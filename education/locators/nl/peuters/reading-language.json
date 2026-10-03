@@ -1,0 +1,714 @@
+{
+  "lane": "nl/peuters/reading-language",
+  "records": [
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Mondelinge taalvaardigheid",
+      "code": "Woordenschat en woordgebruik / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "uitbreiden van de",
+          "last": "de receptieve woordenschat"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Mondelinge taalvaardigheid",
+      "code": "Woordenschat en woordgebruik / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "uitbreiden van productieve",
+          "last": "van productieve woordenschat"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Mondelinge taalvaardigheid",
+      "code": "Woordenschat en woordgebruik / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "gebruiken van nieuwe",
+          "last": "situaties betekenisuitbreiding semantiek"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Mondelinge taalvaardigheid",
+      "code": "Woordenschat en woordgebruik / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "gebruiken van steeds",
+          "last": "en complexere woorden"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Mondelinge taalvaardigheid",
+      "code": "Woordenschat en woordgebruik / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "nieuwe woorden vormen",
+          "last": "woorden vormen morfologie"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Mondelinge taalvaardigheid",
+      "code": "Spreken / vloeiendheid, verstaanbaarheid en grammaticale beheersing / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "uitspreken van alle",
+          "last": "p v tap"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Mondelinge taalvaardigheid",
+      "code": "Spreken / vloeiendheid, verstaanbaarheid en grammaticale beheersing / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "klanken vormen met",
+          "last": "nederlandse klanksysteem fonologie"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Mondelinge taalvaardigheid",
+      "code": "Spreken / vloeiendheid, verstaanbaarheid en grammaticale beheersing / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "zinnen vormen syntaxis",
+          "last": "zinnen vormen syntaxis"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Mondelinge taalvaardigheid",
+      "code": "Spreken / vloeiendheid, verstaanbaarheid en grammaticale beheersing / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "vertellen op een",
+          "last": "en verstaanbare wijze"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Mondelinge taalvaardigheid",
+      "code": "Spreken / vloeiendheid, verstaanbaarheid en grammaticale beheersing / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "beschrijven van iets",
+          "last": "of eenvoudige zinnen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Mondelinge taalvaardigheid",
+      "code": "Spreken / vloeiendheid, verstaanbaarheid en grammaticale beheersing / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "uitvoeren van eenvoudige",
+          "last": "van een versje"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Mondelinge taalvaardigheid",
+      "code": "Spreken / non-verbale communicatie en visuele ondersteuning / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "gebruiken van gebaren",
+          "last": "boodschappen te ondersteunen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Mondelinge taalvaardigheid",
+      "code": "Spreken / non-verbale communicatie en visuele ondersteuning / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "vertellen aan de",
+          "last": "zelf meegenomen materiaal"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Mondelinge taalvaardigheid",
+      "code": "Luisteren / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "ontwikkelen van verhaalbegrip",
+          "last": "ontwikkelen van verhaalbegrip"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Mondelinge taalvaardigheid",
+      "code": "Luisteren / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "luisteren naar en begrijpen van uitleg",
+          "last": "activiteiten en taken"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Mondelinge taalvaardigheid",
+      "code": "Luisteren / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "luisteren naar en begrijpen van instructie",
+          "last": "in de groep"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Mondelinge taalvaardigheid",
+      "code": "Luisteren / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "luisteren naar en begrijpen van een",
+          "last": "passende prenten aanwijzen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Mondelinge taalvaardigheid",
+      "code": "Luisteren / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "luisteren naar liedjes",
+          "last": "liedjes en versjes"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Mondelinge taalvaardigheid",
+      "code": "Luisteren / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "luisteren naar eenvoudige",
+          "last": "volwassene of kind"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Mondelinge taalvaardigheid",
+      "code": "Luisteren / 7",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "luisteren en begrijpen",
+          "last": "prentenboeken en luisterboeken"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Mondelinge taalvaardigheid",
+      "code": "Luisteren / 8",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "samenvatten van wat",
+          "last": "een prentenboek navertellen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Mondelinge taalvaardigheid",
+      "code": "Luisteren / 9",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "evalueren van wat",
+          "last": "antwoord op vragen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Mondelinge taalvaardigheid",
+      "code": "Gesprekken voeren / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 2,
+          "first": "gesprekjes voeren met",
+          "last": "of een ander kind"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Mondelinge taalvaardigheid",
+      "code": "Gesprekken voeren / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 2,
+          "first": "uiten van een",
+          "last": "mening van anderen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Mondelinge taalvaardigheid",
+      "code": "Gesprekken voeren / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 2,
+          "first": "beantwoorden van verschillende",
+          "last": "dingen kiezen voorspelvragen",
+          "corrections": [
+            {
+              "from": "wie-wat- waar-vragen",
+              "to": "wie-wat-waar-vragen",
+              "reason": "line-break hyphen"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Mondelinge taalvaardigheid",
+      "code": "Gesprekken voeren / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 2,
+          "first": "stellen van vragen",
+          "last": "hulp te krijgen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Mondelinge taalvaardigheid",
+      "code": "Gesprekken voeren / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 2,
+          "first": "kennismaken met enkele",
+          "last": "naar elkaar luisteren"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Mondelinge taalvaardigheid",
+      "code": "Gesprekken voeren / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 2,
+          "first": "gebruiken van gebaren",
+          "last": "gespreksbijdragen te ondersteunen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Mondelinge taalvaardigheid",
+      "code": "Gesprekken voeren / 7",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 2,
+          "first": "spontaan reageren op",
+          "last": "zichzelf te vertellen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Aanvankelijk lezen",
+      "code": "Leesplezier / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "ontwikkelen van leesplezier",
+          "last": "een rijke leesomgeving"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Aanvankelijk lezen",
+      "code": "Leesplezier / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "meeleven met prentenboeken",
+          "last": "met prentenboeken leesbeleving"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Aanvankelijk lezen",
+      "code": "Leesplezier / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "genieten van voorgelezen",
+          "last": "rijmpjes of verhalen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Aanvankelijk lezen",
+      "code": "Oriëntatie op verhaal en tekst / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "bladeren door prenten",
+          "last": "door prenten boeken"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Aanvankelijk lezen",
+      "code": "Oriëntatie op verhaal en tekst / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "ontdekken dat illustraties",
+          "last": "vormen begrijpend luisteren"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Aanvankelijk lezen",
+      "code": "Oriëntatie op verhaal en tekst / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "herkennen van bekende",
+          "last": "bijv handen wassen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Aanvankelijk lezen",
+      "code": "Oriëntatie op verhaal en tekst / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "herkennen van verschillende",
+          "last": "zoals met whatsapp"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Aanvankelijk lezen",
+      "code": "Oriëntatie op verhaal en tekst / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "mondeling reageren op",
+          "last": "en eigen mening"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Aanvankelijk lezen",
+      "code": "Oriëntatie op verhaal en tekst / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "ontdekken dat er",
+          "last": "schriftelijke bronnen zijn"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Aanvankelijk lezen",
+      "code": "Fonemisch bewustzijn en alfabetisch principe / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "spelen met klanken",
+          "last": "fonemen en symbolen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Aanvankelijk lezen",
+      "code": "Fonemisch bewustzijn en alfabetisch principe / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "bewust worden van",
+          "last": "klanken in woorden"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Aanvankelijk lezen",
+      "code": "Fonemisch bewustzijn en alfabetisch principe / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "spelen van spelletjes",
+          "last": "woord en klankspelletjes"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Aanvankelijk lezen",
+      "code": "Fonemisch bewustzijn en alfabetisch principe / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "ontdekken van relaties",
+          "last": "context alfabetisch principe"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Aanvankelijk lezen",
+      "code": "Fonemisch bewustzijn en alfabetisch principe / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "ervaringen opdoen in",
+          "last": "opdoen in rijmen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Aanvankelijk lezen",
+      "code": "Fonemisch bewustzijn en alfabetisch principe / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "herkennen van symbolen",
+          "last": "herkennen van symbolen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Aanvankelijk schrijven",
+      "code": "Oriëntatie op geschreven taal / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "interesse tonen in",
+          "last": "in geschreven taal"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Aanvankelijk schrijven",
+      "code": "Oriëntatie op geschreven taal / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "ontdekken dat tekens",
+          "last": "iets te vertellen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Aanvankelijk schrijven",
+      "code": "Oriëntatie op geschreven taal / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "ervaren dat tekenen",
+          "last": "bieden tot communicatie"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Aanvankelijk schrijven",
+      "code": "Oriëntatie op geschreven taal / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "naschrijven stempelen of",
+          "last": "namen van producten"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Aanvankelijk schrijven",
+      "code": "Oriëntatie op geschreven taal / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "spelen met letters",
+          "last": "kleuren van letters en woorden"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Aanvankelijk schrijven",
+      "code": "Oriëntatie op geschreven taal / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "verschil ontdekken tussen",
+          "last": "schrijven en lezen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Aanvankelijk schrijven",
+      "code": "Oriëntatie op geschreven taal / 7",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "verkennen van schrijven",
+          "last": "vormen letter tekenreeksen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Taalbeschouwing",
+      "code": "1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 5,
+          "first": "op speelse wijze",
+          "last": "zijn met taal"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Taalbeschouwing",
+      "code": "2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 5,
+          "first": "bewust worden van",
+          "last": "het eigen taalgebruik"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, peuters / Taalbeschouwing",
+      "code": "3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-prefase",
+          "page": 1,
+          "column": 5,
+          "first": "bewust worden dat",
+          "last": "taal kunt praten"
+        }
+      ]
+    }
+  ]
+}

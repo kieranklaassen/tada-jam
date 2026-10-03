@@ -1,0 +1,1143 @@
+{
+  "lane": "nl/peuters/practical-life-feelings",
+  "verdicts": [
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.besluit-basisvoorwaarden-kwaliteit-voorschoolse-educatie-artikel-5",
+      "wording_sha256": "7e87e61fe37077d439566feb98f6b8545aeb0b39af952839339640d228fbc399",
+      "text_sha256": "28f83856ffceb0980ef0e5cc65f81be0d1e9db5c866a35546cd9938ffcc2ae49",
+      "verdict": "confirmed",
+      "note": "Wording equals the one sentence of artikel 5 in the stored XML (the article has no second paragraph); Limits names all four areas (taal, rekenen, motoriek, sociaal-emotionele ontwikkeling) as a duty on the provider. In a child's hands speaks of \"a child of 2 to 4 in such a group\": artikel 5 names no age, and artikel 2, eerste lid of the same decree arranges voorschoolse educatie for a child \"vanaf de dag dat het tweeëneenhalf jaar oud wordt\", so the youngest child in such a group is two and a half. The pack's age for the level is about 2 to 4, so this is not counted as a fault; a reader should know the decree's own starting age.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 1754
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings legal-aims-and-world-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.besluit-basisvoorwaarden-kwaliteit-voorschoolse-educatie-artikel-5",
+      "wording_sha256": "7e87e61fe37077d439566feb98f6b8545aeb0b39af952839339640d228fbc399",
+      "text_sha256": "b93ef204f261c7306cc28461e220f7ee22a56b47c4392d8a779a69dc00eaecb7",
+      "verdict": "confirmed",
+      "note": "Round 2. Wording equals the one sentence of artikel 5 in the stored XML (heading \"Gebruik voorschools educatie-programma\", no numbered paragraphs). In a child's hands now speaks of \"a child of two and a half to 4\", and Limits adds \"The starting age is in artikel 2, first paragraph (*eerste lid*), of the same decree: the offer is arranged so that a child can receive pre-school education from the day the child turns two and a half\". Artikel 2, eerste lid was read in the same XML: \"Het aanbod voorschoolse educatie is zodanig ingericht dat een kind vanaf de dag dat het tweeëneenhalf jaar oud wordt in anderhalf jaar ten minste 960 uur voorschoolse educatie kan ontvangen.\" The record's sentence says no more than that: it takes the age clause and leaves out the year and a half and the 960 hours. For a reader: that article is headed \"Omvang voorschoolse educatie\" and is about the size of the offer; the age stands in it as the day from which the hours count. Limits still says rightly that artikel 5 itself names no ages.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 1754
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.besluit-kwaliteit-kinderopvang-artikel-2-onderdeel-a",
+      "wording_sha256": "a20b7b315b67c23a6d9e39cd17c4dcd03c71407b7bc37bb0e5b6f38ac4aea4a9",
+      "text_sha256": "a330c2e03ef5ffcb930ba628a40affcee4e5b74fdf15bd86127cce069c4cf5bf",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 462
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings legal-aims-and-world-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.besluit-kwaliteit-kinderopvang-artikel-2-onderdeel-b",
+      "wording_sha256": "ae2e879d91a1ebead4ac57718d3f7ecde5e9a43bbfb543753b03461b556e2865",
+      "text_sha256": "3868c6cc1aa17d8ef2e6c29a620b260a96a9e7bd285bbbf647fad112a2400835",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 504
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings legal-aims-and-world-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.besluit-kwaliteit-kinderopvang-artikel-2-onderdeel-c",
+      "wording_sha256": "16047dfcf03583c6a88fa2678e01486d8606f45b34d49fc0b40f96c5c2c05ec0",
+      "text_sha256": "ac1d9ca7d4f8b53d22432436d5acc34e468987de410e120826bc1f46ca073a53",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 536
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings legal-aims-and-world-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.besluit-kwaliteit-kinderopvang-artikel-2-onderdeel-d",
+      "wording_sha256": "3786b6fcc4bf3680d0c35856aaff0712c14773f07a009c9155533e2d1d34378c",
+      "text_sha256": "5f5871732e42edcfd8fd1e1251be944e622033c26f1277f71d274b3968f95500",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 570
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings legal-aims-and-world-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-de-ruimte-om-je-heen-inrichting-en-indeling-van-de-ruimte-2",
+      "wording_sha256": "4945cab781e249a4e89ec6a9422d79ebb6a9350ad699fe43e04c6a4111441e36",
+      "text_sha256": "5ca40bac8f428123b5d7c50688dcf3cef7660611ebc1a07cfd1dc240905ca5ba",
+      "verdict": "confirmed",
+      "note": "Looked at on the rendered card (page 1 as an image at 400 dpi): bar \"De ruimte om je heen\" (third column), sub-heading \"Inrichting en indeling van de ruimte\", two bullets under it, this is the second and last; the next line is the sub-heading \"Landbouw, industrie en logistiek\". The card prints: aandacht hebben voor milieuzorg zoals 'afval in de afvalbak' (broken after \"in de\"; straight single quotation marks round the four words; no comma before \"zoals\", no full stop, no \"(b)\"). The record holds exactly that. The first bullet (\"bekijken van en praten over elementen in de directe omgeving (bijv. …)\") has no record, as the frame says (geography). The text layer has 53 bullet glyphs, two of them under this sub-heading, as the frame counts. Gloss: \"aandacht hebben voor\" is \"paying attention to\", as in the confirmed \"(Veilige) leefomgeving / 1\" of this lane and \"Weer, klimaat en hemellichamen / 3\" of science; \"milieuzorg\" is given with the Dutch and both English forms; \"zoals\" stays \"such as\"; the quotation marks are kept. Faithful. The hard point. Limits says the wording \"names no action a child performs\", and In a child's hands shows a child putting rubbish in the bin in three of its four scenes and in both ages (the fourth scene is watching an adult do it). Judged not a contradiction: the Limits sentence is about the wording and is true of it (the verb is having attention; the example is a phrase without a verb, as Limits says next), and the scenes are the bullet's own example, 'afval in de afvalbak', in plain present tense under the heading that marks them as the pack's inference, with no \"can\", \"learns to\", \"always\" or rule. Attention for \"rubbish in the rubbish bin\" in a child of 2 to 4 is honestly shown by a child who sees that a wrapper or a scrap on the floor goes to the bin. The confirmed science bullet carries the same Limits sentence and also shows acts the wording does not name (pointing, saying the name). A reader should still take the scenes with the Limits: the bullet asks for attention, not for the act. Ruling 11 and 12: nothing shown is what a higher level words as its own. Fase 1 card, same heading, bullet 3 \"bewust worden dat de mens invloed heeft op de natuurlijke omgeving\" and bullet 4 \"onderzoeken en bespreken van elementen die positief bijdragen aan de zorg voor het milieu\" (and the fase 1 goals ojw/rojh/6/01 and /02): no scene shows awareness of human influence, investigating or discussing. Fase 2: \"verkennen van aspecten van het begrip 'milieu' zoals milieuvervuiling\", \"verantwoordelijkheid dragen voor de eigen leefomgeving en een actieve bijdrage leveren aan de zorg voor het milieu\", \"werken aan een duurzame samenleving\", the energy sources, nature and environment, human intervention: no scene shows pollution, responsibility, sorting or reuse of waste, or where rubbish goes afterwards. Putting one's own rubbish in the bin is near the fase 2 \"actieve bijdrage\" (and the fase 3 \"zorgdragen voor het milieu\") but is the peuter bullet's own example, and the peuter card itself has \"aandacht hebben en zorg dragen voor de eigen leefomgeving\" at this level; near is no fault (ruling 12). Limits opens with the lane's fixed sentence, word for word as in the other 70 card records of the lane, and then states only what the wording says and leaves open (an example, in quotation marks, no other example, no kind of rubbish, no extent of \"milieuzorg\"). Common mistakes opens \"This is not a skill with a typical error.\" and names what children of 2 to 4 do, without a norm. The age sentence gives two plain instances (2 and 4) with no count, norm word or help. The three sub-headings stand in the lane's order. The review file's `unrecorded` list is empty, so no entry there names this bullet.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 404
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings new card bullet",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-de-samenleving-consument-zijn-1",
+      "wording_sha256": "3954f2f1fdd248a4716c6baf3a8bae67a2a4db3c91a8efd7ce9ecf983659eda7",
+      "text_sha256": "327b9d84746d7ae3e0592cbd3fa7058f37c48b03a4fc4d48beb5aac50c28ff16",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 279
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings legal-aims-and-world-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-de-samenleving-deelnemen-aan-het-verkeer-1",
+      "wording_sha256": "f34b964b76ca08e9bb438da64d2a307374f8cda3938f74d5b8019f6d1c814cab",
+      "text_sha256": "f6099bae2a417a6cb80e9d8ca8867b4e2ee9516eb4de89547e210dea15d6a900",
+      "verdict": "confirmed",
+      "note": "Limits says the statement \"does not mention cycling, traffic rules, signs or traffic lights\": true of the words (the brackets name lopen, spelen), though \"veilig gedragen op straat\" is a general term and the sub-heading is \"Deelnemen aan het verkeer\". Not counted as a fault.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 271
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings legal-aims-and-world-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-de-samenleving-veilige-leefomgeving-1",
+      "wording_sha256": "7f660a500cdaca743f4429a35e6139fea7a50e60a78823a00ba9e68b07be9fb6",
+      "text_sha256": "079774be65169855fb501054a27b20ff9869b5d1ae817c380a8ca0fd6b5e337c",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 150
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings legal-aims-and-world-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-de-samenleving-veilige-leefomgeving-2",
+      "wording_sha256": "36a5cb3b5e102937aabbb5822ae75a2c9e2719bb0e6b13b0bae4ade726936ad0",
+      "text_sha256": "02b547f706285fbf145c41c0f6cc03a2c5697519a70cba69445ffc170c45941f",
+      "verdict": "confirmed",
+      "note": "Compared on the rendered page. The script could not match because the recognised text of the file has \"hygienisch\" without the diaeresis; the page prints \"hygiënisch\", so the locator's correction is right. The bullet runs over five lines and ends at \"gevaarlijk kan zijn)\"; the record holds all of it.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1
+      },
+      "matched_by": "agent",
+      "corrections_verified": true,
+      "checker": "nl/peuters/practical-life-feelings legal-aims-and-world-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-jezelf-en-de-ander-gevoelens-wensen-en-opvattingen-1",
+      "wording_sha256": "774864c55fd842ff747fd455f3c92dcb98393d5eeddc1287e5d6eddecede561f",
+      "text_sha256": "f0f1e8b90a04a56d1ba8b4d42c65e272d6474f187c047a8858b4129c8dd331f7",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 25
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings legal-aims-and-world-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-jezelf-en-de-ander-gevoelens-wensen-en-opvattingen-2",
+      "wording_sha256": "164c98f4deffedda2240e1e0daa6cc62eede6e681d61c92288d56e8b530722aa",
+      "text_sha256": "aab8d501189aab227f9f1ef5b7609aa5744883acf3b2633fb4e2eda30da9e35c",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 29
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings legal-aims-and-world-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-jezelf-en-de-ander-gevoelens-wensen-en-opvattingen-3",
+      "wording_sha256": "c7ee6eafd810399d50bbb5c906b79ca2dbef4b7beb276d7bf6ada8594c78f8d0",
+      "text_sha256": "298b88f7ed6718166dddd067481ac63b82a8641e1c3359267d87631abbfa95c4",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 33
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings legal-aims-and-world-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-jezelf-en-de-ander-relaties-en-seksualiteit-1",
+      "wording_sha256": "4d2f1c3626a442846c42e9e5f57eb7d7b60ec1f75ce050f6f1dddc5f1e0967b2",
+      "text_sha256": "9096e9eac0bc1b3ac18d06c209c3b315ffee48b4567bd9ca7c0ce7bd23bf8cdf",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 116
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings legal-aims-and-world-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-jezelf-en-de-ander-relaties-en-seksualiteit-2",
+      "wording_sha256": "4fc29d36055810c10ada74fca8de7e6d4c151a519ab955265842cd360fc57024",
+      "text_sha256": "c34e8937c16d77d63b9fe62438dc3150de4bd6a749f7977008d5060a14f28668",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 123
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings legal-aims-and-world-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-jezelf-en-de-ander-samen-leven-en-samenwerken-1",
+      "wording_sha256": "ceaf7fa824d741f58f49b1f622dfcd566e244f2c8b4eae8138a412e31a5ccb3f",
+      "text_sha256": "ffa7e9af0b8dd455af595fb01da669801f587787826df9d8803df533f61f54cd",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 45
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings legal-aims-and-world-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-jezelf-en-de-ander-samen-leven-en-samenwerken-2",
+      "wording_sha256": "eb8505f12b3b223ed4b2766533325faa0d5800d886775492012e9130b4505b76",
+      "text_sha256": "71a81798b4e56a5be378baa913cd7fd4f939dc6b9f75f24af941e296a82c9356",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 55
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings legal-aims-and-world-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-jezelf-en-de-ander-samen-leven-en-samenwerken-3",
+      "wording_sha256": "fd67381128f3ea62c15cb17c11a40fb0566792984dc13348d25b068798e5c912",
+      "text_sha256": "81689263467f9bccf0db538c65f3a33e82f8029387da48e72914ff4c46af8c63",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 62
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings legal-aims-and-world-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-jezelf-en-de-ander-samen-leven-en-samenwerken-4",
+      "wording_sha256": "242f6a64cd13344af26856fa1d748c7e5f3c01e2f4a2c72deb5f8d5a910f270e",
+      "text_sha256": "3bb23fba61f89bc3805b5bb48fbce0b19aec8b33375139e6f1152591ba70e097",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 74
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings legal-aims-and-world-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-jezelf-en-de-ander-samen-leven-en-samenwerken-5",
+      "wording_sha256": "5f20fc23010d64b7648de373f73be73c9a38eb14b7b8d4ae8d7c7e1c8681292b",
+      "text_sha256": "1d2ec1258220ee0e85b9f2e542b48cfe518e9704bce5e5eafd644a988cf8efb6",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 84
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings legal-aims-and-world-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-jezelf-en-de-ander-samen-leven-en-samenwerken-6",
+      "wording_sha256": "9a6205eade82b5b281b6521d30e59561aa832c64c8e93b52059666bf85391bc5",
+      "text_sha256": "257fb2dde72250629edf347e6cc2030a8b43718b3d49497474425309cafd6d69",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 103
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings legal-aims-and-world-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-planten-dieren-en-de-mens-gezondheid-en-hygiene-1",
+      "wording_sha256": "7e7ca7fcde1c30d9bc251c66acae0a0e0e5ce3a2b0b9e8be56916d636348af16",
+      "text_sha256": "7b579919ae9cae5608759086b6b0b63e4100ec699a9023a617f6d622658886b8",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 613
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings legal-aims-and-world-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-relaties-sociale-vaardigheden-ervaren-wat-het-vraagt-om-in-een-groep-deel-te-nemen-1",
+      "wording_sha256": "4343640c9c56a4d16258ec7e5226f7d801b0c38501d982f3e5b1f0e755f30076",
+      "text_sha256": "bb7c745d2153a6971a3e4277d3cffa5fd3e2198642517f95d4538c185f76fb31",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 215
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-relaties-sociale-vaardigheden-ervaren-wat-het-vraagt-om-in-een-groep-deel-te-nemen-2",
+      "wording_sha256": "e9f6874d6df41ab6425bd173ba0e2a5eee716d6fef1a0dc38d0a32e2d18ef3db",
+      "text_sha256": "a17c2fa9c999b564c3bff7406d9cbb1197c495bf2cdad09d913906b6aa1d9967",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 224
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-relaties-sociale-vaardigheden-ervaren-wat-het-vraagt-om-in-een-groep-deel-te-nemen-3",
+      "wording_sha256": "14178252689892d6db2d84170b31a77676b897b5f936cd32da790be7864a917f",
+      "text_sha256": "981d41a77880a67a1e36d83ed8761965488d6941c5322588f32a53307de4ca47",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Limits, last sentence: \"The statement does not mention friendship.\" The Dutch is \"omgaan met verhoudingen in een groep\": \"verhoudingen\" (how members stand towards one another, as the same Limits says) is a general term and a friendship between two children of the group falls inside it, so the sentence reads as leaving out something the wording covers; \"In a child's hands\" itself uses preferred playmates. The sentence before it (\"names ... no kind of relation\") already says all the card supports: take the friendship sentence out or fold it in (\"no kind of relation, friendship included, is singled out\"). Wording, heading and position checked on the rendered page and right; the gloss is faithful.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 231
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-relaties-sociale-vaardigheden-ervaren-wat-het-vraagt-om-in-een-groep-deel-te-nemen-3",
+      "wording_sha256": "14178252689892d6db2d84170b31a77676b897b5f936cd32da790be7864a917f",
+      "text_sha256": "ae5ea5174b4b1d8641e42e4b034bde41d8b4ba5a1ef504d3b9bba8ef5e1ae2e4",
+      "verdict": "confirmed",
+      "note": "Round 2. Wording, heading and position equal the card on the rendered page (column Relaties, Ervaren wat het vraagt om in een groep deel te nemen, third bullet). The round 1 fault is resolved: the sentence \"The statement does not mention friendship\" is gone; Limits now says the wording names \"no kind of relation\", which is all the Dutch \"verhoudingen in een groep\" supports.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 231
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-relaties-sociale-vaardigheden-ervaren-wat-het-vraagt-om-in-een-groep-deel-te-nemen-4",
+      "wording_sha256": "e5081310a6486a1e2e6b596ea2af2861d4ed12586b4fc52b069851484f3864f1",
+      "text_sha256": "8dd27e1a6fb30ad8e0c4eda55725716d6f8bbd4afed431baf4b03ce02949b992",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 237
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-relaties-sociale-vaardigheden-ervaren-wat-het-vraagt-om-in-een-groep-deel-te-nemen-5",
+      "wording_sha256": "8ab00c212e1f2e136ad5e7d880840f31e37f3be0cdf8666524292f10d1d2678d",
+      "text_sha256": "fea414d45407d223a59a36d5dc3f553feffddbd74549483aeb3c48bda864578d",
+      "verdict": "confirmed",
+      "note": "The card prints 'goed-maken' with a hyphen and in quotation marks; the record reproduces that. Limits: \"saying sorry is not mentioned\" stands after \"It prescribes no form\", so it reads as an unprescribed form, not as left out.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 243
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-relaties-sociale-vaardigheden-ervaren-wat-het-vraagt-om-in-een-groep-deel-te-nemen-6",
+      "wording_sha256": "f8c02c1c5dc9cf85e97e8add285539e608f69eb7b161e04cc229e82428bb1113",
+      "text_sha256": "ad31222ac7f1554f1d80b9ba523b2d60469b0053750833a4fdff147f591aea9a",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 248
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-relaties-sociale-vaardigheden-kansen-bieden-om-ervaringen-op-te-doen-1",
+      "wording_sha256": "337c2e1e49c04969d315aefa26a5c34a794dbf30194319b76ca561f2ca60d810",
+      "text_sha256": "03ddb41a7d823f3e2b02f143fa9f6d7bf85be1efac6663ff6eaabb1b59069d49",
+      "verdict": "confirmed",
+      "note": "The card breaks the line after \"delen\" and prints no comma before \"bijv.\"; the record reproduces that. \"delen\" is settled as sharing by \"met andere kinderen\" and the examples.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 162
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-relaties-sociale-vaardigheden-kansen-bieden-om-ervaringen-op-te-doen-2",
+      "wording_sha256": "b199f1a5b97ca0d51692574175a0382ee99dd662ed79e56ac9aca49d2c3e2c5b",
+      "text_sha256": "e9974e741a8fad724302f255c9209cd1283b8068a54415a6740ea0e05acb527b",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 171
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-relaties-sociale-vaardigheden-kansen-bieden-om-ervaringen-op-te-doen-3",
+      "wording_sha256": "ede0d1f05c4f9da60e0d8ffad9aa56fe29b06bd8b9c24af37c8514434d6e3d4a",
+      "text_sha256": "5631edacb4f84aa995d17990ce45d67094ba00625507193b2afce4b5d2b08dd2",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 179
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-relaties-sociale-vaardigheden-kansen-bieden-om-ervaringen-op-te-doen-4",
+      "wording_sha256": "59aea28aed2c5f95d5e7e60b25007d7f0cdac86fac37a7e07d219f1bb06e7214",
+      "text_sha256": "13ebadea66d7793ddb9c36c1b8206829b05af3bca68c7e66e2a3bfcc5ef46490",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Limits, second sentence: \"nothing in it says that a bodily need such as using the toilet is to be postponed\". The Dutch is \"uitstellen van eigen behoeften\": \"eigen behoeften\" is a general term with no exception, and a bodily need falls inside it. The sentence reads as a limit (and a care condition) the card does not state. Keep \"It does not say which needs\" and take the clause about bodily needs out, or say only that the card names no kind of need. Wording, heading and position checked on the rendered page and right; the gloss \"postponing one's own needs\" is faithful.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 185
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-relaties-sociale-vaardigheden-kansen-bieden-om-ervaringen-op-te-doen-4",
+      "wording_sha256": "59aea28aed2c5f95d5e7e60b25007d7f0cdac86fac37a7e07d219f1bb06e7214",
+      "text_sha256": "d825244cf76a0cb1e14af0b20f0906f6252e30da27eb49d8b5958ed78a6ca35e",
+      "verdict": "confirmed",
+      "note": "Round 2. Wording, heading and position equal the card on the rendered page (column Relaties, Kansen bieden om ervaringen op te doen, fourth bullet). The round 1 fault is resolved: the clause about a bodily need such as using the toilet is gone and Limits says only \"It does not say which needs\", which leaves \"eigen behoeften\" whole. Noted, not counted: In a child's hands has a child of 4 wait \"a few minutes\"; Limits says the wording names no length of waiting, and the phrase stands as the pack's illustration.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 185
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-relaties-sociale-vaardigheden-kansen-bieden-om-ervaringen-op-te-doen-5",
+      "wording_sha256": "93aedfe3ef4561155f170c38f714531c7f053f511d090c9079c3931aa9b5c3fd",
+      "text_sha256": "149e337f50e9b4bbb2338b6c40a7b5603de589fb503b485b1bbbbd0c34b68687",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 189
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-relaties-sociale-vaardigheden-open-staan-voor-oplossingen-bij-conflicten-1",
+      "wording_sha256": "67588bbfde5c1f022aaa9355cb38ef1b2c54f3b4e162a7603d4dfa5f7a49afe0",
+      "text_sha256": "70a3454764953d7c6f484478f9ff3a3812e62e232f1ee8d8be14e7877cbfde2a",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 263
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-relaties-sociale-vaardigheden-open-staan-voor-oplossingen-bij-conflicten-2",
+      "wording_sha256": "e20399e6c9b8a35d1396806b175c9d9b217d554440d925ab4b61bff9eab3c411",
+      "text_sha256": "29909f674b732eb1070681bfdab50ab4f130c682fa7e8d090bd2a01ddd0a00aa",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 270
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-relaties-sociale-vaardigheden-plezier-beleven-in-het-omgaan-met-een-ander-1",
+      "wording_sha256": "abc8459625b659f00ad85a0d7c1098c64af8c6f473b298223a5fdd03713f51df",
+      "text_sha256": "493b732a752dfbcf2e98bf061bc28a3250909b24e6e28618b1dce8c764931a21",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 116
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-relaties-sociale-vaardigheden-plezier-beleven-in-het-omgaan-met-een-ander-2",
+      "wording_sha256": "26b1aa0f957485596db5783224eb7ed6224c36bd03367492c9f34b1857135edd",
+      "text_sha256": "429b7ca597337374ff8d9d62c7de98df4445489e85e4d141443442b8ccc2f6ab",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 120
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-relaties-sociale-vaardigheden-plezier-beleven-in-het-omgaan-met-een-ander-3",
+      "wording_sha256": "475987cf4a17412bde10be8f187a49f86093892cbc7a7a1b7b1051608eabc220",
+      "text_sha256": "7dba7c3370691d21d0c748a6fa18f5fd7840902f4257efbd7dcdd5e8d5a06391",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 127
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-relaties-sociale-vaardigheden-plezier-beleven-in-het-omgaan-met-een-ander-4",
+      "wording_sha256": "e183804bea096d9dd3e0238e5e4f4a668520da0fae3128f65036069e465231e3",
+      "text_sha256": "a49f605065f3f2d6a2c251ccf4d7fa393d4c7228c21a8024e8ca2062de4e3d05",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 136
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-relaties-sociale-vaardigheden-plezier-beleven-in-het-omgaan-met-een-ander-5",
+      "wording_sha256": "1b7635100e1fe0219f185ecea48c236e173c9693cac8c81f11acd2ff7fd17fe8",
+      "text_sha256": "cf65e026ee13063a71f1fd225fd62825d9ce620e5ade7cab809c58e6c1ee61c1",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 143
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-zelfbeeld-zelf-beeld-ontdekken-van-behoeften-gevoelens-en-emoties-van-zichzelf-1",
+      "wording_sha256": "774864c55fd842ff747fd455f3c92dcb98393d5eeddc1287e5d6eddecede561f",
+      "text_sha256": "664874707b7ce2fa035168b05e91197374bd4863c7d58d0c441d367c681f008f",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 11
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-zelfbeeld-zelf-beeld-ontdekken-van-behoeften-gevoelens-en-emoties-van-zichzelf-2",
+      "wording_sha256": "0dd718eb5d9aab12f620d3cb1d073de61fc0c35d3b40fb5f1c0a406fe2bea8e2",
+      "text_sha256": "d89df0d567b4fdf80d77320241b298be6974f4ab942b94e6243de63e7762ef80",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 15
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-zelfbeeld-zelf-beeld-ontdekken-van-behoeften-gevoelens-en-emoties-van-zichzelf-3",
+      "wording_sha256": "3f6ec47cd4a6c6b1bedd4278e496c1622a47d2cc6f482dbad8c2c5d10f1c599d",
+      "text_sha256": "fcdc58a31f33662799e78ead0ae43cd7d80a7266825a939310faac28a3f4ad5a",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 22
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-zelfbeeld-zelf-beeld-ontdekken-van-de-eigen-kwaliteiten-en-krachten-1",
+      "wording_sha256": "303a7fe356776c8f73b414e7ca8b42f4f27d340b74ff794f5914c29a523207ba",
+      "text_sha256": "e2840a8e7e98dd5a73d195cc8fb7b6f1b4c60b0bfeb82d404ac5d3544b8e60d5",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 36
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-zelfbeeld-zelf-beeld-ontdekken-van-de-eigen-kwaliteiten-en-krachten-2",
+      "wording_sha256": "ac6c8383c93ecf675d402a3153e220b07907e9df4d50fd36bd85e739fa4109b9",
+      "text_sha256": "8e87a8b79171892b1ab1c58a007aae038f1babf45eadf37305befc22b0377129",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 45
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-zelfbeeld-zelf-beeld-ontdekken-van-de-eigen-kwaliteiten-en-krachten-3",
+      "wording_sha256": "1677939a712fa5c11bff29b2ec874c296e92379e1c7363aa041f702af9a2ac49",
+      "text_sha256": "82abcc4d6e2c198e0b712cdc1976399788caa3e2c578208d47b4ea7aed3807f6",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 55
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-zelfbeeld-zelf-beeld-ontdekken-van-verschillen-tussen-zelf-en-de-ander-1",
+      "wording_sha256": "534a4780f4687b506fdc7ecec1f2c521276cd79009828d327fec32e9d9d329a6",
+      "text_sha256": "6c89342b09c867eec06c1d7344acd295097b48e4a4cf154c4cede92cca1d1fb1",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 69
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-zelfbeeld-zelf-beeld-ontdekken-van-verschillen-tussen-zelf-en-de-ander-2",
+      "wording_sha256": "0f6cc17114530852ffd7e6d60df2c40927e9a603affda134f0d935ad3620fed9",
+      "text_sha256": "06469764c349f69403c29d55cddb84199a376ec0daa2cc268e947d5c1cce4355",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 74
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-zelfsturing-zelfmanagement-bijsturen-stoppen-van-ongewenst-gedrag-1",
+      "wording_sha256": "c3be80fc92facbf7d112ec0ea2ce93b920fda28b572ef752437732ff42da8a07",
+      "text_sha256": "153dcfb539e6fc19ae6e31e098f320d4ef16c9a44725db62f3d43eee0e11cc43",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 332
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-zelfsturing-zelfmanagement-bijsturen-stoppen-van-ongewenst-gedrag-2",
+      "wording_sha256": "f699505ea5695142c25e6f06ce2d6190541e2fc12190c89eeeb60efea6bf958d",
+      "text_sha256": "92c4162f828a1efb3b7e4128fb865147bcc413021bd9fec169e4efa7d1d249e5",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 340
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-zelfsturing-zelfmanagement-grip-krijgen-op-eigen-gevoelens-1",
+      "wording_sha256": "c2d91bf68e9dd338fe440cb7aeb3cabedf388aa1a6f42b9de1472c6527bc2cd5",
+      "text_sha256": "6359db6cb6240f0eb4628b81fb54828ad4d6f89e11bfbd19c490158e11a37ff6",
+      "verdict": "confirmed",
+      "note": "Limits says \"It does not say to whom the child reacts\"; the Dutch does say \"op anderen\". Read as \"which others\" it is right, and the gloss keeps \"to others\"; a clearer sentence would say it does not say which others.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 285
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-zelfsturing-zelfmanagement-grip-krijgen-op-eigen-gevoelens-2",
+      "wording_sha256": "353852084d4fd7db8bac0acff98325b6d5275921f6ed35389b9c66cd824a99eb",
+      "text_sha256": "2351bdba62e2af884ba88b2d43a8991b486aaa295a618c65ea7cf0dfc14ea9df",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 292
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-zelfsturing-zelfmanagement-grip-krijgen-op-eigen-gevoelens-3",
+      "wording_sha256": "a54f1ca77caec4512021ee6c5c5492eeb3d414e936584dc2052ecded9f9ee6ff",
+      "text_sha256": "e7c6626595746430d05f7c028715bb29ba92757e0d1ddb8cf3b0a230545ee388",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 296
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-zelfsturing-zelfmanagement-grip-krijgen-op-eigen-gevoelens-4",
+      "wording_sha256": "a06127b1cee622e81c561bcb96377393adf4ddfe33c5f8f2022bf7491bb600a0",
+      "text_sha256": "b85e075ca84345e0b40133b8b3222b917e3daa431873907e95344433090cc2cd",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 307
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-zelfsturing-zelfmanagement-grip-krijgen-op-eigen-gevoelens-5",
+      "wording_sha256": "c9a0b55fe7fb4f0d95c925f915a0cf6468f2a384bfcbde9c333204b5b668e5c1",
+      "text_sha256": "88adae038cfc1dd546741cdf754215121803abe2fe265acc24b13153fc093ad5",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 316
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-zelfsturing-zelfmanagement-uitvoeren-van-eenvoudige-opdrachten-en-of-doelen-1",
+      "wording_sha256": "bc465f59645f0ec133759fea20429e9bc9563d99a07aa2799690bc5d5eae973a",
+      "text_sha256": "32401b7f4aa9e45f2a184ea44826b27095bba4321d9de6c3fda387cea573d29f",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 351
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-zelfsturing-zelfmanagement-uitvoeren-van-eenvoudige-opdrachten-en-of-doelen-2",
+      "wording_sha256": "23e46529637688c273fb3e102fb8a62a88c1dd728a8bccd780fce250a5f50505",
+      "text_sha256": "f212c7fa41b0982e4981830afdb783ae1d86094bb2dbe8b161838a3e4a2f6bfb",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 365
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-zelfsturing-zelfmanagement-uitvoeren-van-eenvoudige-opdrachten-en-of-doelen-3",
+      "wording_sha256": "195f97a30bb92208713c7f82f412b5001850b5a54d2d15ad4f9b6fb52602a3c1",
+      "text_sha256": "586b5ace3b5db38b7c4106c263ee7a761ebd97f87a03e198ab343f18d28c073e",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 371
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-zelfsturing-zelfmanagement-uitvoeren-van-eenvoudige-opdrachten-en-of-doelen-4",
+      "wording_sha256": "1d16222f975191ea29a5b85a70c2ec6ba04f30418c16e7a49b239531e474b93f",
+      "text_sha256": "39b268d369d65f8b946ccc691812d6ba7ab9680ad8c92c2533d2e1c658c49fbe",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 380
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-emotionele-competenties-zelfsturing-zelfmanagement-uitvoeren-van-eenvoudige-opdrachten-en-of-doelen-5",
+      "wording_sha256": "da018dd36f7f85a5f65e5d9895f20f014bde9fc1b73fc17b04b782b124c5eea1",
+      "text_sha256": "3d811cb3f9aa939def41aac88e413bc5c04a9bee89ef01124136d337e9be7335",
+      "verdict": "confirmed",
+      "note": "Limits: \"eating, washing hands and using the toilet are not named\" stands after \"lists no other self-care actions\", so it reads as not listed, not as outside \"zichzelf kunnen redden\".",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 388
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-morele-competenties-kiezen-keuzes-maken-maken-van-een-keuze-1",
+      "wording_sha256": "d887242ffe9c718e0cd465d743173144cd5fadf743b5214d148bd522add22f4b",
+      "text_sha256": "a31cb8b57dbba983d9824d2aee1e93b198c9ed2b6b25ca265af5b2910f7fe20e",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 511
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-morele-competenties-kiezen-keuzes-maken-maken-van-een-keuze-2",
+      "wording_sha256": "562d4be9b9c98b38371484cbbd87c830fc374b10fed77b79033bccd3736330d8",
+      "text_sha256": "07907dd1157e4d5286d024b92732726d7104839763a8d2412695a6f1f299e023",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 516
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-morele-competenties-kiezen-keuzes-maken-maken-van-een-keuze-3",
+      "wording_sha256": "8ae5d8c6d5feb0783bd6d457edb230b1cbb6f4040e918d3339dbca9f4cb91d45",
+      "text_sha256": "0ebd60386fb6552ebe0575a82214352064f575f66f0f209cc88b4684bfbfb254",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 524
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-morele-competenties-kiezen-keuzes-maken-maken-van-een-keuze-4",
+      "wording_sha256": "b4176fe1640f2dbd0e0293d96c6244e14a597c530e022f0f10152ab543005bf2",
+      "text_sha256": "976652a121ed0aa3f099c9471b3e0de7bf0f63d81af050fb5537221516d361c3",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 530
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-morele-competenties-kiezen-keuzes-maken-zelf-willen-doen-1",
+      "wording_sha256": "5c2fd86a839c0583c013755d79620cefb9ca97e1535695a7d9991d8ef1e5b35f",
+      "text_sha256": "b2fcf3c8fc321da6979dde0920eb151d4f08aa2b4e45b71349c74b90dfebc003",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 540
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-morele-competenties-kiezen-keuzes-maken-zelf-willen-doen-2",
+      "wording_sha256": "8198b805e09d905123f154a6bfd7ffbdd700267537eb627c7ac231f16b9694c8",
+      "text_sha256": "fa9f200da61e1c40e15f53cbf1c13dacf8ddbe6842068e043d24065c0e7942f1",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 545
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-morele-competenties-kiezen-keuzes-maken-zelf-willen-doen-3",
+      "wording_sha256": "dfc45561758f50296d402205bca912701d90d11eb2d02a22db755636e4143738",
+      "text_sha256": "8c12dd99a08181b3a975320148607c45ae7a5a9d290a46515d0dd5f5bae92adf",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 551
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-morele-competenties-kiezen-keuzes-maken-zelf-willen-doen-4",
+      "wording_sha256": "7540a421e1b8fbc2477ed78f4fc235d7a1b2daa935d0382b29f06c96ef1f1700",
+      "text_sha256": "0e2c0f0e5b4e536215235140418724c80f0587a0df5283b036011f2d695b283a",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 555
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-sociale-competenties-de-ander-besef-van-de-ander-deel-uitmaken-van-een-groep-1",
+      "wording_sha256": "e6ca1185fce808c89ab15c00575aa370ae37b65d15ab6344a940464a9e7b82df",
+      "text_sha256": "ea02d87daee60fc2996e47d5a8b0c985c1584bce2cd6ccf23fce4d6b217de048",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 460
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-sociale-competenties-de-ander-besef-van-de-ander-deel-uitmaken-van-een-groep-2",
+      "wording_sha256": "1bc06b9d4be5872fa76b278bc39a0f326df60c7a68a4255305d56e279e5174f6",
+      "text_sha256": "41b320d1b979c602a4065952f1358188180dc2d0d8c105da17c5cba727a4dd8b",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 470
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-sociale-competenties-de-ander-besef-van-de-ander-inschatten-van-het-gedrag-van-een-ander-1",
+      "wording_sha256": "b4d33fea54265b810e60cfadcb9092f20884c8ddbbcd8d68f182b055a8c84961",
+      "text_sha256": "578928bdd8a6ab176a6e8e386a557634300070956e514fedf15de2ca96ece194",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 484
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-sociale-competenties-de-ander-besef-van-de-ander-inschatten-van-het-gedrag-van-een-ander-2",
+      "wording_sha256": "e2720713bd2ea5967dcdc72a8e3c56aceea1a51e38cbea9dbf384a535a2ffd87",
+      "text_sha256": "022af06bd11d694173fa1a08ae8fc2679f9561403e97270d53047d8c8c859f50",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 493
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-sociale-competenties-de-ander-besef-van-de-ander-open-staan-voor-de-emoties-van-een-ander-1",
+      "wording_sha256": "52976f956b2d2e5c49e8a7b02e0fe4bac1d6fe5b3f1c0c35838a5a498a25d9dc",
+      "text_sha256": "330ff84d99751960ded7ef6030286c60b86ff8e70649f63d24e688361b3ba915",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 422
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-sociale-competenties-de-ander-besef-van-de-ander-open-staan-voor-de-emoties-van-een-ander-2",
+      "wording_sha256": "60f94a5bb650a64373d261997e633d545983594c56a5304ded72da2cc8e947db",
+      "text_sha256": "3a9b6d3544ea5bd5dede22b174ceb328966dadbab2a96488ff4156a617cd4d26",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 432
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-sociale-competenties-de-ander-besef-van-de-ander-open-staan-voor-de-emoties-van-een-ander-3",
+      "wording_sha256": "c700a71224d0483e7e0e06bc2736c2a9519824092e35911a98028eb382557d44",
+      "text_sha256": "7ff7ceb5e5a287706244d403c1f81baca4c7e8b61ea07e9b9ea9ed69aaf54bd6",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 444
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-sociaal-emotionele-ontwikkeling-peuters-sociale-competenties-de-ander-besef-van-de-ander-open-staan-voor-de-emoties-van-een-ander-4",
+      "wording_sha256": "e6474887f354664b7ea2480a0ec7a79cf4bbe87600a4efd5fda030ddfb799a18",
+      "text_sha256": "0075bdfe88d1e08bf0b7efde967af3040ac6a87457b5d39253218cf7006dc9ae",
+      "verdict": "confirmed",
+      "note": "Limits says \"It does not say which needs or whose\"; the Dutch does say \"van anderen\". Read as \"which others\" it is right, and the gloss keeps \"of others\".",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 449
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings social-emotional-card",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.practical-life-feelings.objective.wet-kinderopvang-artikel-1-49-eerste-lid",
+      "wording_sha256": "46956773b44db7bb94cbaa42ac42340314fe1a625d52cc5a564a4b6ca8a86358",
+      "text_sha256": "dee7291a95116601db54ba5af2ed67778bcdf0a63aff0fa9c7d3249437416bc7",
+      "verdict": "confirmed",
+      "note": "Limits says the Dutch leaves open whether \"in een veilige en gezonde omgeving\" belongs to emotional safety only or to all that follows, and that the gloss keeps this open. The gloss puts the words after \"offering emotional safety to children\", which reads as the first phrase only; since Limits states the openness, a reader is not misled. Not counted as a fault.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 10227
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/practical-life-feelings legal-aims-and-world-card",
+      "round": 1
+    }
+  ],
+  "unrecorded": []
+}

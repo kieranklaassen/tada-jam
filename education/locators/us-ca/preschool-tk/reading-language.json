@@ -1,0 +1,558 @@
+{
+  "lane": "us-ca/preschool-tk/reading-language",
+  "records": [
+    {
+      "group": "Language and Literacy Development / Foundational Language Development / Strand 1.0 — Listening and Speaking",
+      "code": "1.1",
+      "title": "Understanding and Using Vocabulary",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 21,
+          "first": "Understand and use",
+          "last": "conversations, or stories",
+          "firstOccurrence": 1,
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 21,
+          "first": "Understand and use",
+          "last": "conversations, or stories",
+          "firstOccurrence": 2,
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Language and Literacy Development / Foundational Language Development / Strand 1.0 — Listening and Speaking",
+      "code": "1.2",
+      "title": "Understanding and Using Words for Categories",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 23,
+          "first": "Understand and use",
+          "last": "relationships within them",
+          "firstOccurrence": 1,
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 23,
+          "first": "Understand and use",
+          "last": "relationships within them",
+          "firstOccurrence": 2,
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Language and Literacy Development / Foundational Language Development / Strand 1.0 — Listening and Speaking",
+      "code": "1.3",
+      "title": "Understanding and Using Size and Location Words",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 25,
+          "first": "Understand and use",
+          "last": "such as \"bigger",
+          "firstOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 25,
+          "first": "Understand and use",
+          "last": "longer\" and \"between",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Language and Literacy Development / Foundational Language Development / Strand 1.0 — Listening and Speaking",
+      "code": "1.4",
+      "title": "Using Grammatical Features and Sentence Structure",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 28,
+          "first": "Use common word",
+          "last": "thoughts and ideas",
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 28,
+          "first": "Use both common",
+          "last": "thoughts and ideas",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Language and Literacy Development / Foundational Language Development / Strand 1.0 — Listening and Speaking",
+      "code": "1.5",
+      "title": "Asking Questions",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 31,
+          "first": "Use questions",
+          "last": "confirm understanding",
+          "firstOccurrence": 1,
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 31,
+          "first": "Use questions and",
+          "last": "and confirm understanding",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Language and Literacy Development / Foundational Language Development / Strand 1.0 — Listening and Speaking",
+      "code": "1.6",
+      "title": "Constructing Narratives",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 33,
+          "first": "Use language",
+          "last": "short narratives",
+          "firstOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 33,
+          "first": "Use language to",
+          "last": "or a plotline",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Language and Literacy Development / Foundational Language Development / Strand 1.0 — Listening and Speaking",
+      "code": "1.7",
+      "title": "Sharing Explanations and Opinions",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 35,
+          "first": "Share",
+          "last": "explanations",
+          "firstOccurrence": 1,
+          "lastOccurrence": 2
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 35,
+          "first": "Share detailed",
+          "last": "explanations",
+          "lastOccurrence": 3
+        }
+      ]
+    },
+    {
+      "group": "Language and Literacy Development / Foundational Language Development / Strand 1.0 — Listening and Speaking",
+      "code": "1.8",
+      "title": "Participating in Conversations",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 37,
+          "first": "Participate in back",
+          "last": "in a conversation"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 37,
+          "first": "Participate in increasingly",
+          "last": "in the conversation"
+        }
+      ]
+    },
+    {
+      "group": "Language and Literacy Development / Foundational Language Development / Strand 2.0 — Foundational Literacy Skills",
+      "code": "2.1",
+      "title": "Isolating Initial Sounds",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 42,
+          "first": "Match words that",
+          "last": "pictures or objects",
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 42,
+          "first": "Isolate and pronounce",
+          "last": "pictures or objects",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Language and Literacy Development / Foundational Language Development / Strand 2.0 — Foundational Literacy Skills",
+      "code": "2.2",
+      "title": "Recognizing and Blending Sounds",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 44,
+          "first": "When presented with",
+          "last": "pictures or objects",
+          "firstOccurrence": 1,
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 44,
+          "first": "When presented with",
+          "last": "pictures or objects",
+          "firstOccurrence": 2,
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Language and Literacy Development / Foundational Language Development / Strand 2.0 — Foundational Literacy Skills",
+      "code": "2.3",
+      "title": "Participating in Rhyming and Wordplay",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 46,
+          "first": "Recognize or",
+          "last": "or songs"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 46,
+          "first": "Produce rhyming sounds",
+          "last": "or nonsense words"
+        }
+      ]
+    },
+    {
+      "group": "Language and Literacy Development / Foundational Language Development / Strand 2.0 — Foundational Literacy Skills",
+      "code": "2.4",
+      "title": "Identifying Letters",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 50,
+          "first": "Match some letter",
+          "last": "child's first name"
+        },
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 50,
+          "first": "If learning the",
+          "last": "their printed form",
+          "firstOccurrence": 1,
+          "lastOccurrence": 3
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 50,
+          "first": "Match many",
+          "last": "printed form",
+          "lastOccurrence": 2
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 50,
+          "first": "If learning the",
+          "last": "their printed form",
+          "firstOccurrence": 2,
+          "lastOccurrence": 4
+        }
+      ]
+    },
+    {
+      "group": "Language and Literacy Development / Foundational Language Development / Strand 2.0 — Foundational Literacy Skills",
+      "code": "2.5",
+      "title": "Learning Letter–Sound Correspondence",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 52,
+          "first": "Recognize",
+          "last": "have sounds"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 52,
+          "first": "Accurately identify or",
+          "last": "of the letters",
+          "firstOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Language and Literacy Development / Foundational Language Development / Strand 2.0 — Foundational Literacy Skills",
+      "code": "2.6",
+      "title": "Understanding the Concept of Print",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 56,
+          "first": "Recognize print",
+          "last": "has meaning"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 56,
+          "first": "Identify the meaning",
+          "last": "in the environment"
+        }
+      ]
+    },
+    {
+      "group": "Language and Literacy Development / Foundational Language Development / Strand 2.0 — Foundational Literacy Skills",
+      "code": "2.7",
+      "title": "Understanding Print Conventions",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 58,
+          "first": "Display basic book",
+          "last": "of a book",
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 58,
+          "first": "Display increasingly sophisticated",
+          "last": "orientation of print",
+          "corrections": [
+            {
+              "from": "bookhandling",
+              "to": "book-handling",
+              "reason": "line-break hyphen"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Language and Literacy Development / Foundational Language Development / Strand 3.0 — Reading",
+      "code": "3.1",
+      "title": "Demonstrating Interest in Literacy Activities",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 60,
+          "first": "Demonstrate interest",
+          "last": "literacyrelated activities",
+          "firstOccurrence": 1,
+          "corrections": [
+            {
+              "from": "literacyrelated",
+              "to": "literacy-related",
+              "reason": "line-break hyphen"
+            }
+          ]
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 60,
+          "first": "Demonstrate interest in",
+          "last": "with increasing independence",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Language and Literacy Development / Foundational Language Development / Strand 3.0 — Reading",
+      "code": "3.2",
+      "title": "Understanding Stories",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 62,
+          "first": "Demonstrate basic understanding",
+          "last": "a few times"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 62,
+          "first": "Demonstrate understanding of",
+          "last": "next when asked",
+          "firstOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Language and Literacy Development / Foundational Language Development / Strand 3.0 — Reading",
+      "code": "3.3",
+      "title": "Understanding Informational Text",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 65,
+          "first": "Demonstrate basic understanding",
+          "last": "a few times",
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 65,
+          "first": "Demonstrate deeper understanding",
+          "last": "and ask questions"
+        }
+      ]
+    },
+    {
+      "group": "Language and Literacy Development / Foundational Language Development / Strand 4.0 — Writing",
+      "code": "4.1",
+      "title": "Developing Fine Motor Skills in Writing",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 68,
+          "first": "Experiment with grasp",
+          "last": "and writing tools"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 68,
+          "first": "Adjust grasp and",
+          "last": "drawing and writing",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Language and Literacy Development / Foundational Language Development / Strand 4.0 — Writing",
+      "code": "4.2",
+      "title": "Writing to Represent Sounds",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 70,
+          "first": "No foundation",
+          "last": "No foundation"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 70,
+          "first": "Write, with adult",
+          "last": "their corresponding sounds"
+        }
+      ]
+    },
+    {
+      "group": "Language and Literacy Development / Foundational Language Development / Strand 4.0 — Writing",
+      "code": "4.3",
+      "title": "Dictating Thoughts and Ideas to Be Conveyed in Writing",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 72,
+          "first": "Engage in dictating",
+          "last": "writing them down"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 72,
+          "first": "Demonstrate interest in",
+          "last": "of an adult"
+        }
+      ]
+    },
+    {
+      "group": "Language and Literacy Development / Foundational Language Development / Strand 4.0 — Writing",
+      "code": "4.4",
+      "title": "Writing to Represent Words or Ideas",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 74,
+          "first": "Write using scribbles",
+          "last": "distinct from pictures"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 74,
+          "first": "Write a few",
+          "last": "words or ideas",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Language and Literacy Development / Foundational Language Development / Strand 4.0 — Writing",
+      "code": "4.5",
+      "title": "Writing Own Name",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 76,
+          "first": "Write",
+          "last": "own name",
+          "firstOccurrence": 1,
+          "lastOccurrence": 2
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-language-literacy",
+          "page": 76,
+          "first": "Write",
+          "last": "correctly",
+          "firstOccurrence": 2
+        }
+      ]
+    }
+  ]
+}

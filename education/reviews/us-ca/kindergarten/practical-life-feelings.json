@@ -1,0 +1,1019 @@
+{
+  "lane": "us-ca/kindergarten/practical-life-feelings",
+  "verdicts": [
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-1-a",
+      "wording_sha256": "757649fb3306bfe99901a3aa77cfe491f4c13ca2b263473448e5a8c53a810c6b",
+      "text_sha256": "f7f48959b03132caa4a7dd0ca3bae5d5d70024bc98a1381e8c331562fa5227dd",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 12,
+        "offset": 187
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-1-g",
+      "wording_sha256": "de7ea06023b287e7509a2618c76a8ed6899cb86624b2c640bd017458ee791a84",
+      "text_sha256": "50ae7eee8514b566782ac715eecd72b4771cf36a19a84caffbb44e50d12bb876",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 11,
+        "offset": 26
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-1-m",
+      "wording_sha256": "3431d5d52876661c9b8ea5b03a82732b337781841084e61af571146daba020b1",
+      "text_sha256": "f0acb41752a24c6013dd0da5499dbd837a8edf00be34723c5053bcc2287b564c",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 13,
+        "offset": 13
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-1-n",
+      "wording_sha256": "fa35b6bff800f6e0c2630d5f13256135093a6d50832cbcf1d8ed5d3ffaffbb75",
+      "text_sha256": "e8314fd4c16222885f90a8c92eab95f47cc7ce1e84c8e4a9daf6a53dd5dbf5af",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 10,
+        "offset": 12
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-1-p",
+      "wording_sha256": "bd107a768bd7137027352a78f1bf8a3f5b1ec3d64b23270a9ffb3197fc986891",
+      "text_sha256": "7e0785120a379883fd8cfe86ca2f1c8f2033f4f65c9928b6bde9381783ad1e03",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 14,
+        "offset": 12
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-1-s",
+      "wording_sha256": "ca9d6d6bf77ffef6895e5a9a99011d66ec8dbfa5c451d571aef5e50d6a1a9c6f",
+      "text_sha256": "5b0b507067734d6537529e67a7d4c1f8c98c67fa7f49460166f08045b9083496",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 11,
+        "offset": 120
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-10-s",
+      "wording_sha256": "758f702714a1ae3c2538029c574a50824bc14601d8f4288935a00f5f1eeb22da",
+      "text_sha256": "1aa2f695ef1f1685e9a29c23a128a246163cd8c6f1d0b0d04b5a11f37b0d2485",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 11,
+        "offset": 234
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-11-s",
+      "wording_sha256": "0c59112353f2852616b3b018101fcc5aec875936a558aba39fff1561706a29a7",
+      "text_sha256": "a98a3925912c9438237dcab40be6411fe306a7b3f4ebef8d08e92030c3ff1f2c",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 11,
+        "offset": 249
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-12-s",
+      "wording_sha256": "1ca15a03d6d4b8ec0b724925002c19fe60d0a359b7673596bccf7165726f5448",
+      "text_sha256": "91bc0688aed9fc23a6ec6ccf7f086ef2179eb0015687a2980540e8351bf2095d",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "The record's wording ends, after its closing full stop, in a footnote marker written in line as the digit 1 in square brackets, as the export's Description cell has it. The adopted PDF (page 11) prints the same sentence, equal word for word, and directly after its closing full stop a raised (superscript) 1 with no brackets; the footnote that the marker points to stands at the foot of the same page, and the record already holds it as accompanying text. So the marker stands at the same position in both, but it is no word of the statement, and the bracketed in-line form is the export's, not the PDF's. The script reported a match at word offset 260, but that match is a coincidence: the PDF's text layer holds a control character (U+0004) at the marker, not a digit, and the record's final token (the marker digit) was matched against the first digit of the code of the next statement, which the PDF prints directly after this one. Importer matter: the marker should be taken out of the wording (the same holds for all three kindergarten rows with a footnote: K.1.12.S, K.1.13.S, K.8.1.S).",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 11
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-12-s",
+      "wording_sha256": "7a819ddc911106e7eb05321761b9cdf4f90537b605aaf593e82cf97fc3c730a2",
+      "text_sha256": "91bc0688aed9fc23a6ec6ccf7f086ef2179eb0015687a2980540e8351bf2095d",
+      "verdict": "confirmed",
+      "note": "Round 2. The fix resolved the first verdict's reason: the record's wording no longer ends in the bracketed in-line marker and now equals the sentence the adopted PDF prints on page 11, word for word, starting and ending where the record does. Seen on the page image: the PDF prints a raised 1 directly after the closing full stop; the record leaves it out, which is form. The PDF's text layer holds a control character at that position, not a digit, so the script's match at this place is now a true match of the whole sentence and no longer the coincidence the first check described. The footnote at the foot of the same page equals the record's accompanying text; only the label differs in form (a raised digit on the page, a bracketed digit in the record). Summary and Design notes are unchanged since round 1 and hold: both verbs of the statement are kept, and Limits says of the footnote only that it cites the Education Code (the footnote also points to the Glossary for the legal definition; nothing is contradicted).",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 11,
+        "offset": 260
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-13-s",
+      "wording_sha256": "567425cda3b59b9bd2161828e359b838e709824c97cbd6ccd81c0113c0d1a5c2",
+      "text_sha256": "446ec96d87ca8faa8a62ad35318d82afe5a12d33d472d3ec49bea614faf2c974",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "The record's wording ends, after its closing full stop, in a footnote marker written in line as the digit 2 in square brackets, as the export's Description cell has it. The adopted PDF (page 11) prints the same sentence, equal word for word, and directly after its closing full stop a raised (superscript) 2 with no brackets; the footnote that the marker points to stands at the foot of the same page, and the record already holds it as accompanying text. So the marker stands at the same position in both, but it is no word of the statement, and the bracketed in-line form is the export's, not the PDF's. The script did not find the record because the PDF's text layer holds a control character (U+0004) at the marker, not a digit. Importer matter: the marker should be taken out of the wording (the same holds for all three kindergarten rows with a footnote: K.1.12.S, K.1.13.S, K.8.1.S).",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 11
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-13-s",
+      "wording_sha256": "befba95bee3f234bcad41c38686ff88af0e8bf02e56c8933e0a8b080a46ea86d",
+      "text_sha256": "446ec96d87ca8faa8a62ad35318d82afe5a12d33d472d3ec49bea614faf2c974",
+      "verdict": "confirmed",
+      "note": "Round 2. The fix resolved the first verdict's reason: the record's wording no longer ends in the bracketed in-line marker and now equals the sentence the adopted PDF prints on page 11, word for word, starting and ending where the record does. Seen on the page image: the PDF prints a raised 2 directly after the closing full stop; the record leaves it out, which is form. The PDF's text layer holds a control character at that position, not a digit, so the script's match at this place is now a true match of the whole sentence and no longer the coincidence the first check described. The footnote at the foot of the same page equals the record's accompanying text; only the label differs in form (a raised digit on the page, a bracketed digit in the record). Summary and Design notes are unchanged since round 1 and hold: both cases (seeing, and hearing about) are kept, and the statement asks for the reason for telling, as Limits says. Not a near copy.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 11,
+        "offset": 270
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-2-a",
+      "wording_sha256": "2ddfe90379a373a2205a8adb699c4e854136d5f7a3497f59540c7090a7276a31",
+      "text_sha256": "cf2974a19d1cd1ab11465c98a4e39d0643b58edf124e2f449913654b3a647c87",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 12,
+        "offset": 195
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-2-g",
+      "wording_sha256": "8be0175811eb9934e33be7768432c3b5159993606afecfb24826208a3987aae6",
+      "text_sha256": "5134ee739fed0e0ed2dda7e2f662fee0d51f7998ae98f6e35baf1aa4d71d5066",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 11,
+        "offset": 36
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-2-m",
+      "wording_sha256": "bd6cd2b88e5c7feff34554dcd9720e4dd4577c9a0e8ac2785b5d1b9ee90d8786",
+      "text_sha256": "d6225ddeca8926181cb7e1cf6bd8a955e9cefdaea08901c08f8d4feac7956e7b",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 13,
+        "offset": 21
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-2-n",
+      "wording_sha256": "1df4e443ef7abf66c3b1a263e77b208fcd1897669a08da1691a9c2e6ccff42ba",
+      "text_sha256": "63b7228e6611199e61c21852d1dc834c958e106d8d54f93540b2399bbe10f649",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 10,
+        "offset": 30
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-2-p",
+      "wording_sha256": "de2cdf900a27d78b5b44bb6c8801a28dd2f951b022701edd240b93efe50ce667",
+      "text_sha256": "0eba47de892c4bcb193dab6c70caff0aaec775ca59a7c90eba0a8cc6e23d4a18",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 14,
+        "offset": 22
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-2-s",
+      "wording_sha256": "bd6f90092ad1365699a593e0478967cfbe316ea09ac471283a4e102f3d09573c",
+      "text_sha256": "6b3a984c6854f722f98d87efffdcca0df05c626d5155c7bde19d64305a7766a8",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 11,
+        "offset": 134
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-3-a",
+      "wording_sha256": "c937ca1244fd33a9d377f9f223c7941d95737ef15384f3854717c7d31a239801",
+      "text_sha256": "3c265cb01a5441e7fc78c9e6e0931471f103ab267711d65a8cc10e705f1269a3",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 12,
+        "offset": 206
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-3-g",
+      "wording_sha256": "3069b62d2a4f27da355c470a08e708cd2fe3cb081f5ec376934647d401f21b37",
+      "text_sha256": "fc7cfd3cf6e9471fe35443378b90469ca451765338046373c94a32106428c0b5",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 11,
+        "offset": 44
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-3-m",
+      "wording_sha256": "a6d31192d4a0a27cf63ee4d87b80b283c0847874d434cd4e06c2c29ceb14b083",
+      "text_sha256": "24c1c442d7b3a2a95171ae7f70e0c9614de3616b4de45d4ed9fac474375df02b",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 13,
+        "offset": 29
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-3-n",
+      "wording_sha256": "5f48a7216b8443be71d41ae35b782b244230f52833de547064d4f029ee8b296a",
+      "text_sha256": "e8ef75c97cb080a0ae1361b05b79154a8bf186fb329a1425e96cf31cca3010e8",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 10,
+        "offset": 39
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-3-p",
+      "wording_sha256": "f447be20a62d61c0655adb687844f20b7a9a612b98d5da16819f36f7dca402a1",
+      "text_sha256": "f8b1a0863a67ea536ab4f12f26344fadaec132b70cc85cc6e288bfc86f4ed363",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 14,
+        "offset": 29
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-3-s",
+      "wording_sha256": "ea90a62d89b85c617414c207d2688de11f4ca2efc83002ad287fcdcec1a90f58",
+      "text_sha256": "30d3fc80e67c8257e7678ad8863e2fff42d8bb5f7f5284d39a22c228469a03b9",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 11,
+        "offset": 140
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-4-a",
+      "wording_sha256": "d068d09a3bfd2ef74569f9c0dcfccc64708645da862bedc5009b8d043cc56769",
+      "text_sha256": "0223fc64e420e80a1e4bcf6f89c8e85552a6c39d1628f0a685cc4d72a0e87637",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 12,
+        "offset": 223
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-4-g",
+      "wording_sha256": "fc572524babbcc50a4d755722551b2ce782ebf47c3d028f44ec46f7a8beb899d",
+      "text_sha256": "b84f7880c4e48586efc697985f86561113778ebbc7676920b4019ce6f593f243",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary adds and changes scope. The standard names two things these adults promote and says neither whose they are nor that they are bodily. The Summary keeps the first, replaces the second with \"stay healthy\", and adds \"children's bodies\", which the standard does not have: it narrows the statement to children and to the body. The four example professions are kept as examples, which is right. Wording, code and Design notes are in order.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 11,
+        "offset": 61
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-4-g",
+      "wording_sha256": "fc572524babbcc50a4d755722551b2ce782ebf47c3d028f44ec46f7a8beb899d",
+      "text_sha256": "b62d7b967b14875856d7a182a37008d4e175d466cf59e1181975babfe809b691",
+      "verdict": "confirmed",
+      "note": "Round 2. The fix resolved the first verdict's reason: the Summary now keeps both things the adults promote and no longer says whose they are or that they are bodily. The four professions stay examples. Not a near copy. Wording and code equal page 11; nothing else stands in the statement's row. Limits and its two cross-references (K.3.1.S, K.3.1.M) agree with those statements. The Summary renders the standard's first verb as \"name\", as nine confirmed records of this lane do; read as \"say who they are\", not as a limit to speech.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 11,
+        "offset": 61
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-4-m",
+      "wording_sha256": "13b7cf2833be7f56af42f04a0ecb1d39ca9c4fca54fc65c754bc90bf36c3a641",
+      "text_sha256": "b820de2bd53d5947be1245bbcff5066fc16863684beb5715d40d0948d1707cad",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 13,
+        "offset": 40
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-4-n",
+      "wording_sha256": "003d9c0eda45df9e56b7e94dc4ab861988be676491705cc298cc80260f29bee5",
+      "text_sha256": "6aac279e0c6e4bcd218ce2137972477495223a871c45e1a43dd63a86bd081f21",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 10,
+        "offset": 49
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-4-p",
+      "wording_sha256": "17f54b80134013a05c77e795bbc20f262da734cacbbc8b626971bf1eda633db9",
+      "text_sha256": "e98f6741d843851eeff585291be8a2b63ddc395259041750a00cd2c2ecf00059",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 14,
+        "offset": 34
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-4-s",
+      "wording_sha256": "198ee414b220131d859bfe694568d4f46e01a91814795e6060e0513584a7d578",
+      "text_sha256": "fe381f3d282074a0a811aaf28364eb58e93b27ed9663ea451c0e0f32d008ec9b",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 11,
+        "offset": 156
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-5-a",
+      "wording_sha256": "4c2c750845a5e2114eb6f9702469baeb9c0ccec8f52cfa17c0e1158717386d87",
+      "text_sha256": "45e8eb7f3885027fd09976967f4286ae34fee6783a3d61a1cd911042284f71d6",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 12,
+        "offset": 237
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-5-g",
+      "wording_sha256": "989914a8ac63618cf384ec31701199d208bff52ee9fe6aa29b7462dd2af3d593",
+      "text_sha256": "f45b3498635ca9bf2202c4f3ccb037246bb9bb6cb318d428e3ffc497fd852fb1",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 11,
+        "offset": 80
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-5-m",
+      "wording_sha256": "79eede08a737e12b450ab8c67c179cdd256a1cf1fb63596d082c2f152f3f7f3d",
+      "text_sha256": "1d6902fa5defa103a73672171eb1c91692d5c3198e466aace9f18ff549b89915",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 13,
+        "offset": 50
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-5-p",
+      "wording_sha256": "868bbf6a2a977c75f228f311e7d18448fe26b0e889806b4e88a3c00a36fab22e",
+      "text_sha256": "581c08e6703a688f69f5fba45f18ea7b7bbcd8a788a6c3363ee016d4266e5ed5",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 14,
+        "offset": 48
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-5-s",
+      "wording_sha256": "b28afd6571d073d3b3a185c1fa1f790e9e6fac6ba776f17d6d16bd66a54e8dae",
+      "text_sha256": "8e8980aa22788ff34fe879b1b069aa8aa57532ae94b6b50329a930fb36c5faf4",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 11,
+        "offset": 165
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-6-g",
+      "wording_sha256": "bfc68e20af2cfbcc23f25fd6ad8045384059114da70e2e31e37498832a8bd59e",
+      "text_sha256": "5d3d702d86528f964eeaa9d5bffca474ae73ca2fd6f8635a87b2492544c8a654",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 11,
+        "offset": 89
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-6-s",
+      "wording_sha256": "45223cf841221b223cc1fc127349435555b27e0229167657a165e50f3a2a9704",
+      "text_sha256": "14c8b74a700f254676bf6d2a4dab3b4a8ceb44f5742b283d0837395f21a0c865",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary narrows the standard's object. The standard's rules concern other people in general; the Summary makes it how children \"treat one another\", and the Limits note states it as a limit (\"only those about how children behave toward each other\") that the official text does not state: rules about getting along with adults at school fall under the standard too. Wording and code are in order.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 11,
+        "offset": 184
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-6-s",
+      "wording_sha256": "45223cf841221b223cc1fc127349435555b27e0229167657a165e50f3a2a9704",
+      "text_sha256": "7714ed547ecfb3ba26b5e9139be0e51225781022670780009cb0abd092fa78a4",
+      "verdict": "confirmed",
+      "note": "Round 2. The fix resolved the first verdict's reason: the Summary now speaks of other people in general, and Limits no longer states a limit to children; it says the wording does not narrow the people to classmates, which is right. The statement is one short sentence, so the Summary follows its content, but its shape differs: not a near copy. Wording and code equal page 11. The cross-reference to K.1.7.S is right.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 11,
+        "offset": 184
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-7-s",
+      "wording_sha256": "a2b904d590fb7cf4c7923eded0735af50812a009e3555d24ff4c9ea22f5801db",
+      "text_sha256": "f031283d77b6a4949e2ab75089c8023cd63b88ac591c42c492a6c35091211b8b",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 11,
+        "offset": 195
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-8-s",
+      "wording_sha256": "cf8260bcc42410a8a0f868fa2a8673d63711548154049677dd659430154c10c9",
+      "text_sha256": "450d9160fa648aeb432d254439fb44f15d3f3032c16dc051c042a99f0ed759ef",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 11,
+        "offset": 203
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-1-9-s",
+      "wording_sha256": "c5df799391bcc29119d61ea06ca17e398c491a683d7870716404d85289ed8942",
+      "text_sha256": "24692e768fecf0c6ed3628d8df7028e1789b0fd6b6b0d97c01f5603b2e7f6af2",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 11,
+        "offset": 219
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-2-1-m",
+      "wording_sha256": "d3c210a95fb10f5e0dfd6e44c72f7bbf6d26b1db141ecc20f080698b70b257dd",
+      "text_sha256": "3d61a2d778318534b80113bef765d56632cd52f3a689dbc6021e44c7b6bbc607",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 13,
+        "offset": 75
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-2-1-n",
+      "wording_sha256": "1c8a6d1e94309b74f9b1b1de4c6e0f4f6bd42264d84f49f5646e810b7edd3575",
+      "text_sha256": "b7ba2f28bf5923cd6d32d2b77e2435d45696b267a151edcdfe345dad50f5e107",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 10,
+        "offset": 63
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-3-1-m",
+      "wording_sha256": "14d1e799ca5b9803330edaa4933da6a9d08bf7a02f8ee6c9e7e8f6a3704e04b4",
+      "text_sha256": "bdf3df475b55420135602912aea112a5c75cece3e3deac204d4b16ebf2f399ca",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 13,
+        "offset": 92
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-3-1-p",
+      "wording_sha256": "5ed034c63ebd20646f095c42b627c64e001fce152ef102bedb5c25c4f0b2efd1",
+      "text_sha256": "9f222d278d28fbba031b05de3ef5127e9b653bc0d290be8f3d1bb57ab21bf573",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 14,
+        "offset": 91
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-3-1-s",
+      "wording_sha256": "f6e345d6b97b6a5547caa8227048e4f3a4289c9acfd6a2fb995c4085cf389884",
+      "text_sha256": "5537cd4ec3ad15c30a84432bd8fe7d085f47e193738c830201aabeff6ccd62cd",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 12,
+        "offset": 24
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-4-1-m",
+      "wording_sha256": "a56ace6a1684bb886a2b031a74a07d7d7a45c913738c08e605f149ea50f0aa6c",
+      "text_sha256": "019a985fda145f743df0130bdc32b1c4b42b28156353785bb9991d0a3d18a89e",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 13,
+        "offset": 116
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-4-1-n",
+      "wording_sha256": "09d1d7fdb8d2021d260e432fcc92db180910f59d14cd77b53c8dcc9f84cd585e",
+      "text_sha256": "830b4a8191579972c2f7c7dafed6680b92363a1dee6ab5fb363d8fb0400e756f",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 10,
+        "offset": 98
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-4-1-p",
+      "wording_sha256": "a29802bac1542bdc050f50e5878be55dd7abaf81bd64214dec7606a4b03e9640",
+      "text_sha256": "ba685391fa00c340931d3eebd95a6fc896be2a5715f1c7020eb5bdebccc492eb",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary adds a condition: \"when something is wrong with their health\" makes the problem the child's own. The standard does not say whose problem it is (the record's Limits note itself says the wording does not say which problems are meant), so asking for help for someone else is covered too. Wording and code are in order.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 14,
+        "offset": 108
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-4-1-p",
+      "wording_sha256": "a29802bac1542bdc050f50e5878be55dd7abaf81bd64214dec7606a4b03e9640",
+      "text_sha256": "12df6a99b67aeb3218aa973d7f018ebde6c66e5dad0a140dbe5ca136b136ada2",
+      "verdict": "confirmed",
+      "note": "Round 2. The fix resolved the first verdict's reason: the Summary no longer makes the problem the child's own; it now says only that the problem has to do with health, as the standard does. Limits agrees (it says the wording names neither whom the child asks nor which problems). Wording and code equal page 14. The examples in \"In a child's hands\" are all the child's own complaints; they are examples and state no limit.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 14,
+        "offset": 108
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-4-1-s",
+      "wording_sha256": "e585a4c62dd5adabaf8eb5ddfec7b650f53de32b6b6bd279f01e882559c74db0",
+      "text_sha256": "39abbca8d238202bcab6c044f7b449d5e3ae00a2c2fbfac40d2982029d7c032d",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 12,
+        "offset": 40
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-4-2-m",
+      "wording_sha256": "35c2526974cc3158d6a768d8114a6d6fbab74d1285e64d5eb05b05133ce391bd",
+      "text_sha256": "0a2cab1c50ff02963ee9679d8d7f507b077c25d1dbfe48b94b64a320e3a3c2f5",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 13,
+        "offset": 128
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-4-2-s",
+      "wording_sha256": "c4e9ac310df53a6f025f9b06d2e2907bffb25176b21222fb61d51c864218482d",
+      "text_sha256": "297e723651167a3ab16b1e4ef876b7f14d803b94ffea098583c055710af75d57",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 12,
+        "offset": 57
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-5-1-n",
+      "wording_sha256": "f482f2ed1cafd95eabaad2f04d101fe6b59c83e48734c793aca0de7e92ab3fec",
+      "text_sha256": "02f098d6df5169bf3b7f03363a6746ecc5649c22d51cf8e1efa836d0034ffb9c",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 10,
+        "offset": 115
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-5-1-s",
+      "wording_sha256": "71a20229487d8b9e50e7da2ece470025c9ae6071fc94dcbe73bbf0b1c84463fa",
+      "text_sha256": "f7c2a7081553189c609e58029a012affd3638b79def6443664a93b94bfb3fa90",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 12,
+        "offset": 74
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-5-2-s",
+      "wording_sha256": "09c0cfe0025ab52963ccfaa07955e3092bd97fff5f21823573b550deb7ad086b",
+      "text_sha256": "ba06259148c5dc90513ba6921b926642a941cb29a82fab072cc8addc3efb3a7a",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 12,
+        "offset": 92
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-6-1-m",
+      "wording_sha256": "7ce18ffe4c3570b90cbfc9f333699a39c65adbbb8d07866234141eb4885dbb88",
+      "text_sha256": "34aaa68702ae3292f5ce21324fead0a2b3d69c14292a17da6938f51795797559",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 13,
+        "offset": 155
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-7-1-m",
+      "wording_sha256": "560b07f7e5048ad6ccf2b9922840a157aa5eb0b4ef56d88757147e561c450921",
+      "text_sha256": "705a1388a417096d7efb1ee09a7c59cabae3cf89a267dd0c771d5e98fbba6868",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 13,
+        "offset": 173
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-7-1-n",
+      "wording_sha256": "563f0d58bf95dd62501304204ad74d92a2e23c124356c4e5bd4543116a6fac49",
+      "text_sha256": "38a670aca53cd7cfc436a9af9f3271d31d63b3cddcb9ef42f03b3e17bbb11f40",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 10,
+        "offset": 151
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-7-1-p",
+      "wording_sha256": "717bd967b9b09add0532710bb457f79c1d82e3fb9deb7ddef4f180d5913a20fa",
+      "text_sha256": "431eda94d6d70353cc069879b0797a7e7faf8e3a671e59f9a794c88f1feebe14",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 14,
+        "offset": 158
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-7-1-s",
+      "wording_sha256": "e6edb5e9f4b0ecadad5ba80cf43bd0d86dd7bd4cdfb2e7cc029df0c29bb43f02",
+      "text_sha256": "11d6e7c510263d9126b645ef8c6b200e3474535285eb07d77224458b57d7bffa",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 12,
+        "offset": 135
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-7-2-m",
+      "wording_sha256": "d3721fadfa828a9335994db1a86839300d20569138e6243402844cb25bc468cc",
+      "text_sha256": "933a5fbfff7c03ebb987aa56cb85724daff4a4fd196c8e7cae1a5f79acce11ce",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 13,
+        "offset": 179
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-7-2-n",
+      "wording_sha256": "c6a475c409805285977b042ec7aac45ce848494ea2b21fc70c18ae248ed2f411",
+      "text_sha256": "263a7e727e628a22b64e8d63f5a55851272dd708598ef950b77ada04b9462981",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 10,
+        "offset": 157
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-7-2-p",
+      "wording_sha256": "9e69768484afa82c2cdfa068bdfb9d0fe701aebff839eb83e03ef62bd80f5a0f",
+      "text_sha256": "29a57e2ffaa8c54fcc8376f8e6615d03dc822e67c8b6992996cba2dce7dd1ca0",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 14,
+        "offset": 168
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-7-2-s",
+      "wording_sha256": "50b90a5733da03df32a8acb3ccaaa4562b1d47b2e4d80e8d3aacfc81a04463da",
+      "text_sha256": "99929904128d4778d92849633a96b27f18390b52f865daf2b56a635facbc05ac",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 12,
+        "offset": 146
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-8-1-m",
+      "wording_sha256": "bc6db71f0bfed67bfcd3de39015b09eb2493d7efdf2f86c2cb776b4e63ab1385",
+      "text_sha256": "fdef26d29d1e848c26fbfd1029d3ed48545ad805ed36515dfaa0bd477d17143c",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary narrows the standard's verb to speech (\"says supportive things\"), and the Limits note repeats it (\"the child's words\"). The standard's verb is not limited to words: a gesture, joining in, or the thumbs-up that the record's own \"In a child's hands\" describes also meet it. Wording and code are in order.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 13,
+        "offset": 197
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-8-1-m",
+      "wording_sha256": "bc6db71f0bfed67bfcd3de39015b09eb2493d7efdf2f86c2cb776b4e63ab1385",
+      "text_sha256": "3ed8451f5643ca940cf8de91963625c8f7d94ef3dfc2ac9e01c709a605b578df",
+      "verdict": "confirmed",
+      "note": "Round 2. The fix resolved the first verdict's reason: the Summary's verb is no longer limited to speech, and Limits now says the wording does not limit the encouragement to spoken words. Both qualities of the behaviour are kept. Wording and code equal page 13 (under the Standard 8 heading of this content area).",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 13,
+        "offset": 197
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-8-1-s",
+      "wording_sha256": "cdd96fff18c58ca09713744d0a854ef5f425d7029bd3da612c49fc48b37e2084",
+      "text_sha256": "4c1a21850af0910d1a6fdfe7c32872b6054918ebf5ae6275d824df63f54bbdbe",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "The record's wording ends, after its closing full stop, in a footnote marker written in line as the digit 3 in square brackets, as the export's Description cell has it. The adopted PDF (page 12) prints the same sentence, equal word for word, and directly after its closing full stop a raised (superscript) 3 with no brackets; the footnote that the marker points to stands at the foot of the same page, and the record already holds it as accompanying text. So the marker stands at the same position in both, but it is no word of the statement, and the bracketed in-line form is the export's, not the PDF's. The script did not find the record because the PDF's text layer holds a control character (U+0004) at the marker, not a digit. Importer matter: the marker should be taken out of the wording (the same holds for all three kindergarten rows with a footnote: K.1.12.S, K.1.13.S, K.8.1.S).",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 12
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k-8-1-s",
+      "wording_sha256": "7c9559787c7b2f23d76582a99f8a7fbde77eba70ec9c23ed76077187b331e08f",
+      "text_sha256": "4c1a21850af0910d1a6fdfe7c32872b6054918ebf5ae6275d824df63f54bbdbe",
+      "verdict": "confirmed",
+      "note": "Round 2. The fix resolved the first verdict's reason: the record's wording no longer ends in the bracketed in-line marker and now equals the sentence the adopted PDF prints on page 12, word for word, starting and ending where the record does. Seen on the page image: the PDF prints a raised 3 directly after the closing full stop; the record leaves it out, which is form. The PDF's text layer holds a control character at that position, not a digit, so the script's match at this place is now a true match of the whole sentence and no longer the coincidence the first check described. The footnote at the foot of the same page equals the record's accompanying text; only the label differs in form (a raised digit on the page, a bracketed digit in the record). Summary and Design notes are unchanged since round 1 and hold: both finders (the child, a friend) are kept.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 12,
+        "offset": 160
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.kindergarten.practical-life-feelings.objective.k7-3-n",
+      "wording_sha256": "23dc6edeba16e2771c7f5f739589c2ced7e3b79f6de10634ae4b74e743d6b380",
+      "text_sha256": "c8e3d3b47f01234799edacba2e7f35c38ef9d59fceef9741dd5f7a83ab96a1e5",
+      "verdict": "confirmed",
+      "note": "Code: the PDF prints 7.3.N under the kindergarten page header (page 10), with a dot between each part like every other code; the record's code, as the export prints it, has no dot between the grade and the first number. A punctuation difference only, treated as equal. The record's id, title and code carry the export's malformed form.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 10,
+        "offset": 164
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/practical-life-feelings",
+      "round": 1
+    }
+  ],
+  "unrecorded": []
+}

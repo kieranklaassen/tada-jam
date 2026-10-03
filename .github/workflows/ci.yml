@@ -33,6 +33,8 @@ jobs:
         run: npm run build
       - name: Egress check (built assets)
         run: npm run egress:built
+      - name: Education pack check (built assets)
+        run: npm run education:built
 
   # Plays every game's production build headless and fails on pieces passing
   # through each other (scripts/jam-intersections.mjs). Games are dealt to the
@@ -84,3 +86,22 @@ jobs:
         run: npm run lab:check
       - name: Lab build
         run: npm run lab:build
+
+  # The education pack (education/) has its own typecheck and tests. It is a
+  # development-time reference; the check job above proves none of it is built.
+  # The second step reads the real tree without the wording store: no record
+  # stale or unchecked, every frame as generated, the coverage report fresh.
+  education:
+    name: Education pack
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Education typecheck and tests
+        run: npm run education:check
+      - name: Education tree (second check, frames, coverage report)
+        run: npm run education:tree

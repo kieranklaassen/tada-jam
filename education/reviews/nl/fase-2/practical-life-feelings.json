@@ -1,0 +1,1645 @@
+{
+  "lane": "nl/fase-2/practical-life-feelings",
+  "verdicts": [
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.00c424ac-c3a3-411d-b977-f673d54bff48",
+      "wording_sha256": "97d5f580c65da8a5dc576106d19dab9b1c7e414a7fa27a08bd1cc73b597817a6",
+      "text_sha256": "4cd8bc2863459e26ba98567b9905ed72f3951dabe4c5c72062655c849707af00",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Wording, place and gloss are right: PDF \"De samenleving\" (04-2018), page 1, fase 2 column, \"(Veilige) leefomgeving\", statement 6 of 7, word for word with the printed \"(b)\" (\"discriminatie\" is underlined in the PDF); \"kennisnemen van\" is glossed as taking note of, and the neighbour ojw/ja/3/05/fase2 cited in Limits exists and says what is claimed. Notes: \"In a child's hands\", last sentence: \"A child of 7 recognises unequal treatment in a concrete case and learns one or two of the words; a child of 10 uses all five words\". A count of the goal's concepts is given as what is usual at 7 and at 10. The Dutch names the five (\"de begrippen vooroordeel, discriminatie, tolerantie, emancipatie en de vrijheid van meningsuiting\") for the whole band and sets no number per age; the record's own Limits says \"nothing says in which year\". Fix: one illustration per age without a count of words.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 1,
+        "offset": 220
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.00c424ac-c3a3-411d-b977-f673d54bff48",
+      "wording_sha256": "97d5f580c65da8a5dc576106d19dab9b1c7e414a7fa27a08bd1cc73b597817a6",
+      "text_sha256": "9f354a72426fcfda7221a38987ba5fdefb2e71b89857fcab66203b68ed5c8358",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix. Read on the page image: PDF \"De samenleving\" (04-2018), page 1, fase 2 column, \"(Veilige) leefomgeving\", statement 6 of 7, with the printed \"(b)\": word for word as the record, and nothing else stands in the dash. Round 1's reason is resolved: the age sentence no longer counts words (\"hears the word for it\" at 7; at 10 \"says how a prejudice can lead to discrimination and names an effect on a person and on a group\"). \"The five words\" on cards are the five concepts the goal itself names. The new sentence on underlining is right: \"discriminatie\" is underlined in this goal (and no other word of it), and the document's closing note is \"NB De onderstreepte begrippen verwijzen naar: Uitwerking kennisonderwerpen bij de inhoudslijnen van Oriëntatie op jezelf en de wereld (Pdf: SLO 04-2018).\"; the sentence says no more than that. The neighbour ojw/ja/3/05/fase2 exists and says what is claimed.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 1,
+        "offset": 220
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.02fa59db-ff6c-450d-b2d3-ed32bc3e10a8",
+      "wording_sha256": "d6394d347270bfa6cd6be649896f020a224f047e7f9b622c5cb0dbe32cf092b1",
+      "text_sha256": "c6a5d09fbad90dea7cb89a64bf98b2d639169285d25a299e435753f383782eb8",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"De ruimte om je heen\" (04-2018), page 2, fase 2 column, cluster \"Omgaan met het milieu\", statement 4 of 6, with \"(olie en gas)\" and \"(zon, wind en water)\": word for word as the record, and nothing else stands in the dash. The PDF underlines \"energiebronnen\": its closing note refers underlined terms to a separate document (\"Uitwerking kennisonderwerpen ...\"), which no record or frame text mentions. Limits says the statement \"does not use the words fossil, renewable or sustainable\": a remark on its vocabulary (it says \"eindig\" and \"oneindig\" and names its five sources in closed brackets), which shuts nothing out. The age sentence's \"all five sources\" are the five the statement names.",
+      "rendition": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": {
+        "page": 2,
+        "offset": 298
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.02fa59db-ff6c-450d-b2d3-ed32bc3e10a8",
+      "wording_sha256": "d6394d347270bfa6cd6be649896f020a224f047e7f9b622c5cb0dbe32cf092b1",
+      "text_sha256": "14ebcd9a658d9427314d08154c29a2b35cb11ea6f0415af0c9c4c5a3c990d222",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix. Read on the page image: PDF \"De ruimte om je heen\" (04-2018), page 2, fase 2 column, \"Omgaan met het milieu\", statement 4 of 6, with \"(olie en gas)\" and \"(zon, wind en water)\": word for word as the record, and nothing else stands in the dash. Limits now gives the statement's own words, finite (*eindig*) and infinite (*oneindig*), and no longer lists words and sources the statement lacks; \"no other source is named\" is true. The age sentence no longer has \"all five\". The PDF underlines \"energiebronnen\" in this goal; this record has no sentence on it, where four other records of the lane now have one.",
+      "rendition": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": {
+        "page": 2,
+        "offset": 298
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.06bf9fad-a53c-480d-a217-a7dda683fe3e",
+      "wording_sha256": "37853fd2ee909924882ca50bb9fd807adf9533876a0e3396933079ca96d229be",
+      "text_sha256": "8d112927f1c2391b06646da6d187ff4845acc3e774b8434869dde9c842d67d72",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 1, fase 2 column, cluster \"Samen leven en samenwerken\", statement 3 of 15, with the three pairs joined by hyphens between spaces and \"(weerbare houding)\": word for word as the record, and nothing else stands in the dash. *zelfbewuste* is kept with both readings; the three pairs and the bracket are all in the gloss.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 307
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.1243d4a1-ce87-44ee-b779-75d445e02fbf",
+      "wording_sha256": "f9a430a99e5a2d2ab6841b37552ec18b9fdb5a0bcc37d5c1bae4c31dba6a25eb",
+      "text_sha256": "b018a9ec540c292245e4bbc244a5a6dd549b68382047d7ec70637c34b2d0d117",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Wording, place and gloss are right: PDF \"Jezelf en de ander\" (12-2018), page 1, fase 2 column, \"Samen leven en samenwerken\", statement 2 of 15, word for word with \"(zelfvertrouwen)\"; *zelfbewust* is kept with both readings (self-aware, self-assured), which the word has. Notes: \"In a child's hands\", last sentence: \"A child of 7 names what he or she likes and can do, mostly things that can be seen\". The frequency word \"mostly\" gives what is usual at 7 as a norm for the age; the Dutch (\"verkennen van de eigen kenmerken, mogelijkheden, beperkingen en voorkeuren ...\") is an offer for the whole band and gives none. Fix: show one child (for example a child of 7 who names things that can be seen) without \"mostly\".",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 291
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.1243d4a1-ce87-44ee-b779-75d445e02fbf",
+      "wording_sha256": "f9a430a99e5a2d2ab6841b37552ec18b9fdb5a0bcc37d5c1bae4c31dba6a25eb",
+      "text_sha256": "70db0a49009b5e1de555e7b422ba833ccbc751ff9986d247382812f4c8b23b74",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix. Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 1, fase 2 column, \"Samen leven en samenwerken\", statement 2 of 15, with \"(zelfvertrouwen)\": word for word as the record, and nothing else stands in the dash. Round 1's reason is resolved: \"mostly\" is gone from the age sentence. *zelfbewust* stays open (self-aware or self-assured).",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 291
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.1b4e5316-2934-42d8-91a8-feb3bdd3d0e1",
+      "wording_sha256": "816d7c2fe7b74755ee13d075e1cffef4c9f18b03e3ab9f600679c9ce9820b3de",
+      "text_sha256": "70c7e9d4a1e84b31339d04abdcd339f8d4d9a341e7abce5a0f7c57dc1fa2b950",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 1, fase 2 column, cluster \"Gevoelens, wensen en opvattingen\", statement 8 of 8: word for word as the record, and nothing else stands in the dash. Gloss faithful. The age sentence sets a bare singular against a plural (\"listens to one other answer\" at 7); it is the pack's illustration and is noted, not counted, as in the sister lanes.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 263
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.1b4e5316-2934-42d8-91a8-feb3bdd3d0e1",
+      "wording_sha256": "816d7c2fe7b74755ee13d075e1cffef4c9f18b03e3ab9f600679c9ce9820b3de",
+      "text_sha256": "1532d10e237f062f19c22cd39d7bfbab62101c643b150151c9b2adde1e01678c",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix. Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 1, fase 2 column, \"Gevoelens, wensen en opvattingen\", statement 8 of 8: word for word as the record, and nothing else stands in the dash. The age sentence no longer has \"one other answer\" and \"without one answer\": a child of 10 \"accepts that the talk ends with the question still open\", which is what \"zonder vaststaande antwoorden ... aan het eind te verwachten\" names.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 263
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.1b953ede-d4cd-45c5-b944-6058cff12106",
+      "wording_sha256": "635410121c02d94b7678887799d7f297ec3e1566c13980185708c821ea71686a",
+      "text_sha256": "019f392ab33db4ef2fb94d975d1e28246ff6321c6544c0636df67fbf03dfed7d",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 1, fase 2 column, cluster \"Samen leven en samenwerken\", statement 5 of 15: word for word as the record, and nothing else stands in the dash. The \"(b)\" is printed; the PDF's first page has the legend \"NB Aspecten die betrekking hebben op burgerschap zijn met (b) aangegeven\"; the gloss keeps it and Limits has the fixed sentence. *onderkennen* is kept beside \"recognising\"; the neighbour ojw/ds/1/06/fase2 exists and is about the concepts.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 339
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.2534881f-17f5-4ee5-b5d4-74781bfdac16",
+      "wording_sha256": "449d67c5a3c83124e8af86d238f9afa895151174fb00bfb9ae4312ddd46a40c5",
+      "text_sha256": "3119bf9e6bf1f51583f4f575365a06290b98d8d5b2211090999e86122f1ce50b",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Wording, place and gloss are right: PDF \"Jezelf en de ander\" (12-2018), page 2, fase 2 column, \"Relaties en seksualiteit*\", statement 5 of 6, word for word (the fase 3 column prints the same goal; the fase 2 place is chosen); Limits rightly says the text names no acts, persons or situations, names nobody to ask for help and sets no level of detail. Notes: \"In a child's hands\" goes past that. The Dutch is \"bespreken wat seksueel misbruik inhoudt en op welke manier hulp te vragen is\": the verb is discussing. The illustration gives a script, advice and a scenario as if they were the goal: \"The child names adults he or she trusts and would tell, and practises words for asking for help. A child of 7 practises saying no and telling a trusted adult, and telling a second adult if the first does not listen; a child of 10 can also name more than one person to ask for help.\" Saying no, a trusted adult, a second adult when the first does not listen and a number of persons are in no word of the statement. Fix: show the discussion only (the child hears and says what it is and that there are ways to ask for help), with no sentence to say, nobody to tell and no count.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 352
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.2534881f-17f5-4ee5-b5d4-74781bfdac16",
+      "wording_sha256": "449d67c5a3c83124e8af86d238f9afa895151174fb00bfb9ae4312ddd46a40c5",
+      "text_sha256": "721c7deb5b524e4bca172c02a30b7931a0f1be2e8d7c2ee1ef141fd53aa9ee95",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Round 2, after the fix. Wording, place and gloss are right: PDF \"Jezelf en de ander\" (12-2018), page 2, fase 2 column, \"Relaties en seksualiteit*\", statement 5 of 6, \"bespreken wat seksueel misbruik inhoudt en op welke manier hulp te vragen is\", word for word, and nothing else stands in the dash (the fase 3 column prints the same goal; the place in the fase 2 column is taken). Round 1's reason is resolved in \"In a child's hands\", which now shows only the discussion: no sentence to say, nobody to tell, no count. \"Common mistakes\", which the fix left as it was, goes past the goal in all three sentences. \"Children think abuse comes only from strangers and that a known or liked person cannot do it\": a claim about who does harm. \"They think a child who did not say no, or who kept it secret, is to blame\": a claim about blame, with saying no and secrecy as a scenario. \"They think that a secret an older person asked them to keep must be kept, and that telling is a betrayal\": a scenario of harm and, by implication, the advice to tell. The Dutch names none of this, and the record's own Limits says the statement \"names no acts, persons or situations, names nobody to ask for help\". Fix: mistakes about the discussion only (for example that children do not know that help can be asked for), with no person, no blame and no secret.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 352
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.2534881f-17f5-4ee5-b5d4-74781bfdac16",
+      "wording_sha256": "449d67c5a3c83124e8af86d238f9afa895151174fb00bfb9ae4312ddd46a40c5",
+      "text_sha256": "0cea0645e40860374897f972d1e8b61b8aced696976ec3534003ae06dc5817d4",
+      "verdict": "confirmed",
+      "note": "Round 3, after the second fix. Read again on the page image: PDF \"Jezelf en de ander\" (12-2018), page 2, \"Relaties en seksualiteit*\", \"bespreken wat seksueel misbruik inhoudt en op welke manier hulp te vragen is\", word for word as the record, and nothing else stands in the dash. The PDF prints the goal in the fase 2 column (statement 5 of 6, offset 352) and in the fase 3 column (offset 574); the place given is the printing in the fase 2 column. The gloss is faithful. Round 2's reason is resolved: Common mistakes no longer says who does harm, who is to blame or what to do with a secret; it now has the fixed opening and two sentences about the discussion itself (children do not know that help can be asked for, or in what way; many have not heard the words *seksueel misbruik*), with no person, blame, scenario or advice. \"In a child's hands\" shows only the discussion (hearing what it is and in what way help can be asked for, and saying both in the child's own words): no sentence to say, nobody to tell, no acts, no count, as Limits says the statement names none. The age sentence, which the fix left (\"A child of 7 listens and answers when asked; a child of 10 also asks the questions he or she has\"): listening, answering and asking are the verb \"bespreken\"; no question is put in a child's mouth, being asked is no help set against working alone (\"also\" keeps the older child in the same talk), and no count, duration or norm word stands at either age. Judged within rulings 5, 8 and 9. Ruling 11: the fase 3 column prints this same goal, and nothing of the other fase 3 goals of the cluster is shown.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 352
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.267ec21f-6881-4e3b-a8bb-671114cf237d",
+      "wording_sha256": "41f9413bac5a59d58d211ec565c1bedb96ea2c02a44139d5a008e905987d2cf4",
+      "text_sha256": "159181c103aabed3cebebcea661a3288e32e51050afb4eba230649b0a20e8abe",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 1, fase 2 column, cluster \"Gevoelens, wensen en opvattingen\", statement 3 of 8: word for word as the record, and nothing else stands in the dash. The \"(b)\" is printed; the PDF's first page has the legend \"NB Aspecten die betrekking hebben op burgerschap zijn met (b) aangegeven\"; the gloss keeps it and Limits has the fixed sentence. The PDF prints \"beleeft\" (page image and text layer: \"hetzelfde beleeft worden (b)\"), a slip for \"beleefd\" that the record reproduces and Limits reports. \"ervaren\" is glossed as experiencing.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 193
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.284ae535-68ed-48d7-a57c-e9b99c17ee9a",
+      "wording_sha256": "adf405ab4271730fa187428401a57011e245a8b322890827033f10eda67df3df",
+      "text_sha256": "4e6fd911bf6c8ba9585d007eca7d1f43b3dc9eec99122ea7ca76a000b84b087d",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"Planten, dieren en de mens\" (04-2018), page 3, fase 2 column, cluster \"Gezondheid en hygiëne\", statement 7 of 9, with \"(chronisch)\" after \"ziekte\": word for word as the record, and nothing else stands in the dash. Gloss faithful.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 3,
+        "offset": 193
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.2bee219f-da35-4089-afd7-5cc10e508945",
+      "wording_sha256": "bb36a55105749df97f8665b4cdb3f237a25708a9bd67a2d4d331c0ed2df50b69",
+      "text_sha256": "f4f8e33e894da2e55362c55ecdea38aef9a011982dd6afcc06cc37b4cf8dd765",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 2, fase 2 column, cluster \"Samen leven en samenwerken\", statement 13 of 15: word for word as the record, and nothing else stands in the dash. The \"(b)\" is printed; the PDF's first page has the legend \"NB Aspecten die betrekking hebben op burgerschap zijn met (b) aangegeven\"; the gloss keeps it and Limits has the fixed sentence. The same goal is also printed in the fase 1 column (page 1, the script's first place) and in the fase 3 column (page 2); the place in the fase 2 column is taken here. The age sentence sets a bare singular against a plural (\"can say what one of them is for\" at 7); it is the pack's illustration and is noted, not counted, as in the sister lanes.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 245
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.2bee219f-da35-4089-afd7-5cc10e508945",
+      "wording_sha256": "bb36a55105749df97f8665b4cdb3f237a25708a9bd67a2d4d331c0ed2df50b69",
+      "text_sha256": "3d912ae62c6bab1d4f2899fa9aa5aec179fcbd7aeb488dd59ce5db7b28896154",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix. Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 2, fase 2 column, \"Samen leven en samenwerken\", statement 13 of 15, with the printed \"(b)\": word for word as the record, and nothing else stands in the dash. The same goal is printed in the fase 1 column (page 1, the script's first place) and in the fase 3 column (page 2); the place in the fase 2 column is taken. The age sentence no longer has \"one of them\": a child of 7 \"can say what a rule is for\".",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 245
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.2e948105-5608-4b0d-841e-120ea841b914",
+      "wording_sha256": "3fbcba4518c9a458b924c58964de51d6456fca7b2a446f590236ae1c07cfd624",
+      "text_sha256": "f6df458a22b314995bf6bd67386be255ea54af38a0d4aec8f957043126b05471",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 1, fase 2 column, cluster \"Gevoelens, wensen en opvattingen\", statement 6 of 8: word for word as the record, and nothing else stands in the dash. The \"(b)\" is printed; the PDF's first page has the legend \"NB Aspecten die betrekking hebben op burgerschap zijn met (b) aangegeven\"; the gloss keeps it and Limits has the fixed sentence. The neighbour ojw/ja/3/08/fase2 exists and says what is claimed. The age sentence sets a bare singular against a plural (\"proposes one way\" at 7); it is the pack's illustration and is noted, not counted, as in the sister lanes.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 230
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.2e948105-5608-4b0d-841e-120ea841b914",
+      "wording_sha256": "3fbcba4518c9a458b924c58964de51d6456fca7b2a446f590236ae1c07cfd624",
+      "text_sha256": "59257edd5ff316d3bddb1607fca48243d2466b831a088c28037d167e370c368c",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix. Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 1, fase 2 column, \"Gevoelens, wensen en opvattingen\", statement 6 of 8, with the printed \"(b)\": word for word as the record, and nothing else stands in the dash. The age sentence no longer has \"one way\": a child of 7 \"proposes a way to go on\", a child of 10 \"says whether it was interests, views or feelings that were opposed\", the three the goal names. The neighbour ojw/ja/3/08/fase2 exists and says what is claimed.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 230
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.3587a951-30f1-4d44-8db2-89dba3840830",
+      "wording_sha256": "d8c5f75bb3bc5909dfec0ad7469bc17f598d3e78447f9e12dc946a3ccc86550d",
+      "text_sha256": "9b9a94df0e0d896212dbe567d4cbed311d671c1acefeb15f402f3a003598d695",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Wording, place and gloss are right: PDF \"Jezelf en de ander\" (12-2018), page 1, fase 2 column, \"Samen leven en samenwerken\", statement 6 of 15, word for word (the fase 3 column prints the same words followed by \"(werkhouding)\"; the fase 2 place is chosen, where nothing follows). Notes: \"In a child's hands\", last sentence: \"A child of 7 works alone on one short task; a child of 10 plans several tasks over a day or a week\". A number of tasks, a task length and a span of time are given as what is usual at 7 and at 10, although the Dutch (\"zelfstandig uitvoeren van taken/zelfstandig werken\") gives none and the record's own Limits says it names \"no tasks, no length of time and no degree of help\". Fix: one illustration per age without a count of tasks and without a span of time.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 351
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.3587a951-30f1-4d44-8db2-89dba3840830",
+      "wording_sha256": "d8c5f75bb3bc5909dfec0ad7469bc17f598d3e78447f9e12dc946a3ccc86550d",
+      "text_sha256": "722b5d6d0b937684d181b2872ac315c316f81d7dd7a7af5dd744c40dea018c73",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix. Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 1, fase 2 column, \"Samen leven en samenwerken\", statement 6 of 15, \"zelfstandig uitvoeren van taken/zelfstandig werken\": word for word as the record, and nothing follows it there (the fase 3 column prints the same words followed by \"(werkhouding)\"; the place in the fase 2 column is taken). Round 1's reason is resolved: the age sentence no longer has a count of tasks, a task length or a span of time. Noted, not counted: the first sentence of the illustration still has \"the task for the day or week\" beside a Limits that says the statement names \"no length of time\"; it names the kind of task card in one scene and sets no length as what the goal asks.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 351
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.3587a951-30f1-4d44-8db2-89dba3840830",
+      "wording_sha256": "d8c5f75bb3bc5909dfec0ad7469bc17f598d3e78447f9e12dc946a3ccc86550d",
+      "text_sha256": "e301824d2e029ee900f829b1e6de708e2f0f4c6461719a0722503a15a293b877",
+      "verdict": "confirmed",
+      "note": "Round 3, after the second fix. Read again on the page image: PDF \"Jezelf en de ander\" (12-2018), page 1, fase 2 column, \"Samen leven en samenwerken\", statement 6 of 15, \"zelfstandig uitvoeren van taken/zelfstandig werken\", word for word as the record, and nothing follows it there. The fase 3 column prints the same words followed by \"(werkhouding)\" (offset 586); the place given is the printing in the fase 2 column (offset 351). The gloss is faithful and keeps the slash. The remark of round 2 is met: the first sentence now has \"the task on the card\", with no day or week, so nothing stands against the Limits (\"no length of time\"). The age sentence shows two instances of the goal (carrying out a task that was set and working on while the teacher is busy with others: \"zelfstandig uitvoeren van taken\"; choosing the order of the work and recording what is done: \"zelfstandig werken\"), with no count, duration or norm word. Ruling 9: the goal has no words of help; no help is given to either age (at 7 the teacher is busy with others), and \"himself or herself\" at 10 is the goal's own \"zelfstandig\", not working alone set against help. Ruling 11: the fase 3 column adds \"(werkhouding)\" and has \"uitvoeren van taken in een groep: plannen maken en de uitvoering organiseren (b)\"; the record shows a child's own work, no group task and no plan for a group. Limits is right.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 351
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.3b58576c-de40-454f-badc-2ce9d5df0a0a",
+      "wording_sha256": "0c26cce92ee2bb94b01776c12ecb2012ebf277e96313300fd0675fb69eb8dd1c",
+      "text_sha256": "1823499f9f1c4a533ba2679552e6e784f3e1b5f4d550011c259b17d2e25814ed",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"De ruimte om je heen\" (04-2018), page 2, fase 2 column, cluster \"Omgaan met het milieu\", statement 5 of 6: word for word as the record, and nothing else stands in the dash. The PDF underlines \"duurzame\": its closing note refers underlined terms to a separate document (\"Uitwerking kennisonderwerpen ...\"), which no record or frame text mentions. The statement is five words, as Limits says; Limits says it does not say what \"duurzaam\" covers: true of the statement.",
+      "rendition": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": {
+        "page": 2,
+        "offset": 316
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.3b58576c-de40-454f-badc-2ce9d5df0a0a",
+      "wording_sha256": "0c26cce92ee2bb94b01776c12ecb2012ebf277e96313300fd0675fb69eb8dd1c",
+      "text_sha256": "d01c3085ab0327ae4dbc97bdf0f0b12a3d16e735f6eb0e8fd998530eebf00d3d",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix. Read on the page image: PDF \"De ruimte om je heen\" (04-2018), page 2, fase 2 column, \"Omgaan met het milieu\", statement 5 of 6, \"werken aan een duurzame samenleving\" (five words, as Limits says): word for word as the record, and nothing else stands in the dash. The new sentence on underlining is right: \"duurzame\" is underlined in this goal, and the document's closing note is \"NB De onderstreepte begrippen verwijzen naar: Uitwerking kennisonderwerpen bij de inhoudslijnen van Oriëntatie op jezelf en de wereld (Pdf: SLO 04-2018).\"; the sentence says no more than that. \"In a week\" and \"one change\" in the body describe one scene, and the Limits sets no number or time against them.",
+      "rendition": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": {
+        "page": 2,
+        "offset": 316
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.42cbadbe-60a5-4eba-8e52-81dd50d07db0",
+      "wording_sha256": "69ac0ac524ad0d815ff97696ce226051dc8563a3c545c43d3bb63e227042843d",
+      "text_sha256": "107b3c8e4d2fe137068eb54c859e55702a06520767978e964ea5ef1b3fff7c71",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 1, fase 2 column, cluster \"Gevoelens, wensen en opvattingen\", statement 4 of 8: word for word as the record, and nothing else stands in the dash. The \"(b)\" is printed; the PDF's first page has the legend \"NB Aspecten die betrekking hebben op burgerschap zijn met (b) aangegeven\"; the gloss keeps it and Limits has the fixed sentence. The age sentence sets a bare singular against a plural (\"an opinion and one reason\" at 7); it is the pack's illustration and is noted, not counted, as in the sister lanes.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 206
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.42cbadbe-60a5-4eba-8e52-81dd50d07db0",
+      "wording_sha256": "69ac0ac524ad0d815ff97696ce226051dc8563a3c545c43d3bb63e227042843d",
+      "text_sha256": "18e03e8785fe48e2ca1027d45f0b106af220bc4f41929303db3a5f752e8ca9cd",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix. Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 1, fase 2 column, \"Gevoelens, wensen en opvattingen\", statement 4 of 8, with the printed \"(b)\": word for word as the record, and nothing else stands in the dash. The age sentence no longer has \"one reason\" or \"finds it hard\": a child of 7 \"says what he or she thinks and why, and hears that a friend thinks otherwise\".",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 206
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.477f84c2-f879-403e-9722-2cd9d2aec4ed",
+      "wording_sha256": "69bbe71bd22483236a76bce84516c8f5c08567bbf96087735799756e7887609e",
+      "text_sha256": "ed019ef4f7bb51487075ac45572eae7f9ed3165b6cb6d94d6f94656757e5f854",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 2, fase 2 column, cluster \"Samen leven en samenwerken\", statement 10 of 15: word for word as the record, and nothing else stands in the dash. Gloss faithful (\"sterk wordt beïnvloed\" as strongly influenced); the neighbour ojw/ja/3/09/fase2 exists and says what is claimed.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 183
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.481e8251-52ce-4a5c-baf2-b22e180ba4e9",
+      "wording_sha256": "1f76655e6a74bc20b4612012e1073942854f35d0ceed92141647d48b3fcaee46",
+      "text_sha256": "8b4a51af0b8b03f7945c991e9528d7761e9743f716eaf6fcd978b27bf4aea868",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"Planten, dieren en de mens\" (04-2018), page 3, fase 2 column, cluster \"Gezondheid en hygiëne\", statement 9 of 9: word for word as the record, and nothing else stands in the dash. \"kennismaken met\" is glossed as getting to know, and Limits says it is not mastery and that no safety condition is stated: right; the neighbour ojw/pdm/2/08/fase2 exists.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 3,
+        "offset": 216
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.481e8251-52ce-4a5c-baf2-b22e180ba4e9",
+      "wording_sha256": "1f76655e6a74bc20b4612012e1073942854f35d0ceed92141647d48b3fcaee46",
+      "text_sha256": "b2083c3691b50f9e753cc7077f80ec93fe890a7e5d474897830776e806cfe427",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix. Read on the page image: PDF \"Planten, dieren en de mens\" (04-2018), page 3, fase 2 column, \"Gezondheid en hygiëne\", statement 9 of 9, \"kennismaken met eenvoudige eerste-hulpvaardigheden\": word for word as the record, and nothing else stands in the dash. The age sentence no longer has \"a few\". Practising what to say when calling for help is here an instance of what the goal names (a first-aid skill). The neighbour ojw/pdm/2/08/fase2 exists and says what is claimed.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 3,
+        "offset": 216
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.48c4dd97-a981-4176-9922-ccbb5aef5ff8",
+      "wording_sha256": "38b23907e5d43c6c51f8a7b2df574bfac93f6bb75c175c86e07f70430b4d253b",
+      "text_sha256": "15ecdd0864fd4bb49385e2fd73fea6de20ceb306bead6f6481aae84eed16ef4a",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 1, fase 2 column, cluster \"Gevoelens, wensen en opvattingen\", statement 2 of 8: word for word as the record, and nothing else stands in the dash. The fase 3 column prints the same goal; the fase 2 place is chosen. Gloss faithful. The age sentence sets a bare singular against a plural (\"in one sentence when asked\" at 7); it is the pack's illustration and is noted, not counted, as in the sister lanes.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 180
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.48c4dd97-a981-4176-9922-ccbb5aef5ff8",
+      "wording_sha256": "38b23907e5d43c6c51f8a7b2df574bfac93f6bb75c175c86e07f70430b4d253b",
+      "text_sha256": "74d51a449855cdb152e483ce03d7bb99fe3d7395b76cd01ae6ee1aa108760919",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix. Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 1, fase 2 column, \"Gevoelens, wensen en opvattingen\", statement 2 of 8: word for word as the record, and nothing else stands in the dash. The fase 3 column prints the same goal; the place in the fase 2 column is taken. The age sentence no longer has \"in one sentence\"; the ages differ in kind (a feeling and its cause when asked; feeling apart from view, with words and a moment chosen for the listener).",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 180
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.48dc0a15-2b4a-47d9-b33b-2ff381ab3523",
+      "wording_sha256": "5a824678c6dbea652e511bae0029690995f55c38461599bd87d682aa33a25e8c",
+      "text_sha256": "d5bb7d3e9944f3021d6f3c93d2dd965059557c8a67eeb34f87d054136bc9c4bd",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"Planten, dieren en de mens\" (04-2018), page 3, fase 2 column, cluster \"Gezondheid en hygiëne\", statement 6 of 9: word for word as the record, and nothing else stands in the dash. Gloss faithful; Limits says it is telling and listening, not knowledge.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 3,
+        "offset": 188
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.49d80219-9057-4dd2-bc77-3df483e09339",
+      "wording_sha256": "a42374f1b1f3716b82201e45b2c88ef37cae76a3f94bb894d42db88d6d6a6bda",
+      "text_sha256": "61da82573b3c48634160c3f8bc70080206fed13f7554ada73cd34e6b6ddb720f",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Wording, place and gloss are right: PDF \"De samenleving\" (04-2018), page 1, fase 2 column, \"(Veilige) leefomgeving\", statement 2 of 7, word for word with \"(oorlog, identiteit, natuurrampen)\" (the three words are underlined: the PDF's closing note refers underlined terms to a separate document, \"Uitwerking kennisonderwerpen ...\"). Limits, last sentence: \"It does not mention the journey, asylum or arrival in another country.\" The Dutch is \"bewust worden dat mensen om verschillende redenen vluchten uit hun eigen land\": the journey is the fleeing itself and falls inside \"vluchten uit hun eigen land\", so singled out the sentence reads as a limit the wording does not set (the record's own illustration starts from the story of a child who had to leave home). Asylum and arrival come after the flight and can stay. Fix: say that the statement is about the fact of fleeing and its reasons and names nothing of what follows the flight. (The age sentence's \"names more than one reason\" follows the goal's own \"verschillende redenen\" and is not counted.)",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 1,
+        "offset": 162
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.49d80219-9057-4dd2-bc77-3df483e09339",
+      "wording_sha256": "a42374f1b1f3716b82201e45b2c88ef37cae76a3f94bb894d42db88d6d6a6bda",
+      "text_sha256": "4c015626a5483ffa9ccdd7c39f8f985ca28ade9c0ae2664bd4a621cc14c1662b",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix. Read on the page image: PDF \"De samenleving\" (04-2018), page 1, fase 2 column, \"(Veilige) leefomgeving\", statement 2 of 7, with \"(oorlog, identiteit, natuurrampen)\": word for word as the record, and nothing else stands in the dash. Round 1's reason is resolved: Limits now says the statement \"is about the fact that people flee and the reasons for it, and names nothing of what follows the flight\", which is true of \"bewust worden dat mensen om verschillende redenen vluchten uit hun eigen land\". The new sentence on underlining is right: each of the three words in the brackets is underlined in this goal, and the document's closing note is \"NB De onderstreepte begrippen verwijzen naar: Uitwerking kennisonderwerpen bij de inhoudslijnen van Oriëntatie op jezelf en de wereld (Pdf: SLO 04-2018).\"; the sentence says no more than that. The age sentence has no count (\"names different reasons\" follows the goal's \"verschillende redenen\").",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 1,
+        "offset": 162
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.4de8ea04-b609-4429-810d-7f2d1cdbafb1",
+      "wording_sha256": "f1957d0aa3666de473f49433a5fd63c3a02eb5e6674dc6df0ff5229df2034f01",
+      "text_sha256": "44af6f5f5eb9dfda85b474ac8f965f2cc7f4edb84be72fdf964f7e4ea0a53d0f",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"De ruimte om je heen\" (04-2018), page 2, fase 2 column, cluster \"Omgaan met het milieu\", statement 2 of 6: word for word as the record, and nothing else stands in the dash. The PDF underlines \"milieu\" inside its quotation marks: its closing note refers underlined terms to a separate document (\"Uitwerking kennisonderwerpen ...\"), which no record or frame text mentions. \"zoals milieuvervuiling\" is still an example in the gloss and in Limits.",
+      "rendition": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": {
+        "page": 2,
+        "offset": 272
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.4de8ea04-b609-4429-810d-7f2d1cdbafb1",
+      "wording_sha256": "f1957d0aa3666de473f49433a5fd63c3a02eb5e6674dc6df0ff5229df2034f01",
+      "text_sha256": "055ab6f10c0dff07177de319285906a6190b96ca7a26f7527121ff4f57fc284d",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix. Read on the page image: PDF \"De ruimte om je heen\" (04-2018), page 2, fase 2 column, \"Omgaan met het milieu\", statement 2 of 6: word for word as the record, and nothing else stands in the dash. The age sentence no longer has \"several kinds\". \"zoals milieuvervuiling\" is still an example in the gloss and in Limits. The PDF underlines \"milieu\" inside its quotation marks; this record has no sentence on it, where four other records of the lane now have one.",
+      "rendition": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": {
+        "page": 2,
+        "offset": 272
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.57e9a0fa-385d-4d36-a964-381fd354a50c",
+      "wording_sha256": "99a228738c87e9cf0a947e9919598ac8388dd32f02f287b3575edf34733b954e",
+      "text_sha256": "347929a1aac302e05ecee27c78227569d5f7893d18748bad3e13baee86383d96",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Wording and place are right: PDF \"Jezelf en de ander\" (12-2018), page 1, fase 2 column, \"Samen leven en samenwerken\", statement 1 of 15, word for word with \"(zelfstandigheid)\". Notes: \"In a child's hands\", last sentence: \"A child of 7 looks for a place beside one or two friends and needs an adult when excluded\". A count (\"one or two friends\") and what a child of 7 \"needs\" are given as a norm for the age; the Dutch (\"vinden en houden van een eigen plek binnen de (eigen) groep (zelfstandigheid)\") names no number of friends and no adult, and the record's own Limits says it names \"no situations and no behaviour\". Fix: show one child at each age without the count and without \"needs\". Smaller, for the same pass: the gloss has \"within one's (own) group\" for \"binnen de (eigen) groep\"; \"one's\" already makes the group the child's own, where Limits says the brackets leave open \"whether any group or the child's own group is meant\": \"within the (own) group\" keeps it open.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 279
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.57e9a0fa-385d-4d36-a964-381fd354a50c",
+      "wording_sha256": "99a228738c87e9cf0a947e9919598ac8388dd32f02f287b3575edf34733b954e",
+      "text_sha256": "e4164b5c0471c656693a4935a4158315e353b558d1a00c0b36b25027b722c341",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix. Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 1, fase 2 column, \"Samen leven en samenwerken\", statement 1 of 15, with \"(zelfstandigheid)\": word for word as the record, and nothing else stands in the dash. Round 1's reason is resolved: the age sentence no longer has \"one or two friends\" or \"needs an adult\" (a child of 7 \"asks to join a game and plays along in it\"; a child of 10 \"keeps a place in a group task while holding to his or her own view\"). The gloss now has \"within the (own) group (*de (eigen) groep*)\", which leaves open what the brackets leave open, as Limits says.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 279
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.5a82ef6a-dd10-4043-9079-4e3496f50b4b",
+      "wording_sha256": "14d055618679702a7b29453c406e912b280191266f94063a3b9b265214b4bb36",
+      "text_sha256": "d89b437656470eaf889401d972210d69384f8d54fc9f7e76d3f30851ae934155",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 2, fase 2 column, cluster \"Samen leven en samenwerken\", statement 8 of 15 (the cluster runs on at the top of page 2 without a repeated heading): word for word as the record, and nothing else stands in the dash. The \"(b)\" is printed; the PDF's first page has the legend \"NB Aspecten die betrekking hebben op burgerschap zijn met (b) aangegeven\"; the gloss keeps it and Limits has the fixed sentence. \"verwoorden\" is glossed as putting into words; the neighbour ojw/ja/1/06/fase2 exists and says what is claimed. The age sentence sets a bare singular against a plural (\"gives one solution\" at 7, \"several solutions\" at 10); it is the pack's illustration and is noted, not counted, as in the sister lanes.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 153
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.5a82ef6a-dd10-4043-9079-4e3496f50b4b",
+      "wording_sha256": "14d055618679702a7b29453c406e912b280191266f94063a3b9b265214b4bb36",
+      "text_sha256": "d62e428bc61c03d3faec4fbf726af8a7111d078d410731edb23283b921059082",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix. Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 2, fase 2 column, \"Samen leven en samenwerken\", statement 8 of 15 (the cluster runs on at the top of page 2 without a repeated heading), with the printed \"(b)\": word for word as the record, and nothing else stands in the dash. The age sentence no longer sets \"one solution\" against \"several solutions\". \"Two or three ways\" in the body describes one scene; the goal has the plural \"oplossingen\" and the Limits sets no number against it. The neighbour ojw/ja/1/06/fase2 exists and says what is claimed.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 153
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.5ea5a732-35d6-4051-ab89-81bde754d862",
+      "wording_sha256": "3794f6b4fe08966283bb9290593ec660b42b291f61ab72b9294f0d9693900991",
+      "text_sha256": "8833eff4a6282d8eb0c99e1bcee28f781a6fa58c7356fd5844115aa4531697f0",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"Planten, dieren en de mens\" (04-2018), page 3, fase 2 column, cluster \"Gezondheid en hygiëne\", statement 8 of 9, ending \"kneuzing, etc.\": word for word as the record, and nothing else stands in the dash. The \"zoals\" list stays open in the gloss and in Limits; Limits says no safety condition is stated: right; the neighbour ojw/pdm/2/09/fase2 exists.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 3,
+        "offset": 204
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.5eb5e016-3475-45ad-a434-9ac4f3cb0503",
+      "wording_sha256": "891bad482c25d7ded81096e249d5cdb06067b14606ddb592b24c241614c70ad1",
+      "text_sha256": "ced3bd7e79edf10b24deaf5ef5b2a105394a589f2d2ce24cb3c099a025595a99",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"Planten, dieren en de mens\" (04-2018), page 3, fase 2 column, cluster \"Gezondheid en hygiëne\", statement 3 of 9: word for word as the record, and nothing else stands in the dash. The PDF prints \"bevorderd\" (page image and text layer: \"gezondheid bevorderd en ziektes\"), a slip for \"bevordert\" that the record reproduces and Limits reports. \"kan voorkomen\" stays \"can prevent\"; the neighbour ojw/pdm/2/04/fase2 exists and says what is claimed.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 3,
+        "offset": 145
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.627465c1-a7d1-45cb-a6f2-283c77754e13",
+      "wording_sha256": "04279c6a6f6668c2c90a73ae72139d09c8e00323403dc4bb9cba2cfa2a94e3e5",
+      "text_sha256": "9ec724867a807417e54edafe99b2acdc8535485389d83d6790b578cd34e4cef9",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"De ruimte om je heen\" (04-2018), page 2, fase 2 column, cluster \"Omgaan met het milieu\", statement 6 of 6, with the example \"(bijv. Natuurmonumenten, Staatsbosbeheer)\" inside the dash: word for word as the record, and nothing else stands in the dash. Limits explains the two names as \"two Dutch organisations that manage nature areas\": right (Natuurmonumenten is a private association, Staatsbosbeheer a government body; both own and manage nature areas in the Netherlands). The explanation is the pack's own knowledge and is marked as such only by the heading of the Design notes, not in the sentence; \"the pack adds:\" would make it plain. The age sentence sets a bare singular against a plural (\"names one rule\" at 7); it is the pack's illustration and is noted, not counted, as in the sister lanes.",
+      "rendition": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": {
+        "page": 2,
+        "offset": 321
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.627465c1-a7d1-45cb-a6f2-283c77754e13",
+      "wording_sha256": "04279c6a6f6668c2c90a73ae72139d09c8e00323403dc4bb9cba2cfa2a94e3e5",
+      "text_sha256": "4f187141c5e4c6ed0e2009f6f30d35b742d4cc4e34b07e7f900faa42184618d5",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix. Read on the page image: PDF \"De ruimte om je heen\" (04-2018), page 2, fase 2 column, \"Omgaan met het milieu\", statement 6 of 6, with \"(bijv. Natuurmonumenten, Staatsbosbeheer)\" inside the dash: word for word as the record, and nothing else stands in the dash. Limits now marks its explanation of the two names as the pack's (\"the pack adds that these are Dutch organisations that manage nature areas, which the statement itself does not say\"); the explanation is right. The age sentence no longer has \"one rule\".",
+      "rendition": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": {
+        "page": 2,
+        "offset": 321
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.6325230c-089b-4a84-bebf-4dc96f40a3b0",
+      "wording_sha256": "4b5f8382097b692beb963f8c168facf4bd66d2432c84170e8c8b1e2ca298bafc",
+      "text_sha256": "7eceb66efbccef9c8729fa8c181fb94f4c1a52478772bb283f29c3df019e1a99",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 1, fase 2 column, cluster \"Gevoelens, wensen en opvattingen\", statement 5 of 8: word for word as the record, and nothing else stands in the dash. \"gedragsuitingen\" is glossed \"how behaviour is expressed\": close enough to \"expressions of behaviour\". \"realiseren\" stays realising. The age sentence sets a bare singular against a plural (\"for one clear case\" at 7); it is the pack's illustration and is noted, not counted, as in the sister lanes.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 222
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.6325230c-089b-4a84-bebf-4dc96f40a3b0",
+      "wording_sha256": "4b5f8382097b692beb963f8c168facf4bd66d2432c84170e8c8b1e2ca298bafc",
+      "text_sha256": "c0325d31ef462e75c4a2d8e622bacce584139c732b9367ba1c6ec080246ca6ed",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix. Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 1, fase 2 column, \"Gevoelens, wensen en opvattingen\", statement 5 of 8: word for word as the record, and nothing else stands in the dash. The age sentence no longer has \"one clear case\": the ages differ in how plain the link between feeling and behaviour is.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 222
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.63ee1a28-33a1-445e-862d-d585781b707e",
+      "wording_sha256": "c6ac45edd0a2d0976fbd2c5c488db07613f21685bcde2dfc0b74f41cc7ec176e",
+      "text_sha256": "0cd3753ec8039c5b044e31d53137cf6873e622343b1968b7cefbaca05b478eb0",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 1, fase 2 column, cluster \"Gevoelens, wensen en opvattingen\", statement 7 of 8: word for word as the record, and nothing else stands in the dash. The \"(b)\" is printed; the PDF's first page has the legend \"NB Aspecten die betrekking hebben op burgerschap zijn met (b) aangegeven\"; the gloss keeps it and Limits has the fixed sentence. The age sentence sets a bare singular against a plural (\"for one person who is present\" at 7, \"several people\" at 10); it is the pack's illustration and is noted, not counted, as in the sister lanes.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 250
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.63ee1a28-33a1-445e-862d-d585781b707e",
+      "wording_sha256": "c6ac45edd0a2d0976fbd2c5c488db07613f21685bcde2dfc0b74f41cc7ec176e",
+      "text_sha256": "fa79938c4e5d922b0b9c53beb2c9beec7b8aef96aeb67b2ece0a37330130e4f9",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix. Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 1, fase 2 column, \"Gevoelens, wensen en opvattingen\", statement 7 of 8, with the printed \"(b)\": word for word as the record, and nothing else stands in the dash. The age sentence no longer has \"one person\" and \"several people\": the ages differ in who the other is (someone present; someone absent or not liked).",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 250
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.6fa91887-4151-4069-b8c9-bb17c948a17b",
+      "wording_sha256": "c089c6bc05de2baabd6f892f48be90a98274c27315e70554abbd415e05a8afee",
+      "text_sha256": "08b2d13ddf604cf2f0335b1fc61b480c9804a11b4091f3e3abc6c1ab4617542c",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Wording, place and gloss are right: PDF \"Jezelf en de ander\" (12-2018), page 2, fase 2 column, \"Relaties en seksualiteit*\", statement 2 of 6, word for word. The PDF prints the plural \"hebben\" (\"... leeftijd en geslacht maar altijd vertrouwen en respect als basis hebben\"), which the record reproduces and Limits reports; *geslacht* is kept with both readings (sex, gender), which the word has; Limits says no level of detail is set. Notes, \"In a child's hands\": (1) \"A child of 7 talks about being in love as something from stories and from older people; a child of 10 talks about it as something children of his or her own age feel\". This gives being in love to an age, where the Dutch names age (\"leeftijd\") as one of the aspects in which being in love can differ, and the record's own Limits says the statement names \"no ages\"; the record's own Common mistakes lists \"being in love is for adults only\" as a mistake. (2) \"such as not laughing at it\" and \"says that teasing someone about it is not respect\": a rule for bystanders that the goal does not ask for. In the Dutch, trust and respect are the basis of being in love itself (\"verliefdheid ... altijd vertrouwen en respect als basis\"), not how others treat a child who is in love. Fix: keep to the discussion the goal names (that being in love differs in such aspects and has trust and respect as its basis), without an age for being in love and without the teasing rule.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 290
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.6fa91887-4151-4069-b8c9-bb17c948a17b",
+      "wording_sha256": "c089c6bc05de2baabd6f892f48be90a98274c27315e70554abbd415e05a8afee",
+      "text_sha256": "c4dacedd52bae6d2c67b66ee68c8299e570caabd3101ebbb186c6dccfdcd3470",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Round 2, after the fix. Wording, place and gloss are right: PDF \"Jezelf en de ander\" (12-2018), page 2, fase 2 column, \"Relaties en seksualiteit*\", statement 2 of 6, word for word with the PDF's plural \"hebben\", and nothing else stands in the dash; *geslacht* stays open. Round 1's reason is resolved in \"In a child's hands\", which now shows only the discussion (no age for being in love, no rule on teasing). The same two faults still stand in \"Common mistakes\", which the fix left as it was. (1) \"Children think being in love is for adults only\": as a mistake this says that being in love is not for adults only, an age for the feeling; the Dutch names \"leeftijd\" only as one of the aspects in which being in love can differ, and the record's own Limits says the statement names \"no ages\". (2) \"or something to laugh at, and tease a child who mentions it\": conduct towards a child who is in love, which implies the rule for bystanders that round 1 found in the illustration; in the Dutch, trust and respect are the basis of being in love itself, not of how others treat it. Fix: keep to mistakes about what is discussed (for example \"They think there is one right way to be in love or to show it\"), with no age and no teasing.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 290
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.6fa91887-4151-4069-b8c9-bb17c948a17b",
+      "wording_sha256": "c089c6bc05de2baabd6f892f48be90a98274c27315e70554abbd415e05a8afee",
+      "text_sha256": "18358607e1bee303663ae825b879ffddc8c8507268ed5e4d184303de147655b4",
+      "verdict": "confirmed",
+      "note": "Round 3, after the second fix. Read again on the page image: PDF \"Jezelf en de ander\" (12-2018), page 2, fase 2 column, \"Relaties en seksualiteit*\", statement 2 of 6, \"bespreken dat verliefdheid kan verschillen in aspecten als uitingsvorm, leeftijd en geslacht maar altijd vertrouwen en respect als basis hebben\", word for word with the PDF's plural \"hebben\", and nothing else stands in the dash. The gloss is faithful; *geslacht* stays open (sex or gender) and Limits reports the plural verb. Round 2's reasons are resolved: Common mistakes no longer has \"for adults only\" (an age for the feeling) or the teasing of a child who mentions it; the two sentences that stand (\"one right way to be in love or to show it\"; \"if one person is in love, the other must be too\") are beliefs about what is discussed and hold no script, advice, rule of conduct, scenario of harm, age for a feeling or claim about harm or blame. \"In a child's hands\" shows only the discussion: the child says what he or she thinks, hears others, and talks about the aspects the statement names and about trust and respect as the basis. The age sentence, which the fix left (\"A child of 7 says what he or she thinks when asked; a child of 10 also asks others what they mean\"): answering and asking are both the verb \"bespreken\"; being asked is no help set against working alone, since \"also\" keeps the older child in the same talk, and no count, duration or norm word stands at either age. Judged within rulings 5, 8 and 9. Ruling 11: the fase 3 column has \"bespreken van verschillen tussen vriendschap en verliefdheid\" and \"samen bespreken van emoties bij verliefdheid en de relatie met seksualiteit\"; neither is shown.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 290
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.79d31d04-bf54-4c87-8b1a-d7cb20eea066",
+      "wording_sha256": "7a8f873b29bc20f52bbfdcdc07ee6f4883989c612feb102a92412f25d276eefa",
+      "text_sha256": "ad4bc5eea5a65fab358f77a08fc6d1b8ff9641ea86a7619e606de42e404b3f0c",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"De samenleving\" (04-2018), page 2, fase 2 column, cluster \"Deelnemen aan het verkeer\", statement 1 of 3: word for word as the record, and nothing else stands in the dash. \"verwoorden\" is glossed as putting into words; Limits says the goal asks for words and ideas and states no safety condition: right. The age sentence sets a bare singular against a plural (\"at one familiar spot and gives one other way\" at 7, \"several ways\" at 10); it is the pack's illustration and is noted, not counted, as in the sister lanes.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 2,
+        "offset": 147
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.79d31d04-bf54-4c87-8b1a-d7cb20eea066",
+      "wording_sha256": "7a8f873b29bc20f52bbfdcdc07ee6f4883989c612feb102a92412f25d276eefa",
+      "text_sha256": "8e6859d86d084ecabb5275c2994daa41aad56492e32ce9fa1258b6238ffbb2e6",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix. Read on the page image: PDF \"De samenleving\" (04-2018), page 2, fase 2 column, \"Deelnemen aan het verkeer\", statement 1 of 3: word for word as the record, and nothing else stands in the dash. The age sentence no longer sets a singular against a plural: a child of 7 \"says what else he or she could do there\", a child of 10 \"says what another way of acting would lead to\"; both put behaviour into words, as \"verwoorden\" asks. \"One or two other things\" in the body describes one scene, and the Limits sets no number against it.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 2,
+        "offset": 147
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.7b551891-887a-4b19-8b08-9ccd4abc7737",
+      "wording_sha256": "51c43cc6a2a44711d07f42dc01e00e94ceae632c0e7da09461e0acdc41f04a3e",
+      "text_sha256": "96283ee5bf7c7fe2554852cb2cdab0d9e9295b5c87793c37b6b0edac189648b4",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Wording, place and gloss are right: PDF \"Planten, dieren en de mens\" (04-2018), page 3, fase 2 column, \"Gezondheid en hygiëne\", statement 2 of 9, word for word. Limits, last sentence: \"It does not use the words healthy or unhealthy.\" The Dutch is \"beseffen dat wat je eet invloed heeft op je gezondheid\": \"invloed ... op je gezondheid\" is a general term that names no kind of influence, and food that is good or bad for health falls inside it; singled out, the sentence reads as a limit the wording does not set (the neighbour ojw/pdm/2/03/fase2 speaks of \"gezonde voeding\", and the record's own illustration sorts foods by what they do for the body). The sentence before it (\"does not say what the influence is\") already says all the wording supports. Fix: take the sentence out, or say only that the statement does not say which food is healthy.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 3,
+        "offset": 135
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.7b551891-887a-4b19-8b08-9ccd4abc7737",
+      "wording_sha256": "51c43cc6a2a44711d07f42dc01e00e94ceae632c0e7da09461e0acdc41f04a3e",
+      "text_sha256": "93144bda7c4e5d044071d3d4d066fded29dd6170749acc9794825d6a1112a35c",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix. Read on the page image: PDF \"Planten, dieren en de mens\" (04-2018), page 3, fase 2 column, \"Gezondheid en hygiëne\", statement 2 of 9: word for word as the record, and nothing else stands in the dash. Round 1's reason is resolved: the sentence \"It does not use the words healthy or unhealthy\" is gone from Limits; what is left (no foods, food groups, nutrients or amounts; not what the influence is) is true of \"beseffen dat wat je eet invloed heeft op je gezondheid\". The age sentence no longer has \"two products\".",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 3,
+        "offset": 135
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.8c7045e7-166e-4158-9d79-88af7daeba50",
+      "wording_sha256": "db4bbb33895e3d33d8cbffcca6a7398fb80474497a84ea65f54564327c82e2b8",
+      "text_sha256": "3e49c2df3dcb4aebce6f9121b5e4a208757042a2e8403b343acfa6e9e029c841",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 2, fase 2 column, cluster \"Samen leven en samenwerken\", statement 15 of 15: word for word as the record, and nothing else stands in the dash. The \"(b)\" is printed; the PDF's first page has the legend \"NB Aspecten die betrekking hebben op burgerschap zijn met (b) aangegeven\"; the gloss keeps it and Limits has the fixed sentence. The fase 3 column prints the same goal; the fase 2 place is chosen. \"inzien\" is glossed as seeing, and Limits says in the sense of understanding.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 269
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.9028b423-217a-41e1-93e4-2a7c327b0fac",
+      "wording_sha256": "c755ebab874b0e4fa8273c0bf85857057b38ae23cc150bfc859d53964f2b77d2",
+      "text_sha256": "3a6041a475b101976885a2074f8f928d497bddd59bdc2e0145704569f25449e0",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Wording, place and gloss are right: PDF \"De ruimte om je heen\" (04-2018), page 2, fase 2 column, \"Omgaan met het milieu\", statement 3 of 6, word for word. Notes: \"In a child's hands\", last sentence: \"A child of 7 does a task that is assigned and needs a reminder\". What a child of 7 \"needs\" is given as a norm for the age; the Dutch (\"verantwoordelijkheid dragen voor de eigen leefomgeving en een actieve bijdrage leveren aan de zorg voor het milieu\") is an offer for the whole band and names no reminder and no adult. Fix: show one child (for example a child of 7 who does an assigned task once reminded) without \"needs\".",
+      "rendition": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": {
+        "page": 2,
+        "offset": 281
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.9028b423-217a-41e1-93e4-2a7c327b0fac",
+      "wording_sha256": "c755ebab874b0e4fa8273c0bf85857057b38ae23cc150bfc859d53964f2b77d2",
+      "text_sha256": "3691d34ddb9ef2f84af1c1d921e166d11fa125a2932a498872b4a62f9c3d1078",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix. Read on the page image: PDF \"De ruimte om je heen\" (04-2018), page 2, fase 2 column, \"Omgaan met het milieu\", statement 3 of 6: word for word as the record, and nothing else stands in the dash. Round 1's reason is resolved: the age sentence now has \"does an assigned task once reminded of it\", without \"needs a reminder\".",
+      "rendition": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": {
+        "page": 2,
+        "offset": 281
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.902bfa3f-6bc9-46f5-b3c2-190d807d8651",
+      "wording_sha256": "fd4f7df2a26ad8f35766ad7df267da2b34aa714d47ac574710fb69d79bc8a944",
+      "text_sha256": "0c6b768b57f7e8b8cb7614c97fe5bbcb936b813bd6fa4d2386b3c026b367e51d",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 2, fase 2 column, cluster \"Samen leven en samenwerken\", statement 14 of 15, with \"(multiculturele samenleving)\": word for word as the record, and nothing else stands in the dash. The \"(b)\" is printed; the PDF's first page has the legend \"NB Aspecten die betrekking hebben op burgerschap zijn met (b) aangegeven\"; the gloss keeps it and Limits has the fixed sentence. The PDF underlines \"multiculturele samenleving\": its closing note refers underlined terms to a separate document (\"Uitwerking kennisonderwerpen ...\"), which no record or frame text mentions. Limits says the bracket is added \"without explaining it\": true of the statement. *(samen)leven* is kept as living (together), both readings. The age sentence sets a bare singular against a plural (\"one other home\" at 7, \"several people\" at 10); it is the pack's illustration and is noted, not counted, as in the sister lanes.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 255
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.902bfa3f-6bc9-46f5-b3c2-190d807d8651",
+      "wording_sha256": "fd4f7df2a26ad8f35766ad7df267da2b34aa714d47ac574710fb69d79bc8a944",
+      "text_sha256": "ebad3f6cbad6cb2c322aea00f9acbc10ee9afd8d6d02a123c8ebda7190c9f5a1",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix. Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 2, fase 2 column, \"Samen leven en samenwerken\", statement 14 of 15, with \"(multiculturele samenleving)\" and the printed \"(b)\": word for word as the record, and nothing else stands in the dash. The new sentence on underlining is right: \"multiculturele samenleving\" is underlined in this goal, and the document's closing note is \"NB De onderstreepte begrippen verwijzen naar: Uitwerking kennisonderwerpen bij de inhoudslijnen van Oriëntatie op jezelf en de wereld (Pdf: SLO 06-2020).\"; the sentence says no more than that. The age sentence no longer has \"one other home\" or \"several people\".",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 255
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.95e9ebd8-8333-49e7-8b56-9555d8a322b0",
+      "wording_sha256": "26cbd1adda4caf955f3fae077a8ab5738b460e1a86e20355ba4a7f671034b58e",
+      "text_sha256": "063a274f59d64e3c4ea2f0b14a5f99c161871318d73113b55c4ae535590817bf",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"De samenleving\" (04-2018), page 2, fase 2 column, cluster \"Consument zijn\", statement 2 of 4: word for word as the record, and nothing else stands in the dash. Gloss faithful.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 2,
+        "offset": 191
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.964cf7a2-b199-4581-8c6c-5494493fd13c",
+      "wording_sha256": "28630cb70de288fa0c4f291b5126d521f3d1b2efeeab31a4d3b757ea9e2190b6",
+      "text_sha256": "2c9ac2dc4d0ea4e9a65639407716074c58dae8e2a5b9b44435224e94373ef509",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 2, fase 2 column, cluster \"Relaties en seksualiteit*\", statement 3 of 6: word for word as the record, and nothing else stands in the dash. The PDF heads the cluster \"Relaties en seksualiteit*\" and prints the footnote under the table (schools must give attention to the theme, under kerndoel 38, and choose their own lines); the frame carries it and Limits does not deny it. Limits says the text names no parts of the body, situations or ages and sets no level of detail: right. The illustration adds no advice, script or scenario; its age sentence gives the first of the goal's two reasons to 7 and both to 10, where the goal gives both for the whole band: the pack's illustration.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 310
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.964cf7a2-b199-4581-8c6c-5494493fd13c",
+      "wording_sha256": "28630cb70de288fa0c4f291b5126d521f3d1b2efeeab31a4d3b757ea9e2190b6",
+      "text_sha256": "8be7794b8847b8577642cab9608b121a1fa94cc1754c218f43bfa352c43e1c0b",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix. Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 2, fase 2 column, \"Relaties en seksualiteit*\", statement 3 of 6: word for word as the record, and nothing else stands in the dash. The age sentence no longer gives the first of the goal's two reasons to 7 and the second to 10: both ages give \"the reasons\" (when asked; unasked). The illustration and the Common mistakes hold no script, advice, rule, scenario of harm or age for a feeling.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 310
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.9c2fcb70-f79e-4462-afb0-044081bb365e",
+      "wording_sha256": "92e26b6b3ad0b1c7b3b2f90669f3b4421ff31dcc8ed71d64bff49e3b50ed458b",
+      "text_sha256": "d6e7f9170a7b08e5b005ec3bac1371744bcdb7074b7c778ed88d566b088e27a5",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 2, fase 2 column, cluster \"Relaties en seksualiteit*\", statement 1 of 6: word for word as the record, and nothing else stands in the dash. The PDF heads the cluster \"Relaties en seksualiteit*\" and prints the footnote under the table (schools must give attention to the theme, under kerndoel 38, and choose their own lines); the frame carries it and Limits does not deny it. The illustration stays with friendship, trust and respect and adds no advice or script.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 277
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.9c2fcb70-f79e-4462-afb0-044081bb365e",
+      "wording_sha256": "92e26b6b3ad0b1c7b3b2f90669f3b4421ff31dcc8ed71d64bff49e3b50ed458b",
+      "text_sha256": "5458646f9aff21cf23aedcdf1278ec17618e1c2ae4b3574f2e461d56a697ddab",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix. Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 2, fase 2 column, \"Relaties en seksualiteit*\", statement 1 of 6: word for word as the record, and nothing else stands in the dash. The illustration now shows only what \"beseffen dat vriendschappen kunnen verschillen maar altijd vertrouwen en respect als basis hebben\" names: the child tells how his or her friendships differ and gives an example of trust and of respect; the sentence on what a friend may and may not do is gone, and so is the count of friends. No script, advice, rule or scenario stands in the illustration or in the Common mistakes.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 277
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.9f80ce93-7be4-480d-a729-4147974a2b2d",
+      "wording_sha256": "79e3d81a94e2b3fefa1556b397633fcaa7da492cdfc879f7f5b0c7a93c13fa7a",
+      "text_sha256": "01b72d2c8043d153ca7b97a28c68ca7ebb5978b5709891159642fe163b8738c4",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Wording, place and gloss are right: PDF \"Jezelf en de ander\" (12-2018), page 2, fase 2 column, \"Relaties en seksualiteit*\", statement 6 of 6, word for word (the fase 3 column prints the same goal; the fase 2 place is chosen); *integriteit* is kept with both readings (not being violated; acting uprightly), which the word has, and Limits says the statement does not choose and names no parts of the body, situations or acts. Notes: \"In a child's hands\" goes past that. The Dutch is \"beseffen van het belang van (seksuele) integriteit\": an awareness. The illustration turns it into behaviour with a script, advice and a rule: \"says \"stop, I do not want that\", and stops at once when another child says it. The child asks before hugging someone, and tells a trusted adult when someone did not stop. A child of 7 practises saying and hearing \"stop\"; a child of 10 can say that every person decides about his or her own body\". It also settles *integriteit* as the bodily reading, which Limits leaves open. Fix: show a child who realises why it matters, with no sentence to say, nobody to tell and no rule.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 365
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.9f80ce93-7be4-480d-a729-4147974a2b2d",
+      "wording_sha256": "79e3d81a94e2b3fefa1556b397633fcaa7da492cdfc879f7f5b0c7a93c13fa7a",
+      "text_sha256": "5fa716e9ebbddd6261aa84288891881c08b1b85b7662d262f9cb3dbb23ff2134",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix. Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 2, fase 2 column, \"Relaties en seksualiteit*\", statement 6 of 6, \"beseffen van het belang van (seksuele) integriteit\": word for word as the record, and nothing else stands in the dash (the fase 3 column prints the same goal; the place in the fase 2 column is taken). Round 1's reason is resolved: the illustration now shows a child who hears what *integriteit* stands for and says why it matters, and the Common mistakes say only that children see why it matters for themselves and not for others; no sentence to say, nobody to tell, no rule, no scene. *integriteit* stays open in the gloss, the illustration, the Limits and the Common mistakes.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 365
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.ad7bf85a-a889-4e4d-ac70-03f929e33ee5",
+      "wording_sha256": "9f3262548f50993354a839ce0767297cea29c939a96ad1f7f37a32805b021221",
+      "text_sha256": "a9d4658de48c3faa76a144e05320c304ba572a7cf768c861766e5c362d9fe36e",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"De samenleving\" (04-2018), page 1, fase 2 column, cluster \"(Veilige) leefomgeving\", statement 4 of 7, with the example \"(bijv. gereedschappen)\" inside the dash: word for word as the record, and nothing else stands in the dash. Gloss keeps *techniek* beside \"technology\"; Limits says no safety condition is stated: right. Limits also has \"Tools are given as an example (*bijv.*); no tools or machines are named\": meant is no particular tool, since the Dutch does name \"gereedschappen\"; worth rewording. The age sentence sets a bare singular against a plural (\"one rule for it\" at 7, \"rules for the group\" at 10); it is the pack's illustration and is noted, not counted, as in the sister lanes.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 1,
+        "offset": 195
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.ad7bf85a-a889-4e4d-ac70-03f929e33ee5",
+      "wording_sha256": "9f3262548f50993354a839ce0767297cea29c939a96ad1f7f37a32805b021221",
+      "text_sha256": "553735451a1098d0b5b6063ebdc345fe1c04143af8116708180df043e0aade1f",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix. Read on the page image: PDF \"De samenleving\" (04-2018), page 1, fase 2 column, \"(Veilige) leefomgeving\", statement 4 of 7, with \"(bijv. gereedschappen)\" inside the dash: word for word as the record, and nothing else stands in the dash. Limits now says \"no particular tool or machine is named\": true (the Dutch names \"gereedschappen\" as an example and no particular one). The age sentence no longer has a count and both ages talk, as the verb \"bespreken\" asks. Noted, not counted: the first sentence ends \"and shows it\" (how to hold and carry the tool) beside a Limits that says the statement \"asks for discussion, not for use of a tool\"; showing a grip is not use, but it is the nearest the illustration comes to it.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 1,
+        "offset": 195
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.ad7bf85a-a889-4e4d-ac70-03f929e33ee5",
+      "wording_sha256": "9f3262548f50993354a839ce0767297cea29c939a96ad1f7f37a32805b021221",
+      "text_sha256": "1ac4237f5b5732a365c5997f731357500b20720710902decc187388f3f163ac0",
+      "verdict": "confirmed",
+      "note": "Round 3, after the second fix. Read again on the page image: PDF \"De samenleving\" (04-2018), page 1, fase 2 column, \"(Veilige) leefomgeving\", statement 4 of 7, \"bespreken van de impact, veiligheid en gevaren van techniek en hoe hiermee om te gaan (bijv. gereedschappen)\", with the example inside the dash: word for word as the record, and nothing else stands in the dash. The gloss is faithful and keeps *techniek*. The remark of round 2 is met: \"and shows it\" is gone, so the child tells how to hold and carry the tool, and every act in the illustration is talk, as the verb \"bespreken\" asks and as Limits says (\"discussion, not ... use of a tool\"). The age sentence shows two instances of the discussion (the danger of a tool in the hand and how to hold it; a thing that is not in the room, what it makes possible and what can go wrong with it), a difference of kind with no count, duration, norm word or help (rulings 5, 8, 9). Ruling 11: the fase 3 column has \"bespreken van de invloed van verschillende toepassingsgebieden van techniek en technische systemen op de veiligheid van de leefomgeving\"; the record stays with a tool and a made thing, their impact and dangers, and names no fields of application or systems. Limits is right (tools an example, no particular tool, no safety condition).",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 1,
+        "offset": 195
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.ae2af6ae-21f2-4711-9759-9cad862839ed",
+      "wording_sha256": "a69c2e9e715ebeb5e347c92f5b991f5d6f4b5d51d41b7a0641cc5e5a2d7f7120",
+      "text_sha256": "b54f86bf3d7dd3edcfdde09bba13a40ce83a098be4b64959418a5f61fc959ed7",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 1, fase 2 column, cluster \"Samen leven en samenwerken\", statement 7 of 15 (the last on page 1): word for word as the record, and nothing else stands in the dash. \"bewust zijn dat\" is glossed as being aware, not as a skill; the three influences are all in the gloss.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 357
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.af2d9333-9994-4196-8e2a-673daa47cdb1",
+      "wording_sha256": "b876d623a6119a30f0ce7c376043ed1069f9cfcc5a79732eb0bff30db7548e57",
+      "text_sha256": "67e15a07cd441d91da079a27d741e6909ad59653b792be3043060ab67887fd86",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"De samenleving\" (04-2018), page 1, fase 2 column, cluster \"(Veilige) leefomgeving\", statement 7 of 7: word for word as the record, and nothing else stands in the dash. The \"(b)\" is printed; the PDF's first page has the legend \"NB Aspecten die betrekking hebben op burgerschap zijn met (b) aangegeven\"; the gloss keeps it and Limits has the fixed sentence. The PDF prints \"elke kind\" (page image and text layer: \"ook elke kind rechten heeft (b)\"): a slip of the source that the record reproduces and Limits reports; the gloss gives \"every child\". The illustration adds \"whom he or she can tell when it goes wrong\", which the goal (becoming aware that every person has rights) does not ask for: the pack's illustration.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 1,
+        "offset": 244
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.af2d9333-9994-4196-8e2a-673daa47cdb1",
+      "wording_sha256": "b876d623a6119a30f0ce7c376043ed1069f9cfcc5a79732eb0bff30db7548e57",
+      "text_sha256": "67e15a07cd441d91da079a27d741e6909ad59653b792be3043060ab67887fd86",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Round 2; the record is unchanged since round 1 and is judged again on the fixer's pointer. Wording, place and gloss are right: PDF \"De samenleving\" (04-2018), page 1, fase 2 column, \"(Veilige) leefomgeving\", statement 7 of 7, \"bewust worden dat elk mens dus ook elke kind rechten heeft (b)\", word for word (the PDF prints \"elke kind\", as the record has it and Limits reports), and nothing else stands in the dash. Notes, \"In a child's hands\", second sentence: \"The child says who makes sure of each one in his or her own life and whom he or she can tell when it goes wrong.\" The verb of the goal is \"bewust worden\" (becoming aware that every person, so every child too, has rights). Whom a child can tell when it goes wrong is advice on seeking help, which no word of the goal names; \"who makes sure of each one\" brings in the people who owe the child something, where the record's own Limits says the statement \"does not mention duties\". Fix: take the sentence out, or keep only what shows the awareness (for example that the child says the same things hold for every child).",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 1,
+        "offset": 244
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.af2d9333-9994-4196-8e2a-673daa47cdb1",
+      "wording_sha256": "b876d623a6119a30f0ce7c376043ed1069f9cfcc5a79732eb0bff30db7548e57",
+      "text_sha256": "64dd1fbb1d16792c447e54a24ab68ec2a555dbe608a3bf11f016b36698b0d67c",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Round 3, after the second fix. Wording, place and gloss are right: PDF \"De samenleving\" (04-2018), page 1, fase 2 column, \"(Veilige) leefomgeving\", statement 7 of 7, \"bewust worden dat elk mens dus ook elke kind rechten heeft (b)\", word for word (the PDF prints \"elke kind\", as the record has it and Limits reports), and nothing else stands in the dash. Round 2's reason is resolved: the sentence on who makes sure of each right and whom the child can tell is gone, and the second sentence now reads \"The child says that the same things hold for every child\", which shows the awareness. The fault that remains is in the age sentence, which the fix left: \"a child of 10 uses the word \\\"right\\\", says that it holds for every child whoever and wherever the child is, and names a place or time where children do not get what they have a right to.\" Naming where or when children's rights are not met goes past becoming aware that every person has rights, and it is what the same document words as a goal of its own in the fase 3 column of this cluster: \"verdiepen in kinderrechten/mensenrechten en het belang hiervan (b)\" (`ojw/ds/1/08/fase3`); the pack's own fase 3 record of that goal shows it in the same way (\"finds out what it means in daily life and where it is not met\"). Ruling 11. Fix: end the sentence after \"whoever and wherever the child is\", or give two plain instances of the awareness, for example \"A child of 7 says that every child has a right to food and a home; a child of 10 says that every child has a right to go to school, whoever and wherever the child is\". That also takes away \"uses the word \\\"right\\\"\" as what marks the age of 10, where the word is the goal's own for the whole band. The rest is right: the body (needs sorted apart from wishes), Limits (the marker (b), *elke kind*, no rights or treaty named, no duties) and the Common mistakes in the fixed form.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 1,
+        "offset": 244
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.af2d9333-9994-4196-8e2a-673daa47cdb1",
+      "wording_sha256": "b876d623a6119a30f0ce7c376043ed1069f9cfcc5a79732eb0bff30db7548e57",
+      "text_sha256": "e26204407abf95c0157a306a287df6c1c44822486fac2522b676c04d917fbd5d",
+      "verdict": "confirmed",
+      "note": "Round 4, the closing round after the third fix (ojw/ds/1/07/fase2). Seen on the page image of the PDF \"De samenleving\" (04-2018), page 1, fase 2 column, cluster \"(Veilige) leefomgeving\", statement 7 of 7: \"bewust worden dat elk mens dus ook elke kind rechten heeft (b)\", word for word, and nothing else stands in the dash. The PDF prints \"elke kind\", as the open data and the record do, and Limits reports it; the legend \"NB Aspecten die betrekking hebben op burgerschap zijn met (b) aangegeven\" stands at the head of the page, as Limits says of the marker. The gloss is faithful (\"every person, and so every child too, has rights (b)\"). Round 3's reason is resolved: the age sentence no longer has the child name a place or time where rights are not met. It now reads \"A child of 7 says that every child has a right to food and a home; a child of 10 says that every child has a right to go to school, whoever and wherever the child is\": two plain instances of the awareness, with no count, duration, share or norm word, and no help given to one age only (the goal has no words of help). Ruling 11, read from the fase 3 column of the same cluster: its last goal is \"verdiepen in kinderrechten/mensenrechten en het belang hiervan (b)\"; nothing in the body, the age sentence or the corrections the common mistakes imply goes into what the rights mean in practice, why they matter or where they are not met. The rights named (food, a home, school) are the pack's instances; Limits says the statement names none. Limits and the Common mistakes in the fixed form are right.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 1,
+        "offset": 244
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 4",
+      "round": 4
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.b0060f40-769d-4129-b21a-273f34bdb3da",
+      "wording_sha256": "e2dc2e73a0c244d2477a9bcbe659c0d50248cd37507ab36bdfa8cdb7bed9e603",
+      "text_sha256": "6dc3b1857c6b9891e5d095ef268b567e9aae90f6f8fbf72e684ce8c1136f25a9",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 2, fase 2 column, cluster \"Samen leven en samenwerken\", statement 9 of 15: word for word as the record, and nothing else stands in the dash. The \"(b)\" is printed; the PDF's first page has the legend \"NB Aspecten die betrekking hebben op burgerschap zijn met (b) aangegeven\"; the gloss keeps it and Limits has the fixed sentence. The same goal is also printed in the fase 1 column at the top of page 2 (the script's first place); the place in the fase 2 column is taken here. The neighbour ojw/ja/3/10/fase2 exists and says what is claimed. The age sentence sets a bare singular against a plural (\"one role in each\" at 7); it is the pack's illustration and is noted, not counted, as in the sister lanes.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 169
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.b0060f40-769d-4129-b21a-273f34bdb3da",
+      "wording_sha256": "e2dc2e73a0c244d2477a9bcbe659c0d50248cd37507ab36bdfa8cdb7bed9e603",
+      "text_sha256": "08da923a866a275353bea4c66dbf8b29de6fcd67e1c86136ccf6d9c7d91a1ec1",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix. Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 2, fase 2 column, \"Samen leven en samenwerken\", statement 9 of 15, with the printed \"(b)\": word for word as the record, and nothing else stands in the dash. The same goal is printed in the fase 1 column at the top of page 2 (the script's first place); the place in the fase 2 column is taken. The age sentence no longer has \"one role in each\" or \"several roles at once\". Noted, not counted: a child of 10 \"says how he or she acts differently from role to role\", which leans on what Limits gives to the neighbour ojw/ja/3/10/fase2 (how a role influences behaviour); the two goals overlap in the Dutch, and the same clause ends on what this goal names (\"that the same person fills different roles\"). The neighbour exists and says what is claimed.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 169
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.b7811ea9-54e0-4922-a916-c6b6589c44fc",
+      "wording_sha256": "9f1a72c44ec578a6e2fae271f965b4332af6e9864097e9c46ffebb74e12cd7ce",
+      "text_sha256": "98318f6a06ba6e551fa21df4d2b488d2efdbef9c4b9333e0fe4818f6749c10f7",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"De samenleving\" (04-2018), page 1, fase 2 column, cluster \"(Veilige) leefomgeving\", statement 1 of 7: word for word as the record, and nothing else stands in the dash. Gloss faithful; the neighbour ojw/ds/1/02/fase2 cited in Limits exists and is about the reasons for fleeing. The illustration has a child practise what to say on the emergency number, which the goal (an awareness, \"beseffen\") does not ask for: the pack's illustration.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 1,
+        "offset": 152
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.b7811ea9-54e0-4922-a916-c6b6589c44fc",
+      "wording_sha256": "9f1a72c44ec578a6e2fae271f965b4332af6e9864097e9c46ffebb74e12cd7ce",
+      "text_sha256": "98318f6a06ba6e551fa21df4d2b488d2efdbef9c4b9333e0fe4818f6749c10f7",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Round 2; the record is unchanged since round 1 and is judged again on the fixer's pointer. Wording, place and gloss are right: PDF \"De samenleving\" (04-2018), page 1, fase 2 column, \"(Veilige) leefomgeving\", statement 1 of 7, \"beseffen wat de betekenis is van 'veilig zijn' in Nederland\", word for word, and nothing else stands in the dash; the neighbour ojw/ds/1/02/fase2 cited in Limits exists and is about the reasons for fleeing. Notes, \"In a child's hands\", second sentence: \"The child names people whose work is safety, such as police officers, firefighters and ambulance staff, and practises what to say when calling the emergency number.\" The verb of the goal is \"beseffen\" (realising what being safe means). Practising an emergency call is the drill of a script, a skill the goal does not name, and the record's own Limits says the statement \"names no persons, services or rules\". Fix: take out \"and practises what to say when calling the emergency number\"; show only a child who says what being safe means and what makes the difference.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 1,
+        "offset": 152
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.b7811ea9-54e0-4922-a916-c6b6589c44fc",
+      "wording_sha256": "9f1a72c44ec578a6e2fae271f965b4332af6e9864097e9c46ffebb74e12cd7ce",
+      "text_sha256": "811dcb3887b048a47c9575588012478397e8d54d918d96bba3d998710614fd20",
+      "verdict": "confirmed",
+      "note": "Round 3, after the second fix. Read again on the page image: PDF \"De samenleving\" (04-2018), page 1, fase 2 column, \"(Veilige) leefomgeving\", statement 1 of 7, \"beseffen wat de betekenis is van 'veilig zijn' in Nederland\", word for word as the record, and nothing else stands in the dash. The gloss is faithful. Round 2's reason is resolved: the practising of an emergency call is gone, and \"In a child's hands\" shows a child who says where he or she feels safe, what or who makes the difference and whose work is safety, which is the realising the verb \"beseffen\" names; no script, drill or advice. The age sentence, on the fixer's pointer: \"A child of 7 links being safe to people and places close by; a child of 10 can also say that rules and laws protect people, and that being safe is not the same for everyone or everywhere.\" Both are instances of realising what being safe means; the difference is one of kind (near at hand; rules and other people), not help, a count, a duration or a norm word, so rulings 5, 8 and 9 are kept. \"can also say\" adds an instance and gives no help or amount to either age; judged no fault. Ruling 11, against the fase 3 column of the cluster (\"bewust worden van de (eigen) bijdrage aan een veilige leefomgeving\", \"herkennen van en passend omgaan met gevaarlijke situaties\" and the others): the record shows no contribution of the child's own and no dealing with a dangerous situation; laws are a fase 2 subject of this line (\"kennismaken met rol, belang en principes van (nationale) wetgeving (b)\"). Limits is right, and the neighbour `ojw/ds/1/02/fase2` is about the reasons for fleeing. Common mistakes has the fixed form.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 1,
+        "offset": 152
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.b8579629-2f1a-4fc9-825e-887930e92d87",
+      "wording_sha256": "6ee1df1006acfac109f471d5d7f567dfa4024e4b73b18cb547feefecde7f56ef",
+      "text_sha256": "c24737593234d59c49f03d2c3e7babb7ca2be370a92526d6cbd491ac8f6edce5",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"De samenleving\" (04-2018), page 2, fase 2 column, cluster \"Consument zijn\", statement 1 of 4, with \"(kopen, verkopen, betalen, sparen)\": word for word as the record, and nothing else stands in the dash. The PDF underlines \"geld\": its closing note refers underlined terms to a separate document (\"Uitwerking kennisonderwerpen ...\"), which no record or frame text mentions. The neighbour ojw/ds/2/02/fase2 exists and names advertising. The age sentence has \"plans saving over weeks\" for a child of 10: a vague span, the pack's illustration.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 2,
+        "offset": 178
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.b8579629-2f1a-4fc9-825e-887930e92d87",
+      "wording_sha256": "6ee1df1006acfac109f471d5d7f567dfa4024e4b73b18cb547feefecde7f56ef",
+      "text_sha256": "2cc2265b881c0879ce1bb8ebda802d0f7d01df17a2484e18a8a4669062a0fa07",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix. Read on the page image: PDF \"De samenleving\" (04-2018), page 2, fase 2 column, \"Consument zijn\", statement 1 of 4, with \"(kopen, verkopen, betalen, sparen)\": word for word as the record, and nothing else stands in the dash. Limits now says only that the brackets name buying, selling, paying and saving, and that the statement names no amounts, coins, notes or ways of paying and no number range: true of the Dutch. The age sentence no longer has a span of time. The numerals in the body (\"two shops or two sizes\", \"how much each week and for how many weeks\") describe one scene and set no amount, so they do not go against the Limits. Noted, not counted: the age sentence gives a child of 7 \"coins and small notes\", a size word beside a Limits that says the goal states no number range. The PDF underlines \"geld\" in this goal; this record has no sentence on it, where four other records of the lane now have one.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 2,
+        "offset": 178
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.b8579629-2f1a-4fc9-825e-887930e92d87",
+      "wording_sha256": "6ee1df1006acfac109f471d5d7f567dfa4024e4b73b18cb547feefecde7f56ef",
+      "text_sha256": "59288a94aee9c49df2275699d4de737574cea82c647deb5cf5045c276a5033cf",
+      "verdict": "confirmed",
+      "note": "Round 3, after the second fix. Read again on the page image: PDF \"De samenleving\" (04-2018), page 2, fase 2 column, \"Consument zijn\", statement 1 of 4, \"onderzoeken van de rol van geld in onze samenleving (kopen, verkopen, betalen, sparen)\", word for word as the record, and nothing else stands in the dash (the PDF underlines \"geld\"; its closing note refers underlined terms to a separate document). The gloss is faithful. The remark of round 2 is met: the age sentence now has \"coins and notes\" without a size word. Both ages show instances of what the bracket names (paying, giving change and saving in a money box; comparing prices, a plan to save, and saying that money on a card is the same money), a difference of kind with no count, duration, norm word or help (rulings 5, 8, 9); \"two shops or two sizes\" and \"how much each week and for how many weeks\" in the body describe one scene and set no amount. Ruling 11, against the fase 3 column: \"(bewust) omgaan met (zak-)geld\" and \"verkennen van de functie van een bank en de werking van bankrekeningen, internet- en mobiel bankieren\". Judged not shown: the plan to save is an instance of \"sparen\", and the card or phone an instance of \"betalen\", both named in the fase 2 bracket; the record explains no bank, account or banking app and shows no handling of pocket money beyond saving. Noted for the lead as the nearest the record comes to fase 3. Limits is right (no amounts, coins, notes or ways of paying named; no number range), and `ojw/ds/2/02/fase2` names advertising.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 2,
+        "offset": 178
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.bffa7916-0975-4886-ad16-a31313438a07",
+      "wording_sha256": "3b1f123d0f717548cee3bee0e6661aad99ca49c5067127d5c51de2e64e021207",
+      "text_sha256": "90156791cdf14016b3bf4b15cc6a2d734b4b38bfc38d0b6f3be735fea0566068",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"De samenleving\" (04-2018), page 1, fase 2 column, cluster \"(Veilige) leefomgeving\", statement 5 of 7: word for word as the record, and nothing else stands in the dash. Gloss faithful (\"verkennen\" as exploring).",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 1,
+        "offset": 212
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.c5327440-a559-4093-b1ed-aea795eaab32",
+      "wording_sha256": "ea50ed87af9e9c9dc64749728447f391e346016a38bed0a22b145f309f9bec96",
+      "text_sha256": "339c85834d3671bc92c3c351fbac9dae06845108c951908d478f3c9e16717ec7",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"Planten, dieren en de mens\" (04-2018), page 3, fase 2 column, cluster \"Gezondheid en hygiëne\", statement 1 of 9: word for word as the record, and nothing else stands in the dash. Limits says no part of hygiene, no frequency and no level of independence is named: right; the neighbour ojw/pdm/2/03/fase2 exists and says what is claimed. The illustration gives frequencies (\"morning and evening\") and a child of 7 whom an adult checks: the pack's illustration.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 3,
+        "offset": 131
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.c5327440-a559-4093-b1ed-aea795eaab32",
+      "wording_sha256": "ea50ed87af9e9c9dc64749728447f391e346016a38bed0a22b145f309f9bec96",
+      "text_sha256": "339c85834d3671bc92c3c351fbac9dae06845108c951908d478f3c9e16717ec7",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Round 2; the fix round did not change this record (round 1 confirmed it), and it is judged again because the lead asked. Wording, place and gloss are right: PDF \"Planten, dieren en de mens\" (04-2018), page 3, fase 2 column, \"Gezondheid en hygiëne\", statement 1 of 9, \"zorgen voor persoonlijke hygiëne\", word for word, and nothing else stands in the dash; the neighbour ojw/pdm/2/03/fase2 exists and says what is claimed. Notes, \"In a child's hands\", against the record's own Limits, which says the statement names \"no frequency and no level of independence\". (1) Age sentence: \"A child of 7 does these steps when reminded, and an adult checks the result\". The goal names no help and no adult; an adult who checks is a level of independence given as the norm for 7. (2) Second sentence: \"The child brushes teeth morning and evening\": a frequency set as the task. Fix: \"A child of 7 does these steps once reminded of them; a child of 10 does them without a reminder and can say why each step matters\", and \"brushes teeth\" without \"morning and evening\".",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 3,
+        "offset": 131
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.c5327440-a559-4093-b1ed-aea795eaab32",
+      "wording_sha256": "ea50ed87af9e9c9dc64749728447f391e346016a38bed0a22b145f309f9bec96",
+      "text_sha256": "dd70abdcc70461dd15490846e2092941fb6ed04481254284891cefe5530c09aa",
+      "verdict": "confirmed",
+      "note": "Round 3, after the second fix. Read again on the page image: PDF \"Planten, dieren en de mens\" (04-2018), page 3, fase 2 column, \"Gezondheid en hygiëne\", statement 1 of 9, \"zorgen voor persoonlijke hygiëne\", word for word as the record, and nothing else stands in the dash. The gloss is faithful. Round 2's reasons are resolved: \"morning and evening\" is gone (\"The child brushes teeth\"), and the age sentence no longer has a reminder or an adult who checks; it shows two plain instances of taking care of personal hygiene (washing hands with soap before eating; showering and putting on clean clothes after sport), with no count, frequency, duration, norm word or help (rulings 5, 8, 9), so nothing stands against the Limits (\"no frequency and no level of independence\"). \"after the toilet, before eating and after blowing the nose\" in the body are occasions in the scene, not a frequency. The third common mistake (\"They do the steps only when reminded and take the reminder as the reason, so the habit stops when nobody checks\") describes a mistake and gives no reminder or check as the level of an age: no norm, no fault. Ruling 11: the fase 3 column has \"beseffen van het belang van goede hygiëne\" and \"herkennen van factoren die het eigen gedrag m.b.t. gezondheid en hygiëne beïnvloeden ...\"; the record shows the care itself and no reasoning about its importance. The neighbour `ojw/pdm/2/03/fase2` (\"realiseren dat een combinatie van gezonde voeding en hygiëne de gezondheid bevorderd en ziektes kan voorkomen\") says what Limits claims.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 3,
+        "offset": 131
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.c580dfcb-71e8-495f-bdf5-be6f11e077d6",
+      "wording_sha256": "13807bb739621b09c79f07dc957e919da21e4d4a5aef5998551ae77632480aee",
+      "text_sha256": "d8c28d82b4f2c717e60aa9e2e15ca0ccd03bfb143fe710dda20f3d3bb7ee0bb8",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Wording, place and gloss are right: PDF \"De ruimte om je heen\" (04-2018), page 2, fase 2 column, \"Omgaan met het milieu\", statement 1 of 6, word for word (\"aarde\" is underlined in the PDF). Two faults in the notes. (1) Limits, last sentence: \"it does not use the words pollution or climate.\" The Dutch is \"beseffen dat ingrijpen van de mens op aarde van invloed is op het natuurlijk evenwicht\": \"ingrijpen van de mens\" names no kind of intervention (as the same Limits says), and pollution falls inside it as much as any other; singled out, the clause reads as a limit the wording does not set. The same sentence was found against the fase 1 goal of this cluster. Fix: take the clause out; the neighbour ojw/rojh/6/02/fase2 names \"milieuvervuiling\" and can be pointed to. (2) \"In a child's hands\", last sentence: \"A child of 7 tells of one intervention and one result at one place ...; a child of 10 follows a chain of two or three steps\". A number of steps is given as the norm for 7 and for 10; the goal sets none. Fix: one illustration per age without a count of steps.",
+      "rendition": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": {
+        "page": 2,
+        "offset": 257
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.c580dfcb-71e8-495f-bdf5-be6f11e077d6",
+      "wording_sha256": "13807bb739621b09c79f07dc957e919da21e4d4a5aef5998551ae77632480aee",
+      "text_sha256": "05a73510916460f3694c06b4beb9a14dbb08e6036c4647a35768d3e69fd3b559",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix. Read on the page image: PDF \"De ruimte om je heen\" (04-2018), page 2, fase 2 column, \"Omgaan met het milieu\", statement 1 of 6: word for word as the record, and nothing else stands in the dash. Both of round 1's reasons are resolved: Limits no longer says the statement does not use the words pollution or climate, and points to ojw/rojh/6/02/fase2, which exists and reads \"verkennen van aspecten van het begrip 'milieu' zoals milieuvervuiling\", as claimed; the age sentence no longer counts interventions or steps. The PDF underlines \"aarde\" in this goal; this record has no sentence on it, where four other records of the lane now have one.",
+      "rendition": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": {
+        "page": 2,
+        "offset": 257
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.cd0194ec-bb48-4cc4-856e-2ee1b0069580",
+      "wording_sha256": "302913b8f9eb8aee25b0d2b9bf47453a47b5dc2f4dea3c55711eec466df5ac8a",
+      "text_sha256": "f70489c4ccdaf8918fec82fd8a75f1471829ddd2446063293c0da2bcd0840c0a",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 2, fase 2 column, cluster \"Samen leven en samenwerken\", statement 12 of 15, with \"zoals woon-, leef- en werkgemeenschappen\" and \"(wederzijdse afhankelijkheid en beïnvloeding)\": word for word as the record, and nothing else stands in the dash. The \"(b)\" is printed; the PDF's first page has the legend \"NB Aspecten die betrekking hebben op burgerschap zijn met (b) aangegeven\"; the gloss keeps it and Limits has the fixed sentence. *samenlevingsvormen* is kept with both readings (forms of living together, forms of society), which the word has; the \"zoals\" list is still a list of examples.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 223
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.cd0194ec-bb48-4cc4-856e-2ee1b0069580",
+      "wording_sha256": "302913b8f9eb8aee25b0d2b9bf47453a47b5dc2f4dea3c55711eec466df5ac8a",
+      "text_sha256": "566ce1523c69692f8cc0ac7a738fc379d024616d250744436d4cba588b32ebc7",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix. Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 2, fase 2 column, \"Samen leven en samenwerken\", statement 12 of 15, with \"zoals woon-, leef- en werkgemeenschappen\", \"(wederzijdse afhankelijkheid en beïnvloeding)\" and the printed \"(b)\": word for word as the record, and nothing else stands in the dash. The age sentence no longer has \"several communities\". *samenlevingsvormen* stays open.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 223
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.db7ebe98-6d96-457c-b0c5-6e7d1f875dcf",
+      "wording_sha256": "05ed07bb006f32a114970684a305b3849bf39e64cb868b73d43b5f1a5a10d717",
+      "text_sha256": "0d6ee4a827745cffbab498e6e395bd026417252a08941ece4725e72ec4fa79cb",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Wording, place and gloss are right: PDF \"Jezelf en de ander\" (12-2018), page 1, fase 2 column, \"Gevoelens, wensen en opvattingen\", statement 1 of 8, word for word (the fase 3 column prints the same goal; the fase 2 place is chosen); the neighbour ojw/ja/1/07/fase2 cited in Limits exists and says what is claimed. Notes: \"In a child's hands\", last sentence: \"A child of 7 calms down with a fixed step that was practised and often needs a reminder\". A frequency word (\"often\") and what a child of 7 \"needs\" are given as a norm for the age; the Dutch (\"omgaan met eigen emoties (positieve en negatieve) in verschillende situaties\") is an offer for the whole band and gives neither, and the record's own Limits says it names \"no ways of dealing with them\". Fix: show one child (for example a child of 7 who uses a practised step once reminded), without \"often\" and \"needs\".",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 170
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.db7ebe98-6d96-457c-b0c5-6e7d1f875dcf",
+      "wording_sha256": "05ed07bb006f32a114970684a305b3849bf39e64cb868b73d43b5f1a5a10d717",
+      "text_sha256": "4ed95c716e7e42489b06567cb5aa18c9f336cf0fe38301176bda2895239e4ab5",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix. Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 1, fase 2 column, \"Gevoelens, wensen en opvattingen\", statement 1 of 8: word for word as the record, and nothing else stands in the dash. The fase 3 column prints the same goal; the place in the fase 2 column is taken. Round 1's reason is resolved: the age sentence now has \"calms down with a fixed step that was practised, once reminded of it\", without \"often\" and \"needs\". \"Counting to ten\" in the body is the name of a way of calming down, not an amount.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 170
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.e56b1af3-f173-42fb-8e45-a0fcf0fac7f9",
+      "wording_sha256": "bcac3aadcd2afbe00fdec71b7e4722032caf403440c049a43d131cc6f5544bd0",
+      "text_sha256": "19e09a41302dcff630c921d1298087fe951e72277c188109e479eb01aa4e08a9",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"Planten, dieren en de mens\" (04-2018), page 3, fase 2 column, cluster \"Gezondheid en hygiëne\", statement 4 of 9, with \"(zit-)houding\" and \"rust/ontspanning op zijn tijd\": word for word as the record, and nothing else stands in the dash. \"aandacht hebben voor\" is glossed as paying attention to, and Limits calls it an attitude; the \"zoals\" items are still examples.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 3,
+        "offset": 161
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.e56b1af3-f173-42fb-8e45-a0fcf0fac7f9",
+      "wording_sha256": "bcac3aadcd2afbe00fdec71b7e4722032caf403440c049a43d131cc6f5544bd0",
+      "text_sha256": "34bc05e01776ee3b547a8e4f46f57b5c30b99cc6123c4b3896e38f38554f67e3",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix. Read on the page image: PDF \"Planten, dieren en de mens\" (04-2018), page 3, fase 2 column, \"Gezondheid en hygiëne\", statement 4 of 9, with \"(zit-)houding\" and \"rust/ontspanning op zijn tijd\": word for word as the record, and nothing else stands in the dash. The age sentence no longer has \"moves a lot\" or \"a long stretch of sitting\": a child of 7 \"corrects posture when reminded\", a child of 10 does so \"without a reminder\". The \"zoals\" items are still examples.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 3,
+        "offset": 161
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.ec383db2-4c17-4dda-a3bb-f6018a819d81",
+      "wording_sha256": "b4bc41a6c095d70f7a00ae1a27e415ccc930746328fa1e288c0dcc0ce4348ede",
+      "text_sha256": "a306863ab19ccba6a9fcea1b2ec04746896a6a4a0a331bb5f4146b3ae4e49ca3",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 2, fase 2 column, cluster \"Samen leven en samenwerken\", statement 11 of 15: word for word as the record, and nothing else stands in the dash. The \"(b)\" is printed; the PDF's first page has the legend \"NB Aspecten die betrekking hebben op burgerschap zijn met (b) aangegeven\"; the gloss keeps it and Limits has the fixed sentence. The three pairs are all in the gloss. The age sentence has a child of 7 work \"in a pair or small group on tasks that an adult has divided\" and keep \"one agreement\": the goal names dividing tasks without an adult and no group size (as Limits says); the pack's illustration, noted and not counted.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 206
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.ec383db2-4c17-4dda-a3bb-f6018a819d81",
+      "wording_sha256": "b4bc41a6c095d70f7a00ae1a27e415ccc930746328fa1e288c0dcc0ce4348ede",
+      "text_sha256": "68ea8d57c331e9f1e33f09e4ec2db5a4ec217ab76189914924fe615536b5875e",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix. Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 2, fase 2 column, \"Samen leven en samenwerken\", statement 11 of 15, with the printed \"(b)\": word for word as the record, and nothing else stands in the dash. The illustration no longer has a group size (\"three or four others\", \"a pair or small group\"), an adult who divides the tasks or \"one agreement\". Limits no longer has the sentence that offering help is not named; what is left (three pairs; no group size, kind of task or roles) is true of the Dutch.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 206
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.f28148b6-75d0-40ef-9f0e-e142824b439c",
+      "wording_sha256": "5f36d71c4d3d206883cedea148507ad5d4bbb9e072384e7301848d31cf6c2d4e",
+      "text_sha256": "024d6c47654e6d630c6738f3c4a86c98f3196d3b72b774ac5cef5dfda8726d00",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"De samenleving\" (04-2018), page 2, fase 2 column, cluster \"Consument zijn\", statement 3 of 4, with the example \"(bijv. met betrekking tot reclame en productkeuze)\" inside the dash: word for word as the record, and nothing else stands in the dash. The example is still an example in the gloss and in Limits.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 2,
+        "offset": 204
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.f350d467-b682-4978-afd1-a19430b5dcb7",
+      "wording_sha256": "f224a7f86c7dd0a5713e8ff77682bcb4e4ae3394fc4ed2825822aee64b80cbe3",
+      "text_sha256": "e0f947e9b5834c7dc0bfe60047a0ed5960766c3b8c9b085acf4d9e6fbff0e6bb",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"De samenleving\" (04-2018), page 1, fase 2 column, cluster \"(Veilige) leefomgeving\", statement 3 of 7: word for word as the record, and nothing else stands in the dash. \"bewust worden\" is glossed as becoming aware, not as a skill.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 1,
+        "offset": 177
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.f36faf72-b7d0-461f-adb0-fbb1bb518bec",
+      "wording_sha256": "f53b5745b0be3da5ab77b9b8e69bf0d9e065ab77189663673a67d87a069aeafa",
+      "text_sha256": "e6b37a0ea5c96b726b067d6393a11aa78b120c9b41e1f38e6fcadcd90bf2e1dd",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"De samenleving\" (04-2018), page 2, fase 2 column, cluster \"Deelnemen aan het verkeer\", statement 3 of 3: word for word as the record, and nothing else stands in the dash. The PDF prints \"verkeerborden\" (page image and text layer), a slip for \"verkeersborden\" that the record reproduces and Limits reports. The gloss renders \"oriënteren op\" as \"getting a first orientation on\": \"first\" is not in the Dutch; this is the pack's fixed rendering of the verb in every lane, so it is noted and not counted.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 2,
+        "offset": 165
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.f36faf72-b7d0-461f-adb0-fbb1bb518bec",
+      "wording_sha256": "f53b5745b0be3da5ab77b9b8e69bf0d9e065ab77189663673a67d87a069aeafa",
+      "text_sha256": "43ff336b328afb7108370fc102c01698b22e6ded3d0f49b92d9826193b0070a0",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix. Read on the page image: PDF \"De samenleving\" (04-2018), page 2, fase 2 column, \"Deelnemen aan het verkeer\", statement 3 of 3: word for word as the record, with the PDF's \"verkeerborden\" (a slip the record reproduces and Limits reports), and nothing else stands in the dash. The gloss and Limits now have \"getting an orientation on\" for \"oriënteren op\" (ruling 6): the added \"first\" is gone in both. The age sentence no longer has \"a few\".",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 2,
+        "offset": 165
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.f7424fc2-1b08-4149-a699-cc0f09e1a3d7",
+      "wording_sha256": "b5cfad9b40941c43a17f6df5864adedebb9daf53d6b30adea59afed3f593058b",
+      "text_sha256": "f6b62ef6fca369b5fa288b00323ebbd4bb67a721b4d6d95c6782884576a87995",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"De samenleving\" (04-2018), page 2, fase 2 column, cluster \"Deelnemen aan het verkeer\", statement 2 of 3: word for word as the record, and nothing else stands in the dash. Gloss keeps \"(independent)\" in brackets; Limits says no traffic rule and no safety condition is stated: right.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 2,
+        "offset": 154
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.fa81eea4-5076-4e42-82b7-969a8d89b56f",
+      "wording_sha256": "517026e6859cac67e29a0ebac12aebb371cbf29a003b0c9d67ae00c5f5f3a022",
+      "text_sha256": "9b65547214b2740f4240bdfbe09911d056ac7d3c398389de83de2111c91aa59a",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"Planten, dieren en de mens\" (04-2018), page 3, fase 2 column, cluster \"Gezondheid en hygiëne\", statement 5 of 9: word for word as the record, and nothing else stands in the dash. Form: the record, as the data, has a non-breaking hyphen and a space in \"(mede‑) verantwoordelijkheid\". The PDF ends a line after \"(mede-)\" and starts the next with \"verantwoordelijkheid\", so the page neither shows nor rules out a space; in the fase 3 column the same compound stands on one line as \"(mede-)verantwoordelijkheid\", without a space. The space is most likely the PDF's line break carried into the data; Limits does not mention it. Gloss \"(shared) responsibility\" is faithful.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 3,
+        "offset": 178
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.fccba231-8824-41dd-ab3c-4daa39397c93",
+      "wording_sha256": "30a8a8a4537f7005200d102abd9e661f8fb8c41a0e17719b1e5918e1d022b7a8",
+      "text_sha256": "62c25b41bd502ca07921ea541c03122666d97d6e24c45b710e8300f54c8ce392",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 1, fase 2 column, cluster \"Samen leven en samenwerken\", statement 4 of 15: word for word as the record, and nothing else stands in the dash. The fase 3 column prints a longer goal that starts with the same words and goes on \"en werken aan adequate oplossingen\"; the fase 2 place is chosen, where the goal ends at \"pestgedrag\", so Limits is right that stopping, reporting and helping are not mentioned here. *onderkennen* is kept beside \"recognising\"; \"bewust zijn van\" is glossed as being aware, not as a skill.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 331
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.fee92f0d-389e-4d33-a251-b12748c13fd7",
+      "wording_sha256": "a03bfc7dfcc21e9b019fb5ee3668198117f88244c9ae4f682ad052147b1afad5",
+      "text_sha256": "04fcd72c7acd6f885c1bd1e01f4b241905533f8aed438a3fafe3de9f23117658",
+      "verdict": "confirmed",
+      "note": "Read on the page image: PDF \"Jezelf en de ander\" (12-2018), page 2, fase 2 column, cluster \"Relaties en seksualiteit*\", statement 4 of 6: word for word as the record, and nothing else stands in the dash. The PDF heads the cluster \"Relaties en seksualiteit*\" and prints the footnote under the table (schools must give attention to the theme, under kerndoel 38, and choose their own lines); the frame carries it and Limits does not deny it. Limits says no form and no view is named and no level of detail set: right. The illustration adds no advice or script.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 337
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.fee92f0d-389e-4d33-a251-b12748c13fd7",
+      "wording_sha256": "a03bfc7dfcc21e9b019fb5ee3668198117f88244c9ae4f682ad052147b1afad5",
+      "text_sha256": "1efd623ac25d3d9de6c234058c38d8dec0a6b2f23ec6a7cacfe46d22d89cef69",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Round 2, after the fix. Wording, place and gloss are right: PDF \"Jezelf en de ander\" (12-2018), page 2, fase 2 column, \"Relaties en seksualiteit*\", statement 4 of 6, \"bespreken dat mensen kunnen kiezen voor verschillende relatievormen en dat daar verschillend over wordt gedacht\", word for word, and nothing else stands in the dash. \"In a child's hands\" now shows only the discussion (the clause \"states a view without judging another child's family\" is gone). \"Common mistakes\", third sentence, still carries the same rule: \"They mix up thinking differently about a form of relationship with being allowed to tease a child whose family has that form.\" That is a rule of conduct (teasing is not allowed) and a scene of a child being teased for his or her family; the goal names a discussion of two facts and no conduct, and the record's own Limits says the statement \"does not say which view is right\". Judged by the rule set for the sensitive goals of this cluster (no rule of conduct and no scenario of harm in the illustration or in the Common mistakes). Fix: take the sentence out; the first two mistakes (taking one's own household as the only real form; taking a view heard at home for a fact) stay inside the goal.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 337
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.fee92f0d-389e-4d33-a251-b12748c13fd7",
+      "wording_sha256": "a03bfc7dfcc21e9b019fb5ee3668198117f88244c9ae4f682ad052147b1afad5",
+      "text_sha256": "c8190a85b17f37c1c2b014b05a4cc6c7b1155ad61b4b556432711e0ab68fdfa2",
+      "verdict": "confirmed",
+      "note": "Round 3, after the second fix. Read again on the page image: PDF \"Jezelf en de ander\" (12-2018), page 2, fase 2 column, \"Relaties en seksualiteit*\", statement 4 of 6, \"bespreken dat mensen kunnen kiezen voor verschillende relatievormen en dat daar verschillend over wordt gedacht\", word for word as the record, and nothing else stands in the dash. The gloss is faithful. Round 2's reason is resolved: the third common mistake (being allowed to tease a child whose family has that form) is gone; the two that stand (taking one's own household as the only real form; taking a view heard at home for a fact everyone shares) are about the two things discussed and hold no rule of conduct and no scenario of harm. \"In a child's hands\" shows only the discussion: telling which forms the child knows, hearing of others, hearing that views differ and giving a view with a reason; no script, advice or verdict on a view, and Limits says the statement \"does not say which view is right\". The age sentence, which the fix left (\"A child of 7 describes the forms he or she knows and notices that other homes differ; a child of 10 can say that the form is a choice people make and that views on it differ\"): both are parts of the discussion, the difference is of kind, and no help, count, duration or norm word stands at either age (rulings 5, 8, 9). Noted, not counted: the goal's two points (a choice; views differ) are given to the child of 10, where the goal gives them to the whole band. Ruling 11: the fase 3 column has \"bespreken dat mensen kunnen kiezen voor verschillende relatievormen en welke consequenties dat heeft\"; no consequence is shown.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 337
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.nl.fase-2.practical-life-feelings.objective.inhoudslijn-de-samenleving-pdf-consument-zijn-4",
+      "wording_sha256": "88ada4629ff141a01ad0d19c3120fba54c710fe9d35d696411d37863c38af55d",
+      "text_sha256": "c95a6ccdacc9713b5afe4a6f5b5487448c8479cf2f9ae1e3e5e05c4378ca46e5",
+      "verdict": "confirmed",
+      "note": "Second reading of the same file on the page image: PDF \"De samenleving\" (04-2018), page 2, fase 2 column, cluster \"Consument zijn\", the fourth and last dash: \"beseffen dat werken voor je geld een dienst voor een ander betekent en dat dit onafhankelijk maakt (inkomsten/uitgaven)\", complete, starting and ending where the record does (\"werken\" and \"geld\" are underlined). The column prints four goals there and no code. The open data was searched: inh_cluster ojw/ds/2 links three goals at fase 2 (ojw/ds/2/01 to /03) and no goal in doelen.json has this text, so the data does lack it; Limits says so and says the record has no code. The locator has no corrections. Gloss faithful; Limits marks \"a person\" as added for the English sentence; the neighbour ojw/ds/2/01/fase2 exists and says what is claimed.",
+      "rendition": "same-file",
+      "place": {
+        "page": 2,
+        "offset": 219
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/practical-life-feelings",
+      "round": 1
+    }
+  ],
+  "unrecorded": []
+}

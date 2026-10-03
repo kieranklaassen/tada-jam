@@ -1,0 +1,1025 @@
+{
+  "lane": "us-ca/preschool-tk/practical-life-feelings",
+  "records": [
+    {
+      "group": "Social and Emotional Development / Strand 1.0 — Self",
+      "code": "1.1",
+      "title": "Self-Identity",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-social-emotional",
+          "page": 16,
+          "first": "Notice and communicate",
+          "last": "how to dress"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-social-emotional",
+          "page": 16,
+          "first": "Express their personal",
+          "last": "their own preferences"
+        }
+      ]
+    },
+    {
+      "group": "Social and Emotional Development / Strand 1.0 — Self",
+      "code": "1.2",
+      "title": "Confidence in Abilities",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-social-emotional",
+          "page": 19,
+          "first": "Describe their abilities",
+          "last": "adults, including teachers",
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-social-emotional",
+          "page": 19,
+          "first": "Express confidence in",
+          "last": "adults, including teachers",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Social and Emotional Development / Strand 1.0 — Self",
+      "code": "1.3",
+      "title": "Understanding Emotions in Self and Others",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-social-emotional",
+          "page": 21,
+          "first": "Identify basic emotions",
+          "last": "self and others",
+          "lastOccurrence": 2
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-social-emotional",
+          "page": 21,
+          "first": "Identify basic and",
+          "last": "themselves and others"
+        }
+      ]
+    },
+    {
+      "group": "Social and Emotional Development / Strand 1.0 — Self",
+      "code": "1.4",
+      "title": "Regulating Emotions, Behaviors, and Stress",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-social-emotional",
+          "page": 22,
+          "first": "Make efforts to",
+          "last": "with adult support"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-social-emotional",
+          "page": 22,
+          "first": "Regulate emotions and",
+          "last": "some adult support"
+        }
+      ]
+    },
+    {
+      "group": "Social and Emotional Development / Strand 1.0 — Self",
+      "code": "1.5",
+      "title": "Managing Routines and Transitions",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-social-emotional",
+          "page": 25,
+          "first": "Manage routines and",
+          "last": "with adult support"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-social-emotional",
+          "page": 25,
+          "first": "Anticipate routines and",
+          "last": "some adult support"
+        }
+      ]
+    },
+    {
+      "group": "Social and Emotional Development / Strand 1.0 — Self",
+      "code": "1.6",
+      "title": "Awareness of Similarities and Differences Across People",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-social-emotional",
+          "page": 28,
+          "first": "Demonstrate awareness",
+          "last": "and different"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-social-emotional",
+          "page": 28,
+          "first": "Make comparisons between",
+          "last": "similarities and differences",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Social and Emotional Development / Strand 1.0 — Self",
+      "code": "1.7",
+      "title": "Understanding Other People’s Thoughts, Behaviors, and Experiences",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-social-emotional",
+          "page": 31,
+          "first": "Develop understanding",
+          "last": "and experiences",
+          "lastOccurrence": 2
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-social-emotional",
+          "page": 31,
+          "first": "Demonstrate emerging understanding",
+          "last": "act or behave"
+        }
+      ]
+    },
+    {
+      "group": "Social and Emotional Development / Strand 1.0 — Self",
+      "code": "1.8",
+      "title": "Empathy and Caring",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-social-emotional",
+          "page": 32,
+          "first": "Demonstrate empathy by",
+          "last": "others in distress"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-social-emotional",
+          "page": 32,
+          "first": "Respond to others",
+          "last": "adult to assist"
+        }
+      ]
+    },
+    {
+      "group": "Social and Emotional Development / Strand 2.0 — Interactions and Relationships with Adults",
+      "code": "2.1",
+      "title": "Reciprocal Interactions with Adults",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-social-emotional",
+          "page": 35,
+          "first": "Engage in positive",
+          "last": "with familiar adults",
+          "lastOccurrence": 2
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-social-emotional",
+          "page": 35,
+          "first": "Take greater initiative",
+          "last": "ask for assistance"
+        }
+      ]
+    },
+    {
+      "group": "Social and Emotional Development / Strand 2.0 — Interactions and Relationships with Adults",
+      "code": "2.2",
+      "title": "Seeking Security and Support",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-social-emotional",
+          "page": 38,
+          "first": "Seek security and",
+          "last": "in difficult situations",
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-social-emotional",
+          "page": 38,
+          "first": "Anticipate when they",
+          "last": "in difficult situations",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Social and Emotional Development / Strand 2.0 — Interactions and Relationships with Adults",
+      "code": "2.3",
+      "title": "Coping with Departures",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-social-emotional",
+          "page": 40,
+          "first": "Cope with departures",
+          "last": "from attachment figures",
+          "firstOccurrence": 1,
+          "lastOccurrence": 2
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-social-emotional",
+          "page": 40,
+          "first": "Cope with departures",
+          "last": "or no assistance",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Social and Emotional Development / Strand 2.0 — Interactions and Relationships with Adults",
+      "code": "2.4",
+      "title": "Relationships with Adults",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-social-emotional",
+          "page": 44,
+          "first": "Contribute to maintaining",
+          "last": "and well-being",
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-social-emotional",
+          "page": 44,
+          "first": "Contribute to positive",
+          "last": "and well-being",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Social and Emotional Development / Strand 3.0 — Interactions and Relationships with Peers",
+      "code": "3.1",
+      "title": "Interacting and Cooperating with Peers",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-social-emotional",
+          "page": 47,
+          "first": "Interact with peers",
+          "last": "with adult support"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-social-emotional",
+          "page": 47,
+          "first": "More actively and",
+          "last": "and play activities"
+        }
+      ]
+    },
+    {
+      "group": "Social and Emotional Development / Strand 3.0 — Interactions and Relationships with Peers",
+      "code": "3.2",
+      "title": "Conflict Resolution with Peers",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-social-emotional",
+          "page": 50,
+          "first": "Seek adult",
+          "last": "or disagreements",
+          "firstOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-social-emotional",
+          "page": 50,
+          "first": "Negotiate with peers",
+          "last": "resolve a conflict"
+        }
+      ]
+    },
+    {
+      "group": "Social and Emotional Development / Strand 3.0 — Interactions and Relationships with Peers",
+      "code": "3.3",
+      "title": "Fairness and Respect",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-social-emotional",
+          "page": 52,
+          "first": "Demonstrate understanding of",
+          "last": "prompting to share"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-social-emotional",
+          "page": 52,
+          "first": "More consistently share",
+          "last": "and daily activities"
+        }
+      ]
+    },
+    {
+      "group": "Social and Emotional Development / Strand 3.0 — Interactions and Relationships with Peers",
+      "code": "3.4",
+      "title": "Developing Friendships",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-social-emotional",
+          "page": 55,
+          "first": "Choose to play",
+          "last": "with other children"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-social-emotional",
+          "page": 55,
+          "first": "Develop friendships that",
+          "last": "problem-solving efforts"
+        }
+      ]
+    },
+    {
+      "group": "Approaches to Learning / Strand 1.0 — Motivation to Learn",
+      "code": "1.1",
+      "title": "Curiosity and Interest",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-approaches-to-learning",
+          "page": 18,
+          "first": "Express interest in",
+          "last": "asking simple questions",
+          "firstOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-approaches-to-learning",
+          "page": 18,
+          "first": "Express interest in",
+          "last": "more detailed questions",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Approaches to Learning / Strand 1.0 — Motivation to Learn",
+      "code": "1.2",
+      "title": "Initiative",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-approaches-to-learning",
+          "page": 22,
+          "first": "Demonstrate initiative by",
+          "last": "solutions to problems",
+          "firstOccurrence": 1,
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-approaches-to-learning",
+          "page": 22,
+          "first": "Demonstrate initiative by",
+          "last": "problems more persistently",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Approaches to Learning / Strand 1.0 — Motivation to Learn",
+      "code": "1.3",
+      "title": "Engagement",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-approaches-to-learning",
+          "page": 25,
+          "first": "Actively engage by",
+          "last": "with adult support",
+          "firstOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-approaches-to-learning",
+          "page": 25,
+          "first": "Actively engage by",
+          "last": "less adult support",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Approaches to Learning / Strand 1.0 — Motivation to Learn",
+      "code": "1.4",
+      "title": "Persisting Despite Difficulties",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-approaches-to-learning",
+          "page": 28,
+          "first": "Demonstrate persistence, with",
+          "last": "a short while"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-approaches-to-learning",
+          "page": 28,
+          "first": "Demonstrate persistence for",
+          "last": "less adult support"
+        }
+      ]
+    },
+    {
+      "group": "Approaches to Learning / Strand 2.0 — Executive Functioning",
+      "code": "2.1",
+      "title": "Working Memory",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-approaches-to-learning",
+          "page": 32,
+          "first": "Hold approximately one",
+          "last": "with adult support"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-approaches-to-learning",
+          "page": 32,
+          "first": "Hold approximately two",
+          "last": "less adult support"
+        }
+      ]
+    },
+    {
+      "group": "Approaches to Learning / Strand 2.0 — Executive Functioning",
+      "code": "2.2",
+      "title": "Managing Impulsive Behaviors",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-approaches-to-learning",
+          "page": 34,
+          "first": "Demonstrate emerging ability",
+          "last": "with adult support"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-approaches-to-learning",
+          "page": 34,
+          "first": "Manage habitual reactions",
+          "last": "less adult support",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Approaches to Learning / Strand 2.0 — Executive Functioning",
+      "code": "2.3",
+      "title": "Managing Attention and Distractions",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-approaches-to-learning",
+          "page": 36,
+          "first": "Demonstrate an emerging",
+          "last": "distracted or interrupted",
+          "firstOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-approaches-to-learning",
+          "page": 36,
+          "first": "Demonstrate an emerging",
+          "last": "less adult support",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Approaches to Learning / Strand 2.0 — Executive Functioning",
+      "code": "2.4",
+      "title": "Flexibility",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-approaches-to-learning",
+          "page": 38,
+          "first": "Demonstrate emerging ability",
+          "last": "with adult support"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-approaches-to-learning",
+          "page": 38,
+          "first": "More consistently shift",
+          "last": "less adult support"
+        }
+      ]
+    },
+    {
+      "group": "Approaches to Learning / Strand 3.0 — Goal-Directed Learning",
+      "code": "3.1",
+      "title": "Planning",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-approaches-to-learning",
+          "page": 42,
+          "first": "Demonstrate emerging ability",
+          "last": "with adult support",
+          "corrections": [
+            {
+              "from": "oneto",
+              "to": "one- to",
+              "reason": "line-break hyphen"
+            }
+          ]
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-approaches-to-learning",
+          "page": 42,
+          "first": "Demonstrate ability to",
+          "last": "less adult support",
+          "corrections": [
+            {
+              "from": "twoto",
+              "to": "two- to",
+              "reason": "line-break hyphen"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Approaches to Learning / Strand 3.0 — Goal-Directed Learning",
+      "code": "3.2",
+      "title": "Reflecting and Analyzing",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-approaches-to-learning",
+          "page": 44,
+          "first": "Make attempts to",
+          "last": "with adult support",
+          "firstOccurrence": 1,
+          "corrections": [
+            {
+              "from": "problemsolving",
+              "to": "problem-solving",
+              "reason": "line-break hyphen"
+            }
+          ]
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-approaches-to-learning",
+          "page": 44,
+          "first": "Make attempts to",
+          "last": "less adult support",
+          "firstOccurrence": 2,
+          "corrections": [
+            {
+              "from": "problemsolving",
+              "to": "problem-solving",
+              "reason": "line-break hyphen"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Approaches to Learning / Strand 3.0 — Goal-Directed Learning",
+      "code": "3.3",
+      "title": "Problem-Solving Together",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-approaches-to-learning",
+          "page": 46,
+          "first": "Collaborate with peers",
+          "last": "and sometimes longer",
+          "corrections": [
+            {
+              "from": "problemsolving",
+              "to": "problem-solving",
+              "reason": "line-break hyphen"
+            }
+          ]
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-approaches-to-learning",
+          "page": 46,
+          "first": "Engage in extended",
+          "last": "peers when needed"
+        }
+      ]
+    },
+    {
+      "group": "Approaches to Learning / Strand 3.0 — Goal-Directed Learning",
+      "code": "3.4",
+      "title": "Understanding Others",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-approaches-to-learning",
+          "page": 48,
+          "first": "Notice, with adult",
+          "last": "approaches or preferences"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-approaches-to-learning",
+          "page": 48,
+          "first": "Demonstrate understanding and",
+          "last": "less adult support"
+        }
+      ]
+    },
+    {
+      "group": "Health / Strand 1.0 — Understanding Health and Wellness",
+      "code": "1.1",
+      "title": "Identifying and Naming Body Parts",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-health",
+          "page": 13,
+          "first": "Identify and correctly",
+          "last": "of their functions",
+          "firstOccurrence": 1,
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-health",
+          "page": 13,
+          "first": "Identify and correctly",
+          "last": "of their functions",
+          "firstOccurrence": 2,
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Health / Strand 1.0 — Understanding Health and Wellness",
+      "code": "1.2",
+      "title": "Communicating About Health Needs",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-health",
+          "page": 15,
+          "first": "Communicate to an",
+          "last": "special health need",
+          "firstOccurrence": 1,
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-health",
+          "page": 15,
+          "first": "Consistently communicate to",
+          "last": "identify a solution"
+        }
+      ]
+    },
+    {
+      "group": "Health / Strand 1.0 — Understanding Health and Wellness",
+      "code": "1.3",
+      "title": "Understanding the Role of Health Care Providers",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-health",
+          "page": 16,
+          "first": "Communicate their basic",
+          "last": "are not well",
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-health",
+          "page": 16,
+          "first": "Communicate more specific",
+          "last": "are not well",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Health / Strand 1.0 — Understanding Health and Wellness",
+      "code": "1.4",
+      "title": "Recognizing and Communicating About Body Boundaries",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-health",
+          "page": 17,
+          "first": "Recognize and communicate",
+          "last": "about body boundaries",
+          "firstOccurrence": 1,
+          "lastOccurrence": 3
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-health",
+          "page": 17,
+          "first": "Demonstrate an ability",
+          "last": "about body boundaries",
+          "lastOccurrence": 5
+        }
+      ]
+    },
+    {
+      "group": "Health / Strand 1.0 — Understanding Health and Wellness",
+      "code": "1.5",
+      "title": "Identifying Foods",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-health",
+          "page": 19,
+          "first": "Identify",
+          "last": "foods",
+          "firstOccurrence": 1,
+          "lastOccurrence": 2
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-health",
+          "page": 19,
+          "first": "Identify a larger",
+          "last": "related food groups"
+        }
+      ]
+    },
+    {
+      "group": "Health / Strand 1.0 — Understanding Health and Wellness",
+      "code": "1.6",
+      "title": "Communicating Fullness and Hunger",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-health",
+          "page": 20,
+          "first": "Demonstrate an emerging",
+          "last": "the next meal"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-health",
+          "page": 20,
+          "first": "Communicate more consistently",
+          "last": "for a meal"
+        }
+      ]
+    },
+    {
+      "group": "Health / Strand 1.0 — Understanding Health and Wellness",
+      "code": "1.7",
+      "title": "Understanding a Variety of Foods",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-health",
+          "page": 21,
+          "first": "Demonstrate an emerging",
+          "last": "trying new foods"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-health",
+          "page": 21,
+          "first": "Demonstrate an understanding",
+          "last": "and cultural foods",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Health / Strand 1.0 — Understanding Health and Wellness",
+      "code": "1.8",
+      "title": "Recognizing the Body’s Response to Physical Activity",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-health",
+          "page": 23,
+          "first": "Recognize, with adult",
+          "last": "outdoors or indoors",
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-health",
+          "page": 23,
+          "first": "Recognize, with less",
+          "last": "outdoors or indoors",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Health / Strand 1.0 — Understanding Health and Wellness",
+      "code": "1.9",
+      "title": "Recognizing and Indicating When Tired",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-health",
+          "page": 24,
+          "first": "Recognize, with adult",
+          "last": "sleep routines consistently"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-health",
+          "page": 24,
+          "first": "Indicate when they",
+          "last": "routines more consistently"
+        }
+      ]
+    },
+    {
+      "group": "Health / Strand 2.0 — Health and Safety Habits",
+      "code": "2.1",
+      "title": "Handwashing",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-health",
+          "page": 25,
+          "first": "Demonstrate knowledge",
+          "last": "handwashing routine",
+          "firstOccurrence": 1,
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-health",
+          "page": 25,
+          "first": "Demonstrate knowledge",
+          "last": "handwashing routine",
+          "firstOccurrence": 2,
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Health / Strand 2.0 — Health and Safety Habits",
+      "code": "2.2",
+      "title": "Preventing Infectious Diseases",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-health",
+          "page": 26,
+          "first": "Practice health habits",
+          "last": "instruction and modeling",
+          "firstOccurrence": 1,
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-health",
+          "page": 26,
+          "first": "Practice health habits",
+          "last": "instruction and modeling",
+          "firstOccurrence": 2,
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Health / Strand 2.0 — Health and Safety Habits",
+      "code": "2.3",
+      "title": "Toothbrushing",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-health",
+          "page": 27,
+          "first": "Demonstrate knowledge and",
+          "last": "supervision and instruction",
+          "firstOccurrence": 1,
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-health",
+          "page": 27,
+          "first": "Demonstrate knowledge and",
+          "last": "supervision and instruction",
+          "firstOccurrence": 2,
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Health / Strand 2.0 — Health and Safety Habits",
+      "code": "2.4",
+      "title": "Practicing Sun Safety",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-health",
+          "page": 28,
+          "first": "Practice some sun",
+          "last": "support and guidance",
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-health",
+          "page": 28,
+          "first": "Practice sun-safe",
+          "last": "support and guidance",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Health / Strand 2.0 — Health and Safety Habits",
+      "code": "2.5",
+      "title": "Following Safety Rules",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-health",
+          "page": 29,
+          "first": "Follow indoor and",
+          "last": "support and prompting",
+          "firstOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-health",
+          "page": 29,
+          "first": "Follow indoor and",
+          "last": "support and guidance",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Health / Strand 2.0 — Health and Safety Habits",
+      "code": "2.6",
+      "title": "Following Emergency Routines",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-health",
+          "page": 30,
+          "first": "Demonstrate an ability",
+          "last": "support and guidance"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-health",
+          "page": 30,
+          "first": "Demonstrate increased independent",
+          "last": "some adult guidance",
+          "lastOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Health / Strand 2.0 — Health and Safety Habits",
+      "code": "2.7",
+      "title": "Following Transportation and Pedestrian Safety Rules",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-health",
+          "page": 31,
+          "first": "Show an emerging",
+          "last": "a car seat",
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-health",
+          "page": 31,
+          "first": "Show increased ability",
+          "last": "a car seat",
+          "lastOccurrence": 2
+        }
+      ]
+    }
+  ]
+}

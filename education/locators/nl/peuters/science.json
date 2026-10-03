@@ -1,0 +1,272 @@
+{
+  "lane": "nl/peuters/science",
+  "records": [
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / De ruimte om je heen",
+      "code": "Weer, klimaat en hemellichamen / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "praten over weersverschijnselen",
+          "last": "met de seizoenen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / De ruimte om je heen",
+      "code": "Weer, klimaat en hemellichamen / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "praten over de",
+          "last": "seizoenen op de",
+          "corrections": [
+            {
+              "from": "seizoenen op de",
+              "to": "seizoenen op de mens",
+              "reason": "text recognition misread"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / De ruimte om je heen",
+      "code": "Weer, klimaat en hemellichamen / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "aandacht hebben voor begrippen",
+          "last": "maan en sterren"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / Planten, dieren en de mens",
+      "code": "Omgaan met de natuur / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "ontmoeten, verwonderen en",
+          "last": "en schimmels (paddenstoelen)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / Planten, dieren en de mens",
+      "code": "Omgaan met de natuur / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "ervaren van schoonheid",
+          "last": "natuur (met planten en dieren)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / Planten, dieren en de mens",
+      "code": "Omgaan met de natuur / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "waarnemen en verkennen",
+          "last": "met alle zintuigen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / Planten, dieren en de mens",
+      "code": "Omgaan met de natuur / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "ervaren dat het",
+          "last": "met de seizoenen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / Planten, dieren en de mens",
+      "code": "Omgaan met de natuur / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "met zorg omgaan",
+          "last": "omgaan met planten en dieren"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / Planten, dieren en de mens",
+      "code": "Planten en dieren / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "waarnemen van herkenbare",
+          "last": "van het dier"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / Planten, dieren en de mens",
+      "code": "Planten en dieren / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "verkennen van uiterlijke",
+          "last": "bouw en beharing"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / Planten, dieren en de mens",
+      "code": "De mens / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "aanwijzen en benoemen",
+          "last": "onderdelen van het eigen lichaam"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / Planten, dieren en de mens",
+      "code": "De mens / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "ontdekken en benoemen",
+          "last": "met andere mensen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / Planten, dieren en de mens",
+      "code": "Groeien, bloeien en voortplanten / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "ervaren dat planten",
+          "last": "groeien en bloeien"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / Planten, dieren en de mens",
+      "code": "Groeien, bloeien en voortplanten / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "bespreken dat baby's",
+          "last": "baby's geboren worden"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / Planten, dieren en de mens",
+      "code": "Groeien, bloeien en voortplanten / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "bespreken dat jonge",
+          "last": "een ei komen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / Planten, dieren en de mens",
+      "code": "Groeien, bloeien en voortplanten / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "ervaren dat mensen",
+          "last": "en ouder worden"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / Verschijnselen uit natuurkunde en techniek",
+      "code": "Natuurkundige verschijnselen / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 5,
+          "first": "verkennen en benoemen",
+          "last": "ruik, ik proef"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / Verschijnselen uit natuurkunde en techniek",
+      "code": "Natuurkundige verschijnselen / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 5,
+          "first": "ontdekken en verwonderen",
+          "last": "en elektriciteit (lamp)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / Verschijnselen uit natuurkunde en techniek",
+      "code": "Materialen, stoffen en voorwerpen / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 5,
+          "first": "experimenteren met veilige",
+          "last": "veilige materialen, stoffen en voorwerpen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / Verschijnselen uit natuurkunde en techniek",
+      "code": "Technische principes en systemen / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 5,
+          "first": "experimenteren met constructiematerialen",
+          "last": "experimenteren met constructiematerialen"
+        }
+      ]
+    }
+  ]
+}

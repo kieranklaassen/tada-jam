@@ -1,0 +1,1561 @@
+{
+  "lane": "nl/fase-1/practical-life-feelings",
+  "records": [
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Jezelf en de ander",
+      "code": "Gevoelens, wensen en opvattingen / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "herkennen van en",
+          "last": "met eigen gevoelens"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Jezelf en de ander",
+      "code": "Gevoelens, wensen en opvattingen / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "openstaan voor gevoelens",
+          "last": "van anderen (b)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Jezelf en de ander",
+      "code": "Gevoelens, wensen en opvattingen / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "ervaren van overeenkomsten en verschillen in",
+          "last": "gewoonten van mensen",
+          "firstOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Jezelf en de ander",
+      "code": "Gevoelens, wensen en opvattingen / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "ervaring opdoen met",
+          "last": "eenvoudige filosofische gesprekken"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Jezelf en de ander",
+      "code": "Samen leven en samenwerken / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "zichzelf handhaven binnen",
+          "last": "opkomen voor jezelf"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Jezelf en de ander",
+      "code": "Samen leven en samenwerken / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "rekening houden met",
+          "last": "met de ander"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Jezelf en de ander",
+      "code": "Samen leven en samenwerken / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "ervaren van overeenkomsten en verschillen in",
+          "last": "gedrag van mensen",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Jezelf en de ander",
+      "code": "Samen leven en samenwerken / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "ervaren dat door",
+          "last": "kunt oplossen (b)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Jezelf en de ander",
+      "code": "Samen leven en samenwerken / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "ervaren dat mensen",
+          "last": "en samenwerken) (b)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Jezelf en de ander",
+      "code": "Samen leven en samenwerken / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "bespreken van verschillende vormen",
+          "last": "mensen betekent (b)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Jezelf en de ander",
+      "code": "Samen leven en samenwerken / 7",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "gedragen vanuit respect",
+          "last": "en normen (b)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Jezelf en de ander",
+      "code": "Samen leven en samenwerken / 8",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "samen spelen, samenwerken",
+          "last": "sociaal-culturele achtergronden) (b)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Jezelf en de ander",
+      "code": "Samen leven en samenwerken / 9",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "ontdekken dat iedereen",
+          "last": "worden vervuld (b)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Jezelf en de ander",
+      "code": "Relaties en seksualiteit / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "(her)kennen van kenmerken",
+          "last": "uitingen van vriendschap"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Jezelf en de ander",
+      "code": "Relaties en seksualiteit / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "bespreken van verschillende relatievormen",
+          "last": "van verschillende relatievormen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Jezelf en de ander",
+      "code": "Relaties en seksualiteit / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "bespreken wat verliefdheid",
+          "last": "hieraan uiting geven"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Jezelf en de ander",
+      "code": "Relaties en seksualiteit / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "bespreken dat het",
+          "last": "om te gaan"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / De samenleving",
+      "code": "(Veilige) leefomgeving / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "zorgdragen voor de",
+          "last": "(thuis, klas, school)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / De samenleving",
+      "code": "(Veilige) leefomgeving / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "ontdekken dat een",
+          "last": "en gevaren zien)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / De samenleving",
+      "code": "(Veilige) leefomgeving / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "beseffen dat de",
+          "last": "(wetenschap en technologie)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / De samenleving",
+      "code": "(Veilige) leefomgeving / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "verkennen van de invloed",
+          "last": "(impact, veiligheid, gevaren)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / De samenleving",
+      "code": "(Veilige) leefomgeving / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "bespreken van het",
+          "last": "van meningsuiting (b)",
+          "corrections": [
+            {
+              "from": "meningsuiting (b)",
+              "to": "meningsuiting' (b)",
+              "reason": "text recognition misread"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / De samenleving",
+      "code": "Deelnemen aan het verkeer / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "veilig gedragen op",
+          "last": "fietsende)deelnemer aan het verkeer"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / De samenleving",
+      "code": "Deelnemen aan het verkeer / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "bespreken van (eigen)",
+          "last": "van (eigen) verkeersgedrag"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / De samenleving",
+      "code": "Consument zijn / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "ontwikkelen van redzaam",
+          "last": "gedrag als consument"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / De samenleving",
+      "code": "Consument zijn / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "verkennen van de rol",
+          "last": "lenen en kopen)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / De ruimte om je heen",
+      "code": "Inrichting en indeling van de ruimte / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "bewust worden dat",
+          "last": "de natuurlijke omgeving"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / De ruimte om je heen",
+      "code": "Inrichting en indeling van de ruimte / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "onderzoeken en bespreken van elementen",
+          "last": "zorg voor het milieu"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Planten, dieren en de mens",
+      "code": "Gezondheid en hygiëne / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "verzorgen van het",
+          "last": "verzorgen van het eigen lichaam"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Planten, dieren en de mens",
+      "code": "Gezondheid en hygiëne / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "verkennen van gewoontes",
+          "last": "voeding en hygiëne"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Planten, dieren en de mens",
+      "code": "Gezondheid en hygiëne / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "kennismaken en ervaringen",
+          "last": "van de gezondheidszorg"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Planten, dieren en de mens",
+      "code": "Gezondheid en hygiëne / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "zorg dragen voor",
+          "last": "(lichamelijke en psychische)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Zelfbeeld (zelf beeld)",
+      "code": "Omgaan met behoeften, gevoelens en emoties van zichzelf / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "(her)kennen van eigen",
+          "last": "emoties en gevoelens"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Zelfbeeld (zelf beeld)",
+      "code": "Omgaan met behoeften, gevoelens en emoties van zichzelf / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "benoemen van gevoelens",
+          "last": "benoemen van gevoelens"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Zelfbeeld (zelf beeld)",
+      "code": "Omgaan met behoeften, gevoelens en emoties van zichzelf / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "uiten van gevoelens",
+          "last": "een acceptabele manier"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Zelfbeeld (zelf beeld)",
+      "code": "Omgaan met behoeften, gevoelens en emoties van zichzelf / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "bewust omgaan met",
+          "last": "begrijpelijk kunnen uiten"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Zelfbeeld (zelf beeld)",
+      "code": "Omgaan met behoeften, gevoelens en emoties van zichzelf / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "inschatten van eigen",
+          "last": "gevoelens, gedachten, motieven"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Zelfbeeld (zelf beeld)",
+      "code": "Omgaan met behoeften, gevoelens en emoties van zichzelf / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "aangeven wat de",
+          "last": "eigen gevoelens is"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Zelfbeeld (zelf beeld)",
+      "code": "Herkennen en omgaan met eigen kwaliteiten en krachten / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "beschrijven van de",
+          "last": "de eigen behoeften"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Zelfbeeld (zelf beeld)",
+      "code": "Herkennen en omgaan met eigen kwaliteiten en krachten / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "omgaan met sterke",
+          "last": "kwaliteiten van zichzelf"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Zelfbeeld (zelf beeld)",
+      "code": "Herkennen en omgaan met eigen kwaliteiten en krachten / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "ontwikkelen van zelfvertrouwen",
+          "last": "ontwikkelen van zelfvertrouwen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Zelfbeeld (zelf beeld)",
+      "code": "Herkennen en omgaan met eigen kwaliteiten en krachten / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "kritiek ervaren en",
+          "last": "kunnen worden geweigerd"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Zelfbeeld (zelf beeld)",
+      "code": "Herkennen en omgaan met eigen kwaliteiten en krachten / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "gebruik maken (op",
+          "last": "vaardigheden en inzichten"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Zelfbeeld (zelf beeld)",
+      "code": "Herkennen van en omgaan met verschillen tussen zichzelf en de ander / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "beschrijven van eigen",
+          "last": "van eigen zelfbeeld"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Zelfbeeld (zelf beeld)",
+      "code": "Herkennen van en omgaan met verschillen tussen zichzelf en de ander / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "ervaren van de",
+          "last": "afkomst en traditie"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Zelfbeeld (zelf beeld)",
+      "code": "Herkennen van en omgaan met verschillen tussen zichzelf en de ander / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "herkennen van situaties",
+          "last": "en reacties oproepen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Leren omgaan met een ander / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "actief luisteren naar",
+          "last": "luisteren naar anderen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Leren omgaan met een ander / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "contact zoeken met",
+          "last": "zoeken met anderen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Leren omgaan met een ander / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "ontdekken dat de",
+          "last": "relatie kan beïnvloeden"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Leren omgaan met een ander / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "geven en ontvangen",
+          "last": "ontvangen van complimenten"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Leren omgaan met een ander / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "reageren op de",
+          "last": "hulpvraag van anderen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Leren omgaan met een ander / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "vertrouwen hebben in",
+          "last": "in een ander"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Leren omgaan met een ander / 7",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "benoemen van verschillen",
+          "last": "verschillen tussen kinderen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Leren omgaan met een ander / 8",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "ontdekken dat er",
+          "last": "bestaan in relaties"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Leren omgaan met een ander / 9",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "uitleggen hoe je",
+          "last": "relatie kunt aangaan"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Leren omgaan met een ander / 10",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "benoemen hoe je",
+          "last": "relatie laat voortduren"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Samenwerken met andere kinderen / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "(samen)werken met andere",
+          "last": "(samen)werken met andere kinderen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Samenwerken met andere kinderen / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "initiatief nemen tot",
+          "last": "nemen tot samenwerken"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Samenwerken met andere kinderen / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "werken aan een",
+          "last": "een gezamenlijke opdracht"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Samenwerken met andere kinderen / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "ideeën/oplossingen aandragen passend",
+          "last": "bij het samenwerken"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Samenwerken met andere kinderen / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "luisteren naar elkaar,",
+          "last": "anderen te bepalen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Samenwerken met andere kinderen / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "rekening houden met",
+          "last": "ander te respecteren)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Samenwerken met andere kinderen / 7",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "houden aan afspraken",
+          "last": "je beurt wachten"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Samenwerken met andere kinderen / 8",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "bewust zijn dat",
+          "last": "(in het proces)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Samenwerken met andere kinderen / 9",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "ervaren dat mensen",
+          "last": "elkaar nodig hebben"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Zichzelf staande houden of aanpassen in een groep / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "verkennen en omgaan",
+          "last": "met afspraken en regels"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Zichzelf staande houden of aanpassen in een groep / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "accepteren van hulp",
+          "last": "accepteren van hulp"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Zichzelf staande houden of aanpassen in een groep / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "inzien dat thuis,",
+          "last": "regels nodig zijn"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Zichzelf staande houden of aanpassen in een groep / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "aanpassen aan nieuwe",
+          "last": "aan nieuwe situaties"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Zichzelf staande houden of aanpassen in een groep / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "demonstreren van goede",
+          "last": "van goede manieren"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Zichzelf staande houden of aanpassen in een groep / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "herkennen van veilige",
+          "last": "en onveilige situaties"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Herkennen, praten over en oplossen van conflicten / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "herkennen van (alledaagse)",
+          "last": "problemen en conflicten"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Herkennen, praten over en oplossen van conflicten / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "vertellen wat de",
+          "last": "zijn van conflictsituaties"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Herkennen, praten over en oplossen van conflicten / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "ervaren dat door",
+          "last": "samen kunt oplossen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Zelfsturing (zelfmanagement)",
+      "code": "Beheersen van eigen gevoelens / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "beheersen van eigen (heftige)",
+          "last": "en stress (reguleren)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Zelfsturing (zelfmanagement)",
+      "code": "Beheersen van eigen gevoelens / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "beschrijven van (heftige)",
+          "last": "stress aan anderen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Zelfsturing (zelfmanagement)",
+      "code": "Beheersen van eigen gevoelens / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "geven van eigen",
+          "last": "van eigen mening"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Zelfsturing (zelfmanagement)",
+      "code": "Beheersen van eigen gevoelens / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "reageren op verbaal",
+          "last": "gevoelens van anderen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Zelfsturing (zelfmanagement)",
+      "code": "Beheersen van eigen gevoelens / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "omgaan met zichzelf",
+          "last": "met zichzelf (zelfsturing)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Zelfsturing (zelfmanagement)",
+      "code": "Beheersen van eigen gevoelens / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "gepast reageren op",
+          "last": "een onverwachte situatie"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Zelfsturing (zelfmanagement)",
+      "code": "Beheersen van eigen gevoelens / 7",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "eerst nadenken voordat",
+          "last": "een (lastige) situatie"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Zelfsturing (zelfmanagement)",
+      "code": "Beheersen van eigen gevoelens / 8",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "kunnen uitstellen van",
+          "last": "uitstellen van behoeften"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Zelfsturing (zelfmanagement)",
+      "code": "Beheersen van eigen gevoelens / 9",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "wachten op zijn/haar",
+          "last": "op zijn/haar beurt"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Zelfsturing (zelfmanagement)",
+      "code": "Beheersen van eigen gevoelens / 10",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "zich niet uit",
+          "last": "door onverwachte dingen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Zelfsturing (zelfmanagement)",
+      "code": "Realiseren van gestelde (eigen) doelen / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "plezier hebben in",
+          "last": "een (nieuwe) taak"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Zelfsturing (zelfmanagement)",
+      "code": "Realiseren van gestelde (eigen) doelen / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "geconcentreerd bezig zijn",
+          "last": "bij het spelen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Zelfsturing (zelfmanagement)",
+      "code": "Realiseren van gestelde (eigen) doelen / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "proberen om iets",
+          "last": "(nieuwe dingen proberen)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Zelfsturing (zelfmanagement)",
+      "code": "Realiseren van gestelde (eigen) doelen / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "zelfstandig uitvoeren van",
+          "last": "taken bijv. opruimen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Zelfsturing (zelfmanagement)",
+      "code": "Realiseren van gestelde (eigen) doelen / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "zichzelf kunnen redden",
+          "last": "zichzelf kunnen redden"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Zelfsturing (zelfmanagement)",
+      "code": "Realiseren van gestelde (eigen) doelen / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "nieuwsgierig naar het",
+          "last": "over tot actie)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Zelfsturing (zelfmanagement)",
+      "code": "Realiseren van gestelde (eigen) doelen / 7",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "vertrouwen hebben in",
+          "last": "in eigen kunnen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Emotionele competenties / Zelfsturing (zelfmanagement)",
+      "code": "Realiseren van gestelde (eigen) doelen / 8",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "weten welke gevolgen",
+          "last": "je gedrag heeft"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Sociale competenties / De ander (besef van de ander)",
+      "code": "Herkennen, begrijpen van en aanpassen aan emoties van anderen / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "openstaan voor gevoelens",
+          "last": "voor gevoelens en wensen van anderen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Sociale competenties / De ander (besef van de ander)",
+      "code": "Herkennen, begrijpen van en aanpassen aan emoties van anderen / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "(her)kennen en interpreteren",
+          "last": "gevoelens bij anderen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Sociale competenties / De ander (besef van de ander)",
+      "code": "Herkennen, begrijpen van en aanpassen aan emoties van anderen / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "verplaatsen in de",
+          "last": "gevoelens van anderen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Sociale competenties / De ander (besef van de ander)",
+      "code": "Herkennen, begrijpen van en aanpassen aan emoties van anderen / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "rekening houden in",
+          "last": "situatie van anderen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Sociale competenties / De ander (besef van de ander)",
+      "code": "Herkennen, begrijpen van en aanpassen aan emoties van anderen / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "bewondering tonen voor",
+          "last": "en mogelijkheden (kwaliteiten)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Sociale competenties / De ander (besef van de ander)",
+      "code": "Rekening houden met zichzelf binnen een groep / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "zichzelf handhaven binnen",
+          "last": "de eigen groep"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Sociale competenties / De ander (besef van de ander)",
+      "code": "Rekening houden met zichzelf binnen een groep / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "hebben van kennis",
+          "last": "kinderen bij naam)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Sociale competenties / De ander (besef van de ander)",
+      "code": "Rekening houden met zichzelf binnen een groep / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "sluiten van vriendschappen",
+          "last": "vriendschappen (vriendjes maken)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Sociale competenties / De ander (besef van de ander)",
+      "code": "Rekening houden met zichzelf binnen een groep / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "ontdekken dat mensen",
+          "last": "van verschillende groepen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Sociale competenties / De ander (besef van de ander)",
+      "code": "Rekening houden met zichzelf binnen een groep / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "beschrijven van de",
+          "last": "zichzelf de ander(en)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Sociale competenties / De ander (besef van de ander)",
+      "code": "Rekening houden met zichzelf binnen een groep / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "ontdekken dat er",
+          "last": "in opvattingen bestaan"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Sociale competenties / De ander (besef van de ander)",
+      "code": "Rekening houden met zichzelf binnen een groep / 7",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "zichzelf durven blijven",
+          "last": "in een groep"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Sociale competenties / De ander (besef van de ander)",
+      "code": "Herkennen en perspectief nemen op het gedrag van een ander / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "herkennen aan gedrag",
+          "last": "blij, verdrietig zijn"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Sociale competenties / De ander (besef van de ander)",
+      "code": "Herkennen en perspectief nemen op het gedrag van een ander / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "herkennen wat iemand",
+          "last": "leuk/niet leuk vindt"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Sociale competenties / De ander (besef van de ander)",
+      "code": "Herkennen en perspectief nemen op het gedrag van een ander / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "rekening houden met gevoelens",
+          "last": "met gevoelens en wensen van anderen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Sociale competenties / De ander (besef van de ander)",
+      "code": "Herkennen en perspectief nemen op het gedrag van een ander / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "oog hebben voor",
+          "last": "zwakheden en uitdagingen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Sociale competenties / De ander (besef van de ander)",
+      "code": "Herkennen en perspectief nemen op het gedrag van een ander / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "benoemen wat de",
+          "last": "ander kan zijn"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Sociale competenties / De ander (besef van de ander)",
+      "code": "Herkennen en perspectief nemen op het gedrag van een ander / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "uitleggen wanneer een",
+          "last": "aan kan doen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Morele competenties / Kiezen (keuzes maken)",
+      "code": "Nadenken over keuzes/keuzemogelijkheden / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "verzamelen van informatie",
+          "last": "te (kunnen) maken"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Morele competenties / Kiezen (keuzes maken)",
+      "code": "Nadenken over keuzes/keuzemogelijkheden / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "benoemen welke keuze",
+          "last": "gemaakt moet worden"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Morele competenties / Kiezen (keuzes maken)",
+      "code": "Nadenken over keuzes/keuzemogelijkheden / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "uitleggen wat het",
+          "last": "een bepaalde keuze"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Morele competenties / Kiezen (keuzes maken)",
+      "code": "Nadenken over keuzes/keuzemogelijkheden / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "maken van een",
+          "last": "en deze uitvoeren"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Morele competenties / Kiezen (keuzes maken)",
+      "code": "Nadenken over keuzes/keuzemogelijkheden / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "beschrijven dat een",
+          "last": "en/of lange termijn"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Morele competenties / Kiezen (keuzes maken)",
+      "code": "Nadenken over gevolgen van eigen handelen / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "beschrijven wat makkelijke",
+          "last": "moeilijke situaties zijn"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Morele competenties / Kiezen (keuzes maken)",
+      "code": "Nadenken over gevolgen van eigen handelen / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "bedenken welke oplossingen",
+          "last": "of probleem voordoet"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Morele competenties / Kiezen (keuzes maken)",
+      "code": "Nadenken over gevolgen van eigen handelen / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "ontdekken dat de",
+          "last": "zichzelf kan liggen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, fase 1 / Morele competenties / Kiezen (keuzes maken)",
+      "code": "Nadenken over gevolgen van eigen handelen / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "benoemen welke eigenschappen",
+          "last": "van moeilijke situaties"
+        }
+      ]
+    }
+  ]
+}

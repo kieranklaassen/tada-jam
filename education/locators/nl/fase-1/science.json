@@ -1,0 +1,461 @@
+{
+  "lane": "nl/fase-1/science",
+  "records": [
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / De ruimte om je heen",
+      "code": "Weer, klimaat en hemellichamen / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "ervaren en onderzoeken van weersverschijnselen",
+          "last": "relatie met de seizoenen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / De ruimte om je heen",
+      "code": "Weer, klimaat en hemellichamen / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "beseffen van de invloed van weer",
+          "last": "seizoenen op de mens"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / De ruimte om je heen",
+      "code": "Weer, klimaat en hemellichamen / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "ontdekken van de aanwezigheid van maan",
+          "last": "in de nacht (heelal)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / De ruimte om je heen",
+      "code": "Weer, klimaat en hemellichamen / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "realiseren dat de aanwezigheid en positie",
+          "last": "de seizoenen veroorzaken"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Planten, dieren en de mens",
+      "code": "Omgaan met de natuur / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "ontmoeten, verwonderen en beseffen",
+          "last": "en schimmels (paddenstoelen)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Planten, dieren en de mens",
+      "code": "Omgaan met de natuur / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "ervaren van schoonheid",
+          "last": "natuur (met planten en dieren)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Planten, dieren en de mens",
+      "code": "Omgaan met de natuur / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "waarnemen en verkennen van de omgeving",
+          "last": "met alle zintuigen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Planten, dieren en de mens",
+      "code": "Omgaan met de natuur / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "ervaren dat bomen",
+          "last": "veranderen met de seizoenen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Planten, dieren en de mens",
+      "code": "Omgaan met de natuur / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "met zorg omgaan",
+          "last": "omgaan met planten en dieren"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Planten, dieren en de mens",
+      "code": "Planten en dieren / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "waarnemen van de elementaire onderdelen",
+          "last": "en de functie ervan"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Planten, dieren en de mens",
+      "code": "Planten en dieren / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "verkennen van uiterlijke kenmerken",
+          "last": "bouw en beharing"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Planten, dieren en de mens",
+      "code": "Planten en dieren / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "kennisnemen van enkele veel voorkomende",
+          "last": "en de leefomstandigheden"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Planten, dieren en de mens",
+      "code": "Planten en dieren / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "realiseren dat planten en dieren voedsel",
+          "last": "en voor de mens"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Planten, dieren en de mens",
+      "code": "De mens / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "herkennen en benoemen van onderdelen",
+          "last": "onderdelen van het eigen lichaam"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Planten, dieren en de mens",
+      "code": "De mens / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "verkennen van de globale werking",
+          "last": "werking van lichaamsdelen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Planten, dieren en de mens",
+      "code": "De mens / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "onderzoeken van de vorm en functie",
+          "last": "zintuigen van de mens"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Planten, dieren en de mens",
+      "code": "De mens / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "ontdekken en benoemen van eigen duidelijke",
+          "last": "verschillen met andere mensen",
+          "corrections": [
+            {
+              "from": "uiter- lijke",
+              "to": "uiterlijke",
+              "reason": "line-break hyphen"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Planten, dieren en de mens",
+      "code": "De mens / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "vergelijken van onderdelen van de mens",
+          "last": "onderdelen van dieren"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Planten, dieren en de mens",
+      "code": "Groeien, bloeien en voortplanten / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "beseffen dat planten, dieren en de mens",
+          "last": "hebben om te leven"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Planten, dieren en de mens",
+      "code": "Groeien, bloeien en voortplanten / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "realiseren dat mensen voedsel",
+          "last": "bewerken en bereiden"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Planten, dieren en de mens",
+      "code": "Groeien, bloeien en voortplanten / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "waarnemen en verkennen van elementaire fasen",
+          "last": "van dieren en van de mens"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Planten, dieren en de mens",
+      "code": "Groeien, bloeien en voortplanten / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "realiseren dat een levend wezen",
+          "last": "van dezelfde soort"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Planten, dieren en de mens",
+      "code": "Groeien, bloeien en voortplanten / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "ontdekken dat sommige dieren eieren leggen",
+          "last": "ontwikkeling in een ei"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Planten, dieren en de mens",
+      "code": "Groeien, bloeien en voortplanten / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "bespreken dat mensen en sommige dieren",
+          "last": "worden door de moeder"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Verschijnselen uit natuurkunde en techniek",
+      "code": "Natuurkundige verschijnselen / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "verkennen en benoemen van dingen",
+          "last": "ik ruik, ik proef"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Verschijnselen uit natuurkunde en techniek",
+      "code": "Natuurkundige verschijnselen / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "ontdekken en verwonderen over",
+          "last": "elektriciteit (lamp en zoemer)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Verschijnselen uit natuurkunde en techniek",
+      "code": "Natuurkundige verschijnselen / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "beseffen dat natuurkundige verschijnselen",
+          "last": "gevaarlijk kunnen zijn"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Verschijnselen uit natuurkunde en techniek",
+      "code": "Materialen, stoffen en voorwerpen / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "verkennen en ontdekken van eigenschappen",
+          "last": "materialen en stoffen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Verschijnselen uit natuurkunde en techniek",
+      "code": "Materialen, stoffen en voorwerpen / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "aangeven waarvan voorwerpen",
+          "last": "de functie onderzoeken"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Verschijnselen uit natuurkunde en techniek",
+      "code": "Materialen, stoffen en voorwerpen / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "maken van een object",
+          "last": "met materialen en voorwerpen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Verschijnselen uit natuurkunde en techniek",
+      "code": "Technische principes en systemen / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "verkennen en toepassen van eenvoudige",
+          "last": "o.a. met constructiematerialen",
+          "corrections": [
+            {
+              "from": "in- verband-leggen",
+              "to": "in-verband-leggen",
+              "reason": "line-break hyphen"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Verschijnselen uit natuurkunde en techniek",
+      "code": "Technische principes en systemen / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "experimenteren met eenvoudige verbindingen",
+          "last": "bouten en moeren)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Verschijnselen uit natuurkunde en techniek",
+      "code": "Technische principes en systemen / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "onderzoeken en ervaren van bewegings",
+          "last": "(hijskraan) en een scharnier"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Verschijnselen uit natuurkunde en techniek",
+      "code": "Technische principes en systemen / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "werken met een (eenvoudige) werktekening",
+          "last": "werktekening of handleiding"
+        }
+      ]
+    }
+  ]
+}

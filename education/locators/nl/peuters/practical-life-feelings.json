@@ -1,0 +1,935 @@
+{
+  "lane": "nl/peuters/practical-life-feelings",
+  "records": [
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Zelfbeeld (zelf beeld)",
+      "code": "Ontdekken van behoeften, gevoelens en emoties van zichzelf / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "herkennen van eigen",
+          "last": "herkennen van eigen gevoelens"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Zelfbeeld (zelf beeld)",
+      "code": "Ontdekken van behoeften, gevoelens en emoties van zichzelf / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "tonen van eigen",
+          "last": "gevoelens (non-verbale wijze)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Zelfbeeld (zelf beeld)",
+      "code": "Ontdekken van behoeften, gevoelens en emoties van zichzelf / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "onderscheiden van basisemoties",
+          "last": "blij, verdrietig, bang)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Zelfbeeld (zelf beeld)",
+      "code": "Ontdekken van de eigen kwaliteiten en krachten / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "ontdekken wat de",
+          "last": "sterke kwaliteiten zijn"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Zelfbeeld (zelf beeld)",
+      "code": "Ontdekken van de eigen kwaliteiten en krachten / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "benoemen wat wel",
+          "last": "(en daarmee omgaan)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Zelfbeeld (zelf beeld)",
+      "code": "Ontdekken van de eigen kwaliteiten en krachten / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "herkennen dat anderen",
+          "last": "ook behoeften hebben"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Zelfbeeld (zelf beeld)",
+      "code": "Ontdekken van verschillen tussen zelf en de ander / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "benoemen van zichzelf",
+          "last": "zichzelf als 'ik'"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Zelfbeeld (zelf beeld)",
+      "code": "Ontdekken van verschillen tussen zelf en de ander / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "ontdekken van de verschillen",
+          "last": "afkomst en traditie"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Plezier beleven in het omgaan met een ander / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 2,
+          "first": "kijken naar andere",
+          "last": "naar andere kinderen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Plezier beleven in het omgaan met een ander / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 2,
+          "first": "belangstelling en sympathie",
+          "last": "voor andere kinderen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Plezier beleven in het omgaan met een ander / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 2,
+          "first": "contact maken met",
+          "last": "of zonder taal)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Plezier beleven in het omgaan met een ander / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 2,
+          "first": "helpen van andere",
+          "last": "of de professional"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Plezier beleven in het omgaan met een ander / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 2,
+          "first": "zorgzaam omgaan met",
+          "last": "van een baby"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Kansen bieden om ervaringen op te doen / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 2,
+          "first": "met andere kinderen 'iets'",
+          "last": "ruimte of speelgoed"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Kansen bieden om ervaringen op te doen / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 2,
+          "first": "naast elkaar spelen",
+          "last": "situatie (hoek, spel)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Kansen bieden om ervaringen op te doen / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 2,
+          "first": "behoeften van zichzelf",
+          "last": "en anderen herkennen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Kansen bieden om ervaringen op te doen / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 2,
+          "first": "uitstellen van eigen",
+          "last": "van eigen behoeften"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Kansen bieden om ervaringen op te doen / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 2,
+          "first": "ontdekken dat er",
+          "last": "leukers te bereiken"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Ervaren wat het vraagt om in een groep deel te nemen / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 2,
+          "first": "vertellen wat wel",
+          "last": "in de groep"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Ervaren wat het vraagt om in een groep deel te nemen / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 2,
+          "first": "houden aan de",
+          "last": "van de groep"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Ervaren wat het vraagt om in een groep deel te nemen / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 2,
+          "first": "omgaan met verhoudingen",
+          "last": "verhoudingen in een groep"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Ervaren wat het vraagt om in een groep deel te nemen / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 2,
+          "first": "beschrijven wat goed",
+          "last": "en fout is"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Ervaren wat het vraagt om in een groep deel te nemen / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 2,
+          "first": "kunnen troosten of",
+          "last": "troosten of 'goed-maken'"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Ervaren wat het vraagt om in een groep deel te nemen / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 2,
+          "first": "op zijn/haar beurt",
+          "last": "tijd tot tijd)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Open staan voor oplossingen bij conflicten / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 2,
+          "first": "verkennen wat de",
+          "last": "zijn in conflicten"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Relaties (sociale vaardigheden)",
+      "code": "Open staan voor oplossingen bij conflicten / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 2,
+          "first": "proberen mee te",
+          "last": "over oplossingen bij conflicten"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Zelfsturing (zelfmanagement)",
+      "code": "Grip krijgen op eigen gevoelens / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "reageren (non-verbaal en",
+          "last": "verbaal) op anderen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Zelfsturing (zelfmanagement)",
+      "code": "Grip krijgen op eigen gevoelens / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "uiten van eigen",
+          "last": "van eigen wil"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Zelfsturing (zelfmanagement)",
+      "code": "Grip krijgen op eigen gevoelens / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "grip krijgen op het",
+          "last": "(reguleren van gevoelens)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Zelfsturing (zelfmanagement)",
+      "code": "Grip krijgen op eigen gevoelens / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "grip krijgen op plezierige",
+          "last": "gevoelens van zichzelf"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Zelfsturing (zelfmanagement)",
+      "code": "Grip krijgen op eigen gevoelens / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "weten dat 'nee'",
+          "last": "van de ander"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Zelfsturing (zelfmanagement)",
+      "code": "Bijsturen/stoppen van ongewenst gedrag / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "controle over zichzelf",
+          "last": "krijgen en behouden"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Zelfsturing (zelfmanagement)",
+      "code": "Bijsturen/stoppen van ongewenst gedrag / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "reageren vanuit intuïtief",
+          "last": "vanuit intuïtief gedrag"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Zelfsturing (zelfmanagement)",
+      "code": "Uitvoeren van eenvoudige opdrachten en/of doelen / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "(actief) opruimen van",
+          "last": "spel te gaan"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Zelfsturing (zelfmanagement)",
+      "code": "Uitvoeren van eenvoudige opdrachten en/of doelen / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "voor een kortdurende",
+          "last": "periode rustig werken"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Zelfsturing (zelfmanagement)",
+      "code": "Uitvoeren van eenvoudige opdrachten en/of doelen / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "(zelfstandig) starten met",
+          "last": "of bekende taak"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Zelfsturing (zelfmanagement)",
+      "code": "Uitvoeren van eenvoudige opdrachten en/of doelen / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "plezier beleven in",
+          "last": "van nieuwe dingen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Emotionele competenties / Zelfsturing (zelfmanagement)",
+      "code": "Uitvoeren van eenvoudige opdrachten en/of doelen / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "grotendeels zichzelf kunnen",
+          "last": "en knopen openmaken)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Sociale competenties / De ander (besef van de ander)",
+      "code": "Open staan voor de emoties van een ander / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "reageren (verbaal en",
+          "last": "van andere mensen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Sociale competenties / De ander (besef van de ander)",
+      "code": "Open staan voor de emoties van een ander / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "ontdekken van patronen",
+          "last": "gedrag van anderen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Sociale competenties / De ander (besef van de ander)",
+      "code": "Open staan voor de emoties van een ander / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "waarnemen van gevoelens",
+          "last": "van gevoelens bij anderen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Sociale competenties / De ander (besef van de ander)",
+      "code": "Open staan voor de emoties van een ander / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "basaal reageren op",
+          "last": "behoeften van anderen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Sociale competenties / De ander (besef van de ander)",
+      "code": "Deel uitmaken van een groep / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "gebruiken en begrijpen",
+          "last": "(kent enkele namen)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Sociale competenties / De ander (besef van de ander)",
+      "code": "Deel uitmaken van een groep / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "op gemak voelen",
+          "last": "de eigen groep"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Sociale competenties / De ander (besef van de ander)",
+      "code": "Inschatten van het gedrag van een ander / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "inschatten van de",
+          "last": "eenvoudige gevoelens bij anderen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Sociale competenties / De ander (besef van de ander)",
+      "code": "Inschatten van het gedrag van een ander / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "duidelijk maken aan",
+          "last": "gevoelens en emoties"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Morele competenties / Kiezen (keuzes maken)",
+      "code": "Maken van een keuze / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 5,
+          "first": "kunnen kiezen tussen",
+          "last": "tussen twee keuzemogelijkheden"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Morele competenties / Kiezen (keuzes maken)",
+      "code": "Maken van een keuze / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 5,
+          "first": "kiezen met wie",
+          "last": "te willen spelen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Morele competenties / Kiezen (keuzes maken)",
+      "code": "Maken van een keuze / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 5,
+          "first": "verbaal duidelijk maken",
+          "last": "van de keuze"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Morele competenties / Kiezen (keuzes maken)",
+      "code": "Maken van een keuze / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 5,
+          "first": "begrijpen van de",
+          "last": "consequenties van een keuze"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Morele competenties / Kiezen (keuzes maken)",
+      "code": "Zelf willen doen / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 5,
+          "first": "zelf (graag) dingen",
+          "last": "dingen willen doen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Morele competenties / Kiezen (keuzes maken)",
+      "code": "Zelf willen doen / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 5,
+          "first": "experimenteren om nieuwe",
+          "last": "dingen te ontdekken"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Morele competenties / Kiezen (keuzes maken)",
+      "code": "Zelf willen doen / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 5,
+          "first": "proberen grenzen te",
+          "last": "grenzen te verleggen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Sociaal-emotionele ontwikkeling, peuters / Morele competenties / Kiezen (keuzes maken)",
+      "code": "Zelf willen doen / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-seo-prefase",
+          "page": 1,
+          "column": 5,
+          "first": "aangeven wanneer hulp",
+          "last": "hulp nodig is"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / Jezelf en de ander",
+      "code": "Gevoelens, wensen en opvattingen / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "herkennen van eigen",
+          "last": "van eigen gevoelens"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / Jezelf en de ander",
+      "code": "Gevoelens, wensen en opvattingen / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "omgaan met eigen",
+          "last": "met eigen gevoelens"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / Jezelf en de ander",
+      "code": "Gevoelens, wensen en opvattingen / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "herkennen van gevoelens",
+          "last": "bij anderen (b)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / Jezelf en de ander",
+      "code": "Samen leven en samenwerken / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "zorgen voor een",
+          "last": "de eigen groep"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / Jezelf en de ander",
+      "code": "Samen leven en samenwerken / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "rekening houden met",
+          "last": "binnen de groep"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / Jezelf en de ander",
+      "code": "Samen leven en samenwerken / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "beseffen dat er",
+          "last": "van mensen (b)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / Jezelf en de ander",
+      "code": "Samen leven en samenwerken / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "ontdekken dat er",
+          "last": "normen zijn (b)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / Jezelf en de ander",
+      "code": "Samen leven en samenwerken / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "beseffen dat je",
+          "last": "samen spelen) (b)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / Jezelf en de ander",
+      "code": "Samen leven en samenwerken / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "ervaren van verschillende",
+          "last": "en samenwerken (b)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / Jezelf en de ander",
+      "code": "Relaties en seksualiteit / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "ontdekken van kenmerken",
+          "last": "uitingen van vriendschap"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / Jezelf en de ander",
+      "code": "Relaties en seksualiteit / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "bespreken wat verliefdheid",
+          "last": "hieraan uiting geven"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / De samenleving",
+      "code": "(Veilige) leefomgeving / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 2,
+          "first": "aandacht hebben en",
+          "last": "de eigen leefomgeving"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / De samenleving",
+      "code": "(Veilige) leefomgeving / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 2,
+          "first": "ontdekken dat een",
+          "last": "gevaarlijk kan zijn)",
+          "corrections": [
+            {
+              "from": "hygienisch",
+              "to": "hygiënisch",
+              "reason": "text recognition misread"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / De samenleving",
+      "code": "Deelnemen aan het verkeer / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 2,
+          "first": "veilig gedragen op",
+          "last": "straat (lopen, spelen)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / De samenleving",
+      "code": "Consument zijn / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 2,
+          "first": "verkennen van de",
+          "last": "(kopen, verkopen, ruilen)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / De ruimte om je heen",
+      "code": "Inrichting en indeling van de ruimte / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "aandacht hebben voor milieuzorg",
+          "last": "in de afvalbak"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / Planten, dieren en de mens",
+      "code": "Gezondheid en hygiëne / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-ojw-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "verzorgen van het",
+          "last": "verzorgen van het eigen lichaam"
+        }
+      ]
+    }
+  ]
+}

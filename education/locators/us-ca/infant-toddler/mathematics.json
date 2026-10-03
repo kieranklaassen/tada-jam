@@ -1,0 +1,68 @@
+{
+  "lane": "us-ca/infant-toddler/mathematics",
+  "records": [
+    {
+      "group": "Cognitive Development / Strand 2.0: Emergent Mathematical Thinking",
+      "code": "2.1",
+      "spans": [
+        {
+          "label": "Foundation",
+          "source": "us-ca-itldf-2025",
+          "page": 145,
+          "first": "The developing",
+          "last": "quantity",
+          "lastOccurrence": 1
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 145,
+          "first": "Children use number",
+          "last": "one two four five",
+          "lastOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Cognitive Development / Strand 2.0: Emergent Mathematical Thinking",
+      "code": "2.2",
+      "spans": [
+        {
+          "label": "Foundation",
+          "source": "us-ca-itldf-2025",
+          "page": 146,
+          "first": "The developing",
+          "last": "in space",
+          "lastOccurrence": 1
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 146,
+          "first": "Children predict how",
+          "last": "down in space"
+        }
+      ]
+    },
+    {
+      "group": "Cognitive Development / Strand 2.0: Emergent Mathematical Thinking",
+      "code": "2.3",
+      "spans": [
+        {
+          "label": "Foundation",
+          "source": "us-ca-itldf-2025",
+          "page": 148,
+          "first": "The developing ability",
+          "last": "to their characteristics"
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 148,
+          "first": "Children sort objects",
+          "last": "all fruits banana"
+        }
+      ]
+    }
+  ]
+}

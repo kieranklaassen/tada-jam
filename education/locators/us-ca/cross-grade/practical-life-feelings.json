@@ -1,0 +1,1657 @@
+{
+  "lane": "us-ca/cross-grade/practical-life-feelings",
+  "records": [
+    {
+      "group": "Overarching health education content standards",
+      "code": "1",
+      "title": "Essential Health Concepts",
+      "spans": [
+        {
+          "source": "us-ca-cde-health-standards-pdf",
+          "page": 66,
+          "first": "Essential Health",
+          "last": "enhancing health"
+        }
+      ]
+    },
+    {
+      "group": "Overarching health education content standards",
+      "code": "2",
+      "title": "Analyzing Health Influences",
+      "spans": [
+        {
+          "source": "us-ca-cde-health-standards-pdf",
+          "page": 66,
+          "first": "Analyzing Health Influences All",
+          "last": "influences that affect health"
+        }
+      ]
+    },
+    {
+      "group": "Overarching health education content standards",
+      "code": "3",
+      "title": "Accessing Valid Health Information",
+      "spans": [
+        {
+          "source": "us-ca-cde-health-standards-pdf",
+          "page": 66,
+          "first": "Accessing Valid Health Information",
+          "last": "information, products, and services"
+        }
+      ]
+    },
+    {
+      "group": "Overarching health education content standards",
+      "code": "4",
+      "title": "Interpersonal Communication",
+      "spans": [
+        {
+          "source": "us-ca-cde-health-standards-pdf",
+          "page": 66,
+          "first": "Interpersonal Communication All students",
+          "last": "skills to enhance health",
+          "lastOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Overarching health education content standards",
+      "code": "5",
+      "title": "Decision Making",
+      "spans": [
+        {
+          "source": "us-ca-cde-health-standards-pdf",
+          "page": 66,
+          "first": "Decision Making All students",
+          "last": "skills to enhance health",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Overarching health education content standards",
+      "code": "6",
+      "title": "Goal Setting",
+      "spans": [
+        {
+          "source": "us-ca-cde-health-standards-pdf",
+          "page": 66,
+          "first": "Goal Setting All students",
+          "last": "skills to enhance health",
+          "lastOccurrence": 3
+        }
+      ]
+    },
+    {
+      "group": "Overarching health education content standards",
+      "code": "7",
+      "title": "Practicing Health-Enhancing Behaviors",
+      "spans": [
+        {
+          "source": "us-ca-cde-health-standards-pdf",
+          "page": 66,
+          "first": "Practicing Health-Enhancing Behaviors",
+          "last": "risk and promote health"
+        }
+      ]
+    },
+    {
+      "group": "Overarching health education content standards",
+      "code": "8",
+      "title": "Health Promotion",
+      "spans": [
+        {
+          "source": "us-ca-cde-health-standards-pdf",
+          "page": 66,
+          "first": "Health Promotion All students",
+          "last": "family, and community health"
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "1.A.1",
+      "title": "Self-Awareness: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students name their personal",
+          "last": "own likes and dislikes"
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "1.A.2",
+      "title": "Self-Awareness: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students understand how some",
+          "last": "feel superior to others"
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "1.A.3",
+      "title": "Self-Awareness: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students identify and explore",
+          "last": "based on their strengths"
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "1.B.1",
+      "title": "Self-Awareness: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students recognize, label, and",
+          "last": "can affect their body"
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "1.B.2",
+      "title": "Self-Awareness: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students recognize the intensity",
+          "last": "feel stressed or anxious"
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "1.B.3",
+      "title": "Self-Awareness: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students examine and reflect",
+          "last": "specificity, their feeling states",
+          "firstOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "1.C.1",
+      "title": "Self-Awareness: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students name people, places",
+          "last": "their own family traditions"
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "1.C.2",
+      "title": "Self-Awareness: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students articulate their beliefs",
+          "last": "and their learning community"
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "1.C.3",
+      "title": "Self-Awareness: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students explore the concept",
+          "last": "values can be challenged"
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "1.D.1",
+      "title": "Self-Awareness: Belonging",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students understand",
+          "last": "harm others",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "1.D.2",
+      "title": "Self-Awareness: Belonging",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students are able to",
+          "last": "excluded and excluding others",
+          "firstOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "1.D.3",
+      "title": "Self-Awareness: Belonging",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students begin to identify",
+          "last": "being inclusive or exclusive",
+          "firstOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "1.E.1",
+      "title": "Self-Awareness: Belonging",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students identify",
+          "last": "other settings",
+          "firstOccurrence": 3,
+          "lastOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "1.E.2",
+      "title": "Self-Awareness: Belonging",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students describe their roles",
+          "last": "in their learning community",
+          "lastOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "1.E.3",
+      "title": "Self-Awareness: Belonging",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students begin to identify",
+          "last": "in their learning community",
+          "firstOccurrence": 2,
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "1.F.1",
+      "title": "Self-Awareness: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students reflect on experiences",
+          "last": "their decisions and behavior"
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "1.F.2",
+      "title": "Self-Awareness: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students recognize how their",
+          "last": "can be changed intentionally"
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "1.F.3",
+      "title": "Self-Awareness: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students recognize the connection",
+          "last": "their culture and experiences"
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "1.G.1",
+      "title": "Self-Awareness: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students are aware of",
+          "last": "skills, knowledge, or talents",
+          "firstOccurrence": 4
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "1.G.2",
+      "title": "Self-Awareness: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students articulate their needs",
+          "last": "are important and meaningful"
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "1.G.3",
+      "title": "Self-Awareness: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students develop a sense",
+          "last": "assets in healthy ways"
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "1.H.1",
+      "title": "Self-Awareness: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students believe in their",
+          "last": "having an optimistic outlook"
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "1.H.2",
+      "title": "Self-Awareness: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students are more accurate",
+          "last": "new and different ideas"
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "1.H.3",
+      "title": "Self-Awareness: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students examine and reflect",
+          "last": "their optimism and confidence",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "2.A.1",
+      "title": "Self-Management: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students practice noticing their",
+          "last": "patient, focused and energized"
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "2.A.2",
+      "title": "Self-Management: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students practice self-monitoring",
+          "last": "social and cultural contexts"
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "2.A.3",
+      "title": "Self-Management: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students explore the difference",
+          "last": "before acting on them"
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "2.B.1",
+      "title": "Self-Management: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students identify situations and",
+          "last": "are within their control",
+          "lastOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "2.B.2",
+      "title": "Self-Management: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students know and use",
+          "last": "are within their control",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "2.B.3",
+      "title": "Self-Management: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students describe how stress",
+          "last": "mental and physical health",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "2.C.1",
+      "title": "Self-Management: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students identify and practice",
+          "last": "bounce back\" from challenges"
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "2.C.2",
+      "title": "Self-Management: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students describe different types",
+          "last": "current and historical characters"
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "2.C.3",
+      "title": "Self-Management: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students consider various paths",
+          "last": "for in supportive relationships"
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "2.D.1",
+      "title": "Self-Management: Belonging",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students understand",
+          "last": "constructive feedback",
+          "firstOccurrence": 5,
+          "lastOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "2.D.2",
+      "title": "Self-Management: Belonging",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students welcome",
+          "last": "to peers",
+          "firstOccurrence": 1,
+          "lastOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "2.D.3",
+      "title": "Self-Management: Belonging",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students seek out and",
+          "last": "learning community and family"
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "2.E.1",
+      "title": "Self-Management: Belonging",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students understand",
+          "last": "physical boundaries",
+          "firstOccurrence": 6,
+          "lastOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "2.E.2",
+      "title": "Self-Management: Belonging",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students perceive social cues",
+          "last": "physical boundaries of others"
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "2.E.3",
+      "title": "Self-Management: Belonging",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students reflect on their",
+          "last": "boundaries within different cultures",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "2.F.1",
+      "title": "Self-Management: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students identify",
+          "last": "achieve them",
+          "firstOccurrence": 8,
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "2.F.2",
+      "title": "Self-Management: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students identify short- and",
+          "last": "to achieve those goals"
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "2.F.3",
+      "title": "Self-Management: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students identify and work",
+          "last": "personal and collective goals",
+          "lastOccurrence": 8
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "2.G.1",
+      "title": "Self-Management: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students begin practicing self",
+          "last": "focused and paying attention"
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "2.G.2",
+      "title": "Self-Management: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students use personally relevant",
+          "last": "solutions to overcome them"
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "2.G.3",
+      "title": "Self-Management: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students can create and",
+          "last": "that work for them",
+          "lastOccurrence": 3
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "2.H.1",
+      "title": "Self-Management: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students keep",
+          "last": "with guidance",
+          "lastOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "2.H.2",
+      "title": "Self-Management: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students practice managing their",
+          "last": "a task or activity"
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "2.H.3",
+      "title": "Self-Management: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students take",
+          "last": "and responsibilities",
+          "firstOccurrence": 1,
+          "lastOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "3.A.1",
+      "title": "Social Awareness: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students discuss",
+          "last": "cultural groups"
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "3.A.2",
+      "title": "Social Awareness: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students identify opinions versus",
+          "last": "individuals from diverse groups"
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "3.A.3",
+      "title": "Social Awareness: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students reflect on how",
+          "last": "those from diverse groups",
+          "firstOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "3.B.1",
+      "title": "Social Awareness: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students recognize and name",
+          "last": "empathy for others' experiences"
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "3.B.2",
+      "title": "Social Awareness: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students name ways people's",
+          "last": "and compassion for others"
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "3.B.3",
+      "title": "Social Awareness: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students explore differences in",
+          "last": "demonstrate care and concern"
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "3.C.1",
+      "title": "Social Awareness: Belonging",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students contribute to creating",
+          "last": "all backgrounds and experiences"
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "3.C.2",
+      "title": "Social Awareness: Belonging",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students recognize healthy and",
+          "last": "build and maintain trust",
+          "lastOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "3.C.3",
+      "title": "Social Awareness: Belonging",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students co-construct all",
+          "last": "inclusivity of the curriculum"
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "3.D.1",
+      "title": "Social Awareness: Belonging",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students describe what it",
+          "last": "when they need help"
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "3.D.2",
+      "title": "Social Awareness: Belonging",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students identify appropriate, trusted",
+          "last": "they can support others"
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "3.D.3",
+      "title": "Social Awareness: Belonging",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students know when and",
+          "last": "members of a community"
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "3.E.1",
+      "title": "Social Awareness: Belonging",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students name groups or",
+          "last": "make others feel welcome"
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "3.E.2",
+      "title": "Social Awareness: Belonging",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students demonstrate acceptance and",
+          "last": "of a diverse group"
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "3.E.3",
+      "title": "Social Awareness: Belonging",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students reflect on how",
+          "last": "systems in healthy ways",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "3.F.1",
+      "title": "Social Awareness: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students describe and demonstrate",
+          "last": "play with peers respectfully"
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "3.F.2",
+      "title": "Social Awareness: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students can work cooperatively",
+          "last": "groups in our society"
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "3.F.3",
+      "title": "Social Awareness: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students examine and reflect",
+          "last": "explore intent versus impact",
+          "firstOccurrence": 3
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "3.G.1",
+      "title": "Social Awareness: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students name ways that",
+          "last": "other groups or communities"
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "3.G.2",
+      "title": "Social Awareness: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students explore the importance",
+          "last": "to their learning community"
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "3.G.3",
+      "title": "Social Awareness: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students accurately recognize inequities",
+          "last": "healthy, and just community"
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "4.A.1",
+      "title": "Relationship Skills: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students begin to identify",
+          "last": "say \"no\" to them",
+          "firstOccurrence": 3
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "4.A.2",
+      "title": "Relationship Skills: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students show progress in",
+          "last": "navigate negative social pressure"
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "4.A.3",
+      "title": "Relationship Skills: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students examine and reflect",
+          "last": "navigate peer-pressure situations",
+          "firstOccurrence": 4
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "4.B.1",
+      "title": "Relationship Skills: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students practice",
+          "last": "learning context",
+          "firstOccurrence": 6
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "4.B.2",
+      "title": "Relationship Skills: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students understand that leadership",
+          "last": "are important to them",
+          "lastOccurrence": 3
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "4.B.3",
+      "title": "Relationship Skills: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students explore different types",
+          "last": "identify areas of improvement"
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "4.C.1",
+      "title": "Relationship Skills: Belonging",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students identify",
+          "last": "toward others",
+          "firstOccurrence": 20,
+          "lastOccurrence": 3
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "4.C.2",
+      "title": "Relationship Skills: Belonging",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students identify characteristics of",
+          "last": "gratitude in different ways"
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "4.C.3",
+      "title": "Relationship Skills: Belonging",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students examine and reflect",
+          "last": "on communication and relationships",
+          "firstOccurrence": 5
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "4.D.1",
+      "title": "Relationship Skills: Belonging",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students show willingness to",
+          "last": "share information with others"
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "4.D.2",
+      "title": "Relationship Skills: Belonging",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students celebrate differences in",
+          "last": "respect for other cultures"
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "4.D.3",
+      "title": "Relationship Skills: Belonging",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students explore different cultural",
+          "last": "foundation of cultural humility"
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "4.E.1",
+      "title": "Relationship Skills: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students identify",
+          "last": "with others",
+          "firstOccurrence": 24,
+          "lastOccurrence": 9
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "4.E.2",
+      "title": "Relationship Skills: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students use constructive strategies",
+          "last": "to solve a problem",
+          "lastOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "4.E.3",
+      "title": "Relationship Skills: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students work with peers",
+          "last": "concerns on both sides"
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "4.F.1",
+      "title": "Relationship Skills: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students can",
+          "last": "own actions",
+          "firstOccurrence": 16,
+          "lastOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "4.F.2",
+      "title": "Relationship Skills: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students practice acknowledging their",
+          "last": "and move forward constructively"
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "4.F.3",
+      "title": "Relationship Skills: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students proactively use restorative",
+          "last": "relationships. Students practice forgiveness"
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "4.G.1",
+      "title": "Relationship Skills: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students communicate",
+          "last": "impacting others"
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "4.G.2",
+      "title": "Relationship Skills: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students can",
+          "last": "with others",
+          "firstOccurrence": 18,
+          "lastOccurrence": 11
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "4.G.3",
+      "title": "Relationship Skills: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students learn and practice",
+          "last": "engage in respectful negotiation"
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "4.H.1",
+      "title": "Relationship Skills: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students recognize all people",
+          "last": "something to an adult",
+          "firstOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "4.H.2",
+      "title": "Relationship Skills: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students recognize all people",
+          "last": "targets from bullying situations",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "4.H.3",
+      "title": "Relationship Skills: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students examine and reflect",
+          "last": "includes ongoing self-reflection",
+          "firstOccurrence": 6
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "5.A.1",
+      "title": "Responsible Decision-Making: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students express curiosity and",
+          "last": "interested in new experiences"
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "5.A.2",
+      "title": "Responsible Decision-Making: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students understand the importance",
+          "last": "or in new situations"
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "5.A.3",
+      "title": "Responsible Decision-Making: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students intentionally practice curiosity",
+          "last": "which they can grow"
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "5.B.1",
+      "title": "Responsible Decision-Making: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students demonstrate honesty and",
+          "last": "behalf of our planet",
+          "firstOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "5.B.2",
+      "title": "Responsible Decision-Making: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students demonstrate honesty and",
+          "last": "actions to our planet",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "5.B.3",
+      "title": "Responsible Decision-Making: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students understand the concepts",
+          "last": "of our planet's resources"
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "5.C.1",
+      "title": "Responsible Decision-Making: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students describe",
+          "last": "with support",
+          "firstOccurrence": 7,
+          "lastOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "5.C.2",
+      "title": "Responsible Decision-Making: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students generate multiple feasible",
+          "last": "to solve a problem",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "5.C.3",
+      "title": "Responsible Decision-Making: Identity",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students apply an improvement",
+          "last": "solving conversations among peers",
+          "corrections": [
+            {
+              "from": "improvement- orientation",
+              "to": "improvement-orientation",
+              "reason": "line-break hyphen"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "5.D.1",
+      "title": "Responsible Decision-Making: Belonging",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students understand why safety",
+          "last": "can demonstrate safe behavior"
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "5.D.2",
+      "title": "Responsible Decision-Making: Belonging",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students understand physical and",
+          "last": "be tied to identity"
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "5.D.3",
+      "title": "Responsible Decision-Making: Belonging",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students differentiate and honor",
+          "last": "assess risk for themselves"
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "5.E.1",
+      "title": "Responsible Decision-Making: Belonging",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students identify ways that",
+          "last": "participant in a democracy"
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "5.E.2",
+      "title": "Responsible Decision-Making: Belonging",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students develop an understanding",
+          "last": "responsibilities of democratic citizenship"
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "5.E.3",
+      "title": "Responsible Decision-Making: Belonging",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students explore their own",
+          "last": "leaders and elected representatives"
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "5.F.1",
+      "title": "Responsible Decision-Making: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students can",
+          "last": "act strategies",
+          "firstOccurrence": 24
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "5.F.2",
+      "title": "Responsible Decision-Making: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students know and regularly",
+          "last": "outcomes for all involved"
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "5.F.3",
+      "title": "Responsible Decision-Making: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students deepen their understanding",
+          "last": "messages and online sources",
+          "firstOccurrence": 3
+        }
+      ]
+    },
+    {
+      "group": "Early Elementary",
+      "code": "5.G.1",
+      "title": "Responsible Decision-Making: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students can name the",
+          "last": "impacts far beyond themselves"
+        }
+      ]
+    },
+    {
+      "group": "Late Elementary",
+      "code": "5.G.2",
+      "title": "Responsible Decision-Making: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students anticipate consequences of",
+          "last": "relationships, and learning contexts"
+        }
+      ]
+    },
+    {
+      "group": "Middle School",
+      "code": "5.G.3",
+      "title": "Responsible Decision-Making: Agency",
+      "spans": [
+        {
+          "source": "us-ca-cde-tsel-competencies-docx",
+          "page": 1,
+          "first": "Students anticipate the most",
+          "last": "country, and the planet"
+        }
+      ]
+    }
+  ]
+}

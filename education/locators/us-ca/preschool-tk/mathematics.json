@@ -1,0 +1,567 @@
+{
+  "lane": "us-ca/preschool-tk/mathematics",
+  "records": [
+    {
+      "group": "Mathematics / Strand 1.0 — Counting and Cardinality",
+      "code": "1.1",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 17,
+          "first": "Recite numbers in order",
+          "last": "a few errors",
+          "firstOccurrence": 1,
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 17,
+          "first": "Recite numbers in order",
+          "last": "other than one",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Mathematics / Strand 1.0 — Counting and Cardinality",
+      "code": "1.2",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 19,
+          "first": "Count five objects",
+          "last": "each number word",
+          "lastOccurrence": 1,
+          "corrections": [
+            {
+              "from": "oneto-one",
+              "to": "one-to-one",
+              "reason": "line-break hyphen"
+            }
+          ]
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 19,
+          "first": "Count ten objects",
+          "last": "each number word",
+          "lastOccurrence": 2,
+          "corrections": [
+            {
+              "from": "oneto-one",
+              "to": "one-to-one",
+              "reason": "line-break hyphen"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Mathematics / Strand 1.0 — Counting and Cardinality",
+      "code": "1.3",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 21,
+          "first": "Answer the question",
+          "last": "in the group",
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 21,
+          "first": "Consistently demonstrate understanding",
+          "last": "in the group",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Mathematics / Strand 1.0 — Counting and Cardinality",
+      "code": "1.4",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 24,
+          "first": "Identify without counting",
+          "last": "to four objects",
+          "firstOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 24,
+          "first": "Identify without counting",
+          "last": "to five objects",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Mathematics / Strand 1.0 — Counting and Cardinality",
+      "code": "1.5",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 25,
+          "first": "Recognize and",
+          "last": "under 10",
+          "firstOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 25,
+          "first": "Recognize and",
+          "last": "through 10",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Mathematics / Strand 1.0 — Counting and Cardinality",
+      "code": "1.6",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 26,
+          "first": "Compare with or without",
+          "last": "same or more"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 26,
+          "first": "Compare two groups",
+          "last": "less or fewer"
+        }
+      ]
+    },
+    {
+      "group": "Mathematics / Strand 2.0 — Operations and Algebraic Thinking",
+      "code": "2.1",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 27,
+          "first": "Demonstrate understanding that adding",
+          "last": "in the group",
+          "firstOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 27,
+          "first": "Demonstrate understanding that adding",
+          "last": "by exactly one",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Mathematics / Strand 2.0 — Operations and Algebraic Thinking",
+      "code": "2.2",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 30,
+          "first": "Demonstrate understanding that a",
+          "last": "than its parts"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 30,
+          "first": "Decompose a set",
+          "last": "set of 5"
+        }
+      ]
+    },
+    {
+      "group": "Mathematics / Strand 2.0 — Operations and Algebraic Thinking",
+      "code": "2.3",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 33,
+          "first": "Solve addition and subtraction",
+          "last": "of everyday situations",
+          "firstOccurrence": 1,
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 33,
+          "first": "Solve addition and subtraction",
+          "last": "of everyday situations",
+          "firstOccurrence": 2,
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Mathematics / Strand 2.0 — Operations and Algebraic Thinking",
+      "code": "2.4",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 35,
+          "first": "Share a small number",
+          "last": "between two recipients"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 35,
+          "first": "Share a slightly larger",
+          "last": "among three recipients"
+        }
+      ]
+    },
+    {
+      "group": "Mathematics / Strand 2.0 — Operations and Algebraic Thinking",
+      "code": "2.5",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 37,
+          "first": "Notice similarities and differences",
+          "last": "or more groups",
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 37,
+          "first": "Sort and classify objects",
+          "last": "the second attribute",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Mathematics / Strand 2.0 — Operations and Algebraic Thinking",
+      "code": "2.6",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 39,
+          "first": "Notice and explore patterns",
+          "last": "for example ABAB"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 39,
+          "first": "Explore extend and duplicate",
+          "last": "pattern unit"
+        }
+      ]
+    },
+    {
+      "group": "Mathematics / Strand 2.0 — Operations and Algebraic Thinking",
+      "code": "2.7",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 41,
+          "first": "Create with",
+          "last": "example ABAB"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 41,
+          "first": "Create a variety",
+          "last": "using different objects"
+        }
+      ]
+    },
+    {
+      "group": "Mathematics / Strand 3.0 — Measurement and Data",
+      "code": "3.1",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 44,
+          "first": "Demonstrate awareness that objects",
+          "last": "about their comparison",
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 44,
+          "first": "Compare two objects by",
+          "last": "about their comparison",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Mathematics / Strand 3.0 — Measurement and Data",
+      "code": "3.2",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 46,
+          "first": "Order a few objects",
+          "last": "example height capacity",
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 46,
+          "first": "Order a slightly larger",
+          "last": "example height capacity",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Mathematics / Strand 3.0 — Measurement and Data",
+      "code": "3.3",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 48,
+          "first": "No foundation",
+          "last": "No foundation"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 48,
+          "first": "Measure length using",
+          "last": "of equal length"
+        }
+      ]
+    },
+    {
+      "group": "Mathematics / Strand 3.0 — Measurement and Data",
+      "code": "3.4",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 51,
+          "first": "Use objects tally marks",
+          "last": "with adult support",
+          "firstOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 51,
+          "first": "Use objects tally marks",
+          "last": "one data point",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Mathematics / Strand 3.0 — Measurement and Data",
+      "code": "3.5",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 53,
+          "first": "Notice with adult support",
+          "last": "more or less",
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 53,
+          "first": "Describe and compare with",
+          "last": "more or less",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Mathematics / Strand 4.0 — Geometry and Spatial Thinking",
+      "code": "4.1",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 55,
+          "first": "Identify familiar two",
+          "last": "triangle and rectangle"
+        },
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 55,
+          "first": "Note May not identify",
+          "last": "down a diamond"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 55,
+          "first": "Identify describe and construct",
+          "last": "sides corners round"
+        }
+      ]
+    },
+    {
+      "group": "Mathematics / Strand 4.0 — Geometry and Spatial Thinking",
+      "code": "4.2",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 57,
+          "first": "Occasionally identify a few",
+          "last": "to a sphere"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 57,
+          "first": "Identify a",
+          "last": "and cylinder",
+          "firstOccurrence": 2
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 57,
+          "first": "Note Sometimes",
+          "last": "box tube"
+        }
+      ]
+    },
+    {
+      "group": "Mathematics / Strand 4.0 — Geometry and Spatial Thinking",
+      "code": "4.3",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 58,
+          "first": "Compare two dimensional shapes",
+          "last": "the same shape",
+          "firstOccurrence": 1,
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 58,
+          "first": "Compare two dimensional shapes",
+          "last": "two different shapes",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Mathematics / Strand 4.0 — Geometry and Spatial Thinking",
+      "code": "4.4",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 59,
+          "first": "Use two or three",
+          "last": "represent the sun"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 59,
+          "first": "Combine different two or",
+          "last": "a triangular prism",
+          "corrections": [
+            {
+              "from": "threedimensional",
+              "to": "three-dimensional",
+              "reason": "line-break hyphen"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Mathematics / Strand 4.0 — Geometry and Spatial Thinking",
+      "code": "4.5",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 62,
+          "first": "Identify some positions",
+          "last": "and inside outside",
+          "corrections": [
+            {
+              "from": "under/ over",
+              "to": "under/over",
+              "reason": "line-break hyphen"
+            }
+          ]
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 62,
+          "first": "Identify positions of objects",
+          "last": "front of behind",
+          "corrections": [
+            {
+              "from": "up/ down",
+              "to": "up/down",
+              "reason": "line-break hyphen"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Mathematics / Strand 4.0 — Geometry and Spatial Thinking",
+      "code": "4.6",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 64,
+          "first": "Rely on trial and",
+          "last": "until it fits",
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-math",
+          "page": 64,
+          "first": "Rotate flip or slide",
+          "last": "into a hole",
+          "lastOccurrence": 2
+        }
+      ]
+    }
+  ]
+}

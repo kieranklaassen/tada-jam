@@ -1,0 +1,1885 @@
+{
+  "lane": "nl/fase-2/science",
+  "verdicts": [
+    {
+      "id": "edu.nl.fase-2.science.objective.02c51e18-96a9-4477-b3ec-f9de04bc579d",
+      "wording_sha256": "f56a6cc8d77e8d7e7a5e63fafe2d6013ea5456bd3424951274167d9c85dd55dc",
+      "text_sha256": "8d2b8ddfaa5cac77d9f7030938c781a4bc2006324492367d3182d181137bd9d1",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands in the fase 2 column under the cluster \"De mens\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 2,
+        "offset": 175
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.02c51e18-96a9-4477-b3ec-f9de04bc579d",
+      "wording_sha256": "f56a6cc8d77e8d7e7a5e63fafe2d6013ea5456bd3424951274167d9c85dd55dc",
+      "text_sha256": "ee04003b767e0a2d4cdc9600ff45ccb07fcffcbc68bc4fc736285d794d677787",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands on page 2 in the fase 2 column of the cluster \"De mens\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful. Limits keeps to \"de uitwendige vorm en bouw van de ledematen van de mens\"; the neighbour `ojw/pdm/1/02/fase2` (inner parts noticed from outside) says what is claimed. The PDF underlines \"mens\" and \"vorm en functie\": form.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 2,
+        "offset": 175
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.0b84e0ee-ea7b-4045-912f-b75301ea8582",
+      "wording_sha256": "b2540eac62541e1e54c3d9763b3ea9e4aa1f13d1dfe81556b6905651c2160cc4",
+      "text_sha256": "144449ed1a06032bd080d43389367ec33899d2e6291c849aa3491626d3a33920",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands in the fase 2 column on page 3, where the cluster \"Technische principes en systemen\" runs on from page 2 (the heading is not repeated), with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. Each of the four common mistakes states the physics rightly (meshing gears turn opposite ways; the small wheel turns faster; a lever trades distance for force; one fixed pulley only changes direction). Four common mistakes (form). The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 3,
+        "offset": 120
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.0b84e0ee-ea7b-4045-912f-b75301ea8582",
+      "wording_sha256": "b2540eac62541e1e54c3d9763b3ea9e4aa1f13d1dfe81556b6905651c2160cc4",
+      "text_sha256": "f68196a1c2de8bc9f3ae443e6a2a969fe9c3fcf08338440ead6b90ca8a9c7a80",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands on page 3 in the fase 2 column of the cluster \"Technische principes en systemen\" (the cluster runs on from page 2 and its heading is not repeated), word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful. *Kracht*: Limits says \"with lever and pulley beside it, the force of mechanics is meant\". Judged: the Dutch is \"hoe kracht en beweging kunnen worden overgebracht zoals kracht via hefboom of katrol\"; what a lever or a pulley passes on is a push or a pull, changed in size or direction, so the context settles the reading and \"force\" may stand without the Dutch word in the gloss; Limits still tells the reader of the everyday meaning. \"No calculation and no ratio is mentioned\" names no instance of a term of the goal. Three common mistakes remain and each states the physics rightly (meshing wheels turn opposite ways; the small wheel turns faster; a single fixed pulley only changes direction). The PDF underlines \"kracht\" and \"overgebracht\": form.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 3,
+        "offset": 120
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.0f95d5f0-e566-4237-bf75-e212387cb3c0",
+      "wording_sha256": "0044c2b6ed408853643ce682a991ec960441e679b1d4c18f80a6fbc4f79c2250",
+      "text_sha256": "c15844175877d4e7e2d17bad598b34b12ec905894b49c65ee0fdf7b219fd3724",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands in the fase 2 column under the cluster \"Planten en dieren\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 1,
+        "offset": 269
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.0f95d5f0-e566-4237-bf75-e212387cb3c0",
+      "wording_sha256": "0044c2b6ed408853643ce682a991ec960441e679b1d4c18f80a6fbc4f79c2250",
+      "text_sha256": "132f0c5593bd9bff80817c7e559b54b7a5c9019fc1e85958ae8ee17327f96c94",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands on page 1 in the fase 2 column of the cluster \"Planten en dieren\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful; the three items after \"bijv.\" stay examples in Limits, which rightly adds that the wording does not say which plant or animal each is taken from. The PDF underlines \"technologische ontwikkelingen\": form.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 1,
+        "offset": 269
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.2d5af352-8657-419a-adbd-1c6d0026850f",
+      "wording_sha256": "01832fe7a9500a84734211acfda204470ad902005bb1d7fb329c4d532635f93c",
+      "text_sha256": "0247ad133f8bd64cdc1d294f6f185ee3de818f9dcf0124c311c48082b365c96e",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"De ruimte om je heen\" (04-2018): the goal stands in the fase 2 column under the cluster \"Heelal en hemellichamen\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. In a child's hands has the child note where the sun stands \"without looking straight at it\", so nothing unsafe is presented. The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": {
+        "page": 1,
+        "offset": 259
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.2d5af352-8657-419a-adbd-1c6d0026850f",
+      "wording_sha256": "01832fe7a9500a84734211acfda204470ad902005bb1d7fb329c4d532635f93c",
+      "text_sha256": "a7959ca0a120b95733f87b31b5553cd0d411b3da1156588dc84a81b4fa82f245",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"De ruimte om je heen\" (04-2018): the goal stands on page 1 in the fase 2 column of the cluster \"Heelal en hemellichamen\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful. The bracket has no \"zoals\" or \"bijv.\"; Limits reports it as \"The brackets name two things to look at\", calling it neither closed nor open. \"does not mention seasons or time zones\" names other subjects, not instances of a term of this goal (the bracket itself says \"gedurende de dag\"). The three common mistakes are real misconceptions and the science is right (the shadow of an upright stick is shortest, not longest, when the sun is highest).",
+      "rendition": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": {
+        "page": 1,
+        "offset": 259
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.32856400-4edb-42a2-b5ee-eb3e639960f3",
+      "wording_sha256": "6d5918920bcc52983da1d81c5281a5b4539c5aad4be3a3d5cee9f6cd6e87263a",
+      "text_sha256": "711a55621f650b395ed887ddfdadcf4437a670385d0f8c35a366f856b6e10d97",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands in the fase 2 column under the cluster \"Materialen, stoffen en voorwerpen\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. Limits says \"Filtering and evaporating are not mentioned\": the content line uses \"ontmengen\" for a mixture coming apart by itself (\"laagjesvorming\" here; \"waterige en vetachtige lagen\" and, apart from it, \"uitzakken\" in fase 3), so filtering is not an instance of it; not counted as a fault, though \"the wording names only layer forming\" would be safer. Common mistakes uses tasting salt water as the proof that the salt is still there: fine for kitchen salt, and it is the pack's remark, not part of the goal. Four common mistakes (form). The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 2,
+        "offset": 131
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.32856400-4edb-42a2-b5ee-eb3e639960f3",
+      "wording_sha256": "6d5918920bcc52983da1d81c5281a5b4539c5aad4be3a3d5cee9f6cd6e87263a",
+      "text_sha256": "498ea9ec42eb23fdcfd36f91161beb5b893b0f92f48f9f1982e78778f489caa8",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands on page 2 in the fase 2 column of the cluster \"Materialen, stoffen en voorwerpen\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful and keeps *keukenpoeders*. Limits now reads \"The wording names no particular powders or liquids and no other way in which a mixture separates\", so filtering and evaporating are no longer singled out (the first check's remark). Three common mistakes remain, all right. For the lead: the age sentence has \"a child of 10 changes one thing\"; read as the method of a fair test, not an amount, and confirmed on that reading.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 2,
+        "offset": 131
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.3286b9bb-4c1c-4cd2-ab0e-2165df9da71a",
+      "wording_sha256": "7f1509c8db19f0128c2c35e4a5f16633bae0bd74f14c457623299aa7359ba97a",
+      "text_sha256": "097694a34473fe68de11e723946485681c9eb3365b39e00fb065508f86c8d86a",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands in the fase 2 column under the cluster \"Omgaan met de natuur\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. The PDF prints the same sentence in the fase 3 column as well (page 1, offset 309); the place given is the printing in the fase 2 column. Glossed as an experience, not a skill. The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 1,
+        "offset": 155
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.3286b9bb-4c1c-4cd2-ab0e-2165df9da71a",
+      "wording_sha256": "7f1509c8db19f0128c2c35e4a5f16633bae0bd74f14c457623299aa7359ba97a",
+      "text_sha256": "bcd7a844e5c79337bbcc7ea3926e4af0d486be8065a4c05055a68a76e7c34c86",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands on page 1 in the fase 2 column of the cluster \"Omgaan met de natuur\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The PDF prints the sentence in the fase 3 column too (page 1, offset 309); the place given is the printing in the fase 2 column. The gloss equals that of the fase 3 record with the same Dutch (`ojw/pdm/4/02/fase3`); checked against the Dutch itself (\"ervaren van schoonheid en esthetische waarde van natuur voor de mens\"): faithful. Limits: experiencing, with no knowledge, skill or kind of nature named.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 1,
+        "offset": 155
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.3573da2c-3bbf-4462-81eb-a8506f0c910a",
+      "wording_sha256": "5f0c3345c5940c3c4d332e5ab75d9e609a84aafd2a430eefbfda343b2ee9898e",
+      "text_sha256": "556cb802a53d565936a44b00b103a3a153c8eb4c0f72ef0fc8df58489312c3f8",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands in the fase 2 column under the cluster \"Materialen, stoffen en voorwerpen\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 2,
+        "offset": 163
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.3573da2c-3bbf-4462-81eb-a8506f0c910a",
+      "wording_sha256": "5f0c3345c5940c3c4d332e5ab75d9e609a84aafd2a430eefbfda343b2ee9898e",
+      "text_sha256": "4a95641aa512261801aeabc9aa6085fce92e5e0ca70d12d5883a54acad3273eb",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands on page 2 in the fase 2 column of the cluster \"Materialen, stoffen en voorwerpen\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful, bracket included (\"denken in vorm-functie van producten en materiaal-functie bij producten\"). Limits: familiar objects, none named; three things related. The PDF underlines \"vorm-functie van producten\": form.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 2,
+        "offset": 163
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.364286ca-74d0-45b2-a2c2-528ce666a5b0",
+      "wording_sha256": "2af4a418fa0e9bc0c147b476e9628806ac80882cdc0d4d4cb469c085cd70905b",
+      "text_sha256": "c1adce7e141df9f18c2a26d8faff319e756218991255d5f3ace02aa830d34a91",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"De ruimte om je heen\" (04-2018): the goal stands in the fase 2 column under the cluster \"Weer en klimaat\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. In a child's hands has \"empties and reads a rain gauge\": the order would be reads, then empties; a slip of wording, not a wrong fact. Four common mistakes (form). The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": {
+        "page": 1,
+        "offset": 228
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.364286ca-74d0-45b2-a2c2-528ce666a5b0",
+      "wording_sha256": "2af4a418fa0e9bc0c147b476e9628806ac80882cdc0d4d4cb469c085cd70905b",
+      "text_sha256": "350456b833b23a4a4d08e0a452e9b9472488748ad3ff77db2aab51cee0089396",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"De ruimte om je heen\" (04-2018): the goal stands on page 1 in the fase 2 column of the cluster \"Weer en klimaat\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful; Limits is right (instruments suitable, none named, no units), and the neighbour `ojw/rojh/7/01/fase2` lists the aspects of the weather as claimed. The rain gauge is now read before it is emptied, and three common mistakes remain, all real. The fault is in the age sentence at the end of In a child's hands: \"A child of 7 needs help to read a scale and may read to the nearest numbered mark\". \"needs help\" states what a child of 7 needs: a norm for the age (lead ruling 1) and a help the Dutch does not name (\"waarnemingen doen aan het weer met passende weersinstrumenten\" carries no \"(met hulp)\"). Fix: show a child without \"needs\", for example \"A child of 7 reads the thermometer to the nearest numbered mark; a child of 10 ...\".",
+      "rendition": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": {
+        "page": 1,
+        "offset": 228
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.364286ca-74d0-45b2-a2c2-528ce666a5b0",
+      "wording_sha256": "2af4a418fa0e9bc0c147b476e9628806ac80882cdc0d4d4cb469c085cd70905b",
+      "text_sha256": "c4da333f455fa4a7111b61ca07d0114c1eb8f0d453142dd1923db70e640231c0",
+      "verdict": "confirmed",
+      "note": "Round 3, after the second fix. Read again on the page image of the content-line PDF \"De ruimte om je heen\" (04-2018): page 1, fase 2 column, cluster \"Weer en klimaat\", last statement of five, \"waarnemingen doen aan het weer met passende weersinstrumenten\", word for word as the record; it starts and ends where the record does and nothing else stands in the dash. The gloss is faithful. Round 2's reason is resolved: \"needs help\" is gone, and the age sentence shows two plain instances of the goal (reading the thermometer outside and writing the reading in the table; reading the rain gauge and holding up the wind vane to see where the wind comes from): each is an observation of the weather with a weather instrument, the goal's own verb and object, with no count, duration, norm word or help (rulings 5, 8, 9). The science is right (a wind vane shows where the wind comes from, and the third common mistake says so). Ruling 11: the fase 3 column has \"onderzoek doen aan weersverschijnselen (windrichting, windkracht, luchtdruk, temperatuur, type en hoeveelheid neerslag en mate en soort van bewolking)\". That goal is research into the phenomena; the record stays with reading instruments, which is what this fase 2 goal words, and rain, wind and temperature are aspects the fase 2 column names itself (`ojw/rojh/7/01/fase2`: \"in regen, hagel en sneeuw, wind, temperatuur en mate van bewolking\", as Limits says). Not a fase 3 goal shown at fase 2. Limits is right (instruments suitable, none named, no units).",
+      "rendition": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": {
+        "page": 1,
+        "offset": 228
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.3756db85-3825-4205-a893-216f6fc3a503",
+      "wording_sha256": "145fd027a83440b3bb488ff0fa79dfa38da22e6d401050bc4be6062a90510301",
+      "text_sha256": "461e461877b12b002ad35a8d740135e32b1b374b8dcff5b89554b81014d88fa5",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands in the fase 2 column on page 3, where the cluster \"Technische principes en systemen\" runs on from page 2 (the heading is not repeated), with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. Form: the PDF breaks \"huis-tuin-keukengereedschap\" over two lines after \"huis-tuin-\". The gloss keeps the word in Dutch with an explanation. The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 3,
+        "offset": 139
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.3756db85-3825-4205-a893-216f6fc3a503",
+      "wording_sha256": "145fd027a83440b3bb488ff0fa79dfa38da22e6d401050bc4be6062a90510301",
+      "text_sha256": "2adfe0c935c8201231ab1e23ad70ace6c066a064b142c56bb2ab680a3b6e8235",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands on page 3 in the fase 2 column of the cluster \"Technische principes en systemen\" (the cluster runs on from page 2 and its heading is not repeated), word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. Form: the PDF breaks \"huis-tuin-keukengereedschap\" over two lines after \"huis-tuin-\". The gloss keeps the word in Dutch with an explanation. Limits: \"(meet-)\" in brackets covers measuring instruments and others; the household tools are an example.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 3,
+        "offset": 139
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.37ea8f19-509c-4305-940c-96e80f8f875e",
+      "wording_sha256": "c0a3fe3686010fee234b159c60cc41d1c8946f17f7e52b8cb15228f44ac8ef48",
+      "text_sha256": "0d730aac78470dc518508112c13214fba858e42d2ec67c69cdc99b34c14f412a",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"De ruimte om je heen\" (04-2018): the goal stands in the fase 2 column under the cluster \"Weer en klimaat\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. Limits says the wording \"does not mention climate change\": that is another subject (the fase 3 column has a goal of its own on it), not an instance of a term of this goal; not counted as a fault. The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": {
+        "page": 1,
+        "offset": 222
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.37ea8f19-509c-4305-940c-96e80f8f875e",
+      "wording_sha256": "c0a3fe3686010fee234b159c60cc41d1c8946f17f7e52b8cb15228f44ac8ef48",
+      "text_sha256": "99c03ba49aa3d875ffc27d9a2a76c0586c19fa67529e43ceca3662c0728fa353",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"De ruimte om je heen\" (04-2018): the goal stands on page 1 in the fase 2 column of the cluster \"Weer en klimaat\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful. Limits keeps \"does not mention climate change\"; judged against lead ruling 4 and the Dutch (\"samenhang zien tussen weer en klimaat\"): climate change is not an instance of a term of this goal but a subject with a goal of its own in the fase 3 column (\"verkennen van oorzaken en gevolgen van klimaatverandering\"), so the sentence narrows nothing. \"usually\" in the age sentence describes the climate, not the child. The PDF underlines \"weer\" and \"klimaat\": form.",
+      "rendition": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": {
+        "page": 1,
+        "offset": 222
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.3dbdc70f-49e7-40d3-b9fa-e8644d532c2c",
+      "wording_sha256": "522f00d80b2fccee64ab609d423386292f453bf03014abf331d8539786117963",
+      "text_sha256": "82d3e90603b842b6c49da004b43438cfe520a61181ad68945da558f35ddfb9b7",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands in the fase 2 column under the cluster \"Natuurkundige verschijnselen\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. A hazardous subject: Limits says \"Danger is named, without safety rules\", which is right; In a child's hands uses a battery and a small bulb and has the child say why sockets are not touched. \"Batteries, bulbs ... are not mentioned\" names apparatus, not instances of a term of the goal. The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 1,
+        "offset": 195
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.3dbdc70f-49e7-40d3-b9fa-e8644d532c2c",
+      "wording_sha256": "522f00d80b2fccee64ab609d423386292f453bf03014abf331d8539786117963",
+      "text_sha256": "617c91d5cf26b013aca60f5cbd580bbd5805a78e791d439fa3bb6789da5727ed",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands on page 1 in the fase 2 column of the cluster \"Natuurkundige verschijnselen\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful, and Limits is right (three parts; no apparatus named; \"Danger is named, without safety rules\"). The fault is in the age sentence at the end of In a child's hands: \"A child of 7 gets the bulb to light with help; a child of 10 builds a circuit with a switch alone\". Help is given as what marks the age of 7 and working alone as what marks 10: a level per age (lead ruling 1), and a help the Dutch does not name (in the content lines \"(met hulp)\" is a printed part of some goals; this goal has none). Fix: a difference in kind without help, for example \"A child of 7 gets the bulb to light; a child of 10 adds a switch, finds the fault when the circuit fails and draws it.\"",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 1,
+        "offset": 195
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.3dbdc70f-49e7-40d3-b9fa-e8644d532c2c",
+      "wording_sha256": "522f00d80b2fccee64ab609d423386292f453bf03014abf331d8539786117963",
+      "text_sha256": "de66a3da8fa150f0d60acf1a0a5277e638004cb230b96ca4f703cdb710e14b39",
+      "verdict": "confirmed",
+      "note": "Round 3, after the second fix. Read again on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): page 1, fase 2 column, cluster \"Natuurkundige verschijnselen\", sixth statement, \"ervaring opdoen met en onderzoeken van het verschijnsel elektriciteit: stroom gaat rond in een gesloten stroomkring; het ontstaan van statische elektriciteit; gebruik door en gevaar voor de mens\", word for word as the record; it starts and ends where the record does and nothing else stands in the dash. The gloss is faithful, clause by clause. Round 2's reason is resolved: \"with help\" and \"alone\" are gone, and the age sentence shows two plain instances of the goal's first part (connecting battery, wires and bulb until the bulb lights; opening the circuit with the paper-clip switch and seeing the bulb go out), each an experience that current goes round in a closed circuit, with no count, duration, norm word or help (rulings 5, 8, 9). The science is right, also in Common mistakes (a single wire gives no circuit; the current is not used up in the bulb). Ruling 11, against the fase 3 column: \"onderzoeken van het verschijnsel elektriciteit: materialen die stroom doorlaten (geleiden) of niet (isoleren); stroomkringen; werking van een elektromagneet (spoel, dynamo); opwekken van statische elektriciteit; reflectie op gebruik en gevaar van elektriciteit\". The record tests no materials for conducting and shows no electromagnet; the balloon and the list of uses and dangers stand under the fase 2 goal's own second and third parts. Limits is right (three parts; no apparatus named; \"Danger is named, without safety rules\").",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 1,
+        "offset": 195
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.452cfa8f-8abf-4131-93df-03e1def0df13",
+      "wording_sha256": "0f7a20fa30a5121b234525d5d4e7f544dedea5918e641c248fa3b5411941e3b1",
+      "text_sha256": "11664d5c2df22bfacf8c05e375f35d88b8f1da561b886126fc4125c44fa87471",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands in the fase 2 column under the cluster \"Groei, ontwikkeling (bloei), gedrag en voortplanting (instandhouding)\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 2,
+        "offset": 260
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.452cfa8f-8abf-4131-93df-03e1def0df13",
+      "wording_sha256": "0f7a20fa30a5121b234525d5d4e7f544dedea5918e641c248fa3b5411941e3b1",
+      "text_sha256": "33cda3a8c0ad0e563b3e495e5f5211d7d937be61b250a6e3bdfe375afd891701",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands on page 2 in the fase 2 column of the cluster \"Groei, ontwikkeling (bloei), gedrag en voortplanting (instandhouding)\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful (\"waardoor ze in een bepaalde omgeving kunnen overleven\" kept). Limits: four things are named, and no environments or species. The common mistakes are real misconceptions.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 2,
+        "offset": 260
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.4a485ca6-3257-48b7-bbd5-c86ec06c2e41",
+      "wording_sha256": "ba59d2ff70800a913724418f18c14e83460d50a1761015eda55a4ac2b7a7145d",
+      "text_sha256": "79814cddce93f431dfab7c585fcd88faf4fbc16514dd44d6291818cd3e880ae5",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands in the fase 2 column under the cluster \"Natuurkundige verschijnselen\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. The seven phenomena Limits lists from the other statements of the cluster are right. Four common mistakes (form). The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 1,
+        "offset": 260
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.4a485ca6-3257-48b7-bbd5-c86ec06c2e41",
+      "wording_sha256": "ba59d2ff70800a913724418f18c14e83460d50a1761015eda55a4ac2b7a7145d",
+      "text_sha256": "7f5bb40ea4b1eacf15e79d1df5fd86dc92954bbb5714aac73b479e51cdffa239",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands on page 1 in the fase 2 column of the cluster \"Natuurkundige verschijnselen\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful. The neighbours `ojw/nattech/2/01/fase2` to `ojw/nattech/2/07/fase2` name light, sound, temperature, force, magnetism, electricity and energy, as claimed. Three common mistakes remain, all right. For the lead: the age sentence shows the child of 7 working \"within steps an adult has set\", an adult the Dutch does not name; shown as a scene, without \"needs\" or \"help\", and not counted under ruling 1.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 1,
+        "offset": 260
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.4c636549-6639-4350-a4af-64bf69778c3a",
+      "wording_sha256": "0de601786104956ba42f3caf9f4f8a23192e1151703c4c9027424101dad5d3c3",
+      "text_sha256": "fc94e799fda0cfeb8910cf2063d169df5495772139aef14f5b463950f3347158",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands in the fase 2 column under the cluster \"Materialen, stoffen en voorwerpen\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. The two neighbours cited (an experiment statement in each of the other two clusters of this line) exist. Four common mistakes (form). The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 2,
+        "offset": 240
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.4c636549-6639-4350-a4af-64bf69778c3a",
+      "wording_sha256": "0de601786104956ba42f3caf9f4f8a23192e1151703c4c9027424101dad5d3c3",
+      "text_sha256": "f08d3949d65559f5dc5d9331dd2db757bcedb715c551b79c6c9c7d264012c824",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands on page 2 in the fase 2 column of the cluster \"Materialen, stoffen en voorwerpen\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful. The neighbours `ojw/nattech/2/08/fase2` and `ojw/nattech/3/09/fase2` are the experiment statements of the other two clusters, as claimed. Three common mistakes remain, all right. For the lead: the age sentence shows the child of 7 working \"within steps an adult has set\", an adult the Dutch (\"opzetten en uitvoeren\") does not name; it is shown as a scene, without \"needs\" or \"help\", and was not counted under ruling 1.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 2,
+        "offset": 240
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.53f85f3e-4480-4e0a-bf79-a3817de4de55",
+      "wording_sha256": "49991059c90703286c338e9f64d5d0c54cae34b5e93dc229b3b427b98853e1fb",
+      "text_sha256": "0af59fe1c05662aab1858cecff2ed7e1b6bb4c436610644e7e39303b3a202c61",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Read on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands in the fase 2 column under the cluster \"Natuurkundige verschijnselen\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. The fault is in Limits: \"Four properties are in the brackets: vibration, loudness, pitch and timbre ... how sound travels through materials is not mentioned in this statement.\" The Dutch is \"eigenschappen van geluid (geluidstrilling, geluidssterkte, toonhoogte, klankkleur)\": \"eigenschappen van geluid\" is a general term and the bracket has no word that closes it; the fase 3 goal of the cluster puts exactly this inside the same bracket as a property of sound (\"eigenschappen van geluid (geluidstrilling, geluidssterkte, toonhoogte, factoren die de klank bepalen en voortplanting door materiaal)\"). The sentence reads as leaving it out of fase 2. Say that the bracket names these four and that travel through materials is first named in the fase 3 goal. The gloss is faithful; the facts in the notes are right. The goal names hearing damage; In a child's hands presents nothing loud.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 1,
+        "offset": 101
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.53f85f3e-4480-4e0a-bf79-a3817de4de55",
+      "wording_sha256": "49991059c90703286c338e9f64d5d0c54cae34b5e93dc229b3b427b98853e1fb",
+      "text_sha256": "624e3d21b97c24279d1cc2bafe48381af8c4303d31d13b2842dcc86a8ee46a01",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands on page 1 in the fase 2 column of the cluster \"Natuurkundige verschijnselen\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. Round 1's reason is resolved: Limits now reads \"Four properties are in the brackets: vibration, loudness, pitch and timbre; the wording names no others\", and travel of sound through materials is no longer singled out. The gloss is faithful; the notes are right science (shorter and tighter gives a higher note; a harder stroke gives a louder one). The goal names hearing damage and In a child's hands presents nothing loud. Nothing new is wrong. The PDF underlines \"geluid\": form.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 1,
+        "offset": 101
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.577e99e9-e992-411e-bf5f-8446f83b3fa3",
+      "wording_sha256": "c7b02b88b462209f147db5f5a62c0c6de7e1efccdd7531493e4eddd6c87625d1",
+      "text_sha256": "2e58f413e124b07fcbce220ef079e3ae73e80b571122d513314c0a6f98ebb68a",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands in the fase 2 column on page 3, where the cluster \"Technische principes en systemen\" runs on from page 2 (the heading is not repeated), with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. Four common mistakes (form). The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 3,
+        "offset": 153
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.577e99e9-e992-411e-bf5f-8446f83b3fa3",
+      "wording_sha256": "c7b02b88b462209f147db5f5a62c0c6de7e1efccdd7531493e4eddd6c87625d1",
+      "text_sha256": "ec47aa62affefda85b2591ba3243f510c763df8dbb66f2324d172b656638fd57",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands on page 3 in the fase 2 column of the cluster \"Technische principes en systemen\" (the cluster runs on from page 2 and its heading is not repeated), word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful. Limits now reads \"an automated system in a device\" where it said \"one\": right for \"een geautomatiseerd systeem in een apparaat\". \"The wording does not ask for programming\": the verbs are \"herkennen\" and \"uitzoeken\", and programming is no instance of either. Three common mistakes remain, all right. For the lead: the age sentence has \"tests one condition at a time\"; read as method, not an amount, and confirmed on that reading. The PDF underlines \"geautomatiseerd systeem\": form.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 3,
+        "offset": 153
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.6415ab5d-f932-4dcf-bcde-821e05641fd2",
+      "wording_sha256": "2c5930b8b1aa8add8c8ff096ccd35248412a11def921272dddca337c7cbe595e",
+      "text_sha256": "660c8b5a68d1f26580677978adfd29058818c38e356b952828f8f3318bea052d",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands in the fase 2 column under the cluster \"De mens\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. Form: the record (as the data) writes \"(voort‑)beweging\" with a non-breaking hyphen, the PDF with a plain hyphen. The gloss gives it as \"movement (and locomotion)\", which keeps both readings of the bracketed prefix. The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 2,
+        "offset": 222
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.6415ab5d-f932-4dcf-bcde-821e05641fd2",
+      "wording_sha256": "2c5930b8b1aa8add8c8ff096ccd35248412a11def921272dddca337c7cbe595e",
+      "text_sha256": "67c13f04b0de803568c3cfa1c71ebc191c5f6cda303bb7132f117aa431df5fad",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands on page 2 in the fase 2 column of the cluster \"De mens\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. Form: the record (as the data) writes \"(voort‑)beweging\" with a non-breaking hyphen, the PDF with a plain hyphen. The gloss \"movement (and locomotion)\" keeps both readings of the bracketed prefix. Limits: \"no other group of animals is named\" is right for \"tussen mens en zoogdieren\". The science is right (the joint halfway up the hind leg of a dog or horse is the heel). The PDF underlines \"mensen\": form.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 2,
+        "offset": 222
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.678de176-8aee-4922-b7bd-b0effaefee22",
+      "wording_sha256": "064abb5c692c3018e1975227d8739dbdbd8036598dba06e1430eb6e9ccdf8dc1",
+      "text_sha256": "f96f5c0260dc112683614b63a07ec389e3b6430eba321ef2a02ca4cfc8874bf1",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands in the fase 2 column under the cluster \"Materialen, stoffen en voorwerpen\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 2,
+        "offset": 189
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.678de176-8aee-4922-b7bd-b0effaefee22",
+      "wording_sha256": "064abb5c692c3018e1975227d8739dbdbd8036598dba06e1430eb6e9ccdf8dc1",
+      "text_sha256": "2c38729013e147a236a70cc6cfa09c9b6e6e53bce3cccdec0cb44c3ab138eeb6",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands on page 2 in the fase 2 column of the cluster \"Materialen, stoffen en voorwerpen\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful (\"zoals\" and \"bijv.\" both kept as examples, and so reported in Limits). \"half a brick\" in the age sentence describes the pattern and sets no amount for the child.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 2,
+        "offset": 189
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.6a502ec1-5c26-48d6-b4e3-652e082a9c45",
+      "wording_sha256": "838d91f927af1a4ed4585cd20252985ba7816dc61c3b413e91130cbf43954688",
+      "text_sha256": "b35f50541494f374a13731e41090057848a3676b56b0d55656a817e8480a74e7",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands in the fase 2 column under the cluster \"Technische principes en systemen\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. Form: the PDF breaks \"driehoek-constructies\" over two lines at its own hyphen. Four common mistakes (form). The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 2,
+        "offset": 282
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.6a502ec1-5c26-48d6-b4e3-652e082a9c45",
+      "wording_sha256": "838d91f927af1a4ed4585cd20252985ba7816dc61c3b413e91130cbf43954688",
+      "text_sha256": "a444f7814df5c87c7bcc6738feb357fb74999e0235d15a521b83725c60be19ad",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands on page 2 in the fase 2 column of the cluster \"Technische principes en systemen\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. Form: the PDF breaks \"driehoek-constructies\" over two lines at its own hyphen. The gloss is faithful. The neighbour `ojw/nattech/3/01/fase2` (investigating such principles) says what is claimed. Three common mistakes remain. For the lead: the age sentence has \"adds triangles after being shown\": a scene with a showing the Dutch does not name, without \"needs\" or \"help\"; not counted under ruling 1.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 2,
+        "offset": 282
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.6ce36c07-24fc-403e-b164-6e57673f413b",
+      "wording_sha256": "87793558ca8ad173e504e67c0eb3251500c62ccfb9472b5155c877e77cbcd646",
+      "text_sha256": "81e7a68a7b0d750392d1e850f3b944b2fdccd41bf8099213fc9aa66e39850f8f",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"De ruimte om je heen\" (04-2018): the goal stands in the fase 2 column under the cluster \"Weer en klimaat\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. Limits says \"other countries are not mentioned in this statement\": the bracket \"(plekken in Nederland)\" sets the area and does not list instances, and the fase 3 goal of the cluster changes it to \"(plekken in de wereld)\", so this is the limit the wording itself gives; not counted as a fault. The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": {
+        "page": 1,
+        "offset": 197
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.6ce36c07-24fc-403e-b164-6e57673f413b",
+      "wording_sha256": "87793558ca8ad173e504e67c0eb3251500c62ccfb9472b5155c877e77cbcd646",
+      "text_sha256": "7738727af5b5c7605608744c271c28ee5c70e0ae53ae7dacf7c4021ccfabcc72",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"De ruimte om je heen\" (04-2018): the goal stands on page 1 in the fase 2 column of the cluster \"Weer en klimaat\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful. Limits now says that the bracket \"sets the area\" and that \"no place outside the Netherlands and no particular place inside it is named\": that is what \"(plekken in Nederland)\" gives, no more. The age sentence has no count and no norm word.",
+      "rendition": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": {
+        "page": 1,
+        "offset": 197
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.6f6af729-e3a8-4b41-8f61-d35f952c8aac",
+      "wording_sha256": "0c3d29de905e0ce0a7e73ca9157905910fe89c2a02f04de072970f416c98bd9c",
+      "text_sha256": "8e7032bbfcc838eeb29902fdefd3ff88d92720177fe9c9259412119e293da52b",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands in the fase 2 column under the cluster \"Planten en dieren\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. Limits says \"food chains are not mentioned\": another subject (first named in the fase 3 column), not an instance of a term of this goal. The neighbour cited for the four named adaptations exists (the goal on \"aanpassingen ... aan temperatuur, droogte, wind en vijanden\" in the cluster on growth). The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 1,
+        "offset": 222
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.6f6af729-e3a8-4b41-8f61-d35f952c8aac",
+      "wording_sha256": "0c3d29de905e0ce0a7e73ca9157905910fe89c2a02f04de072970f416c98bd9c",
+      "text_sha256": "22f3ea0a2878cc4b26fa6c681f07089a51b096e6ea331a3d8631390595d30137",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands on page 1 in the fase 2 column of the cluster \"Planten en dieren\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful and keeps *levensgemeenschap* in Dutch with an explanation. Limits: \"the wording names no particular relations within it, and the term food chain is not used\"; judged against lead ruling 4: the general statement comes first and the second half is about the word only (\"voedselketens\" is first printed in the fase 3 column), so nothing inside \"levensgemeenschap\" is denied. The neighbour `ojw/pdm/3/02/fase2` names the four adaptations, as claimed.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 1,
+        "offset": 222
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.6fbe7b63-1955-4340-b89b-3923fb615091",
+      "wording_sha256": "3423191ee12b042e0978f58ee9010ec9ee07702741777ffe3d467c7e9398d2bc",
+      "text_sha256": "61513302e8684c2f9cc0f072da1f12d81f0460fdbeb47641aa7138b0aa89bc93",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands in the fase 2 column on page 3, where the cluster \"Groei, ontwikkeling (bloei), gedrag en voortplanting (instandhouding)\" runs on from page 2 (the heading is not repeated), with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. A sensitive goal: Limits says the wording \"sets no level of detail and no vocabulary\", which is right, and \"does not mention puberty or relationships\", which are other subjects (the fase 3 column has a goal on puberty). \"Getting a first orientation on\" is the pack's standing gloss of \"oriënteren op\" (other lanes use it too). The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 3,
+        "offset": 113
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.6fbe7b63-1955-4340-b89b-3923fb615091",
+      "wording_sha256": "3423191ee12b042e0978f58ee9010ec9ee07702741777ffe3d467c7e9398d2bc",
+      "text_sha256": "93090bc0d8347cc2ddd45c3537941aae81d8f40cd242c64b7f6c784f71dca88a",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands on page 3 in the fase 2 column of the cluster \"Groei, ontwikkeling (bloei), gedrag en voortplanting (instandhouding)\" (the cluster runs on from page 2 and its heading is not repeated), word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The lead's change holds: the gloss reads \"getting an orientation on ...\" (no \"first\"), and Limits \"The verb is *oriënteren* (getting an orientation): it names no result and no level\". \"it does not use the words puberty or relationships\" is a statement about the words, and both are other subjects (the fase 3 column has a goal on \"lichamelijke veranderingen ... tijdens de puberteit\"): judged against lead ruling 4, no fault. The fault is in In a child's hands, on a sensitive goal. The Dutch is \"oriënteren op de voortplanting en de functie(s) van voortplantingsorganen bij mensen en de vergelijking maken met dieren\": orienting, and comparing with animals. (1) \"uses the correct names for the parts of the body\" is a rule about vocabulary, and Common mistakes repeats it as an error (\"Knowing only family words for the parts of the body and not the correct names\"), while the record's own Limits says the text \"sets no level of detail and no vocabulary\". (2) \"hears a plain answer\" says how an adult answers: advice to adults that the goal does not give. (3) The age sentence gives what a child asks at each age as a level (\"A child of 7 asks where the baby grows and how it comes out; a child of 10 asks about changes in the body ...\"), and \"changes in the body\" brings in the subject of the fase 3 goal on puberty, which this goal does not name. Fix: show only the orienting and the comparing (for example looking at pictures or a model of a baby growing in the womb and of the organs involved, and comparing with an animal that is expecting or has young), with no vocabulary rule, no manner of answering and no list of questions per age; the comparison between mammals can stay. Drop or reword the third common mistake.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 3,
+        "offset": 113
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.6fbe7b63-1955-4340-b89b-3923fb615091",
+      "wording_sha256": "3423191ee12b042e0978f58ee9010ec9ee07702741777ffe3d467c7e9398d2bc",
+      "text_sha256": "96b11ad9c26bf8f6ec87d6bd2b4e889b676462b196b5872969c4234afd87e0dd",
+      "verdict": "confirmed",
+      "note": "Round 3, after the second fix. Read again on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): page 3, fase 2 column, where the cluster \"Groei, ontwikkeling (bloei), gedrag en voortplanting (instandhouding)\" runs on from page 2 (heading not repeated), last statement of the column, \"oriënteren op de voortplanting en de functie(s) van voortplantingsorganen bij mensen en de vergelijking maken met dieren\", word for word as the record; it starts and ends where the record does and nothing else stands in the dash. The gloss is faithful (\"getting an orientation on\", no \"first\"; \"function(s)\" kept; \"in humans\" stands where \"bij mensen\" stands). Round 2's three reasons are resolved. \"In a child's hands\" now shows only what the verb names: a book or a lesson about how a baby begins and grows in the womb, with pictures or a model of the organs involved (the orienting), and an animal that is expecting or has young, such as a guinea pig or a sheep (the comparison). There is no rule about vocabulary, no manner in which an adult answers, no script, no advice and no question per age. The age sentence shows two plain instances (a book and a lamb; a lesson and the young of a guinea pig), each orienting and comparing, with no count, duration, norm word or help (rulings 5, 8, 9). Common mistakes keeps two misconceptions about the subject (the stomach; only the mother has a part) and the sentence on family words is gone. Ruling 11, against the fase 3 column on the same page: \"verkennen van lichamelijke veranderingen die optreden bij mensen tijdens de puberteit\", \"kennisnemen en onderzoeken van aspecten van de voortplanting van de mens en seksualiteit zoals doorgifte van erfelijke eigenschappen\", \"kennisnemen van de ontwikkelingsfasen bij de voortplanting van dieren\" and \"uitzoeken van de werking en functies van ... voortplantingsorganen bij dieren en bij de mens\". The record shows no puberty, no changes in the body, no heredity, no sexuality and no stages of development in animals; the organs appear only as pictures or a model in an orientation, which is the fase 2 wording. Limits is right (the verb names no result and no level; no level of detail and no vocabulary; the words puberty and relationships are not used).",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 3,
+        "offset": 113
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.70a71ca0-8faa-483a-a71c-bb91ba375e2b",
+      "wording_sha256": "045b4dbf3ff061e5263f5326953f39c0b679c95999e214b05415ce3f8a06401b",
+      "text_sha256": "91f0631df79c124127ac97c6b2e0fa65255130613d81115bf2c1392d124c8310",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands in the fase 2 column under the cluster \"Groei, ontwikkeling (bloei), gedrag en voortplanting (instandhouding)\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. Limits says the wording \"speaks of one animal\": the Dutch is \"een dier\" (an animal), which sets no number; In a child's hands rightly uses several woodlice and birds. Not counted as a fault, but \"an animal\" would be closer. The gloss is faithful.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 2,
+        "offset": 281
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.70a71ca0-8faa-483a-a71c-bb91ba375e2b",
+      "wording_sha256": "045b4dbf3ff061e5263f5326953f39c0b679c95999e214b05415ce3f8a06401b",
+      "text_sha256": "254d505f3eacb0fed145bfe0f9116d7b8763bb11c889bda84c0a966089613964",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands on page 2 in the fase 2 column of the cluster \"Groei, ontwikkeling (bloei), gedrag en voortplanting (instandhouding)\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful. Limits now reads \"an animal (*een dier*, which sets no number)\" where it said \"one animal\": right. The fault is in the age sentence at the end of In a child's hands: \"A child of 7 watches for a short time and tells; a child of 10 watches for a set time, tallies and repeats the observation.\" A length of watching is given for each age (lead ruling 1: no duration); the Dutch (\"observeren van het gedrag van een dier in relatie tot de omgeving\") sets none. Fix: a difference in kind, for example \"A child of 7 watches and tells; a child of 10 tallies what the animal does and repeats the observation.\"",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 2,
+        "offset": 281
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.70a71ca0-8faa-483a-a71c-bb91ba375e2b",
+      "wording_sha256": "045b4dbf3ff061e5263f5326953f39c0b679c95999e214b05415ce3f8a06401b",
+      "text_sha256": "12611a9de7678d03b96fbde703f0cd677240dfb3fb364a363dabf991ab2e2cde",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Round 3, after the second fix. Wording, place and gloss are right: content-line PDF \"Planten, dieren en de mens\" (04-2018), page 2, fase 2 column, cluster \"Groei, ontwikkeling (bloei), gedrag en voortplanting (instandhouding)\", third statement, \"observeren van het gedrag van een dier in relatie tot de omgeving\", word for word, starting and ending where the record does, nothing else in the dash. Round 2's reason is resolved: the age sentence no longer gives a length of watching to each age. A new finding under ruling 11, read from the fase 3 column of the same cluster. \"In a child's hands\", first sentence: \"The child puts woodlice in a tray with a damp dark half and a dry light half and tallies where they are after a few minutes\", and the age sentence gives it to the older child: \"a child of 10 watches the woodlice in the tray and tallies where they are\". A tray prepared with two conditions is an experiment on what ground animals prefer, and the document words that as goals of its own at fase 3: \"uitvoeren van eenvoudige experimenten met planten (bijv. factoren die van invloed zijn op de groei) en met dieren (bijv. factoren die van invloed zijn op de voorkeuren van gronddieren zoals regenwormen); waarbij de zorg voor levende organismen niet uit het oog wordt verloren\" (`ojw/pdm/3/07/fase3`) and \"onderzoeken van het gedrag van dieren (bijv. bodemdieren, huisdier)\" (`ojw/pdm/3/03/fase3`). The pack's own fase 3 record `ojw/pdm/3/03/fase3` uses the same tray in nearly the same words (\"puts woodlice in a tray with a damp dark half and a dry light half\"). The fase 2 verb is \"observeren\", and the record's own Limits says \"It asks for observing\". Fix: take the woodlice tray out of the first sentence and out of the age sentence and show observing an animal where it is, with nothing set up, for example \"The child watches a blackbird in the school garden and notes where it looks for food and what it does when a cat comes by\" and \"a child of 10 watches the snails in the school garden and notes that they come out when the ground is wet\"; the birds at the feeding table (a child of 7) can stay. The rest is right: gloss faithful, Limits (\"an animal (*een dier*, which sets no number)\", no species, no kind of surroundings, no explanation asked), three common mistakes.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 2,
+        "offset": 281
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.70a71ca0-8faa-483a-a71c-bb91ba375e2b",
+      "wording_sha256": "045b4dbf3ff061e5263f5326953f39c0b679c95999e214b05415ce3f8a06401b",
+      "text_sha256": "65c4949fab3d7808471ef2e025a7d2f6dcc358d15b8794e48ccf47ec5f3cc908",
+      "verdict": "confirmed",
+      "note": "Round 4, the closing round after the third fix (ojw/pdm/3/03/fase2). Seen on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018), page 2, fase 2 column, cluster \"Groei, ontwikkeling (bloei), gedrag en voortplanting (instandhouding)\", third statement: \"observeren van het gedrag van een dier in relatie tot de omgeving\", word for word, starting and ending where the record does; nothing else stands in the dash, no example and no year label. The gloss is faithful. Round 3's reason is resolved: the woodlice tray is gone from the body and from the age sentence. Every instance now is the goal's own verb and object, an animal watched where it is with nothing set up: a blackbird in the school garden (where it looks for food, what it does when a cat comes by), birds at a feeding table, and in the age sentence the birds at 7 and snails in the school garden at 10 (\"notes that they come out when the ground is wet\"). The age sentence has no count, length of watching, share or norm word, and the two ages are two plain instances. Ruling 11, read from the fase 3 column of the same cluster on pages 2 and 3: \"onderzoeken van het gedrag van dieren (bijv. bodemdieren, huisdier)\", \"onderzoeken hoe planten en dieren zich aanpassen aan de seizoenen en leefomgevingen (bijv. groeien of leven in 'sociaal verband')\" and \"uitvoeren van eenvoudige experimenten met planten (...) en met dieren (bijv. factoren die van invloed zijn op de voorkeuren van gronddieren zoals regenwormen); ...\". Nothing shown is an investigation or an experiment. Snails can be counted among the \"bodemdieren\" that the fase 3 goal gives as an example; what marks that goal is its verb \"onderzoeken\", and the record shows watching and noting, which is \"observeren\" of \"een dier\", so the instance stands. No correction a common mistake implies is a fase 3 statement. Limits is right: \"an animal (*een dier*, which sets no number)\", no species, no kind of surroundings, observing and no explanation asked. For a reader, not a fault: the second common mistake (\"Disturbing the animal and then recording its reaction to the child\") stands beside an illustration in which the birds are watched \"when someone comes near\"; the illustration is about a person who is part of the surroundings, the mistake about the watcher.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 2,
+        "offset": 281
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 4",
+      "round": 4
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.7c777238-cf10-441b-84be-a92eddd2b2ed",
+      "wording_sha256": "02d43f7bd170a57c24ac0c575b0ea0255dff5ba79a66a10522f13e6eb6a6f9b0",
+      "text_sha256": "dc5a025a1d19804e979d5753aebe4fa4c82ab8f6a7f06fc60cceff1c3029bcde",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands in the fase 2 column under the cluster \"Materialen, stoffen en voorwerpen\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 2,
+        "offset": 110
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.7c777238-cf10-441b-84be-a92eddd2b2ed",
+      "wording_sha256": "02d43f7bd170a57c24ac0c575b0ea0255dff5ba79a66a10522f13e6eb6a6f9b0",
+      "text_sha256": "6cf684d4b7115be9d4bc689721ca9d1cefe235749f2b205bc6cde089661fee35",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands on page 2 in the fase 2 column of the cluster \"Materialen, stoffen en voorwerpen\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful (\"zoals\" kept as examples, \"en/of\" kept; the Dutch joins \"de invloed van vocht (roesten)\" with a comma, the gloss with \"and\"). Limits says what \"and/or\" leaves open. The science in the notes is right (metal feels colder at the same temperature; a wrapping slows melting; not all metals rust).",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 2,
+        "offset": 110
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.811548ea-25bc-4644-9efa-7f19b9e6d6a8",
+      "wording_sha256": "9d114b0f01b3129e51a1e7fc30a0c0281183ba6b4a2e6624374749e574ce20b9",
+      "text_sha256": "255b830f6059622a3e8a1b7bd6649db5acd873aae0217d40d991390ed6c75f85",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"De ruimte om je heen\" (04-2018): the goal stands in the fase 2 column under the cluster \"Heelal en hemellichamen\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. Limits says the wording \"does not name the phases of the moon\": read as \"no shape is named\" (the wording has only \"verschillende vormen\"), which is right. The gloss keeps \"ervaren\" as experiencing. The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": {
+        "page": 1,
+        "offset": 236
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.811548ea-25bc-4644-9efa-7f19b9e6d6a8",
+      "wording_sha256": "9d114b0f01b3129e51a1e7fc30a0c0281183ba6b4a2e6624374749e574ce20b9",
+      "text_sha256": "2089f834888ba92ad097dca36088672eb644cd0e893dc13a01d2729e0cc82320",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"De ruimte om je heen\" (04-2018): the goal stands on page 1 in the fase 2 column of the cluster \"Heelal en hemellichamen\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss (\"experiencing that we see the moon in different shapes\") is faithful. Limits (\"names no particular shapes or phases and does not ask for an explanation\") fits \"verschillende vormen\", and the neighbour `ojw/rojh/2/02/fase2` says what is claimed. Common mistakes now opens with the fixed sentence for an experience goal and keeps the three misconceptions of round 1, all real (the earth's shadow as the cause of the phases is the usual one). The fault is in the age sentence at the end of In a child's hands: \"A child of 7 mostly looks and draws\". \"mostly\" is a norm word (lead ruling 1 for the age sentence): it gives what is usual at 7, and the Dutch (\"ervaren dat we de maan in verschillende vormen zien\") is an offer for the whole band with no level per age. Fix: \"A child of 7 looks and draws; a child of 10 ...\".",
+      "rendition": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": {
+        "page": 1,
+        "offset": 236
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.811548ea-25bc-4644-9efa-7f19b9e6d6a8",
+      "wording_sha256": "9d114b0f01b3129e51a1e7fc30a0c0281183ba6b4a2e6624374749e574ce20b9",
+      "text_sha256": "2eb7a31092519baa625b8ab7af57b79792ccaa93cbf23c0597a15c4ddf429870",
+      "verdict": "confirmed",
+      "note": "Round 3, after the second fix. Read again on the page image of the content-line PDF \"De ruimte om je heen\" (04-2018): page 1, fase 2 column, cluster \"Heelal en hemellichamen\", first statement of three, \"ervaren dat we de maan in verschillende vormen zien\", word for word as the record; it starts and ends where the record does and nothing else stands in the dash. The gloss is faithful (\"ervaren\" kept as experiencing). Round 2's reason is resolved: \"mostly\" is gone, and the age sentence shows two plain instances of the goal (a child who looks at the moon and draws the shape seen; a child who keeps a moon diary and sees that the shape is not the same every evening), each an experience that the moon is seen in different shapes, with no count, duration, norm word or help (rulings 5, 8, 9). Ruling 11: the fase 3 column of the cluster has \"inzicht krijgen in de draaiing van de aarde en beweging van aarde en maan t.o.v. elkaar en t.o.v. de zon (maanstanden, heelal)\"; neither age explains the shapes or the movement, and Limits says the goal asks for no explanation. \"several evenings\" and \"over a few weeks\" in the body describe the scene and set nothing for an age. The neighbour `ojw/rojh/2/02/fase2` (\"beseffen dat de aarde draait en beweegt t.o.v. van de zon (heelal)\") says what Limits claims. Common mistakes has the fixed form for an experience goal and the misconceptions are real.",
+      "rendition": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": {
+        "page": 1,
+        "offset": 236
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.85460e58-4e77-4ee3-881a-96a551defb2a",
+      "wording_sha256": "de9b841c57c77678161e8040b919862e0cd0dc86cc703cbe3cf5c142fdb87e36",
+      "text_sha256": "1271d3303421c9a44605b72f5ee24e7e7443d3635c725e759f701d649cf2246d",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Read on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands in the fase 2 column on page 3, where the cluster \"Groei, ontwikkeling (bloei), gedrag en voortplanting (instandhouding)\" runs on from page 2 (the heading is not repeated), with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. The fault is in Limits: \"The brackets name the forms: seed that develops in a fruit, tuber, bulb and runners. Cuttings and spores are not mentioned, and neither is pollination.\" The Dutch is \"verkennen van vormen van voortplanting bij planten (via zaad dat zich ontwikkelt in een vrucht of via knol, bol of uitlopers)\": \"vormen van voortplanting bij planten\" is a general term, the bracket has no word that closes it, and a cutting and a spore are forms of reproduction in plants, so the sentence reads as leaving them out of a goal whose wording does not. Say that the bracket names these four and the wording names no others, or drop the clause. \"Pollination\" is a step on the way to seed, not a form; that part can stay if it is said that way. The gloss is faithful and the facts in the notes are right.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 3,
+        "offset": 44
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.85460e58-4e77-4ee3-881a-96a551defb2a",
+      "wording_sha256": "de9b841c57c77678161e8040b919862e0cd0dc86cc703cbe3cf5c142fdb87e36",
+      "text_sha256": "75bf28e0153b96fb9203f628ec4b5f1235f895e864b3a6e2fe2fede2bf9bbb3c",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands on page 3 in the fase 2 column of the cluster \"Groei, ontwikkeling (bloei), gedrag en voortplanting (instandhouding)\" (the cluster runs on from page 2 and its heading is not repeated), word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. Round 1's reason is resolved: Limits now reads \"The brackets name four forms: seed that develops in a fruit, tuber, bulb and runners; the wording names no others\", which reports the bracket (no \"zoals\" or \"bijv.\") without closing \"vormen van voortplanting bij planten\", and cuttings and spores are no longer singled out. The kept sentence on pollination (\"a step on the way to seed and not a form of reproduction, is not named\") was judged against lead ruling 4: pollination is not an instance of \"vormen van voortplanting\", so nothing inside the term is denied. The neighbour `ojw/pdm/3/09/fase2` (how seeds spread and germinate) says what is claimed. The gloss is faithful and nothing new is wrong.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 3,
+        "offset": 44
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.858364fa-488e-4254-b159-7419248a0c71",
+      "wording_sha256": "d0a71ee6496722f8cd2aba56374aeedcb27376eb69e986e646fb08936b0de4d9",
+      "text_sha256": "2eed7a004a455b470395b4573556c64fefa2e6e87e91198946d778755e00ff6f",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands in the fase 2 column on page 3, where the cluster \"Technische principes en systemen\" runs on from page 2 (the heading is not repeated), with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. The PDF prints the same sentence in the fase 3 column as well (page 3, offset 275); the place given is the printing in the fase 2 column. Four common mistakes (form). The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 3,
+        "offset": 171
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.858364fa-488e-4254-b159-7419248a0c71",
+      "wording_sha256": "d0a71ee6496722f8cd2aba56374aeedcb27376eb69e986e646fb08936b0de4d9",
+      "text_sha256": "c54f17093b14a0144497c296d4ef59346d88cbf6f505e20a1e57eac47247e202",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands on page 3 in the fase 2 column of the cluster \"Technische principes en systemen\" (the cluster runs on from page 2 and its heading is not repeated), word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The PDF prints the sentence in the fase 3 column too (page 3, offset 275); the place given is the printing in the fase 2 column. The gloss equals that of the fase 3 record with the same Dutch (`ojw/nattech/3/06/fase3`); checked against the Dutch itself (\"toepassen van technische principes bij het oplossen van een vraag of probleem door deze functioneel te gebruiken in eigen ontwerpen (onderzoeken en ontwerpen)\"): faithful. The neighbours cited (`ojw/nattech/3/01/fase2` and `ojw/nattech/3/02/fase2` structural principles, `ojw/nattech/3/03/fase2` joins, `ojw/nattech/3/04/fase2` transmission of force and movement) say what is claimed. The fault is in the age sentence at the end of In a child's hands: \"A child of 7 works towards the goal by trying, with one principle that was shown just before\". The bare \"one\" sets an amount for the age (lead ruling 5); the Dutch has \"technische principes\" and sets no number. Fix: \"with a principle that was shown just before\".",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 3,
+        "offset": 171
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.858364fa-488e-4254-b159-7419248a0c71",
+      "wording_sha256": "d0a71ee6496722f8cd2aba56374aeedcb27376eb69e986e646fb08936b0de4d9",
+      "text_sha256": "351aa5ad6ef860237b43df8a6020130f0ceecc66b051070aeea0f07babe7bace",
+      "verdict": "confirmed",
+      "note": "Round 3, after the second fix. Read again on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): page 3, where the cluster \"Technische principes en systemen\" runs on from page 2 (heading not repeated), \"toepassen van technische principes bij het oplossen van een vraag of probleem door deze functioneel te gebruiken in eigen ontwerpen (onderzoeken en ontwerpen)\", word for word as the record, nothing else in the dash. The PDF prints the sentence in the fase 2 column (offset 171) and in the fase 3 column (offset 275); the place given is the printing in the fase 2 column. The gloss is faithful. Round 2's reason is resolved: \"one principle\" is gone, and the age sentence shows two plain instances of the goal (a lever used in the child's own design to lift the load; a pulley used in the child's own design to get the load onto the shelf), each a technical principle used functionally in an own design to solve a problem, with no count, duration, norm word or help (rulings 5, 8, 9). Ruling 11: lever, pulley and gear wheel are worded in the fase 2 column itself (`ojw/nattech/3/04/fase2`: \"kracht via hefboom of katrol, beweging via tandwiel of fietsketting\") and the triangle in `ojw/nattech/3/01/fase2` and `ojw/nattech/3/02/fase2`; what fase 3 adds (\"bewegings- en overbrengingsprincipes (snaar), sturingsmechanismen en pneumatiek\") is not shown. The four neighbours cited in Limits say what is claimed.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 3,
+        "offset": 171
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.89d095a5-c2b8-401e-b9b7-4c3ca4994ebf",
+      "wording_sha256": "84db3051e825472b180c094b47aa112a33455f234906b37a747dd77bc4223f77",
+      "text_sha256": "6af58f1163e50d4afcffde4c90b115debc2802f5ab567abbd3657cdccc15e285",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Read on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands in the fase 2 column under the cluster \"Natuurkundige verschijnselen\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. Two faults. (1) Gloss: Dutch \"relateren aan vormen van energie (warmte, licht, kracht en geluid)\"; gloss \"relating them to forms of energy (heat, light, force and sound)\". \"kracht\" means force and also power or strength, and as a form of energy next to heat, light and sound it is the second reading that fits (what a source delivers as motive power: \"spierkracht\", \"waterkracht\"); the record's own In a child's hands reads it so (\"what it gives (heat, light, movement or sound)\"). The gloss and Limits (\"Four forms are named: heat, light, force and sound\") settle it as force without saying so. Keep *kracht* in Dutch with both readings, as another lane of the pack does (\"*kracht*, read as force or as strength or power\"). (2) Limits: \"The brackets name ten sources ... Coal and nuclear power are not mentioned\". \"energiebronnen\" is a general term, the bracket has no word that closes it (\"..., maar ook mens en paard\"), and the fase 3 goal calls the same list examples and adds to it (\"voorbeelden van energiebronnen (aardgas, aardwarmte, olie, biomassa, hout, kernenergie, ...)\"); coal is an energy source, so the sentence reads as leaving it out. Say that the bracket names these ten and the wording names no others, and that nuclear energy is first named in the fase 3 goal. The count of ten and the remark that electricity is not among the four forms are right. Four common mistakes (form).",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 1,
+        "offset": 223
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.89d095a5-c2b8-401e-b9b7-4c3ca4994ebf",
+      "wording_sha256": "84db3051e825472b180c094b47aa112a33455f234906b37a747dd77bc4223f77",
+      "text_sha256": "24546217166dbd1c0df88af2f0b3f6714e6bd6648ec9fd14d36859c443f6070e",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands on page 1 in the fase 2 column of the cluster \"Natuurkundige verschijnselen\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. Round 1's two reasons are resolved. (1) The gloss now reads \"forms of energy (heat, light, *kracht* (which means force and also strength or power) and sound)\", and Limits \"*Kracht* means force and also strength or power, and the wording does not choose\": as open as the Dutch. (2) Limits now reads \"the goal names these ten and no others\", and coal and nuclear power are no longer singled out; the count of ten is right. The kept sentence \"electricity is not among the four\" was judged against lead ruling 4: the bracket after \"vormen van energie\" has no \"zoals\" or \"bijv.\" and ends on \"en geluid\", so it may be counted as four, and the sentence says only what is not in it. \"The wording does not use the words renewable and fossil\" is about the words. Three common mistakes remain, all real. Nothing new is wrong.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 1,
+        "offset": 223
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.8c019d81-5a8d-4770-b979-5be40e5d8fb8",
+      "wording_sha256": "e74d5724fc4e1b52eadfa86958e444b2dc4ea952a933b073de5eb247b2bd35f0",
+      "text_sha256": "5bc43f7f6ca9c5a4e7b80df8436cdbffdfb30f0bf996691731ba1e6ca911624a",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands in the fase 2 column under the cluster \"Groei, ontwikkeling (bloei), gedrag en voortplanting (instandhouding)\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 2,
+        "offset": 346
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.8c019d81-5a8d-4770-b979-5be40e5d8fb8",
+      "wording_sha256": "e74d5724fc4e1b52eadfa86958e444b2dc4ea952a933b073de5eb247b2bd35f0",
+      "text_sha256": "02907e269ae947d719cb31eee3912577e1dc4f0f3fb27ec2080065c40c247060",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands on page 2 in the fase 2 column of the cluster \"Groei, ontwikkeling (bloei), gedrag en voortplanting (instandhouding)\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful (\"zich kunnen voortplanten\" as \"can reproduce\", which Limits points out). Limits counts three groups and four steps, as the Dutch has them. The common mistakes are real.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 2,
+        "offset": 346
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.8d84caa1-921e-4cae-b332-0f2d3c008136",
+      "wording_sha256": "70335760a8c7f039434a360edc27a0217df78b0ec32396b27a8a76e44c1fb839",
+      "text_sha256": "eb3a48edda4beb9a96a2f2bd30b44539b55720693e4af16cbadb26edf61cb760",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands in the fase 2 column under the cluster \"Groei, ontwikkeling (bloei), gedrag en voortplanting (instandhouding)\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 2,
+        "offset": 293
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.8d84caa1-921e-4cae-b332-0f2d3c008136",
+      "wording_sha256": "70335760a8c7f039434a360edc27a0217df78b0ec32396b27a8a76e44c1fb839",
+      "text_sha256": "957142748fb5141eba16c0e4371929db06307dc3cae5077941e2c75627c60686",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands on page 2 in the fase 2 column of the cluster \"Groei, ontwikkeling (bloei), gedrag en voortplanting (instandhouding)\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful. Limits: no foods, food groups, nutrients or amounts are named. In the age sentence \"a whole day or week\" is the span of the eating record that is looked at (the goal's \"voedingspatroon\"), not a length of the child's activity.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 2,
+        "offset": 293
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.8d8e77f7-4928-43e6-ad77-3d395ba997ae",
+      "wording_sha256": "8c6ba370745fea5e2713a2669215ed57e8268aeacf7353d7a55183d3e1c53871",
+      "text_sha256": "189a75ec5a65807816685494f4e05a481af7a08cca1a9e906387b7b2fd2c2a3b",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Read on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands in the fase 2 column on page 3, where the cluster \"Groei, ontwikkeling (bloei), gedrag en voortplanting (instandhouding)\" runs on from page 2 (the heading is not repeated), with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. The gloss settles a word the Dutch leaves open. Dutch: \"een levend wezen steeds voortkomt uit een ander levend wezen van dezelfde soort\"; gloss: \"a living being always comes from another living being of the same species\". \"soort\" means both kind and species, and the record of the same sentence in fase 1 keeps it open: \"of the same kind or species (*soort*, which means both)\". Limits repeats the choice (\"each comes from another of the same species\"). Keep *soort* in Dutch with both readings in the gloss and in Limits. The rest of the gloss is faithful, the neighbours cited (reproduction in plants and in humans) exist, and the facts in the notes are right.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 3,
+        "offset": 90
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.8d8e77f7-4928-43e6-ad77-3d395ba997ae",
+      "wording_sha256": "8c6ba370745fea5e2713a2669215ed57e8268aeacf7353d7a55183d3e1c53871",
+      "text_sha256": "bc96e6c090bf8245925797bf41559d2f26304371ded7eecaead91ed41dbca627",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands on page 3 in the fase 2 column of the cluster \"Groei, ontwikkeling (bloei), gedrag en voortplanting (instandhouding)\" (the cluster runs on from page 2 and its heading is not repeated), word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. Round 1's reason is resolved: the gloss now reads \"of the same kind or species (*soort*, which means both)\", and Limits \"of the same *soort*, a word that means both kind and species; the wording does not choose\". The neighbours `ojw/pdm/3/08/fase2` (plants) and `ojw/pdm/3/11/fase2` (humans) say what is claimed. The common mistakes are real. Nothing new is wrong.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 3,
+        "offset": 90
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.8fa58837-1d71-4779-8140-874a7309b462",
+      "wording_sha256": "341011319472cb750c204a472ab19d49fef7feab97a6a7eb9e8489a6dfbe02aa",
+      "text_sha256": "c2ca5d2906c9a28f1eae14725363ed9d515927e0903aa1bfbcd9e2e0c0a2218e",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands in the fase 2 column under the cluster \"Planten en dieren\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 1,
+        "offset": 173
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.8fa58837-1d71-4779-8140-874a7309b462",
+      "wording_sha256": "341011319472cb750c204a472ab19d49fef7feab97a6a7eb9e8489a6dfbe02aa",
+      "text_sha256": "adc56a8798c6f9d4c8dd5c9ad2b2b4f946cf2e9d812d87449456da4b624d7162",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands on page 1 in the fase 2 column of the cluster \"Planten en dieren\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful (\"zoals organen\" kept as an example). The neighbours `ojw/pdm/1/01/fase2` to `ojw/pdm/1/03/fase2` are the cluster on the human body, as claimed. The science is right (coloured water rising in a stalk; an insect has neither lungs nor bones).",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 1,
+        "offset": 173
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.932957f0-0f75-4ea6-8d79-07322e3a361e",
+      "wording_sha256": "93ae95d984683d71fec9506bf5ee642b712f43c0a7ecaffa68bfc2d1d23ec8e1",
+      "text_sha256": "21af238d552a8fce9e595645cd5251388ad70e918783fdd51eb4a1de962a84f8",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Read on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands in the fase 2 column on page 3, where the cluster \"Groei, ontwikkeling (bloei), gedrag en voortplanting (instandhouding)\" runs on from page 2 (the heading is not repeated), with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. The fault is in Limits: \"The brackets name three ways of spreading: wind, water and birds. Spreading on the fur of animals is not mentioned.\" The Dutch is \"onderzoeken hoe zaden van planten zich verspreiden (wind, water, vogels)\": \"hoe zaden ... zich verspreiden\" is a general term, the bracket gives three instances and does not close it, and spreading on fur is a way seeds spread, so the sentence reads as leaving it out. Say that the bracket names three ways and the wording names no others, or drop the sentence. The gloss is faithful; the facts in the notes are right (the root comes out first; cress and beans germinate without soil or light). Four common mistakes (form).",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 3,
+        "offset": 65
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.932957f0-0f75-4ea6-8d79-07322e3a361e",
+      "wording_sha256": "93ae95d984683d71fec9506bf5ee642b712f43c0a7ecaffa68bfc2d1d23ec8e1",
+      "text_sha256": "414ddc4a10a84006dfc759a941807968da9ebc52f1d33a690698cc6e837376b1",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands on page 3 in the fase 2 column of the cluster \"Groei, ontwikkeling (bloei), gedrag en voortplanting (instandhouding)\" (the cluster runs on from page 2 and its heading is not repeated), word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. Round 1's reason is resolved: Limits now reads \"The brackets name three ways of spreading: wind, water and birds; the wording names no others\", and spreading on fur is no longer singled out. Three common mistakes remain, all right science (the root comes out first; cress and beans germinate without soil or light). The gloss is faithful. \"measures each day\" in the age sentence gives no count and no duration. Nothing new is wrong.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 3,
+        "offset": 65
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.97694a7a-f21f-40b6-8dc3-d5cece505b1f",
+      "wording_sha256": "131ec9beefc8f1af87870b7b48da8bde919f7216d201fa98e31d245b83e12409",
+      "text_sha256": "f3e78eb8b2d290e480cb59cc247103e0764cccf3e0d93b9c344d7f5daa3245ef",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands in the fase 2 column under the cluster \"Materialen, stoffen en voorwerpen\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 2,
+        "offset": 144
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.97694a7a-f21f-40b6-8dc3-d5cece505b1f",
+      "wording_sha256": "131ec9beefc8f1af87870b7b48da8bde919f7216d201fa98e31d245b83e12409",
+      "text_sha256": "a83638ca5d3bfd12a30b7955393b6f252491f39b5c540e36a73942a2b271b233",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands on page 2 in the fase 2 column of the cluster \"Materialen, stoffen en voorwerpen\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful. Limits is right, and the neighbour `ojw/nattech/1/02/fase2` holds the examples (conducting, insulating, rusting) as claimed. The fault is in the age sentence at the end of In a child's hands: \"A child of 7 notices one link at a time in what shows at once; a child of 10 compares across a table and comes back for the slow changes.\" \"one link at a time\" sets an amount for the age of 7 (lead ruling 5: a bare \"one\"), against comparing across a table at 10; the Dutch (\"samenhang zien tussen waarneembare eigenschappen van materialen ...\") sets none. Fix: \"A child of 7 notices a link in what shows at once; ...\".",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 2,
+        "offset": 144
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.97694a7a-f21f-40b6-8dc3-d5cece505b1f",
+      "wording_sha256": "131ec9beefc8f1af87870b7b48da8bde919f7216d201fa98e31d245b83e12409",
+      "text_sha256": "49d5a9d9fbf5ee46d10e8778c9c0b2df2b0f3a0f2a818e5a13bdd4a4264c585a",
+      "verdict": "confirmed",
+      "note": "Round 3, after the second fix. Read again on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): page 2, fase 2 column, cluster \"Materialen, stoffen en voorwerpen\", fourth statement, \"samenhang zien tussen waarneembare eigenschappen van materialen (zowel direct, na verloop van tijd of op een andere plaats zichtbaar)\", word for word as the record; it starts and ends where the record does and nothing else stands in the dash. The gloss is faithful. Round 2's reason is resolved: \"one link at a time\" is gone. The age sentence shows two plain instances of seeing a connection between observable properties: \"the materials that pass on heat are also the ones that make the bulb light\" (7) and \"the material that rusted is among those that make the bulb light\" (10). The science holds as stated for a set a class tests (metal against wood, plastic and paper: the metals pass on heat and close the circuit, the others do neither; the iron that rusts is a metal and conducts), \"among those\" claims no more than that, and neither sentence is put as a rule for all materials, which the second common mistake warns against. No count, duration, norm word or help at either age (rulings 5, 8, 9); \"one set of materials\" and \"one table\" in the body are the method (the same set tested for each property: ruling 10), and \"after a week\", \"for some weeks\" illustrate the goal's own \"na verloop van tijd\". Ruling 11, against the fase 3 column: \"onderzoeken van veranderingen aan waarneembare eigenschappen van materialen: ... invloed van vocht (roesten) ...\" and, under electricity, \"materialen die stroom doorlaten (geleiden) of niet (isoleren)\". The record shows the link between properties, not an investigation of the changes, and heat, electricity and rust are the examples of the fase 2 column itself (`ojw/nattech/1/02/fase2`: \"zoals geleiden en isoleren van warmte, geluid en/of elektriciteit, de invloed van vocht (roesten)\", as Limits says). Limits is right.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 2,
+        "offset": 144
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.9ba10727-d6cb-40f6-bc13-75adce2a6bc3",
+      "wording_sha256": "0b08efe5188fe54d02715eef6dfa757987d415e215e47abf493fc36edfd32719",
+      "text_sha256": "85aef3a4d29a522cd437c3810f94850669441ecff5e9881419e4c3b65ca066a2",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands in the fase 2 column under the cluster \"Materialen, stoffen en voorwerpen\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. The nine materials are counted right and stay examples (\"bijv.\"). Four common mistakes (form). The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 2,
+        "offset": 92
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.9ba10727-d6cb-40f6-bc13-75adce2a6bc3",
+      "wording_sha256": "0b08efe5188fe54d02715eef6dfa757987d415e215e47abf493fc36edfd32719",
+      "text_sha256": "26c1f0c1481286ba16c6110b3f90b11c875d5b18e80c893dbf5e049d7d055246",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands on page 2 in the fase 2 column of the cluster \"Materialen, stoffen en voorwerpen\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful; the nine materials after \"bijv.\" are counted right and stay examples. The neighbour `ojw/nattech/1/02/fase2` (properties of materials) says what is claimed. Three common mistakes remain; the one dropped (\"Not counting cloth as a material\") is not needed.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 2,
+        "offset": 92
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.a180b3b4-f39a-4420-ab92-855701b062bc",
+      "wording_sha256": "381405b2b8da4ce6504a30906e623244192513bfb37849f31d3e255a9636e761",
+      "text_sha256": "2d9587dd1d5d726cce5a96b5fabfffc9dde217f8a94fcf992f8d9e83b3763396",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Read on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands in the fase 2 column under the cluster \"Natuurkundige verschijnselen\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. The fault is in Limits: \"Condensing is not mentioned\". The Dutch is \"verandering van temperatuur verandert stoffen (vriezen/koelen leidt tot stollen/krimpen; verwarmen/koken leidt tot smelten/verdampen/uitzetten)\": the clause before the bracket is general, the bracket has no word that closes it, and condensing is a change of a substance through cooling; the fase 3 goal adds it to the same bracket (\"stollen-/krimpen/condenseren\"). The sentence reads as leaving it out of fase 2. Say that the bracket names these changes and that condensing is first named in the fase 3 goal. The other clause of that sentence, that the wording does not mention that water expands when it freezes, is right and useful and can stay. The wording names heating and boiling and sets no safety condition; Limits could say so (In a child's hands itself only melts ice, chocolate and butter). Form: the PDF breaks the line after \"stollen/-\", with a hyphen the data does not have. The gloss is faithful. Four common mistakes (form).",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 1,
+        "offset": 123
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.a180b3b4-f39a-4420-ab92-855701b062bc",
+      "wording_sha256": "381405b2b8da4ce6504a30906e623244192513bfb37849f31d3e255a9636e761",
+      "text_sha256": "087e194a9cdadfa63b1908e7f38065a6ebb916f103b794de88b75c8a8e7be54d",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands on page 1 in the fase 2 column of the cluster \"Natuurkundige verschijnselen\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. Form: the PDF breaks the line after \"stollen/-\", with a hyphen the data does not have. Round 1's reason is resolved: \"Condensing is not mentioned\" is gone; Limits now reports what the brackets name and adds \"the wording names no other changes\", and says that heating and boiling are named with no safety condition. The kept sentence \"The wording does not mention that water expands when it freezes\" stays on the first check's advice: it warns that the bracket's \"vriezen/koelen leidt tot stollen/krimpen\" does not hold for water and narrows nothing. The gloss is faithful; three common mistakes remain, all real. Nothing new is wrong.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 1,
+        "offset": 123
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.a46f4024-8683-4758-8c4b-b9524903b3d4",
+      "wording_sha256": "fec843b8e0348e57331d4d93c56603a1e4211d2eb8a763380f94d63a9a9067db",
+      "text_sha256": "97c97ecb2e3bc98174a146c9b645c52c92314eadc4f82ff3ca887329dffdc240",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands in the fase 2 column under the cluster \"Groei, ontwikkeling (bloei), gedrag en voortplanting (instandhouding)\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 2,
+        "offset": 304
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.a46f4024-8683-4758-8c4b-b9524903b3d4",
+      "wording_sha256": "fec843b8e0348e57331d4d93c56603a1e4211d2eb8a763380f94d63a9a9067db",
+      "text_sha256": "71f2cb6d3040ab3d5921e3f494be966d0531cfaf9e9a9c68df6192fb9f8f43e8",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands on page 2 in the fase 2 column of the cluster \"Groei, ontwikkeling (bloei), gedrag en voortplanting (instandhouding)\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful. The neighbour `ojw/pdm/3/09/fase2` (from seed to plant) says what is claimed. The science is right (egg, larva, pupa, adult; young that look like the adults against young that change form). The PDF underlines \"groei en ontwikkeling\" and \"dieren\": form.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 2,
+        "offset": 304
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.a69ebf3e-bf27-4741-91df-c932ac25218d",
+      "wording_sha256": "cac6e55b3368eb79494477755cd8cc6f50955e5a0830f9bd84d6e3f014485683",
+      "text_sha256": "ecf11aade80c9276b6e743930efad12da1ca8e64c92398426efc8ceac11a3707",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"De ruimte om je heen\" (04-2018): the goal stands in the fase 2 column under the cluster \"Heelal en hemellichamen\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. Source oddity: the data and the PDF both print the doubled word \"t.o.v. van de zon\"; the record reproduces it and the gloss gives \"relative to the sun\". Limits does not say that the source prints the doubled \"van\"; a sentence saying so would help a reader of the Dutch. The PDF underlines \"heelal\" (a link to its glossary): form. The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": {
+        "page": 1,
+        "offset": 245
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.a69ebf3e-bf27-4741-91df-c932ac25218d",
+      "wording_sha256": "cac6e55b3368eb79494477755cd8cc6f50955e5a0830f9bd84d6e3f014485683",
+      "text_sha256": "d87e7085a4b4019f04253b9da370e45f5bad96b90daaee00bc4e6154e41918b1",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"De ruimte om je heen\" (04-2018): the goal stands on page 1 in the fase 2 column of the cluster \"Heelal en hemellichamen\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful. The doubled word in \"t.o.v. van de zon\" (data and PDF both print it) is now reported in Limits, which the first check asked for, and glossed \"relative to the sun\". Limits names the two things the Dutch names and says the bracketed word only places the subject; the neighbour `ojw/rojh/2/03/fase2` (how day and night come about) says what is claimed. In the age sentence \"the two movements\" describes the case and sets no amount. The PDF underlines \"heelal\" (a link to its glossary): form.",
+      "rendition": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": {
+        "page": 1,
+        "offset": 245
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.ad949c1a-3a20-4ff1-90c7-c430edd66462",
+      "wording_sha256": "13219102a20831b717738ae941cd3ed1704567e6fa41a6c1569b3811c0e0c5e2",
+      "text_sha256": "d51d0e8401dcbdd05d3590697d5b157ced7adafd864316548a53e65fde6f638e",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands in the fase 2 column under the cluster \"Planten en dieren\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. The gloss keeps \"bloeiwijze\" in Dutch with an explanation; both \"bijv.\" lists stay examples in the gloss and in Limits. The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 1,
+        "offset": 190
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.ad949c1a-3a20-4ff1-90c7-c430edd66462",
+      "wording_sha256": "13219102a20831b717738ae941cd3ed1704567e6fa41a6c1569b3811c0e0c5e2",
+      "text_sha256": "a5ef2803f4bea3597d8a64690b50dad590bb0f44a6e168036ea7c981fe8c6da8",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands on page 1 in the fase 2 column of the cluster \"Planten en dieren\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful: both \"bijv.\" lists stay examples, in the gloss and in Limits, and *bloeiwijze* is kept in Dutch with an explanation. The fault is in the age sentence at the end of In a child's hands: \"A child of 7 compares on one feature, mostly colour or size; a child of 10 compares on several features and records them in a table.\" The ages differ by a count of features (\"one\" against \"several\": lead ruling 5), and \"mostly\" is a norm word (ruling 1). The Dutch sets no number of characteristics. Fix: a difference in kind, for example \"A child of 7 compares by colour or size; a child of 10 also compares build and the way the flowers are arranged, and records the comparison in a table.\"",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 1,
+        "offset": 190
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.ad949c1a-3a20-4ff1-90c7-c430edd66462",
+      "wording_sha256": "13219102a20831b717738ae941cd3ed1704567e6fa41a6c1569b3811c0e0c5e2",
+      "text_sha256": "f0786e3137aadbe6eb4df15b54e3dbd0351f8d1d228ec38c8ce2c95071f0c84e",
+      "verdict": "confirmed",
+      "note": "Round 3, after the second fix. Read again on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): page 1, fase 2 column, cluster \"Planten en dieren\", second statement of six, \"waarnemen en op basis van uiterlijke kenmerken vergelijken van (delen van) verschillende planten (bijv. vorm, kleur, bouw, geur, bloeiwijze) en vergelijken van (delen van) verschillende dieren (bijv. vorm, kleur, bouw, beharing, gedrag)\", word for word as the record; it starts and ends where the record does and nothing else stands in the dash. The gloss is faithful: both \"bijv.\" lists stay examples, in the gloss and in Limits, and *bloeiwijze* is kept in Dutch with an explanation. Round 2's reason is resolved: the count of features (\"one\" against \"several\") and \"mostly\" are gone, and the age sentence shows two plain instances of the goal (the leaves of different trees compared by shape and colour: parts of different plants; a snail and a slug compared by build and the way they move: different animals, by build and behaviour), each on characteristics the bracket names, with no count, duration, norm word or help (rulings 5, 8, 9). \"two birds\", \"two groups\" in the body describe the scene. Ruling 11, against the fase 3 column: \"ordenen en indelen van planten en dieren in hoofdgroepen en soorten (plantenrijk en dierenrijk)\" and \"ordenen en op naam brengen van ... met behulp van passende determineersleutels\". The body has \"then sorts a set into two groups and states the rule\". Judged not to be that goal: the child groups by an outward characteristic of his or her own choosing, which is how the comparison shows, and no main group, species, kingdom or key is used. Noted for the lead as the nearest the record comes to fase 3; it is not in the age sentence.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 1,
+        "offset": 190
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.b0954ec3-af23-40e0-b2b4-5f0d192c33d6",
+      "wording_sha256": "6bb06a4e67932342f0520a3ebf27fba4ba185b61649f9db8d86b2208ee352529",
+      "text_sha256": "94b2c91ac6f001a32a808f67b4b3e4956b99dd4b2e742219b026b5fec871b77b",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands in the fase 2 column under the cluster \"Groei, ontwikkeling (bloei), gedrag en voortplanting (instandhouding)\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 2,
+        "offset": 321
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.b0954ec3-af23-40e0-b2b4-5f0d192c33d6",
+      "wording_sha256": "6bb06a4e67932342f0520a3ebf27fba4ba185b61649f9db8d86b2208ee352529",
+      "text_sha256": "289653a60bd678214cbda38902739ce33fd20c50b887a750e9e77113adc5bcdf",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands on page 2 in the fase 2 column of the cluster \"Groei, ontwikkeling (bloei), gedrag en voortplanting (instandhouding)\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful and keeps the three parts. Limits is right (the senses are not listed, no animals named). The common mistakes are real (taste without smell; seeing as something going out from the eye). For the lead: the age sentence has \"a child of 10 tests one sense at a time\"; read as method, not an amount, and confirmed on that reading.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 2,
+        "offset": 321
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.b213a49f-d5a2-4038-bdbb-9a6fef4a67ad",
+      "wording_sha256": "6a0513f8de0495326d32f423736388b2a8a6def575d356955e3c991a06146f93",
+      "text_sha256": "d942eb4a5d6eb81fcda46eb549c9267621e8e33f81206cea1428d4951091fb75",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands in the fase 2 column under the cluster \"Natuurkundige verschijnselen\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. Limits says \"Colour, lenses and the bending of light are not mentioned\": the goal lists its five parts itself after the colon, and the fase 3 goal is where \"lichtbreking\" and \"kleuren (prisma)\" are first named; read as that, not counted as a fault, though \"these are first named in fase 3\" would be safer. Four common mistakes (form). The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 1,
+        "offset": 74
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.b213a49f-d5a2-4038-bdbb-9a6fef4a67ad",
+      "wording_sha256": "6a0513f8de0495326d32f423736388b2a8a6def575d356955e3c991a06146f93",
+      "text_sha256": "e020580951e926fe2d3c830d12f494951b1b10a0c52a257a4c71a851e7710589",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands on page 1 in the fase 2 column of the cluster \"Natuurkundige verschijnselen\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful. Limits: \"colour is not among the five parts\"; the Dutch lists its five parts itself after the colon, with no \"zoals\" or \"bijv.\", so this is true of the list and narrows nothing (\"kleuren (prisma)\" is first printed in the fase 3 column). Three common mistakes remain, all real. The PDF underlines \"licht\": form.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 1,
+        "offset": 74
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.b793e6cc-e30d-4193-ad5c-5bff8d3e9a82",
+      "wording_sha256": "bd2d64e3073e3b605cba7a540ea8ec930b3bb532e5b6a0e26425ccb2f3ef5855",
+      "text_sha256": "dcb81784665b04ab9348a5d9c1e03724a4aaf248287965fae623915b1cd584e1",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands in the fase 2 column under the cluster \"Groei, ontwikkeling (bloei), gedrag en voortplanting (instandhouding)\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. Limits says \"Air is not mentioned\": the four needs are a plain list in the sentence itself (voedsel, water, licht en juiste temperatuur), not a general term with examples, so this is right. The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 2,
+        "offset": 241
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.b793e6cc-e30d-4193-ad5c-5bff8d3e9a82",
+      "wording_sha256": "bd2d64e3073e3b605cba7a540ea8ec930b3bb532e5b6a0e26425ccb2f3ef5855",
+      "text_sha256": "53dc2897440dce5167ce462b0e086d753faa7fb10d8f5a6379cb20a6d5987de6",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands on page 2 in the fase 2 column of the cluster \"Groei, ontwikkeling (bloei), gedrag en voortplanting (instandhouding)\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful. Limits keeps \"Air is not among the four\"; judged against lead ruling 4 and the Dutch: the needs are a plain list inside the sentence (\"voedsel, water, licht en juiste temperatuur\"), with no \"zoals\", \"o.a.\" or \"bijv.\", so they may be counted as four and the sentence says only what is not in the list. For the lead: the age sentence has \"a child of 10 changes one condition per pot\"; read as naming the method of a fair test, not an amount that differs between the ages, and confirmed on that reading.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 2,
+        "offset": 241
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.bbb258a6-6de1-4407-bca8-e3c49af3db83",
+      "wording_sha256": "18f077bbd0edc67b64345dbfa6558075caa1bcf7bb9b0f0ac890fbfddd6e9ab8",
+      "text_sha256": "db9041133c8a00651bbd172a83f5ae066ed592c79269cbc7aaaf55a8e2745de7",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands in the fase 2 column under the cluster \"De mens\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. Limits says \"Other organs, such as the brain, are not mentioned\": the wording limits itself to parts \"van buitenaf waarneembaar\", and the brain cannot be noticed from outside, so nothing the wording covers is denied; not counted as a fault. The seven items in the bracket are counted right. The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 2,
+        "offset": 194
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.bbb258a6-6de1-4407-bca8-e3c49af3db83",
+      "wording_sha256": "18f077bbd0edc67b64345dbfa6558075caa1bcf7bb9b0f0ac890fbfddd6e9ab8",
+      "text_sha256": "0e761fa49e80e7e7fd9bea187cecc51ad963fa94baa72cef11cc3e35438594e0",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands on page 2 in the fase 2 column of the cluster \"De mens\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful and keeps the quotation marks around 'de van buitenaf waarneembare'. The bracket has no \"zoals\" or \"bijv.\"; Limits (\"The brackets name seven ...; the wording names no others\") counts right and claims neither that the list is closed nor that it is an illustration. The fault is in the age sentence at the end of In a child's hands: \"a child of 10 counts the pulse for a minute at rest and after exercise\". \"for a minute\" is a duration in the age sentence (lead ruling 1); the Dutch gives none. A slight case. Fix: \"counts the pulse at rest and after exercise\".",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 2,
+        "offset": 194
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.bbb258a6-6de1-4407-bca8-e3c49af3db83",
+      "wording_sha256": "18f077bbd0edc67b64345dbfa6558075caa1bcf7bb9b0f0ac890fbfddd6e9ab8",
+      "text_sha256": "3219b40dca8aec942b07e9607479a34089ad268ebf707530fd0904caef6efb07",
+      "verdict": "confirmed",
+      "note": "Round 3, after the second fix. Read again on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): page 2, fase 2 column, cluster \"De mens\", second statement of three, \"onderscheiden en verkennen bij jezelf van 'de van buitenaf waarneembare' inwendige lichaamsdelen en organen (hart, bloedsomloop, longen, spieren, skelet, ademhaling en spijsverteringsstelsel) en verkennen wat hun functie is\", word for word as the record; it starts and ends where the record does and nothing else stands in the dash. The gloss is faithful and keeps the quotation marks. Round 2's reason is resolved: \"for a minute\" is gone. The fixer's question on the age sentence (\"A child of 7 feels and names; a child of 10 counts the pulse at rest and after exercise and says what each organ does\"), judged by ruling 8: the two ages differ as the two halves of the statement differ. Feeling and naming is \"onderscheiden en verkennen bij jezelf\"; counting the pulse at rest and after exercise is exploring the heart and the circulation on oneself, and saying what an organ does is \"verkennen wat hun functie is\". Both instances are worded by the goal, and the difference is not help, a range, an amount, a duration or a norm word, so it is a difference the statement supports and no fault; \"each organ\" refers to the organs felt and sets no number. Noted, not counted: the goal gives both halves to the whole band, so the sentence could as well show the function at 7. Ruling 11: the fase 3 column has \"onderzoeken van vorm en functie van uitwendige en inwendige lichaamsdelen (organen) van de mens en systemen van het menselijk lichaam (ademhaling, bloedsomloop, voortbeweging en stofwisseling)\" and \"onderzoeken van de bouw en functie van het skelet\"; the record stays with what can be felt on one's own body from outside, which is the fase 2 wording. Limits counts the seven names right and names no others.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 2,
+        "offset": 194
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.be3fd5d5-39eb-4601-9d43-6c5088ad9eb5",
+      "wording_sha256": "8ded345aae53fd08d75093210fa8b15aea76f2b4c169945895e1d0f050314d27",
+      "text_sha256": "92beb28715b9df531fb941c6c340235abca9513e2ad9b18468fb2d67120e1b7b",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands in the fase 2 column under the cluster \"Planten en dieren\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. The gloss keeps \"zoekkaarten\" in Dutch with an explanation. Four common mistakes (form). The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 1,
+        "offset": 237
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.be3fd5d5-39eb-4601-9d43-6c5088ad9eb5",
+      "wording_sha256": "8ded345aae53fd08d75093210fa8b15aea76f2b4c169945895e1d0f050314d27",
+      "text_sha256": "4fe023efbce9f5274ccb53770295bdd6258ebe5e8bbb9a77bf06a409c603d735",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands on page 1 in the fase 2 column of the cluster \"Planten en dieren\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss keeps *zoekkaarten* in Dutch with an explanation. Limits is right (simple cards, of plants and of animals; using a card, not names from memory). Three common mistakes remain; the one dropped (\"Miscounting legs\") is not needed.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 1,
+        "offset": 237
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.bfc87d39-6432-4fa0-99a7-f31bf521f6c5",
+      "wording_sha256": "a9b8911fa8d4d1974788c0603be10955f1c2cd56012753983c8f025a607c8c5a",
+      "text_sha256": "c766cd2c5ef593a653ec2b27ff8f0f52d8e37e637de91335fcbd69993fffe2e7",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"De ruimte om je heen\" (04-2018): the goal stands in the fase 2 column under the cluster \"Weer en klimaat\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. The gloss keeps \"weerbeeld\" in Dutch with an explanation and gives the whole bracket. The PDF underlines \"weer\" inside \"weerbeeld\" (a glossary link): form. The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": {
+        "page": 1,
+        "offset": 177
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.bfc87d39-6432-4fa0-99a7-f31bf521f6c5",
+      "wording_sha256": "a9b8911fa8d4d1974788c0603be10955f1c2cd56012753983c8f025a607c8c5a",
+      "text_sha256": "2219d9796e989a8a5124617692eb8da6953cb97d9fdd0bfa2fc48bc0a77035f1",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"De ruimte om je heen\" (04-2018): the goal stands on page 1 in the fase 2 column of the cluster \"Weer en klimaat\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss keeps *weerbeeld* in Dutch with an explanation and gives the whole bracket. Limits reports the bracket as naming the aspects of the weather; the neighbour `ojw/rojh/7/05/fase2` (observing with weather instruments) says what is claimed. The PDF underlines \"weer\" inside \"weerbeeld\": form.",
+      "rendition": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": {
+        "page": 1,
+        "offset": 177
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.cb1652d1-eb99-4617-8728-24ef4b7b0ae2",
+      "wording_sha256": "dce8f269b4a3fb5f153ecd5bd12129387f393126511066607a7eb2dae2331971",
+      "text_sha256": "562d5d0ca44813997ade6fbe108fc59bdbfb5d1b7859af6f772120284096a75f",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands in the fase 2 column under the cluster \"Natuurkundige verschijnselen\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. Limits says \"Poles and their names, the compass, the earth's magnetism and electromagnets are not mentioned\": the goal lists its two parts itself after the colon, and the compass, the pole names and the electromagnet are first named in fase 3; not counted as a fault, though In a child's hands itself has the child find that \"the same two ends always push each other away\", so \"poles\" would be better left out of that sentence or said to be first named in fase 3. The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 1,
+        "offset": 176
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.cb1652d1-eb99-4617-8728-24ef4b7b0ae2",
+      "wording_sha256": "dce8f269b4a3fb5f153ecd5bd12129387f393126511066607a7eb2dae2331971",
+      "text_sha256": "088138f8e5e62f010ec747ace7e7412a302c19dc6d6d9a6628b90ce1d671ae9c",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands on page 1 in the fase 2 column of the cluster \"Natuurkundige verschijnselen\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful. Limits now reads \"gives no terms for the ends of a magnet, and names no instrument or application of magnetism\", which meets the first check's remark on poles. \"the same two ends\" in the age sentence describes the case. The science is right (only some metals are attracted; aluminium is not). The PDF underlines \"magnetisme\": form.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 1,
+        "offset": 176
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.cdfb0278-df82-4d9f-a9e5-9c05e35272f2",
+      "wording_sha256": "e28ceb793b5222f38c813d3a5065d37bf69ee74220b6e35b50cfd56d461e184f",
+      "text_sha256": "56d35393c1566d7d121dcefb01cc5709bcc0bde23eb58334d082674a5eacfce8",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands in the fase 2 column on page 3, where the cluster \"Technische principes en systemen\" runs on from page 2 (the heading is not repeated), with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 3,
+        "offset": 203
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.cdfb0278-df82-4d9f-a9e5-9c05e35272f2",
+      "wording_sha256": "e28ceb793b5222f38c813d3a5065d37bf69ee74220b6e35b50cfd56d461e184f",
+      "text_sha256": "9ac22a897d748652737fba801d20c367dfe30cb344ecb8bad62ce8c3c170b3f3",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands on page 3 in the fase 2 column of the cluster \"Technische principes en systemen\" (the cluster runs on from page 2 and its heading is not repeated), word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful. The neighbours `ojw/nattech/1/08/fase2` and `ojw/nattech/2/08/fase2` are the experiment statements of the other two clusters, as claimed. The common mistakes are right. For the lead: the age sentence shows the child of 7 working \"within steps an adult has set\", an adult the Dutch does not name; shown as a scene, without \"needs\" or \"help\", and not counted under ruling 1.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 3,
+        "offset": 203
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.d3116c5e-a8be-4602-b6db-aabdf335d3f1",
+      "wording_sha256": "6401b838242dc2d30c70828f9f66dd025f9780bea6b5dd9ab00200ada28c0db8",
+      "text_sha256": "6bd674512452fc0ccacef90e5f035f7babea8199e97dde5ffff9358e826efdb7",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands in the fase 2 column on page 3, where the cluster \"Technische principes en systemen\" runs on from page 2 (the heading is not repeated), with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. Four common mistakes (form). The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 3,
+        "offset": 194
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.d3116c5e-a8be-4602-b6db-aabdf335d3f1",
+      "wording_sha256": "6401b838242dc2d30c70828f9f66dd025f9780bea6b5dd9ab00200ada28c0db8",
+      "text_sha256": "2a8651c6b380b5dd65f84670c968d34953a65d0cd890ad6fc20ab4bc5b89af74",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands on page 3 in the fase 2 column of the cluster \"Technische principes en systemen\" (the cluster runs on from page 2 and its heading is not repeated), word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful. Limits: \"The wording does not ask for making a drawing of one's own\" is right for \"uitvoeren van een werktekening of handleiding\". Three common mistakes remain. The fault is in the age sentence at the end of In a child's hands: \"A child of 7 follows one picture per step with few parts; a child of 10 reads a working drawing with sizes and views from more than one side\". Counts (\"one picture per step\", \"few parts\", \"more than one side\") are given as the level at 7 and at 10 (lead rulings 1 and 5), although the record's own Limits says the wording \"gives no kind, length or difficulty\". Fix: a difference in kind, for example \"A child of 7 follows picture instructions; a child of 10 reads a working drawing with sizes and finds their own error by going back through the steps.\"",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 3,
+        "offset": 194
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.d3116c5e-a8be-4602-b6db-aabdf335d3f1",
+      "wording_sha256": "6401b838242dc2d30c70828f9f66dd025f9780bea6b5dd9ab00200ada28c0db8",
+      "text_sha256": "2796aca9962ceed4e98134c604e62ab2a521dec0ba6726a5750b37bca55fb922",
+      "verdict": "confirmed",
+      "note": "Round 3, after the second fix. Read again on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): page 3, fase 2 column, where the cluster \"Technische principes en systemen\" runs on from page 2 (heading not repeated), \"stap voor stap uitvoeren van een werktekening of handleiding\", word for word as the record; it starts and ends where the record does and nothing else stands in the dash. The gloss is faithful. Round 2's reason is resolved: \"one picture per step\", \"few parts\" and \"more than one side\" are gone, and the age sentence shows two plain instances of the goal (building a model from a construction set by its picture instructions, step by step: a \"handleiding\"; making a wooden boat by its working drawing, step by step: a \"werktekening\"), with no count, duration, norm word or help (rulings 5, 8, 9). \"does one step\" in the body is the method the goal names (\"stap voor stap\": ruling 10). Ruling 11: the fase 3 column has \"aan de hand van een werktekening iets construeren dat aan vooraf geformuleerde bedoelingen beantwoordt\". The working drawing is in the fase 2 wording itself; what fase 3 adds, purposes set beforehand that the thing made must meet, is not shown. Limits is right (no kind, length or difficulty; no drawing of one's own asked).",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 3,
+        "offset": 194
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.d41e41ea-4bf5-40ef-ba0e-0e8ef8e91542",
+      "wording_sha256": "6698ba483324159b4a1f5d9cd7369aad6e07affffcd9cf1d99aaf7ad7400d6d7",
+      "text_sha256": "3167704e33aa358f4b763f49b44c3e58a6221328734f68b383157c44b9d9c251",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands in the fase 2 column under the cluster \"Omgaan met de natuur\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. The PDF prints the same sentence in the fase 3 column as well (page 1, offset 295); the place given is the printing in the fase 2 column. The gloss keeps the three verbs as encounter, wonder and realise, not as a skill. The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 1,
+        "offset": 141
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.d41e41ea-4bf5-40ef-ba0e-0e8ef8e91542",
+      "wording_sha256": "6698ba483324159b4a1f5d9cd7369aad6e07affffcd9cf1d99aaf7ad7400d6d7",
+      "text_sha256": "2412bd2ed47476343ceac9e756d5c8474c063639f74698d344d5daa9ed93b2ae",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands on page 1 in the fase 2 column of the cluster \"Omgaan met de natuur\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The PDF prints the sentence in the fase 3 column too (page 1, offset 295); the place given is the printing in the fase 2 column. The gloss is now that of the fase 3 record with the same Dutch (`ojw/pdm/4/01/fase3`); checked against the Dutch itself (\"ontmoeten, verwonderen en beseffen van de grote verscheidenheid aan planten, dieren en paddenstoelen (schimmels)\"): faithful, the three verbs kept and \"schimmels\" in brackets. Common mistakes now opens \"This is not a skill with a typical error.\" and then says what children leave out; what remains is right (fungi are not plants), and the one remark that was dropped (two animals of a kind counted as two kinds) is not needed.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 1,
+        "offset": 141
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.dd24ec19-8b48-463b-b0e4-fbf2f00aab58",
+      "wording_sha256": "5bb470e8b12851e7f3fa80e220b5cfac965e19d0d02b47878e053dc0ec96a119",
+      "text_sha256": "ae5aed4b2aaaf665189f83b2865c392a972ab89d88d9f95808be75fd85c6a6eb",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands in the fase 2 column under the cluster \"Omgaan met de natuur\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. The PDF prints this sentence three times on page 1, once in each column of the cluster: fase 1 (offset 62, the script's first choice), fase 2 (offset 166) and fase 3 (offset 320). The place given is the printing in the fase 2 column. Glossed as conduct, not a skill. Four common mistakes (form). The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 1,
+        "offset": 166
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.dd24ec19-8b48-463b-b0e4-fbf2f00aab58",
+      "wording_sha256": "5bb470e8b12851e7f3fa80e220b5cfac965e19d0d02b47878e053dc0ec96a119",
+      "text_sha256": "61049fa26fa86e50e29ff2e4f42c8cc6e043de02938f2ed71ae35241c1d7cf9d",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands on page 1 in the fase 2 column of the cluster \"Omgaan met de natuur\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The PDF prints the sentence three times on page 1, once in each column of the cluster: fase 1 (offset 62, the script's first choice), fase 2 (offset 166) and fase 3 (offset 320); the place given is the printing in the fase 2 column. The gloss equals that of the fase 3 record with the same Dutch (`ojw/pdm/4/03/fase3`) and is faithful to \"met zorg omgaan met planten en dieren\". Common mistakes now opens with the fixed sentence for a goal about conduct; what remains is right. The fault is in the age sentence at the end of In a child's hands: \"A child of 7 needs reminders and shows care mostly by stroking and holding\". \"needs\" and \"mostly\" are norm words (lead ruling 1): they give what is usual at 7, and the Dutch names no reminder and no level per age. Fix: show a child, for example \"A child of 7 strokes and holds the animal and waters the plant once reminded; a child of 10 keeps to a care rota and notices when an animal wants to be left alone.\"",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 1,
+        "offset": 166
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.dd24ec19-8b48-463b-b0e4-fbf2f00aab58",
+      "wording_sha256": "5bb470e8b12851e7f3fa80e220b5cfac965e19d0d02b47878e053dc0ec96a119",
+      "text_sha256": "b6c09aff2cd36f75f0d8edd16e278e303bf99e9583a3790bcda810bb51d0ba3f",
+      "verdict": "confirmed",
+      "note": "Round 3, after the second fix. Read again on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): page 1, cluster \"Omgaan met de natuur\", \"met zorg omgaan met planten en dieren\", word for word as the record, nothing else in the dash. The PDF prints the sentence once in each column of the cluster (fase 1 offset 62, the script's first choice; fase 2 offset 166; fase 3 offset 320); the place given is the printing in the fase 2 column, third statement of three. The gloss is faithful. Round 2's reason is resolved: \"needs reminders\" and \"mostly\" are gone, and the age sentence shows two plain instances of the goal (stroking the class animal gently and putting it back in its cage; watering the plants when it is the child's turn and letting an animal be when it moves away), each a way of treating a plant or an animal with care, with no count, duration, norm word or help (rulings 5, 8, 9); no reminder stands at either age. \"with two hands\" and \"the right amount\" in the body describe the scene. Ruling 11: the fase 3 column prints the same three goals for this cluster, so nothing of a later fase is shown. Common mistakes has the fixed form for a goal about conduct (\"most often\", \"Many\": ruling 7).",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 1,
+        "offset": 166
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.df1e826d-d4be-4a4e-a219-5450e6ec6875",
+      "wording_sha256": "5727ad29da81ef710769e7f4b24c0b0d7e0cf4fb136002f34755ba7529778498",
+      "text_sha256": "09d4fded6438f9040872e27e9511c5d502695067b62596019621766de6c9f412",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands in the fase 2 column under the cluster \"Materialen, stoffen en voorwerpen\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 2,
+        "offset": 220
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.df1e826d-d4be-4a4e-a219-5450e6ec6875",
+      "wording_sha256": "5727ad29da81ef710769e7f4b24c0b0d7e0cf4fb136002f34755ba7529778498",
+      "text_sha256": "b3ded80ac724d567b1e1f8742eb661fa16b2ed0bb31df7ce3095c58897b35054",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands on page 2 in the fase 2 column of the cluster \"Materialen, stoffen en voorwerpen\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful (\"naar eigen idee en inzicht\"; \"waarbij rekening wordt gehouden met het gebruik van materialen\"). Limits: the child's own idea, no object, material or tool named. The PDF underlines \"ontwerpen\": form.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 2,
+        "offset": 220
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.e358bee9-5fb8-48bc-a017-77e45d5da836",
+      "wording_sha256": "f61a9d64581f56e916843991c10aeab5ac4d1ef6a6cfbcb17ace80096eaa7256",
+      "text_sha256": "30018b756843f186a97af0fdd74a70e9895d0efc63218d7cfc2e2a10d7cac733",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands in the fase 2 column under the cluster \"Technische principes en systemen\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. The gloss keeps \"kunstwerken\" in Dutch with both readings (works of art; civil-engineering structures); both are real. Limits explains \"profile\" and says the wording does not explain the word. Four common mistakes (form). The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 2,
+        "offset": 252
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.e358bee9-5fb8-48bc-a017-77e45d5da836",
+      "wording_sha256": "f61a9d64581f56e916843991c10aeab5ac4d1ef6a6cfbcb17ace80096eaa7256",
+      "text_sha256": "52c96bb793037fa319d824e157bee4fd7f0238841ca004b8ce5c7cc997b4ede0",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands on page 2 in the fase 2 column of the cluster \"Technische principes en systemen\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss keeps *kunstwerken* in Dutch with both readings. Limits: the five principles after \"zoals\" and the four places after \"bijv.\" are counted right and stay examples; it explains \"profile\" and says the wording does not. Three common mistakes remain, all right (a frame of four strips does not keep its shape as a triangle does). The PDF underlines \"constructies\": form.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 2,
+        "offset": 252
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.e9941f95-4fdf-4a1b-942d-2de73461b567",
+      "wording_sha256": "ac3124a7cd0d66e054fb57d06b04e1c87319960176ecb12957804f8173b7336d",
+      "text_sha256": "5151ec83e3d11eb4aab90106b2664f19e6ca9d39e790e7c84bd58725036fbc13",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"De ruimte om je heen\" (04-2018): the goal stands in the fase 2 column under the cluster \"Weer en klimaat\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": {
+        "page": 1,
+        "offset": 210
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.e9941f95-4fdf-4a1b-942d-2de73461b567",
+      "wording_sha256": "ac3124a7cd0d66e054fb57d06b04e1c87319960176ecb12957804f8173b7336d",
+      "text_sha256": "b1e8bfb9618714bc5211e9a34229ca0720181982cbc12d156f10e471d2e1a239",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"De ruimte om je heen\" (04-2018): the goal stands on page 1 in the fase 2 column of the cluster \"Weer en klimaat\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful. Limits: three groups are named, and no particular animals, plants or effects. The common mistakes are real and the science is right (a tree that has dropped its leaves is not dead; not all animals sleep through the winter). The PDF underlines \"weer\": form.",
+      "rendition": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": {
+        "page": 1,
+        "offset": 210
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.ea7ecbd9-28a6-4d1a-9462-c18987bf9073",
+      "wording_sha256": "c1f106bafee4c94b2cc46d403e11393e2b3227f5ba4280d48d2105771172f703",
+      "text_sha256": "f7406af5af71efadc7308fb8cdd729f8708f0678be46d43c0d41d6b5c27e8b89",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Read on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands in the fase 2 column under the cluster \"Natuurkundige verschijnselen\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. The fault is in Limits: \"Gravity, friction and wind are not mentioned in this statement\". The Dutch is \"het verschijnsel kracht: krachtbronnen; kracht door mensen (spierkracht); kracht van water (...)\": \"krachtbronnen\" is a general term with no list, and wind is a source of force as water is, so the sentence reads as leaving wind out of a goal whose wording does not (the record for energy in this cluster has the child turn a paper windmill). Gravity and friction are first named in the fase 3 goal (\"zwaartekracht; wrijvingskracht; kracht van lucht\"); say that, and drop \"wind\", or say only that the wording names no sources apart from people and water. Not counted, for the fixer to weigh: the gloss gives \"kracht\" as \"force\" throughout and \"spierkracht\" as \"muscle power\"; another lane of the pack keeps the word open (\"*kracht*, read as force or as strength or power\"). Form: the PDF breaks the line after \"zinken/-\", with a hyphen the data does not have. The gloss keeps \"zweven\" in Dutch with an explanation; the facts in the notes are right.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 1,
+        "offset": 155
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.ea7ecbd9-28a6-4d1a-9462-c18987bf9073",
+      "wording_sha256": "c1f106bafee4c94b2cc46d403e11393e2b3227f5ba4280d48d2105771172f703",
+      "text_sha256": "b11afff2c7676de5df86f9c1ce2d48b8a22f2fcdcdcbf811a735ac62c72e4f2a",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands on page 1 in the fase 2 column of the cluster \"Natuurkundige verschijnselen\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. Form: the PDF breaks the line after \"zinken/-\", with a hyphen the data does not have. Round 1's reason is resolved: \"Gravity, friction and wind are not mentioned\" is gone, and Limits says \"Apart from people and water the wording names no particular source of force\". *Kracht*: the gloss gives \"force\" with \"(*kracht*, which also means strength or power)\" at first use, and Limits sets out both readings (a phenomenon, in the cluster on physical phenomena; \"krachtbronnen\" and \"spierkracht\" also fit power) and says the wording does not choose: this leaves open what the Dutch leaves open and no more. The neighbour `ojw/nattech/2/05/fase2` (magnetism) says what is claimed. The science is right. Nothing new is wrong.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 1,
+        "offset": 155
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.f09d51bb-2b1b-43e1-b4f9-20c1fde79a6d",
+      "wording_sha256": "51455eb1584dcb112ed1edc3f84018adac138cc73be79c9caea052b5de266979",
+      "text_sha256": "2b320c6fbf511adbf3cfd2bf203b1a2c176b278cda089042d20daeca48733325",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands in the fase 2 column under the cluster \"Planten en dieren\", with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 1,
+        "offset": 246
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.f09d51bb-2b1b-43e1-b4f9-20c1fde79a6d",
+      "wording_sha256": "51455eb1584dcb112ed1edc3f84018adac138cc73be79c9caea052b5de266979",
+      "text_sha256": "e230f308c49218b347712cd992b8f40d5253eec0fc0939fb29548d025f8e0140",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Planten, dieren en de mens\" (04-2018): the goal stands on page 1 in the fase 2 column of the cluster \"Planten en dieren\", word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful and as open as the Dutch on whether \"de rol voor genezing\" falls under \"zoals\". For the lead: Limits reads it as the third example (\"Three examples follow 'such as'\"); the Dutch (\"... zoals leverancier van zuurstof en voedsel en de rol voor genezing\") can also be read with the role in healing as a second object of \"verkennen\". On either reading nothing is narrowed or denied; not counted as a fault. The neighbour `ojw/pdm/4/02/fase2` (beauty of nature) says what is claimed. The science is right.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 1,
+        "offset": 246
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.fd2fd5ab-c558-4f67-9ba3-eeb86290afd6",
+      "wording_sha256": "725e3694c99ab552dd1e4b3ec59ccca213246c504e2b392c50e0e6957d3c7962",
+      "text_sha256": "f708f9cbe12760843e351b9bd39bd6aaeafd7f34b1647de098e368e1ea030bcb",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands in the fase 2 column on page 3, where the cluster \"Technische principes en systemen\" runs on from page 2 (the heading is not repeated), with the same words as the record, and starts and ends where the record does. The PDF prints no example beyond the record's wording and no year label. A hazardous item: Limits says \"Soldering is named without any condition; the wording says nothing about tools, supervision or safety\", which is right, and In a child's hands does not have the child solder. Limits also says \"Gluing and nailing are not in the list\", straight after saying that the six joins after \"zoals\" are examples: a true statement about the list, not about the goal, so not counted as a fault (both are joins and fall inside \"typen verbindingen\"; \"the wording names only these six examples\" would be safer). Four common mistakes (form). The gloss is faithful, clause by clause.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 3,
+        "offset": 104
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-2.science.objective.fd2fd5ab-c558-4f67-9ba3-eeb86290afd6",
+      "wording_sha256": "725e3694c99ab552dd1e4b3ec59ccca213246c504e2b392c50e0e6957d3c7962",
+      "text_sha256": "a7a1e2c170ef5d528d7712c85d0bfa55220b9bd1d41dc3a31940812ca9e7563f",
+      "verdict": "confirmed",
+      "note": "Round 2. Read again on the page image of the content-line PDF \"Verschijnselen uit natuurkunde en techniek\" (04-2018): the goal stands on page 3 in the fase 2 column of the cluster \"Technische principes en systemen\" (the cluster runs on from page 2 and its heading is not repeated), word for word as the record has it, and starts and ends where the record does; nothing else stands with it, no example and no year label. The gloss is faithful. Limits: the six joins after \"zoals\" are examples, and \"Gluing and nailing are not among the examples\" is the form lead ruling 4 allows for an open list. Soldering: \"named without any condition; the wording says nothing about tools, supervision or safety\" is right, and In a child's hands does not have the child solder. Three common mistakes remain. The PDF underlines \"verbindingen\": form.",
+      "rendition": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": {
+        "page": 3,
+        "offset": 104
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-2/science round 2",
+      "round": 2
+    }
+  ],
+  "unrecorded": []
+}

@@ -1,0 +1,933 @@
+{
+  "lane": "nl/einde-po/science",
+  "records": [
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurwetenschappen en technologie / Kerndoel 29",
+      "code": "29",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 11,
+          "column": 1,
+          "first": "De leerling verkent de wereld",
+          "last": "en technologisch perspectief"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurwetenschappen en technologie / Kerndoel 29",
+      "code": "29 A",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 11,
+          "column": 1,
+          "first": "De leerling verkent de leefomgeving",
+          "last": "uit de leefomgeving"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurwetenschappen en technologie / Kerndoel 29",
+      "code": "29 A a",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 11,
+          "column": 2,
+          "first": "ervaringen in de",
+          "last": "natuur en technologie"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurwetenschappen en technologie / Kerndoel 29",
+      "code": "29 A b",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 11,
+          "column": 2,
+          "first": "onderzoeken van vraagstukken",
+          "last": "en ruimtelijke inrichting"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurwetenschappen en technologie / Kerndoel 29",
+      "code": "29 A c",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 11,
+          "column": 2,
+          "first": "onderscheiden van verschillende",
+          "last": "van een vraagstuk"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurwetenschappen en technologie / Kerndoel 29",
+      "code": "29 A d",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 11,
+          "column": 2,
+          "first": "verwoorden wat het",
+          "last": "met je doen"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurwetenschappen en technologie / Kerndoel 29",
+      "code": "29 A e",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 11,
+          "column": 2,
+          "first": "oriënteren op beroepsbeelden",
+          "last": "ambities en capaciteiten"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurwetenschappen en technologie / Kerndoel 29",
+      "code": "29 B",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 11,
+          "column": 1,
+          "first": "De leerling gebruikt natuurwetenschappelijke",
+          "last": "verklaren van de wereld",
+          "firstOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurwetenschappen en technologie / Kerndoel 29",
+      "code": "29 B a",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 11,
+          "column": 2,
+          "first": "redeneren met patronen",
+          "last": "en oorzaak- gevolgrelaties",
+          "corrections": [
+            {
+              "from": "oorzaak- gevolgrelaties",
+              "to": "oorzaak-gevolgrelaties",
+              "reason": "line-break hyphen"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurwetenschappen en technologie / Kerndoel 29",
+      "code": "29 B b",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 11,
+          "column": 2,
+          "first": "redeneren met structuur",
+          "last": "eigenschap en functie"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurwetenschappen en technologie / Kerndoel 29",
+      "code": "29 B c",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 11,
+          "column": 2,
+          "first": "redeneren met schaal",
+          "last": "verhoudingen en hoeveelheden"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurwetenschappen en technologie / Kerndoel 29",
+      "code": "29 B d",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 11,
+          "column": 2,
+          "first": "redeneren met systemen",
+          "last": "systemen en modellen"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurwetenschappen en technologie / Kerndoel 29",
+      "code": "29 B e",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 11,
+          "column": 2,
+          "first": "redeneren met kringlopen",
+          "last": "redeneren met kringlopen"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurwetenschappen en technologie / Kerndoel 29",
+      "code": "29 C",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 11,
+          "column": 1,
+          "first": "De leerling gebruikt natuurwetenschappelijke",
+          "last": "begrijpen van de wereld",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurwetenschappen en technologie / Kerndoel 29",
+      "code": "29 C a",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 11,
+          "column": 2,
+          "first": "oriënteren op verschillende",
+          "last": "antwoorden te komen"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurwetenschappen en technologie / Kerndoel 29",
+      "code": "29 C b",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 11,
+          "column": 2,
+          "first": "toepassen van onderzoeks-",
+          "last": "en iteratieve wijze"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurwetenschappen en technologie / Kerndoel 29",
+      "code": "29 C c",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 11,
+          "column": 2,
+          "first": "gebruiken van instrumenten",
+          "last": "en duurzame wijze"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurwetenschappen en technologie / Kerndoel 29",
+      "code": "29 C d",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 11,
+          "column": 2,
+          "first": "interpreteren van kwalitatieve",
+          "last": "metingen en waarnemingen"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurwetenschappen en technologie / Kerndoel 29",
+      "code": "29 C e",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 11,
+          "column": 2,
+          "first": "onderbouwen van conclusies",
+          "last": "gebruik van vaktaal"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurwetenschappen en technologie / Kerndoel 29",
+      "code": "29 D",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 11,
+          "column": 1,
+          "first": "De leerling verkent de aard",
+          "last": "van natuurwetenschappen en technologie"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurwetenschappen en technologie / Kerndoel 29",
+      "code": "29 D a",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 11,
+          "column": 2,
+          "first": "ervaring opdoen met",
+          "last": "en hun motieven"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurwetenschappen en technologie / Kerndoel 29",
+      "code": "29 D b",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 11,
+          "column": 2,
+          "first": "verkennen hoe wetenschappers",
+          "last": "en zorgvuldig werken"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurwetenschappen en technologie / Kerndoel 29",
+      "code": "29 D c",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 12,
+          "column": 2,
+          "first": "afwegen of alles",
+          "last": "en ethische grenzen"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurwetenschappen en technologie / Kerndoel 29",
+      "code": "29 D d",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 12,
+          "column": 2,
+          "first": "verwoorden van het",
+          "last": "volgens de natuurwetenschappen"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurwetenschappen en technologie / Kerndoel 29",
+      "code": "29 D e",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 12,
+          "column": 2,
+          "first": "verkennen waarom wetenschappers",
+          "last": "niet alles weten"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurkundige en scheikundige verschijnselen en technische systemen / Kerndoel 30",
+      "code": "30",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 12,
+          "column": 1,
+          "first": "De leerling toont inzicht",
+          "last": "natuurverschijnselen en technische systemen",
+          "firstOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurkundige en scheikundige verschijnselen en technische systemen / Kerndoel 30",
+      "code": "30 A",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 12,
+          "column": 1,
+          "first": "De leerling toont inzicht",
+          "last": "uit de leefomgeving",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurkundige en scheikundige verschijnselen en technische systemen / Kerndoel 30",
+      "code": "30 A a",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 12,
+          "column": 2,
+          "first": "communicatie-, meet-, regel-",
+          "last": "productie- en transportsystemen"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurkundige en scheikundige verschijnselen en technische systemen / Kerndoel 30",
+      "code": "30 A b",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 12,
+          "column": 2,
+          "first": "verkennen hoe een",
+          "last": "materialen zijn gebruikt"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurkundige en scheikundige verschijnselen en technische systemen / Kerndoel 30",
+      "code": "30 A c",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 12,
+          "column": 2,
+          "first": "beschrijven hoe onderdelen",
+          "last": "voorwerp of systeem"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurkundige en scheikundige verschijnselen en technische systemen / Kerndoel 30",
+      "code": "30 A d",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 12,
+          "column": 2,
+          "first": "experimenteren met overbrengingsprincipes",
+          "last": "constructies en profielen"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurkundige en scheikundige verschijnselen en technische systemen / Kerndoel 30",
+      "code": "30 A e",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 12,
+          "column": 2,
+          "first": "experimenteren met ontwerpen",
+          "last": "maken en repareren"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurkundige en scheikundige verschijnselen en technische systemen / Kerndoel 30",
+      "code": "30 B",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 12,
+          "column": 1,
+          "first": "De leerling toont inzicht",
+          "last": "stoffen kunnen ondergaan",
+          "firstOccurrence": 3
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurkundige en scheikundige verschijnselen en technische systemen / Kerndoel 30",
+      "code": "30 B a",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 12,
+          "column": 2,
+          "first": "benoemen van waarneembare",
+          "last": "een bepaalde temperatuur"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurkundige en scheikundige verschijnselen en technische systemen / Kerndoel 30",
+      "code": "30 B b",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 12,
+          "column": 2,
+          "first": "benoemen van veel",
+          "last": "eigenschappen en gevaren"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurkundige en scheikundige verschijnselen en technische systemen / Kerndoel 30",
+      "code": "30 B c",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 12,
+          "column": 2,
+          "first": "ordenen van stoffen",
+          "last": "verschillen in eigenschappen"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurkundige en scheikundige verschijnselen en technische systemen / Kerndoel 30",
+      "code": "30 B d",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 12,
+          "column": 2,
+          "first": "experimenteren met natuurkundige",
+          "last": "natuurkundige veranderingen van stoffen"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurkundige en scheikundige verschijnselen en technische systemen / Kerndoel 30",
+      "code": "30 B e",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 12,
+          "column": 2,
+          "first": "experimenteren met scheikundige",
+          "last": "verandering in stofeigenschappen"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurkundige en scheikundige verschijnselen en technische systemen / Kerndoel 30",
+      "code": "30 C",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 12,
+          "column": 1,
+          "first": "De leerling toont inzicht",
+          "last": "energie en krachten",
+          "firstOccurrence": 4
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurkundige en scheikundige verschijnselen en technische systemen / Kerndoel 30",
+      "code": "30 C a",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 12,
+          "column": 2,
+          "first": "begrip tonen van",
+          "last": "voortplanting en sterkte"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurkundige en scheikundige verschijnselen en technische systemen / Kerndoel 30",
+      "code": "30 C b",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 12,
+          "column": 2,
+          "first": "beschrijven van verschillende",
+          "last": "transporteren van energie"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurkundige en scheikundige verschijnselen en technische systemen / Kerndoel 30",
+      "code": "30 C c",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 12,
+          "column": 2,
+          "first": "verbanden leggen tussen",
+          "last": "verandering in beweging"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurkundige en scheikundige verschijnselen en technische systemen / Kerndoel 30",
+      "code": "30 C d",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 12,
+          "column": 2,
+          "first": "benoemen van gevaren",
+          "last": "onweer en zonlicht"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: natuurkundige en scheikundige verschijnselen en technische systemen / Kerndoel 30",
+      "code": "30 C e",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 12,
+          "column": 2,
+          "first": "experimenteren met de",
+          "last": "lucht en vloeistof"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: organismen en gezondheid / Kerndoel 31",
+      "code": "31",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 13,
+          "column": 1,
+          "first": "De leerling toont inzicht",
+          "last": "en hun gezondheid",
+          "firstOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: organismen en gezondheid / Kerndoel 31",
+      "code": "31 A",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 13,
+          "column": 1,
+          "first": "De leerling toont inzicht",
+          "last": "toont inzicht in organismen",
+          "firstOccurrence": 2,
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: organismen en gezondheid / Kerndoel 31",
+      "code": "31 A a",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 13,
+          "column": 2,
+          "first": "beschrijven van de levenscyclus",
+          "last": "schimmels, planten en dieren"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: organismen en gezondheid / Kerndoel 31",
+      "code": "31 A b",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 13,
+          "column": 2,
+          "first": "verbanden leggen tussen",
+          "last": "vorm en functie"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: organismen en gezondheid / Kerndoel 31",
+      "code": "31 A c",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 13,
+          "column": 2,
+          "first": "beschrijven van verschillen",
+          "last": "van hormonen hierop"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: organismen en gezondheid / Kerndoel 31",
+      "code": "31 A d",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 13,
+          "column": 2,
+          "first": "beschrijven van de verzorging",
+          "last": "van planten en dieren"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: organismen en gezondheid / Kerndoel 31",
+      "code": "31 A e",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 13,
+          "column": 2,
+          "first": "verkennen van rollen",
+          "last": "organismen bij voedselproductie"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: systeem aarde / Kerndoel 32",
+      "code": "32",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 13,
+          "column": 1,
+          "first": "De leerling toont inzicht",
+          "last": "verkent systeem aarde",
+          "firstOccurrence": 4
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: systeem aarde / Kerndoel 32",
+      "code": "32 A",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 13,
+          "column": 1,
+          "first": "De leerling toont inzicht",
+          "last": "en menselijk handelen",
+          "firstOccurrence": 5
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: systeem aarde / Kerndoel 32",
+      "code": "32 A a",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 13,
+          "column": 2,
+          "first": "evalueren hoe planeten",
+          "last": "voorwaarden voor leven"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: systeem aarde / Kerndoel 32",
+      "code": "32 A b",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 13,
+          "column": 2,
+          "first": "verklaren hoe de",
+          "last": "jaren en getijden"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: systeem aarde / Kerndoel 32",
+      "code": "32 A c",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 13,
+          "column": 2,
+          "first": "beschrijven van kenmerken",
+          "last": "kusten en vegetatie"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: systeem aarde / Kerndoel 32",
+      "code": "32 A d",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 13,
+          "column": 2,
+          "first": "beredeneren hoe processen",
+          "last": "gebergtevorming en vulkanisme"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: systeem aarde / Kerndoel 32",
+      "code": "32 A e",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 13,
+          "column": 2,
+          "first": "verklaren van de",
+          "last": "en menselijk handelen"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: systeem aarde / Kerndoel 32",
+      "code": "32 B",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 14,
+          "column": 1,
+          "first": "De leerling toont inzicht",
+          "last": "de eigen leefomgeving"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: systeem aarde / Kerndoel 32",
+      "code": "32 B a",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 14,
+          "column": 2,
+          "first": "beschrijven van de",
+          "last": "klimaten op aarde"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: systeem aarde / Kerndoel 32",
+      "code": "32 B b",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 14,
+          "column": 2,
+          "first": "beschrijven hoe de waterkringloop",
+          "last": "in elkaar zit"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: systeem aarde / Kerndoel 32",
+      "code": "32 B c",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 14,
+          "column": 2,
+          "first": "analyseren van het",
+          "last": "luchtvochtigheid en wind"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: systeem aarde / Kerndoel 32",
+      "code": "32 B d",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 14,
+          "column": 2,
+          "first": "beschrijven van frequentie",
+          "last": "en zware neerslag"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: systeem aarde / Kerndoel 32",
+      "code": "32 B e",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 14,
+          "column": 2,
+          "first": "verbanden leggen tussen",
+          "last": "en menselijk handelen"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: systeem aarde / Kerndoel 32",
+      "code": "32 C",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 14,
+          "column": 1,
+          "first": "De leerling verkent",
+          "last": "binnen het systeem"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: systeem aarde / Kerndoel 32",
+      "code": "32 C a",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 14,
+          "column": 2,
+          "first": "verkennen op welke",
+          "last": "schimmels zich bevinden"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: systeem aarde / Kerndoel 32",
+      "code": "32 C b",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 14,
+          "column": 2,
+          "first": "benoemen van soortnamen",
+          "last": "in een taxonomie"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: systeem aarde / Kerndoel 32",
+      "code": "32 C c",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 14,
+          "column": 2,
+          "first": "weergeven van voedselrelaties",
+          "last": "in een ecosysteem"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: systeem aarde / Kerndoel 32",
+      "code": "32 C d",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 14,
+          "column": 2,
+          "first": "beredeneren hoe biotische",
+          "last": "met elkaar samenhangen"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: systeem aarde / Kerndoel 32",
+      "code": "32 C e",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 14,
+          "column": 2,
+          "first": "beschrijven hoe de mens",
+          "last": "op de biodiversiteit"
+        }
+      ]
+    }
+  ]
+}

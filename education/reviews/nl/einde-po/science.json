@@ -1,0 +1,1273 @@
+{
+  "lane": "nl/einde-po/science",
+  "verdicts": [
+    {
+      "id": "edu.nl.einde-po.science.objective.1095e038-a147-4b0a-bbfa-a202789744da",
+      "wording_sha256": "839756d7185933e6be2acf67ddddfd55798945fdc80b14fdc3f5bbdf72e02726",
+      "text_sha256": "875d9d1faffbe0f7ce98aa0f671278447ee11ee2d368b2d5532c5de7c95d2c7f",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-curriculum-kerndoelen",
+      "place": {
+        "node": "1095e038-a147-4b0a-bbfa-a202789744da",
+        "offset": 0
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science goals-2006",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.2de22d5b-8896-4338-a202-519119b58c56",
+      "wording_sha256": "81a85dceaf6f7abd7e7ea31fbf4c0a257fe6c3d3bc42b843296144a9b71e06ce",
+      "text_sha256": "27dae6fab4c9d3d6cff2c24730f715b06371a18a59b15c3b200220c478beffb5",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-curriculum-kerndoelen",
+      "place": {
+        "node": "2de22d5b-8896-4338-a202-519119b58c56",
+        "offset": 0
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science goals-2006",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.3d12e0ca-bca7-4b78-a8ed-f4699570fb12",
+      "wording_sha256": "0b6e60382263dc09420312c58b4cd667322cf2941efda41ce8bff44a25cfb49e",
+      "text_sha256": "c815060c7eb5e77f3543901b36da32736e7783a4fa021a3a3d1962fd3351e35d",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-curriculum-kerndoelen",
+      "place": {
+        "node": "3d12e0ca-bca7-4b78-a8ed-f4699570fb12",
+        "offset": 0
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science goals-2006",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.518b5749-dbe3-4e31-a139-f520752566e4",
+      "wording_sha256": "22d55f18db3642cb139f09e676d25ff089c80d0199a8dac378e264aaf52cb54f",
+      "text_sha256": "c8284bc9554b1961d82301a1ca68b193f434fd615effe004665f02268d7696fe",
+      "verdict": "confirmed",
+      "note": "The record follows the legal text: \"natuurverschijnselen zoals seizoenen\". The open data (node \"PO Kerndoel 46\") prints a comma: \"natuurverschijnselen, zoals seizoenen\" (the difference the frame lists). Misconception lines checked: the seasons come from the tilt of the axis, the earth is closest to the sun in early January, and the seasons are opposite in the two hemispheres: all correct.",
+      "rendition": "nl-slo-curriculum-kerndoelen",
+      "place": {
+        "node": "518b5749-dbe3-4e31-a139-f520752566e4",
+        "offset": 0
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science goals-2006",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.ae2a7b51-65e1-4186-b4ec-8355dba8cb80",
+      "wording_sha256": "b96393c249a4996b3ed5651af00338aeb8d4b25e05731f008b130d039de236be",
+      "text_sha256": "48452a320507955c8aa55382333d720d78380c126e238e4c4489485088cc275f",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-curriculum-kerndoelen",
+      "place": {
+        "node": "ae2a7b51-65e1-4186-b4ec-8355dba8cb80",
+        "offset": 0
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science goals-2006",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.c3d8c8c0-0f94-4dec-8ce6-f52fab27158f",
+      "wording_sha256": "16b4ec304f609bbb7547feacb80934a9172ec3c5db609e4e1356f6db614af450",
+      "text_sha256": "352b320e589307c2924cdde5bc43b6e65a92868a99b9c2b27b67c2148033c334",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-curriculum-kerndoelen",
+      "place": {
+        "node": "c3d8c8c0-0f94-4dec-8ce6-f52fab27158f",
+        "offset": 0
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science goals-2006",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurkundige-en-scheikundige-verschijnselen-en-technische-systemen-kerndoel-30-30",
+      "wording_sha256": "ac7c2728a592a98573bf884837b7217bd0920cc86fb3aa81ea989dacf645a82f",
+      "text_sha256": "add393559f22575617c89058782569e3bf7182af46bc5356b1708d866a214668",
+      "verdict": "confirmed",
+      "note": "Two printings in the bundle: the overview on PDF page 38 (without the closing full stop) and the goal itself on PDF page 39, column 4 (printed page 77). The second is the record's own place and is the one given here.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 296
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurkundige-en-scheikundige-verschijnselen-en-technische-systemen-kerndoel-30-30-a",
+      "wording_sha256": "bc0592eed790f7801c286a8b431a063eb70273be45a437b6f3bec4603bda50ea",
+      "text_sha256": "07e7075a77a57b9f30a1ac132bda125b5eb61991e706c172c0b4f66369509d44",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 308
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurkundige-en-scheikundige-verschijnselen-en-technische-systemen-kerndoel-30-30-a-a",
+      "wording_sha256": "59750a63d9452e6ea0a737cf272d3cd235cede092fe00b200c11a05fa5b18beb",
+      "text_sha256": "c6d782de19d5ff394ef9ba6ae7e6678fdd5a80b89b12895db576f14e6274293c",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 327
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurkundige-en-scheikundige-verschijnselen-en-technische-systemen-kerndoel-30-30-a-b",
+      "wording_sha256": "1ff4a519a8afa5f5e0ca5c776b97c9412d35646ddc6aaa426bac3d67da30a452",
+      "text_sha256": "3c27757426de0ee35b6f95445c2de6b5cce7d2dc585e618072177ab9ae63d42f",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 333
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurkundige-en-scheikundige-verschijnselen-en-technische-systemen-kerndoel-30-30-a-c",
+      "wording_sha256": "3844883799cffc7acbb0aa41937036534668b93a41f1ee427152a471ec3fc78b",
+      "text_sha256": "fb62ebbf8a9f2cabaf0bb6d97f79c00fa37c77dea0d5005e18d8b9de8f518a06",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 345
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurkundige-en-scheikundige-verschijnselen-en-technische-systemen-kerndoel-30-30-a-d",
+      "wording_sha256": "085abbfeefb8240ec111ebdececf40ace3b718191c545b4616de3126baeefd01",
+      "text_sha256": "c7a18cc5242ee773207bc97068390f0741c8b8d88842993660b6f2be7d3650b3",
+      "verdict": "confirmed",
+      "note": "The bundle's text layer splits the ff or fi ligature inside a word (\"stoff en\", \"profi elen\"), which is why the script's match is tolerant; on the page image the word is whole. Form only. Limits has a bracket of the form \"(… are not listed/named)\" after \"names no …\": read as saying that the item does not enumerate, not that these fall outside it; they are inside the item's general term, so a fixer may want \"names no particular …\".",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 357
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurkundige-en-scheikundige-verschijnselen-en-technische-systemen-kerndoel-30-30-a-d",
+      "wording_sha256": "085abbfeefb8240ec111ebdececf40ace3b718191c545b4616de3126baeefd01",
+      "text_sha256": "06bea85f148788cdc00c0a1018c7151e25f04c08f9d147562a8bbb56aca5f7dd",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix round. Read again on the page image of SLO's bundle (July 2026), PDF page 39 (printed page 77): the fourth bullet under 30A, same words; and on page 12 of the draft decree, item d. of doelzin A of kerndoel 30. The script's match is tolerant because the bundle's text layer splits the fi ligature (\"profi elen\"); on the page image the word is whole: form only. Round 1's remark (the bracket \"gear wheels, levers and pulleys are not in the text\" read as leaving them out) is resolved: Limits now says \"no particular mechanism, no particular kind of joint, no particular construction and no particular profile shape; gear wheels, a split pin, a square frame and a folded strip are the pack's examples\". Each of the four is in the record's own illustration, and the science is right: of two meshing gear wheels the small one turns faster and in the opposite direction; a split pin lets strips turn where glue fixes them; a square frame of four pinned strips can be pushed out of shape and a diagonal stops that; a strip folded into a U carries more than the same strip flat. \"It names no materials or tools and states no safety condition\" is true of this item. The parent 30 A was opened; the standing sentence agrees with the frame.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 357
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurkundige-en-scheikundige-verschijnselen-en-technische-systemen-kerndoel-30-30-a-e",
+      "wording_sha256": "78b7fccbe12e740333dc5cd9b82e370109766369ea17ad8855ba3bdef69a1292",
+      "text_sha256": "58a950a1dbedcaabf42dddd2ba66df9bb4638d65c851b15f1d1843ad497ac0cb",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 369
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurkundige-en-scheikundige-verschijnselen-en-technische-systemen-kerndoel-30-30-b",
+      "wording_sha256": "1b80af35adcd31fce0642a848d55440ee5a95f3eb4123e39f9ef00cca6a3ba41",
+      "text_sha256": "7a92943435b9f3d499f5fe80a0e41e5e3089a59e536c6140941ee10376d42cd2",
+      "verdict": "confirmed",
+      "note": "Compared by eye on the page image of the bundle (PDF page 39, printed page 77, \"30B\"): word for word equal to the record and to the draft decree (page 12). The script did not find it because the bold face of the bundle encodes \"ff\" as one ligature character (U+FB00) and splits the word: the text layer reads \"stoﬀ en\" twice. Form of the text layer only.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39
+      },
+      "matched_by": "agent",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurkundige-en-scheikundige-verschijnselen-en-technische-systemen-kerndoel-30-30-b-a",
+      "wording_sha256": "09a57f50d63f5686882a8ec187858dd34376bd1c47d0a2950f63a00c87065622",
+      "text_sha256": "cf49ad7a2dc96146c386345e12c48e8e117012c0aafe327fe8d695dabb1c0b0a",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 396
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurkundige-en-scheikundige-verschijnselen-en-technische-systemen-kerndoel-30-30-b-b",
+      "wording_sha256": "64342f1bf0d95efaadcfc1bc07b70487251472be8c659623c09994b6278171af",
+      "text_sha256": "01b6b318295d7f20e50f7f13e88ee7a1c624b0c25db684a229279353cc78d997",
+      "verdict": "confirmed",
+      "note": "The bundle's text layer splits the ff or fi ligature inside a word (\"stoff en\", \"profi elen\"), which is why the script's match is tolerant; on the page image the word is whole. Form only. Misconception lines checked (\"chemical\" against \"natural\", a clear liquid taken for water, telling apart by colour alone): correct.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 407
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurkundige-en-scheikundige-verschijnselen-en-technische-systemen-kerndoel-30-30-b-c",
+      "wording_sha256": "ca5b914f3da11be07d2cadb998b13faa0475eb7cd91e5df43c764b0576798e64",
+      "text_sha256": "db9f1fb0bfcc00c8417f735a40c14fcb2918f05ca021fecc854277b4bc3550ac",
+      "verdict": "confirmed",
+      "note": "The bundle's text layer splits the ff or fi ligature inside a word (\"stoff en\", \"profi elen\"), which is why the script's match is tolerant; on the page image the word is whole. Form only.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 419
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurkundige-en-scheikundige-verschijnselen-en-technische-systemen-kerndoel-30-30-b-d",
+      "wording_sha256": "b280cb452502ea90a834fd95970c2579544544125fdba1a465be6c9d9ef18636",
+      "text_sha256": "a11e931665957d0cffa3e4ff08a9455e7b6269a09f3dc917433860bfa3694dfb",
+      "verdict": "confirmed",
+      "note": "The bundle's text layer splits the ff or fi ligature inside a word (\"stoff en\", \"profi elen\"), which is why the script's match is tolerant; on the page image the word is whole. Form only. Misconception lines checked (evaporated water still exists, the drops on a cold glass come from water vapour in the air, melting does not change the weight): correct. Limits has a bracket of the form \"(… are not listed/named)\" after \"names no …\": read as saying that the item does not enumerate, not that these fall outside it; they are inside the item's general term, so a fixer may want \"names no particular …\".",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 428
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurkundige-en-scheikundige-verschijnselen-en-technische-systemen-kerndoel-30-30-b-d",
+      "wording_sha256": "b280cb452502ea90a834fd95970c2579544544125fdba1a465be6c9d9ef18636",
+      "text_sha256": "effa1aaf133f804e319144ab36888b876eabff9e81c8aad3c2f90696d4cc34e7",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix round. Read again on the page image of SLO's bundle (July 2026), PDF page 39 (printed page 77): the fourth bullet under 30B, same words; and on page 12 of the draft decree, item d. of doelzin B. The script's match is tolerant because the bundle's text layer splits the ff ligature (\"stoff en\"); on the page image the word is whole: form only. Round 1's remark is resolved: Limits now says \"names no particular physical change and no particular substance; melting, evaporating and condensing, and ice, salt water and water vapour, are the pack's examples\". All six are in the record's own illustration and the science is right (a melted ice cube in a closed jar weighs the same; salt stays behind as crystals when the water evaporates; the drops on a cold glass come from water vapour in the air). The safety sentence, \"it states no safety condition, also not for heating\", is true of the wording: the item has no word on safety or on heating. (Dangers of substances are named in another item, 30 B b; the record says nothing about that item and denies nothing.) The neighbour 30 B e and the parent 30 B were opened; *stof* is kept open; the standing sentence agrees with the frame.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 428
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurkundige-en-scheikundige-verschijnselen-en-technische-systemen-kerndoel-30-30-b-e",
+      "wording_sha256": "dcee40581eb53232fb4c87619ca9e7329a7bd4c7ec4bdb7b8dab979ae0f3f7fd",
+      "text_sha256": "9f79ba1b3b56a1c25808379e00229daa7c57e95c71c32f3fe80d9c4069435ff8",
+      "verdict": "confirmed",
+      "note": "The bundle's text layer splits the ff or fi ligature inside a word (\"stoff en\", \"profi elen\"), which is why the script's match is tolerant; on the page image the word is whole. Form only. Misconception lines checked (melting and dissolving are not chemical changes, burning forms new substances that are mostly gases, rust forms from iron with oxygen and water): correct. Limits has a bracket of the form \"(… are not listed/named)\" after \"names no …\": read as saying that the item does not enumerate, not that these fall outside it; they are inside the item's general term, so a fixer may want \"names no particular …\".",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 435
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurkundige-en-scheikundige-verschijnselen-en-technische-systemen-kerndoel-30-30-b-e",
+      "wording_sha256": "dcee40581eb53232fb4c87619ca9e7329a7bd4c7ec4bdb7b8dab979ae0f3f7fd",
+      "text_sha256": "2d733c68a1b89c8bd9cf0eb4d873da77c823d9f06ac3747aca5a6071ca31d9ce",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix round. Read again on the page image of SLO's bundle (July 2026), PDF page 39 (printed page 77): the fifth and last bullet under 30B, same words, ending on a full stop; and on page 12 of the draft decree, item e. of doelzin B. The script's match is tolerant because the bundle's text layer splits the ff ligature (\"stoff en\"); on the page image the word is whole: form only. Round 1's remark is resolved: Limits now says \"names no particular chemical change and no particular substance, and it names no particles or formulas; the fizzing of vinegar with baking soda and the rusting of steel wool are the pack's examples\". Both are in the record's own illustration and the science is right (a gas forms that was not there; rust is a different substance from the steel and forms on the wet wad). The safety sentence, \"It states no safety condition, also not for fire or heating\", is true of the wording, which mentions neither. The neighbour 30 B d and the parent 30 B were opened; *stof* is kept open; the standing sentence agrees with the frame.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 435
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurkundige-en-scheikundige-verschijnselen-en-technische-systemen-kerndoel-30-30-c",
+      "wording_sha256": "0659b20cc0efaafc171609773e9bfc3a92e37a14db617d315ed8a770ecec0078",
+      "text_sha256": "c403b792992f7d60b66b3e28065bb596a499f610d916adb99b4507aab93ea028",
+      "verdict": "confirmed",
+      "note": "The record follows the draft decree and the bundle: \"licht, geluid, energie en krachten\". The open data has \"energie, krachten\" (a difference the frame lists).",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 448
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurkundige-en-scheikundige-verschijnselen-en-technische-systemen-kerndoel-30-30-c-a",
+      "wording_sha256": "cccf2a234ad606857d5105cb00ec44ba21b2c371548d8dd3f8b1d818ea36fb62",
+      "text_sha256": "68b96215af5f91bf65046d80236ba60278b3bd7a2e79b61aabd291755e721e8d",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 465
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurkundige-en-scheikundige-verschijnselen-en-technische-systemen-kerndoel-30-30-c-b",
+      "wording_sha256": "09073c61ad938564715119a14fbfd080dc889c9c51068214aed353f6a0b65bfb",
+      "text_sha256": "f9595241ef556600b9e42626a1135da1bd4b81260ad07792dda5e950214f500a",
+      "verdict": "confirmed",
+      "note": "Misconception lines checked (electricity is generated from a source and carries energy; energy is not used up and ends mostly as heat): correct.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 478
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurkundige-en-scheikundige-verschijnselen-en-technische-systemen-kerndoel-30-30-c-c",
+      "wording_sha256": "bbfcf084d3d919bfdfa272639355f0b5e94a05bea374bd8260a2ca73596c1bb0",
+      "text_sha256": "910917d6e99f352f615d3302767b8fa2d9c342eec9babd2c55da35dc5c8ea452",
+      "verdict": "confirmed",
+      "note": "Misconception lines checked (a moving thing stops through friction, forces act on a book at rest, a heavy and a light ball of one size land at almost the same moment): correct. Limits has a bracket of the form \"(… are not listed/named)\" after \"names no …\": read as saying that the item does not enumerate, not that these fall outside it; they are inside the item's general term, so a fixer may want \"names no particular …\".",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 491
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurkundige-en-scheikundige-verschijnselen-en-technische-systemen-kerndoel-30-30-c-c",
+      "wording_sha256": "bbfcf084d3d919bfdfa272639355f0b5e94a05bea374bd8260a2ca73596c1bb0",
+      "text_sha256": "5e57b072f4bf8c3c7cf87e96d4b8b2dac380de089beb6512f17569d304429e57",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix round. Read again on the page image of SLO's bundle (July 2026), PDF page 39 (printed page 77): the third bullet under 30C, same words; and on page 12 of the draft decree, item c. of doelzin C. Round 1's remark is resolved: Limits now says \"it names no particular kind of change and no particular force; starting, speeding up, turning and stopping, and friction and gravity, are the pack's examples\". Each is in the record's own illustration (a push sets the car moving, a harder push gives more speed, a push from the side changes direction, a hand stops it; the carpet's larger friction; gravity on the ramp) and the science is right. \"It states no unit, no instrument, no formula and no number\" is true. The parent 30 C was opened and reads \"licht, geluid, energie en krachten\", as Limits says; *kracht* is kept open; the standing sentence agrees with the frame.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 491
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurkundige-en-scheikundige-verschijnselen-en-technische-systemen-kerndoel-30-30-c-d",
+      "wording_sha256": "178f5c95648d88fd3bbc7f288a97939566f9bb45df9841f3b019930e38be3f24",
+      "text_sha256": "e7c728a4a2571c43e1bbfbb7d360c74eff5486ef5ae50e07bb624c5794a3ed58",
+      "verdict": "confirmed",
+      "note": "Misconception lines checked (a tree is no safe shelter, ultraviolet light burns on a cool or lightly clouded day, hearing damage builds up and is permanent): correct. The notes add no experiment with these dangers.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 499
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurkundige-en-scheikundige-verschijnselen-en-technische-systemen-kerndoel-30-30-c-e",
+      "wording_sha256": "3dc5706b2e55ae71d0fa969ccfa933f65a0bb686a2dd2e5f15cbcdf1d76d0b48",
+      "text_sha256": "f291c903b6bc82c2ae06a9c8f147570054dcf76673afe0e685b27f3620d8e3e2",
+      "verdict": "confirmed",
+      "note": "The two plastic syringes joined by a tube, with air and then with water, are judged to be inside the statement: it is an experiment with \"de kracht van … lucht en vloeistof\", presented as the pack's illustration, and the physics is right (air can be pressed together, water hardly). Limits says no safety condition is stated.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 512
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurwetenschappen-en-technologie-kerndoel-29-29",
+      "wording_sha256": "5bb6cb5bb4bcc7fab695e1eb9188754145720a94ceba3b04ababba840b0467b3",
+      "text_sha256": "aa78560cd141680bdc8e2491dd432c544b8566043bb6b1cb891c5cfd2d7b422f",
+      "verdict": "confirmed",
+      "note": "Goal page of the bundle (PDF page 39, printed page 76) equals the draft decree. The bundle's overview on PDF page 38 prints this sentence with one more word, \"vanuit een natuurwetenschappelijk en technologisch perspectief\", the form of the open data; the record follows the draft decree, page 11.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 14
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurwetenschappen-en-technologie-kerndoel-29-29-a",
+      "wording_sha256": "f2a2522ac57ced0372e80a49f7bdf6415449bccd6c7500787c6ad1789861599b",
+      "text_sha256": "7c15bd0e31b768e15f5a0e18472c5a3e63bbd5f3d4aea3615b2bc67e38ba385f",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 24
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurwetenschappen-en-technologie-kerndoel-29-29-a-a",
+      "wording_sha256": "4c4564f1ceda0f1143d58dee610e9a8f2f80eb3e647de568968eaf17fbce0fd2",
+      "text_sha256": "2d936d8ccad1269f160552d3134b090f98327b2d9c7eba9b971e8a779c59fbbb",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Limits says \"it names no place\". The Dutch names where the experiences are gained: \"ervaringen in de leefomgeving opdoen\" (the gloss has \"in the living environment\"). The sentence should say that the item names no particular place within the living environment. Everything else checks out: wording, letter and position equal the draft decree (page 11, 29 A, first item) and the bundle; gloss faithful, *waarderen* kept open with two real readings; draft standing and parent stated.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 39
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurwetenschappen-en-technologie-kerndoel-29-29-a-a",
+      "wording_sha256": "4c4564f1ceda0f1143d58dee610e9a8f2f80eb3e647de568968eaf17fbce0fd2",
+      "text_sha256": "57705241fd1161132d1df50f041208256a3afe28d1360f223e510b7d92988556",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix round. Read again on the page image of SLO's bundle (July 2026), PDF page 39 (printed page 76): the first bullet under 29A, same words; and on page 11 of the draft decree, item a. of doelzin A of kerndoel 29, same words and letter. Round 1's reason (Limits said \"it names no place\" although the Dutch has \"in de leefomgeving\") is resolved: Limits now says \"it names no particular place within the living environment\". Whole record read again: the gloss keeps *waarderen* open with both readings; the parent 29 A was opened and says what Limits says of it; the standing sentence (draft, not yet in force) agrees with the frame.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 39
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurwetenschappen-en-technologie-kerndoel-29-29-a-b",
+      "wording_sha256": "0a6683ea7588352aa1c408046b836a2a4c707a3889d8704c13e4e50ef7e284e5",
+      "text_sha256": "4848b62136d48a7aa0b750e6d6fe87bd59d32dc3eefd00a5cb4a193c72429372",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 53
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurwetenschappen-en-technologie-kerndoel-29-29-a-c",
+      "wording_sha256": "e14e39b57b7f3bfae1e2bde7a656e56d64fdb54528c92d2ca3ca4f8a9b5d6060",
+      "text_sha256": "32c719ad2213e0fb000c4357072feea52f1186614edbc8542d58b2ae4251616e",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 68
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurwetenschappen-en-technologie-kerndoel-29-29-a-d",
+      "wording_sha256": "a28926ac142520a3cf9ea07be76f9b235d37fefbab76d2c5dc665ca988188fbc",
+      "text_sha256": "6bcb0eb1508623b64cf9be7c2063d134f0f6d48c7ab39c9715d52c9953d205c6",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 79
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurwetenschappen-en-technologie-kerndoel-29-29-a-e",
+      "wording_sha256": "710d091d6efb6d25d2d9b9f6b8313ddabdfaf1f2e1baac698d99a4c60b886430",
+      "text_sha256": "3329bd5ff4f3ea0627c377abef18ed507af45d33160e4e6db03d071ac58e619a",
+      "verdict": "confirmed",
+      "note": "The gloss and Limits render \"oriënteren op\" as \"getting a first orientation on\"; the word \"first\" is not in the Dutch. This is the pack's fixed rendering of the verb in every lane, so it is noted and not counted, as in the other Dutch lanes.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 89
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurwetenschappen-en-technologie-kerndoel-29-29-a-e",
+      "wording_sha256": "710d091d6efb6d25d2d9b9f6b8313ddabdfaf1f2e1baac698d99a4c60b886430",
+      "text_sha256": "90b41bd440063fbd9a2a8c46364dc774824609eedebd1a0e6947198a5f549717",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix round. Read again on the page image of SLO's bundle (July 2026), PDF page 39 (printed page 76): the fifth and last bullet under 29A, same words; and on page 11 of the draft decree, item e. of doelzin A, same words and letter. Round 1's remark (\"a first orientation\" for \"oriënteren op\", lead ruling 6) is resolved: the gloss and Limits now have \"getting an orientation on\", and the word \"first\" stands nowhere in the record. Whole record read again: \"it sits under a core goal about science and technology\" is right (kerndoel 29: \"vanuit natuurwetenschappelijk en technologisch perspectief\"); the parent 29 A was opened; the standing sentence agrees with the frame.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 89
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurwetenschappen-en-technologie-kerndoel-29-29-b",
+      "wording_sha256": "86e4387c745df4b05c295775022776c5dd2cfb284e90d7997f31f75677648447",
+      "text_sha256": "0fb9d7b0b38d79f261e0e1ea25f1729a1e4a0b16e286a897bd04b97484a4a6f8",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 100
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurwetenschappen-en-technologie-kerndoel-29-29-b-a",
+      "wording_sha256": "cf15cb7e68bbe6725d9474539d4ff7b90f3e7f7fc7a71a90311e9b473666283a",
+      "text_sha256": "074061a3e980bbb5527bad92c1006be9d33751c854394b39f1b4917ed6768038",
+      "verdict": "confirmed",
+      "note": "Correction verified on the page image of the draft decree (page 11): the word is broken at its own hyphen at the line end (\"oorzaak-\" / \"gevolgrelaties\"), so \"oorzaak-gevolgrelaties\" is right; the bundle prints it on one line in that form.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 119
+      },
+      "matched_by": "script",
+      "corrections_verified": true,
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurwetenschappen-en-technologie-kerndoel-29-29-b-b",
+      "wording_sha256": "c3100cd1c4348edef4a993976d5e6d326780f5ddfca1cf5572161099f4eeca06",
+      "text_sha256": "01da6f3cc56e97cc85acb42ad74480b2fe9eba3a7ba5db7fae5e030dcdab5f14",
+      "verdict": "confirmed",
+      "note": "Misconception lines checked: a steel ship floats because the hull with the air inside is lighter than the same volume of water; the giraffe line names a purpose-explanation correctly as a mistake. Correct.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 125
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurwetenschappen-en-technologie-kerndoel-29-29-b-c",
+      "wording_sha256": "883155071066e33139375de58e810bc1555263cf6d3c01493f6187b1d8741926",
+      "text_sha256": "ebdc4681e8e683e262a2d44255585fbdf31bf759c0d1d98a66107bd3f9153d5a",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 132
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurwetenschappen-en-technologie-kerndoel-29-29-b-d",
+      "wording_sha256": "f0101d1249a5f988f148ff9c981bdcb5db7139dafd42a8efae77f9d85afbb5b3",
+      "text_sha256": "45d34fac9ef263b4f54e49f2655a89d40d25a77dfc8e2d88257651b086a4618d",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 138
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurwetenschappen-en-technologie-kerndoel-29-29-b-e",
+      "wording_sha256": "bc0f11670d981202ce5116132002be07fea9f988da8b7a82a7de718ad2e712b1",
+      "text_sha256": "2b03a1ddec067c3817a67c0ba5912b34854d0edf54b41c1e7c046fb81db438cb",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 143
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurwetenschappen-en-technologie-kerndoel-29-29-c",
+      "wording_sha256": "da4ad19a5bdadfa99db0bd295fc5dcad1aa08fafb8cffde780dc32a3ffeef100",
+      "text_sha256": "0d72495cd59de88aa4fd4329dc54578cfbbb11f1bfa8d77d726a053cb5a643fc",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 146
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurwetenschappen-en-technologie-kerndoel-29-29-c-a",
+      "wording_sha256": "8e9793a6f65e54e5ca8aab2d1d383f13b95e57be6c92a06bcf1d446dd7d7b0d9",
+      "text_sha256": "e83a6b5cae903f6c2a4158981f255cdd71ccec6981ed068c63490c6b4293625e",
+      "verdict": "confirmed",
+      "note": "The gloss and Limits render \"oriënteren op\" as \"getting a first orientation on\"; the word \"first\" is not in the Dutch. This is the pack's fixed rendering of the verb in every lane, so it is noted and not counted, as in the other Dutch lanes.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 165
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurwetenschappen-en-technologie-kerndoel-29-29-c-a",
+      "wording_sha256": "8e9793a6f65e54e5ca8aab2d1d383f13b95e57be6c92a06bcf1d446dd7d7b0d9",
+      "text_sha256": "aa66375e6a91bb6b1dd1a2eca7502f7db94cac3a716adebb5da52e1dd6153211",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix round. Read again on the page image of SLO's bundle (July 2026), PDF page 39 (printed page 76): the first bullet under 29C, same words; and on page 11 of the draft decree, item a. of doelzin C, same words and letter. Round 1's remark (\"a first orientation\", lead ruling 6) is resolved: the gloss and Limits now have \"getting an orientation on\", and \"first\" stands nowhere in the record. Whole record read again: \"It names no ways of working\" is true (the item speaks of \"verschillende manieren\" and names none); the neighbour 29 C b was opened and reads \"toepassen van onderzoeks- en ontwerpstappen op een systematische en iteratieve wijze\", as Limits says; the parent 29 C was opened; the standing sentence agrees with the frame.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 165
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurwetenschappen-en-technologie-kerndoel-29-29-c-b",
+      "wording_sha256": "45383c7130cdc61c5cd62b84ab3b5e3102089c55f1941ded8ac0018c2293f92f",
+      "text_sha256": "30db855a7e0324c7e2af5fe15206025cfd040e15572d311affe3a1088ea76fba",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 176
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurwetenschappen-en-technologie-kerndoel-29-29-c-c",
+      "wording_sha256": "db93ee6cbf73fffc51d8c5d81af70df44ab3058145c7f43d2ef42d63e3f5c5fc",
+      "text_sha256": "1ccb3445db80d3467369ffd5a063d21f1c0c9329413178c8a98bf484361d4c7a",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 187
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurwetenschappen-en-technologie-kerndoel-29-29-c-d",
+      "wording_sha256": "974b6d016401b527e4fe7d1ff5c5b252840f412c1bfd8b4208a10daaf081a37e",
+      "text_sha256": "0128c1e318362d3285131126bb1d8ab4650b0eff842e78943d3151d273237989",
+      "verdict": "confirmed",
+      "note": "The scope of \"kwalitatieve en kwantitatieve\" is left open in the gloss, and Limits says so.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 199
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurwetenschappen-en-technologie-kerndoel-29-29-c-e",
+      "wording_sha256": "969d5783425c108147b5770ec670d39a98f546d89140122032059cd73ccf2c8b",
+      "text_sha256": "a26ca06e034c5aba9687d7c0cf9bd583b6e5c65972417cf79d92ac5855790a7b",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 207
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurwetenschappen-en-technologie-kerndoel-29-29-d",
+      "wording_sha256": "1b0f6f58daf48b5c15e6d2374cd4cafa380d11c75bd24e0850742fac035e3ffb",
+      "text_sha256": "f63cea07bc8806c6689652514c7d1a092db274c19f4886bb3dc90167084c2246",
+      "verdict": "confirmed",
+      "note": "The doelzin stands whole in the left cell on page 11 of the draft decree; its row runs on to page 12 with an empty left cell (items c to e).",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 214
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurwetenschappen-en-technologie-kerndoel-29-29-d-a",
+      "wording_sha256": "e9f83a2863e57b29cf2bce6f8f2cd8e683de3704e4018dd8b71b67e2c126f63f",
+      "text_sha256": "8d6a0aacb7f4bd22593fa6242f2bcbe81e1cea0a336f699f757fd48f4afe75d3",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 227
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurwetenschappen-en-technologie-kerndoel-29-29-d-b",
+      "wording_sha256": "0f85213da5163ee6bd7b8a76096b0cee92e9686dd99a53f2804213d765ecc118",
+      "text_sha256": "0d9714c5d8b398110255250d2feddface0aa34fb92f0846b42a2a222326dbf3c",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 238
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurwetenschappen-en-technologie-kerndoel-29-29-d-c",
+      "wording_sha256": "0be5ad70697a07f53582a1c46af21f6308cf08ff13eb5c59af55cc953cf6ca87",
+      "text_sha256": "d0f45592e527bcddea9cfb3a6a7d502eac56d960e429e74cc6891f55c69aedea",
+      "verdict": "confirmed",
+      "note": "Draft decree page 12, top: the row of 29 D continues from page 11; items c, d and e stand there under an empty left cell.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 248
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurwetenschappen-en-technologie-kerndoel-29-29-d-d",
+      "wording_sha256": "247c3f3d69bdd73da005885991b506eaab8107ea7d7e0166aadbad4f72b52ded",
+      "text_sha256": "97aa2c8761573bd50384a26c1e9fe79efd8360c399a287d1c29d8ab79af206ed",
+      "verdict": "confirmed",
+      "note": "Draft decree page 12 (continued row of 29 D). The scope of \"volgens de natuurwetenschappen\" is left open in the gloss, and Limits says so.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 258
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurwetenschappen-en-technologie-kerndoel-29-29-d-e",
+      "wording_sha256": "ee00a573faf79de95d25a9774b9f3e48c5c3f8b239ab6923c6e6a43e3a203548",
+      "text_sha256": "0c955e026ac3bcda8af4b4fd4a6fb36fd0169a302235afc7a0fe00d4c0b0fc07",
+      "verdict": "confirmed",
+      "note": "Draft decree page 12 (continued row of 29 D), last item.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 39,
+        "offset": 271
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-29-30",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-organismen-en-gezondheid-kerndoel-31-31",
+      "wording_sha256": "61eed36d127c1285c24c1fa71c0cf8791fd1dc60a169d14ac5fb3e07f5c24c2e",
+      "text_sha256": "aee9e75ed16f410ce88017b0d41b59b82305969460aacbcc4e31b49a70e98c8e",
+      "verdict": "confirmed",
+      "note": "The script lists two printings in the bundle: the overview on PDF page 38 (without the closing full stop: form) and the goal itself on PDF page 40, printed page 78; this verdict takes page 40. The script reports the page-38 place as shared with 31 A only because the wording of 31 A is the first six words of this sentence; they are two printed statements. In the draft decree the headings \"Domein: organismen en gezondheid\" and \"Kerndoel 31\" stand at the foot of PDF page 12 and the sentence is the first row of page 13. Limits says rightly that doelzin 31 B is recorded under practical life and feelings.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 40,
+        "offset": 14
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-31-32",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-organismen-en-gezondheid-kerndoel-31-31-a",
+      "wording_sha256": "538bf4f921083d99516d3c82bb9c0310ec0dda135091417d33eecbb89a136a60",
+      "text_sha256": "a10114b03ae4722c1e1d510ab06c412766d4d50fc49610447aa28cf46431f734",
+      "verdict": "confirmed",
+      "note": "The script lists three places in the bundle; the first two (page 38 offset 94, page 40 offset 14) are the sentence of kerndoel 31, which begins with the same six words. This verdict takes the third, the line \"31A\" on PDF page 40. Draft decree: PDF page 13, left column, \"A.\". The bundle prints the code as \"31A\" where the draft prints \"A.\" in its own cell: form.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 40,
+        "offset": 25
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-31-32",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-organismen-en-gezondheid-kerndoel-31-31-a-a",
+      "wording_sha256": "61b90b5d0ed24cdc729e17d75f14800e5b7b6a11ab10abc7e799b4c6b7541eab",
+      "text_sha256": "dd2505ae0cb015239fa5984d5f8bb0ca1442c3a1deaa84421cc6b6b99168c857",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Wording, code and gloss are right (draft decree PDF page 13, right column, item a. under doelzin A; bullet 1 of 31A in the bundle). Limits says \"Humans are not named in this item\". The item says \"dieren\" (animals), a general term, and the pack's own record for 31 A, in the same goal, puts humans with the animals (\"puts humans with the animals\"; \"Many children do not count humans among the animals\"). The Dutch does not say whether \"dieren\" leaves humans out here, so Limits may not state it as a limit. What can be said: the word \"mensen\" is not printed in this item (items 31 A b and 31 A c print \"mensen\" and \"de mens\"), and human reproduction and growing up are named in 31 A c. The rest of the notes is right: the science in \"In a child's hands\" and \"Common mistakes\" is correct.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 40,
+        "offset": 35
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-31-32",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-organismen-en-gezondheid-kerndoel-31-31-a-a",
+      "wording_sha256": "61b90b5d0ed24cdc729e17d75f14800e5b7b6a11ab10abc7e799b4c6b7541eab",
+      "text_sha256": "b36a5e9e011af144f0a67b29bd937664e51b34ce8c3cde75c448c352afeccea7",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix round. Read again on the page image of SLO's bundle (July 2026), PDF page 40 (printed page 78): the first bullet under 31A, same words; and on page 13 of the draft decree, item a. of doelzin A of kerndoel 31. Round 1's reason (Limits said \"Humans are not named in this item\", which the general term \"dieren\" does not settle) is resolved: Limits now says \"The word *mensen* (humans) is not printed in this item, and the wording does not say whether *dieren* (animals) leaves humans out\", which is what can be said. The pointer was opened: 31 A c reads \"verloop van de menselijke voortplanting; ... veranderingen bij de mens: bij het opgroeien, in de puberteit ...\", so \"human reproduction and growing up are named in item 31 A c\" is right. Whole record read again: gloss faithful (*schimmels* with both readings); \"the life cycle\" is singular in the Dutch, as Limits says; the science of the illustration is right (frog, bean, mould from spores, a bacterium that divides into two); the parent 31 A was opened; the standing sentence agrees with the frame.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 40,
+        "offset": 35
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-organismen-en-gezondheid-kerndoel-31-31-a-b",
+      "wording_sha256": "2da8ca2c44651fb4e0ccd3a08f8a169b359cdfb1181f56be7945a3183b9ac7e3",
+      "text_sha256": "710d9e36067e49d651d986225bad06698c1d9a9ad6a8c5ad6b60ba268b111580",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the draft decree (PDF page 13, right column, under doelzin 31 A): the whole item and nothing of a neighbour. The bundle prints it as bullet 2 of 31A without a letter; same words. The gloss keeps *bouw* with one explanation (\"how something is built\"), which is the only reading here; the open reference of \"hun\" is named in Limits.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 40,
+        "offset": 45
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-31-32",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-organismen-en-gezondheid-kerndoel-31-31-a-c",
+      "wording_sha256": "5a4cc72b322ee86f715c4f002592ae90b9267b709790d340f6e94d4edc6c5c46",
+      "text_sha256": "fa8e0eb976a21cfa960f8d365f249d55c52756fd7423ee96619fc965f02e0158",
+      "verdict": "confirmed",
+      "note": "One item on the page: the draft decree prints a single letter \"c.\" before six lines that end with a semicolon after \"hierop\" (PDF page 13, right column, under doelzin 31 A), and the bundle prints the same text as one bullet (bullet 3 of 31A). No table lines were joined; the three parts separated by semicolons are the draft's own. The gloss follows it clause by clause. Limits says that the text names no parts, acts or situations beyond those it prints and sets no level of detail; \"In a child's hands\" stays with what the item names.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 40,
+        "offset": 59
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-31-32",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-organismen-en-gezondheid-kerndoel-31-31-a-d",
+      "wording_sha256": "936696c224c78b7c55c0463edd7ee36b9a884317d1024ea678278d3ab150570c",
+      "text_sha256": "50b354b7512803ed005e3fac3c7fef0f73a71095e20ba706fee12ee545415008",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the draft decree (PDF page 13, right column, under doelzin 31 A): the whole item and nothing of a neighbour. The bundle prints it as bullet 4 of 31A without a letter; same words.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 40,
+        "offset": 94
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-31-32",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-organismen-en-gezondheid-kerndoel-31-31-a-e",
+      "wording_sha256": "c3a06048413b4c064a2d3478d2aefcd8e577c1058191974592665bfd1be5fec3",
+      "text_sha256": "6773fb7d23dd9e4137f54d48273231f26fe6954abb2a464eb19809a22ea9b737",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the draft decree (PDF page 13, right column, under doelzin 31 A): the whole item and nothing of a neighbour. The bundle prints it as bullet 5 of 31A without a letter; same words. It is the last item of 31 A and ends with a full stop in both renditions.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 40,
+        "offset": 102
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-31-32",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-systeem-aarde-kerndoel-32-32",
+      "wording_sha256": "c09f8f3598efe3577c6080f10acf52b9a51657d9ea6224e759ff43bc6e8428c0",
+      "text_sha256": "a28f93142c2c61f185ebfa8dec3c0ed719ebf1956a8d669c2cb460ab6dcd3031",
+      "verdict": "confirmed",
+      "note": "The script lists two printings in the bundle: the overview on PDF page 38 (without the closing full stop: form) and the goal itself on PDF page 40, printed page 79; this verdict takes page 40. Draft decree: PDF page 13, under \"Domein: systeem aarde\" and \"Kerndoel 32\".",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 40,
+        "offset": 202
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-31-32",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-systeem-aarde-kerndoel-32-32-a",
+      "wording_sha256": "f371c5d36add1887e4394027bef0e58537f85fc6db341bc87dee678fd818f989",
+      "text_sha256": "a5eb9ef18798af0cef200bf32096078a83f029cf4c308cba5c94511e5813fc0f",
+      "verdict": "confirmed",
+      "note": "Draft decree: PDF page 13, left column, \"A.\". On the page the five items a. to e. stand in the right cell of this row, so the items about planets (a) and celestial bodies (b) are under doelzin A in the draft itself; the bundle prints the same five bullets under \"32A\" (PDF page 40), and its overview on PDF page 38 labels this doelzin \"A Aarde\", a label the draft decree does not print. Limits states the placement rightly.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 40,
+        "offset": 211
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-31-32",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-systeem-aarde-kerndoel-32-32-a-a",
+      "wording_sha256": "f691bf7b166b5db3becaf5bcd2e1d428edd1e46a2c511d9f0a1678096b05a1fc",
+      "text_sha256": "a0a8e7383224680707062db868125ebf1a3089e0b10a885220e44f21e6b04eda",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the draft decree (PDF page 13, right column, under doelzin 32 A): the whole item and nothing of a neighbour. The bundle prints it as bullet 1 of 32A without a letter; same words. The item stands under doelzin A on the page in both renditions: the placement is the draft's own and not an effect of reading two columns. The facts about the planets in the notes are correct.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 40,
+        "offset": 231
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-31-32",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-systeem-aarde-kerndoel-32-32-a-b",
+      "wording_sha256": "e96f1466d1d91627ca72009b3c735ee4ec8f5d67f96382902adda0d85245bb2d",
+      "text_sha256": "9f6b8d0b4b02e2fa74b950f61215bfac8ceceb346c5b75a5ef2ce3dd975165eb",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the draft decree (PDF page 13, right column, under doelzin 32 A): the whole item and nothing of a neighbour. The bundle prints it as bullet 2 of 32A without a letter; same words. The item stands under doelzin A on the page in both renditions: the placement is the draft's own. Limits calls the item \"not about the earth's surface\"; that is the pack's reading of the item's own words (its four results, day and night, seasons, years and tides, are met on earth), and Limits says rightly that the draft prints it under 32 A. \"dag-nacht\" is printed with a hyphen in both renditions.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 40,
+        "offset": 242
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-31-32",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-systeem-aarde-kerndoel-32-32-a-c",
+      "wording_sha256": "45f4bf3956044ac79e9b115b7d5337418edda0294311b1d5d6e0cd1a9b9075ba",
+      "text_sha256": "0b7e19998ac205c9db12e370017f81b5c5d740d0bd82d45e8588ba57f74158ee",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the draft decree (PDF page 13, right column, under doelzin 32 A): the whole item and nothing of a neighbour. The bundle prints it as bullet 3 of 32A without a letter; same words.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 40,
+        "offset": 258
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-31-32",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-systeem-aarde-kerndoel-32-32-a-d",
+      "wording_sha256": "a73d700e3b0bf1abfb412e8474a4dfce4d94ebc0fcd1e487118eddf74b969697",
+      "text_sha256": "bf04777d17b9cdcd8a2346fca1385e437e9d346b474c426e08dc9fb631008e97",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the draft decree (PDF page 13, right column, under doelzin 32 A): the whole item and nothing of a neighbour. The bundle prints it as bullet 4 of 32A without a letter; same words.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 40,
+        "offset": 275
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-31-32",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-systeem-aarde-kerndoel-32-32-a-e",
+      "wording_sha256": "162adf8c036f25dbb320891cf0c943cff5ccf23bfc9d4859a347bde271797b45",
+      "text_sha256": "bf1637e3d78bbd37f8ca86c0caefc318e3b98298e912554cce6198b0b4fe9435",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the draft decree (PDF page 13, right column, under doelzin 32 A): the whole item and nothing of a neighbour. The bundle prints it as bullet 5 of 32A without a letter; same words. The draft breaks the line after \"kust-\", which is the hyphen of the shortened compound (\"berg-, kust- en rivierlandschappen\"), printed the same in the bundle; no correction is needed. It is the last item of 32 A.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 40,
+        "offset": 288
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-31-32",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-systeem-aarde-kerndoel-32-32-b",
+      "wording_sha256": "ef62bc28be672d824d41f768fabba8da2cb1f74cd695e4ee992f90ec2a9797d6",
+      "text_sha256": "61765baba38284b1cf96f16918ae3578af6fa2510ac567d3d16dbcfde01859fe",
+      "verdict": "confirmed",
+      "note": "Draft decree: PDF page 14, left column, \"B.\", the first row of the page (the table of kerndoel 32 runs on from page 13; no statement is cut by the page break). The bundle prints the same sentence, with \"in de waterkringloop\" (PDF page 40, \"32B\"). Known difference with the open data, which is not the check rendition: it lacks \"de\" (\"inzicht in waterkringloop\"); the record follows the draft decree.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 40,
+        "offset": 303
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-31-32",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-systeem-aarde-kerndoel-32-32-b-a",
+      "wording_sha256": "5a651eae38379d052d7a15947cfb1289f0d2b5bc231cd4aa646e5b885a4b9fe1",
+      "text_sha256": "2f1bd5d457eaa9197013ae8c89f47c58df9daf265040b6b5f356b9f55f9c40f7",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the draft decree (PDF page 14, right column, under doelzin 32 B): the whole item and nothing of a neighbour. The bundle prints it as bullet 1 of 32B without a letter; same words. On the page the letter \"a.\" stands on the same line as the first words of the item.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 40,
+        "offset": 324
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-31-32",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-systeem-aarde-kerndoel-32-32-b-b",
+      "wording_sha256": "7704b826a05b181090648e39cff75b60796c1b10473c5d4d967343a7d575015b",
+      "text_sha256": "0d8e3ba65053e319052b694113412a15b2795f1b3e3460e946be6621ed5363d0",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the draft decree (PDF page 14, right column, under doelzin 32 B): the whole item and nothing of a neighbour. The bundle prints it as bullet 2 of 32B without a letter; same words.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 40,
+        "offset": 334
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-31-32",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-systeem-aarde-kerndoel-32-32-b-c",
+      "wording_sha256": "fc72d49b2fd16c20faa555fccc6abfc14f596ed47df38eab2dfd692edc6c9e4c",
+      "text_sha256": "7dbdeb0bfd23a048166da3d077fbda76b4288f63de3eb90850c784a5921f51a2",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the draft decree (PDF page 14, right column, under doelzin 32 B): the whole item and nothing of a neighbour. The bundle prints it as bullet 3 of 32B without a letter; same words.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 40,
+        "offset": 341
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-31-32",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-systeem-aarde-kerndoel-32-32-b-d",
+      "wording_sha256": "83315cc6d8fd7f9ca511e61470c06a056fda4749b5dc2df6ee3182123e217aff",
+      "text_sha256": "2cd2ac0cee5708077658c4324c2df3444fdf7c17d41bd3d9cf047575b0eb6274",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the draft decree (PDF page 14, right column, under doelzin 32 B): the whole item and nothing of a neighbour. The bundle prints it as bullet 4 of 32B without a letter; same words. Both renditions print \"hittegolf\" in the singular, as Limits says.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 40,
+        "offset": 356
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-31-32",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-systeem-aarde-kerndoel-32-32-b-e",
+      "wording_sha256": "b417f2390f478b8c517ce0f56fa55a8bf821f9ddefb261f432fd6183320a83c6",
+      "text_sha256": "2cb5a9e89b161a8cb240b7ab00ed6f35d91ecd6f9e575d2a181d3792ad8682bb",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the draft decree (PDF page 14, right column, under doelzin 32 B): the whole item and nothing of a neighbour. The bundle prints it as bullet 5 of 32B without a letter; same words. It is the last item of 32 B.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 40,
+        "offset": 374
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-31-32",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-systeem-aarde-kerndoel-32-32-c",
+      "wording_sha256": "f8b4b5eee993f3991043d8555587f630d69339a885eaf0e113a09ecdd72fe543",
+      "text_sha256": "04e6816125d0a9d6b3e4e312228ba3001b19cd629d9bd3ca893a90f9a7df1ed5",
+      "verdict": "confirmed",
+      "note": "Draft decree: PDF page 14, left column, \"C.\". Both renditions print \"binnen het systeem\" in the singular, as Limits says. The bundle prints the code as \"32C\".",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 40,
+        "offset": 384
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-31-32",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-systeem-aarde-kerndoel-32-32-c-a",
+      "wording_sha256": "647a3ae3bc3938bcaea79019683c56c84ea789ec529a9d01b36166a7f87fe308",
+      "text_sha256": "c0d09efdd374286fb904bcff1078f98c3364e6e38f53563e4767a806de514612",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the draft decree (PDF page 14, right column, under doelzin 32 C): the whole item and nothing of a neighbour. The bundle prints it as bullet 1 of 32C without a letter; same words. On the page the letter \"a.\" stands on the same line as the first words of the item. The gloss gives \"fungi\" for *schimmels* without the remark that the word also means moulds, which the gloss of 31 A a has; fungi is the wider word, so nothing is narrowed.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 40,
+        "offset": 399
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-31-32",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-systeem-aarde-kerndoel-32-32-c-b",
+      "wording_sha256": "e72d12bc08db10850a3aaf01c2e118f32cd355d5b73cc1061733042ddbb2c740",
+      "text_sha256": "d3c3e68e731b439a11f33a69116db24281b93a9ba870d7d3a8af46ba8a98eefe",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the draft decree (PDF page 14, right column, under doelzin 32 C): the whole item and nothing of a neighbour. The bundle prints it as bullet 2 of 32C without a letter; same words. The gloss keeps both readings of *soort* (species and kind), and both are real.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 40,
+        "offset": 412
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-31-32",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-systeem-aarde-kerndoel-32-32-c-c",
+      "wording_sha256": "a38980226ca327fc789d0d4e9a50ad1801608e84851cd83fbf7cbb3c22606edc",
+      "text_sha256": "aee29440b2b5fdaf7c35da0a0e10190b6605499435b430652ae76b2551afaac1",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the draft decree (PDF page 14, right column, under doelzin 32 C): the whole item and nothing of a neighbour. The bundle prints it as bullet 3 of 32C without a letter; same words.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 40,
+        "offset": 432
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-31-32",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-systeem-aarde-kerndoel-32-32-c-d",
+      "wording_sha256": "b5f728f914b2e5946fd2bf57a50f7454302f9bb82aedef30ad02014a3d66a29e",
+      "text_sha256": "6a0022d118aaa17757e609d243aefe3acf475b576e02f7051a75b781b0fef27e",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the draft decree (PDF page 14, right column, under doelzin 32 C): the whole item and nothing of a neighbour. The bundle prints it as bullet 4 of 32C without a letter; same words. The bundle has \"beredeneren hoe\", as the draft. Known difference with the open data, which is not the check rendition: it has \"beredeneerd hoe\"; the record follows the draft decree.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 40,
+        "offset": 438
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-31-32",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-systeem-aarde-kerndoel-32-32-c-e",
+      "wording_sha256": "8b9c52b61acc4d3d1fbff7a8802304f9a97b8e06c8b5a4706d8da0d26757d9ca",
+      "text_sha256": "8b37a128f933698db2f7879ca5b4bae82b1b259d5d47dff5acaa1b6be79d5908",
+      "verdict": "confirmed",
+      "note": "Read on the page image of the draft decree (PDF page 14, right column, under doelzin 32 C): the whole item and nothing of a neighbour. The bundle prints it as bullet 5 of 32C without a letter; same words. It is the last item of 32 C and of the learning area.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 40,
+        "offset": 450
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science draft-31-32",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.e652ff27-3b26-4820-8d7b-32e9d38836e1",
+      "wording_sha256": "1a95accd835d29ac5ada34903f1c9f17c98c3631fadfb309152c5de6a953b721",
+      "text_sha256": "bc0c91903b167b7798558ec59ce3c87c6e42063bdc3923601fcfccaf78b52adf",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Limits says \"It names no kind of problem, no materials and no tools\". The Dutch names the kind: \"technische problemen\" (the gloss has \"technical problems\"). The sentence should say that the goal names no particular technical problem. Everything else checks out: wording and number equal the legal XML (Onderdeel45) and the open-data node \"PO Kerndoel 45\"; gloss faithful; the design cycle in the notes is right; Limits says the goal is still in force and that no safety condition is stated.",
+      "rendition": "nl-slo-curriculum-kerndoelen",
+      "place": {
+        "node": "e652ff27-3b26-4820-8d7b-32e9d38836e1",
+        "offset": 0
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science goals-2006",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.science.objective.e652ff27-3b26-4820-8d7b-32e9d38836e1",
+      "wording_sha256": "1a95accd835d29ac5ada34903f1c9f17c98c3631fadfb309152c5de6a953b721",
+      "text_sha256": "9fe51c8747796a95edb6ac435452bb3daa82e04e8e0d1eea0bc60b5f64ea48ff",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix round. The wording and number equal the legal XML (Onderdeel45: \"45.\" and the one sentence, nothing else in the item) and the title of the open-data node \"PO Kerndoel 45\". Round 1's reason (Limits said \"It names no kind of problem\" although the Dutch has \"technische problemen\") is resolved: Limits now says \"It names no particular technical problem\", which is true. Whole record read again: the gloss follows the Dutch; \"the sixth of seven goals\" under Natuur en techniek is right (40 to 46); \"This 2006 goal is still in force\" agrees with the frame (the 2006 goals are law; the draft would withdraw them when it enters into force); the illustration is one example and is not presented as the goal.",
+      "rendition": "nl-slo-curriculum-kerndoelen",
+      "place": {
+        "node": "e652ff27-3b26-4820-8d7b-32e9d38836e1",
+        "offset": 0
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/science round 2",
+      "round": 2
+    }
+  ],
+  "unrecorded": []
+}

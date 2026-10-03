@@ -1,0 +1,150 @@
+{
+  "lane": "us-ca/grade-1/science",
+  "verdicts": [
+    {
+      "id": "edu.us-ca.grade-1.science.objective.1-ess1-1",
+      "wording_sha256": "ae58a36d724b9e3badc5b03c2369728f50868da0194bb19a4cf588762173ab7d",
+      "text_sha256": "d6a6e19256c50545a6e06388b4fb02d4fbd7ffdbd71dbbccf482e1d48145a405",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ngss-grade1-dci-pdf",
+      "place": {
+        "page": 4,
+        "offset": 22
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.science.objective.1-ess1-2",
+      "wording_sha256": "c12fd20e50beb582c5cd2470b33735449a7c87688cfd375755fc31e20c2dc22d",
+      "text_sha256": "2a1be6c6e2ef82f756aa5041528c7959f94f2e5c4266b38496b5dc548f7cac40",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ngss-grade1-dci-pdf",
+      "place": {
+        "page": 4,
+        "offset": 101
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.science.objective.1-ls1-1",
+      "wording_sha256": "fdd306dc5f34ea55ae2b0630e705d43c60084a9d5d1685009f30e243d59a7a6e",
+      "text_sha256": "b45fa99c4bfb21e0c60fa55b8f2434d8fe24d2a92648f357ed65b3889ca246a5",
+      "verdict": "confirmed",
+      "note": "The export has a comma after the conjunction before the last example of the clarification; the PDF has none. Punctuation only.",
+      "rendition": "us-ca-cde-ngss-grade1-dci-pdf",
+      "place": {
+        "page": 1,
+        "offset": 107
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.science.objective.1-ls1-2",
+      "wording_sha256": "94fc16809fdd8c5fef4fda8c8db516c5a43f0a2aaf21d17563164eb9e75d1e81",
+      "text_sha256": "b7dd92454bd91410dd2b11e7f90be4283b96870410af7452f8aa327f1c0dce5b",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ngss-grade1-dci-pdf",
+      "place": {
+        "page": 1,
+        "offset": 204
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.science.objective.1-ls3-1",
+      "wording_sha256": "3d9c581adc0b6f665c09f646faad68cc34fc492e11d663600cde66b0019ccaf9",
+      "text_sha256": "13d18228047237540b88052475a7ffbb2a65a6570fd8e3ff89d721852909fc8b",
+      "verdict": "confirmed",
+      "note": "The export has a comma after the conjunction that follows the semicolon in the clarification; the PDF has none. Punctuation only.",
+      "rendition": "us-ca-cde-ngss-grade1-dci-pdf",
+      "place": {
+        "page": 3,
+        "offset": 24
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.science.objective.1-ps4-1",
+      "wording_sha256": "44e19842f3eeaeb63be261dde171e44a845dcff2ecc9dd1d744070d33429e461",
+      "text_sha256": "e484d7b8fb5105232257e4d71e19803b6398bfe18dcecf20fadfe1547b173217",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ngss-grade1-dci-pdf",
+      "place": {
+        "page": 6,
+        "offset": 30
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.science.objective.1-ps4-2",
+      "wording_sha256": "206d796ddc53585f9eb23b0344e7d710fe18a764a017f40eca82eec9f513ffb4",
+      "text_sha256": "49ccf7b5269abb05626d93387114b350b7df49acfd5656e1e195f5f0e9bbb2e0",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "A real difference between two official renditions; the record follows its canonical source, the export. In the expectation sentence the PDF (page 6) has two more words directly after the ninth word, counting the hyphenated word as one (the noun for what is seen): a qualifier that places those objects in the dark. The export lacks them, so the record's sentence is about objects in general. The clarification is equal in both. No double asterisk: the flag false is right. Code equal. Summary and Limits state the export's version faithfully. A designer should know the PDF's narrower phrasing.",
+      "rendition": "us-ca-cde-ngss-grade1-dci-pdf",
+      "place": {
+        "page": 6
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/grade-1/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.science.objective.1-ps4-2",
+      "wording_sha256": "206d796ddc53585f9eb23b0344e7d710fe18a764a017f40eca82eec9f513ffb4",
+      "text_sha256": "9864276c963034fff9b5ad1f76f4779581674777e69a62c8a8118a8ff2d7f6bd",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "Round 2. A real difference between two official renditions, which the fix round leaves as it is; the record follows its canonical source, the export. In the expectation sentence the PDF (page 6) has two more words directly after the ninth word, counting the hyphenated word as one: a qualifier that places the objects in the dark. The export lacks them. The clarification is equal in both, neither has an assessment boundary, there is no double asterisk (the flag false is right), and the code is equal. The sentence added to Limits is true against the page image and in the pack's own words: it says the grade document's expectation is about objects in the dark and that the export's sentence, which the record follows, has no such qualifier and so speaks of objects in general. The rest of Limits and the Summary are faithful to the export, and the three settings for observing stay examples.",
+      "rendition": "us-ca-cde-ngss-grade1-dci-pdf",
+      "place": {
+        "page": 6
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/grade-1/science, round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-1.science.objective.1-ps4-3",
+      "wording_sha256": "a9688f814f9a8d41a83bb5946653c98824a9ea9a5161ac94fa5d5eed6baaabca",
+      "text_sha256": "40ca5c3f139129cedcd82fd6f633dc4321bbe5935e36f65709cd39af65d6ac08",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ngss-grade1-dci-pdf",
+      "place": {
+        "page": 6,
+        "offset": 166
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.science.objective.1-ps4-4",
+      "wording_sha256": "32ece9d46c4692ed6338f81b7413f7f3652ec669cf9cb6d1536186f695d09c24",
+      "text_sha256": "77199edc2687b84b1241062d29e9a2daf8580f64102e0528699f38664f84a7fc",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ngss-grade1-dci-pdf",
+      "place": {
+        "page": 6,
+        "offset": 234
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/science",
+      "round": 1
+    }
+  ],
+  "unrecorded": []
+}

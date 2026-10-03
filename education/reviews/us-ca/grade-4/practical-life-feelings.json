@@ -1,0 +1,1304 @@
+{
+  "lane": "us-ca/grade-4/practical-life-feelings",
+  "verdicts": [
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-1-1-a",
+      "wording_sha256": "c208b667944875c86a2af91f02ef76dd0c93d3a3d5de1d2d27d91508a6159921",
+      "text_sha256": "8d027385316ad46a092c60275bf8f7a0bdbf943526d7fd9b1431778a077fcbb6",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 30,
+        "offset": 235
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-1-1-n",
+      "wording_sha256": "04a8c8d617c45660a59e1a61ed44da84e2a92f45504340afebd255fa58df8537",
+      "text_sha256": "a09f46c37f420c8bb582cfe8bcfbe5b1a64183153d178d71c4e748afd216743d",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 27,
+        "offset": 13
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-1-1-s",
+      "wording_sha256": "7c33b76edb7eca4efb398e8c756d5b244d741ade0717f36bdc0c433ef71cd035",
+      "text_sha256": "0f425409a533eec8056ce34be4bd0834317849d9e432fe41143e584058c91723",
+      "verdict": "confirmed",
+      "note": "Summary: the fourth of the five kinds of danger is given as being in the house \"with no adult\"; the standard's phrase is about being there with nobody else. Read as the same thing here (the usual sense of the phrase for a child), so confirmed; a fixer passing by could use the plainer form.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 28,
+        "offset": 135
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-1-10-s",
+      "wording_sha256": "f39ce154d820c74cc74d0b6d0032832e19c0bb9f4a3451f792c9a22536f08959",
+      "text_sha256": "b7357c01c2296e7c11399edacf7ba9cdcb11db8d5236a93a8d1294b1f5f1bbec",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 28,
+        "offset": 281
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-1-11-s",
+      "wording_sha256": "55a63181d3d9293784b5b52973f7a18a4423cdf43dbbf4d7c41e26b43ce0dfee",
+      "text_sha256": "4ae28a098729d59dc78841539fdf6e8950715e8e8e2d7822160b7672959e2008",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 28,
+        "offset": 299
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-1-12-s",
+      "wording_sha256": "b8f8246c50d7381487b4f3678e46886bec2ac5f3d68faa46909e5e7f8f171dd2",
+      "text_sha256": "f23c9803a1de6705b0c664a61349916a30931135de7e929aaa3d21af3d6dfdfa",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 28,
+        "offset": 308
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-1-13-s",
+      "wording_sha256": "160205de182d7cfa6f8abee85f3fbb6ee202a15364309c83e0a46a1f431f8e4d",
+      "text_sha256": "3fd41d3d9628ea8c74f5bcb2c564ea87b13386dcf0a7e6593f184c0f85a46c3e",
+      "verdict": "confirmed",
+      "note": "Summary and Limits call the two kinds of bag \"school\" bags. The standard names the two kinds of bag and does not say what they are for; the second kind is a school bag by its name, the first need not be. Read as a description and not as a change of scope, so confirmed.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 28,
+        "offset": 317
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-1-14-s",
+      "wording_sha256": "5a828b6b147374f75bca8320cee3fee78287d7610a7ac3f642edf79bb762c753",
+      "text_sha256": "63364ed51d85e4463b1f81341c14aebc806ec2624408022484ae270b8d70c871",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 29,
+        "offset": 5
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-1-15-s",
+      "wording_sha256": "934ab1228cd9e6db07ccd0eba230e414ef1610847d5ffa58e4398f3d508a6a00",
+      "text_sha256": "56d7d2600a7710d710dcfdb0f35bb10e04146b59fceae8cc2f9f7bda124ac292",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 29,
+        "offset": 23
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-1-16-s",
+      "wording_sha256": "957cd7f9e540824edd81c74527e233d0263a045e83d32f2ef0d2b9edf56b6b70",
+      "text_sha256": "d4e481d71176e30b00cb7f50984f81fc730cf4afc586781356e9327fbc1a1617",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 29,
+        "offset": 55
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-1-17-s",
+      "wording_sha256": "d899cffc5ccda76aadc344d3336cd7cd1f1f14b8c1b9f67a1e18997e13380e23",
+      "text_sha256": "92cb844d687dc3e65fbb775243169c4403d3625a5d938deb2e0c1238d18dce5a",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 29,
+        "offset": 83
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-1-18-s",
+      "wording_sha256": "f1ab359921d069aaf76ed3dfdc7e923b50acffd9904cf08148fdc3fc69091578",
+      "text_sha256": "5a97db5109fadeb9d56259fa876fe9009a7dbba2d99c69117c2224898475fd8c",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 29,
+        "offset": 94
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-1-19-s",
+      "wording_sha256": "733da87e2b2a3a54ecd1792e0a4aee5d8968c38131a045a07ba741f3eab3f818",
+      "text_sha256": "4ef401e36f8c4c6926f3c7d9bd1edfa8115f132ed3ce556cbffeed8df5bb727c",
+      "verdict": "confirmed",
+      "note": "The PDF prints this sentence twice for grade 4, word for word the same: here on page 29 as 1.19.S, the last statement under Standard 1, and on page 30 as 7.5.S under Standard 7. Both seen on the page images; each stands alone in its row. The record's Limits says so correctly.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 29,
+        "offset": 111
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-1-2-a",
+      "wording_sha256": "6fbdbb6a38721644e31003ae7db9a2e82696ea6566f8f747fcd7030ae8d9a2ad",
+      "text_sha256": "a36898fa9d9154a2136785850fcd08a241c9d595eb08e591734ae4e791410952",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 30,
+        "offset": 254
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-1-2-n",
+      "wording_sha256": "8ed9ba50bb1fa75d6f0d4a731b021e1b44cd79eaf3e6d7ced40b27ba84728ac9",
+      "text_sha256": "7025894997cc739b6ef097b7da88f9f71680ac8843385c40823149270e3c56fe",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 27,
+        "offset": 24
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-1-2-s",
+      "wording_sha256": "a616248059e6df6c58646e5077fe6b3eb4864695e73973ccbdb520c67619c2aa",
+      "text_sha256": "9d517727a75bbc4a15411a482cdfc44676d0a591bb01b2457d5aa026ac1be557",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 28,
+        "offset": 156
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-1-3-a",
+      "wording_sha256": "d6f9922dcc1009e107ddd050effb9a83ca68e7faa755191c42344ca4b618e887",
+      "text_sha256": "aebc0b86864aed17e4d757df89d6239508ac7dd0c17d0cf50838795e6f71c8c1",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 30,
+        "offset": 269
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-1-3-n",
+      "wording_sha256": "79cc658d5cc1673296571de6d5d769b6186e256e449790fd330dda5ab7da9122",
+      "text_sha256": "bc74602a6d6fc7675ac9aa3a2a5125ff0ac751802fe9abe081e43d64bc526eca",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 27,
+        "offset": 40
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-1-3-s",
+      "wording_sha256": "c4313c0611d076a35bc06bb4b4e9224d54781df435af327d0003923e5eb1f64c",
+      "text_sha256": "2bdef6c1b68eae2b8bd2f87a9e0f634919bca6b1563342fe1d5cd95bf0c98193",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 28,
+        "offset": 168
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-1-4-a",
+      "wording_sha256": "bbf649b86e8d59cb194ef1effe9d4e7832d5b45975217837edbcc72ccbb6c1df",
+      "text_sha256": "44d69604f41c404952dba673a174eab53832b8a4ea69b3177d641080a701c9f2",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 30,
+        "offset": 280
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-1-4-n",
+      "wording_sha256": "96f2039c326bac8b64005487394220c26805cf157d42e34b5eff15ae032bd829",
+      "text_sha256": "5b2e321bc9fbfb9cc9a39701a5637d69eea788f09fa0e0c3365646528f4d43b8",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Limits, last sentence: it says cooking on a stove is not mentioned. The statement names the preparing of food as a whole, and cooking is part of it, so the sentence reads as a limit the statement does not set. Wording, code and Summary are right.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 27,
+        "offset": 54
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-1-4-n",
+      "wording_sha256": "96f2039c326bac8b64005487394220c26805cf157d42e34b5eff15ae032bd829",
+      "text_sha256": "7b04926caa6f90796bbd3edd36dfbdae6c92dbf70404a97af53f02629a94bb6f",
+      "verdict": "confirmed",
+      "note": "Round 2. The fix resolved the first verdict's reason: the Limits sentence about cooking on a stove is gone, and no remaining sentence singles out something that falls inside the statement's two general terms. What Limits still says holds: two areas, no temperatures or times, and the cross-reference to 4.1.5.N is right in code and loosely right in content (that statement is about germs in food and the illness they bring). The Summary is unchanged since round 1 and faithful. Wording and code equal the PDF (page 27, printed as 1.4.N under Standard 1); nothing else stands in the row. Not a near copy.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 27,
+        "offset": 54
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-1-4-s",
+      "wording_sha256": "671398778cb56f21dd7ff09eded8d7e48f15770d390bdb56b636ef0730c1a9f5",
+      "text_sha256": "3a8c35af9de6004b1f7ca63af68a736e56a1db9e1034fb03a7d5ad1be3a4b6de",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 28,
+        "offset": 179
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-1-5-a",
+      "wording_sha256": "b184d0e3c2991230faab8c9be05a770ad3a375cd7f767b475ac2de68726f4943",
+      "text_sha256": "d494a4ca6f1a3e8f6ebf18759a8fae5a8521c85179e83b6bfd8b00675bc6cc4b",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 30,
+        "offset": 294
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-1-5-n",
+      "wording_sha256": "57aaf2f59476d95265de47a0f537b410dc92d8ed43ad8ed2f6ca99ce74d417ba",
+      "text_sha256": "2604674cdd2385878ce9796b1f9863aae6ea86c22b69ed513ee298122c1f87b8",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 27,
+        "offset": 69
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-1-5-s",
+      "wording_sha256": "0e1be7032467709fc6d916476be9749473577ede666ef202e8a694d7405d2c0f",
+      "text_sha256": "7b878817f6423c289e604e663c2e5c1560694619dd280b6d4f5d51bd3e32e296",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 28,
+        "offset": 191
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-1-6-n",
+      "wording_sha256": "889d4975a4538722f05542e0ed784970fd6c796f1291e9fbcc875b4e226302d0",
+      "text_sha256": "5e9aef89d088493e3ed75b7a2573b1c5c538e40d8eceb74f0f4c49ecf55c1586",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 27,
+        "offset": 81
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-1-6-s",
+      "wording_sha256": "47acdbfb715bceee0c8178a85a96fe7420b87a2736a9bc3efccfe508e26ac09e",
+      "text_sha256": "0204d2f1584a52ff4573b8d372f1e0698a51cbb7cd3fba362bb1248263554bc6",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary narrows the third setting. The standard names three settings, and the third is the widest one, beyond the family home and the school (the pack's own Summaries of 4.5.4.S and 4.7.4.S call it \"the community\"). This Summary gives it as \"the neighborhood\", which is smaller: a town's shelter, warning system or evacuation route, which the record's own \"In a child's hands\" uses, is not a neighborhood matter. Fix: name the wider setting. Not a near copy. Wording and code match the PDF (page 28, printed as 1.6.S under the grade header; the statement starts and ends where the record does); Design notes are in order.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 28,
+        "offset": 212
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-1-6-s",
+      "wording_sha256": "47acdbfb715bceee0c8178a85a96fe7420b87a2736a9bc3efccfe508e26ac09e",
+      "text_sha256": "5afa0eec9d83882ee59837b8a80139333fb2e20a61df41c26e2b0a230aba5836",
+      "verdict": "confirmed",
+      "note": "Round 2. The fix resolved the first verdict's reason: the Summary now gives the widest of the three settings as the community and no longer as the neighborhood; nothing else in the record changed. Wording and code equal the PDF (page 28, printed as 1.6.S under the grade header); the statement starts and ends where the record does and nothing else stands in its row. The Summary keeps the one verb and all three settings. It gives the first setting as \"the family home\", as the confirmed records of this lane do; read as the child's home and not as a narrowing. Limits is right that rehearsing is a separate statement with two of the settings (4.7.2.S) and that no disaster is singled out. Not a near copy.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 28,
+        "offset": 212
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-1-7-n",
+      "wording_sha256": "8ff2b161603e7134e357df5f2a05fd6f0934310b1a69ddc8f36edfaef6d6d512",
+      "text_sha256": "d0e462ddbc87ccd17fe90b383f8d2dc6ae2e30101b1dcd37fda2c8ca4e771dfd",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 27,
+        "offset": 97
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-1-7-s",
+      "wording_sha256": "f233cc616c79f3eee6852c486bcc11e299039ee12eb5a938535650cd645e6822",
+      "text_sha256": "ed17e1464ed0e4c5a9fc688aa8160418d6a7e64c1d8c5929ec005075b2bc50f1",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 28,
+        "offset": 227
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-1-8-n",
+      "wording_sha256": "040d7ed69c31081aaec660885b934b70e811a22d08e0c02b5394b4d6ac9afbcc",
+      "text_sha256": "1581735423ecb060895e6a5a40db950ad727df45695d49b22efbcb176fc2c9d1",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 27,
+        "offset": 109
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-1-8-s",
+      "wording_sha256": "395b4110c152fcd271131522dd7b95a947b6d3a226e4fb021711630a3f0ad511",
+      "text_sha256": "0fee180c9a760791cc82d7f1409b3358c6c97478f94feaf3fc4ef46827349bd2",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "Two things. (1) Accompanying text: the statement itself equals the PDF word for word (page 28, printed as 1.8.S, with a raised footnote digit after its closing full stop and nothing else in its row). The footnote at the foot of page 28 differs from the record's accompanying footnote in one word: the word that stands directly before the section number is plural in the record, as the export row for this code has it, and singular in the PDF. The export itself prints the singular in the same footnote of the kindergarten, grade 1 and grade 6 rows, so the plural is a slip of this one export row that the record has inherited; only one section number follows. The record's marker in square brackets is the export's form of the PDF's raised digit (form only). For the importer or the owner to decide: keep the export's form or take the adopted PDF's. (2) Summary: it narrows two of the three settings. The widest setting (called \"the community\" in the pack's Summaries of 4.5.4.S and 4.7.4.S) is given as \"the neighborhood\", and the school setting is given as \"in a school building\", which leaves out the school grounds and anything else that is at school but not indoors. Fix: name the school and the wider setting without those limits. Not a near copy. Limits is right that the footnote cites the Education Code; the footnote also points to the document's glossary for what counts as a weapon in law, which a designer may want to know.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 28,
+        "offset": 240
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-1-8-s",
+      "wording_sha256": "395b4110c152fcd271131522dd7b95a947b6d3a226e4fb021711630a3f0ad511",
+      "text_sha256": "f9b7176dfa1850c7de82ebcd2714b7709d0a1f3b39811d5ed197eef16eef4d25",
+      "verdict": "confirmed",
+      "note": "Round 2. The fix resolved the Summary part of the first verdict: all three settings now stand without narrowing (the community; the school as a whole). The statement equals the PDF word for word (page 28, printed as 1.8.S, with a raised footnote digit after its closing full stop and nothing else in its row); the record's bracketed marker is the export's form of that raised digit. Accompanying text, unchanged and left as a note by the rule on accompanying text: the footnote at the foot of page 28 differs from the record's in one word. The word directly before the section number is plural in the record, as this one export row has it, and singular in the PDF and in the three other export rows that carry the same footnote. Only one section number follows, so no limit a designer relies on changes. The footnote belongs to this record: on the page its raised digit stands on this statement only. Limits is right that a footnote cites the Education Code; the footnote also points to the document's glossary (PDF page 71), which gives a general legal definition of a weapon with one exclusion and no list of kinds, so the Limits sentence that the statement names no kind of weapon stands. Not a near copy.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 28,
+        "offset": 240
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-1-9-s",
+      "wording_sha256": "c45c5cea31ed48a80470d879b7f0476417e1cb5c30ea9600b510f976baeed70a",
+      "text_sha256": "9489c9b06cf6fed0267019b5a4cb34f45deec812de8fcb7e7e182c0f07593a9b",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 28,
+        "offset": 257
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-2-1-a",
+      "wording_sha256": "b2fc9df68e1eabffe223acfdfcabc6317a838f3579df3a27615cf1428dcbccaa",
+      "text_sha256": "e52a37f2c3d23be2f5b992f59ff7edfa57b29d281d19591159e35edce077ffcc",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 31,
+        "offset": 9
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-2-1-n",
+      "wording_sha256": "c509c3525e7d58e7776ac5978a4ecbeb6b15b3d63bbb59ae96df6faa7006c079",
+      "text_sha256": "589c2faeeef82a168bd2c8c68a48f765c81b38937cc60d187d4042d3bfdf4507",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 27,
+        "offset": 124
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-2-1-s",
+      "wording_sha256": "1adfe7cfc0cffe47cc03ae348ed78e6c7468aef97d146dcc431485131f29b453",
+      "text_sha256": "6a8b077145ef8da0911c8f487e5db9a9626c723974cda89aca016275e267eaa1",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 29,
+        "offset": 129
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-2-2-a",
+      "wording_sha256": "ffb0499e580a84bdea2ca974922418c324e958d330a72b54d886c81e626d3d67",
+      "text_sha256": "4713607e66f3d3227e3c846321c7cd46f450b0352a63a05580a868d85823e2fa",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 31,
+        "offset": 27
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-2-2-n",
+      "wording_sha256": "27b4bda8c68d28c2a4e7ea995d6ddeb04839c7c5a0e69886f432422b6b8bf390",
+      "text_sha256": "27bf9380d10e18f59f7a98e37fc63d1cd0d5eca9400ac57b06f55de3ad83055d",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 27,
+        "offset": 136
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-2-2-s",
+      "wording_sha256": "3e1d713efc3c4964ea12b4d4a3268d64a283ae9662d5097c01f3539351668a77",
+      "text_sha256": "8e2606e850180ac04b224d31ba1a49046ac5323516ec544f8be87f01aa1e5def",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 29,
+        "offset": 142
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-2-3-n",
+      "wording_sha256": "cefbacd4591d49836c62ec05621cd6fa61d1ddecca810dc04808d6e84510c562",
+      "text_sha256": "a96e2f1eb6087087780714c5be517f7fdeb1e3040bbebee5a793e8a028210142",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 27,
+        "offset": 149
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-2-3-s",
+      "wording_sha256": "609feaa47a116c8081c1eb36ffbf8f2ed606f6c22946b5a2560f1c6ab1000341",
+      "text_sha256": "e29e7f2ec198a07cb9b1cd261cd2bd286ca7dd43edb7422f40bd35730964c069",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 29,
+        "offset": 157
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-3-1-a",
+      "wording_sha256": "649a10df982a59830974753fd503fa4dbd75812fd8986eed04831c9a82faa359",
+      "text_sha256": "3032ca52cb3abee8a335c528d28ba6fcebd661e1fd83010dfdeccb41a23ee8a2",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 31,
+        "offset": 45
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-3-1-n",
+      "wording_sha256": "29ef4a67939b8286dcf244dd1df8c6af19dcd9ff94029ab36f35908c5fd7913a",
+      "text_sha256": "a677fdf916053a52ea5c6de972006b95bc8ed3d370605a0933ed75e8e57af1bd",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 27,
+        "offset": 166
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-3-1-s",
+      "wording_sha256": "4f9707e7e76fa0ce7c1826fcb225e3ce2ba793516becea3625fec96d144912fe",
+      "text_sha256": "e48a65840cc8344d5382c243aaa5111b8bfada78bcd977d4514ff6e4376ae6c3",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 29,
+        "offset": 178
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-3-2-n",
+      "wording_sha256": "22b3627af2f3b2feb4c293c4b8ad51b4e378749a33afb68b6d0deb9ea7be96fd",
+      "text_sha256": "925605f2c9f9ad6c280799886ee294f8a9fa182ad914fa13bcaabb4341dd7bf2",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Limits, last sentence: it says the ingredient list is not mentioned. The statement names the label on food as a whole and no part of it; the ingredient list is part of such a label, so the sentence reads as a limit the statement does not set. Wording, code and Summary are right.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 27,
+        "offset": 179
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-3-2-n",
+      "wording_sha256": "22b3627af2f3b2feb4c293c4b8ad51b4e378749a33afb68b6d0deb9ea7be96fd",
+      "text_sha256": "248f22cd8cbf4b75c43fef3dd97a07dddc77417816aafe95f1d5cd49b4989a4d",
+      "verdict": "confirmed",
+      "note": "Round 2. The fix resolved the first verdict's reason: the Limits sentence that said the ingredient list is not mentioned is replaced by one saying the statement names the label as a whole and no one part of it, which is what the statement does. The Summary is unchanged since round 1: it places the label on a food package and gives what is read from it as amounts; both are read as the ordinary sense of the statement's terms and not as limits. Limits is right that no particular nutrients and no calculation are named. Wording and code equal the PDF (page 27, printed as 3.2.N under Standard 3); nothing else stands in the row. Not a near copy.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 27,
+        "offset": 179
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-3-2-s",
+      "wording_sha256": "62178952643dd1bbc6d1b94e60f0bd8b9215fdaeb02ad3b98f14a9cbab613b18",
+      "text_sha256": "7756dc752610bf3ea8666f29c9c7325244dd6227d966a06ffbfbfe066303055d",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 29,
+        "offset": 191
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-3-3-s",
+      "wording_sha256": "d52dc1f991553097765a7c4a36e179c0be88fb884199e4fa005277e19eb13b2b",
+      "text_sha256": "e758e24b0936448382ca1c68e7b07f0bb94811c42c5626ce1888d33008b7fe74",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 29,
+        "offset": 206
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-3-4-s",
+      "wording_sha256": "eea57813de7906a516b7337f1e013b7ea918d99726e83b0bd66bd6ab69fb21ba",
+      "text_sha256": "4255ccaf422d6898569248691da89950d92f1db40b355c1309c1d1b793a16859",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 29,
+        "offset": 230
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-3-5-s",
+      "wording_sha256": "fab3fc81b0d9157bf49379fd1bcb443c2c7ca5c104b3f82401abe0a4bf05c517",
+      "text_sha256": "2664f77146d7fab07ad8fae156d0e9cd3dbcef55ecdcfa465b6f36b61e136049",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 29,
+        "offset": 249
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-3-6-s",
+      "wording_sha256": "4bcbd131262680f91ccb4f234625eea84f720505876bbdab74fdd86f6ea4ad2c",
+      "text_sha256": "7d5ca1c30112417127d61cf4654b5391619d6b4dad1c5d07c52b9ca0552820aa",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 29,
+        "offset": 269
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-4-1-a",
+      "wording_sha256": "4b559adbe78b7f9e0fb1bd504cc3ce76616b573543b804211f1622367738235f",
+      "text_sha256": "608836c2f80f97dd9bc0af9029f9e2155f6b50e124ac16a859459acf53a4e5f1",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 31,
+        "offset": 63
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-4-1-n",
+      "wording_sha256": "4efbe88b0843d979d665599a952ac4736e2c5515e6166b5bff3dc1a311e3bf80",
+      "text_sha256": "113e79946a1cd75ab71bd5cb8d353a1fcc21a5cf7a8989056b87772bbdfc0027",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 27,
+        "offset": 195
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-4-1-s",
+      "wording_sha256": "ea2bfdb3d18c553714afcddf061488b97a7a334688979c6867e6e134c27dc50d",
+      "text_sha256": "b7ffd2cdd8275777bef4f59f353ccce9c7eda35aa13b443aaf4777bf094df9d4",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary adds a condition. The standard asks the child to show the skill of refusing in risky situations and names no particular technique (the record's own Limits says it names \"no set of steps\"). The Summary writes it as saying no \"and keep saying it\", which makes one technique, repeating the refusal, part of the statement. Fix: drop the added clause, or say it as the skills of refusing in general. Not a near copy. Wording and code match the PDF (page 29, printed as 4.1.S under Standard 4; the statement starts and ends where the record does); Design notes are in order.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 29,
+        "offset": 297
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-4-1-s",
+      "wording_sha256": "ea2bfdb3d18c553714afcddf061488b97a7a334688979c6867e6e134c27dc50d",
+      "text_sha256": "b04d80b88db9e06775debce6acaf7e78c541b386fabbcf709f832bec05059a72",
+      "verdict": "confirmed",
+      "note": "Round 2. The fix resolved the first verdict's reason: the Summary no longer makes repeating the refusal part of the statement; it now speaks of the skills of refusing in general, and the repeating stands only in the pack's example. Wording and code equal the PDF (page 29, printed as 4.1.S under Standard 4); nothing else stands in the row. Near copy looked at and not found: the statement is one short clause and the new Summary follows its order, as a faithful summary of one clause will, but only four in ten of the statement's words survive in order by the overlap tool's own count, and both of its noun phrases are recast. It is the closest of the six rechecked Summaries to its statement; a fixer passing by could move it further from the statement's order. Limits agrees with the statement and with 4.4.4.S.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 29,
+        "offset": 297
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-4-2-a",
+      "wording_sha256": "37ba548e8a2f048775809c7616145fcdad58550ee9fc93395d81777d2486d4f1",
+      "text_sha256": "e0be97599c54b0b6db49ed2a30665ebab9726c5d77241e4e1028e71d9c2f4885",
+      "verdict": "confirmed",
+      "note": "The Summary and the Limits read the statement's word for communication in words as spoken; that is the usual sense, though the word can also cover written words.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 31,
+        "offset": 81
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-4-2-s",
+      "wording_sha256": "f5fca370f914e3a19a05a2e910efd16ba474d3ccb7bcb905287ab14afcfc4ca3",
+      "text_sha256": "866b4c94b6b8200bb3397c9fbaee79180095d0628727ce65cc900f516efe85c4",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 29,
+        "offset": 310
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-4-3-s",
+      "wording_sha256": "0bfa3a3c49e750c54c25b81b4e273c99ef52c5d6b755e202e48b3ba077964ce1",
+      "text_sha256": "57cb84b61c3c9335593064236ae8ccce1aad9fdfbda327beed55e7e11af4a230",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 29,
+        "offset": 320
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-4-4-s",
+      "wording_sha256": "e8f25f534bfbe92f776c5cfb887e798ce0ad069d05fc16e2d4a77f40f55cc076",
+      "text_sha256": "f3067cd1e7e2f84994fe07feec6791e164fa51445a363122a907b3978eff0a61",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 29,
+        "offset": 330
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-4-5-s",
+      "wording_sha256": "9a3854e4ee00051a21f49038ae955ce52f4c823d753b12995368fb17bde8a076",
+      "text_sha256": "db3374fa79347f855ced25e1cf9b531987ace4149f28524b1b9ac061f69256dc",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 29,
+        "offset": 340
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-5-1-a",
+      "wording_sha256": "e140e3ee0c82253696a92456da3926d5e2c5ebf2b99fea11615f1ac3f8d62510",
+      "text_sha256": "a06ea983a0c74dcb75bf34f0d12a7c2ad835128a13e7277cedbb0b2e33ee0f8d",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 31,
+        "offset": 107
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-5-1-n",
+      "wording_sha256": "44e0cd68a496c6d936a16c45d4b627ea8b87ec9f8b6ade3e863ebf983d3b479c",
+      "text_sha256": "8ec4db7e335e121e781503e8b03bf31c532a78f263512d454462ea4c981bbd3c",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 27,
+        "offset": 212
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-5-1-s",
+      "wording_sha256": "170548e0aee5c1735162797ffa4012409a770b93206ec14e6dda978496a76563",
+      "text_sha256": "df809dd5f8b34c1acc4e6a24166b93edfc7778b2c82965114dc24cd4aeddf4ed",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 30,
+        "offset": 9
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-5-2-n",
+      "wording_sha256": "c784b3af5da0e2b83a7dd7ee34df33eacc917063b6fd65a7940597f1b3a90764",
+      "text_sha256": "a8c3348597469c7929f8741719021cf064873f2d3f0e7629adc7d1ca73cb62cb",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 27,
+        "offset": 229
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-5-2-s",
+      "wording_sha256": "f450300983cc8e067f9de94e49c6593e078800dc688e7b4732ca757883d74670",
+      "text_sha256": "75e2361d8c3cd815f2cba0639f33f7119189ac63200f08d9193eed41cc3a1df4",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 30,
+        "offset": 19
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-5-3-s",
+      "wording_sha256": "0ce981212859e21e5ee0626a704de4b18508f492dfe9f55c9bb3d2afc32b57eb",
+      "text_sha256": "5198344c3169e89118681f6df72045de696849b69cac5f81b1881a537bf995d1",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 30,
+        "offset": 29
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-5-4-s",
+      "wording_sha256": "f3c9dce5818bf7dac078dbfffed1ce54a879533cb0ff0f548e41cb44f617ace6",
+      "text_sha256": "51ac4a13b7af8026e2a488918e32d899a0714128ba30e20af6477011d84a972c",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 30,
+        "offset": 42
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-6-1-a",
+      "wording_sha256": "fc3bd2dd45be2f7545b6151c5a958b0d5941da534cdeb77f03bee2dc126ea21c",
+      "text_sha256": "cb3ff9a51ea0c0673d036c7b18466ff64adf7cbd935ba2c3fb6c5cbda0138b70",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 31,
+        "offset": 128
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-6-1-n",
+      "wording_sha256": "977f12a6144d04032b6f2a25d6081306c9318e52f2804fc013c2c444ac06f10b",
+      "text_sha256": "1dd3ac1e09287564e1e7e023ba8906df0c07950b75dba1e8d5a1defeb01409f3",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 28,
+        "offset": 9
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-6-1-s",
+      "wording_sha256": "8489dd2d6447575bcf36c47989ab7355723559434b6d5bcd56aa9dbe8e860660",
+      "text_sha256": "c27e336c21984d71e3cacdaf8ff2f4cac159e9bffcb8e2b85db5d282cd332661",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 30,
+        "offset": 60
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-6-2-n",
+      "wording_sha256": "9d3ab7c611f4e7f17dfd39e37f42e0c7842f1a84963dc5e92fbe683b817d9558",
+      "text_sha256": "9f85ad1cb0f0244bac60b88e508e62f8c4b267c8f4c22060a55455a458d15418",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 28,
+        "offset": 21
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-6-2-s",
+      "wording_sha256": "222875c48d96b05d191ac3a855f0d97a3cd777229c1eb6b9194057bd8b7f7348",
+      "text_sha256": "187ef0ad6a749497c79b38b1aab3341c6623bc42efdadb78504a58a28bbc8204",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 30,
+        "offset": 76
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-7-1-a",
+      "wording_sha256": "7adf270ebebc0a94a38318b20b79d2b7b77cbe005c547a839130d3e19e3340cd",
+      "text_sha256": "2af3b012a4c34be7765b5a0fd3b82578b847b8713a747949fedd3ab2742c0224",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 31,
+        "offset": 149
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-7-1-n",
+      "wording_sha256": "7368c3d76fc45f0ca89eabfa782b2371d443eb1b60d76d3049ac630c3da3de62",
+      "text_sha256": "2b4657f455c91dc4fd4cf45b51a292e79a543ae0a697862b58ee4e0cacb1080c",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 28,
+        "offset": 42
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-7-1-s",
+      "wording_sha256": "0cff03c201997dc5a679a4ff01a7d7a33617ffcd0c31391aa9dcf9d424bee1a7",
+      "text_sha256": "ca124035e0dd410f20bdf5a8ac94ff3ab5172a5c2098824d05a77a427e4c6895",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 30,
+        "offset": 98
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-7-2-n",
+      "wording_sha256": "3743612a9d2d06b43b40a8198c2733a941af3a9d82bc9af6ac43930968394bc7",
+      "text_sha256": "a60ad8e2752e9a8b362ad74e8916ce09853b1492f8e4ac5bfa41d3e226a4e49a",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 28,
+        "offset": 55
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-7-2-s",
+      "wording_sha256": "b2377003d0289865ddb2059e99ee0e39fc0f0c21817362ddb91a0dc4c6978caa",
+      "text_sha256": "36495a3f8dbace06dea82491fbcc6519a1a299627252b12423f8cdef7b7cbdcf",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary narrows one of the two settings. The standard names the family home and the school as a whole; the Summary gives the second as \"in class\", which is smaller than the school (a whole-school drill, the corridors, the yard and the gathering point that the record's own \"In a child's hands\" describes are at school but not in class). A small narrowing; fix by naming the school. Not a near copy. Wording and code match the PDF (page 30, printed as 7.2.S under Standard 7; the statement starts and ends where the record does); Limits is right that the wider third setting is absent from this statement.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 30,
+        "offset": 111
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-7-2-s",
+      "wording_sha256": "b2377003d0289865ddb2059e99ee0e39fc0f0c21817362ddb91a0dc4c6978caa",
+      "text_sha256": "7de69293406e84e5b441c33f3ffd789fe5aa67a0bdb2f9acb6310a8292643ac7",
+      "verdict": "confirmed",
+      "note": "Round 2. The fix resolved the first verdict's reason: the Summary now names the school as a whole and no longer the class; nothing else in the record changed. Wording and code equal the PDF (page 30, printed as 7.2.S under Standard 7); the statement starts and ends where the record does. Both settings are kept and nothing is added; \"the family home\" is read as the child's home, as elsewhere in this lane. Limits is right that the widest setting is absent from this statement (it stands in 4.1.6.S) and that no disaster is singled out. Not a near copy.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 30,
+        "offset": 111
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-7-3-n",
+      "wording_sha256": "e41cf1240c602bdab4bba59a107d1107cf32422c64b0fc56aa15f37fbe1b8326",
+      "text_sha256": "b89e386439d83e78286f966f35334a86f314838621b11e1501d7a6813663fbfe",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 28,
+        "offset": 73
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-7-3-s",
+      "wording_sha256": "a6df4a79ab2f37f8518c416585f7eb280fee46db1bf69b7603ef155729c49e8d",
+      "text_sha256": "9061e9c95d7b792fe6e2765ad98b0584bea004225df728732cf839cc2a88512b",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 30,
+        "offset": 123
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-7-4-n",
+      "wording_sha256": "fb05779927e4fb603dd356ff4b971b331f2655284c76ad9a66fad856f36b67d3",
+      "text_sha256": "2cfa0e480cc9f52f64511fde875493ee1f503d10a499fe1f86c727f93c0c0f19",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 28,
+        "offset": 96
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-7-4-s",
+      "wording_sha256": "195e00e65a02aeefef328f87b68faae1d53a6e4537f23cdd2cb93177cf2c704e",
+      "text_sha256": "aedb079126e1187e5104f7923b67a2bc46ec4fef184c5b8f91ea6221d43510a8",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 30,
+        "offset": 132
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-7-5-s",
+      "wording_sha256": "733da87e2b2a3a54ecd1792e0a4aee5d8968c38131a045a07ba741f3eab3f818",
+      "text_sha256": "81c43e0573700419a6f222ef9642373fbe0236edfe7092df5dbe9c753fd86b50",
+      "verdict": "confirmed",
+      "note": "The PDF prints this sentence twice for grade 4, word for word the same: on page 29 as 1.19.S under Standard 1 and on page 30 as 7.5.S under Standard 7. The script reported the first occurrence (page 29, offset 111), which is the statement of the other record; the place given here is the statement printed under this record's own code, found on the page image of page 30 between 7.4.S and 7.6.S, alone in its row. The record's Limits names the right standard and the twin statement correctly.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 30,
+        "offset": 148
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-7-6-s",
+      "wording_sha256": "0035366d9e29d11945a8fe3e4a1cca8cd39fe4f7f010b418abc9d0eafef8c032",
+      "text_sha256": "6ab4b005023604be9efa17d666467a8e82d3dbdc8fac783685c1ab28e66443ba",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 30,
+        "offset": 162
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-8-1-a",
+      "wording_sha256": "67f69a7df576f5d4428b8aa82aec9c44b46d9d9415141edb216a499e8e0be972",
+      "text_sha256": "e6ce7f289e5564c7a998d89f4c5db8852332a3683d9f75a7e8e7d63f1e8789fa",
+      "verdict": "confirmed",
+      "note": "In the plain text layer the page number falls between the printed code and the statement; on the page image the statement stands whole beside its code.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 31,
+        "offset": 179
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-8-1-n",
+      "wording_sha256": "711132370d57d60e7fb2d0a2c38434cb477b0057bd8acd23f7f88792b29d6444",
+      "text_sha256": "cbc6c116305bb20a613b36a23dd39a054b907550c63251ccae480527722d8868",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 28,
+        "offset": 114
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings drugs-food",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-8-1-s",
+      "wording_sha256": "4f98d6f453fc050444bf203739c3f2ba7b4a6145354ab39de93ed515379432d1",
+      "text_sha256": "3f4170b5465c098036ecdf75f6059c4cd224a99ce0819413cdd36a1c73493873",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 30,
+        "offset": 187
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-8-2-s",
+      "wording_sha256": "f752f46c847d9f844d7d34c3f7b6f93a97eac7febc263d0f8fabee6fb76b905d",
+      "text_sha256": "91a4b639c45bf764c2551ff92b0a69f270cabd8171f14a4495654c9e72411a55",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 30,
+        "offset": 199
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.practical-life-feelings.objective.4-8-3-s",
+      "wording_sha256": "f6344ca7d2bbbb4a8b9833581122f6968a5c315894de9ffcffc1838b46a3868d",
+      "text_sha256": "b89e5080c0ee2a8ac8dbf49ddf09fd995080dabe1ebedf168a558605e525b19d",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 30,
+        "offset": 211
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/practical-life-feelings safety",
+      "round": 1
+    }
+  ],
+  "unrecorded": []
+}

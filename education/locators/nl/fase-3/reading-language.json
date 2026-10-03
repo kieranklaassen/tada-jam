@@ -1,0 +1,145 @@
+{
+  "lane": "nl/fase-3/reading-language",
+  "records": [
+    {
+      "group": "Inhoudslijn Schrijven, PDF / Schrijven: kenmerken van de taakuitvoering / inhoud/vorm",
+      "code": "1",
+      "printed_code": false,
+      "spans": [
+        {
+          "source": "nl-slo-inhoudslijn-ne-schrijven",
+          "page": 2,
+          "column": 4,
+          "first": "schrijven langere teksten",
+          "last": "tekststructuren (bijv. oorzaak-gevolg"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudslijn Schrijven, PDF / Schrijven: kenmerken van de taakuitvoering / inhoud/vorm",
+      "code": "2",
+      "printed_code": false,
+      "spans": [
+        {
+          "source": "nl-slo-inhoudslijn-ne-schrijven",
+          "page": 2,
+          "column": 4,
+          "first": "schrijven langere zinnen",
+          "last": "grammaticale fouten"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudslijn Schrijven, PDF / Schrijven: kenmerken van de taakuitvoering / inhoud/vorm",
+      "code": "3",
+      "printed_code": false,
+      "spans": [
+        {
+          "source": "nl-slo-inhoudslijn-ne-schrijven",
+          "page": 2,
+          "column": 4,
+          "first": "structureren/verbeteren",
+          "last": "er) wordt"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudslijn Schrijven, PDF / Schrijven: kenmerken van de taakuitvoering / inhoud/vorm",
+      "code": "4",
+      "printed_code": false,
+      "spans": [
+        {
+          "source": "nl-slo-inhoudslijn-ne-schrijven",
+          "page": 2,
+          "column": 4,
+          "first": "aanbrengen van",
+          "last": "namelijk, bovendien"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudslijn Schrijven, PDF / Schrijven: kenmerken van de taakuitvoering / inhoud/vorm",
+      "code": "5",
+      "printed_code": false,
+      "spans": [
+        {
+          "source": "nl-slo-inhoudslijn-ne-schrijven",
+          "page": 2,
+          "column": 4,
+          "first": "toepassen van",
+          "last": "in eigen teksten"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudslijn Schrijven, PDF / Schrijven: kenmerken van de taakuitvoering / inhoud/vorm",
+      "code": "6",
+      "printed_code": false,
+      "spans": [
+        {
+          "source": "nl-slo-inhoudslijn-ne-schrijven",
+          "page": 2,
+          "column": 4,
+          "first": "schrijven in toenemende mate zelfstandig teksten",
+          "last": "het schrijfdoel"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudslijn Schrijven, PDF / Schrijven: kenmerken van de taakuitvoering / inhoud/vorm",
+      "code": "7",
+      "printed_code": false,
+      "spans": [
+        {
+          "source": "nl-slo-inhoudslijn-ne-schrijven",
+          "page": 2,
+          "column": 4,
+          "first": "plaatsen bij",
+          "last": "één alinea"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudslijn Schrijven, PDF / Schrijven: kenmerken van de taakuitvoering / inhoud/vorm",
+      "code": "8",
+      "printed_code": false,
+      "spans": [
+        {
+          "source": "nl-slo-inhoudslijn-ne-schrijven",
+          "page": 2,
+          "column": 4,
+          "first": "gebruikmaken van (tussen",
+          "last": "tussen)kopjes"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudslijn Schrijven, PDF / Schrijven: kenmerken van de taakuitvoering / inhoud/vorm",
+      "code": "9",
+      "printed_code": false,
+      "spans": [
+        {
+          "source": "nl-slo-inhoudslijn-ne-schrijven",
+          "page": 2,
+          "column": 4,
+          "first": "zorgen voor",
+          "last": "in woordkeuze"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudslijn Schrijven, PDF / Schrijven: kenmerken van de taakuitvoering / inhoud/vorm",
+      "code": "10",
+      "printed_code": false,
+      "spans": [
+        {
+          "source": "nl-slo-inhoudslijn-ne-schrijven",
+          "page": 2,
+          "column": 4,
+          "first": "gebruikmaken van spreekwoorden",
+          "last": "de eigen teksten"
+        }
+      ]
+    }
+  ]
+}

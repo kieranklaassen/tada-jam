@@ -1,0 +1,168 @@
+{
+  "lane": "us-ca/infant-toddler/reading-language",
+  "records": [
+    {
+      "group": "Language Development / Strand 1.0: Attending and Understanding",
+      "code": "1.1",
+      "spans": [
+        {
+          "label": "Foundation",
+          "source": "us-ca-itldf-2025",
+          "page": 115,
+          "first": "The developing ability",
+          "last": "they are developing"
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 115,
+          "first": "Children listen to",
+          "last": "people and ideas"
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 115,
+          "first": "Children show increasing",
+          "last": "is not present"
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 115,
+          "first": "A child who",
+          "last": "sound or touch",
+          "firstOccurrence": 3,
+          "lastOccurrence": 3
+        }
+      ]
+    },
+    {
+      "group": "Language Development / Strand 1.0: Attending and Understanding",
+      "code": "1.2",
+      "spans": [
+        {
+          "label": "Foundation",
+          "source": "us-ca-itldf-2025",
+          "page": 117,
+          "first": "The developing ability",
+          "last": "they are developing"
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 117,
+          "first": "Children understand many words",
+          "last": "requests or stories",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Language Development / Strand 2.0: Communicating",
+      "code": "2.1",
+      "spans": [
+        {
+          "label": "Foundation",
+          "source": "us-ca-itldf-2025",
+          "page": 120,
+          "first": "The developing ability",
+          "last": "they are developing"
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 120,
+          "first": "Children use vocabulary",
+          "last": "the child's language"
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 120,
+          "first": "Children also combine",
+          "last": "with many inaccuracies"
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 120,
+          "first": "Children who do",
+          "last": "tablet-based programs",
+          "firstOccurrence": 1,
+          "lastOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Language Development / Strand 2.0: Communicating",
+      "code": "2.2",
+      "spans": [
+        {
+          "label": "Foundation",
+          "source": "us-ca-itldf-2025",
+          "page": 122,
+          "first": "The developing ability",
+          "last": "they are developing"
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 122,
+          "first": "Children engage in",
+          "last": "topic in general",
+          "corrections": [{ "from": "back-andforth", "to": "back-and-forth", "reason": "line-break hyphen" }]
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 122,
+          "first": "Children who do",
+          "last": "tablet-based programs",
+          "firstOccurrence": 2,
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Language Development / Strand 3.0: Early Literacy",
+      "code": "3.1",
+      "spans": [
+        {
+          "label": "Foundation",
+          "source": "us-ca-itldf-2025",
+          "page": 125,
+          "first": "The developing understanding",
+          "last": "they are developing"
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 125,
+          "first": "Children engage with",
+          "last": "text represents words"
+        }
+      ]
+    },
+    {
+      "group": "Language Development / Strand 3.0: Early Literacy",
+      "code": "3.2",
+      "spans": [
+        {
+          "label": "Foundation",
+          "source": "us-ca-itldf-2025",
+          "page": 127,
+          "first": "The developing ability",
+          "last": "they are developing"
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 127,
+          "first": "Children show a",
+          "last": "experienced many times"
+        }
+      ]
+    }
+  ]
+}

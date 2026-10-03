@@ -1,0 +1,968 @@
+{
+  "lane": "nl/peuters/reading-language",
+  "verdicts": [
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-aanvankelijk-lezen-fonemisch-bewustzijn-en-alfabetisch-principe-1",
+      "wording_sha256": "348fc5f5ae77b5ba48bf4016e5957588d2d70aa85c09d9b2dd98a5fbda037cde",
+      "text_sha256": "38a5ac4c457984b980999367ac5c256c81200769ddaf6e2a40018c1d1e1b294c",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Limits says \"This statement does not mention letters, reading or writing; letters are named in the statement `Fonemisch bewustzijn en alfabetisch principe / 4`\", but the bullet names \"symbolen\", a general term that holds letters (the bullet stands under \"Fonemisch bewustzijn en alfabetisch principe\"), and the record's own In a child's hands has the child handle \"letter blocks\". The sentence reads as putting letters outside this bullet. Say instead that the wording does not say which symbols (letters are one kind) or drop the denial. Wording, code, heading and gloss are right.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 485
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-aanvankelijk-lezen-fonemisch-bewustzijn-en-alfabetisch-principe-1",
+      "wording_sha256": "348fc5f5ae77b5ba48bf4016e5957588d2d70aa85c09d9b2dd98a5fbda037cde",
+      "text_sha256": "c7b1cec75421d8740249f3bf63b51e0c0e2e572570e1257bc95dad20d5116f88",
+      "verdict": "confirmed",
+      "note": "Round 2. Wording, heading and position equal the card on the rendered page (Fonemisch bewustzijn en alfabetisch principe, first bullet). The round 1 fault is resolved: Limits no longer puts letters outside \"symbolen\"; it says \"Letters are one kind of symbol; they are also named separately, in the statement `Fonemisch bewustzijn en alfabetisch principe / 4`\". That statement was opened: the fourth bullet under the same sub-heading is \"ontdekken van relaties tussen klanken en letters in een speelse context (alfabetisch principe)\", so the claim holds.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 485
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-aanvankelijk-lezen-fonemisch-bewustzijn-en-alfabetisch-principe-2",
+      "wording_sha256": "f7ef8c6c2371d89a3ed918ce0278b662c1b36486f033e52d1f16038641354a92",
+      "text_sha256": "6d00e0c2a2225094a9d5ab49b3700790d076eee8f2395a5c107a57e791578485",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 491
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-aanvankelijk-lezen-fonemisch-bewustzijn-en-alfabetisch-principe-3",
+      "wording_sha256": "523f933dbb4fe039a3753fc0e71175ebd637750bc077a3afe8a09dd094541793",
+      "text_sha256": "1bba83d02d0355a0fa8b090f1e3a2552abbdd158847649114e8a30788c35bd68",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 497
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-aanvankelijk-lezen-fonemisch-bewustzijn-en-alfabetisch-principe-4",
+      "wording_sha256": "364efe74d9267f3cede61677571d56abbfe27c143fe2ba2a2b3ed3fdc6b4cb07",
+      "text_sha256": "26064f0cca9465b2c089a1223cf87e48a08511ff8a62a57d89ebab4ec500fd8d",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 505
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-aanvankelijk-lezen-fonemisch-bewustzijn-en-alfabetisch-principe-5",
+      "wording_sha256": "3be5865f8cc518dcbdb2052973f6159cfdb3671063b92d2e65f9feefbee68beb",
+      "text_sha256": "d1636da1c02f9b19e8c367c258c50729fbe14e9d4ca3f6c55c4619ba9693c1cf",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The record's own Limits says \"*Rijmen* can be read as the act of rhyming or as rhymes (verses), and the wording does not choose\", yet the gloss \"gaining experience in rhyming\" picks one reading for \"ervaringen opdoen in rijmen\". By the pack's rule a word left open keeps the Dutch in italics with both readings in the gloss (as `Luisteren / 6` does for *voorstellingen*). Either gloss it open, for example \"gaining experience in *rijmen* (rhyming, or rhymes)\", or, if \"in rijmen\" is judged to be the verb only (the card uses \"rijmpjes\" for the noun under Leesplezier / 3), drop the Limits sentence. Wording, code and heading are right.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 518
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-aanvankelijk-lezen-fonemisch-bewustzijn-en-alfabetisch-principe-5",
+      "wording_sha256": "3be5865f8cc518dcbdb2052973f6159cfdb3671063b92d2e65f9feefbee68beb",
+      "text_sha256": "b1c5a95213286fb47ae37d89cf85b5fe7f967d2997502d213b1444ce282537e9",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Round 2. Wording, heading and position equal the card on the rendered page (Fonemisch bewustzijn en alfabetisch principe, fifth bullet: \"ervaringen opdoen in rijmen\"). The round 1 fault (a word called open in Limits and closed in the gloss) is gone: the fixer took the two-readings sentence out and kept the verb reading, \"gaining experience in rhyming\", which \"opdoen in\" supports (the card writes \"rijmpjes\" for the verses, Leesplezier / 3). The gloss is faithful. But the Limits sentence that stayed no longer fits it: \"The wording says gaining experience; it does not ask the child to make rhymes or to judge whether two words rhyme.\" It leaned on the reading that was removed (rhymes as verses a child hears). With \"rijmen\" read as the act, making rhymes falls inside the term: experience in rhyming is experience in that act, so the sentence reads as putting the child's own rhyming outside the statement, which the Dutch does not do. The record itself goes against it: In a child's hands has the child of 4 notice \"that two words sound alike at the end\" and add \"a nonsense word that sounds alike too\", and all three Common mistakes are faults in giving a rhyming word. What the Dutch supports is a limit on level, not on activity. Fix: for example \"The wording says gaining experience; it sets no level, so it does not say that the child can make a rhyme or can tell whether two words rhyme, and it does not say what the experience consists of (hearing, joining in, making)\", or drop the clause after the semicolon.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 518
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-aanvankelijk-lezen-fonemisch-bewustzijn-en-alfabetisch-principe-5",
+      "wording_sha256": "3be5865f8cc518dcbdb2052973f6159cfdb3671063b92d2e65f9feefbee68beb",
+      "text_sha256": "dd8239bc185972a443f9a638b096dfd8e339453ad1eba2dbeb07e1b555ed0f34",
+      "verdict": "confirmed",
+      "note": "Round 3, second reading on the rendered card (same file, 200 dpi): bar \"Aanvankelijk lezen\", sub-heading \"Fonemisch bewustzijn en alfabetisch principe\", bullet 5 of 6, \"ervaringen opdoen in rijmen\"; it starts and ends where the record does, and the next bullet is \"herkennen van symbolen\". The card prints no code. Gloss \"gaining experience in rhyming\": faithful (the verb reading, as round 2 found; the card writes \"rijmpjes\" for the verses under Leesplezier). Round 2's fault is resolved: Limits now reads \"The wording says gaining experience; it sets no level, so it does not say that the child can make a rhyme or can tell whether two words rhyme, and it does not say what the experience consists of (hearing, joining in, making)\". That is a limit on level and not on activity, which is what \"ervaringen opdoen\" supports, and it agrees with the gloss. \"In a child's hands\" shows a child hearing verses, joining in the last word of a line, moving in time with a verse and, at 4, noticing that two words sound alike and adding a nonsense word: each is a way of gaining experience that the bracket in Limits leaves open, one illustration for each age, under the marker line of the pack, and none is given as a level or as part of the statement. The opener says children of about 2 to 4 before school, the fixed form. Common mistakes are faults in giving a rhyming word and do not go against the wording.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 518
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-aanvankelijk-lezen-fonemisch-bewustzijn-en-alfabetisch-principe-6",
+      "wording_sha256": "565fc845f842e1c7012c2eaac6e3832ddeed66a867a163797b578c7b2f266561",
+      "text_sha256": "c1ec42a010321ba002b1300ae8189bca438028b40b738dd41c93ddae4653b031",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Limits says \"Letters are not named in this statement. Pictograms are the subject of another statement, `Oriëntatie op verhaal en tekst / 3`\", which reads as putting letters and pictograms outside \"herkennen van symbolen\". Both fall inside the general term \"symbolen\" (the bullet stands under \"Fonemisch bewustzijn en alfabetisch principe\"), and the record's own In a child's hands uses the sign on the toilet door, which is a pictogram. Say that the wording does not say which symbols, and that pictograms are also named separately in that other statement. Wording, code, heading and gloss are right.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 522
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-aanvankelijk-lezen-fonemisch-bewustzijn-en-alfabetisch-principe-6",
+      "wording_sha256": "565fc845f842e1c7012c2eaac6e3832ddeed66a867a163797b578c7b2f266561",
+      "text_sha256": "b14f33d858cf5781207616a44848f81d9ff050155bab73085dcd37b4f1431c30",
+      "verdict": "confirmed",
+      "note": "Round 2. Wording, heading and position equal the card on the rendered page (Fonemisch bewustzijn en alfabetisch principe, sixth and last bullet). The round 1 fault is resolved: Limits no longer denies letters or pictograms; it says \"Pictograms are one kind of symbol; they are also named separately, in the statement `Oriëntatie op verhaal en tekst / 3`\". That statement was opened: the third bullet under that sub-heading is \"herkennen van (bekende) veelvoorkomende pictogrammen (bijv. handen wassen)\", so the claim holds.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 522
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-aanvankelijk-lezen-leesplezier-1",
+      "wording_sha256": "2207b57d1260f0b7626c189dae4aa91c74235e67e88f3d6f41e6c16c36f3d9a7",
+      "text_sha256": "a7fb36cc48a830fe4c848cfd928cc1b57d02a9646be9c5f15019535c5030e365",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 395
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-aanvankelijk-lezen-leesplezier-2",
+      "wording_sha256": "8fb25c12565179f1b0e70588b3b988af114342f16cef4520fcaf4daae2f34e0a",
+      "text_sha256": "6ad8439b96591b3c3eea2d200c32788e496541f18d6e87bd1520ef5545abf24a",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 402
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-aanvankelijk-lezen-leesplezier-3",
+      "wording_sha256": "cd59991ddfc0c7ad96f4a81d94ac7ebc936bdb472046311efe22bd46d7128900",
+      "text_sha256": "5a0c5e52c9c267c3d1e5950436c2d99fbb08af196755978254deba2100799f7f",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 406
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-aanvankelijk-lezen-orientatie-op-verhaal-en-tekst-1",
+      "wording_sha256": "6eacf31b392504d7983672720671fea9c5d6ec106dc39cacc36eab11df97bee8",
+      "text_sha256": "703c178045e44b0ad4c605ef16676524adfecfc0b9f62179cf9020b82f25d147",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 419
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-aanvankelijk-lezen-orientatie-op-verhaal-en-tekst-2",
+      "wording_sha256": "a8816a57768b3941f2893aca345f295732f9a65f4c0406b24799a2fd9255e99c",
+      "text_sha256": "8593818bf3d073546fd9e4007eec60f6620b4629496501e619d52bd1d5ef0b1a",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 423
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-aanvankelijk-lezen-orientatie-op-verhaal-en-tekst-3",
+      "wording_sha256": "68aded5da7acf22baa0bb54feaaf51c7796598493adb9e4d8210a73f22d93df8",
+      "text_sha256": "3c42eb14333c1935d9e83395882b50f94b427525ff7344a5db90da0267d78aec",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 432
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-aanvankelijk-lezen-orientatie-op-verhaal-en-tekst-4",
+      "wording_sha256": "148e0ac0b68e78ac52f9914cdfe818e200912258dfa82ebae77f9b3b347efed4",
+      "text_sha256": "715e5aea4a6db6a059e8b718f5f240ffe23b4dc7a10c2d864e6c4a724864943e",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 440
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-aanvankelijk-lezen-orientatie-op-verhaal-en-tekst-5",
+      "wording_sha256": "04bef00f48ad8051222ea5a91755f7cce1e3dca7dd5d4da35bb32d7ac65a2e8d",
+      "text_sha256": "0588adaa321fc2a0cd206ddc3860541e48b152b265baa2405d1dfc2860866f09",
+      "verdict": "confirmed",
+      "note": "The card prints two spaces after 'tekst': form.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 460
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-aanvankelijk-lezen-orientatie-op-verhaal-en-tekst-6",
+      "wording_sha256": "4f0676afe421795903f9c2fdc0d16a5c65d71f31b82199e2c83913cd6aa20cca",
+      "text_sha256": "63f920a47ed72eb63f7743e1bb941b0dbc4e64f3209fe03532eb37aa6895f665",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 472
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-aanvankelijk-schrijven-orientatie-op-geschreven-taal-1",
+      "wording_sha256": "07b74e6e379a4e829bed55b6abcedbf3f316da54c5cfe32b1354f49bf1595c0b",
+      "text_sha256": "20cbf09bca465e893b366ae4da91047c534f05d00184f32756b0b2546a40a91b",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 531
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-aanvankelijk-schrijven-orientatie-op-geschreven-taal-2",
+      "wording_sha256": "6fb7937523d04362afdbfb08259ab58b5787835fa20503652b46ea055217aa36",
+      "text_sha256": "2ac41d44cf168d46ecec741bb3818edf7271044fecd70cb797f7b27b8c6fc5f3",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 536
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-aanvankelijk-schrijven-orientatie-op-geschreven-taal-3",
+      "wording_sha256": "9fb070e53f0cd5357e643e45e04ff6b63f16acc5e4797b8f0e6d86aa533599b5",
+      "text_sha256": "344f72f264cdea97f710b24fece67b33c951c5da3f0e5692ad95c0347e5ac7ce",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 545
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-aanvankelijk-schrijven-orientatie-op-geschreven-taal-4",
+      "wording_sha256": "a4b97b979a316dd586cedd497bce1e40e6d51d922ba70733b852b9d275bae14c",
+      "text_sha256": "53ae3ade757ad94c6de2fa0b067959811ec930f115737797a87467a76d7292d9",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 554
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-aanvankelijk-schrijven-orientatie-op-geschreven-taal-5",
+      "wording_sha256": "8d1fbf1abb43b58e405c0216190b94350e6b7a9e1fe61c3010a345b280473f67",
+      "text_sha256": "6619f4b3892558fc73f723dd4b1708e47f3df3255835259a55584f0fb8beb973",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 570
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-aanvankelijk-schrijven-orientatie-op-geschreven-taal-6",
+      "wording_sha256": "8e626be2888ec95121cd6a83ea122a8aaec6fea12c9f7675d66cced57d3961a7",
+      "text_sha256": "daf3ed41f86bbc410e09c37788f63d08c207b8130cbcbf330ae9b6f0a075b599",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 582
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-aanvankelijk-schrijven-orientatie-op-geschreven-taal-7",
+      "wording_sha256": "23700a8da910e535a054cc905a8881cf7717157608edfb8b479c0a09ed1d0a38",
+      "text_sha256": "0c55dde5000345010b41c6e02de63ef8c54bfb94bbaa1754ead7dedaae229803",
+      "verdict": "confirmed",
+      "note": "The sub-point (the card's only one, printed with an en dash under this bullet) is inside the record; the dash is stored as a hyphen: form. Limits concludes \"so correct letters and spelling are not what is offered here\" from \"vooral via ...\"; \"vooral\" is \"mainly\" and the sub-point itself names \"letter-/tekenreeksen\", so that sentence is the pack's inference and a little stronger than the Dutch.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 588
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-aanvankelijk-schrijven-orientatie-op-geschreven-taal-7",
+      "wording_sha256": "23700a8da910e535a054cc905a8881cf7717157608edfb8b479c0a09ed1d0a38",
+      "text_sha256": "278cd2602beaf0cbe08eb55594ff663161c0c7e85a8847bd22bbf75e3f755095",
+      "verdict": "confirmed",
+      "note": "Round 2. Wording, heading and position equal the card on the rendered page (Oriëntatie op geschreven taal, seventh and last bullet, with the card's only sub-point under it; the en dash is stored as a hyphen: form). The round 1 remark is met: Limits no longer concludes that correct letters and spelling \"are not what is offered here\"; it gives \"mainly (*vooral*)\" and says only that the statement \"does not mention correct spelling or how the child holds the pencil\", which is true of the wording.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 588
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-mondelinge-taalvaardigheid-gesprekken-voeren-1",
+      "wording_sha256": "ef5977d8545b2f23f29db46a699d29ef457262f80835b22f2a54803d76d1cee4",
+      "text_sha256": "684da6b68e80fec469a9648c00b57f24dfa503c8ac0ae4eec94290ae1761c379",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "In a child's hands gives counts the bullet \"gesprekjes voeren met de leidster en/of een ander kind\" does not state: \"A child of 2 takes one or two turns with utterances of one or two words and gestures; a child of 4 stays on one subject for several turns\". The record's own Limits says the statement sets no number of turns. Describe the two ages without a number of words or turns. Wording, code, heading and gloss are right.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 285
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-mondelinge-taalvaardigheid-gesprekken-voeren-1",
+      "wording_sha256": "ef5977d8545b2f23f29db46a699d29ef457262f80835b22f2a54803d76d1cee4",
+      "text_sha256": "2d48a9e95cbb5de3863b269b31d452ee71ff2201a344ff438a74317eef6161d4",
+      "verdict": "confirmed",
+      "note": "Round 2. Wording, heading and position equal the card on the rendered page (Gesprekken voeren, first bullet). The round 1 fault is resolved: In a child's hands now reads \"A child of 2 joins in with words and gestures and soon turns back to play; a child of 4 keeps to one subject for longer\", with no number of turns or of words. Nothing that reads as a norm by age is left in Limits or Common mistakes.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 285
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-mondelinge-taalvaardigheid-gesprekken-voeren-2",
+      "wording_sha256": "b6ea3c108cdcec0a30b3bb7b2888ae1a6f00997de615427fb7f71d64ccd35bd5",
+      "text_sha256": "64ceca25605184d1352bf0798ec1abc18adb7ea6bdcd89f28abf928e86393da0",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 295
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-mondelinge-taalvaardigheid-gesprekken-voeren-3",
+      "wording_sha256": "2de72a13228834ef9986666a49059e314de7db01e33e156b63aba1afe90923f6",
+      "text_sha256": "d5c78e1005c89910a3283b4436c2e0994299de1bd1c54922ba42503a7d9b5a7d",
+      "verdict": "confirmed",
+      "note": "The correction (the text layer has \"wie-wat- waar-vragen\" where the card breaks the line after \"wie-wat-\") was checked on the page image: \"wie-wat-waar-vragen\" is what the card prints. The card prints \"ondersteunt\" and \"verschillende type vragen\"; the record keeps both and Limits names the first.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 307
+      },
+      "matched_by": "script",
+      "corrections_verified": true,
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-mondelinge-taalvaardigheid-gesprekken-voeren-4",
+      "wording_sha256": "e751c2f4880ee462ac938ce611b549449924ae20723000440a0a5d4d12e1f749",
+      "text_sha256": "90a4b129740970e6dc80619862e7d4deaf196ee2d72b8a00b06432a13a8fdcba",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 334
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-mondelinge-taalvaardigheid-gesprekken-voeren-5",
+      "wording_sha256": "6419ba8166bf70f6c7fc94655e53b6c41e71b5a402d08e4d853a2a6cd375a554",
+      "text_sha256": "66321ef3f2e37328c2f0f20dc4cc7f7d0526afe6eee538f5106380b95c1e5b76",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 354
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-mondelinge-taalvaardigheid-gesprekken-voeren-6",
+      "wording_sha256": "df3e6a883d061293f981816ff250c697dea25c88435e082bb60d6037844688b6",
+      "text_sha256": "0b12605e59509c01504001c57e40aee35d795f3a7f910fcabac071a10dc61b57",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 367
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-mondelinge-taalvaardigheid-gesprekken-voeren-7",
+      "wording_sha256": "3caec1bb1ffc961cd7d18fe63db7bb8caa8a978bb71988b372cc9793fb19b1a2",
+      "text_sha256": "9eaa1e80dcf6132f7cf4ffd931fbf92930192eda0eff016c49d8baba7000dfcc",
+      "verdict": "confirmed",
+      "note": "The card prints \"(spontaan)reageren\" without a space; the record keeps it.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 376
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-mondelinge-taalvaardigheid-luisteren-1",
+      "wording_sha256": "2324453b62252047fd407d6baac62a3b8a8e46feb9fc42d6c4fb5b21bb6b7be9",
+      "text_sha256": "91b2d5a9bddd5171e0cc62cf5db62c7094de8763dee4ffd469630d04e1e99898",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 163
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-mondelinge-taalvaardigheid-luisteren-2",
+      "wording_sha256": "9c37be4c0466f6d72510e793468eb3ce1c3c51463389d3ee3df7c250ba98c996",
+      "text_sha256": "78874f408437f39ac08c50da4ec1a72ec33ebf23dcd3763d1f18117c8b54892d",
+      "verdict": "confirmed",
+      "note": "In a child's hands gives \"a short explanation of two steps\" for a child of 4; the bullet states no number of steps, and Limits says so. Left as the pack's illustration.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 166
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-mondelinge-taalvaardigheid-luisteren-2",
+      "wording_sha256": "9c37be4c0466f6d72510e793468eb3ce1c3c51463389d3ee3df7c250ba98c996",
+      "text_sha256": "3e48e11f6f8cc54d5575a89d2dfeb06ebe1cd722275c340f84587fca02e9ce29",
+      "verdict": "confirmed",
+      "note": "Round 2. Wording, heading and position equal the card on the rendered page (Luisteren, second bullet). The round 1 remark is met: \"a short explanation of two steps\" for a child of 4 is now \"this short explanation to its end\". The worked example (first the glue, then press the leaf on) still has two parts, as an example and without an age. Limits cites `Luisteren / 3` for instructions; that statement was opened and is \"luisteren naar en begrijpen van instructie(-s) ...\".",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 166
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-mondelinge-taalvaardigheid-luisteren-3",
+      "wording_sha256": "7f326ca42748dabc11779bb00b0d1b06b827e3f0a1f05d696f1fb604c3968677",
+      "text_sha256": "b40079f4404a4194a4c537e94e44dfb13b62592d3fd794b966026bd225e0a8a5",
+      "verdict": "confirmed",
+      "note": "In a child's hands gives \"one step\" for a child of 2 and \"two steps\" for a child of 4; the bullet states no number of steps, and Limits says so. Left as the pack's illustration.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 176
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-mondelinge-taalvaardigheid-luisteren-3",
+      "wording_sha256": "7f326ca42748dabc11779bb00b0d1b06b827e3f0a1f05d696f1fb604c3968677",
+      "text_sha256": "d25f215f8d82eab9965709c9fc66507aa55764c066d46e4e3f11b3e525990aa6",
+      "verdict": "confirmed",
+      "note": "Round 2. Wording, heading and position equal the card on the rendered page (Luisteren, third bullet; the example in brackets is part of the bullet). The round 1 remark is met: In a child's hands no longer gives \"one step\" for a child of 2 and \"two steps\" for a child of 4; it gives \"a longer one, for example \\\"get your coat and wait by the door\\\"\". Noted, not counted: Common mistakes still says \"an instruction of two steps\", with no age; the pack's inference, and Limits says the statement sets no number of steps.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 176
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-mondelinge-taalvaardigheid-luisteren-4",
+      "wording_sha256": "c8645b24059082f4c98be56ef3c0b22dfb977e7515a796c806a7bba225399eb6",
+      "text_sha256": "19a70ad2af96d95f2aebd37fdfd85f2e89033ee831dff979e6ca54ac5ed6d4c7",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 189
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-mondelinge-taalvaardigheid-luisteren-5",
+      "wording_sha256": "0267649360fed7090adea9c1af46052ba615c443fc740c327b2796997f5214f2",
+      "text_sha256": "8d24de52378daccb80bf16fa281589590914b25ba88d09d39f0e94cc9a5178a1",
+      "verdict": "confirmed",
+      "note": "The card prints two spaces after \"naar\": form.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 211
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-mondelinge-taalvaardigheid-luisteren-6",
+      "wording_sha256": "40d71bb5ff43943047097383ce46ea45ef28afe747de4b1208e9427821be307d",
+      "text_sha256": "345497db075742f067450713cab772319487b516d6eaadedabab3e5c96681863",
+      "verdict": "confirmed",
+      "note": "The card prints \"voorstellingen , belevenissen\" with a space before the comma; the record keeps it and Limits says so. The gloss keeps *voorstellingen* open.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 216
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-mondelinge-taalvaardigheid-luisteren-7",
+      "wording_sha256": "c0d3cf385b89b06f2feeb6fa8f790a80134c4ff55ba49abeb41c21c6827a87d5",
+      "text_sha256": "f155b34f55353a0e94ece978672d48fe96a947ccc19c33dfc32e99947bd01f78",
+      "verdict": "confirmed",
+      "note": "The card prints \"luisteren en begrijpen van\" without \"naar\"; the record keeps it and Limits says so.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 225
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-mondelinge-taalvaardigheid-luisteren-8",
+      "wording_sha256": "4b4543e375930582869706df39d5ecc397eb4b8cc188c90f07ea2bf55792dcc7",
+      "text_sha256": "3029f47b6b251e2475d1e7e46622600c8c2dfbb94ae8c24d1b67a794c132f879",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 245
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-mondelinge-taalvaardigheid-luisteren-9",
+      "wording_sha256": "7db9ce4dbb747d3fd5a16a5f72e9030a7f5198267032fbf506460eb02cbf6359",
+      "text_sha256": "dc4f45f087ac52cae250e014acfd217955cdf2b16ea4974297e71c655dde89df",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Limits says of the example \"the adult asks and the response is brief\". The Dutch has \"(bijv. kort reageren op de inhoud in antwoord op vragen)\": it names no asker, and the same Limits says the wording does not say by whom something is told. \"The adult asks\" is a giver the bullet does not state; say \"in answer to questions\" without an asker. Wording, code, heading and gloss are right.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 261
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-mondelinge-taalvaardigheid-luisteren-9",
+      "wording_sha256": "7db9ce4dbb747d3fd5a16a5f72e9030a7f5198267032fbf506460eb02cbf6359",
+      "text_sha256": "1a97c5b3cc665aecc757c2da2e79f1325b511e19b6779b32a6713da6844818d7",
+      "verdict": "confirmed",
+      "note": "Round 2. Wording, heading and position equal the card on the rendered page (Luisteren, ninth and last bullet; the example in brackets is part of the bullet). The round 1 fault is resolved: Limits no longer says \"the adult asks\"; it now says the wording \"does not say who asks the questions\". The adult who asks in In a child's hands is the pack's illustration.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 261
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-mondelinge-taalvaardigheid-spreken-non-verbale-communicatie-en-visuele-ondersteuning-1",
+      "wording_sha256": "46ec507bdda5c475d61b2b95a5361f68c770e9c3ebdaa8280f0e58d6bd9d1d2d",
+      "text_sha256": "fc4e4e7969620c6f708f5cbe1e9998a31833fa7bf1737fa8fd7d42b22ed51763",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 145
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-mondelinge-taalvaardigheid-spreken-non-verbale-communicatie-en-visuele-ondersteuning-2",
+      "wording_sha256": "85bdc82a64e2e161ad31fbc662a942aae98cfe1e354fd98ba6554010c88a865b",
+      "text_sha256": "e6678950ad692d12bfa8d18c43cdd0671acf5baae5708d5b87bf40eae27286fc",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 154
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-mondelinge-taalvaardigheid-spreken-vloeiendheid-verstaanbaarheid-en-grammaticale-beheersing-1",
+      "wording_sha256": "373115e40c4bec6be326913bacb8bae7327c11bd97fa9feeb53082e9b4cf7acd",
+      "text_sha256": "0ed7007bebbe2c84aeacdc2a18bc7435ce0abd3a3f02455723c3a3650de93f5b",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 50
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-mondelinge-taalvaardigheid-spreken-vloeiendheid-verstaanbaarheid-en-grammaticale-beheersing-2",
+      "wording_sha256": "3de03c07fe15d20d475c0f791da1b3b5bcacffbf2bec64a1037d8898850d299e",
+      "text_sha256": "32915845e33658ec7e05af8f7e1b0b416c58658031ead9baec3aecb3d07e46c8",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "In a child's hands names sounds and an order of acquisition that the bullet \"klanken vormen met het Nederlandse klanksysteem (fonologie)\" does not state: \"A child of 2 most reliably uses sounds made at the front of the mouth, such as m, p, b, t and n; a child of 4 uses nearly all the sounds of Dutch, and r, s and groups of consonants often still differ\". The record's own Limits says the wording \"lists no sounds and no order in which they come\". Describe the two ages without a list of sounds. Wording, code, heading and gloss are right.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 80
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-mondelinge-taalvaardigheid-spreken-vloeiendheid-verstaanbaarheid-en-grammaticale-beheersing-2",
+      "wording_sha256": "3de03c07fe15d20d475c0f791da1b3b5bcacffbf2bec64a1037d8898850d299e",
+      "text_sha256": "f109fc4021d382c2a81bddc894dcc940b760912134d80a76e6fb6a82debe56a9",
+      "verdict": "confirmed",
+      "note": "Round 2. Wording, heading and position equal the card on the rendered page (Spreken, under the black heading \"vloeiendheid, verstaanbaarheid en grammaticale beheersing\", second bullet). The round 1 fault is resolved: In a child's hands no longer lists sounds by age; it says a child of 2 \"says words with the sounds they can already make\" and that for a child of 4 \"some sounds still differ from adult speech\". Noted, not counted: Common mistakes still names sounds and an order (\"Replacing a sound with one learned earlier, such as t for k ... or l, j or w for r\"), with no age; that is the pack's inference and does not contradict the wording, which Limits rightly says lists no sounds and no order.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 80
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-mondelinge-taalvaardigheid-spreken-vloeiendheid-verstaanbaarheid-en-grammaticale-beheersing-3",
+      "wording_sha256": "1384ed8c386231d98c20cb1fa4be1bed578e9f95a1520863eaf69d434ba4e2ac",
+      "text_sha256": "7f6e8d27496fcbc2585119070334a494fba90d69385c10c417816441fce8d28e",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "In a child's hands gives sentence lengths in words that the bullet \"zinnen vormen (syntaxis)\" does not state: \"A child of 2 puts two words together; a child of 4 says sentences of four or more words with a verb, and joins two of them with *en*\". The record's own Limits says the wording sets no sentence length. Describe the two ages without word counts. Wording, code, heading and gloss are right.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 87
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-mondelinge-taalvaardigheid-spreken-vloeiendheid-verstaanbaarheid-en-grammaticale-beheersing-3",
+      "wording_sha256": "1384ed8c386231d98c20cb1fa4be1bed578e9f95a1520863eaf69d434ba4e2ac",
+      "text_sha256": "083c969624264f65c0e68b5ec025062cb1211bde777afdb8b05633ab013cfda1",
+      "verdict": "confirmed",
+      "note": "Round 2. Wording, heading and position equal the card on the rendered page (Spreken, under the black heading \"vloeiendheid, verstaanbaarheid en grammaticale beheersing\", third bullet). The round 1 fault is resolved: In a child's hands now reads \"A child of 2 puts words together without the small words between them; a child of 4 says longer sentences with a verb\", with no count of words. The sample utterances (\"papa car\", \"I want apple too\") are not tied to an age. No norm by age is left in Common mistakes.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 87
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-mondelinge-taalvaardigheid-spreken-vloeiendheid-verstaanbaarheid-en-grammaticale-beheersing-4",
+      "wording_sha256": "ac55d5352959c97903917c9a70ed551969cc832a5b6322105435df44b3d6541a",
+      "text_sha256": "16b34a6c1b0e39a4b9c6f5e09b6c2e7f4beac3d0a26e9c5201aac506f8312686",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 90
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-mondelinge-taalvaardigheid-spreken-vloeiendheid-verstaanbaarheid-en-grammaticale-beheersing-5",
+      "wording_sha256": "2b40355bd0373eab048a70b29d88cfca4577e0b4044110d1debf5e5a7a298be4",
+      "text_sha256": "3610c4e8dc988b911afba1e2a192f82f6a8fca7d91afd5e93a34e95251174afb",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 97
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-mondelinge-taalvaardigheid-spreken-vloeiendheid-verstaanbaarheid-en-grammaticale-beheersing-6",
+      "wording_sha256": "d53a4edade47e7410ff8bbb19303dd88710c60faa1ebebb2f1cc1e262ac748bb",
+      "text_sha256": "4a1c8b180ab227781e676d024305febb4ac8484c5eac0494d437860fe3cac774",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 114
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-mondelinge-taalvaardigheid-woordenschat-en-woordgebruik-1",
+      "wording_sha256": "db560c7f7362959ba69fd3740918188859fa166e8efdd839d0d5353d75e2edd8",
+      "text_sha256": "086aff26f739a82b28efcffa1049f0021499f8d814829410860a5b54edbe65af",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 14
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-mondelinge-taalvaardigheid-woordenschat-en-woordgebruik-2",
+      "wording_sha256": "8309355242113a4ac35cdb3eb9f7da89f35b8faa33d4ba51d194e5b17fc2ab76",
+      "text_sha256": "4d9f1506c71fa0b21ad76131ed2c3c67b79339d19172a4d8feae2d3831aa4706",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 19
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-mondelinge-taalvaardigheid-woordenschat-en-woordgebruik-3",
+      "wording_sha256": "81a635d18d7268b34c262782e60c02d6da3e0c775830ad0a10e00a8057fa42c9",
+      "text_sha256": "949bac63a3deb83ae8f409ec9b47cf9849cb0187311bb81fc1bd22fe878a19bf",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 23
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-mondelinge-taalvaardigheid-woordenschat-en-woordgebruik-4",
+      "wording_sha256": "1ecba33fca2f08eb8342fdd817d6af8f24701dd2fee7b4fa0375ffc22e79ff9a",
+      "text_sha256": "7b6c0811d5d0e6b132ab72fb74b5330bbb0ff2c89b197fbbb46d980851950f06",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 32
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-mondelinge-taalvaardigheid-woordenschat-en-woordgebruik-5",
+      "wording_sha256": "32f967a72993b655972fd57a1f803105f6d4dacc927c5e09876eb431204f7f54",
+      "text_sha256": "9a6c4e60da10cd2e8d566679e411411255f9c2999d460aa6e1bf7824664ba85f",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 40
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-taalbeschouwing-1",
+      "wording_sha256": "a8be3f770262c4469e4faa4fa2a67893dc176b0936d9c00fa6c01685a637c314",
+      "text_sha256": "9a6c498a24efb1efe0a2c17e5b78be0f33bcd22cff04eaf0219ef1f007a487d5",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 609
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-taalbeschouwing-2",
+      "wording_sha256": "e38dd3b7119ddf76fe99748ae0fd533c6414a06e86085eee2f0bfca802cd2d7a",
+      "text_sha256": "db942fe778f13f79b9fc9cdc873e02839eeb7bf096a4dbca2f0bba5fbec11cf8",
+      "verdict": "confirmed",
+      "note": "Limits says the statement \"does not mention speaking more than one language\"; true of the words, though for a child with two languages that falls inside \"het eigen taalgebruik\".",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 616
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-taalbeschouwing-2",
+      "wording_sha256": "e38dd3b7119ddf76fe99748ae0fd533c6414a06e86085eee2f0bfca802cd2d7a",
+      "text_sha256": "85accd461b8dbcd320a1486afb71d122b5529c29e8fae7dc77a89790788258af",
+      "verdict": "confirmed",
+      "note": "Round 2. Wording and position equal the card on the rendered page (second of the three bullets that stand directly under the bar Taalbeschouwing). The round 1 remark is met: the sentence \"It does not mention speaking more than one language\" is gone, so Limits no longer sets apart something that falls inside \"het eigen taalgebruik\".",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 616
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-taalbeschouwing-3",
+      "wording_sha256": "5fbc62d0f424bec9b6835007f96c61bc2d1478d05702762cd4574b2de104d461",
+      "text_sha256": "4be33900e9a1aee33565303ac4fa19bc44049dc0c87a0624bf6eeffc82f3d18a",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 622
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/reading-language",
+      "round": 1
+    }
+  ],
+  "unrecorded": []
+}

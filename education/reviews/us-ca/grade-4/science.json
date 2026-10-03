@@ -1,0 +1,252 @@
+{
+  "lane": "us-ca/grade-4/science",
+  "verdicts": [
+    {
+      "id": "edu.us-ca.grade-4.science.objective.4-ess1-1",
+      "wording_sha256": "9a2786ada5a627e23c0f69734e0d85b667bec676c9553f618cb06a27b40af957",
+      "text_sha256": "f4a035c11a0b969814181431e744c2c7c09994449839b949adfa856a800b04f6",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "A real difference between two official renditions; the record follows its canonical source, the export. Three differences on PDF page 3. (1) Expectation sentence: the PDF prints words six to ten of the export's sentence twice in a row, and before the purpose clause it inserts the same seven-word phrase that also ends the sentence; the PDF sentence is twelve words longer and reads like an editing slip, the export's is the clean one. (2) Clarification: the export has one adjective before the first mention of the fossils of the upper layers (saying they come from the sea) that the PDF lacks. (3) Clarification: after the first example the PDF goes on, after a semicolon, with a second example that the export lacks altogether: a canyon with layered walls and a river at the bottom, as a sign of a river cutting down over time. The assessment boundary is equal. No double asterisk: the flag false is right. Code equal. The Summary and Limits are faithful to the export and so give only the one example.",
+      "rendition": "us-ca-cde-ngss-grade4-dci-pdf",
+      "place": {
+        "page": 3
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/grade-4/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.science.objective.4-ess1-1",
+      "wording_sha256": "9a2786ada5a627e23c0f69734e0d85b667bec676c9553f618cb06a27b40af957",
+      "text_sha256": "f13da4ec4320762eafa27e2660d5f58a09a72d1bf0cd2bcd1d2d6087df3fcb55",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "Round 2. A real difference between two official renditions, which the fix round leaves as it is; the record follows its canonical source, the export. Three differences on PDF page 3. (1) Expectation sentence: the PDF prints words six to ten of the export's sentence twice in a row, and before the purpose clause it inserts the same seven-word phrase that also ends the sentence, so the PDF sentence is twelve words longer and adds no content. (2) Clarification: the export has one adjective before the first mention of the fossils of the upper layers (that they are of the sea) that the PDF lacks. (3) Clarification: after the first example the PDF goes on, after a semicolon, with a second example that the export lacks. The assessment boundary is equal, there is no double asterisk (the flag false is right), and the code is equal. The sentence added to Limits describes difference (3) and is true against the page image, in the pack's own words, with the example kept as an example: a canyon with a river at the bottom and walls showing different rock layers, as a sign that the river went down through the rock. One word in it is the pack's: it says this took a long time, where the document's example says only that it happened over time. The added sentence does not mention differences (1) and (2); it does not claim to list every difference, and neither changes what a designer would take from the record. The Summary is faithful to the export and gives the one example the export has.",
+      "rendition": "us-ca-cde-ngss-grade4-dci-pdf",
+      "place": {
+        "page": 3
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/grade-4/science, round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-4.science.objective.4-ess2-1",
+      "wording_sha256": "5cd34215de7d07491b6285a5169854c2729a8ea93a51e7934837a8a5db9f8f94",
+      "text_sha256": "6726d1b4e16ab4e942ca262856564b6577c6df1bb61c7a577c0b78fce7574f3a",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ngss-grade4-dci-pdf",
+      "place": {
+        "page": 5,
+        "offset": 16
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.science.objective.4-ess2-2",
+      "wording_sha256": "f0cc4f5121ab68e51dd82630ee9da5f4172a69dd941a3ff4ca4b71badda866f0",
+      "text_sha256": "0b30c97365ce2893f3800334a24f71d9a9e166151a7aaa743e11a99e05489cbe",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ngss-grade4-dci-pdf",
+      "place": {
+        "page": 5,
+        "offset": 103
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.science.objective.4-ess3-1",
+      "wording_sha256": "d7437e1b69c34ce4118254ca5d2706f4651c1ab967cd35247ff3c9094a1fd39a",
+      "text_sha256": "6b8cb3d0417c763f9577b0aa461414489ef897436c91a57843e7350bea4e43ff",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "A real difference between two official renditions; the record follows its canonical source, the export. In the expectation sentence the export has one more word than the PDF (page 7): a second subordinating conjunction directly after the conjunction that joins the two things to be described. The meaning is the same. The clarification is equal. No double asterisk: the flag false is right. Code equal. Summary and Limits state the export's version faithfully.",
+      "rendition": "us-ca-cde-ngss-grade4-dci-pdf",
+      "place": {
+        "page": 7
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/grade-4/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.science.objective.4-ess3-2",
+      "wording_sha256": "2f69efa5d9b3a8ec938ac8ca3d7ca70452536e24acf6ba30685cf5e0d5f2475f",
+      "text_sha256": "dc1aacb75b8bb5f8adbe46686daa79d2811c3ac0dd0dd6f721d2d2923c8e9ecf",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ngss-grade4-dci-pdf",
+      "place": {
+        "page": 7,
+        "offset": 98
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.science.objective.4-ls1-1",
+      "wording_sha256": "d41fd4e7dc1e980af8b1f6cf16d542560860fc3c4102245f8efb0edea3ee367a",
+      "text_sha256": "2932cc969ac85f68697862037e5474f48da2a5e5cba24e362ae68cd7454a1b3f",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "A real difference between two official renditions; the record follows its canonical source, the export. The PDF (page 1) has one more sentence at the end of the clarification, after the list of example structures and before the assessment boundary. It is marked with a double asterisk as a California clarification and says that every structure has its own functions inside the system it belongs to. The export lacks the sentence itself, not only the mark. So california_addition: true agrees with the PDF, but the California text is in neither the record's wording nor its Summary. Everything else is equal. Code equal. Summary and Limits are faithful to the export.",
+      "rendition": "us-ca-cde-ngss-grade4-dci-pdf",
+      "place": {
+        "page": 1
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/grade-4/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.science.objective.4-ls1-1",
+      "wording_sha256": "d41fd4e7dc1e980af8b1f6cf16d542560860fc3c4102245f8efb0edea3ee367a",
+      "text_sha256": "b279ff927be75f3e6dcb72413d10fce4f822bd4f4755f6544ef8689e6e7e72df",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "Round 2. A real difference between two official renditions, which the fix round leaves as it is; the record follows its canonical source, the export. The PDF (page 1) has one more sentence at the end of the clarification, after the list of example structures and before the assessment boundary, marked with a double asterisk as California's own. The export lacks the sentence itself, not only the mark, so the record's wording does not hold it. Everything else is equal: the expectation sentence, the nine example structures, the assessment boundary and the code. The flag california_addition: true agrees with the PDF. The two sentences added to Limits are true against the page image and in the pack's own words: they say California adds a closing sentence to the clarification, that the grade 4 document prints and marks it and the export lacks it, and that it is about function (a structure has particular functions inside the system it belongs to). That is what the marked sentence says, no more. The Summary is faithful to the export and keeps the named structures as examples.",
+      "rendition": "us-ca-cde-ngss-grade4-dci-pdf",
+      "place": {
+        "page": 1
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/grade-4/science, round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-4.science.objective.4-ls1-2",
+      "wording_sha256": "65288960dc734eb737352f2fcf7d341e3b398888d21df6d744eb7cf5dc225639",
+      "text_sha256": "9821e4b803663138993dba4c7aa616a3013df35355ccaf827164c5bbcd07a421",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ngss-grade4-dci-pdf",
+      "place": {
+        "page": 1,
+        "offset": 187
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.science.objective.4-ps3-1",
+      "wording_sha256": "43e346c20ed521a9440d07576781bd38dfdc8a30051422c40604cf1128e685ee",
+      "text_sha256": "bdeb3a4263531a577473600607c7318a5a8ea9693c5f0ac7b1dda592b161b2d3",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "A real difference between two official renditions; the record follows its canonical source, the export. The PDF (page 9) has a clarification statement between the expectation sentence and the assessment boundary; the export has none. The whole statement is marked with a double asterisk as California's own. It gives examples of evidence that links speed and energy: how something changes shape when hit, or other outcomes of collisions. The expectation sentence and the assessment boundary are equal. So california_addition: true agrees with the PDF, but the California clarification is in neither the record's wording nor its Summary. Code equal. Summary and Limits are faithful to the export.",
+      "rendition": "us-ca-cde-ngss-grade4-dci-pdf",
+      "place": {
+        "page": 9
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/grade-4/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.science.objective.4-ps3-1",
+      "wording_sha256": "43e346c20ed521a9440d07576781bd38dfdc8a30051422c40604cf1128e685ee",
+      "text_sha256": "dbe94d235f9ada789428a67bb1f08989c36366267133c093ad30f6cbc6a7928a",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "Round 2. A real difference between two official renditions, which the fix round leaves as it is; the record follows its canonical source, the export. The PDF (page 9) has a clarification statement between the expectation sentence and the assessment boundary, the whole of it marked with a double asterisk as California's own; the export has no clarification, so the record's wording does not hold it. The expectation sentence, the assessment boundary and the code are equal. The flag california_addition: true agrees with the PDF. The two sentences added to Limits are true against the page image and in the pack's own words: they say California adds a clarification, that the grade 4 document prints and marks it and the export has none, and that its examples of evidence for the link between speed and energy are outcomes of collisions, the way a thing is deformed when hit among them. The examples are kept as examples. One point of form: the second added sentence opens with a pronoun that follows directly on the mention of the export; it means the clarification's examples, and a reader has to work that out. The Summary is faithful to the export.",
+      "rendition": "us-ca-cde-ngss-grade4-dci-pdf",
+      "place": {
+        "page": 9
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/grade-4/science, round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-4.science.objective.4-ps3-2",
+      "wording_sha256": "fcbef215f0e044c3c66795386d5f7ae1da06360049c1c7b40e13e0ac622c2d54",
+      "text_sha256": "0027ae3548346d27e89c86a7ec8eff620fd7a60cc4f3c9fd356cc7a5be2af240",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ngss-grade4-dci-pdf",
+      "place": {
+        "page": 9,
+        "offset": 81
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.science.objective.4-ps3-3",
+      "wording_sha256": "bbdd342581427f60d69193165f981ef6d560a1d525201f50ddb7697d203b07d6",
+      "text_sha256": "42862c79581b58c08ff85279b6513a72eb6981198935f647005e5467aa4ec498",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ngss-grade4-dci-pdf",
+      "place": {
+        "page": 9,
+        "offset": 116
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.science.objective.4-ps3-4",
+      "wording_sha256": "a6cd62281a494c9f9e09c9c4241080cdf530c2fa12cab847d57f4a990d17d18b",
+      "text_sha256": "112c5740c83d46919e9c8022b4e3985903a45cc611819bca51d3b70484767bd0",
+      "verdict": "confirmed",
+      "note": "The export has a comma after the conjunction that follows the semicolon in the clarification; the PDF has none. Punctuation only.",
+      "rendition": "us-ca-cde-ngss-grade4-dci-pdf",
+      "place": {
+        "page": 9,
+        "offset": 168
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.science.objective.4-ps4-1",
+      "wording_sha256": "358d10729826a4fd505f1e94c09a526485218b96a102bad2ee8bdfa108032a40",
+      "text_sha256": "591920c1e5555ef429b4cd06188e39cb10216f5d543b93a4752b9fef72199c30",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ngss-grade4-dci-pdf",
+      "place": {
+        "page": 12,
+        "offset": 30
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.science.objective.4-ps4-2",
+      "wording_sha256": "d2755c885d80804fa9b7db51ec55038a651f1aa2ead66d4ad527b8bee774a1e0",
+      "text_sha256": "468ed22c277e1c9341d4c79d4f653cd19d115df64c814633daae3428dd935309",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ngss-grade4-dci-pdf",
+      "place": {
+        "page": 12,
+        "offset": 97
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.science.objective.4-ps4-3",
+      "wording_sha256": "bfa2dbebb59b8a2b1e61b2074a54d7c3bedc1961d8ecc1d1265e48b2ab7e722d",
+      "text_sha256": "f4c2c06eef3d62ebfb4c8f6f7d9cb481ff903d5b78c60ec8997145fa6c9dde8b",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ngss-grade4-dci-pdf",
+      "place": {
+        "page": 12,
+        "offset": 142
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/science",
+      "round": 1
+    }
+  ],
+  "unrecorded": []
+}

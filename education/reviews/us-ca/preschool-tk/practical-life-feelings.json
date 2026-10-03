@@ -1,0 +1,839 @@
+{
+  "lane": "us-ca/preschool-tk/practical-life-feelings",
+  "verdicts": [
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.approaches-to-learning-strand-1-0-motivation-to-learn-1-1",
+      "wording_sha256": "6796a5d887ddfaa9349671331fa669686e951744110f5ef764aa82f736cdade0",
+      "text_sha256": "5f0911c56174314cf3e05c1c70346087f2853a8745571cdf5cc8d4179e02d172",
+      "verdict": "confirmed",
+      "note": "Remark, not a fault: the later statement repeats the qualifier that the things of interest are both known and new; the Summary gives it at the earlier age only. It restricts nothing. The domain PDF (page 18) prints a commentary paragraph under the two boxes, outside both, about cultural differences in how curiosity shows; it is not part of either statement and the record rightly leaves it out.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 4,
+        "offset": 44
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.approaches-to-learning-strand-1-0-motivation-to-learn-1-2",
+      "wording_sha256": "a6098bf6528753ade23a1e7ca12c239dc58cd85c5f46062f55badbeffd7aa9a6",
+      "text_sha256": "5ce77e71ec4f967051e7eb119294fa49dbdd75fe2fd4b9738f409f63f6708cae",
+      "verdict": "confirmed",
+      "note": "Remark, not a fault: the Summary calls the example activity a \"pretend-play\" scene; the statements speak of play scenes without saying what kind. It is an example in both and Limits says so. The domain PDF (page 22) prints a commentary paragraph under the two boxes, outside both, about cultural differences in how initiative shows; it is not part of either statement and the record rightly leaves it out.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 4,
+        "offset": 124
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.approaches-to-learning-strand-1-0-motivation-to-learn-1-3",
+      "wording_sha256": "d7d658799355d8626c11257562ed202b4a7724edf3c445f54082659dbf579a39",
+      "text_sha256": "7374015957388dc50d9352e1c70e9b753fe67706d04ef373b291e387a53dfbb1",
+      "verdict": "confirmed",
+      "note": "The domain PDF (page 25) prints a commentary paragraph under the two boxes, outside both, that gives a general range of minutes of engagement for each age range and names what the level of engagement depends on. It is not part of either statement, the At-a-Glance PDF does not print it, and the record rightly leaves it out. Limits says the statements give no length of time in minutes, which is true of the statements; a designer would still want to know that the official document gives such ranges just under them.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 4,
+        "offset": 194
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.approaches-to-learning-strand-1-0-motivation-to-learn-1-3",
+      "wording_sha256": "d7d658799355d8626c11257562ed202b4a7724edf3c445f54082659dbf579a39",
+      "text_sha256": "07447fdb395bdcc2d098f39fe1e82fe9aa87b7cdfa220ecc89b92e4f8edebd23",
+      "verdict": "confirmed",
+      "note": "Round 2. Round 1 confirmed this record; the fix added one sentence to Limits about the commentary the domain PDF prints inside the foundation's panel, under the two age boxes (page 25, printed 24). Read on the page image: the sentence is true to it. Both ranges of minutes equal the page (3 to 12 at the earlier age, 8 to 20 at the later age), the four things the page names as bearing on engagement are all there, and nothing is added. It is the pack's own words: no shared run longer than two words, and about half of the page sentence's words in order. Two small remarks, not faults: the page gives the later range as an upper reach with no second word for approximately, where the sentence has both \"up to\" and \"roughly\"; and the page says it is the child's level of engagement that depends on those four things, which the sentence gives as how long the child stays. The Summary is unchanged and faithful: a short while against longer, adult support at both ages and less of it at the later. Wording, code and title equal the At-a-Glance PDF (page 4); each age box holds exactly the stored statement.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 4,
+        "offset": 194
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.approaches-to-learning-strand-1-0-motivation-to-learn-1-4",
+      "wording_sha256": "1aee5db2928a030f9b022ffe001343705c233a668226651ab002b93c22313fe7",
+      "text_sha256": "b9a3a671cc26a08610efd6236ee63a9e877b22633b0cee5130f16b674cc559e6",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 5,
+        "offset": 33
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.approaches-to-learning-strand-2-0-executive-functioning-2-1",
+      "wording_sha256": "ecbcc587c7e6a022037fb1f40a7d61ec4d698aa5dd8823c12b442002b012c34d",
+      "text_sha256": "30e7580f44965f7b4144718489aaa14ed4518393ca626442b1212cbdcd3cd634",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Scope of a condition changed at the earlier age. The official earlier statement is one sentence and names adult support once, at its very end after a comma, so the support stands with the whole of it: keeping the pieces of information in mind and using them. The Summary moves the support inside the second half only (\"and, with adult support, act on them\"), so keeping one or two pieces in mind now reads as something the child does unsupported. The Summary's own later-age sentence leaves the support at the end, as the official later statement does, and In a child's hands shows an adult helping the child to keep the information (repeating part of an instruction), which fits the official reading and not the Summary's. Put the earlier-age support back where it covers both actions. Limits (\"Adult support is part of both statements\") is right as it stands. Wording and code match the At-a-Glance PDF, and in both documents each age box holds exactly the stored statement. (At-a-Glance page 5; domain PDF page 32.)",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 5,
+        "offset": 143
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.approaches-to-learning-strand-2-0-executive-functioning-2-1",
+      "wording_sha256": "ecbcc587c7e6a022037fb1f40a7d61ec4d698aa5dd8823c12b442002b012c34d",
+      "text_sha256": "27ffaa802b259cdbe38e8ed15d23ea9e9843bfbc405e4c6002c2195a04d4d95c",
+      "verdict": "confirmed",
+      "note": "Round 2. The fix resolved the first verdict's reason: the earlier-age sentence now puts adult support in front of both actions (keeping the pieces of information in mind, and acting on them), which is what the statement's closing condition covers. Every condition is kept at both ages: the two approximate amounts, a short time against longer, tasks and play against tasks of several steps and more complex play, support against less support. Limits is right. Near copy looked at and not found: about half of each statement's words survive in order. The later-age sentence does end on a run of seven words shared with the statement (its closing phrase about play and support), one short of what the automated check rejects. Wording, code and title equal the At-a-Glance PDF (page 5; domain PDF page 32); each age box holds exactly the stored statement, and nothing is printed under the boxes on the domain page.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 5,
+        "offset": 143
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.approaches-to-learning-strand-2-0-executive-functioning-2-2",
+      "wording_sha256": "6c110e6a38933bcdbcdd5917de34292ac671bb6be0ad4716d8d105c56f2339a3",
+      "text_sha256": "b746ac655f36e8c0c3a405e797a22338d9a5170a06307c528948152f9660bb7e",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 5,
+        "offset": 233
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.approaches-to-learning-strand-2-0-executive-functioning-2-3",
+      "wording_sha256": "07c5fb78d41d188eedca44da6a69b8f9b7ff147130c3bd4f00c313d6df91c09e",
+      "text_sha256": "e8bb6ac97c6e86826240157fc1fe43e9a4b0c9831d88c84d985c695d3e4f2ab0",
+      "verdict": "confirmed",
+      "note": "The domain PDF (page 36) prints a commentary paragraph under the two boxes, outside both, about younger and older children managing attention for shorter and longer periods; it gives no numbers, is not part of either statement, and the record rightly leaves it out.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 6,
+        "offset": 31
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.approaches-to-learning-strand-2-0-executive-functioning-2-4",
+      "wording_sha256": "1d46cc57876fa4bb11c7301ac9e31d464a14dae2df8b08c6bacc41571bcc0f23",
+      "text_sha256": "b4835063f6b9346ce95e955451e269619035f1e745ccec1dd17e3136efb0cbf1",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 6,
+        "offset": 94
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.approaches-to-learning-strand-3-0-goal-directed-learning-3-1",
+      "wording_sha256": "c183046ca4bda7cd22d94ac968b67cede2dbae9c5cad4dc84c493e4ebe858569",
+      "text_sha256": "5caa0e9e160b4cd573647f10b7c0c474fb334f300c0e85a96d0e2e5a43c22003",
+      "verdict": "confirmed",
+      "note": "Both corrections verified on the page image of the domain PDF (page 42): each statement breaks its line right after the hanging hyphen of the first number word, and the corrections restore that hyphen and the space after it. The At-a-Glance PDF (page 6) prints the same hanging hyphen within a line. The script's match is tolerant because the At-a-Glance PDF breaks the following hyphenated compound at a line end; that hyphen is the compound's own and the stored wording has it.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 6,
+        "offset": 153
+      },
+      "matched_by": "script",
+      "corrections_verified": true,
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.approaches-to-learning-strand-3-0-goal-directed-learning-3-2",
+      "wording_sha256": "ec710b3281ab1df6f8c0ebdecae989e7e599b2da9b823bacfaa3c5085f10a24a",
+      "text_sha256": "c58ca2103ecab8ef6a8bd7824b5c0235b6b0ccd2ca421701326e7a79d0838d6a",
+      "verdict": "confirmed",
+      "note": "Both corrections verified on the page image of the domain PDF (page 44): in each statement the first line ends on the hyphen of the hyphenated compound and the corrections restore it. The At-a-Glance PDF (page 6) prints the compound with its hyphen within a line in both statements.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 6,
+        "offset": 214
+      },
+      "matched_by": "script",
+      "corrections_verified": true,
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.approaches-to-learning-strand-3-0-goal-directed-learning-3-3",
+      "wording_sha256": "5579ded8030489cc56187c39fe8f62e40b944fadb1a8b495cfa73e1cc700486a",
+      "text_sha256": "98f66e1d205cbf9d9b2acd89e58ca4c5b14f7dc4058007923ed73a49b3d2f9ff",
+      "verdict": "confirmed",
+      "note": "The correction verified on the page image of the domain PDF (page 46): the Early statement's first line ends on the hyphen of the hyphenated compound and the correction restores it; the Later statement prints the compound whole and needs none. The At-a-Glance PDF (page 7) prints it with its hyphen within a line in the Early statement and breaks it at a line end in the Later statement, hence the tolerant match. Remark, not a fault: the Summary and Limits say children \"talk\" with one another about solving the problem, where the later statement uses the framework's general verb for communicating, which is not tied to speech.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 7,
+        "offset": 34
+      },
+      "matched_by": "script",
+      "corrections_verified": true,
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.approaches-to-learning-strand-3-0-goal-directed-learning-3-3",
+      "wording_sha256": "5579ded8030489cc56187c39fe8f62e40b944fadb1a8b495cfa73e1cc700486a",
+      "text_sha256": "ae2388c6bcf81093ca3a300bdb714eaa4df725965f3caecb4c89b8fc99fc9ee0",
+      "verdict": "confirmed",
+      "note": "Round 2. Round 1 confirmed this record with a remark on a speech verb; the fix replaced it. The Summary and Limits now use the statement's own general verb for what children do with one another about solving a problem; no mode is added, and helping a child who needs it is kept. The later-age sentence does not repeat the two settings; it speaks of \"the joint problem-solving\" of the sentence before, which names both. Limits is right that neither statement mentions adult support or a group size, and that no measured length of time is given. Not a near copy: under half of each statement's words in order, no shared run longer than two. Correction verified on the page image of the domain PDF (page 46, printed 45): the Early statement's first line ends on the hyphen of the hyphenated compound and the correction restores it; the Later statement prints the compound whole and needs none. The At-a-Glance PDF (page 7) prints the compound within a line in the Early statement and breaks it at a line end in the Later statement, hence the tolerant match. Wording, code and title equal the At-a-Glance PDF (page 7); each age box holds exactly the stored statement.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 7,
+        "offset": 34
+      },
+      "matched_by": "script",
+      "corrections_verified": true,
+      "checker": "us-ca/preschool-tk/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.approaches-to-learning-strand-3-0-goal-directed-learning-3-4",
+      "wording_sha256": "cc6d62680338b87460f9cc876ec71b4d905fd10c1b65f9e870118c06a4ad0d5d",
+      "text_sha256": "f91b03473c4f428021cf850a939c054fbe8373924620c2e70dae102b7f681ee9",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 7,
+        "offset": 96
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.health-strand-1-0-understanding-health-and-wellness-1-1",
+      "wording_sha256": "955fee9e3ba34ed327524efc061257ff2d73ba2935e0b94f9c75c5a761001b83",
+      "text_sha256": "aaaa9aa70c4849eb0b711bd4f48d7d9d5d8a0cd82d2f9656debb7612fcde385b",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 49,
+        "offset": 44
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.health-strand-1-0-understanding-health-and-wellness-1-2",
+      "wording_sha256": "aadce19f36b1aaa3e913ab7ff59c6bd7e7d520e3c96fe2162ed8f439227b408a",
+      "text_sha256": "b9d1d8a93b671e3c88c514d713b10c7178f4e55117001edd87f8a39380f9ae89",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 49,
+        "offset": 129
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.health-strand-1-0-understanding-health-and-wellness-1-2",
+      "wording_sha256": "aadce19f36b1aaa3e913ab7ff59c6bd7e7d520e3c96fe2162ed8f439227b408a",
+      "text_sha256": "0fd7caa06e50c64a9a53f009b5bdeac0531c14ddc53b7fb19f7d1bcc1f58d23f",
+      "verdict": "confirmed",
+      "note": "Round 2. Round 1 confirmed this record; the fix replaced speech verbs. The Summary now says children let an adult know (both ages) and identify something that would help (later age), and Limits follows: mode-neutral, with the adult kept as the one the message goes to. The three things communicated about, the varying exactness and accuracy at the earlier age, and consistency plus a solution at the later age are all kept; nothing is added. Not a near copy. Remark, not a fault: the second item of Common mistakes counts a child who shows discomfort without speaking as falling short, while the statement's verb is not tied to speech (the examples under this foundation in the domain PDF, page 15, include a gesture and signing). Wording, code and title equal the At-a-Glance PDF (page 49); each age box holds exactly the stored statement.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 49,
+        "offset": 129
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.health-strand-1-0-understanding-health-and-wellness-1-3",
+      "wording_sha256": "c26634e31254ae6d99c814135ed62cb97d54938060c999de4e7f5a3a0329e934",
+      "text_sha256": "73d4d84be022eff54493d65501dc2a4af996f62679ef74040fc360532d29019e",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 49,
+        "offset": 192
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.health-strand-1-0-understanding-health-and-wellness-1-4",
+      "wording_sha256": "0c8cad81cbfa882b70c5b698b85319394f5a1469b7e23d86f4a8b6b7b040509d",
+      "text_sha256": "1fa6413eeda059e74ad84131bf9cc054189e595feb899e65e4b6e4c4e9e5ba7c",
+      "verdict": "confirmed",
+      "note": "The domain PDF (page 17) prints a commentary sentence under the two boxes, outside both, that defines a term used among the examples the statements give of touches a child does not want. It is not part of either statement, the At-a-Glance PDF does not print it, and the record rightly leaves it out; a designer working on this foundation would want it. Remark, not a fault: the Summary says children \"talk about\" body boundaries at both ages, where the statements use the framework's general verb for communicating, which is not tied to speech (In a child's hands includes stepping back).",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 50,
+        "offset": 37
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.health-strand-1-0-understanding-health-and-wellness-1-4",
+      "wording_sha256": "0c8cad81cbfa882b70c5b698b85319394f5a1469b7e23d86f4a8b6b7b040509d",
+      "text_sha256": "d072c9df99c55909ceeb39141e83187e237140f82d85dd87997fe26ca5a982a6",
+      "verdict": "confirmed",
+      "note": "Round 2. Round 1 confirmed this record; the fix replaced the speech verb and added one sentence to Limits. (1) The Summary and Limits now use the statement's general verb for communicating at both ages. Adult support stands in front of recognising and communicating at the earlier age and is absent at the later age, as in the statements; following trusted adults' guidance is kept at both ages with its two later-age adverbs; the touches stay examples. Not a near copy: about a third of the earlier statement's words in order, no shared run longer than three. (2) The added sentence reports the commentary the domain PDF prints inside the panel under the two age boxes (page 17, printed 16), which says what the last of the statement's examples of unwanted touch takes in. Read on the page image: the sentence is true to it (how the touch leaves the child, and the three purposes it does not serve) and adds nothing; it leaves out the citation the page gives. It is the pack's own words: no shared run longer than three words, about half of the page sentence's words in order. Remark, not a fault: the Summary gives the first example of a wanted touch as coming from a friend, where the statement has its general word for another child; it is an example and sets no limit. Wording, code and title equal the At-a-Glance PDF (page 50); each age box holds exactly the stored statement.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 50,
+        "offset": 37
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.health-strand-1-0-understanding-health-and-wellness-1-5",
+      "wording_sha256": "f51fa2b82eaf1b0ccb1761d648c874a971cbcbb46f3eab1e02e66cf808fd8862",
+      "text_sha256": "589aa3878ae962308b5494051812937ee9f50ac5aa19c9cf8558dc60ca8a5e96",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Amount overstated at the later age. The later statement says only that the variety of foods is larger than at the earlier age; the Summary makes it \"many more kinds of food\". The amount is the one thing this foundation grades by age (a small number at the earlier age), and the official text gives nothing that supports \"many\". Say a larger or wider variety. Limits and \"What changes with age\" already say only \"more foods\" and need no change. Wording and code match the At-a-Glance PDF, and in both documents each age box holds exactly the stored statement. (At-a-Glance page 50; domain PDF page 19.)",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 50,
+        "offset": 144
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.health-strand-1-0-understanding-health-and-wellness-1-5",
+      "wording_sha256": "f51fa2b82eaf1b0ccb1761d648c874a971cbcbb46f3eab1e02e66cf808fd8862",
+      "text_sha256": "1f3df1a6873c62aefe6630df0310f176195999432db7adf1af7f4a119c0f389e",
+      "verdict": "confirmed",
+      "note": "Round 2. The fix resolved the first verdict's reason: the later age now speaks of a wider variety and no longer of many more kinds, so nothing in the Summary goes beyond the statement's comparative. The earlier age keeps the small number and the particular foods; the later age keeps knowing some of the groups the foods belong to. The Summary's verbs (telling which food is which; recognising) do not require the name of the food. Limits is right. Near copy looked at and not found: the later-age sentence shares about two thirds of the short later statement's words in order, because its second half can hardly be said otherwise; the first half is recast. Wording, code and title equal the At-a-Glance PDF (page 50; domain PDF page 19); each age box holds exactly the stored statement, and nothing is printed under the boxes on the domain page.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 50,
+        "offset": 144
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.health-strand-1-0-understanding-health-and-wellness-1-6",
+      "wording_sha256": "3f7c6b0b2d764b5e959f6abbe8f0b97f27cd54950e2060d3e514bf6adf9f9333",
+      "text_sha256": "676b5c4d84d209ea20c478f767423cbb449073bc4806adf6db64ec2b40934616",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 50,
+        "offset": 182
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.health-strand-1-0-understanding-health-and-wellness-1-6",
+      "wording_sha256": "3f7c6b0b2d764b5e959f6abbe8f0b97f27cd54950e2060d3e514bf6adf9f9333",
+      "text_sha256": "09a39df002b8d1e497014e93715427d05c4cd0491ab4e464859fa0ab9b004586",
+      "verdict": "confirmed",
+      "note": "Round 2. Round 1 confirmed this record; the fix replaced speech verbs. The Summary and Limits now say children let an adult know about being hungry and being full: mode-neutral, with the adult kept. The ability that is only beginning at the earlier age, more consistency at the later age, expecting the mealtime routines at both ages, and a short wait against a somewhat longer one are all kept; nothing is added. Limits is right that no waiting time is given. Not a near copy. Wording, code and title equal the At-a-Glance PDF (page 50; domain PDF page 20); each age box holds exactly the stored statement.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 50,
+        "offset": 182
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.health-strand-1-0-understanding-health-and-wellness-1-7",
+      "wording_sha256": "3b4020c67a30a5b4cd3e77c55064e169234be9831584e66d0807264a22cee8c6",
+      "text_sha256": "a61cd817ec2e1ace4e2a77b390b0fb28f25299b357e2e358d8e064585fdf3cec",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 51,
+        "offset": 30
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.health-strand-1-0-understanding-health-and-wellness-1-8",
+      "wording_sha256": "130661cc9540980ac7ded1295121ddbaf796742a9fc4b054f0d03a7331c1dfa4",
+      "text_sha256": "b0be72d838bc361c8ceec691043f85a51641328a83f1b67c44da5169bc69d540",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 51,
+        "offset": 118
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.health-strand-1-0-understanding-health-and-wellness-1-9",
+      "wording_sha256": "937b5fbf5a368beb88f7262480f8b62b607ed5e0b63c346a4faf41a928a9ebed",
+      "text_sha256": "b99dfe9cef4dd6241f5518ec8ca0483bec1eab04105a3ab0b66ca5b7453ca0e1",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 51,
+        "offset": 218
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.health-strand-2-0-health-and-safety-habits-2-1",
+      "wording_sha256": "433f323ec2d7af4e6a07bc37f64d34551e8a1d944229db07e637aef02f4646c5",
+      "text_sha256": "ce461e0e9c61d508cc28ccc0763c5ff549c6b87ad7b1ca806ddf4968e5f85261",
+      "verdict": "confirmed",
+      "note": "The domain PDF (page 25) prints a commentary sentence under the two boxes, outside both, that lists the steps of the routine and a time in seconds for one of them, with its source. It is not part of either statement, the At-a-Glance PDF does not print it, and the record rightly leaves it out. Limits says the statements do not list the steps or give a washing time, which is true of the statements; a designer would still want to know that the official document lists both just under them.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 52,
+        "offset": 37
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.health-strand-2-0-health-and-safety-habits-2-1",
+      "wording_sha256": "433f323ec2d7af4e6a07bc37f64d34551e8a1d944229db07e637aef02f4646c5",
+      "text_sha256": "5dbed0125679bcb8f03d9d56fb96cd3f4c2ca4a6912f7f5e41cdd44e1252ec58",
+      "verdict": "confirmed",
+      "note": "Round 2. Round 1 confirmed this record; the fix added one sentence to Limits about the commentary the domain PDF prints inside the panel under the two age boxes (page 25, printed 24). Read on the page image: the sentence gives all eight actions the page lists, in the page's order, the one time the page gives (20 seconds, for the lathering) and the programme the page says its list is adapted from. Nothing is added. It is the pack's own words: recast into clauses of its own, no shared run longer than five words (the phrase for one side of the hand), about half of the page sentence's words in order. Remark, not a fault: the sentence says what the routine \"consists of\", where the page introduces its list with a verb that does not claim the list is complete. The Summary is unchanged and faithful: part of the sequence at the earlier age, most or all of the steps at the later. Wording, code and title equal the At-a-Glance PDF (page 52); each age box holds exactly the stored statement.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 52,
+        "offset": 37
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.health-strand-2-0-health-and-safety-habits-2-2",
+      "wording_sha256": "9591e2725e7f688c490bd6d8c0ae7c97c6a1d1876b141a6a3f73c81bd0352834",
+      "text_sha256": "b26611faac15deaa9dbf7c83565b48e76dd00d36a41ce9d12d00418f54467a81",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 52,
+        "offset": 75
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.health-strand-2-0-health-and-safety-habits-2-3",
+      "wording_sha256": "a632096966077716f948ed827542a866c49b5ed352ec844e8fb9f1da8729d1ff",
+      "text_sha256": "ae1e7a3869fd19b708d109e8774975d274d7983e756ba52f66f79d143da5f4e9",
+      "verdict": "confirmed",
+      "note": "The domain PDF (page 27) prints a commentary sentence under the two boxes, outside both, that describes the procedure and a brushing time in minutes, with its source. It is not part of either statement, the At-a-Glance PDF does not print it, and the record rightly leaves it out. Limits says the statements do not list the steps or a brushing time, which is true of the statements; a designer would still want to know that the official document gives both just under them.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 52,
+        "offset": 130
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.health-strand-2-0-health-and-safety-habits-2-3",
+      "wording_sha256": "a632096966077716f948ed827542a866c49b5ed352ec844e8fb9f1da8729d1ff",
+      "text_sha256": "7a768d80540af5b5415cf740efab80e54f32cf9be68e1b3b9cb9d5396fc1bf74",
+      "verdict": "confirmed",
+      "note": "Round 2. Round 1 confirmed this record; the fix added one sentence to Limits about the commentary the domain PDF prints inside the panel under the two age boxes (page 27, printed 26). Read on the page image: the sentence is true to it: the kind of brush, the kind and amount of paste, the three surfaces of the teeth, the brushing time (two minutes, equal to the page) and the programme the page says its description is adapted from. Nothing is added. It is the pack's own words: reordered, no shared run longer than four words. The Summary is unchanged and faithful: knowing and following some steps while an adult supervises and instructs; at the later age more steps, knowing when teeth are to be brushed, and limited supervision and instruction. Limits is right that the statement does not say which times. Wording, code and title equal the At-a-Glance PDF (page 52); each age box holds exactly the stored statement.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 52,
+        "offset": 130
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.health-strand-2-0-health-and-safety-habits-2-4",
+      "wording_sha256": "fc83144874d2cbcfaadef9954e9cc3ad12d27d01eebe1172f5afede767b80664",
+      "text_sha256": "12cadecd3d6713c91f0ac0f40a6e1140a7181749794c920b321d5211d5da2ab3",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 52,
+        "offset": 192
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.health-strand-2-0-health-and-safety-habits-2-5",
+      "wording_sha256": "aa7f7542343ac318ec8ff131cd15100515e4280d5666a8e275d923d90536d6ee",
+      "text_sha256": "e0a36f680bdeacd31e48a53512dde58478d7b47c1d474a392b67b75b6e191143",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 53,
+        "offset": 32
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.health-strand-2-0-health-and-safety-habits-2-6",
+      "wording_sha256": "7ad974a3508b17b6bac26eaf5124002c8020671783fa5d1239effc27823624a5",
+      "text_sha256": "86831b3a4ce385d62ec32851d26b5bcadd1d949387870a96f4a6b8bb00d897f5",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 53,
+        "offset": 97
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.health-strand-2-0-health-and-safety-habits-2-7",
+      "wording_sha256": "1475c60efe41d9a64dc4726b94018858e4f7c79f53f0ebbde6e65198b307b41a",
+      "text_sha256": "cf3c6a417d1eb5ccbcdfcf130713ec623e453e2a62213e2a2b1af9defe22978a",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 53,
+        "offset": 162
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.social-and-emotional-development-strand-1-0-self-1-1",
+      "wording_sha256": "91ddbd58a5c2b3cc4568ff6684f0fdc2ff99c7618082544aa1a2e0a43f8c89e3",
+      "text_sha256": "3a83351ddc65d69fe710a4c8e40c025d3b74cc1c37043909d002e469454c190a",
+      "verdict": "confirmed",
+      "note": "Remark, not a fault: the Summary says children \"talk about\" features of how they look at the earlier age, where the statement uses the framework's general verb for communicating, which is not tied to speech (the first earlier-age example under this foundation in the domain PDF is a gesture).",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 8,
+        "offset": 42
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.social-and-emotional-development-strand-1-0-self-1-1",
+      "wording_sha256": "91ddbd58a5c2b3cc4568ff6684f0fdc2ff99c7618082544aa1a2e0a43f8c89e3",
+      "text_sha256": "25f10882f5c0e0fe415841023f9473599cf46fa2b7f8a407fc6501a7e5941d01",
+      "verdict": "confirmed",
+      "note": "Round 2. Round 1 confirmed this record with a remark on a speech verb; the fix replaced the speech verbs. The Summary now has children notice and communicate (earlier age) and express and let others know (later age), and Limits follows; no mode is added, and \"to others\" names no particular recipient. The identities and the preferences stay examples; emerging preferences for activities are kept at the earlier age; pride stands at the later age only. Not a near copy: about a third of each statement's words in order. Wording, code and title equal the At-a-Glance PDF (page 8; domain PDF page 16); each age box holds exactly the stored statement.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 8,
+        "offset": 42
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.social-and-emotional-development-strand-1-0-self-1-2",
+      "wording_sha256": "7cf9a36df4faee6f87ad41534916253c0acac81812b603ba8d2be2e6788fe7a9",
+      "text_sha256": "1090066addd9cceb09ce450c6a72285e750b9ac83e31fea02c1ac4e39fc3f0f7",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 8,
+        "offset": 130
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.social-and-emotional-development-strand-1-0-self-1-3",
+      "wording_sha256": "d055753c5b6ba2256e800c40ec352a6b4644efd6dbe7ed1693bd10e0cd1d1d74",
+      "text_sha256": "28553172623a4768b14713461fd839f1c9cd0ac833981dd991c259bb1dccc7d2",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The demand is changed at both ages. Each official statement opens by asking children to identify emotions, and then, as a second thing, to recognise how emotions are expressed. The Summary says children \"name\" the emotions, at both ages. Naming is narrower than identifying: a child who picks out or points to the matching face has identified the emotion without giving its name (one of the earlier-age examples under this foundation in the domain PDF is of that kind), and where this framework wants the name as well it says so as a separate demand beside identifying (Health 1.1, which this lane's own Summary renders as pointing out and giving the name). Use a verb that does not require the word for the emotion, in both sentences. Limits and the rest of the Design notes do not repeat the fault. Wording and code match the At-a-Glance PDF, and in both documents each age box holds exactly the stored statement. (At-a-Glance page 8; domain PDF page 21.)",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 8,
+        "offset": 205
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.social-and-emotional-development-strand-1-0-self-1-3",
+      "wording_sha256": "d055753c5b6ba2256e800c40ec352a6b4644efd6dbe7ed1693bd10e0cd1d1d74",
+      "text_sha256": "529ab6dded2ec84a6b01878f257661c9eae858b94c706de2e565b023f5e79954",
+      "verdict": "confirmed",
+      "note": "Round 2. The fix resolved the first verdict's reason: the Summary now uses the statement's own verb for what children do with emotions at both ages and no longer asks for the name of the emotion. Recognising how emotions show in self and in others is kept at both ages; complex emotions, and the growing understanding of the different ways of expressing emotions and of the behaviours that go with them, stand at the later age only; the emotions listed stay examples. Near copy looked at and not found: the earlier-age sentence follows the short statement's two halves, as a faithful summary of it must, with half of its words in order and no shared run longer than three. Wording, code and title equal the At-a-Glance PDF (page 8; domain PDF page 21); each age box holds exactly the stored statement.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 8,
+        "offset": 205
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.social-and-emotional-development-strand-1-0-self-1-4",
+      "wording_sha256": "0b39f9f53708365530a3176233805f6648ec261ec0473abe010deee8c16ccc58",
+      "text_sha256": "fdd341121d82762ba918e0798f43327d1965d0958ca8018ee1941b0275543cd6",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 9,
+        "offset": 39
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.social-and-emotional-development-strand-1-0-self-1-5",
+      "wording_sha256": "28efc3856f336cf6433548b63604d142c26412683812c65c7183f9008dc20285",
+      "text_sha256": "27a0b8b50583d02f4fed83c9e6daf484c0022cae5c81d4dbbc6dcbda8a0c1b57",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 9,
+        "offset": 93
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.social-and-emotional-development-strand-1-0-self-1-6",
+      "wording_sha256": "d37475330366642efa75b74cb8320b9a776aac9e92b4f590e28a59b76ef444ae",
+      "text_sha256": "94f56491e56c53c7ce01b7a53670e245627357194bf54e0afb515d88830ba4b1",
+      "verdict": "confirmed",
+      "note": "Remark, not a fault: \"What changes with age\" in Limits calls the later-age comparisons \"spoken\"; the later statement does not say how the comparisons are made.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 9,
+        "offset": 172
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.social-and-emotional-development-strand-1-0-self-1-6",
+      "wording_sha256": "d37475330366642efa75b74cb8320b9a776aac9e92b4f590e28a59b76ef444ae",
+      "text_sha256": "a93790cd7305588ad5f77403178a002fae64c361d393ceb82dd207cf969ed1ca",
+      "verdict": "confirmed",
+      "note": "Round 2. Round 1 confirmed this record with a remark that Limits called the later-age comparisons spoken; the fix removed that word and replaced the stating verb. The Summary now keeps the statement's own verb for the beliefs and ties them to the likenesses and differences the child perceives; Limits speaks of comparisons the child makes and beliefs the child expresses. No mode is added. The earlier age keeps both noticing and interest. Limits is right that the statement does not say the beliefs are accurate. Not a near copy. Wording, code and title equal the At-a-Glance PDF (page 9; domain PDF page 28); each age box holds exactly the stored statement.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 9,
+        "offset": 172
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.social-and-emotional-development-strand-1-0-self-1-7",
+      "wording_sha256": "aaed3c4dc2f21737489b5fda3cb9179fc8de0d0d05edc6da8799af44fef73ff2",
+      "text_sha256": "f4b14c1ffadd83e6e4806cea09ed00cc10b936e036b7b9c254de40bfde91aad2",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 9,
+        "offset": 224
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.social-and-emotional-development-strand-1-0-self-1-8",
+      "wording_sha256": "0260788650b1b2626c0514fc6c12110bafc97de94666a79a71605908de1567ef",
+      "text_sha256": "94a94cf34edab7dfdcf9d624642e985569253742c81ad06b207c2c453e6fb702",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 10,
+        "offset": 31
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.social-and-emotional-development-strand-2-0-interactions-and-relationships-with-adults-2-1",
+      "wording_sha256": "645a5db94e74408a037b2b75b5806c0933aa070ead08619745f183897c431240",
+      "text_sha256": "c74838bcaf4e9942689cebc2efe23bb86e507cf7d0ddc02a6bbdcff823b0955b",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 10,
+        "offset": 107
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.social-and-emotional-development-strand-2-0-interactions-and-relationships-with-adults-2-2",
+      "wording_sha256": "09181abcdbd6a06d0e46287dbd45a760a8e4aa3ac68761cca9603f297d794a04",
+      "text_sha256": "d36baa9e8ae8425d73db28bcb1e0416ff71b154e51bf5bbe8b9c48cc542ae168",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 10,
+        "offset": 176
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.social-and-emotional-development-strand-2-0-interactions-and-relationships-with-adults-2-3",
+      "wording_sha256": "1de875f4207aeef5f8dbe13c8d92f11446a3e419fad73e12103ef4c173eab506",
+      "text_sha256": "f6cf5aa14fc7217b60650577da014634c35e63c8f62e0d3f893974d490cb6d5c",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 11,
+        "offset": 31
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.social-and-emotional-development-strand-2-0-interactions-and-relationships-with-adults-2-4",
+      "wording_sha256": "c4294851cfd181997cd8c244143897cdb3ec351001bc70a64e26c1e588cfa0cb",
+      "text_sha256": "f378d615ed00443597d76b4bcca07f02f835af29a6d7bd3eb2bd6b4fb5393485",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 11,
+        "offset": 111
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.social-and-emotional-development-strand-3-0-interactions-and-relationships-with-peers-3-1",
+      "wording_sha256": "29d897644b6633fad0cf5230793a4f4304abf44becc5e5935dece806b7e9ad8a",
+      "text_sha256": "8e870052168bcc34983a1ac084da634e3ad659ee7255a33d453df1691b37a0b8",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 11,
+        "offset": 211
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.social-and-emotional-development-strand-3-0-interactions-and-relationships-with-peers-3-2",
+      "wording_sha256": "519e2c2cac2a6dd76ad76f98ec3b0e6da7daa3e7e2b791bea4db139de2f7ee5e",
+      "text_sha256": "04c56feaf22730d0901accc24c09acd81a10388d70ac5733f4ef8f36169387fc",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 12,
+        "offset": 32
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.social-and-emotional-development-strand-3-0-interactions-and-relationships-with-peers-3-3",
+      "wording_sha256": "0888ec7bcf839c805dc2462411c7366e55334538d883cb0b66261e05e46cc2cc",
+      "text_sha256": "049948bfee67bcee45da31f7d3185d8e4bb6dbd085c5522a11bafd35e9769bc2",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 12,
+        "offset": 88
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.social-and-emotional-development-strand-3-0-interactions-and-relationships-with-peers-3-4",
+      "wording_sha256": "3bd607f19560efecd5436b31b1018333e69fdf8dc3d969cfee100871b93fadc5",
+      "text_sha256": "ebfbac2a1ed1740e24a56d3fa8f9ad2e9988597cae04a12cade5d36f64b9d8cd",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 12,
+        "offset": 159
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.practical-life-feelings.objective.social-and-emotional-development-strand-3-0-interactions-and-relationships-with-peers-3-4",
+      "wording_sha256": "3bd607f19560efecd5436b31b1018333e69fdf8dc3d969cfee100871b93fadc5",
+      "text_sha256": "3e37d443c7e2570b4d6fdfacf84537f360e714971f298909f5478e4caf2f0fe6",
+      "verdict": "confirmed",
+      "note": "Round 2. Round 1 confirmed this record; the fix replaced one speech verb. The Summary now says the child singles the one or two children out as friends, which does not require the child to say so. The number, the richer play a child has with friends compared with the rest, the three ways in which friendships grow at the later age, and greater cooperation and problem-solving are all kept. Limits is right that the later statement gives no number and does not say with whom the cooperation takes place. Not a near copy. Wording, code and title equal the At-a-Glance PDF (page 12; domain PDF page 55); each age box holds exactly the stored statement.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 12,
+        "offset": 159
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/practical-life-feelings round 2",
+      "round": 2
+    }
+  ],
+  "unrecorded": []
+}

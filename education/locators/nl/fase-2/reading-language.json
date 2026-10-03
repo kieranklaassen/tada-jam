@@ -1,0 +1,89 @@
+{
+  "lane": "nl/fase-2/reading-language",
+  "records": [
+    {
+      "group": "Inhoudslijn Schrijven, PDF / Schrijven: kenmerken van de taakuitvoering / inhoud/vorm",
+      "code": "1",
+      "printed_code": false,
+      "spans": [
+        {
+          "source": "nl-slo-inhoudslijn-ne-schrijven",
+          "page": 2,
+          "column": 3,
+          "first": "schrijven langere teksten",
+          "last": "vraag-antwoord"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudslijn Schrijven, PDF / Schrijven: kenmerken van de taakuitvoering / inhoud/vorm",
+      "code": "2",
+      "printed_code": false,
+      "spans": [
+        {
+          "source": "nl-slo-inhoudslijn-ne-schrijven",
+          "page": 2,
+          "column": 3,
+          "first": "schrijven langere zinnen",
+          "last": "worden maken"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudslijn Schrijven, PDF / Schrijven: kenmerken van de taakuitvoering / inhoud/vorm",
+      "code": "3",
+      "printed_code": false,
+      "spans": [
+        {
+          "source": "nl-slo-inhoudslijn-ne-schrijven",
+          "page": 2,
+          "column": 3,
+          "first": "structureren van",
+          "last": "er) wordt"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudslijn Schrijven, PDF / Schrijven: kenmerken van de taakuitvoering / inhoud/vorm",
+      "code": "4",
+      "printed_code": false,
+      "spans": [
+        {
+          "source": "nl-slo-inhoudslijn-ne-schrijven",
+          "page": 2,
+          "column": 3,
+          "first": "oefenen met",
+          "last": "en voegwoorden"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudslijn Schrijven, PDF / Schrijven: kenmerken van de taakuitvoering / inhoud/vorm",
+      "code": "5",
+      "printed_code": false,
+      "spans": [
+        {
+          "source": "nl-slo-inhoudslijn-ne-schrijven",
+          "page": 2,
+          "column": 3,
+          "first": "schrijfervaring opdoen",
+          "last": "kern-slot"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudslijn Schrijven, PDF / Schrijven: kenmerken van de taakuitvoering / inhoud/vorm",
+      "code": "6",
+      "printed_code": false,
+      "spans": [
+        {
+          "source": "nl-slo-inhoudslijn-ne-schrijven",
+          "page": 2,
+          "column": 3,
+          "first": "afstemmen woordgebruik",
+          "last": "en overtuigen"
+        }
+      ]
+    }
+  ]
+}

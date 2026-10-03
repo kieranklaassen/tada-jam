@@ -1,0 +1,20 @@
+{
+  "lane": "us-ca/infant-toddler/science",
+  "verdicts": [
+    {
+      "id": "edu.us-ca.infant-toddler.science.objective.cognitive-development-strand-1-0-exploration-1-1",
+      "wording_sha256": "e3f3f99f3b27db9d6599fd926ab9807dad3bfb12fb57123b1cc57157907a9908",
+      "text_sha256": "1b334206d2608899f6bf78a99b088730ee13b104c2420a177d57ba394b04254d",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 34,
+        "offset": 38
+      },
+      "matched_by": "script",
+      "checker": "us-ca/infant-toddler/science",
+      "round": 1
+    }
+  ],
+  "unrecorded": []
+}

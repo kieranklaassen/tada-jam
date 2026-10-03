@@ -1,0 +1,674 @@
+{
+  "lane": "nl/peuters/mathematics",
+  "records": [
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / GETALLEN: Getalbegrip",
+      "code": "Telrij / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "noemen van namen",
+          "last": "liedjes en prentenboeken"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / GETALLEN: Getalbegrip",
+      "code": "Telrij / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "opzeggen van stukjes",
+          "last": "tellen bij verstoppertje"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / GETALLEN: Getalbegrip",
+      "code": "Hoeveelheden / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "tellen van kleine",
+          "last": "tellen van kleine hoeveelheden"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / GETALLEN: Getalbegrip",
+      "code": "Hoeveelheden / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "synchroon tellen bijv",
+          "last": "op een traptrede"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / GETALLEN: Getalbegrip",
+      "code": "Hoeveelheden / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "leggen van eén",
+          "last": "een schoteltje neerzetten"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / GETALLEN: Getalbegrip",
+      "code": "Hoeveelheden / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "vergelijken van kleine",
+          "last": "aantal op het oog"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / GETALLEN: Getalbegrip",
+      "code": "Hoeveelheden / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "omgaan met begrippen",
+          "last": "veel alles niets"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / GETALLEN: Getalbegrip",
+      "code": "Hoeveelheden / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "herkennen van kleine",
+          "last": "3 zonder tellen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / GETALLEN: Getalbegrip",
+      "code": "Hoeveelheden / 7",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "nadenken over de",
+          "last": "betekenis van telwoorden"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / GETALLEN: Getalbegrip",
+      "code": "Hoeveelheden / 8",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "nadenken over begrippen",
+          "last": "en heel weinig"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / GETALLEN: Getalbegrip",
+      "code": "Getallen / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "herkennen en benoemen",
+          "last": "enkele cijfers en getallen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / GETALLEN: Getalbegrip",
+      "code": "Getallen / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "verkennen van cijfers",
+          "last": "tablet mobiele telefoon"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / GETALLEN: Getalbegrip",
+      "code": "Relaties tussen telrij, hoeveelheden en getallen / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 1,
+          "first": "ontdekken dat getalsymbolen",
+          "last": "te maken hebben"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / GETALLEN: Bewerkingen",
+      "code": "Bewerkingen / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 2,
+          "first": "ervaring opdoen met optellen",
+          "last": "tien kleine kikkertjes"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / GETALLEN: Bewerkingen",
+      "code": "Bewerkingen / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 2,
+          "first": "ervaring opdoen met het",
+          "last": "of in groepjes"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / GETALLEN: Bewerkingen",
+      "code": "Bewerkingen / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 2,
+          "first": "omgaan met begrippen",
+          "last": "samen evenveel overhouden"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / Verhoudingen",
+      "code": "1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 2,
+          "first": "experimenteren met verhoudingen",
+          "last": "met passende kleren"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / Verhoudingen",
+      "code": "2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 2,
+          "first": "gesprekjes voeren over",
+          "last": "klein speelgoed olifantje"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / METEN & MEETKUNDE: Meten",
+      "code": "Lengte, omtrek en oppervlakte / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "verge lijken op",
+          "last": "elkaar gaan staan",
+          "corrections": [
+            {
+              "from": "verge lijken",
+              "to": "vergelijken",
+              "reason": "text recognition misread"
+            },
+            {
+              "from": "'op het oog,",
+              "to": "'op het oog',",
+              "reason": "text recognition misread"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / METEN & MEETKUNDE: Meten",
+      "code": "Lengte, omtrek en oppervlakte / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "voorwerpen sorteren op",
+          "last": "schelpen bij elkaar"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / METEN & MEETKUNDE: Meten",
+      "code": "Lengte, omtrek en oppervlakte / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "omgaan met begrippen rond",
+          "last": "laag dik dun"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / METEN & MEETKUNDE: Meten",
+      "code": "Lengte, omtrek en oppervlakte / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "vergelijken en ontdekken van tegenstellingen en omgaan",
+          "last": "kleinste groter kleiner"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / METEN & MEETKUNDE: Meten",
+      "code": "Lengte, omtrek en oppervlakte / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "meten van de",
+          "last": "op de muur"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / METEN & MEETKUNDE: Meten",
+      "code": "Inhoud / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "vergelijken op inhoud",
+          "last": "houden overgieten uitgieten"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / METEN & MEETKUNDE: Meten",
+      "code": "Inhoud / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "ervaring opdoen met inhouden",
+          "last": "dozen met blokken"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / METEN & MEETKUNDE: Meten",
+      "code": "Inhoud / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "ervaring opdoen met begrippen rond inhoud",
+          "last": "e evenveel genoeg"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / METEN & MEETKUNDE: Meten",
+      "code": "Inhoud / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "vergelijken en ontdekken van tegenstellingen en herkennen",
+          "last": "kleinste meeste minste"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / METEN & MEETKUNDE: Meten",
+      "code": "Gewicht / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "ontdekken en onderzoeken",
+          "last": "deze begrippen herkennen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / METEN & MEETKUNDE: Meten",
+      "code": "Gewicht / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "tillen en wegen",
+          "last": "begrippen leren herkennen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / METEN & MEETKUNDE: Meten",
+      "code": "Gewicht / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "ervaring opdoen met meten",
+          "last": "wip balans handen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / METEN & MEETKUNDE: Meten",
+      "code": "Tijd / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "verkennen van de",
+          "last": "middag avond nacht"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / METEN & MEETKUNDE: Meten",
+      "code": "Tijd / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "navertellen van gebeurtenissen",
+          "last": "de juiste volgorde"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / METEN & MEETKUNDE: Meten",
+      "code": "Tijd / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "gesprekjes voeren waarin",
+          "last": "even langzaam snel"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / METEN & MEETKUNDE: Meten",
+      "code": "Tijd / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "ontdekken van de",
+          "last": "laat het is"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / METEN & MEETKUNDE: Meten",
+      "code": "Geld / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "omgaan met en",
+          "last": "bijv winkeltje spelen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / METEN & MEETKUNDE: Meten",
+      "code": "Geld / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "kennismaken met geld",
+          "last": "en spullen terugkrijgen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / METEN & MEETKUNDE: Meten",
+      "code": "Geld / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 3,
+          "first": "ervaring opdoen met begrippen rond geld",
+          "last": "goedkoop kost veel"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / METEN & MEETKUNDE: Meetkunde",
+      "code": "Oriënteren in de ruimte / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "ervaring opdoen met",
+          "last": "voorleesverhalen en prentenboeken"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / METEN & MEETKUNDE: Meetkunde",
+      "code": "Oriënteren in de ruimte / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "vertellen over situaties",
+          "last": "achter mijn rug"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / METEN & MEETKUNDE: Meetkunde",
+      "code": "Oriënteren in de ruimte / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "gesprekjes voeren over",
+          "last": "in de speelzaal",
+          "corrections": [
+            {
+              "from": "(voorstellingsvermogen)",
+              "to": "(=voorstellingsvermogen)",
+              "reason": "text recognition misread"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / METEN & MEETKUNDE: Meetkunde",
+      "code": "Construeren / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "construeren met vrij",
+          "last": "zand dozen touw"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / METEN & MEETKUNDE: Meetkunde",
+      "code": "Construeren / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "construeren met meetkundig",
+          "last": "en ook nabouwen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / METEN & MEETKUNDE: Meetkunde",
+      "code": "Construeren / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "ontwerpen van mozaïek",
+          "last": "mozaïek en kettingpatronen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / METEN & MEETKUNDE: Meetkunde",
+      "code": "Construeren / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "construeren met papier",
+          "last": "patronen ontwerpen tekenen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / METEN & MEETKUNDE: Meetkunde",
+      "code": "Opereren met vormen en figuren / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "onderzoeken van eigenschappen",
+          "last": "eigenschap sorteren classificeren"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / METEN & MEETKUNDE: Meetkunde",
+      "code": "Opereren met vormen en figuren / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "onderscheiden en benoemen",
+          "last": "rondje vierkant driehoek"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / METEN & MEETKUNDE: Meetkunde",
+      "code": "Opereren met vormen en figuren / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "spelen experimenteren rond",
+          "last": "schaduw met vormen en figuren"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / METEN & MEETKUNDE: Meetkunde",
+      "code": "Opereren met vormen en figuren / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 4,
+          "first": "experimenteren met spiegels",
+          "last": "in de spiegel"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / Verbanden",
+      "code": "1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 5,
+          "first": "omgaan met symbolen",
+          "last": "we nu doen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, peuters / Verbanden",
+      "code": "2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-prefase",
+          "page": 1,
+          "column": 5,
+          "first": "samen experimenteren met",
+          "last": "met de auto"
+        }
+      ]
+    }
+  ]
+}

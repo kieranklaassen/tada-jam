@@ -1,0 +1,306 @@
+{
+  "lane": "us-ca/infant-toddler/practical-life-feelings",
+  "verdicts": [
+    {
+      "id": "edu.us-ca.infant-toddler.practical-life-feelings.objective.approaches-to-learning-strand-1-0-motivation-to-learn-1-1",
+      "wording_sha256": "ede692b2ec265a670c34fcb3b8077700e8759accac30fe9a18e2a5ed55a12271",
+      "text_sha256": "42811ae2652ef9a32cedc40b452d833142602b1e6f167ad15fcc3338b22dde1d",
+      "verdict": "confirmed",
+      "note": "Summary renders two sense-neutral phrases of the indicator (observing, paying closer attention) with verbs of sight (watching, looking) and adds \"carefully\" to the first. Small; recorded, not failed.",
+      "rendition": "same-file",
+      "place": {
+        "page": 32,
+        "offset": 42
+      },
+      "matched_by": "script",
+      "checker": "us-ca/infant-toddler/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.infant-toddler.practical-life-feelings.objective.approaches-to-learning-strand-1-0-motivation-to-learn-1-2",
+      "wording_sha256": "1bd03a121cecb1280dac6d71141a01d528d5451991c130b7301681e583d5e799",
+      "text_sha256": "b3ac2e141e58931ec296bff0b8a4bb195c99fb73d93a8b37b887d4b35026e607",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 32,
+        "offset": 61
+      },
+      "matched_by": "script",
+      "checker": "us-ca/infant-toddler/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.infant-toddler.practical-life-feelings.objective.approaches-to-learning-strand-2-0-executive-functioning-2-1",
+      "wording_sha256": "ff4b7c3b97a9436dfd1bbb9fc082170a8eeeb3adfee45dc5bfb38ca29ca41903",
+      "text_sha256": "87eb5569c8a04748957bafe3430635a16b45e93eeab49de2e6df426dc1c68ae2",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 32,
+        "offset": 92
+      },
+      "matched_by": "script",
+      "checker": "us-ca/infant-toddler/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.infant-toddler.practical-life-feelings.objective.approaches-to-learning-strand-2-0-executive-functioning-2-2",
+      "wording_sha256": "362c911e4a382d91d3a13a54cb6b2a25e5129579a57857687a499ecbbae48345",
+      "text_sha256": "88308681cda915b8fcbdf60637d47b5d47ef8055449d3e2ad793d89d1d667bff",
+      "verdict": "confirmed",
+      "note": "The foundation statement matches its own page (92). The introduction's restatement (page 32) prints the last two nouns in the other order, which is why the script matched the statement on page 92 and not on page 32; a difference between two printings in the same file, not a fault of the record. Summary uses \"say\" where the indicator has its mode-neutral verb for communicating.",
+      "rendition": "same-file",
+      "place": {
+        "page": 92,
+        "offset": 15
+      },
+      "matched_by": "script",
+      "checker": "us-ca/infant-toddler/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.infant-toddler.practical-life-feelings.objective.approaches-to-learning-strand-2-0-executive-functioning-2-3",
+      "wording_sha256": "975f8a894fc873bcdcc961e254cfc33080b2262ba8652d3168f480ac4553f9d2",
+      "text_sha256": "3167d4032083edff714c992b9ecdb04ea85b56ef0734dd7f8f00e70c59cb3b93",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 32,
+        "offset": 120
+      },
+      "matched_by": "script",
+      "checker": "us-ca/infant-toddler/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.infant-toddler.practical-life-feelings.objective.approaches-to-learning-strand-2-0-executive-functioning-2-4",
+      "wording_sha256": "14cf1384a187e530ad2321f2000ce3912a7b85216460661309ffb617cf92feb4",
+      "text_sha256": "0afbe97886a54b6dbcfbc82bf1941b94697da84cf2d369f85f9425fbd8261be7",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 32,
+        "offset": 143
+      },
+      "matched_by": "script",
+      "checker": "us-ca/infant-toddler/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.infant-toddler.practical-life-feelings.objective.approaches-to-learning-strand-3-0-goal-directed-learning-3-1",
+      "wording_sha256": "196d155111f627c90a6ee00a373670655a5dc86892a30558d44f2cc87ddceeec",
+      "text_sha256": "2fdd5a88e0eac62e4a7a21624c6590daf6a612a3c05a61d249b063139846b50c",
+      "verdict": "confirmed",
+      "note": "The title follows the foundation page (99), two words without a hyphen; the introduction (page 32) hyphenates it.",
+      "rendition": "same-file",
+      "place": {
+        "page": 32,
+        "offset": 170
+      },
+      "matched_by": "script",
+      "checker": "us-ca/infant-toddler/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.infant-toddler.practical-life-feelings.objective.approaches-to-learning-strand-3-0-goal-directed-learning-3-2",
+      "wording_sha256": "da68317fd63945244a6bcb5897650780f333a20d59926a9ba7972e48d903ce58",
+      "text_sha256": "fd4a96be450579737609da933f6b33b7465ba8d89bfae9a8a8775cb046f3f819",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 32,
+        "offset": 189
+      },
+      "matched_by": "script",
+      "checker": "us-ca/infant-toddler/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.infant-toddler.practical-life-feelings.objective.cognitive-development-strand-3-0-imitation-and-symbolic-thinking-3-1",
+      "wording_sha256": "203503c07f2078f094ae7e9eccecc18315c1536348f797bc07ca1dd880d1b7b6",
+      "text_sha256": "432c3545cf420a9373e9c01bbbee177fb62b9ab295a7d67d00e8238ae9d858cd",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 34,
+        "offset": 124
+      },
+      "matched_by": "script",
+      "checker": "us-ca/infant-toddler/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.infant-toddler.practical-life-feelings.objective.cognitive-development-strand-3-0-imitation-and-symbolic-thinking-3-2",
+      "wording_sha256": "83e4221573298cc13eb4e7f976306bfbc7542da455f6207dce1fd3a817ac5a06",
+      "text_sha256": "98ae27e6bcb9afa6b0933c5a8d6e2f82a4f3d4d5d89a307b8225c904ec7637e2",
+      "verdict": "confirmed",
+      "note": "Summary adds \"with nothing in their hands\" to the second sentence of the indicator, which says only that the concrete object need not be present. A concrete reading that fits the page's examples; recorded, not failed.",
+      "rendition": "same-file",
+      "place": {
+        "page": 34,
+        "offset": 145
+      },
+      "matched_by": "script",
+      "checker": "us-ca/infant-toddler/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.infant-toddler.practical-life-feelings.objective.cognitive-development-strand-4-0-memory-4-1",
+      "wording_sha256": "00b41e5f080980b9250d380c5b49818b817bb70986ba47038602f1156cc67f53",
+      "text_sha256": "f220d1adff8c4003b21154ce548b7b8645ffa4eb8f1d4feae047155b92c274eb",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 34,
+        "offset": 174
+      },
+      "matched_by": "script",
+      "checker": "us-ca/infant-toddler/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.infant-toddler.practical-life-feelings.objective.social-and-emotional-development-strand-1-0-self-1-1",
+      "wording_sha256": "2d4bb01a6a8f2d6d7bc80bd268af0bf97a913c6ed5561b29c85d82744ec6099f",
+      "text_sha256": "fd04b02a0a9ab920bcc6a1af99f1108a1df50b69f225c6067092193222aabf53",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 31,
+        "offset": 46
+      },
+      "matched_by": "script",
+      "checker": "us-ca/infant-toddler/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.infant-toddler.practical-life-feelings.objective.social-and-emotional-development-strand-1-0-self-1-2",
+      "wording_sha256": "81172b9edc7e3f536586db89a85d7e8dfa7d90dd2b9c925e669e4f64d1d88df2",
+      "text_sha256": "125eebd96c3aced63c2e7ee90fabf9c7886107b9bab23c4af4551b123a2f3b81",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 31,
+        "offset": 67
+      },
+      "matched_by": "script",
+      "checker": "us-ca/infant-toddler/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.infant-toddler.practical-life-feelings.objective.social-and-emotional-development-strand-1-0-self-1-3",
+      "wording_sha256": "980140c4f99b55cf61d2fa0754d9bb258d31c6c4f4c7b3aa0b009a07ef969ab8",
+      "text_sha256": "746d2c1aeec93e1dea60e0a1ab9063db30805f3c116303fae5b098d091f91429",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 31,
+        "offset": 84
+      },
+      "matched_by": "script",
+      "checker": "us-ca/infant-toddler/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.infant-toddler.practical-life-feelings.objective.social-and-emotional-development-strand-1-0-self-1-4",
+      "wording_sha256": "c154f80277414affe91cb57623fb601e48d195108fb6e2bc11a157b8558cad3a",
+      "text_sha256": "2bec9be2949e220fe39a3bdacf36946456822e10d4e64c79f984cc68fe720324",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 31,
+        "offset": 107
+      },
+      "matched_by": "script",
+      "checker": "us-ca/infant-toddler/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.infant-toddler.practical-life-feelings.objective.social-and-emotional-development-strand-2-0-social-interactions-2-1",
+      "wording_sha256": "4de0806e023adebc509ad4088df2881e8ef8fd741f7b072639025b42384032f4",
+      "text_sha256": "5d6067692ff1b599f3ffa69994d73773cb42275c068709ebcf0cc3f656419df3",
+      "verdict": "confirmed",
+      "note": "Summary uses \"talk about\" where the indicator has its mode-neutral verb for communicating. A cross-reference note to two Approaches to Learning foundations stands under the examples on the continuation page (63); it is commentary, not part of the statement.",
+      "rendition": "same-file",
+      "place": {
+        "page": 31,
+        "offset": 146
+      },
+      "matched_by": "script",
+      "checker": "us-ca/infant-toddler/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.infant-toddler.practical-life-feelings.objective.social-and-emotional-development-strand-2-0-social-interactions-2-2",
+      "wording_sha256": "dc363eb990554f25bc6119b107fa450be4e03d6ba2b86dfc3cf6ec786260d26c",
+      "text_sha256": "22682aefbe4c27eda61781547e08a2100d499c680c46fe0e979ced7814a69720",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 31,
+        "offset": 162
+      },
+      "matched_by": "script",
+      "checker": "us-ca/infant-toddler/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.infant-toddler.practical-life-feelings.objective.social-and-emotional-development-strand-2-0-social-interactions-2-3",
+      "wording_sha256": "4822446cffb6d2cbfdf3cfd190dccbbd9561f552a1ccca2b0ebf3ce91fd81cd9",
+      "text_sha256": "71290155a4538a0ec4f727e638c7ca4d7a86106732086b3048974453c2a923bb",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 31,
+        "offset": 181
+      },
+      "matched_by": "script",
+      "checker": "us-ca/infant-toddler/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.infant-toddler.practical-life-feelings.objective.social-and-emotional-development-strand-2-0-social-interactions-2-4",
+      "wording_sha256": "f925f2bac08aa2967c85e621bafb4f7ee70405c4694d89485401611e5326258c",
+      "text_sha256": "99e1722cd6e246bdfed9ec0667ce4479db6166ee37e1b3f8fca562b36af9321d",
+      "verdict": "confirmed",
+      "note": "A cross-reference note to an Approaches to Learning foundation stands under the examples on this page; it is labelled \"Note:\", sits below the examples, and is commentary, not part of the statement.",
+      "rendition": "same-file",
+      "place": {
+        "page": 31,
+        "offset": 199
+      },
+      "matched_by": "script",
+      "checker": "us-ca/infant-toddler/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.infant-toddler.practical-life-feelings.objective.social-and-emotional-development-strand-3-0-relationships-3-1",
+      "wording_sha256": "3c98dfd8e4ce38285e4c1da59a750fec9e87ed96ac271bd59b7e37b635025fff",
+      "text_sha256": "0f8426838c0b0dbd2e997c806813bcd99a387b3dca58345335dbe8e6b88f6c60",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 31,
+        "offset": 225
+      },
+      "matched_by": "script",
+      "checker": "us-ca/infant-toddler/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.infant-toddler.practical-life-feelings.objective.social-and-emotional-development-strand-3-0-relationships-3-2",
+      "wording_sha256": "9b176825f32cb784f336956e8ce06f4dd6d692534d2fb81eaa8adaa1fa25219b",
+      "text_sha256": "e25c0c8b70733403662fcc44a32aef9e195477d9b166981ebda8578f3854628f",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 31,
+        "offset": 242
+      },
+      "matched_by": "script",
+      "checker": "us-ca/infant-toddler/practical-life-feelings",
+      "round": 1
+    }
+  ],
+  "unrecorded": []
+}

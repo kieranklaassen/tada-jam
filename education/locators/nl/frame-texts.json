@@ -1,0 +1,630 @@
+{
+  "generated": "Written by `node education/tools/frame-texts.ts` from the pinned sources in the store, as manifest/nl-additions.ts (NL_FRAME_TEXTS) and the lane manifest say where each text is. Official text, read by script; not edited by hand. `--check` says whether it is still what the tool reads.",
+  "texts": [
+    {
+      "lanes": [
+        "fase-1/reading-language"
+      ],
+      "title": "What the texts are like that a child listens to, fase 1",
+      "about": "The PDF of the line Mondelinge taalvaardigheid prints this under the heading \"tekstkenmerken\", over the goals of the cluster Luisteren: the kinds of text, how long they are, and how they are built. It is no goal and the open data has none of it. Each item stands after the label of its row.",
+      "source": "nl-slo-inhoudslijn-ne-mondeling",
+      "place": "page 2, column fase 1",
+      "text": "tekstsoorten:\n  ▪ verhalende en informatieve teksten\n  ▪ liedjes en gedichten\n  ▪ korte instructieve teksten (bijv. aanwijzingen en instructies)\n  ▪ eenvoudige verslagjes (bijv. over een gebeurtenis)\ntekstlengte:\n  ▪ informatieve teksten: enkele minuten\n  ▪ verhalende teksten: tot 10 minuten\ntekststructuur:\n  ▪ teksten hebben een chronologische structuur, bevatten veel herhaling en met visuele en auditieve ondersteuning (d.m.v. prenten, gebaren, mimiek, stemgebruik, intonatie en voorwerpen)\n  ▪ zinnen zijn kort, eenvoudig en meestal enkelvoudig"
+    },
+    {
+      "lanes": [
+        "fase-2/reading-language"
+      ],
+      "title": "What the texts are like that a child listens to, fase 2",
+      "about": "The PDF of the line Mondelinge taalvaardigheid prints this under the heading \"tekstkenmerken\", over the goals of the cluster Luisteren: the kinds of text, how long they are, and how they are built. It is no goal and the open data has none of it. Each item stands after the label of its row.",
+      "source": "nl-slo-inhoudslijn-ne-mondeling",
+      "place": "page 2, column fase 2",
+      "text": "tekstsoorten:\n  ▪ informatieve, verhalende, instructieve en betogende teksten\ntekstlengte:\n  ▪ informatieve teksten: 5 tot 10 minuten\n  ▪ verhalende teksten: tot 15 minuten\ntekststructuur:\n  ▪ teksten hebben ook complexere structuren, bijvoorbeeld vraag-antwoordstructuren, vergelijkingsstructuren en oorzaak-gevolgrelaties\n  ▪ zinnen zijn langer; samengestelde zinnen komen ook voor"
+    },
+    {
+      "lanes": [
+        "fase-3/reading-language"
+      ],
+      "title": "What the texts are like that a child listens to, fase 3",
+      "about": "The PDF of the line Mondelinge taalvaardigheid prints this under the heading \"tekstkenmerken\", over the goals of the cluster Luisteren: the kinds of text, how long they are, and how they are built. It is no goal and the open data has none of it. Each item stands after the label of its row.",
+      "source": "nl-slo-inhoudslijn-ne-mondeling",
+      "place": "page 2, column fase 3",
+      "text": "tekstsoorten:\n  ▪ informatieve, verhalende, instructieve en betogende teksten\ntekstlengte:\n  ▪ informatieve teksten: 10 tot 15 minuten\n  ▪ verhalende teksten: tot 20 minuten\ntekststructuur:\n  ▪ teksten hebben zowel herkenbare als complexere structuren, bijvoorbeeld redengevende tekststructuren en probleemoplossingsrelaties\n  ▪ samengestelde zinnen komen vaak voor"
+    },
+    {
+      "lanes": [
+        "fase-1/reading-language"
+      ],
+      "title": "What the informative texts are like that a child reads, fase 1",
+      "about": "The PDF of the line Lezen prints this under the heading \"teksten en tekstkenmerken\", after the goals of the cluster \"Oriëntatie op en lezen van zakelijke teksten\": the subjects, the density, the structure and the style of the texts of this fase. It is no goal and the open data has none of it. Each item stands after the label of its row.",
+      "source": "nl-slo-inhoudslijn-ne-lezen",
+      "place": "page 1, column fase 1",
+      "text": "zakelijke teksten\n  zakelijke teksten (informatieve, instructieve en betogende teksten) hebben in deze fase één of meer van de volgende kenmerken:\nonderwerpen:\n  ▪ concrete onderwerpen uit de eigen leefwereld, over het hier en nu of over de nabije omgeving, de nabije toekomst/verleden\ninformatiedichtheid:\n  ▪ tekst met een beperkt aantal eenvoudige inhoudselementen\nstructuur:\n  ▪ tekst met herkenbare structuur (bijv. chronologisch, met eenvoudige en eenduidige verwijzingen, verwijzen naar iets concreets)\n  ▪ eenvoudige signaalwoorden maken verbanden herkenbaar\nstijl:\n  ▪ korte enkelvoudige zinnen met een eenvoudige structuur en concrete begrippen in de context van het onderwerp"
+    },
+    {
+      "lanes": [
+        "fase-2/reading-language"
+      ],
+      "title": "What the informative texts are like that a child reads, fase 2",
+      "about": "The PDF of the line Lezen prints this under the heading \"teksten en tekstkenmerken\", after the goals of the cluster \"Oriëntatie op en lezen van zakelijke teksten\": the subjects, the density, the structure and the style of the texts of this fase. It is no goal and the open data has none of it. Each item stands after the label of its row.",
+      "source": "nl-slo-inhoudslijn-ne-lezen",
+      "place": "page 1, column fase 2",
+      "text": "zakelijke teksten\n  zakelijke teksten (informatieve, instructieve en betogende teksten) hebben in deze fase één of meer van de volgende kenmerken:\nonderwerpen:\n  ▪ onderwerpen uit eigen leefwereld die minder concreet zijn, betrekking hebben op omgeving die minder nabij is, op verleden en toekomst (bijv. bij de zaakvakken)\ninformatiedichtheid:\n  ▪ tekst met meerdere eenvoudige inhoudselementen en meerdere voorbeelden en parafrases\nstructuur:\n  ▪ tekst met probleemoplossingsstructuur, vergelijking van twee opvattingen\n  ▪ signaalwoorden moeten worden afgeleid\nstijl:\n  ▪ korte en langere enkelvoudige en samengestelde zinnen met concrete en abstractere begrippen in de context van het onderwerp"
+    },
+    {
+      "lanes": [
+        "fase-3/reading-language"
+      ],
+      "title": "What the informative texts are like that a child reads, fase 3",
+      "about": "The PDF of the line Lezen prints this under the heading \"teksten en tekstkenmerken\", after the goals of the cluster \"Oriëntatie op en lezen van zakelijke teksten\": the subjects, the density, the structure and the style of the texts of this fase. It is no goal and the open data has none of it. Each item stands after the label of its row.",
+      "source": "nl-slo-inhoudslijn-ne-lezen",
+      "place": "page 1, column fase 3",
+      "text": "zakelijke teksten\n  zakelijke teksten (informatieve, instructieve en betogende teksten) hebben in deze fase één of meer van de volgende kenmerken:\nonderwerpen:\n  ▪ onderwerpen uit eigen leefwereld en abstractere onderwerpen, niet altijd context gebonden en betrekking hebbend op verleden en toekomst\ninformatiedichtheid:\n  ▪ tekst met meerdere eenvoudige, in alinea's beschreven inhoudselementen en minder voorbeelden en parafrases\nstructuur:\n  ▪ tekst met opsommingsstructuur met beschrijving en vergelijking van mening met argumenten\n  ▪ verwijzingen staan niet altijd dichtbij en zijn niet altijd eenduidig of concreet\nstijl:\n  ▪ korte en langere enkelvoudige en samengestelde zinnen met bijzinnen en concrete en abstractere begrippen in bekende en minder bekende context van het onderwerp"
+    },
+    {
+      "lanes": [
+        "fase-1/reading-language"
+      ],
+      "title": "What the fiction is like that a child reads, fase 1",
+      "about": "The PDF of the line Lezen prints this under the heading \"teksten en tekstkenmerken\", after the goals of the cluster \"Oriëntatie op en lezen van fictie\": the subjects and the structure of the stories and poems of this fase. It is no goal and the open data has none of it. Each item stands after the label of its row.",
+      "source": "nl-slo-inhoudslijn-ne-lezen",
+      "place": "page 3, column fase 1",
+      "text": "fictie\n  fictie teksten (verhalende teksten, poëzie) hebben in deze fase één of meer van de volgende kenmerken:\nonderwerpen:\n  ▪ onderwerpen die concreet zijn en dichtbij de eigen leefwereld staan\nstructuur:\n  ▪ teksten met één verhaallijn met een lineaire structuur\n  ▪ teksten met een personale verteller"
+    },
+    {
+      "lanes": [
+        "fase-2/reading-language"
+      ],
+      "title": "What the fiction is like that a child reads, fase 2",
+      "about": "The PDF of the line Lezen prints this under the heading \"teksten en tekstkenmerken\", after the goals of the cluster \"Oriëntatie op en lezen van fictie\": the subjects and the structure of the stories and poems of this fase. It is no goal and the open data has none of it. Each item stands after the label of its row.",
+      "source": "nl-slo-inhoudslijn-ne-lezen",
+      "place": "page 3, column fase 2",
+      "text": "fictie\n  fictie teksten (verhalende teksten, poëzie) hebben in deze fase één of meer van de volgende kenmerken:\nonderwerpen:\n  ▪ onderwerpen die betrekking hebben op de minder nabije omgeving en die minder concreet zijn. Ze hebben ook betrekking op verleden en toekomst\nstructuur:\n  ▪ teksten met één of soms meerdere verhaallijnen (raamvertelling) en soms zonder lineaire structuur (tekst begint bijv. middenin)\n  ▪ teksten met een ik-verteller"
+    },
+    {
+      "lanes": [
+        "fase-3/reading-language"
+      ],
+      "title": "What the fiction is like that a child reads, fase 3",
+      "about": "The PDF of the line Lezen prints this under the heading \"teksten en tekstkenmerken\", after the goals of the cluster \"Oriëntatie op en lezen van fictie\": the subjects and the structure of the stories and poems of this fase. It is no goal and the open data has none of it. Each item stands after the label of its row.",
+      "source": "nl-slo-inhoudslijn-ne-lezen",
+      "place": "page 3, column fase 3",
+      "text": "fictie\n  fictie teksten (verhalende teksten, jeugdliteratuur en poëzie) hebben in deze fase één of meer van de volgende kenmerken:\nonderwerpen:\n  ▪ concrete, minder concrete en abstractere onderwerpen die niet direct gerelateerd zijn aan de eigen leefwereld en die betrekking hebben op verleden en toekomst\nstructuur:\n  ▪ teksten met een eenvoudige structuur, waarin het tempo hoog is en spannende of dramatische gebeurtenissen elkaar snel opvolgen\n  ▪ teksten met wisselende vertelperspectieven die duidelijk aangegeven zijn"
+    },
+    {
+      "lanes": [
+        "fase-1/reading-language"
+      ],
+      "title": "Terms about language offered from groep 1-2",
+      "about": "The PDF of the line Taalbeschouwing prints a table of terms by pair of groepen, not by fase, and says a term is offered from the pair it stands under. This is the column groep 1-2, row by row after the label of each row, with the lines of the page as printed. A row the column leaves empty is left out.",
+      "source": "nl-slo-inhoudslijn-ne-taalbeschouwing",
+      "place": "pages 1, 2, column groep 1-2",
+      "text": "tekstkennis:\n  voor, achter, boven, onder,\n  beneden, links, rechts, begin,\n  midden, eind, prentenboek,\n  voorlezen, omslag/kaft/voor-\n  en achterkant boek, bladeren,\n  plaat(je), verhaal(tje),\n  probleem, oplossing, grapje,\n  versje, rijmpje, gedicht, lied(je),\n  vertellen, luisteren, lezen,\n  schrijven\nwoordvorming:\n  woord\nklanken:\n  rijm(en)\ntaal en communicatie:\n  spreken, luisteren, vertellen,\n  lezen, schrijven"
+    },
+    {
+      "lanes": [
+        "fase-1/reading-language",
+        "fase-2/reading-language"
+      ],
+      "title": "Terms about language offered from groep 3-4",
+      "about": "The PDF of the line Taalbeschouwing prints a table of terms by pair of groepen, not by fase, and says a term is offered from the pair it stands under. This is the column groep 3-4, row by row after the label of each row, with the lines of the page as printed. A row the column leaves empty is left out. Groep 3-4 is the last year of fase 1 and the first of fase 2, so this column is quoted in the frames of both.",
+      "source": "nl-slo-inhoudslijn-ne-taalbeschouwing",
+      "place": "pages 1, 2, column groep 3-4",
+      "text": "leestekens:\n  punt, komma, vraagteken,\n  uitroepteken,\n  aanhalingstekens, hoofdletter,\n  kleine letter, letter, haakjes\nwoordsoorten:\n  zelfstandig naamwoord,\n  werkwoord, lidwoord\ngrammaticale kennis:\n  zin\nwoordvorming:\n  lettergreep, enkelvoud,\n  meervoud, verkleinwoord\nopmaak:\n  regel, bladzijde, hoofdstuk, titel\nklanken:\n  klank (korte klank, lange klank,\n  tweetekenklank,\n  meertekenklank, klankgroep,\n  klinker, medeklinker, uitspraak\ntaal en communicatie:\n  bedoeling, spreker, schrijver,\n  lezer, luisteraar"
+    },
+    {
+      "lanes": [
+        "fase-2/reading-language"
+      ],
+      "title": "Terms about language offered from groep 5-6",
+      "about": "The PDF of the line Taalbeschouwing prints a table of terms by pair of groepen, not by fase, and says a term is offered from the pair it stands under. This is the column groep 5-6, row by row after the label of each row, with the lines of the page as printed. A row the column leaves empty is left out.",
+      "source": "nl-slo-inhoudslijn-ne-taalbeschouwing",
+      "place": "pages 1, 2, column groep 5-6",
+      "text": "leestekens:\n  leesteken, dubbele punt\nwoordsoorten:\n  voegwoord, voorzetsel,\n  telwoord, bijvoeglijk\n  naamwoord\ngrammaticale kennis:\n  onderwerp, persoonsvorm,\n  hoofdzin, bijzin, zinsdeel,\n  vragende vorm\ntekstkennis:\n  standpunt, argument, feit,\n  mening, tekst, signaalwoord,\n  inhoudsopgave, inleiding, kern,\n  slot, boodschap, situatie,\n  bedoeling, tekstsoort,\n  gespreksvorm, aanduiding voor\n  gespreksvorm: overleg,\n  discussie,\n  interview/vraaggesprek,\n  voordracht/presentatie\nstijl en betekenis:\n  betekenis, letterlijk, figuurlijk,\n  uitdrukking, spreekwoord,\n  gezegde, definitie, spreektaal,\n  schrijftaal, tegenstelling,\n  picto(gram), logo(gram)\nwoordvorming:\n  hele werkwoord/ infinitief,\n  stam van het werkwoord,\n  woordvorm, woorddeel,\n  samenstelling, voorvoegsel,\n  achtervoegsel, woordsoort,\n  tegenwoordige tijd, verleden\n  tijd, klankvast (zwak)\n  werkwoord, klankveranderend\n  (sterk) werkwoord, persoon\n  (1e, 2e, 3e)\nopmaak:\n  lettertype, alinea, kopje,\n  opmaak, lay-out, cursief, vet\n  gedrukt\ntaal en communicatie:\n  boodschap, situatie, publiek,\n  doel, gespreksregels,\n  beurtwisseling, informatie"
+    },
+    {
+      "lanes": [
+        "fase-3/reading-language"
+      ],
+      "title": "Terms about language offered from groep 7-8",
+      "about": "The PDF of the line Taalbeschouwing prints a table of terms by pair of groepen, not by fase, and says a term is offered from the pair it stands under. This is the column groep 7-8, row by row after the label of each row, with the lines of the page as printed. A row the column leaves empty is left out.",
+      "source": "nl-slo-inhoudslijn-ne-taalbeschouwing",
+      "place": "pages 1, 2, column groep 7-8",
+      "text": "leestekens:\n  puntkomma, apostrof,\n  koppelteken, afbreekstreepje,\n  spatie, trema, accent\nwoordsoorten:\n  bijvoeglijk naamwoord\n  (stoffelijk afgeleid van\n  deelwoord), voornaamwoord\ngrammaticale kennis:\n  lijdend voorwerp,\n  (werkwoordelijk) gezegde,\n  lijdende vorm, bedrijvende\n  vorm\ntekstkennis:\n  aanduiding voor\n  tekstsoort/genre:\n  ▪ fictie: verhaal, poëzie\n  ▪ zakelijk: informatief,\n    instructief, betogend\n  debat, monoloog, dialoog\n  metatalige vorm: woord, zin of\n  tekstfragment dat informatie\n  geeft over de rest van de tekst\n  (zoals een prospectief en\n  retrospectief tekstelement in\n  inleiding, samenvattende zin\n  aan slot)\n  hoofdgedachte van tekst,\n  tekstthema, paragraaf, zender,\n  ontvanger, illustratie\nstijl en betekenis:\n  afkorting, symbool, synoniem,\n  context, moedertaal, tweede\n  taal, vreemde taal,\n  standaardtaal, dialect,\n  meertalig, formeel taalgebruik,\n  informeel taalgebruik,\n  leenwoord, homoniem,\n  vaktaal/jargon\nwoordvorming:\n  trappen van vergelijking\n  (stellende, vergrotende,\n  overtreffende trap), voltooide\n  tijd, onvoltooide tijd, voltooid\n  deelwoord, bijvoeglijk gebruik\n  van onvoltooid en voltooid\n  deelwoord\nklanken:\n  klemtoon, intonatie\ntaal en communicatie:\n  publiekgerichtheid,\n  doelgerichtheid, mimiek,\n  spreektempo, spreekpauze,\n  volume, communicatie"
+    },
+    {
+      "lanes": [
+        "fase-1/reading-language",
+        "fase-2/reading-language"
+      ],
+      "title": "Spelling categories and rules offered from groep 3-4",
+      "about": "The PDF of the line Taalbeschouwing prints a table of spelling categories and rules by pair of groepen, and says each is offered from the pair it stands under and mastered almost without thought two pairs later. This is the column groep 3-4, row by row after the label of each row, with the lines of the page as printed; the column groep 1-2 of this table is empty. An item between underscores is set in italics in the PDF, which the note under the heading of the table classes at reference level 2F (\"items cursief zijn ingedeeld op 2F; items vet zijn ingedeeld op 3F\"). The same note classes items in bold at 3F: the text layer does not tell bold from light, so the quote cannot mark them. On the page no item of this column is bold. Groep 3-4 is the last year of fase 1 and the first of fase 2, so this column is quoted in the frames of both.",
+      "source": "nl-slo-inhoudslijn-ne-taalbeschouwing",
+      "place": "pages 2, 3, column groep 3-4",
+      "text": "alfabetische spelling: op basis van een een-op-een-relatie tussen klank en teken\n  mkm (kat, doos, boek)\n  mmk(m) (klok, trui)\n  (m)kmm (als, kaart)\n  mmkmm (plant, klomp)\n  -mmm (eerst, kunst)\n  mmm- (strik, spruit)\n  f-, v- (feest, vuur)\n  s-, z- (sok, zoen)\n  -ng (bang)\n  -eer, -oor, -eur (keer, spoor,\n  deur)\northografische spelling: gebaseerd op afspraken over de schrijfwijze van (groepen) woorden\n  niet geschreven tussenklank\n  (r + medeklinker: verf\n  l + medeklinker: melk)\n  sch(r)- (school, schrik)\n  -nk (bank)\n  -aai, -ooi, -oei (saai, mooi, boei)\n  -eeuw, -ieuw (leeuw, nieuw)\n  -ee (zee, twee)\n  -a, -o, -u (papa, foto, nu)\n  medeklinkerverdubbeling\n  (bruggen, petten)\n  klinkerverenkeling (straten,\n  bomen)\nlexicaal-morfologische spelling: op basis van de opbouw van het woord, los van de grammaticale context\n  -d (hond, paard)\n  (verlengingsregel\n  eenlettergrepige woorden),\n  -el, -er, -en, -te (sleutel,\n  moeder, molen, breedte),\n  ge-, be-, ver-, te-, (genoeg,\n  bezoek, verschil, terug),\n  ont- (ontdekken),\n  meervoudsvorming met -en of\n  –s (boeken, sleutels),\n  samengestelde woorden\n  (tuindeur, schatkist),\n  verkleinwoorden met uitgang –\n  je, -tje (huisje, boekje,\n  schaaltje)\nlogografische spelling: gebaseerd op vaststaande combinaties, zonder regelvorming (woorden met…)\n  -ch(t) (pech, bocht)\n  (-)ei(-) of (-)ij(-) (trein, lijst)\n  -au-, -auw (saus, blauw)\n  -ou-, -ouw (stout, vrouw)\ninterpunctie en het gebruik van hoofdletters\n  hoofdletter aan begin zin,\n  punt, vraagteken, uitroepteken"
+    },
+    {
+      "lanes": [
+        "fase-2/reading-language"
+      ],
+      "title": "Spelling categories and rules offered from groep 5-6",
+      "about": "The PDF of the line Taalbeschouwing prints a table of spelling categories and rules by pair of groepen, and says each is offered from the pair it stands under and mastered almost without thought two pairs later. This is the column groep 5-6, row by row after the label of each row, with the lines of the page as printed; the column groep 1-2 of this table is empty. An item between underscores is set in italics in the PDF, which the note under the heading of the table classes at reference level 2F (\"items cursief zijn ingedeeld op 2F; items vet zijn ingedeeld op 3F\"). The same note classes items in bold at 3F: the text layer does not tell bold from light, so the quote cannot mark them. On the page 2 items of this column are bold: \"komma\"; \"dubbele punt\".",
+      "source": "nl-slo-inhoudslijn-ne-taalbeschouwing",
+      "place": "pages 2, 3, column groep 5-6",
+      "text": "alfabetische spelling: op basis van een een-op-een-relatie tussen klank en teken\n  -f-, -v- ongeleed (tafel, oven)\n  -s-, -z- ongeleed (fase, pauze)\northografische spelling: gebaseerd op afspraken over de schrijfwijze van (groepen) woorden\n  f/v-wisseling (braaf - brave),\n  s/z-wisseling (huis - huizen),\n  verkleinwoorden met ng/nk\n  wisseling (ketting - kettinkje)\nlexicaal-morfologische spelling: op basis van de opbouw van het woord, los van de grammaticale context\n  verkleinwoorden met uitgang\n  -je na -d en -t (vriendje,\n  plantje),\n  uitgang -pje, -etje (raampje,\n  dingetje, karretje),\n  uitgang -em (stiekem),\n  uitgang -elen, -enen, -eren\n  (wandelen, oefenen, kinderen),\n  uitgang -lijk (eerlijk),\n  uitgang -ig (veilig),\n  uitgang -teit (majesteit),\n  uitgang -heid (eenheid),\n  _beginnend met ’s (’s ochtends),_\n  eindigend op ‘s (komma’s,\n  lolly’s),\n  vorming bijvoeglijk naamwoord\n  (blauwe, grote),\n  uitgang -ing (buiging),\n  _meervouds- -s na klinker_\n  _(meisjes)_\nmorfologische spelling op grammaticale basis: op basis van de opbouw van het woord binnen de grammaticale context\n  hele werkwoord/infinitief\n  stam van het werkwoord\n  tijd van het werkwoord:\n  tegenwoordige tijd, verleden\n  tijd\n  regel voor overeenkomst in\n  getal (onderwerp-persoonsvorm)\n  persoonsvorm:\n  _tegenwoordige tijd meervoud;_\n  _tegenwoordige tijd enkelvoud;_\n  _tegenwoordige tijd met stam -d_\n  _enkelvoud (word);_\n  _verleden tijd (kookte, schreef);_\n  _verleden tijd met stam op -d of -_\n  _t (brandde(n), startte(n))_\nlogografische spelling: gebaseerd op vaststaande combinaties, zonder regelvorming (woorden met…)\n  /zj/ geschreven als g (horloge,\n  gelei)\n  /ie/ geschreven als i (liter,\n  olifant, januari)\n  /s/ geschreven als -c- (narcis,\n  precies)\n  /k/ geschreven als -c- (contact)\n  -tie (politie)\ninterpunctie en het gebruik van hoofdletters\n  _hoofdletter bij eigennaam_,\n  komma, dubbele punt,\n  aanhalingstekens, haakjes"
+    },
+    {
+      "lanes": [
+        "fase-3/reading-language"
+      ],
+      "title": "Spelling categories and rules offered from groep 7-8",
+      "about": "The PDF of the line Taalbeschouwing prints a table of spelling categories and rules by pair of groepen, and says each is offered from the pair it stands under and mastered almost without thought two pairs later. This is the column groep 7-8, row by row after the label of each row, with the lines of the page as printed; the column groep 1-2 of this table is empty. An item between underscores is set in italics in the PDF, which the note under the heading of the table classes at reference level 2F (\"items cursief zijn ingedeeld op 2F; items vet zijn ingedeeld op 3F\"). The same note classes items in bold at 3F: the text layer does not tell bold from light, so the quote cannot mark them. On the page 6 items of this column are bold: \"trema (ruïne, skiën, poriën, knieën, zeeën), koppelteken (zonne-energie)\"; \"tussenklank -s of -e(n) (stadsdeel)\"; \"aaneenschrijven of los schrijven (kleinkind/klein kind, tenslotte/ ten slotte)\"; \"persoonsvorm: tegenwoordige tijd 2e/3e persoon achter persoonsvorm (word je, wordt je broer);\"; \"met prefix homofoon met voltooid deelwoord (beoordeelt/beoordeeld)\"; \"voltooid deelwoord, homofone gevallen (verhuist, verhuisd)\".",
+      "source": "nl-slo-inhoudslijn-ne-taalbeschouwing",
+      "place": "pages 2, 3, column groep 7-8",
+      "text": "orthografische spelling: gebaseerd op afspraken over de schrijfwijze van (groepen) woorden\n  uitgang -iaal, -ieel, -eaal, -ueel\n  (liniaal, officieel, ideaal, ritueel),\n  afbreekregels,\n  trema (ruïne, skiën, poriën,\n  knieën, zeeën), koppelteken\n  (zonne-energie)\nlexicaal-morfologische spelling: op basis van de opbouw van het woord, los van de grammaticale context\n  eindigend op -b (web)\n  uitgang -isch(e) (historisch)\n  _verkleinwoord na open_\n  _lettergreep op -a, -e, -o, -u_\n  _(laatje, autootje, parapluutje)_\n  meervoud heid-heden\n  (eenheden)\n  meervoud op -a (musea)\n  meervoud op -i (critici)\n  assimilatieverschijnselen (afval,\n  zakdoek)\n  bijvoeglijk gebruikt voltooid\n  deelwoord (gebroken,\n  verlichte)\n  _stoffelijk bijvoeglijk naamwoord_\n  _(ijzeren)_\n  _tussenletter -n- in_\n  _samengestelde woorden_\n  _(zonnebloem, bessensap)_\n  tussenklank -s of -e(n)\n  (stadsdeel)\n  aaneenschrijven of los schrijven\n  (kleinkind/klein kind, tenslotte/\n  ten slotte)\nmorfologische spelling op grammaticale basis: op basis van de opbouw van het woord binnen de grammaticale context\n  persoonsvorm: tegenwoordige\n  tijd 2e/3e persoon achter\n  persoonsvorm (word je, wordt\n  je broer);\n  met prefix homofoon met\n  voltooid deelwoord\n  (beoordeelt/beoordeeld)\n  voltooid deelwoord, excl.\n  homofone gevallen (gekookt,\n  gemeld, geworden)\n  voltooid deelwoord, homofone\n  gevallen (verhuist, verhuisd)\n  regel voor overeenkomst in\n  getal (referent-verwijswoord)\n  regel voor overeenkomst in\n  geslacht (referent-verwijswoord)\n  _meervouds- -n bij zelfstandig_\n  _gebruikte verwijzing (alle/allen)_\nlogografische spelling: gebaseerd op vaststaande combinaties, zonder regelvorming (woorden met…)\n  /t/ geschreven als th (thee)\n  /sj/ geschreven als -ch-\n  (chocola, douche)\n  /ks/ geschreven als -x- (taxi)\n  /oe/ geschreven als -ou- (route)\n  (-)y(-) (yoghurt, pony)\n  Franse leenwoorden (trottoir,\n  cadeau, militair)\n  Engelse leenwoorden (cake,\n  manager, laptop)\n  afkortingen van woorden (tv,\n  cd, bv.)\ninterpunctie en het gebruik van hoofdletters\n  _hoofdletter bij directe rede_,\n  puntkomma, afbreekstreepje,\n  spatie"
+    },
+    {
+      "lanes": [
+        "fase-1/reading-language",
+        "fase-2/reading-language",
+        "fase-3/reading-language"
+      ],
+      "title": "Why the terms and the spelling are listed by pair of groepen",
+      "about": "The note the PDF of the line Taalbeschouwing prints under its two tables.",
+      "source": "nl-slo-inhoudslijn-ne-taalbeschouwing",
+      "place": "page 3",
+      "text": "* Bij de begrippenlijst en taalverzorging (spellingscategorieën en -regels) is afgeweken van de fase-indeling zoals die bij de andere inhoudslijnen voor Nederlands en de overige leergebieden is gehanteerd. Om aan te sluiten op het referentiekader taal is gekozen voor een indeling in groep 1-2, groep 3-4, groep 5-6 en groep 7-8."
+    },
+    {
+      "lanes": [
+        "fase-1/reading-language",
+        "fase-2/reading-language",
+        "fase-3/reading-language"
+      ],
+      "title": "Which groepen a fase is",
+      "about": "The note on the last page of the PDF of the line Mondelinge taalvaardigheid; the PDFs of Lezen and Schrijven print the same note. The PDFs of the other two areas print none.",
+      "source": "nl-slo-inhoudslijn-ne-mondeling",
+      "place": "page 4",
+      "text": "* Bij de uitwerking van deze inhoudslijn voor Nederlands is uitgegaan van de volgende indeling: fase 1 is groep 1, 2 en 3; fase 2 is groep 4, 5 en 6; fase 3 is groep 7 en 8."
+    },
+    {
+      "lanes": [
+        "fase-1/practical-life-feelings",
+        "fase-2/practical-life-feelings",
+        "fase-3/practical-life-feelings"
+      ],
+      "title": "The note on the cluster \"Relaties en seksualiteit\"",
+      "about": "The PDF of the line Jezelf en de ander marks the heading of this cluster with an asterisk and prints this note under its last page. It holds for every goal of the cluster (ojw/ja/2).",
+      "source": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": "page 2",
+      "text": "* Scholen zijn verplicht aandacht te besteden aan het thema relaties en seksualiteit, dat valt onder kerndoel 38, maar mogen zelf kiezen welke leerlijnen en tussendoelen per bouw zij formuleren."
+    },
+    {
+      "lanes": [
+        "fase-1/science",
+        "fase-2/science",
+        "fase-3/science"
+      ],
+      "title": "The note on underlined terms",
+      "about": "The PDFs of this area underline terms in their goals and close with this note, which says what the underlining refers to. The document it names, the \"Uitwerking kennisonderwerpen\" of the institute, is not a source of the pack: no record and no frame holds what it says about a term. The goals that hold an underlined term are listed in this section, PDF by PDF. Quoted from the PDF of the line Verschijnselen uit natuurkunde en techniek; the PDFs of De ruimte om je heen and of Planten, dieren en de mens, the other two this lane is checked against, print the same note.",
+      "source": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": "page 3",
+      "text": "NB De onderstreepte begrippen verwijzen naar: Uitwerking kennisonderwerpen bij de inhoudslijnen van Oriëntatie op jezelf en de wereld (Pdf: SLO 04-2018)."
+    },
+    {
+      "lanes": [
+        "fase-1/practical-life-feelings",
+        "fase-2/practical-life-feelings",
+        "fase-3/practical-life-feelings"
+      ],
+      "title": "The note on underlined terms",
+      "about": "The PDFs of this area underline terms in their goals and close with this note, which says what the underlining refers to. The document it names, the \"Uitwerking kennisonderwerpen\" of the institute, is not a source of the pack: no record and no frame holds what it says about a term. The goals that hold an underlined term are listed in this section, PDF by PDF. Quoted from the PDF of the line De samenleving; the PDFs of De ruimte om je heen and of Planten, dieren en de mens print the same note.",
+      "source": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": "page 3",
+      "text": "NB De onderstreepte begrippen verwijzen naar: Uitwerking kennisonderwerpen bij de inhoudslijnen van Oriëntatie op jezelf en de wereld (Pdf: SLO 04-2018)."
+    },
+    {
+      "lanes": [
+        "fase-1/practical-life-feelings",
+        "fase-2/practical-life-feelings",
+        "fase-3/practical-life-feelings"
+      ],
+      "title": "The note on underlined terms, as the line Jezelf en de ander prints it",
+      "about": "The PDF of the line Jezelf en de ander prints the same note with another date.",
+      "source": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": "page 2",
+      "text": "NB De onderstreepte begrippen verwijzen naar: Uitwerking kennisonderwerpen bij de inhoudslijnen van Oriëntatie op jezelf en de wereld (Pdf: SLO 06-2020)."
+    },
+    {
+      "lanes": [
+        "einde-po/reading-language"
+      ],
+      "title": "What the decree prints with its list of terms (section 4.1)",
+      "about": "Section 4.1 Begrippenlijst of annex 1: the two paragraphs that introduce the list of terms, the caption of table 1, and under the table a list of grammatical terms for the spelling of verbs and a rule, which carry no level. The cells of the table are records of this lane, at 1F and at 2F, and are not quoted: the table stands here by its caption. A heading stands at the margin, and a list item after its number.",
+      "source": "nl-wet-referentieniveaus-besluit",
+      "place": "bijlage 1, section 4.1",
+      "text": "4.1 Begrippenlijst\n  Om te spreken over taal en taalverschijnselen is een beperkt aantal begrippen noodzakelijk. De meeste daarvan zijn aan het einde van het basisonderwijs wel aan de orde geweest (1F).\n  Kennis van deze begrippen bevordert het gesprek binnen en buiten het taalonderwijs over taal en taalverschijnselen: het gaat erom dat docenten (en leerlingen) bepaalde verschijnselen kunnen benoemen in contextrijke taalsituaties. Dat wil zeggen dat docenten deze termen moeten kunnen gebruiken in hun onderwijs in de vaardigheidsdomeinen.\n  Tabel 1: Niveaubeschrijvingen Begrippen Taal\nGrammaticale begrippen voor werkwoordspelling\n  1. Werkwoord;\n  2. Tijd van het werkwoord (tegenwoordig en verleden, onvoltooid en voltooid);\n  3. Getal: meervoud, enkelvoud;\n  4. Eerste, tweede en derde persoon;\n  5. Persoonsvorm;\n  6. Voltooid deelwoord;\n  7. Stam van het werkwoord;\n  8. Hele werkwoord (infinitief);\n  9. Onderwerp;\n  10. Zwakke en sterke werkwoorden;\n  11. Werkwoordelijk gezegde.\nRegels\n  Regel voor overeenkomst in getal (onderwerp-persoonsvorm; referent-verwijswoord) en geslacht (referent-verwijswoord)."
+    },
+    {
+      "lanes": [
+        "einde-po/reading-language"
+      ],
+      "title": "What the decree says language care is (section 4.2)",
+      "about": "Section 4.2 Taalverzorging of annex 1: two paragraphs, which say that the levels of section 4 mean full mastery and are an end point. They hold for every record of table 2.",
+      "source": "nl-wet-referentieniveaus-besluit",
+      "place": "bijlage 1, section 4.2",
+      "text": "4.2 Taalverzorging\n  De vereiste kwaliteit van productief taalgebruik (spreken, schrijven) wordt steeds aangeduid bij de kenmerken van de taakuitvoering in die domeinen.\n  In dit domein van taalverzorging gaat het alleen om kennis van regels en begrippen die ten dienste staan van correct taalgebruik. Bij de niveaubepaling is steeds uitgegaan van volledige beheersing, dat wil zeggen, vrijwel automatische beheersing en bij uitzondering terugvallend op regelkennis in taalproductie, zoals in de domeinen schrijven en spreken beschreven. Regelkennis en toepassing in oefentaken gaat aan die beheersing vooraf. De niveaus geven een eindpunt aan: het verwerven van de regels tot een vrijwel automatische beheersing vergt veel leertijd. Het geleerde moet voortdurend in onderhoud zijn. Dat kan betekenen dat van tijd tot tijd nieuwe instructie en oefening gegeven moeten worden (opfrissen) en dat er zorgvuldig feedback gegeven dient te worden op schrijf- en spreekproducten door alle bij het onderwijs betrokkenen, docenten Nederlands en docenten van andere vakken."
+    },
+    {
+      "lanes": [
+        "einde-po/reading-language"
+      ],
+      "title": "The categories of spelling and punctuation, without a level (section 4.3)",
+      "about": "Section 4.3 Niveaubeschrijvingen of annex 1: the running lists of the categories of spelling (4.3.1) and of punctuation (4.3.2). They carry no level and are no records; table 2 of section 4.4 says at which level each kind is mastered. A heading stands at the margin, and a list item after its number.",
+      "source": "nl-wet-referentieniveaus-besluit",
+      "place": "bijlage 1, section 4.3",
+      "text": "4.3 Niveaubeschrijvingen\n4.3.1 Spelling\nCategorieën\n  Deze paragraaf bevat de categorieën van spellingsproblemen en -regels. De basis voor de spelling is kennis van de beschaafde uitspraak van het Nederlands («klankzuiver»):\n  1. Klankzuivere woorden (wil, dier, maat, daar, moet, wesp, kalf etc.): woorden die in een standaard Nederlandse uitspraak geen alternatieve spelling toelaten.\n  2. Klankambigue woorden: woorden die indien de klank gevolgd wordt fout gespeld zullen worden. Het gaat om algemene regels en dialectische bijzonderheden. Het zijn fouten die in de ene regio vaker zullen voorkomen dan in een andere:\n    bodum (bodem), enugu (enige), flakbij (vlakbij), prijsen (prijzen), prongeluk (per ongeluk), srijf (schrijf), teminste; tuminste, tuminstu (tenminste), trugbetalen (terugbetalen).\n  3. Spelambigue woorden zoals mouwen (mauwen), klijn (klein), dagt (dacht), antwoort (antwoord), direkt (direct). Het zijn woorden die op twee manieren gespeld kunnen worden, omdat de klank geen uitsluitsel geeft. Twee lettertekens representeren één klank (au/ou, d/t, ei/ij, ch/g, c/k).\nRegels voor lettergreepgrenzen\n  4. Regels voor verdubbeling en verenkeling op lettergreepgrenzen: ontsmetting, nummer, verstoppen, liggen, lopen, oversteken, haren.\n  5. Afbreekregels (ge-trokken; getrok-ken, get-rokken, getrokk-en), als een samenspel van morfologische en spellingregels.\nRegels voor woordgrenzen\n  6. Aaneen- en losschrijven van woorden\n    (autoweg, kwijtraakte, voor altijd).\nMorfologische spelling\n  7. Regel van gelijkvormigheid bij assimilatie: zakdoek in plaats van zaddoek.\n  8. Meervoudsvorming\n    8.1. -s na medeklinker, -a, -o, -u, -y, -e: (a) fuchsia’s, (b) cafés, (c) garages, meisjes\n    8.2. -en (a) zonder en (b) met verdubbeling: latten (zelfstandig naamwoord), laten (werkwoord).\n  9. Vorming van bijvoeglijk naamwoord\n    9.1. -e (bij zelfstandig naamwoord in enkelvoud als meervoud), met mogelijk toepassing van andere regels (verenkeling/verdubbeling op lettergreepgrenzen). Ook bij bijvoeglijke naamwoorden afgeleid van werkwoorden\n    9.2. Stoffelijke bijvoeglijke naamwoorden op -en: gouden, zilveren (zowel bij zelfstandig naamwoord in enkelvoud als meervoud).\n  10. Vorming van verkleinwoord\n    10.1. Basis + diminutief\n    10.2. Uitzondering op verenkelings/verdubbelingsregel:\n      verkleinwoord na open klinker: chocolaatje, cafeetje, parapluutje.\n  11. Schrijfwijze van achtervoegsels (-heid, -lijk).\n  12. ’s en -s: ‘s nachts, ’s Nachts (begin van een zin).\n  13. Meervouds -n bij zelfstandig en bijvoeglijk gebruikte verwijzingen naar personen/niet personen: alle, vele, weinige, maar ook allen, weinigen, velen etc.\nRegels voor de werkwoordspelling\n  14. Persoonsvorm\n    14.1. tegenwoordige tijd van werkwoorden met stam op -d\n      14.1.1. enkelvoud: word(t)\n        eerste persoon stellend en vragend (ik word/word ik)\n        tweede persoon stellend en vragend (jij wordt/word jij)\n        derde persoon enkelvoud stellend en vragend (hij wordt/wordt hij)\n        wordt je broer, wordt jou de toegang ontzegd\n        derde persoon, enkelvoud stellend en vragend bij werkwoorden met prefix (kans op verwarring met woordbeeld van voltooid deelwoord): hij beoordeelt (niet: beoordeeld)\n      14.1.2. meervoud: worden, laten\n    14.2. verleden tijd van zwakke werkwoorden met stam op -d of -t: (morfologische regel leidt tot verdubbeling van d/t, hoewel fonetisch niet nodig) antwoordde\n    14.3. verleden tijd van sterke werkwoorden met stam op -d of -t\n      enkelvoud: werd, liet\n      meervoud: werden.\n  15. Infinitief\n    15.1. «Gewone» werkwoorden met stam op -d of -t: worden, laten\n    15.2. Werkwoorden met stam op -d en -t die in de verleden tijd dd/tt krijgen: vergoeden, verplichten (verwisseling woordbeelden)\n    15.3. Als 15.2, in bijvoeglijke bepalingen, in een omgeving met verleden tijd («de te verlichten straten waren niet afgesloten»).\n  16. Voltooid deelwoord\n    16.1. (per prefix), met kans op verwarring met woordbeeld persoonsvorm\n      op -d: gebeurd, beoordeeld\n      op -d: na een «valse» f (stam op v): geverfd\n      op -d, na een «valse» s (stam op z): verhuisd\n    16.2. op -den of -ten: geladen, gelaten\n      in de omgeving van meervoud (de geladen wagens)\n      in de omgeving van enkelvoud (de geladen wagen)\n    16.3. op -d of -t, gebruikt als bijvoeglijk naamwoord: geparkeerde, geraakte, beschutte\n      in de omgeving van enkelvoud/meervoud: de beschutte tuin/tuinen (bijvoeglijk naamwoord buigt niet met getal mee)\n      in de omgeving van tegenwoordige/verleden tijd: hij zag/zij ziet verlichte straten.\nOverige regels\n  17. Schrijfwijze van tussenklanken -s en -e(n).\n  18. Gebruik van trema en koppelteken.\n4.3.2 Leestekens\n  1. Hoofdletters en punten bij zinsmarkering.\n  2. Vraagtekens, uitroeptekens en aanhalingstekens.\n  3. Hoofdletters bij eigennaam en directe rede.\n  4. Komma’s, dubbele punt."
+    },
+    {
+      "lanes": [
+        "einde-po/reading-language"
+      ],
+      "title": "What the decree says about difficulty, and what mastery means (section 4.4)",
+      "about": "Section 4.4 Moeilijkheid of annex 1: the paragraph and the five classes of spelling problems that come before table 2, and the caption of table 2, which says what mastery means for every row of it. The footnote of the first paragraph follows it on a line of its own, after its number in square brackets; the brackets are not the decree's. The cells of the table are records of this lane, at 1F and at 2F, and are not quoted: the table stands here by its caption. A heading stands at the margin, and a list item after its number.",
+      "source": "nl-wet-referentieniveaus-besluit",
+      "place": "bijlage 1, section 4.4",
+      "text": "4.4 Moeilijkheid\n  De moeilijkheid van spelling is op twee manieren te ordenen. Er zijn empirische gegevens over wat leerlingen einde BO kunnen (PPON) en toetsgegevens van brugklasleerlingen.[1] Dat levert een overzicht van itemmoeilijkheden op, zoals gepresenteerd in het eerste rapport van de Expertgroep (2008). Spellingsproblemen kunnen ook in grotere klassen worden ondergebracht, zoals Schijf (2009) laat zien. Naast een zekere logische opeenvolging van klassen van problemen, speelt ook de frequentie waarin het te spellen woord verschijnt een rol. De «stomme e» bijvoorbeeld, in «stomme» wordt in het algemeen pas beheerst na groep 4, maar zeer frequente woorden met een stomme «e» worden al in groep 3 goed gespeld. Als ordening voor de spellingsproblemen gebruiken we een indeling in vijf klassen. Deze indeling wordt gebruikt bij het diagnosticeren van spellingvaardigheid.\n  [1] G.M. Schijf (2009), Lees- en spellingsvaardigheden van brugklassers, diss. Universiteit van Amsterdam.\n  1. Alfabetisch: hier gaat het om het volgen van de beschaafde Nederlandse uitspraak: dezelfde klank heeft dezelfde letter. De basiskennis is de klank-tekenkoppeling, ook voor bijvoorbeeld oe, ui. Allofonen (v/f; z/s afwisseling) kunnen hierbij gerekend worden. Eind groep 3 wordt deze categorie beheerst.\n  2. Orthografisch: hier gaat het om autonome regels over de grens van lettergrepen heen: woorden met sch, ng, nk, aai, ooi, oei, ch(t), -eeuw, -ieuw, -uw, -ee, de ë in ie of ieë, medeklinkerverdubbeling, open lettergrepen, kleefletters behoren tot deze categorie.\n  3. Morfologisch: alle woorden die gevormd worden door de toevoeging van voor- of achtervoegsels zoals verkleinwoorden (-tje, -pje, -je), meervoudsvorming en achtervoegsels als (-ig, -heid, -teit, -lijk, -aard, -erd, -tie, -iaal/-eaal/-ieel/-ueel, -isch); ook: bijvoeglijk gebruikt voltooid deelwoord. Woorden met ’s als meervoud. Alle woorden die gevormd worden door samenstellingen (assimilatieverschijnselen: voortdurend).\n  4. Morfologisch, met gebruikmaking van syntactische kennis: werkwoordsspelling waarin persoon en getal van het onderwerp leidend is voor de spelling (persoonsvorm), de functie van het werkwoord moet worden bepaald (persoonsvorm, infinitief, voltooid deelwoord). Homofonen zijn hier de moeilijkste problemen (verhuisd/verhuist, beleeft/beleefd): kennis van de functie is hier noodzakelijk.\n  5. Logografisch: vaststaande combinaties, die als zodanig gekend moeten worden (geen regelvorming): /zj/ geschreven als g (garage), open lettergreep /ie/ geschreven als -i-, woorden op -isch, /sj/ geschreven als -ch-, /oo/ geschreven als -au- of -ou-, /s/ geschreven als -c- voor i, ie en e; /ks/ geschreven als -x-, /oe/ geschreven als -ou-, woorden met -aise, -aire, /sj/ geschreven als -ci-, /ie/ geschreven als -y-, leenwoorden (team, jam, tram). Woorden met een trema, woorden voorafgegaan door ‘s.\n  In schema: zie tabel 2 op de volgende pagina\n  Tabel 2: Niveaus voor spelling, interpunctie en grammaticale begrippen voor werkwoordsspelling. Beheersing; 75% van alle leerlingen in de leeftijdsgroep/niveaugroep heeft een kans van 80% goed."
+    },
+    {
+      "lanes": [
+        "peuters/mathematics"
+      ],
+      "title": "The sentence every bullet of the card continues",
+      "about": "The card prints this sentence under its title, over all five columns. Every bullet of the card continues it: a record of the card holds the bullet alone.",
+      "source": "nl-slo-inhoudskaart-rekenen-prefase",
+      "place": "page 1",
+      "text": "Kinderen doen in betekenisvolle situaties ervaringen op over:"
+    },
+    {
+      "lanes": [
+        "peuters/science",
+        "peuters/practical-life-feelings"
+      ],
+      "title": "The sentence every bullet of the card continues",
+      "about": "The card prints this sentence under its title, over all five columns. Every bullet of the card continues it: a record of the card holds the bullet alone. The card serves both lanes.",
+      "source": "nl-slo-inhoudskaart-ojw-prefase",
+      "place": "page 1",
+      "text": "Kinderen doen in betekenisvolle situaties ervaringen op over:"
+    },
+    {
+      "lanes": [
+        "fase-1/reading-language"
+      ],
+      "title": "Cluster headings as the PDF prints them",
+      "about": "Listed where the PDF heads a cluster of this lane otherwise than the open data titles it, or prints a sentence under the heading across the three columns. The records carry the title of the data, in their code scope; what the PDF adds, such as \"(vanaf groep 3)\", holds for every goal of the cluster.",
+      "source": "nl-slo-inhoudslijn-ne-mondeling",
+      "place": "pages 1, 2, 3",
+      "text": "Gesprekken voeren  [NE/MT/01]\n  In gesprekken over alledaagse en niet-alledaagse onderwerpen uit de leefwereld van het kind en de wereld eromheen uiting geven aan persoonlijke meningen en gevoelens, informatie uitwisselen, en deelnemen aan discussie en overleg\nLuisteren  [NE/MT/02]\n  Luisteren naar teksten over alledaagse onderwerpen, onderwerpen die aansluiten bij de leefwereld van de leerling en die verder van de leerling afstaan\nSpreken  [NE/MT/03]\n  Een beschrijving geven, verslag uitbrengen, informatie, uitleg en instructie geven in alledaagse situaties in en buiten school"
+    },
+    {
+      "lanes": [
+        "fase-1/reading-language"
+      ],
+      "title": "Cluster headings as the PDF prints them",
+      "about": "Listed where the PDF heads a cluster of this lane otherwise than the open data titles it, or prints a sentence under the heading across the three columns. The records carry the title of the data, in their code scope; what the PDF adds, such as \"(vanaf groep 3)\", holds for every goal of the cluster.",
+      "source": "nl-slo-inhoudslijn-ne-lezen",
+      "place": "pages 1, 2, 3, 4",
+      "text": "Zakelijke teksten: studievaardigheden (vanaf groep 3)  [the open data titles this cluster \"Zakelijke teksten: studievaardigheden\", NE/LE/04]\nZakelijke teksten: aanpak (vanaf groep 3)  [the open data titles this cluster \"Zakelijke teksten: aanpak\", NE/LE/05]\nTechnisch lezen (vanaf groep 3)  [the open data titles this cluster \"Technisch lezen\", NE/LE/09]"
+    },
+    {
+      "lanes": [
+        "fase-1/reading-language"
+      ],
+      "title": "Cluster headings as the PDF prints them",
+      "about": "Listed where the PDF heads a cluster of this lane otherwise than the open data titles it, or prints a sentence under the heading across the three columns. The records carry the title of the data, in their code scope; what the PDF adds, such as \"(vanaf groep 3)\", holds for every goal of the cluster.",
+      "source": "nl-slo-inhoudslijn-ne-schrijven",
+      "place": "page 1",
+      "text": "Schrijven: kenmerken van de taakuitvoering  [the open data titles this cluster \"Kenmerken van de taakuitvoering schrijven\", NE/SCH/02]\n  Samenhangende teksten schrijven met een eenvoudige lineaire opbouw, over uiteenlopende (meestal vertrouwde) onderwerpen binnen school en de wereld om ons heen."
+    },
+    {
+      "lanes": [
+        "fase-1/reading-language"
+      ],
+      "title": "Cluster headings as the PDF prints them",
+      "about": "Listed where the PDF heads a cluster of this lane otherwise than the open data titles it, or prints a sentence under the heading across the three columns. The records carry the title of the data, in their code scope; what the PDF adds, such as \"(vanaf groep 3)\", holds for every goal of the cluster.",
+      "source": "nl-slo-inhoudslijn-ne-taalbeschouwing",
+      "place": "pages 1, 2",
+      "text": "Taalbeschouwing  [NE/TB/01]\n  Onderstaande begrippen zijn van belang om te reflecteren op taal en taalgebruik in gesprekken met kinderen\nBegrippenlijst*  [the open data titles this cluster \"Begrippenlijst\", NE/TB/02]\n  Begrippen worden vanaf het genoemde niveau aangeboden\nTaalverzorging*  [the open data titles this cluster \"Taalverzorging\", NE/TB/03]\n  spellingcategorieën en -regels worden vanaf het genoemde niveau aangeboden en twee niveaus hoger vrijwel automatisch beheerst. NB In relatie tot het Referentiekader Taal: items cursief zijn ingedeeld op 2F; items vet zijn ingedeeld op 3F."
+    },
+    {
+      "lanes": [
+        "fase-1/practical-life-feelings"
+      ],
+      "title": "Cluster headings as the PDF prints them",
+      "about": "Listed where the PDF heads a cluster of this lane otherwise than the open data titles it, or prints a sentence under the heading across the three columns. The records carry the title of the data, in their code scope; what the PDF adds, such as \"(vanaf groep 3)\", holds for every goal of the cluster.",
+      "source": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": "pages 1, 2",
+      "text": "Relaties en seksualiteit*  [the open data titles this cluster \"Relaties en seksualiteit\", ojw/ja/2]"
+    },
+    {
+      "lanes": [
+        "fase-2/mathematics"
+      ],
+      "title": "Cluster headings as the PDF prints them",
+      "about": "Listed where the PDF heads a cluster of this lane otherwise than the open data titles it, or prints a sentence under the heading across the three columns. The records carry the title of the data, in their code scope; what the PDF adds, such as \"(vanaf groep 3)\", holds for every goal of the cluster.",
+      "source": "nl-slo-inhoudslijn-rw-getalbegrip",
+      "place": "pages 1, 2, 3",
+      "text": "Breuken (zie voor de breuk als verhouding het domein Verhoudingen)  [the open data titles this cluster \"Breuken\", rw/gb/5]"
+    },
+    {
+      "lanes": [
+        "fase-2/reading-language"
+      ],
+      "title": "Cluster headings as the PDF prints them",
+      "about": "Listed where the PDF heads a cluster of this lane otherwise than the open data titles it, or prints a sentence under the heading across the three columns. The records carry the title of the data, in their code scope; what the PDF adds, such as \"(vanaf groep 3)\", holds for every goal of the cluster.",
+      "source": "nl-slo-inhoudslijn-ne-mondeling",
+      "place": "pages 1, 2, 3",
+      "text": "Gesprekken voeren  [NE/MT/01]\n  In gesprekken over alledaagse en niet-alledaagse onderwerpen uit de leefwereld van het kind en de wereld eromheen uiting geven aan persoonlijke meningen en gevoelens, informatie uitwisselen, en deelnemen aan discussie en overleg\nLuisteren  [NE/MT/02]\n  Luisteren naar teksten over alledaagse onderwerpen, onderwerpen die aansluiten bij de leefwereld van de leerling en die verder van de leerling afstaan\nSpreken  [NE/MT/03]\n  Een beschrijving geven, verslag uitbrengen, informatie, uitleg en instructie geven in alledaagse situaties in en buiten school"
+    },
+    {
+      "lanes": [
+        "fase-2/reading-language"
+      ],
+      "title": "Cluster headings as the PDF prints them",
+      "about": "Listed where the PDF heads a cluster of this lane otherwise than the open data titles it, or prints a sentence under the heading across the three columns. The records carry the title of the data, in their code scope; what the PDF adds, such as \"(vanaf groep 3)\", holds for every goal of the cluster.",
+      "source": "nl-slo-inhoudslijn-ne-lezen",
+      "place": "pages 1, 2, 3, 4",
+      "text": "Zakelijke teksten: studievaardigheden (vanaf groep 3)  [the open data titles this cluster \"Zakelijke teksten: studievaardigheden\", NE/LE/04]\nZakelijke teksten: aanpak (vanaf groep 3)  [the open data titles this cluster \"Zakelijke teksten: aanpak\", NE/LE/05]\nTechnisch lezen (vanaf groep 3)  [the open data titles this cluster \"Technisch lezen\", NE/LE/09]"
+    },
+    {
+      "lanes": [
+        "fase-2/reading-language"
+      ],
+      "title": "Cluster headings as the PDF prints them",
+      "about": "Listed where the PDF heads a cluster of this lane otherwise than the open data titles it, or prints a sentence under the heading across the three columns. The records carry the title of the data, in their code scope; what the PDF adds, such as \"(vanaf groep 3)\", holds for every goal of the cluster.",
+      "source": "nl-slo-inhoudslijn-ne-schrijven",
+      "place": "page 1",
+      "text": "Schrijven: kenmerken van de taakuitvoering  [the open data titles this cluster \"Kenmerken van de taakuitvoering schrijven\", NE/SCH/02]\n  Samenhangende teksten schrijven met een eenvoudige lineaire opbouw, over uiteenlopende (meestal vertrouwde) onderwerpen binnen school en de wereld om ons heen."
+    },
+    {
+      "lanes": [
+        "fase-2/reading-language"
+      ],
+      "title": "Cluster headings as the PDF prints them",
+      "about": "Listed where the PDF heads a cluster of this lane otherwise than the open data titles it, or prints a sentence under the heading across the three columns. The records carry the title of the data, in their code scope; what the PDF adds, such as \"(vanaf groep 3)\", holds for every goal of the cluster.",
+      "source": "nl-slo-inhoudslijn-ne-taalbeschouwing",
+      "place": "pages 1, 2",
+      "text": "Taalbeschouwing  [NE/TB/01]\n  Onderstaande begrippen zijn van belang om te reflecteren op taal en taalgebruik in gesprekken met kinderen\nBegrippenlijst*  [the open data titles this cluster \"Begrippenlijst\", NE/TB/02]\n  Begrippen worden vanaf het genoemde niveau aangeboden\nTaalverzorging*  [the open data titles this cluster \"Taalverzorging\", NE/TB/03]\n  spellingcategorieën en -regels worden vanaf het genoemde niveau aangeboden en twee niveaus hoger vrijwel automatisch beheerst. NB In relatie tot het Referentiekader Taal: items cursief zijn ingedeeld op 2F; items vet zijn ingedeeld op 3F."
+    },
+    {
+      "lanes": [
+        "fase-2/practical-life-feelings"
+      ],
+      "title": "Cluster headings as the PDF prints them",
+      "about": "Listed where the PDF heads a cluster of this lane otherwise than the open data titles it, or prints a sentence under the heading across the three columns. The records carry the title of the data, in their code scope; what the PDF adds, such as \"(vanaf groep 3)\", holds for every goal of the cluster.",
+      "source": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": "pages 1, 2",
+      "text": "Relaties en seksualiteit*  [the open data titles this cluster \"Relaties en seksualiteit\", ojw/ja/2]"
+    },
+    {
+      "lanes": [
+        "fase-3/mathematics"
+      ],
+      "title": "Cluster headings as the PDF prints them",
+      "about": "Listed where the PDF heads a cluster of this lane otherwise than the open data titles it, or prints a sentence under the heading across the three columns. The records carry the title of the data, in their code scope; what the PDF adds, such as \"(vanaf groep 3)\", holds for every goal of the cluster.",
+      "source": "nl-slo-inhoudslijn-rw-getalbegrip",
+      "place": "pages 1, 2, 3",
+      "text": "Breuken (zie voor de breuk als verhouding het domein Verhoudingen)  [the open data titles this cluster \"Breuken\", rw/gb/5]"
+    },
+    {
+      "lanes": [
+        "fase-3/reading-language"
+      ],
+      "title": "Cluster headings as the PDF prints them",
+      "about": "Listed where the PDF heads a cluster of this lane otherwise than the open data titles it, or prints a sentence under the heading across the three columns. The records carry the title of the data, in their code scope; what the PDF adds, such as \"(vanaf groep 3)\", holds for every goal of the cluster.",
+      "source": "nl-slo-inhoudslijn-ne-mondeling",
+      "place": "pages 1, 2, 3",
+      "text": "Gesprekken voeren  [NE/MT/01]\n  In gesprekken over alledaagse en niet-alledaagse onderwerpen uit de leefwereld van het kind en de wereld eromheen uiting geven aan persoonlijke meningen en gevoelens, informatie uitwisselen, en deelnemen aan discussie en overleg\nLuisteren  [NE/MT/02]\n  Luisteren naar teksten over alledaagse onderwerpen, onderwerpen die aansluiten bij de leefwereld van de leerling en die verder van de leerling afstaan\nSpreken  [NE/MT/03]\n  Een beschrijving geven, verslag uitbrengen, informatie, uitleg en instructie geven in alledaagse situaties in en buiten school"
+    },
+    {
+      "lanes": [
+        "fase-3/reading-language"
+      ],
+      "title": "Cluster headings as the PDF prints them",
+      "about": "Listed where the PDF heads a cluster of this lane otherwise than the open data titles it, or prints a sentence under the heading across the three columns. The records carry the title of the data, in their code scope; what the PDF adds, such as \"(vanaf groep 3)\", holds for every goal of the cluster.",
+      "source": "nl-slo-inhoudslijn-ne-lezen",
+      "place": "pages 1, 2, 3, 4",
+      "text": "Zakelijke teksten: studievaardigheden (vanaf groep 3)  [the open data titles this cluster \"Zakelijke teksten: studievaardigheden\", NE/LE/04]\nZakelijke teksten: aanpak (vanaf groep 3)  [the open data titles this cluster \"Zakelijke teksten: aanpak\", NE/LE/05]\nTechnisch lezen (vanaf groep 3)  [the open data titles this cluster \"Technisch lezen\", NE/LE/09]"
+    },
+    {
+      "lanes": [
+        "fase-3/reading-language"
+      ],
+      "title": "Cluster headings as the PDF prints them",
+      "about": "Listed where the PDF heads a cluster of this lane otherwise than the open data titles it, or prints a sentence under the heading across the three columns. The records carry the title of the data, in their code scope; what the PDF adds, such as \"(vanaf groep 3)\", holds for every goal of the cluster.",
+      "source": "nl-slo-inhoudslijn-ne-schrijven",
+      "place": "page 1",
+      "text": "Schrijven: kenmerken van de taakuitvoering  [the open data titles this cluster \"Kenmerken van de taakuitvoering schrijven\", NE/SCH/02]\n  Samenhangende teksten schrijven met een eenvoudige lineaire opbouw, over uiteenlopende (meestal vertrouwde) onderwerpen binnen school en de wereld om ons heen."
+    },
+    {
+      "lanes": [
+        "fase-3/reading-language"
+      ],
+      "title": "Cluster headings as the PDF prints them",
+      "about": "Listed where the PDF heads a cluster of this lane otherwise than the open data titles it, or prints a sentence under the heading across the three columns. The records carry the title of the data, in their code scope; what the PDF adds, such as \"(vanaf groep 3)\", holds for every goal of the cluster.",
+      "source": "nl-slo-inhoudslijn-ne-taalbeschouwing",
+      "place": "pages 1, 2",
+      "text": "Taalbeschouwing  [NE/TB/01]\n  Onderstaande begrippen zijn van belang om te reflecteren op taal en taalgebruik in gesprekken met kinderen\nBegrippenlijst*  [the open data titles this cluster \"Begrippenlijst\", NE/TB/02]\n  Begrippen worden vanaf het genoemde niveau aangeboden\nTaalverzorging*  [the open data titles this cluster \"Taalverzorging\", NE/TB/03]\n  spellingcategorieën en -regels worden vanaf het genoemde niveau aangeboden en twee niveaus hoger vrijwel automatisch beheerst. NB In relatie tot het Referentiekader Taal: items cursief zijn ingedeeld op 2F; items vet zijn ingedeeld op 3F."
+    },
+    {
+      "lanes": [
+        "fase-3/practical-life-feelings"
+      ],
+      "title": "Cluster headings as the PDF prints them",
+      "about": "Listed where the PDF heads a cluster of this lane otherwise than the open data titles it, or prints a sentence under the heading across the three columns. The records carry the title of the data, in their code scope; what the PDF adds, such as \"(vanaf groep 3)\", holds for every goal of the cluster.",
+      "source": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": "pages 1, 2",
+      "text": "Relaties en seksualiteit*  [the open data titles this cluster \"Relaties en seksualiteit\", ojw/ja/2]"
+    },
+    {
+      "lanes": [
+        "fase-1/science"
+      ],
+      "title": "Goals that hold an underlined term",
+      "about": "The PDF underlines terms in its goals; its note, quoted in this section, says what the underlining refers to. Neither the open data nor a record marks an underlined term. Goals of this lane that this PDF prints: 4. With an underlined term: 3, listed here, each by the code the data gives it (a statement the data lacks by its name in the manifest), then the term or terms as underlined, in the order of the page. Read by script from the rules the PDF draws under its words. \"(in part)\" after a word says the rule runs under part of that word only; the word is given whole, since the box of a word does not tell which letters the rule covers.",
+      "source": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": "column fase 1",
+      "text": "ojw/rojh/2/01/fase1: heelal\nojw/rojh/7/01/fase1: weersverschijnselen (in part)\nojw/rojh/7/02/fase1: weer"
+    },
+    {
+      "lanes": [
+        "fase-1/science"
+      ],
+      "title": "Goals that hold an underlined term",
+      "about": "The PDF underlines terms in its goals; its note, quoted in this section, says what the underlining refers to. Neither the open data nor a record marks an underlined term. Goals of this lane that this PDF prints: 20. With an underlined term: 16, listed here, each by the code the data gives it (a statement the data lacks by its name in the manifest), then the term or terms as underlined, in the order of the page. Read by script from the rules the PDF draws under its words. \"(in part)\" after a word says the rule runs under part of that word only; the word is given whole, since the box of a word does not tell which letters the rule covers.",
+      "source": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": "column fase 1",
+      "text": "ojw/pdm/1/01/fase1: mens\nojw/pdm/1/03/fase1: vorm en functie; mens\nojw/pdm/1/04/fase1: mensen\nojw/pdm/1/05/fase1: mens\nojw/pdm/3/01/fase1: planten; dieren; mens\nojw/pdm/3/03/fase1: groei; ontwikkeling; voortplanting; planten; dieren; mens\nojw/pdm/3/05/fase1: dieren\nojw/pdm/3/06/fase1: mensen\nojw/pdm/4/01/fase1: planten; dieren\nojw/pdm/4/02/fase1: planten; dieren\nojw/pdm/4/04/fase1: planten\nojw/pdm/4/05/fase1: planten; dieren\nojw/pdm/5/01/fase1: plant; dier\nojw/pdm/5/02/fase1: planten; dieren\nojw/pdm/5/03/fase1: planten; dieren\nojw/pdm/5/04/fase1: planten; dieren"
+    },
+    {
+      "lanes": [
+        "fase-1/science"
+      ],
+      "title": "Goals that hold an underlined term",
+      "about": "The PDF underlines terms in its goals; its note, quoted in this section, says what the underlining refers to. Neither the open data nor a record marks an underlined term. Goals of this lane that this PDF prints: 10. With an underlined term: 5, listed here, each by the code the data gives it (a statement the data lacks by its name in the manifest), then the term or terms as underlined, in the order of the page. Read by script from the rules the PDF draws under its words. \"(in part)\" after a word says the rule runs under part of that word only; the word is given whole, since the box of a word does not tell which letters the rule covers.",
+      "source": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": "column fase 1",
+      "text": "ojw/nattech/1/03/fase1: ontwerp\nojw/nattech/2/02/fase1: licht\nojw/nattech/3/01/fase1: constructies\nojw/nattech/3/02/fase1: verbindingen\nojw/nattech/3/03/fase1: overbrengings (in part)"
+    },
+    {
+      "lanes": [
+        "fase-1/practical-life-feelings"
+      ],
+      "title": "Goals that hold an underlined term",
+      "about": "The PDF underlines terms in its goals; its note, quoted in this section, says what the underlining refers to. Neither the open data nor a record marks an underlined term. Goals of this lane that this PDF prints: 2. With an underlined term: 1, listed here, each by the code the data gives it (a statement the data lacks by its name in the manifest), then the term or terms as underlined, in the order of the page. Read by script from the rules the PDF draws under its words. \"(in part)\" after a word says the rule runs under part of that word only; the word is given whole, since the box of a word does not tell which letters the rule covers.",
+      "source": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": "column fase 1",
+      "text": "ojw/rojh/6/02/fase1: milieu"
+    },
+    {
+      "lanes": [
+        "fase-2/science"
+      ],
+      "title": "Goals that hold an underlined term",
+      "about": "The PDF underlines terms in its goals; its note, quoted in this section, says what the underlining refers to. Neither the open data nor a record marks an underlined term. Goals of this lane that this PDF prints: 8. With an underlined term: 5, listed here, each by the code the data gives it (a statement the data lacks by its name in the manifest), then the term or terms as underlined, in the order of the page. Read by script from the rules the PDF draws under its words. \"(in part)\" after a word says the rule runs under part of that word only; the word is given whole, since the box of a word does not tell which letters the rule covers.",
+      "source": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": "column fase 2",
+      "text": "ojw/rojh/2/02/fase2: heelal\nojw/rojh/7/01/fase2: weerbeeld (in part)\nojw/rojh/7/03/fase2: weer\nojw/rojh/7/04/fase2: weer; klimaat\nojw/rojh/7/05/fase2: weer"
+    },
+    {
+      "lanes": [
+        "fase-2/science"
+      ],
+      "title": "Goals that hold an underlined term",
+      "about": "The PDF underlines terms in its goals; its note, quoted in this section, says what the underlining refers to. Neither the open data nor a record marks an underlined term. Goals of this lane that this PDF prints: 23. With an underlined term: 19, listed here, each by the code the data gives it (a statement the data lacks by its name in the manifest), then the term or terms as underlined, in the order of the page. Read by script from the rules the PDF draws under its words. \"(in part)\" after a word says the rule runs under part of that word only; the word is given whole, since the box of a word does not tell which letters the rule covers.",
+      "source": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": "column fase 2",
+      "text": "ojw/pdm/1/01/fase2: mens; vorm en functie\nojw/pdm/1/03/fase2: mensen\nojw/pdm/3/05/fase2: groei en ontwikkeling; dieren\nojw/pdm/3/10/fase2: dieren; voortplanten\nojw/pdm/3/11/fase2: voortplanting; mensen\nojw/pdm/3/01/fase2: planten; dieren; mens; groei; ontwikkeling\nojw/pdm/3/02/fase2: planten; dieren\nojw/pdm/3/06/fase2: dieren\nojw/pdm/3/07/fase2: mensen; dieren; planten; groeien en ontwikkelen; voortplanten\nojw/pdm/3/08/fase2: voortplanting\nojw/pdm/3/09/fase2: plant\nojw/pdm/4/01/fase2: planten; dieren\nojw/pdm/4/03/fase2: planten; dieren\nojw/pdm/5/01/fase2: planten; dieren\nojw/pdm/5/02/fase2: planten; dieren\nojw/pdm/5/03/fase2: planten; dieren; levensgemeenschap\nojw/pdm/5/04/fase2: planten; dieren\nojw/pdm/5/05/fase2: planten; dieren\nojw/pdm/5/06/fase2: planten; dieren; technologische ontwikkelingen"
+    },
+    {
+      "lanes": [
+        "fase-2/science"
+      ],
+      "title": "Goals that hold an underlined term",
+      "about": "The PDF underlines terms in its goals; its note, quoted in this section, says what the underlining refers to. Neither the open data nor a record marks an underlined term. Goals of this lane that this PDF prints: 25. With an underlined term: 18, listed here, each by the code the data gives it (a statement the data lacks by its name in the manifest), then the term or terms as underlined, in the order of the page. Read by script from the rules the PDF draws under its words. \"(in part)\" after a word says the rule runs under part of that word only; the word is given whole, since the box of a word does not tell which letters the rule covers.",
+      "source": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": "column fase 2",
+      "text": "ojw/nattech/1/01/fase2: materiaal\nojw/nattech/1/02/fase2: materialen\nojw/nattech/1/03/fase2: stoffen\nojw/nattech/1/04/fase2: materialen\nojw/nattech/1/05/fase2: vorm-functie van producten\nojw/nattech/1/07/fase2: ontwerpen\nojw/nattech/2/01/fase2: licht\nojw/nattech/2/02/fase2: geluid\nojw/nattech/2/03/fase2: temperatuur; warmte\nojw/nattech/2/04/fase2: kracht\nojw/nattech/2/05/fase2: magnetisme\nojw/nattech/2/06/fase2: elektriciteit\nojw/nattech/2/07/fase2: energie; energiebronnen\nojw/nattech/3/01/fase2: constructies\nojw/nattech/3/02/fase2: constructie\nojw/nattech/3/03/fase2: verbindingen\nojw/nattech/3/04/fase2: kracht; overgebracht\nojw/nattech/3/06/fase2: geautomatiseerd systeem"
+    },
+    {
+      "lanes": [
+        "fase-2/practical-life-feelings"
+      ],
+      "title": "Goals that hold an underlined term",
+      "about": "The PDF underlines terms in its goals; its note, quoted in this section, says what the underlining refers to. Neither the open data nor a record marks an underlined term. Goals of this lane that this PDF prints: 29. With an underlined term: 1, listed here, each by the code the data gives it (a statement the data lacks by its name in the manifest), then the term or terms as underlined, in the order of the page. Read by script from the rules the PDF draws under its words. \"(in part)\" after a word says the rule runs under part of that word only; the word is given whole, since the box of a word does not tell which letters the rule covers.",
+      "source": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": "column fase 2",
+      "text": "ojw/ja/3/14/fase2: multiculturele samenleving"
+    },
+    {
+      "lanes": [
+        "fase-2/practical-life-feelings"
+      ],
+      "title": "Goals that hold an underlined term",
+      "about": "The PDF underlines terms in its goals; its note, quoted in this section, says what the underlining refers to. Neither the open data nor a record marks an underlined term. Goals of this lane that this PDF prints: 14. With an underlined term: 4, listed here, each by the code the data gives it (a statement the data lacks by its name in the manifest), then the term or terms as underlined, in the order of the page. Read by script from the rules the PDF draws under its words. \"(in part)\" after a word says the rule runs under part of that word only; the word is given whole, since the box of a word does not tell which letters the rule covers.",
+      "source": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": "column fase 2",
+      "text": "ojw/ds/1/02/fase2: oorlog; identiteit; natuurrampen\nojw/ds/1/06/fase2: discriminatie\nojw/ds/2/01/fase2: geld\nInhoudslijn De samenleving, PDF / Consument zijn, 4: werken; geld"
+    },
+    {
+      "lanes": [
+        "fase-2/practical-life-feelings"
+      ],
+      "title": "Goals that hold an underlined term",
+      "about": "The PDF underlines terms in its goals; its note, quoted in this section, says what the underlining refers to. Neither the open data nor a record marks an underlined term. Goals of this lane that this PDF prints: 6. With an underlined term: 4, listed here, each by the code the data gives it (a statement the data lacks by its name in the manifest), then the term or terms as underlined, in the order of the page. Read by script from the rules the PDF draws under its words. \"(in part)\" after a word says the rule runs under part of that word only; the word is given whole, since the box of a word does not tell which letters the rule covers.",
+      "source": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": "column fase 2",
+      "text": "ojw/rojh/6/01/fase2: aarde\nojw/rojh/6/02/fase2: milieu\nojw/rojh/6/04/fase2: energiebronnen\nojw/rojh/6/05/fase2: duurzame"
+    },
+    {
+      "lanes": [
+        "fase-3/science"
+      ],
+      "title": "Goals that hold an underlined term",
+      "about": "The PDF underlines terms in its goals; its note, quoted in this section, says what the underlining refers to. Neither the open data nor a record marks an underlined term. Goals of this lane that this PDF prints: 9. With an underlined term: 5, listed here, each by the code the data gives it (a statement the data lacks by its name in the manifest), then the term or terms as underlined, in the order of the page. Read by script from the rules the PDF draws under its words. \"(in part)\" after a word says the rule runs under part of that word only; the word is given whole, since the box of a word does not tell which letters the rule covers.",
+      "source": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": "column fase 3",
+      "text": "ojw/rojh/2/01/fase3: heelal\nojw/rojh/7/03/fase3: klimaatverandering\nojw/rojh/7/06/fase3: klimaten\nojw/rojh/7/01/fase3: weersverschijnselen (in part)\nojw/rojh/7/05/fase3: weer; klimaat"
+    },
+    {
+      "lanes": [
+        "fase-3/science"
+      ],
+      "title": "Goals that hold an underlined term",
+      "about": "The PDF underlines terms in its goals; its note, quoted in this section, says what the underlining refers to. Neither the open data nor a record marks an underlined term. Goals of this lane that this PDF prints: 39. With an underlined term: 29, listed here, each by the code the data gives it (a statement the data lacks by its name in the manifest), then the term or terms as underlined, in the order of the page. Read by script from the rules the PDF draws under its words. \"(in part)\" after a word says the rule runs under part of that word only; the word is given whole, since the box of a word does not tell which letters the rule covers.",
+      "source": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": "column fase 3",
+      "text": "ojw/pdm/1/01/fase3: vorm en functie; mens; stofwisseling\nojw/pdm/1/02/fase3: mens\nojw/pdm/1/05/fase3: mens\nojw/pdm/1/06/fase3: mensen\nojw/pdm/1/04/fase3: mensen\nojw/pdm/3/01/fase1: dieren; mens; groei en ontwikkeling\nojw/pdm/3/08/fase3: dieren; mens\nojw/pdm/3/09/fase3: planten; voortplanting; stofwisseling\nojw/pdm/3/12/fase3: voortplanting\nojw/pdm/3/13/fase3: voortplanting; dieren\nojw/pdm/3/15/fase3: voortplanting; mens\nojw/pdm/3/16/fase3: mensen\nojw/pdm/3/02/fase3: planten; dieren\nojw/pdm/3/03/fase3: dieren\nojw/pdm/3/07/fase3: planten; dieren\nojw/pdm/4/01/fase3: planten; dieren\nojw/pdm/4/03/fase3: planten; dieren\nojw/pdm/5/03/fase3: cellen\nojw/pdm/5/04/fase3: dieren\nojw/pdm/5/05/fase3: zaad-)planten (in part); planten\nojw/pdm/5/06/fase3: dieren\nojw/pdm/5/07/fase3: vorm en functie; planten; dieren\nojw/pdm/5/01/fase3: planten; dieren; plantenrijk; dierenrijk\nojw/pdm/5/08/fase3: planten; dieren\nojw/pdm/5/09/fase3: dieren\nojw/pdm/5/10/fase3: planten; dieren\nojw/pdm/5/11/fase3: wisselwerking tussen planten, dieren, mensen en omgeving\nojw/pdm/5/13/fase3: planten; dieren\nojw/pdm/5/14/fase3: dieren; planten; technologische ontwikkelingen"
+    },
+    {
+      "lanes": [
+        "fase-3/science"
+      ],
+      "title": "Goals that hold an underlined term",
+      "about": "The PDF underlines terms in its goals; its note, quoted in this section, says what the underlining refers to. Neither the open data nor a record marks an underlined term. Goals of this lane that this PDF prints: 24. With an underlined term: 17, listed here, each by the code the data gives it (a statement the data lacks by its name in the manifest), then the term or terms as underlined, in the order of the page. Read by script from the rules the PDF draws under its words. \"(in part)\" after a word says the rule runs under part of that word only; the word is given whole, since the box of a word does not tell which letters the rule covers.",
+      "source": "nl-slo-inhoudslijn-ojw-natuurkunde-techniek",
+      "place": "column fase 3",
+      "text": "ojw/nattech/1/01/fase3: materiaal\nojw/nattech/1/02/fase3: materialen\nojw/nattech/1/03/fase3: stoffen\nojw/nattech/1/04/fase3: vorm en functie van producten\nojw/nattech/1/06/fase3: ontwerpen\nojw/nattech/2/01/fase3: licht\nojw/nattech/2/02/fase3: geluid\nojw/nattech/2/03/fase3: temperatuur; warmte\nojw/nattech/2/04/fase3: kracht\nojw/nattech/2/05/fase3: magnetisme\nojw/nattech/2/06/fase3: elektriciteit\nojw/nattech/2/07/fase3: technologieën\nojw/nattech/2/09/fase3: energie; energiebronnen\nojw/nattech/3/01/fase3: ontwerpen; constructie\nojw/nattech/3/02/fase3: verbindingen\nojw/nattech/3/04/fase3: overbrengingsprincipes (in part)\nojw/nattech/3/05/fase3: geautomatiseerd systeem"
+    },
+    {
+      "lanes": [
+        "fase-3/practical-life-feelings"
+      ],
+      "title": "Goals that hold an underlined term",
+      "about": "The PDF underlines terms in its goals; its note, quoted in this section, says what the underlining refers to. Neither the open data nor a record marks an underlined term. Goals of this lane that this PDF prints: 18. With an underlined term: 3, listed here, each by the code the data gives it (a statement the data lacks by its name in the manifest), then the term or terms as underlined, in the order of the page. Read by script from the rules the PDF draws under its words. \"(in part)\" after a word says the rule runs under part of that word only; the word is given whole, since the box of a word does not tell which letters the rule covers.",
+      "source": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": "column fase 3",
+      "text": "ojw/ds/1/03/fase3: grenzen en identiteit; oorlog en vrede\nojw/ds/1/07/fase3: discriminatie\nojw/ds/2/01/fase3: zak-)geld (in part)"
+    },
+    {
+      "lanes": [
+        "fase-3/practical-life-feelings"
+      ],
+      "title": "Goals that hold an underlined term",
+      "about": "The PDF underlines terms in its goals; its note, quoted in this section, says what the underlining refers to. Neither the open data nor a record marks an underlined term. Goals of this lane that this PDF prints: 5. With an underlined term: 3, listed here, each by the code the data gives it (a statement the data lacks by its name in the manifest), then the term or terms as underlined, in the order of the page. Read by script from the rules the PDF draws under its words. \"(in part)\" after a word says the rule runs under part of that word only; the word is given whole, since the box of a word does not tell which letters the rule covers.",
+      "source": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": "column fase 3",
+      "text": "ojw/rojh/6/01/fase3: milieu\nojw/rojh/6/03/fase3: watermanagement\nojw/rojh/6/05/fase3: duurzame ontwikkeling"
+    },
+    {
+      "lanes": [
+        "fase-3/practical-life-feelings"
+      ],
+      "title": "Goals that hold an underlined term",
+      "about": "The PDF underlines terms in its goals; its note, quoted in this section, says what the underlining refers to. Neither the open data nor a record marks an underlined term. Goals of this lane that this PDF prints: 11. With an underlined term: 1, listed here, each by the code the data gives it (a statement the data lacks by its name in the manifest), then the term or terms as underlined, in the order of the page. Read by script from the rules the PDF draws under its words. \"(in part)\" after a word says the rule runs under part of that word only; the word is given whole, since the box of a word does not tell which letters the rule covers.",
+      "source": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": "column fase 3",
+      "text": "ojw/pdm/2/04/fase3: mens"
+    }
+  ]
+}

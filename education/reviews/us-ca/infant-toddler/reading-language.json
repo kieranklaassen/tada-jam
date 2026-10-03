@@ -1,0 +1,142 @@
+{
+  "lane": "us-ca/infant-toddler/reading-language",
+  "verdicts": [
+    {
+      "id": "edu.us-ca.infant-toddler.reading-language.objective.language-development-strand-1-0-attending-and-understanding-1-1",
+      "wording_sha256": "dbaa9179b80cfe0e9986ce150bdfb0ac64f7062fbda9be214017e4407af30528",
+      "text_sha256": "98ce813a7bbebe8c0557294c7753e3d54abaab6d15af83bc75c4180857720abf",
+      "verdict": "confirmed",
+      "note": "The record holds the indicator as two paragraphs, as the page prints it. The 23 through 36 months cell on this page prints one more paragraph after the indicator paragraphs the record holds: a one-sentence inclusion note. The extraction left it out on purpose and the assignment says to report it, not to fail the record for it. It stands above the rule that separates the indicators from the examples, in the row the document's own key (page 30) labels as indicators, and it carries no \"Note:\" label. Here the note is about a child who is blind, and the same sentence stands in all three age columns.",
+      "rendition": "same-file",
+      "place": {
+        "page": 33,
+        "offset": 41
+      },
+      "matched_by": "script",
+      "checker": "us-ca/infant-toddler/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.infant-toddler.reading-language.objective.language-development-strand-1-0-attending-and-understanding-1-1",
+      "wording_sha256": "92175b0adddaf8c858cc18f684ad7c9e069337dcea7c0bce485bb6eefc802a47",
+      "text_sha256": "89274793ae23302d7f4694ee1f934deb44bb0a82610962e189f78f881cceb13a",
+      "verdict": "confirmed",
+      "note": "Round 2, a second reading on the page image (page 115). The 23 through 36 months cell prints three paragraphs above the rule that separates indicators from examples, and the record now holds all three, in order. The added third span is that cell's own one-sentence inclusion sentence about a child who is blind. All three age columns print the same sentence; the span takes the third printing, which in the extractor's view follows directly on the second paragraph of the 23 through 36 months cell. Nothing from another column and nothing from the examples row is in the record. The foundation statement and the heading number are equal. The Summary and Limits now state the sentence as an allowance, with its two named senses kept as examples. The page gives the sentence no label; calling it a note is the pack's word and changes no condition.",
+      "rendition": "same-file",
+      "place": {
+        "page": 33,
+        "offset": 41
+      },
+      "matched_by": "script",
+      "checker": "us-ca/infant-toddler/reading-language, round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.infant-toddler.reading-language.objective.language-development-strand-1-0-attending-and-understanding-1-2",
+      "wording_sha256": "386866cc48b82208effde547d60006d96dcb6a634f85ad52715654929c127cab",
+      "text_sha256": "a4a133f0920d8f322884d4d3cc991e52801d3fcb8343f0126495c81971c911bb",
+      "verdict": "confirmed",
+      "note": "Limits says learning a new word after one or two meetings \"is stated as\" understanding it, not saying it. The indicator's own verb there is wider than understanding; the reading rests on the foundation statement, which is about understanding. Not a contradiction, so confirmed.",
+      "rendition": "same-file",
+      "place": {
+        "page": 33,
+        "offset": 81
+      },
+      "matched_by": "script",
+      "checker": "us-ca/infant-toddler/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.infant-toddler.reading-language.objective.language-development-strand-2-0-communicating-2-1",
+      "wording_sha256": "d93e9236cb8bfc72a004f4199f727c9cb90ad0ba04f3e3edf5247b43d22a37fd",
+      "text_sha256": "61b3c2db73ccbd8d2e06daa680ca6e4bf88331f8a40013cad053de0b3fb98eb4",
+      "verdict": "confirmed",
+      "note": "The record holds the indicator as two paragraphs, as the page prints it. The 23 through 36 months cell on this page prints one more paragraph after the indicator paragraphs the record holds: a one-sentence inclusion note. The extraction left it out on purpose and the assignment says to report it, not to fail the record for it. It stands above the rule that separates the indicators from the examples, in the row the document's own key (page 30) labels as indicators, and it carries no \"Note:\" label. Here the note is about children not yet communicating by voice or by hand signs, and the aids they may use; the same note stands in the 11 through 23 months column. The Design notes name speech and signing only.",
+      "rendition": "same-file",
+      "place": {
+        "page": 33,
+        "offset": 132
+      },
+      "matched_by": "script",
+      "checker": "us-ca/infant-toddler/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.infant-toddler.reading-language.objective.language-development-strand-2-0-communicating-2-1",
+      "wording_sha256": "382a4419dc28aa60ec3226a942bd9eda63e03ff24799366264daf94485f579be",
+      "text_sha256": "edb527c05b83a46defe9213c7da0bc3fa845624349ade79771b895d6bd5abb46",
+      "verdict": "confirmed",
+      "note": "Round 2, a second reading on the page image (page 120). The 23 through 36 months cell prints three paragraphs above the rule, and the record now holds all three, in order. The added third span is the short form of the inclusion sentence, as that cell prints it (the abbreviation alone), not the longer form in the 11 through 23 months cell, which spells the abbreviation out; nothing from that column is in the record. The foundation statement and the heading number are equal. The Summary states the sentence as an allowance and keeps its three kinds of device as examples. Limits spells the abbreviation out: the expansion is printed on this page in the neighbouring column, not in this cell, and it is correct. Limits also says, truly, that the sentence does not say how the stated sentence length applies to a child who uses a device.",
+      "rendition": "same-file",
+      "place": {
+        "page": 33,
+        "offset": 132
+      },
+      "matched_by": "script",
+      "checker": "us-ca/infant-toddler/reading-language, round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.infant-toddler.reading-language.objective.language-development-strand-2-0-communicating-2-2",
+      "wording_sha256": "90f888303fae1014b2059ab01e84d4a62836063c5e514a10b5dcfeb95f8db6e0",
+      "text_sha256": "da3da04ece20da1bc724d5ed243990c8802bd04665e35b7ec90eae3dcff64d16",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Summary, last clause: it says the child's answers stay on the subject \"the other person raised\". The indicator says only that the child responds to the other person on the same topic of the conversation, in general; it does not say who brought the topic up (the record's own Limits says as much, and the page's first example has the child start the topic). Drop the attribution. Wording, code and the correction are right: the page breaks the hyphenated compound at a line end in the indicator and prints it on one line in the foundation statement, so the restored hyphen is correct. The 23 through 36 months cell on this page prints one more paragraph after the indicator paragraphs the record holds: a one-sentence inclusion note. The extraction left it out on purpose and the assignment says to report it, not to fail the record for it. It stands above the rule that separates the indicators from the examples, in the row the document's own key (page 30) labels as indicators, and it carries no \"Note:\" label. Here it is the same note as on foundation 2.1 (children not yet communicating by voice or by hand signs).",
+      "rendition": "same-file",
+      "place": {
+        "page": 33,
+        "offset": 172
+      },
+      "matched_by": "script",
+      "corrections_verified": true,
+      "checker": "us-ca/infant-toddler/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.infant-toddler.reading-language.objective.language-development-strand-2-0-communicating-2-2",
+      "wording_sha256": "29bb6701f2301f70dd79c4fedab6ad9920438754c1e2ac74e0439fb1d3e8562f",
+      "text_sha256": "1df44f4e24731ddd3740845527d190e2adf213bb54b29fb2438a99600157ac90",
+      "verdict": "confirmed",
+      "note": "Round 2, a second reading on the page image (page 122). The 23 through 36 months cell prints two paragraphs above the rule, and the record now holds both. The added span is the short form of the inclusion sentence, as that cell prints it, not the longer form in the 11 through 23 months cell; nothing from that column is in the record. The Summary no longer says who raised the topic: it now says only that the replies keep, broadly, to the subject of the conversation, which is what the indicator says. Limits says the indicator does not say who starts and gives no number of turns: both true. Correction verified on the image: the indicator breaks the hyphenated compound at a line end after its second hyphen, and the foundation statement prints it on one line, so the restored hyphen is right. The foundation statement and the heading number are equal.",
+      "rendition": "same-file",
+      "place": {
+        "page": 33,
+        "offset": 172
+      },
+      "matched_by": "script",
+      "corrections_verified": true,
+      "checker": "us-ca/infant-toddler/reading-language, round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.infant-toddler.reading-language.objective.language-development-strand-3-0-early-literacy-3-1",
+      "wording_sha256": "aff53d02ccc80023573bb3a5b1bfad0475dccfb6edf0b577806504c6cdc79e30",
+      "text_sha256": "5bae64630bc9b5957c9b2cd6345fa0a4cdcdacbe4b08ebbc3607057c0610629a",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 33,
+        "offset": 222
+      },
+      "matched_by": "script",
+      "checker": "us-ca/infant-toddler/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.infant-toddler.reading-language.objective.language-development-strand-3-0-early-literacy-3-2",
+      "wording_sha256": "fd186fbae94c2b0cb865c5e89729043835da545a421b4b97b7ffaaa54be235c1",
+      "text_sha256": "dc076a2152b73a1d0812a085de80b8237d9f151a6c5e04e201898fa8764a9718",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 33,
+        "offset": 262
+      },
+      "matched_by": "script",
+      "checker": "us-ca/infant-toddler/reading-language",
+      "round": 1
+    }
+  ],
+  "unrecorded": []
+}

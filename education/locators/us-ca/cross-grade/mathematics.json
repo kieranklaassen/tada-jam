@@ -1,0 +1,149 @@
+{
+  "lane": "us-ca/cross-grade/mathematics",
+  "records": [
+    {
+      "group": "Standards for Mathematical Practice",
+      "code": "1",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-math-pdf",
+          "page": 13,
+          "first": "Make sense of problems",
+          "last": "between different approaches"
+        }
+      ]
+    },
+    {
+      "group": "Standards for Mathematical Practice",
+      "code": "2",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-math-pdf",
+          "page": 13,
+          "first": "Reason abstractly and quantitatively",
+          "last": "operations and objects"
+        }
+      ]
+    },
+    {
+      "group": "Standards for Mathematical Practice",
+      "code": "3",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-math-pdf",
+          "page": 13,
+          "first": "Construct viable arguments and",
+          "last": "improve the arguments",
+          "lastPage": 14,
+          "corrections": [
+            {
+              "from": "6 | Standards for",
+              "to": "",
+              "reason": "running header or footer"
+            },
+            {
+              "from": "Mathematical Practice",
+              "to": "",
+              "reason": "running header or footer"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Standards for Mathematical Practice",
+      "code": "4",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-math-pdf",
+          "page": 14,
+          "first": "Model with mathematics",
+          "last": "served its purpose"
+        }
+      ]
+    },
+    {
+      "group": "Standards for Mathematical Practice",
+      "code": "5",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-math-pdf",
+          "page": 14,
+          "first": "Use appropriate tools strategically",
+          "last": "understanding of concepts"
+        }
+      ]
+    },
+    {
+      "group": "Standards for Mathematical Practice",
+      "code": "6",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-math-pdf",
+          "page": 14,
+          "first": "Attend to precision",
+          "last": "use of definitions"
+        }
+      ]
+    },
+    {
+      "group": "Standards for Mathematical Practice",
+      "code": "7",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-math-pdf",
+          "page": 14,
+          "first": "Look for and make",
+          "last": "numbers x and y",
+          "lastPage": 15,
+          "corrections": [
+            {
+              "from": "Standards for Mathematical Practice",
+              "to": "",
+              "reason": "running header or footer"
+            },
+            {
+              "from": "| 7",
+              "to": "",
+              "reason": "running header or footer"
+            },
+            {
+              "from": "x2 + 9x",
+              "to": "x² + 9x",
+              "reason": "ligature or glyph"
+            },
+            {
+              "from": "y)2",
+              "to": "y)²",
+              "reason": "ligature or glyph"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Standards for Mathematical Practice",
+      "code": "8",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-math-pdf",
+          "page": 15,
+          "first": "Look for and express",
+          "last": "their intermediate results",
+          "corrections": [
+            {
+              "from": "(x2 + x",
+              "to": "(x² + x",
+              "reason": "ligature or glyph"
+            },
+            {
+              "from": "(x3 + x2",
+              "to": "(x³ + x²",
+              "reason": "ligature or glyph"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

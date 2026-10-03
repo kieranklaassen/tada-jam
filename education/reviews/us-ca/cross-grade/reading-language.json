@@ -1,0 +1,598 @@
+{
+  "lane": "us-ca/cross-grade/reading-language",
+  "verdicts": [
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-language-l-ccr-1",
+      "wording_sha256": "de0f838dc229490e6dc00826d83a53912cc0ae93e75a242898713d6a64be035a",
+      "text_sha256": "01f3bd04294329381c314af88cba48d43852d2bec84bfe423e538b34ced9006b",
+      "verdict": "confirmed",
+      "note": "Second reading on the page image: page 37 (the printing before the K-5 tables), also read on page 76; printed as the bare number 1 under the strand's heading, which with the document's own citation form (strand, CCR, number; stated on page 13) gives the record's code. The item starts and ends where the record does, what follows directly is the next numbered item, a heading, or the end of the list, and no word differs between the printings. No boldface California addition stands in it. Summary keeps both areas of convention and both modes. Limits presents it as an anchor for all grades, not as an expectation of one grade or age; the two age examples stand under the heading that marks them as the pack's inference.",
+      "rendition": "same-file",
+      "place": {
+        "page": 37,
+        "offset": 82
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-language-l-ccr-2",
+      "wording_sha256": "3bddad5ad0d56344f0b1549cb79e6cfbe5ea746cf91c5ca83178d720258373cd",
+      "text_sha256": "d767cf0afba19cd0d2c640f8b8ad8cb69e0d5c14b39a85319cad978fe0e8a182",
+      "verdict": "confirmed",
+      "note": "Second reading on the page image: page 37 (the printing before the K-5 tables), also read on page 76; printed as the bare number 2 under the strand's heading, which with the document's own citation form (strand, CCR, number; stated on page 13) gives the record's code. The item starts and ends where the record does, what follows directly is the next numbered item, a heading, or the end of the list, and no word differs between the printings. No boldface California addition stands in it. Summary keeps the three conventions and the limit to writing. Limits presents it as an anchor for all grades, not as an expectation of one grade or age; the two age examples stand under the heading that marks them as the pack's inference.",
+      "rendition": "same-file",
+      "place": {
+        "page": 37,
+        "offset": 98
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-language-l-ccr-3",
+      "wording_sha256": "89ad2605d177929aad595ecdf98cb9820dbe9d57037d5042ecab7890c89015ec",
+      "text_sha256": "ca2eba35e0dd5fc1f630e65bbd2eb25b0b18ad80acd3d87cd99cf6cc25ec9bb0",
+      "verdict": "confirmed",
+      "note": "Second reading on the page image: page 37 (the printing before the K-5 tables), also read on page 76; printed as the bare number 3 under the strand's heading, which with the document's own citation form (strand, CCR, number; stated on page 13) gives the record's code. The item starts and ends where the record does, what follows directly is the next numbered item, a heading, or the end of the list, and no word differs between the printings. No boldface California addition stands in it. Summary keeps the three uses and both listening and reading. Its first use is worded as understanding that language works differently between settings, where the statement asks about the manner in which language works in them: close, read as faithful. Limits presents it as an anchor for all grades, not as an expectation of one grade or age; the two age examples stand under the heading that marks them as the pack's inference.",
+      "rendition": "same-file",
+      "place": {
+        "page": 37,
+        "offset": 116
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-language-l-ccr-4",
+      "wording_sha256": "679e3c612ec84b63dda9c8bd862c8fd3b9a179ce915678020bfdee414066aef0",
+      "text_sha256": "26fd9d460108bedce086242f382b1333a8f17449aa3efe7c4fad3c3a8de79677",
+      "verdict": "confirmed",
+      "note": "Second reading on the page image: page 37 (the printing before the K-5 tables), also read on page 76; printed as the bare number 4 under the strand's heading, which with the document's own citation form (strand, CCR, number; stated on page 13) gives the record's code. The item starts and ends where the record does, what follows directly is the next numbered item, a heading, or the end of the list, and no word differs between the printings. No boldface California addition stands in it. Summary keeps both kinds of word or phrase, both verbs, the three strategies and the closing condition on their use. Limits presents it as an anchor for all grades, not as an expectation of one grade or age; the two age examples stand under the heading that marks them as the pack's inference.",
+      "rendition": "same-file",
+      "place": {
+        "page": 37,
+        "offset": 150
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-language-l-ccr-5",
+      "wording_sha256": "8c28de59468ee284d86294170ce86928dcf3efcf0626f20ffd2dab11eb7dff22",
+      "text_sha256": "c7ec341cc9666d6d1f37ac0813827d28fdc3ac9d5a14fac3849743d731aee101",
+      "verdict": "confirmed",
+      "note": "Second reading on the page image: page 37 (the printing before the K-5 tables), also read on page 76; printed as the bare number 5 under the strand's heading, which with the document's own citation form (strand, CCR, number; stated on page 13) gives the record's code. The item starts and ends where the record does, what follows directly is the next numbered item, a heading, or the end of the list, and no word differs between the printings. No boldface California addition stands in it. Summary keeps the three areas; short statement, restated in another order, not a near copy. Limits presents it as an anchor for all grades, not as an expectation of one grade or age; the two age examples stand under the heading that marks them as the pack's inference.",
+      "rendition": "same-file",
+      "place": {
+        "page": 37,
+        "offset": 181
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-language-l-ccr-6",
+      "wording_sha256": "a5dc30b25987397e5a3ae669fc85a168786d1b74a3431d7e7f625fe3b5e34c3c",
+      "text_sha256": "beadecbd83fffaeb25eeba6ac4bb8544e48064065d1d8021568c70814cfb5163",
+      "verdict": "confirmed",
+      "note": "Second reading on the page image: page 37 (the printing before the K-5 tables), also read on page 76; printed as the bare number 6 under the strand's heading, which with the document's own citation form (strand, CCR, number; stated on page 13) gives the record's code. The item starts and ends where the record does, what follows directly is the next numbered item, a heading, or the end of the list, and no word differs between the printings. No boldface California addition stands in it. Summary keeps both kinds of vocabulary, the four uses, the readiness level and the independence clause with its condition. Limits presents it as an anchor for all grades, not as an expectation of one grade or age; the two age examples stand under the heading that marks them as the pack's inference.",
+      "rendition": "same-file",
+      "place": {
+        "page": 37,
+        "offset": 194
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-reading-r-ccr-1",
+      "wording_sha256": "91d6803a7ca0cdb3ebc795dc433070ef62ed31334b1e9eb25b348c817ffe9a27",
+      "text_sha256": "83ce1bbc988b7dbea97a16842656f27f0352b80ffbb618b37190af06ec429569",
+      "verdict": "confirmed",
+      "note": "Second reading on the page image: page 16 (the printing before the K-5 tables), also read on pages 52 and 86; printed as the bare number 1 under the strand's heading, which with the document's own citation form (strand, CCR, number; stated on page 13) gives the record's code. The item starts and ends where the record does, what follows directly is the next numbered item, a heading, or the end of the list, and no word differs between the printings. No boldface California addition stands in it. Summary keeps both aims and the evidence condition for writing and speaking; not a near copy. Limits presents it as an anchor for all grades, not as an expectation of one grade or age; the two age examples stand under the heading that marks them as the pack's inference.",
+      "rendition": "same-file",
+      "place": {
+        "page": 16,
+        "offset": 82
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-reading-r-ccr-10",
+      "wording_sha256": "7783275d31bef3861b6092fda42c2dfe66839b0cd71a6ea5894ff53508b1ad87",
+      "text_sha256": "2e2e7c00587ba5a855fc801b5f7123ef28e60fa9983188039ca177e69b3eb451",
+      "verdict": "confirmed",
+      "note": "Second reading on the page image: page 16 (the printing before the K-5 tables), also read on pages 52 and 86; printed as the bare number 10 under the strand's heading, which with the document's own citation form (strand, CCR, number; stated on page 13) gives the record's code. The item starts and ends where the record does, what follows directly is the next numbered item, a heading, or the end of the list, and no word differs between the printings. No boldface California addition stands in it. Summary keeps both kinds of text, complexity, independence and proficiency; short statement, restated in another order, not a near copy. Page 86 breaks one word at a line end with a hyphen: form. Limits presents it as an anchor for all grades, not as an expectation of one grade or age; the two age examples stand under the heading that marks them as the pack's inference.",
+      "rendition": "same-file",
+      "place": {
+        "page": 16,
+        "offset": 327
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-reading-r-ccr-2",
+      "wording_sha256": "429a20955d9d8694380f3b85259204d9bef22ea0bd2692d571ce1ec0d160ddbf",
+      "text_sha256": "86301d6d816e2c8996f921d28494f280a40b663eabf62dc5c5f675703dcfa5ab",
+      "verdict": "confirmed",
+      "note": "Second reading on the page image: page 16 (the printing before the K-5 tables), also read on pages 52 and 86; printed as the bare number 2 under the strand's heading, which with the document's own citation form (strand, CCR, number; stated on page 13) gives the record's code. The item starts and ends where the record does, what follows directly is the next numbered item, a heading, or the end of the list, and no word differs between the printings. No boldface California addition stands in it. Summary keeps all three parts. Limits presents it as an anchor for all grades, not as an expectation of one grade or age; the two age examples stand under the heading that marks them as the pack's inference.",
+      "rendition": "same-file",
+      "place": {
+        "page": 16,
+        "offset": 114
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-reading-r-ccr-3",
+      "wording_sha256": "50639b4fc943fd358f321bf21cd445e8782fa5c48186bae7a3aaf2502a1bdf50",
+      "text_sha256": "079cc3e79922ce59f060493a5c4fdea1e00e50ec846a867c9f9bd054dfdca18c",
+      "verdict": "confirmed",
+      "note": "Second reading on the page image: page 16 (the printing before the K-5 tables), also read on pages 52 and 86; printed as the bare number 3 under the strand's heading, which with the document's own citation form (strand, CCR, number; stated on page 13) gives the record's code. The item starts and ends where the record does, what follows directly is the next numbered item, a heading, or the end of the list, and no word differs between the printings. No boldface California addition stands in it. Summary keeps the three things followed and both questions asked. Limits presents it as an anchor for all grades, not as an expectation of one grade or age; the two age examples stand under the heading that marks them as the pack's inference.",
+      "rendition": "same-file",
+      "place": {
+        "page": 16,
+        "offset": 134
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-reading-r-ccr-4",
+      "wording_sha256": "765dba3cfa6c992a3e158c29d40927dccaebdd90311620cd9395e7a716d17b73",
+      "text_sha256": "d8cc71b3c3a65b680b1f7711edbf3110d87bbb0c1f7d13241820f82e85f6cd66",
+      "verdict": "confirmed",
+      "note": "Second reading on the page image: page 16 (the printing before the K-5 tables), also read on pages 52 and 86; printed as the bare number 4 under the strand's heading, which with the document's own citation form (strand, CCR, number; stated on page 13) gives the record's code. The item starts and ends where the record does, what follows directly is the next numbered item, a heading, or the end of the list, and no word differs between the printings. No boldface California addition stands in it. Summary keeps the three kinds of meaning as included ones and the effect of word choice. Limits presents it as an anchor for all grades, not as an expectation of one grade or age; the two age examples stand under the heading that marks them as the pack's inference.",
+      "rendition": "same-file",
+      "place": {
+        "page": 16,
+        "offset": 155
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-reading-r-ccr-5",
+      "wording_sha256": "4195b508388a9690803b365cee0195bf482e31ceaf5b1005353510aa532846b9",
+      "text_sha256": "516c29cc5c20cc9dc0e63062e25dd5fbe10d0ef48d616fbc91324c5bd78d2968",
+      "verdict": "confirmed",
+      "note": "Second reading on the page image: page 16 (the printing before the K-5 tables), also read on pages 52 and 86; printed as the bare number 5 under the strand's heading, which with the document's own citation form (strand, CCR, number; stated on page 13) gives the record's code. The item starts and ends where the record does, what follows directly is the next numbered item, a heading, or the end of the list, and no word differs between the printings. No boldface California addition stands in it. Summary keeps the bracketed list as examples. The text layer of page 52 holds a digit after this item's closing full stop that the page image does not show; it is not wording. Limits presents it as an anchor for all grades, not as an expectation of one grade or age; the two age examples stand under the heading that marks them as the pack's inference.",
+      "rendition": "same-file",
+      "place": {
+        "page": 16,
+        "offset": 184
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-reading-r-ccr-6",
+      "wording_sha256": "18b70f23e401aa16ea554e8fd55b1a15bf2381bd826b0c3e0af2268c0c04567c",
+      "text_sha256": "7c137d3190d6cc0f776427cd27212bbe6a54f2efa0d362a0487220261a28ef0d",
+      "verdict": "confirmed",
+      "note": "Second reading on the page image: page 16 (the printing before the K-5 tables), also read on pages 52 and 86; printed as the bare number 6 under the strand's heading, which with the document's own citation form (strand, CCR, number; stated on page 13) gives the record's code. The item starts and ends where the record does, what follows directly is the next numbered item, a heading, or the end of the list, and no word differs between the printings. No boldface California addition stands in it. Summary keeps both causes and both effects; short statement, restated in another order, not a near copy. Limits presents it as an anchor for all grades, not as an expectation of one grade or age; the two age examples stand under the heading that marks them as the pack's inference.",
+      "rendition": "same-file",
+      "place": {
+        "page": 16,
+        "offset": 216
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-reading-r-ccr-7",
+      "wording_sha256": "0d64d258e1b0b849fda0b3edaf081beafeaf8f052bdcec7a3ff4068850fd8f1f",
+      "text_sha256": "0b040eaf74d4fe5b4ac158852e00b0c2c40c846ee7bdd698c0de5acf4cd52ca0",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Wording, code and bounds are right, and the correction is right: all three printings print an asterisk directly after the closing full stop, a footnote mark, and it is correctly taken out. The Summary is unfaithful in one point: the statement introduces the ways of presenting (the ones that Limits names) as members of a wider set of ways content can come; the Summary puts them after a colon as if they were the whole set, so an example list reads as complete. Fix: say that the wider set includes these. Also for the fixer: the asterisk leads to a footnote at the foot of the page that belongs to this item and to no other (it points to one cluster of the Writing anchors and one of the Speaking and Listening anchors for more standards on gathering, judging and using information from print and digital sources); the record holds no accompanying text and Limits does not mention the pointer. A line in Limits would help a designer. Checked on the page image: page 16 (the printing before the K-5 tables), also read on pages 52 and 86; no word differs between the printings; no California addition.",
+      "rendition": "same-file",
+      "place": {
+        "page": 16,
+        "offset": 237
+      },
+      "matched_by": "script",
+      "corrections_verified": true,
+      "checker": "us-ca/cross-grade/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-reading-r-ccr-7",
+      "wording_sha256": "0d64d258e1b0b849fda0b3edaf081beafeaf8f052bdcec7a3ff4068850fd8f1f",
+      "text_sha256": "d0265aa80b5c86ecadfdefbfcb4972324de6a9d4616a704da766154bdd08f721",
+      "verdict": "confirmed",
+      "note": "Round 2, whole record read again on the page image of page 16. Wording, code (the bare number 7 under the strand heading, with the citation form the document states) and bounds are right; the correction is right: an asterisk, a footnote mark, stands directly after the closing full stop and is rightly taken out. The round 1 fault is resolved: the Summary now presents the named ways of presenting as included in the wider set of media and formats, not as the whole set. The Summary's \"pictures or other visual form\" is a fair instance and no addition: the general term is kept beside the instance, so the scope equals the statement's (anything visual). Not a near copy. The new Limits sentence on the footnote is true to the footnote at the foot of the page: the footnote belongs to this item only; it names one cluster of the Writing anchors and one of the Speaking and Listening anchors by their headings, and on pages 26 and 32 those headings stand over anchors 7 to 9 and 1 to 3, the numbers the sentence gives; the three activities and the two kinds of source are each kept and nothing is added. It is in the pack's own words: longest shared run three words (the name of a strand), 13 of the footnote's 33 words shared in order. The rest of Limits and the examples do not contradict the statement.",
+      "rendition": "same-file",
+      "place": {
+        "page": 16,
+        "offset": 237
+      },
+      "matched_by": "script",
+      "corrections_verified": true,
+      "checker": "us-ca/cross-grade/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-reading-r-ccr-8",
+      "wording_sha256": "55e3f1ebe17b1c41ae4f8e8b48bd0d5213028d1f624879d2114448cc58262431",
+      "text_sha256": "568eca159c285069a68b4efc2c143695b44f35816157fe75349b2e865ba54340",
+      "verdict": "confirmed",
+      "note": "Second reading on the page image: page 16 (the printing before the K-5 tables), also read on pages 52 and 86; printed as the bare number 8 under the strand's heading, which with the document's own citation form (strand, CCR, number; stated on page 13) gives the record's code. The item starts and ends where the record does, what follows directly is the next numbered item, a heading, or the end of the list, and no word differs between the printings. No boldface California addition stands in it. Summary keeps the three tests as included ones. On page 16 only, a raised digit 1 is printed directly after the closing full stop, although the page has no footnote with that number; pages 52 and 86 print the item without it. The record leaves the digit out (its span ends at the last word and its full stop), which is right; the locator lists no correction for it because none was needed. The script's match is on tokens and passes over the digit. Limits presents it as an anchor for all grades, not as an expectation of one grade or age; the two age examples stand under the heading that marks them as the pack's inference.",
+      "rendition": "same-file",
+      "place": {
+        "page": 16,
+        "offset": 265
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-reading-r-ccr-9",
+      "wording_sha256": "17e6a2d38c2544f1d6ab9813288ca82aa96a212ea0027535b57ecba780b2e6a5",
+      "text_sha256": "26cd45967a8f65c818a5bf0f6099601c9c55d7b21daf00d2d81febe7c658b0f0",
+      "verdict": "confirmed",
+      "note": "Second reading on the page image: page 16 (the printing before the K-5 tables), also read on pages 52 and 86; printed as the bare number 9 under the strand's heading, which with the document's own citation form (strand, CCR, number; stated on page 13) gives the record's code. The item starts and ends where the record does, what follows directly is the next numbered item, a heading, or the end of the list, and no word differs between the printings. No boldface California addition stands in it. Summary keeps the minimum of two texts and the two aims as alternatives. Limits presents it as an anchor for all grades, not as an expectation of one grade or age; the two age examples stand under the heading that marks them as the pack's inference.",
+      "rendition": "same-file",
+      "place": {
+        "page": 16,
+        "offset": 294
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-speaking-and-listening-sl-ccr-1",
+      "wording_sha256": "15083140d063dc634191c21fbdf1d6db3891348fd48d2b0f624a90837fd5d552",
+      "text_sha256": "3f904a29ee4938bb57bf1939cc121fd1d9cb94468b48c1d3b44d23fd9d2094ad",
+      "verdict": "confirmed",
+      "note": "Second reading on the page image: page 32 (the printing before the K-5 tables), also read on page 71; printed as the bare number 1 under the strand's heading, which with the document's own citation form (strand, CCR, number; stated on page 13) gives the record's code. The item starts and ends where the record does, what follows directly is the next numbered item, a heading, or the end of the list, and no word differs between the printings. No boldface California addition stands in it. Summary keeps preparing and taking part, both kinds of exchange, varied partners, and both halves of the closing clause. Limits presents it as an anchor for all grades, not as an expectation of one grade or age; the two age examples stand under the heading that marks them as the pack's inference.",
+      "rendition": "same-file",
+      "place": {
+        "page": 32,
+        "offset": 84
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-speaking-and-listening-sl-ccr-2",
+      "wording_sha256": "4f2809698eb42abd3be119772edb45d5a5421e7693acacbab661bcfffdca4e86",
+      "text_sha256": "870e540da007f33bc13171079eb00b0e7c8fd84fd26ba5be8237c5abe6484fcb",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Wording, code and bounds are right. The Summary is unfaithful in one point, the same as in the Reading anchor with the matching number 7: the statement introduces three ways of presenting as members of a wider set of ways information can come; the Summary puts the three after a colon as if they were the whole set, so an example list reads as complete. Fix: say that the wider set includes these three. Limits is right (\"Three ways of presenting are named\"). Checked on the page image: page 32 (the printing before the K-5 tables), also read on page 71; no word differs between the printings; no California addition.",
+      "rendition": "same-file",
+      "place": {
+        "page": 32,
+        "offset": 111
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-speaking-and-listening-sl-ccr-2",
+      "wording_sha256": "4f2809698eb42abd3be119772edb45d5a5421e7693acacbab661bcfffdca4e86",
+      "text_sha256": "e58ede374268a76da7797dc8eeb778aac900cfb867194feb3e8315d24799aa20",
+      "verdict": "confirmed",
+      "note": "Round 2, whole record read again on the page image of page 32. Wording, code (the bare number 2 under the strand heading) and bounds are right: the item ends at its full stop and the next numbered item follows; no footnote mark on it. The round 1 fault is resolved: the Summary now says the wider set of media and formats includes the three named ways, where it read as the complete set before. All three ways are kept, and both combining and judging. Not a near copy (two sentences, the three ways in another order). Limits names the same three ways and denies nothing the statement says.",
+      "rendition": "same-file",
+      "place": {
+        "page": 32,
+        "offset": 111
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-speaking-and-listening-sl-ccr-3",
+      "wording_sha256": "c269b0fe266e1507d11acf0838099600688e666d61a1225e7a569316ed1d967e",
+      "text_sha256": "61ae6968377d7e13f672c44e4af26250eae5b7b8afbd83d0005c09c288c247b7",
+      "verdict": "confirmed",
+      "note": "Second reading on the page image: page 32 (the printing before the K-5 tables), also read on page 71; printed as the bare number 3 under the strand's heading, which with the document's own citation form (strand, CCR, number; stated on page 13) gives the record's code. The item starts and ends where the record does, what follows directly is the next numbered item, a heading, or the end of the list, and no word differs between the printings. No boldface California addition stands in it. Summary keeps all four things judged; short statement, restated in another order, not a near copy. Limits presents it as an anchor for all grades, not as an expectation of one grade or age; the two age examples stand under the heading that marks them as the pack's inference.",
+      "rendition": "same-file",
+      "place": {
+        "page": 32,
+        "offset": 127
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-speaking-and-listening-sl-ccr-4",
+      "wording_sha256": "50ba1550dc8afe4dc748e400c472cccdbc0a7d6417834450070018679f0c9ed7",
+      "text_sha256": "4b56fd6be454c635707c33b96acb014148db9d2fb65916e6774bbee574662508",
+      "verdict": "confirmed",
+      "note": "Second reading on the page image: page 32 (the printing before the K-5 tables), also read on page 71; printed as the bare number 4 under the strand's heading, which with the document's own citation form (strand, CCR, number; stated on page 13) gives the record's code. The item starts and ends where the record does, what follows directly is the next numbered item, a heading, or the end of the list, and no word differs between the printings. No boldface California addition stands in it. Summary keeps the three things presented, the test that listeners can follow, and the three features fitted to the three things. Limits presents it as an anchor for all grades, not as an expectation of one grade or age; the two age examples stand under the heading that marks them as the pack's inference.",
+      "rendition": "same-file",
+      "place": {
+        "page": 32,
+        "offset": 146
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-speaking-and-listening-sl-ccr-5",
+      "wording_sha256": "336a9a4055ed05264b5357e1c6bb09e4041651c065119dc80cd5512e397eb0b4",
+      "text_sha256": "5a1cf6b29de0b9d790cc8cd85f612a9d08228e8f344e5572e93763d4ee26d7de",
+      "verdict": "confirmed",
+      "note": "Second reading on the page image: page 32 (the printing before the K-5 tables), also read on page 71; printed as the bare number 5 under the strand's heading, which with the document's own citation form (strand, CCR, number; stated on page 13) gives the record's code. The item starts and ends where the record does, what follows directly is the next numbered item, a heading, or the end of the list, and no word differs between the printings. No boldface California addition stands in it. Summary keeps both aids, the strategic use and both aims. Limits presents it as an anchor for all grades, not as an expectation of one grade or age; the two age examples stand under the heading that marks them as the pack's inference.",
+      "rendition": "same-file",
+      "place": {
+        "page": 32,
+        "offset": 175
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-speaking-and-listening-sl-ccr-6",
+      "wording_sha256": "a707f23f07eed52b4f16ead7721f0cce2807f066d46b1e9a46db36a4b736a046",
+      "text_sha256": "5f378d5c580c2c2c711c83ff7b609020622513da4001281768aa634b8b11827c",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Wording, code and bounds are right. The Summary narrows a general term: the statement says speech is adapted to two things, and the second is tasks of communicating in general; the Summary makes it \"speaking tasks\". Fix: keep the tasks as tasks of communication. The condition on formal English is kept, and Limits states it correctly. Checked on the page image: page 32 (the printing before the K-5 tables), also read on page 71; no word differs between the printings; no California addition.",
+      "rendition": "same-file",
+      "place": {
+        "page": 32,
+        "offset": 195
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-speaking-and-listening-sl-ccr-6",
+      "wording_sha256": "a707f23f07eed52b4f16ead7721f0cce2807f066d46b1e9a46db36a4b736a046",
+      "text_sha256": "63bfb38ab77805d831a04471dd2478ef0e285b3baac8088df8e6bfd115f1998c",
+      "verdict": "confirmed",
+      "note": "Round 2, whole record read again on the page image of page 32. Wording, code (the bare number 6 under the strand heading) and bounds are right: it is the last item of the list and nothing follows it in the column. The round 1 fault is resolved: the Summary now has \"tasks of communication\", the general term, where it had narrowed them to speaking. Both things speech is adapted to are kept, and the condition on formal English is kept with both of its alternatives. Not a near copy. Limits states that condition correctly and names no setting or task.",
+      "rendition": "same-file",
+      "place": {
+        "page": 32,
+        "offset": 195
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-writing-w-ccr-1",
+      "wording_sha256": "a6779514cf2c51e591a0942385dbbdd094954f3aac4a184fe8792cb77895ef9a",
+      "text_sha256": "aff6f08617585f0cadef51b301aec5b4481987db12bfffb2d0f167cc12ef5768",
+      "verdict": "confirmed",
+      "note": "Second reading on the page image: page 26 (the printing before the K-5 tables), also read on pages 61 and 91; printed as the bare number 1 under the strand's heading, which with the document's own citation form (strand, CCR, number; stated on page 13) gives the record's code. The item starts and ends where the record does, what follows directly is the next numbered item, a heading, or the end of the list, and no word differs between the printings. No boldface California addition stands in it. Summary keeps the claims, the analysis of topics or texts of substance, and all three conditions on reasoning and evidence. The third printing (page 91) lacks the comma after the thirteenth word that pages 26 and 61 print: punctuation only, the record follows page 26. The heading above items 1 to 3 carries an asterisk whose footnote says these broad types include many subgenres and points to an appendix; it is not part of any one item and the record does not hold it. Limits presents it as an anchor for all grades, not as an expectation of one grade or age; the two age examples stand under the heading that marks them as the pack's inference.",
+      "rendition": "same-file",
+      "place": {
+        "page": 26,
+        "offset": 83
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-writing-w-ccr-1",
+      "wording_sha256": "a6779514cf2c51e591a0942385dbbdd094954f3aac4a184fe8792cb77895ef9a",
+      "text_sha256": "359472b14e1b21ca1c7059254a6a7ee5ffbbcb93a669e1f0685c8b9ecdf10bd2",
+      "verdict": "confirmed",
+      "note": "Round 2, whole record read again on the page image of page 26. Wording, code (the bare number 1 under the strand heading) and bounds are right; the item itself carries no footnote mark. Summary faithful: the claims, the analysis of topics or texts of substance, and all three conditions on reasoning and evidence; not a near copy. The new Limits sentence on the footnote is true to the page: the asterisk stands on the heading over items 1 to 3, as the sentence says, and the footnote has two parts, both kept (the kinds of writing are broad and hold many sub-kinds; a pointer to an appendix for definitions of the main kinds). Three small things the sentence supplies and the footnote does not print, none of which changes a limit: the count of three (countable on the page: items 1 to 3 each name one kind), \"inside each\" (the footnote says it of the kinds together), and \"its\" for the appendix (the document's contents list that appendix among its own, as linked and not printed in the file, so a reader will not find it among the 98 pages). In the pack's own words: longest shared run two words, 5 of the footnote's 17 words shared in order.",
+      "rendition": "same-file",
+      "place": {
+        "page": 26,
+        "offset": 83
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-writing-w-ccr-10",
+      "wording_sha256": "1d6b486e171747b28f38bae9c941721a3ded41df7c15954a135f9eb7ef31b287",
+      "text_sha256": "0a8b6719a48b888ede642e9dd2bb0d5785e829196676193765fb8dcfe157a913",
+      "verdict": "confirmed",
+      "note": "Second reading on the page image: page 26 (the printing before the K-5 tables), also read on pages 61 and 91; printed as the bare number 10 under the strand's heading, which with the document's own citation form (strand, CCR, number; stated on page 13) gives the record's code. The item starts and ends where the record does, what follows directly is the next numbered item, a heading, or the end of the list, and no word differs between the printings. No boldface California addition stands in it. Summary keeps routine, both time spans with their bracketed explanations, and the range of the three things written for. Limits presents it as an anchor for all grades, not as an expectation of one grade or age; the two age examples stand under the heading that marks them as the pack's inference.",
+      "rendition": "same-file",
+      "place": {
+        "page": 26,
+        "offset": 307
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-writing-w-ccr-2",
+      "wording_sha256": "0f6adcb91b7d17910d313b71ae6ac1f3160feb883ae25f6f8d882feb46ee70f2",
+      "text_sha256": "50e87043f819fac489ed8da17cd61dd63c13f0840f0bb2c9e5ebca64fcf6db42",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Wording, code and bounds are right and the Summary is faithful (purpose and all three means kept). Limits states a limit the statement does not state: its second sentence adds \"not to argue or tell a story\". The statement names what such a text is for and excludes nothing; the footnote on the heading above items 1 to 3 says these broad types include many subgenres. Fix: end that Limits sentence after the purpose, or say that arguments and narratives have anchors of their own (items 1 and 3) without presenting it as an exclusion made by this statement. Checked on the page image: page 26 (the printing before the K-5 tables), also read on pages 61 and 91; no word differs between the printings; no California addition.",
+      "rendition": "same-file",
+      "place": {
+        "page": 26,
+        "offset": 105
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-writing-w-ccr-2",
+      "wording_sha256": "0f6adcb91b7d17910d313b71ae6ac1f3160feb883ae25f6f8d882feb46ee70f2",
+      "text_sha256": "317a78dcf9b5e3e63d9d21c7c831518d58475c5dbd1e58869451adbc506922d9",
+      "verdict": "confirmed",
+      "note": "Round 2, whole record read again on the page image of page 26. Wording, code (the bare number 2 under the strand heading) and bounds are right; no footnote mark on the item. The round 1 fault is resolved: the exclusion that Limits had added to its sentence on purpose is gone, and that sentence now ends after the purpose. Summary faithful (purpose, both qualities of the conveying, all three means); not a near copy. The new Limits sentence on the footnote is true to the page: the asterisk stands on the heading over items 1 to 3 and the footnote's two parts are both kept (broad kinds holding many sub-kinds; a pointer to an appendix for definitions of the main kinds). The sentence supplies the count of three, \"inside each\" and \"its\" for the appendix, which the footnote does not print; none changes a limit (see the round 2 note on anchor 1 of this strand). In the pack's own words: longest shared run two words, 5 of the footnote's 17 words shared in order. The last Common mistakes sentence is the pack's inference and does not contradict the statement.",
+      "rendition": "same-file",
+      "place": {
+        "page": 26,
+        "offset": 105
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-writing-w-ccr-3",
+      "wording_sha256": "6d2bf5e6effbf405a1997d2f3cca9a091195f8411352c709ac4fa3f9e0e7c470",
+      "text_sha256": "4f5db8b46232635625a21de9ccdab95c7f94734026b612463f40631066c57765",
+      "verdict": "confirmed",
+      "note": "Second reading on the page image: page 26 (the printing before the K-5 tables), also read on pages 61 and 91; printed as the bare number 3 under the strand's heading, which with the document's own citation form (strand, CCR, number; stated on page 13) gives the record's code. The item starts and ends where the record does, what follows directly is the next numbered item, a heading, or the end of the list, and no word differs between the printings. No boldface California addition stands in it. Summary keeps that the events may be true or invented, and the three means. Pages 61 and 91 break one word at a line end with a hyphen: form. Limits presents it as an anchor for all grades, not as an expectation of one grade or age; the two age examples stand under the heading that marks them as the pack's inference.",
+      "rendition": "same-file",
+      "place": {
+        "page": 26,
+        "offset": 130
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-writing-w-ccr-3",
+      "wording_sha256": "6d2bf5e6effbf405a1997d2f3cca9a091195f8411352c709ac4fa3f9e0e7c470",
+      "text_sha256": "1c6606d3e7e5ff701255641af6b620151e22cb5c7ee28af2673a6c80509616e4",
+      "verdict": "confirmed",
+      "note": "Round 2, whole record read again on the page image of page 26. Wording, code (the bare number 3 under the strand heading) and bounds are right: the item ends at its full stop and a heading follows; no footnote mark on the item. Summary faithful: the events or experiences may be true or invented, and the three means are kept each with its quality; not a near copy (two sentences, both pairs in another order). The new Limits sentence on the footnote is true to the page: the asterisk stands on the heading over items 1 to 3 and the footnote's two parts are both kept (broad kinds holding many sub-kinds; a pointer to an appendix for definitions of the main kinds). The sentence supplies the count of three, \"inside each\" and \"its\" for the appendix, which the footnote does not print; none changes a limit (see the round 2 note on anchor 1 of this strand). In the pack's own words: longest shared run two words, 5 of the footnote's 17 words shared in order.",
+      "rendition": "same-file",
+      "place": {
+        "page": 26,
+        "offset": 130
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-writing-w-ccr-4",
+      "wording_sha256": "5bc394d5cc3ad72a43d34273c6b4b83110c5da5683a3b4cc87f37fe7a3eaff33",
+      "text_sha256": "c9122cde5b406244e30a0fa0cf7ba679dd29a961f903f857f568126b4b6d8933",
+      "verdict": "confirmed",
+      "note": "Second reading on the page image: page 26 (the printing before the K-5 tables), also read on pages 61 and 91; printed as the bare number 4 under the strand's heading, which with the document's own citation form (strand, CCR, number; stated on page 13) gives the record's code. The item starts and ends where the record does, what follows directly is the next numbered item, a heading, or the end of the list, and no word differs between the printings. No boldface California addition stands in it. Summary keeps the two qualities of the writing and the three features fitted to the three things. Limits presents it as an anchor for all grades, not as an expectation of one grade or age; the two age examples stand under the heading that marks them as the pack's inference.",
+      "rendition": "same-file",
+      "place": {
+        "page": 26,
+        "offset": 157
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-writing-w-ccr-5",
+      "wording_sha256": "84dac3c2a5fb23769211db08bc4d9382761f8fadd59cf052637481520f3a7a6e",
+      "text_sha256": "30d87f9f5b2a87294d8bb4c08cc8ef8a949ec5be941fe05a88297df9bf5027de",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Wording, code and bounds are right. The Summary changes the last of the five ways the statement lists: the statement's last way is a general one (taking a different approach), and the Summary makes it \"starting over in a different way\", which adds beginning again; a different approach need not discard the piece, and beginning again is already close to the fourth way. Fix: restate the fifth way without starting over. The rest is faithful (the condition of need; the five ways as alternatives), and Limits is right that no helper is named. Checked on the page image: page 26 (the printing before the K-5 tables), also read on pages 61 and 91; no word differs between the printings; no California addition.",
+      "rendition": "same-file",
+      "place": {
+        "page": 26,
+        "offset": 177
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-writing-w-ccr-5",
+      "wording_sha256": "84dac3c2a5fb23769211db08bc4d9382761f8fadd59cf052637481520f3a7a6e",
+      "text_sha256": "290ca67713c8f44c916f5a6b9b11a3e0014d3a4d4bf609bf78402c758362277d",
+      "verdict": "confirmed",
+      "note": "Round 2, whole record read again on the page image of page 26. Wording, code (the bare number 5 under the strand heading) and bounds are right: the item ends at its full stop and the next numbered item follows; the heading over it carries no footnote mark. The round 1 fault is resolved: the fifth way is now \"taking a different approach\", a general one, and beginning again is no longer added. The condition of need is kept and the five ways stay alternatives (two of them stand in another order, which changes nothing in a list of alternatives); not a near copy. Limits is right that five ways are named as alternatives and that the anchor names no helper. The last Common mistakes sentence (unwillingness to delete or begin again) is the pack's inference about children; it does not contradict the statement, which lists reworking a piece and changing approach among its ways.",
+      "rendition": "same-file",
+      "place": {
+        "page": 26,
+        "offset": 177
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-writing-w-ccr-6",
+      "wording_sha256": "298cc87aeffc973fe56542f0d08e3b52f1f9cb2079399fccc54ea215fb926109",
+      "text_sha256": "760a7750f6384708f8b96230d95075aa494c1b362a39b6d455811c735134b7c7",
+      "verdict": "confirmed",
+      "note": "Second reading on the page image: page 26 (the printing before the K-5 tables), also read on pages 61 and 91; printed as the bare number 6 under the strand's heading, which with the document's own citation form (strand, CCR, number; stated on page 13) gives the record's code. The item starts and ends where the record does, what follows directly is the next numbered item, a heading, or the end of the list, and no word differs between the printings. No boldface California addition stands in it. Summary keeps the Internet as an included technology and both uses. Limits presents it as an anchor for all grades, not as an expectation of one grade or age; the two age examples stand under the heading that marks them as the pack's inference.",
+      "rendition": "same-file",
+      "place": {
+        "page": 26,
+        "offset": 194
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-writing-w-ccr-7",
+      "wording_sha256": "809e3c2a5033f1e7d3c6b48062be276056ef9bb1f06811c44b9f047d0a67c711",
+      "text_sha256": "ecf090563297a2c5810ffff5594900852d32ffa282f78629dfa8db6ae824ed8f",
+      "verdict": "confirmed",
+      "note": "Second reading on the page image: page 26 (the printing before the K-5 tables), also read on pages 61 and 91; printed as the bare number 7 under the strand's heading, which with the document's own citation form (strand, CCR, number; stated on page 13) gives the record's code. The item starts and ends where the record does, what follows directly is the next numbered item, a heading, or the end of the list, and no word differs between the printings. No boldface California addition stands in it. Summary keeps both lengths of project, the focus of the questions and the understanding shown. Limits presents it as an anchor for all grades, not as an expectation of one grade or age; the two age examples stand under the heading that marks them as the pack's inference.",
+      "rendition": "same-file",
+      "place": {
+        "page": 26,
+        "offset": 243
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-writing-w-ccr-8",
+      "wording_sha256": "9f0299bb94c41433018e09aa59e4c41584039552a185049f2477821f80553362",
+      "text_sha256": "212a71009303bdae9d0c69b1313f11a3f517ebb65cd38015f14a4a29f80ca572",
+      "verdict": "confirmed",
+      "note": "Second reading on the page image: page 26 (the printing before the K-5 tables), also read on pages 61 and 91; printed as the bare number 8 under the strand's heading, which with the document's own citation form (strand, CCR, number; stated on page 13) gives the record's code. The item starts and ends where the record does, what follows directly is the next numbered item, a heading, or the end of the list, and no word differs between the printings. No boldface California addition stands in it. Summary keeps relevance, several sources of both kinds, the judgement of each source on both counts, and the closing condition. It says the information is worked into the child's own writing; the statement does not say into what the information is integrated, but the strand is Writing, so this is read as within scope. A fixer passing by could drop the destination. Limits presents it as an anchor for all grades, not as an expectation of one grade or age; the two age examples stand under the heading that marks them as the pack's inference.",
+      "rendition": "same-file",
+      "place": {
+        "page": 26,
+        "offset": 264
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.reading-language.objective.college-and-career-readiness-anchor-standards-for-writing-w-ccr-9",
+      "wording_sha256": "bfbb04304f151c78fd4ab5b25703f324c9b8d4cafaa4d5d712870d9ff6f48045",
+      "text_sha256": "a8e46c4b94af1b3d12f2c77f41a58eba2c3ca2fa461fdb256cf286634f228954",
+      "verdict": "confirmed",
+      "note": "Second reading on the page image: page 26 (the printing before the K-5 tables), also read on pages 61 and 91; printed as the bare number 9 under the strand's heading, which with the document's own citation form (strand, CCR, number; stated on page 13) gives the record's code. The item starts and ends where the record does, what follows directly is the next numbered item, a heading, or the end of the list, and no word differs between the printings. No boldface California addition stands in it. Summary keeps both kinds of text as either or both, and the three uses. Limits presents it as an anchor for all grades, not as an expectation of one grade or age; the two age examples stand under the heading that marks them as the pack's inference.",
+      "rendition": "same-file",
+      "place": {
+        "page": 26,
+        "offset": 289
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/reading-language",
+      "round": 1
+    }
+  ],
+  "unrecorded": []
+}

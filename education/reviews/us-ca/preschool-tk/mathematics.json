@@ -1,0 +1,431 @@
+{
+  "lane": "us-ca/preschool-tk/mathematics",
+  "verdicts": [
+    {
+      "id": "edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-1-0-counting-and-cardinality-1-1",
+      "wording_sha256": "7c84f83bfe02f48ca0968354a2ec3376e4befeb55f8021f15570419f0a206d4e",
+      "text_sha256": "1e0954615e502e6e0061a78ebb3658ab6fa5ecc8000faeee76c050c5d497f362",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 28,
+        "offset": 38
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-1-0-counting-and-cardinality-1-2",
+      "wording_sha256": "06444d79a38d1beac3fc4fa60df6b365b62b8ef1312335a28399de727fcd3088",
+      "text_sha256": "126c07a8d71dba67f73a7ec181b57b064162c842c8f7f76acc160b11bad0baff",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 28,
+        "offset": 97
+      },
+      "matched_by": "script",
+      "corrections_verified": true,
+      "checker": "us-ca/preschool-tk/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-1-0-counting-and-cardinality-1-3",
+      "wording_sha256": "cfff7ab83e8fdfad9c6a94f113d5646c5d7f732c0722ec71e690b9eeff3d1f98",
+      "text_sha256": "bc3ecc8ed969959dcb278700aa0ac96930d924462294a70740e1abe991451ed4",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 28,
+        "offset": 145
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-1-0-counting-and-cardinality-1-4",
+      "wording_sha256": "252e240a2d83e889d093a112e52c693077817fd89b7423cc70c7150cbd1bbe6d",
+      "text_sha256": "532adb129ee806024809aa102145fd3e2d7d0a0fa1c90ceac3afac71aaf39f4f",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 28,
+        "offset": 231
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-1-0-counting-and-cardinality-1-5",
+      "wording_sha256": "23119c1ca213b9850d0e9298aa3f087715a908e9b4a0078a0707da69f366e3a5",
+      "text_sha256": "a3645f02b8c0bac8bf4fc98e6ba6f7cb14b33ead52e465aa43adadcffcb84c9c",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 29,
+        "offset": 31
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-1-0-counting-and-cardinality-1-6",
+      "wording_sha256": "58e1437d087433c768cbb9694576e64b57ebe0648141883d98a1e433d6435334",
+      "text_sha256": "8e6c5efa9623f8406ee8436d63192ebbcbd27df1078c2f2e4b36aac24a9fb3c0",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 29,
+        "offset": 69
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-2-0-operations-and-algebraic-thinking-2-1",
+      "wording_sha256": "d71c13e08608d011efd3e2a0825bbffdd6b513c64d36f25f826a7e10b2fe592f",
+      "text_sha256": "57d21c339384712e337d50e3a9229661e604ae08b2ae331c559e8f21815dfb5c",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 29,
+        "offset": 136
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-2-0-operations-and-algebraic-thinking-2-2",
+      "wording_sha256": "71b7a4b87db9decc7894835cd1611d635f3b1488ebaed72522e2baaca7662b3d",
+      "text_sha256": "a8610be77de1ce916a6b6c597e27bdd7464738fec463898d6b72ea0bf66977cf",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 29,
+        "offset": 202
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-2-0-operations-and-algebraic-thinking-2-3",
+      "wording_sha256": "04c1ad15fb89a37fe3e89a8685cf1bc451619e706b78e67e65d948ccfe300704",
+      "text_sha256": "489a867b157a45415371dfb14f30520154f6d34a40c325037b72dec6de326521",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 30,
+        "offset": 30
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-2-0-operations-and-algebraic-thinking-2-4",
+      "wording_sha256": "712e64614ef2b6f4ea75735f1a7df9ce4f4bf0441aa3dbe00422eddadb4ff3ae",
+      "text_sha256": "8ada7ea1dbb06dfa07c668bb57053e545e4d142929e02e34852e95455d6487cd",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 30,
+        "offset": 87
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-2-0-operations-and-algebraic-thinking-2-5",
+      "wording_sha256": "e721bf2c97110df3dcb53f3214ae949941f143d5a3a9a8ca0d7a6a7768e8d0e2",
+      "text_sha256": "4f56c3f8f6747ed3bdab075f5bc5d028dfd73d485e3d72f2d4e01741d1496a4e",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 30,
+        "offset": 146
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-2-0-operations-and-algebraic-thinking-2-6",
+      "wording_sha256": "6fc93c35e21957117991fdc47b2ec1f80d8d9a583a1ce0f491b89e9bcd524b2d",
+      "text_sha256": "efd2548ba481ebc7a94199b2bc44de233d0ab1817d71565fb8ae143d998ecea8",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 30,
+        "offset": 224
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-2-0-operations-and-algebraic-thinking-2-7",
+      "wording_sha256": "7b8f9908b2415275bbab2cb31745b75d17a2324ead3639918555b97fc2616477",
+      "text_sha256": "106860ac5ed81894c72dbe72c78a503414982fe436277354ffa51c646661786c",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 31,
+        "offset": 27
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-3-0-measurement-and-data-3-1",
+      "wording_sha256": "6c181fcb4980bf8f0f6732a6bb27945348873b8729c6b3cb1350e3ca991a38ca",
+      "text_sha256": "c823b13b236ae0841fdba9bae6ccc199471b2ecf0c267a63c61ec0c91a0eb26b",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Added condition at the later age. The Summary says the child \"directly compares\" two objects, and Limits repeats it (\"two objects, compared directly\"). The official later statement only asks for comparing two objects by one of the three attributes and gives side-by-side placement as an example; it does not restrict the method to direct comparison. The example has been turned into a condition. Drop \"directly\" from the Summary and from Limits (or say that the method is not specified and side-by-side placement is the example).",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 31,
+        "offset": 87
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-3-0-measurement-and-data-3-1",
+      "wording_sha256": "6c181fcb4980bf8f0f6732a6bb27945348873b8729c6b3cb1350e3ca991a38ca",
+      "text_sha256": "8e3bc90337cdd2ff5d26cd10834ecad9e8729b20ba9e735793fd07a0e6af3535",
+      "verdict": "confirmed",
+      "note": "The round 1 fault is fixed: the Summary and Limits no longer restrict the later-age comparison to a direct one; placing the objects side by side is presented as the statement's example, and Limits says the method is not specified. Both boxes on page 31 hold exactly the stored statements.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 31,
+        "offset": 87
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/mathematics, round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-3-0-measurement-and-data-3-2",
+      "wording_sha256": "fdd892fa4c7df5e1402f928a930e1a98bb319924d5061daf91a5e6016671aad5",
+      "text_sha256": "d39ebaccbf5de81ed2504d66effcafd8752572760bccb303f3333f0447aa894d",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 31,
+        "offset": 146
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-3-0-measurement-and-data-3-3",
+      "wording_sha256": "8984dca8d0f085a38b90d8f3beff5862bb5e316cbbd575d510fa37c50a7e4eb3",
+      "text_sha256": "4d8c26eb809cf13fc95b325e691c5330266aadb6df296cdc57d2c5b36dd5621d",
+      "verdict": "confirmed",
+      "note": "Both renditions print the earlier-age placeholder in parentheses, as the record has it. The later-age note is a paragraph of its own in both renditions and is stored run on after the statement in one labelled paragraph (unlike 4.1, where the note is a labelled paragraph of its own); the content is equal.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 31,
+        "offset": 200
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-3-0-measurement-and-data-3-4",
+      "wording_sha256": "14219e524ae3e8a87d5a8d840425ee75b4dbf5e38333acccefff62b9588bb06f",
+      "text_sha256": "4eeff4e2bc44bfd2404e8b6452a28870c771d867f7de86974aa8e930ea1f4716",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 32,
+        "offset": 30
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-3-0-measurement-and-data-3-5",
+      "wording_sha256": "9de189731b6b8fb772d2fe062f7b6e093eb19962a47933b4195a0dee0d971d8b",
+      "text_sha256": "dca4c7023f44bcecca5578eacd35c253a63d0b50b8dc92e4a5df56ddfc707974",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Scope of a condition changed at the later age. The official later statement has two sentences: adult support is named inside the first (the describe-and-compare sentence) and the second sentence (settling which group is the larger or the smaller) names no adult support. The Summary puts one \"still with an adult's help\" in front of both actions, so the support now also covers the second. Limits says \"Adult support is stated at both ages\" without that distinction. Rewrite so the later-age adult support attaches only to describing and comparing, as the writer did for the two sentences of foundation 2.6.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 32,
+        "offset": 89
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-3-0-measurement-and-data-3-5",
+      "wording_sha256": "9de189731b6b8fb772d2fe062f7b6e093eb19962a47933b4195a0dee0d971d8b",
+      "text_sha256": "1cf59154a65f5cb0d9cbcb0aba683cde133131a4c48a1d16e495f0afd38727fe",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Near copy at the later age. The round 1 fault itself is fixed: the adult's help now stands only with describing and comparing, and Limits says so. But the fix split the later age into two sentences that follow the two official sentences one for one, in the same order. The Summary's last sentence is the official second sentence with only its opening verb replaced: every word after the verb is the same, in the same order (a shared run of six words; the automated check rejects at eight). The sentence before it keeps the official first sentence's pair of verbs, its noun for what is counted and its closing phrase about the groups, in the official order, with the support phrase moved to the front and two short phrases reworded. About seven in ten of the official later-age words survive in order, the highest share in the lane apart from the list of position words in 4.5. Fix: restate the later age in the pack's own structure (for instance leading with the groups, or with the outcome), do not keep the wording of the official second sentence after its verb, and keep the support attached only to describing and comparing. Lesser point for the same rewrite: the Limits sentence that begins \"Only more and less are asked\" reads as if no count were asked, while the later statement also asks the child to describe the number of data points in the groups; say that it is the outcome of the comparison that is only more or less. Wording and code match the At-a-Glance PDF (page 32) and nothing else stands in either box.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 32,
+        "offset": 89
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/mathematics, round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-3-0-measurement-and-data-3-5",
+      "wording_sha256": "9de189731b6b8fb772d2fe062f7b6e093eb19962a47933b4195a0dee0d971d8b",
+      "text_sha256": "295710de2feea3487a3052b248bdc8cae8896c2e7cdea2a5d9fd6e428b54ba5e",
+      "verdict": "confirmed",
+      "note": "Round 3. The round 2 reason is resolved. The later age is now in the pack's own shape: it opens with the groups, what is described and compared comes after, and the last sentence starts from the group and ends on the verb. Nothing of the second later-age sentence of the statement is kept after its verb, and the longest run shared with either later-age sentence is three words. The adult's help still stands only with describing and comparing, and the sentence about which group has more or less names none, as on the page. One describing verb at both ages, as in the statements. Limits now says that it is the outcome of the comparison that is only more or less, so it no longer reads as if no number were asked. Remarks, none counted a fault: (1) The earlier-age sentence keeps the statement's order of parts with the support moved to the front; about two thirds of that statement's words recur in order (its terms, its two verbs, the support), the longest shared run is three words and what is noticed is recast as a clause, so it is not counted a near copy; it is the closest sentence in the record now that both of its verbs are the statement's. (2) In the earlier statement the support phrase stands directly after the first verb; the Summary puts it in front of both verbs, and Limits treats it as covering the whole earlier age. That is a fair reading of a single sentence, but the wording does not settle it, and Limits could say so, as other records of the pack do for the same case. (3) The last Limits sentence speaks of counting and of more groups; the later statement has the child describe the number and names two or more groups, as the same note says rightly two sentences earlier. Foundation 3.4 is rightly named for making the display. Wording, code and title equal the At-a-Glance PDF (page 32, page image); each age box holds exactly the stored statement.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 32,
+        "offset": 89
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/mathematics round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-4-0-geometry-and-spatial-thinking-4-1",
+      "wording_sha256": "217cc731df89f7c5d9498d4dfb1b537e43ad5a54fd6447c55ede4ee6ce61f7d0",
+      "text_sha256": "1a4ecf4b640e6dc92872d59b05f17ecdff1e87744ceaeabd1e210be7ac96f12d",
+      "verdict": "confirmed",
+      "note": "Form only: both renditions print an em dash inside the parenthetical of the earlier-age note; the stored wording has a hyphen there, which is what the normaliser makes of every dash. The words are equal.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 32,
+        "offset": 160
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-4-0-geometry-and-spatial-thinking-4-2",
+      "wording_sha256": "dd7af92e8d1f55a27a4ec1f773e0c6b5394ea5d22440fe73f7ac5f435070af89",
+      "text_sha256": "530ae08d28945b16569fd19de9a97ce93258ffe461091bda766d7778a4229ef8",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "The record's Later statement is incomplete. Both official renditions print a second paragraph in the Later box, a labelled note with a parenthetical of three example names (At-a-Glance PDF page 33; domain PDF page 57, printed page 56), directly after the sentence the record ends on. The record stops after the first sentence, so the note is missing. The locator span for the Later statement ends too early; the lane's two other notes (3.3 Later, 4.1 Early) were captured. The script reported a match because the record's text is contained in the rendition; it does not see text the rendition has beyond the record. After the wording is fixed the pack's text needs a rewrite too: the Summary does not mention the note, and Limits and \"What changes with age\" present informal names as a feature of the earlier age only, which the missing note contradicts.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 33,
+        "offset": 29
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-4-0-geometry-and-spatial-thinking-4-2",
+      "wording_sha256": "5af6218f0abb21bf47f7bdeafed2949860f8e6b566347b3894642c6992720610",
+      "text_sha256": "e3e9a07ded8abac85b21f48d608a43ecfafca84bd9dd8f62de33c60cb4e82eef",
+      "verdict": "confirmed",
+      "note": "The round 1 fault is fixed: the later-age note is now part of the wording, as a labelled paragraph of its own after the later statement, and both renditions print it in the Later box (At-a-Glance PDF page 33; domain PDF page 57). The Summary, Limits and \"What changes with age\" now carry the note and no longer present informal names as a feature of the earlier age only. The script's match is tolerant because the At-a-Glance PDF breaks a hyphenated word at a line end in the Early statement; the hyphen is the word's own and the stored wording has it. One remark, not a fault: the Summary introduces the three later-age shapes as \"the ones named\", which does not itself say they are examples; Limits says they are and that the list is open (the lane's 4.1 Summary uses the same phrase).",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 33,
+        "offset": 29
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/mathematics, round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-4-0-geometry-and-spatial-thinking-4-3",
+      "wording_sha256": "f60b68cdebc9b1ac97e7abe04ecf52f0896a6a4f36b558ca4b9f3e5a3a99b955",
+      "text_sha256": "fc2c681d03fa66bf05914f823bfc3f301bbe3d8c911cd52735bed8042afb2d1f",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 33,
+        "offset": 92
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-4-0-geometry-and-spatial-thinking-4-4",
+      "wording_sha256": "efe39d8eb98c16cac30551df0c63da155de30c50b17ba7b5fb89385f4fbc6268",
+      "text_sha256": "e83c2a6a6e8619a045a8a3340a8c0b4d44a6fb19563b2c8638ea6d4fc160ad05",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 33,
+        "offset": 159
+      },
+      "matched_by": "script",
+      "corrections_verified": true,
+      "checker": "us-ca/preschool-tk/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-4-0-geometry-and-spatial-thinking-4-5",
+      "wording_sha256": "a84b23064982d2ba071bd3a97436870d33c8892587fbb14f1229631f06753902",
+      "text_sha256": "a9af0d7f143f14f93a0c34f7a77b22543b7853a2d4e7279ccce8992151975554",
+      "verdict": "unconfirmed",
+      "reason": "extraction-artefact",
+      "note": "Two missing corrections for a slash pair broken over a line. On the domain PDF page 62 (printed 61) the Early statement breaks its line inside the second slash pair, right after the slash, and the Later statement breaks inside the third slash pair, right after the slash. The stored wording has a space after the slash in exactly those two pairs, so each reads as two tokens, while every other pair is stored closed. The At-a-Glance PDF page 33 prints both of those pairs closed on one line, which confirms no space is intended. Add a correction closing each (same class as the line-break hyphen corrections of 1.2 and 4.4). The word match ignores punctuation and spacing, so the script did not see it. Summary and Design notes are faithful.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 33,
+        "offset": 242
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-4-0-geometry-and-spatial-thinking-4-5",
+      "wording_sha256": "9c3373fde82ee5b4769cd66375746d65254a31c0b295f40e20e0678d0b48ec9f",
+      "text_sha256": "a9af0d7f143f14f93a0c34f7a77b22543b7853a2d4e7279ccce8992151975554",
+      "verdict": "confirmed",
+      "note": "The round 1 fault is fixed. Both corrections were verified on the page image of the domain PDF, page 62 (printed 61): the Early statement's line ends right after the slash of its second pair and the Later statement's line ends right after the slash of its third pair; the corrections close exactly those two, and the stored wording now has every pair closed, as each pair prints when it stands on one line. The At-a-Glance PDF (page 33) prints both of those pairs closed; it breaks a line after the slash of another pair in the Later statement (the one before the last item), which the stored wording has closed, as the domain PDF prints it. The corrections give \"line-break hyphen\" as their reason because the closed list of reasons has no entry for a slash; the repair itself is right.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 33,
+        "offset": 242
+      },
+      "matched_by": "script",
+      "corrections_verified": true,
+      "checker": "us-ca/preschool-tk/mathematics, round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-4-0-geometry-and-spatial-thinking-4-6",
+      "wording_sha256": "9c55e4981cfd0d5d3f042656cd793b342185e470095fa0502b74064c4ccd4fa4",
+      "text_sha256": "95f9b2a94eb3dc423bcefba1f08e1ab96c15f197e811894ca380e839dfb25879",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 34,
+        "offset": 27
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/mathematics",
+      "round": 1
+    }
+  ],
+  "unrecorded": []
+}

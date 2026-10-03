@@ -1,0 +1,608 @@
+{
+  "lane": "us-ca/grade-5/mathematics",
+  "verdicts": [
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-g-1",
+      "wording_sha256": "595f80e6d87229c078d52b9c1bbe630804b66b9d0813571e2014b7065da20eba",
+      "text_sha256": "330c1bbece8e3b58153762e6631c7227fcc824fb50d7e541660140c43e88caa8",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 46,
+        "offset": 20
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-g-2",
+      "wording_sha256": "f3b815d503b8d04cfb0479ef94aec95bd3dfb8b1d17c98028df0bad86979b3fe",
+      "text_sha256": "421a994b56281eeb96f0793a3fc6618d9cd22ef03141a96ef64850c5c3e02f75",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 46,
+        "offset": 131
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-g-3",
+      "wording_sha256": "d457f031cb06f199697116de395aacc4ff279aac5bebd4578c18393780b8a985",
+      "text_sha256": "18deaa03afd392ea4a7851393493440ecca884f6f2833185e85ef143e0e60b2f",
+      "verdict": "confirmed",
+      "note": "Form only: the PDF breaks one word of the first sentence at a line end with a printed hyphen; the record holds the word whole.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 46,
+        "offset": 171
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-g-4",
+      "wording_sha256": "35369cc7e0a89448ae66ee4910038b534a7064a9187155e93c48dec5b54ad340",
+      "text_sha256": "573aaecccf8415229b1fdd03ab636fdebf614a01447c5db7dc7194f4e66d7860",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 46,
+        "offset": 210
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-md-1",
+      "wording_sha256": "a8602a14d847cd10ad0973ee1fc40ce161c9b8527c674a0605cceb0072589a1b",
+      "text_sha256": "436ed268a604e4ee5f699fc9adec413ea4d79b6e40e7accb104d6e63b2fb445c",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 45,
+        "offset": 139
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-md-2",
+      "wording_sha256": "694c97c92b5356c5960f81428655aa161f1ed28f1e9742b25dffd0baa651ca34",
+      "text_sha256": "263a88de5fcecceed516e21ff0859723a69f576bc79d2a3e48e8527f40a1b738",
+      "verdict": "confirmed",
+      "note": "The three unit fractions printed in the statement are the ones Limits gives (halves, quarters, eighths).",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 45,
+        "offset": 176
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-md-3-a",
+      "wording_sha256": "1245059c531c85be3f33bd9c0680a3f4521186ff9a6de4f344dc0bcb4ffada79",
+      "text_sha256": "37a889172ebee140d3c2a8d4876347c1a78ece20b8678d4b97f7bb612a98cbcd",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 45,
+        "offset": 259
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-5/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-md-3-b",
+      "wording_sha256": "0d82b51ae3867deb7a7dd3051ca30523984b088a37c4db0f90b28e965e91ef2c",
+      "text_sha256": "1e1224fea0d905391fefb196374cee60955b091c60cdf92eaec88f5fee0b08c9",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 45,
+        "offset": 259
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-5/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-md-4",
+      "wording_sha256": "ef9b6a21f97c4d0d98880bf04c7dceca164eaffcb2fa40e51739c1d59055232f",
+      "text_sha256": "c5ed44e73bbb8dfd9c1d3530acda89d363d66c7b66576d7c7960470017b8e4e2",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 45,
+        "offset": 328
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-md-5-a",
+      "wording_sha256": "bcd162291d6ed311e3ef4b008fe5281accc0dd6b2b9a5e5caaac6d83e1bf49e6",
+      "text_sha256": "5fc130de9708f174687860399614dc2c3623dd91a303213bfb572a8ade987bc3",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 45,
+        "offset": 345
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-5/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-md-5-b",
+      "wording_sha256": "7b039a00432be26b28a17d4bf6a40236441fa62fd0871258fb20983b2a1eddd2",
+      "text_sha256": "45db5d12d74091ff32f4b1623c2e48f20776e69f9c9521b37ec7e7ac694be3b9",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 45,
+        "offset": 345
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-5/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-md-5-c",
+      "wording_sha256": "00bea434f00d470d80eefdefd5e3944303d5ca3627c71bb4b2e5caab32a709b9",
+      "text_sha256": "d3e7296035b39b449de468d901914fd3810d4fb42cab34230ee5ac5015cd4234",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 45,
+        "offset": 345
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-5/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-nbt-1",
+      "wording_sha256": "5c7e239365ff42bc84ce71dbc37aa1bc134ad1a38ccde9b316cf35c3cca2862c",
+      "text_sha256": "2d9ef487e5432b0e71a63421f59897c916c0c9eb897d974dd6e6944063b88d12",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 43,
+        "offset": 224
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-nbt-2",
+      "wording_sha256": "8dbbd7c4f043a35b1273d70e39014d851543cbbbf4816813eb99fd44a126021d",
+      "text_sha256": "98d6212a3b64ceca20d206a1edc5f84eee2f174afbab85764bb7ad306d54f948",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 43,
+        "offset": 264
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-nbt-3-a",
+      "wording_sha256": "c1059176cd945b16ceff2682cf9f11403b629051ac3f4de505134e31c64d73e1",
+      "text_sha256": "9b331a8ef10ff6d95da767711df231296a468b8da5893eac7463a1b67cd12e81",
+      "verdict": "confirmed",
+      "note": "The six place values and the digits of the worked number in the example were compared digit by digit with the page; the Summary and Limits give them as printed.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 43,
+        "offset": 314
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-5/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-nbt-3-b",
+      "wording_sha256": "fbf1030f37b2f0f65dd0979622c62d358b216b9c89d6e0d3c1f47b793acb62f6",
+      "text_sha256": "8b93bd1cedeb2cfc57dbc7d7a5224e4cecfeb59f1397e220092f961b5b39621b",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 43,
+        "offset": 314
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-5/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-nbt-4",
+      "wording_sha256": "66e282180d281cb766f18c11894f4bad13ea626c6314a9bd3fbc6b17e1896839",
+      "text_sha256": "f0534f2ae0a6c6c1836979d1e0a84d505611866768e8d1fb3d5aa59c09d78aa6",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 43,
+        "offset": 381
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-nbt-5",
+      "wording_sha256": "89731d7eff4c91f71dfdefd0b44b84666639ba6d63ca523730f91b74b9b9692d",
+      "text_sha256": "8d7e732aa87a12db31e95044c02b4a9556da21bfb19c7683110456bd91e1fcfe",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 43,
+        "offset": 404
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-nbt-6",
+      "wording_sha256": "0e46fde1d5896afb0742dd36fa74172ac7303d482987fec9f638d733e99eb20d",
+      "text_sha256": "296cc3990718dac5704fb69f6139b648d256bb97e0222264c6d7f4a4fe2d4ae4",
+      "verdict": "confirmed",
+      "note": "Numbers checked against the page: dividends of up to four digits, divisors of two digits, whole-number quotients. Summary and Limits give the same.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 43,
+        "offset": 415
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-nbt-7",
+      "wording_sha256": "086049174f61e4ca2b872174709a33cffcd20e127e80ddada6c9049ed422f156",
+      "text_sha256": "9dead1a2318dc102831e5167c330501c92e8ce85880007dde0f0836f6817dd3f",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 43,
+        "offset": 465
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-nf-1",
+      "wording_sha256": "9561359a4ea7ac97735e8e7a8610d63e6af54f3755faa0a1605c62075ce230e7",
+      "text_sha256": "87fbc2517ff54eafbda62d73343ee25de0d396929e276dc4a03e7f56d77ca561",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 44,
+        "offset": 21
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-nf-2",
+      "wording_sha256": "bb2474ba875c79593736f887606a76846f4a492ee707596c997bc5498d6bad43",
+      "text_sha256": "a708fbae0da3db32d353244ebd136c369db86be25b7b663ef7c60de98cec8968",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 44,
+        "offset": 77
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-nf-3",
+      "wording_sha256": "615749f148f1d3b855a5bafc97fc98b50f8e624b0e352d8c11faf97ceadb6da1",
+      "text_sha256": "dd8b91542d5c5a9a3600bdd0c1333c39215c0d7a30e6a7846783ba1429aeb696",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 44,
+        "offset": 160
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-nf-4-a",
+      "wording_sha256": "57ef9c9af6bb1e239aaf665613fdc02f2a03f2b88c5d127634b22c2a090801af",
+      "text_sha256": "eede86baf2ea8caa9b307a4ecd3b6e8c86bf7960c3bb1a7a99281d0272d2bade",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 44,
+        "offset": 283
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-5/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-nf-4-b",
+      "wording_sha256": "c15354b65ff98e992cb531b680c87329c15926086aa616dd57c2d192c9f58af9",
+      "text_sha256": "a6eac2899c99bcfd2444d450e39d124d092c79781c995c862ae5faa26e8a35c2",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 44,
+        "offset": 283
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-5/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-nf-5-a",
+      "wording_sha256": "c864b50c0428d194eaa68af4ea0c9a08cd66eadb18a302ba9ecb9c0b422cbdfc",
+      "text_sha256": "bd9457e69d7c1cb870e3dfc83fecc1103128e2e165ca462088a5139833285be3",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 44,
+        "offset": 429
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-5/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-nf-5-b",
+      "wording_sha256": "3a28dd1c0f3ce0cbe8a26c5747971045de9d3b128a8a37e62b2f418d3a36fd8a",
+      "text_sha256": "1d2dd7b79efa0b7f5310f5c4d8ebcfff2377513a0cea3f37c5b248d4d96fc671",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 44,
+        "offset": 429
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-5/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-nf-6",
+      "wording_sha256": "a182421f7dae5339011bff043b76285c0496ab89943f6cd88729784e37e24d78",
+      "text_sha256": "0298ed525dd6cbed5723746659d43627ce380f8d606ce4adff6d40ec3d8c3511",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 44,
+        "offset": 541
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-nf-7-a",
+      "wording_sha256": "3105040d01b27eb18bbd95d27ff737e8fb736e334d9d8ab3cda098ee78ad8370",
+      "text_sha256": "d9d21ff7092d5fc834dbc5c4f7b7342503a39b02690db1ccec247dfa1ba3f677",
+      "verdict": "confirmed",
+      "note": "Form: the PDF prints a raised footnote digit directly after the last word of the stem; the record leaves the digit out. The footnote at the foot of page 44 equals the accompanying footnote of this record, and its marker stands on the stem this record repeats, so it belongs here. Limits states what the footnote rules out exactly and adds nothing. Seen on the page: because the marker is on the stem, the footnote covers parts b and c as much as part a; the export carries it only in the row of part a.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 44,
+        "offset": 566
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-5/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-nf-7-b",
+      "wording_sha256": "2f5cdb741caaf291451140cf97a6c5bdbd525ef9dad1d16bb9357f06a61405f8",
+      "text_sha256": "568395f27b3a95bbf1a7a147f1a8e8d198a97ab3025e67bdbaaea58dcf8e51fa",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Limits, last sentence: it says the footnote is attached to the neighbouring part of this standard. On the PDF page (page 44) the raised footnote digit stands at the end of the stem of the standard, the sentence this record's own wording begins with, so the footnote is attached to this part as much as to part a. The export puts the footnote only in the row of part a and this record carries no footnote as accompanying text, which is why the note reads as it does; what the footnote rules out is stated correctly. Fix: say that the footnote stands on the stem of the standard and so covers this part. For the importer: a footnote whose marker is on a parent stem belongs with every sub-part record of that parent. Everything else holds: wording and code match the PDF (stem on page 44, the text of part b at the top of page 45, with only part a, the footnote and the page furniture between them); the Summary is faithful, its numbers equal the page, and it is not a near copy.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 44,
+        "offset": 566
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-5/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-nf-7-b",
+      "wording_sha256": "2f5cdb741caaf291451140cf97a6c5bdbd525ef9dad1d16bb9357f06a61405f8",
+      "text_sha256": "a3dd9615b2584742818070f320c80d80b59cc587873660f4ab3b7a8fdde9498a",
+      "verdict": "confirmed",
+      "note": "Round 2. The fix resolved the first verdict's reason: Limits now says the footnote stands on the stem of the standard and so covers this part, which is what page 44 shows (the raised footnote digit stands directly after the last word of the stem; the record leaves the digit out, which is form). The record now carries the footnote as accompanying text, and it equals the footnote at the foot of page 44. What Limits says the footnote rules out is right. Wording and code match: the stem on page 44, the text of part b on page 45, with only part a, the footnote and the page furniture between them. The Summary is faithful, its numbers and examples equal the page, examples stay examples, and it is not a near copy. The arithmetic in \"In a child's hands\" is right.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 44,
+        "offset": 566
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-5/mathematics round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-nf-7-c",
+      "wording_sha256": "c87d7bd20f2c7eecdd954b2dbf05b1b9865eae0b3e669308f8ea55361c7b46b0",
+      "text_sha256": "08fb26a4901d3764e4826629afe440fba65fcf7d74946ef4073284a103943a83",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Limits, third sentence: it says the footnote is attached to a neighbouring part of this standard. On the PDF page (page 44) the raised footnote digit stands at the end of the stem of the standard, the sentence this record's own wording begins with, so the footnote is attached to this part as much as to part a. The export puts the footnote only in the row of part a and this record carries no footnote as accompanying text, which is why the note reads as it does; what the footnote rules out is stated correctly. Fix: say that the footnote stands on the stem of the standard and so covers this part. For the importer: a footnote whose marker is on a parent stem belongs with every sub-part record of that parent. Everything else holds: wording and code match the PDF (stem on page 44, the text of part c on page 45, with only parts a and b, the footnote and the page furniture between them); the Summary is faithful, its numbers equal the page, and it is not a near copy.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 44,
+        "offset": 566
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-5/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-nf-7-c",
+      "wording_sha256": "c87d7bd20f2c7eecdd954b2dbf05b1b9865eae0b3e669308f8ea55361c7b46b0",
+      "text_sha256": "c5af73243aef0ee9e98d56d20d387fb65e1f6bdbb720626b13d6d1f516642841",
+      "verdict": "confirmed",
+      "note": "Round 2. The fix resolved the first verdict's reason: Limits now says the footnote stands on the stem of the standard and so covers this part, which is what page 44 shows (the raised footnote digit stands directly after the last word of the stem; the record leaves the digit out, which is form). The record now carries the footnote as accompanying text, and it equals the footnote at the foot of page 44. What Limits says the footnote rules out is right. Wording and code match: the stem on page 44, the text of part c on page 45, with only parts a and b, the footnote and the page furniture between them. The Summary is faithful, its numbers and examples equal the page, examples stay examples, and it is not a near copy. The arithmetic in \"In a child's hands\" is right.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 44,
+        "offset": 566
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-5/mathematics round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-oa-1",
+      "wording_sha256": "b01b22aee183990cf38ee4121ea1d4f95f78510a703af1f91ca703126c2fd37b",
+      "text_sha256": "f477b4edfefd80711fd92b89d672d3fa94f7908043b4a03376eecf64c9c8f138",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 43,
+        "offset": 15
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-oa-2",
+      "wording_sha256": "33b02bd027aaf4c5b8e7d3f952bc085603c59be04c691f0a2aa21876032f3eb4",
+      "text_sha256": "a9ef9acf388932d8a87931534b8412f0a232c8fdbbe1a60d9d3f794b77a6cc9f",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 43,
+        "offset": 30
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-oa-2-1",
+      "wording_sha256": "f7a72ecf085411dd160fddfd50b9faa67ea18c95cd56a29b400536f34cc80d38",
+      "text_sha256": "dc4554d9dbce24abc83ea368db9b5c6baa2af310d734314b891450af82aa696f",
+      "verdict": "confirmed",
+      "note": "The PDF prints the range with an en dash and the record with a hyphen: form. On pages 43 to 46 this is the only grade 5 statement set in boldface and the only one that ends in the CA marker, so california_addition true is right here and no other record of the lane should carry the flag. Limits gives the range as the page prints it, 2 to 50.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 43,
+        "offset": 86
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.mathematics.objective.5-oa-3",
+      "wording_sha256": "5859a1a1fa9197e6633f94fb0516cba753a673fe08fced484f2f1459c9946b6d",
+      "text_sha256": "0c27a4d8a1c07910d63e22551194ef7849264380e5efd0c83be6ef2120984d29",
+      "verdict": "confirmed",
+      "note": "Limits speaks of the explanation as informal without saying where that comes from: on the page the request to explain stands inside the italic example, not in the statement proper. The Summary keeps it inside the example. Not a contradiction, but a designer should not read it as a separate requirement.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 43,
+        "offset": 124
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/mathematics",
+      "round": 1
+    }
+  ],
+  "unrecorded": [
+    {
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "code": "5.NBT.3",
+      "place": {
+        "page": 43,
+        "offset": 314
+      },
+      "explained": "parent of sub-part records; the source has no row for it. The PDF prints it as number 3 under the 5.NBT domain bar with parts a and b beneath; its stem stands at the head of each of those sub-part records. Found by eye: the PDF prints no full codes."
+    },
+    {
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "code": "5.NF.4",
+      "place": {
+        "page": 44,
+        "offset": 283
+      },
+      "explained": "parent of sub-part records; the source has no row for it. The PDF prints it as number 4 under the 5.NF domain bar with parts a and b beneath; its stem stands at the head of each of those sub-part records. Found by eye: the PDF prints no full codes."
+    },
+    {
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "code": "5.NF.5",
+      "place": {
+        "page": 44,
+        "offset": 429
+      },
+      "explained": "parent of sub-part records; the source has no row for it. The PDF prints it as number 5 under the 5.NF domain bar with parts a and b beneath; its stem stands at the head of each of those sub-part records. Found by eye: the PDF prints no full codes."
+    },
+    {
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "code": "5.NF.7",
+      "place": {
+        "page": 44,
+        "offset": 566
+      },
+      "explained": "parent of sub-part records; the source has no row for it. The PDF prints it as number 7 under the 5.NF domain bar with parts a, b and c beneath; its stem stands at the head of each of those sub-part records. Its stem carries the marker of footnote 1 of page 44; parts b and c are printed on page 45. Found by eye: the PDF prints no full codes."
+    },
+    {
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "code": "5.MD.3",
+      "place": {
+        "page": 45,
+        "offset": 259
+      },
+      "explained": "parent of sub-part records; the source has no row for it. The PDF prints it as number 3 under the 5.MD domain bar with parts a and b beneath; its stem stands at the head of each of those sub-part records. Found by eye: the PDF prints no full codes."
+    },
+    {
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "code": "5.MD.5",
+      "place": {
+        "page": 45,
+        "offset": 345
+      },
+      "explained": "parent of sub-part records; the source has no row for it. The PDF prints it as number 5 under the 5.MD domain bar with parts a, b and c beneath; its stem stands at the head of each of those sub-part records. Found by eye: the PDF prints no full codes."
+    }
+  ]
+}

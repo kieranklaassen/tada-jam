@@ -1,0 +1,1388 @@
+{
+  "lane": "nl/fase-1/reading-language",
+  "records": [
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Woordenschat en woordgebruik / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "uitbreiden van de receptieve",
+          "last": "receptieve woordenschat"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Woordenschat en woordgebruik / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "uitbreiden van productieve",
+          "last": "productieve woordenschat"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Woordenschat en woordgebruik / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "passende woorden gebruiken",
+          "last": "dingen en plaatsen",
+          "corrections": [
+            {
+              "from": "zaken/ schoolse",
+              "to": "zaken/schoolse",
+              "reason": "line-break hyphen"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Woordenschat en woordgebruik / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "verschillende en nieuwe woorden",
+          "last": "betekenisuitbreiding, semantiek"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Woordenschat en woordgebruik / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "(nieuwe) woorden vormen",
+          "last": "vormen (morfologie)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Luisteren / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "luisteren naar en begrijpen van uitleg",
+          "last": "activiteiten en taken"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Luisteren / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "luisteren naar en begrijpen van instructies",
+          "last": "activiteiten in de groep"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Luisteren / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "luisteren naar en begrijpen van prentenboeken",
+          "last": "over concrete onderwerpen",
+          "corrections": [
+            {
+              "from": "(toneel) voorstellingen",
+              "to": "(toneel)voorstellingen",
+              "reason": "text recognition misread"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Luisteren / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "luisteren naar en begrijpen van de mening",
+          "last": "mening van anderen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Luisteren / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "luisteren en begrijpen van gesproken tekst",
+          "last": "prentenboeken en luisterboeken"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Luisteren / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "interpreteren van wat wordt verteld",
+          "last": "intonatie en stemgebruik"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Luisteren / 7",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "benoemen van thema/onderwerp",
+          "last": "onderwerp van gesproken tekst"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Luisteren / 8",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "herkennen van persoon",
+          "last": "gebeurtenis in gesproken tekst"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Luisteren / 9",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "precies luisteren",
+          "last": "luisteren/begrip belemmert"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Luisteren / 10",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "samenvatten van wat wordt verteld",
+          "last": "gebeurtenis in het verhaal"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Luisteren / 11",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "(met hulp) vormen van eigen mening",
+          "last": "je ervan?) (evalueren)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Taalbeschouwing",
+      "code": "1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "gesprekken voeren over taal",
+          "last": "taal en taalgebruik"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Taalbeschouwing",
+      "code": "2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "reflecteren op taal",
+          "last": "reflecteren op taal"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Taalbeschouwing",
+      "code": "3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "verbeteren van taalgebruik",
+          "last": "verbeteren van taalgebruik"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Spreken / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "vertellen voor vertrouwd publiek",
+          "last": "spelen van een spel"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Spreken / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "vloeiend en verstaanbaar praten",
+          "last": "intonatie (bijv. vraagzin"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Spreken / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "klanken vormen met",
+          "last": "klanksysteem (fonologie"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Spreken / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "zinnen vormen",
+          "last": "vormen (syntaxis"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Spreken / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "gebruiken van gebaren en mimiek",
+          "last": "boodschappen te ondersteunen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Spreken / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "blijven bij het gekozen onderwerp",
+          "last": "ondersteunend materiaal"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Spreken / 7",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "gebruiken van eenvoudige signaalwoorden",
+          "last": "samenhang in een verhaal"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Spreken / 8",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "waarnemen van signalen",
+          "last": "(bekende) luisteraars",
+          "lastOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Spreken / 9",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "reageren op signalen",
+          "last": "inhoud aan de groep"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Spreken / 10",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "(met hulp) herkennen",
+          "last": "op het publiek",
+          "firstOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Spreken / 11",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "(met hulp) herkennen",
+          "last": "afstemmen op spreekdoel",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Gesprekken voeren / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "deelnemen aan geplande",
+          "last": "over spel en ervaringen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Gesprekken voeren / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "reageren op elkaar",
+          "last": "stellen en beantwoorden"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Gesprekken voeren / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "kennismaken met verschillende gesprekssoorten",
+          "last": "discussie, kringgesprek"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Gesprekken voeren / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "ervaren van verschillende gespreksdoelen",
+          "last": "in een prentenboek"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Gesprekken voeren / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "kennismaken met en gebruiken",
+          "last": "naar elkaar luisteren"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Gesprekken voeren / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "oriënteren op een gespreksonderwerp",
+          "last": "vertellen/weten"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Gesprekken voeren / 7",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "vasthouden en blijven",
+          "last": "bij het gespreksonderwerp"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Gesprekken voeren / 8",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "bewust worden van verschillen",
+          "last": "gespreksbijdragen te ondersteunen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Gesprekken voeren / 9",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "(met hulp) kiezen",
+          "last": "woorden tijdens gesprekken"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Mondelinge taalvaardigheid",
+      "code": "Gesprekken voeren / 10",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "(met hulp) reflecteren",
+          "last": "aan het gesprek"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Leesplezier / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "ontwikkelen van leesplezier",
+          "last": "rijke leesomgeving"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Leesplezier / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "plezier tonen in voorlezen",
+          "last": "boeken (leesbeleving"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Leesplezier / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "plezier in zelf",
+          "last": "zelf (kunnen) voorlezen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Leesplezier / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "meeleven met personages",
+          "last": "afgestemd boek"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Leesplezier / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "ervaren van verschillende emoties",
+          "last": "boosheid, blijdschap"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Leesplezier / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "uiten van gevoelens",
+          "last": "verhaal of rijmpje"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Leesplezier / 7",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "zich inleven",
+          "last": "afstaan van het kind"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Fonemisch bewustzijn en alfabetisch principe / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "spelen met klanken",
+          "last": "woorden verklanken"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Fonemisch bewustzijn en alfabetisch principe / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "ontdekken van het alfabetisch principe",
+          "last": "speelse context"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Fonemisch bewustzijn en alfabetisch principe / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "deelnemen aan woord",
+          "last": "en klankspelletjes"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Fonemisch bewustzijn en alfabetisch principe / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "ontdekken dat letters",
+          "last": "klanken corresponderen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Fonemisch bewustzijn en alfabetisch principe / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "herkennen en gebruiken van rijmwoorden",
+          "last": "van rijmwoorden"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Fonemisch bewustzijn en alfabetisch principe / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "ontdekken van de structuur",
+          "last": "tekst, zin, woord"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Oriëntatie op verhaal en tekst / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "ontwikkelen van kennis over",
+          "last": "functies van lezen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Oriëntatie op verhaal en tekst / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "kennismaken met verhalende teksten",
+          "last": "voorleesverhalen, prentenboeken"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Oriëntatie op verhaal en tekst / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "kennismaken met poëzie",
+          "last": "raadselrijmen, spotversjes"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Oriëntatie op verhaal en tekst / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "kennismaken met informatieve teksten",
+          "last": "weerbericht op website"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Oriëntatie op verhaal en tekst / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "kennismaken met instructieve teksten",
+          "last": "recept, bouwtekening"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Oriëntatie op verhaal en tekst / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "kennismaken met betogende teksten",
+          "last": "oproep, reclame"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Oriëntatie op verhaal en tekst / 7",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "herkennen en onderscheiden",
+          "last": "fictie en non-fictie"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Oriëntatie op verhaal en tekst / 8",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "naspelen of navertellen",
+          "last": "zonder illustraties"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Oriëntatie op verhaal en tekst / 9",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "onderscheiden van de hoofdcomponenten",
+          "last": "behulp van picto's"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Oriëntatie op verhaal en tekst / 10",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "afleiden van de betekenis",
+          "last": "afbeeldingen bij een tekst"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Aanvankelijk lezen (vanaf GROEP 3) / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "oefenen van de elementaire",
+          "last": "elementaire leeshandelingen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Aanvankelijk lezen (vanaf GROEP 3) / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "decoderen van klankzuivere",
+          "last": "klankzuivere woorden",
+          "lastOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Aanvankelijk lezen (vanaf GROEP 3) / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "herkennen van lettercombinaties",
+          "last": "niet-klankzuivere woorden"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Aanvankelijk lezen (vanaf GROEP 3) / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "herkennen van lettergrepen",
+          "last": "in geschreven woorden"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Aanvankelijk lezen (vanaf GROEP 3) / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "kennismaken met eenvoudige technieken",
+          "last": "onderstrepen, woordspin"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Aanvankelijk lezen (vanaf GROEP 3) / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "opzoeken en kennismaken",
+          "last": "opzet van informatiebronnen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Aanvankelijk lezen (vanaf GROEP 3) / 7",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "kennis ontwikkelen over",
+          "last": "behulp van leesstrategieën"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Aanvankelijk lezen (vanaf GROEP 3) / 8",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "voorspellen waar de tekst",
+          "last": "om te onthouden"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Aanvankelijk lezen (vanaf GROEP 3) / 9",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "(met hulp) oriënteren",
+          "last": "op het leesdoel"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Aanvankelijk lezen (vanaf GROEP 3) / 10",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "(met hulp) bewust worden",
+          "last": "eigen leesleerproces"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Aanvankelijk lezen (vanaf GROEP 3) / 11",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "herkennen en begrijpen van signaalwoorden",
+          "last": "structuur aangeven"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Aanvankelijk lezen (vanaf GROEP 3) / 12",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "zelfstandig begrijpen",
+          "last": "titel te interpreteren"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Lezen",
+      "code": "Aanvankelijk lezen (vanaf GROEP 3) / 13",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "ontdekken welke onderwerpen",
+          "last": "om over te lezen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Schrijven",
+      "code": "Oriëntatie op geschreven taal / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "ontwikkelen van kennis van",
+          "last": "functies van schrijven"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Schrijven",
+      "code": "Oriëntatie op geschreven taal / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "benoemen van het verschil",
+          "last": "gesproken en geschreven taal"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Schrijven",
+      "code": "Oriëntatie op geschreven taal / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "ontdekken van het verschil",
+          "last": "'schrijven' en 'lezen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Schrijven",
+      "code": "Oriëntatie op geschreven taal / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "achterhalen van de betekenis",
+          "last": "betekenis van geschreven taal"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Schrijven",
+      "code": "Voorbereidend schrijven / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "spelen met lettertekens",
+          "last": "benoemen en schrijven"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Schrijven",
+      "code": "Voorbereidend schrijven / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "schrijven van woorden met grote",
+          "last": "logo's en merknamen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Schrijven",
+      "code": "Voorbereidend schrijven / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "tekenen en versieren",
+          "last": "versieren van woorden"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Schrijven",
+      "code": "Voorbereidend schrijven / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "schrijven met eigen grafische",
+          "last": "typen op de computer",
+          "corrections": [
+            {
+              "from": "krabbelen, etterachtige vormen",
+              "to": "krabbelen, letterachtige vormen",
+              "reason": "text recognition misread"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Schrijven",
+      "code": "Voorbereidend schrijven / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "ervaring opdoen met het schrijven van woorden",
+          "last": "zelfgemaakte tekeningen",
+          "corrections": [
+            {
+              "from": "(2 woords) zinnen",
+              "to": "(2 woords)zinnen",
+              "reason": "text recognition misread"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Schrijven",
+      "code": "Voorbereidend schrijven / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "vertellen wat gebruikte tekens",
+          "last": "eigen schrift betekenen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Schrijven",
+      "code": "Aanvankelijk schrijven (vanaf GROEP 3) / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "ervaren dat geschreven taal",
+          "last": "communicatieve doelen heeft"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Schrijven",
+      "code": "Aanvankelijk schrijven (vanaf GROEP 3) / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "ervaren dat schrijven is",
+          "last": "gevoelens en meningen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Schrijven",
+      "code": "Aanvankelijk schrijven (vanaf GROEP 3) / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "ervaring opdoen met de schrijfdoelen",
+          "last": "ander plezier verschaffen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Schrijven",
+      "code": "Aanvankelijk schrijven (vanaf GROEP 3) / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "plezier krijgen in schrijven",
+          "last": "plezier krijgen in schrijven"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Schrijven",
+      "code": "Aanvankelijk schrijven (vanaf GROEP 3) / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "ervaring opdoen met het schrijven van korte zinnen",
+          "last": "van korte zinnen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Schrijven",
+      "code": "Aanvankelijk schrijven (vanaf GROEP 3) / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "ervaring opdoen met het schrijven van korte teksten",
+          "last": "korte gebruiksaanwijzing"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Schrijven",
+      "code": "Aanvankelijk schrijven (vanaf GROEP 3) / 7",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "schrijven over concrete onderwerpen",
+          "last": "toekomst/verleden"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Schrijven",
+      "code": "Aanvankelijk schrijven (vanaf GROEP 3) / 8",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "experimenteren met het afstemmen",
+          "last": "tekst op publiek"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Schrijven",
+      "code": "Aanvankelijk schrijven (vanaf GROEP 3) / 9",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "(met hulp) aanpassen",
+          "last": "publiek (klasgenootjes"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Schrijven",
+      "code": "Aanvankelijk schrijven (vanaf GROEP 3) / 10",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "(met hulp) inzetten",
+          "last": "minder op vorm",
+          "corrections": [
+            {
+              "from": "het onderwerp, verzamelen', selecteren",
+              "to": "het onderwerp, 'verzamelen' , selecteren",
+              "reason": "text recognition misread"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Schrijven",
+      "code": "Aanvankelijk schrijven (vanaf GROEP 3) / 11",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "reflecteren in tekstbesprekingen",
+          "last": "wel/niet begrijpen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Nederlandse taal, fase 1 / Schrijven",
+      "code": "Aanvankelijk schrijven (vanaf GROEP 3) / 12",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-taal-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "verzorgen van de lay-out",
+          "last": "bij de tekst maken"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudslijn Schrijven, PDF / Schrijven: kenmerken van de taakuitvoering / inhoud/vorm",
+      "code": "groep 1/2 / 1",
+      "printed_code": false,
+      "spans": [
+        {
+          "source": "nl-slo-inhoudslijn-ne-schrijven",
+          "page": 2,
+          "column": 2,
+          "first": "dicteren teksten",
+          "last": "noemen/introduceren"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudslijn Schrijven, PDF / Schrijven: kenmerken van de taakuitvoering / inhoud/vorm",
+      "code": "groep 1/2 / 2",
+      "printed_code": false,
+      "spans": [
+        {
+          "source": "nl-slo-inhoudslijn-ne-schrijven",
+          "page": 2,
+          "column": 2,
+          "first": "schrijven: >(losse",
+          "last": "een tekening"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudslijn Schrijven, PDF / Schrijven: kenmerken van de taakuitvoering / inhoud/vorm",
+      "code": "groep 1/2 / 3",
+      "printed_code": false,
+      "spans": [
+        {
+          "source": "nl-slo-inhoudslijn-ne-schrijven",
+          "page": 2,
+          "column": 2,
+          "first": "schrijven vooral",
+          "last": "de computer"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudslijn Schrijven, PDF / Schrijven: kenmerken van de taakuitvoering / inhoud/vorm",
+      "code": "groep 3 / 1",
+      "printed_code": false,
+      "spans": [
+        {
+          "source": "nl-slo-inhoudslijn-ne-schrijven",
+          "page": 2,
+          "column": 2,
+          "first": "schrijven korte teksten",
+          "last": "chronologische opbouw"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudslijn Schrijven, PDF / Schrijven: kenmerken van de taakuitvoering / inhoud/vorm",
+      "code": "groep 3 / 2",
+      "printed_code": false,
+      "spans": [
+        {
+          "source": "nl-slo-inhoudslijn-ne-schrijven",
+          "page": 2,
+          "column": 2,
+          "first": "schrijven korte zinnen",
+          "last": "worden gemaakt"
+        }
+      ]
+    }
+  ]
+}

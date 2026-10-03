@@ -1,0 +1,641 @@
+{
+  "lane": "us-ca/preschool-tk/science",
+  "records": [
+    {
+      "group": "Science / Strand 1.0 — Science and Engineering Practices",
+      "code": "1.1",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 18,
+          "first": "Observe and actively explore",
+          "last": "describe their observations",
+          "firstOccurrence": 1,
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 18,
+          "first": "Observe and actively explore",
+          "last": "in greater detail",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Science / Strand 1.0 — Science and Engineering Practices",
+      "code": "1.2",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 21,
+          "first": "Compare and contrast objects",
+          "last": "on observable properties",
+          "firstOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 21,
+          "first": "Compare and contrast objects",
+          "last": "in greater detail",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Science / Strand 1.0 — Science and Engineering Practices",
+      "code": "1.3",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 23,
+          "first": "Demonstrate curiosity",
+          "last": "their environment",
+          "firstOccurrence": 1,
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 23,
+          "first": "Demonstrate curiosity and an",
+          "last": "in their environment",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Science / Strand 1.0 — Science and Engineering Practices",
+      "code": "1.4",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 25,
+          "first": "Identify problems during play",
+          "last": "peers and adults",
+          "firstOccurrence": 1,
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 25,
+          "first": "Identify problems during play",
+          "last": "peers and adults",
+          "firstOccurrence": 2,
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Science / Strand 1.0 — Science and Engineering Practices",
+      "code": "1.5",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 27,
+          "first": "Make simple predictions give",
+          "last": "through concrete experiences"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 27,
+          "first": "Make more detailed predictions",
+          "last": "correct or incorrect"
+        }
+      ]
+    },
+    {
+      "group": "Science / Strand 1.0 — Science and Engineering Practices",
+      "code": "1.6",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 30,
+          "first": "Carry out simple experiments",
+          "last": "about their observations"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 30,
+          "first": "Carry out more complex",
+          "last": "test their hypotheses"
+        }
+      ]
+    },
+    {
+      "group": "Science / Strand 1.0 — Science and Engineering Practices",
+      "code": "1.7",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 32,
+          "first": "Identify and",
+          "last": "adult support",
+          "firstOccurrence": 1,
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 32,
+          "first": "Identify and more spontaneously",
+          "last": "some adult support"
+        }
+      ]
+    },
+    {
+      "group": "Science / Strand 1.0 — Science and Engineering Practices",
+      "code": "1.8",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 34,
+          "first": "Record observations or findings",
+          "last": "of science concepts",
+          "firstOccurrence": 1,
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 34,
+          "first": "Record observations or findings",
+          "last": "of science concepts",
+          "firstOccurrence": 2,
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Science / Strand 1.0 — Science and Engineering Practices",
+      "code": "1.9",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 36,
+          "first": "Use mathematical thinking to",
+          "last": "with adult support"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 36,
+          "first": "Use mathematical thinking with",
+          "last": "some adult support"
+        }
+      ]
+    },
+    {
+      "group": "Science / Strand 1.0 — Science and Engineering Practices",
+      "code": "1.10",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 37,
+          "first": "Formulate and",
+          "last": "collaborative investigations",
+          "firstOccurrence": 1,
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 37,
+          "first": "Formulate and communicate more",
+          "last": "and collaborative investigations",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Science / Strand 2.0 — Physical Science",
+      "code": "2.1",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 40,
+          "first": "Investigate and describe the",
+          "last": "smell and sound",
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 40,
+          "first": "Investigate and describe in",
+          "last": "smell and sound",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Science / Strand 2.0 — Physical Science",
+      "code": "2.2",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 42,
+          "first": "Notice and explore sound",
+          "last": "and collaborative investigations",
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 42,
+          "first": "Explore and describe changes",
+          "last": "and collaborative investigations",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Science / Strand 2.0 — Physical Science",
+      "code": "2.3",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 44,
+          "first": "Explore and describe changes",
+          "last": "and collaborative investigations",
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 44,
+          "first": "Explore describe in greater",
+          "last": "and collaborative investigations",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Science / Strand 2.0 — Physical Science",
+      "code": "2.4",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 46,
+          "first": "Observe and describe the",
+          "last": "and collaborative investigations",
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 46,
+          "first": "Make and test predictions",
+          "last": "and collaborative investigations",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Science / Strand 2.0 — Physical Science",
+      "code": "2.5",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 48,
+          "first": "Demonstrate awareness with adult",
+          "last": "energy to function",
+          "firstOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 48,
+          "first": "Demonstrate awareness with adult",
+          "last": "these sources of energy",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Science / Strand 3.0 — Life Science",
+      "code": "3.1",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 51,
+          "first": "Identify and describe characteristics",
+          "last": "to categorize them",
+          "firstOccurrence": 1,
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 51,
+          "first": "Identify and describe characteristics",
+          "last": "to categorize them",
+          "firstOccurrence": 2,
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Science / Strand 3.0 — Life Science",
+      "code": "3.2",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 53,
+          "first": "Indicate emerging knowledge of",
+          "last": "and other animals",
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 53,
+          "first": "Indicate greater knowledge of",
+          "last": "observations and descriptions"
+        }
+      ]
+    },
+    {
+      "group": "Science / Strand 3.0 — Life Science",
+      "code": "3.3",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 55,
+          "first": "Expect animate objects",
+          "last": "from inanimate objects"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 55,
+          "first": "Indicate knowledge of the",
+          "last": "healing and dying"
+        }
+      ]
+    },
+    {
+      "group": "Science / Strand 3.0 — Life Science",
+      "code": "3.4",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 57,
+          "first": "Name and describe similarities",
+          "last": "their young ones"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 57,
+          "first": "Express their expectation that",
+          "last": "the same kind"
+        }
+      ]
+    },
+    {
+      "group": "Science / Strand 3.0 — Life Science",
+      "code": "3.5",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 59,
+          "first": "Identify the habitats of",
+          "last": "have different habitats",
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 59,
+          "first": "Recognize that",
+          "last": "unique needs"
+        }
+      ]
+    },
+    {
+      "group": "Science / Strand 3.0 — Life Science",
+      "code": "3.6",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 61,
+          "first": "Observe and explore growth",
+          "last": "grow and age",
+          "firstOccurrence": 1,
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 61,
+          "first": "Observe and explore growth",
+          "last": "growth reproduction death",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Science / Strand 3.0 — Life Science",
+      "code": "3.7",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 63,
+          "first": "Recognize that animals and",
+          "last": "humans animals and plants",
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 63,
+          "first": "Describe the needs of",
+          "last": "sleep sunshine shelter"
+        }
+      ]
+    },
+    {
+      "group": "Science / Strand 4.0 — Earth and Space Science",
+      "code": "4.1",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 66,
+          "first": "Investigate and describe the",
+          "last": "water and air",
+          "firstOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 66,
+          "first": "Investigate and describe the",
+          "last": "shape color texture",
+          "firstOccurrence": 2,
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Science / Strand 4.0 — Earth and Space Science",
+      "code": "4.2",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 68,
+          "first": "Observe and",
+          "last": "and clouds",
+          "firstOccurrence": 1,
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 68,
+          "first": "Observe and describe natural",
+          "last": "stars and clouds",
+          "firstOccurrence": 2,
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Science / Strand 4.0 — Earth and Space Science",
+      "code": "4.3",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 70,
+          "first": "Notice and describe changes",
+          "last": "plants and animals",
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 70,
+          "first": "Observe and describe changes",
+          "last": "plants and animals",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Science / Strand 4.0 — Earth and Space Science",
+      "code": "4.4",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 72,
+          "first": "Notice with adult prompting",
+          "last": "for the environment",
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 72,
+          "first": "Investigate with adult support",
+          "last": "to its care"
+        }
+      ]
+    },
+    {
+      "group": "Science / Strand 5.0 — Engineering, Technology, and Applications of Science",
+      "code": "5.1",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 75,
+          "first": "Engage collaboratively with peers",
+          "last": "refining their solutions",
+          "firstOccurrence": 1,
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 75,
+          "first": "Engage collaboratively with peers",
+          "last": "periods of time",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Science / Strand 5.0 — Engineering, Technology, and Applications of Science",
+      "code": "5.2",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 77,
+          "first": "Notice and explore with",
+          "last": "in everyday life"
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 77,
+          "first": "Explore in more detail",
+          "last": "families and communities"
+        }
+      ]
+    },
+    {
+      "group": "Science / Strand 5.0 — Engineering, Technology, and Applications of Science",
+      "code": "5.3",
+      "spans": [
+        {
+          "label": "Early (3 to 4 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 80,
+          "first": "Demonstrate emerging understanding",
+          "last": "in everyday situations",
+          "lastOccurrence": 1
+        },
+        {
+          "label": "Later (4 to 5 ½ Years)",
+          "source": "us-ca-ptklf-2024-science",
+          "page": 80,
+          "first": "Recognize a greater diversity",
+          "last": "in everyday situations",
+          "lastOccurrence": 2
+        }
+      ]
+    }
+  ]
+}

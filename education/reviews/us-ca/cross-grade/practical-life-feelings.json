@@ -1,0 +1,2654 @@
+{
+  "lane": "us-ca/cross-grade/practical-life-feelings",
+  "verdicts": [
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-1-a-1",
+      "wording_sha256": "704a6d5186e0cbbcad2928fd39f41d5b54192ab84630698306d0a12db5cb0379",
+      "text_sha256": "eaf155d4e71a45d6ef23cac86208af1a604912657bfc3803d302c51291394f75",
+      "verdict": "confirmed",
+      "note": "Second reading of the table cell (the source is a word-processor file: read in an independent parse of its tables and on page images made from a conversion of the file): the record holds the whole Early Elementary cell after its printed code and nothing of a neighbouring cell; the code heads the cell, printed with a closing full stop; the title is the competency heading and the heading of the table the row stands in; the column heading is the band.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 3862
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-1-b-1",
+      "wording_sha256": "31e134ba9c96cd2b5326f26d33f4d7ccfc492fe9eef2a6670121682008dad281",
+      "text_sha256": "fbce345c96d69c42d206a4ad5dbb8bbb1f2e9c4a0dace94ea111803eca059f8f",
+      "verdict": "confirmed",
+      "note": "Second reading of the table cell (the source is a word-processor file: read in an independent parse of its tables and on page images made from a conversion of the file): the record holds the whole Early Elementary cell after its printed code and nothing of a neighbouring cell; the code heads the cell, printed with a closing full stop; the title is the competency heading and the heading of the table the row stands in; the column heading is the band.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 4050
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-1-c-1",
+      "wording_sha256": "a1c114bc1469d6d46a32510b62551e13b46322f50ac20ac00d86f8f81e5ab5ab",
+      "text_sha256": "7953d3e1db9d8922b848d2c07ba8759e79d2c2195abc3421e4c5ef11cec4589a",
+      "verdict": "confirmed",
+      "note": "Second reading of the table cell (the source is a word-processor file: read in an independent parse of its tables and on page images made from a conversion of the file): the record holds the whole Early Elementary cell after its printed code and nothing of a neighbouring cell; the code heads the cell, printed with a closing full stop; the title is the competency heading and the heading of the table the row stands in; the column heading is the band.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 4169
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-1-d-1",
+      "wording_sha256": "3a9b82b6f08b7d23dd416d6e200c1e979778f643b4103571d23b9395a6775c9c",
+      "text_sha256": "9ad39d16196d5bc7dc1dabce7fb666fb12d2ab62d51279074ff227b9306b6be8",
+      "verdict": "confirmed",
+      "note": "Second reading of the table cell (the source is a word-processor file: read in an independent parse of its tables and on page images made from a conversion of the file): the record holds the whole Early Elementary cell after its printed code and nothing of a neighbouring cell; the code heads the cell, printed with a closing full stop; the title is the competency heading and the heading of the table the row stands in; the column heading is the band.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 4310
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-1-e-1",
+      "wording_sha256": "f237dcc5956d0176497666c3d65873a939d381f7832afc0859d5a185988301d4",
+      "text_sha256": "b8872c8cfc04b89cab040f4c3fad2e6238bead4f08da4f415c12264230fe1955",
+      "verdict": "confirmed",
+      "note": "Second reading of the table cell (the source is a word-processor file: read in an independent parse of its tables and on page images made from a conversion of the file): the record holds the whole Early Elementary cell after its printed code and nothing of a neighbouring cell; the code heads the cell, printed with a closing full stop; the title is the competency heading and the heading of the table the row stands in; the column heading is the band.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 4437
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-1-f-1",
+      "wording_sha256": "9baf4cfda9c72069874bb3a64a55ccfa7b2d4df25c25615909b97ddd6c65d0c5",
+      "text_sha256": "01e1b3f42f62ba12e65d49b5dbfef4780a2935c5da20585e6a419ac4c6e70c82",
+      "verdict": "confirmed",
+      "note": "Second reading of the table cell (the source is a word-processor file: read in an independent parse of its tables and on page images made from a conversion of the file): the record holds the whole Early Elementary cell after its printed code and nothing of a neighbouring cell; the code heads the cell, printed with a closing full stop; the title is the competency heading and the heading of the table the row stands in; the column heading is the band.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 4598
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-1-g-1",
+      "wording_sha256": "dcb7e896f49b7f130657406165736823f4b25910bdce80d116c0f9944ec6a0b6",
+      "text_sha256": "f2d27fe71b331beeef6cd558e1cb6d4111dd2898bec22c79997e5f2f0b8cd555",
+      "verdict": "confirmed",
+      "note": "Second reading of the table cell (the source is a word-processor file: read in an independent parse of its tables and on page images made from a conversion of the file): the record holds the whole Early Elementary cell after its printed code and nothing of a neighbouring cell; the code heads the cell, printed with a closing full stop; the title is the competency heading and the heading of the table the row stands in; the column heading is the band.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 4765
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-1-h-1",
+      "wording_sha256": "1fca8953da79c211ab923a9116591f559169dd93ad75c3d2c4178ec629ff4dbb",
+      "text_sha256": "6d0f8aa2975a04661c38e4dd51f70e4c10bd73f9d69315f23d4d2ad057982071",
+      "verdict": "confirmed",
+      "note": "Second reading of the table cell (the source is a word-processor file: read in an independent parse of its tables and on page images made from a conversion of the file): the record holds the whole Early Elementary cell after its printed code and nothing of a neighbouring cell; the code heads the cell, printed with a closing full stop; the title is the competency heading and the heading of the table the row stands in; the column heading is the band.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 4897
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-2-a-1",
+      "wording_sha256": "e26b898cba60a8ad378c2b79155f839d73cb9048281c39938f93d6a33740d89f",
+      "text_sha256": "07417b70115d7bced4006fd6070b7d350c15cd608d1ef763cb30441669e26da1",
+      "verdict": "confirmed",
+      "note": "Second reading of the table cell (the source is a word-processor file: read in an independent parse of its tables and on page images made from a conversion of the file): the record holds the whole Early Elementary cell after its printed code and nothing of a neighbouring cell; the code heads the cell, printed with a closing full stop; the title is the competency heading and the heading of the table the row stands in; the column heading is the band.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 5740
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-2-b-1",
+      "wording_sha256": "39e3c0b372d3d9fb6350268f2f389766fd198aaba64f19ad503c7fa119131c5a",
+      "text_sha256": "c4d063f783d6ddfc5e0ff5dc6bfc5ca88ab8218a864a9a8a4cae4ed67c00cd1d",
+      "verdict": "confirmed",
+      "note": "Second reading of the table cell (the source is a word-processor file: read in an independent parse of its tables and on page images made from a conversion of the file): the record holds the whole Early Elementary cell after its printed code and nothing of a neighbouring cell; the code heads the cell, printed with a closing full stop; the title is the competency heading and the heading of the table the row stands in; the column heading is the band.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 5916
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-2-c-1",
+      "wording_sha256": "4428285f1f943e8b64dc272b749e85f3e76049deb454a878b1d83720c393d0a9",
+      "text_sha256": "c7daf6caf7a2b975cb2e59595d9e5a47834b256c584cc4f5d5a130564b9e1290",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Wording, code, title and band are right. The Summary narrows the statement's first verb to speech: the child 'names' the ways. The statement's first verb asks the child to pick the ways out, which can be done by choosing, pointing or showing as well as by saying. Fix: a verb that is not limited to words (picks out, finds).",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 6099
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-2-c-1",
+      "wording_sha256": "4428285f1f943e8b64dc272b749e85f3e76049deb454a878b1d83720c393d0a9",
+      "text_sha256": "8116f5cb1898f3c366336dc69e9ad886b406826863865242ebd1d51cc0da4595",
+      "verdict": "confirmed",
+      "note": "Round 1 fault resolved: the first verb is now one of picking out, not of saying. The Summary keeps both kinds of strategy (already tried, still possible), both aims and the practising. Not a near copy. Second reading: the cell was read in an independent parse of the file's tables, through the tools' own view of the file, and on a page image made from a conversion of the file. The record holds the whole cell after its printed code and nothing of a neighbouring cell; the code heads the cell, and the band column and the table heading are the ones the record gives.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 6099
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 early-middle",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-2-d-1",
+      "wording_sha256": "4e893702a86249782f5c6ae152a0c5c614e1b36e1c87f10410961233967d9e43",
+      "text_sha256": "244de21f804b1390f0ac08b8514cad3b76f8cb5fc930731810326e0ceb36fa54",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Wording, code, title and band are right. Added manner: the Summary says the child 'listens to the end'. The statement asks only for the ability to listen to it and take it on, and sets no extent or manner of listening. The statement also gives this as something the child can do; the Summary states it as what the child does. Fix: drop 'to the end' and keep the ability. Waiting until the end may stay as an example under In a child's hands.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 6276
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-2-d-1",
+      "wording_sha256": "4e893702a86249782f5c6ae152a0c5c614e1b36e1c87f10410961233967d9e43",
+      "text_sha256": "4425f742762fb65d33aa47d3d4de03399bfccb91ff8f44ac340dc90b403def2f",
+      "verdict": "confirmed",
+      "note": "Round 1 fault resolved: the added extent of listening is gone, and listening and accepting are given as an ability. Both qualities of the feedback are kept. Not a near copy. Second reading: the cell was read in an independent parse of the file's tables, through the tools' own view of the file, and on a page image made from a conversion of the file. The record holds the whole cell after its printed code and nothing of a neighbouring cell; the code heads the cell, and the band column and the table heading are the ones the record gives.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 6276
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 early-middle",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-2-e-1",
+      "wording_sha256": "709ca371d61d1a4a8b51c316e07759ca0b0c880ffb7a75c4e241ecc9d9d9b951",
+      "text_sha256": "fe63d7548e973b4855e4c4e0636f72a5dafe4a9a5e6e08f02126e17df099ad26",
+      "verdict": "confirmed",
+      "note": "Second reading of the table cell (the source is a word-processor file: read in an independent parse of its tables and on page images made from a conversion of the file): the record holds the whole Early Elementary cell after its printed code and nothing of a neighbouring cell; the code heads the cell, printed with a closing full stop; the title is the competency heading and the heading of the table the row stands in; the column heading is the band.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 6418
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-2-f-1",
+      "wording_sha256": "d6618716bd00a90d04ebc50a3440cce1ce328710e88df40c6825253428b18eec",
+      "text_sha256": "5bd2b2ba3aaf4bb3c6b4d5521f9be373d8c5381fde7ba436ef25dc5a7aaab6e7",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Wording, code, title and band are right. The Summary narrows the first verb to speech: the child 'can say a goal'. The statement uses two different verbs: one of picking out for the goals, and one of naming for the steps only. Limits repeats the narrowing ('asks the child to state goals and steps'). Fix: keep picking out for the goals, in both places.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 6542
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-2-f-1",
+      "wording_sha256": "d6618716bd00a90d04ebc50a3440cce1ce328710e88df40c6825253428b18eec",
+      "text_sha256": "5bb27bdb1e66b8c99a550ce50506c6f9e7ef5ef90e34765edfc4282febff6a8c",
+      "verdict": "confirmed",
+      "note": "Round 1 fault resolved in the Summary and in Limits: picking out for the goals, naming for the steps only, as the statement has it. Both kinds of goal and the simplicity of the steps are kept. The second half of the Summary stays close to the statement because the naming verb is the statement's own and the plain words for the steps leave little room; the first half is rebuilt, so this is not counted a near copy. Second reading: the cell was read in an independent parse of the file's tables, through the tools' own view of the file, and on a page image made from a conversion of the file. The record holds the whole cell after its printed code and nothing of a neighbouring cell; the code heads the cell, and the band column and the table heading are the ones the record gives.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 6542
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 early-middle",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-2-g-1",
+      "wording_sha256": "3690edee205845d115ca6ae200f8149e0e2c07204376c418ceaefef3041ebf1e",
+      "text_sha256": "4a83a3188d65f27a8b3061dc57da0cb497fb49ee48fd868a35235ccfdba84290",
+      "verdict": "confirmed",
+      "note": "Second reading of the table cell (the source is a word-processor file: read in an independent parse of its tables and on page images made from a conversion of the file): the record holds the whole Early Elementary cell after its printed code and nothing of a neighbouring cell; the code heads the cell, printed with a closing full stop; the title is the competency heading and the heading of the table the row stands in; the column heading is the band.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 6712
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-2-h-1",
+      "wording_sha256": "2a84efa7fc344dc7b33ffe06af6fa9e453c27aa670e5261cbe077ab1b59a8a88",
+      "text_sha256": "d80e1a53beedb18d5622c5e291cd00ea528c49bdd04469614fe3bc8daddedbdc",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Wording, code, title and band are right. Added giver: the Summary says the child is 'guided by an adult'. The statement says only that it is done with guidance and names no one and nothing that gives it; labels on shelves, a picture of where things go or an older child are guidance too. Limits ('with guidance, not alone') is right as it stands. Fix: use the wording of Limits.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 6873
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-2-h-1",
+      "wording_sha256": "2a84efa7fc344dc7b33ffe06af6fa9e453c27aa670e5261cbe077ab1b59a8a88",
+      "text_sha256": "99bbca3752abd2fa0ff1029dbc018f640217f4fa5bb1edc9c0349ecd321a87a1",
+      "verdict": "confirmed",
+      "note": "Round 1 fault resolved: no giver of the guidance is named any more. The guidance condition is kept and covers both the spaces and the belongings. The adult under In a child's hands is an example. Not a near copy. Second reading: the cell was read in an independent parse of the file's tables, through the tools' own view of the file, and on a page image made from a conversion of the file. The record holds the whole cell after its printed code and nothing of a neighbouring cell; the code heads the cell, and the band column and the table heading are the ones the record gives.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 6873
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 early-middle",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-3-a-1",
+      "wording_sha256": "5b1017b2b4b71e9d0410a45175d955d1f73cef189f2acc54980fededce093ad8",
+      "text_sha256": "63a96a22a0256e3f1f6a3b5b9bbe38af214dfac7a300f861266dff0588fec28f",
+      "verdict": "confirmed",
+      "note": "Second reading of the table cell (the source is a word-processor file: read in an independent parse of its tables and on page images made from a conversion of the file): the record holds the whole Early Elementary cell after its printed code and nothing of a neighbouring cell; the code heads the cell, printed with a closing full stop; the title is the competency heading and the heading of the table the row stands in; the column heading is the band.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 7523
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-3-b-1",
+      "wording_sha256": "ea6ebf4afadb0df8ebbbc6074bd9aeb892b9c54e4b08d44d97644ab26d3d8754",
+      "text_sha256": "c6908cee48f42558c027b789b484325f054ebff40995ab04e1480e5830e081e6",
+      "verdict": "confirmed",
+      "note": "Second reading of the table cell (the source is a word-processor file: read in an independent parse of its tables and on page images made from a conversion of the file): the record holds the whole Early Elementary cell after its printed code and nothing of a neighbouring cell; the code heads the cell, printed with a closing full stop; the title is the competency heading and the heading of the table the row stands in; the column heading is the band.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 7692
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-3-c-1",
+      "wording_sha256": "07b4021604b2b0167945b221012e9e51c2c8fa5b797e6913e1f51e15b035fd7c",
+      "text_sha256": "4d77e8026f39c856e689a1aaecef0c3a427115fdf87122b4cae276155b953fec",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Wording, code, title and band are right. The Summary narrows a general term: it makes the agreements ones 'a group shares about how its members treat each other'. In the statement the agreements are about the children's dealings with other people in general and with their surroundings; it does not limit those people to members of the group that made the agreement, so dealings with a visitor, another class or an adult are covered too. Fix: 'how they deal with other people and with their surroundings'.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 7926
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-3-c-1",
+      "wording_sha256": "07b4021604b2b0167945b221012e9e51c2c8fa5b797e6913e1f51e15b035fd7c",
+      "text_sha256": "6c8a5e92b9b8d9d47696a6d2c153cc82a7a8f3f3426abb905d177c2d8a634830",
+      "verdict": "confirmed",
+      "note": "Round 1 fault resolved: the agreements now concern dealings with other people in general and with the surroundings. Making and keeping up are both kept, and the second sentence keeps both of its terms. The Summary follows the content of the statement with nearly every word changed; not a near copy. Second reading: the cell was read in an independent parse of the file's tables, through the tools' own view of the file, and on a page image made from a conversion of the file. The record holds the whole cell after its printed code and nothing of a neighbouring cell; the code heads the cell, and the band column and the table heading are the ones the record gives.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 7926
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 early-middle",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-3-d-1",
+      "wording_sha256": "10693cfa762ff62641c8245a75845271c709fe753b4476a22a36dff4a1dd6f33",
+      "text_sha256": "f9dcc20c611310d6c8625e7ec1061417ee1fc450195917c719e5dd93f78d8274",
+      "verdict": "confirmed",
+      "note": "Second reading of the table cell (the source is a word-processor file: read in an independent parse of its tables and on page images made from a conversion of the file): the record holds the whole Early Elementary cell after its printed code and nothing of a neighbouring cell; the code heads the cell, printed with a closing full stop; the title is the competency heading and the heading of the table the row stands in; the column heading is the band.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 8133
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-3-e-1",
+      "wording_sha256": "3406f021bd0aac0d082ceb5fb7eec28ff07230ed412ec00a327372cfdaabc9a9",
+      "text_sha256": "11714498082132242285340ec2508eec49e46a3dad0fc7eef0eb4b9e3441ade6",
+      "verdict": "confirmed",
+      "note": "Second reading of the table cell (the source is a word-processor file: read in an independent parse of its tables and on page images made from a conversion of the file): the record holds the whole Early Elementary cell after its printed code and nothing of a neighbouring cell; the code heads the cell, printed with a closing full stop; the title is the competency heading and the heading of the table the row stands in; the column heading is the band.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 8261
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-3-f-1",
+      "wording_sha256": "8927ef84827163cc628daad492b3358c8414ece2c0c0a601fe49821a0fe83a59",
+      "text_sha256": "c646e9762e74b6b46e1ba0cba69853c75201c4532335cdf5eb2b3fc972df2b02",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Wording, code, title and band are right. The Summary narrows a general term in its last sentence: 'children of their own age'. The statement's word for the other children means their fellows and sets no age; in a mixed-age class or group it takes in older and younger children. Fix: 'other children'.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 8441
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-3-f-1",
+      "wording_sha256": "8927ef84827163cc628daad492b3358c8414ece2c0c0a601fe49821a0fe83a59",
+      "text_sha256": "781decbe6f040d7589d952d345384c137425e834e900ef6f61878a078a0360e5",
+      "verdict": "confirmed",
+      "note": "Round 1 fault resolved: the last sentence now has the statement's own word for the other children. Small and not counted a fault: the Summary gives the describing of the first sentence as an ability, where the statement uses the plain verb there and the ability form only in its second sentence. Second reading: the cell was read in an independent parse of the file's tables, through the tools' own view of the file, and on a page image made from a conversion of the file. The record holds the whole cell after its printed code and nothing of a neighbouring cell; the code heads the cell, and the band column and the table heading are the ones the record gives.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 8441
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 early-middle",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-3-g-1",
+      "wording_sha256": "949ad9918fdfbee503d57cd3cdfae3973337b214ed903517f76bb7b3e4d48e2b",
+      "text_sha256": "48dbc72ad6bda8661e54b238d09d98316c2e17603d602458bbddee36e58c808d",
+      "verdict": "confirmed",
+      "note": "Second reading of the table cell (the source is a word-processor file: read in an independent parse of its tables and on page images made from a conversion of the file): the record holds the whole Early Elementary cell after its printed code and nothing of a neighbouring cell; the code heads the cell, printed with a closing full stop; the title is the competency heading and the heading of the table the row stands in; the column heading is the band.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 8653
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-4-a-1",
+      "wording_sha256": "1025265e5dea81068ed938672a23ee8f82e6f0d5de4d9c5e7eabf44ac35135a8",
+      "text_sha256": "c4a8ebdb32432271fce55811c4cb6aa1a977316be1d85e1bba840f288eb4bf68",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Wording, code, title and band are right. Two small changes in the Summary. (1) Added recipient: 'something asked of them'. The statement's first sentence speaks in general of things asked and of situations of that kind, and does not say they are put to the child, so spotting one put to a friend is covered too. (2) The child's refusal is given as something they 'are allowed to' answer; the statement's plain modal verb leaves open whether it means being permitted or being able. Fix: drop 'of them' and keep the plain verb.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 9320
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-4-a-1",
+      "wording_sha256": "1025265e5dea81068ed938672a23ee8f82e6f0d5de4d9c5e7eabf44ac35135a8",
+      "text_sha256": "9b823cf2c72ab46ac1052f3067a3ab75511638ec5be7dfa9bfa2d3e4504ff64e",
+      "verdict": "confirmed",
+      "note": "Both round 1 faults resolved: no recipient is added to what is asked, and the refusal has the plain modal verb. The beginning stage and both objects (things asked, situations) are kept. Not a near copy. Second reading: the cell was read in an independent parse of the file's tables, through the tools' own view of the file, and on a page image made from a conversion of the file. The record holds the whole cell after its printed code and nothing of a neighbouring cell; the code heads the cell, and the band column and the table heading are the ones the record gives.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 9320
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 early-middle",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-4-b-1",
+      "wording_sha256": "5a116116a1ec811c13e54d61d242122f02ead2e968e931cca09192fe6f89a424",
+      "text_sha256": "968590e190304dcce1f1d1ceaed98ffd1c805881ab7cef26f458c0e5ac233ff7",
+      "verdict": "confirmed",
+      "note": "Second reading of the table cell (the source is a word-processor file: read in an independent parse of its tables and on page images made from a conversion of the file): the record holds the whole Early Elementary cell after its printed code and nothing of a neighbouring cell; the code heads the cell, printed with a closing full stop; the title is the competency heading and the heading of the table the row stands in; the column heading is the band.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 9435
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-4-c-1",
+      "wording_sha256": "def53115f18df5a975aa438b81f4d87e59c6401f314da5447472ae0262730dcb",
+      "text_sha256": "d187be2ec6e760efa71c3e32a6f0b93f43216f9348a1b29293296a72b84ca133",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Wording, code, title and band are right. The Summary narrows the first verb to speech: the child 'can say what makes someone a good friend'. The statement's verb asks the child to pick out or recognise it, which can be shown by choosing, sorting or pointing as well as by saying. Fix: a verb that is not limited to words.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 9590
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-4-c-1",
+      "wording_sha256": "def53115f18df5a975aa438b81f4d87e59c6401f314da5447472ae0262730dcb",
+      "text_sha256": "74449bee0aba9376d2c78361e88354058bce898d19a751f98d67dc7c2a414c3e",
+      "verdict": "confirmed",
+      "note": "Round 1 fault resolved: the first verb is one of picking out. Small, in Limits, not counted a fault: it says the statement does not say to whom gratitude is shown. The statement gives a general recipient (other people), which the Summary keeps; it names no particular people. Second reading: the cell was read in an independent parse of the file's tables, through the tools' own view of the file, and on a page image made from a conversion of the file. The record holds the whole cell after its printed code and nothing of a neighbouring cell; the code heads the cell, and the band column and the table heading are the ones the record gives.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 9590
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 early-middle",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-4-d-1",
+      "wording_sha256": "1818705e63ba9b6ae06b9373d701efa45ac681ab172cdc6af8164ca004048f02",
+      "text_sha256": "5dc39a2f2fad3fd5b9be4b2200c0bafef11d5b3a4ac0dae275d006d785df5b2c",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Wording, code, title and band are right. In its last clause the Summary narrows the verb to speech and adds an object: 'tells others about it'. The statement's verb for passing the information on is a general one (showing an object, a picture, a song or a dish meets it, as the record's own In a child's hands has), and the statement does not say what the information is about; that it is about the child's own culture is the likely reading, not something stated. Fix: a general verb, and let Limits say that the subject of the information is left unstated.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 9782
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-4-d-1",
+      "wording_sha256": "1818705e63ba9b6ae06b9373d701efa45ac681ab172cdc6af8164ca004048f02",
+      "text_sha256": "e1afbea0cc899d5c0c9b77b307651569a61806ae94c9e34b55e99d6110410b2c",
+      "verdict": "confirmed",
+      "note": "Round 1 fault resolved: a general verb for passing information on and no added subject, and Limits now says that the subject of the information and the way of sharing are left unstated. Second reading: the cell was read in an independent parse of the file's tables, through the tools' own view of the file, and on a page image made from a conversion of the file. The record holds the whole cell after its printed code and nothing of a neighbouring cell; the code heads the cell, and the band column and the table heading are the ones the record gives.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 9782
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 early-middle",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-4-e-1",
+      "wording_sha256": "ec146925d8c8608ba629b62fee1dab96d3fa490927a797803570e0ac15cd31ae",
+      "text_sha256": "4365327b25d448535cab631b443910eb065ec5a0aa25542672eaacb2a34bcfb4",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Wording, code, title and band are right. (1) Scope of a condition: the statement puts the condition of doing it together with other people at the very end, after its second half (coming up with solutions); it does not attach it to the first half (picking the problem out and discussing it). The Summary opens with 'works together with other people on a problem' and puts all three steps under it, and Limits states it as settled ('The child does this with others, not alone'). The wide reading is possible, but the wording does not settle it; say so in Limits, as the Limits of 5.C.1 does for its support condition. (2) The Summary narrows the first verb to speech ('they say what the problem is'); the statement's first verb is one of picking out.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 9960
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-4-e-1",
+      "wording_sha256": "ec146925d8c8608ba629b62fee1dab96d3fa490927a797803570e0ac15cd31ae",
+      "text_sha256": "64ddca317c61f87fad6f2f8c5e13c1b0680c4115d7290d27845b7473048d70d6",
+      "verdict": "confirmed",
+      "note": "Both round 1 faults resolved. The condition of doing it with other people is attached to the coming up with solutions, where the statement prints it, and Limits says the wording leaves open whether it reaches the first two steps too. The first verb is one of picking out. For a later pass, not counted a fault: \"picks out a problem\" can be read as choosing one problem among several, while the statement's verb means recognising what the problem is; the record's In a child's hands shows the right sense. Not a near copy. Second reading: the cell was read in an independent parse of the file's tables, through the tools' own view of the file, and on a page image made from a conversion of the file. The record holds the whole cell after its printed code and nothing of a neighbouring cell; the code heads the cell, and the band column and the table heading are the ones the record gives.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 9960
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 early-middle",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-4-f-1",
+      "wording_sha256": "636d312026075504086f82379aaf77c04ac0d6b5bda2b59e302379f314d454e8",
+      "text_sha256": "ff8cdf3cc0ab1086152d6598a47825e0e83900a7bf9abc23e54455197feae2ed",
+      "verdict": "confirmed",
+      "note": "Second reading of the table cell (the source is a word-processor file: read in an independent parse of its tables and on page images made from a conversion of the file): the record holds the whole Early Elementary cell after its printed code and nothing of a neighbouring cell; the code heads the cell, printed with a closing full stop; the title is the competency heading and the heading of the table the row stands in; the column heading is the band.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 10082
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-4-g-1",
+      "wording_sha256": "4f55876cd475c9bbba4361ee1c83018a914915044b5ef5ea436c1bbda503e1a1",
+      "text_sha256": "4292e0ca0aada68c9f31d8d34afbf76d8930863121182123b3a12abdf4338c26",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Wording, code, title and band are right. The Summary narrows a general term: 'does no harm to those others' limits the people who must not be badly affected to the ones the child is communicating with. The statement does not say to whom the child communicates, and the people it protects are other people in general, so getting a need across to one person at a third person's cost is outside the statement and inside the Summary. Fix: 'in a way that does no harm to other people'.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 10250
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-4-g-1",
+      "wording_sha256": "4f55876cd475c9bbba4361ee1c83018a914915044b5ef5ea436c1bbda503e1a1",
+      "text_sha256": "78ba5e7f8aa47b980024db080acdef0468bf89bb33dab9902f564d318ff05f95",
+      "verdict": "confirmed",
+      "note": "Round 1 fault resolved: the people who must not be badly affected are other people in general. All three things communicated are kept and no manner of communicating is set. Second reading: the cell was read in an independent parse of the file's tables, through the tools' own view of the file, and on a page image made from a conversion of the file. The record holds the whole cell after its printed code and nothing of a neighbouring cell; the code heads the cell, and the band column and the table heading are the ones the record gives.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 10250
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 early-middle",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-4-h-1",
+      "wording_sha256": "d8f79f0afad83a292392b1e3e517b78c44a35b7349ce7a53e560f2661f7ba06e",
+      "text_sha256": "91d1b7d7542df2f207019bddfab9240eaccefdfb37cce590729e7ded1403d71e",
+      "verdict": "confirmed",
+      "note": "Second reading of the table cell (the source is a word-processor file: read in an independent parse of its tables and on page images made from a conversion of the file): the record holds the whole Early Elementary cell after its printed code and nothing of a neighbouring cell; the code heads the cell, printed with a closing full stop; the title is the competency heading and the heading of the table the row stands in; the column heading is the band.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 10383
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-5-a-1",
+      "wording_sha256": "a3a795967b065aa4ec5a0a2a0a5ab0908a93bef72f85cc7656ca23820e8e974b",
+      "text_sha256": "2c1104acbda3ad327b75b4287a7c501568c0262f2b174af64fabae1633b61493",
+      "verdict": "confirmed",
+      "note": "Second reading of the table cell (the source is a word-processor file: read in an independent parse of its tables and on page images made from a conversion of the file): the record holds the whole Early Elementary cell after its printed code and nothing of a neighbouring cell; the code heads the cell, printed with a closing full stop; the title is the competency heading and the heading of the table the row stands in; the column heading is the band.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 11002
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-5-b-1",
+      "wording_sha256": "d635dfeb83569b7c730a90d95ee14a7e0afe014258f5fcf5200f3ce35031137e",
+      "text_sha256": "78c7fcc99ff3a1d39ca887a900696c153e4af82058b5b06134e7eeaa63e90858",
+      "verdict": "confirmed",
+      "note": "Second reading of the table cell (the source is a word-processor file: read in an independent parse of its tables and on page images made from a conversion of the file): the record holds the whole Early Elementary cell after its printed code and nothing of a neighbouring cell; the code heads the cell, printed with a closing full stop; the title is the competency heading and the heading of the table the row stands in; the column heading is the band.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 11132
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-5-c-1",
+      "wording_sha256": "023ed96e99fc799beba882b714923a7212ef08abd1ca00a23d43068efecaf9e6",
+      "text_sha256": "53a8cdfdf5c9dfc651408079c7d57c5fd53ecd8144de5d041cccec43fdc81da2",
+      "verdict": "confirmed",
+      "note": "Second reading of the table cell (the source is a word-processor file: read in an independent parse of its tables and on page images made from a conversion of the file): the record holds the whole Early Elementary cell after its printed code and nothing of a neighbouring cell; the code heads the cell, printed with a closing full stop; the title is the competency heading and the heading of the table the row stands in; the column heading is the band.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 11296
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-5-c-1",
+      "wording_sha256": "023ed96e99fc799beba882b714923a7212ef08abd1ca00a23d43068efecaf9e6",
+      "text_sha256": "8f0f53e1d63ac5441cf3302d22c82251385ca428c432259a8520f6f7dc628c96",
+      "verdict": "confirmed",
+      "note": "Round 2. Confirmed in round 1; since then the Summary's phrase for the support was changed so that it no longer names anyone who gives it; the statement names no giver. Read whole: describing problems of both kinds named, and being able to name what might solve them, with support. The Summary puts the support with naming solutions, and Limits says that the wording leaves open whether it also covers describing the problems; together they keep the statement as open as it is. Not a near copy. Limits right: naming what might solve a problem only, no choosing or carrying out, no definition of a social problem, the band tied to no grades, voluntary guidance. The adult in the pack's example stays an example. Second reading: the cell was read through the tools' own view of the file, in an independent parse of the file's tables, and on a page image made from a conversion of the file. The record holds the whole Early Elementary cell after its printed code and nothing of a neighbouring cell; the code heads the cell, printed with a closing full stop; the column heading is the band and the table heading is the one in the title.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 11296
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 3",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-5-d-1",
+      "wording_sha256": "208348e1962c0441b1f53192857993e4ee32db267184b22f6284fc0a372e5219",
+      "text_sha256": "75814d3d8964286c9d5adf31529a610f10a810eac78e216df42ee599696c5458",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Wording, code, title and band are right, and the Summary keeps the three sentences apart. Limits: 'the statement does not mention roads, strangers or screens' is said of the whole statement, but only its middle sentence (the describing one) is limited to bodily danger and to the home and the place of learning. The first sentence (the reason for rules of safety) and the last (showing safe conduct) name no setting and no kind of safety, so road rules fall inside their general terms; the record's own In a child's hands uses a rule at a pool for the first sentence. A designer would read the Limits sentence as putting road safety outside this statement. Fix: attach the limit to the describing sentence only and say that the other two sentences set no setting.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 11429
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-5-d-1",
+      "wording_sha256": "208348e1962c0441b1f53192857993e4ee32db267184b22f6284fc0a372e5219",
+      "text_sha256": "26c99a16228e82e8971253a70e54a25e268ebabdffa6dd9d4d7d7b9dc18998f3",
+      "verdict": "confirmed",
+      "note": "Round 1 fault resolved: Limits now limits only the describing sentence (bodily danger; the home and the place of learning) and says that the other two sentences set no setting and no kind of safety. The Summary is unchanged and faithful, with the three sentences kept apart. The file prints this code at the head of two neighbouring cells of the row (a known oddity of the source); the record holds the cell in the Early Elementary column. Second reading: the cell was read in an independent parse of the file's tables, through the tools' own view of the file, and on a page image made from a conversion of the file. The record holds the whole cell after its printed code and nothing of a neighbouring cell; the code heads the cell, and the band column and the table heading are the ones the record gives.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 11429
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 early-middle",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-5-e-1",
+      "wording_sha256": "3c34796b8b5806a6dab5c87851fef116b1aeea059684df79067c9ba96b1861d4",
+      "text_sha256": "3b9571f9105085ff4160084bcb1c8833e034afad604d4bb75d2181a24c07c589",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Wording, code, title and band are right. The Summary narrows the first verb to speech: the child 'names' how they can help and 'says why'. The statement's verb asks the child to pick out the ways and the reason, which can be done by choosing or showing as well as by saying. Limits repeats it ('here the child names ways and gives the reason'). Fix: a verb that is not limited to words, in both places.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 11609
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-5-e-1",
+      "wording_sha256": "3c34796b8b5806a6dab5c87851fef116b1aeea059684df79067c9ba96b1861d4",
+      "text_sha256": "21696355ae5bd36a658ed400db9b730fa8578987eb2ff1c7af1631e5f4c97e8d",
+      "verdict": "confirmed",
+      "note": "Round 1 fault resolved in the Summary and in Limits: picking out for the ways and for the reason. The three settings and the beginning stage of the second sentence are kept. The neighbour named in Limits (1.E.1 of the same band) does include practising helping. \"Picks out ... why\" is awkward English but is not limited to words. Second reading: the cell was read in an independent parse of the file's tables, through the tools' own view of the file, and on a page image made from a conversion of the file. The record holds the whole cell after its printed code and nothing of a neighbouring cell; the code heads the cell, and the band column and the table heading are the ones the record gives.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 11609
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 early-middle",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-5-f-1",
+      "wording_sha256": "8a67590d68f9ffde7b85baa3efed069655728ad17add2ac13f1296355b79c261",
+      "text_sha256": "d8a2e84dddc42dab9813819193b8a445e2de319a0d95e83774bef86d96b1202c",
+      "verdict": "confirmed",
+      "note": "Second reading of the table cell (the source is a word-processor file: read in an independent parse of its tables and on page images made from a conversion of the file): the record holds the whole Early Elementary cell after its printed code and nothing of a neighbouring cell; the code heads the cell, printed with a closing full stop; the title is the competency heading and the heading of the table the row stands in; the column heading is the band.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 11806
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-5-g-1",
+      "wording_sha256": "2e73c23b95dda53c239c56d8686d3a8fdea756eebb5b10e315a232033298a589",
+      "text_sha256": "601ffc205ec0ba057c1c4f4edd9d1c360fff65d84bd73835f7c5c518f2ebcc08",
+      "verdict": "confirmed",
+      "note": "Second reading of the table cell (the source is a word-processor file: read in an independent parse of its tables and on page images made from a conversion of the file): the record holds the whole Early Elementary cell after its printed code and nothing of a neighbouring cell; the code heads the cell, printed with a closing full stop; the title is the competency heading and the heading of the table the row stands in; the column heading is the band.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 11955
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-early-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-1-a-2",
+      "wording_sha256": "a2fb83c8c01185f747b96a12208619c1bcf6debc96664e3cddd151a952057849",
+      "text_sha256": "1d064fa84ac193480a632fafd3ce959e1e80cd656a8fa4e4e3125e0837dc2f32",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "A small narrowing in the Summary. The statement names three things that form a child's identity, and the first is the child, with no word for how. The Summary gives it as \"the child's own choices\", which adds a means the statement does not have (the record's own Limits says \"the child\"). Fix: \"the child themselves, other people, and what happens to the child\". Less important: the statement's second sentence asks that the confidence and pride be shown, and the Summary says the child \"is\" proud and sure. Not a near copy. Wording and code are in order. Second reading of the table cell: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell; the title is the competency heading and the heading of the table the row stands in.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 3891
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-1-a-2",
+      "wording_sha256": "a2fb83c8c01185f747b96a12208619c1bcf6debc96664e3cddd151a952057849",
+      "text_sha256": "2bbe19c0051085711206f463a1e2345ae746d8fac459780ede860952578bb6ea",
+      "verdict": "confirmed",
+      "note": "The fix resolved the round 1 fault: the first of the three things that form identity is now the child, with no means added, and the second sentence now has the child show the pride and confidence. Small and left: the Summary has the child understand that parts shift where the statement has the child understand how they can; no condition is lost. Not a near copy. Second reading, on the parsed table and on the page image: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 3891
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 late",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-1-b-2",
+      "wording_sha256": "a40703f5a72e6af0519c044d3a08dcab2eb6078116fd1bdb3599de1b8d635d2e",
+      "text_sha256": "e31f8b507bb1c32fd06a53fd760a1b423c7adffb7f5e1155ab2dfbdeded0b505",
+      "verdict": "confirmed",
+      "note": "The suspected title fault is not there: the table under the heading Identity of this competency holds three rows (A, B and C), no row has a heading of its own, and the title names that heading.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 4084
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-1-c-2",
+      "wording_sha256": "c3a93c0d4544657b0d4395bf54cf0995a4b457a5f5efada85a2b0d96d590971f",
+      "text_sha256": "ed7ba41b433a8431b9766b2911be6c91c56f34d2fcfe74d6b504ce7b3e3fb565",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary narrows the third of the three circles the topics matter to. The statement names it as the community in which the child learns and has no word for class or school; the Summary gives it as \"the class or school community\", which leaves out an after-school programme, a club or any other place of learning (the document is written for those settings too). The record's own Limits uses the wider term. Fix: \"the community where the child learns\". Not a near copy. Wording and code are in order. Second reading of the table cell: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell; the title is the competency heading and the heading of the table the row stands in.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 4190
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-1-c-2",
+      "wording_sha256": "c3a93c0d4544657b0d4395bf54cf0995a4b457a5f5efada85a2b0d96d590971f",
+      "text_sha256": "f3dec0cc1fe2c5f6dada6be029ed0a2836612b5b1d27b993180746d58758826a",
+      "verdict": "confirmed",
+      "note": "The fix resolved the round 1 fault: the third circle is now the community where the child learns, with no word for class or school. The Summary follows the order of the one-sentence statement, as it must to keep the three circles, in words of its own: not a near copy. Second reading, on the parsed table and on the page image: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 4190
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 late",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-1-d-2",
+      "wording_sha256": "efb092d7ba745ffff4452f01b2403ef466aa07b65d1a1ef076f27ef0de1cdef3",
+      "text_sha256": "60405a4a39fdfbeb7ece7f648d91bd6da0d38903fb1233c2fdaa6df0c9f8b2ec",
+      "verdict": "confirmed",
+      "note": "Form only: the document breaks the line twice inside this cell by hand (forced line breaks); the record has spaces there.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 4325
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-1-e-2",
+      "wording_sha256": "8b6231ee74bf90a17b69999a3f9632218e18ae608272e2865a7331098a85b042",
+      "text_sha256": "ca5ebd4b7ab2e55b98279f52004ac1f6193de8d07591f43ffab6109d3e299d42",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary narrows where the other people are whom the child's traits and habits may affect. The statement names the community in which the child learns and has no word for class or school; the Summary gives it as \"the class or school community\", which leaves out an after-school programme, a club or any other place of learning. The record's own Limits uses the wider term. Fix: \"in the community where the child learns\". Not a near copy. Wording and code are in order. Second reading of the table cell: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell; the title is the competency heading and the heading of the table the row stands in.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 4455
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-1-e-2",
+      "wording_sha256": "8b6231ee74bf90a17b69999a3f9632218e18ae608272e2865a7331098a85b042",
+      "text_sha256": "1774b88a2dbbed889127beeb731b701d1758f510b45f29986d7c6433fedf77da",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The round 1 fault is fixed: the community is no longer narrowed to class or school, and the first sentence now has the statement's own verb of describing. One fault remains in the Summary's second sentence; round 1 did not raise it and the fix did not touch it. The statement's second sentence has one verb of picking out that governs two objects: the child's traits and habits, and the way these can bear on other people. The Summary keeps that verb for the first object (\"picks out\") and gives the second a weaker one, \"considers what effect these could have\": thinking an effect over is less than picking it out, and the document uses the verb of considering as a verb of its own in other cells. Fix: \"picks out traits and habits of their own, and how these could affect other people in the community where the child learns\". Also small: \"Looking at themselves\" is a manner the statement does not state and can go. Not a near copy. Wording and code are in order. Second reading, on the parsed table and on the page image: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 4455
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 late",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-1-e-2",
+      "wording_sha256": "8b6231ee74bf90a17b69999a3f9632218e18ae608272e2865a7331098a85b042",
+      "text_sha256": "d864cf438eb573979d54c2cc72b87f08e8a97918ce0a406258b4392284d401c8",
+      "verdict": "confirmed",
+      "note": "Round 3. The round 2 reason is resolved: one verb of picking out now governs both objects, the child's traits and habits and the way these can bear on other people, as in the statement's second sentence; the weaker verb of considering is gone, and so is the opening phrase that added a manner. Read whole: first sentence, describing the part the child plays and what the child adds across the settings the child takes part in; second sentence, as above, with the other people placed in the community where the child learns and the effect kept as a possibility. Nothing added or dropped; not a near copy (under half of the words recur in order, longest shared run two). Limits right: the effect is tied to the learning community, no settings or roles are named, the band is tied to no grades, voluntary guidance. Second reading: the cell was read through the tools' own view of the file, in an independent parse of the file's tables, and on a page image made from a conversion of the file. The record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell; the code heads the cell, the column heading is the band, and the table heading is the one in the title.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 4455
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-1-f-2",
+      "wording_sha256": "6c9396b2ab9436c8d43f22b6b2add6905656a6aac5c1b09eefc3f7db01fabb62",
+      "text_sha256": "8e10f9277be1bb63d1eeb7fc8faadf3fed6630d8b6657544715872023bc31d8e",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 4628
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-1-g-2",
+      "wording_sha256": "3e225623f4045a89a9f3d0a7e60ba2fa8270141284d6983b9d5c531dfbaf5636",
+      "text_sha256": "8c51afb7687d1df758740e159d628a519a2ddbf4a10dd79bc41ca7d5e380169c",
+      "verdict": "confirmed",
+      "note": "The second sentence of the statement can be read two ways (its opening verb of beginning governs only the sense of purpose, or also the feeling that follows); the Summary takes the second reading and Limits speaks only of the first part. Neither contradicts the statement.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 4790
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-1-g-2",
+      "wording_sha256": "3e225623f4045a89a9f3d0a7e60ba2fa8270141284d6983b9d5c531dfbaf5636",
+      "text_sha256": "ee4a6d0973065025c66ce61e1a619b3b7caaa5e19eefc7226cdbad2f9880d657",
+      "verdict": "confirmed",
+      "note": "The added Limits sentence is right against the cell: the statement's second sentence can be read with its verb of beginning governing only the sense of purpose, or also the feeling that follows. The Summary puts both under the beginning, which is the reading the sentence calls the first, and the sentence says the statement allows both. Nothing else changed; Summary and notes remain faithful. Second reading, on the parsed table and on the page image: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 4790
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 late",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-1-h-2",
+      "wording_sha256": "3813989c7ddca7f2162c8e645fce0be308dfe0d2a38f68a4859d74835743e938",
+      "text_sha256": "c12f90ffe5fdbcd03d7cce1c44c17b60edd48d3d0d5f2e6cc48d2a77c986edf8",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary gives the statement's first element an object it does not have: \"reads situations more correctly\". The statement says only that what the child perceives becomes more accurate, and not of what; under this competency (awareness of oneself) the child's view of themselves is meant at least as much as their reading of a situation, and the Summary leaves it out. The Summary also renders the ideas the child stays open to as \"ideas unlike their own\": the statement gives those ideas two qualities, and the first of them (that they are new to the child) is dropped. Fix: say that the child perceives more accurately, with no object, and keep both qualities. Not a near copy. Wording and code are in order. Second reading of the table cell: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell; the title is the competency heading and the heading of the table the row stands in.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 4921
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-1-h-2",
+      "wording_sha256": "3813989c7ddca7f2162c8e645fce0be308dfe0d2a38f68a4859d74835743e938",
+      "text_sha256": "0a853fc7c4ee20f6d44446bd7e1aa461d7d208996aed020cf96bdfe28da09855",
+      "verdict": "confirmed",
+      "note": "The fix resolved both round 1 faults: the first element now has no object (the child perceives more accurately), and both qualities of the ideas the child stays open to are kept, in the Summary and in Limits. The new verb of perceiving is the statement's own notion. Not a near copy. Second reading, on the parsed table and on the page image: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 4921
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 late",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-2-a-2",
+      "wording_sha256": "e1a7b6e18515378b0364a6b7d2a88a0f0ee7daacf397ab0a23255e4612b60c9e",
+      "text_sha256": "da2795d43bafb872fb7b0422911c0b277bf57b99b0201c88016f0dcba2b3cd56",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 5784
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-2-b-2",
+      "wording_sha256": "332add988bf9e205f356f072505d9b18048ec2f665f7fe7e5e3ac67fd9d0d48b",
+      "text_sha256": "9aca88114e3eb4b38a88f25eec5b14ff9264fe0861d368cf0f0a648e40a47a0d",
+      "verdict": "confirmed",
+      "note": "The Summary says \"a few\" practices where the statement gives no number; read as a turn of phrase, not as a limit. Limits sets no number.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 5945
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-2-b-2",
+      "wording_sha256": "332add988bf9e205f356f072505d9b18048ec2f665f7fe7e5e3ac67fd9d0d48b",
+      "text_sha256": "97694b56cdc068032860e582bd09afbe6061859a47812189c6f42e44464ba8bb",
+      "verdict": "confirmed",
+      "note": "The number word round 1 noted is gone from the Summary. The condition on the health activities (ways within the child's control) is kept, and the practices keep their quality of being simple. Not a near copy. Second reading, on the parsed table and on the page image: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 5945
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 late",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-2-c-2",
+      "wording_sha256": "9416b1b4dc6bce21a46a8f91cea6865f107ca71e48fbaf9b7402dd480df04e46",
+      "text_sha256": "dcf8f6f1ccd72f2207535e059283e3ceb211ad89926939dd4ea001c1813bfc68",
+      "verdict": "confirmed",
+      "note": "The statement's example names the two kinds of figure with a word that could also take in characters from fiction; the Summary's \"people of today and figures from history\" reads them as real people. It stays an example in the Summary and in Limits, so no limit follows from it.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 6121
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-2-d-2",
+      "wording_sha256": "d6a1b6de4f143ddf6d7644a9b39b47d4ba9cf214b77a184919291797730b63df",
+      "text_sha256": "c0ec382756fda44bfc6863703e2b5e6287811df7bda7dd1f6a6c513577e2a312",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary narrows who receives the child's feedback to \"classmates\". The statement's word takes in children of the child's own age and standing in general (a team-mate, a friend outside school, a cousin), not only those in the same class; the record's own Limits has the statement's word. Fix: use that word, or \"other children\". Not a near copy. Wording and code are in order. Second reading of the table cell: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell; the title is the competency heading and the heading of the table the row stands in.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 6294
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-2-d-2",
+      "wording_sha256": "d6a1b6de4f143ddf6d7644a9b39b47d4ba9cf214b77a184919291797730b63df",
+      "text_sha256": "a8d346700117ad0acc095611e32dcf7c8498a9cd604ecc3f572edfd56caca9e3",
+      "verdict": "confirmed",
+      "note": "The fix resolved the round 1 fault: the child's feedback now goes to peers. Small and left: the Summary renders the statement's word for strategies of differing kinds as \"several ways\"; having several ways implies differing ones, and Limits has the statement's word. Not a near copy. Second reading, on the parsed table and on the page image: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 6294
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 late",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-2-e-2",
+      "wording_sha256": "ed2b18809e0d940a0e77300da1d4296f6fa8413dbb3fc3a4c6689880a8d881a8",
+      "text_sha256": "6109dcb1ad0519b97c94421c724a1a5b514881ec2b1d15ad26398bbeca97a83b",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "A small narrowing to speech in the Summary. The statement names two kinds of boundary by how they are made known, and the first is any boundary that has been made plain, whether spoken, written or set as a rule; the Summary gives it as \"said aloud\". The record's own Limits has it right (\"stated\"). Fix: \"stated outright or only hinted at\". Not a near copy. Wording and code are in order. Second reading of the table cell: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell; the title is the competency heading and the heading of the table the row stands in.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 6432
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-2-e-2",
+      "wording_sha256": "ed2b18809e0d940a0e77300da1d4296f6fa8413dbb3fc3a4c6689880a8d881a8",
+      "text_sha256": "ac4d9a0a47d2a1c795dff4936fc63bd1dfda224a3dee8c3467dcff276ca69f91",
+      "verdict": "confirmed",
+      "note": "The fix resolved the round 1 fault: the first kind of boundary is now one stated outright, with no narrowing to speech. Both kinds of boundary by content and both by how they are made known are kept. The neighbour cited in Limits exists and says what is claimed. Second reading, on the parsed table and on the page image: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 6432
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 late",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-2-f-2",
+      "wording_sha256": "6b347facae2ad5884b74417986bd6fe885314d6da80256ec0ff86eaed979ab18",
+      "text_sha256": "b9d8092a985ed00d33c35f6ad8ad36152cb3365156dc00d6df22ee10948ea19c",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Limits, third sentence: it says the goals are \"not ones assigned\". The statement requires only that the goals mean something to the child. It does not say who sets them, and a goal set by a teacher or by a group (the shared goals the statement names are often of that kind) can mean something to the child. The sentence states a limit the statement does not set. Fix: end the sentence after \"meaningful to the child\", or say that the statement does not say who sets the goals. The Summary is faithful and not a near copy. Wording and code are in order. Second reading of the table cell: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell; the title is the competency heading and the heading of the table the row stands in.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 6558
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-2-f-2",
+      "wording_sha256": "6b347facae2ad5884b74417986bd6fe885314d6da80256ec0ff86eaed979ab18",
+      "text_sha256": "eff9ef897bea58a8867973c4b44f1b22666bce1cd23894dd3a5bf0c4dbdd300e",
+      "verdict": "confirmed",
+      "note": "The fix resolved the round 1 fault: Limits now says that the statement does not say who sets the goals. The Summary keeps both spans of time, both kinds of goal and that the goals mean something to the child; its verb of picking out is a faithful rendering of the statement's verb. Second reading, on the parsed table and on the page image: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 6558
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 late",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-2-g-2",
+      "wording_sha256": "f0dbac848acd3d5f98024ca497383b75a11f5d777b05501296dad1f0b6fdd1e5",
+      "text_sha256": "d588af3fbf8f33b9ef0cc85de9cb925d843ed50518372b235c89f54568ff2c88",
+      "verdict": "confirmed",
+      "note": "The Summary's opening (\"To start a task and keep going\") gives motivation an object, a task, which the statement leaves unnamed; a paraphrase of being and staying motivated, and Limits names both without it.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 6753
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-2-g-2",
+      "wording_sha256": "f0dbac848acd3d5f98024ca497383b75a11f5d777b05501296dad1f0b6fdd1e5",
+      "text_sha256": "ecef0096336d5e96868c30cb1b49bf4aaca2ab655de6059c8854a56da8d0996e",
+      "verdict": "confirmed",
+      "note": "The object round 1 noted (a task) is gone: the Summary now has the child become motivated and stay so, with nothing named that the motivation is for. The example stays an example. Not a near copy. Second reading, on the parsed table and on the page image: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 6753
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 late",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-2-h-2",
+      "wording_sha256": "bae1580d7409b8fd52cf0825f293fff6f4528d895153cb9c424e1dbc5d3bb1c1",
+      "text_sha256": "fa0101e0537a358a649aafe882c4cab708da2a6675ae6d0afe8625454119ce63",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 6885
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-3-a-2",
+      "wording_sha256": "21359b312b96dc18814ed8a2a8387c8e52e5a6fcf119a4065ddca7ab1156d657",
+      "text_sha256": "af0c6b464b3385747d57994c2554a0c16f4bf1748373040248f4c86481f6ffa2",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 7541
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-3-b-2",
+      "wording_sha256": "f9be76fd7004e33317254c8ab6a975082b5a0fcbdacd7ba204d22a1259d5fe62",
+      "text_sha256": "a74c7b398655bb165764220b16b08b321aa687418dc5306bbf035406ff530624",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 7724
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-3-c-2",
+      "wording_sha256": "43d4c171821ae6dc9b1418d1bf3a26efa90277de4698f1234521ee0ddfc6589e",
+      "text_sha256": "c54d0e26bb6e9cdaa4900e0706299c8c6e4fa949a63e9dac264e596768ac3b3c",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Narrowings in the Summary. (1) The first of the three circles in the statement is the child's family, a group of people; the Summary makes it a place, \"at home\", which leaves out family who live elsewhere. (2) The second circle is the community in which the child learns; the Summary gives it as \"the class or school community\", which leaves out other places of learning. (3) The statement's first verb about trust covers trust growing in either direction; \"earn trust\" makes it only the trust other people place in the child. The record's own Limits has the first two right. Fix: \"with people in their family, in the community where they learn, and beyond\", and \"build trust and keep it\". Also small: the verb of the second sentence asks the child to pick the strategies out, which choosing, sorting or showing does as well as saying; the Summary has \"can name\". Not a near copy. Wording and code are in order. Second reading of the table cell: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell; the title is the competency heading and the heading of the table the row stands in.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 7956
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-3-c-2",
+      "wording_sha256": "43d4c171821ae6dc9b1418d1bf3a26efa90277de4698f1234521ee0ddfc6589e",
+      "text_sha256": "461e08090de6ae335774b49cc36772f17e2660489e1016166ac42330324ca176",
+      "verdict": "confirmed",
+      "note": "The fix resolved all the round 1 points: the first circle is now people in the child's family and not a place, the second is the community where the child learns, trust is built and kept with no direction given to it, and the second sentence's verb is now one of picking out. The Summary follows the statement's order and shares a few short phrases with it, with most words its own: not a near copy. The neighbour cited in Limits exists and says what is claimed. Second reading, on the parsed table and on the page image: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 7956
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 late",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-3-d-2",
+      "wording_sha256": "55a334cbca2aa8b9fab01aa7ffd6d00cc1b59cf13dfed58401ba2518522dfd44",
+      "text_sha256": "45fb05e8885582a14c2b9273846d93462903c4d536bd1f6dacc823295c4cf169",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 8165
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-3-e-2",
+      "wording_sha256": "7fc50c2f79709acd0c831fe3c6acf1950280936646740772b43d64960f5aa4ec",
+      "text_sha256": "eebfdc2a3481ada4e62d9695ab7c65480e9da07a015d7952a3f3438cb0827365",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 8295
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-3-f-2",
+      "wording_sha256": "bc61b55126133d7d349222d0b608a8f1e87bc742b4d5897b995a9dbe2897dfe0",
+      "text_sha256": "c3e4669dbd8a0897635583493b5a0cdc0cf5da0b848b7a220a5c56a805c4b42d",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary narrows the group the child works in to \"classmates\". The statement's word takes in children of the child's own age and standing in general (a team, a club, a group of friends), not only those in the same class. Fix: use the statement's word, or \"other children\". Also small: the verb of the second sentence asks the child to pick the rights out, which choosing, sorting or pointing does as well as saying; the Summary has \"can say which\". The rest of the Summary is faithful and it is not a near copy. Wording and code are in order. Second reading of the table cell: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell; the title is the competency heading and the heading of the table the row stands in.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 8469
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-3-f-2",
+      "wording_sha256": "bc61b55126133d7d349222d0b608a8f1e87bc742b4d5897b995a9dbe2897dfe0",
+      "text_sha256": "9393a59c0b53bfb4b32048b70c65ec142ce153e5ba50d72f2e8dcbf97ef69355",
+      "verdict": "confirmed",
+      "note": "The fix resolved both round 1 points: the group is now one of peers, and the rights are picked out, not said. All four sentences of the statement are kept; the beginning is attached only to the understanding in the third, and the quality of being basic only to the child's own rights, as in the cell. Not a near copy. Second reading, on the parsed table and on the page image: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 8469
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 late",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-3-g-2",
+      "wording_sha256": "467a4f21172551830164aa08202aeb9e038a79cbbbd3eb370df5dc5bfbcea3d2",
+      "text_sha256": "c56355fc77c7d8b16ff269992a463c650a12ba26143742422cd02107a3271c13",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary narrows where the child contributes. The statement names the community in which the child learns and has no word for class or school; the Summary gives it as \"the class or school community\", which leaves out an after-school programme, a club or any other place of learning. The record's own Limits uses the wider term. Fix: \"the community where the child learns\". Not a near copy. Wording and code are in order. Second reading of the table cell: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell; the title is the competency heading and the heading of the table the row stands in.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 8687
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-3-g-2",
+      "wording_sha256": "467a4f21172551830164aa08202aeb9e038a79cbbbd3eb370df5dc5bfbcea3d2",
+      "text_sha256": "78b7bfb42978c0d679f568a781965ff6ba71aee66ddfdb6b705cc52e3a68f338",
+      "verdict": "confirmed",
+      "note": "The fix resolved the round 1 fault: the place the child contributes to is now the community where the child learns. Both sentences are kept, with the working together attached to the finding of ways. Not a near copy. Second reading, on the parsed table and on the page image: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 8687
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 late",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-4-a-2",
+      "wording_sha256": "415967ac49ad71f55811fab8b4a194510ba8c9ee8a003bceb3f378a33e88170b",
+      "text_sha256": "c19b6c8ceabbcfa9eabf85daef5201944a9133898b7eafc4831380285dcab120",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 9345
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-4-b-2",
+      "wording_sha256": "3091c1936e41fe53b13ba3bd9d62727540e06705f84f73c738d117366a7e2f40",
+      "text_sha256": "0b77bb5f1422761f1a0ff2dc68589b1dc25b8ad5820ec8141c4856140b66cd4e",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 9453
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-4-c-2",
+      "wording_sha256": "68b6a3e8b699b0a40c6e389d172b64e91d78d7b1e8c1c812ff7c61f21af31ab0",
+      "text_sha256": "b5b89b7b915da0ba7eb2a257d01509ffe973d9166462f0e4785e81fc792f7ed7",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "A small narrowing to speech in the Summary's first sentence: the child \"can say\" what marks a friend. The statement's verb asks the child to pick these things out, which choosing, sorting or pointing does as well as saying. The same sentence also weakens the second object: the statement has the child pick out the kinds and degrees of friendship themselves, and the Summary has the child say only \"that\" friendships come in kinds and degrees. Fix: \"The child can pick out what marks a friend, and the kinds and degrees of friendship\". The second sentence is faithful. Not a near copy. Wording and code are in order. Second reading of the table cell: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell; the title is the competency heading and the heading of the table the row stands in.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 9608
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-4-c-2",
+      "wording_sha256": "68b6a3e8b699b0a40c6e389d172b64e91d78d7b1e8c1c812ff7c61f21af31ab0",
+      "text_sha256": "844884ac178c22d4ccc96249d688049dff0e89378d5f2735b6b309586803dace",
+      "verdict": "confirmed",
+      "note": "The fix resolved both round 1 points: the child now picks out what marks a friend and the kinds and degrees of friendship themselves, and Limits says the same. The second sentence's new verb, working out the reasons for being thankful, is a faithful rendering of the statement's verb of picking out with a why after it. Small and left: the people are given as those around the child where the statement has those in the child's life; Limits has the statement's term. The first sentence follows the statement's order in words of its own: not a near copy. Second reading, on the parsed table and on the page image: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 9608
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 late",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-4-d-2",
+      "wording_sha256": "419bf887bb1f9c204c671b0905c3572205fac9b0b47dbe6919c5fe85093cf17a",
+      "text_sha256": "3be1858efdc33cff917cdf4d55d01c48f6239062c64e48aff6ed3e885338b99d",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "A small narrowing to speech in the Summary's second sentence: the child \"can name\" ways of showing respect. The statement's verb asks the child to pick the ways out, which choosing, sorting or pointing does as well as naming. Fix: \"can pick out ways of showing respect ... and shows them in practice\". The rest is faithful. Not a near copy. Wording and code are in order. Second reading of the table cell: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell; the title is the competency heading and the heading of the table the row stands in.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 9807
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-4-d-2",
+      "wording_sha256": "419bf887bb1f9c204c671b0905c3572205fac9b0b47dbe6919c5fe85093cf17a",
+      "text_sha256": "6b257e4d6b400b0c3846016122286bddbc391d55f18085c52199a6400b4f210e",
+      "verdict": "confirmed",
+      "note": "The fix resolved the round 1 fault: the child now picks out ways of showing respect, with no narrowing to naming, and shows them in practice. Both verbs of the second sentence are kept. Not a near copy. Second reading, on the parsed table and on the page image: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 9807
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 late",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-4-e-2",
+      "wording_sha256": "07dab70bd66ea955892ed14e5979183bdc38533f4d987b799628c6502c3435f3",
+      "text_sha256": "f7f942392b5e13d2d312da12fdbd92cb669b84e1e78020d78d13ba9d09255419",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Limits, second sentence: it calls the first half of the statement \"Speaking\". The statement's verb for how the child conveys their view is a general one and is not limited to speech: a child who writes, draws or signs their view meets it. The Summary has it right (\"puts their own view across\"). Fix: \"Putting one's view across and listening both serve one purpose\". A small fault. The Summary is faithful and not a near copy. Wording and code are in order. Second reading of the table cell: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell; the title is the competency heading and the heading of the table the row stands in.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 9975
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-4-e-2",
+      "wording_sha256": "07dab70bd66ea955892ed14e5979183bdc38533f4d987b799628c6502c3435f3",
+      "text_sha256": "736057fc1af65e55a21d3bb9330a77a76b46a5271e83bf2eddf467655fe4f176",
+      "verdict": "confirmed",
+      "note": "The fix resolved the round 1 fault: Limits now calls the first half putting one's view across, with no narrowing to speech. Summary and Limits agree, and the purpose (solving a problem) stays attached to both halves. Second reading, on the parsed table and on the page image: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 9975
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 late",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-4-f-2",
+      "wording_sha256": "7edd40fe32af7a83bf10ed5dc94a07127970916946b8e701defc4aba34474c89",
+      "text_sha256": "0e121e4c1b9b50524a429eaba926dbc090fe783fe42d61ac4b125dd38f8cb297",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "A small addition of time in the Summary: it opens with \"After a conflict\". The statement speaks of the child's part in a conflict and has no word for when the child practises these things; owning one's part while the conflict is still going on meets it too. Fix: \"About a conflict they are part of, the child practises four things\". The four things themselves are all kept, and it is not a near copy. Wording and code are in order. Second reading of the table cell: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell; the title is the competency heading and the heading of the table the row stands in.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 10098
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-4-f-2",
+      "wording_sha256": "7edd40fe32af7a83bf10ed5dc94a07127970916946b8e701defc4aba34474c89",
+      "text_sha256": "9d956cb0aba3c8d86e419d2eea8bffa2e26b3a43fb024e8f0fa9dd6dd5bdb37d",
+      "verdict": "confirmed",
+      "note": "The fix resolved the round 1 fault: no time is given any more, and the conflict is one the child has a part in. All four things are kept. The statement governs the four by one verb of admitting; the Summary uses four verbs, and the fix changed the third from one of naming to one of seeing. Seeing what one might change is a verb of recognising, like the one round 1 accepted for the second thing, so it is taken as faithful; one verb of admitting for all four would be closer still. Not a near copy. Second reading, on the parsed table and on the page image: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 10098
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 late",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-4-g-2",
+      "wording_sha256": "e60a878e00062c52e2d648ccbd649c688f00a09500728338ea06379b3e50a320",
+      "text_sha256": "c5fe74eb8aa04593d3cca355b95be78b5883b57dc670e4f56fb28530500815e5",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary narrows the statement's first verb to speech: \"say things firmly\". The statement's verb covers every way of conveying something (writing, a gesture, signing), not only saying it. Fix: \"gets their message across firmly while staying respectful\". The second sentence is faithful. Not a near copy. Wording and code are in order. Second reading of the table cell: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell; the title is the competency heading and the heading of the table the row stands in.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 10265
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-4-g-2",
+      "wording_sha256": "e60a878e00062c52e2d648ccbd649c688f00a09500728338ea06379b3e50a320",
+      "text_sha256": "13c0b9d156a126a651e65ce5c98450569f2ae814255daee0628e7194670e1aea",
+      "verdict": "confirmed",
+      "note": "The fix resolved the round 1 fault: the first verb is now one of getting a message across, with no narrowing to speech, and both manners (firm and respectful) are kept. The second sentence and Limits now carry the statement's own verb for standing up for one's needs; that one shared word does not make a near copy. Second reading, on the parsed table and on the page image: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 10265
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 late",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-4-h-2",
+      "wording_sha256": "c993d2ddd394974069d90889e2b4b85832966f393a1ec7474e97ff10db942889",
+      "text_sha256": "637c089ea3828aee970a5fc6cd56ca62a0625d3d2f1ac5f5f9e2ef7bab61c8b3",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Two faults. Summary: it makes the strategies ways of stepping in for \"someone who is being bullied\". In the statement, bullying stands only inside the examples that follow its words for \"for instance\"; the strategies themselves are named by a general term for standing up for a person who is wronged, which follows on the statement's first sentence about the rights of every person and so also covers unfair treatment that is not bullying. An example has become the scope. Fix: \"ways of standing up for someone who is being wronged\", then the two examples as examples. Limits, third sentence: it says confronting the person who bullies is not mentioned. That is one kind of the strategy the general term names, and the same Limits says the two examples are not the full list, so the sentence reads as a limit the statement does not set. Fix: drop it, or say that the statement gives only these two examples. Not a near copy. Wording and code are in order. Second reading of the table cell: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell; the title is the competency heading and the heading of the table the row stands in.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 10417
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-4-h-2",
+      "wording_sha256": "c993d2ddd394974069d90889e2b4b85832966f393a1ec7474e97ff10db942889",
+      "text_sha256": "693f07959d2aef8be41f9e26309c91a072ad4f804617ce65d5ce1d6bc5553d1d",
+      "verdict": "confirmed",
+      "note": "The fix resolved both round 1 faults: the strategies are now ways of standing up for someone who is wronged, bullying stands only inside the two examples, and Limits says so and no longer denies a kind of strategy. The two examples are both kept, as examples. Not a near copy. Second reading, on the parsed table and on the page image: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 10417
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 late",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-5-a-2",
+      "wording_sha256": "c7b9f43319587c1c7d8397b031e20d0feac21be29b9b1f95171acc586af83580",
+      "text_sha256": "ed9f842869434134e4eecf465709e344bffd8839349eb5e92aded3b107d987fd",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary turns the second of the two occasions into a place: \"is somewhere unfamiliar\". The statement's word is wider: any circumstance that is new to the child, also in a familiar place (a new teacher, a new kind of task, a new group in the same room). The record's own Limits has it right. Fix: \"or is in a situation that is new to them\". Not a near copy. Wording and code are in order. Second reading of the table cell: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell; the title is the competency heading and the heading of the table the row stands in.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 11021
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-5-a-2",
+      "wording_sha256": "c7b9f43319587c1c7d8397b031e20d0feac21be29b9b1f95171acc586af83580",
+      "text_sha256": "65e0ee0fd0e83124db92c3165adcfa438cd0ab3df9ec779d3218cf9fe4df6434",
+      "verdict": "confirmed",
+      "note": "The fix resolved the round 1 fault: the second occasion is now a situation that is new to the child, not a place. Both occasions and the practising are kept. Not a near copy. Second reading, on the parsed table and on the page image: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 11021
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 late",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-5-b-2",
+      "wording_sha256": "21c183c39f234ba69df1b6db45e75004480fede79ee460986a926a1eed113182",
+      "text_sha256": "33e2ba515fc6a850b30321f7a7ac15f65f4e60da910b9afa1b9d93cb57e2f7fd",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 11160
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-5-c-2",
+      "wording_sha256": "c170745ccdbd59ebb03dcd60fd7f96cb99cc2af62f8ffb9de63aaa2221ce3973",
+      "text_sha256": "3180c722bd0cf4019dc775025fba220e8c17a467e858307d07a65e2d7a616d0e",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "A small narrowing in the Summary: the second of the two kinds of problem is given as \"one between people\". The statement's adjective is wider. It also takes in a problem of a group or of the community (litter in the playground, a rule that works badly for some), and the High School cell of the same row uses the same adjective beside issues that affect the community. The record's own Limits keeps the statement's word. Fix: \"a personal problem or a social one\". Not a near copy. Wording and code are in order. Second reading of the table cell: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell; the title is the competency heading and the heading of the table the row stands in.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 11312
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-5-c-2",
+      "wording_sha256": "c170745ccdbd59ebb03dcd60fd7f96cb99cc2af62f8ffb9de63aaa2221ce3973",
+      "text_sha256": "4d0f07b3add9c64359e6f271a9abb976c0ba6aae90d91f2ecf0f33b0783e8a07",
+      "verdict": "confirmed",
+      "note": "The fix resolved the round 1 fault: the second kind of problem now has the statement's wider adjective. The solutions stay several and workable. The neighbour cited in Limits (row D of the third competency, this band) exists and is about choosing people to seek support from, as claimed. Second reading, on the parsed table and on the page image: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 11312
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 late",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-5-d-2",
+      "wording_sha256": "cba587bb7ccba78a701f4a06a65fef0891ed0691dda1a1c13e24ee44d72c6c73",
+      "text_sha256": "c5d193fcd2f181b88b533cfdf7b98addce7915dc405aded38b7fb190d37d224d",
+      "verdict": "unconfirmed",
+      "reason": "code-differs",
+      "note": "The code printed at the start of this cell is not the record's code: the document prints the Early Elementary code there (the one ending in 1), the same code as the cell to its left, which has other wording. The code 5.D.2 is printed nowhere in the document. The record's code is the one the cell's position gives (the Late Elementary column, row D of the fifth competency; every other cell of the column has a code ending in 2), so the record looks right and the document looks misprinted; the source record mentions such a cell without saying which. Nothing in this record tells a reader that the document prints another code here: a sentence in Limits, or a note of the importer, should say so, since a search of the document for the record's code finds nothing. Everything else is in order: the record holds the whole cell after the printed code and nothing of a neighbouring cell, the title is the competency heading and the heading of the table the row stands in, and the Summary and the notes are faithful and not a near copy.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 11457
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-5-d-2",
+      "wording_sha256": "cba587bb7ccba78a701f4a06a65fef0891ed0691dda1a1c13e24ee44d72c6c73",
+      "text_sha256": "f19942d50c7d6e95013eab864e1c0ac5b3cf1cde2ff67b4f07f23e398fcb1cd9",
+      "verdict": "confirmed",
+      "note": "The code printed at the start of this cell differs from the record's code: the document prints the Early Elementary code there (the one ending in 1), the same code as the cell to its left, which has other wording, and it prints the record's code nowhere (the whole file was searched). By the lead's ruling the code that the cell's position gives (the Late Elementary column, row D of the fifth competency) stands, the printed one being plainly a misprint; this verdict confirms on that ruling. The new Limits sentence says that the document prints the Early Elementary code in this cell and that the code used is the one the cell's place gives: right against the cell. Everything else is in order: the three sentences of the statement are each kept in the Summary, safe choices stay tied to where the child learns, and it is not a near copy. Second reading, on the parsed table and on the page image: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 11457
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 late",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-5-e-2",
+      "wording_sha256": "d4c5d1bbb9daa0a633f1b0bcaf6e20469e692a1d402f883e0bb3eeeb6797f6df",
+      "text_sha256": "99f82efb36c749b18c5079ea5cf273d706d9eae3fa9e33771cba75450197de19",
+      "verdict": "confirmed",
+      "note": "Form only: the document breaks the line once inside this cell by hand (a forced line break); the record has a space there.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 11658
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-5-f-2",
+      "wording_sha256": "b9d13b62f0ffe75753a6e4684c4d9012a5a56d58a236becce522dc1cd299dd39",
+      "text_sha256": "cd1d9dc54542540810d2631540253b66c6b62de4fd87e11c4d4435aa8493e609",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 11820
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-5-g-2",
+      "wording_sha256": "12b56273ab1411501db20e91968280c3f12e14d8372bc4ab4177c9fa9b6184e7",
+      "text_sha256": "82dfc6946f7658428e6d39885969ac875b944250c1c29e230eb7c1ca66753336",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "A small narrowing to speech in the Summary's second sentence: the child \"can say\" how activities and chances affect the three things. The statement's verb asks the child to pick the effect out, which choosing, sorting or showing does as well as saying. Fix: \"The child can pick out how ...\". The first sentence and the three things affected are faithful. Not a near copy. Wording and code are in order. Second reading of the table cell: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell; the title is the competency heading and the heading of the table the row stands in.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 11983
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-late-elementary",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.late-elementary-5-g-2",
+      "wording_sha256": "12b56273ab1411501db20e91968280c3f12e14d8372bc4ab4177c9fa9b6184e7",
+      "text_sha256": "c1161c3c55e865b9ae3299325117a7dd1ff511c656319573982fb619147160ef",
+      "verdict": "confirmed",
+      "note": "The fix resolved the round 1 fault: the second sentence's verb is now one of picking out the effect, with no narrowing to speech. The growing accuracy and the three things affected are kept. The cell prints a curly apostrophe where the store holds a straight one: form. Not a near copy. Second reading, on the parsed table and on the page image: the record holds the whole Late Elementary cell after its printed code and nothing of a neighbouring cell.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 11983
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 late",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-1-a-3",
+      "wording_sha256": "e86153161002e7577b6ec3bcb8600c6818fd18adaf78f285a3c3dd70cfcde787",
+      "text_sha256": "77a9476ae1749cc99d8eca67efdff4d80a7dc4bbe12fd5c3b031079b2525aa4b",
+      "verdict": "confirmed",
+      "note": "The source file itself types a space after the hyphen inside the compound word near the end of the last sentence (it is in the document's text, not a line break, so no correction is due); the record keeps it as the file has it. Second reading of the table cell: the record holds the whole Middle School cell after its printed code and nothing of a neighbouring cell; the code is the one printed at the head of the cell; the title is the competency heading and the heading of the table the row stands in.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 3933
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-1-a-3",
+      "wording_sha256": "e86153161002e7577b6ec3bcb8600c6818fd18adaf78f285a3c3dd70cfcde787",
+      "text_sha256": "b616aecfff8703dab81c8d356de07b5ddc2cf26b2cdffa7809824768764c32cc",
+      "verdict": "confirmed",
+      "note": "The new Limits sentence about the source is true: the file's text has a space after the hyphen inside that compound near the end of the last sentence, inside one run of text (not a line break), and the conversion prints it on one line; the record's wording keeps it. The first Summary verb now reads picking out, which is faithful. The rest is unchanged and faithful. Second reading: the cell was read in an independent parse of the file's tables, through the tools' own view of the file, and on a page image made from a conversion of the file. The record holds the whole cell after its printed code and nothing of a neighbouring cell; the code heads the cell, and the band column and the table heading are the ones the record gives.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 3933
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 early-middle",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-1-b-3",
+      "wording_sha256": "b649ff6c3bae542fd059a99807e59f68767520dbb5e703ed39a20768862d92f8",
+      "text_sha256": "ec8c8e70d5ec56a59e00fff2f97c2b98e46592f044bb1cb18d8788c6ad703b73",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 4108
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-1-c-3",
+      "wording_sha256": "f6952b82ae618a280c0e298f1922de85caf53a0530f8785d41a596a75aa6ab51",
+      "text_sha256": "ff96dd957871b5bada8efb73ddb51d9c230de1474ab31f4a875b9c62fd8dcc78",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 4210
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-1-d-3",
+      "wording_sha256": "461b6c54af57425f889787192bf2acb012079b645e01545b344c78efb5943e6d",
+      "text_sha256": "53629988e943ed012faa2f8bd742af38c05c6fa61ae5474d76ef8852c5964180",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 4348
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-1-e-3",
+      "wording_sha256": "116dec1854eb893c70fff914cec72f7d86666135d52ff98ef20b26287f15386a",
+      "text_sha256": "e2982be4285aafc183a9711343e7a6f26079e675b3bfea16c600ff05d848db38",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 4489
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-1-f-3",
+      "wording_sha256": "7583452c0339f390ed5392a59880fe7e2f27573cfd98341b016a4546dbacff4e",
+      "text_sha256": "10f138d474f6b8774c8370043ea8a93400f827f544c5c774ac6ba6babdc88df4",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 4662
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-1-g-3",
+      "wording_sha256": "767512ec0a0a4f53e6bb639c8c0704aff4d9686536b5ae50035cce9a967d8bea",
+      "text_sha256": "07653d20901a919cb715a75e62fa0def0b75fb244663b25464ee6e4c2995aff5",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The first Summary sentence replaces the term the statement uses for what the student develops (a sense of power of their own, which the statement leaves undefined) with a definition of the pack's: feeling able to affect what happens \"in their own life\". The statement does not say what the power is over, so the Summary adds a domain. The record's Limits already says the term is given no measure. Say it without the added domain. Small. Second reading of the table cell: the record holds the whole Middle School cell after its printed code and nothing of a neighbouring cell; the code is the one printed at the head of the cell; the title is the competency heading and the heading of the table the row stands in. The rest of the Summary and the notes are faithful; not a near copy.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 4818
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-1-g-3",
+      "wording_sha256": "767512ec0a0a4f53e6bb639c8c0704aff4d9686536b5ae50035cce9a967d8bea",
+      "text_sha256": "401f37c4f9625cbae6ba6960d37065c21e92e0e9b1d71bae3cef6b740f81fc94",
+      "verdict": "confirmed",
+      "note": "Round 1 fault resolved: no domain is added to the sense of power. The ability form, the three kinds of asset and the healthy use are kept. Not a near copy. Second reading: the cell was read in an independent parse of the file's tables, through the tools' own view of the file, and on a page image made from a conversion of the file. The record holds the whole cell after its printed code and nothing of a neighbouring cell; the code heads the cell, and the band column and the table heading are the ones the record gives.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 4818
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 early-middle",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-1-h-3",
+      "wording_sha256": "ee052e50d7dcbf7720bf78c27b0e0c6f2982361abed1e55b9ea91d0104d57058",
+      "text_sha256": "b68721b888d8012b1a71a453ceb8d651a884805cbdc4be86d28c12cce9d1cff4",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 4954
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-2-a-3",
+      "wording_sha256": "78dc56834e4e2bd38c938a8b76a873cb8fd60fa9316e28f808d32efe37035f68",
+      "text_sha256": "0eb955fa029ee7cb454ca4a0972e979a6b527974c0caf80da417ea01ce10e2eb",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 5828
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-2-b-3",
+      "wording_sha256": "ee59ffff5fac48299726581cb8e7a827798eb298f97e362c456360fac42e475a",
+      "text_sha256": "227e4612afafd61c9f0a03a779dc8233082f8dcd05aca2a369dd3fa964df5956",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 5972
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-2-c-3",
+      "wording_sha256": "c1ca736480058811a758ccd74d8b2e76beb9cbe81f874b0553e7e96564b0631c",
+      "text_sha256": "61db3a50ee69ac18f6d61f335b5b62429fa5569e824aac4cfe8fbc2ea205c428",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 6157
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-2-d-3",
+      "wording_sha256": "a9ec5ce70861496448c75b25bf47774aff59f723449756e30efdf973ddc67281",
+      "text_sha256": "b72a2c8ca91d803f24da3acb0c559ffae5fa36bd4de8cd32ace828a4270e1835",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary narrows two of the receivers of feedback that the statement names: it says \"classmates\" where the statement has the general word for people of the same age or standing (peers), and \"teachers\" where the statement has the wider word (educators). The record's Limits uses the right two terms. Replace both words in the Summary. Second reading of the table cell: the record holds the whole Middle School cell after its printed code and nothing of a neighbouring cell; the code is the one printed at the head of the cell; the title is the competency heading and the heading of the table the row stands in. The rest is faithful; not a near copy.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 6312
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-2-d-3",
+      "wording_sha256": "a9ec5ce70861496448c75b25bf47774aff59f723449756e30efdf973ddc67281",
+      "text_sha256": "724473bae653c2858363ba79430cac7e9f0a84d016a524aac4a02d6b8b6d1eaa",
+      "verdict": "confirmed",
+      "note": "Round 1 fault resolved: both receivers now carry the statement's own general terms. Seeking feedback, changing in response to it, and the fit to the setting are kept. Second reading: the cell was read in an independent parse of the file's tables, through the tools' own view of the file, and on a page image made from a conversion of the file. The record holds the whole cell after its printed code and nothing of a neighbouring cell; the code heads the cell, and the band column and the table heading are the ones the record gives.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 6312
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 early-middle",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-2-e-3",
+      "wording_sha256": "fd7ed04a98f8da824c94b56dc1105e3ed82d68212912267d61ba16e1e2f94402",
+      "text_sha256": "60e97bfbbd10de373b636ef930cf847f08d083f92f5017eca55bea084e179bc7",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 6456
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-2-f-3",
+      "wording_sha256": "4822cf15d0a0f4c0ad73fca10307f432b74c301441c26b067c0cd72bba817dee",
+      "text_sha256": "1e695fab10f405627c2ff127c33c302285c4253115114dae2626ec568ad17d43",
+      "verdict": "confirmed",
+      "note": "The source file prints a stray comma after the hyphenated adjective near the end of the first sentence; the record reproduces it as printed. Second reading of the table cell: the record holds the whole Middle School cell after its printed code and nothing of a neighbouring cell; the code is the one printed at the head of the cell; the title is the competency heading and the heading of the table the row stands in.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 6587
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-2-f-3",
+      "wording_sha256": "4822cf15d0a0f4c0ad73fca10307f432b74c301441c26b067c0cd72bba817dee",
+      "text_sha256": "c30c7d23a39bb458b076d68669616d73d8b1c4aca9f3b70d753d790bb9e7931e",
+      "verdict": "confirmed",
+      "note": "The new Limits sentence about the source is true: the file prints a comma directly after the hyphenated adjective that stands before the last word of the first sentence; the record's wording keeps it. The Summary is unchanged and faithful. Second reading: the cell was read in an independent parse of the file's tables, through the tools' own view of the file, and on a page image made from a conversion of the file. The record holds the whole cell after its printed code and nothing of a neighbouring cell; the code heads the cell, and the band column and the table heading are the ones the record gives.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 6587
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 early-middle",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-2-g-3",
+      "wording_sha256": "5341bac2462808eef440c6e74b252cce4fef73314be95a1666c74fe97fba6cbe",
+      "text_sha256": "968475fb754ea4bdbefd2f2181aa7cd276d2adb7c64618d816ed1f91f1c4b708",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 6782
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-2-h-3",
+      "wording_sha256": "8c5691a5b7e2825e9594e9097ee45ff988478e69b2c3f1b2e2a16f86c7126101",
+      "text_sha256": "ad88012506c9c064c2d6416912489a84cbc1b10f77e29f969957ee1e96e71ea1",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 6907
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-3-a-3",
+      "wording_sha256": "d406b8355e3b1d7afe5cddc5c14e89e940d36da05ce745918ba43a18546e068a",
+      "text_sha256": "483fac4b6381b6a65de3e050c74ff9d362a445b758becfdb32bf31f7f17a0e74",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 7571
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-3-b-3",
+      "wording_sha256": "590981dff37678845908d067af57bdd6af599ec513cd155ab54d7e2ec03cef81",
+      "text_sha256": "3d4aadec756a6c84817bea69bc7538124fc64bd446218371b3185015ae7cd844",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The last Summary sentence adds an occasion: \"When others share what they have been through\". The statement's second sentence has the student respond with compassion to what other people experience and sets no condition that they tell it. Drop the added clause. Second reading of the table cell: the record holds the whole Middle School cell after its printed code and nothing of a neighbouring cell; the code is the one printed at the head of the cell; the title is the competency heading and the heading of the table the row stands in. The first two Summary sentences and the notes are faithful; not a near copy.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 7769
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-3-b-3",
+      "wording_sha256": "590981dff37678845908d067af57bdd6af599ec513cd155ab54d7e2ec03cef81",
+      "text_sha256": "33995dd7c092d351ce796275aad481dae45d517cf3b761896abc55b099d74b93",
+      "verdict": "confirmed",
+      "note": "Round 1 fault resolved: the added occasion is gone; the response is to what other people experience, with no condition that they tell it. Small and not counted a fault: the Summary says differences can cause misreading, where the statement has the weaker verb of adding to it. Second reading: the cell was read in an independent parse of the file's tables, through the tools' own view of the file, and on a page image made from a conversion of the file. The record holds the whole cell after its printed code and nothing of a neighbouring cell; the code heads the cell, and the band column and the table heading are the ones the record gives.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 7769
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 early-middle",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-3-c-3",
+      "wording_sha256": "c5b6f057c13acdd8f946bed315d2a477e9e3ecf650f4fdbee510e532843ebb9f",
+      "text_sha256": "8a1cb21cae87822a9954147a27556f5379f5b000a4a893ae9b3deffa4659b776",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 7984
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-3-d-3",
+      "wording_sha256": "10d0a8907f7fd1e2e0a07aff083116439000f6e884fec7565851047343be9d16",
+      "text_sha256": "d135233ae9779399cda33adea149ab11ca4e56b12b8852ad7459df272876b11e",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary adds an act: \"and does so on their own initiative\". The first half of the statement is about what the student knows (the time and the place for going, unprompted, for resources and supports); it does not say that the student goes. Keep the unprompted quality inside what is known. Second reading of the table cell: the record holds the whole Middle School cell after its printed code and nothing of a neighbouring cell; the code is the one printed at the head of the cell; the title is the competency heading and the heading of the table the row stands in. The second Summary sentence and the notes are faithful; not a near copy.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 8189
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-3-d-3",
+      "wording_sha256": "10d0a8907f7fd1e2e0a07aff083116439000f6e884fec7565851047343be9d16",
+      "text_sha256": "bbc33ecec26f3cfe2943a2ba1c5bf5aed49a7b15f9b78f1c82284aef36c13326",
+      "verdict": "confirmed",
+      "note": "Round 1 fault resolved: the unprompted quality now stands inside what the student knows, and no act of going is added. The beginning stage of the second half is kept. Second reading: the cell was read in an independent parse of the file's tables, through the tools' own view of the file, and on a page image made from a conversion of the file. The record holds the whole cell after its printed code and nothing of a neighbouring cell; the code heads the cell, and the band column and the table heading are the ones the record gives.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 8189
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 early-middle",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-3-e-3",
+      "wording_sha256": "249556b44eafaa13951973779e4aa726c06b618b7b561cabf28ad60bcbe49fa6",
+      "text_sha256": "dad8a5e338eba228cbc6b14e459f4127af36d3e1b4df53595498e95ec347092c",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The first Summary sentence adds an owner: \"their learning community\". The statement's first sentence is about how a learning community of that kind is built and names no owner; only its second sentence speaks of the student's own learning community. Small: say \"a learning community\". Second reading of the table cell: the record holds the whole Middle School cell after its printed code and nothing of a neighbouring cell; the code is the one printed at the head of the cell; the title is the competency heading and the heading of the table the row stands in. The rest of the Summary and the notes are faithful; not a near copy.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 8321
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-3-e-3",
+      "wording_sha256": "249556b44eafaa13951973779e4aa726c06b618b7b561cabf28ad60bcbe49fa6",
+      "text_sha256": "4b16f4812b2cd9d6ca6f8f081bd53df75f405228173ef40a6a97a3a1e79c71e3",
+      "verdict": "confirmed",
+      "note": "Round 1 fault resolved: the first sentence is about a learning community in general, the second about the student's own. Working together, every member, and the healthy manner of questioning are kept. Second reading: the cell was read in an independent parse of the file's tables, through the tools' own view of the file, and on a page image made from a conversion of the file. The record holds the whole cell after its printed code and nothing of a neighbouring cell; the code heads the cell, and the band column and the table heading are the ones the record gives.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 8321
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 early-middle",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-3-f-3",
+      "wording_sha256": "d85fbe0e71e1d907a03ec23a78554bf4c8bcfc514bc9439f40fd42e0e47624e6",
+      "text_sha256": "3795af8069f9cb661b165f013ad94f0d672694f223ac919d1c2d60624a79fc4e",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 8530
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-3-g-3",
+      "wording_sha256": "38fcd5003704272a3540bd961d63c1d99307a652c79d15754530f236a5e474ba",
+      "text_sha256": "6ab1a6e2b67a625c569f36542dd79d1cfac4151ae7ef872d05e97b8030ae1252",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary says \"classmates\" where the statement has the general word for people of the same age or standing (peers); the action may be taken with peers who are not classmates. The record's Limits has the right term. Second reading of the table cell: the record holds the whole Middle School cell after its printed code and nothing of a neighbouring cell; the code is the one printed at the head of the cell; the title is the competency heading and the heading of the table the row stands in. The rest is faithful; not a near copy.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 8715
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-3-g-3",
+      "wording_sha256": "38fcd5003704272a3540bd961d63c1d99307a652c79d15754530f236a5e474ba",
+      "text_sha256": "5e640b076f6487f3092072ae4357adf2832ed2dd635c34a29824b237c23a70e5",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The round 1 fault is resolved: the Summary now has the statement's own word for people of like age or standing. Another fault, present in round 1 and not noted then, remains in the first Summary sentence: it renders the first thing the student recognises as \"where things are unequal\". The statement's word there means differences that are unfair or unjust, not differences of amount. The document keeps the two ideas apart (a High School cell of this competency uses its word for unequal amounts beside this one), and the pack's own Early Elementary record 3.F.1 warns under Common mistakes that fair is not the same as equal. A designer reading \"unequal\" would build spotting who has less; the statement asks for recognising what is unfair. Fix: \"where things are unfair\" (or \"unjust\") in the Summary. The rest is faithful: the accuracy, both adults and peers, real-world issues, and the four qualities of the community. Not a near copy. Second reading: the cell was read in an independent parse of the file's tables, through the tools' own view of the file, and on a page image made from a conversion of the file. The record holds the whole cell after its printed code and nothing of a neighbouring cell; the code heads the cell, and the band column and the table heading are the ones the record gives.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 8715
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 early-middle",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-3-g-3",
+      "wording_sha256": "38fcd5003704272a3540bd961d63c1d99307a652c79d15754530f236a5e474ba",
+      "text_sha256": "10a81bed213daacf95ce791adb88189d29ea3bffd6c3b8468cac85fc8b8ad34d",
+      "verdict": "confirmed",
+      "note": "Round 3. The round 2 reason is resolved: the first thing the student recognises is now given as where things are unfair, which is what the statement's word means, and no longer as a difference of amount. Read whole: recognising accurately; both objects (what is unfair, what a community needs); working with both groups named; acting on real problems; and the four qualities of the community that the action is in support of. Nothing added or dropped; not a near copy. Limits right. Second reading: the cell was read through the tools' own view of the file, in an independent parse of the file's tables, and on a page image made from a conversion of the file. The record holds the whole Middle School cell after its printed code and nothing of a neighbouring cell; the code heads the cell, and the band column and the table heading are the ones the record gives.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 8715
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-4-a-3",
+      "wording_sha256": "fb8c76bb718ee312dcffd39c4e8af81974421258c18186a07150305f75c76a7b",
+      "text_sha256": "48b90806aa791e2324bf48f5cf49cf2c19e96925a26346923519973a80f81976",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 9366
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-4-a-3",
+      "wording_sha256": "fb8c76bb718ee312dcffd39c4e8af81974421258c18186a07150305f75c76a7b",
+      "text_sha256": "918d02c6a543c2bf3cb628cb02cb05654d3b99e6fdeda661492fe78c6f5a0e44",
+      "verdict": "confirmed",
+      "note": "The changed phrase now has the statement's own word for people of like age or standing. The three things examined and the improvement are kept. Not a near copy. Second reading: the cell was read in an independent parse of the file's tables, through the tools' own view of the file, and on a page image made from a conversion of the file. The record holds the whole cell after its printed code and nothing of a neighbouring cell; the code heads the cell, and the band column and the table heading are the ones the record gives.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 9366
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 early-middle",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-4-b-3",
+      "wording_sha256": "7763a6c338b6d5e9401f39edc4f32f527267a51d3037f58adb09d5fb75005dcd",
+      "text_sha256": "cbfd226a32bbd36ddeac022e5339aac869488f7fb6cc48ce77151e67c413a48f",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 9475
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-4-b-3",
+      "wording_sha256": "7763a6c338b6d5e9401f39edc4f32f527267a51d3037f58adb09d5fb75005dcd",
+      "text_sha256": "b908bb2cc5eb75bc77ab42e3554597bce9bea45426ae01b88c931ce0e0b12ad2",
+      "verdict": "confirmed",
+      "note": "The changed verb (picking out what could be better) is faithful to the statement's verb and is not limited to words. The growing share of leading and the reflection are kept. Second reading: the cell was read in an independent parse of the file's tables, through the tools' own view of the file, and on a page image made from a conversion of the file. The record holds the whole cell after its printed code and nothing of a neighbouring cell; the code heads the cell, and the band column and the table heading are the ones the record gives.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 9475
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 early-middle",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-4-c-3",
+      "wording_sha256": "2698688c8ee92323420390a57c56516a021085b3cf76088ab5dc92fa4b558d37",
+      "text_sha256": "37c8a8abfdd2ddc7032c7ba2e74c04c7357579629bd2a5235d66e1de112e2dfc",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 9641
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-4-d-3",
+      "wording_sha256": "040d82ee161ea847b4d7a817a153bfb3e130a3b2e27da279053108adee94dfdd",
+      "text_sha256": "f85b23685cfde65c4e4945682ccbe74b6a2fdd380b41c5b19c24545d7146e360",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The first Summary sentence narrows the statement's second sentence: \"talk and work with people across cultures\" where the statement names communication and interaction in general. Communication is wider than talk (writing, gesture, listening), and interaction is wider than working together. Second reading of the table cell: the record holds the whole Middle School cell after its printed code and nothing of a neighbouring cell; the code is the one printed at the head of the cell; the title is the competency heading and the heading of the table the row stands in. The rest of the Summary and the notes are faithful; not a near copy.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 9827
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-4-d-3",
+      "wording_sha256": "040d82ee161ea847b4d7a817a153bfb3e130a3b2e27da279053108adee94dfdd",
+      "text_sha256": "5e2afd20b9aec7c4e0f8c9a65353ed41120a793f583b7614bd018dbf25a0a68d",
+      "verdict": "confirmed",
+      "note": "Round 1 fault resolved: communicating and dealing with others in general, no longer talk and work. Small and not counted a fault: the Summary and Limits make the reflection one on oneself, where the statement names reflection without an object beside self-critique. Second reading: the cell was read in an independent parse of the file's tables, through the tools' own view of the file, and on a page image made from a conversion of the file. The record holds the whole cell after its printed code and nothing of a neighbouring cell; the code heads the cell, and the band column and the table heading are the ones the record gives.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 9827
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 early-middle",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-4-e-3",
+      "wording_sha256": "18631689c7f5137f94ee825f99f436ed63e36596798b9448716dc84c85e33e5c",
+      "text_sha256": "fd383f35841aecbfafa63edc3a88b7e48e21fb7074f072381b867675c12a2360",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 9998
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-4-e-3",
+      "wording_sha256": "18631689c7f5137f94ee825f99f436ed63e36596798b9448716dc84c85e33e5c",
+      "text_sha256": "df753530517eed5967d2593ec91294e69c030d10ad1914b532d74c19bf3399a4",
+      "verdict": "confirmed",
+      "note": "The changed phrase now has the statement's own word for people of like age or standing. Small, not counted a fault, recorded for a later pass: the Summary joins the two groups the student works with by \"or\" where the statement joins them by \"and\", and Limits calls them \"the other party\", which the statement does not say (it says the student works with them and speaks of two sides). Both groups are named, so neither is dropped. Second reading: the cell was read in an independent parse of the file's tables, through the tools' own view of the file, and on a page image made from a conversion of the file. The record holds the whole cell after its printed code and nothing of a neighbouring cell; the code heads the cell, and the band column and the table heading are the ones the record gives.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 9998
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 early-middle",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-4-e-3",
+      "wording_sha256": "18631689c7f5137f94ee825f99f436ed63e36596798b9448716dc84c85e33e5c",
+      "text_sha256": "c416a623c625e61be92d7b3625dfc2bbdfda76e2dd80617cea2007f18232d069",
+      "verdict": "confirmed",
+      "note": "Round 3. Confirmed in round 2; both small points recorded then are met. The Summary now joins the two groups the student works with by \"and\", as the statement does. Limits no longer calls them the other party: it says that the student works on this with both, and that the statement speaks of two sides without saying who they are, which is what the wording gives. Read whole: working with both groups towards solutions that both sides can accept and that deal with the concerns underneath. Remark, not counted a fault: the Summary and Limits place those concerns behind or beneath each side's position; the statement has no word for positions and says only that the concerns are underlying. Not a near copy. Second reading: the cell was read through the tools' own view of the file, in an independent parse of the file's tables, and on a page image made from a conversion of the file. The record holds the whole Middle School cell after its printed code and nothing of a neighbouring cell; the code heads the cell, and the band column and the table heading are the ones the record gives.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 9998
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-4-f-3",
+      "wording_sha256": "58fe0d58e38a3c24844a1154e909ff059267b19644d2a181f54e4db2619510d2",
+      "text_sha256": "17cedd2eaa81a42da0cae13a200fdc20c402c8d217bfb3e4e89129789dd96909",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The first Summary sentence attaches the conflict setting to every restorative approach (\"uses restorative approaches when there is a conflict\"). In the statement's first sentence the conflict setting stands at the very end, directly after the included example (the questions) with no comma before it, and the use of the approaches is called proactive, which reaches beyond moments of conflict. So the condition is attached to more than the statement attaches it to. Keep the setting with the example, or word it so that both readings stay open. Second reading of the table cell: the record holds the whole Middle School cell after its printed code and nothing of a neighbouring cell; the code is the one printed at the head of the cell; the title is the competency heading and the heading of the table the row stands in. The rest of the Summary and the notes are faithful; not a near copy.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 10130
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-4-f-3",
+      "wording_sha256": "58fe0d58e38a3c24844a1154e909ff059267b19644d2a181f54e4db2619510d2",
+      "text_sha256": "ae0f42206d921e12f1fa763b9e1c0e436a2be181c99b5319b4721ae853ce49d5",
+      "verdict": "confirmed",
+      "note": "Round 1 fault resolved: the conflict setting stays with the included example (the questions), and Limits says the wording does not settle whether it reaches the other approaches. The proactive use, the growing responsibility and the practising of forgiveness are kept. Small and not counted a fault: the Summary speaks of mending \"the relationship\", the statement of relationships in general. Second reading: the cell was read in an independent parse of the file's tables, through the tools' own view of the file, and on a page image made from a conversion of the file. The record holds the whole cell after its printed code and nothing of a neighbouring cell; the code heads the cell, and the band column and the table heading are the ones the record gives.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 10130
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 early-middle",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-4-g-3",
+      "wording_sha256": "70a94a3543b992eb960734510f1b44b75f61ba7067a9da572edb39ab7e5a8979",
+      "text_sha256": "a7e23e2e16ed86dfc1804b8fa9e943d3742ba6e006fefa180b29440d40699641",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 10283
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-4-h-3",
+      "wording_sha256": "a2275281254c8480deca52e201a5f996550142f1c6318f272c4b79bd990cdfa2",
+      "text_sha256": "d48ea4383fa3110aac43794cb696596207a0fb5bf31822db42220c05cd47484f",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 10445
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-5-a-3",
+      "wording_sha256": "7b692b218c70e137fa9e7beec5d30089cbf1e6cb0807835b423ff27a3a395a24",
+      "text_sha256": "683681c8ba8f66308e55f69d9c4383d3f57208ade2166a73601030d4fc33a915",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 11045
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-5-b-3",
+      "wording_sha256": "16e8f3dcd3c39f8dbb6f4d0c974f59e096e313d0525bb905d896ec5607669896",
+      "text_sha256": "8b3b60fbf7c67f3502fd1e6a7f77b2af7b466c51d855d8d9688a851bde548fce",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 11198
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-5-c-3",
+      "wording_sha256": "c5e9a12d7cc818dbbcf92b517948ef3075d1dc4f4dae50597fc108fe7fe3403f",
+      "text_sha256": "3b015f42445ed9960eabfe82524838f1dd52a2d623d9e8778cdc50eab58f03f4",
+      "verdict": "confirmed",
+      "note": "Correction verified on the page: the file has a forced line break straight after the hyphen of the compound in the first sentence, and the correction joins the two halves with the hyphen kept. The High School cell beside it prints the same compound joined with its hyphen. Second reading of the table cell: the record holds the whole Middle School cell after its printed code and nothing of a neighbouring cell; the code is the one printed at the head of the cell; the title is the competency heading and the heading of the table the row stands in.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 11335
+      },
+      "matched_by": "script",
+      "corrections_verified": true,
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-5-d-3",
+      "wording_sha256": "c1a4ed9ce8778d6c4f846a8ca338d94c3931b41fb8e682ecd6af4057a16a0644",
+      "text_sha256": "a073b35606f66c2eb0309b84092c34f455be7b6714d791f0fb5be7682dc97081",
+      "verdict": "confirmed",
+      "note": "Small, not a fault: the Summary says the student knows \"that\" who a person is affects safety, where the statement has the student know in what way it does. The record's Limits says the statement does not explain it. Second reading of the table cell: the record holds the whole Middle School cell after its printed code and nothing of a neighbouring cell; the code is the one printed at the head of the cell; the title is the competency heading and the heading of the table the row stands in.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 11493
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-5-e-3",
+      "wording_sha256": "4a561148b80a649f19dd237fd7b75d4be17f71f8786b533d1a6f79e444924d74",
+      "text_sha256": "18069baeb879ed3696300d4514314f1aa02f2fc461ce7274e45a821abde8cd36",
+      "verdict": "confirmed",
+      "note": "The first Summary sentence keeps the clause order of the statement's first sentence, with the verbs, two nouns and the closing purpose in the pack's own words: judged not a near copy. Second reading of the table cell: the record holds the whole Middle School cell after its printed code and nothing of a neighbouring cell; the code is the one printed at the head of the cell; the title is the competency heading and the heading of the table the row stands in.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 11686
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-5-f-3",
+      "wording_sha256": "700f0924d397b74f30e38ee1f95a3c711a24c1ea5c0907ce3e2d997f3499cd38",
+      "text_sha256": "5ed5aa549c6ba1693ada9e47045a200e47f80df8060678e4a40dfbae7dd30ae3",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 11847
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-5-g-3",
+      "wording_sha256": "d72743936968b873b3a953bfeb1755de69cd8a5050f2b154b92f897f2b555796",
+      "text_sha256": "05b2dbda772b4c43fbb276f46f593013f3aa2b17ec2f0910985517984046474a",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 12014
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings sel-middle-school",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.middle-school-5-g-3",
+      "wording_sha256": "d72743936968b873b3a953bfeb1755de69cd8a5050f2b154b92f897f2b555796",
+      "text_sha256": "9025e526826c6b1c150b6a2e6f487fb9d21867974e1d0106990923daa6956092",
+      "verdict": "confirmed",
+      "note": "The changed verb (picking out how a choice affects) is faithful to the statement's verb and is not limited to words. The most likely consequences, own and other people's actions, both spans of goals and the three wider scales are kept. Second reading: the cell was read in an independent parse of the file's tables, through the tools' own view of the file, and on a page image made from a conversion of the file. The record holds the whole cell after its printed code and nothing of a neighbouring cell; the code heads the cell, and the band column and the table heading are the ones the record gives.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 12014
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings round 2 early-middle",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.overarching-health-education-content-standards-1",
+      "wording_sha256": "3f9b897b48664810f22e5f335f5849cc38644fee20af6ab0eca2db83c9144f14",
+      "text_sha256": "87d888eb4323726de44a018185f9a5c15cefb7804251f4e98991b8c2b427da09",
+      "verdict": "confirmed",
+      "note": "Second reading on the page images of both printings in the same file: the introduction (pages 7 and 8, two columns, each standard followed by a rationale paragraph) and the Appendix (page 66, the place the record's locator names). The two printings agree word for word. The record holds the standard's printed name followed by its one sentence, as the lane's frame describes; the printed label with the number is the code. The rationale that the introduction prints under the standard is not part of the record, and the Summary takes nothing from it or from any grade-level standard.",
+      "rendition": "same-file",
+      "place": {
+        "page": 7,
+        "offset": 377
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings health-overarching",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.overarching-health-education-content-standards-2",
+      "wording_sha256": "9be6921cc0ceac08569cca4e8d31c08a6cdba90e191b6444196eeba1f6e83cdd",
+      "text_sha256": "9a6a1e7c061736fc38a93eecb85f77efaade94991ec629586d3c41ffbc5457d0",
+      "verdict": "confirmed",
+      "note": "Second reading on the page images of both printings in the same file: the introduction (pages 7 and 8, two columns, each standard followed by a rationale paragraph) and the Appendix (page 66, the place the record's locator names). The two printings agree word for word. The record holds the standard's printed name followed by its one sentence, as the lane's frame describes; the printed label with the number is the code. The rationale that the introduction prints under the standard is not part of the record, and the Summary takes nothing from it or from any grade-level standard.",
+      "rendition": "same-file",
+      "place": {
+        "page": 7,
+        "offset": 421
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings health-overarching",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.overarching-health-education-content-standards-3",
+      "wording_sha256": "1b5f78589f84622a94dea41e53e174a9fd2d562bbe032bbc1c36f07be883213a",
+      "text_sha256": "f8e4e9da56e170acffea7be60f832c114230084cb578c3d11fe4e32f2c0a2c5c",
+      "verdict": "confirmed",
+      "note": "Second reading on the page images of both printings in the same file: the introduction (pages 7 and 8, two columns, each standard followed by a rationale paragraph) and the Appendix (page 66, the place the record's locator names). The two printings agree word for word. The record holds the standard's printed name followed by its one sentence, as the lane's frame describes; the printed label with the number is the code. The rationale that the introduction prints under the standard is not part of the record, and the Summary takes nothing from it or from any grade-level standard.",
+      "rendition": "same-file",
+      "place": {
+        "page": 66,
+        "offset": 44
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings health-overarching",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.overarching-health-education-content-standards-4",
+      "wording_sha256": "7d81fd3f6944af530bbd8043e683c36304baadbe59334b84eb15e0e58ad97205",
+      "text_sha256": "62e687e78838d121804b9c94b0452c649af90845bea1d700e71200423b312877",
+      "verdict": "confirmed",
+      "note": "Second reading on the page images of both printings in the same file: the introduction (pages 7 and 8, two columns, each standard followed by a rationale paragraph) and the Appendix (page 66, the place the record's locator names). The two printings agree word for word. The record holds the standard's printed name followed by its one sentence, as the lane's frame describes; the printed label with the number is the code. The rationale that the introduction prints under the standard is not part of the record, and the Summary takes nothing from it or from any grade-level standard.",
+      "rendition": "same-file",
+      "place": {
+        "page": 8,
+        "offset": 104
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings health-overarching",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.overarching-health-education-content-standards-5",
+      "wording_sha256": "f93c66ad40c62d55755a19b7ea977174eb473c5197fe0bf35e00f47ae1db2b3e",
+      "text_sha256": "8357d50f80de4f544aae69e32b6206d416c77fe4d429cc7fca1674ced4a3c64c",
+      "verdict": "confirmed",
+      "note": "Second reading on the page images of both printings in the same file: the introduction (pages 7 and 8, two columns, each standard followed by a rationale paragraph) and the Appendix (page 66, the place the record's locator names). The two printings agree word for word. The record holds the standard's printed name followed by its one sentence, as the lane's frame describes; the printed label with the number is the code. The rationale that the introduction prints under the standard is not part of the record, and the Summary takes nothing from it or from any grade-level standard.",
+      "rendition": "same-file",
+      "place": {
+        "page": 8,
+        "offset": 160
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings health-overarching",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.overarching-health-education-content-standards-6",
+      "wording_sha256": "fa5185874fc0cfc360071276514e6511b495906dc0230d2d597790d2ecbdeecf",
+      "text_sha256": "d34d303ea947c37c19a59c645f1fb8e4c2ce066cb0f88b9d8f99119562101ae0",
+      "verdict": "confirmed",
+      "note": "Second reading on the page images of both printings in the same file: the introduction (pages 7 and 8, two columns, each standard followed by a rationale paragraph) and the Appendix (page 66, the place the record's locator names). The two printings agree word for word. The record holds the standard's printed name followed by its one sentence, as the lane's frame describes; the printed label with the number is the code. The rationale that the introduction prints under the standard is not part of the record, and the Summary takes nothing from it or from any grade-level standard.",
+      "rendition": "same-file",
+      "place": {
+        "page": 66,
+        "offset": 101
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings health-overarching",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.overarching-health-education-content-standards-7",
+      "wording_sha256": "9ac03660862670958676aaaea13a89ffe9689f527d0518fa2a8aba1d4a79072d",
+      "text_sha256": "5f7bcdbadb9ab859ffdba192fb1b1e7726e48a552beca7c4285135c55957567c",
+      "verdict": "confirmed",
+      "note": "Second reading on the page images of both printings in the same file: the introduction (pages 7 and 8, two columns, each standard followed by a rationale paragraph) and the Appendix (page 66, the place the record's locator names). The two printings agree word for word. The record holds the standard's printed name followed by its one sentence, as the lane's frame describes; the printed label with the number is the code. The rationale that the introduction prints under the standard is not part of the record, and the Summary takes nothing from it or from any grade-level standard.",
+      "rendition": "same-file",
+      "place": {
+        "page": 8,
+        "offset": 226
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings health-overarching",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.practical-life-feelings.objective.overarching-health-education-content-standards-8",
+      "wording_sha256": "a070b72b67bb085d541b5926c36b36591006e5b5b8a1f2a5a141467323fb9355",
+      "text_sha256": "12d81c38cf98ca1451c33146900c950c6926364d77dbc06109c6daec7227d030",
+      "verdict": "confirmed",
+      "note": "Second reading on the page images of both printings in the same file: the introduction (pages 7 and 8, two columns, each standard followed by a rationale paragraph) and the Appendix (page 66, the place the record's locator names). The two printings agree word for word. The record holds the standard's printed name followed by its one sentence, as the lane's frame describes; the printed label with the number is the code. The rationale that the introduction prints under the standard is not part of the record, and the Summary takes nothing from it or from any grade-level standard.",
+      "rendition": "same-file",
+      "place": {
+        "page": 8,
+        "offset": 286
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/practical-life-feelings health-overarching",
+      "round": 1
+    }
+  ],
+  "unrecorded": []
+}

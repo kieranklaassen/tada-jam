@@ -1,0 +1,395 @@
+{
+  "lane": "us-ca/grade-1/mathematics",
+  "verdicts": [
+    {
+      "id": "edu.us-ca.grade-1.mathematics.objective.1-g-1",
+      "wording_sha256": "1cba14d9e6d19892a2e6358a527de1c062e1db6a34231f57d772f342398e9e8a",
+      "text_sha256": "6c15497cbf976bf04061acf78a5889d18ac025233c0c3c626b219a13a3b35801",
+      "verdict": "confirmed",
+      "note": "Cluster heading checked on the page image: it is the boldface line this standard stands under. Statement equal on page 24; Limits says rightly that neither the statement nor its heading lists shapes.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 24,
+        "offset": 382
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.mathematics.objective.1-g-2",
+      "wording_sha256": "9b0674e3ea11c7c70a2db5d17dfed0bae255d55fb5c62916e6dac8c3bf25bf13",
+      "text_sha256": "96df55aa1a2a0b38c7d4b0d154d7774db81c19b034b311653f9cf227bea86b77",
+      "verdict": "confirmed",
+      "note": "Tolerant match: the PDF breaks one hyphenated compound of the statement across two lines at its hyphen (page 24); form. The footnote this record carries is marked by a raised digit at the very end of this standard (footnote 4 of page 24), not on a heading bar or a stem, so it holds for this record alone; it equals the accompanying footnote and Limits restates it faithfully. Cluster heading checked on the page image: it is the boldface line this standard stands under. ",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 24,
+        "offset": 413
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.mathematics.objective.1-g-3",
+      "wording_sha256": "63bea4f5d632edfdcf99fe0cee121c97d5ede11330f4ab1c47039da534eb8a60",
+      "text_sha256": "b02f89cb329d53ca1d47ead0a8edc46eab97ab9973179fef7c8b0aeab03c97f3",
+      "verdict": "confirmed",
+      "note": "Cluster heading checked on the page image: it is the boldface line this standard stands under. Statement equal on page 24, all three sentences. Near-copy check: the Summary keeps the order of the five things asked and about six in ten of the official words in order (longest shared run five words), the highest in the lane. Judged not a near copy, narrowly: more than half of the surviving words are the terms the statement prescribes (the two shapes, the two numbers, the three share names and the three phrases) and cannot be replaced without loss; every verb and connective is the pack's own. Limits gives the two shapes and the two numbers of shares exactly.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 24,
+        "offset": 455
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.mathematics.objective.1-md-1",
+      "wording_sha256": "27125a8792c67de1088984be34e88825b51d00a60e5aabd947fbf59cae7cae49",
+      "text_sha256": "b25b83552ce0aa364cdcce2d4b5d85b1ec707d73940b3406b6f008316f1b2618",
+      "verdict": "confirmed",
+      "note": "Cluster heading checked on the page image: it is the boldface line this standard stands under. Statement equal on page 24. Limits gives the two numbers (three objects ordered, two compared through a third) exactly and agrees with the heading, which speaks of length only.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 24,
+        "offset": 218
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.mathematics.objective.1-md-2",
+      "wording_sha256": "63c8f6a9fbdff66a6cfe80aaa2eef6ad73d4a260a71fe33fb0e0cb870d30c4c0",
+      "text_sha256": "165db24efa7f26c04c79c59c506d44f0411994c6ca2ccef9b230a29d02b2d60e",
+      "verdict": "confirmed",
+      "note": "Cluster heading checked on the page image: it is the boldface line this standard stands under. Statement equal on page 24, including its closing sentence (printed in italics), which the Summary and Limits keep as a restriction.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 24,
+        "offset": 236
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.mathematics.objective.1-md-3",
+      "wording_sha256": "1ca4446b277926461d61455d6fb103d58c410debd03de467990a87304deae6cc",
+      "text_sha256": "4211875889ba2c30b8bd3c8f00bf3102aaf19de14ebd5d0b0ba10429c9c8ab39",
+      "verdict": "confirmed",
+      "note": "Cluster heading checked on the page image: it is the boldface line this standard stands under. Statement equal on page 24.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 24,
+        "offset": 314
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.mathematics.objective.1-md-4",
+      "wording_sha256": "521276a61686b2ec1a7dba61d47529029b7fc4fa53b0ba5039519c45fcca4449",
+      "text_sha256": "8544febf567156b7de2fb60a6ca18e82407a102d2363629e3445f802c2d266fa",
+      "verdict": "confirmed",
+      "note": "Cluster heading checked on the page image: it is the boldface line this standard stands under. Statement equal on page 24; Limits gives the one number (at most three categories) exactly.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 24,
+        "offset": 333
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.mathematics.objective.1-nbt-1",
+      "wording_sha256": "5472e5bb029cd438cbde636cbd01bb4daace9caf1ccec5c1816c8a9c2451a078",
+      "text_sha256": "e69fbb3c580d8eb7ea92cf318c8b75de95c815c6e8403129e4fa3a3764ba1a9d",
+      "verdict": "confirmed",
+      "note": "Cluster heading checked on the page image: it is the boldface line this standard stands under. Statement equal on page 23; the number 120 is given exactly in Summary and Limits.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 23,
+        "offset": 416
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.mathematics.objective.1-nbt-2-a",
+      "wording_sha256": "7528cbc03bdccf8870a30543f9de57803502e3af223e3bd86793fcf932921dd2",
+      "text_sha256": "715356824ffe5dc99fa48d0bbd4a8676172704a07af2472f56ca4ed796cc8788",
+      "verdict": "confirmed",
+      "note": "Granularity: the PDF prints the stem once, as number 2 under the 1.NBT bar on page 23, with parts a, b and c beneath it; part a follows the stem directly. The PDF prints an em dash in part a where the record has a hyphen: form. Cluster heading checked on the page image: it is the boldface line this standard stands under. ",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 23,
+        "offset": 447
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-1/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.mathematics.objective.1-nbt-2-b",
+      "wording_sha256": "38c4c46e93a74791b5ba16fd1044a60ab59ea38c9f92ad874357c0f4407c67e4",
+      "text_sha256": "dcf40127d43b6d8d5821f480ca776c0a7fbafc5c3c639a645b11a4f87d465469",
+      "verdict": "confirmed",
+      "note": "Granularity: the PDF prints the stem once, as number 2 under the 1.NBT bar on page 23; between the stem and part b only part a stands. Cluster heading checked on the page image: it is the boldface line this standard stands under. Limits gives the range (11 to 19, one ten each) exactly.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 23,
+        "offset": 447
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-1/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.mathematics.objective.1-nbt-2-c",
+      "wording_sha256": "6a74649deb0388fe8f5abff4f0dacfe3cb65b688c99dbfc9718b57fb095ad106",
+      "text_sha256": "3a34dfddfa43ec95f09c51f95ecd5d5f8e9f33b73b61884710bf9bbd991097cd",
+      "verdict": "confirmed",
+      "note": "Granularity: the PDF prints the stem once, as number 2 under the 1.NBT bar on page 23; between the stem and part c only parts a and b stand. The nine tens numbers and the closing parenthesis are equal on the page image. Cluster heading checked on the page image: it is the boldface line this standard stands under. ",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 23,
+        "offset": 447
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-1/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.mathematics.objective.1-nbt-3",
+      "wording_sha256": "af63926ebfbb59d71e266c3505f1103b954d5a7fbdf4e7870fad57307f5d3317",
+      "text_sha256": "2c1c0f38f2dab684b9d1cfad1080b80ff7ffaa8513e76a39163cb33d8e0eb6c7",
+      "verdict": "confirmed",
+      "note": "This standard is the first line of page 24; its cluster heading is printed on page 23, above standard 2 of the domain, and no other heading comes between, so the heading the record carries is the right one. The three comparison signs are equal on the page image.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 24,
+        "offset": 4
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.mathematics.objective.1-nbt-4",
+      "wording_sha256": "84221958ca61b19d52b9e50e77d8a21def8dd7233326918a573584cd4ea1152f",
+      "text_sha256": "ec2add1c829e452bb6d782771effeecdfeccfca3fff96d4d95d9437719f526ef",
+      "verdict": "confirmed",
+      "note": "Cluster heading checked on the page image: it is the boldface line this standard stands under. The PDF breaks one word of the statement at a line end with a printed hyphen (page 24); the record holds the word whole: form. Near-copy check: the Summary follows the order of the conditions and keeps a little over half of the official words in order; the surviving words are the named cases and the named ways of working, and the closing clauses are restated. Judged not a near copy. Limits: the number 100 exact; what it says of the neighbouring statement on subtraction is true of 1.NBT.6.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 24,
+        "offset": 40
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.mathematics.objective.1-nbt-5",
+      "wording_sha256": "3da436ac08e2845e691cb14bac354e802a04e9b53ec82953d0930374112135fa",
+      "text_sha256": "26564eced5853d1424a8bcb240bb8b76f6d209e58af86514b2c64848ab902529",
+      "verdict": "confirmed",
+      "note": "Cluster heading checked on the page image: it is the boldface line this standard stands under. Statement equal on page 24.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 24,
+        "offset": 124
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.mathematics.objective.1-nbt-6",
+      "wording_sha256": "40a8a147331f8e3b7dce05171fa5a64b2bd51a2f26760f16094fde80737ab9ff",
+      "text_sha256": "880a8a53d79ae39f8a38861a403ec2e82ae00b8ccb415af147075e783a06341d",
+      "verdict": "confirmed",
+      "note": "Cluster heading checked on the page image: it is the boldface line this standard stands under. The PDF prints both ranges with an en dash and the record with a hyphen: form. Limits gives the range (multiples of 10 from 10 to 90, differences zero or more) exactly.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 24,
+        "offset": 148
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.mathematics.objective.1-oa-1",
+      "wording_sha256": "af1da04f0d61fe207212808c0405b2852505919fedc6226b557782cface78946",
+      "text_sha256": "c33cefd6f15f058e126ca29cd1936c0f4e8d6b0aaf29a824343c78b601f06d6c",
+      "verdict": "confirmed",
+      "note": "The footnote this record carries is marked by a raised digit at the very end of this standard (footnote 2 of page 23), not on the domain bar or the cluster heading, so it holds for this record alone. It is only a pointer to a table in the glossary, and Limits says so. Cluster heading checked on the page image: it is the boldface line this standard stands under. The number 20 and all five kinds of situation are kept.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 23,
+        "offset": 18
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.mathematics.objective.1-oa-2",
+      "wording_sha256": "b2f49e6f55029a1157ae380c91a05a181b9f3e9122886e29eca8f15369058a20",
+      "text_sha256": "a64607320bf6afcbbe6c32a7e7a6e356eaa6c9dbe31ec2c5306aa159e07cf361",
+      "verdict": "confirmed",
+      "note": "Cluster heading checked on the page image: it is the boldface line this standard stands under. Statement equal on page 23. Limits rightly says the statement asks for addition only while its heading speaks of both operations.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 23,
+        "offset": 67
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.mathematics.objective.1-oa-3",
+      "wording_sha256": "4c7583b9998475539e20b54e44d45357c3ac9eb1c95ac89f9e663fed63345d8b",
+      "text_sha256": "e1a92fce9a1fd4e742a5cb8a008f5df3cc4b4c4e54212ccc4ba58dbdc208a735",
+      "verdict": "confirmed",
+      "note": "The script did not find it because the PDF prints a raised footnote digit (3) inside the statement, directly after the full stop of its first sentence. Compared by eye on the image of page 23 and sentence by sentence on the text layer with that digit set aside: every word, number and sign is equal and the statement begins and ends where the record does (the examples are printed in italics). The footnote is marked on this standard itself, not on a heading bar or a stem, so it holds for this record alone; it equals the accompanying footnote and Limits restates it correctly. Cluster heading checked on the page image: it is the boldface line this standard stands under. Offset left out: the script could not align this record.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 23
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/grade-1/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.mathematics.objective.1-oa-4",
+      "wording_sha256": "b76e26a30f4b822e9ea3faf65136ba709c66314af37450cd19d52026d138c641",
+      "text_sha256": "d0772f44b135a1218b7d81309209745c1cad440a327d7cd5151eb302a2848342",
+      "verdict": "confirmed",
+      "note": "Cluster heading checked on the page image: it is the boldface line this standard stands under. The PDF prints the minus sign of the example as an en dash and the record as a hyphen: form. Limits rightly says neither statement nor heading sets a number range.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 23,
+        "offset": 177
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.mathematics.objective.1-oa-5",
+      "wording_sha256": "05d94e4630b72eb0b4419083b00c1215f7b3c2cb0a846364c780bbcf8a26ea6d",
+      "text_sha256": "abadd0102b32c920e77a298a3812ddb90f13a3ab888abda96767ff180c30b548",
+      "verdict": "confirmed",
+      "note": "Cluster heading checked on the page image: it is the boldface line this standard stands under. Limits rightly reports that the range of 20 comes from the heading, not from the statement.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 23,
+        "offset": 206
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.mathematics.objective.1-oa-6",
+      "wording_sha256": "23333c5dbbd6cfcdc56e42b777364e33645d054b0ecb11b028c171e3f04502b6",
+      "text_sha256": "3fa89cb7e3198ffe3d51199048664e8462b78e85d3c6e1016cbc580eb1112e89",
+      "verdict": "confirmed",
+      "note": "Cluster heading checked on the page image: it is the boldface line this standard stands under. All five example calculations compared number by number on the image of page 23: equal. The PDF prints minus signs as en dashes, the record as hyphens: form. Limits gives both ranges (20 for adding and subtracting, 10 for fluency) exactly.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 23,
+        "offset": 222
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.mathematics.objective.1-oa-7",
+      "wording_sha256": "c9ebf103cbba3978c7c2ed0e9c72c06fd5eb70c5e8cc2192446f34b324c8306b",
+      "text_sha256": "18687be3f67c14bd2b59a23d2100e262f164b071d2142564b847fdf6fe3026a3",
+      "verdict": "confirmed",
+      "note": "Cluster heading checked on the page image: it is the boldface line this standard stands under. The four example equations compared sign by sign on the image of page 23: equal (the minus sign is an en dash in the PDF, a hyphen in the record: form).",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 23,
+        "offset": 320
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.mathematics.objective.1-oa-8",
+      "wording_sha256": "5d9226e4b6852189f5bccd08fd1ac25da666c6084c10e801785e260a0279d786",
+      "text_sha256": "d653c4390f5054ad9ee88a67566154c14985f9bb876beb3ff0733b437533c017",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "A real difference between two official renditions; the record follows its canonical source, the export, exactly. The closing example of the statement lists three equations, each with a placeholder for the unknown number. The adopted PDF (page 23) prints a question mark as the placeholder in the first equation and an empty square box in the second and in the third; the record, like the cell of the export, has a question mark in all three. So two characters differ, the placeholders of the second and third equations. No word and no number differs, and the statement begins and ends where the record does. The script reported a match because it compares word tokens and does not see the placeholders. The export is encoded in Windows-1252, which has no box character, so its question marks at those two places are probably a substitution made by the export: an importer or export matter, not something to fix in the pack's text. The Summary shows all three placeholders as question marks, following the export; its meaning is not affected, and In a child's hands already speaks of an empty box. Cluster heading right; Limits right.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 23,
+        "offset": 366
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.mathematics.objective.1-oa-8",
+      "wording_sha256": "561fdfdd7ad1c6c8a22ce88007ed00a8c3f1d9b61dfb109fbfdfd92abda2be28",
+      "text_sha256": "d653c4390f5054ad9ee88a67566154c14985f9bb876beb3ff0733b437533c017",
+      "verdict": "confirmed",
+      "note": "Round 2. The wording is the export's as corrected from the adopted document at two places (at each, a symbol the export had lost is restored). It now equals the page image (PDF page 23, number 8, the last statement under the last cluster heading of the domain, two lines, directly above the bar of the next domain): in the closing example the unknown of the first equation is a question mark and the unknowns of the second and of the third equation are empty square boxes; numbers, signs and order are equal, and the statement starts and ends where the record does. Compared by eye: the script's token match holds at this place but does not see the three placeholders, and the PDF's text layer holds the box as a private-use glyph, so the page image is what settles it. The minus sign is an en dash in the PDF and a hyphen in the record: form. Cluster heading right. Summary judged again: faithful (one unknown, addition or subtraction, three whole numbers; the three examples kept as examples, each with its numbers right and the position of its unknown named correctly) and of the pack's own shape (the examples are regrouped by the role of the unknown and given in another order). It writes the placeholder as a question mark in all three examples, where the wording now has a box in two: notation only, no number or position changes, but it could be brought in line with the corrected wording. Limits right: neither the statement nor its heading sets a range, the examples stay within 12, and other statements of the domain work within 20. The two wrong answers under Common mistakes are worked correctly from the examples.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 23,
+        "offset": 366
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/grade-1/mathematics round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-1.mathematics.objective.1-oa-8",
+      "wording_sha256": "561fdfdd7ad1c6c8a22ce88007ed00a8c3f1d9b61dfb109fbfdfd92abda2be28",
+      "text_sha256": "b5df40199421946876f05d74a0e04ce23f9cf16e51f66f0d6a8c3fca309ff379",
+      "verdict": "confirmed",
+      "note": "Round 3. Confirmed in round 2; two changes since. (1) The Summary now writes the unknown as an empty box in two of its three examples and as a question mark in one, each in the equation where the stored wording and the page have it (checked example by example against the page image, PDF page 23). (2) Limits has one new sentence saying that the stored wording is the export's as corrected from the adopted document at two places. That is what the importer's list holds for this code (two corrections, each restoring a box the export had lost), and both are right on the page image: the unknown of the first equation is a question mark, those of the second and of the third are empty square boxes. The PDF's text layer holds the box as a private-use glyph, so the image settles it; the script's token match holds at this place but does not see the placeholders. The minus sign is an en dash in the PDF and a hyphen in the record: form. Read whole: Summary faithful (one unknown, addition or subtraction, three whole numbers; the three examples kept as examples, their numbers right, the role of the unknown named rightly in each) and in the pack's own shape (the examples regrouped by role and given in another order). Limits right: no number range in the statement or in its heading, the examples stay within 12, neighbouring statements work within 20. The two wrong answers under Common mistakes are worked rightly (19; 2). The statement is number 8, the last under the last cluster heading of the domain; it starts and ends where the record does. Cluster heading right.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 23,
+        "offset": 366
+      },
+      "matched_by": "agent",
+      "corrections_verified": true,
+      "checker": "us-ca/grade-1/mathematics round 3",
+      "round": 3
+    }
+  ],
+  "unrecorded": [
+    {
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "code": "1.NBT.2",
+      "place": {
+        "page": 23,
+        "offset": 447
+      },
+      "explained": "parent of sub-part records; the source has no row for it. The PDF prints it as number 2 under the 1.NBT domain bar with parts a, b and c beneath; its stem stands at the head of the records 1.NBT.2.a, 1.NBT.2.b and 1.NBT.2.c. Found by eye: the PDF prints no full codes. Count by eye on pages 23 and 24: 1.OA 8 numbered standards, 1.NBT 6 numbered and 3 lettered, 1.MD 4, 1.G 3; 21 numbered and 3 lettered in all, 23 leaves, one record each."
+    }
+  ]
+}
