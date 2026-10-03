@@ -7,8 +7,15 @@
 - **The text to check in round 2 is the sheet as it stands at commit `6a861da`**, sheet hash (everything above `## The look`) `a056b98a28a59d858576b614289a79309c5d3f41c673e48787baf613ca346ae4`.
 - For the round 2 checker, what differs from the text round 1 read beyond the ten pastes, all written so that the sheet says what the rules do: under "The designed order", the sentence on heard hides starting over for a new asker, "and everyone who came to ask has found its own" in the first paragraph, and "never two of one kind" in the `hill` row; under "The scenes", the scene lengths (now held by `beats.test.ts`), "the last one of the clutch has found its own" and "turns to the front" in the choir, and the last sentence of the restart paragraph, which follows the pasted one ("A tap on a hide while nobody is at the stone brings the next one in as well, and is then a first tap."); under the grid, "The grid itself is in `grid.ts`."
 - Rules: written as pure modules with tests while the check ran, at the builder's own risk, and brought into line with the sheet at `6a861da` after the pastes (the basket has no egg in a first clutch and gets one when the next clutch is laid out; what waits at the edge says which way of asking it is): `voices.ts`, `tastes.ts`, `places.ts`, `layout.ts`, `world.ts`, `save.ts`, `grid.ts`, `guide.ts`, `beats.ts`, and the tests beside them with `play.test.ts` and `consequence.test.ts`. A finding of round 2 under the representation, the mechanic questions, the error, the designed order or the records reopens them.
-- Look in use: painted-tissue collage, the first reserved look. The spike is being built in this run.
+- Look in use: painted-tissue collage, the first reserved look. **The spike is done**: the Mount draws the game's real scene at the place `three-eggs` at load, from a fixed seed, with nothing playable behind it (`kinds=1` in the address shows the six kinds in a row). The art guide is in `ART.md` under "The look". Its own stills were taken at 1180 by 820, pixel ratio 2, on software rendering, and are kept outside the repository. No frame rate was taken: this machine has no graphics card.
 - Renderer: canvas 2D, as the brief suggests.
+- This run ends here, as the brief says: sheet, look spike and rules. No toy and no gameplay is on screen. The next run needs the round 2 report and the commit that holds what the canvas pilot changed in the template.
+- Requests to the lead:
+  - The still of the spike at 1180 by 820 and its frame rate at pixel ratio 2 on a real graphics card.
+  - A row in the claimed-styles registry of `docs/art-direction.md` when the look is accepted: `Who Made That Sound | Painted-tissue collage (canvas 2D): flat pieces of streaky hand-painted tissue with torn and scissored edges on a white page, one bright hue for each creature, plain pale eggs on one dark ground strip, no shadows and no line | games/who-made-that-sound/ART.md`.
+  - Ears on the voices, once the toy makes them sound: see "For the owner to decide".
+- Findings not fixed: what is still weak in the picture is listed at the end of "The look" in `ART.md` (`tok`'s charm and wings, turquoise on green, the asker's spot when a `brrl` asks). `tissue.ts` and `spikeScene.ts` run a little over two hundred lines and want a `props.ts` split off at the toy stage.
+- Checks run on this machine at the last commit: `npx tsc --noEmit`; `npx vitest run games/who-made-that-sound test/games.test.ts` (26 files, 359 tests, under 6 seconds); `npm run -s wordless:check`; `node scripts/egress-check.ts`; `npm run build`; `npm run egress:built`; `npm run education:built`. All passed. CI on the branch has not been read from here.
 - Open: sheet ready for check, round 2
 
 The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Ask for the sheet's check by writing `Open: sheet ready for check, round N` here; when it passes, record the round and the commit it judged. Someone with no session to read resumes from this block and the files. The two parts below belong to the block.
@@ -23,7 +30,12 @@ One entry a file copied from the template (version 2), for the lead and for the 
 - `guidance.ts`: used as copied. The game's `guide.ts` says where the glow and the ghost hand go; the timing stays the template's.
 - `scene.ts`: used as copied. The game's `beats.ts` builds each scene as plain timed cues, which the view will turn into `Beat`s.
 - `input.ts`, `overlay.ts`: used as copied. The game has no drag, so only `press` and `tap` will be used.
-- The Mount (`who-made-that-sound.tsx`): changed only so that `draw` draws the look spike and counts its sprites. It still reads and saves the template's three fields; it moves to `save.ts` when the toy goes in.
+- The Mount (`who-made-that-sound.tsx`): changed only so that `draw` draws the look spike and counts its sprites. It still reads and saves the template's three fields; it moves to `save.ts` when the toy goes in. What a canvas game found missing, **for the template**:
+  - No fit of a design space to the surface: every canvas 2D game will write its own (`fit` in `stage.ts` here).
+  - `draw()` can be called from the load before the first `resize`, so a renderer has to return early while the width or height is 0.
+  - Nothing tells the renderer that the pixel ratio changed, so it has to key its cached layers on the canvas size and the ratio inside `draw`.
+  - "Under about 80 draw calls" is written for WebGL. A jointed cut-out figure is 11 to 14 `drawImage` calls, so a full hill and a full row go past 80 sprites; the spike's scene is 74. A figure that stands still could be flattened into one sprite. The bar needs a canvas reading.
+- For stills on this machine: the installed Playwright looks for a Chromium build that is not there, so a script passes `executablePath: '/opt/pw-browsers/chromium'`. A portrait viewport shows the shell's rotate screen, so only landscape shapes were looked at.
 - The four frozen files are untouched.
 
 ### For the owner to decide

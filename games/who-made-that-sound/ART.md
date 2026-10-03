@@ -229,4 +229,58 @@ Who Made That Sound is designed from three California foundations published by a
 
 ## The look
 
-Written after the style spike, not part of the sheet: the claimed look, the palette, materials, lighting and motion rules, and how each tier in `config.ts` keeps the look.
+Written after the style spike, not part of the sheet. The look is **painted-tissue collage**, the first look reserved for the game in the ledger of `docs/art-direction.md`: flat pieces of hand-painted tissue with brush streaks and torn or scissored edges, laid on a white page, one bright hue for each creature. No shadows, no depth, no lamp, no ink line, no shading bands.
+
+The spike is the game's real scene at the place `three-eggs`, drawn by the Mount at load from a fixed seed with nothing playable behind it. Adding `kinds=1` to the address shows the six kinds in a row, grown and little.
+
+### Palette
+
+| Thing | Colour |
+| --- | --- |
+| The page | `#fdfbf4`, with faint fibres |
+| The hill | `#56a83f`, one big torn piece with a pale torn rim |
+| The ground strip (the working surface) | `#4b362d`, plain and dark, torn top and bottom |
+| Every egg | `#f6e9cd`, the same plain pale egg from one sprite |
+| The calling stone | `#b7b1c4`, a slab |
+| The basket | `#a9c63b`, woven from leaves of `#7fa52e` and `#c3d64f` |
+| `pip` | `#f6b100` |
+| `tok` | `#e63e2b` |
+| `hoom` | `#2d6fdb` |
+| `brrl` | `#8d4bd0` |
+| `wheep` | `#ee4c9b` |
+| `dooo` | `#1cc4cf` |
+| Eyes | white `#fbf6e9`, pupil and the dark inside a cracked egg `#2c2432` |
+
+No creature shares its hue with the hill, the ground or the eggs. A grown one and its little one share hue and shape, the little one at about half the size.
+
+### Materials
+
+- Every piece is cut from a sheet of tissue painted once at load: brush passes with bristle marks in lighter and darker tones of the one hue, with a little of a neighbouring hue (`tissue.ts`).
+- Edges are scissor-cut or torn, from the same seeded stream, so the same seed gives the same picture.
+- Wings, ears and feet take the creature's hue a little darker, and thin pieces are slightly see-through, so an overlap reads without any line.
+- The working objects stay plain: the eggs carry no pattern and no face, and the ground strip under them is one flat dark hue. A hide that has been heard is the same egg torn along zigzag teeth with its top lifted like a lid and two eyes in the gap.
+
+### Lighting
+
+None. Nothing casts a shadow and nothing is shaded. Depth is only what lies on top of what.
+
+### Motion
+
+Cut-out animation: each creature is a few whole pieces (body, head or neck, two wings, feet, eyes) that turn at their joints (`figures.ts`). At idle there is a small sway and blinks, driven by the attended clock alone. Each kind's own moves (its entrance, its trick, its tastes) are named in `grid.ts` and `tastes.ts` and are built with the toy and the game.
+
+### Layout
+
+A design space of 1180 by 820, fitted to the surface and centred (`stage.ts`). The hill is across the back with four places on it. The row is across the middle on the ground strip, the calling stone to its left, the basket to its right, and the one who waits leans in at the right edge of whatever the surface shows. Nothing is in the bottom 12 percent. Every target is about 100 logical pixels across or more and no two overlap, which `stage.test.ts` holds.
+
+### Tiers
+
+A tier changes the pixel ratio only (`config.ts`): textures and pieces are painted and cut again at the new ratio, and the picture is the same picture at every tier. A frame is cached sprites drawn with `drawImage`: 74 in the spike's scene.
+
+### Still weak
+
+- `tok` is the least charming of the six, and its wings are too small for the asking pose to read.
+- The little `dooo` (turquoise) on the green hill is the lowest contrast on the page, and little ones on the hill are just under 100 pixels tall as figures, though their spots are larger.
+- The blue `hoom` on the dark ground has less contrast than the figures on the hill.
+- The asker's spot is sized for `hoom`; a `brrl` asking would reach up into the first hill place.
+- The hill is a very regular dome and large for two residents.
+- A row of four hides meets the gap rule exactly.
