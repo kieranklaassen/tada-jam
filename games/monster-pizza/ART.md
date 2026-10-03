@@ -184,23 +184,61 @@ Each scene is a list of timed beats filled in from the state of play, built on `
 
 ## The records
 
-One heading per jurisdiction, never one list or table that pairs them; a game with no learning goal has no records part.
+Read through the lookup on 2026-10-03. Each record is named by pack id and official code, with its standing and check state as the lookup prints them. What a record asks is given in the game's own words or the pack's Summary.
 
 ### us-ca
 
-The records the game is designed from, by pack id or official code, each with its standing and check state as the lookup prints them; the level with the basis the lookup prints; any lane label and any gap as printed; and the limits taken from each record's Limits. The pack's own Summary or the game's own words only, never the official wording.
+Levels: `preschool-tk` (returned at ages 4 and 5) and `kindergarten` (returned at ages 5 and 6). Age mapping: official at ages 4, 5 and 6; derived at age 7.
+Gap, as printed at age 7: "Grade 2 is not in the pack. A first grader turns seven during the year; a child who starts the school year at seven is in grade 2." Age 7 returns `grade-1`, and the game is designed from no grade 1 record: that lane works with numerals and sums, which this game does not show. The `cross-grade` lane is returned from age 5 and is not used.
+At age 4 the game rests on foundations only.
+
+- `edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-1-0-counting-and-cardinality-1-2` (`us-ca 1.2`, Mathematics, Strand 1.0): department-published-foundation, confirmed. A child counts a set by giving each thing exactly one number word.
+  What the game takes: one tap, one piece and one note for each thing, so a child who counts aloud has one piece for each word. The game itself says no number word.
+  Limits taken: sets of five or more at the earlier age and ten or more at the later age, both lower bounds. Left open by Limits: any upper bound, the layout, adult help. The game's own choices: it stops at ten, and the places `a-few` to `two-kinds` hold sets of five at most, most of them below the lower bound of five, as an easy start that lies outside this record.
+- `edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-1-0-counting-and-cardinality-1-6` (`us-ca 1.6`, Mathematics, Strand 1.0): department-published-foundation, confirmed. A child looks at two sets and tells how they compare in number; at the later age by counting both.
+  What the game takes: the set on the card and the set of that kind on the pizza are the two sets, and the child makes the second hold as many as the first.
+  Limits taken: two groups only; at the earlier age the difference is plain to see and counting is optional. Left open by Limits: the number range, which is the game's own choice of ten. How many more is not asked, and the game never asks it: a tasting plays the difference out, and the child is not asked to name it. An order of two or three kinds is several pairs of groups on one pizza, which is the game's own choice.
+- `edu.us-ca.kindergarten.mathematics.objective.k-cc-5` (`us-ca K.CC.5`): state-board-adopted-standard, confirmed. The child counts to find how many things there are; told a number, the child also counts out a group of that size.
+  What the game takes: counting to find how many, on the card and on the pizza. Not taken: counting out from a number that is told. The game tells no number, by numeral or by voice, so its step from a picture to a set does not rest on this record.
+  Limits taken: up to 20 things in a row, a grid or a ring, and up to 10 when scattered. The pictured rows hold ten at most, the pizza's scattered set is ten at most for any order, and the scattered card of the last place holds ten at most. Beyond the record: the pizza has room for twelve, so a child can lay eleven or twelve scattered pieces; no order asks for that.
+- `edu.us-ca.kindergarten.mathematics.objective.k-cc-6` (`us-ca K.CC.6`): state-board-adopted-standard, confirmed. Looking at two groups of things, the child tells whether one holds more, fewer or as many as the other; pairing things off and counting both are example ways.
+  What the game takes: making the pizza's group hold as many as the card's, by pairing or by counting, and reading more and fewer from the tasting.
+  Limits taken: groups of objects, not written numerals; groups of up to ten are named as included, which is not a cap; pairing and counting are examples, not the only ways.
+- `edu.us-ca.preschool-tk.practical-life-feelings.objective.approaches-to-learning-strand-2-0-executive-functioning-2-1` (`us-ca 2.1`, Approaches to Learning, Strand 2.0): department-published-foundation, confirmed. Children keep a few pieces of information in mind and act on them in tasks of several steps.
+  What the game takes: the size of an order, which holds one kind at first, then two, and three at most, and a job of three steps in a fixed order.
+  Limits taken: about one or two pieces at the earlier age and about two or three at the later age, stated as ranges. Adult support is part of both statements and the game gives none; the card also stays in view, so the game asks for less holding in mind than the statement describes. Left open by Limits: the length of time.
 
 ### nl
 
-The same four things for the Dutch records, with the regime of a core goal.
+Level: `fase-1`, with the sub-band printed for each age: groep 1 at age 4, groep 1 or groep 2 at age 5, groep 2 or groep 3 at age 6, groep 3 at age 7. Age mapping: convention.
+`peuters` is returned for a child who has only just turned four. The `einde-po` lane is returned beside every age, labelled end-of-primary goals, and is not used. At age 7 `fase-2` (groep 4) is also returned, and the game is designed from no fase 2 record.
+None of these records is a core goal, so none has a regime.
+
+- `edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-getallen-getalbegrip-hoeveelheden-3` (`nl Hoeveelheden / 3`, the pack's code for a bullet of the content card for peuters): curriculum-institute-guidance, confirmed. Making one-to-one pairs by putting objects with each other.
+  What the game takes: the pairing of each drawn piece with one piece on the pizza.
+  Limits taken: it describes what is offered to children of about 2 to 4 before school, not what a child must do. Left open by Limits: counting, number words and the number of objects, none of which it names; the amounts are the game's own choice.
+- `edu.nl.fase-1.mathematics.objective.af14ff56-8932-4032-bd6c-031aeb12ab5d` (`nl rw/gb/2/01/fase1`): curriculum-institute-guidance, confirmed. Counting amounts to find how many, and learning the rules of counting.
+  Limits taken: up to at least 20, with no upper limit; it says what a school offers in fase 1 and names no year inside the band. Left open by Limits: which rules of counting. Stopping at five and then at ten is the game's own choice inside this.
+- `edu.nl.fase-1.mathematics.objective.0b3e8f72-07b7-4fad-8ec6-10d82fd65b62` (`nl rw/gb/2/08/fase1`): curriculum-institute-guidance, confirmed. Showing an amount in another form.
+  What the game takes: an amount shown as a picture is made again in objects.
+  Limits taken: up to at least 20. The forms the source prints with this goal are an example, not a limit, so pictures and objects alone are within it. Ten at most is the game's own choice.
+- `edu.nl.fase-1.mathematics.objective.a9357f6e-1801-45cd-b570-42993c24a14a` (`nl rw/gb/2/03/fase1`): curriculum-institute-guidance, confirmed. Comparing and ordering amounts.
+  What the game takes: comparing two amounts. Ordering amounts is not used.
+  Limits taken: up to at least 20. Left open by Limits: the size of the larger amounts it also mentions, which the game does not use.
+
+nl has no record here for carrying out the steps of a job in order, and the game names nothing in its place. `nl rw/m/6/04/fase1`, which is about putting events in order of time, is not one the game is designed from: the child places no events in order.
 
 ### Where the two differ
 
-Each difference written as a difference, and which jurisdiction the game follows at that point.
+- **The range and the layout.** The us-ca standard K.CC.5 bounds a scattered set at 10 and an arranged one at 20. The nl goals say up to at least 20 and name no layout. The game follows us-ca here, the tighter of the two: ten at most, scattered or in rows.
+- **Starting from a picture.** In us-ca, counting out a set starts from a number that is told (K.CC.5), which this game cannot do without a numeral or a voice; its step from picture to set rests on K.CC.6 and foundation 1.6. In nl, showing an amount in another form is a goal of its own (rw/gb/2/08/fase1). The play is the same under both, and each claim rests on its own records.
+- **The steps of the job.** us-ca has foundation 2.1, for ages 4 and 5 and with adult support. nl has no record. The game follows us-ca for the size of an order, and claims nothing for nl.
+- **The ages covered.** The us-ca records reach from age 4 to age 6: foundations at 4 and 5, kindergarten standards at 5 and 6, and nothing at 7. The nl fase 1 goals cover groep 1 to 3, about ages 4 to 7 by convention. So the top of the band is the game's own stretch in us-ca and inside fase 1 in nl.
+- **The standing.** The us-ca records are two adopted standards and three foundations. The nl records are all guidance.
 
 ### The claim
 
-One sentence in the words of each record's standing saying what the game is designed from, with the state and reason for any record that is not confirmed, and no word about what a child has reached.
+Monster Pizza is designed from, in California, three foundations published by a state department for preschool and transitional kindergarten (mathematics 1.2 and 1.6, and approaches to learning 2.1), which are foundations and not standards, and two kindergarten content standards adopted by the State Board of Education (K.CC.5 and K.CC.6); and, in the Netherlands, guidance of the curriculum institute SLO, which is not law: one statement of its content card for peuters and three of its goals for fase 1, which say what a school can offer and not what a child must know. All nine records are confirmed. What the game is designed from in them is making a set that holds as many as a pictured set, by pairing one to one or by counting, with sets of up to ten, and, from the California foundation 2.1 alone, an order of one to three kinds worked through in three steps. It is designed from no California record for a seven-year-old and from no Dutch record for the steps of a job.
 
 ## The look
 
