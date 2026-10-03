@@ -3,9 +3,10 @@
 
 ## Status
 
-- Stage: template copied. No sheet yet.
-- Look in use: none yet.
-- Open: the design sheet in `ART.md` and its check.
+- Stage: sheet. Remote builder, branch `lane/seed-lab`, cut from base commit `2a133cc41b6199cdb4da8ac3c2852eb401f82b61`. Renderer: canvas 2D.
+- The sheet is whole at commit `e08d3944df8271fd3bf5b99de28cbf26c651ce12`. Hash of its sheet part (everything above `## The look`): `c3303b4373c1643d1d687f1ff0cdf3771aec35c15bf3830aff1607974f39d087`.
+- Look in use: none yet. First reserved look: Naturalist's field journal. Second: Ink brush.
+- Open: sheet ready for check, round 1
 
 The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Ask for the sheet's check by writing `Open: sheet ready for check, round N` here; when it passes, record the round and the commit it judged. Someone with no session to read resumes from this block and the files. The two parts below belong to the block.
 
@@ -15,7 +16,11 @@ No entry yet. One entry a file copied from the template, written for the lead an
 
 ### For the owner to decide
 
-Nothing yet. One line for each thing only the owner can settle: the look and the toy at the toy checkpoint, a default the game would like changed, and anything the guide does not rule on.
+One line for each thing only the owner can settle.
+
+- **The count beside a sorted group.** When a brood is sorted into like young, the sheet lays a numeral (one to six) beside each group. The game reads that as a numeral on a quantity the child made. The default on readings leaves out a part count as a gauge of how well the child's work did. No count here is better than another, but the line between the two is the owner's. If he rules it a reading, the groups stay and the numerals go; nothing else in the game changes.
+- **No letters, so no cross table in its school form.** The school form of this idea writes factors as letters. Under the default the game stops at beads and numerals. Nothing is asked for; it is listed so that he knows where the bridge to the school form ends.
+- **The look and the toy**, at the toy checkpoint.
 
 ## Pass log
 
