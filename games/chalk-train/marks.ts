@@ -69,7 +69,7 @@ const wrap = (a: number): number => {
 function crosses(a: Pt, b: Pt, c: Pt, d: Pt): boolean {
   const side = (p: Pt, q: Pt, r: Pt) => (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x)
   const d1 = side(c, d, a), d2 = side(c, d, b), d3 = side(a, b, c), d4 = side(a, b, d)
-  return d1 * d2 < 0 && d3 * d4 < 0
+  return d1 > 0 !== d2 > 0 && d3 > 0 !== d4 > 0
 }
 
 /** Reads a tidied mark. */

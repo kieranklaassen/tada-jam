@@ -17,7 +17,7 @@ export function lengths(pts: readonly Pt[]): { each: number[]; total: number } {
 
 export const pathLength = (pts: readonly Pt[]): number => lengths(pts).total
 
-/** The same path as points a fixed step apart, ends kept. A single point stays a single point. */
+/** The same path as points a fixed step apart, from its first point to its last; a last stretch under a quarter of a step is let go. A single point stays a single point. */
 export function resample(pts: readonly Pt[], step: number): Pt[] {
   if (pts.length < 2) return pts.map((p) => ({ x: p.x, y: p.y }))
   const out: Pt[] = [{ x: pts[0].x, y: pts[0].y }]
@@ -94,7 +94,8 @@ export function crossings(a: readonly Pt[], b: readonly Pt[]): number {
     for (let j = 1; j < b.length; j++) {
       const d1 = side(b[j - 1], b[j], a[i - 1]), d2 = side(b[j - 1], b[j], a[i])
       const d3 = side(a[i - 1], a[i], b[j - 1]), d4 = side(a[i - 1], a[i], b[j])
-      if (d1 * d2 < 0 && d3 * d4 < 0) count++
+      // A point that lies exactly on the other path belongs to one side, so a crossing there is counted once.
+      if (d1 > 0 !== d2 > 0 && d3 > 0 !== d4 > 0) count++
     }
   }
   return count
