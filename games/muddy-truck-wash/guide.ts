@@ -2,11 +2,10 @@ import type { Guidance } from './guidance'
 import { handPose, type HandPose } from './guidance'
 import type { Play } from './play'
 import { TOOL_HOME, TOOL_MIDDLE } from './props'
-import type { VehicleId } from './roster'
 import { patchCentre } from './silhouette'
 import { GRID_H, GRID_W, WORK, allShiny, cellAt, nextTool, type Tool } from './surface'
 
-// What the idle ladder shows in this game: a glow on what can be touched now,
+// What the idle ladder shows in this game: a glow on the tools that can be taken,
 // then a ghost hand making one move. One move only, chosen from what is on
 // the vehicle: how a tool is taken, where the tool in hand can work, or that
 // the vehicle at the door can be touched. Never the whole order of a wash.
@@ -15,8 +14,8 @@ import { GRID_H, GRID_W, WORK, allShiny, cellAt, nextTool, type Tool } from './s
 export type Hint = {
   /** 0..1: how strongly the touchable things glow. */
   glow: number
+  /** The tools on the rack: everything else that answers a touch is a vehicle, and a vehicle is alive already. */
   tools: Tool[]
-  vehicles: VehicleId[]
   /** The ghost hand's fingertip in the world, or null when no move is being shown. */
   hand: { x: number; y: number; z: number; press: number; opacity: number } | null
 }
@@ -46,13 +45,11 @@ function workRow(play: Play, tool: Tool): { from: [number, number]; to: [number,
 export function hintFor(play: Play, guidance: Guidance, out: Hint): Hint {
   out.glow = guidance.glow
   out.tools.length = 0
-  out.vehicles.length = 0
   out.hand = null
   if (guidance.glow <= 0 && guidance.demo === null) return out
   const shiny = allShiny(play.bay.surface)
-  // Everything that answers a touch glows: the tools on the rack, the vehicle in the bay, the one at the door.
+  // The tools on the rack glow.
   for (const tool of ['sponge', 'hose', 'cloth'] as const) if (play.hand !== tool) out.tools.push(tool)
-  out.vehicles.push(play.bay.def.id, play.next.def.id)
   if (guidance.demo === null) return out
 
   const bay = play.bay.motion
@@ -79,5 +76,5 @@ export function hintFor(play: Play, guidance: Guidance, out: Hint): Hint {
 }
 
 export function emptyHint(): Hint {
-  return { glow: 0, tools: [], vehicles: [], hand: null }
+  return { glow: 0, tools: [], hand: null }
 }

@@ -256,21 +256,23 @@ export function dripScene(play: Play, who: Vehicle, patch: DriedPatch): { beats:
         m.lookAt = { side: 0.2, up: 0.5 }
         play.say(voices.drip())
         // The drop lives exactly as long as its fall, so it ends on the patch.
-        play.particles.emit(KIND.drop, tap.x, tap.y - 0.1, tap.z, 0, 0, 0, 0.17, fall)
+        play.particles.emit(KIND.drop, tap.x, tap.y - 0.1, tap.z, 0, 0, 0, 0.26, fall)
       }),
       cue(0.9 + fall, () => {
         who.surface = surface
         play.say(voices.poke.squelch(), 0.6)
         play.say(voices.puzzled(who.def.horn.low, who.def.horn.high))
-        play.particles.burst(KIND.drop, 4, tap.x, patch.y + 0.2, m.homeZ + 0.9, 0.9, 1.2, 0.05, 0.6)
+        play.particles.burst(KIND.drop, 9, tap.x, patch.y + 0.2, m.homeZ + 0.9, 1.4, 1.6, 0.07, 0.8)
         play.particles.burst(KIND.splat, 2, tap.x, patch.y, m.homeZ + 0.98, 0.2, -0.3, 0.09, 1.3)
         m.cross = 1
         m.lookAt = { side: 0.1, up: -0.1 }
       }),
-      cue(1.5 + fall, () => { m.kick(-2, 0.7); m.cross = 1 }),
-      cue(1.8 + fall, () => m.kick(-2, -0.7)),
-      drive(2.2 + fall, 0.9, who, under, bay, outCubic),
-      cue(3.1 + fall, () => { m.lookAt = null }),
+      // It stays cross-eyed at the patch for a long moment: the mud is still there.
+      cue(1.5 + fall, () => { m.cross = 1 }),
+      cue(2.0 + fall, () => { m.kick(-2, 0.7); m.cross = 1 }),
+      cue(2.3 + fall, () => m.kick(-2, -0.7)),
+      drive(2.7 + fall, 0.9, who, under, bay, outCubic),
+      cue(3.6 + fall, () => { m.lookAt = null }),
     ],
   }
 }

@@ -40,7 +40,8 @@ export class ToolsView {
     }
   }
 
-  update(dt: number, seconds: number, hand: Hand, spot: ToolSpot): void {
+  /** `glowing` are the tools the idle ladder is pointing out, and `glow` how strongly, 0 to 1: they swell with it. */
+  update(dt: number, seconds: number, hand: Hand, spot: ToolSpot, glowing: readonly Tool[] = [], glow = 0): void {
     this.jet.visible = false
     for (const tool of TOOLS) {
       const mesh = this.tools[tool]
@@ -84,8 +85,10 @@ export class ToolsView {
         // A rub wiggles the sponge and the cloth; the sponge is pressed flat against the paint.
         mesh.rotation.z = work * Math.sin(seconds * 22) * (tool === 'cloth' ? 0.22 : 0.12)
         const flat = tool === 'sponge' ? work * (0.28 + 0.08 * Math.sin(seconds * 30)) : 0
-        mesh.scale.set(1 + flat * 0.4, 1 + flat * 0.25, 1 - flat)
+        const swell = glowing.includes(tool) ? 1 + glow * 0.08 : 1
+        mesh.scale.set((1 + flat * 0.4) * swell, (1 + flat * 0.25) * swell, (1 - flat) * swell)
       }
+      if (tool === 'hose') mesh.scale.setScalar(glowing.includes(tool) ? 1 + glow * 0.12 : 1)
     }
   }
 

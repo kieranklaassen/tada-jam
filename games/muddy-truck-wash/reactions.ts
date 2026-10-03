@@ -65,6 +65,7 @@ export function react(hand: Hand, met: Patch, m: Moment): Reaction {
   if (met === 's') return { voices: [voices.poke.squelch()], bursts: [burst(KIND.splat, 2, 0.7, 0.6, 0.08, 1.0)], force: 1.2, kick: 0.6 }
   if (met === 'b' || met === 'f') return { voices: [voices.pop(0.5)], bursts: [burst(KIND.bubble, 4, 0.7, 0.3, 0.11, 0.35)], force: 0.8, kick: 0.5 }
   if (met === 'w') return { voices: [voices.poke.slide()], bursts: [burst(KIND.drop, 4, 1.2, 0.8, 0.06, 0.8)], force: 1, kick: 0.7 }
-  if (met === 'p') return { voices: [voices.poke.print()], bursts: [], force: 1, kick: 0.7 }
-  return { voices: [voices.poke.ring()], bursts: [], force: 1, kick: 1 }
+  if (met === 'p') return { voices: [voices.poke.print()], bursts: [burst(KIND.glint, 1, 0.0, 0.0, 0.3, 0.35)], force: 1, kick: 0.7 }
+  // Dull paint: the metal rings and a little dust jumps off it.
+  return { voices: [voices.poke.ring()], bursts: [burst(KIND.dust, 3, 0.9, 0.5, 0.24, 0.6)], force: 1, kick: 1 }
 }

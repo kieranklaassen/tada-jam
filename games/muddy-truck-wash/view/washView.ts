@@ -52,9 +52,10 @@ export class WashView {
     // The ghost hand: a pale mitten whose fingertip is its origin. It is drawn over everything and shows through.
     const mitten = new Shape()
     const pale: [number, number, number] = [1, 0.97, 0.9]
-    mitten.round(0.1, 0.55, pale, { at: [0.06, -0.26, 0.05], turn: { axis: 'z', by: 0.22 } }, { axis: 'y', mat: MAT.soft, segs: 12, bevel: 0.05 })
-    mitten.ball(0.3, pale, { at: [0.2, -0.7, 0.1] }, { mat: MAT.soft, segs: 14, squash: [1, 1.1, 0.6] })
-    mitten.round(0.09, 0.3, pale, { at: [-0.08, -0.62, 0.1], turn: { axis: 'z', by: 0.9 } }, { axis: 'y', mat: MAT.soft, segs: 10, bevel: 0.04 })
+    // It reaches in from the lower right, from the open floor, so it never lies on the thing below the one it shows.
+    mitten.round(0.1, 0.55, pale, { at: [0.19, -0.19, 0.05], turn: { axis: 'z', by: 0.785 } }, { axis: 'y', mat: MAT.soft, segs: 12, bevel: 0.05 })
+    mitten.ball(0.3, pale, { at: [0.55, -0.52, 0.1] }, { mat: MAT.soft, segs: 14, squash: [1.05, 1.05, 0.6] })
+    mitten.round(0.09, 0.3, pale, { at: [0.3, -0.62, 0.1], turn: { axis: 'z', by: 1.5 } }, { axis: 'y', mat: MAT.soft, segs: 10, bevel: 0.04 })
     const handMaterial = enamelMaterial(this.kit, {})
     handMaterial.transparent = true
     handMaterial.depthTest = false
@@ -107,10 +108,10 @@ export class WashView {
 
   update(dt: number, seconds: number, poses: ReadonlyMap<VehicleId, TruckPose>, particles: Particles, hand: Hand, spot: ToolSpot, hint: Hint): void {
     for (const [id, pose] of poses) this.truck(id).update(dt, pose)
-    // The idle glow breathes; it is on the tools on the rack and the vehicles that answer a touch.
-    const glow = hint.glow * (0.55 + 0.45 * Math.sin(seconds * 3.2))
+    // The idle glow breathes on the tools that hang on the rack, and they swell a little with it. The vehicles are
+    // alive already and take no glow: on a body that size it reads as haze.
+    const pulse = 0.55 + 0.45 * Math.sin(seconds * 3.2), glow = hint.glow * pulse
     for (const tool of ['sponge', 'hose', 'cloth'] as const) (this.stage.tools[tool].material as THREE.ShaderMaterial).uniforms.uGlow.value = hint.tools.includes(tool) ? glow : 0
-    for (const [id, truck] of this.trucks) truck.setGlow(hint.vehicles.includes(id) ? glow * 0.7 : 0)
     this.hand.visible = hint.hand !== null && hint.hand.opacity > 0.01
     if (hint.hand) {
       // The hand hovers off the thing and comes down onto it as it presses.
@@ -118,7 +119,7 @@ export class WashView {
       ;(this.hand.material as THREE.ShaderMaterial).uniforms.uAlpha.value = hint.hand.opacity * 0.9
     }
     this.fx.update(particles, this.particleLimit)
-    this.toolsView.update(dt, seconds, hand, spot)
+    this.toolsView.update(dt, seconds, hand, spot, hint.tools, glow)
   }
 
   render(): void {

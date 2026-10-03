@@ -31,9 +31,14 @@ export const TURNS: Readonly<Record<Hand, Readonly<Record<Patch, Patch>>>> = {
   finger: { '.': '.', c: 'c', s: 's', b: 'b', f: 'f', w: 'w', d: 'd', p: 'd' },
 }
 
-/** What the cloth drags onto the clean paint around it: wet mud smears, foam is pushed along. Dried mud does not spread. */
+/** What a cloth picks up and drags along: wet mud smears, foam is pushed. Dried mud does not come away on it. */
 const SPREADS: readonly Patch[] = ['s', 'b', 'f']
 const CLEAN: readonly Patch[] = ['w', 'd', 'p']
+/** A cloth lets go of what it carries over this many patches, so a smear is short and mended in a moment. */
+export const SMEAR_PATCHES = 3
+
+/** What a cloth has picked up and has not yet wiped off: the patch it leaves, and on how many more patches. */
+export type Carried = { patch: Patch; left: number }
 
 export type Surface = Patch[]
 
@@ -58,21 +63,34 @@ export type Dab = {
   met: Patch[]
   /** The covered patches that changed. */
   changed: number[]
+  /** What the cloth carries on to its next dab, or null. Always null for the other hands. */
+  carries: Carried | null
 }
 
-/** One touch of `hand` at a patch. Off the body it meets nothing. */
-export function dab(surface: Surface, hand: Hand, col: number, row: number): Dab {
+/**
+ * One touch of `hand` at a patch. Off the body it meets nothing.
+ *
+ * A cloth that has just been on soft mud or foam carries some along: the
+ * next clean patch under the finger gets it instead of a shine, for a few
+ * patches, and then the cloth is clean again. So a wipe through mud leaves a
+ * short streak where the finger went, never mud all over.
+ */
+export function dab(surface: Surface, hand: Hand, col: number, row: number, carried: Carried | null = null): Dab {
   const cells = dabCells(col, row).filter((cell) => surface[cell] !== '.')
   const met = cells.map((cell) => surface[cell])
   const next = surface.slice()
   for (const cell of cells) next[cell] = TURNS[hand][surface[cell]]
-  if (hand === 'cloth') {
-    // The first spreading thing the cloth meets is what it drags over the clean paint under it.
-    const dragged = met.find((patch) => SPREADS.includes(patch))
-    if (dragged) for (const cell of cells) if (CLEAN.includes(surface[cell])) next[cell] = dragged
+  let carries: Carried | null = null
+  const under = cellAt(col, row)
+  if (hand === 'cloth' && cells.includes(under)) {
+    if (SPREADS.includes(surface[under])) carries = { patch: surface[under], left: SMEAR_PATCHES }
+    else if (carried && CLEAN.includes(surface[under])) {
+      next[under] = carried.patch
+      carries = carried.left > 1 ? { patch: carried.patch, left: carried.left - 1 } : null
+    }
   }
   const changed = cells.filter((cell) => next[cell] !== surface[cell])
-  return { surface: changed.length ? next : surface, met, changed }
+  return { surface: changed.length ? next : surface, met, changed, carries }
 }
 
 export type Tally = Record<Patch, number> & { body: number; mud: number; foam: number }

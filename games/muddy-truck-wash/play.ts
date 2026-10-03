@@ -8,7 +8,7 @@ import { Scene } from './scene'
 import { dripScene, openDriedPatch, puddleScene, sendOffScene, shineScene } from './scenes'
 import { reliefAt, silhouette } from './silhouette'
 import { WANTS, drumJammed, foamHat, launchFoam, tasteFor, type Taste } from './tastes'
-import { GRID_W, allShiny, dab, decode, type Hand, type Surface, type Tool } from './surface'
+import { GRID_W, allShiny, dab, decode, type Carried, type Hand, type Surface, type Tool } from './surface'
 import * as voices from './voices'
 import type { VoiceSpec } from './voices'
 import { landedOnNext, markShown, sendOff, throughPuddle, washed, type WashState } from './washState'
@@ -74,6 +74,8 @@ export class Play {
   private tapIn = 2.5
   private pendingDrip = false
   private tookAt = -9
+  /** What the cloth has picked up and not yet wiped off. Not saved: on load the cloth hangs clean on the rack. */
+  private carried: Carried | null = null
   private readonly felt = new Map<Taste['id'], number>()
   /** Small things that happen a moment after a touch: the blast of a sneeze, the second chug. */
   private later: { at: number; run: () => void }[] = []
@@ -169,6 +171,7 @@ export class Play {
       return
     }
     this.hand = tool
+    this.carried = null
     this.tookAt = this.seconds
     this.say(voices.take[tool]())
     this.rest()
@@ -204,8 +207,9 @@ export class Play {
   /** One dab at the target: the surface changes, and the touch is answered for what it met. */
   private touch(target: Extract<Target, { kind: 'truck' }>, landed: boolean): void {
     const bay = this.bay
-    const result = dab(bay.surface, this.hand, target.col, target.row)
+    const result = dab(bay.surface, this.hand, target.col, target.row, this.carried)
     if (!result.met.length) return
+    this.carried = result.carries
     const wasShiny = allShiny(bay.surface)
     this.setBaySurface(result.surface)
     this.variant = (this.variant + 1 + (this.particles.random() < 0.3 ? 1 : 0)) % 4
@@ -246,7 +250,7 @@ export class Play {
     if (taste.id === 'foam-toot') {
       // The bed bounces and the stack toots out bubbles.
       this.say(voices.feel.foamToot(def.horn.low))
-      m.fling(7)
+      m.fling(3.2)
       for (let i = 0; i < 6; i++) p.emit(KIND.bubble, x - 1.0, 2.75, z + 0.98, (p.random() - 0.5) * 0.6, 1.2 + p.random(), 0.2, 0.13 + p.random() * 0.08, 1.4 + p.random())
     } else if (taste.id === 'sneeze') {
       // A breath in, then a sneeze that throws the bed up and launches whatever foam is on it, over to the one that waits.
