@@ -2,17 +2,19 @@
 import { useEffect, useRef } from 'react'
 import type { Cartridge, CartridgeContext } from '../types'
 import { AttendedClock, Attention } from './attention'
-import { GameAudio, tick } from './audio'
+import { GameAudio } from './audio'
 import { BACKDROP } from './config'
 import { IdleLadder } from './guidance'
 import { ForgivingTouch, type Gesture, type Point } from './input'
 import { muddyTruckWashManifest } from './manifest'
+import { TruckMotion } from './motion'
 import { arrive } from './mud'
-import { restPose } from './pose'
+import { Play, type Target } from './play'
 import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
 import { SaveCadence } from './saveCadence'
 import { silhouette } from './silhouette'
+import { voiced } from './sound'
 import { fireEngine } from './fireEngine'
 import { LAYOUT } from './props'
 import { deserialize, serialize, type GameState } from './state'
@@ -41,12 +43,16 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // A canvas 2D game reports the sprites and figures it drew as drawCalls; a three.js game reports the renderer's own counts.
     const view = new WashView(canvas, [tipper, fireEngine])
     const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, ...view.counts }))
-    // The look spike: the game's real scene with a fixed seed, before any play.
-    const pose = restPose(), waiting = { ...restPose(), x: LAYOUT.door.x, z: LAYOUT.door.z }
-    const poses = new Map([[tipper.id, pose], [fireEngine.id, waiting]])
+    // The toy: one muddy vehicle in the bay with a fixed seed, the three tools, and another vehicle at the door.
+    const play = new Play({ def: tipper, surface: arrive(silhouette(tipper), 'dried-patches', 20261003), motion: new TruckMotion(tipper.moves, tipper.wheels.map((wheel) => wheel.x), 11) })
+    const waiting = { def: fireEngine, surface: arrive(silhouette(fireEngine), 'fresh-splashes', 77), motion: new TruckMotion(fireEngine.moves, fireEngine.wheels.map((wheel) => wheel.x), 23) }
+    waiting.motion.homeX = LAYOUT.door.x
+    waiting.motion.homeZ = LAYOUT.door.z
+    const poses = new Map([[tipper.id, play.bay.motion.pose], [fireEngine.id, waiting.motion.pose]])
     view.show([tipper.id, fireEngine.id])
-    view.setSurface(fireEngine.id, arrive(silhouette(fireEngine), 'fresh-splashes', 77), true)
-    view.setSurface(tipper.id, arrive(silhouette(tipper), 'dried-patches', 20261003), true)
+    view.setSurface(fireEngine.id, waiting.surface, true)
+    view.setSurface(tipper.id, play.bay.surface, true)
+    let shown = play.bay.surface
     let state: GameState | null = null, disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
 
     // Nothing is saved until the slot has been read, so an early put-away cannot overwrite it.
@@ -75,9 +81,33 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const observer = new ResizeObserver(resize)
     observer.observe(root)
 
-    // What the game does with a gesture. The blank surface only answers a touch with a sound.
+    // What a finger is on, from where it is on the surface.
+    const targetAt = (at: Point): Target => {
+      const bay = play.bay
+      return view.picker.pick(at.x, at.y, width, height, { def: bay.def, x: bay.motion.homeX, z: bay.motion.homeZ, surface: bay.surface }, { def: waiting.def, x: waiting.motion.homeX, z: waiting.motion.homeZ, surface: waiting.surface })
+    }
+    // How fast the finger travels over the vehicle, in its units a second, smoothed over a few moves.
+    let last: { x: number; y: number; at: number } | null = null, speed = 0
+    // What the game does with a gesture. The answer starts on the press, when the finger lands, never on the lift.
     const act = (gestures: Gesture[]) => {
-      for (const gesture of gestures) if (gesture.type === 'press') audio.play(tick)
+      for (const gesture of gestures) {
+        if (gesture.type === 'press') {
+          last = null
+          speed = 0
+          play.press(targetAt(gesture.at))
+        } else if (gesture.type === 'dragMove') {
+          const target = targetAt(gesture.at)
+          if (target.kind === 'truck') {
+            const now = clock.seconds
+            if (last && now > last.at) speed += (Math.hypot(target.x - last.x, target.y - last.y) / (now - last.at) - speed) * 0.4
+            if (!last || now > last.at) last = { x: target.x, y: target.y, at: now }
+          } else last = null
+          play.drag(target, speed)
+        } else if (gesture.type !== 'dragStart') {
+          // A tap's lift, a lift mid-rub, the end of a rub, or a press taken away: the tool stays in hand where it was let go.
+          play.release()
+        }
+      }
     }
     const at = (event: PointerEvent): Point => {
       const box = root.getBoundingClientRect()
@@ -117,8 +147,17 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       // What to show an idle child: a glow on what can be touched, then one move.
       ladder.update(clock.seconds)
       // The game steps its rules here.
-      pose.lift = Math.sin(clock.seconds * 1.7) * 0.012
-      view.update(dt, poses)
+      play.step(dt)
+      waiting.motion.step(dt)
+      for (const sound of play.sounds) audio.play(voiced(sound.spec, sound.gain))
+      play.sounds.length = 0
+      for (const mark of play.marks) view.stage.marks.land(mark)
+      play.marks.length = 0
+      if (play.bay.surface !== shown) {
+        shown = play.bay.surface
+        view.setSurface(play.bay.def.id, shown)
+      }
+      view.update(dt, clock.seconds, poses, play.particles, play.hand, play.tool)
       // A tier change is applied ahead of the draw: the pixel ratio now, and whatever else the game's tiers set.
       // The interval just measured belongs to the frame before, so it is judged with that frame's work.
       const sized = clock.intervalMs > 0 && governor.sample(clock.intervalMs, lastWork) && resize()

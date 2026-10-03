@@ -1,8 +1,9 @@
 import * as THREE from 'three'
-import { LAYOUT, TOOL_HOME, bayShape, rackShape, toolShape } from '../props'
+import { LAYOUT, bayShape, rackShape, toolShape } from '../props'
 import type { Tool } from '../surface'
 import { enamelMaterial, type EnamelKit } from './enamel'
 import { toGeometry } from './geometry'
+import { FloorMarks, MARKS } from './marks'
 
 // The wash bay: dark wet concrete with a painted pad, a tiled back wall, the
 // door to a dirt yard with its puddle, the rack and the three tools. The
@@ -25,6 +26,8 @@ uniform vec3 uFloor;
 uniform vec4 uPad;
 uniform float uYard;
 uniform vec4 uPuddle;
+uniform sampler2D uMarks;
+uniform vec4 uMarksBox;
 varying vec3 vWorld;
 
 float box(vec2 p, vec2 lo, vec2 hi, float soft) {
@@ -60,6 +63,14 @@ void main() {
   float rim = smoothstep(0.7, 0.95, r) * puddle;
   vec3 mudWater = vec3(0.27, 0.17, 0.09) + vec3(0.55, 0.6, 0.62) * 0.3 * smoothstep(0.2, -0.5, q.y + q.x * 0.4) * smoothstep(0.9, 0.3, r);
   col = mix(col, mix(mudWater, vec3(0.36, 0.25, 0.14), rim), puddle);
+  // What the wash has dropped: water darkens and shines, mud lies brown, foam sits in white blobs.
+  vec4 marks = texture2D(uMarks, (p - uMarksBox.xy) / uMarksBox.zw);
+  float water = smoothstep(0.25, 0.5, marks.r + (f.r - 0.5) * 0.3);
+  col = mix(col, col * 0.55 + vec3(0.35, 0.45, 0.55) * 0.16 * smoothstep(0.3, 0.9, f.b), water * 0.8);
+  float mud = smoothstep(0.3, 0.5, marks.g + (f.r - 0.5) * 0.35);
+  col = mix(col, vec3(0.3, 0.19, 0.1) * (0.8 + 0.4 * f.g), mud);
+  float foam = smoothstep(0.3, 0.48, marks.b + (f.b - 0.5) * 0.3);
+  col = mix(col, mix(vec3(0.78, 0.86, 0.94), vec3(1.0), smoothstep(0.1, 0.5, f.b)), foam);
   gl_FragColor = vec4(col, 1.0);
 }
 `
@@ -99,6 +110,7 @@ export class Stage {
   readonly scene = new THREE.Scene()
   readonly camera = new THREE.PerspectiveCamera(FOV, 1, 1, 80)
   readonly tools: Record<Tool, THREE.Mesh>
+  readonly marks = new FloorMarks()
   private readonly owned: { dispose(): void }[] = []
 
   constructor(kit: EnamelKit) {
@@ -108,6 +120,8 @@ export class Stage {
       uPad: { value: new THREE.Vector4(LAYOUT.pad.x0, LAYOUT.pad.x1, LAYOUT.pad.z0, LAYOUT.pad.z1) },
       uYard: { value: LAYOUT.yardFrom },
       uPuddle: { value: new THREE.Vector4(LAYOUT.puddle.x, LAYOUT.puddle.z, LAYOUT.puddle.rx, LAYOUT.puddle.rz) },
+      uMarks: { value: this.marks.texture },
+      uMarksBox: { value: new THREE.Vector4(MARKS.x0, MARKS.z0, MARKS.x1 - MARKS.x0, MARKS.z1 - MARKS.z0) },
     }
     const plane = new THREE.PlaneGeometry(1, 1)
     const floorMaterial = new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: FLOOR_FRAGMENT, uniforms, depthWrite: false })
@@ -124,7 +138,7 @@ export class Stage {
     wall.scale.set(60, 16, 1)
     wall.position.set(0, 8, LAYOUT.wall.z)
     wall.renderOrder = -2
-    this.owned.push(plane, floorMaterial, wallMaterial)
+    this.owned.push(plane, floorMaterial, wallMaterial, this.marks)
 
     const fixed = enamelMaterial(kit, { gloss: 0.9 })
     this.owned.push(fixed)
@@ -139,7 +153,6 @@ export class Stage {
     add('rack', toGeometry(rackShape()))
     add('bay', toGeometry(bayShape()))
     this.tools = { sponge: add('tool-sponge', toGeometry(toolShape('sponge'))), hose: add('tool-hose', toGeometry(toolShape('hose'))), cloth: add('tool-cloth', toGeometry(toolShape('cloth'))) }
-    for (const tool of ['sponge', 'hose', 'cloth'] as const) this.tools[tool].position.set(...TOOL_HOME[tool])
     this.fit(1180, 820)
   }
 

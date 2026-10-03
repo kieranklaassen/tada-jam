@@ -26,7 +26,7 @@ export const LAYOUT = {
 /** Where each tool hangs: its own origin in the world. */
 export const TOOL_HOME: Readonly<Record<Tool, readonly [number, number, number]>> = {
   cloth: [LAYOUT.rack.x + 0.62, 3.62, LAYOUT.rack.z],
-  hose: [LAYOUT.rack.x + 0.62, 2.2, LAYOUT.rack.z],
+  hose: [LAYOUT.rack.x + 0.95, 1.88, LAYOUT.rack.z + 0.09],
   sponge: [LAYOUT.rack.x + 0.66, 0.98, LAYOUT.rack.z],
 }
 
@@ -47,8 +47,17 @@ export function rackShape(): Shape {
   s.round(0.4, 0.62, PAINT.blue, { at: [x + 0.66, 0.43, z] }, { axis: 'y', r2: 0.5, segs: 20, bevel: 0.05 })
   s.round(0.52, 0.07, PAINT.zinc, { at: [x + 0.66, 0.74, z] }, { axis: 'y', mat: MAT.metal, segs: 20, bevel: 0.02 })
   s.ball(0.46, SUDS, { at: [x + 0.66, 0.72, z] }, { mat: MAT.soft, from: 0, squash: [1, 0.35, 1], segs: 16 })
+  // Two turns of hose on the middle arm; the nozzle hangs from them and is the tool.
+  s.ring(0.44, 0.085, HOSE, { at: [x + 0.62, 2.2, z - 0.07] }, { mat: MAT.rubber, segs: 28, sides: 8 })
+  s.ring(0.4, 0.085, HOSE, { at: [x + 0.65, 2.17, z + 0.09] }, { mat: MAT.rubber, segs: 28, sides: 8 })
   return s
 }
+
+/** How each tool hangs on the rack: a turn about z. */
+export const TOOL_HANG: Readonly<Record<Tool, number>> = { cloth: 0, hose: 0.9, sponge: 0 }
+
+/** The middle of each tool as it hangs, from its origin: where a finger aims and where a glow sits. */
+export const TOOL_MIDDLE: Readonly<Record<Tool, readonly [number, number, number]>> = { cloth: [0, -0.42, 0], hose: [0.22, -0.2, 0], sponge: [0, 0, 0] }
 
 /** Each tool about its own origin, as it hangs. */
 export function toolShape(tool: Tool): Shape {
@@ -56,12 +65,10 @@ export function toolShape(tool: Tool): Shape {
   if (tool === 'sponge') {
     s.box([0.82, 0.4, 0.56], SPONGE, { turn: { axis: 'z', by: 0.12 } }, { bevel: 0.11, mat: MAT.soft })
   } else if (tool === 'hose') {
-    // Two turns of hose on the arm, and the nozzle hanging from them.
-    s.ring(0.44, 0.085, HOSE, { at: [0, 0, -0.07] }, { mat: MAT.rubber, segs: 28, sides: 8 })
-    s.ring(0.4, 0.085, HOSE, { at: [0.03, -0.03, 0.09] }, { mat: MAT.rubber, segs: 28, sides: 8 })
-    s.round(0.085, 0.3, HOSE, { at: [0.36, -0.4, 0.09], turn: { axis: 'z', by: -0.9 } }, { axis: 'y', mat: MAT.rubber, segs: 10 })
-    s.round(0.16, 0.4, PAINT.red, { at: [0.6, -0.59, 0.09], turn: { axis: 'z', by: -0.9 } }, { axis: 'y', r2: 0.1, segs: 14, bevel: 0.03 })
-    s.round(0.08, 0.18, PAINT.zinc, { at: [0.82, -0.765, 0.09], turn: { axis: 'z', by: -0.9 } }, { axis: 'y', mat: MAT.metal, segs: 12, bevel: 0.02 })
+    // The nozzle, pointing down -y from its origin: a stub of hose, a red grip, a zinc tip. The coil stays on the rack.
+    s.round(0.085, 0.3, HOSE, { at: [0, 0.0, 0] }, { axis: 'y', mat: MAT.rubber, segs: 10 })
+    s.round(0.1, 0.42, PAINT.red, { at: [0, -0.32, 0] }, { axis: 'y', r2: 0.17, segs: 14, bevel: 0.03 })
+    s.round(0.085, 0.2, PAINT.zinc, { at: [0, -0.6, 0] }, { axis: 'y', mat: MAT.metal, segs: 12, bevel: 0.02 })
   } else {
     // A folded cloth over the arm: cream with two red stripes.
     s.round(0.11, 0.84, CLOTH, { at: [0, 0.02, 0] }, { axis: 'x', mat: MAT.soft, segs: 12, bevel: 0.05 })

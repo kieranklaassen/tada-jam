@@ -25,6 +25,9 @@ export const fireEngine: VehicleDef = {
     part: { x0: -0.9, x1: 2.6, y0: 2.0, y1: 2.9 },
   },
   partSwing: 0.7,
+  // Quick and eager: stiff springs that snap back, short breaths, a ladder that twitches.
+  moves: { stiffness: 190, damping: 11, give: 0.8, breath: 0.62, breathDepth: 0.008, idleRate: 15, idleSize: 0.0018, blink: [1.4, 3.2], partStiffness: 160, partDamping: 7, partThrow: 0.02, glance: 1.5 },
+  horn: { low: 392, high: 523, hold: 0.16 },
   build() {
     const body = new Shape()
     undercarriage(body, 4.7, -2.45, EYES)

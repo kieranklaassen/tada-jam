@@ -21,14 +21,16 @@ export type Tier = {
   dpr: number
   /** The wet floor gives back a faded copy of each vehicle. Without it the floor is still dark, wet and streaked. */
   reflections: boolean
+  /** How many of the small flying things (bubbles, drops, crumbs) are drawn. The pool itself is the same on every tier. */
+  particles: number
 }
 
 /** Tier 0 is full quality; each later tier is cheaper to draw. Whatever a tier change needs is compiled before it happens. */
 export const TIERS: readonly Tier[] = [
-  { dpr: 2, reflections: true },
-  { dpr: 1.5, reflections: true },
-  { dpr: 1.25, reflections: false },
-  { dpr: 1, reflections: false },
+  { dpr: 2, reflections: true, particles: 260 },
+  { dpr: 1.5, reflections: true, particles: 200 },
+  { dpr: 1.25, reflections: false, particles: 130 },
+  { dpr: 1, reflections: false, particles: 80 },
 ]
 
 /** The governor's thresholds. The rules they feed are at the top of quality.ts. */

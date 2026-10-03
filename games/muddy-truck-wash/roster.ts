@@ -1,3 +1,4 @@
+import type { Personality } from './motion'
 import { MAT, Shape, rgb, type Rgb } from './shapes'
 
 // The vehicles as data: each one's fixed body, its moving part, its wheels and
@@ -34,6 +35,10 @@ export type VehicleDef = {
   zones: { nose: Zone; eyes: Zone; wheels: Zone; part: Zone }
   /** The moving part turns about z by up to this much (radians), or spins freely when it is a drum. */
   partSwing: number
+  /** How it moves: its weight, its tempo and how its funniest part is thrown about. No two vehicles share these. */
+  moves: Personality
+  /** Its horn: two pitches in Hz, and how long it holds them. */
+  horn: { low: number; high: number; hold: number }
 }
 
 export const PAINT = {

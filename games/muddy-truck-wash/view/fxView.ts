@@ -46,11 +46,11 @@ void main() {
     float star = max(0.0, 1.0 - (abs(vUv.x) * abs(vUv.y) * 26.0 + r * 0.9));
     alpha = (star + (1.0 - smoothstep(0.0, 0.3, r)) * 0.8) * fade;
   } else if (kind < 4.5) {
-    float lumpy = r + 0.12 * sin(atan(vUv.y, vUv.x) * 5.0 + phase * 30.0);
+    float lumpy = r + 0.05 * sin(atan(vUv.y, vUv.x) * 3.0 + phase * 30.0);
     alpha = (1.0 - smoothstep(0.75, 1.0, lumpy)) * fade;
     col = mix(vec3(0.8, 0.88, 0.96), vec3(1.0), 1.0 - smoothstep(0.0, 0.8, length(vUv - vec2(-0.2, 0.3))));
   } else if (kind < 5.5) {
-    float lumpy = r + 0.16 * sin(atan(vUv.y, vUv.x) * 4.0 + phase * 30.0);
+    float lumpy = r + 0.09 * sin(atan(vUv.y, vUv.x) * 3.0 + phase * 30.0);
     alpha = (1.0 - smoothstep(0.75, 1.0, lumpy)) * fade;
     col = vec3(0.33, 0.2, 0.1) + 0.25 * (1.0 - smoothstep(0.0, 0.5, length(vUv - vec2(-0.25, 0.3))));
   } else {
