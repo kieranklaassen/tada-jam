@@ -3,9 +3,10 @@ import { FLIGHT_SECONDS } from './carry'
 import { freshGame, type Game } from './cycle'
 import { GameRun } from './gameRun'
 import { RAIL, WHOLE } from './measure'
-import { tinAt } from './moves'
+import { tinAt, type GameEvent } from './moves'
 import { inRange, tinParts } from './orders'
 import { deserialize, serialize } from './save'
+import { served } from './serve'
 import { BOARD, COUNTER, CRATE, DOG, PAGE, PX, QUEUE, RAIL_BOX, ROLLER, SHELF_BOX, WINDOW, shown, type Box, type Point } from './stage'
 import { draw } from './stream'
 import { LANES, SHELF, inTin, onLane, onShelf } from './world'
@@ -46,6 +47,8 @@ function expectSound(game: Game, where: string): void {
     expect(one.box.y + one.box.h, where).toBeLessThanOrEqual(slab.y + slab.h)
     for (let b = a + 1; b < boxes.length; b++) expect(overlap(one.box, boxes[b].box), `${where}: pieces ${one.piece.id} (${JSON.stringify(one.piece.place)}) and ${boxes[b].piece.id} (${JSON.stringify(boxes[b].piece.place)}) cross, for ${game.window?.who}`).toBeLessThan(0.01)
   }
+  // A tin whose contents fit has shut: no customer waits on with a fit lying in its open tin.
+  if (game.window && !game.finished) expect(served(game.world, game.window).kind, `${where}: a fit lies in the tin and the lid has not shut`).not.toBe('fit')
   // The customers are always ones the rules could have laid out, and nothing is finished with nobody there.
   for (const customer of [game.window, ...game.queue]) if (customer) expect(inRange(customer), where).toEqual([])
   if (!game.window) expect(game.finished, where).toBe(false)
@@ -57,6 +60,18 @@ function expectSound(game: Game, where: string): void {
 /** Plays `touches` seeded touches on everything the game holds. Returns the kinds of thing that happened. */
 function monkey(seed: number, touches: number, start: Game = freshGame(null, seed)): Set<string> {
   const run = new GameRun(start, seed)
+  // Nothing leaves the world unseen: every piece that goes is in an event that shows it going (to the dog, into a mouth, onto a face),
+  // or was inside a customer who has now left, or is the whole fruit a pelican glides off with.
+  const watched = run as unknown as { take: (game: Game, events: readonly GameEvent[]) => void }
+  const take = watched.take.bind(run)
+  watched.take = (game, events) => {
+    const before = run.game
+    const shown = new Set(events.flatMap((event) => (event.kind === 'fell' || event.kind === 'ate' || event.kind === 'splat' || event.kind === 'burp' ? [event.piece.id] : [])))
+    const glider = events.some((event) => event.kind === 'gliderAway' || (event.kind === 'ending' && event.ending.glider))
+    const left = before.world.pieces.filter((piece) => !game.world.pieces.some((other) => other.id === piece.id))
+    for (const piece of left) expect(shown.has(piece.id) || piece.place.on === 'eaten' || glider, `seed ${seed}: piece ${piece.id} (${JSON.stringify(piece.place)}) left the world unseen, in ${events.map((event) => event.kind).join(',')}`).toBe(true)
+    take(game, events)
+  }
   let state = seed
   const random = (): number => {
     const drawn = draw(state)

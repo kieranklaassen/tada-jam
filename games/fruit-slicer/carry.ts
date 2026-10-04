@@ -190,7 +190,8 @@ function intoTin(game: Game, held: Held, part: number): { game: Game; events: Ga
     }
     now = result.game
   }
-  if (back.length === 0) return { game: now, events }
+  // A piece that left the tin on the way (one that slid off the rail's end) may leave what is in the tin fitting: the lid then shuts by itself.
+  if (back.length === 0) return now.finished ? { game: now, events } : shutAfter(now, events, game, held)
   // Served already, or nobody there to serve: the tin takes nothing, and the pieces come back to the near lane.
   const first = pieces.find(({ piece }) => piece.id === back[0])!
   const set = setRowOnBoard(now.world, back, 0, (first.from.x - X0) / PX)

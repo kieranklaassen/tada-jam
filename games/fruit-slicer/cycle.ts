@@ -175,7 +175,9 @@ export function give(game: Game, id: number, part: number): { game: Game; given:
   if (!customer || game.finished || !piece) return { game, given: null }
   const compartment = Math.max(0, Math.min(tinParts(customer).length - 1, Math.round(part)))
   // The rail is as long as the board: what would run off its end, counting every compartment, slides off onto the shelf.
-  if (tinParts(customer).reduce((sum, _, part) => sum + tinTotal(game.world, part), 0) + piece.length > RAIL) {
+  // A piece that already lies in the tin and is laid in it again is counted once.
+  const already = piece.place.on === 'tin' ? piece.length : 0
+  if (tinParts(customer).reduce((sum, _, part) => sum + tinTotal(game.world, part), 0) - already + piece.length > RAIL) {
     const set = setOnShelf(game.world, id)
     return { game: { ...game, world: set.world }, given: { opened: false, firstShowing: null, strays: [], slidOff: true, fell: set.fell, result: served(set.world, customer), ending: null } }
   }
