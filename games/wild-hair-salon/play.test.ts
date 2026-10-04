@@ -236,17 +236,57 @@ describe('a thing shown once', () => {
     expect(paw).toBe(true)
   })
 
-  it('still follows when another scene with the same customer comes between: the friend sent across and back before the snip was shown', () => {
+  it('still follows when another scene with the same customer comes between: the friend sent across before the snip was shown', () => {
     const play = opened()
     tap(play, DOOR)
     run(play, 1, true)
-    // The coming in is cut short by the touch that sends the friend across; that walk is cut short by the one that sends it back.
+    // The coming in is cut short by a touch on the wall; the next touch sends the friend across before the finger has been off the glass long enough.
+    tap(play, AIR)
     tap(play, BENCH)
-    run(play, 0.3, true)
-    tap(play, STOOL)
+    expect(play.inScene).toBe(true)
+    expect(play.game!.seat).toBe('across')
     expect(play.game!.shown.snip).toBe(false)
     through(play)
     expect(play.game!.shown.snip).toBe(true)
+  })
+
+  it('starts no scene with the touch that ends one: on the door, the knot, the chair or a seat it ends the scene, with a small knock, and does nothing more', () => {
+    // The knot, tapped again more than a second into the cape coming off: the ending is cut short and the customer is not put back under the cape.
+    const knot = seated()
+    const at = knotOf(knot)
+    tap(knot, at)
+    run(knot, 1.5, true)
+    knot.takeNotes()
+    tap(knot, at)
+    expect(knot.inScene).toBe(false)
+    expect(knot.game!.cape).toBe('off')
+    expect(knot.game!.finished).toBe(true)
+    expect(knot.takeNotes().length).toBeGreaterThanOrEqual(1)
+    // The next tap there is an ordinary one: the chair takes the customer back under the cape.
+    tap(knot, CHAIR)
+    expect(knot.game!.cape).toBe('on')
+    // A seat, touched while the pair come in, sends nobody anywhere; the door, touched while the cape comes off, lets nobody in.
+    const seat = opened()
+    tap(seat, DOOR)
+    run(seat, 1.5, true)
+    tap(seat, BENCH)
+    expect(seat.inScene).toBe(false)
+    expect(seat.game!.seat).toBe('beside')
+    const door = seated()
+    const who = door.game!.chair
+    tap(door, knotOf(door))
+    run(door, 1.5, true)
+    tap(door, DOOR)
+    expect(door.inScene).toBe(false)
+    expect(door.game!.chair).toBe(who)
+    // Hair is still hair under such a touch: a press on the lock ends the scene and has the lock.
+    const lock = seated()
+    tap(lock, knotOf(lock))
+    run(lock, 1.5, true)
+    lock.gesture({ type: 'press', at: onLock(Math.min(lock.game!.lock, 10)) })
+    expect(lock.inScene).toBe(false)
+    expect(lock.hair.holds).toBe('lock')
+    lock.gesture({ type: 'pressEnd', at: AIR })
   })
 
   it('waits for its cause to come round again when the game is put away before it began, and is never begun behind the child\'s back', () => {

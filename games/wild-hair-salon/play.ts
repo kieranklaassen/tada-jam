@@ -3,7 +3,7 @@ import { Hair, type StrandId } from './hair'
 import { Hand, type Happening, type Held } from './hand'
 import type { Gesture } from './input'
 import { PERSONALITIES, type Reaction } from './personality'
-import { bowOn, clippingBox, placesOf, stripOf, tuftRoot, type Button, type Point } from './poses'
+import { bowOn, clippingBox, placesOf, stripOf, tuftRoot, whatIsAt, type Button, type Point } from './poses'
 import { Puppet } from './puppet'
 import { makeRng } from './rng'
 import { TUFTS } from './rules'
@@ -270,8 +270,14 @@ export class Play implements Cast {
         // twice, as the ghost hand does, does not undo what the first tap did. It does nothing.
         this.echo = this.inScene && this.began !== null && this.time - this.began.time < ECHO_S && Math.hypot(gesture.at.x - this.began.at.x, gesture.at.y - this.began.at.y) < ECHO_REACH
         if (this.echo) return
-        // A touch ends a scene, and is then an ordinary touch.
-        this.endScene()
+        // A touch ends a scene, and is then an ordinary touch on hair, a face, a piece or the air. On a thing that moves the
+        // game on it is not: the touch that ends one scene never starts another, so the door, the knot, the chair and a
+        // seat do nothing under it. A child who taps the knot again while the cape is coming off sees the ending, whole.
+        if (this.inScene) {
+          this.endScene()
+          // It is still answered: the small knock of a finger.
+          if (whatIsAt(this.game!, gesture.at)?.object === 'button') { this.echo = true; this.notes.push(OTHER_VOICES.caught); return }
+        }
         this.pressedAt = gesture.at
         this.took(this.game!, hand.press(this.game!, gesture.at, this.time), 0)
         return
