@@ -56,7 +56,7 @@ export function playCycle(game: Game): void {
   for (let guard = 0; guard < 4; guard++) {
     sortAll(game)
     if (game.world.finished) break
-    tap(game, { on: 'ledge', which: 0 }, 1.5)
+    tap(game, { on: 'ledge', which: 0 }, 2.2)
     watch(game)
   }
   watch(game)

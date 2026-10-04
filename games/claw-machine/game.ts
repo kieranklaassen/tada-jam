@@ -11,7 +11,8 @@ import type { GameEvent } from './events'
 import { knobAt, tongueTop } from './gobblerBuild'
 import { GOBBLER, shapeOf, snackOf, type GobblerId } from './gobblers'
 import { CRATE_STANDS, bellySpots, crateSpot, crateTop, crewSpot, deckTop, handleSpot, headTop, type Spot, waitingSpot } from './layout'
-import { LIFT_SECONDS, WRONG, actSeconds, type Act } from './motion'
+import { LIFT_SECONDS, WRONG, actSeconds, restPose, type Act, type Pose } from './motion'
+import { poseOf } from './gamePicture'
 import { layCycle } from './order'
 import { BELL, GATE, PLACES, RAIL, SHELF, SLOT_Z, TRAY, WAIT_Z, placeAt } from './places'
 import type { Scene } from './scene'
@@ -87,6 +88,8 @@ export type Plan =
 export const REACH = 4.6
 /** How far from the way of a thrown toy the claw backs off: half the longest toy and the reach of its own open jaws. */
 const CLEAR_OF_A_THROW = 6.5
+/** How a gobbler under the claw is standing now, worked out afresh each time it is asked. */
+const standing: Pose = restPose({} as Pose)
 /** How long after it lets a toy go the claw backs off: the toy has dropped out of its jaws by then, and nothing has been thrown yet. */
 const BACKS_OFF_AFTER = 0.28
 
@@ -390,7 +393,11 @@ export class Game {
     // Over the crew it rides clear of their heads, and it starts to rise as soon as it is sent across them.
     if (claw.z < 1.5 || claw.targetZ < 1.5) for (const actor of this.crew) {
       const beside = Math.abs(actor.x - claw.x) < shapeOf(actor.id).width / 2 + 5, onTheWay = (actor.x - claw.x) * (actor.x - claw.targetX) < 0
-      if ((beside || onTheWay) && actor.slot !== this.lifted) near = Math.max(near, actor.y + headTop(actor.id))
+      // (A gobbler under the claw stretches up on tiptoe for it or hops; the claw rides clear of it as it is now.)
+      if ((beside || onTheWay) && actor.slot !== this.lifted) {
+        const pose = poseOf(this, actor, standing)
+        near = Math.max(near, actor.y + Math.max(0, pose.dy) + headTop(actor.id) * Math.max(1, pose.squash))
+      }
     }
     if (claw.z < -5.5) {
       near = Math.max(near, GATE.top + 0.6)

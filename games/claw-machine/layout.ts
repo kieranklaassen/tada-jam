@@ -1,7 +1,7 @@
 import { bellyLayout } from './belly'
 import { ON_STUDS, PLATE } from './bricks'
 import { toySpan } from './builds'
-import { EYE, rimHeight } from './gobblerBuild'
+import { OVER_ITS_BROWS, rimHeight } from './gobblerBuild'
 import { shapeOf, snackOf, type GobblerId } from './gobblers'
 import { CRATE, SHELF, SLOT_Z, STEP, TRAY, WAIT_Z, crateX, slotX } from './places'
 import type { Toy } from './toys'
@@ -28,10 +28,11 @@ export function waitingSpot(slot: number, crew: number): Spot {
   return { x: slotX(slot, crew), y: SHELF.top + ON_STUDS, z: WAIT_Z }
 }
 
-/** The top of a gobbler's head above its feet: its eyes, or the model on its back. */
+/** The top of a gobbler's head above its feet: its brows raised as high as they go, or the model on its back. */
 export function headTop(id: GobblerId): number {
   const shape = shapeOf(id)
-  return rimHeight(shape) + (shape.model ? 0.8 + toySpan({ colour: 'red', kind: shape.model, size: 'small' }).height + 0.2 : EYE + 0.3)
+  const model = shape.model ? 0.8 + toySpan({ colour: 'red', kind: shape.model, size: 'small' }).height + 0.2 : 0
+  return rimHeight(shape) + Math.max(model, OVER_ITS_BROWS)
 }
 
 /** Where the snack and then the toys of a group lie in a gobbler's belly, measured from its feet, in the order they went in. */
@@ -81,10 +82,16 @@ export function deckSpots(toys: readonly Toy[], places: readonly number[]): Spot
 /**
  * Where each rider sits on a crate: one row for each crew, each row a step
  * higher and further back than the last, so more crews make a taller crate.
- * Measured like the deck spots. Returned crew by crew.
+ * Measured like the deck spots. Returned crew by crew. The crews sit in the
+ * order they will work in, but for one thing: a crew with models on its
+ * heads sits in the last row, since a model stands out behind its head, where
+ * the next row would be.
  */
 export function riderSpots(crews: readonly (readonly GobblerId[])[]): Spot[][] {
-  return crews.map((crew, row) => {
+  const tall = (crew: readonly GobblerId[]) => crew.some((id) => shapeOf(id).model !== undefined)
+  const seats = crews.map((_, i) => i).sort((a, b) => Number(tall(crews[a])) - Number(tall(crews[b])) || a - b)
+  return crews.map((crew, i) => {
+    const row = seats.indexOf(i)
     const widths = crew.map((id) => shapeOf(id).width * RIDER + 0.75)
     const total = widths.reduce((sum, width) => sum + width, 0)
     let x = -total / 2

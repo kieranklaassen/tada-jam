@@ -131,7 +131,8 @@ describe('the game', () => {
     sortAll(game)
     expect(trayIsClear(game.world.cycle)).toBe(true)
     expect(game.world.finished).toBe(false)
-    const events = [...tap(game, { on: 'ledge', which: 0 }, 1.2), ...watch(game)]
+    // The claw crosses to the gate and hooks it, and the scene is then under way.
+    const events = [...tap(game, { on: 'ledge', which: 0 }, 1.8), ...watch(game)]
     expect(types(events)).toContain('tip')
     expect(game.world.cycle.sort).toBe(1)
     expect(game.crew.map((actor) => actor.id)).toEqual(game.world.cycle.crews[1])

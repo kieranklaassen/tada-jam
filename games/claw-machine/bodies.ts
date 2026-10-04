@@ -118,6 +118,9 @@ export function fly(body: Body, to: { x: number; y: number; z: number }, dt: num
   }
   body.vy -= FALL * dt
   body.x += body.vx * dt; body.y += body.vy * dt; body.z += body.vz * dt
+  // Stepped in fixed steps it falls a hair faster than its arc, so on the way down it is held at the height it
+  // is going to: it never dips into what it lands on in the step before it lands.
+  if (body.vy < 0 && body.y < to.y) body.y = to.y
   // It rights itself as it flies: however it hung or lay when it was let go, it comes down level.
   const level = Math.max(0, 1 - 9 * dt)
   body.leanX *= level; body.leanZ *= level

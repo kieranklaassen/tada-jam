@@ -262,9 +262,10 @@ export function gamePicture(game: Game, guidance: Guidance | null): Picture {
     if (inside || carried.has(body)) return
     const into = body.mode === 'flying' && body.landing === 'mouth' ? game.crew[body.slot] : undefined
     if (into) {
-      // On its way into a mouth it is drawn more and more where the gobbler has its mouth at this moment, so it
-      // lands on the tongue however the gobbler is hopping or stretching for it.
-      const to = carriedBy(game, into, body), part = Math.min(1, body.flown / Math.max(1e-6, body.flight))
+      // On its way into a mouth it is drawn more and more where the gobbler has its mouth at this moment, and
+      // wholly so by half-way, while it is still well above it: so it lands on the tongue, or on the teeth,
+      // however the gobbler is hopping or stretching for it.
+      const to = carriedBy(game, into, body), part = Math.min(1, (body.flown / Math.max(1e-6, body.flight)) * 2)
       toys.push(look(game.generation * 100 + toy, body, body.x + (to.x - body.x) * part, body.y + (to.y - body.y) * part, body.z + (to.z - body.z) * part))
       return
     }

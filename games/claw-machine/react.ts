@@ -7,7 +7,7 @@ import { KNOB_HALF, gripFor } from './clawBuild'
 import type { Deed } from './deeds'
 import { fromSegment, type Actor, type Game, type Plan } from './game'
 import { carriedBy } from './gamePicture'
-import { EYE, rimHeight } from './gobblerBuild'
+import { OVER_ITS_BROWS, rimHeight } from './gobblerBuild'
 import { GOBBLER, shapeOf } from './gobblers'
 import { headTop, type Spot } from './layout'
 import { WRONG, actSeconds } from './motion'
@@ -28,11 +28,11 @@ type Stop = { at?: Spot; landing: Leg['landing']; peak?: number; seconds?: numbe
 /** How small a toy is chewed to go down a throat: small enough that the biggest fits it. */
 export const DOWN_THE_THROAT = 0.15
 /** How far above the rim a toy lies that rests on a gobbler's teeth. */
-const ON_TEETH = 0.85
+const ON_TEETH = 1
 /** How far above the bell a toy rises as it leaves it: enough that its far end is past the bell before it is lower than the bell. */
 const OFF_THE_BELL = 2.2
-/** How far above its rim a toy is lifted before it is thrown out: clear of the tops of its eyes. */
-const OVER_ITS_EYES = 3.2
+/** How far above its rim a toy is lifted before it is thrown out: clear of its eyes and of its brows, raised. */
+const OVER_ITS_EYES = OVER_ITS_BROWS + 0.3
 /** How far above the higher end of a throw it rises when nothing is said: a short hop. */
 const HOP = 0.3
 
@@ -73,9 +73,10 @@ export function clearTop(game: Game, toy: number, from: Spot, to: Spot, least: n
   /** Points along the way, as parts of it from 0 to 1, with the height the base of the toy has to have there. */
   const bars: [number, number][] = []
   if (game.crew.length > 0 && Math.abs(dz) > 1e-6) {
-    const heads = Math.max(...game.crew.map((actor) => actor.y + headTop(actor.id))) + 0.4
-    const eyes = Math.max(...game.crew.map((actor) => actor.y + rimHeight(shapeOf(actor.id)) + EYE * 0.92)) + 0.4
-    // Over the models at the backs of their heads, and past the fronts of their eyes.
+    // (A gobbler that is startled or keen stands a little taller than at rest.)
+    const heads = Math.max(...game.crew.map((actor) => actor.y + headTop(actor.id) * 1.06)) + 0.4
+    const eyes = Math.max(...game.crew.map((actor) => actor.y + (rimHeight(shapeOf(actor.id)) + OVER_ITS_BROWS) * 1.06)) + 0.3
+    // Over the models at the backs of their heads, and past the fronts of their eyes and brows.
     for (const [z, bar] of [[SLOT_Z - 5.6 - span.depth / 2, heads], [SLOT_Z - 2 + span.depth / 2, heads], [SLOT_Z + 3.7 + span.depth / 2, eyes]]) bars.push([(z - from.z) / dz, bar])
   }
   const tray = game.tray(), reach = Math.max(span.length, span.depth) / 2 + 2.9

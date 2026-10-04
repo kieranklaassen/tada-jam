@@ -4,7 +4,7 @@ import { toySpan } from './builds'
 import { KNOB_HALF, gripFor } from './clawBuild'
 import type { Deed } from './deeds'
 import { AIR, Game, KNOB_HOLD, newActor, type Actor } from './game'
-import { rimHeight } from './gobblerBuild'
+import { OVER_ITS_BROWS, rimHeight } from './gobblerBuild'
 import { crewGoesBy, shapeOf } from './gobblers'
 import { BED, CRATE_STANDS, ON_DECK, RIDER, TIP, crewSpot, deckSpots, deckTop, handleSpot, riderSpots, tipped, waitingSpot, type Spot } from './layout'
 import { actSeconds } from './motion'
@@ -127,7 +127,7 @@ export function tipOut(game: Game, tipped: readonly number[]): void {
         const under = { x: actor.x, y: tongue - 0.75, z: actor.z, seconds: 0.12, scale: DOWN_THE_THROAT, landing: 'again' as const, fixed: true }
         const on = { x: actor.x, y: tongue, z: actor.z, seconds: 0.08, scale: DOWN_THE_THROAT, landing: 'again' as const, fixed: true }
         // Up to over the tops of its eyes, still small, and from there over them onto the tray, growing late.
-        const above = { x: actor.x, y: rim + 3.2, z: actor.z, seconds: 0.2, scale: 0.5, landing: 'again' as const, fixed: true }
+        const above = { x: actor.x, y: rim + OVER_ITS_BROWS + 0.3, z: actor.z, seconds: 0.2, scale: 0.5, landing: 'again' as const, fixed: true }
         const peak = clearTop(game, toy, above, home, 1.5)
         game.flights.set(body, under)
         body.legs = [on, above, { x: home.x, y: home.y, z: home.z, seconds: airTime(above.y, home.y, peak), scale: 1, landing: 'stand' }]
@@ -257,7 +257,8 @@ export function delivery(game: Game, which: number): void {
   beats.push(cue(game, tips + 0.2, () => game.say({ type: 'pour' })))
   // Row by row from the front, and in a row whoever has furthest to go sideways first: so a toy that is on its way
   // never moves into its neighbour that has not left yet.
-  const sideways = (toy: number) => Math.abs(game.spotOf(toy).x - (crate.x + deck[toy].x))
+  // (It pours from the middle of the tray, wherever on the ledge it waited.)
+  const sideways = (toy: number) => Math.abs(game.spotOf(toy).x - deck[toy].x)
   const order = game.bodies.map((_, toy) => toy).sort((a, b) => deck[b].z - deck[a].z || sideways(b) - sideways(a))
   let leaves = tips + 0.3, lastRow = order.length > 0 ? deck[order[0]].z : 0
   for (const toy of order) {
