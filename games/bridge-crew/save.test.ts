@@ -3,7 +3,7 @@ import { CROSSINGS, part } from './bridges.fixture'
 import { FIRST_VISIT, LADDER } from './config'
 import { KINDS, MAX_PARTS, SPEC, type Part } from './kit'
 import { JUDGE, movedAfter, strainThinned } from './order'
-import { RACK, TRACINGS, crossed, deserialize, edit, failedRun, freshSave, leaveHats, markShown, onNewest, parked, pluckHat, sentAway, sentHome, serialize, setTrolley, standing, swapTracing, toFront, trace, turnTo, unroll, type Save } from './save'
+import { RACK, TRACINGS, crossed, crossedHome, deserialize, edit, failedRun, freshSave, leaveHats, markShown, onNewest, parked, pluckHat, sentAway, sentHome, serialize, setTrolley, standing, swapTracing, toFront, trace, turnTo, unroll, type Save } from './save'
 import { COLS, ROWS, canPin, site } from './sites'
 import { STATE_VERSION } from './state'
 
@@ -269,14 +269,19 @@ describe('the saved state', () => {
     // One that is parked across is not the one that comes.
     expect(sentAway(over, 'piano-mover').waiting).toEqual(['giraffe-bus'])
     expect(sentAway(sentAway(sentAway(over, 'piano-mover'), 'giraffe-bus'), 'caterpillar-bus').waiting).toEqual(['post-van'])
-    // Two park at most, and one sent home stands behind the one at the front.
-    let busy = over
-    for (let i = 0; i < 3; i++) busy = crossed(busy, busy.waiting[0])
-    expect(busy.across).toHaveLength(2)
-    for (const id of busy.across) expect(busy.waiting).not.toContain(id)
-    const home = sentHome(busy, busy.across[0])
-    expect(home.waiting).toEqual([busy.waiting[0], busy.across[0]])
-    expect(home.across).toEqual([busy.across[1]])
+    // The one that draws up after a crossing shows more crates than the one that crossed: after the piano mover's four
+    // the caterpillar bus with its five, and not the giraffe bus with its three. After the caterpillar bus, nobody.
+    const busy = crossed(over, 'piano-mover')
+    expect(busy.waiting).toEqual(['caterpillar-bus'])
+    expect(crossed(sentAway(over, 'piano-mover'), 'giraffe-bus').waiting).toEqual(['caterpillar-bus'])
+    const full = crossed(busy, 'caterpillar-bus')
+    expect(full.waiting).toEqual([])
+    // Two park at most, and one sent home stands at the near bank, behind whoever is at the front.
+    expect(full.across).toEqual(['piano-mover', 'caterpillar-bus'])
+    const home = sentHome(full, 'piano-mover')
+    expect(home.waiting).toEqual(['piano-mover'])
+    expect(home.across).toEqual(['caterpillar-bus'])
+    expect(sentHome(home, 'caterpillar-bus').waiting).toEqual(['piano-mover', 'caterpillar-bus'])
     expect(round(home)).toEqual(home)
     // Any two of the fleet are read back there, and on another sheet only that sheet's own two.
     expect(round({ ...home, waiting: ['giraffe-bus', 'piano-mover'], across: [] }).waiting).toEqual(['giraffe-bus', 'piano-mover'])
@@ -324,3 +329,63 @@ describe('the saved state', () => {
     expect(strainThinned('post-van', { crossed: ['post-van'], home: false }, movedAfter(['rock-prop', 'plank-gap'], 0), true, 0)).toBe(true)
   })
 })
+
+describe('what a full reading found of what is stored', () => {
+  it('a free-yard sheet taken back from the rack shows the vehicle the child sent across it, not the first of the fleet', () => {
+    const last = LADDER[LADDER.length - 1]
+    let state: Save = { ...edit(freshSave(null, last), CROSSINGS[last]), position: last }
+    state = crossed(sentAway(state, 'post-van'), 'jelly-truck')
+    expect(state.sheets[0].crossed).toEqual(['jelly-truck'])
+    // On to the next sheet, and back to the first on the rack.
+    state = turnTo(unroll(state), 0)
+    expect(onNewest(state)).toBe(false)
+    expect(parked(state)).toEqual(['jelly-truck'])
+    expect(standing(state)).toEqual([])
+    // Sent home there, it stands at the near bank of that sheet, and the entry itself remembers it.
+    state = sentHome(state, 'jelly-truck')
+    expect(state.sheets[0].home).toBe(true)
+    expect(parked(state)).toEqual([])
+    expect(standing(state)).toEqual(['jelly-truck'])
+    expect(round(state).sheets[0]).toEqual(state.sheets[0])
+    // With nobody across yet it is the first of the fleet that waits there.
+    const bare = turnTo(unroll(crossed({ ...edit(freshSave(null, last), CROSSINGS[last]), position: last }, 'post-van')), 1)
+    expect(standing(bare)).toEqual(['post-van'])
+  })
+
+  it('a vehicle that crosses on its way home has crossed the bridge as it stands', () => {
+    // The van is parked; the bridge is changed, so nobody has crossed it as it stands; then the van crosses it home.
+    let state = crossed(edit(freshSave(null), CROSSINGS['plank-gap']), 'post-van')
+    state = edit(state, [...CROSSINGS['plank-gap'], part('plank', 10, 6, 10, 4)])
+    expect(state.sheets[0].crossed).toEqual([])
+    expect(state.across).toEqual(['post-van'])
+    state = sentHome(crossedHome(state, 'post-van'), 'post-van')
+    expect(state.sheets[0]).toMatchObject({ crossed: ['post-van'], home: true })
+    expect(state.waiting).toContain('post-van')
+    expect(crossedHome(state, 'post-van')).toBe(state)
+    expect(round(state)).toEqual(state)
+  })
+
+  it('a position is counted as laid out at the moment its roll is laid out, at the judging, and not again when the roll is unrolled', () => {
+    let state = edit(freshSave(null), CROSSINGS['plank-gap'])
+    expect(state.laid).toEqual({ 'plank-gap': 1 })
+    state = crossed(state, 'post-van')
+    const next = state.next!
+    // The roll waits, and its position is counted already.
+    expect(state.laid[next.site]).toBe(1)
+    expect(next.variant).toBe(0)
+    const after = unroll(state)
+    expect(after.laid).toEqual(state.laid)
+    expect(round(state).laid).toEqual(state.laid)
+    // The forms come in turn all the same: three times round the first position is forms 0, 1, 2 and 0 again.
+    const forms: number[] = []
+    let turn: Save = { ...freshSave(null), tries: JUDGE.badly - 1 }
+    forms.push(turn.sheets[0].variant)
+    for (let i = 0; i < 3; i++) { turn = unroll(failedRun(turn, 'post-van', null)); turn = { ...turn, tries: JUDGE.badly - 1 }; forms.push(turn.sheets[turn.on].variant) }
+    expect(forms).toEqual([0, 1, 2, 0])
+    // A state saved when the count was raised at the unrolling is read back with its waiting roll counted.
+    const old = { ...state, laid: { 'plank-gap': 1 } }
+    expect(round(old).laid[next.site]).toBe(1)
+    expect(round(old).next).toEqual(next)
+  })
+})
+

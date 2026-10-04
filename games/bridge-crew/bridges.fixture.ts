@@ -29,8 +29,8 @@ export const CROSSINGS: Readonly<Record<string, readonly Part[]>> = {
     part('stick', 9, 4, 11, 6), part('stick', 11, 6, 13, 6), part('stick', 13, 6, 15, 4), part('stick', 11, 6, 11, 8), part('stick', 13, 6, 13, 8),
   ],
   'barge-below': [
-    edge(7, 6, 9, 6), edge(9, 6, 13, 6), edge(13, 6, 16, 6), edge(16, 6, 17, 6), part('stick', 7, 4, 9, 6), part('tube', 16, 3, 16, 6),
-    part('stick', 9, 6, 11, 8), part('stick', 11, 8, 13, 6), part('stick', 13, 6, 15, 8), part('stick', 15, 8, 16, 6), part('stick', 11, 8, 15, 8), part('stick', 11, 8, 11, 6), part('stick', 15, 8, 15, 6),
+    edge(6, 6, 8, 6), edge(8, 6, 12, 6), edge(12, 6, 16, 6), edge(16, 6, 18, 6), part('stick', 6, 4, 8, 6), part('tube', 16, 3, 16, 6),
+    part('stick', 8, 6, 10, 8), part('stick', 10, 8, 12, 6), part('stick', 12, 6, 14, 8), part('stick', 14, 8, 16, 6), part('stick', 10, 8, 14, 8), part('stick', 10, 8, 10, 6), part('stick', 14, 8, 14, 6),
   ],
   'thin-kit': [edge(8, 6, 12, 6), edge(12, 6, 16, 6), part('stick', 12, 6, 12, 4), part('thread', 8, 6, 12, 4), part('thread', 16, 6, 12, 4)],
   'long-haul': [edge(5, 6, 8, 6), edge(8, 6, 12, 6), edge(12, 6, 16, 6), edge(16, 6, 19, 6), part('thread', 4, 11, 8, 6), part('tube', 14, 2, 12, 6), part('tube', 14, 2, 16, 6)],

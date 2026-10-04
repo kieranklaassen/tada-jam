@@ -537,7 +537,8 @@ describe('what the sheet says a child sees and hears', () => {
 
   it('a whole arch is three or more firm parts in a curve from footing to footing, over the whole stretch', () => {
     const at = site('barge-below', 0), footing = isFooting(at), over = at.channel!
-    const arch = [part('stick', 7, 6, 9, 9), part('stick', 9, 9, 12, 10), part('stick', 12, 10, 15, 9), part('stick', 15, 9, 17, 6)]
+    expect([at.left[0], at.right[0], ...over]).toEqual([6, 18, 11, 14])
+    const arch = [part('stick', 6, 6, 9, 8), part('stick', 9, 8, 12, 9), part('stick', 12, 9, 15, 8), part('stick', 15, 8, 18, 6)]
     const firm = (parts: unknown[]) => parts.map(() => true)
     expect(wholeArch(arch, firm(arch), footing, over)).toBe(true)
     // Not whole with a part that is not firm, with a part missing, or with a thread in it.
@@ -545,20 +546,22 @@ describe('what the sheet says a child sees and hears', () => {
     expect(wholeArch(arch.slice(0, 3), firm(arch), footing, over)).toBe(false)
     expect(wholeArch(arch.map((p, i) => (i === 1 ? { ...p, kind: 'thread' as const } : p)), firm(arch), footing, over)).toBe(false)
     // Two parts make a gable and no curve; a curve that bends back is no arch; nor is one that stops short of the stretch's far side.
-    const gable = [part('stick', 7, 6, 9, 9), part('stick', 9, 9, 10, 3)]
-    expect(wholeArch(gable, firm(gable), footing, [8, 9])).toBe(false)
-    const kinked = [part('stick', 7, 6, 9, 7), part('stick', 9, 7, 12, 10), part('stick', 12, 10, 15, 9), part('stick', 15, 9, 17, 6)]
+    const gable = [part('stick', 6, 6, 8, 9), part('stick', 8, 9, 9, 0)]
+    expect(wholeArch(gable, firm(gable), footing, [7, 8])).toBe(false)
+    const kinked = [part('stick', 6, 6, 8, 7), part('stick', 8, 7, 12, 10), part('stick', 12, 10, 15, 8), part('stick', 15, 8, 18, 6)]
     expect(wholeArch(kinked, firm(kinked), footing, over)).toBe(false)
-    const short = [part('stick', 7, 6, 8, 8), part('stick', 8, 8, 9, 8), part('stick', 9, 8, 10, 0)]
-    expect(wholeArch(short, firm(short), footing, [7, 9])).toBe(true)
+    const short = [part('stick', 6, 6, 7, 8), part('stick', 7, 8, 8, 8), part('stick', 8, 8, 9, 0)]
+    expect(wholeArch(short, firm(short), footing, [6, 8])).toBe(true)
     expect(wholeArch(short, firm(short), footing, over)).toBe(false)
   })
 
   it('a secret that works every time: under a whole arch the barge\'s toot comes back as a chord', () => {
     const on = (bridge: typeof CROSSINGS['barge-below']) => new Game(edit({ ...freshSave(null), sheets: [{ ...freshSave(null).sheets[0], site: 'barge-below' }] }, bridge), stream(2))
     const heard = (game: Game) => { const all = []; send(game); for (let i = 0; i < 60 * 9; i++) { game.step(1 / 60); all.push(...game.takeVoices()) } return all }
-    // The arch stands over the deck from lip to lip, and three posts from the deck hold its joints.
-    const arch = [...CROSSINGS['barge-below'], part('stick', 7, 6, 9, 9), part('stick', 9, 9, 12, 10), part('stick', 12, 10, 15, 9), part('stick', 15, 9, 17, 6), part('stick', 9, 6, 9, 9), part('stick', 12, 6, 12, 10), part('stick', 15, 6, 15, 9)]
+    // A deck of four planks on edge, an arch of four sticks over it from lip to lip, and three posts from the deck up to
+    // the arch's joints, with two braces: thirteen parts, within the sheet's kit, and nothing in the channel.
+    const arch = [part('plank', 6, 6, 9, 6, true), part('plank', 9, 6, 12, 6, true), part('plank', 12, 6, 15, 6, true), part('plank', 15, 6, 18, 6, true),
+      part('stick', 6, 6, 9, 8), part('stick', 9, 8, 12, 9), part('stick', 12, 9, 15, 8), part('stick', 15, 8, 18, 6), part('stick', 9, 6, 9, 8), part('stick', 12, 6, 12, 9), part('stick', 15, 6, 15, 8), part('stick', 12, 6, 9, 8), part('stick', 12, 6, 15, 8)]
     for (const again of [0, 1]) {
       const game = on(arch)
       expect(game.frame.firm.every(Boolean), `time ${again + 1}`).toBe(true)

@@ -11,7 +11,7 @@ import { DRAWN_DIP, WATER, atRest, rests, type Rest } from './pose'
 import { answerOf, between, creaks, ended, frontAt, seat, stepAt, type Seat } from './ride'
 import type { Frame, Strain } from './frame'
 import { hang, lowPoint, park, roadOf, run, type Ending, type Run, type Train } from './run'
-import { crossed, failedRun, leaveHats, markShown, onNewest, parked, pluckHat, ringed, sentAway, sentHome, setTrolley, standing, swapTracing, toFront, trace, turnTo, unringed, unroll, type Save, type Sheet } from './save'
+import { crossed, crossedHome, failedRun, leaveHats, markShown, onNewest, parked, pluckHat, ringed, sentAway, sentHome, setTrolley, standing, swapTracing, toFront, trace, turnTo, unringed, unroll, type Save, type Sheet } from './save'
 import { Scene } from './scene'
 import { groundAt } from './sheet'
 import { isFooting, isYard, site, type Idea, type VehicleId } from './sites'
@@ -961,7 +961,7 @@ export class Game extends Toy {
       // bus leaves a hat on any part lower than its heads.
       const hats = drive.vehicle === 'giraffe-bus' ? drive.run.ride.low[TASTE.bus.headroom - 1] : []
       const before = this.save, ring = before.sheets[before.on].ring
-      this.save = drive.homeward ? leaveHats(unringed(sentHome(this.save, drive.vehicle), drive.vehicle), hats) : crossed(this.save, drive.vehicle, hats)
+      this.save = drive.homeward ? leaveHats(unringed(sentHome(crossedHome(this.save, drive.vehicle), drive.vehicle), drive.vehicle), hats) : crossed(this.save, drive.vehicle, hats)
       // The ring fades through this scene if this crossing took it away. The roll slides in and a vehicle draws up
       // only if this crossing brought them: a later crossing on the same sheet brings neither again.
       this.fading = ring && !this.save.sheets[this.save.on].ring ? ring : null

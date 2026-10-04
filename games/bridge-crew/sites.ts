@@ -39,6 +39,8 @@ type Plan = {
   deck?: number
   /** A rock: how far from the left lip, for each variant, and how high it stands. */
   rock?: { from: readonly [number, number, number]; top: number }
+  /** A second, lower rock, which the water covers: the same, for a site with rocks. */
+  low?: { from: readonly [number, number, number]; top: number }
   /** Cliffs behind both banks, with footings this far above the deck. */
   cliffs?: number
   /** Gorge walls that step down from each lip by two cells a column, for this many columns. */
@@ -60,14 +62,14 @@ const PLANS: Readonly<Record<string, Plan>> = {
   'truss-span': { gap: [10, 11, 9], kit: [4, 14, 0, 0], job: 'jelly-truck', extra: 'caterpillar-bus', idea: 'row' },
   'tube-post': { gap: [10, 9, 10], deck: 8, rock: { from: [5, 4, 6], top: 3 }, kit: [4, 6, 2, 0], job: 'jelly-truck', extra: 'piano-mover', idea: 'tube' },
   'piano-day': { gap: [8, 9, 8], rock: { from: [4, 5, 3], top: 3 }, kit: [4, 10, 1, 0], job: 'piano-mover', extra: 'caterpillar-bus', idea: null },
-  'high-thread': { gap: [8, 9, 7], cliffs: 4, kit: [3, 2, 0, 6], job: 'piano-mover', extra: 'caterpillar-bus', idea: 'thread' },
+  'high-thread': { gap: [8, 9, 7], cliffs: 4, kit: [3, 2, 1, 6], job: 'piano-mover', extra: 'caterpillar-bus', idea: 'thread' },
   'tall-bus': { gap: [8, 7, 9], cliffs: 4, kit: [3, 10, 0, 6], job: 'giraffe-bus', extra: 'piano-mover', idea: null },
   'mast-and-stay': { gap: [10, 11, 9], kit: [4, 8, 2, 8], job: 'piano-mover', extra: 'caterpillar-bus', idea: 'wide-base' },
   'arch-gorge': { gap: [10, 9, 11], deck: 8, steps: 2, kit: [4, 12, 0, 0], job: 'giraffe-bus', extra: 'piano-mover', idea: 'arch' },
-  'barge-below': { gap: [10, 11, 12], rock: { from: [9, 9, 9], top: 3 }, channel: [5, 8], kit: [4, 12, 2, 4], job: 'jelly-truck', extra: 'caterpillar-bus', idea: null },
+  'barge-below': { gap: [12, 11, 12], rock: { from: [10, 9, 9], top: 3 }, channel: [5, 8], kit: [4, 12, 2, 4], job: 'jelly-truck', extra: 'caterpillar-bus', idea: null },
   'thin-kit': { gap: [8, 9, 7], kit: [3, 5, 0, 2], job: 'piano-mover', extra: 'caterpillar-bus', idea: null },
   'long-haul': { gap: [14, 13, 14], cliffs: 5, rock: { from: [9, 4, 5], top: 2 }, kit: [5, 16, 4, 8], job: 'piano-mover', extra: 'caterpillar-bus', idea: null },
-  'open-yard': { gap: [12, 12, 12], cliffs: 5, rock: { from: [4, 8, 6], top: 3 }, kit: [5, 16, 4, 8], job: 'post-van', extra: 'caterpillar-bus', idea: null },
+  'open-yard': { gap: [12, 12, 12], cliffs: 5, rock: { from: [4, 8, 6], top: 3 }, low: { from: [9, 3, 9], top: 2 }, kit: [5, 16, 4, 8], job: 'post-van', extra: 'caterpillar-bus', idea: null },
 }
 
 const DECK = 6
@@ -86,6 +88,7 @@ export function site(id: string, variant: number): Site {
       if (inward > 0 && inward <= plan.steps) height = deck - 2 * inward
     }
     if (plan.rock && x === lip + plan.rock.from[v]) height = plan.rock.top
+    if (plan.low && x === lip + plan.low.from[v]) height = plan.low.top
     ground.push(height)
   }
   const anchors: Point[] = plan.cliffs ? [[lip - 1, deck + plan.cliffs], [far + 1, deck + plan.cliffs]] : []

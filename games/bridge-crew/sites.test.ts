@@ -103,3 +103,36 @@ describe('the sheets', () => {
     expect(LADDER.filter((id) => isYard(site(id, 0)))).toEqual([LADDER[LADDER.length - 1]])
   })
 })
+
+describe('what a full reading found of the sheets', () => {
+  const heights = (id: string, variant: number) => { const at = site(id, variant); return { at, inGap: at.ground.slice(at.left[0] + 1, at.right[0]) } }
+
+  it('the free yard has rocks: one that stands out of the water and a lower one under it, in every form, apart from each other and from both banks', () => {
+    for (let variant = 0; variant < VARIANTS; variant++) {
+      const { inGap } = heights('open-yard', variant), rocks = inGap.flatMap((height, i) => (height > 0 ? [{ i, height }] : []))
+      expect(rocks.map((rock) => rock.height).sort()).toEqual([2, 3])
+      expect(Math.abs(rocks[0].i - rocks[1].i)).toBeGreaterThan(2)
+      for (const rock of rocks) { expect(rock.i).toBeGreaterThan(1); expect(rock.i).toBeLessThan(inGap.length - 2) }
+    }
+  })
+
+  it('the rock of the barge\'s sheet stands in the river in every form: clear of both banks, and beyond the channel', () => {
+    for (let variant = 0; variant < VARIANTS; variant++) {
+      const { at, inGap } = heights('barge-below', variant), rock = inGap.findIndex((height) => height > 0)
+      expect(inGap.filter((height) => height > 0)).toHaveLength(1)
+      const x = at.left[0] + 1 + rock
+      // Open water on both sides of it: it is no step of a bank.
+      expect(x - at.left[0]).toBeGreaterThan(1)
+      expect(at.right[0] - (x + 1)).toBeGreaterThanOrEqual(1)
+      expect(x).toBeGreaterThan(at.channel![1])
+    }
+  })
+
+  it('the thread\'s sheet adds thread and takes nothing away: the kit still has every kind the sheets before it had', () => {
+    const before = site('piano-day', 0).kit, now = site('high-thread', 0).kit
+    for (const kind of KINDS) if (before[kind] > 0) expect(now[kind], kind).toBeGreaterThan(0)
+    expect(now.thread).toBeGreaterThan(0)
+    expect(before.thread).toBe(0)
+  })
+})
+
