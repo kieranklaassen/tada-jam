@@ -45,6 +45,9 @@ export function modelBuilt(idea: Idea, progress: number): number {
   return (common + (whole - common) * share(0.5, 0.62)) / whole
 }
 
+/** How long the trolley takes to turn over when it is flipped, in seconds. */
+const FLIP = 0.3
+
 /** A hat left on a part swings when the part is turned, and comes to rest: how far it leans, in radians, this long after the turn. */
 export const hatSwing = (since: number): number => (since >= 0 && since < 1.4 ? 0.9 * Math.sin(since * 11) * (1 - since / 1.4) : 0)
 
@@ -587,7 +590,8 @@ export class View {
     // In the hand it is under the finger, unless the finger has it on the deck, where it rides.
     const riding = carried !== null && cart.at !== null && 'x' in cart.at
     if (carried && !riding) trolley(pen, ...at2(carried[0], carried[1] - 0.2), cell, cart.weights, 'tray', 0, stream(31))
-    else if (!cart.at && !game.trolleyFell) trolley(pen, home[0], home[1], cell * 1.15, cart.weights, 'tray', 0, stream(31))
+    // At home with the one weight it comes with it has no numeral yet: the numeral names a stack the child set.
+    else if (!cart.at && !game.trolleyFell) trolley(pen, home[0], home[1], cell * 1.15, cart.weights, 'tray', 0, stream(31), cart.weights > 1 || game.aside)
     // On the bridge: trundling from where it was set down to where it rests, riding under the plank, or swinging from a pin.
     const place = game.trolleyPlace()
     if (place && cart.at && (!carried || riding)) {
@@ -595,14 +599,25 @@ export class View {
       const x = rolled ? rolled.from + (place[0] - rolled.from) * e * e * (3 - 2 * e) : place[0]
       const how = 'pin' in cart.at ? 'pin' : cart.at.under ? 'under' : 'deck'
       const rung = game.trolleyRung < RING ? 0.04 * Math.sin(game.trolleyRung * 60) * (1 - game.trolleyRung / RING) : 0
-      trolley(pen, ...at2(x + rung, place[1] + (how === 'deck' ? 0.11 : 0)), cell, cart.weights, how, swingAt(game.swing), stream(31))
+      // Flipped, it turns over about the deck: half a turn in a third of a second, to ride under the plank or back on it.
+      const over = game.trolleyFlipped < FLIP && how !== 'pin' ? (1 - game.trolleyFlipped / FLIP) * Math.PI * (how === 'under' ? 1 : -1) : 0
+      const [tx, ty] = at2(x + rung, place[1] + (how === 'deck' ? 0.11 : 0))
+      pen.save()
+      pen.translate(tx, ty); pen.rotate(over)
+      // Turning over, its numeral is left out: a numeral on its head is no numeral.
+      trolley(pen, 0, 0, cell, cart.weights, how, swingAt(game.swing), stream(31), over === 0)
+      pen.restore()
     }
     // A part gave under it: it drops into the water where it was, and is back in its compartment.
     if (game.trolleyFell) {
       const f = Math.min(1, game.trolleyFell.since / 0.5), from = game.trolleyFell.from
-      if (f < 1) trolley(pen, ...at2(from[0], from[1] + (WATER - from[1]) * f * f), cell, cart.weights, 'tray', 0, stream(31))
+      if (f < 1 && game.trolleyFell.rolled) {
+        // A tube turned under it: it log-rolls off sideways, over and over, into the water.
+        const [rx, ry] = at2(from[0] + 0.7 * f, from[1] + (WATER - from[1]) * f * f)
+        pen.save(); pen.translate(rx, ry); pen.rotate(2 * Math.PI * f); trolley(pen, 0, 0, cell, cart.weights, 'tray', 0, stream(31), false); pen.restore()
+      } else if (f < 1) trolley(pen, ...at2(from[0], from[1] + (WATER - from[1]) * f * f), cell, cart.weights, 'tray', 0, stream(31))
       // On the water it bobs for a moment, and then it is back in its compartment.
-      else trolley(pen, ...at2(from[0], WATER + 0.06 * Math.sin((game.trolleyFell.since - 0.5) * 16) * Math.max(0, 1 - (game.trolleyFell.since - 0.5) / 0.6)), cell, cart.weights, 'tray', 0, stream(31))
+      else trolley(pen, ...at2(from[0] + (game.trolleyFell.rolled ? 0.7 : 0), WATER + 0.06 * Math.sin((game.trolleyFell.since - 0.5) * 16) * Math.max(0, 1 - (game.trolleyFell.since - 0.5) / 0.6)), cell, cart.weights, 'tray', 0, stream(31))
     }
 
     // The tracing paper: the pad at the bottom, and the two tracings kept above it. The one laid on the board is marked.

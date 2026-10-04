@@ -17,7 +17,7 @@ import { plop, pinSwing, splash as splashVoice } from './voices'
 import { DRAWN_DIP } from './pose'
 import { MODEL_PLACE, MODEL_TOP, perchOn } from './motion'
 import { modelDip, modelSides } from './props'
-import { pluck as pluckVoice, scaleNote, scaleStart, trolleyFlip } from './voices'
+import { pinTick, pluck as pluckVoice, scaleNote, scaleStart, trolleyFlip, trolleyOff, trolleySet, trolleyWeight } from './voices'
 import { lowPoint } from './run'
 import { JUDGE } from './order'
 import { desk } from './valley'
@@ -242,7 +242,8 @@ describe('the trolley, the tracing paper and the two showings', () => {
     expect(game.trolley.at).toEqual({ x: 12, under: true })
     // Dropped off the bridge, it goes back to the tray.
     game.step(2)
-    game.press(x, y + 0.3); game.dragStart(); game.dragMove(3, 12); game.dragEnd()
+    // (Under the plank it is touched where it hangs: below the deck.)
+    game.press(x, y - 0.6); game.dragStart(); game.dragMove(3, 12); game.dragEnd()
     expect(game.trolley.at).toBeNull()
     carryTrolley(game, [12, 6.2])
     tapAt(game, waitAt(game.at, 0) - 0.4, 7)
@@ -884,7 +885,8 @@ describe('what the reader found the sheet promises', () => {
     expect(squeaks(20)).toBe(0)
     expect(game.swing).toBe(Infinity)
     const place = game.trolleyPlace()!
-    tapAt(game, place[0], place[1] + 0.3)
+    // It is touched where it hangs: under its pin.
+    tapAt(game, place[0], place[1] - 0.6)
     expect(game.swing).toBe(0)
     expect(squeaks(3)).toBeGreaterThanOrEqual(2)
     expect(JSON.stringify(stored(game))).not.toContain('swing')
@@ -1479,4 +1481,136 @@ describe('what the seventh reading found the sheet promises', () => {
     expect(scale(heard(third, byLength[1]))).toBe(true)
   })
 })
+
+describe('what a full reading found of the trolley', () => {
+  const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
+  const cart = (game: Game) => tools(game.at).find((t) => t.tool === 'trolley')!
+  const home = (game: Game) => { const b = cart(game); return [(b.x0 + b.x1) / 2, TRAY.top - 1] as const }
+  const onEdge = () => new Game(edit(freshSave(null), CROSSINGS['plank-gap']), stream(2))
+
+  it('in the hand it is where the finger has it, and nothing is saved until it is let go; put away in the hand, it is where it came from', () => {
+    const game = onEdge()
+    game.takeChange()
+    const kept = JSON.stringify(stored(game))
+    game.press(...home(game)); game.dragStart(); game.dragMove(11, 6.3); game.dragMove(12, 6.3); game.dragMove(13, 6.3)
+    // It rides the deck under the finger, and the bridge answers under it.
+    expect(game.trolley.at).toEqual({ x: 13, under: false })
+    expect(game.answer.parts[0].use).toBeGreaterThan(0.05)
+    // Nothing of that has reached the save.
+    expect(JSON.stringify(stored(game))).toBe(kept)
+    expect(game.takeChange()).toBe(false)
+    game.pressEnd()
+    expect(game.trolley.at).toBeNull()
+    expect(JSON.stringify(stored(game))).toBe(kept)
+    // Let go on the deck, it is saved there.
+    game.press(...home(game)); game.dragStart(); game.dragMove(12, 6.3); game.dragEnd()
+    expect(game.save.sheets[0].trolley.at).toMatchObject({ under: false })
+    expect(game.takeChange()).toBe(true)
+  })
+
+  it('set down, it clinks once: as it comes onto the deck under the finger, and not again when it is let go', () => {
+    const game = onEdge()
+    game.takeVoices()
+    game.press(...home(game)); game.dragStart(); game.dragMove(12, 6.3); game.dragEnd()
+    expect(game.takeVoices().filter((voice) => voice === trolleySet)).toHaveLength(1)
+  })
+
+  it('while a vehicle has the road it stands aside, and it is back where it stood when the road is free: nothing is saved of that, and a run put away has moved nothing', () => {
+    const game = onEdge()
+    game.press(...home(game)); game.dragStart(); game.dragMove(12, 6.3); game.dragEnd()
+    const stood = game.save.sheets[0].trolley.at
+    expect(stood).not.toBeNull()
+    game.takeChange()
+    tapAt(game, waitAt(game.at, 0) - 0.4, 7)
+    expect(game.drive).not.toBeNull()
+    // Aside: the road is the vehicle's, and the save still has the trolley where the child put it.
+    expect(game.trolley.at).toBeNull()
+    expect(game.save.sheets[0].trolley.at).toEqual(stood)
+    // Put away in the middle of the run: the vehicle is at the near bank and the trolley where it stood.
+    const away = onEdge()
+    away.press(...home(away)); away.dragStart(); away.dragMove(12, 6.3); away.dragEnd()
+    tapAt(away, waitAt(away.at, 0) - 0.4, 7); steps(away, 0.5); away.putAway()
+    expect(away.trolley.at).toEqual(stood)
+    expect(deserialize(stored(away)).sheets[0].trolley.at).toEqual(stood)
+    // The run through and its scene over: it is back, with its clink.
+    for (let i = 0; i < 60 * 20 && game.drive; i++) game.step(1 / 60)
+    expect(game.show.kind).toBe('crossing')
+    expect(game.trolley.at).toBeNull()
+    game.takeVoices()
+    steps(game, 12)
+    expect(game.show.kind).toBeNull()
+    expect(game.trolley.at).toEqual(stood)
+    expect(game.takeVoices().some((voice) => voice === trolleySet)).toBe(true)
+  })
+
+  it('a part that gives under it is seen broken where it gave for a moment, the carry ends, and it gives once', () => {
+    // The first sheet's plank laid flat cracks under the trolley.
+    const game = new Game(edit(freshSave(null), [part('plank', 10, 6, 14, 6)]), stream(2))
+    game.takeVoices()
+    game.press(...home(game)); game.dragStart(); game.dragMove(11, 6.3); game.dragMove(12, 6.3)
+    expect(game.trolleyBroke).toMatchObject({ part: 0 })
+    expect(game.save.sheets[0].ring).toMatchObject({ part: 0 })
+    // The carry is over: the hand is empty, and moving the finger on does nothing more.
+    expect(game.hand).toBeNull()
+    const once = game.takeVoices()
+    game.dragMove(12.5, 6.3); game.dragMove(13, 6.3); game.dragEnd()
+    expect(game.takeVoices()).toEqual([])
+    expect(once.length).toBeGreaterThan(0)
+    // Drawn in two pieces that hang from their own pins, and whole again within a second and a half.
+    steps(game, 0.4)
+    const broken = game.pieces()!
+    expect(broken).toMatchObject({ part: 0, kind: 'plank' })
+    expect(broken.near[1][1]).toBeLessThan(5.6); expect(broken.far[1][1]).toBeLessThan(5.6)
+    steps(game, 1.2)
+    expect(game.pieces()).toBeNull()
+    expect(game.trolleyBroke).toBeNull()
+    expect(game.bridge).toHaveLength(1)
+  })
+
+  it('let go on a pin that is no point of the road it hangs there, however near the deck; on a footing or nowhere it goes back with an answer', () => {
+    // The triangle's sheet: the bridge's top pin is two cells above the middle of the road.
+    const yard = new Game(edit(freshSave(null, 'first-triangle'), CROSSINGS['first-triangle']), stream(2))
+    yard.press(...home(yard)); yard.dragStart(); yard.dragMove(12, 4.1); yard.dragEnd()
+    expect(yard.trolley.at).toEqual({ pin: [12, 4] })
+    // Touched where it hangs, and carried to a footing in the bank: back to the tray, and heard.
+    steps(yard, 1); yard.takeVoices()
+    const place = yard.trolleyPlace()!
+    yard.press(place[0], place[1] - 0.6); yard.dragStart(); yard.dragMove(3, 6); yard.dragEnd()
+    expect(yard.trolley.at).toBeNull()
+    expect(yard.takeVoices().length).toBeGreaterThan(0)
+    // From the tray to nowhere: a tick, and it is in the tray.
+    yard.press(...home(yard)); yard.dragStart(); yard.dragMove(3, 9); yard.dragEnd()
+    expect(yard.trolley.at).toBeNull()
+    expect(yard.takeVoices().some((voice) => voice === pinTick)).toBe(true)
+  })
+
+  it('the seventh tap takes five weights off with a jingle, and no weight is heard landing', () => {
+    const game = onEdge(), b = cart(game)
+    const add = () => { tapAt(game, b.x0 + 0.4, TRAY.top - TRAY.tall + 0.3); return game.takeVoices() }
+    game.takeVoices()
+    let last: unknown[] = []
+    for (let i = 0; i < 5; i++) last = add()
+    expect(game.trolley.weights).toBe(6)
+    expect(last.some((voice) => same(voice, trolleyWeight(6)))).toBe(true)
+    const wrap = add()
+    expect(game.trolley.weights).toBe(1)
+    expect(wrap.some((voice) => same(voice, trolleyOff(5)))).toBe(true)
+    expect(wrap.some((voice) => same(voice, trolleyWeight(1)))).toBe(false)
+  })
+
+  it('flipped, it is seen turning over for a third of a second', () => {
+    const game = onEdge()
+    game.press(...home(game)); game.dragStart(); game.dragMove(12, 6.3); game.dragEnd()
+    steps(game, 1)
+    const [x, y] = game.trolleyPlace()!
+    expect(game.trolleyFlipped).toBeGreaterThan(1)
+    tapAt(game, x, y + 0.3); game.step(0.2); tapAt(game, x, y + 0.3)
+    expect(game.trolley.at).toMatchObject({ under: true })
+    expect(game.trolleyFlipped).toBe(0)
+    steps(game, 0.5)
+    expect(game.trolleyFlipped).toBeGreaterThan(0.3)
+    expect(JSON.stringify(stored(game))).not.toContain('trolleyFlipped')
+  })
+})
+
 

@@ -34,9 +34,10 @@ function weight(pen: Pen, x: number, y: number, c: number) {
  * The test trolley at (x, y), the point of the deck or the pin it is on, in
  * pixels. `how` says whether it stands on the deck, rides under the plank or
  * hangs from a pin by its hook, where `swing` is its pendulum's angle. The
- * numeral beside its stack names the weights the child put on it.
+ * numeral beside its stack names the weights the child put on it; `counted`
+ * false leaves it out.
  */
-export function trolley(pen: Pen, x: number, y: number, c: number, weights: number, how: 'deck' | 'under' | 'pin' | 'tray', swing: number, random: () => number) {
+export function trolley(pen: Pen, x: number, y: number, c: number, weights: number, how: 'deck' | 'under' | 'pin' | 'tray', swing: number, random: () => number, counted = true) {
   pen.save()
   pen.translate(x, y)
   let bed = -c * 0.2
@@ -62,6 +63,8 @@ export function trolley(pen: Pen, x: number, y: number, c: number, weights: numb
   for (let i = 0; i < weights; i++) weight(pen, 0, bed - c * 0.08 - i * c * 0.14, c)
   // The numeral beside its stack. Riding under the plank it hangs on a string each side of the stack, so there the
   // numeral lies under the bed: no upright stands between the stack and its numeral.
+  // At home in its compartment with the one weight it comes with, it has no numeral: the numeral names a stack the child set.
+  if (!counted) { pen.restore(); return }
   if (how === 'under') drawWhole(pen, weights, 0, bed + c * 0.44, c * 0.5, { fill: INK.line, edge: INK.sheetDeep, edgeWidth: c * 0.12 })
   else drawWhole(pen, weights, c * 0.62, bed - c * 0.08 - (weights * c * 0.14) / 2, c * 0.5, { fill: INK.line, edge: INK.sheetDeep, edgeWidth: c * 0.12 })
   pen.restore()
