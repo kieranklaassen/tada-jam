@@ -432,11 +432,15 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
   const atWindow = game.window ?? (gliding?.whom === 'window' ? gliding.customer : null)
   let feasting: Feast | null = null
   if (atWindow) {
-    // What is inside it: while its serve plays, what the ending says it ate, a piece of another fruit fed by hand included; otherwise what the game holds.
-    const inside = scenery.ending ? [...scenery.ending.result.parts.flatMap((part) => part.pieces), ...(scenery.ending.fed ? scenery.ending.result.strays : [])] : eaten(game.world)
+    // What is inside it: while a serve from the tin plays, what the ending says it ate; otherwise, and for one fed by hand, what the game holds,
+    // which is every piece it was fed, a piece of another fruit and the rest of a row included.
+    const byHand = scenery.ending !== null && scenery.ending.fed
+    const inside = scenery.ending && !byHand ? scenery.ending.result.parts.flatMap((part) => part.pieces) : eaten(game.world)
     // A scene that is somebody else's (the glider of a pelican that waits) is not this customer's: it stays in its last pose, with all it ate.
-    const own = gliding && gliding.whom !== 'window' ? null : scenery.show
-    const feast = feastOf(atWindow, inside.map((piece) => piece.length), scenery.ending?.taste ?? null, own?.kind === 'showing' ? null : own, scenery.ending?.result.kind === 'over', scenery.ending?.outcome === 'badly', inside.map((piece) => piece.fruit))
+    const mine = gliding && gliding.whom !== 'window' ? null : scenery.show
+    // Fed a row of pieces by hand, it has gulped all but the last already: the serve shows the last one going down.
+    const own = mine && byHand && mine.kind === 'serve' ? { ...mine, bites: mine.bites + Math.max(0, inside.length - 1) } : mine
+    const feast = feastOf(atWindow, inside.map((piece) => piece.length), scenery.ending?.taste ?? null, own?.kind === 'showing' ? null : own, !byHand && scenery.ending?.result.kind === 'over', scenery.ending?.outcome === 'badly', inside.map((piece) => piece.fruit))
     feasting = feast
     // A glider playing for a pelican that waits is that pelican's scene, not the scene of whoever stands at the window.
     drawn += customerAt(ctx, dots, atWindow, scenery.window, { feast, show: gliding && gliding.whom !== 'window' ? null : scenery.show, beak: gliding?.fruit }, 'window', scenery.finger)
