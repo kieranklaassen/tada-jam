@@ -123,7 +123,7 @@ export class Hair {
     this.strands[what].flutter = 1
   }
 
-  /** The end of a strip is kicked sideways, the way a lock that is too long is trodden on or a longer one tickles a chin. */
+  /** The end of a strip is kicked sideways, the way a piece that is too long flaps or a longer lock flicks over at its neighbour. */
   kicked(what: StrandId, by: number): void {
     this.strands[what].kick.v += by
   }

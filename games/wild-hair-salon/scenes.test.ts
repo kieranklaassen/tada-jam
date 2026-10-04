@@ -229,7 +229,7 @@ describe('the cape coming off', () => {
     const short = playThrough(capeComesOff(c2, plain, plainDone.game, plainDone.showing!))
     // A scene with more to show is longer; one with a middling mane and nothing worn says nothing about them.
     expect(long).toBeGreaterThan(short)
-    expect(c2.customer()!.started.some((id) => id.includes('mane') || id.includes('rumbles') || id.includes('cape-over-head'))).toBe(false)
+    expect(c2.customer()!.started.some((id) => id.includes('mane') || id.includes('rumbles') || id.includes('peeks-sideways'))).toBe(false)
     expect(long).toBeLessThanOrEqual(10)
   })
 })

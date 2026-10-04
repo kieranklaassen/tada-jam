@@ -379,7 +379,7 @@ describe('the cycle', () => {
   it('acts out the comparison the child made: the two locks side by side, and the customer\'s own reaction to its lock', () => {
     const cases: [string, (play: Play) => void, string][] = [
       ['too long', () => {}, 'lion-treads-on-it-into-a-slow-bow'],
-      ['as long', (play) => match(play), 'lion-slow-head-toss-in-step'],
+      ['as long', (play) => match(play), 'lion-slow-head-toss'],
       ['too short', (play) => drag(play, [AIR, { x: LOCK_X + 40, y: COLLAR_Y + 6 * STEP - BLADES.y }, { x: LOCK_X - 20, y: COLLAR_Y + 6 * STEP - BLADES.y }]), 'lion-pats-for-it-and-an-ear-flicks-out'],
     ]
     for (const [name, cut, bit] of cases) {
@@ -521,7 +521,7 @@ describe('touching the two in the salon', () => {
     expect(lion.customer()!.started).toContain('lion-purrs-and-melts')
     const yak = seated({ chair: 'yak', friend: 'rabbit' })
     rub(yak)
-    expect(yak.customer()!.started).toContain('yak-sinks-into-his-hair-with-a-long-low-groan')
+    expect(yak.customer()!.started).toContain('yak-sinks-down-with-a-long-low-groan')
   })
 
   it('never moves the model: pulled it is drawn out and springs back, snipped it grows back and a piece falls', () => {
