@@ -179,7 +179,13 @@ export function poseOf(actor: Actor, member = 0): CastPose {
       pose.brow = 0.25
       if (idle === 'sniff') { pose.part = Math.sin(i * Math.PI * 12 + m); pose.head = 0.25 * bump(i) * (m ? -1 : 1) }
       if (idle === 'startle') { pose.hop = 9 * bump(ramp(i, m * 0.18, 0.6 + m * 0.18)); pose.bit = 1 - i; pose.lids = -0.6 * (1 - i) }
-      if (idle === 'squabble') { pose.lean = 0.22 * Math.sin(i * Math.PI * 5) * (m ? -1 : 1); pose.mouth = 0.6 * Math.abs(Math.sin(i * Math.PI * 5 + m * 1.5)) }
+      // They squabble in turn: one jabs its nose forward as the other rears back from it, and then the other way about. The two never
+      // lean in together, since their snouts would cross. The first twin leans in by leaning to the right, the second to the left.
+      if (idle === 'squabble') {
+        const turn = Math.sin(i * Math.PI * 5) * (m ? -1 : 1)
+        pose.lean = (turn > 0 ? 0.16 : 0.1) * turn * (m ? -1 : 1)
+        pose.mouth = 0.6 * Math.abs(Math.sin(i * Math.PI * 5 + m * 1.5))
+      }
       if (idle === 'groom') { pose.head = 0.7 * bump(i) * (m ? 0 : 1); pose.part = 0.3 * Math.sin(i * 40) * (m ? 1 : 0) }
       if (react === 'flinch') { pose.hop = 12 * bump(r); pose.bit = 1.2 * (1 - r); pose.lean = -0.2 * bump(r) }
       if (react === 'snip') { pose.tuft = r < 0.5 ? 0 : ramp(r, 0.5, 0.6); pose.part = Math.sin(r * 50) * (1 - r); pose.eyeX = Math.sin(r * 20) * (1 - r) }

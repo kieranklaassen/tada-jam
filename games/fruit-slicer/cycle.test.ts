@@ -5,7 +5,7 @@ import { WHOLE, giveOf, shareLength } from './measure'
 import { ideasOf, inRange, tinParts, type Customer } from './orders'
 import { MOST_PIECES, deserialize, serialize } from './save'
 import { serveOf } from './serve'
-import { MOST_EATEN, cut, eaten, inTin, isWhole, onLane, onShelf, roll, setOnShelf, type Piece } from './world'
+import { MOST_EATEN, SHELF, cut, eaten, inTin, isWhole, onLane, onShelf, roll, setOnShelf, type Piece } from './world'
 
 /** Cuts a piece of exactly `length` (plus `off`) from a fresh fruit of the ordered kind, and returns its id. */
 function cutFor(game: Game, length: number, off = 0): { game: Game; id: number } {
@@ -488,6 +488,27 @@ describe('a full shelf', () => {
     const fed = feed(other.game, other.id)
     expect(fed.shelved).toEqual([short.id])
     expect(fed.fell).toEqual([oldest])
+  })
+})
+
+describe('a piece taken from the oldest row of a full shelf', () => {
+  it('is eaten by the customer it is fed to, and is not what the tin\'s pieces push off the shelf', () => {
+    const start = call(freshGame(null), 0)
+    // A short piece lies in the tin; then the shelf is filled.
+    const short = cutFor(start.game, tinParts(start.game.window!)[0], -400)
+    let game = give(short.game, short.id, 0).game
+    while (onShelf(game.world).length < SHELF) {
+      const landed = crate(game)
+      game = { ...landed.game, world: setOnShelf(landed.game.world, landed.id).world }
+    }
+    // The child takes the piece in the oldest row, the one that would be the next to drop, and feeds it to the customer.
+    const mine = onShelf(game.world)[0]
+    expect(mine.fruit).toBe(game.window!.fruit)
+    const fed = feed(game, mine.id)
+    expect(fed).toMatchObject({ ate: true, shelved: [short.id], fell: [] })
+    expect(eaten(fed.game.world).map((piece) => piece.id)).toEqual([mine.id])
+    expect(onShelf(fed.game.world)).toHaveLength(SHELF)
+    expect(onShelf(fed.game.world).map((piece) => piece.id)).toContain(short.id)
   })
 })
 

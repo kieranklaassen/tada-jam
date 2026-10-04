@@ -43,6 +43,9 @@ describe('what went in', () => {
     expect(going.lumps).toEqual(feastOf(pelican, lengths, null, null).lumps)
     expect(going.hop).toBeGreaterThan(3)
     expect(leavingFeast(pelican, [len(3, 4)], 0.5).hop).toBe(0)
+    // One hop for every seam on the way out, however many: with nine pieces, eight tops.
+    const nine = Array.from({ length: 9 }, () => len(3, 4) / 9)
+    for (let k = 0; k < 8; k++) expect(leavingFeast(pelican, nine, (k + 0.5) / 8).hop).toBeCloseTo(7)
     expect(leavingFeast(of('boa', { num: 5, den: 4 }), lengths, 0.5).hop).toBe(0)
   })
 

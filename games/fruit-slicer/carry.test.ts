@@ -5,7 +5,7 @@ import { WHOLE, giveOf } from './measure'
 import { land, newStroke, poke, slice, tinAt, type GameEvent } from './moves'
 import { tinParts } from './orders'
 import { COUNTER, CRATE, DOG, LANE_H, PX, QUEUE, ROLLER, SHELF_BOX, TIN, WINDOW, X0, laneTop, type Box, type Point } from './stage'
-import { eaten, inTin, marksOf, onLane, onShelf, pieceOf } from './world'
+import { SHELF, eaten, inTin, marksOf, onLane, onShelf, pieceOf, setOnShelf } from './world'
 
 const fresh = freshGame(null)
 const start = call(fresh, 0).game
@@ -213,6 +213,25 @@ describe('letting go over the board and the shelf', () => {
     const laid = pieceOf(out.game.world, made.right)!
     expect(laid.place).toEqual({ on: 'board', lane: 0, x: far.place.on === 'board' ? far.place.x : -1 })
     expect(pieceOf(out.game.world, made.left)!.place.on).toBe('shelf')
+  })
+
+  it('lays a piece taken from the oldest row of a full shelf, and does not push that very piece off the shelf with what it sweeps there', () => {
+    const two = land(start).game
+    const made = cutAt(two, 600)
+    // The right part goes to the shelf first of all, and three small pieces after it fill the shelf.
+    let world = setOnShelf(made.game.world, made.right).world
+    for (let slot = 1; slot < SHELF; slot++) world = { ...world, pieces: [...world.pieces, { id: world.nextId, fruit: 'long', length: 200, place: { on: 'shelf', slot }, blind: true, ruled: 0, mark: 0 }], nextId: world.nextId + 1 }
+    const game: Game = { ...made.game, world }
+    expect(onShelf(game.world).map((piece) => piece.id)[0]).toBe(made.right)
+    const held = grab(game, { x: X0 + 40, y: SHELF_BOX.y + 30 })!
+    expect(held.ids).toEqual([made.right])
+    // Laid alongside the far fruit, where the left part lies in the way: the left part goes to the shelf, and the piece in the hand is laid.
+    const out = drop(game, held, { x: X0 + 1200 * PX, y: FAR })
+    expect(kinds(out.events)).toEqual(['swept', 'setDown'])
+    expect(pieceOf(out.game.world, made.right)!.place).toMatchObject({ on: 'board', lane: 0 })
+    expect(pieceOf(out.game.world, made.left)!.place.on).toBe('shelf')
+    expect(onShelf(out.game.world)).toHaveLength(SHELF)
+    expect(total(out.game)).toBe(total(game))
   })
 
   it('butts a piece end to end against another even when something lies there: what is in the way goes to the shelf, and the two travel as a row', () => {

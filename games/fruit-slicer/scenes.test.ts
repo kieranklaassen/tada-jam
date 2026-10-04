@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Ending } from './cycle'
+import { feastOf } from './feast'
 import { shareLength } from './measure'
 import type { Customer, Who } from './orders'
 import { Scene, sceneLength } from './scene'
@@ -73,13 +74,56 @@ describe('the serve', () => {
     }
     const len = (num: number, den: number) => shareLength('long', { num, den })
     expect(heard(customer('pelican', 3, 4), [[len(3, 4)]])).toEqual([['babble', 0]])
-    expect(heard(customer('pelican', 3, 4), [[len(1, 4), len(1, 4), len(1, 4)]])).toEqual([['hiccup', 2]])
+    expect(heard(customer('pelican', 3, 4), [[len(1, 4), len(1, 4), len(1, 4)]])).toEqual([['hiccup', undefined], ['hiccup', undefined]])
     expect(heard(customer('twins', 1, 2), [[len(1, 4)], [len(1, 4)]])).toEqual([['babble', 1]])
     expect(heard(customer('twins', 1, 2), [[len(3, 8)], [len(1, 8)]])).toEqual([['tug', undefined]])
     expect(heard(customer('ants', 3, 4), [[len(1, 4), len(1, 4), len(1, 4)]])).toEqual([['babble', 2]])
     expect(heard(customer('ants', 3, 4), [[len(3, 8), len(3, 8)]])[0][0]).toBe('squish')
     expect(heard(customer('boa', 5, 4), [[len(1, 1), len(1, 4)]])).toEqual([['babble', 4]])
-    expect(heard(customer('boa', 5, 4), [[len(1, 1), len(1, 16), len(1, 16), len(1, 8)]])).toEqual([['sneeze', 2]])
+    expect(heard(customer('boa', 5, 4), [[len(1, 1), len(1, 16), len(1, 16), len(1, 8)]])).toEqual([['sneeze', undefined], ['sneeze', undefined]])
+    // A squash for each ant as it goes down, and a pop for each as it peels itself up.
+    expect(heard(customer('ants', 3, 4), [[len(1, 8), len(1, 4), len(1, 4), len(1, 8)]]).map(([id]) => id).sort()).toEqual(['peel', 'peel', 'peel', 'squish', 'squish', 'squish'])
+  })
+
+  it('sounds each of them once, however many there are, at the moment the body shows it', () => {
+    const len = (num: number, den: number) => shareLength('long', { num, den })
+    /** Plays a serve and returns, for every taste sound, what the body showed in the frame it was heard. */
+    const shown = (who: Customer, lists: number[][]) => {
+      const result = serveOf(who, lists.map((list, part) => list.map((length, i) => piece(part * 10 + i + 1, length))))
+      const taste = tasteOf(who, result), lengths = lists.flat()
+      const show = restShow('serve')
+      const pending: string[] = []
+      const heard: { id: string; feast: ReturnType<typeof feastOf> }[] = []
+      play(serveBeats(show, { result, taste, outcome: 'well', glider: false, fed: false }, (id) => void (['hiccup', 'squish', 'peel', 'sneeze'].includes(id) && pending.push(id))), () => {
+        for (const id of pending.splice(0)) heard.push({ id, feast: feastOf(who, lengths, taste, show) })
+      })
+      return heard
+    }
+    // Thirteen pieces are twelve seams: twelve hiccups, none left out, and each is heard at the top of its own hop.
+    const hiccups = shown(customer('pelican', 3, 4), [Array.from({ length: 13 }, () => len(3, 4) / 13)])
+    expect(hiccups).toHaveLength(12)
+    for (const one of hiccups) expect(one.feast.hop).toBeGreaterThan(5.5)
+    // One seam: the one hiccup comes at the top of the one hop, not at its start.
+    const single = shown(customer('pelican', 3, 4), [[len(1, 2), len(1, 4)]])
+    expect(single).toHaveLength(1)
+    expect(single[0].feast.hop).toBeGreaterThan(6.5)
+    // Three ants go down one after another: at each squash one more of them is flat, and each pops as it starts to peel itself up.
+    const ants = shown(customer('ants', 3, 4), [[len(1, 8), len(1, 4), len(1, 4), len(1, 8)]])
+    expect(ants.filter((one) => one.id === 'squish').map((one) => one.feast.flat.filter((flat) => flat > 0).length)).toEqual([1, 2, 3])
+    const peels = ants.filter((one) => one.id === 'peel')
+    expect(peels).toHaveLength(3)
+    peels.forEach((one, k) => {
+      expect(one.feast.flat[k]).toBeGreaterThan(0.8)
+      expect(one.feast.flat[k]).toBeLessThanOrEqual(1)
+      if (k < 2) expect(one.feast.flat[k + 1]).toBe(1)
+    })
+    // Five crumbs are five sneezes: each is heard as it sets off from the head.
+    const sneezes = shown(customer('boa', 5, 4), [[len(1, 1), len(1, 16), len(1, 16), len(1, 16), len(1, 32), len(1, 32)]])
+    expect(sneezes).toHaveLength(5)
+    for (const one of sneezes) {
+      expect(one.feast.sneeze).toBeGreaterThanOrEqual(0)
+      expect(one.feast.sneeze).toBeLessThan(0.12)
+    }
   })
 
   it('eats a piece of another fruit too when it is fed by hand: the bite is there for the body to show', () => {

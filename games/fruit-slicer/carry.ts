@@ -79,7 +79,8 @@ function layClear(game: Game, held: Held, lane: number, x: number, how: 'beside'
   let world = game.world
   const fell: GameEvent[] = []
   for (const { piece } of swept) {
-    const set = setOnShelf(world, piece.id)
+    // The pieces being laid are in the hand: they are not what the swept ones push off the shelf.
+    const set = setOnShelf(world, piece.id, held.ids)
     fell.push(...fellEvents(world, set.fell))
     world = set.world
   }

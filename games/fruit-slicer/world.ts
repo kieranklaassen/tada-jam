@@ -85,9 +85,13 @@ function tidy(world: World): World {
   }
 }
 
-/** Puts pieces at the end of the shelf, in the order given. Whatever no longer fits drops off the old end: `fell`. */
-function shelve(world: World, ids: readonly number[]): { world: World; fell: number[] } {
-  const others = onShelf(world).filter((piece) => !ids.includes(piece.id)).map((piece) => piece.id)
+/**
+ * Puts pieces at the end of the shelf, in the order given. Whatever no longer fits drops off the old end: `fell`.
+ * A piece that is in the hand lies nowhere while it is carried: one taken from the shelf takes up no row of it
+ * and is never the piece that drops, whatever its own move shoves onto the shelf.
+ */
+function shelve(world: World, ids: readonly number[], inHand: readonly number[] = []): { world: World; fell: number[] } {
+  const others = onShelf(world).filter((piece) => !ids.includes(piece.id) && !inHand.includes(piece.id)).map((piece) => piece.id)
   const order = [...others, ...ids]
   const fell = order.slice(0, Math.max(0, order.length - SHELF))
   const kept = order.slice(fell.length)
@@ -97,9 +101,9 @@ function shelve(world: World, ids: readonly number[]): { world: World; fell: num
   return { world: tidy({ ...world, pieces }), fell }
 }
 
-/** A piece is set down on the shelf. */
-export function setOnShelf(world: World, id: number): { world: World; fell: number[] } {
-  return pieceOf(world, id) ? shelve(world, [id]) : { world, fell: [] }
+/** A piece is set down on the shelf. `inHand` are the pieces the finger is carrying as that happens. */
+export function setOnShelf(world: World, id: number, inHand: readonly number[] = []): { world: World; fell: number[] } {
+  return pieceOf(world, id) ? shelve(world, [id], inHand) : { world, fell: [] }
 }
 
 /**

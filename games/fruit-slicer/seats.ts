@@ -23,6 +23,25 @@ export const SILL = WINDOW.y + WINDOW.h - 4
  */
 export const TWINS_APART = 60
 export const SNOUT_REACH = 55
+/** The paper there is always between the two tips, whatever the two are doing. */
+export const SNOUT_GAP = 6
+/** How high the tip of a snout is above the feet, and how much wider a twin is when it is rolled flat. */
+const SNOUT_HIGH = 52
+export const TWIN_SPREAD = 0.1
+
+/**
+ * How far toward the middle of the pair a twin's snout tip is from its own feet: it leans about its feet, so
+ * leaning in by `leanIn` radians carries the tip nearer the other twin and leaning back takes it away, and
+ * rolled `flat` it is a little wider and much lower.
+ */
+export function snoutReach(leanIn: number, flat = 0): number {
+  return SNOUT_REACH * (1 + TWIN_SPREAD * flat) * Math.cos(leanIn) + SNOUT_HIGH * (1 - 0.88 * flat) * Math.sin(leanIn)
+}
+
+/** How far from the middle each twin stands, given how far each one's snout reaches now: where they would touch, both give way. */
+export function twinsApart(reachA: number, reachB: number): number {
+  return Math.max(TWINS_APART, (SNOUT_GAP + reachA + reachB) / 2)
+}
 
 /** How many stand in a file of ants: one for each part of the order. */
 const fileOf = (customer: Customer): number => Math.max(...customer.shares.map((share) => share.num))

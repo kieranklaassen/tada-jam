@@ -178,8 +178,9 @@ function queuePanel(ctx: Ctx, screens: Screens, scene: SpikeScene): void {
   panel(ctx, 806, 18, 356, 262, PAPER, screens.of(ctx, YELLOW, 0.45))
   ticket(ctx, scene.queue[0], 818, 30, 0.6)
   ticket(ctx, scene.queue[1], 1006, 30, 0.6)
-  shrew(ctx, screens, 850, 208, 0.6, 1, '#9aa6b8')
-  shrew(ctx, screens, 968, 208, 0.6, -1, '#9aa6b8')
+  // Nose to nose with paper between the two tips: each snout reaches 61 from its own middle at this size.
+  shrew(ctx, screens, 848, 208, 0.6, 1, '#9aa6b8')
+  shrew(ctx, screens, 974, 208, 0.6, -1, '#9aa6b8')
   for (let i = 0; i < 3; i++) ant(ctx, 1042 + i * 42, 240, 0.46, i === 1 ? 0.35 : 0)
 }
 

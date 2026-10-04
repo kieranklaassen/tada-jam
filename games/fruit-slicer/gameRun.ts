@@ -9,6 +9,7 @@ import { newStroke, poke, slice, thingAt, tinAt, type GameEvent, type Stroke, ty
 import { Scene, followedBy } from './scene'
 import { headOf } from './seats'
 import { gliderBeats, restShow, servedShow, serveBeats, showingBeats, type Show } from './scenes'
+import { hiccupAt } from './feast'
 import { CRATE, DOG, TIN, shown, type Point } from './stage'
 import { dogTaste } from './tastes'
 import type { VoiceId } from './voices'
@@ -480,7 +481,11 @@ export class GameRun {
           // The served one leaves as the called one steps up. It left the game on the touch: this only shows it going, and no touch waits for it.
           this.departing = event.did === 'stepped' && before.window && before.finished && this.window ? { customer: before.window, actor: reactTo(this.window, 'leave'), lengths: eaten(before.world).map((piece) => piece.length), fruits: eaten(before.world).map((piece) => piece.fruit) } : null
           // A pelican that swallowed its order in more than one piece hiccups all the way out, and is heard doing it.
-          if (this.departing && this.departing.customer.who === 'pelican' && this.departing.lengths.length > 1) this.sounds.push({ id: 'hiccup', count: this.departing.lengths.length - 1, delay: 0.1 })
+          if (this.departing && this.departing.customer.who === 'pelican') {
+            // One for every seam, each at the top of its own hop on the way out.
+            const seams = this.departing.lengths.length - 1
+            for (let k = 0; k < seams; k++) this.sounds.push({ id: 'hiccup', delay: SHEETS.pelican.react.leave * hiccupAt(k, seams) })
+          }
           this.queue[event.index] = event.did === 'swapped' && this.window ? reactTo(this.window, 'step') : reactTo(newActor(game.queue[event.index].who, ++this.seed + 10), 'step')
           // One that was poked to call it flinches first, in its own way, and steps up as the flinch ends: the step is heard then.
           this.window = reactAfter(called, 'step')

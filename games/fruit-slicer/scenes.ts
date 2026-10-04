@@ -1,4 +1,5 @@
 import type { Ending } from './cycle'
+import { PEELS_AFTER, flatAt, hiccupAt, sneezeAt } from './feast'
 import { CAST, type Customer } from './orders'
 import { ruling } from './serve'
 import type { Beat } from './scene'
@@ -54,6 +55,9 @@ export type Cue = (id: VoiceId, length?: number, count?: number) => void
 /** The most pieces eaten one at a time; the rest go down in one go. */
 export const BITES_SHOWN = 6
 
+/** How long a customer's body takes over what it makes of its pieces. */
+export const TASTE_SECONDS = 1.4
+
 /**
  * The serve: the ending of a cycle, 4 to 8 seconds. The lid, or the shrug at a lid that will not shut; the tin
  * is lifted; the pieces are eaten one at a time in the order they lie, up to six and then the rest in one go;
@@ -96,20 +100,21 @@ export function serveBeats(show: Show, ending: Ending, cue: Cue): Beat[] {
   }
   // The taste is heard as it is seen: a hiccup for every seam, the creak of the twins' pull, a squash for every flattened ant, a sneeze
   // for every crumb. A body that has nothing against these pieces only says so, in its own throat.
+  // Each of them sounds once, at the moment the body shows it: every hiccup at the top of its own hop, every ant as it goes down and
+  // again as it peels itself up, every sneeze as it sets off down the boa. None is left out however many there are.
   const taste = ending.taste
-  beats.push({
-    at,
-    lasts: 0,
-    play: () => {
-      if (taste.who === 'pelican' && taste.hiccups > 0) cue('hiccup', undefined, taste.hiccups)
-      else if (taste.who === 'twins' && taste.pulled !== null) cue('tug')
-      else if (taste.who === 'ants' && taste.flattened.length > 0) cue('squish', undefined, taste.flattened.length)
-      else if (taste.who === 'boa' && taste.sneezes > 0) cue('sneeze', undefined, taste.sneezes)
-      else cue('babble', undefined, who)
-    },
-  })
-  beats.push({ at, lasts: 1.4, play: (p) => (show.taste = p) })
-  beats.push({ at: at + 1.4, lasts: 0.9, play: (p) => (show.settle = p) })
+  const sound = (after: number, id: VoiceId, count?: number): void => void beats.push({ at: at + TASTE_SECONDS * after, lasts: 0, play: () => cue(id, undefined, count) })
+  if (taste.who === 'pelican' && taste.hiccups > 0) for (let k = 0; k < taste.hiccups; k++) sound(hiccupAt(k, taste.hiccups), 'hiccup')
+  else if (taste.who === 'twins' && taste.pulled !== null) sound(0, 'tug')
+  else if (taste.who === 'ants' && taste.flattened.length > 0) {
+    for (let k = 0; k < taste.flattened.length; k++) {
+      sound(flatAt(k, taste.flattened.length), 'squish')
+      sound(flatAt(k, taste.flattened.length) + PEELS_AFTER, 'peel')
+    }
+  } else if (taste.who === 'boa' && taste.sneezes > 0) for (let k = 0; k < taste.sneezes; k++) sound(sneezeAt(k, taste.sneezes), 'sneeze')
+  else sound(0, 'babble', who)
+  beats.push({ at, lasts: TASTE_SECONDS, play: (p) => (show.taste = p) })
+  beats.push({ at: at + TASTE_SECONDS, lasts: 0.9, play: (p) => (show.settle = p) })
   return beats
 }
 

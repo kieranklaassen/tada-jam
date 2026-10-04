@@ -50,13 +50,6 @@ const run = (count: number, hz: number, step: number, gap: number, peak: number,
   return Array.from({ length: ticks }, (_, i) => tone(hz * step ** i, peak, 0.002, length, wave, undefined, i * apart))
 }
 
-/** A small sound made `count` times over, at most `most`, `gap` seconds apart or closer, so that the last of them still starts in time. */
-const several = (count: number, most: number, gap: number, one: (after: number) => Note[]): Note[] => {
-  const times = Math.max(1, Math.min(most, Math.round(count)))
-  const apart = times > 1 ? Math.min(gap, 0.45 / (times - 1)) : 0
-  return Array.from({ length: times }, (_, i) => one(i * apart)).flat()
-}
-
 /** Each customer's own throat, by its place in the cast (pelican, twins, ants, cat, boa): how high it speaks, and with what wave. */
 const THROATS: readonly { up: number; wave: Note['wave'] }[] = [{ up: 0.55, wave: 'sawtooth' }, { up: 2.4, wave: 'square' }, { up: 4.5, wave: 'square' }, { up: 1.5, wave: 'sine' }, { up: 0.8, wave: 'triangle' }]
 const throat = (who: number): { up: number; wave: Note['wave'] } => THROATS[Math.max(0, Math.min(THROATS.length - 1, Math.round(who)))]
@@ -110,13 +103,14 @@ export const VOICES = {
   // A gulp of its own, and then the piece, at the pitch of its length.
   gulp: (length: number, who = 0) => [tone(260 * throat(who).up, 0.2, 0.01, 0.16, 'sine', 120 * throat(who).up), tone(ringHz(length) * 0.5, 0.1, 0.01, 0.12, 'sine', undefined, 0.16)],
   // What a body makes of pieces it cannot stand, each heard as it is seen. The pelican's hiccups, one for every seam: a small squeak that jumps up.
-  hiccup: (_: number, count = 1) => several(count, 6, 0.2, (after) => [tone(300, 0.16, 0.004, 0.06, 'sine', 640, after)]),
+  hiccup: () => [tone(300, 0.16, 0.004, 0.06, 'sine', 640)],
   // The twins pulling the longer piece between them: a creak one way and a creak back.
   tug: () => [tone(180, 0.14, 0.03, 0.22, 'sawtooth', 270), tone(270, 0.14, 0.03, 0.22, 'sawtooth', 170, 0.27)],
-  // An ant flattened under the end of a piece, once for each: a soft squash, and the pop as it peels itself up.
-  squish: (_: number, count = 1) => several(count, 4, 0.14, (after) => [hiss(480, 0.16, 0.002, 0.08, 180, after), tone(420, 0.08, 0.002, 0.04, 'sine', 900, Math.min(0.6, after + 0.1))]),
+  // An ant flattened under the end of a piece, once for each: a soft squash as it goes down, and the pop as it peels itself up.
+  squish: () => [hiss(480, 0.16, 0.002, 0.08, 180)],
+  peel: () => [tone(420, 0.08, 0.002, 0.04, 'sine', 900)],
   // The boa's sneeze, one for every crumb: a breath drawn in, and then the burst.
-  sneeze: (_: number, count = 1) => several(count, 3, 0.22, (after) => [tone(520, 0.07, 0.04, 0.07, 'sine', 900, after), hiss(1500, 0.2, 0.002, 0.12, 500, Math.min(0.6, after + 0.11))]),
+  sneeze: () => [tone(520, 0.07, 0.03, 0.05, 'sine', 900), hiss(1500, 0.2, 0.002, 0.1, 500, 0.08)],
   splat: () => [hiss(900, 0.24, 0.001, 0.12, 300), hiss(400, 0.1, 0.02, 0.3, 200, 0.06)],
   honk: () => [tone(230, 0.2, 0.008, 0.26, 'square', 210), tone(345, 0.08, 0.008, 0.26, 'square')],
   // The crate.

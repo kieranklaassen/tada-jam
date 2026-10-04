@@ -4,7 +4,7 @@ import { BLUE, FLESH, INK, RED, RIND, WHITE, YELLOW, brow, eyeOut, inked, oval, 
 import { WHOLE, type Fruit } from './measure'
 import type { Who } from './orders'
 import type { Show } from './scenes'
-import { SNOUT_REACH, TWINS_APART } from './seats'
+import { SNOUT_REACH, TWIN_SPREAD, snoutReach, twinsApart } from './seats'
 
 // The five customers, drawn in the look: flat colour, a dot screen on the
 // shaded side, a black brush line round everything. Each is drawn about its
@@ -38,11 +38,11 @@ const GREY = '#9aa6b8'
  * Stands a body on its feet at (x, y): its hop, its lean, how flat the roller left it and how tall it gathers
  * itself. One that is leaving is `exit` units further left when it is out of sight.
  */
-function stand(ctx: Ctx, x: number, y: number, s: number, pose: CastPose, body: () => void, exit = 0): void {
+function stand(ctx: Ctx, x: number, y: number, s: number, pose: CastPose, body: () => void, exit = 0, spread = 0.6): void {
   ctx.save()
   ctx.translate(x - pose.away * exit, y - (pose.hop + pose.bob) * s)
   ctx.rotate(pose.lean)
-  ctx.scale(s * (1 + 0.6 * pose.flat), s * (1 + pose.stretch) * (1 - 0.88 * pose.flat))
+  ctx.scale(s * (1 + spread * pose.flat), s * (1 + pose.stretch) * (1 - 0.88 * pose.flat))
   body()
   ctx.restore()
 }
@@ -315,16 +315,19 @@ export const WIDTH: Readonly<Record<Who, number>> = { pelican: 190, twins: 150, 
 export function drawCustomer(ctx: Ctx, dots: Dots, cast: Casting, x: number, y: number, s: number, room = 400, exit = 0): void {
   if (cast.who === 'twins') {
     const feast = cast.feast
+    const poses = [bodyPose(cast, 0), bodyPose(cast, 1)]
+    // Each stands far enough from the middle that its snout stops short of the other's, whatever the two are doing: two snouts
+    // that crossed would read as a sign. The first leans in by leaning to the right, the second by leaning to the left.
+    const apart = twinsApart(snoutReach(poses[0].lean, poses[0].flat), snoutReach(-poses[1].lean, poses[1].flat))
     for (const member of [0, 1]) {
       const side = member === 0 ? -1 : 1
-      const pose = bodyPose(cast, member)
-      // Each stands far enough from the middle that its snout stops short of the other's: two snouts that crossed would read as a sign.
-      stand(ctx, x + side * TWINS_APART * s + feast.pull * 10 * s, y, s, pose, () => {
+      const pose = poses[member]
+      stand(ctx, x + side * apart * s + feast.pull * 10 * s, y, s, pose, () => {
         // They face each other, until they turn to go.
         ctx.scale(pose.turn > 0.5 ? -1 : -side, 1)
         ctx.rotate(-0.12 * Math.abs(feast.pull))
         shrew(ctx, dots, cast, member)
-      }, exit)
+      }, exit, TWIN_SPREAD)
     }
     // The longer piece, pulled between them like a rope.
     if (feast.pull !== 0) {

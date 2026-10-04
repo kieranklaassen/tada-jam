@@ -87,9 +87,11 @@ export function feastOf(customer: Customer, lengths: readonly number[], taste: T
       break
     case 'ants': {
       const count = wantedCount(customer)
-      feast.flat = Array.from({ length: count }, (_, ant) => (taste.flattened.includes(ant) ? (t < 0.6 ? 1 : Math.max(0, 1 - (t - 0.6) / 0.15)) : 0))
+      // Each flattened ant goes down in its turn along the file, lies flat, and peels itself up.
+      const since = (ant: number): number => t - flatAt(taste.flattened.indexOf(ant), taste.flattened.length)
+      feast.flat = Array.from({ length: count }, (_, ant) => (taste.flattened.includes(ant) && since(ant) >= 0 ? (since(ant) < PEELS_AFTER ? 1 : Math.max(0, 1 - (since(ant) - PEELS_AFTER) / 0.15)) : 0))
       // Peeled up, it is cross, and stays so until the file has settled.
-      feast.cross2 = Array.from({ length: count }, (_, ant) => (taste.flattened.includes(ant) && t >= 0.75 ? easing : 0))
+      feast.cross2 = Array.from({ length: count }, (_, ant) => (taste.flattened.includes(ant) && since(ant) >= PEELS_AFTER + 0.15 ? easing : 0))
       feast.pleased = taste.liked ? bump(t) : 0
       break
     }
@@ -107,12 +109,24 @@ export function feastOf(customer: Customer, lengths: readonly number[], taste: T
 }
 
 /**
+ * When in a taste each thing happens, as a share of the taste from 0 to 1: the scene sounds each of them at
+ * the moment the body shows it, one sound for each, however many there are.
+ */
+/** The top of the pelican's hop for seam `k` of `seams`. */
+export const hiccupAt = (k: number, seams: number): number => (k + 0.5) / seams
+/** The flattened ants go down one after another along the file, and each peels itself up this long after it went down. */
+export const flatAt = (k: number, flattened: number): number => (0.25 * k) / flattened
+export const PEELS_AFTER = 0.6
+/** Sneeze `k` of `sneezes` sets off down the boa. */
+export const sneezeAt = (k: number, sneezes: number): number => k / sneezes
+
+/**
  * What shows of a served customer on its way out, `away` of the way gone: the pieces it ate, at rest, and the
  * pelican still hiccuping once for every seam, all the way out.
  */
 export function leavingFeast(customer: Customer, lengths: readonly number[], away: number, fruits: readonly Fruit[] = []): Feast {
   const feast = feastOf(customer, lengths, null, null, false, false, fruits)
-  if (customer.who === 'pelican' && lengths.length > 1) feast.hop = 7 * Math.abs(Math.sin(away * Math.PI * Math.min(6, lengths.length - 1)))
+  if (customer.who === 'pelican' && lengths.length > 1) feast.hop = 7 * Math.abs(Math.sin(away * Math.PI * (lengths.length - 1)))
   return feast
 }
 

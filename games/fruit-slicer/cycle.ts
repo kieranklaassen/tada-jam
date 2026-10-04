@@ -100,7 +100,8 @@ export function feed(game: Game, id: number): { game: Game; ending: Ending | nul
     const fell: number[] = []
     const shelved = game.finished ? [] : tinIds(game).filter((left) => left !== id)
     for (const left of shelved) {
-      const set = setOnShelf(world, left)
+      // The piece being fed is in the hand: it is not what the tin's pieces push off the shelf.
+      const set = setOnShelf(world, left, [id])
       fell.push(...set.fell)
       world = set.world
     }
