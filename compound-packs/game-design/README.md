@@ -13,6 +13,7 @@ Depth and delight, for every game:
 - `characters-with-opinions.md`: characters have fixed tastes, and their reactions are the feedback.
 - `touch-answers-bigger-than-the-touch.md`: every touch is answered when the finger lands, and the answer is bigger than the touch.
 - `liveliness-from-causing-and-comedy.md`: liveliness comes from the child causing things and from comedy, never from pressure; wrong uses work and are funny.
+- `a-full-frame-with-large-funny-characters.md`: the first frame is a place filled from edge to edge with large, funny characters, and the working pieces stay plain.
 - `endings-and-short-scenes.md`: a cycle ends when the child ends it; short scenes are the twist or the ending.
 - `hidden-never-counted.md`: things can be hidden, never counted or shown as missing.
 - `the-world-keeps-and-waits.md`: the world keeps what the child made and is found as it was left.
