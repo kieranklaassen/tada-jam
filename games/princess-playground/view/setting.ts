@@ -72,10 +72,10 @@ function paintBoards(): HTMLCanvasElement {
       for (let x = 0; x <= SIZE; x += 16) ctx.lineTo(x, at + Math.sin((x / SIZE) * Math.PI * 2 * Math.round(wave) + phase) * 1.6)
       ctx.stroke()
     }
-    // Where two lengths of board meet.
-    const joint = Math.floor(random() * SIZE)
+    // Where two lengths of board meet: never in line with the joint of the board before, so no two cross a gap as one line.
+    const joint = (row * 203 + 70 + Math.floor(random() * 60)) % SIZE
     ctx.fillStyle = 'hsla(206, 22%, 27%, 0.55)'
-    ctx.fillRect(joint, y, 2, deep)
+    ctx.fillRect(joint, y + 2.5, 2, deep - 2.5)
     // The gap to the next board, with a thin light edge below it where the low sun catches the wood.
     ctx.fillStyle = 'hsl(206, 22%, 29%)'
     ctx.fillRect(0, y, SIZE, 2.5)
@@ -98,31 +98,24 @@ function paintMat(width: number, depth: number): HTMLCanvasElement {
     ctx.fillStyle = `hsla(${190 + random() * 14}, 16%, ${random() < 0.5 ? 44 : 60}%, ${0.1 + random() * 0.14})`
     ctx.fillRect(0, y, W, 1.6)
   }
-  // The warp threads that bind them: dotted lines from front to back.
-  for (let x = SCALE * 0.5; x < W; x += SCALE * 0.5) {
-    ctx.fillStyle = 'hsla(198, 20%, 36%, 0.28)'
-    for (let y = (Math.round(x / (SCALE * 0.5)) % 2) * 5; y < H; y += 10) ctx.fillRect(x, y, 2, 5)
-  }
+  // The warp threads that bind them: faint lines from front to back.
+  ctx.fillStyle = 'hsla(198, 20%, 36%, 0.16)'
+  for (let x = SCALE * 0.5; x < W; x += SCALE * 0.5) ctx.fillRect(x, 0, 2, H)
   // The shadow of the tray, thrown away from the light: soft, to the side and toward the child.
   const tray = { x: (MAT_MARGIN - TRAY.rimThick) * SCALE, y: (MAT_MARGIN - TRAY.rimThick) * SCALE, w: (TRAY.halfWidth + TRAY.rimThick) * 2 * SCALE, h: (TRAY.halfDepth + TRAY.rimThick) * 2 * SCALE }
   const throwX = (-LIGHT.x / LIGHT.y) * (TRAY.rimHeight - GROUND) * 0.5 * SCALE, throwZ = (-LIGHT.z / LIGHT.y) * (TRAY.rimHeight - GROUND) * 0.5 * SCALE
   soft(ctx, SCALE * 0.5, 'hsla(205, 35%, 14%, 0.55)', () => ctx.fillRect(tray.x + throwX, tray.y + throwZ, tray.w, tray.h))
-  // The border: a band of dark cloth all the way round, with one line of pale stitches.
+  // The border: a band of dark cloth all the way round.
   const band = SCALE * 0.42
   ctx.fillStyle = 'hsl(204, 26%, 31%)'
   ctx.fillRect(0, 0, W, band)
   ctx.fillRect(0, H - band, W, band)
   ctx.fillRect(0, 0, band, H)
   ctx.fillRect(W - band, 0, band, H)
-  ctx.fillStyle = 'hsla(196, 22%, 62%, 0.7)'
-  for (let x = band; x < W - band; x += 14) {
-    ctx.fillRect(x, band * 0.62, 7, 2)
-    ctx.fillRect(x, H - band * 0.62 - 2, 7, 2)
-  }
-  for (let y = band; y < H - band; y += 14) {
-    ctx.fillRect(band * 0.62, y, 2, 7)
-    ctx.fillRect(W - band * 0.62 - 2, y, 2, 7)
-  }
+  // One seam of pale thread all the way round, a continuous line: a row of short dashes would be a row of small bars.
+  ctx.strokeStyle = 'hsla(196, 22%, 62%, 0.6)'
+  ctx.lineWidth = 2
+  ctx.strokeRect(band * 0.62, band * 0.62, W - band * 1.24, H - band * 1.24)
   return canvas
 }
 
