@@ -134,7 +134,7 @@ Each kind is one colour all over and takes only balloons of that colour: this is
 
 - A refusal is as good to watch as a catch, and it is about the balloon: the friend is put out by the colour, startled by the pop, bewildered by the lift-off, and never hurt.
 - No friend has any feeling about the child. None thanks, praises, sulks or hurries, and the troop that waits at the edge only bobs and looks at the balloons.
-- A reaction starts as the balloon arrives, well inside half a second of the tap, and is big enough to read from across a room. A friend gives one answer at a time: a bunch sent to one that is still in the middle of an answer leaves the sky at once and comes down when the friend is free.
+- A reaction starts as the balloon arrives, well inside half a second of the tap, and is big enough to read from across a room. A friend gives one answer at a time: a bunch sent to one that is still in the middle of an answer leaves the sky at once and comes down when the friend is free, and a poke or a pop while a friend is carried off, or in the moment before its answer lands, is answered where it is with its kind's sound and a wobble.
 - No two kinds share a motion: each has its own walk, catch, refusal, lift-off, pop reaction and squeak (step 6 of the guide).
 
 (pack: game-design, characters-with-opinions.md)
