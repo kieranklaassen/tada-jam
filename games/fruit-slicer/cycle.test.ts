@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { LADDER } from './config'
 import { call, crate, feed, freshGame, give, judge, sendOff, settle, splat, treat, type Game } from './cycle'
-import { WHOLE, giveOf, shareLength } from './measure'
+import { RAIL, WHOLE, giveOf, shareLength } from './measure'
 import { ideasOf, inRange, tinParts, type Customer } from './orders'
 import { MOST_PIECES, deserialize, serialize } from './save'
 import { serveOf } from './serve'
@@ -476,6 +476,29 @@ describe('a full shelf', () => {
     // In the first compartment it ends inside the rail, and stays.
     const first = give(landed.game, landed.id, 0)
     expect(first.given).toMatchObject({ slidOff: false })
+  })
+
+  it('has its give to either side at the very end of the rail too: an order as long as the rail takes a piece that is over by less than the give', () => {
+    // Three halves of the middle fruit are exactly as long as the rail.
+    const boa: Customer = { who: 'boa', fruit: 'middle', shares: [{ num: 3, den: 2 }], carries: null, written: true, lined: true }
+    expect(tinParts(boa)[0]).toBe(RAIL)
+    const game: Game = { ...start.game, window: boa }
+    const whole = crate(game)
+    const laid = give(whole.game, whole.id, 0).game
+    const over = (by: number) => {
+      const made = cutFor(laid, WHOLE.middle / 2, by)
+      return give(made.game, made.id, 0)
+    }
+    // Forty over, with a give of eighty: the jaw takes up the slack, the lid shuts and the boa eats.
+    expect(giveOf('middle')).toBe(80)
+    const fits = over(40)
+    expect(fits.given).toMatchObject({ slidOff: false, result: { kind: 'fit' } })
+    expect(fits.game.finished).toBe(true)
+    // Forty under fits as it always did; and one that is over by more than the give still slides off the rail's end onto the shelf.
+    expect(over(-40).game.finished).toBe(true)
+    const tooLong = over(140)
+    expect(tooLong.given).toMatchObject({ slidOff: true })
+    expect(tooLong.game.finished).toBe(false)
   })
 
   it('says what the pieces left in a hand-fed customer\'s tin push off the shelf', () => {

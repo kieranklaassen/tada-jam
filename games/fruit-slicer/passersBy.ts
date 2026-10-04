@@ -28,9 +28,12 @@ function far(ctx: Ctx, path: (c: Ctx) => void, fill: string | null, screen?: Can
   ctx.stroke()
 }
 
-/** Two legs in mid-stride, each from its own hip: one forward as the other is back. Two strokes opening from one point would read as a sign. */
+/**
+ * Two legs in mid-stride, each from its own hip: they open as far as the stride and close again, and neither
+ * ever swings past the other. Two strokes from one point, or two that cross, would read as a sign.
+ */
 function legs(ctx: Ctx, x: number, hip: number, stride: number, reach: number): void {
-  const swing = Math.sin(stride) * reach
+  const swing = Math.abs(Math.sin(stride)) * reach
   ctx.beginPath()
   ctx.moveTo(x + 3, hip)
   ctx.lineTo(x + 3 + swing, GROUND)

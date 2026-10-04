@@ -193,7 +193,10 @@ export function give(game: Game, id: number, part: number): { game: Game; given:
     reach = Math.max(from, reach) + lying
     from += ordered
   })
-  if (reach > RAIL) {
+  // An order may be exactly as long as the rail. Its give is to either side there too: a piece that brings what lies in the tin to
+  // within the give is taken, the jaw takes up the slack and the lid shuts, though it ends a little past the rail's end.
+  const withinGive = reach > RAIL && piece.fruit === customer.fruit && served(giveToTin(game.world, id, compartment), customer).kind === 'fit'
+  if (reach > RAIL && !withinGive) {
     const set = setOnShelf(game.world, id)
     return { game: { ...game, world: set.world }, given: { opened: false, firstShowing: null, strays: [], slidOff: true, fell: set.fell, result: served(set.world, customer), ending: null } }
   }
