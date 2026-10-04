@@ -11,6 +11,11 @@
 
 /** The side of the corner that takes the taps, in the surface's own pixels. Keep backdrop under it, where nothing answers a touch, so a child does not open it by playing. */
 export const CORNER = 72
+
+/** Whether a touch-down landed in that corner. A surface that has not been measured yet has no corner. */
+export function inCorner(x: number, y: number, width: number): boolean {
+  return width > 0 && x >= width - CORNER && y <= CORNER
+}
 /** Three taps count when the first and the last are no further apart than this. */
 export const WITHIN_MS = 700
 /** The numbers are refreshed this often, so they can be read. */
@@ -39,7 +44,7 @@ export class Overlay {
   /** Every touch-down on the surface, where it landed and how wide the surface is. Three in the corner in quick succession show or hide the numbers; one anywhere else starts the count again. */
   press(x: number, y: number, width: number, timeMs: number): void {
     // A surface that has not been measured yet has no corner.
-    if (width <= 0 || x < width - CORNER || y > CORNER) {
+    if (!inCorner(x, y, width)) {
       this.taps.length = 0
       return
     }

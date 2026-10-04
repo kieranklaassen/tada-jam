@@ -74,12 +74,29 @@ describe('the save', () => {
   it('leaves out a piece that no child could have laid: off the pizza, on another piece, of no kind, or one too many', () => {
     const good = serialize(full()) as unknown as Record<string, unknown>
     const piece = (good.pizza as { pieces: unknown[] }).pieces[0] as { kind: string; x: number; y: number }
-    const pieces = [piece, { ...piece }, { kind: 'pepper', x: 3, y: 0, turn: 0 }, { kind: 'anchovy', x: 0.5, y: 0.5, turn: 0 }, { kind: 'olive', x: Number.NaN, y: 0 }, 'crumb', null]
+    const pieces = [piece, { ...piece }, { kind: 'pepper', x: 3, y: 0 }, { kind: 'anchovy', x: 0.5, y: 0.5 }, { kind: 'olive', x: Number.NaN, y: 0 }, 'crumb', null]
     const back = deserialize({ ...good, pizza: { pieces, baked: 'burnt' } })
     expect(back.pizza.pieces.length).toBe(1)
     expect(back.pizza.baked).toBe(false)
-    const many = Array.from({ length: 40 }, (_, i) => ({ kind: KINDS[i % 6], x: Math.cos(i) * 0.6, y: Math.sin(i) * 0.6, turn: 0 }))
+    const many = Array.from({ length: 40 }, (_, i) => ({ kind: KINDS[i % 6], x: Math.cos(i) * 0.6, y: Math.sin(i) * 0.6 }))
     expect(deserialize({ ...good, pizza: { pieces: many, baked: true } }).pizza.pieces.length).toBeLessThanOrEqual(CAPACITY)
+  })
+
+  it('keeps of a piece only its kind and its spot, and drops anything else an older save held', () => {
+    const good = serialize(full()) as unknown as Record<string, unknown>
+    for (const piece of (good.pizza as { pieces: object[] }).pieces) expect(Object.keys(piece).sort()).toEqual(['kind', 'x', 'y'])
+    const older = { ...good, pizza: { pieces: [{ kind: 'olive', x: 0.1, y: 0.2, turn: 0.4 }], baked: false } }
+    expect(deserialize(older).pizza.pieces).toEqual([{ kind: 'olive', x: 0.1, y: 0.2 }])
+  })
+
+  it('keeps a card\'s seed only when the card is scattered', () => {
+    const scattered = { ...full(), order: { wanted: [{ kind: 'pepper' as const, count: 3 }], picture: 'scattered' as const, seed: 77 } }
+    const rows = { ...full(), order: { wanted: [{ kind: 'pepper' as const, count: 3 }], picture: 'rows' as const, seed: 77 } }
+    expect(serialize(scattered).order).toEqual({ wanted: [{ kind: 'pepper', count: 3 }], picture: 'scattered', seed: 77 })
+    expect(Object.keys(serialize(rows).order!).sort()).toEqual(['picture', 'wanted'])
+    expect(deserialize(serialize(scattered)).order!.seed).toBe(77)
+    // A card in rows is the same picture whatever seed an older save kept with it.
+    expect(deserialize({ ...serialize(rows), order: { ...serialize(rows).order, seed: 5 } }).order!.seed).toBe(1)
   })
 
   it('clears the counter when the card cannot be read, and never keeps a cycle finished without its customer', () => {

@@ -1,16 +1,21 @@
 import { describe, expect, it } from 'vitest'
 import { CHARACTERS, CUSTOMERS } from './customers'
 import { KINDS } from './kinds'
-import { LIMITS, babble, bake, bite, boing, burp, door, footstep, gulp, hiccup, home, jiggle, knock, lick, pat, pip, plop, pop, rumble, seconds, slide, snap, stepFreq, stretch, tickOn, tooMany, unroll, wheeze, type VoiceSpec } from './voices'
+import { LIMITS, babble, bake, bite, boing, burp, cannotStandVoice, door, inManner, streetVoice, footstep, gulp, hiccup, home, jiggle, knock, lick, pat, pip, plop, pop, rumble, seconds, slide, snap, stepFreq, stretch, tap, tickOn, tooMany, unroll, wheeze, type VoiceSpec } from './voices'
 
 // The builder's machine cannot hear, so every voice is held to a range here.
 
 function all(): [string, VoiceSpec][] {
   const out: [string, VoiceSpec][] = [['pop', pop], ['home', home], ['boing', boing], ['jiggle', jiggle], ['knock', knock]]
+  out.push(['tap', tap])
   out.push(['unroll', unroll], ['slide', slide], ['door', door], ['lick', lick], ['pat', pat], ['stretch', stretch], ['snap', snap], ['wheeze', wheeze], ['hiccup', hiccup])
   for (let n = 0; n < 3; n++) out.push([`bite ${n}`, bite(n)])
   for (let count = 1; count <= 10; count++) out.push([`tickOn ${count}`, tickOn(count)])
-  for (const who of CUSTOMERS) out.push([`burp ${who}`, burp(CHARACTERS[who].voice)], [`footstep ${who}`, footstep(CHARACTERS[who].voice)])
+  for (const who of CUSTOMERS) out.push([`burp ${who}`, burp(CHARACTERS[who].voice)], [`footstep ${who}`, footstep(CHARACTERS[who].voice)], [`cannot stand ${who}`, cannotStandVoice(who)])
+  for (const kind of KINDS) for (let n = 0; n < 3; n++) out.push([`bite ${n} ${kind}`, bite(n, [kind])])
+  out.push(['bite of three kinds', bite(2, ['pepper', 'sock', 'worm'])])
+  for (const what of ['sun', 'tree', 'house', 'cloud', 'bird'] as const) out.push([`street ${what}`, streetVoice(what)])
+  for (const who of CUSTOMERS) for (const kind of KINDS) out.push([`gulp ${kind} as ${who}`, inManner(gulp(kind), who)], [`tooMany ${kind} as ${who}`, inManner(tooMany(kind, false), who)], [`tooMany big ${kind} as ${who}`, inManner(tooMany(kind, true), who)])
   for (const kind of KINDS) {
     out.push([`bake ${kind}`, bake(kind)], [`gulp ${kind}`, gulp(kind)])
     for (const big of [false, true]) {
@@ -73,6 +78,46 @@ describe('voices', () => {
     expect(seen.size).toBe(KINDS.length)
   })
 
+  it('gives a bite the crunch of the kinds in it, and every customer its own sound for the kind it cannot stand', () => {
+    const shape = (spec: VoiceSpec): string => JSON.stringify(spec.map((p) => [p.wave, Math.round(p.freq), p.decay, p.delay ?? 0]))
+    expect(new Set(KINDS.map((kind) => shape(bite(0, [kind])))).size).toBe(KINDS.length)
+    // Two kinds are heard one after the other, on top of the crust.
+    const both = bite(0, ['olive', 'cheese'])
+    expect(both.length).toBe(bite(0).length + 2)
+    expect(both[1].delay!).toBeGreaterThan(both[0].delay!)
+    expect(shape(bite(0, ['olive', 'cheese']))).not.toBe(shape(bite(0, ['cheese', 'olive'])))
+    expect(new Set(CUSTOMERS.map((who) => shape(cannotStandVoice(who)))).size).toBe(CUSTOMERS.length)
+    // Grum's is a whistle: high, and held.
+    const whistle = cannotStandVoice('grum')
+    expect(whistle[0].wave).toBe('sine')
+    expect(whistle[0].freq).toBeGreaterThan(1500)
+    expect(seconds(whistle)).toBeGreaterThan(0.6)
+  })
+
+  it('sounds a reaction in its owner\'s manner: Bim\'s higher and shorter, Grum\'s lower and longer, for every kind', () => {
+    for (const kind of KINDS) {
+      const plain = tooMany(kind, false), bim = inManner(plain, 'bim'), grum = inManner(plain, 'grum')
+      expect(bim[0].freq, kind).toBeGreaterThan(plain[0].freq)
+      expect(grum[0].freq, kind).toBeLessThan(plain[0].freq)
+      expect(seconds(bim), kind).toBeLessThan(seconds(plain))
+      expect(seconds(grum), kind).toBeGreaterThanOrEqual(seconds(plain))
+      expect(seconds(grum), kind).toBeLessThanOrEqual(LIMITS.maxSeconds + 1e-9)
+    }
+    const shape = (spec: VoiceSpec): string => JSON.stringify(spec.map((p) => [p.wave, Math.round(p.freq), Math.round(p.decay * 1000)]))
+    expect(new Set(CUSTOMERS.map((who) => shape(inManner(tooMany('pepper', false), who)))).size).toBe(CUSTOMERS.length)
+    expect(new Set(CUSTOMERS.map((who) => shape(inManner(gulp('worm'), who)))).size).toBe(CUSTOMERS.length)
+  })
+
+  it('gives each thing in the street a small sound of its own, short and soft', () => {
+    const things = ['sun', 'tree', 'house', 'cloud', 'bird'] as const
+    const shape = (spec: VoiceSpec): string => JSON.stringify(spec.map((p) => [p.wave, Math.round(p.freq), p.decay, p.delay ?? 0]))
+    expect(new Set(things.map((what) => shape(streetVoice(what)))).size).toBe(things.length)
+    for (const what of things) {
+      expect(seconds(streetVoice(what)), what).toBeLessThan(0.5)
+      for (const part of streetVoice(what)) expect(part.peak, what).toBeLessThanOrEqual(0.13)
+    }
+  })
+
   it('gives every kind its own sound for baking, for too many and for too few', () => {
     const shape = (spec: VoiceSpec): string => JSON.stringify(spec.map((p) => [p.wave, Math.round(p.freq), p.decay, p.delay ?? 0]))
     for (const make of [bake, (kind: (typeof KINDS)[number]) => tooMany(kind, false), (kind: (typeof KINDS)[number]) => tooMany(kind, true), (kind: (typeof KINDS)[number]) => rumble(kind, 220, false), gulp]) {
@@ -93,7 +138,23 @@ describe('voices', () => {
     }
     expect(tooMany('olive', false).filter((p) => p.decay <= 0.03).length).toBeGreaterThanOrEqual(4)
     expect(tooMany('sock', false)[0].wave).toBe('sawtooth')
-    expect(gulp('sock').length).toBeGreaterThan(gulp('cheese').length)
+    // A sock goes on with a snap: a short bright crack after the pull.
+    expect(gulp('sock').some((p) => p.wave === 'noise' && p.freq > 2000 && p.decay < 0.06 && (p.delay ?? 0) > 0.3)).toBe(true)
+    // Cheese is played like a harp: plucked notes, each higher than the last. A worm is slurped: one long climbing hiss, and a flick after it. A pepper's spark pops after the gulp.
+    const plucks = gulp('cheese').filter((p) => p.wave === 'triangle')
+    expect(plucks.length).toBeGreaterThanOrEqual(3)
+    for (let i = 1; i < plucks.length; i++) {
+      expect(plucks[i].freq).toBeGreaterThan(plucks[i - 1].freq)
+      expect(plucks[i].delay!).toBeGreaterThan(plucks[i - 1].delay ?? 0)
+    }
+    const slurp = gulp('worm')[0]
+    expect(slurp.wave).toBe('noise')
+    expect(slurp.decay).toBeGreaterThan(0.4)
+    expect(slurp.glideTo!).toBeGreaterThan(slurp.freq * 3)
+    expect(gulp('worm').some((p) => (p.delay ?? 0) > slurp.decay && p.decay < 0.06)).toBe(true)
+    expect(gulp('pepper').filter((p) => (p.delay ?? 0) > 0.5 && p.freq > 1500).length).toBe(2)
+    // No two kinds begin alike: the swallow itself is each kind's own.
+    expect(new Set(KINDS.map((kind) => JSON.stringify([gulp(kind)[0].wave, gulp(kind)[0].freq, gulp(kind)[0].decay]))).size).toBe(KINDS.length)
     // A flame comes with a whoomph: a low thump that falls. An olive swallowed whole goes down with a plunk and its echo.
     const thump = tooMany('pepper', false).find((p) => p.wave === 'sine')!
     expect(thump.freq).toBeLessThan(200)

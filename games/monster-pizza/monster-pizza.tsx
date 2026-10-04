@@ -9,7 +9,7 @@ import { ForgivingTouch, type Gesture, type Point } from './input'
 import { Kitchen } from './kitchen'
 import { toStage } from './layout'
 import { monsterPizzaManifest } from './manifest'
-import { Overlay } from './overlay'
+import { Overlay, inCorner } from './overlay'
 import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
 import { deserialize, serialize } from './save'
@@ -111,7 +111,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       for (const gesture of gestures) {
         if (gesture.type === 'press') {
           const p = toStage(view.fit, gesture.at.x, gesture.at.y)
-          kitchen.press(p.x, p.y)
+          // The stage shrinks with the surface and the corner does not, so on a small surface the corner lies over things that answer.
+          kitchen.press(p.x, p.y, inCorner(gesture.at.x, gesture.at.y, width))
         } else if (gesture.type === 'tap') kitchen.tap()
         else if (gesture.type === 'dragMove') {
           const p = toStage(view.fit, gesture.at.x, gesture.at.y)
@@ -130,11 +131,25 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       kitchen.sounds.length = 0
     }
     // What the kitchen changed goes to storage: a piece set down at the throttle, an outcome at once.
+    let mayWrite = true
     const keep = () => {
       if (!kitchen || kitchen.dirty === 'no') return
+      // After a read that failed nothing is written until the child has touched the game: what the kitchen does by
+      // itself in that time, such as its first showing, stays unsaved and is written with the first change the child makes.
+      if (!mayWrite) return
       const now = kitchen.dirty === 'now'
       kitchen.dirty = 'no'
       cadence.change(performance.now(), now)
+    }
+    // The finger's lift will never arrive. The gestures that ending the touch would give are dropped: a drag
+    // "put down" would bake or serve a pizza held past half way, and lay or feed a carried piece, and nothing
+    // may happen to the kitchen because it was put away. Whatever is in hand goes back where it came from.
+    const putAway = () => {
+      touch.clear()
+      if (!kitchen) return
+      kitchen.putAway()
+      sound()
+      keep()
     }
     const at = (event: PointerEvent): Point => {
       const box = root.getBoundingClientRect()
@@ -142,10 +157,16 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     }
     const onDown = (event: PointerEvent) => {
       if (!attention.awake) return
+      mayWrite = true
       audio.touchDown()
       ladder.touch(clock.seconds)
       const where = at(event)
-      overlay.press(where.x, where.y, width, event.timeStamp)
+      // Every touch-down is a new touch and gets its own answer. The input would join one that lands soon after a
+      // lifted drag, and near it, to that drag, with no press: a quick second tap would then be swallowed. So a
+      // drag that is waiting out its grace is ended here first. A finger that is still down is left alone.
+      act(touch.advance(Infinity))
+      // Only a finger that lands alone counts towards the grown-up corner: three fingertips coming down together are one touch.
+      if (!touch.active) overlay.press(where.x, where.y, width, event.timeStamp)
       act(touch.down(event.pointerId, where, event.timeStamp))
       // Captured, so the lift is reported even when the finger has slid off the surface.
       root.setPointerCapture(event.pointerId)
@@ -153,10 +174,16 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const onMove = (event: PointerEvent) => act(touch.move(event.pointerId, at(event)))
     const onUp = (event: PointerEvent) => {
       act(touch.up(event.pointerId, at(event), event.timeStamp))
+      // A drag ends when the finger lifts, in this handler: the piece flies, the pizza goes. The input would hold it
+      // open for a moment in case the finger came back, but here every touch-down is a new touch, so nothing waits.
+      act(touch.advance(Infinity))
       audio.touchUp()
     }
     const onCancel = (event: PointerEvent) => {
-      act(touch.cancel(event.pointerId, event.timeStamp))
+      // The browser took the finger that was working away, which the child did not do: whatever is in hand goes
+      // back where it came from, as at a put-away. The gestures a cancelled drag would give are not acted on,
+      // since after its grace a drag put down bakes, serves, lays or feeds.
+      if (touch.cancel(event.pointerId, event.timeStamp).length > 0) putAway()
       audio.touchUp()
     }
     root.addEventListener('pointerdown', onDown)
@@ -197,7 +224,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     }
 
     // Everything stops while unattended or hidden: the loop, the clock and sound. A touch in progress is
-    // ended, since its lift will never arrive (a drag is put down, a press ends without a tap), and the
+    // ended, since its lift will never arrive (what is in hand goes back where it came from), and the
     // newest state is handed to storage.
     const attention = new Attention(document, (awake) => {
       audio.setActive(awake)
@@ -208,12 +235,14 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       cancelAnimationFrame(frame)
       frame = 0
       clock.rest()
-      act(touch.clear())
+      putAway()
       cadence.settle(performance.now())
     })
     attendRef.current = (attended) => attention.set(attended)
 
-    ctxRef.current.storage.load<unknown>().catch(() => null).then((value) => {
+    // A read that fails is not a first visit: the slot may hold a game. The kitchen opens as new so that there is
+    // something to play, but nothing is written over the slot until the child has touched it (`mayWrite`, in `keep`).
+    ctxRef.current.storage.load<unknown>().catch(() => { mayWrite = false; return null }).then((value) => {
       if (disposed) return
       // A saved position wins; `childAge` only chooses where a first visit starts.
       // The game sets itself up from the state here, as it was left: nothing eases in and no scene replays.
@@ -230,8 +259,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
 
     return () => {
       disposed = true
-      // As on going to rest: the touch ends first, so the thing in hand is put down before the last save.
-      act(touch.clear())
+      // As on going to rest: the touch ends first, so the thing in hand is back where it came from before the last save.
+      putAway()
       cadence.settle(performance.now())
       cancelAnimationFrame(frame)
       observer.disconnect()

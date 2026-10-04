@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { CUSTOMERS } from './customers'
-import { MotionDirector, PERSONALITIES, type Action, type ActionKind, type Delta } from './motion'
+import { CHANNELS, MotionDirector, PERSONALITIES, type Action, type ActionKind, type Delta } from './motion'
 
 const KINDS_OF_ACTION: ActionKind[] = ['react', 'poke', 'delight']
-const KEYS: (keyof Delta)[] = ['lift', 'squash', 'lean', 'mouth', 'tongue', 'part', 'lookX', 'lookY', 'blink']
+const KEYS = CHANNELS
 // Each channel in the units it is drawn in, so a hop and a squash can be compared.
-const SCALE: Record<keyof Delta, number> = { lift: 1 / 40, squash: 5, lean: 8, mouth: 1, tongue: 1, part: 1, lookX: 1, lookY: 1, blink: 1 }
+const SCALE: Record<keyof Delta, number> = { lift: 1 / 40, squash: 5, lean: 8, mouth: 1, tongue: 1, part: 1, lookX: 1, lookY: 1, blink: 1, brow: 1, frown: 1, smile: 1, pucker: 1, cheeks: 1, pupil: 2, upset: 1, rollX: 1, rollY: 1 }
 
 /** An action as a curve: every channel sampled along its length. */
 function curve(action: Action): number[] {
@@ -63,6 +63,24 @@ describe('motion', () => {
     expect(new Set(CUSTOMERS.map((who) => PERSONALITIES[who].look.stiffness)).size).toBe(CUSTOMERS.length)
   })
 
+  it('gives every customer a face of its own at rest, and a face to every action', () => {
+    const resting = CUSTOMERS.map((who) => {
+      const d = PERSONALITIES[who].idle(1.3)
+      return [d.brow ?? 0, d.frown ?? 0, d.smile ?? 0, d.cheeks ?? 0, d.pupil ?? 0].map((v) => v.toFixed(1)).join(' ')
+    })
+    expect(new Set(resting).size).toBe(CUSTOMERS.length)
+    const FACE = ['brow', 'frown', 'smile', 'pucker', 'cheeks', 'pupil'] as const
+    for (const who of CUSTOMERS) {
+      for (const kind of KINDS_OF_ACTION) {
+        for (const action of PERSONALITIES[who].actions[kind]) {
+          let moved = 0
+          for (let i = 1; i < 10; i++) for (const key of FACE) moved += Math.abs(action.at(i / 10)[key] ?? 0)
+          expect(moved, action.name).toBeGreaterThan(0.5)
+        }
+      }
+    }
+  })
+
   it('never plays the same variant twice in a row', () => {
     for (const who of CUSTOMERS) {
       const director = new MotionDirector(who, 7)
@@ -91,7 +109,14 @@ describe('motion', () => {
         expect(pose.sy).toBeLessThan(1.5)
         expect(Math.abs(pose.lean)).toBeLessThan(0.4)
         expect(pose.lift).toBeGreaterThanOrEqual(0)
-        for (const unit of [pose.blink, pose.mouth, pose.tongue]) {
+        // A face stays a face: every part of it inside what the art can draw.
+        for (const signed of [pose.brow, pose.frown, pose.smile]) {
+          expect(signed).toBeGreaterThanOrEqual(-1)
+          expect(signed).toBeLessThanOrEqual(1)
+        }
+        expect(pose.pupil).toBeGreaterThanOrEqual(0.5)
+        expect(pose.pupil).toBeLessThanOrEqual(1.5)
+        for (const unit of [pose.blink, pose.mouth, pose.tongue, pose.pucker, pose.cheeks]) {
           expect(unit).toBeGreaterThanOrEqual(0)
           expect(unit).toBeLessThanOrEqual(1)
         }

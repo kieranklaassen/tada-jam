@@ -5,7 +5,7 @@ import { MOST, compare, harder, judge, layOrder, matches, outcomeFor, placeOf, r
 import { makeRng } from './rng'
 import { MOST_KINDS, MOST_PIECES, MOST_TUBS } from './save'
 import { finishCycle, firstPosition, freshState } from './state'
-import { LONGEST, ONE_BY_ONE, SHORTEST, planTasting } from './tasting'
+import { KINDS_PLAYED, LONGEST, ONE_BY_ONE, SHORTEST, planTasting } from './tasting'
 
 const total = (wanted: { count: number }[]): number => wanted.reduce((n, w) => n + w.count, 0)
 
@@ -183,6 +183,19 @@ describe('a tasting', () => {
     for (let i = 1; i < plan.tastes.length; i++) expect(plan.tastes[i].at).toBeGreaterThanOrEqual(plan.tastes[i - 1].at + plan.tastes[i - 1].lasts - 1e-9)
     expect(plan.tastes[0].at).toBeGreaterThanOrEqual(plan.lick.lasts)
     expect(plan.push.at).toBeGreaterThan(plan.tastes[2].at + plan.tastes[2].lasts)
+  })
+
+  it('always plays the kind a customer cannot stand, and first, when more kinds are off than a tasting plays', () => {
+    const off = [{ kind: 'cheese', wanted: 0, have: 1, off: 1 }, { kind: 'olive', wanted: 0, have: 2, off: 2 }, { kind: 'worm', wanted: 0, have: 1, off: 1 }, { kind: 'sock', wanted: 0, have: 1, off: 1 }] as const
+    expect(off.length).toBeGreaterThan(KINDS_PLAYED)
+    // Left to the order they came in, the fourth kind is not played.
+    expect(planTasting(off).tastes.some((t) => t.kind === 'sock')).toBe(false)
+    const plan = planTasting(off, 'sock')
+    expect(plan.tastes[0].kind).toBe('sock')
+    expect(new Set(plan.tastes.map((t) => t.kind)).size).toBe(KINDS_PLAYED)
+    // A kind that is only missing is not what it cannot stand being there: the order is left alone.
+    const missing = [{ kind: 'cheese', wanted: 0, have: 1, off: 1 }, { kind: 'sock', wanted: 2, have: 1, off: -1 }] as const
+    expect(planTasting(missing, 'sock').tastes.map((t) => t.kind)).toEqual(['cheese', 'sock'])
   })
 
   it('plays more than three as one big version, so nothing has to be counted to know there were far too many', () => {

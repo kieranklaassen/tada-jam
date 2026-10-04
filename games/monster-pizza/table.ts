@@ -1,5 +1,6 @@
 import type { Kind } from './kinds'
 import { PIECE_SHARE, PIZZA, TOP_SHARE, TUB, onPizza, tubPlace } from './layout'
+import { rollsIn } from './pieceMotion'
 import { makeRng, type Rng } from './rng'
 import { spring, stepSpring, type Spring } from './spring'
 
@@ -16,7 +17,11 @@ export const APART = PIECE_SHARE * 2.12
 /** A piece's centre stays within this share of the pizza's radius. */
 export const REACH = TOP_SHARE - PIECE_SHARE
 
-export type Piece = { id: number; kind: Kind; x: number; y: number; turn: number; settle: Spring }
+/** A piece on the pizza. `age` is how many seconds ago it came down; a piece found lying there is old. */
+export type Piece = { id: number; kind: Kind; x: number; y: number; turn: number; settle: Spring; age: number }
+
+/** The age of a piece that was not just laid. */
+export const AT_REST = 9
 
 export type Flight = {
   kind: Kind
@@ -26,8 +31,10 @@ export type Flight = {
   /** 0 to 1 through the flight, which takes `lasts` seconds. */
   t: number
   lasts: number
+  /** It was lifted off the pizza, so it looks as the pieces on the pizza look: toasted, if the pizza is baked. */
+  lifted: boolean
   /** Where it ends: on the pizza at this spot, home in its tub, or off the heap and home. */
-  end: { on: 'pizza'; x: number; y: number } | { on: 'tub'; tub: number } | { on: 'bounce'; tub: number } | { on: 'mouth' }
+  end: { on: 'pizza'; x: number; y: number } | { on: 'tub'; tub: number } | { on: 'bounce'; tub: number; home: { x: number; y: number } } | { on: 'roll'; tub: number } | { on: 'mouth' }
 }
 
 export type Hand = { kind: Kind; turn: number; x: number; y: number; tub: number; from: { x: number; y: number } | null; waiting: boolean }
@@ -38,6 +45,8 @@ export type TableEvent =
   | { type: 'pip'; kind: Kind; count: number }
   | { type: 'home'; kind: Kind }
   | { type: 'boing'; kind: Kind }
+  /** A piece let go off the pizza touched the table, on its way home. */
+  | { type: 'bounce'; kind: Kind }
   /** A piece reached a customer's mouth. */
   | { type: 'fed'; kind: Kind }
   | { type: 'jiggle' }
@@ -57,6 +66,28 @@ export type Table = {
 export function makeTable(kinds: readonly Kind[], seed: number): Table {
   return { tubs: kinds.map((kind) => ({ kind, squash: spring() })), pieces: [], flights: [], hand: null, jiggle: spring(), events: [], rng: makeRng(seed), nextId: 1 }
 }
+
+/**
+ * How a piece lies on its spot: every spot has its own turn, so a piece is
+ * found lying as it was left without its turn being saved. The spot is taken
+ * to three places, as a save keeps it. A sock turns less than the others, so
+ * that it always lies down and never stands on its toe or its heel.
+ */
+export function turnAt(x: number, y: number, kind?: Kind): number {
+  const rx = Math.round(x * 1000), ry = Math.round(y * 1000)
+  const mixed = Math.sin(rx * 12.9898 + ry * 78.233) * 43758.5453
+  return lean(kind, mixed - Math.floor(mixed))
+}
+
+/** A turn for a piece of a kind from a number from 0 to 1: anywhere in the kind's own range. */
+export function lean(kind: Kind | undefined, share: number): number {
+  if (kind === 'sock') return SOCK_LEANS[0] + share * (SOCK_LEANS[1] - SOCK_LEANS[0])
+  // A wedge of cheese lies on its long side too: stood on its tall end it would be a triangle on its base.
+  return kind === 'cheese' ? (share - 0.5) * 0.8 : (share - 0.5) * 1.6
+}
+
+/** The turns a sock may lie at, on top of the tip of its own outline (kinds.ts): from 0.2 one way to 0.6 the other in all, so it always lies down. */
+export const SOCK_LEANS = [-0.4, 0.4] as const
 
 export function tubAt(table: Table, index: number): { x: number; y: number } {
   return tubPlace(index, table.tubs.length)
@@ -104,7 +135,8 @@ function ringSpots(): { x: number; y: number }[] {
 /**
  * Makes room for one more piece near (x, y) by nudging the pieces that lie
  * there apart, as a hand would. Returns the new piece's spot. The pieces at
- * rest are moved; a piece still in the air keeps the spot it was promised.
+ * rest are moved; a piece still in the air keeps the spot it was promised,
+ * unless nothing else will make room: then it is sent to another.
  */
 export function makeRoom(table: Table, x: number, y: number): { x: number; y: number } | null {
   if (claimed(table).length >= CAPACITY) return null
@@ -134,17 +166,28 @@ export function makeRoom(table: Table, x: number, y: number): { x: number; y: nu
   }
   if (!settled) {
     // Too tangled to nudge apart: everything goes to the spots that always fit, each piece to the nearest one left.
-    const spots = ringSpots().filter((s) => fixed.every((f) => Math.hypot(f.x - s.x, f.y - s.y) >= APART))
-    if (spots.length < free.length) return null
-    for (const p of free) {
+    // The pieces still in the air go first and are sent to one of those spots too, so there is always room for
+    // twelve, however fast the taps come.
+    const spots = ringSpots()
+    const nearest = (p: { x: number; y: number }) => {
       let best = 0
       for (let i = 1; i < spots.length; i++) if (Math.hypot(spots[i].x - p.x, spots[i].y - p.y) < Math.hypot(spots[best].x - p.x, spots[best].y - p.y)) best = i
-      const [spot] = spots.splice(best, 1)
+      return spots.splice(best, 1)[0]
+    }
+    for (const f of table.flights) {
+      if (f.end.on !== 'pizza') continue
+      const spot = nearest(f.end)
+      f.end = { on: 'pizza', x: spot.x, y: spot.y }
+      const at = onPizza(spot.x, spot.y)
+      f.to = { x: at.x - rollsIn(f.kind), y: at.y }
+    }
+    for (const p of free) {
+      const spot = nearest(p)
       p.x = spot.x; p.y = spot.y
     }
   }
   table.pieces.forEach((piece, i) => {
-    if (piece.x !== free[i].x || piece.y !== free[i].y) piece.settle.v += 4
+    if (piece.x !== free[i].x || piece.y !== free[i].y) kick(piece.settle, 4)
     piece.x = free[i].x
     piece.y = free[i].y
   })
@@ -169,9 +212,11 @@ export function spotNear(table: Table, x: number, y: number): { x: number; y: nu
   return makeRoom(table, x, y)
 }
 
-function fly(table: Table, kind: Kind, turn: number, from: { x: number; y: number }, to: { x: number; y: number }, end: Flight['end']): void {
+function fly(table: Table, kind: Kind, turn: number, from: { x: number; y: number }, to: { x: number; y: number }, end: Flight['end'], lifted = false): void {
   const lasts = Math.min(0.4, Math.max(0.18, Math.hypot(to.x - from.x, to.y - from.y) / 1200))
-  table.flights.push({ kind, turn, from, to, t: 0, lasts: end.on === 'bounce' ? 0.62 : lasts, end })
+  // An olive comes down a finger-width short of its spot and rolls there (pieceMotion.ts).
+  if (end.on === 'pizza') to = { x: to.x - rollsIn(kind), y: to.y }
+  table.flights.push({ kind, turn, from, to, lifted, t: 0, lasts: end.on === 'bounce' ? 0.62 : end.on === 'roll' ? 0.6 : lasts, end })
 }
 
 /** Touch-down on a tub: it squashes and one piece pops up into the hand. The answer to the touch starts here. */
@@ -179,7 +224,7 @@ export function pressTub(table: Table, index: number): void {
   const tub = table.tubs[index]
   const at = tubAt(table, index)
   tub.squash.v -= 7
-  table.hand = { kind: tub.kind, turn: table.rng.range(-0.5, 0.5), x: at.x, y: at.y - TUB.r * 0.9, tub: index, from: null, waiting: false }
+  table.hand = { kind: tub.kind, turn: tub.kind === 'sock' ? lean('sock', table.rng.next()) : table.rng.range(-0.5, 0.5), x: at.x, y: at.y - TUB.r * 0.9, tub: index, from: null, waiting: false }
   table.events.push({ type: 'pop', kind: tub.kind })
 }
 
@@ -201,13 +246,13 @@ export function tapHand(table: Table): void {
   table.hand = null
   const from = { x: hand.x, y: hand.y }
   if (hand.from) {
-    fly(table, hand.kind, hand.turn, from, tubAt(table, hand.tub), { on: 'tub', tub: hand.tub })
-    table.events.push({ type: 'pip', kind: hand.kind, count: countOf(table, hand.kind) })
+    fly(table, hand.kind, hand.turn, from, tubAt(table, hand.tub), { on: 'tub', tub: hand.tub }, hand.from !== null)
+    table.events.push({ type: 'pip', kind: hand.kind, count: table.pieces.length })
     return
   }
   const spot = freeSpot(table)
-  if (spot) fly(table, hand.kind, hand.turn, from, onPizza(spot.x, spot.y), { on: 'pizza', x: spot.x, y: spot.y })
-  else fly(table, hand.kind, hand.turn, from, { x: PIZZA.x, y: PIZZA.y - PIZZA.r * 0.3 }, { on: 'bounce', tub: hand.tub })
+  if (spot) fly(table, hand.kind, hand.turn, from, onPizza(spot.x, spot.y), { on: 'pizza', x: spot.x, y: spot.y }, hand.from !== null)
+  else fly(table, hand.kind, hand.turn, from, { x: PIZZA.x, y: PIZZA.y - PIZZA.r * 0.3 }, { on: 'bounce', tub: hand.tub, home: tubAt(table, hand.tub) }, hand.from !== null)
 }
 
 /** The finger moved: the piece in the hand goes with it. */
@@ -231,11 +276,36 @@ export function dropHand(table: Table): void {
   const sx = (hand.x - PIZZA.x) / PIZZA.r, sy = (hand.y - PIZZA.y) / PIZZA.r
   const spot = Math.hypot(sx, sy) <= 1.02 ? spotNear(table, sx, sy) : null
   const from = { x: hand.x, y: hand.y }
-  if (spot) fly(table, hand.kind, hand.turn, from, onPizza(spot.x, spot.y), { on: 'pizza', x: spot.x, y: spot.y })
+  if (spot) fly(table, hand.kind, hand.turn, from, onPizza(spot.x, spot.y), { on: 'pizza', x: spot.x, y: spot.y }, hand.from !== null)
+  // Let go over a pizza that is full, it bounces off the heap like a tapped one.
+  else if (Math.hypot(sx, sy) <= 1.02) fly(table, hand.kind, hand.turn, from, { x: PIZZA.x, y: PIZZA.y - PIZZA.r * 0.3 }, { on: 'bounce', tub: hand.tub, home: tubAt(table, hand.tub) }, hand.from !== null)
   else {
-    fly(table, hand.kind, hand.turn, from, tubAt(table, hand.tub), { on: 'tub', tub: hand.tub })
-    if (hand.from) table.events.push({ type: 'pip', kind: hand.kind, count: countOf(table, hand.kind) })
+    // Let go anywhere else, it bounces once on the table and rolls back into its tub.
+    fly(table, hand.kind, hand.turn, from, tubAt(table, hand.tub), { on: 'roll', tub: hand.tub }, hand.from !== null)
+    if (hand.from) table.events.push({ type: 'pip', kind: hand.kind, count: table.pieces.length })
   }
+}
+
+/** A carried piece with no pizza to lie on: from where it was let go it drops to the table, bounces once and rolls back into its tub. */
+export function sendHome(table: Table): void {
+  const hand = table.hand
+  if (!hand) return
+  table.hand = null
+  fly(table, hand.kind, hand.turn, { x: hand.x, y: hand.y }, tubAt(table, hand.tub), { on: 'roll', tub: hand.tub }, hand.from !== null)
+  if (hand.from) table.events.push({ type: 'pip', kind: hand.kind, count: table.pieces.length })
+}
+
+/** Whether the piece in the hand came out of a tub and is still at that tub: a tap that slid a little, and not a carry. */
+export function stillAtTub(table: Table): boolean {
+  const hand = table.hand
+  if (!hand || hand.from) return false
+  const tub = tubAt(table, hand.tub)
+  return Math.hypot(hand.x - tub.x, hand.y - tub.y) <= TUB.r * 1.7
+}
+
+/** Whether a piece is on its way to the customer's mouth. */
+export function feeding(table: Table): boolean {
+  return table.flights.some((f) => f.end.on === 'mouth')
 }
 
 /** The press ended without a tap or a carry: the piece goes back where it came from, and nothing has changed. */
@@ -243,13 +313,18 @@ export function releaseHand(table: Table): void {
   const hand = table.hand
   if (!hand) return
   table.hand = null
-  if (hand.from) table.pieces.push({ id: table.nextId++, kind: hand.kind, x: hand.from.x, y: hand.from.y, turn: hand.turn, settle: spring() })
+  if (hand.from) table.pieces.push({ id: table.nextId++, kind: hand.kind, x: hand.from.x, y: hand.from.y, turn: turnAt(hand.from.x, hand.from.y, hand.kind), settle: spring(), age: AT_REST })
+}
+
+/** Kicks a spring, and never past `most`: a storm of taps makes things bob as hard as one good knock, not harder with every tap. */
+function kick(s: Spring, by: number, most = 10): void {
+  s.v = Math.max(-most, Math.min(most, s.v + by))
 }
 
 /** A tap on the pizza itself: everything on it wobbles. */
 export function jigglePizza(table: Table, by = 5): void {
-  table.jiggle.v += by
-  for (const piece of table.pieces) piece.settle.v += table.rng.range(1.5, 3.5)
+  kick(table.jiggle, by, 5)
+  for (const piece of table.pieces) kick(piece.settle, table.rng.range(7, 11))
   table.events.push({ type: 'jiggle' })
 }
 
@@ -274,19 +349,28 @@ export function whatIsAt(table: Table, x: number, y: number): { what: 'tub'; ind
 export function stepTable(table: Table, dt: number): void {
   for (const tub of table.tubs) stepSpring(tub.squash, 0, dt, 320, 14)
   stepSpring(table.jiggle, 0, dt, 180, 9)
-  for (const piece of table.pieces) stepSpring(piece.settle, 0, dt, 300, 13)
+  for (const piece of table.pieces) {
+    stepSpring(piece.settle, 0, dt, 300, 13)
+    piece.age += dt
+  }
   for (let i = table.flights.length - 1; i >= 0; i--) {
     const f = table.flights[i]
+    const before = f.t
     f.t += dt / f.lasts
+    // The moment it comes off the heap, or touches the table: heard as it happens.
+    if (f.end.on === 'bounce' && before < BOUNCE_AT && f.t >= BOUNCE_AT) table.events.push({ type: 'boing', kind: f.kind })
+    if (f.end.on === 'roll' && before < ROLL_AT && f.t >= ROLL_AT) table.events.push({ type: 'bounce', kind: f.kind })
     if (f.t < 1) continue
     table.flights.splice(i, 1)
     if (f.end.on === 'pizza') {
       const settle = spring()
       settle.v = 9
-      table.pieces.push({ id: table.nextId++, kind: f.kind, x: f.end.x, y: f.end.y, turn: f.turn, settle })
-      table.jiggle.v += 3.2
-      for (const piece of table.pieces) piece.settle.v += 1.4
-      table.events.push({ type: 'plop', kind: f.kind, count: countOf(table, f.kind) })
+      table.pieces.push({ id: table.nextId++, kind: f.kind, x: f.end.x, y: f.end.y, turn: turnAt(f.end.x, f.end.y, f.kind), settle, age: 0 })
+      kick(table.jiggle, 3.2, 5)
+      // The pieces already lying there bob, enough to be seen.
+      for (const piece of table.pieces) kick(piece.settle, 7.5)
+      // The note follows how many lie on the pizza, of every kind together.
+      table.events.push({ type: 'plop', kind: f.kind, count: table.pieces.length })
     } else if (f.end.on === 'mouth') table.events.push({ type: 'fed', kind: f.kind })
     else {
       table.tubs[f.end.tub].squash.v -= 4
@@ -300,14 +384,39 @@ export function feedHand(table: Table, to: { x: number; y: number }): void {
   const hand = table.hand
   if (!hand) return
   table.hand = null
-  if (hand.from) table.events.push({ type: 'pip', kind: hand.kind, count: countOf(table, hand.kind) })
-  fly(table, hand.kind, hand.turn, { x: hand.x, y: hand.y }, to, { on: 'mouth' })
+  if (hand.from) table.events.push({ type: 'pip', kind: hand.kind, count: table.pieces.length })
+  fly(table, hand.kind, hand.turn, { x: hand.x, y: hand.y }, to, { on: 'mouth' }, hand.from !== null)
 }
 
 /** A piece comes flying out of a mouth at `from` and lands back in its tub. */
 export function spitHome(table: Table, kind: Kind, from: { x: number; y: number }): void {
   const tub = table.tubs.findIndex((t) => t.kind === kind)
   if (tub >= 0) fly(table, kind, 0, from, tubAt(table, tub), { on: 'tub', tub })
+}
+
+/**
+ * The piece at this spot of the pizza, or on its way there, goes back into its tub: the customer takes back the piece
+ * it showed with. No note sounds for it, so the child's own first piece lands on the first step. True if there was one.
+ */
+export function takeBack(table: Table, spot: { x: number; y: number }): boolean {
+  const near = (x: number, y: number) => Math.hypot(x - spot.x, y - spot.y) < 1e-6
+  const i = table.pieces.findIndex((p) => near(p.x, p.y))
+  if (i >= 0) {
+    const [piece] = table.pieces.splice(i, 1)
+    const tub = table.tubs.findIndex((t) => t.kind === piece.kind)
+    if (tub >= 0) fly(table, piece.kind, piece.turn, onPizza(piece.x, piece.y), tubAt(table, tub), { on: 'tub', tub }, true)
+    return true
+  }
+  const f = table.flights.find((flight) => flight.end.on === 'pizza' && near(flight.end.x, flight.end.y))
+  if (!f) return false
+  const tub = table.tubs.findIndex((t) => t.kind === f.kind)
+  if (tub < 0) return false
+  const at = flightAt(f)
+  f.from = { x: at.x, y: at.y }
+  f.to = tubAt(table, tub)
+  f.t = 0
+  f.end = { on: 'tub', tub }
+  return true
 }
 
 /** One piece hops out of a tub by itself and flies to a spot on the pizza: the customer poked the tub. */
@@ -327,16 +436,30 @@ export function landNow(table: Table): void {
   stepTable(table, 0)
 }
 
+/** How far through its flight a piece comes off a full pizza, and how far through a piece let go off the pizza touches the table. */
+export const BOUNCE_AT = 0.45
+export const ROLL_AT = 0.3
+
 /** Where a flight is now, in stage units, with the arc it flies and how far it has turned. */
 export function flightAt(f: Flight): { x: number; y: number; turn: number } {
   const t = Math.min(1, f.t)
   if (f.end.on === 'bounce') {
     // Out to the heap, off it, and home: two arcs.
-    const out = t < 0.45
-    const k = out ? t / 0.45 : (t - 0.45) / 0.55
-    const tubHome = { x: f.from.x, y: f.from.y + TUB.r * 0.9 }
-    const a = out ? f.from : f.to, b = out ? f.to : tubHome
+    const out = t < BOUNCE_AT
+    const k = out ? t / BOUNCE_AT : (t - BOUNCE_AT) / (1 - BOUNCE_AT)
+    // Home is its tub, wherever it was thrown or let go from.
+    const a = out ? f.from : f.to, b = out ? f.to : f.end.home
     return { x: a.x + (b.x - a.x) * k, y: a.y + (b.y - a.y) * k - Math.sin(k * Math.PI) * (out ? 120 : 170), turn: f.turn + t * 9 }
+  }
+  if (f.end.on === 'roll') {
+    // Down onto the table under where it was let go, one bounce, and home.
+    const ground = { x: f.from.x, y: f.from.y + 44 }
+    if (t < ROLL_AT) {
+      const k = t / ROLL_AT
+      return { x: f.from.x, y: f.from.y + (ground.y - f.from.y) * k * k, turn: f.turn + t * 3 }
+    }
+    const k = (t - ROLL_AT) / (1 - ROLL_AT)
+    return { x: ground.x + (f.to.x - ground.x) * k, y: ground.y + (f.to.y - ground.y) * k - Math.sin(k * Math.PI) * 90, turn: f.turn + t * 7 }
   }
   const arc = f.end.on === 'mouth' ? 60 : Math.min(150, Math.max(26, Math.hypot(f.to.x - f.from.x, f.to.y - f.from.y) * 0.32))
   return { x: f.from.x + (f.to.x - f.from.x) * t, y: f.from.y + (f.to.y - f.from.y) * t - Math.sin(t * Math.PI) * arc, turn: f.turn + (1 - t) * (f.end.on === 'pizza' ? 2.4 : -3) }
@@ -347,9 +470,9 @@ export function flightAt(f: Flight): { x: number; y: number; turn: number } {
  * its way to the pizza is saved where it will land; a piece in the hand is
  * saved on the spot it was picked up from, or not at all if it came from a tub.
  */
-export function restingPieces(table: Table): { kind: Kind; x: number; y: number; turn: number }[] {
-  const out = table.pieces.map((p) => ({ kind: p.kind, x: p.x, y: p.y, turn: p.turn }))
-  for (const f of table.flights) if (f.end.on === 'pizza') out.push({ kind: f.kind, x: f.end.x, y: f.end.y, turn: f.turn })
-  if (table.hand?.from) out.push({ kind: table.hand.kind, x: table.hand.from.x, y: table.hand.from.y, turn: table.hand.turn })
+export function restingPieces(table: Table): { kind: Kind; x: number; y: number }[] {
+  const out = table.pieces.map((p) => ({ kind: p.kind, x: p.x, y: p.y }))
+  for (const f of table.flights) if (f.end.on === 'pizza') out.push({ kind: f.kind, x: f.end.x, y: f.end.y })
+  if (table.hand?.from) out.push({ kind: table.hand.kind, x: table.hand.from.x, y: table.hand.from.y })
   return out
 }
