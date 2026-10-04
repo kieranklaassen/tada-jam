@@ -13,13 +13,30 @@
   - Round 5 (checker G): passed, no finding, on commit `ca35987` (hash `eea42219…b03b`).
   - Round 6 (checker H): passed, no finding, on commit `ebd6aea` (hash `89ccbace…4d06`): the three sentences the closing run made true (Bo awake at his own ride, in two places; Mog's low-end cell).
   - Nothing was disputed in any round.
-- After round 6 the sheet was read against the game again, the grid cell by cell, and then against the lead's list of points where the game did less than the sheet. Whatever a child should see or hear was built (listed below). Three sentences said a detail other than the game does and were made true, and one row was added to the stored fields. None touches the mechanic, the error, the designed order, the records or the claim; one adds a saved field.
-  - Sheet now: commit `12c2c234cd8841a38eac44eaaeec2b578e32523b`, hash of the sheet part `00e26a18d40a0ffee1b6297568c0e21bc4f153ef044b5655623324ef41c8bc84`, unchanged since that commit.
+- After round 6 the sheet was read against the game three more times: by this lane, the grid cell by cell; against the lead's list of points where the game did less than the sheet; and by a reader who had not seen the build (the report is below). Whatever a child should see or hear was built (listed below). The sentences that said a detail other than the game does were made true, in every place the sheet says them. None touches the mechanic, the error, the designed order, the records or the claim. Two touch what is saved or loaded: a new field `touched`, and a decided ride found ended on load.
+  - Sheet now: commit `38631fe300effd8bcc419ea78d731f92b15c1758`, hash of the sheet part `eb0fc82041024d436e6dc737ff6b50bf0cfa970a4e10ab89b6257a58b61560fa`, unchanged since that commit.
   - Grid, Bo, "Tap it". Old: "Rumbles, rocks twice to get going and thuds to the end on his side, or off it." New: "Rumbles, rocks twice to get going and thuds to the end on his side; tapped on the plank he rumbles and thuds off it at once."
   - Scenes, "Tidying", first two sentences. Old: "While the sand holds marks, a small rake lies at the far rim. A tap on it draws it once across the tray and leaves even raked lines." New: "While the sand holds marks, a small rake lies at the far rim, from the child's first touch of anything on: the first showing marks the sand before that touch, and no tool is on screen then. A tap on it draws it once along the far rim, from one side of the tray to the other, and the sand behind it lies in even raked lines again."
   - What is stored, `marks`, last sentence. Old: "The rake lies out while any cell holds a mark deeper than raked." New: "The rake lies out while any cell holds a mark deeper than raked, once `touched` is set."
   - What is stored, a new row after `marks`. New: "`touched`: The child has touched the game at least once, ever. It is never shown. Until it is set no tool is on screen: the rake stays away."
-  - Why: a friend who leaves the plank leaves at once, since the plank swings the moment its weight is gone and must not swing through him; the rake travels along the rim, where it passes through nothing; and the sheet's own age rule allows no tool on screen before it means something, while the first showing marks the sand before the child has done anything, so the rake waits for the first touch, which has to be saved for the game to be found as left.
+  - The grid, opening paragraph, last sentence. Old: ""Low end" and "high end" are the ends of the plank as it stands at that moment." New: ""Low end" and "high end" are the ends of the plank as it stands at that moment. The end that is down always holds someone, so a friend sent onto the low end lands on a head there: its cell under "Onto the low end" plays, and the one below answers as it does to anyone on its head. "Onto a friend's head" is a head on an end that is up or level."
+  - The toy, "What it does in an empty scene", last sentence. Old: "A friend who lands on the high end without tipping it just dangles up there, legs kicking, and the plank creaks." New: "A friend who lands on the high end without tipping it just dangles up there and answers in its own way, and the plank creaks."
+  - Grid, Pim, "Onto the low end". Old: "A tiny tick; the end sinks a hair deeper and she stamps on it, cross that nothing moved." New: "She lands on the head of whoever holds it down and crows; then a tiny tick, the end sinks a hair deeper and she stamps, cross that nothing moved."
+  - Grid, Pim, "Onto the high end", second sentence. Old: "If not: she dangles high, kicking, and trills." New: "If not: she dangles high, wriggling and hopping on the spot, and trills."
+  - Grid, Mog, "Onto the low end". Old: "A soft thud; he circles once and sits." New: "A soft thud on the head of whoever holds it down; he circles once, kneads it and sits with his purr."
+  - Grid, Mog, "Onto a friend's head". Old: "Kneads the head below twice, two muffled pats, then sits with a short chirr; Pim underneath blows a raspberry." New: "Kneads the head below twice, two muffled pats and a short chirr, then sits with his purr; Pim underneath blows a raspberry."
+  - Grid, Dot, "Onto the low end". Old: "A thud and a two-note hum, brighter still if someone already sits there; alone on the plank the hum dies away and Dot peeks over at the others." New: "A thud and a bright two-note hum, then its duet with the one it lands on. Alone on the plank, wherever it landed, the hum dies away and Dot peeks over at the others."
+  - Grid, Dot, "Dropped in the sand", end of the last sentence. Old: "alone it pales and draws one ring in the sand with its foot, a faint slow scratch." New: "alone it pales and draws one swirl in the sand with its foot, a faint slow scratch."
+  - Wrong uses, first clause. Old: "a light friend sent to lift a heavy one dangles in the air and kicks;" New: "a light friend sent to lift a heavy one dangles in the air, too light to tip it;"
+  - The error, "Too light", second sentence, its opening. Old: "It sits high in the air on the far end, legs kicking, the plank creaks and stays," New: "It sits high in the air on the far end and answers in its own way, the plank creaks and stays,"
+  - What is stored, `marks`, second sentence, its opening. Old: "craters, hollows and Dot's rings are all kept this way" New: "craters, hollows and Dot's swirls are all kept this way"
+  - Characters, Pim, "Dislikes, every time", second sentence. Old: "Nothing moving when she lands: she stamps." New: "Nothing moving when she lands on an end that is already down: she stamps."
+  - Characters, Dot, "Likes, every time", second sentence. Old: "Sharing an end or a patch of sand with someone: a two-note hum, and a duet with whoever is under or over it." New: "Sharing an end with someone: a duet with whoever is under or over it, after a bright two-note hum when it lands on the end that is down. Sharing a patch of sand with someone: it stays warm and hums one soft note."
+  - Characters, Dot, "Dislikes, every time", end of the sentence. Old: "it pales, goes quiet and draws one ring in the sand, once, when it is left alone." New: "it pales, goes quiet and draws one swirl in the sand, once, when it is left alone."
+  - The ride, beat 3, second sentence. Old: "How far each end travels and who is tossed how high come from the two totals as they stand." New: "How far each end travels comes from the two totals as they stand, and who is tossed how high from those and from how heavy the one tossed is: two friends of one weight fly equally high."
+  - The showings, `middle-asks`. Old: "`middle-asks`: Pim hops onto the far end, dangles and kicks, and hops off again." New: "`middle-asks`: Pim hops onto the far end, dangles and wriggles, and hops off again."
+  - How a ride ends and the next begins, last sentence. Old: "On load nothing replays: the world is as the last ride left it, with the next asker waiting, or mid-ride exactly as it was." New: "On load nothing replays and nothing starts by itself: the world is as the last ride left it, with the next asker waiting, or mid-ride exactly as it was. A ride put away after the move that carried the asker there and before its ending began is found ended, the asker where it wanted to be and the next asker waiting."
+  - Why, in order. A friend who leaves the plank leaves at once, since the plank swings the moment its weight is gone and must not swing through him. The rake travels along the rim, where it passes through nothing, and the sheet's own age rule allows no tool on screen before it means something, so it waits for the first touch, which has to be saved for the game to be found as left. The end that is down always holds someone (an empty plank and equal ends lie level), so the low-end column as first written could never play: it is now a landing on that head, and each friend's cell says what it does there. The friends are pebbles and have no legs to kick. A closed ring left lying in the sand reads as a nought, which a game for this band may not draw, so Dot's mark is an open swirl. A toss depends on how heavy the one tossed is as well as on the two totals. A scene that started by itself on load would be the game acting without the child's touch.
 - Open: sheet ready for check, round 7
 - Answers handled: `docs/build/answers/princess-playground-1.md` to `-6.md` on the base branch.
 - Look in use: sand tray, the first reserved choice. The owner has answered on the look: yes.
@@ -49,18 +66,38 @@
 - A tap on the plank lifts its riders a finger's width.
 - The rake is not on screen before the child's first touch of anything; that touch is saved as `touched`.
 
-**Still weak.** Nothing here is short of a sentence of the sheet, as far as this lane has read it.
+**Built after the first reading by a reader who had not seen the build.** Its report named twelve promises unkept, one drawn sign, a gap on load and the overlay. Each was checked in the code and found as it said.
 
-- Bo rocks twice only when he starts from the sand. Tapped on the plank he leaves at once, and the sheet now says so: the plank swings the moment his weight is gone, and a friend who lingered would have it swing through him.
+- The low-end column plays. No landing could reach it before: the end that is down always holds someone, and a landing on a head was always read as the on-a-friend column. Now a landing on the end that is down is the low-end column, and a head on an end that is up or level is the on-a-friend column (`cells.ts`, `landingOf`; a test reaches all four columns for every friend). So Pim stamps, Dot's two-note hum sounds, and Bo's crater is dug.
+- Alone on the plank, wherever it landed, Dot's hum dies away and it peeks over at the others.
+- Whoever is under Bo is squashed flat for as long as he sits there, and pops back when he leaves (`motion.ts`, `press`).
+- A friend let go over the middle drops onto the board, slides down it on the board itself, and climbs the side of whoever holds the low end (`motion.ts`, `slide`).
+- Those Dot is set down beside in the sand turn to it and bounce, and look after it when it is taken away, as those on the plank do.
+- Each friend's want can be seen whenever nothing else has its eye (`game.ts`, `wants`): Pim looks at the sky and the high end, Mog at the highest seat, Dot at whoever is on the plank, Bo up along the plank. The one who waits looks at the end it will hop to.
+- A look can be read: the body turns with it and tips back to look up, the pupils travel as far as the whites allow, and at the finger the eyes go wide.
+- No sad face is turned to the child: put out, a mouth is pressed to a short flat line and is never turned down.
+- A bite is drawn as deep as the end is heavy, from the weight that came down and not from its speed, and the saved digit rises one step for each size of friend.
+- Two friends of one weight are thrown equally high.
+- Dot's mark in the sand is an open swirl wound more than twice round, never a closed ring.
+- A ride put away after the deciding move and before its ending began is found ended on load; no scene starts by itself.
+- The grown-up corner answers nothing (no sound, no mark), and the overlay is not opened by a hand laid or slapped on it: a touch-down counts only while no other finger is on the surface and a moment after the last.
+
+**Still weak.** Nothing here is short of a sentence of the sheet, as far as this lane and its reader have read it.
+
+- To land a carried friend on the plank it has to be held above the plank's picture, over its own shadow: the friend hangs at carrying height under the finger, and what counts is where it is over the tray. Held on the plank's picture it comes down in front of the plank. The shadow shows it; whether a small child reads the shadow is not known.
+- Bo rocks twice only when he starts from the sand. Tapped on the plank he leaves at once, and the sheet says so.
+- The friends are pebbles: Pim's "kick" on a high end she cannot tip is a wriggle and small hops on the spot, and the sheet says so.
+- On the low end several things now happen in a row (Pim crows and then stamps; Mog circles, kneads and purrs; Dot hums and then sings its duet), up to about two seconds in all. Whether that is lively or too much has not been heard or seen in motion.
 - The grains that lie on a head are a few small points for under half a second. They are there, and small.
-- A load draws the sand from the coarse grid alone, as the sheet says, so a groove the child drew comes back as a row of soft hollows.
+- A load draws the sand from the coarse grid alone, as the sheet says, so a groove the child drew comes back as a row of soft hollows, and Dot's swirl as a soft round patch.
 - The held secrets sound for as long as they hold: a plank left level hums every couple of seconds, and Bo left alone snores every few, until the child changes something or puts the game away. That is the sheet; whether it wears is for someone who can hear it.
-- Nobody has heard the game. Every voice is numbers inside ranges; whether the thumps, squeaks and hums sit well together is unknown, and so is whether Bo's chuckle now comes too often in free play.
+- Nobody has heard the game. Every voice is numbers inside ranges; whether the thumps, squeaks and hums sit well together is unknown, and so is whether Bo's chuckle and Mog's purr now come too often in free play.
 - Motion was judged from model tests, stills and the audit's pictures, never from video.
 - The rake appears at the child's first touch, wherever that touch lands. It does not slide in; it is simply there.
 - Two friends hopping to different places at the same moment can pass through each other in the air. A hop clears whoever stood in its way when it left, not whoever is flying.
 - The waiting place is beside Pim's default place; a big friend waiting there stands close to her.
 - The idle glow is faint on the pale sand at tier 0 in stills.
+- A friend's hollow in the sand, and the crater Bo leaves, are round dimples with a lit lip. A reader looking for unmeant signs passed them; from far off a single one is a small round mark.
 
 **Open, for the lead.**
 
@@ -97,7 +134,7 @@ The stages in order are sheet, toy, game, gates. Keep this block current: the st
 - `input.ts`: used as copied. The press, tap and drag gestures mapped onto touch, hop and carry without change.
 - `state.ts`: used as copied and wrapped by `save.ts`, as its header says to. The second read of the raw record worked as described.
 - `scene.ts`: used as copied, for the ending and the five showings. **For the template:** a scene's outcome is saved when it starts, but the sand a scene marks is only known once it has played. This game plays the scene first on a twin of its model (`forecast.ts`); a line in the header on outcomes that are only known by playing would help the next game with a surface.
-- `overlay.ts`: used as copied.
+- `overlay.ts`: changed in one place. A touch-down in the corner counts as a tap only while no other finger is on the surface and at least 80 ms after the last one, so a hand slapped or laid on the corner does not open it; the Mount passes the number of fingers down. The template counts every touch-down, and its comment asks for backdrop under the corner "where nothing answers a touch": in this game the cloth answered every touch with a hiss, so the Mount now leaves a touch in the corner unanswered.
 - `guidance.ts`: the game reads `glow`, `demo` and `demoIndex`, and `handPose` for the hand's one tap.
 - `perf.ts`, `quality.ts`, `attention.ts`, `saveCadence.ts`: frozen, untouched.
 - `ART.md`: the outline's line under `## The records` was replaced by a sentence of the game's own.
@@ -142,6 +179,8 @@ One row per pass: what was looked at, the critique written as the child, the one
 
 The closing run made no pass of its own: it built the small things the passed sheet promises and the game had left out, listed in the status block, and ran the audit and every check again.
 
+The finishing run made no pass of its own either. It built what the lead's reader and then its own reader found short of the sheet, listed in the status block, looked at stills of Dot apart, the looks, a touch, the slide and the grains on a head, and ran the audit and every check again.
+
 ## For the pull request
 
 Written as the game is built and kept at the end of this file: the pull request is made from it.
@@ -153,7 +192,7 @@ Nothing here is a frame rate. Every number was read on a machine with no graphic
 - **Alive at idle.** Each friend breathes at its own rate and blinks on its own timer; the one who asks stretches toward where it wants to be and, after a still while, gives one small hop (three at most, further and further apart); Dot's colour follows its company; Bo alone on the plank dozes and snores. All of it runs on the attended clock and stops when the game is unattended or hidden.
 - **Motion and sound on every touch.** A press on a friend is answered in the same frame with a squash and that friend's own voice, before the tap is known. Each of the thirty cells of the grid has its own motion and its own sound (`cells.ts`, `grid.ts`); a tap on the plank, the sand, the rake or the cloth is answered too.
 - **Weight, squash and follow-through.** Hops gather, leap, arc and land with a squash set by each friend's own numbers; the plank turns faster for a bigger difference, knocks, rebounds and settles; a throw is higher for a lighter friend; the crown, the ears and the belly swing on. A friend on another rides its squash.
-- **Kid-clear.** Four large bodies in four hues the sand does not have, one plank, one stone, a plain pale surface. The smallest friend answers a touch within about 115 to 130 logical pixels across. Nothing that answers a touch is in the bottom strip or the top right corner.
+- **Kid-clear.** Four large bodies in four hues the sand does not have, one plank, one stone, a plain pale surface. The smallest friend answers a touch within about 115 to 130 logical pixels across. Nothing that answers a touch is in the bottom strip, and the top right corner, where the grown-up overlay is opened, answers nothing at all.
 - **Wordless clarity for the declared age.** No word, numeral or symbol on the kid side (`npm run -s wordless:check`). Everything essential is one tap, and a second tap undoes the first. One want in every scene: the asker, or after a ride the friend who waits. An error is a state of the plank that the friends react to, never a verdict.
 - **Wordless guidance.** The whole idle ladder: a warm ring on the sand under one friend, then a ghost hand that taps it once, backing off and stopping; any touch clears it. It shows a move, never the answer: during a ride a friend standing in the sand, taken in turn; after one, the friend who waits. A new kind of ride is shown once by a friend, with no word.
 - **60 fps on a mid-range iPad.** Not measured. What can be said: 25 to 27 draw calls, about 16,400 triangles, no shadow map, no post pass, pixel ratio capped at 2, one 512 by 320 texture sent again only in a frame that marked the sand, every program compiled and drawn once at mount, a counted frame-budget test (`frameBudget.test.ts`). The game's own work per frame, one reading in Chromium at six times CPU throttle with the top tier pinned: 7.3 ms at the 95th percentile, render submit included on this renderer.
@@ -162,7 +201,7 @@ Nothing here is a frame rate. Every number was read on a machine with no graphic
 
 Beyond the bar:
 
-- **Found as left.** What is saved is who is where, the ride on screen, the showings that have played and the sand as a coarse grid; never a friend in the air or in the hand. A scene's outcome, its marks included, is saved before its first beat, and tests hold that an ending or a showing put away or touched at any instant is found finished and never replays.
+- **Found as left.** What is saved is who is where, the ride on screen, the showings that have played, the sand as a coarse grid and whether the child has ever touched the game; never a friend in the air or in the hand. A scene's outcome, its marks included, is saved before its first beat, and tests hold that an ending or a showing put away or touched at any instant is found finished and never replays. A friend in the hand at put-away goes back to where it was picked up from and no move is made or counted. A ride put away between its deciding move and its ending is found ended, and no scene starts by itself on load.
 - **How a cycle restarts.** The ending stays; the friend who asks next waits in front of the stone and never hurries anyone; a touch on it lays out the next ride. If the child does nothing, nothing starts.
 - **Nothing passes through anything.** The intersection audit is clean and enforced on moments that play one visit straight through; 17 contacts are allowed, each with its reason and cap. A model test measures overlap on the shapes as drawn on every frame of two minutes of seeded play on four seeds.
 - **The hidden position.** Six ids naming places in the game's own order; a saved position wins over the age; it moves one step between rides and nothing shows it.
