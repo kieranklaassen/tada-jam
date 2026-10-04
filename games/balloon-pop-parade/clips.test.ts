@@ -131,7 +131,7 @@ describe('the hippo\'s yawn', () => {
 })
 
 describe('the arms of a friend that walks', () => {
-  it('are both down while it has no balloon, and one up on the string and one down while it has one: never one up and one down without a balloon', () => {
+  it('are both down while it has no balloon, or both up for the crab, and one up on the string and one down while it has one: never one up and one down without a balloon', () => {
     for (const kind of KINDS) for (const holds of [false, true]) {
       const reach = BODIES[kind].reach
       for (let i = 2; i <= 18; i++) {
@@ -141,6 +141,10 @@ describe('the arms of a friend that walks', () => {
         if (holds) {
           expect(pose.armR, `${kind} with a balloon`).toBeGreaterThan(2)
           expect(pose.armL, `${kind} with a balloon`).toBeLessThan(0.6)
+        } else if (kind === 'crab') {
+          // The crab walks as it reaches, both claws up: two crabs' lowered claws would meet between them.
+          expect(pose.armL, 'crab without').toBeGreaterThan(2)
+          expect(pose.armR, 'crab without').toBeGreaterThan(2)
         } else {
           expect(pose.armL, `${kind} without`).toBeLessThan(0.6)
           expect(pose.armR, `${kind} without`).toBeLessThan(0.6)

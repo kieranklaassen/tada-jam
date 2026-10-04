@@ -432,8 +432,9 @@ export function walk(kind: KindName, u: number, direction: number, pose: Pose): 
   }
   // A friend without a balloon walks with both arms down and swinging, as the troop that waits stands, and reaches
   // up as it stops. One that holds a string has that hand up and its free arm down already, and keeps them so:
-  // one arm up and one down is only ever the stance of a friend that has its balloon.
-  if (pose.armL > 1) {
+  // one arm up and one down is only ever the stance of a friend that has its balloon. The crab walks as it reaches,
+  // both claws up: let down side by side, the claws of two crabs would meet between them.
+  if (kind !== 'crab' && pose.armL > 1) {
     const swing = Math.sin(at * Math.PI) * 0.1
     pose.armL += (0.16 + swing - pose.armL) * ease
     pose.armR += (0.16 - swing - pose.armR) * ease
