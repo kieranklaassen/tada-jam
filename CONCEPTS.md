@@ -115,6 +115,12 @@ One remote builder's work on one game of a Wave: a cloud machine, a branch named
 
 The lead cannot reach a lane while it runs. What a lane pushed and the status block in its game folder are all that carries from one run of a lane to the next, so every message to a lane is written for a session that has never seen the game.
 
+### Reader
+Someone who did not build a game and reads its whole folder against its Design sheet before the game is brought in: for copied official wording, for anything that reaches outside, for drawn text, and for whether the game does what the sheet says.
+*Avoid:* reviewer, auditor
+
+A builder's own readers are fresh each time and have seen nothing of the build. Their readings are bounded, because each one tends to find other things than the one before; when the bound is reached the builder writes what is left and why it is slight. The last reading is the lead's: one read, one message of last points to the builder, and no reading after it.
+
 ### Held game
 A game that is stopped and left out of its Wave's merge, because its Design sheet names no supporting record, the owner rejected its toy, or it did not reach the Quality bar in time.
 *Avoid:* cancelled, cut
