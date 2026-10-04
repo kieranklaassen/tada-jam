@@ -7,7 +7,7 @@ import { newGame } from './gameScenes'
 import { aimOn, feed, playCycle, sortAll, tap, watch } from './play'
 import { CRATE, placeAt } from './places'
 import { toySpan } from './builds'
-import { shapeOf } from './gobblers'
+import { shapeOf, snackOf } from './gobblers'
 import { deckTop, headTop } from './layout'
 import { deserializeWorld, serializeWorld } from './save'
 import { homeOf, newWorld, startCycle, trayIsClear, type World } from './world'
@@ -352,6 +352,65 @@ describe('the game', () => {
       expect(game.waiting.map((actor) => actor.id)).toEqual(game.world.cycle.crews[1] ?? [])
       expect(game.world.shown.colour).toBe(true)
       expect(game.scene).toBeNull()
+    }
+  })
+
+  it('counts the crew of a first visit as coming in with its load: its showing follows the delivery without a pause, with the snacks that stood on its tongues', () => {
+    for (const [age, seed] of [[null, 5], [5, 7], [6, 3]] as const) {
+      const game = newGame(newWorld(age, seed))
+      const snacks = game.crew.map((actor) => actor.snack)
+      tap(game, { on: 'ledge', which: 0 }, 0)
+      for (let i = 0; i < 2000 && !game.scene; i++) game.advance(STEP)
+      const playing = game.scene
+      expect(playing).not.toBeNull()
+      game.takeEvents()
+      // Through the delivery the snacks stay on the tongues, and the showing is owed.
+      let shows = 0, plinks = 0
+      for (let i = 0; i < 4000 && shows === 0; i++) {
+        expect(game.crew.map((actor) => actor.snack.mode)).toEqual(game.crew.map(() => 'mouth'))
+        game.advance(STEP)
+        shows += game.takeEvents().filter((event) => event.type === 'show').length
+      }
+      // The first gobbler shows its snack in the scene the delivery began: no pause between them, and no touch.
+      expect(shows).toBe(1)
+      expect(game.scene).toBe(playing)
+      expect(game.world.shown.colour).toBe(true)
+      for (let i = 0; i < 4000 && game.scene; i++) {
+        game.advance(STEP)
+        for (const event of game.takeEvents()) { if (event.type === 'show') shows++; if (event.type === 'plink') plinks++ }
+      }
+      // Each gobbler held up and gulped the snack that stood on its tongue, and it lies in its belly now.
+      expect(shows).toBe(game.crew.length)
+      expect(plinks).toBe(game.crew.length)
+      expect(game.crew.map((actor) => actor.snack)).toEqual(snacks)
+      game.crew.forEach((actor, i) => { expect(actor.snack).toBe(snacks[i]); expect(actor.snack.mode).toBe('resting') })
+    }
+  })
+
+  it('builds the snacks of a first visit from the load in the crate, the same before the crate is taken and after', () => {
+    for (const age of [null, 4, 5, 6]) for (const seed of [3, 5, 7, 11]) {
+      const world = newWorld(age, seed)
+      const crate = world.crates[0], load = startCycle(crate.from, crate.seed, false)
+      const game = newGame(world)
+      // Before the crate is taken `cycle` is empty: each snack takes its other two properties from the first toy
+      // of the load the crate is laid out for.
+      expect(world.cycle.toys).toEqual([])
+      const before = game.crew.map((actor) => ({ ...actor.snack.toy }))
+      expect(game.crew.map((actor) => actor.id)).toEqual(load.crews[0])
+      expect(before).toEqual(load.crews[0].map((id) => snackOf(id, load.toys[0])))
+      // Opened again before the crate is taken: the same crew with the same snacks, and nothing of them saved.
+      const saved = serializeWorld(world)
+      expect(JSON.stringify(saved)).not.toContain('snack')
+      expect(newGame(deserializeWorld(saved, age)).crew.map((actor) => actor.snack.toy)).toEqual(before)
+      // The delivery starts: that toy is now listed first in `cycle.toys`, and the snacks have not changed.
+      tap(game, { on: 'ledge', which: 0 }, 0)
+      for (let i = 0; i < 2000 && !game.scene; i++) game.advance(STEP)
+      expect(game.world.cycle.toys[0]).toEqual(load.toys[0])
+      expect(game.crew.map((actor) => actor.snack.toy)).toEqual(before)
+      // Put away in the delivery and opened again, and played to its end: still the same snacks.
+      expect(newGame(deserializeWorld(serializeWorld(game.world), age)).crew.map((actor) => actor.snack.toy)).toEqual(before)
+      watch(game)
+      expect(game.crew.map((actor) => actor.snack.toy)).toEqual(before)
     }
   })
 
