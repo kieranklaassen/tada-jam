@@ -247,7 +247,7 @@ Fire Truck Hero is designed from five learning foundations published by Californ
 
 **The idle cue.** A blue ring round the thing that wants water, wider than the thing so it is never hidden under it, and after it a blue ghost hand that presses once on the thing itself, at the height its picture stands. Once the want is met both go to the bell.
 
-**Quality tiers** (`config.ts`). A tier changes drawing only. Tier 0 is the full look at a pixel ratio of 2. Tier 1 lowers the pixel ratio to 1.5. Tier 2 lowers it to 1.25, flattens the ground's grain to plain colours, draws seven in ten of the stream's small drops and throws up one splash drop a landing in place of two. Tier 3 is a pixel ratio of 1, matte plastic without the satin highlight, and half the small drops. The toys, the colours, the blob shadows and the water's marks on the sand are the same on every tier, and so is how much water lands and where.
+**Quality tiers** (`config.ts`). A tier changes drawing only. Tier 0 is the full look at a pixel ratio of 2. Tier 1 lowers the pixel ratio to 1.5. Tier 2 lowers it to 1.25, flattens the grain of the sand and the grass to plain colours (mud keeps its lumps on every tier, since its texture is what the child made), draws seven in ten of the stream's small drops and throws up one splash drop a landing in place of two. Tier 3 is a pixel ratio of 1, matte plastic without the satin highlight, and half the small drops. The toys, the colours, the blob shadows and the water's marks on the sand are the same on every tier, and so is how much water lands and where.
 
 **The first frame.** Everything the game will ever draw is drawn once, unseen, when the stage is made, so the first water in the pool, the first steam and the first ripple do not stall a frame.
 

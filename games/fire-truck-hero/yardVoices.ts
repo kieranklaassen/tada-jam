@@ -478,6 +478,20 @@ export function boatBumps(): VoiceSpec {
   ]
 }
 
+/** A full boat on the sand gets more: its water slops out over the brim, two soft wet slaps and a short run. */
+export function boatSlops(): VoiceSpec {
+  return [
+    { kind: 'noise', at: 0, frequency: 900, glideTo: 600, q: 1.4, peak: 0.08, attack: 0.006, decay: 0.09 },
+    { kind: 'noise', at: 0.13, frequency: 760, glideTo: 520, q: 1.4, peak: 0.06, attack: 0.006, decay: 0.1 },
+    { kind: 'tone', at: 0.02, frequency: 430, glideTo: 620, wave: 'sine', peak: 0.04, attack: 0.006, decay: 0.07 },
+  ]
+}
+
+/** The same voice at half its loudness: the answer of a thing the truck is only showing. */
+export function halved(voice: VoiceSpec): VoiceSpec {
+  return voice.map((partial) => ({ ...partial, peak: Math.max(0.01, partial.peak * 0.5) }))
+}
+
 /** A voice that starts `later` seconds on: the duck's quack after the splash that set it off. */
 export function delayed(voice: VoiceSpec, later: number): VoiceSpec {
   return voice.map((partial) => ({ ...partial, at: partial.at + later }))

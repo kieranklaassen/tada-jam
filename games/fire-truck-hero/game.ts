@@ -28,7 +28,7 @@ import { honk as honkVoice, plip, splat, squelch, SPLAT_VARIANTS, type VoiceSpec
 import { afloat, gulpOn, gulpOnGround, honk, rest as restYard, sweepOver, type Came, type Step, type Yard, type YardEvent } from './world'
 import { arrangementsOf } from './yards'
 import { YardMotion } from './yardMotion'
-import { beeBuzz, beeLands, bellRing, boatBumps, boatScrapes, catPaws, cellVoice, delayed, drip, duckQuack, duckTapsFloor, gateSwings, onPlastic, petalOpens, showSpit, slowSizzle, snailGlides, steamFades, truckRolls, wormPops } from './yardVoices'
+import { beeBuzz, beeLands, bellRing, boatBumps, boatScrapes, boatSlops, catPaws, cellVoice, delayed, drip, duckQuack, gateSwings, halved, onPlastic, petalOpens, showSpit, slowSizzle, snailGlides, steamFades, truckRolls, wormPops } from './yardVoices'
 
 /** A landing point that moves faster than this, in yard units a second, is sweeping. */
 export const SWEEP_SPEED = 4.2
@@ -92,13 +92,14 @@ export class Game extends Toy {
   private readonly spits: Spit[] = []
   private clock = 0
   private putts = 0
-  private tapsHeard = 0
   private fingerRangOpen = false
   /** Mud made while a scene played: its worm comes up when the scene is over. */
   private wormOwed: Place | null = null
   /** The want was met by a gulp aimed at it, whose own sound said so. */
   private metByAim = false
   private cupTipped = false
+  /** While one step of the rules is heard: where the wheel or the shaking cat stands whose drops the next results are. */
+  private flinger: Place | null = null
   /** Some thing other than the want was brought to its fill in this yard: the child was busy with an idea of their own. */
   private busy = false
   /** Drips still to fall from the wet logs of a fire that went out and holds no want: when, and which of the two. */
@@ -151,8 +152,7 @@ export class Game extends Toy {
       this.latch = 0
       this.motion.latchDown()
     }
-    // The duck's beak on a dry floor is heard a few times after a touch, and then it taps in silence: an idle yard goes quiet.
-    if (this.motion.duck.tapped && this.tapsHeard++ < 3) this.say(duckTapsFloor())
+    // The duck's beak on a dry floor is seen and not heard: when the child stops, the yard falls quiet.
     while (this.logDrips.length > 0 && this.logDrips[0].at <= now) this.dripFromLogs(this.logDrips.shift()!.n)
     if (this.motion.boat.landed) this.say(boatBumps())
     // Down from its ride over the rim it stands in a puddle, which it likes.
@@ -185,6 +185,8 @@ export class Game extends Toy {
     this.skipSounds = true
     for (const gulp of this.hose.clear()) {
       this.land(gulp)
+      // Its drops never fell, so its blot is laid here: the sand is found as wet as the yard says it is.
+      this.paint.splash(gulp.arc.to.x, gulp.arc.to.z, 1)
       // Water that rang the gate open was the last of its yard: what was in the air behind it does not fall into the next one.
       if (this.leaving) break
     }
@@ -326,6 +328,7 @@ export class Game extends Toy {
     const before = this.yard
     this.yard = step.yard
     if (step.yard !== before) this.need('soon')
+    this.flinger = null
     for (const event of step.events) this.hear(event, before, now)
   }
 
@@ -336,7 +339,14 @@ export class Game extends Toy {
         const fullness = Math.min(1, (thing?.gulps ?? 0) / THINGS[event.kind].fill)
         // A boat that the overflow carries over the rim is heard when it is set down, with a bump, and not as it leaves.
         const carried = event.kind === 'boat' && event.action === 'neighbour' && before.things[event.thing]?.in !== undefined && thing?.in === undefined
-        if (!carried) this.say(this.voiceOf(event.kind, event.action, event.by, thing?.gulps ?? 0, fullness))
+        // On the truck already, the cat takes no water and makes no sound: the water patters on the truck.
+        const onTruck = event.kind === 'cat' && before.things[event.thing]?.spot === 'roof'
+        if (onTruck) this.say(onPlastic(this.variants.next(3)))
+        else if (!carried) this.say(this.voiceOf(event.kind, event.action, event.by, thing?.gulps ?? 0, fullness, event.thing))
+        // Drops that a wheel or a shaking cat flings are seen to fly to what they reach.
+        const here = placeOf(before, event.thing)
+        if (event.by === 'drops' && this.flinger) this.drops.fling(arcTo({ x: this.flinger.x, y: 1.2, z: this.flinger.z }, here))
+        if ((event.kind === 'wheel' && (event.action === 'fill' || event.action === 'too-much')) || (event.kind === 'cat' && event.action === 'fill')) this.flinger = here
         this.motion.result(event.thing, event.action, this.yard, 1, event.by)
         this.around(event.thing, event.kind, event.action, event.by)
         if (event.thing === this.yard.want && event.action === 'fill') this.metByAim = true
@@ -374,8 +384,10 @@ export class Game extends Toy {
    * that already holds water splashes, deeper with each gulp, where an empty one bonks; run-off that reaches a
    * fire sizzles where flung drops crackle; and a cat who lifts her paws out of run-off does not sneeze.
    */
-  private voiceOf(kind: Kind, action: Action, by: Came | undefined, gulps: number, fullness: number): VoiceSpec {
+  private voiceOf(kind: Kind, action: Action, by: Came | undefined, gulps: number, fullness: number, index: number): VoiceSpec {
     const variant = this.variants.next(3)
+    // A full boat on the sand that gets more slops over its brim: the glugs are a boat that sinks.
+    if (kind === 'boat' && action === 'too-much' && !afloat(this.yard, index)) return boatSlops()
     if (kind === 'pool' && action === 'gulp' && gulps > 1) return cellVoice(cellOf('pool', 'fill').voice, fullness, variant)
     // Water gathers in the boat with a drumming that deepens gulp by gulp: the first gulp rings the empty hull.
     if (kind === 'boat' && action === 'gulp' && gulps > 1) return cellVoice(cellOf('boat', 'fill').voice, fullness, variant)
@@ -622,7 +634,8 @@ export class Game extends Toy {
       const spit = this.spits.shift()!
       const thing = this.yard.things[spit.thing]
       if (!thing) continue
-      this.say(cellVoice(cellOf(thing.kind, 'gulp').voice, 0, 0))
+      // Its one-gulp answer at half size, in sound as in sight.
+      this.say(halved(cellVoice(cellOf(thing.kind, 'gulp').voice, 0, 0)))
       this.motion.shown(spit.thing, this.yard)
     }
     if (now < this.nextShowAt || this.leaving || this.scene) return
@@ -651,7 +664,6 @@ export class Game extends Toy {
    */
   private touched(now: number): void {
     this.stillSince = now
-    this.tapsHeard = 0
     this.nextShowAt = Infinity
   }
 

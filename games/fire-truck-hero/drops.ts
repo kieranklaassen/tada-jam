@@ -110,6 +110,11 @@ export class Drops {
     this.asThrown(drop, true)
   }
 
+  /** Drops flung from one place onto another: off the wheel's paddles or a shaking cat, onto a neighbour. They fly an arc, land there with a splash and leave their dots; the water they stand for is the rules' to give. */
+  fling(arc: Arc, count = 3): void {
+    for (let i = 0; i < count; i++) this.jet(arc, -i * 0.04, (this.random() - 0.5) * 0.7, (this.random() - 0.5) * 0.7, 0.11 + this.random() * 0.05, 0.04, 0.22)
+  }
+
   /** Drops flung from a place: off the paddles of the wheel, or off a cat who shakes herself. They fall and leave their dots. */
   burst(x: number, y: number, z: number, count: number, speed: number): void {
     for (let i = 0; i < count; i++) {

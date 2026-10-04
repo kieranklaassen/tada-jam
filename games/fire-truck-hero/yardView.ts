@@ -25,6 +25,10 @@ export type Proxy = { readonly ball: THREE.Sphere; to: Place }
 export type Materials = { plastic: THREE.Material; glow: THREE.Material; water: THREE.Material }
 
 const MAX_SHADOWS = 12
+/** How far the leaves swing for each unit of their flutter, how far the boat rolls for each unit of its rock, and how far it bobs, so that each shows at the size the yard is drawn. */
+const FLUTTER_SHOWS = 0.32
+const ROCK_SHOWS = 0.3
+const BOB_SHOWS = 0.09
 const dryPatch = new THREE.Color(THINGS_PAINT.patch), dampSand = new THREE.Color(SAND.damp), mudSand = new THREE.Color(SAND.mud)
 const drySoil = new THREE.Color(THINGS_PAINT.soilDry), wetSoil = new THREE.Color(THINGS_PAINT.soil)
 
@@ -222,7 +226,8 @@ export class YardSet {
       const pose = motion.seed.pose, place = at('seed')
       this.pot.root.position.set(place.x, 0, place.z)
       ;(this.pot.soil.material as THREE.MeshLambertMaterial).color.copy(drySoil).lerp(wetSoil, pose.soil)
-      const sway = pose.flutter * 0.06 + Math.sin(time * 1.1) * 0.03
+      // The flutter is several times the idle sway, so it shows from across the yard.
+      const sway = pose.flutter * FLUTTER_SHOWS + Math.sin(time * 1.1) * 0.03
       const grown = 0.3 + 0.7 * pose.leaves
       this.pot.shoot.visible = pose.shoot > 0.02
       this.pot.shoot.scale.set(1, Math.max(0.02, pose.shoot * grown * (1 + pose.pop * 0.03)), 1)
@@ -288,16 +293,21 @@ export class YardSet {
       // On the pool's floor until the water is deep enough; then on the water, lower the more it holds.
       // On sand it is lifted as it tips, so its ends never dig in.
       // In the pool it rests on the floor until the water is deep enough to carry it, and then rides lower the more it holds.
-      const carried = waterY - 0.16 - pose.water * 0.08 + (floats ? pose.bob * 0.02 - pose.sunk * 0.2 : 0)
+      const carried = waterY - 0.16 - pose.water * 0.08 + (floats ? pose.bob * BOB_SHOWS - pose.sunk * 0.2 : 0)
       // Not before: until the pool is deep enough it stands on the floor, however far the water has climbed its hull.
       boatY = inPool ? (floats ? Math.max(POOL.floor * SCALE.pool + 0.012, carried) : POOL.floor * SCALE.pool + 0.012) : 0.02 + Math.abs(pose.rock * 0.09 + pose.brim * 0.1) * 0.5
       boatAt = { x: place.x + pose.pushX + pose.carryX, z: place.z + pose.pushZ + pose.carryZ }
       // Rolling over, it comes up out of the water far enough that its rim never dips under the pool's floor.
       boatY += pose.carryY + (Math.abs(Math.sin(pose.roll)) * 0.4 + ((1 - Math.cos(pose.roll)) / 2) * 0.33) * SCALE.boat
       this.boat.root.position.set(boatAt.x, boatY, boatAt.z)
-      this.boat.root.rotation.set(pose.roll, -BOAT_HEADS - pose.yaw, pose.rock * 0.09 + pose.brim * 0.1)
+      // It rocks on its keel: a roll from side to side that shows, with a little pitch.
+      this.boat.root.rotation.set(pose.roll + pose.rock * ROCK_SHOWS, -BOAT_HEADS - pose.yaw, pose.rock * 0.09 + pose.brim * 0.1)
+      // The water in it spreads over its floor as it gathers and reaches its sides when it is full to the brim:
+      // its floor is thick, so the rise alone is too small to see.
       this.boat.inside.visible = pose.water > 0.05
       this.boat.inside.position.y = BOAT.floor + 0.02 + pose.water * (BOAT.brim - BOAT.floor - 0.07)
+      const spread = 0.4 + 0.6 * Math.min(1, pose.water)
+      this.boat.inside.scale.set(spread, 1, spread)
       if (!inPool) this.shadow(boatAt, 0.95)
     }
 

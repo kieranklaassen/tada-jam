@@ -17,7 +17,7 @@ import { Toy } from './toy'
 import { splat, type VoiceSpec } from './voices'
 import { CREEP_REACH, SPRAY_REACH, gulpOn, gulpOnGround, type Step, type Yard, type YardEvent } from './world'
 import { ARRANGEMENTS, layOut } from './yards'
-import { boatBumps, boatScrapes, catPaws, cellVoice, delayed, duckQuack, slowSizzle } from './yardVoices'
+import { boatBumps, boatScrapes, boatSlops, catPaws, cellVoice, delayed, duckQuack, halved, onPlastic, slowSizzle } from './yardVoices'
 
 const FRAME = 1 / 60
 
@@ -1527,5 +1527,90 @@ describe('what a fifth reader found', () => {
     const lifted = new Table(saved('afloat', 0))
     lifted.gulps({ x: lifted.at(0).x - 0.5, z: lifted.at(0).z }, 3)
     expect(those(lifted.heard, cellVoices('boat', 'neighbour', 0))).toHaveLength(1)
+  })
+})
+
+describe('what a sixth reader found', () => {
+  it('flies the drops a wheel or a shaking cat flings all the way to what they reach', () => {
+    const t = new Table(saved('round-and-round', 0))
+    const wheel = t.at(t.the('wheel')), cat = t.at(t.the('cat')), seed = t.at(t.the('seed'))
+    expect(distance(wheel, cat)).toBeGreaterThan(2.5)
+    let atCat = 0, atSeed = 0
+    t.game.press({ truck: false, point: wheel }, t.now)
+    t.play(1.6, () => {
+      for (const drop of t.drops()) {
+        if (distance(drop, cat) < 0.7) atCat++
+        if (distance(drop, seed) < 0.7) atSeed++
+      }
+    })
+    t.game.lift()
+    expect(atCat).toBeGreaterThan(0)
+    expect(atSeed).toBeGreaterThan(0)
+    // And the soaked cat's spray reaches the fire beside her.
+    const soaked = new Table(saved('two-things', 2))
+    const fire = soaked.at(soaked.the('fire')), her = soaked.at(soaked.the('cat'))
+    soaked.gulps(her, 2)
+    let atFire = 0
+    soaked.tap(her).play(1, () => { atFire += soaked.drops().filter((drop) => distance(drop, fire) < 0.7).length })
+    expect(atFire).toBeGreaterThan(0)
+  })
+
+  it('slops, and does not glug, when a full boat on the sand gets more: the glugs are a boat that sinks', () => {
+    const t = new Table(saved('afloat', 0))
+    const pool = t.at(t.the('pool')), boat = t.the('boat')
+    t.gulps({ x: pool.x - 0.5, z: pool.z }, 5).play(4)
+    t.gulps(t.at(boat), 3)
+    const before = t.heard.length
+    t.gulp(t.at(boat))
+    expect(those(t.heard.slice(before), [boatSlops()])).toHaveLength(1)
+    expect(those(t.heard.slice(before), cellVoices('boat', 'too-much', 1))).toHaveLength(0)
+    // Afloat it sinks with its glugs.
+    const afloat = new Table(saved('afloat', 0))
+    afloat.gulps({ x: afloat.at(0).x - 0.5, z: afloat.at(0).z }, 3)
+    afloat.gulps(afloat.at(1), 3)
+    const mark = afloat.heard.length
+    afloat.gulp(afloat.at(1))
+    expect(those(afloat.heard.slice(mark), cellVoices('boat', 'too-much', 1))).toHaveLength(1)
+  })
+
+  it('patters on the truck, with no more scrabbling of claws, when water lands on the truck with the cat on it', () => {
+    const t = new Table(saved('two-things', 2))
+    const cat = t.the('cat')
+    t.gulps(t.at(cat), 3).play(4)
+    t.gulp(t.at(cat)).play(3)
+    expect(t.game.yard.things[cat].spot).toBe('roof')
+    expect(those(t.heard, cellVoices('cat', 'too-much', 1))).toHaveLength(1)
+    const before = t.heard.length
+    t.gulp({ x: 3.4, z: 5.2 }).gulp({ x: 3.4, z: 5.2 })
+    expect(those(t.heard.slice(before), cellVoices('cat', 'too-much', 1))).toHaveLength(0)
+    expect(those(t.heard.slice(before), VARIANTS.map((variant) => onPlastic(variant)))).toHaveLength(2)
+    expect(t.game.yard.things[cat].spot).toBe('roof')
+  })
+
+  it('sounds a first showing at half size, as it draws it', () => {
+    const t = new Table(saved('one-thing', 0, { seen: [] }))
+    t.play(SHOW_AFTER_S + 1)
+    const full = cellVoice(cellOf('fire', 'gulp').voice, 0, 0)
+    expect(those(t.heard, [halved(full)])).toHaveLength(1)
+    expect(those(t.heard, [full])).toHaveLength(0)
+    expect(halved(full)[0].peak).toBeCloseTo(full[0].peak / 2, 9)
+  })
+
+  it('is quiet when the child does nothing: the duck taps its dry floor without a sound', () => {
+    const t = new Table(saved('one-thing', 2))
+    let taps = 0
+    t.play(12, () => { if (t.game.motion.duck.tapped) taps++ })
+    expect(taps).toBeGreaterThanOrEqual(3)
+    expect(t.heard).toHaveLength(0)
+  })
+
+  it('lays the blot of water that was still in the air when the game went to rest', () => {
+    const t = new Table(saved('one-thing', 0))
+    const sand = { x: 12.5, z: 8.1 }
+    t.tap(sand).play(0.05)
+    expect(t.game.paint.at(sand.x, sand.z).damp).toBe(0)
+    t.game.rest()
+    expect(levelAt(t.game.yard.ground, sand.x, sand.z)).toBe('damp')
+    expect(t.game.paint.at(sand.x, sand.z).damp).toBeGreaterThan(60)
   })
 })
