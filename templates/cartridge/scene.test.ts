@@ -1,4 +1,4 @@
-// template: cartridge/scene.test.ts v2
+// template: cartridge/scene.test.ts v3
 import { describe, expect, it } from 'vitest'
 import { AttendedClock } from './attention'
 import { Scene, followedBy, sceneLength, type Beat } from './scene'
@@ -59,7 +59,7 @@ describe('a scene', () => {
   it('ends on a touch with every beat left at its end state, in order, each once', () => {
     const seen: number[][] = [[], [], []]
     const order: number[] = []
-    const scene = new Scene(beats(seen).map((beat, index) => ({ ...beat, play: (progress: number) => { beat.play(progress); if (progress === 1) order.push(index) } })))
+    const scene = new Scene(beats(seen).map((beat, index) => ({ ...beat, play: (progress: number, finishing: boolean) => { beat.play(progress, finishing); if (progress === 1) order.push(index) } })))
     scene.start(0, () => {})
     scene.update(0.4)
     scene.finish()
@@ -111,7 +111,29 @@ describe('a scene', () => {
     scene.update(0.7)
     expect(laid).toEqual([0, 1, 2])
     scene.finish()
-    expect(laid).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+    // Each of the ten once, in order.
+    expect(laid).toHaveLength(10)
+    expect(laid.every((value, index) => value === index)).toBe(true)
+  })
+
+  it('tells a beat when a touch is landing it unwatched, so a scene that is cut short makes none of the sounds it had left', () => {
+    const heard: string[] = []
+    const calls: [string, number, boolean][] = []
+    const cue = (name: string, at: number): Beat => ({ at, lasts: 0, play: (progress, finishing) => { calls.push([name, progress, finishing]); if (!finishing) heard.push(name) } })
+    const move: Beat = { at: 0, lasts: 2, play: (progress, finishing) => calls.push(['move', progress, finishing]) }
+    const scene = new Scene([cue('knock', 0), move, cue('creak', 1), cue('cheer', 2)])
+    scene.start(0, () => {})
+    scene.update(0.5)
+    expect(heard).toEqual(['knock'])
+    scene.finish()
+    expect(heard).toEqual(['knock'])
+    expect(calls).toEqual([['knock', 1, false], ['move', 0.25, false], ['move', 1, true], ['creak', 1, true], ['cheer', 1, true]])
+    // Played through, every beat is watched to its end.
+    heard.length = 0
+    scene.start(10, () => {})
+    scene.update(12)
+    expect(heard).toEqual(['knock', 'creak', 'cheer'])
+    expect(scene.running).toBe(false)
   })
 })
 

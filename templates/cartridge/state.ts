@@ -1,4 +1,4 @@
-// template: cartridge/state.ts v2
+// template: cartridge/state.ts v3
 import { FIRST_VISIT, LADDER } from './config'
 
 // What goes into ctx.storage: small plain JSON, versioned, and read
@@ -21,6 +21,16 @@ import { FIRST_VISIT, LADDER } from './config'
 //   `deserialize` for these fields and then reads the same raw record again
 //   for its own, each repaired by itself. That second read is the intended
 //   way; its `serialize` spreads this one's result and adds its fields.
+//   `isReadable` tells the wrapper whether the record was read or a fresh
+//   state came back, which look the same from outside.
+// - `beginCycle` and `finishCycle` hand back the record they were given with
+//   the position and the ending changed, so a wrapper passes its own larger
+//   state through them and keeps its type.
+// - Where the wrapper can tell from its own fields whether the cycle on
+//   screen is over, those fields win over the stored `finished`, so the two
+//   never disagree. A wrapper that cannot restore its own fields keeps the
+//   position and starts a fresh cycle (`finished: false`), or the game opens
+//   on a judged cycle with nothing in it.
 // - Where the touch that ends a cycle also begins the next, `finishCycle` is
 //   followed at once by `beginCycle`, and `finished` is false in every save.
 //   That is as meant. The guard against finishing one cycle twice never comes
@@ -50,6 +60,17 @@ export function freshState(childAge: number | null): GameState {
   return { v: STATE_VERSION, position: firstPosition(childAge), finished: false }
 }
 
+/** A plain record, which is the only shape a save has: not null, not a list. */
+export function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+/** Whether `raw` is a record this build can read: a plain record at this version. Anything else makes `deserialize` hand back a fresh state. */
+export function isReadable(raw: unknown): raw is Record<string, unknown> {
+  // When the version is raised, the older shapes that are still read count here too.
+  return isRecord(raw) && raw.v === STATE_VERSION
+}
+
 /**
  * Saved state is untrusted. Anything that is not this game's record gives a
  * fresh state, and so does a version above this one, which a newer build
@@ -58,14 +79,12 @@ export function freshState(childAge: number | null): GameState {
  */
 export function deserialize(raw: unknown, childAge: number | null = null, ladder: readonly string[] = LADDER): GameState {
   const fresh = freshState(childAge)
-  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return fresh
-  const record = raw as Record<string, unknown>
   // When the version is raised, read the older shapes here.
-  if (record.v !== STATE_VERSION) return fresh
+  if (!isReadable(raw)) return fresh
   return {
     v: STATE_VERSION,
-    position: typeof record.position === 'string' && ladder.includes(record.position) ? record.position : fresh.position,
-    finished: record.finished === true,
+    position: typeof raw.position === 'string' && ladder.includes(raw.position) ? raw.position : fresh.position,
+    finished: raw.finished === true,
   }
 }
 
@@ -74,7 +93,7 @@ export function serialize(state: GameState): GameState {
 }
 
 /** The child began the next cycle. The position is read here and stays put until the cycle is finished. */
-export function beginCycle(state: GameState): GameState {
+export function beginCycle<S extends GameState>(state: S): S {
   return { ...state, finished: false }
 }
 
@@ -85,7 +104,7 @@ export function beginCycle(state: GameState): GameState {
  * it once. Call this when the ending starts and save at once, so a put-away
  * during the ending loses nothing.
  */
-export function finishCycle(state: GameState, outcome: CycleOutcome, ladder: readonly string[] = LADDER): GameState {
+export function finishCycle<S extends GameState>(state: S, outcome: CycleOutcome, ladder: readonly string[] = LADDER): S {
   if (state.finished) return state
   const at = ladder.indexOf(state.position)
   const step = outcome === 'well' ? 1 : outcome === 'badly' ? -1 : 0

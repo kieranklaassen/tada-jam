@@ -1,4 +1,4 @@
-<!-- template: cartridge/ART.md v2 -->
+<!-- template: cartridge/ART.md v3 -->
 # Design sheet
 
 Written before any game code, and checked by someone who did not write it before the game is built on the toy. The headings stay in this order. The look follows the sheet at the end of this file.
@@ -41,7 +41,7 @@ Each character's one visible want and the likes and dislikes that never change, 
 
 ## The scenes
 
-Each short scene with what causes it, its beats, what from the state of play fills it in and how it gives way to a touch, then how a cycle ends and how the next one starts.
+Each short scene with what causes it, its beats, what it saves when it starts, what from the state of play fills it in and how it gives way to a touch, then how a cycle ends and how the next one starts.
 
 ## The records
 

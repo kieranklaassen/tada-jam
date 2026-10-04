@@ -1,4 +1,4 @@
-// template: cartridge/manifest.ts v2
+// template: cartridge/manifest.ts v3
 import type { CartridgeManifest } from '../types'
 
 export const templateManifest = {

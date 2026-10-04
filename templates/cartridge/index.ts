@@ -1,4 +1,4 @@
-// template: cartridge/index.ts v2
+// template: cartridge/index.ts v3
 import type { JamGame } from '../types'
 import { templateCartridge } from './game'
 

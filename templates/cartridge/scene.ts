@@ -1,4 +1,4 @@
-// template: cartridge/scene.ts v2
+// template: cartridge/scene.ts v3
 
 // A short scene: a list of timed beats played over game time (pack:
 // game-design, endings-and-short-scenes.md). It is the twist or the ending of
@@ -9,13 +9,24 @@
 //   save throttle, so a put-away at any moment of the scene loses nothing and
 //   nothing replays on load.
 // - Any touch ends it at once, with every beat left at its end state.
-// Two rules for the game that plays one:
+// - What is saved and what is seen are two things. The save holds the scene's
+//   end from its first moment; the screen arrives there beat by beat. A scene
+//   that changes what the game draws from keeps what is shown apart from what
+//   is saved until the beat that shows it.
+// Four rules for the game that plays one:
 // - The game calls `finish()` first thing in every press, before the press is
 //   answered. The touch ends the scene and is then an ordinary touch, and a
 //   scene that the press itself starts is started after that call.
 // - A beat that lays things down as it goes (a trail, a row of sparks) counts
 //   what it has laid and lays the rest when its progress arrives. Finishing
 //   jumps its progress to 1, and whatever it had not laid yet is laid then.
+// - A beat that makes a sound asks `finishing` and stays quiet when it is
+//   true. A touch lands every beat that is left in one call, and the sounds
+//   of the rest of the scene would otherwise all play at once. The same goes
+//   for anything else that belongs to the scene being watched and not to its
+//   end state.
+// - A scene that a held finger or a rub starts lets go of that finger first,
+//   or the same finger's next move is read as the touch that ends it.
 // One scene plays at a time. A second one that should follow the first is
 // made into one scene with it (`followedBy`).
 
@@ -27,9 +38,11 @@ export type Beat = {
   /**
    * Called on every frame of the beat with its progress, and exactly once with
    * 1: when the beat ends, or when a touch ends the scene before or during it.
-   * At 1 it must leave everything where the beat was taking it.
+   * At 1 it must leave everything where the beat was taking it. `finishing`
+   * is true when a touch is ending the scene and this call lands the beat
+   * unwatched: no sound then, only the end state.
    */
-  play(progress: number): void
+  play(progress: number, finishing: boolean): void
 }
 
 /** Seconds from a scene's start to the end of its last beat. */
@@ -61,7 +74,11 @@ export class Scene {
     return this.startedAt !== null
   }
 
-  /** `now` is the attended clock's seconds. `saveOutcome` runs first: it puts the scene's result into the state and saves it at once (`cadence.change(time, true)` in the Mount). */
+  /**
+   * `now` is the attended clock's seconds. `saveOutcome` runs first: it puts the scene's result into the state and
+   * saves it at once (`cadence.change(time, true)` in the Mount). A scene that only shows something and changes
+   * nothing, or whose outcome the game has already saved, passes a function that does nothing.
+   */
   start(now: number, saveOutcome: () => void): void {
     saveOutcome()
     this.done.fill(false)
@@ -82,7 +99,7 @@ export class Scene {
       const progress = beat.lasts > 0 ? Math.min(1, (age - beat.at) / beat.lasts) : 1
       if (progress >= 1) this.done[index] = true
       else left += 1
-      beat.play(progress)
+      beat.play(progress, false)
     })
     if (left === 0) this.startedAt = null
   }
@@ -94,7 +111,7 @@ export class Scene {
     this.beats.forEach((beat, index) => {
       if (this.done[index]) return
       this.done[index] = true
-      beat.play(1)
+      beat.play(1, true)
     })
   }
 }

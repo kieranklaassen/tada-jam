@@ -1,4 +1,4 @@
-<!-- template: cartridge/REFINEMENT.md v2 -->
+<!-- template: cartridge/REFINEMENT.md v3 -->
 # Refinement log
 
 ## Status

@@ -1,4 +1,4 @@
-// template: cartridge/symbols.ts v2
+// template: cartridge/symbols.ts v3
 
 // The one module of a game that draws numerals and mathematics signs on the
 // kid side. Nothing in it knows what the game is about: it takes numbers, a

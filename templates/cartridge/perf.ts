@@ -1,4 +1,4 @@
-// template: cartridge/perf.ts v2 (frozen: do not edit; tune through config.ts)
+// template: cartridge/perf.ts v3 (frozen: do not edit; tune through config.ts)
 import type { PerfRing } from './quality'
 
 // Grown-up measurement only: the jam's perf probe reads `window.__jamPerf`.

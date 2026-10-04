@@ -1,4 +1,4 @@
-// template: cartridge/quality.ts v2 (frozen: do not edit; tune through config.ts)
+// template: cartridge/quality.ts v3 (frozen: do not edit; tune through config.ts)
 import { GOVERNOR, TIERS, type Tier } from './config'
 
 // Adaptive quality. The game watches its own frames and steps between the

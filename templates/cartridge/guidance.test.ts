@@ -1,4 +1,4 @@
-// template: cartridge/guidance.test.ts v2
+// template: cartridge/guidance.test.ts v3
 import { describe, expect, it } from 'vitest'
 import { AttendedClock } from './attention'
 import { TAP_PRESSES } from './config'
