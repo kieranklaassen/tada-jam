@@ -102,8 +102,9 @@ export const VOICES = {
   slide: () => [hiss(700, 0.08, 0.03, 0.22, 1100), tone(900, 0.08, 0.001, 0.04, 'square', undefined, 0.22)],
   click: () => [tone(1900, 0.12, 0.001, 0.03, 'square'), tone(950, 0.14, 0.002, 0.09, 'triangle', undefined, 0.02)],
   // A customer.
-  // A snip, and the tuft pops back.
-  pop: () => [hiss(3400, 0.1, 0.001, 0.03), tone(500, 0.16, 0.002, 0.07, 'sine', 1400, 0.12)],
+  // A snip as the blade takes the tuft off; and the pop, on its own, as the tuft comes back, which each customer's does in its own time.
+  snip: () => [hiss(3400, 0.1, 0.001, 0.03)],
+  pop: () => [tone(500, 0.16, 0.002, 0.07, 'sine', 1400)],
   // Its own noise, in its own throat: the pelican low and rough, the twins and the ants high and thin, the cat a mew, the boa soft.
   babble: (_: number, who = 0) => [tone(320 * throat(who).up, 0.14, 0.01, 0.1, throat(who).wave, 420 * throat(who).up), tone(380 * throat(who).up, 0.12, 0.01, 0.12, throat(who).wave, 300 * throat(who).up, 0.12)],
   // A gulp of its own, and then the piece, at the pitch of its length.

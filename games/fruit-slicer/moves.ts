@@ -52,7 +52,7 @@ export type GameEvent =
   /** What lies in the tin does not fit: it sticks out past the jaw, or leaves a gap, by so many points. `gap` is the gap in the compartment this piece was laid in, in points, or nothing when that compartment is not short: only there does the piece rattle. */
   | { kind: 'misfit'; id: number; how: 'over' | 'under'; by: number; length: number; voice: VoiceId; gap: number }
   /** A customer ate a piece from the hand with nothing judged: one who waits, or one already served. */
-  | { kind: 'ate'; whom: Whom; piece: Piece; from: Box; voice: VoiceId }
+  | { kind: 'ate'; whom: Whom; piece: Piece; from: Box; voice: VoiceId; after?: number }
   /** A waiting pelican left as the glider, with this fruit across its beak, and another customer joined the queue in its place. */
   | { kind: 'gliderAway'; whom: 0 | 1; fruit: Fruit }
   /** The crate chewed a piece and burped it across to the dog. */
@@ -227,7 +227,7 @@ export function slice(game: Game, a: Point, b: Point, stroke: Stroke): { game: G
   for (const [whom, box, there] of customers) {
     if (!there || next.snipped.includes(whom) || !touches(a, b, box)) continue
     next.snipped.push(whom)
-    events.push({ kind: 'snip', whom, voice: 'pop' })
+    events.push({ kind: 'snip', whom, voice: 'snip' })
   }
   return { game: now, stroke: next, events }
 }

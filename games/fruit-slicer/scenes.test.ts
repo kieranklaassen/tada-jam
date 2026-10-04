@@ -4,7 +4,7 @@ import { feastOf } from './feast'
 import { shareLength } from './measure'
 import type { Customer, Who } from './orders'
 import { Scene, sceneLength } from './scene'
-import { BITES_SHOWN, gliderBeats, restShow, servedShow, serveBeats, showingBeats, type Show } from './scenes'
+import { BITES_SHOWN, FED_DOWN_SECONDS, TO_MOUTH_SECONDS, fedAfter, gliderBeats, restShow, servedShow, serveBeats, showingBeats, type Show } from './scenes'
 import { serveOf } from './serve'
 import { tasteOf } from './tastes'
 import type { Piece } from './world'
@@ -83,6 +83,35 @@ describe('the serve', () => {
     expect(heard(customer('boa', 5, 4), [[len(1, 1), len(1, 16), len(1, 16), len(1, 8)]])).toEqual([['sneeze', undefined], ['sneeze', undefined]])
     // A squash for each ant as it goes down, and a pop for each as it peels itself up.
     expect(heard(customer('ants', 3, 4), [[len(1, 8), len(1, 4), len(1, 4), len(1, 8)]]).map(([id]) => id).sort()).toEqual(['peel', 'peel', 'peel', 'squish', 'squish', 'squish'])
+  })
+
+  it('takes about three seconds over a customer fed by hand, however many pieces it was fed in a row, each going down as it arrives', () => {
+    const who = customer('pelican', 3, 4)
+    for (const count of [1, 2, 6, 12]) {
+      const result = serveOf(who, [Array.from({ length: count }, (_, i) => piece(i + 1, 1800 / count))])
+      const show = restShow('serve')
+      const cues: string[] = []
+      const beats = serveBeats(show, { result, taste: tasteOf(who, result), outcome: 'mixed', glider: false, fed: true }, (id) => cues.push(id))
+      expect(sceneLength(beats), `${count} pieces`).toBeGreaterThanOrEqual(3)
+      expect(sceneLength(beats), `${count} pieces`).toBeLessThanOrEqual(3.4)
+      // Nothing goes down before the first piece has reached the mouth; then one after another, piece `i` as it arrives.
+      const seen: number[] = []
+      const scene = new Scene(beats)
+      scene.start(0, () => {})
+      for (let t = 0; scene.running && t < 20; t += 1 / 120) {
+        scene.update(t)
+        seen.push(show.bites)
+      }
+      expect(seen[Math.floor((TO_MOUTH_SECONDS - 0.02) * 120)]).toBe(0)
+      for (let i = 0; i < count; i++) {
+        const arrives = TO_MOUTH_SECONDS + fedAfter(i, count)
+        expect(seen[Math.floor((arrives - 0.01) * 120)], `${count} pieces, piece ${i}`).toBeLessThanOrEqual(i + 0.001)
+        expect(seen[Math.ceil((arrives + FED_DOWN_SECONDS / count) * 120) + 1], `${count} pieces, piece ${i}`).toBeGreaterThanOrEqual(i + 1 - 0.001)
+      }
+      expect(show.bites).toBe(count)
+      // The gulps came with the pieces, from the hand: the scene sounds none of its own.
+      expect(cues).not.toContain('gulp')
+    }
   })
 
   it('sounds each of them once, however many there are, at the moment the body shows it', () => {

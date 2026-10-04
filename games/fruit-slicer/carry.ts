@@ -1,6 +1,7 @@
 import { feed, give, splat, treat, type Game } from './cycle'
 import { RAIL, WHOLE } from './measure'
 import { fellEvents, gone, land, shutIfFit, thingAt, tinAt, type GameEvent, type Whom } from './moves'
+import { fedAfter } from './scenes'
 import { ruling } from './serve'
 import { isGlider } from './tastes'
 import { COUNTER, CRATE, LANE_H, PX, TIN, WALL, X0, laneTop, type Box, type Point, type Under } from './stage'
@@ -139,7 +140,7 @@ export function drop(game: Game, held: Held, at: Point): { game: Game; events: G
           events.push(...fellEvents(now.world, fed.fell, tinAt(now)))
           now = fed.game
           // Each piece goes from the hand to the mouth and is gulped, whether or not that ends the cycle. A whole fruit to the pelican is the glider, and stays across its beak.
-          if (fed.ate && !fed.ending?.glider) for (const { piece, from } of serving) events.push({ kind: 'ate', whom, piece, from, voice: 'gulp' })
+          if (fed.ate && !fed.ending?.glider) serving.forEach(({ piece, from }, index) => events.push({ kind: 'ate', whom, piece, from, voice: 'gulp', after: fedAfter(index, serving.length) }))
           if (fed.ending) events.push({ kind: 'ending', ending: fed.ending, how: 'fed' })
         }
       }
@@ -153,7 +154,7 @@ export function drop(game: Game, held: Held, at: Point): { game: Game; events: G
           now = given.game
           // A whole fruit to a waiting pelican is the glider: it is not swallowed, it goes across the beak and out with the pelican.
           if (given.glider) events.push({ kind: 'gliderAway', whom: waits, fruit: piece.fruit })
-          else events.push({ kind: 'ate', whom, piece, from, voice: 'gulp' })
+          else events.push({ kind: 'ate', whom, piece, from, voice: 'gulp', after: fedAfter(inHand.findIndex((one) => one.piece.id === piece.id), inHand.length) })
         }
       }
       // A piece that came out of the tin to be eaten may leave what is in the tin fitting: the lid then shuts by itself.

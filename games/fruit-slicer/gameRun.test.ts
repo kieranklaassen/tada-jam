@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { FLIGHT_SECONDS } from './carry'
-import { SHEETS } from './cast'
+import { SHEETS, poseOf, tuftBackAfter } from './cast'
 import { freshGame } from './cycle'
 import { CURL_FLIGHT, CURL_LIFE, LANDS_AFTER } from './fx'
 import { GameRun, RUN_GAP, RUN_STEP, SNACK_SECONDS, SWING } from './gameRun'
@@ -9,7 +9,7 @@ import { IdleLadder } from './guidance'
 import { WHOLE } from './measure'
 import { tinParts } from './orders'
 import { deserialize, serialize } from './save'
-import { servedShow } from './scenes'
+import { TO_MOUTH_SECONDS, servedShow } from './scenes'
 import { headOf } from './seats'
 import { tinAt } from './moves'
 import { BOARD, CRATE, DOG, LANE_H, PX, QUEUE, ROLLER, SHELF_BOX, TIN, WINDOW, X0, laneTop, shown, type Box, type Point } from './stage'
@@ -456,6 +456,46 @@ describe('the comedy', () => {
     expect(run.queue[1].react).toBeNull()
   })
 
+  it('has a flung piece splat, be licked off and be stared at when it lands on the face, not as it is let go', () => {
+    const { run } = withCut(-400)
+    run.takeSounds()
+    const from = { x: X0 + 30, y: NEAR }, to = mid(QUEUE[1])
+    run.press(from, 0)
+    run.move({ x: 500, y: NEAR }, 0.1)
+    // The last stretch of the carry is fast and aimed so that the throw comes down on the one who waits.
+    const v = { x: (to.x - 600) / FLIGHT_SECONDS, y: (to.y - 620) / FLIGHT_SECONDS }
+    run.move({ x: 600 - v.x * 0.02, y: 620 - v.y * 0.02 }, 0.5)
+    run.move({ x: 600, y: 620 }, 0.52)
+    run.move({ x: 600, y: 620 }, 0.52)
+    run.queue = [{ ...run.queue[0], react: null, then: null }, { ...run.queue[1], react: null, then: null }]
+    run.lift()
+    const sounds = run.takeSounds()
+    expect(sounds.map((sound) => sound.id)).toContain('splat')
+    expect(sounds.find((sound) => sound.id === 'splat')!.delay).toBeCloseTo(TO_MOUTH_SECONDS)
+    expect(run.queue[1].react).not.toBe('lick')
+    expect(run.queue[0].react).not.toBe('gawp')
+    play(run, TO_MOUTH_SECONDS + 0.02)
+    expect(run.queue[1].react).toBe('lick')
+    expect(run.queue[0].react).toBe('gawp')
+  })
+
+  it('sounds the snip as the blade takes the tuft, and the pop as the tuft comes back, in each customer\'s own time', () => {
+    const run = fresh()
+    play(run, 0.5)
+    run.takeSounds()
+    drag(run, { x: QUEUE[0].x + 10, y: QUEUE[0].y + 20 }, { x: QUEUE[0].x + 200, y: QUEUE[0].y + 220 }, 0.1)
+    const who = run.game.queue[0].who
+    const sounds = run.takeSounds().filter((sound) => sound.id === 'snip' || sound.id === 'pop')
+    expect(sounds.map((sound) => sound.id)).toEqual(['snip', 'pop'])
+    expect(sounds[0].delay).toBe(0)
+    expect(sounds[1].delay).toBeCloseTo(tuftBackAfter(who))
+    // The tuft is still off just before the pop, and coming back just after it.
+    play(run, tuftBackAfter(who) - 0.04)
+    expect(poseOf(run.queue[0]).tuft).toBe(0)
+    play(run, 0.08)
+    expect(poseOf(run.queue[0]).tuft).toBeGreaterThan(0)
+  })
+
   it('lands a curl of peel on the dog, which looks up at it and only then turns its circle', () => {
     const run = fresh()
     // A stroke right at the end of the fruit takes off a curl.
@@ -533,9 +573,17 @@ describe('what the reading found', () => {
     const before = run.game.world.pieces.length
     drag(run, { x: X0 + 30, y: NEAR }, mid(QUEUE[1]), 1.5)
     expect(run.game.world.pieces.length).toBe(before - 1)
+    // The piece is in the air: it is gulped, heard and shown inside only when it reaches the mouth.
+    const gulp = run.takeSounds().find((sound) => sound.id === 'gulp')!
+    expect(gulp.delay).toBeCloseTo(TO_MOUTH_SECONDS)
+    expect(run.frame(0, BUSY).snacks).toHaveLength(0)
+    expect(run.queue[1].react).not.toBe('gulp')
+    play(run, TO_MOUTH_SECONDS + 0.02)
+    expect(run.queue[1].react).toBe('gulp')
     const given = run.frame(0, BUSY).snacks
     expect(given).toHaveLength(1)
-    expect(given[0]).toMatchObject({ whom: 1, age: 0 })
+    expect(given[0]).toMatchObject({ whom: 1 })
+    expect(given[0].age).toBeLessThan(0.05)
     expect(JSON.stringify(serialize(run.game))).not.toContain('snack')
     play(run, 2)
     expect(run.frame(0, BUSY).snacks).toHaveLength(1)
@@ -555,8 +603,12 @@ describe('what the reading found', () => {
     const rest = onLane(run.game.world, 0)[0]
     drag(run, { x: X0 + rest.length * PX * 0.5 + (rest.place.on === 'board' ? rest.place.x * PX : 0), y: NEAR }, { x: WINDOW.x + 120, y: WINDOW.y + 120 }, 1.5)
     expect(run.game.finished).toBe(true)
-    const heard = ids(run)
+    const sounds = run.takeSounds()
+    const heard = sounds.map((sound) => sound.id)
     expect(heard).toContain('gulp')
+    // The gulp is heard as the piece reaches the mouth, and the piece shows inside from then, not while it is still in the air.
+    expect(sounds.find((sound) => sound.id === 'gulp')!.delay).toBeCloseTo(TO_MOUTH_SECONDS)
+    expect(run.frame(0, BUSY).show).toMatchObject({ kind: 'serve', bites: 0 })
     for (const lid of ['click', 'clang', 'slide']) expect(heard).not.toContain(lid)
     expect(run.fx.fx.some((one) => one.kind === 'fly')).toBe(true)
     expect(inTin(run.game.world, 0)).toEqual([])

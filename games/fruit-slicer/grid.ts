@@ -58,7 +58,7 @@ export const GRID: Readonly<Record<Thing, Readonly<Record<Act, Cell>>>> = {
     roll: { show: 'parts-answer-one-by-one', voice: 'rule', does: 'nothing', shut: { show: 'drum-along-lid', voice: 'drum' } },
   },
   customer: {
-    slice: { show: 'tuft-pops-back', voice: 'pop', does: 'nothing' },
+    slice: { show: 'tuft-pops-back', voice: 'snip', does: 'nothing' },
     poke: { show: 'flinch', voice: 'babble', does: 'call' },
     give: { show: 'eat-from-hand', voice: 'gulp', does: 'feed' },
     fling: { show: 'splat-and-lick', voice: 'splat', does: 'toDog' },

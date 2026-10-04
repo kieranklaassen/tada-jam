@@ -213,12 +213,14 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     })
     attendRef.current = (attended) => attention.set(attended)
 
-    ctxRef.current.storage.load<unknown>().catch(() => null).then((value) => {
+    // A read that fails is not an empty slot: the game opens as a first visit, but nothing is written over what could not be read until the child changes something.
+    let unread = false
+    ctxRef.current.storage.load<unknown>().catch(() => { unread = true; return null }).then((value) => {
       if (disposed) return
       // A saved position wins; `childAge` only chooses where a first visit starts.
       run = new GameRun(deserialize(value, ctxRef.current.childAge, seed), seed)
       // A first visit is saved as it is laid out, before any touch: put away untouched, it opens again with the same two waiting.
-      if (differsFromSlot(value, run.game)) cadence.change(performance.now(), true)
+      if (!unread && differsFromSlot(value, run.game)) cadence.change(performance.now(), true)
       // The game sets itself up from the state here, as it was left: nothing eases in and no scene replays.
       // Then the load draws the first frame itself. A game that is resting or parked when the slot comes back
       // has no frame coming, and would go on showing the surface as it was before the read.

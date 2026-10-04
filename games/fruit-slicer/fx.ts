@@ -2,6 +2,7 @@ import type { Fruit } from './measure'
 import { BOARD, COUNTER, CRATE, DOG, QUEUE, RAIL_BOX, SHELF_BOX, WALL, WINDOW, inside, type Box, type Point } from './stage'
 import { draw } from './stream'
 import type { GameEvent } from './moves'
+import { TO_MOUTH_SECONDS } from './scenes'
 import { answerSeconds } from './voices'
 
 // What a touch sets off beyond itself: the burst of juice along a cut, the
@@ -150,8 +151,8 @@ export function spawn(state: FxState, event: GameEvent, heads: Partial<Record<'w
     case 'splat': {
       // To a customer's mouth, or onto its face, where it bursts.
       const to = heads[event.whom] ?? mouthOf(event.whom)
-      next.fx.push({ kind: 'fly', x: event.from.x, y: event.from.y, tx: to.x, ty: to.y, from: event.from, fruit: event.piece.fruit, age: 0, life: 0.3 })
-      if (event.kind === 'splat') next.fx.push({ kind: 'burst', x: to.x, y: to.y, size: 30, fruit: event.piece.fruit, seed: random() * 1000, age: -0.3, life: 0.3 })
+      next.fx.push({ kind: 'fly', x: event.from.x, y: event.from.y, tx: to.x, ty: to.y, from: event.from, fruit: event.piece.fruit, age: event.kind === 'ate' ? -(event.after ?? 0) : 0, life: TO_MOUTH_SECONDS })
+      if (event.kind === 'splat') next.fx.push({ kind: 'burst', x: to.x, y: to.y, size: 30, fruit: event.piece.fruit, seed: random() * 1000, age: -TO_MOUTH_SECONDS, life: 0.3 })
       break
     }
     case 'setDown':

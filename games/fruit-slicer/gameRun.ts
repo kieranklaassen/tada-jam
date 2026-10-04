@@ -1,5 +1,5 @@
 import { FLING_SPEED, drop, fling, grab, rollOver, type Held } from './carry'
-import { SHEETS, newActor, poseOf as castPose, reactAfter, reactTo, stepActor, type Actor } from './cast'
+import { SHEETS, newActor, poseOf as castPose, reactAfter, reactTo, stepActor, tuftBackAfter, type Actor } from './cast'
 import type { Ending, Game } from './cycle'
 import { newDog, poseOf as dogPose, react, stepDog, type DogState, type Reaction } from './dogMotion'
 import { CURL_FLIGHT, CURL_LIFE, LANDS_AFTER, LID_STRIKES, MOUTH, mark, newFx, rollAlong, spawn, step, whoosh, type FxState } from './fx'
@@ -8,7 +8,7 @@ import { handPose, type Guidance, type HandPose } from './guidance'
 import { newStroke, poke, slice, thingAt, tinAt, type GameEvent, type Stroke, type Whom } from './moves'
 import { Scene, followedBy } from './scene'
 import { headOf } from './seats'
-import { gliderBeats, restShow, servedShow, serveBeats, showingBeats, type Show } from './scenes'
+import { TO_MOUTH_SECONDS, gliderBeats, restShow, servedShow, serveBeats, showingBeats, type Show } from './scenes'
 import { hiccupAt } from './feast'
 import { CRATE, DOG, TIN, shown, type Point } from './stage'
 import { dogTaste } from './tastes'
@@ -74,6 +74,8 @@ export type Scenery = {
   leaving: { customer: Customer; whom: Whom; fruit: Fruit } | null
   /** What the two who wait have been given by hand and eaten: each piece shows in the body that ate it for a few seconds, and is in no state. */
   snacks: readonly { whom: 0 | 1; length: number; fruit: Fruit; age: number }[]
+  /** How many of the pieces the customer at the window was fed are still in the air from the hand: the last so many it ate. */
+  inAir: number
   /** The served customer on its way out with its tin, as the one who was called steps up: who it is, how it moves, and the pieces it ate. */
   departing: { customer: Customer; actor: Actor; lengths: number[]; fruits: Fruit[]; sides: number[] } | null
   /** The idle ladder: how strongly the next thing glows, what glows, and the ghost hand when it is showing a move. */
@@ -104,6 +106,9 @@ export class GameRun {
   private roller: Point | null = null
   private sounds: Sound[] = []
   private coming: { wait: number; reaction: Reaction; amount: number }[] = []
+  /** What a customer does when a piece that is in the air reaches it: its gulp, its lick, the others' stare. */
+  private arriving: { wait: number; act: () => void }[] = []
+  private inAir = 0
   private hand: HandPose = { travel: 0, press: 0, opacity: 0 }
   private scene: Scene | null = null
   private show: Show | null = null
@@ -269,6 +274,10 @@ export class GameRun {
       this.departing = actor.react === 'leave' ? { ...this.departing, actor } : null
     }
     this.snacks = this.snacks.map((one) => ({ ...one, age: one.age + dt })).filter((one) => one.age < SNACK_SECONDS)
+    for (const one of this.arriving) one.wait -= dt
+    const arrived = this.arriving.filter((due) => due.wait <= 0)
+    this.arriving = this.arriving.filter((due) => due.wait > 0)
+    for (const one of arrived) one.act()
     for (const one of this.coming) one.wait -= dt
     for (const one of this.coming.filter((due) => due.wait <= 0)) this.dog = react(this.dog, one.reaction, one.amount)
     this.coming = this.coming.filter((due) => due.wait > 0)
@@ -294,7 +303,7 @@ export class GameRun {
     const carried = this.held ? { ids: this.held.held.ids, dx: this.held.at.x - this.held.held.dx - this.held.held.boxes[0].x, dy: this.held.at.y - this.held.held.dy - this.held.held.boxes[0].y } : null
     // With no scene playing, a served customer is in the last pose of its serve: that is what a load finds.
     const show = this.show ?? (this.game.window && this.game.finished ? servedShow(eaten(this.game.world).length) : null)
-    return { game: this.game, fx: this.fx, dog: dogPose(this.dog, look), window: this.window, queue: this.queue, leavingActor: this.leavingActor, departing: this.departing, snacks: this.snacks, time, blade: this.blade, finger: finger ?? null, carried, roller: this.roller, show, ending: this.ending, leaving: this.leaving, glow: idle ? guidance.glow : 0, guide, hand }
+    return { game: this.game, fx: this.fx, dog: dogPose(this.dog, look), window: this.window, queue: this.queue, leavingActor: this.leavingActor, departing: this.departing, snacks: this.snacks, inAir: this.inAir, time, blade: this.blade, finger: finger ?? null, carried, roller: this.roller, show, ending: this.ending, leaving: this.leaving, glow: idle ? guidance.glow : 0, guide, hand }
   }
 
   /** A customer's pose, for the view: the one at the window or one who waits, and which of its bodies. */
@@ -313,6 +322,11 @@ export class GameRun {
 
   private actorOf(whom: Whom): Actor | null {
     return whom === 'window' ? this.window : this.queue[whom]
+  }
+
+  /** The customer standing at a place now, or nobody. */
+  private customerAt(whom: Whom): Customer | null {
+    return whom === 'window' ? this.game.window : this.game.queue[whom]
   }
 
   private reactAs(whom: Whom, reaction: Parameters<typeof reactTo>[1]): void {
@@ -390,7 +404,9 @@ export class GameRun {
         const rolledFlat = event.kind === 'rolled' && event.on === 'customer' && event.whom !== null ? (event.whom === 'window' ? before.window : before.queue[event.whom]) : null
         // A piece the crate chews is heard going down the dog only once the crate has let go of it; and a lid clangs as it strikes, not before.
         // A fruit out of the crate thumps as it comes down on its lane.
-        const late = event.kind === 'fell' ? event.after ?? 0 : event.kind === 'misfit' && event.how === 'over' ? LID_STRIKES : event.kind === 'land' ? LANDS_AFTER : 0
+        // A piece on its way to a mouth or a face is heard when it gets there: the gulp, the splat.
+        const flight = event.kind === 'ate' ? (event.after ?? 0) + TO_MOUTH_SECONDS : event.kind === 'splat' ? TO_MOUTH_SECONDS : 0
+        const late = event.kind === 'fell' ? event.after ?? 0 : event.kind === 'misfit' && event.how === 'over' ? LID_STRIKES : event.kind === 'land' ? LANDS_AFTER : flight
         const delay = event.kind === 'cut' || event.kind === 'curl' ? cuts++ * RUN_GAP : rolledFlat ? SHEETS[rolledFlat.who].react.flat * SPRINGS_BACK[rolledFlat.who] : late
         let length = 'length' in event ? event.length : 'piece' in event ? event.piece.length : undefined
         if (event.kind === 'cut') length = this.rung = this.rung === null ? event.length : Math.min(event.length, this.rung * RUN_STEP)
@@ -460,20 +476,43 @@ export class GameRun {
         }
         case 'snip': {
           this.reactAs(event.whom, 'snip')
+          // The pop is heard as the tuft comes back, which each customer's does in its own time.
+          const snipped = event.whom === 'window' ? before.window : before.queue[event.whom]
+          if (snipped && !this.skipping) this.sounds.push({ id: 'pop', delay: tuftBackAfter(snipped.who) })
           const head = heads[event.whom]
           if (head) this.fx = mark(this.fx, 'sweat', head)
           this.stare(event.whom)
           break
         }
-        case 'splat':
-          this.reactAs(event.whom, 'lick')
-          this.stare(event.whom)
+        case 'splat': {
+          // The piece is in the air: it is licked off, and stared at, when it lands on the face.
+          const whom = event.whom, hit = whom === 'window' ? before.window : before.queue[whom]
+          this.arriving.push({
+            wait: TO_MOUTH_SECONDS,
+            act: () => {
+              if (this.customerAt(whom) !== hit) return
+              this.reactAs(whom, 'lick')
+              this.stare(whom)
+            },
+          })
           break
-        case 'ate':
-          this.reactAs(event.whom, 'gulp')
-          // What one who waits was given shows in its body, exactly as it went in, for a few seconds: it is in no state.
-          if (event.whom !== 'window') this.snacks = [...this.snacks.filter((one) => one.whom !== event.whom).slice(-5), ...this.snacks.filter((one) => one.whom === event.whom).slice(-5), { whom: event.whom, length: event.piece.length, fruit: event.piece.fruit, age: 0 }]
+        }
+        case 'ate': {
+          // The piece is in the air: it is gulped when it reaches the mouth, and shows inside from then.
+          const whom = event.whom, fed = whom === 'window' ? before.window : before.queue[whom], piece = event.piece
+          if (whom === 'window') this.inAir++
+          this.arriving.push({
+            wait: (event.after ?? 0) + TO_MOUTH_SECONDS,
+            act: () => {
+              if (whom === 'window') this.inAir = Math.max(0, this.inAir - 1)
+              if (this.customerAt(whom) !== fed) return
+              this.reactAs(whom, 'gulp')
+              // What one who waits was given shows in its body, exactly as it went in, for a few seconds: it is in no state.
+              if (whom !== 'window') this.snacks = [...this.snacks.filter((one) => one.whom !== whom).slice(-5), ...this.snacks.filter((one) => one.whom === whom).slice(-5), { whom, length: piece.length, fruit: piece.fruit, age: 0 }]
+            },
+          })
           break
+        }
         case 'called': {
           // The one who was called steps up; whoever now stands in its place in the queue has just arrived there.
           const called = this.queue[event.index]

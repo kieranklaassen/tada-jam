@@ -89,6 +89,10 @@ export type Actor = {
 
 export const newActor = (who: Who, seed: number): Actor => ({ who, t: (seed % 97) / 10, seed, idle: null, idleAge: 0, rest: SHEETS[who].rest[0], last: null, react: null, reactAge: 0, then: null })
 
+/** How far through its snip each customer's tuft, feather tip or whisker end starts to pop back: the pop is heard then. */
+export const TUFT_BACK: Readonly<Record<Who, number>> = { pelican: 0.55, twins: 0.5, ants: 0.5, cat: 0.6, boa: 0.5 }
+export const tuftBackAfter = (who: Who): number => SHEETS[who].react.snip * TUFT_BACK[who]
+
 /** A reaction starts at once and replaces whatever the customer was doing. */
 export function reactTo(actor: Actor, reaction: Reaction): Actor {
   return { ...actor, react: reaction, reactAge: 0, then: null, idle: null, idleAge: 0, rest: Math.max(actor.rest, SHEETS[actor.who].rest[0] / 2) }
@@ -159,7 +163,7 @@ export function poseOf(actor: Actor, member = 0): CastPose {
       if (idle === 'gape') { pose.mouth = 0.8 * ramp(i, 0, 0.7) * (i < 0.86 ? 1 : 0); pose.part = 0.4 * bump(ramp(i, 0.86, 1)) }
       if (idle === 'shuffle') { pose.lean = 0.07 * Math.sin(i * Math.PI * 4); pose.hop = 2 * Math.abs(Math.sin(i * Math.PI * 4)) }
       if (react === 'flinch') { pose.stretch = 0.16 * bump(ramp(r, 0, 0.5)); pose.lids = -0.5 * (1 - r); pose.part = 0.7 * Math.sin(r * 9) * (1 - r); pose.brow = 1 - 1.7 * r }
-      if (react === 'snip') { pose.tuft = r < 0.55 ? 0 : ramp(r, 0.55, 0.7) * (1 + 0.3 * bump(ramp(r, 0.7, 1))); pose.eyeY = -0.9 * (1 - r); pose.lids = 0 }
+      if (react === 'snip') { pose.tuft = r < TUFT_BACK.pelican ? 0 : ramp(r, TUFT_BACK.pelican, 0.7) * (1 + 0.3 * bump(ramp(r, 0.7, 1))); pose.eyeY = -0.9 * (1 - r); pose.lids = 0 }
       if (react === 'flat') { pose.flat = r < 0.55 ? ramp(r, 0, 0.12) : 1 - ramp(r, 0.55, 0.66); pose.stretch = 0.3 * bump(ramp(r, 0.66, 1)); pose.part = 0.6 * bump(ramp(r, 0.66, 1)) }
       if (react === 'lick') { pose.mouth = 0.5 * bump(r); pose.head = 0.35 * Math.sin(r * Math.PI * 2); pose.lids = 0.9 * bump(r) }
       if (react === 'gulp') { pose.mouth = bump(ramp(r, 0, 0.4)); pose.part = bump(ramp(r, 0.3, 1)); pose.stretch = 0.1 * bump(ramp(r, 0.3, 0.7)) }
@@ -188,7 +192,7 @@ export function poseOf(actor: Actor, member = 0): CastPose {
       }
       if (idle === 'groom') { pose.head = 0.7 * bump(i) * (m ? 0 : 1); pose.part = 0.3 * Math.sin(i * 40) * (m ? 1 : 0) }
       if (react === 'flinch') { pose.hop = 12 * bump(r); pose.bit = 1.2 * (1 - r); pose.lean = -0.2 * bump(r) }
-      if (react === 'snip') { pose.tuft = r < 0.5 ? 0 : ramp(r, 0.5, 0.6); pose.part = Math.sin(r * 50) * (1 - r); pose.eyeX = Math.sin(r * 20) * (1 - r) }
+      if (react === 'snip') { pose.tuft = r < TUFT_BACK.twins ? 0 : ramp(r, TUFT_BACK.twins, 0.6); pose.part = Math.sin(r * 50) * (1 - r); pose.eyeX = Math.sin(r * 20) * (1 - r) }
       if (react === 'flat') { pose.flat = r < 0.5 ? 1 : 1 - ramp(r, 0.5, 0.58); pose.hop = 14 * bump(ramp(r, 0.58, 1)); pose.bit = bump(ramp(r, 0.58, 1)) }
       if (react === 'lick') { pose.mouth = Math.abs(Math.sin(r * Math.PI * 6)); pose.part = Math.sin(r * 60) }
       if (react === 'gulp') { pose.mouth = bump(r); pose.hop = 4 * bump(r) }
@@ -208,7 +212,7 @@ export function poseOf(actor: Actor, member = 0): CastPose {
       if (idle === 'drill') pose.hop = 6 * bump(ramp(i, m * 0.07, m * 0.07 + 0.3))
       if (idle === 'aboutFace') pose.head = Math.PI * bump(ramp(i, m * 0.05, m * 0.05 + 0.6))
       if (react === 'flinch') { pose.hop = 8 * bump(ramp(r, m * 0.06, m * 0.06 + 0.5)); pose.bit = 1 }
-      if (react === 'snip') { pose.tuft = r < 0.5 ? 0 : 1; pose.bit = -1 + ramp(r, 0.5, 1) }
+      if (react === 'snip') { pose.tuft = r < TUFT_BACK.ants ? 0 : 1; pose.bit = -1 + ramp(r, 0.5, 1) }
       if (react === 'flat') { pose.flat = r < 0.6 ? 1 : 1 - ramp(r, 0.6 + m * 0.03, 0.7 + m * 0.03) }
       if (react === 'lick') { pose.lean = 0.5 * Math.sin(r * Math.PI * 4 + m); pose.part = r * 40 }
       if (react === 'gulp') { pose.mouth = bump(r); pose.stretch = 0.3 * bump(r) }
@@ -231,7 +235,7 @@ export function poseOf(actor: Actor, member = 0): CastPose {
       if (idle === 'yawn') { pose.mouth = bump(ramp(i, 0.15, 0.85)); pose.lids = 1; pose.stretch = 0.12 * bump(i); pose.bit = bump(i) }
       if (idle === 'lookAway') { pose.head = -0.8 * bump(ramp(i, 0, 1)); pose.lids = 0.7 }
       if (react === 'flinch') { pose.lids = -0.8 * (1 - ramp(r, 0, 0.3)) + 0.45 * ramp(r, 0.3, 1); pose.part = 1.4 * (1 - r); pose.bit = 1 - r }
-      if (react === 'snip') { pose.tuft = r < 0.6 ? 0 : ramp(r, 0.6, 0.75); pose.head = -0.5 * bump(ramp(r, 0.1, 0.9)); pose.lids = 0.2; pose.eyeX = -0.8 * bump(r) }
+      if (react === 'snip') { pose.tuft = r < TUFT_BACK.cat ? 0 : ramp(r, TUFT_BACK.cat, 0.75); pose.head = -0.5 * bump(ramp(r, 0.1, 0.9)); pose.lids = 0.2; pose.eyeX = -0.8 * bump(r) }
       if (react === 'flat') { pose.flat = r < 0.6 ? 1 : 1 - ramp(r, 0.6, 0.72); pose.part = 1.6 * bump(ramp(r, 0.72, 1)); pose.lids = -0.6 * bump(ramp(r, 0.6, 1)) }
       if (react === 'lick') { pose.mouth = 0.4 * bump(r); pose.head = 0.5 * bump(ramp(r, 0, 0.5)) - 0.5 * bump(ramp(r, 0.5, 1)); pose.lids = 1; pose.bit = Math.sin(r * Math.PI * 5) }
       if (react === 'gulp') { pose.mouth = 0.7 * bump(ramp(r, 0, 0.5)); pose.lids = 0.9 }
@@ -253,7 +257,7 @@ export function poseOf(actor: Actor, member = 0): CastPose {
       if (idle === 'sway') { pose.head = 0.5 * Math.sin(i * Math.PI * 2); pose.lean = 0.1 * Math.sin(i * Math.PI * 2 - 0.8) }
       if (idle === 'coil') { pose.stretch = 0.15 * bump(i); pose.part = t * 0.35 + 1.5 * bump(i) }
       if (react === 'flinch') { pose.head = -0.6 * bump(ramp(r, 0, 0.4)); pose.stretch = 0.25 * bump(ramp(r, 0.3, 1)); pose.lids = -0.7 * (1 - r) }
-      if (react === 'snip') { pose.tuft = r < 0.5 ? 0 : ramp(r, 0.5, 0.65); pose.bit = 1 - r; pose.head = 0.3 * Math.sin(r * Math.PI * 3) }
+      if (react === 'snip') { pose.tuft = r < TUFT_BACK.boa ? 0 : ramp(r, TUFT_BACK.boa, 0.65); pose.bit = 1 - r; pose.head = 0.3 * Math.sin(r * Math.PI * 3) }
       if (react === 'flat') { pose.flat = r < 0.5 ? 1 : 1 - ramp(r, 0.5, 0.9); pose.part = t * 0.35 + 3 * ramp(r, 0.5, 1) }
       if (react === 'lick') { pose.bit = Math.abs(Math.sin(r * Math.PI * 4)); pose.head = 0.4 * bump(r) }
       if (react === 'gulp') { pose.mouth = bump(ramp(r, 0, 0.3)); pose.hop = 0; pose.stretch = 0.2 * bump(ramp(r, 0.2, 1)) }

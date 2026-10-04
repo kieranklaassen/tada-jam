@@ -449,11 +449,11 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
     // What is inside it: while a serve from the tin plays, what the ending says it ate; otherwise, and for one fed by hand, what the game holds,
     // which is every piece it was fed, a piece of another fruit and the rest of a row included.
     const byHand = scenery.ending !== null && scenery.ending.fed
-    const inside = scenery.ending && !byHand ? scenery.ending.result.parts.flatMap((part) => part.pieces) : eaten(game.world)
+    // Outside a serve, a piece that is still in the air from the hand is not inside it yet.
+    const inside = scenery.ending && !byHand ? scenery.ending.result.parts.flatMap((part) => part.pieces) : byHand ? eaten(game.world) : eaten(game.world).slice(0, Math.max(0, eaten(game.world).length - scenery.inAir))
     // A scene that is somebody else's (the glider of a pelican that waits) is not this customer's: it stays in its last pose, with all it ate.
     const mine = gliding && gliding.whom !== 'window' ? null : scenery.show
-    // Fed a row of pieces by hand, it has gulped all but the last already: the serve shows the last one going down.
-    const own = mine && byHand && mine.kind === 'serve' ? { ...mine, bites: mine.bites + Math.max(0, inside.length - 1) } : mine
+    const own = mine
     const feast = feastOf(atWindow, inside.map((piece) => piece.length), scenery.ending?.taste ?? null, own?.kind === 'showing' ? null : own, !byHand && scenery.ending?.result.kind === 'over', scenery.ending?.outcome === 'badly', inside.map((piece) => piece.fruit), inside.map((piece) => (piece.place.on === 'tin' || piece.place.on === 'eaten' ? piece.place.part : 0)))
     feasting = feast
     // A glider playing for a pelican that waits is that pelican's scene, not the scene of whoever stands at the window.
@@ -563,7 +563,8 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
   if (scenery.blade) {
     // The hairline: where a cut would fall, straight across the rail, the board and the shelf.
     ctx.fillStyle = INK
-    ctx.fillRect(scenery.blade.x - 1, TIN.bodyY - 8, 2, SHELF_BOX.y + SHELF_BOX.h - TIN.bodyY + 20)
+    // It starts at the tin's body, under the lid: a thin upright stroke in the lid would stand against the fraction there.
+    ctx.fillRect(scenery.blade.x - 1, TIN.bodyY, 2, SHELF_BOX.y + SHELF_BOX.h - TIN.bodyY + 12)
     // The blade itself, under the finger: a bright wedge with a black back.
     ctx.save()
     ctx.translate(scenery.blade.x, scenery.blade.y)

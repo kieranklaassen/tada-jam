@@ -55,15 +55,22 @@ export type Cue = (id: VoiceId, length?: number, count?: number) => void
 /** The most pieces eaten one at a time; the rest go down in one go. */
 export const BITES_SHOWN = 6
 
+/** How long a piece is in the air from the hand to a mouth or a face. Whatever it does there (a gulp, a splat, a lick) starts when it arrives. */
+export const TO_MOUTH_SECONDS = 0.3
+/** How long what a customer is fed by hand takes to go down, however many pieces: they leave the hand and go down one after another inside this time. */
+export const FED_DOWN_SECONDS = 0.6
+/** How long after the first piece of a row let go over a mouth piece `index` of `count` leaves the hand. */
+export const fedAfter = (index: number, count: number): number => (count > 0 ? (index * FED_DOWN_SECONDS) / count : 0)
+
 /** How long a customer's body takes over what it makes of its pieces. */
 export const TASTE_SECONDS = 1.4
 
 /**
  * The serve: the ending of a cycle, 4 to 8 seconds. The lid, or the shrug at a lid that will not shut; the tin
  * is lifted; the pieces are eaten one at a time in the order they lie, up to six and then the rest in one go;
- * the taste lands; the customer settles with its tin. A customer fed by hand has no lid and no lift: the piece
- * has gone from the hand to its mouth with a gulp already, and the serve is only its going down, the taste and
- * the settling, about three seconds.
+ * the taste lands; the customer settles with its tin. A customer fed by hand has no lid and no lift: each piece
+ * comes from the hand to its mouth with its own gulp, a row of them one after another, and the serve is only
+ * their going down as they arrive, the taste and the settling: about three seconds however many pieces.
  */
 export function serveBeats(show: Show, ending: Ending, cue: Cue): Beat[] {
   // What is eaten: the pieces of the order, and for a customer fed by hand a piece of another fruit as well, which it eats as it is.
@@ -79,21 +86,26 @@ export function serveBeats(show: Show, ending: Ending, cue: Cue): Beat[] {
         { at: 0, lasts: 0.5, play: (p) => (show.lid = p) },
         { at: 0.5, lasts: 0.6, play: (p) => (show.lift = p) },
       ]
-  let at = ending.fed ? 0.25 : 1.1
+  let at = ending.fed ? TO_MOUTH_SECONDS : 1.1
+  if (ending.fed) {
+    // Fed by hand, each piece goes down as it arrives from the hand, with the gulp it arrives with: one after another, all inside the same short time.
+    lengths.forEach((_, i) => beats.push({ at: at + fedAfter(i, lengths.length), lasts: FED_DOWN_SECONDS / lengths.length, play: (p) => (show.bites = Math.max(show.bites, i + p)) }))
+    at += FED_DOWN_SECONDS
+  }
   // The twins, given two pieces of one length, one each, eat in step: the two pieces are one bite, taken together.
   const inStep = ending.taste.who === 'twins' && ending.taste.liked
-  if (inStep) {
+  if (inStep && !ending.fed) {
     beats.push({ at, lasts: 0, play: () => cue('gulp', lengths[0], who) })
     beats.push({ at, lasts: 0.6, play: (p) => (show.bites = Math.max(show.bites, lengths.length * p)) })
     at += 0.6
   }
-  for (let i = 0; i < single && !inStep; i++) {
+  for (let i = 0; i < single && !inStep && !ending.fed; i++) {
     const length = lengths[i]
-    if (!ending.fed) beats.push({ at, lasts: 0, play: () => cue('gulp', length, who) })
+    beats.push({ at, lasts: 0, play: () => cue('gulp', length, who) })
     beats.push({ at, lasts: 0.6, play: (p) => (show.bites = Math.max(show.bites, i + p)) })
     at += 0.6
   }
-  if (lengths.length > single && !inStep) {
+  if (lengths.length > single && !inStep && !ending.fed) {
     beats.push({ at, lasts: 0, play: () => cue('gulp', lengths[single], who) })
     beats.push({ at, lasts: 0.8, play: (p) => (show.bites = Math.max(show.bites, single + (lengths.length - single) * p)) })
     at += 0.8
