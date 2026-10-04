@@ -117,6 +117,8 @@ export class Game implements Director {
   private owedSwirl: { x: number; z: number; radius: number } | null = null
   /** For a friend the child has sent and that has not landed yet: the moves counted before it left, and the end it left, or null for the sand. */
   private flights: Partial<Record<FriendId, { base: number; from: End | null }>> = {}
+  /** The friend in the hand was taken from the air, on its way from a tap: its flight is still open. */
+  private caught: FriendId | null = null
 
   /** `found`: the world was read from a slot the game had been put away into, not made for a first open. */
   constructor(world: World, seed: number, grains: Grains = new Grains(seed + 17), found = false) {
@@ -248,7 +250,11 @@ export class Game implements Director {
     if (this.world.arrangement.waiting === pressed.id) {
       this.pressed = { kind: 'other' }
       if (this.play.bodies[pressed.id].mode === 'rest') this.begin()
-    } else this.play.grab(pressed.id)
+    } else {
+      // Taken from the air before it landed: it never arrived where the tap sent it.
+      this.caught = this.play.bodies[pressed.id].mode === 'hop' && this.flights[pressed.id] ? pressed.id : null
+      this.play.grab(pressed.id)
+    }
   }
 
   /**
@@ -383,7 +389,9 @@ export class Game implements Director {
     this.later = this.later.filter((item) => item.reaction.who !== id || item.reaction.mark === 'trickle')
     const before = this.play.arrangement, movesBefore = this.world.moves
     // In the air already, from a move not yet landed: this touch turns it round.
-    const flight = this.play.bodies[id].mode === 'hop' ? this.flights[id] : undefined
+    // Or it was taken from the air by the hand, and is now let go: it has made one move from where it last stood, or none.
+    const flight = this.play.bodies[id].mode === 'hop' || this.caught === id ? this.flights[id] : undefined
+    if (this.caught === id) this.caught = null
     act()
     const after = this.play.arrangement
     this.world = afterMove(this.world, after)

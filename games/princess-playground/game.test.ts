@@ -1477,6 +1477,39 @@ describe('however fast the child goes, only the heavier end comes down', () => {
   })
 })
 
+describe('a move is a friend arriving on an end or leaving one', () => {
+  it('a friend tapped, taken from the air by the hand and let go in the sand never arrived on an end: no move is counted', () => {
+    const game = new Game({ ...shown(), touched: true }, 1)
+    run(game, 0.5)
+    expect(game.world.moves).toBe(0)
+    tapOn(game, 'mog')
+    expect(game.world.moves).toBe(1)
+    run(game, 0.15)
+    expect(game.play.bodies.mog.mode).toBe('hop')
+    game.press({ kind: 'friend', id: 'mog' })
+    game.dragStart()
+    expect(game.play.held).toBe('mog')
+    game.dragTo({ x: 2.5, z: 2.5 }, null)
+    run(game, 0.5)
+    game.dragEnd()
+    run(game, 2)
+    expect(placeOf(game.play.arrangement, 'mog').at).toBe('sand')
+    expect(game.world.moves).toBe(0)
+    expect(game.world.state.finished).toBe(false)
+    // Taken from the air and set on the other end instead: one move, as if it had been carried there.
+    const other = new Game({ ...shown(), touched: true }, 1)
+    run(other, 0.5)
+    tapOn(other, 'mog')
+    run(other, 0.15)
+    other.press({ kind: 'friend', id: 'mog' })
+    other.dragStart()
+    other.dragTo({ x: -PLANK.seat, z: PLANK.z }, null)
+    run(other, 0.6)
+    other.dragEnd()
+    expect(other.world.moves).toBe(1)
+  })
+})
+
 describe('a tap on the plank', () => {
   it('never brings the lighter end down, nor a level or empty plank to the sand: it dips, springs back, and marks nothing new', () => {
     const bare = tap(layout(rideOf('little-asks', 0)), 'pim')
