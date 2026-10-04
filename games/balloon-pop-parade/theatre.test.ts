@@ -121,7 +121,9 @@ describe('a bunch the child sends', () => {
     expect(mine).toHaveLength(1)
     // It stands as one that has its balloon: its free arm down (the crab's claws stay up), its eyes on the balloon and no longer on the sky.
     if (kind !== 'crab') expect(frame.poses.get('friend-0')!.armL).toBeLessThan(0.6)
-    expect(frame.poses.get('friend-0')!.headTurn).toBeLessThan(-0.05)
+    // A positive turn of the head looks to the child's right, and that is the side its balloon hangs on.
+    expect(mine[0].x).toBeGreaterThan(frame.poses.get('friend-0')!.x)
+    expect(frame.poses.get('friend-0')!.headTurn).toBeGreaterThan(0.05)
   })
 
   it.each(KINDS)('is refused by a %s of another colour in its own way, and nothing is lost', (kind) => {
@@ -368,6 +370,42 @@ describe('the director', () => {
 })
 
 describe('a balloon a friend holds', () => {
+  it('popped in a troop that had all of its own stops the troop swaying, and the others look at the empty hand', () => {
+    for (const kind of KINDS) {
+      const theatre = staged({ troop: { kind, size: 3, held: [true, true, true] }, sky: [{ colour: kind, count: 1 }], waiting: { kind: kind === 'duck' ? 'frog' : 'duck', size: 1 } }), { frame, painter, clear } = recorder()
+      play(theatre, 1)
+      theatre.paint(painter, VIEW)
+      // The balloon of the friend in the middle: the others stand either side of it.
+      const middle = frame.poses.get('friend-1')!.x
+      const mine = frame.balloons.filter((balloon) => balloon.y < 2 && balloon.y > GROUND + 2).sort((a, b) => Math.abs(a.x - middle - 0.7) - Math.abs(b.x - middle - 0.7))[0]
+      theatre.sounds.length = 0
+      theatre.press(mine.x, mine.y, VIEW)
+      theatre.cancel()
+      expect(theatre.troop.held, kind).toEqual([true, false, true])
+      expect(voices(theatre), kind).toContain('heels')
+      const still: string[] = []
+      for (let i = 0; i < 4; i++) {
+        play(theatre, 0.25)
+        clear()
+        theatre.paint(painter, VIEW)
+        const left = frame.poses.get('friend-0')!, right = frame.poses.get('friend-2')!
+        // A positive turn looks to the child's right: the friend on the left looks right, the one on the right looks left.
+        expect(left.headTurn, kind).toBeGreaterThan(0.4)
+        expect(right.headTurn, kind).toBeLessThan(-0.4)
+        still.push([left.x, left.y, left.lean, left.squash, left.puff, left.wag, right.x, right.lean, right.squash].map((value) => value.toFixed(4)).join(' '))
+      }
+      // Nothing of their breathing or swaying moved in that second.
+      expect(new Set(still).size, kind).toBe(1)
+      // Then they sway again, from where they stopped.
+      play(theatre, 1.5)
+      clear()
+      theatre.paint(painter, VIEW)
+      const after = frame.poses.get('friend-0')!
+      expect([after.x, after.y, after.lean, after.squash, after.puff, after.wag, frame.poses.get('friend-2')!.x, frame.poses.get('friend-2')!.lean, frame.poses.get('friend-2')!.squash].map((value) => value.toFixed(4)).join(' '), kind).not.toBe(still[0])
+      expect(Math.abs(after.headTurn), kind).toBeLessThan(0.3)
+    }
+  })
+
   it('pops the moment the finger lands on it, and the friend reaches up again', () => {
     const theatre = solo('crab', ['crab', 'duck']), { frame, painter } = recorder()
     tapSlot(theatre, 0)

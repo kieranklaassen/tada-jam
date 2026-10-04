@@ -72,9 +72,10 @@ export function blinkAt(kind: KindName, time: number, seed: number): number {
 /**
  * The resting life of a friend, written onto a pose whose place is already set: reaching up while it has no
  * balloon, holding the string and looking at its balloon once it has one. `reach` is how far its arms swing up.
+ * `sway` is the clock its breathing and swaying run on: the same as `time`, unless something has stopped it still.
  */
-export function rest(kind: KindName, holds: boolean, reach: number, time: number, seed: number, pose: Pose): void {
-  const p = PERSONALITIES[kind], t = time + seed * 1.7
+export function rest(kind: KindName, holds: boolean, reach: number, time: number, seed: number, pose: Pose, sway = time): void {
+  const p = PERSONALITIES[kind], t = sway + seed * 1.7
   const breath = Math.sin(t * p.breath * Math.PI * 2)
   pose.squash = 1 + breath * p.depth
   pose.blink = blinkAt(kind, time, seed)
@@ -83,7 +84,8 @@ export function rest(kind: KindName, holds: boolean, reach: number, time: number
     // The crab never lets a claw hang: its free one stays up beside the one that holds the string.
     pose.armL = kind === 'crab' ? reach : 0.2
     pose.nod = -0.3
-    pose.headTurn = -0.14
+    // The balloon hangs to the side of its string hand, which is the child's right: a positive turn looks that way.
+    pose.headTurn = 0.14
     pose.tilt = -0.07
   } else {
     pose.armL = reach
@@ -165,7 +167,9 @@ function duck(id: ClipId, t: number, pose: Pose, reach: number): void {
     pose.armL = pose.armR = 1.5 + hump(t, 0, 0.4) * 0.6
     pose.squash += hump(t, 0, 0.2) * 0.14 - hold(t, 0.4, 0.46, 0.6, 0.85) * 0.22 + wobble(t, 0.46, 28, 7) * 0.07
     pose.bow = hold(t, 0.4, 0.48, 0.62, 0.88) * -0.3
-    pose.nod = -0.1
+    // Sat down, it looks at the hand that held the string, which is on the child's right.
+    pose.nod = -0.1 - hold(t, 0.48, 0.58, 0.8, 0.9) * 0.2
+    pose.headTurn = hold(t, 0.48, 0.58, 0.8, 0.9) * 0.45
   } else if (id === 'poke') {
     pose.squash += -hump(t, 0, 0.18) * 0.2 + wobble(t, 0.18, 30, 8) * 0.08
     pose.y += hump(t, 0.1, 0.3) * 0.08
@@ -220,7 +224,9 @@ function frog(id: ClipId, t: number, pose: Pose): void {
     pose.puff = 1 - hold(t, 0, 0.14, 0.5, 0.66) * 0.7 + wobble(t, 0.62, 18, 5) * 0.35
     pose.squash += -hold(t, 0, 0.12, 0.5, 0.7) * 0.16
     pose.armL = pose.armR = 0.4
-    pose.nod = -0.05
+    // Its eyes open again on the hand that held the string.
+    pose.nod = -0.05 - hold(t, 0.5, 0.6, 0.84, 0.95) * 0.2
+    pose.headTurn = hold(t, 0.5, 0.6, 0.84, 0.95) * 0.4
     pose.blink = Math.max(pose.blink, hold(t, 0.05, 0.12, 0.4, 0.5))
   } else if (id === 'poke') {
     // A crouch and a hop on the spot, arms flung wide, throat out.
@@ -271,9 +277,9 @@ function hippo(id: ClipId, t: number, pose: Pose): void {
     pose.squash += hold(t, 0.36, 0.66, 0.68, 0.74) * 0.1 - hump(t, 0.7, 0.9) * 0.14
     pose.puff = 1 + hold(t, 0.36, 0.66, 0.7, 0.76) * 0.18 + wobble(t, 0.72, 14, 3.5) * 0.2
   } else if (id === 'popped') {
-    // It does not notice for a beat; then it looks up, slowly.
+    // It does not notice for a beat; then it looks up, slowly, to where its balloon was: over its string hand.
     pose.nod = -0.3 - hold(t, 0.45, 0.85, 1.05, 1.3) * 0.45
-    pose.headTurn = hold(t, 0.45, 0.85, 1.05, 1.3) * -0.3
+    pose.headTurn = hold(t, 0.45, 0.85, 1.05, 1.3) * 0.3
     pose.armL = pose.armR = 0.25 + ramp(t, 0.9, 1.3) * 0.8
     pose.tilt += hold(t, 0.5, 0.9, 1.05, 1.3) * 0.12
   } else if (id === 'poke') {
@@ -334,6 +340,8 @@ function crab(id: ClipId, t: number, pose: Pose, reach: number): void {
     pose.armL = pose.armR = reach - 0.25
     pose.armLForward = pose.armRForward = hold(t, 0, 0.14, 0.62, 0.95) * 1.2
     pose.squash += -hold(t, 0, 0.1, 0.6, 0.9) * 0.12
+    // The peek is at the claw that held the string: the stalks swing to it.
+    pose.wag = hold(t, 0.6, 0.72, 0.92, 1.04) * 0.45
   } else if (id === 'poke') {
     pose.x += hump(t, 0.04, 0.2) * 0.28 - hump(t, 0.22, 0.4) * 0.2
     pose.armL = reach - hump(t, 0.02, 0.1) * 0.5

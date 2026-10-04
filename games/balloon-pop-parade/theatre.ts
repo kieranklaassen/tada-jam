@@ -120,6 +120,8 @@ export class Theatre {
   private took: number[] = []
   /** The other friends look at a friend whose balloon was popped, until this time. */
   private lookAt = { friend: -1, until: 0 }
+  /** The clock the troop's breathing and swaying run on: it stands still while the troop looks at an empty hand. */
+  private sway = 0
   /** The scenery answers too: each cloud is a pillow that squashes and sheds drops, and the hill is an air bed that wobbles. */
   private readonly clouds = CLOUDS.map(() => ({ squash: 1, speed: 0 }))
   private readonly drops: Drop[] = []
@@ -525,6 +527,7 @@ export class Theatre {
   /** Plays `dt` seconds. */
   step(dt: number): void {
     this.time += dt
+    if (this.time >= this.lookAt.until) this.sway += dt
     const kind = this.troop.kind, personality = PERSONALITIES[kind]
 
     // The scene that is playing moves on, and whoever is walking in it is heard at each step.
@@ -884,7 +887,7 @@ export class Theatre {
       pose.y = spot.y
       pose.scale = FRIEND_SCALE
       // It stands as one that holds a balloon only once the balloon is in its hand.
-      rest(kind, this.held[i].shown, plan.reach, time, i, pose)
+      rest(kind, this.held[i].shown, plan.reach, time, i, pose, this.sway)
       if (this.walkIn < 1) {
         // On its way in from the edge, where it waited: nearer, larger, and in its kind's own gait.
         // The friend at the head of the waiting troop, nearest the middle, goes furthest: nobody has to pass anybody.
@@ -913,8 +916,9 @@ export class Theatre {
       this.ride(pose, i)
       if (!actor.clip) {
         // A troop whose friend has lost its balloon looks at the empty hand; a served troop, left alone, looks to the troop that waits.
-        if (time < this.lookAt.until && i !== this.lookAt.friend) pose.headTurn += Math.sign(this.lookAt.friend - i) * -0.55
-        else if (next && glow > 0) pose.headTurn += 0.35 * glow
+        // A positive turn looks to the child's right, where the friends with a higher place stand; the troop that waits is at the left edge.
+        if (time < this.lookAt.until && i !== this.lookAt.friend) pose.headTurn = Math.sign(this.lookAt.friend - i) * 0.55
+        else if (next && glow > 0) pose.headTurn -= 0.35 * glow
       }
       painter.place(name, kind, pose)
       const floor = groundAt(pose.x, pose.z), lifted = pose.y - floor
