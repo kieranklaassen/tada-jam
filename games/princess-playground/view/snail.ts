@@ -98,8 +98,10 @@ export function poseSnail(view: SnailView, pose: SnailPose): void {
   const { group, shell, foot, first, second, shade } = view
   // The shadow lies along the light, to the right of the shell and toward the child, and reaches as far as the foot is out.
   shade.scale.set(SNAIL.shell * 3 + pose.out * 1.1, 1, SNAIL.shell * 2.3)
-  shade.position.x = 0.25 + pose.out * 0.45
-  shade.position.z = 0.22
+  // The same way whichever way the snail faces: the light does not turn with it.
+  const cos = Math.cos(pose.heading), sin = Math.sin(pose.heading), fallX = 0.3, fallZ = 0.22
+  shade.position.x = fallX * cos - fallZ * sin + pose.out * 0.4
+  shade.position.z = fallX * sin + fallZ * cos
   group.position.x = pose.x
   group.position.z = pose.z
   group.rotation.y = pose.heading
@@ -117,6 +119,6 @@ export function poseSnail(view: SnailView, pose: SnailPose): void {
     stalk.visible = out > 0.04
     stalk.position.set(headX, headY, side * 0.12)
     stalk.scale.set(1, Math.max(0.05, out), 1)
-    stalk.rotation.set(side * 0.28 + pose.look * 0.45, 0, -0.25)
+    stalk.rotation.set(side * 0.28 + pose.look * 0.45 * cos, 0, -0.25)
   }
 }

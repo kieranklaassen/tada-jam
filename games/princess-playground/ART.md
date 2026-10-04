@@ -227,9 +227,11 @@ Princess Playground is designed from five California learning foundations publis
 
 ## The look
 
-Written after the spike of 2026-10-03. Not part of the sheet.
+Written after the spike of 2026-10-03, and brought up to date after the look run of 2026-10-04, when the frame was filled. Not part of the sheet.
 
-**The claimed look: sand tray** (the first row reserved for this game in the look ledger). A shallow walnut tray of pale sand on a cool grey-blue cloth, seen from the child's side and a little above. The sand is one material, raked into even lines that bend into rings round the stone, and a low light from the left picks out every line, groove and dimple. The only objects are smooth stones: a dark stone with a slate plank across it, and four painted pebbles. Nothing is made of sand, and nothing is clay.
+**The claimed look: sand tray** (the first row reserved for this game in the look ledger). A shallow walnut tray of pale sand, seen from the child's side and from well above. The sand is one material, raked into even lines that bend into rings round the stone, and a low light from the left picks out every line, groove and dimple. The only objects in the tray are smooth stones: a dark stone with a slate plank across it, and four painted pebbles. Nothing is made of sand, and nothing is clay.
+
+**What is in the frame.** The tray is deep, twelve units wide and ten from front to back, with the plank across its middle, and it takes up a little under two thirds of the frame at 1180 by 820: it reaches nearly from side to side and from the bottom edge to four fifths of the way up. In front of the plank stand the friends the ride leaves in the sand; behind it, at the far rim, Dot stands apart, further than a body's width from anyone on the plank. The friends are 9 to 15 per cent of the frame's width where the game sets them down (Pim 9, Dot at the rim 9, Mog 12, Bo 15), each over a hundred logical pixels. Round the tray is a place: a woven rush mat with a dark stitched border, on a veranda floor of weathered grey boards, and over both the light of a tree, patches of sun and leaf shadow that move a little. All of it is flat ground, painted once, quieter than anything in the tray. On the boards behind the tray a small snail creeps along. The band above the far rim is also the air a tower stands in and a tossed friend flies through.
 
 How it stays apart from the claimed looks: Pebble Table is plasticine with thumbprints under stop-motion light on a table of many things; here there is one granular surface that records what touches it, hard glossy stones, and no depth blur.
 
@@ -240,18 +242,23 @@ How it stays apart from the claimed looks: Pebble Table is plasticine with thumb
 | Sand | `#e9d3a9`, warm and pale | The plain surface under the working pieces. |
 | Sand in shade | cool violet-grey over the same sand | Shade is a hue shift, so a groove reads as depth and not as dirt. |
 | Tray | `#5a3b2a` walnut | Darker than everything in it: a frame, never a target. |
-| Cloth | `#6f8794` | Cool and quiet behind a warm tray. |
+| Floor boards | cool greys round `hsl(206, 17%, 47%)` | Cool and quiet behind a warm tray, a little darker than the mat, with dark gaps between the boards. |
+| Mat | `hsl(196, 17%, 52%)` rush, border `hsl(204, 26%, 31%)` | One step lighter than the boards, so the tray sits on something. Its weave and stitches are a few per cent of lightness. |
+| Leaf light | pale sun and blue shade, each under a third of full strength | The only thing in the place that moves by itself, besides the snail. |
+| Snail | shell `#e6cfb0` banded `#8e6a58`, foot `#c3ccc6` | The floor's greys warmed a little: plain to see, and still quieter than a friend. |
 | Stone and plank | `#2f3340`, `#56617a` slate | The working pieces: plain, no pattern, a hue the sand does not have. |
 | Pim | `#ff6a55` coral, cream shell crown | The smallest gets the hottest colour so she is never lost. |
-| Mog | `#19c2ae` teal | Told from Dot by hue and by his two ear bumps. |
+| Mog | `#19c2ae` teal | Told from Dot by hue and by his two ears, which stand up from the corners of his head in a lighter teal. |
 | Dot | `#d3c9e8` alone, `#8c56e0` in company | The one colour in the game that changes, and it changes only with company. |
 | Bo | `#1d6a8c` deep blue-green | The darkest and largest: weight you can see. |
 
 No friend is yellow, tan or brown: those belong to the sand and the tray.
 
-**Materials.** The sand is one flat plane. Its relief is a 512 by 320 height canvas that the fragment shader lights from the slope (two taps each way); grains are a hash; the soft shadows of the four friends and the plank are uniforms in the same shader. The plane is never displaced. Stones are glossy standard materials with a small soft highlight, no texture. Faces are flat unlit ink and white, so they read at any angle of the light.
+**Materials.** The sand is one flat plane. Its relief is a 480 by 400 height canvas that the fragment shader lights from the slope (two taps each way); grains are a hash; the soft shadows of the four friends and the plank are uniforms in the same shader. The plane is never displaced. Stones are glossy standard materials with a small soft highlight, no texture. Faces are flat unlit ink and white, so they read at any angle of the light. The place round the tray is paint: three flat planes with unlit canvas textures (a tile of boards that repeats, the mat with the tray's soft shadow painted on it, and the leaf light, which is see-through and slides a fifth of a unit to and fro). The snail is four small meshes, a banded shell, a foot and two eyes on stalks, lit like the stones, with its own painted shadow, since painted ground takes no light.
 
-**Lighting.** One directional light, low from the left and a little behind, warm; one cool hemisphere fill. No shadow map and no post pass. Shadows on the sand fall to the right and stretch, as a low light makes them.
+**Lighting.** One directional light, low from the left and a little behind, warm; one cool hemisphere fill. No shadow map and no post pass. Shadows on the sand fall to the right and stretch, as a low light makes them, and the painted shadows of the tray and the snail fall the same way.
+
+**The camera** (`view/camera.ts`). A long lens, 26 degrees, looking down at 46 degrees. It stands as near as it can with the whole tray in the frame, whatever the shape of the surface: the near rim just above the bottom edge, the sides inside the side edges, and 6.8 units of air above the plank below the top. A test holds the frame on six shapes of surface.
 
 **Motion rules.**
 
@@ -264,12 +271,12 @@ No friend is yellow, tan or brown: those belong to the sand and the tray.
 
 **Tiers** (`config.ts`). A tier changes drawing only.
 
-| Tier | Pixel ratio | Grain | What still holds |
-| --- | --- | --- | --- |
-| 0 | 2 | full | Everything. |
-| 1 | 1.5 | full | The same look, softer edges. |
-| 2 | 1.25 | 0.7 | Fewer flashing grains. |
-| 3 | 1 | 0.5 | Raked lines, grooves, shadows and every friend as before: it is still the sand tray. |
+| Tier | Pixel ratio | Grain | Leaf light | What still holds |
+| --- | --- | --- | --- | --- |
+| 0 | 2 | full | moving | Everything. |
+| 1 | 1.5 | full | moving | The same look, softer edges. |
+| 2 | 1.25 | 0.7 | moving | Fewer flashing grains. |
+| 3 | 1 | 0.5 | left out | Raked lines, grooves, shadows, every friend, the mat, the boards and the snail as before: it is still the sand tray on its veranda, with one blended layer less to draw. |
 
 **The small things.**
 
@@ -277,9 +284,11 @@ No friend is yellow, tan or brown: those belong to the sand and the tray.
 - The grains: a fixed pool of 72 pale points thrown up by a knock or a landing, running off the low end of the board, or sliding back into a bite as an end lifts; each falls back in about half a second. One draw, no body, no mark.
 - The ghost hand of the idle ladder: a pale mitten with one finger out, drawn once on a canvas, tilted so that it comes in from the side and comes down on the top of a head, never over a face. It is a picture of a hand, not a sign to read.
 - The idle glow: a warm halo of light on the sand under the one friend the ladder shows, drawn in the sand's own shader, when that friend stands in the sand. A friend sitting on the plank or on a head has no sand under it: it glows itself, a soft pulse of its own colour, and no ring of light lies empty on the sand.
-- A shut eye is a dark line: the white is put away. Pim's crown slips to the side of her head when a friend sits on her, and over one eye when she is set down in the sand; Mog's ears lie flat when he is put out and under a friend, where they stay in sight at the corners of his head.
+- A shut eye is a dark line: the white is put away. Pim's crown is a tall spiral shell, four fifths of her radius high and far narrower than she is; Mog's ears are two pointed bumps about as high. Both are at their full size, since they are the funniest marks in the tray, and a test holds that neither is wide enough to read as more body nor stands as high as Bo. The crown swings wide behind every move, slips to the side of her head when a friend sits on her, and over one eye when she is set down in the sand; Mog's ears lie flat when he is put out and under a friend, where they stay in sight at the corners of his head.
+- The stone: tapped where it shows under the plank, it answers with a small bright click and a few grains that hop at its foot.
+- The snail: on the boards behind the mat, creeping along a line from one side of the frame to the other and turning toward the tray at each end, its foot stretching and gathering. Touched, it pulls in with a small hollow pop and its shell rocks; a heavy knock in the tray sends it in too, and a light one makes its eyes flinch and lean toward the tray. It comes out one eye at a time. It is no part of any ride and nothing of it is saved.
 
-**Budget.** 25 to 27 draw calls and about 16,400 triangles with everything on screen, read from the renderer. No shadow map, no post pass, pixel ratio capped at 2, one 512 by 320 texture sent again only in a frame that marked the sand. Every program is compiled and drawn once, hidden, at mount. No frame rate has been measured: this machine has no graphics card.
+**Budget.** 31 to 34 draw calls and about 18,600 triangles with everything on screen, read from the renderer: the place round the tray adds three flat planes and the snail five small draws to what the tray alone took. No shadow map, no post pass, pixel ratio capped at 2, one 480 by 400 texture sent again only in a frame that marked the sand, and three canvases for the place that are painted once at mount and never sent again. Every program is compiled and drawn once, hidden, at mount. No frame rate has been measured: this machine has no graphics card.
 
 ## The registry row, for the lead
 
@@ -287,4 +296,4 @@ For section 3 of `docs/art-direction.md`, when the game is merged:
 
 | Game | Style | Art guide |
 | --- | --- | --- |
-| Princess Playground | Sand tray 3D: one shallow walnut tray of pale raked sand under a low raking light, lit from a height canvas so every groove, dimple and bite shows; a slate plank on a dark stone and four glossy painted pebbles (coral, teal, lilac to violet, deep blue-green) as the only objects | [`games/princess-playground/ART.md`](../games/princess-playground/ART.md) |
+| Princess Playground | Sand tray 3D: one deep walnut tray of pale raked sand under a low raking light, lit from a height canvas so every groove, dimple and bite shows; a slate plank on a dark stone and four glossy painted pebbles (coral, teal, lilac to violet, deep blue-green) as the only objects in it; the tray on a rush mat on a veranda of grey boards under leaf light, painted flat and quiet, with one snail on the boards | [`games/princess-playground/ART.md`](../games/princess-playground/ART.md) |
