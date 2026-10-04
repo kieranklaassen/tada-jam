@@ -78,7 +78,7 @@ export type WatcherPose = { dy: number; squash: number; turn: number; gazeX: num
 const bump = (t: number, a: number, b: number) => Math.sin(Math.min(1, Math.max(0, (t - a) / (b - a))) * Math.PI)
 
 /**
- * How it is posed: its own idle life (it breathes, blinks, and now and then looks up at the lamps), with what it is
+ * How it is posed: its own idle life (it breathes and blinks, with its eyes on the claw), with what it is
  * doing laid over it. `lookX` and `lookY` are where the thing it watches is, from -1 to 1 across and up. It never
  * leans, so its feet never leave the floor but in a hop.
  */
@@ -86,10 +86,9 @@ export function watcherPose(watcher: Watcher, seconds: number, lookX: number, lo
   out.dy = 0
   out.squash = 1 + 0.03 * Math.sin(seconds * 2.3)
   out.blink = (seconds + 1.7) % 4.1 < 0.12 ? 1 : 0
-  // Every so often it looks up at the lamps on the wall for a moment, and back. It never looks out at the child.
-  const away = bump((seconds + 2) % 9, 0, 1.4)
-  out.turn = lookX * 0.35 * (1 - away) - 0.3 * away
-  out.gazeX = lookX * (1 - away) - 0.5 * away; out.gazeY = lookY * (1 - away) + 0.9 * away
+  // Its one want is to see what the claw does next: its eyes are on the claw all the time, and never on the child.
+  out.turn = lookX * 0.35
+  out.gazeX = lookX; out.gazeY = lookY
   const t = watcher.t
   switch (watcher.act) {
     case 'start': // a jump at a bang, and wide eyes

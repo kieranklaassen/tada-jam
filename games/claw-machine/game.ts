@@ -19,7 +19,7 @@ import type { Scene } from './scene'
 import type { Toy } from './toys'
 import { nearestToy, type Tray } from './tray'
 import { newWatcher, stepWatcher, watcherNotices, watcherSees, type Watcher } from './watcher'
-import { bellyOf, crewNow, placesFor, someoneWaits, trayOf, type World } from './world'
+import { bellyOf, crewNow, placesFor, showingOwed, showingStarts, someoneWaits, trayOf, type World } from './world'
 
 // The game: the rules (world.ts, deeds.ts) played with a claw. It answers
 // every touch at once, carries out each deed the rules allow, and moves the
@@ -323,9 +323,14 @@ export class Game {
   point(aim: Aim, landing: boolean): void {
     if (landing) {
       this.endScene(true)
+      // A showing that is still owed (the game was put away before it started) starts at the first touch, and
+      // that touch does nothing else.
+      this.spent = !this.scene && showingOwed(this.world)
+      if (this.spent) { this.startOwed(); return }
       if (this.lifted >= 0) this.dropGobbler()
       this.still = 0; this.noticed = false; this.wagTurns = 0; this.wagWay = 0
     }
+    if (this.spent) return
     // With one crate on the ledge, either side of the ledge means that crate.
     if (aim.target.on === 'ledge' && this.crates.length > 0) aim = { ...aim, target: { on: 'ledge', which: Math.min(aim.target.which, this.crates.length - 1) } }
     this.aim = aim
@@ -337,6 +342,7 @@ export class Game {
 
   /** The finger lifted: the claw drops on what the finger pointed at, or lets its toy go there. */
   lift(): void {
+    if (this.spent) return
     const claw = this.claw
     let target = this.aim.target
     // A gobbler the bare claw is coming down on holds still for it, so the jaws find its knob where it stands.
@@ -661,6 +667,8 @@ export class Game {
     if (!scene) return
     this.scene = null
     if (byTouch) { this.skipping = true; scene.finish(); this.skipping = false }
+    // A touch that ends a delivery or a tip-out ends the showing that follows it too.
+    this.showingBegins()
     this.rest()
   }
 
@@ -757,6 +765,20 @@ export class Game {
 
   /** Set by `react.ts`: what a body does when one leg of its flight ends and another begins. */
   onLeg: (body: Body, toy: number) => void = () => {}
+  /** Starts a first showing that is owed (`gameScenes.ts`). */
+  startOwed: () => void = () => {}
+  /** A first showing has been laid into the scene that is playing and has not started yet. */
+  owes = false
+  /** The touch that is down started an owed showing, and does nothing else. */
+  private spent = false
+
+  /** The first showing starts, or a touch has ended the scene it follows: its mark is written, once, and saved. */
+  showingBegins(): void {
+    if (!this.owes) return
+    this.owes = false
+    showingStarts(this.world)
+    this.save = 'now'
+  }
   /** Set by `react.ts`: what becomes of a toy on a tongue as time passes. */
   chew: (body: Body, toy: number) => void = () => {}
 

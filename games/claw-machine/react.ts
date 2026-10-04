@@ -378,6 +378,9 @@ export function chew(game: Game, body: Body, toy: number, onEnd: (ends: 'sort' |
   const heldUp = plan.kind === 'spit' && way !== 'falls-through' ? HELD_UP * Math.min(1, body.chewed / 0.22) : 0
   body.x = at.x; body.z = at.z; body.y = onHead ? actor.y + rimHeight(shapeOf(actor.id)) + ON_TEETH : at.y + heldUp
   if (body.chewed === 0) {
+    // The chewing of the cycle's last toy starts: the rules ended the cycle when it was let go, and what they
+    // wrote (that it is finished, the position as it now stands, the crates) is saved now.
+    if (plan.kind === 'gulp' && plan.ends === 'cycle') game.save = 'now'
     if (plan.kind === 'gulp') game.startAct(actor, 'gulp', plan.chomps)
     else { game.startAct(actor, 'hold'); game.say({ type: 'chomp', heavy: body.heavy, who: actor.id }); game.say({ type: 'hmm', who: actor.id }) }
   }

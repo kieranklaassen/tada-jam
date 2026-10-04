@@ -216,15 +216,23 @@ export function nextCrew(world: World): number[] | null {
 }
 
 /**
- * A crew has come to the tray. The first time a crew goes by an attribute,
- * its showing plays, once: the mark is set here, when the showing starts, so
- * a put-away in the middle of it never plays it again.
+ * Whether a first showing is owed: a crew stands at the tray that goes by an
+ * attribute whose showing has not started yet. A showing follows the scene
+ * that brings its crew in, so it is owed from the moment that scene starts
+ * until the showing itself does; a game put away in between still owes it.
  */
-export function crewArrives(world: World): { by: Attribute; showing: boolean } {
-  const by = crewGoesBy(crewNow(world))
-  const showing = !world.shown[by]
-  world.shown[by] = true
-  return { by, showing }
+export function showingOwed(world: World): boolean {
+  if (world.finished || world.cycle.toys.length === 0) return false
+  return !world.shown[crewGoesBy(crewNow(world))]
+}
+
+/**
+ * The first showing of the attribute the crew at the tray goes by starts: its
+ * mark is written here and nowhere else, so a put-away in the middle of the
+ * showing never plays it again.
+ */
+export function showingStarts(world: World): void {
+  if (world.cycle.toys.length > 0) world.shown[crewGoesBy(crewNow(world))] = true
 }
 
 /** Which gobbler of the crew at the tray takes a toy. Every toy of a load has exactly one. */

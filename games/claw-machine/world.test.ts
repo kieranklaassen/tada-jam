@@ -4,7 +4,7 @@ import { toyLetGo } from './deeds'
 import { crewGoesBy } from './gobblers'
 import { nextUp } from './order'
 import { PLACES } from './places'
-import { FIRST_SEED, bellyOf, crewArrives, crewNow, endCycle, homeOf, judge, newWorld, nextCrew, someoneWaits, startCycle, takeCrate, trayIsClear, trayOf, type World } from './world'
+import { FIRST_SEED, bellyOf, crewNow, showingOwed, showingStarts, endCycle, homeOf, judge, newWorld, nextCrew, someoneWaits, startCycle, takeCrate, trayIsClear, trayOf, type World } from './world'
 
 const at = (position: PositionId, seed = 7): World => ({ ...newWorld(null), position, finished: false, crates: [], cycle: startCycle(position, seed, false) })
 
@@ -48,7 +48,7 @@ describe('the world', () => {
     expect(world.finished).toBe(false)
     expect(world.cycle).toEqual(startCycle('colours-among-kinds', FIRST_SEED, false))
     expect(world.position).toBe('colours-among-kinds')
-    expect(crewArrives(world)).toEqual({ by: 'colour', showing: true })
+    expect(showingOwed(world)).toBe(true)
   })
 
   it('tells the taller crate apart at every step, by more to sort or by a crew that goes by something new', () => {
@@ -173,11 +173,17 @@ describe('the world', () => {
 
   it('plays the first showing of an attribute once', () => {
     const world = at('colours-then-kinds')
-    expect(crewArrives(world)).toEqual({ by: 'colour', showing: true })
-    expect(crewArrives(world)).toEqual({ by: 'colour', showing: false })
+    // It is owed from the moment the crew is at the tray until it starts, and never again after that.
+    expect(showingOwed(world)).toBe(true)
+    expect(world.shown.colour).toBe(false)
+    showingStarts(world)
+    expect(showingOwed(world)).toBe(false)
     sortAll(world); nextCrew(world)
-    expect(crewArrives(world)).toEqual({ by: 'kind', showing: true })
+    expect(showingOwed(world)).toBe(true)
+    showingStarts(world)
     expect(world.shown).toEqual({ colour: true, kind: true, size: false })
+    // No crew at the tray, nothing owed: a first visit, and an ended cycle.
+    expect(showingOwed(newWorld(null))).toBe(false)
   })
 
   it('can be played through every position from the first to the last', () => {

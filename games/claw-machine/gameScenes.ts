@@ -12,7 +12,7 @@ import { actSeconds } from './motion'
 import { CRATE, TRAY, TRAY_DEPTH } from './places'
 import { DOWN_THE_THROAT, chew, clearTop, nextLeg, react } from './react'
 import { Scene, type Beat } from './scene'
-import { bellyOf, crewArrives, crewNow, type World } from './world'
+import { bellyOf, crewNow, showingOwed, type World } from './world'
 
 // The four short scenes (ART.md, "The scenes"), as timed beats filled in from
 // the state of play. The outcome of a scene is in the rules before it starts,
@@ -23,6 +23,8 @@ import { bellyOf, crewArrives, crewNow, type World } from './world'
 
 /** How long a gobbler takes to show its snack and swallow it, in a first showing. */
 const SHOW_EACH = 2
+/** How long a snack that is already in a belly takes to come back up onto the tongue for a showing that was owed. */
+const COMES_UP = 0.3
 
 function scene(game: Game, beats: Beat[]): void {
   const playing = new Scene(beats)
@@ -51,14 +53,36 @@ const walk = (actor: Actor, to: Spot, seconds: number, arc = 0, scaleTo = 1, gon
  * gulps it. What it saves when it starts: the mark that this attribute has
  * been shown. Returns no beats when the attribute has been shown before.
  */
-function showing(game: Game, from: number): Beat[] {
-  const { showing: plays } = crewArrives(game.world)
-  if (!plays) return []
-  // The snacks start on the tongues, full size; each is held up to the rim as its gobbler shows it.
-  for (const actor of game.crew) actor.snack.mode = 'mouth'
-  const beats: Beat[] = []
+function showing(game: Game, from: number, arriving = true): Beat[] {
+  if (!showingOwed(game.world)) return []
+  // It is owed from here on. Its mark is written when it starts, or when a touch ends the scene it follows,
+  // which ends both; a game put away before either still owes it (`Game.showingBegins`, `owedShowing`).
+  game.owes = true
+  // A crew that is coming in has its snacks on its tongues, full size; each is held up to the rim as its gobbler
+  // shows it. A crew that was found lined up has them in its bellies, and each brings its own back up first.
+  if (arriving) for (const actor of game.crew) actor.snack.mode = 'mouth'
+  const beats: Beat[] = [cue(game, from, () => game.showingBegins())]
   game.crew.forEach((actor, i) => {
-    const at = from + i * SHOW_EACH
+    const up = arriving ? 0 : COMES_UP
+    if (!arriving) {
+      const snack = actor.snack
+      beats.push(cue(game, from + i * SHOW_EACH, () => game.say({ type: 'burp', nth: i })))
+      // Up the way it went down: from its place in the belly to under the tongue, and out onto it.
+      beats.push(over(game, from + i * SHOW_EACH, COMES_UP, (progress) => {
+        const mouth = game.mouthOf(actor), home = game.snackSpot(actor)
+        snack.mode = 'parked'
+        if (progress < 0.6) {
+          const u = progress / 0.6
+          snack.x = home.x + (mouth.x - home.x) * u; snack.y = home.y + (mouth.y - 0.75 - home.y) * u; snack.z = home.z + (mouth.z - home.z) * u
+          snack.scale = (MINI + (DOWN_THE_THROAT - MINI) * u) * actor.scale
+          return
+        }
+        const u = (progress - 0.6) / 0.4
+        snack.x = mouth.x; snack.y = mouth.y - 0.75 * (1 - u); snack.z = mouth.z; snack.scale = (DOWN_THE_THROAT + (1 - DOWN_THE_THROAT) * u) * actor.scale
+        if (progress >= 1) snack.mode = 'mouth'
+      }))
+    }
+    const at = from + i * SHOW_EACH + up
     beats.push(cue(game, at, () => { game.startAct(actor, 'show'); game.say({ type: 'show', who: actor.id }) }))
     const gulp = at + actSeconds(actor.id, 'show') * 0.8
     beats.push(cue(game, gulp, () => { game.startAct(actor, 'gulp', 1); game.say({ type: 'gulp', heavy: 1, who: actor.id }) }))
@@ -77,8 +101,17 @@ function showing(game: Game, from: number): Beat[] {
       if (progress >= 1) { snack.mode = 'resting'; game.say({ type: 'plink', nth: 0 }) }
     }))
   })
-  beats.push(cue(game, from + game.crew.length * SHOW_EACH, () => {}))
+  beats.push(cue(game, from + game.crew.length * SHOW_EACH + (arriving ? 0 : COMES_UP), () => {}))
   return beats
+}
+
+/**
+ * A showing that is still owed, by a crew that was found lined up: the game was put away in the delivery or the
+ * tip-out that brought the crew in, before its showing had started. It starts at the child's first touch.
+ */
+export function owedShowing(game: Game): void {
+  const beats = showing(game, 0.25, false)
+  if (beats.length > 0) scene(game, beats)
 }
 
 /** How long a crew takes to shuffle off, and how far to the side it goes to be out of sight. */
@@ -344,6 +377,7 @@ function install(game: Game): Game {
   }
   game.onLeg = (body, toy) => nextLeg(game, body, toy, game.causes.get(body))
   game.chew = (body, toy) => chew(game, body, toy, (ends) => (ends === 'cycle' ? ending(game) : sortDone(game)))
+  game.startOwed = () => owedShowing(game)
   return game
 }
 

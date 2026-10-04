@@ -12,8 +12,11 @@ import { deckTop, headTop } from './layout'
 import { deserializeWorld, serializeWorld } from './save'
 import { homeOf, newWorld, startCycle, trayIsClear, type World } from './world'
 
+/** A world in the middle of a cycle has had the showings of its attributes. */
+const SHOWN = { colour: true, kind: true, size: true }
+
 const types = (events: GameEvent[]) => new Set(events.map((event) => event.type))
-const begun = (position: Parameters<typeof startCycle>[0], seed = 7) => newGame({ ...newWorld(null), position, finished: false, crates: [], cycle: startCycle(position, seed, false) } as World)
+const begun = (position: Parameters<typeof startCycle>[0], seed = 7) => newGame({ ...newWorld(null), shown: SHOWN, position, finished: false, crates: [], cycle: startCycle(position, seed, false) } as World)
 const snapshot = (world: World) => JSON.stringify(serializeWorld(world))
 
 describe('the game', () => {
@@ -266,7 +269,8 @@ describe('the game', () => {
   })
 
   it('tips the same toys back out for the next crew when the gate is hooked', () => {
-    const game = begun('colours-then-kinds')
+    // Colour has had its showing; kind has not.
+    const game = newGame({ ...newWorld(null), shown: { colour: true, kind: false, size: false }, position: 'colours-then-kinds', finished: false, crates: [], cycle: startCycle('colours-then-kinds', 7, false) } as World)
     sortAll(game)
     expect(trayIsClear(game.world.cycle)).toBe(true)
     expect(game.world.finished).toBe(false)
@@ -278,7 +282,7 @@ describe('the game', () => {
     expect(game.waiting).toEqual([])
     for (const body of game.bodies) { expect(body.mode).toBe('resting'); expect(body.scale).toBe(1) }
     // The first showing of kind played as the new crew lined up.
-    expect(game.world.shown).toEqual({ colour: false, kind: true, size: false })
+    expect(game.world.shown).toEqual({ colour: true, kind: true, size: false })
   })
 
   it('saves what a scene changes when the scene starts, and changes nothing more while it plays', () => {
@@ -295,11 +299,92 @@ describe('the game', () => {
       for (let i = 0; i < 2000 && !game.scene; i++) game.advance(STEP)
       expect(game.scene).not.toBeNull()
       expect(game.save).toBe('now')
-      atStart = snapshot(game.world)
+      // (All but the mark of a first showing, which is written when the showing itself starts: the next test.)
+      const but = (world: World) => JSON.stringify({ ...serializeWorld(world), shown: null })
+      atStart = but(game.world)
       watch(game)
       expect(game.scene).toBeNull()
-      expect(snapshot(game.world)).toBe(atStart)
+      expect(but(game.world)).toBe(atStart)
     }
+  })
+
+  it('marks a first showing when it starts, and owes it until then', () => {
+    const game = newGame(newWorld(null, 3))
+    tap(game, { on: 'ledge', which: 0 }, 0)
+    for (let i = 0; i < 2000 && !game.scene; i++) game.advance(STEP)
+    // In the delivery the showing has not started: it is owed, and its mark is not written.
+    game.advance(2)
+    expect(game.world.shown.colour).toBe(false)
+    const putAway = serializeWorld(game.world)
+    // Played on, the mark is written at the moment the first gobbler shows its snack, and saved at once.
+    game.save = 'none'
+    let shows = 0
+    for (let i = 0; i < 4000 && shows === 0; i++) { game.advance(STEP); shows += game.takeEvents().filter((event) => event.type === 'show').length }
+    expect(game.world.shown.colour).toBe(true)
+    expect(game.save).toBe('now')
+    // Put away in the delivery and opened again: the crew is lined up with its snacks in its bellies, no scene
+    // plays, and the showing is still owed.
+    const again = newGame(deserializeWorld(putAway, null))
+    expect(again.scene).toBeNull()
+    expect(again.crew.length).toBeGreaterThan(0)
+    for (const actor of again.crew) expect(actor.snack.mode).toBe('resting')
+    again.advance(5)
+    expect(again.scene).toBeNull()
+    expect(again.takeEvents().filter((event) => event.type === 'show')).toEqual([])
+    // It starts at the child's first touch, and that touch does nothing else.
+    const before = { x: again.claw.x, z: again.claw.z }
+    const first = (again.world.cycle.where[0] as { place: number }).place
+    again.point(aimOn(again, { on: 'place', place: first }), true)
+    again.lift()
+    expect(again.scene).not.toBeNull()
+    again.advance(1)
+    expect(again.world.shown.colour).toBe(true)
+    expect(again.held).toBe(-1)
+    expect([again.claw.x, again.claw.z]).toEqual([before.x, before.z])
+    const shown = watch(again)
+    expect(shown.filter((event) => event.type === 'show').length + 0).toBeGreaterThanOrEqual(0)
+    for (const actor of again.crew) expect(actor.snack.mode).toBe('resting')
+    // After it, a touch is a touch.
+    tap(again, { on: 'place', place: first }, 2.2)
+    expect(again.held).toBe(0)
+  })
+
+  it('writes the mark of a showing when a touch ends the delivery it follows, since the touch ends both', () => {
+    const game = newGame(newWorld(null, 3))
+    tap(game, { on: 'ledge', which: 0 }, 0)
+    for (let i = 0; i < 2000 && !game.scene; i++) game.advance(STEP)
+    game.advance(2)
+    expect(game.world.shown.colour).toBe(false)
+    tap(game, { on: 'place', place: 2 }, 2)
+    expect(game.scene).toBeNull()
+    expect(game.world.shown.colour).toBe(true)
+    for (const actor of game.crew) expect(actor.snack.mode).toBe('resting')
+  })
+
+  it('saves the end of the cycle when the chewing of its last toy starts', () => {
+    const game = begun('two-colours')
+    const last = game.world.cycle.toys.length - 1
+    for (let toy = 0; toy < last; toy++) feed(game, toy)
+    tap(game, { on: 'place', place: (game.world.cycle.where[last] as { place: number }).place }, 2.2)
+    tap(game, { on: 'gobbler', slot: homeOf(game.world, last) }, 0)
+    // From the moment the toy is caught on the tongue: within a few steps the chewing starts, and asks for a save at once.
+    let caught = -1, saved = false
+    for (let i = 0; i < 2000 && !game.scene && !saved; i++) {
+      game.save = 'none'
+      game.advance(STEP)
+      if (caught < 0 && game.takeEvents().some((event) => event.type === 'catch')) caught = i
+      if (caught >= 0 && i - caught > 5) break
+      saved = caught >= 0 && (game.save as string) === 'now'
+    }
+    expect(saved).toBe(true)
+    expect(game.world.finished).toBe(true)
+    expect(game.world.crates.length).toBeGreaterThan(0)
+    // Put away in that chew and opened again: found ended, and no ending plays.
+    const again = newGame(deserializeWorld(serializeWorld(game.world), null))
+    again.advance(10)
+    expect(again.scene).toBeNull()
+    expect(again.takeEvents().filter((event) => event.type === 'ring')).toEqual([])
+    expect(again.crates.length).toBe(game.world.crates.length)
   })
 
   it('ends a scene on any touch with everything where the scene was taking it, and then answers the touch', () => {

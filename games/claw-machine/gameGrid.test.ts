@@ -9,8 +9,11 @@ import { placeAt } from './places'
 import { STACK_MOST } from './tray'
 import { homeOf, newWorld, startCycle, trayOf, type World } from './world'
 
+/** A world in the middle of a cycle has had the showings of its attributes. */
+const SHOWN = { colour: true, kind: true, size: true }
+
 const types = (events: GameEvent[]) => new Set(events.map((event) => event.type))
-const begun = (position: Parameters<typeof startCycle>[0], seed = 11): Game => newGame({ ...newWorld(null), position, finished: false, crates: [], cycle: startCycle(position, seed, false) } as World)
+const begun = (position: Parameters<typeof startCycle>[0], seed = 11): Game => newGame({ ...newWorld(null), shown: SHOWN, position, finished: false, crates: [], cycle: startCycle(position, seed, false) } as World)
 const sized = (game: Game, size: 'small' | 'big') => game.world.cycle.toys.map((toy, i) => ({ toy, i })).filter(({ toy }) => toy.size === size).map(({ i }) => i)
 const placeOf = (game: Game, toy: number) => (game.world.cycle.where[toy] as { place: number }).place
 const pick = (game: Game, toy: number) => tap(game, { on: 'place', place: placeOf(game, toy) }, 2.2)

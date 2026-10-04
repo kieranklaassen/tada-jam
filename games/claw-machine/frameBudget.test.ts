@@ -7,6 +7,9 @@ import { drawsOf } from './picture'
 import { sortAll, tap, watch } from './play'
 import { newWorld, startCycle, type World } from './world'
 
+/** A world in the middle of a cycle has had the showings of its attributes. */
+const SHOWN = { colour: true, kind: true, size: true }
+
 // The frame budget, counted and not timed, so it holds on a busy runner
 // (docs/solutions/test-failures/frame-budget-tests-that-hold-on-a-shared-ci-runner.md).
 // A frame of the game is its fixed steps and the picture it hands the stage.
@@ -38,7 +41,7 @@ describe('the frame budget', () => {
   })
 
   it('stays under the draw budget in the heaviest moments: the widest load, three crews, every scene', () => {
-    const game = newGame({ ...newWorld(null), position: 'three-ways-wide', finished: false, crates: [], cycle: startCycle('three-ways-wide', 3, false) } as World)
+    const game = newGame({ ...newWorld(null), shown: SHOWN, position: 'three-ways-wide', finished: false, crates: [], cycle: startCycle('three-ways-wide', 3, false) } as World)
     const count: Count = { frames: 0, mostDraws: 0, mostToys: 0, mostGobblers: 0, scenes: 0 }
     play(game, 2, count)
     for (let sort = 0; sort < 2; sort++) {
