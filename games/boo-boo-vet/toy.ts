@@ -309,9 +309,10 @@ export function under(toy: Toy, room: Room, point: Vec): Under {
   }
   if (within(point, middle(room, waiting, room.waiting), room.bodies[waiting].w, room.bodies[waiting].h)) return { on: 'waiting' }
   if (toy.clinic.carrier && within(point, { x: room.carrier.x, y: room.carrier.y - CARRIER.h / 2 }, CARRIER.w, CARRIER.h)) return { on: 'carrier' }
+  // The lamp hangs over the table whether or not anybody sits there; the mouse rides the cart, which is out of the room while the table is empty.
+  if (within(point, room.lamp, 170, 130)) return { on: 'lamp' }
   if (!table && !toy.coming) return { on: 'room' }
   if (within(point, { x: room.mouse.x + cartShift(toy), y: room.mouse.y - 50 }, 110, 120)) return { on: 'mouse' }
-  if (within(point, room.lamp, 170, 130)) return { on: 'lamp' }
   return { on: 'room' }
 }
 
