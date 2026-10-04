@@ -3,6 +3,7 @@
 
 ## Status
 
+- Resumed: "after the run that pastes your sentences" (the look pass, cut off part-way with its work uncommitted), then "to take up at the end of your look pass. Round 5 of your sheet is answered", then "after the run before this one. A new last step for every game: the reader", in that order.
 - Stage: gates. The game is built on the toy and the gates were run as far as the build machine takes them (below). The lead reports that it passes the gates on the lead's machine as well and that its intersection audit is clean there. It stands on the sheet that passed round 4, with ten details pasted since so that the sheet says what the game does; round 5 reads only those.
 - Sheet, round 1: checker B, 14 findings, all pasted at commit `06c946d`.
 - Sheet, round 2: checker D, 4 findings, all pasted at commit `d9a0c46`.
