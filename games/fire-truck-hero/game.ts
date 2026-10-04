@@ -49,8 +49,8 @@ export const QUACK_AFTER_S = 0.09
 /** How near a thing's middle a worm may come up, and how near the snail. */
 export const WORM_CLEAR = 1.7
 export const WORM_CLEAR_OF_SNAIL = 0.85
-/** How wide the puddle is that the wet logs of a fire float on: it lies inside the ring of pebbles. */
-export const FIRE_PUDDLE = 0.95
+/** How wide the stamp of the puddle is that the wet logs of a fire float on. Its water shows over the middle half of that, inside the ring of pebbles. */
+export const FIRE_PUDDLE = 1.5
 /** How far the flower's cup has nodded over when its water tips out, as a share of the whole nod. */
 export const CUP_TIPS_AT = 0.85
 
@@ -150,14 +150,16 @@ export class Game extends Toy {
     this.show(now)
     this.scene?.update(now)
     if (this.scene && !this.scene.running) this.scene = null
+    this.atRest(seconds, now)
+    this.motion.step(seconds, this.yard, this.channels)
+    this.tipCup()
+    // A worm that was owed comes up once the scene is over and everything stands where the scene left it: a
+    // snail whose glide a touch cut short is at the end of its way by now, and the worm keeps clear of it there.
     if (!this.scene && this.wormOwed && !this.leaving) {
       const at = this.wormOwed
       this.wormOwed = null
       this.startWorm(at, now)
     }
-    this.atRest(seconds, now)
-    this.motion.step(seconds, this.yard, this.channels)
-    this.tipCup()
     this.leaving?.motion.step(seconds, this.leaving.yard, this.leaving.motion.ownChannels)
   }
 

@@ -323,6 +323,28 @@ describe('the worm', () => {
     }
   })
 
+  it('keeps clear of the snail where a touch cut the snail\'s glide short and put it at the end of its way', () => {
+    const t = new Table(saved('one-thing', 3))
+    const home = t.at(0)
+    // A finger held on the patch in a dry yard: the ending starts, the stream goes on into mud, and the snail
+    // sets out across its patch.
+    t.game.press({ truck: false, point: home }, t.now)
+    t.play(1.9)
+    t.game.lift()
+    expect(t.game.sceneRunning).toBe(true)
+    // A tap elsewhere ends the scene: the snail is at the end of its way at once, and the owed worm comes up.
+    t.tap({ x: 3.5, z: 8.5 })
+    let nearest = Infinity, came = false
+    t.play(3, () => {
+      if (!t.game.wormAt || t.game.channels.wormUp === 0) return
+      came = true
+      const snail = { x: home.x + t.game.motion.snail.pose.x, z: home.z + t.game.motion.snail.pose.z }
+      nearest = Math.min(nearest, distance(snail, t.game.wormAt))
+    })
+    expect(came).toBe(true)
+    expect(nearest).toBeGreaterThanOrEqual(WORM_CLEAR_OF_SNAIL)
+  })
+
   it('waits for a scene to be over when its mud was made while the scene played, and then comes up', () => {
     const t = new Table(saved('one-thing', 3))
     const home = t.at(0)

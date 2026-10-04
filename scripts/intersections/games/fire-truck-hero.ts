@@ -88,6 +88,8 @@ export default {
     { a: 'seed-petals', b: 'seed-petals', kind: 'pose', upTo: 1, reason: 'the petals are set round the heart of the flower and into it, and while they are shut they lie close in together' },
     { a: 'seed-petals', b: 'seed-shoot', kind: 'pose', upTo: 1, reason: 'the stem runs up into the heart of the flower' },
     { a: 'seed-leaves', b: 'seed-shoot', kind: 'pose', upTo: 1, reason: 'the leaves grow out of the stem' },
+    { a: 'seed-pot', b: 'seed-pot-damp', kind: 'pose', upTo: 1, reason: "the dark that climbs the pot is a skin on the pot's own wall" },
+    { a: 'fire-ring', b: 'fire-logs-wet', kind: 'pose', upTo: 0.15, reason: 'the wet logs float on their puddle and knock against the ring of pebbles' },
     { a: 'patch-mound', b: 'worm-body', upTo: 1, reason: 'the worm comes up out of the mud of the patch and goes back down into it' },
     { a: 'cat-body', b: 'cat-paw', kind: 'pose', upTo: 0.5, reason: 'her front paw rests against her body' },
     { a: 'cat-body', b: 'cat-tail', kind: 'pose', upTo: 0.3, reason: 'her tail is rooted in her body' },
@@ -148,9 +150,11 @@ export default {
         await d.wait(7400)
         await gulps(d, [7.7, 6.2], 2)
         await d.wait(3600)
-        // The boat, aground beside the pool: a gulp, its fill, too much.
-        await gulps(d, [8.35, 8.05], 4)
+        // The boat, aground beside the pool: a gulp, its fill, too much, and a sweep that slides it nose first.
+        await gulps(d, [8.35, 8.2], 4)
         await d.wait(1500)
+        await sweep(d, [5.6, 8.4], [11, 8.4], 500)
+        await d.wait(1800)
       },
     },
     {
@@ -304,6 +308,22 @@ export default {
         await d.wait(8200)
         await gulps(d, SPOT[2], 2)
         await d.wait(4600)
+      },
+    },
+    {
+      // The whole garden with the snail and a fire: water on the patch while the fire burns, the wheel spun to a
+      // blur so that every neighbour gets a gulp, the fire put out, and the snail's ending.
+      name: 'snail-by-the-fire',
+      run: async (d) => {
+        await yard(d, 'whole-garden', 3)
+        await d.wait(1200)
+        await gulps(d, SPOT[3], 2)
+        await hold(d, SPOT[4], 2200, 1.2)
+        await d.wait(2500)
+        await gulps(d, SPOT[0], 3, 0.6)
+        await d.wait(2500)
+        await gulps(d, SPOT[3], 2)
+        await d.wait(8000)
       },
     },
     { name: 'rest', run: (d) => d.wait(5000) },
