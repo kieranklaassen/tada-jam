@@ -42,7 +42,7 @@ export function modelBuilt(idea: Idea, progress: number): number {
   const share = (a: number, b: number) => Math.max(0, Math.min(1, (progress - a) / (b - a)))
   if (progress < 0.5) return share(0.02, 0.26)
   const whole = ideaPieces(idea, true), common = Math.min(whole - 1, ideaPieces(idea, false))
-  return (common + (whole - common) * share(0.5, 0.62)) / whole
+  return (common + (whole - common) * share(0.56, 0.64)) / whole
 }
 
 /** How long a thread takes to unreel from its first pin to its second, in seconds; and how many times as far the middle of a plucked plank goes as a stiff part shifts. */
@@ -340,8 +340,10 @@ export class View {
     const showing = toy.showing, t = toy.chief.progress
     const span = (a: number, b: number) => Math.max(0, Math.min(1, (t - a) / (b - a)))
     // The models are drawn large enough to read from across the sheet: a cell and a half to the model's own cell.
-    if (showing && 'idea' in showing && toy.chief.act === 'shows') ideaModel(pen, showing.idea, cx + cell * MODEL_PLACE.from, cy, (cell * MODEL_PLACE.unit) / 0.9, t >= 0.5, span(0.34, 0.46), stream(12), showing.failure, modelBuilt(showing.idea, t))
-    else if (showing && 'differences' in showing) compareModels(pen, showing.differences, cx + cell * 1.4, cy, cell * 1.35, t >= 0.5, t < 0.5 ? span(0.2, 0.34) : span(0.62, 0.76), stream(12))
+    if (showing && 'idea' in showing && toy.chief.act === 'shows') ideaModel(pen, showing.idea, cx + cell * MODEL_PLACE.from, cy, (cell * MODEL_PLACE.unit) / 0.9, t >= 0.5, t >= 0.5 ? 1 - span(0.5, 0.56) : span(0.34, 0.46), stream(12), showing.failure, modelBuilt(showing.idea, t))
+    // The one change: the two models are set down side by side, loaded, the block lifted, one part swapped back in
+    // view, and loaded again.
+    else if (showing && 'differences' in showing) compareModels(pen, showing.differences, cx + cell * 1.4, cy, cell * 1.35, t >= 0.58, t < 0.5 ? span(0.2, 0.32) * (1 - span(0.4, 0.46)) : span(0.64, 0.76), stream(12), span(0, 0.16), span(0.46, 0.58))
     else if (toy.marginModel) {
       // Pressed, it gives a little on its ledge; plucked, it shakes from side to side and dies away.
       const rung = toy.modelRung, shake = rung < RING ? 0.06 * Math.exp(-rung / 0.2) * Math.sin(2 * Math.PI * 16 * rung) : 0

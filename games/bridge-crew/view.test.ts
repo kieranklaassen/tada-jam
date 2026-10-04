@@ -326,7 +326,9 @@ describe('what the seventh reading found, drawn', () => {
       expect(modelBuilt(idea, 0.3)).toBe(1)
       // The idea starts from pieces that are there already and is whole before the chief stands on it.
       expect(modelBuilt(idea, 0.5)).toBeGreaterThan(0.3); expect(modelBuilt(idea, 0.5)).toBeLessThan(1)
-      expect(modelBuilt(idea, 0.62)).toBe(1); expect(modelBuilt(idea, 1)).toBe(1)
+      expect(modelBuilt(idea, 0.64)).toBe(1); expect(modelBuilt(idea, 1)).toBe(1)
+      // The idea's own piece goes on last: with all but one piece on, the square has no diagonal yet.
+      if (idea === 'triangle') expect(holds).toBe(fails + 1)
       // Drawn part built, it has fewer pieces on it than drawn whole, and never none.
       const count = (built: number) => { const { pen, calls } = recording(); ideaModel(pen, idea, 0, 0, 40, false, 0, stream(3), null, built); for (const n of numbers(calls)) expect(Number.isFinite(n)).toBe(true); return calls.length }
       expect(count(0.01)).toBeGreaterThan(0)

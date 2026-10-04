@@ -204,29 +204,39 @@ function modelOf(pen: Pen | null, idea: Idea, x: number, y: number, c: number, h
   const stick: Mini = (ax, ay, bx, by, kind = 'stick') => { if (laid++ < pieces && pen) wood(pen, kind, x + ax * w, y - ay * w, x + bx * w, y - by * w, c * 0.55, random) }
   const dot = (px: number, py: number) => { if (laid++ < pieces && pen) pin(pen, x + px * w, y - py * w, c * 0.5, false) }
   const sag = fail * 0.35
+  // A block that loads a model, or that it stands on: no piece of it, and drawn only once the pieces before it are on.
+  const block = (colour: string, path: () => void) => { if (pen && laid <= pieces) cutOut(pen, c, colour, path) }
   switch (idea) {
     case 'triangle': case 'row': {
-      // A square of four pinned sticks leans over; with a diagonal it cannot.
-      const cells = idea === 'row' ? 2 : 1, lean = holds ? 0 : fail * 0.75, top = Math.sqrt(Math.max(0.05, 1 - lean * lean))
+      // A square of four pinned sticks leans over; with a diagonal it cannot. The idea is the same square: it stands
+      // up again (`fail` falls back to nothing) and the diagonal goes on last.
+      const cells = idea === 'row' ? 2 : 1, lean = fail * 0.75, top = Math.sqrt(Math.max(0.05, 1 - lean * lean))
       for (let i = 0; i <= cells; i++) stick(i, 0, i + lean, top)
-      for (let i = 0; i < cells; i++) { stick(i + lean, top, i + 1 + lean, top); if (holds) stick(i, 0, i + 1, 1) }
+      for (let i = 0; i < cells; i++) stick(i + lean, top, i + 1 + lean, top)
       for (let i = 0; i <= cells; i++) { dot(i, 0); dot(i + lean, top) }
+      if (holds) for (let i = 0; i < cells; i++) {
+        stick(i, 0, i + 1 + lean, top)
+        // Its two pins lie on it, as on every part.
+        if (pen && laid <= pieces) { pin(pen, x + i * w, y, c * 0.5, false); pin(pen, x + (i + 1 + lean) * w, y - top * w, c * 0.5, false) }
+      }
       break
     }
     case 'profile':
-      // A strip laid flat dips between its two pins; the same strip on edge does not.
+      // A strip laid flat dips between its two pins; the same strip on edge does not. Each end rests on a block.
+      for (const bx of [-0.08, 1.24]) block(INK.balsaEdge, () => pen!.rect(x + bx * w, y - 0.46 * w, 0.24 * w, 0.46 * w))
       if (holds) stick(0, 0.5, 1.4, 0.5, 'plank-edge')
       else { stick(0, 0.5, 0.7, 0.5 - sag, 'plank'); stick(0.7, 0.5 - sag, 1.4, 0.5, 'plank') }
       dot(0, 0.5); dot(1.4, 0.5)
-      // The same small block presses on both: one dips under it and the other does not.
-      if (pen) cutOut(pen, c, INK.steel, () => pen.rect(x + 0.52 * w, y - (0.5 - (holds ? 0 : sag)) * w - c * (holds ? 0.36 : 0.22), 0.36 * w, c * 0.16))
+      // The same small block presses on both, sitting on the strip: one dips under it and the other does not.
+      block(INK.steel, () => pen!.rect(x + 0.52 * w, y - (0.5 - (holds ? 0 : sag)) * w - c * (holds ? 0.28 : 0.22), 0.36 * w, c * 0.16))
       break
     case 'prop':
-      // The same strip dips with nothing under it, and lies level on a post.
+      // The same strip dips with nothing under it, and lies level on a post. The post goes in last.
       // Each end of the strip rests on a block of its own, so the model is a bridge and not a bar on a post.
-      for (const bx of [-0.08, 1.24]) if (pen) cutOut(pen, c, INK.balsaEdge, () => pen.rect(x + bx * w, y - 0.66 * w, 0.24 * w, 0.66 * w))
-      if (holds) { stick(0, 0.7, 1.4, 0.7, 'plank'); stick(0.7, 0, 0.7, 0.7) } else { stick(0, 0.7, 0.7, 0.7 - sag, 'plank'); stick(0.7, 0.7 - sag, 1.4, 0.7, 'plank') }
-      dot(0, 0.7); dot(1.4, 0.7); if (holds) dot(0.7, 0)
+      for (const bx of [-0.08, 1.24]) block(INK.balsaEdge, () => pen!.rect(x + bx * w, y - 0.66 * w, 0.24 * w, 0.66 * w))
+      if (holds) stick(0, 0.7, 1.4, 0.7, 'plank'); else { stick(0, 0.7, 0.7, 0.7 - sag, 'plank'); stick(0.7, 0.7 - sag, 1.4, 0.7, 'plank') }
+      dot(0, 0.7); dot(1.4, 0.7)
+      if (holds) { stick(0.7, 0, 0.7, 0.7); dot(0.7, 0) }
       break
     case 'tube':
       // Two thin posts under a strip with a block on it bow in the middle; two rolled tubes of the same height stand straight.
@@ -236,7 +246,7 @@ function modelOf(pen: Pen | null, idea: Idea, x: number, y: number, c: number, h
         dot(px0, 0)
       }
       stick(0.05, 1.0 - (holds ? 0 : 0.22 * fail) + 0.08, 1.35, 1.0 - (holds ? 0 : 0.22 * fail) + 0.08, 'plank')
-      if (pen) cutOut(pen, c, INK.steel, () => pen.rect(x + 0.5 * w, y - (1.0 - (holds ? 0 : 0.22 * fail) + 0.16) * w - c * 0.2, 0.4 * w, c * 0.2))
+      block(INK.steel, () => pen!.rect(x + 0.5 * w, y - (1.0 - (holds ? 0 : 0.22 * fail) + 0.16) * w - c * 0.2, 0.4 * w, c * 0.2))
       break
     case 'thread':
       // Two strips hinged in the middle drop into a V inside a frame of two posts and a beam; a thread down from the
@@ -247,17 +257,23 @@ function modelOf(pen: Pen | null, idea: Idea, x: number, y: number, c: number, h
       dot(0, 0.4); dot(1.4, 0.4); dot(0, 1.25); dot(1.4, 1.25); dot(0.7, 0.4 - (holds ? 0 : sag))
       if (holds) { if (laid++ < pieces && pen) string(pen, x + 0.7 * w, y - 0.4 * w, x + 0.7 * w, y - 1.25 * w, c * 0.6); dot(0.7, 1.25) }
       break
-    case 'wide-base':
-      // A mast on one footing topples; two legs on a wide base stand.
+    case 'wide-base': {
+      // A mast on one footing topples; two legs on a wide base stand. Both stand on a base board, which closes the two
+      // legs into a triangle, and the top carries a paper pennant: no bare stroke with a dot over it, and no open A.
+      block(INK.balsaEdge, () => pen!.rect(x - 0.15 * w, y - 0.07 * w, 1.3 * w, 0.14 * w))
+      const a = fail * 1.3, tx = holds ? 0.5 : 0.5 + Math.sin(a) * 1.2, ty = holds ? 1.2 : Math.cos(a) * 1.2
       if (holds) { stick(0, 0, 0.5, 1.2); stick(1, 0, 0.5, 1.2); dot(0, 0); dot(1, 0) }
-      else { const a = fail * 1.3; stick(0.5, 0, 0.5 + Math.sin(a) * 1.2, Math.cos(a) * 1.2); dot(0.5, 0) }
-      dot(holds ? 0.5 : 0.5 + Math.sin(fail * 1.3) * 1.2, holds ? 1.2 : Math.cos(fail * 1.3) * 1.2)
+      else { stick(0.5, 0, tx, ty); dot(0.5, 0) }
+      block(INK.paper, () => { pen!.moveTo(x + tx * w, y - ty * w - c * 0.02); pen!.lineTo(x + tx * w + c * 0.3, y - ty * w - c * 0.14); pen!.lineTo(x + tx * w, y - ty * w - c * 0.26); pen!.closePath() })
+      dot(tx, ty)
       break
+    }
     case 'arch':
-      // Three sticks pinned in a curve fold flat by themselves; posts up to a strip above hold their joints.
-      if (holds) { stick(0, 0, 0.45, 0.5); stick(0.45, 0.5, 0.95, 0.5); stick(0.95, 0.5, 1.4, 0); stick(0.45, 0.5, 0.45, 0.95); stick(0.95, 0.5, 0.95, 0.95); stick(0, 0.95, 1.4, 0.95, 'plank'); dot(0.45, 0.5); dot(0.95, 0.5) }
+      // Three sticks pinned in a curve fold flat by themselves; posts up to a strip above hold their joints. The posts and the strip go on last.
+      if (holds) { stick(0, 0, 0.45, 0.5); stick(0.45, 0.5, 0.95, 0.5); stick(0.95, 0.5, 1.4, 0) }
       else { const h = 0.5 * (1 - fail); stick(0, 0, 0.45 + 0.1 * fail, h); stick(0.45 + 0.1 * fail, h, 0.95 + 0.25 * fail, h * 0.4); stick(0.95 + 0.25 * fail, h * 0.4, 1.4, 0) }
       dot(0, 0); dot(1.4, 0)
+      if (holds) { stick(0.45, 0.5, 0.45, 0.95); stick(0.95, 0.5, 0.95, 0.95); stick(0, 0.95, 1.4, 0.95, 'plank'); dot(0.45, 0.5); dot(0.95, 0.5) }
       break
   }
   return laid
@@ -279,8 +295,9 @@ type Side = { strut: Wood | 'thread' | null; foot: number; edge: boolean }
  * the middle less again. So any one difference between two models shows.
  */
 export function modelDip(left: Side, right: Side): number {
-  const hold = (side: Side) => (side.strut ? ({ tube: 1.5, stick: 1, thread: 0.6, plank: 1.2, 'plank-edge': 1.35 } as const)[side.strut] * (side.foot > 0 ? 0.6 : 1) : 0) + (side.edge ? 1 : 0)
-  return Math.max(0.05, 0.34 - 0.1 * (hold(left) + hold(right)))
+  const hold = (side: Side) => (side.strut ? ({ tube: 1.5, stick: 1, thread: 0.6, plank: 1.2, 'plank-edge': 1.35 } as const)[side.strut] * (side.foot > 0 ? 0.5 : 1) : 0) + (side.edge ? 1 : 0)
+  // Wide enough apart that any one difference is a few pixels of dip at the size the models are drawn.
+  return Math.max(0.05, 0.5 - 0.17 * (hold(left) + hold(right)))
 }
 
 /**
@@ -302,25 +319,51 @@ export function modelSides(d: Difference | undefined): [Side, Side] {
   }
 }
 
-export function compareModels(pen: Pen, differences: readonly Difference[], x: number, y: number, c: number, swapped: boolean, load: number, random: () => number) {
+export function compareModels(pen: Pen, differences: readonly Difference[], x: number, y: number, c: number, swapped: boolean, load: number, random: () => number, set = 1, swap = swapped ? 1 : 0) {
   const w = c * 0.9
   const sides = modelSides
-  const model = (ox: number, left: Side, right: Side) => {
-    const dip = load * w * modelDip(left, right)
-    wood(pen, left.edge ? 'plank-edge' : 'plank', ox, y - w * 0.6, ox + w * 0.6, y - w * 0.6 + dip, c * 0.55, random)
-    wood(pen, right.edge ? 'plank-edge' : 'plank', ox + w * 0.6, y - w * 0.6 + dip, ox + w * 1.2, y - w * 0.6, c * 0.55, random)
-    ;[left, right].forEach((side, i) => {
-      if (!side.strut) return
+  /** One half of a model's deck with what holds it up, lifted by `up` (in the model's units) and drawn at `alpha`: how a part is seen going out and coming in. */
+  const half = (ox: number, side: Side, i: number, dip: number, up: number, alpha: number) => {
+    if (alpha <= 0.01) return
+    pen.save()
+    pen.globalAlpha = alpha
+    pen.translate(0, -up * w)
+    if (i === 0) wood(pen, side.edge ? 'plank-edge' : 'plank', ox, y - w * 0.6, ox + w * 0.6, y - w * 0.6 + dip, c * 0.55, random)
+    else wood(pen, side.edge ? 'plank-edge' : 'plank', ox + w * 0.6, y - w * 0.6 + dip, ox + w * 1.2, y - w * 0.6, c * 0.55, random)
+    if (side.strut) {
       const foot = i ? 1.0 - side.foot : 0.2 + side.foot
-      if (side.strut === 'thread') string(pen, ox + w * 0.6, y - w * 0.6 + dip, ox + w * (i ? 1.2 - side.foot : side.foot), y - w * 1.25, c * 0.6)
+      // A stay comes down from a pin on the beam of the model's frame; a strut stands on the ledge.
+      if (side.strut === 'thread') { const tx = ox + w * (i ? 1.2 - side.foot : side.foot); string(pen, ox + w * 0.6, y - w * 0.6 + dip, tx, y - w * 1.25, c * 0.6); pin(pen, tx, y - w * 1.25, c * 0.45, false) }
       else wood(pen, side.strut, ox + w * foot, y, ox + w * 0.6, y - w * 0.6 + dip, c * 0.55, random)
-    })
+    }
+    pen.restore()
+  }
+  const model = (ox: number, left: Side, right: Side, coming: Side | null, alpha: number) => {
+    if (alpha <= 0.01) return
+    pen.save()
+    pen.globalAlpha = alpha
+    const dip = load * w * modelDip(left, swap >= 0.5 && coming ? coming : right)
+    // Each end of the deck rests on a block of its own, so the model stands on the ledge and is closed all round.
+    for (const bx of [-0.1, 1.1]) cutOut(pen, c, INK.balsaEdge, () => pen.rect(ox + bx * w, y - 0.56 * w, 0.2 * w, 0.56 * w))
+    // A model with a stay has a frame for it: a post at each end and a beam across, which the stay's pin is on.
+    if ([left, right, coming].some((side) => side?.strut === 'thread')) {
+      wood(pen, 'stick', ox, y - w * 0.6, ox, y - w * 1.25, c * 0.5, random); wood(pen, 'stick', ox + w * 1.2, y - w * 0.6, ox + w * 1.2, y - w * 1.25, c * 0.5, random); wood(pen, 'stick', ox, y - w * 1.25, ox + w * 1.2, y - w * 1.25, c * 0.5, random)
+    }
+    half(ox, left, 0, dip, 0, alpha)
+    // The part that is swapped back is seen going: it lifts out and is gone, and the other comes down into its place.
+    if (coming) { half(ox, right, 1, dip, 0.5 * Math.min(1, swap * 2), alpha * Math.max(0, 1 - swap * 2)); half(ox, coming, 1, dip, 0.5 * Math.max(0, 2 - swap * 2), alpha * Math.max(0, swap * 2 - 1)) }
+    else half(ox, right, 1, dip, 0, alpha)
+    pen.globalAlpha = alpha
     pin(pen, ox, y - w * 0.6, c * 0.5, false); pin(pen, ox + w * 1.2, y - w * 0.6, c * 0.5, false)
     // The block that loads it comes down on the middle.
     cutOut(pen, c, INK.steel, () => pen.rect(ox + w * 0.42, y - w * 0.6 + dip - c * (0.24 + 0.5 * (1 - load)), w * 0.36, c * 0.18))
+    pen.restore()
   }
   const [firstA, firstB] = sides(differences[0]), [secondA, secondB] = sides(differences[1] ?? differences[0])
-  // Side by side they differ in two things; with one part swapped back, in one.
-  model(x, firstA, secondA)
-  model(x + w * 1.7, firstB, swapped ? secondA : secondB)
+  // Side by side they differ in two things; with one part swapped back, in one. The first is set down, and then the
+  // second beside it, from the right.
+  const first = Math.min(1, set * 2), second = Math.max(0, set * 2 - 1)
+  model(x, firstA, secondA, null, first)
+  const done = swap >= 1
+  model(x + w * (1.7 + 0.8 * (1 - second)), firstB, done ? secondA : secondB, !done && swap > 0 ? secondA : null, second)
 }
