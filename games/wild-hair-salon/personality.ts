@@ -100,8 +100,8 @@ const LION: Personality = {
     floorWatched: [bit('lion-peers-over-the-cape', m('lookY', 1, 0, 0.7), m('tilt', 0.4, 0, 0.7), m('brow', 0.5, 0, 0.7))],
     blindfolded: [bit('lion-lifts-it-with-a-paw-and-oohs', m('tilt', -0.4, 0.3, 0.9), m('mouthOpen', 0.8, 0.5, 0.5), m('brow', 1, 0.4, 0.8), m('tail', 1, 0.5, 0.5))],
     bowLoved: [bit('lion-turns-to-show-it', m('tilt', 0.5, 0, 0.6), m('tilt', -0.5, 0.7, 0.6), m('smile', 1, 0, 1.3))],
-    // He hates a bow: he goes cross-eyed and bats at it like a kitten.
-    bowHated: [bit('lion-goes-cross-eyed-and-bats-at-it', m('cross', 1, 0, 1.2), m('lookY', -1, 0, 1.2), m('bob', -0.7, 0.3, 0.12), m('bob', -0.7, 0.6, 0.12), m('bob', -0.7, 0.9, 0.12), m('brow', -0.7, 0, 1.2), m('paw', 1, 0.25, 0.85), m('pawY', -0.95, 0.25, 0.85), m('pawX', -0.25, 0.25, 0.14), m('pawX', 0.25, 0.42, 0.14), m('pawX', -0.25, 0.59, 0.14), m('pawX', 0.25, 0.76, 0.14))],
+    // He hates a bow: he goes cross-eyed and bats at it like a kitten. The paw's move is played about where the bow is (`Puppet.reaching`).
+    bowHated: [bit('lion-goes-cross-eyed-and-bats-at-it', m('cross', 1, 0, 1.2), m('lookY', -1, 0, 1.2), m('bob', -0.7, 0.3, 0.12), m('bob', -0.7, 0.6, 0.12), m('bob', -0.7, 0.9, 0.12), m('brow', -0.7, 0, 1.2), m('paw', 1, 0.25, 0.85), m('pawX', -0.25, 0.25, 0.14), m('pawX', 0.25, 0.42, 0.14), m('pawX', -0.25, 0.59, 0.14), m('pawX', 0.25, 0.76, 0.14))],
     friendPulled: [bit('lion-eyes-cross-tail-stiffens', m('cross', 1, 0, 0.6), m('tail', 1, 0, 0.6), m('wide', 0.8, 0, 0.6))],
     friendSnipped: [bit('lion-shakes-like-a-wet-dog-slowly', m('tilt', 1, 0, 0.16), m('tilt', -1, 0.2, 0.16), m('tilt', 1, 0.4, 0.16), m('tilt', -0.6, 0.6, 0.16), m('blink', 1, 0, 0.7), m('tail', -1, 0.1, 0.6), m('earL', -0.7, 0, 0.7), m('earR', -0.7, 0, 0.7))],
     friendPoked: [bit('lion-deep-hum-ear-flick', m('earL', 1, 0.1, 0.12), m('smile', 0.8, 0, 0.5), m('mouthOpen', 0.25, 0, 0.45))],
@@ -230,7 +230,7 @@ const YAK: Personality = {
     floorWatched: [bit('yak-stares-at-it-for-a-while', m('lookY', 1, 0.2, 1.4), m('tilt', 0.2, 0.2, 1.4), m('nose', 0.5, 0.8, 0.3))],
     blindfolded: [bit('yak-stands-quite-still-then-noses-it-up', m('nose', 1, 0.7, 0.5), m('bob', -0.5, 0.7, 0.5), m('mouthOpen', 0.6, 0.9, 0.4), m('lookY', -0.6, 0.9, 0.4), m('brow', 1, 0.75, 0.6))],
     // He loves a bow: he tucks it under his hair and pats the place.
-    bowLoved: [bit('yak-looks-up-at-it-and-pats-the-place', m('lookY', -1, 0, 0.6), m('sink', 0.25, 0.3, 0.2), m('sink', 0.25, 0.7, 0.2), m('smile', 1, 0.3, 1), m('blink', 1, 0.6, 0.6), m('paw', 1, 0.3, 0.9), m('pawX', 0.3, 0.3, 0.9), m('pawY', -1, 0.3, 0.25), m('pawY', -0.86, 0.55, 0.12), m('pawY', -1, 0.7, 0.2), m('pawY', -0.86, 0.9, 0.12))],
+    bowLoved: [bit('yak-looks-up-at-it-and-pats-the-place', m('lookY', -1, 0, 0.6), m('sink', 0.25, 0.3, 0.2), m('sink', 0.25, 0.7, 0.2), m('smile', 1, 0.3, 1), m('blink', 1, 0.6, 0.6), m('paw', 1, 0.3, 0.9), m('pawY', -0.14, 0.3, 0.25), m('pawY', -0.14, 0.7, 0.2))],
     bowHated: [bit('yak-blows-at-it-until-it-turns', m('nose', 1, 0, 1), m('lookY', -1, 0, 1), m('brow', -0.6, 0, 1))],
     friendPulled: [bit('yak-eyes-cross-nostrils-flare', m('cross', 1, 0.1, 0.8), m('nose', 1, 0.1, 0.8), m('brow', 0.8, 0.1, 0.8))],
     friendSnipped: [bit('yak-slow-shudder-from-nose-to-tail', m('nose', 1, 0, 0.3), m('shift', 0.3, 0.2, 0.2), m('shift', -0.3, 0.45, 0.2), m('tail', 1, 0.6, 0.3), m('blink', 1, 0.2, 0.6))],

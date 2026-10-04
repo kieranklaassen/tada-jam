@@ -15,7 +15,7 @@ const G = 2600
 /** How fast an offcut of ribbon comes down, in scene units a second. */
 const LEAF_FALL = 240
 /** The most puffs of fluff in the air at once. */
-export const MOST_PUFFS = 8
+export const MOST_PUFFS = 24
 
 /** What the whole mane can do of its own accord. */
 export type Mood = 'droop' | 'wave' | 'up'
@@ -46,7 +46,7 @@ export class Hair {
   private held: { what: StrandId | number; to: Point; root: Point } | null = null
   /** The piece or the ribbon carried in the fingers, and where. */
   carried: { what: Clipping | 'ribbon'; at: Point } | null = null
-  /** Scissors are near: the whole mane stands on end and trembles for as long as this is set. */
+  /** Scissors are near: the whole mane trembles for as long as this is set. */
   scared = false
   private bristle = 0
   private mood: { kind: Mood; t: number; lasts: number } | null = null
@@ -183,7 +183,9 @@ export class Hair {
 
   /** A few puffs of fluff float up from a point. */
   fluff(from: Point, hue: string, count: number): void {
-    for (let i = 0; i < count && this.puffs.length < MOST_PUFFS; i++) {
+    // Every cut has its fluff: when there is no room, the oldest puffs in the air make way.
+    if (this.puffs.length + count > MOST_PUFFS) this.puffs.splice(0, this.puffs.length + count - MOST_PUFFS)
+    for (let i = 0; i < count; i++) {
       this.puffs.push({ x: from.x + this.rng.range(-10, 10), y: from.y + this.rng.range(-8, 8), vx: this.rng.range(-40, 40), vy: this.rng.range(-110, -50), r: this.rng.range(5, 11), age: 0, life: this.rng.range(0.7, 1.2), hue, rolls: false })
     }
   }
@@ -328,9 +330,10 @@ export class Hair {
         stiffness = 300
         damping = 28
       }
-      // The mane has feelings of its own: it stands on end and trembles at the scissors, droops, or lets a wave run through it.
+      // The mane has feelings of its own: it trembles at the scissors, droops, or lets a wave run through it.
       let long = tuft.rest
-      if (this.bristle > 0.01) { long *= 1 + 0.15 * this.bristle; lean += 0.07 * this.bristle * Math.sin(this.time * 46 + index * 1.9) }
+      // Scared, it trembles where it stands and is no longer for it: a tuft is cut where it is seen to be.
+      if (this.bristle > 0.01) lean += 0.09 * this.bristle * Math.sin(this.time * 46 + index * 1.9)
       if (mood) {
         const swell = Math.max(0, Math.min(1, mood.t / 0.15, (mood.lasts - mood.t) / 0.25)), middle = (this.tufts.length - 1) / 2
         if (mood.kind === 'droop') { long *= 1 - 0.22 * swell; lean += ((index - middle) / Math.max(1, middle)) * 0.34 * swell }

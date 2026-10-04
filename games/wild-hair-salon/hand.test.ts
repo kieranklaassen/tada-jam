@@ -3,7 +3,7 @@ import { GRID } from './grid'
 import { BLADES, Hand, RUB_STROKE, type Happening } from './hand'
 import { MANES } from './kits'
 import { BESIDE_X, COLLAR_Y, HEAD, LOCK_X, PEG, STEP } from './layout'
-import { BUTTONS, clippingBox, floorX, floorY, onHead, placeOnFloor, placesOf, tuftPose, tuftTip, type Point } from './poses'
+import { BUTTONS, clippingBox, crossedBy, floorX, floorY, onHead, placeOnFloor, placesOf, tuftPose, tuftTip, type Point } from './poses'
 import { TUFTS } from './rules'
 import type { Salon } from './world'
 
@@ -211,6 +211,28 @@ describe('the finger', () => {
     expect(cells(rubbed.happenings).map((h) => h.cell)).toEqual([GRID.clipping.ruffle])
   })
 
+  it('cuts the piece the blades cross, and no other, when the same stroke has just cut a lock and the floor was full', () => {
+    // Twelve pieces: the lock's offcut takes the oldest away and moves the rest along the list.
+    const pieces = Array.from({ length: 12 }, (_, i) => ({ len: 20 + i, hue: 'lion' as const, on: 'floor' as const, x: 4 + i * 5 }))
+    const start = salon({ lock: 90, seat: 'across', clippings: pieces })
+    // One move of the blades, through the lock and on down to a piece on the floor to the left of it.
+    const box = clippingBox(start, start.clippings[6])!
+    const a = { x: LOCK_X + 40, y: tipY(30) }, b = { x: box.x - (a.x - box.x) * 0.1, y: box.y + (box.y - a.y) * 0.1 }
+    const crossed = crossedBy(start, a, b)
+    expect(crossed[0]).toMatchObject({ object: 'lock' })
+    const met = crossed.find((hit) => hit.object === 'clipping') as { index: number }
+    expect(met.index).toBeGreaterThanOrEqual(2)
+    const theOne = start.clippings[met.index], itsNeighbour = start.clippings[met.index + 1]
+    const hand = new Hand()
+    let step = hand.press(start, air, 0)
+    step = hand.move(step.salon, bladesAt(a), 0.05)
+    step = hand.move(step.salon, bladesAt(b), 0.1)
+    expect(step.salon.lock).toBeLessThan(90)
+    expect(step.salon.clippings).toHaveLength(12)
+    expect(step.salon.clippings).not.toContain(theOne)
+    expect(step.salon.clippings).toContain(itsNeighbour)
+  })
+
   it('gives every press one ending, and holds nothing afterwards', () => {
     for (const first of [onLock(20), air, { x: HEAD.x, y: HEAD.y }, placesOf(salon()).knot!]) {
       const hand = new Hand()
@@ -250,6 +272,17 @@ describe('the ribbon in the fingers', () => {
     expect(to({ x: HEAD.x, y: HEAD.y }).salon.ribbon).toEqual({ len: 60, at: 'face', who: 'chair' })
     expect(to({ x: friend.x, y: friend.y }).salon.ribbon).toEqual({ len: 60, at: 'face', who: 'friend' })
     expect(to({ x: floorX(80), y: floorY(80) }).salon.ribbon).toEqual({ len: 60, at: 'floor', x: 80 })
+  })
+
+  it('goes round the head when it is let go on a piece that is stuck on a face, and answers as it does on the face itself', () => {
+    const start = withRibbon({ clippings: [{ len: 20, hue: 'lion', on: 'face', who: 'friend', spot: 'lip' }] })
+    const box = clippingBox(start, start.clippings[0])!
+    const done = drag(new Hand(), start, [clip, { x: 800, y: 300 }, { x: box.x, y: box.y }])
+    expect(done.salon.ribbon).toEqual({ len: 60, at: 'face', who: 'friend' })
+    const cell = cells(done.happenings)[0]
+    expect(cell.cell).toBe(GRID.face.ribbon)
+    expect(cell.held).toMatchObject({ object: 'face', who: 'friend' })
+    expect(done.salon.clippings).toEqual(start.clippings)
   })
 
   it('goes back to its peg when it is let go over nothing, or over a thing that only moves the game on', () => {

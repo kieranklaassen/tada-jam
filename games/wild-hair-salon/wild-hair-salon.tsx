@@ -229,6 +229,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       frame = 0
       clock.rest()
       abandon(touch.clear())
+      // A scene that was playing ends here, in the state it was saved in when it began, and is not gone on with later.
+      if (!spike) play.putAway()
       cadence.settle(performance.now())
     })
     attendRef.current = (attended) => attention.set(attended)

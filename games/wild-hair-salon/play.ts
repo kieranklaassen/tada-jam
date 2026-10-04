@@ -3,7 +3,7 @@ import { Hair, type StrandId } from './hair'
 import { Hand, type Happening, type Held } from './hand'
 import type { Gesture } from './input'
 import { PERSONALITIES, type Reaction } from './personality'
-import { clippingBox, placesOf, stripOf, tuftRoot, type Button, type Point } from './poses'
+import { bowOn, clippingBox, placesOf, stripOf, tuftRoot, type Button, type Point } from './poses'
 import { Puppet } from './puppet'
 import { makeRng } from './rng'
 import { TUFTS } from './rules'
@@ -32,6 +32,8 @@ const near = (salon: Salon, piece: Salon['clippings'][number], p: Point): number
 
 /** A second tap this soon after the one that began a scene, and this near it, is taken as part of the same touch. */
 const ECHO_S = 1, ECHO_REACH = 70
+/** The most notes that wait their turn: a few frames' worth, so nothing is heard late. */
+const MOST_WAITING = MOST_NOTES * 5
 
 /** How often, in seconds, something stirs by itself while nobody is touching. */
 const STIR_EVERY = 6
@@ -110,9 +112,10 @@ export class Play implements Cast {
 
   /** The notes to play now, a few at most, or nothing. */
   takeNotes(): Note[] {
-    // What a touch set off is held to a few; what a customer says in a scene is its own short phrase and is played whole.
-    const notes = [...this.notes.slice(0, MOST_NOTES), ...this.said]
-    this.notes = []
+    // What a touch set off starts a few at a time, and the rest on the frames that follow, so that a stroke through
+    // everything is a flurry in which each thing is heard; what a customer says in a scene is its own short phrase and is played whole.
+    const notes = [...this.notes.splice(0, MOST_NOTES), ...this.said]
+    if (this.notes.length > MOST_WAITING) this.notes.length = MOST_WAITING
     this.said = []
     return notes
   }
@@ -251,8 +254,9 @@ export class Play implements Cast {
         return
       case 'tap':
         this.took(game, hand.tap(game, gesture.at), 0)
-        // A poke holds nothing: the hair it touched is free to wobble.
+        // A poke holds nothing: the hair it touched is free to wobble, and a ribbon or a piece it touched is where it was.
         this.hair.release()
+        this.hair.carried = null
         return
       case 'dragMove':
         this.lifted = false
@@ -294,6 +298,17 @@ export class Play implements Cast {
     this.hair.scissorsOut()
     this.hair.scared = false
     for (const puppet of [this.puppets.chair, this.puppets.friend]) { puppet?.pulledTowards(null); puppet?.cheekHeld(null) }
+  }
+
+  /**
+   * The game is put away. A scene that was playing ends there, with everyone
+   * where it would have put them, so the game is found in that state however
+   * it is opened again; and what was waiting to sound does not.
+   */
+  putAway(): void {
+    this.endScene()
+    this.notes = []
+    this.said = []
   }
 
   /** Plays `dt` seconds. `idle` says no finger is working. */
@@ -362,7 +377,7 @@ export class Play implements Cast {
       case 'looked': for (const puppet of this.waiting ?? []) puppet.react('looksAbout'); return
       case 'scissors':
         hair.scissorsIn(h.at)
-        // The mane does not like the look of scissors: it stands on end for as long as they are out.
+        // The mane does not like the look of scissors: it trembles for as long as they are out.
         hair.scared = before.chair !== null && before.cape === 'on'
         return
       case 'airSnip': hair.scissorsClose(); return
@@ -445,6 +460,8 @@ export class Play implements Cast {
         const bow = taste('chair')?.bow === 'hates' ? 'bowHated' as const : 'bowLoved' as const
         hair.carried = null
         react(chair, bow)
+        // A paw that goes for the bow goes to the tuft it is on.
+        if (chair) chair.reaching = bowOn(after)
         if (after.chair) this.say(after.chair, bow)
         return
       }

@@ -249,6 +249,20 @@ describe('what the scissors cross', () => {
     for (const hit of hits) expect(hit.at > 20 && hit.at < 90).toBe(true)
   })
 
+  it('cuts a tuft where it was crossed: the stump ends at the blades, whatever the customer and however long the tuft', () => {
+    for (const who of CUSTOMERS) for (const steps of [40, 90]) for (const t of [0.75, 0.9]) {
+      const s = salon({ chair: who, friend: CUSTOMERS.find((other) => other !== who)!, mane: Array(TUFTS).fill(steps) })
+      const root = rootOf(4, who), tip = tipOf(4, steps, who), at = mid(root, tip, t)
+      // Across the tuft, at right angles to it.
+      const along = { x: (tip.x - root.x) / Math.hypot(tip.x - root.x, tip.y - root.y), y: (tip.y - root.y) / Math.hypot(tip.x - root.x, tip.y - root.y) }
+      const hit = crossedBy(s, { x: at.x - along.y * 20, y: at.y + along.x * 20 }, { x: at.x + along.y * 20, y: at.y - along.x * 20 }).find((found) => found.object === 'tuft' && found.index === 4) as { at: number } | undefined
+      if (!hit) continue
+      // A tuft cut to that many steps reaches from its root to where the blades were, to within a step's rounding.
+      const left = Math.max(0, Math.round(hit.at))
+      expect(Math.abs(tuftPose(who, 4, left).reach - Math.hypot(at.x - root.x, at.y - root.y)), `${who} ${steps} ${t}`).toBeLessThan(MANES[who].step * 1.5)
+    }
+  })
+
   it('crosses a face once, as the blades come in over the middle of it, and cuts no hair inside it', () => {
     const s = salon()
     const hits = crossedBy(s, { x: HEAD.x - 200, y: HEAD.y }, { x: HEAD.x, y: HEAD.y })

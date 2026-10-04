@@ -6,7 +6,7 @@ import { hintFor, type Hint } from './ladder'
 import { BESIDE_X, CHAIR, COLLAR_Y, DOOR, FLOOR_Y, HEAD, LOCK_X, LOOKING_GLASS, PEG, STEP, STRIP_W, fit } from './layout'
 import { FLUFF, LOOKS, RIBBON, hueOf } from './looks'
 import type { Play } from './play'
-import { SPOT_Y, clippingBox, onHead, placesOf, ribbonShape, tuftPose, tuftTip, type Point } from './poses'
+import { SPOT_Y, bowOn, clippingBox, onHead, placesOf, ribbonShape, tuftPose, tuftTip, type Point } from './poses'
 import { TAIL_LEN } from './rules'
 import { PAW_HOME, SHOULDER, TAIL_OF_CUSTOMER, tailOf } from './scenes'
 import type { Sprites } from './sprites'
@@ -94,6 +94,8 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
       pieces: game.clippings.filter((c) => c.on === 'face' && c.who === who && !hair.flights.has(c) && hair.carried?.what !== c).map((c) => (c.on === 'face' ? { y: SPOT_Y[c.spot], half: (c.len * STEP) / 2, hue: c.hue } : { y: 0, half: 0, hue: c.hue })),
       blindfold: !carriedRibbon && staging.ribbon === null && shape?.kind === 'worn' && shape.as === 'blindfold' && game.ribbon?.at === 'face' && game.ribbon.who === who,
       hat: staging.hats,
+      // A bow sits on the end of its tuft and goes wherever the head goes.
+      bow: who === 'chair' && !carriedRibbon && staging.ribbon === null ? bowOn(game) : null,
     })
     const customer = play.customer(), other = play.friend()
     // Its limbs come later, over the cape and the strips: a paw that pats its lock and a foot that thumps are out in front of both.
@@ -155,8 +157,6 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
       g.fill()
       g.stroke()
      drawn += 2
-      // A bow at the end of a tuft.
-      if (shape && !carriedRibbon && staging.ribbon === null && shape.kind === 'worn' && shape.as === 'bow') drawn += bow(g, shape.at.x, shape.at.y, 0)
     }
 
     if (seated) drawn += drawLimbs(g, seated)
@@ -195,7 +195,8 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
     if (staging.ribbon) drawn += hanging(g, staging.ribbon, staging.ribbon.len * STEP, hair.strands.ribbon, play.time, RIBBON, 0, true, true)
     else if (shape?.kind === 'hang' && game.ribbon.at === 'peg') drawn += hanging(g, shape.root, game.ribbon.len * shape.unit, hair.strands.ribbon, play.time, RIBBON, 0, true, true)
     else if (shape?.kind === 'lie') {
-      drawn += ribbonOnFloor(g, shape.from, game.ribbon.len * shape.unit, hair.strands.ribbon.flutter, play.time)
+      // Poked where it lies, it jumps up short and drops back to its length, as it does where it hangs.
+      drawn += ribbonOnFloor(g, shape.from, game.ribbon.len * shape.unit * Math.max(0.3, hair.strands.ribbon.stretch.x), hair.strands.ribbon.flutter, play.time)
       drawn += clip(g, shape.from.x - 8, shape.from.y, Math.PI / 2)
     }
   } else if (staging.ribbon) drawn += hanging(g, staging.ribbon, staging.ribbon.len * STEP, hair.strands.ribbon, play.time, RIBBON, 0, true, true)
@@ -436,32 +437,6 @@ function clip(g: Ctx, x: number, y: number, turn: number): number {
   g.lineWidth = 2
   g.beginPath()
   g.rect(-11, -22, 22, 40)
-  g.fill()
-  g.stroke()
-  g.restore()
-  return 2
-}
-
-/** The ribbon tied as a bow: two loops, a knot and two short ends. */
-function bow(g: Ctx, x: number, y: number, turn: number): number {
-  g.save()
-  g.translate(x, y)
-  g.rotate(turn)
-  g.fillStyle = RIBBON.fill
-  g.strokeStyle = RIBBON.edge
-  g.lineWidth = 2.2
-  g.beginPath()
-  for (const side of [-1, 1]) {
-    g.moveTo(0, 0)
-    g.quadraticCurveTo(side * 26, -30, side * 38, -6)
-    g.quadraticCurveTo(side * 30, 16, 0, 0)
-    g.moveTo(side * 3, 4)
-    g.lineTo(side * 18, 30)
-    g.lineTo(side * 6, 32)
-    g.closePath()
-  }
-  g.moveTo(9, 0)
-  g.arc(0, 0, 9, 0, Math.PI * 2)
   g.fill()
   g.stroke()
   g.restore()

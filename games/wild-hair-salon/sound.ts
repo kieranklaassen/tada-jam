@@ -15,7 +15,7 @@ export type Note = VoiceSpec & { after?: number }
 /** A giggle is different on the nose, an ear and the chin: the same voice, higher or lower. */
 const PART_PITCH = { nose: 1.25, ear: 1.5, chin: 0.75, cheek: 1 } as const
 
-/** The most notes one frame may start, so a stroke through the whole mane is a flurry and not a wall. */
+/** The most notes one frame may start, so a stroke through the whole mane is a flurry and not a wall. The rest start on the frames after. */
 export const MOST_NOTES = 4
 
 /** What a customer says, with the cape off, about its lock, its mane, a bow or what is on its face: its own noise for it. */

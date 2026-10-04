@@ -43,6 +43,8 @@ export type Wears = {
   blindfold: boolean
   /** A rain hat, hair tucked under: 0 off, 1 on. */
   hat: number
+  /** The ribbon tied as a bow, where it sits relative to the head's centre. */
+  bow?: Point | null
 }
 
 export type Figure = {
@@ -148,6 +150,8 @@ export function drawFigure(g: Ctx, sprites: Sprites, figure: Figure): number {
   // The looking glass shows the head and not the limbs: the oval is too small for them.
   if (!figure.flipped && !figure.limbsLater) drawn += limbs(g, puppet, look)
 
+  if (figure.wears.bow) drawn += bow(g, figure.wears.bow.x, figure.wears.bow.y)
+
   if (figure.wears.hat > 0) {
     g.save()
     g.globalAlpha *= Math.min(1, figure.wears.hat * 2)
@@ -184,7 +188,9 @@ function limbs(g: Ctx, puppet: Puppet, look: Look): number {
   const out = Math.max(0, Math.min(1, puppet.at('paw'))), foot = Math.max(0, Math.min(1, puppet.at('foot')))
   let drawn = 0
   if (out > 0.05) {
-    const x = puppet.at('pawX') * 130, y = puppet.at('pawY') * 130, sides = puppet.at('paws') > 0.5 ? [1, -1] : [x < 0 ? -1 : 1]
+    // A paw that is after something on the head goes to where that thing is, and its move is played about that place.
+    const about = puppet.reaching ?? { x: 0, y: 0 }
+    const x = about.x + puppet.at('pawX') * 130, y = about.y + puppet.at('pawY') * 130, sides = puppet.at('paws') > 0.5 ? [1, -1] : [x < 0 ? -1 : 1]
     // Each arm comes up from under the chin on its own side to where its paw is.
     const reach = sides.map((side) => { const to = { x: Math.abs(x) * side, y }, from = { x: side * 58, y: 136 }; return { from, at: { x: from.x + (to.x - from.x) * out, y: from.y + (to.y - from.y) * out }, side } })
     g.lineCap = 'round'
@@ -411,4 +417,29 @@ export function features(g: Ctx, puppet: Puppet, look: Look, small: boolean, par
   }
   if (pencilled.length) { lines(g, pencilled, 2.1, 0.85); drawn++ }
   return drawn
+}
+
+/** The ribbon tied as a bow: two loops, a knot and two short ends. */
+function bow(g: Ctx, x: number, y: number): number {
+  g.save()
+  g.translate(x, y)
+  g.fillStyle = RIBBON.fill
+  g.strokeStyle = RIBBON.edge
+  g.lineWidth = 2.2
+  g.beginPath()
+  for (const side of [-1, 1]) {
+    g.moveTo(0, 0)
+    g.quadraticCurveTo(side * 26, -30, side * 38, -6)
+    g.quadraticCurveTo(side * 30, 16, 0, 0)
+    g.moveTo(side * 3, 4)
+    g.lineTo(side * 18, 30)
+    g.lineTo(side * 6, 32)
+    g.closePath()
+  }
+  g.moveTo(9, 0)
+  g.arc(0, 0, 9, 0, Math.PI * 2)
+  g.fill()
+  g.stroke()
+  g.restore()
+  return 2
 }

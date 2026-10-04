@@ -117,6 +117,13 @@ export function tuftTip(pose: TuftPose): Point {
   return { x: pose.base.x + Math.sin(pose.angle) * pose.reach, y: pose.base.y - Math.cos(pose.angle) * pose.reach }
 }
 
+/** Where a bow sits, relative to the customer's head: the free end of the tuft it is tied on. Nothing when the ribbon is not a bow. */
+export function bowOn(salon: Salon): Point | null {
+  const ribbon = salon.ribbon
+  if (!ribbon || ribbon.at !== 'mane' || salon.chair === null) return null
+  return tuftTip(tuftPose(salon.chair, ribbon.tuft, salon.mane[ribbon.tuft] ?? 0, salon.mane.length))
+}
+
 /** A point given in an actor's head units, in the scene. */
 export function onHead(actor: Actor, local: Point): Point {
   return { x: actor.x + local.x * actor.s, y: actor.y + local.y * actor.s }
@@ -360,8 +367,9 @@ export function crossedBy(salon: Salon, a: Point, b: Point): Crossed[] {
     salon.mane.forEach((steps, index) => {
       const pose = tuftPose(who, index, steps, salon.mane.length)
       const cut = crossing(a, b, onHead(customer, pose.base), onHead(customer, tuftTip(pose)))
-      // Only the part of a tuft that shows outside the face can be cut.
-      if (cut && !inHead(toHead(customer, at(cut.u)))) found.push({ u: cut.u, hit: { object: 'tuft', index, at: cut.v * steps, where: at(cut.u) } })
+      // Only the part of a tuft that shows outside the face can be cut. It is cut where it was crossed: a tuft has a
+      // root that is no part of its length, so how far along the blades were is turned back into steps.
+      if (cut && !inHead(toHead(customer, at(cut.u)))) found.push({ u: cut.u, hit: { object: 'tuft', index, at: Math.max(0, (cut.v * pose.reach - MANES[who].base) / MANES[who].step), where: at(cut.u) } })
     })
   }
   for (const who of ['chair', 'friend'] as const) {

@@ -178,13 +178,14 @@ describe('the mane', () => {
     expect(hair.tufts.every((tuft) => tuft.frizz === 0)).toBe(true)
   })
 
-  it('stands the whole mane on end, trembling, for as long as scissors are near, and lets it down when they go', () => {
+  it('sets the whole mane trembling for as long as scissors are near, no longer than it is, and lets it be when they go', () => {
     const hair = fresh()
     run(hair, 1)
     hair.scared = true
     let leans = new Set<number>()
     run(hair, 0.6, salon(), 60, () => leans.add(Math.round(hair.tufts[2].lean.x * 500)))
-    for (const tuft of hair.tufts) expect(tuft.stretch.x).toBeGreaterThan(1.08)
+    // It is cut where it is seen to be, so being scared makes no tuft longer.
+    for (const tuft of hair.tufts) expect(tuft.stretch.x).toBeCloseTo(1, 2)
     expect(leans.size).toBeGreaterThan(4)
     expect(hair.settled).toBe(false)
     hair.scared = false
@@ -268,12 +269,16 @@ describe('the mane', () => {
     const hair = fresh()
     hair.tuftSnipped(2, { x: 400, y: 200 }, 'lion')
     expect(hair.puffs.length).toBe(5)
-    expect(MOST_PUFFS).toBeLessThanOrEqual(8)
+    expect(MOST_PUFFS).toBeLessThanOrEqual(24)
     hair.step(0.2, salon())
     expect(hair.puffs.every((puff) => puff.y < 215)).toBe(true)
     run(hair, 2)
     expect(hair.puffs).toEqual([])
     for (let i = 0; i < 20; i++) hair.fluff({ x: 1, y: 1 }, 'fluff', 5)
+    expect(hair.puffs.length).toBeLessThanOrEqual(MOST_PUFFS)
+    // However many are in the air, the next cut has all of its own: the oldest make way.
+    hair.fluff({ x: 700, y: 300 }, 'poodle', 5)
+    expect(hair.puffs.filter((puff) => puff.hue === 'poodle')).toHaveLength(5)
     expect(hair.puffs.length).toBeLessThanOrEqual(MOST_PUFFS)
   })
 })

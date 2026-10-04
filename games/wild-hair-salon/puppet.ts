@@ -22,6 +22,8 @@ export function ease(spring: Spring, target: number, stiffness: number, damping:
 /** The parts that have a left and a right: a bit played the other way round moves these the other way. */
 const SIDED: readonly Part[] = ['lookX', 'tilt', 'shift']
 
+const pawed = (bit: Bit): boolean => bit.moves.some((m) => m.part === 'paw')
+
 /** Which way round a bit is played: as written, the other way round, or the other way round from its second look on. */
 export type Turn = boolean | 'second'
 
@@ -34,6 +36,8 @@ export class Puppet {
   private readonly rng: Rng
   private readonly parts: Record<Part, Spring>
   private playing: { bit: Bit; t: number; from: number }[] = []
+  /** Where on its head the thing is that a paw is after, relative to the head's centre: a move of the paw is played about that place. */
+  reaching: { x: number; y: number } | null = null
   private untilIdle: number
   /** 0 to 1 through one breath. */
   breath = 0
@@ -74,6 +78,8 @@ export class Puppet {
    */
   play(bit: Bit, turned: Turn = false): void {
     const later = bit.moves.filter((m) => SIDED.includes(m.part) && m.at > 0).map((m) => m.at)
+    // A new move of the paw is about its own place, until it is told otherwise.
+    if (pawed(bit)) this.reaching = null
     this.playing.push({ bit, t: 0, from: turned === true ? 0 : turned === 'second' && later.length > 0 ? Math.min(...later) : Infinity })
     this.started.push(bit.id)
   }
@@ -92,6 +98,7 @@ export class Puppet {
   /** Everything it was doing stops, and every part is at rest: where a scene that was cut short leaves it. */
   rest(): void {
     this.playing = []
+    this.reaching = null
     for (const part of PARTS) { this.parts[part].x = this.personality.rest[part] ?? 0; this.parts[part].v = 0 }
   }
 

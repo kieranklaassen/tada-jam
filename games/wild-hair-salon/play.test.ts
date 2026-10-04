@@ -5,7 +5,7 @@ import { alike } from './voices'
 import { BESIDE_X, COLLAR_Y, HEAD, LOCK_X, PEG, STEP } from './layout'
 import { PERSONALITIES } from './personality'
 import { Play } from './play'
-import { BUTTONS, floorX, floorY, placesOf } from './poses'
+import { BUTTONS, floorX, floorY, placesOf, ribbonShape } from './poses'
 import { MEET, TAIL_LEN, TUFTS } from './rules'
 import { deserializeGame, freshGame, serializeGame, type Game } from './save'
 import { DOORWAY } from './staging'
@@ -102,6 +102,53 @@ describe('a second tap', () => {
     tap(door, DOOR)
     expect(door.inScene).toBe(true)
     expect(door.game!.chair).not.toBeNull()
+  })
+})
+
+describe('a tap', () => {
+  it('holds nothing afterwards: a ribbon tapped by its clip hangs where it hung, and is not in the fingers', () => {
+    const play = seated({ shown: { snip: true, pull: true, ribbon: true }, ribbon: { len: 40, at: 'peg' } })
+    tap(play, { x: PEG.x, y: PEG.y - 14 })
+    expect(play.hair.carried).toBeNull()
+    const bow = seated({ shown: { snip: true, pull: true, ribbon: true }, ribbon: { len: 40, at: 'mane', tuft: 4 } })
+    const at = ribbonShape(bow.game!)!
+    tap(bow, at.kind === 'worn' ? at.at : { x: 0, y: 0 })
+    expect(bow.hair.carried).toBeNull()
+    expect(bow.game!.ribbon).toEqual({ len: 40, at: 'mane', tuft: 4 })
+  })
+})
+
+describe('what a stroke sets off', () => {
+  it('is all heard: more notes than one frame may start are started on the frames after, none dropped', () => {
+    const play = seated({ lock: 80, model: 50, seat: 'beside', cape: 'on' })
+    play.takeNotes()
+    // One stroke of the scissors through the model and the lock: a snip, a twang, a giggle, a pop, a shake.
+    drag(play, [AIR, { x: BESIDE_X + 60, y: COLLAR_Y + 30 * STEP - BLADES.y }, { x: LOCK_X - 60, y: COLLAR_Y + 30 * STEP - BLADES.y }])
+    expect(play.game!.lock).toBe(30)
+    const first = play.takeNotes()
+    let later = 0
+    for (let i = 0; i < 8; i++) later += play.takeNotes().length
+    expect(first.length).toBeGreaterThan(0)
+    expect(later).toBeGreaterThan(0)
+    expect(play.takeNotes()).toEqual([])
+  })
+})
+
+describe('put away in the middle of a scene', () => {
+  it('ends the scene there, with everyone where it would have put them, and nothing left to sound', () => {
+    const play = seated()
+    tap(play, knotOf(play))
+    run(play, 1.2, true)
+    expect(play.inScene).toBe(true)
+    play.putAway()
+    expect(play.inScene).toBe(false)
+    expect(play.game!.cape).toBe('off')
+    const places = placesOf(play.game!)
+    expect(play.staging).toMatchObject({ friend: { x: places.friend!.x }, cape: 0, paw: null, fx: null })
+    expect(play.takeNotes()).toEqual([])
+    // Back again, nothing goes on from where it was: the pair stand as the scene left them.
+    run(play, 1, true)
+    expect(play.inScene).toBe(false)
   })
 })
 
@@ -302,7 +349,7 @@ describe('left alone', () => {
 })
 
 describe('the mane and the scissors', () => {
-  it('stands on end while the scissors are out over a customer under the cape, and not in an empty salon or with the cape off', () => {
+  it('trembles while the scissors are out over a customer under the cape, and not in an empty salon or with the cape off', () => {
     const play = seated()
     play.gesture({ type: 'press', at: AIR })
     expect(play.hair.scared).toBe(true)

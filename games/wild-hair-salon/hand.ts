@@ -227,7 +227,10 @@ export class Hand {
   private bring(salon: Salon, p: Point): Step {
     // What is under the finger, as if the ribbon itself were not there.
     const under = whatIsAt({ ...salon, ribbon: null }, p)
-    const held: Held = !under || under.object === 'button' || under.object === 'ribbon' || under.object === 'ribbonClip' ? { object: 'ribbon' } : heldOf(under)
+    // A piece stuck on a face is part of that face to the ribbon, which goes round the head.
+    const worn = under?.object === 'clipping' ? salon.clippings[under.index] : null
+    const held: Held = worn?.on === 'face' ? { object: 'face', who: worn.who, part: 'cheek' }
+      : !under || under.object === 'button' || under.object === 'ribbon' || under.object === 'ribbonClip' ? { object: 'ribbon' } : heldOf(under)
     const done = act(salon, targetOf(held), { action: 'ribbon' })
     if (!done.cell) return { salon, happenings: [{ kind: 'letGo', held: { object: 'ribbonClip' }, at: p }] }
     return { salon: done.salon, happenings: [{ kind: 'cell', object: targetOf(held).object as ObjectId, action: 'ribbon', cell: done.cell, held, at: p, rings: null, piece: null, place: null, sprangBack: false }] }
@@ -249,6 +252,8 @@ export class Hand {
     const happenings: Happening[] = []
     const to = blades(p)
     let cutClipping = false
+    // The pieces as they lay when the blades moved: a cut earlier in this stroke can take one away and move the rest along the list.
+    const lay = salon.clippings
     for (const crossed of crossedBy(salon, holding.last, to)) {
       if (crossed.object === 'face') {
         // Once for each time the blades come in over a face.
@@ -260,7 +265,9 @@ export class Hand {
       }
       // One piece on the floor for each stroke: cutting one moves the others along the list.
       if (crossed.object === 'clipping' && cutClipping) continue
-      const target: Target = crossed.object === 'tuft' ? { object: 'tuft', index: crossed.index } : crossed.object === 'clipping' ? { object: 'clipping', index: crossed.index } : { object: crossed.object }
+      const now = crossed.object === 'clipping' ? salon.clippings.indexOf(lay[crossed.index]) : 0
+      if (now < 0) continue
+      const target: Target = crossed.object === 'tuft' ? { object: 'tuft', index: crossed.index } : crossed.object === 'clipping' ? { object: 'clipping', index: now } : { object: crossed.object }
       const before = salon.clippings
       const done = act(salon, target, { action: 'snip', at: crossed.object === 'clipping' ? 0 : crossed.at })
       if (!done.cell) continue

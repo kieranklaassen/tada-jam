@@ -6,7 +6,7 @@ import { PERSONALITIES } from './personality'
 import { Play } from './play'
 import { Puppet } from './puppet'
 import { makeRng } from './rng'
-import { BUTTONS, placesOf } from './poses'
+import { BUTTONS, placesOf, ribbonShape } from './poses'
 import { blankSheets, bounds, recordingSheet, type Recording } from './recorder'
 import { Sprites } from './sprites'
 import { CUSTOMERS } from './tastes'
@@ -240,6 +240,45 @@ describe('the ribbon on the floor', () => {
     const band = kept.shapes.find((shape) => shape.kind === 'fill' && shape.style === hueOf('ribbon').fill && bounds(shape.points).w > 100)!
     const top = band.points.slice(0, band.points.length / 2).map((p) => Math.round(p.y))
     expect(Math.max(...top) - Math.min(...top)).toBeGreaterThanOrEqual(8)
+  })
+})
+
+describe('a poke on the ribbon where it lies', () => {
+  it('is seen: it jumps up short and comes back to its length', () => {
+    const play = seated({ ribbon: { len: 60, at: 'floor', x: 40 }, shown: { snip: true, pull: true, ribbon: true } })
+    const long = (): number => {
+      const kept: Recording = { shapes: [], stamps: [], texts: 0 }
+      drawFrame(recordingSheet(1180, 820, kept).g as Ctx, 1180, 820, new Sprites(blankSheets, 1180, 820, 1), { play, guidance: null })
+      return Math.max(...kept.shapes.filter((shape) => shape.kind === 'fill' && shape.style === hueOf('ribbon').fill).map((shape) => bounds(shape.points).w))
+    }
+    const before = long()
+    const shape = ribbonShape(play.game!)!
+    tap(play, shape.kind === 'lie' ? { x: shape.from.x + 60, y: shape.from.y } : { x: 0, y: 0 })
+    play.step(1 / 60, false)
+    expect(long()).toBeLessThan(before * 0.8)
+    for (let i = 0; i < 120; i++) play.step(1 / 60, true)
+    expect(long()).toBeCloseTo(before, 0)
+  })
+})
+
+describe('a bow', () => {
+  it('sits on the end of its tuft and goes down with the head when the customer sinks', () => {
+    const play = seated({ ribbon: { len: 40, at: 'mane', tuft: 4 }, shown: { snip: true, pull: true, ribbon: true } })
+    const bowAt = (): { x: number; y: number; w: number; h: number } => {
+      const kept: Recording = { shapes: [], stamps: [], texts: 0 }
+      drawFrame(recordingSheet(1180, 820, kept).g as Ctx, 1180, 820, new Sprites(blankSheets, 1180, 820, 1), { play, guidance: null })
+      const bows = kept.shapes.filter((shape) => shape.kind === 'fill' && shape.style === hueOf('ribbon').fill).map((shape) => bounds(shape.points)).filter((box) => box.y < 300)
+      // On the head, and the other way round in the looking glass.
+      expect(bows.length).toBe(2)
+      return bows.sort((a, b) => b.x - a.x)[0]
+    }
+    for (let i = 0; i < 30; i++) play.step(1 / 60, true)
+    const rest = bowAt(), shape = ribbonShape(play.game!)!
+    expect(shape.kind === 'worn' && Math.abs(rest.x + rest.w / 2 - shape.at.x) < 12).toBe(true)
+    play.customer()!.react('maneHated')
+    for (let i = 0; i < 30; i++) play.step(1 / 60, false)
+    expect(play.customer()!.at('sink')).toBeGreaterThan(0.3)
+    expect(bowAt().y).toBeGreaterThan(rest.y + 12)
   })
 })
 

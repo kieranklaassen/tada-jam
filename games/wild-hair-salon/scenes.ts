@@ -2,7 +2,7 @@ import type { Idea } from './cycle'
 import type { Hair } from './hair'
 import { COLLAR_Y, HEAD, STEP } from './layout'
 import { PERSONALITIES } from './personality'
-import { onHead, placesOf, tuftPose, tuftTip, type Actor, type Point } from './poses'
+import { bowOn, onHead, placesOf, tuftPose, tuftTip, type Actor, type Point } from './poses'
 import type { Puppet } from './puppet'
 import { TAIL_LEN } from './rules'
 import type { Game } from './save'
@@ -247,7 +247,7 @@ export function capeComesOff(cast: Cast, before: Game, after: Game, showing: Sho
   if (showing.bow !== null) {
     const reaction = taste.bow === 'loves' ? 'bowLoved' as const : 'bowHated' as const
     const at = t
-    beats.push(cueAt(at, () => { if (!cast.cut) { customer?.react(reaction); cast.say(chair, reaction) } }), over(at, (customer?.lasts(reaction) ?? 1) + 0.1, () => {}))
+    beats.push(cueAt(at, () => { if (!cast.cut) { customer?.react(reaction); if (customer) customer.reaching = bowOn(after); cast.say(chair, reaction) } }), over(at, (customer?.lasts(reaction) ?? 1) + 0.1, () => {}))
     t += (customer?.lasts(reaction) ?? 1) + 0.1
   }
   if (showing.blindfold !== null || showing.worn.chair > 0 || showing.worn.friend > 0) {
