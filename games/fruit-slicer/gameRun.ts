@@ -1,8 +1,9 @@
 import { FLING_SPEED, drop, fling, grab, rollOver, type Held } from './carry'
 import { SHEETS, newActor, poseOf as castPose, reactAfter, reactTo, stepActor, tuftBackAfter, type Actor } from './cast'
+import { decorAt, type Decor } from './decor'
 import type { Ending, Game } from './cycle'
 import { newDog, poseOf as dogPose, react, stepDog, type DogState, type Reaction } from './dogMotion'
-import { CURL_FLIGHT, CURL_LIFE, LID_STRIKES, MOUTH, mark, newFx, rollAlong, spawn, step, whoosh, type FxState } from './fx'
+import { CURL_FLIGHT, CURL_LIFE, LID_STRIKES, MOUTH, answer, answering, mark, newFx, rollAlong, spawn, step, whoosh, type FxState } from './fx'
 import { guideOf, type Guide } from './guide'
 import { handPose, type Guidance, type HandPose } from './guidance'
 import { LANDS_AFTER, newStroke, poke, slice, thingAt, tinAt, type GameEvent, type Stroke, type Whom } from './moves'
@@ -16,6 +17,9 @@ import { answerSeconds, type VoiceId } from './voices'
 import type { Fruit } from './measure'
 import { CAST, type Customer } from './orders'
 import { MOST_EATEN, eaten } from './world'
+
+/** The voice of each thing about the stall that is no part of the task: its own, and nobody else's. */
+const DECOR_VOICE: Readonly<Record<Decor, VoiceId>> = { umbrella: 'pomf', longDog: 'yip', barrow: 'squeak', lamp: 'ding', bone: 'clatter', cloth: 'flap', bags: 'rustle' }
 
 // The game while it runs: the game itself, what is moving, the cast, the
 // blade or the piece under the finger, the scene that is playing, and the
@@ -113,6 +117,8 @@ export class GameRun {
   /** A serve that the same touch brought about as a glider for one who waits: it plays when the glider is over, so both are seen. */
   private next: { beats: Parameters<typeof followedBy>[0]; show: Show; ending: Ending } | null = null
   private inAir = 0
+  /** The attended time of the frame last drawn: where the passers-by were when the child saw them, which is where a tap finds them. */
+  private seen = 0
   private hand: HandPose = { travel: 0, press: 0, opacity: 0 }
   private scene: Scene | null = null
   private show: Show | null = null
@@ -242,6 +248,16 @@ export class GameRun {
   tap(at: Point): void {
     this.held = null
     this.roller = null
+    // Somebody in the street, a lamp, the cloth, the bags, the bone: each is no part of the task and changes nothing, and each has its own
+    // small answer to a tap, in place of the knock of bare wood or wall.
+    const bare = thingAt(this.game, at).thing
+    const decor = bare === 'wall' || bare === 'counter' ? decorAt(at, this.seen) : null
+    if (decor) {
+      this.fx = answer(this.fx, decor.what, decor.index)
+      this.sounds.push({ id: DECOR_VOICE[decor.what], delay: 0 })
+      this.end()
+      return
+    }
     const result = poke(this.game, at)
     this.take(result.game, result.events)
     this.end()
@@ -310,7 +326,10 @@ export class GameRun {
     const finger = this.blade ?? this.held?.at ?? this.roller
     // A curl of peel that has come down on its head: it looks up at it, cross as that makes it.
     const hat = this.fx.fx.some((one) => one.kind === 'curl' && one.age >= CURL_FLIGHT)
-    const look = hat ? { x: 0, y: -1 } : finger ? { x: (finger.x - MOUTH.x) / 420, y: (finger.y - MOUTH.y) / 260 } : null
+    this.seen = time
+    // Its bone has jumped: it looks down at it.
+    const bone = answering(this.fx, 'bone') >= 0
+    const look = hat ? { x: 0, y: -1 } : bone ? { x: 0, y: 1 } : finger ? { x: (finger.x - MOUTH.x) / 420, y: (finger.y - MOUTH.y) / 260 } : null
     const carried = this.held ? { ids: this.held.held.ids, dx: this.held.at.x - this.held.held.dx - this.held.held.boxes[0].x, dy: this.held.at.y - this.held.held.dy - this.held.held.boxes[0].y } : null
     // With no scene playing, a served customer is in the last pose of its serve: that is what a load finds.
     const rest = this.game.window && this.game.finished ? servedShow(eaten(this.game.world).length) : null

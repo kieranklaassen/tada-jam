@@ -1,6 +1,7 @@
 import { BLUE, PAPER, RED, WHITE, YELLOW, GREEN, type Screens } from './look'
+import { STREET } from './decor'
 import { WALL } from './stage'
-import { passersAt, type Passer } from './street'
+import { passersAt, type Passer, type PasserKind } from './street'
 
 // The passers-by of street.ts, drawn as far things are drawn: thin blue line,
 // flat pale fills, a little dot, and all of it half faded into the paper, so
@@ -11,8 +12,11 @@ import { passersAt, type Passer } from './street'
 type Ctx = CanvasRenderingContext2D
 type Dots = Pick<Screens, 'of'>
 
-/** The line every foot in the street walks on: far enough up the panel for the feet to show over the sill. */
-const GROUND = WALL.y + WALL.h - 24
+/** The line every foot in the street walks on (decor.ts). */
+const GROUND = STREET
+
+/** A bump from 0 up to 1 and back as `t` goes from 0 to 1, and nothing when a thing is not answering (`t` under 0). */
+const bump = (t: number): number => (t < 0 ? 0 : Math.sin(Math.min(1, t) * Math.PI))
 
 function far(ctx: Ctx, path: (c: Ctx) => void, fill: string | null, screen?: CanvasPattern | string): void {
   ctx.beginPath()
@@ -52,9 +56,10 @@ function walker(ctx: Ctx, dots: Dots, x: number, tall: number, stride: number, c
   return neck - tall * 0.24
 }
 
-function umbrella(ctx: Ctx, dots: Dots, one: Passer): number {
-  const top = walker(ctx, dots, one.x, 74, one.stride, BLUE, 0.3)
-  const hand = { x: one.x + one.dir * 12, y: GROUND - 44 }
+function umbrella(ctx: Ctx, dots: Dots, one: Passer, t: number): number {
+  const top = walker(ctx, dots, one.x, 74, one.stride, BLUE, 0.3) - 16 * bump(t)
+  // Tapped, the umbrella jumps up out of the hand's grip and comes down again, tipping as it goes.
+  const hand = { x: one.x + one.dir * 12 + 5 * Math.sin(t < 0 ? 0 : t * Math.PI * 2), y: GROUND - 44 - 10 * bump(t) }
   ctx.beginPath()
   ctx.moveTo(hand.x, hand.y)
   ctx.lineTo(hand.x, top - 20)
@@ -65,8 +70,10 @@ function umbrella(ctx: Ctx, dots: Dots, one: Passer): number {
 }
 
 /** A small person leading a dog that is far too long: it has a third pair of legs in the middle, and they all keep step. */
-function longDog(ctx: Ctx, dots: Dots, one: Passer): number {
+function longDog(ctx: Ctx, dots: Dots, one: Passer, t: number): number {
   const front = one.x + one.dir * 150, back = one.x - one.dir * 150, belly = GROUND - 20
+  // Tapped, its head goes up with a yip in the first part of the answer; the news reaches the far end of it late, and the tail wags after.
+  const yip = t < 0 ? 0 : bump(Math.min(1, t / 0.45)), wag = t > 0.45 ? Math.sin((t - 0.45) * 60) * 9 * (1 - t) / 0.55 : 0
   const leader = one.x + one.dir * 178
   walker(ctx, dots, leader, 56, one.stride * 1.3, YELLOW, 0.4)
   // The lead, from a hand to the collar.
@@ -77,17 +84,18 @@ function longDog(ctx: Ctx, dots: Dots, one: Passer): number {
   for (const [at, lag] of [[front - one.dir * 22, 0], [one.x, 2.1], [back + one.dir * 22, 4.2]] as const) legs(ctx, at, belly + 6, one.stride + lag, 6)
   far(ctx, (c) => { c.moveTo(back, belly - 13); c.lineTo(front, belly - 13); c.quadraticCurveTo(front + one.dir * 14, belly, front, belly + 10); c.lineTo(back, belly + 10); c.quadraticCurveTo(back - one.dir * 14, belly, back, belly - 13) }, WHITE, dots.of(ctx, RED, 0.22))
   // The head, a long nose, and one ear that swings as it goes.
-  far(ctx, (c) => { c.moveTo(front - one.dir * 4, belly - 12); c.lineTo(front + one.dir * 10, belly - 26); c.lineTo(front + one.dir * 40, belly - 16); c.lineTo(front + one.dir * 40, belly - 9); c.lineTo(front + one.dir * 8, belly - 2); c.closePath() }, WHITE, dots.of(ctx, RED, 0.22))
-  far(ctx, (c) => c.ellipse(front + one.dir * 8, belly - 14 + 2 * Math.sin(one.stride * 2), 5, 10, one.dir * 0.3, 0, Math.PI * 2), PAPER, dots.of(ctx, BLUE, 0.5))
+  const up = 12 * yip
+  far(ctx, (c) => { c.moveTo(front - one.dir * 4, belly - 12); c.lineTo(front + one.dir * 10, belly - 26 - up); c.lineTo(front + one.dir * 40, belly - 16 - up * 1.4); c.lineTo(front + one.dir * 40, belly - 9 - up * 1.1); c.lineTo(front + one.dir * 8, belly - 2); c.closePath() }, WHITE, dots.of(ctx, RED, 0.22))
+  far(ctx, (c) => c.ellipse(front + one.dir * 8, belly - 14 - up + 2 * Math.sin(one.stride * 2), 5, 10, one.dir * (0.3 + yip), 0, Math.PI * 2), PAPER, dots.of(ctx, BLUE, 0.5))
   // The tail, straight up at the far end of it, long after the rest has gone by.
   ctx.beginPath()
   ctx.moveTo(back - one.dir * 6, belly - 6)
-  ctx.quadraticCurveTo(back - one.dir * 20, belly - 16, back - one.dir * 16 + 3 * Math.sin(one.stride * 3), belly - 32)
+  ctx.quadraticCurveTo(back - one.dir * 20, belly - 16, back - one.dir * 16 + 3 * Math.sin(one.stride * 3) + wag, belly - 32)
   ctx.stroke()
   return 12
 }
 
-function barrow(ctx: Ctx, dots: Dots, one: Passer): number {
+function barrow(ctx: Ctx, dots: Dots, one: Passer, t: number): number {
   const pusher = one.x - one.dir * 40
   walker(ctx, dots, pusher, 70, one.stride, RED, 0.25)
   const tray = one.x + one.dir * 14, y = GROUND - 22
@@ -102,13 +110,14 @@ function barrow(ctx: Ctx, dots: Dots, one: Passer): number {
   ctx.fillStyle = dots.of(ctx, BLUE, 0.6)
   ctx.fill()
   // A heap of fruit, three kinds, jolting a little as it rolls.
+  // Tapped, the heap jumps: each fruit goes up out of the tray, the top one highest, and they come down one after another.
   const jolt = 1.2 * Math.abs(Math.sin(one.stride * 2))
-  for (const [dx, dy, colour] of [[-12, -15, RED], [8, -16, YELLOW], [-2, -26, GREEN]] as const) far(ctx, (c) => c.ellipse(tray + one.dir * dx, y + dy - jolt, 12, 9, 0, 0, Math.PI * 2), WHITE, dots.of(ctx, colour, 0.45))
+  for (const [dx, dy, colour, high] of [[-12, -15, RED, 12], [8, -16, YELLOW, 16], [-2, -26, GREEN, 24]] as const) far(ctx, (c) => c.ellipse(tray + one.dir * dx, y + dy - jolt - high * bump(t), 12, 9, 0, 0, Math.PI * 2), WHITE, dots.of(ctx, colour, 0.45))
   return 9
 }
 
-/** Whoever is in the street now, behind everyone at the stall. Returns the figures drawn. */
-export function paintPassers(ctx: Ctx, dots: Dots, time: number): number {
+/** Whoever is in the street now, behind everyone at the stall. `answering` says how far through its answer to a tap each kind is, from 0 to 1, or under 0 when it is not answering. Returns the figures drawn. */
+export function paintPassers(ctx: Ctx, dots: Dots, time: number, answering: (kind: PasserKind) => number = () => -1): number {
   const passing = passersAt(time)
   if (passing.length === 0) return 0
   let drawn = 0
@@ -120,7 +129,10 @@ export function paintPassers(ctx: Ctx, dots: Dots, time: number): number {
   ctx.lineWidth = 2.2
   ctx.strokeStyle = BLUE
   ctx.lineJoin = ctx.lineCap = 'round'
-  for (const one of passing) drawn += one.kind === 'umbrella' ? umbrella(ctx, dots, one) : one.kind === 'longDog' ? longDog(ctx, dots, one) : barrow(ctx, dots, one)
+  for (const one of passing) {
+    const t = answering(one.kind)
+    drawn += one.kind === 'umbrella' ? umbrella(ctx, dots, one, t) : one.kind === 'longDog' ? longDog(ctx, dots, one, t) : barrow(ctx, dots, one, t)
+  }
   ctx.restore()
   return drawn
 }

@@ -2,7 +2,8 @@ import { poseOf, type Actor } from './cast'
 import { drawCustomer, type Casting } from './castFigures'
 import { feastOf, leavingFeast, wantedCount, type Feast } from './feast'
 import { dog } from './figures'
-import { CURL_FLIGHT, MOUTH, flight, offsetOf, type FxState } from './fx'
+import { LAMPS } from './decor'
+import { CURL_FLIGHT, MOUTH, answering, flight, offsetOf, type FxState } from './fx'
 import { SNACK_DOWN, type Scenery } from './gameRun'
 import type { Guide } from './guide'
 import type { HandPose } from './guidance'
@@ -14,7 +15,7 @@ import { paintPassers } from './passersBy'
 import { restShow } from './scenes'
 import { ruling, served as lyingIn } from './serve'
 import { SILL, fitOf, headOf, standsAt, ticketAt, ticketCards, type Seat } from './seats'
-import { paintCounter, paintStreet } from './setting'
+import { drawBags, drawBone, drawCloth, lightLamp, paintCounter, paintStreet } from './setting'
 import { BOARD, COUNTER, CRATE, DOG, PX, ROLLER, SHELF_BOX, TIN, WALL, WINDOW, laneTop, rowTop, shown, tinShape, type Box, type Point, type TinShape } from './stage'
 import { drawFraction, drawSign } from './symbols'
 import { eaten, marksOf, SHELF, type Piece } from './world'
@@ -40,7 +41,7 @@ export function paintPlate(ctx: Ctx, dots: Dots): number {
   let drawn = paintStreet(ctx, dots)
   inked(ctx, rect(WALL.x, WALL.y, WALL.w, WALL.h), null, 6)
   panel(ctx, COUNTER.x, COUNTER.y, COUNTER.w, COUNTER.h, PAPER, dots.of(ctx, YELLOW, 0.22))
-  drawn += paintCounter(ctx, dots)
+  drawn += paintCounter(ctx)
   inked(ctx, rect(COUNTER.x, COUNTER.y, COUNTER.w, COUNTER.h), null, 6)
   // The board and the shelf: plain pale slabs with a hard shadow, and nothing on them but lines between the lanes.
   for (const box of [BOARD, SHELF_BOX]) {
@@ -143,7 +144,7 @@ function roller(ctx: Ctx, dots: Dots, at: Point): number {
 function effects(ctx: Ctx, fx: FxState, wall: boolean): number {
   let drawn = 0
   for (const one of fx.fx) {
-    if ((one.kind === 'spatter') !== wall || one.age < 0 || one.kind === 'lid' || one.kind === 'jaw' || one.kind === 'slat' || one.kind === 'answer' || one.kind === 'roll' || one.kind === 'chew') continue
+    if ((one.kind === 'spatter') !== wall || one.age < 0 || one.kind === 'lid' || one.kind === 'jaw' || one.kind === 'slat' || one.kind === 'answer' || one.kind === 'roll' || one.kind === 'chew' || one.kind === 'decor') continue
     const t = one.age / one.life
     drawn++
     switch (one.kind) {
@@ -427,7 +428,17 @@ function ghostHand(ctx: Ctx, guide: Guide, hand: HandPose): number {
 export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
   const { game, fx } = scenery
   // Whoever is going by in the street, behind everything at the stall; then the juice on the wall.
-  let drawn = paintPassers(ctx, dots, scenery.time) + effects(ctx, fx, true)
+  let drawn = paintPassers(ctx, dots, scenery.time, (kind) => answering(fx, kind))
+  // A street lamp that has been tapped lights, and goes out again.
+  LAMPS.forEach((at, index) => {
+    const lit = answering(fx, 'lamp', index)
+    if (lit >= 0) drawn += lightLamp(ctx, dots, at, lit < 0.15 ? lit / 0.15 : 1 - (lit - 0.15) / 0.85)
+  })
+  drawn += effects(ctx, fx, true)
+  // What the stall keeper leaves about. Tapped, the cloth swings on its peg and the paper bags rustle.
+  const swing = answering(fx, 'cloth'), rustle = answering(fx, 'bags')
+  drawn += drawCloth(ctx, dots, swing < 0 ? 0 : 12 * Math.sin(swing * Math.PI * 3) * (1 - swing))
+  drawn += drawBags(ctx, dots, rustle < 0 ? 0 : 10 * Math.abs(Math.sin(rustle * Math.PI * 2)) * (1 - rustle))
   // The customer at the window, with its ticket; or one still on its way out.
   const departing = scenery.departing
   if (departing) {
@@ -549,6 +560,9 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
   for (const jaw of jaws) ctx.fillRect(jaw.x + fx.jolt * 5, jaw.y, jaw.w, jaw.h)
   drawn += effects(ctx, fx, false)
   dog(ctx, dots, MOUTH.x, DOG.y + 10, 1.05, scenery.dog)
+  // The dog's bone. Tapped, it jumps and turns over, and the dog looks down at it.
+  const jump = answering(fx, 'bone')
+  drawn += drawBone(ctx, jump < 0 ? 0 : 16 * Math.sin(jump * Math.PI), jump < 0 ? 0 : jump * Math.PI)
   drawn += 12
   // The roller: in the hand, running the rail in a first showing, or on its hook.
   const show = scenery.show

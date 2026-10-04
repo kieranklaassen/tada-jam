@@ -120,6 +120,20 @@ export const VOICES = {
   sneeze: () => [tone(520, 0.07, 0.03, 0.05, 'sine', 900), hiss(1500, 0.2, 0.002, 0.1, 500, 0.08)],
   splat: () => [hiss(900, 0.24, 0.001, 0.12, 300), hiss(400, 0.1, 0.02, 0.3, 200, 0.06)],
   honk: () => [tone(230, 0.2, 0.008, 0.26, 'square', 210), tone(345, 0.08, 0.008, 0.26, 'square')],
+  // What is about the stall and no part of the task, each with its own small answer to a tap. A street lamp lights with a small bell.
+  ding: () => [tone(1760, 0.12, 0.002, 0.5, 'sine'), tone(2640, 0.05, 0.002, 0.3, 'sine')],
+  // The dog's bone jumps and lands: two dry knocks, the second as it comes down.
+  clatter: () => [tone(900, 0.14, 0.001, 0.04, 'triangle'), tone(1150, 0.12, 0.001, 0.04, 'triangle', undefined, 0.3)],
+  // The cloth swings on its peg: a soft flap one way and back.
+  flap: () => [hiss(500, 0.1, 0.01, 0.12, 900), hiss(700, 0.07, 0.01, 0.1, 400, 0.16)],
+  // The paper bags rustle.
+  rustle: () => [hiss(3000, 0.08, 0.005, 0.06), hiss(2600, 0.07, 0.005, 0.06, undefined, 0.09), hiss(3200, 0.06, 0.005, 0.07, undefined, 0.19)],
+  // The barrow's one wheel squeaks as its fruit jumps.
+  squeak: () => [tone(1400, 0.1, 0.01, 0.12, 'triangle', 1900), tone(1900, 0.08, 0.01, 0.1, 'triangle', 1500, 0.14)],
+  // The long dog yips at the front, and its tail thumps twice at the far end, late.
+  yip: () => [tone(700, 0.16, 0.004, 0.07, 'sawtooth', 1050), tone(110, 0.1, 0.004, 0.05, 'sine', 80, 0.45), tone(110, 0.09, 0.004, 0.05, 'sine', 80, 0.57)],
+  // The umbrella jumps in its walker's hand and settles: a soft puff.
+  pomf: () => [hiss(300, 0.12, 0.004, 0.1, 150), tone(240, 0.1, 0.004, 0.12, 'sine', 320)],
   // The crate.
   split: () => [hiss(1400, 0.22, 0.001, 0.09, 600), tone(180, 0.18, 0.002, 0.2, 'triangle', 90), tone(140, 0.14, 0.002, 0.14, 'triangle', undefined, 0.2), tone(120, 0.12, 0.002, 0.14, 'triangle', undefined, 0.34)],
   thump: (length: number) => [tone(ringHz(length) * 0.5, 0.26, 0.003, 0.24, 'sine', ringHz(length) * 0.3), hiss(300, 0.1, 0.002, 0.1)],

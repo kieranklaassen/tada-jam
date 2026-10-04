@@ -1,13 +1,16 @@
+import { BAGS, BONE, CLOTH, LAMPS } from './decor'
 import { BLUE, INK, PAPER, RED, TINT, WHITE, YELLOW, inked, oval, poly, rect, slab, type Screens } from './look'
-import { BOARD, COUNTER, CRATE, DOG, QUEUE, RAIL_BOX, ROLLER, SHELF_BOX, TIN, WALL, WINDOW, X0 } from './stage'
+import { BOARD, COUNTER, CRATE, QUEUE, RAIL_BOX, ROLLER, SHELF_BOX, TIN, WALL, WINDOW, X0 } from './stage'
 
 // The place the game happens in, painted once onto the plate: a street of
 // gabled houses behind the stall, in thin blue line and pale dots, the
-// stall's own poles and bunting, and the counter as worn wood with the things
-// a stall keeper leaves on it. Everything here stands still, costs nothing a
-// frame, and is fainter than anything a finger can use: far things are drawn
-// in blue line, never in ink, and nothing here carries a letter, a numeral or
-// a sign. Windows are plain panes with no bars that cross.
+// stall's own poles and bunting, and the counter as worn wood. Everything on
+// the plate stands still, costs nothing a frame, and is fainter than anything
+// a finger can use: far things are drawn in blue line, never in ink, and
+// nothing here carries a letter, a numeral or a sign. Windows are plain panes
+// with no bars that cross. The few things a stall keeper leaves about that
+// answer a tap (the cloth, the paper bags, the dog's bone, a lamp as it
+// lights) are drawn here too, but every frame, since they move (decor.ts).
 
 type Ctx = CanvasRenderingContext2D
 type Dots = Pick<Screens, 'of'>
@@ -123,7 +126,7 @@ function street(ctx: Ctx, dots: Dots): number {
     x += w
   })
   // Two street lamps, on thin posts.
-  for (const at of [WALL.x + 318, WALL.x + 884]) {
+  for (const at of LAMPS) {
     ctx.fillStyle = BLUE
     ctx.fillRect(at - 2, WALL.y + 96, 4, GROUND - WALL.y - 96)
     far(ctx, poly([[at - 9, WALL.y + 96], [at + 9, WALL.y + 96], [at + 6, WALL.y + 74], [at - 6, WALL.y + 74]]), WHITE, dots.of(ctx, YELLOW, 0.5))
@@ -235,35 +238,79 @@ function rail(ctx: Ctx): number {
   return 5
 }
 
-/** What a stall keeper leaves about: a cloth on a peg and a stack of paper bags down the left edge, and the dog's bone under its arch. */
-function clutter(ctx: Ctx, dots: Dots): number {
-  // A cloth hanging from a peg beside the rail, its lower part in red dots.
-  const cx = COUNTER.x + 12, cy = RAIL_BOX.y + 6
+/** The peg the cloth hangs from, and the peg rail over the roller's hook: the still part of what a stall keeper leaves about. */
+function pegs(ctx: Ctx): number {
   ctx.fillStyle = INK
-  ctx.fillRect(cx + 16, cy - 6, 8, 10)
-  inked(ctx, poly([[cx, cy], [cx + 40, cy], [cx + 42, cy + 86], [cx + 32, cy + 80], [cx + 22, cy + 88], [cx + 10, cy + 80], [cx - 2, cy + 86]]), WHITE, 3)
+  ctx.fillRect(CLOTH.x + 16, CLOTH.y - 6, 8, 10)
+  inked(ctx, rect(ROLLER.x - 4, COUNTER.y + 3, ROLLER.w + 8, 9), '#d9a441', 3)
+  return 2
+}
+
+/**
+ * The cloth hanging from its peg beside the rail, its lower part in red dots. Tapped, it swings: `sway` is how
+ * far its hem is off to one side, in units, and the hem lifts as it goes. Drawn every frame, since it moves.
+ */
+export function drawCloth(ctx: Ctx, dots: Dots, sway = 0): number {
+  const cx = CLOTH.x, cy = CLOTH.y, lift = Math.abs(sway) * 0.5
+  const shape = poly([[cx, cy], [cx + 40, cy], [cx + 42 + sway, cy + 86 - lift], [cx + 32 + sway, cy + 80 - lift], [cx + 22 + sway, cy + 88 - lift], [cx + 10 + sway, cy + 80 - lift], [cx - 2 + sway, cy + 86 - lift]])
+  inked(ctx, shape, WHITE, 3)
   ctx.save()
   ctx.beginPath()
-  ctx.rect(cx - 2, cy + 52, 46, 40)
+  ctx.rect(cx - 16, cy + 52, 74, 44)
   ctx.clip()
-  inked(ctx, poly([[cx, cy], [cx + 40, cy], [cx + 42, cy + 86], [cx + 32, cy + 80], [cx + 22, cy + 88], [cx + 10, cy + 80], [cx - 2, cy + 86]]), WHITE, 3, dots.of(ctx, RED, 0.45))
+  inked(ctx, shape, WHITE, 3, dots.of(ctx, RED, 0.45))
   ctx.restore()
-  // Paper bags, stacked flat, beside the shelf.
-  // An untidy heap of three, the top one folded over: not a neat stack of bars.
+  return 2
+}
+
+/**
+ * The paper bags beside the shelf: an untidy heap of three, the top one folded over, not a neat stack of bars.
+ * Tapped, they rustle: the top one jumps `hop` units and tips, and the two under it shift a little.
+ */
+export function drawBags(ctx: Ctx, dots: Dots, hop = 0): number {
   const heap: readonly [number, number, number][] = [[10, 0, 46], [15, 15, 38], [8, 31, 42]]
   heap.forEach(([dx, up, w], bag) => {
-    const by = SHELF_BOX.y + SHELF_BOX.h - 22 - up
-    inked(ctx, poly([[COUNTER.x + dx, by], [COUNTER.x + dx + w, by - (bag === 2 ? 7 : 0)], [COUNTER.x + dx + w + 3, by + 16], [COUNTER.x + dx - 2, by + 16 + (bag === 1 ? 3 : 0)]]), PAPER, 3, bag === 2 ? dots.of(ctx, BLUE, 0.2) : undefined)
+    const jog = bag === 2 ? hop : bag === 1 ? hop * 0.25 : 0
+    const x = BAGS.x + dx + (bag === 1 ? hop * 0.2 : 0), by = BAGS.y - 16 - up - jog
+    inked(ctx, poly([[x, by - (bag === 2 ? hop * 0.4 : 0)], [x + w, by - (bag === 2 ? 7 : 0)], [x + w + 3, by + 16], [x - 2, by + 16 + (bag === 1 ? 3 : 0)]]), PAPER, 3, bag === 2 ? dots.of(ctx, BLUE, 0.2) : undefined)
   })
-  // The dog's bone, under the sill of its arch, clear of its tail and of anything that lands on its head.
-  const ox = DOG.x + DOG.w / 2, oy = DOG.y + DOG.h + 28
-  inked(ctx, slab(ox - 22, oy - 5, 44, 10, 5), WHITE, 3.5)
-  for (const [ex, ey] of [[-22, -6], [-22, 6], [22, -6], [22, 6]] as const) inked(ctx, oval(ox + ex, oy + ey, 7, 6), WHITE, 3.5)
+  return 3
+}
+
+/** The dog's bone, under the sill of its arch, clear of its tail and of anything that lands on its head. Tapped, it jumps `hop` units and turns as it goes. */
+export function drawBone(ctx: Ctx, hop = 0, turn = 0): number {
+  ctx.save()
+  ctx.translate(BONE.x, BONE.y - hop)
+  ctx.rotate(turn)
+  inked(ctx, slab(-22, -5, 44, 10, 5), WHITE, 3.5)
+  for (const [ex, ey] of [[-22, -6], [-22, 6], [22, -6], [22, 6]] as const) inked(ctx, oval(ex, ey, 7, 6), WHITE, 3.5)
   ctx.fillStyle = WHITE
-  ctx.fillRect(ox - 20, oy - 3, 40, 6)
-  // A peg rail over the roller's hook.
-  inked(ctx, rect(ROLLER.x - 4, COUNTER.y + 3, ROLLER.w + 8, 9), '#d9a441', 3)
-  return 12
+  ctx.fillRect(-20, -3, 40, 6)
+  ctx.restore()
+  return 6
+}
+
+/** A street lamp that has been tapped and is lit: its glass full of yellow and a round of yellow dots about it, as bright as `glow` from 0 to 1. Drawn over the lamp on the plate. */
+export function lightLamp(ctx: Ctx, dots: Dots, at: number, glow: number): number {
+  ctx.save()
+  ctx.globalAlpha = Math.max(0, Math.min(1, glow))
+  ctx.beginPath()
+  ctx.arc(at, WALL.y + 85, 20 + 16 * glow, 0, Math.PI * 2)
+  ctx.fillStyle = dots.of(ctx, YELLOW, 0.5)
+  ctx.fill()
+  ctx.beginPath()
+  ctx.moveTo(at - 9, WALL.y + 96)
+  ctx.lineTo(at + 9, WALL.y + 96)
+  ctx.lineTo(at + 6, WALL.y + 74)
+  ctx.lineTo(at - 6, WALL.y + 74)
+  ctx.closePath()
+  ctx.fillStyle = YELLOW
+  ctx.fill()
+  ctx.lineWidth = 2.2
+  ctx.strokeStyle = BLUE
+  ctx.stroke()
+  ctx.restore()
+  return 2
 }
 
 /** The street, behind everything in the stall's panel. Painted before the stall's own front. */
@@ -272,6 +319,6 @@ export function paintStreet(ctx: Ctx, dots: Dots): number {
 }
 
 /** The counter's wood and what lies about on it. Painted before the board, the shelf and the dog's arch. */
-export function paintCounter(ctx: Ctx, dots: Dots): number {
-  return wood(ctx) + rail(ctx) + clutter(ctx, dots)
+export function paintCounter(ctx: Ctx): number {
+  return wood(ctx) + rail(ctx) + pegs(ctx)
 }

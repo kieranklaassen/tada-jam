@@ -1,3 +1,4 @@
+import { ANSWER_SECONDS, type Decor } from './decor'
 import type { Fruit } from './measure'
 import { BOARD, COUNTER, CRATE, DOG, QUEUE, RAIL_BOX, SHELF_BOX, WALL, WINDOW, inside, type Box, type Point } from './stage'
 import { draw } from './stream'
@@ -41,6 +42,8 @@ export type Fx =
   | { kind: 'roll'; x0: number; x1: number; y: number; age: number; life: number }
   /** The marks a comic puts round a head, with no letter in them: an impact star, drops of sweat flying off, and the short lines of a start. */
   | { kind: 'star'; x: number; y: number; size: number; seed: number; age: number; life: number }
+  /** One of the things about the stall that are no part of the task, answering a tap in its own small way (decor.ts). */
+  | { kind: 'decor'; what: Decor; index: number; age: number; life: number }
   | { kind: 'sweat'; x: number; y: number; seed: number; age: number; life: number }
   | { kind: 'shock'; x: number; y: number; r: number; age: number; life: number }
 
@@ -85,6 +88,18 @@ const LAND_LIFE = LANDS_AFTER / LAND_FALL
 /** A lid that tries a misfit starts down as the piece is laid, takes this long over it, and first strikes what sticks out this long after it started. */
 export const LID_LIFE = 0.7
 export const LID_STRIKES = LID_LIFE / 6
+
+/** A thing about the stall that is no part of the task is tapped, and answers: one answer at a time for each of them, started again by a new tap. */
+export function answer(state: FxState, what: Decor, index: number): FxState {
+  const others = state.fx.filter((one) => !(one.kind === 'decor' && one.what === what && one.index === index))
+  return trimmed({ ...state, fx: [...others, { kind: 'decor', what, index, age: 0, life: ANSWER_SECONDS[what] }] })
+}
+
+/** How far through its answer one of them is, from 0 to 1, or -1 when it is not answering. */
+export function answering(state: FxState, what: Decor, index = 0): number {
+  const one = state.fx.find((other) => other.kind === 'decor' && other.what === what && other.index === index)
+  return one ? Math.max(0, Math.min(1, one.age / one.life)) : -1
+}
 
 /** A comic's mark at a place on the stage, starting after `delay` seconds. */
 export function mark(state: FxState, kind: 'star' | 'sweat' | 'shock', at: Point, delay = 0, size = 1): FxState {

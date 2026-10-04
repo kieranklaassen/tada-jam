@@ -4,8 +4,10 @@ import { WALL } from './stage'
 // nothing to do with the task: somebody goes by under an umbrella, somebody
 // pushes a barrow of fruit, and somebody walks a dog that is far too long and
 // takes a long time to pass. They go by at their own paces with long gaps
-// between, they are never asked for anything and never answer a touch, and
-// they stand still when the game rests, since they run on the attended clock.
+// between, and they are never asked for anything. A tap on one gets its own
+// small answer and changes nothing: not its pace, and nothing in the game
+// (decor.ts). They stand still when the game rests, since they run on the
+// attended clock.
 // Pure.
 
 export type PasserKind = 'umbrella' | 'longDog' | 'barrow'
