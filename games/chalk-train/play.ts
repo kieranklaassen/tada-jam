@@ -1,6 +1,6 @@
 import { REACH, answer, landsOn, type Thing } from './grid'
 import { STEP, addMark, nextChalk, readMark, tidy, type MarkKind } from './marks'
-import { WORK, middle, nearestOn } from './path'
+import { WORK, nearestOn } from './path'
 import { along, routeAlong, routeCalled, routeTo, type Route } from './ride'
 import { finishCycle, type CycleOutcome } from './state'
 import { CHARACTERS, FEELS, feel, mostFelt, taste, type Feel, type RiderKind, type Taste } from './tastes'
@@ -302,7 +302,7 @@ export function makeMark(before: World, raw: readonly Pt[], cycle = true, seen?:
   // with its rider in it or not. A rider there that the mark is laid on answers as a rider as well.
   // A home is touched anywhere on it as it is drawn: its middle a little below the place, and wider than it is high.
   const on = (q: Pt, at: Pt): boolean => Math.abs(q.x - at.x) <= HOME_HALF.w && Math.abs(q.y - (at.y + HOME_DOWN)) <= HOME_HALF.h
-  const touches = (at: Pt): boolean => (reading.kind === 'line' ? p.some((q) => on(q, at)) : on(reading.kind === 'tap' ? p[0] : middle(p), at))
+  const touches = (at: Pt): boolean => (reading.kind === 'tap' ? on(p[0], at) : p.some((q) => on(q, at)))
   for (const r of world.riders) {
     if (!touches(PLACES[r.home])) continue
     told.push({ what: 'home-answered', home: r.kind, sight: CHARACTERS[r.kind].homeSight, sound: CHARACTERS[r.kind].homeSound })
