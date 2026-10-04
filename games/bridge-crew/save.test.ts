@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { CROSSINGS, part } from './bridges.fixture'
 import { FIRST_VISIT, LADDER } from './config'
 import { KINDS, MAX_PARTS, SPEC, type Part } from './kit'
-import { JUDGE, strainThinned } from './order'
+import { JUDGE, movedAfter, strainThinned } from './order'
 import { RACK, TRACINGS, crossed, deserialize, edit, failedRun, freshSave, leaveHats, markShown, onNewest, parked, pluckHat, sentHome, serialize, setTrolley, standing, swapTracing, toFront, trace, turnTo, unroll, type Save } from './save'
 import { COLS, ROWS, canPin, site } from './sites'
 import { STATE_VERSION } from './state'
@@ -293,15 +293,26 @@ describe('the saved state', () => {
     expect(leaveHats(leaveHats(state, [0]), [0, 7]).sheets[0].hats).toEqual([0])
     expect(leaveHats(state, [])).toBe(state)
     // Before the job vehicle has crossed: the full showing. After: thinned, and a change to the bridge does not undo it.
-    expect(strainThinned('post-van', state.sheets[0], true, false, 0)).toBe(false)
+    expect(strainThinned('post-van', state.sheets[0], null, false, 0)).toBe(false)
     const over = crossed(state, 'post-van')
-    expect(strainThinned('post-van', over.sheets[0], true, over.finished, over.tries)).toBe(true)
+    expect(strainThinned('post-van', over.sheets[0], null, over.finished, over.tries)).toBe(true)
     const changed = edit(over, [])
     expect(changed.sheets[0].crossed).toEqual([])
-    expect(strainThinned('post-van', changed.sheets[0], true, changed.finished, changed.tries)).toBe(true)
+    expect(strainThinned('post-van', changed.sheets[0], null, changed.finished, changed.tries)).toBe(true)
     // A cycle judged badly was never crossed: the full showing stays.
     let lost = state
     for (let i = 0; i < JUDGE.badly; i++) lost = failedRun(lost, 'post-van', null)
-    expect(strainThinned('post-van', lost.sheets[0], true, lost.finished, lost.tries)).toBe(false)
+    expect(strainThinned('post-van', lost.sheets[0], null, lost.finished, lost.tries)).toBe(false)
+    // A sheet on the rack: crossed if the position went up or stayed after it, not if it went down; and at an end of
+    // the order, where staying says nothing, the fuller showing is kept.
+    const bare = { crossed: [], home: false }
+    expect(movedAfter(['rock-prop', 'first-triangle'], 0)).toEqual({ moved: 1, atEnd: false })
+    expect(movedAfter(['rock-prop', 'first-triangle'], 1)).toBeNull()
+    expect(strainThinned('post-van', bare, movedAfter(['rock-prop', 'first-triangle'], 0), true, 0)).toBe(true)
+    expect(strainThinned('post-van', bare, movedAfter(['rock-prop', 'rock-prop'], 0), true, 0)).toBe(true)
+    expect(strainThinned('post-van', bare, movedAfter(['rock-prop', 'plank-gap'], 0), true, 0)).toBe(false)
+    expect(strainThinned('post-van', bare, movedAfter(['plank-gap', 'plank-gap'], 0), true, 0)).toBe(false)
+    expect(strainThinned('post-van', bare, movedAfter(['open-yard', 'open-yard'], 0), true, 0)).toBe(false)
+    expect(strainThinned('post-van', { crossed: ['post-van'], home: false }, movedAfter(['rock-prop', 'plank-gap'], 0), true, 0)).toBe(true)
   })
 })

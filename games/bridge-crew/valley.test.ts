@@ -140,6 +140,8 @@ describe('the valley the gap is in', () => {
       expect(calls.filter((call) => call.name === 'fillText' || call.name === 'strokeText')).toEqual([])
       for (const call of calls) for (const arg of call.args) if (typeof arg === 'number') expect(Number.isFinite(arg), `${at.id} ${call.name}`).toBe(true)
       expect(calls.filter((call) => call.name === 'fill').length).toBe(finds(at).length)
+      // No whole ring is drawn anywhere in it: every arc is a part of a circle.
+      for (const call of calls.filter((one) => one.name === 'arc')) expect(Math.abs((call.args[4] as number) - (call.args[3] as number)), at.id).toBeLessThan(Math.PI * 2 - 0.01)
     }
   })
 })

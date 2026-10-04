@@ -101,7 +101,8 @@ export function paintSheet(pen: Pen, width: number, height: number, plot: Plot, 
   // The draughtsman's marks, with no figures on them: the gap's centre line and its dimension line.
   const lip = at.left[0], far = at.right[0]
   const mid = (lip + far) / 2, deck = at.left[1]
-  for (let y = deck - 0.6; y < deck + 3.2; y += 0.55) rule(pen, ...px(plot, mid, y), ...px(plot, mid, y + (Math.round((y - deck) / 0.55) % 2 ? 0.08 : 0.34)), cell * 0.018, 0.45, random)
+  // Even dashes: a long dash over a dot, one above another, would read as a column of letters.
+  for (let y = deck - 0.6; y < deck + 3.2; y += 0.55) rule(pen, ...px(plot, mid, y), ...px(plot, mid, y + 0.3), cell * 0.018, 0.45, random)
   const dim = deck + 2.6
   rule(pen, ...px(plot, lip, dim), ...px(plot, far, dim), cell * 0.018, 0.5, random)
   for (const x of [lip, far]) {

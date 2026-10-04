@@ -116,12 +116,23 @@ export function modelInMargin(position: string, shown: readonly Showing[]): Idea
  * Feedback thins with practice: once a sheet's own vehicle has crossed, only a
  * part within a fifth of its limit shows its strain. A change to the bridge
  * does not bring the fuller feedback back. What is saved names who has crossed
- * the bridge as it stands, so after a change this is read from the cycle: a
- * sheet whose cycle was judged has been crossed, unless it was judged badly,
- * which the newest sheet's count of failed runs still says.
+ * the bridge as it stands, so after a change this is read from the designed
+ * order itself. The newest sheet: its cycle was judged and not badly, which
+ * its count of failed runs still says. A sheet on the rack (`later` is how far
+ * the position had moved when the next sheet was laid out, and whether it was
+ * at an end of the order where it cannot move): it was crossed if the position
+ * went up or stayed, and not if it went down; at an end of the order, where
+ * staying says nothing, the fuller feedback is kept.
  */
-export function strainThinned(job: string, sheet: { crossed: readonly string[]; home: boolean }, newest: boolean, finished: boolean, tries: number): boolean {
+export function strainThinned(job: string, sheet: { crossed: readonly string[]; home: boolean }, later: { moved: number; atEnd: boolean } | null, finished: boolean, tries: number): boolean {
   if (sheet.crossed.includes(job) || sheet.home) return true
-  if (!newest) return true
-  return finished && !givenUpOn(tries)
+  if (later === null) return finished && !givenUpOn(tries)
+  return later.moved > 0 || (later.moved === 0 && !later.atEnd)
+}
+
+/** For a sheet on the rack: how far the position had moved when the sheet after it was laid out. Null for the newest sheet. */
+export function movedAfter(sites: readonly string[], on: number): { moved: number; atEnd: boolean } | null {
+  if (on >= sites.length - 1) return null
+  const here = LADDER.indexOf(sites[on]), next = LADDER.indexOf(sites[on + 1])
+  return { moved: next - here, atEnd: here <= 0 || here >= LADDER.length - 1 }
 }

@@ -70,15 +70,28 @@ export function spareWeights(pen: Pen, x: number, y: number, c: number, count: n
 const lineOf = (kind: Kind, turned: boolean): number => (kind === 'thread' ? 0.03 : kind === 'tube' ? 0.14 : kind === 'plank' ? (turned ? 0.2 : 0.09) : 0.05)
 
 /** A design as a line drawing: each part one stroke, its weight by its kind, as on tracing paper. `at` turns grid cells into pixels. */
-export function lineDrawing(pen: Pen, parts: readonly Part[], ends: readonly { a: readonly [number, number]; b: readonly [number, number] }[], at: (x: number, y: number) => [number, number], c: number, colour: string, alpha: number) {
+export function lineDrawing(pen: Pen, parts: readonly Part[], ends: readonly { a: readonly [number, number]; b: readonly [number, number] }[], at: (x: number, y: number) => [number, number], c: number, colour: string, alpha: number, curve: (index: number) => readonly { share: number; off: readonly [number, number] }[] = () => [], broken: number | null = null) {
   pen.strokeStyle = colour
   pen.lineCap = 'round'
+  pen.lineJoin = 'round'
   pen.globalAlpha = alpha
   parts.forEach((part, index) => {
-    const [ax, ay] = at(ends[index].a[0], ends[index].a[1]), [bx, by] = at(ends[index].b[0], ends[index].b[1])
+    const a = ends[index].a, b = ends[index].b
     pen.lineWidth = Math.max(1, lineOf(part.kind, part.turned) * c)
     if (part.kind === 'thread') pen.setLineDash([c * 0.12, c * 0.1])
-    pen.beginPath(); pen.moveTo(ax, ay); pen.lineTo(bx, by); pen.stroke()
+    pen.beginPath()
+    if (broken === index) {
+      // It would give under this load: its line is drawn parted in the middle, each half hanging from its own end.
+      const dx = b[0] - a[0], dy = b[1] - a[1]
+      pen.moveTo(...at(a[0], a[1])); pen.lineTo(...at(a[0] + dx * 0.42, a[1] + dy * 0.42 - 0.45))
+      pen.moveTo(...at(b[0], b[1])); pen.lineTo(...at(b[0] - dx * 0.42, b[1] - dy * 0.42 - 0.45))
+    } else {
+      // A plank's line bends as the plank would: through each point along it.
+      pen.moveTo(...at(a[0], a[1]))
+      for (const point of curve(index)) pen.lineTo(...at(a[0] + (b[0] - a[0]) * point.share + point.off[0], a[1] + (b[1] - a[1]) * point.share + point.off[1]))
+      pen.lineTo(...at(b[0], b[1]))
+    }
+    pen.stroke()
     pen.setLineDash([])
   })
   pen.globalAlpha = 1
@@ -153,8 +166,13 @@ export function ideaModel(pen: Pen, idea: Idea, x: number, y: number, c: number,
     pen.lineWidth = Math.max(1, c * 0.03)
     pen.globalAlpha = (fail - 0.8) / 0.2
     pen.beginPath()
-    if (failure === 'gives') for (let i = 0; i < 5; i++) { const a = i * 1.26 + 0.4; pen.moveTo(x + 0.7 * w + Math.cos(a) * c * 0.1, y - 0.28 * w + Math.sin(a) * c * 0.1); pen.lineTo(x + 0.7 * w + Math.cos(a) * c * 0.24, y - 0.28 * w + Math.sin(a) * c * 0.24) }
-    else for (const [from, to] of [[0.2, 0.55], [0.7, 1.0], [1.1, 1.35]] as const) { pen.moveTo(x + from * w, y + c * 0.1); pen.quadraticCurveTo(x + ((from + to) / 2) * w, y + c * 0.2, x + to * w, y + c * 0.1) }
+    if (failure === 'gives') {
+      // Three chips flying off it, filled.
+      pen.fillStyle = INK.balsa
+      for (const [turn, far] of [[0.6, 0.2], [2.4, 0.24], [4.3, 0.18]] as const) { const cx = x + 0.7 * w + Math.cos(turn) * c * far, cy = y - 0.28 * w + Math.sin(turn) * c * far; pen.moveTo(cx + c * 0.05, cy); pen.lineTo(cx - c * 0.03, cy + c * 0.04); pen.lineTo(cx - c * 0.02, cy - c * 0.04); pen.closePath() }
+      pen.fill()
+      pen.beginPath()
+    } else for (const [from, to] of [[0.2, 0.55], [0.7, 1.0], [1.1, 1.35]] as const) { pen.moveTo(x + from * w, y + c * 0.1); pen.quadraticCurveTo(x + ((from + to) / 2) * w, y + c * 0.2, x + to * w, y + c * 0.1) }
     pen.stroke()
     pen.globalAlpha = 1
   }

@@ -124,11 +124,10 @@ function tree(pen: Pen, plot: Plot, x: number, base: number, tall: number, kind:
     }
     stroke(pen, plot, [[x, base + tall * 0.42], [x, base + tall * 0.98]], 0.014, a * 0.6)
   } else {
-    // A poplar: one tall narrow leaf.
+    // A poplar: one tall narrow leaf, with nothing drawn through it.
     const wide = tall * 0.14, steps = 10, left: Dot[] = [], right: Dot[] = []
     for (let i = 0; i <= steps; i++) { const t = i / steps, w = wide * Math.sin(Math.PI * Math.pow(t, 0.7)); left.push([x - w, base + tall * (0.3 + 0.7 * t)]); right.unshift([x + w, base + tall * (0.3 + 0.7 * t)]) }
     stroke(pen, plot, [...left, ...right], 0.022, a, true)
-    stroke(pen, plot, [[x, base + tall * 0.4], [x, base + tall * 0.88]], 0.014, a * 0.6)
   }
 }
 
@@ -172,16 +171,17 @@ export function paintValley(pen: Pen, plot: Plot, at: Site) {
   }
   // Trees, behind the road.
   for (const one of trees(at)) tree(pen, plot, one.x, deck, one.tall, one.kind, random)
-  // A fence along each bank, behind the road, which stops short of the lip with its last rail hanging.
+  // Posts along each bank, behind the road, with a rope slung from top to top, which stops short of the lip with its
+  // last length hanging. No rail crosses a post.
   for (const [from, to, toward] of [[-MARGIN.side + 0.1, lip - 1.1, 1], [far + 1.1, COLS + MARGIN.side - 0.1, -1]] as const) {
     const posts: number[] = []
     for (let x = toward > 0 ? to : from; toward > 0 ? x > from : x < to; x -= toward * 0.85) posts.push(x)
     posts.forEach((x, i) => {
-      stroke(pen, plot, [[x, deck], [x, deck + 0.46]], 0.022, FAINT.fence)
+      stroke(pen, plot, [[x, deck], [x, deck + 0.42]], 0.024, FAINT.fence)
       const next = posts[i + 1]
-      if (next !== undefined) for (const h of [0.2, 0.36]) stroke(pen, plot, [[x, deck + h], [next, deck + h]], 0.014, FAINT.fence)
+      if (next !== undefined) { const rope: Dot[] = []; for (let t = 0; t <= 1.001; t += 0.125) rope.push([x + (next - x) * t, deck + 0.42 - 0.14 * Math.sin(Math.PI * t)]); stroke(pen, plot, rope, 0.014, FAINT.fence) }
     })
-    if (posts.length) stroke(pen, plot, [[posts[0], deck + 0.36], [posts[0] + toward * 0.55, deck + 0.08]], 0.014, FAINT.fence)
+    if (posts.length) stroke(pen, plot, [[posts[0], deck + 0.42], [posts[0] + toward * 0.12, deck + 0.2], [posts[0] + toward * 0.16, deck + 0.04]], 0.014, FAINT.fence)
   }
   // Grass: tufts of three strokes on the banks' tops.
   for (let x = -MARGIN.side + 0.3; x < COLS + MARGIN.side; x += 0.5 + random() * 0.9) {
@@ -191,12 +191,12 @@ export function paintValley(pen: Pen, plot: Plot, at: Site) {
 }
 
 /** What lies in the cut ground under a bank: each a small drawing of its own, with the hatching cleared behind it. */
-export type Find = 'shell' | 'bone' | 'boot' | 'pipe' | 'chest' | 'fishbone' | 'burrow'
+export type Find = 'shell' | 'bottle' | 'boot' | 'pot' | 'chest' | 'burrow'
 
 /** The finds of a sheet: a burrow under the near bank on every sheet, and two or three other things, each well inside a bank and under the road. */
 export function finds(at: Site): { what: Find; x: number; y: number }[] {
   const random = stream(siteSeed(at) + 11), deck = at.left[1], out: { what: Find; x: number; y: number }[] = []
-  const others: Find[] = ['shell', 'bone', 'boot', 'pipe', 'chest', 'fishbone']
+  const others: Find[] = ['shell', 'bottle', 'boot', 'pot', 'chest']
   const room = (from: number, to: number): number[] => { const xs: number[] = []; for (let x = from + 1.35; x < to - 0.9; x += 2.3) xs.push(x); return xs }
   const near = room(-MARGIN.side + 0.3, at.left[0] - 0.4), away = room(at.right[0] + 0.4, COLS + MARGIN.side - 0.3)
   if (near.length) out.push({ what: 'burrow', x: near[0], y: deck - 1.9 })
@@ -228,35 +228,26 @@ function find(pen: Pen, plot: Plot, what: Find, x: number, y: number) {
       for (let i = 0; i < 7; i++) { const t = 4.4 * Math.PI + i * 0.26, r0 = 0.055 * (1 + t * 0.32), r1 = 0.055 * (1 + (t - 2 * Math.PI) * 0.32); stroke(pen, plot, [at(Math.cos(t) * r0, Math.sin(t) * r0), at(Math.cos(t) * (r1 + 0.03), Math.sin(t) * (r1 + 0.03))], 0.012, a * 0.8) }
       break
     }
-    case 'bone':
-      stroke(pen, plot, [at(-0.3, -0.04), at(0.3, 0.1)], 0.05, a)
-      for (const [ex, ey] of [[-0.33, -0.05], [0.33, 0.11]] as const) { ring(pen, plot, x + ex, y + ey + 0.06, 0.07, 0.02, a); ring(pen, plot, x + ex, y + ey - 0.06, 0.07, 0.02, a) }
+    case 'bottle':
+      // An old bottle on its side: a body, a shoulder and a neck, in one outline.
+      stroke(pen, plot, [at(-0.36, -0.12), at(0.08, -0.12), at(0.2, -0.05), at(0.4, -0.05), at(0.4, 0.05), at(0.2, 0.05), at(0.08, 0.12), at(-0.36, 0.12)], 0.022, a, true)
       break
     case 'boot':
       stroke(pen, plot, [at(-0.16, 0.3), at(-0.18, -0.1), at(-0.2, -0.22), at(0.3, -0.22), at(0.33, -0.1), at(0.1, 0.0), at(0.08, 0.3)], 0.022, a, true)
       stroke(pen, plot, [at(-0.2, -0.22), at(-0.2, -0.28), at(0.3, -0.28), at(0.3, -0.22)], 0.022, a)
       for (const h of [0.08, 0.16, 0.24]) stroke(pen, plot, [at(-0.1, h), at(0.03, h + 0.02)], 0.012, a)
       break
-    case 'pipe':
-      // An old pipe with an elbow, and the little wheel of its tap.
-      stroke(pen, plot, [at(-0.5, 0.1), at(0.1, 0.1), at(0.1, -0.34)], 0.022, a)
-      stroke(pen, plot, [at(-0.5, -0.04), at(0.24, -0.04), at(0.24, -0.34)], 0.022, a)
-      for (const jx of [-0.3, -0.1]) stroke(pen, plot, [at(jx, 0.13), at(jx, -0.07)], 0.03, a)
-      ring(pen, plot, x - 0.2, y + 0.26, 0.09, 0.02, a)
-      stroke(pen, plot, [at(-0.2, 0.1), at(-0.2, 0.17)], 0.02, a)
-      stroke(pen, plot, [at(-0.29, 0.26), at(-0.11, 0.26)], 0.012, a)
+    case 'pot': {
+      // A clay pot: a belly, a neck and a rim, with a chip out of the rim.
+      const side: Dot[] = []
+      for (let t = 0; t <= 1.001; t += 0.1) side.push(at(-0.08 - 0.22 * Math.sin(Math.PI * Math.pow(t, 0.8)), -0.3 + 0.5 * t))
+      stroke(pen, plot, [...side, at(-0.14, 0.28), at(0.02, 0.28), at(0.06, 0.22), at(0.14, 0.28), ...side.map(([px0, py0]): Dot => [2 * x - px0, py0]).reverse()], 0.022, a, true)
       break
+    }
     case 'chest':
       stroke(pen, plot, [at(-0.3, -0.2), at(0.3, -0.2), at(0.3, 0.06), at(-0.3, 0.06)], 0.022, a, true)
       ring(pen, plot, x, y + 0.06, 0.3, 0.022, a, Math.PI, Math.PI * 2)
-      stroke(pen, plot, [at(-0.3, -0.07), at(0.3, -0.07)], 0.012, a)
-      stroke(pen, plot, [at(-0.04, -0.01), at(0.04, -0.01), at(0.04, -0.12), at(-0.04, -0.12)], 0.016, a, true)
-      break
-    case 'fishbone':
-      stroke(pen, plot, [at(-0.36, 0), at(0.2, 0)], 0.02, a)
-      for (let i = 0; i < 5; i++) { const bx = -0.26 + i * 0.1, h = 0.13 - 0.02 * Math.abs(i - 1.5); stroke(pen, plot, [at(bx + 0.04, h), at(bx, 0), at(bx + 0.04, -h)], 0.014, a) }
-      stroke(pen, plot, [at(0.2, 0), at(0.3, 0.1), at(0.42, 0), at(0.3, -0.1)], 0.02, a, true)
-      stroke(pen, plot, [at(-0.36, 0), at(-0.48, 0.1), at(-0.46, -0.1)], 0.02, a, true)
+      stroke(pen, plot, [at(-0.04, 0.03), at(0.04, 0.03), at(0.04, -0.08), at(-0.04, -0.08)], 0.016, a, true)
       break
     case 'burrow': {
       // A burrow: a chamber with a bed, a shelf with a jar and a lamp on its cord, and the tunnel up to the grass.
@@ -341,8 +332,7 @@ export function paintDesk(pen: Pen, plot: Plot, at: Site) {
     // A pair of compasses, open, with the arc it has just drawn.
     const x = leftRoom[1] - 3.6, y = floor + 0.1
     stroke(pen, plot, [[x - 0.45, y], [x, y + 1.5], [x + 0.5, y]], 0.022, a)
-    ring(pen, plot, x, y + 1.5, 0.08, 0.02, a)
-    stroke(pen, plot, [[x, y + 1.58], [x, y + 1.8]], 0.03, a)
+    stroke(pen, plot, [[x, y + 1.5], [x, y + 1.8]], 0.05, a)
     ring(pen, plot, x - 0.45, y, 0.95, 0.012, a * 0.7, -0.5, -0.02)
   }
   const right = rightRoom[1] - rightRoom[0]
@@ -356,7 +346,7 @@ export function paintDesk(pen: Pen, plot: Plot, at: Site) {
     stroke(pen, plot, [[x0 + 1.8, y0], [x0 + 1.8, y0 + 0.45]], 0.014, a)
     // In its corner box, a small drawing of a plank on two pins: what the sheet is a drawing of.
     stroke(pen, plot, [[x0 + 0.2, y0 + 0.66], [x0 + 0.7, y0 + 0.66]], 0.03, a)
-    for (const cx of [x0 + 0.2, x0 + 0.7]) ring(pen, plot, cx, y0 + 0.66, 0.045, 0.014, a)
+    for (const cx of [x0 + 0.2, x0 + 0.7]) stroke(pen, plot, [[cx, y0 + 0.6], [cx, y0 + 0.66]], 0.05, a)
   }
   if (right >= 4.3 || (right >= 1.3 && right < 2.9)) {
     // A mug, seen from the side. Its steam is drawn live.

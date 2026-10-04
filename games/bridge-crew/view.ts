@@ -1,7 +1,6 @@
 import { RAIL_TILT, givePose, poke, reactPose, waitPose, drivePose, type VehiclePose } from './acts'
 import { showsStrain, strainLook } from './consequence'
-import { strainThinned } from './order'
-import { onNewest } from './save'
+import { movedAfter, strainThinned } from './order'
 import { CREW_SCALE } from './crew'
 import { crewFigure } from './crewfig'
 import { bargeAt, drawSky, drawSplash, drawWaterLife } from './drift'
@@ -153,7 +152,7 @@ export class View {
 
     // The parts where their springs have them. String lies under wood, wood under pins.
     const hand = toy.hand
-    const sheet = toy.save.sheets[toy.save.on], jobCrossed = strainThinned(at.job, sheet, onNewest(toy.save), toy.save.finished, toy.save.tries)
+    const sheet = toy.save.sheets[toy.save.on], jobCrossed = strainThinned(at.job, sheet, movedAfter(toy.save.sheets.map((one) => one.site), toy.save.on), toy.save.finished, toy.save.tries)
     // What each part carries now, where a load is on the bridge: a vehicle on a run, or the trolley where it stands or hangs.
     const carried = (index: number): { use: number; strain: string } | null => {
       if (toy.drive) return { use: toy.drive.heard[index] ?? 0, strain: toy.drive.strain[index] ?? 'rest' }
@@ -216,6 +215,16 @@ export class View {
         drawn += 2
         return
       }
+      // A plank bends in a smooth curve, deepest under the load: drawn as short lengths from point to point along it.
+      const curve = part.kind === 'plank' && !carried_ ? toy.bend(index) : []
+      if (curve.some((point) => Math.abs(point.off[0]) + Math.abs(point.off[1]) > 0.012)) {
+        const points: (readonly [number, number])[] = [p.a, ...curve.map((point): [number, number] => [p.a[0] + (p.b[0] - p.a[0]) * point.share + point.off[0] * cell, p.a[1] + (p.b[1] - p.a[1]) * point.share - point.off[1] * cell]), p.b]
+        const each = length(part) / (points.length - 1), kind = woodOf(part)
+        for (let i = 0; i + 1 < points.length; i++) woodShadow(pen, kind, points[i][0], points[i][1], points[i + 1][0], points[i + 1][1], cell, 1 + landing, deep * strained)
+        for (let i = 0; i + 1 < points.length; i++) this.part(pen, kind, each, points[i], points[i + 1], 0, deep * strained)
+        drawn += 2
+        return
+      }
       this.part(pen, woodOf(part), length(part), p.a, p.b, carried_ ? 3 : 1 + landing, deep * strained)
       drawn++
     })
@@ -229,7 +238,7 @@ export class View {
         if (hand.kind === 'thread') string(pen, ...from, ...tip, cell, 0.15)
         else wood(pen, woodOf({ kind: hand.kind, turned: false }), from[0], from[1], tip[0], tip[1], cell, stream(7), true, this.grain)
       }
-      this.ring(pen, at2(hand.to), 0.2, 0.95)
+      this.halo(pen, at2(hand.to), 0.24, 1.6)
       pin(pen, from[0], from[1], cell, footing(hand.from))
       drawn += 3
     }
@@ -239,12 +248,13 @@ export class View {
     toy.bridge.forEach((part, index) => {
       for (const end of ['a', 'b'] as const) {
         const where = pose[index][end], name = `${Math.round(where[0] / 3)},${Math.round(where[1] / 3)}`
-        if (part.loose === end) { this.ring(pen, at2(part[end]), 0.1, 0.8); drawn++; continue }
+        // Where its pin was taken out: a pinhole, as a dot of the sheet's own shadow.
+        if (part.loose === end) { const [hx, hy] = at2(part[end]); pen.fillStyle = INK.shadow; pen.beginPath(); pen.arc(hx, hy, cell * 0.06, 0, Math.PI * 2); pen.fill(); drawn++; continue }
         if (seen.has(name)) continue
         seen.add(name)
         const since = toy.clicked.get(key(part[end]))
         pin(pen, where[0], where[1], cell * (since !== undefined && since < 0.18 ? 1 + 0.8 * (1 - since / 0.18) : 1), footing(part[end]) && toy.rest[index].how === 'firm')
-        if (glow > 0.01) this.ring(pen, where, 0.24, glow * 0.8)
+        if (glow > 0.01) this.halo(pen, where, 0.3, glow)
         drawn++
       }
     })
@@ -257,7 +267,7 @@ export class View {
       pen.globalAlpha = 1
       drawn++
     }
-    if (glow > 0.01) for (const lip of [at.left, at.right]) this.ring(pen, at2(lip), 0.24, glow * 0.8)
+    if (glow > 0.01) for (const lip of [at.left, at.right]) this.halo(pen, at2(lip), 0.3, glow)
 
     // A part taken off flies to its pile in the tray.
     for (const flight of toy.flying) {
@@ -313,10 +323,11 @@ export class View {
       pen.globalAlpha = Math.max(0, 1 - t)
       pen.beginPath()
       if (mark.what === 'ring') {
-        // The draughtsman's circle, running out from the pin, with four ticks beyond it.
-        const r = cell * (0.16 + 0.6 * t)
-        pen.arc(mx, my, r, 0, Math.PI * 2)
-        for (let i = 0; i < 4; i++) { const a = (i * Math.PI) / 2 + 0.4; pen.moveTo(mx + Math.cos(a) * (r + cell * 0.08), my + Math.sin(a) * (r + cell * 0.08)); pen.lineTo(mx + Math.cos(a) * (r + cell * 0.2), my + Math.sin(a) * (r + cell * 0.2)) }
+        // Four specks of the drafting white that fly out from the pin as it clicks in. Filled, and no two opposite.
+        pen.fillStyle = INK.line
+        for (const turn of [0.5, 2.2, 3.5, 5.4]) { const r = cell * (0.18 + 0.55 * t), sx = mx + Math.cos(turn) * r, sy = my + Math.sin(turn) * r; pen.moveTo(sx + cell * 0.05, sy); pen.arc(sx, sy, cell * 0.05 * (1 - 0.5 * t), 0, Math.PI * 2) }
+        pen.fill()
+        pen.beginPath()
       } else if (mark.what === 'dust') {
         // Three soft dabs that roll outward and up, filled: an open curl would read as a letter.
         pen.fillStyle = INK.line
@@ -366,15 +377,20 @@ export class View {
     // The pale pencil ring round the spot where a part gave: it fades as the job vehicle crosses.
     const ring = game.gave ?? sheet.ring ?? (show.kind === 'crossing' ? game.fading : null)
     if (ring) { this.ring(pen, at2(ring.spot[0], ring.spot[1]), 0.34, 0.6 * (show.kind === 'crossing' ? 1 - show.fade : 1)); drawn++ }
-    // A splinter where the part is giving, for as long as the bridge lies broken.
+    // Splinters where the part is giving, for as long as the bridge lies broken: four chips of the part's own stuff
+    // that fly a little way out from the spot. Filled wedges, not rays: rays through one point would read as a sign.
     if (game.gave) {
-      const [sx, sy] = at2(game.gave.spot[0], game.gave.spot[1])
-      pen.strokeStyle = INK.line
-      pen.lineWidth = Math.max(1, cell * 0.04)
+      const [sx, sy] = at2(game.gave.spot[0], game.gave.spot[1]), kind = game.bridge[game.gave.part]?.kind
+      pen.fillStyle = kind === 'tube' ? INK.paper : kind === 'thread' ? INK.string : INK.balsa
       pen.globalAlpha = 1 - show.restore
-      pen.beginPath()
-      for (let i = 0; i < 6; i++) { const a = i * 1.05 + 0.3, r0 = cell * 0.12, r1 = cell * (0.3 + 0.25 * show.snap * (i % 2 ? 1 : 0.6)); pen.moveTo(sx + Math.cos(a) * r0, sy + Math.sin(a) * r0); pen.lineTo(sx + Math.cos(a) * r1, sy + Math.sin(a) * r1) }
-      pen.stroke()
+      for (const [turn, far, size] of [[0.5, 0.42, 0.11], [2.0, 0.34, 0.08], [3.4, 0.46, 0.1], [5.1, 0.3, 0.07]] as const) {
+        const r = cell * far * (0.4 + 0.6 * show.snap), cx = sx + Math.cos(turn) * r, cy = sy + Math.sin(turn) * r, spin = turn * 2.3 + show.snap * 3
+        pen.beginPath()
+        pen.moveTo(cx + Math.cos(spin) * cell * size, cy + Math.sin(spin) * cell * size)
+        pen.lineTo(cx + Math.cos(spin + 2.5) * cell * size * 0.6, cy + Math.sin(spin + 2.5) * cell * size * 0.6)
+        pen.lineTo(cx + Math.cos(spin + 3.9) * cell * size * 0.5, cy + Math.sin(spin + 3.9) * cell * size * 0.5)
+        pen.closePath(); pen.fill()
+      }
       pen.globalAlpha = 1
       drawn++
     }
@@ -391,7 +407,7 @@ export class View {
 
     drawn += this.tools(pen, game, glow)
     // A tracing laid on the board: the traced design as a white line drawing, lying as it would under the same load.
-    if (game.laidTracing !== null && sheet.tracings[game.laidTracing]) { lineDrawing(pen, sheet.tracings[game.laidTracing], game.tracingRest, at2, cell, INK.line, 0.8); drawn++ }
+    if (game.laidTracing !== null && sheet.tracings[game.laidTracing]) { lineDrawing(pen, sheet.tracings[game.laidTracing], game.tracingRest, at2, cell, INK.line, 0.8, (index) => game.bend(index, true), game.tracingGave); drawn++ }
     // The barge, on a sheet where one passes: moored by the near bank, nosing forward and back, and under the bridge and back while a crossing is shown.
     if (at.channel) {
       const passing = show.kind === 'crossing' && game.bargeTook ? Math.sin(Math.PI * show.react) : 0, took = game.bargeTook
@@ -421,7 +437,7 @@ export class View {
       const arriving = show.kind === 'crossing' && id === show.arriving && show.arrive < 1
       const pose = restingPose(id, place === 0 && !game.playing)
       put(id, (arriving ? drawUp(show.arrive, at, place) : waitAt(at, place)) + pose.creep, at.left[1], 0, pose, false)
-      if (glow > 0.01 && place === 0 && game.ready) this.ring(pen, at2(waitAt(at, 0) - longOf(id) / 2, at.left[1] + 0.9), 1.05, glow * 0.7)
+      if (glow > 0.01 && place === 0 && game.ready) this.brackets(pen, at2(waitAt(at, 0) - longOf(id) - 0.9, at.left[1] + 2.2), at2(waitAt(at, 0) + 0.8, at.left[1] - 0.1), glow * 0.8)
     })
     // Parked in the lay-by on the far bank.
     game.across.forEach((id, place) => { if (id !== busy) put(id, parkAt(at, longOf(id), place), at.right[1], 0, restingPose(id, false), false) })
@@ -430,7 +446,7 @@ export class View {
     if (game.drive && seat) {
       const flip = game.drive.homeward
       // On a stick it rides a rail, tilting, with its back wheels off; on a plank on edge it wobbles as on a kerb.
-      put(game.drive.vehicle, seat.x, seat.y, (flip ? -seat.tilt : seat.tilt) - RAIL_TILT * seat.rail, drivePose(game.drive.vehicle, game.drive.seconds, seat.kerb, undefined, Math.max(0, ...game.drive.heard.filter((use) => showsStrain(use, strainThinned(at.job, sheet, onNewest(game.save), game.save.finished, game.save.tries))))), flip)
+      put(game.drive.vehicle, seat.x, seat.y, (flip ? -seat.tilt : seat.tilt) - RAIL_TILT * seat.rail, drivePose(game.drive.vehicle, game.drive.seconds, seat.kerb, undefined, Math.max(0, ...game.drive.heard.filter((use) => showsStrain(use, strainThinned(at.job, sheet, movedAfter(game.save.sheets.map((one) => one.site), game.save.on), game.save.finished, game.save.tries))))), flip)
     }
     // In a scene: where its beats have it.
     if (show.vehicle && show.kind === 'give') {
@@ -446,8 +462,12 @@ export class View {
         pen.globalAlpha = place.afloat
         pen.strokeStyle = INK.line
         pen.lineWidth = Math.max(1, cell * 0.035)
+        // A ripple each side of it, each a shallow curve: a level bar beside the crates' numeral would read as a sign.
         pen.beginPath()
-        for (const side of [-1, 1]) { const rx = at2(place.x - longOf(show.vehicle) / 2 + side * (longOf(show.vehicle) / 2 + 0.8 + 0.5 * show.paddle), WATER); pen.moveTo(rx[0] - cell * 0.25, rx[1]); pen.lineTo(rx[0] + cell * 0.25, rx[1]) }
+        for (const side of [-1, 1]) {
+          const rx = at2(place.x - longOf(show.vehicle) / 2 + side * (longOf(show.vehicle) / 2 + 1.05 + 0.5 * show.paddle), WATER)
+          pen.moveTo(rx[0] - cell * 0.25, rx[1]); pen.quadraticCurveTo(rx[0], rx[1] - cell * 0.14, rx[0] + cell * 0.25, rx[1])
+        }
         pen.stroke()
         pen.globalAlpha = 1
       }
@@ -474,7 +494,7 @@ export class View {
       pen.restore()
       const [x, y] = at2(rx, at.right[1])
       roll(pen, x, y, cell * ROLL.tall, cell)
-      if (glow > 0.01) this.ring(pen, [x, y - cell * 1.5], 0.9, glow * 0.7)
+      if (glow > 0.01) this.brackets(pen, [x - cell * 0.55, y - cell * (ROLL.tall + 0.15)], [x + cell * 0.55, y + cell * 0.1], glow * 0.8)
       drawn += 2
     }
     const count = game.save.sheets.length
@@ -529,7 +549,8 @@ export class View {
     if (game.trolleyFell) {
       const f = Math.min(1, game.trolleyFell.since / 0.5), from = game.trolleyFell.from
       if (f < 1) trolley(pen, ...at2(from[0], from[1] + (WATER - from[1]) * f * f), cell, cart.weights, 'tray', 0, stream(31))
-      else this.ring(pen, at2(from[0], WATER), 0.3 + 0.8 * (game.trolleyFell.since - 0.5), Math.max(0, 1 - (game.trolleyFell.since - 0.5) / 0.6))
+      // On the water it bobs for a moment, and then it is back in its compartment.
+      else trolley(pen, ...at2(from[0], WATER + 0.06 * Math.sin((game.trolleyFell.since - 0.5) * 16) * Math.max(0, 1 - (game.trolleyFell.since - 0.5) / 0.6)), cell, cart.weights, 'tray', 0, stream(31))
     }
 
     // The tracing paper: the pad at the bottom, and the two tracings kept above it. The one laid on the board is marked.
@@ -551,7 +572,15 @@ export class View {
     return 4
   }
 
-  /** A thin white ring: the draughtsman's circle round a point. */
+  /** A soft patch of the drafting white round a point, filled: what glows, what a part will land on, where a pin was. Never a ring: the one ring on the sheet is the pencil ring where a part gave. */
+  private halo(pen: Pen, at: readonly [number, number], radius: number, alpha: number): void {
+    pen.fillStyle = INK.line
+    pen.globalAlpha = alpha * 0.3
+    pen.beginPath(); pen.arc(at[0], at[1], radius * this.plot.cell, 0, Math.PI * 2); pen.fill()
+    pen.globalAlpha = 1
+  }
+
+  /** A thin white ring: the pencil ring round the spot where a part gave. */
   private ring(pen: Pen, at: readonly [number, number], radius: number, alpha: number): void {
     pen.strokeStyle = INK.line
     pen.globalAlpha = alpha

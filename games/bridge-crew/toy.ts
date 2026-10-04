@@ -7,7 +7,7 @@ import { atRest, ends, follow, rests, unrest, type Moving, type Rest } from './p
 import { edit, type Save } from './save'
 import { groundAt } from './sheet'
 import { canPin, isFooting, site, type Site } from './sites'
-import { chiefCroak, chiefRuffle, chiefTaps, fold, growCreak, knock, lay as layVoice, pick, pinClick, pinRattle, pinTick, putBack, snapTick, type VoiceSpec } from './voices'
+import { chiefCroak, chiefRuffle, chiefTaps, fold, growCreak, knock, lay as layVoice, pick, pinClick, pinRattle, pinSwing, pinTick, putBack, snapTick, type VoiceSpec } from './voices'
 
 // The toy: the bridge on the board, a finger, and what the two do to each
 // other. Pure: no renderer, no DOM and no clock of its own. The Mount feeds it
@@ -57,8 +57,8 @@ export const NOTCH = { turn: 0.3, gap: 0.05 } as const
 export const LEAN = { far: 0.07, reach: 5 } as const
 
 /**
- * What a touch leaves behind for a moment, drawn in the drafting line: a ring
- * that runs out from a pin as it clicks in, dust where a part lands or a pile
+ * What a touch leaves behind for a moment, drawn in the drafting white: specks
+ * that fly out from a pin as it clicks in, dust where a part lands or a pile
  * is stirred, the blast of a horn, and a feather the chief loses when it is
  * poked, which floats down to its ledge and lies there a while. Short-lived:
  * never saved.
@@ -100,6 +100,8 @@ export class Toy {
   private leanFrom: Point | null = null
   /** Seconds since a hinge last ticked. */
   private ticked = Infinity
+  /** Seconds since the pin at each grid point was last rattled, by its key: a second tap inside the ring turns it. */
+  private rattled = new Map<string, number>()
   readonly chief: ChiefDirector
   seconds = 0
   protected voices: VoiceSpec[] = []
@@ -203,9 +205,19 @@ export class Toy {
       if (back.pinned.length) { this.voices.push(back.result.voice); this.commit(back.bridge); return }
       const on = this.bridge.flatMap((part, index) => (pinsOf(part).some((p) => samePoint(p, hand.at)) ? [index] : []))
       if (on.length === 0) return
+      // A second tap while it still rings turns the pin: a lone part that hangs on it swings right round like a clock
+      // hand, ticking as it goes, and hangs straight down again.
+      const lone = on.length === 1 && this.rest[on[0]].how === 'hangs'
+      if (lone && (this.rattled.get(key(hand.at)) ?? Infinity) < RING) {
+        this.moving[on[0]].turn.speed += on[0] % 2 ? 17 : -17
+        this.voices.push(pinSwing)
+        this.rattled.delete(key(hand.at))
+        return
+      }
       // Every part on the pin rattles at once, each in its own voice.
       this.voices.push(pinRattle(on.map((index) => this.pluckOf(index)[0].pitch)))
       for (const index of on) this.rung[index] = RING * 0.5
+      this.rattled.set(key(hand.at), 0)
     }
     if (hand.what === 'part') {
       const index = hand.index
@@ -342,6 +354,7 @@ export class Toy {
       moving.turn.speed *= -0.35
     }
     for (const [point, since] of this.clicked) { if (since > 1) this.clicked.delete(point); else this.clicked.set(point, since + dt) }
+    for (const [point, since] of this.rattled) { if (since > RING) this.rattled.delete(point); else this.rattled.set(point, since + dt) }
     for (const mark of this.marks) mark.since += dt
     if (this.marks.some((mark) => mark.since >= mark.life)) this.marks = this.marks.filter((mark) => mark.since < mark.life)
     for (const flight of this.flying) flight.since += dt

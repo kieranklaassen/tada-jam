@@ -42,7 +42,7 @@ export function between(run: Run, progress: number): Answer & { use: number[]; s
   const strain = t < 0.5 ? a.strain : b.strain
   return {
     moved: (node) => [a.moved[2 * node] + (b.moved[2 * node] - a.moved[2 * node]) * t, a.moved[2 * node + 1] + (b.moved[2 * node + 1] - a.moved[2 * node + 1]) * t],
-    parts: use.map((value, index) => ({ force: 0, bending: 0, use: value, strain: strain[index], spot: [0, 0] as const })),
+    parts: use.map((value, index) => ({ force: a.force[index] + (b.force[index] - a.force[index]) * t, bending: 0, use: value, strain: strain[index], spot: [0, 0] as const })),
     held: true,
     use, strain,
   }
@@ -123,7 +123,7 @@ export function answerOf(step: Step): Answer & { use: number[] } {
   const use = Array.from(step.use)
   return {
     moved: (node) => [step.moved[2 * node], step.moved[2 * node + 1]],
-    parts: use.map((value, index) => ({ force: 0, bending: 0, use: value, strain: step.strain[index], spot: [0, 0] as const })),
+    parts: use.map((value, index) => ({ force: step.force[index], bending: 0, use: value, strain: step.strain[index], spot: [0, 0] as const })),
     held: true,
     use,
   }

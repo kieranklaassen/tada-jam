@@ -77,6 +77,8 @@ export type Step = {
   /** For each part, the share of its strength in use, and how it is strained. */
   use: Float32Array
   strain: Strain[]
+  /** For each part, the force along it: a pull above zero, a squeeze below. What a pluck is pitched by. */
+  force: Float32Array
 }
 
 export type Ending =
@@ -157,7 +159,7 @@ function clearances(at: Site, frame: Frame, road: Road, parts: readonly Part[]):
 function record(frame: Frame, x: number, answer: Answer): Step {
   const moved = new Float32Array(2 * frame.nodes.length)
   for (let n = 0; n < frame.nodes.length; n++) { const [dx, dy] = answer.moved(n); moved[2 * n] = dx; moved[2 * n + 1] = dy }
-  return { x, moved, use: Float32Array.from(answer.parts, (p) => p.use), strain: answer.parts.map((p) => p.strain) }
+  return { x, moved, use: Float32Array.from(answer.parts, (p) => p.use), strain: answer.parts.map((p) => p.strain), force: Float32Array.from(answer.parts, (p) => p.force) }
 }
 
 /** How the frame fails under this answer, if it does: it folds, or the part most over its strength gives. */
@@ -259,7 +261,8 @@ export function park(at: Site, parts: readonly Part[], x: number, weight: number
   if (!place(frame, road, x)) return null
   const { loads, wrong } = carry(at, frame, road, parts, [{ x, weight }])
   const answer = solve(frame, loads)
-  return { frame, step: record(frame, x, answer), ending: wrong ?? failure(answer) }
+  // Standing still, it can stand on a tube: it rolls off only when the tube is turned under it (the game does that).
+  return { frame, step: record(frame, x, answer), ending: (wrong && wrong.kind !== 'rolls-off' ? wrong : null) ?? failure(answer) }
 }
 
 /** A weight hung from a pin by its hook: the trolley as a pendulum. Its pull drags that one joint straight down. Null when no firm part has a pin there. */

@@ -3,12 +3,12 @@ import { BUILD, CrewDirector, type CrewId } from './crew'
 import { layPart } from './grid'
 import { length, pinsOf, samePoint, type Kind, type Part, type Point } from './kit'
 import { PART_REACH, PIN_REACH, SLIDE_OFF, TROLLEY_REACH, farFromStretch, gridPointAt, onRoll, onVehicle, parkAt, rackSlot, toolAt, touched, tracingSpot, waitAt } from './layout'
-import { modelInMargin, nearestDifferences, neatWayDue, oneChangeDue, type Difference } from './order'
+import { givenUpOn, modelInMargin, nearestDifferences, neatWayDue, oneChangeDue, type Difference } from './order'
 import { CALM, type Splash } from './drift'
 import { desk } from './valley'
 import { DRAWN_DIP, atRest, rests, type Rest } from './pose'
 import { answerOf, between, creaks, ended, frontAt, seat, stepAt, type Seat } from './ride'
-import type { Strain } from './frame'
+import type { Frame, Strain } from './frame'
 import { hang, lowPoint, park, roadOf, run, type Ending, type Run, type Train } from './run'
 import { crossed, failedRun, leaveHats, markShown, onNewest, parked, pluckHat, ringed, sentHome, setTrolley, standing, swapTracing, toFront, trace, turnTo, unroll, type Save, type Sheet } from './save'
 import { Scene } from './scene'
@@ -45,6 +45,9 @@ export const swingAt = (since: number): number => (Number.isFinite(since) ? SWIN
 
 /** How long the next roll takes to slide in when it arrives outside a crossing, in seconds. */
 export const ROLL_IN = 1.1
+
+type Lying = { frame: Frame; moved: (node: number) => readonly [number, number] }
+const STRAIGHT: { share: number; off: readonly [number, number] }[] = []
 
 const longOf = (id: VehicleId): number => Math.max(...VEHICLES[id].axles)
 /** How tall each vehicle stands with its load, in cells: what a touch on it can reach. */
@@ -98,6 +101,13 @@ export class Game extends Toy {
   trolleyFell: { from: readonly [number, number]; since: number } | null = null
   /** The showing the chief is giving: the neat way of an idea, filled in from the kind of failure it follows (or none, after a crossing), or the one change with the two differences that fill its models. */
   showing: { idea: Idea; failure: Ending['kind'] | null } | { differences: Difference[] } | null = null
+  /** The part of the laid tracing that would give under the load the bridge is carrying: its line is drawn broken. */
+  tracingGave: number | null = null
+  /** What the bridge and the laid tracing lie by now: the frame and how far each of its points has moved. A plank's curve is read from it. */
+  private lying: Lying | null = null
+  private tracingLying: Lying | null = null
+  /** Where the trolley last stood or hung: where it drops from when what held it is taken away. */
+  private trolleyWas: readonly [number, number] | null = null
   /** The pencil ring as it was when the job vehicle crossed: it fades through the crossing's scene. What is saved has it gone already. */
   fading: Sheet['ring'] = null
   /** Seconds since the next roll began to slide in after a cycle judged badly; -1 while it waits for the give's scene to end; Infinity once it is there. */
@@ -131,6 +141,8 @@ export class Game extends Toy {
     this.model()
     this.moving = this.rest.map(atRest)
     this.crew = { beaver: new CrewDirector('beaver', this.crewEyes('beaver'), random), mole: new CrewDirector('mole', this.crewEyes('mole'), random) }
+    // Found as left: setting itself up makes no sound.
+    this.voices = []
   }
 
   /** Where one of the crew stands on this sheet: its feet, in cells. */
@@ -173,10 +185,45 @@ export class Game extends Toy {
   trolleyPlace(): readonly [number, number] | null {
     const place = this.trolley.at
     if (!place) return null
-    const node = 'x' in place ? roadOf(this.at, this.frame).nodes.find((n) => this.frame.nodes[n].x === place.x) : this.frame.at.get(`${place.pin[0]},${place.pin[1]}`)
-    if (node === undefined) return null
-    const [dx, dy] = this.answer.moved(node)
-    return [this.frame.nodes[node].x + dx * DRAWN_DIP, this.frame.nodes[node].y + dy * DRAWN_DIP]
+    const drawn = (node: number): readonly [number, number] => { const [dx, dy] = this.answer.moved(node); return [this.frame.nodes[node].x + dx * DRAWN_DIP, this.frame.nodes[node].y + dy * DRAWN_DIP] }
+    if ('pin' in place) { const node = this.frame.at.get(`${place.pin[0]},${place.pin[1]}`); return node === undefined ? null : drawn(node) }
+    // On the way: at one of its points, or between two of them (on a tube, which has a point only at each pin).
+    const road = roadOf(this.at, this.frame)
+    for (let r = 0; r < road.nodes.length; r++) {
+      const x0 = this.frame.nodes[road.nodes[r]].x
+      if (x0 === place.x) return drawn(road.nodes[r])
+      if (r + 1 < road.nodes.length && place.x > x0 && place.x < this.frame.nodes[road.nodes[r + 1]].x) {
+        const from = drawn(road.nodes[r]), to = drawn(road.nodes[r + 1]), t = (place.x - x0) / (this.frame.nodes[road.nodes[r + 1]].x - x0)
+        return [place.x, from[1] + (to[1] - from[1]) * t]
+      }
+    }
+    return null
+  }
+
+  /** The part of the way the trolley stands on, where it stands on the deck: its index in the bridge. Null in the tray, on a hook, or exactly on a pin between two parts. */
+  private trolleyOn(): number | null {
+    const place = this.trolley.at
+    if (!place || !('x' in place)) return null
+    const road = roadOf(this.at, this.frame)
+    for (let r = 0; r + 1 < road.nodes.length; r++) if (place.x > this.frame.nodes[road.nodes[r]].x && place.x < this.frame.nodes[road.nodes[r + 1]].x) return road.parts[r]
+    return null
+  }
+
+  /**
+   * How a plank lies between its two ends now: for each point along it, how
+   * far along it is and how far off the straight line between the ends, in
+   * cells. A plank bends in a smooth curve, deepest under the load; everything
+   * else is straight. `traced` asks it of the tracing laid on the board.
+   */
+  bend(index: number, traced = false): { share: number; off: readonly [number, number] }[] {
+    const lying = traced ? this.tracingLying : this.lying, line = lying?.frame.along.get(index)
+    if (!lying || !line || line.length < 3) return STRAIGHT
+    const at = (node: number): readonly [number, number] => { const point = lying.frame.nodes[node], [dx, dy] = lying.moved(node); return [point.x + dx * DRAWN_DIP, point.y + dy * DRAWN_DIP] }
+    const first = at(line[0]), last = at(line[line.length - 1])
+    return line.slice(1, -1).map((node, i) => {
+      const share = (i + 1) / (line.length - 1), here = at(node)
+      return { share, off: [here[0] - (first[0] + (last[0] - first[0]) * share), here[1] - (first[1] + (last[1] - first[1]) * share)] as const }
+    })
   }
 
   /** True once after an outcome that must be saved at once: a scene's, a cycle's. */
@@ -261,8 +308,10 @@ export class Game extends Toy {
     if (place) {
       const loaded = under(this.bridge)
       if (!loaded || loaded.ending) {
-        // Nothing holds it there, or what held it gave: it is back in the tray, and the bridge lies with nothing on it.
+        // What held it gave, or nothing holds it there any more (the part it stood on was taken off): it drops into
+        // the water, bobs, and is back in the tray, and the bridge lies with nothing on it.
         if (loaded?.ending) this.trolleyGave(loaded.ending)
+        else this.trolleyDrops(false)
         this.save = setTrolley(this.save, trolley.weights, null)
         this.changed = true
       } else {
@@ -271,10 +320,32 @@ export class Game extends Toy {
         this.rest = rests(this.bridge, loaded.frame, this.answer, footing, ground)
       }
     }
+    this.lying = { frame: this.frame, moved: this.answer.moved }
+    this.trolleyWas = this.trolleyPlace() ?? this.trolleyWas
     const tracing = this.laidTracing === null || this.laidTracing === undefined ? null : this.save.sheets[this.save.on].tracings[this.laidTracing]
-    if (!tracing) { this.tracingRest = []; return }
+    this.tracingGave = null
+    if (!tracing) { this.tracingRest = []; this.tracingLying = null; return }
+    // The tracing under the same load at the same place. A design that would give under it is still drawn under it, and
+    // the part that would give is drawn broken: the weaker design looks the weaker.
     const loaded = this.trolley.at ? under(tracing) : null
-    this.tracingRest = loaded && !loaded.ending ? rests(tracing, loaded.frame, answerOf(loaded.step), footing, ground) : this.modelOf(tracing).rest
+    if (loaded) {
+      const answer = answerOf(loaded.step)
+      this.tracingRest = rests(tracing, loaded.frame, answer, footing, ground)
+      this.tracingLying = { frame: loaded.frame, moved: answer.moved }
+      if (loaded.ending?.kind === 'gives') this.tracingGave = loaded.ending.part
+    } else {
+      const alone = this.modelOf(tracing)
+      this.tracingRest = alone.rest
+      this.tracingLying = { frame: alone.frame, moved: alone.answer.moved }
+    }
+  }
+
+  /** The trolley lost what it stood on or hung from: it drops into the water where it was, with a splash, and bobs. `rolled` is true when a tube rolled it off, which has its own plop. */
+  private trolleyDrops(rolled: boolean): void {
+    const from = this.trolleyWas ?? [this.at.left[0] + 1, this.at.left[1]]
+    this.trolleyFell = { from, since: 0 }
+    this.voices.push(rolled ? plop : splash(this.trolley.weights))
+    this.splash = { x: Math.max(this.at.left[0] + 0.3, Math.min(this.at.right[0] - 0.3, from[0])), since: -0.45, big: 0.4 }
   }
 
   /** A part gave under the trolley, or the build folded: it is heard, the spot is ringed, and the trolley falls from where it was. */
@@ -434,8 +505,20 @@ export class Game extends Toy {
 
   /** A part laid is a thing to measure: the mole does, twice, unless it is in the middle of something. */
   protected override commit(bridge: readonly Part[], added = -1): void {
+    // What was just turned, if this change is a turn (the toy starts its turn's clock before it commits).
+    const spun = added >= 0 ? -1 : this.turned.findIndex((since) => since === 0), on = this.trolleyOn(), place = this.trolley?.at
     super.commit(bridge, added)
     if (added >= 0 && this.crew && !this.crew.mole.busy) this.crew.mole.react('laid')
+    const part = spun >= 0 ? this.bridge[spun] : undefined
+    if (!part || !place) return
+    // A tube rolls as it is turned: the trolley parked on it log-rolls off into the water with a plop.
+    if (part.kind === 'tube' && on === spun && this.trolley.at) {
+      this.trolleyDrops(true)
+      this.save = setTrolley(this.save, this.trolley.weights, null)
+      this.model()
+    }
+    // A thread whirls as it is turned: the trolley hung on one of its pins swings.
+    if (part.kind === 'thread' && 'pin' in place && pinsOf(part).some((point) => samePoint(point, place.pin))) { this.swing = 0; this.voices.push(pendulumSqueak(false)) }
   }
 
   /**
@@ -488,7 +571,10 @@ export class Game extends Toy {
   private dropTrolley(x: number, y: number): void {
     const trolley = this.trolley, snapped = Math.round(x * 2) / 2, was = trolley.at
     const onDeck = park(this.at, this.bridge, snapped, trolley.weights)
-    const deckY = onDeck ? roadOf(this.at, onDeck.frame).nodes.map((n) => onDeck.frame.nodes[n]).find((n) => n.x === snapped)?.y ?? Infinity : Infinity
+    // The height of the way at that place: at one of its points, or between two (a tube has a point only at each pin).
+    const way = onDeck ? roadOf(this.at, onDeck.frame).nodes.map((n) => onDeck.frame.nodes[n]) : []
+    const before = way.filter((n) => n.x <= snapped).pop(), after = way.find((n) => n.x >= snapped)
+    const deckY = before && after ? (after.x === before.x ? before.y : before.y + ((after.y - before.y) * (snapped - before.x)) / (after.x - before.x)) : Infinity
     const pin = [Math.round(x), Math.round(y)] as const
     if (onDeck && Math.abs(y - deckY) <= 1 && snapped > this.at.left[0] && snapped < this.at.right[0]) {
       const rest = lowPoint(this.at, this.bridge, snapped, trolley.weights) ?? snapped
@@ -592,11 +678,18 @@ export class Game extends Toy {
       const answer = between(drive.run, progress)
       // The bridge lies as the model says it does under the load where it is now.
       this.rest = rests(this.bridge, drive.run.frame, answer, isFooting(this.at), (gx) => groundAt(this.at, gx))
+      this.lying = { frame: drive.run.frame, moved: answer.moved }
       // Each part is heard as it takes the load, in its own kind's voice.
       for (const due of creaks(drive.heard, answer.use)) this.voices.push(this.bridge[due.part] ? loadVoice(this.bridge[due.part].kind, due.use) : creak(due.use))
       // A tracing laid on the board dips under the same vehicle at the same place: as far as its own run got.
       const traced = this.laidTracing === null ? null : this.save.sheets[this.save.on].tracings[this.laidTracing]
-      if (drive.tracing && traced) this.tracingRest = rests(traced, drive.tracing.frame, between(drive.tracing, Math.min(progress, drive.tracing.steps.length - 1)), isFooting(this.at), (gx) => groundAt(this.at, gx))
+      if (drive.tracing && traced) {
+        const last = drive.tracing.steps.length - 1, under = between(drive.tracing, Math.min(progress, last))
+        this.tracingRest = rests(traced, drive.tracing.frame, under, isFooting(this.at), (gx) => groundAt(this.at, gx))
+        this.tracingLying = { frame: drive.tracing.frame, moved: under.moved }
+        // Where the traced design would have given under this vehicle, its part is drawn broken from then on.
+        if (progress >= last && drive.tracing.ending.kind === 'gives') this.tracingGave = drive.tracing.ending.part
+      }
       drive.heard = answer.use
       drive.strain = answer.strain
       if (ended(this.at, drive.run, x, drive.homeward)) this.finishDrive(drive)
@@ -605,6 +698,12 @@ export class Game extends Toy {
       const wasRunning = this.scene.running
       this.scene.update(this.sceneClock)
       if (wasRunning && !this.scene.running) this.afterScene()
+    }
+    // The neat way after a crossing is owed by the state itself, so putting the game away in the middle of that
+    // crossing's scene does not lose it: the newest sheet's vehicle has crossed and its idea has not been shown.
+    if (!this.scene && !this.drive && !this.showing && !this.hand && this.crossedUnshown()) {
+      this.owed = this.at.idea; this.owedAfter = null
+      this.beginShowing()
     }
     super.step(dt)
   }
@@ -690,6 +789,7 @@ export class Game extends Toy {
       // drawn hanging from their own pins (`pieces`). With no part given (the road ended, the wheels rolled off), the
       // bridge lies as it does with nothing on it.
       const gone = what.ring?.part
+      this.lying = null
       if (gone === undefined) this.rest = this.modelOf(this.bridge).rest
       else if (this.bridge[gone].kind === 'tube') this.rest = this.modelOf(this.bridge.map((part, index) => (index === gone ? { ...part, loose: 'a' as const } : part))).rest
       else {
@@ -749,6 +849,11 @@ export class Game extends Toy {
       if (this.skipping) this.rollIn = Infinity
       else { this.rollIn = 0; this.voices.push(unrollVoice(1)) }
     }
+    return this.beginShowing()
+  }
+
+  /** The showing that is owed begins, and is marked given at that moment. True when one began. */
+  private beginShowing(): boolean {
     const idea = this.owed
     this.owed = null
     if (!idea) return false
@@ -758,6 +863,12 @@ export class Game extends Toy {
     this.changed = true
     this.chief.showing('shows')
     return true
+  }
+
+  /** True when the newest sheet is on the board, its own vehicle has crossed it (its cycle was judged, and not badly), and its idea has not been shown yet. */
+  private crossedUnshown(): boolean {
+    const idea = this.at.idea
+    return idea !== null && onNewest(this.save) && this.save.finished && !givenUpOn(this.save.tries) && !this.save.shown.includes(idea)
   }
 
   /** Another sheet comes onto the board: the roll unrolled, or a sheet taken back from the rack. */

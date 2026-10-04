@@ -69,7 +69,7 @@ function face(pen: Pen, x: number, y: number, c: number, pose: Pick<VehiclePose,
   }
   // Brows tip inward when it is put out and lift when it is content, and go up in the middle when it is not sure; the
   // mouth curves with the mood, or is an open round.
-  const tip = 0.04 * mood - 0.06 * pose.fret
+  const tip = 0.04 * mood + 0.07 * pose.fret
   pen.beginPath()
   pen.moveTo(x - c * 0.18, y - c * (0.18 - tip)); pen.lineTo(x - c * 0.03, y - c * (0.18 + tip))
   pen.moveTo(x + c * 0.07, y - c * (0.18 + tip)); pen.lineTo(x + c * 0.22, y - c * (0.18 - tip))
