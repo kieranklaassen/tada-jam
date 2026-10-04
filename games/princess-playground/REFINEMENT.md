@@ -143,7 +143,14 @@
 - Tastes hold on a landing the child did not make: a friend thrown by the plank and down again on the head it sat on is hissed at by Mog and puffed at by Pim, and Pim on top crows again. Mog left on top of a stack when the one above him goes purrs.
 - The level hum and the swaying stacks go on while a friend from the sand is in the hand.
 - A pointer the browser takes away is not the child letting go: at put-away the friend it carried goes back, and no move is made.
-- `input.ts` carries one more small thing for that, a mark on a drag whose pointer was taken.
+- `input.ts` carries one more small thing for that, a mark on a drag whose pointer was taken, and a `dragAbort` gesture for when it does not come back.
+
+**Built after the eighth reading.** Rules 1 to 5 clean again; four things under rule 6.
+
+- Only an end that goes up throws. A friend landing on the end that is already down pushed it into the sand hard enough to count as a knock, and flung whoever sat high opposite although nothing had moved; now the plank must have been up off that end since it last came down on it.
+- The ending's plank see-saws three times whatever the two ends weigh. Each push is sized so that the heavy end lifts and is down again before the next (`motion.ts`, `seeSaw`), so a bigger difference swings further and throws higher; and a rider a see-saw throws comes down without pushing the plank. Before, the pushes were one size, a swing could outlast the gap to the next push, and the landings of thrown riders rocked the plank on their own.
+- Bo with a friend on his head holds very still: no breath, no drawing himself up, and he gives a good deal less under the weight than anyone else.
+- A pointer the browser takes away and that does not come back makes no move, whenever the game rests: after the grace the friend goes back to where it was picked up from (`input.ts`, `dragAbort`).
 
 **Found by this lane while checking those.**
 

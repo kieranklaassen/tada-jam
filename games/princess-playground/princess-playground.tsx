@@ -143,6 +143,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
         else if (gesture.type === 'dragStart') game.dragStart()
         else if (gesture.type === 'dragMove') game.dragTo(stage.pointAt(gesture.at.x, gesture.at.y, game.carryHeight), stage.sandAt(gesture.at.x, gesture.at.y), stage.pointAt(gesture.at.x, gesture.at.y, AIM_HEIGHT))
         else if (gesture.type === 'dragEnd') game.dragEnd()
+        else if (gesture.type === 'dragAbort') game.dragAbort()
         else if (gesture.type === 'pressEnd') game.pressEnd()
         // A lifted finger mid-drag: the friend in hand hangs where it is and waits out the grace.
       }

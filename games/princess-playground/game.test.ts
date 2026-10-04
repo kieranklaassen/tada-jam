@@ -1017,6 +1017,24 @@ describe('whoever the deciding move lifts', () => {
   })
 })
 
+describe('a pointer the browser takes away mid-drag', () => {
+  it('makes no move when it does not come back: the friend goes back to where it was picked up from', () => {
+    const game = new Game({ ...shown(), touched: true }, 1)
+    run(game, 0.2)
+    const before = game.saved()
+    game.press({ kind: 'friend', id: 'mog' })
+    game.dragStart()
+    game.dragTo({ x: PLANK.seat, z: PLANK.z }, null, { x: PLANK.seat, z: PLANK.z })
+    run(game, 0.5)
+    game.dragAbort()
+    run(game, 4)
+    expect(game.play.held).toBe(null)
+    expect(game.world.moves).toBe(0)
+    expect(game.sceneRunning).toBe(false)
+    expect({ ...game.saved(), marks: before.marks }).toEqual(before)
+  })
+})
+
 describe('a finger already down when a scene begins', () => {
   it('does nothing when it lifts or drags: nobody is moved inside the scene and no ride begins in it', () => {
     // Mog is sent to lift Pim, and a finger comes down on Dot before the plank has carried her up.

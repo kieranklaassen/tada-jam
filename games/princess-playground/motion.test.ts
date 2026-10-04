@@ -265,6 +265,77 @@ describe('the playground in motion', () => {
     expect(tips).toBeGreaterThan(30)
   })
 
+  it('throws nobody when a friend lands on the end that is already down: nothing went up', () => {
+    for (const lander of ['pim', 'dot', 'mog'] as const) {
+      // Bo holds the left end down, a friend rides the right one high, and another lands on Bo.
+      const rider = lander === 'mog' ? 'dot' : 'mog'
+      const world = new Playground(putOnEnd(putOnEnd(emptyArrangement(), 'bo', 'left'), rider, 'right'))
+      play(world, 0.5)
+      world.grab(lander)
+      world.carryTo(-PLANK.seat, PLANK.z)
+      play(world, 0.4)
+      world.release()
+      const events = play(world, 4)
+      expect(placeOf(world.arrangement, lander)).toMatchObject({ at: 'end', end: 'left', level: 1 })
+      expect(events.some((event) => event.type === 'toss'), lander).toBe(false)
+    }
+  })
+
+  it('see-saws three times in an ending whatever the two ends weigh: up, down and still again each time', () => {
+    for (const [left, right] of [[['pim'], ['mog']], [['pim'], ['bo']], [['bo'], ['mog', 'pim']], [['mog'], ['bo', 'dot', 'pim']], [['pim', 'mog'], ['bo', 'dot']]] as const) {
+      let a = emptyArrangement()
+      for (const id of left) a = putOnEnd(a, id, 'left')
+      for (const id of right) a = putOnEnd(a, id, 'right')
+      const world = new Playground(a)
+      play(world, 0.5)
+      world.takeEvents()
+      // Each push lifts the heavy end off the sand and it comes down again: three times away and back.
+      const rest = world.plank.tilt
+      let away = false, backs = 0, furthest = 0, t = 0
+      const watch = () => {
+        const off = Math.abs(world.plank.tilt - rest)
+        furthest = Math.max(furthest, off)
+        if (!away && off > 0.02) away = true
+        else if (away && off < 0.012) {
+          away = false
+          backs += 1
+        }
+      }
+      for (const at of [0, 0.8, 1.6]) {
+        while (t < at) {
+          world.advance(1 / 60)
+          t += 1 / 60
+          watch()
+        }
+        world.seeSaw()
+      }
+      while (t < 2.6) {
+        world.advance(1 / 60)
+        t += 1 / 60
+        watch()
+      }
+      expect(backs, `${left} | ${right}`).toBe(3)
+      // Plain to see, and never so far that the plank tips over.
+      expect(furthest, `${left} | ${right}`).toBeGreaterThan(0.04)
+      expect(furthest, `${left} | ${right}`).toBeLessThan(Math.abs(rest))
+      expect(Math.abs(world.plank.tilt - rest), `${left} | ${right}`).toBeLessThan(0.01)
+    }
+  })
+
+  it('holds Bo very still while a friend sits on his head: not a breath', () => {
+    const world = new Playground(putOnEnd(putOnEnd(emptyArrangement(), 'bo', 'left'), 'pim', 'left'))
+    play(world, 3)
+    const seen = new Set<string>()
+    play(world, 6, (w) => { seen.add(w.frame().poses.bo.squash.toFixed(4)) })
+    expect(seen.size).toBe(1)
+    // With nobody on him he breathes, the deepest of the four.
+    const alone = new Playground(putOnEnd(emptyArrangement(), 'mog', 'left'))
+    play(alone, 3)
+    const breaths = new Set<string>()
+    play(alone, 6, (w) => { breaths.add(w.frame().poses.bo.squash.toFixed(3)) })
+    expect(breaths.size).toBeGreaterThan(10)
+  })
+
   it('throws Bo too when the others bring his end up hard, lower than anyone lighter', () => {
     const world = new Playground(putOnEnd(emptyArrangement(), 'bo', 'left'))
     play(world, 0.5)

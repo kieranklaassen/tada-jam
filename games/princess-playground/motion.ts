@@ -1,6 +1,6 @@
 import { aimedAtPlank, drop, inCompany, placeOf, tap, weightOn, type Arrangement } from './arrangement'
 import { PERSONALITY } from './personality'
-import { nudge, stepPlank, type PlankState } from './plank'
+import { PLANK_INERTIA, TURN, nudge, stepPlank, type PlankState } from './plank'
 import type { Frame, FriendPose, Poses } from './pose'
 import { restPose } from './pose'
 import { NESTLE, restingAt, restTilt } from './rest'
@@ -39,8 +39,14 @@ export const HALF_AWAY = 0.85
 export const FINGER = 0.14
 /** How flat a head is pressed by a friend sitting on it. */
 export const PRESSED = 0.93
+/** How long one rock of an ending takes, up and down again: three fit between its beats. Seconds. */
+export const ROCK_SECONDS = 0.6
+/** How fast a see-sawing end must come down to throw: slower, it only bobs them. Radians a second. */
+export const ROCK_TOSS = 0.4
 /** How flat Mog goes in the air when the plank throws him: flat and long. */
 export const MOG_FLAT = 0.72
+/** Bo with a friend on his head gives a good deal less under it than anyone else, and holds very still. */
+export const PROUD = 0.97
 /** How flat anyone is squashed for as long as Bo sits on top of them. */
 export const FLAT = 0.7
 /** How hard a landing turns the plank, per unit of weight. */
@@ -109,6 +115,8 @@ type Body = {
   glance: number
   /** It was thrown by the plank and has not landed yet. */
   thrown: boolean
+  /** Thrown by a see-saw of an ending, not by a friend landing: it comes down again without pushing the plank, so the three rocks stay three. */
+  rocked: boolean
 }
 
 /** A small seeded stream (mulberry32): the only randomness in the game, and it only picks ordinary detail. */
@@ -141,6 +149,10 @@ export class Playground {
   private wasLevel = false
   /** The plank is rocking under a finger's tap, which throws nobody: until it lies still again, or a friend comes or goes. */
   private tapRock = false
+  /** The plank was pushed to see-saw in an ending: its end comes down again on purpose, and throws whoever rides the other. */
+  private rocked = false
+  /** The end the plank lies on, or last came down on, until it has been well up off it again; not yet looked at when undefined. */
+  private lay: End | null | undefined = undefined
   /** The end that lies in the sand, to tell when it lifts. */
   private downEnd: End | null = null
   private readonly random: () => number
@@ -161,7 +173,7 @@ export class Playground {
         squash: 1, squashV: 0, squashTo: 1, lean: 0, leanV: 0, leanTo: 0, follow: 0, followV: 0,
         holdX: at.x, holdZ: at.z, blinkIn: 0.6 + index * 0.9 + this.random() * 2, blinkT: 0, mouth: 0,
         bright: 1, doze: 0, phase: index * 1.7, turn: 0, aside: 0, press: 1,
-        away: null, act: null, actT: 0, actFor: 0, actWay: 0, mood: 'plain', gaze: 0, gazeTo: 0, gazeUp: 0, gazeUpTo: 0, glance: 0, thrown: false,
+        away: null, act: null, actT: 0, actFor: 0, actWay: 0, mood: 'plain', gaze: 0, gazeTo: 0, gazeUp: 0, gazeUpTo: 0, glance: 0, thrown: false, rocked: false,
       }
       this.poses[id] = restPose()
     })
@@ -328,6 +340,7 @@ export class Playground {
     this.arrangement = arrangement
     this.plank.tilt = restTilt(arrangement)
     this.plank.spin = 0
+    this.lay = undefined
     for (const id of FRIEND_IDS) {
       const body = this.bodies[id], at = restingAt(arrangement, id, this.plank.tilt)
       body.away = null
@@ -357,6 +370,8 @@ export class Playground {
     twin.carry = this.carry
     twin.wasLevel = this.wasLevel
     twin.tapRock = this.tapRock
+    twin.rocked = this.rocked
+    twin.lay = this.lay
     twin.downEnd = this.downEnd
     twin.shakes = this.shakes
     twin.shakeIn = this.shakeIn
@@ -375,6 +390,19 @@ export class Playground {
   /** A push on the plank from the game: a rock in the ending scene. Positive turns the right end down. */
   rock(spin: number): void {
     nudge(this.plank, spin)
+  }
+
+  /**
+   * One see of an ending's see, saw, see: the plank is pushed against the way it lies, just hard enough that the
+   * heavy end lifts and is down again in `ROCK_SECONDS`, whatever the two ends weigh. So a bigger difference swings
+   * further, and the end comes down harder and throws higher.
+   */
+  seeSaw(): void {
+    const left = this.landedOn('left'), right = this.landedOn('right')
+    const way = Math.sign(this.plank.tilt) || 1
+    const pull = left === right ? 1.5 : (TURN * Math.abs(right - left)) / (PLANK_INERTIA + left + right)
+    nudge(this.plank, -way * pull * ROCK_SECONDS * 0.5)
+    this.rocked = true
   }
 
   /** A chuckle is shaking the plank. */
@@ -427,6 +455,7 @@ export class Playground {
     body.fromX = body.x; body.fromY = body.y; body.fromZ = body.z
     // A friend coming or going is no finger's tap: what the plank knocks down after it throws.
     this.tapRock = false
+    this.rocked = false
     body.mode = 'hop'
     body.landed = false
     body.hopT = 0
@@ -496,6 +525,7 @@ export class Playground {
 
   private step(dt: number): void {
     this.time += dt
+    if (this.lay === undefined) this.lay = Math.abs(this.plank.tilt) >= MAX_TILT * 0.92 ? (this.plank.tilt > 0 ? 'right' : 'left') : null
     if (this.shakes > 0) {
       this.shakeIn -= dt
       if (this.shakeIn <= 0) {
@@ -506,7 +536,7 @@ export class Playground {
     }
     const knock = stepPlank(this.plank, this.landedOn('left'), this.landedOn('right'), dt)
     if (knock) this.knocked(knock.end, knock.speed)
-    if (this.tapRock && Math.abs(this.plank.spin) < 0.02 && Math.abs(this.plank.tilt - this.restingTilt()) < 0.01) this.tapRock = false
+    if ((this.tapRock || this.rocked) && Math.abs(this.plank.spin) < 0.02 && Math.abs(this.plank.tilt - this.restingTilt()) < 0.01) this.tapRock = this.rocked = false
     // An end that lay in the sand has lifted well out of it: grains slide back into the bite it leaves.
     const tilt = this.plank.tilt
     const down: End | null = Math.abs(tilt) >= MAX_TILT * 0.92 ? (tilt > 0 ? 'right' : 'left') : null
@@ -515,6 +545,7 @@ export class Playground {
       this.downEnd = null
     }
     if (down) this.downEnd = down
+    if (Math.abs(tilt) < MAX_TILT * 0.7) this.lay = null
     const level = this.isLevel() && Math.abs(this.plank.tilt) < 0.05 && Math.abs(this.plank.spin) < 0.6
     if (level && !this.wasLevel) this.events.push({ type: 'level' })
     if (!this.isLevel()) this.wasLevel = false
@@ -528,17 +559,22 @@ export class Playground {
   private knocked(end: End, speed: number): void {
     this.events.push({ type: 'knock', end, speed, x: (end === 'left' ? -1 : 1) * PLANK.halfLength * Math.cos(MAX_TILT) })
     const up = otherEnd(end)
+    // It lay on this end already and has not been up since: nothing went up, so nobody is thrown.
+    const again = end === this.lay
+    this.lay = end
     for (const id of this.arrangement[up]) {
       const body = this.bodies[id]
       if (!body.landed || body.mode !== 'rest') continue
       const throwSpeed = speed * PLANK.seat * PERSONALITY[id].tossGain * TOSS
-      // A knock from a finger's tap on the plank, or a soft one, only bobs them.
-      if (speed < KNOCK_TOSS || this.tapRock) {
+      // Only an end that goes up throws: the plank tipping over, or see-sawing in an ending. An end that was down
+      // already and is knocked again by a landing on it, a finger's tap on the plank, or a soft knock, only bobs them.
+      if (this.tapRock || (this.rocked ? speed < ROCK_TOSS : speed < KNOCK_TOSS || again)) {
         body.squashV += Math.min(TOSS_FLOOR, throwSpeed) * 1.2
         continue
       }
       body.mode = 'air'
       body.thrown = true
+      body.rocked = this.rocked
       body.vy = throwSpeed
       body.squashV += 5
       body.mouth = 1
@@ -717,7 +753,7 @@ export class Playground {
     }
     const side = place.end === 'right' ? 1 : -1
     const before = Math.sign(this.plank.tilt)
-    nudge(this.plank, side * spec.weight * LANDING_PUSH * (firstTouch ? 1 : 0.35) * (0.5 + 0.5 * hard))
+    if (!(body.thrown && body.rocked)) nudge(this.plank, side * spec.weight * LANDING_PUSH * (firstTouch ? 1 : 0.35) * (0.5 + 0.5 * hard))
     this.events.push({ type: 'land', id, on: place.level > 0 ? 'friend' : 'plank', x: target.x, z: target.z, speed, thrown: body.thrown })
     body.thrown = false
     if (place.level > 0) {
@@ -769,7 +805,7 @@ export class Playground {
     let hold = 1
     if (place && place.at === 'end') {
       const above = this.arrangement[place.end].slice(place.level + 1)
-      if (above.length) hold = above.includes('bo') && this.bodies.bo.mode === 'rest' && this.bodies.bo.landed ? FLAT : PRESSED
+      if (above.length) hold = above.includes('bo') && this.bodies.bo.mode === 'rest' && this.bodies.bo.landed ? FLAT : id === 'bo' ? PROUD : PRESSED
     }
     if (hold > body.press + 0.1) body.squashV += POP
     body.press = hold < body.press ? Math.max(hold, body.press - dt * 3) : hold
@@ -837,7 +873,9 @@ export class Playground {
   frame(glow = 0, glowOn: FriendId | null = null): Frame {
     for (const id of FRIEND_IDS) {
       const body = this.bodies[id], own = PERSONALITY[id], pose: FriendPose = this.poses[id]
-      const breathe = body.mode === 'rest' ? Math.sin(body.phase) * own.breatheDepth : 0
+      // Bo with a friend on his head holds very still: not even a breath.
+      const still = id === 'bo' && body.press === PROUD
+      const breathe = body.mode === 'rest' && !still ? Math.sin(body.phase) * own.breatheDepth : 0
       pose.x = body.x
       pose.y = body.y
       pose.z = body.z

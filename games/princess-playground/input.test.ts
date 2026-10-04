@@ -184,4 +184,25 @@ describe('a drag that is partly done', () => {
     taken.up(2, { x: 205, y: 100 }, 200)
     expect(taken.lifted).toBe(true)
   })
+
+  it('ends a drag whose pointer was taken, once the grace is over, as nothing let go: an abort, not an end', () => {
+    const touch = new ForgivingTouch()
+    touch.down(1, { x: 100, y: 100 }, 0)
+    touch.move(1, { x: 200, y: 100 })
+    touch.cancel(1, 50)
+    expect(touch.advance(50 + LIFT_GRACE_MS)).toEqual([])
+    expect(touch.advance(51 + LIFT_GRACE_MS).map((gesture) => gesture.type)).toEqual(['dragAbort'])
+    // A real lift ends the drag as a drop.
+    const lifted = new ForgivingTouch()
+    lifted.down(1, { x: 100, y: 100 }, 0)
+    lifted.move(1, { x: 200, y: 100 })
+    lifted.up(1, { x: 200, y: 100 }, 50)
+    expect(lifted.advance(51 + LIFT_GRACE_MS).map((gesture) => gesture.type)).toEqual(['dragEnd'])
+    // A new finger elsewhere while a taken drag waits: the old drag is aborted, and the new press begins.
+    const other = new ForgivingTouch()
+    other.down(1, { x: 100, y: 100 }, 0)
+    other.move(1, { x: 200, y: 100 })
+    other.cancel(1, 50)
+    expect(other.down(2, { x: 900, y: 600 }, 100).map((gesture) => gesture.type)).toEqual(['dragAbort', 'press'])
+  })
 })

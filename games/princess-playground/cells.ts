@@ -88,8 +88,8 @@ export function underneath(below: FriendId, by: FriendId): Reaction[] {
   if (below === 'pim') out.push(react('pim', 0.35 + late, { voice: v.raspberry(), act: 'puff', seconds: 0.6 }))
   // Mog underneath: he ducks, ears flat, and hisses. Under Bo he is flat already.
   else if (below === 'mog') out.push(react('mog', 0.2 + late, by === 'bo' ? { voice: v.spit() } : { voice: v.spit(), act: 'duck', seconds: 0.5 }))
-  // Bo underneath holds very still, proud: he only draws himself up.
-  else if (below === 'bo') out.push(react('bo', 0.3, { act: 'tall', seconds: 0.9 }))
+  // Bo underneath holds very still, proud: he does nothing at all, and the motion model stills even his breath.
+  else if (below === 'bo') return out
   // Dot underneath hums its duet with whoever is over it, and sways.
   else out.push(react('dot', 0.3 + late, { voice: v.duet(), act: 'sway', seconds: 1.2, way: 1 }))
   return out

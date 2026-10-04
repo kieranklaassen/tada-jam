@@ -31,8 +31,6 @@ export type Director = {
   expectLanding(before: Arrangement, id: FriendId): void
 }
 
-/** How hard the plank is pushed for each of the three rocks of an ending, radians a second. */
-export const ROCK = 1.6
 /** When the three rocks fall, in seconds from the start of the ending. */
 export const ROCKS_AT = [1.8, 2.6, 3.4] as const
 /** When the friend who asks next leaves for the waiting place: the last beat of an ending. */
@@ -66,9 +64,8 @@ export function endingBeats(game: Director, asker: FriendId, lifters: readonly F
   })
   for (const at of ROCKS_AT) {
     beats.push(once(game, at, () => {
-      // Against the way it lies: the heavy end lifts as far as the difference lets it, and comes back.
-      const way = Math.sign(game.play.plank.tilt)
-      if (way !== 0) game.play.rock(-way * ROCK)
+      // Against the way it lies: the heavy end lifts as far as the difference lets it and is down again before the next.
+      game.play.seeSaw()
     }))
   }
   // This beat lands whether or not the scene is cut: the next asker goes to wait, and the plank answers its leaving.

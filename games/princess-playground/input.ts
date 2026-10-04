@@ -35,6 +35,8 @@ export type Gesture =
   /** The finger let go mid-drag. The drag is not over: show the thing waiting. */
   | { type: 'dragLift'; from: Point; at: Point }
   | { type: 'dragEnd'; from: Point; at: Point }
+  /** The browser took the pointer away mid-drag and the finger did not come back: nothing was let go, and what was carried goes back. */
+  | { type: 'dragAbort'; from: Point; at: Point }
 
 /** A finger that stays within this of where it went down is tapping, not dragging. */
 export const TAP_SLOP = 14
@@ -84,7 +86,7 @@ export class ForgivingTouch {
         working.taken = false
         return [{ type: 'dragMove', from: working.from, at }]
       }
-      gestures.push({ type: 'dragEnd', from: working.from, at: working.at })
+      gestures.push({ type: working.taken ? 'dragAbort' : 'dragEnd', from: working.from, at: working.at })
     }
     this.working = { id, from: at, at, dragging: false, liftedAt: 0, taken: false }
     gestures.push({ type: 'press', at })
@@ -132,7 +134,7 @@ export class ForgivingTouch {
     const working = this.working
     if (!working || working.id !== null || t - working.liftedAt <= LIFT_GRACE_MS) return []
     this.working = null
-    return [{ type: 'dragEnd', from: working.from, at: working.at }]
+    return [{ type: working.taken ? 'dragAbort' : 'dragEnd', from: working.from, at: working.at }]
   }
 
   /** The surface was parked or hidden mid-touch. A drag ends where it is, so the thing in hand is put down; a press ends without a tap; nothing else is left. */

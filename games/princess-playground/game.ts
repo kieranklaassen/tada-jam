@@ -247,6 +247,13 @@ export class Game implements Director {
     this.pressed = { kind: 'other' }
   }
 
+  /** The pointer was taken away mid-drag and did not come back: the friend goes back to where it was picked up from, and no move is made. */
+  dragAbort(): void {
+    this.pressed = { kind: 'other' }
+    this.aim = null
+    this.play.putBack()
+  }
+
   /** A touch that lands on nothing the game answers (the grown-up corner, or a second finger beside the one that is working): it still ends a scene, as any touch does. */
   touchNothing(): void {
     this.idle = 0
