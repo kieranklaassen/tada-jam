@@ -691,9 +691,11 @@ describe('a friend that is being carried off', () => {
     return theatre
   }
   /** Plays on and keeps, frame by frame, how high the friend is and what has sounded so far. */
-  const follow = (theatre: Theatre, seconds: number) => {
+  /** Follows the first friend for so many seconds: how high it is in each frame and what has been heard by then. With `toTheLeap`, only until the leap that ends an ending begins, which is a rise of its own. */
+  const follow = (theatre: Theatre, seconds: number, toTheLeap = false) => {
     const { frame, painter } = recorder(), high: number[] = [], heard: string[][] = []
-    for (let i = 0; i < seconds * 60; i++) {
+    const leaping = () => (theatre as unknown as { actors: { leapAt?: number }[] }).actors[0].leapAt !== undefined
+    for (let i = 0; i < seconds * 60 && !(toTheLeap && leaping()); i++) {
       theatre.step(1 / 60)
       theatre.paint(painter, VIEW)
       high.push(frame.poses.get('friend-0')!.y - GROUND)
@@ -707,7 +709,7 @@ describe('a friend that is being carried off', () => {
     theatre.sounds.length = 0
     tapSeen(theatre, 1)
     expect(theatre.troop.held).toEqual([true])
-    const { high, heard } = follow(theatre, 5)
+    const { high, heard } = follow(theatre, 5, true)
     // It never snaps down: from one frame to the next it moves no further than a fall does.
     for (let i = 1; i < high.length; i++) expect(Math.abs(high[i] - high[i - 1]), `frame ${i}`).toBeLessThan(0.35)
     // It lands once, and is heard landing; it does not rise a second time.
