@@ -107,6 +107,7 @@ export class CatMotion {
   private readonly sneeze = new Gesture()
   private readonly huff = new Gesture()
   private readonly paws = new Gesture()
+  private toLogs = 0.5
   /** How far she has turned her back on the truck, 0 to 1. Once the fire is out she sits that way wherever she sits on the sand. */
   private back = spring(0)
   private time = 0
@@ -168,8 +169,12 @@ export class CatMotion {
     this.onRoof = toRoof
   }
 
-  /** The fire she sat by has gone out: she looks at the logs, then at the truck, and turns her back with her tail up. */
-  fireOut(): void {
+  /**
+   * The fire she sat by has gone out: she looks at the wet logs, then at the truck, and turns her back with her
+   * tail up. `toLogs` is the turn of her head toward the fire, from the way she faces.
+   */
+  fireOut(toLogs = 0.5): void {
+    this.toLogs = Math.max(-1.3, Math.min(1.3, toLogs))
     this.huff.start()
   }
 
@@ -212,7 +217,7 @@ export class CatMotion {
     // With her back turned the truck is behind her: a glare is then a look over her shoulder.
     const round = toTruck - away * backTurned
     const toward = Math.max(-1.3, Math.min(1.3, Math.atan2(Math.sin(round), Math.cos(round))))
-    pose.headTurn = glaring * toward + (huffing < 1 ? (huffing < 0.45 ? 0.5 : toTruck) * (1 - backTurned) : 0) + Math.sin(this.time * 0.31) * 0.12 * (1 - glaring)
+    pose.headTurn = glaring * toward + (huffing < 1 ? (huffing < 0.45 ? this.toLogs : toTruck) * (1 - backTurned) : 0) + Math.sin(this.time * 0.31) * 0.12 * (1 - glaring)
     const sneezing = this.sneeze.through(0.45)
     pose.headTilt = sneezing < 1 ? -hump(sneezing) * 0.5 : 0
     const shaking = this.shake.through(0.8)

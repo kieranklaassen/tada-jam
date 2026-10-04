@@ -50,10 +50,10 @@ export function buildPool(plastic: THREE.Material, water: THREE.Material): { roo
       'pool-floor',
       [
         at(rod(1.0, 1.0, 0.02, PAINT.poolFloor, 28), 0, POOL.floor + 0.011, 0),
-        // The low side of the rim: a short pouring lip that slopes down outward, and a pale channel worn across
-        // the rim to it. It points along +z, and the stage turns the pool so that it points where the water will run.
+        // The low side of the rim: a short pouring lip that slopes down outward, and a channel across the rim to
+        // it, in a paler blue than the wall: cream on the blue ring read as the stroke of a letter. It points along +z, and the stage turns the pool so that it points where the water will run.
         at(box(0.56, 0.12, 0.3, 0.05, PAINT.poolWall), 0, POOL.wall - 0.09, POOL.radius + 0.03, 0.3),
-        at(box(0.34, 0.05, 0.42, 0.02, PAINT.poolFloor), 0, POOL.wall - 0.012, POOL.radius - 0.03, 0.12),
+        at(box(0.34, 0.05, 0.42, 0.02, PAINT.poolLip), 0, POOL.wall - 0.012, POOL.radius - 0.03, 0.12),
       ],
       plastic,
     ),

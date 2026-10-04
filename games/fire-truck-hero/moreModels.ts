@@ -30,7 +30,8 @@ export function buildBoat(plastic: THREE.Material, water: THREE.Material): BoatM
   // A bowl turned on a lathe and drawn out lengthways into a hull.
   const bowl = lathe([[0, 0], [0.28, 0.02], [0.44, 0.16], [0.5, BOAT.brim], [0.44, BOAT.brim + 0.02], [0.4, BOAT.brim - 0.04], [0.38, BOAT.floor + 0.03], [0.3, BOAT.floor], [0, BOAT.floor]], PAINT.boat, 20)
   bowl.scale(BOAT.length, 1, 1)
-  const gunwale = ring(0.47, 0.045, PAINT.bench, 22)
+  // The rim is the hull's teal a shade darker: a pale ring on teal read from above as a nought.
+  const gunwale = ring(0.47, 0.045, PAINT.boatRim, 22)
   gunwale.scale(BOAT.length, 1, 1)
   gunwale.translate(0, BOAT.brim + 0.01, 0)
   const hull = named(

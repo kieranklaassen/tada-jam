@@ -396,8 +396,8 @@ export class Game extends Toy {
   /** What the animals and the air round a thing do about a result: a quack, a buzz, drops flung off a wheel, a wet cat or a tipped flower, blobs out of mud. */
   private around(index: number, kind: Kind, action: Action, by?: Came): void {
     const at = placeOf(this.yard, index)
-    // Sprayed, the duck wriggles and quacks: every time the hose reaches its pool.
-    if (kind === 'pool' && action !== 'neighbour') this.say(delayed(duckQuack(this.variants.next(3)), QUACK_AFTER_S))
+    // Sprayed, the duck wriggles and quacks: every time water reaches its pool, from the hose or flung by a neighbour.
+    if (kind === 'pool') this.say(delayed(duckQuack(this.variants.next(3)), QUACK_AFTER_S))
     // Mud throws brown blobs.
     else if (kind === 'patch' && action === 'too-much') this.drops.blobs(at.x, at.z)
     // The leaves shake off drops, once the plant has leaves.
@@ -453,6 +453,8 @@ export class Game extends Toy {
   /** The gate opens and the truck rolls on. The next yard is in the state from this moment: a put-away in the middle finds it there. */
   private driveOn(now: number): void {
     this.endScene()
+    // A cat on the truck does not ride on: she jumps off to a dry spot of her yard as the gate swings.
+    if (this.yard.things.some((thing) => thing.spot === 'roof')) this.apply(honk(this.yard), now)
     // The stream stops with the yard it was for. Water still in the air belonged to that yard and is let go.
     this.fingerRangOpen = this.hose.holding
     this.hose.clear()
@@ -545,7 +547,9 @@ export class Game extends Toy {
     if (mark === 'arrived') return this.arrive()
     if (mark === 'worm-gone') this.wormAt = null
     // The logs drip: a drop lets go of a log's end and falls.
-    if (mark === 'drip') return this.skipSounds ? undefined : this.dripFromLogs(n)
+    // The logs' two drips are not the scene's to give: they fall a little after any fire goes out, and a touch
+    // that ends the ending does not stop them (`wentOut`).
+    if (mark === 'drip') return
     const voices: Partial<Record<Mark, () => VoiceSpec>> = {
       // A fire that a neighbour's water put out had no hiss of its own yet.
       'hiss-falls': () => (this.metByAim ? [] : cellVoice(cellOf('fire', 'fill').voice, 1, 0)),
@@ -573,15 +577,15 @@ export class Game extends Toy {
   }
 
   /**
-   * A fire went out. Where it holds the want its ending says so: the falling hiss, and the logs that drip twice.
-   * A fire that holds no want goes out just the same: it drips twice a little later, and one that a neighbour's
-   * water put out gives the falling hiss it had not given yet.
+   * A fire went out: its black wet logs drip twice, a little later, whoever put it out and whatever the child
+   * does meanwhile. Where it holds the want its ending gives the falling hiss. A fire that holds no want and
+   * that a neighbour's water put out gives the hiss here, since it had not given it yet.
    */
   private wentOut(event: Extract<YardEvent, { type: 'result' }>, before: Yard): void {
-    if (event.kind !== 'fire' || event.thing === this.yard.want) return
+    if (event.kind !== 'fire') return
     const was = before.things[event.thing]?.gulps ?? 0, now = this.yard.things[event.thing]?.gulps ?? 0
     if (was >= THINGS.fire.fill || now < THINGS.fire.fill) return
-    if (event.action === 'neighbour') this.say(cellVoice(cellOf('fire', 'fill').voice, 1, 0))
+    if (event.thing !== this.yard.want && event.action === 'neighbour') this.say(cellVoice(cellOf('fire', 'fill').voice, 1, 0))
     this.logDrips.push({ at: this.clock + 1.4, n: 0 }, { at: this.clock + 2.3, n: 1 })
   }
 

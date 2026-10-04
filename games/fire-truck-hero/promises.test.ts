@@ -1247,3 +1247,65 @@ describe('what a second reader found', () => {
     expect(box.max.z).toBeLessThan(0.32)
   })
 })
+
+describe('what a third reader found', () => {
+  it('has a cat on the truck jump off to a spot of her own yard as the gate opens: she does not ride on, or hang in the air', () => {
+    const t = new Table(saved('two-things', 2))
+    const cat = t.the('cat')
+    t.gulps(t.at(cat), 3).play(4)
+    t.gulp(t.at(cat)).play(3)
+    expect(t.game.yard.things[cat].spot).toBe('roof')
+    const bell = { x: 4.6, z: 0.6 }
+    t.gulp(bell).gulp(bell).tap(bell).play(0.6)
+    expect(t.game.leaving).not.toBeNull()
+    const left = t.game.leaving!
+    expect(typeof left.yard.things[cat].spot).toBe('number')
+    // She comes down onto the sand of the yard that is left, and stays with it.
+    left.motion.step(FRAME, left.yard, left.motion.ownChannels)
+    t.play(2)
+    expect(left.motion.cat.pose.y).toBeLessThan(0.3)
+    expect(distance(left.motion.cat.pose, placeOf(left.yard, cat))).toBeLessThan(0.01)
+  })
+
+  it('lets the wet logs drip twice though a touch ends the fire\'s ending at once', () => {
+    const t = new Table(saved('one-thing', 0))
+    const fire = t.at(0)
+    t.gulps(fire, 3)
+    // A tap far from the fire, while the ending plays: the ending lands at its end.
+    t.tap({ x: 14, z: 8.5 })
+    expect(t.game.sceneRunning).toBe(false)
+    t.play(0.5)
+    const nearLogs = () => t.drops().filter((drop) => distance(drop, fire) < 1.2).length
+    let rises = 0, was = nearLogs()
+    t.play(2.6, () => {
+      const now = nearLogs()
+      if (was === 0 && now > 0) rises++
+      was = now
+    })
+    expect(rises).toBe(2)
+  })
+
+  it('has the cat look at the wet logs themselves when the fire goes out, and then at the truck', () => {
+    for (const [place, number] of [['two-things', 2], ['whole-garden', 1]] as const) {
+      const t = new Table(saved(place, number))
+      const cat = t.at(t.the('cat')), fire = t.at(t.the('fire'))
+      t.gulps(fire, 2)
+      const faces = t.game.motion.cat.pose.turn
+      t.tap(fire).play(0.34 + 0.5)
+      const toLogs = Math.atan2(fire.z - cat.z, fire.x - cat.x) - faces
+      const wanted = Math.max(-1.3, Math.min(1.3, Math.atan2(Math.sin(toLogs), Math.cos(toLogs))))
+      // Her head is on its way to the logs' side, and gets there, a small sway apart.
+      expect(Math.sign(t.game.motion.cat.pose.headTurn), `${place} ${number}`).toBe(Math.sign(wanted))
+      expect(Math.abs(t.game.motion.cat.pose.headTurn - wanted), `${place} ${number}`).toBeLessThan(0.2)
+    }
+  })
+
+  it('has the duck quack when drops flung by the wheel reach its pool', () => {
+    const start = layOut('whole-garden', 2)
+    expect(start.flingsTo).toContain(indexOf(start, 'pool'))
+    const t = new Table(saved('whole-garden', 2))
+    t.stream(t.at(t.the('wheel')), 1.2)
+    expect(those(t.heard, cellVoices('pool', 'neighbour')).length).toBeGreaterThan(0)
+    expect(those(t.heard, QUACKS).length).toBeGreaterThan(0)
+  })
+})

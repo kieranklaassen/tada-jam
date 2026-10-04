@@ -55,6 +55,8 @@ export const THINGS_PAINT = {
   shoot: 0x62b34f,
   petal: 0xf472a0,
   boat: 0x36b3a8,
+  boatRim: 0x278f86,
+  poolLip: 0xa6d8f4,
   wheel: 0xf2b53a,
   snailShell: 0xe3a05c,
   snailBody: 0xd9c9a2,

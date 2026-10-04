@@ -190,7 +190,10 @@ export class YardMotion {
       // The moment it goes out, and only then, the cat who sat by it is put out too.
       if (thing.gulps >= THINGS.fire.fill && !this.fireOut) {
         this.fireOut = true
-        this.cat.fireOut()
+        // She looks at the logs themselves: from where she sits, by the way she faces.
+        const cat = this.has.cat >= 0 ? placeOf(yard, this.has.cat) : at
+        const toLogs = Math.atan2(at.z - cat.z, at.x - cat.x) - CAT_FACES
+        this.cat.fireOut(Math.atan2(Math.sin(toLogs), Math.cos(toLogs)))
         // Put out by a neighbour's water it gives up its cloud all the same.
         if (action === 'neighbour') this.steam.puff(at, 0.6, 7, 0.95)
       }

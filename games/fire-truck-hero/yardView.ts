@@ -8,7 +8,7 @@
 import * as THREE from 'three'
 import { PETAL_COUNT, flowerOf, leafDrop, petalOpen } from './flower'
 import { FENCE_Z } from './gardenModel'
-import { BELL, GATE, PEEK_X, SPOTS, type Place } from './layout'
+import { BELL, GATE, PEEK_X, SPOTS, TRUCK, type Place } from './layout'
 import { FLOWER_PAINT, SAND, THINGS_PAINT, WATER } from './look'
 import { BOAT, PATCH, WHEEL, buildBee, buildBoat, buildPatch, buildSnail, buildWheel, buildWorm } from './moreModels'
 import { NEST, lowSideOf, placeOf } from './places'
@@ -81,6 +81,8 @@ export class YardSet {
     this.cat = buildCat(plastic)
     this.worm = buildWorm(plastic)
     this.fire.root.scale.setScalar(SCALE.fire)
+    // The flames wobble about their own upright first and lean after, so the lean keeps its direction.
+    this.fire.flames.rotation.order = 'ZXY'
     this.pool.root.scale.setScalar(SCALE.pool)
     this.duck.scale.setScalar(SCALE.duck)
     this.pot.root.scale.setScalar(SCALE.seed)
@@ -166,7 +168,10 @@ export class YardSet {
       const lick = 1 + Math.sin(pose.flicker * 6.3) * 0.09 + Math.sin(pose.flicker * 13.7) * 0.04 + pose.spit * 0.35
       const wide = (0.5 + 0.5 * pose.flame) * (1 + pose.flat * 0.5) * (1 + Math.sin(pose.flicker * 9.1) * 0.05)
       flames.scale.set(wide, Math.max(0.05, pose.flame * (1 - pose.flat * 0.85) * lick), wide)
-      flames.rotation.z = pose.lean
+      // It leans away from the stream, which comes from the truck: its top tips the way the water flies.
+      const far = Math.max(0.001, Math.hypot(place.x - TRUCK.x, place.z - TRUCK.z))
+      flames.rotation.z = (-pose.lean * (place.x - TRUCK.x)) / far
+      flames.rotation.x = (pose.lean * (place.z - TRUCK.z)) / far
       flames.rotation.y = Math.sin(pose.flicker * 2.2) * 0.5
       this.fire.dryLogs.visible = !pose.wet
       this.fire.wetLogs.visible = pose.wet
@@ -283,7 +288,8 @@ export class YardSet {
       // On sand it is lifted as it tips, so its ends never dig in.
       // In the pool it rests on the floor until the water is deep enough to carry it, and then rides lower the more it holds.
       const carried = waterY - 0.16 - pose.water * 0.08 + (floats ? pose.bob * 0.02 - pose.sunk * 0.2 : 0)
-      boatY = inPool ? Math.max(POOL.floor * SCALE.pool + 0.012, carried) : 0.02 + Math.abs(pose.rock * 0.09 + pose.brim * 0.1) * 0.5
+      // Not before: until the pool is deep enough it stands on the floor, however far the water has climbed its hull.
+      boatY = inPool ? (floats ? Math.max(POOL.floor * SCALE.pool + 0.012, carried) : POOL.floor * SCALE.pool + 0.012) : 0.02 + Math.abs(pose.rock * 0.09 + pose.brim * 0.1) * 0.5
       boatAt = { x: place.x + pose.pushX + pose.carryX, z: place.z + pose.pushZ + pose.carryZ }
       // Rolling over, it comes up out of the water far enough that its rim never dips under the pool's floor.
       boatY += pose.carryY + (Math.abs(Math.sin(pose.roll)) * 0.4 + ((1 - Math.cos(pose.roll)) / 2) * 0.33) * SCALE.boat

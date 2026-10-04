@@ -329,6 +329,20 @@ export default {
         await d.wait(8000)
       },
     },
+    {
+      // The cat is on the truck when the gate opens: she jumps off to a spot of her own yard, and the truck drives on without her.
+      name: 'drive-with-the-cat-on-the-truck',
+      run: async (d) => {
+        await yard(d, 'two-things', 2)
+        await gulps(d, SPOT[4], 3, 0.9)
+        await d.wait(3400)
+        const cat = (await d.find('^cat-body$')) ?? (await at(d, SPOT[0], 0.9))
+        await d.tap(cat)
+        await d.wait(2600)
+        await gulps(d, BELL, 3, 1.3)
+        await d.wait(5600)
+      },
+    },
     { name: 'rest', run: (d) => d.wait(5000) },
   ],
 } satisfies GameAudit
