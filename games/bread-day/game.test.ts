@@ -152,6 +152,17 @@ describe('the peel and its places', () => {
     expect(names(game.voices()), 'a brick lands as a brick').toContain('thunk')
   })
 
+  it('keeps the baking behind the shut door: a drag on it only rattles it, and the dough bakes on', () => {
+    const game = knead(withDough())
+    carry(game, HANDLE, OVEN)
+    game.step(BAKE_SECONDS / 2); game.voices()
+    carry(game, OVEN, { x: LUMP.x, y: BENCH + 120 })
+    expect(game.bakery.peel.at, 'nothing comes out of a shut oven').toBe('oven')
+    expect(names(game.voices()), 'the door only rattles').toContain('door-rattle')
+    game.step(BAKE_SECONDS)
+    expect(bread(game)).toMatchObject({ crust: 'gold' })
+  })
+
   it('goes back where it came from when let go nowhere', () => {
     const game = knead(withDough())
     carry(game, HANDLE, { x: 600, y: 60 })

@@ -180,10 +180,15 @@ export class Game {
     return [at.x - w * 0.36, at.y - h / 2, w, h]
   }
 
+  /** Raw stuff is baking behind the shut door: nothing on the peel can be reached until the oven is done. */
+  private get baking(): boolean {
+    const { at, load } = this.bakery.peel
+    return at === 'oven' && load !== null && load.raw && kindOf(load) !== 'nothing'
+  }
+
   /** The door is shut while raw stuff bakes, and for a moment after a bread went back in. */
   get doorShut(): boolean {
-    const { at, load } = this.bakery.peel
-    return at === 'oven' && ((load !== null && load.raw && kindOf(load) !== 'nothing') || this.seconds < this.doorUntil)
+    return this.baking || (this.bakery.peel.at === 'oven' && this.seconds < this.doorUntil)
   }
 
   /** What a finger at this point lands on, front to back. The stuff comes first: it is what the game is for. */
@@ -205,7 +210,8 @@ export class Game {
       if (far < near) { near = far; found = { on: 'animal', animal, where: actor.where, place: actor.place } }
     }
     if (found) return found
-    if (inside(at, this.peelRect(), peel.at === 'board' ? 0 : 10)) return { on: 'peel' }
+    // While the oven bakes, the mouth is the shut door and not the peel: the finger rattles it and takes nothing out.
+    if (!this.baking && inside(at, this.peelRect(), peel.at === 'board' ? 0 : 10)) return { on: 'peel' }
     if (inside(at, SPOTS.badger) && at.y < BENCH) return { on: 'poke', who: 'badger' }
     if (inside(at, SPOTS.mouth)) return { on: 'poke', who: this.doorShut ? 'door' : 'fire' }
     if (inside(at, SPOTS.sill, 16)) return { on: 'room', what: 'window' }
