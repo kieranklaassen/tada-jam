@@ -69,6 +69,21 @@ describe('an empty salon', () => {
 })
 
 describe('small things the sheet has', () => {
+  it('has the customer look up at a bow and be heard to like it or hate it, by its taste', () => {
+    for (const [who, bit] of [['lion', 'lion-goes-cross-eyed-and-bats-at-it'], ['poodle', 'poodle-turns-her-head-at-the-mirror']] as const) {
+      const play = seated({ chair: who, friend: who === 'lion' ? 'yak' : 'lion', ribbon: { len: 40, at: 'peg' }, shown: { snip: true, pull: true, ribbon: true } })
+      const peg = { x: PEG.x, y: PEG.y - 12 }
+      play.takeNotes()
+      drag(play, [peg, { x: 700, y: 200 }, { x: HEAD.x, y: HEAD.y - HEAD.ry - 50 }])
+      expect(play.game!.ribbon).toMatchObject({ at: 'mane' })
+      expect(play.customer()!.started).toContain(bit)
+      let looked = 0
+      for (let i = 0; i < 20; i++) { play.step(1 / 60, false); looked = Math.min(looked, play.customer()!.at('lookY')) }
+      expect(looked).toBeLessThan(-0.3)
+      expect(play.takeNotes().length).toBeGreaterThan(1)
+    }
+  })
+
   it('lets a swipe that only began on a seat, the door or the chair go by, and a drag from the knot still pull the cape off', () => {
     const play = seated(), before = round(play)
     drag(play, [BENCH, { x: BENCH.x + 60, y: BENCH.y - 40 }, { x: BENCH.x + 200, y: BENCH.y - 120 }])

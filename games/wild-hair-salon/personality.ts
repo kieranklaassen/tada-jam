@@ -163,7 +163,7 @@ const POODLE: Personality = {
     floorWatched: [bit('poodle-tuts-at-the-mess', m('lookY', 1, 0, 0.5), m('brow', -0.6, 0, 0.5), m('nose', 1, 0.1, 0.08), m('nose', 1, 0.25, 0.08))],
     blindfolded: [bit('poodle-peeks-under-with-a-squeal', m('lift', 0.4, 0.2, 0.2), m('tilt', 0.5, 0.2, 0.5), m('mouthOpen', 0.7, 0.35, 0.25), m('tail', 1, 0.3, 0.1), m('tail', -1, 0.42, 0.1), m('brow', 1, 0.25, 0.5))],
     // She loves a bow: she turns her head from side to side at the mirror.
-    bowLoved: [bit('poodle-turns-her-head-at-the-mirror', m('tilt', 0.6, 0, 0.3), m('tilt', -0.6, 0.35, 0.3), m('tilt', 0.6, 0.7, 0.3), m('smile', 1, 0, 1), m('lookX', -0.8, 0, 1), m('lift', 0.3, 0, 1))],
+    bowLoved: [bit('poodle-turns-her-head-at-the-mirror', m('lookY', -1, 0, 0.3), m('tilt', 0.6, 0, 0.3), m('tilt', -0.6, 0.35, 0.3), m('tilt', 0.6, 0.7, 0.3), m('smile', 1, 0, 1), m('lookX', -0.8, 0, 1), m('lift', 0.3, 0, 1))],
     bowHated: [bit('poodle-flicks-it-with-a-sniff', m('tilt', 0.9, 0, 0.1), m('nose', 1, 0.15, 0.1), m('brow', -0.7, 0, 0.5))],
     friendPulled: [bit('poodle-eyes-cross-pom-quivers', m('cross', 1, 0, 0.35), m('tail', 1, 0, 0.05), m('tail', -1, 0.06, 0.05), m('tail', 1, 0.12, 0.05), m('tail', -1, 0.18, 0.05), m('lift', 0.3, 0, 0.3))],
     friendSnipped: [bit('poodle-quick-shake-poms-bounce', m('tilt', 0.8, 0, 0.07), m('tilt', -0.8, 0.08, 0.07), m('tilt', 0.8, 0.16, 0.07), m('earL', 1, 0, 0.3), m('earR', -1, 0, 0.3))],
@@ -294,7 +294,7 @@ const RABBIT: Personality = {
     blindfolded: [bit('rabbit-ears-search-the-room-then-it-peeks', m('earL', 1, 0, 0.12), m('earR', -1, 0, 0.12), m('earL', -1, 0.14, 0.12), m('earR', 1, 0.14, 0.12), m('lift', 0.4, 0.3, 0.12), m('mouthOpen', 0.6, 0.32, 0.15), m('brow', 1, 0.3, 0.4))],
     bowLoved: [bit('rabbit-wears-it-between-its-ears', m('earL', 0.6, 0, 0.5), m('earR', 0.6, 0, 0.5), m('smile', 1, 0, 0.5), m('lift', 0.3, 0, 0.1))],
     // It hates a bow: it thumps a hind foot until the bow slides off an ear.
-    bowHated: [bit('rabbit-thumps-a-hind-foot-at-it', m('bob', 0.6, 0, 0.05), m('bob', 0.6, 0.12, 0.05), m('bob', 0.6, 0.24, 0.05), m('bob', 0.6, 0.36, 0.05), m('earL', -1, 0.1, 0.5), m('brow', -0.8, 0, 0.6), m('tail', 1, 0, 0.5), m('foot', 1, 0, 0.07), m('foot', 1, 0.14, 0.07), m('foot', 1, 0.28, 0.07), m('foot', 1, 0.42, 0.07))],
+    bowHated: [bit('rabbit-thumps-a-hind-foot-at-it', m('lookY', -1, 0, 0.3), m('bob', 0.6, 0, 0.05), m('bob', 0.6, 0.12, 0.05), m('bob', 0.6, 0.24, 0.05), m('bob', 0.6, 0.36, 0.05), m('earL', -1, 0.1, 0.5), m('brow', -0.8, 0, 0.6), m('tail', 1, 0, 0.5), m('foot', 1, 0, 0.07), m('foot', 1, 0.14, 0.07), m('foot', 1, 0.28, 0.07), m('foot', 1, 0.42, 0.07))],
     friendPulled: [bit('rabbit-eyes-cross-ears-knot', m('cross', 1, 0, 0.3), m('earL', 1, 0, 0.3), m('earR', -1, 0, 0.3))],
     friendSnipped: [bit('rabbit-twitchy-shake-ears-flap', m('tilt', 1, 0, 0.04), m('tilt', -1, 0.05, 0.04), m('tilt', 1, 0.1, 0.04), m('tilt', -1, 0.15, 0.04), m('earL', 1, 0, 0.1), m('earR', 1, 0.1, 0.1))],
     friendPoked: [bit('rabbit-tiny-hum-ear-flick-nose-wiggle', m('earR', -0.8, 0.05, 0.1), m('nose', 1, 0, 0.06), m('nose', -1, 0.07, 0.06), m('smile', 1, 0, 0.2))],

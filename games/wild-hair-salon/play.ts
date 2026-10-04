@@ -418,7 +418,14 @@ export class Play implements Cast {
       // The ribbon was brought to something: it leaves the fingers and hangs there.
       case 'lock/ribbon': hair.carried = null; react(chair, 'wantsItSo', false); return
       case 'model/ribbon': hair.carried = null; react(friend, 'holdsBreath'); return
-      case 'tuft/ribbon': hair.carried = null; react(chair, taste('chair')?.bow === 'hates' ? 'bowHated' : 'bowLoved'); return
+      case 'tuft/ribbon': {
+        // The customer looks up at the bow and likes it or hates it, by its taste, and is heard to.
+        const bow = taste('chair')?.bow === 'hates' ? 'bowHated' as const : 'bowLoved' as const
+        hair.carried = null
+        react(chair, bow)
+        if (after.chair) this.say(after.chair, bow)
+        return
+      }
       case 'face/ribbon': hair.carried = null; react(mine, 'blindfolded'); return
       case 'clipping/ribbon':
       case 'ribbon/ribbon': hair.carried = null; return
