@@ -18,14 +18,19 @@ describe('the object-by-action grid', () => {
     for (const hand of HANDS) for (const met of ON) expect(react(hand, met, moment).voices.length).toBeGreaterThan(0)
   })
 
+  it('gives every cell its own sound: no two of the twenty-four sound alike', () => {
+    const seen = new Map<string, string>()
+    for (const hand of HANDS) for (const met of ON) {
+      const key = JSON.stringify(react(hand, met, moment).voices), cell = `${hand} on ${met}`
+      expect(seen.get(key), `${cell} sounds as ${seen.get(key)}`).toBeUndefined()
+      seen.set(key, cell)
+    }
+  })
+
   it('gives every cell a different answer in sound or in what flies', () => {
     const seen = new Map<string, string>()
     for (const hand of HANDS) for (const met of ON) {
       const key = print(hand, met), cell = `${hand} on ${met}`
-      // The sponge treats wet, dull and shiny paint alike: it lays foam on all three, and the picture differs by what the foam hides.
-      if (hand === 'sponge' && (met === 'd' || met === 'p')) continue
-      // The hose treats wet and dull paint alike: water on clean paint.
-      if (hand === 'hose' && met === 'd') continue
       expect(seen.get(key), `${cell} answers as ${seen.get(key)}`).toBeUndefined()
       seen.set(key, cell)
     }

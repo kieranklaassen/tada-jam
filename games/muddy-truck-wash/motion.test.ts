@@ -92,6 +92,21 @@ describe('a body on springs', () => {
     }
   })
 
+  it('however hard it is knocked, no body sinks or dips so far that a bumper would reach the floor', () => {
+    for (const def of ROSTER) {
+      const m = make(def)
+      let lowest = Infinity, steepest = 0
+      for (let i = 0; i < 240; i++) {
+        if (i % 12 === 0) { m.kick(-2, 1.8); m.jolt(-2) }
+        const pose = m.step(FRAME)
+        lowest = Math.min(lowest, pose.lift)
+        steepest = Math.max(steepest, Math.abs(pose.pitch))
+      }
+      // The lowest thing on a nose is the mouth plate, 0.36 above the floor and 2.5 from the middle at most.
+      expect(-lowest + 2.5 * Math.sin(steepest), def.id).toBeLessThan(0.36)
+    }
+  })
+
   it('wheels turn with the ground they cover, forward for a move toward the nose', () => {
     const m = make(ROSTER[0])
     m.step(FRAME)

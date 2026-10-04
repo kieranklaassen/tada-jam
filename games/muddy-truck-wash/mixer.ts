@@ -18,6 +18,7 @@ export const mixer: VehicleDef = {
     { x: 1.86, r: 0.5, z: 0.8, w: 0.42, hub: PAINT.cream },
   ],
   eyes: EYES,
+  mouth: { at: [-2.45, 0.62, 0], w: 1.5, h: 0.52 },
   side: { x0: -2.55, x1: 2.6, y0: 0, y1: 3.0 },
   zones: {
     nose: { x0: -2.55, x1: -1.8, y0: 0.4, y1: 1.2 },
@@ -52,10 +53,12 @@ export const mixer: VehicleDef = {
     part.round(0.92, 1.5, PAINT.cream, { at: at(-0.15), turn: tilt }, { axis: 'x', segs: 22, bevel: 0.06 })
     part.round(0.6, 0.8, PAINT.cream, { at: at(1.0), turn: tilt }, { axis: 'x', r2: 0.92, segs: 22, bevel: 0.05 })
     part.round(0.92, 0.5, PAINT.cream, { at: at(-1.15), turn: tilt }, { axis: 'x', r2: 0.6, segs: 22, bevel: 0.05 })
-    // Bands that run along the drum, a quarter of the way round each: they sweep past as it turns.
+    // Blades that wind a little way round the drum, each a row of short slanted pieces: they sweep past as it turns, and none lies level like a bar.
     for (let i = 0; i < 4; i++) {
-      const a = (i / 4) * Math.PI * 2
-      part.box(i % 2 ? [1.46, 0.34, 0.07] : [1.46, 0.07, 0.34], PAINT.orange, { at: [at(-0.15)[0] - Math.sin(0.2) * Math.cos(a) * 0.93, at(-0.15)[1] + Math.cos(0.2) * Math.cos(a) * 0.93, Math.sin(a) * 0.93], turn: tilt }, { bevel: 0.02 })
+      for (let k = -2; k <= 2; k++) {
+        const a = (i / 4) * Math.PI * 2 + k * 0.24, along = -0.15 + k * 0.27
+        part.box([0.3, 0.07, 0.26], PAINT.orange, { at: [at(along)[0] - Math.sin(0.2) * Math.cos(a) * 0.93, at(along)[1] + Math.cos(0.2) * Math.cos(a) * 0.93, Math.sin(a) * 0.93], turn: { axis: 'x', by: -a } }, { bevel: 0.02 })
+      }
     }
     return { body, part, pivot: at(-0.15) }
   },

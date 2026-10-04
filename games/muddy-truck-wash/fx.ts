@@ -3,12 +3,14 @@
 // time with a seeded stream, so the same touches give the same chain. The view
 // draws the pool; the rules never read it.
 
-export const KIND = { bubble: 0, drop: 1, crumb: 2, glint: 3, blob: 4, splat: 5, dust: 6 } as const
+/** A crack and a dent are marks a bare finger leaves on mud for a moment, and a bead is a drop still hanging and swelling: each stays where it is put and is gone when its time is up. A ring is a ring of steam: it rises as dust does, widening. */
+export const KIND = { bubble: 0, drop: 1, crumb: 2, glint: 3, blob: 4, splat: 5, dust: 6, mist: 7, crack: 8, dent: 9, bead: 10, ring: 11 } as const
 export type Kind = (typeof KIND)[keyof typeof KIND]
 
 export const CAPACITY = 260
 
-export type Landing = { kind: Kind; x: number; y: number; z: number; size: number }
+/** `strength` is how much it leaves on the floor, 0 to 1, when that is not what its kind leaves by itself. */
+export type Landing = { kind: Kind; x: number; y: number; z: number; size: number; strength?: number }
 
 const GRAVITY = 7.5
 
@@ -24,6 +26,8 @@ export class Particles {
   readonly age = new Float32Array(CAPACITY)
   readonly life = new Float32Array(CAPACITY)
   readonly kind = new Uint8Array(CAPACITY)
+  /** While set, nothing new is thrown: what is already in the air carries on. */
+  quiet = false
   /** A number per particle for its own wobble or tint. */
   readonly phase = new Float32Array(CAPACITY)
   private seed: number
@@ -43,6 +47,7 @@ export class Particles {
 
   /** Adds one. When the pool is full the oldest of the same kind makes room, so a new touch is always answered. */
   emit(kind: Kind, x: number, y: number, z: number, vx: number, vy: number, vz: number, size: number, life: number): void {
+    if (this.quiet) return
     let i = this.count
     if (i >= CAPACITY) {
       i = 0
@@ -79,16 +84,16 @@ export class Particles {
         this.vx[i] += (Math.sin(this.age[i] * 3 + this.phase[i] * 20) * 0.25 - this.vx[i]) * Math.min(1, dt * 2)
         this.vz[i] *= Math.exp(-dt * 2)
         if (dead) landed?.({ kind, x: this.x[i], y: this.y[i], z: this.z[i], size: this.size[i] })
-      } else if (kind === KIND.glint) {
+      } else if (kind === KIND.glint || kind === KIND.crack || kind === KIND.dent || kind === KIND.bead) {
         this.vx[i] = this.vy[i] = this.vz[i] = 0
-      } else if (kind === KIND.dust) {
+      } else if (kind === KIND.dust || kind === KIND.mist || kind === KIND.ring) {
         this.vx[i] *= Math.exp(-dt * 3); this.vz[i] *= Math.exp(-dt * 3)
         this.vy[i] += (0.25 - this.vy[i]) * Math.min(1, dt * 3)
       } else {
         this.vy[i] -= GRAVITY * (kind === KIND.blob ? 0.45 : 1) * dt
       }
       this.x[i] += this.vx[i] * dt; this.y[i] += this.vy[i] * dt; this.z[i] += this.vz[i] * dt
-      if (!dead && this.y[i] <= 0.02 && this.vy[i] < 0 && kind !== KIND.bubble && kind !== KIND.glint && kind !== KIND.dust) {
+      if (!dead && this.y[i] <= 0.02 && this.vy[i] < 0 && kind !== KIND.bubble && kind !== KIND.glint && kind !== KIND.dust && kind !== KIND.mist && kind !== KIND.crack && kind !== KIND.dent && kind !== KIND.bead && kind !== KIND.ring) {
         if (kind === KIND.crumb && this.phase[i] < 2) {
           // A crumb bounces once and lies where it stops. Its first landing is heard and leaves its mark.
           this.y[i] = 0.02

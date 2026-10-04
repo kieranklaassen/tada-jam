@@ -22,8 +22,8 @@ function middle(floor: Floor, sheet: number): { x: number; z: number; sum: numbe
 }
 
 describe('what lands on the floor', () => {
-  it('a drop wets it, a splat or a crumb muddies it, a blob leaves foam, each on its own sheet', () => {
-    for (const [kind, sheet] of [[KIND.drop, 0], [KIND.splat, 1], [KIND.crumb, 1], [KIND.blob, 2]] as const) {
+  it('a drop wets it, a splat muddies it, a blob leaves foam, a crumb of dried mud lies as a clod, each on its own sheet', () => {
+    for (const [kind, sheet] of [[KIND.drop, 0], [KIND.splat, 1], [KIND.crumb, 3], [KIND.blob, 2]] as const) {
       const floor = new Floor()
       floor.land({ kind, x: -2, y: 0, z: 1, size: 0.1 })
       expect(floor.live).toBe(true)
@@ -95,5 +95,71 @@ describe('what lands on the floor', () => {
     for (let i = 0; i < 120; i++) if (floor.step(1 / 120)) steps += 1
     expect(steps).toBeLessThanOrEqual(31)
     expect(steps).toBeGreaterThanOrEqual(28)
+  })
+})
+
+describe('the jet of the hose on the floor', () => {
+  it('pushes the foam lying there away from where it lands, along the floor, and loses none of it', () => {
+    const floor = new Floor()
+    floor.land({ kind: KIND.blob, x: -1.0, y: 0, z: 1.0, size: 0.15 })
+    const before = middle(floor, 2)
+    expect(floor.push(-1.3, 1.0)).toBe(true)
+    const after = middle(floor, 2)
+    expect(after.x - before.x).toBeGreaterThan(0.2)
+    expect(Math.abs(after.z - before.z)).toBeLessThan(0.15)
+    expect(after.sum).toBeGreaterThan(before.sum * 0.8)
+    expect(after.sum).toBeLessThanOrEqual(before.sum + 1e-6)
+    // Again, from the same place: it goes further, and it is still foam and nothing else.
+    floor.push(-1.0, 1.0)
+    expect(middle(floor, 2).x).toBeGreaterThan(after.x)
+    expect(middle(floor, 0).sum).toBe(0)
+    expect(middle(floor, 1).sum).toBe(0)
+  })
+
+  it('moves no water and no mud, and does nothing where no foam lies', () => {
+    const floor = new Floor()
+    floor.land({ kind: KIND.drop, x: 0, y: 0, z: 1, size: 0.1 })
+    floor.land({ kind: KIND.splat, x: 0.2, y: 0, z: 1, size: 0.1 })
+    const water = middle(floor, 0), mud = middle(floor, 1)
+    expect(floor.push(0.1, 1.0)).toBe(false)
+    expect(middle(floor, 0)).toEqual(water)
+    expect(middle(floor, 1)).toEqual(mud)
+  })
+})
+
+describe('tyre lines', () => {
+  it('a wet tyre\'s line is laid thick enough to be seen, and is still seen two seconds on; a line of single drops is not', () => {
+    // The floor shows water from a quarter of the way up.
+    const seen = 0.3
+    const line = new Floor(), drops = new Floor()
+    for (let x = -1; x >= -4; x -= 0.3) {
+      line.land({ kind: KIND.drop, x, y: 0, z: 0.3, size: 0.09, strength: 0.9 })
+      drops.land({ kind: KIND.drop, x, y: 0, z: 0.3, size: 0.02 })
+    }
+    const most = (floor: Floor): number => Math.max(...Array.from({ length: FLOOR.w * FLOOR.h }, (_, cell) => floor.amount[cell * SHEETS]))
+    expect(most(line)).toBeGreaterThan(0.8)
+    run(line, 2)
+    run(drops, 2)
+    expect(most(line)).toBeGreaterThan(seen)
+    expect(most(drops)).toBeLessThan(seen)
+    run(line, 8)
+    expect(most(line)).toBe(0)
+  })
+})
+
+describe('clods', () => {
+  it('lie where they fell, in a row, while what is wet creeps to the drain; and are gone within some seconds like the rest', () => {
+    const floor = new Floor()
+    for (let x = -1; x >= -4; x -= 0.5) floor.land({ kind: KIND.crumb, x, y: 0, z: -0.4, size: 0.07 })
+    floor.land({ kind: KIND.splat, x: -2.5, y: 0, z: -0.4, size: 0.1 })
+    const clods = middle(floor, 3), mud = middle(floor, 1)
+    run(floor, 3)
+    // Three seconds on the clods are where they were, and still there to be seen; the soft mud has moved toward the drain.
+    expect(middle(floor, 3).x).toBeCloseTo(clods.x, 1)
+    expect(middle(floor, 3).z).toBeCloseTo(clods.z, 1)
+    expect(Math.max(...Array.from({ length: FLOOR.w * FLOOR.h }, (_, cell) => floor.amount[cell * SHEETS + 3]))).toBeGreaterThan(0.4)
+    expect(Math.hypot(middle(floor, 1).x - DRAIN.x, middle(floor, 1).z - DRAIN.z)).toBeLessThan(Math.hypot(mud.x - DRAIN.x, mud.z - DRAIN.z))
+    run(floor, 8)
+    expect(middle(floor, 3).sum).toBe(0)
   })
 })

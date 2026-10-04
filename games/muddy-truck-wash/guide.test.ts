@@ -41,9 +41,21 @@ describe('what the idle ladder shows', () => {
     expect(hint.hand).toBeNull()
   })
 
-  it('then shows one move: how the tool a wash takes up next is taken', () => {
-    const cases: [Patch, string][] = [['c', 'hose'], ['s', 'sponge'], ['b', 'hose'], ['f', 'hose'], ['w', 'cloth'], ['d', 'cloth']]
-    for (const [patch, tool] of cases) expect(atTool(hintFor(new Play(coated(patch)), showing, emptyHint()).hand), patch).toBe(tool)
+  it('then shows one move: a touch on the vehicle itself, never on a tool, whatever is on the vehicle', () => {
+    for (const patch of ['c', 's', 'b', 'f', 'w', 'd'] as const) {
+      const play = new Play(coated(patch))
+      const side = play.bay.def.side
+      for (const demoIndex of [0, 1, 2]) for (const demo of [0.05, 0.3, 0.6, 0.95]) {
+        const hand = hintFor(play, { glow: 1, demo, demoIndex }, emptyHint()).hand!
+        expect(atTool(hand), patch).toBeNull()
+        expect(hand.x).toBeGreaterThan(side.x0)
+        expect(hand.x).toBeLessThan(side.x1)
+        expect(hand.y).toBeGreaterThan(side.y0)
+        expect(hand.y).toBeLessThan(side.y1)
+      }
+      // The tools glow all alike while it does.
+      expect(hintFor(play, showing, emptyHint()).tools).toEqual(['sponge', 'hose', 'cloth'])
+    }
   })
 
   it('with the right tool in hand, shows one short rub on the vehicle where that tool has work', () => {
@@ -63,10 +75,10 @@ describe('what the idle ladder shows', () => {
     expect(end.x - start.x).toBeLessThan((side.x1 - side.x0) / 2)
   })
 
-  it('with the wrong tool in hand, shows how the right one is taken, not what to do with the wrong one', () => {
+  it('with a tool in hand that has no work, shows the same touch on the vehicle, and no tool', () => {
     const play = new Play(coated('s'))
     play.press({ kind: 'tool', tool: 'cloth' })
-    expect(atTool(hintFor(play, showing, emptyHint()).hand)).toBe('sponge')
+    for (const demo of [0.2, 0.5, 0.8]) expect(atTool(hintFor(play, { glow: 1, demo, demoIndex: 0 }, emptyHint()).hand)).toBeNull()
   })
 
   it('when the vehicle is all shiny, shows that the one at the door can be touched', () => {
@@ -75,6 +87,21 @@ describe('what the idle ladder shows', () => {
     expect(atTool(hand)).toBeNull()
     expect(hand.x).toBeGreaterThan(play.bay.def.side.x1)
     expect(hand.x).toBeLessThan(play.next.motion.homeX)
+  })
+
+  it('the hand holds what the child has in hand as it shows its move on the vehicle, and nothing when the child holds nothing or the move is the send-off', () => {
+    for (const patch of ['c', 's', 'f', 'w', 'd'] as const) {
+      for (const tool of ['sponge', 'hose', 'cloth'] as const) {
+        const play = new Play(coated(patch))
+        play.press({ kind: 'tool', tool })
+        // Whether or not the tool has work there, the hand that shows a touch on the vehicle holds that tool and no other.
+        expect(hintFor(play, showing, emptyHint()).hand!.holding, `${tool} on ${patch}`).toBe(tool)
+      }
+      expect(hintFor(new Play(coated(patch)), showing, emptyHint()).hand!.holding).toBeNull()
+    }
+    const done = new Play(coated('p'))
+    done.press({ kind: 'tool', tool: 'cloth' })
+    expect(hintFor(done, showing, emptyHint()).hand!.holding).toBeNull()
   })
 
   it('makes nothing new each frame: the same object is filled in and handed back', () => {

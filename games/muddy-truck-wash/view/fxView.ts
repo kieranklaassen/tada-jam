@@ -3,7 +3,8 @@ import { CAPACITY, type Particles } from '../fx'
 
 // Draws the particle pool as one instanced set of camera-facing cards. Each
 // kind is a small shape painted in the shader: a bubble with a rim and a
-// glint, a drop, a crumb, a four-point star, a foam blob, a mud splat, dust.
+// glint, a drop, a crumb, a slanted gleam, a foam blob, a mud splat, dust,
+// mist, a crack, a dent, a hanging bead and a ring of steam.
 
 const VERTEX = /* glsl */ `
 attribute vec4 aSpot;
@@ -42,9 +43,11 @@ void main() {
     alpha = (1.0 - smoothstep(0.7, 1.0, max(abs(vUv.x), abs(vUv.y) * 1.3))) * fade;
     col = mix(vec3(0.58, 0.46, 0.3), vec3(0.78, 0.66, 0.47), phase);
   } else if (kind < 3.5) {
-    // A four-point star that swells and goes.
-    float star = max(0.0, 1.0 - (abs(vUv.x) * abs(vUv.y) * 26.0 + r * 0.9));
-    alpha = (star + (1.0 - smoothstep(0.0, 0.3, r)) * 0.8) * fade;
+    // A gleam that swells and goes: a soft round light with one long slanted flash through it, as on polished
+    // metal. Not a star with crossed arms, which would read as a sign.
+    vec2 g = vec2(vUv.x * 0.8 + vUv.y * 0.6, -vUv.x * 0.6 + vUv.y * 0.8);
+    float flash = (1.0 - smoothstep(0.0, 1.0, abs(g.x))) * (1.0 - smoothstep(0.0, 0.16 * (1.0 - abs(g.x)), abs(g.y)));
+    alpha = max(flash, (1.0 - smoothstep(0.0, 0.42, r)) * 0.85) * fade;
   } else if (kind < 4.5) {
     float lumpy = r + 0.05 * sin(atan(vUv.y, vUv.x) * 3.0 + phase * 30.0);
     alpha = (1.0 - smoothstep(0.75, 1.0, lumpy)) * fade;
@@ -53,9 +56,33 @@ void main() {
     float lumpy = r + 0.09 * sin(atan(vUv.y, vUv.x) * 3.0 + phase * 30.0);
     alpha = (1.0 - smoothstep(0.75, 1.0, lumpy)) * fade;
     col = vec3(0.33, 0.2, 0.1) + 0.25 * (1.0 - smoothstep(0.0, 0.5, length(vUv - vec2(-0.25, 0.3))));
-  } else {
+  } else if (kind < 6.5) {
     alpha = (1.0 - smoothstep(0.2, 1.0, r)) * fade * 0.5;
     col = vec3(0.8, 0.7, 0.54);
+  } else if (kind < 7.5) {
+    // Mist: a soft pale cloud, brighter on the side the light is.
+    alpha = (1.0 - smoothstep(0.0, 1.0, r)) * fade * 0.3;
+    col = mix(vec3(0.72, 0.86, 0.98), vec3(1.0), smoothstep(0.5, -0.6, vUv.x - vUv.y));
+  } else if (kind < 8.5) {
+    // A crack: one dark jagged line across dried mud. One stroke only: a second that met it could cross it and read as a sign.
+    float line = abs(vUv.y - 0.24 * sin(vUv.x * 7.0 + phase * 30.0) - 0.12 * sin(vUv.x * 17.0 + phase * 11.0));
+    float ends = 1.0 - smoothstep(0.75, 1.0, abs(vUv.x));
+    alpha = (1.0 - smoothstep(0.035, 0.085, line)) * ends * fade;
+    col = vec3(0.26, 0.19, 0.11);
+  } else if (kind < 9.5) {
+    // A dent in soft mud: a dark hollow with a wet lip below it.
+    alpha = (1.0 - smoothstep(0.55, 1.0, r)) * fade * 0.7;
+    col = mix(vec3(0.17, 0.1, 0.05), vec3(0.62, 0.5, 0.38), smoothstep(0.35, 0.8, r) * smoothstep(0.1, -0.7, vUv.y - vUv.x * 0.4));
+  } else if (kind < 10.5) {
+    // A bead: a drop still hanging, round below and drawn up to where it hangs from.
+    float pear = length(vec2(vUv.x * (1.0 + 0.9 * smoothstep(-0.2, 1.0, vUv.y)), vUv.y));
+    alpha = 1.0 - smoothstep(0.6, 0.95, pear);
+    col = mix(vec3(0.55, 0.8, 1.0), vec3(1.0), 1.0 - smoothstep(0.0, 0.45, length(vUv - vec2(-0.2, -0.1))));
+  } else {
+    // A ring of steam, lying flat and seen from a little above it: a wide, thin, soft loop with the air showing through its middle.
+    float loop = abs(length(vec2(vUv.x, vUv.y * 3.0)) - 0.72);
+    alpha = (1.0 - smoothstep(0.05, 0.24, loop)) * fade * 0.8;
+    col = vec3(0.94, 0.96, 0.98);
   }
   if (alpha < 0.01) discard;
   gl_FragColor = vec4(col, alpha);
@@ -84,17 +111,19 @@ export class FxView {
     this.mesh.count = 0
   }
 
-  /** Copies the pool into the cards. `limit` is how many a tier draws. */
-  update(pool: Particles, limit: number): void {
-    const n = Math.min(pool.count, limit)
+  /** Copies the pool into the cards. All of it, on every tier: each of these things is heard when it lands or pops, so each is seen. */
+  update(pool: Particles): void {
+    const n = pool.count
     const spot = this.spot.array as Float32Array, look = this.look.array as Float32Array
     for (let i = 0; i < n; i++) {
       const t = pool.age[i] / pool.life[i]
       // In fast, out over the last third; a glint swells and shrinks.
-      const fade = Math.min(1, t * 12) * Math.min(1, (1 - t) * 3)
       const kind = pool.kind[i]
+      // A bead does not fade: it swells and then it is the drop that falls.
+      const fade = kind === 10 ? 1 : Math.min(1, t * 12) * Math.min(1, (1 - t) * 3)
       spot[i * 4] = pool.x[i]; spot[i * 4 + 1] = pool.y[i]; spot[i * 4 + 2] = pool.z[i]
-      spot[i * 4 + 3] = pool.size[i] * (kind === 3 ? Math.sin(Math.min(1, t) * Math.PI) : kind === 6 ? 1 + t * 2 : 1)
+      // A glint swells and goes; dust and mist spread; a crack runs across; a dent fills.
+      spot[i * 4 + 3] = pool.size[i] * (kind === 3 ? Math.sin(Math.min(1, t) * Math.PI) : kind === 8 ? Math.min(1, 0.25 + t * 6) : kind === 9 ? 1 - 0.75 * t : kind === 10 ? 0.25 + 0.75 * Math.min(1, t * 1.15) : kind === 11 ? 1 + t * 1.5 : kind >= 6 ? 1 + t * 2 : 1)
       look[i * 3] = kind; look[i * 3 + 1] = fade; look[i * 3 + 2] = pool.phase[i] % 1
     }
     this.mesh.count = n

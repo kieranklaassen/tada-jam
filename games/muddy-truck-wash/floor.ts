@@ -1,7 +1,7 @@
 import { KIND, type Landing } from './fx'
 import { LAYOUT } from './props'
 
-// What has landed on the floor: water, mud and foam, as three coarse sheets
+// What has landed on the floor: water, soft mud, foam and clods of dried mud, as four coarse sheets
 // of amounts. None of it is kept. A puddle creeps to the drain and a trail
 // dries away, each within seconds of attended play, so the floor a child
 // comes back to is the floor every visit starts with and nothing has been
@@ -9,8 +9,10 @@ import { LAYOUT } from './props'
 // texture.
 
 export const FLOOR = { x0: -9, x1: 7, z0: -2.7, z1: 3.7, w: 128, h: 52 } as const
-/** Water, mud, foam. */
-export const SHEETS = 3
+/** Water, soft mud, foam, clods. */
+export const SHEETS = 4
+/** The sheet of clods: dried mud lies where it fell, pale, and does not run to the drain. */
+export const CLODS = 3
 /** The drain at the front of the pad, where everything on the floor creeps to. */
 export const DRAIN = LAYOUT.drain
 /** How fast a mark fades, in amount a second: the thickest is gone in about seven seconds. */
@@ -28,10 +30,10 @@ export class Floor {
   private scratch = new Float32Array(FLOOR.w * FLOOR.h * SHEETS)
   private owed = 0
 
-  /** Something reached the floor: a drop wets it, a splat or a crumb muddies it, a blob leaves foam. */
+  /** Something reached the floor: a drop wets it, a splat muddies it, a blob leaves foam, a crumb of dried mud lies as a clod. */
   land(landing: Landing): void {
-    const sheet = landing.kind === KIND.drop ? 0 : landing.kind === KIND.blob ? 2 : 1
-    this.stamp(landing.x, landing.z, 0.16 + landing.size * 1.6, sheet, landing.kind === KIND.drop ? 0.3 : 0.75)
+    const sheet = landing.kind === KIND.drop ? 0 : landing.kind === KIND.blob ? 2 : landing.kind === KIND.crumb ? CLODS : 1
+    this.stamp(landing.x, landing.z, 0.16 + landing.size * 1.6, sheet, landing.strength ?? (landing.kind === KIND.drop ? 0.3 : landing.kind === KIND.crumb ? 1 : 0.75))
   }
 
   /** Adds a soft round mark. */
@@ -48,6 +50,36 @@ export class Floor {
         this.live = true
       }
     }
+  }
+
+  /**
+   * The jet of the hose hits the floor here: the foam lying within its reach is pushed away from the point, along
+   * the floor, and none of it is lost on the way. Returns whether any foam moved.
+   */
+  push(x: number, z: number, reach = 0.9, by = 0.55): boolean {
+    const cw = (FLOOR.x1 - FLOOR.x0) / FLOOR.w, ch = (FLOOR.z1 - FLOOR.z0) / FLOOR.h
+    const moved: { x: number; z: number; amount: number }[] = []
+    for (let j = Math.max(0, Math.floor((z - reach - FLOOR.z0) / ch)); j <= Math.min(FLOOR.h - 1, Math.ceil((z + reach - FLOOR.z0) / ch)); j++) {
+      for (let i = Math.max(0, Math.floor((x - reach - FLOOR.x0) / cw)); i <= Math.min(FLOOR.w - 1, Math.ceil((x + reach - FLOOR.x0) / cw)); i++) {
+        const k = (j * FLOOR.w + i) * SHEETS + 2
+        if (this.amount[k] <= 0) continue
+        const px = FLOOR.x0 + (i + 0.5) * cw, pz = FLOOR.z0 + (j + 0.5) * ch
+        const d = Math.hypot(px - x, pz - z)
+        if (d >= reach) continue
+        // Nearest the jet it goes furthest; straight under it, it goes toward the drain.
+        const ux = d > 1e-3 ? (px - x) / d : Math.sign(DRAIN.x - x) || 1, uz = d > 1e-3 ? (pz - z) / d : 0
+        const far = by * (1 - d / reach) + 0.15
+        moved.push({ x: px + ux * far, z: pz + uz * far, amount: this.amount[k] })
+        this.amount[k] = 0
+      }
+    }
+    for (const foam of moved) {
+      const i = Math.max(0, Math.min(FLOOR.w - 1, Math.floor((foam.x - FLOOR.x0) / cw))), j = Math.max(0, Math.min(FLOOR.h - 1, Math.floor((foam.z - FLOOR.z0) / ch)))
+      const k = (j * FLOOR.w + i) * SHEETS + 2
+      this.amount[k] = Math.min(1, this.amount[k] + foam.amount)
+    }
+    if (moved.length) this.live = true
+    return moved.length > 0
   }
 
   /** Attended time passes: what lies on the floor creeps toward the drain and dries. Returns whether anything changed. */
@@ -70,7 +102,8 @@ export class Floor {
       const k = (j * FLOOR.w + i) * SHEETS
       for (let s = 0; s < SHEETS; s++) {
         const at = (a: number, b: number): number => (a < 0 || a >= FLOOR.w || b < 0 || b >= FLOOR.h ? 0 : from[(b * FLOOR.w + a) * SHEETS + s])
-        const taken = (at(i0, j0) * (1 - fi) + at(i0 + 1, j0) * fi) * (1 - fj) + (at(i0, j0 + 1) * (1 - fi) + at(i0 + 1, j0 + 1) * fi) * fj
+        // What is wet creeps; a clod stays where it lies.
+        const taken = s === CLODS ? from[k + s] : (at(i0, j0) * (1 - fi) + at(i0 + 1, j0) * fi) * (1 - fj) + (at(i0, j0 + 1) * (1 - fi) + at(i0 + 1, j0 + 1) * fi) * fj
         const left = Math.max(0, taken - DRY * t)
         to[k + s] = left
         if (left > 0) any = true

@@ -6,6 +6,8 @@ import { MAT, Shape } from '../shapes'
 import { CELLS, GRID_H, GRID_W, type Surface } from '../surface'
 import { enamelMaterial, type EnamelKit } from './enamel'
 import { toGeometry } from './geometry'
+import { Lumps } from './lumps'
+import { mouthMaterial } from './mouth'
 
 // One vehicle on the floor: a merged body, its one moving part, instanced
 // wheels, two lamp eyes with pupils and lids, the copy the wet floor gives
@@ -28,6 +30,8 @@ function unitWheel(): Shape {
 }
 
 const EASE = 14
+/** A softening spreads from the finger at this many seconds a patch. */
+const SPREAD = 0.16
 const AHEAD = new THREE.Vector3(0, 0, 1)
 
 export class TruckView {
@@ -37,11 +41,26 @@ export class TruckView {
   private readonly sets: { chassis: THREE.Group; part: THREE.Mesh; wheels: THREE.InstancedMesh }[] = []
   private readonly pupils: THREE.Mesh[] = []
   private readonly lids: THREE.Mesh[] = []
+  private readonly mouth: THREE.ShaderMaterial
+  private readonly lumps: Lumps
   private readonly maskA: THREE.DataTexture
   private readonly maskB: THREE.DataTexture
   private readonly shown = new Float32Array(CELLS * 6)
   private readonly target = new Float32Array(CELLS * 6)
   private settled = false
+  /** Seconds each patch still waits before it starts to change. */
+  private readonly hold = new Float32Array(CELLS)
+  /** How far each patch's foam is swollen just now: the sponge has piled it up. It sinks back by itself. */
+  private readonly puff = new Float32Array(CELLS)
+  private puffed = false
+  /** How hard its mud is wobbling just now, 0 to 1, and for how long it has been. */
+  private jiggle = 0
+  private jiggled = 0
+  private rested = false
+  /** Whether any of it stands over the wet pad, where the floor gives its copy back. */
+  onPad = true
+  /** Whether it stands far back in the yard, in the queue. */
+  farBack = false
   private readonly owned: { dispose(): void }[] = []
   private readonly matrix = new THREE.Matrix4()
   private readonly scratch = new THREE.Matrix4()
@@ -55,6 +74,10 @@ export class TruckView {
     this.mirror.scale.y = -1
     // One vehicle is one object to the intersection audit: its own lids, pupils and drum are meant to touch it.
     this.root.userData.jamObject = def.id
+    this.lumps = new Lumps(kit, def)
+    this.owned.push(this.lumps)
+    this.mouth = mouthMaterial()
+    this.owned.push(this.mouth)
     this.maskA = maskTexture()
     this.maskB = maskTexture()
     this.owned.push(this.maskA, this.maskB)
@@ -99,6 +122,16 @@ export class TruckView {
         this.owned.push(pupilGeometry, lidGeometry)
         const plain = enamelMaterial(kit, {})
         this.owned.push(plain)
+        // Mud and foam stand out from the paint in lumps that ride with the body.
+        chassis.add(this.lumps.mesh)
+        // The mouth: a plate on the nose, facing ahead, a little proud of the bumper.
+        const plate = new THREE.PlaneGeometry(def.mouth.w, def.mouth.h)
+        const mouth = new THREE.Mesh(plate, this.mouth)
+        mouth.name = `${def.id}-mouth`
+        mouth.position.set(...def.mouth.at)
+        mouth.rotation.y = -Math.PI / 2
+        this.owned.push(plate)
+        chassis.add(mouth)
         def.eyes.forEach((eye, i) => {
           const pupil = new THREE.Mesh(pupilGeometry, plain)
           pupil.name = `${def.id}-pupil-${i}`
@@ -116,9 +149,13 @@ export class TruckView {
     this.pose(restPose())
   }
 
-  /** What is on the vehicle. `instant` skips the easing, as on load. */
-  setSurface(surface: Surface, instant = false): void {
+  /**
+   * What is on the vehicle. `instant` skips the easing, as on load. `from` is the patch under the finger: dried
+   * mud that water has just softened darkens there first and on the patches round it a moment later.
+   */
+  setSurface(surface: Surface, instant = false, from = -1): void {
     const t = this.target
+    const softBefore = from >= 0 && !instant ? Array.from({ length: CELLS }, (_, cell) => this.target[cell * 6 + 1]) : null
     for (let cell = 0; cell < CELLS; cell++) {
       const patch = surface[cell], k = cell * 6
       const mud = patch === 'c' || patch === 's' || patch === 'm', foam = patch === 'b' || patch === 'f'
@@ -144,17 +181,68 @@ export class TruckView {
         t[k + kind] = count ? sum / count : this.shown[k + kind]
       }
     }
-    if (instant) this.shown.set(t)
+    if (softBefore) {
+      const col = from % GRID_W, row = Math.floor(from / GRID_W)
+      for (let cell = 0; cell < CELLS; cell++) {
+        const k = cell * 6
+        // Mud that stays mud and has just turned soft: it waits its turn, further from the finger later.
+        if (t[k] > 0.5 && this.shown[k] > 0.5 && t[k + 1] > 0.5 && softBefore[cell] < 0.5) this.hold[cell] = Math.hypot((cell % GRID_W) - col, Math.floor(cell / GRID_W) - row) * SPREAD
+      }
+    }
+    if (instant) {
+      this.shown.set(t)
+      this.hold.fill(0)
+    }
     this.settled = false
     if (instant) this.write()
   }
 
+  /** A cheaper tier draws no lumps on a vehicle far back in the queue: its mud is still painted on it. */
+  showLumps(on: boolean): void {
+    this.lumps.mesh.visible = on
+  }
+
+  /** Its mud has been shaken, as by braking: the lumps of mud wobble and settle. */
+  wobble(): void {
+    this.jiggle = 1
+    this.jiggled = 0
+  }
+
+  /** The foam on a patch has just been piled up: it stands taller for a moment. */
+  swell(cell: number): void {
+    if (cell < 0 || cell >= CELLS) return
+    this.puff[cell] = 1
+    this.puffed = true
+  }
+
   /** Eases the shown surface toward what is there, and shows the pose. */
   update(dt: number, pose: TruckPose): void {
+    if (this.puffed) {
+      // Swollen foam sinks back in about a second.
+      const keep = Math.exp(-dt * 2.4)
+      let any = false
+      for (let i = 0; i < CELLS; i++) {
+        if (this.puff[i] === 0) continue
+        this.puff[i] = this.puff[i] * keep < 0.02 ? 0 : this.puff[i] * keep
+        any ||= this.puff[i] > 0
+      }
+      this.puffed = any
+    }
+    if (this.jiggle > 0) {
+      // Shaken mud wobbles for about a second.
+      this.jiggled += dt
+      this.jiggle = this.jiggle * Math.exp(-dt * 2.6) < 0.03 ? 0 : this.jiggle * Math.exp(-dt * 2.6)
+    }
+    if ((this.puffed || this.jiggle > 0 || this.rested) && this.settled) this.lumps.update(this.shown, this.puff, this.jiggle, this.jiggled)
+    // One more write after the last of a swell or a wobble, so the lumps come to rest exactly.
+    this.rested = this.puffed || this.jiggle > 0
     if (!this.settled) {
       const blend = 1 - Math.exp(-EASE * dt)
       let moving = false
+      for (let cell = 0; cell < CELLS; cell++) if (this.hold[cell] > 0) this.hold[cell] = Math.max(0, this.hold[cell] - dt)
       for (let i = 0; i < this.shown.length; i++) {
+        // A patch that is waiting its turn stays as it is.
+        if (this.hold[Math.floor(i / 6)] > 0) { moving = true; continue }
         const gap = this.target[i] - this.shown[i]
         if (Math.abs(gap) < 0.004) this.shown[i] = this.target[i]
         else { this.shown[i] += gap * blend; moving = true }
@@ -174,13 +262,18 @@ export class TruckView {
     }
     this.maskA.needsUpdate = true
     this.maskB.needsUpdate = true
+    this.lumps.update(this.shown, this.puff, this.jiggle, this.jiggled)
   }
 
   private pose(pose: TruckPose): void {
     const def = this.def
     this.root.position.set(pose.x, pose.hop, pose.z)
+    this.root.rotation.y = pose.turn
     // The copy under the floor sinks as the vehicle rises.
     this.mirror.position.set(pose.x, -pose.hop, pose.z)
+    // Only the wet pad gives a copy back: out in the yard there is none to draw.
+    this.onPad = pose.x + def.side.x0 < LAYOUT.yardFrom
+    this.farBack = pose.z < LAYOUT.wall.z
     for (const set of this.sets) {
       set.chassis.position.y = pose.lift
       set.chassis.rotation.set(pose.lean, 0, pose.pitch)
@@ -203,6 +296,11 @@ export class TruckView {
       })
       set.wheels.instanceMatrix.needsUpdate = true
     }
+    const mouth = this.mouth.uniforms
+    mouth.uSmile.value = pose.smile
+    mouth.uOpen.value = pose.open
+    mouth.uTongue.value = pose.tongue
+    mouth.uSkew.value = pose.brow
     def.eyes.forEach((eye, i) => {
       // Ahead is -x; the child is toward +z. A crossed eye turns toward the other one.
       const inward = -Math.sign(eye.at[2]) * pose.cross * 0.9
@@ -213,7 +311,9 @@ export class TruckView {
       pupil.position.set(eye.at[0] + dx * eye.r * 0.97, eye.at[1] + dy * eye.r * 0.97, eye.at[2] + dz * eye.r * 0.97)
       pupil.quaternion.setFromUnitVectors(AHEAD, this.aim.set(dx, dy, dz))
       // The lid is a dome over the back of the lamp that rolls forward to shut.
-      this.lids[i].rotation.set(0, side * 0.6, -0.7 + pose.lid * 2.2, 'YXZ')
+      // A raised brow is the near lid up and the far one half down.
+      const lid = Math.max(pose.lid, i === 1 ? pose.brow * 0.55 : 0)
+      this.lids[i].rotation.set(0, side * 0.6, -0.7 - (i === 0 ? pose.brow * 0.14 : 0) + lid * 2.2, 'YXZ')
     })
   }
 

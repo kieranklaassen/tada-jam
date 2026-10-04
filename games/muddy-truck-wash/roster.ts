@@ -29,6 +29,8 @@ export type VehicleDef = {
   wheels: readonly Wheel[]
   /** Lamp eyes: centre and radius. The near one comes first. */
   eyes: readonly { at: readonly [number, number, number]; r: number }[]
+  /** The mouth in the bumper: the middle of the plate it is drawn on, facing ahead, and the plate's width and height. */
+  mouth: { at: readonly [number, number, number]; w: number; h: number }
   /** The side view the surface grid covers. */
   side: Zone
   /** Parts of the body a taste can belong to. */
@@ -71,10 +73,10 @@ export const PAINT = {
   black: rgb(0x0c0c0e),
 } as const
 
-/** The parts every vehicle shares: a dark chassis rail, a zinc bumper and two lamp eyes. */
+/** The parts every vehicle shares: a dark chassis rail, a deep zinc bumper (the plate its mouth is in) and two lamp eyes. */
 export function undercarriage(body: Shape, length: number, noseX: number, eyes: VehicleDef['eyes']): void {
   body.box([length, 0.26, 1.36], PAINT.charcoal, { at: [noseX + length / 2 + 0.12, 0.6, 0] }, { bevel: 0.05 })
-  body.box([0.2, 0.26, 1.96], PAINT.zinc, { at: [noseX + 0.08, 0.56, 0] }, { bevel: 0.07, mat: MAT.metal })
+  body.box([0.2, 0.42, 1.8], PAINT.zinc, { at: [noseX + 0.08, 0.6, 0] }, { bevel: 0.07, mat: MAT.metal })
   for (const eye of eyes) {
     // A zinc bezel, then the lamp itself, proud of the bonnet so it reads from the side.
     body.round(eye.r * 1.12, 0.16, PAINT.zinc, { at: [eye.at[0] + 0.1, eye.at[1], eye.at[2]] }, { axis: 'x', mat: MAT.metal, segs: 18 })

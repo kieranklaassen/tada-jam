@@ -42,7 +42,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const work = new PerfRing()
     // A canvas 2D game reports the sprites and figures it drew as drawCalls; a three.js game reports the renderer's own counts.
     const view = new WashView(canvas, ROSTER)
-    // Grown-ups only: three taps in the top right corner, or fps=1 in the address.
+    // Grown-ups only: two taps and a held press in the top left corner, or fps=1 in the address.
     const overlay = new Overlay(root, window.location.search)
     view.setTier(governor.settings)
     const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, ...view.counts }))
@@ -62,7 +62,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
         poses.set(who.def.id, who.motion.pose)
         if (shown.get(who.def.id) !== who.surface) {
           shown.set(who.def.id, who.surface)
-          view.setSurface(who.def.id, who.surface, instant || !view.isShown(who.def.id))
+          view.setSurface(who.def.id, who.surface, instant || !view.isShown(who.def.id), who === game.bay ? game.dabbed : -1)
         }
       }
       view.show(on.map((who) => who.def.id))
@@ -100,7 +100,9 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // What a finger is on, from where it is on the surface.
     const targetAt = (game: Play, at: Point): Target => {
       const { bay, next } = game
-      return view.picker.pick(at.x, at.y, width, height, { def: bay.def, x: bay.motion.homeX, z: bay.motion.homeZ, surface: bay.surface }, { def: next.def, x: next.motion.homeX, z: next.motion.homeZ, surface: next.surface })
+      // The one that comes to the door next is at the door only when it stands on the floor, nose ahead: while it is still leaving the hill it is not there to be touched as that.
+      const atDoor = next.motion.ground === 0 && next.motion.turn === 0
+      return view.picker.pick(at.x, at.y, width, height, { def: bay.def, x: bay.motion.homeX, z: bay.motion.homeZ, surface: bay.surface }, atDoor ? { def: next.def, x: next.motion.homeX, z: next.motion.homeZ, surface: next.surface } : null, game.queue.map((who) => ({ def: who.def, x: who.motion.homeX, z: who.motion.homeZ, ground: who.motion.ground + who.motion.hop, turn: who.motion.turn })), game.hand !== 'finger' && game.toolWaits ? { tool: game.hand, ...view.toolAt(game.hand) } : null)
     }
     // How fast the finger travels over the vehicle, in its units a second, smoothed over a few moves.
     let last: { x: number; y: number; at: number } | null = null, speed = 0
@@ -137,17 +139,33 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       audio.touchDown()
       ladder.touch(clock.seconds)
       const where = at(event)
-      overlay.press(where.x, where.y, width, event.timeStamp)
-      act(touch.down(event.pointerId, at(event), event.timeStamp))
+      overlay.press(where.x, where.y, event.timeStamp)
+      const gestures = touch.down(event.pointerId, where, event.timeStamp)
+      // A finger that comes down again so soon and so near after a rub is taken for the same rub, and gets no press.
+      // To the game it is a touch of its own, wherever it lands, and is answered as one.
+      if (play && gestures.length > 0 && !gestures.some((gesture) => gesture.type === 'press')) {
+        last = null
+        speed = 0
+        play.land(targetAt(play, where))
+        save(play)
+      } else act(gestures)
+      // A second finger or a palm does no work while one finger is working, and still gets a knock.
+      if (play && gestures.length === 0) play.extra()
       // Captured, so the lift is reported even when the finger has slid off the surface.
       root.setPointerCapture(event.pointerId)
     }
-    const onMove = (event: PointerEvent) => act(touch.move(event.pointerId, at(event)))
+    const onMove = (event: PointerEvent) => {
+      const where = at(event)
+      overlay.move(where.x, where.y)
+      act(touch.move(event.pointerId, where))
+    }
     const onUp = (event: PointerEvent) => {
+      overlay.lift(event.timeStamp)
       act(touch.up(event.pointerId, at(event), event.timeStamp))
       audio.touchUp()
     }
     const onCancel = (event: PointerEvent) => {
+      overlay.lift(event.timeStamp, true)
       act(touch.cancel(event.pointerId, event.timeStamp))
       audio.touchUp()
     }
@@ -177,8 +195,16 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
         game.sounds.length = 0
         for (const mark of game.marks) view.stage.marks.land(mark)
         game.marks.length = 0
+        for (const who of game.wobbles) view.truck(who).wobble()
+        game.wobbles.length = 0
+        for (const jet of game.jets) view.stage.marks.push(jet.x, jet.z)
+        game.jets.length = 0
+        for (const cell of game.swells) view.truck(game.bay.def.id).swell(cell)
+        game.swells.length = 0
         stage(game, false)
-        view.update(dt, clock.seconds, poses, game.particles, game.hand, game.tool, hintFor(game, guidance, hint), game.tapAngle)
+        // The patch a dab landed on is for the change that dab made, and for no later one.
+        game.dabbed = -1
+        view.update(dt, clock.seconds, poses, game.particles, game.hand, game.tool, hintFor(game, guidance, hint), game.tapAngle, game.bits, game.clothWears)
         save(game)
       }
       // A tier change is applied ahead of the draw: the pixel ratio now, and whatever else the game's tiers set.
@@ -206,6 +232,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       cancelAnimationFrame(frame)
       frame = 0
       clock.rest()
+      overlay.rest()
       act(touch.clear())
       cadence.settle(performance.now())
     })
@@ -214,11 +241,12 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     ctxRef.current.storage.load<unknown>().catch(() => null).then((value) => {
       if (disposed) return
       // A saved position wins; `childAge` only chooses where a first visit starts.
-      const game = new Play(deserializeWash(value, ctxRef.current.childAge))
+      // A game that was put away is found as left and nothing plays; a first visit has no save and starts as a first visit does.
+      const game = new Play(deserializeWash(value, ctxRef.current.childAge), undefined, value != null)
       play = game
       // Found as left: the vehicles stand as the save has them, with no easing in and no scene.
       stage(game, true)
-      view.update(0, clock.seconds, poses, game.particles, game.hand, game.tool, hint)
+      view.update(0, clock.seconds, poses, game.particles, game.hand, game.tool, hint, 0, game.bits)
       draw()
     })
     resize()

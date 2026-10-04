@@ -14,6 +14,9 @@ export const BACKDROP = '#1c2026'
  * What one quality tier sets. A tier changes drawing only: the pixel ratio,
  * how much detail is drawn, whether the post pass runs. It never changes the
  * rules, the physics or the pace, so a slower device plays the same game.
+ * In this game a tier takes away nothing the child causes: every flying
+ * thing, and the mud and foam on the two vehicles a wash can reach, are drawn
+ * on every tier, since each is heard too and the sheet promises it is seen.
  * Add the game's own fields here and a row per tier below.
  */
 export type Tier = {
@@ -21,16 +24,16 @@ export type Tier = {
   dpr: number
   /** The wet floor gives back a faded copy of each vehicle. Without it the floor is still dark, wet and streaked. */
   reflections: boolean
-  /** How many of the small flying things (bubbles, drops, crumbs) are drawn. The pool itself is the same on every tier. */
-  particles: number
+  /** The two that wait far back in the yard have lumps of mud standing out from them. Without the lumps their mud is still painted on them. */
+  queueLumps: boolean
 }
 
 /** Tier 0 is full quality; each later tier is cheaper to draw. Whatever a tier change needs is compiled before it happens. */
 export const TIERS: readonly Tier[] = [
-  { dpr: 2, reflections: true, particles: 260 },
-  { dpr: 1.5, reflections: true, particles: 200 },
-  { dpr: 1.25, reflections: false, particles: 130 },
-  { dpr: 1, reflections: false, particles: 80 },
+  { dpr: 2, reflections: true, queueLumps: true },
+  { dpr: 1.5, reflections: true, queueLumps: true },
+  { dpr: 1.25, reflections: false, queueLumps: false },
+  { dpr: 1, reflections: false, queueLumps: false },
 ]
 
 /** The governor's thresholds. The rules they feed are at the top of quality.ts. */

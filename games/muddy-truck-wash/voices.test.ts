@@ -11,15 +11,19 @@ function all(): [string, VoiceSpec][] {
     for (const speed of [0, 0.5, 1, 4]) out.push([`scrub ${speed} ${variant}`, voices.scrub(speed, variant)])
     out.push([`foamUp ${variant}`, voices.foamUp(variant)], [`rasp ${variant}`, voices.rasp(variant)], [`rinse ${variant}`, voices.rinse(variant)])
     out.push([`spray ${variant}`, voices.spray(variant, false)], [`spray gurgle ${variant}`, voices.spray(variant, true)])
+    for (const [name, make] of Object.entries(voices.lather)) out.push([`lather ${name} ${variant}`, make(variant)])
+    for (const [name, make] of Object.entries(voices.water)) out.push([`water ${name} ${variant}`, make(variant)])
   }
-  for (const t of [-1, 0, 0.3, 1, 2]) out.push([`shine ${t}`, voices.shine(t)], [`pop ${t}`, voices.pop(t)], [`plip ${t}`, voices.plip(t)])
+  for (const t of [-1, 0, 0.3, 1, 2]) out.push([`shine ${t}`, voices.shine(t)], [`pop ${t}`, voices.pop(t)], [`plip ${t}`, voices.plip(t)], [`clack ${t}`, voices.clack(t)], [`slap ${t}`, voices.slap(t)])
   out.push(['scratch', voices.scratch()], ['smear', voices.smear()], ['fizz', voices.fizz()])
   for (const mood of ['call', 'proud', 'plain', 'muddy', 'bubbly', 'wet'] as const) for (const [low, high, hold] of [[147, 175, 0.22], [392, 523, 0.16], [196, 247, 0.34]]) out.push([`horn ${mood} ${low}`, voices.horn(low, high, hold, mood)])
   for (const size of [0, 0.5, 1]) out.push([`rev ${size}`, voices.rev(size)])
-  out.push(['brake', voices.brake()], ['splash', voices.splash()], ['shake', voices.shake()], ['sigh', voices.sigh()], ['clods', voices.clods()], ['drip', voices.drip()], ['clink', voices.clink()], ['puzzled', voices.puzzled(196, 247)])
+  out.push(['brake', voices.brake()], ['splash', voices.splash()], ['shake', voices.shake()], ['settle', voices.settle()], ['clods', voices.clods()], ['drip', voices.drip()], ['clink', voices.clink()], ['squeakLow', voices.squeakLow()], ['puzzled', voices.puzzled(196, 247)])
   for (const [name, make] of Object.entries(voices.feel)) out.push([`feel ${name}`, (make as (n: number) => VoiceSpec)(262)])
+  for (const pitch of [147, 262, 523]) for (const [name, make] of Object.entries(voices.face)) out.push([`face ${name} ${pitch}`, (make as (n: number) => VoiceSpec)(pitch)])
   for (const [name, make] of Object.entries(voices.poke)) out.push([`poke ${name}`, make()])
   for (const [name, make] of Object.entries(voices.take)) out.push([`take ${name}`, make()])
+  for (const [name, make] of Object.entries(voices.place)) out.push([`place ${name}`, make()])
   return out
 }
 
@@ -56,5 +60,22 @@ describe('voices', () => {
 
   it('a small bubble pops higher than a big one', () => {
     expect(voices.pop(0)[0].pitch).toBeGreaterThan(voices.pop(1)[0].pitch)
+  })
+})
+
+describe('the horn of a vehicle that leaves muddy', () => {
+  it('is a horn and no verdict: no buzz in it, nothing in it falls, and it ends on the vehicle\'s high note', () => {
+    for (const [low, high, hold] of [[147, 175, 0.22], [392, 523, 0.16], [196, 247, 0.34], [262, 330, 0.28]]) {
+      const spec = voices.horn(low, high, hold, 'muddy')
+      for (const n of spec) {
+        expect(n.wave).not.toBe('sawtooth')
+        if (n.glideTo !== undefined) expect(n.glideTo).toBeGreaterThan(n.pitch)
+        if (n.wave !== 'noise') expect(n.pitch).toBeGreaterThanOrEqual(low * 0.9)
+      }
+      const last = [...spec].sort((a, b) => (a.delay ?? 0) - (b.delay ?? 0)).at(-1)!
+      expect(last.pitch).toBeGreaterThanOrEqual(high)
+      // It opens on the vehicle's own toot, as every horn of its does.
+      expect(spec[0]).toEqual(voices.horn(low, high, hold, 'plain')[0] && { ...voices.horn(low, high, hold, 'plain')[0], length: spec[0].length })
+    }
   })
 })
