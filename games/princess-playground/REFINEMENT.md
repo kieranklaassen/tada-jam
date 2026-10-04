@@ -4,22 +4,24 @@
 ## Status
 
 - Stage: gates. Every gate this machine can run has been run at the tip and passed. **One gate could not be run here: the frame rate on a graphics card** (`npm run perf:jam -- princess-playground` in WebKit and throttled Chrome, and a physical iPad). The machine has no graphics card and no WebKit, so every frame is drawn in software and a frame rate read here would measure the software renderer. The lead runs it.
-- Sheet: **passed in round 5** (checker G), as it stands at commit `ca35987449145ce51946ee101bd628bef1541344`: hash of the sheet part (everything above `## The look`) `eea422194ff33af1fe6c6d4d795dd7ccda40ff8d28e347e1e9d36bd9c14ab03b`.
+- Sheet: **passed in round 6** (checker H), as it stood at commit `ebd6aea5b99e7246e9809cdf9577f103b048aa3e`: hash of the sheet part (everything above `## The look`) `89ccbacef6a45502243a07d4e1bf843282016fb3dd94297bd7d1af1275b24d06`. It has changed since in the sentences listed below, so round 7 is asked for.
   - Round 1 (checker B): 16 findings, on commit `132bc32` (hash `05fd9b42…d82fd6`). All 16 pasted as written in `19240ad`.
   - Round 2 (checker D): 2 findings, on commit `19240ad` (hash `c2e26354…1661`). Both pasted as written in `67f6589`.
   - Round 3 (checker E): 3 findings, on commit `67f6589` (hash `10298789…5295`). All three pasted as written in `0cf0982`.
   - Round 4 (checker F): 1 finding, on commit `0cf0982` (hash `a44b954d…c9ab`). Pasted as written in `ca35987`.
   - Round 5 (checker G): passed, no finding, on commit `ca35987` (hash `eea42219…b03b`).
+  - Round 6 (checker H): passed, no finding, on commit `ebd6aea` (hash `89ccbace…4d06`): the three sentences the closing run made true (Bo awake at his own ride, in two places; Mog's low-end cell).
   - Nothing was disputed in any round.
-- The closing run then read the passed sheet against the built game, sentence by sentence. Where the game was short of the sheet it was built (listed below). Three sentences said a detail other than the game does and were made true, in every place the sheet said them. None touches the mechanic, the error, the designed order, the saved state, the records or the claim.
-  - Sheet now: commit `ebd6aea5b99e7246e9809cdf9577f103b048aa3e`, hash of the sheet part `89ccbacef6a45502243a07d4e1bf843282016fb3dd94297bd7d1af1275b24d06`, unchanged since that commit.
-  - Grid, Bo, "Onto the low end". Old: "The deepest thump; the end digs a crater and a ring of sand flies. Alone on the plank he dozes and snores." New: "The deepest thump; the end digs a crater and a ring of sand flies. Alone on the plank he dozes and snores, unless he is the one asking, who stays awake."
-  - Characters, Bo, "Dislikes, every time". Old: "Being alone on the plank with nobody opposite: he dozes and snores until something lands." New: "Being alone on the plank with nobody opposite: he dozes and snores until something lands, unless he is the one asking, who stays awake and looks up along the plank."
-  - Grid, Mog, "Onto the low end". Old: "A soft thud; he circles once and sits, tail side to the child." New: "A soft thud; he circles once and sits."
-  - Why: a sleeping asker showed no want (pass 5), so Bo stays awake at his own ride; and a pebble has no tail side to turn.
-- Open: sheet ready for check, round 6
-- Answers handled: `docs/build/answers/princess-playground-1.md` to `-5.md` on the base branch.
-- Look in use: sand tray, the first reserved choice. The owner has been shown the toy and had not answered on the look when this was written.
+- After round 6 the sheet was read against the game again, the grid cell by cell, and then against the lead's list of points where the game did less than the sheet. Whatever a child should see or hear was built (listed below). Three sentences said a detail other than the game does and were made true, and one row was added to the stored fields. None touches the mechanic, the error, the designed order, the records or the claim; one adds a saved field.
+  - Sheet now: commit `12c2c234cd8841a38eac44eaaeec2b578e32523b`, hash of the sheet part `00e26a18d40a0ffee1b6297568c0e21bc4f153ef044b5655623324ef41c8bc84`, unchanged since that commit.
+  - Grid, Bo, "Tap it". Old: "Rumbles, rocks twice to get going and thuds to the end on his side, or off it." New: "Rumbles, rocks twice to get going and thuds to the end on his side; tapped on the plank he rumbles and thuds off it at once."
+  - Scenes, "Tidying", first two sentences. Old: "While the sand holds marks, a small rake lies at the far rim. A tap on it draws it once across the tray and leaves even raked lines." New: "While the sand holds marks, a small rake lies at the far rim, from the child's first touch of anything on: the first showing marks the sand before that touch, and no tool is on screen then. A tap on it draws it once along the far rim, from one side of the tray to the other, and the sand behind it lies in even raked lines again."
+  - What is stored, `marks`, last sentence. Old: "The rake lies out while any cell holds a mark deeper than raked." New: "The rake lies out while any cell holds a mark deeper than raked, once `touched` is set."
+  - What is stored, a new row after `marks`. New: "`touched`: The child has touched the game at least once, ever. It is never shown. Until it is set no tool is on screen: the rake stays away."
+  - Why: a friend who leaves the plank leaves at once, since the plank swings the moment its weight is gone and must not swing through him; the rake travels along the rim, where it passes through nothing; and the sheet's own age rule allows no tool on screen before it means something, while the first showing marks the sand before the child has done anything, so the rake waits for the first touch, which has to be saved for the game to be found as left.
+- Open: sheet ready for check, round 7
+- Answers handled: `docs/build/answers/princess-playground-1.md` to `-6.md` on the base branch.
+- Look in use: sand tray, the first reserved choice. The owner has answered on the look: yes.
 
 **What the lead should try first.** Open the production build with a fresh slot and touch nothing for ten seconds: the first showing plays, then the glow, then the hand. Tap the friend the hand shows; watch the fling and the ending; tap the friend who then waits in front of the stone. After that: carry Dot onto the plank (it warms and the others bounce), seat Mog against Dot (the plank floats and hums), stack all four on one end, let a friend go over the middle of the plank, draw in the sand and tap the rake on the far rim. `?seed=1` fixes the detail for stills.
 
@@ -36,17 +38,25 @@
 
 **Built in the closing run, because the sheet promises it.** A touched friend looks at the finger. A friend thrown by the plank squeaks as it comes down. Dot twirls as it goes. Pim's crown slips and is shaken straight when she is set down in the sand. Bo on the low end digs a crater and a ring of sand flies. Sand runs off the low end of the board, and slides back into a bite as an end lifts. Riders shake grains off. The slide down the plank is a whistle that rises (it fell). Bo's chuckle shakes the plank. The friends on the plank look after Dot when it is taken away. Pim stuck on the high end looks down at the sand and back at the sky. The held secrets hold: the level hum for as long as the plank floats, the tower's sway for as long as it stands, the snore for as long as Bo is alone.
 
-**Still weak.** Where the game is still short of a sentence of the sheet, it is said first.
+**Built in the finishing run, for the same reason.** Each was checked in the code first and found as the lead's reader said.
 
-- Short of the sheet: grains thrown by a landing are seen flying and falling, and the riders shake, but no grain is seen lying on a head.
-- Short of the sheet: Pim underneath a friend turns her mouth down, stamps and blows a raspberry; her cheeks do not puff.
-- Short of the sheet: Mog's slow blink on a high perch is only his ordinary, slower blink.
-- The rake crosses the tray along its far rim, on top of the rail, and the sand is raked again across its whole depth as it passes. The sheet's sentence ("draws it once across the tray and leaves even raked lines") was left as it is, read as true. Through the sand it would pass through the stone, the plank and whoever stands there.
+- Dot apart in the sand stands turned half away, pale, its eyes on the others, and turns back the moment it is touched, carried or in company (`motion.ts`, `aside`).
+- The friends on the plank turn to Dot as they bounce for it (`greet`, with the angle to Dot worked out when it plays).
+- Tastes given as every time are every time. Pim underneath puffs her cheeks out with her raspberry, under Bo too, after his wheeze. Mog landed on hisses in a voice of his own (`spit`), under anyone. Dot underneath hums its duet. Mog on top of a stack kneads and then purrs with his slow blink. Mog and Bo each say that they are high whenever the others lift them there, once the plank has carried them up and not again until they have been down: Mog's purr and slow blink, Bo's chuckle, which shakes the plank four times. Bo landing on a high end he cannot tip chuckles too. The one who asks says it in the ending of its own ride, and no shake starts inside a scene, whose sand was saved when it began.
+- A friend in the hand when the game is put away goes back to where it was picked up from. Nothing is moved, nothing is counted and no ride can end by it (`Game.putAway`, called by the Mount when it goes to rest and when it unmounts; tests in `game.test.ts` under "found as left").
+- Grains thrown by a landing lie on the head of whoever rides the end that came down, for a moment, and are shaken off.
+- A tap on the plank lifts its riders a finger's width.
+- The rake is not on screen before the child's first touch of anything; that touch is saved as `touched`.
+
+**Still weak.** Nothing here is short of a sentence of the sheet, as far as this lane has read it.
+
+- Bo rocks twice only when he starts from the sand. Tapped on the plank he leaves at once, and the sheet now says so: the plank swings the moment his weight is gone, and a friend who lingered would have it swing through him.
+- The grains that lie on a head are a few small points for under half a second. They are there, and small.
 - A load draws the sand from the coarse grid alone, as the sheet says, so a groove the child drew comes back as a row of soft hollows.
 - The held secrets sound for as long as they hold: a plank left level hums every couple of seconds, and Bo left alone snores every few, until the child changes something or puts the game away. That is the sheet; whether it wears is for someone who can hear it.
-- Nobody has heard the game. Every voice is numbers inside ranges; whether the thumps, squeaks and hums sit well together is unknown.
+- Nobody has heard the game. Every voice is numbers inside ranges; whether the thumps, squeaks and hums sit well together is unknown, and so is whether Bo's chuckle now comes too often in free play.
 - Motion was judged from model tests, stills and the audit's pictures, never from video.
-- The rake is out from the first seconds, because the first showing already marks the sand. It is small and on the far rim, but it is a tool on screen before the child has made a mark.
+- The rake appears at the child's first touch, wherever that touch lands. It does not slide in; it is simply there.
 - Two friends hopping to different places at the same moment can pass through each other in the air. A hop clears whoever stood in its way when it left, not whoever is flying.
 - The waiting place is beside Pim's default place; a big friend waiting there stands close to her.
 - The idle glow is faint on the pale sand at tier 0 in stills.
@@ -54,7 +64,7 @@
 **Open, for the lead.**
 
 - The frame rate on a graphics card, WebKit and a physical iPad: the one gate not run.
-- The sheet's check, round 6, on the three sentences listed above and nothing else.
+- The sheet's check, round 7, on the sentences listed above and nothing else.
 - The registry row: its text is at the end of `ART.md`.
 - Someone to listen to the game.
 - Draft pull request 37 is open from this branch so that it can be read; the lead merges by squash and may close it.
@@ -98,9 +108,9 @@ The stages in order are sheet, toy, game, gates. Keep this block current: the st
 - The name: the princess is the smallest pebble, with a shell for a crown, and the playground is a seesaw in a sand tray. Whether that is princess enough for the name.
 - The skill line of the roster calls weight "science". The records carry comparing weight as measurement in the mathematics lane in both jurisdictions, with one California science foundation that lists weight as an example property. The sheet follows the records.
 - No default of the guide needed changing.
-- Whether Bo may stay awake while he is the one asking. The game keeps him awake at his own ride so that the scene has a want, and the sheet now says so (round 6). If the owner would rather have him snore there, the idle ladder is then the only invitation.
+- Whether Bo may stay awake while he is the one asking. The game keeps him awake at his own ride so that the scene has a want, and the sheet says so (passed in round 6). If the owner would rather have him snore there, the idle ladder is then the only invitation.
 - Whether the held secrets may sound for as long as they hold: the hum of a level plank and Bo's snore go on until the child changes something.
-- Whether the rake may be out from the first seconds. It lies out while the sand holds any mark, and the first showing already makes one.
+- Whether the rake should come in at the child's first touch. It now stays away until then, so that no tool is on screen before the child has done anything; the first showing marks the sand before that.
 - A first visit at four or older opens one step on, at the ride where size matters. Younger, or with no age, it opens at the first ride. Both are the game's own choice.
 
 ## Pass log
