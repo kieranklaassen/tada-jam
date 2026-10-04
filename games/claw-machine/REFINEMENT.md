@@ -3,6 +3,7 @@
 
 ## Status
 
+- Resumed: 4 October, after a cut-off on 3 October. The game run stood in its last gate, "nothing passes through anything": the game was built and played from the first position to the last (commit `27cedfb`), the audit was at 45 open findings from 273, and a batch of fixes for them was in the working tree, not yet committed. Still to come in the game run: that batch, the audit to zero with `enforce: true`, the logged passes, the cold playtest and this block rewritten at `Stage: gates`. Then the look pass and the closing run. Sheet check round 3 has passed (`claw-machine-3.md`).
 - Stage: game, being built on the toy (the game run). The model plays from the first position to the last; the scenes, the grid and the idle ladder are in; the audit, the passes and the cold playtest are still to come.
 - Sheet check, round 1 (checker: B): open, 13 findings, judged on the sheet at commit `f5f963d` (sha256 of the sheet part `11f75200bb12e675854d59ebb3e8ebf296e0f47c37942c6cacea1d793d955db1`). All 13 replacements were pasted as written; none was disputed.
 - Sheet check, round 2 (checker: D): open, 3 findings, judged on the sheet at commit `81513f0` (sha256 `2fe390c20d44e339cc5e5f1e8fcfaed6d229422d055e0b8c2596cf6806ff32a6`). All 3 replacements were pasted as written; none was disputed, and all three were words only: the game already swings into things on a wag, already lets the trolley finish its run before a drop, and the comb already rasps upward. Answers handled so far: `claw-machine-1.md` and `claw-machine-2.md`.
