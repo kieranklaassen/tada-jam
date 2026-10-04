@@ -3,6 +3,7 @@
 
 ## Status
 
+- Resumed: on 4 October, after the session was cut off on 3 October at about 21:21 UTC. Taking up, in order: "Thank you for the closing run. One short run more" (in hand when it stopped: five commits of it are pushed, its status block is not); then the look pass ("after the run that pastes your sentences"); then "to take up when the look pass has ended" (the reader step).
 - Stage: gates. The game is built on the toy; the closing run made this folder say what the game is and built nothing new.
 - **The sheet has passed.** Round 5, checker G, passed the sheet part with sha256 `2ec1e59ab4516efa6b02745fc8117d801e0efede06b7be2c900c97a365f2ca42`. The commit that holds that sheet is `55b19cb`. Nothing above `## The look` has changed since, and the hash is the same today.
 - The rounds before it: round 1 (checker B, 14 findings) pasted at `b7c2270`; round 2 (D, 5) at `4f2a5d5`; round 3 (E, 4) at `0a76b32`; round 4 (F, 2, with the lead's sentence on the numerals) at `55b19cb`. No finding of any round was refused.
