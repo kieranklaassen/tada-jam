@@ -12,7 +12,7 @@ import { sharedVinyl, type VinylUniforms } from './vinyl'
 // Nothing in a frame allocates.
 
 /** What a quality tier changes here, besides the pixel ratio the Mount applies. */
-export type StageLook = { gloss: boolean; wobble: boolean; clouds: boolean }
+export type StageLook = { gloss: boolean; wobble: boolean }
 
 const UP = new Vector3(0, 1, 0)
 const KINDS: readonly KindName[] = ['duck', 'frog', 'hippo', 'crab']
@@ -63,7 +63,6 @@ export class Stage {
   setLook(look: StageLook): void {
     this.shared.uGloss.value = look.gloss ? 1 : 0
     this.shared.uWobble.value = look.wobble ? 0.012 : 0
-    for (const cloud of this.scenery.clouds) cloud.visible = look.clouds
   }
 
   /** The friend of that name, built the first time it is asked for. A name belongs to one kind. */

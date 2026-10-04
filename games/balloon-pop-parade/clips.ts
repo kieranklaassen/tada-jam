@@ -236,8 +236,10 @@ function frog(id: ClipId, t: number, pose: Pose): void {
     pose.armL = pose.armR = 1.3 + hump(t, 0.16, 0.5) * 0.5
     pose.puff = 1 + hump(t, 0, 0.6) * 0.7
   } else if (id === 'pokeB') {
-    // The other way a frog takes a poke: it stays put, shuts its eyes and its throat goes out twice, the second time further.
+    // The other way a frog takes a poke: it shuts its eyes and its throat goes out twice, the second time further,
+    // and that one lifts it off the ground. However a frog takes a poke, it hops on the spot.
     pose.puff = 1 + hump(t, 0.04, 0.34) * 0.7 + hump(t, 0.36, 0.8) * 1.0
+    pose.y += hump(t, 0.42, 0.74) * 0.34
     pose.blink = Math.max(pose.blink, hold(t, 0.02, 0.1, 0.62, 0.78))
     pose.squash += -hump(t, 0, 0.3) * 0.08 - hump(t, 0.36, 0.7) * 0.1
     pose.tilt += hump(t, 0.36, 0.85) * 0.14
@@ -352,8 +354,10 @@ function crab(id: ClipId, t: number, pose: Pose, reach: number): void {
     pose.armR = reach - hump(t, 0.1, 0.18) * 0.5
     pose.squash += wobble(t, 0, 36, 9) * 0.06
   } else if (id === 'pokeB') {
-    // The other way a crab takes a poke: down flat, eyes right up, and up again with a clack of the free claw.
+    // The other way a crab takes a poke: down flat, eyes right up, and up again with a clack of the free claw as it
+    // shuffles off to the side and back. However a crab takes a poke, it shuffles sideways.
     pose.squash += -hold(t, 0, 0.1, 0.3, 0.42) * 0.24 + wobble(t, 0.42, 34, 9) * 0.06
+    pose.x += -hump(t, 0.36, 0.5) * 0.26 + hump(t, 0.5, 0.62) * 0.14
     pose.puff = 1 + hold(t, 0.04, 0.14, 0.34, 0.5) * 0.8
     pose.armL = reach - Math.abs(Math.sin(t * 24)) * 0.5 * hold(t, 0.36, 0.42, 0.55, 0.62)
     pose.wag = wobble(t, 0.3, 30, 7) * 0.3

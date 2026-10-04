@@ -151,14 +151,15 @@ function hippo(): Body {
     head: [
       { at: [0, 0.42, 0.04], size: [0.6, 0.46, 0.5], colour: c },
       // The top of the muzzle. The bottom of it is the jaw, a part of its own, and the two close on a dark lining.
-      { at: [0, 0.27, 0.42], size: [0.62, 0.26, 0.4], colour: light, panels: 2 },
+      // Neither half of the muzzle has a welded seam: one down the middle would cross the line of the mouth and read as a sign.
+      { at: [0, 0.27, 0.42], size: [0.62, 0.26, 0.4], colour: light },
       ...both({ at: [0.2, 0.3, 0.8], size: [0.06, 0.045, 0.03], colour: dark, detail: TINY }),
       ...both({ at: [0.44, 0.84, -0.04], size: [0.14, 0.15, 0.08], turn: [0, 0, -0.4], colour: c, detail: SMALL }),
     ],
     eyes: eye(0.28, 0.68, 0.42, 0.12),
     arm: [{ at: [-0.04, -0.34, 0.02], size: [0.21, 0.42, 0.21], colour: c, panels: 2, detail: SMALL }],
     extra: [{ at: [0, 0, 0], size: [0.72, 0.56, 0.3], colour: light, detail: SMALL }],
-    jaw: [{ at: [0, -0.1, 0.34], size: [0.58, 0.17, 0.36], colour: light, panels: 2 }],
+    jaw: [{ at: [0, -0.1, 0.34], size: [0.58, 0.17, 0.36], colour: light }],
     jawPivot: [0, 0.08, 0.04],
     inside: [{ at: [0, 0.02, 0.34], size: [0.46, 0.06, 0.29], colour: lining, detail: SMALL }],
     neck: [0, 1.52, 0.2],

@@ -23,16 +23,16 @@ export type Tier = {
   gloss: boolean
   /** The skin breathing in the vertex shader. */
   wobble: boolean
-  /** The clouds: three draws of scenery nothing depends on. */
-  clouds: boolean
 }
 
 /** Tier 0 is full quality; each later tier is cheaper to draw. Whatever a tier change needs is compiled before it happens. */
 export const TIERS: readonly Tier[] = [
-  { dpr: 2, gloss: true, wobble: true, clouds: true },
-  { dpr: 1.5, gloss: true, wobble: true, clouds: true },
-  { dpr: 1.25, gloss: false, wobble: true, clouds: true },
-  { dpr: 1, gloss: false, wobble: false, clouds: false },
+  // The clouds are drawn at every tier: they answer a touch, one sheds its drops on the troop, and all three bounce
+  // when a hippo sits down, so a tier that hid them would hide part of the game.
+  { dpr: 2, gloss: true, wobble: true },
+  { dpr: 1.5, gloss: true, wobble: true },
+  { dpr: 1.25, gloss: false, wobble: true },
+  { dpr: 1, gloss: false, wobble: false },
 ]
 
 /** The governor's thresholds. The rules they feed are at the top of quality.ts. */

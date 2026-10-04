@@ -60,7 +60,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // sprites and figures it drew as drawCalls; a three.js game copies the renderer's own counts.
     const drawn = { drawCalls: 0, triangles: 0 }
     const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, ...drawn }))
-    let disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
+    let disposed = false, unread = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
     // What the idle ladder shows now: kept from the loop for the draw, so the glow and the ghost hand reach the stage.
     let guidance: Guidance | null = null
 
@@ -72,7 +72,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     //                                            since a put-away in the next moment must find it saved
     // Going to rest writes whatever the throttle still holds (`cadence.settle`, below). This game makes only the
     // second kind of change (`keep`, above): a balloon sent, a balloon popped, a scene begun.
-    const cadence = new SaveCadence(() => { if (theatre && !moment) ctxRef.current.storage.save(serializeSave(theatre.save)) })
+    const cadence = new SaveCadence(() => { if (theatre && !moment && !unread) ctxRef.current.storage.save(serializeSave(theatre.save)) })
 
     // The one place the game applies a quality tier: whatever its tiers set besides the pixel ratio, which
     // `resize` applies. It runs once before the first frame and again each time the governor changes tier, ahead
@@ -122,7 +122,14 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
         if (gesture.type === 'press') {
           const at = toWorld(gesture.at.x, gesture.at.y, width, height, stage.view)
           theatre.press(at.x, at.y, stage.view)
-        } else if (gesture.type === 'tap' || gesture.type === 'dragStart') theatre.release(stage.view)
+        } else if (gesture.type === 'tap') theatre.release(stage.view)
+        else if (gesture.type === 'dragStart') {
+          // A tap that smeared counts as the tap, and the touch is over there: the game has nothing to drag. The touch
+          // is forgotten at once, so a finger that lands again a moment later nearby is a new touch and is answered
+          // when it lands; left as a drag, it would be taken for the same drag picked up again, and nothing would answer.
+          theatre.release(stage.view)
+          touch.clear()
+        }
         else if (gesture.type === 'pressEnd') theatre.cancel()
       }
       // The sounds are played here, inside the handler, so the first one falls inside the touch that unlocks the audio.
@@ -207,7 +214,9 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     })
     attendRef.current = (attended) => attention.set(attended)
 
-    ctxRef.current.storage.load<unknown>().catch(() => null).then((value) => {
+    // A slot that could not be read may still hold a game. The child plays a new one, and nothing of it is written
+    // over the slot: the game that is there is found again the next time it can be read.
+    ctxRef.current.storage.load<unknown>().catch(() => { unread = true; return null }).then((value) => {
       if (disposed) return
       // A saved position wins; `childAge` only chooses where a first visit starts. A new game is laid out from
       // `seed=` when the address has one, and otherwise from a seed drawn for this child's first visit.

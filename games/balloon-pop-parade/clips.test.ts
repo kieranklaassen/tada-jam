@@ -130,6 +130,24 @@ describe('the hippo\'s yawn', () => {
   })
 })
 
+describe('a poke', () => {
+  it('always has what its kind is known for, whichever of its two ways it is taken', () => {
+    const most = (kind: KindName, id: ClipId, read: (pose: Pose, still: Pose) => number) => {
+      let found = 0
+      const lasts = PERSONALITIES[kind].lasts[id]
+      for (let i = 0; i <= 60; i++) found = Math.max(found, read(sample(kind, id, (i / 60) * lasts), sample(kind, null, 0)))
+      return found
+    }
+    for (const id of ['poke', 'pokeB'] as const) {
+      // The duck wags its tail, the frog hops on the spot, the hippo's belly wobbles, and the crab shuffles sideways.
+      expect(most('duck', id, (pose) => Math.abs(pose.wag)), `duck ${id}`).toBeGreaterThan(0.4)
+      expect(most('frog', id, (pose, still) => pose.y - still.y), `frog ${id}`).toBeGreaterThan(0.25)
+      expect(most('hippo', id, (pose, still) => Math.abs(pose.puff - still.puff)), `hippo ${id}`).toBeGreaterThan(0.1)
+      expect(most('crab', id, (pose, still) => Math.abs(pose.x - still.x)), `crab ${id}`).toBeGreaterThan(0.18)
+    }
+  })
+})
+
 describe('the cues', () => {
   it('fall inside their clips and in order', () => {
     for (const kind of KINDS) {
