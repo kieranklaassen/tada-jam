@@ -59,7 +59,7 @@ function partsOf(kind: KindName): Parts {
       armL: pillows(plan.arm),
       armR: pillows(mirrored(plan.arm)),
       extra: pillows(plan.extra),
-      jaw: plan.jaw.length > 0 ? pillows(plan.jaw) : null,
+      jaw: plan.jaw.length > 0 ? pillows([...plan.jaw, ...plan.inside]) : null,
       eyeHeight: plan.eyes[0].at[1],
     }
     built.set(kind, parts)
@@ -141,7 +141,7 @@ export function marcherGeometry(kind: KindName): BufferGeometry {
   const armL = pillows(plan.arm).rotateZ(-down).rotateY(forwardOf(down)).translate(...plan.shoulder)
   const armR = pillows(mirrored(plan.arm)).rotateZ(plan.reach).rotateY(-forwardOf(plan.reach)).translate(-plan.shoulder[0], plan.shoulder[1], plan.shoulder[2])
   const parts = [pillows(plan.body), head, eyes, extra, armL, armR]
-  // A mouth that opens is shut on the far hill.
+  // A mouth that opens is shut on the far hill, and built without its lining.
   if (plan.jaw.length > 0) parts.push(pillows(plan.jaw).translate(plan.neck[0] + plan.jawPivot[0], plan.neck[1] + plan.jawPivot[1], plan.neck[2] + plan.jawPivot[2]))
   const whole = mergeGeometries(parts, false)
   for (const part of parts) part.dispose()

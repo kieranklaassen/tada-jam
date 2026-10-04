@@ -344,8 +344,8 @@ function crab(id: ClipId, t: number, pose: Pose, reach: number): void {
     pose.armL = pose.armR = reach - 0.25
     pose.armLForward = pose.armRForward = hold(t, 0, 0.14, 0.62, 0.95) * 1.2
     pose.squash += -hold(t, 0, 0.1, 0.6, 0.9) * 0.12
-    // The peek is at the claw that held the string: the stalks swing to it.
-    pose.wag = hold(t, 0.6, 0.72, 0.92, 1.04) * 0.45
+    // The peek is at the claw that held the string: the stalks swing to it, once they are up out of the shell again.
+    pose.wag = hold(t, 0.72, 0.82, 0.94, 1.04) * 0.28
   } else if (id === 'poke') {
     pose.x += hump(t, 0.04, 0.2) * 0.28 - hump(t, 0.22, 0.4) * 0.2
     pose.armL = reach - hump(t, 0.02, 0.1) * 0.5
