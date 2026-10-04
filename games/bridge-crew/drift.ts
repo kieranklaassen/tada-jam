@@ -285,7 +285,9 @@ export function drawSplash(pen: Pen, plot: Plot, at: Site, splash: Splash | null
   if (s < 0.7) for (const side of [-1, 1]) for (const reach of [1, 0.62]) { pen.moveTo(x + side * wide * 0.3 * reach, y); pen.quadraticCurveTo(x + side * wide * 0.42 * reach, y - high * reach, x + side * wide * reach, y - high * 0.72 * reach) }
   for (const drop of drops(splash, [at.left[0] + 0.15, at.right[0] - 0.15])) {
     const [dx, dy] = px(plot, drop.x, drop.y)
-    pen.moveTo(dx, dy); pen.lineTo(dx, dy + drop.vy * cell * 0.035)
+    // Each a streak along its way, never shorter than a drop.
+    const long = Math.max(0.16, Math.abs(drop.vy) * 0.04) * cell * (drop.vy >= 0 ? 1 : -1)
+    pen.moveTo(dx, dy); pen.lineTo(dx, dy + long)
   }
   // The rings stop at the banks.
   const [low] = px(plot, at.left[0] + 0.1, 0), [top] = px(plot, at.right[0] - 0.1, 0), held = (v: number) => Math.max(low, Math.min(top, v))
