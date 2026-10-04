@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { LADDER } from './config'
-import { CALM, LEAP, TRAIN, boat, clouds, drawSky, drawWaterLife, drops, fish, train, type Splash } from './drift'
+import { CALM, LEAP, SPLASH, TRAIN, balloon, boat, clouds, drawSky, drawSplash, drawWaterLife, drops, fish, train, type Splash } from './drift'
 import type { Pen } from './look'
 import { WATER } from './pose'
 import { groundAt, plotFor } from './sheet'
@@ -31,6 +31,17 @@ describe('what goes on at the edge of the sheet', () => {
       expect(cloud.x).toBeGreaterThanOrEqual(-4); expect(cloud.x).toBeLessThan(COLS + 4)
       expect(cloud.y).toBeGreaterThanOrEqual(SKY.low); expect(cloud.y).toBeLessThanOrEqual(SKY.high)
     }
+  })
+
+  it('a balloon crosses the sky far off, slowly, and comes round again', () => {
+    let leftward = 0
+    for (let seconds = 0; seconds < 600; seconds += 5) {
+      const now = balloon(gap, seconds), next = balloon(gap, seconds + 5)
+      expect(now.y).toBeGreaterThanOrEqual(SKY.low); expect(now.y).toBeLessThanOrEqual(SKY.high)
+      expect(now.x).toBeGreaterThan(-5.01); expect(now.x).toBeLessThanOrEqual(COLS + 5)
+      if (next.x < now.x) { leftward++; expect(now.x - next.x).toBeCloseTo(0.55, 5) }
+    }
+    expect(leftward).toBeGreaterThan(100)
   })
 
   it('a train crosses the finished bridge far off now and then, and the bridge is empty the rest of the time', () => {
@@ -101,19 +112,20 @@ describe('what goes on at the edge of the sheet', () => {
   it('a splash throws drops that fall back: more for a vehicle than for the trolley, and none left when it is over', () => {
     expect(drops(big(0.2)).length).toBeGreaterThan(drops({ x: 12, since: 0.2, big: 0.4 }).length)
     for (let since = 0.02; since < 2; since += 0.05) for (const drop of drops(big(since))) expect(drop.y).toBeGreaterThan(WATER)
-    expect(drops(big(1.3))).toEqual([])
-    const reach = Math.max(...drops(big(0.3)).map((drop) => drop.y - WATER))
-    expect(reach).toBeGreaterThan(1)
-    expect(reach).toBeLessThan(3)
+    expect(drops(big(SPLASH))).toEqual([])
+    const reach = Math.max(...Array.from({ length: 30 }, (_, i) => Math.max(0, ...drops(big(i * 0.05)).map((drop) => drop.y - WATER))))
+    // The highest go well over a bank four cells above the water, and none off the top of the sheet.
+    expect(reach).toBeGreaterThan(4)
+    expect(reach).toBeLessThan(7)
   })
 
   it('is drawn in a few lines with real numbers and no text, at any moment, with a splash or without', () => {
     const plot = plotFor(1180, 820)
     for (const at of every) for (let seconds = 0; seconds < 60; seconds += 1.7) for (const splash of [null, big(0.3, (at.left[0] + at.right[0]) / 2), big(3)]) {
       const { pen, calls } = recording()
-      const drawn = drawSky(pen, plot, at, seconds) + drawWaterLife(pen, plot, at, seconds, splash)
-      expect(drawn).toBeGreaterThanOrEqual(1)
-      expect(drawn).toBeLessThanOrEqual(6)
+      const drawn = drawSky(pen, plot, at, seconds) + drawWaterLife(pen, plot, at, seconds, splash) + drawSplash(pen, plot, at, splash)
+      expect(drawn).toBeGreaterThanOrEqual(2)
+      expect(drawn).toBeLessThanOrEqual(7)
       expect(calls.filter((call) => call.name === 'fillText' || call.name === 'strokeText')).toEqual([])
       for (const call of calls) for (const arg of call.args) if (typeof arg === 'number') expect(Number.isFinite(arg), `${at.id} ${call.name}`).toBe(true)
     }

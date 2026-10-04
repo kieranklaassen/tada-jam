@@ -2,7 +2,7 @@ import { RAIL_TILT, givePose, poke, reactPose, waitPose, drivePose, type Vehicle
 import { showsStrain, strainLook } from './consequence'
 import { CREW_SCALE } from './crew'
 import { crewFigure } from './crewfig'
-import { drawSky, drawWaterLife } from './drift'
+import { drawSky, drawSplash, drawWaterLife } from './drift'
 import { chief, chiefModel, roll } from './figures'
 import { barge, compareModels, ideaModel, lineDrawing, spareWeights, tracingSheet, trolley } from './props'
 import { vehicle } from './fleet'
@@ -241,6 +241,8 @@ export class View {
     }
 
     drawn += this.cast(pen, toy, guidance)
+    // The splash, over whatever made it.
+    drawn += drawSplash(pen, plot, at, toy.splash)
 
     // The crew chief and the small model it is fiddling with, on the near bank.
     const [cx, cy] = at2([CHIEF.x, CHIEF.y])

@@ -61,7 +61,7 @@ export function fish(at: Site, seconds: number, splash: Splash | null): { x: num
   if (splash && splash.big >= 1 && splash.since < 1.7) {
     // Flung: up fast, a slow turn at the top, and down nose first.
     const t = splash.since / 1.7, up = Math.sin(Math.PI * Math.pow(t, 0.8))
-    return { x: home - 0.25 * t, y: WATER + 0.1 + 2.3 * up, turn: 1.3 - 2.6 * t, flung: true }
+    return { x: home - 0.25 * t, y: WATER + 0.1 + 3.1 * up, turn: 1.3 - 2.6 * t, flung: true }
   }
   const into = (seconds + (siteSeed(at) % 11)) % LEAP.every
   if (into > LEAP.lasts) return null
@@ -99,9 +99,9 @@ export function boat(at: Site, seconds: number, splash: Splash | null): { x: num
 export function drops(splash: Splash): { x: number; y: number; vx: number; vy: number }[] {
   const out: { x: number; y: number; vx: number; vy: number }[] = [], s = splash.since, count = Math.round(6 + 7 * splash.big)
   for (let i = 0; i < count; i++) {
-    const fan = ((i + 0.5) / count - 0.5) * 2.3, speed = (3.2 + 1.9 * ((i * 7) % 5) / 4) * (0.55 + 0.45 * splash.big)
-    const vx = Math.sin(fan) * speed * 0.6, vy0 = Math.cos(fan) * speed, y = WATER + vy0 * s - 4.6 * s * s
-    if (y > WATER) out.push({ x: splash.x + vx * s, y, vx, vy: vy0 - 9.2 * s })
+    const fan = ((i + 0.5) / count - 0.5) * 2.1, speed = (7.5 + 4 * ((i * 7) % 5) / 4) * (0.5 + 0.5 * splash.big)
+    const vx = Math.sin(fan) * speed * 0.42, vy0 = Math.cos(fan) * speed, y = WATER + vy0 * s - 7 * s * s
+    if (y > WATER) out.push({ x: splash.x + vx * s, y, vx, vy: vy0 - 14 * s })
   }
   return out
 }
@@ -119,7 +119,7 @@ export function drawSky(pen: Pen, plot: Plot, at: Site, seconds: number): number
   const { cell } = plot
   let drawn = 0
   // Clouds: a flat foot and three bumps, as on a weather chart.
-  line(pen, cell, 0.02, FAINT.hills)
+  line(pen, cell, 0.022, FAINT.hills + 0.06)
   pen.beginPath()
   for (const cloud of clouds(at, seconds)) {
     const [x, y] = px(plot, cloud.x, cloud.y), w = cloud.wide * cell
@@ -226,27 +226,38 @@ export function drawWaterLife(pen: Pen, plot: Plot, at: Site, seconds: number, s
       drawn++
     }
   }
-  if (splash && splash.since < 1.6) {
-    const s = splash.since, [x, y] = px(plot, splash.x, WATER), big = splash.big
-    // The crown: a column that stands up and falls, the drops it throws, and the rings that run out from it.
-    line(pen, cell, 0.03, Math.max(0, 1 - s / 1.5))
-    pen.beginPath()
-    const high = cell * 2.1 * big * Math.sin(Math.PI * Math.min(1, s / 0.6)), wide = cell * (0.5 + 1.1 * Math.min(1, s / 0.5)) * (0.6 + 0.4 * big)
-    if (s < 0.6) for (const side of [-1, 1]) { pen.moveTo(x + side * wide * 0.25, y); pen.quadraticCurveTo(x + side * wide * 0.3, y - high, x + side * wide, y - high * 0.7) }
-    for (const drop of drops(splash)) {
-      const [dx, dy] = px(plot, drop.x, drop.y)
-      pen.moveTo(dx, dy); pen.lineTo(dx - drop.vx * cell * 0.03, dy + drop.vy * cell * 0.03)
-    }
-    // The rings stop at the banks.
-    const [low] = px(plot, at.left[0] + 0.1, 0), [top] = px(plot, at.right[0] - 0.1, 0), held = (v: number) => Math.max(low, Math.min(top, v))
-    for (let i = 0; i < 3; i++) {
-      const r = cell * (0.4 + (1.3 + i * 0.8) * s) * (0.6 + 0.4 * big)
-      pen.moveTo(held(x - r), y + cell * 0.05 * i); pen.lineTo(held(x - r * 0.55), y + cell * 0.05 * i)
-      pen.moveTo(held(x + r * 0.55), y + cell * 0.05 * i); pen.lineTo(held(x + r), y + cell * 0.05 * i)
-    }
-    pen.stroke()
-    drawn++
-  }
   pen.globalAlpha = 1
   return drawn
+}
+
+/** How long a splash is seen, in seconds. */
+export const SPLASH = 1.7
+
+/**
+ * Draws the splash itself, over whatever made it: a crown that stands up out
+ * of the water and falls, the drops it throws well over the banks, and the
+ * rings that run out to both walls. Returns how many things it drew.
+ */
+export function drawSplash(pen: Pen, plot: Plot, at: Site, splash: Splash | null): number {
+  if (!splash || splash.since < 0 || splash.since >= SPLASH) return 0
+  const { cell } = plot, s = splash.since, [x, y] = px(plot, splash.x, WATER), big = splash.big
+  line(pen, cell, 0.045, Math.max(0, 1 - s / SPLASH))
+  pen.beginPath()
+  // The crown: two sheets of water that stand up either side of what fell in, and curl over.
+  const high = cell * 2.8 * big * Math.sin(Math.PI * Math.min(1, s / 0.7)), wide = cell * (0.7 + 1.3 * Math.min(1, s / 0.5)) * (0.6 + 0.4 * big)
+  if (s < 0.7) for (const side of [-1, 1]) for (const reach of [1, 0.62]) { pen.moveTo(x + side * wide * 0.3 * reach, y); pen.quadraticCurveTo(x + side * wide * 0.42 * reach, y - high * reach, x + side * wide * reach, y - high * 0.72 * reach) }
+  for (const drop of drops(splash)) {
+    const [dx, dy] = px(plot, drop.x, drop.y)
+    pen.moveTo(dx, dy); pen.lineTo(dx - drop.vx * cell * 0.035, dy + drop.vy * cell * 0.035)
+  }
+  // The rings stop at the banks.
+  const [low] = px(plot, at.left[0] + 0.1, 0), [top] = px(plot, at.right[0] - 0.1, 0), held = (v: number) => Math.max(low, Math.min(top, v))
+  for (let i = 0; i < 3; i++) {
+    const r = cell * (0.5 + (1.5 + i * 0.9) * s) * (0.6 + 0.4 * big)
+    pen.moveTo(held(x - r), y + cell * 0.06 * i); pen.lineTo(held(x - r * 0.5), y + cell * 0.06 * i)
+    pen.moveTo(held(x + r * 0.5), y + cell * 0.06 * i); pen.lineTo(held(x + r), y + cell * 0.06 * i)
+  }
+  pen.stroke()
+  pen.globalAlpha = 1
+  return 1
 }
