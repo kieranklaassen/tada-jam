@@ -2,7 +2,7 @@ import { RAIL_TILT, givePose, poke, reactPose, waitPose, drivePose, type Vehicle
 import { showsStrain, strainLook } from './consequence'
 import { CREW_SCALE } from './crew'
 import { crewFigure } from './crewfig'
-import { drawSky, drawSplash, drawWaterLife } from './drift'
+import { bargeAt, drawSky, drawSplash, drawWaterLife } from './drift'
 import { chief, chiefModel, roll } from './figures'
 import { barge, compareModels, ideaModel, lineDrawing, spareWeights, tracingSheet, trolley } from './props'
 import { vehicle } from './fleet'
@@ -361,7 +361,7 @@ export class View {
     // The barge, on a sheet where one passes: moored by the near bank, nosing forward and back, and under the bridge and back while a crossing is shown.
     if (at.channel) {
       const passing = show.kind === 'crossing' && game.bargeTook ? Math.sin(Math.PI * show.react) : 0, took = game.bargeTook
-      const bx = at.left[0] + 2 + 0.2 * Math.sin(game.seconds * 0.9) + passing * (at.channel[1] - at.left[0] - 1.5)
+      const bx = bargeAt(at, game.seconds, passing) ?? at.channel[0]
       const scrape = took && took.mood === 'dislike' ? passing : 0
       barge(pen, ...at2(bx, WATER), cell, 0.05 * Math.sin(game.seconds * 1.7), scrape, took && took.mood === 'dislike' ? Math.min(1, show.react * 2) * (1 - show.arrive) : 0, took ? (took.mood === 'like' ? passing : -passing) : 0)
       drawn++

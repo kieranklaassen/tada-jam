@@ -69,7 +69,9 @@ export function skyline(at: Site, x: number, layer: 0 | 1): number {
 
 /** Where the finished bridge far off stands: over the far bank, between two hills. Its rail's two ends and its height above the deck, in cells. */
 export function farBridge(at: Site): { x0: number; x1: number; y: number } {
-  const x0 = Math.min(at.right[0] + 2.4, COLS - 3.6), x1 = Math.min(x0 + 4.6, COLS + 0.9)
+  // Clear of a cliff that stands behind the far bank: it begins beyond the cliff's foot.
+  const cliff = Math.max(-Infinity, ...at.anchors.filter(([ax]) => ax > at.right[0]).map(([ax]) => ax + 2.1))
+  const x0 = Math.max(Math.min(at.right[0] + 2.4, COLS - 3.6), Math.min(cliff, COLS - 1.9)), x1 = Math.min(x0 + 4.6, COLS + 0.9)
   return { x0, x1, y: at.right[1] + 2.75 }
 }
 

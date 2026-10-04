@@ -98,6 +98,21 @@ export function boat(at: Site, seconds: number, splash: Splash | null): { x: num
   return { x, y: WATER + bob, tilt: rock, facing: out ? 1 : -1 }
 }
 
+/**
+ * The barge, on a sheet where one passes: the middle of its hull, in cells.
+ * It lies moored at the near end of its channel, clear of the rock, nosing
+ * forward and back; `passing` (0 to 1 and back) takes it down the channel and
+ * under the bridge to just short of the far bank. Its hull is never over a
+ * rock or in a bank. Null on a sheet with no channel.
+ */
+export function bargeAt(at: Site, seconds: number, passing: number): number | null {
+  if (!at.channel) return null
+  const moored = at.channel[0] + 0.25, away = at.right[0] - BARGE.bow - 0.25
+  return moored + 0.15 * Math.sin(seconds * 0.9) * (1 - passing) + passing * Math.max(0, away - moored)
+}
+/** How far the barge's hull reaches from its middle, in cells: to its stern and to its bow. */
+export const BARGE = { stern: 1.5, bow: 1.7 } as const
+
 /** The drops a splash throws: each a short streak, where it is at this moment. Gone when they have fallen back to the water. `between` is the gap's two walls, which no drop goes through. */
 export function drops(splash: Splash, between: readonly [number, number] = [-Infinity, Infinity]): { x: number; y: number; vx: number; vy: number }[] {
   const out: { x: number; y: number; vx: number; vy: number }[] = [], s = splash.since, count = Math.round(6 + 7 * splash.big)
@@ -169,12 +184,16 @@ export function drawSky(pen: Pen, plot: Plot, at: Site, seconds: number): number
       pen.rect(x - w, rail - h, w, h)
       if (car === 0) pen.rect(x - w * 0.34, rail - h - cell * 0.09, cell * 0.06, cell * 0.09)
     }
+    pen.stroke()
+    pen.restore()
+    // Its smoke is whole puffs or none: one that would be cut by the bridge's end is left out.
+    pen.beginPath()
     for (let puff = 0; puff < 3; puff++) {
-      const [x] = px(plot, nose - 0.35 - puff * 0.42, 0), r = cell * (0.06 + 0.035 * puff), y = rail - cell * (0.36 + 0.11 * puff + 0.03 * Math.sin(seconds * 3 + puff))
+      const at0 = nose - 0.35 - puff * 0.42, [x] = px(plot, at0, 0), r = cell * (0.06 + 0.035 * puff), y = rail - cell * (0.36 + 0.11 * puff + 0.03 * Math.sin(seconds * 3 + puff))
+      if (at0 < span.x0 + 0.2 || at0 > span.x1 - 0.2) continue
       pen.moveTo(x + r, y); pen.arc(x, y, r, 0, Math.PI * 2)
     }
     pen.stroke()
-    pen.restore()
     drawn++
   }
   const mug = mugAt(at)

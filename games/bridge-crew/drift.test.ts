@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { LADDER } from './config'
-import { CALM, LEAP, SPLASH, TRAIN, balloon, boat, clouds, drawSky, drawSplash, drawWaterLife, drops, fish, train, type Splash } from './drift'
+import { BARGE, CALM, LEAP, SPLASH, TRAIN, balloon, bargeAt, boat, clouds, drawSky, drawSplash, drawWaterLife, drops, fish, train, type Splash } from './drift'
 import type { Pen } from './look'
 import { WATER } from './pose'
 import { groundAt, plotFor } from './sheet'
@@ -97,6 +97,18 @@ describe('what goes on at the edge of the sheet', () => {
       }
     }
     expect(every.filter((at) => boat(at, 5, null) !== null).length).toBeGreaterThan(every.length / 2)
+  })
+
+  it('the barge lies moored in its channel and goes down it and back, with its hull never over the rock or in a bank', () => {
+    for (const at of every) {
+      if (!at.channel) { expect(bargeAt(at, 3, 0)).toBeNull(); continue }
+      for (let seconds = 0; seconds < 20; seconds += 0.7) for (let passing = 0; passing <= 1.0001; passing += 0.1) {
+        const middle = bargeAt(at, seconds, passing)!
+        for (let x = middle - BARGE.stern; x <= middle + BARGE.bow; x += 0.2) expect(groundAt(at, x), `${at.id}/${at.variant} ${x.toFixed(2)}`).toBeLessThan(WATER)
+      }
+      // It goes somewhere: most of two cells down the channel.
+      expect(bargeAt(at, 0, 1)! - bargeAt(at, 0, 0)!).toBeGreaterThan(1.5)
+    }
   })
 
   it('a splash swamps the boat: over, under until the water is calm, and up again where it was', () => {
