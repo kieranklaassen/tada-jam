@@ -455,8 +455,10 @@ export class Playground {
     for (const other of FRIEND_IDS) {
       if (other === id) continue
       const there = this.bodies[other]
-      // With a little over, for a head that is riding a squash a hair above where its body is.
-      if (Math.hypot(there.x - x, there.z - z) < (radius + FRIENDS[other].radius) * 1.08) top = Math.max(top, there.y + FRIENDS[other].halfHeight * 2 * Math.max(1, there.squash) + 0.25)
+      // With a little over, for a head that is riding a squash a hair above where its body is; and a friend sitting on
+      // the tilted board leans with it, so its head reaches further to the side the steeper the board lies.
+      const tip = there.landed ? Math.abs(Math.sin(this.plank.tilt)) * FRIENDS[other].halfHeight * 2 : 0
+      if (Math.hypot(there.x - x, there.z - z) < (radius + FRIENDS[other].radius) * 1.08 + tip) top = Math.max(top, there.y + FRIENDS[other].halfHeight * 2 * Math.max(1, there.squash) + 0.25)
     }
     return top
   }
@@ -786,10 +788,11 @@ export class Playground {
     }
     body.blinkT = Math.max(0, body.blinkT - dt)
     if (id === 'dot') {
-      const warm = body.mode === 'held' || inCompany(this.arrangement) ? 1 : 0
+      // Touched, it warms to full colour and stays warm as it goes; alone where it lands, it pales again.
+      const warm = body.mode === 'held' || body.mode === 'hop' || body.glance > 0 || inCompany(this.arrangement) ? 1 : 0
       body.bright += Math.max(-dt * 0.9, Math.min(dt * 3, warm - body.bright))
       // Apart in the sand it stands turned half away; touched, carried or in company it turns back at once.
-      const apart = !warm && body.mode === 'rest' && body.glance <= 0 && !body.away && placeOf(this.arrangement, 'dot').at === 'sand' ? 1 : 0
+      const apart = !inCompany(this.arrangement) && body.mode === 'rest' && body.glance <= 0 && !body.away && placeOf(this.arrangement, 'dot').at === 'sand' ? 1 : 0
       body.aside += Math.max(-dt * 5, Math.min(dt * 1.2, apart - body.aside))
     }
     if (id === 'bo') {

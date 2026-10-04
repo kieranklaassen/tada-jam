@@ -64,7 +64,7 @@ export const CELLS: Readonly<Record<Thing, Readonly<Record<Deed, Cell>>>> = {
 
 /** A use that is wrong for the thing and works anyway, and is at least as funny. One for each friend. */
 export const WRONG_USES: Readonly<Record<'pim' | 'mog' | 'dot' | 'bo', { thing: Thing; deed: Deed; why: string }>> = {
-  pim: { thing: 'pim', deed: 'high-end', why: 'sent to lift someone heavier, she dangles and kicks' },
+  pim: { thing: 'pim', deed: 'high-end', why: 'sent to lift someone heavier, she dangles and wriggles' },
   mog: { thing: 'mog', deed: 'on-a-friend', why: 'put on Pim, he kneads her head and she blows a raspberry' },
   dot: { thing: 'dot', deed: 'low-end', why: 'stacked on the one who wants up, it pushes that end deeper' },
   bo: { thing: 'bo', deed: 'on-a-friend', why: 'on Pim’s head, she is squashed flat and pops back' },

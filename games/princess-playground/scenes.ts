@@ -76,15 +76,28 @@ export function endingBeats(game: Director, asker: FriendId, lifters: readonly F
   return beats
 }
 
+/**
+ * Where a showing opens, when that is not how the ride itself is laid out: who stands where instead. The game lays
+ * the ride out this way when the showing is due, so that everyone hops there and the showing opens with no jump.
+ */
+export function showingOpens(ride: Ride, ends: Arrangement): { arrangement: Arrangement; stand?: { id: FriendId; point: { x: number; y: number; z: number } } } | null {
+  const near = askerEnd(ride), far = otherEnd(near)
+  // Pim stands in the sand by her end, which lies level without her.
+  if (ride.kind === 'little-asks') return { arrangement: ends, stand: { id: 'pim', point: { x: seatX(near), y: 0, z: PLANK.z + SAND.plankStrip + 0.2 } } }
+  // Bo stands in the sand on his side, and Pim's end is down.
+  if (ride.kind === 'high-asks') return { arrangement: putInSand(ends, 'bo', homeOn('bo', far)) }
+  return null
+}
+
 /** The one showing of a kind of ride: a friend does the new thing once, with no word, and never the answer to this ride. */
 export function showingBeats(game: Director, ride: Ride): Beat[] {
-  const play = game.play, near = askerEnd(ride), far = otherEnd(near), side = near === 'left' ? -1 : 1
+  const play = game.play, near = askerEnd(ride), side = near === 'left' ? -1 : 1
   switch (ride.kind) {
     case 'little-asks':
       // Pim, standing by the plank, hops onto her end herself; it thumps down; she looks up at the high end and across at the others.
       return [
         once(game, 0, () => {
-          play.standAt('pim', { x: seatX(near), y: 0, z: PLANK.z + SAND.plankStrip + 0.2 })
+          play.standAt('pim', showingOpens(ride, game.ends)!.stand!.point)
           play.plank.tilt = 0
           play.plank.spin = 0
         }),
@@ -98,7 +111,7 @@ export function showingBeats(game: Director, ride: Ride): Beat[] {
         until(2.8),
       ]
     case 'middle-asks':
-      // Pim hops onto the far end, dangles and kicks, and hops off again.
+      // Pim hops onto the far end, dangles and wriggles, and hops off again.
       return [
         once(game, 0.4, () => {
           const before = play.arrangement
@@ -145,13 +158,13 @@ export function showingBeats(game: Director, ride: Ride): Beat[] {
     case 'high-asks':
       // Bo hops on and the plank tosses Pim up to where she sits.
       return [
-        once(game, 0, () => play.settleTo(putInSand(game.ends, 'bo', homeOn('bo', far)))),
+        once(game, 0, () => play.settleTo(showingOpens(ride, game.ends)!.arrangement)),
         once(game, 0.5, () => {
           const before = play.arrangement
           play.tapFriend('bo')
           game.expectLanding(before, 'bo')
         }),
-        until(3.2),
+        until(3.0),
       ]
   }
 }

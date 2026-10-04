@@ -12,7 +12,7 @@ export const RAKE_AT = { x: 0, y: TRAY.rimHeight + 0.02, z: -TRAY.halfDepth - TR
 /** How near the rake a touch counts as on it, in tray units. */
 export const RAKE_REACH = 1.5
 
-/** A small wooden rake: a handle along the rim and a head with five tines. */
+/** A small wooden rake: a handle along the rim and a head with six tines. */
 export function buildRake(): THREE.Mesh {
   const parts: THREE.BufferGeometry[] = []
   // Built lying flat, as it rests on the rim: the handle along the rim, the head across its end, the tines beyond the head like a comb.

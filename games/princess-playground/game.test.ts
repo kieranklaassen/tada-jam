@@ -439,7 +439,8 @@ describe('found as left', () => {
         expect(back.arrangement).toEqual((rideIsOver(game.world) ? endRide(game.world) : game.world).arrangement)
         expect(back.arrangement.waiting !== null).toBe(back.state.finished)
         expect(rideIsOver(back)).toBe(false)
-        if (!game.sceneRunning && !game.play.held) expect(game.play.arrangement).toEqual(game.world.arrangement)
+        // But for a showing that is due or playing, where everyone is where the showing opens or has them.
+        if (!game.sceneRunning && !game.showingDue && !game.play.held) expect(game.play.arrangement).toEqual(game.world.arrangement)
       }
       // Rides were ridden on the way.
       expect(endings, `seed ${seed}`).toBeGreaterThan(0)
@@ -737,6 +738,33 @@ describe('the small promises of the sheet', () => {
     expect(cues.some((cue) => cue.type === 'swirl')).toBe(false)
   })
 
+  it('Pim on a high end where nothing moves looks down at the sand and back at the sky, whoever is asking', () => {
+    const game = free(['bo'], ['pim'])
+    run(game, 1)
+    const ups = new Set<number>()
+    for (let i = 0; i < 300; i++) {
+      game.step(1 / 60, QUIET)
+      ups.add(game.play.bodies.pim.gazeUpTo)
+    }
+    expect([...ups].sort()).toEqual([-0.9, 0.9])
+  })
+
+  it('Dot tapped onto an empty plank warms to full colour as it goes, and pales again alone on the plank', () => {
+    const game = free([], [])
+    run(game, 1)
+    expect(game.play.bodies.dot.bright).toBeLessThan(0.1)
+    tapOn(game, 'dot')
+    let brightest = 0
+    for (let i = 0; i < 50; i++) {
+      game.step(1 / 60, QUIET)
+      brightest = Math.max(brightest, game.play.bodies.dot.bright)
+    }
+    expect(brightest).toBe(1)
+    run(game, 4)
+    expect(placeOf(game.play.arrangement, 'dot').at).toBe('end')
+    expect(game.play.bodies.dot.bright).toBeLessThan(0.1)
+  })
+
   it('each friend looks at what it always wants: Pim at the sky and the high end, Mog at the highest seat, Dot at whoever is on the plank, Bo up along the plank', () => {
     // Bo holds the right end down; the left end is up and empty.
     const game = free([], ['bo'])
@@ -967,6 +995,94 @@ describe('a finger already down when a scene begins', () => {
     expect(next.world.kind).toBe(kind)
     expect(next.world.state.finished).toBe(true)
     expect(next.play.held).toBe(null)
+  })
+})
+
+describe('a showing opens with no jump', () => {
+  const opening = (kind: Kind): World => {
+    const world = freshWorld(null)
+    return { ...world, state: { ...world.state, position: kind }, kind, turn: 0, arrangement: layout(rideOf(kind, 0)) }
+  }
+  const places = (game: Game) => FRIEND_IDS.map((id) => ({ ...game.frame.poses[id] })).map((pose) => [pose.x, pose.y, pose.z])
+  const furthest = (a: number[][], b: number[][]) => Math.max(...a.map((p, i) => Math.hypot(p[0] - b[i][0], p[1] - b[i][1], p[2] - b[i][2])))
+
+  it('on a first open the first frame already has everyone where the showing begins', () => {
+    for (const kind of KINDS) {
+      const game = new Game(opening(kind), 1)
+      const tilt = game.play.plank.tilt
+      const first = places(game)
+      game.step(1 / 60, QUIET)
+      expect(game.sceneRunning, kind).toBe(true)
+      expect(furthest(first, places(game)), kind).toBeLessThan(0.12)
+      expect(Math.abs(game.play.plank.tilt - tilt), kind).toBeLessThan(0.02)
+    }
+  })
+
+  it('when a touch on the waiting friend lays the ride out, everyone hops to where the showing begins, and nobody jumps when it does', () => {
+    let ran = 0
+    for (const kind of ['little-asks', 'high-asks'] as const) {
+      // A finished ride whose next is `kind`, not yet shown.
+      const before = KINDS[(KINDS.indexOf(kind) + KINDS.length - 1) % KINDS.length]
+      let world: World = { ...opening(before), shown: KINDS.filter((k) => k !== kind), touched: true }
+      world = { ...world, state: { ...world.state, position: kind } }
+      const ended = endRide({ ...world, arrangement: layout(rideOf(before, 0)) })
+      const next = { ...ended, state: { ...ended.state, position: kind } }
+      const game = new Game(next, 1)
+      run(game, 0.3)
+      tapOn(game, game.play.arrangement.waiting!)
+      expect(game.world.kind, kind).toBe(kind)
+      expect(game.showingDue, kind).toBe(true)
+      ran += 1
+      let last = places(game), jump = 0, began = false
+      for (let i = 0; i < 900 && !(began && !game.sceneRunning); i++) {
+        game.step(1 / 60, QUIET)
+        const now = places(game)
+        jump = Math.max(jump, furthest(last, now))
+        last = now
+        began = began || game.sceneRunning
+      }
+      expect(began, kind).toBe(true)
+      // The fastest thing in the tray moves well under half a unit in a frame; a jump would be units.
+      expect(jump, kind).toBeLessThan(0.45)
+      expect(game.play.arrangement, kind).toEqual(game.world.arrangement)
+    }
+    expect(ran).toBe(2)
+  })
+
+  it('a touch before a due showing has begun sends everyone to where the ride itself has them', () => {
+    const game = new Game(opening('high-asks'), 1)
+    expect(game.showingDue).toBe(true)
+    expect(placeOf(game.play.arrangement, 'bo').at).toBe('sand')
+    game.press({ kind: 'sand', x: 0, z: 2.5 })
+    game.pressEnd()
+    expect(game.showingDue).toBe(false)
+    run(game, 4)
+    expect(game.sceneRunning).toBe(false)
+    expect(game.play.arrangement).toEqual(game.world.arrangement)
+    expect(placeOf(game.play.arrangement, 'bo').at).toBe('end')
+  })
+})
+
+describe('a double tap on the friend who waits', () => {
+  it('begins the ride once: the second tap does not take the asker off again, and the asker taken off later is the one the idle ladder shows', () => {
+    const game = lifting()
+    run(game, 9)
+    const waiting = game.play.arrangement.waiting!
+    tapOn(game, waiting)
+    run(game, 0.15)
+    tapOn(game, waiting)
+    run(game, 5)
+    expect(game.world.state.finished).toBe(false)
+    expect(game.ride.asker).toBe(waiting)
+    expect(placeOf(game.play.arrangement, waiting).at).toBe('end')
+    expect(game.world.moves).toBe(0)
+    // Taken off on purpose, well after: the ladder shows the asker, to be tapped back on.
+    run(game, 3)
+    tapOn(game, waiting)
+    run(game, 3)
+    expect(placeOf(game.play.arrangement, waiting).at).toBe('sand')
+    game.step(1 / 60, { glow: 1, demo: 0.5, demoIndex: 0 })
+    expect(game.guide.on).toBe(waiting)
   })
 })
 

@@ -9,7 +9,7 @@ import type { Frame } from './pose'
 import { askerEnd, layout, rideOf, type Kind, type Ride } from './rides'
 import { afterMove, beginRide, endRide, markShown, rideIsOver, save, type Saved, type World } from './save'
 import { Scene, type Beat } from './scene'
-import { endingBeats, showingBeats, type Director } from './scenes'
+import { endingBeats, showingBeats, showingOpens, type Director } from './scenes'
 import { moodOf } from './tastes'
 import * as v from './voices'
 import type { Part } from './voices'
@@ -47,6 +47,8 @@ export const SNORE_EVERY = 3.4
 export const HELD_EVERY = 1.8
 /** Seconds the rake takes to cross the tray. */
 export const RAKE_SECONDS = 1.2
+/** How long after a ride has begun a tap on its asker is the tail of the touch that began it: seconds. */
+const BEGIN_SECONDS = 1.2
 /** How long a purr or a chuckle at being lifted has to itself before an ending may begin: seconds. */
 const PERCH_SECONDS = 1
 /** The two who like being high. */
@@ -93,6 +95,8 @@ export class Game implements Director {
   private perch: Partial<Record<FriendId, 'pending' | 'said'>> = {}
   /** Until when one of them is saying it, and an ending that is due waits. */
   private perchUntil = 0
+  /** When the ride on screen was begun by a touch on the friend who waited. */
+  private begunAt = -9
   private company: boolean
   private lastDemo = -1
   /** What the scene that is playing does to the sand, as it was read before the scene began and saved with its outcome. */
@@ -110,6 +114,13 @@ export class Game implements Director {
     this.grains = grains
     this.company = inCompany(world.arrangement)
     this.pendingShowing = this.wantsShowing() ? world.kind : null
+    // A showing that is due opens as it will play, before anything has been seen: nothing jumps when it begins.
+    const opens = this.pendingShowing ? showingOpens(this.ride, world.arrangement) : null
+    if (opens) {
+      this.play.settleTo(opens.arrangement)
+      if (opens.stand) this.play.standAt(opens.stand.id, opens.stand.point)
+      if (opens.stand) this.play.plank.tilt = 0
+    }
     this.moods()
     this.perchesAsFound()
     this.frame = this.play.frame()
@@ -122,6 +133,11 @@ export class Game implements Director {
 
   get ride(): Ride {
     return rideOf(this.world.kind, this.world.turn)
+  }
+
+  /** A showing is due and has not begun: everyone is where it opens, or on the way there, not yet where the saved ride has them. */
+  get showingDue(): boolean {
+    return this.pendingShowing !== null
   }
 
   /** A scene is playing: an ending or a showing. The Mount keeps the idle ladder at the bottom meanwhile. */
@@ -157,8 +173,12 @@ export class Game implements Director {
     }
     const cut = this.scene !== null
     if (this.scene) this.endScene(true)
-    // The child acted before the showing began: it waits for the next time this kind is laid out.
-    this.pendingShowing = null
+    // The child acted before the showing began: it waits for the next time this kind is laid out, and everyone goes
+    // to where the ride itself has them.
+    if (this.pendingShowing) {
+      this.pendingShowing = null
+      if (showingOpens(this.ride, this.world.arrangement)) this.play.relayout(this.world.arrangement)
+    }
     this.pressed = { kind: 'other' }
     if (touched.kind === 'friend') {
       this.play.touch(touched.id)
@@ -179,6 +199,8 @@ export class Game implements Director {
     this.pressed = { kind: 'other' }
     if (pressed.kind !== 'friend') return
     if (this.world.arrangement.waiting === pressed.id) this.begin()
+    // The second tap of a double tap on the friend who was waiting: it is still on its way to its end, and stays on its way.
+    else if (!this.world.state.finished && pressed.id === this.ride.asker && this.time - this.begunAt < BEGIN_SECONDS) return
     else {
       this.moved(pressed.id, () => this.play.tapFriend(pressed.id))
       // Dot twirls as it goes.
@@ -332,11 +354,15 @@ export class Game implements Director {
     this.landings = {}
     this.later = []
     this.drawOwed()
-    this.play.relayout(this.world.arrangement)
+    this.pendingShowing = this.world.shown.includes(this.world.kind) ? null : this.world.kind
+    // With a showing due, everyone hops to where the showing opens, so that it begins with no jump.
+    const opens = this.pendingShowing ? showingOpens(this.ride, this.world.arrangement) : null
+    this.play.relayout(opens ? opens.arrangement : this.world.arrangement)
+    if (opens?.stand) this.play.visit(opens.stand.id, opens.stand.point)
     this.voice(v.chirp(this.ride.asker, this.said++))
     this.moods()
     this.perchesAsFound()
-    this.pendingShowing = this.world.shown.includes(this.world.kind) ? null : this.world.kind
+    this.begunAt = this.time
   }
 
   private wantsShowing(): boolean {
@@ -711,7 +737,13 @@ export class Game implements Director {
     const way = lean(a)
     // The end that is up, or none on a level or empty plank.
     const highX = way === 0 ? null : -way * PLANK.seat
-    if (id === 'pim') play.look('pim', highX === null ? 0 : toward(highX), 0.9)
+    if (id === 'pim') {
+      // Stuck on a high end where nothing moves, she looks down at the sand under her and back at the sky, whoever is asking.
+      const there = placeOf(a, 'pim')
+      const stuck = there.at === 'end' && way !== 0 && (there.end === 'left' ? -1 : 1) === -way && play.bodies.pim.mode === 'rest'
+      if (stuck) play.look('pim', 0, Math.floor(this.time / 1.6) % 2 === 0 ? -0.9 : 0.9)
+      else play.look('pim', highX === null ? 0 : toward(highX), 0.9)
+    }
     else if (id === 'mog') {
       // The highest seat: the end that is up, or on a level plank the taller stack. Sitting on it, he looks about him.
       const seat = highX ?? (a.left.length === a.right.length ? 0 : a.left.length > a.right.length ? -PLANK.seat : PLANK.seat)
@@ -811,7 +843,9 @@ export class Game implements Director {
     let on: FriendId | null = a.waiting
     if (!on) {
       const asker = this.world.state.finished ? null : this.ride.asker
-      const standing = (['mog', 'bo', 'pim', 'dot'] as const).filter((id) => id !== asker && placeOf(a, id).at === 'sand' && this.play.bodies[id].mode === 'rest')
+      // The one who asks has been taken off the plank: it is the one to tap, back onto its end.
+      const strayed = asker !== null && placeOf(a, asker).at === 'sand' && this.play.bodies[asker].mode === 'rest'
+      const standing = strayed ? [asker] : (['mog', 'bo', 'pim', 'dot'] as const).filter((id) => id !== asker && placeOf(a, id).at === 'sand' && this.play.bodies[id].mode === 'rest')
       const turn = Math.max(0, guidance.demoIndex >= 0 ? guidance.demoIndex : this.lastDemo)
       on = standing.length ? standing[turn % standing.length] : (a.right[a.right.length - 1] ?? a.left[a.left.length - 1] ?? null)
     }

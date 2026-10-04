@@ -160,7 +160,14 @@ export class Stage {
       this.sand.setShadow(index, a.x + spec.radius * 1.25, a.z + spec.radius * 0.42, spec.radius * (0.92 + pose.y * 0.03), 0.9 * fade)
     })
     const uniforms = this.sand.material.uniforms
-    uniforms.uGlow.value = frame.glowOn ? frame.glow : 0
+    // The idle glow lies on the sand under a friend who stands in it. A friend sitting on the plank or on a head has
+    // no sand under it to light, and a ring of light with nobody in it would be a ring: that friend glows itself instead.
+    const glowOnSand = frame.glowOn !== null && frame.poses[frame.glowOn].y < 0.2
+    uniforms.uGlow.value = glowOnSand ? frame.glow : 0
+    for (const id of FRIEND_IDS) {
+      const friend = this.friends[id]
+      friend.body.material.emissive.copy(friend.full).multiplyScalar(id === frame.glowOn && !glowOnSand ? frame.glow * 0.45 : 0)
+    }
     const hand = this.hand
     hand.visible = false
     if (frame.glowOn) {
