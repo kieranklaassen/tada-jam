@@ -89,6 +89,7 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 | Night Camp | `games/night-camp/` | 9–12 | A camp on a survey map: the child lays in wood, lamp oil and water along a ruler of hours from cards that give an amount for a span of hours, then lets the night run and sees who stays warm. A learning game on rates and amounts for one. |
 | Bread Day | `games/bread-day/` | 4–6 | A badger's bakery cut in lino: push and pull the dough, hand it flour, water and seeds, let it rise or stiffen, bake it, and give each customer the bread it is showing it wants. A learning game on how stuff changes and on telling what someone wants. |
 | Boo-Boo Vet | `games/boo-boo-vet/` | 3–6 | A small vet's room in glossy stickers: an animal shows what it needs by how it looks and moves, and the child gives it the care thing that helps. A learning game on reading how another feels and what a living thing needs. |
+| Chalk Train | `games/chalk-train/` | 2–4 | Chalk on tar: draw a line with a finger and the chalk train rides along it to a rider at a stop and on to the rider's home. A learning game on making marks on purpose. |
 
 ## Showcases
 
