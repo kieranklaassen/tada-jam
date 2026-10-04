@@ -1,6 +1,6 @@
 import { type Bench } from './bench'
 import { handBack } from './handback'
-import { HELD, HELD_AT_WINDOW, HUNG, lidBox, OWNER, padAt, probeGrip, type Box, type P } from './stage'
+import { HELD, HELD_AT_WINDOW, HUNG, lidBox, padAt, probeGrip, type Box, type P } from './stage'
 
 // What an idle child is shown: the things that can be touched now, and one
 // move the hand could make. The move is never a mend. Before the gadget is
@@ -11,6 +11,14 @@ import { HELD, HELD_AT_WINDOW, HUNG, lidBox, OWNER, padAt, probeGrip, type Box, 
 export type Hint = { glow: P[]; from: P; to: P; drag: boolean }
 
 const mid = (box: Box): P => ({ x: box.x + box.w / 2, y: box.y + box.h / 2 })
+
+/** Whether a circuit would run for its owner: tried once for a circuit and kept, so a frame that shows a ring solves nothing. */
+const ran = new WeakMap<object, boolean>()
+function runs(circuit: Parameters<typeof handBack>[0]): boolean {
+  let known = ran.get(circuit)
+  if (known === undefined) { known = handBack(circuit).ran; ran.set(circuit, known) }
+  return known
+}
 
 /** The one obvious want of the scene, as a place: what the hand goes to first. */
 export function suggest(bench: Bench): Hint {
@@ -29,9 +37,9 @@ export function suggest(bench: Bench): Hint {
     return { glow: [at], from: at, to: at, drag: false }
   }
   const circuit = bench.live
-  if (handBack(circuit).ran) {
+  if (runs(circuit)) {
     // It runs on the mat: it can go back to its owner, by its lid.
-    const from = mid(lidBox(circuit)), to = { x: OWNER.x + OWNER.w / 2, y: 150 }
+    const from = mid(lidBox(circuit)), to = mid(HELD)
     return { glow: [from, to], from, to, drag: true }
   }
   // It does not run. The test lamp is shown going to the cell: one clip, one place it could go. Never a mend.

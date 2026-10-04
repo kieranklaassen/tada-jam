@@ -1,22 +1,30 @@
 import { boardFor, isPad, MAT, ODD_KINDS, type Bite, type Circuit, type OddKind, type PartKind } from './circuit'
+import { GARAGE } from './mouse'
 
 // Where everything in the stall lies, and what a finger is on. Pure geometry,
 // no drawing: the view paints from the same numbers the touch is read with, so
 // what looks touchable is what answers.
 //
 // Everything is in stage units: the scene is 1180 by 820, fitted whole into
-// whatever surface the shell gives and centred there. The lane runs along the
-// top, then the counter, then the mat. A customer leans over the counter in
-// the middle and the next one waits at the window on the right. The board
-// that is being worked on lies in the middle of the mat, the tray of parts to
-// its right, the bench odds along the bottom, the test lamp beside them, and
-// the old hand sleeps at the bottom left with her practice board by her. The
-// board that is not on the mat hangs at the top left.
+// whatever surface the shell gives and centred there. The far side of the
+// stall runs along the top: at the left its back wall, where the old hand
+// sits on her stool with her practice board beside her and the board that is
+// not on the mat hangs; from `WINDOW_LEFT` on, the open front, with the lane
+// beyond it. Then the counter, then the bench. A customer leans over the
+// counter and the next one waits to its right. The board that is being
+// worked on lies in the middle of the mat, the tray of parts to its right,
+// the bench odds along the bottom and the test lamp beside them. The old
+// hand's mug stands before her, and her own clutter fills the near left
+// corner of the bench.
 
 export type P = { x: number; y: number }
 export type Box = { x: number; y: number; w: number; h: number }
 
-export const STAGE = { w: 1180, h: 820, counterTop: 140, counterBottom: 174 } as const
+export const STAGE = { w: 1180, h: 820, counterTop: 202, counterBottom: 236 } as const
+/** Left of this is the inside of the stall: its back wall. Right of it the front is open, and the lane shows. */
+export const WINDOW_LEFT = 476
+/** The pillar at the other side of the open front. Right of this is the stall's own wall again, plain: the grown-up's corner of the surface lies over it, and nothing there invites a touch. */
+export const PILLAR_LEFT = 1108
 
 /** Stage units to surface pixels: one scale and an offset. */
 export type Fit = { scale: number; x: number; y: number }
@@ -37,19 +45,28 @@ export const overlaps = (a: Box, b: Box) => a.x < b.x + b.w && b.x < a.x + a.w &
 
 // --- The fixed places ------------------------------------------------------------
 
-/** Where the customer at the bench stands, and the one who waits at the window. */
-export const AT_BENCH: P = { x: 590, y: 46 }
-export const AT_WINDOW: P = { x: 1000, y: 62 }
+/** Where the customer at the bench stands, and the one who waits beside them. */
+export const AT_BENCH: P = { x: 690, y: 80 }
+export const AT_WINDOW: P = { x: 1030, y: 104 }
+/** A customer's painter draws it this many times its own size at the bench: large enough to have a face. */
+export const FOLK_SCALE = 1.3
 /** The gadget as its owner holds it out over the counter, shut. */
-export const HELD: Box = { x: 520, y: 112, w: 140, h: 78 }
-export const HELD_AT_WINDOW: Box = { x: 948, y: 122, w: 104, h: 58 }
-/** Where a customer can be touched: head, shoulders and hands. */
-export const OWNER: Box = { x: 470, y: 0, w: 240, h: 196 }
-export const WAITING: Box = { x: 912, y: 0, w: 176, h: 190 }
-/** The board that is not on the mat hangs here. */
-export const HUNG: Box = { x: 34, y: 14, w: 250, h: 116 }
+export const HELD: Box = { x: 605, y: 178, w: 170, h: 90 }
+export const HELD_AT_WINDOW: Box = { x: 962, y: 186, w: 136, h: 72 }
+/** The order ticket, where it is clipped to the gadget in its owner's hands. */
+export const CARD: Box = { x: HELD.x - 22, y: HELD.y - 30, w: 104, h: 46 }
+/** Where a customer can be touched: head, shoulders, hands and what they hold. */
+export const OWNER: Box = { x: 560, y: 12, w: 260, h: 258 }
+/** Its hands, at the counter: a tap here hands the open gadget back. Higher up, on its head and shoulders, a tap only has it answer. */
+export const OWNER_HANDS: Box = { x: OWNER.x, y: 170, w: OWNER.w, h: OWNER.y + OWNER.h - 170 }
+/** The one who waits is touched by its body and what it holds, below the corner of the surface that is the grown-up's: that corner is 72 surface pixels square, which is up to 128 stage units on the narrowest surface the stage is fitted to. */
+export const WAITING: Box = { x: 930, y: 130, w: 178, h: 128 }
+/** Its head, above that: it answers too wherever the grown-up's corner does not lie over it (`grownUps` in bench.ts). */
+export const WAITING_HEAD: Box = { x: 930, y: 40, w: 178, h: 90 }
+/** The board that is not on the mat hangs here, on the back wall. */
+export const HUNG: Box = { x: 212, y: 74, w: 250, h: 112 }
 /** The tray: two wide and three deep. The last place holds the coil of leads. */
-export const TRAY: Box = { x: 908, y: 236, w: 260, h: 398 }
+export const TRAY: Box = { x: 908, y: 266, w: 260, h: 398 }
 export const TRAY_KINDS: readonly (Exclude<PartKind, 'odd'> | 'coil')[] = ['cell', 'lamp', 'motor', 'buzzer', 'switch', 'coil']
 export function trayPlace(i: number): Box {
   const gap = 8, w = (TRAY.w - 3 * gap) / 2, h = (TRAY.h - 4 * gap) / 3
@@ -63,11 +80,20 @@ export function oddPlace(what: OddKind): P {
 /** The test lamp's own place on the mat, and where each of its clips lies when it bites nothing. */
 export const TEST_LAMP: P = { x: 450, y: 700 }
 export const PROBE_HOME: readonly [P, P] = [{ x: 364, y: 744 }, { x: 536, y: 668 }]
-/** The old hand, her mug, and the practice board that hangs beside her. */
-export const OLD_HAND: P = { x: 118, y: 708 }
-export const OLD_HAND_BOX: Box = { x: 0, y: 590, w: 318, h: 230 }
-export const MUG: P = { x: 60, y: 628 }
-export const PRACTICE: Box = { x: 18, y: 488, w: 118, h: 64 }
+/** The old hand on her stool at the far left: the middle of her face, and where she can be touched. */
+export const OLD_HAND: P = { x: 104, y: 112 }
+export const OLD_HAND_BOX: Box = { x: 0, y: 26, w: 204, h: 206 }
+/** Her mug, on the bench before her, and the practice board that hangs beside her on the back wall. */
+export const MUG: P = { x: 62, y: 280 }
+export const PRACTICE: Box = { x: 214, y: 6, w: 112, h: 60 }
+/** What is hers on the bench: the nook before her with the mug, and the near left corner with her clutter. No part is laid on either. */
+export const NOOK: Box = { x: 0, y: 236, w: 160, h: 82 }
+export const CLUTTER: Box = { x: 0, y: 624, w: 330, h: 196 }
+/** The grey mat on the wood of the bench: everything the child works with lies on it. */
+/** On the shelf beside the practice board, the things that have waited longest: a toaster and a radio. Each answers a finger. */
+export const TOASTER: Box = { x: 334, y: 22, w: 62, h: 46 }
+export const RADIO: Box = { x: 398, y: 2, w: 62, h: 66 }
+export const MAT_BOX: Box = { x: 148, y: 246, w: 1018, h: 562 }
 
 // --- The board on the mat --------------------------------------------------------
 
@@ -75,7 +101,7 @@ export const PRACTICE: Box = { x: 18, y: 488, w: 118, h: 64 }
 export type Lay = { x: number; y: number; u: number }
 
 export function layOf(circuit: Circuit): Lay {
-  return circuit.gadget === 'sign' ? { x: 290, y: 270, u: 56 } : { x: 330, y: 316, u: 84 }
+  return circuit.gadget === 'sign' ? { x: 290, y: 305, u: 56 } : { x: 342, y: 326, u: 80 }
 }
 
 /** The rectangle a board takes on the mat, case and all. */
@@ -89,7 +115,7 @@ export function lidBox(circuit: Circuit): Box {
   return { x: box.x - 128, y: box.y + 8, w: 118, h: box.h - 16 }
 }
 
-/** How near a finger must be to a pad of this board: 60 across on a gadget, a little less on the sign, never less than 48. */
+/** How near a finger must be to a pad of this board: 68 across on a gadget, a little less on the sign, never less than 48. */
 export function reach(lay: Lay) {
   const pad = Math.max(24, Math.min(34, lay.u * 0.44))
   return { pad, boot: 28, clip: 36, part: lay.u * 0.3, wire: 18 }
@@ -105,7 +131,7 @@ export function padAt(circuit: Circuit, pad: number): P {
 /** The middle of a cell of the coarse grid over the mat, where a part that lies loose is. */
 export function matAt(cell: number): P {
   const col = cell % MAT.cols, row = Math.floor(cell / MAT.cols)
-  return { x: 50 + ((col + 0.5) * (STAGE.w - 100)) / MAT.cols, y: 200 + ((row + 0.5) * (STAGE.h - 220)) / MAT.rows }
+  return { x: 50 + ((col + 0.5) * (STAGE.w - 100)) / MAT.cols, y: 252 + ((row + 0.5) * (STAGE.h - 252)) / MAT.rows }
 }
 /** A loose part is drawn this long and this wide, whatever it is. */
 export const LOOSE = { w: 84, h: 44 } as const
@@ -120,7 +146,7 @@ export function taken(circuit: Circuit): Box[] {
   const lamp: Box = { x: 334, y: 640, w: 234, h: 132 }
   const board = boardBox(circuit)
   // A gadget's lid stands open at its left; the sign has none.
-  return [circuit.gadget === 'sign' ? board : { x: lidBox(circuit).x, y: board.y, w: board.x + board.w - lidBox(circuit).x, h: board.h }, TRAY, odds, lamp, OLD_HAND_BOX, PRACTICE]
+  return [circuit.gadget === 'sign' ? board : { x: lidBox(circuit).x, y: board.y, w: board.x + board.w - lidBox(circuit).x, h: board.h }, TRAY, odds, lamp, NOOK, CLUTTER, GARAGE]
 }
 
 const cells = new Map<string, number[]>()
@@ -149,6 +175,36 @@ export function nearestCell(circuit: Circuit, at: P): number {
     if (d < bestD) { best = cell; bestD = d }
   }
   return best
+}
+
+/**
+ * A circuit as it was saved, with whatever lay loose brought onto places that
+ * are free as the bench is laid out now. A stall saved before the bench was
+ * laid out again may hold a part or a lead on a place that something else has
+ * since taken; nothing else about it changes.
+ */
+export function reseat(circuit: Circuit): Circuit {
+  const free = matCells(circuit)
+  if (circuit.loose.every((l) => free.includes(l.at)) && circuit.leads.every((l) => l.at === undefined || free.includes(l.at))) return circuit
+  const used = new Set(circuit.loose.filter((l) => free.includes(l.at)).map((l) => l.at))
+  const nearest = (cell: number, open: boolean): number => {
+    const from = matAt(cell)
+    let best = free[0] ?? 0, bestD = Infinity
+    for (const other of free) {
+      if (open && used.has(other)) continue
+      const p = matAt(other), d = Math.hypot(p.x - from.x, p.y - from.y)
+      if (d < bestD) { best = other; bestD = d }
+    }
+    return best
+  }
+  const loose = circuit.loose.map((l) => {
+    if (free.includes(l.at)) return l
+    const at = nearest(l.at, true)
+    used.add(at)
+    return { ...l, at }
+  })
+  const leads = circuit.leads.map((l) => (l.at === undefined || free.includes(l.at) ? l : { ...l, at: nearest(l.at, false) }))
+  return { ...circuit, loose, leads }
 }
 
 /** The free cell nearest a point, or -1 when the mat is full. */
@@ -195,6 +251,11 @@ export function clipAt(circuit: Circuit, lead: number, end: 0 | 1, own = false):
 /** The lazy curve a lead lies in between two points, bowed to one side by `bend`. */
 export function leadCurve(p: P, q: P, bend: number): [P, P, P, P] {
   const dx = q.x - p.x, dy = q.y - p.y, d = Math.hypot(dx, dy) || 1
+  // Both ends in one place: a loop of nothing, which hangs down from where it is clipped and is wider the more it sways.
+  if (d < 2) {
+    const wide = 44 + Math.abs(bend) * 0.5
+    return [p, { x: p.x - wide, y: p.y + wide * 1.7 }, { x: p.x + wide, y: p.y + wide * 1.7 }, q]
+  }
   const nx = -dy / d, ny = dx / d
   return [p, { x: p.x + dx * 0.25 + nx * bend, y: p.y + dy * 0.25 + ny * bend }, { x: p.x + dx * 0.75 + nx * bend, y: p.y + dy * 0.75 + ny * bend }, q]
 }
@@ -259,6 +320,15 @@ export function probeGrip(circuit: Circuit, end: 0 | 1): P {
   return circuit.probe[end] === null ? at : bootOf(at, TEST_LAMP, 0, PROBE_BEND[end])
 }
 
+/** The middle of a popped cell's flag, where the view draws it: to one side of the cell, over the leads. */
+export function flagAt(circuit: Circuit, part: number): P {
+  const cell = circuit.parts[part], p = padAt(circuit, cell.a), q = padAt(circuit, cell.b), u = layOf(circuit).u
+  const turn = Math.atan2(q.y - p.y, q.x - p.x), fx = FLAG.x * u, fy = FLAG.y * u
+  return { x: (p.x + q.x) / 2 + Math.cos(turn) * fx - Math.sin(turn) * fy, y: (p.y + q.y) / 2 + Math.sin(turn) * fx + Math.cos(turn) * fy }
+}
+/** That middle in the cell's own frame, in pad units, as the flag is drawn there: half as large again, and turned over to the cell's other side. */
+export const FLAG = { x: 0.09, y: 0.76, scale: 1.5 } as const
+
 // --- What a finger is on -----------------------------------------------------------
 
 export type Hit =
@@ -275,6 +345,8 @@ export type Hit =
   | { on: 'pad'; pad: number }
   /** A part that lies loose on the mat. */
   | { on: 'loose'; loose: number }
+  /** One of its two legs, the lug at an end of it: metal a clip can bite. */
+  | { on: 'lug'; loose: number; end: 0 | 1 }
   /** The wire of a lead, between its clips. */
   | { on: 'wire'; lead: number }
   | { on: 'tray'; kind: Exclude<PartKind, 'odd'> }
@@ -291,6 +363,13 @@ export type Hit =
   | { on: 'waiting' }
   | { on: 'oldHand' }
   | { on: 'mug' }
+  /** The old hand's plate of biscuits, and the clutter in her corner of the bench. */
+  | { on: 'plate' }
+  | { on: 'clutter' }
+  /** Her practice board on its shelf, and the toaster and the radio that wait beside it. */
+  | { on: 'practice' }
+  | { on: 'toaster' }
+  | { on: 'radio' }
   | { on: 'mat' }
 
 /** What a clip in the hand would bite here: a pad, an end of a loose part, or another lead's loose clip. Or nothing. `self` is the lead whose clip it is. */
@@ -323,6 +402,12 @@ export function hitTest(circuit: Circuit, at: P, bends: readonly number[], open:
   if (open) {
     const lay = layOf(circuit), r = reach(lay)
     const bendOf = (i: number) => bends[i] ?? restBend(...leadEnds(circuit, i), i)
+    // A popped flag stands beside its cell, over the leads, and a tap on it is a tap on the cell: that is what sets it
+    // back. It is drawn on top of everything on the board, so it is tried first.
+    for (let i = 0; i < circuit.parts.length; i++) {
+      const part = circuit.parts[i]
+      if (part.kind === 'cell' && part.popped && near(at, flagAt(circuit, i), lay.u * 0.4)) return { on: 'part', part: i }
+    }
     // The newest lead is on top, so it is tried first.
     for (let i = circuit.leads.length - 1; i >= 0; i--) {
       if (circuit.leads[i].a === null) {
@@ -349,6 +434,8 @@ export function hitTest(circuit: Circuit, at: P, bends: readonly number[], open:
       if (d <= bestD) { best = i; bestD = d }
     })
     if (best >= 0) return { on: 'pad', pad: best }
+    // A loose part's legs before its body: a finger on a lug clips there, a finger on the middle flicks or carries it.
+    for (let i = 0; i < circuit.loose.length; i++) for (const end of [0, 1] as const) if (near(at, biteAt(circuit, { loose: i, end }), 17)) return { on: 'lug', loose: i, end }
     for (let i = 0; i < circuit.loose.length; i++) if (inBox(at, looseBox(circuit.loose[i].at))) return { on: 'loose', loose: i }
     for (let i = circuit.leads.length - 1; i >= 0; i--) {
       const curve = leadCurve(...leadEnds(circuit, i), bendOf(i))
@@ -363,10 +450,24 @@ export function hitTest(circuit: Circuit, at: P, bends: readonly number[], open:
     if (circuit.gadget !== 'sign' && inBox(at, lidBox(circuit))) return { on: 'lid' }
     if (inBox(at, boardBox(circuit))) return { on: 'board' }
   }
+  if (!open) {
+    // No board lies open: the tray, the odds and the test lamp are there all the same, and each answers a flick.
+    if (near(at, TEST_LAMP, 26) || near(at, PROBE_HOME[0], 22) || near(at, PROBE_HOME[1], 22)) return { on: 'testLamp' }
+    for (let i = 0; i < TRAY_KINDS.length; i++) {
+      const kind = TRAY_KINDS[i]
+      if (inBox(at, trayPlace(i))) return kind === 'coil' ? { on: 'coil' } : { on: 'tray', kind }
+    }
+    for (const what of ODD_KINDS) if (near(at, oddPlace(what), 30)) return { on: 'odd', what }
+  }
   if (inBox(at, HUNG)) return { on: 'hung' }
   if (inBox(at, WAITING)) return { on: 'waiting' }
   if (inBox(at, OWNER)) return { on: 'owner' }
   if (near(at, MUG, 34)) return { on: 'mug' }
+  if (inBox(at, NOOK)) return { on: 'plate' }
+  if (inBox(at, CLUTTER) || inBox(at, GARAGE)) return { on: 'clutter' }
   if (inBox(at, OLD_HAND_BOX)) return { on: 'oldHand' }
+  if (inBox(at, PRACTICE)) return { on: 'practice' }
+  if (inBox(at, TOASTER)) return { on: 'toaster' }
+  if (inBox(at, RADIO)) return { on: 'radio' }
   return { on: 'mat' }
 }

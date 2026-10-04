@@ -2,7 +2,7 @@ import { type GadgetKind } from './board'
 import { benchOdd, boardFor, crackTrace, partAcross, placePart, removeLead, trayPart, turnPart, type Circuit, type OddKind, type Part } from './circuit'
 import { LADDER } from './config'
 import { asBuilt, hasSwitch } from './gadgets'
-import { handBack } from './handback'
+import { handBack, switchedOn } from './handback'
 import { read, RUNS_FROM } from './solve'
 import { CUSTOMERS, type Who } from './tastes'
 
@@ -247,7 +247,8 @@ export function layOut(position: string, state: number, avoid?: Who): { job: Job
 
 /** Whether the gadget, switched on, holds what the ticket asks for: at least that many of that part carrying current. */
 export function meetsTicket(circuit: Circuit, ticket: Ticket): boolean {
-  const on: Circuit = { ...circuit, probe: [null, null], parts: circuit.parts.map((p): Part => (p.kind === 'switch' ? { ...p, down: true } : p)) }
-  const reading = read(on)
-  return on.parts.filter((p, i) => p.kind === ticket.part && Math.abs(reading.parts[i]) >= RUNS_FROM).length >= ticket.count
+  // As its owner tries it: every lever down, the test lamp off. A part that hangs in the loop by its leads counts as one seated does.
+  const on = switchedOn(circuit), reading = read(on)
+  const carries = (kind: string, current: number) => kind === ticket.part && Math.abs(current) >= RUNS_FROM
+  return on.parts.filter((p, i) => carries(p.kind, reading.parts[i])).length + on.loose.filter((p, i) => carries(p.kind, reading.loose[i])).length >= ticket.count
 }

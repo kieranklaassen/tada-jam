@@ -44,9 +44,10 @@ export const LENGTH = { handBack: 6.2, laidBack: 4.4, neatWay: 4.8, changeOver: 
  * far as it will go, throws the switch, and reacts to exactly what it does;
  * then settles, holding it as it runs. Ends in `settled`.
  */
-export function handBackScene(show: Show, act: string): Beat[] {
+export function handBackScene(show: Show, act: string, neatWayFollows = false): Beat[] {
   return [
-    { at: 0, lasts: 0, play: () => { show.act = act; show.neat = -1 } },
+    // With a neat way to come, her board stands as the job was, broken, until she mends it.
+    { at: 0, lasts: 0, play: () => { show.act = act; show.neat = neatWayFollows ? 0 : -1 } },
     ramp(0, 0.8, (t) => { show.take = t }),
     ramp(0.8, 0.6, (t) => { show.lid = t }),
     ramp(1.6, 0.25, (t) => { show.on = t }),
@@ -57,7 +58,8 @@ export function handBackScene(show: Show, act: string): Beat[] {
 /**
  * The hand-back when the gadget does not run. The owner takes it, shuts the
  * lid, throws the switch twice, peers in, and lays it back on the mat with
- * the lid open. Ends where it began, at rest: the cycle goes on.
+ * the lid open. While the switch is down the gadget does what its circuit
+ * does. Ends where it began, at rest: the cycle goes on.
  */
 export function laidBackScene(show: Show, act: string): Beat[] {
   return [
@@ -65,6 +67,12 @@ export function laidBackScene(show: Show, act: string): Beat[] {
     ramp(0, 0.8, (t) => { show.take = t }),
     ramp(0.8, 0.5, (t) => { show.lid = t }),
     { at: 1.3, lasts: 2, play: (t) => { show.react = t } },
+    // The switch is thrown twice. Each time the gadget does whatever its circuit does, which is not what it was
+    // brought in to do: nothing at all, a blade that sucks, a flag that pops.
+    { at: 1.4, lasts: 0, play: () => { show.on = 1 } },
+    { at: 2.0, lasts: 0, play: () => { show.on = 0 } },
+    { at: 2.4, lasts: 0, play: () => { show.on = 1 } },
+    { at: 3.0, lasts: 0, play: () => { show.on = 0 } },
     ramp(3.3, 0.4, (t) => { show.lid = 1 - t }),
     ramp(3.5, 0.9, (t) => { show.take = 1 - t }),
     { at: LENGTH.laidBack, lasts: 0, play: () => { show.take = 0; show.lid = 0; show.on = 0; show.react = 0; show.act = null } },

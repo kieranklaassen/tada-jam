@@ -7,8 +7,9 @@ import { asBuilt } from './gadgets'
 import { layOut } from './jobs'
 import { freshStall, type Stall } from './save'
 import { firstDaySign } from './sign'
-import { biteAt, looseEnd, matAt, boardBox, HELD, HELD_AT_WINDOW, HUNG, layOf, leadEnds, lidBox, looseBox, matCells, OLD_HAND_BOX, oddPlace, overlaps, OWNER, padAt, PRACTICE, PROBE_HOME, STAGE, taken, TEST_LAMP, TRAY, WAITING, type Box, type P } from './stage'
+import { biteAt, looseEnd, matAt, boardBox, CLUTTER, COIL, HELD, HELD_AT_WINDOW, HUNG, layOf, leadEnds, lidBox, looseBox, matCells, NOOK, OLD_HAND_BOX, oddPlace, overlaps, OWNER, padAt, PILLAR_LEFT, PRACTICE, PROBE_HOME, RADIO, reseat, STAGE, taken, TEST_LAMP, TOASTER, TRAY, WAITING, WINDOW_LEFT, type Box, type P } from './stage'
 import { ODD_KINDS } from './circuit'
+import { Lane, sag, WASHING } from './lane'
 
 // Nothing passes through anything. A canvas game has no live scene for the
 // audit to read, so the model is held to it here: the room every part takes,
@@ -73,7 +74,7 @@ describe('the fixed things of the stall', () => {
 
   it('stand clear of each other, whichever board is on the mat', () => {
     for (const circuit of [gadget, sign]) {
-      const boxes: [string, Box][] = [['board', boardBox(circuit)], ['tray', TRAY], ['odds', odds], ['test lamp', lamp], ['practice board', PRACTICE]]
+      const boxes: [string, Box][] = [['board', boardBox(circuit)], ['tray', TRAY], ['odds', odds], ['test lamp', lamp], ['the nook with the mug', NOOK], ['the old hand\'s clutter', CLUTTER]]
       if (circuit.gadget !== 'sign') boxes.push(['lid', lidBox(circuit)])
       for (let a = 0; a < boxes.length; a++) for (let b = a + 1; b < boxes.length; b++) {
         if (boxes[a][0] === 'board' && boxes[b][0] === 'lid') continue
@@ -96,9 +97,31 @@ describe('the fixed things of the stall', () => {
       expect(overlaps(held, boardBox(circuit))).toBe(false)
       expect(overlaps(held, TRAY)).toBe(false)
     }
-    // The grown-up's corner, top right, has nothing in it that answers a touch.
-    const corner: Box = { x: STAGE.w - 72, y: 0, w: 72, h: 72 }
+    // The grown-up's corner, top right, has nothing of the game in it. It is 72 surface pixels square, so on a surface
+    // as narrow as 664 pixels, where a stage unit is 0.56 of a pixel, it is 128 stage units square.
+    const corner: Box = { x: STAGE.w - 128, y: 0, w: 128, h: 128 }
     for (const box of [OWNER, WAITING, HUNG, TRAY]) expect(overlaps(box, corner)).toBe(false)
+    // On the back wall, the old hand, her practice board and the board that hangs are clear of each other, inside the
+    // stall, and above the counter; the customers stand where the front is open.
+    const wall: [string, Box][] = [['the old hand', OLD_HAND_BOX], ['practice board', PRACTICE], ['the board that hangs', HUNG], ['the toaster', TOASTER], ['the radio', RADIO]]
+    for (let a = 0; a < wall.length; a++) for (let b = a + 1; b < wall.length; b++) expect(overlaps(wall[a][1], wall[b][1]), `${wall[a][0]} and ${wall[b][0]}`).toBe(false)
+    for (const [name, box] of wall) {
+      expect(box.x, name).toBeGreaterThanOrEqual(0)
+      expect(box.y, name).toBeGreaterThanOrEqual(0)
+      expect(box.x + box.w, name).toBeLessThanOrEqual(WINDOW_LEFT)
+      expect(box.y + box.h, name).toBeLessThanOrEqual(STAGE.counterBottom)
+    }
+    for (const box of [OWNER, WAITING]) expect(box.x).toBeGreaterThanOrEqual(WINDOW_LEFT)
+    // The lane shows between the corner post and the pillar. The pillar and the wall beyond it are plain, and at the
+    // size the stage is drawn for they fill the grown-up's corner: nothing that passes, hangs or stands shows there.
+    expect(PILLAR_LEFT).toBeLessThanOrEqual(STAGE.w - 72)
+    expect(WAITING.x + WAITING.w).toBeLessThanOrEqual(PILLAR_LEFT)
+    for (const item of WASHING) expect(overlaps({ x: item.x - item.half, y: sag(item.x), w: item.half * 2, h: item.drop }, corner), item.what).toBe(false)
+    const lane = new Lane()
+    for (let t = 0; t < 110; t += 0.25) {
+      lane.seconds = t
+      for (let x = STAGE.w - 72; x <= STAGE.w; x += 8) for (let y = 0; y <= 72; y += 8) expect(lane.hit({ x, y }), `${x},${y} at ${t}`).toBeNull()
+    }
   })
 
   it('every place a loose part may lie beside a board is bare mat, clear of that board and of everything else', () => {
@@ -107,13 +130,30 @@ describe('the fixed things of the stall', () => {
       expect(cells.length).toBeGreaterThanOrEqual(12)
       for (const cell of cells) {
         const box = looseBox(cell)
-        const others = [...taken(circuit), boardBox(circuit), TRAY, odds, lamp, OLD_HAND_BOX, PRACTICE, ...(circuit.gadget === 'sign' ? [] : [lidBox(circuit)])]
+        const others = [...taken(circuit), boardBox(circuit), TRAY, odds, lamp, NOOK, CLUTTER, HELD, HELD_AT_WINDOW, ...(circuit.gadget === 'sign' ? [] : [lidBox(circuit)])]
         for (const other of others) expect(overlaps(box, other), `cell ${cell} beside the ${circuit.gadget}`).toBe(false)
         expect(box.y).toBeGreaterThan(STAGE.counterBottom)
         expect(box.x).toBeGreaterThanOrEqual(0)
         expect(box.x + box.w).toBeLessThanOrEqual(STAGE.w)
       }
       for (let a = 0; a < cells.length; a++) for (let b = a + 1; b < cells.length; b++) expect(overlaps(looseBox(cells[a]), looseBox(cells[b]))).toBe(false)
+    }
+  })
+
+  it('a stall saved before the bench was laid out again has its loose things brought onto places that are free now', () => {
+    for (const circuit of [gadget, sign]) {
+      const free = matCells(circuit)
+      // Every place of the grid, taken or not, as an older save could hold them.
+      const taken = Array.from({ length: 96 }, (_, cell) => cell).filter((cell) => !free.includes(cell))
+      const old = { ...circuit, loose: taken.slice(0, 6).map((at) => ({ kind: 'lamp' as const, blown: false, at })), leads: [...circuit.leads, { a: null, b: null, at: taken[7] }] }
+      const now = reseat(old)
+      expect(now.loose.map((l) => l.kind)).toEqual(old.loose.map((l) => l.kind))
+      for (const l of now.loose) expect(free).toContain(l.at)
+      expect(new Set(now.loose.map((l) => l.at)).size).toBe(now.loose.length)
+      expect(free).toContain(now.leads.at(-1)!.at)
+      // What already lies on a free place stays there, and a circuit with nothing out of place is the same object.
+      expect(reseat(now)).toBe(now)
+      expect(reseat(circuit)).toBe(circuit)
     }
   })
 })
@@ -145,6 +185,8 @@ describe('a seeded hour of play', () => {
     }
     let states = { loose: 0, joined: 0, onParts: 0, sign: 0, carried: 0, laid: 0 }
     for (let i = 0; i < 2500; i++) {
+      // Now and then a lead is drawn out of the coil and laid on the bare mat, so that the play holds one that bites nothing.
+      if (i % 97 === 5) { const to = matAt(matCells(bench.live)[(i >> 3) % matCells(bench.live).length]); bench.press(COIL); bench.move(to); bench.lift(to, 'end') }
       bench.press(somewhere())
       const to = somewhere()
       bench.move(to)

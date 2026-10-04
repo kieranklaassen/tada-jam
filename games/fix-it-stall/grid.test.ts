@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { ODD_KINDS } from './circuit'
+import { pulses } from './benchSound'
+import { boardOf } from './board'
+import { ODD_KINDS, placePart, removeLead, trayPart, turnPart } from './circuit'
+import { asBuilt } from './gadgets'
 import { ACTIONS, answer, GRID, humBackPitch, ODD_CLIP, ODD_FLICK, ODD_PASSES, THINGS, WRONG } from './grid'
+import { read } from './solve'
 import { RANGE, VOICE_IDS, VOICES, type Note } from './voices'
 
 const cells = THINGS.flatMap((thing) => ACTIONS.map((action) => ({ thing, action, ...GRID[thing][action] })))
@@ -97,5 +101,33 @@ describe('the voices', () => {
     expect(VOICES['buzzer-shriek'][0].pitch).toBeGreaterThan(VOICES['buzzer-clip'][0].pitch)
     // A braked blade stops sooner than one that freewheels.
     expect(VOICES['motor-across'][0].length).toBeLessThan(0.4)
+  })
+})
+
+describe('what runs is heard for as long as it runs', () => {
+  it('a blade that blows whirrs, and the same blade turned round and sucking whirrs breathy', () => {
+    const fan = asBuilt('fan-plain'), motor = fan.parts.findIndex((part) => part.kind === 'motor')
+    const voices = (circuit: typeof fan) => pulses(circuit, read(circuit)).map((sound) => sound.voice)
+    expect(voices(fan)).toContain('whirr')
+    expect(voices(fan)).not.toContain('whirr-in')
+    const turned = turnPart(fan, motor)
+    expect(read(turned).parts[motor]).toBeLessThan(0)
+    expect(voices(turned)).toContain('whirr-in')
+    expect(voices(turned)).not.toContain('whirr')
+  })
+
+  it('two blades side by side are heard twice at their own pitch; two in a row are one low drone', () => {
+    const fan = asBuilt('fan-plain'), board = boardOf('fan-plain'), spare = board.rungs[0]
+    const one = pulses(fan, read(fan)).filter((sound) => sound.voice === 'whirr')
+    expect(one).toHaveLength(1)
+    const beside = placePart(fan, trayPart('motor', spare[0], spare[1]))
+    const two = pulses(beside, read(beside)).filter((sound) => sound.voice === 'whirr')
+    expect(two).toHaveLength(2)
+    expect(two[0].pitch).toBeCloseTo(one[0].pitch, 6)
+    // In a row, in place of the link: both lazy.
+    const row = placePart(removeLead(fan, 0), trayPart('motor', board.linkSocket[0], board.linkSocket[1]))
+    const lazy = pulses(row, read(row)).filter((sound) => sound.voice === 'whirr')
+    expect(lazy).toHaveLength(1)
+    expect(lazy[0].pitch).toBeLessThan(one[0].pitch * 0.7)
   })
 })

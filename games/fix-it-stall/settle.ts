@@ -9,17 +9,24 @@ import { BLOW, CUTOUT, read, type Reading, type Spin } from './solve'
 export type Consequence =
   /**
    * A cell's cutout flag popped. `hot` is the way the current took: the traces, leads and parts that carried most
-   * of it. `onMat` marks a cell that lies loose on the mat, held only by its leads; `part` is then its place in `loose`.
+   * of it, seated on the board (`parts`) or lying loose and held by their leads (`loose`). `onMat` marks a cell that lies loose on the mat, held only by its leads; `part` is then its place in `loose`.
    */
-  | { type: 'pop'; part: number; hot: { traces: number[]; leads: number[]; parts: number[] }; onMat?: true }
+  | { type: 'pop'; part: number; hot: { traces: number[]; leads: number[]; parts: number[]; loose: number[] }; onMat?: true }
   /** A lamp blew. It is now a gap, and it rattles. */
   | { type: 'blow'; part: number; onMat?: true }
 
 export type Settled = { circuit: Circuit; reading: Reading; consequences: Consequence[] }
 
+/**
+ * A way that carried this share of a short's current or more is part of the way it took. A lamp, a motor or a buzzer
+ * beside a short carries a few thousandths of it; sixteen leads side by side, the most there can be, carry a sixteenth
+ * each. So every lead of a short glows however many share it, and nothing that is a load does.
+ */
+const HOT_SHARE = 0.02
+
 const over = (reading: Reading, share: number) => {
   const list = (currents: number[]) => currents.flatMap((c, i) => (Math.abs(c) >= share ? [i] : []))
-  return { traces: list(reading.traces), leads: list(reading.leads), parts: list(reading.parts) }
+  return { traces: list(reading.traces), leads: list(reading.leads), parts: list(reading.parts), loose: list(reading.loose) }
 }
 
 /**
@@ -36,8 +43,8 @@ export function settle(circuit: Circuit, spin: Spin = {}): Settled {
     const popping = now.parts.flatMap((part, i) => (part.kind === 'cell' && !part.popped && Math.abs(reading.parts[i]) > CUTOUT ? [i] : []))
     const poppingLoose = now.loose.flatMap((part, i) => (part.kind === 'cell' && !part.popped && Math.abs(reading.loose[i]) > CUTOUT ? [i] : []))
     if (popping.length + poppingLoose.length > 0) {
-      for (const i of popping) consequences.push({ type: 'pop', part: i, hot: over(reading, Math.abs(reading.parts[i]) / 2) })
-      for (const i of poppingLoose) consequences.push({ type: 'pop', part: i, hot: over(reading, Math.abs(reading.loose[i]) / 2), onMat: true })
+      for (const i of popping) consequences.push({ type: 'pop', part: i, hot: over(reading, Math.abs(reading.parts[i]) * HOT_SHARE) })
+      for (const i of poppingLoose) consequences.push({ type: 'pop', part: i, hot: over(reading, Math.abs(reading.loose[i]) * HOT_SHARE), onMat: true })
       now = {
         ...now,
         parts: now.parts.map((part, i): Part => (part.kind === 'cell' && popping.includes(i) ? { ...part, popped: true } : part)),

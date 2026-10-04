@@ -30,7 +30,7 @@ export const GRID: Record<Thing, Record<Action, Answer>> = {
     clip: { look: 'jaws-bite-and-lead-swings', voice: 'lead-clip' },
     turn: { look: 'clips-swap-with-a-flourish', voice: 'lead-turn' },
     second: { look: 'longer-way-round', voice: 'lead-second' },
-    across: { look: 'two-leads-plait-with-a-zip', voice: 'lead-across' },
+    across: { look: 'two-leads-bow-apart-with-a-zip', voice: 'lead-across' },
     flick: { look: 'swing-like-a-slack-string', voice: 'lead-flick' },
   },
   switch: {
@@ -45,7 +45,7 @@ export const GRID: Record<Thing, Record<Action, Answer>> = {
     turn: { look: 'unscrew-and-screw-back', voice: 'lamp-turn' },
     second: { look: 'glow-shared-or-doubled', voice: 'lamp-second' },
     across: { look: 'filament-out-and-glass-tinks', voice: 'lamp-across' },
-    flick: { look: 'filament-quivers', voice: 'lamp-flick' },
+    flick: { look: 'quivers-in-its-collar', voice: 'lamp-flick' },
   },
   motor: {
     clip: { look: 'blade-spins-up', voice: 'motor-clip' },
@@ -55,10 +55,10 @@ export const GRID: Record<Thing, Record<Action, Answer>> = {
     flick: { look: 'blade-freewheels', voice: 'motor-flick' },
   },
   buzzer: {
-    clip: { look: 'arm-blurs-and-dust-jumps', voice: 'buzzer-clip' },
+    clip: { look: 'rings-go-out-from-it', voice: 'buzzer-clip' },
     turn: { look: 'hop-round-on-its-feet', voice: 'buzzer-turn' },
-    second: { look: 'two-arms-throb', voice: 'buzzer-second' },
-    across: { look: 'arm-stops-mid-beat', voice: 'buzzer-across' },
+    second: { look: 'two-rasps-throb', voice: 'buzzer-second' },
+    across: { look: 'rings-stop-mid-beat', voice: 'buzzer-across' },
     flick: { look: 'tin-cap-dents-and-springs', voice: 'buzzer-flick' },
   },
   odd: {
@@ -111,12 +111,12 @@ export const WRONG: Record<string, Answer & { thing: Thing; action: Action; when
   noseToNose: { thing: 'cell', action: 'second', when: 'two cells in one loop whose pushes cancel, so no current runs', look: 'two-cells-arm-wrestle', voice: 'cell-nose-to-nose' },
   short: { thing: 'cell', action: 'across', when: 'a pop consequence from settle', look: 'lead-glows-orange', voice: 'cell-across' },
   loopOfNothing: { thing: 'lead', action: 'second', when: 'a lead with both clips on one pad', look: 'loop-sags-and-twangs', voice: 'lead-loop-of-nothing' },
-  alwaysOn: { thing: 'switch', action: 'across', when: 'a switch whose lever changes no current', look: 'lever-flicked-faster-and-faster', voice: 'switch-across' },
+  alwaysOn: { thing: 'switch', action: 'across', when: 'a switch whose lever changes no current', look: 'lever-no-longer-puts-anything-out', voice: 'switch-across' },
   blown: { thing: 'lamp', action: 'second', when: 'a blow consequence from settle', look: 'flare-and-smoky-glass', voice: 'lamp-blow' },
   onlyLoadBridged: { thing: 'lamp', action: 'across', when: 'a pop consequence whose hot way holds no lamp, motor or buzzer', look: 'lead-glows-orange-over-the-lamp', voice: 'cell-across' },
-  sucks: { thing: 'motor', action: 'turn', when: 'a motor whose current runs from b to a', look: 'scarves-and-whiskers-lean-in', voice: 'motor-turn' },
-  wild: { thing: 'motor', action: 'second', when: 'a motor at level 3', look: 'fan-walks-across-the-mat', voice: 'motor-wild' },
-  shriek: { thing: 'buzzer', action: 'second', when: 'a buzzer at level 3', look: 'skitters-backwards-until-its-leads-pull-it-up', voice: 'buzzer-shriek' },
+  sucks: { thing: 'motor', action: 'turn', when: 'a motor whose current runs from b to a', look: 'fringe-and-whiskers-lean-in', voice: 'motor-turn' },
+  wild: { thing: 'motor', action: 'second', when: 'a motor at level 3', look: 'motor-shakes-where-it-sits', voice: 'motor-wild' },
+  shriek: { thing: 'buzzer', action: 'second', when: 'a buzzer at level 3', look: 'buzzer-shakes-where-it-sits', voice: 'buzzer-shriek' },
   rubberWorks: { thing: 'odd', action: 'across', when: 'an odd that lets nothing through, with a lead across it and the loop running', look: 'rubber-sits-there-doing-nothing', voice: 'odd-across' },
 }
 
