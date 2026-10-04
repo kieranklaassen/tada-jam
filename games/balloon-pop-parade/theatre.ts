@@ -99,6 +99,9 @@ const ARRIVE_APART = 0.06
 const FROGS_REACH = 2.5
 /** Seconds a troop that was served by one bunch is in the air when it jumps together. */
 const JUMPS_FOR = 0.5
+/** How far behind the friends' line a troop that stopped beside a troop on stage goes on, and the part of its way out it spends stepping back to there. */
+const PASSES_BEHIND = 2.7
+const STEPS_BACK = 0.16
 /** Seconds the leap at the end of an ending takes, from the crouch to the landing and the wobble after it, and the part of it at which the troop lands. */
 const LEAP = 1.05
 const LEAP_LANDS = 0.72
@@ -1117,14 +1120,15 @@ export class Theatre {
       beats.push({ at: 0, lasts: gone, play: (u) => { this.leaveU = u; if (u >= 1) this.leaving = null } })
     }
     // When the child's troop sets off from the edge, and when it stands; when the passing troop comes, and when it has gone.
-    let walkAt = first ? -1 : 0.45, passAt = 0, clear = 0
+    // A quick troop does not set off on the heels of a slow one: it comes into its places when those are clear.
+    let walkAt = first ? -1 : Math.max(0.45, gone - walkFor * 0.8), passAt = 0, clear = 0
     if (showing) {
       const p = PERSONALITIES[showing.kind]
       // Beside a troop on stage it stands in the room there is between the left edge and that troop, shoulder to
       // shoulder, and is drawn as large as fits there, a little smaller than a friend in front at the most.
       const view = this.lastView, across = 2 * BODIES[showing.kind].halfWidth * FRIEND_SCALE
       const room = friendX(0, this.troop.size) - BODIES[kind].halfWidth * FRIEND_SCALE + view.width / 2
-      const scale = beside ? Math.min(0.9, room / (showing.size * across + 0.1)) : 1, gap = beside ? across * scale + 0.05 : FRIEND_GAP
+      const scale = beside ? Math.min(0.9, (room - 0.35) / (showing.size * across + 0.1)) : 1, gap = beside ? across * scale + 0.05 : FRIEND_GAP
       const stopAt = beside ? -view.width / 2 + 0.05 + (showing.size * gap) / 2 : 0
       const passer = { kind: showing.kind, size: showing.size, held: Array.from({ length: showing.size }, () => false), actors: actorsFor(showing.size), idea: showing.idea, balloons: Array.from({ length: showing.size }, (): Held => ({ x: 0, y: 0, vx: 0, vy: 0, shown: false })), scale, stopAt, gap }
       // In, a look up at what hangs low for it, the taking, and out: four to six seconds for any kind, the quick
@@ -1140,7 +1144,7 @@ export class Theatre {
       const look = Math.max(0.35, PASS_BY.shortest + 0.2 - (out * 2 + over + taking))
       // Beside a troop that walks in, it comes when that troop stands and the one before has gone; before a troop
       // of three, it comes in as the one before goes out, so the middle is not left empty.
-      passAt = first ? 0 : beside ? Math.max(gone * 0.9, walkAt + walkFor) : gone * 0.3
+      passAt = first ? 0 : beside ? Math.max(gone * 0.9, walkAt + walkFor) : Math.max(gone * 0.3, gone - 1)
       let at = passAt
       beats.push({ at, lasts: 0, play: () => { this.passer = passer; this.passIn = 0; this.passOut = 0; this.passTook = false } })
       if (at <= 0) { this.passer = passer; this.passIn = 0; this.passOut = 0; this.passTook = false }
@@ -1977,12 +1981,12 @@ export class Theatre {
         // The friend at the head of the waiting troop, nearest the middle, goes furthest: nobody has to pass anybody.
         const from = waitingSpot(this.troop.size - 1 - i, view), gone = stride(kind, this.walkIn), beyond = 0
         pose.x = from.x - beyond + (spot.x - from.x + beyond) * gone
-        // They spread out sideways before they come forward, so no friend walks through another.
-        pose.z = from.z * (1 - gone * gone * gone)
         // The tower comes apart as it sets off: the one at the bottom walks out from under, and each one above
-        // hops down to the hill, the highest last.
-        const up = this.towerLift(kind, this.troop.size - 1 - i), down = Math.min(1, gone * 2.2)
-        pose.y = groundAt(pose.x, pose.z) + (pose.y - spot.y) + up * (1 - down * down) + (up > 0 ? Math.sin(down * Math.PI) * 0.35 : 0)
+        // hops down behind it, the highest last and furthest back. They go round behind whoever is still marching
+        // off, and come forward into their places only at the end: so no friend walks through another.
+        const level = this.troop.size - 1 - i, up = this.towerLift(kind, level), down = ramp(gone, 0.1 + level * 0.1, 0.5 + level * 0.12)
+        pose.z = from.z * (1 - gone * gone * gone) - 2.3 * hump(gone, 0, 0.92) - level * 1.15 * hump(gone, 0, 0.8)
+        pose.y = groundAt(pose.x, pose.z) + (pose.y - spot.y) + up * (1 - down) + (up > 0 ? Math.sin(down * Math.PI) * 0.35 : 0)
         pose.scale = FRIEND_SCALE * (WAITING_SCALE + (1 - WAITING_SCALE) * gone)
         if (this.walkIn <= 0) {
           pose.armL = pose.armR = 0.2
@@ -2205,7 +2209,14 @@ export class Theatre {
     const passer = this.passer!, stop = this.stopOf(passer, i), last = this.stopOf(passer, passer.size - 1), first = this.stopOf(passer, 0)
     // In from beyond the left edge and out beyond the right one, however far to the left it stops.
     const from = stop - (view.width / 2 + 2.4 + last), to = stop + (view.width / 2 + 2.4 - first)
-    return this.passOut > 0 ? stop + (to - stop) * stride(passer.kind, this.passOut) : from + (stop - from) * stride(passer.kind, this.passIn)
+    // One that stopped beside a troop on stage steps back where it stands before it goes on, behind that troop.
+    const out = this.besideStage(passer) ? Math.max(0, (this.passOut - STEPS_BACK) / (1 - STEPS_BACK)) : this.passOut
+    return this.passOut > 0 ? stop + (to - stop) * stride(passer.kind, out) : from + (stop - from) * stride(passer.kind, this.passIn)
+  }
+
+  /** Whether a troop that passes by stops beside a troop on stage, and not in the middle. */
+  private besideStage(troop: Passing): boolean {
+    return troop.gap !== undefined && troop.gap !== FRIEND_GAP
   }
 
   /** Where friend `i` of a troop that passes by stops: in the middle, as far apart as friends stand, or beside a troop on stage, shoulder to shoulder. */
@@ -2214,10 +2225,9 @@ export class Theatre {
   }
 
   /** How far behind the friends' line a troop that walks is at `x`: one that stopped beside a troop on stage goes on behind it. */
-  private passerZ(troop: Passing, x: number): number {
-    if (troop.gap === undefined || troop.gap === FRIEND_GAP) return 0
-    const edge = this.stopOf(troop, troop.size - 1)
-    return -1.9 * ramp(x, edge + 0.3, edge + 1.6)
+  private passerZ(troop: Passing, _x: number): number {
+    if (troop !== this.passer || !this.besideStage(troop)) return 0
+    return -PASSES_BEHIND * ramp(this.passOut, 0, STEPS_BACK)
   }
 
   /** How high above the ground a troop that walks carries its balloons: lower for one that is drawn smaller, so the string still reaches. */

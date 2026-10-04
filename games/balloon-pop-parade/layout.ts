@@ -29,7 +29,7 @@ export const FRIEND_SCALE = 1.28
  * the head of the one below, so that three read as three in the narrow place beside a troop of three.
  */
 export const WAITING_SCALE = 0.5
-export const WAITING_DEPTH = -1.2
+export const WAITING_DEPTH = -2.1
 
 /** The hill is the top of a wide pillow. */
 export const HILL = { x: 0, z: -0.4, rx: 22, ry: 4.6, rz: 10 } as const
@@ -138,7 +138,7 @@ export function friendX(index: number, size: number): number {
 
 /** Where the waiting troop's tower stands: at the left edge. Friend `index` is that many friends up it; how high that is depends on its kind (`seat` in bodies.ts). */
 export function waitingSpot(_index: number, view: View): { x: number; z: number } {
-  return { x: -view.width / 2 + 0.85, z: WAITING_DEPTH }
+  return { x: -view.width / 2 + 0.6, z: WAITING_DEPTH }
 }
 
 /** The top right corner is the grown-up's: this many logical pixels each way, where nothing of the game is drawn to be touched and no touch is answered (`overlay.ts`). */

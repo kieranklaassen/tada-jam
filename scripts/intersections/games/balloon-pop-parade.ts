@@ -6,7 +6,8 @@
 // bunches: three friends served at once, a whole troop carried off, a bunch
 // bigger than the troop, and a first showing of bunches inside a step-in.
 
-import { friendX, GROUND, HELD_HEIGHT, skySlots, viewFor, waitingSpot } from '../../../games/balloon-pop-parade/layout.ts'
+import { farGroundAt, friendX, GROUND, groundAt, HELD_HEIGHT, skySlots, viewFor, waitingSpot } from '../../../games/balloon-pop-parade/layout.ts'
+import { BALL, HUT, POOL } from '../../../games/balloon-pop-parade/setting.ts'
 import type { Driver, Frac, GameAudit } from '../types.ts'
 
 const SLOT = 'tada-jam:slot:balloon-pop-parade'
@@ -23,7 +24,7 @@ const sky = (d: Driver, slot: number, slots: number) => { const p = skySlots(slo
 const friend = (d: Driver, i: number, size: number) => at(d, friendX(i, size), GROUND + 1)
 /** The balloon friend `i` holds. */
 const held = (d: Driver, i: number, size: number) => at(d, friendX(i, size) + 0.7, GROUND + HELD_HEIGHT)
-const waiting = (d: Driver) => { const spot = waitingSpot(0, VIEW); return at(d, spot.x, GROUND + 0.9, spot.z) }
+const waiting = (d: Driver) => { const spot = waitingSpot(0, VIEW); return at(d, spot.x, GROUND + 0.6, spot.z) }
 
 type Kind = 'duck' | 'frog' | 'hippo' | 'crab'
 const one = (colour: Kind) => ({ colour, count: 1 })
@@ -61,14 +62,21 @@ export default {
     // balloons at rest. The ones at rest are held by tests on the game's own layout: the balloons of a bunch, the
     // places in the sky, and a held balloon above its friend's head and below the row (layout.test.ts).
     '^scenery>balloons',
+    // A face is printed on the skin of whatever carries it: the small pillows of every eye, brow and mouth sit in
+    // that skin by design, and are one batch for all the faces on screen. What a face may do is held by tests on
+    // the pillows themselves (faces.test.ts): a pupil stays inside its white, a brow clears its eye, and a mouth is
+    // never one straight bar.
+    '^scenery>bits',
   ],
   allow: [
     { a: '^(friend|passer|leaving|waiting)-\\d>squash', kind: 'pose', upTo: 0.5, reason: 'A friend is a pool toy: its head, arms and funniest part are pillows welded onto its trunk, and they press into the trunk and each other as it squashes, nods and swings its arms.' },
     { a: '^scenery>hill', b: '^(friend|passer|leaving|waiting)-\\d>squash', kind: 'penetration', upTo: 0.3, reason: 'The hill is an air bed. A friend stands in it up to its feet, and one that lands on its bottom or its side, or sits down hard, sinks in for a moment.' },
     { a: '^scenery>far-hill', b: '^scenery>parade-', kind: 'penetration', upTo: 0.4, reason: 'The troops that were served stand upright on the far hill, whose skin slopes under them; they are a few pixels tall at that distance.' },
+    { a: '^(waiting|friend)-\\d>squash', b: '^(waiting|friend)-\\d>squash', kind: 'penetration', upTo: 0.35, reason: 'The troop that waits stands as a tower: each friend stands on the head of the one below and presses into it a little, as one pool toy does on another, and brushes it as the tower comes apart when the troop sets off.' },
+    { a: '^scenery>(hill|far-hill|setting)', b: '^scenery>(setting|whale|keeper|ball)', kind: 'penetration', upTo: 0.6, reason: 'What stands in the setting stands in the air bed or in the far hill up to its foot, and the whale sits in the water of its pool: the flowers, the pool, the hut, the keeper, the ball where it lands.' },
   ],
   moments: [
-    // The pair passes by and takes its balloons, the child's pair walks in, the sky fills, the next troop comes to the edge.
+    // The child's pair stands under a full sky from the first frame; a pair passes by to its left, takes its balloons and goes on behind it; the next troop comes to the edge.
     { name: 'a new game opens', run: (d) => d.wait(9000) },
     // The bunches swell, and the ghost hand taps one place and then another.
     { name: 'idle ladder', run: (d) => d.wait(19000) },
@@ -96,11 +104,21 @@ export default {
     {
       name: 'the scenery and the step-in',
       run: async (d) => {
-        // The cloud over the troop, the hill, then the troop that waits: the ducks march off and three frogs walk in.
+        // The cloud over the troop, the hill, and the toys that live in the setting: the whale blows, the ball is
+        // kicked twice, and a knock at the hut makes its keeper jump. Then the troop that waits: the ducks march off
+        // and three frogs come down from their tower and walk in.
         await d.tap(await at(d, 0.47, 0.53))
         await d.wait(700)
         await d.tap(await at(d, 3, GROUND - 0.9))
         await d.wait(1100)
+        await d.tap(await at(d, POOL.x, groundAt(POOL.x, POOL.z) + 0.7, POOL.z))
+        await d.wait(900)
+        await d.tap(await at(d, BALL.x, groundAt(BALL.x, BALL.z) + 0.5, BALL.z))
+        await d.wait(500)
+        await d.tap(await at(d, BALL.x, groundAt(BALL.x, BALL.z) + 0.9, BALL.z))
+        await d.wait(1400)
+        await d.tap(await at(d, HUT.x, farGroundAt(HUT.x, HUT.z) + 1.2, HUT.z))
+        await d.wait(900)
         await d.tap(await waiting(d))
         await d.wait(5200)
       },

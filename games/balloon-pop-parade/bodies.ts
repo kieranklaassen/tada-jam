@@ -118,7 +118,7 @@ function duck(): Body {
     halfWidth: 1.06,
     reach: 2.75,
     lowest: 0,
-    seat: 1.95,
+    seat: 2.0,
   }
 }
 
@@ -157,7 +157,7 @@ function frog(): Body {
     halfWidth: 1.2,
     reach: 2.8,
     lowest: 0,
-    seat: 1.45,
+    seat: 1.58,
   }
 }
 
@@ -196,7 +196,7 @@ function hippo(): Body {
     halfWidth: 1.3,
     reach: 2.95,
     lowest: 0,
-    seat: 2.15,
+    seat: 2.22,
   }
 }
 
@@ -237,7 +237,7 @@ function crab(): Body {
     halfWidth: 1.34,
     reach: 2.95,
     lowest: 1.0,
-    seat: 1.3,
+    seat: 1.42,
   }
 }
 
