@@ -23,7 +23,9 @@ import type { Salon, Who } from './world'
 // drew, for the grown-up overlay.
 
 const STEEL = '#cfd2dc', STEEL_EDGE = '#8a8fa0', HANDLE = '#ee7c62'
-const LEAF = '#b94a3a', RAIN = 'rgba(75,74,87,0.4)'
+const RAIN = 'rgba(75,74,87,0.4)'
+/** How much of its width the door's leaf loses when it stands wide open: it is seen nearly edge on. */
+const OPEN_BY = 0.86
 /** Somebody goes by in the street every so many seconds, and takes this long to cross the door's glass. */
 const PASSER = { every: 13, takes: 5 }
 /** Where the customer's head shows in the looking glass, and how big. */
@@ -303,9 +305,13 @@ function door(g: Ctx, sprites: Sprites, play: Play, game: Salon): number {
   let drawn = 0
   const pane = DOOR.glass
   const nudge = play.pressed === 'door' ? 3 : 0
+  // Open, the leaf has swung out of the doorway and the street is seen whole, with no glass before it.
+  const open = staging.door
+  if (open > 0) drawn += stamp(g, sprites.doorway)
   g.save()
   g.beginPath()
-  g.rect(pane.x, pane.y, pane.w, pane.h)
+  if (open > 0) g.rect(DOOR.x, DOOR.y, DOOR.w, DOOR.h)
+  else g.rect(pane.x, pane.y, pane.w, pane.h)
   g.clip()
   // Somebody goes by in the street now and then, under an umbrella: nothing to do with the salon.
   const walk = (play.time % PASSER.every) / PASSER.takes
@@ -332,6 +338,20 @@ function door(g: Ctx, sprites: Sprites, play: Play, game: Salon): number {
       g.restore()
     })
   }
+  g.restore()
+  // The leaf. Shut, it is in the room's own sheet; as it opens it swings on its hinges at the right, which is seen
+  // as the leaf narrowing towards them, with the rain on its glass and the light across it going with it.
+  g.save()
+  if (open > 0) {
+    const hinge = DOOR.x + DOOR.w
+    g.translate(hinge, 0)
+    g.scale(1 - OPEN_BY * open, 1)
+    g.translate(-hinge, 0)
+    drawn += stamp(g, sprites.leaf)
+  }
+  g.beginPath()
+  g.rect(pane.x, pane.y, pane.w, pane.h)
+  g.clip()
   // Rain down the glass, and the light on it.
   g.strokeStyle = RAIN
   g.lineWidth = 2
@@ -344,26 +364,18 @@ function door(g: Ctx, sprites: Sprites, play: Play, game: Salon): number {
   }
   g.stroke()
   drawn++
-  if (staging.door < 1) {
-    g.globalAlpha = 0.34 * (1 - staging.door)
-    g.strokeStyle = PAPER
-    g.lineWidth = 16
-    g.beginPath()
-    g.moveTo(pane.x + 24 + nudge, pane.y + 150)
-    g.lineTo(pane.x + 92 + nudge, pane.y + 18)
-    g.moveTo(pane.x + 58 + nudge, pane.y + 170)
-    g.lineTo(pane.x + 104 + nudge, pane.y + 82)
-    g.stroke()
-    g.globalAlpha = 1
-    drawn++
-  }
+  g.globalAlpha = 0.34
+  g.strokeStyle = PAPER
+  g.lineWidth = 16
+  g.beginPath()
+  g.moveTo(pane.x + 24 + nudge, pane.y + 150)
+  g.lineTo(pane.x + 92 + nudge, pane.y + 18)
+  g.moveTo(pane.x + 58 + nudge, pane.y + 170)
+  g.lineTo(pane.x + 104 + nudge, pane.y + 82)
+  g.stroke()
+  g.globalAlpha = 1
+  drawn++
   g.restore()
-  if (staging.door > 0) {
-    // Open, the door stands edge on at its hinges.
-    g.fillStyle = LEAF
-    g.fillRect(DOOR.x + DOOR.w - 20 * staging.door, DOOR.y + 4, 20 * staging.door, DOOR.h - 6)
-    drawn++
-  }
   return drawn
 }
 

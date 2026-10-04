@@ -211,6 +211,31 @@ describe('the salon around them', () => {
     expect(walking.kept.stamps.filter((stamp) => stamp.image === walking.sprites.drape.sheet.canvas)).toHaveLength(1)
   })
 
+  it('swings the door open when a pair comes in: its leaf narrows towards its hinges and the doorway shows behind it, and shut it is the room\'s own', () => {
+    const play = fresh()
+    const wide = (stamps: Recording['stamps'], sheet: unknown): number[] => stamps.filter((stamp) => stamp.image === sheet).map((stamp) => bounds(stamp.corners).w)
+    const shut = frame(play)
+    expect(wide(shut.kept.stamps, shut.sprites.leaf.sheet.canvas)).toEqual([])
+    expect(wide(shut.kept.stamps, shut.sprites.doorway.sheet.canvas)).toEqual([])
+    tap(play, DOOR)
+    const widths: number[] = []
+    for (let i = 0; i < 60 * 6 && play.inScene; i++) {
+      play.step(1 / 60, true)
+      if (i % 6 !== 0) continue
+      const now = frame(play, play.time), leaf = wide(now.kept.stamps, now.sprites.leaf.sheet.canvas), way = wide(now.kept.stamps, now.sprites.doorway.sheet.canvas)
+      // The leaf is drawn exactly when the doorway is, and never wider than it.
+      expect(leaf.length).toBe(way.length)
+      if (leaf.length === 1) { widths.push(leaf[0]); expect(leaf[0]).toBeLessThanOrEqual(way[0] + 1) }
+      if (play.staging.door > 0) expect(leaf.length).toBe(1)
+    }
+    // It went from nearly its whole width to nearly edge on, and came back.
+    expect(Math.max(...widths)).toBeGreaterThan(DOOR_AT.w * 0.7)
+    expect(Math.min(...widths)).toBeLessThan(DOOR_AT.w * 0.25)
+    expect(widths[widths.length - 1]).toBeGreaterThan(Math.min(...widths) * 1.5)
+    const after = frame(play, play.time)
+    expect(wide(after.kept.stamps, after.sprites.leaf.sheet.canvas)).toEqual([])
+  })
+
   it('draws no tail in the doorway before its owner is seen there', () => {
     const play = fresh()
     tap(play, DOOR)

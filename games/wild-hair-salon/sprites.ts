@@ -2,7 +2,7 @@ import { STILL, features, stamp } from './figure'
 import { FRIEND_MANE } from './kits'
 import { CAPE, CHAIR, COLLAR_Y, FLOOR_Y, HEAD, fit } from './layout'
 import { LOOKS, tuftOutline, type Look } from './looks'
-import { ROOM, paintRoom, roughBox } from './paintRoom'
+import { ROOM, leafOutline, paintDoorway, paintLeaf, paintRoom, roughBox } from './paintRoom'
 import { PLAIN, capeOutline } from './paintStrips'
 import { tuftPose } from './poses'
 import { makeRng, type Rng } from './rng'
@@ -45,6 +45,8 @@ type Making = Partial<Pick<Animal, Part>> & Pick<Animal, 'friendHead' | 'waiting
 
 /** Sheets a frame may paint once the first frame is done: a new customer's hair comes up over a few frames, behind the opening door. */
 const PER_FRAME = 2
+/** The number the door's leaf is seeded from, in the room and by itself. */
+const LEAF_N = 12
 
 const ORDER = Object.keys(LOOKS)
 
@@ -72,6 +74,9 @@ export class Sprites {
   readonly glow: Sprite
   /** Somebody going by in the street under an umbrella. */
   readonly passer: Sprite
+  /** The door's leaf by itself, to swing, and the doorway it swings out of: drawn only while the door is open. */
+  readonly leaf: Sprite
+  readonly doorway: Sprite
 
   constructor(makeSheet: MakeSheet, width: number, height: number, seed: number) {
     this.makeSheet = makeSheet
@@ -85,7 +90,7 @@ export class Sprites {
       const g = this.backdrop.g, rng = makeRng(seed + 1)
       this.paint.from(rng).paper(g, width, height)
       g.setTransform(f.scale, 0, 0, f.scale, f.dx, f.dy)
-      paintRoom(g, this.paint, rng)
+      paintRoom(g, this.paint, rng, makeRng(seed * 31 + LEAF_N))
       g.setTransform(1, 0, 0, 1, 0, 0)
     }
 
@@ -121,6 +126,9 @@ export class Sprites {
       paint.pencil(g, brim, true, 0.8)
     })
     this.glow = this.makeGlow()
+    // The same leaf as the one painted shut into the room, from the same seed.
+    this.leaf = this.piece(LEAF_N, leafOutline, (g, paint, outline, rng) => paintLeaf(g, paint, outline, rng), 8)
+    this.doorway = this.piece(LEAF_N + 1, leafOutline, (g, paint, _outline, rng) => paintDoorway(g, paint, rng), 8)
     this.passer = this.piece(9, (rng) => blob(rng, 0, 0, 62, 96, 0.02, 10), (g, paint, _outline, rng) => {
       paint.wash(g, blob(rng, 0, 46, 22, 46, 0.05, 10), { color: ROOM.steelEdge, strength: 0.8, reserve: true })
       paint.pencil(g, [{ x: 4, y: -40 }, { x: 4, y: 30 }], false, 0.9)
@@ -333,7 +341,7 @@ export class Sprites {
 
   /** Gives back the memory of every sheet, before a new set is made for another size. */
   dispose(): void {
-    const sheets: (Sheet | undefined)[] = [this.backdrop, this.cape.sheet, this.drape.sheet, this.knot.sheet, this.hat.sheet, this.glow.sheet, this.passer.sheet]
+    const sheets: (Sheet | undefined)[] = [this.backdrop, this.cape.sheet, this.drape.sheet, this.knot.sheet, this.hat.sheet, this.glow.sheet, this.passer.sheet, this.leaf.sheet, this.doorway.sheet]
     for (const animal of this.animals.values()) sheets.push(...PARTS.map((part) => animal[part]?.sheet), animal.friendHead?.sheet, animal.waiting?.sheet, animal.mane?.sprite.sheet, ...animal.tufts.map((tuft) => tuft?.sprite.sheet))
     for (const sheet of sheets) if (sheet) { sheet.canvas.width = 0; sheet.canvas.height = 0 }
     this.animals.clear()

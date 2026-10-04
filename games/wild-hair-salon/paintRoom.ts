@@ -77,14 +77,14 @@ export function paintWalls(g: Ctx, paint: Watercolour, rng: Rng): void {
 }
 
 /** Everything that stands still in the salon, back to front. */
-export function paintRoom(g: Ctx, paint: Watercolour, rng: Rng): void {
+export function paintRoom(g: Ctx, paint: Watercolour, rng: Rng, leafRng: Rng = rng): void {
   paintWalls(g, paint, rng)
   paintLamps(g, paint, rng)
   paintMirror(g, paint, rng)
   paintLookingGlass(g, paint, rng)
   paintPictures(g, paint, rng)
   paintShelf(g, paint, rng)
-  paintDoor(g, paint, rng)
+  paintDoor(g, paint, rng, leafRng)
   paintTrolley(g, paint, rng)
   paintRug(g, paint, rng)
   paintBench(g, paint, rng)
@@ -224,15 +224,10 @@ export function paintTrolley(g: Ctx, paint: Watercolour, rng: Rng): void {
   for (const [dx, color] of [[18, ROOM.bottle[0]], [28, ROOM.pot], [38, ROOM.bottle[4]]] as const) paint.wash(g, blob(rng, right + dx, FLOOR_Y + 14 - (dx % 3) * 3, 12, 7, 0.2, 8), { color, strength: 0.7 })
 }
 
-/** The door: a red frame round one tall pane, a kick plate, a handle, a bell over it, and the street behind the glass in the rain. */
-export function paintDoor(g: Ctx, paint: Watercolour, rng: Rng): void {
-  const leaf = roughBox(rng, DOOR.x, DOOR.y, DOOR.w, DOOR.h, 3)
-  paint.wash(g, leaf, { color: ROOM.door, edge: ROOM.doorEdge, blooms: ['#f6a17f'], strength: 0.9, reserve: true })
-  paint.pencil(g, leaf, true)
-  const { x, y, w, h } = DOOR.glass
-  const pane = roughBox(rng, x, y, w, h, 2)
-  // The street: sky, three houses across the road, the wet pavement, a lamp post.
-  paint.wash(g, pane, { color: ROOM.sky, edge: ROOM.glassBloom, blooms: [ROOM.glassBloom, '#e6ecf6'], strength: 0.9, grain: 0.1, reserve: true })
+/** The street: sky, three houses across the road, the wet pavement and a lamp post, in a box. `wet` adds the rain and the puddles. */
+function paintStreet(g: Ctx, paint: Watercolour, rng: Rng, box: { x: number; y: number; w: number; h: number }, wobble: number): void {
+  const { x, y, w, h } = box
+  paint.wash(g, roughBox(rng, x, y, w, h, wobble), { color: ROOM.sky, edge: ROOM.glassBloom, blooms: [ROOM.glassBloom, '#e6ecf6'], strength: 0.9, grain: 0.1, reserve: true })
   const ground = y + h * 0.56
   ROOM.house.forEach((color, i) => {
     const hx = x + 4 + i * (w - 8) / 3, hw = (w - 8) / 3 - 4, top = ground - 96 - (i % 2) * 34
@@ -243,19 +238,51 @@ export function paintDoor(g: Ctx, paint: Watercolour, rng: Rng): void {
   paint.wash(g, roughBox(rng, x, ground, w, y + h - ground, 2), { color: ROOM.pavement, edge: ROOM.steelEdge, blooms: [ROOM.sky], strength: 0.8 })
   paint.pencil(g, [{ x: x + 24, y: ground + 30 }, { x: x + 24, y: y + 60 }, { x: x + 34, y: y + 52 }], false, 1.1)
   paint.wash(g, blob(rng, x + 37, y + 56, 7, 6, 0.05, 8), { color: ROOM.lamp, edge: ROOM.lampEdge, strength: 0.9 })
-  // Rain, in loose slanting strokes, and puddle rings on the pavement.
+  // Rain, in loose slanting strokes, and puddles on the pavement: flat patches of wet, washed in and not outlined, so none is a ring.
   for (let i = 0; i < 16; i++) {
     const rx = x + 10 + rng.range(0, w - 26), ry = y + 10 + rng.range(0, h - 60)
     paint.pencil(g, [{ x: rx, y: ry }, { x: rx - 5, y: ry + 20 }], false, 0.55)
   }
-  // Puddles: flat patches of wet, washed in and not outlined, so none is a ring.
-  for (let i = 0; i < 3; i++) paint.wash(g, blob(rng, x + 30 + i * 52, ground + 40 + (i % 2) * 34, 18, 5, 0.05, 8), { color: ROOM.glassTint, strength: 0.6 })
+  for (let i = 0; i < 3; i++) paint.wash(g, blob(rng, x + 30 + i * (w / 3.4), ground + 40 + (i % 2) * 34, 18, 5, 0.05, 8), { color: ROOM.glassTint, strength: 0.6 })
+}
+
+/** The outline of the door's leaf. */
+export function leafOutline(rng: Rng): Point[] {
+  return roughBox(rng, DOOR.x, DOOR.y, DOOR.w, DOOR.h, 3)
+}
+
+/**
+ * The door's leaf: a red frame round one tall pane with the street behind
+ * it in the rain, a kick plate and a handle. It is painted twice from one
+ * seed: shut, into the room, and by itself, to swing when a pair comes in.
+ */
+export function paintLeaf(g: Ctx, paint: Watercolour, leaf: Point[], rng: Rng): void {
+  paint.wash(g, leaf, { color: ROOM.door, edge: ROOM.doorEdge, blooms: ['#f6a17f'], strength: 0.9, reserve: true })
+  paint.pencil(g, leaf, true)
+  const { x, y, w, h } = DOOR.glass
+  paintStreet(g, paint, rng, DOOR.glass, 2)
   // The glass over it all, and the plate at the door's foot.
+  const pane = roughBox(rng, x, y, w, h, 2)
   paint.wash(g, pane, { color: ROOM.glassTint, strength: 0.4, grain: 0.05 })
   paint.pencil(g, pane, true, 1.1)
   paint.pencil(g, roughBox(rng, DOOR.x + 12, y + h + 12, DOOR.w - 24, DOOR.y + DOOR.h - (y + h) - 22, 1.5), true, 0.7)
-  // The handle, on the side the door opens from, and the bell that rings when it does.
+  // The handle, on the side the door opens from.
   paint.wash(g, roughBox(rng, DOOR.x + 4, DOOR.y + DOOR.h * 0.5, 9, 54, 1), { color: ROOM.frame, edge: ROOM.frameEdge, reserve: true })
+}
+
+/** The doorway with the leaf swung out of it: the street itself, from the lintel to a worn step, between two jambs. */
+export function paintDoorway(g: Ctx, paint: Watercolour, rng: Rng): void {
+  const step = 26
+  paintStreet(g, paint, rng, { x: DOOR.x, y: DOOR.y, w: DOOR.w, h: DOOR.h - step }, 2)
+  paint.wash(g, roughBox(rng, DOOR.x - 2, DOOR.y + DOOR.h - step, DOOR.w + 4, step, 2), { color: ROOM.steel, edge: ROOM.steelEdge, strength: 0.9, reserve: true })
+  for (const jx of [DOOR.x, DOOR.x + DOOR.w]) paint.pencil(g, [{ x: jx, y: DOOR.y }, { x: jx, y: DOOR.y + DOOR.h }], false, 1.2)
+  paint.pencil(g, [{ x: DOOR.x, y: DOOR.y }, { x: DOOR.x + DOOR.w, y: DOOR.y }], false, 1.2)
+}
+
+/** The door, shut, and the bell over it that rings when it opens. `leafRng` is the seed the leaf is painted from, here and where it swings. */
+export function paintDoor(g: Ctx, paint: Watercolour, rng: Rng, leafRng: Rng = rng): void {
+  paintLeaf(g, paint.from(leafRng), leafOutline(leafRng), leafRng)
+  paint.from(rng)
   const bell = { x: DOOR.x + DOOR.w / 2, y: DOOR.y - 28 }
   paint.pencil(g, [{ x: bell.x - 26, y: DOOR.y - 2 }, { x: bell.x - 22, y: bell.y - 16 }, { x: bell.x, y: bell.y - 14 }], false, 1)
   paint.wash(g, [{ x: bell.x - 6, y: bell.y - 14 }, { x: bell.x + 6, y: bell.y - 14 }, { x: bell.x + 15, y: bell.y + 12 }, { x: bell.x - 15, y: bell.y + 12 }], { color: ROOM.frame, edge: ROOM.frameEdge, blooms: [ROOM.lamp], reserve: true })
