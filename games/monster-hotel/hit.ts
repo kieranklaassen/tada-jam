@@ -94,8 +94,10 @@ export function guestAt(page: PageLayout, standing: readonly Standing[], point: 
 }
 
 function edgeAt(page: PageLayout, point: Point): { id: string; nearer: number } | null {
+  // A bed answers for itself: no wall or floor reaches over one, though a finger right on the slab or the wall still lands on it. The slab under a room on the ground and the outer wall beside it lie along the bed's own sides.
+  const reach = page.rooms.some((layout) => inside(layout.bed, point)) ? 0 : EDGE_REACH * page.scale
   for (const edge of page.edges) {
-    if (!inside(edge.rect, point, EDGE_REACH * page.scale)) continue
+    if (!inside(edge.rect, point, reach)) continue
     const a = page.rooms[edge.a].rect, b = page.rooms[edge.b].rect
     // The nearer room is the one whose middle the finger is closer to, along the way the edge divides.
     const nearer = edge.kind === 'wall'

@@ -99,6 +99,9 @@ describe('what a finger landed on', () => {
     const room = page.rooms[1]
     expect(hitAt(page, standing, middle(room.door))).toEqual({ kind: 'roomDoor', room: 1 })
     expect(hitAt(page, standing, middle(room.bed))).toEqual({ kind: 'bed', room: 1 })
+    // The slab under a room on the ground lies along the foot of its bed and does not reach over it, and a finger on the slab itself still lands there.
+    expect(hitAt(page, standing, { x: middle(room.bed).x, y: room.bed.y + room.bed.h - 2 })).toEqual({ kind: 'bed', room: 1 })
+    expect(hitAt(page, standing, { x: middle(room.bed).x, y: room.rect.y + room.rect.h + 2 })).toEqual({ kind: 'edge', id: 'under-1', nearer: 1 })
     const mirrored = { x: 2 * (room.rect.x + room.rect.w / 2) - (room.bed.x + room.bed.w / 2), y: room.bed.y + 4 }
     expect(hitAt(page, standing, mirrored, [], false, { fixtures: [], twins: [] }).kind).not.toBe('bed')
     expect(hitAt(page, standing, mirrored, [], false, { fixtures: [], twins: [1] })).toEqual({ kind: 'bed', room: 1 })
