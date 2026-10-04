@@ -1,8 +1,10 @@
 // template: cartridge/overlay.ts v2
 
 // The grown-up performance overlay. It is no part of the game a child plays:
-// it shows only after three quick taps in the top right corner, or with
-// `?fps=1` in the address, and three more taps hide it again. It reads what
+// it shows only after three quick taps of one finger in the top right corner,
+// or with `?fps=1` in the address, and three more taps hide it again. A hand
+// laid or slapped on the corner is not three taps: a touch-down counts only
+// while no other finger is on the surface and a moment after the last one. It reads what
 // the Mount already measures and changes nothing, in the game or in a save.
 // Its readout is the only text in the game. The wordless check accepts text
 // in a file with this name alone, behind the comment the readout carries, so
@@ -13,6 +15,8 @@
 export const CORNER = 72
 /** Three taps count when the first and the last are no further apart than this. */
 export const WITHIN_MS = 700
+/** Two touch-downs closer together than this are the fingers of one hand coming down, not two taps. */
+export const APART_MS = 120
 /** The numbers are refreshed this often, so they can be read. */
 export const EVERY_MS = 400
 
@@ -36,10 +40,19 @@ export class Overlay {
     if (new URLSearchParams(search).get('fps') === '1') this.toggle()
   }
 
-  /** Every touch-down on the surface, where it landed and how wide the surface is. Three in the corner in quick succession show or hide the numbers; one anywhere else starts the count again. */
-  press(x: number, y: number, width: number, timeMs: number): void {
+  /**
+   * Every touch-down on the surface: where it landed, how wide the surface is, and how many fingers are on the
+   * surface with it. Three single taps in the corner in quick succession show or hide the numbers. One anywhere
+   * else, a second finger down at the same time, or two touch-downs too close together to be taps start the count again.
+   */
+  press(x: number, y: number, width: number, timeMs: number, fingersDown = 1): void {
     // A surface that has not been measured yet has no corner.
-    if (width <= 0 || x < width - CORNER || y > CORNER) {
+    if (width <= 0 || x < width - CORNER || y > CORNER || fingersDown > 1) {
+      this.taps.length = 0
+      return
+    }
+    const last = this.taps[this.taps.length - 1]
+    if (last !== undefined && timeMs - last < APART_MS) {
       this.taps.length = 0
       return
     }

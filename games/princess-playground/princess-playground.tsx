@@ -7,7 +7,7 @@ import { BACKDROP } from './config'
 import { IdleLadder } from './guidance'
 import { ForgivingTouch, type Gesture, type Point } from './input'
 import { princessPlaygroundManifest } from './manifest'
-import { Overlay } from './overlay'
+import { CORNER, Overlay } from './overlay'
 import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
 import { SaveCadence } from './saveCadence'
@@ -150,22 +150,29 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       const box = root.getBoundingClientRect()
       return { x: event.clientX - box.left, y: event.clientY - box.top }
     }
+    // The fingers on the surface now, for the overlay: a hand laid on the corner is not three taps.
+    const fingers = new Set<number>()
     const onDown = (event: PointerEvent) => {
       if (!attention.awake) return
       audio.touchDown()
       ladder.touch(clock.seconds)
       const where = at(event)
-      overlay.press(where.x, where.y, width, event.timeStamp)
+      fingers.add(event.pointerId)
+      overlay.press(where.x, where.y, width, event.timeStamp, fingers.size)
+      // The grown-up corner is bare cloth and answers nothing: no sound, no mark, so nothing there invites a child to tap it.
+      if (width > 0 && where.x >= width - CORNER && where.y <= CORNER) return
       act(touch.down(event.pointerId, where, event.timeStamp))
       // Captured, so the lift is reported even when the finger has slid off the surface.
       root.setPointerCapture(event.pointerId)
     }
     const onMove = (event: PointerEvent) => act(touch.move(event.pointerId, at(event)))
     const onUp = (event: PointerEvent) => {
+      fingers.delete(event.pointerId)
       act(touch.up(event.pointerId, at(event), event.timeStamp))
       audio.touchUp()
     }
     const onCancel = (event: PointerEvent) => {
+      fingers.delete(event.pointerId)
       act(touch.cancel(event.pointerId, event.timeStamp))
       audio.touchUp()
     }
@@ -220,6 +227,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       clock.rest()
       // A friend in the hand goes back to where it was picked up from: put away makes no move.
       game?.putAway()
+      fingers.clear()
       act(touch.clear())
       cadence.settle(performance.now())
     })

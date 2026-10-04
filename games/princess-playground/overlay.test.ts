@@ -1,7 +1,7 @@
 // template: cartridge/overlay.test.ts v2
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest'
-import { CORNER, EVERY_MS, Overlay, WITHIN_MS } from './overlay'
+import { APART_MS, CORNER, EVERY_MS, Overlay, WITHIN_MS } from './overlay'
 
 const WIDTH = 1180
 /** A point inside the corner that takes the taps, and one in the middle of the surface. */
@@ -48,6 +48,22 @@ describe('the grown-up performance overlay', () => {
     // A surface that has not been measured has no corner to tap.
     for (const time of [9000, 9100, 9200]) overlay.press(0, 0, 0, time)
     expect(box.style.display).toBe('none')
+  })
+
+  it('is not opened by a hand slapped or laid on the corner: fingers down together, or one straight after another', () => {
+    const { overlay, box, taps } = mount()
+    // Four fingers of one slap, each counted as it lands while the others are still down.
+    for (const [index, time] of [0, 15, 30, 45].entries()) overlay.press(CORNER_AT[0], CORNER_AT[1], WIDTH, time, index + 1)
+    expect(box.style.display).toBe('none')
+    // Fingers drummed down one straight after another, each lifted before the next.
+    taps(CORNER_AT, [1000, 1000 + APART_MS / 2, 1000 + APART_MS, 1000 + 1.5 * APART_MS, 1000 + 2 * APART_MS])
+    expect(box.style.display).toBe('none')
+    // A second finger resting elsewhere on the surface while the corner is tapped.
+    for (const time of [3000, 3250, 3500]) overlay.press(CORNER_AT[0], CORNER_AT[1], WIDTH, time, 2)
+    expect(box.style.display).toBe('none')
+    // Three deliberate taps of one finger still open it.
+    taps(CORNER_AT, [5000, 5200, 5400])
+    expect(box.style.display).toBe('block')
   })
 
   it('opens with fps=1 in the address, and with nothing else there', () => {
