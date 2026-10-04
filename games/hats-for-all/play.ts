@@ -3,7 +3,7 @@ import type { CreatureKind, HatKind } from './kinds'
 import { PERSONALITY, hash, stepSpring, type Spring } from './motion'
 import { PROPS, PROP_AT, type PropName } from './props'
 import { BODY, HAND, HAT_HALF, HAT_HEIGHT, SLAB } from './sizes'
-import { LOOSE_Z, TILE_Z, alongWay, holeX, spotX, wayLength, type Point } from './stage'
+import { LOOSE_Z, TILE_Z, alongWay, holeX, spotX, tileX, wayLength, type Point } from './stage'
 import type { Mood, Partial } from './voices'
 
 // The puppet theatre: where every creature and hat is this frame, as plain
@@ -484,7 +484,7 @@ export class Play {
     // With nothing to look at, a bare creature looks at the hats, a hatted one up at its own, and a walker where it is going.
     // Its eyes follow the child's finger while it is on the glass and for a moment after.
     const follows = actor.lookFor === 0 && !walking && this.finger.left > 0
-    let wantX = actor.lookFor > 0 ? actor.lookX : follows ? Math.max(-1, Math.min(1, (this.finger.x - actor.x) / 3.5)) : walking ? 0.8 * actor.heading : 0.25 * Math.sin(beat * 0.21)
+    let wantX = actor.lookFor > 0 ? actor.lookX : follows ? Math.max(-1, Math.min(1, (this.finger.x - actor.x) / 3.5)) : walking ? 0.8 * actor.heading : bare ? Math.max(-0.8, Math.min(0.8, (tileX(this.hats.length) - actor.x) / 6)) + 0.12 * Math.sin(beat * 0.21) : 0.25 * Math.sin(beat * 0.21)
     let wantY = actor.lookFor > 0 ? actor.lookY : follows ? Math.max(-1, Math.min(1, (this.finger.y - BODY[actor.kind].faceY) / 3 - (this.finger.z - actor.z) / 6)) : walking ? 0 : bare ? -0.7 : 0.15 + 0.5 * Math.max(0, Math.sin(beat * 0.13))
     wantX += (mods.gazeX - wantX) * mods.looks
     wantY += (mods.gazeY - wantY) * mods.looks

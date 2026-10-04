@@ -71,7 +71,8 @@ export const ACTS: Record<string, Act> = {
   'peeks-from-under': { lasts: 1.3, play: (u, m) => { m.hatFwd = forward(u); m.hatLift = -0.5 * down(u); m.hatTilt = -0.25 * bump(u, 0.45, 0.93); m.pat = bump(u, 0.5, 0.9) } },
 
   // --- What a creature does in a cell of the grid, or when its hats change ---
-  'pats-its-bare-head': { lasts: 1.2, play: (u, m) => { m.pat = hold(u) * (0.8 + 0.2 * hops(u, 4)); m.looks = hold(u); m.gazeY = -0.8 } },
+  // Its eyes are left to the theatre, which has them on the hats, or on the hole its own hat has just gone into.
+  'pats-its-bare-head': { lasts: 1.2, play: (u, m) => { m.pat = hold(u) * (0.8 + 0.2 * hops(u, 4)); m.squash = 1 - 0.05 * hops(u, 4) * hold(u) } },
   'looks-into-the-holes': { lasts: 1.6, play: (u, m) => { m.pat = bump(u, 0, 0.5); m.squash = 1 - 0.08 * bump(u, 0.4, 1); m.lean = 0.1 * swing(u, 1) * bump(u, 0.4, 1); m.looks = hold(u); m.gazeY = -1; m.gazeX = 0.5 * swing(u, 1) } },
   'does-a-trick': { lasts: 0.8, play: (u, m) => { m.dy = 0.45 * bump(u, 0, 0.7); m.hatLift = 0.5 * bump(u, 0.1, 0.9); m.lean = 0.1 * swing(u, 1) } },
   'totters-blind': { lasts: 1.9, play: (u, m) => { m.dx = 0.52 * swing(u, 1.5) * hold(u); m.lean = 0.2 * swing(u, 3) * hold(u); m.pat = 0.55 * hold(u); m.dy = 0.14 * hops(u, 6) * hold(u) } },
@@ -79,7 +80,8 @@ export const ACTS: Record<string, Act> = {
   'salutes-and-topples': { lasts: 1.2, play: (u, m) => { m.pat = 0.5 * bump(u, 0, 0.5); m.lean = 0.22 * swing(u, 2) * (1 - u); m.squash = 1 - 0.12 * bump(u, 0.5, 0.8) } },
   // The one who gets none makes a show of it: looks into every hole and at every other head, throws its hands up and jumps to its full height, then sits down with a bump, slumped to one side and cross-eyed. It is bewildered, and it is about the hats: never about the child.
   'makes-a-show-of-it': { lasts: 1.9, play: (u, m) => { m.looks = hold(u, 0.1, 0.15); m.gazeX = swing(u, 1.5); m.gazeY = -0.8 + 1.5 * bump(u, 0.28, 0.6); m.pat = bump(u, 0.2, 0.62); m.squash = 1 + 0.26 * bump(u, 0.24, 0.52) - 0.27 * bump(u, 0.56, 0.93); m.dy = 0.6 * bump(u, 0.3, 0.56); m.lean = 0.34 * bump(u, 0.58, 0.96); m.cross = bump(u, 0.6, 0.92) } },
-  'watches-it-go': { lasts: 1.4, play: (u, m) => { m.looks = hold(u); m.gazeY = -0.6; m.lean = 0.06 * bump(u) } },
+  // Its eyes are on the hat, wherever it goes: the theatre turns them there.
+  'watches-it-go': { lasts: 1.4, play: (u, m) => { m.lean = 0.08 * bump(u); m.squash = 1 + 0.1 * bump(u, 0, 0.5) } },
   'ducks-under': { lasts: 0.8, play: (u, m) => { m.squash = 1 - 0.22 * bump(u, 0, 0.6) + 0.08 * bump(u, 0.6, 1); m.looks = hold(u); m.gazeY = 1 } },
   'waves-it-off': { lasts: 1.2, play: (u, m) => { m.pat = 0.45 * hold(u) * (0.6 + 0.4 * hops(u, 5)); m.lean = 0.08 * swing(u, 2.5) * hold(u); m.looks = hold(u); m.gazeY = -0.7 } },
   // The acts a creature does to another, or to the tile, are written as towards the right; the theatre turns them to face whoever they are for, and holds them short of touching.

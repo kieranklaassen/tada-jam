@@ -110,7 +110,8 @@ export class Game {
 
   /** The game went to rest and is looked at again: as when it is opened, nothing comes by itself until a hat or a creature is touched. */
   rested(): void {
-    this.pace = freshPace(this.saved)
+    // What it still owes is kept: a finished crew that was unsettled and set right again has its parade to come, once it is touched.
+    this.pace = { ...freshPace(this.saved), paraded: this.pace.paraded }
   }
 
   /** A touch ends the scene that is playing: everything is at once where the scene was taking it. */
@@ -290,7 +291,8 @@ export class Game {
     if (held?.type === 'hat') {
       const hat = this.topOf(held.hat), object = this.objectOf(held.hat), kind = this.saved.tile[hat]
       this.play.pressHat(held.hat, false)
-      this.carrying = { hat, from: this.play.seen(hat), object }
+      // If it is let go again where it was, or put down unlet, it goes back to where the world has it: a hat taken from a tower that is falling is already home.
+      this.carrying = { hat, from: this.seenFor(placeOf(worldOf(this.saved), hat)), object }
       // Out of the tile it stretches after the finger with a low rubbery groan; off the floor it comes with a sucker "thwop"; off a head with a "pip".
       if (object === 'hat-in-tile') this.play.cue('groan', groan(this.next()))
       else if (object === 'loose-hat') this.play.cue('thwop', thwop(this.next()))
@@ -417,6 +419,13 @@ export class Game {
     } else if (event.type === 'bared') {
       const who = this.at(event.spot)
       play.act(who, action === 'to-tile' ? 'waves-it-off' : action === 'tap' ? 'pats-its-bare-head' : 'watches-it-go')
+      // Its eyes follow its hat to where it goes: the hole it is pressed into, the place on the floor where it lies, or the other head.
+      const gone = all.find((one) => one.type === 'hatMoved' && one.from.at === 'head' && one.from.spot === event.spot)
+      if (gone?.type === 'hatMoved') {
+        const to = gone.to
+        if (to.at === 'tile') play.look(who, holeX(gone.hat, this.saved.tile.length), TILE_Z, 1.6)
+        else play.look(who, spotX(to.spot), to.at === 'loose' ? LOOSE_Z : ROW_Z, 1.6)
+      }
       this.says(who, action === 'to-tile' ? 'plain' : 'ask', 0.12)
     } else if (event.type === 'noHat') {
       play.act(this.at(event.spot), 'looks-into-the-holes')

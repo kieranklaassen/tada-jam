@@ -914,3 +914,70 @@ describe('Pip under the cone', () => {
     expect(names).toContain('scuttle')
   })
 })
+
+describe('what the fourth reading found', () => {
+  it('a creature whose hat is taken follows it with its eyes: to its hole on a tap, and to the floor when it is let go there', () => {
+    const tapped = new Game(saveOf(everything()))
+    tapped.press({ type: 'hat', hat: 0 })
+    tapped.tap()
+    const side = Math.sign(holeX(0, 5) - spotX(1))
+    let across = 0, down = 0
+    run(tapped, 1.2, [], () => { const pose = tapped.play.actorPose('lanky', {} as never); across = Math.max(across, pose.gazeX * side); down = Math.min(down, pose.gazeY) })
+    // The hole is nearly straight in front of it: its eyes go down to it, and a little across.
+    expect(across).toBeGreaterThan(0.15)
+    expect(down).toBeLessThan(-0.5)
+
+    const carried = new Game(saveOf(everything()))
+    carried.press({ type: 'hat', hat: 0 })
+    carried.dragStart()
+    carried.dragTo(0, 2, 1, 0.5, 0.2)
+    run(carried, 0.2)
+    carried.letGo({ on: 'floor', x: spotX(0), z: 1 })
+    const loose = worldOf(carried.saved).loose.find((entry) => entry.hat === 0)!, to = Math.sign(spotX(loose.spot) - spotX(1))
+    let followed = 0
+    run(carried, 1.2, [], () => { followed = Math.max(followed, carried.play.actorPose('lanky', {} as never).gazeX * to) })
+    expect(to).not.toBe(0)
+    expect(followed).toBeGreaterThan(0.3)
+  })
+
+  it('a finished crew that was unsettled and set right keeps its parade to come when the game rests before the wait is up', () => {
+    const start = at('two-heads'), game = new Game(start)
+    while (carefulTap(game)) run(game, 0.7)
+    run(game, ALONE + 0.5)
+    while (game.sceneRunning) run(game, 0.5)
+    expect(game.saved.finished).toBe(true)
+    const parades = (): number => game.seen.filter((name) => name === 'the-parade').length
+    expect(parades()).toBe(1)
+    const worn = game.saved.crew[0].hats[0]
+    tap(game, { type: 'hat', hat: worn })
+    run(game, 0.8)
+    tap(game, { type: 'hat', hat: worn })
+    run(game, 0.5)
+    game.rested()
+    run(game, 6)
+    expect(parades()).toBe(1)
+    tap(game, { type: 'creature', who: game.saved.crew[0].kind })
+    run(game, ALONE + 0.3)
+    expect(parades()).toBe(2)
+  })
+
+  it('a hat taken from a falling tower and held past the fall goes back to where the world has it', () => {
+    for (const end of ['put down', 'let go on the tile'] as const) {
+      const game = new Game(saveOf(everything()))
+      game.press({ type: 'hat', hat: 4 })
+      game.dragStart()
+      game.dragTo(0, 2, 1, 0.5, 0.2)
+      run(game, 0.2)
+      game.letGo({ on: 'creature', who: 'flop' })
+      run(game, 0.4)
+      game.press({ type: 'hat', hat: 4 })
+      game.dragStart()
+      game.dragTo(1, 2, 1, 0.3, 0.1)
+      run(game, 1.5)
+      if (end === 'put down') game.pressEnd()
+      else game.letGo({ on: 'tile' })
+      run(game, 3)
+      expectStageIsWorld(game)
+    }
+  })
+})

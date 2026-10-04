@@ -203,8 +203,10 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       act(touch.up(event.pointerId, at(event), event.timeStamp))
       audio.touchUp()
     }
+    // A touch the browser takes away (a system gesture, a palm) is not a lift: nothing is let go where it was and no tap is made.
+    // Whatever was in hand goes back where it came from, as when the game goes to rest.
     const onCancel = (event: PointerEvent) => {
-      act(touch.cancel(event.pointerId, event.timeStamp))
+      if (touch.cancel(event.pointerId, event.timeStamp).length > 0) { lifted = false; putDown() }
       audio.touchUp()
     }
     root.addEventListener('pointerdown', onDown)

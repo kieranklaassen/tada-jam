@@ -238,7 +238,7 @@ It must not be taken for Kite Tower (blocks on a playroom floor: wood with grain
 
 - One matte foam material for everything (roughness 0.95, no metal), coloured by vertex, with one small stipple normal tile that repeats. The stipple is seeded, so every load shows the same foam.
 - Every piece is an outline extruded 0.1 to about 1 mat unit (an ear the thinnest, a block of the wall the thickest) with a bevel of 0.055. Squash is a scale spring, never a soft body.
-- The hats are working pieces and stay plain: one flat colour, one simple outline, no face, no pattern and no motion of its own in the tile, apart from stirring inside the idle ladder's ring (pack: game-design, working-objects-stay-plain.md). The creatures carry the faces and the comedy.
+- The hats are working pieces and stay plain: one flat colour, one simple outline, no face, no pattern and no motion of its own in the tile: the idle ladder's ring pulses round a hat and the hat lies still (pack: game-design, working-objects-stay-plain.md). The creatures carry the faces and the comedy.
 - No shadow map. A soft round blob lies under each creature, each hat in the air or on the floor, each leg of the arch and the tree; the same blob is the dimple where the floor is poked.
 - Everything of the room that stands still is one mesh, built once. Four things of it move, each one mesh: the tree's crown, the cloud, the ball and the brick. The floor, the wall and the window's sky are three planes in one more. The faces' dots, the crumbs, the leaves and the balloon are instances of one flat disc in one draw.
 - A body leans as foam does: its feet stay planted and its top slides across. Nothing rotates into the floor.

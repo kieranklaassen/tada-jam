@@ -241,12 +241,11 @@ export class FoamStage {
         mesh.visible = hat < play.hatCount
         if (!mesh.visible) return
         const pose = play.hatPose(hat), flat = 1 - pose.up, give = 1 - pose.squash, glowing = lit({ type: 'hat', hat })
-        const stir = glowing ? pulse * (0.5 + 0.5 * Math.sin(play.time * 5 + hat * 1.7)) : 0
         // Lying in its hole a hat gives under the finger as foam does: it gets thinner and its underside stays on
         // the mat. Standing, it squashes onto what it stands on and spreads.
         const thin = 1 - flat * Math.max(0, give) * 0.7
-        mesh.position.set(pose.x, pose.y - flat * (1 - thin) * SLAB / 2 + stir * 0.1, pose.z)
-        mesh.rotation.set(-Math.PI / 2 * flat + pose.flip, pose.turn, pose.tilt + stir * 0.05)
+        mesh.position.set(pose.x, pose.y - flat * (1 - thin) * SLAB / 2, pose.z)
+        mesh.rotation.set(-Math.PI / 2 * flat + pose.flip, pose.turn, pose.tilt)
         mesh.scale.set(1 + pose.up * (1 / Math.sqrt(pose.squash) - 1), 1 - pose.up * give, thin)
         if (pose.up > 0.02) shade(pose.x, pose.z, 2 / (1 + pose.y * 0.25), 1.1 / (1 + pose.y * 0.25))
         // A hat in its hole is ringed on the tile, close round its own outline; a hat standing on the floor or a head is ringed on the floor under it.
