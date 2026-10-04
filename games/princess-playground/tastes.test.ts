@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { emptyArrangement, putInSand, putOnEnd, type Arrangement } from './arrangement'
 import { TASTES, feelingAbout, moodOf, situationsOf } from './tastes'
-import { FRIEND_IDS, type FriendId } from './world'
+import { FRIEND_IDS, homeOn, type FriendId } from './world'
 
 const on = (left: FriendId[], right: FriendId[]): Arrangement => {
   let a = emptyArrangement()
@@ -65,7 +65,7 @@ describe('the friends’ fixed tastes', () => {
     expect(moodOf(start, 'dot')).toEqual({ mood: 'put-out', about: 'apart' })
     expect(moodOf(on(['pim'], ['dot']), 'dot')).toEqual({ mood: 'glad', about: 'in-company' })
     // Walked over to stand beside a friend in the sand, it is glad as well.
-    const beside = putInSand(start, 'dot', { x: 3.4, z: 2.6 })
+    const beside = putInSand(start, 'dot', { x: homeOn('mog', 'right').x - 1.9, z: homeOn('mog', 'right').z })
     expect(moodOf(beside, 'dot').mood).toBe('glad')
     // Alone on the plank it is still by itself.
     expect(moodOf(on([], ['dot']), 'dot').mood).toBe('put-out')

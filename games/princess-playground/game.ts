@@ -707,8 +707,8 @@ export class Game implements Director {
       this.paid(op)
       // A ring of sand flies from under the end that came down, and the end that lifted lets grains slide back.
       this.grains.burst(event.x, PLANK.z, 0.35 + 0.65 * power, Math.round(8 + 22 * power), PLANK.halfWidth * 2)
-      // The snail behind the tray minds a knock: a hard one sends it into its shell, a soft one makes its eyes flinch.
-      this.snail.startle(power)
+      // The snail behind the tray minds a knock: a hard one, heavy and fast, sends it into its shell; a soft one makes its eyes flinch.
+      this.snail.startle(Math.min(1, (weight * event.speed) / 10))
       if (power > 0.45) {
         // Sand thrown onto the board runs off its low end.
         this.react([{ who: 'pim', after: 0.6, voice: v.trickle(), mark: 'trickle' }])

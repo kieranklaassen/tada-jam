@@ -740,12 +740,13 @@ describe('the small promises of the sheet', () => {
   })
 
   it('those Dot is set down beside in the sand turn to it and bounce, and look after it when it is taken away again', () => {
-    const game = free([], [])
+    // Pim sits on the plank, so the sand along the front is free beside Mog.
+    const game = free(['pim'], [])
     run(game, 0.5)
     const mog = standsAt(game.play.arrangement, 'mog')
     game.press({ kind: 'friend', id: 'dot' })
     game.dragStart()
-    game.dragTo({ x: mog.x - 1.6, z: mog.z + 0.2 }, null)
+    game.dragTo({ x: mog.x - 1.9, z: mog.z }, null)
     run(game, 0.5)
     game.dragEnd()
     let greeted = 0, turned = 0
@@ -764,7 +765,7 @@ describe('the small promises of the sheet', () => {
     // Taken to the far side of the tray: Mog looks after it.
     game.press({ kind: 'friend', id: 'dot' })
     game.dragStart()
-    game.dragTo({ x: -4, z: 1.5 }, null)
+    game.dragTo({ x: -4.4, z: -3.6 }, null)
     run(game, 0.5)
     game.dragEnd()
     run(game, 0.6)

@@ -223,9 +223,10 @@ describe('Dot in company', () => {
   })
 
   it('is in company in the sand within a body\'s width of a friend, whoever walked to whom, and whether that friend stands in the sand or sits on an end', () => {
+    // With Pim on the plank the sand along the front is free beside Mog, in front of the place kept for whoever waits.
     const mog = homeOn('mog', 'right')
-    const beside = putInSand(emptyArrangement(), 'dot', { x: mog.x + 1.9, z: mog.z })
-    expect(companyOf(beside)).toContain('mog')
+    const beside = putInSand(on(['pim'], []), 'dot', { x: mog.x - 1.9, z: mog.z })
+    expect(companyOf(beside)).toEqual(['mog'])
     const visited = putInSand(emptyArrangement(), 'pim', { x: homeOn('dot', 'right').x - 1.9, z: homeOn('dot', 'right').z })
     expect(companyOf(visited)).toEqual(['pim'])
     // Set down in the sand just in front of the end Bo sits on: Bo is its company, though he is on the plank.

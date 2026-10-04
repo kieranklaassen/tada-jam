@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isSound, lean, placeOf, tap, type Arrangement } from './arrangement'
+import { companyOf, isSound, lean, placeOf, putInSand, tap, type Arrangement } from './arrangement'
 import { FIRST_VISIT, LADDER } from './config'
 import { KINDS, MIXED, TURNS, askerEnd, consequence, fewestMoves, isMove, judge, kindAt, ladderIsWhole, layout, rideOf, wantMet, type Kind, type Ride } from './rides'
 import { deserialize, finishCycle, firstPosition, freshState } from './state'
@@ -102,6 +102,21 @@ describe('each ride as it opens', () => {
         for (const seat of [-PLANK.seat, PLANK.seat]) expect(Math.hypot(here.x - seat, here.z - PLANK.z) - r - biggest, `${label} and a seat`).toBeGreaterThanOrEqual(APART)
       }
     }
+  })
+
+  it('leaves room to walk Dot over to a friend: let go beside whoever stands at the inner place, Dot stands in company with that friend', () => {
+    let tried = 0
+    for (const ride of everyRide()) {
+      const a = layout(ride)
+      const inner = FRIEND_IDS.find((id) => a.sand[id] && Math.abs(a.sand[id]!.x) === HOME.pim.x && a.sand[id]!.z === HOME.pim.z)
+      if (!inner) continue
+      const at = a.sand[inner]!
+      for (const [dx, dz] of [[1.2, 0], [-1.2, 0], [0, -1.2], [0, 0.6]]) {
+        expect(companyOf(putInSand(a, 'dot', { x: at.x + dx, z: at.z + dz })), `${ride.kind} ${ride.mirrored} ${inner} ${dx} ${dz}`).toContain(inner)
+        tried += 1
+      }
+    }
+    expect(tried).toBeGreaterThanOrEqual(32)
   })
 
   it('mirrored is the same ride the other way round', () => {

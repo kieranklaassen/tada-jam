@@ -79,7 +79,7 @@ export function lowTilt(weight: number): number {
 export const SAND = {
   maxX: 5.15,
   /** Nearest the child. Kept off the bottom of the screen, where wrists rest. */
-  maxZ: 3.85,
+  maxZ: 3.9,
   minZ: -4.4,
   /** Half the depth of the strip under the plank where nobody stands. */
   plankStrip: 2.0,
@@ -87,8 +87,12 @@ export const SAND = {
   plankReach: 3.9,
 } as const
 
-/** Where the friend who asks next waits: in front of the stone. */
-export const WAITING_PLACE = { x: 0, z: 3.3 } as const
+/**
+ * Where the friend who asks next waits: right in front of the stone, as near it as the biggest friend can land
+ * without spreading into it. That leaves most of the row of sand along the front free, so a friend can be set down
+ * beside one who stands at the inner place, in front of whoever waits.
+ */
+export const WAITING_PLACE = { x: 0, z: 2.1 } as const
 
 export type Spot = { x: number; z: number }
 
@@ -187,8 +191,8 @@ export function standablePlaces(radius: number): readonly Spot[] {
  * beside the waiting place and an outer one by the side rim. They are well apart from each other and from the
  * friend who waits, whoever stands on them.
  */
-export const INNER: Spot = { x: 2.28, z: 3.72 }
-export const OUTER: Spot = { x: 4.5, z: 2.5 }
+export const INNER: Spot = { x: 1.92, z: 3.72 }
+export const OUTER: Spot = { x: 4.5, z: 2.4 }
 
 /**
  * Where each friend stands by default on the right of the tray; mirrored for the left. Pim and Mog stand at the

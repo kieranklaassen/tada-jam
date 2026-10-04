@@ -25,6 +25,8 @@ export const SNAIL = {
 
 /** Seconds it stays in its shell after a touch, and after a hard knock in the tray. */
 export const HIDES = { touched: 2.2, startled: 1.1 } as const
+/** How hard an end must come down, 0 to 1, to send it in: Bo's slam does, a small friend's landing does not. */
+export const HARD = 0.65
 /** Seconds from the first eye coming out until it creeps again. */
 export const PEEK_SECONDS = 1.5
 /** Seconds a turn at the end of its line takes. */
@@ -85,7 +87,7 @@ export class Snail {
   /** An end came down in the tray. Hard, and the snail ducks in for a moment; softly, and its eyes only flinch and look that way. */
   startle(strength: number): void {
     this.looking = 1.6
-    if (strength >= 0.6 && this.hidden <= 0) {
+    if (strength >= HARD && this.hidden <= 0) {
       this.hidden = HIDES.startled
       this.peeking = -1
     } else this.flinch = 0.35
