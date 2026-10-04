@@ -3,7 +3,7 @@ import { landingOf, perched, reactionsTo, tossed, type Landing, type Reaction } 
 import { forecast, type SandOp } from './forecast'
 import { Grains } from './grains'
 import type { Guidance } from './guidance'
-import { bite as biteMark, biteDepth, furrow, rake as rakeMarks, rakeIsOut, ring as ringMark, stamp } from './marks'
+import { DEEPEST, SHALLOWEST, bite as biteMark, biteDepth, furrow, rake as rakeMarks, rakeIsOut, ring as ringMark, stamp } from './marks'
 import { HOLD_HEIGHT, Playground, type PlayEvent } from './motion'
 import type { Frame } from './pose'
 import { layout, rideOf, type Kind, type Ride } from './rides'
@@ -376,7 +376,8 @@ export class Game implements Director {
 
   /** The same thing, for the eye. */
   private draw(op: SandOp): void {
-    if (op.type === 'bite') this.cues.push({ type: 'bite', x: op.x, strength: Math.min(1, op.speed / 3) })
+    // Deeper the heavier the end: drawn from the weight that came down, as it is saved, never from how fast it fell.
+    if (op.type === 'bite') this.cues.push({ type: 'bite', x: op.x, strength: (biteDepth(op.weight) - SHALLOWEST) / (DEEPEST - SHALLOWEST) })
     else this.cues.push({ type: 'dimple', x: op.x, z: op.z, radius: FRIENDS[op.id].radius * 0.8, depth: Math.min(1, 0.35 + 0.16 * FRIENDS[op.id].weight) })
   }
 

@@ -84,7 +84,8 @@ export function ring(marks: Marks, x: number, z: number, radius: number, depth =
 
 /** How deep an end bites when it comes down with this much weight on it: deeper the heavier the end. */
 export function biteDepth(weight: number): number {
-  return Math.max(SHALLOWEST, Math.min(DEEPEST, 3 + Math.round(weight / 2)))
+  // One digit deeper for each of the three sizes of friend, and on up to the deepest for a tower.
+  return Math.max(SHALLOWEST, Math.min(DEEPEST, 2 + Math.round(weight * 0.7)))
 }
 
 /** Where an end of the plank came down, at `x` along the tray. */

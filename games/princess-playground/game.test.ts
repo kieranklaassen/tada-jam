@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { isSound, placeOf, putInSand, putOnEnd, standsAt, tap } from './arrangement'
 import { ASK_AT, Game, SNORE_EVERY, type Cue } from './game'
 import type { Guidance } from './guidance'
-import { RAKED, marksToText, rakeIsOut } from './marks'
+import { DEEPEST, RAKED, SHALLOWEST, biteDepth, marksToText, rakeIsOut } from './marks'
 import { overlap } from './overlap'
 import { seeded } from './motion'
 import { KINDS, layout, rideOf, wantMet, type Kind } from './rides'
@@ -604,8 +604,27 @@ describe('the small promises of the sheet', () => {
       cues.push(...game.takeCues())
       flew = Math.max(flew, game.grains.flying)
     }
-    expect(cues.some((cue) => cue.type === 'bite')).toBe(true)
-    expect(flew).toBeGreaterThanOrEqual(10)
+    // The crater is deeper than the bite Mog's end had made alone: drawn and saved from the weight now on it.
+    const bites = cues.filter((cue) => cue.type === 'bite').map((cue) => (cue.type === 'bite' ? cue.strength : 0))
+    expect(Math.max(...bites)).toBeCloseTo((biteDepth(7) - SHALLOWEST) / (DEEPEST - SHALLOWEST), 5)
+    expect(biteDepth(7)).toBeGreaterThan(biteDepth(3))
+    expect(Math.max(...game.world.marks)).toBe(biteDepth(7))
+    expect(flew).toBeGreaterThanOrEqual(20)
+  })
+
+  it('an end bites deeper the heavier it is, as drawn as well as saved, however fast it came down', () => {
+    const drawn = (id: FriendId) => {
+      const game = free([], [])
+      run(game, 0.3)
+      game.takeCues()
+      tapOn(game, id)
+      const bites = run(game, 4).cues.filter((cue) => cue.type === 'bite').map((cue) => (cue.type === 'bite' ? cue.strength : 0))
+      expect(new Set(bites).size, id).toBe(1)
+      return bites[0]
+    }
+    expect(drawn('pim')).toBeLessThan(drawn('mog'))
+    expect(drawn('mog')).toBe(drawn('dot'))
+    expect(drawn('mog')).toBeLessThan(drawn('bo'))
   })
 
   it('the friends still on the plank look after Dot when it is taken away', () => {

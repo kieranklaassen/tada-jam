@@ -13,7 +13,12 @@ import { FRIENDS, type End, type FriendId } from './world'
 
 export type Landing = {
   id: FriendId
-  /** Which column of the grid this is. A friend sent onto a level or empty plank counts as landing on a high end that it tips. */
+  /**
+   * Which column of the grid this is. The end that is down always holds someone, so a friend sent onto the low end
+   * lands on a head there: that is the low-end column, and the one below answers as it does to anyone on its head.
+   * A head on an end that is up or level is the on-a-friend column. A friend sent onto a level or empty plank
+   * counts as landing on a high end that it tips.
+   */
   deed: Exclude<Deed, 'tap'>
   /** The end it landed on, or null in the sand. */
   end: End | null
@@ -61,7 +66,7 @@ export function landingOf(before: Arrangement, after: Arrangement, id: FriendId)
   const without = lean(before, id), now = lean(after)
   const side = place.end === 'right' ? 1 : -1
   const below = place.level > 0 ? after[place.end][place.level - 1] : null
-  const deed: Landing['deed'] = below ? 'on-a-friend' : without === side ? 'low-end' : 'high-end'
+  const deed: Landing['deed'] = without === side ? 'low-end' : below ? 'on-a-friend' : 'high-end'
   const weightThere = after[place.end].reduce((sum, other) => sum + FRIENDS[other].weight, 0)
   return { id, deed, end: place.end, tips: now === side && without !== side, levels: now === 0, below, alone: after.left.length + after.right.length === 1, company, weightThere, others }
 }
@@ -96,14 +101,21 @@ export function reactionsTo(l: Landing): Reaction[] {
   if (l.below) out.push(...underneath(l.below, l.id))
   switch (l.id) {
     case 'pim':
-      if (l.deed === 'low-end') add(0.1, { voice: v.tick(), act: 'stamp', seconds: 0.6 })
-      else if (l.deed === 'high-end') add(0.05, l.tips ? { voice: v.clack() } : { voice: v.trill(), act: 'kick', seconds: 1.3 })
+      if (l.deed === 'low-end') {
+        // On top of someone she crows, as always; then, cross that nothing moved, a tiny tick and she stamps.
+        add(0.1, { voice: v.crow(), act: 'bounce', seconds: 0.5 })
+        add(0.65, { voice: v.tick(), act: 'stamp', seconds: 0.6 })
+      } else if (l.deed === 'high-end') add(0.05, l.tips ? { voice: v.clack() } : { voice: v.trill(), act: 'kick', seconds: 1.3 })
       else if (l.deed === 'on-a-friend') add(0.1, { voice: v.crow(), act: 'bounce', seconds: 0.7 })
       else add(0.05, { voice: v.rattle(), act: 'slip', seconds: 1.1 })
       break
     case 'mog':
-      if (l.deed === 'low-end') add(0.15, { act: 'spin', seconds: 0.8 })
-      else if (l.deed === 'high-end') {
+      if (l.deed === 'low-end') {
+        // He circles once, kneads the head he has landed on, and sits with his purr and his slow blink.
+        add(0.15, { act: 'spin', seconds: 0.45 })
+        add(0.65, { voice: v.knead(), act: 'knead', seconds: 0.5 })
+        add(1.2, { voice: v.purr(), act: 'tall', seconds: 1.2, blink: 0.7 })
+      } else if (l.deed === 'high-end') {
         if (!l.tips) add(0.3, { voice: v.purr(), act: 'tall', seconds: 1.2, blink: 0.7 })
       } else if (l.deed === 'on-a-friend') {
         // On top of a stack he kneads the head below, then sits tall with his purr and his slow blink.
@@ -115,9 +127,16 @@ export function reactionsTo(l: Landing): Reaction[] {
     case 'dot':
       // The friends already on the plank turn to Dot and bounce, one after another: it is their answer to its coming.
       if (l.end) l.others.forEach((other, index) => { if (other !== l.below) out.push(react(other, 0.25 + index * 0.12, { act: 'greet', seconds: 0.7, toward: 'dot' })) })
-      if (l.deed === 'low-end') add(0.1, { voice: v.hum(l.alone), act: l.alone ? 'look' : 'sway', seconds: 1, way: toward })
-      else if (l.deed === 'high-end') add(0.1, l.tips ? { voice: v.ringOver() } : { voice: v.longNote(), act: 'sway', seconds: 1.4, way: toward })
-      else if (l.deed === 'on-a-friend') {
+      if (l.deed === 'low-end') {
+        // A bright two-note hum, and then its duet with the one it has landed on, both swaying.
+        add(0.1, { voice: v.hum(false), act: 'sway', seconds: 0.6, way: toward })
+        add(0.75, { voice: v.duet(), act: 'sway', seconds: 1.4, way: 1 })
+        if (l.below) out.push(react(l.below, 0.75, { act: 'sway', seconds: 1.4, way: 1 }))
+      } else if (l.deed === 'high-end') {
+        add(0.1, l.tips ? { voice: v.ringOver() } : { voice: v.longNote(), act: 'sway', seconds: 1.4, way: toward })
+        // Alone on the plank: the hum dies away, and Dot peeks over at the others.
+        if (l.alone) add(0.7, { voice: v.hum(true), act: 'look', seconds: 1, way: toward })
+      } else if (l.deed === 'on-a-friend') {
         add(0.15, { voice: v.duet(), act: 'sway', seconds: 1.4, way: 1 })
         if (l.below) out.push(react(l.below, 0.15, { act: 'sway', seconds: 1.4, way: 1 }))
       } else if (l.company) add(0.2, { voice: v.softNote() })
@@ -131,8 +150,11 @@ export function reactionsTo(l: Landing): Reaction[] {
           add(0.1, { voice: v.chuckle(), act: 'chuckle', seconds: 1, rock: CHUCKLE_ROCK })
         }
       }
-      // On the low end he digs it deeper into the sand.
-      else if (l.deed === 'low-end') add(0.05, { voice: v.crunch(l.weightThere), act: 'sink', seconds: 0.9 })
+      // On the low end he digs it deeper into the sand, and the stack he tops sways.
+      else if (l.deed === 'low-end') {
+        add(0.05, { voice: v.crunch(l.weightThere), act: 'dig', seconds: 0.55 })
+        add(0.65, { act: 'sway', seconds: 1.6, way: 1 })
+      }
       else if (l.deed === 'in-the-sand') add(0.2, { voice: v.sigh(), act: 'sink', seconds: 1.1 })
       else if (l.deed === 'on-a-friend') add(0.3, { act: 'sway', seconds: 1.6, way: 1 })
       break

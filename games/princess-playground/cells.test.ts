@@ -15,8 +15,12 @@ const shape = (reactions: Reaction[]) => reactions.map((r) => `${r.who}:${r.act 
 
 describe('where a friend was put', () => {
   it('reads the column of the grid from the plank as it lay without that friend', () => {
-    // Onto the end that is already down.
-    expect(landingOf(on(['bo'], []), putOnEnd(on(['bo'], []), 'pim', 'left'), 'pim')).toMatchObject({ deed: 'on-a-friend', below: 'bo', tips: false })
+    // Onto the end that is already down: always onto the head of whoever holds it down.
+    expect(landingOf(on(['bo'], []), putOnEnd(on(['bo'], []), 'pim', 'left'), 'pim')).toMatchObject({ deed: 'low-end', below: 'bo', tips: false })
+    // Onto a head on the end that is up.
+    expect(landingOf(on(['pim'], ['bo']), putOnEnd(on(['pim'], ['bo']), 'dot', 'left'), 'dot')).toMatchObject({ deed: 'on-a-friend', below: 'pim', tips: true })
+    // Onto a head on a level plank.
+    expect(landingOf(on(['mog'], ['dot']), putOnEnd(on(['mog'], ['dot']), 'pim', 'left'), 'pim')).toMatchObject({ deed: 'on-a-friend', below: 'mog', tips: true })
     expect(landingOf(on(['bo'], ['mog']), putOnEnd(putOnEnd(emptyArrangement(), 'bo', 'left'), 'mog', 'right'), 'mog').deed).toBe('high-end')
     // Onto the high end without tipping it, and tipping it.
     const low = on(['bo'], [])
@@ -35,7 +39,7 @@ describe('where a friend was put', () => {
   it('a friend moved from one end to the other is read against the plank without it', () => {
     const start = on(['pim', 'mog'], ['bo'])
     const moved = putOnEnd(start, 'mog', 'right')
-    expect(landingOf(start, moved, 'mog')).toMatchObject({ deed: 'on-a-friend', below: 'bo', end: 'right' })
+    expect(landingOf(start, moved, 'mog')).toMatchObject({ deed: 'low-end', below: 'bo', end: 'right' })
   })
 })
 
@@ -45,13 +49,49 @@ describe('the cells in play', () => {
     const heavy = id === 'bo' ? 'mog' : 'bo'
     return {
       low: reactionsTo(landingOf(on([heavy, others.find((o) => o !== heavy)!], []), putOnEnd(on([], []), id, 'left'), id)),
-      lowAlready: reactionsTo({ id, deed: 'low-end', end: 'left', tips: false, levels: false, below: null, alone: false, company: true, weightThere: 5, others: [] }),
+      // The end that is down always holds someone: a landing there is a landing on that friend's head.
+      lowAlready: reactionsTo({ id, deed: 'low-end', end: 'left', tips: false, levels: false, below: heavy, alone: false, company: true, weightThere: 6, others: [heavy] }),
       highTips: reactionsTo({ id, deed: 'high-end', end: 'right', tips: true, levels: false, below: null, alone: false, company: true, weightThere: 5, others: [] }),
       highStays: reactionsTo({ id, deed: 'high-end', end: 'right', tips: false, levels: false, below: null, alone: false, company: true, weightThere: 2, others: [] }),
       onFriend: reactionsTo({ id, deed: 'on-a-friend', end: 'left', tips: false, levels: false, below: heavy, alone: false, company: true, weightThere: 6, others: [heavy] }),
       sand: reactionsTo({ id, deed: 'in-the-sand', end: null, tips: false, levels: false, below: null, alone: false, company: false, weightThere: 0, others: [] }),
     }
   }
+
+  it('every column of the grid can be reached by every friend in play, the low end among them', () => {
+    // Every arrangement of the other three on the two ends, and the friend then tapped or carried to each end.
+    const reached = new Map<string, Set<string>>(FRIEND_IDS.map((id) => [id, new Set<string>()]))
+    for (const id of FRIEND_IDS) {
+      const others = FRIEND_IDS.filter((other) => other !== id)
+      for (let code = 0; code < 27; code++) {
+        let a = emptyArrangement()
+        others.forEach((other, index) => {
+          const where = Math.floor(code / 3 ** index) % 3
+          a = where === 0 ? putInSand(a, other, homeOn(other, 'right')) : putOnEnd(a, other, where === 1 ? 'left' : 'right')
+        })
+        a = putInSand(a, id, homeOn(id, 'right'))
+        for (const end of ['left', 'right'] as const) reached.get(id)!.add(landingOf(a, putOnEnd(a, id, end), id).deed)
+        reached.get(id)!.add(landingOf(putOnEnd(a, id, 'left'), a, id).deed)
+      }
+    }
+    for (const id of FRIEND_IDS) expect([...reached.get(id)!].sort(), id).toEqual(['high-end', 'in-the-sand', 'low-end', 'on-a-friend'])
+  })
+
+  it('what the low end is for each: Pim crows and then stamps, Mog circles and kneads and purrs, Dot hums and then sings its duet, Bo digs it in', () => {
+    const low = (id: FriendId) => {
+      const heavy = id === 'bo' ? 'mog' : 'bo'
+      return reactionsTo(landingOf(on([heavy], []), putOnEnd(on([heavy], []), id, 'left'), id)).filter((r) => r.who === id)
+    }
+    expect(low('pim').map((r) => r.act)).toEqual(['bounce', 'stamp'])
+    expect(low('mog').map((r) => r.act)).toEqual(['spin', 'knead', 'tall'])
+    expect(low('dot').map((r) => r.act)).toEqual(['sway', 'sway'])
+    expect(low('dot').every((r) => r.voice)).toBe(true)
+    expect(low('bo').map((r) => r.act)).toEqual(['dig', 'sway'])
+    // Alone on the plank Dot's hum dies away and it peeks over at the others.
+    const alone = reactionsTo(landingOf(on([], []), putOnEnd(on([], []), 'dot', 'right'), 'dot'))
+    expect(alone.map((r) => r.act)).toEqual([undefined, 'look'])
+    expect(alone.every((r) => r.voice)).toBe(true)
+  })
 
   it('each friend answers each place in a way of its own: no two friends share a cell', () => {
     for (const cell of ['lowAlready', 'highTips', 'highStays', 'onFriend', 'sand'] as const) {
@@ -74,7 +114,7 @@ describe('the cells in play', () => {
     expect(boOnPim.some((r) => r.who === 'pim' && r.voice)).toBe(true)
     const mogOnPim = reactionsTo(landingOf(on(['pim'], []), putOnEnd(on(['pim'], []), 'mog', 'left'), 'mog'))
     expect(mogOnPim.find((r) => r.who === 'pim')).toMatchObject({ act: 'puff' })
-    expect(mogOnPim.find((r) => r.who === 'mog')).toMatchObject({ act: 'knead' })
+    expect(mogOnPim.some((r) => r.who === 'mog' && r.act === 'knead')).toBe(true)
     // Landed on, Mog ducks and hisses; on top of a stack he blinks slowly once he has sat.
     const pimOnMog = reactionsTo(landingOf(on(['mog'], []), putOnEnd(on(['mog'], []), 'pim', 'left'), 'pim'))
     expect(pimOnMog.find((r) => r.who === 'mog')).toMatchObject({ act: 'duck' })
@@ -122,14 +162,17 @@ describe('the cells in play', () => {
     for (const by of ['pim', 'dot', 'bo'] as const) expect(heard(under('mog', by)), by).toContain(hiss)
     expect(hiss).not.toBe(heard(reactionsTo(landingOf(on([], []), putInSand(on([], []), 'mog', homeOn('mog', 'right')), 'mog')))[0])
     // Dot under anyone: its duet.
-    const duet = heard(reactionsTo(landingOf(on(['pim'], []), putOnEnd(on(['pim'], []), 'dot', 'left'), 'dot')).filter((r) => r.who === 'dot'))[0]
+    const duet = heard(reactionsTo(landingOf(on(['pim'], ['bo']), putOnEnd(on(['pim'], ['bo']), 'dot', 'left'), 'dot')).filter((r) => r.who === 'dot'))[0]
     for (const by of ['pim', 'mog', 'bo'] as const) expect(heard(under('dot', by)), by).toContain(duet)
     // Mog on top of a stack: he kneads, then purrs and blinks slowly, as on the high end.
     const purr = shape(perched('mog'))
-    const onTop = reactionsTo(landingOf(on(['pim'], []), putOnEnd(on(['pim'], []), 'mog', 'left'), 'mog')).filter((r) => r.who === 'mog')
+    const onTop = reactionsTo(landingOf(on(['pim'], ['bo']), putOnEnd(on(['pim'], ['bo']), 'mog', 'left'), 'mog')).filter((r) => r.who === 'mog')
     expect(onTop.map((r) => r.act)).toEqual(['knead', 'tall'])
     expect(shape([onTop[1]])).toBe(purr)
     expect(onTop[1].blink).toBeGreaterThan(0.5)
+    // And on the low end, after circling once.
+    const onLow = reactionsTo(landingOf(on(['pim'], []), putOnEnd(on(['pim'], []), 'mog', 'left'), 'mog')).filter((r) => r.who === 'mog')
+    expect(onLow.map((r) => r.act)).toEqual(['spin', 'knead', 'tall'])
     expect(perched('mog')[0].blink).toBeGreaterThan(0.5)
     expect(perched('pim')).toEqual([])
   })
@@ -146,7 +189,8 @@ describe('the cells in play', () => {
     const all = FRIEND_IDS.flatMap((id) => [...Object.values(deeds(id)).flat(), ...tossed(id, 9), ...delight(id)])
     for (const r of all) {
       expect(r.after).toBeGreaterThanOrEqual(0)
-      expect(r.after).toBeLessThanOrEqual(0.6)
+      // Soon: a cell that is two or three things in a row has the last begin within a second and a quarter.
+      expect(r.after).toBeLessThanOrEqual(1.25)
       if (r.act) expect(r.seconds ?? 0.6).toBeLessThanOrEqual(1.6)
       expect(r.act !== undefined || r.voice !== undefined || r.rock !== undefined).toBe(true)
     }

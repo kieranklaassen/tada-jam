@@ -167,18 +167,20 @@ export class SandMap {
     this.dirty = true
   }
 
-  /** Where an end of the plank comes down: a short trench across the tray with sand pushed out along it. */
+  /** Where an end of the plank comes down: a short trench across the tray, deeper and wider the heavier the end (`strength`, 0 to 1). */
   bite(x: number, halfWidth: number, strength: number): void {
     const ctx = this.ctx, cx = this.px(x), cz = this.pz(PLANK.z)
-    const rx = (0.32 + 0.2 * strength) * this.scale, rz = (halfWidth + 0.1) * this.scale
+    const s = Math.min(1, Math.max(0, strength))
+    const rx = (0.3 + 0.24 * s) * this.scale, rz = (halfWidth + 0.1) * this.scale
     ctx.save()
     ctx.translate(cx, cz)
     ctx.scale(rx / rz, 1)
     // A soft dent, deepest in the middle and fading out to nothing, with no lip: a lip catches the low light all the
     // way round and reads as a ring lying on the sand.
     const pit = ctx.createRadialGradient(0, 0, 0, 0, 0, rz * 1.25)
-    pit.addColorStop(0, grey(FLAT - 64, 0.95))
-    pit.addColorStop(0.5, grey(FLAT - 44, 0.8))
+    // Deeper the heavier the end that came down: `strength` is 0 for an empty end and 1 for the heaviest stack.
+    pit.addColorStop(0, grey(FLAT - 34 - 60 * s, 0.95))
+    pit.addColorStop(0.5, grey(FLAT - 24 - 40 * s, 0.8))
     pit.addColorStop(1, grey(FLAT - 12, 0))
     ctx.fillStyle = pit
     ctx.beginPath()

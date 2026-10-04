@@ -49,7 +49,7 @@ export type PlayEvent =
 type Mode = 'rest' | 'hop' | 'air' | 'held'
 
 /** A small thing a friend does with its body where it sits or stands. Each lasts a moment and changes no place. */
-export type Act = 'spin' | 'stamp' | 'kick' | 'tall' | 'knead' | 'sway' | 'sink' | 'duck' | 'lean' | 'chuckle' | 'bounce' | 'look' | 'slip' | 'shake' | 'puff' | 'toss' | 'greet'
+export type Act = 'spin' | 'stamp' | 'kick' | 'tall' | 'knead' | 'sway' | 'sink' | 'duck' | 'lean' | 'chuckle' | 'bounce' | 'look' | 'slip' | 'shake' | 'puff' | 'toss' | 'greet' | 'dig'
 
 export type Mood = 'glad' | 'put-out' | 'plain'
 
@@ -711,6 +711,8 @@ export class Playground {
       case 'sway': pose.lean += (body.actWay || 1) * 0.17 * Math.sin(t * Math.PI * 3) * (0.4 + 0.6 * fade); break
       case 'sink': pose.squash *= 1 - 0.12 * bell; pose.y -= 0.05 * bell; break
       case 'duck': pose.squash *= 1 - 0.32 * bell; break
+      // Bo bearing down on the low end: he presses himself flat for a moment, and never goes lower than he sits.
+      case 'dig': pose.squash *= 1 - 0.14 * bell; break
       case 'lean': pose.lean += body.actWay * 0.3 * bell; break
       case 'chuckle': pose.squash *= 1 + 0.06 * Math.sin(t * Math.PI * 14) * fade; break
       case 'bounce': pose.y += 0.4 * Math.abs(Math.sin(t * Math.PI * 2)) * (0.5 + 0.5 * fade); pose.squash *= 1 + 0.08 * Math.sin(t * Math.PI * 4); break
