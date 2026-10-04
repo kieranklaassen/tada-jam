@@ -826,6 +826,51 @@ describe('the far hill', () => {
     look().forEach((marcher, k) => expect(Math.abs(marcher.y - before[k].y)).toBeLessThan(0.5))
   })
 
+  it('lets nobody appear, vanish or jump in plain sight when a fifth troop is served: the oldest goes down and out of sight, the rest keep their places, the newest comes up', () => {
+    const parade = [{ kind: 'crab' as const, size: 3 as const, balloons: 3 }, { kind: 'duck' as const, size: 2 as const, balloons: 1 }, { kind: 'frog' as const, size: 1 as const, balloons: 1 }, { kind: 'hippo' as const, size: 2 as const, balloons: 2 }]
+    const save = { ...saveOf({ position: 'pair-singles', troop: { kind: 'duck', size: 2, held: [true, true] }, sky: [{ colour: 'duck', count: 1 }], waiting: { kind: 'frog', size: 1 } }), parade }
+    const theatre = new Theatre(save)
+    type Far = { kind: KindName; x: number; y: number; z: number }
+    const far: Far[] = []
+    const painter: Painter = { ...recorder().painter, marcher: (kind, x, y, z) => void far.push({ kind, x, y, z }) }
+    const look = () => { far.length = 0; theatre.paint(painter, VIEW); return far.map((marcher) => ({ ...marcher })) }
+    play(theatre, 0.4)
+    let before = look()
+    expect(before).toHaveLength(8)
+    // The troop that waits is tapped: the ducks march off, and they are the fifth for the far hill.
+    theatre.press(-VIEW.width / 2 + 1.1, GROUND + 0.9, VIEW)
+    theatre.cancel()
+    expect(theatre.save.parade.map((troop) => troop.kind)).toEqual(['duck', 'frog', 'hippo', 'duck'])
+    // What hides a far friend: it is sunk below the foot of the far hill, under the near hill's horizon.
+    const hidden = (marcher: Far) => marcher.y < farGroundAt(FAR_HILL.x + FAR_HILL.rx * 2, FAR_HILL.z) - 2
+    const seen = new Set<string>(), counts: number[] = []
+    for (let i = 0; i < 60 * 6; i++) {
+      theatre.step(1 / 60)
+      const now = look()
+      counts.push(now.length)
+      // Every far friend is where one was a frame ago, give or take a step; a new one starts hidden; one that goes was hidden.
+      for (const marcher of now) {
+        const was = before.filter((other) => other.kind === marcher.kind).map((other) => Math.hypot(other.x - marcher.x, other.y - marcher.y, other.z - marcher.z))
+        if (was.length > 0 && Math.min(...was) < 0.45) continue
+        expect(hidden(marcher), `frame ${i}: a ${marcher.kind} appears in plain sight`).toBe(true)
+        seen.add(marcher.kind)
+      }
+      for (const marcher of before) {
+        const is = now.filter((other) => other.kind === marcher.kind).map((other) => Math.hypot(other.x - marcher.x, other.y - marcher.y, other.z - marcher.z))
+        if (is.length > 0 && Math.min(...is) < 0.45) continue
+        expect(hidden(marcher), `frame ${i}: a ${marcher.kind} vanishes in plain sight`).toBe(true)
+      }
+      before = now
+    }
+    // The three crabs left, the two ducks that marched off came up, and there are seven on the ring at the end.
+    expect(Math.max(...counts)).toBeLessThanOrEqual(8)
+    expect(seen.has('duck')).toBe(true)
+    expect(before).toHaveLength(7)
+    expect(before.filter((marcher) => marcher.kind === 'crab')).toHaveLength(0)
+    expect(before.filter((marcher) => marcher.kind === 'duck')).toHaveLength(4)
+    expect(before.every((marcher) => !hidden(marcher))).toBe(true)
+  })
+
   it('answers a touch on the hill itself, with nobody on it or with a parade: a small far boing, and the sky bobs', () => {
     const theatre = new Theatre(saveOf(MOMENTS.solo)), { frame, painter, clear } = recorder()
     // The top of the far hill as it is seen, a little under its crest.

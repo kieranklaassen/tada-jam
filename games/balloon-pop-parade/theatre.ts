@@ -7,7 +7,7 @@ import { copyPose, forwardOf, mirror, REST, restPose, spread, type Pose } from '
 import { LADDER } from './config'
 import type { VoiceId } from './voices'
 import { callNext, popHeld, sendBunch } from './play'
-import type { Marched, Save } from './save'
+import { PARADE_LENGTH, type Marched, type Save } from './save'
 import { Scene, sceneLength, type Beat } from './scene'
 import { markShown, showingAtStart, type Showing } from './showings'
 import type { Bunch, Given, Troop } from './world'
@@ -75,6 +75,9 @@ const REFUSAL_LEAD = 0.12
  */
 const OVER_PATH = { x: -7.6, across: 0.8, z: 4.6, deep: 9, dip: 2.4 } as const
 const OVER_LAG = 0.2
+/** Seconds the oldest troop takes down from the far hill's ring and out of sight; and seconds the newest takes up to its place, once the oldest has gone and it has itself left by the edge in front. */
+const RETIRES_IN = 1.8
+const JOINS_IN = 1.6
 /** How much later each friend of a troop that was carried off comes down than the one before it, in seconds. */
 const LAND_APART = 0.15
 /** Seconds a held balloon takes to swing round onto its friend's head when a refusal knocks it. */
@@ -134,6 +137,15 @@ export class Theatre {
   private passIn = 0
   private passOut = 0
   private passTook = false
+  /**
+   * The far hill's ring has a place for each troop, and a troop keeps its place for as long as it is there: `turned`
+   * is how many have left since this visit began, so the troop at `parade[t]` stands at place `t + turned`.
+   * `retiring` is the oldest of five on its way down from its place and out of sight, `u` of the way; `joining`
+   * is how far the newest has come up to its place, 1 when it is there.
+   */
+  private turned = 0
+  private retiring: { troop: Marched; place: number; u: number } | null = null
+  private joining = 1
   /** When each troop on the far hill last began a jump, as an answer to a touch. */
   private readonly hopAt = [-9, -9, -9, -9]
   /** The troop that passed, on its way over the far hill, and how far over it is. */
@@ -254,11 +266,12 @@ export class Theatre {
     // Below the friends' feet there is only the hill.
     if (y < groundAt(x, 0) - 0.25) return { on: 'hill' }
     // Above it, far off: a troop that goes round the far hill, with its balloons, or the far hill itself.
-    const parade = this.save.parade, arrived = this.leaving ? parade.length - 1 : parade.length
+    // One that is still on its way up to the ring is not yet there to be touched.
+    const parade = this.save.parade, arrived = this.leaving || this.joining < 1 ? parade.length - 1 : parade.length
     for (let t = 0; t < arrived; t++) {
       const body = BODIES[parade[t].kind]
       for (let m = 0; m < parade[t].size; m++) {
-        const spot = paradeSpot(t, m, this.time, this.far), at = seenAt(spot.x, spot.y, spot.z, view, this.seen), size = at.scale * PARADE_SCALE
+        const spot = paradeSpot(t + this.turned, m, this.time, this.far), at = seenAt(spot.x, spot.y, spot.z, view, this.seen), size = at.scale * PARADE_SCALE
         if (Math.abs(x - at.x) < body.halfWidth * FRIEND_SCALE * size + 0.3 && y > at.y - 0.3 && y < at.y + (HELD_HEIGHT + BALLOON) * size + 0.3) return { on: 'parade', troop: t }
       }
     }
@@ -429,7 +442,11 @@ export class Theatre {
       return
     }
     // The troop that marches off is drawn from what it was; the save already holds the troop that steps in.
-    const was = this.save.troop
+    const was = this.save.troop, before = this.save.parade
+    // The parade holds four: when a fifth is on its way the oldest leaves its place, and the rest keep theirs.
+    this.retiring = before.length >= PARADE_LENGTH ? { troop: before[0], place: this.turned, u: 0 } : null
+    if (this.retiring) this.turned += 1
+    this.joining = 0
     this.save = save
     this.setTheStage()
     this.arrive({ kind: was.kind, size: was.size, balloons: event.marched.balloons }, event.showing, was.held)
@@ -441,6 +458,9 @@ export class Theatre {
     this.finishing = true
     this.scene.finish()
     this.finishing = false
+    // On the far hill too, everything is where it was going.
+    this.retiring = null
+    this.joining = 1
     for (const actor of this.actors) if (actor.clip === 'proud' || actor.clip === 'march') actor.clip = null
   }
 
@@ -596,6 +616,8 @@ export class Theatre {
   step(dt: number): void {
     this.time += dt
     if (this.time >= this.lookAt.until) this.sway += dt
+    if (this.retiring && (this.retiring.u += dt / RETIRES_IN) >= 1) this.retiring = null
+    if (!this.leaving && !this.retiring && this.joining < 1) this.joining = Math.min(1, this.joining + dt / JOINS_IN)
     const kind = this.troop.kind, personality = PERSONALITIES[kind]
 
     // The scene that is playing moves on, and whoever is walking in it is heard at each step.
@@ -950,22 +972,16 @@ export class Theatre {
       painter.shadow(dimple.x, groundAt(dimple.x, 2.4) + 0.03, 2.4, grown, grown * 0.5, PALETTE.shadow)
     }
     // The troops that were served, going round the far hill with the balloons they carried off. The one that is
-    // still marching off in front has not got there yet.
-    const parade = this.save.parade, arrived = this.leaving ? parade.length - 1 : parade.length
-    for (let t = 0; t < arrived; t++) {
-      const troop = parade[t], rate = PERSONALITIES[troop.kind].steps / PERSONALITIES[troop.kind].walk, hue = shade(KIND_COLOURS[troop.kind], 0.4)
-      for (let m = 0; m < troop.size; m++) {
-        const at = paradeSpot(t, m, time, this.far), step = time * rate + m * 0.4
-        // Its step, and the jump it gives when it or the far hill is touched, each friend a moment after the one in front.
-        const hop = Math.abs(Math.sin(step * Math.PI)) * (troop.kind === 'frog' ? 0.35 : 0.1) + hump(time - this.hopAt[t] - m * 0.07, 0, FAR_JUMP) * 1.1
-        // The far hill slopes under them: they stand a little proud of it, so the uphill foot is not sunk in.
-        painter.marcher(troop.kind, at.x, at.y + hop + 0.14, at.z, FRIEND_SCALE * PARADE_SCALE, at.turn, Math.sin(step * Math.PI) * 0.1)
-        if (m >= troop.balloons) continue
-        const by = at.y + hop + HELD_HEIGHT * PARADE_SCALE + Math.sin(time * 1.4 + t + m) * 0.08
-        painter.balloon(at.x + 0.3, by, at.z, PARADE_SCALE, PARADE_SCALE, 0.06, hue)
-        painter.string(at.x + 0.3, by - BALLOON * 1.32 * PARADE_SCALE, at.z, at.x, at.y + hop + BODIES[troop.kind].height * FRIEND_SCALE * PARADE_SCALE * 0.95, at.z, hue, 0.03)
-      }
+    // still marching off in front has not got there yet; when it has left by the edge it comes up the far hill to
+    // its place on the ring. The oldest of five goes down from its place and out of sight as the scene begins.
+    const parade = this.save.parade
+    for (let t = 0; t < parade.length; t++) {
+      const newest = t === parade.length - 1
+      // It is not on the far hill until it has left by the edge in front, and it waits for the oldest to be gone.
+      if (newest && (this.leaving || this.retiring)) continue
+      this.farTroop(painter, parade[t], t + this.turned, newest ? 1 - this.joining : 0, true, this.hopAt[t])
     }
+    if (this.retiring) this.farTroop(painter, this.retiring.troop, this.retiring.place, this.retiring.u, false, -9)
 
     // The troop that passed by, going over the left shoulder of the far hill, clear of the ring the parade walks: up
     // from behind the near hill, over the top and down the far side, each friend a little behind the one in front.
@@ -1189,6 +1205,25 @@ export class Theatre {
           painter.string(x, y + high - BALLOON * 1.32, 0.3, x, y + high - BALLOON * 1.32 - 0.5, 0.3, line)
         }
       }
+    }
+  }
+
+  /**
+   * One troop on the far hill, at `place` of the ring, with the balloons it carried off. `away` is how far it is
+   * down the slope from its place (0 on the ring), and `coming` says it is on its way up and not down.
+   */
+  private farTroop(painter: Painter, troop: Marched, place: number, away: number, coming: boolean, hopAt: number): void {
+    const time = this.time, rate = PERSONALITIES[troop.kind].steps / PERSONALITIES[troop.kind].walk, hue = shade(KIND_COLOURS[troop.kind], 0.4)
+    for (let m = 0; m < troop.size; m++) {
+      const at = paradeSpot(place, m, time, this.far, away), step = time * rate + m * 0.4
+      // Its step, and the jump it gives when it or the far hill is touched, each friend a moment after the one in front.
+      const hop = Math.abs(Math.sin(step * Math.PI)) * (troop.kind === 'frog' ? 0.35 : 0.1) + hump(time - hopAt - m * 0.07, 0, FAR_JUMP) * 1.1
+      // The far hill slopes under them: they stand a little proud of it, so the uphill foot is not sunk in.
+      painter.marcher(troop.kind, at.x, at.y + hop + 0.14, at.z, FRIEND_SCALE * PARADE_SCALE, away > 0 && coming ? at.turn + Math.PI : at.turn, Math.sin(step * Math.PI) * 0.1)
+      if (m >= troop.balloons) continue
+      const by = at.y + hop + HELD_HEIGHT * PARADE_SCALE + Math.sin(time * 1.4 + place + m) * 0.08
+      painter.balloon(at.x + 0.3, by, at.z, PARADE_SCALE, PARADE_SCALE, 0.06, hue)
+      painter.string(at.x + 0.3, by - BALLOON * 1.32 * PARADE_SCALE, at.z, at.x, at.y + hop + BODIES[troop.kind].height * FRIEND_SCALE * PARADE_SCALE * 0.95, at.z, hue, 0.03)
     }
   }
 

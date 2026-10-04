@@ -148,6 +148,9 @@ export const PARADE_FRIENDS = PARADE_TROOPS * 3
 /** The ring they walk, as half-widths across and in depth and how far forward of the hill's middle it lies; and the angle from one friend to the next, which shares the ring out evenly among twelve, so each follows the one in front at more than a body's depth all the way round. */
 export const PARADE_RING = { x: 3.7, z: 2.9, forward: 0.7 } as const
 export const PARADE_STEP = (Math.PI * 2) / PARADE_FRIENDS
+/** How far past the far hill's edge the foot of the way up to the ring is, as a part of the hill's half-widths, and how far a friend sinks there, to be wholly out of sight. */
+const PARADE_PAST = 0.08
+const PARADE_SINK = 2.8
 /** They are drawn a little smaller than the friends in front, on top of what the distance does. */
 export const PARADE_SCALE = 0.8
 
@@ -155,13 +158,32 @@ export const PARADE_SCALE = 0.8
  * Where friend `member` of troop `troop` of the parade is at `time`: the troops go slowly round the top of the
  * far hill, evenly spaced, each friend a step behind the one in front. `turn` is which way it faces.
  */
-export function paradeSpot(troop: number, member: number, time: number, out: { x: number; y: number; z: number; turn: number }): { x: number; y: number; z: number; turn: number } {
+export function paradeSpot(troop: number, member: number, time: number, out: { x: number; y: number; z: number; turn: number }, away = 0): { x: number; y: number; z: number; turn: number } {
   const angle = time * 0.1 + (troop / PARADE_TROOPS) * Math.PI * 2 - member * PARADE_STEP
-  out.x = FAR_HILL.x + Math.cos(angle) * PARADE_RING.x
-  out.z = FAR_HILL.z + Math.sin(angle) * PARADE_RING.z + PARADE_RING.forward
-  out.y = farGroundAt(out.x, out.z)
-  // It walks along the ring: at the front of it to the left, at the back to the right.
-  out.turn = Math.atan2(-Math.sin(angle) * PARADE_RING.x, Math.cos(angle) * PARADE_RING.z)
+  if (away <= 0) {
+    out.x = FAR_HILL.x + Math.cos(angle) * PARADE_RING.x
+    out.z = FAR_HILL.z + Math.sin(angle) * PARADE_RING.z + PARADE_RING.forward
+    out.y = farGroundAt(out.x, out.z)
+    // It walks along the ring: at the front of it to the left, at the back to the right.
+    out.turn = Math.atan2(-Math.sin(angle) * PARADE_RING.x, Math.cos(angle) * PARADE_RING.z)
+    return out
+  }
+  // On its way between its place on the ring and the foot of the far hill, straight down the slope from that place:
+  // `away` is how far down, and at the foot (1) it is past the hill's edge and under, out of sight behind the near
+  // hill in front or behind the far hill at the back. A troop comes up to join the parade this way, and the oldest
+  // goes down it to leave, so nobody appears or vanishes on the hill in plain sight.
+  const cos = Math.cos(angle), sin = Math.sin(angle)
+  // The place on the ring, as a part of the hill's half-widths from its middle, and the way straight out from there.
+  const nx = (cos * PARADE_RING.x) / FAR_HILL.rx, nz = (sin * PARADE_RING.z + PARADE_RING.forward) / FAR_HILL.rz, from = Math.hypot(nx, nz) || 1
+  // It loses height evenly, and is as far out as the hill's skin is at that height: slowly over the steep edge.
+  const down = away * away * (3 - 2 * away), high = Math.sqrt(Math.max(0, 1 - from * from)) * (1 - down)
+  const out2 = Math.sqrt(Math.max(0, 1 - high * high)) * (1 + PARADE_PAST * down * down) / from
+  out.x = FAR_HILL.x + nx * out2 * FAR_HILL.rx
+  out.z = FAR_HILL.z + nz * out2 * FAR_HILL.rz
+  const sunk = Math.max(0, (down - 0.75) / 0.25)
+  out.y = FAR_HILL.y + FAR_HILL.ry * high - sunk * sunk * PARADE_SINK
+  // It faces down the slope, the way it goes when it leaves; one that comes up is turned about by whoever places it.
+  out.turn = Math.atan2(nx * FAR_HILL.rx, nz * FAR_HILL.rz)
   return out
 }
 
