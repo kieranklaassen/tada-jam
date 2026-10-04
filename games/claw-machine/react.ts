@@ -288,7 +288,8 @@ export function react(game: Game, deed: Deed): void {
       break
     case 'open-wide': {
       const actor = game.crew.find((one) => one.id === deed.gobbler)
-      if (actor) { actor.openT = 0; game.say({ type: 'gargle', who: actor.id }) }
+      // Its feet patter as it shuffles to stay under the claw.
+      if (actor) { actor.openT = 0; game.say({ type: 'gargle', who: actor.id }); game.say({ type: 'waddle' }) }
       break
     }
     case 'stare':
