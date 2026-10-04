@@ -83,8 +83,6 @@ const RETIRES_IN = 1.3
 const JOINS_IN = 1.2
 /** The least time between one bunch's arrival and the next one's, in seconds. */
 const ARRIVE_APART = 0.06
-/** The longest a bunch waits on its way down for a friend that is busy, in seconds: past that it arrives all the same. */
-const LONGEST_WAIT = 3
 /** How far above the frogs' heads a bunch with one for each of them stops, so that their tongues cross over their heads. */
 const FROGS_REACH = 2.5
 /** Seconds a troop that was served by one bunch is in the air when it jumps together. */
@@ -133,8 +131,6 @@ export const REGROW_AFTER = 0.45
 const GROW = 0.5
 /** How long a pop's scraps and a flat balloon last. */
 const SCRAP_LIFE = 0.5
-/** What a frame may hold of each passing thing, so the most a child can set off at once still fits the stage's batches. */
-const MAX_FLIGHTS = 4
 const MAX_LOOSE = 9
 const MAX_SCRAPS = 21
 
@@ -452,14 +448,6 @@ export class Theatre {
     const place = this.places[slot]
     place.pressed = false
     if (place.away > 0) return
-    // Tapping a balloon always works. When as many bunches are in the air as the sky can show, the one that has
-    // been there longest gets its answer at once and makes room.
-    if (this.flights.length >= MAX_FLIGHTS) {
-      const oldest = this.flights[0]
-      if (!oldest.landed) this.land(oldest)
-      this.settle(oldest, PERSONALITIES[this.troop.kind].cue, true)
-      this.flights.shift()
-    }
     const bunch = this.sky[slot]
     // The rules decide here, at the lift, and the save holds the outcome before the bunch has left the sky.
     const slips = this.save.slips
@@ -493,15 +481,17 @@ export class Theatre {
     // And bunches arrive in the order they were sent, so that each one finds the troop as the rule found it at
     // its lift: with the balloons of every bunch sent before it already in their hands.
     const before = Math.max(0, ...this.flights.filter((flight) => !flight.landed).map((flight) => flight.lasts - flight.t)) + ARRIVE_APART
-    const lasts = Math.max(Math.min(FLIGHT + LONGEST_WAIT, Math.max(FLIGHT, free + lead + 0.04 - this.time)), this.flights.some((flight) => !flight.landed) ? before : 0)
+    const lasts = Math.max(FLIGHT, free + lead + 0.04 - this.time, this.flights.some((flight) => !flight.landed) ? before : 0)
     for (const i of answering) this.actors[i].busyUntil = this.time + lasts - lead + takes / (QUICKEST - 0.14) + 0.06
     this.flights.push({ bunch, slot, given, t: 0, lasts, fromX: at.x, fromY: at.y, landed: false, after: 0, friend, slipped })
     // The ending begins with its cause: the moment the last balloon is in a hand. Its first beat is that catch.
     if (serves && serves.type === 'served') {
       this.endingDue = { at: this.time + lasts, order: [...this.took], together: serves.together }
     }
-    // The same bunch drifts back into the same place: the sky stays as it was.
-    place.away = REGROW_AFTER
+    // The same bunch drifts back into the same place when this one has been answered (`back`): the sky stays as it
+    // was. Until then the place is empty, so there are never more bunches on their way than the sky has places,
+    // and every one of them is answered in full, in its turn.
+    place.away = Number.POSITIVE_INFINITY
     place.grow = 0
     place.squash = 0
     place.squashSpeed = 0
@@ -537,6 +527,13 @@ export class Theatre {
     this.took = this.took.filter((i) => i !== friend)
     const balloon = this.held[friend]
     balloon.shown = false
+    if (balloon.owed) {
+      // It was still waiting to be taken: the catch its friend owed it is off, and is neither played nor heard.
+      const actor = this.actors[friend]
+      if (actor.next === 'catch') { actor.next = actor.after ?? null; actor.after = null } else if (actor.after === 'catch') actor.after = null
+      actor.catchAt = 0
+      balloon.owed = false
+    }
     this.burst(balloon.x, balloon.y, KIND_COLOURS[troop.kind])
     // Its start is seen and heard in the same moment. One that is being carried off cannot jump: it starts where
     // it hangs, with a wobble, and no start is left over for when it lands.
@@ -590,7 +587,7 @@ export class Theatre {
       flight.friend = first.takers[0]
       // It arrives when those who take it are free: after the start at the pop.
       const free = Math.max(...first.takers.map((i) => this.actors[i].busyUntil ?? 0))
-      flight.lasts = Math.max(flight.lasts, Math.min(flight.t + FLIGHT + LONGEST_WAIT, flight.t + free + p.cue.grab + 0.04 - this.time))
+      flight.lasts = Math.max(flight.lasts, flight.t + free + p.cue.grab + 0.04 - this.time)
       for (const i of first.takers) this.actors[i].busyUntil = this.time + (flight.lasts - flight.t) - p.cue.grab + p.lasts.catch / (QUICKEST - 0.14) + 0.06
       if (serves && serves.type === 'served') {
         this.endingDue = { at: this.time + flight.lasts - flight.t, order: [...this.took], together: serves.together }
@@ -604,6 +601,18 @@ export class Theatre {
       if (flight.lasts - flight.t < earliest) flight.lasts = flight.t + earliest
       earliest = flight.lasts - flight.t + ARRIVE_APART
     }
+  }
+
+  /** Whether a balloon here is under the grown-up's corner: in its column, and below its lower edge. */
+  private underCorner(x: number, y: number): boolean {
+    const view = this.lastView, corner = GROWN_UP_CORNER / view.pixelsPerUnit
+    return x + BALLOON * view.balloon > view.width / 2 - corner - 0.04 && y + BALLOON * 1.12 * view.balloon < view.height / 2 - corner + 0.02
+  }
+
+  /** A bunch has been answered: the same bunch drifts back into the place it left, a moment later. */
+  private back(slot: number): void {
+    const place = this.places[slot]
+    if (place && !Number.isFinite(place.away)) place.away = REGROW_AFTER
   }
 
   /** The child touched the troop that waits. Before the troop on screen is served it only waves; after, it steps in. */
@@ -653,7 +662,9 @@ export class Theatre {
     this.sky.forEach((bunch, slot) => {
       if (this.places[slot].away > 0 || !this.skyIn) return
       for (const offset of bunchOffsets(bunch.count)) {
-        this.loose.push({ x: old[slot].x + offset.x * big, y: old[slot].y + offset.y * big, vx: (this.random() - 0.5) * 1.2, vy: 1.5 + this.random() + slot * 0.3, colour: KIND_COLOURS[bunch.colour], flat: false, t: 0, popAt: 9, drift: true })
+        // One under the grown-up's corner sets off sideways, and every other upwards (see where they are moved, in `step`).
+        const x = old[slot].x + offset.x * big, y = old[slot].y + offset.y * big, under = this.underCorner(x, y)
+        this.loose.push({ x, y, vx: under ? 1.5 : (this.random() - 0.5) * 1.2, vy: under ? 0 : 1.5 + this.random() + slot * 0.3, colour: KIND_COLOURS[bunch.colour], flat: false, t: 0, popAt: 9, drift: true })
       }
     })
     this.save = save
@@ -988,7 +999,10 @@ export class Theatre {
       if (!flight.landed && flight.t >= flight.lasts) this.land(flight)
       if (flight.landed) {
         flight.after += dt
-        if (this.settle(flight, personality.cue)) this.flights.splice(i, 1)
+        if (this.settle(flight, personality.cue)) {
+          this.flights.splice(i, 1)
+          this.back(flight.slot)
+        }
       } else if (flight.given.result === 'taken' && flight.t >= flight.lasts - personality.cue.grab) {
         // The friends who will take one start to meet it before it is there.
         // The ducks jump at once and the frogs' tongues go out together; the hippos yawn in a row, one after another, and the crabs snip in a row like scissors.
@@ -1125,11 +1139,20 @@ export class Theatre {
             this.shed(CLOUDS.length - 1, this.lastView)
           }
         }
-      } else balloon.vy += 7 * dt
+      } else if (balloon.drift && this.underCorner(balloon.x, balloon.y)) {
+        // One of a sky that is over, under the grown-up's corner: it leaves by the side, below the corner, and
+        // never rises into it, where a touch would not be answered.
+        balloon.vy = 0
+        balloon.vx += 9 * dt
+      } else {
+        balloon.vy += 7 * dt
+        // One that rises beside the corner keeps to its own side of it.
+        if (balloon.drift && balloon.x + BALLOON * this.lastView.balloon > this.lastView.width / 2 - GROWN_UP_CORNER / this.lastView.pixelsPerUnit - 0.5) balloon.vx = Math.min(balloon.vx, -0.8)
+      }
       balloon.x += balloon.vx * dt
       balloon.y += balloon.vy * dt
-      // One of a sky that is over is gone when it is out of the top of the view; every other when its time is up, with a pop unless it went flat.
-      if (balloon.drift ? balloon.y > this.lastView.height / 2 + 1.5 : balloon.t >= balloon.popAt) {
+      // One of a sky that is over is gone when it is out of the top or the side of the view; every other when its time is up, with a pop unless it went flat.
+      if (balloon.drift ? balloon.y > this.lastView.height / 2 + 1.5 || balloon.x > this.lastView.width / 2 + 1.5 : balloon.t >= balloon.popAt) {
         if (!balloon.flat && !balloon.drift) this.burst(balloon.x, balloon.y, balloon.colour)
         this.loose.splice(i, 1)
       }

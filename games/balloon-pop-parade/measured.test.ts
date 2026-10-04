@@ -617,6 +617,60 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
     expect(carried).toHaveLength(2)
   })
 
+  it.each(kinds)('a %s answers every wrong bunch in full however fast they are sent: a place stays empty until its bunch is answered, so none is hurried and none shares a refusal', (kind) => {
+    const theatre = new Theatre(saveOf({ position: 'solo-three-colours', troop: { kind, size: 1, held: [false] }, sky: [{ colour: other(kind), count: 1 }, { colour: other(kind), count: 1 }, { colour: kind, count: 1 }, { colour: other(kind), count: 1 }, { colour: other(kind), count: 1 }], waiting: { kind: other(kind), size: 1 } }), 11)
+    const wrong = [0, 1, 3, 4], p = PERSONALITIES[kind]
+    const sent: number[] = [], begun: number[] = [], landed: number[] = []
+    let most = 0
+    for (let i = 0; i < 60 * 30; i++) {
+      // A wrong place is tapped three times a second for twelve seconds: far faster than a friend answers.
+      if (i < 60 * 12 && i % 20 === 0) tap(theatre, wrong[(i / 20) % 4])
+      theatre.step(1 / 60)
+      const count = (voice: string) => theatre.sounds.filter((sound) => sound.voice === voice).length
+      while (sent.length < count('letGo')) sent.push(i)
+      while (begun.length < count(`${kind}Refuse`)) begun.push(i)
+      while (landed.length < count(kind === 'hippo' ? 'raspberry' : 'pop')) landed.push(i)
+      most = Math.max(most, sent.length - landed.length)
+    }
+    expect(sent.length).toBeGreaterThan(8)
+    // Every bunch that left the sky was refused, and every refusal landed on its own bunch at its own moment.
+    expect(begun).toHaveLength(sent.length)
+    expect(landed).toHaveLength(sent.length)
+    for (let k = 0; k < sent.length; k++) {
+      expect(landed[k] - begun[k], `refusal ${k}`).toBeGreaterThanOrEqual(Math.floor((p.cue.hit / 1.07) * 60) - 2)
+      if (k > 0) expect(begun[k], `refusal ${k} begins when the one before has landed`).toBeGreaterThan(landed[k - 1])
+    }
+    // Never more on their way than the sky has wrong places.
+    expect(most).toBeLessThanOrEqual(4)
+  })
+
+  it('never lets a balloon of a sky that is over rise into the grown-up\'s corner, where a touch is not answered, on any shape of surface', () => {
+    for (const [w, h] of [[1180, 820], [1024, 768], [820, 1180], [1024, 640]]) for (const sky of [[1, 1, 1, 1, 1], [2, 1, 3, 3], [3, 1, 2, 3]]) {
+      const view = viewFor(w, h), corner = 72 / view.pixelsPerUnit
+      const save = { ...saveOf({ position: 'bunches-mixed', troop: { kind: 'duck', size: 1, held: [true] }, sky: sky.map((count) => ({ colour: 'duck' as const, count: count as 1 | 2 | 3 })), waiting: { kind: 'frog', size: 1 } }), finished: true }
+      const theatre = new Theatre(save, 2), { balloons, painter, clear } = recorder()
+      theatre.paint(painter, view)
+      theatre.step(1 / 60)
+      theatre.press(waitingSpot(0, view).x, GROUND + 0.8, view)
+      theatre.cancel()
+      expect(theatre.playing).toBe('arrival')
+      let drifting = 0
+      for (let i = 0; i < 60 * 3; i++) {
+        theatre.step(1 / 60)
+        clear()
+        theatre.paint(painter, view)
+        // The balloons of the old sky are the ones in front of everything; the new sky has not come yet.
+        for (const balloon of balloons) {
+          if (Math.abs(balloon.z - 0.4) > 1e-6) continue
+          drifting += 1
+          const right = balloon.x + 0.66 * view.balloon * balloon.wide / view.balloon, top = balloon.y + 0.66 * 1.12 * view.balloon
+          expect(right > view.width / 2 - corner && top > view.height / 2 - corner && balloon.x - 0.66 * view.balloon < view.width / 2, `${w} by ${h}, sky ${sky.join()}, frame ${i}: a balloon at ${balloon.x.toFixed(2)}, ${balloon.y.toFixed(2)}`).toBe(false)
+        }
+      }
+      expect(drifting).toBeGreaterThan(20)
+    }
+  })
+
   it('draws every balloon in front at one size, also where balloons are drawn larger: in the sky, in a hand, on its way, beside a friend, carrying one off and passing by', () => {
     const big = SMALL.balloon
     expect(big).toBeGreaterThan(1.1)

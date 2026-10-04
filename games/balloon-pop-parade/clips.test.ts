@@ -160,6 +160,23 @@ describe('the arms of a friend that walks', () => {
   })
 })
 
+describe('the crab\'s start at a pop', () => {
+  it('has the scuttle of feet that is heard with it: quick steps from side to side as it hides its eyes', () => {
+    const still = sample('crab', null, 0, false).x
+    let left = 0, right = 0, turns = 0, last = 0
+    for (let t = 0; t <= 0.3; t += 1 / 240) {
+      const dx = sample('crab', 'popped', t, false).x - still
+      left = Math.min(left, dx)
+      right = Math.max(right, dx)
+      if (dx * last < 0) turns += 1
+      if (Math.abs(dx) > 0.01) last = dx
+    }
+    expect(right).toBeGreaterThan(0.04)
+    expect(left).toBeLessThan(-0.04)
+    expect(turns).toBeGreaterThanOrEqual(3)
+  })
+})
+
 describe('a refusal', () => {
   it('begins with a look from one colour to the other: at the balloon beside it, and then down at itself, before its answer lands', () => {
     for (const kind of KINDS) {
