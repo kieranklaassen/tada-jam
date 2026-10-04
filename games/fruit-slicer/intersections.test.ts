@@ -1,15 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import { FLIGHT_SECONDS } from './carry'
 import { freshGame, type Game } from './cycle'
+import { LADDER } from './config'
 import { GameRun } from './gameRun'
 import { RAIL, WHOLE } from './measure'
 import { tinAt, type GameEvent } from './moves'
 import { inRange, tinParts } from './orders'
-import { deserialize, serialize } from './save'
+import { MOST_PIECES, deserialize, serialize } from './save'
 import { served } from './serve'
 import { BOARD, COUNTER, CRATE, DOG, PAGE, PX, QUEUE, RAIL_BOX, ROLLER, SHELF_BOX, WINDOW, shown, type Box, type Point } from './stage'
 import { draw } from './stream'
-import { LANES, SHELF, inTin, onLane, onShelf } from './world'
+import { LANES, SHELF, eaten, inTin, onLane, onShelf } from './world'
 
 // Nothing passes through anything. A canvas game has no audit to read its scene, so this plays the real game
 // with seeded touches, thousands of them, on every thing it holds, and after every one measures what a child
@@ -49,6 +50,12 @@ function expectSound(game: Game, where: string): void {
   }
   // A tin whose contents fit has shut: no customer waits on with a fit lying in its open tin.
   if (game.window && !game.finished) expect(served(game.world, game.window).kind, `${where}: a fit lies in the tin and the lid has not shut`).not.toBe('fit')
+  // Every piece is one piece: no id twice, and what a customer ate is in turn, with nothing missing from the count.
+  expect(new Set(game.world.pieces.map((piece) => piece.id)).size, where).toBe(game.world.pieces.length)
+  expect(eaten(game.world).map((piece) => (piece.place.on === 'eaten' ? piece.place.turn : -1)), where).toEqual(eaten(game.world).map((_, turn) => turn))
+  // An idea is marked as shown once, and the state never outgrows what a save may hold.
+  expect(new Set(game.shown).size, where).toBe(game.shown.length)
+  expect(game.world.pieces.length, where).toBeLessThanOrEqual(MOST_PIECES)
   // The customers are always ones the rules could have laid out, and nothing is finished with nobody there.
   for (const customer of [game.window, ...game.queue]) if (customer) expect(inRange(customer), where).toEqual([])
   if (!game.window) expect(game.finished, where).toBe(false)
@@ -69,6 +76,8 @@ function monkey(seed: number, touches: number, start: Game = freshGame(null, see
     const shown = new Set(events.flatMap((event) => (event.kind === 'fell' || event.kind === 'ate' || event.kind === 'splat' || event.kind === 'burp' ? [event.piece.id] : [])))
     const glider = events.some((event) => event.kind === 'gliderAway' || (event.kind === 'ending' && event.ending.glider))
     const left = before.world.pieces.filter((piece) => !game.world.pieces.some((other) => other.id === piece.id))
+    // The place in the designed order moves one step at a time, or not at all.
+    expect(Math.abs(LADDER.indexOf(game.position) - LADDER.indexOf(before.position)), `seed ${seed}: the position jumped`).toBeLessThanOrEqual(1)
     for (const piece of left) expect(shown.has(piece.id) || piece.place.on === 'eaten' || glider, `seed ${seed}: piece ${piece.id} (${JSON.stringify(piece.place)}) left the world unseen, in ${events.map((event) => event.kind).join(',')}`).toBe(true)
     take(game, events)
   }

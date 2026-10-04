@@ -68,7 +68,7 @@ It stops there for this band. A symbol is never shown without the length it name
 - **Swap.** No: the place of the cut along the fruit is the fraction, so with another subject put in its place there is no decision left and no game.
 - **Attention.** At the moment of decision the child looks at the whole length of this fruit and at the share on the ticket, and thinks about where that share of this length ends; the hairline shows where the cut will fall before the stroke commits, so the stroke asks for no aim and no timing.
 - **Fun.** The skill is used in the most enjoyable moment: the slice is the toy, and placing it is the fraction.
-- **Guess.** A stroke at random fits a tin about one time in twelve, and a continuous length has no list of options to try; a child can always finish an order by trimming a piece against the open tin, which is matching and not fraction work, and for that reason only a first cut made before the tin opened moves the child on in the designed order.
+- **Guess.** A stroke at random fits a tin about one time in twelve, and a continuous length has no list of options to try; a child can always finish an order by trimming a piece against the open tin, which is matching and not fraction work, and for that reason no piece cut while a tin stood open moves the child on in the designed order: only pieces cut with no tin open do.
 
 ## The error as a consequence
 
@@ -134,7 +134,7 @@ Only a cycle with the customer who carries the new thing of the position as it s
 - `nextId`: the id the next piece takes.
 - `shown`: the ids of the positions whose first showing has played, so each plays once.
 
-A piece in the hand is saved where it was picked up. The pieces a served customer ate stay in `pieces`, inside that customer, until the next customer steps up, so the last pose of the serve is rebuilt on load from `window`, `finished` and those pieces. Short-lived and never saved: the juice, the drops and the spatter on the wall, a curl of peel, the split slat of the crate, and whatever the dog or the crate was given, which is gone once it is eaten. The serve is judged and saved when its scene starts, so a put-away in the middle of it loses nothing. The largest state the rules allow is under half of the 64 KB cap, and a test holds it there.
+A piece in the hand is saved where it was picked up. The pieces a served customer ate stay in `pieces`, inside that customer, until the next customer steps up (the last forty-eight of them, if it is fed more than that by hand afterwards), so the last pose of the serve is rebuilt on load from `window`, `finished` and those pieces. Short-lived and never saved: the juice, the drops and the spatter on the wall, a curl of peel, the split slat of the crate, and whatever the dog or the crate was given, which is gone once it is eaten. The serve is judged and saved when its scene starts, so a put-away in the middle of it loses nothing. The largest state the rules allow is under half of the 64 KB cap, and a test holds it there.
 
 ## The characters and their fixed tastes
 

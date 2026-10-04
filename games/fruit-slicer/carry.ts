@@ -126,6 +126,9 @@ export function drop(game: Game, held: Held, at: Point): { game: Game; events: G
           // The piece goes from the hand to the mouth and is gulped, whether or not that ends the cycle. A whole fruit to the pelican is the glider, and stays across its beak.
           if (fed.ate && !fed.ending?.glider) events.push({ kind: 'ate', whom, piece, from, voice: 'gulp' })
           if (fed.ending) events.push({ kind: 'ending', ending: fed.ending, how: 'fed' })
+        } else if (events.some((event) => event.kind === 'gliderAway')) {
+          // The pelican has gone with the fruit: what came after it in the row is not fed to whoever joins in its place, and stays where it lay.
+          continue
         } else {
           const given = treat(now, whom, piece.id)
           now = given.game
