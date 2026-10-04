@@ -20,7 +20,7 @@ export const TOSS = 1.25
 /** A throw slower than this is a bob, not a toss: the friend stays seated. */
 export const TOSS_FLOOR = 6
 /** An end that comes down at least this fast throws whoever rides the other one, Bo included; slower, they only bob. Radians a second. */
-export const KNOCK_TOSS = 1.2
+export const KNOCK_TOSS = 1.05
 /** How long a tap on the plank has its riders off the board, in seconds; they rise a finger's width. */
 export const RIDER_BOB = 0.32
 /** How long a friend let go over the middle takes to drop, slide down the board and climb onto the low end. */

@@ -52,14 +52,19 @@ type Working = {
   at: Point
   dragging: boolean
   liftedAt: number
+  /** The browser took the pointer away: the finger did not let go. */
+  taken: boolean
 }
 
 export class ForgivingTouch {
   private working: Working | null = null
 
-  /** The finger has let go mid-drag and its drag is waiting out the grace: what it carried has been let go by the child. */
+  /**
+   * The finger has let go mid-drag and its drag is waiting out the grace: what it carried has been let go by the
+   * child. A pointer the browser took away is not the child letting go.
+   */
   get lifted(): boolean {
-    return this.working !== null && this.working.id === null
+    return this.working !== null && this.working.id === null && !this.working.taken
   }
 
   /** A finger is working, or a drag is waiting out a lift. */
@@ -76,11 +81,12 @@ export class ForgivingTouch {
       if (t - working.liftedAt <= LIFT_GRACE_MS && Math.hypot(at.x - working.at.x, at.y - working.at.y) <= REGRAB_RADIUS) {
         working.id = id
         working.at = at
+        working.taken = false
         return [{ type: 'dragMove', from: working.from, at }]
       }
       gestures.push({ type: 'dragEnd', from: working.from, at: working.at })
     }
-    this.working = { id, from: at, at, dragging: false, liftedAt: 0 }
+    this.working = { id, from: at, at, dragging: false, liftedAt: 0, taken: false }
     gestures.push({ type: 'press', at })
     return gestures
   }
@@ -113,7 +119,10 @@ export class ForgivingTouch {
   cancel(id: number, t: number): Gesture[] {
     const working = this.working
     if (!working || working.id !== id) return []
-    if (working.dragging) return this.lift(working, t)
+    if (working.dragging) {
+      working.taken = true
+      return this.lift(working, t)
+    }
     this.working = null
     return [{ type: 'pressEnd', at: working.at }]
   }

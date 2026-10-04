@@ -8,7 +8,7 @@ import { seeded } from './motion'
 import { KINDS, layout, rideOf, wantMet, type Kind } from './rides'
 import { endRide, freshWorld, load, rideIsOver, save, type Saved, type World } from './save'
 import { NEXT_AT } from './scenes'
-import { chuckle, levelHum, purr, softNote, spit, type Part } from './voices'
+import { chuckle, crow, levelHum, purr, scratch, softNote, spit, type Part } from './voices'
 import { FRIEND_IDS, MAX_TILT, PLANK, WAITING_PLACE, homeOn, plankTopAt, type FriendId } from './world'
 
 const QUIET: Guidance = { glow: 0, demo: null, demoIndex: -1 }
@@ -870,25 +870,41 @@ describe('what the child set going, put away before it has happened', () => {
     for (let i = 0; i < kept.length; i++) expect(live[i]).toBeGreaterThanOrEqual(kept[i])
   })
 
-  it('Dot left alone: its swirl is in the saved sand at once, though it takes a moment to draw it', () => {
-    const game = new Game({ ...shown(), touched: true, state: { ...shown().state, finished: true }, arrangement: (() => {
-      let a = layout(rideOf('little-asks', 0))
-      for (const id of FRIEND_IDS) a = putInSand(a, id, homeOn(id, 'right'))
-      const dot = standsAt(a, 'dot')
-      return { ...putInSand(a, 'pim', { x: dot.x + 0.3, z: dot.z + 1.65 }), waiting: null }
-    })() }, 1)
-    run(game, 0.5)
-    expect(companyOf(game.play.arrangement, 'dot')).toEqual(['pim'])
-    const before = game.saved().marks
-    tapOn(game, 'pim')
-    const { cues } = run(game, 0.2)
-    // Saved before it is drawn.
-    expect(game.saved().marks).not.toBe(before)
-    expect(cues.some((cue) => cue.type === 'swirl')).toBe(false)
-    const saved = game.saved().marks
-    expect(run(game, 2).cues.filter((cue) => cue.type === 'swirl').length).toBe(1)
-    const after = marksFromText(game.saved().marks), then = marksFromText(saved)
-    for (let i = 0; i < then.length; i++) expect(after[i]).toBeGreaterThanOrEqual(then[i])
+  it('Dot left alone: put away before it has drawn its swirl, the swirl is in the saved sand; tapped away first, it draws none', () => {
+    const left = () => {
+      const game = new Game({ ...shown(), touched: true, state: { ...shown().state, finished: true }, arrangement: (() => {
+        let a = layout(rideOf('little-asks', 0))
+        for (const id of FRIEND_IDS) a = putInSand(a, id, homeOn(id, 'right'))
+        const dot = standsAt(a, 'dot')
+        return { ...putInSand(a, 'pim', { x: dot.x + 0.3, z: dot.z + 1.65 }), waiting: null }
+      })() }, 1)
+      run(game, 0.5)
+      expect(companyOf(game.play.arrangement, 'dot')).toEqual(['pim'])
+      tapOn(game, 'pim')
+      run(game, 0.2)
+      return game
+    }
+    // Put away before the swirl is drawn: it is saved.
+    const away = left()
+    const before = away.saved().marks
+    away.putAway()
+    expect(away.saved().marks).not.toBe(before)
+    // Left to it, Dot draws it once, where it stands.
+    const stays = left()
+    const cues = run(stays, 2).cues.filter((cue) => cue.type === 'swirl')
+    expect(cues.length).toBe(1)
+    const dot = standsAt(stays.play.arrangement, 'dot')
+    expect(cues[0]).toMatchObject({ x: dot.x, z: dot.z })
+    // Tapped away before it has begun: no swirl anywhere, no scratch, and nothing marked where Dot never stood.
+    const taken = left()
+    const untouched = taken.saved().marks
+    tapOn(taken, 'dot')
+    const after = run(taken, 3).cues
+    expect(after.some((cue) => cue.type === 'swirl')).toBe(false)
+    const scratchy = JSON.stringify(scratch())
+    expect(after.some((cue) => cue.type === 'voice' && JSON.stringify(cue.parts) === scratchy)).toBe(false)
+    expect(taken.play.bodies.dot.act).not.toBe('spin')
+    void untouched
   })
 
   it('a mark made while the rake travels is kept: the sand is drawn again from the saved grid when the rake arrives, and the rake lies out', () => {
@@ -929,6 +945,45 @@ describe('the level plank hums for as long as it is level', () => {
     expect(weightOnEnds(game)).toEqual([3, 3])
     expect(times.length).toBeGreaterThanOrEqual(5)
     for (let i = 1; i < times.length; i++) expect(times[i] - times[i - 1]).toBeLessThan(2.5)
+  })
+})
+
+describe('tastes hold on every landing, not only on one the child made', () => {
+  it('a friend thrown by the plank that comes down on the head it sat on is hissed at by Mog, and Pim on top crows again', () => {
+    // Pim sits on Mog on the left; Bo slams the right end down and both fly.
+    const bare = tap(layout(rideOf('little-asks', 0)), 'pim')
+    const game = new Game({ ...shown(), arrangement: putOnEnd(putOnEnd(bare, 'mog', 'left'), 'pim', 'left'), touched: true, state: { ...shown().state, finished: true } }, 1)
+    run(game, 1)
+    game.takeCues()
+    tapOn(game, 'bo')
+    const { cues } = run(game, 5)
+    const heard = (voice: readonly Part[]) => cues.filter((cue) => cue.type === 'voice' && JSON.stringify(cue.parts) === JSON.stringify(voice)).length
+    expect(heard(spit())).toBeGreaterThanOrEqual(1)
+    expect(heard(crow())).toBeGreaterThanOrEqual(1)
+  })
+
+  it('Mog left on top of a stack when the friend above him goes purrs: the top of a stack is his high perch too', () => {
+    const bare = tap(layout(rideOf('little-asks', 0)), 'pim')
+    // Bo, Mog and Pim on the left, the low end: Mog is in the middle.
+    const game = new Game({ ...shown(), arrangement: putOnEnd(putOnEnd(putOnEnd(bare, 'bo', 'left'), 'mog', 'left'), 'pim', 'left'), touched: true, state: { ...shown().state, finished: true } }, 1)
+    run(game, 1)
+    game.takeCues()
+    tapOn(game, 'pim')
+    const { cues } = run(game, 4)
+    expect(cues.filter((cue) => cue.type === 'voice' && JSON.stringify(cue.parts) === JSON.stringify(purr())).length).toBe(1)
+  })
+
+  it('the level plank goes on humming while a friend from the sand is in the hand', () => {
+    const bare = tap(layout(rideOf('little-asks', 0)), 'pim')
+    const game = new Game({ ...shown(), arrangement: putOnEnd(putOnEnd(bare, 'mog', 'left'), 'dot', 'right'), touched: true, state: { ...shown().state, finished: true } }, 1)
+    run(game, 3)
+    game.press({ kind: 'friend', id: 'pim' })
+    game.dragStart()
+    game.dragTo({ x: -1, z: 2.5 }, null)
+    const { cues } = run(game, 8)
+    const hum = JSON.stringify(levelHum())
+    expect(cues.filter((cue) => cue.type === 'voice' && JSON.stringify(cue.parts) === hum).length).toBeGreaterThanOrEqual(3)
+    expect(game.play.held).toBe('pim')
   })
 })
 

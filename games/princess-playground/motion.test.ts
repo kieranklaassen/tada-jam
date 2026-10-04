@@ -237,6 +237,34 @@ describe('the playground in motion', () => {
     expect(play(world, 4).some((event) => event.type === 'toss' && event.id === 'pim')).toBe(true)
   })
 
+  it('throws whoever rides the end that goes up, every time a friend tapped on tips the plank, and once', () => {
+    // Every pair of stacks the four can make, and every friend still in the sand tapped onto the lighter end.
+    let tips = 0
+    const ids = FRIEND_IDS
+    for (let code = 0; code < 81; code++) {
+      const where = ids.map((_, index) => Math.floor(code / 3 ** index) % 3)
+      let a = emptyArrangement()
+      ids.forEach((id, index) => { a = where[index] === 0 ? putInSand(a, id, homeOn(id, 'right')) : putOnEnd(a, id, where[index] === 1 ? 'left' : 'right') })
+      for (const id of ids.filter((_, index) => where[index] === 0)) for (const end of ['left', 'right'] as const) {
+        const after = putOnEnd(a, id, end)
+        const weight = (x: Arrangement, e: 'left' | 'right') => x[e].reduce((sum, f) => sum + FRIENDS[f].weight, 0)
+        const other = end === 'left' ? 'right' : 'left'
+        // It tips: the other end was down, or the plank was level or empty, and this end is now the heavier.
+        if (!(weight(a, end) <= weight(a, other) && weight(after, end) > weight(after, other)) || a[other].length === 0) continue
+        tips += 1
+        const world = new Playground(a)
+        play(world, 0.3)
+        world.grab(id)
+        world.carryTo((end === 'left' ? -1 : 1) * PLANK.seat, PLANK.z)
+        play(world, 0.4)
+        world.release()
+        const tossed = play(world, 5).filter((event) => event.type === 'toss').map((event) => (event.type === 'toss' ? event.id : ''))
+        expect([...tossed].sort(), `${JSON.stringify(a.left)} ${JSON.stringify(a.right)} + ${id} on ${end}`).toEqual([...a[other]].sort())
+      }
+    }
+    expect(tips).toBeGreaterThan(30)
+  })
+
   it('throws Bo too when the others bring his end up hard, lower than anyone lighter', () => {
     const world = new Playground(putOnEnd(emptyArrangement(), 'bo', 'left'))
     play(world, 0.5)

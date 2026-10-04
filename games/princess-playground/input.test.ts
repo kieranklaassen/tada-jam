@@ -165,4 +165,23 @@ describe('a drag that is partly done', () => {
     expect(countsAsDone(from, { x: 200 * COUNTS_FROM - 1, y: 0 }, target)).toBe(false)
     expect(countsAsDone(from, { x: 0, y: 150 }, target)).toBe(false)
   })
+
+  it('tells a finger that let go from a pointer the browser took away: only the first is the child\'s own drop', () => {
+    const lifted = new ForgivingTouch()
+    lifted.down(1, { x: 100, y: 100 }, 0)
+    lifted.move(1, { x: 200, y: 100 })
+    expect(lifted.lifted).toBe(false)
+    lifted.up(1, { x: 200, y: 100 }, 50)
+    expect(lifted.lifted).toBe(true)
+    const taken = new ForgivingTouch()
+    taken.down(1, { x: 100, y: 100 }, 0)
+    taken.move(1, { x: 200, y: 100 })
+    taken.cancel(1, 50)
+    expect(taken.active).toBe(true)
+    expect(taken.lifted).toBe(false)
+    // The finger comes back within the grace: it carries on, and a lift after that is a lift.
+    taken.down(2, { x: 205, y: 100 }, 120)
+    taken.up(2, { x: 205, y: 100 }, 200)
+    expect(taken.lifted).toBe(true)
+  })
 })

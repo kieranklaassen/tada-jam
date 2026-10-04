@@ -1,5 +1,5 @@
 import { companyOf, inCompany, lean, placeOf, standsAt, weightOn, type Arrangement } from './arrangement'
-import { landingOf, perched, reactionsTo, tossed, type Landing, type Reaction } from './cells'
+import { landingOf, perched, reactionsTo, tossed, underneath, type Landing, type Reaction } from './cells'
 import { forecast, type SandOp } from './forecast'
 import { Grains } from './grains'
 import type { Guidance } from './guidance'
@@ -264,6 +264,8 @@ export class Game implements Director {
     this.play.putBack()
     // Whoever is still in the air will land, and the plank will come down, with nobody watching: the marks they
     // make go into the saved sand now, so nothing the child set going is lost. They are drawn when they happen.
+    // A swirl Dot was about to draw is in the saved sand too.
+    for (const item of this.later) if (item.reaction.mark === 'swirl') this.swirlMarked(item.reaction.who)
     if (!this.scene) {
       const coming = forecast(this.play, this.world.arrangement, () => [])
       for (const op of coming) this.mark(op)
@@ -328,6 +330,8 @@ export class Game implements Director {
   private moved(id: FriendId, act: () => void): void {
     // What was still to come may not come now: the picture catches up with the saved sand first.
     this.drawOwed()
+    // Whatever the friend was about to do where it was, it no longer does: it has been taken from there.
+    this.later = this.later.filter((item) => item.reaction.who !== id)
     const before = this.play.arrangement
     act()
     const after = this.play.arrangement
@@ -445,8 +449,6 @@ export class Game implements Director {
   /** A reaction now, or after its own small delay. */
   react(reactions: readonly Reaction[]): void {
     for (const reaction of reactions) {
-      // Dot's swirl is in the saved sand the moment it is due, though Dot takes a moment to draw it.
-      if (reaction.mark === 'swirl') this.swirlMarked(reaction.who)
       if (reaction.after <= 0) this.apply(reaction)
       else this.later.push({ at: this.time + reaction.after, reaction })
     }
@@ -555,7 +557,16 @@ export class Game implements Director {
         this.wantSave('soon')
       }
       // Thrown by the plank and down again: a squeak in its own voice.
-      if (event.thrown) this.voice(v.chirp(event.id, this.said++))
+      if (event.thrown) {
+        this.voice(v.chirp(event.id, this.said++))
+        // Thrown and down again on the head it sat on: that head says what it always says to being landed on, and
+        // Pim, on top of someone once more, crows.
+        const place = placeOf(this.play.arrangement, event.id)
+        if (event.on === 'friend' && place.at === 'end' && place.level > 0) {
+          this.react(underneath(this.play.arrangement[place.end][place.level - 1], event.id))
+          if (event.id === 'pim') this.react([{ who: 'pim', after: 0.1, voice: v.crow(), act: 'bounce', seconds: 0.5 }])
+        }
+      }
       const landing = this.landings[event.id]
       if (landing) {
         delete this.landings[event.id]
@@ -627,10 +638,13 @@ export class Game implements Director {
     } else this.voice(v.twang())
   }
 
-  /** The arrangement has this friend on the end that is up. */
+  /** The arrangement has this friend where it likes to be: high. */
   private high(id: FriendId): boolean {
     const a = this.play.arrangement, place = placeOf(a, id)
-    return place.at === 'end' && lean(a) === (place.end === 'left' ? 1 : -1)
+    if (place.at !== 'end') return false
+    // Mog's high perch is the up end or the top of any stack; Bo's is the up end.
+    if (id === 'mog' && place.level > 0 && place.level === a[place.end].length - 1) return true
+    return lean(a) === (place.end === 'left' ? 1 : -1)
   }
 
   /** Found as it stands: whoever is high already has said so, and says nothing on a load or when a scene is over. */
@@ -783,7 +797,7 @@ export class Game implements Director {
    */
   private held(): void {
     const play = this.play, a = play.arrangement
-    if (this.scene || play.held || this.time < this.heldAt) return
+    if (this.scene || this.time < this.heldAt) return
     // Sitting, not on its way there: a held state holds from the moment everyone has landed, however the plank still sways.
     const sits = (id: FriendId) => play.bodies[id].landed && play.bodies[id].mode === 'rest'
     const left = weightOn(a, 'left'), right = weightOn(a, 'right')
