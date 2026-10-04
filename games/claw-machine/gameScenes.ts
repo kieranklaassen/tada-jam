@@ -253,7 +253,10 @@ export function delivery(game: Game, which: number): void {
   const tips = 1.9
   beats.push(over(game, tips, 0.45, (progress) => { crate.tip = Math.max(0.001, ease(progress)) }))
   beats.push(cue(game, tips + 0.2, () => game.say({ type: 'pour' })))
-  const order = game.bodies.map((_, toy) => toy).sort((a, b) => deck[b].z - deck[a].z || deck[a].x - deck[b].x)
+  // Row by row from the front, and in a row whoever has furthest to go sideways first: so a toy that is on its way
+  // never moves into its neighbour that has not left yet.
+  const sideways = (toy: number) => Math.abs(game.spotOf(toy).x - (crate.x + deck[toy].x))
+  const order = game.bodies.map((_, toy) => toy).sort((a, b) => deck[b].z - deck[a].z || sideways(b) - sideways(a))
   let leaves = tips + 0.3, lastRow = order.length > 0 ? deck[order[0]].z : 0
   for (const toy of order) {
     const body = game.bodies[toy]

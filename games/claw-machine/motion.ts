@@ -282,8 +282,9 @@ export function actPose(who: GobblerId, act: Act, t: number, n: number, out: Pos
       break
     case 'catch': // catches, winds up, lobs
       out.squash = 1 - 0.14 * bump(t, 0, 0.25) + 0.2 * bump(t, 0.45, 0.7)
-      // It winds up backward and lobs with a stretch: it never leans out over the gate in front of it.
-      out.leanX = -0.25 * bump(t, 0.2, 0.5) + 0.08 * bump(t, 0.5, 0.75)
+      // It winds up with a dip and lobs with a stretch: it never leans out over the gate in front of it, nor back
+      // into the wall behind it.
+      out.leanX = -0.07 * bump(t, 0.2, 0.5) + 0.08 * bump(t, 0.5, 0.75)
       break
     case 'heave': // staggers under a big one, then heaves
       out.dx = 0.4 * Math.sin(t * TAU * 2) * (1 - ramp(t, 0.55, 0.65)); out.squash = 1 - 0.18 * ramp(t, 0, 0.08) * (1 - ramp(t, 0.6, 0.7)) + 0.24 * bump(t, 0.62, 0.9)

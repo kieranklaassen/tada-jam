@@ -181,7 +181,7 @@ export function react(game: Game, deed: Deed): void {
       deed.moved.forEach(({ toy }, i) => {
         const body = game.bodies[toy]
         const over = clearTop(game, toy, body, game.spotOf(toy), 0.3, nearestPlace(body.x, body.z))
-        if (i === 0) send(game, body, toy, [{ at: { x: body.x, y: body.y - 0.9, z: body.z }, landing: 'again', seconds: 0.2 }, { landing: 'stand', peak: Math.max(body.y - 0.5, over) }], deed)
+        if (i === 0) send(game, body, toy, [{ at: { x: body.x, y: body.y - 1 + ON_STUDS, z: body.z }, landing: 'again', seconds: 0.2 }, { landing: 'stand', peak: Math.max(body.y - 0.5, over) }], deed)
         else send(game, body, toy, [{ landing: 'stand', peak: Math.max(body.y + 0.8 + i * 0.6, over) }], deed, 0.5 + i * 0.3)
       })
       break

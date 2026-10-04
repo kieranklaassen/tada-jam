@@ -518,20 +518,25 @@ export class Game {
    * thrown ever comes up through it. A toy set down on the place under it goes nowhere, and the claw stays.
    */
   private backOff(toy: number): void {
-    const body = this.bodies[toy], claw = this.claw
-    if (!body || body.mode === 'resting' || body.mode === 'held') return
-    const way: { x: number; z: number }[] = [{ x: body.x, z: body.z }]
-    if (body.mode === 'flying') way.push(this.flightEnd(body, toy))
-    if (body.mode === 'mouth') { const actor = this.crew[body.slot]; if (actor) way.push(actor) }
-    for (const leg of body.legs) way.push(leg.fixed ? leg : this.spotOf(toy))
-    const where = this.world.cycle.where[toy]
-    if (where.at === 'tray') way.push(this.spotOf(toy))
-    if (this.pending.on === 'place' && way.every((stop) => Math.hypot(stop.x - claw.x, stop.z - claw.z) < 1.5)) return
+    const claw = this.claw
+    if (!this.bodies[toy] || this.bodies[toy].mode === 'resting' || this.bodies[toy].mode === 'held') return
+    // The way of the toy that was let go, and of every other toy its landing has sent off or is about to.
+    const ways: { x: number; z: number }[][] = []
+    this.bodies.forEach((body, one) => {
+      if (body.mode === 'resting' || body.mode === 'held' || (body.mode === 'parked' && body.wait <= 0)) return
+      const way: { x: number; z: number }[] = [{ x: body.x, z: body.z }]
+      if (body.mode === 'flying') way.push(this.flightEnd(body, one))
+      if (body.mode === 'mouth') { const actor = this.crew[body.slot]; if (actor) way.push(actor) }
+      for (const leg of body.legs) way.push(leg.fixed ? leg : this.spotOf(one))
+      if (this.world.cycle.where[one]?.at === 'tray') way.push(this.spotOf(one))
+      ways.push(way)
+    })
+    if (this.pending.on === 'place' && ways.every((way) => way.every((stop) => Math.hypot(stop.x - claw.x, stop.z - claw.z) < 1.5))) return
     let best: { x: number; z: number } | null = null, least = Infinity
     for (let place = 0; place < PLACES; place++) {
       const at = placeAt(place)
       let clear = Infinity
-      for (let i = 0; i + 1 < way.length; i++) clear = Math.min(clear, fromSegment(at, way[i], way[i + 1]))
+      for (const way of ways) for (let i = 0; i + 1 < way.length; i++) clear = Math.min(clear, fromSegment(at, way[i], way[i + 1]))
       const far = Math.hypot(at.x - claw.x, at.z - claw.z)
       if (clear >= CLEAR_OF_A_THROW && far < least) { least = far; best = at }
     }
@@ -662,7 +667,7 @@ export class Game {
       if (toy === except || toy === this.held || body.mode !== 'resting' || this.world.cycle.where[toy].at !== 'tray') return
       // A toy with another in the jaws, in the air or waiting its turn right above it stays down: it would hop
       // up into it.
-      if (this.bodies.some((over) => over !== body && over.mode !== 'resting' && over.y > body.y && Math.abs(over.x - body.x) < 3 && Math.abs(over.z - body.z) < 2.5 && over.y - body.y < body.height + 2.5)) return
+      if (this.bodies.some((over, other) => over !== body && (over.mode !== 'resting' || other === this.held) && over.y > body.y && Math.abs(over.x - body.x) < 3 && Math.abs(over.z - body.z) < 2.5 && over.y - body.y < body.height + 2.5)) return
       const d = Math.hypot(body.x - x, body.z - z)
       body.hopV += strength / (1 + (d / reach) * (d / reach)) / Math.sqrt(body.heavy)
     })

@@ -52,8 +52,9 @@ export function poseOf(game: Game, actor: Actor, out: Pose): Pose {
   if (actor.liftedT < 0) {
     // Standing, it leans as a thing on feet does: it rocks up onto the edge of its feet, and never down into the
     // floor.
-    const shape = shapeOf(actor.id), foot = Math.max(1.5, shape.width / 2 - 2.5) + 1
-    out.dy += (Math.abs(Math.sin(out.leanZ)) * foot + Math.abs(Math.sin(out.leanX)) * 2) * actor.scale
+    // (Squashed, it is wider, and its feet stand further out.)
+    const shape = shapeOf(actor.id), wide = 1 / Math.sqrt(Math.max(0.2, out.squash)), foot = (Math.max(1.5, shape.width / 2 - 2.5) + 1) * wide
+    out.dy += (Math.abs(Math.sin(out.leanZ)) * foot + Math.abs(Math.sin(out.leanX)) * 2 * wide) * actor.scale
   }
   if (actor.liftedT >= 0) {
     // In the jaws it hangs from its knob: however it stretches or leans, the knob stays between the teeth. A spin
@@ -175,6 +176,14 @@ export function gamePicture(game: Game, guidance: Guidance | null): Picture {
     const where = game.world.cycle.where[toy]
     const inside = toy !== game.held && ((body.mode === 'resting' && where.at === 'belly') || body.mode === 'mouth' || (rides(body) && game.crew[body.slot] !== undefined))
     if (inside || carried.has(body)) return
+    const into = body.mode === 'flying' && body.landing === 'mouth' ? game.crew[body.slot] : undefined
+    if (into) {
+      // On its way into a mouth it is drawn more and more where the gobbler has its mouth at this moment, so it
+      // lands on the tongue however the gobbler is hopping or stretching for it.
+      const to = carriedBy(game, into, body), part = Math.min(1, body.flown / Math.max(1e-6, body.flight))
+      toys.push(look(game.generation * 100 + toy, body, body.x + (to.x - body.x) * part, body.y + (to.y - body.y) * part, body.z + (to.z - body.z) * part))
+      return
+    }
     toys.push(look(game.generation * 100 + toy, body))
     // A toy in the jaws has no shadow of its own, and neither has one on a crate or behind the parapet.
     if (toy === game.held || body.z < TRAY.z - 0.5) return
