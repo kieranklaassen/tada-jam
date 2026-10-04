@@ -156,6 +156,8 @@ export function buildScenery(shared: VinylUniforms): Scenery {
   // The setting, painted once: every pillow of it in one mesh, each with its own haze.
   const setting = new Mesh(pillows(SETTING), still)
   setting.name = 'setting'
+  // Drawn after the friends, the hills and the balloons, which stand in front of most of it: what they hide of it costs nothing.
+  setting.renderOrder = 2
   // The toys that live in it.
   const toyOf = (name: ToyName, toy: Toy): Mesh => {
     const mesh = new Mesh(pillows(toy.pillows.map((spec) => ({ ...spec, haze: toy.haze }))), still)

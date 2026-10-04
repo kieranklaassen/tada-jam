@@ -33,7 +33,7 @@ function topOf(mound: Mound, x: number, z: number): number {
 }
 
 function mound(m: Mound, colour: string, haze: number): Pillow {
-  return { at: [m.x, m.y, m.z], size: [m.rx, m.ry, m.rz], colour, haze, detail: [40, 16] }
+  return { at: [m.x, m.y, m.z], size: [m.rx, m.ry, m.rz], colour, haze, detail: [32, 12] }
 }
 
 const SMALL: readonly [number, number] = [14, 10]
@@ -51,7 +51,7 @@ function tree(on: Mound, x: number, z: number, tall: number, colour: string, haz
   const foot = topOf(on, x, z) - 0.1
   return [
     { at: [x, foot + tall * 0.3, z], size: [tall * 0.07, tall * 0.34, tall * 0.07], colour: C.sand, haze, detail: TINY },
-    { at: [x, foot + tall * 0.72, z], size: [tall * 0.3, tall * 0.33, tall * 0.28], colour, haze, detail: SMALL },
+    { at: [x, foot + tall * 0.72, z], size: [tall * 0.3, tall * 0.33, tall * 0.28], colour, haze, detail: TINY },
   ]
 }
 
@@ -91,11 +91,11 @@ export const HUT = { x: FAR_HILL.x + 0.3, z: FAR_HILL.z + PARADE_RING.forward - 
 export const KEEPER = { x: FAR_HILL.x - 0.9, z: FAR_HILL.z + PARADE_RING.forward + 0.9 } as const
 
 function pool(): Pillow[] {
-  const foot = groundAt(POOL.x, POOL.z), parts: Pillow[] = [], pieces = 14
+  const foot = groundAt(POOL.x, POOL.z), parts: Pillow[] = [], pieces = 12
   // The wall: a ring of fat pillows.
   for (let i = 0; i < pieces; i++) {
     const angle = (i / pieces) * Math.PI * 2
-    parts.push({ at: [POOL.x + Math.cos(angle) * POOL.radius, foot + 0.3, POOL.z + Math.sin(angle) * POOL.radius], size: [0.4, 0.34, 0.4], colour: C.aqua, detail: SMALL })
+    parts.push({ at: [POOL.x + Math.cos(angle) * POOL.radius, foot + 0.3, POOL.z + Math.sin(angle) * POOL.radius], size: [0.44, 0.34, 0.44], colour: C.aqua, detail: TINY })
   }
   parts.push({ at: [POOL.x, foot + 0.36, POOL.z], size: [POOL.radius, 0.06, POOL.radius], colour: C.water, detail: [20, 8] })
   return parts
