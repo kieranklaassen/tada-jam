@@ -12,11 +12,11 @@ import { Scene, sceneLength, type Beat } from './scene'
 import { PAW_HOME, capeComesOff, comingIn, shownOnce, tailOf, type Cast, type Cue } from './scenes'
 import { DOORWAY, LOW, Staging, WINDOW, dipAt, lowFor, walk } from './staging'
 
-function cast(game: Game): Cast & { cues: Cue[]; cut: boolean } {
+function cast(game: Game): Cast & { cues: Cue[]; said: string[]; cut: boolean } {
   const customer = game.chair ? new Puppet(PERSONALITIES[game.chair], makeRng(1)) : null
   const friend = game.friend ? new Puppet(PERSONALITIES[game.friend], makeRng(2)) : null
-  const cues: Cue[] = []
-  return { staging: new Staging(), hair: new Hair(TUFTS, makeRng(3)), customer: () => customer, friend: () => friend, cue: (cue) => { cues.push(cue) }, cues, cut: false }
+  const cues: Cue[] = [], said: string[] = []
+  return { staging: new Staging(), hair: new Hair(TUFTS, makeRng(3)), customer: () => customer, friend: () => friend, cue: (cue) => { cues.push(cue) }, say: (who, what) => { said.push(`${who} ${what}`) }, cues, said, cut: false }
 }
 /** Plays beats from start to end at 60 frames a second and returns how long they took. */
 function playThrough(beats: Beat[], each?: (t: number) => void): number {
@@ -148,6 +148,8 @@ describe('the cape coming off', () => {
     expect(c.staging).toMatchObject({ cape: 0, fx: null })
     // What sounds is the two lengths, never a cheer or a buzzer: there is no such cue to give.
     expect(c.cues.every((heard) => ['capeOff', 'landed', 'tooLong', 'tooShort', 'asLong', 'flap', 'air', 'ping'].includes(heard))).toBe(true)
+    // And the customer is heard: its own noise for what it does about its lock.
+    expect(c.said).toContain(`lion ${kind === 'too-long' ? 'lockTooLong' : kind === 'too-short' ? 'lockTooShort' : 'lockAsLong'}`)
     expect(c.staging.paw).toBeNull()
   })
 
@@ -221,6 +223,8 @@ describe('the cape coming off', () => {
     const long = playThrough(capeComesOff(c, liked, done.game, done.showing!))
     expect(c.customer()!.started).toEqual(expect.arrayContaining(['lion-shakes-it-out-and-rumbles', 'lion-goes-cross-eyed-and-bats-at-it']))
     expect(c.friend()!.started).toContain('poodle-admires-it-sideways')
+    // Each answer is heard as well as seen: the mane, the bow, and what the friend wears.
+    expect(c.said).toEqual(expect.arrayContaining(['lion maneLiked', 'lion bowHated', 'poodle wearing']))
     const plain = seated({ mane: Array(TUFTS).fill(48) }), plainDone = capeOff(plain), c2 = cast(plainDone.game)
     const short = playThrough(capeComesOff(c2, plain, plainDone.game, plainDone.showing!))
     // A scene with more to show is longer; one with a middling mane and nothing worn says nothing about them.

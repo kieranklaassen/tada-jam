@@ -1,10 +1,21 @@
 import { describe, expect, it } from 'vitest'
 import { MAX_LEN, MIN_LEN } from './rules'
 import { CUSTOMERS, TASTES } from './tastes'
-import { CELL_VOICES, OTHER_VOICES, RUB_VOICES, VOICE_RANGE, alike, inVoice, pitchForLength, type VoiceSpec } from './voices'
+import { CELL_VOICES, OTHER_VOICES, RUB_VOICES, SAID, SAID_VOICES, VOICE_RANGE, alike, inVoice, pitchForLength, type VoiceSpec } from './voices'
 
 const within = (value: number, range: { min: number; max: number }): boolean => value >= range.min && value <= range.max
 const all: [string, VoiceSpec][] = [...Object.entries(CELL_VOICES), ...Object.entries(OTHER_VOICES), ...Object.entries(RUB_VOICES).map(([who, v]): [string, VoiceSpec] => [`rub/${who}`, v])]
+
+const inRange = (v: VoiceSpec): void => {
+  expect(within(v.pitch, VOICE_RANGE.pitch)).toBe(true)
+  if (v.glideTo !== undefined) expect(within(v.glideTo, VOICE_RANGE.pitch)).toBe(true)
+  expect(within(v.peak, VOICE_RANGE.peak)).toBe(true)
+  expect(within(v.attack, VOICE_RANGE.attack)).toBe(true)
+  expect(within(v.length, VOICE_RANGE.length)).toBe(true)
+  if (v.kind === 'noise') expect(within(v.q ?? 0, VOICE_RANGE.q)).toBe(true)
+  else expect(v.wave).toBeDefined()
+  expect(v.attack).toBeLessThan(v.length)
+}
 
 describe('the voices', () => {
   it.each(all)('%s stays inside the stated ranges', (_name, v) => {
@@ -31,6 +42,21 @@ describe('the voices', () => {
     const others = Object.entries(OTHER_VOICES) as [string, VoiceSpec][]
     for (let i = 0; i < others.length; i++) for (let j = i + 1; j < others.length; j++) {
       expect(alike(others[i][1], others[j][1]), `${others[i][0]} and ${others[j][0]}`).toBe(false)
+    }
+  })
+
+  it('gives each customer a noise of its own for each answer with the cape off: a few notes, in range, and no two customers the same', () => {
+    const who = Object.keys(SAID_VOICES) as (keyof typeof SAID_VOICES)[]
+    expect(who).toHaveLength(4)
+    for (const said of SAID) {
+      for (const customer of who) {
+        const notes = SAID_VOICES[customer][said]
+        expect(notes.length).toBeGreaterThanOrEqual(1)
+        expect(notes.length).toBeLessThanOrEqual(4)
+        for (const note of notes) { inRange(note); expect(note.after ?? 0).toBeLessThan(1.5) }
+      }
+      const shapes = who.map((customer) => JSON.stringify(SAID_VOICES[customer][said]))
+      expect(new Set(shapes).size).toBe(4)
     }
   })
 

@@ -201,7 +201,7 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
 
   // The pieces that lie still on the floor are drawn together, one path for each colour; a piece in the air is drawn by itself.
   const lying = new Map<string, { x: number; y: number; half: number; turn: number }[]>()
-  game.clippings.forEach((piece, index) => {
+  game.clippings.forEach((piece) => {
     if (hair.carried?.what === piece) return
     const flight = hair.flights.get(piece)
     if (flight) { drawn += strip(g, flight.x, flight.y, (piece.len * STEP) / 2, flight.turn, piece.hue); return }
@@ -209,7 +209,7 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
     const box = clippingBox(game, piece)
     if (!box) return
     const group = lying.get(piece.hue) ?? []
-    group.push({ x: box.x, y: box.y, half: box.half, turn: ((index % 5) - 2) * 0.05 })
+    group.push({ x: box.x, y: box.y, half: box.half, turn: fallen(piece) })
     lying.set(piece.hue, group)
   })
   for (const [hue, group] of lying) drawn += strips(g, group, hue)
@@ -251,6 +251,12 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
   sprites.ahead(game.waiting[1], true)
   for (const who of CUSTOMERS) sprites.ahead(who, false)
   return drawn
+}
+
+/** How a piece lies where it fell: tilted one way or the other by a fixed amount of its own, never level, so that a piece of hair on the floor is a thing that dropped and no kind of sign. */
+function fallen(piece: { len: number; x?: number }): number {
+  const n = (Math.round(piece.x ?? 0) * 7 + piece.len * 3) % 7
+  return (n < 3 ? n - 4 : n - 2) * 0.1
 }
 
 /** A head as the looking glass shows it: the other way round, smaller, and only as much of it as the oval holds. */

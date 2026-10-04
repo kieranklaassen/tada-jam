@@ -2,7 +2,7 @@ import { noise, tone, type Voice } from './audio'
 import type { Happening } from './hand'
 import type { Cue } from './scenes'
 import { TASTES, type CustomerId } from './tastes'
-import { CELL_VOICES, OTHER_VOICES, RUB_VOICES, inVoice, pitchForLength, type VoiceSpec } from './voices'
+import { CELL_VOICES, OTHER_VOICES, RUB_VOICES, SAID_VOICES, inVoice, pitchForLength, type Said, type VoiceSpec } from './voices'
 import type { Salon } from './world'
 
 // What each thing that happens sounds like: a short list of notes, in plain
@@ -17,6 +17,11 @@ const PART_PITCH = { nose: 1.25, ear: 1.5, chin: 0.75, cheek: 1 } as const
 
 /** The most notes one frame may start, so a stroke through the whole mane is a flurry and not a wall. */
 export const MOST_NOTES = 4
+
+/** What a customer says, with the cape off, about its lock, its mane, a bow or what is on its face: its own noise for it. */
+export function notesForSaying(who: CustomerId, said: Said): Note[] {
+  return SAID_VOICES[who][said].map((note) => ({ ...note }))
+}
 
 /** A voice moved onto a customer's own pitch. */
 const voiced = (spec: VoiceSpec, who: CustomerId | null): VoiceSpec => (who ? inVoice(spec, TASTES[who].voiceHz) : spec)

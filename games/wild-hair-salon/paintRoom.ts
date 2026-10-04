@@ -110,8 +110,13 @@ export function paintLookingGlass(g: Ctx, paint: Watercolour, rng: Rng): void {
   const frame = blob(rng, x, y, rx + 14, ry + 14, 0.012, 22), glass = blob(rng, x, y, rx, ry, 0.01, 22)
   paint.wash(g, frame, { color: ROOM.frame, edge: ROOM.frameEdge, blooms: [ROOM.lamp], strength: 0.85, reserve: true })
   paint.wash(g, glass, { color: ROOM.glass, edge: ROOM.glassBloom, blooms: [ROOM.glassBloom], strength: 0.75, grain: 0.1, reserve: true })
+  // It is never an empty ring: the room shows in it, a lamp and the stripes of the wall across from it, and light lies on the glass.
+  for (const sx of [-44, 6, 52]) paint.wash(g, [{ x: x + sx, y: y - ry * 0.74 }, { x: x + sx + 20, y: y - ry * 0.78 }, { x: x + sx + 14, y: y + ry * 0.7 }, { x: x + sx - 6, y: y + ry * 0.74 }], { color: ROOM.wall, strength: 0.5, bleed: 5, pool: 2, grain: 0.2 })
+  paint.wash(g, blob(rng, x + 30, y - ry * 0.5, 22, 15, 0.08, 9), { color: ROOM.lamp, edge: ROOM.lampEdge, strength: 0.6, bleed: 5 })
   paint.pencil(g, frame, true)
   paint.pencil(g, glass, true, 0.8)
+  paint.pencil(g, [{ x: x - 54, y: y + 10 }, { x: x - 40, y: y - 44 }, { x: x - 14, y: y - 78 }], false, 0.8)
+  paint.pencil(g, [{ x: x - 44, y: y + 34 }, { x: x - 36, y: y + 8 }], false, 0.8)
   paint.wash(g, blob(rng, x, y - ry - 46, 6, 6, 0.05, 8), { color: ROOM.steel, edge: ROOM.steelEdge, reserve: true })
 }
 
@@ -304,10 +309,11 @@ export function paintChair(g: Ctx, paint: Watercolour, rng: Rng): void {
   const back = roughBox(rng, CHAIR.x - 150, 300, 300, 250, 6)
   paint.wash(g, back, { color: ROOM.chair, edge: ROOM.chairEdge, blooms: ['#f6a17f'], reserve: true })
   paint.pencil(g, back, true)
-  for (const [bx, by] of [[-70, 372], [70, 372], [0, 430], [-70, 488], [70, 488]] as const) {
-    dot(g, CHAIR.x + bx, by, 5, ROOM.chairEdge)
-    paint.pencil(g, [{ x: CHAIR.x + bx - 16, y: by - 10 }, { x: CHAIR.x + bx, y: by }, { x: CHAIR.x + bx + 16, y: by - 10 }], false, 0.5)
-  }
+  // Three long seams down the padding, and a roll for a head along the top.
+  for (const sx of [-72, 2, 76]) paint.pencil(g, [{ x: CHAIR.x + sx, y: 344 }, { x: CHAIR.x + sx + rng.range(-5, 5), y: 440 }, { x: CHAIR.x + sx + rng.range(-3, 3), y: 532 }], false, 0.7)
+  const roll = roughBox(rng, CHAIR.x - 104, 292, 208, 40, 8)
+  paint.wash(g, roll, { color: ROOM.chair, edge: ROOM.chairEdge, strength: 0.6 })
+  paint.pencil(g, roll, true, 0.7)
   paint.wash(g, roughBox(rng, CHAIR.x - 13, FLOOR_Y - 40, 26, 60, 2), { color: ROOM.steel, edge: ROOM.steelEdge, reserve: true })
   const foot = blob(rng, CHAIR.x, FLOOR_Y + 30, 118, 17, 0.03, 14)
   paint.wash(g, foot, { color: ROOM.steel, edge: ROOM.steelEdge, reserve: true })

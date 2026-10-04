@@ -10,6 +10,7 @@ import type { Beat } from './scene'
 import type { Showing } from './showing'
 import { DOORWAY, LOW, RIBBON_HOME, dipAt, lowFor, smooth, walk, type Staging } from './staging'
 import { TASTES, type CustomerId } from './tastes'
+import type { Said } from './voices'
 
 // The short scenes, as lists of timed beats (scene.ts). Each is filled in
 // from the state of play: who the two are, how long everything is, what the
@@ -31,6 +32,8 @@ export type Cast = {
   customer(): Puppet | null
   friend(): Puppet | null
   cue(cue: Cue, who?: CustomerId): void
+  /** One of the customers makes its own noise about its lock, its mane, a bow or what is on its face. */
+  say(who: CustomerId, said: Said): void
   /** A touch has ended the scene: beats land where they were going without starting anything. */
   readonly cut: boolean
 }
@@ -156,7 +159,7 @@ export function capeComesOff(cast: Cast, before: Game, after: Game, showing: Sho
     const flap = 0.36
     beats.push(
       over(2.1, 0.4, (p) => reach(p, lock.x - 2, modelEnd)),
-      cueAt(2.5, () => { staging.fx = { kind, muddle: showing.comparison.muddle }; if (!cast.cut) { customer?.react(reaction); cast.cue('tooLong', chair) } }),
+      cueAt(2.5, () => { staging.fx = { kind, muddle: showing.comparison.muddle }; if (!cast.cut) { customer?.react(reaction); cast.cue('tooLong', chair); cast.say(chair, reaction) } }),
       ...Array.from({ length: times }, (_, i) => cueAt(2.5 + i * flap, () => { if (!cast.cut) { hair.kicked('lock', (i % 2 ? -1 : 1) * 7 * big); if (i > 0) cast.cue('flap', chair) } })),
       over(2.5, times * flap, (p) => paw(lock.x - 2 + Math.sin(p * times * Math.PI) * 5, modelEnd)),
     )
@@ -187,6 +190,7 @@ export function capeComesOff(cast: Cast, before: Game, after: Game, showing: Sho
         cast.cue('ping', chair)
         customer?.bump(1.3)
         customer?.react(reaction)
+        cast.say(chair, reaction)
         // The yak snorts, and his own fringe flies up.
         if (chair === 'yak') hair.moodOf('up', 0.8, 0.5)
         other?.react('friendPoked')
@@ -198,7 +202,7 @@ export function capeComesOff(cast: Cast, before: Game, after: Game, showing: Sho
     // The two ends meet in its paw, and the two locks swing as one.
     beats.push(
       over(2.1, 0.4, (p) => reach(p, lock.x + 18, modelEnd)),
-      cueAt(2.5, () => { staging.fx = { kind, muddle: showing.comparison.muddle }; if (!cast.cut) { customer?.react(reaction); other?.react(reaction); cast.cue('asLong', chair) } }),
+      cueAt(2.5, () => { staging.fx = { kind, muddle: showing.comparison.muddle }; if (!cast.cut) { customer?.react(reaction); other?.react(reaction); cast.cue('asLong', chair); cast.say(chair, reaction) } }),
       over(2.5, 0.5, () => paw(lock.x + 18, modelEnd)),
       cueAt(3.0, () => { if (!cast.cut) { hair.strands.lock.swing.v = 2.4; hair.strands.model.swing.v = 2.4; hair.moodOf('wave', 1.4); customer?.bump(0.7); other?.bump(0.7) } }),
     )
@@ -213,23 +217,23 @@ export function capeComesOff(cast: Cast, before: Game, after: Game, showing: Sho
   if (showing.mane !== 'plain') {
     const reaction = showing.mane === 'liked' ? 'maneLiked' as const : 'maneHated' as const
     const at = t
-    beats.push(cueAt(at, () => { if (!cast.cut) { customer?.react(reaction); hair.moodOf(showing.mane === 'liked' ? 'wave' : 'droop', chair === 'poodle' && showing.mane === 'hated' ? 0.7 : 1.4); if (chair === 'poodle' && showing.mane === 'hated') hair.moodOf('up', 0.8, 0.75) } }), over(at, (customer?.lasts(reaction) ?? 1) + 0.2, () => {}))
+    beats.push(cueAt(at, () => { if (!cast.cut) { customer?.react(reaction); cast.say(chair, reaction); hair.moodOf(showing.mane === 'liked' ? 'wave' : 'droop', chair === 'poodle' && showing.mane === 'hated' ? 0.7 : 1.4); if (chair === 'poodle' && showing.mane === 'hated') hair.moodOf('up', 0.8, 0.75) } }), over(at, (customer?.lasts(reaction) ?? 1) + 0.2, () => {}))
     t += (customer?.lasts(reaction) ?? 1) + 0.2
   }
   if (showing.bow !== null) {
     const reaction = taste.bow === 'loves' ? 'bowLoved' as const : 'bowHated' as const
     const at = t
-    beats.push(cueAt(at, () => { if (!cast.cut) customer?.react(reaction) }), over(at, (customer?.lasts(reaction) ?? 1) + 0.2, () => {}))
+    beats.push(cueAt(at, () => { if (!cast.cut) { customer?.react(reaction); cast.say(chair, reaction) } }), over(at, (customer?.lasts(reaction) ?? 1) + 0.2, () => {}))
     t += (customer?.lasts(reaction) ?? 1) + 0.2
   }
   if (showing.blindfold !== null || showing.worn.chair > 0 || showing.worn.friend > 0) {
     const at = t
     beats.push(cueAt(at, () => {
       if (cast.cut) return
-      if (showing.blindfold === 'chair') customer?.react('blindfolded')
-      else if (showing.worn.chair > 0) customer?.react('wearing')
-      if (showing.blindfold === 'friend') other?.react('blindfolded')
-      else if (showing.worn.friend > 0) other?.react('wearing')
+      if (showing.blindfold === 'chair') { customer?.react('blindfolded'); cast.say(chair, 'blindfolded') }
+      else if (showing.worn.chair > 0) { customer?.react('wearing'); cast.say(chair, 'wearing') }
+      if (showing.blindfold === 'friend') { other?.react('blindfolded'); cast.say(friend, 'blindfolded') }
+      else if (showing.worn.friend > 0) { other?.react('wearing'); cast.say(friend, 'wearing') }
     }), over(at, 1.1, () => {}))
     t += 1.1
   }

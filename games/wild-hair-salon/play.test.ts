@@ -68,6 +68,41 @@ describe('an empty salon', () => {
   })
 })
 
+describe('small things the sheet has', () => {
+  it('lets a swipe that only began on a seat, the door or the chair go by, and a drag from the knot still pull the cape off', () => {
+    const play = seated(), before = round(play)
+    drag(play, [BENCH, { x: BENCH.x + 60, y: BENCH.y - 40 }, { x: BENCH.x + 200, y: BENCH.y - 120 }])
+    expect(round(play)).toEqual(before)
+    expect(play.pressed).toBeNull()
+    // A short slip of the finger on the bench is still a touch on it.
+    drag(play, [BENCH, { x: BENCH.x + 20, y: BENCH.y + 16 }])
+    expect(play.game!.seat).toBe('across')
+    through(play)
+    const knot = knotOf(play)
+    drag(play, [knot, { x: knot.x - 80, y: knot.y - 60 }, { x: knot.x - 160, y: knot.y - 120 }])
+    expect(play.game!.cape).toBe('off')
+  })
+
+  it('turns the oldest piece on the floor to fluff, with a sigh, when a thirteenth is cut', () => {
+    const full = Array.from({ length: 12 }, (_, i) => ({ len: 9, hue: 'lion' as const, on: 'floor' as const, x: 20 + i * 3 }))
+    const play = seated({ lock: 90, clippings: full })
+    play.takeNotes()
+    drag(play, [AIR, { x: LOCK_X + 40, y: COLLAR_Y + 150 - BLADES.y }, { x: LOCK_X - 20, y: COLLAR_Y + 150 - BLADES.y }])
+    expect(play.game!.clippings).toHaveLength(12)
+    expect(play.game!.clippings.some((c) => c.on === 'floor' && c.x === 20 && c.len === 9)).toBe(false)
+    expect(play.hair.puffs.length).toBeGreaterThanOrEqual(3)
+  })
+
+  it('shows the pull only as a customer comes in: a lock the child cut short is not shown it at a touch on a seat', () => {
+    const play = seated({ shown: { snip: true, pull: false, ribbon: true }, ribbon: { len: 40, at: 'peg' }, lock: 60, model: 44 })
+    drag(play, [AIR, { x: LOCK_X + 40, y: COLLAR_Y + 10 * STEP - BLADES.y }, { x: LOCK_X - 20, y: COLLAR_Y + 10 * STEP - BLADES.y }])
+    expect(play.game!.lock).toBeLessThan(44 - MEET)
+    tap(play, BENCH)
+    through(play)
+    expect(play.game!.shown.pull).toBe(false)
+  })
+})
+
 describe('a touch that is cut off', () => {
   // The game is put away under a finger, or the browser takes the finger: the Mount gives the touch up.
   it('does not open the door, pull the cape off or move the friend when the finger was on one of them', () => {
@@ -128,8 +163,11 @@ describe('left alone', () => {
   it('has the mane stir by itself under the cape now and then, and never while a finger is at work', () => {
     const play = seated()
     let stirred = false
-    for (let i = 0; i < 60 * 8; i++) { play.step(1 / 60, true); if (!play.hair.settled) stirred = true }
+    for (let i = 0; i < 60 * 14; i++) { play.step(1 / 60, true); if (!play.hair.settled) stirred = true }
     expect(stirred).toBe(true)
+    // And the one want is there to see without a touch, after a reload too: the customer looks from lock to lock and pats its own, and the friend looks back.
+    expect(play.customer()!.started).toEqual(expect.arrayContaining(['lion-looks-from-his-lock-to-the-other', 'lion-pats-his-lock-twice-slowly']))
+    expect(play.friend()!.started).toContain('poodle-points-her-nose-at-each-in-turn')
     const busy = seated()
     let moved = false
     for (let i = 0; i < 60 * 8; i++) { busy.step(1 / 60, false); if (busy.hair.tufts.some((tuft) => tuft.stretch.x > 1.05)) moved = true }

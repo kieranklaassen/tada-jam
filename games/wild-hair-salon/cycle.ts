@@ -73,11 +73,12 @@ export function sendFriend(game: Game, seat: Seat): Game {
 export type Idea = 'snip' | 'pull' | 'ribbon'
 
 /** What is due to be shown now, in the order it is shown. Nothing is due while nobody is under the cape. */
-export function ideasDue(game: Game): Idea[] {
+export function ideasDue(game: Game, when: 'coming in' | 'later' = 'coming in'): Idea[] {
   if (game.cape !== 'on' || game.chair === null) return []
   const due: Idea[] = []
-  if (!game.shown.snip) due.push('snip')
-  if (!game.shown.pull && game.lock < game.model - MEET) due.push('pull')
+  // The snip and the pull are shown as a customer comes in: the pull only for a lock that starts shorter, never for one the child cut short.
+  if (when === 'coming in' && !game.shown.snip) due.push('snip')
+  if (when === 'coming in' && !game.shown.pull && game.lock < game.model - MEET) due.push('pull')
   if (!game.shown.ribbon && game.seat === 'across') due.push('ribbon')
   return due
 }

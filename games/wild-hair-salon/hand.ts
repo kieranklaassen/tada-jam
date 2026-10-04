@@ -56,7 +56,10 @@ type Rub = { lastX: number; lastY: number; dirX: number; dirY: number; runX: num
 type Holding =
   | { mode: 'thing'; held: Held; start: Point; grip: number; before: number; heard: number; dragged: boolean; rub: Rub }
   | { mode: 'scissors'; last: Point; overFace: boolean; cut: boolean }
-  | { mode: 'button'; button: Button }
+  | { mode: 'button'; button: Button; start: Point }
+
+/** A press on the door, a seat or the chair counts when the finger comes off within this of where it went down: a swipe that only began there does not. The knot is pulled, so a drag from it counts however far it goes. */
+export const BUTTON_SLOP = 70
 
 export type Step = { salon: Salon; happenings: Happening[] }
 
@@ -116,7 +119,7 @@ export class Hand {
       return { salon, happenings: [{ kind: 'scissors', at: p }] }
     }
     if (touched.object === 'button') {
-      this.holding = { mode: 'button', button: touched.button }
+      this.holding = { mode: 'button', button: touched.button, start: p }
       return { salon, happenings: [{ kind: 'pressed', button: touched.button, at: p }] }
     }
     const held = heldOf(touched)
@@ -194,7 +197,11 @@ export class Hand {
     this.holding = null
     this.drawnOut = 0
     if (!holding) return { salon, happenings: [] }
-    if (holding.mode === 'button') return { salon, happenings: [{ kind: 'button', button: holding.button, at: p }] }
+    if (holding.mode === 'button') {
+      const swiped = holding.button !== 'knot' && Math.hypot(p.x - holding.start.x, p.y - holding.start.y) > BUTTON_SLOP
+      // A swipe that only began there: the finger has gone away and the thing is not touched.
+      return { salon, happenings: swiped ? [{ kind: 'away' }] : [{ kind: 'button', button: holding.button, at: p }] }
+    }
     if (holding.mode === 'scissors') return { salon, happenings: [...(holding.cut ? [] : [{ kind: 'airSnip' as const, at: blades(p) }]), { kind: 'away' }] }
     const { held, rub } = holding
     if (rub.ruffled || !holding.dragged) return { salon, happenings: [{ kind: 'letGo', held, at: p }] }

@@ -111,7 +111,8 @@ describe('a scene', () => {
     scene.update(0.7)
     expect(laid).toEqual([0, 1, 2])
     scene.finish()
-    expect(laid).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+    expect(laid).toHaveLength(10)
+    expect(laid.every((value, index) => value === index)).toBe(true)
   })
 })
 

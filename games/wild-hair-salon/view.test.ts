@@ -247,13 +247,13 @@ describe('limbs and the ribbon', () => {
     const calm = balls(lion, 'lion')
     lion.customer()!.react('bowHated')
     for (let i = 0; i < 36; i++) lion.step(1 / 60, false)
-    expect(balls(lion, 'lion')).toBe(calm + 2)
+    expect(balls(lion, 'lion')).toBe(calm + 1)
     const yak = seated({ chair: 'yak', friend: 'poodle' })
     const before = balls(yak, 'yak')
     yak.customer()!.react('maneHated')
     for (let i = 0; i < 40; i++) yak.step(1 / 60, false)
-    // Two hooves, at the customer and again in the looking glass.
-    expect(balls(yak, 'yak')).toBe(before + 4)
+    // Two hooves, over his eyes.
+    expect(balls(yak, 'yak')).toBe(before + 2)
     const rabbit = seated({ chair: 'rabbit', friend: 'poodle' })
     const feet = (play: Play): number => drawn(play).shapes.filter((shape) => shape.kind === 'fill' && shape.style === furOf('rabbit') && bounds(shape.points).w > 70 && bounds(shape.points).w < 110 && bounds(shape.points).h < 70).length
     expect(feet(rabbit)).toBe(0)

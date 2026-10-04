@@ -3,16 +3,17 @@ import { Hair, type StrandId } from './hair'
 import { Hand, type Happening, type Held } from './hand'
 import type { Gesture } from './input'
 import { PERSONALITIES, type Reaction } from './personality'
-import { placesOf, stripOf, tuftRoot, type Button, type Point } from './poses'
+import { clippingBox, placesOf, stripOf, tuftRoot, type Button, type Point } from './poses'
 import { Puppet } from './puppet'
 import { makeRng } from './rng'
 import { TUFTS } from './rules'
 import { deserializeGame, serializeGame, type Game } from './save'
 import { Scene, followedBy, sceneLength, type Beat } from './scene'
 import { capeComesOff, comingIn, shownOnce, type Cast, type Cue } from './scenes'
-import { MOST_NOTES, notesFor, notesForCue, type Note } from './sound'
+import { MOST_NOTES, notesFor, notesForCue, notesForSaying, type Note } from './sound'
 import { Staging, lowFor, walk } from './staging'
 import { TASTES, type CustomerId } from './tastes'
+import { OTHER_VOICES, type Said } from './voices'
 import type { Salon, Who } from './world'
 
 // The game on the toy: the finger (hand.ts) joined to the model (world.ts)
@@ -25,6 +26,9 @@ import type { Salon, Who } from './world'
 
 /** How soon a change has to be in storage: a scene's outcome now, a small change at the throttle. */
 export type Save = 'now' | 'soon'
+
+/** How far a piece on the floor is from a point, for telling the piece that was cut from one that was crowded out. */
+const near = (salon: Salon, piece: Salon['clippings'][number], p: Point): number => { const box = clippingBox(salon, piece); return box ? Math.hypot(box.x - p.x, box.y - p.y) : Infinity }
 
 /** How often, in seconds, something stirs by itself while nobody is touching. */
 const STIR_EVERY = 6
@@ -47,8 +51,11 @@ export class Play implements Cast {
   leaving: Puppet[] = []
   private scene: Scene | null = null
   private notes: Note[] = []
+  private said: Note[] = []
   private pressedAt: Point | null = null
   private untilStir = STIR_EVERY / 2
+  /** The finger has come off a drag and the drag has not been ended yet: the child let go, and what was in hand is to be put down there. */
+  lifted = false
   private stirs = 0
   private save: Save | null = null
   /** The thing that moves the game on which is under the finger now, for the view to show it give. */
@@ -97,8 +104,10 @@ export class Play implements Cast {
 
   /** The notes to play now, a few at most, or nothing. */
   takeNotes(): Note[] {
-    const notes = this.notes.slice(0, MOST_NOTES)
+    // What a touch set off is held to a few; what a customer says in a scene is its own short phrase and is played whole.
+    const notes = [...this.notes.slice(0, MOST_NOTES), ...this.said]
     this.notes = []
+    this.said = []
     return notes
   }
 
@@ -109,6 +118,10 @@ export class Play implements Cast {
 
   cue(cue: Cue, who?: CustomerId): void {
     if (this.game) this.notes.push(...notesForCue(cue, who ?? null, this.game))
+  }
+
+  say(who: CustomerId, said: Said): void {
+    this.said.push(...notesForSaying(who, said))
   }
 
   // --- Scenes ---------------------------------------------------------------
@@ -144,9 +157,9 @@ export class Play implements Cast {
   }
 
   /** The showings that are due now, each marked as shown, as beats to follow whatever scene is starting. */
-  private showings(): Beat[] {
+  private showings(when: 'coming in' | 'later'): Beat[] {
     let beats: Beat[] = []
-    for (const idea of this.game ? ideasDue(this.game) : []) {
+    for (const idea of this.game ? ideasDue(this.game, when) : []) {
       const before = this.game!
       const after = markShown(before, idea)
       this.game = after
@@ -169,7 +182,7 @@ export class Play implements Cast {
       this.game = done.game
       this.hair.settle()
       const beats = comingIn(this, game, done.game)
-      this.play(followedBy(beats, this.showings()))
+      this.play(followedBy(beats, this.showings('coming in')))
       return
     }
     if (button === 'knot') {
@@ -189,7 +202,7 @@ export class Play implements Cast {
       this.play(followedBy([
         { at: 0, lasts: 0.45, play: (p) => { this.staging.cape = p } },
         { at: 0.1, lasts: 0.9, play: (p) => { if (from && to) this.staging.friend = from.x === to.x ? { ...to, lift: 0, seen: 1 } : walk(from, to, p, gait, 0.9, lowFor(from, to)) } },
-      ], this.showings()))
+      ], this.showings('later')))
       return
     }
     // The empty seat: the friend goes to it, at any moment and as often as the child likes.
@@ -201,7 +214,7 @@ export class Play implements Cast {
     this.play(followedBy([
       { at: 0, lasts: 1.0, play: (p) => { if (from && to) this.staging.friend = walk(from, to, p, gait, 1.0, lowFor(from, to)) } },
       { at: 1.0, lasts: 0, play: () => { if (!this.cut) { this.puppets.friend?.react('hopsOver'); this.cue('landed', seated.friend ?? undefined) } } },
-    ], this.showings()))
+    ], this.showings('later')))
   }
 
   // --- The finger -----------------------------------------------------------
@@ -224,6 +237,7 @@ export class Play implements Cast {
         this.hair.release()
         return
       case 'dragMove':
+        this.lifted = false
         this.follow(gesture.at)
         this.took(game, hand.move(game, gesture.at, this.time), 0)
         return
@@ -231,11 +245,15 @@ export class Play implements Cast {
       case 'pressEnd': this.abandon(); return
       case 'dragEnd': {
         const out = hand.drawnOut
+        this.lifted = false
         this.took(game, hand.end(game, gesture.at), out)
+        // A seat, the door or the chair that was pressed and then left by a drag is let go of untouched.
+        this.pressed = null
         return
       }
-      // A lifted finger mid-drag: the thing waits where it is. A drag has begun: its first move follows.
-      case 'dragLift':
+      // A lifted finger mid-drag: the thing waits where it is, and the child has let go of it.
+      case 'dragLift': this.lifted = true; return
+      // A drag has begun: its first move follows.
       case 'dragStart': return
     }
   }
@@ -248,6 +266,7 @@ export class Play implements Cast {
    * under the cape is as long as it was drawn.
    */
   abandon(): void {
+    this.lifted = false
     this.hand.drop()
     this.pressed = null
     this.pressedAt = null
@@ -268,14 +287,20 @@ export class Play implements Cast {
     this.puppets.chair?.step(dt, calm)
     this.puppets.friend?.step(dt, calm)
     for (const puppet of this.waiting ?? []) puppet.step(dt, true)
-    // Left alone, things go on by themselves: in an empty salon the pair at the door look about and rock on their heels, turn about; under the cape the mane stirs.
+    // Left alone, things go on by themselves: in an empty salon the pair at the door look about and rock on their heels, turn about; under the cape the pair show what they want, and the mane stirs.
     if (calm) {
       this.untilStir -= dt
       if (this.untilStir <= 0) {
         this.untilStir = STIR_EVERY
         this.stirs++
         if (game.chair === null) this.waiting?.[this.stirs % 2]?.react('looksAbout')
-        else if (game.cape === 'on' && this.hair.settled) this.hair.moodOf('wave', 1.3)
+        else if (game.cape === 'on') {
+          // The one want, always there to see: the customer looks from its lock to the friend's and pats its own, and the friend looks from its lock to the customer's.
+          this.puppets.chair?.react('wantsItSo')
+          this.puppets.chair?.react('patsItsLock')
+          this.puppets.friend?.react('wantsItSo')
+          if (this.stirs % 2 === 0 && this.hair.settled) this.hair.moodOf('wave', 1.3)
+        }
       }
     }
     for (const puppet of this.leaving) puppet.step(dt, false)
@@ -340,6 +365,15 @@ export class Play implements Cast {
       case 'cell': break
     }
     const added = after.clippings.filter((piece) => !before.clippings.includes(piece))
+    // A piece too many: the oldest one on the floor turns to fluff and blows away with a sigh.
+    if (h.action === 'snip' && added.length > 0) {
+      const cut = h.object === 'clipping' ? before.clippings.filter((c) => !after.clippings.includes(c)).sort((a, b) => near(before, a, h.at) - near(before, b, h.at))[0] : null
+      for (const gone of before.clippings.filter((c) => c.on === 'floor' && c !== cut && !after.clippings.includes(c))) {
+        const box = clippingBox(before, gone)
+        if (box) hair.fluff({ x: box.x, y: box.y }, 'fluff', 4)
+        this.notes.push(OTHER_VOICES.sigh)
+      }
+    }
     const who: Who = h.held?.object === 'face' ? h.held.who : 'chair'
     const mine = this.of(who), taste = (w: Who) => { const id = w === 'chair' ? after.chair : after.friend; return id ? TASTES[id] : null }
     const react = (puppet: Puppet | null, name: Reaction, always = true): void => { if (puppet && (always || !puppet.busy)) puppet.react(name) }

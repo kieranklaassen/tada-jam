@@ -165,9 +165,13 @@ describe('a cycle', () => {
     const short = { ...snipped, lock: snipped.model - 20 }
     expect(ideasDue(short)).toEqual(['pull'])
     expect(ideasDue(markShown(short, 'pull'))).toEqual([])
+    // The pull is for a lock that starts shorter: one the child cut short is not shown it at a touch on the chair or a seat.
+    expect(ideasDue(short, 'later')).toEqual([])
+    expect(ideasDue(came, 'later')).toEqual([])
     const across = sendFriend(markShown(short, 'pull'), 'across')
     expect(across.ribbon).toBeNull()
     expect(ideasDue(across)).toEqual(['ribbon'])
+    expect(ideasDue(across, 'later')).toEqual(['ribbon'])
     const shown = markShown(across, 'ribbon')
     expect(shown.ribbon).toEqual({ len: TAIL_LEN, at: 'peg' })
     expect(ideasDue(shown)).toEqual([])

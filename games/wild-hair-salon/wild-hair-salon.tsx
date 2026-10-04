@@ -25,7 +25,10 @@ import { drawFrame } from './view'
 // performance handle and the grown-up overlay.
 //
 // In the address: `seed=<n>` fixes the stream the motion draws from, for a
-// still; `spike=1` shows the painted look spike instead of the toy.
+// still; `spike=1` shows the painted look spike instead of the game.
+
+/** How long the top right corner is held before its taps reach the grown-up's numbers, and for how long they do then, in ms. */
+const CORNER_HOLD_MS = 1000, CORNER_ARMED_MS = 4000
 
 function Mount({ ctx }: { ctx: CartridgeContext }) {
   const rootRef = useRef<HTMLDivElement>(null)
@@ -53,7 +56,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const play = new Play(query.has('seed') && Number.isFinite(asked) ? asked : Math.floor(Math.random() * 0xffffffff))
     let guidance: Guidance | null = null
     // The grown-up's corner (overlay.ts): a press that lands there is not the game's.
-    let cornered = false
+    let cornered = false, cornerDownAt = 0, cornerArmedUntil = 0
 
     // Nothing is saved until the slot has been read, so an early put-away cannot overwrite it.
     // The game hands a change to storage where it makes it, at one of two speeds:
@@ -145,21 +148,34 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       audio.touchDown()
       ladder.touch(clock.seconds)
       const where = at(event)
-      overlay.press(where.x, where.y, width, event.timeStamp)
+      // The grown-up's numbers take three quick taps in the corner, and here only after the corner has been held
+      // down for a second first: a child who drums on that corner does not open them.
+      const inCorner = where.x > width - 72 && where.y < 72
+      if (inCorner) cornerDownAt = event.timeStamp
+      if (!inCorner || event.timeStamp <= cornerArmedUntil) overlay.press(where.x, where.y, width, event.timeStamp)
       act(touch.down(event.pointerId, where, event.timeStamp))
       // Captured, so the lift is reported even when the finger has slid off the surface.
       root.setPointerCapture(event.pointerId)
     }
     const onMove = (event: PointerEvent) => act(touch.move(event.pointerId, at(event)))
     const onUp = (event: PointerEvent) => {
+      if (cornered && cornerDownAt > 0 && event.timeStamp - cornerDownAt >= CORNER_HOLD_MS) cornerArmedUntil = event.timeStamp + CORNER_ARMED_MS
+      cornerDownAt = 0
       act(touch.up(event.pointerId, at(event), event.timeStamp))
       audio.touchUp()
     }
     // A finger the browser takes away, and a touch still down when the game is put away, let go of nothing and
     // press nothing: whatever was in the fingers is as it was, and a door or a knot under them is not touched.
-    const abandon = (ended: Gesture[]) => { if (ended.length > 0 && !cornered && !spike) play.abandon() }
+    // The one exception is a drag the child has already let go of, whose end the tracker was still holding back for
+    // a finger that might return: that let-go is the child's own, and it lands where it was made.
+    const abandon = (ended: Gesture[]) => {
+      if (ended.length === 0 || cornered || spike) return
+      if (play.lifted) act(ended)
+      else play.abandon()
+    }
     const onCancel = (event: PointerEvent) => {
-      abandon(touch.cancel(event.pointerId, event.timeStamp))
+      // A drag the browser takes is not waited out as a lift is: it is given up at once.
+      if (touch.cancel(event.pointerId, event.timeStamp).length > 0) { touch.clear(); if (!cornered && !spike) play.abandon() }
       audio.touchUp()
     }
     root.addEventListener('pointerdown', onDown)
@@ -229,8 +245,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
 
     return () => {
       disposed = true
-      // As on going to rest: the touch ends first, so the thing in hand is put down before the last save.
-      act(touch.clear())
+      // As on going to rest: a touch still down is given up before the last save, and makes no move of its own.
+      abandon(touch.clear())
       cadence.settle(performance.now())
       cancelAnimationFrame(frame)
       observer.disconnect()

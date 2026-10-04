@@ -142,7 +142,8 @@ export function drawFigure(g: Ctx, sprites: Sprites, figure: Figure): number {
   if (figure.wears.blindfold) drawn += blindfold(g, puppet.at('brow') > 0.5 ? 1 : 0)
   g.restore()
   if (live && look.ears.kind !== 'long') ears()
-  drawn += limbs(g, puppet, look)
+  // The looking glass shows the head and not the limbs: the oval is too small for them.
+  if (!figure.flipped) drawn += limbs(g, puppet, look)
 
   if (figure.wears.hat > 0) {
     g.save()
