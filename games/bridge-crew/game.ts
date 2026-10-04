@@ -51,7 +51,7 @@ export const RUN_OVER = 1
 export const PULL = { most: 2.6, sends: 1, leaves: 0.8, arrives: 1, back: 0.3 } as const
 
 /** How long the next roll takes to slide in when it arrives outside a crossing, in seconds. */
-export const ROLL_IN = 1.1
+export const ROLL_IN = 1.9
 
 type Lying = { frame: Frame; moved: (node: number) => readonly [number, number] }
 const STRAIGHT: { share: number; off: readonly [number, number] }[] = []
@@ -416,9 +416,22 @@ export class Game extends Toy {
   override press(x: number, y: number): void {
     // A touch ends a scene, and is then an ordinary touch.
     let began = false
-    if (this.scene?.running) { this.skipping = true; this.scene.finish(); began = this.afterScene(); this.skipping = false }
-    // While a vehicle is on the bridge the bridge is not changed under it: a touch is answered and no more.
-    if (this.drive) { this.voices.push(pinTick); this.hand = null; return }
+    // What the scene was still bringing in when this touch ended it: the touch that ends a scene does not also take the
+    // roll or the vehicle that scene's last beat brings.
+    const coming = this.scene?.running ? { roll: (this.show.rollArrives && this.show.arrive < 1) || this.rollIn === -1, vehicle: this.show.arrive < 1 ? this.show.arriving : null } : null
+    if (this.scene?.running) {
+      this.skipping = true; this.scene.finish(); began = this.afterScene(); this.skipping = false
+      // The bridge is back exactly as built, at once: what had swung or fallen is where it was laid.
+      this.moving = this.rest.map(atRest)
+    }
+    // While a vehicle is on the bridge the bridge is not changed under it. A part touched then is plucked, and is not
+    // turned or taken off; any other touch is answered with a tick and no more.
+    if (this.drive) {
+      const own = touched(this.at, this.bridge, this.drawn(), x, y)
+      if (own && 'part' in own) { this.voices.push(this.pluckOf(own.part)); this.shook[own.part] = 0 } else this.voices.push(pinTick)
+      this.hand = null
+      return
+    }
     // A touch ends a showing too: the chief stops where it is, and the showing has been given.
     // A showing that this very touch let begin, by ending the scene before it, goes on: the next touch ends it.
     if (!began && this.showing && (this.chief.act === 'shows' || this.chief.act === 'compares')) { this.chief.rest(); if ('differences' in this.showing) this.showing = null }
@@ -434,7 +447,16 @@ export class Game extends Toy {
     const sheet = this.save.sheets[this.save.on], ends = this.drawn()
     const hat = sheet.hats.find((index) => ends[index] && Math.hypot(x - (ends[index].a[0] + ends[index].b[0]) / 2, y - (ends[index].a[1] + ends[index].b[1]) / 2 - 0.2) <= 0.45)
     if (hat !== undefined) { this.save = pluckHat(this.save, hat); this.chiefHat = true; this.changed = true; this.voices.push(unrollVoice(0)); this.chief.poke(); this.hand = null; return }
-    const vehicle = this.vehicleAt(x, y)
+    // The roll, before a vehicle parked in front of it: a touch on the roll unrolls.
+    if (this.save.next && onNewest(this.save) && onRoll(this.at, x, y)) {
+      if (coming?.roll) { this.hand = null; return }
+      this.hand = { what: 'roll' }; this.voices.push(unrollVoice(0)); return
+    }
+    // A touch at a lip's own pin, or at a pin a part ends on, means that pin, though a vehicle's nose is over it.
+    const grid = gridPointAt(this.at, x, y)
+    const pinFirst = grid !== null && grid.far <= PIN_REACH && (samePoint(grid.point, this.at.left) || samePoint(grid.point, this.at.right) || this.bridge.some((part) => pinsOf(part).some((point) => samePoint(point, grid.point))))
+    const vehicle = pinFirst ? null : this.vehicleAt(x, y)
+    if (vehicle && coming?.vehicle === vehicle.id) { this.hand = null; return }
     if (vehicle) {
       this.hand = { what: 'vehicle', id: vehicle.id, across: vehicle.across, from: x, pulled: 0 }
       this.poked.set(vehicle.id, 0)
@@ -444,7 +466,6 @@ export class Game extends Toy {
       this.mark('toot', [front + 0.85, (vehicle.across ? this.at.right[1] : this.at.left[1]) + 0.75])
       return
     }
-    if (this.save.next && onNewest(this.save) && onRoll(this.at, x, y)) { this.hand = { what: 'roll' }; this.voices.push(unrollVoice(0)); return }
     const slot = this.save.sheets.length > 1 ? rackSlot(this.save.sheets.length, x, y) : -1
     if (slot >= 0) { this.hand = { what: 'rack', index: slot }; this.voices.push(unrollVoice(0)); return }
     // One of the crew, poked: each has its own answer.

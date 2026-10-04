@@ -1613,4 +1613,98 @@ describe('what a full reading found of the trolley', () => {
   })
 })
 
+describe('what a full reading found of what a touch means', () => {
+  it('a touch at a lip\'s pin means the pin, though the waiting vehicle\'s nose is over it; a touch on the vehicle means the vehicle', () => {
+    const game = new Game(freshSave(null), stream(2)), lip = game.at.left
+    game.press(lip[0] - 0.25, lip[1] + 0.1)
+    expect(game.hand).toMatchObject({ what: 'pin', at: [lip[0], lip[1]] })
+    game.pressEnd()
+    game.press(waitAt(game.at, 0) - 0.4, lip[1] + 1)
+    expect(game.hand).toMatchObject({ what: 'vehicle', id: 'post-van' })
+    game.pressEnd()
+    // A drag from that pin lays a plank from the lip: the first move of the game works under the van's nose.
+    game.press(lip[0] - 0.2, lip[1]); game.dragStart(); game.dragMove(game.at.right[0], lip[1]); game.dragEnd()
+    expect(game.bridge).toHaveLength(1)
+    expect(game.drive).toBeNull()
+  })
+
+  it('a touch on the roll unrolls, though a parked vehicle stands in front of it', () => {
+    // Both vehicles parked on the far bank of the wide truss sheet, where the second stands under the roll.
+    const done = crossed(crossed(edit(freshSave(null, 'truss-span'), CROSSINGS['truss-span']), 'jelly-truck'), 'caterpillar-bus')
+    expect(done.next).not.toBeNull()
+    expect(done.across).toEqual(['jelly-truck', 'caterpillar-bus'])
+    const game = new Game(done, stream(2))
+    for (const up of [0.2, 0.8, 1.5, 2.5]) {
+      game.press(ROLL.x, game.at.right[1] + up)
+      expect(game.hand, `${up}`).toMatchObject({ what: 'roll' })
+      game.pressEnd()
+    }
+    expect(game.drive).toBeNull()
+    // Left of the roll the parked vehicle is still itself.
+    game.press(parkAt(game.at, 2.5, 1) - 1.2, game.at.right[1] + 0.8)
+    expect(game.hand).toMatchObject({ what: 'vehicle', across: true })
+  })
+
+  it('the touch that ends a scene does not also take the roll or the vehicle the scene was bringing in; the next touch does', () => {
+    const game = new Game(edit(freshSave(null), CROSSINGS['plank-gap']), stream(2))
+    send(game)
+    expect(game.show.kind).toBe('crossing')
+    steps(game, 1)
+    // One second into the crossing the roll is not there yet. A tap where it will be ends the scene, and that is all.
+    tapAt(game, ROLL.x, game.at.right[1] + 2.5)
+    expect(game.show.kind).toBeNull()
+    expect(game.save.on).toBe(0)
+    expect(game.save.sheets).toHaveLength(1)
+    // Nor is the jelly truck sent by the tap that ended the scene that brings it.
+    const again = new Game(edit(freshSave(null), CROSSINGS['plank-gap']), stream(2))
+    send(again); steps(again, 1)
+    tapAt(again, waitAt(again.at, 0) - 0.4, 7)
+    expect(again.show.kind).toBeNull()
+    expect(again.drive).toBeNull()
+    expect(again.waiting).toEqual(['jelly-truck'])
+    // The next touch on each is an ordinary touch.
+    tapAt(game, ROLL.x, game.at.right[1] + 2.5)
+    expect(game.save.sheets).toHaveLength(2)
+    tapAt(again, waitAt(again.at, 0) - 0.4, 7)
+    expect(again.drive).toMatchObject({ vehicle: 'jelly-truck' })
+  })
+
+  it('while a vehicle is on the bridge a part touched is plucked and nothing is changed: no turn, no pin, nothing taken off', () => {
+    const game = new Game(edit(freshSave(null), CROSSINGS['plank-gap']), stream(2))
+    tapAt(game, waitAt(game.at, 0) - 0.4, 7)
+    expect(game.drive).not.toBeNull()
+    game.takeVoices(); game.takeChange()
+    const before = JSON.stringify(game.bridge)
+    tapAt(game, 12.5, 6.1)
+    const plucked = game.takeVoices()
+    expect(plucked).toHaveLength(1)
+    expect(plucked[0]).not.toBe(pinTick)
+    expect(game.shakeOf(0)).toBe(0)
+    game.step(0.1); tapAt(game, 12.5, 6.1)
+    game.press(12.5, 6.1); game.dragStart(); game.dragMove(12.5, 1); game.dragEnd()
+    expect(JSON.stringify(game.bridge)).toBe(before)
+    // Off any part, a tick.
+    game.takeVoices()
+    tapAt(game, 12, 10)
+    expect(game.takeVoices()).toEqual([pinTick])
+    expect(game.bridge).toHaveLength(1)
+  })
+
+  it('a touch during a give brings the bridge back exactly as built at once: what had swung or fallen is where it was laid', () => {
+    // A plank hung under a flat deck by one pin: the deck cracks under the van and the hung plank swings.
+    const bridge = [part('plank', 10, 6, 14, 6), part('plank', 12, 6, 12, 4)]
+    const game = new Game(edit(freshSave(null), bridge), stream(2))
+    steps(game, 3)
+    const built = JSON.stringify(game.drawn().map((ends) => [ends.a, ends.b].map((p) => p.map((n) => +n.toFixed(3)))))
+    send(game)
+    expect(game.show.kind).toBe('give')
+    steps(game, 2.5)
+    expect(JSON.stringify(game.drawn().map((ends) => [ends.a, ends.b].map((p) => p.map((n) => +n.toFixed(3)))))).not.toBe(built)
+    game.press(3, 9); game.pressEnd()
+    expect(game.show.kind).toBeNull()
+    expect(JSON.stringify(game.drawn().map((ends) => [ends.a, ends.b].map((p) => p.map((n) => +n.toFixed(3)))))).toBe(built)
+  })
+})
+
+
 
