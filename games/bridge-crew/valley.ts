@@ -14,7 +14,7 @@ import { COLS, ROWS, type Site } from './sites'
 // Nothing here is a word, a letter or a figure, and nothing here answers a touch.
 
 /** How strong the setting's line is, against 1 for the ground's outline: it never competes with a part. */
-export const FAINT = { far: 0.2, hills: 0.26, trees: 0.4, fence: 0.3, finds: 0.5, desk: 0.42 } as const
+export const FAINT = { far: 0.24, hills: 0.3, trees: 0.46, fence: 0.34, finds: 0.5, desk: 0.42 } as const
 
 /** A number for a sheet, so that each position has its own valley and has it every time. */
 export function siteSeed(at: Site): number {
@@ -267,9 +267,9 @@ export function paintUnderground(pen: Pen, plot: Plot, at: Site) {
 export function desk(at: Site): { ledge: readonly [number, number]; floor: number; crew: readonly [number, number]; leftRoom: readonly [number, number]; rightRoom: readonly [number, number] } {
   const piles = bays(at), box = tools(at), floor = TRAY.top - TRAY.tall
   const trayLeft = piles.length ? piles[0].x0 : at.left[0] - 1, toolsRight = box[box.length - 1].x1
-  // The crew stand side by side just left of the tray, and never off the sheet.
-  const second = Math.max(1.75, trayLeft - 1.25), first = Math.max(-0.15, second - 1.95)
-  return { ledge: [first - 0.95, second + 0.95], floor, crew: [first, second], leftRoom: [-MARGIN.side + 0.5, first - 1.05], rightRoom: [toolsRight + 0.4, COLS + MARGIN.side - 0.5] }
+  // The crew stand side by side just left of the tray, the mole with room for its rule, and never off the sheet.
+  const second = Math.max(2.3, trayLeft - 1.7), first = Math.max(0.3, second - 2.0)
+  return { ledge: [first - 1.3, second + 0.95], floor, crew: [first, second], leftRoom: [-MARGIN.side + 0.5, first - 1.6], rightRoom: [toolsRight + 0.4, COLS + MARGIN.side - 0.5] }
 }
 
 /** The draughtsman's own things along the bottom of the sheet, each drawn in line: the ledge the crew stand on, a set square and a pair of compasses where there is room on the left, and the drawing's empty title block and a mug where there is room on the right. */

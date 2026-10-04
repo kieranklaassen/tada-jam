@@ -10,7 +10,9 @@ import { deserialize, edit, freshSave, serialize } from './save'
 import { isFooting, site } from './sites'
 import { CHIEF } from './toy'
 import { VEHICLES, trainOf } from './vehicles'
-import { bargeHorn, hornEcho } from './voices'
+import { bargeHorn, beaverChatter, beaverSigh, beaverSlap, hornEcho, moleDrop, moleRule } from './voices'
+import { desk } from './valley'
+import { BUILD } from './crew'
 
 const fresh = () => new Game(freshSave(null), stream(5))
 const drag = (game: Game, from: [number, number], to: [number, number]) => { game.press(...from); game.dragStart(); game.dragMove(...to); game.dragEnd() }
@@ -597,5 +599,88 @@ describe('what the sheet says a child sees and hears', () => {
     game.press(1, 1)
     steps(game, 2)
     expect(game.splash).toBeNull()
+  })
+})
+
+describe('the crew at the foot of the sheet, in the game', () => {
+  const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
+  const heard = (game: Game, seconds: number) => { const all = []; for (let i = 0; i < seconds * 60; i++) { game.step(1 / 60); all.push(...game.takeVoices()) } return all }
+
+  it('they stand left of the tray on every sheet, and go with the sheet when it is turned', () => {
+    const game = fresh()
+    expect(game.crewAt('beaver')).toEqual([desk(game.at).crew[0], desk(game.at).floor])
+    expect(game.crewAt('mole')[0]).toBeLessThan(game.at.left[0] - 1)
+    const yard = new Game(freshSave(null, 'long-haul'), stream(2))
+    expect(yard.crewAt('beaver')[0]).toBeLessThan(game.crewAt('beaver')[0])
+    expect(yard.crew.mole.head[0]).toBe(yard.crewAt('mole')[0])
+    expect(yard.crew.mole.head[1]).toBeCloseTo(yard.crewAt('mole')[1] + BUILD.mole.eyes)
+  })
+
+  it('the beaver winces before every crossing, whatever the bridge: at a give it starts and hides its eyes, at a crossing it lets its breath go', () => {
+    const game = fresh()
+    game.takeVoices()
+    tapAt(game, waitAt(game.at, 0) - 0.4, 7)
+    expect(game.takeVoices()).toContain(beaverChatter)
+    steps(game, 0.3)
+    expect(game.crew.beaver.act).toBe('brace')
+    for (let i = 0; i < 60 * 20 && game.drive; i++) game.step(1 / 60)
+    expect(game.show.kind).toBe('give')
+    expect(game.crew.beaver.act).toBe('flinch')
+    expect(game.chief.act).toBe('looks-up')
+    steps(game, 1.2)
+    expect(game.crew.mole.act).toBe('splashed')
+    steps(game, 8)
+    expect(game.crew.beaver.busy).toBe(false)
+    // The same wince for a bridge that holds.
+    const sound = new Game(edit(freshSave(null), CROSSINGS['plank-gap']), stream(2))
+    tapAt(sound, waitAt(sound.at, 0) - 0.4, 7)
+    steps(sound, 0.3)
+    expect(sound.crew.beaver.act).toBe('brace')
+    sound.takeVoices()
+    for (let i = 0; i < 60 * 20 && sound.drive; i++) sound.step(1 / 60)
+    expect(sound.crew.beaver.act).toBe('relief')
+    expect(sound.crew.mole.act).toBe('crossed')
+    const after = [...sound.takeVoices(), ...heard(sound, 4)]
+    expect(after).toContain(beaverSigh)
+    // The mole's rule is heard twice, lower and then higher.
+    expect(after.filter((voice) => same(voice, moleRule(false)) || same(voice, moleRule(true))).map((voice) => same(voice, moleRule(true)))).toEqual([false, true])
+  })
+
+  it('a part laid is measured by the mole, twice, and a part laid while it measures does not start it again', () => {
+    const game = fresh()
+    steps(game, 0.5); game.takeVoices()
+    drag(game, [10, 6], [14, 6])
+    expect(game.crew.mole.act).toBe('laid')
+    steps(game, 0.4)
+    const into = game.crew.mole.progress
+    drag(game, [10, 6], [12, 7])
+    expect(game.crew.mole.progress).toBeGreaterThanOrEqual(into)
+    const rules = heard(game, 3).filter((voice) => same(voice, moleRule(false)) || same(voice, moleRule(true)))
+    expect(rules.map((voice) => same(voice, moleRule(true)))).toEqual([false, true])
+    expect(game.crew.mole.busy).toBe(false)
+  })
+
+  it('each has its own answer to a poke, and nothing of them is saved', () => {
+    const game = fresh()
+    steps(game, 0.5); game.takeVoices(); game.takeChange()
+    const [bx, by] = game.crewAt('beaver'), [mx, my] = game.crewAt('mole')
+    game.press(bx, by + 1.2)
+    expect(game.hand).toEqual({ what: 'crew', who: 'beaver' })
+    expect(game.crew.beaver.act).toBe('poked')
+    expect(game.takeVoices()).toEqual([beaverSlap])
+    game.tap()
+    game.press(mx, my + 0.8)
+    expect(game.hand).toEqual({ what: 'crew', who: 'mole' })
+    expect(game.crew.mole.act).toBe('poked')
+    expect(game.takeVoices()).toEqual([moleDrop])
+    game.tap()
+    expect(game.takeChange()).toBe(false)
+    expect(game.bridge).toEqual([])
+    const kept = JSON.stringify(stored(game))
+    expect(kept).not.toContain('crew'); expect(kept).not.toContain('beaver'); expect(kept).not.toContain('mole')
+    // The tray beside them is still the tray.
+    const pile = bays(game.at)[0]
+    game.press(pile.x0 + 0.5, TRAY.top - 1)
+    expect(game.hand?.what).toBe('bay')
   })
 })

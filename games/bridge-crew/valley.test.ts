@@ -85,7 +85,10 @@ describe('the valley the gap is in', () => {
   it('along the bottom of the sheet the crew, the draughtsman\'s things, the tray and the tools each have their own room', () => {
     for (const at of every) {
       const { ledge, crew, leftRoom, rightRoom, floor } = desk(at), piles = bays(at), box = tools(at)
-      expect(crew[1] - crew[0]).toBeGreaterThanOrEqual(1.9)
+      // The beaver's flag reaches a little over a cell toward the mole, and the mole's board most of a cell back: they do not touch.
+      expect(crew[1] - crew[0]).toBeGreaterThanOrEqual(1.99)
+      // And the mole's rule, held out level, stops short of the tray.
+      expect(piles[0].x0 - crew[1]).toBeGreaterThanOrEqual(1.65)
       expect(ledge[0]).toBeGreaterThanOrEqual(-MARGIN.side + 0.05)
       expect(ledge[1]).toBeLessThanOrEqual(piles[0].x0 - 0.2)
       expect(leftRoom[1]).toBeLessThanOrEqual(ledge[0])

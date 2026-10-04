@@ -235,6 +235,13 @@ export const bargeHorn = (clear: boolean): VoiceSpec => (clear ? [{ wave: 'sine'
 /** Under a whole arch the barge's toot comes back as a chord: three soft notes on the horn's own, after it. */
 export const hornEcho: VoiceSpec = [0, 4, 7].map((semis) => ({ wave: 'sine' as const, pitch: 294 * 2 ** (semis / 12), peak: 0.06, attack: 0.08, length: 0.9, after: 0.55 }))
 
+/** The crew. The beaver: its tail on the floor, its teeth when it cannot look, and the breath it lets go. The mole: its rule laid on a thing, lower the first time and higher the second, and the rule dropped. */
+export const beaverSlap: VoiceSpec = [{ wave: 'noise', pitch: 500, slideTo: 200, peak: 0.12, attack: 0.002, length: 0.09 }, { wave: 'triangle', pitch: 150, slideTo: 95, peak: 0.1, attack: 0.002, length: 0.12 }]
+export const beaverChatter: VoiceSpec = [0, 0.06, 0.12, 0.18, 0.24].map((after) => ({ wave: 'triangle' as const, pitch: 1150, peak: 0.04, attack: 0.001, length: 0.03, after }))
+export const beaverSigh: VoiceSpec = [{ wave: 'noise', pitch: 1400, slideTo: 500, peak: 0.05, attack: 0.08, length: 0.5 }]
+export const moleRule = (again: boolean): VoiceSpec => [{ wave: 'triangle', pitch: again ? 830 : 690, peak: 0.07, attack: 0.002, length: 0.05 }, { wave: 'triangle', pitch: again ? 1245 : 1035, peak: 0.03, attack: 0.002, length: 0.04, after: 0.05 }]
+export const moleDrop: VoiceSpec = [0, 0.08, 0.2].map((after, i) => ({ wave: 'triangle' as const, pitch: 900 - 160 * i, peak: 0.07, attack: 0.002, length: 0.04, after }))
+
 /** The bridge goes back as it was built: a soft run of knocks upward. */
 export const restore: VoiceSpec = [0, 1, 2].map((i) => ({ wave: 'triangle' as const, pitch: 300 + 90 * i, peak: 0.06, attack: 0.004, length: 0.09, after: 0.08 * i }))
 

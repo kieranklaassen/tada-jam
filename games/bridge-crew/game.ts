@@ -1,9 +1,11 @@
 import { consequence } from './consequence'
+import { BUILD, CrewDirector, type CrewId } from './crew'
 import { layPart } from './grid'
 import { length, pinsOf, samePoint, type Part, type Point } from './kit'
 import { PART_REACH, PIN_REACH, SLIDE_OFF, TROLLEY_REACH, farFromStretch, gridPointAt, onRoll, onVehicle, parkAt, rackSlot, toolAt, touched, tracingSpot, waitAt } from './layout'
 import { modelInMargin, nearestDifferences, neatWayDue, oneChangeDue, type Difference } from './order'
 import { CALM, type Splash } from './drift'
+import { desk } from './valley'
 import { DRAWN_DIP, atRest, rests, type Rest } from './pose'
 import { answerOf, between, creaks, ended, frontAt, seat, stepAt, type Seat } from './ride'
 import type { Strain } from './frame'
@@ -15,7 +17,7 @@ import { isFooting, site, type Idea, type VehicleId } from './sites'
 import { crossingBeats, giveBeats, givePlace, idleShow, type Cue, type Show } from './stage'
 import { CHIEF, RING, Toy } from './toy'
 import { TAIL, TASTE, VEHICLES, bargeReaction, reaction, trainOf, type Reaction } from './vehicles'
-import { bargeHorn, chiefTaps, chord, creak, give, gurgle, honk, hornEcho, plop, lay as layVoice, pendulum, pinTick, pluck as pluckVoice, reactVoice, restore, snapTick, splash, trolleyBells, trolleyFlip, trolleyOff, trolleySet, trolleyWeight, unrollVoice } from './voices'
+import { bargeHorn, beaverChatter, beaverSigh, beaverSlap, chiefTaps, chord, creak, give, gurgle, honk, hornEcho, plop, lay as layVoice, moleDrop, moleRule, pendulum, pinTick, pluck as pluckVoice, reactVoice, restore, snapTick, splash, trolleyBells, trolleyFlip, trolleyOff, trolleySet, trolleyWeight, unrollVoice } from './voices'
 
 // The game on the toy: the vehicles at the two banks, a run over the bridge,
 // the two scenes a run ends in, and the sheets (the roll and the rack). Pure,
@@ -93,6 +95,10 @@ export class Game extends Toy {
   modelRung = Infinity
   /** A hat the chief has plucked off a part and wears until the next sheet is unrolled. Short-lived: not saved. */
   chiefHat = false
+  /** The two who watch from the foot of the sheet. Their moves are short-lived: not saved. */
+  readonly crew: Readonly<Record<CrewId, CrewDirector>>
+  private moleUp = false
+  private tailUp = false
   private owed: Idea | null = null
   /** The threads plucked one after another, for the secret: every thread of the bridge from longest to shortest is a scale. */
   private tune: number[] = []
@@ -107,6 +113,30 @@ export class Game extends Toy {
     // The fields above are set after the toy has built itself, so the model is run again here, with the trolley on it.
     this.model()
     this.moving = this.rest.map(atRest)
+    this.crew = { beaver: new CrewDirector('beaver', this.crewEyes('beaver'), random), mole: new CrewDirector('mole', this.crewEyes('mole'), random) }
+  }
+
+  /** Where one of the crew stands on this sheet: its feet, in cells. */
+  crewAt(who: CrewId): readonly [number, number] {
+    const { crew, floor } = desk(this.at)
+    return [crew[who === 'beaver' ? 0 : 1], floor]
+  }
+
+  private crewEyes(who: CrewId): readonly [number, number] {
+    const [x, y] = this.crewAt(who)
+    return [x, y + BUILD[who].eyes]
+  }
+
+  /** Where the work is now, for the crew's eyes: the finger's part, the vehicle on the road, the vehicle in the water. */
+  private work(): readonly [number, number] | null {
+    const hand = this.hand
+    if (hand && 'finger' in hand) return hand.finger
+    if (hand?.what === 'pin') return hand.at
+    const seat = this.seatNow()
+    if (seat) return [seat.x - 0.5, seat.y + 0.6]
+    if (this.show.vehicle && this.show.kind === 'give') { const place = givePlace(this.show, this.at, longOf(this.show.vehicle), TAIL[this.show.vehicle]); return [place.x - 0.5, place.y + 0.5] }
+    if (this.show.vehicle && this.show.kind === 'crossing') return [this.show.from[0], this.show.from[1] + 0.6]
+    return null
   }
 
   /** The vehicles at the near bank, the front of the line first, and those parked on the far bank. */
@@ -237,6 +267,16 @@ export class Game extends Toy {
     if (this.save.next && onNewest(this.save) && onRoll(this.at, x, y)) { this.hand = { what: 'roll' }; this.voices.push(unrollVoice(0)); return }
     const slot = this.save.sheets.length > 1 ? rackSlot(this.save.sheets.length, x, y) : -1
     if (slot >= 0) { this.hand = { what: 'rack', index: slot }; this.voices.push(unrollVoice(0)); return }
+    // One of the crew, poked: each has its own answer.
+    for (const who of ['beaver', 'mole'] as const) {
+      const [cx, cy] = this.crewAt(who)
+      if (Math.abs(x - cx) <= BUILD[who].wide / 2 && y >= cy - 0.3 && y <= cy + BUILD[who].tall + 0.15) {
+        this.hand = { what: 'crew', who }
+        this.crew[who].react('poked')
+        this.voices.push(who === 'beaver' ? beaverSlap : moleDrop)
+        return
+      }
+    }
     // The model in the margin gives under a finger with a creak, like the bridge it is a model of.
     if (this.marginModel && x >= MODEL.x0 && x <= MODEL.x1 && y >= MODEL.y0 && y <= MODEL.y1) { this.hand = { what: 'model' }; this.voices.push(creak(0.35)); return }
     const traced = this.tracedAt(x, y)
@@ -333,6 +373,12 @@ export class Game extends Toy {
       return
     }
     super.dragEnd()
+  }
+
+  /** A part laid is a thing to measure: the mole does, twice, unless it is in the middle of something. */
+  protected override commit(bridge: readonly Part[], added = -1): void {
+    super.commit(bridge, added)
+    if (added >= 0 && this.crew && !this.crew.mole.busy) this.crew.mole.react('laid')
   }
 
   /**
@@ -449,6 +495,7 @@ export class Game extends Toy {
     this.trolleyRung += dt
     this.modelRung += dt
     if (this.splash && (this.splash.since += dt) > CALM) this.splash = null
+    this.stepCrew(dt)
     this.slidOff = this.slidOff < SLIDE_OFF ? this.slidOff + dt : Infinity
     if (this.trolleyRolled && (this.trolleyRolled.since += dt) > 0.7) this.trolleyRolled = null
     if (this.trolleyFell && (this.trolleyFell.since += dt) > 1.1) this.trolleyFell = null
@@ -475,6 +522,21 @@ export class Game extends Toy {
     super.step(dt)
   }
 
+  /** The crew's time: the beaver braces for as long as a vehicle is on the road, both watch the work, and what they do about the sheet is heard as it happens. */
+  private stepCrew(dt: number): void {
+    const { beaver, mole } = this.crew, work = this.work()
+    beaver.brace(this.drive !== null)
+    const b = beaver.step(dt, work), m = mole.step(dt, work)
+    // The mole's rule is heard each time it is laid on something: lower the first time, higher the second.
+    const up = mole.busy && m.raise > 0.8
+    if (up && !this.moleUp) this.voices.push(moleRule(m.own > 0.5))
+    this.moleUp = up
+    // The beaver's tail is heard when it comes down.
+    const tail = beaver.busy && b.own > 0.6
+    if (!tail && this.tailUp && beaver.act !== 'poked') this.voices.push(beaverSlap)
+    this.tailUp = tail
+  }
+
   // --- Runs ----------------------------------------------------------------------
 
   private vehicleAt(x: number, y: number): { id: VehicleId; across: boolean } | null {
@@ -491,7 +553,8 @@ export class Game extends Toy {
     const train = trainOf(VEHICLES[id])
     const result = run(this.at, this.bridge, train, homeward)
     this.drive = { vehicle: id, run: result, train, homeward, seconds: 0, heard: Array.from(result.steps[0].use), strain: result.steps[0].strain }
-    this.voices.push(honk(id))
+    // The beaver cannot look, and its teeth say so.
+    this.voices.push(honk(id), beaverChatter)
   }
 
   /** The run has reached its ending: its outcome is saved at once, and the scene that shows it starts. */
@@ -507,11 +570,14 @@ export class Game extends Toy {
       // Homeward, the vehicle is back at the near bank and nothing is judged; outward, it has crossed.
       this.save = drive.homeward ? sentHome(this.save, drive.vehicle) : crossed(this.save, drive.vehicle, drive.vehicle === 'giraffe-bus' ? drive.run.ride.low[TASTE.bus.headroom - 1] : [])
       this.scene = new Scene(crossingBeats(show, cue))
+      this.crew.beaver.brace(false); this.crew.beaver.react('relief'); this.crew.mole.react('crossed')
+      this.voices.push(beaverSigh)
     } else {
       const what = consequence(drive.run, this.bridge, VEHICLES[drive.vehicle].crates)
       show.kind = 'give'
-      // The chief looks up from its model, at the gap and never at the child.
+      // The chief looks up from its model, at the gap and never at the child; the beaver starts and hides its eyes.
       this.chief.react('looks-up')
+      this.crew.beaver.brace(false); this.crew.beaver.react('flinch')
       this.gave = what.ring
       this.voices.push(what.voice.filter((sound) => (sound.after ?? 0) < 0.35))
       // The wrong road has its own sound: a tube rolls its load off with a plop, and wheels on a thread gurgle in the water.
@@ -541,6 +607,7 @@ export class Game extends Toy {
       this.voices.push(splash(VEHICLES[drive.vehicle].crates))
       const long = longOf(drive.vehicle)
       this.splash = { x: givePlace(this.show, this.at, long, TAIL[drive.vehicle]).x - long / 2, since: 0, big: 1 }
+      this.crew.mole.react('splashed')
     }
     if (what === 'ring') {
       // The bridge springs up and rings with the notes of its own parts.
@@ -585,6 +652,8 @@ export class Game extends Toy {
     this.moving = this.rest.map(atRest)
     this.rung = this.bridge.map(() => Infinity); this.turned = this.bridge.map(() => Infinity); this.laid = this.bridge.map(() => Infinity)
     this.flying = []; this.clicked.clear()
+    this.splash = null
+    for (const who of ['beaver', 'mole'] as const) this.crew[who].head = this.crewEyes(who)
     this.voices.push(unrollVoice(1))
     this.urgent = true
     this.changed = true

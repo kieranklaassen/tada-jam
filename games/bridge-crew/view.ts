@@ -1,5 +1,7 @@
 import { RAIL_TILT, poke, reactPose, waitPose, drivePose, type VehiclePose } from './acts'
 import { showsStrain, strainLook } from './consequence'
+import { CREW_SCALE } from './crew'
+import { crewFigure } from './crewfig'
 import { drawSky, drawWaterLife } from './drift'
 import { chief, chiefModel, roll } from './figures'
 import { barge, compareModels, ideaModel, lineDrawing, spareWeights, tracingSheet, trolley } from './props'
@@ -269,6 +271,9 @@ export class View {
     // While it shows something, corner marks round its models lead the eye to the margin.
     if (showing && (toy.chief.act === 'shows' || toy.chief.act === 'compares')) this.brackets(pen, [cx + cell * 1.05, cy - cell * 2.5], [cx + cell * 4.7, cy + cell * 0.25], 0.55 + 0.35 * Math.sin(toy.seconds * 4))
     drawn += 2
+
+    // The crew, at the foot of the sheet.
+    for (const who of ['beaver', 'mole'] as const) { const [gx, gy] = toy.crewAt(who); crewFigure(pen, who, ...at2([gx, gy]), cell * CREW_SCALE, toy.crew[who].pose, stream(who === 'beaver' ? 41 : 43)); drawn++ }
 
     if (guidance && guidance.demo !== null) { this.ghost(pen, toy, guidance); drawn++ }
     return drawn

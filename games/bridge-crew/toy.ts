@@ -39,6 +39,8 @@ export type Hand =
   /** The small model in the margin, pressed; and one part of the tracing laid on the board, to be copied. */
   | { what: 'model' }
   | { what: 'traced'; index: number }
+  /** One of the crew at the foot of the sheet. */
+  | { what: 'crew'; who: 'beaver' | 'mole' }
 
 /** How long a plucked part goes on ringing, in seconds: a second tap inside it turns the part. */
 export const RING = 0.8

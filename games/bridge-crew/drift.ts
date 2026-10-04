@@ -28,6 +28,12 @@ export function clouds(at: Site, seconds: number): { x: number; y: number; wide:
   })
 }
 
+/** A balloon, far off and high: it crosses the sky over the far bank from right to left, slowly, rising and sinking as it goes, and comes round again. */
+export function balloon(at: Site, seconds: number): { x: number; y: number } {
+  const lane = COLS + 10, x = COLS + 5 - frac((seconds * 0.11 + (siteSeed(at) % 41) * 0.61) / lane) * lane
+  return { x, y: SKY.low + 0.3 + 0.9 * (0.5 + 0.5 * Math.sin(seconds * 0.07 + (siteSeed(at) % 7))) }
+}
+
 /** How often the far train comes, and how fast it goes, in seconds and cells a second. */
 export const TRAIN = { every: 37, speed: 0.75, long: 1.45 } as const
 
@@ -123,6 +129,13 @@ export function drawSky(pen: Pen, plot: Plot, at: Site, seconds: number): number
       pen.arc(x + w * cx, y - w * cy, w * r, from, to)
     }
   }
+  // The balloon: an envelope with its gores, four lines down to a basket, and nobody waving.
+  const up = balloon(at, seconds), [bx, by] = px(plot, up.x, up.y), r = cell * 0.62
+  pen.moveTo(bx + r, by - r * 0.1); pen.arc(bx, by - r * 0.1, r, 0, Math.PI, true)
+  pen.quadraticCurveTo(bx - r * 0.95, by + r * 0.7, bx - r * 0.24, by + r * 1.25); pen.lineTo(bx + r * 0.24, by + r * 1.25); pen.quadraticCurveTo(bx + r * 0.95, by + r * 0.7, bx + r, by - r * 0.1)
+  for (const gore of [-0.5, 0, 0.5]) { pen.moveTo(bx + gore * r * 0.5, by + r * 1.25); pen.quadraticCurveTo(bx + gore * r * 1.5, by + r * 0.2, bx + gore * r * 0.3, by - r * 1.08) }
+  pen.moveTo(bx - r * 0.24, by + r * 1.25); pen.lineTo(bx - r * 0.18, by + r * 1.62); pen.moveTo(bx + r * 0.24, by + r * 1.25); pen.lineTo(bx + r * 0.18, by + r * 1.62)
+  pen.rect(bx - r * 0.2, by + r * 1.62, r * 0.4, r * 0.3)
   pen.stroke()
   drawn++
   const nose = train(at, seconds)
