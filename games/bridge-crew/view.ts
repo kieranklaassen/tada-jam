@@ -468,7 +468,12 @@ export class View {
       pen.save()
       pen.translate(hx, hy); pen.rotate(swing)
       pen.fillStyle = INK.paper
-      pen.beginPath(); pen.moveTo(-cell * 0.2, -cell * 0.02); pen.lineTo(cell * 0.2, -cell * 0.02); pen.lineTo(0, -cell * 0.36); pen.closePath(); pen.fill()
+      // A party hat: a cone with a brim under it and a bobble on its tip. (A bare triangle would be a sign.)
+      pen.beginPath(); pen.ellipse(0, -cell * 0.02, cell * 0.27, cell * 0.06, 0, 0, Math.PI * 2); pen.fill()
+      pen.beginPath(); pen.moveTo(-cell * 0.17, -cell * 0.03); pen.lineTo(cell * 0.17, -cell * 0.03); pen.lineTo(0, -cell * 0.36); pen.closePath(); pen.fill()
+      pen.beginPath(); pen.arc(0, -cell * 0.38, cell * 0.055, 0, Math.PI * 2); pen.fill()
+      pen.fillStyle = INK.paperShade
+      pen.beginPath(); pen.moveTo(-cell * 0.13, -cell * 0.1); pen.lineTo(cell * 0.13, -cell * 0.1); pen.lineTo(cell * 0.1, -cell * 0.16); pen.lineTo(-cell * 0.1, -cell * 0.16); pen.closePath(); pen.fill()
       pen.restore()
       drawn++
     }

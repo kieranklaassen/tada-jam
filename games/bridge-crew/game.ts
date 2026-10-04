@@ -1011,9 +1011,7 @@ export class Game extends Toy {
       this.bargeTook = this.at.channel ? bargeReaction(drive.run.ride) : null
       // Homeward, the vehicle is back at the near bank and nothing is judged; outward, it has crossed. Either way the
       // bus leaves a hat on any part lower than its heads.
-      // The bus has three hats to lose: the ones still hanging and the ones the chief wears are not lost again.
-      const lost = this.save.sheets[this.save.on].hats.length + this.chiefHat
-      const hats = drive.vehicle === 'giraffe-bus' ? drive.run.ride.low[TASTE.bus.headroom - 1].filter((index) => !this.save.sheets[this.save.on].hats.includes(index)).slice(0, Math.max(0, 3 - lost)) : []
+      const hats = drive.vehicle === 'giraffe-bus' ? drive.run.ride.low[TASTE.bus.headroom - 1] : []
       const before = this.save, ring = before.sheets[before.on].ring
       this.save = drive.homeward ? leaveHats(unringed(sentHome(crossedHome(this.save, drive.vehicle), drive.vehicle), drive.vehicle), hats) : crossed(this.save, drive.vehicle, hats)
       // The ring fades through this scene if this crossing took it away. The roll slides in and a vehicle draws up

@@ -132,6 +132,9 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
         if (gesture.type === 'pressEnd') toy.pressEnd()
         if (gesture.type === 'dragStart') toy.dragStart()
         if (gesture.type === 'dragMove' || gesture.type === 'dragLift') toy.dragMove(...view.toGrid(gesture.at.x, gesture.at.y))
+        // On lift the part drops: this game does not wait out the input's grace, in which a finger coming down again
+        // nearby would carry the same part on. The next part is laid from where this one ended, by a new drag.
+        if (gesture.type === 'dragLift') { toy.dragEnd(); touch.clear(); lifted = false }
         if (gesture.type === 'dragEnd') toy.dragEnd()
       }
       afterToy()

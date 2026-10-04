@@ -250,6 +250,9 @@ export function vehicle(pen: Pen, id: VehicleId, c: number, pose: VehiclePose, s
         if (i < hats) {
           const off = pose.upset * c * 0.5
           cutOut(pen, c, INK.paper, () => { pen.moveTo(hx - c * 0.12, hy - c * 0.1 - off); pen.lineTo(hx + c * 0.26, hy - c * 0.1 - off); pen.lineTo(hx + c * 0.07, hy - c * 0.42 - off); pen.closePath() })
+          // Its brim and its bobble: a party hat, not a bare triangle.
+          cutOut(pen, c, INK.paper, () => pen.ellipse(hx + c * 0.07, hy - c * 0.1 - off, c * 0.25, c * 0.05, 0, 0, Math.PI * 2))
+          cutOut(pen, c, INK.paper, () => pen.arc(hx + c * 0.07, hy - c * 0.44 - off, c * 0.05, 0, Math.PI * 2))
         }
       }
       crateCount(pen, spec.crates, back - c * 0.4, bed - c * 0.4, c, flip, counted)

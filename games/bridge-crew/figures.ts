@@ -162,7 +162,13 @@ export function chief(pen: Pen, x: number, y: number, cell: number, pose: ChiefP
   pen.beginPath(); pen.moveTo(cell * 0.12, -cell * 0.12); pen.lineTo(cell * 0.17, -cell * 0.108); pen.stroke()
   // A hat it plucked off a part of the bridge: a paper cone, worn until the next sheet.
   // One on another when it has plucked more than one: up to the bus's three.
-  for (let i = 0; i < Math.min(3, hats); i++) cutOut(pen, cell, INK.paper, () => { const up = cell * 0.17 * i; pen.moveTo(-cell * 0.2, -cell * 0.1 - up); pen.lineTo(cell * 0.2, -cell * 0.16 - up); pen.lineTo(-cell * 0.04, -cell * 0.5 - up); pen.closePath() })
+  for (let i = 0; i < Math.min(3, hats); i++) {
+    const up = cell * 0.17 * i
+    cutOut(pen, cell, INK.paper, () => { pen.moveTo(-cell * 0.2, -cell * 0.1 - up); pen.lineTo(cell * 0.2, -cell * 0.16 - up); pen.lineTo(-cell * 0.04, -cell * 0.5 - up); pen.closePath() })
+    // Its brim, and the bobble on the top one: a party hat, not a bare triangle.
+    cutOut(pen, cell, INK.paper, () => pen.ellipse(0, -cell * 0.13 - up, cell * 0.27, cell * 0.055, -0.15, 0, Math.PI * 2))
+    if (i === Math.min(3, hats) - 1) cutOut(pen, cell, INK.paper, () => pen.arc(-cell * 0.04, -cell * 0.52 - up, cell * 0.055, 0, Math.PI * 2))
+  }
   pen.restore()
 }
 
@@ -199,7 +205,9 @@ export function tray(pen: Pen, x: number, y: number, wide: number, cell: number,
     if (kind === 'thread') {
       // A spool: two balsa cheeks on a core wound with string, and a loose end.
       const mid = left + bay / 2, top = y + cell * 0.45, low = y + tall - cell * 0.45
-      for (let i = 0; i < 9; i++) string(pen, mid - cell * 0.42, top + ((low - top) * (i + 0.6)) / 10, mid + cell * 0.42, top + ((low - top) * (i + 1)) / 10, cell * 1.6)
+      // The string wound on it, as one filled bobbin: turns drawn as level strings would be lines of writing.
+      pen.fillStyle = INK.string
+      pen.beginPath(); pen.roundRect(mid - cell * 0.42, top + cell * 0.06, cell * 0.84, low - top - cell * 0.12, cell * 0.14); pen.fill()
       wood(pen, 'plank', mid - cell * 0.62, top, mid + cell * 0.62, top, cell, random)
       wood(pen, 'plank', mid - cell * 0.62, low, mid + cell * 0.62, low, cell, random)
       string(pen, mid + cell * 0.42, low - cell * 0.12, mid + cell * 1.25, low - cell * 0.02, cell, 0.12)

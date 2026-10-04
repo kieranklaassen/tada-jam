@@ -265,7 +265,9 @@ function modelOf(pen: Pen | null, idea: Idea, x: number, y: number, c: number, h
       if (holds) { stick(0.7, 0, 0.7, 0.7); dot(0.7, 0) }
       break
     case 'tube':
-      // Two thin posts under a strip with a block on it bow in the middle; two rolled tubes of the same height stand straight.
+      // Two thin posts under a strip with a block on it bow in the middle; two rolled tubes of the same height stand
+      // straight. Both stand on a base board, which closes posts and strip into a frame.
+      block(INK.balsaEdge, () => pen!.rect(x + 0.02 * w, y - 0.07 * w, 1.36 * w, 0.14 * w))
       for (const px0 of [0.25, 1.15]) {
         if (holds) stick(px0, 0, px0, 1.0, 'tube')
         else { const out = px0 < 0.7 ? -1 : 1; stick(px0, 0, px0 + out * 0.26 * fail, 0.5 - 0.08 * fail); stick(px0 + out * 0.26 * fail, 0.5 - 0.08 * fail, px0, 1.0 - 0.22 * fail) }
@@ -345,6 +347,9 @@ export function modelSides(d: Difference | undefined): [Side, Side] {
   }
 }
 
+/** The least by which two differing models' dips are drawn apart, as a share of the model's unit: about four pixels. */
+const SEEN = 0.07
+
 export function compareModels(pen: Pen, differences: readonly Difference[], x: number, y: number, c: number, swapped: boolean, load: number, random: () => number, set = 1, swap = swapped ? 1 : 0) {
   const w = c * 0.9
   const sides = modelSides
@@ -364,11 +369,11 @@ export function compareModels(pen: Pen, differences: readonly Difference[], x: n
     }
     pen.restore()
   }
-  const model = (ox: number, left: Side, right: Side, coming: Side | null, alpha: number) => {
+  const model = (ox: number, left: Side, right: Side, coming: Side | null, alpha: number, own: number, after: number) => {
     if (alpha <= 0.01) return
     pen.save()
     pen.globalAlpha = alpha
-    const dip = load * w * modelDip(left, swap >= 0.5 && coming ? coming : right)
+    const dip = load * w * (swap >= 0.5 && coming ? after : own)
     // Each end of the deck rests on a block of its own, so the model stands on the ledge and is closed all round.
     for (const bx of [-0.1, 1.1]) cutOut(pen, c, INK.balsaEdge, () => pen.rect(ox + bx * w, y - 0.56 * w, 0.2 * w, 0.56 * w))
     // A model with a stay has a frame for it: a post at each end and a beam across, which the stay's pin is on.
@@ -389,7 +394,11 @@ export function compareModels(pen: Pen, differences: readonly Difference[], x: n
   // Side by side they differ in two things; with one part swapped back, in one. The first is set down, and then the
   // second beside it, from the right.
   const first = Math.min(1, set * 2), second = Math.max(0, set * 2 - 1)
-  model(x, firstA, secondA, null, first)
   const done = swap >= 1
-  model(x + w * (1.7 + 0.8 * (1 - second)), firstB, done ? secondA : secondB, !done && swap > 0 ? secondA : null, second)
+  // How far each dips. Two models that differ dip differently enough to see: where the numbers come out closer than a
+  // fourteenth of the model's unit, the two are drawn that far apart, the stiffer one above.
+  const apart = (a: number, b: number): [number, number] => { if (a === b || Math.abs(a - b) >= SEEN) return [a, b]; const low = Math.max(0.02, (a + b) / 2 - SEEN / 2); return a < b ? [low, low + SEEN] : [low + SEEN, low] }
+  const [dipA, dipB] = apart(modelDip(firstA, secondA), modelDip(firstB, secondB)), [, dipSwapped] = apart(modelDip(firstA, secondA), modelDip(firstB, secondA))
+  model(x, firstA, secondA, null, first, dipA, dipA)
+  model(x + w * (1.7 + 0.8 * (1 - second)), firstB, done ? secondA : secondB, !done && swap > 0 ? secondA : null, second, done ? dipSwapped : dipB, dipSwapped)
 }

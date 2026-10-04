@@ -355,11 +355,10 @@ export function paintDesk(pen: Pen, plot: Plot, at: Site) {
     stroke(pen, plot, [[x + 0.3, y + 0.25], [x + 0.95, y + 0.25], [x + 0.3, y + 0.73]], 0.014, a, true)
   }
   if (left >= 4.6) {
-    // A pair of compasses, shut, lying on the ledge: its two legs side by side, a knob at the hinge and a point.
-    const x = leftRoom[1] - 3.9, y = floor + 0.16
-    stroke(pen, plot, [[x, y + 0.06], [x + 1.45, y + 0.06], [x + 1.7, y], [x + 1.45, y - 0.06], [x, y - 0.06]], 0.02, a, true)
-    stroke(pen, plot, [[x + 0.1, y], [x + 1.4, y]], 0.012, a * 0.7)
-    stroke(pen, plot, [[x - 0.22, y - 0.07], [x, y - 0.07], [x, y + 0.07], [x - 0.22, y + 0.07]], 0.02, a, true)
+    // A rubber, lying on the ledge: a block with a paper sleeve round its middle. Two closed boxes, and nothing that points.
+    const x = leftRoom[1] - 3.7, y = floor + 0.05
+    stroke(pen, plot, [[x, y], [x + 1.1, y], [x + 1.1, y + 0.42], [x, y + 0.42]], 0.02, a, true)
+    stroke(pen, plot, [[x + 0.3, y - 0.03], [x + 0.85, y - 0.03], [x + 0.85, y + 0.45], [x + 0.3, y + 0.45]], 0.016, a, true)
   }
   const right = rightRoom[1] - rightRoom[0]
   if (right >= 2.9) {
