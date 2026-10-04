@@ -470,7 +470,7 @@ export class Game implements Director {
     if (JSON.stringify(this.play.arrangement) !== JSON.stringify(this.world.arrangement)) this.play.relayout(this.world.arrangement)
     else this.play.arrangement = this.world.arrangement
     this.moods()
-    this.perchesAsFound()
+    // Who is high is not settled here either: if the friend who went to wait lifted Mog or Bo by leaving, each says so.
     // Dot's company is not reset here: if the friend who went to wait stood beside it, Dot has been left alone, and says so.
   }
 
@@ -685,7 +685,9 @@ export class Game implements Director {
 
   /** The arrangement has this friend where it likes to be: high. */
   private high(id: FriendId): boolean {
-    const a = this.play.arrangement, place = placeOf(a, id)
+    // By who sits: a friend in the hand is not on the plank, and is not high itself.
+    if (this.play.held === id) return false
+    const a = this.play.sitting, place = placeOf(a, id)
     if (place.at !== 'end') return false
     // Mog's high perch is the up end or the top of any stack; Bo's is the up end.
     if (id === 'mog' && place.level > 0 && place.level === a[place.end].length - 1) return true
@@ -912,12 +914,14 @@ export class Game implements Director {
       const asker = this.world.state.finished ? null : this.ride.asker
       // The one who asks has been taken off the plank: it is the one to tap, back onto its end.
       const strayed = asker !== null && placeOf(a, asker).at === 'sand' && this.play.bodies[asker].mode === 'rest'
-      const idle = (['mog', 'bo', 'pim', 'dot'] as const).filter((id) => id !== asker && placeOf(a, id).at === 'sand' && this.play.bodies[id].mode === 'rest')
+      // Dot is never shown: bringing it in is never asked for.
+      const idle = (['mog', 'bo', 'pim'] as const).filter((id) => id !== asker && placeOf(a, id).at === 'sand' && this.play.bodies[id].mode === 'rest')
       // Never the answer first: a friend whose one tap would carry the asker there is shown after the others.
       const answers = (id: FriendId) => asker !== null && wantMet(this.ride, tap(a, id))
       const standing = strayed ? [asker] : [...idle.filter((id) => !answers(id)), ...idle.filter(answers)]
       const turn = Math.max(0, guidance.demoIndex >= 0 ? guidance.demoIndex : this.lastDemo)
-      on = standing.length ? standing[turn % standing.length] : (a.right[a.right.length - 1] ?? a.left[a.left.length - 1] ?? null)
+      const tops = [a.right[a.right.length - 1], a.left[a.left.length - 1]].filter((id): id is FriendId => id !== undefined && id !== 'dot')
+      on = standing.length ? standing[turn % standing.length] : (tops[0] ?? null)
     }
     guide.on = on
     guide.glow = guidance.glow

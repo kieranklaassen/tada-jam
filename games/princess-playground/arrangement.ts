@@ -1,4 +1,4 @@
-import { ENDS, FRIEND_IDS, FRIENDS, PLANK, SAND, WAITING_PLACE, endOnSide, homeOn, standable, type End, type FriendId, type Spot } from './world'
+import { ENDS, FRIEND_IDS, FRIENDS, GRID, PLANK, SAND, WAITING_PLACE, endOnSide, homeOn, standable, standablePlaces, type End, type FriendId, type Spot } from './world'
 
 // Who is where: the model of the world, and the only thing the plank reads.
 // Pure. Each end holds a stack, bottom first; everyone else stands in the
@@ -91,43 +91,44 @@ export function elbowRoom(a: FriendId, b: FriendId): number {
 /** The waiting place is kept clear for whoever waits there, or will: nobody stands within this of it, plus their own radius. */
 export const WAITING_CLEAR = 1.15
 
-function clear(a: Arrangement, id: FriendId, at: Spot): boolean {
+function clear(a: Arrangement, id: FriendId, at: Spot, spare = 0): boolean {
   const radius = FRIENDS[id].radius
   if (Math.hypot(at.x - WAITING_PLACE.x, at.z - WAITING_PLACE.z) < radius + WAITING_CLEAR) return false
   for (const other of FRIEND_IDS) {
     const there = a.sand[other]
     if (other === id || !there) continue
-    if (Math.hypot(at.x - there.x, at.z - there.z) < elbowRoom(id, other)) return false
+    if (Math.hypot(at.x - there.x, at.z - there.z) < elbowRoom(id, other) + spare) return false
   }
   return true
 }
 
+/** The room a friend moved to the nearest free place keeps beyond bare elbow room, where there is any. */
+export const SPARE_ROOM = 0.15
+
 /**
  * Nearest place to `spot` where this friend stands clear of the plank, the
- * rim, the waiting place and the others in the sand. It looks outward in
- * rings, so the answer is the same every time and always exists.
+ * rim, the waiting place and the others in the sand: of every place on the
+ * grid, the one nearest to where the friend was let go. The answer is the
+ * same every time and always exists.
  */
 export function freeSpot(a: Arrangement, id: FriendId, spot: Spot): Spot {
   const radius = FRIENDS[id].radius
   const first = standable(spot, radius)
-  if (clear(a, id, first)) return first
-  let best: Spot | null = null, bestApart = Infinity
-  for (let ring = 1; ring <= 40; ring++) {
-    const reach = ring * 0.25
-    for (let k = 0; k < 20; k++) {
-      const angle = (k / 20) * Math.PI * 2
-      const at = standable({ x: first.x + Math.cos(angle) * reach, z: first.z + Math.sin(angle) * reach }, radius)
-      if (!clear(a, id, at)) continue
-      const apart = Math.hypot(at.x - first.x, at.z - first.z)
-      if (apart < bestApart - 1e-9) {
-        best = at
-        bestApart = apart
-      }
+  // Where it was let go, if a friend may stand there: the common case, and the one a saved place always is.
+  if (Math.hypot(first.x - spot.x, first.z - spot.z) < GRID && clear(a, id, first)) return first
+  // Else the nearest of every place it may stand, measured from where it was let go, whichever way that lies.
+  // With a little room to spare where there is any: two neighbours crouching to hop at once spread wider than they stand.
+  for (const spare of [SPARE_ROOM, 0]) {
+    let best: Spot | null = null, bestApart = Infinity
+    for (const at of standablePlaces(radius)) {
+      const apart = Math.hypot(at.x - spot.x, at.z - spot.z)
+      if (apart >= bestApart - 1e-9 || !clear(a, id, at, spare)) continue
+      best = at
+      bestApart = apart
     }
-    // A free place this near cannot be beaten by a wider ring.
-    if (best && bestApart <= reach) return best
+    if (best) return best
   }
-  return best ?? first
+  return first
 }
 
 /**

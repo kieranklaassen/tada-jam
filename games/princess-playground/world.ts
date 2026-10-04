@@ -158,6 +158,25 @@ export function standable(spot: Spot, radius: number): Spot {
   return { x, z: best ?? childRim }
 }
 
+const PLACES = new Map<number, readonly Spot[]>()
+
+/** Every place on the grid where a friend of this radius may stand: clear of the rim and out of the plank's way. */
+export function standablePlaces(radius: number): readonly Spot[] {
+  const known = PLACES.get(radius)
+  if (known) return known
+  const reach = radius * 1.3 + 0.05
+  const sideRim = Math.min(SAND.maxX - radius * 0.5, TRAY.halfWidth - reach)
+  const nearRim = Math.max(SAND.minZ + radius * 0.5, -TRAY.halfDepth + reach)
+  const childRim = Math.min(SAND.maxZ, TRAY.halfDepth - reach)
+  const xs = new Set<number>(), zs = new Set<number>()
+  for (let v = -sideRim; v <= sideRim + 1e-9; v += GRID) xs.add(onGrid(v, -sideRim, sideRim, -TRAY.halfWidth))
+  for (let v = nearRim; v <= childRim + 1e-9; v += GRID) zs.add(onGrid(v, nearRim, childRim, -TRAY.halfDepth))
+  const places: Spot[] = []
+  for (const x of xs) for (const z of zs) if (!inTheWay(x, z, radius)) places.push({ x, z })
+  PLACES.set(radius, places)
+  return places
+}
+
 /** Where each friend stands by default on the right of the tray; mirrored for the left. Dot's is the rim. */
 export const HOME: Readonly<Record<FriendId, Spot>> = {
   pim: standable({ x: 1.8, z: 2.49 }, FRIENDS.pim.radius),

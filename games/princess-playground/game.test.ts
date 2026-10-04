@@ -1252,9 +1252,8 @@ describe('the idle ladder', () => {
       game.step(1 / 60, { glow: 1, demo: 0.5, demoIndex })
       shownFirst.push(game.guide.on!)
     }
-    // Bo alone lifts Mog: he is shown last. Pim is too light and Dot only floats the plank.
-    expect(shownFirst[2]).toBe('bo')
-    expect([...shownFirst].sort()).toEqual(['bo', 'dot', 'pim'])
+    // Bo alone lifts Mog: he is shown after Pim, who is too light. Dot is never shown.
+    expect(shownFirst).toEqual(['pim', 'bo', 'pim'])
   })
 })
 
@@ -1286,6 +1285,45 @@ describe('a tap on the plank', () => {
       if (weights[0] === weights[1]) expect(cues.some((cue) => cue.type === 'bite'), label).toBe(false)
       expect(Math.abs(game.play.plank.tilt - rest), label).toBeLessThan(0.02)
     }
+  })
+})
+
+describe('Mog and Bo say that they are high, every time', () => {
+  it('when the friend who goes to wait leaves the plank and that lifts Mog: he purrs once he is up', () => {
+    // Bo's ride: Pim and Mog lift him. Pim asks next and leaves, and Mog, alone against Bo, is carried up.
+    const world = shown()
+    const game = new Game({ ...world, state: { ...world.state, position: 'big-asks' }, kind: 'big-asks', turn: 0, shown: ['big-asks'], arrangement: layout(rideOf('big-asks', 0)), touched: true }, 1)
+    run(game, 0.5)
+    const far = placeOf(game.play.arrangement, 'bo')
+    expect(far.at).toBe('end')
+    tapOn(game, 'mog')
+    run(game, 2.5)
+    tapOn(game, 'pim')
+    const voice = JSON.stringify(purr())
+    const cues: Cue[] = []
+    let waited: FriendId | null = null
+    for (let i = 0; i < 900; i++) {
+      game.step(1 / 60, QUIET)
+      cues.push(...game.takeCues())
+      waited = game.world.arrangement.waiting
+    }
+    expect(game.world.state.finished).toBe(true)
+    expect(waited).toBe('pim')
+    expect(placeOf(game.play.arrangement, 'mog').at).toBe('end')
+    expect(cues.filter((cue) => cue.type === 'voice' && JSON.stringify(cue.parts) === voice).length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('with a rider in the hand: Pim lifted off Mog, who then sits high against Bo, and he purrs while she is held', () => {
+    const bare = tap(layout(rideOf('little-asks', 0)), 'pim')
+    const game = new Game({ ...shown(), arrangement: putOnEnd(putOnEnd(putOnEnd(bare, 'mog', 'left'), 'pim', 'left'), 'bo', 'right'), touched: true, state: { ...shown().state, finished: true } }, 1)
+    run(game, 2)
+    game.takeCues()
+    game.press({ kind: 'friend', id: 'pim' })
+    game.dragStart()
+    game.dragTo({ x: -1, z: 2.6 }, null)
+    const { cues } = run(game, 6)
+    expect(game.play.held).toBe('pim')
+    expect(cues.filter((cue) => cue.type === 'voice' && JSON.stringify(cue.parts) === JSON.stringify(purr())).length).toBe(1)
   })
 })
 
@@ -1629,7 +1667,9 @@ describe('the idle ladder', () => {
     }
     expect(seen.has('pim')).toBe(false)
     expect(seen.has(null)).toBe(false)
-    expect(seen.size).toBe(3)
+    // Mog and Bo, in turn. Never Dot: bringing it in is never asked for.
+    expect(seen.has('dot')).toBe(false)
+    expect(seen.size).toBe(2)
   })
 
   it('after a ride shows the friend who waits, and shows nothing while a scene plays', () => {

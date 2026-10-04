@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { CATCH_DEPTH, WAITING_CLEAR, drop, emptyArrangement, freeSpot, inCompany, isSound, lean, lowEnd, placeOf, putInSand, putOnEnd, tap, weightOn, type Arrangement } from './arrangement'
-import { FRIEND_IDS, FRIENDS, PLANK, SAND, WAITING_PLACE, homeOn, inTheWay, type FriendId } from './world'
+import { CATCH_DEPTH, SPARE_ROOM, WAITING_CLEAR, drop, elbowRoom, emptyArrangement, freeSpot, inCompany, isSound, lean, lowEnd, placeOf, putInSand, putOnEnd, standsAt, tap, weightOn, type Arrangement } from './arrangement'
+import { FRIEND_IDS, FRIENDS, PLANK, SAND, WAITING_PLACE, homeOn, inTheWay, standablePlaces, type FriendId } from './world'
 
 const on = (left: FriendId[], right: FriendId[]): Arrangement => {
   let a = emptyArrangement()
@@ -109,6 +109,27 @@ describe('a friend let go', () => {
       expect(isSound(landed.arrangement), `${z}`).toBe(true)
     }
     expect(CATCH_DEPTH).toBeLessThan(1)
+  })
+
+  it('anywhere it may not stand, it stands at the nearest place it may, whichever way that lies', () => {
+    const a = putOnEnd(emptyArrangement(), 'pim', 'left')
+    // Behind the plank, within reach of the right seat: the nearest free place is close by, not out in front.
+    for (const spot of [{ x: 2, z: -2.6 }, { x: 3.4, z: -2.7 }, { x: 0.3, z: -1.9 }, { x: -2.2, z: 0.2 }]) {
+      const at = standsAt(putInSand(a, 'mog', spot), 'mog')
+      const apart = Math.hypot(at.x - spot.x, at.z - spot.z)
+      // No place it may stand is nearer.
+      for (const other of standablePlaces(FRIENDS.mog.radius)) {
+        if (Math.hypot(other.x - WAITING_PLACE.x, other.z - WAITING_PLACE.z) < FRIENDS.mog.radius + WAITING_CLEAR) continue
+        // Nor where another friend stands, with elbow room.
+        if ((['dot', 'bo'] as const).some((id) => Math.hypot(other.x - a.sand[id]!.x, other.z - a.sand[id]!.z) < elbowRoom('mog', id) + SPARE_ROOM)) continue
+        expect(Math.hypot(other.x - spot.x, other.z - spot.z), `${spot.x}, ${spot.z}`).toBeGreaterThanOrEqual(apart - 1e-6)
+      }
+      expect(inTheWay(at.x, at.z, FRIENDS.mog.radius)).toBe(false)
+    }
+    // Behind the plank, where it was let go, it stays behind the plank.
+    const behind = standsAt(putInSand(a, 'mog', { x: 2, z: -2.6 }), 'mog')
+    expect(Math.hypot(behind.x - 2, behind.z + 2.6)).toBeLessThan(1)
+    expect(behind.z).toBeLessThan(PLANK.z)
   })
 
   it('over the middle slides to the low end, and on a level plank to the nearer end', () => {
