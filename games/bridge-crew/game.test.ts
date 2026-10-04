@@ -17,7 +17,7 @@ import { plop, pinSwing, splash as splashVoice } from './voices'
 import { DRAWN_DIP } from './pose'
 import { MODEL_PLACE, MODEL_TOP, perchOn } from './motion'
 import { modelDip, modelSides } from './props'
-import { chiefTaps, pinTick, pluck as pluckVoice, scaleNote, scaleStart, trolleyFlip, trolleyOff, trolleySet, trolleyWeight } from './voices'
+import { chiefTaps, deskKnock, pinTick, pluck as pluckVoice, scaleNote, scaleStart, trolleyFlip, trolleyOff, trolleySet, trolleyWeight } from './voices'
 import { lowPoint } from './run'
 import { JUDGE } from './order'
 import { desk } from './valley'
@@ -1802,6 +1802,57 @@ describe('what a full reading found of the scenes', () => {
     expect(game.fading).toBeNull()
   })
 })
+
+describe('what the eighth reading found', () => {
+  it('a neat way owed in a give is not lost when the game is put away in that give: opened again, it is shown', () => {
+    // The flat plank cracks under the van: the second failed run owes the plank on edge.
+    const game = new Game({ ...edit(freshSave(null), [part('plank', 10, 6, 14, 6)]), tries: 1 }, stream(2))
+    send(game)
+    expect(game.show.kind).toBe('give')
+    expect(game.save.tries).toBe(2)
+    expect(game.save.shown).toEqual([])
+    steps(game, 1)
+    // Put away in the middle of the give, and opened again from what was stored.
+    game.putAway()
+    const again = new Game(deserialize(stored(game)), stream(2))
+    expect(again.save.shown).toEqual([])
+    again.step(1 / 60)
+    expect(again.chief.act).toBe('shows')
+    expect(again.showing).toMatchObject({ idea: 'profile' })
+    expect(again.save.shown).toEqual(['profile'])
+    // Once and not again: opened a third time, nothing starts.
+    const third = new Game(deserialize(stored(again)), stream(2))
+    third.step(1 / 60)
+    expect(third.showing).toBeNull()
+    // And not where it is not owed: one failed run, or a bridge that would carry the vehicle.
+    const once = new Game({ ...edit(freshSave(null), [part('plank', 10, 6, 14, 6)]), tries: 1 }, stream(2))
+    once.step(1 / 60)
+    expect(once.showing).toBeNull()
+    const sound = new Game({ ...edit(freshSave(null), CROSSINGS['plank-gap']), tries: 3 }, stream(2))
+    sound.step(1 / 60)
+    expect(sound.showing).toBeNull()
+  })
+
+  it('a touch where no pin can go and nothing is drawn to touch is answered all the same: a dull knock and a little dust', () => {
+    const game = new Game(freshSave(null), stream(2))
+    game.takeVoices()
+    // Deep in the near bank, where the burrow is drawn.
+    game.press(2, 2)
+    expect(game.hand).toBeNull()
+    expect(game.takeVoices()).toEqual([deskKnock])
+    expect(game.marks.some((mark) => mark.what === 'dust')).toBe(true)
+    game.pressEnd()
+    expect(game.bridge).toEqual([])
+  })
+
+  it('the chief knocks once for a note it taps along with, and three times for a triangle', () => {
+    expect(chiefTaps([440])).toHaveLength(1)
+    expect(chiefTaps([440, 550])).toHaveLength(2)
+    expect(chiefTaps([440, 550, 660])).toHaveLength(3)
+    expect(chiefTaps([440, 550, 660, 770])).toHaveLength(3)
+  })
+})
+
 
 
 

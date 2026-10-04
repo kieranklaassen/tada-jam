@@ -169,7 +169,12 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       audio.touchUp()
     }
     const onCancel = (event: PointerEvent) => {
-      act(touch.cancel(event.pointerId, event.timeStamp))
+      // The browser took the finger away (its own gesture, a palm, the surface going): the child did not let go. A
+      // drag in the middle is abandoned, and whatever was in the hand is back where it came from: a half-drawn part
+      // is not laid, a carried part not taken off, a pin not pulled.
+      const gestures = touch.cancel(event.pointerId, event.timeStamp)
+      if (gestures.some((gesture) => gesture.type === 'dragLift')) { touch.clear(); lifted = false; if (toy && !spike) { toy.pressEnd(); afterToy() } }
+      else act(gestures)
       audio.touchUp()
     }
     root.addEventListener('pointerdown', onDown)

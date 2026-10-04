@@ -58,6 +58,12 @@ export function trolley(pen: Pen, x: number, y: number, c: number, weights: numb
     wood(pen, 'stick', -c * 0.58, bed - c * 0.62, -c * 0.8, bed - c * 0.56, c * 0.6, random)
     wood(pen, 'stick', -c * 0.8, bed - c * 0.56, -c * 0.42, bed, c * 0.6, random)
   }
+  // Under the plank it is upside down, on its wheels like a cable car: its handle hangs down from its bed.
+  if (how === 'under') {
+    wood(pen, 'stick', -c * 0.42, bed, -c * 0.58, bed + c * 0.5, c * 0.6, random)
+    wood(pen, 'stick', -c * 0.58, bed + c * 0.5, -c * 0.8, bed + c * 0.44, c * 0.6, random)
+    wood(pen, 'stick', -c * 0.8, bed + c * 0.44, -c * 0.42, bed, c * 0.6, random)
+  }
   wood(pen, 'plank', -c * 0.42, bed, c * 0.42, bed, c * 0.9, random)
   const onTop = how === 'under' ? -c * 0.1 : how === 'pin' ? null : bed + c * 0.09
   if (onTop !== null) for (const wx of [-0.3, 0.3]) {
@@ -76,6 +82,9 @@ export function trolley(pen: Pen, x: number, y: number, c: number, weights: numb
     pen.save()
     pen.translate(c * 0.72, bed + c * 0.16)
     pen.rotate(how === 'pin' ? -swing : 0)
+    // A patch of the sheet's own blue under it: hung low, it would lie on the water's dashes.
+    pen.fillStyle = INK.sheet
+    pen.beginPath(); pen.roundRect(-c * 0.3, -c * 0.34, c * 0.6, c * 0.68, c * 0.1); pen.fill()
     drawWhole(pen, weights, 0, 0, c * 0.5, { fill: INK.line, edge: INK.sheetDeep, edgeWidth: c * 0.12 })
     pen.restore()
   }
@@ -85,7 +94,8 @@ export function trolley(pen: Pen, x: number, y: number, c: number, weights: numb
 
 /** The weights not on the trolley, lying in its compartment in a row. No numeral: nobody set this pile. */
 export function spareWeights(pen: Pen, x: number, y: number, c: number, count: number) {
-  for (let i = 0; i < count; i++) weight(pen, x + (i % 3) * c * 0.6, y - Math.floor(i / 3) * c * 0.18, c)
+  // Two to a row, in the compartment's top left corner: none lies over the trolley's numeral or beside it.
+  for (let i = 0; i < count; i++) weight(pen, x + (i % 2) * c * 0.52, y - Math.floor(i / 2) * c * 0.2, c * 0.9)
 }
 
 const lineOf = (kind: Kind, turned: boolean): number => (kind === 'thread' ? 0.03 : kind === 'tube' ? 0.14 : kind === 'plank' ? (turned ? 0.2 : 0.09) : 0.05)
@@ -151,7 +161,7 @@ export const TRACING_PAPER = '#6f93c4'
  * balsa hull, a paper cabin with the captain's face, and a flowerpot on the
  * roof that `spill` (0 to 1) tips into the water, where it bobs.
  */
-export function barge(pen: Pen, x: number, y: number, c: number, bob: number, scrape: number, spill: number, mood: number) {
+export function barge(pen: Pen, x: number, y: number, c: number, bob: number, scrape: number, spill: number, mood: number, seconds = 0) {
   pen.save()
   pen.translate(x + c * 0.06 * Math.sin(scrape * 40) * scrape, y - c * bob)
   pen.rotate(0.05 * Math.sin(scrape * 31) * scrape)
@@ -166,7 +176,9 @@ export function barge(pen: Pen, x: number, y: number, c: number, bob: number, sc
   for (const ex of [-0.52, -0.3]) { pen.beginPath(); pen.arc(c * ex, -c * 0.7, c * 0.04, 0, Math.PI * 2); pen.fill() }
   pen.beginPath(); pen.moveTo(-c * 0.52, -c * 0.52); pen.quadraticCurveTo(-c * 0.41, -c * (0.52 - 0.08 * mood), -c * 0.3, -c * 0.52); pen.stroke()
   // The flowerpot: on the cabin roof, or off it and in the water beside the hull.
-  const px = -c * 0.2 + spill * c * 2.2, py = -c * 0.95 + spill * c * 1.0 - c * 0.5 * Math.sin(Math.PI * Math.min(1, spill * 1.4))
+  // In the water it bobs by itself, up and down on the surface, until it comes back.
+  const afloat = Math.max(0, Math.min(1, (spill - 0.7) / 0.3))
+  const px = -c * 0.2 + spill * c * 2.2, py = -c * 0.95 + spill * c * 1.0 - c * 0.5 * Math.sin(Math.PI * Math.min(1, spill * 1.4)) + afloat * c * (0.07 * Math.sin(seconds * 7) + bob)
   cutOut(pen, c, INK.paperShade, () => { pen.moveTo(px - c * 0.14, py - c * 0.2); pen.lineTo(px + c * 0.14, py - c * 0.2); pen.lineTo(px + c * 0.09, py); pen.lineTo(px - c * 0.09, py); pen.closePath() })
   pen.strokeStyle = INK.balsaEdge
   pen.lineWidth = Math.max(1, c * 0.03)

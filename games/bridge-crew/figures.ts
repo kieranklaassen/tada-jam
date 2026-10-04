@@ -111,12 +111,11 @@ export function chief(pen: Pen, x: number, y: number, cell: number, pose: ChiefP
   pen.beginPath(); pen.moveTo(bodyX - cell * 0.37, bodyY + cell * 0.04); pen.quadraticCurveTo(bodyX, bodyY + cell * 0.22, bodyX + cell * 0.31, bodyY - cell * 0.1); pen.stroke()
   // Feathers on end: short strokes standing off its back.
   if (pose.crest > 0.05) {
-    pen.beginPath()
+    // Each a paper feather, filled, of its own length and lean: not a row of like strokes.
     for (let i = 0; i < 5; i++) {
-      const fx = bodyX - cell * (0.42 - i * 0.16), fy = bodyY - cell * (0.2 + 0.06 * Math.sin(i * 1.7))
-      pen.moveTo(fx, fy); pen.lineTo(fx - cell * 0.1 * pose.crest, fy - cell * 0.26 * pose.crest)
+      const fx = bodyX - cell * (0.42 - i * 0.16), fy = bodyY - cell * (0.2 + 0.06 * Math.sin(i * 1.7)), long = cell * (0.2 + 0.1 * Math.abs(Math.sin(i * 2.3 + 1))) * pose.crest, lean = -0.5 + 0.22 * i
+      cutOut(pen, cell, INK.paper, () => pen.ellipse(fx + Math.sin(lean) * long * 0.5, fy - Math.cos(lean) * long * 0.5, cell * 0.045, long * 0.55, lean, 0, Math.PI * 2))
     }
-    pen.stroke()
   }
   // The head: where the neck's reach, the preening and the peck put it.
   const reach = 0.3 + pose.neck

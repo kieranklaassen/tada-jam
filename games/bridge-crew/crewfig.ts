@@ -119,12 +119,8 @@ function beaver(pen: Pen, x: number, y: number, c: number, pose: CrewPose, rando
   flat(pen, INK.paper, () => pen.ellipse(hand[0] + c * 0.04, hand[1], c * (0.13 + 0.15 * pose.cover), c * 0.12, -0.2 * pose.cover, 0, Math.PI * 2))
   pencil(pen, c, 0.022)
   pen.beginPath(); pen.ellipse(hand[0] + c * 0.04, hand[1], c * (0.13 + 0.15 * pose.cover), c * 0.12, -0.2 * pose.cover, 0, Math.PI * 2); pen.stroke()
-  if (pose.cover > 0.3) {
-    pencil(pen, c, 0.022)
-    pen.beginPath()
-    for (const fx of [-0.06, 0.06, 0.17]) { pen.moveTo(hand[0] + c * fx, hand[1] - c * 0.1); pen.lineTo(hand[0] + c * (fx + 0.02), hand[1] + c * 0.1) }
-    pen.stroke()
-  }
+  // Its paw is a paper mitten with a thumb: no strokes for fingers, which in a row would read as a tally.
+  if (pose.cover > 0.3) flat(pen, INK.paper, () => pen.ellipse(hand[0] - c * 0.12, hand[1] + c * 0.1, c * 0.06, c * 0.045, 0.6, 0, Math.PI * 2))
   // The flag: an arm, a balsa stick and a paper pennant. At ease it stands upright at its side; raised, the arm goes up and the flag tips forward.
   const turn = Math.PI * 0.72 - pose.raise * Math.PI * 0.62, sx = c * 0.3, sy = -c * 0.98 + sag
   const px = sx + Math.sin(turn) * c * 0.34, py = sy - Math.cos(turn) * c * 0.34
@@ -151,10 +147,6 @@ function mole(pen: Pen, x: number, y: number, c: number, pose: CrewPose, random:
   const sag = pose.sag * c
   for (const fx of [-0.26, 0.26]) {
     cutOut(pen, c, INK.paper, () => pen.ellipse(x + c * fx, y - c * 0.05, c * 0.2, c * 0.075, 0, 0, Math.PI * 2))
-    pencil(pen, c, 0.018)
-    pen.beginPath()
-    for (const t of [0.06, 0.12, 0.17]) { pen.moveTo(x + c * (fx + t), y - c * 0.09); pen.lineTo(x + c * (fx + t + 0.02), y - c * 0.02) }
-    pen.stroke()
   }
   pen.save()
   pen.translate(x, y); pen.rotate(pose.lean)
@@ -176,7 +168,8 @@ function mole(pen: Pen, x: number, y: number, c: number, pose: CrewPose, random:
   cutOut(pen, c, INK.paper, () => { pen.moveTo(c * 0.14, -c * 1.18 + sag); pen.quadraticCurveTo(c * 0.4, -c * 1.34 + sag, tip[0], tip[1]); pen.quadraticCurveTo(c * 0.5, -c * 0.98 + sag, c * 0.3, -c * 0.82 + sag); pen.closePath() })
   pencil(pen, c, 0.018)
   pen.beginPath()
-  for (const w of [-0.16, -0.02, 0.12]) { pen.moveTo(c * 0.5, -c * 1.1 + sag); pen.lineTo(c * (0.8 + 0.05 * w), -c * (1.0 + w) + sag) }
+  // Each from its own root along the snout, curving its own way: three strokes from one point would be rays.
+  for (const [root, w] of [[0.4, -0.16], [0.47, -0.02], [0.54, 0.12]] as const) { pen.moveTo(c * root, -c * (1.03 + root * 0.18) + sag); pen.quadraticCurveTo(c * (root + 0.16), -c * (1.0 + w * 0.5) + sag, c * (0.8 + 0.05 * w), -c * (1.0 + w) + sag) }
   pen.stroke()
   pin(pen, tip[0], tip[1], c * 0.9, false)
   mouth(pen, c, c * 0.42, -c * 0.9 + sag, c * 0.2, pose)
@@ -195,10 +188,8 @@ function mole(pen: Pen, x: number, y: number, c: number, pose: CrewPose, random:
   const lie = -pose.own * Math.PI * 0.5, rx = Math.cos(lie), ry = Math.sin(lie)
   const a: [number, number] = [px - rx * c * 0.3, py - ry * c * 0.3], z: [number, number] = [px + rx * c * 0.62, py + ry * c * 0.62]
   wood(pen, 'stick', a[0], a[1], z[0], z[1], c * 0.75, random)
-  pencil(pen, c, 0.016)
-  pen.beginPath()
-  for (let i = 1; i < 9; i++) { const t = i / 9, mx = a[0] + (z[0] - a[0]) * t, my = a[1] + (z[1] - a[1]) * t, tall = c * (i % 3 === 0 ? 0.045 : 0.025); pen.moveTo(mx, my); pen.lineTo(mx - ry * tall, my + rx * tall) }
-  pen.stroke()
+  // A folding rule: a brass hinge at each third of it, and no marks along it. (A row of ticks is a row of strokes.)
+  for (const t of [1 / 3, 2 / 3]) pin(pen, a[0] + (z[0] - a[0]) * t, a[1] + (z[1] - a[1]) * t, c * 0.45, false)
   pen.lineCap = 'round'
   pen.lineWidth = c * 0.14
   pen.strokeStyle = INK.paperShade
@@ -207,7 +198,6 @@ function mole(pen: Pen, x: number, y: number, c: number, pose: CrewPose, random:
   pencil(pen, c, 0.018)
   pen.beginPath()
   pen.ellipse(px, py, c * 0.15, c * 0.12, lie, 0, Math.PI * 2)
-  for (const t of [-0.07, 0, 0.07]) { pen.moveTo(px + c * t, py - c * 0.1); pen.lineTo(px + c * (t + 0.01), py - c * 0.03) }
   pen.stroke()
   pen.restore()
 }

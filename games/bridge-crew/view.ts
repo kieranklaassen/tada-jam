@@ -505,7 +505,7 @@ export class View {
       const passing = show.kind === 'crossing' && game.bargeTook ? Math.sin(Math.PI * show.react) : 0, took = game.bargeTook
       const bx = bargeAt(at, game.seconds, passing) ?? at.channel[0]
       const scrape = took && took.mood === 'dislike' ? passing : 0
-      barge(pen, ...at2(bx, WATER), cell, 0.05 * Math.sin(game.seconds * 1.7), scrape, took && took.mood === 'dislike' ? Math.min(1, show.react * 2) * (1 - show.arrive) : 0, took ? (took.mood === 'like' ? passing : -passing) : 0)
+      barge(pen, ...at2(bx, WATER), cell, 0.05 * Math.sin(game.seconds * 1.7), scrape, took && took.mood === 'dislike' ? Math.min(1, show.react * 2) * (1 - show.arrive) : 0, took ? (took.mood === 'like' ? passing : -passing) : 0, game.seconds)
       drawn++
     }
 
@@ -648,7 +648,7 @@ export class View {
     // The trolley's compartment: the trolley with its stack while it is at home, and the weights not on it.
     const cart = game.trolley, carried = hand?.what === 'trolley' && hand.carried ? hand.finger : null
     const home = at2((boxes[0].x0 + boxes[0].x1) / 2 - 0.25, low + 0.55)
-    spareWeights(pen, ...at2(boxes[0].x0 + 0.5, low + 1.6), cell * 0.9, 6 - cart.weights)
+    spareWeights(pen, ...at2(boxes[0].x0 + 0.38, low + 1.72), cell * 0.9, 6 - cart.weights)
     // In the hand it is under the finger, unless the finger has it on the deck, where it rides.
     const riding = carried !== null && cart.at !== null && 'x' in cart.at
     if (carried && !riding) trolley(pen, ...at2(carried[0], carried[1] - 0.2), cell, cart.weights, 'tray', 0, stream(31))

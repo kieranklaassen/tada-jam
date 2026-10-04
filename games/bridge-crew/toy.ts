@@ -7,7 +7,7 @@ import { atRest, ends, follow, rests, unrest, type Moving, type Rest } from './p
 import { edit, type Save } from './save'
 import { groundAt } from './sheet'
 import { canPin, isFooting, site, type Site } from './sites'
-import { chiefCroak, chiefRuffle, chiefTaps, fold, growCreak, knock, touchPart, lay as layVoice, pick, pinClick, pinRattle, pinSwing, pinTick, putBack, snapTick, type VoiceSpec } from './voices'
+import { chiefCroak, chiefRuffle, chiefTaps, deskKnock, fold, growCreak, knock, touchPart, lay as layVoice, pick, pinClick, pinRattle, pinSwing, pinTick, putBack, snapTick, type VoiceSpec } from './voices'
 
 // The toy: the bridge on the board, a finger, and what the two do to each
 // other. Pure: no renderer, no DOM and no clock of its own. The Mount feeds it
@@ -217,7 +217,9 @@ export class Toy {
       return
     }
     const target = touched(this.at, this.bridge, this.drawn(), x, y)
-    if (!target) { this.hand = null; return }
+    // A touch where no pin can go (deep in a bank, at the foot of the sheet) is answered too: a dull knock on the
+    // desk and a little dust where the finger landed. Nothing else comes of it.
+    if (!target) { this.hand = null; this.voices.push(deskKnock); this.mark('dust', [x, y]); return }
     if ('pin' in target) {
       this.hand = { what: 'pin', at: target.pin }
       this.clicked.set(key(target.pin), 0)

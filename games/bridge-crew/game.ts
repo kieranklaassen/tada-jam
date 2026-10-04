@@ -138,6 +138,8 @@ export class Game extends Toy {
   /** Seconds since the oldest sheet slid off the end of the rack, and since the model in the margin was plucked. Short-lived: not saved. */
   slidOff = Infinity
   modelRung = Infinity
+  /** True until the first step after the game was opened. */
+  private opened = true
   /** The sounds of the reaction that is playing, each waiting for its move. Short-lived. */
   private reactDue: { at: number; voice: VoiceSpec }[] = []
   private ringDue: { at: number; voice: VoiceSpec }[] = []
@@ -942,6 +944,20 @@ export class Game extends Toy {
     if (!this.scene && !this.drive && !this.showing && !this.hand && this.crossedUnshown()) {
       this.owed = this.at.idea; this.owedAfter = null
       this.beginShowing()
+    }
+    // The neat way after a give is owed by the state too, so putting the game away in the middle of that give does
+    // not lose it. On the first step after the game is opened: the newest sheet's job vehicle has failed twice or
+    // more, the idea has not been shown, and the bridge as it stands fails under that vehicle in the way the idea answers.
+    if (this.opened) {
+      this.opened = false
+      const idea = this.at.idea
+      if (idea !== null && !this.scene && !this.drive && !this.showing && onNewest(this.save) && !this.save.finished && this.save.tries >= 2 && !this.save.shown.includes(idea)) {
+        const again = run(this.at, this.bridge, trainOf(VEHICLES[this.at.job]))
+        if (again.ending.kind !== 'crossed' && neatWayDue(idea, this.save.tries, again.ending, again.frame.firm.some((firm) => !firm), this.save.shown, true)) {
+          this.owed = idea; this.owedAfter = again.ending.kind
+          this.beginShowing()
+        }
+      }
     }
     super.step(dt)
   }

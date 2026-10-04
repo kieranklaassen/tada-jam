@@ -205,7 +205,14 @@ export const trolleyWeight = (weights: number): VoiceSpec => kept([{ wave: 'tria
 export const trolleyOff = (weights: number): VoiceSpec => [{ wave: 'triangle', pitch: 180, slideTo: 360, peak: 0.1, attack: 0.01, length: 0.25 }, ...Array.from({ length: Math.min(Math.max(Math.round(weights), 1), 5) }, (_, i) => ({ wave: 'sine' as const, pitch: 2100 + 190 * ((i * 5) % 6), peak: 0.04, attack: 0.001, length: 0.12, after: 0.05 + 0.035 * i }))]
 
 /** The crew chief taps a triangle, once on each side: three knocks at the pitches of the three parts. */
-export const chiefTaps = (pitches: readonly number[]): VoiceSpec => kept([0, 1, 2].map((i) => ({ wave: 'triangle' as const, pitch: (pitches[i] ?? 700) * 1.5, peak: 0.09, attack: 0.002, length: 0.07, after: 0.34 + 0.29 * i })))
+export const chiefTaps = (pitches: readonly number[]): VoiceSpec => {
+  // One knock for each pitch it is given, three at most: three for a triangle, one for a note it taps along with.
+  const notes = pitches.length ? pitches.slice(0, 3) : [700, 700, 700]
+  return kept(notes.map((pitch, i) => ({ wave: 'triangle' as const, pitch: pitch * 1.5, peak: 0.09, attack: 0.002, length: 0.07, after: notes.length === 1 ? 0.12 : 0.34 + 0.29 * i })))
+}
+
+/** A finger lands where nothing can be touched or pinned: a dull knock on the desk under the sheet. */
+export const deskKnock: VoiceSpec = [{ wave: 'triangle', pitch: 150, slideTo: 95, peak: 0.04, attack: 0.004, length: 0.06 }]
 
 /** Its feathers stand on end: a quick dry ruffle that rises. */
 export const chiefRuffle: VoiceSpec = [{ wave: 'noise', pitch: 1500, slideTo: 3000, peak: 0.07, attack: 0.02, length: 0.22 }, { wave: 'noise', pitch: 2400, peak: 0.04, attack: 0.01, length: 0.1, after: 0.2 }]
