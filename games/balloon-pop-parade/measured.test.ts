@@ -783,6 +783,49 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
     expect(got).toBeGreaterThan(200)
   }, 120_000)
 
+  it.each(kinds)('a %s alone marches every step that is heard: given its balloon and one too many at once, with the waiting troop tapped inside the second, it marches its three steps when it is down, and none sounds before', (kind) => {
+    const theatre = new Theatre(saveOf({ position: 'solo-two-colours', troop: { kind, size: 1, held: [false] }, sky: [{ colour: kind, count: 1 }, { colour: other(kind), count: 1 }, { colour: kind, count: 1 }], waiting: { kind: other(kind), size: 1 } }), 3)
+    const actor = () => (theatre as unknown as { actors: { clip: string | null }[] }).actors[0]
+    let steps = 0, began = -1
+    for (let i = 0; i < 60 * 12; i++) {
+      if (i === 6) tap(theatre, 0)
+      if (i === 16) tap(theatre, 2)
+      if (i === 60) { theatre.press(waitingSpot(0, VIEW).x, GROUND + 0.8, VIEW); theatre.cancel() }
+      if (began < 0 && theatre.playing === 'ending') began = i
+      // The ending is left to play: once it is over, the troop that waits is not tapped again.
+      theatre.step(1 / 60)
+      const heard = theatre.sounds.filter((sound) => sound.voice === `${kind}Step`).length
+      if (heard > 0) expect(actor().clip, `frame ${i}: a step heard`).toBe('march')
+      steps += heard
+      theatre.sounds.length = 0
+    }
+    expect(began).toBeGreaterThan(0)
+    expect(steps).toBe(3)
+    expect(theatre.troop.held).toEqual([true])
+  })
+
+  it('turns no head of a new troop to an empty hand of the troop before it: after a pop and a step-in the troop sways from its first moment', () => {
+    const theatre = new Theatre(saveOf({ position: 'pair-singles', troop: { kind: 'duck', size: 2, held: [true, true] }, sky: [{ colour: 'duck', count: 1 }, { colour: 'frog', count: 1 }], waiting: { kind: 'frog', size: 2 } }), 3), { poses, balloons, painter, clear } = recorder()
+    const inside = theatre as unknown as { lookAt: { until: number }; time: number; sway: number }
+    theatre.step(1 / 60)
+    clear()
+    theatre.paint(painter, VIEW)
+    const own = balloons.find((balloon) => balloon.z > 0.29 && balloon.z < 0.31 && balloon.wide === 1 && balloon.y < 2.2)!
+    theatre.press(own.x, own.y, VIEW)
+    theatre.cancel()
+    expect(inside.lookAt.until).toBeGreaterThan(inside.time)
+    theatre.press(waitingSpot(0, VIEW).x, GROUND + 0.8, VIEW)
+    theatre.cancel()
+    expect(theatre.playing).toBe('arrival')
+    expect(theatre.troop.kind).toBe('frog')
+    expect(inside.lookAt.until).toBeLessThanOrEqual(inside.time)
+    const sway = inside.sway
+    theatre.step(1 / 60)
+    expect(inside.sway).toBeGreaterThan(sway)
+    theatre.paint(painter, VIEW)
+    for (const i of [0, 1]) expect(Math.abs(poses.get(`friend-${i}`)!.headTurn), `friend ${i}`).not.toBeCloseTo(0.55, 3)
+  })
+
   it.each(kinds)('a troop of %ss does not set off without a balloon that is on its way to a hand: the waiting troop waves until it has arrived, and the parade holds what the troop is seen to carry', (kind) => {
     const theatre = new Theatre(saveOf({ position: 'trio-singles', troop: { kind, size: 3, held: [true, false, false] }, sky: [{ colour: kind, count: 1 }, { colour: other(kind), count: 1 }], waiting: { kind: other(kind), size: 1 } }), 3)
     // Served before, by the look of the save: finished, with two balloons popped since.

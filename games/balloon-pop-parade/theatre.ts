@@ -52,7 +52,7 @@ type Scrap = { x: number; y: number; vx: number; vy: number; colour: string; lif
 type Drop = { x: number; y: number; vx: number; vy: number; life: number }
 type Dimple = { x: number; t: number }
 /** `jumpAt` is when it last jumped with its troop, at the start of an ending for a troop that one bunch served. A bunch sent to a friend arrives when the answers it has to give so far are over (`schedule`). `next` and `after` are the answers it owes all the same, in order, when something reached it while it was busy. `tug` is the bunch that carries a friend off, `proudAt` the pitch of the proud move it owes when it is down and `catchAt` that it owes a catch then, `jolt` when it was last poked while carried, `hang` where its balloons hang from the friend, `from` where they were when it took hold, and `second` whether the friend already held a balloon, both as they were when it took hold, `bumps` says that bunch is bigger than the whole troop and goes out by way of the cloud, `landAfter` is how much longer than its neighbour it hangs in the air before it comes down, when a whole troop was carried off, `fall` is the height it was at when a motion was cut short in the air and `fallT` how long it has been falling from there, `mirrored` has it refuse towards its other side, where the bunch hangs, `brisk` has the part of a refusal after it lands played faster, `speed` is how fast this playing of a motion runs, and `lastPoke` is which way it last took a poke. */
-type Actor = { clip: ClipId | null; t: number; next: ClipId | null; after?: ClipId | null; jumpAt?: number; tug: Bunch | null; proudAt?: number; catchAt?: number; jolt?: number; hang?: { x: number; y: number }[]; from?: { x: number; y: number }[]; second?: boolean; fall?: number; fallT?: number; bumps?: boolean; landAfter: number; mirrored?: boolean; brisk?: boolean; speed?: number; lastPoke?: ClipId }
+type Actor = { clip: ClipId | null; t: number; next: ClipId | null; after?: ClipId | null; jumpAt?: number; tug: Bunch | null; proudAt?: number; catchAt?: number; jolt?: number; hang?: { x: number; y: number }[]; from?: { x: number; y: number }[]; second?: boolean; fall?: number; fallT?: number; bumps?: boolean; landAfter: number; mirrored?: boolean; brisk?: boolean; speed?: number; lastPoke?: ClipId; marchAfter?: boolean }
 
 /** A troop that is only passing: one that marches off, or one that crosses to show a new idea. Short-lived, and no part of the save. */
 type Passing = { kind: KindName; size: number; held: boolean[]; actors: Actor[]; balloons: Held[] }
@@ -110,6 +110,20 @@ const CARRIED_ASIDE = 0.6
 function shareOf(kind: KindName, count: number, k: number): number {
   const leftToRight = count === 3 ? [0, 2, 1] : [0, 1]
   return leftToRight[kind === 'frog' && count === 2 ? 1 - k : k] ?? 0
+}
+
+/**
+ * How a kind takes a bunch with one for each, for the `k`th friend of those who take from it: how much later than
+ * the first its motion begins, how much later its sound, and at what pitch. The ducks jump at once, their boings
+ * in a run; the frogs' tongues go out together, their twangs on top of one another; the hippos yawn in a row, one
+ * after another, their honks stepping down; the crabs snip in a row like scissors, their clicks in a quick run.
+ * The child's own troop and a troop that passes by to show it take it the same way.
+ */
+function inARow(kind: KindName, k: number): { moves: number; sounds: number; pitch: number } {
+  if (kind === 'hippo') return { moves: k * 0.17, sounds: k * 0.17, pitch: 1 - k * 0.11 }
+  if (kind === 'crab') return { moves: k * 0.06, sounds: k * 0.06, pitch: 1 }
+  if (kind === 'duck') return { moves: 0, sounds: k * 0.1, pitch: 1 + k * 0.06 }
+  return { moves: 0, sounds: k * 0.03, pitch: 1 }
 }
 
 /** Seconds a friend takes to fall to the ground when a motion that had it in the air is cut short by another. */
@@ -197,12 +211,16 @@ export class Theatre {
   private walkIn = 1
   private nextIn = 1
   private skyIn = true
+  /** The places of the sky that held no bunch when the touch that is being answered landed, while that touch ended a scene. */
+  private unseen: boolean[] | null = null
   /** At the opening of a new game the child's troop comes in from beyond the edge, so it is not seen until it walks. */
   private fromBeyond = false
   /** The friends who hold a balloon, in the order they came by it. Short-lived: as the game is found, those who hold one stand in it in the order they stand. */
   private took: number[] = []
   /** The other friends look at a friend whose balloon was popped, until this time. */
   private lookAt = { friend: -1, until: 0 }
+  /** When a step of the march last squeaked. */
+  private steppedAt = -1
   /** The clock the troop's breathing and swaying run on: it stands still while the troop looks at an empty hand. */
   private sway = 0
   /** The scenery answers too: each cloud is a pillow that squashes and sheds drops, and the hill is an air bed that wobbles. */
@@ -252,6 +270,9 @@ export class Theatre {
     this.flights.length = 0
     this.slotsFor = ''
     this.pressedSlot = -1
+    // Nobody of this troop has lost a balloon: no head is turned to an empty hand, and the troop sways.
+    this.lookAt.friend = -1
+    this.lookAt.until = 0
   }
 
   /** The places in the sky for this view, worked out once for each width. */
@@ -311,7 +332,7 @@ export class Theatre {
     }
     const slots = this.slots(view)
     for (let slot = 0; slot < slots.length; slot++) {
-      if (this.places[slot].away > 0) continue
+      if (this.places[slot].away > 0 || !this.skyIn || this.unseen?.[slot]) continue
       const reach = bunchReach(this.sky[slot].count)
       if (Math.abs(x - slots[slot].x) < reach.x * view.balloon + 0.3 && Math.abs(y - slots[slot].y) < reach.y * view.balloon + 0.3) return { on: 'bunch', slot }
     }
@@ -357,7 +378,7 @@ export class Theatre {
     // A near miss still counts: a small finger aimed at a bunch and landed beside it.
     let nearest = -1, nearestGap = 0.9
     for (let slot = 0; slot < slots.length; slot++) {
-      if (this.places[slot].away > 0) continue
+      if (this.places[slot].away > 0 || !this.skyIn || this.unseen?.[slot]) continue
       const reach = bunchReach(this.sky[slot].count)
       const gap = Math.hypot(Math.max(0, Math.abs(x - slots[slot].x) - reach.x * view.balloon), Math.max(0, Math.abs(y - slots[slot].y) - reach.y * view.balloon))
       if (gap < nearestGap) { nearest = slot; nearestGap = gap }
@@ -370,9 +391,20 @@ export class Theatre {
     this.pressedSlot = -1
     // The top right corner is the grown-up's: three quick taps there open the frame-rate overlay, and nothing of the game answers a touch in it.
     if (x > view.width / 2 - GROWN_UP_CORNER / view.pixelsPerUnit && y > view.height / 2 - GROWN_UP_CORNER / view.pixelsPerUnit) return
-    // A touch ends a scene, and is then an ordinary touch.
+    // A touch ends a scene, and is then an ordinary touch: on what was on the screen when it landed. A bunch that
+    // the end of the scene hangs in the sky was not there to be touched, and this touch does not press it; what
+    // hung low for a troop that passes by was, and pops under the finger as a balloon that has got away does.
+    const playing = this.scene?.running === true
+    const low = playing ? this.lowUnder(x, y, view) : null
+    this.unseen = playing ? this.places.map((place) => !this.skyIn || place.away > 0) : null
     this.endScene()
+    if (low) {
+      this.unseen = null
+      this.burst(low.x, low.y, low.colour)
+      return
+    }
     const hit = this.hit(x, y, view)
+    this.unseen = null
     this.pressedSlot = -1
     if (hit.on === 'bunch') {
       const place = this.places[hit.slot]
@@ -497,6 +529,15 @@ export class Theatre {
   cancel(): void {
     if (this.pressedSlot >= 0) this.places[this.pressedSlot].pressed = false
     this.pressedSlot = -1
+  }
+
+  /** The balloon that hangs low for a troop that passes by, if one is under a point: where it is, and its colour. */
+  private lowUnder(x: number, y: number, view: View): { x: number; y: number; colour: string } | null {
+    const passer = this.passer
+    if (!passer || this.passTook) return null
+    const low = this.lowFor(passer)
+    for (let k = 0; k < passer.size; k++) if (Math.hypot(x - low[k].x, (y - low[k].y) / 1.12) < BALLOON * 1.2 * view.balloon) return { x: low[k].x, y: low[k].y, colour: KIND_COLOURS[passer.kind] }
+    return null
   }
 
   /** The friend whose carrying bunch has a balloon within `reach` of a point, or -1. */
@@ -760,6 +801,7 @@ export class Theatre {
     this.joining = 1
     for (let i = 0; i < this.actors.length; i++) {
       const actor = this.actors[i]
+      actor.marchAfter = false
       if (actor.clip !== 'proud' && actor.clip !== 'march') continue
       this.cutShort(i)
       actor.clip = null
@@ -800,9 +842,16 @@ export class Theatre {
       this.sound(`${kind}Poke`, 1.18 + k * 0.05, 0.8)
     }) }))
     let at = first + (size - 1) * gap + p.lasts.proud
-    // The march is for those on the ground: one still in the air, or late with its proud move, keeps to that.
-    beats.push({ at, lasts: 0, play: this.cue(() => { for (let i = 0; i < size; i++) if (this.held[i].shown && !this.answering(i) && !this.actors[i].proudAt) this.act(i, 'march') }) })
-    for (let step = 0; step < 3; step++) beats.push({ at: at + (p.lasts.march * (step + 0.5)) / 3, lasts: 0, play: this.cue(() => this.sound(`${kind}Step`, 1, 0.9)) })
+    // The march begins for those on the ground. One still in the air, or late with its proud move, marches when
+    // it is down and that is done. The three steps are heard as they are marched (`step`), never without a march.
+    beats.push({ at, lasts: 0, play: this.cue(() => {
+      for (let i = 0; i < size; i++) {
+        if (!this.held[i].shown) continue
+        const actor = this.actors[i]
+        if (!this.answering(i) && !actor.proudAt && !actor.next) this.act(i, 'march')
+        else actor.marchAfter = true
+      }
+    }) })
     at += p.lasts.march
     for (let i = 0; i < size; i++) beats.push({ at: at + i * 0.16, lasts: 0, play: this.cue(() => { if (!this.held[i].shown) return; this.held[i].vy += 4.6; this.sound('bloop', 1 + i * 0.12, 0.5) }) })
     at += size * 0.16
@@ -849,7 +898,10 @@ export class Theatre {
       this.passTook = false
       // In, a look up at what hangs low for it, the taking, and out: four to six seconds for any kind, the quick
       // ones looking a little longer and the slow ones wasting none.
-      const turn = showing.idea === 'bunch' ? 0.06 : 0.2, after = 0.25 + (showing.size - 1) * turn
+      // A bunch for the whole troop is taken as the kind takes one, in its own row; a balloon each is taken in turn.
+      const bunch = showing.idea === 'bunch', last = showing.size - 1
+      const turns = (k: number) => (bunch ? inARow(showing.kind, k) : { moves: k * 0.2, sounds: k * 0.2, pitch: 1 + k * 0.05 })
+      const after = 0.25 + turns(last).moves
       // Its walk in, its walk out and its way over the far hill are the parts that can give: a slow kind steps a
       // little quicker here than when it comes to stay, so that the whole pass is over inside its six seconds.
       const taking = p.lasts.catch + after, quick = Math.min(1, (PASS_BY.longest - 0.15 - 0.35 - taking) / (p.walk * 2 + OVER_HILL))
@@ -878,15 +930,17 @@ export class Theatre {
             balloon.x = from.x
             balloon.y = from.y
             balloon.knot = { x: knot.x, y: knot.y }
-            balloon.wait = k * turn + (passer.kind === 'frog' ? 0.2 : p.cue.grab)
+            balloon.wait = turns(k).moves + (passer.kind === 'frog' ? 0.2 : p.cue.grab)
           }
         })
         if (this.finishing) return
         passer.actors.forEach((actor, k) => {
           actor.clip = 'catch'
-          actor.t = -k * turn
-          this.sound(`${showing.kind}Catch`, 1 + k * 0.05, k === 0 ? 1 : 0.8, k * turn)
+          actor.t = -turns(k).moves
+          this.sound(`${showing.kind}Catch`, turns(k).pitch, k === 0 ? 1 : 0.8, turns(k).sounds)
         })
+        // The frogs bring a bunch home with a slurp, as the child's own do.
+        if (bunch && showing.kind === 'frog' && showing.size > 1) this.sound('frogSlurp', 1, 1, 0.3)
       } })
       at += p.lasts.catch + after
       beats.push({ at, lasts: out, play: (u) => { this.passOut = u; if (u >= 1) this.passer = null } })
@@ -1093,14 +1147,13 @@ export class Theatre {
         // The friends who will take one start to meet it before it is there.
         flight.begun = true
         // The ducks jump at once and the frogs' tongues go out together; the hippos yawn in a row, one after another, and the crabs snip in a row like scissors.
-        const gap = kind === 'hippo' ? 0.17 : kind === 'crab' ? 0.06 : 0
         flight.given.takers.forEach((taker, k) => {
           // One that is being carried off has its hands full: its balloon is in its hand when it comes down.
           // One that is refusing another bunch finishes that first. Either way the balloon waits where it arrives (`land`).
           const actor = this.actors[taker]
           if (actor.clip === 'catch' || actor.clip === 'liftOff' || actor.clip === 'refuse') return
           this.act(taker, 'catch')
-          actor.t = -k * gap
+          actor.t = -inARow(kind, k).moves
         })
       } else if (flight.given.result === 'refused' && !flight.met && flight.t >= flight.lasts - REFUSAL_LEAD) {
         // The friend that will refuse it turns to look as it arrives: its answer begins well inside half a second of the touch.
@@ -1153,11 +1206,23 @@ export class Theatre {
           if (kind === 'hippo') for (const cloud of this.clouds) cloud.speed += 3.5
         }
       }
+      // The march's three steps squeak as they are marched: once for friends that step together.
+      if (actor.clip === 'march') {
+        for (let pace = 0; pace < 3; pace++) {
+          const at = (personality.lasts.march * (pace + 0.5)) / 3
+          if (before < at && actor.t >= at && this.steppedAt !== this.time) { this.sound(`${kind}Step`, 1, 0.9); this.steppedAt = this.time }
+        }
+      }
       if (actor.t >= personality.lasts[actor.clip]) {
         actor.clip = actor.next
         actor.next = actor.after ?? null
         actor.after = null
         actor.t = 0
+        // One that was in the air or late when its troop marched marches now, if it still has its balloon.
+        if (!actor.clip && actor.marchAfter) {
+          actor.marchAfter = false
+          if (this.held[i].shown) { actor.clip = 'march'; actor.speed = 1 }
+        }
         // What it owed begins now, and is heard now.
         if (actor.clip === 'refuse') {
           this.sound(`${kind}Refuse`, 1, 1, 0, actor.speed ?? 1)
@@ -1326,9 +1391,8 @@ export class Theatre {
         }
         // A bunch with one for each: the ducks' boings in a run, the frogs' twangs on top of one another, the hippos'
         // honks stepping down one after another, the crabs' clicks in a quick run.
-        const gap = kind === 'hippo' ? 0.17 : kind === 'duck' ? 0.1 : kind === 'crab' ? 0.06 : 0.03
-        const pitch = kind === 'hippo' ? 1 - k * 0.11 : kind === 'duck' ? 1 + k * 0.06 : 1
-        this.sound(`${kind}Catch`, pitch, k === 0 ? 1 : 0.8, k * gap)
+        const row = given.takers.length > 1 ? inARow(kind, k) : { sounds: 0, pitch: 1 }
+        this.sound(`${kind}Catch`, row.pitch, k === 0 ? 1 : 0.8, row.sounds)
       })
       if (kind === 'frog' && given.takers.length > 1) this.sound('frogSlurp', 1, 1, 0.3)
     } else if (given.result !== 'refused') {

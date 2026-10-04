@@ -307,13 +307,21 @@ describe('the step-in', () => {
     tapWaiting(theatre)
     play(theatre, 0.3)
     const saved = serializeSave(theatre.save)
+    theatre.sounds.length = 0
     tapSlot(theatre, 0)
     expect(theatre.playing).not.toBe('arrival')
     theatre.paint(painter, VIEW)
     expect(poses.has('leaving-0')).toBe(false)
     expect(poses.get('friend-0')!.x).toBeCloseTo(friendX(0, saved.troop.size), 5)
     expect(poses.has('waiting-0')).toBe(true)
-    // The touch that ended it sent the bunch it landed on.
+    // The touch that ended it is answered as a touch on what was on the screen when it landed. The new sky was not:
+    // the bunch that the end of the scene hangs in that place is not sent by a finger that never saw it.
+    expect(theatre.sounds.length).toBeGreaterThan(0)
+    expect(theatre.sounds.map((sound) => sound.voice)).not.toContain('letGo')
+    expect(serializeSave(theatre.save)).toEqual(saved)
+    // It hangs there now, and the next touch on it sends it.
+    tapSlot(theatre, 0)
+    expect(theatre.sounds.map((sound) => sound.voice)).toContain('letGo')
     expect(serializeSave(theatre.save)).not.toEqual(saved)
   })
 
@@ -391,6 +399,73 @@ describe('the pass-by', () => {
       expect(poses.get('friend-0')!.x).toBeCloseTo(friendX(0, theatre.save.troop.size), 5)
       expect(balloons()).toBe(theatre.save.sky.length)
       expect(poses.has('waiting-0')).toBe(true)
+    }
+  })
+
+  it('takes a bunch for the whole troop in its kind\'s own row, as the child\'s own troop does: passing hippos honk one after another, stepping down, and passing frogs twang together and slurp', () => {
+    const seen = new Set<string>()
+    for (let rng = 1; rng <= 60; rng++) for (const waiting of ['duck', 'frog'] as const) {
+      // A friend alone with its balloon, and a troop of three at the edge under a sky that will hold bunches: the
+      // step-in brings the first showing of a bunch, by three of another kind.
+      const served = saveOf({ position: 'bunches-own-colour', troop: { kind: 'crab', size: 1, held: [true] }, sky: [{ colour: 'crab', count: 1 }, { colour: 'crab', count: 2 }], waiting: { kind: waiting, size: 3 } })
+      const theatre = new Theatre({ ...served, rng, shown: { give: true, each: true, bunch: false } })
+      tapWaiting(theatre)
+      expect(theatre.save.shown.bunch).toBe(true)
+      let took: { voice: string; after: number; pitch: number }[] = []
+      for (let i = 0; i < 60 * 8 && took.length === 0; i++) {
+        theatre.sounds.length = 0
+        theatre.step(1 / 60)
+        if (theatre.sounds.some((sound) => sound.voice.endsWith('Catch'))) took = theatre.sounds.filter((sound) => sound.voice.endsWith('Catch') || sound.voice === 'frogSlurp').map((sound) => ({ voice: sound.voice, after: sound.after ?? 0, pitch: sound.pitch ?? 1 }))
+      }
+      const kind = took[0].voice.replace('Catch', '')
+      seen.add(kind)
+      const catches = took.filter((sound) => sound.voice.endsWith('Catch'))
+      expect(catches).toHaveLength(3)
+      if (kind === 'hippo') {
+        // One after another, as far apart as the child's own hippos, and each lower than the one before.
+        expect(catches[1].after - catches[0].after).toBeCloseTo(0.17, 5)
+        expect(catches[2].after - catches[1].after).toBeCloseTo(0.17, 5)
+        expect(catches[1].pitch).toBeLessThan(catches[0].pitch)
+        expect(catches[2].pitch).toBeLessThan(catches[1].pitch)
+      }
+      if (kind === 'frog') {
+        // On top of one another, and then the slurp.
+        expect(catches[2].after - catches[0].after).toBeLessThan(0.1)
+        expect(took.filter((sound) => sound.voice === 'frogSlurp')).toHaveLength(1)
+      } else expect(took.filter((sound) => sound.voice === 'frogSlurp')).toHaveLength(0)
+    }
+    expect([...seen]).toEqual(expect.arrayContaining(['hippo', 'frog']))
+  })
+
+  it('answers a touch on what hangs low for the passing troop as a balloon: it pops under the finger, and the scene is over', () => {
+    const theatre = new Theatre(freshSave(2, 5))
+    play(theatre, 1.2)
+    expect(theatre.playing).toBe('arrival')
+    const inside = theatre as unknown as { passer: unknown; lowFor: (passer: unknown) => { x: number; y: number }[]; scraps: unknown[] }
+    const low = inside.lowFor(inside.passer)[0], saved = serializeSave(theatre.save)
+    theatre.sounds.length = 0
+    theatre.press(low.x, low.y, VIEW)
+    theatre.release(VIEW)
+    expect(theatre.sounds.map((sound) => sound.voice)).toEqual(['pop'])
+    expect(inside.scraps.length).toBeGreaterThan(0)
+    expect(theatre.playing).toBe(null)
+    expect(serializeSave(theatre.save)).toEqual(saved)
+  })
+
+  it('sends nothing that was not on the screen: a touch on a place of the sky while a troop passes by ends the scene and counts no slip, wherever it lands', () => {
+    for (const [age, seed] of [[2, 1], [2, 3], [3, 5], [4, 2], [4, 7]] as const) for (let slot = 0; slot < 5; slot++) {
+      const theatre = new Theatre(freshSave(age, seed))
+      if (slot >= theatre.sky.length) continue
+      play(theatre, 1)
+      const saved = serializeSave(theatre.save)
+      theatre.sounds.length = 0
+      tapSlot(theatre, slot)
+      expect(theatre.playing).toBe(null)
+      // It is answered, and no bunch leaves the sky: none hung there when the finger landed.
+      expect(theatre.sounds.length).toBeGreaterThan(0)
+      expect(theatre.sounds.map((sound) => sound.voice)).not.toContain('letGo')
+      expect(serializeSave(theatre.save)).toEqual(saved)
+      expect(theatre.save.slips).toBe(0)
     }
   })
 
