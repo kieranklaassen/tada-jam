@@ -2,6 +2,8 @@
 
 For a cloud builder about to build a toy or a game on it. Muddy Truck Wash (three.js) and Monster Pizza (canvas 2D) went first, and this page holds what they found that the template does not yet carry. It changes no rule: [`CLOUD.md`](CLOUD.md), your brief and the guide still decide. Read it before the stage your message names.
 
+Template version 3 carries several of these itself: the Mount keeps what the idle ladder returns and the frame's step, `rng.ts` reads the seed, `stage.ts` fits the stage, and `voiceOf` in `audio.ts` is the bridge from numbers to sound. [`template-notes-v3.md`](template-notes-v3.md) lists what changed. A game on version 2 still does these by hand, as written below.
+
 Both pilots keep their own notes in the status block and the pass log of their `REFINEMENT.md`. You may read them as a worked example (`git fetch origin`, then `git show origin/lane/muddy-truck-wash:games/muddy-truck-wash/REFINEMENT.md`, or the same for `monster-pizza`). Read them for how a step was done and never copy code or a look from another game.
 
 ## The Mount, for every game
@@ -13,8 +15,8 @@ Both pilots keep their own notes in the status block and the pass log of their `
 - **A scene playing is not idleness.** Call `ladder.touch` while a scene runs, next to the template's own call for a working finger.
 - **Keep what the idle ladder returns.** The Mount calls `ladder.update` in the loop and drops the result. Keep it in a variable and hand it to `draw`, so the glow and the ghost hand reach the renderer without a second call.
 - **A fixed seed for the lead's stills.** Read `?seed=<n>` from the address for the game's random stream, and otherwise draw a new seed for the visit.
-- **One finger works at a time.** A second finger does nothing; for the youngest band that is the safer rule. Whatever starts on `press` must not wait for a move: no `dragMove` comes until the finger has passed `TAP_SLOP`. Every press has one ending (`tap`, `dragLift`, `dragEnd` or `pressEnd`), and a piece taken up on `press` goes down on whichever arrives.
-- **The top right corner is the grown-up's.** Keep 72 by 72 there bare of anything that answers a touch (`overlay.ts`).
+- **One finger works at a time.** A second finger does nothing; for the youngest band that is the safer rule. Whatever starts on `press` must not wait for a move: no `dragMove` comes until the finger has passed `TAP_SLOP`. Every press has one ending. A tap ends as `tap`. A press that is taken away ends as `pressEnd`, which is not a tap. A drag ends as `dragEnd` when the finger let go, which is a drop, and as `dragCancel` when the game was parked under the finger or the browser took it, which is not: the piece goes back where it came from. `dragLift` comes first when a finger lifts mid-drag, and is not yet the end unless the game calls `letGo`. (Since template version 3; a game on version 2 has no `dragCancel`, and puts the piece back itself at a put-away.)
+- **The top right corner is the grown-up's.** Keep 72 by 72 there bare of anything that answers a touch (`overlay.ts`). Since template version 3 the overlay opens on a finger held a second in that corner and lifted there, then three taps within three seconds, and only the working finger counts.
 
 ## Scenes and state, for every game
 
@@ -36,7 +38,7 @@ Both pilots keep their own notes in the status block and the pass log of their `
 ## three.js
 
 - **Stills on a machine with no graphics card.** Take them on a paused clock with the random stream seeded, at 1180 by 820. Frame rates read there mean nothing; the lead measures.
-- **The tier reaches the view through `applyTier`** (template version 2 has the hook). Give every field of your `Tier` a visible effect, or drop the field.
+- **The tier reaches the view through `applyTier`** (the template has the hook since version 2). Give every field of your `Tier` a visible effect, or drop the field.
 - **The intersection audit takes passes.** The pilot's first run had 44 findings. Most were flush faces and parts so close they overlapped; the rest were things in motion that needed an allowance with a reason and a cap. Write the moments so that they reach every state (each scene, each tool on each part a taste belongs to, a touch in the middle of a scene, a rest), and give the flying things no body.
 
 ## The cold playtest proxy
