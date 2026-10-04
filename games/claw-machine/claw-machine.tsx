@@ -13,7 +13,7 @@ import { IdleLadder, type Guidance } from './guidance'
 import { ForgivingTouch, type Gesture, type Point } from './input'
 import { headTop } from './layout'
 import { clawMachineManifest } from './manifest'
-import { Overlay } from './overlay'
+import { CORNER, Overlay } from './overlay'
 import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
 import { deserializeWorld, serializeWorld } from './save'
@@ -29,6 +29,8 @@ import { newWorld } from './world'
 
 /** The most voices one frame starts: a busy moment is still a few sounds, not a wall of them. */
 const VOICES_A_FRAME = 6
+/** How long a finger has to stay off the glass before its lift is the drop: a finger that skips for less than this carries on. */
+const DROPS_AFTER_MS = 120
 
 /** `?seed=<n>` in the address lays the first crate out from that seed, so a still can be taken again. */
 function seedFrom(search: string): number | null {
@@ -56,6 +58,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     let game: Game | null = null
     // What the idle ladder last said, and whether the drop of this drag has been made.
     let guidance: Guidance | null = null, dropped = false, poked = false
+    // When the finger of a drag left the glass, by the loop's clock, or -1: the drop that lift stands for is still to be made.
+    let liftedAt = -1
     // What the last draw put on the surface, for the grown-up handle and the overlay. A canvas 2D game counts the
     // sprites and figures it drew as drawCalls; a three.js game copies the renderer's own counts.
     const drawn = { drawCalls: 0, triangles: 0 }
@@ -138,11 +142,12 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
         if (poked) { if (gesture.type === 'tap' || gesture.type === 'dragEnd' || gesture.type === 'pressEnd') poked = false; continue }
         if (gesture.type === 'press') { aim(gesture.at, true); dropped = false }
         else if (gesture.type === 'tap') { aim(gesture.at, false); game.lift() }
-        else if (gesture.type === 'dragMove') { aim(gesture.at, false); dropped = false }
-        // Lifting is the drop, so it is made the moment the finger leaves, not when the drag is given up. A
-        // finger that comes back carries on pointing, and its next lift drops again.
-        else if (gesture.type === 'dragLift') { game.lift(); dropped = true }
-        else if (gesture.type === 'dragEnd') { if (!dropped) game.lift(); dropped = false }
+        else if (gesture.type === 'dragMove') { aim(gesture.at, false); dropped = false; liftedAt = -1 }
+        // Lifting is the drop, so it does not wait for the drag to be given up. But a finger that only skips off
+        // the glass has not let go: the drop is made when the finger has stayed away for a moment (`loop`), and
+        // a finger that is back before that carries on pointing. Its next lift drops again.
+        else if (gesture.type === 'dragLift') liftedAt = performance.now()
+        else if (gesture.type === 'dragEnd') { if (!dropped) game.lift(); dropped = false; liftedAt = -1 }
         else if (gesture.type === 'pressEnd') game.cancel()
       }
       // Heard inside the touch, where the first sound can be held for the audio to unlock.
@@ -153,29 +158,36 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const endTouch = () => {
       if (touch.clear().length === 0) return
       game?.cancel()
-      dropped = false; poked = false
+      dropped = false; poked = false; liftedAt = -1
     }
+    // Touches in the corner kept for the grown-up overlay are no part of the game: nothing answers them, so a
+    // child is given no reason to tap there (the overlay's header asks for this).
+    const aside = new Set<number>()
     const at = (event: PointerEvent): Point => {
       const box = root.getBoundingClientRect()
       return { x: event.clientX - box.left, y: event.clientY - box.top }
     }
     const onDown = (event: PointerEvent) => {
       if (!attention.awake) return
-      audio.touchDown()
-      ladder.touch(clock.seconds)
       const where = at(event)
       overlay.press(where.x, where.y, width, event.timeStamp)
+      if (width > 0 && where.x >= width - CORNER && where.y <= CORNER) { aside.add(event.pointerId); return }
+      audio.touchDown()
+      ladder.touch(clock.seconds)
       act(touch.down(event.pointerId, where, event.timeStamp))
       // Captured, so the lift is reported even when the finger has slid off the surface.
       root.setPointerCapture(event.pointerId)
     }
     const onMove = (event: PointerEvent) => act(touch.move(event.pointerId, at(event)))
     const onUp = (event: PointerEvent) => {
+      if (aside.delete(event.pointerId)) return
       act(touch.up(event.pointerId, at(event), event.timeStamp))
       audio.touchUp()
     }
     const onCancel = (event: PointerEvent) => {
-      act(touch.cancel(event.pointerId, event.timeStamp))
+      if (aside.delete(event.pointerId)) return
+      // The system took the finger away. That is no lift: the touch is ended and nothing is done with it.
+      if (touch.cancel(event.pointerId, event.timeStamp).length > 0) { endTouch(); game?.cancel(); poked = false; hear() }
       audio.touchUp()
     }
     root.addEventListener('pointerdown', onDown)
@@ -190,6 +202,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       const step = clock.advance(now)
       const start = performance.now()
       act(touch.advance(now))
+      // A finger that left the glass in a drag and has stayed away: that was the lift, and the claw drops.
+      if (game && liftedAt >= 0 && now - liftedAt >= DROPS_AFTER_MS) { liftedAt = -1; game.lift(); dropped = true }
       // The game plays the step in fixed parts, and what happened in it is heard at once.
       if (game) { game.advance(step); hear() }
       // A finger that is working is not idle: a hold or a slow drag keeps the ladder at the bottom.

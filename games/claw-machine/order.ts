@@ -67,9 +67,12 @@ const RECIPE: { readonly [P in PositionId]: Recipe } = {
     const toys = colours.flatMap((colour) => kinds.flatMap((kind) => [toy(colour, kind, 'small'), toy(colour, kind, 'big')]))
     return { toys, sorts: ['colour', 'kind', 'size'], shuffleSorts: true }
   },
-  // The widest load: one of each colour in each kind, four or five of them big.
+  // The widest load: one of each colour in each kind, four or five of them big. Each kind comes in both sizes,
+  // one or two of its three toys big, so that big and small can be told by looking at two of the same kind: a
+  // small rocket stands taller than a big duck.
   'three-ways-wide': (random) => {
-    const big = new Set(some(random, [0, 1, 2, 3, 4, 5, 6, 7, 8], 4 + pick(random, 2)))
+    const twoBig = new Set(some(random, [0, 1, 2], 1 + pick(random, 2)))
+    const big = new Set(KINDS.flatMap((_, k) => some(random, [0, 1, 2], twoBig.has(k) ? 2 : 1).map((c) => c * 3 + k)))
     const toys = COLOURS.flatMap((colour, c) => KINDS.map((kind, k) => toy(colour, kind, big.has(c * 3 + k) ? 'big' : 'small')))
     return { toys, sorts: ['colour', 'kind', 'size'], shuffleSorts: true }
   },

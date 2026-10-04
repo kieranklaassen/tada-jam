@@ -50,6 +50,16 @@ describe('the designed order', () => {
     }
   })
 
+  it('brings every kind in both sizes wherever a crew goes by size, so big and small can be told within a kind', () => {
+    for (const position of LADDER) for (const seed of [...SEEDS, ...Array.from({ length: 300 }, (_, i) => 1000 + i)]) {
+      const { toys, crews } = layCycle(position, seed)
+      if (!crews.some((crew) => crewGoesBy(crew) === 'size')) continue
+      for (const kind of new Set(toys.map((toy) => toy.kind))) {
+        expect(new Set(toys.filter((toy) => toy.kind === kind).map((toy) => toy.size)).size, `${position} ${seed} ${kind}`).toBe(2)
+      }
+    }
+  })
+
   it('gives every toy exactly one home in every crew, and every gobbler of a crew at least one toy', () => {
     for (const position of LADDER) for (const seed of SEEDS) {
       const { toys, crews } = layCycle(position, seed)

@@ -64,6 +64,9 @@ export function bedMesh(which: number): BrickMesh {
   return buildMesh(bed(which), true)
 }
 
+/** How far below straight ahead a rider on a crate looks, as an angle: down at the tray. */
+const DOWN = 0.5
+
 /** A crate as one mesh. `withBed` is false while its bed is tipping: the stage then draws the bed by itself. */
 export function crateMesh(which: number, toys: readonly Toy[], places: readonly number[], crews: readonly (readonly GobblerId[])[], withBed = true): BrickMesh {
   const top = deckTop(which)
@@ -76,8 +79,8 @@ export function crateMesh(which: number, toys: readonly Toy[], places: readonly 
     parts.push({ mesh: buildMesh(built.body, true), scale: RIDER, at })
     const over = browsAt(shape)
     parts.push({ mesh: buildMesh(built.brows, true), scale: RIDER, at: [at[0], at[1] + over.y * RIDER, at[2] + over.z * RIDER] })
-    // Its pupils, looking at the child.
-    parts.push({ mesh: buildMesh(built.pupils), scale: RIDER, at: [at[0], at[1] + (eye.y + Math.sin(AHEAD) * reach) * RIDER, at[2] + (eye.z + Math.cos(AHEAD) * reach) * RIDER] })
+    // Its pupils, looking down at the tray it is waiting to come to, and not out at the child.
+    parts.push({ mesh: buildMesh(built.pupils), scale: RIDER, at: [at[0], at[1] + (eye.y + Math.sin(AHEAD - DOWN) * reach) * RIDER, at[2] + (eye.z + Math.cos(AHEAD - DOWN) * reach) * RIDER] })
   }))
   return mergeMeshes(parts)
 }
