@@ -1,4 +1,5 @@
 import { BENCH, CHAIR, DADO_Y, DOOR, FLOOR_Y, LOOKING_GLASS, MIRROR, PEG, SCENE, SHELF, STOOL, TROLLEY } from './layout'
+import { paintBenchGround } from './paintStrips'
 import type { Rng } from './rng'
 import { blob, type Ctx, type Point, type Watercolour } from './wash'
 
@@ -87,6 +88,8 @@ export function paintRoom(g: Ctx, paint: Watercolour, rng: Rng): void {
   paintTrolley(g, paint, rng)
   paintRug(g, paint, rng)
   paintBench(g, paint, rng)
+  // Over the end of the bench and the floor in front of it, the plain ground the friend's lock hangs over across the room.
+  paintBenchGround(g, paint)
   paintStool(g, paint, rng)
   paintChair(g, paint, rng)
 }

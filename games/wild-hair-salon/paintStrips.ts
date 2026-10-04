@@ -1,4 +1,4 @@
-import { CAPE, CHAIR, COLLAR_Y, STEP, STRIP_W, capeHalfWidthAt, tipY } from './layout'
+import { BENCH_GROUND, CAPE, CHAIR, COLLAR_Y, STEP, STRIP_W, capeHalfWidthAt, tipY } from './layout'
 import type { Rng } from './rng'
 import { blob, type Ctx, type Point, type Watercolour } from './wash'
 
@@ -10,6 +10,30 @@ import { blob, type Ctx, type Point, type Watercolour } from './wash'
 export const PLAIN = {
   cape: '#aed8ec', capeEdge: '#6da9cc', collar: '#7fb8d8', knot: '#5c9fc8', knotEdge: '#3f7fa8',
 } as const
+
+/**
+ * The spare cape at the bench: the ground the friend's lock is read against
+ * when the friend sits across the room. One flat coat of the cape's own colour,
+ * a little wider where it lies on the floor, with nothing on it: no fold line,
+ * no stripe and no edge anywhere a strip can hang. Its own edge and its hook
+ * are outside that.
+ */
+export function benchGroundOutline(): Point[] {
+  const { x, y, w, h, flare } = BENCH_GROUND
+  return [
+    { x: x + 6, y }, { x: x + w - 6, y }, { x: x + w, y: y + 10 },
+    { x: x + w + flare * 0.4, y: y + h * 0.6 }, { x: x + w + flare, y: y + h - 8 }, { x: x + w + flare - 10, y: y + h },
+    { x: x - flare + 10, y: y + h }, { x: x - flare, y: y + h - 8 }, { x: x - flare * 0.4, y: y + h * 0.6 }, { x, y: y + 10 },
+  ]
+}
+
+export function paintBenchGround(g: Ctx, paint: Watercolour): void {
+  const outline = benchGroundOutline(), { x, y, w } = BENCH_GROUND
+  // The hook it hangs from, on the wall above it.
+  paint.pencil(g, [{ x: x + w / 2 - 8, y: y - 16 }, { x: x + w / 2, y: y - 24 }, { x: x + w / 2 + 8, y: y - 16 }, { x: x + w / 2, y: y + 2 }], false, 1)
+  paint.wash(g, outline, { color: PLAIN.cape, edge: PLAIN.capeEdge, flat: true })
+  paint.pencil(g, outline, true)
+}
 
 /** The cape as a bell from the collar to the hem. */
 export function capeOutline(): Point[] {

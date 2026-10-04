@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { MANES } from './kits'
-import { BESIDE_X, COLLAR_Y, HEAD, LOCK_X, PEG, SCENE, STEP, STRIP_W } from './layout'
+import { BENCH_GROUND, BESIDE_X, COLLAR_Y, HEAD, LOCK_X, PEG, SCENE, STEP, STRIP_W } from './layout'
+import { benchGroundOutline } from './paintStrips'
 import { LOOKS } from './looks'
 import { BUTTONS, SLOP, clippingBox, crossedBy, dropPlace, facePart, modelRootAt, onEar, floorX, floorY, onHead, placeOnFloor, placesOf, ribbonShape, stripOf, tuftPose, tuftRoot, tuftTip, whatIsAt, type Point } from './poses'
 import { TUFTS } from './rules'
@@ -90,6 +91,27 @@ describe('who stands where', () => {
       const root = modelRootAt(at)
       expect(Math.hypot(root.x - last.x, root.y - last.y)).toBeLessThan(12)
       last = root
+    }
+  })
+
+  it('hangs the friend\'s lock across the room, and the ribbon beside it, wholly over the one plain ground at the bench, whatever their lengths', () => {
+    // The ground's straight part: inside it there is nothing but its one flat colour.
+    const ground = { left: BENCH_GROUND.x, right: BENCH_GROUND.x + BENCH_GROUND.w, top: BENCH_GROUND.y + 10, bottom: BENCH_GROUND.y + BENCH_GROUND.h - 8 }
+    const outline = benchGroundOutline()
+    expect(Math.min(...outline.map((p) => p.x))).toBeLessThanOrEqual(ground.left)
+    expect(Math.max(...outline.map((p) => p.x))).toBeGreaterThanOrEqual(ground.right)
+    for (const model of [34, 50, 66]) for (const len of [4, 60, 100]) {
+      const s = salon({ seat: 'across', model, ribbon: { len, at: 'model' }, shown: { snip: true, pull: true, ribbon: true } })
+      const hang = placesOf(s).model!, ribbon = ribbonShape(s)!
+      expect(ribbon.kind).toBe('hang')
+      const strips = [{ x: hang.x, top: hang.y, bottom: hang.y + model * hang.unit }, ...(ribbon.kind === 'hang' ? [{ x: ribbon.root.x, top: ribbon.root.y - 26, bottom: ribbon.root.y + len * ribbon.unit }] : [])]
+      for (const strip of strips) {
+        // With room at each side for a strip that swings, and above for the clip and the paw.
+        expect(strip.x - STRIP_W / 2 - 16).toBeGreaterThanOrEqual(ground.left)
+        expect(strip.x + STRIP_W / 2 + 16).toBeLessThanOrEqual(ground.right)
+        expect(strip.top).toBeGreaterThanOrEqual(ground.top)
+        expect(strip.bottom + 6).toBeLessThanOrEqual(ground.bottom)
+      }
     }
   })
 

@@ -29,6 +29,11 @@ export const FRIEND_HEAD = { x: 708, y: 302, rx: 68, ry: 62 } as const
 
 /** The bench is across the room from the lock, by the left wall; the door is on the right, past the stool. */
 export const BENCH = { x: 30, w: 206, seatY: 560, backY: 470 } as const
+/**
+ * The plain ground at the bench: a spare cape that hangs from its hook over the end of the bench and lies out over
+ * the floor. The friend's lock, and the ribbon when it is hung beside that lock, hang over it and over nothing else.
+ */
+export const BENCH_GROUND = { x: 168, y: 426, w: 126, h: 328, flare: 12 } as const
 /** The door is glass from top to kick plate, and the street shows through it. */
 export const DOOR = { x: 938, y: 150, w: 214, h: FLOOR_Y - 150, glass: { x: 958, y: 172, w: 174, h: 424 } } as const
 /** The looking glass on the wall above the bench: it is turned to the chair, and the customer's face shows in it. */
