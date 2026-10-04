@@ -86,6 +86,11 @@ export function save(world: World): Saved {
  * visit. Inside a record every field is repaired by itself, and the result
  * is always a sound arrangement: each friend in exactly one place.
  */
+/** A slot holds a world this build can read: the game was put away before and is now found, not opened for the first time. */
+export function wasSaved(raw: unknown): boolean {
+  return typeof raw === 'object' && raw !== null && !Array.isArray(raw) && (raw as Record<string, unknown>).v === freshWorld(null).state.v
+}
+
 export function load(raw: unknown, childAge: number | null): World {
   if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return freshWorld(childAge)
   const record = raw as Record<string, unknown>

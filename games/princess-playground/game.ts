@@ -118,12 +118,15 @@ export class Game implements Director {
   /** For a friend the child has sent and that has not landed yet: the moves counted before it left, and the end it left, or null for the sand. */
   private flights: Partial<Record<FriendId, { base: number; from: End | null }>> = {}
 
-  constructor(world: World, seed: number, grains: Grains = new Grains(seed + 17)) {
+  /** `found`: the world was read from a slot the game had been put away into, not made for a first open. */
+  constructor(world: World, seed: number, grains: Grains = new Grains(seed + 17), found = false) {
     this.world = world
     this.play = new Playground(world.arrangement, seed)
     this.grains = grains
     this.company = inCompany(world.arrangement)
-    this.pendingShowing = this.wantsShowing() ? world.kind : null
+    // A showing plays by itself only at the very first open. One that was due and had not begun when the game was
+    // put away is still owed: the ride is found laid out, and the showing plays the next time its kind is laid out.
+    this.pendingShowing = !found && this.wantsShowing() ? world.kind : null
     // A showing that is due opens as it will play, before anything has been seen: nothing jumps when it begins.
     const opens = this.pendingShowing ? showingOpens(this.ride, world.arrangement) : null
     if (opens) {

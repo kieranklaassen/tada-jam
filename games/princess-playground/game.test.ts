@@ -6,7 +6,7 @@ import { RAKED, biteDepth, marksFromText, marksToText, rakeIsOut } from './marks
 import { overlap } from './overlap'
 import { seeded } from './motion'
 import { KINDS, layout, rideOf, wantMet, type Kind } from './rides'
-import { endRide, freshWorld, load, rideIsOver, save, type Saved, type World } from './save'
+import { endRide, freshWorld, load, rideIsOver, save, wasSaved, type Saved, type World } from './save'
 import { NEXT_AT } from './scenes'
 import { chuckle, clonk, crow, knead, lengthOf, levelHum, purr, raspberry, scratch, softNote, spit, wheeze, type Part } from './voices'
 import { FRIEND_IDS, MAX_TILT, PLANK, WAITING_PLACE, homeOn, plankTopAt, type FriendId } from './world'
@@ -1792,6 +1792,32 @@ describe('a showing opens with no jump', () => {
     run(middle, 3)
     expect(middle.world.moves).toBe(0)
     expect(placeOf(middle.play.arrangement, 'pim')).toEqual(pimWas)
+  })
+
+  it('a showing that was due and had not begun when the game was put away does not play by itself on load, and is still owed', () => {
+    // The ride before has ended; a touch on the friend who waits lays out a kind not seen before, and the game is put away at once.
+    const world: World = { ...opening('near-side'), shown: KINDS.filter((k) => k !== 'high-asks'), touched: true }
+    const ended = endRide(world)
+    const game = new Game({ ...ended, state: { ...ended.state, position: 'high-asks' } }, 1)
+    run(game, 0.3)
+    tapOn(game, game.play.arrangement.waiting!)
+    expect(game.showingDue).toBe(true)
+    game.putAway()
+    const slot = JSON.parse(JSON.stringify(game.saved()))
+    expect(wasSaved(slot)).toBe(true)
+    const found = new Game(load(slot, null), 1, undefined, wasSaved(slot))
+    expect(found.showingDue).toBe(false)
+    // The ride is found laid out, as it was saved when it began: Bo on the far end, holding Pim high.
+    expect(found.play.arrangement).toEqual(layout(rideOf('high-asks', found.world.turn)))
+    expect(placeOf(found.play.arrangement, 'bo').at).toBe('end')
+    const { cues } = run(found, 5)
+    expect(found.sceneRunning).toBe(false)
+    expect(cues.filter((cue) => cue.type !== 'voice')).toEqual([])
+    expect(found.world.shown).not.toContain('high-asks')
+    // The very first open is no load: there the first showing plays by itself.
+    expect(wasSaved(null)).toBe(false)
+    expect(wasSaved(undefined)).toBe(false)
+    expect(new Game(load(null, null), 1, undefined, wasSaved(null)).showingDue).toBe(true)
   })
 
   it('once the showing has put a friend where the ride has it, a tap on it is a move as always', () => {

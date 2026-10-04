@@ -14,7 +14,7 @@ import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
 import { SaveCadence } from './saveCadence'
 import { Game, type Touched } from './game'
 import { Grains } from './grains'
-import { load } from './save'
+import { load, wasSaved } from './save'
 import { voiceOf } from './sound'
 import { Stage, type StageView } from './view/stage'
 import { PLANK, seatX } from './world'
@@ -265,7 +265,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       if (disposed) return
       // A saved position wins; `childAge` only chooses where a first visit starts.
       const world = load(value, ctxRef.current.childAge)
-      game = new Game(world, seed, grainPool)
+      game = new Game(world, seed, grainPool, wasSaved(value))
       // The sand as it was left: each cell of the saved grid drawn from its digit.
       stage.map.fromMarks(world.marks)
       // The game sets itself up from the state here, as it was left: nothing eases in and no scene replays.
