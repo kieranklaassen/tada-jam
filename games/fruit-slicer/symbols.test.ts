@@ -1,6 +1,6 @@
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
+// The module's own source, as text: the test reads it to hold a comment to every text call. Read through the bundler, so that nothing here reaches outside the game's folder.
+import source from './symbols.ts?raw'
 import { FRACTION, drawDecimal, drawFraction, drawMixed, drawSign, drawWhole, fractionBox, fractionLayout, isFraction, type Sign, type SymbolSurface } from './symbols'
 
 // A surface that keeps what was drawn on it. Every digit is 0.6 of the size wide, as in a tabular face.
@@ -183,7 +183,6 @@ describe('the module as a whole', () => {
     for (const drawn of r.texts) expect(drawn.text).toMatch(ALLOWED)
   })
 
-  const source = readFileSync(fileURLToPath(new URL('./symbols.ts', import.meta.url)), 'utf8')
 
   it('carries the numeral comment on every text call', () => {
     const lines = source.split('\n')

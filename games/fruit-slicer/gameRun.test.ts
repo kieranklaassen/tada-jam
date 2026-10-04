@@ -86,6 +86,11 @@ describe('the touch', () => {
     drag(run, { x: 300, y: BOARD.y - 30 }, { x: 300 + SWING + 40, y: BOARD.y - 24 })
     expect(ids(run)).toEqual(['ring', 'whistle'])
     expect(run.fx.flapSpeed).toBeGreaterThan(0)
+    // However short the stroke: one that crosses nothing whistles.
+    run.fx = { ...run.fx, flapSpeed: 0 }
+    drag(run, { x: 300, y: BOARD.y - 30 }, { x: 314, y: BOARD.y - 28 })
+    expect(ids(run)).toEqual(['ring', 'whistle'])
+    expect(run.fx.flapSpeed).toBeGreaterThan(0)
     const end = X0 + WHOLE.long * PX
     run.press({ x: end - 30, y: BOARD.y - 30 })
     run.move({ x: end + 30, y: BOARD.y - 30 })

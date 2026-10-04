@@ -56,7 +56,7 @@ export type RuledRow = { share: Share; parts: number; lit: number }
 /**
  * The why of a consequence: the whole fruit ruled into equal parts along the rail, with the ordered parts
  * lit. For the cat's two shares both rows are ruled into the same parts, the fewest that both come out in,
- * and the sign goes between their ends.
+ * and the sign is laid between the cat's two tickets once the tin is open.
  */
 export function ruling(customer: Customer): { whole: number; rows: RuledRow[]; sign: 'less' | 'equals' | 'greater' | null } {
   const [first, second] = customer.shares

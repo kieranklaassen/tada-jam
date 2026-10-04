@@ -176,11 +176,21 @@ export function inRange(customer: Customer): string[] {
  * showing plays once, the first time a customer carrying it is served.
  */
 export function ideaOf(customer: Customer): string {
-  let idea = LADDER[0]
+  const ideas = ideasOf(customer)
+  return ideas[ideas.length - 1]
+}
+
+/**
+ * Every idea a customer carries, in the order of the ladder: each position whose new thing shows in it. A child
+ * who starts further up the ladder meets the earlier ideas for the first time mixed in with later ones, and
+ * each is still shown the first time it is met.
+ */
+export function ideasOf(customer: Customer): string[] {
+  const ideas: string[] = []
   for (const id of LADDER) {
     const added = NEW[id]
     if (!added) continue
-    if (added.who === customer.who || (added.parts && usesParts(customer, added.parts)) || (id === 'written' && customer.written) || (id === 'bare' && !customer.lined)) idea = id
+    if (added.who === customer.who || (added.parts && usesParts(customer, added.parts)) || (id === 'written' && customer.written) || (id === 'bare' && !customer.lined)) ideas.push(id)
   }
-  return idea
+  return ideas.length > 0 ? ideas : [LADDER[0]]
 }

@@ -32,7 +32,7 @@ export type Show = {
   ruled: number
   /** The ordered parts filling with the fruit's colour, up to the jaw. */
   fill: number
-  /** The twins' divider dropping in the middle; the sign laid between the cat's two rows. */
+  /** The twins' divider dropping in the middle; for the cat, the beat after which the sign stands between its two tickets. */
   extra: number
   // The glider.
   /** Tries at closing the beak on the fruit: two of them. */
@@ -107,7 +107,7 @@ export function serveBeats(show: Show, ending: Ending, cue: Cue): Beat[] {
 /**
  * The first showing: 3 to 5 seconds, once for each idea. The roller drops from its hook, runs along the rail
  * under the open tin and rules the whole into its equal parts, one tick a part; the ordered parts fill with the
- * fruit's colour up to the jaw; then the twins' divider drops, or the sign is laid between the cat's two rows.
+ * fruit's colour up to the jaw; then the twins' divider drops, or the sign is laid between the cat's two tickets.
  */
 export function showingBeats(show: Show, customer: Customer, cue: Cue): Beat[] {
   const parts = ruling(customer).rows[0].parts

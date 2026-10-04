@@ -1,7 +1,8 @@
 import type { Game } from './cycle'
 import { GIVE_PARTS, WHOLE } from './measure'
+import type { Customer } from './orders'
 import { holdsMisfit, tinAt } from './moves'
-import { wanted } from './orders'
+import { tinParts, wanted } from './orders'
 import { served } from './serve'
 import { BOARD, CRATE, QUEUE, WINDOW, boxOf, type Box, type Point } from './stage'
 import { LANES, onLane, type Piece } from './world'
@@ -19,8 +20,30 @@ export type Guide = {
   hand: { from: Point; to: Point; drag: boolean }
 }
 
-/** Where along a fruit the hand strokes, as a share of its length, for each showing in turn. Each is further than the give of a tin from a half, a third and a quarter. */
-export const STROKE_AT: readonly number[] = [0.38, 0.62, 0.42, 0.58]
+/** Places along a fruit where the hand might stroke, as shares of its length, in the order they are tried. */
+export const STROKE_AT: readonly number[] = [0.38, 0.62, 0.42, 0.58, 0.3, 0.7, 0.46, 0.54, 0.27, 0.73, 0.34, 0.66]
+
+/**
+ * The pieces a customer could use, as shares of its fruit: what each compartment of its tin takes, less a whole
+ * fruit where the order is longer than one, and for the ants one part. A stroke that left any of them, to its
+ * left or to its right, would be showing where to cut.
+ */
+export function usefulPieces(customer: Customer): number[] {
+  const whole = WHOLE[customer.fruit]
+  const pieces = tinParts(customer).map((length) => (length % whole || whole) / whole)
+  if (customer.who === 'ants') pieces.push(1 / wanted(customer).den)
+  return pieces
+}
+
+/** The places the hand strokes for this customer, in turn: none leaves a useful piece on either side of it, by a good deal more than the give of a tin. */
+export function strokePlaces(customer: Customer | null): number[] {
+  if (!customer) return STROKE_AT.slice(0, 4)
+  const useful = usefulPieces(customer)
+  const off = (at: number): number => Math.min(...useful.flatMap((piece) => [Math.abs(at - piece), Math.abs(1 - at - piece)]))
+  const clear = STROKE_AT.filter((at) => off(at) > 2 / GIVE_PARTS)
+  if (clear.length > 0) return clear.slice(0, 4)
+  return [[...STROKE_AT].sort((a, b) => off(b) - off(a))[0]]
+}
 
 const mid = (box: Box): Point => ({ x: box.x + box.w / 2, y: box.y + box.h / 2 })
 const tap = (glow: Box[], on: Guide['on'], at: Point): Guide => ({ glow, on, hand: { from: at, to: at, drag: false } })
@@ -32,10 +55,9 @@ function onBoard(game: Game): { piece: Piece; box: Box }[] {
   return out
 }
 
-/** The stroke the hand shows across a fruit or a piece: straight down through it, at a place that is not the share on the ticket. */
-function strokeAcross(box: Box, showing: number, share: number | null): Guide['hand'] {
-  const clear = STROKE_AT.filter((at) => share === null || Math.abs(at - share) > 2 / GIVE_PARTS)
-  const places = clear.length > 0 ? clear : STROKE_AT
+/** The stroke the hand shows across a fruit: straight down through it, at a place that leaves nothing the customer could use on either side. */
+function strokeAcross(box: Box, showing: number, customer: Customer | null): Guide['hand'] {
+  const places = strokePlaces(customer)
   const x = box.x + box.w * places[((showing % places.length) + places.length) % places.length]
   return { from: { x, y: Math.max(BOARD.y - 44, box.y - 90) }, to: { x, y: box.y + box.h + 50 }, drag: true }
 }
@@ -65,6 +87,5 @@ export function guideOf(game: Game, showing = 0): Guide {
   }
   const whole = mine.reduce<{ piece: Piece; box: Box } | null>((best, one) => (!best || one.box.w > best.box.w ? one : best), null)
   if (!whole) return tap([CRATE], 'crate', mid(CRATE))
-  const share = wanted(customer)
-  return { glow: [whole.box], on: 'fruit', hand: strokeAcross(whole.box, showing, share.num / share.den) }
+  return { glow: [whole.box], on: 'fruit', hand: strokeAcross(whole.box, showing, customer) }
 }

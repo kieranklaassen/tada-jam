@@ -30,8 +30,8 @@ import { eaten } from './world'
 /** A sound to play: a voice, the length it is about, a count where it counts something, and seconds to wait first. */
 export type Sound = { id: VoiceId; length?: number; count?: number; delay: number }
 
-/** A stroke shorter than this that cut nothing is not a swing: it gets no whistle. */
-export const SWING = 60
+/** How far a stroke has to travel to whistle when it crossed nothing: no distance at all. Every stroke that crosses nothing whistles, however short; the touch layer has already told a stroke from a tap. */
+export const SWING = 0
 /** The stretch of a carry, in seconds, over which its speed at the moment of letting go is taken. */
 export const SPEED_WINDOW = 0.1
 /** Cuts made by one step of a stroke sound one after another, this many seconds apart, so a long stroke is a run of notes. */

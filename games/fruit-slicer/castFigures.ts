@@ -51,6 +51,9 @@ function lump(ctx: Ctx, fruit: Fruit, x: number, y: number, size: number, whole:
   ctx.strokeRect(x + 0.75, y + 0.75, w - 1.5, h - 1.5)
 }
 
+/** The longest piece inside a customer, as a share of the fruit on order, or one whole if none is longer: everything inside it is drawn to that one scale, so each piece is exactly as long beside the others as it was on the board. */
+const longest = (feast: Feast): number => Math.max(1, ...feast.lumps.map((one) => one.size))
+
 /** A lid over an eye: half shut is a deadpan, shut is a blink. Wide eyes have none. */
 function lid(ctx: Ctx, x: number, y: number, r: number, lids: number, fill: string): void {
   if (lids <= 0.05) return
@@ -78,7 +81,9 @@ function pelican(ctx: Ctx, dots: Dots, cast: Casting): void {
   ctx.beginPath()
   body(ctx)
   ctx.clip()
-  feast.lumps.filter((one) => one.at >= 1).slice(-6).forEach((one, row) => lump(ctx, one.fruit, -34, -28 - row * 11, Math.min(1, one.size), 70, 9))
+  // Every piece it ate, all of them, to one scale: the longest is as long as the belly is wide, and the rows close up to make room.
+  const down = feast.lumps.filter((one) => one.at >= 1), pitch = Math.min(11, 64 / Math.max(1, down.length)), most = longest(feast)
+  down.forEach((one, row) => lump(ctx, one.fruit, -34, -28 - (row + 1) * pitch + 11, one.size / most, 70, Math.max(3, pitch - 2)))
   ctx.restore()
   // The neck, and a head that can turn away to preen.
   inked(ctx, poly([[-4, -90], [18, -96], [24, -122], [4, -126]]), WHITE, 4)
@@ -97,7 +102,7 @@ function pelican(ctx: Ctx, dots: Dots, cast: Casting): void {
     c.lineTo(18, -4)
     c.closePath()
   }, YELLOW, 4, dots.of(ctx, RED, 0.45))
-  for (const one of inPouch) lump(ctx, one.fruit, 100 - one.at * 80 - Math.min(1, one.size) * 30, 4 + sag * 0.5 - 4, Math.min(1, one.size), 60)
+  for (const one of inPouch) lump(ctx, one.fruit, 100 - one.at * 80 - (one.size / most) * 30, 4 + sag * 0.5 - 4, one.size / most, 60)
   inked(ctx, poly([[16, -8], [122, 8], [118, 14 + 10 * open], [18, 4 + 6 * open]]), YELLOW, 4)
   // The whole fruit across the beak, from the first try at closing on it until it has glided away.
   if (show?.kind === 'glider') lump(ctx, cast.fruit, 60, -2 + 5 * tries, 1, 110, 12)
@@ -126,7 +131,7 @@ function shrew(ctx: Ctx, dots: Dots, cast: Casting, member: number): void {
   feast.lumps.filter((one) => one.at >= 1).forEach((one) => {
     const mine = (before + one.size / 2 < total / 2) === (member === 0)
     before += one.size
-    if (mine) lump(ctx, one.fruit, -14, -20 - (before * 40) % 18, Math.min(1, one.size), 56, 6)
+    if (mine) lump(ctx, one.fruit, -14, -20 - (before * 40) % 18, one.size / longest(feast), 56, 6)
   })
   for (const [ear, lift] of [[-10, 0], [8, 3]] as const) inked(ctx, oval(ear, -62 - lift - 4 * Math.abs(pose.bit), 8, 9 + 2 * pose.bit), GREY, 3, dots.of(ctx, RED, 0.5))
   ctx.save()
@@ -201,7 +206,8 @@ function cat(ctx: Ctx, dots: Dots, cast: Casting): void {
   const body = oval(0, -40, 32, 42)
   inked(ctx, body, YELLOW, 4, dots.of(ctx, RED, 0.4))
   inked(ctx, oval(4, -30, 17, 26), WHITE, 0)
-  feast.lumps.filter((one) => one.at >= 1).slice(-5).forEach((one, row) => lump(ctx, one.fruit, -18, -18 - row * 10, Math.min(1, one.size), 44))
+  const eatenUp = feast.lumps.filter((one) => one.at >= 1), step = Math.min(10, 50 / Math.max(1, eatenUp.length))
+  eatenUp.forEach((one, row) => lump(ctx, one.fruit, -18, -18 - (row + 1) * step + 10, one.size / longest(feast), 44, Math.max(3, step - 2)))
   for (const paw of [-12, 14]) inked(ctx, oval(paw, -2, 11, 6), WHITE, 3)
   ctx.save()
   ctx.translate(4, -92)
@@ -259,24 +265,15 @@ function boa(ctx: Ctx, dots: Dots, cast: Casting): void {
     const rest = 0.3 + (0.62 * (k + 0.5)) / Math.max(1, feast.lumps.length)
     const u = one.at >= 1 ? rest : 0.05 + one.at * (rest - 0.05)
     const [x, y] = at(u)
-    lump(ctx, one.fruit, x - Math.min(1.2, one.size) * 17, y - 5, Math.min(1.2, one.size), 34, 10)
+    lump(ctx, one.fruit, x - (one.size / longest(feast)) * 17, y - 5, one.size / longest(feast), 34, 10)
   })
   const [hx, hy] = at(0)
   ctx.save()
   ctx.translate(hx, hy - 6)
   ctx.rotate(-0.3 + pose.head * 0.6)
   const open = Math.max(pose.mouth, feast.mouth)
-  if (pose.bit > 0.05) {
-    ctx.beginPath()
-    ctx.moveTo(22, 4)
-    ctx.lineTo(22 + 22 * pose.bit, 2)
-    ctx.lineTo(28 + 24 * pose.bit, -4)
-    ctx.moveTo(22 + 22 * pose.bit, 2)
-    ctx.lineTo(28 + 24 * pose.bit, 8)
-    ctx.lineWidth = 2.5
-    ctx.strokeStyle = RED
-    ctx.stroke()
-  }
+  // The tongue: one filled ribbon with a notch in its end, not two strokes that open from a point.
+  if (pose.bit > 0.05) inked(ctx, poly([[22, 1], [22 + 22 * pose.bit, 0], [30 + 24 * pose.bit, -4], [26 + 23 * pose.bit, 3], [30 + 24 * pose.bit, 10], [22 + 22 * pose.bit, 6], [22, 6]]), RED, 1.5)
   if (open > 0.08) inked(ctx, poly([[4, 6], [30, 6 + 16 * open], [4, 12]]), RED, 3)
   inked(ctx, oval(8, 0, 22, 13), WHITE, 4, dots.of(ctx, BLUE, 0.5))
   if (pose.tuft > 0.3) inked(ctx, poly([[-6, -11], [-2, -11 - 12 * pose.tuft], [4, -12], [8, -12 - 10 * pose.tuft], [12, -11]]), RED, 2.5)

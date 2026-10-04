@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { drop, grab } from './carry'
 import { call, freshGame, type Game } from './cycle'
-import { STROKE_AT, guideOf } from './guide'
-import { GIVE_PARTS } from './measure'
+import { LADDER } from './config'
+import { guideOf, strokePlaces, usefulPieces } from './guide'
+import { GIVE_PARTS, WHOLE, fitOf, giveOf } from './measure'
 import { newStroke, poke, slice, tinAt } from './moves'
-import { tinParts, wanted } from './orders'
+import { layOut, tinParts, wanted } from './orders'
 import { CRATE, COUNTER, LANE_H, PX, QUEUE, WINDOW, X0, boxOf, laneTop } from './stage'
 import { onLane, remove } from './world'
 
@@ -49,7 +50,32 @@ describe('with a customer to serve', () => {
     const places = [0, 1, 2, 3, 4, 5].map((showing) => (guideOf(start, showing).hand.from.x - fruit.x) / fruit.w)
     for (const place of places) expect(Math.abs(place - share.num / share.den)).toBeGreaterThan(2 / GIVE_PARTS)
     expect(new Set(places.map((place) => place.toFixed(2))).size).toBeGreaterThan(1)
-    for (const place of STROKE_AT) for (const simple of [1 / 2, 1 / 3, 2 / 3, 1 / 4, 3 / 4]) expect(Math.abs(place - simple)).toBeGreaterThan(1 / GIVE_PARTS)
+  })
+
+  it('never shows a stroke that leaves a piece the customer could use, on either side of it, for any order there is', () => {
+    let orders = 0
+    for (const position of LADDER) {
+      for (let seed = 1; seed <= 80; seed++) {
+        for (const role of ['new', 'known'] as const) {
+          const customer = layOut(position, role, seed).customer
+          const whole = WHOLE[customer.fruit], give = giveOf(customer.fruit)
+          const places = strokePlaces(customer)
+          expect(places.length, JSON.stringify(customer)).toBeGreaterThan(0)
+          for (const at of places) {
+            for (const part of [at * whole, (1 - at) * whole]) {
+              // Neither part fills a compartment of the tin, or what an order longer than a fruit still needs, or is one ant's piece.
+              for (const useful of usefulPieces(customer)) expect(fitOf(part, useful * whole, give).kind, `${JSON.stringify(customer.shares)} ${customer.who} at ${at}`).not.toBe('fit')
+            }
+          }
+          orders++
+        }
+      }
+    }
+    expect(orders).toBeGreaterThan(1500)
+    // What each compartment takes is among the useful pieces, and for the twins that is half the order each.
+    const twins = { who: 'twins' as const, fruit: 'long' as const, shares: [{ num: 3, den: 4 }], carries: null, written: true, lined: true }
+    expect(usefulPieces(twins)).toEqual([3 / 8, 3 / 8])
+    for (const at of strokePlaces(twins)) expect(Math.min(Math.abs(at - 3 / 8), Math.abs(1 - at - 3 / 8))).toBeGreaterThan(2 / GIVE_PARTS)
   })
 
   it('glows on the crate, with a tap, when none of its fruit lies on the board', () => {

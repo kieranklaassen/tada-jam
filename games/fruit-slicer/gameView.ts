@@ -9,7 +9,7 @@ import type { HandPose } from './guidance'
 import { BLUE, BOARD as BOARD_FILL, BOARD_EDGE, FLESH, INK, PAPER, RED, RIND, TINT, WHITE, YELLOW, burst, inked, panel, poly, rect, slab, speedLines, oval, type Screens } from './look'
 import { FRUITS, WHOLE, giveOf, type Fruit } from './measure'
 import { tinAt } from './moves'
-import { tinParts, wanted, type Customer } from './orders'
+import { signBetween, tinParts, wanted, type Customer } from './orders'
 import { paintPassers } from './passersBy'
 import { restShow } from './scenes'
 import { ruling } from './serve'
@@ -220,7 +220,7 @@ function effects(ctx: Ctx, fx: FxState, wall: boolean): number {
 }
 
 /** A ticket: a card with a small strip of the fruit for each share ordered, the share filled in, and, once it is written, the fraction on a bracket over that share. */
-function ticket(ctx: Ctx, customer: Customer, x: number, top: number, s: number, stacked = false): number {
+function ticket(ctx: Ctx, customer: Customer, x: number, top: number, s: number, stacked = false, sign: 'less' | 'equals' | 'greater' | null = null): number {
   const whole = (WHOLE[customer.fruit] / WHOLE.long) * 190 * s
   let left = x, y = top, drawn = 0
   for (const share of customer.shares) {
@@ -252,8 +252,11 @@ function ticket(ctx: Ctx, customer: Customer, x: number, top: number, s: number,
       ctx.stroke()
       drawFraction(ctx, share, sx + filled / 2, sy - 44 * s, 28 * s, { fill: INK })
     }
+    // The cat's two tickets side by side, in the order it holds them: once the truth has been shown, the sign for less than, equal or
+    // greater than stands between the two strips, so it reads as it stands, the first share on its left and the second on its right.
+    if (sign && share === customer.shares[0]) drawSign(ctx, sign, left + w + 17, sy + tall / 2, 24, { fill: INK, edge: WHITE, edgeWidth: 5 })
     if (stacked) y += h + 6 * s
-    else left += w + 8 * s
+    else left += w + (customer.shares.length > 1 ? 34 : 8 * s)
     drawn += 6
   }
   return drawn
@@ -263,11 +266,10 @@ function ticket(ctx: Ctx, customer: Customer, x: number, top: number, s: number,
 function tin(ctx: Ctx, dots: Dots, scenery: Scenery, shape: TinShape, customer: Customer, up = 0, spin = 0): number {
   const { body, lid, ruler } = shape
   if (!shape.open) {
-    // Folded, it says nothing of how long the order is: a small box with the creases of its folds.
+    // Folded, it says nothing of how long the order is: a small shut box with a clasp. It has no creases across it, which would read as a strip ruled into parts.
     inked(ctx, rect(body.x, body.y, body.w, body.h), '#c9d6e6', 5, dots.of(ctx, BLUE, 0.3))
-    ctx.fillStyle = INK
-    for (let fold = 1; fold < 5; fold++) ctx.fillRect(body.x + (body.w * fold) / 5 - 1.5, body.y + 6, 3, body.h - 12)
-    return 3
+    inked(ctx, slab(body.x + body.w / 2 - 11, body.y + body.h / 2 - 9, 22, 18, 6), YELLOW, 3)
+    return 2
   }
   const show = scenery.show
   const ruled = ruling(customer)
@@ -342,13 +344,6 @@ function tin(ctx: Ctx, dots: Dots, scenery: Scenery, shape: TinShape, customer: 
   if (answering && answering.kind === 'answer') {
     const parts = ruled.rows[0].parts, at = Math.min(answering.parts - 1, Math.floor((answering.age / answering.life) * answering.parts))
     inked(ctx, rect(ruler.x + (whole * at) / parts, ruler.y - 7, whole / parts, rowH * ruled.rows.length + 10), WHITE, 3)
-  }
-  // The sign between the cat's two shares, laid between the ends of their two rows: the shorter row ends at its left and the longer at
-  // its right, so it reads as it stands, the less on the left of it. Two equal shares end at one place, and the sign sits there.
-  if (ruled.sign && customer.written && (!showing || show.extra > 0)) {
-    const ends = ruled.rows.map((row) => (whole * row.lit) / row.parts)
-    const short = Math.min(...ends), long = Math.max(...ends)
-    drawSign(ctx, ruled.sign === 'equals' ? 'equals' : 'less', ruler.x + (short + long) / 2, ruler.y + rowH, Math.max(13, Math.min(22, (long - short) * 0.8 || 22)), { fill: INK, edge: WHITE, edgeWidth: 5 })
   }
   return 8 + 4 * ruled.rows.length
 }
@@ -439,8 +434,11 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
     feasting = feast
     // A glider playing for a pelican that waits is that pelican's scene, not the scene of whoever stands at the window.
     drawn += customerAt(ctx, dots, atWindow, scenery.window, { feast, show: gliding && gliding.whom !== 'window' ? null : scenery.show }, 'window', scenery.finger)
-    // The ticket is large and stands clear of whoever holds it: the cat's two are stacked.
-    if (game.window) drawn += ticket(ctx, atWindow, WINDOW.x + 330, TICKET_TOP, atWindow.who === 'boa' ? 0.66 : atWindow.shares.length > 1 ? 0.72 : 1.1, atWindow.shares.length > 1)
+    // The ticket is large and stands clear of whoever holds it. The cat's two stand side by side, and the sign is laid between them once
+    // its tin has opened, or it has been served: after the child's cut, never before, and in a first showing as the last thing shown.
+    const ruling2 = scenery.show !== null && scenery.show.drop > 0 && scenery.show.fill < 1
+    const signNow = atWindow.shares.length > 1 && (game.finished || (game.world.tinOpen && !ruling2)) ? signBetween(atWindow) : null
+    if (game.window) drawn += ticket(ctx, atWindow, WINDOW.x + (atWindow.shares.length > 1 ? 306 : 330), TICKET_TOP, atWindow.who === 'boa' ? 0.66 : atWindow.shares.length > 1 ? 0.57 : 1.1, false, signNow)
     // Served, and the serve over: it holds its tin, shut, by its feet. One fed by hand has had it there from the first.
     if (game.finished && (!scenery.ending || scenery.ending.fed)) {
       inked(ctx, rect(TIN_BY_FEET, SILL - 30, 64, 26), '#c9d6e6', 4, dots.of(ctx, BLUE, 0.3))

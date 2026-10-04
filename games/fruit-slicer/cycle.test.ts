@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { LADDER } from './config'
 import { call, crate, feed, freshGame, give, judge, sendOff, settle, splat, treat, type Game } from './cycle'
 import { WHOLE, giveOf, shareLength } from './measure'
-import { inRange, tinParts, type Customer } from './orders'
+import { ideasOf, inRange, tinParts, type Customer } from './orders'
 import { serveOf } from './serve'
 import { cut, eaten, inTin, isWhole, onLane, onShelf, roll, setOnShelf, type Piece } from './world'
 
@@ -379,6 +379,42 @@ describe('the two who wait', () => {
     expect(next.game.world.pieces.map((made) => made.id)).toEqual(before)
     expect(eaten(next.game.world)).toEqual([])
     expect(next.game.world.tinOpen).toBe(false)
+  })
+})
+
+describe('a first showing', () => {
+  it('plays for every idea the first time it is met, also after a first visit that starts further up the designed order', () => {
+    let game = freshGame(11)
+    expect(game.position).toBe('written')
+    expect(game.shown).toEqual([])
+    const metFirst: Record<string, boolean> = {}
+    for (let i = 0; i < 120 && !(metFirst.twins && metFirst.ants); i++) {
+      game = call(game, (i % 2) as 0 | 1).game
+      const who = game.window!.who, idea = who === 'twins' ? 'shared' : who === 'ants' ? 'carried' : null
+      const before = game.shown
+      // The first piece laid in the tin opens it, and every idea of this customer not yet shown is shown and marked.
+      const made = cutFor(game, tinParts(game.window!)[0])
+      const first = give(made.game, made.id, 0)
+      if (idea && !before.includes(idea)) {
+        expect(first.given!.firstShowing, `${who}, cycle ${i}`).not.toBeNull()
+        expect(first.game.shown).toContain(idea)
+        metFirst[who] = true
+      }
+      for (const id of ideasOf(game.window!)) expect(first.game.shown, `${who}, cycle ${i}`).toContain(id)
+      expect(new Set(first.game.shown).size).toBe(first.game.shown.length)
+      game = first.game.finished ? first.game : serve(game).game
+    }
+    expect(metFirst).toEqual({ twins: true, ants: true })
+  })
+
+  it('is one idea at a time in the designed order: nothing but the new position is marked', () => {
+    let game = freshGame(null)
+    for (let i = 0; i < 40; i++) {
+      game = call(game, 0).game
+      const before = game.shown.length
+      game = serve(game).game
+      expect(game.shown.length - before).toBeLessThanOrEqual(1)
+    }
   })
 })
 

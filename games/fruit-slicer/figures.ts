@@ -79,14 +79,15 @@ export function ant(ctx: Ctx, x: number, y: number, s: number, lift = 0): void {
   ctx.lineWidth = 4
   ctx.lineCap = 'round'
   // Six legs, the part of an ant that is funny.
-  for (const [lx, bend] of [[-12, -8], [0, 0], [12, 8]] as const) {
+  // Each leg has a root of its own and keeps to its own strip under the body, so no leg crosses another.
+  for (const lx of [-12, 0, 12]) {
     ctx.beginPath()
-    ctx.moveTo(lx, 4)
-    ctx.lineTo(lx + bend - 6, 20)
-    ctx.lineTo(lx + bend - 12, 32)
-    ctx.moveTo(lx, 4)
-    ctx.lineTo(lx + bend + 8, 18 - lift * 26)
-    ctx.lineTo(lx + bend + 14, 32 - lift * 52)
+    ctx.moveTo(lx - 3, 4)
+    ctx.lineTo(lx - 4, 18)
+    ctx.lineTo(lx - 5, 32)
+    ctx.moveTo(lx + 3, 4)
+    ctx.lineTo(lx + 4, 18 - lift * 8)
+    ctx.lineTo(lx + 5, 32 - lift * 16)
     ctx.stroke()
   }
   inked(ctx, oval(-24, 0, 17, 13), INK, 0)

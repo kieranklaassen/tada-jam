@@ -141,17 +141,9 @@ function counter(ctx: Ctx, screens: Screens, scene: SpikeScene): void {
   // The roller on its hook, a tool that looks like a tool.
   ctx.lineWidth = 5
   ctx.strokeStyle = INK
-  ctx.beginPath()
-  ctx.moveTo(1040, 312)
-  ctx.lineTo(1040, 346)
-  ctx.moveTo(1100, 312)
-  ctx.lineTo(1100, 346)
-  ctx.moveTo(1034, 352)
-  ctx.lineTo(1106, 352)
-  ctx.lineTo(1106, 392)
-  ctx.moveTo(1034, 352)
-  ctx.lineTo(1034, 392)
-  ctx.stroke()
+  // It hangs on two cords, each a run of dashes: no upright here meets a crossbar.
+  ctx.fillStyle = INK
+  for (const cord of [1040, 1100]) for (let dash = 0; dash < 5; dash++) ctx.fillRect(cord - 2.5, 316 + dash * 14, 5, 9)
   inked(ctx, slab(1018, 384, 104, 44, 10), WHITE, 5, screens.of(ctx, BLUE, 0.4))
   for (let ridge = 1; ridge < 6; ridge++) {
     ctx.beginPath()

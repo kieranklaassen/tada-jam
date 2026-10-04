@@ -1,5 +1,5 @@
 import { FRUITS, RAIL } from './measure'
-import { ideaOf, layOut, tinParts, type Customer } from './orders'
+import { ideasOf, layOut, tinParts, type Customer } from './orders'
 import { serveOf, served, type Served } from './serve'
 import { beginCycle, finishCycle, freshState, type CycleOutcome, type GameState } from './state'
 import { pick } from './stream'
@@ -183,9 +183,11 @@ export function give(game: Game, id: number, part: number): { game: Game; given:
   let world = giveToTin(game.world, id, compartment)
   const strays = served(world, customer).strays.map((stray) => stray.id)
   for (const stray of strays) world = remove(world, stray)
-  const idea = ideaOf(customer)
-  const firstShowing = opened && !game.shown.includes(idea) ? idea : null
-  const next: Game = { ...game, world, shown: firstShowing ? [...game.shown, firstShowing] : game.shown }
+  // Every idea this customer carries that has not been shown yet is shown now, in the one showing, and is marked as shown: the newest
+  // of them names it. In the designed order that is one idea at a time; after a first visit that starts further up, it can be several.
+  const fresh = opened ? ideasOf(customer).filter((idea) => !game.shown.includes(idea)) : []
+  const firstShowing = fresh.length > 0 ? fresh[fresh.length - 1] : null
+  const next: Game = { ...game, world, shown: fresh.length > 0 ? [...game.shown, ...fresh] : game.shown }
   const result = served(world, customer)
   if (result.kind !== 'fit') return { game: next, given: { opened, firstShowing, strays, slidOff: false, fell: [], result, ending: null } }
   const ended = end(next, result, judge(result), tinIds(next))
