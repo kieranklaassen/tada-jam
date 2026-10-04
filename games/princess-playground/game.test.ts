@@ -1329,6 +1329,72 @@ describe('the idle ladder', () => {
   })
 })
 
+describe('however fast the child goes, only the heavier end comes down', () => {
+  const made = (left: FriendId[], right: FriendId[]) => {
+    let a = tap(layout(rideOf('little-asks', 0)), 'pim')
+    for (const id of left) a = putOnEnd(a, id, 'left')
+    for (const id of right) a = putOnEnd(a, id, 'right')
+    return new Game({ ...shown(), arrangement: a, touched: true, state: { ...shown().state, finished: true } }, 1)
+  }
+
+  it('a finger drumming on the lighter end, or on a level plank, never knocks it on the sand', () => {
+    for (const [left, right] of [[['dot'], ['pim']], [['bo'], ['pim']], [['bo'], ['mog']], [['mog'], ['dot']]] as [FriendId[], FriendId[]][]) for (const gap of [0.2, 0.3]) {
+      const game = made(left, right)
+      run(game, 1)
+      const marks = game.saved().marks
+      const cues: Cue[] = []
+      for (let n = 0; n < 8; n++) {
+        game.press({ kind: 'plank', along: 2 })
+        cues.push(...run(game, gap).cues)
+      }
+      cues.push(...run(game, 3).cues)
+      const label = `${left} | ${right} every ${gap}`
+      expect(game.play.plank.tilt, label).toBeLessThan(MAX_TILT - 0.04)
+      // No bite on the right, the lighter side or one side of a level plank: every bite cue is on the left.
+      expect(cues.filter((cue) => cue.type === 'bite' && cue.x > 0).length, label).toBe(0)
+      if (weightOnEnds(game)[0] === weightOnEnds(game)[1]) expect(game.saved().marks, label).toBe(marks)
+    }
+  })
+
+  it('a friend arriving on the other end while the plank is still swinging stops the swing short of the sand when that end is no longer the heavier', () => {
+    for (const gap of [0.04, 0.1, 0.2, 0.3]) {
+      const game = made([], [])
+      run(game, 0.5)
+      // Mog from the right goes to the right end; Dot is carried to the left end and let go so that it lands just after.
+      game.press({ kind: 'friend', id: 'dot' })
+      game.dragStart()
+      game.dragTo({ x: -PLANK.seat, z: PLANK.z }, null)
+      run(game, 0.4)
+      tapOn(game, 'mog')
+      const cues: Cue[] = [...run(game, 0.45 + gap).cues]
+      game.press({ kind: 'friend', id: 'dot' })
+      game.dragEnd()
+      cues.push(...run(game, 6).cues)
+      expect(weightOnEnds(game), `${gap}`).toEqual([3, 3])
+      expect(Math.abs(game.play.plank.tilt), `${gap}`).toBeLessThan(0.1)
+    }
+  })
+
+  it('Mog and Bo each say that they are high though the friend who lifts them was tapped almost at once', () => {
+    const heard = (cues: Cue[], voice: readonly Part[]) => cues.filter((cue) => cue.type === 'voice' && JSON.stringify(cue.parts) === JSON.stringify(voice)).length
+    for (const gap of [0.1, 0.3, 0.6]) {
+      // Bo to the right end, then Mog (carried) to the left: Mog ends up high.
+      const game = made([], [])
+      run(game, 0.5)
+      tapOn(game, 'bo')
+      run(game, gap)
+      game.press({ kind: 'friend', id: 'mog' })
+      game.dragStart()
+      game.dragTo({ x: -PLANK.seat, z: PLANK.z }, null)
+      run(game, 0.3)
+      game.dragEnd()
+      const { cues } = run(game, 7)
+      expect(game.play.arrangement.left, `${gap}`).toEqual(['mog'])
+      expect(heard(cues, purr()), `${gap}`).toBeGreaterThanOrEqual(1)
+    }
+  })
+})
+
 describe('a tap on the plank', () => {
   it('never brings the lighter end down, nor a level or empty plank to the sand: it dips, springs back, and marks nothing new', () => {
     const bare = tap(layout(rideOf('little-asks', 0)), 'pim')

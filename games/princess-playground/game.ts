@@ -615,9 +615,10 @@ export class Game implements Director {
       }
       if (landing) {
         delete this.landings[event.id]
-        this.react(reactionsTo(landing))
-        // Landed on the end that is up: the cell has said what it makes of being high.
-        if (this.high(event.id)) this.perch[event.id] = 'said'
+        const answers = reactionsTo(landing)
+        this.react(answers)
+        // The cell has said what it makes of being high, if it did: Mog's purr with his slow blink, Bo's chuckle.
+        if (this.high(event.id) && answers.some((r) => r.who === event.id && (r.act === 'chuckle' || (r.act === 'tall' && r.blink)))) this.perch[event.id] = 'said'
         // Bo on the low end digs it in: a crater under that end, and a ring of sand flies.
         if (event.id === 'bo' && landing.deed === 'low-end' && landing.end) {
           const x = (landing.end === 'left' ? -1 : 1) * PLANK.halfLength * Math.cos(this.play.plank.tilt)
@@ -686,6 +687,12 @@ export class Game implements Director {
     } else this.voice(v.twang())
   }
 
+  /** This friend sits on the end that is up. */
+  private onUpEnd(id: FriendId): boolean {
+    const a = this.play.sitting, place = placeOf(a, id)
+    return place.at === 'end' && lean(a) === (place.end === 'left' ? 1 : -1)
+  }
+
   /** The arrangement has this friend where it likes to be: high. */
   private high(id: FriendId): boolean {
     // By who sits: a friend in the hand is not on the plank, and is not high itself.
@@ -718,7 +725,9 @@ export class Game implements Director {
         continue
       }
       if (this.perch[id] === 'said') continue
-      if (this.play.asking?.id === id) {
+      // The one who asks says it in the ending of its own ride, when the plank has carried it up; on top of a stack on
+      // the low end it has not got there yet, and purrs as anyone would.
+      if (this.play.asking?.id === id && this.onUpEnd(id)) {
         this.perch[id] = 'said'
         continue
       }

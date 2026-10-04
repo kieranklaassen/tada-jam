@@ -1,4 +1,4 @@
-import { lowTilt } from './world'
+import { MAX_TILT, lowTilt } from './world'
 
 // The plank as a thing with weight: it turns toward its heavier end, faster
 // the bigger the difference, knocks on the sand, rebounds a little and comes
@@ -32,6 +32,8 @@ export const SETTLE_SPEED = 0.5
 /** A level plank is pulled back to level this hard, and loses its sway this slowly. */
 export const LEVEL_SPRING = 16
 export const LEVEL_DRAG = 0.7
+/** How far short of the sand an end that is no heavier than the other is turned back: radians. */
+export const CLEAR_OF_SAND = 0.05
 /** An empty plank loses its sway this fast: it lies still within a second. */
 export const EMPTY_DRAG = 7
 /** How fast an end that has been lightened comes up out of the hollow it dug, radians a second. */
@@ -52,6 +54,18 @@ export function stepPlank(state: PlankState, left: number, right: number, dt: nu
   }
   state.spin += pull * dt
   state.tilt += state.spin * dt
+  // Only the heavier end comes down on the sand. An end that is no heavier than the other, however it was set
+  // swinging (a landing, a finger drumming on it, a rider who has since left), stops short of the sand and is turned
+  // back: the tilt follows the two totals and nothing else.
+  const downWeight = state.tilt > 0 ? right : left, upWeight = state.tilt > 0 ? left : right
+  if (downWeight <= upWeight) {
+    const floor = MAX_TILT - CLEAR_OF_SAND
+    if (Math.abs(state.tilt) > floor && Math.sign(state.spin) === Math.sign(state.tilt)) {
+      state.tilt = Math.sign(state.tilt) * floor
+      state.spin = -state.spin * 0.2
+    }
+    return null
+  }
   // The end that is going down stops in the sand, deeper the more it carries.
   const limit = lowTilt(state.tilt > 0 ? right : left)
   if (Math.abs(state.tilt) < limit) return null

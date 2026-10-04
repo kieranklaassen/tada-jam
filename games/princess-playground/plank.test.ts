@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { atRest, stepPlank, type Knock, type PlankState } from './plank'
+import { atRest, nudge, stepPlank, type Knock, type PlankState } from './plank'
 import { MAX_TILT, lowTilt } from './world'
 
 const DT = 1 / 120
@@ -26,6 +26,29 @@ describe('the plank', () => {
     expect(lowTilt(0)).toBe(MAX_TILT)
     expect(lowTilt(2)).toBe(MAX_TILT)
     for (let weight = 3; weight <= 12; weight++) expect(lowTilt(weight)).toBeGreaterThan(lowTilt(weight - 1))
+  })
+
+  it('only the heavier end ever comes down on the sand, however the plank is pushed', () => {
+    // Every pair of weights two ends can carry, with hard pushes either way at random moments.
+    let seed = 7
+    const random = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff }
+    for (const [left, right] of [[0, 0], [2, 0], [0, 4], [3, 3], [2, 3], [4, 3], [5, 7], [6, 6], [9, 3], [4, 8]] as const) {
+      const state = { tilt: 0, spin: 0 }
+      let low = 0, high = 0
+      for (let i = 0; i < 6000; i++) {
+        if (random() < 0.02) nudge(state, (random() - 0.5) * 6)
+        const knock = stepPlank(state, left, right, DT)
+        if (knock) {
+          const down = knock.end === 'left' ? left : right, up = knock.end === 'left' ? right : left
+          expect(down, `${left} | ${right}`).toBeGreaterThan(up)
+        }
+        low = Math.min(low, state.tilt)
+        high = Math.max(high, state.tilt)
+      }
+      // The lighter end, and both ends of a level or empty plank, stay clear of the sand.
+      if (left <= right) expect(low, `${left} | ${right}`).toBeGreaterThan(-MAX_TILT + 0.04)
+      if (right <= left) expect(high, `${left} | ${right}`).toBeLessThan(MAX_TILT - 0.04)
+    }
   })
 
   it('never passes through the sand', () => {

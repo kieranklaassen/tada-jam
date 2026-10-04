@@ -232,6 +232,11 @@
 - An empty plank comes level and lies still within a second, so the showing that a touch on the waiting friend sets going begins soon for every kind; the first ride's had waited nine seconds for the emptied plank to stop swaying. The sheet says where everyone hops when a showing is due (listed above).
 - The tilt follows the totals here too: a friend tapped off again just after landing left the plank swinging on, and the end it had left could come down, bite and throw. A swing toward an end that is no longer the heavier now loses nearly all its speed the moment the rider leaves.
 
+**Built after the nineteenth reading.** Rules 1 to 5 clean; three things under rule 6, all of them about what happens when the child is quick.
+
+- **Only the heavier end ever comes down on the sand**, as a rule of the plank itself (`plank.ts`): an end that is no heavier than the other is turned back just short of the sand, however it was set swinging. A finger drumming on the lighter end, and a friend arriving on the other end mid-swing, could still knock it down; the cures before this one each covered one way of pushing. A test pushes the plank hard at random with every pair of weights.
+- Mog and Bo say that they are high though the friend who lifts them was tapped almost at once: a landing marks it as said only when the landing's own cell said it. Mog asking, left on top of a stack on the low end, purrs.
+
 **Found by this lane while checking those.**
 
 - A friend held on the picture of the plank's end did not land on the plank: carried friends hung under the finger, high over the tray, so it hung over the sand in front and came down there. A first cure read the finger at the height of a seated friend; it took too much of the sand for the plank and was replaced after the thirteenth reading (above): a carried friend now hangs over the place the finger points at. The audit's own "carried" moment had been dropping friends in the sand all along; it now really lands them on the ends, onto a friend and over the middle.
