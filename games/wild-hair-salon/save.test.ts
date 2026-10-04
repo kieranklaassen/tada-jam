@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { LADDER } from './config'
 import { letIn } from './cycle'
-import { MAX_CLIPPINGS, MAX_LEN, MIN_LEN, PLAIN, TAIL_LEN, TUFTS } from './rules'
+import { MAX_CLIPPINGS, MAX_LEN, MIN_LEN, MODEL_MAX, MODEL_MIN, PLAIN, TAIL_LEN, TUFTS } from './rules'
 import { FIRST_PAIR, deserializeGame, freshGame, serializeGame, type Game } from './save'
 import { STATE_VERSION } from './state'
 import { CUSTOMERS } from './tastes'
@@ -17,7 +17,7 @@ function largest(): Game {
   const clipping: Clipping = { len: MAX_LEN, hue: longest([...CUSTOMERS, 'ribbon'] as const), on: 'face', who: 'friend', spot: 'brow' }
   return {
     ...seated(6), position: longest(LADDER), finished: true, cape: 'off', seed: 0xffffffff,
-    chair: 'poodle', friend: 'rabbit', waiting: ['rabbit', 'poodle'], lock: MAX_LEN, model: MAX_LEN,
+    chair: 'poodle', friend: 'rabbit', waiting: ['rabbit', 'poodle'], lock: MAX_LEN, model: MODEL_MAX,
     mane: Array(TUFTS).fill(MAX_LEN), ribbon: { len: MAX_LEN, at: 'face', who: 'friend' },
     clippings: Array(MAX_CLIPPINGS).fill(clipping), shown: { snip: true, pull: true, ribbon: true },
   }
@@ -108,7 +108,9 @@ describe('the saved salon', () => {
   it('brings every length back inside what a strip can be', () => {
     const back = deserializeGame({ ...serializeGame(seated(4)), lock: 9999, model: -5, mane: [1e9, -1, 3.7, Number.NaN, 'x', 50], ribbon: { len: 0.2, at: 'peg' } })
     expect(back.lock).toBe(MAX_LEN)
-    expect(back.model).toBe(MIN_LEN)
+    // The friend's lock is the model, and a model is never shorter or longer than one that is dealt.
+    expect(back.model).toBe(MODEL_MIN)
+    expect(deserializeGame({ ...serializeGame(seated(4)), model: 9999 }).model).toBe(MODEL_MAX)
     expect(back.mane).toHaveLength(TUFTS)
     for (const steps of back.mane) expect(Number.isInteger(steps) && steps >= MIN_LEN && steps <= MAX_LEN).toBe(true)
     expect(back.mane.slice(0, 3)).toEqual([MAX_LEN, MIN_LEN, MIN_LEN])

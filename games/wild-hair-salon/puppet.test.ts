@@ -121,12 +121,21 @@ describe('the puppet', () => {
     expect(Math.abs(puppet.at('blink'))).toBeLessThan(0.02)
   })
 
+  it('gives every customer eyes that go from its own lock to the other and back', () => {
+    for (const who of CUSTOMERS) {
+      const looks = PERSONALITIES[who].reactions.wantsItSo[0].moves.filter((m) => m.part === 'lookX').sort((a, b) => a.at - b.at)
+      expect(looks.length, who).toBe(3)
+      expect(looks[1].to, who).toBeGreaterThan(looks[0].to)
+      expect(looks[2].to, who).toBe(looks[0].to)
+    }
+  })
+
   it('looks from one thing to another the way round it is asked: as written, the other way, or only its second look the other way', () => {
-    const looks = (turned: boolean | 'second'): { first: number; second: number } => {
+    const looks = (turned: boolean | 'second'): { first: number; second: number; back: number } => {
       const puppet = new Puppet(LION, makeRng(5)), seen: number[] = []
       puppet.react('wantsItSo', turned)
       for (let i = 0; i < 90; i++) { puppet.step(1 / 60, false); seen.push(puppet.at('lookX')) }
-      return { first: seen[25], second: seen[70] }
+      return { first: seen[22], second: seen[55], back: seen[82] }
     }
     // Both things on its right: its own lock, and the friend's beyond it.
     expect(looks(false).first).toBeGreaterThan(0.2)
@@ -137,6 +146,10 @@ describe('the puppet', () => {
     // Its own lock on its right and the friend's across the room on its left.
     expect(looks('second').first).toBeGreaterThan(0.2)
     expect(looks('second').second).toBeLessThan(-0.5)
+    // And back to its own, on its right again.
+    expect(looks('second').back).toBeGreaterThan(0.2)
+    expect(looks(false).back).toBeGreaterThan(0.2)
+    expect(looks(true).back).toBeLessThan(-0.2)
   })
 
   it('reacts with one of its own reactions, knows how long it lasts, and can be put to rest at once', () => {

@@ -226,7 +226,7 @@ export function capeComesOff(cast: Cast, before: Game, after: Game, showing: Sho
     // The two ends meet in its paw, and the two locks swing as one.
     beats.push(
       over(2.1, 0.4, (p) => reach(p, lock.x + 18, modelEnd)),
-      cueAt(2.5, () => { staging.fx = { kind, muddle: showing.comparison.muddle }; if (!cast.cut) { customer?.react(reaction); other?.react(reaction); cast.cue('asLong', chair); cast.say(chair, reaction) } }),
+      cueAt(2.5, () => { staging.fx = { kind, muddle: showing.comparison.muddle }; if (!cast.cut) { customer?.react(reaction); other?.react(reaction); cast.cue('asLong', chair); cast.say(chair, reaction); cast.say(friend, reaction) } }),
       over(2.5, 0.5, () => paw(lock.x + 18, modelEnd)),
       cueAt(3.0, () => { if (!cast.cut) { hair.strands.lock.swing.v = 2.4; hair.strands.model.swing.v = 2.4; hair.moodOf('wave', 1.4); customer?.bump(0.7); other?.bump(0.7) } }),
     )

@@ -1,6 +1,6 @@
 import { layOut } from './deal'
 import { makeRng, toSeed } from './rng'
-import { MAX_CLIPPINGS, MAX_LEN, MIN_LEN, TAIL_LEN, TUFTS, toLength } from './rules'
+import { MAX_CLIPPINGS, MAX_LEN, MIN_LEN, MODEL_MAX, MODEL_MIN, TAIL_LEN, TUFTS, toLength } from './rules'
 import { STATE_VERSION, deserialize, freshState, serialize, type GameState } from './state'
 import { isCustomer, type CustomerId } from './tastes'
 import { FACE_SPOTS, type Clipping, type Ribbon, type Salon, type Who } from './world'
@@ -94,7 +94,8 @@ export function deserializeGame(raw: unknown, childAge: number | null = null): G
     ...base,
     chair: pair?.chair ?? null, friend: pair?.friend ?? null, waiting, seed,
     lock: isNumber(raw.lock) ? toLength(raw.lock) : fallback.lock,
-    model: isNumber(raw.model) ? toLength(raw.model) : fallback.model,
+    // A friend's lock is never outside what is dealt, whatever a damaged save says. With nobody in the salon there is none.
+    model: isNumber(raw.model) ? (pair ? Math.max(MODEL_MIN, Math.min(MODEL_MAX, toLength(raw.model))) : toLength(raw.model)) : fallback.model,
     seat: raw.seat === 'beside' || raw.seat === 'across' ? raw.seat : fallback.seat,
     // The cape is off with nobody in the chair, and in a cycle that has been judged; anything else opens with it on.
     cape: !pair || (raw.cape === 'off' && base.finished) ? 'off' : 'on',

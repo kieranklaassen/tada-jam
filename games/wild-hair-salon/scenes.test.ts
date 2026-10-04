@@ -162,6 +162,29 @@ describe('the cape coming off', () => {
     expect(c.staging.paw).toBeNull()
   })
 
+  it('sounds the friend\'s own move too when the two ends meet: a yak that is the friend hums as it rocks', () => {
+    const before = seated({ chair: 'lion', friend: 'yak', lock: 50, model: 50 }), done = capeOff(before), c = cast(done.game)
+    playThrough(capeComesOff(c, before, done.game, done.showing!))
+    expect(c.said).toEqual(expect.arrayContaining(['lion lockAsLong', 'yak lockAsLong']))
+    expect(c.friend()!.started).toContain(PERSONALITIES.yak.reactions.lockAsLong[0].id)
+  })
+
+  it('has the lion pat for a lock that is too short, with his own paw, once the paw that felt for it has gone home', () => {
+    const before = seated({ chair: 'lion', friend: 'poodle', lock: 20, model: 50 }), done = capeOff(before), c = cast(done.game)
+    const scene = new Scene(capeComesOff(c, before, done.game, done.showing!))
+    let both = 0, pats = 0
+    scene.start(0, () => {})
+    for (let t = 0; scene.running && t < 12; t += 1 / 60) {
+      scene.update(t)
+      c.customer()!.step(1 / 60, false)
+      const own = c.customer()!.at('paw') > 0.5
+      if (own) pats++
+      if (own && c.staging.paw) both++
+    }
+    expect(pats).toBeGreaterThan(10)
+    expect(both).toBe(0)
+  })
+
   it('has the customer take hold of a lock that is too long level with the friend\'s end, and the piece below flaps the more the longer it is', () => {
     const flaps = (lock: number): number => {
       const before = seated({ lock, model: 40 }), done = capeOff(before), c = cast(done.game)
