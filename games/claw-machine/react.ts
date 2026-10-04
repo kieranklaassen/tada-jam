@@ -213,6 +213,7 @@ export function react(game: Game, deed: Deed): void {
     case 'thrown-back': {
       const body = game.bodies[deed.toy]
       // Caught, bobbled once where it was caught, and thrown back: by then the claw has backed off.
+      thrown.delete(body)
       const caught = ledgePoint(game)
       send(game, body, deed.toy, [{ at: caught, landing: 'again', seconds: 0.42 }, { at: caught, landing: 'again', seconds: 0.3, peak: caught.y + 0.3 }, ...backOverTheCrew(game, deed.toy, caught, deed.heavy ? 1 : 2.5)], deed)
       break
@@ -265,7 +266,9 @@ export function react(game: Game, deed: Deed): void {
     }
     case 'lean':
       game.waiting.forEach((actor, i) => { game.startAct(actor, 'lean', Math.sign(claw.vx) || 1); game.say({ type: 'creak', nth: i }) })
-      if (game.waiting.length === 0) game.say({ type: 'creak', nth: 0 })
+      // With crates on the ledge it is the crates, riders and all, that lean out of the way, one after the other.
+      game.crates.forEach((crate, i) => { crate.leans = -i * 0.12; game.say({ type: 'creak', nth: i }) })
+      if (game.waiting.length === 0 && game.crates.length === 0) game.say({ type: 'creak', nth: 0 })
       break
     case 'double-ding':
       game.say({ type: 'double-ding' })
@@ -286,6 +289,8 @@ export function react(game: Game, deed: Deed): void {
     }
     case 'stare':
       for (const actor of game.waiting) game.startAct(actor, 'stare')
+      // With crates on the ledge the crates stand up on their carts to see.
+      for (const crate of game.crates) crate.peers = 0
       game.say({ type: 'stare' })
       break
     case 'hum':
@@ -306,6 +311,9 @@ export function react(game: Game, deed: Deed): void {
   }
 }
 
+/** How many turns of its way back from the ledge a thrown toy has made. */
+const thrown = new WeakMap<Body, number>()
+
 /** One leg of a flight has ended and the next begins: what is heard and done at the turn. */
 export function nextLeg(game: Game, body: Body, toy: number, deed: Deed | undefined): void {
   const next = body.legs.shift()
@@ -324,9 +332,15 @@ export function nextLeg(game: Game, body: Body, toy: number, deed: Deed | undefi
   }
   if (deed?.type === 'bounce') game.say({ type: 'boing' })
   else if (deed?.type === 'thrown-back') {
+    // Caught, then thrown, then (for the back row) a bounce on the place in front: each is heard once.
+    const turn = thrown.get(body) ?? 0
+    thrown.set(body, turn + 1)
     const waiter = nearestWaiter(game, body.x)
-    if (deed.heavy) { for (const one of game.waiting) game.startAct(one, 'heave'); game.say({ type: 'grunt' }); game.say({ type: 'huff' }) }
-    else { if (waiter) game.startAct(waiter, 'catch'); game.say({ type: 'slap' }); game.say({ type: 'whistle' }) }
+    if (turn === 0) {
+      if (deed.heavy) { for (const one of game.waiting) game.startAct(one, 'heave'); game.say({ type: 'grunt' }) }
+      else { if (waiter) game.startAct(waiter, 'catch'); game.say({ type: 'slap' }) }
+    } else if (turn === 1) game.say(deed.heavy ? { type: 'huff' } : { type: 'whistle' })
+    else game.say({ type: 'boing' })
   } else if (deed?.type === 'gate-roll') {
     // On the gate: a small toy pings along its bars; a big one thuds onto it and then scrapes off. Past the gate
     // it only lands.

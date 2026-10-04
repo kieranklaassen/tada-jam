@@ -53,7 +53,6 @@ export type ClawEvent =
   | { type: 'chirp'; distance: number } // the finger landed and the trolley set off
   | { type: 'jaws' } // the jaws snapped open as it landed
   | { type: 'tick' } // a stud of travel
-  | { type: 'buffer'; side: -1 | 1; speed: number } // the trolley hit the end of the rail
   | { type: 'landed'; x: number; z: number; swing: number } // the jaws reached what was straight under the trolley
   | { type: 'closed' } // the jaws shut on what the scene gave them when they landed
   | { type: 'ratchet'; progress: number } // one click of the hoist
@@ -156,12 +155,11 @@ export function stepClaw(claw: Claw, rideY: number, landY: number, events: ClawE
     claw.vx *= Math.max(0, 1 - 30 * dt); claw.vz *= Math.max(0, 1 - 30 * dt)
   }
   claw.x += claw.vx * dt; claw.z += claw.vz * dt
-  // The buffers at either end of the rail.
+  // The ends of the rail: the trolley stops there and bounces a little. (The game rings the bell that stands there.)
   for (const side of [-1, 1] as const) {
     const end = side < 0 ? RAIL.minX : RAIL.maxX
     if ((claw.x - end) * side > 0) {
       claw.x = end
-      if (claw.vx * side > 6) events.push({ type: 'buffer', side, speed: Math.abs(claw.vx) })
       claw.vx = -claw.vx * 0.25
     }
   }

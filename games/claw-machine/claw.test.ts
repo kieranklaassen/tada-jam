@@ -125,13 +125,13 @@ describe('the claw', () => {
     expect(claw.load).toBe(0)
   })
 
-  it('rings the buffer when it is run hard into the end of the rail', () => {
+  it('stops at the end of the rail when it is run hard into it', () => {
     const claw = newClaw(RAIL.maxX - 6, 6, RIDE), events: ClawEvent[] = []
     // A target beyond the rail is held at its end; the trolley arrives at speed and bounces.
     claw.targetX = RAIL.maxX + 6
     run(claw, 0.6, events)
-    expect(events.some((event) => event.type === 'buffer' && event.side === 1)).toBe(true)
     expect(claw.x).toBeLessThanOrEqual(RAIL.maxX)
+    expect(claw.x).toBeGreaterThan(RAIL.maxX - 1)
   })
 
   it('plays the same touches the same way every time', () => {

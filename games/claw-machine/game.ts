@@ -77,6 +77,9 @@ export type CrateBody = {
   tip: number
   /** In the jaws: it hangs from its handle under the claw. */
   carried: boolean
+  /** Seconds since it began to lean out of the way of a swing, or to stand up to see what waits above it; -1 when it does neither. */
+  leans: number
+  peers: number
 }
 
 /** What becomes of a toy that is on a gobbler's tongue. */
@@ -88,6 +91,9 @@ export type Plan =
 export const REACH = 4.6
 /** How far from the way of a thrown toy the claw backs off: half the longest toy and the reach of its own open jaws. */
 const CLEAR_OF_A_THROW = 6.5
+/** How long a crate on the ledge leans out of the way of a swing, and how long it stands up to see what waits above it. */
+export const LEANS_FOR = 0.7
+export const PEERS_FOR = 1.6
 /** How a gobbler under the claw is standing now, worked out afresh each time it is asked. */
 const standing: Pose = restPose({} as Pose)
 /** How long after it lets a toy go the claw backs off: the toy has dropped out of its jaws by then, and nothing has been thrown yet. */
@@ -189,7 +195,7 @@ export class Game {
   arrangeCrates(): void {
     this.crates = this.world.crates.map((crate, which) => {
       const laid = layCycle(crate.from, crate.seed), at = crateSpot(which, this.world.crates.length)
-      return { from: crate.from, seed: crate.seed, which, toys: laid.toys, places: placesFor(crate.seed).slice(0, laid.toys.length), crews: laid.crews, x: at.x, y: CRATE_STANDS, z: at.z, away: 0, tip: 0, carried: false }
+      return { from: crate.from, seed: crate.seed, which, toys: laid.toys, places: placesFor(crate.seed).slice(0, laid.toys.length), crews: laid.crews, x: at.x, y: CRATE_STANDS, z: at.z, away: 0, tip: 0, carried: false, leans: -1, peers: -1 }
     })
   }
 
@@ -465,6 +471,10 @@ export class Game {
     this.leaving = this.leaving.filter((actor) => !(actor.walk === null && actor.role === 'leaving'))
     this.gateShake = Math.max(0, this.gateShake - STEP / 0.5)
     stepWatcher(this.watcher, STEP)
+    for (const crate of this.crates) {
+      if (crate.leans >= 0 && (crate.leans += STEP) > LEANS_FOR) crate.leans = -1
+      if (crate.peers >= 0 && (crate.peers += STEP) > PEERS_FOR) crate.peers = -1
+    }
     // A crate in the jaws hangs from its handle under the hub.
     for (const crate of this.crates) if (crate.carried) {
       const hub = hubAt(claw), handle = handleSpot()
@@ -487,17 +497,27 @@ export class Game {
     if (target.on !== 'rail-end' || claw.phase !== 'ready') { this.runPeak = 0; this.buffered = false; return }
     const end = target.side * RAIL.maxX
     this.runPeak = Math.max(this.runPeak, claw.vx * target.side)
-    if (this.buffered || Math.abs(claw.x - end) > 0.8 || this.runPeak < 45) return
-    this.buffered = true
-    claw.vx = -target.side * 14
-    this.carry(clawSwingsInto(this.world, target, target.side, this.held >= 0))
+    if (this.buffered || Math.abs(claw.x - end) > 0.8) return
+    // Run hard into the end, the trolley bounces back a stud and the bell rings twice; slid up to it gently, the
+    // bell rings once. (A tap rings it when the claw lands on it.)
+    if (this.runPeak >= 45) {
+      this.buffered = true
+      claw.vx = -target.side * 14
+      this.carry(clawSwingsInto(this.world, target, target.side, this.held >= 0))
+    } else if (claw.following) {
+      this.buffered = true
+      this.say({ type: 'bell' })
+      claw.swingVX += target.side * 2
+    }
   }
 
   /** The claw held still over one thing: after a moment the thing notices, once for each hold. */
   private watchWaiting(): void {
     const claw = this.claw
     const waiting = claw.following && claw.phase === 'ready' && Math.hypot(claw.vx, claw.vz) < 1.5 && Math.hypot(claw.targetX - claw.x, claw.targetZ - claw.z) < 0.6 && !this.scene
-    if (!waiting) { this.still = 0; this.waitsAbove = null; if (!claw.following) { this.noticed = false; for (const actor of this.crew) actor.openT = -1 } return }
+    // When the claw moves on, the wait is over: the gobbler under it shuts its mouth, and the next thing the claw
+    // comes to rest above notices it in its turn, in the same touch or the next.
+    if (!waiting) { this.still = 0; this.waitsAbove = null; this.noticed = false; for (const actor of this.crew) actor.openT = -1; return }
     this.still += STEP
     if (this.noticed || this.still < WAIT_SECONDS) return
     this.noticed = true
@@ -505,6 +525,9 @@ export class Game {
     this.waitsAbove = deed.type === 'spread-jaws' ? 'toy' : deed.type === 'breathe' ? 'studs' : null
     this.carry(deed)
   }
+
+  /** The claw was sent down before the ending of the cycle began, and has not landed yet. */
+  sentBeforeTheEnding = false
 
   /** What the claw has been waiting above long enough to be noticed: a toy, bare studs, or neither. Its shadow shows it. */
   waitsAbove: 'toy' | 'studs' | null = null
@@ -515,7 +538,15 @@ export class Game {
     else if (event.type === 'jaws') this.say({ type: 'jaws' })
     else if (event.type === 'tick') this.say({ type: 'tick' })
     else if (event.type === 'ratchet') this.say({ type: 'ratchet', progress: event.progress, heavy: claw.load })
-    else if (event.type === 'landed') { this.say({ type: 'clack' }); this.carry(clawLands(this.world, this.pending)) }
+    else if (event.type === 'landed') {
+      this.say({ type: 'clack' })
+      // The cycle ends in the rules on the last let-go, but its crates come onto the ledge only when the ending
+      // has played. Until then the ledge is a bare ledge: the claw rattles its gate and takes nothing.
+      // The same holds for a claw that was already on its way down when the ending began.
+      const bare = this.pending.on === 'ledge' && this.world.finished && (this.crates.length === 0 || this.sentBeforeTheEnding)
+      this.sentBeforeTheEnding = false
+      this.carry(bare ? { type: 'gate-rattle' } : clawLands(this.world, this.pending))
+    }
     else if (event.type === 'closed') {
       if (this.held >= 0) {
         const where = this.world.cycle.where[this.held]

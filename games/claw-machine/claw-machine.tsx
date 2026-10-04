@@ -217,7 +217,10 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       cancelAnimationFrame(frame)
       frame = 0
       clock.rest()
-      act(touch.clear())
+      // The touch is ended and nothing is done with it: the claw stays as it is, with whatever it holds, so that
+      // putting the game away never makes a move the child did not make.
+      if (touch.clear().length > 0) { game?.cancel(); dropped = false; poked = false }
+      hear()
       cadence.settle(performance.now())
     })
     attendRef.current = (attended) => attention.set(attended)

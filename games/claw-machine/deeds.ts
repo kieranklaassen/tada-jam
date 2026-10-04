@@ -102,13 +102,6 @@ export function toyLetGo(world: World, toy: number, aimed: Target): Deed {
   const stand = (place: number) => { const level = tray[place].length; cycle.where[toy] = { at: 'tray', place, level }; return level }
   if (target.on === 'place') {
     const stack = tray[target.place], at = placeAt(target.place)
-    if (stack.length >= STACK_MOST) {
-      // A stack of three takes no more: the toy bounces off its top onto the nearest place with room.
-      const room = nearestWithRoom(tray, at.x, at.z, target.place)
-      const place = room >= 0 ? room : freePlace(tray, at.x, at.z, target.place)
-      stand(place)
-      return { type: 'bounce', toy, off: target.place, place }
-    }
     if (heavy && stack.length >= 2) {
       // Too heavy on top: the stack comes down toy by toy, top first, each onto its own free place.
       const moved: { toy: number; place: number }[] = []
@@ -121,6 +114,13 @@ export function toyLetGo(world: World, toy: number, aimed: Target): Deed {
         moved.push({ toy: one, place })
       }
       return { type: 'topple', moved }
+    }
+    if (stack.length >= STACK_MOST) {
+      // A stack of three takes no more: the toy bounces off its top onto the nearest place with room.
+      const room = nearestWithRoom(tray, at.x, at.z, target.place)
+      const place = room >= 0 ? room : freePlace(tray, at.x, at.z, target.place)
+      stand(place)
+      return { type: 'bounce', toy, off: target.place, place }
     }
     return { type: 'click', toy, place: target.place, level: stand(target.place), heavy }
   }

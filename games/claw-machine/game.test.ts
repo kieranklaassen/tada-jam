@@ -3,7 +3,7 @@ import { MINI } from './belly'
 import { STEP } from './claw'
 import type { GameEvent } from './events'
 import { newGame } from './gameScenes'
-import { feed, playCycle, sortAll, tap, watch } from './play'
+import { aimOn, feed, playCycle, sortAll, tap, watch } from './play'
 import { CRATE, placeAt } from './places'
 import { toySpan } from './builds'
 import { shapeOf } from './gobblers'
@@ -124,6 +124,67 @@ describe('the game', () => {
     expect(snapshot(game.world)).toBe(before)
     expect(game.crew.length).toBe(2)
     expect(game.takeEvents()).toEqual([])
+  })
+
+  it('takes the ledge for a bare ledge while the last toy is still being swallowed, and the ending still plays', () => {
+    const game = begun('two-colours')
+    const last = game.world.cycle.toys.length - 1
+    for (let toy = 0; toy < last; toy++) feed(game, toy)
+    tap(game, { on: 'place', place: (game.world.cycle.where[last] as { place: number }).place }, 2.2)
+    game.point(aimOn(game, { on: 'gobbler', slot: homeOf(game.world, last) }), true)
+    game.lift()
+    for (let t = 0; t < 4 && !game.world.finished; t += STEP) game.advance(STEP)
+    expect(game.world.finished).toBe(true)
+    expect(game.crates.length).toBe(0)
+    // The crates of the next load are not on the ledge yet: the claw rattles the gate and takes nothing.
+    const events = [...game.takeEvents(), ...tap(game, { on: 'ledge', which: 0 }, 2.5), ...watch(game)]
+    expect(types(events)).toContain('ring')
+    expect(types(events)).toContain('slide-in')
+    expect(game.crates.length).toBe(2)
+    expect(game.scene).toBeNull()
+  })
+
+  it('is noticed by each thing it comes to wait above, in one touch', () => {
+    const game = begun('three-colours')
+    const stares = () => game.takeEvents().filter((event) => event.type === 'gargle').length
+    game.point(aimOn(game, { on: 'gobbler', slot: 0 }), true)
+    game.advance(2.5)
+    expect(stares()).toBeGreaterThan(0)
+    game.advance(2)
+    expect(stares()).toBe(0)
+    // The finger slides on without lifting, and stops over another gobbler.
+    game.point(aimOn(game, { on: 'gobbler', slot: 1 }), false)
+    game.advance(2.5)
+    expect(stares()).toBeGreaterThan(0)
+    game.lift()
+  })
+
+  it('rings the bell at the end of the rail once when the claw is slid up to it gently', () => {
+    const game = begun('three-colours')
+    game.point({ target: { on: 'place', place: 4 }, ...placeAt(4) }, true)
+    game.advance(1)
+    game.takeEvents()
+    const end = aimOn(game, { on: 'rail-end', side: 1 })
+    // A slow slide: the finger creeps to the end of the rail.
+    for (let x = game.claw.x; x < end.x; x += 0.05) { game.point({ ...end, x }, false); game.advance(STEP * 4) }
+    game.point(end, false)
+    game.advance(1.5)
+    expect(game.takeEvents().filter((event) => event.type === 'bell').length).toBe(1)
+    game.cancel()
+  })
+
+  it('makes no move when the game is put away in the middle of a drag', () => {
+    const game = begun('three-colours')
+    const where = game.world.cycle.where[0] as { place: number }
+    tap(game, { on: 'place', place: where.place }, 2.2)
+    expect(game.held).toBe(0)
+    const before = snapshot(game.world)
+    game.point(aimOn(game, { on: 'gobbler', slot: (homeOf(game.world, 0) + 1) % game.crew.length }), true)
+    game.advance(0.4)
+    game.cancel()
+    game.advance(6)
+    expect(game.held).toBe(0)
+    expect(snapshot(game.world)).toBe(before)
   })
 
   it('tips the same toys back out for the next crew when the gate is hooked', () => {

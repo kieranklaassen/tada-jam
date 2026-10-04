@@ -159,6 +159,8 @@ export function tipOut(game: Game, tipped: readonly number[]): void {
 export function ending(game: Game): void {
   const cycle = game.world.cycle
   game.arrangeCrates()
+  // A claw sent to the ledge before this began lands on a ledge that was bare when it was sent.
+  game.sentBeforeTheEnding = game.claw.dropOnArrival || game.claw.phase === 'dropping'
   for (const crate of game.crates) crate.away = 1
   const total = Math.max(1, cycle.toys.length)
   const gap = Math.min(0.5, Math.max(0.3, 3.2 / total))

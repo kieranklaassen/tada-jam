@@ -1,7 +1,7 @@
 import type { Body } from './bodies'
 import { holdOf } from './builds'
 import { hubAt } from './claw'
-import type { Actor, Game } from './game'
+import { LEANS_FOR, PEERS_FOR, type Actor, type Game } from './game'
 import { EYE, knobAt, rimHeight } from './gobblerBuild'
 import { crateSpot, crewSpot } from './layout'
 import { GOBBLER, shapeOf } from './gobblers'
@@ -324,7 +324,11 @@ export function gamePicture(game: Game, guidance: Guidance | null): Picture {
     crates: game.crates.map((crate) => ({
       key: `${crate.from}-${crate.seed}-${crate.toys.length}-${crate.crews.length}`, which: crate.which, toys: crate.toys, places: crate.places, crews: crate.crews,
       // A crate that waits rocks a little on its foot: its riders cannot sit still.
-      x: crate.x + crate.away * AWAY * (crate.x < 0 ? -1 : 1), y: crate.y + (crate.carried || game.scene ? 0 : 0.07 * Math.abs(Math.sin(game.time * 2.6 + crate.which))), z: crate.z, tip: crate.tip,
+      // On the ledge it leans out of the way of a swing, away from the middle, and stands up on its cart to see
+      // what waits above it.
+      x: crate.x + crate.away * AWAY * (crate.x < 0 ? -1 : 1) + (crate.leans > 0 ? 0.7 * Math.sin((crate.leans / LEANS_FOR) * Math.PI) * (crate.x < 0 ? -1 : 1) : 0),
+      y: crate.y + (crate.carried || game.scene ? 0 : 0.07 * Math.abs(Math.sin(game.time * 2.6 + crate.which))) + (crate.peers >= 0 ? 0.5 * Math.sin((crate.peers / PEERS_FOR) * Math.PI) * (0.6 + 0.4 * Math.abs(Math.sin(crate.peers * 9))) : 0),
+      z: crate.z, tip: crate.tip,
     })),
     // Left alone, the claw is never quite still: the cable sways a hair and the jaws work a little.
     claw: {

@@ -151,6 +151,22 @@ describe('an error is a consequence', () => {
     }
   })
 
+  it('topples any stack of two or more that a big toy is let go on, a full one as well', () => {
+    for (const tall of [2, STACK_MOST]) {
+      // Small toys stacked on one place, found by trying each order in a world of its own.
+      const found = [11, 12, 13, 14, 15, 16].flatMap((seed) => {
+        const w = world(seed), smalls = toysOf(w, 'small'), base = smalls[0]
+        const place = placeOf(w, base)
+        for (const toy of smalls.slice(1)) { if (trayOf(w.cycle)[place].length < tall) toyLetGo(w, toy, { on: 'place', place }) }
+        return trayOf(w.cycle)[place].length === tall ? [{ w, place }] : []
+      })[0]
+      expect(found, `a stack of ${tall}`).toBeDefined()
+      const { w, place } = found
+      const big = toysOf(w, 'big').find((toy) => w.cycle.where[toy].at === 'tray')!
+      expect(toyLetGo(w, big, { on: 'place', place }).type, `a big toy on a stack of ${tall}`).toBe('topple')
+    }
+  })
+
   it('changes nothing when the claw only lands, waits or rings', () => {
     const w = world()
     const before = snapshot(w)
