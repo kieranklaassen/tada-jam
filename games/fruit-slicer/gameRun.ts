@@ -15,7 +15,7 @@ import { dogTaste } from './tastes'
 import type { VoiceId } from './voices'
 import type { Fruit } from './measure'
 import { CAST, type Customer } from './orders'
-import { eaten } from './world'
+import { MOST_EATEN, eaten } from './world'
 
 // The game while it runs: the game itself, what is moving, the cast, the
 // blade or the piece under the finger, the scene that is playing, and the
@@ -68,6 +68,8 @@ export type Scenery = {
   roller: Point | null
   /** The scene that is playing, or the last pose of the serve while a served customer stands at the window. */
   show: Show | null
+  /** The glider that is playing, whoever's it is. When it is the glider of a pelican that waits, `show` and `ending` are still the window's own: the serve that waits behind it, at its first moment, or the last pose. */
+  glide: Show | null
   /** The ending whose serve is playing: the taste lands on these pieces. Nothing once the scene is over. */
   ending: Ending | null
   /** A customer who has left the game and is still on its way out: the pelican, gliding, from the window or from its place in the queue, with the fruit it was fed across its beak. */
@@ -108,6 +110,8 @@ export class GameRun {
   private coming: { wait: number; reaction: Reaction; amount: number }[] = []
   /** What a customer does when a piece that is in the air reaches it: its gulp, its lick, the others' stare. */
   private arriving: { wait: number; act: () => void }[] = []
+  /** A serve that the same touch brought about as a glider for one who waits: it plays when the glider is over, so both are seen. */
+  private next: { beats: Parameters<typeof followedBy>[0]; show: Show; ending: Ending } | null = null
   private inAir = 0
   private hand: HandPose = { travel: 0, press: 0, opacity: 0 }
   private scene: Scene | null = null
@@ -258,7 +262,12 @@ export class GameRun {
   step(dt: number): void {
     this.clock += dt
     this.scene?.update(this.clock)
-    if (this.scene && !this.scene.running) this.sceneOver()
+    if (this.scene && !this.scene.running) {
+      const next = this.next
+      this.sceneOver()
+      // The serve that waited behind a glider plays now.
+      if (next) this.start(next.beats, next.show, next.ending)
+    }
     this.fx = step(this.fx, dt)
     // Juice that came down where somebody's face is: it licks it off, in its own way, unless it is busy with something else.
     for (const hit of this.fx.hits) {
@@ -304,8 +313,13 @@ export class GameRun {
     const look = hat ? { x: 0, y: -1 } : finger ? { x: (finger.x - MOUTH.x) / 420, y: (finger.y - MOUTH.y) / 260 } : null
     const carried = this.held ? { ids: this.held.held.ids, dx: this.held.at.x - this.held.held.dx - this.held.held.boxes[0].x, dy: this.held.at.y - this.held.held.dy - this.held.held.boxes[0].y } : null
     // With no scene playing, a served customer is in the last pose of its serve: that is what a load finds.
-    const show = this.show ?? (this.game.window && this.game.finished ? servedShow(eaten(this.game.world).length) : null)
-    return { game: this.game, fx: this.fx, dog: dogPose(this.dog, look), window: this.window, queue: this.queue, leavingActor: this.leavingActor, departing: this.departing, snacks: this.snacks, inAir: this.inAir, time, blade: this.blade, finger: finger ?? null, carried, roller: this.roller, show, ending: this.ending, leaving: this.leaving, glow: idle ? guidance.glow : 0, guide, hand }
+    const rest = this.game.window && this.game.finished ? servedShow(eaten(this.game.world).length) : null
+    // A glider playing for a pelican that waits is not the window's scene: the window shows its own, the serve waiting behind it or its last pose.
+    const elsewhere = this.show !== null && this.show.kind === 'glider' && this.leaving !== null && this.leaving.whom !== 'window'
+    const show = elsewhere ? (this.next ? this.next.show : rest) : (this.show ?? rest)
+    const ending = elsewhere ? (this.next ? this.next.ending : null) : this.ending
+    const glide = this.show !== null && this.show.kind === 'glider' ? this.show : null
+    return { game: this.game, fx: this.fx, dog: dogPose(this.dog, look), window: this.window, queue: this.queue, leavingActor: this.leavingActor, departing: this.departing, snacks: this.snacks, inAir: this.inAir, time, blade: this.blade, finger: finger ?? null, carried, roller: this.roller, show, glide, ending, leaving: this.leaving, glow: idle ? guidance.glow : 0, guide, hand }
   }
 
   /** A customer's pose, for the view: the one at the window or one who waits, and which of its bodies. */
@@ -367,6 +381,7 @@ export class GameRun {
 
   private sceneOver(): void {
     this.scene = null
+    this.next = null
     this.ending = null
     // The serve leaves its last pose, which is rebuilt from the game; the showing leaves the ruled rail; the glider leaves an empty window.
     this.show = null
@@ -398,6 +413,7 @@ export class GameRun {
     }
     let cuts = 0
     let showing: string | null = null
+    let glided = false
     const heads = { window: this.headAt(before, 'window') ?? undefined, 0: this.headAt(before, 0) ?? undefined, 1: this.headAt(before, 1) ?? undefined }
     for (const event of events) {
       this.fx = spawn(this.fx, event, heads)
@@ -510,7 +526,7 @@ export class GameRun {
               if (this.customerAt(whom) !== fed) return
               this.reactAs(whom, 'gulp')
               // What one who waits was given shows in its body, exactly as it went in, for a few seconds: it is in no state.
-              if (whom !== 'window') this.snacks = [...this.snacks.filter((one) => one.whom !== whom).slice(-5), ...this.snacks.filter((one) => one.whom === whom).slice(-5), { whom, length: piece.length, fruit: piece.fruit, age: 0 }]
+              if (whom !== 'window') this.snacks = [...this.snacks.filter((one) => one.whom !== whom), ...this.snacks.filter((one) => one.whom === whom), { whom, length: piece.length, fruit: piece.fruit, age: 0 }].slice(-2 * MOST_EATEN)
             },
           })
           break
@@ -537,6 +553,7 @@ export class GameRun {
         }
         case 'gliderAway': {
           // The glider all the same: the pelican that waited glides out from its place, and the one who joins steps in after it.
+          glided = true
           const show = restShow('glider')
           const gone = this.queue[event.whom]
           this.start(gliderBeats(show, cue), show, null)
@@ -568,7 +585,11 @@ export class GameRun {
           } else {
             const show = restShow('serve')
             const serve = serveBeats(show, event.ending, cue)
-            this.start(showing ? followedBy(showingBeats(show, customer, cue), serve) : serve, show, event.ending)
+            const beats = showing ? followedBy(showingBeats(show, customer, cue), serve) : serve
+            // The same touch sent a pelican that waits gliding off with a fruit taken from this tin, which left the tin fitting: the glider
+            // is seen first, every time, and the serve plays after it.
+            if (glided && this.scene?.running) this.next = { beats, show, ending: event.ending }
+            else this.start(beats, show, event.ending)
             // Sent off with a tin that will not shut: the two who wait have seen it.
             if (event.ending.outcome === 'badly') this.stare('window')
           }

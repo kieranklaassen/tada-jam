@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { FLIGHT_SECONDS } from './carry'
 import { SHEETS, poseOf, tuftBackAfter } from './cast'
-import { freshGame } from './cycle'
+import { call, crate, freshGame, give, type Game } from './cycle'
 import { CURL_FLIGHT, CURL_LIFE } from './fx'
 import { GameRun, RUN_GAP, RUN_STEP, SNACK_SECONDS, SWING } from './gameRun'
-import { CAST } from './orders'
+import { CAST, type Customer } from './orders'
 import { IdleLadder } from './guidance'
 import { WHOLE } from './measure'
 import { tinParts } from './orders'
@@ -13,7 +13,7 @@ import { TO_MOUTH_SECONDS, servedShow } from './scenes'
 import { headOf } from './seats'
 import { LANDS_AFTER, tinAt } from './moves'
 import { BOARD, CRATE, DOG, LANE_H, PX, QUEUE, ROLLER, SHELF_BOX, TIN, WINDOW, X0, laneTop, shown, type Box, type Point } from './stage'
-import { eaten, inTin, marksOf, onLane } from './world'
+import { cut, eaten, inTin, marksOf, onLane } from './world'
 
 const NEAR = laneTop(0) + LANE_H / 2
 const fresh = () => new GameRun(freshGame(null), 11)
@@ -340,6 +340,56 @@ describe('the glider, every time', () => {
   })
 })
 
+describe('the glider and a serve brought about by one touch', () => {
+  it('plays the glider first, every time, and the serve after it: a whole fruit taken out of the tin for a pelican that waits leaves the tin fitting', () => {
+    const pelican = (fruit: 'middle' | 'short'): Customer => ({ who: 'pelican', fruit, shares: [{ num: 1, den: 2 }], carries: null, written: true, lined: true })
+    const start = call(freshGame(null), 0).game
+    let game: Game = { ...start, window: pelican('middle'), queue: [start.queue[0], pelican('short')], world: { ...start.world, pieces: [] } }
+    // A whole fruit and a piece that is exactly the order lie in the tin together: far too long.
+    const whole = crate(game)
+    const second = crate(whole.game)
+    const made = cut(second.game.world, second.id, WHOLE.middle / 2)
+    if (made.kind !== 'cut') throw new Error('no cut')
+    game = give({ ...second.game, world: made.world }, whole.id, 0).game
+    game = give(game, made.left, 0).game
+    expect(game.finished).toBe(false)
+    expect(inTin(game.world, 0).map((piece) => piece.id)).toEqual([whole.id, made.left])
+    const run = new GameRun(game, 11)
+    // The whole fruit is carried out of the tin to the pelican that waits.
+    drag(run, { x: X0 + 100 * PX, y: TIN.bodyY + TIN.bodyH / 2 }, mid(QUEUE[1]), 1.5)
+    expect(run.game.finished).toBe(true)
+    expect(run.playing).toBe(true)
+    // The glider plays; the serve waits behind it at its first moment, lid up, nothing eaten, and is not heard yet.
+    const first = run.frame(0, BUSY)
+    expect(first).toMatchObject({ glide: { kind: 'glider' }, show: { kind: 'serve', lid: 0, bites: 0 }, ending: { fed: false, result: { kind: 'fit' } }, leaving: { whom: 1 } })
+    expect(ids(run)).not.toContain('click')
+    play(run, 4.5)
+    expect(run.frame(0, BUSY)).toMatchObject({ glide: { kind: 'glider' }, show: { lid: 0 } })
+    expect(ids(run)).not.toContain('click')
+    // The glider over, the serve plays from its start: the lid, its click, the piece eaten.
+    play(run, 1.2)
+    expect(run.playing).toBe(true)
+    expect(run.frame(0, BUSY)).toMatchObject({ glide: null, leaving: null, show: { kind: 'serve' }, ending: { result: { kind: 'fit' } } })
+    expect(run.frame(0, BUSY).show!.lid).toBeGreaterThan(0)
+    play(run, 8)
+    expect(ids(run)).toContain('click')
+    expect(run.playing).toBe(false)
+    expect(run.frame(0, BUSY)).toMatchObject({ glide: null, ending: null, show: servedShow(1) })
+  })
+
+  it('drops the serve that waits when a touch ends the glider: its outcome is in the game, and the last pose is what is left', () => {
+    const run = fresh()
+    run.tap(mid(QUEUE[0]))
+    drag(run, { x: X0 + 100, y: NEAR }, mid(QUEUE[1]), 1.5)
+    expect(run.playing).toBe(true)
+    run.press({ x: 300, y: BOARD.y - 30 })
+    run.end()
+    expect(run.playing).toBe(false)
+    play(run, 6)
+    expect(run.playing).toBe(false)
+  })
+})
+
 describe('the glider from the queue', () => {
   it('plays all the same for a pelican that waits: the queue and the stream are in the game before its first beat, and the window is as it was', () => {
     const run = fresh()
@@ -349,7 +399,8 @@ describe('the glider from the queue', () => {
     const seed = run.game.seed
     drag(run, { x: X0 + 100, y: NEAR }, mid(QUEUE[1]), 1.5)
     expect(run.playing).toBe(true)
-    expect(run.frame(0, BUSY)).toMatchObject({ show: { kind: 'glider' }, leaving: { whom: 1, customer: { who: 'pelican' } } })
+    // The glider is the scene; the window's own show is not it, and stays as it was.
+    expect(run.frame(0, BUSY)).toMatchObject({ glide: { kind: 'glider' }, show: null, ending: null, leaving: { whom: 1, customer: { who: 'pelican' } } })
     expect(run.game.window).toEqual(window)
     expect(run.game.seed).not.toBe(seed)
     expect(run.game.world.pieces).toEqual([])
@@ -615,6 +666,24 @@ describe('what the reading found', () => {
     expect(run.frame(0, BUSY).snacks).toHaveLength(1)
     play(run, SNACK_SECONDS)
     expect(run.frame(0, BUSY).snacks).toHaveLength(0)
+  })
+
+  it('shows every piece of a row in one who waits, however many: its body shows exactly what went in', () => {
+    const run = fresh()
+    run.tap(mid(QUEUE[0]))
+    // The fruit on the near lane is cut into ten, and the ten are butted back into one row as they lie.
+    const whole = onLane(run.game.world, 0)[0]
+    const each = whole.length / 10
+    let world = run.game.world
+    world = { ...world, pieces: world.pieces.filter((piece) => piece.id !== whole.id).concat(Array.from({ length: 10 }, (_, i) => ({ ...whole, id: world.nextId + i, length: each, place: { on: 'board' as const, lane: 0, x: i * each } }))), nextId: world.nextId + 10 }
+    const fed = new GameRun({ ...run.game, world }, 11)
+    // Taken by the right half of its first piece, the whole row comes with it.
+    drag(fed, { x: X0 + each * 0.8 * PX, y: NEAR }, mid(QUEUE[1]), 1.5)
+    expect(onLane(fed.game.world, 0)).toHaveLength(0)
+    play(fed, 1.2)
+    const shown = fed.frame(0, BUSY).snacks.filter((one) => one.whom === 1)
+    expect(shown).toHaveLength(10)
+    expect(shown.every((one) => one.length === each)).toBe(true)
   })
 
   it('feeds the one at the window past its tin: the piece flies to its mouth with a gulp, there is no lid, and what lay in the tin goes to the shelf', () => {

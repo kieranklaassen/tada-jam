@@ -268,7 +268,7 @@ function ticket(ctx: Ctx, customer: Customer, x: number, top: number, s: number,
 }
 
 /** The tin on the rail. Shut, it is folded small. Open, it is exactly as long as the order, with its lid standing behind it and the whole fruit ruled into its parts on the strip under it. */
-function tin(ctx: Ctx, dots: Dots, scenery: Scenery, shape: TinShape, customer: Customer, up = 0, spin = 0): number {
+function tin(ctx: Ctx, dots: Dots, scenery: Scenery, shape: TinShape, customer: Customer, up = 0, spin = 0, jaws: Box[] = []): number {
   const { body, lid, ruler } = shape
   if (!shape.open) {
     // Folded, it says nothing of how long the order is: a small shut box with a clasp. It has no creases across it, which would read as a strip ruled into parts.
@@ -331,6 +331,9 @@ function tin(ctx: Ctx, dots: Dots, scenery: Scenery, shape: TinShape, customer: 
     const slack = served ? (served.total - served.ordered) * PX * Math.min(1, closing * 2) : 0
     ctx.fillStyle = INK
     ctx.fillRect(part.x + part.w + 18 * bite - onAir + slack, body.y + 3, 7, body.h - 6)
+    // The same wall is drawn again once the pieces are down, in front of them, so that a piece that is too long is seen to pass the jaw
+    // and stick out beyond it by exactly its excess.
+    if (spin === 0) jaws.push({ x: part.x + part.w + 18 * bite - onAir + slack, y: body.y + 3 - up, w: 7, h: body.h - 6 })
   })
   ctx.restore()
   // The rail: the whole fruit ruled into its equal parts, the ordered ones in the fruit's tint. One row for each share.
@@ -454,12 +457,13 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
     // Outside a serve, a piece that is still in the air from the hand is not inside it yet.
     const inside = scenery.ending && !byHand ? scenery.ending.result.parts.flatMap((part) => part.pieces) : byHand ? eaten(game.world) : eaten(game.world).slice(0, Math.max(0, eaten(game.world).length - scenery.inAir))
     // A scene that is somebody else's (the glider of a pelican that waits) is not this customer's: it stays in its last pose, with all it ate.
-    const mine = gliding && gliding.whom !== 'window' ? null : scenery.show
+    // The window's own show: a glider playing for a pelican that waits is not it (`scenery.glide`).
+    const mine = scenery.show
     const own = mine
     const feast = feastOf(atWindow, inside.map((piece) => piece.length), scenery.ending?.taste ?? null, own?.kind === 'showing' ? null : own, !byHand && scenery.ending?.result.kind === 'over', scenery.ending?.outcome === 'badly', inside.map((piece) => piece.fruit), inside.map((piece) => (piece.place.on === 'tin' || piece.place.on === 'eaten' ? piece.place.part : 0)))
     feasting = feast
     // A glider playing for a pelican that waits is that pelican's scene, not the scene of whoever stands at the window.
-    drawn += customerAt(ctx, dots, atWindow, scenery.window, { feast, show: gliding && gliding.whom !== 'window' ? null : scenery.show, beak: gliding?.fruit }, 'window', scenery.finger)
+    drawn += customerAt(ctx, dots, atWindow, scenery.window, { feast, show: scenery.show, beak: gliding && gliding.whom === 'window' ? gliding.fruit : undefined }, 'window', scenery.finger)
     // The ticket is large and stands clear of whoever holds it. The cat's two stand side by side, and the sign is laid between them once
     // its tin has opened, or it has been served: after the child's cut, never before, and in a first showing as the last thing shown.
     const ruling2 = scenery.show !== null && scenery.show.drop > 0 && scenery.show.fill < 1
@@ -475,8 +479,8 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
     }
   }
   // The glider's last beat: one feather drifts down where the pelican stood.
-  if (gliding && scenery.show && scenery.show.kind === 'glider' && scenery.show.feather > 0 && scenery.show.feather < 1) {
-    const f = scenery.show.feather, from = standsAt('pelican', gliding.whom).x
+  if (gliding && scenery.glide && scenery.glide.feather > 0 && scenery.glide.feather < 1) {
+    const f = scenery.glide.feather, from = standsAt('pelican', gliding.whom).x
     ctx.save()
     ctx.translate(from + 40 + 26 * Math.sin(f * Math.PI * 3), WALL.y + 50 + (WALL.h - 66) * f)
     ctx.rotate(0.7 * Math.cos(f * Math.PI * 3))
@@ -488,8 +492,8 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
   game.queue.forEach((customer, at) => {
     const index = at as 0 | 1, box = QUEUE[index]
     // A pelican gliding out of the queue is drawn in its place until it has gone; the one who joins is seen after it.
-    if (gliding && gliding.whom === index && scenery.show && scenery.show.away < 1) {
-      drawn += customerAt(ctx, dots, gliding.customer, scenery.leavingActor, { show: scenery.show, beak: gliding.fruit }, index)
+    if (gliding && gliding.whom === index && scenery.glide && scenery.glide.away < 1) {
+      drawn += customerAt(ctx, dots, gliding.customer, scenery.leavingActor, { show: scenery.glide, beak: gliding.fruit }, index)
       return
     }
     // The pelican and the cat stand beside their tickets, the cat's two stacked; the low ones (the twins, the ants, the boa) have theirs over their heads.
@@ -514,7 +518,8 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
   ctx.translate(fx.jolt * 5, 0)
   // In the serve the tin is lifted off its rail, and what is in it with it.
   const up = serving ? 26 * scenery.show!.lift : 0
-  if (shape && game.window) drawn += tin(ctx, dots, scenery, shape, game.window, up, serving && feasting ? feasting.spin : 0)
+  const jaws: Box[] = []
+  if (shape && game.window) drawn += tin(ctx, dots, scenery, shape, game.window, up, serving && feasting ? feasting.spin : 0, jaws)
   ctx.restore()
   if (serving && shape) {
     let eatenSoFar = 0
@@ -542,6 +547,9 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
     pieceBar(ctx, piece, box, off.dx, off.dy, off.squash)
     drawn++
   }
+  // The jaw, in front of whatever lies in the tin.
+  ctx.fillStyle = INK
+  for (const jaw of jaws) ctx.fillRect(jaw.x + fx.jolt * 5, jaw.y, jaw.w, jaw.h)
   drawn += effects(ctx, fx, false)
   dog(ctx, dots, MOUTH.x, DOG.y + 10, 1.05, scenery.dog)
   drawn += 12

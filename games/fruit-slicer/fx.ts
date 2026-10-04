@@ -123,8 +123,11 @@ export function spawn(state: FxState, event: GameEvent, heads: Partial<Record<'w
         const wall = i % 3 !== 2
         // Drops for the wall fan out wide, so the wall is spattered and not blotted in one place.
         const vx = (random() - 0.5) * (wall ? 1300 : 420)
-        const vy = wall ? -(820 + random() * 520) : -(220 + random() * 260)
-        next.fx.push({ kind: 'drop', x: event.x, y: event.y - event.h / 2, vx, vy, r: 4 + random() * 5, fruit: event.fruit, wall, age: 0, life: wall ? 0.5 : 0.55 })
+        // A drop for the wall leaves fast enough to get there from wherever the cut was made, the bottom row of the shelf included, and
+        // lives until it does: every one of them spatters the wall.
+        const from = event.y - event.h / 2, reach = Math.sqrt(2 * GRAVITY * Math.max(0, from - (WALL.y + WALL.h - 12)))
+        const vy = wall ? -Math.max(820 + random() * 520, reach * (1.12 + random() * 0.3)) : -(220 + random() * 260)
+        next.fx.push({ kind: 'drop', x: event.x, y: from, vx, vy, r: 4 + random() * 5, fruit: event.fruit, wall, age: 0, life: wall ? 1.2 : 0.55 })
       }
       shake(event.left, 'hop', -1, 0.34)
       shake(event.right, 'hop', 1, 0.34)

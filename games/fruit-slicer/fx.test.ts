@@ -14,6 +14,20 @@ function play(state: FxState, seconds: number, each?: (state: FxState) => void):
 }
 
 describe('what the grid promises to the eye', () => {
+  it('has every drop that sets off for the wall spatter the wall, wherever the cut was made: the near lane, or the bottom row of the shelf', () => {
+    for (const y of [412, BOARD.y + BOARD.h - 30, SHELF_BOX.y + 30, SHELF_BOX.y + SHELF_BOX.h - 30]) {
+      for (const seed of [1, 2, 3, 4, 5]) {
+        const cut = spawn(newFx(seed), { ...CUT, y } as GameEvent)
+        const bound = cut.fx.filter((one) => one.kind === 'drop' && one.wall).length
+        expect(bound).toBeGreaterThanOrEqual(4)
+        const after = play(cut, 1.4)
+        expect(after.fx.filter((one) => one.kind === 'drop')).toHaveLength(0)
+        const onWall = after.fx.filter((one) => one.kind === 'spatter' && inside({ x: one.x, y: one.y }, WALL))
+        expect(onWall.length, `cut at ${y}, seed ${seed}`).toBe(bound)
+      }
+    }
+  })
+
   const kinds = (state: FxState) => state.fx.map((one) => one.kind)
   it('snaps the open tin\'s jaw at a poke, and only rattles a shut one', () => {
     expect(kinds(spawn(newFx(1), { kind: 'tinPoke', open: true, voice: 'castanet' }))).toEqual(['jaw'])
