@@ -49,6 +49,7 @@ export const THINGS_PAINT = {
   cat: 0xb08ad8,
   catPale: 0xe9dcf6,
   pot: 0xe07a52,
+  potDamp: 0xa9502f,
   soilDry: 0xb89a78,
   soil: 0x6e5038,
   shoot: 0x62b34f,

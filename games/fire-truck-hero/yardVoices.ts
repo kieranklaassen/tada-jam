@@ -462,6 +462,14 @@ export function catPaws(): VoiceSpec {
   ]
 }
 
+/** The boat slides over the sand, nose first: a short dry scrape of its keel that sinks as it slows. */
+export function boatScrapes(): VoiceSpec {
+  return [
+    { kind: 'noise', at: 0, frequency: 950, glideTo: 620, q: 2.2, peak: 0.07, attack: 0.02, decay: 0.24 },
+    { kind: 'noise', at: 0, frequency: 2400, glideTo: 1700, q: 1.2, peak: 0.02, attack: 0.02, decay: 0.16 },
+  ]
+}
+
 /** A voice that starts `later` seconds on: the duck's quack after the splash that set it off. */
 export function delayed(voice: VoiceSpec, later: number): VoiceSpec {
   return voice.map((partial) => ({ ...partial, at: partial.at + later }))

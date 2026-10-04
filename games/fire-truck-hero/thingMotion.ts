@@ -153,13 +153,14 @@ export class PoolMotion {
 // --- The seed in its pot -----------------------------------------------------
 
 export class SeedMotion {
-  readonly pose = { soil: 0, shoot: 0, leaves: 0, bud: 0, flower: 0, pop: 0, flutter: 0, nod: 0, saucer: 0 }
+  readonly pose = { soil: 0, shoot: 0, leaves: 0, bud: 0, flower: 0, pop: 0, flutter: 0, nod: 0, saucer: 0, soak: 0 }
   private shoot = spring(0)
   private leaves = spring(0)
   private flower = spring(0)
   private pop = spring(0)
   private flutter = spring(0)
   private nod = new Gesture()
+  private soak = new Gesture()
   private gulps = 0
   private slow = false
 
@@ -177,6 +178,8 @@ export class SeedMotion {
     this.flower.target = gulps >= 3 ? 1 : 0
     // Water soaked up from below grows the plant as surely, and slowly.
     this.slow = action === 'neighbour'
+    // Soaked up from below, the dark climbs the pot's wall.
+    if (action === 'neighbour') this.soak.start()
     if (action === 'gulp' || action === 'fill') kick(this.pop, 5 * strength)
     else if (action === 'sweep') kick(this.flutter, 9)
     else if (action === 'too-much') this.nod.start()
@@ -184,6 +187,7 @@ export class SeedMotion {
 
   step(seconds: number): typeof this.pose {
     this.nod.step(seconds)
+    this.soak.step(seconds)
     const grow = this.slow ? { stiffness: 6, damping: 4.6 } : SOFT
     stepSpring(this.shoot, grow, seconds)
     stepSpring(this.leaves, grow, seconds)
@@ -202,9 +206,16 @@ export class SeedMotion {
     // The cup fills, nods over and tips, and comes up again.
     pose.nod = hump(this.nod.through(1.4))
     pose.saucer = this.gulps > THINGS.seed.fill ? 1 : 0
+    // The dark climbs the wall in a second and a half, stands, and dries off again from the top down.
+    const soaking = this.soak.through(SOAK_S) * SOAK_S
+    const smooth = (t: number) => { const x = Math.min(1, Math.max(0, t)); return x * x * (3 - 2 * x) }
+    pose.soak = this.soak.playing(SOAK_S) ? Math.min(smooth(soaking / 1.5), smooth((SOAK_S - soaking) / 1.5)) : 0
     return pose
   }
 }
+
+/** How long the pot's wall stays dark after it drank from below. */
+export const SOAK_S = 7
 
 // --- The dry patch -----------------------------------------------------------
 
@@ -261,13 +272,18 @@ export const CARRY_S = 1.1
 /** How long a swamped boat takes to sink, roll over, empty itself and pop up. */
 export const SINK_S = 1.7
 
+/** The way the boat's nose points as it lies, as a turn from +x toward +z, and how far round a push can bring it. */
+export const BOAT_HEADS = 0.3
+export const NOSE_ROUND = 0.4
+
 export class BoatMotion {
-  readonly pose = { rock: 0, roll: 0, sunk: 0, water: 0, pushX: 0, pushZ: 0, bob: 0, brim: 0, carryX: 0, carryZ: 0, carryY: 0 }
+  readonly pose = { rock: 0, roll: 0, sunk: 0, water: 0, pushX: 0, pushZ: 0, bob: 0, brim: 0, carryX: 0, carryZ: 0, carryY: 0, yaw: 0 }
   private rock = spring(0)
   private pushX = spring(0)
   private pushZ = spring(0)
   private water = spring(0)
   private bob = spring(0)
+  private yaw = spring(0)
   private sink = new Gesture()
   private brim = new Gesture()
   private carry = new Gesture()
@@ -284,6 +300,7 @@ export class BoatMotion {
     this.carriedFrom = { ...from }
     this.pushX.value = this.pushX.target = 0
     this.pushZ.value = this.pushZ.target = 0
+    this.yaw.value = this.yaw.target = 0
     this.carry.start()
     kick(this.rock, 5)
   }
@@ -305,6 +322,11 @@ export class BoatMotion {
     } else if (action === 'sweep') {
       this.push(away, afloat ? 0.34 : 0.26)
       kick(this.rock, 2)
+      // Afloat the slap swings it round at its mooring and it swings back. On sand it slides nose first: its nose
+      // comes round toward the way it is pushed, as far as the things beside it leave room.
+      const toward = Math.atan2(away.z, away.x) - BOAT_HEADS
+      if (afloat) kick(this.yaw, 2.6)
+      else this.yaw.target = Math.max(-NOSE_ROUND, Math.min(NOSE_ROUND, Math.atan2(Math.sin(toward), Math.cos(toward))))
     } else {
       kick(this.bob, 3)
     }
@@ -321,7 +343,9 @@ export class BoatMotion {
     stepSpring(this.pushZ, afloat ? { stiffness: 14, damping: 6 } : HEAVY, seconds)
     stepSpring(this.water, SOFT, seconds)
     stepSpring(this.bob, SOFT, seconds)
+    stepSpring(this.yaw, afloat ? { stiffness: 22, damping: 3.2 } : HEAVY, seconds)
     const pose = this.pose
+    pose.yaw = Math.max(-NOSE_ROUND, Math.min(NOSE_ROUND, this.yaw.value))
     const sinking = this.sink.through(SINK_S)
     pose.rock = this.rock.value + (afloat ? Math.sin(this.time * 1.3) * 0.04 : 0)
     // Down with three glugs, over, and up again empty.

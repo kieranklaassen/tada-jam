@@ -65,6 +65,9 @@ export const RUN_OFF_REACH = 1.5
 /** A cat who sits this near a pool that runs over has the run-off creep toward her. */
 export const CREEP_REACH = 3.8
 
+/** A soaked cat who shakes herself sprays what stands this near her. */
+export const SPRAY_REACH = 4.3
+
 type Mutable<T> = { -readonly [K in keyof T]: T[K] }
 type Draft = Omit<Mutable<Yard>, 'things'> & { things: Mutable<Thing>[] }
 
@@ -194,13 +197,20 @@ function reach(d: Draft, events: YardEvent[], index: number, aimed: boolean, wat
   // A boat full of water sinks where it floats, empties itself and pops up.
   if (thing.kind === 'boat' && aimed && over && afloat(d, index)) thing.gulps = 0
   if (thing.kind === 'wheel' && aimed && thing.gulps >= fill) {
-    // At its fill the ring is drops. Past it every neighbour gets a whole gulp.
-    for (const to of d.flingsTo ?? []) if (to !== index && d.things[to]) reach(d, events, to, false, over, 'drops')
+    // At its fill the ring is drops on what stands beside it. Past it the ring is thrown so wide that every
+    // neighbour in the yard gets a whole gulp.
+    const ring = over ? d.things.map((_, to) => to) : (d.flingsTo ?? [])
+    for (const to of ring) if (to !== index && d.things[to]) reach(d, events, to, false, over, 'drops')
   }
   if (thing.kind === 'cat' && over) {
     moveTo(d, events, index, 'roof')
     events.push({ type: 'secret', id: 'cat-on-roof' })
   } else if (thing.kind === 'cat' && thing.gulps >= fill) {
+    // Soaked, she shakes herself and sprays her neighbours: a fire spits at the drops and a pool patters.
+    d.things.forEach((other, to) => {
+      const near = other.kind === 'fire' || other.kind === 'pool' ? placeOf(other) : null
+      if (near && at && Math.hypot(near.x - at.x, near.z - at.z) <= SPRAY_REACH) reach(d, events, to, false, false, 'drops')
+    })
     const dry = driestFreeSpot(d)
     if (dry !== null) moveTo(d, events, index, dry)
   }

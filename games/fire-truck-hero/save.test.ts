@@ -111,7 +111,7 @@ describe('a damaged record', () => {
   })
 
   it('with an unknown place or arrangement gives a freshly laid out yard at the position', () => {
-    for (const yard of [{ place: 'nowhere', arrangement: 0 }, { place: 'whole-garden', arrangement: 3 }, { place: 'whole-garden', arrangement: -1 }, { place: 'whole-garden' }]) {
+    for (const yard of [{ place: 'nowhere', arrangement: 0 }, { place: 'whole-garden', arrangement: 4 }, { place: 'whole-garden', arrangement: -1 }, { place: 'whole-garden' }]) {
       const save = deserializeSave({ ...played(), yard }, 2)
       expect(save.yard).toEqual(nextYardSpec('whole-garden', 7))
       expect(yardOf(save)).toEqual(layOut('whole-garden', save.yard.arrangement))

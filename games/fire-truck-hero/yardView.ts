@@ -11,9 +11,10 @@ import { FENCE_Z } from './gardenModel'
 import { BELL, GATE, PEEK_X, SPOTS, type Place } from './layout'
 import { FLOWER_PAINT, SAND, THINGS_PAINT, WATER } from './look'
 import { BOAT, PATCH, WHEEL, buildBee, buildBoat, buildPatch, buildSnail, buildWheel, buildWorm } from './moreModels'
-import { NEST, placeOf } from './places'
+import { NEST, lowSideOf, placeOf } from './places'
 import type { Channels } from './scenes'
-import { LEAF_TIP, PETAL, POOL, POT, SCALE, buildCat, buildDuck, buildFire, buildGate, buildPool, buildPot } from './thingModels'
+import { DAMP_STEPS, LEAF_TIP, PETAL, POOL, POT, SCALE, buildCat, buildDuck, buildFire, buildGate, buildPool, buildPot } from './thingModels'
+import { BOAT_HEADS } from './thingMotion'
 import type { Kind } from './things'
 import { afloat, type Yard } from './world'
 import { PUFFS, RINGS, type YardMotion } from './yardMotion'
@@ -94,6 +95,9 @@ export class YardSet {
     this.cat.root.rotation.order = 'YXZ'
     this.root.add(this.gate.root, this.fire.root, this.pool.root, this.duck, this.pot.root, this.bee.root, this.patch.root, this.snail.root, this.boat.root, this.wheel.root, this.cat.root, this.worm.root)
     this.own.push(this.patch.mound.material as THREE.Material, this.pot.soil.material as THREE.Material)
+    // For the intersection audit: the petals, which are instances of one ball, are parts of the plant like its stem and leaves.
+    this.pot.root.userData.jamObject = `${name}-seed`
+    this.pot.petals.userData.jamInstanceObjects = Array.from({ length: PETAL_COUNT + 1 }, () => `${name}-seed`)
 
     // What waits beyond the fence, beside the gate: a wisp of smoke, a duck, a bee or a snail's shell.
     const smoke = new THREE.Group()
@@ -178,6 +182,8 @@ export class YardSet {
     if (pool) {
       const pose = motion.pool.pose, place = at('pool')
       this.pool.root.position.set(place.x, 0, place.z)
+      // The low side of its rim points where it will run over.
+      this.pool.root.rotation.y = lowSideOf(yard, has.pool)
       this.pool.root.scale.set(SCALE.pool, SCALE.pool * (1 - pose.bonk * 0.02), SCALE.pool)
       const inside = POOL.floor + 0.03 + pose.level * (POOL.wall - POOL.floor - 0.05)
       this.pool.sheet.visible = pose.level > 0.02
@@ -227,6 +233,9 @@ export class YardSet {
       this.petals(open, flowerOf(yard.place, yard.arrangement))
       this.pot.flower.rotation.z = sway + pose.nod * 1.2 - channels.beeLands * 0.14
       this.pot.saucerWater.visible = pose.saucer > 0.5
+      // The dark that climbs the pot when it drinks from below.
+      this.pot.damp.visible = pose.soak > 0.04
+      this.pot.damp.geometry = this.pot.dampSteps[Math.min(DAMP_STEPS - 1, Math.floor(pose.soak * DAMP_STEPS))]
       // A drop hangs from a leaf's tip as the ending closes, lets go and falls.
       const drop = leafDrop(has.seed === yard.want ? channels.leafDrop : 0)
       this.pot.leafDrop.visible = drop.size > 0.05
@@ -276,7 +285,7 @@ export class YardSet {
       // Rolling over, it comes up out of the water far enough that its rim never dips under the pool's floor.
       boatY += pose.carryY + (Math.abs(Math.sin(pose.roll)) * 0.4 + ((1 - Math.cos(pose.roll)) / 2) * 0.33) * SCALE.boat
       this.boat.root.position.set(boatAt.x, boatY, boatAt.z)
-      this.boat.root.rotation.set(pose.roll, -0.3, pose.rock * 0.09 + pose.brim * 0.1)
+      this.boat.root.rotation.set(pose.roll, -BOAT_HEADS - pose.yaw, pose.rock * 0.09 + pose.brim * 0.1)
       this.boat.inside.visible = pose.water > 0.05
       this.boat.inside.position.y = BOAT.floor + 0.02 + pose.water * (BOAT.brim - BOAT.floor - 0.07)
       if (!inPool) this.shadow(boatAt, 0.95)
@@ -407,6 +416,7 @@ export class YardSet {
   }
 
   dispose(): void {
+    for (const step of this.pot.dampSteps) step.dispose()
     for (const material of this.own) material.dispose()
   }
 }

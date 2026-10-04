@@ -123,7 +123,9 @@ describe('the cat', () => {
   it('stalks to the driest free spot when soaked, climbs the roof at too much, and jumps off at a honk', () => {
     const start = yardOf([at('fire', 0), at('cat', 1)], { ground: pour(pour(dryGround(), SPOTS[2].x, SPOTS[2].z, 1), SPOTS[3].x, SPOTS[3].z, 2) })
     const soaked = play(start, ...times(3, gulp(1)))
-    expect(soaked.events.slice(2)).toEqual([expect.objectContaining({ id: 'cat-soaked' }), { type: 'moved', thing: 1, to: 4 }])
+    // Soaked, she shakes herself, and the fire she sat by spits at the drops.
+    expect(soaked.events.slice(2)).toEqual([expect.objectContaining({ id: 'cat-soaked' }), expect.objectContaining({ id: 'fire-spits', by: 'drops' }), { type: 'moved', thing: 1, to: 4 }])
+    expect(soaked.yard.things[0].gulps).toBe(0)
     const roof = gulpOn(soaked.yard, 1)
     expect(roof.events).toEqual([expect.objectContaining({ id: 'cat-to-roof' }), { type: 'moved', thing: 1, to: 'roof' }, { type: 'secret', id: 'cat-on-roof' }])
     // The roof takes no water: she stays, and the secret is not given again until she climbs again.

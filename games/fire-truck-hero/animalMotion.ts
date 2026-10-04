@@ -243,6 +243,9 @@ export class CatMotion {
 export const LAP_RADIUS = 0.7
 export const LAP_SWING = 0.6
 
+/** How far the duck's wriggle rolls it, in radians for each unit of its spring: enough to see from across the yard. */
+export const WRIGGLE = 0.3
+
 /** How long the duck's ride over the rim and its waddle back take. */
 export const RIDE_S = 3
 
@@ -250,6 +253,9 @@ export class DuckMotion {
   readonly pose = { x: 0, z: 0, y: 0, turn: 0, tilt: 0, wiggle: 0, beak: 0 }
   /** It tapped the pool floor in this step: the game plays the tick. */
   tapped = false
+  /** It reached the puddle its ride over the rim left it in, in this step: it wriggles, and the game plays its quack. */
+  splashed = false
+  private rode = 1
   private wiggle = spring(0)
   private readonly tap = new Gesture()
   private readonly ride = new Gesture()
@@ -292,6 +298,10 @@ export class DuckMotion {
     pose.y = floats + (afloat ? beat * 0.025 : 0)
     pose.tilt = hump(channels.dunk) * 1.15 + this.tapBow()
     const riding = this.ride.through(RIDE_S)
+    // Down on the sand it stands in the puddle the overflow made, which it likes: a wriggle and a quack.
+    this.splashed = riding < 1 && riding >= 0.42 && this.rode < 0.42
+    this.rode = riding
+    if (this.splashed) kick(this.wiggle, 12)
     if (riding < 1) {
       // Out over the low side of the rim on the overflow, a waddle on the sand, and back in the same way.
       const sand = -(rim.floor ?? 0)
@@ -305,7 +315,7 @@ export class DuckMotion {
       pose.tilt = Math.sin(riding * Math.PI * 14) * 0.12
     }
     const shaking = channels.shake > 0 && channels.shake < 1 ? Math.sin(channels.shake * Math.PI * 12) * 0.35 * (1 - channels.shake) : 0
-    pose.wiggle = this.wiggle.value * 0.08 + shaking
+    pose.wiggle = this.wiggle.value * WRIGGLE + shaking
     pose.beak = this.tap.playing(0.5) ? hump(this.tap.through(0.5)) : 0
     return pose
   }
@@ -349,8 +359,8 @@ export class BeeMotion {
       y += up * 1.5
       x += Math.sin(startled * 34) * 0.32 * up
     }
-    // On an open flower she lands, and stays.
-    const landed = open ? channels.beeLands : 0
+    // On an open flower she lands, and stays. Drops on her wings send her up off it every time, and she comes back down.
+    const landed = (open ? channels.beeLands : 0) * (startled < 1 ? 1 - hump(Math.min(1, startled * 1.15)) : 1)
     pose.x = x * (1 - landed)
     pose.z = z * (1 - landed)
     pose.y = y * (1 - landed) + (budTop + 0.2) * landed

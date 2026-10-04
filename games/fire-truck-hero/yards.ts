@@ -37,8 +37,8 @@ const inside = (kind: Kind, spot: number, index: number): Placed => ({ kind, spo
 
 /**
  * The spots are those of layout.ts, by index. In a downhill yard the pool
- * stands on a far spot and what it runs to on a nearer one. In two whole
- * gardens a wheel stands on the way down, and the run-off bends past it.
+ * stands on a far spot and what it runs to on a nearer one. In one whole
+ * garden a wheel stands on the way down, and the run-off bends past it.
  */
 export const ARRANGEMENTS: Readonly<Record<string, readonly Arrangement[]>> = {
   /** One thing alone with the truck. Water does something to a thing. */
@@ -77,7 +77,9 @@ export const ARRANGEMENTS: Readonly<Record<string, readonly Arrangement[]>> = {
   'whole-garden': [
     { things: [on('pool', 1), inside('boat', 1, 0), on('seed', 3), on('wheel', 2), on('cat', 0)], want: 2, runsTo: 2, flingsTo: [2, 4] },
     { things: [on('pool', 0), on('fire', 3), on('wheel', 2), on('cat', 1)], want: 1, runsTo: 1, flingsTo: [1, 3], runsPast: 2 },
-    { things: [on('pool', 1), inside('boat', 1, 0), inside('cat', 1, 1), on('patch', 3), on('wheel', 4)], want: 3, runsTo: 3, flingsTo: [3, 0], runsPast: 4 },
+    { things: [on('pool', 1), inside('boat', 1, 0), inside('cat', 1, 1), on('patch', 3), on('wheel', 4)], want: 3, runsTo: 3, flingsTo: [3, 0] },
+    // The snail in a garden with a fire: it keeps its feelers in from the heat for as long as the fire burns.
+    { things: [on('pool', 1), on('fire', 0), on('patch', 3), on('wheel', 4)], want: 2, runsTo: 2, flingsTo: [2, 1] },
   ],
 }
 

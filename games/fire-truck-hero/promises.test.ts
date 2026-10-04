@@ -10,13 +10,14 @@ import { cellOf } from './grid'
 import { cellAt, levelAt } from './ground'
 import { arcTo } from './jet'
 import { NOZZLE, distance, type Place } from './layout'
-import { placeOf, targetAt } from './places'
+import { lowSideOf, placeOf, targetAt } from './places'
+import { NOSE_ROUND, SOAK_S } from './thingMotion'
 import { KINDS, type Kind } from './things'
 import { Toy } from './toy'
 import type { VoiceSpec } from './voices'
-import { CREEP_REACH, gulpOn, gulpOnGround, type Step, type Yard, type YardEvent } from './world'
+import { CREEP_REACH, SPRAY_REACH, gulpOn, gulpOnGround, type Step, type Yard, type YardEvent } from './world'
 import { ARRANGEMENTS, layOut } from './yards'
-import { catPaws, cellVoice, delayed, duckQuack, slowSizzle } from './yardVoices'
+import { boatScrapes, catPaws, cellVoice, delayed, duckQuack, slowSizzle } from './yardVoices'
 
 const FRAME = 1 / 60
 
@@ -67,6 +68,17 @@ class Table {
   stream(at: Place, seconds: number): this {
     this.game.press({ truck: false, point: at }, this.now)
     this.play(seconds)
+    this.game.lift()
+    return this.play(0.5)
+  }
+
+  /** A fast stream drawn from one place to another, and long enough for the last of its water to land. */
+  sweep(from: Place, to: Place, frames = 30): this {
+    this.game.press({ truck: false, point: from }, this.now)
+    for (let frame = 1; frame <= frames; frame++) {
+      this.game.move({ x: from.x + ((to.x - from.x) * frame) / frames, z: from.z + ((to.z - from.z) * frame) / frames })
+      this.play(FRAME)
+    }
     this.game.lift()
     return this.play(0.5)
   }
@@ -135,8 +147,8 @@ function everyYard(): Yard[] {
 }
 
 describe('the wheel, water from a neighbour', () => {
-  it('is turned from below by run-off that passes under it, in both whole gardens where it stands on the way, and keeps no water', () => {
-    for (const number of [1, 2]) {
+  it('is turned from below by run-off that passes under it, in the whole garden where it stands on the way, and keeps no water', () => {
+    for (const number of [1]) {
       const start = layOut('whole-garden', number)
       const pool = indexOf(start, 'pool'), wheel = indexOf(start, 'wheel')
       expect(start.runsPast).toBe(wheel)
@@ -647,5 +659,225 @@ describe('the cat and a fire that has gone out', () => {
     const first = found.turn
     again.play(2)
     expect(again.game.motion.cat.pose.turn).toBeCloseTo(first, 4)
+  })
+})
+
+describe('the wheel, too much', () => {
+  it('throws its ring so wide that every neighbour gets a gulp, where at its fill only those beside it get drops', () => {
+    for (const start of everyYard()) {
+      const wheel = indexOf(start, 'wheel')
+      if (wheel < 0) continue
+      const steps = pours(start, wheel, 4)
+      const others = start.things.map((_, index) => index).filter((index) => index !== wheel)
+      // At its fill: drops on what stands beside it, and no water kept by anything.
+      const atFill = results(steps[2].events).filter((event) => event.thing !== wheel)
+      expect(atFill.map((event) => event.thing).sort()).toEqual([...(start.flingsTo ?? [])].filter((index) => index !== wheel).sort())
+      for (const index of others) expect(steps[2].yard.things[index].gulps).toBe(0)
+      // Past it: every other thing of the yard, each a whole gulp.
+      const wide = results(steps[3].events).filter((event) => event.by === 'drops').map((event) => event.thing)
+      for (const index of others) {
+        expect(wide, `${start.place} ${start.arrangement}, thing ${index}`).toContain(index)
+        expect(steps[3].yard.things[index].gulps, `${start.place} ${start.arrangement}, thing ${index}`).toBe(1)
+      }
+    }
+  })
+})
+
+describe('the cat, her fill', () => {
+  it('sprays her neighbours as she shakes herself: a fire near her spits at the drops and keeps no water', () => {
+    const start = layOut('two-things', 2)
+    const cat = indexOf(start, 'cat'), fire = indexOf(start, 'fire')
+    expect(distance(placeOf(start, cat), placeOf(start, fire))).toBeLessThanOrEqual(SPRAY_REACH)
+    const steps = pours(start, cat, 3)
+    for (const step of steps.slice(0, 2)) expect(results(step.events).some((event) => event.thing === fire)).toBe(false)
+    const sprayed = results(steps[2].events).filter((event) => event.thing === fire)
+    expect(sprayed).toHaveLength(1)
+    expect(sprayed[0]).toMatchObject({ action: 'neighbour', by: 'drops' })
+    expect(steps[2].yard.things[fire].gulps).toBe(0)
+    // And a pool near her patters.
+    const garden = layOut('whole-garden', 1)
+    const wet = pours(garden, indexOf(garden, 'cat'), 3)[2]
+    expect(results(wet.events).some((event) => event.kind === 'pool' && event.action === 'neighbour' && event.by === 'drops')).toBe(true)
+    expect(wet.yard.things[indexOf(garden, 'pool')].gulps).toBe(0)
+  })
+})
+
+describe('the small fire, too much', () => {
+  it('floats its wet logs on a puddle of their own, which is found there again after the game was put away', () => {
+    const t = new Table(saved('one-thing', 0))
+    const fire = t.at(0)
+    t.gulps(fire, 3)
+    expect(t.game.paint.at(fire.x, fire.z).puddle).toBe(0)
+    t.gulp(fire).play(3)
+    expect(t.game.paint.at(fire.x, fire.z).puddle).toBeGreaterThan(96)
+    expect(Math.hypot(t.game.motion.fire.pose.logsX, t.game.motion.fire.pose.logsZ) + t.game.motion.fire.pose.logsY).toBeGreaterThan(0.01)
+    const again = t.reload()
+    expect(again.game.paint.at(fire.x, fire.z).puddle).toBeGreaterThan(96)
+  })
+})
+
+describe('the seed in its pot', () => {
+  it('shakes drops off its leaves when a stream sweeps past', () => {
+    const t = new Table(saved('one-thing', 1))
+    const seed = t.at(0)
+    t.gulps(seed, 2).play(2)
+    const high = () => t.drops().filter((drop) => drop.y > 1.2 && distance(drop, seed) < 1.2).length
+    expect(high()).toBe(0)
+    let shaken = 0
+    t.game.press({ truck: false, point: { x: seed.x - 3, z: seed.z + 0.4 } }, t.now)
+    for (let frame = 1; frame <= 30; frame++) {
+      t.game.move({ x: seed.x - 3 + (frame / 30) * 6, z: seed.z + 0.4 })
+      t.play(FRAME)
+      shaken = Math.max(shaken, high())
+    }
+    t.game.lift()
+    expect(shaken).toBeGreaterThanOrEqual(3)
+    expect(t.game.yard.things[0].gulps).toBe(2)
+  })
+
+  it('shows the dark climb its wall when it drinks run-off from below, and not when it is watered from above', () => {
+    const t = new Table(saved('downhill', 0))
+    const pool = t.at(t.the('pool')), seed = t.the('seed')
+    t.gulps(pool, 4)
+    expect(t.game.motion.seed.pose.soak).toBe(0)
+    let last = 0, fell = false
+    t.tap(pool).play(2.2, () => {
+      const soak = t.game.motion.seed.pose.soak
+      if (soak < last - 1e-9) fell = true
+      last = soak
+    })
+    expect(t.game.yard.things[seed].gulps).toBe(1)
+    // It climbs and does not slip back while it climbs.
+    expect(fell).toBe(false)
+    expect(last).toBeGreaterThan(0.95)
+    t.play(SOAK_S)
+    expect(t.game.motion.seed.pose.soak).toBe(0)
+    const above = new Table(saved('one-thing', 1))
+    let soaked = 0
+    above.tap(above.at(0)).play(2, () => { soaked = Math.max(soaked, above.game.motion.seed.pose.soak) })
+    expect(soaked).toBe(0)
+  })
+})
+
+describe('the boat', () => {
+  it('rings hollow at its first gulp, and then drums deeper gulp by gulp until it is full', () => {
+    const t = new Table(saved('afloat', 0))
+    const boat = t.at(t.the('boat'))
+    const pitches: number[] = []
+    for (let gulp = 1; gulp <= 3; gulp++) {
+      const before = t.heard.length
+      t.gulp(boat)
+      const heard = t.heard.slice(before)
+      expect(t.game.yard.things[t.the('boat')].gulps).toBe(gulp)
+      expect(those(heard, cellVoices('boat', 'gulp', gulp / 3)), `gulp ${gulp}`).toHaveLength(gulp === 1 ? 1 : 0)
+      const drums = those(heard, cellVoices('boat', 'fill', gulp / 3))
+      expect(drums, `gulp ${gulp}`).toHaveLength(gulp === 1 ? 0 : 1)
+      if (drums.length > 0) pitches.push(drums[0][0].frequency)
+    }
+    expect(pitches[1]).toBeLessThan(pitches[0])
+  })
+
+  it('slides on sand with a scrape, nose first, when a stream sweeps past it; afloat it swings at its mooring and swings back', () => {
+    const t = new Table(saved('afloat', 0))
+    const pool = t.at(t.the('pool')), boat = t.the('boat')
+    const duckSide = { x: pool.x - 0.5, z: pool.z }
+    // Afloat.
+    t.gulps(duckSide, 3).play(8)
+    let before = t.heard.length
+    let swung = 0
+    const afloatAt = t.at(boat)
+    t.sweep({ x: afloatAt.x, z: afloatAt.z - 3 }, { x: afloatAt.x, z: afloatAt.z + 3 })
+    t.play(0.4, () => { swung = Math.max(swung, Math.abs(t.game.motion.boat.pose.yaw)) })
+    expect(those(t.heard.slice(before), cellVoices('boat', 'sweep')).length).toBeGreaterThan(0)
+    expect(those(t.heard.slice(before), [delayed(boatScrapes(), 0.05)])).toHaveLength(0)
+    expect(swung).toBeGreaterThan(0.05)
+    t.play(6)
+    expect(Math.abs(t.game.motion.boat.pose.yaw)).toBeLessThan(0.01)
+    // Carried over the rim, it lies aground on the sand.
+    t.gulps(duckSide, 2).play(3)
+    const aground = t.at(boat)
+    expect(distance(aground, pool)).toBeGreaterThan(1.9)
+    before = t.heard.length
+    const slidFrom = { x: t.game.motion.boat.pose.pushX, z: t.game.motion.boat.pose.pushZ }
+    t.sweep({ x: aground.x - 3, z: aground.z + 0.2 }, { x: aground.x + 3, z: aground.z + 0.2 })
+    t.play(1.5)
+    expect(those(t.heard.slice(before), [delayed(boatScrapes(), 0.05)]).length).toBeGreaterThan(0)
+    const pose = t.game.motion.boat.pose
+    expect(Math.hypot(pose.pushX - slidFrom.x, pose.pushZ - slidFrom.z)).toBeGreaterThan(0.1)
+    // Its nose has come round toward the way it was pushed, and no further than there is room for.
+    expect(Math.abs(pose.yaw)).toBeGreaterThan(0.05)
+    expect(Math.abs(pose.yaw)).toBeLessThanOrEqual(NOSE_ROUND)
+  })
+})
+
+describe('the duck, the bee and the snail', () => {
+  it('has the duck wriggle and quack in the puddle its ride over the rim leaves it in', () => {
+    const t = new Table(saved('one-thing', 2))
+    const pool = t.at(0)
+    t.gulps(pool, 4).play(8)
+    const before = t.heard.length
+    let splashes = 0
+    t.tap(pool).play(3.5, () => { if (t.game.motion.duck.splashed) splashes++ })
+    expect(splashes).toBe(1)
+    // One quack as the water reaches it, and one more, later, in the puddle.
+    expect(those(t.heard.slice(before), QUACKS)).toHaveLength(1)
+    expect(those(t.heard.slice(before), VARIANTS.map((variant) => duckQuack(variant)))).toHaveLength(1)
+  })
+
+  it('sends the bee up off her flower every time drops reach her wings, and she comes back down', () => {
+    const t = new Table(saved('one-thing', 1))
+    const seed = t.at(0)
+    t.gulps(seed, 3).play(8)
+    expect(t.game.motion.bee.pose.landed).toBeGreaterThan(0.95)
+    for (let time = 0; time < 2; time++) {
+      const sat = t.game.motion.bee.pose.y
+      let least = 1, highest = 0
+      t.tap(seed).play(1.4, () => {
+        least = Math.min(least, t.game.motion.bee.pose.landed)
+        highest = Math.max(highest, t.game.motion.bee.pose.y)
+      })
+      expect(least).toBeLessThan(0.2)
+      expect(highest).toBeGreaterThan(sat + 0.8)
+      t.play(2.5)
+      expect(t.game.motion.bee.pose.landed).toBeGreaterThan(0.95)
+    }
+  })
+
+  it('keeps the snail\'s feelers in from the heat for as long as a fire burns in its yard, and lets them out when the fire is out', () => {
+    const start = layOut('whole-garden', 3)
+    expect(indexOf(start, 'fire')).toBeGreaterThanOrEqual(0)
+    expect(indexOf(start, 'patch')).toBe(start.want)
+    const t = new Table(saved('whole-garden', 3))
+    t.gulps(t.at(t.the('patch')), 2).play(4)
+    expect(t.game.motion.snail.pose.feelers).toBeLessThan(0.02)
+    t.gulps(t.at(t.the('fire')), 3).play(4)
+    expect(t.game.motion.snail.pose.feelers).toBeGreaterThan(0.4)
+  })
+})
+
+describe('the low side of the pool', () => {
+  it('points at what the pool will run to, or at the wheel on the way, so the child can see where the water will go', () => {
+    let pointed = 0
+    for (const yard of everyYard()) {
+      const pool = indexOf(yard, 'pool')
+      if (pool < 0) continue
+      const turn = lowSideOf(yard, pool)
+      const first = yard.runsPast ?? yard.runsTo
+      if (first === undefined) {
+        // With nothing below it, it points at the near edge, where its overflow lands.
+        expect(turn).toBe(0)
+        continue
+      }
+      const from = placeOf(yard, pool), to = placeOf(yard, first)
+      const far = distance(from, to)
+      expect(Math.sin(turn)).toBeCloseTo((to.x - from.x) / far, 9)
+      expect(Math.cos(turn)).toBeCloseTo((to.z - from.z) / far, 9)
+      // Downhill is toward the child.
+      expect(Math.cos(turn)).toBeGreaterThan(0.5)
+      pointed++
+    }
+    expect(pointed).toBeGreaterThanOrEqual(6)
+    expect(lowSideOf(layOut('one-thing', 0), 0)).toBe(0)
+    expect(lowSideOf(layOut('one-thing', 2), 7)).toBe(0)
   })
 })

@@ -487,19 +487,31 @@ describe('the duck', () => {
     const step = () => { wetDuck(duck)(); wetDuck(twin)() }
     play(step, 1)
     duck.answer('too-much')
-    let furthest = 0, highest = 0
+    let furthest = 0, highest = 0, splashes = 0, splashedAt = 0, wriggled = 0
     play(step, RIDE_S, () => {
       furthest = Math.max(furthest, duck.pose.z - twin.pose.z)
       highest = Math.max(highest, duck.pose.y)
       // It goes out on the side toward the child, and not sideways.
       expect(duck.pose.x).toBe(twin.pose.x)
+      if (duck.splashed) {
+        splashes++
+        splashedAt = duck.pose.z - twin.pose.z
+      }
+      if (splashes > 0) wriggled = Math.max(wriggled, Math.abs(duck.pose.wiggle))
     })
     expect(furthest).toBeGreaterThan(RIM.far)
     expect(furthest).toBeLessThan(RIM.far + 1.5)
     // Up over the wall on the way out.
     expect(highest).toBeGreaterThanOrEqual(RIM.high * 0.9)
+    // Down on the sand, in the puddle the overflow made, it wriggles once: it likes puddles.
+    expect(splashes).toBe(1)
+    expect(splashedAt).toBeGreaterThan(RIM.far)
+    expect(wriggled).toBeGreaterThan(0.15)
+    expect(twin.splashed).toBe(false)
     step()
-    expect(duck.pose).toEqual(twin.pose)
+    // Back in its pool it is where a duck that never left is, and the last of its wriggle has all but died away.
+    for (const key of ['x', 'z', 'y', 'turn', 'tilt', 'beak'] as const) expect(duck.pose[key]).toBe(twin.pose[key])
+    expect(Math.abs(duck.pose.wiggle - twin.pose.wiggle)).toBeLessThan(0.02)
   })
 
   it('paddles along its own side of the pool in the ending, one way and back the other, and ends where it began', () => {

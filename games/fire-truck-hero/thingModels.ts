@@ -25,7 +25,7 @@ function eye(x: number, y: number, z: number, size = 0.06): Part {
 
 export const POOL = { radius: 1.2, wall: 0.46, floor: 0.06 } as const
 
-/** The paddling pool: a fat blue ring with a pale floor. Its water is a sheet the stage raises and lowers. */
+/** The paddling pool: a fat blue ring with a pale floor and a pouring lip on its low side. Its water is a sheet the stage raises and lowers. */
 export function buildPool(plastic: THREE.Material, water: THREE.Material): { root: THREE.Group; sheet: THREE.Mesh } {
   const root = new THREE.Group()
   root.name = 'pool'
@@ -36,6 +36,10 @@ export function buildPool(plastic: THREE.Material, water: THREE.Material): { roo
         // The profile runs from the middle of the underside, up the outside of the wall, over the rim and down to the floor.
         lathe([[0, 0], [POOL.radius - 0.02, 0], [POOL.radius + 0.03, 0.2], [POOL.radius, POOL.wall - 0.03], [1.12, POOL.wall], [1.04, POOL.wall - 0.06], [1.0, POOL.floor], [0, POOL.floor]], PAINT.poolWall, 28),
         at(rod(1.0, 1.0, 0.02, PAINT.poolFloor, 28), 0, POOL.floor + 0.011, 0),
+        // The low side of the rim: a short pouring lip that slopes down outward, and a pale channel worn across
+        // the rim to it. It points along +z, and the stage turns the pool so that it points where the water will run.
+        at(box(0.56, 0.12, 0.3, 0.05, PAINT.poolWall), 0, POOL.wall - 0.09, POOL.radius + 0.03, 0.3),
+        at(box(0.34, 0.05, 0.42, 0.02, PAINT.poolFloor), 0, POOL.wall - 0.012, POOL.radius - 0.03, 0.12),
       ],
       plastic,
     ),
@@ -168,7 +172,10 @@ export function buildCat(plastic: THREE.Material): CatModel {
   return { root, body, head, lids, tail, paw, pawFar }
 }
 
-export type PotModel = { root: THREE.Group; soil: THREE.Mesh; shoot: THREE.Mesh; leaves: THREE.Mesh; bud: THREE.Mesh; flower: THREE.Group; petals: THREE.InstancedMesh; saucerWater: THREE.Mesh; leafDrop: THREE.Mesh }
+export type PotModel = { root: THREE.Group; soil: THREE.Mesh; shoot: THREE.Mesh; leaves: THREE.Mesh; bud: THREE.Mesh; flower: THREE.Group; petals: THREE.InstancedMesh; saucerWater: THREE.Mesh; leafDrop: THREE.Mesh; damp: THREE.Mesh; dampSteps: THREE.BufferGeometry[] }
+
+/** In how many steps the dark climbs the pot's wall. */
+export const DAMP_STEPS = 8
 
 /** The flower: five petals round a heart. Where each petal sits when it is open, and how big it and the heart are. */
 export const PETALS = 5
@@ -216,6 +223,16 @@ export function buildPot(plastic: THREE.Material, water: THREE.Material): PotMod
   const pink = new THREE.Color(PAINT.petal)
   for (let i = 0; i <= PETALS; i++) petals.setColorAt(i, i < PETALS ? pink : pink.clone().set(PAINT.bee))
   flower.add(petals)
+  // The dark that climbs the pot's wall when it drinks from below: a skin just outside the wall, drawn up to
+  // one of a few heights. The stage picks the height.
+  const dampSteps = Array.from({ length: DAMP_STEPS }, (_, step) => {
+    const high = (step + 1) / DAMP_STEPS
+    return mould([lathe([[0.512, 0.07], [0.512 + 0.16 * high, 0.07 + 0.66 * high]], PAINT.potDamp, 22)])
+  })
+  const damp = new THREE.Mesh(dampSteps[0], plastic)
+  damp.name = 'seed-pot-damp'
+  damp.visible = false
+  root.add(damp)
   // The drop that hangs from a leaf's tip and falls when the flower has opened.
   const leafDrop = named('seed-leaf-drop', [ball(0.11, WATER.body, [1, 1.2, 1], 8)], water)
   leafDrop.visible = false
@@ -225,7 +242,7 @@ export function buildPot(plastic: THREE.Material, water: THREE.Material): PotMod
     part.visible = false
     root.add(part)
   }
-  return { root, soil, shoot, leaves, bud, flower, petals, saucerWater, leafDrop }
+  return { root, soil, shoot, leaves, bud, flower, petals, saucerWater, leafDrop, damp, dampSteps }
 }
 
 /** How much bigger than its parts each toy stands in the yard, so the smallest is still a fat target for a small finger. */

@@ -81,12 +81,17 @@ describe('the arrangements of the designed order', () => {
       expect(plan.flingsTo).toEqual([plan.want, indexOf(plan, 'cat')])
       expect(distance(SPOTS[wheel.spot], SPOTS[plan.things[plan.want].spot])).toBeLessThan(4.3)
     }
+    // In one whole garden the snail and a fire stand together: its dislike of the heat can be seen there.
+    expect(arrangementsOf('whole-garden').filter((plan) => kinds(plan).includes('fire') && kinds(plan).includes('patch'))).toHaveLength(1)
+    // And in one a wheel stands on the way down from the pool.
+    expect(arrangementsOf('whole-garden').filter((plan) => plan.runsPast !== undefined && plan.things[plan.runsPast].kind === 'wheel')).toHaveLength(1)
     for (const plan of arrangementsOf('whole-garden')) {
       expect([4, 5]).toContain(plan.things.length)
       expect(plan.runsTo).toBe(plan.want)
       expect(plan.flingsTo).toContain(plan.want)
-      expect(kinds(plan)).toEqual(expect.arrayContaining(['pool', 'wheel', 'cat']))
+      expect(kinds(plan)).toEqual(expect.arrayContaining(['pool', 'wheel']))
     }
+    expect(arrangementsOf('whole-garden').filter((plan) => kinds(plan).includes('cat')).length).toBeGreaterThanOrEqual(3)
   })
 
   it('brings in one new thing at a time: nothing stands in a yard before its place in the order', () => {

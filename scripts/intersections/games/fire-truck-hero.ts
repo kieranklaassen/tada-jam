@@ -68,8 +68,6 @@ export default {
     // The demonstration hand hovers over what it points at and is drawn see-through.
     'guide-hand',
   ],
-  // The five petals of the flower and its heart are instances of one ball: together they are one flower.
-  instances: [{ match: 'seed-petals', per: 6 }],
   allow: [
     // The truck's own joints.
     { a: 'truck-shell', b: 'truck-yoke', upTo: 0.4, reason: "the nozzle's yoke turns in its socket on top of the pedestal, which is part of the shell" },
@@ -86,7 +84,11 @@ export default {
     { a: 'seed-bud', b: 'seed-shoot', kind: 'pose', upTo: 1, reason: 'the bud is the end of its stem: the stem runs up into it' },
     { a: 'seed-bud', b: 'seed-petals', kind: 'pose', upTo: 1, reason: 'the bud opens into the flower: for a moment the small bud is inside the opening petals' },
     { a: 'snail-shell', b: 'snail-body', kind: 'pose', upTo: 0.4, reason: "the snail's body comes out of its shell" },
-    { a: 'snail-shell', b: 'snail-feelers', kind: 'pose', upTo: 0.6, reason: "the snail's feelers come out of its shell with its body" },
+    { a: 'snail-shell', b: 'snail-feelers', kind: 'pose', upTo: 1, reason: "the snail's feelers come out of its shell with its body, and pulled right in they are wholly inside it" },
+    { a: 'seed-petals', b: 'seed-petals', kind: 'pose', upTo: 1, reason: 'the petals are set round the heart of the flower and into it, and while they are shut they lie close in together' },
+    { a: 'seed-petals', b: 'seed-shoot', kind: 'pose', upTo: 1, reason: 'the stem runs up into the heart of the flower' },
+    { a: 'seed-leaves', b: 'seed-shoot', kind: 'pose', upTo: 1, reason: 'the leaves grow out of the stem' },
+    { a: 'patch-mound', b: 'worm-body', upTo: 1, reason: 'the worm comes up out of the mud of the patch and goes back down into it' },
     { a: 'cat-body', b: 'cat-paw', kind: 'pose', upTo: 0.5, reason: 'her front paw rests against her body' },
     { a: 'cat-body', b: 'cat-tail', kind: 'pose', upTo: 0.3, reason: 'her tail is rooted in her body' },
     { a: 'cat-body', b: 'cat-skull', kind: 'pose', upTo: 0.3, reason: 'her head sits on her shoulders' },
@@ -279,9 +281,9 @@ export default {
       },
     },
     {
-      // The other whole garden: the cat floats out in the boat, the run-off passes the wheel to the dry patch,
+      // Another whole garden: the cat floats out in the boat, the run-off reaches the dry patch,
       // the snail comes out, and more run-off makes mud of the patch and brings up the worm.
-      name: 'run-off-past-the-wheel-to-the-patch',
+      name: 'run-off-to-the-patch',
       run: async (d) => {
         await yard(d, 'whole-garden', 2)
         await d.wait(1000)

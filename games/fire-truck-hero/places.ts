@@ -13,8 +13,8 @@ export const NEST = {
   boatInPool: { x: 0.55, z: 0 },
   /** The cat naps in the middle of the boat. */
   catInBoat: { x: -0.05, z: 0 },
-  /** A boat carried over the rim lies aground on the near side of the pool. */
-  boatAground: { x: 0.35, z: 1.85 },
+  /** A boat carried over the rim lies aground on the near side of the pool, just past the lip of its low side. */
+  boatAground: { x: 0.35, z: 2.0 },
   /** The duck's side of the pool. */
   duckInPool: { x: -0.7, z: 0 },
 } as const
@@ -44,6 +44,19 @@ export function placeOf(yard: Yard, index: number): Place {
   const sharesWithPool = thing.kind === 'boat' && yard.things.some((other, at) => at !== index && other.kind === 'pool' && other.spot === thing.spot)
   if (sharesWithPool) return { x: spot.x + NEST.boatAground.x, z: spot.z + NEST.boatAground.z }
   return spot
+}
+
+/**
+ * Which way the low side of a pool's rim points, as a turn from the near edge
+ * (+z) toward +x: at the first thing its run-off comes to, the wheel on the
+ * way where there is one, or straight at the near edge when nothing stands
+ * below it. The child can see where the pool will run over.
+ */
+export function lowSideOf(yard: Yard, pool: number): number {
+  const first = yard.runsPast ?? yard.runsTo
+  if (first === undefined || first === pool || !yard.things[first] || !yard.things[pool]) return 0
+  const from = placeOf(yard, pool), to = placeOf(yard, first)
+  return Math.atan2(to.x - from.x, to.z - from.z)
 }
 
 /** How near a point must be to count as on this thing. */

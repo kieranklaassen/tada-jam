@@ -25,10 +25,10 @@ import { driveScene, endedChannels, endingOf, onTheWay, restChannels, wormScene,
 import { THINGS, type Action, type Kind } from './things'
 import { Toy, type Touched } from './toy'
 import { honk as honkVoice, plip, splat, squelch, SPLAT_VARIANTS, type VoiceSpec } from './voices'
-import { gulpOn, gulpOnGround, honk, rest as restYard, sweepOver, type Came, type Step, type Yard, type YardEvent } from './world'
+import { afloat, gulpOn, gulpOnGround, honk, rest as restYard, sweepOver, type Came, type Step, type Yard, type YardEvent } from './world'
 import { arrangementsOf } from './yards'
 import { YardMotion } from './yardMotion'
-import { beeBuzz, beeLands, bellRing, catPaws, cellVoice, delayed, drip, duckQuack, duckTapsFloor, gateSwings, onPlastic, petalOpens, showSpit, slowSizzle, snailGlides, steamFades, truckRolls, wormPops } from './yardVoices'
+import { beeBuzz, beeLands, bellRing, boatScrapes, catPaws, cellVoice, delayed, drip, duckQuack, duckTapsFloor, gateSwings, onPlastic, petalOpens, showSpit, slowSizzle, snailGlides, steamFades, truckRolls, wormPops } from './yardVoices'
 
 /** A landing point that moves faster than this, in yard units a second, is sweeping. */
 export const SWEEP_SPEED = 4.2
@@ -49,6 +49,8 @@ export const QUACK_AFTER_S = 0.09
 /** How near a thing's middle a worm may come up, and how near the snail. */
 export const WORM_CLEAR = 1.7
 export const WORM_CLEAR_OF_SNAIL = 0.85
+/** How wide the puddle is that the wet logs of a fire float on: it lies inside the ring of pebbles. */
+export const FIRE_PUDDLE = 0.95
 /** How far the flower's cup has nodded over when its water tips out, as a share of the whole nod. */
 export const CUP_TIPS_AT = 0.85
 
@@ -143,6 +145,8 @@ export class Game extends Toy {
     }
     // The duck's beak on a dry floor is heard a few times after a touch, and then it taps in silence: an idle yard goes quiet.
     if (this.motion.duck.tapped && this.tapsHeard++ < 3) this.say(duckTapsFloor())
+    // Down from its ride over the rim it stands in a puddle, which it likes.
+    if (this.motion.duck.splashed) this.say(duckQuack(this.variants.next(3)))
     this.show(now)
     this.scene?.update(now)
     if (this.scene && !this.scene.running) this.scene = null
@@ -171,7 +175,6 @@ export class Game extends Toy {
     this.skipSounds = false
     this.drops.clear()
     this.spits.length = 0
-    this.wormOwed = null
   }
 
   /** A scene is playing: the Mount keeps the idle ladder down meanwhile. */
@@ -338,6 +341,8 @@ export class Game extends Toy {
   private voiceOf(kind: Kind, action: Action, by: Came | undefined, gulps: number, fullness: number): VoiceSpec {
     const variant = this.variants.next(3)
     if (kind === 'pool' && action === 'gulp' && gulps > 1) return cellVoice(cellOf('pool', 'fill').voice, fullness, variant)
+    // Water gathers in the boat with a drumming that deepens gulp by gulp: the first gulp rings the empty hull.
+    if (kind === 'boat' && action === 'gulp' && gulps > 1) return cellVoice(cellOf('boat', 'fill').voice, fullness, variant)
     if (kind === 'fire' && by === 'run-off') return slowSizzle()
     if (kind === 'cat' && by === 'run-off') return catPaws()
     return cellVoice(cellOf(kind, action).voice, fullness, variant)
@@ -360,7 +365,15 @@ export class Game extends Toy {
     if (kind === 'pool' && action !== 'neighbour') this.say(delayed(duckQuack(this.variants.next(3)), QUACK_AFTER_S))
     // Mud throws brown blobs.
     else if (kind === 'patch' && action === 'too-much') this.drops.blobs(at.x, at.z)
-    else if (kind === 'seed' && action !== 'neighbour') this.say(beeBuzz(true))
+    // The leaves shake off drops.
+    else if (kind === 'seed' && action === 'sweep') {
+      this.say(beeBuzz(true))
+      this.drops.burst(at.x, 1.5, at.z, 4, 1.1)
+    } else if (kind === 'seed' && action !== 'neighbour') this.say(beeBuzz(true))
+    // On sand the boat slides with a scrape.
+    else if (kind === 'boat' && action === 'sweep' && !afloat(this.yard, index)) this.say(delayed(boatScrapes(), 0.05))
+    // The wet logs float off on their own puddle.
+    else if (kind === 'fire' && action === 'too-much') this.paint.puddle(at.x, at.z, FIRE_PUDDLE)
     else if (kind === 'wheel' && (action === 'fill' || action === 'too-much')) this.drops.burst(at.x, 1.3, at.z, action === 'fill' ? 6 : 12, action === 'fill' ? 2.2 : 3.6)
     else if (kind === 'cat' && action === 'fill') this.drops.burst(at.x, 0.9, at.z, 10, 2.4)
   }
@@ -579,6 +592,10 @@ export class Game extends Toy {
   /** Sets the game up from the state as it was left: nothing eases in and no scene replays. */
   private settle(): void {
     this.paint.fromGround(this.yard.ground)
+    // A fire that has had too much is found with its logs afloat on their puddle.
+    this.yard.things.forEach((thing, index) => {
+      if (thing.kind === 'fire' && thing.gulps > THINGS.fire.fill) this.paint.puddle(placeOf(this.yard, index).x, placeOf(this.yard, index).z, FIRE_PUDDLE)
+    })
     Object.assign(this.channels, restChannels())
     const kind = this.yard.things[this.yard.want]?.kind
     if (this.yard.met && kind) for (const channel of endedChannels(kind)) this.channels[channel] = 1
