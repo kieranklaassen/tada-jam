@@ -12,7 +12,7 @@ import { changeShow, firstShowing, nextCrewShow, paradeShow, type Show } from '.
 import { IN_ARCH, LOOSE_Z, ROW_Z, TILE_Z, holeX, nearestSpot, spotPoint, spotX } from './stage'
 import { ACTS as TASTE_ACTS, moodFor, tasteFor } from './tastes'
 import {
-  babble, bap, bip, bloopBlip, bomBom, chirrup, clap, creak, donk, dwong, flap, fwump, groan, hiss, hoot, hum, paf, pip, plap, plop, pok, pomf, rumble, rustle,
+  babble, bap, bip, bloopBlip, bomBom, chirrup, clap, creak, donk, dwong, flap, fwump, groan, hiss, hoot, hum, paf, pip, plap, plop, pok, pomf, rumble, rustle, thup, trundle,
   scuttle, shoop, squeak, squeal, squelch, thwop, tok, twang, voiceLength, whirr, whistle, zrrp, type Mood,
 } from './voices'
 
@@ -193,7 +193,8 @@ export class Game {
     else if (target.type === 'prop') {
       // A thing of the room: it wobbles and sounds, and nothing in the world changes.
       this.play.poke(target.prop)
-      this.play.cue(target.prop === 'tree' ? 'rustle' : target.prop === 'brick' ? 'donk' : 'bom-bom', target.prop === 'tree' ? rustle(this.next()) : target.prop === 'brick' ? donk(this.next()) : bomBom('dome', this.next()), 0.03)
+      // Each has a voice of its own, which no hat and no creature has.
+      this.play.cue(target.prop === 'tree' ? 'rustle' : target.prop === 'brick' ? 'thup' : 'trundle', target.prop === 'tree' ? rustle(this.next()) : target.prop === 'brick' ? thup(this.next()) : trundle(this.next()), 0.03)
     } else this.play.dimple(target.x, target.z)
   }
 

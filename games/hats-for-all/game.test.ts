@@ -490,8 +490,8 @@ describe('the room', () => {
   const calm: World = { crew: [{ kind: 'bop', spot: 1, hats: [0] }, { kind: 'flop', spot: 2, hats: [1] }], tile: ['cone', 'dome'], loose: [], changes: [], guest: null, leaver: null, slips: 0 }
   const atRest = (): Saved => ({ ...saveOf(calm), finished: true })
 
-  it('answers a touch and changes nothing: the tree rustles and drops leaves, the ball rolls, the brick hops, and the save is as it was', () => {
-    for (const [prop, sound] of [['tree', 'rustle'], ['ball', 'bom-bom'], ['brick', 'donk']] as const) {
+  it('answers a touch and changes nothing: the tree rustles and drops leaves, the ball rolls with a trundle, the brick hops with a thup, and the save is as it was', () => {
+    for (const [prop, sound] of [['tree', 'rustle'], ['ball', 'trundle'], ['brick', 'thup']] as const) {
       const game = new Game(atRest()), before = serialize(game.saved), heard: { at: number; name: string }[] = []
       game.press({ type: 'prop', prop })
       let most = 0

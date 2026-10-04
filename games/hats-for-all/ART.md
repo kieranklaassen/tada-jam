@@ -24,7 +24,7 @@ In an empty scene, with no creature at all, the hat pops out, flips and lands on
 
 Why it is a pleasure with no goal (pack: game-design, toy-first.md): it is the press-out play of a foam puzzle mat, the covering and joining a toddler repeats unprompted, and each direction has its own sound, its own flip and a hole that fills or empties. The answer starts when the finger lands, runs alongside the next touch, and is bigger than the touch: the tile dimples, the hat flies, the creature bounces, its neighbours look (pack: game-design, touch-answers-bigger-than-the-touch.md). A person watching sees within three seconds what the child is doing: taking hats out and putting them on heads.
 
-A tap anywhere else is answered too: the foam floor dimples under the finger with a squeak and whatever stands near hops.
+A tap anywhere else is answered too: the foam floor dimples under the finger with a squeak and whatever stands near hops. Three things of the playroom round the mat answer a tap as well, each with a sound no hat and no creature makes, and change nothing: the tree shakes with a rustle and drops a few leaves, the ball on the low wall rolls a little way and back with a low trundle, and the brick beside it hops with a soft "thup".
 
 ## The object-by-action grid, and what is new on day 15
 
@@ -132,12 +132,12 @@ Five foam creatures, cut from the same mat as the floor. Each has the same one v
 
 - A hat a creature cannot stand still counts as its one hat and stays on its head: the reaction is a short act that ends with the hat worn, grumpily. A dislike is as good to watch as a like, and never stops the parade.
 - The reaction starts as the hat lands, reads from across a room, and is to exactly that hat on exactly that creature.
-- No creature is ever sad at the child, thanks the child, hurries the child or refers to the child leaving or coming back. A bare creature that has to wait waits calmly.
+- No creature is ever sad at the child, thanks the child, hurries the child or refers to the child leaving or coming back. A bare creature that has to wait waits calmly. One thing comes first, each time every hat is on a head, one each, and a head is still bare: the bare one makes a show of it, once. It looks into the empty holes and at the hats on the others, throws up its hands, jumps, sits down with a bump and goes cross-eyed, with a questioning babble; then it waits calmly. The show is about the hats and never about the child.
 - Each creature has its own babble (a pitch range and a rhythm of its own, invented and synthesized), its own walk and its own idle; no two share a motion.
 
 ## The scenes
 
-Every scene is a list of timed beats on game time, built on the template's `scene.ts`, filled in from the state of play, between 4 and 10 seconds long, and it gives way to any touch: the touch jumps the world to the scene's end state, which was saved when the scene began (pack: game-design, endings-and-short-scenes.md). No scene plays before an action, and none plays only sometimes for the same cause.
+Every scene is a list of timed beats on game time, built on the template's `scene.ts`, filled in from the state of play, between 4 and 10 seconds long, and it gives way to any touch: the touch jumps the world to the scene's end state, which was saved when the scene began (pack: game-design, endings-and-short-scenes.md). No scene plays before an action, except the first showing, which plays once when the game is first opened, before the child's first try (pack: game-design, guided-discovery.md), and none plays only sometimes for the same cause.
 
 - **The first showing** (once ever; cause: the game is opened for the first time, with the first crew standing on its spots). The first creature of the crew hops to the tile, stamps beside a hat, the hat pops out and lands on its own head, and it turns to look at the others and at the hats left. Filled in from: which creature leads and which hat is nearest. The crew of this one cycle has one creature and one hat more than its position lays out, so what is left for the child is the position as designed. It is a move in the world, with no word, and it never plays again (pack: game-design, guided-discovery.md).
 - **A crew walks in** (cause: the child taps the arch or the creature waiting in it). The tile of hats slides in at the front, and the creatures walk in one by one, each in its own walk, take their spots, look at the hats and pat their heads. Filled in from: the crew and tile laid out for the position.

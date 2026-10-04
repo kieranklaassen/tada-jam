@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { CREATURE_KINDS, HAT_KINDS } from './kinds'
 import {
-  RANGE, babble, bap, bip, bloopBlip, bomBom, chirrup, clap, creak, donk, dwong, flap, fwump, groan, hiss, hoot, hum, paf, pip, plap, plop, pok, pomf, rumble, rustle,
+  RANGE, babble, bap, bip, bloopBlip, bomBom, chirrup, clap, creak, donk, dwong, flap, fwump, groan, hiss, hoot, hum, paf, pip, plap, plop, pok, pomf, rumble, rustle, thup, trundle,
   scuttle, shoop, squeak, squeal, squelch, thwop, tok, twang, voiceLength, whirr, whistle, zrrp, type Mood, type Partial,
 } from './voices'
 
@@ -14,7 +14,7 @@ function everyVoice(): [string, Partial[]][] {
   for (const count of COUNTS) {
     all.push([`creak ${count}`, creak(count)], [`squeak ${count}`, squeak(count)], [`scuttle ${count}`, scuttle(count)], [`hoot ${count}`, hoot(count)], [`squeal ${count}`, squeal(count)], [`whirr ${count}`, whirr(count)], [`whistle ${count}`, whistle(count)])
     for (const hat of HAT_KINDS) for (const [name, voice] of [['pok', pok], ['pip', pip], ['bap', bap], ['fwump', fwump], ['plop', plop], ['paf', paf], ['pomf', pomf], ['bloop-blip', bloopBlip], ['plap', plap], ['chirrup', chirrup], ['bom-bom', bomBom]] as const) all.push([`${name} ${hat} ${count}`, voice(hat, count)])
-    for (const [name, voice] of [['groan', groan], ['squelch', squelch], ['hiss', hiss], ['thwop', thwop], ['bip', bip], ['shoop', shoop], ['zrrp', zrrp], ['rumble', rumble], ['donk', donk], ['twang', twang], ['dwong', dwong], ['tok', tok], ['flap', flap], ['clap', clap], ['rustle', rustle]] as const) all.push([`${name} ${count}`, voice(count)])
+    for (const [name, voice] of [['groan', groan], ['squelch', squelch], ['hiss', hiss], ['thwop', thwop], ['bip', bip], ['shoop', shoop], ['zrrp', zrrp], ['rumble', rumble], ['donk', donk], ['twang', twang], ['dwong', dwong], ['tok', tok], ['flap', flap], ['clap', clap], ['rustle', rustle], ['trundle', trundle], ['thup', thup]] as const) all.push([`${name} ${count}`, voice(count)])
     for (const creature of CREATURE_KINDS) all.push([`hum ${creature} ${count}`, hum(creature, count)])
     for (const creature of CREATURE_KINDS) for (const mood of MOODS) all.push([`babble ${creature} ${mood} ${count}`, babble(creature, mood, count)])
   }

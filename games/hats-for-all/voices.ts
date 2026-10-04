@@ -240,6 +240,18 @@ export function rustle(count: number): Partial[] {
   return [noise(0, 1500 * v, 2300 * v, 1.4, 0.06, 0.03, 0.22), noise(0.12, 2100 * v, 1300 * v, 1.4, 0.05, 0.03, 0.25)]
 }
 
+/** The ball on the low wall rolls a little way and back: a low trundle, down and up again. */
+export function trundle(count: number): Partial[] {
+  const v = vary(count)
+  return [tone(0, 196 * v, 165 * v, 0.11, 0.04, 0.3, 'triangle'), tone(0.2, 170 * v, 196 * v, 0.09, 0.04, 0.24, 'triangle')]
+}
+
+/** The brick on the low wall hops and lands: a soft "thup" as it leaves and a softer one as it comes down. */
+export function thup(count: number): Partial[] {
+  const v = vary(count)
+  return [noise(0, 700 * v, 420 * v, 1.2, 0.12, 0.002, 0.07), noise(0.42, 520 * v, 330 * v, 1.2, 0.09, 0.002, 0.09)]
+}
+
 /** A creature claps, once. */
 export function clap(count: number): Partial[] {
   return [noise(0, 1800 * vary(count), 1200, 1.5, 0.1, 0.002, 0.04)]
