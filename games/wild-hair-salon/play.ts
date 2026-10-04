@@ -9,9 +9,9 @@ import { makeRng } from './rng'
 import { TUFTS } from './rules'
 import { deserializeGame, serializeGame, type Game } from './save'
 import { Scene, followedBy, sceneLength, type Beat } from './scene'
-import { capeComesOff, comingIn, shownOnce, type Cast, type Cue } from './scenes'
+import { RIBBON_FIRST, capeComesOff, comingIn, shownOnce, tuftShown, type Cast, type Cue } from './scenes'
 import { MOST_NOTES, notesFor, notesForCue, notesForSaying, type Note } from './sound'
-import { Staging, lowFor, walk } from './staging'
+import { RIBBON_HOME, Staging, lowFor, walk } from './staging'
 import { TASTES, type CustomerId } from './tastes'
 import { OTHER_VOICES, type Said } from './voices'
 import type { Salon, Who } from './world'
@@ -29,6 +29,9 @@ export type Save = 'now' | 'soon'
 
 /** How far a piece on the floor is from a point, for telling the piece that was cut from one that was crowded out. */
 const near = (salon: Salon, piece: Salon['clippings'][number], p: Point): number => { const box = clippingBox(salon, piece); return box ? Math.hypot(box.x - p.x, box.y - p.y) : Infinity }
+
+/** A second tap this soon after the one that began a scene, and this near it, is taken as part of the same touch. */
+const ECHO_S = 1, ECHO_REACH = 70
 
 /** How often, in seconds, something stirs by itself while nobody is touching. */
 const STIR_EVERY = 6
@@ -54,6 +57,9 @@ export class Play implements Cast {
   private said: Note[] = []
   private pressedAt: Point | null = null
   private untilStir = STIR_EVERY / 2
+  /** Where and when the press landed that began the scene now playing. */
+  private began: { at: Point; time: number } | null = null
+  private echo = false
   /** The finger has come off a drag and the drag has not been ended yet: the child let go, and what was in hand is to be put down there. */
   lifted = false
   private stirs = 0
@@ -134,6 +140,7 @@ export class Play implements Cast {
     this.scene = new Scene([...beats, { at: length, lasts: 0, play: () => this.settle() }])
     this.scene.start(this.time, () => { this.save = 'now' })
     this.scene.update(this.time)
+    this.began = this.pressedAt ? { at: this.pressedAt, time: this.time } : null
   }
 
   /** A touch: the scene that is playing ends now, with everything where it was going. */
@@ -163,6 +170,12 @@ export class Play implements Cast {
       const before = this.game!
       const after = markShown(before, idea)
       this.game = after
+      // The game holds what the showing will change before the showing plays. Until it does, the thing is drawn as it was:
+      // the tuft at its old length, and the ribbon short on its peg.
+      const tuft = idea === 'ribbon' ? null : tuftShown(before, after)
+      const held = tuft ? this.hair.tufts[tuft.tuft] : null
+      if (tuft && held) { held.rest = tuft.share; held.stretch.x = tuft.share; held.stretch.v = 0 }
+      if (idea === 'ribbon') this.staging.ribbon = { x: RIBBON_HOME.x, y: RIBBON_HOME.y, len: RIBBON_FIRST }
       beats = followedBy(beats, shownOnce(this, idea, before, after))
     }
     return beats
@@ -224,8 +237,13 @@ export class Play implements Cast {
     const game = this.game
     if (!game) return
     const hand = this.hand
+    if (this.echo && gesture.type !== 'press') return
     switch (gesture.type) {
       case 'press':
+        // A second tap in the same place, straight after the one that began a scene, is part of that touch: a child who taps
+        // twice, as the ghost hand does, does not undo what the first tap did. It does nothing.
+        this.echo = this.inScene && this.began !== null && this.time - this.began.time < ECHO_S && Math.hypot(gesture.at.x - this.began.at.x, gesture.at.y - this.began.at.y) < ECHO_REACH
+        if (this.echo) return
         // A touch ends a scene, and is then an ordinary touch.
         this.endScene()
         this.pressedAt = gesture.at
@@ -267,6 +285,7 @@ export class Play implements Cast {
    */
   abandon(): void {
     this.lifted = false
+    this.echo = false
     this.hand.drop()
     this.pressed = null
     this.pressedAt = null

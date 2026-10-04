@@ -2,7 +2,9 @@
 
 // The grown-up performance overlay. It is no part of the game a child plays:
 // it shows only after three quick taps in the top right corner, or with
-// `?fps=1` in the address, and three more taps hide it again. It reads what
+// `?fps=1` in the address, and three more taps hide it again. In this game
+// the Mount passes the corner's taps on only after the corner has been held
+// down for a second, so a child who drums there does not open it. It reads what
 // the Mount already measures and changes nothing, in the game or in a save.
 // Its readout is the only text in the game. The wordless check accepts text
 // in a file with this name alone, behind the comment the readout carries, so
@@ -65,7 +67,7 @@ export class Overlay {
     if (nowMs - this.since < EVERY_MS) return
     this.since = nowMs
     const fps = this.frames / (this.sumMs / 1000)
-    // wordless-ok: grown-up performance overlay, reached only by three quick taps in the corner or by fps=1 in the address
+    // wordless-ok: grown-up performance overlay, reached only by a hold and three quick taps in the corner or by fps=1 in the address
     this.box.textContent = `${fps.toFixed(0)} fps  worst ${this.worstMs.toFixed(0)} ms\nwork ${(this.workMs / this.frames).toFixed(1)} ms  tier ${tier}\n${drawCalls} calls  ${triangles} tris`
     this.reset()
   }

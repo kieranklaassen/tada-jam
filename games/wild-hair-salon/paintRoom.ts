@@ -176,11 +176,10 @@ export function paintShelf(g: Ctx, paint: Watercolour, rng: Rng): void {
   // What stands on it goes down first, then the board in front of their feet.
   bottle(g, paint, rng, x + 22, y + 2, 26, 60, ROOM.bottle[0], false)
   bottle(g, paint, rng, x + 56, y + 2, 34, 46, ROOM.bottle[1], true)
-  // A jar of combs: three handles stick out of the glass.
+  // A jar of combs: three plain handles stick out of the glass, with no marks on them.
   const jar = roughBox(rng, x + 82, y - 40, 34, 42, 1.2)
   for (const [dx, lean, color] of [[90, -5, ROOM.bottle[3]], [99, 1, ROOM.bottle[4]], [108, 6, ROOM.bottle[0]]] as const) {
     paint.wash(g, [{ x: x + dx - 4, y: y - 30 }, { x: x + dx + 4, y: y - 30 }, { x: x + dx + 4 + lean, y: y - 74 }, { x: x + dx - 4 + lean, y: y - 74 }], { color, strength: 0.85, sharp: true, reserve: true })
-    for (let t = 0; t < 4; t++) paint.pencil(g, [{ x: x + dx - 4 + lean * (0.5 + t * 0.12), y: y - 52 - t * 6 }, { x: x + dx + 4 + lean * (0.5 + t * 0.12), y: y - 52 - t * 6 }], false, 0.5)
   }
   paint.wash(g, jar, { color: ROOM.glassBloom, edge: ROOM.steelEdge, strength: 0.55, reserve: false })
   paint.pencil(g, jar, true, 0.7)

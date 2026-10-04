@@ -69,6 +69,65 @@ describe('an empty salon', () => {
   })
 })
 
+describe('a second tap', () => {
+  it('in the same place straight after the tap that began a scene does nothing: two taps on the knot leave the cape off and the scene playing', () => {
+    const play = seated()
+    const knot = knotOf(play)
+    tap(play, knot)
+    run(play, 0.4, false)
+    tap(play, { x: knot.x + 6, y: knot.y - 4 })
+    expect(play.game!.cape).toBe('off')
+    expect(play.inScene).toBe(true)
+    // Later, or somewhere else, a touch ends the scene as any touch does.
+    const far = seated()
+    tap(far, knotOf(far))
+    run(far, 0.4, false)
+    far.gesture({ type: 'press', at: AIR })
+    expect(far.inScene).toBe(false)
+    const late = seated()
+    const where = knotOf(late)
+    tap(late, where)
+    run(late, 1.2, false)
+    late.gesture({ type: 'press', at: where })
+    expect(late.inScene).toBe(false)
+    // And two taps on the door let the pair in once and leave them coming in.
+    const door = opened()
+    tap(door, DOOR)
+    run(door, 0.3, false)
+    tap(door, DOOR)
+    expect(door.inScene).toBe(true)
+    expect(door.game!.chair).not.toBeNull()
+  })
+})
+
+describe('a thing shown once', () => {
+  it('is drawn as it was until it is shown: the tuft at its old length from the moment the pair come in, the ribbon short on its peg', () => {
+    const play = opened()
+    tap(play, DOOR)
+    const game = play.game!
+    expect(game.shown.snip).toBe(true)
+    // The game already holds the tuft at half; it is drawn at its full length until the paw nips it.
+    const tuft = play.hair.tufts.findIndex((t) => t.rest > 1.2)
+    expect(tuft).toBeGreaterThanOrEqual(0)
+    run(play, 3.9, true)
+    expect(play.inScene).toBe(true)
+    expect(play.hair.tufts[tuft].rest).toBeGreaterThan(1.2)
+    expect(play.hair.tufts[tuft].stretch.x).toBeGreaterThan(1.2)
+    through(play)
+    expect(play.hair.tufts[tuft].rest).toBe(1)
+    // The ribbon: from the touch that sends the friend across, it hangs short on its peg until the friend has drawn it out.
+    const ribbon = seated({ shown: { snip: true, pull: true, ribbon: false }, ribbon: null })
+    tap(ribbon, BENCH)
+    expect(ribbon.game!.ribbon).toMatchObject({ len: TAIL_LEN, at: 'peg' })
+    expect(ribbon.staging.ribbon).toMatchObject({ x: PEG.x, y: PEG.y })
+    expect(ribbon.staging.ribbon!.len).toBeLessThan(TAIL_LEN / 2)
+    run(ribbon, 0.8, true)
+    expect(ribbon.staging.ribbon!.len).toBeLessThan(TAIL_LEN / 2)
+    through(ribbon)
+    expect(ribbon.staging.ribbon).toBeNull()
+  })
+})
+
 describe('small things the sheet has', () => {
   it('has each of the pair look to the side the other one\'s lock is on, beside the chair and across the room', () => {
     const looks = (seat: 'beside' | 'across'): { customer: number; friend: number } => {

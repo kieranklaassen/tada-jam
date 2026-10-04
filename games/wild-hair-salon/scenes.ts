@@ -46,6 +46,22 @@ export const TAIL_OF_CUSTOMER: Point = { x: 300, y: 474 }
 export function tailOf(actor: Actor): Point {
   return { x: actor.x + 72, y: actor.y + 98 }
 }
+/**
+ * The tuft a showing changes, and how long it was as a share of how long it
+ * is. The game holds the new length before the showing plays, so the tuft is
+ * drawn at that share of itself from the moment the showing is due until the
+ * paw has done its work: nothing changes before it is shown.
+ */
+export function tuftShown(before: Game, after: Game): { tuft: number; share: number } | null {
+  const tuft = after.mane.findIndex((steps, i) => steps !== before.mane[i])
+  if (tuft < 0 || after.chair === null) return null
+  const reach = (steps: number): number => tuftPose(after.chair!, tuft, steps, after.mane.length).reach
+  return { tuft, share: reach(before.mane[tuft]) / reach(after.mane[tuft]) }
+}
+
+/** How long the ribbon is when it is first seen, before the friend has pulled it as long as its tail. */
+export const RIBBON_FIRST = 16
+
 /** Where the customer's paw comes out of the cape, on the far side from the friend. */
 export const PAW_HOME: Point = { x: HEAD.x - 104, y: COLLAR_Y + 12 }
 /** Where its paw comes from when the cape is off and it stands by the friend: its shoulder on the friend's side. */
@@ -268,7 +284,7 @@ export function shownOnce(cast: Cast, idea: Idea, before: Game, after: Game): Be
     const tail = tailOf(BY_THE_PEG), beside = { x: TAIL_OF_CUSTOMER.x + 30, y: TAIL_OF_CUSTOMER.y }
     const stand = (a: Actor) => ({ ...a, lift: 0, seen: 1 })
     return [
-      cueAt(0, () => { staging.ribbon = { x: RIBBON_HOME.x, y: RIBBON_HOME.y, len: 16 }; if (!cast.cut) cast.friend()?.react('showsAMove') }),
+      cueAt(0, () => { staging.ribbon = { x: RIBBON_HOME.x, y: RIBBON_HOME.y, len: RIBBON_FIRST }; if (!cast.cut) cast.friend()?.react('showsAMove') }),
       over(0, 1.0, (p) => { staging.friend = walk(home, BY_THE_PEG, p, gait, 1.0, lowFor(home, BY_THE_PEG)) }),
       cueAt(1.0, () => { if (!cast.cut) cast.cue('ribbonTaken') }),
       // It holds the ribbon beside its own tail, and pulls it until it is as long as the tail.
@@ -301,11 +317,10 @@ export function shownOnce(cast: Cast, idea: Idea, before: Game, after: Game): Be
   }
 
   // The tuft the customer showed the move on: the one whose length the showing changed.
-  const tuft = after.mane.findIndex((steps, i) => steps !== before.mane[i])
-  if (tuft < 0) return [over(0, 0.3, () => {})]
+  const shown = tuftShown(before, after)
+  if (!shown) return [over(0, 0.3, () => {})]
+  const { tuft, share } = shown
   const was = before.mane[tuft], is = after.mane[tuft]
-  const reach = (steps: number): number => tuftPose(chair, tuft, steps, after.mane.length).reach
-  const share = reach(was) / reach(is)
   const tip = (): Point => onHead({ x: HEAD.x, y: HEAD.y, s: 1 }, tuftTip(tuftPose(chair, tuft, is, after.mane.length)))
   const held = hair.tufts[tuft]
   // The paw comes out of the cape on the far side from the friend and goes to the tuft, a good way along it.
