@@ -41,8 +41,8 @@ export type Hit = { on: 'held'; friend: number } | { on: 'tug'; friend: number }
 
 /** A bunch's place in the sky and its springs: how flat it is, how far it is pushed aside, how far the loose end of its string has whipped, and how long until it is back. */
 type Place = { squash: number; squashSpeed: number; pressed: boolean; push: number; pushSpeed: number; whip: number; whipSpeed: number; away: number; grow: number }
-/** A bunch on its way down. `lasts` is how long the way takes: `FLIGHT`, or longer when whoever will answer it is still busy; it is worked out again whenever that changes, so `gone` keeps how much of the way is behind it, 0 to 1, and it is never moved by a change of plan. `begun` says its answer has begun, so its arrival is settled. `owed` says its friend was busy all the same when it arrived, and owes it a refusal; `squeezed` is when a finger last landed on it; `slipped` says it was counted as a slip when it was sent; `judged` says the cycle was judged by it, and holds the position before; `dueBefore` is the ending that was due when it came to serve the troop; `sprung` is how flat it was under the finger when it left, from which it springs back past round. */
-type Flight = { bunch: Bunch; slot: number; given: Given; t: number; lasts: number; fromX: number; fromY: number; landed: boolean; after: number; friend: number; gone: number; begun?: boolean; met?: boolean; owed?: boolean; squeezed?: number; slipped?: boolean; judged?: { position: string }; dueBefore?: { at: number; order: number[]; together: boolean } | null; sprung?: number }
+/** A bunch on its way down. `lasts` is how long the way takes: `FLIGHT`, or longer when whoever will answer it is still busy; it is worked out again whenever that changes, so `gone` keeps how much of the way is behind it, 0 to 1, and it is never moved by a change of plan. `begun` says its answer has begun, so its arrival is settled. `owed` says its friend was busy all the same when it arrived, and owes it a refusal; `squeezed` is when a finger last landed on it; `slipped` says it was counted as a slip when it was sent; `judged` says the cycle was judged by it, and holds the position before; `sprung` is how flat it was under the finger when it left, from which it springs back past round. */
+type Flight = { bunch: Bunch; slot: number; given: Given; t: number; lasts: number; fromX: number; fromY: number; landed: boolean; after: number; friend: number; gone: number; begun?: boolean; met?: boolean; owed?: boolean; squeezed?: number; slipped?: boolean; judged?: { position: string }; sprung?: number }
 /** A balloon in a friend's hand. `bonk` is how long it is still on its way round to the friend's head, knocked by a refusal; `wait` is how long it still hangs where it arrived, in a bunch with one for each, before its friend's turn to take it, `owed` says it hangs there until its friend, who is busy, is free to take it, and `knot` is where its string still ends meanwhile. */
 type Held = { x: number; y: number; vx: number; vy: number; shown: boolean; bonk?: number; wait?: number; owed?: boolean; knot?: { x: number; y: number } }
 /** A balloon that has got away. `flat` is one blown off going flat; `bump` is one that is heading for the cloud over the troop and has not met it yet; `drift` is one of a sky that is over, which rises out of the top of the view without a pop. */
@@ -284,6 +284,15 @@ export class Theatre {
 
   /** What is under a point of the friends' plane. Whatever looks touchable is, and is read a little larger than it is drawn. */
   hit(x: number, y: number, view: View): Hit {
+    // What is drawn in front answers. A balloon that has got away is in front of a bunch on its way, and that is in
+    // front of everything else: under a finger that is on one as it is drawn, it is the one touched, whatever is
+    // behind it, a balloon in a hand, a friend, the troop that waits or a cloud.
+    const drawn = BALLOON * view.balloon
+    for (let b = 0; b < this.loose.length; b++) if (Math.hypot(x - this.loose[b].x, (y - this.loose[b].y) / 1.12) < drawn) return { on: 'loose', balloon: b }
+    for (let f = 0; f < this.flights.length; f++) {
+      const flight = this.flights[f], at = this.along(flight)
+      for (const offset of bunchOffsets(flight.bunch.count)) if (Math.hypot(x - at.x - offset.x * view.balloon, (y - at.y - offset.y * view.balloon) / 1.12) < drawn) return { on: 'flying', flight: f }
+    }
     for (let i = 0; i < this.held.length; i++) {
       const balloon = this.held[i]
       if (balloon.shown && Math.hypot(x - balloon.x, (y - balloon.y) / 1.12) < BALLOON * 1.2 * view.balloon) return { on: 'held', friend: i }
@@ -308,6 +317,13 @@ export class Theatre {
       const spot = this.spot(i), tall = plan.height * FRIEND_SCALE, feet = spot.y + this.highOf(i)
       if (Math.abs(x - spot.x) < plan.halfWidth * FRIEND_SCALE && y > feet - 0.2 && y < feet + tall + 0.25) return { on: 'friend', friend: i }
     }
+    // A bunch on its way down, and a balloon that has got away, are balloons like any other: each answers a touch,
+    // and is read a little larger than it is drawn where nothing in front of the scenery is under the finger.
+    for (let f = 0; f < this.flights.length; f++) {
+      const flight = this.flights[f], at = this.along(flight)
+      for (const offset of bunchOffsets(flight.bunch.count)) if (Math.hypot(x - at.x - offset.x * view.balloon, (y - at.y - offset.y * view.balloon) / 1.12) < BALLOON * 1.2 * view.balloon) return { on: 'flying', flight: f }
+    }
+    for (let b = 0; b < this.loose.length; b++) if (Math.hypot(x - this.loose[b].x, (y - this.loose[b].y) / 1.12) < BALLOON * 1.2 * view.balloon) return { on: 'loose', balloon: b }
     const first = waitingSpot(0, view), far = view.distance / (view.distance - first.z)
     const waitingPlan = BODIES[this.waiting.kind], wide = waitingPlan.halfWidth * FRIEND_SCALE * WAITING_SCALE * far
     const footY = groundAt(first.x, first.z) * far
@@ -316,12 +332,6 @@ export class Theatre {
       const cloud = CLOUDS[index], at = seenAt(cloud.x, cloud.y, cloud.z, view, this.seen)
       if (Math.abs(x - at.x) < 2.5 * cloud.scale * at.scale && Math.abs(y - at.y) < 0.95 * cloud.scale * at.scale) return { on: 'cloud', index }
     }
-    // A bunch on its way down, and a balloon that has got away, are balloons like any other: each answers a touch.
-    for (let f = 0; f < this.flights.length; f++) {
-      const flight = this.flights[f], at = this.along(flight)
-      for (const offset of bunchOffsets(flight.bunch.count)) if (Math.hypot(x - at.x - offset.x * view.balloon, (y - at.y - offset.y * view.balloon) / 1.12) < BALLOON * 1.2 * view.balloon) return { on: 'flying', flight: f }
-    }
-    for (let b = 0; b < this.loose.length; b++) if (Math.hypot(x - this.loose[b].x, (y - this.loose[b].y) / 1.12) < BALLOON * 1.2 * view.balloon) return { on: 'loose', balloon: b }
     // Below the friends' feet there is only the hill.
     if (y < groundAt(x, 0) - 0.25) return { on: 'hill' }
     // Above it, far off: a troop that goes round the far hill, with its balloons, or the far hill itself.
@@ -519,10 +529,13 @@ export class Theatre {
       this.act(friend, 'popped')
     }
     this.sound(`${troop.kind}Startle`)
+    // The ending is the troop's with all its balloons. One that is due and has not begun, since it waited for a
+    // friend in the air or for bunches on their way, or since the bunch that causes it has not arrived, is off: the
+    // troop is not full any more, and no bunch on its way or in a hand completes it now. It is due again the next
+    // time the last friend takes its balloon, which may be a bunch that is read again here (`sentAgain`).
+    this.endingDue = null
+    for (const flight of this.flights) if (flight.given.result === 'taken') flight.given.served = false
     this.sentAgain()
-    // An ending that is due and has had to wait (for a friend in the air, for bunches on their way) still plays:
-    // its cause, the last friend taking its balloon, has happened. The friends that hold a balloon do their proud
-    // moves; this one reaches up again, and the ending plays once more when it has been given another.
     if (troop.held.filter((holds) => holds).length === troop.size - 1) {
       // A troop that had all its balloons, one friend alone too, stops swaying with a squeak of heels, and looks at the empty hand.
       this.lookAt.friend = friend
@@ -557,9 +570,7 @@ export class Theatre {
     const everyoneHolds = first.type === 'gotAway' && first.spare === flight.bunch.count
     if (!refusedBefore) flight.friend = first.type === 'taken' ? first.takers[0] : first.type === 'gotAway' ? (everyoneHolds ? this.nearest(x, false) : first.grabber) : this.nearest(x, true)
     // The ending begins with its cause: the moment the last balloon is in a hand. Its first beat is that catch.
-    flight.dueBefore = undefined
     if (serves && serves.type === 'served') {
-      flight.dueBefore = this.endingDue
       this.endingDue = { at: Number.POSITIVE_INFINITY, order: [...this.took], together: serves.together }
     }
     return true
@@ -577,8 +588,8 @@ export class Theatre {
   private sentAgain(): void {
     const again = this.flights.filter((flight) => !flight.landed && !flight.begun)
     if (again.length === 0) return
-    // What they stored is taken back: the balloons they were to bring, their slips, and the judging of the cycle
-    // with the ending it called for.
+    // What they stored is taken back: the balloons they were to bring, their slips, and the judging of the cycle.
+    // The ending one of them called for is off already (`popHeld`).
     const held = [...this.save.troop.held]
     let position = this.save.position, finished = this.save.finished, slips = this.save.slips
     for (let i = again.length - 1; i >= 0; i--) {
@@ -586,7 +597,6 @@ export class Theatre {
       if (given.result === 'taken') {
         for (const taker of given.takers) held[taker] = false
         this.took = this.took.filter((friend) => !given.takers.includes(friend))
-        if (given.served) this.endingDue = flight.dueBefore ?? null
       }
       if (flight.slipped) slips = Math.min(2, Math.max(0, (this.slipped -= 1))) as 0 | 1 | 2
       if (flight.judged) { position = flight.judged.position; finished = false }

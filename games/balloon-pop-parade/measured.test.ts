@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { BODIES, type KindName } from './bodies'
 import { PERSONALITIES } from './clips'
-import { GROUND, skySlots, viewFor, waitingSpot } from './layout'
+import { GROUND, skySlots, viewFor, waitingSpot, bunchOffsets } from './layout'
 import { saveOf } from './moments'
 import type { Pose } from './pose'
 import { freshSave } from './save'
@@ -694,6 +694,86 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
     }
     expect(arrived).toBeGreaterThan(400)
     expect(afterPop).toBeGreaterThan(40)
+  }, 120_000)
+
+  it.each(kinds)('a %s alone has no ending without its balloon: given one, sent a wrong bunch a quarter of a second later and popped inside the second, it marches for nothing, and has its ending when it is given another', (kind) => {
+    const theatre = new Theatre(saveOf({ position: 'solo-two-colours', troop: { kind, size: 1, held: [false] }, sky: [{ colour: kind, count: 1 }, { colour: other(kind), count: 1 }, { colour: kind, count: 1 }], waiting: { kind: other(kind), size: 1 } }), 3), { balloons, painter, clear } = recorder()
+    let endings = 0, steps = 0, popped = false
+    for (let i = 0; i < 60 * 9; i++) {
+      if (i === 6) tap(theatre, 0)
+      if (i === 21) tap(theatre, 1)
+      if (i >= 40 && !popped) {
+        // The balloon in its hand, as soon as it is there: the wrong bunch is still on its way, so the ending waits.
+        clear()
+        theatre.paint(painter, VIEW)
+        const own = balloons.find((balloon) => balloon.z > 0.29 && balloon.z < 0.31 && balloon.wide === 1 && balloon.y < 2.2)
+        if (own) {
+          expect(theatre.playing, 'the ending waits for the wrong bunch').toBe(null)
+          theatre.press(own.x, own.y, VIEW)
+          theatre.cancel()
+          popped = theatre.troop.held[0] === false
+        }
+      }
+      const before = theatre.playing
+      theatre.step(1 / 60)
+      if (theatre.playing === 'ending' && before !== 'ending') endings += 1
+      steps += theatre.sounds.filter((sound) => sound.voice === `${kind}Step`).length
+      theatre.sounds.length = 0
+    }
+    expect(popped).toBe(true)
+    expect(endings, 'no ending for a friend without its balloon').toBe(0)
+    expect(steps, 'and no march heard').toBe(0)
+    // The cycle was judged when the balloon was sent, and stays judged; the ending comes with the next balloon.
+    expect(theatre.save.finished).toBe(true)
+    tap(theatre, 2)
+    for (let i = 0; i < 60 * 3 && theatre.playing !== 'ending'; i++) theatre.step(1 / 60)
+    expect(theatre.playing).toBe('ending')
+    expect(theatre.troop.held).toEqual([true])
+  })
+
+  it('begins an ending only for a troop that is seen with all its balloons, and gives a touch to the balloon drawn in front: in whole games played at random, with pops as balloons land and taps on bunches on their way', () => {
+    let endings = 0, flying = 0, got = 0
+    for (const [age, seed] of [[2, 3], [3, 5], [4, 7], [4, 11], [2, 13], [4, 17], [3, 19], [4, 23]] as const) {
+      const theatre = new Theatre(freshSave(age, seed), seed), { balloons, painter, clear } = recorder()
+      const inside = theatre as unknown as { flights: { bunch: Bunch }[]; held: { shown: boolean }[]; loose: { x: number; y: number }[]; along: (flight: unknown) => { x: number; y: number } }
+      let state = seed * 86028121
+      const random = () => (state = (state * 1103515245 + 12345) % 2147483648) / 2147483648
+      const full = () => theatre.troop.held.every((holds) => holds) && inside.held.slice(0, theatre.troop.size).every((balloon) => balloon.shown)
+      for (let i = 0; i < 60 * 150; i++) {
+        const before = theatre.playing
+        if (i % 7 === 0) {
+          const roll = random()
+          if (roll < 0.45) {
+            const own = theatre.sky.map((bunch, slot) => (bunch.colour === theatre.troop.kind ? slot : -1)).filter((slot) => slot >= 0)
+            tap(theatre, random() < 0.75 && own.length > 0 ? own[Math.floor(random() * own.length)] : Math.floor(random() * theatre.sky.length))
+          } else if (roll < 0.55) { theatre.press(waitingSpot(0, VIEW).x, GROUND + 0.8, VIEW); theatre.cancel() }
+          else if (roll < 0.8) {
+            clear()
+            theatre.paint(painter, VIEW)
+            const held = balloons.filter((balloon) => balloon.z > 0.29 && balloon.z < 0.31 && balloon.wide === 1 && balloon.y < 2.2)
+            if (held.length > 0) { const one = held[Math.floor(random() * held.length)]; theatre.press(one.x, one.y, VIEW); theatre.cancel() }
+          }
+        }
+        // Whatever is drawn in front is what a finger on it touches: a balloon that has got away, and then a bunch on its way.
+        if (i % 5 === 0) {
+          for (const loose of inside.loose) { expect(theatre.hit(loose.x, loose.y, VIEW).on, `seed ${seed}, frame ${i}`).toBe('loose'); got += 1 }
+          for (const flight of inside.flights) {
+            const at = inside.along(flight)
+            for (const offset of bunchOffsets(flight.bunch.count)) {
+              expect(['flying', 'loose'], `seed ${seed}, frame ${i}`).toContain(theatre.hit(at.x + offset.x * VIEW.balloon, at.y + offset.y * VIEW.balloon, VIEW).on)
+              flying += 1
+            }
+          }
+        }
+        if (theatre.playing === 'ending' && before !== 'ending') { endings += 1; expect(full(), `seed ${seed}, frame ${i}: an ending at a touch for a troop that is not full`).toBe(true) }
+        const still = theatre.playing
+        theatre.step(1 / 60)
+        if (theatre.playing === 'ending' && still !== 'ending') { endings += 1; expect(full(), `seed ${seed}, frame ${i}: an ending for a troop that is not full`).toBe(true) }
+      }
+    }
+    expect(endings).toBeGreaterThan(40)
+    expect(flying).toBeGreaterThan(2000)
+    expect(got).toBeGreaterThan(200)
   }, 120_000)
 
   it.each(kinds)('a troop of %ss does not set off without a balloon that is on its way to a hand: the waiting troop waves until it has arrived, and the parade holds what the troop is seen to carry', (kind) => {
