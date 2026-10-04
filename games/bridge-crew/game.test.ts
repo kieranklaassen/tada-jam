@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { CROSSINGS, part } from './bridges.fixture'
 import { driverAt } from './fleet'
-import { Game, MODEL, PULL, ROLL_IN, SWING, swingAt, wholeArch } from './game'
+import { Game, LEAVE, MODEL, PULL, ROLL_IN, SWING, swingAt, wholeArch } from './game'
 import { ROLL, SLIDE_OFF, TRAY, bays, parkAt, rackAt, slideOff, tools, waitAt } from './layout'
 import { stream } from './look'
 import { WATER } from './pose'
@@ -1708,6 +1708,27 @@ describe('what a full reading found of what a touch means', () => {
     expect(JSON.stringify(game.drawn().map((ends) => [ends.a, ends.b].map((p) => p.map((n) => +n.toFixed(3)))))).toBe(built)
   })
 })
+
+describe('what a full reading found of the free yard', () => {
+  it('a vehicle that makes room on the far bank is seen driving off, and the one that draws up shows more crates than the one that crossed', () => {
+    const last = 'open-yard'
+    let state = { ...edit(freshSave(null, last), CROSSINGS[last]), position: last }
+    state = crossed(crossed(state, 'post-van'), 'jelly-truck')
+    expect(state.across).toEqual(['post-van', 'jelly-truck'])
+    expect(state.waiting).toEqual(['piano-mover'])
+    const game = new Game(state, stream(3))
+    send(game)
+    expect(game.show.kind).toBe('crossing')
+    // Two park at most: the van has gone from the save, and is seen leaving.
+    expect(game.save.across).toEqual(['jelly-truck', 'piano-mover'])
+    expect(game.leaving).toMatchObject([{ id: 'post-van', bank: 'far', place: 0 }])
+    expect(game.save.waiting).toEqual(['caterpillar-bus'])
+    steps(game, LEAVE + 0.1)
+    expect(game.leaving).toEqual([])
+    expect(JSON.stringify(stored(game))).not.toContain('leaving')
+  })
+})
+
 
 
 

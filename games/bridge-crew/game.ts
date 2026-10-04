@@ -50,6 +50,9 @@ export const RUN_OVER = 1
 /** At the free yard: how far back the waiting vehicle can be drawn, how far sends it away, and how long it takes to leave, the next to draw up, and one let go early to roll up again. Cells and seconds. */
 export const PULL = { most: 2.6, sends: 1, leaves: 0.8, arrives: 1, back: 0.3 } as const
 
+/** How long a vehicle that makes room takes to drive off the sheet, in seconds. */
+export const LEAVE = 1.4
+
 /** How long the next roll takes to slide in when it arrives outside a crossing, in seconds. */
 export const ROLL_IN = 1.9
 
@@ -132,6 +135,8 @@ export class Game extends Toy {
   /** Seconds since the oldest sheet slid off the end of the rack, and since the model in the margin was plucked. Short-lived: not saved. */
   slidOff = Infinity
   modelRung = Infinity
+  /** Vehicles that made room on a bank of the free yard and are driving off the sheet. Short-lived: what is saved has them gone already. */
+  leaving: { id: VehicleId; bank: 'near' | 'far'; place: number; since: number }[] = []
   /** Where the finger has the trolley while it is carried: on the deck, or null in the air. Undefined when it is not in the hand. Never saved. */
   private carriedAt: Sheet['trolley']['at'] | undefined = undefined
   /** A vehicle has the road: the trolley stands aside. Short-lived: not saved. */
@@ -869,6 +874,7 @@ export class Game extends Toy {
     if (this.trolleyRolled && (this.trolleyRolled.since += dt) > 0.7) this.trolleyRolled = null
     if (this.trolleyFell && (this.trolleyFell.since += dt) > 1.1) this.trolleyFell = null
     if (this.trolleyBroke && (this.trolleyBroke.since += dt) > 1.3) this.trolleyBroke = null
+    if (this.leaving.length) { for (const one of this.leaving) one.since += dt; this.leaving = this.leaving.filter((one) => one.since < LEAVE) }
     this.trolleyFlipped += dt
     if (this.showing && 'differences' in this.showing && this.chief.act !== 'compares') this.showing = null
     if (this.showing && 'idea' in this.showing && this.chief.act !== 'shows') this.showing = null
@@ -949,7 +955,7 @@ export class Game extends Toy {
 
   /** The run has reached its ending: its outcome is saved at once, and the scene that shows it starts. */
   private finishDrive(drive: Drive): void {
-    const where = this.seatNow()!
+    const where = this.seatNow()!, was = this.save
     this.drive = null
     const show = (this.show = { ...idleShow(), vehicle: drive.vehicle, homeward: drive.homeward, from: [where.x, where.y], tilt: where.tilt })
     const cue = (what: Cue) => this.cue(what, drive)
@@ -1017,6 +1023,10 @@ export class Game extends Toy {
     const tries = drive.run.ending.kind === 'crossed' ? this.save.tries : Math.max(this.save.tries, 1)
     this.owed = neatWayDue(this.at.idea, tries, drive.run.ending, drive.run.frame.firm.some((firm) => !firm), this.save.shown, byJob) ? this.at.idea : null
     this.owedAfter = drive.run.ending.kind === 'crossed' ? null : drive.run.ending.kind
+    // At the free yard two stand on a bank at most: one that has to make room is seen driving off, and is not just gone.
+    for (const [bank, list] of [['near', was.waiting], ['far', was.across]] as const) list.forEach((id, place) => {
+      if (id !== drive.vehicle && !this.save.waiting.includes(id) && !this.save.across.includes(id)) this.leaving.push({ id, bank, place, since: 0 })
+    })
     this.urgent = true
     this.changed = true
     this.scene.start(this.sceneClock, () => {})

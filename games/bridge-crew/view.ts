@@ -7,7 +7,7 @@ import { bargeAt, drawSky, drawSplash, drawWaterLife } from './drift'
 import { chief, chiefModel, roll } from './figures'
 import { barge, compareModels, ideaModel, ideaPieces, lineDrawing, spareWeights, tracingSheet, trolley } from './props'
 import { vehicle } from './fleet'
-import { PULL, ROLL_IN, swingAt, type Game } from './game'
+import { LEAVE, PULL, ROLL_IN, swingAt, type Game } from './game'
 import { handPose, type Guidance, type HandPose } from './guidance'
 import { key, length, samePoint, type Kind, type Part, type Point } from './kit'
 import { ROLL, SLIDE_OFF, TRAY, bays, parkAt, rackAt, slideOff, tools, waitAt } from './layout'
@@ -492,6 +492,13 @@ export class View {
       put(id, (arriving ? drawUp(show.arrive, at, place) : waitAt(at, place)) + (drawn > 0 ? -drawn : pose.creep), at.left[1], 0, pose, false)
       if (glow > 0.01 && place === 0 && game.ready && drawn === 0) this.brackets(pen, at2(waitAt(at, 0) - longOf(id) - 0.9, at.left[1] + 2.2), at2(waitAt(at, 0) + 0.8, at.left[1] - 0.1), glow * 0.8)
     })
+    // One that makes room on a bank of the free yard drives off the sheet: from the far bank on to the right, behind
+    // whoever is parked there and behind the roll, as on the road's far lane; from the near bank back off the left edge.
+    for (const one of game.leaving) {
+      const t = Math.min(1, one.since / LEAVE), from = one.bank === 'far' ? parkAt(at, longOf(one.id), one.place) : waitAt(at, one.place)
+      const to = one.bank === 'far' ? COLS + 6 + longOf(one.id) : -4
+      put(one.id, from + (to - from) * t * t, one.bank === 'far' ? at.right[1] : at.left[1], 0, restingPose(one.id, false), false)
+    }
     // Parked in the lay-by on the far bank.
     game.across.forEach((id, place) => { if (id !== busy) put(id, parkAt(at, longOf(id), place), at.right[1], 0, restingPose(id, false), false) })
     // On a run: seated on the road as it lies under it now.
@@ -541,9 +548,11 @@ export class View {
       pen.save()
       const [nx, ny] = at2(rx - 0.25, at.right[1])
       pen.beginPath(); pen.rect(nx - cell * 2, ny - cell * 3, cell * 2, cell * 3.2); pen.clip()
-      pen.translate(nx + cell * 0.7, ny)
+      // It looks out from behind the roll, nose first: its cab and its face show, and the rest of it is behind the roll.
+      pen.translate(nx - cell * 1.15, ny)
+      pen.scale(-1, 1)
       // Its crates are not yet a load the child is asked for, so no numeral names them here.
-      vehicle(pen, next.job, cell * 0.85, waitPose(next.job, game.seconds, false), game.seconds, stream(22), false, 3, false)
+      vehicle(pen, next.job, cell * 0.85, waitPose(next.job, game.seconds, false), game.seconds, stream(22), true, 3, false)
       pen.restore()
       const [x, y] = at2(rx, at.right[1])
       roll(pen, x, y, cell * ROLL.tall, cell)
