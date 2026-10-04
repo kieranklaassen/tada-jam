@@ -43,7 +43,7 @@ export function rgb(hex: string): Rgb {
   return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255]
 }
 
-/** The same hue a step darker (amount below 0) or lighter (above 0): a beak, a belly, a claw tip. */
+/** The same hue a step darker (amount below 0) or lighter (above 0): a string, a tongue, a shadow, a balloon far off. Never a part of a friend, which is one flat colour all over. */
 export function shade(hex: string, amount: number): string {
   const mix = amount < 0 ? 0 : 1
   const t = Math.abs(amount)
