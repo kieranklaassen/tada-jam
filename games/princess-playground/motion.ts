@@ -714,7 +714,7 @@ export class Playground {
     let underway = false
     if (place && place.at === 'end' && place.level > 0) {
       const underId = this.seen[place.end][place.level - 1], under = this.bodies[underId]
-      if (under.mode !== 'held') target.y = Math.max(target.y, under.y + Math.cos(this.plank.tilt) * FRIENDS[underId].halfHeight * 2 * NESTLE * Math.max(1, under.squash))
+      if (under.mode !== 'held') target.y = Math.max(target.y, under.y + Math.cos(this.plank.tilt) * FRIENDS[underId].halfHeight * 2 * NESTLE * Math.max(1, under.squash, this.poses[underId].squash))
       // The friend it will sit on is still on its own way there: it hangs over it and lands when that one has.
       underway = under.mode === 'hop'
     }
@@ -731,7 +731,7 @@ export class Playground {
     if (place && place.at === 'end' && place.level > 0) {
       const underId = this.seen[place.end][place.level - 1], under = this.bodies[underId]
       if (under.mode !== 'held' && Math.hypot(under.x - body.x, under.z - body.z) < (FRIENDS[id].radius + FRIENDS[underId].radius) * 1.1) {
-        body.y = Math.max(body.y, under.y + FRIENDS[underId].halfHeight * 2 * Math.max(1, under.squash))
+        body.y = Math.max(body.y, under.y + FRIENDS[underId].halfHeight * 2 * Math.max(1, under.squash, this.poses[underId].squash))
       }
     }
     // Over the board it is never below the board's top: a plank that swings up under a hopping friend carries it.

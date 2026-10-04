@@ -14,6 +14,8 @@ export type Ground = {
   z: number
   /** What lies there under the finger: a friend's body, the board, or the sand. */
   on: 'friend' | 'plank' | 'sand'
+  /** The friend, when it is one. */
+  id?: FriendId
 }
 
 /** How far past the board's own edges a finger still counts as on it, in tray units. */
@@ -62,7 +64,7 @@ export function groundUnder(ray: Ray, frame: Frame, except: FriendId | null): Gr
       boardAt = t
     }
   }
-  if (nearest && nearestAt <= boardAt) return { x: frame.poses[nearest].x, z: frame.poses[nearest].z, on: 'friend' }
+  if (nearest && nearestAt <= boardAt) return { x: frame.poses[nearest].x, z: frame.poses[nearest].z, on: 'friend', id: nearest }
   if (board) return board
   if (d.y >= -1e-6) return null
   const t = -o.y / d.y

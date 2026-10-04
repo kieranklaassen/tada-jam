@@ -8,7 +8,7 @@ import { seeded } from './motion'
 import { KINDS, layout, rideOf, wantMet, type Kind } from './rides'
 import { endRide, freshWorld, load, rideIsOver, save, type Saved, type World } from './save'
 import { NEXT_AT } from './scenes'
-import { chuckle, crow, levelHum, purr, raspberry, scratch, softNote, spit, type Part } from './voices'
+import { chuckle, crow, levelHum, purr, raspberry, scratch, softNote, spit, wheeze, type Part } from './voices'
 import { FRIEND_IDS, MAX_TILT, PLANK, WAITING_PLACE, homeOn, plankTopAt, type FriendId } from './world'
 
 const QUIET: Guidance = { glow: 0, demo: null, demoIndex: -1 }
@@ -1094,6 +1094,30 @@ describe('the tilt follows the two totals and nothing else', () => {
     const { cues } = run(game, 3)
     expect(game.play.arrangement.left).toEqual(['mog', 'dot'])
     expect(cues.filter((cue) => cue.type === 'voice' && JSON.stringify(cue.parts) === JSON.stringify(spit())).length).toBe(1)
+  })
+})
+
+describe('a landing is answered by what is there when the friend lands', () => {
+  it('the head taken away while the friend is on its way is not landed on: no wheeze, no raspberry, and the bite of the end as it then is', () => {
+    const bare = tap(layout(rideOf('little-asks', 0)), 'pim')
+    // Pim holds the right end down; Bo, on her side, is tapped onto her head, and she is tapped off before he lands.
+    const game = new Game({ ...shown(), arrangement: putOnEnd(bare, 'pim', 'right'), touched: true, state: { ...shown().state, finished: true } }, 1)
+    run(game, 1)
+    game.takeCues()
+    tapOn(game, 'bo')
+    run(game, 0.5)
+    expect(game.play.bodies.bo.mode).toBe('hop')
+    tapOn(game, 'pim')
+    const { cues } = run(game, 5)
+    expect(game.play.arrangement.right).toEqual(['bo'])
+    const heard = (voice: readonly Part[]) => cues.filter((cue) => cue.type === 'voice' && JSON.stringify(cue.parts) === JSON.stringify(voice)).length
+    expect(heard(wheeze())).toBe(0)
+    expect(heard(raspberry())).toBe(0)
+    expect(game.play.bodies.pim.act).not.toBe('puff')
+    // Every bite drawn after he lands is for his four, never for the six the end would have held.
+    const bites = cues.filter((cue) => cue.type === 'bite').map((cue) => (cue.type === 'bite' ? cue.strength : 0))
+    expect(bites.length).toBeGreaterThan(0)
+    expect(Math.max(...bites)).toBeCloseTo((4 + 1) / (12 + 1), 5)
   })
 })
 

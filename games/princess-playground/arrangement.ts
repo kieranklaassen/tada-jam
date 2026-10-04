@@ -144,7 +144,9 @@ export function tap(a: Arrangement, id: FriendId): Arrangement {
   return putOnEnd(a, id, endOnSide(place.spot.x))
 }
 
-/** How near an end's seat, along the plank, a friend let go still lands on that end. */
+/** How far past the board's tip a friend let go still lands on that end: over the board, and a little past its edge. Further out it is over sand. */
+export const CATCH_PAST = 0.25
+/** How near an end's seat, along the plank, a friend let go lands on that end and does not slide. */
 export const CATCH = 1.75
 /**
  * How far in front of or behind the plank's line a friend let go still lands on it: over the board itself, and a
@@ -159,7 +161,7 @@ export const CATCH_DEPTH = PLANK.halfWidth + 0.25
  */
 export function drop(a: Arrangement, id: FriendId, x: number, z: number): { arrangement: Arrangement; slid: boolean } {
   const without = lift(a, id)
-  if (Math.abs(z - PLANK.z) <= CATCH_DEPTH && Math.abs(x) <= PLANK.seat + CATCH) {
+  if (Math.abs(z - PLANK.z) <= CATCH_DEPTH && Math.abs(x) <= PLANK.halfLength + CATCH_PAST) {
     const near: End = endOnSide(x)
     if (Math.abs(Math.abs(x) - PLANK.seat) <= CATCH) return { arrangement: putOnEnd(a, id, near), slid: false }
     return { arrangement: putOnEnd(a, id, lowEnd(without) ?? near), slid: true }

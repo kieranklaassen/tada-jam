@@ -109,6 +109,14 @@ describe('a friend let go', () => {
       expect(isSound(landed.arrangement), `${z}`).toBe(true)
     }
     expect(CATCH_DEPTH).toBeLessThan(1)
+    // And past the board's tip: over the board and a little past its edge is the end; further out is sand.
+    expect(placeOf(drop(a, 'pim', PLANK.halfLength + 0.2, PLANK.z).arrangement, 'pim').at).toBe('end')
+    for (const x of [PLANK.halfLength + 0.5, 4.75, -4.75]) {
+      const landed = drop(a, 'pim', x, PLANK.z)
+      expect(placeOf(landed.arrangement, 'pim').at, `${x}`).toBe('sand')
+      const at = standsAt(landed.arrangement, 'pim')
+      expect(Math.hypot(at.x - x, at.z - PLANK.z), `${x}`).toBeLessThan(1.6)
+    }
   })
 
   it('anywhere it may not stand, it stands at the nearest place it may, whichever way that lies', () => {

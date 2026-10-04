@@ -214,6 +214,11 @@
 - The idle ladder never shows Dot: bringing it in is never asked for.
 - The nearest free place is the nearest: of every place on the grid a friend may stand, the one closest to where it was let go, whichever way that lies, with a little room to spare from its neighbours where there is any. Before, a friend let go behind the plank was stepped out in front of it.
 
+**Built after the sixteenth reading.** Rules 1 to 5 clean; two things under rule 6.
+
+- A landing is answered by what is there when the friend lands. The cell was read when the child let go; a head tapped away while the friend was still on its way was wheezed at and puffed all the same, and the bite was drawn for a weight the end no longer held.
+- Past the board's tip, as beside it, sand is sand: a friend let go there stands at the nearest free place. A friend held over one who sits on the plank comes down on that end's seat, however the stack leans.
+
 **Found by this lane while checking those.**
 
 - A friend held on the picture of the plank's end did not land on the plank: carried friends hung under the finger, high over the tray, so it hung over the sand in front and came down there. A first cure read the finger at the height of a seated friend; it took too much of the sand for the plank and was replaced after the thirteenth reading (above): a carried friend now hangs over the place the finger points at. The audit's own "carried" moment had been dropping friends in the sand all along; it now really lands them on the ends, onto a friend and over the middle.

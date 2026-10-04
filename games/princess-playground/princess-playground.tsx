@@ -1,6 +1,7 @@
 // template: cartridge/game.tsx v2
 import { useEffect, useRef } from 'react'
 import type { Cartridge, CartridgeContext } from '../types'
+import { placeOf } from './arrangement'
 import { AttendedClock, Attention } from './attention'
 import { GameAudio } from './audio'
 import { BACKDROP } from './config'
@@ -16,7 +17,7 @@ import { Grains } from './grains'
 import { load } from './save'
 import { voiceOf } from './sound'
 import { Stage, type StageView } from './view/stage'
-import { PLANK } from './world'
+import { PLANK, seatX } from './world'
 
 // The Mount, showing a blank surface. Everything a game needs around its
 // renderer is wired and running: the saved state, attention, the attended
@@ -152,7 +153,9 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
           // What the finger points at is where the friend in the hand hangs, and so where it will come down: the
           // board when the finger is on the board's picture, a friend's place when it is on that friend, else the sand.
           const under = stage.groundAt(gesture.at.x, gesture.at.y, game.frame, game.play.held)
-          const over = under ? (under.on === 'sand' ? { x: under.x + carry.x, z: under.z + carry.z } : { x: under.x, z: under.z }) : null
+          // A friend who sits on the plank means its end, at the seat, however the stack it sits in leans.
+          const sits = under?.id ? placeOf(game.play.sitting, under.id) : null
+          const over = !under ? null : under.on === 'sand' ? { x: under.x + carry.x, z: under.z + carry.z } : sits && sits.at === 'end' ? { x: seatX(sits.end), z: PLANK.z } : { x: under.x, z: under.z }
           game.dragTo(over, stage.sandAt(gesture.at.x, gesture.at.y))
         }
         else if (gesture.type === 'dragEnd') game.dragEnd()

@@ -603,7 +603,9 @@ export class Game implements Director {
           if (event.id === 'pim') this.react([{ who: 'pim', after: 0.1, voice: v.crow(), act: 'bounce', seconds: 0.5 }])
         }
       }
-      const landing = this.landings[event.id]
+      // The cell is read when the friend lands, from what is there then: a head taken away meanwhile is not landed on.
+      const sent = this.landings[event.id], sitting = this.play.sitting
+      const landing = sent ? landingOf(sitting, sitting, event.id) : undefined
       // Come down a place onto a head, because the friend between was taken away: that head answers as it does to anyone landing on it.
       if (event.fell && !landing && !this.scene && event.on === 'friend') {
         // With a friend in the hand, the stack is the one that still sits.
