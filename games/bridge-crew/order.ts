@@ -111,3 +111,17 @@ export function modelInMargin(position: string, shown: readonly Showing[]): Idea
   const idea = site(position, 0).idea
   return idea !== null && shown.includes(idea) ? idea : null
 }
+
+/**
+ * Feedback thins with practice: once a sheet's own vehicle has crossed, only a
+ * part within a fifth of its limit shows its strain. A change to the bridge
+ * does not bring the fuller feedback back. What is saved names who has crossed
+ * the bridge as it stands, so after a change this is read from the cycle: a
+ * sheet whose cycle was judged has been crossed, unless it was judged badly,
+ * which the newest sheet's count of failed runs still says.
+ */
+export function strainThinned(job: string, sheet: { crossed: readonly string[]; home: boolean }, newest: boolean, finished: boolean, tries: number): boolean {
+  if (sheet.crossed.includes(job) || sheet.home) return true
+  if (!newest) return true
+  return finished && !givenUpOn(tries)
+}

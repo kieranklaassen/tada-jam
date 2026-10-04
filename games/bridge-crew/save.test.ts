@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { CROSSINGS, part } from './bridges.fixture'
 import { FIRST_VISIT, LADDER } from './config'
 import { KINDS, MAX_PARTS, SPEC, type Part } from './kit'
-import { JUDGE } from './order'
-import { RACK, TRACINGS, crossed, deserialize, edit, failedRun, freshSave, markShown, onNewest, parked, pluckHat, sentHome, serialize, setTrolley, standing, swapTracing, toFront, trace, turnTo, unroll, type Save } from './save'
+import { JUDGE, strainThinned } from './order'
+import { RACK, TRACINGS, crossed, deserialize, edit, failedRun, freshSave, leaveHats, markShown, onNewest, parked, pluckHat, sentHome, serialize, setTrolley, standing, swapTracing, toFront, trace, turnTo, unroll, type Save } from './save'
 import { COLS, ROWS, canPin, site } from './sites'
 import { STATE_VERSION } from './state'
 
@@ -244,5 +244,64 @@ describe('the saved state', () => {
     // The longest part of each kind still fits a stored part of the same shape.
     for (const kind of KINDS) expect(SPEC[kind].maxLength).toBeLessThan(10)
     expect(canPin(site('open-yard', 0), [COLS, ROWS])).toBe(true)
+  })
+
+  it('at the free yard the child has whichever vehicle it picks: two wait, and the one behind brought forward brings the next up', () => {
+    let state = freshSave(null, 'open-yard')
+    expect(state.waiting).toEqual(['post-van', 'jelly-truck'])
+    const seen = new Set<string>(state.waiting)
+    for (let i = 0; i < 5; i++) { state = toFront(state, state.waiting[1]); expect(state.waiting).toHaveLength(2); expect(new Set(state.waiting).size).toBe(2); seen.add(state.waiting[1]) }
+    expect(seen.size).toBe(5)
+    expect(state.waiting[0]).toBe('post-van')
+    // Whichever is sent is the yard's own: its failed runs count and its crossing judges the cycle.
+    state = toFront(state, 'jelly-truck')
+    expect(failedRun(state, 'jelly-truck', null).tries).toBe(1)
+    const over = crossed(state, 'jelly-truck')
+    expect(over.finished).toBe(true)
+    expect(over.across).toEqual(['jelly-truck'])
+    expect(over.waiting).toHaveLength(2)
+    expect(over.waiting).not.toContain('jelly-truck')
+    // Two park at most, and one sent home stands behind the one at the front.
+    let busy = over
+    for (let i = 0; i < 3; i++) busy = crossed(busy, busy.waiting[0])
+    expect(busy.across).toHaveLength(2)
+    for (const id of busy.across) expect(busy.waiting).not.toContain(id)
+    const home = sentHome(busy, busy.across[0])
+    expect(home.waiting).toEqual([busy.waiting[0], busy.across[0]])
+    expect(home.across).toEqual([busy.across[1]])
+    expect(round(home)).toEqual(home)
+    // Any two of the fleet are read back there, and on another sheet only that sheet's own two.
+    expect(round({ ...home, waiting: ['giraffe-bus', 'piano-mover'], across: [] }).waiting).toEqual(['giraffe-bus', 'piano-mover'])
+    expect(round({ ...freshSave(null), waiting: ['giraffe-bus'] }).waiting).toEqual(['post-van'])
+  })
+
+  it('at the free yard the position stays, however the cycle went', () => {
+    const last = LADDER[LADDER.length - 1]
+    let state = { ...freshSave(null, last), position: last }
+    for (let i = 0; i < JUDGE.badly; i++) state = failedRun(state, 'post-van', null)
+    expect(state).toMatchObject({ finished: true, position: last, next: { site: last } })
+    expect(crossed({ ...freshSave(null, last), position: last }, 'post-van').position).toBe(last)
+    // Anywhere else a cycle judged badly moves it a step down.
+    let earlier = { ...freshSave(null, LADDER[3]), position: LADDER[3] }
+    for (let i = 0; i < JUDGE.badly; i++) earlier = failedRun(earlier, site(LADDER[3], 0).job, null)
+    expect(earlier.position).toBe(LADDER[2])
+  })
+
+  it('a hat is left on a part whichever way the bus was going, and the strain keeps to its thinner showing after a change to the bridge', () => {
+    const state = edit(freshSave(null), bridge)
+    expect(leaveHats(state, [0]).sheets[0].hats).toEqual([0])
+    expect(leaveHats(leaveHats(state, [0]), [0, 7]).sheets[0].hats).toEqual([0])
+    expect(leaveHats(state, [])).toBe(state)
+    // Before the job vehicle has crossed: the full showing. After: thinned, and a change to the bridge does not undo it.
+    expect(strainThinned('post-van', state.sheets[0], true, false, 0)).toBe(false)
+    const over = crossed(state, 'post-van')
+    expect(strainThinned('post-van', over.sheets[0], true, over.finished, over.tries)).toBe(true)
+    const changed = edit(over, [])
+    expect(changed.sheets[0].crossed).toEqual([])
+    expect(strainThinned('post-van', changed.sheets[0], true, changed.finished, changed.tries)).toBe(true)
+    // A cycle judged badly was never crossed: the full showing stays.
+    let lost = state
+    for (let i = 0; i < JUDGE.badly; i++) lost = failedRun(lost, 'post-van', null)
+    expect(strainThinned('post-van', lost.sheets[0], true, lost.finished, lost.tries)).toBe(false)
   })
 })

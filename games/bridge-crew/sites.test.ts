@@ -3,7 +3,7 @@ import { CROSSINGS } from './bridges.fixture'
 import { FIRST_VISIT, LADDER } from './config'
 import { KINDS, MAX_PARTS, countKinds, layProblem, type Part } from './kit'
 import { run } from './run'
-import { COLS, ROWS, VARIANTS, canPin, isFooting, site } from './sites'
+import { COLS, ROWS, VARIANTS, canPin, isFooting, isYard, site } from './sites'
 import { VEHICLES, trainOf } from './vehicles'
 
 describe('the sheets', () => {
@@ -82,5 +82,24 @@ describe('the sheets', () => {
       expect(result.ending, id).toEqual({ kind: 'crossed' })
       expect(result.frame.firm.every(Boolean), id).toBe(true)
     }
+  })
+
+  it('the three variants of every position differ, in the gap or in where the rock stands', () => {
+    for (const id of LADDER) {
+      const forms = [0, 1, 2].map((v) => { const at = site(id, v); return JSON.stringify([at.left, at.right, at.ground, at.anchors]) })
+      expect(new Set(forms).size, id).toBe(3)
+      // The gap is the first one, or a cell or two wider or narrower.
+      const gaps = [0, 1, 2].map((v) => site(id, v).right[0] - site(id, v).left[0])
+      for (const gap of gaps) expect(Math.abs(gap - gaps[0])).toBeLessThanOrEqual(2)
+    }
+  })
+
+  it('the other vehicle of every position carries more crates than its own, and at the free yard any vehicle is its own', () => {
+    for (const id of LADDER) {
+      const at = site(id, 0)
+      if (isYard(at)) continue
+      expect(VEHICLES[at.extra].crates, id).toBeGreaterThan(VEHICLES[at.job].crates)
+    }
+    expect(LADDER.filter((id) => isYard(site(id, 0)))).toEqual([LADDER[LADDER.length - 1]])
   })
 })

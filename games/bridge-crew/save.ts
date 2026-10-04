@@ -1,7 +1,7 @@
 import { LADDER } from './config'
 import { KINDS, MAX_PARTS, layProblem, type Part, type Point } from './kit'
 import { JUDGE, crossedOutcome, givenUpOn, layOut, type Showing } from './order'
-import { canPin, site, type Site, type VehicleId } from './sites'
+import { canPin, isYard, site, type Site, type VehicleId } from './sites'
 import { beginCycle, deserialize as readBase, finishCycle, freshState, serialize as writeBase, type GameState } from './state'
 import { TROLLEY_WEIGHTS, VEHICLES } from './vehicles'
 
@@ -73,9 +73,28 @@ const emptySheet = (id: string, variant: number): Sheet => ({ site: id, variant,
  * position lays out: the toy opens on the free yard, where the whole kit is
  * (config.ts, `TOY_SHEET`). The position is left as the age set it.
  */
+/** The order the vehicles come up in at the free yard. */
+const FLEET = Object.keys(VEHICLES) as VehicleId[]
+
+/** The vehicle that steps in behind another at the free yard: the next of the fleet that is on neither bank. */
+function successor(after: VehicleId, taken: readonly VehicleId[]): VehicleId | null {
+  const from = FLEET.indexOf(after)
+  for (let i = 1; i < FLEET.length; i++) { const id = FLEET[(from + i) % FLEET.length]; if (!taken.includes(id)) return id }
+  return null
+}
+
+/** The line at the free yard's near bank: the vehicle at the front, and the next of the fleet behind it. Bringing the one behind to the front brings the next one up, so the child can have whichever vehicle it picks. */
+function yardLine(front: VehicleId, across: readonly VehicleId[]): VehicleId[] {
+  const behind = successor(front, across)
+  return behind ? [front, behind] : [front]
+}
+
+/** Who waits at a sheet's near bank while the child builds: the sheet's own vehicle, and at the free yard one more behind it. */
+const lineFor = (at: Site): VehicleId[] => (isYard(at) ? yardLine(at.job, []) : [at.job])
+
 export function freshSave(childAge: number | null, startOn: string | null = null): Save {
   const base = freshState(childAge), first = layOut(startOn ?? base.position, {})
-  return { ...base, sheets: [emptySheet(first.site, first.variant)], on: 0, next: null, waiting: [site(first.site, first.variant).job], across: [], tries: 0, laid: { [first.site]: 1 }, shown: [] }
+  return { ...base, sheets: [emptySheet(first.site, first.variant)], on: 0, next: null, waiting: lineFor(site(first.site, first.variant)), across: [], tries: 0, laid: { [first.site]: 1 }, shown: [] }
 }
 
 /** A list of stored parts read back as a design the sheet allows: anything that could not have been laid is left out. */
@@ -145,14 +164,16 @@ export function deserialize(raw: unknown, childAge: number | null = null, startO
   const next = isRecord(raw.next) && typeof raw.next.site === 'string' && LADDER.includes(raw.next.site)
     ? { site: raw.next.site, variant: site(raw.next.site, whole(raw.next.variant, 0, 99) ? raw.next.variant : 0).variant } : null
   // Only the newest sheet's own two vehicles can stand at its near bank, and before the judging its job vehicle does.
-  const waiting = Array.isArray(raw.waiting) ? [...new Set(raw.waiting.filter(isVehicle))].filter((id) => id === board.job || id === board.extra) : []
+  // At the free yard any two of the fleet can.
+  const own = (id: VehicleId) => isYard(board) || id === board.job || id === board.extra
+  const waiting = Array.isArray(raw.waiting) ? [...new Set(raw.waiting.filter(isVehicle))].filter(own).slice(0, 2) : []
   return {
     ...base, sheets, on,
     // A judged cycle always has its next sheet waiting; a damaged one is laid out again from the position.
     next: base.finished ? next ?? layOut(base.position, laid) : null,
-    waiting: waiting.length || base.finished ? waiting : [board.job],
-    // A vehicle is on one bank or the other.
-    across: Array.isArray(raw.across) ? [...new Set(raw.across.filter(isVehicle))].filter((id) => (id === board.job || id === board.extra) && !waiting.includes(id)) : [],
+    waiting: waiting.length || (base.finished && !isYard(board)) ? waiting : lineFor(board),
+    // A vehicle is on one bank or the other, and two at most are parked.
+    across: Array.isArray(raw.across) ? [...new Set(raw.across.filter(isVehicle))].filter((id) => own(id) && !waiting.includes(id)).slice(-2) : [],
     tries: whole(raw.tries, 0, JUDGE.badly) ? raw.tries : 0,
     laid,
     shown: Array.isArray(raw.shown) ? SHOWINGS.filter((idea) => (raw.shown as unknown[]).includes(idea)) : [],
@@ -210,7 +231,7 @@ export function edit(state: Save, bridge: readonly Part[]): Save {
 export function failedRun(state: Save, vehicle: VehicleId, ring: Sheet['ring']): Save {
   const board = state.sheets[state.on], job = site(board.site, board.variant).job
   let next = ring ? withSheet(state, (sheet) => ({ ...sheet, ring })) : state
-  if (!onNewest(state) || vehicle !== job || state.finished) return next
+  if (!onNewest(state) || (vehicle !== job && !isYard({ id: board.site })) || state.finished) return next
   next = { ...next, tries: Math.min(state.tries + 1, JUDGE.badly) }
   return givenUpOn(next.tries) ? judge(next, 'badly') : next
 }
@@ -223,22 +244,35 @@ export function failedRun(state: Save, vehicle: VehicleId, ring: Sheet['ring']):
  */
 export function crossed(state: Save, vehicle: VehicleId, hats: readonly number[] = []): Save {
   const board = state.sheets[state.on], at = site(board.site, board.variant)
+  // At the free yard whichever vehicle the child sent is the sheet's own.
+  const own = vehicle === at.job || isYard(at)
   let next = withSheet(state, (sheet) => ({
     ...sheet,
     crossed: sheet.crossed.includes(vehicle) ? sheet.crossed : [...sheet.crossed, vehicle],
     // Across again, the job vehicle is parked on the far bank once more.
     home: vehicle === at.job ? false : sheet.home,
-    ring: vehicle === at.job ? null : sheet.ring,
+    ring: own ? null : sheet.ring,
     hats: [...new Set([...sheet.hats, ...hats.filter((index) => whole(index, 0, sheet.bridge.length - 1))])].sort((a, b) => a - b),
   }))
   if (!onNewest(state)) return next
   let waiting = state.waiting.filter((id) => id !== vehicle)
-  const across = state.across.includes(vehicle) ? state.across : [...state.across, vehicle]
-  if (vehicle === at.job && !state.finished) next = judge(next, crossedOutcome(state.tries))
-  // The other vehicle draws up when the job vehicle first reaches the far bank, however the cycle was judged.
-  if (vehicle === at.job && !waiting.includes(at.extra) && !across.includes(at.extra)) waiting = [...waiting, at.extra]
+  let across = state.across.includes(vehicle) ? state.across : [...state.across, vehicle]
+  if (own && !state.finished) next = judge(next, crossedOutcome(state.tries))
+  if (isYard(at)) {
+    // Two are parked at most: a third arriving, the first of them has gone on its way. And the line fills up behind.
+    across = across.slice(-2)
+    const front = waiting[0] ?? successor(vehicle, across)
+    waiting = front ? yardLine(front, across) : []
+  } else if (vehicle === at.job && !waiting.includes(at.extra) && !across.includes(at.extra)) {
+    // The other vehicle draws up when the job vehicle first reaches the far bank, however the cycle was judged.
+    waiting = [...waiting, at.extra]
+  }
   return { ...next, waiting, across }
 }
+
+/** A hat left hanging on a part the bus passed under, whichever way it was going. */
+export const leaveHats = (state: Save, parts: readonly number[]): Save =>
+  parts.length === 0 ? state : withSheet(state, (sheet) => ({ ...sheet, hats: [...new Set([...sheet.hats, ...parts.filter((index) => whole(index, 0, sheet.bridge.length - 1))])].sort((a, b) => a - b) }))
 
 /**
  * A parked vehicle was sent home across the bridge and stands at the near bank
@@ -248,10 +282,14 @@ export function crossed(state: Save, vehicle: VehicleId, hats: readonly number[]
  */
 export function sentHome(state: Save, vehicle: VehicleId): Save {
   const board = state.sheets[state.on], at = site(board.site, board.variant)
-  if (vehicle !== at.job && vehicle !== at.extra) return state
+  if (vehicle !== at.job && vehicle !== at.extra && !isYard(at)) return state
   let next = state
   if (vehicle === at.job && board.crossed.includes(at.job) && !board.home) next = withSheet(next, (sheet) => ({ ...sheet, home: true }))
-  if (onNewest(state) && !state.waiting.includes(vehicle)) next = { ...next, waiting: [...state.waiting, vehicle], across: state.across.filter((id) => id !== vehicle) }
+  if (onNewest(state) && !state.waiting.includes(vehicle)) {
+    // At the free yard the line is two long: it stands behind whoever is at the front.
+    const waiting = isYard(at) ? [...state.waiting.slice(0, 1), vehicle] : [...state.waiting, vehicle]
+    next = { ...next, waiting, across: state.across.filter((id) => id !== vehicle) }
+  }
   return next
 }
 
@@ -271,7 +309,8 @@ export function standing(state: Save): VehicleId[] {
 /** The cycle is judged: the position moves by the template's rule, and the next sheet is laid out from it at once. */
 function judge(state: Save, outcome: Parameters<typeof finishCycle>[1]): Save {
   if (state.finished) return state
-  const moved = finishCycle(state, outcome)
+  // At the free yard, the last position, it stays whatever the outcome: there is nothing to go back to that the child has not done.
+  const moved = finishCycle(state, state.position === LADDER[LADDER.length - 1] ? 'mixed' : outcome)
   return { ...state, ...moved, next: layOut(moved.position, state.laid) }
 }
 
@@ -280,7 +319,7 @@ export function unroll(state: Save): Save {
   if (!state.next) return state
   const { site: id, variant } = state.next
   const sheets = [...state.sheets, emptySheet(id, variant)].slice(-RACK)
-  return { ...state, ...beginCycle(state), sheets, on: sheets.length - 1, next: null, waiting: [site(id, variant).job], across: [], tries: 0, laid: { ...state.laid, [id]: (state.laid[id] ?? 0) + 1 } }
+  return { ...state, ...beginCycle(state), sheets, on: sheets.length - 1, next: null, waiting: lineFor(site(id, variant)), across: [], tries: 0, laid: { ...state.laid, [id]: (state.laid[id] ?? 0) + 1 } }
 }
 
 /** The child turned to another sheet of the rack. Nothing else changes: the newest sheet keeps its tries and its waiting vehicles while it lies there. */
@@ -313,8 +352,13 @@ export function parked(state: Save): VehicleId[] {
 }
 
 /** The child brought a waiting vehicle to the front of the line at the near bank. */
-export const toFront = (state: Save, vehicle: VehicleId): Save =>
-  onNewest(state) && state.waiting.includes(vehicle) ? { ...state, waiting: [vehicle, ...state.waiting.filter((id) => id !== vehicle)] } : state
+export function toFront(state: Save, vehicle: VehicleId): Save {
+  if (!onNewest(state) || !state.waiting.includes(vehicle)) return state
+  const board = state.sheets[state.on]
+  // At the free yard the next of the fleet comes up behind it, so every vehicle can be had in turn.
+  if (isYard({ id: board.site })) return { ...state, waiting: yardLine(vehicle, state.across) }
+  return { ...state, waiting: [vehicle, ...state.waiting.filter((id) => id !== vehicle)] }
+}
 
 /** A part gave under the test trolley: the one ring moves to its spot. No run is counted. */
 export const ringed = (state: Save, ring: NonNullable<Sheet['ring']>): Save => withSheet(state, (sheet) => ({ ...sheet, ring }))

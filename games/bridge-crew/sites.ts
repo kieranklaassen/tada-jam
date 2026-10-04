@@ -50,20 +50,22 @@ type Plan = {
   idea: Idea | null
 }
 
+// Every position's three variants differ: in the gap, or in where the rock stands. And the other vehicle of every
+// position carries more crates than its job vehicle, so the harder run looks harder.
 const PLANS: Readonly<Record<string, Plan>> = {
-  'plank-gap': { gap: [4, 3, 4], kit: [3, 0, 0, 0], job: 'post-van', extra: 'jelly-truck', idea: 'profile' },
+  'plank-gap': { gap: [4, 3, 2], kit: [3, 0, 0, 0], job: 'post-van', extra: 'jelly-truck', idea: 'profile' },
   'rock-prop': { gap: [7, 8, 7], rock: { from: [4, 4, 3], top: 3 }, kit: [3, 4, 0, 0], job: 'post-van', extra: 'jelly-truck', idea: 'prop' },
-  'first-triangle': { gap: [6, 7, 6], kit: [3, 6, 0, 0], job: 'post-van', extra: 'jelly-truck', idea: 'triangle' },
-  'jelly-run': { gap: [7, 8, 7], kit: [3, 8, 0, 0], job: 'jelly-truck', extra: 'caterpillar-bus', idea: null },
-  'truss-span': { gap: [10, 11, 10], kit: [4, 14, 0, 0], job: 'jelly-truck', extra: 'caterpillar-bus', idea: 'row' },
+  'first-triangle': { gap: [6, 7, 5], kit: [3, 6, 0, 0], job: 'post-van', extra: 'jelly-truck', idea: 'triangle' },
+  'jelly-run': { gap: [7, 8, 6], kit: [3, 8, 0, 0], job: 'jelly-truck', extra: 'caterpillar-bus', idea: null },
+  'truss-span': { gap: [10, 11, 9], kit: [4, 14, 0, 0], job: 'jelly-truck', extra: 'caterpillar-bus', idea: 'row' },
   'tube-post': { gap: [10, 9, 10], deck: 8, rock: { from: [5, 4, 6], top: 3 }, kit: [4, 6, 2, 0], job: 'jelly-truck', extra: 'piano-mover', idea: 'tube' },
   'piano-day': { gap: [8, 9, 8], rock: { from: [4, 5, 3], top: 3 }, kit: [4, 10, 1, 0], job: 'piano-mover', extra: 'caterpillar-bus', idea: null },
-  'high-thread': { gap: [8, 9, 8], cliffs: 4, kit: [3, 2, 0, 6], job: 'piano-mover', extra: 'caterpillar-bus', idea: 'thread' },
+  'high-thread': { gap: [8, 9, 7], cliffs: 4, kit: [3, 2, 0, 6], job: 'piano-mover', extra: 'caterpillar-bus', idea: 'thread' },
   'tall-bus': { gap: [8, 7, 9], cliffs: 4, kit: [3, 10, 0, 6], job: 'giraffe-bus', extra: 'piano-mover', idea: null },
-  'mast-and-stay': { gap: [10, 11, 10], kit: [4, 8, 2, 8], job: 'piano-mover', extra: 'caterpillar-bus', idea: 'wide-base' },
-  'arch-gorge': { gap: [10, 10, 11], deck: 8, steps: 2, kit: [4, 12, 0, 0], job: 'giraffe-bus', extra: 'piano-mover', idea: 'arch' },
-  'barge-below': { gap: [10, 11, 10], rock: { from: [3, 3, 2], top: 3 }, channel: [5, 8], kit: [4, 12, 2, 4], job: 'jelly-truck', extra: 'giraffe-bus', idea: null },
-  'thin-kit': { gap: [8, 9, 8], kit: [3, 5, 0, 2], job: 'piano-mover', extra: 'caterpillar-bus', idea: null },
+  'mast-and-stay': { gap: [10, 11, 9], kit: [4, 8, 2, 8], job: 'piano-mover', extra: 'caterpillar-bus', idea: 'wide-base' },
+  'arch-gorge': { gap: [10, 9, 11], deck: 8, steps: 2, kit: [4, 12, 0, 0], job: 'giraffe-bus', extra: 'piano-mover', idea: 'arch' },
+  'barge-below': { gap: [10, 11, 10], rock: { from: [3, 3, 2], top: 3 }, channel: [5, 8], kit: [4, 12, 2, 4], job: 'jelly-truck', extra: 'caterpillar-bus', idea: null },
+  'thin-kit': { gap: [8, 9, 7], kit: [3, 5, 0, 2], job: 'piano-mover', extra: 'caterpillar-bus', idea: null },
   'long-haul': { gap: [14, 13, 14], cliffs: 5, rock: { from: [9, 4, 5], top: 2 }, kit: [5, 16, 4, 8], job: 'piano-mover', extra: 'caterpillar-bus', idea: null },
   'open-yard': { gap: [12, 12, 12], cliffs: 5, rock: { from: [4, 8, 6], top: 3 }, kit: [5, 16, 4, 8], job: 'post-van', extra: 'caterpillar-bus', idea: null },
 }
@@ -109,3 +111,6 @@ export function canPin(at: Site, p: Point): boolean {
   const beside = (x: number) => (x < 0 || x > COLS ? at.ground[p[0]] : at.ground[x])
   return !(p[1] < at.ground[p[0]] && p[1] < beside(p[0] - 1) && p[1] < beside(p[0] + 1))
 }
+
+/** The free yard, the last position: any vehicle is its vehicle, whichever the child brings to the front. */
+export const isYard = (at: Pick<Site, 'id'>): boolean => at.id === 'open-yard'
