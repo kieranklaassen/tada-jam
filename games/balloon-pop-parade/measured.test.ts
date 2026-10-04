@@ -426,6 +426,48 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
     expect(catches).toBeGreaterThan(100)
   }, 60_000)
 
+  it('takes a pop in its kind\'s own way again once a balloon is in the hand: a duck whose balloon is popped just after it took it leaps, and one popped in the air only wobbles', () => {
+    const theatre = new Theatre(saveOf({ position: 'solo-two-colours', troop: { kind: 'duck', size: 1, held: [false] }, sky: [{ colour: 'duck', count: 1 }, { colour: 'frog', count: 1 }], waiting: { kind: 'frog', size: 1 } }), 2), { poses, balloons, painter, clear } = recorder()
+    tap(theatre, 0)
+    // A few frames after the balloon is in its hand, while the catch still plays.
+    for (let i = 0; i < 40; i++) theatre.step(1 / 60)
+    clear()
+    theatre.paint(painter, VIEW)
+    const own = balloons.filter((balloon) => balloon.z > -5 && balloon.wide === 1 && balloon.y < 2.6)[0]
+    theatre.sounds.length = 0
+    theatre.press(own.x, own.y, VIEW)
+    theatre.cancel()
+    expect(theatre.sounds.map((sound) => sound.voice)).toEqual(expect.arrayContaining(['pop', 'duckStartle']))
+    let highest = 0
+    for (let i = 0; i < 40; i++) {
+      theatre.step(1 / 60)
+      theatre.paint(painter, VIEW)
+      highest = Math.max(highest, poses.get('friend-0')!.y - GROUND)
+    }
+    // Straight up, as a duck starts at a pop: far more than a wobble.
+    expect(highest).toBeGreaterThan(0.6)
+  })
+
+  it('points the hand that shows the way at something a tap answers as the hand shows: the troop that waits once a tap there steps it in, and a bunch until then', () => {
+    const theatre = new Theatre(saveOf({ position: 'solo-two-colours', troop: { kind: 'duck', size: 1, held: [false] }, sky: [{ colour: 'duck', count: 1 }, { colour: 'frog', count: 1 }], waiting: { kind: 'frog', size: 1 } }), 2)
+    let hand: { x: number; y: number } | null = null
+    const painter: Painter = { ...recorder().painter, hand: (x, y, size) => { hand = size > 0.02 ? { x, y } : null } }
+    const shown = () => { hand = null; theatre.paint(painter, VIEW, { glow: 1, demo: 0.5, demoIndex: 0 }); return hand as { x: number; y: number } | null }
+    // Not served: the hand is in the sky, on a bunch.
+    theatre.step(1 / 60)
+    expect(shown()!.y).toBeGreaterThan(1.5)
+    // Served, the ending left to play out: the hand is on the troop that waits, and a tap there steps it in.
+    tap(theatre, 0)
+    for (let i = 0; i < 60 * 9; i++) theatre.step(1 / 60)
+    expect(theatre.playing).toBe(null)
+    const at = shown()!
+    expect(at.x).toBeLessThan(-VIEW.width / 2 + 3)
+    // The fingertip is drawn at the point it touches.
+    theatre.press(at.x - 0.3, at.y, VIEW)
+    theatre.cancel()
+    expect(theatre.playing).toBe('arrival')
+  })
+
   it('draws every balloon in front at one size, also where balloons are drawn larger: in the sky, in a hand, on its way, beside a friend, carrying one off and passing by', () => {
     const big = SMALL.balloon
     expect(big).toBeGreaterThan(1.1)
