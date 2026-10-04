@@ -60,7 +60,7 @@ type Actor = { clip: ClipId | null; t: number; next: ClipId | null; after?: Clip
 
 /** A troop that is only passing: one that marches off, or one that crosses to show a new idea. Short-lived, and no part of the save. */
 /** A troop that walks through: the one that marches off, or the one that passes by. One that passes by a troop on stage stops off to the left (`stopAt` is the middle of its stops), its friends `gap` apart and drawn `scale` of a friend in front, and goes on behind that troop. */
-type Passing = { kind: KindName; size: number; held: boolean[]; actors: Actor[]; balloons: Held[]; scale?: number; stopAt?: number; gap?: number; beside?: boolean }
+type Passing = { kind: KindName; size: number; held: boolean[]; actors: Actor[]; balloons: Held[]; scale?: number; stopAt?: number; gap?: number; beside?: boolean; startled?: { at: number; friend: number } }
 
 /** How long a troop that passes by takes to cross, in seconds (the sheet: 4 to 6). */
 export const PASS_BY = { shortest: 4, longest: 6 } as const
@@ -2337,11 +2337,10 @@ export class Theatre {
   /** A troop that passes by is touched: the friend under the finger squeaks and jumps, and the others after it. */
   private startle(passer: Passing, friend: number): void {
     this.sound(`${passer.kind}Poke`, 1.15, 0.9)
-    passer.actors.forEach((actor, k) => {
-      actor.clip = 'poke'
-      actor.t = -Math.abs(k - friend) * 0.07
-      actor.jolt = this.time
-    })
+    // It jumps straight up with its arms as they are (`passing`): its friends stand shoulder to shoulder, where a
+    // poke taken in its kind's way, arms flung out, would go through the friend beside it.
+    passer.startled = { at: this.time, friend }
+    for (const actor of passer.actors) if (actor.clip === 'catch') actor.clip = null
   }
 
   /** Where friend `i` of a troop that passes by stops: in the middle, as far apart as friends stand, or beside a troop on stage, shoulder to shoulder. */
@@ -2430,6 +2429,15 @@ export class Theatre {
     rest(troop.kind, troop.held[i], plan.reach, this.time, seed, pose)
     walk(troop.kind, u, 1, pose)
     if (actor.clip && actor.t >= 0) clip(troop.kind, actor.clip, actor.t, plan.height * FRIEND_SCALE * scale, plan.reach, pose)
+    if (troop.startled) {
+      // Touched: a start. Straight up and down again, flat as it lands, eyes and mouth wide; the friend under the finger first.
+      const since = this.time - troop.startled.at - Math.abs(i - troop.startled.friend) * 0.07, up = hump(since, 0, FLEES_AFTER)
+      pose.y += up * 0.6 * scale
+      pose.squash += up * 0.1 - hump(since, FLEES_AFTER - 0.04, FLEES_AFTER + 0.14) * 0.14
+      pose.wide = Math.max(pose.wide, 1 + up * 0.6)
+      pose.browLift = Math.max(pose.browLift, up)
+      pose.mouth = Math.max(pose.mouth, up * 0.9)
+    }
     // One that was in the air when its troop set off comes down as it goes.
     if (actor.fall) pose.y += actor.fall * (1 - ((actor.fallT ?? 0) / FALLS_IN) ** 2)
     painter.place(name, troop.kind, pose)
