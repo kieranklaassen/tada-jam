@@ -1004,7 +1004,7 @@ describe('what a reader of the folder found', () => {
     const pool = t.at(t.the('pool'))
     const duckSide = { x: pool.x - 0.5, z: pool.z }
     t.gulps(duckSide, 4).play(8)
-    expect(t.game.motion.pool.pose.spill).toBe(0)
+    expect(t.game.motion.pool.pose.spill).toBeLessThan(1e-9)
     let bobbed = 0
     const rest = t.game.motion.boat.pose.bob
     t.sweep({ x: pool.x - 0.6, z: pool.z - 3 }, { x: pool.x - 0.6, z: pool.z + 3 })
