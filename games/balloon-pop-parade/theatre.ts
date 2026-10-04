@@ -81,6 +81,8 @@ const OVER_LAG = 0.2
 /** Seconds the oldest troop takes down from the far hill's ring and out of sight; and seconds the newest takes up to its place, once the oldest has gone and it has itself left by the edge in front. */
 const RETIRES_IN = 1.3
 const JOINS_IN = 1.2
+/** The least time between one bunch's arrival and the next one's, in seconds. */
+const ARRIVE_APART = 0.06
 /** The longest a bunch waits on its way down for a friend that is busy, in seconds: past that it arrives all the same. */
 const LONGEST_WAIT = 3
 /** How far above the frogs' heads a bunch with one for each of them stops, so that their tongues cross over their heads. */
@@ -458,7 +460,10 @@ export class Theatre {
     const lead = given.result === 'taken' ? p.cue.grab : given.result === 'refused' ? REFUSAL_LEAD : 0
     const takes = given.result === 'taken' ? p.lasts.catch + (given.takers.length - 1) * 0.17 : given.result === 'refused' ? p.lasts.refuse : p.lasts.liftOff + (answering.length - 1) * LAND_APART
     const free = Math.max(...answering.map((i) => this.actors[i].busyUntil ?? 0))
-    const lasts = Math.min(FLIGHT + LONGEST_WAIT, Math.max(FLIGHT, free + lead + 0.04 - this.time))
+    // And bunches arrive in the order they were sent, so that each one finds the troop as the rule found it at
+    // its lift: with the balloons of every bunch sent before it already in their hands.
+    const before = Math.max(0, ...this.flights.filter((flight) => !flight.landed).map((flight) => flight.lasts - flight.t)) + ARRIVE_APART
+    const lasts = Math.max(Math.min(FLIGHT + LONGEST_WAIT, Math.max(FLIGHT, free + lead + 0.04 - this.time)), this.flights.some((flight) => !flight.landed) ? before : 0)
     for (const i of answering) this.actors[i].busyUntil = this.time + lasts - lead + takes / (QUICKEST - 0.14) + 0.06
     this.flights.push({ bunch, slot, given, t: 0, lasts, fromX: at.x, fromY: at.y, landed: false, after: 0, friend })
     // The ending begins with its cause: the moment the last balloon is in a hand. Its first beat is that catch.
@@ -512,6 +517,7 @@ export class Theatre {
       this.actors[friend].busyUntil = Math.max(this.actors[friend].busyUntil ?? 0, this.time + PERSONALITIES[troop.kind].lasts.popped / (QUICKEST - 0.14) + 0.06)
     }
     this.sound(`${troop.kind}Startle`)
+    this.sentAgain()
     // An ending that is due and has had to wait (for a friend in the air, for bunches on their way) still plays:
     // its cause, the last friend taking its balloon, has happened. The friends that hold a balloon do their proud
     // moves; this one reaches up again, and the ending plays once more when it has been given another.
@@ -520,6 +526,49 @@ export class Theatre {
       this.lookAt.friend = friend
       this.lookAt.until = this.time + 1.4
       this.sound('heels', 1, 0.8, 0.12)
+    }
+  }
+
+  /**
+   * A balloon was popped while bunches are on their way down. The world they will arrive in is not the one they
+   * were sent into: a friend wants a balloon again. A bunch that was too many when it was sent is read against the
+   * troop as it is now, by the one rule, in this same touch: if it is no longer too many it is taken, and the save
+   * says so; if it still is, it is too many for the friends that want one now. So what arrives is always answered
+   * as the child sees the troop when it arrives.
+   */
+  private sentAgain(): void {
+    const p = PERSONALITIES[this.troop.kind]
+    for (const flight of this.flights) {
+      if (flight.landed || flight.given.result !== 'gotAway') continue
+      const again = sendBunch(this.save, flight.slot), first = again.events[0]
+      if (!first || first.type === 'refused') continue
+      if (first.type === 'gotAway') {
+        // Still too many: for whoever wants one now. Its slip was counted when it was sent, and is not counted twice.
+        flight.given = { result: 'gotAway', grabber: first.grabber, spare: first.spare }
+        flight.friend = first.grabber
+        continue
+      }
+      if (first.type !== 'taken') continue
+      this.save = again.save
+      this.took.push(...first.takers)
+      const serves = again.events.find((event) => event.type === 'served')
+      flight.given = { result: 'taken', takers: first.takers, served: serves !== undefined }
+      flight.friend = first.takers[0]
+      // It arrives when those who take it are free: after the start at the pop.
+      const free = Math.max(...first.takers.map((i) => this.actors[i].busyUntil ?? 0))
+      flight.lasts = Math.max(flight.lasts, flight.t + free + p.cue.grab + 0.04 - this.time)
+      for (const i of first.takers) this.actors[i].busyUntil = this.time + (flight.lasts - flight.t) - p.cue.grab + p.lasts.catch / (QUICKEST - 0.14) + 0.06
+      if (serves && serves.type === 'served') {
+        this.endingDue = { at: this.time + flight.lasts - flight.t, order: [...this.took], together: serves.together }
+        this.unsaved = 2
+      }
+    }
+    // Whatever was pushed back, the bunches still arrive in the order they were sent.
+    let earliest = 0
+    for (const flight of this.flights) {
+      if (flight.landed) continue
+      if (flight.lasts - flight.t < earliest) flight.lasts = flight.t + earliest
+      earliest = flight.lasts - flight.t + ARRIVE_APART
     }
   }
 

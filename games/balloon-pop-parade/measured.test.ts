@@ -468,6 +468,66 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
     expect(theatre.playing).toBe('arrival')
   })
 
+  it.each(kinds)('a bunch finds the troop as the rule found it when it was sent: bunches reach %ss in the order they were sent, with every earlier balloon already in its hand', (kind) => {
+    // Two friends; the three (too many: one is carried off), the single (taken), the two (too many for the one that still wants one).
+    const theatre = new Theatre(saveOf({ position: 'bunches-own-colour', troop: { kind, size: 2, held: [false, false] }, sky: [{ colour: kind, count: 3 }, { colour: kind, count: 1 }, { colour: kind, count: 2 }], waiting: { kind: other(kind), size: 1 } }), 3), { poses, balloons, painter, clear } = recorder()
+    const lifts: number[] = []
+    for (const slot of [0, 1, 2]) {
+      tap(theatre, slot)
+      lifts.push(theatre.sounds.filter((sound) => sound.voice === 'letGo').length)
+      for (let i = 0; i < 30; i++) theatre.step(1 / 60)
+    }
+    expect(lifts).toEqual([1, 2, 3])
+    expect(theatre.troop.held.filter(Boolean)).toHaveLength(1)
+    // The two is pulled apart over the troop when it takes hold: taller than wide, two of them. In that moment one
+    // friend has its balloon in its hand, so one balloon of the two is over the friend that reaches and one over a gap.
+    let seen = false
+    for (let i = 0; i < 60 * 8 && !seen; i++) {
+      theatre.step(1 / 60)
+      // The second lift-off is the two taking hold: the first was the three.
+      if (theatre.sounds.filter((sound) => sound.voice === `${kind}LiftOff`).length < 2) continue
+      // Let it be pulled into place.
+      for (let k = 0; k < 24; k++) theatre.step(1 / 60)
+      clear()
+      theatre.paint(painter, VIEW)
+      // A bunch that has hold of a friend is drawn a little taller than wide, by fixed amounts.
+      const two = balloons.filter((balloon) => balloon.z > -5 && Math.abs(balloon.wide - 0.96) < 1e-6 && Math.abs(balloon.tall - 1.08) < 1e-6).map((balloon) => balloon.x)
+      expect(two).toHaveLength(2)
+      const held = balloons.filter((balloon) => balloon.z > -5 && balloon.wide === 1 && balloon.tall === 1 && balloon.y < 2.2)
+      expect(held, 'the single is in a hand by then').toHaveLength(1)
+      const reaching = [0, 1].map((k) => poses.get(`friend-${k}`)!).filter((pose) => Math.abs(held[0].x - pose.x - 0.7) > 0.8)
+      expect(reaching).toHaveLength(1)
+      expect(two.filter((x) => Math.abs(x - reaching[0].x) < 0.35), 'one over the friend that reaches').toHaveLength(1)
+      expect(two.filter((x) => [0, 1].every((k) => Math.abs(x - poses.get(`friend-${k}`)!.x) > 1.2)), 'one with nobody under it').toHaveLength(1)
+      seen = true
+    }
+    expect(seen).toBe(true)
+  })
+
+  it.each(kinds)('a balloon sent to a %s that has one, whose own is popped while the new one is on its way, is taken: what arrives is answered as the troop is when it arrives', (kind) => {
+    const theatre = new Theatre(saveOf({ position: 'solo-two-colours', troop: { kind, size: 1, held: [true] }, sky: [{ colour: kind, count: 1 }, { colour: other(kind), count: 1 }], waiting: { kind: other(kind), size: 1 } }), 3), { balloons, painter, clear } = recorder()
+    theatre.step(1 / 60)
+    clear()
+    theatre.paint(painter, VIEW)
+    const own = balloons.find((balloon) => balloon.z > -5 && balloon.wide === 1 && balloon.y < 2.2)!
+    tap(theatre, 0)
+    for (let i = 0; i < 10; i++) theatre.step(1 / 60)
+    theatre.press(own.x, own.y, VIEW)
+    theatre.cancel()
+    // Popped, and wanting one again: the balloon on its way is the one it wants, and the save says so at once.
+    expect(theatre.troop.held).toEqual([true])
+    expect(theatre.unsaved).toBeGreaterThan(0)
+    theatre.sounds.length = 0
+    for (let i = 0; i < 60 * 5; i++) theatre.step(1 / 60)
+    const heard = theatre.sounds.map((sound) => sound.voice)
+    expect(heard).toContain(`${kind}Catch`)
+    expect(heard).not.toContain(`${kind}LiftOff`)
+    expect(heard).not.toContain('squeal')
+    clear()
+    theatre.paint(painter, VIEW)
+    expect(balloons.filter((balloon) => balloon.z > -5 && balloon.wide === 1 && balloon.tall === 1 && balloon.y < 2.2)).toHaveLength(1)
+  })
+
   it('draws every balloon in front at one size, also where balloons are drawn larger: in the sky, in a hand, on its way, beside a friend, carrying one off and passing by', () => {
     const big = SMALL.balloon
     expect(big).toBeGreaterThan(1.1)

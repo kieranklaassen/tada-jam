@@ -38,11 +38,12 @@ describe('the balloons', () => {
     expect(2 * BALLOON * phone.balloon * phone.pixelsPerUnit).toBeGreaterThanOrEqual(48)
   })
 
-  it('hang well apart: no two bunches nearer than half a balloon, whatever is in them', () => {
+  it('hang apart on every surface: no two bunches nearer than half a balloon\'s radius, whatever is in them', () => {
     for (const view of [IPAD, NARROW, SMALL, viewFor(1024, 768), viewFor(390, 844), viewFor(844, 390)]) for (const slots of [3, 4, 5]) {
       const places = skySlots(slots, view, slots === 5 ? 1 : 3)
       // Five places hold singles; three or four may each hold a bunch of three. Every pair of places is held apart
-      // by the nearest two balloons of full bunches, as large as they are drawn on that surface.
+      // by the nearest two balloons of full bunches, as large as they are drawn on that surface: by half a balloon's
+      // radius at the least.
       const offsets = bunchOffsets(slots === 5 ? 1 : 3), reach = bunchReach(slots === 5 ? 1 : 3).x * view.balloon
       for (let i = 0; i < slots; i++) for (let j = i + 1; j < slots; j++) {
         let nearest = Infinity
@@ -51,6 +52,22 @@ describe('the balloons', () => {
       }
       expect(places[0].x - reach, 'the first is inside the view').toBeGreaterThan(-view.width / 2)
     }
+  })
+
+  it('stand as far apart as the sheet says: most of a balloon\'s width on the iPad held wide, and some twenty pixels on the iPad upright and on a phone', () => {
+    // The nearest two balloons of neighbouring bunches of three, edge to edge, in logical pixels.
+    const apart = (view: typeof IPAD) => {
+      const places = skySlots(4, view, 3), offsets = bunchOffsets(3)
+      let nearest = Infinity
+      for (let i = 1; i < places.length; i++) for (const a of offsets) for (const b of offsets) nearest = Math.min(nearest, Math.hypot(places[i].x + b.x * view.balloon - places[i - 1].x - a.x * view.balloon, (b.y - a.y) * view.balloon))
+      return (nearest - 2 * BALLOON * view.balloon) * view.pixelsPerUnit
+    }
+    expect(apart(IPAD)).toBeGreaterThanOrEqual(0.85 * 2 * BALLOON * IPAD.pixelsPerUnit)
+    expect(apart(NARROW)).toBeGreaterThanOrEqual(20)
+    expect(apart(NARROW)).toBeLessThan(30)
+    expect(apart(viewFor(844, 390))).toBeGreaterThanOrEqual(20)
+    expect(apart(viewFor(844, 390))).toBeLessThan(30)
+    expect(apart(SMALL)).toBeGreaterThanOrEqual(20)
   })
 
   it('stay inside the top of the view, a bunch of three included, in one row', () => {
