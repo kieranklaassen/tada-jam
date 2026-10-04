@@ -473,7 +473,8 @@ describe('a bunch the child sends', () => {
     // The fifth leaves the sky at the lift, as every bunch does, and the duck has its balloon.
     expect(voices(theatre)).toEqual(expect.arrayContaining(['letGo', 'whistle']))
     expect(theatre.troop.held).toEqual([true])
-    play(theatre, 3)
+    // It is caught when the duck has given its answers to the others, one at a time.
+    play(theatre, 8)
     expect(voices(theatre)).toContain('duckCatch')
   })
 
