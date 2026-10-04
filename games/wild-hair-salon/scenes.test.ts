@@ -4,7 +4,7 @@ import { Hair } from './hair'
 import { COLLAR_Y, HEAD, LOCK_X, STEP } from './layout'
 import { PERSONALITIES } from './personality'
 import { CUSTOMERS } from './tastes'
-import { onHead, placesOf, tuftPose, tuftTip } from './poses'
+import { FIRST_WAIT, onHead, placesOf, tuftPose, tuftTip } from './poses'
 import { Puppet } from './puppet'
 import { makeRng } from './rng'
 import { TAIL_LEN, TUFTS } from './rules'
@@ -79,7 +79,8 @@ describe('the staging', () => {
 
 describe('coming in', () => {
   it('opens the door on the customer, who is in the doorway at once, and shows the friend there when the customer has left it', () => {
-    const before = freshGame(null), after = letIn(before).game, c = cast(after)
+    const before = seated({ cape: 'off', finished: true }), after = letIn(before).game, c = cast(after)
+    c.staging.settle(before)
     let customerBy = -1, friendBy = -1, nearest = Infinity
     playThrough(comingIn(c, before, after), (t) => {
       const customer = c.staging.customer!, friend = c.staging.friend!
@@ -127,13 +128,30 @@ describe('coming in', () => {
     expect(c.staging.hats).toBe(0)
   })
 
-  it('brings the pair from the doorway to their places, hats off and cape on, in 4 to 6 seconds', () => {
+  it('brings every pair after the first in through the door, which swings open and shut, in 4 to 6 seconds', () => {
+    const before = seated({ cape: 'off', finished: true }), after = letIn(before).game, c = cast(after)
+    c.staging.settle(before)
+    let widest = 0, startedAt = -1
+    const length = playThrough(comingIn(c, before, after), () => {
+      widest = Math.max(widest, c.staging.door)
+      if (startedAt < 0) startedAt = c.staging.customer!.x
+    })
+    expect(length).toBeGreaterThanOrEqual(4)
+    expect(length).toBeLessThanOrEqual(6)
+    expect(widest).toBe(1)
+    expect(startedAt).toBeGreaterThan(DOORWAY.x - 60)
+    expect(c.staging).toMatchObject({ hats: 0, cape: 1, door: 0, waiting: 1, leaving: [] })
+    expect(c.cues).toEqual(expect.arrayContaining(['door', 'hatOff', 'hairOut', 'capeOn', 'doorShut']))
+  })
+
+  it('brings the first pair from the bench to their places, hats off and cape on, in 4 to 6 seconds, with the door shut', () => {
     const before = freshGame(null), after = letIn(before).game, c = cast(after)
     const beats = comingIn(c, before, after)
-    let sawHats = false, sawDoor = false, patted = 0
+    let sawHats = false, sawDoor = false, patted = 0, startedAt: { x: number; s: number } | null = null
     const length = playThrough(beats, () => {
       if (c.staging.hats === 1) sawHats = true
-      if (c.staging.door > 0.9) sawDoor = true
+      if (c.staging.door > 0) sawDoor = true
+      startedAt ??= { x: c.staging.customer!.x, s: c.staging.customer!.s }
       // At the end the customer pats its own lock with a paw, near its top.
       const paw = c.staging.paw
       if (paw && Math.abs(paw.x - LOCK_X) < 12 && paw.y > COLLAR_Y && paw.y < COLLAR_Y + 60) patted++
@@ -142,10 +160,14 @@ describe('coming in', () => {
     expect(c.staging.paw).toBeNull()
     expect(length).toBeGreaterThanOrEqual(4)
     expect(length).toBeLessThanOrEqual(6)
-    expect(sawHats && sawDoor).toBe(true)
+    // On a first visit they were in the room already, large, by the bench: the door never opens, and they are seen from the first moment.
+    expect(sawHats).toBe(true)
+    expect(sawDoor).toBe(false)
+    expect(startedAt).toEqual({ x: FIRST_WAIT[0].x, s: FIRST_WAIT[0].s })
     const places = placesOf(after)
     expect(c.staging).toMatchObject({ customer: { x: places.customer!.x, y: places.customer!.y, s: 1 }, friend: { x: places.friend!.x }, hats: 0, cape: 1, door: 0, waiting: 1, leaving: [] })
-    expect(c.cues).toEqual(expect.arrayContaining(['door', 'hatOff', 'hairOut', 'capeOn', 'doorShut']))
+    expect(c.cues).toEqual(expect.arrayContaining(['step', 'hatOff', 'hairOut', 'capeOn']))
+    expect(c.cues).not.toContain('door')
     expect(c.customer()!.started).toEqual(expect.arrayContaining(['lion-settles-with-a-thump', 'lion-shakes-his-mane-free', 'lion-looks-from-his-lock-to-the-other']))
     expect(c.friend()!.started).toContain('poodle-points-her-nose-at-each-in-turn')
   })

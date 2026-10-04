@@ -437,6 +437,8 @@ export class Play implements Cast {
         this.pressed = h.button
         // The door stays shut while a customer is under the cape: the pair behind it duck and peek.
         if (h.button === 'door' && before.chair !== null && before.cape === 'on') for (const puppet of this.waiting ?? []) puppet.react('ducksAndPeeks')
+        // On a first visit the pair is in the room: touched, each gives under the finger.
+        if (h.button === 'door' && before.chair === null) for (const puppet of this.waiting ?? []) puppet.bump(0.9)
         return
       case 'button': this.pressed = null; this.pressedOn(h.button); return
       case 'letGo': {

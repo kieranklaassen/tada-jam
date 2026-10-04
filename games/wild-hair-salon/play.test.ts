@@ -5,10 +5,9 @@ import { alike } from './voices'
 import { BESIDE_X, COLLAR_Y, HEAD, LOCK_X, PEG, STEP } from './layout'
 import { PERSONALITIES } from './personality'
 import { Play } from './play'
-import { BUTTONS, GLASS_AT, SWEEPINGS, floorX, floorY, placesOf, ribbonShape } from './poses'
+import { BUTTONS, FIRST_WAIT, GLASS_AT, SWEEPINGS, floorX, floorY, placesOf, ribbonShape } from './poses'
 import { MEET, TAIL_LEN, TUFTS } from './rules'
 import { deserializeGame, freshGame, serializeGame, type Game } from './save'
-import { DOORWAY } from './staging'
 
 type P = { x: number; y: number }
 const DOOR: P = { x: BUTTONS.door.x + 84, y: BUTTONS.door.y + 290 }
@@ -69,7 +68,7 @@ describe('an empty salon', () => {
     // One that is in the middle of something else looks round all the same: every touch is answered by both.
     const busy = opened()
     for (const puppet of busy.waiting!) puppet.react('ducksAndPeeks')
-    busy.gesture({ type: 'press', at: { x: 300, y: 300 } })
+    busy.gesture({ type: 'press', at: { x: 700, y: 300 } })
     busy.waiting!.forEach((puppet, n) => expect(puppet.started.some((id) => PERSONALITIES[busy.game!.waiting[n]].reactions.looksAbout.some((bit) => bit.id === id))).toBe(true))
   })
 })
@@ -560,18 +559,27 @@ describe('a first visit', () => {
     expect(seatedPlay.hand.held).toBe('scissors')
   })
 
-  it('lets the first pair in on a touch on the door: they are in the game at once, and the scene plays them in', () => {
+  it('lets the first pair come to the chair on a touch on them, where they wait by the bench, or on the door: they are in the game at once, and the scene plays them in', () => {
+    for (const at of [{ x: FIRST_WAIT[0].x, y: FIRST_WAIT[0].y }, { x: FIRST_WAIT[1].x, y: FIRST_WAIT[1].y + 40 }, DOOR]) {
+      const touched = opened()
+      touched.gesture({ type: 'press', at })
+      // Each of the two gives under the finger.
+      touched.step(1 / 60, false)
+      expect(touched.pressed).toBe('door')
+      touched.gesture({ type: 'tap', at })
+      expect(touched.game).toMatchObject({ chair: 'lion', friend: 'poodle', cape: 'on', finished: false })
+    }
     const play = opened()
     tap(play, DOOR)
     expect(play.game).toMatchObject({ chair: 'lion', friend: 'poodle', cape: 'on', finished: false })
     expect(play.takeSave()).toBe('now')
     expect(play.inScene).toBe(true)
-    // They start in the doorway, under their rain hats, with the door opening.
+    // They start where they waited, by the bench, under their rain hats, and the door stays shut.
     expect(play.staging.hats).toBe(1)
-    expect(play.staging.customer!.x).toBeGreaterThan(DOORWAY.x - 60)
+    expect(play.staging.customer).toMatchObject({ x: FIRST_WAIT[0].x, s: FIRST_WAIT[0].s, seen: 1 })
     run(play, 1.2)
-    expect(play.staging.customer!.x).toBeLessThan(DOORWAY.x - 60)
-    expect(play.staging.door).toBeGreaterThan(0.5)
+    expect(play.staging.customer!.x).toBeGreaterThan(FIRST_WAIT[0].x + 40)
+    expect(play.staging.door).toBe(0)
     through(play)
     const places = placesOf(play.game!)
     expect(play.staging).toMatchObject({ customer: { x: places.customer!.x, y: places.customer!.y }, friend: { x: places.friend!.x }, door: 0, hats: 0, cape: 1, waiting: 1, leaving: [] })

@@ -2,7 +2,7 @@ import type { Idea } from './cycle'
 import type { Hair } from './hair'
 import { COLLAR_Y, HEAD, STEP } from './layout'
 import { PERSONALITIES } from './personality'
-import { bowOn, onHead, placesOf, tuftPose, tuftTip, type Actor, type Point } from './poses'
+import { FIRST_WAIT, bowOn, onHead, placesOf, tuftPose, tuftTip, type Actor, type Point } from './poses'
 import type { Puppet } from './puppet'
 import { TAIL_LEN } from './rules'
 import type { Game } from './save'
@@ -90,6 +90,9 @@ export function comingIn(cast: Cast, before: Game, after: Game): Beat[] {
       .map((goer) => ({ ...goer, worn: before.clippings.flatMap((c) => (c.on === 'face' && c.who === goer.part ? [{ spot: c.spot, len: c.len, hue: c.hue }] : [])) }))
     : []
   const WALK = 1.6, OUT = 0.9, BEHIND = 0.65, HAT_OFF = 0.35, IN_SIGHT = 0.15
+  // On a first visit the pair is in the room already, by the bench: they set off from there and the door stays shut.
+  const first = before.chair === null
+  const from = first ? { customer: FIRST_WAIT[0], friend: FIRST_WAIT[1] } : { customer: { ...DOORWAY, x: DOORWAY.x - 22 }, friend: { ...DOORWAY, x: DOORWAY.x + 26 } }
   // Along the back wall, a little above the straight way, when there is a pair going out to pass.
   const BACK = -40
   const beats: Beat[] = [
@@ -98,15 +101,15 @@ export function comingIn(cast: Cast, before: Game, after: Game): Beat[] {
       staging.waiting = 0
       staging.hats = 1
       staging.cape = 0
-      staging.customer = { ...DOORWAY, x: DOORWAY.x - 22, lift: 0, seen: 0 }
-      staging.friend = { ...DOORWAY, x: DOORWAY.x + 26, lift: 0, seen: 0 }
+      staging.customer = { ...from.customer, lift: 0, seen: first ? 1 : 0 }
+      staging.friend = { ...from.friend, lift: 0, seen: first ? 1 : 0 }
       staging.leaving = goers.map((goer) => ({ ...goer, at: { ...goer.from, lift: 0, seen: 1 } }))
-      if (!cast.cut) cast.cue('door')
+      if (!cast.cut) cast.cue(first ? 'step' : 'door')
     }),
-    over(0, 0.4, (p) => { staging.door = p }),
+    over(0, 0.4, (p) => { if (!first) staging.door = p }),
     // The customer is in the doorway as the glass swings away, so the door never opens on nobody. Two heads do not fit in
     // it side by side: the friend is seen in it as soon as the customer has left it.
-    over(0, IN_SIGHT, (p) => { if (staging.customer) staging.customer = { ...staging.customer, seen: p } }),
+    over(0, IN_SIGHT, (p) => { if (!first && staging.customer) staging.customer = { ...staging.customer, seen: p } }),
     // The pair that was done go out along the front of the floor, the friend first, past the pair coming in along the back.
     ...goers.map((goer) => over(goer.part === 'friend' ? 0.1 : 0.4, OUT, (p) => {
       const mine = staging.leaving.find((other) => other.part === goer.part)
@@ -115,8 +118,8 @@ export function comingIn(cast: Cast, before: Game, after: Game): Beat[] {
     })),
     // The customer leads the way in and the friend follows it, so each is seen whole. A friend whose seat is across the room
     // goes round the front of the chair, as it does whenever it crosses, and never through the customer.
-    over(0.5, WALK, (p) => { staging.customer = { ...walk({ ...DOORWAY, x: DOORWAY.x - 22 }, to.customer, p, gait.customer, WALK, goers.length ? BACK : 0), seen: 1 } }),
-    over(0.5 + BEHIND, WALK - BEHIND, (p) => { staging.friend = { ...walk({ ...DOORWAY, x: DOORWAY.x + 26 }, to.friend, p, gait.friend, WALK - BEHIND, lowFor(DOORWAY, to.friend) || (goers.length ? BACK : 0)), seen: Math.min(1, p * 6) } }),
+    over(0.5, WALK, (p) => { staging.customer = { ...walk(from.customer, to.customer, p, gait.customer, WALK, goers.length ? BACK : 0), seen: 1 } }),
+    over(0.5 + BEHIND, WALK - BEHIND, (p) => { staging.friend = { ...walk(from.friend, to.friend, p, gait.friend, WALK - BEHIND, lowFor(from.friend, to.friend) || (goers.length ? BACK : 0)), seen: first ? 1 : Math.min(1, p * 6) } }),
     cueAt(0.5 + WALK, () => { if (!cast.cut) { cast.cue('landed', after.chair ?? undefined); cast.customer()?.react('sitsDown'); cast.friend()?.react('sitsDown'); cast.customer()?.bump(1.2); cast.friend()?.bump(0.8) } }),
     // The hats pop off: up, over and gone.
     over(0.7 + WALK, HAT_OFF, (p) => { staging.hats = 1 - p }),
@@ -131,8 +134,9 @@ export function comingIn(cast: Cast, before: Game, after: Game): Beat[] {
     }),
     cueAt(1.0 + WALK, () => { if (!cast.cut) cast.cue('capeOn') }),
     over(1.0 + WALK, 0.45, (p) => { staging.cape = p }),
-    cueAt(1.3 + WALK, () => { if (!cast.cut) cast.cue('doorShut') }),
-    over(1.3 + WALK, 0.35, (p) => { staging.door = 1 - p; staging.waiting = p }),
+    // The door swings shut on the pair after them, who are at its glass; on a first visit it was never open, and they come up to it.
+    cueAt(1.3 + WALK, () => { if (!cast.cut && !first) cast.cue('doorShut') }),
+    over(1.3 + WALK, 0.35, (p) => { staging.door = first ? 0 : 1 - p; staging.waiting = p }),
     // The one want, always visible: the customer looks from its lock to the friend's, and the friend holds its own out.
     cueAt(1.7 + WALK, () => { if (!cast.cut) { cast.customer()?.react('wantsItSo', after.seat === 'across' ? 'second' : false); cast.friend()?.react('wantsItSo', after.seat === 'beside') } }),
     // And pats its own lock, twice, with a paw from under the cape.

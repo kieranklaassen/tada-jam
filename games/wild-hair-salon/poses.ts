@@ -85,6 +85,15 @@ export const BUTTONS: Record<Exclude<Button, 'knot'>, Box> = {
   bench: { x: BENCH.x, y: BENCH.backY - 10, w: BENCH.w, h: FLOOR_Y - BENCH.backY + 14 },
   chair: { x: CHAIR.x - 150, y: 300, w: 300, h: FLOOR_Y - 300 },
 }
+/**
+ * Where the first pair waits on a first visit, before anybody is in the
+ * chair: in the room by the bench, whole and large, the one who will be the
+ * customer nearer the chair. A touch on either of them, or on the door, is the
+ * touch that brings them to the chair.
+ */
+export const FIRST_WAIT: readonly [Actor, Actor] = [{ x: 272, y: 372, s: 0.85 }, { x: 92, y: 440, s: FRIEND_SIZE }]
+/** The box round the two of them that takes that touch. */
+export const FIRST_WAIT_BOX: Box = { x: 20, y: 210, w: 380, h: FLOOR_Y + 20 - 210 }
 /** Where the customer's head shows in the looking glass, and how big: seen the other way round. */
 export const GLASS_AT: Actor = { x: LOOKING_GLASS.x, y: LOOKING_GLASS.y + 18, s: 0.5 }
 /** The heap of swept-up hair by the trolley's wheel, and how near it a touch is on it. */
@@ -339,6 +348,8 @@ export function whatIsAt(salon: Salon, p: Point): Touched | null {
   if (Math.hypot(p.x - SWEEPINGS.x, p.y - SWEEPINGS.y) <= SWEEPINGS.reach) return { object: 'room', thing: 'sweepings' }
   if (places.seatFree && inBox(p, BUTTONS[places.seatFree])) return { object: 'button', button: places.seatFree }
   if (places.chair && inBox(p, BUTTONS.chair)) return { object: 'button', button: 'chair' }
+  // The pair that waits is touched where it is: at the door, and on a first visit in the room by the bench as well.
+  if (salon.chair === null && inBox(p, FIRST_WAIT_BOX)) return { object: 'button', button: 'door' }
   if (inBox(p, BUTTONS.door)) return { object: 'button', button: 'door' }
   return null
 }

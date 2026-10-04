@@ -6,7 +6,7 @@ import { PERSONALITIES } from './personality'
 import { Play } from './play'
 import { Puppet } from './puppet'
 import { makeRng } from './rng'
-import { BUTTONS, onHead, placesOf, ribbonShape, tuftPose, tuftTip } from './poses'
+import { BUTTONS, FIRST_WAIT, onHead, placesOf, ribbonShape, tuftPose, tuftTip } from './poses'
 import { blankSheets, bounds, recordingSheet, type Recording } from './recorder'
 import { Sprites } from './sprites'
 import { CUSTOMERS } from './tastes'
@@ -51,7 +51,11 @@ const seated = (over: object = {}): Play => {
   play.open({ ...first.saved(), shown: { snip: true, pull: true, ribbon: true }, ribbon: { len: 40, at: 'peg' }, ...over }, null)
   return play
 }
+/** A salon whose pair is done, with the cape off: the next touch on the door brings the next pair in through it. */
+const done = (): Play => seated({ cape: 'off', finished: true })
 const idle = { glow: 1, demo: 0.5, demoIndex: 0 }
+/** How wide a face is drawn at the size it has in the chair, give or take its soft edge. */
+const HEAD_W = 210
 
 describe('one frame', () => {
   it('draws the bare room before the slot has been read, in one stamp', () => {
@@ -202,6 +206,32 @@ describe('the salon around them', () => {
     expect(frame(fresh()).kept.stamps.some((stamp) => inBox(stamp.corners, glass) && bounds(stamp.corners).w < 400)).toBe(false)
   })
 
+  it('has the first pair in the room on a first visit: whole and large by the bench under their rain hats, with nobody at the door yet', () => {
+    const play = fresh(), { kept, sprites } = frame(play)
+    const [customer, friend] = play.game!.waiting
+    const face = (who: typeof customer) => kept.stamps.filter((stamp) => stamp.image === sprites.animal(who).face.sheet.canvas).map((stamp) => bounds(stamp.corners))
+    expect(face(customer)).toHaveLength(1)
+    expect(face(friend)).toHaveLength(1)
+    // Large: the one who will be the customer is drawn at most of the size it has in the chair, and both stand left of the chair.
+    expect(face(customer)[0].w).toBeGreaterThan(HEAD_W * 0.8)
+    expect(face(friend)[0].w).toBeGreaterThan(HEAD_W * 0.6)
+    expect(face(customer)[0].x + face(customer)[0].w).toBeLessThan(420)
+    // Left alone, the light that says what can be touched is on them, not on the door where nobody is.
+    const lit = new Sprites(blankSheets, 1180, 820, 1), seen: Recording = { shapes: [], stamps: [], texts: 0 }
+    for (let i = 0; i < 3; i++) { seen.stamps.length = 0; drawFrame(recordingSheet(1180, 820, seen).g as Ctx, 1180, 820, lit, { play, guidance: { glow: 1, demo: null, demoIndex: -1 } }) }
+    const glows = seen.stamps.filter((stamp) => stamp.image === lit.glow.sheet.canvas).map((stamp) => bounds(stamp.corners))
+    expect(glows).toHaveLength(1)
+    expect(glows[0].x + glows[0].w / 2).toBeLessThan(420)
+    // Two hats, one each, and no sheet behind the door's glass.
+    expect(kept.stamps.filter((stamp) => stamp.image === sprites.hat.sheet.canvas)).toHaveLength(2)
+    for (const who of play.game!.waiting) expect(kept.stamps.filter((stamp) => stamp.image === sprites.waiting(who).sheet.canvas)).toHaveLength(0)
+    // Once they have come in, the pair after them is at the glass.
+    tap(play, { x: FIRST_WAIT[0].x, y: FIRST_WAIT[0].y })
+    through(play)
+    const after = frame(play, play.time)
+    for (const who of play.game!.waiting) expect(after.kept.stamps.filter((stamp) => stamp.image === after.sprites.waiting(who).sheet.canvas)).toHaveLength(1)
+  })
+
   it('hangs the cape over the chair whenever nobody wears it: on a first visit, and while a pair walks in', () => {
     const first = fresh(), empty = frame(first)
     expect(empty.kept.stamps.filter((stamp) => stamp.image === empty.sprites.drape.sheet.canvas)).toHaveLength(1)
@@ -212,7 +242,7 @@ describe('the salon around them', () => {
   })
 
   it('swings the door open when a pair comes in: its leaf narrows towards its hinges and the doorway shows behind it, and shut it is the room\'s own', () => {
-    const play = fresh()
+    const play = done()
     const wide = (stamps: Recording['stamps'], sheet: unknown): number[] => stamps.filter((stamp) => stamp.image === sheet).map((stamp) => bounds(stamp.corners).w)
     const shut = frame(play)
     expect(wide(shut.kept.stamps, shut.sprites.leaf.sheet.canvas)).toEqual([])
@@ -237,7 +267,7 @@ describe('the salon around them', () => {
   })
 
   it('draws no tail in the doorway before its owner is seen there', () => {
-    const play = fresh()
+    const play = done()
     tap(play, DOOR)
     for (let i = 0; i < 18; i++) play.step(1 / 60, true)
     expect(play.staging.customer!.seen).toBeGreaterThan(0.9)
@@ -260,7 +290,7 @@ describe('the salon around them', () => {
   })
 
   it('draws each of the pair at the door as one sheet with its eyes on top, behind rain that moves', () => {
-    const play = fresh(), { kept, sprites } = frame(play)
+    const play = seated(), { kept, sprites } = frame(play)
     const pane = DOOR_AT.glass
     for (const who of play.game!.waiting) {
       const stamps = kept.stamps.filter((stamp) => stamp.image === sprites.waiting(who).sheet.canvas)

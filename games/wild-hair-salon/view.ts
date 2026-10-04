@@ -6,7 +6,7 @@ import { hintFor, type Hint } from './ladder'
 import { BESIDE_X, CHAIR, COLLAR_Y, DOOR, FLOOR_Y, HEAD, LOCK_X, LOOKING_GLASS, PEG, STEP, STRIP_W, fit } from './layout'
 import { FLUFF, LOOKS, RIBBON, hueOf } from './looks'
 import type { Play } from './play'
-import { GLASS_AT, SPOT_Y, bowOn, clippingBox, modelRootAt, onHead, placesOf, ribbonShape, tuftPose, tuftTip, type Point } from './poses'
+import { FIRST_WAIT, FIRST_WAIT_BOX, GLASS_AT, SPOT_Y, bowOn, clippingBox, modelRootAt, onHead, placesOf, ribbonShape, tuftPose, tuftTip, type Point } from './poses'
 import { TAIL_LEN } from './rules'
 import { PAW_HOME, SHOULDER, TAIL_OF_CUSTOMER, tailOf } from './scenes'
 import type { Sprites } from './sprites'
@@ -65,8 +65,10 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
     g.restore()
   }
 
-  // The door: the street behind its glass, who waits there under their rain hats, and its edge when it stands open.
-  light(DOOR.x + DOOR.w / 2, DOOR.y + DOOR.h / 2, DOOR.w * 1.5, DOOR.h * 1.25, glowOn('door'))
+  // The door: the street behind its glass and who waits there under their rain hats. The light for the pair that waits is
+  // on the door, or on a first visit on the pair by the bench.
+  if (game.chair === null) light(FIRST_WAIT_BOX.x + FIRST_WAIT_BOX.w / 2, FIRST_WAIT_BOX.y + FIRST_WAIT_BOX.h / 2, FIRST_WAIT_BOX.w * 1.3, FIRST_WAIT_BOX.h * 1.2, glowOn('door'))
+  else light(DOOR.x + DOOR.w / 2, DOOR.y + DOOR.h / 2, DOOR.w * 1.5, DOOR.h * 1.25, glowOn('door'))
   drawn += door(g, sprites, play, game)
 
   const places = placesOf(game)
@@ -76,8 +78,18 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
   const customerAt = staging.customer, friendAt = staging.friend
   const caped = staging.cape
 
-  // With nobody in the chair the cape hangs over it and waits for the first customer.
-  if (!chair) drawn += stamp(g, sprites.drape)
+  // With nobody in the chair the cape hangs over it and waits for the first customer, and the first pair waits in the room by
+  // the bench: whole, large, under their rain hats, the friend first since it stands further back.
+  if (!chair) {
+    drawn += stamp(g, sprites.drape)
+    for (const i of [1, 0] as const) {
+      const puppet = play.waiting?.[i], who = game.waiting[i], at = FIRST_WAIT[i]
+      if (!puppet) continue
+      const shown = { ...at, lift: 0, seen: 1 }
+      drawn += tail(g, sprites, who, i === 0 ? { x: at.x - 60 * at.s, y: at.y + 250 * at.s } : { x: at.x + 44 * at.s, y: at.y + 300 * at.s }, null, puppet.at('tail'), 0, at.s, 1)
+      drawn += drawFigure(g, sprites, { who, puppet, at: shown, mane: null, body: 1, wears: { pieces: [], blindfold: false, hat: 1 }, time: play.time })
+    }
+  }
 
   if (chair && friend && customerAt && friendAt && places.customer && places.friend) {
     const look = LOOKS[chair]
@@ -320,7 +332,8 @@ function door(g: Ctx, sprites: Sprites, play: Play, game: Salon): number {
     drawn += stamp(g, sprites.passer)
     g.restore()
   }
-  if (staging.waiting > 0 && play.waiting) {
+  // On a first visit the pair that waits is in the room, and nobody is at the glass yet.
+  if (staging.waiting > 0 && play.waiting && game.chair !== null) {
     game.waiting.forEach((who, i) => {
       const puppet = play.waiting?.[i]
       if (!puppet) return
