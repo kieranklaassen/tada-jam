@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { BODIES, reachOut } from './bodies'
-import { BALLOON, bunchOffsets, bunchReach, CLOUDS, farGroundAt, FAR_HILL, FRIEND_GAP, FRIEND_SCALE, friendX, GROUND, groundAt, HELD_HEIGHT, PARADE_SCALE, PARADE_TROOPS, paradeSpot, seenAt, SKY_ROW, skySlots, toWorld, viewFor, WAITING_SCALE, waitingSpot } from './layout'
+import { BALLOON, bunchOffsets, bunchReach, CLOUDS, farGroundAt, FAR_HILL, FRIEND_GAP, FRIEND_SCALE, friendX, GROUND, groundAt, HELD_HEIGHT, PARADE_SCALE, PARADE_TROOPS, paradeSpot, seenAt, SKY_ROW, skySlots, toWorld, viewFor, WAITING_SCALE, waitingSpot, GROWN_UP_CORNER } from './layout'
 
 // The sizes a two-year-old needs (pack: game-design, ages-2-to-4.md), held at the size of the iPad the game is
 // measured on, and the jam's floor held at a narrow surface.
@@ -39,8 +39,8 @@ describe('the balloons', () => {
   })
 
   it('hang well apart: no two bunches nearer than half a balloon, whatever is in them', () => {
-    for (const view of [IPAD, NARROW, SMALL, viewFor(390, 844), viewFor(844, 390)]) for (const slots of [3, 4, 5]) {
-      const places = skySlots(slots, view)
+    for (const view of [IPAD, NARROW, SMALL, viewFor(1024, 768), viewFor(390, 844), viewFor(844, 390)]) for (const slots of [3, 4, 5]) {
+      const places = skySlots(slots, view, slots === 5 ? 1 : 3)
       // Five places hold singles; three or four may each hold a bunch of three. Every pair of places is held apart
       // by the nearest two balloons of full bunches, as large as they are drawn on that surface.
       const offsets = bunchOffsets(slots === 5 ? 1 : 3), reach = bunchReach(slots === 5 ? 1 : 3).x * view.balloon
@@ -58,6 +58,22 @@ describe('the balloons', () => {
       for (const slots of [3, 4, 5]) for (const place of skySlots(slots, view)) expect(place.y + bunchReach(3).y * view.balloon, `${view.width.toFixed(1)} wide`).toBeLessThan(view.height / 2)
     }
     expect(skySlots(5, IPAD).every((place) => place.y === SKY_ROW)).toBe(true)
+  })
+
+  it('are never in the top right corner, which is the grown-up\'s and answers no touch, on any shape of surface', () => {
+    for (const [w, h] of [[1180, 820], [1024, 768], [1080, 810], [1366, 1024], [1024, 640], [960, 620], [844, 390], [2000, 900]]) {
+      const view = viewFor(w, h), corner = GROWN_UP_CORNER / view.pixelsPerUnit
+      // Five places hold singles; three or four may hold a bunch of up to three.
+      for (const [slots, largest] of [[5, 1], [4, 1], [4, 3], [3, 3], [4, 2]] as const) {
+        for (const place of skySlots(slots, view, largest)) for (const offset of bunchOffsets(largest)) {
+          const right = place.x + (offset.x + BALLOON) * view.balloon, top = place.y + (offset.y + BALLOON * 1.12) * view.balloon
+          expect(right < view.width / 2 - corner || top < view.height / 2 - corner, `${w} by ${h}, ${slots} places of ${largest}`).toBe(true)
+        }
+      }
+    }
+    // On the iPad held wide the row is as it always was.
+    expect(skySlots(4, IPAD, 3)).toEqual(skySlots(4, IPAD))
+    expect(skySlots(5, IPAD, 1)).toEqual(skySlots(5, IPAD))
   })
 
   it('keep one arrangement for each number, with no balloon over another', () => {

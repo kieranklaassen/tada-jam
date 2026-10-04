@@ -89,10 +89,23 @@ export function waitingSpot(index: number, view: View): { x: number; z: number }
   return { x: -view.width / 2 + 1.1 - index * 1.0, z: WAITING_DEPTH - index * 1.6 }
 }
 
-/** The middle of each place in the sky, for `slots` bunches: one row, with room at each end for a balloon as large as it is drawn here. */
-export function skySlots(slots: number, view: View): { x: number; y: number }[] {
-  const room = view.width - 2 * (BALLOON * 1.9 * view.balloon)
-  const gap = slots > 1 ? Math.min(3.6, room / (slots - 1)) : 0
+/** The top right corner is the grown-up's: this many logical pixels each way, where nothing of the game is drawn to be touched and no touch is answered (`overlay.ts`). */
+export const GROWN_UP_CORNER = 72
+
+/**
+ * The middle of each place in the sky, for `slots` bunches: one row, with room at each end for a balloon as large
+ * as it is drawn here. `largest` is the most balloons any bunch of this sky holds. Where the top of such a bunch
+ * would stand as high as the grown-up's corner, the row ends short of the corner, so no balloon is ever in it.
+ */
+export function skySlots(slots: number, view: View, largest = 1): { x: number; y: number }[] {
+  const corner = GROWN_UP_CORNER / view.pixelsPerUnit
+  let end = BALLOON * 1.9 * view.balloon
+  // Each balloon of such a bunch whose top is as high as the corner's lower edge must end to the left of the corner.
+  for (const offset of bunchOffsets(largest)) {
+    const top = SKY_ROW + (offset.y + BALLOON * 1.12) * view.balloon
+    if (top > view.height / 2 - corner - 0.1) end = Math.max(end, corner + (offset.x + BALLOON) * view.balloon + 0.1)
+  }
+  const gap = slots > 1 ? Math.min(3.6, (view.width - 2 * end) / (slots - 1)) : 0
   return Array.from({ length: slots }, (_, i) => ({ x: (i - (slots - 1) / 2) * gap, y: SKY_ROW }))
 }
 

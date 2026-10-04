@@ -1,7 +1,7 @@
 import { BODIES, type KindName } from './bodies'
 import { clip, hold, hump, PERSONALITIES, ramp, rest, stride, walk, type ClipId } from './clips'
 import { handPose, type Guidance, type HandPose } from './guidance'
-import { BALLOON, bunchOffsets, bunchReach, CLOUDS, FAR_HILL, farGroundAt, FRIEND_SCALE, friendX, GROUND, groundAt, HELD_HEIGHT, PARADE_SCALE, paradeSpot, seenAt, skySlots, viewFor, WAITING_SCALE, waitingSpot, type View } from './layout'
+import { BALLOON, bunchOffsets, bunchReach, CLOUDS, FAR_HILL, farGroundAt, FRIEND_SCALE, friendX, GROUND, groundAt, GROWN_UP_CORNER, HELD_HEIGHT, PARADE_SCALE, paradeSpot, seenAt, skySlots, viewFor, WAITING_SCALE, waitingSpot, type View } from './layout'
 import { KIND_COLOURS, PALETTE, shade } from './palette'
 import { copyPose, forwardOf, mirror, REST, restPose, spread, type Pose } from './pose'
 import { LADDER } from './config'
@@ -42,14 +42,15 @@ export type Hit = { on: 'held'; friend: number } | { on: 'bunch'; slot: number }
 /** A bunch's place in the sky and its springs: how flat it is, how far it is pushed aside, how far the loose end of its string has whipped, and how long until it is back. */
 type Place = { squash: number; squashSpeed: number; pressed: boolean; push: number; pushSpeed: number; whip: number; whipSpeed: number; away: number; grow: number }
 type Flight = { bunch: Bunch; slot: number; given: Given; t: number; fromX: number; fromY: number; landed: boolean; after: number; friend: number; met?: boolean }
-type Held = { x: number; y: number; vx: number; vy: number; shown: boolean }
+/** A balloon in a friend's hand. `bonk` is how long it is still on its way round to the friend's head, knocked by a refusal. */
+type Held = { x: number; y: number; vx: number; vy: number; shown: boolean; bonk?: number }
 /** A balloon that has got away. `flat` is one blown off going flat; `bump` is one that is heading for the cloud over the troop and has not met it yet. */
 type Loose = { x: number; y: number; vx: number; vy: number; colour: string; flat: boolean; t: number; popAt: number; bump?: boolean }
 type Scrap = { x: number; y: number; vx: number; vy: number; colour: string; life: number }
 /** A drop of water from a cloud, and a dimple in the hill where it was touched. */
 type Drop = { x: number; y: number; vx: number; vy: number; life: number }
 type Dimple = { x: number; t: number }
-/** `tug` is the bunch that carries a friend off, `bumps` says that bunch is bigger than the whole troop and goes out by way of the cloud, `landAfter` puts its landing sound a little after its neighbour's when a whole troop comes down, `mirrored` has it refuse towards its other side, where the bunch hangs, `speed` is how fast this playing of a motion runs, and `lastPoke` is which way it last took a poke. */
+/** `tug` is the bunch that carries a friend off, `bumps` says that bunch is bigger than the whole troop and goes out by way of the cloud, `landAfter` is how much longer than its neighbour it hangs in the air before it comes down, when a whole troop was carried off, `mirrored` has it refuse towards its other side, where the bunch hangs, `speed` is how fast this playing of a motion runs, and `lastPoke` is which way it last took a poke. */
 type Actor = { clip: ClipId | null; t: number; next: ClipId | null; tug: Bunch | null; bumps?: boolean; landAfter: number; mirrored?: boolean; speed?: number; lastPoke?: ClipId }
 
 /** A troop that is only passing: one that marches off, or one that crosses to show a new idea. Short-lived, and no part of the save. */
@@ -62,7 +63,6 @@ export const PASS_BY = { shortest: 4, longest: 6 } as const
 export const ENDING = { shortest: 5, longest: 7 } as const
 
 /** The side of the grown-up's corner, in logical pixels (`CORNER` in overlay.ts). */
-const GROWN_UP_CORNER = 72
 
 /** How long before a bunch of another colour arrives the friend begins to refuse it, in seconds. */
 const REFUSAL_LEAD = 0.12
@@ -75,6 +75,10 @@ const REFUSAL_LEAD = 0.12
  */
 const OVER_PATH = { x: -7.6, across: 0.8, z: 4.6, deep: 9, dip: 2.4 } as const
 const OVER_LAG = 0.2
+/** How much later each friend of a troop that was carried off comes down than the one before it, in seconds. */
+const LAND_APART = 0.15
+/** Seconds a held balloon takes to swing round onto its friend's head when a refusal knocks it. */
+const BONK = 0.3
 /** Seconds a troop on the far hill is in the air when it jumps at a touch. */
 const FAR_JUMP = 0.45
 /** How far apart the balloons of a bunch are pulled while it carries a friend off, against how they hang in the sky: the second is then over the gap between two friends. */
@@ -197,7 +201,8 @@ export class Theatre {
   /** The places in the sky for this view, worked out once for each width. */
   private slots(view: View): { x: number; y: number }[] {
     if (this.slotsFor !== view.width + view.balloon * 1000) {
-      this.slotsAt = skySlots(this.sky.length, view)
+      // The largest bunch in this sky decides how near the top right corner the last place may be.
+      this.slotsAt = skySlots(this.sky.length, view, Math.max(1, ...this.sky.map((bunch) => bunch.count)))
       this.slotsFor = view.width + view.balloon * 1000
     }
     return this.slotsAt
@@ -337,7 +342,15 @@ export class Theatre {
     if (slot < 0) return
     const place = this.places[slot]
     place.pressed = false
-    if (place.away > 0 || this.flights.length >= MAX_FLIGHTS) return
+    if (place.away > 0) return
+    // Tapping a balloon always works. When as many bunches are in the air as the sky can show, the one that has
+    // been there longest gets its answer at once and makes room.
+    if (this.flights.length >= MAX_FLIGHTS) {
+      const oldest = this.flights[0]
+      if (!oldest.landed) this.land(oldest)
+      this.settle(oldest, PERSONALITIES[this.troop.kind].cue, true)
+      this.flights.shift()
+    }
     const bunch = this.sky[slot]
     // The rules decide here, at the lift, and the save holds the outcome before the bunch has left the sky.
     const { save, events } = sendBunch(this.save, slot)
@@ -656,7 +669,15 @@ export class Theatre {
       const actor = this.actors[i]
       if (!actor.clip) continue
       const before = actor.t
-      actor.t += dt * (actor.clip === 'liftOff' ? 1 : actor.speed ?? 1)
+      let step = dt * (actor.clip === 'liftOff' ? 1 : actor.speed ?? 1)
+      // A whole troop that was carried off comes down one after another: each friend hangs in the air where it let
+      // go for a moment longer than the one before it.
+      if (actor.clip === 'liftOff' && actor.landAfter > 0 && actor.t >= personality.cue.letGo) {
+        const hung = Math.min(actor.landAfter, step)
+        actor.landAfter -= hung
+        step -= hung
+      }
+      actor.t += step
       if (actor.clip === 'liftOff') {
         const { letGo, land } = personality.cue
         if (before < letGo && actor.t >= letGo && actor.tug) {
@@ -676,7 +697,7 @@ export class Theatre {
           actor.bumps = false
         }
         if (before < land && actor.t >= land) {
-          this.sound(`${kind}Land`, 1, 1, actor.landAfter)
+          this.sound(`${kind}Land`)
           // The hippo sits down so hard that the clouds bounce.
           if (kind === 'hippo') for (const cloud of this.clouds) cloud.speed += 3.5
         }
@@ -694,9 +715,18 @@ export class Theatre {
     for (let i = 0; i < this.held.length; i++) {
       const balloon = this.held[i], spot = this.spot(i), actor = this.actors[i]
       const lifted = actor.clip === 'liftOff' ? this.lift(kind, actor.t) : 0
-      const targetX = spot.x + 0.7 + Math.sin(this.time * 1.2 + i) * 0.1, targetY = spot.y + lifted + HELD_HEIGHT + Math.sin(this.time * 1.5 + i * 2) * 0.06
-      balloon.vx += ((targetX - balloon.x) * 60 - balloon.vx * 6) * dt
-      balloon.vy += ((targetY - balloon.y) * 60 - balloon.vy * 6) * dt
+      let targetX = spot.x + 0.7 + Math.sin(this.time * 1.2 + i) * 0.1, targetY = spot.y + lifted + HELD_HEIGHT + Math.sin(this.time * 1.5 + i * 2) * 0.06, pull = 60, drag = 6
+      if (balloon.bonk !== undefined && balloon.bonk > 0) {
+        // Knocked by a refusal, it swings round on its string and comes down on its friend's head: its underside
+        // on the top of the head, hard and fast, and then it is let go to bob back up.
+        balloon.bonk -= dt
+        targetX = spot.x + 0.08
+        targetY = spot.y + lifted + BODIES[kind].height * FRIEND_SCALE + BALLOON * this.lastView.balloon * 0.92
+        pull = 420
+        drag = 22
+      }
+      balloon.vx += ((targetX - balloon.x) * pull - balloon.vx * drag) * dt
+      balloon.vy += ((targetY - balloon.y) * pull - balloon.vy * drag) * dt
       balloon.x += balloon.vx * dt
       balloon.y += balloon.vy * dt
     }
@@ -795,7 +825,7 @@ export class Theatre {
       if (everyoneHolds && flight.bunch.count === this.troop.size && this.troop.size > 1) {
         // One more for each of a troop that has its balloons: the whole troop is carried off at the same moment,
         // their squeaks climbing a scale together, and they come down one after another.
-        for (let i = 0; i < this.troop.size; i++) this.carryOff(i, { colour: flight.bunch.colour, count: 1 }, 1 + i * 0.12, i * 0.11)
+        for (let i = 0; i < this.troop.size; i++) this.carryOff(i, { colour: flight.bunch.colour, count: 1 }, 1 + i * 0.12, i * LAND_APART)
       } else {
         this.carryOff(flight.friend, flight.bunch, 1, 0)
         // A balloon in each hand: the two rub together.
@@ -836,11 +866,12 @@ export class Theatre {
   }
 
   /** What a landed bunch does after it lands. True when there is nothing left of it to play. */
-  private settle(flight: Flight, cue: { hit: number }): boolean {
+  private settle(flight: Flight, cue: { hit: number }, now = false): boolean {
     if (flight.given.result !== 'refused') return true
-    // The refusal lands on it at its own moment of the friend's motion, or at once if the friend was set to something else.
+    // The refusal lands on it at its own moment of the friend's motion, or at once if the friend was set to
+    // something else or the bunch has to make room (`now`).
     const refusing = this.actors[flight.friend]
-    if (refusing.clip === 'refuse' && refusing.t < cue.hit) return false
+    if (!now && refusing.clip === 'refuse' && refusing.t < cue.hit) return false
     // The refusal lands on it: it pops, or with the hippo it is blown away going flat.
     const kind = this.troop.kind, colour = KIND_COLOURS[flight.bunch.colour]
     const beside = this.beside(flight.friend, flight.bunch.count)
@@ -855,10 +886,10 @@ export class Theatre {
     const mine = this.held[flight.friend]
     if (mine.shown) {
       // The refusal knocks the balloon it already holds, which swings round on its string and bumps it on the head.
-      const spot = this.spot(flight.friend)
-      mine.vx += (spot.x - mine.x) * 9 - beside.side * 3
-      mine.vy -= 7
-      this.sound('bonk', 1, 1, 0.2)
+      // It is flung out to the side the refused one hung on and comes round onto the head (see the held balloons, in `step`).
+      mine.vx += beside.side * 5
+      mine.bonk = BONK
+      this.sound('bonk', 1, 1, BONK * 0.55)
     }
     return true
   }

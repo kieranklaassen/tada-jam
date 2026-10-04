@@ -315,11 +315,24 @@ describe('a bunch the child sends', () => {
     play(theatre, FLIGHT + PERSONALITIES.hippo.cue.letGo - 0.1)
     theatre.paint(painter, VIEW)
     for (const name of ['friend-0', 'friend-1', 'friend-2']) expect(frame.poses.get(name)!.y - GROUND, name).toBeGreaterThan(0.1)
-    play(theatre, 3)
+    // Each comes down later than the one before it, and is heard as it lands.
+    const down = [-1, -1, -1], heard: number[] = []
+    for (let i = 0; i < 180; i++) {
+      const lands = theatre.sounds.filter((sound) => sound.voice === 'hippoLand').length
+      theatre.step(1 / 60)
+      if (theatre.sounds.filter((sound) => sound.voice === 'hippoLand').length > lands) heard.push(i)
+      theatre.paint(painter, VIEW)
+      for (let k = 0; k < 3; k++) if (down[k] < 0 && frame.poses.get(`friend-${k}`)!.y - GROUND < 0.02) down[k] = i
+    }
+    expect(down[1] - down[0]).toBeGreaterThanOrEqual(7)
+    expect(down[2] - down[1]).toBeGreaterThanOrEqual(7)
+    expect(heard).toHaveLength(3)
+    expect(heard[1] - heard[0]).toBeGreaterThanOrEqual(7)
+    expect(heard[2] - heard[1]).toBeGreaterThanOrEqual(7)
     const lifts = theatre.sounds.filter((sound) => sound.voice === 'hippoLiftOff'), lands = theatre.sounds.filter((sound) => sound.voice === 'hippoLand')
     expect(lifts.map((sound) => sound.after)).toEqual([0, 0, 0])
     expect(lifts[2].pitch).toBeGreaterThan(lifts[0].pitch * 1.1)
-    expect(lands.map((sound) => sound.after)).toEqual([0, 0.11, 0.22])
+    expect(lands.map((sound) => sound.after)).toEqual([0, 0, 0])
     clear()
     theatre.paint(painter, VIEW)
     expect(theatre.troop.held).toEqual([true, true, true])
@@ -352,6 +365,47 @@ describe('a bunch the child sends', () => {
     expect(Math.hypot(after.x - before.x, after.y - before.y)).toBeGreaterThan(0.3)
     play(theatre, 3)
     expect(theatre.troop.held).toEqual([true])
+  })
+
+  it.each(KINDS)('brings the balloon a %s holds round onto its head when it refuses another colour, as the bonk sounds', (kind) => {
+    const other: KindName = kind === 'duck' ? 'frog' : 'duck'
+    const theatre = staged({ troop: { kind, size: 1, held: [true] }, sky: [{ colour: kind, count: 1 }, { colour: other, count: 1 }], waiting: { kind: other, size: 1 } }), { frame, painter, clear } = recorder()
+    tapSlot(theatre, 1)
+    theatre.sounds.length = 0
+    // How far the underside of its own balloon is above the top of its head, and how far to the side of its middle.
+    let nearest = Infinity, aside = Infinity, bonkAt = -1, touchedAt = -1
+    for (let i = 0; i < 150; i++) {
+      theatre.step(1 / 60)
+      const bonk = theatre.sounds.find((sound) => sound.voice === 'bonk')
+      if (bonk && bonkAt < 0) bonkAt = i + Math.round(bonk.after * 60)
+      clear()
+      theatre.paint(painter, VIEW)
+      const pose = frame.poses.get('friend-0')!, top = pose.y + BODIES[kind].height * 1.08 * pose.squash
+      const own = frame.balloons.filter((balloon) => balloon.y < 2.2 && balloon.y > pose.y + 1.2 && balloon.tall === 1 && balloon.wide === 1)[0]
+      if (!own) continue
+      const gap = own.y - BALLOON * 1.12 - top
+      if (gap < nearest) { nearest = gap; aside = Math.abs(own.x - pose.x) }
+      if (touchedAt < 0 && gap < 0.05 && Math.abs(own.x - pose.x) < 0.4) touchedAt = i
+    }
+    expect(nearest, 'its underside reaches the top of the head').toBeLessThan(0.05)
+    expect(aside, 'over the head, not beside it').toBeLessThan(0.4)
+    expect(bonkAt).toBeGreaterThan(0)
+    expect(Math.abs(touchedAt - bonkAt), 'and the bonk sounds as it touches').toBeLessThanOrEqual(6)
+    play(theatre, 2)
+    expect(theatre.troop.held).toEqual([true])
+  })
+
+  it('still goes to the troop when four bunches are already in the air: the one longest there gets its answer at once', () => {
+    const theatre = solo('duck', ['frog', 'hippo', 'crab', 'frog', 'duck'])
+    for (const slot of [0, 1, 2, 3]) { tapSlot(theatre, slot); play(theatre, 0.08) }
+    expect(theatre.troop.held).toEqual([false])
+    theatre.sounds.length = 0
+    tapSlot(theatre, 4)
+    // The fifth leaves the sky at the lift, as every bunch does, and the duck has its balloon.
+    expect(voices(theatre)).toEqual(expect.arrayContaining(['letGo', 'whistle']))
+    expect(theatre.troop.held).toEqual([true])
+    play(theatre, 3)
+    expect(voices(theatre)).toContain('duckCatch')
   })
 
   it('is refused by a friend who is still without a balloon when there is one', () => {
