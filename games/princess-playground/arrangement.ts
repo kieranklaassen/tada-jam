@@ -148,20 +148,6 @@ export const CATCH = 1.75
 /** How far in front of or behind the plank a friend let go still lands on it. */
 export const CATCH_DEPTH = 1.5
 /**
- * The height at which the finger is read against the plank: about the middle of a friend sitting on it. A carried
- * friend hangs high over the tray, so from the child's side its picture lies over things that are further back than
- * the spot it hangs over. What the child sees is the friend on the plank's picture, so that is read too.
- */
-export const AIM_HEIGHT = 1.5
-/** How far to either side of the plank's line the finger, read at `AIM_HEIGHT`, still counts as on the plank: the ends ride higher and lower than its middle. */
-export const AIM_DEPTH = 1.6
-
-/** The finger, read at `AIM_HEIGHT`, is on the picture of the plank. */
-export function aimedAtPlank(aim: { x: number; z: number } | null): boolean {
-  return aim !== null && Math.abs(aim.z - PLANK.z) <= AIM_DEPTH && Math.abs(aim.x) <= PLANK.seat + CATCH
-}
-
-/**
  * A friend let go at (x, z) over the tray, with the plank resting as `a` has
  * it. Over an end it lands there; over the middle it slides to the low end,
  * or on a level plank to the nearer one; anywhere else it stands in the sand.

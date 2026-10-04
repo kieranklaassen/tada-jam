@@ -1,7 +1,6 @@
 // template: cartridge/game.tsx v2
 import { useEffect, useRef } from 'react'
 import type { Cartridge, CartridgeContext } from '../types'
-import { AIM_HEIGHT } from './arrangement'
 import { AttendedClock, Attention } from './attention'
 import { GameAudio } from './audio'
 import { BACKDROP } from './config'
@@ -133,6 +132,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // What the game does with a gesture. The blank surface only answers a touch with a sound.
     // A game with short scenes ends the one that is playing first thing in every press, before the press is
     // answered (`finish` in scene.ts). A gesture that changes the state hands it to storage here (`cadence`, above).
+    // The step a carried friend keeps from the place the finger points at on the sand.
+    let carry = { x: 0, z: 0 }
     const act = (gestures: Gesture[]) => {
       if (!game) return
       for (const gesture of gestures) {
@@ -140,8 +141,20 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
           const hit = stage.pick(gesture.at.x, gesture.at.y, game.frame)
           game.press(hit as Touched)
         } else if (gesture.type === 'tap') game.tap()
-        else if (gesture.type === 'dragStart') game.dragStart()
-        else if (gesture.type === 'dragMove') game.dragTo(stage.pointAt(gesture.at.x, gesture.at.y, game.carryHeight), stage.sandAt(gesture.at.x, gesture.at.y), stage.pointAt(gesture.at.x, gesture.at.y, AIM_HEIGHT))
+        else if (gesture.type === 'dragStart') {
+          game.dragStart()
+          // The friend rises from under the finger. Over the sand it keeps the step it stood from the place the finger
+          // pointed at, so it does not jump as it is lifted.
+          const id = game.play.held
+          const under = id ? stage.groundAt(gesture.from.x, gesture.from.y, game.frame, id) : null
+          carry = id && under ? { x: Math.max(-1.2, Math.min(1.2, game.frame.poses[id].x - under.x)), z: Math.max(-1.2, Math.min(1.2, game.frame.poses[id].z - under.z)) } : { x: 0, z: 0 }
+        } else if (gesture.type === 'dragMove') {
+          // What the finger points at is where the friend in the hand hangs, and so where it will come down: the
+          // board when the finger is on the board's picture, a friend's place when it is on that friend, else the sand.
+          const under = stage.groundAt(gesture.at.x, gesture.at.y, game.frame, game.play.held)
+          const over = under ? (under.on === 'sand' ? { x: under.x + carry.x, z: under.z + carry.z } : { x: under.x, z: under.z }) : null
+          game.dragTo(over, stage.sandAt(gesture.at.x, gesture.at.y))
+        }
         else if (gesture.type === 'dragEnd') game.dragEnd()
         else if (gesture.type === 'dragAbort') game.dragAbort()
         else if (gesture.type === 'pressEnd') game.pressEnd()

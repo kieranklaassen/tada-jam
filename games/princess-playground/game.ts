@@ -4,7 +4,7 @@ import { forecast, type SandOp } from './forecast'
 import { Grains } from './grains'
 import type { Guidance } from './guidance'
 import { bite as biteMark, biteDepth, furrow, rake as rakeMarks, rakeIsOut, stamp, swirl as swirlMark } from './marks'
-import { HOLD_HEIGHT, Playground, type PlayEvent } from './motion'
+import { Playground, type PlayEvent } from './motion'
 import type { Frame } from './pose'
 import { askerEnd, layout, rideOf, wantMet, type Kind, type Ride } from './rides'
 import { afterMove, beginRide, endRide, markShown, rideIsOver, save, type Saved, type World } from './save'
@@ -94,8 +94,6 @@ export class Game implements Director {
   /** Who looks after it: those it was with, on the plank or beside it in the sand. */
   private lookers: readonly FriendId[] = []
   private nextEndOf: World | null = null
-  /** Where the finger last was, read at the height of a friend sitting on the plank. */
-  private aim: { x: number; z: number } | null = null
   private nextEndIs: End = 'left'
   /** Mog and Bo on the end that is up: whether each has yet said what it makes of it. */
   private perch: Partial<Record<FriendId, 'pending' | 'said'>> = {}
@@ -228,12 +226,11 @@ export class Game implements Director {
   }
 
   /**
-   * The finger moved: `over` is where it is above the tray at carrying height, `sand` where it is on the sand, and
-   * `aim` where it is at the height of a friend sitting on the plank (`AIM_HEIGHT`); any may be null.
+   * The finger moved: `over` is the place in the tray it points at, where a carried friend hangs and will come down;
+   * `sand` is where it is on the sand; either may be null.
    */
-  dragTo(over: { x: number; z: number } | null, sand: { x: number; z: number } | null, aim: { x: number; z: number } | null = null): void {
+  dragTo(over: { x: number; z: number } | null, sand: { x: number; z: number } | null): void {
     const pressed = this.pressed
-    this.aim = aim
     if (pressed.kind === 'friend' && this.play.held && over) this.play.carryTo(over.x, over.z)
     else if (pressed.kind === 'sand' && sand && Math.hypot(sand.x - pressed.x, sand.z - pressed.z) >= GROOVE_STEP) {
       this.play.dragSand(pressed.x, pressed.z, sand.x, sand.z)
@@ -245,9 +242,7 @@ export class Game implements Director {
   dragEnd(): void {
     const id = this.play.held
     this.pressed = { kind: 'other' }
-    const aim = this.aim
-    this.aim = null
-    if (id) this.moved(id, () => this.play.release(aim))
+    if (id) this.moved(id, () => this.play.release())
     // Brought in by the hand, Dot twirls as it comes, as it does when a tap brings it in.
     if (id === 'dot' && inCompany(this.play.arrangement)) this.play.act('dot', 'spin', 0.5)
   }
@@ -259,7 +254,6 @@ export class Game implements Director {
   /** The pointer was taken away mid-drag and did not come back: the friend goes back to where it was picked up from, and no move is made. */
   dragAbort(): void {
     this.pressed = { kind: 'other' }
-    this.aim = null
     this.backToItsEnd()
   }
 
@@ -289,7 +283,6 @@ export class Game implements Director {
    */
   putAway(): void {
     this.pressed = { kind: 'other' }
-    this.aim = null
     this.backToItsEnd()
     // Whoever is still in the air will land, and the plank will come down, with nobody watching: the marks they
     // make go into the saved sand now, so nothing the child set going is lost. They are drawn when they happen.
@@ -303,11 +296,6 @@ export class Game implements Director {
         this.wantSave('now')
       }
     }
-  }
-
-  /** How high above the sand the middle of a carried friend hangs, for the Mount to find the point under the finger. */
-  get carryHeight(): number {
-    return HOLD_HEIGHT + (this.play.held ? FRIENDS[this.play.held].halfHeight : 0)
   }
 
   // --- A step ---------------------------------------------------------------
@@ -436,7 +424,6 @@ export class Game implements Director {
     // A finger that was already down when the scene began is no touch on the scene: its lift does nothing, and only a
     // new touch ends the scene.
     this.pressed = { kind: 'other' }
-    this.aim = null
     this.drawOwed()
     this.sceneSand = forecast(this.play, this.world.arrangement, build)
     for (const op of this.sceneSand) this.mark(op)
@@ -595,17 +582,18 @@ export class Game implements Director {
         this.voice(v.chirp(event.id, this.said++))
         // Thrown and down again on the head it sat on: that head says what it always says to being landed on, and
         // Pim, on top of someone once more, crows.
-        const place = placeOf(this.play.arrangement, event.id)
+        const place = placeOf(this.play.sitting, event.id)
         if (event.on === 'friend' && place.at === 'end' && place.level > 0) {
-          this.react(underneath(this.play.arrangement[place.end][place.level - 1], event.id))
+          this.react(underneath(this.play.sitting[place.end][place.level - 1], event.id))
           if (event.id === 'pim') this.react([{ who: 'pim', after: 0.1, voice: v.crow(), act: 'bounce', seconds: 0.5 }])
         }
       }
       const landing = this.landings[event.id]
       // Come down a place onto a head, because the friend between was taken away: that head answers as it does to anyone landing on it.
       if (event.fell && !landing && !this.scene && event.on === 'friend') {
-        const place = placeOf(this.play.arrangement, event.id)
-        if (place.at === 'end' && place.level > 0) this.react(underneath(this.play.arrangement[place.end][place.level - 1], event.id))
+        // With a friend in the hand, the stack is the one that still sits.
+        const place = placeOf(this.play.sitting, event.id)
+        if (place.at === 'end' && place.level > 0) this.react(underneath(this.play.sitting[place.end][place.level - 1], event.id))
       }
       if (landing) {
         delete this.landings[event.id]
@@ -625,7 +613,8 @@ export class Game implements Director {
         }
       }
     } else if (event.type === 'knock') {
-      const weight = weightOn(this.play.arrangement, event.end), power = Math.min(1, event.speed / 3)
+      // What sits on the end that came down: a friend in the hand is not on it.
+      const weight = weightOn(this.play.sitting, event.end), power = Math.min(1, event.speed / 3)
       this.voice(v.knock(event.speed))
       this.voice(v.crunch(weight))
       const op: SandOp = { type: 'bite', x: event.x, weight, speed: event.speed }

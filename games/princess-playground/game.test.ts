@@ -840,49 +840,6 @@ describe('the small promises of the sheet', () => {
   })
 })
 
-describe('a friend carried onto the picture of the plank', () => {
-  it('lands on the plank where the child holds it, although it hangs over the sand in front; held clear of the plank it stands in the sand', () => {
-    // Bo carried so that he is drawn on the right end: he hangs over the sand two units in front of the plank's line.
-    const game = new Game({ ...shown(), touched: true }, 1)
-    run(game, 0.2)
-    game.press({ kind: 'friend', id: 'bo' })
-    game.dragStart()
-    game.dragTo({ x: 2.8, z: 1.0 }, null, { x: 2.9, z: -0.6 })
-    run(game, 0.5)
-    game.dragEnd()
-    expect(placeOf(game.play.arrangement, 'bo')).toMatchObject({ at: 'end', end: 'right' })
-    expect(game.world.moves).toBe(1)
-    // Held over the middle of its picture, a friend slides to the low end.
-    const slide = new Game({ ...shown(), touched: true }, 1)
-    run(slide, 0.2)
-    slide.press({ kind: 'friend', id: 'mog' })
-    slide.dragStart()
-    slide.dragTo({ x: 0.2, z: 1.2 }, null, { x: 0.2, z: -0.4 })
-    run(slide, 0.5)
-    slide.dragEnd()
-    expect(run(slide, 0.1).cues.length).toBeGreaterThan(0)
-    expect(placeOf(slide.play.arrangement, 'mog')).toMatchObject({ at: 'end', end: 'left', level: 1 })
-    // Held in front of the plank, clear of its picture: it stands in the sand where it hung.
-    const sand = new Game({ ...shown(), touched: true }, 1)
-    run(sand, 0.2)
-    sand.press({ kind: 'friend', id: 'bo' })
-    sand.dragStart()
-    sand.dragTo({ x: 2.8, z: 2.6 }, null, { x: 2.9, z: 1.2 })
-    run(sand, 0.5)
-    sand.dragEnd()
-    expect(placeOf(sand.play.arrangement, 'bo').at).toBe('sand')
-    // With no reading of the finger at all, the place it hangs over decides, as before.
-    const plain = new Game({ ...shown(), touched: true }, 1)
-    run(plain, 0.2)
-    plain.press({ kind: 'friend', id: 'bo' })
-    plain.dragStart()
-    plain.dragTo({ x: 2.8, z: 1.0 }, null)
-    run(plain, 0.5)
-    plain.dragEnd()
-    expect(placeOf(plain.play.arrangement, 'bo').at).toBe('sand')
-  })
-})
-
 describe('what the child set going, put away before it has happened', () => {
   it('a friend in the air and the plank it will tip: their marks are in the saved sand at put-away, and a load finds them', () => {
     const game = new Game({ ...shown(), touched: true }, 1)
@@ -1306,7 +1263,7 @@ describe('a pointer the browser takes away mid-drag', () => {
     const before = game.saved()
     game.press({ kind: 'friend', id: 'mog' })
     game.dragStart()
-    game.dragTo({ x: PLANK.seat, z: PLANK.z }, null, { x: PLANK.seat, z: PLANK.z })
+    game.dragTo({ x: PLANK.seat, z: PLANK.z }, null)
     run(game, 0.5)
     game.dragAbort()
     run(game, 4)

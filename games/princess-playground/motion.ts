@@ -1,4 +1,4 @@
-import { aimedAtPlank, drop, inCompany, lift, placeOf, putOnEnd, tap, weightOn, type Arrangement } from './arrangement'
+import { drop, inCompany, lift, placeOf, putOnEnd, tap, weightOn, type Arrangement } from './arrangement'
 import { PERSONALITY } from './personality'
 import { LEVEL_SPRING, PLANK_INERTIA, TURN, nudge, stepPlank, type PlankState } from './plank'
 import type { Frame, FriendPose, Poses } from './pose'
@@ -14,7 +14,7 @@ import { ENDS, FRIEND_IDS, FRIENDS, MAX_TILT, PLANK, TRAY, lowTilt, otherEnd, pl
 export const STEP = 1 / 120
 export const GRAVITY = 26
 /** How high above the sand a carried friend hangs. */
-export const HOLD_HEIGHT = 2.6
+export const HOLD_HEIGHT = 2.1
 /** How much of the plank's speed at a knock goes into whoever sits on the end that came up. */
 export const TOSS = 1.25
 /** A throw slower than this is a bob, not a toss: the friend stays seated. */
@@ -286,17 +286,13 @@ export class Playground {
     body.holdZ = Math.max(-TRAY.halfDepth + 0.3, Math.min(TRAY.halfDepth - 0.5, z))
   }
 
-  /**
-   * The finger lets go: the friend comes down where it hangs. `aim` is where the finger is over the tray at the height
-   * of a friend sitting on the plank: when the child holds the friend on the plank's picture, it lands on the plank
-   * there, although it hangs over the sand in front of it.
-   */
-  release(aim: { x: number; z: number } | null = null): void {
+  /** The finger lets go: the friend comes down where it hangs. */
+  release(): void {
     const id = this.held
     if (!id) return
     this.held = null
     const body = this.bodies[id]
-    const result = aimedAtPlank(aim) ? drop(this.arrangement, id, aim!.x, PLANK.z) : drop(this.arrangement, id, body.x, body.z)
+    const result = drop(this.arrangement, id, body.x, body.z)
     this.arrangement = result.arrangement
     this.hop(id, true, result.slid)
   }

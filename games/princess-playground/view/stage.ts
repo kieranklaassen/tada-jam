@@ -2,7 +2,9 @@ import * as THREE from 'three'
 import type { Frame } from '../pose'
 import { FRIEND_IDS, FRIENDS, PLANK, TRAY, type FriendId } from '../world'
 import { handPose, type HandPose } from '../guidance'
+import { FIELD_OF_VIEW, placeCamera } from './camera'
 import { buildFriend, poseFriend, type FriendView } from './friends'
+import { groundUnder, type Ground } from './ground'
 import { RAKE_AT, RAKE_REACH, buildGrains, buildHand, buildRake } from './props'
 import { LIGHT, Sand } from './sand'
 import { SandMap } from './sandMap'
@@ -26,18 +28,12 @@ export type StageView = {
 }
 
 const CLOTH = '#6f8794'
-/** The camera looks down the tray from the child's side. */
-const EYE = new THREE.Vector3(0, 11.2, 11.6)
-const AIM = new THREE.Vector3(0, 1.5, -0.35)
-/** What must stay in frame: the tray with its rim, and room above for a toss. */
-const FRAME_HALF_WIDTH = 6.9
-
 export class Stage {
   readonly map = new SandMap()
   readonly drawn = { drawCalls: 0, triangles: 0 }
   private readonly renderer: THREE.WebGLRenderer
   private readonly scene = new THREE.Scene()
-  private readonly camera = new THREE.PerspectiveCamera(30, 1, 1, 80)
+  private readonly camera = new THREE.PerspectiveCamera(FIELD_OF_VIEW, 1, 1, 80)
   private readonly sand: Sand
   private readonly plank: THREE.Mesh
   private readonly friends: Record<FriendId, FriendView>
@@ -105,17 +101,8 @@ export class Stage {
     this.height = height
     this.renderer.setPixelRatio(dpr)
     this.renderer.setSize(width, height, false)
-    const aspect = width / height
-    this.camera.aspect = aspect
     // Step back until the tray fits across, whatever the shape of the surface.
-    const direction = this.scratch.copy(EYE).sub(AIM)
-    const base = direction.length()
-    const halfFov = THREE.MathUtils.degToRad(this.camera.fov / 2)
-    const needed = FRAME_HALF_WIDTH / (Math.tan(halfFov) * aspect)
-    const distance = Math.max(base, needed + 3.4)
-    this.camera.position.copy(AIM).addScaledVector(direction.normalize(), distance)
-    this.camera.lookAt(AIM)
-    this.camera.updateProjectionMatrix()
+    placeCamera(this.camera, width / height)
     if (!this.warmed) {
       this.warmed = true
       this.warmUp()
@@ -240,11 +227,10 @@ export class Stage {
     return { kind: 'none' }
   }
 
-  /** Where the finger is over the tray, on the level plane at `height`: where a carried friend hangs. */
-  pointAt(x: number, y: number, height: number): { x: number; z: number } | null {
+  /** The place in the tray whose picture lies under the finger: a friend's (never `except`, the one in the hand), a point of the board, or a point of the sand. A carried friend hangs over it. */
+  groundAt(x: number, y: number, frame: Frame, except: FriendId | null): Ground | null {
     this.aim(x, y)
-    const at = this.onPlane(height)
-    return at ? { x: at.x, z: at.z } : null
+    return groundUnder(this.ray.ray, frame, except)
   }
 
   /** Where the finger is on the sand, or null when it is off the tray. */
