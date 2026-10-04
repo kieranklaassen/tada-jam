@@ -1,4 +1,4 @@
-// template: cartridge/guidance.ts v2
+// template: cartridge/guidance.ts v3
 import { TAP_PRESSES } from './config'
 
 // Wordless guidance: show, never tell. When the child has been idle a while,

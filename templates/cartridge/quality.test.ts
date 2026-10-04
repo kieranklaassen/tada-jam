@@ -1,4 +1,4 @@
-// template: cartridge/quality.test.ts v2
+// template: cartridge/quality.test.ts v3
 import { describe, expect, it } from 'vitest'
 import { GOVERNOR, TIERS } from './config'
 import { LOWEST_TIER, PERF_FRAMES, PerfRing, TierGovernor, startingTier, tierOverride } from './quality'

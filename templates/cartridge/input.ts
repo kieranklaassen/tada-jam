@@ -1,4 +1,4 @@
-// template: cartridge/input.ts v2
+// template: cartridge/input.ts v3
 
 // Touch for a small hand (pack: game-design, ages-2-to-4.md). The tracker
 // turns pointer events into gestures and leaves their meaning to the game.
@@ -13,7 +13,18 @@
 //   enough toward where it was going for the game to finish it. It and
 //   `progressToward` are for a drag that has a target. A rub has none: it
 //   counts stroke by stroke as `dragMove` arrives, and uses neither.
-// - A parked surface clears every gesture, since the lifts never arrive.
+// - A lifted drag gives two gestures: `dragLift` at the moment of the lift,
+//   and `dragEnd` when the drag is given up. A finger that comes back in
+//   between arrives as a `dragMove` with no `press` before it. A game whose
+//   lift is the act, or whose targets stand nearer than `REGRAB_RADIUS`,
+//   takes the lift for the end with `letGo`, and every touch-down is then a
+//   touch of its own.
+// - A drag that is taken away is not a drop. When the surface is parked
+//   under a finger that is still down, or the browser takes that finger, the
+//   drag ends as `dragCancel`: the child did not let go, so the game puts
+//   the thing back where it came from and makes no move. A press taken away
+//   the same way ends as `pressEnd`, which is not a tap. Every drag has one
+//   ending, `dragEnd` or `dragCancel`.
 // - Every `press` is followed by exactly one of `tap`, `dragStart` or
 //   `pressEnd`, so whatever the game squashes or lights on a press always has
 //   a gesture on which to let it go.
@@ -34,7 +45,10 @@ export type Gesture =
   | { type: 'dragMove'; from: Point; at: Point }
   /** The finger let go mid-drag. The drag is not over: show the thing waiting. */
   | { type: 'dragLift'; from: Point; at: Point }
+  /** The drag is over where the finger let go: the drop is the child's. */
   | { type: 'dragEnd'; from: Point; at: Point }
+  /** The drag was taken away with the finger still down. The child made no drop: put the thing back. */
+  | { type: 'dragCancel'; from: Point; at: Point }
 
 /** A finger that stays within this of where it went down is tapping, not dragging. */
 export const TAP_SLOP = 14
@@ -60,6 +74,11 @@ export class ForgivingTouch {
   /** A finger is working, or a drag is waiting out a lift. */
   get active(): boolean {
     return this.working !== null
+  }
+
+  /** Whether that pointer is the finger that is working. An extra finger or a palm is not, and neither is a finger that has lifted mid-drag. */
+  holds(id: number): boolean {
+    return this.working !== null && this.working.id === id
   }
 
   down(id: number, at: Point, t: number): Gesture[] {
@@ -104,13 +123,12 @@ export class ForgivingTouch {
     return this.lift(working, t)
   }
 
-  /** The browser took the pointer away. A drag waits out the grace as after a lift; a press ends without a tap. */
-  cancel(id: number, t: number): Gesture[] {
+  /** The browser took the pointer away, which is not the child letting go. A drag is cancelled; a press ends without a tap. */
+  cancel(id: number): Gesture[] {
     const working = this.working
     if (!working || working.id !== id) return []
-    if (working.dragging) return this.lift(working, t)
     this.working = null
-    return [{ type: 'pressEnd', at: working.at }]
+    return [working.dragging ? { type: 'dragCancel', from: working.from, at: working.at } : { type: 'pressEnd', at: working.at }]
   }
 
   /** Call every frame: a lift that has outlasted the grace ends its drag where it was let go. */
@@ -121,12 +139,25 @@ export class ForgivingTouch {
     return [{ type: 'dragEnd', from: working.from, at: working.at }]
   }
 
-  /** The surface was parked or hidden mid-touch. A drag ends where it is, so the thing in hand is put down; a press ends without a tap; nothing else is left. */
+  /**
+   * The game takes the lift for the end of the drag: a drag that is waiting out a lift ends now, where it was let
+   * go. Call it straight after `up`, in the same handler, and the drop and its sound fall inside the touch.
+   */
+  letGo(): Gesture[] {
+    return this.advance(Infinity)
+  }
+
+  /**
+   * The surface was parked or hidden mid-touch, and the lifts will never arrive. A drag whose finger is still
+   * down is cancelled, since the child did not let go; a drag that was waiting out a lift ends where it was let
+   * go, since that drop is the child's; a press ends without a tap; nothing else is left.
+   */
   clear(): Gesture[] {
     const working = this.working
     this.working = null
     if (!working) return []
-    return working.dragging ? [{ type: 'dragEnd', from: working.from, at: working.at }] : [{ type: 'pressEnd', at: working.at }]
+    if (!working.dragging) return [{ type: 'pressEnd', at: working.at }]
+    return [{ type: working.id === null ? 'dragEnd' : 'dragCancel', from: working.from, at: working.at }]
   }
 
   private lift(working: Working, t: number): Gesture[] {

@@ -368,27 +368,82 @@ describe('the template Mount', () => {
     expect(code.filter((line) => line === 'draw()')).toHaveLength(1)
   })
 
-  it('opens the grown-up overlay on three quick taps in its top right corner, and feeds it every frame', () => {
+  /** A quick tap by one pointer: down and up in the same place. */
+  const tapAt = (game: ReturnType<typeof open>, x: number, y: number, id = 1): void => {
+    game.pointer('pointerdown', id, x, y)
+    game.pointer('pointerup', id, x, y)
+  }
+
+  it('opens the grown-up overlay on a finger held a second in its top right corner and lifted there, then three taps, and feeds it every frame', () => {
     const game = open(frames)
     const box = overlayOf(game.root)!
     expect(box.style.display).toBe('none')
     frames.run(3, 20)
     expect(box.textContent).toBe('')
     // A touch in the corner is still a touch: the game gets it too.
+    game.pointer('pointerdown', 1, 790, 10)
+    frames.run(50, 20)
+    game.pointer('pointerup', 1, 790, 10)
     for (let tap = 0; tap < 3; tap++) {
-      game.pointer('pointerdown', 1, 790, 10)
-      game.pointer('pointerup', 1, 790, 10)
+      expect(box.style.display).toBe('none')
+      tapAt(game, 790, 10)
     }
-    expect(types()).toEqual(['press', 'tap', 'press', 'tap', 'press', 'tap'])
+    expect(types()).toEqual(['press', 'tap', 'press', 'tap', 'press', 'tap', 'press', 'tap'])
     expect(box.style.display).toBe('block')
     frames.run(2, 20)
     expect(box.textContent).toContain('50 fps')
     expect(box.textContent).toContain(`tier ${game.canvas.dataset.tier}`)
     // Three taps anywhere else leave it as it is.
-    for (let tap = 0; tap < 3; tap++) {
-      game.pointer('pointerdown', 1, 400, 300)
-      game.pointer('pointerup', 1, 400, 300)
+    for (let tap = 0; tap < 3; tap++) tapAt(game, 400, 300)
+    expect(box.style.display).toBe('block')
+  })
+
+  it('counts only the working finger towards the overlay: a second finger tapping beside a hold undoes nothing, and its taps are none of the three', () => {
+    const game = open(frames)
+    const box = overlayOf(game.root)!
+    // Pointer 1 holds the corner for a second while pointer 2 taps in the middle of the surface and in the corner.
+    game.pointer('pointerdown', 1, 790, 10)
+    frames.run(20, 20)
+    tapAt(game, 400, 300, 2)
+    frames.run(10, 20)
+    tapAt(game, 780, 20, 2)
+    frames.run(20, 20)
+    game.pointer('pointerup', 1, 790, 10)
+    // Two taps by pointer 1, each with a tap by pointer 2 inside it: counted, those would make three too soon.
+    for (let tap = 0; tap < 2; tap++) {
+      game.pointer('pointerdown', 1, 790, 10)
+      tapAt(game, 780, 20, 2)
+      game.pointer('pointerup', 1, 790, 10)
+      expect(box.style.display).toBe('none')
     }
+    tapAt(game, 790, 10)
+    expect(box.style.display).toBe('block')
+    // The tracker gave the second finger nothing either.
+    expect(types()).toEqual(['press', 'tap', 'press', 'tap', 'press', 'tap', 'press', 'tap'])
+  })
+
+  it.each([
+    ['the game is parked under it and comes back', (game: ReturnType<typeof open>) => { game.attend(false); game.attend(true) }],
+    ['the browser takes the finger away', (game: ReturnType<typeof open>) => game.pointer('pointercancel', 1, 790, 10)],
+    ['the finger leaves the corner and comes back to it', (game: ReturnType<typeof open>) => { game.pointer('pointermove', 1, 400, 300); frames.run(50, 20); game.pointer('pointermove', 1, 790, 10) }],
+  ])('does not take a touch in the corner for the overlay\'s hold when %s', (_, interrupt) => {
+    const game = open(frames)
+    const box = overlayOf(game.root)!
+    game.pointer('pointerdown', 1, 790, 10)
+    frames.run(50, 20)
+    interrupt(game)
+    game.pointer('pointerup', 1, 790, 10)
+    for (let tap = 0; tap < 3; tap++) {
+      frames.run(5, 20)
+      tapAt(game, 790, 10)
+      expect(box.style.display).toBe('none')
+    }
+    // Nothing is left over from it: the whole gesture, made afterwards, opens the overlay.
+    frames.run(200, 20)
+    game.pointer('pointerdown', 1, 790, 10)
+    frames.run(50, 20)
+    game.pointer('pointerup', 1, 790, 10)
+    for (let tap = 0; tap < 3; tap++) tapAt(game, 790, 10)
     expect(box.style.display).toBe('block')
   })
 
@@ -408,8 +463,9 @@ describe('the template Mount', () => {
     const settle = vi.mocked(SaveCadence.prototype.settle)
 
     expect(() => game.unmount()).not.toThrow()
-    // The thing in hand is put down before the last save, as on a put-away.
-    expect(types()).toEqual(['press', 'dragStart', 'dragMove', 'dragEnd'])
+    // The finger never let go, so the drag is cancelled and not dropped: the thing in hand goes back before the
+    // last save, as on a put-away.
+    expect(types()).toEqual(['press', 'dragStart', 'dragMove', 'dragCancel'])
     expect(game.storage.save).toHaveBeenCalledTimes(1)
     expect(clear.mock.invocationCallOrder.at(-1)!).toBeLessThan(settle.mock.invocationCallOrder.at(-1)!)
     expect(window.__jamPerf).toBeUndefined()

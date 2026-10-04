@@ -1,4 +1,4 @@
-// template: cartridge/audio.ts v2
+// template: cartridge/audio.ts v3
 
 // Every sound is synthesized with raw Web Audio. The context is created inside
 // the child's first touch, suspended while the game is unattended or hidden,
@@ -8,6 +8,11 @@
 // So the unlock is tried on both, and the newest sound of a touch that could
 // not sound yet is kept and played once when the unlock lands. A first tap is
 // then heard, a moment late, and never dropped.
+//
+// One touch, one voice. Only the newest sound waits for the unlock, so that a
+// rub is not heard as a burst when it lands. A game whose touch sets off more
+// than one sound joins them into one voice (`voiceOf`), or the first touch of
+// a visit loses all but the last.
 
 type ExtendedState = AudioContextState | 'interrupted'
 
@@ -186,6 +191,44 @@ export function noise(context: AudioContext, out: AudioNode, at: number, frequen
     source.disconnect()
     band.disconnect()
     gain.disconnect()
+  }
+}
+
+/**
+ * One part of a voice written as plain numbers: a tone or a band of noise, with what `tone` and `noise` take.
+ * A game keeps its voices as lists of these in a pure module of its own, where a test holds every pitch, peak
+ * and length in range, since nobody may have heard the game before it is shown.
+ */
+export type Note = {
+  kind: 'tone' | 'noise'
+  /** Hertz: the tone's pitch, or the middle of the noise band. */
+  frequency: number
+  /** Where the pitch glides to by the end of the note, if it moves. */
+  glideTo?: number
+  /** A tone's wave, a sine when left out. A noise has none. */
+  wave?: OscillatorType
+  /** How narrow a noise's band is, 1 when left out. A tone has none. */
+  q?: number
+  /** The loudest point, as a gain from 0 to 1. */
+  peak: number
+  /** Seconds up to the peak, and seconds down from it. */
+  attack: number
+  decay: number
+  /** Seconds after the voice starts that this note starts, 0 when left out. */
+  delay?: number
+}
+
+/**
+ * A list of notes as one voice. Everything one touch sets off goes into one call, the notes of each sound one
+ * after the other in the list, so the touch is one voice and the unlock holds all of it.
+ */
+export function voiceOf(notes: readonly Note[]): Voice {
+  return (context, out, at) => {
+    for (const note of notes) {
+      const start = at + (note.delay ?? 0)
+      if (note.kind === 'tone') tone(context, out, start, note.frequency, note.wave ?? 'sine', note.peak, note.attack, note.decay, note.glideTo)
+      else noise(context, out, start, note.frequency, note.q ?? 1, note.peak, note.attack, note.decay, note.glideTo)
+    }
   }
 }
 

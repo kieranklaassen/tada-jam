@@ -97,7 +97,7 @@ Detail: checklist items 5 to 13 of [wordless clarity](wordless-clarity-for-the-d
 **7. Build performance in from day one.** The template already carries adaptive quality (`quality.ts`, with the tier table and thresholds in `config.ts`) and the grown-up performance handle the probe reads (`perf.ts`), so no game writes a governor or a `window.__jamPerf` declaration again ([why the declaration must match](../build-errors/jam-perf-global-declaration-must-match-in-every-game.md)). What the game adds:
 
 - Its tier table in `config.ts`: what each tier sheds for this look (pixel ratio, per-object detail, the post pass). Tiers are counted from 0 as full quality. A tier changes how the game is drawn, never what happens in it, and the lowest tier still looks like the game.
-- A grown-up frame-rate overlay behind a triple tap. The template ships it as `overlay.ts`: three quick taps in the top right corner, or `fps=1` in the address. The wordless check accepts grown-up text only in a file named `overlay` or `perf`, and in a game made from the template `perf.ts` is frozen, so `overlay.ts` is the one file of a game that may hold text.
+- A grown-up frame-rate overlay behind a gesture a child does not make by playing. The template ships it as `overlay.ts`: a finger held for a second in the top right corner, never leaving it, and lifted there, then three taps there within three seconds, or `fps=1` in the address. Only the working finger counts, so a palm or a second finger neither opens it nor undoes a hold, and a child who drums on the corner opens nothing. The wordless check accepts grown-up text only in a file named `overlay` or `perf`, and in a game made from the template `perf.ts` is frozen, so `overlay.ts` is the one file of a game that may hold text.
 - A frame-budget test that CI runs through `npm test`, counting the work where the code exposes it ([frame-budget tests](../test-failures/frame-budget-tests-that-hold-on-a-shared-ci-runner.md); `games/bad-neighbours/frameBudget.test.ts` is the counted form).
 - Measurements with the shared probe on a production build: `npm run perf:jam -- <game> [webkit|chrome] [cpuThrottle] [auto|full|tierN] [base]`. Run WebKit, Chrome at 6x and 20x CPU throttle, and the fill test with four times the pixels (`SIZE=2 npm run perf:jam -- <game> webkit 1 full`). The probe pins a tier through the `tier` query, so the game reads that query, as `tierOverride` does in Bad Neighbours. No game needs a perf script of its own. On a machine with no graphics card the numbers are read as "Building several games at once" says for a remote builder.
 
@@ -138,11 +138,13 @@ games/<key>/
   attention.ts     frozen: attended and not hidden
   saveCadence.ts   frozen
   state.ts         versioned state, a defensive deserialize, the hidden position rules
-  audio.ts         unlocks on touch-down and again on lift; rebuilds an interrupted context; `tone` and `noise` to build voices from
-  overlay.ts       the grown-up frame-rate overlay, plain DOM: the one file that may hold text
-  input.ts         pointer tracking that forgives a lifted finger and extra fingers; every press has one ending
+  audio.ts         unlocks on touch-down and again on lift; rebuilds an interrupted context; `tone` and `noise` to build voices from, and `voiceOf` for a voice kept as numbers
+  overlay.ts       the grown-up frame-rate overlay, plain DOM: the one file that may hold text; opened by a held finger and three taps in its corner
+  input.ts         pointer tracking that forgives a lifted finger and extra fingers; every press has one ending, and every drag ends as a drop or a cancel
   guidance.ts      the idle guidance ladder, on attended time; the ghost hand taps once for a band that starts below 4
-  scene.ts         a cue list of timed beats over game time; one scene can follow another
+  scene.ts         a cue list of timed beats over game time; one scene can follow another; a beat is told when a touch is ending the scene
+  rng.ts           a seeded random stream, and the seed of a visit from `seed=<n>` in the address
+  stage.ts         for a canvas 2D game: the stage fitted into the surface, and a touch brought back to stage units
   ART.md           the design sheet outline
   REFINEMENT.md    the status block (with template notes and what the owner must decide), the pass log, and the part for the pull request
   *.test.ts        beside each module
@@ -152,9 +154,11 @@ games/<key>/
 - A frozen file is never edited in a game. What a game tunes is in `config.ts`, which the frozen files read.
 - The frozen-copy test decides from the folder, not from the file. A game folder in which any file carries a template header must hold all four frozen files (`perf.ts`, `quality.ts`, `attention.ts`, `saveCadence.ts`), each with its frozen header, and each byte-equal to the template unless it is on an earlier version. A missing file, a stripped header or a version later than the template's fails the test. A builder that changed a frozen file by mistake copies `templates/cartridge/<file>` over it.
 - A fault in a frozen file is a request to the lead, who fixes the template and raises its version. `npm run new:game -- --refresh <key>` rewrites the frozen files of an existing game from the template and nothing else, and the lead runs it for each game after raising the version. Until then a copy on the earlier version is not held byte-equal: it is waiting for the refresh.
-- The other files are free: `state.ts`, `audio.ts`, `input.ts`, `guidance.ts`, `scene.ts`, `overlay.ts` and the Mount are starting points that a game changes as it needs. Keep their tests passing or change the tests with them.
+- The other files are free: `state.ts`, `audio.ts`, `input.ts`, `guidance.ts`, `scene.ts`, `overlay.ts`, `rng.ts`, `stage.ts` and the Mount are starting points that a game changes as it needs. Keep their tests passing or change the tests with them.
 - The Mount already pauses when `ctx.attention.attended` is false or the document is hidden, and watches its own element with a `ResizeObserver` that ignores 0×0. Keep both when the renderer goes in.
 - `input.ts` turns pointer events into gestures. Every `press` is followed by exactly one of `tap`, `dragStart` or `pressEnd`. `pressEnd` says the press is over and was not a tap, as when the browser takes the touch away or the game is parked under the finger. So whatever a game squashes or lights on `press`, it lets go on whichever of the three arrives.
+- A drag has one ending too, `dragEnd` or `dragCancel`. `dragEnd` is a drop the child made: the finger let go. `dragCancel` says the drag was taken away with the finger still down, when the game is parked under it or the browser takes the touch. The child made no drop, so the game puts the thing back where it came from and makes no move. The Mount's `act` has a case for every gesture, and a game that leaves `dragCancel` out does not compile. A lifted drag waits a moment for the finger to come back; a game whose lift is the act, or whose targets stand close together, ends it at the lift with `letGo`.
+- A canvas 2D game makes one fit of the stage from the surface's size in CSS pixels (`fit` in `stage.ts`), brings every touch back through `toStage` with that fit, and draws with its transform set to the pixel ratio times that fit. A fit made from the backing store's size puts every touch off by the pixel ratio on a tablet.
 - The template has no speech and no language pack. Both arrive with the first game that needs them, after a trial on the owner's iPad.
 - `symbols.ts` and its test are in the template, and the generator copies them only into a game whose band starts at 6 or above ("Symbols, and the defaults awaiting the owner"). It is a free file that came from the first game to need it: it draws whole numbers, fractions with a bar, mixed numbers, decimals and the signs on a canvas 2D surface, takes numbers and never a string, and carries the comment the wordless check asks for on every text call. A three.js game draws with it onto a canvas that it uses as a texture.
 - A helper is never copied from another game any more. If two games need the same new helper, that is a request to the lead for the template.
@@ -237,7 +241,7 @@ One rule for every game with a cycle: **the next customer, patient or vehicle is
 
 Put-away can happen at any instant, and the world is found exactly as it was left (pack: game-design, the-world-keeps-and-waits.md). For the cases that are not obvious:
 
-- **A piece in the hand** is saved where it came from or where it lies. Nothing is saved in the air.
+- **A piece in the hand** is saved where it came from or where it lies. Nothing is saved in the air. A put-away under a finger that is still dragging is no drop: the drag ends as `dragCancel` and the piece goes back where it came from, while a piece the finger had already let go is dropped where it was let go.
 - **A running test** is a view of the saved design and is not saved. A truck crossing a bridge is not in the save; the bridge is.
 - **A continuous surface**, such as mud on a truck or lines in sand, is saved as a coarse grid.
 - **A scene's outcome** is saved when the scene starts, so a put-away in the middle loses nothing and the scene does not play again on load (`games/kite-tower/controller.ts` is the pattern).

@@ -1,4 +1,4 @@
-// template: cartridge/config.ts v2
+// template: cartridge/config.ts v3
 import { templateManifest } from './manifest'
 
 // The one module a game tunes. The frozen files (quality.ts, attention.ts and
@@ -77,6 +77,10 @@ const [YOUNGEST, OLDEST] = templateManifest.ageBand
  * tap and not as a hold, but a child under 4 copies what the hand does and
  * taps twice, so a band that starts below 4 is shown one. It follows the
  * manifest band, never the child's age while playing.
+ * Before keeping two, list what a second tap does to each thing the hand may
+ * show. Where a tap counts something, turns something over or starts a
+ * scene, the second tap does harm, and the game sets this to 1 whatever its
+ * band.
  */
 export const TAP_PRESSES: 1 | 2 = YOUNGEST < 4 ? 1 : 2
 
@@ -96,6 +100,11 @@ export const LADDER: readonly string[] = ['first', 'second', 'third']
  * hint: a saved position always wins, and every step stays reachable by play.
  * Rows ascend by age and no two share one, or the earlier row is never reached:
  * a band of a single age has a single row.
+ * The two rows below are a start and not a rule. How many rows there are and
+ * the age each begins at are the game's to choose: a row for each age of a
+ * wide band, or a second row a year below the oldest. A game that writes its
+ * rows out by hand takes `OLDEST` out of the line that reads the band, or the
+ * typecheck stops on a name nothing uses.
  */
 export const FIRST_VISIT: readonly { fromAge: number; position: string }[] = [
   { fromAge: YOUNGEST, position: 'first' },

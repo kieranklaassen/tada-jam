@@ -1,6 +1,6 @@
-// template: cartridge/audio.test.ts v2
+// template: cartridge/audio.test.ts v3
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { GameAudio, noise, tick, tone, type Voice } from './audio'
+import { GameAudio, noise, tick, tone, voiceOf, type Note, type Voice } from './audio'
 
 type Answer = 'refuse' | 'wait' | 'run'
 
@@ -12,7 +12,8 @@ type Answer = 'refuse' | 'wait' | 'run'
  * its promise settles. `attempts` counts every context the game tried to
  * build, including the ones that threw. `nodes` holds every node any context
  * made, in order, each with what it was connected to and whether it has been
- * disconnected; a parameter keeps the last value it was set to.
+ * disconnected, and a source with when it was started; a parameter keeps the
+ * last value it was set to.
  */
 function fakeAudio(scripts: Answer[][] = [], options: { broken?: boolean } = {}) {
   const made = { contexts: [] as { state: string }[], attempts: 0, closed: 0, voices: 0, nodes: [] as FakeNode[], noises: [] as Float32Array[] }
@@ -23,10 +24,13 @@ function fakeAudio(scripts: Answer[][] = [], options: { broken?: boolean } = {})
   const node = () => {
     const self = {
       gain: param(), frequency: param(), threshold: param(), Q: param(), type: '', buffer: null as unknown, loop: false, onended: null as unknown,
-      to: null as unknown, disconnected: false,
+      to: null as unknown, disconnected: false, startedAt: null as number | null,
       connect: (next: unknown) => (self.to = next),
       disconnect: () => void (self.disconnected = true),
-      start: () => made.voices++,
+      start: (at?: number) => {
+        self.startedAt = at ?? null
+        return made.voices++
+      },
       stop: () => {},
     }
     made.nodes.push(self)
@@ -343,6 +347,44 @@ describe('the building blocks', () => {
     // Up to its peak and back down to silence.
     expect(gain.gain.rampedTo).toBeLessThan(0.001)
     expect(gain.to).toBe(master)
+  })
+
+  it('a list of notes is one voice: each note a tone or a band of noise, started at its own moment', async () => {
+    const { made, audio } = await running()
+    const before = made.nodes.length
+    const notes: Note[] = [
+      { kind: 'tone', frequency: 520, wave: 'triangle', peak: 0.1, attack: 0.01, decay: 0.2, glideTo: 390 },
+      { kind: 'noise', frequency: 1800, q: 4, peak: 0.08, attack: 0.02, decay: 0.3, delay: 0.25 },
+      { kind: 'tone', frequency: 260, peak: 0.1, attack: 0.01, decay: 0.2, delay: 0.5 },
+    ]
+    audio.play(voiceOf(notes))
+    expect(made.voices).toBe(3)
+    const [first, , source, band, , last] = made.nodes.slice(before)
+    expect([first.type, first.frequency.value, first.frequency.rampedTo, first.startedAt]).toEqual(['triangle', 520, 390, 0])
+    expect([band.type, band.frequency.value, band.Q.value, source.startedAt]).toEqual(['bandpass', 1800, 4, 0.25])
+    // A tone with no wave named is a sine, and one with no glide keeps its pitch.
+    expect([last.type, last.frequency.value, last.frequency.rampedTo, last.startedAt]).toEqual(['sine', 260, null, 0.5])
+  })
+
+  it('holds a whole touch for the unlock when its sounds are joined into one voice, where two voices would lose the first', async () => {
+    const pop: Note[] = [{ kind: 'tone', frequency: 660, peak: 0.1, attack: 0.005, decay: 0.1 }]
+    const squeak: Note[] = [{ kind: 'tone', frequency: 990, peak: 0.1, attack: 0.005, decay: 0.1, delay: 0.1 }]
+    const joined = fakeAudio([['refuse', 'run']])
+    const audio = new GameAudio()
+    audio.touchDown()
+    audio.play(voiceOf([...pop, ...squeak]))
+    audio.touchUp()
+    await answered()
+    expect(joined.voices).toBe(2)
+    vi.unstubAllGlobals()
+    const apart = fakeAudio([['refuse', 'run']])
+    const other = new GameAudio()
+    other.touchDown()
+    other.play(voiceOf(pop))
+    other.play(voiceOf(squeak))
+    other.touchUp()
+    await answered()
+    expect(apart.voices).toBe(1)
   })
 
   it('makes its noise once for a context, however many sounds use it, and the noise fills the range', async () => {

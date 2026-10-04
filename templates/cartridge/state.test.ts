@@ -1,7 +1,7 @@
-// template: cartridge/state.test.ts v2
+// template: cartridge/state.test.ts v3
 import { describe, expect, it } from 'vitest'
 import { FIRST_VISIT, LADDER } from './config'
-import { STATE_VERSION, beginCycle, deserialize, finishCycle, firstPosition, freshState, serialize, type CycleOutcome, type GameState } from './state'
+import { STATE_VERSION, beginCycle, deserialize, finishCycle, firstPosition, freshState, isReadable, isRecord, serialize, type CycleOutcome, type GameState } from './state'
 
 /** A designed order long enough to walk ten steps along. */
 const LONG = Array.from({ length: 12 }, (_, index) => `step-${index}`)
@@ -38,6 +38,15 @@ describe('saved state', () => {
   ])('gives a fresh, usable state for %s', (_, raw) => {
     expect(deserialize(raw, null)).toEqual(freshState(null))
     expect(LADDER).toContain(deserialize(raw, null).position)
+  })
+
+  it('tells a wrapper whether a record was read, so it knows when to start its own fields fresh', () => {
+    expect(isReadable(stored(freshState(null)))).toBe(true)
+    // A damaged field is repaired inside a record that was read.
+    expect(isReadable({ v: STATE_VERSION, position: 42 })).toBe(true)
+    for (const raw of [undefined, null, 'position', 7, [1, 2, 3], { v: STATE_VERSION + 1, position: LADDER[0], finished: false }, { position: LADDER[0], finished: false }]) expect(isReadable(raw)).toBe(false)
+    expect(isRecord({})).toBe(true)
+    for (const value of [undefined, null, 'record', 7, [{ v: STATE_VERSION }]]) expect(isRecord(value)).toBe(false)
   })
 
   it('repairs one damaged field and keeps the other', () => {
@@ -110,6 +119,15 @@ describe('the position in the designed order', () => {
     // The same cycle finished twice still moved once.
     expect(finishCycle(finished, 'well', LONG)).toEqual(finished)
     expect(finishCycle(beginCycle(finished), 'well', LONG).position).toBe(LONG[7])
+  })
+
+  it('hands a larger state back whole, with only the position and the ending changed', () => {
+    const world = { ...at(5), guests: ['owl', 'mole'], seed: 7 }
+    const judged = finishCycle(world, 'well', LONG)
+    expect(judged).toEqual({ ...world, position: LONG[6], finished: true })
+    expect(beginCycle(judged)).toEqual({ ...world, position: LONG[6], finished: false })
+    // The type is the wrapper's own, so its fields are still there to read.
+    expect(beginCycle(judged).guests).toEqual(['owl', 'mole'])
   })
 
   it('stops at either end of the ladder', () => {

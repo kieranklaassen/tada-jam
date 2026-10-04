@@ -1,4 +1,4 @@
-// template: cartridge/saveCadence.ts v2 (frozen: do not edit; tune through config.ts)
+// template: cartridge/saveCadence.ts v3 (frozen: do not edit; tune through config.ts)
 import { SAVE_THROTTLE_MS } from './config'
 
 // When to hand the state to ctx.storage. The storage layer debounces and the

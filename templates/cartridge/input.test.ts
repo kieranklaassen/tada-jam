@@ -1,4 +1,4 @@
-// template: cartridge/input.test.ts v2
+// template: cartridge/input.test.ts v3
 import { describe, expect, it } from 'vitest'
 import { COUNTS_FROM, ForgivingTouch, LIFT_GRACE_MS, REGRAB_RADIUS, TAP_SLOP, countsAsDone, progressToward, type Gesture } from './input'
 
@@ -29,7 +29,7 @@ describe('a press the browser takes away', () => {
     const touch = new ForgivingTouch()
     const p = { x: 10, y: 10 }, q = { x: 200, y: 40 }
     touch.down(1, p, 0)
-    expect(touch.cancel(1, 50)).toEqual([{ type: 'pressEnd', at: p }])
+    expect(touch.cancel(1)).toEqual([{ type: 'pressEnd', at: p }])
     expect(touch.active).toBe(false)
     expect(touch.down(2, q, 100)).toEqual([{ type: 'press', at: q }])
     // The lift of the finger that was taken away arrives late and means nothing.
@@ -90,27 +90,64 @@ describe('a drag', () => {
     expect(touch.move(2, { x: 340, y: 300 })).toEqual([])
     expect(touch.up(2, { x: 340, y: 300 }, 130)).toEqual([])
     expect(touch.down(3, { x: 500, y: 700 }, 140)).toEqual([])
-    expect(touch.cancel(3, 150)).toEqual([])
+    expect(touch.cancel(3)).toEqual([])
     expect(touch.move(1, { x: 90, y: 0 })).toEqual([{ type: 'dragMove', from: { x: 0, y: 0 }, at: { x: 90, y: 0 } }])
   })
 
-  it('waits out the grace when the browser takes the pointer away, like a lift', () => {
+  it('is cancelled when the browser takes the working finger away: the child did not let go, so it is no drop', () => {
     const { touch } = dragging()
-    expect(types(touch.cancel(1, 100))).toEqual(['dragLift'])
-    expect(types(touch.down(2, { x: 62, y: 0 }, 200))).toEqual(['dragMove'])
+    expect(touch.cancel(1)).toEqual([{ type: 'dragCancel', from: { x: 0, y: 0 }, at: { x: 60, y: 0 } }])
+    expect(touch.active).toBe(false)
+    // Nothing waits out a grace: the next finger starts fresh, however near.
+    expect(types(touch.down(2, { x: 62, y: 0 }, 200))).toEqual(['press'])
+    expect(touch.advance(9000)).toEqual([])
+  })
+
+  it('that the game takes as over at the lift ends there, and the next touch nearby is a touch of its own', () => {
+    const { touch } = dragging()
+    expect(types(touch.up(1, { x: 60, y: 0 }, 100))).toEqual(['dragLift'])
+    expect(touch.letGo()).toEqual([{ type: 'dragEnd', from: { x: 0, y: 0 }, at: { x: 60, y: 0 } }])
+    expect(touch.active).toBe(false)
+    expect(types(touch.down(2, { x: 62, y: 0 }, 110))).toEqual(['press'])
+    // With a finger still down, or with no drag at all, there is nothing to let go.
+    expect(dragging().touch.letGo()).toEqual([])
+    expect(new ForgivingTouch().letGo()).toEqual([])
+  })
+})
+
+describe('the working finger', () => {
+  it('is the one pointer the tracker follows: an extra finger or a palm is not, and neither is a finger that has lifted', () => {
+    const { touch } = dragging()
+    touch.down(2, { x: 200, y: 200 }, 50)
+    expect(touch.holds(1)).toBe(true)
+    expect(touch.holds(2)).toBe(false)
+    touch.up(1, { x: 60, y: 0 }, 100)
+    expect(touch.holds(1)).toBe(false)
+    // The finger that comes back for the drag is the working one from then on.
+    touch.down(3, { x: 62, y: 0 }, 150)
+    expect(touch.holds(3)).toBe(true)
+    expect(new ForgivingTouch().holds(1)).toBe(false)
   })
 })
 
 describe('a parked surface', () => {
-  it('clears every gesture: the thing in hand is put down and no finger is left working', () => {
+  it('clears every gesture: a drag under a finger that is still down is cancelled, not dropped, and no finger is left working', () => {
     const { touch } = dragging()
     touch.down(2, { x: 300, y: 300 }, 110)
-    expect(touch.clear()).toEqual([{ type: 'dragEnd', from: { x: 0, y: 0 }, at: { x: 60, y: 0 } }])
+    expect(touch.clear()).toEqual([{ type: 'dragCancel', from: { x: 0, y: 0 }, at: { x: 60, y: 0 } }])
     expect(touch.active).toBe(false)
     // The lifts never arrived; when the fingers finally move or lift, nothing happens.
     expect(touch.move(1, { x: 80, y: 0 })).toEqual([])
     expect(touch.up(1, { x: 80, y: 0 }, 5001)).toEqual([])
     expect(touch.up(2, { x: 300, y: 300 }, 5002)).toEqual([])
+    expect(touch.advance(9000)).toEqual([])
+  })
+
+  it('ends a drag the finger had already let go as the drop it was', () => {
+    const { touch } = dragging()
+    touch.up(1, { x: 60, y: 0 }, 100)
+    expect(touch.clear()).toEqual([{ type: 'dragEnd', from: { x: 0, y: 0 }, at: { x: 60, y: 0 } }])
+    expect(touch.active).toBe(false)
     expect(touch.advance(9000)).toEqual([])
   })
 
@@ -141,10 +178,27 @@ describe('every press', () => {
     }
     expect(endings((touch) => [touch.up(1, p, 50), touch.clear()])).toEqual(['press', 'tap'])
     expect(endings((touch) => [touch.move(1, far), touch.up(1, far, 50), touch.advance(50 + LIFT_GRACE_MS + 1), touch.clear()])).toEqual(['press', 'dragStart'])
-    expect(endings((touch) => [touch.move(1, far), touch.cancel(1, 50), touch.clear()])).toEqual(['press', 'dragStart'])
+    expect(endings((touch) => [touch.move(1, far), touch.cancel(1), touch.clear()])).toEqual(['press', 'dragStart'])
     expect(endings((touch) => [touch.move(1, far), touch.clear()])).toEqual(['press', 'dragStart'])
-    expect(endings((touch) => [touch.cancel(1, 50), touch.clear()])).toEqual(['press', 'pressEnd'])
+    expect(endings((touch) => [touch.cancel(1), touch.clear()])).toEqual(['press', 'pressEnd'])
     expect(endings((touch) => [touch.clear(), touch.up(1, p, 50)])).toEqual(['press', 'pressEnd'])
+  })
+})
+
+describe('every drag', () => {
+  it('has exactly one ending, a drop or a cancel, however the touch ends', () => {
+    const p = { x: 0, y: 0 }, far = { x: 60, y: 0 }
+    const endings = (run: (touch: ForgivingTouch) => Gesture[][]): string[] => {
+      const touch = new ForgivingTouch()
+      return [touch.down(1, p, 0), touch.move(1, far), ...run(touch), touch.clear(), touch.advance(9000)].flatMap(types).filter((type) => type === 'dragEnd' || type === 'dragCancel')
+    }
+    expect(endings((touch) => [touch.up(1, far, 50), touch.advance(50 + LIFT_GRACE_MS + 1)])).toEqual(['dragEnd'])
+    expect(endings((touch) => [touch.up(1, far, 50), touch.letGo()])).toEqual(['dragEnd'])
+    expect(endings((touch) => [touch.up(1, far, 50)])).toEqual(['dragEnd'])
+    expect(endings((touch) => [touch.cancel(1)])).toEqual(['dragCancel'])
+    expect(endings(() => [])).toEqual(['dragCancel'])
+    // A finger that came back for the drag and is down again when the surface is parked: cancelled, not dropped.
+    expect(endings((touch) => [touch.up(1, far, 50), touch.down(2, far, 100)])).toEqual(['dragCancel'])
   })
 })
 
