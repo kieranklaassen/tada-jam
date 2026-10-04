@@ -94,7 +94,7 @@ export class YardSet {
     // She heads first and then rocks, so she rocks about the way she faces.
     this.cat.root.rotation.order = 'YXZ'
     this.root.add(this.gate.root, this.fire.root, this.pool.root, this.duck, this.pot.root, this.bee.root, this.patch.root, this.snail.root, this.boat.root, this.wheel.root, this.cat.root, this.worm.root)
-    this.own.push(this.patch.mound.material as THREE.Material, this.pot.soil.material as THREE.Material)
+    this.own.push(this.patch.mound.material as THREE.Material, this.pot.soil.material as THREE.Material, this.pool.wall.material as THREE.Material)
     // For the intersection audit: the petals, which are instances of one ball, are parts of the plant like its stem and leaves.
     this.pot.root.userData.jamObject = `${name}-seed`
     this.pot.petals.userData.jamInstanceObjects = Array.from({ length: PETAL_COUNT + 1 }, () => `${name}-seed`)

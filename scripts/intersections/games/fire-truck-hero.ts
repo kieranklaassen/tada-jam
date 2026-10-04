@@ -73,7 +73,8 @@ export default {
     { a: 'truck-shell', b: 'truck-yoke', upTo: 0.4, reason: "the nozzle's yoke turns in its socket on top of the pedestal, which is part of the shell" },
     { a: 'truck-shell', b: 'truck-barrel', upTo: 0.3, reason: "the barrel's fat back end turns in the cup on top of the pedestal, which is part of the shell" },
     { a: 'truck-shell', b: 'cat-', upTo: 0.2, reason: 'the cat sits on the hose reel at the back of the truck, which is part of the shell' },
-    { a: 'pool-shell', b: 'duck-body', upTo: 0.2, reason: "the duck sits on the pool's floor until the water lifts it" },
+    { a: 'pool-(shell|floor)', b: 'duck-body', upTo: 0.2, reason: "the duck sits on the pool's floor until the water lifts it" },
+    { a: 'pool-shell', b: 'pool-floor', kind: 'pose', upTo: 1, reason: "the pool's pale floor lies in its ring, and the lip of its low side is set into the rim" },
     { a: 'truck-shell', b: 'truck-pupils', upTo: 0.7, reason: 'the pupils are set into the whites of the eyes, which are part of the shell' },
     // Things that float sit in the water, and the water line crosses them.
     { a: 'pool-water', b: 'duck-body', upTo: 0.6, reason: 'the duck floats: the water line crosses its body' },

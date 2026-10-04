@@ -24,17 +24,31 @@ function eye(x: number, y: number, z: number, size = 0.06): Part {
 }
 
 export const POOL = { radius: 1.2, wall: 0.46, floor: 0.06 } as const
+/** How solid the pool's vinyl wall is drawn: enough to read as a blue ring, and thin enough to see the water's level through it. */
+export const POOL_SEE_THROUGH = 0.62
 
-/** The paddling pool: a fat blue ring with a pale floor and a pouring lip on its low side. Its water is a sheet the stage raises and lowers. */
-export function buildPool(plastic: THREE.Material, water: THREE.Material): { root: THREE.Group; sheet: THREE.Mesh } {
+/**
+ * The paddling pool: a fat blue ring of see-through vinyl with a pale floor
+ * and a pouring lip on its low side. Its water is a sheet the stage raises
+ * and lowers, and the level shows through the wall. The wall has a material
+ * of its own, which the caller disposes of.
+ */
+export function buildPool(plastic: THREE.Material, water: THREE.Material): { root: THREE.Group; sheet: THREE.Mesh; wall: THREE.Mesh } {
   const root = new THREE.Group()
   root.name = 'pool'
+  // The profile runs from the middle of the underside, up the outside of the wall, over the rim and down to the floor.
+  const wall = named(
+    'pool-shell',
+    [lathe([[0, 0], [POOL.radius - 0.02, 0], [POOL.radius + 0.03, 0.2], [POOL.radius, POOL.wall - 0.03], [1.12, POOL.wall], [1.04, POOL.wall - 0.06], [1.0, POOL.floor], [0, POOL.floor]], PAINT.poolWall, 28)],
+    new THREE.MeshPhongMaterial({ vertexColors: true, shininess: 60, specular: 0x4a5a66, transparent: true, opacity: POOL_SEE_THROUGH }),
+  )
+  // Drawn after the water inside it, so the water shows through the near wall.
+  wall.renderOrder = 1
+  root.add(wall)
   root.add(
     named(
-      'pool-shell',
+      'pool-floor',
       [
-        // The profile runs from the middle of the underside, up the outside of the wall, over the rim and down to the floor.
-        lathe([[0, 0], [POOL.radius - 0.02, 0], [POOL.radius + 0.03, 0.2], [POOL.radius, POOL.wall - 0.03], [1.12, POOL.wall], [1.04, POOL.wall - 0.06], [1.0, POOL.floor], [0, POOL.floor]], PAINT.poolWall, 28),
         at(rod(1.0, 1.0, 0.02, PAINT.poolFloor, 28), 0, POOL.floor + 0.011, 0),
         // The low side of the rim: a short pouring lip that slopes down outward, and a pale channel worn across
         // the rim to it. It points along +z, and the stage turns the pool so that it points where the water will run.
@@ -48,7 +62,7 @@ export function buildPool(plastic: THREE.Material, water: THREE.Material): { roo
   sheet.position.y = POOL.floor + 0.03
   sheet.visible = false
   root.add(sheet)
-  return { root, sheet }
+  return { root, sheet, wall }
 }
 
 /** The rubber duck, who wants to float. It faces +x. */
