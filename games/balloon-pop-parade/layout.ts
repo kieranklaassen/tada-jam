@@ -112,6 +112,22 @@ export function groundAt(x: number, z: number): number {
   return GROUND - HILL.ry + HILL.ry * Math.sqrt(Math.max(0, 1 - dx * dx - dz * dz))
 }
 
+/**
+ * How high the hill stands at `x` as it is seen, in the friends' plane: the top edge of the pink the child sees
+ * there. The hill's crest is a little behind the friends' feet and its skin falls away from the eye beyond it, so
+ * the hill is drawn higher than the ground under the feet: the strip at and behind the feet is hill too. A point of
+ * the plane below this height is on the hill, whatever stands in front of it.
+ */
+export function hillSeenTop(x: number, view: View): number {
+  let top = -Infinity
+  // Back from in front of the feet to the far edge of the hill, in steps: the highest the skin is seen along the eye's line.
+  for (let z = 1; z >= HILL.z - HILL.rz; z -= 0.5) {
+    const far = (view.distance - z) / view.distance
+    top = Math.max(top, groundAt(x * far, z) / far)
+  }
+  return top
+}
+
 /** The x of friend `index` in a troop of `size`, the troop centred. */
 export function friendX(index: number, size: number): number {
   return (index - (size - 1) / 2) * FRIEND_GAP

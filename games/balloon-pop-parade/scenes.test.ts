@@ -130,6 +130,30 @@ describe('the march on the spot', () => {
     expect(Math.max(...began) - Math.min(...began)).toBeLessThanOrEqual(2 / 60)
   })
 
+  it.each(['duck', 'frog', 'hippo', 'crab'] as const)('has only the %ss that one bunch served jump together: one served before them by a balloon of its own takes its turn first, and stays on the ground', (kind) => {
+    const other: KindName = kind === 'duck' ? 'frog' : 'duck'
+    const theatre = new Theatre(saveOf({ position: 'bunches-own-colour', troop: { kind, size: 3, held: [false, false, false] }, sky: [{ colour: kind, count: 1 }, { colour: kind, count: 2 }], waiting: { kind: other, size: 1 } }))
+    const actors = () => (theatre as unknown as { actors: { clip: string | null; jumpAt?: number }[] }).actors
+    tapSlot(theatre, 0)
+    play(theatre, 2.5)
+    tapSlot(theatre, 1)
+    expect(theatre.troop.held).toEqual([true, true, true])
+    until(theatre, 'ending')
+    const proud = [-1, -1, -1]
+    for (let i = 0; i < 60 * 4; i++) {
+      theatre.step(1 / 60)
+      actors().forEach((actor, friend) => { if (proud[friend] < 0 && actor.clip === 'proud') proud[friend] = i })
+    }
+    // The one that was given a balloon by itself has its turn, and does not jump.
+    expect(actors()[0].jumpAt).toBeUndefined()
+    expect(proud[0]).toBeGreaterThanOrEqual(0)
+    // The two that the bunch served jump in the same moment, after that turn has begun.
+    expect(actors()[1].jumpAt).toBeDefined()
+    expect(actors()[1].jumpAt).toBe(actors()[2].jumpAt)
+    expect(proud[1]).toBe(proud[2])
+    expect(proud[1]).toBeGreaterThan(proud[0] + 10)
+  })
+
   /** The order in which the friends of a frog troop swell their throats, which is the frog's proud move. */
   const turnsOf = (theatre: Theatre, size: number): number[] => {
     const { poses, painter } = recorder(), swelled: number[] = Array.from({ length: size }, () => -1)

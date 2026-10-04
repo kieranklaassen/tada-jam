@@ -1,7 +1,7 @@
 import { BODIES, type KindName } from './bodies'
 import { clip, hold, hump, PERSONALITIES, ramp, rest, stride, walk, type ClipId } from './clips'
 import { handPose, type Guidance, type HandPose } from './guidance'
-import { BALLOON, bunchOffsets, bunchReach, CLOUDS, FAR_HILL, farGroundAt, FRIEND_GAP, FRIEND_SCALE, friendX, GROUND, groundAt, GROWN_UP_CORNER, HELD_HEIGHT, PARADE_SCALE, paradeSpot, seenAt, skySlots, viewFor, WAITING_SCALE, waitingSpot, type View } from './layout'
+import { BALLOON, bunchOffsets, bunchReach, CLOUDS, FAR_HILL, farGroundAt, FRIEND_GAP, FRIEND_SCALE, friendX, GROUND, groundAt, GROWN_UP_CORNER, HELD_HEIGHT, PARADE_SCALE, paradeSpot, seenAt, skySlots, viewFor, WAITING_SCALE, waitingSpot, type View, hillSeenTop } from './layout'
 import { KIND_COLOURS, PALETTE, shade } from './palette'
 import { copyPose, forwardOf, mirror, REST, restPose, spread, type Pose } from './pose'
 import { LADDER } from './config'
@@ -85,7 +85,7 @@ const JOINS_IN = 1.2
 const WAITS_FROM = 0.45
 /** The least time between one bunch's arrival and the next one's, in seconds. */
 const ARRIVE_APART = 0.06
-/** How far above the frogs' heads a bunch with one for each of them stops, so that their tongues go up to it over one another's heads. */
+/** How far above the frogs' heads a bunch with one for each of them stops, so that their tongues go up to it side by side, clear of one another's heads. */
 const FROGS_REACH = 2.5
 /** Seconds a troop that was served by one bunch is in the air when it jumps together. */
 const JUMPS_FOR = 0.5
@@ -102,14 +102,11 @@ const CARRIED_ASIDE = 0.6
 
 /**
  * Which balloon of a bunch with one for each goes to the `k`th friend of those who take it, counted from the left,
- * as a place in `bunchOffsets`. Each friend takes the one nearest it, so no string crosses another. Two frogs
- * alone go for the far side, so that their two tongues cross in the air, as two bows. Three frogs take the nearest
- * as every kind does: the middle one's tongue goes straight up, and two that crossed would cross on it, three
- * lines through one point.
+ * as a place in `bunchOffsets`. Each friend takes the one nearest it, so no string crosses another and no frog's
+ * tongue crosses another's: two that crossed stood as two crossed bars for the moment the bunch arrived.
  */
-function shareOf(kind: KindName, count: number, k: number): number {
-  const leftToRight = count === 3 ? [0, 2, 1] : [0, 1]
-  return leftToRight[kind === 'frog' && count === 2 ? 1 - k : k] ?? 0
+function shareOf(count: number, k: number): number {
+  return (count === 3 ? [0, 2, 1] : [0, 1])[k] ?? 0
 }
 
 /**
@@ -179,7 +176,8 @@ export class Theatre {
   /** True while a touch is ending a scene: its beats land where they were going without playing their sounds or starting a motion. */
   private finishing = false
   /** An ending waits for the catch that causes it to be over. */
-  private endingDue: { at: number; order: number[]; together: boolean } | null = null
+  /** The ending that is due: when its cause is in a hand, the order the balloons were taken in, and the friends that one bunch served together, who jump together. */
+  private endingDue: { at: number; order: number[]; jumpers: number[] } | null = null
   /** The arrival: the served troop marching off, a troop passing by to show a new idea, the next troop walking in, the one after coming to the edge. */
   private leaving: Passing | null = null
   private leaveU = 0
@@ -361,8 +359,9 @@ export class Theatre {
       const cloud = CLOUDS[index], at = seenAt(cloud.x, cloud.y, cloud.z, view, this.seen)
       if (Math.abs(x - at.x) < 2.5 * cloud.scale * at.scale && Math.abs(y - at.y) < 0.95 * cloud.scale * at.scale) return { on: 'cloud', index }
     }
-    // Below the friends' feet there is only the hill.
-    if (y < groundAt(x, 0) - 0.25) return { on: 'hill' }
+    // The hill is one thing with one answer, as far up as its pink is seen: under the friends' feet, and the strip
+    // at and behind them up to its crest.
+    if (y < hillSeenTop(x, view)) return { on: 'hill' }
     // Above it, far off: a troop that goes round the far hill, with its balloons, or the far hill itself.
     // One that is still on its way up to the ring is not yet there to be touched.
     const parade = this.save.parade, arrived = this.leaving || this.joining < 1 ? parade.length - 1 : parade.length
@@ -642,7 +641,7 @@ export class Theatre {
     if (!refusedBefore) flight.friend = first.type === 'taken' ? first.takers[0] : first.type === 'gotAway' ? (everyoneHolds ? this.nearest(x, false) : first.grabber) : this.nearest(x, true)
     // The ending begins with its cause: the moment the last balloon is in a hand. Its first beat is that catch.
     if (serves && serves.type === 'served') {
-      this.endingDue = { at: Number.POSITIVE_INFINITY, order: [...this.took], together: serves.together }
+      this.endingDue = { at: Number.POSITIVE_INFINITY, order: [...this.took], jumpers: serves.together ? [...serves.order] : [] }
     }
     return true
   }
@@ -754,7 +753,7 @@ export class Theatre {
     const due = this.endingDue, coming = this.flights.some((flight) => flight.given.result === 'taken' && !flight.landed) || this.held.some((balloon) => balloon.shown && balloon.owed)
     if (due && !coming && !this.scene?.running) {
       this.endingDue = null
-      this.endCycle(due.order, due.together)
+      this.endCycle(due.order, due.jumpers)
     }
     const { save, events } = due || coming ? { save: this.save, events: [] } : callNext(this.save)
     const event = events[0]
@@ -829,30 +828,33 @@ export class Theatre {
    * three steps on the spot together; the balloons bobbing up in a wave; and the troop settling to look up at
    * them. Its outcome is in the save already: the cycle was judged when the finger lifted.
    */
-  private endCycle(order: readonly number[], together: boolean): void {
+  private endCycle(order: readonly number[], jumpers: readonly number[]): void {
     const kind = this.troop.kind, p = PERSONALITIES[kind], size = this.troop.size
     // The friends take their turns in the order the balloons were taken. After a load that order is gone for those
     // who already held one: they go first, in the order they stand, and those served since follow as they were served.
     const turns = [...order, ...Array.from({ length: size }, (_, i) => i).filter((i) => !order.includes(i))]
-    // Balloons that came one at a time: the friends take turns. One bunch for all: they jump together, in the same
-    // moment, each with its own proud move.
-    const gap = together ? 0 : Math.min(0.7, p.lasts.proud * 0.75)
+    // Balloons that came one at a time: those friends take turns. The friends that one bunch served jump together,
+    // in the same moment, each with its own proud move: after the turns of any that were served before them.
+    const alone = turns.filter((friend) => !jumpers.includes(friend)), gap = Math.min(0.7, p.lasts.proud * 0.75)
     const beats: Beat[] = []
     // The scene begins as the last balloon is taken, and its first beat is that catch, which is left to finish.
     const first = p.lasts.catch * 0.7 + 0.15
-    turns.forEach((friend, k) => beats.push({ at: first + k * gap, lasts: 0, play: this.cue(() => {
+    const proud = (friend: number, k: number, jumps: boolean): Beat['play'] => this.cue(() => {
       // One that is in the air does its proud move when it is down, and is heard then: never heard and not seen.
       const actor = this.actors[friend]
       // One whose balloon was popped since has nothing to be proud of: it reaches up, as it does.
       if (!this.held[friend].shown) return
       // One that is in the middle of an answer finishes it first, too: a refusal lands on its bunch before the proud move.
       if (this.answering(friend)) { this.owe(actor, 'proud'); actor.proudAt = 1.18 + k * 0.05; return }
-      // A troop that one bunch served jumps together: every friend that is on the ground leaves it in this moment.
-      if (together && size > 1) actor.jumpAt = this.time
+      // Those that one bunch served jump together: every one of them that is on the ground leaves it in this moment.
+      if (jumps) actor.jumpAt = this.time
       this.act(friend, 'proud')
       this.sound(`${kind}Poke`, 1.18 + k * 0.05, 0.8)
-    }) }))
-    let at = first + (size - 1) * gap + p.lasts.proud
+    })
+    alone.forEach((friend, k) => beats.push({ at: first + k * gap, lasts: 0, play: proud(friend, k, false) }))
+    jumpers.forEach((friend, k) => beats.push({ at: first + alone.length * gap, lasts: 0, play: proud(friend, alone.length + k, true) }))
+    const moves = alone.length + (jumpers.length > 0 ? 1 : 0)
+    let at = first + (moves - 1) * gap + p.lasts.proud
     // The march begins for those on the ground. One still in the air, or late with its proud move, marches when
     // it is down and that is done. The three steps are heard as they are marched (`step`), never without a march.
     beats.push({ at, lasts: 0, play: this.cue(() => {
@@ -925,10 +927,10 @@ export class Theatre {
         this.passTook = true
         passer.held.fill(true)
         // Each balloon is taken from where it hangs low, and goes from there to its friend's hand as that friend
-        // takes it: of a bunch, each friend takes the one nearest it, and two frogs the one on the far side.
+        // takes it: of a bunch, each friend takes the one nearest it.
         const low = this.lowFor(passer)
         passer.balloons.forEach((balloon, k) => {
-          const from = low[passer.idea === 'bunch' ? shareOf(passer.kind, passer.size, k) : k]
+          const from = low[passer.idea === 'bunch' ? shareOf(passer.size, k) : k]
           balloon.shown = true
           balloon.vx = 0
           balloon.vy = 0
@@ -937,7 +939,7 @@ export class Theatre {
             balloon.y = GROUND + HELD_HEIGHT
             balloon.wait = 0
           } else {
-            const knot = this.knotOf(passer, passer.idea === 'bunch' ? shareOf(passer.kind, passer.size, k) : k, from)
+            const knot = this.knotOf(passer, passer.idea === 'bunch' ? shareOf(passer.size, k) : k, from)
             balloon.x = from.x
             balloon.y = from.y
             balloon.knot = { x: knot.x, y: knot.y }
@@ -1118,7 +1120,7 @@ export class Theatre {
     if (this.endingDue && this.time >= this.endingDue.at && !this.scene?.running && (calm || (served && this.time >= this.endingDue.at + ENDING_WAITS))) {
       const due = this.endingDue
       this.endingDue = null
-      this.endCycle(due.order, due.together)
+      this.endCycle(due.order, due.jumpers)
     }
 
     for (const place of this.places) {
@@ -1369,7 +1371,7 @@ export class Theatre {
     if (given.result === 'taken') {
       const at = this.target(flight), offsets = bunchOffsets(flight.bunch.count), big = this.lastView.balloon, shared = given.takers.length > 1
       given.takers.forEach((taker, k) => {
-        const balloon = this.held[taker], from = offsets[shared ? shareOf(kind, given.takers.length, k) : 0]
+        const balloon = this.held[taker], from = offsets[shared ? shareOf(given.takers.length, k) : 0]
         // Each balloon is taken from where it is in the bunch as it arrives, and goes from there to the hand of the
         // friend that takes it, on its string: one for each is seen happening. A single one arrives above the
         // hand and swings up. Where the friends take in a row, each balloon hangs on until its friend's turn.
@@ -1413,7 +1415,7 @@ export class Theatre {
       if (everyoneHolds && flight.bunch.count === this.troop.size && this.troop.size > 1) {
         // One more for each of a troop that has its balloons: the whole troop is carried off at the same moment,
         // their squeaks climbing a scale together, and they come down one after another.
-        for (let i = 0; i < this.troop.size; i++) this.carryOff(i, { colour: flight.bunch.colour, count: 1 }, 1 + i * 0.12, i * LAND_APART, false, [arrived[shareOf('duck', this.troop.size, i)]])
+        for (let i = 0; i < this.troop.size; i++) this.carryOff(i, { colour: flight.bunch.colour, count: 1 }, 1 + i * 0.12, i * LAND_APART, false, [arrived[shareOf(this.troop.size, i)]])
       } else {
         // A bunch bigger than the whole troop: its balloons bump the cloud on their way out, and it sheds its drops on the troop.
         this.carryOff(flight.friend, flight.bunch, 1, 0, everyoneHolds && flight.bunch.count > this.troop.size, arrived)
@@ -1561,7 +1563,7 @@ export class Theatre {
     const spot = this.spot(flight.friend), tall = BODIES[this.troop.kind].height * FRIEND_SCALE
     if (flight.given.result === 'taken' && flight.given.takers.length > 1) {
       // One for each: the bunch comes down over the middle of those who take from it. For frogs it stops higher,
-      // so that their tongues go up to it over one another's heads, those of two crossing in the air.
+      // so that their tongues go up to it side by side, clear of one another's heads.
       const takers = flight.given.takers
       return { x: (this.spot(takers[0]).x + this.spot(takers[takers.length - 1]).x) / 2, y: spot.y + tall + (this.troop.kind === 'frog' ? FROGS_REACH : 0.75) }
     }
@@ -1952,8 +1954,7 @@ export class Theatre {
     if (balloon.wait !== undefined && balloon.wait > 0 && balloon.knot) painter.string(tailX, tailY, 0.3, balloon.knot.x, balloon.knot.y, 0.3, shade(colour, -0.3))
     else if (!tongued) painter.string(tailX, tailY, 0.3, this.hand.x, this.hand.y, this.hand.z, shade(colour, -0.3))
     // A frog that passes takes its balloon as every frog does: the tongue out to it where it hangs, and in again
-    // with it. Two that take one bunch each take the balloon on the far side of it, so their tongues cross in the
-    // air; three each take the nearest.
+    // with it. Those that take one bunch each take the balloon nearest them, so no two tongues cross.
     if (troop.kind === 'frog' && actor.clip === 'catch' && actor.t >= 0) {
       const mouthY = pose.y + (plan.neck[1] + plan.mouth[1]) * pose.scale * pose.squash, mouthZ = (plan.neck[2] + plan.mouth[2]) * pose.scale
       this.lick(painter, pose.x, mouthY, mouthZ, tailX, tailY, 0.3, hold(actor.t, 0.1, 0.2, 0.2 + TONGUE_HOME, 0.3 + TONGUE_HOME), shade(colour, 0.34))
@@ -1987,9 +1988,9 @@ export class Theatre {
       if (flight.landed || flight.given.result !== 'taken') continue
       const k = flight.given.takers.indexOf(friend)
       if (k < 0) continue
-      // When two frogs take from one bunch, each goes for the balloon on the far side of it, so the tongues cross in the air; three each take the nearest.
+      // When two or three frogs take from one bunch, each goes for the balloon nearest it, so no two tongues cross.
       const takers = flight.given.takers.length
-      const at = this.along(flight), offset = bunchOffsets(flight.bunch.count)[takers > 1 ? shareOf('frog', takers, k) : 0], big = this.lastView.balloon
+      const at = this.along(flight), offset = bunchOffsets(flight.bunch.count)[takers > 1 ? shareOf(takers, k) : 0], big = this.lastView.balloon
       const tipX = at.x + offset.x * big, tipY = at.y + (offset.y - BALLOON * 1.25) * big
       this.lick(painter, mouthX, mouthY, mouthZ, tipX, tipY, 0.35, out, colour)
       return

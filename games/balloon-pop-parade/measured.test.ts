@@ -389,9 +389,9 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
     expect(theatre.playing).toBe('arrival')
   })
 
-  it('sends frogs\' tongues over one another\'s heads to a bunch with one for each: two cross in the air above the frogs, three go up side by side with no two crossing, and none goes through a frog', () => {
-    // Three frogs and a bunch of three, where two that crossed would cross on the middle one's tongue, three lines
-    // through one point; and two frogs either side of one that has its balloon, with a bunch of two.
+  it('sends frogs\' tongues up side by side to a bunch with one for each: no two cross in any frame, and none goes through a frog', () => {
+    // Three frogs and a bunch of three; and two frogs either side of one that has its balloon, with a bunch of two,
+    // whose tongues go up over the middle frog's head.
     for (const [held, count] of [[[false, false, false], 3], [[false, true, false], 2]] as const) {
       const theatre = new Theatre(saveOf({ position: 'bunches-own-colour', troop: { kind: 'frog', size: 3, held: [...held] }, sky: [{ colour: 'frog', count: 1 }, { colour: 'frog', count }], waiting: { kind: 'duck', size: 1 } }), 4)
       const poses = new Map<string, Pose>(), tongues: { x0: number; y0: number; x1: number; y1: number }[] = []
@@ -426,8 +426,7 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
         if (crossing) crossedInAir += 1
       }
       expect(out, 'the tongues are out for a good while').toBeGreaterThan(15)
-      if (count === 3) expect(crossed, 'three tongues: no two cross').toBe(0)
-      else expect(crossedInAir, `${count} for ${held.join()}: crossed in the air`).toBeGreaterThan(10)
+      expect(crossed + crossedInAir, `${count} for ${held.join()}: no two tongues cross`).toBe(0)
     }
   })
 

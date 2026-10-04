@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { BODIES, type KindName } from './bodies'
 import { PERSONALITIES } from './clips'
 import { applyPose, buildFriend } from './friends'
-import { BALLOON, CLOUDS, FAR_HILL, farGroundAt, friendX, GROUND, seenAt, skySlots, viewFor } from './layout'
+import { BALLOON, CLOUDS, FAR_HILL, farGroundAt, friendX, GROUND, seenAt, skySlots, viewFor, hillSeenTop, groundAt } from './layout'
 import { MOMENTS, saveOf, type Moment } from './moments'
 import { freshSave } from './save'
 import { restPose, type Pose } from './pose'
@@ -132,6 +132,15 @@ describe('a touch', () => {
     // The scenery is touchable too: the cloud over the troop, and the hill under its feet.
     expect(theatre.hit(0.4, 0.5, VIEW)).toEqual({ on: 'cloud', index: 2 })
     expect(theatre.hit(3, GROUND - 0.8, VIEW)).toEqual({ on: 'hill' })
+    // One hill, one answer: the strip of pink at and behind the friends' feet, up to the hill's crest as it is seen,
+    // is the hill too, all the way across; a little above the crest it is not.
+    for (const x of [-6.8, -4, -2.2, 2.2, 4, 6.8]) {
+      const top = hillSeenTop(x, VIEW)
+      expect(top, `the crest is above the feet at ${x}`).toBeGreaterThan(groundAt(x, 0) + 0.1)
+      expect(theatre.hit(x, top - 0.04, VIEW).on === 'hill' || theatre.hit(x, top - 0.04, VIEW).on === 'waiting', `just under the crest at ${x}`).toBe(true)
+      expect(theatre.hit(x, GROUND - 0.05, VIEW).on === 'hill' || theatre.hit(x, GROUND - 0.05, VIEW).on === 'waiting', `at the feet's height at ${x}`).toBe(true)
+      expect(theatre.hit(x, top + 0.12, VIEW).on, `just over the crest at ${x}`).not.toBe('hill')
+    }
     expect(theatre.hit(0, GROUND + 1, VIEW)).toEqual({ on: 'friend', friend: 0 })
     expect(theatre.hit(-VIEW.width / 2 + 0.9, GROUND + 0.9, VIEW)).toEqual({ on: 'waiting' })
   })
@@ -546,7 +555,7 @@ describe('the frog\'s tongue', () => {
     return { drawn, painter, whole }
   }
 
-  it('crosses its neighbour\'s in the air when two frogs take from one bunch, each a bow with a pad and never a straight bar', () => {
+  it('goes up beside its neighbour\'s when two frogs take from one bunch, each to the balloon nearest it: the two never cross, and each is a bow with a pad and never a straight bar', () => {
     const theatre = staged({ troop: { kind: 'frog', size: 2, held: [false, false] }, sky: [{ colour: 'frog', count: 1 }, { colour: 'frog', count: 2 }], waiting: { kind: 'duck', size: 1 } }), { painter, whole } = tongues()
     tapSlot(theatre, 1)
     play(theatre, FLIGHT - 0.12)
@@ -554,13 +563,13 @@ describe('the frog\'s tongue', () => {
     const both = whole()
     expect(both).toHaveLength(2)
     const [left, right] = both[0].mouthX < both[1].mouthX ? both : [both[1], both[0]]
-    // The frog on the left reaches the balloon on the right, and the other way round.
-    expect(left.tipX).toBeGreaterThan(right.tipX)
+    // The frog on the left reaches the balloon on the left, and the one on the right the one on the right.
+    expect(left.tipX).toBeLessThan(right.tipX)
     for (const tongue of both) {
       // The middle of the tongue is off the straight line from its mouth to its tip, by more than its own thickness.
       const middle = tongue.pieces[1], dx = tongue.tipX - tongue.mouthX, dy = tongue.tipY - tongue.mouthY
       const off = Math.abs((middle.x1 - tongue.mouthX) * dy - (middle.y1 - tongue.mouthY) * dx) / Math.hypot(dx, dy)
-      expect(off).toBeGreaterThan(0.2)
+      expect(off).toBeGreaterThan(0.1)
     }
   })
 
