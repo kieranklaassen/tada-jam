@@ -124,11 +124,16 @@ export function givePlace(show: Show, at: Site, long: number, tail = 0): Place {
 
 /** The stretch of the gap where the water is open: from where the near bank's foot goes under the surface to where the far bank's comes out of it. A rock that stands out of it in between is ridden over. */
 export function openWater(at: Site): readonly [number, number] {
+  const known = OPEN.get(at)
+  if (known) return known
   let near = at.left[0], far = at.right[0]
   while (near < at.right[0] && groundAt(at, near + 0.05) >= WATER) near += 0.25
   while (far > near && groundAt(at, far - 0.05) >= WATER) far -= 0.25
-  return [near, far]
+  const open = [near, far] as const
+  OPEN.set(at, open)
+  return open
 }
+const OPEN = new WeakMap<Site, readonly [number, number]>()
 
 /** The vehicle during the crossing: where the run left it while it reacts, then on to where it stays: the lay-by on the far bank, or, come home, its place in the line at the near bank. `stays` is that place's x. */
 export function crossingPlace(show: Show, at: Site, stays: number): Place {

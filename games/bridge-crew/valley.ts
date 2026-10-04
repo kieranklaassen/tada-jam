@@ -17,13 +17,23 @@ import { COLS, ROWS, type Site } from './sites'
 export const FAINT = { far: 0.24, hills: 0.3, trees: 0.46, fence: 0.34, finds: 0.5, desk: 0.42 } as const
 
 /** A number for a sheet, so that each position has its own valley and has it every time. */
-export function siteSeed(at: Site): number {
+export const siteSeed = (at: Site): number => {
   let seed = 17 + at.variant * 101
   for (const letter of at.id) seed = (seed * 31 + letter.charCodeAt(0)) >>> 0
   return seed
 }
 
 type Dot = readonly [number, number]
+
+/** Keeps what was worked out for a sheet, so that a frame asks for it and does not work it out again. */
+function kept<T>(make: (at: Site) => T): (at: Site) => T {
+  const known = new WeakMap<Site, { value: T }>()
+  return (at) => {
+    let had = known.get(at)
+    if (!had) { had = { value: make(at) }; known.set(at, had) }
+    return had.value
+  }
+}
 
 function stroke(pen: Pen, plot: Plot, points: readonly Dot[], width: number, alpha: number, close = false) {
   pen.strokeStyle = INK.line
@@ -63,6 +73,13 @@ export function farBridge(at: Site): { x0: number; x1: number; y: number } {
   return { x0, x1, y: at.right[1] + 2.75 }
 }
 
+/** The windmill on the hills over the near bank: where its cap is, in cells, or null on a sheet whose near bank is too short for a hill to stand on. Its sails turn (drift.ts). */
+export const windmill = kept((at: Site): readonly [number, number] | null => {
+  const x = at.left[0] - 5.2
+  if (x < 0.8) return null
+  return [x, at.left[1] + Math.max(skyline(at, x, 0), skyline(at, x, 1)) + 0.95]
+})
+
 /** The trees along a bank, behind the road: where each stands, how tall, and which kind. Clear of the lips and of the cliffs. */
 export function trees(at: Site): { x: number; tall: number; kind: 'round' | 'pine' | 'poplar' }[] {
   const random = stream(siteSeed(at) + 5), out: { x: number; tall: number; kind: 'round' | 'pine' | 'poplar' }[] = []
@@ -70,6 +87,8 @@ export function trees(at: Site): { x: number; tall: number; kind: 'round' | 'pin
     for (let x = from + 0.4 + random() * 0.8; x < to; x += 1.5 + random() * 1.5) {
       const pick = random(), tall = 1.5 + random() * 1.3
       if (at.anchors.some(([ax]) => Math.abs(ax - x) < 2.3)) continue
+      // And clear of the windmill, which stands on the hill behind.
+      if (Math.abs(x - (at.left[0] - 5.2)) < 1.3 && at.left[0] - 5.2 >= 0.8) continue
       out.push({ x, tall, kind: pick < 0.45 ? 'round' : pick < 0.8 ? 'pine' : 'poplar' })
     }
   }
@@ -135,6 +154,14 @@ export function paintValley(pen: Pen, plot: Plot, at: Site) {
     }
     for (const x of [span.x0, span.x1]) stroke(pen, plot, [[x - 0.09, rail], [x - 0.09, rail + 0.42], [x, rail + 0.56], [x + 0.09, rail + 0.42], [x + 0.09, rail]], 0.014, FAINT.hills)
   }
+  // The windmill's tower, on the hill: a tapering body with a door and a cap. Its sails are drawn live.
+  const mill = windmill(at)
+  if (mill) {
+    const [mx, my] = mill, foot = my - 0.95
+    stroke(pen, plot, [[mx - 0.3, foot], [mx - 0.17, my - 0.06], [mx + 0.17, my - 0.06], [mx + 0.3, foot]], 0.02, FAINT.hills + 0.06)
+    stroke(pen, plot, [[mx - 0.2, my - 0.06], [mx, my + 0.14], [mx + 0.2, my - 0.06]], 0.02, FAINT.hills + 0.06)
+    stroke(pen, plot, [[mx - 0.08, foot], [mx - 0.08, foot + 0.24], [mx + 0.08, foot + 0.24], [mx + 0.08, foot]], 0.014, FAINT.hills)
+  }
   // Trees, behind the road.
   for (const one of trees(at)) tree(pen, plot, one.x, deck, one.tall, one.kind, random)
   // A fence along each bank, behind the road, which stops short of the lip with its last rail hanging.
@@ -165,9 +192,11 @@ export function finds(at: Site): { what: Find; x: number; y: number }[] {
   const room = (from: number, to: number): number[] => { const xs: number[] = []; for (let x = from + 1.35; x < to - 0.9; x += 2.3) xs.push(x); return xs }
   const near = room(-MARGIN.side + 0.3, at.left[0] - 0.4), away = room(at.right[0] + 0.4, COLS + MARGIN.side - 0.3)
   if (near.length) out.push({ what: 'burrow', x: near[0], y: deck - 1.9 })
-  const places = [...near.slice(1), ...away]
+  // The rest turn about between the far bank and the near one, so neither is left bare: five at most.
+  const rest = near.slice(1), places: number[] = []
+  for (let i = 0; i < Math.max(rest.length, away.length); i++) { if (away[i] !== undefined) places.push(away[i]); if (rest[i] !== undefined) places.push(rest[i]) }
   for (const x of places) {
-    if (out.length >= 4 || others.length === 0) break
+    if (out.length >= 5 || others.length === 0) break
     const pick = others.splice(Math.floor(random() * others.length), 1)[0]
     out.push({ what: pick, x: x + (random() - 0.5) * 0.6, y: 0.9 + random() * Math.max(0.2, deck - 2.6) })
   }
@@ -239,7 +268,22 @@ function find(pen: Pen, plot: Plot, what: Find, x: number, y: number) {
 
 /** The finds in the ground, and the burrow's tunnel up through the hatching. Painted after the ground. */
 export function paintUnderground(pen: Pen, plot: Plot, at: Site) {
-  const deck = at.left[1]
+  const deck = at.left[1], random = stream(siteSeed(at) + 23)
+  // The beds of the ground, as a section shows them: two long uneven lines through each bank, and pebbles along the lower one.
+  for (const [from, to] of [[-MARGIN.side, at.left[0] - 0.25], [at.right[0] + 0.25, COLS + MARGIN.side]] as const) {
+    for (const [share, swing] of [[0.38, 0.16], [0.72, 0.22]] as const) {
+      const level = deck * (1 - share), phase = random() * 6, bed: Dot[] = []
+      for (let x = from; x <= to + 0.001; x += 0.25) bed.push([x, level + swing * Math.sin(x * 0.7 + phase) + 0.08 * Math.sin(x * 2.3 + phase)])
+      stroke(pen, plot, bed, 0.024, FAINT.fence)
+      if (share > 0.5) for (let x = from + 0.5; x < to - 0.3; x += 0.7 + random() * 1.1) ring(pen, plot, x, level + swing * Math.sin(x * 0.7 + phase) - 0.16 - 0.1 * random(), 0.05 + 0.04 * random(), 0.016, FAINT.fence)
+    }
+  }
+  // Under each tree, its roots: two uneven threads going down side by side, which never meet.
+  for (const one of trees(at)) for (const side of [-1, 1]) {
+    const root: Dot[] = []
+    for (let d = 0.06; d <= 0.5 + 0.12 * side; d += 0.08) root.push([one.x + side * (0.07 + 0.2 * d + 0.04 * Math.sin(d * 14 + one.x)), deck - d])
+    stroke(pen, plot, root, 0.018, FAINT.fence)
+  }
   for (const one of finds(at)) {
     if (one.what === 'burrow') {
       // The tunnel: two lines up to just under the grass, and a mound over its mouth.
@@ -321,15 +365,15 @@ export function paintDesk(pen: Pen, plot: Plot, at: Site) {
 }
 
 /** Where the mug stands, if the sheet has room for one: the middle of its foot. */
-export function mugAt(at: Site): readonly [number, number] | null {
+export const mugAt = kept((at: Site): readonly [number, number] | null => {
   const { rightRoom, floor } = desk(at), right = rightRoom[1] - rightRoom[0]
   if (right >= 4.3) return [rightRoom[1] - 3.5, floor + 0.05]
   if (right >= 1.3 && right < 2.9) return [rightRoom[0] + 0.55, floor + 0.05]
   return null
-}
+})
 
 /** The stretches of the gap where the water is open at its surface, widest first: between a bank's foot, a rock and the other bank. */
-export function reaches(at: Site): (readonly [number, number])[] {
+export const reaches = kept((at: Site): (readonly [number, number])[] => {
   const out: [number, number][] = []
   let from: number | null = null
   for (let x = at.left[0]; x <= at.right[0] + 0.001; x += 0.25) {
@@ -338,7 +382,7 @@ export function reaches(at: Site): (readonly [number, number])[] {
     if (!wet && from !== null) { out.push([from, x - 0.25]); from = null }
   }
   return out.sort((a, b) => b[1] - b[0] - (a[1] - a[0]))
-}
+})
 
 /** The sky's height on the sheet, for what drifts in it. */
 export const SKY = { low: ROWS - 3.4, high: ROWS - 0.9 } as const

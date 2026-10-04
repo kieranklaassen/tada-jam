@@ -5,7 +5,7 @@ import type { Pen } from './look'
 import { WATER } from './pose'
 import { MARGIN, groundAt, plotFor } from './sheet'
 import { COLS, VARIANTS, site, type Site } from './sites'
-import { FAINT, SKY, desk, farBridge, finds, mugAt, paintDesk, paintUnderground, paintValley, reaches, siteSeed, skyline, trees } from './valley'
+import { FAINT, SKY, desk, farBridge, finds, mugAt, paintDesk, paintUnderground, paintValley, reaches, siteSeed, skyline, trees, windmill } from './valley'
 
 const every: Site[] = LADDER.flatMap((id) => Array.from({ length: VARIANTS }, (_, v) => site(id, v)))
 
@@ -52,6 +52,22 @@ describe('the valley the gap is in', () => {
     }
   })
 
+  it('a windmill stands on the hills over the near bank, well back from the lip, where the bank is long enough for a hill', () => {
+    let mills = 0
+    for (const at of every) {
+      const mill = windmill(at)
+      if (at.left[0] - 5.2 < 0.8) { expect(mill, at.id).toBeNull(); continue }
+      mills++
+      expect(mill![0]).toBeLessThan(at.left[0] - 4)
+      expect(mill![0]).toBeGreaterThan(0)
+      // Its sails, most of a cell long, clear the road and stay under the sky's top.
+      expect(mill![1] - 0.8).toBeGreaterThan(at.left[1] + 0.5)
+      expect(mill![1] + 0.8).toBeLessThan(SKY.high + 1)
+      expect(windmill(at)).toBe(mill)
+    }
+    expect(mills).toBeGreaterThan(every.length / 2)
+  })
+
   it('trees stand on the banks, behind the road, clear of both lips and of the cliffs', () => {
     for (const at of every) {
       const stand = trees(at)
@@ -70,6 +86,9 @@ describe('the valley the gap is in', () => {
       const found = finds(at)
       expect(found[0]?.what, at.id).toBe('burrow')
       expect(found.length).toBeGreaterThanOrEqual(3)
+      expect(found.length).toBeLessThanOrEqual(5)
+      // Neither bank is left bare.
+      expect(found.some((one) => one.x > at.right[0]), at.id).toBe(true)
       expect(new Set(found.map((one) => one.what)).size).toBe(found.length)
       for (const one of found) {
         const reach = one.what === 'burrow' ? 1 : 0.62

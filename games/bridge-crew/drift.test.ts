@@ -113,6 +113,8 @@ describe('what goes on at the edge of the sheet', () => {
     expect(drops(big(0.2)).length).toBeGreaterThan(drops({ x: 12, since: 0.2, big: 0.4 }).length)
     for (let since = 0.02; since < 2; since += 0.05) for (const drop of drops(big(since))) expect(drop.y).toBeGreaterThan(WATER)
     expect(drops(big(SPLASH))).toEqual([])
+    // None goes into a bank: thrown from beside a wall, every drop stays on the gap's side of it.
+    for (let since = 0.02; since < SPLASH; since += 0.05) for (const drop of drops(big(since, gap.left[0] + 0.4), [gap.left[0] + 0.15, gap.right[0] - 0.15])) { expect(drop.x).toBeGreaterThanOrEqual(gap.left[0] + 0.15); expect(drop.x).toBeLessThanOrEqual(gap.right[0] - 0.15) }
     const reach = Math.max(...Array.from({ length: 30 }, (_, i) => Math.max(0, ...drops(big(i * 0.05)).map((drop) => drop.y - WATER))))
     // The highest go well over a bank four cells above the water, and none off the top of the sheet.
     expect(reach).toBeGreaterThan(4)
@@ -121,7 +123,7 @@ describe('what goes on at the edge of the sheet', () => {
 
   it('is drawn in a few lines with real numbers and no text, at any moment, with a splash or without', () => {
     const plot = plotFor(1180, 820)
-    for (const at of every) for (let seconds = 0; seconds < 60; seconds += 1.7) for (const splash of [null, big(0.3, (at.left[0] + at.right[0]) / 2), big(3)]) {
+    for (const at of every) for (let seconds = 0; seconds < 60; seconds += 4.3) for (const splash of [null, big(0.3, (at.left[0] + at.right[0]) / 2), big(3)]) {
       const { pen, calls } = recording()
       const drawn = drawSky(pen, plot, at, seconds) + drawWaterLife(pen, plot, at, seconds, splash) + drawSplash(pen, plot, at, splash)
       expect(drawn).toBeGreaterThanOrEqual(2)

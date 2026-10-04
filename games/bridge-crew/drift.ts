@@ -2,7 +2,7 @@ import { INK, type Pen } from './look'
 import { WATER } from './pose'
 import { px, type Plot } from './sheet'
 import { COLS, type Site } from './sites'
-import { FAINT, SKY, farBridge, mugAt, reaches, siteSeed } from './valley'
+import { FAINT, SKY, farBridge, mugAt, reaches, siteSeed, windmill } from './valley'
 
 // What goes on at the edge of the sheet and has nothing to do with the job:
 // clouds drift, a train crosses the finished bridge far off, a fish leaps, a
@@ -33,6 +33,9 @@ export function balloon(at: Site, seconds: number): { x: number; y: number } {
   const lane = COLS + 10, x = COLS + 5 - frac((seconds * 0.11 + (siteSeed(at) % 41) * 0.61) / lane) * lane
   return { x, y: SKY.low + 0.3 + 0.9 * (0.5 + 0.5 * Math.sin(seconds * 0.07 + (siteSeed(at) % 7))) }
 }
+
+/** How fast the windmill's sails turn, in radians a second: once round in about twelve seconds. */
+export const SAILS = 0.52
 
 /** How often the far train comes, and how fast it goes, in seconds and cells a second. */
 export const TRAIN = { every: 37, speed: 0.75, long: 1.45 } as const
@@ -95,13 +98,14 @@ export function boat(at: Site, seconds: number, splash: Splash | null): { x: num
   return { x, y: WATER + bob, tilt: rock, facing: out ? 1 : -1 }
 }
 
-/** The drops a splash throws: each a short streak, where it is at this moment. Gone when they have fallen back to the water. */
-export function drops(splash: Splash): { x: number; y: number; vx: number; vy: number }[] {
+/** The drops a splash throws: each a short streak, where it is at this moment. Gone when they have fallen back to the water. `between` is the gap's two walls, which no drop goes through. */
+export function drops(splash: Splash, between: readonly [number, number] = [-Infinity, Infinity]): { x: number; y: number; vx: number; vy: number }[] {
   const out: { x: number; y: number; vx: number; vy: number }[] = [], s = splash.since, count = Math.round(6 + 7 * splash.big)
   for (let i = 0; i < count; i++) {
     const fan = ((i + 0.5) / count - 0.5) * 2.1, speed = (7.5 + 4 * ((i * 7) % 5) / 4) * (0.5 + 0.5 * splash.big)
-    const vx = Math.sin(fan) * speed * 0.42, vy0 = Math.cos(fan) * speed, y = WATER + vy0 * s - 7 * s * s
-    if (y > WATER) out.push({ x: splash.x + vx * s, y, vx, vy: vy0 - 14 * s })
+    // They go up far more than out, and never into a bank: one that reaches a wall runs down it.
+    const vx = Math.sin(fan) * speed * 0.16, vy0 = Math.cos(fan) * speed, y = WATER + vy0 * s - 7 * s * s
+    if (y > WATER) out.push({ x: Math.max(between[0], Math.min(between[1], splash.x + vx * s)), y, vx, vy: vy0 - 14 * s })
   }
   return out
 }
@@ -138,6 +142,20 @@ export function drawSky(pen: Pen, plot: Plot, at: Site, seconds: number): number
   pen.rect(bx - r * 0.2, by + r * 1.62, r * 0.4, r * 0.3)
   pen.stroke()
   drawn++
+  const mill = windmill(at)
+  if (mill) {
+    // The windmill's four sails, each a spar with a ladder of cloth, turning as slowly as a windmill does.
+    const [mx, my] = px(plot, mill[0], mill[1] + 0.04), turn = seconds * SAILS
+    line(pen, cell, 0.018, FAINT.hills + 0.08)
+    pen.beginPath()
+    for (let i = 0; i < 4; i++) {
+      const a = turn + (i * Math.PI) / 2, cx = Math.cos(a), cy = Math.sin(a), long = cell * 0.78
+      pen.moveTo(mx, my); pen.lineTo(mx + cx * long, my + cy * long)
+      pen.moveTo(mx + cx * long * 0.3 - cy * cell * 0.14, my + cy * long * 0.3 + cx * cell * 0.14); pen.lineTo(mx + cx * long - cy * cell * 0.14, my + cy * long + cx * cell * 0.14); pen.lineTo(mx + cx * long, my + cy * long)
+    }
+    pen.stroke()
+    drawn++
+  }
   const nose = train(at, seconds)
   if (nose !== null) {
     // An engine with a funnel and three wagons, each a small box on the rail, and three puffs left behind.
@@ -246,9 +264,9 @@ export function drawSplash(pen: Pen, plot: Plot, at: Site, splash: Splash | null
   // The crown: two sheets of water that stand up either side of what fell in, and curl over.
   const high = cell * 2.8 * big * Math.sin(Math.PI * Math.min(1, s / 0.7)), wide = cell * (0.7 + 1.3 * Math.min(1, s / 0.5)) * (0.6 + 0.4 * big)
   if (s < 0.7) for (const side of [-1, 1]) for (const reach of [1, 0.62]) { pen.moveTo(x + side * wide * 0.3 * reach, y); pen.quadraticCurveTo(x + side * wide * 0.42 * reach, y - high * reach, x + side * wide * reach, y - high * 0.72 * reach) }
-  for (const drop of drops(splash)) {
+  for (const drop of drops(splash, [at.left[0] + 0.15, at.right[0] - 0.15])) {
     const [dx, dy] = px(plot, drop.x, drop.y)
-    pen.moveTo(dx, dy); pen.lineTo(dx - drop.vx * cell * 0.035, dy + drop.vy * cell * 0.035)
+    pen.moveTo(dx, dy); pen.lineTo(dx, dy + drop.vy * cell * 0.035)
   }
   // The rings stop at the banks.
   const [low] = px(plot, at.left[0] + 0.1, 0), [top] = px(plot, at.right[0] - 0.1, 0), held = (v: number) => Math.max(low, Math.min(top, v))
