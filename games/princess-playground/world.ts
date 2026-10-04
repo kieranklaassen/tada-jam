@@ -45,6 +45,13 @@ export const PLANK = {
 } as const
 
 /** The tilt at which an end rests on the sand, in radians. Positive is right end down. */
+/**
+ * Pim's crown, in her own measures: how wide it is at its base and how high it rises, as shares of her radius, and
+ * where its base sits, as a share of her half height. It is low and wide, so that with it on she is still plainly
+ * the smallest outline in the tray: a mark may tell a friend apart and must add no bulk.
+ */
+export const CROWN = { girth: 0.5, rise: 0.34, seat: 1.9 } as const
+
 export const MAX_TILT = Math.asin(PLANK.pivotHeight / PLANK.halfLength)
 /** How much further an end digs into the sand for each unit of weight on it beyond the lightest friend's: radians. */
 export const DIG = 0.007

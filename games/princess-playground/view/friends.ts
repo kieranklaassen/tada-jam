@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { belly, spread } from '../overlap'
 import type { FriendPose } from '../pose'
-import { FRIENDS, type FriendId } from '../world'
+import { CROWN, FRIENDS, type FriendId } from '../world'
 
 // The four friends: smooth painted pebbles. One body, a pair of eyes that can
 // blink and look about, a small mouth, and the one part that makes each its
@@ -33,6 +33,7 @@ export type FriendView = {
 /** Where an eye sits on a body, as a direction from its centre: high on the front, so the face reads from above. */
 const EYE = { x: 0.37, y: 0.66, z: 0.66 }
 
+const SCRATCH = new THREE.Vector3()
 const INK = new THREE.MeshBasicMaterial({ color: '#1d1a2b' })
 const WHITE = new THREE.MeshBasicMaterial({ color: '#fffaf0' })
 
@@ -107,7 +108,7 @@ export function buildFriend(id: FriendId): FriendView {
   if (id === 'mog') extra = ears(body.material)
   if (id === 'bo') extra = lids(eyeSize)
   if (extra) {
-    if (id === 'pim') extra.position.set(0, spec.halfHeight * 1.9, -spec.radius * 0.18)
+    if (id === 'pim') extra.position.set(0, spec.halfHeight * CROWN.seat, -spec.radius * 0.18)
     else if (id === 'mog') extra.position.y = spec.halfHeight * 1.86
     else extra.position.y = spec.halfHeight
     group.add(extra)
@@ -121,7 +122,7 @@ function crown(radius: number): THREE.Object3D {
   for (let i = 0; i <= 10; i++) {
     const t = i / 10
     // Whorls: the outline steps in as it rises.
-    profile.push(new THREE.Vector2(radius * 0.44 * (1 - t) * (1 + 0.2 * Math.sin(t * Math.PI * 7)) + 0.004, radius * 0.8 * t))
+    profile.push(new THREE.Vector2(radius * CROWN.girth * (1 - t) * (1 + 0.2 * Math.sin(t * Math.PI * 7)) + 0.004, radius * CROWN.rise * t))
   }
   const shell = new THREE.Mesh(new THREE.LatheGeometry(profile, 18), new THREE.MeshStandardMaterial({ color: '#fff6dc', roughness: 0.4, emissive: '#5a4a20', emissiveIntensity: 0.35 }))
   shell.name = 'pim-crown'
@@ -220,8 +221,10 @@ export function poseFriend(view: FriendView, pose: FriendPose): void {
       view.extra.position.set(-spec.radius * 0.86, spec.halfHeight * 1.05, spec.radius * 0.12)
       view.extra.rotation.set(0, 0, 1.25)
     } else {
-      view.extra.position.set(0, spec.halfHeight * 1.9, -spec.radius * 0.18)
-      view.extra.rotation.set(0.1 + swing * 0.4, 0, -swing)
+      // Set down in the sand, it slips forward off the top of her head and hangs over one eye, until she shakes it back.
+      const slip = pose.slip, over = onBody('pim', EYE.x, EYE.y + 0.35, EYE.z, SCRATCH)
+      view.extra.position.set(over.x * slip, spec.halfHeight * CROWN.seat * (1 - slip) + (over.y + spec.halfHeight) * slip, -spec.radius * 0.18 * (1 - slip) + (over.z + 0.02) * slip)
+      view.extra.rotation.set(0.1 + swing * 0.4 + slip * 0.95, 0, -swing - slip * 0.35)
     }
   }
   if (view.extra && view.id === 'dot') view.extra.rotation.y = pose.follow * 0.6

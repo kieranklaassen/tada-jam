@@ -126,6 +126,8 @@ export default {
     { a: 'bo-body', b: 'bo-lids', kind: 'pose', upTo: 1.0, reason: 'Bo’s lids are caps lying on his body over his eyes; his squash, the deepest of the four, carries them with it' },
     { a: 'bo-(whites|pupils)\\b', b: 'bo-lids', kind: 'pose', upTo: 0.7, reason: 'Bo’s lids lie over the top of his eyes, which flatten under them in a blink and when he dozes' },
     { a: 'pim-body', b: 'pim-crown', kind: 'pose', upTo: 1.0, reason: 'the shell crown sits on Pim’s head, swings on its base after she stops, and slips down to the side of her head when a friend sits on her' },
+    { a: 'pim-(whites|pupils)\\b', b: 'pim-crown', kind: 'pose', upTo: 1.0, reason: 'set down in the sand, Pim’s crown slips down over one eye and lies on it until she shakes it back: the sheet asks for exactly that' },
+    { a: '^sand', b: '^plank', kind: 'penetration', upTo: 0.2, reason: 'the low end digs into the sand, deeper the heavier it is, and the bite is drawn round it: with a stack on that end the tip of the board lies a little under the surface, which is what the sheet means by the end sinking further' },
     { a: 'mog-body', b: 'mog-ears', kind: 'pose', upTo: 1.2, reason: 'Mog’s ears sit on his head and lie flat when he is put out or a friend is on him' },
     { a: 'dot-body', b: 'dot-speckles', kind: 'pose', upTo: 0.5, reason: 'the speckles lie on Dot’s back and shimmer by turning a little on it' },
     { a: '^friend-', b: '^friend-', kind: 'penetration', upTo: 0.15, reason: 'a friend sits on the very top of the one below, touching it; when the two sway or spring a little out of step, the rim of one presses into the other for a moment' },

@@ -808,7 +808,7 @@ export class Playground {
       case 'bounce': pose.y += 0.4 * Math.abs(Math.sin(t * Math.PI * 2)) * (0.5 + 0.5 * fade); pose.squash *= 1 + 0.08 * Math.sin(t * Math.PI * 4); break
       case 'look': pose.nod += 0.2 * bell; break
       // The crown slips over one eye, stays a moment, and is shaken straight.
-      case 'slip': pose.follow = t < 0.55 ? 0.3 * Math.min(1, t * 6) : 0.3 * Math.cos((t - 0.55) * 28) * (1 - t) * 2.2; pose.lean += t < 0.55 ? 0 : 0.1 * Math.sin((t - 0.55) * 28) * (1 - t) * 2.2; break
+      case 'slip': pose.slip = t < 0.55 ? Math.min(1, t * 6) : Math.max(0, 1 - (t - 0.55) * 7); pose.follow = t < 0.55 ? 0.3 * Math.min(1, t * 6) : 0.3 * Math.cos((t - 0.55) * 28) * (1 - t) * 2.2; pose.lean += t < 0.55 ? 0 : 0.1 * Math.sin((t - 0.55) * 28) * (1 - t) * 2.2; break
       // Cheeks out: the body bulges sideways for a moment.
       case 'puff': pose.squash *= 1 - 0.14 * bell; break
       // Tossed a finger's width by a tap on the plank, and down again.
@@ -843,6 +843,7 @@ export class Playground {
       // Only Pim and Mog pull a face: Dot goes pale and quiet, and Bo dozes.
       pose.frown = body.mood === 'put-out' && (id === 'pim' || id === 'mog') && body.mouth < 0.3 ? 1 : 0
       pose.follow = body.follow + (id === 'mog' && body.mood === 'put-out' ? -0.5 : 0)
+      pose.slip = 0
       // A head with a friend on it, or one on its way there, is pressed: it gives a little under the weight, and Pim's
       // crown and Mog's ears are out of the way before the friend lands.
       const place = body.away ? null : placeOf(this.arrangement, id)

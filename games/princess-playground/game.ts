@@ -689,16 +689,20 @@ export class Game implements Director {
     }
   }
 
-  /** Dot left alone in the sand, by a friend who was beside it going away, draws its one swirl: once, when it is left. */
+  /**
+   * Dot left alone in the sand, by a friend who was beside it going away, draws its one swirl: once, when it is left.
+   * And a friend set down beside Dot where it stands is company come to it: its one soft note.
+   */
   private dotAlone(): void {
     const now = inCompany(this.play.arrangement)
     if (now === this.company) return
     const was = this.company
     this.company = now
     const dot = this.play.bodies.dot
-    if (was && !now && placeOf(this.play.arrangement, 'dot').at === 'sand' && dot.mode === 'rest' && !dot.away) {
-      this.react([{ who: 'dot', after: 0.6, voice: v.scratch(), act: 'spin', seconds: 1.1, mark: 'swirl' }])
-    }
+    if (placeOf(this.play.arrangement, 'dot').at !== 'sand' || dot.mode !== 'rest' || dot.away) return
+    if (was && !now) this.react([{ who: 'dot', after: 0.6, voice: v.scratch(), act: 'spin', seconds: 1.1, mark: 'swirl' }])
+    // A friend set down beside it where it stands: it warms, and hums its one soft note, as when it is set down beside one.
+    else if (!was && now) this.react([{ who: 'dot', after: 0.5, voice: v.softNote(), act: 'sway', seconds: 0.8, way: 1 }])
   }
 
   // --- The idle ladder ------------------------------------------------------------

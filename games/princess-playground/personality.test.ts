@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { PERSONALITY, type Personality } from './personality'
-import { FRIEND_IDS, FRIENDS } from './world'
+import { CROWN, FRIEND_IDS, FRIENDS } from './world'
 
 describe('the friends move like themselves', () => {
   const keys = Object.keys(PERSONALITY.pim) as (keyof Personality)[]
@@ -21,6 +21,20 @@ describe('the friends move like themselves', () => {
     expect(new Set(tempo.map((t) => t.toFixed(2))).size).toBe(4)
     expect(Math.abs(tempo[1] - tempo[2])).toBeGreaterThan(0.01)
     expect(PERSONALITY.mog.heldStretch).toBeGreaterThan(PERSONALITY.dot.heldStretch + 0.15)
+  })
+
+  it('size alone shows weight: Pim with her crown on is still the lowest and narrowest outline, and the two of one weight are one size', () => {
+    const pimTop = FRIENDS.pim.halfHeight * CROWN.seat + FRIENDS.pim.radius * CROWN.rise
+    for (const id of ['mog', 'dot', 'bo'] as const) {
+      expect(pimTop, id).toBeLessThan(FRIENDS[id].halfHeight * 2)
+      expect(FRIENDS.pim.radius * Math.max(1, CROWN.girth), id).toBeLessThan(FRIENDS[id].radius)
+    }
+    expect(FRIENDS.mog.radius).toBe(FRIENDS.dot.radius)
+    expect(FRIENDS.mog.halfHeight).toBe(FRIENDS.dot.halfHeight)
+    expect(PERSONALITY.mog.tossGain).toBe(PERSONALITY.dot.tossGain)
+    // Heavier is bigger, every time.
+    const byWeight = [...FRIEND_IDS].sort((a, b) => FRIENDS[a].weight - FRIENDS[b].weight)
+    for (let i = 1; i < byWeight.length; i++) expect(FRIENDS[byWeight[i]].halfHeight).toBeGreaterThanOrEqual(FRIENDS[byWeight[i - 1]].halfHeight)
   })
 
   it('the heavier the friend, the less of a throw it takes: Pim flies and Bo barely lifts', () => {

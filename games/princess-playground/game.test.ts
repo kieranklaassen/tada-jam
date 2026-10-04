@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isSound, placeOf, putInSand, putOnEnd, standsAt, tap } from './arrangement'
+import { companyOf, isSound, placeOf, putInSand, putOnEnd, standsAt, tap } from './arrangement'
 import { ASK_AT, Game, SNORE_EVERY, type Cue } from './game'
 import type { Guidance } from './guidance'
 import { DEEPEST, RAKED, SHALLOWEST, biteDepth, marksToText, rakeIsOut } from './marks'
@@ -8,7 +8,7 @@ import { seeded } from './motion'
 import { KINDS, layout, rideOf, wantMet, type Kind } from './rides'
 import { endRide, freshWorld, load, rideIsOver, save, type Saved, type World } from './save'
 import { NEXT_AT } from './scenes'
-import { chuckle, purr, type Part } from './voices'
+import { chuckle, purr, softNote, type Part } from './voices'
 import { FRIEND_IDS, MAX_TILT, PLANK, WAITING_PLACE, homeOn, plankTopAt, type FriendId } from './world'
 
 const QUIET: Guidance = { glow: 0, demo: null, demoIndex: -1 }
@@ -673,6 +673,25 @@ describe('the small promises of the sheet', () => {
     run(game, 0.6)
     expect(game.play.bodies.mog.gazeTo).toBeLessThan(-0.8)
     expect(game.play.bodies.mog.gazeUpTo).toBe(0)
+  })
+
+  it('Dot hums its soft note when a friend is set down beside it, as it does when it is set down beside a friend', () => {
+    const game = free([], [])
+    run(game, 0.5)
+    game.takeCues()
+    const dot = standsAt(game.play.arrangement, 'dot')
+    expect(game.play.bodies.dot.bright).toBeLessThan(0.2)
+    game.press({ kind: 'friend', id: 'pim' })
+    game.dragStart()
+    game.dragTo({ x: dot.x + 0.3, z: dot.z + 1.65 }, null)
+    run(game, 0.5)
+    game.dragEnd()
+    const { cues } = run(game, 3)
+    expect(companyOf(game.play.arrangement, 'dot')).toEqual(['pim'])
+    const soft = JSON.stringify(softNote())
+    expect(cues.filter((cue) => cue.type === 'voice' && JSON.stringify(cue.parts) === soft).length).toBe(1)
+    expect(game.play.bodies.dot.bright).toBeGreaterThan(0.8)
+    expect(cues.some((cue) => cue.type === 'swirl')).toBe(false)
   })
 
   it('each friend looks at what it always wants: Pim at the sky and the high end, Mog at the highest seat, Dot at whoever is on the plank, Bo up along the plank', () => {

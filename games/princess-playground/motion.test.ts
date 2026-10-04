@@ -266,6 +266,18 @@ describe('the playground in motion', () => {
     expect(play(emptied, 3).some((event) => event.type === 'rise')).toBe(false)
   })
 
+  it('slips Pim\'s crown right down over one eye when she is set down in the sand, and has her shake it back', () => {
+    const world = new Playground(firstRide())
+    play(world, 0.5)
+    expect(world.frame().poses.pim.slip).toBe(0)
+    world.act('pim', 'slip', 1.1)
+    let most = 0
+    play(world, 0.5, (w) => { most = Math.max(most, w.frame().poses.pim.slip) })
+    expect(most).toBe(1)
+    play(world, 1)
+    expect(world.frame().poses.pim.slip).toBe(0)
+  })
+
   it('shuts a friend\'s eyes for as long as a slow blink lasts', () => {
     const world = new Playground(firstRide())
     world.advance(0)
