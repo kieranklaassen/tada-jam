@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { WAITING_CLEAR, drop, emptyArrangement, freeSpot, inCompany, isSound, lean, lowEnd, placeOf, putInSand, putOnEnd, tap, weightOn, type Arrangement } from './arrangement'
+import { CATCH_DEPTH, WAITING_CLEAR, drop, emptyArrangement, freeSpot, inCompany, isSound, lean, lowEnd, placeOf, putInSand, putOnEnd, tap, weightOn, type Arrangement } from './arrangement'
 import { FRIEND_IDS, FRIENDS, PLANK, SAND, WAITING_PLACE, homeOn, inTheWay, type FriendId } from './world'
 
 const on = (left: FriendId[], right: FriendId[]): Arrangement => {
@@ -96,6 +96,19 @@ describe('a friend let go', () => {
     const { arrangement, slid } = drop(on(['pim'], []), 'bo', 2.2, -0.4)
     expect(arrangement.right).toEqual(['bo'])
     expect(slid).toBe(false)
+  })
+
+  it('over the sand right beside the plank is over sand: the plank takes only what hangs over the board', () => {
+    const a = putOnEnd(emptyArrangement(), 'bo', 'left')
+    // Over the board's line and a little past its edge: the plank.
+    for (const z of [PLANK.z, PLANK.z + PLANK.halfWidth, PLANK.z - PLANK.halfWidth - 0.2]) expect(placeOf(drop(a, 'pim', PLANK.seat, z).arrangement, 'pim').at, `${z}`).toBe('end')
+    // A step in front of it or behind it: the sand, at the nearest free place.
+    for (const z of [PLANK.z + 1.0, PLANK.z + 1.4, PLANK.z - 1.2]) {
+      const landed = drop(a, 'pim', PLANK.seat, z)
+      expect(placeOf(landed.arrangement, 'pim').at, `${z}`).toBe('sand')
+      expect(isSound(landed.arrangement), `${z}`).toBe(true)
+    }
+    expect(CATCH_DEPTH).toBeLessThan(1)
   })
 
   it('over the middle slides to the low end, and on a level plank to the nearer end', () => {

@@ -1135,6 +1135,91 @@ describe('Dot left alone by the friend who goes to wait', () => {
   })
 })
 
+describe('Dot\'s swirl is never lost to a put-away', () => {
+  const beside = () => {
+    const start = shown()
+    let a = putInSand(start.arrangement, 'bo', { x: -3.6, z: 2.3 })
+    a = putInSand(a, 'dot', { x: 4.44, z: 0.6 })
+    const game = new Game({ ...start, arrangement: a, touched: true }, 1)
+    run(game, 0.5)
+    game.press({ kind: 'friend', id: 'bo' })
+    game.dragStart()
+    game.dragTo({ x: PLANK.seat, z: PLANK.z }, null)
+    run(game, 0.5)
+    game.dragEnd()
+    for (let i = 0; i < 600 && !game.sceneRunning; i++) game.step(1 / 60, QUIET)
+    expect(game.sceneRunning).toBe(true)
+    return game
+  }
+  const cells = (text: string) => marksFromText(text).reduce((sum, cell) => sum + (cell > RAKED ? 1 : 0), 0)
+
+  it('when the friend who will go to wait stands beside Dot, the swirl is in the sand the ending saves at its start', () => {
+    const game = beside()
+    const atStart = game.saved().marks
+    // Left to play, Dot draws it once and the saved sand gains nothing it did not already hold from the swirl.
+    const played = beside()
+    const { cues } = run(played, 12)
+    expect(cues.filter((cue) => cue.type === 'swirl').length).toBe(1)
+    const before = marksFromText(atStart), after = marksFromText(played.saved().marks)
+    const dot = standsAt(played.play.arrangement, 'dot')
+    // Round Dot the two are the same sand.
+    let differ = 0
+    for (let i = 0; i < before.length; i++) {
+      const col = i % 32, row = Math.floor(i / 32)
+      const x = -6 + (col + 0.5) * (12 / 32), z = -3.75 + (row + 0.5) * (7.5 / 20)
+      if (Math.hypot(x - dot.x, z - dot.z) < 1.2 && before[i] !== after[i]) differ += 1
+    }
+    expect(differ).toBe(0)
+    expect(cells(atStart)).toBeGreaterThan(10)
+    // Put away at once and loaded: the swirl is there.
+    const loaded = load(JSON.parse(JSON.stringify(game.saved())), null)
+    expect(save(loaded).marks).toBe(atStart)
+  })
+
+  it('Dot tapped off the plank and put away in the air: the swirl it will draw alone where it lands is saved', () => {
+    const bare = tap(layout(rideOf('little-asks', 0)), 'pim')
+    const game = new Game({ ...shown(), arrangement: putOnEnd(bare, 'dot', 'right'), touched: true, state: { ...shown().state, finished: true } }, 1)
+    run(game, 1)
+    tapOn(game, 'dot')
+    run(game, 0.15)
+    expect(game.play.bodies.dot.mode).toBe('hop')
+    const flying = cells(game.saved().marks)
+    game.putAway()
+    const parked = cells(game.saved().marks)
+    // The hollow and the swirl round it: a good patch more than the hollow alone.
+    expect(parked).toBeGreaterThan(flying + 8)
+    // Played on after the put-away, Dot draws it once.
+    expect(run(game, 4).cues.filter((cue) => cue.type === 'swirl').length).toBe(1)
+  })
+})
+
+describe('a touch on the friend who asks next while it is still on its way to wait', () => {
+  it('begins nothing: the next ride begins with a touch on it where it waits', () => {
+    const game = lifting()
+    const kind = game.world.kind
+    // Past the ending's last beat: Mog has left the plank and is on his way.
+    let hopping = false
+    for (let i = 0; i < 900 && !hopping; i++) {
+      game.step(1 / 60, QUIET)
+      hopping = !game.sceneRunning && game.play.bodies.mog.mode !== 'rest'
+    }
+    expect(hopping).toBe(true)
+    tapOn(game, 'mog')
+    run(game, 0.1)
+    expect(game.world.state.finished).toBe(true)
+    expect(game.world.kind).toBe(kind)
+    game.press({ kind: 'friend', id: 'mog' })
+    game.dragStart()
+    expect(game.play.held).toBe(null)
+    expect(game.world.state.finished).toBe(true)
+    run(game, 3)
+    expect(game.play.bodies.mog.mode).toBe('rest')
+    tapOn(game, 'mog')
+    run(game, 0.1)
+    expect(game.world.state.finished).toBe(false)
+  })
+})
+
 describe('the ending begins when the asker has arrived', () => {
   it('not while the plank still has her in the air: her toss and her delight are two things, one after the other', () => {
     const game = new Game({ ...shown(), touched: true }, 1)

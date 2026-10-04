@@ -265,6 +265,23 @@ describe('the playground in motion', () => {
     expect(tips).toBeGreaterThan(30)
   })
 
+  it('has Bo doze when the only other rider is in the hand, and Dot pale when its only company is', () => {
+    const world = new Playground(putOnEnd(putOnEnd(emptyArrangement(), 'bo', 'left'), 'pim', 'right'))
+    play(world, 1)
+    expect(world.bodies.bo.doze).toBeLessThan(0.1)
+    world.grab('pim')
+    world.carryTo(1, 2.5)
+    play(world, 3)
+    expect(world.bodies.bo.doze).toBeGreaterThan(0.9)
+    const dot = new Playground(putOnEnd(putOnEnd(emptyArrangement(), 'dot', 'left'), 'pim', 'right'))
+    play(dot, 1)
+    expect(dot.bodies.dot.bright).toBeGreaterThan(0.9)
+    dot.grab('pim')
+    dot.carryTo(1, 2.5)
+    play(dot, 3)
+    expect(dot.bodies.dot.bright).toBeLessThan(0.1)
+  })
+
   it('brings the friends above down a place the moment the one under them is lifted: nobody hangs over a gap', () => {
     let a = emptyArrangement()
     for (const id of ['mog', 'pim', 'dot'] as const) a = putOnEnd(a, id, 'left')

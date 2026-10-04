@@ -909,15 +909,18 @@ export class Playground {
     body.blinkT = Math.max(0, body.blinkT - dt)
     if (id === 'dot') {
       // Touched, it warms to full colour and stays warm as it goes; alone where it lands, it pales again.
-      const warm = body.mode === 'held' || body.mode === 'hop' || body.glance > 0 || inCompany(this.arrangement) ? 1 : 0
+      // Its company is who still sits or stands: a friend in the hand is not with it.
+      const with_ = this.held === 'dot' ? true : inCompany(this.seen)
+      const warm = body.mode === 'held' || body.mode === 'hop' || body.glance > 0 || with_ ? 1 : 0
       body.bright += Math.max(-dt * 0.9, Math.min(dt * 3, warm - body.bright))
       // Apart in the sand it stands turned half away; touched, carried or in company it turns back at once.
-      const apart = !inCompany(this.arrangement) && body.mode === 'rest' && body.glance <= 0 && !body.away && placeOf(this.arrangement, 'dot').at === 'sand' ? 1 : 0
+      const apart = !with_ && body.mode === 'rest' && body.glance <= 0 && !body.away && placeOf(this.arrangement, 'dot').at === 'sand' ? 1 : 0
       body.aside += Math.max(-dt * 5, Math.min(dt * 1.2, apart - body.aside))
     }
     if (id === 'bo') {
       // Alone on the plank he dozes, unless he is the one who asks: then he is wide awake, looking up along the plank.
-      const alone = body.landed && body.mode === 'rest' && this.arrangement.left.length + this.arrangement.right.length === 1 && this.asking?.id !== 'bo'
+      // Alone among those who sit: with the only other rider in the hand he is alone, and dozes.
+      const alone = body.landed && body.mode === 'rest' && this.held !== 'bo' && this.seen.left.length + this.seen.right.length === 1 && this.asking?.id !== 'bo'
       body.doze += Math.max(-dt * 6, Math.min(dt * 0.8, (alone ? 1 : 0) - body.doze))
     }
   }

@@ -145,8 +145,12 @@ export function tap(a: Arrangement, id: FriendId): Arrangement {
 
 /** How near an end's seat, along the plank, a friend let go still lands on that end. */
 export const CATCH = 1.75
-/** How far in front of or behind the plank a friend let go still lands on it. */
-export const CATCH_DEPTH = 1.5
+/**
+ * How far in front of or behind the plank's line a friend let go still lands on it: over the board itself, and a
+ * little past its edges. A friend carried by the finger hangs over the board's line when the finger is on the board
+ * or on a friend who sits on it; let go over the sand beside the plank, it is over sand.
+ */
+export const CATCH_DEPTH = PLANK.halfWidth + 0.25
 /**
  * A friend let go at (x, z) over the tray, with the plank resting as `a` has
  * it. Over an end it lands there; over the middle it slides to the low end,

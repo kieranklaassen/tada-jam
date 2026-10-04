@@ -201,9 +201,16 @@
 - With a friend in the hand, the head that is come down onto and the weight of an end that bites are read from who still sits, not from the arrangement with the friend in the hand still in it.
 - The sheet says how a friend is carried, and that the pictures of friends who stand close may touch while a finger on a body takes that body (listed above).
 
+**Built after the fourteenth reading.** Rules 1 to 5 clean; four things under rule 6.
+
+- Dot's swirl is never lost to a put-away. When the friend who will go to wait stands beside Dot, the swirl is part of the sand the ending saves at its start, and Dot draws it when that friend has gone. When Dot is on its way to a spot of sand where it will be alone, the swirl is saved at put-away with its hollow.
+- The next ride begins with a touch on the friend who waits where it waits; a touch while it is still on its way there begins nothing.
+- Bo dozes, and Dot pales, by who still sits: with the only other rider in the hand each is alone.
+- A friend let go over the sand right beside the plank is over sand: the plank takes only what hangs over the board and a little past its edges. With the finger pointing, nothing wider is needed.
+
 **Found by this lane while checking those.**
 
-- A friend held on the picture of the plank's end did not land on the plank: carried friends hang high over the tray, so it hung over the sand in front and came down there. The finger is now also read at the height of a friend sitting on the plank (`arrangement.ts`, `aimedAtPlank`), so what the child sees decides. The audit's own "carried" moment had been dropping friends in the sand all along; it now really lands them on the ends, onto a friend and over the middle.
+- A friend held on the picture of the plank's end did not land on the plank: carried friends hung under the finger, high over the tray, so it hung over the sand in front and came down there. A first cure read the finger at the height of a seated friend; it took too much of the sand for the plank and was replaced after the thirteenth reading (above): a carried friend now hangs over the place the finger points at. The audit's own "carried" moment had been dropping friends in the sand all along; it now really lands them on the ends, onto a friend and over the middle.
 - The intersection audit plays the build that lies in `dist`, and several runs in this run were made without building first: those clean results said nothing. Every result named under the gates below is from a build made after the last change to the code.
 
 **Still weak.** Nothing here is short of a sentence of the sheet, as far as this lane and its reader have read it.

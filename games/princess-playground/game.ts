@@ -111,6 +111,8 @@ export class Game implements Director {
    * when its cause arrives, or all at once when something the child does changes what will happen.
    */
   private owed: SandOp[] = []
+  /** Dot's swirl, saved already because what leaves it alone is on its way, and not yet drawn by Dot. */
+  private owedSwirl: { x: number; z: number; radius: number } | null = null
 
   constructor(world: World, seed: number, grains: Grains = new Grains(seed + 17)) {
     this.world = world
@@ -205,7 +207,10 @@ export class Game implements Director {
     const pressed = this.pressed
     this.pressed = { kind: 'other' }
     if (pressed.kind !== 'friend') return
-    if (this.world.arrangement.waiting === pressed.id) this.begin()
+    // The next ride begins with a touch on the friend who waits, where it waits: not while it is still on its way there.
+    if (this.world.arrangement.waiting === pressed.id) {
+      if (this.play.bodies[pressed.id].mode === 'rest') this.begin()
+    }
     // The second tap of a double tap on the friend who was waiting: it is still on its way to its end, and stays on its way.
     else if (!this.world.state.finished && pressed.id === this.ride.asker && this.time - this.begunAt < BEGIN_SECONDS) return
     else {
@@ -221,7 +226,7 @@ export class Game implements Director {
     // The friend who waits is not carried: any touch that takes hold of it begins the next ride.
     if (this.world.arrangement.waiting === pressed.id) {
       this.pressed = { kind: 'other' }
-      this.begin()
+      if (this.play.bodies[pressed.id].mode === 'rest') this.begin()
     } else this.play.grab(pressed.id)
   }
 
@@ -286,8 +291,10 @@ export class Game implements Director {
     this.backToItsEnd()
     // Whoever is still in the air will land, and the plank will come down, with nobody watching: the marks they
     // make go into the saved sand now, so nothing the child set going is lost. They are drawn when they happen.
-    // A swirl Dot was about to draw is in the saved sand too.
-    for (const item of this.later) if (item.reaction.mark === 'swirl') this.swirlMarked(item.reaction.who)
+    // A swirl Dot was about to draw is in the saved sand too; and one it will draw when it lands, alone, where the child sent it.
+    for (const item of this.later) if (item.reaction.mark === 'swirl') this.owedSwirl = this.swirlMarked(item.reaction.who)
+    const dotLands = this.landings.dot
+    if (dotLands && dotLands.deed === 'in-the-sand' && !dotLands.company) this.owedSwirl = this.swirlMarked('dot')
     if (!this.scene) {
       const coming = forecast(this.play, this.world.arrangement, () => [])
       for (const op of coming) this.mark(op)
@@ -428,6 +435,9 @@ export class Game implements Director {
     this.sceneSand = forecast(this.play, this.world.arrangement, build)
     for (const op of this.sceneSand) this.mark(op)
     this.owed = [...this.sceneSand]
+    // The friend who goes to wait stood beside Dot: the scene leaves Dot alone, and its swirl is part of the sand the scene leaves.
+    const dot = this.play.bodies.dot
+    if (kind === 'ending' && placeOf(this.play.arrangement, 'dot').at === 'sand' && dot.mode === 'rest' && !dot.away && inCompany(this.play.arrangement) && placeOf(this.world.arrangement, 'dot').at === 'sand' && !inCompany(this.world.arrangement)) this.owedSwirl = this.swirlMarked('dot')
     this.wantSave('now')
     this.cut = false
     this.sceneKind = kind
@@ -446,7 +456,7 @@ export class Game implements Director {
     this.cut = false
     // Ended by a touch, the sand ends as it was saved: whatever of the scene's bites and hollows has not happened is
     // drawn now. Ended by itself, what its last beat set going is still on its way, and each mark is drawn as it comes.
-    if (touched) this.drawOwed()
+    if (touched) this.drawOwed(false)
     this.sceneSand = []
     if (touched) {
       this.later = []
@@ -503,10 +513,14 @@ export class Game implements Director {
     if (index >= 0) this.owed.splice(index, 1)
   }
 
-  /** Everything saved and not yet drawn is drawn now. */
-  private drawOwed(): void {
+  /** Everything saved and not yet drawn is drawn now. Dot's swirl waits for Dot to draw it, unless `all`: then what will happen has changed, and Dot may never. */
+  private drawOwed(all = true): void {
     for (const op of this.owed) this.draw(op)
     this.owed = []
+    if (all && this.owedSwirl) {
+      this.cues.push({ type: 'swirl', ...this.owedSwirl })
+      this.owedSwirl = null
+    }
   }
 
   /** One thing done to the sand, into the saved grid. A mark never gets shallower, so doing it twice changes nothing. */
@@ -549,6 +563,7 @@ export class Game implements Director {
     if (reaction.mark === 'swirl') {
       const { x, z, radius } = this.swirlMarked(reaction.who)
       this.cues.push({ type: 'swirl', x, z, radius })
+      this.owedSwirl = null
     }
   }
 
