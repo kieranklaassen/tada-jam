@@ -451,7 +451,8 @@ describe('nothing passes through anything', () => {
           const body = game.play.bodies[id], pose = game.frame.poses[id]
           lowest = Math.min(lowest, pose.y)
           // Its middle over the board: its underside is on the board or above it.
-          if (Math.abs(pose.z - PLANK.z) < PLANK.halfWidth && Math.abs(pose.x) < PLANK.halfLength) deepest = Math.max(deepest, plankTopAt(pose.x, tilt) - pose.y)
+          // The board's top where the friend is: a place `along` the board lies at `along` times the cosine of the tilt across the tray.
+          if (Math.abs(pose.z - PLANK.z) < PLANK.halfWidth && Math.abs(pose.x) < PLANK.halfLength * Math.cos(tilt)) deepest = Math.max(deepest, plankTopAt(pose.x / Math.cos(tilt), tilt) - pose.y)
           // Two friends are held apart whenever either stands, sits, rides, is thrown or is carried. A friend in the
           // middle of a hop flies over whoever stood in its way when it left; two hopping at once are not compared.
           for (const other of FRIEND_IDS) {

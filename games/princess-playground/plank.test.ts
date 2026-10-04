@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { atRest, stepPlank, type Knock, type PlankState } from './plank'
-import { MAX_TILT } from './world'
+import { MAX_TILT, lowTilt } from './world'
 
 const DT = 1 / 120
 
@@ -17,18 +17,22 @@ describe('the plank', () => {
   it('goes down on the heavier end and stays there', () => {
     const state = { tilt: 0, spin: 0 }
     run(state, 2, 4, 4)
-    expect(state.tilt).toBeCloseTo(MAX_TILT)
+    expect(state.tilt).toBeCloseTo(lowTilt(4))
     expect(atRest(state, 2, 4)).toBe(true)
     const other = { tilt: 0, spin: 0 }
     run(other, 4, 2, 4)
-    expect(other.tilt).toBeCloseTo(-MAX_TILT)
+    expect(other.tilt).toBeCloseTo(-lowTilt(4))
+    // The lightest friend's end only touches the sand; every heavier end digs in, deeper the heavier.
+    expect(lowTilt(0)).toBe(MAX_TILT)
+    expect(lowTilt(2)).toBe(MAX_TILT)
+    for (let weight = 3; weight <= 12; weight++) expect(lowTilt(weight)).toBeGreaterThan(lowTilt(weight - 1))
   })
 
   it('never passes through the sand', () => {
     const state = { tilt: -MAX_TILT, spin: 0 }
     for (let t = 0; t < 5; t += DT) {
       stepPlank(state, 0, 10, DT)
-      expect(Math.abs(state.tilt)).toBeLessThanOrEqual(MAX_TILT + 1e-9)
+      expect(Math.abs(state.tilt)).toBeLessThanOrEqual(lowTilt(10) + 1e-9)
     }
   })
 

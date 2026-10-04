@@ -46,6 +46,15 @@ export const PLANK = {
 
 /** The tilt at which an end rests on the sand, in radians. Positive is right end down. */
 export const MAX_TILT = Math.asin(PLANK.pivotHeight / PLANK.halfLength)
+/** How much further an end digs into the sand for each unit of weight on it beyond the lightest friend's: radians. */
+export const DIG = 0.007
+/** The lightest weight an end can hold: Pim's. With that, or with nothing, an end only touches the sand. */
+const LIGHTEST = 2
+
+/** How far the plank tilts with `weight` resting on its low end: the heavier the end, the deeper it digs. */
+export function lowTilt(weight: number): number {
+  return MAX_TILT + DIG * Math.max(0, weight - LIGHTEST)
+}
 
 /** Where friends may stand in the sand: inside the rim, clear of the plank's strip. */
 export const SAND = {

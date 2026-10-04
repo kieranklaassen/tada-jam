@@ -483,9 +483,6 @@ export class Game implements Director {
       // A ring of sand flies from under the end that came down, and the end that lifted lets grains slide back.
       this.grains.burst(event.x, PLANK.z, 0.35 + 0.65 * power, Math.round(8 + 22 * power), PLANK.halfWidth * 2)
       if (power > 0.45) {
-        this.voice(v.whisper())
-        // As the other end lifts, grains slide back into the bite it leaves.
-        this.grains.burst(-event.x, PLANK.z, 0.14, 6, PLANK.halfWidth * 2)
         // Sand thrown onto the board runs off its low end.
         this.react([{ who: 'pim', after: 0.6, voice: v.trickle(), mark: 'trickle' }])
         // Thrown grains settle on the heads of whoever rides.
@@ -498,6 +495,10 @@ export class Game implements Director {
         }
       }
       this.wantSave('soon')
+    } else if (event.type === 'rise') {
+      // As an end lifts, grains slide back into the bite it leaves, with a short whisper. The bite stays.
+      this.voice(v.whisper())
+      this.grains.burst(event.x, PLANK.z, 0.14, 6, PLANK.halfWidth * 2)
     } else if (event.type === 'poke') {
       this.voice(v.poke())
       stamp(marks, event.x, event.z, 0.24, 6)

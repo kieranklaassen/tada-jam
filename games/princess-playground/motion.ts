@@ -4,7 +4,7 @@ import { nudge, stepPlank, type PlankState } from './plank'
 import type { Frame, FriendPose, Poses } from './pose'
 import { restPose } from './pose'
 import { NESTLE, restingAt, restTilt } from './rest'
-import { ENDS, FRIEND_IDS, FRIENDS, MAX_TILT, PLANK, TRAY, otherEnd, plankTopAt, type End, type FriendId } from './world'
+import { ENDS, FRIEND_IDS, FRIENDS, MAX_TILT, PLANK, TRAY, lowTilt, otherEnd, plankTopAt, type End, type FriendId } from './world'
 
 // The playground in motion: the plank, and each friend hopping, riding, being
 // tossed, carried and set down. Pure, on game time alone, stepped at a fixed
@@ -19,6 +19,8 @@ export const HOLD_HEIGHT = 2.6
 export const TOSS = 1.25
 /** A throw slower than this is a bob, not a toss: the friend stays seated. */
 export const TOSS_FLOOR = 6
+/** An end that comes down at least this fast throws whoever rides the other one, Bo included; slower, they only bob. Radians a second. */
+export const KNOCK_TOSS = 1.2
 /** How long a tap on the plank has its riders off the board, in seconds; they rise a finger's width. */
 export const RIDER_BOB = 0.32
 /** How long a friend let go over the middle takes to drop, slide down the board and climb onto the low end. */
@@ -49,6 +51,8 @@ export type PlayEvent =
   | { type: 'knock'; end: End; speed: number; x: number }
   | { type: 'toss'; id: FriendId; speed: number }
   | { type: 'creak'; strength: number }
+  /** An end that lay in the sand has lifted out of it. */
+  | { type: 'rise'; end: End; x: number }
   | { type: 'level' }
   | { type: 'lift'; id: FriendId }
   | { type: 'slide'; id: FriendId }
@@ -133,6 +137,10 @@ export class Playground {
   time = 0
   private carry = 0
   private wasLevel = false
+  /** The plank is rocking under a finger's tap, which throws nobody: until it lies still again, or a friend comes or goes. */
+  private tapRock = false
+  /** The end that lies in the sand, to tell when it lifts. */
+  private downEnd: End | null = null
   private readonly random: () => number
   private readonly poses: Poses
   private readonly out: Frame
@@ -233,6 +241,7 @@ export class Playground {
   tapPlank(along: number): void {
     const side = along >= 0 ? 1 : -1
     nudge(this.plank, side * 1.7)
+    this.tapRock = true
     this.events.push({ type: 'creak', strength: 0.6 })
     // Its riders are tossed a finger's width and come down again.
     for (const id of FRIEND_IDS) {
@@ -345,6 +354,8 @@ export class Playground {
     twin.time = this.time
     twin.carry = this.carry
     twin.wasLevel = this.wasLevel
+    twin.tapRock = this.tapRock
+    twin.downEnd = this.downEnd
     twin.shakes = this.shakes
     twin.shakeIn = this.shakeIn
     twin.shakeBy = this.shakeBy
@@ -385,7 +396,8 @@ export class Playground {
   }
 
   private restingTilt(): number {
-    return Math.sign(this.landedOn('right') - this.landedOn('left')) * MAX_TILT
+    const left = this.landedOn('left'), right = this.landedOn('right')
+    return Math.sign(right - left) * lowTilt(Math.max(left, right))
   }
 
   private landedOn(end: End): number {
@@ -406,6 +418,8 @@ export class Playground {
     // A friend leaving the plank leaves at once: the plank swings the moment its weight is gone, and must not swing through it.
     const offPlank = body.landed
     body.fromX = body.x; body.fromY = body.y; body.fromZ = body.z
+    // A friend coming or going is no finger's tap: what the plank knocks down after it throws.
+    this.tapRock = false
     body.mode = 'hop'
     body.landed = false
     body.hopT = 0
@@ -483,6 +497,15 @@ export class Playground {
     }
     const knock = stepPlank(this.plank, this.landedOn('left'), this.landedOn('right'), dt)
     if (knock) this.knocked(knock.end, knock.speed)
+    if (this.tapRock && Math.abs(this.plank.spin) < 0.02 && Math.abs(this.plank.tilt - this.restingTilt()) < 0.01) this.tapRock = false
+    // An end that lay in the sand has lifted well out of it: grains slide back into the bite it leaves.
+    const tilt = this.plank.tilt
+    const down: End | null = Math.abs(tilt) >= MAX_TILT * 0.92 ? (tilt > 0 ? 'right' : 'left') : null
+    if (this.downEnd && down !== this.downEnd && (down !== null || Math.abs(tilt) < MAX_TILT * 0.7)) {
+      this.events.push({ type: 'rise', end: this.downEnd, x: (this.downEnd === 'left' ? -1 : 1) * PLANK.halfLength * Math.cos(MAX_TILT) })
+      this.downEnd = null
+    }
+    if (down) this.downEnd = down
     const level = this.isLevel() && Math.abs(this.plank.tilt) < 0.05 && Math.abs(this.plank.spin) < 0.6
     if (level && !this.wasLevel) this.events.push({ type: 'level' })
     if (!this.isLevel()) this.wasLevel = false
@@ -500,8 +523,9 @@ export class Playground {
       const body = this.bodies[id]
       if (!body.landed || body.mode !== 'rest') continue
       const throwSpeed = speed * PLANK.seat * PERSONALITY[id].tossGain * TOSS
-      if (throwSpeed < TOSS_FLOOR) {
-        body.squashV += throwSpeed * 1.2
+      // A knock from a finger's tap on the plank, or a soft one, only bobs them.
+      if (speed < KNOCK_TOSS || this.tapRock) {
+        body.squashV += Math.min(TOSS_FLOOR, throwSpeed) * 1.2
         continue
       }
       body.mode = 'air'
@@ -644,6 +668,8 @@ export class Playground {
     const body = this.bodies[id], own = PERSONALITY[id], spec = FRIENDS[id]
     const place = placeOf(this.arrangement, id)
     const firstTouch = !body.landed
+    // A friend landing on the plank is no finger's tap: what it knocks down throws.
+    if (place.at === 'end' && firstTouch) this.tapRock = false
     if (body.away) {
       body.mode = 'rest'
       body.x = target.x; body.y = target.y; body.z = target.z

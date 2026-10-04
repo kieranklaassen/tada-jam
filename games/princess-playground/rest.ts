@@ -1,6 +1,6 @@
-import { lean, placeOf, type Arrangement } from './arrangement'
+import { lean, placeOf, weightOn, type Arrangement } from './arrangement'
 import { restPose, type Frame, type Poses } from './pose'
-import { FRIEND_IDS, FRIENDS, MAX_TILT, PLANK, WAITING_PLACE, plankTopAt, type End, type FriendId } from './world'
+import { FRIEND_IDS, FRIENDS, PLANK, WAITING_PLACE, lowTilt, plankTopAt, type End, type FriendId } from './world'
 
 // Where everything is when nothing moves: the plank on its heavier end, each
 // stack standing on its seat, everyone else in the sand. Pure. A load draws
@@ -10,7 +10,8 @@ import { FRIEND_IDS, FRIENDS, MAX_TILT, PLANK, WAITING_PLACE, plankTopAt, type E
 export const NESTLE = 1
 
 export function restTilt(a: Arrangement, without: FriendId | null = null): number {
-  return lean(a, without) * MAX_TILT
+  // Its heavier end is down, deeper in the sand the more it carries.
+  return lean(a, without) * lowTilt(Math.max(weightOn(a, 'left', without), weightOn(a, 'right', without)))
 }
 
 /** Where the bottom of the friend at `level` of an end's stack is, for a tilt. A stack stands square on the board, so it leans with it. */

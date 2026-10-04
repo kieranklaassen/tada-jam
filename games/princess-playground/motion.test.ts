@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { emptyArrangement, isSound, placeOf, putInSand, putOnEnd, type Arrangement } from './arrangement'
 import { HALF_AWAY, Playground, seeded, type PlayEvent } from './motion'
-import { FRIEND_IDS, FRIENDS, MAX_TILT, PLANK, homeOn, plankTopAt, type FriendId } from './world'
+import { restTilt } from './rest'
+import { FRIEND_IDS, FRIENDS, MAX_TILT, PLANK, homeOn, lowTilt, plankTopAt, type FriendId } from './world'
 
 /** The first ride as it is laid out: Pim on the left end, the others in the sand on the right. */
 function firstRide(): Arrangement {
@@ -190,6 +191,81 @@ describe('the playground in motion', () => {
     expect(world.bodies.mog.y).toBeGreaterThan(world.bodies.pim.y + FRIENDS.pim.halfHeight)
   })
 
+  it('sinks the low end further when a friend is sent onto it, and lets it rise again when that friend leaves, with no knock', () => {
+    // The wrong side: Pim sits low on the left, and Mog is carried onto her head.
+    const world = new Playground(firstRide())
+    play(world, 0.5)
+    const before = world.plank.tilt
+    expect(before).toBeCloseTo(-MAX_TILT)
+    world.grab('mog')
+    world.carryTo(-3, -1)
+    play(world, 0.5)
+    world.release()
+    play(world, 4)
+    expect(world.plank.tilt).toBeCloseTo(-lowTilt(5))
+    // The end is lower than it was: by more than a hundredth of the plank's half length.
+    expect(plankTopAt(-PLANK.seat, before) - plankTopAt(-PLANK.seat, world.plank.tilt)).toBeGreaterThan(0.05)
+    world.tapFriend('mog')
+    const events = play(world, 4)
+    expect(world.plank.tilt).toBeCloseTo(-MAX_TILT)
+    expect(events.some((event) => event.type === 'knock')).toBe(false)
+  })
+
+  it('tosses nobody when the plank is tapped: its riders only bob, on a low end and on a high one', () => {
+    for (const along of [-2, 2]) {
+      const world = new Playground(putOnEnd(firstRide(), 'bo', 'right'))
+      play(world, 1)
+      world.takeEvents()
+      world.tapPlank(along)
+      const sat = world.frame().poses.pim.y
+      let highest = 0
+      const events = play(world, 2.5, (w) => { highest = Math.max(highest, w.frame().poses.pim.y - sat) })
+      expect(events.some((event) => event.type === 'toss'), `${along}`).toBe(false)
+      // She is lifted a finger's width and a spring's worth above where she sat, no more: the board may dip away under her and catch her again.
+      expect(highest, `${along}`).toBeLessThan(0.3)
+      // A friend landing straight after a tap is no tap: it throws.
+      world.tapPlank(along)
+      world.tapFriend('bo')
+      world.tapFriend('mog')
+      play(world, 0.2)
+    }
+    const world = new Playground(firstRide())
+    play(world, 0.5)
+    world.tapPlank(2)
+    world.tapFriend('bo')
+    expect(play(world, 4).some((event) => event.type === 'toss' && event.id === 'pim')).toBe(true)
+  })
+
+  it('throws Bo too when the others bring his end up hard, lower than anyone lighter', () => {
+    const world = new Playground(putOnEnd(emptyArrangement(), 'bo', 'left'))
+    play(world, 0.5)
+    world.tapFriend('mog')
+    play(world, 0.3)
+    world.tapFriend('dot')
+    let top = 0
+    const events = play(world, 5, (w) => { top = Math.max(top, w.bodies.bo.y) })
+    expect(events.some((event) => event.type === 'toss' && event.id === 'bo')).toBe(true)
+    expect(top - world.bodies.bo.y).toBeGreaterThan(0.05)
+    expect(top - world.bodies.bo.y).toBeLessThan(1.2)
+  })
+
+  it('says when an end that lay in the sand lifts out of it, tipped over or only lightened to level', () => {
+    // Tipped over: Pim's end lifts as Bo's comes down.
+    const tipped = new Playground(firstRide())
+    play(tipped, 0.5)
+    tipped.takeEvents()
+    tipped.tapFriend('bo')
+    expect(play(tipped, 4).filter((event) => event.type === 'rise').map((event) => (event.type === 'rise' ? event.end : ''))).toEqual(['left'])
+    // Lightened to level: the last friend hops off and the end comes up.
+    const emptied = new Playground(firstRide())
+    play(emptied, 0.5)
+    emptied.takeEvents()
+    emptied.tapFriend('pim')
+    expect(play(emptied, 4).filter((event) => event.type === 'rise').length).toBe(1)
+    // At rest nothing lifts.
+    expect(play(emptied, 3).some((event) => event.type === 'rise')).toBe(false)
+  })
+
   it('shuts a friend\'s eyes for as long as a slow blink lasts', () => {
     const world = new Playground(firstRide())
     world.advance(0)
@@ -241,7 +317,9 @@ describe('the playground in motion', () => {
     expect(kinds.indexOf('land')).toBeLessThan(kinds.indexOf('knock'))
     expect(kinds.indexOf('knock')).toBeLessThanOrEqual(kinds.indexOf('toss'))
     expect(world.settled).toBe(true)
-    expect(world.plank.tilt).toBeCloseTo(MAX_TILT)
+    // Down on Bo's end, a little deeper in the sand than Pim's end lay.
+    expect(world.plank.tilt).toBeCloseTo(lowTilt(4))
+    expect(world.plank.tilt).toBeGreaterThan(MAX_TILT)
     expect(placeOf(world.arrangement, 'pim')).toMatchObject({ at: 'end', end: 'left' })
   })
 
@@ -264,7 +342,8 @@ describe('the playground in motion', () => {
     const events = play(world, 5)
     expect(events.some((event) => event.type === 'creak')).toBe(true)
     expect(events.some((event) => event.type === 'toss')).toBe(false)
-    expect(world.plank.tilt).toBeCloseTo(-MAX_TILT)
+    expect(world.plank.tilt).toBeCloseTo(restTilt(world.arrangement))
+    expect(world.plank.tilt).toBeLessThan(0)
     expect(world.bodies.pim.y).toBeGreaterThan(1.8)
   })
 

@@ -1,4 +1,4 @@
-import { MAX_TILT } from './world'
+import { lowTilt } from './world'
 
 // The plank as a thing with weight: it turns toward its heavier end, faster
 // the bigger the difference, knocks on the sand, rebounds a little and comes
@@ -32,6 +32,8 @@ export const SETTLE_SPEED = 0.5
 /** A level plank is pulled back to level this hard, and loses its sway this slowly. */
 export const LEVEL_SPRING = 16
 export const LEVEL_DRAG = 0.7
+/** How fast an end that has been lightened comes up out of the hollow it dug, radians a second. */
+export const RISE = 0.4
 
 /**
  * One fixed step. `left` and `right` are the weights resting on each end.
@@ -47,13 +49,19 @@ export function stepPlank(state: PlankState, left: number, right: number, dt: nu
   }
   state.spin += pull * dt
   state.tilt += state.spin * dt
-  if (Math.abs(state.tilt) < MAX_TILT) return null
+  // The end that is going down stops in the sand, deeper the more it carries.
+  const limit = lowTilt(state.tilt > 0 ? right : left)
+  if (Math.abs(state.tilt) < limit) return null
   const end = state.tilt > 0 ? 'right' : 'left'
   const speed = Math.abs(state.spin)
-  state.tilt = Math.sign(state.tilt) * MAX_TILT
-  // Moving into the sand: knock and rebound, or stay if it was only a touch.
   const into = Math.sign(state.spin) === Math.sign(state.tilt)
-  if (!into) return null
+  if (!into) {
+    // Lighter than it was, and on its way up out of the hollow it dug: it rises to where it now belongs.
+    state.tilt = Math.sign(state.tilt) * Math.max(limit, Math.abs(state.tilt) - RISE * dt)
+    return null
+  }
+  state.tilt = Math.sign(state.tilt) * limit
+  // Moving into the sand: knock and rebound, or stay if it was only a touch.
   if (speed < SETTLE_SPEED) {
     state.spin = 0
     return null
@@ -69,6 +77,6 @@ export function nudge(state: PlankState, spin: number): void {
 
 /** True when the plank has come to rest where its weights leave it. */
 export function atRest(state: PlankState, left: number, right: number): boolean {
-  const target = Math.sign(right - left) * MAX_TILT
+  const target = Math.sign(right - left) * lowTilt(Math.max(left, right))
   return Math.abs(state.tilt - target) < 0.004 && Math.abs(state.spin) < 0.02
 }
