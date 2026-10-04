@@ -1007,8 +1007,14 @@ describe('what a reader of the folder found', () => {
     expect(t.game.motion.pool.pose.spill).toBeLessThan(1e-9)
     let bobbed = 0
     const rest = t.game.motion.boat.pose.bob
-    t.sweep({ x: pool.x - 0.6, z: pool.z - 3 }, { x: pool.x - 0.6, z: pool.z + 3 })
-    t.play(0.3, () => { bobbed = Math.max(bobbed, Math.abs(t.game.motion.boat.pose.bob - rest)) })
+    t.game.press({ truck: false, point: { x: pool.x - 0.6, z: pool.z - 3 } }, t.now)
+    for (let frame = 1; frame <= 45; frame++) {
+      if (frame <= 30) t.game.move({ x: pool.x - 0.6, z: pool.z - 3 + (frame / 30) * 6 })
+      t.play(FRAME)
+      bobbed = Math.max(bobbed, Math.abs(t.game.motion.boat.pose.bob - rest))
+    }
+    t.game.lift()
+    t.play(0.5)
     expect(bobbed).toBeGreaterThan(0.05)
     let spilled = 0
     t.tap(duckSide).play(1.6, () => { spilled = Math.max(spilled, t.game.motion.pool.pose.spill) })
