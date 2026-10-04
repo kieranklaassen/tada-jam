@@ -250,7 +250,11 @@ describe('the game', () => {
     tap(game, { on: 'place', place: (game.world.cycle.where[0] as { place: number }).place }, 2.2)
     game.point(aimOn(game, { on: 'gobbler', slot: 1 }), true)
     game.advance(1)
-    expect(shadowUnderClaw()?.y).toBeCloseTo(game.mouthOf(game.crew[1]).y)
+    // (The gobbler stretches up for the toy, and its tongue with it: the shadow is on the tongue as it stands now.)
+    const tongue = game.mouthOf(game.crew[1]).y, shadow = shadowUnderClaw()
+    expect(shadow).toBeDefined()
+    expect(shadow!.y).toBeGreaterThan(tongue)
+    expect(shadow!.y).toBeLessThan(tongue + 1)
     // Over a bell and over the gate.
     game.point(aimOn(game, { on: 'rail-end', side: 1 }), false)
     game.advance(1.5)

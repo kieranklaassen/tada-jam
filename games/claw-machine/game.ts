@@ -533,8 +533,9 @@ export class Game {
    * the top of it is, and how wide a shadow it has room for. The claw's shadow lies there, so that it shows
    * where the claw or the toy in its jaws will come down: on the tongue of a gobbler that is being fed, on the
    * knob of one that would be lifted, in the mouth of one who waits, on the handle of a crate, the gate or a bell.
+   * The height is that of the thing standing at rest; `on` is the gobbler it is part of, which may be stretching.
    */
-  under(): { y: number; most: number } | null {
+  under(): { y: number; most: number; on?: Actor } | null {
     const claw = this.claw, target = this.aim.target
     if (target.on === 'place' || claw.phase !== 'ready') return null
     const to = this.trolleyFor(this.aim)
@@ -542,7 +543,7 @@ export class Game {
     if (target.on === 'gobbler') {
       const actor = this.crew[target.slot]
       if (!actor || actor.walk || actor.liftedT >= 0) return null
-      return this.held >= 0 ? { y: this.mouthOf(actor).y, most: 1.9 } : { y: actor.y + knobAt(shapeOf(actor.id)).y + ON_STUDS, most: 0.8 }
+      return this.held >= 0 ? { y: this.mouthOf(actor).y, most: 1.9, on: actor } : { y: actor.y + knobAt(shapeOf(actor.id)).y + ON_STUDS, most: 0.8, on: actor }
     }
     if (target.on === 'rail-end') return { y: BELL.top + ON_STUDS, most: 0.7 }
     if (this.crates.length > 0) {
@@ -551,7 +552,7 @@ export class Game {
     }
     if (Math.abs(claw.z - WAIT_Z) < 1 && this.waiting.length > 0) {
       const nearest = this.waiting.reduce((best, actor) => (Math.abs(actor.x - claw.x) < Math.abs(best.x - claw.x) ? actor : best))
-      return nearest.walk ? null : { y: this.mouthOf(nearest).y, most: 1.9 }
+      return nearest.walk ? null : { y: this.mouthOf(nearest).y, most: 1.9, on: nearest }
     }
     return { y: GATE.top + AIR, most: 0.5 }
   }

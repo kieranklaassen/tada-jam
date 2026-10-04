@@ -301,7 +301,12 @@ export function gamePicture(game: Game, guidance: Guidance | null): Picture {
   } else {
     // Off the tray it lies on top of the thing the trolley stands over, as wide as that thing has room for.
     const on = game.under()
-    if (on) shadows.push({ x: claw.x, y: on.y, z: claw.z, r: Math.min(on.most, game.held >= 0 ? 2 : 1.7), a: 0.9 })
+    if (on) {
+      // A gobbler that stretches up for the toy takes its tongue and its knob up with it, and the shadow too.
+      const look = on.on ? gobblers.find((one) => one.id === `g${on.on!.key}`) : undefined
+      const y = look && on.on ? look.y + (on.y - on.on.y) * look.squash + 0.04 : on.y
+      shadows.push({ x: claw.x, y, z: claw.z, r: Math.min(on.most, game.held >= 0 ? 2 : 1.7), a: 0.9 })
+    }
   }
 
   // The idle ladder: a ring on each thing that can be touched now, and the ghost hand tapping one of them.
