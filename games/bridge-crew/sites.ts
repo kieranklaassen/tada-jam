@@ -64,7 +64,7 @@ const PLANS: Readonly<Record<string, Plan>> = {
   'tall-bus': { gap: [8, 7, 9], cliffs: 4, kit: [3, 10, 0, 6], job: 'giraffe-bus', extra: 'piano-mover', idea: null },
   'mast-and-stay': { gap: [10, 11, 9], kit: [4, 8, 2, 8], job: 'piano-mover', extra: 'caterpillar-bus', idea: 'wide-base' },
   'arch-gorge': { gap: [10, 9, 11], deck: 8, steps: 2, kit: [4, 12, 0, 0], job: 'giraffe-bus', extra: 'piano-mover', idea: 'arch' },
-  'barge-below': { gap: [10, 11, 10], rock: { from: [3, 3, 2], top: 3 }, channel: [5, 8], kit: [4, 12, 2, 4], job: 'jelly-truck', extra: 'caterpillar-bus', idea: null },
+  'barge-below': { gap: [10, 11, 12], rock: { from: [9, 9, 9], top: 3 }, channel: [5, 8], kit: [4, 12, 2, 4], job: 'jelly-truck', extra: 'caterpillar-bus', idea: null },
   'thin-kit': { gap: [8, 9, 7], kit: [3, 5, 0, 2], job: 'piano-mover', extra: 'caterpillar-bus', idea: null },
   'long-haul': { gap: [14, 13, 14], cliffs: 5, rock: { from: [9, 4, 5], top: 2 }, kit: [5, 16, 4, 8], job: 'piano-mover', extra: 'caterpillar-bus', idea: null },
   'open-yard': { gap: [12, 12, 12], cliffs: 5, rock: { from: [4, 8, 6], top: 3 }, kit: [5, 16, 4, 8], job: 'post-van', extra: 'caterpillar-bus', idea: null },

@@ -406,8 +406,13 @@ export class View {
       const where = drawnEnds[index]
       if (!where) continue
       const [hx, hy] = at2((where.a[0] + where.b[0]) / 2, (where.a[1] + where.b[1]) / 2)
+      // Whatever hangs on a part swings when the part is turned, and comes to rest.
+      const since = game.turned[index] ?? Infinity, swing = since < 1.4 ? 0.9 * Math.sin(since * 11) * (1 - since / 1.4) : 0
+      pen.save()
+      pen.translate(hx, hy); pen.rotate(swing)
       pen.fillStyle = INK.paper
-      pen.beginPath(); pen.moveTo(hx - cell * 0.2, hy - cell * 0.02); pen.lineTo(hx + cell * 0.2, hy - cell * 0.02); pen.lineTo(hx, hy - cell * 0.36); pen.closePath(); pen.fill()
+      pen.beginPath(); pen.moveTo(-cell * 0.2, -cell * 0.02); pen.lineTo(cell * 0.2, -cell * 0.02); pen.lineTo(0, -cell * 0.36); pen.closePath(); pen.fill()
+      pen.restore()
       drawn++
     }
 
@@ -611,18 +616,11 @@ export class View {
     pen.globalAlpha = 1
   }
 
-  /** Four corner marks round a box, as a draughtsman marks a selection. */
+  /** A soft patch of light over a box: what is picked, what is laid, what glows. Filled, with no outline: corner marks would read as letters. */
   private brackets(pen: Pen, a: readonly [number, number], b: readonly [number, number], alpha: number): void {
-    const arm = this.plot.cell * 0.45
-    pen.strokeStyle = INK.line
-    pen.globalAlpha = alpha
-    pen.lineWidth = Math.max(1.5, this.plot.cell * 0.06)
-    pen.lineCap = 'round'
-    pen.beginPath()
-    for (const [x, sx] of [[a[0], 1], [b[0], -1]] as const) for (const [y, sy] of [[a[1], 1], [b[1], -1]] as const) {
-      pen.moveTo(x + sx * arm, y); pen.lineTo(x, y); pen.lineTo(x, y + sy * arm)
-    }
-    pen.stroke()
+    pen.fillStyle = INK.line
+    pen.globalAlpha = alpha * 0.16
+    pen.beginPath(); pen.roundRect(Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1]), this.plot.cell * 0.14); pen.fill()
     pen.globalAlpha = 1
   }
 

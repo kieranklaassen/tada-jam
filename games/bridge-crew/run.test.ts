@@ -89,7 +89,7 @@ describe('a run over the bridge as built', () => {
     const barge = site('barge-below', 0)
     expect(run(barge, CROSSINGS['barge-below'], van).ride.blocked).toEqual([])
     const propped = [...CROSSINGS['barge-below'], part('tube', 14, 1, 14, 6)]
-    expect(run(barge, propped, van).ride.blocked).toEqual([5])
+    expect(run(barge, propped, van).ride.blocked).toEqual([CROSSINGS['barge-below'].length])
     // A road built on a slope has a corner at each bank and a steep piece.
     const humped = [part('plank', 10, 6, 12, 7, true), part('plank', 12, 7, 14, 6, true), part('stick', 12, 7, 10, 4), part('stick', 12, 7, 14, 4)]
     const hump = run(gap, humped, van)

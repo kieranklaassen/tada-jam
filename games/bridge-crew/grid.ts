@@ -96,7 +96,7 @@ export function putPin(bridge: readonly Part[], at: Point): { bridge: Part[]; pi
  * voice of a part two cells long at rest or half-way to its limit.
  */
 export function cellVoice(thing: Thing, gesture: Gesture): VoiceSpec {
-  if (thing === 'pin') return { lay: pinClick, pluck: pinRattle([600, 900, 400]), turn: pinSwing, load: pendulum, 'take-off': pinPop(2) }[gesture]
+  if (thing === 'pin') return { lay: pinClick, pluck: pinRattle([pluckVoice('plank', 0, 3, false)[0], pluckVoice('stick', 1, 2, false)[0], pluckVoice('tube', 0, 2, false)[0]]), turn: pinSwing, load: pendulum, 'take-off': pinPop(2) }[gesture]
   if (thing === 'trolley') return { lay: trolleySet, pluck: trolleyBells(2), turn: trolleyFlip, load: trolleyWeight(2), 'take-off': trolleyOff(2) }[gesture]
   return { lay: layVoice(thing, 2), pluck: pluckVoice(thing, 2, 2, false), turn: turnVoice(thing, 2), load: loadVoice(thing, 0.5), 'take-off': takeOffVoice(thing, 2) }[gesture]
 }

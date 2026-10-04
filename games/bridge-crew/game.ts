@@ -11,14 +11,14 @@ import { DRAWN_DIP, atRest, rests, type Rest } from './pose'
 import { answerOf, between, creaks, ended, frontAt, seat, stepAt, type Seat } from './ride'
 import type { Frame, Strain } from './frame'
 import { hang, lowPoint, park, roadOf, run, type Ending, type Run, type Train } from './run'
-import { crossed, failedRun, leaveHats, markShown, onNewest, parked, pluckHat, ringed, sentHome, setTrolley, standing, swapTracing, toFront, trace, turnTo, unroll, type Save, type Sheet } from './save'
+import { crossed, failedRun, leaveHats, markShown, onNewest, parked, pluckHat, ringed, sentHome, setTrolley, standing, swapTracing, toFront, trace, turnTo, unringed, unroll, type Save, type Sheet } from './save'
 import { Scene } from './scene'
 import { groundAt } from './sheet'
 import { isFooting, site, type Idea, type VehicleId } from './sites'
 import { crossingBeats, giveBeats, givePlace, idleShow, type Cue, type Show } from './stage'
 import { CHIEF, RING, Toy, type Hand } from './toy'
 import { TAIL, TASTE, VEHICLES, bargeReaction, reaction, trainOf, type Reaction } from './vehicles'
-import { bargeHorn, beaverChatter, beaverSigh, beaverSlap, chiefTaps, chord, creak, give, gurgle, honk, hornEcho, plop, lay as layVoice, load as loadVoice, moleDrop, moleRule, pendulumSqueak, pinTick, pluck as pluckVoice, reactVoice, restore, scaleNote, snapTick, splash, trolleyBells, trolleyFlip, trolleyOff, trolleySet, trolleyWeight, unrollVoice } from './voices'
+import { bargeHorn, beaverChatter, beaverSigh, beaverSlap, chiefTaps, chord, creak, give, gurgle, honk, hornEcho, plop, lay as layVoice, load as loadVoice, moleDrop, moleRule, pendulumSqueak, scaleStart, pinTick, pluck as pluckVoice, reactVoice, restore, scaleNote, snapTick, splash, trolleyBells, trolleyFlip, trolleyOff, trolleySet, trolleyWeight, unrollVoice } from './voices'
 
 // The game on the toy: the vehicles at the two banks, a run over the bridge,
 // the two scenes a run ends in, and the sheets (the roll and the rack). Pure,
@@ -567,18 +567,22 @@ export class Game extends Toy {
    * scale, and the chief taps along. It works with any two threads or more.
    */
   protected override plucked(index: number): void {
-    if (this.bridge[index].kind !== 'thread') { this.tune = []; return }
+    // A slack thread only flops: it sounds no note, and a run of notes ends at it.
+    if (this.bridge[index].kind !== 'thread' || this.rest[index]?.slack) { this.tune = []; return }
     this.tune.push(index)
-    // Each thread plucked after a longer one (or one as long) sounds the next note of a scale, starting again from the
-    // first note when the order breaks: so the threads of a bridge, from longest to shortest, play a scale.
+    // A thread plucked by itself is only its own voice: nothing hints at the secret. Plucked after a longer one (or
+    // one as long) it sounds the scale so far, and each one after that the next note, starting again when the order
+    // breaks: so the threads of a bridge, from longest to shortest, play a scale.
     let run = 1
     while (run < this.tune.length && run < 8) {
       const here = this.tune[this.tune.length - run], before = this.tune[this.tune.length - run - 1]
       if (this.tune.slice(-run).includes(before) || length(this.bridge[before]) < length(this.bridge[here]) - 1e-9) break
       run++
     }
-    this.voices.push(scaleNote(run - 1))
-    const threads = this.bridge.flatMap((part, i) => (part.kind === 'thread' ? [i] : []))
+    if (run === 2) this.voices.push(scaleStart)
+    else if (run > 2) this.voices.push(scaleNote(run - 1))
+    // The threads that count are the ones that hold something: a slack one has no note to give.
+    const threads = this.bridge.flatMap((part, i) => (part.kind === 'thread' && !this.rest[i]?.slack ? [i] : []))
     const last = this.tune.slice(-threads.length), longs = last.map((i) => length(this.bridge[i]))
     if (threads.length < 2 || last.length < threads.length || new Set(last).size < threads.length) return
     // From longest to shortest: threads of one length may come in either order.
@@ -848,7 +852,7 @@ export class Game extends Toy {
       // bus leaves a hat on any part lower than its heads.
       const hats = drive.vehicle === 'giraffe-bus' ? drive.run.ride.low[TASTE.bus.headroom - 1] : []
       const before = this.save, ring = before.sheets[before.on].ring
-      this.save = drive.homeward ? leaveHats(sentHome(this.save, drive.vehicle), hats) : crossed(this.save, drive.vehicle, hats)
+      this.save = drive.homeward ? leaveHats(unringed(sentHome(this.save, drive.vehicle), drive.vehicle), hats) : crossed(this.save, drive.vehicle, hats)
       // The ring fades through this scene if this crossing took it away. The roll slides in and a vehicle draws up
       // only if this crossing brought them: a later crossing on the same sheet brings neither again.
       this.fading = ring && !this.save.sheets[this.save.on].ring ? ring : null

@@ -20,7 +20,7 @@ const every: [string, VoiceSpec][] = [
   ...['post-van', 'caterpillar-bus'].flatMap((id) => (['like', 'dislike', 'plain'] as const).map((mood): [string, VoiceSpec] => [`react ${id} ${mood}`, reactVoice(id, mood)])),
   ...[-1, 0, 3, 7, 12].map((step): [string, VoiceSpec] => [`scale ${step}`, scaleNote(step)]),
   ['beaver slap', beaverSlap], ['beaver chatter', beaverChatter], ['beaver sigh', beaverSigh], ['mole rule', moleRule(false)], ['mole rule again', moleRule(true)], ['mole drop', moleDrop], ['pin tick', pinTick], ['pin swing', pinSwing], ['pendulum', pendulum], ['trolley set', trolleySet], ['trolley flip', trolleyFlip],
-  ['rattle none', pinRattle([])], ['rattle many', pinRattle([1, 99999, 300, 400, 500, 600, 700])],
+  ['rattle none', pinRattle([])], ['rattle many', pinRattle(KINDS.flatMap((kind) => [pluck(kind, 99, 9, false)[0], pluck(kind, -99, 1, false)[0]]))],
   ...[0, 1, 3, 40].flatMap((n): [string, VoiceSpec][] => [[`pop ${n}`, pinPop(n)], [`weight ${n}`, trolleyWeight(n)], [`off ${n}`, trolleyOff(n)]]),
 ]
 
@@ -94,5 +94,17 @@ describe('the voices, as numbers', () => {
     const drum = takeOff('tube', 3)
     expect(drum.length).toBeGreaterThanOrEqual(4)
     for (let i = 1; i < drum.length; i++) { expect(drum[i].after!).toBeGreaterThan(drum[i - 1].after ?? 0); expect(drum[i].pitch).toBeLessThan(drum[i - 1].pitch) }
+  })
+})
+
+
+describe('a pin plucked', () => {
+  it('rattles each part at it in that part\'s own voice: its wave and its pitch, one after another', () => {
+    const own = [pluck('plank', 0, 3, false)[0], pluck('thread', 2, 5, false)[0], pluck('tube', 0, 2, false)[0]]
+    const rattle = pinRattle(own)
+    expect(rattle).toHaveLength(3)
+    rattle.forEach((sound, i) => { expect(sound.wave).toBe(own[i].wave); expect(sound.pitch).toBeCloseTo(own[i].pitch, 6); expect(sound.after ?? 0).toBeCloseTo(0.035 * i, 6) })
+    // Three kinds, so not one voice three times.
+    expect(new Set(rattle.map((sound) => `${sound.wave} ${Math.round(sound.pitch)}`)).size).toBe(3)
   })
 })

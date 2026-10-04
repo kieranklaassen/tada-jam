@@ -87,25 +87,34 @@ export const hillHouse = kept((at: Site): readonly [number, number] | null => {
 export const CHIEF_MARGIN = { right: 5.6, low: 10.5 } as const
 
 /** The trees along a bank, behind the road: where each stands, how tall, and which kind. Clear of the lips and of the cliffs. */
-export function trees(at: Site): { x: number; tall: number; kind: 'round' | 'pine' | 'poplar' }[] {
-  const random = stream(siteSeed(at) + 5), out: { x: number; tall: number; kind: 'round' | 'pine' | 'poplar' }[] = []
+export function trees(at: Site): { x: number; tall: number; kind: 'round' | 'pine' | 'poplar' | 'bush' }[] {
+  const random = stream(siteSeed(at) + 5), out: { x: number; tall: number; kind: 'round' | 'pine' | 'poplar' | 'bush' }[] = []
+  // Where vehicles wait or park, two deep, there are only bushes: no trunk stands as high as a numeral beside one.
+  const lineUp = (x: number) => (x > at.left[0] - LINE_UP && x < at.left[0]) || (x < at.right[0] + LINE_UP && x > at.right[0])
   const stretch = (from: number, to: number) => {
     for (let x = from + 0.4 + random() * 0.8; x < to; x += 1.5 + random() * 1.5) {
       const pick = random(), tall = 1.5 + random() * 1.3
       if (at.anchors.some(([ax]) => Math.abs(ax - x) < 2.3)) continue
       // And clear of the house, which stands on the hill behind.
       if (hillHouse(at) && Math.abs(x - (at.left[0] - 5.2)) < 1.3) continue
-      out.push({ x, tall, kind: pick < 0.45 ? 'round' : pick < 0.8 ? 'pine' : 'poplar' })
+      out.push(lineUp(x) ? { x, tall: 0.36 + 0.14 * random(), kind: 'bush' } : { x, tall, kind: pick < 0.45 ? 'round' : pick < 0.8 ? 'pine' : 'poplar' })
     }
   }
-  // On the near bank they stand well back: a waiting vehicle's numeral stands beside its crates, up to four and a half cells from the lip, and no trunk stands behind it.
-  stretch(-MARGIN.side + 0.2, at.left[0] - 4.7)
+  stretch(-MARGIN.side + 0.2, at.left[0] - 1.4)
   stretch(at.right[0] + 1.4, COLS + MARGIN.side - 0.6)
   return out
 }
+/** How far back from a lip vehicles stand, two deep, with their numerals: no tree with a trunk grows there. */
+export const LINE_UP = 8.4
 
-function tree(pen: Pen, plot: Plot, x: number, base: number, tall: number, kind: 'round' | 'pine' | 'poplar', random: () => number) {
+function tree(pen: Pen, plot: Plot, x: number, base: number, tall: number, kind: 'round' | 'pine' | 'poplar' | 'bush', random: () => number) {
   const a = FAINT.trees
+  if (kind === 'bush') {
+    // A bush: a low hump of scallops that sits on the ground, with no stem.
+    // Every scallop stays above the ground, and the whole is lower than the foot of a numeral beside a vehicle.
+    for (let i = 0; i < 5; i++) { const t = (i / 4) * Math.PI; ring(pen, plot, x + Math.cos(t) * tall * 0.62, base + Math.sin(t) * tall * 0.62, tall * 0.34, 0.022, a, Math.max(-Math.PI, -t - 1.5), Math.min(0, -t + 1.5)) }
+    return
+  }
   stroke(pen, plot, [[x, base], [x + 0.03, base + tall * (kind === 'pine' ? 0.24 : 0.42)]], 0.035, a)
   if (kind === 'round') {
     // A crown drawn as an architect draws one: a ring of scallops and two loose arcs inside.
@@ -279,7 +288,7 @@ export function paintUnderground(pen: Pen, plot: Plot, at: Site) {
     }
   }
   // Under each tree, its roots: two uneven threads going down side by side, which never meet.
-  for (const one of trees(at)) for (const side of [-1, 1]) {
+  for (const one of trees(at)) for (const side of one.kind === 'bush' ? [] : [-1, 1]) {
     const root: Dot[] = []
     for (let d = 0.06; d <= 0.5 + 0.12 * side; d += 0.08) root.push([one.x + side * (0.07 + 0.2 * d + 0.04 * Math.sin(d * 14 + one.x)), deck - d])
     stroke(pen, plot, root, 0.018, FAINT.fence)

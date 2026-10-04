@@ -161,7 +161,7 @@ export const gurgle: VoiceSpec = [0, 0.09, 0.17, 0.28].map((after, i) => ({ wave
 export const pinTick: VoiceSpec = [{ wave: 'triangle', pitch: 2600, peak: 0.05, attack: 0.001, length: 0.03 }]
 
 /** Every part on a plucked pin rattles at once: a few quick knocks at the pitches of those parts. */
-export const pinRattle = (pitches: readonly number[]): VoiceSpec => kept((pitches.length ? pitches : [600]).slice(0, 5).map((pitch, i) => ({ wave: 'triangle' as const, pitch, peak: 0.07, attack: 0.002, length: 0.06, after: 0.03 * i })))
+export const pinRattle = (parts: readonly Sound[]): VoiceSpec => kept((parts.length ? parts : [{ wave: 'triangle' as const, pitch: 600, peak: 0.07, attack: 0.002, length: 0.08 }]).slice(0, 5).map((own, i) => ({ wave: own.wave, pitch: own.pitch, slideTo: own.slideTo, peak: 0.07, attack: own.attack, length: Math.min(own.length, 0.22), after: 0.035 * i })))
 
 /** A lone part swings round its one pin like a clock hand, ticking. */
 export const pinSwing: VoiceSpec = [0, 0.14, 0.28, 0.42].map((after, i) => ({ wave: 'triangle' as const, pitch: i % 2 ? 1500 : 1900, peak: 0.06, attack: 0.001, length: 0.035, after }))
@@ -267,6 +267,8 @@ export const pendulumSqueak = (back: boolean): VoiceSpec => [{ wave: 'triangle',
 
 /** One note of the scale the threads play when they are plucked from longest to shortest: the first is the lowest, and the eighth is the first again an octave up. */
 export const scaleNote = (step: number): VoiceSpec => { const pitch = 262 * 2 ** ([0, 2, 4, 5, 7, 9, 11, 12][Math.max(0, Math.min(7, Math.round(step)))] / 12); return [{ wave: 'sine', pitch, peak: 0.09, attack: 0.004, length: 0.5 }, { wave: 'triangle', pitch: pitch * 2, peak: 0.03, attack: 0.004, length: 0.2 }] }
+/** The scale's first two notes one after the other: what the second thread of a run sounds, so that the scale is heard from its first note. */
+export const scaleStart: VoiceSpec = [...scaleNote(0), ...scaleNote(1).map((sound) => ({ ...sound, after: 0.2 }))]
 
 /** The crew. The beaver: its tail on the floor, its teeth when it cannot look, and the breath it lets go. The mole: its rule laid on a thing, lower the first time and higher the second, and the rule dropped. */
 export const beaverSlap: VoiceSpec = [{ wave: 'noise', pitch: 500, slideTo: 200, peak: 0.12, attack: 0.002, length: 0.09 }, { wave: 'triangle', pitch: 150, slideTo: 95, peak: 0.1, attack: 0.002, length: 0.12 }]

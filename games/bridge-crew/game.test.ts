@@ -6,7 +6,8 @@ import { ROLL, SLIDE_OFF, TRAY, bays, parkAt, rackAt, slideOff, tools, waitAt } 
 import { stream } from './look'
 import { WATER } from './pose'
 import { crossingTime } from './ride'
-import { deserialize, edit, freshSave, serialize } from './save'
+import { crossed, deserialize, edit, freshSave, serialize, unringed } from './save'
+import type { Part } from './kit'
 import { isFooting, site } from './sites'
 import { CHIEF } from './toy'
 import { VEHICLES, trainOf } from './vehicles'
@@ -16,7 +17,7 @@ import { plop, pinSwing, splash as splashVoice } from './voices'
 import { DRAWN_DIP } from './pose'
 import { MODEL_PLACE, MODEL_TOP, perchOn } from './motion'
 import { modelDip, modelSides } from './props'
-import { scaleNote, trolleyFlip } from './voices'
+import { pluck as pluckVoice, scaleNote, scaleStart, trolleyFlip } from './voices'
 import { lowPoint } from './run'
 import { JUDGE } from './order'
 import { desk } from './valley'
@@ -385,18 +386,11 @@ describe('the trolley, the tracing paper and the two showings', () => {
   })
 
   it('a secret that works every time: the threads plucked from longest to shortest play a scale and the chief taps along', () => {
-    const yard = () => {
-      const game = new Game(freshSave(null, 'open-yard'), stream(8))
-      const b = (kind: number) => 5 + (14 * (kind + 0.5)) / 4
-      tapAt(game, b(3), -2.3)
-      // Three threads of three lengths, each from the far cliff down to the far bank, so each is held at both ends.
-      drag(game, [19, 11], [18, 6]); drag(game, [19, 11], [23, 6]); drag(game, [19, 11], [22, 6])
-      return game
-    }
-    const game = yard()
+    const game = hung()
+    expect(game.rest.slice(4).map((rest) => rest.slack)).toEqual([false, false, false])
     const mid = (i: number) => { const e = game.drawn()[i]; return [(e.a[0] + e.b[0]) / 2, (e.a[1] + e.b[1]) / 2] as const }
     const pluck = (i: number) => { steps(game, 1.2); tapAt(game, ...mid(i)) }
-    const byLength = [0, 1, 2].sort((i, j) => Math.hypot(game.bridge[j].b[0] - game.bridge[j].a[0], game.bridge[j].b[1] - game.bridge[j].a[1]) - Math.hypot(game.bridge[i].b[0] - game.bridge[i].a[0], game.bridge[i].b[1] - game.bridge[i].a[1]))
+    const byLength = [4, 5, 6].sort((i, j) => Math.hypot(game.bridge[j].b[0] - game.bridge[j].a[0], game.bridge[j].b[1] - game.bridge[j].a[1]) - Math.hypot(game.bridge[i].b[0] - game.bridge[i].a[0], game.bridge[i].b[1] - game.bridge[i].a[1]))
     // In any other order nothing happens.
     pluck(byLength[2]); pluck(byLength[0]); pluck(byLength[1])
     expect(game.chief.act).not.toBe('taps-and-listens')
@@ -407,6 +401,10 @@ describe('the trolley, the tracing paper and the two showings', () => {
     }
   })
 })
+
+/** A deck at the free yard hung from both cliffs by three stays of three lengths (parts 4, 5 and 6), each of them taut under the deck's own weight. */
+const HUNG = [part('plank', 6, 6, 10, 6, true), part('plank', 10, 6, 13, 6, true), part('plank', 13, 6, 16, 6, true), part('plank', 16, 6, 18, 6, true), part('thread', 5, 11, 10, 6), part('thread', 19, 11, 13, 6), part('thread', 19, 11, 16, 6)]
+const hung = (bridge: readonly Part[] = HUNG) => new Game(edit(freshSave(null, 'open-yard'), bridge), stream(8))
 
 /** Picks a pile in the tray. */
 const pile = (game: Game, kind: string) => { const bay = bays(game.at).find((b) => b.kind === kind)!; tapAt(game, (bay.x0 + bay.x1) / 2, TRAY.top - 1) }
@@ -550,7 +548,7 @@ describe('what the sheet says a child sees and hears', () => {
     expect(wholeArch(gable, firm(gable), footing, [8, 9])).toBe(false)
     const kinked = [part('stick', 7, 6, 9, 7), part('stick', 9, 7, 12, 10), part('stick', 12, 10, 15, 9), part('stick', 15, 9, 17, 6)]
     expect(wholeArch(kinked, firm(kinked), footing, over)).toBe(false)
-    const short = [part('stick', 7, 6, 8, 8), part('stick', 8, 8, 9, 8), part('stick', 9, 8, 10, 3)]
+    const short = [part('stick', 7, 6, 8, 8), part('stick', 8, 8, 9, 8), part('stick', 9, 8, 10, 0)]
     expect(wholeArch(short, firm(short), footing, [7, 9])).toBe(true)
     expect(wholeArch(short, firm(short), footing, over)).toBe(false)
   })
@@ -858,15 +856,12 @@ describe('what the reader found the sheet promises', () => {
     expect(bare.fading).toBeNull()
   })
 
-  it('a secret that works every time: any two threads or more, plucked from longest to shortest, and threads of one length in either order', () => {
-    const game = new Game(freshSave(null, 'open-yard'), stream(8))
-    const b = (kind: number) => 5 + (14 * (kind + 0.5)) / 4
-    tapAt(game, b(3), -2.3)
-    // Two stays of one length, either side of the far cliff's footing.
-    drag(game, [19, 11], [18, 6]); drag(game, [19, 11], [20, 6])
-    expect(game.bridge).toHaveLength(2)
+  it('a secret that works every time: any two threads or more that hold something, plucked from longest to shortest, and threads of one length in either order', () => {
+    // Two stays of one length hold a deck, one from each cliff; a third thread from cliff to bank holds nothing and is slack.
+    const game = hung([part('plank', 6, 6, 10, 6, true), part('plank', 10, 6, 14, 6, true), part('plank', 14, 6, 18, 6, true), part('thread', 5, 11, 10, 6), part('thread', 19, 11, 14, 6), part('thread', 19, 11, 22, 6)])
+    expect(game.rest.slice(3).map((rest) => rest.slack)).toEqual([false, false, true])
     const mid = (i: number) => { const e = game.drawn()[i]; return [(e.a[0] + e.b[0]) / 2, (e.a[1] + e.b[1]) / 2] as const }
-    for (const order of [[0, 1], [1, 0]]) {
+    for (const order of [[3, 4], [4, 3]]) {
       steps(game, 4)
       for (const i of order) { steps(game, 1.2); tapAt(game, ...mid(i)) }
       expect(game.chief.act, order.join()).toBe('taps-and-listens')
@@ -1233,6 +1228,26 @@ describe('what the third reading found the sheet promises', () => {
 })
 
 describe('what the fourth reading found the sheet promises', () => {
+  it('the job vehicle crossing home rubs the pencil ring out, as its crossing outward does; another vehicle\'s crossing home leaves it', () => {
+    const ring = { part: 0, spot: [12, 6] as const }
+    const across = crossed(edit(freshSave(null), CROSSINGS['plank-gap']), 'post-van')
+    const game = new Game({ ...across, sheets: [{ ...across.sheets[0], ring }] }, stream(2))
+    tapAt(game, parkAt(game.at, 1, 0) - 0.4, 7)
+    expect(game.drive).toMatchObject({ homeward: true, vehicle: 'post-van' })
+    for (let i = 0; i < 60 * 20 && game.drive; i++) game.step(1 / 60)
+    expect(game.show.kind).toBe('crossing')
+    expect(game.save.sheets[0].ring).toBeNull()
+    expect(game.fading).toEqual(ring)
+    steps(game, 9)
+    expect(game.fading).toBeNull()
+    expect(game.save.waiting).toContain('post-van')
+    // The jelly truck is not this sheet's own: home it goes, and the ring stays.
+    const both = crossed(crossed(edit(freshSave(null), CROSSINGS['plank-gap']), 'post-van'), 'jelly-truck')
+    expect(unringed({ ...both, sheets: [{ ...both.sheets[0], ring }] }, 'jelly-truck').sheets[0].ring).toEqual(ring)
+    expect(unringed({ ...both, sheets: [{ ...both.sheets[0], ring }] }, 'post-van').sheets[0].ring).toBeNull()
+    expect(unringed(both, 'post-van')).toBe(both)
+  })
+
   it('a give on the way home ends with the pencil ring on the spot too', () => {
     const game = new Game(edit(freshSave(null), CROSSINGS['plank-gap']), stream(2))
     send(game); steps(game, 16)
@@ -1314,8 +1329,8 @@ describe('what the fifth reading found the sheet promises', () => {
 
   it('a build that folds under a load is seen folding: nothing leaves the sheet, the slack stay hangs, and the bridge goes back as built', () => {
     // A deck on a prop, with a stay down to the river bed at its far end, which goes slack as the truck comes on.
-    const bridge = [part('plank', 7, 6, 8, 6, true), part('plank', 8, 6, 12, 6, true), part('stick', 10, 3, 10, 6), part('thread', 12, 6, 12, 0)]
-    const game = new Game(edit({ ...freshSave(null), sheets: [{ ...freshSave(null).sheets[0], site: 'barge-below' }], waiting: ['jelly-truck'] }, bridge), stream(2))
+    const bridge = [part('plank', 8, 6, 10, 6, true), part('plank', 10, 6, 14, 6, true), part('stick', 12, 3, 12, 6), part('thread', 14, 6, 14, 0)]
+    const game = new Game(edit({ ...freshSave(null), sheets: [{ ...freshSave(null).sheets[0], site: 'rock-prop' }], waiting: ['jelly-truck'] }, bridge), stream(2))
     tapAt(game, waitAt(game.at, 0) - 0.4, 7)
     expect(game.drive?.run.ending.kind).toBe('folds')
     const onSheet = () => { for (const ends of game.drawn()) for (const n of [...ends.a, ...ends.b]) { expect(Number.isFinite(n)).toBe(true); expect(Math.abs(n)).toBeLessThan(40) } }
@@ -1332,18 +1347,40 @@ describe('what the fifth reading found the sheet promises', () => {
   })
 
   it('the threads of a bridge, plucked from longest to shortest, play a scale note by note, and it starts again when the order breaks', () => {
-    const game = new Game(freshSave(null, 'open-yard'), stream(8))
-    const b = (kind: number) => 5 + (14 * (kind + 0.5)) / 4
-    tapAt(game, b(3), -2.3)
-    drag(game, [19, 11], [18, 6]); drag(game, [19, 11], [23, 6]); drag(game, [19, 11], [22, 6])
+    const game = hung()
     const mid = (i: number) => { const e = game.drawn()[i]; return [(e.a[0] + e.b[0]) / 2, (e.a[1] + e.b[1]) / 2] as const }
     const long = (i: number) => Math.hypot(game.bridge[i].b[0] - game.bridge[i].a[0], game.bridge[i].b[1] - game.bridge[i].a[1])
-    const byLength = [0, 1, 2].sort((i, j) => long(j) - long(i))
-    const note = (i: number) => { steps(game, 1.2); game.takeVoices(); tapAt(game, ...mid(i)); const heard = game.takeVoices(); return [0, 1, 2, 3, 4, 5, 6, 7].find((step) => heard.some((voice) => same(voice, scaleNote(step)))) }
-    expect([note(byLength[0]), note(byLength[1]), note(byLength[2])]).toEqual([0, 1, 2])
-    // A longer one after a shorter breaks the order: it is the first note again.
-    expect(note(byLength[0])).toBe(0)
-    expect(note(byLength[2])).toBe(1)
+    const byLength = [4, 5, 6].sort((i, j) => long(j) - long(i))
+    const note = (i: number) => { steps(game, 1.2); game.takeVoices(); tapAt(game, ...mid(i)); const heard = game.takeVoices(); return heard.some((voice) => same(voice, scaleStart)) ? 'start' : [0, 1, 2, 3, 4, 5, 6, 7].find((step) => heard.some((voice) => same(voice, scaleNote(step)))) }
+    // One thread plucked is only itself, so nothing hints at the secret; the second sounds the scale's first two notes, and each after it the next.
+    expect([note(byLength[0]), note(byLength[1]), note(byLength[2])]).toEqual([undefined, 'start', 2])
+    // A longer one after a shorter breaks the order: it is only itself again, and the scale starts over after it.
+    expect(note(byLength[0])).toBeUndefined()
+    expect(note(byLength[2])).toBe('start')
+    // And plucked by itself again and again, a thread never sounds a note of the scale.
+    for (let again = 0; again < 3; again++) expect(note(byLength[1])).toBeUndefined()
+  })
+
+  it('a slack thread only flops: it sounds no note of the scale, and a run of notes ends at it', () => {
+    // Two stays hold the deck, and a longer thread from the cliff to the far bank holds nothing.
+    const game = hung([...HUNG.slice(0, 4), part('thread', 19, 11, 22, 3), HUNG[5], HUNG[6]])
+    expect(game.rest.slice(4).map((rest) => rest.slack)).toEqual([true, false, false])
+    const mid = (i: number) => { const e = game.drawn()[i]; return [(e.a[0] + e.b[0]) / 2, (e.a[1] + e.b[1]) / 2] as const }
+    const heard = (i: number) => { steps(game, 1.2); game.takeVoices(); tapAt(game, ...mid(i)); return game.takeVoices() }
+    const scale = (voices: unknown[]) => voices.some((voice) => same(voice, scaleStart) || [0, 1, 2, 3, 4, 5, 6, 7].some((step) => same(voice, scaleNote(step))))
+    // The slack one by itself: its flop and nothing else.
+    const flop = heard(4)
+    expect(flop.some((voice) => same(voice, pluckVoice('thread', 0, 1, true)))).toBe(true)
+    expect(scale(flop)).toBe(false)
+    // The longer stay, then the slack one, then the shorter stay: the run ended at the flop, so the shorter one is only itself.
+    expect(scale(heard(5))).toBe(false)
+    expect(scale(heard(4))).toBe(false)
+    expect(scale(heard(6))).toBe(false)
+    expect(game.chief.act).not.toBe('taps-and-listens')
+    // The two that hold something, from the longer to the shorter with no flop between: the scale, and the chief taps along.
+    expect(scale(heard(5))).toBe(false)
+    expect(scale(heard(6))).toBe(true)
+    expect(game.chief.act).toBe('taps-and-listens')
   })
 
   it('flipped, the trolley rolls to the lowest point as the deck lies now', () => {

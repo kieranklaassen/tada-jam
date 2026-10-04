@@ -366,3 +366,9 @@ export function toFront(state: Save, vehicle: VehicleId): Save {
 
 /** A part gave under the test trolley: the one ring moves to its spot. No run is counted. */
 export const ringed = (state: Save, ring: NonNullable<Sheet['ring']>): Save => withSheet(state, (sheet) => ({ ...sheet, ring }))
+
+/** The sheet's own vehicle crossed, outward or home: the pencil ring is rubbed out. Another vehicle's crossing leaves it. */
+export function unringed(state: Save, vehicle: VehicleId): Save {
+  const board = state.sheets[state.on], at = site(board.site, board.variant)
+  return board.ring && (vehicle === at.job || isYard(at)) ? withSheet(state, (sheet) => ({ ...sheet, ring: null })) : state
+}

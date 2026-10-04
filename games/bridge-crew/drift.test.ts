@@ -101,7 +101,33 @@ describe('what goes on at the edge of the sheet', () => {
     expect(every.filter((at) => boat(at, 5, null) !== null).length).toBeGreaterThan(every.length / 2)
   })
 
-  it('the barge lies moored in its channel and goes down it and back, with its hull never over the rock or in a bank', () => {
+  it('the barge lies moored upstream of its channel, its bow toward it, noses forward and back, and passes down the channel and back; its hull is never over the rock or in a bank, and the fish keeps astern of it', () => {
+    for (const at of every) {
+      if (!at.channel) continue
+      let least = Infinity, most = -Infinity
+      for (let seconds = 0; seconds < 20; seconds += 0.3) {
+        const bow = bargeAt(at, seconds, 0)! + BARGE.bow
+        // Moored: the whole hull lies upstream of the channel, the bow just short of it.
+        expect(bow).toBeLessThan(at.channel[0])
+        expect(bow).toBeGreaterThan(at.channel[0] - 0.6)
+        least = Math.min(least, bow); most = Math.max(most, bow)
+        // And the fish, when it is out, is behind the stern at every moment of a pass.
+        for (const splash of [null, big(0.4), big(1.2)]) {
+          const out = fish(at, seconds, splash)
+          if (out) for (const passing of [0, 0.5, 1]) expect(out.x + 0.3, `${at.id}/${at.variant}`).toBeLessThan(bargeAt(at, seconds, passing)! - BARGE.stern)
+          if (out) expect(out.x - 0.4).toBeGreaterThan(at.left[0])
+        }
+      }
+      expect(most - least).toBeGreaterThan(0.2)
+      // Passing, it goes right through the channel.
+      expect(bargeAt(at, 0, 1)! + BARGE.bow).toBeGreaterThan(at.channel[1])
+      let leaps = 0
+      for (let seconds = 0; seconds < LEAP.every * 2; seconds += 0.05) if (fish(at, seconds, null)) leaps++
+      expect(leaps).toBeGreaterThan(10)
+    }
+  })
+
+  it('the barge goes down its channel and back, with its hull never over the rock or in a bank', () => {
     for (const at of every) {
       if (!at.channel) { expect(bargeAt(at, 3, 0)).toBeNull(); continue }
       for (let seconds = 0; seconds < 20; seconds += 0.7) for (let passing = 0; passing <= 1.0001; passing += 0.1) {
@@ -140,7 +166,7 @@ describe('what goes on at the edge of the sheet', () => {
     for (const at of every) for (let seconds = 0; seconds < 60; seconds += 4.3) for (const splash of [null, big(0.3, (at.left[0] + at.right[0]) / 2), big(3)]) {
       const { pen, calls } = recording()
       const drawn = drawSky(pen, plot, at, seconds) + drawWaterLife(pen, plot, at, seconds, splash) + drawSplash(pen, plot, at, splash)
-      expect(drawn).toBeGreaterThanOrEqual(2)
+      expect(drawn).toBeGreaterThanOrEqual(1)
       expect(drawn).toBeLessThanOrEqual(7)
       expect(calls.filter((call) => call.name === 'fillText' || call.name === 'strokeText')).toEqual([])
       for (const call of calls) for (const arg of call.args) if (typeof arg === 'number') expect(Number.isFinite(arg), `${at.id} ${call.name}`).toBe(true)

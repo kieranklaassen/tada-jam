@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { LADDER } from './config'
-import { bays, tools } from './layout'
+import { bays, tools, waitAt } from './layout'
 import type { Pen } from './look'
 import { WATER } from './pose'
 import { MARGIN, groundAt, plotFor } from './sheet'
 import { COLS, VARIANTS, site, type Site } from './sites'
 import { CHIEF } from './toy'
-import { CHIEF_MARGIN, FAINT, SKY, desk, farBridge, finds, mugAt, paintDesk, paintUnderground, paintValley, reaches, siteSeed, hillHouse, skyline, trees } from './valley'
+import { CHIEF_MARGIN, FAINT, LINE_UP, SKY, desk, farBridge, finds, mugAt, paintDesk, paintUnderground, paintValley, reaches, siteSeed, hillHouse, skyline, trees } from './valley'
 
 const every: Site[] = LADDER.flatMap((id) => Array.from({ length: VARIANTS }, (_, v) => site(id, v)))
 
@@ -73,18 +73,24 @@ describe('the valley the gap is in', () => {
     expect(houses).toBeGreaterThan(every.length / 3)
   })
 
-  it('trees stand on the banks, behind the road, clear of both lips and of the cliffs', () => {
+  it('trees stand on the banks, behind the road, clear of both lips and of the cliffs; where vehicles stand with their numerals there are only bushes', () => {
+    let bushes = 0, trunks = 0
     for (const at of every) {
       const stand = trees(at)
       expect(stand.length, at.id).toBeGreaterThanOrEqual(1)
       for (const tree of stand) {
-        // On the near bank well back from the lip, where no waiting vehicle's numeral stands before a trunk.
-        expect(tree.x < at.left[0] - 4.6 || tree.x > at.right[0] + 1.3, `${at.id} ${tree.x}`).toBe(true)
-        expect(tree.tall).toBeGreaterThan(1)
-        expect(tree.tall).toBeLessThan(3)
+        expect(tree.x < at.left[0] - 1.3 || tree.x > at.right[0] + 1.3, `${at.id} ${tree.x}`).toBe(true)
+        // Within the stretch where vehicles wait or park, two deep, nothing has a trunk: a bush is lower than a numeral stands.
+        const lineUp = (tree.x > at.left[0] - LINE_UP && tree.x < at.left[0]) || (tree.x > at.right[0] && tree.x < at.right[0] + LINE_UP)
+        expect(tree.kind === 'bush', `${at.id} ${tree.x}`).toBe(lineUp)
+        if (tree.kind === 'bush') { bushes++; expect(tree.tall).toBeLessThanOrEqual(0.5); expect(tree.tall).toBeGreaterThan(0.3) } else { trunks++; expect(tree.tall).toBeGreaterThan(1); expect(tree.tall).toBeLessThan(3) }
         for (const [ax] of at.anchors) expect(Math.abs(ax - tree.x)).toBeGreaterThanOrEqual(2.3)
       }
+      // The second in line, with its numeral, stands well inside that stretch.
+      for (const slot of [0, 1]) expect(Math.abs(waitAt(at, slot) - at.left[0])).toBeLessThan(LINE_UP - 1.5)
     }
+    expect(bushes).toBeGreaterThan(every.length)
+    expect(trunks).toBeGreaterThan(every.length / 2)
   })
 
   it('what is buried lies inside a bank, under the road and over the sheet\'s foot, with a burrow under the near bank on every sheet', () => {

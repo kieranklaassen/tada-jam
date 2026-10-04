@@ -237,7 +237,7 @@ export class Toy {
         return
       }
       // Every part on the pin rattles at once, each in its own voice.
-      this.voices.push(pinRattle(on.map((index) => this.pluckOf(index)[0].pitch)))
+      this.voices.push(pinRattle(on.map((index) => this.pluckOf(index)[0])))
       for (const index of on) this.rung[index] = RING * 0.5
       this.rattled.set(key(hand.at), 0)
     }

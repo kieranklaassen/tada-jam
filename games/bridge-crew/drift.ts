@@ -1,6 +1,6 @@
 import { INK, type Pen } from './look'
 import { WATER } from './pose'
-import { px, type Plot } from './sheet'
+import { groundAt, px, type Plot } from './sheet'
 import { COLS, type Site } from './sites'
 import { FAINT, SKY, farBridge, hillHouse, mugAt, reaches, siteSeed } from './valley'
 
@@ -61,7 +61,10 @@ export const LEAP = { every: 8.7, lasts: 0.85, high: 0.7 } as const
 export function fish(at: Site, seconds: number, splash: Splash | null): { x: number; y: number; turn: number; flung: boolean } | null {
   const reach = reaches(at)[0]
   if (!reach || reach[1] - reach[0] < 1.6) return null
-  const home = reach[1] - 0.55
+  // Where a barge passes, the fish keeps to the water behind its stern, where no hull ever comes, and leaps short.
+  const astern = at.channel ? at.channel[0] - BARGE.bow - 0.3 - BARGE.stern - 0.15 - at.left[0] : 0
+  if (at.channel && astern < 1.2) return null
+  const home = at.channel ? at.left[0] + astern - 0.3 : reach[1] - 0.55, far = at.channel ? astern - 0.9 : 0.7
   if (splash && splash.big >= 1 && splash.since < 1.7) {
     // Flung: up fast, a slow turn at the top, and down nose first.
     const t = splash.since / 1.7, up = Math.sin(Math.PI * Math.pow(t, 0.8))
@@ -70,7 +73,7 @@ export function fish(at: Site, seconds: number, splash: Splash | null): { x: num
   const into = (seconds + (siteSeed(at) % 11)) % LEAP.every
   if (into > LEAP.lasts) return null
   const t = into / LEAP.lasts
-  return { x: home - 0.7 * t, y: WATER + LEAP.high * Math.sin(Math.PI * t), turn: Math.PI - (1.1 - 2.2 * t), flung: false }
+  return { x: home - far * t, y: WATER + LEAP.high * Math.sin(Math.PI * t), turn: Math.PI - (1.1 - 2.2 * t), flung: false }
 }
 
 /**
@@ -101,15 +104,19 @@ export function boat(at: Site, seconds: number, splash: Splash | null): { x: num
 
 /**
  * The barge, on a sheet where one passes: the middle of its hull, in cells.
- * It lies moored at the near end of its channel, clear of the rock, nosing
- * forward and back; `passing` (0 to 1 and back) takes it down the channel and
- * under the bridge to just short of the far bank. Its hull is never over a
- * rock or in a bank. Null on a sheet with no channel.
+ * It lies moored upstream of its channel, its bow toward it and just short of
+ * it, nosing forward and back; `passing` (0 to 1 and back) takes it down the
+ * channel under the bridge, as far as the water is open beyond. Its hull is
+ * never over a rock or in a bank. Null on a sheet with no channel.
  */
 export function bargeAt(at: Site, seconds: number, passing: number): number | null {
   if (!at.channel) return null
-  const moored = at.channel[0] + 0.25, away = at.right[0] - BARGE.bow - 0.25
-  return moored + 0.15 * Math.sin(seconds * 0.9) * (1 - passing) + passing * Math.max(0, away - moored)
+  const moored = at.channel[0] - BARGE.bow - 0.3
+  // As far down as the water is open: to a rock that stands beyond the channel, or to the far bank.
+  let open = at.channel[1]
+  while (open < at.right[0] && groundAt(at, open + 0.25) < WATER) open += 0.25
+  const away = Math.max(moored, open - BARGE.bow - 0.15)
+  return moored + 0.15 * Math.sin(seconds * 0.9) * (1 - passing) + passing * (away - moored)
 }
 /** How far the barge's hull reaches from its middle, in cells: to its stern and to its bow. */
 export const BARGE = { stern: 1.5, bow: 1.7 } as const
