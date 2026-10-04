@@ -27,6 +27,14 @@ export const BALL_ROLL = 0.5
 export const BRICK_HOP = 0.7
 export const PROP_LEAN = 0.22
 
+/**
+ * What else of the room a finger can land on: a block of the low wall, a bead of the string, the cloud or the balloon
+ * in the window, or the bare wall or window board. Each gives a small answer where the finger is, and none changes
+ * anything. `n` says which block or which bead; x, y and z are where the answer is drawn.
+ */
+export type RoomThing = 'block' | 'bead' | 'cloud' | 'balloon' | 'wall'
+export type RoomTouch = { what: RoomThing; x: number; y: number; z: number; n: number }
+
 /** A balloon rises past the window now and then, outside, where no finger reaches: how often in seconds, how long it takes, and how far it sways. */
 export const BALLOON = { every: 13, takes: 6.5, sway: 0.22 } as const
 

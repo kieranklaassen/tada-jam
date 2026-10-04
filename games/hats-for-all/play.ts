@@ -1,7 +1,7 @@
 import { playAct, rest, type Mods } from './acts'
 import type { CreatureKind, HatKind } from './kinds'
 import { PERSONALITY, hash, stepSpring, type Spring } from './motion'
-import { PROPS, PROP_AT, type PropName } from './props'
+import { PROPS, PROP_AT, type PropName, type RoomTouch } from './props'
 import { BODY, HAND, HAT_HALF, HAT_HEIGHT, SLAB } from './sizes'
 import { LOOSE_Z, TILE_Z, alongWay, holeX, spotX, tileX, wayLength, type Point } from './stage'
 import type { Mood, Partial } from './voices'
@@ -112,6 +112,9 @@ const blank = (): Mods => rest({} as Mods)
 /** A crumb of foam or a leaf in the air: where it is, how it moves, how old it is and how long it lasts, how big, what it is a crumb of, and where in its sway a leaf is. */
 export type Crumb = { x: number; y: number; z: number; vx: number; vy: number; age: number; life: number; size: number; of: HatKind | 'leaf'; sway: number }
 export const MOST_CRUMBS = 24
+/** A mark where the room was touched lasts this long, and there are never more of them than this. */
+export const MARK_SECONDS = 0.4
+export const MOST_MARKS = 6
 /** A crumb that has fallen lies just above the mat. */
 export const CRUMB_FLOOR = 0.04
 
@@ -213,6 +216,17 @@ export class Play {
       const leaf = of === 'leaf', side = (i + 0.5) / count * 2 - 1
       this.crumbs.push({ x: x + side * (leaf ? 1.0 : 0.35), y, z, vx: side * (leaf ? 0.5 : 2.2 + 1.4 * a), vy: leaf ? 0.4 * b : 3.2 + 2.4 * b, age: 0, life: leaf ? 3.4 : 1.5, size: (leaf ? 0.2 : 0.11) * (0.8 + 0.5 * a), of, sway: 6.3 * a })
     }
+  }
+
+  /** What else of the room was touched, each for a moment: a mark where the finger was. And the cloud and the balloon, each on a spring: 0 at rest. */
+  readonly marks: (RoomTouch & { age: number })[] = []
+  readonly cloud: Spring = { x: 0, v: 0 }
+  readonly balloon: Spring = { x: 0, v: 0 }
+  touchRoom(touch: RoomTouch): void {
+    if (this.marks.length >= MOST_MARKS) this.marks.shift()
+    this.marks.push({ ...touch, age: 0 })
+    if (touch.what === 'cloud') this.cloud.v += 5
+    if (touch.what === 'balloon') this.balloon.v += 6
   }
 
   /** Runs something a little later, on the theatre's own time: the next beat of a chain. */
@@ -390,6 +404,11 @@ export class Play {
       if (Math.abs(spring.x) > 1) { spring.x = Math.sign(spring.x); spring.v = 0 }
     }
     this.finger.left = Math.max(0, this.finger.left - dt)
+    for (let i = this.marks.length - 1; i >= 0; i--) if ((this.marks[i].age += dt) > MARK_SECONDS) this.marks.splice(i, 1)
+    for (const spring of [this.cloud, this.balloon]) {
+      stepSpring(spring, 0, 60, 5, dt)
+      if (Math.abs(spring.x) > 1) { spring.x = Math.sign(spring.x); spring.v = 0 }
+    }
     for (let i = this.crumbs.length - 1; i >= 0; i--) {
       const crumb = this.crumbs[i], leaf = crumb.of === 'leaf'
       if ((crumb.age += dt) > crumb.life) { this.crumbs.splice(i, 1); continue }

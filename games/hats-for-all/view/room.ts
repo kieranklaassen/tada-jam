@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { BALL_RADIUS, BALL_REST_Y, BLOCKS_Z, BRICK_REST_Y, PROP_AT } from '../props'
+import { BALLOON, BALL_RADIUS, BALL_REST_Y, BLOCKS_Z, BRICK_REST_Y, CLOUD_DRIFT, PROP_AT, balloonAt, type RoomTouch } from '../props'
 import { SLAB } from '../sizes'
 import { MAT_BACK } from './build'
 import { disc, merged, paint, roundedRect, slab } from './foam'
@@ -79,6 +79,16 @@ const BEADS_A_SWAG = 7
 const SWAG_Y = 4.52
 const BEAD_TINTS = [TINT.rose, TINT.butter, TINT.sky, TINT.mint, TINT.lilac, TINT.peach] as const
 
+/** The beads of the string, from left to right: where the middle of each is, how big it is and its tint. */
+export const BEADS: readonly { x: number; y: number; r: number; tint: string }[] = SWAGS.flatMap(([from, to, sag], swag) => Array.from({ length: BEADS_A_SWAG }, (_, i) => {
+  const u = (i + 0.5) / BEADS_A_SWAG
+  return { x: from + (to - from) * u, y: SWAG_Y - sag * 4 * u * (1 - u), r: i % 3 === 1 ? 0.33 : 0.24, tint: BEAD_TINTS[(swag * BEADS_A_SWAG + i) % BEAD_TINTS.length] }
+}))
+/** How far in front of the wall a bead's face is, and a block's tint by its place in the row. */
+export const BEAD_FACE_Z = WALL_Z + 0.08 + LAYER / 2
+export const blockTint = (n: number): string => BLOCKS[n]?.[3] ?? TINT.wall
+export const WALL_TINT = TINT.wall
+
 /** Everything of the room that stands still, as one geometry. No two of its faces lie in one plane over each other: each layer has its own depth. */
 export function buildScenery(): THREE.BufferGeometry {
   const parts: THREE.BufferGeometry[] = []
@@ -92,12 +102,8 @@ export function buildScenery(): THREE.BufferGeometry {
   parts.push(standing(hill(4.6, 1.5), LAYER, TINT.hillFar, x - 0.9, FLOOR_Y + paneY, PANE_Z + 0.08))
   parts.push(standing(hill(3.6, 1.0), LAYER, TINT.hill, x + 1.2, FLOOR_Y + paneY, PANE_Z + 0.21))
   parts.push(slab(disc(0.42, 0, 0.42), LAYER, TINT.sun, 12).translate(x + 1.6, FLOOR_Y + paneY + 1.25, PANE_Z + 0.08))
-  // The string of beads on the wall: flat, pale and out of reach, so plainly part of the wall.
-  let bead = 0
-  for (const [from, to, sag] of SWAGS) for (let i = 0; i < BEADS_A_SWAG; i++) {
-    const u = (i + 0.5) / BEADS_A_SWAG
-    parts.push(standing(disc(i % 3 === 1 ? 0.33 : 0.24, 0, 0), LAYER, BEAD_TINTS[bead++ % BEAD_TINTS.length], from + (to - from) * u, SWAG_Y - sag * 4 * u * (1 - u), WALL_Z + 0.08))
-  }
+  // The string of beads on the wall: flat and pale. A bead that is touched swells for a moment (stage3d.ts).
+  for (const bead of BEADS) parts.push(standing(disc(bead.r, 0, 0), LAYER, bead.tint, bead.x, bead.y, WALL_Z + 0.08))
   // The trunk of the tree; its crown is its own mesh, since it sways.
   parts.push(standing(roundedRect(-0.42, 0, 0.84, 3.3, 0.3), 0.6, TINT.trunk, PROP_AT.tree.x, 0.02, PROP_AT.tree.z))
   return merged(parts)
@@ -142,4 +148,47 @@ export function buildBall(): THREE.BufferGeometry {
 /** The brick that sits on a block. Drawn standing on y = 0. */
 export function buildBrick(): THREE.BufferGeometry {
   return slab(roundedRect(-0.62, 0, 1.24, 0.9, 0.22), 0.6, TINT.rose, 5)
+}
+
+/** Where the middle of the cloud is at a time, and of the balloon if one is passing. */
+export function cloudCentre(time: number): { x: number; y: number } {
+  return { x: CLOUD_AT.x + CLOUD_DRIFT.far * Math.sin(time * CLOUD_DRIFT.speed), y: CLOUD_AT.y }
+}
+export function balloonCentre(time: number): { x: number; y: number } | null {
+  const up = balloonAt(time)
+  return up < 0 ? null : { x: BALLOON_WAY.x + BALLOON.sway * Math.sin(up * 7), y: BALLOON_WAY.from + (BALLOON_WAY.to - BALLOON_WAY.from) * up }
+}
+
+/**
+ * What of the room lies under a finger, for a ray that goes from the eye into the room behind the mat (it goes away from
+ * the eye, so `dz` is below zero). The front of the blocks and the window board comes first, then the wall behind them.
+ * Pure numbers: the same room the builders above cut.
+ */
+export function roomUnder(ox: number, oy: number, oz: number, dx: number, dy: number, dz: number, time: number): RoomTouch | null {
+  if (dz >= 0) return null
+  const at = (z: number): { x: number; y: number } => ({ x: ox + dx * (z - oz) / dz, y: oy + dy * (z - oz) / dz })
+  const front = at(BLOCKS_Z + 0.45), w = WINDOW
+  if (Math.abs(front.x - w.x) <= w.wide / 2 && front.y >= FLOOR_Y && front.y <= FLOOR_Y + w.high) {
+    const inPane = Math.abs(front.x - w.x) <= w.paneWide / 2 && front.y >= FLOOR_Y + w.paneY && front.y <= FLOOR_Y + w.paneY + w.paneHigh
+    if (!inPane) return { what: 'wall', x: front.x, y: front.y, z: BLOCKS_Z + BOARD_DEPTH / 2 + 0.02, n: 0 }
+    // Through the pane: the balloon if one is passing there, the cloud, or else the pane itself.
+    const balloon = balloonCentre(time), nearBalloon = at(BALLOON_WAY.z)
+    if (balloon && Math.hypot(nearBalloon.x - balloon.x, nearBalloon.y - balloon.y) <= 0.55) return { what: 'balloon', x: balloon.x, y: balloon.y, z: BALLOON_WAY.z, n: 0 }
+    const cloud = cloudCentre(time), nearCloud = at(CLOUD_AT.z)
+    if (Math.abs(nearCloud.x - cloud.x) <= 1.2 && Math.abs(nearCloud.y - cloud.y) <= 0.6) return { what: 'cloud', x: cloud.x, y: cloud.y, z: CLOUD_AT.z, n: 0 }
+    const pane = at(PANE_Z + 0.6)
+    return { what: 'wall', x: pane.x, y: pane.y, z: PANE_Z + 0.6, n: 0 }
+  }
+  for (let n = 0; n < BLOCKS.length; n++) {
+    const [from, to, high] = BLOCKS[n]
+    if (front.x >= from + 0.04 && front.x <= to - 0.04 && front.y >= FLOOR_Y && front.y <= FLOOR_Y + high) return { what: 'block', x: front.x, y: front.y, z: BLOCKS_Z + (0.9 + (n % 3) * 0.06) / 2 + 0.02, n }
+  }
+  const wall = at(BEAD_FACE_Z)
+  let nearest = -1, near = Infinity
+  BEADS.forEach((bead, n) => {
+    const d = Math.hypot(wall.x - bead.x, wall.y - bead.y) - bead.r
+    if (d < near) { near = d; nearest = n }
+  })
+  if (nearest >= 0 && near <= 0.3) return { what: 'bead', x: BEADS[nearest].x, y: BEADS[nearest].y, z: BEAD_FACE_Z + 0.02, n: nearest }
+  return { what: 'wall', x: wall.x, y: wall.y, z: WALL_Z + 0.02, n: 0 }
 }

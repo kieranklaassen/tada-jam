@@ -258,6 +258,24 @@ export function thup(count: number): Partial[] {
   return [noise(0, 700 * v, 420 * v, 1.2, 0.12, 0.002, 0.07), noise(0.42, 520 * v, 330 * v, 1.2, 0.09, 0.002, 0.09)]
 }
 
+/** A bead of the string on the wall is touched: one small clear note, a different one for each bead along the string. */
+export function tink(bead: number): Partial[] {
+  const step = [1, 9 / 8, 5 / 4, 3 / 2, 5 / 3][((bead % 5) + 5) % 5] * (Math.floor(bead / 5) % 2 === 0 ? 1 : 2)
+  return [tone(0, 660 * step, 660 * step, 0.07, 0.003, 0.32), tone(0, 1320 * step, 1320 * step, 0.025, 0.003, 0.14)]
+}
+
+/** The balloon outside the window is poked: a quick rubbery "bwip", up. */
+export function bwip(count: number): Partial[] {
+  const v = vary(count)
+  return [tone(0, 300 * v, 540 * v, 0.1, 0.004, 0.13, 'triangle')]
+}
+
+/** The cloud in the window is poked: a soft "pff". */
+export function pff(count: number): Partial[] {
+  const v = vary(count)
+  return [noise(0, 900 * v, 500 * v, 0.9, 0.07, 0.02, 0.2)]
+}
+
 /** A creature claps, once. */
 export function clap(count: number): Partial[] {
   return [noise(0, 1800 * vary(count), 1200, 1.5, 0.1, 0.002, 0.04)]

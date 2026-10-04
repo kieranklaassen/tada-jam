@@ -2,14 +2,14 @@ import * as THREE from 'three'
 import type { LetGo, Target } from '../game'
 import type { Hint } from '../guide'
 import { MOST, type HatKind } from '../kinds'
-import { DIMPLE_SECONDS, MOST_CRUMBS, type ActorPose, type Play } from '../play'
+import { DIMPLE_SECONDS, MARK_SECONDS, MOST_CRUMBS, MOST_MARKS, type ActorPose, type Play } from '../play'
 import { CREATURE_DEPTH, HAND, HAT_HALF, HAT_HEIGHT, SLAB, TILE_DEPTH } from '../sizes'
-import { BALLOON, balloonAt, BALL_RADIUS, BALL_ROLL, BRICK_HOP, BRICK_REST_Y, CLOUD_DRIFT, PROPS, PROP_AT, PROP_LEAN } from '../props'
+import { BALL_RADIUS, BALL_ROLL, BRICK_HOP, BRICK_REST_Y, PROPS, PROP_AT, PROP_LEAN } from '../props'
 import { ARCH_X, ARCH_Z, LANE_Z, TILE_Z, tileX } from '../stage'
 import { COUNTS_FROM } from '../input'
 import { tileWidth } from '../tile'
 import { CREATURE_COLOUR, EAR_DEPTH, HAT_COLOUR, MAT_BACK, PALETTE, buildArch, buildMat, buildPieces, buildTile, type Pieces } from './build'
-import { BALLOON_WAY, CLOUD_AT, TINT, buildBall, buildBrick, buildCloud, buildCrown, buildRoomPlanes, buildScenery } from './room'
+import { BALLOON_WAY, BEADS, CLOUD_AT, TINT, WALL_TINT, balloonCentre, blockTint, cloudCentre, roomUnder, buildBall, buildBrick, buildCloud, buildCrown, buildRoomPlanes, buildScenery } from './room'
 import { RING_CLEAR, blobTexture, foamMaterials, handTexture, ringTexture } from './foam'
 
 // The foam scene as three.js objects, with no renderer: it is built once,
@@ -126,14 +126,14 @@ export class FoamStage {
     }
     const flat = (colour: string, opacity: number, map = 0): THREE.MeshBasicMaterial => new THREE.MeshBasicMaterial({ color: colour, map: this.textures[map], transparent: true, opacity, depthWrite: false })
     this.hands = instanced('hands', this.pieces.hand, this.foam.plain, BODIES * 2)
-    this.dots = instanced('dots', this.pieces.dot, new THREE.MeshBasicMaterial({ color: '#ffffff' }), BODIES * DOTS + MOST_CRUMBS + 3)
+    this.dots = instanced('dots', this.pieces.dot, new THREE.MeshBasicMaterial({ color: '#ffffff' }), BODIES * DOTS + MOST_CRUMBS + MOST_MARKS + 3)
     this.blobs = instanced('shadow-blobs', this.pieces.blob, flat(PALETTE.shadow, 0.5), BLOBS)
     this.glows = instanced('glow-blobs', this.pieces.blob, flat(PALETTE.glow, 1, 2), GLOWS)
     this.blobs.renderOrder = 1
     this.glows.renderOrder = 2
     // The owners of each hand and each dot, for a check that reads the scene: they belong to their creature.
     this.hands.userData.jamInstanceObjects = Array.from({ length: BODIES * 2 }, (_, i) => `creature-${Math.floor(i / 2)}`)
-    this.dots.userData.jamInstanceObjects = Array.from({ length: BODIES * DOTS + MOST_CRUMBS + 3 }, (_, i) => (i < BODIES * DOTS ? `creature-${Math.floor(i / DOTS)}` : 'crumbs'))
+    this.dots.userData.jamInstanceObjects = Array.from({ length: BODIES * DOTS + MOST_CRUMBS + MOST_MARKS + 3 }, (_, i) => (i < BODIES * DOTS ? `creature-${Math.floor(i / DOTS)}` : 'crumbs'))
     this.hand = new THREE.Sprite(new THREE.SpriteMaterial({ map: this.textures[1], transparent: true, depthTest: false, depthWrite: false }))
     this.hand.name = 'ghost-hand'
     this.hand.center.set(0.5, 1)
@@ -267,16 +267,26 @@ export class FoamStage {
       this.dots.setColorAt(dotCount++, crumb.of === 'leaf' ? this.colour.set(TINT.crown) : this.colour.set(HAT_COLOUR[crumb.of]).lerp(WHITE, 0.45))
     }
     // The room's passer-by: a balloon on its string rises past the window, outside, and is gone behind the board. Three more dots.
-    const up = balloonAt(play ? play.time : 0)
-    if (up >= 0) {
-      const x = BALLOON_WAY.x + BALLOON.sway * Math.sin(up * 7), y = BALLOON_WAY.from + (BALLOON_WAY.to - BALLOON_WAY.from) * up
+    const balloon = balloonCentre(play ? play.time : 0)
+    if (balloon) {
+      // Poked, it swells and swings on its string.
+      const poked = play ? play.balloon.x : 0, big = 1 + 0.35 * Math.abs(poked), x = balloon.x + 0.22 * poked, y = balloon.y
       const put = (dy: number, wide: number, high: number, tint: string): void => {
         this.dots.setMatrixAt(dotCount, this.m.compose(this.v.set(x, y + dy, BALLOON_WAY.z), this.q.identity(), this.s.set(wide, high, 1)))
         this.dots.setColorAt(dotCount++, this.colour.set(tint))
       }
-      put(0, 0.27, 0.33, TINT.balloon)
-      put(-0.36, 0.05, 0.05, TINT.balloon)
-      put(-0.62, 0.014, 0.24, TINT.string)
+      put(0, 0.27 * big, 0.33 * big, TINT.balloon)
+      put(-0.36 * big, 0.05, 0.05, TINT.balloon)
+      put(-0.36 * big - 0.26, 0.014, 0.24, TINT.string)
+    }
+    // Where the room was touched, a mark for a moment: a block gives under the finger, a bead swells, the wall and the window board dent.
+    if (play) for (const mark of play.marks) {
+      const pulse = Math.sin(Math.PI * mark.age / MARK_SECONDS)
+      if (mark.what === 'cloud' || mark.what === 'balloon') continue
+      const bead = mark.what === 'bead' ? BEADS[mark.n] : null
+      const size = bead ? bead.r * (1 + 0.55 * pulse) : (mark.what === 'block' ? 0.46 : 0.3) * pulse
+      this.dots.setMatrixAt(dotCount, this.m.compose(this.v.set(mark.x, mark.y, mark.z), this.q.identity(), this.s.set(size, size, 1)))
+      this.dots.setColorAt(dotCount++, bead ? this.colour.set(bead.tint).lerp(WHITE, 0.45) : this.colour.set(mark.what === 'block' ? blockTint(mark.n) : WALL_TINT).multiplyScalar(0.8))
     }
     this.dots.count = dotCount
     if (this.dots.instanceColor) this.dots.instanceColor.needsUpdate = true
@@ -310,7 +320,10 @@ export class FoamStage {
     // The crown hangs on the top of the trunk and in front of it; it leans as foam does, from where it is held.
     this.crown.matrix.makeShear(0, 0, -Math.tan(lean), 0, 0, 0).setPosition(PROP_AT.tree.x, 2.7, PROP_AT.tree.z + 0.62)
     this.crown.matrixWorldNeedsUpdate = true
-    this.cloud.position.set(CLOUD_AT.x + CLOUD_DRIFT.far * Math.sin(time * CLOUD_DRIFT.speed), CLOUD_AT.y, CLOUD_AT.z)
+    // The cloud drifts; poked, it dips and flattens a little and comes back. It never grows wider or higher: it stays inside the pane.
+    const drift = cloudCentre(time), dip = play ? Math.abs(play.cloud.x) : 0
+    this.cloud.position.set(drift.x, drift.y - 0.3 * dip, CLOUD_AT.z)
+    this.cloud.scale.set(1, 1 - 0.22 * dip, 1)
     // The ball rolls a little way along its block and back, turning as far as it rolls; the brick hops and lands.
     const roll = BALL_ROLL * wobble('ball')
     this.ball.position.set(PROP_AT.ball.x + roll, PROP_AT.ball.y, PROP_AT.ball.z)
@@ -399,8 +412,11 @@ export class FoamStage {
     tryFor({ type: 'arch' }, 2.4, 1.15)
     for (const prop of PROPS) tryFor({ type: 'prop', prop }, PROP_AT[prop].reach, 1.1)
     if (best) return best
-    // Nothing near: the finger is on the foam floor, at the place its ray meets the mat.
-    return { type: 'floor', ...this.floorUnder(x, y) }
+    // Nothing near: the finger is on the foam floor, at the place its ray meets the mat; or past the mat's far edge, on the room behind it, which answers where the finger is as well.
+    const floor = this.floorUnder(x, y), ray = this.aim(x, y), o = ray.origin, d = ray.direction
+    const beyond = d.y > -0.02 || o.z + d.z * (-o.y / d.y) < MAT_BACK - 0.55
+    const room = beyond ? roomUnder(o.x, o.y, o.z, d.x, d.y, d.z, play.time) : null
+    return room ? { type: 'floor', ...floor, room } : { type: 'floor', ...floor }
   }
 
   /** Where a dragged thing is let go: on a creature (or the hat on its head), on the tile, or on the floor. A drag counts when it gets near. */

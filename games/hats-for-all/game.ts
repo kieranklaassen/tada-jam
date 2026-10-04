@@ -4,7 +4,7 @@ import { GRID, type Action, type ObjectKind } from './grid'
 import type { CreatureKind, HatKind } from './kinds'
 import { PERSONALITY } from './motion'
 import { Play, type ActorPose, type Seen, type Travel } from './play'
-import type { PropName } from './props'
+import type { PropName, RoomTouch } from './props'
 import { bareSpots, creatureAt, dropHat, hatsInTile, placeOf, settled, tapCreature, tapHat, type Drop, type Happened, type Outcome, type Place } from './rules'
 import { worldOf, type Saved } from './save'
 import { Scene } from './scene'
@@ -13,7 +13,7 @@ import { changeShow, firstShowing, nextCrewShow, paradeShow, type Show } from '.
 import { IN_ARCH, LOOSE_Z, ROW_Z, TILE_Z, holeX, nearestSpot, spotPoint, spotX, tileX } from './stage'
 import { ACTS as TASTE_ACTS, moodFor, tasteFor } from './tastes'
 import {
-  babble, bap, bip, bloopBlip, bomBom, chirrup, clap, creak, donk, dwong, flap, fwump, groan, hiss, hoot, hum, longCreak, paf, pip, plap, plop, pok, pomf, rumble, rustle, thup, trundle,
+  babble, bap, bip, bloopBlip, bomBom, bwip, pff, tink, chirrup, clap, creak, donk, dwong, flap, fwump, groan, hiss, hoot, hum, longCreak, paf, pip, plap, plop, pok, pomf, rumble, rustle, thup, trundle,
   scuttle, shoop, squeak, squeal, squelch, thwop, tok, twang, voiceLength, whirr, whistle, zrrp, type Mood,
 } from './voices'
 
@@ -28,7 +28,7 @@ import {
 const SQUASH_WIDENS = 1.13
 const EARS_FLUNG = 2.3
 
-export type Target = { type: 'hat'; hat: number } | { type: 'creature'; who: string } | { type: 'arch' } | { type: 'prop'; prop: PropName } | { type: 'floor'; x: number; z: number }
+export type Target = { type: 'hat'; hat: number } | { type: 'creature'; who: string } | { type: 'arch' } | { type: 'prop'; prop: PropName } | { type: 'floor'; x: number; z: number; room?: RoomTouch }
 
 /** Where a dragged thing is let go. */
 export type LetGo = { on: 'creature'; who: string } | { on: 'tile' } | { on: 'floor'; x: number; z: number }
@@ -220,7 +220,16 @@ export class Game {
       this.play.poke(target.prop)
       // Each has a voice of its own, which no hat and no creature has.
       this.play.cue(target.prop === 'tree' ? 'rustle' : target.prop === 'brick' ? 'thup' : 'trundle', target.prop === 'tree' ? rustle(this.next()) : target.prop === 'brick' ? thup(this.next()) : trundle(this.next()), 0.03)
-    } else this.play.dimple(target.x, target.z)
+    } else {
+      this.play.dimple(target.x, target.z)
+      // The finger is on something of the room behind the mat: it answers where the finger is, as well as the floor.
+      if (target.room) {
+        this.play.touchRoom(target.room)
+        if (target.room.what === 'bead') this.play.cue('tink', tink(target.room.n), 0.02)
+        else if (target.room.what === 'balloon') this.play.cue('bwip', bwip(this.next()), 0.02)
+        else if (target.room.what === 'cloud') this.play.cue('pff', pff(this.next()), 0.02)
+      }
+    }
   }
 
   /** Where the finger is over the mat, for the creatures' eyes. */
