@@ -6,7 +6,8 @@ import { forwardOf, spread, type Pose } from './pose'
 import { peg, pillows, type Pillow } from './shapes'
 import { vinylMaterial, type VinylUniforms } from './vinyl'
 
-// A friend as meshes: six draws, one per part that moves by itself. The
+// A friend as meshes: six draws, one per part that moves by itself, and a
+// seventh for the hippo, whose jaw drops when it yawns. The
 // geometry of each kind is built once and shared by every friend of that kind;
 // a friend owns only its groups and one material, which carries its own glow.
 // Every mesh is named and the root is tagged as one object, so the
@@ -24,12 +25,14 @@ export type FriendRig = {
   armL: Group
   armR: Group
   extra: Group
+  /** The lower jaw, on the head: only a kind whose plan has one. */
+  jaw: Group | null
   material: ShaderMaterial
   /** Where the right arm holds a string, in the arm's own space. */
   hand: Vector3
 }
 
-type Parts = { body: BufferGeometry; head: BufferGeometry; eyes: BufferGeometry; armL: BufferGeometry; armR: BufferGeometry; extra: BufferGeometry; eyeHeight: number }
+type Parts = { body: BufferGeometry; head: BufferGeometry; eyes: BufferGeometry; armL: BufferGeometry; armR: BufferGeometry; extra: BufferGeometry; jaw: BufferGeometry | null; eyeHeight: number }
 
 const built = new Map<KindName, Parts>()
 
@@ -56,6 +59,7 @@ function partsOf(kind: KindName): Parts {
       armL: pillows(plan.arm),
       armR: pillows(mirrored(plan.arm)),
       extra: pillows(plan.extra),
+      jaw: plan.jaw.length > 0 ? pillows(plan.jaw) : null,
       eyeHeight: plan.eyes[0].at[1],
     }
     built.set(kind, parts)
@@ -86,6 +90,15 @@ export function buildFriend(kind: KindName, name: string, shared: VinylUniforms)
   head.add(mesh(parts.head, 'face'))
   squash.add(head)
 
+  let jaw: Group | null = null
+  if (parts.jaw) {
+    jaw = new Group()
+    jaw.name = 'jaw'
+    jaw.position.set(...plan.jawPivot)
+    jaw.add(mesh(parts.jaw, 'chin'))
+    head.add(jaw)
+  }
+
   const extra = new Group()
   extra.name = 'extra'
   extra.position.set(...plan.extraPivot)
@@ -106,7 +119,7 @@ export function buildFriend(kind: KindName, name: string, shared: VinylUniforms)
   armR.add(mesh(parts.armR, 'limb'))
   squash.add(armL, armR)
 
-  return { kind, plan, root, squash, head, eyes, armL, armR, extra, material, hand: new Vector3(-plan.hand[0], plan.hand[1], plan.hand[2]) }
+  return { kind, plan, root, squash, head, eyes, armL, armR, extra, jaw, material, hand: new Vector3(-plan.hand[0], plan.hand[1], plan.hand[2]) }
 }
 
 /**
@@ -128,6 +141,8 @@ export function marcherGeometry(kind: KindName): BufferGeometry {
   const armL = pillows(plan.arm).rotateZ(-down).rotateY(forwardOf(down)).translate(...plan.shoulder)
   const armR = pillows(mirrored(plan.arm)).rotateZ(plan.reach).rotateY(-forwardOf(plan.reach)).translate(-plan.shoulder[0], plan.shoulder[1], plan.shoulder[2])
   const parts = [pillows(plan.body), head, eyes, extra, armL, armR]
+  // A mouth that opens is shut on the far hill.
+  if (plan.jaw.length > 0) parts.push(pillows(plan.jaw).translate(plan.neck[0] + plan.jawPivot[0], plan.neck[1] + plan.jawPivot[1], plan.neck[2] + plan.jawPivot[2]))
   const whole = mergeGeometries(parts, false)
   for (const part of parts) part.dispose()
   return whole
@@ -146,6 +161,8 @@ export function applyPose(rig: FriendRig, pose: Pose): void {
   rig.armL.rotation.set(-pose.armLForward, forwardOf(left), -left)
   rig.armR.rotation.set(-pose.armRForward, -forwardOf(right), right)
   rig.extra.rotation.set(-pose.flick, pose.wag, 0)
+  // The jaw hinges at the back of the mouth and drops at the front.
+  if (rig.jaw) rig.jaw.rotation.x = pose.jaw
   if (rig.plan.extraOnHead) rig.extra.scale.set(1, pose.puff, 1)
   else rig.extra.scale.setScalar(pose.puff)
   rig.eyes.scale.y = 1 - pose.blink * 0.9
@@ -154,6 +171,6 @@ export function applyPose(rig: FriendRig, pose: Pose): void {
 
 /** Frees the shared geometry of every kind. Call once when the game is torn down, after the friends are gone. */
 export function disposeFriends(): void {
-  for (const parts of built.values()) for (const part of Object.values(parts)) if (typeof part !== 'number') part.dispose()
+  for (const parts of built.values()) for (const part of Object.values(parts)) if (part && typeof part !== 'number') part.dispose()
   built.clear()
 }

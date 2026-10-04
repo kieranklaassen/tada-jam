@@ -16,6 +16,8 @@ import type { Pillow, Vec3 } from './shapes'
 //   armR   the same on the other side, and holds the string at `hand`
 //   extra  the funniest part: the duck's tail, the frog's throat, the hippo's
 //          belly, the crab's eye stalks, each about `extraPivot`
+//   jaw    the hippo's alone: its lower jaw, which drops about `jawPivot` when
+//          it yawns. It rides on the head. The other kinds have none.
 
 export type KindName = keyof typeof KIND_COLOURS
 
@@ -26,6 +28,9 @@ export type Body = {
   /** The left arm, hanging from its pivot at the origin. The right arm is its mirror. */
   arm: Pillow[]
   extra: Pillow[]
+  /** The lower jaw, about its own hinge at the origin, and where that hinge is in the head. Empty for a kind whose mouth does not open. */
+  jaw: Pillow[]
+  jawPivot: Vec3
   neck: Vec3
   /** The left shoulder; the right is mirrored in x. */
   shoulder: Vec3
@@ -80,6 +85,8 @@ function duck(): Body {
     eyes: eye(0.26, 0.64, 0.5, 0.13),
     arm: [{ at: [-0.06, -0.34, 0], size: [0.19, 0.42, 0.32], colour: c, panels: 2, detail: SMALL }],
     extra: [{ at: [0, 0.2, -0.14], size: [0.22, 0.32, 0.22], turn: [-0.7, 0, 0], colour: c, detail: SMALL }],
+    jaw: [],
+    jawPivot: [0, 0, 0],
     neck: [0, 1.2, 0.04],
     shoulder: [-0.66, 0.98, 0],
     extraPivot: [0, 0.76, -0.56],
@@ -113,6 +120,8 @@ function frog(): Body {
       { at: [-0.06, -0.66, 0.06], size: [0.2, 0.17, 0.17], colour: c, detail: SMALL },
     ],
     extra: [{ at: [0, 0, 0.1], size: [0.44, 0.26, 0.3], colour: light, detail: SMALL }],
+    jaw: [],
+    jawPivot: [0, 0, 0],
     neck: [0, 1.02, 0.06],
     shoulder: [-0.8, 0.98, 0.16],
     extraPivot: [0, 0.94, 0.5],
@@ -128,7 +137,7 @@ function frog(): Body {
 }
 
 function hippo(): Body {
-  const c = KIND_COLOURS.hippo, light = shade(c, 0.3), dark = shade(c, -0.18)
+  const c = KIND_COLOURS.hippo, light = shade(c, 0.3), dark = shade(c, -0.18), lining = shade(c, -0.45)
   return {
     body: [
       { at: [0, 0.86, 0], size: [1.0, 0.82, 0.86], colour: c, panels: 6 },
@@ -137,19 +146,26 @@ function hippo(): Body {
     ],
     head: [
       { at: [0, 0.42, 0.04], size: [0.6, 0.46, 0.5], colour: c },
-      { at: [0, 0.2, 0.42], size: [0.62, 0.34, 0.4], colour: light, panels: 2 },
+      // The top of the muzzle. The bottom of it is the jaw, a part of its own, and the two close on a dark lining.
+      { at: [0, 0.27, 0.42], size: [0.62, 0.26, 0.4], colour: light, panels: 2 },
+      { at: [0, 0.11, 0.4], size: [0.48, 0.05, 0.3], colour: lining, detail: SMALL },
       ...both({ at: [0.2, 0.3, 0.8], size: [0.06, 0.045, 0.03], colour: dark, detail: TINY }),
       ...both({ at: [0.44, 0.84, -0.04], size: [0.14, 0.15, 0.08], turn: [0, 0, -0.4], colour: c, detail: SMALL }),
     ],
     eyes: eye(0.28, 0.68, 0.42, 0.12),
     arm: [{ at: [-0.04, -0.34, 0.02], size: [0.21, 0.42, 0.21], colour: c, panels: 2, detail: SMALL }],
     extra: [{ at: [0, 0, 0], size: [0.72, 0.56, 0.3], colour: light, detail: SMALL }],
+    jaw: [
+      { at: [0, -0.1, 0.34], size: [0.58, 0.17, 0.36], colour: light, panels: 2 },
+      { at: [0, 0.02, 0.34], size: [0.46, 0.06, 0.29], colour: lining, detail: SMALL },
+    ],
+    jawPivot: [0, 0.08, 0.04],
     neck: [0, 1.52, 0.2],
     shoulder: [-0.94, 1.2, 0.1],
     extraPivot: [0, 0.74, 0.66],
     extraOnHead: false,
     hand: [-0.04, -0.72, 0.02],
-    mouth: [0, 0.24, 0.8],
+    mouth: [0, 0.1, 0.7],
     valve: [0.74, 0.5, -0.56],
     height: 2.5,
     halfWidth: 1.3,
@@ -177,6 +193,8 @@ function crab(): Body {
       ...both({ at: [0.3, 0.26, 0], size: [0.07, 0.3, 0.07], colour: c, detail: TINY }),
       ...both({ at: [0.3, 0.62, 0], size: [0.19, 0.19, 0.17], colour: light, detail: SMALL }),
     ],
+    jaw: [],
+    jawPivot: [0, 0, 0],
     neck: [0, 0.86, 0.28],
     shoulder: [-0.8, 0.76, 0.12],
     extraPivot: [0, 0, 0],

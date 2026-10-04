@@ -28,6 +28,8 @@ export type Pose = {
   wag: number
   flick: number
   puff: number
+  /** How far the lower jaw has dropped, in radians: 0 is shut. Only the hippo has one. */
+  jaw: number
   /** 0 open, 1 shut. */
   blink: number
   /** The breathing glow, 0 to 1. */
@@ -39,7 +41,7 @@ export function restPose(): Pose {
     x: 0, y: 0, z: 0, scale: 1, turn: 0, lean: 0, bow: 0, squash: 1,
     nod: 0, headTurn: 0, tilt: 0,
     armL: 0.12, armR: 0.12, armLForward: 0, armRForward: 0,
-    wag: 0, flick: 0, puff: 1, blink: 0, glow: 0,
+    wag: 0, flick: 0, puff: 1, jaw: 0, blink: 0, glow: 0,
   }
 }
 
@@ -52,7 +54,7 @@ export function copyPose(into: Pose, from: Readonly<Pose>): Pose {
   into.turn = from.turn; into.lean = from.lean; into.bow = from.bow; into.squash = from.squash
   into.nod = from.nod; into.headTurn = from.headTurn; into.tilt = from.tilt
   into.armL = from.armL; into.armR = from.armR; into.armLForward = from.armLForward; into.armRForward = from.armRForward
-  into.wag = from.wag; into.flick = from.flick; into.puff = from.puff; into.blink = from.blink; into.glow = from.glow
+  into.wag = from.wag; into.flick = from.flick; into.puff = from.puff; into.jaw = from.jaw; into.blink = from.blink; into.glow = from.glow
   return into
 }
 

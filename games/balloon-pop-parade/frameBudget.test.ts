@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { KindName } from './bodies'
+import { BODIES, type KindName } from './bodies'
 import { GROUND, skySlots, viewFor, waitingSpot } from './layout'
 import type { Pose } from './pose'
 import { freshSave } from './save'
@@ -7,7 +7,8 @@ import { MAX_BALLOONS, MAX_SHADOWS, MAX_STRINGS } from './scenery'
 import { Theatre, type Painter } from './theatre'
 
 // The frame budget, counted and not timed, so it holds on a busy machine. What a frame costs the renderer is fixed
-// by what the theatre asks the stage to draw: six draws for each friend on stage, and a fixed handful for
+// by what the theatre asks the stage to draw: six draws for each friend on stage (seven for a hippo, whose jaw is
+// a part of its own), and a fixed handful for
 // everything else, however many balloons there are. The test plays whole games with a seeded child who taps fast
 // and at random, through every scene, and holds the most any frame asked for under the jam's bar.
 
@@ -15,14 +16,14 @@ import { Theatre, type Painter } from './theatre'
 const FIXED_DRAWS = 1 + 2 + 3 + 3 + 4 + 1
 const DRAWS_A_FRIEND = 6
 /** The jam's bar is about 80 draw calls; the game keeps a margin under it. */
-const DRAW_BUDGET = 72
+const DRAW_BUDGET = 76
 
 const VIEW = viewFor(1180, 820)
 
 function counter() {
-  const frame = { friends: new Set<string>(), balloons: 0, strings: 0, shadows: 0, marchers: 0 }
+  const frame = { friends: new Map<string, KindName>(), balloons: 0, strings: 0, shadows: 0, marchers: 0 }
   const painter: Painter = {
-    place: (name: string, _kind: KindName, _pose: Pose) => void frame.friends.add(name),
+    place: (name: string, kind: KindName, _pose: Pose) => void frame.friends.set(name, kind),
     drop: (name) => void frame.friends.delete(name),
     balloon: () => void (frame.balloons += 1),
     string: () => void (frame.strings += 1),
@@ -61,7 +62,7 @@ describe('the frame budget', () => {
         theatre.step(1 / 60)
         clear()
         theatre.paint(painter, VIEW, { glow: 1, demo: 0.4, demoIndex: i % 4 })
-        const draws = FIXED_DRAWS + DRAWS_A_FRIEND * frame.friends.size
+        const draws = FIXED_DRAWS + [...frame.friends.values()].reduce((sum, kind) => sum + DRAWS_A_FRIEND + (BODIES[kind].jaw.length > 0 ? 1 : 0), 0)
         most.draws = Math.max(most.draws, draws)
         most.friends = Math.max(most.friends, frame.friends.size)
         most.balloons = Math.max(most.balloons, frame.balloons)

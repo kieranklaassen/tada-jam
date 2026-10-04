@@ -102,6 +102,34 @@ describe('the clips', () => {
   })
 })
 
+describe('the hippo\'s yawn', () => {
+  it('opens its mouth wide to take a balloon, is widest as the string drops in, and shuts again', () => {
+    const p = PERSONALITIES.hippo
+    let widest = 0, at = 0
+    for (let t = 0; t <= p.lasts.catch; t += 1 / 60) {
+      const jaw = sample('hippo', 'catch', t).jaw
+      if (jaw > widest) { widest = jaw; at = t }
+    }
+    // More than a third of a right angle, on a jaw as long as the whole muzzle: a mouth a child sees open from across a room.
+    expect(widest).toBeGreaterThan(0.7)
+    expect(sample('hippo', 'catch', p.cue.grab).jaw, 'still wide as the string arrives').toBeGreaterThan(0.6)
+    expect(Math.abs(at - p.cue.grab)).toBeLessThan(0.2)
+    expect(sample('hippo', 'catch', 0).jaw).toBe(0)
+    expect(sample('hippo', 'catch', p.lasts.catch).jaw).toBeCloseTo(0, 2)
+    // At rest, with or without a balloon, it is shut.
+    expect(sample('hippo', null, 0).jaw).toBe(0)
+    expect(sample('hippo', null, 0, true).jaw).toBe(0)
+  })
+
+  it('is the hippo\'s alone: no other kind has a jaw to drop', () => {
+    for (const kind of KINDS) {
+      expect(BODIES[kind].jaw.length > 0, kind).toBe(kind === 'hippo')
+      if (kind === 'hippo') continue
+      for (const id of Object.keys(PERSONALITIES[kind].lasts) as ClipId[]) for (let i = 0; i <= 10; i++) expect(sample(kind, id, (i / 10) * PERSONALITIES[kind].lasts[id]).jaw, `${kind} ${id}`).toBe(0)
+    }
+  })
+})
+
 describe('the cues', () => {
   it('fall inside their clips and in order', () => {
     for (const kind of KINDS) {

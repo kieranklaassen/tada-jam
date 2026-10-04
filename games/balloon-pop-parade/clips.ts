@@ -262,7 +262,9 @@ function frog(id: ClipId, t: number, pose: Pose): void {
 function hippo(id: ClipId, t: number, pose: Pose): void {
   if (id === 'catch') {
     // A wide slow yawn, the string dropping in, and the head coming down on it.
-    // The yawn tips the head back only as far as the face can still be seen.
+    // The yawn: the jaw drops wide and the top of the head tips back, only as far as the face can still be seen.
+    // The mouth is at its widest as the string drops in, and shuts on it.
+    pose.jaw = hold(t, 0.04, 0.4, 0.6, 0.92) * 0.85
     pose.nod = -0.17 - hold(t, 0, 0.42, 0.55, 0.95) * 0.3
     pose.squash += hold(t, 0, 0.42, 0.55, 0.95) * 0.05
     pose.squash += hump(t, 0, 0.5) * 0.06 - hump(t, 0.5, 0.75) * 0.08 + wobble(t, 0.75, 12, 4) * 0.04
@@ -292,6 +294,7 @@ function hippo(id: ClipId, t: number, pose: Pose): void {
     // The other way a hippo takes a poke: a slow look round at whoever did it, a yawn, and back.
     pose.headTurn = hold(t, 0.1, 0.45, 0.85, 1.2) * 0.5
     pose.nod += -hold(t, 0.45, 0.7, 0.9, 1.15) * 0.45
+    pose.jaw = hold(t, 0.45, 0.7, 0.9, 1.15) * 0.6
     pose.puff = 1 + wobble(t, 0, 13, 3) * 0.16
     pose.tilt += hold(t, 0.1, 0.45, 0.85, 1.2) * 0.14
   } else if (id === 'proud') {
