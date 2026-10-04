@@ -572,6 +572,21 @@ describe('the one who gets none', () => {
     expect(high).toBeGreaterThan(0.4)
     expect(low).toBeLessThan(0.8)
   })
+
+  it('does not make its show again when the game is opened on that state, and nothing of it is saved', () => {
+    const game = new Game(saveOf(short, 'one-short'))
+    for (const hat of [0, 1]) {
+      game.press({ type: 'hat', hat })
+      game.tap()
+      run(game, 1.2)
+    }
+    const again = new Game(putAway(game.saved)), who = worldOf(again.saved).crew.find((creature) => creature.hats.length === 0)!.kind
+    again.press({ type: 'creature', who })
+    again.tap()
+    run(again, 2.5)
+    expect(again.seen).not.toContain('makes-a-show-of-it')
+    expect(Object.keys(serialize(again.saved)).sort()).toEqual(Object.keys(serialize(saveOf(short))).sort())
+  })
 })
 
 describe('a hat that lands on a head', () => {

@@ -65,6 +65,8 @@ export class Game {
     world.tile.forEach((_, hat) => this.play.place(hat, this.seenFor(placeOf(world, hat))))
     if (this.saved.finished) this.someoneWaits()
     this.dress()
+    // Whoever stands bare with every hat given out has made its show before the game was put away: it does not make it again on load.
+    this.makesAShow(true)
   }
 
   /** The next crew's first creature stands in the arch. */
@@ -207,16 +209,18 @@ export class Game {
 
   /**
    * The one who gets none makes a show of it. When every hat is on a head and a head is still bare, each bare
-   * creature does it once: it looks into the holes and at the other heads, throws up its hands, shrugs and sits
-   * down with a bump. It is about the hats and never about the child, and then it waits, calm.
+   * creature does it once: it looks into the holes and at the other heads, throws up its hands, jumps, sits down
+   * with a bump and goes cross-eyed. It is about the hats and never about the child, and then it waits, calm.
+   * `quiet` only notes who is already in that state, as when the stage is laid out from a save.
    */
-  private makesAShow(): void {
+  private makesAShow(quiet = false): void {
     const world = worldOf(this.saved), none = settled(world) && hatsInTile(world).length === 0 ? bareSpots(world) : []
     for (const who of [...this.shown]) if (!none.some((spot) => this.at(spot) === who)) this.shown.delete(who)
     for (const spot of none) {
       const who = this.at(spot)
       if (this.shown.has(who)) continue
       this.shown.add(who)
+      if (quiet) continue
       this.seen.push('makes-a-show-of-it')
       this.play.act(who, 'makes-a-show-of-it')
       this.says(who, 'ask', 0.25)

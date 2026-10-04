@@ -201,6 +201,21 @@ Hats for All is designed from three California preschool and transitional kinder
 
 **Foam play mats**, the first look reserved for this game in the ledger of `docs/art-direction.md`. Everything on screen is a thick slab of squashy foam cut from one outline: the floor of jigsaw tiles with five round spots inlaid in it, the cream tile the hats press out of, the hats, the creatures and the arch they come and go through. A hat pressed out leaves its hole, and the mat shows through it.
 
+### What is in the frame
+
+The mat lies in a playroom made of the same foam, which fills the frame from edge to edge and is the setting, never the work.
+
+- **Behind the mat**, a low wall of ten soft blocks in six pale tints, of different heights, with a cream window board standing among them. Through its pane: a pale sky, two hills, a sun, a cloud that drifts from side to side, and now and then a balloon on its string that rises past outside. The window is the room's own life and has nothing to do with the hats.
+- **On the wall behind the blocks**, a string of round foam beads hung in four swags along the top of the frame.
+- **At the left**, a foam tree, its trunk on the mat and its crown cut by the frame's edge. The crown sways a little all the time.
+- **On the blocks**, a ball and a brick. With the tree's crown they are the three things of the room that answer a touch: the crown shakes and drops a few leaves, the ball rolls a little way and back, the brick hops. They sit at the back, far from the hats and the heads, and change nothing in the world.
+- **At the right, behind the end of the row**, the arch, a little to the right of the last round spot, so whoever waits in it shows beside whoever stands there. Creatures who come or go by it walk behind the row.
+- **In front**, the row of creatures on their round spots and the tile of hats. The mat in front of the tile and between the tile and the row is kept bare: it is where a small hand comes in and where a loose hat lies.
+
+The camera stands near enough that a creature is about a sixth of the frame's height. Each creature has two eyes that stand proud of its face, with pupils that follow the finger while it is on the glass; two brows; two cheeks in a warmer tint of its own colour; and a mouth that is a line in two halves, which bend up for a smile and down when it is cross, and a round hole when it babbles. Its face shows what it makes of the hat on its head: glad under the one it loves, cross under the one it cannot stand, lost under a tower, and calm with its brows up while it waits bare. No face is sad.
+
+Nothing in the room is shaped like a hat, nothing in it is a sign, and nothing in it is as strong in colour as a hat or a creature.
+
 It must not be taken for Kite Tower (blocks on a playroom floor: wood with grain, lathe-turned dolls) or Shadow Lantern (flat extruded shapes: paper, lamp light). Here nothing has grain, nothing is paper and nothing is lit by a lamp: the foam is matte with a fine stipple, every edge is a small soft bevel, the floor locks together with dovetail teeth, and the colours are flat.
 
 ### Palette
@@ -213,15 +228,19 @@ It must not be taken for Kite Tower (blocks on a playroom floor: wood with grain
 | Hat tile and arch | `#f6f1e4` | The mat's furniture is cream: the hats lie on the plainest, lightest surface in the scene. |
 | Cone, dome, brim | `#e3382c`, `#2d6fe0`, `#f7c41d` | The working pieces are the three flat primaries and nothing else is. |
 | Bop, Lanky, Flop, Wig, Pip | `#f58a1f`, `#8b52d4`, `#f0609f`, `#a9d83c`, `#4b4f5c` | Secondaries and one charcoal, none shared with a hat. |
-| Wall and room floor | `#f6efe2`, `#eadfcd` | Pale and empty, so the foam is all there is to look at. |
-| Eye whites, pupils and mouths | `#fbfaf5`, `#22252e` | Pressed-on foam discs. |
+| Wall and room floor | `#f6efe2`, `#eadfcd` | Pale, behind and under everything. |
+| The blocks, the beads, the ball and the brick | `#f4d3bf`, `#cfe9d8`, `#dcd4ee`, `#f5e8b9`, `#cbe4ef`, `#f3d0d8` | Six tints, each most of the way to the wall's cream: the room is lower in contrast than anything that is worked with. |
+| Window board; pane, hills, sun, cloud, balloon | `#fbf6ea`; `#d9edf6`, `#d6ecd2`, `#c4e2c0`, `#f8e7a6`, `#fbf8f0`, `#f3bcb0` | The board is the mat's cream furniture; what is seen through it is paler still. |
+| Tree: trunk, crown | `#e2cdb6`, `#bfe0b4`, `#d0e9c6` | A pale green that is neither the mat's teal nor Wig's lime. |
+| Eye whites; pupils, brows and mouths; cheeks | `#fbfaf5`; `#22252e`; the creature's own colour mixed with `#ff8fa6` | Pressed-on foam discs. |
 
 ### Materials
 
 - One matte foam material for everything (roughness 0.95, no metal), coloured by vertex, with one small stipple normal tile that repeats. The stipple is seeded, so every load shows the same foam.
-- Every piece is an outline extruded 0.1 to 0.9 mat units (an ear the thinnest, the arch the thickest) with a bevel of 0.055. Squash is a scale spring, never a soft body.
+- Every piece is an outline extruded 0.1 to about 1 mat unit (an ear the thinnest, a block of the wall the thickest) with a bevel of 0.055. Squash is a scale spring, never a soft body.
 - The hats are working pieces and stay plain: one flat colour, one simple outline, no face, no pattern and no motion of its own in the tile, apart from stirring inside the idle ladder's ring (pack: game-design, working-objects-stay-plain.md). The creatures carry the faces and the comedy.
-- No shadow map. A soft round blob lies under each creature, each hat in the air or on the floor, and each leg of the arch; the same blob is the dimple where the floor is poked.
+- No shadow map. A soft round blob lies under each creature, each hat in the air or on the floor, each leg of the arch and the tree; the same blob is the dimple where the floor is poked.
+- Everything of the room that stands still is one mesh, built once. Four things of it move, each one mesh: the tree's crown, the cloud, the ball and the brick. The floor, the wall and the window's sky are three planes in one more. The faces' dots, the crumbs, the leaves and the balloon are instances of one flat disc in one draw.
 - A body leans as foam does: its feet stay planted and its top slides across. Nothing rotates into the floor.
 - The ghost hand of the idle ladder is a white mitten with one finger out and a dark edge, drawn in code. It is a picture of a hand pressing the thing a child could press, and nothing to decode.
 
@@ -236,11 +255,18 @@ Daylight, as through a window: one broad sky light and one soft sun from the upp
 - Each creature has its own spring, tempo and sway (`motion.ts`), so the same landing, the same walk and the same breath look different on each: the ball bounces, the post sways, the jelly loaf wobbles for seconds.
 - What a creature does is an act (`acts.ts`): fifteen for the tastes, one for each creature under each kind of hat, and others for the cells of the grid and the scenes. Every act begins and ends at rest and is its own motion, by test.
 - A hat that comes down over a face comes forward of it first, and a hat on its way home is over its hole before it goes in: nothing passes through anything on the way.
-- Alive at idle: every creature breathes at its own tempo, looks at the hats while it is bare and up at its hat when it has one, blinks at moments of its own, and a bare one pats its head now and then. Nothing beckons or flashes.
+- Alive at idle: every creature breathes at its own tempo, looks at the hats while it is bare and up at its hat when it has one, blinks at moments of its own, and a bare one pats its head now and then. Its eyes follow a finger on the glass and go back to the hats a moment after it lifts. Nothing beckons or flashes.
+- Something is left behind: a hat that lands on a head knocks a few crumbs of its own foam loose, which fly, fall and lie on the mat a moment; a shaken tree drops leaves the same way; a poked floor keeps its dimple a moment.
+- The jokes are played large: under a tower a creature cannot see, and sways about with its hands out for as long as the tower stands; the hat Bop cannot stand drops to its feet and walks about on them; the one left bare when every hat is on a head looks into the holes and at the others, throws up its hands, jumps, sits down with a bump and goes cross-eyed, and then waits.
+- One who leaves stops in the arch and looks back at the row before it goes.
 
 ### The tiers
 
 `config.ts` has four tiers. Tier 0 draws at a pixel ratio of up to 2 with the stipple; tier 1 at 1.5 with it; tiers 2 and 3 at 1.25 and 1 without it. Without its stipple the foam is the same flat matte colour with the same bevels, so the lowest tier still looks like the game. A tier never changes what happens.
+
+### The look pass
+
+The owner looked at the stills of every game and said of the set that some looked too minimal. This game was then a wide teal mat under a bare cream wall with three small creatures and a tile. The look stayed and the frame was filled: the playroom, the nearer camera, the faces and the larger jokes above are that pass. Its stills and the lines written to them are in the pass log of `REFINEMENT.md`.
 
 ### What the spike showed
 
@@ -252,4 +278,4 @@ For the lead, for section 3 of `docs/art-direction.md`, when the game merges:
 
 | Game | Style | Art guide |
 | --- | --- | --- |
-| Hats for All | Foam play mats 3D: thick matte foam slabs with a fine stipple and a small soft bevel, a jigsaw-toothed teal floor with round spots inlaid, a cream tile the hats press out of and leave their holes in, hats in the three flat primaries, cut-out creatures in secondaries, plain daylight | `games/hats-for-all/ART.md` |
+| Hats for All | Foam play mats 3D: thick matte foam slabs with a fine stipple and a small soft bevel, a jigsaw-toothed teal floor with round spots inlaid, a cream tile the hats press out of and leave their holes in, hats in the three flat primaries, cut-out creatures in secondaries with pressed-on faces, a playroom of pale foam blocks round the mat, plain daylight | `games/hats-for-all/ART.md` |
