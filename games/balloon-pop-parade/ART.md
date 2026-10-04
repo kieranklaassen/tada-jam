@@ -216,8 +216,8 @@ Balloon Pop Parade is designed from four California learning foundations publish
 
 One material for everything but the sky, the strings and the shadows. It reads no three.js light and is not see-through. Each fragment gets a soft wrapped shade that stays in the toy's own hue, a broad pale sheen with a small bright core, a lighter rim that reads as light through the edge, and welded seams drawn from the form's own UVs as a dark groove with a pale lip. The vertex shader breathes the skin a little along its normal. The base colour is in the vertices, times the instance colour for balloons. No texture, no light, no shadow map and no post pass.
 
-- **Forms** (`shapes.ts`, `bodies.ts`). Every form is a pillow: a sphere pulled into an ellipsoid. A friend is about a dozen pillows merged into six meshes, one per part that moves by itself (trunk, head, eyes, two arms, and its funniest part), which makes six draws a friend. The hippo has a seventh: its lower jaw, which drops on a hinge at the back of its mouth when it yawns and shows a lining of its own hue, darker. A trunk has six welded panels, so one seam runs down its front; the crab's shell has eight, so the seams fall either side of its smile and none runs through it, since a bar across a line would read as a sign.
-- **Balloons** are the working pieces and stay plain: one shape, one size, one colour, a knot, no seam, no face. All of them, in the sky, in a hand, in flight and on the far hill, are one instanced draw, and so are the scraps of a pop and the drops of a cloud, which are drawn from the same form made small. Strings are a second, in a darker shade of their balloon, and blob shadows a third, each a soft disc tinted with the colour of the toy above it.
+- **Forms** (`shapes.ts`, `bodies.ts`). Every form is a pillow: a sphere pulled into an ellipsoid. A friend is about a dozen pillows merged into six meshes, one per part that moves by itself (trunk, head, eyes, two arms, and its funniest part), which makes six draws a friend. The hippo has a seventh: its lower jaw, which drops on a hinge at the back of its mouth when it yawns and shows a lining of its own hue, darker. A trunk has six welded panels, so one seam runs down its front; the crab's shell has eight, so the seams fall either side of its smile and none runs through it, since a bar across a line would read as a sign. For the same reason neither half of the hippo's muzzle has a seam: one down the middle would cross the line of its mouth.
+- **Balloons** are the working pieces and stay plain: one shape, one size, one colour, a knot, no seam, no face. On a surface smaller than the iPad held wide, the balloons a finger can touch, in the sky and in a hand, are all drawn larger by the same amount, up to a quarter, so that each is still about a hundred logical pixels across (`balloon` in `layout.ts`). All of them, in the sky, in a hand, in flight and on the far hill, are one instanced draw, and so are the scraps of a pop and the drops of a cloud, which are drawn from the same form made small. Strings are a second, in a darker shade of their balloon, and blob shadows a third, each a soft disc tinted with the colour of the toy above it.
 
 ### Lighting
 
@@ -228,7 +228,8 @@ Daylight from up, left and in front, fixed in view space, so every form is lit t
 - Everything is air under vinyl: a touch squashes it, letting go springs it back past round, and it wobbles before it settles. Nothing stops dead. A squashed friend spreads by half of what its volume would ask, so it never pushes into the friend beside it.
 - A balloon squashes flat under the finger the moment the finger lands, swoops down when the finger lifts, and a new one drifts into its place small and grows.
 - Each kind has its own tempo, weight and funniest part, and no two share a motion: the duck is quick and light and its tail never stops; the frog is still and then sudden, with a throat that swells; the hippo is slow and heavy, with a belly that wobbles after everything; the crab goes sideways in stops and starts, with eyes on stalks. Each has nine motions (a catch, a refusal, being carried off, a start at a pop, two ways to take a poke, a wave, a proud move and a march) and its own gait, and tests fail when two kinds' motions, or two motions of one kind, come too close.
-- A director keeps it from repeating: a poke is never taken the same way twice running, and a motion a touch starts never runs at quite the same speed twice.
+- A director keeps it from repeating: a poke is never taken the same way twice running, and a motion a touch starts never runs at quite the same speed twice. Both ways a kind takes a poke have what the sheet gives it: the duck's tail wags, the frog hops on the spot, the hippo's belly wobbles, the crab shuffles sideways.
+- A consequence is drawn where it happens. A balloon the frog refuses is bounced off and flies from it for a moment before it pops. A bunch that is too many hangs with one balloon straight over the friend that grabbed it and the rest over the empty ground beside it. The balloons of a bunch bigger than the whole troop dart at the cloud over the troop, and it squashes and sheds in the step one reaches it.
 - A friend without a balloon reaches up with both arms; one with a balloon holds its string, lets its free arm down and looks at its balloon, which hangs on the child's right of it. The troop that waits keeps its arms down. A crab's claw cannot hang, since it is long enough to go through the hill: let down, it comes as far as it goes, low and out in front, so a crab with a balloon is told from one without as easily as any other kind. In everything else a crab does its claws stay up, and only one dips at a time.
 - An arm comes round to the front as it is raised or let down, and a hand that holds a string stays up whatever else the friend does. A refusal goes to the side the bunch hangs on. All three are there so that no friend ever reaches into the one beside it.
 - A bunch with one for each is taken at once by ducks and by frogs, whose tongues cross in the air on the way, and one after another by hippos, who yawn in a row with their mouths open, and crabs, who snip in a row. A frog's tongue is flung: it bows out and down like a thrown rope and ends in a fat pad, so two that cross are two bows and never two crossed bars. A frog that passes by takes its balloon with its tongue too. A frog that is carried off hangs from the bunch by its tongue.
@@ -239,7 +240,7 @@ Daylight from up, left and in front, fixed in view space, so every form is lit t
 
 ### The far hill, the clouds and the ghost hand (`scenery.ts`, `layout.ts`)
 
-- **The far hill** is a paler pillow a long way back and to the right. The last four troops the child served go round its top in single file with the balloons they carried off: whole toys in one geometry, one batch a kind, a little smaller than the friends in front, hazed towards the sky, with balloons a step paler than the ones in play.
+- **The far hill** is a paler pillow a long way back and to the right. The last four troops the child served go round its top in single file with the balloons they carried off: whole toys in one geometry, one batch a kind, a little smaller than the friends in front, hazed towards the sky, with balloons a step paler than the ones in play. A troop that is touched squeaks in its kind's voice, small and quiet, and jumps, and the others jump after it; a touch on the far hill itself gets a small far boing, and everyone on it jumps.
 - **The clouds** are three white pillows, far back and below the row of balloons. The smallest hangs over the troop. A touched cloud squashes, squeaks and sheds blue drops, and so does the one over the troop when the spare balloons of too big a bunch bump it.
 - **The hill** answers a touch with a dimple where the finger is and a slow wobble that everyone standing on it rides.
 - **The idle guidance.** What can be touched next breathes: a bunch swells and settles, never changing colour, since its colour is what the child sorts by; the troop that waits takes a pale glow. The ghost hand is an inflated white mitten with a yellow cuff. It grows in from below and to the right of what it points at, dips onto it once, and shrinks away; the bunch under it squashes as a touched one would.
@@ -250,14 +251,14 @@ Every sound is synthesized: rubber, air and vinyl. Each is a few partials kept a
 
 ### How each tier keeps the look (`config.ts`)
 
-| Tier | Pixel ratio | Sheen core | Breathing skin | Clouds |
-| --- | --- | --- | --- | --- |
-| 0 | 2 | on | on | on |
-| 1 | 1.5 | on | on | on |
-| 2 | 1.25 | off | on | on |
-| 3 | 1 | off | off | off |
+| Tier | Pixel ratio | Sheen core | Breathing skin |
+| --- | --- | --- | --- |
+| 0 | 2 | on | on |
+| 1 | 1.5 | on | on |
+| 2 | 1.25 | off | on |
+| 3 | 1 | off | off |
 
-A tier changes drawing only. The broad sheen, the pale rim, the seams and every form stay at every tier, so the lowest tier is the same toys with a softer highlight under an empty sky. No tier change compiles anything: the sheen and the breathing are uniforms.
+A tier changes drawing only. The broad sheen, the pale rim, the seams, every form and the three clouds stay at every tier, since the clouds answer a touch and take part in two consequences; the lowest tier is the same scene with a softer highlight and a still skin. No tier change compiles anything: the sheen and the breathing are uniforms.
 
 ### Budget
 
