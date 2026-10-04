@@ -20,8 +20,8 @@ import { FoamStage, type Guide } from './view/stage3d'
 const FRAME = 1 / 60
 /** The jam's bar is about 80 draw calls; this look's own is about 30. */
 const DRAW_BUDGET = 30
-/** Measured when written: 38,714 at the most, counting every mesh whole. */
-const TRIANGLE_BUDGET = 45000
+/** Measured with the playroom in the frame: 54,000 at the most, counting every mesh whole. About 39,000 of them are the mat, and 12,000 the room, which never changes. */
+const TRIANGLE_BUDGET = 60000
 
 function count(stage: FoamStage): { draws: number; triangles: number } {
   stage.scene.updateMatrixWorld()
@@ -102,9 +102,10 @@ describe('frame budget', () => {
   })
 
   it('every frame submits a small, bounded number of draws', () => {
-    // Measured when written, with the glow and the hand shown on every frame: 20 at most, 18.5 on average, with seven creatures on the mat at the most.
+    // Measured with the playroom in the frame and the glow and the hand shown on every frame: 25 at most, 23.3 on average, with seven creatures on the mat at the most.
+    // The room costs five draws: what stands still in one, and the crown, the cloud, the ball and the brick, which move.
     expect(Math.max(...seen.map((frame) => frame.draws)), 'most draws in one frame').toBeLessThanOrEqual(DRAW_BUDGET)
-    expect(seen.reduce((sum, frame) => sum + frame.draws, 0) / seen.length, 'average draws a frame').toBeLessThanOrEqual(DRAW_BUDGET * 0.7)
+    expect(seen.reduce((sum, frame) => sum + frame.draws, 0) / seen.length, 'average draws a frame').toBeLessThanOrEqual(DRAW_BUDGET * 0.85)
   })
 
   it('and a bounded number of triangles, most of them the floor, which never changes', () => {

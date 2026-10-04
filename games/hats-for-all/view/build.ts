@@ -11,7 +11,6 @@ import { archOutline, creatureCut, earOutline, hatOutline, holeBase, matTileOutl
 
 export const PALETTE = {
   wall: '#f6efe2',
-  room: '#eadfcd',
   matA: '#27a99a',
   matB: '#2fb8a8',
   spot: '#63d2c3',
@@ -52,14 +51,7 @@ export function buildMat(): THREE.BufferGeometry {
   return merged([mat, ...spots])
 }
 
-/** The room the mat lies in: a pale floor and a pale wall, plain so the foam is all there is to look at. */
-export function buildRoom(): THREE.BufferGeometry {
-  const floor = paint(new THREE.PlaneGeometry(120, 80).rotateX(-Math.PI / 2).translate(0, -SLAB, 0), PALETTE.room)
-  const wall = paint(new THREE.PlaneGeometry(120, 40).translate(0, 20 - SLAB, MAT_BACK - 4.5), PALETTE.wall)
-  return merged([floor, wall])
-}
-
-/** The arch, standing on the origin: the view puts it at the mat's edge, and it squashes about its own feet. */
+/** The arch, standing on the origin: the view puts it behind the right end of the row, and it squashes about its own feet. */
 export function buildArch(): THREE.BufferGeometry {
   return slab(archOutline(), ARCH.depth, PALETTE.furniture)
 }

@@ -234,6 +234,12 @@ export function flap(count: number): Partial[] {
   return [noise(0, 520 * v, 300 * v, 1, 0.09, 0.006, 0.07), noise(0.15, 480 * v, 280 * v, 1, 0.08, 0.006, 0.07)]
 }
 
+/** The tree's crown is shaken: a soft rustle of foam leaves. */
+export function rustle(count: number): Partial[] {
+  const v = vary(count)
+  return [noise(0, 1500 * v, 2300 * v, 1.4, 0.06, 0.03, 0.22), noise(0.12, 2100 * v, 1300 * v, 1.4, 0.05, 0.03, 0.25)]
+}
+
 /** A creature claps, once. */
 export function clap(count: number): Partial[] {
   return [noise(0, 1800 * vary(count), 1200, 1.5, 0.1, 0.002, 0.04)]

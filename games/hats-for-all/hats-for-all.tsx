@@ -134,11 +134,13 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
           held = view.pick(gesture.at.x, gesture.at.y, game.play)
           from = gesture.at
           dragging = false
+          watch(gesture.at)
           game.press(held)
         } else if (!held) continue
         else if (gesture.type === 'tap') { game.tap(); held = null }
         else if (gesture.type === 'pressEnd') { game.pressEnd(); held = null }
         else if (gesture.type === 'dragMove' || gesture.type === 'dragLift') {
+          watch(gesture.at)
           if (!dragging && Math.hypot(gesture.at.x - from.x, gesture.at.y - from.y) < SMEAR) continue
           if (!dragging) { dragging = true; game.dragStart() }
           const point = view.handPoint(gesture.at.x, gesture.at.y)
@@ -151,6 +153,11 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       }
       sound()
       keep()
+    }
+    // The creatures' eyes follow the finger: where it is over the mat, as a hat in the hand would float there.
+    const watch = (where: Point) => {
+      const point = view.handPoint(where.x, where.y)
+      game?.fingerAt(point.x, point.y, point.z)
     }
     // Plays what the game has asked to be heard since the last call: inside the gesture, so the first sound
     // falls within the touch, and again after each step of the loop.

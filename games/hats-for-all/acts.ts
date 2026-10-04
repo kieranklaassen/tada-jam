@@ -54,7 +54,7 @@ const hops = (u: number, times: number): number => Math.abs(Math.sin(u * Math.PI
 export const ACTS: Record<string, Act> = {
   // --- The fifteen acts of the tastes (tastes.ts) ---
   'spins-until-dizzy': { lasts: 1.8, play: (u, m) => { m.turn = TAU * 2 * Math.min(1, u / 0.6) ** 0.8 * (u < 0.6 ? 1 : 0); m.squash = 1 - 0.2 * bump(u, 0.6, 1); m.lean = 0.2 * swing(u, 4) * bump(u, 0.6, 1); m.cross = bump(u, 0.55, 1) } },
-  'walks-as-a-hat-with-legs': { lasts: 1.9, play: (u, m, top) => { const low = down(u); m.hatLift = -(top - 0.55) * low; m.hatFwd = forward(u); m.dx = 0.42 * swing(u, 2) * low; m.dy = 0.1 * hops(u, 8) * low; m.pat = bump(u, 0.6, 0.9) } },
+  'walks-as-a-hat-with-legs': { lasts: 1.9, play: (u, m, top) => { const low = down(u); m.hatLift = -(top - 0.55) * low; m.hatFwd = forward(u); m.dx = 0.56 * swing(u, 2) * low; m.dy = 0.17 * hops(u, 8) * low; m.pat = bump(u, 0.6, 0.9) } },
   'bounces-twice': { lasts: 0.9, play: (u, m) => { m.dy = 0.5 * hops(u, 2) * (1 - u * 0.4); m.squash = 1 - 0.12 * bump(u, 0.42, 0.58) } },
   'stretches-and-struts': { lasts: 1.8, play: (u, m) => { const tall = hold(u); m.squash = 1 + 0.16 * tall; m.dx = 0.45 * swing(u, 1) * tall; m.lean = -0.08 * swing(u, 3) * tall; m.looks = tall; m.gazeY = 0.6 } },
   'goes-cross-eyed': { lasts: 1.6, play: (u, m) => { const on = hold(u); m.cross = on; m.looks = on; m.gazeY = 0.9; m.hatTilt = 0.18 * swing(u, 3) * on; m.lean = 0.04 * swing(u, 3) * on } },
@@ -73,9 +73,11 @@ export const ACTS: Record<string, Act> = {
   'pats-its-bare-head': { lasts: 1.2, play: (u, m) => { m.pat = hold(u) * (0.8 + 0.2 * hops(u, 4)); m.looks = hold(u); m.gazeY = -0.8 } },
   'looks-into-the-holes': { lasts: 1.6, play: (u, m) => { m.pat = bump(u, 0, 0.5); m.squash = 1 - 0.08 * bump(u, 0.4, 1); m.lean = 0.1 * swing(u, 1) * bump(u, 0.4, 1); m.looks = hold(u); m.gazeY = -1; m.gazeX = 0.5 * swing(u, 1) } },
   'does-a-trick': { lasts: 0.8, play: (u, m) => { m.dy = 0.45 * bump(u, 0, 0.7); m.hatLift = 0.5 * bump(u, 0.1, 0.9); m.lean = 0.1 * swing(u, 1) } },
-  'totters-blind': { lasts: 1.6, play: (u, m) => { m.dx = 0.3 * swing(u, 1.5) * hold(u); m.lean = 0.14 * swing(u, 3) * hold(u); m.pat = 0.5 * hold(u) } },
+  'totters-blind': { lasts: 1.9, play: (u, m) => { m.dx = 0.52 * swing(u, 1.5) * hold(u); m.lean = 0.2 * swing(u, 3) * hold(u); m.pat = 0.55 * hold(u); m.dy = 0.14 * hops(u, 6) * hold(u) } },
   'blinks-in-the-light': { lasts: 1.0, play: (u, m) => { m.cross = 0.6 * bump(u, 0, 0.6); m.squash = 1 + 0.06 * bump(u, 0, 0.5); m.looks = hold(u); m.gazeY = 0.5 } },
   'salutes-and-topples': { lasts: 1.2, play: (u, m) => { m.pat = 0.5 * bump(u, 0, 0.5); m.lean = 0.22 * swing(u, 2) * (1 - u); m.squash = 1 - 0.12 * bump(u, 0.5, 0.8) } },
+  // The one who gets none makes a show of it: looks into every hole and at every other head, throws its hands up and jumps to its full height, then sits down with a bump, slumped to one side and cross-eyed. It is bewildered, and it is about the hats: never about the child.
+  'makes-a-show-of-it': { lasts: 1.9, play: (u, m) => { m.looks = hold(u, 0.1, 0.15); m.gazeX = swing(u, 1.5); m.gazeY = -0.8 + 1.5 * bump(u, 0.28, 0.6); m.pat = bump(u, 0.2, 0.62); m.squash = 1 + 0.26 * bump(u, 0.24, 0.52) - 0.27 * bump(u, 0.56, 0.93); m.dy = 0.6 * bump(u, 0.3, 0.56); m.lean = 0.34 * bump(u, 0.58, 0.96); m.cross = bump(u, 0.6, 0.92) } },
   'watches-it-go': { lasts: 1.4, play: (u, m) => { m.looks = hold(u); m.gazeY = -0.6; m.lean = 0.06 * bump(u) } },
   'ducks-under': { lasts: 0.8, play: (u, m) => { m.squash = 1 - 0.22 * bump(u, 0, 0.6) + 0.08 * bump(u, 0.6, 1); m.looks = hold(u); m.gazeY = 1 } },
   'waves-it-off': { lasts: 1.2, play: (u, m) => { m.pat = 0.45 * hold(u) * (0.6 + 0.4 * hops(u, 5)); m.lean = 0.08 * swing(u, 2.5) * hold(u); m.looks = hold(u); m.gazeY = -0.7 } },

@@ -25,8 +25,8 @@ export function holeX(hole: number, hats: number): number {
 /** Where a loose hat rests: in front of its round spot, clear of the lane the creatures walk along. */
 export const LOOSE_Z = ROW_Z + 2.7
 
-/** The foam arch the creatures come in through, at the back right of the mat. */
-export const ARCH_X = 10.2
+/** The foam arch the creatures come in through, behind the right end of the row. */
+export const ARCH_X = 6.4
 export const ARCH_Z = -4.0
 
 /** The spot whose x is nearest to this x; the lower spot wins a tie. */

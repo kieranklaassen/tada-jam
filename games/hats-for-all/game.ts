@@ -1,16 +1,18 @@
 import { due, freshPace, touched, waited, waitingLead, withWorld, type Pace } from './cycle'
 import { GRID, type Action, type ObjectKind } from './grid'
-import type { CreatureKind } from './kinds'
+import type { CreatureKind, HatKind } from './kinds'
 import { PERSONALITY } from './motion'
-import { Play, type Seen, type Travel } from './play'
-import { creatureAt, dropHat, placeOf, tapCreature, tapHat, type Drop, type Happened, type Outcome, type Place } from './rules'
+import { Play, type ActorPose, type Seen, type Travel } from './play'
+import type { PropName } from './props'
+import { bareSpots, creatureAt, dropHat, hatsInTile, placeOf, settled, tapCreature, tapHat, type Drop, type Happened, type Outcome, type Place } from './rules'
 import { worldOf, type Saved } from './save'
 import { Scene } from './scene'
+import { BODY, CREATURE_DEPTH } from './sizes'
 import { changeShow, firstShowing, nextCrewShow, paradeShow, type Show } from './shows'
 import { IN_ARCH, LOOSE_Z, ROW_Z, TILE_Z, holeX, nearestSpot, spotPoint, spotX } from './stage'
 import { ACTS as TASTE_ACTS, moodFor, tasteFor } from './tastes'
 import {
-  babble, bap, bip, bloopBlip, bomBom, chirrup, clap, creak, donk, dwong, flap, fwump, groan, hiss, hoot, hum, paf, pip, plap, plop, pok, pomf, rumble,
+  babble, bap, bip, bloopBlip, bomBom, chirrup, clap, creak, donk, dwong, flap, fwump, groan, hiss, hoot, hum, paf, pip, plap, plop, pok, pomf, rumble, rustle,
   scuttle, shoop, squeak, squeal, squelch, thwop, tok, twang, voiceLength, whirr, whistle, zrrp, type Mood,
 } from './voices'
 
@@ -21,7 +23,7 @@ import {
 // refused, rated or counted on screen.
 
 /** What a finger landed on. A creature is named as the theatre names it. */
-export type Target = { type: 'hat'; hat: number } | { type: 'creature'; who: string } | { type: 'arch' } | { type: 'floor'; x: number; z: number }
+export type Target = { type: 'hat'; hat: number } | { type: 'creature'; who: string } | { type: 'arch' } | { type: 'prop'; prop: PropName } | { type: 'floor'; x: number; z: number }
 
 /** Where a dragged thing is let go. */
 export type LetGo = { on: 'creature'; who: string } | { on: 'tile' } | { on: 'floor'; x: number; z: number }
@@ -132,6 +134,7 @@ export class Game {
     if (!this.play.has(who)) return
     const voice = babble(this.play.kindOf(who), mood, this.next())
     this.play.speaks(who, delay + voiceLength(voice))
+    this.play.feels(who, mood, delay + voiceLength(voice) + 0.9)
     this.play.cue(mood === 'ask' ? 'babble-ask' : mood === 'grump' ? 'babble-grump' : 'babble', voice, delay)
   }
 
@@ -147,7 +150,7 @@ export class Game {
     const world = worldOf(this.saved)
     for (const creature of world.crew) {
       const one = creature.hats.length === 1 ? world.tile[creature.hats[0]] : null
-      this.play.sulks(creature.kind, one !== null && tasteFor(creature.kind, one) === 'cannot-stand')
+      this.play.sulks(creature.kind, one !== null && tasteFor(creature.kind, one) === 'cannot-stand', one !== null && tasteFor(creature.kind, one) === 'loves')
     }
   }
 
@@ -177,7 +180,7 @@ export class Game {
   press(target: Target): void {
     this.endScene()
     this.held = target
-    this.play.cue(target.type === 'floor' ? 'squeak' : 'creak', target.type === 'floor' ? squeak(this.next()) : creak(this.next()))
+    if (target.type !== 'prop') this.play.cue(target.type === 'floor' ? 'squeak' : 'creak', target.type === 'floor' ? squeak(this.next()) : creak(this.next()))
     if (target.type === 'hat') {
       this.play.pressHat(target.hat, true)
       const place = placeOf(worldOf(this.saved), target.hat)
@@ -187,7 +190,36 @@ export class Game {
       this.play.pressActor(target.who, true)
       this.pace = touched(this.pace, this.saved)
     } else if (target.type === 'arch') this.play.archPressed = true
-    else this.play.dimple(target.x, target.z)
+    else if (target.type === 'prop') {
+      // A thing of the room: it wobbles and sounds, and nothing in the world changes.
+      this.play.poke(target.prop)
+      this.play.cue(target.prop === 'tree' ? 'rustle' : target.prop === 'brick' ? 'donk' : 'bom-bom', target.prop === 'tree' ? rustle(this.next()) : target.prop === 'brick' ? donk(this.next()) : bomBom('dome', this.next()), 0.03)
+    } else this.play.dimple(target.x, target.z)
+  }
+
+  /** Where the finger is over the mat, for the creatures' eyes. */
+  fingerAt(x: number, y: number, z: number): void {
+    this.play.fingerAt(x, y, z)
+  }
+
+  private readonly shown = new Set<string>()
+
+  /**
+   * The one who gets none makes a show of it. When every hat is on a head and a head is still bare, each bare
+   * creature does it once: it looks into the holes and at the other heads, throws up its hands, shrugs and sits
+   * down with a bump. It is about the hats and never about the child, and then it waits, calm.
+   */
+  private makesAShow(): void {
+    const world = worldOf(this.saved), none = settled(world) && hatsInTile(world).length === 0 ? bareSpots(world) : []
+    for (const who of [...this.shown]) if (!none.some((spot) => this.at(spot) === who)) this.shown.delete(who)
+    for (const spot of none) {
+      const who = this.at(spot)
+      if (this.shown.has(who)) continue
+      this.shown.add(who)
+      this.seen.push('makes-a-show-of-it')
+      this.play.act(who, 'makes-a-show-of-it')
+      this.says(who, 'ask', 0.25)
+    }
   }
 
   private lift(): Target | null {
@@ -296,6 +328,7 @@ export class Game {
     this.pace = touched(this.pace, this.saved)
     this.dress()
     for (const event of outcome.happened) this.plays(event, object, action, carried, outcome.happened)
+    this.makesAShow()
   }
 
   private plays(event: Happened, object: ObjectKind, action: Action, carried: boolean, all: Happened[]): void {
@@ -368,12 +401,19 @@ export class Game {
     const play = this.play
     play.cue('bap', bap(this.saved.tile[hats[hats.length - 1]], this.next()))
     play.act(who, 'salutes-and-topples')
+    play.after(0.5, () => { if (play.has(who)) this.crumbsAt(who, this.saved.tile[hats[hats.length - 1]], 8) })
     play.cue('whistle', whistle(this.next()), 0.35)
     // They leave from the top down, a moment apart, so no hat flies through the one above it.
     hats.forEach((hat, level) => play.after(0.5 + (hats.length - 1 - level) * 0.14, () => {
       const kind = this.saved.tile[hat]
       if (play.seen(hat).at === 'head') play.moveHat(hat, { at: 'tile' }, 'pop', () => play.cue('fwump', fwump(kind, this.next())))
     }))
+  }
+
+  private readonly crumbPose = { x: 0, y: 0, z: 0 } as ActorPose
+  private crumbsAt(who: string, kind: HatKind, count: number): void {
+    const at = this.play.actorPose(who, this.crumbPose)
+    this.play.puff(at.x, BODY[this.play.kindOf(who)].top * 0.9, at.z + CREATURE_DEPTH / 2 + 0.3, count, kind)
   }
 
   /** A hat comes down on a head: the creature gives under it and reacts to exactly this hat, and the others look. */
@@ -387,6 +427,8 @@ export class Game {
     else if (carried && object === 'hat-on-head') play.cue(tower ? 'squelch' : 'bloop-blip', tower ? squelch(this.next()) : bloopBlip(kind, this.next()))
     else play.cue('bap', bap(kind, this.next()))
     play.bounce(who, 1 - PERSONALITY[creature.kind].bounce)
+    // Crumbs of the hat's own foam fly from where it comes down, and lie a moment.
+    this.crumbsAt(who, kind, tower ? 6 : 4)
     if (tower) {
       // A second hat: the tower slips over its eyes and it totters, bewildered and never hurt. A loose hat makes the
       // tower lean with a creak; the top of another tower lands with a second soft thump.

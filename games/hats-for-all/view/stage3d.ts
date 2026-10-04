@@ -2,11 +2,13 @@ import * as THREE from 'three'
 import type { LetGo, Target } from '../game'
 import type { Hint } from '../guide'
 import { MOST, type HatKind } from '../kinds'
-import { DIMPLE_SECONDS, type ActorPose, type Play } from '../play'
+import { DIMPLE_SECONDS, MOST_CRUMBS, type ActorPose, type Play } from '../play'
 import { CREATURE_DEPTH, HAND, HAT_HALF, HAT_HEIGHT, SLAB, TILE_DEPTH } from '../sizes'
+import { BALL_RADIUS, BALL_ROLL, BRICK_HOP, BRICK_REST_Y, CLOUD_DRIFT, PROPS, PROP_AT, PROP_LEAN } from '../props'
 import { ARCH_X, ARCH_Z, LANE_Z, TILE_Z } from '../stage'
 import { tileWidth } from '../tile'
-import { CREATURE_COLOUR, EAR_DEPTH, MAT_BACK, PALETTE, buildArch, buildMat, buildPieces, buildRoom, buildTile, type Pieces } from './build'
+import { CREATURE_COLOUR, EAR_DEPTH, HAT_COLOUR, MAT_BACK, PALETTE, buildArch, buildMat, buildPieces, buildTile, type Pieces } from './build'
+import { CLOUD_AT, TINT, buildBall, buildBrick, buildCloud, buildCrown, buildRoomPlanes, buildScenery } from './room'
 import { RING_CLEAR, blobTexture, foamMaterials, handTexture, ringTexture } from './foam'
 
 // The foam scene as three.js objects, with no renderer: it is built once,
@@ -16,8 +18,12 @@ import { RING_CLEAR, blobTexture, foamMaterials, handTexture, ringTexture } from
 
 /** The most creatures on the mat at once: a crew walking off, the next walking in, and no more. */
 const BODIES = MOST * 2
-const BLOBS = BODIES + MOST + 8
+const BLOBS = BODIES + MOST + 11
 const GLOWS = MOST
+/** The dots of a face: two pupils, the open mouth, two cheeks, two brows and the two halves of the shut mouth's line. */
+const DOTS = 9
+const CHEEK = new THREE.Color('#ff8fa6')
+const WHITE = new THREE.Color('#ffffff')
 const HAT_REACH = 1.15
 /** A hat in the hand floats on a wall in front of the row, and never lower than this above the floor: clear of every head, loose hat and the tile. */
 const HOLD_Z = LANE_Z + 0.45
@@ -41,6 +47,11 @@ export class FoamStage {
   private readonly blobs: THREE.InstancedMesh
   private readonly glows: THREE.InstancedMesh
   private readonly hand: THREE.Sprite
+  private readonly crown: THREE.Mesh
+  private readonly cloud: THREE.Mesh
+  private readonly brick: THREE.Mesh
+  private readonly ball: THREE.Mesh
+  private readonly dark = new THREE.Color(PALETTE.dot)
   private readonly textures = [blobTexture(), handTexture(), ringTexture()]
   private readonly m = new THREE.Matrix4()
   private readonly body = new THREE.Matrix4()
@@ -49,6 +60,7 @@ export class FoamStage {
   private readonly q = new THREE.Quaternion()
   private readonly s = new THREE.Vector3()
   private readonly colour = new THREE.Color()
+  private readonly tint = new THREE.Color()
   private readonly ray = new THREE.Raycaster()
   private readonly pose = {} as ActorPose
   private tileFor = ''
@@ -68,7 +80,14 @@ export class FoamStage {
       if (material === this.foam.stippled) this.solid.push(mesh)
       return mesh
     }
-    add('room', buildRoom(), this.foam.plain)
+    // The room: its flat floor, wall and window pane; then everything of it that stands still, in one mesh; then the four things that move.
+    add('room', buildRoomPlanes(), this.foam.plain)
+    add('scenery', buildScenery())
+    this.crown = add('tree-crown', buildCrown())
+    this.cloud = add('cloud', buildCloud(), this.foam.plain)
+    this.brick = add('brick', buildBrick())
+    this.ball = add('ball', buildBall())
+    this.crown.matrixAutoUpdate = false
     add('mat', buildMat())
     this.arch = add('arch', buildArch())
     this.arch.position.set(ARCH_X, 0, ARCH_Z)
@@ -103,14 +122,14 @@ export class FoamStage {
     }
     const flat = (colour: string, opacity: number, map = 0): THREE.MeshBasicMaterial => new THREE.MeshBasicMaterial({ color: colour, map: this.textures[map], transparent: true, opacity, depthWrite: false })
     this.hands = instanced('hands', this.pieces.hand, this.foam.plain, BODIES * 2)
-    this.dots = instanced('dots', this.pieces.dot, new THREE.MeshBasicMaterial({ color: PALETTE.dot }), BODIES * 3)
+    this.dots = instanced('dots', this.pieces.dot, new THREE.MeshBasicMaterial({ color: '#ffffff' }), BODIES * DOTS + MOST_CRUMBS)
     this.blobs = instanced('shadow-blobs', this.pieces.blob, flat(PALETTE.shadow, 0.5), BLOBS)
     this.glows = instanced('glow-blobs', this.pieces.blob, flat(PALETTE.glow, 1, 2), GLOWS)
     this.blobs.renderOrder = 1
     this.glows.renderOrder = 2
     // The owners of each hand and each dot, for a check that reads the scene: they belong to their creature.
     this.hands.userData.jamInstanceObjects = Array.from({ length: BODIES * 2 }, (_, i) => `creature-${Math.floor(i / 2)}`)
-    this.dots.userData.jamInstanceObjects = Array.from({ length: BODIES * 3 }, (_, i) => `creature-${Math.floor(i / 3)}`)
+    this.dots.userData.jamInstanceObjects = Array.from({ length: BODIES * DOTS + MOST_CRUMBS }, (_, i) => (i < BODIES * DOTS ? `creature-${Math.floor(i / DOTS)}` : 'crumbs'))
     this.hand = new THREE.Sprite(new THREE.SpriteMaterial({ map: this.textures[1], transparent: true, depthTest: false, depthWrite: false }))
     this.hand.name = 'ghost-hand'
     this.hand.center.set(0.5, 1)
@@ -129,10 +148,10 @@ export class FoamStage {
     this.height = height
     // The whole row, the arch and the tile stay in view at any shape: a narrow surface moves the camera back.
     const aspect = width / height, half = THREE.MathUtils.degToRad(this.camera.fov / 2)
-    const far = Math.max(11.6 / (Math.tan(half) * aspect), 6.5 / Math.tan(half))
+    const far = Math.max(8.5 / (Math.tan(half) * aspect), 5.2 / Math.tan(half))
     this.camera.aspect = aspect
-    this.camera.position.set(2.6, 1.6 + far * Math.sin(0.6), 1.1 + far * Math.cos(0.6))
-    this.camera.lookAt(2.6, 1.6, 1.1)
+    this.camera.position.set(0.2, 2.1 + far * Math.sin(0.6), 1.2 + far * Math.cos(0.6))
+    this.camera.lookAt(0.2, 2.1, 1.2)
     this.camera.updateProjectionMatrix()
     this.camera.updateMatrixWorld()
   }
@@ -154,7 +173,7 @@ export class FoamStage {
 
   /** Moves everything to where the theatre has it this frame. With no theatre yet, the bare mat and the arch. */
   update(play: Play | null, guide: Guide | null): void {
-    let blob = 0, dot = 0, hand = 0, ear = 0, glow = 0
+    let blob = 0, dotCount = 0, hand = 0, ear = 0, glow = 0
     const shade = (x: number, z: number, wide: number, deep: number, y = 0.012): void => {
       if (blob < BLOBS) this.blobs.setMatrixAt(blob++, this.m.compose(this.v.set(x, y, z), this.q.identity(), this.s.set(wide, 1, deep)))
     }
@@ -179,20 +198,33 @@ export class FoamStage {
       mesh.matrix.copy(this.body)
       mesh.matrixWorldNeedsUpdate = true
       const front = CREATURE_DEPTH / 2
-      const part = (x: number, y: number, z: number, sx: number, sy: number): THREE.Matrix4 => this.m.compose(this.v.set(x, y, z), this.q.identity(), this.s.set(sx, sy, 1)).premultiply(this.body)
-      const pupil = cut.eyeSize * 0.5, wander = cut.eyeSize * 0.42
+      const part = (x: number, y: number, z: number, sx: number, sy: number, turn = 0): THREE.Matrix4 => this.m.compose(this.v.set(x, y, z), this.q.setFromAxisAngle(this.w.set(0, 0, 1), turn), this.s.set(sx, sy, 1)).premultiply(this.body)
+      const dot = (n: number, matrix: THREE.Matrix4, colour: THREE.Color): void => {
+        this.dots.setMatrixAt(i * DOTS + n, matrix)
+        this.dots.setColorAt(i * DOTS + n, colour)
+      }
+      const eye = cut.eyeSize, pupil = eye * 0.5, wander = eye * 0.42, smile = Math.max(0, pose.smile), frown = Math.max(0, -pose.smile)
+      // Its cheeks are a warmer tint of its own colour, and rise and round out when it smiles.
+      this.colour.set(CREATURE_COLOUR[kind]).lerp(CHEEK, 0.6)
       for (const side of [-1, 1]) {
+        const n = (side + 1) / 2
         // Crossed eyes turn each pupil in towards the other.
         const lookX = pose.gazeX * (1 - pose.cross) - side * pose.cross
-        this.dots.setMatrixAt(i * 3 + (side + 1) / 2, part(side * cut.eyeGap + lookX * wander, cut.faceY + pose.gazeY * wander, front + 0.17, pupil, pupil * pose.eyes))
+        dot(n, part(side * cut.eyeGap + lookX * wander, cut.faceY + pose.gazeY * wander, front + 0.17, pupil, pupil * pose.eyes), this.dark)
+        dot(3 + n, part(side * (cut.eyeGap + eye * 0.95), cut.faceY - eye * 1.0 + 0.05 * smile, front + 0.012, eye * (0.44 + 0.1 * smile), eye * (0.34 + 0.08 * smile)), this.colour)
+        // Its brows: raised when it is glad, tipped up in the middle when it wonders, down in the middle when it is cross.
+        dot(5 + n, part(side * cut.eyeGap, cut.faceY + eye * 1.22 + 0.07 * pose.browLift, front + 0.012, eye * 0.6, eye * 0.15, side * pose.browTilt * 0.45), this.dark)
         // A hand rests at its side, and goes up to pat the top of its bare head.
         const hx = side * (cut.reach + (0.36 - cut.reach) * pose.pat), hy = cut.top * 0.42 + (cut.top * 0.56 + 0.08) * pose.pat
-        this.hands.setMatrixAt(i * 2 + (side + 1) / 2, part(hx, hy, HAND.front - HAND.depth / 2, 1, 1))
-        this.hands.setColorAt(i * 2 + (side + 1) / 2, this.colour.set(CREATURE_COLOUR[kind]).multiplyScalar(0.86))
+        this.hands.setMatrixAt(i * 2 + n, part(hx, hy, HAND.front - HAND.depth / 2, 1, 1))
+        this.hands.setColorAt(i * 2 + n, this.tint.set(CREATURE_COLOUR[kind]).multiplyScalar(0.86))
         if (kind === 'flop' && ear < this.ears.length) this.swing(this.ears[ear++], i, side, cut.top, pose)
       }
-      this.dots.setMatrixAt(i * 3 + 2, part(0, cut.faceY - cut.eyeSize * 1.55, front + 0.02, 0.15 + 0.05 * pose.mouth, 0.045 + 0.15 * pose.mouth))
-      dot = (i + 1) * 3
+      // Its mouth. Shut, it is a line in two halves that turn up at the ends for a smile and down for a sulk; open, it is a round hole that hides the line.
+      const open = Math.min(1, pose.mouth * 1.4), mouthY = cut.faceY - eye * 1.55, half = 0.11 + 0.07 * smile - 0.02 * frown, bend = 0.5 * pose.smile
+      for (const side of [-1, 1]) dot(7 + (side + 1) / 2, part(side * half * 0.8, mouthY + Math.abs(Math.sin(bend)) * half * 0.8 * Math.sign(bend), front + 0.02, half * (1 - open), 0.05 * (1 - open), side * bend), this.dark)
+      dot(2, part(0, mouthY, front + 0.024, (0.13 + 0.05 * smile) * open, (0.1 + 0.11 * pose.mouth) * open), this.dark)
+      dotCount = (i + 1) * DOTS
       hand = (i + 1) * 2
       shade(pose.x, pose.z + 0.1, cut.ground * 2.3 / (1 + pose.y * 0.4), 1.5 / (1 + pose.y * 0.4))
       if (lit({ type: 'creature', who })) halo(pose.x, 0.02, pose.z + 0.1, cut.ground * 1.05, 0.85)
@@ -225,7 +257,14 @@ export class FoamStage {
     } else for (const mesh of this.hats) mesh.visible = false
     shade(ARCH_X - 2.3, ARCH_Z + 0.1, 1.5, 1.3)
     shade(ARCH_X + 2.3, ARCH_Z + 0.1, 1.5, 1.3)
-    this.dots.count = dot
+    // Crumbs and leaves are drawn with the faces' dots, after the last face: they cost no draw of their own. Each shrinks away at the end of its time.
+    if (play) for (const crumb of play.crumbs) {
+      const size = crumb.size * Math.min(1, (crumb.life - crumb.age) / 0.3), leaf = crumb.of === 'leaf'
+      this.dots.setMatrixAt(dotCount, this.m.compose(this.v.set(crumb.x, crumb.y, crumb.z), this.q.setFromAxisAngle(this.w.set(0, 0, 1), crumb.sway + crumb.age * (crumb.y > 0.05 ? 5 : 0)), this.s.set(size * (leaf ? 1.5 : 1), size, 1)))
+      this.dots.setColorAt(dotCount++, crumb.of === 'leaf' ? this.colour.set(TINT.crown) : this.colour.set(HAT_COLOUR[crumb.of]).lerp(WHITE, 0.45))
+    }
+    this.dots.count = dotCount
+    if (this.dots.instanceColor) this.dots.instanceColor.needsUpdate = true
     this.hands.count = hand
     this.blobs.count = blob
     this.glows.count = glow
@@ -237,6 +276,7 @@ export class FoamStage {
       mesh.visible = mesh.count > 0
     }
     if (this.hands.instanceColor) this.hands.instanceColor.needsUpdate = true
+    this.moveRoom(play)
     // The ghost hand comes down on one thing, once, and goes: it is a hand, and it shows a tap.
     const at = play && guide && guide.opacity > 0 && guide.hint.hand ? this.whereIs(guide.hint.hand, play) : null
     this.hand.visible = at !== null
@@ -246,6 +286,24 @@ export class FoamStage {
       this.hand.scale.set(size, size, 1)
       this.hand.material.opacity = guide.opacity * 0.92
     }
+  }
+
+  /** The room's four moving things: the crown sways a little all the time and the cloud drifts in the window; the crown, the ball and the brick wobble when poked. */
+  private moveRoom(play: Play | null): void {
+    const time = play ? play.time : 0, wobble = (name: (typeof PROPS)[number]): number => (play ? play.props[name].x : 0)
+    const lean = 0.03 * Math.sin(time * 0.9) + PROP_LEAN * wobble('tree')
+    // The crown hangs on the top of the trunk and in front of it; it leans as foam does, from where it is held.
+    this.crown.matrix.makeShear(0, 0, -Math.tan(lean), 0, 0, 0).setPosition(PROP_AT.tree.x, 2.7, PROP_AT.tree.z + 0.62)
+    this.crown.matrixWorldNeedsUpdate = true
+    this.cloud.position.set(CLOUD_AT.x + CLOUD_DRIFT.far * Math.sin(time * CLOUD_DRIFT.speed), CLOUD_AT.y, CLOUD_AT.z)
+    // The ball rolls a little way along its block and back, turning as far as it rolls; the brick hops and lands.
+    const roll = BALL_ROLL * wobble('ball')
+    this.ball.position.set(PROP_AT.ball.x + roll, PROP_AT.ball.y, PROP_AT.ball.z)
+    this.ball.rotation.z = -roll / BALL_RADIUS
+    this.brick.position.set(PROP_AT.brick.x, BRICK_REST_Y + BRICK_HOP * Math.abs(wobble('brick')), PROP_AT.brick.z)
+    if (this.blobs.count < BLOBS) this.blobs.setMatrixAt(this.blobs.count++, this.m.compose(this.v.set(PROP_AT.tree.x, 0.012, PROP_AT.tree.z + 0.1), this.q.identity(), this.s.set(2.4, 1, 1.3)))
+    this.blobs.instanceMatrix.needsUpdate = true
+    this.blobs.visible = this.blobs.count > 0
   }
 
   /** Flop's ears hang from the top of its head, swing a little behind its lean, and fling out or droop as it feels. */
@@ -270,6 +328,7 @@ export class FoamStage {
       const pose = play.actorPose(target.who, this.pose)
       return this.w.set(pose.x, pose.y + this.pieces.cuts[play.kindOf(target.who)].top / 2, pose.z)
     }
+    if (target.type === 'prop') return this.w.set(PROP_AT[target.prop].x, PROP_AT[target.prop].y, PROP_AT[target.prop].z)
     return target.type === 'arch' ? this.w.set(ARCH_X, 2.4, ARCH_Z) : null
   }
 
@@ -316,6 +375,7 @@ export class FoamStage {
       tryFor({ type: 'creature', who }, Math.max(cut.reach, cut.top / 2) + 0.15)
     }
     tryFor({ type: 'arch' }, 2.4, 1.15)
+    for (const prop of PROPS) tryFor({ type: 'prop', prop }, PROP_AT[prop].reach, 1.1)
     if (best) return best
     // Nothing near: the finger is on the foam floor, at the place its ray meets the mat.
     return { type: 'floor', ...this.floorUnder(x, y) }

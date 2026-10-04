@@ -18,6 +18,7 @@ import { ARCH, BODY, CREATURE_DEPTH, HAND, TILE_DEPTH } from './sizes'
 import { ARCH_X, ARCH_Z, TILE_Z } from './stage'
 import { tileWidth } from './tile'
 import { MOST } from './kinds'
+import { MOST_CRUMBS } from './play'
 const FRAME = 1 / 60
 
 /** A save around a world, in the middle of a cycle. */
@@ -252,7 +253,7 @@ describe('every scene', () => {
   })
 
   it('gives way to a touch at any moment and leaves the stage as the save has it', () => {
-    for (const position of ['one-leaves', 'one-comes']) for (const when of [0.1, 0.6, 1.3, 2.5, 4]) {
+    for (const position of ['one-leaves', 'one-comes']) for (const when of [0.1, 0.6, 1.3, 2.5, 3.4]) {
       const game = new Game(at(position))
       while (carefulTap(game)) run(game, 0.7)
       run(game, ALONE + when)
@@ -464,5 +465,111 @@ describe('a loose hat that is tapped', () => {
     game.tap()
     expect(run(game, 1.5, heard)).toEqual(['creak', 'bom-bom', 'fwump'])
     expect(game.play.seen(1)).toEqual({ at: 'tile' })
+  })
+})
+
+describe('the room', () => {
+  // A finished crew at rest: nothing is due, so whatever moves is the room.
+  const calm: World = { crew: [{ kind: 'bop', spot: 1, hats: [0] }, { kind: 'flop', spot: 2, hats: [1] }], tile: ['cone', 'dome'], loose: [], changes: [], guest: null, leaver: null, slips: 0 }
+  const atRest = (): Saved => ({ ...saveOf(calm), finished: true })
+
+  it('answers a touch and changes nothing: the tree rustles and drops leaves, the ball rolls, the brick hops, and the save is as it was', () => {
+    for (const [prop, sound] of [['tree', 'rustle'], ['ball', 'bom-bom'], ['brick', 'donk']] as const) {
+      const game = new Game(atRest()), before = serialize(game.saved), heard: { at: number; name: string }[] = []
+      game.press({ type: 'prop', prop })
+      let most = 0
+      const names = run(game, 0.3, heard, () => { most = Math.max(most, Math.abs(game.play.props[prop].x)) })
+      game.tap()
+      expect(names, prop).toEqual([sound])
+      expect(most, prop).toBeGreaterThan(0.08)
+      expect(game.play.crumbs.some((crumb) => crumb.of === 'leaf'), prop).toBe(prop === 'tree')
+      // It comes to rest by itself, and what it dropped is gone.
+      run(game, 4)
+      expect(Math.abs(game.play.props[prop].x), prop).toBeLessThan(0.02)
+      expect(game.play.crumbs).toEqual([])
+      expect(serialize(game.saved)).toEqual(before)
+      expectStageIsWorld(game)
+    }
+  })
+
+  it('is no touch of the crew, like the floor: a crew left alone with only the room touched still parades when its wait is up', () => {
+    const game = new Game(saveOf(calm))
+    run(game, LEFT_ALONE_S - 0.5)
+    game.press({ type: 'prop', prop: 'ball' })
+    game.tap()
+    expect(game.seen).not.toContain('the-parade')
+    run(game, 0.7)
+    expect(game.seen).toContain('the-parade')
+  })
+})
+
+describe('a face', () => {
+  it('follows the finger with its eyes while the finger is there, and lets go a moment after', () => {
+    const game = new Game({ ...saveOf({ crew: [{ kind: 'bop', spot: 2, hats: [0] }], tile: ['cone'], loose: [], changes: [], guest: null, leaver: null, slips: 0 }), finished: true })
+    const gaze = (): number => game.play.actorPose('bop', {} as never).gazeX
+    for (const side of [-1, 1]) {
+      run(game, 0.6, [], () => game.fingerAt(spotX(2) + side * 5, 1, ROW_Z + 2))
+      expect(Math.sign(gaze()), `finger to side ${side}`).toBe(side)
+      expect(Math.abs(gaze())).toBeGreaterThan(0.4)
+    }
+    run(game, 3)
+    expect(Math.abs(gaze())).toBeLessThan(0.4)
+  })
+
+  it('shows what the creature makes of its hat: glad under one it loves, cross under one it cannot bear, lost under a tower, and each is a different face', () => {
+    const faceOf = (kind: 'bop', hats: number[], tile: World['tile']): string => {
+      const game = new Game(saveOf({ crew: [{ kind, spot: 2, hats }], tile, loose: [], changes: ['leave'], guest: null, leaver: 2, slips: 0 }))
+      run(game, 1.5)
+      const pose = game.play.actorPose(kind, {} as never)
+      return [pose.smile, pose.browTilt, pose.browLift].map((n) => n.toFixed(1)).join(' ')
+    }
+    const faces = [faceOf('bop', [], ['cone']), faceOf('bop', [0], ['cone']), faceOf('bop', [0], ['brim']), faceOf('bop', [0], ['dome']), faceOf('bop', [0, 1], ['cone', 'dome'])]
+    expect(new Set(faces).size, faces.join(' | ')).toBeGreaterThanOrEqual(4)
+  })
+})
+
+describe('the one who gets none', () => {
+  const short: World = { crew: [{ kind: 'flop', spot: 1, hats: [] }, { kind: 'bop', spot: 2, hats: [] }, { kind: 'wig', spot: 3, hats: [] }], tile: ['brim', 'cone'], loose: [], changes: ['leave'], guest: null, leaver: 3, slips: 0 }
+
+  it('makes a show of it when the last hat is on a head, once, and again only after it has had a hat and lost it', () => {
+    const game = new Game(saveOf(short, 'one-short'))
+    for (const hat of [0, 1]) {
+      game.press({ type: 'hat', hat })
+      game.tap()
+      run(game, 1.2)
+    }
+    const shows = (): number => game.seen.filter((name) => name === 'makes-a-show-of-it').length
+    expect(shows()).toBe(1)
+    const bare = bareSpots(worldOf(game.saved))
+    expect(bare).toHaveLength(1)
+    // It is big: it jumps clear of the mat and comes down slumped.
+    const who = worldOf(game.saved).crew.find((creature) => creature.spot === bare[0])!.kind
+    let high = 0, low = 1
+    game.press({ type: 'floor', x: 0, z: 3 })
+    game.tap()
+    expect(shows()).toBe(1)
+    const again = new Game(saveOf(short, 'one-short'))
+    again.press({ type: 'hat', hat: 0 }); again.tap(); run(again, 1.2)
+    again.press({ type: 'hat', hat: 1 }); again.tap()
+    run(again, 2.4, [], () => { const pose = again.play.actorPose(who, {} as never); high = Math.max(high, pose.y); low = Math.min(low, pose.squash) })
+    expect(high).toBeGreaterThan(0.4)
+    expect(low).toBeLessThan(0.8)
+  })
+})
+
+describe('a hat that lands on a head', () => {
+  it('knocks crumbs of its own foam loose, which fall, lie a moment and are gone; there are never more than the stage can draw', () => {
+    const game = new Game(saveOf(everything()))
+    game.press({ type: 'hat', hat: 4 })
+    game.tap()
+    let most = 0
+    run(game, 1.2, [], () => { most = Math.max(most, game.play.crumbs.length) })
+    expect(most).toBeGreaterThanOrEqual(4)
+    expect(game.play.crumbs.every((crumb) => crumb.of === 'dome')).toBe(true)
+    run(game, 2)
+    expect(game.play.crumbs).toEqual([])
+    for (let n = 0; n < 40; n++) game.play.puff(0, 1, 0, 6, 'cone')
+    expect(game.play.crumbs.length).toBeLessThanOrEqual(MOST_CRUMBS)
+    for (const crumb of game.play.crumbs) for (const value of [crumb.x, crumb.y, crumb.z, crumb.size]) expect(Number.isFinite(value)).toBe(true)
   })
 })

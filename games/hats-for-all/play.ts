@@ -1,9 +1,10 @@
 import { playAct, rest, type Mods } from './acts'
 import type { CreatureKind, HatKind } from './kinds'
 import { PERSONALITY, hash, stepSpring, type Spring } from './motion'
+import { PROPS, PROP_AT, type PropName } from './props'
 import { BODY, HAND, HAT_HALF, HAT_HEIGHT, SLAB } from './sizes'
 import { LOOSE_Z, TILE_Z, alongWay, holeX, spotX, wayLength, type Point } from './stage'
-import type { Partial } from './voices'
+import type { Mood, Partial } from './voices'
 
 // The puppet theatre: where every creature and hat is this frame, as plain
 // numbers, and which voices to sound. No renderer and no DOM, and no rule:
@@ -36,6 +37,22 @@ export type ActorPose = {
   eyes: number
   /** Flop's ears, from -1 drooped to 1 flung out. */
   ears: number
+  /** Its face: the mouth from -1 turned down and tight to 1 wide in a smile; the brows from -1 worried (inner ends up) to 1 cross (inner ends down), and how far they are raised, 0 to 1. */
+  smile: number; browTilt: number; browLift: number
+}
+
+/** What a creature's face shows, as the three numbers of its pose. */
+type Face = { smile: number; tilt: number; lift: number }
+const FACES: Record<Mood | 'bare' | 'fond' | 'sulky' | 'blind' | 'calm', Face> = {
+  glad: { smile: 1, tilt: 0, lift: 1 },
+  grump: { smile: -1, tilt: 1, lift: 0 },
+  ask: { smile: -0.3, tilt: -1, lift: 0.6 },
+  plain: { smile: 0.35, tilt: 0, lift: 0.2 },
+  bare: { smile: -0.15, tilt: -0.55, lift: 0.3 },
+  fond: { smile: 0.65, tilt: 0, lift: 0.4 },
+  sulky: { smile: -0.6, tilt: 0.7, lift: 0 },
+  blind: { smile: -0.2, tilt: -0.8, lift: 0.8 },
+  calm: { smile: 0.2, tilt: 0, lift: 0 },
 }
 
 /** Where a hat is seen to be: in its hole, loose beside a round spot, on a creature's head, or in the child's hand. */
@@ -57,6 +74,8 @@ type Actor = {
   pullX: number; pullY: number
   gazeX: number; gazeY: number; lookX: number; lookY: number; lookFor: number
   pat: number; mouth: number; phase: number
+  /** What it feels for a moment and for how long, and the face it has now, eased towards what it should show. */
+  mood: Mood; moodFor: number; fond: boolean; smile: number; browTilt: number; browLift: number
   walk: Walk | null
   act: { name: string; t: number } | null
   /** How many hats are seen on its head, and whether it cannot stand the one it wears. */
@@ -73,6 +92,12 @@ export const LOOSE_TURN = 1.1
 /** How far in front of a face a hat stands when it comes down over it. */
 export const HAT_FWD = HAND.front + SLAB / 2 + 0.04
 const blank = (): Mods => rest({} as Mods)
+
+/** A crumb of foam or a leaf in the air: where it is, how it moves, how old it is and how long it lasts, how big, what it is a crumb of, and where in its sway a leaf is. */
+export type Crumb = { x: number; y: number; z: number; vx: number; vy: number; age: number; life: number; size: number; of: HatKind | 'leaf'; sway: number }
+export const MOST_CRUMBS = 24
+/** A crumb that has fallen lies just above the mat. */
+export const CRUMB_FLOOR = 0.04
 
 export class Play {
   /** Seconds of attended game time. */
@@ -117,7 +142,7 @@ export class Play {
   /** Puts a creature on the mat at a point, standing still. */
   enter(who: string, kind: CreatureKind, at: Point): void {
     const n = this.actors.size + 1
-    this.actors.set(who, { kind, x: at.x, z: at.z, heading: 0, squash: { x: 1, v: 0 }, lean: { x: 0, v: 0 }, hop: { x: 0, v: 0 }, pressed: false, pullX: 0, pullY: 0, gazeX: 0, gazeY: 0, lookX: 0, lookY: 0, lookFor: 0, pat: 0, mouth: 0, phase: hash(n + kind.length * 7) * 6.28, walk: null, act: null, hats: 0, grumpy: false, slip: 0, mods: blank() })
+    this.actors.set(who, { kind, x: at.x, z: at.z, heading: 0, squash: { x: 1, v: 0 }, lean: { x: 0, v: 0 }, hop: { x: 0, v: 0 }, pressed: false, pullX: 0, pullY: 0, gazeX: 0, gazeY: 0, lookX: 0, lookY: 0, lookFor: 0, pat: 0, mouth: 0, phase: hash(n + kind.length * 7) * 6.28, walk: null, act: null, hats: 0, grumpy: false, slip: 0, mods: blank(), mood: 'plain', moodFor: 0, fond: false, smile: 0, browTilt: 0, browLift: 0 })
   }
 
   leave(who: string): void { this.actors.delete(who) }
@@ -133,10 +158,40 @@ export class Play {
     if (actor) actor.act = { name, t: 0 }
   }
 
-  /** Whether a creature cannot stand the one hat it wears: it wears it askew. The game says so from the tastes. */
-  sulks(who: string, grumpy: boolean): void {
+  /** Whether a creature cannot stand the one hat it wears (it wears it askew, with a cross face) or loves it (it smiles). The game says so from the tastes. */
+  sulks(who: string, grumpy: boolean, fond = false): void {
     const actor = this.actors.get(who)
-    if (actor) actor.grumpy = grumpy
+    if (actor) { actor.grumpy = grumpy; actor.fond = fond }
+  }
+
+  /** A creature's face shows a feeling for a while: the tune of its babble, seen as well as heard. */
+  feels(who: string, mood: Mood, seconds: number): void {
+    const actor = this.actors.get(who)
+    if (actor) { actor.mood = mood; actor.moodFor = seconds }
+  }
+
+  /** Where the child's finger is over the mat, and for how long the creatures go on looking there once it lifts. */
+  readonly finger = { x: 0, y: 0, z: 0, left: 0 }
+  fingerAt(x: number, y: number, z: number, seconds = 1.2): void {
+    this.finger.x = x; this.finger.y = y; this.finger.z = z; this.finger.left = seconds
+  }
+
+  /** The things of the room that answer a touch, each on a spring: 0 at rest. */
+  readonly props: Record<PropName, Spring> = { tree: { x: 0, v: 0 }, ball: { x: 0, v: 0 }, brick: { x: 0, v: 0 } }
+  poke(prop: PropName): void {
+    this.props[prop].v += prop === 'ball' ? 5 : 4
+    // The tree drops a few leaves, which lie on the mat a moment.
+    if (prop === 'tree') this.puff(PROP_AT.tree.x + 1.7, 4.2, PROP_AT.tree.z + 1.1, 4, 'leaf')
+  }
+
+  /** Crumbs of foam knocked loose where something lands, and leaves shaken from the tree: each flies, falls, lies a moment and is gone. */
+  readonly crumbs: Crumb[] = []
+  puff(x: number, y: number, z: number, count: number, of: Crumb['of']): void {
+    for (let i = 0; i < count && this.crumbs.length < MOST_CRUMBS; i++) {
+      const a = hash(this.crumbs.length * 7.3 + this.time * 31 + i * 1.7), b = hash(i * 3.1 + x * 5.7 + this.time * 13)
+      const leaf = of === 'leaf', side = (i + 0.5) / count * 2 - 1
+      this.crumbs.push({ x: x + side * (leaf ? 1.0 : 0.35), y, z, vx: side * (leaf ? 0.5 : 2.2 + 1.4 * a), vy: leaf ? 0.4 * b : 3.2 + 2.4 * b, age: 0, life: leaf ? 3.4 : 1.5, size: (leaf ? 0.2 : 0.11) * (0.8 + 0.5 * a), of, sway: 6.3 * a })
+    }
   }
 
   /** Runs something a little later, on the theatre's own time: the next beat of a chain. */
@@ -271,6 +326,17 @@ export class Play {
     this.time += dt
     for (let i = this.dimples.length - 1; i >= 0; i--) if ((this.dimples[i].age += dt) > DIMPLE_SECONDS) this.dimples.splice(i, 1)
     stepSpring(this.arch, this.archPressed ? 0.94 : 1, 120, 7, dt)
+    for (const prop of PROPS) stepSpring(this.props[prop], 0, prop === 'tree' ? 30 : 46, prop === 'ball' ? 3.2 : 2.6, dt)
+    this.finger.left = Math.max(0, this.finger.left - dt)
+    for (let i = this.crumbs.length - 1; i >= 0; i--) {
+      const crumb = this.crumbs[i], leaf = crumb.of === 'leaf'
+      if ((crumb.age += dt) > crumb.life) { this.crumbs.splice(i, 1); continue }
+      if (crumb.y <= CRUMB_FLOOR) continue
+      // A crumb is thrown and drops; a leaf comes down slowly, from side to side.
+      crumb.vy = leaf ? Math.max(-1.5, crumb.vy - 3 * dt) : crumb.vy - 16 * dt
+      crumb.x += (crumb.vx + (leaf ? 1.1 * Math.sin(crumb.age * 4 + crumb.sway) : 0)) * dt
+      crumb.y = Math.max(CRUMB_FLOOR, crumb.y + crumb.vy * dt)
+    }
     if (this.tileSlide) {
       const slide = this.tileSlide
       slide.t += dt
@@ -327,7 +393,8 @@ export class Play {
     const stride = walking ? Math.abs(Math.sin(this.time * (5 + p.tempo * 3) + actor.phase)) : 0
     const stretch = Math.hypot(actor.pullX, actor.pullY)
     stepSpring(actor.squash, actor.pressed && stretch === 0 ? 0.86 : 1 + 0.022 * Math.sin(beat) + 0.14 * stretch * Math.abs(actor.pullY) - 0.1 * stride * p.bounce * 2, p.stiffness, p.damping, dt)
-    stepSpring(actor.lean, -0.45 * actor.pullX + (walking ? -0.1 * actor.heading : p.sway * Math.sin(beat * 0.5)), p.stiffness * 0.5, p.damping, dt)
+    const blind = actor.hats > 1 ? 0.13 * Math.sin(this.time * 2.2 + actor.phase) : 0
+    stepSpring(actor.lean, -0.45 * actor.pullX + (walking ? -0.1 * actor.heading : p.sway * Math.sin(beat * 0.5) + blind), p.stiffness * 0.5, p.damping, dt)
     stepSpring(actor.hop, walking ? 0.3 * stride * p.hop : 0, walking ? 400 : 90, walking ? 40 : 9, dt)
     if (actor.hop.x < 0) { actor.hop.x = 0; actor.hop.v = Math.abs(actor.hop.v) * 0.35; actor.squash.v -= 1.5 }
     actor.pat = Math.max(0, actor.pat - dt)
@@ -343,13 +410,24 @@ export class Play {
       if (!playAct(actor.act.name, actor.act.t, mods, BODY[actor.kind].top)) actor.act = null
     }
     // With nothing to look at, a bare creature looks at the hats, a hatted one up at its own, and a walker where it is going.
-    let wantX = actor.lookFor > 0 ? actor.lookX : walking ? 0.8 * actor.heading : 0.25 * Math.sin(beat * 0.21)
-    let wantY = actor.lookFor > 0 ? actor.lookY : walking ? 0 : bare ? -0.7 : 0.15 + 0.5 * Math.max(0, Math.sin(beat * 0.13))
+    // Its eyes follow the child's finger while it is on the glass and for a moment after.
+    const follows = actor.lookFor === 0 && !walking && this.finger.left > 0
+    let wantX = actor.lookFor > 0 ? actor.lookX : follows ? Math.max(-1, Math.min(1, (this.finger.x - actor.x) / 3.5)) : walking ? 0.8 * actor.heading : 0.25 * Math.sin(beat * 0.21)
+    let wantY = actor.lookFor > 0 ? actor.lookY : follows ? Math.max(-1, Math.min(1, (this.finger.y - BODY[actor.kind].faceY) / 3 - (this.finger.z - actor.z) / 6)) : walking ? 0 : bare ? -0.7 : 0.15 + 0.5 * Math.max(0, Math.sin(beat * 0.13))
     wantX += (mods.gazeX - wantX) * mods.looks
     wantY += (mods.gazeY - wantY) * mods.looks
     const follow = 1 - Math.exp(-dt * 9)
     actor.gazeX += (wantX - actor.gazeX) * follow
     actor.gazeY += (wantY - actor.gazeY) * follow
+    // Its face: what it feels this moment, or else what its head has on it.
+    actor.moodFor = Math.max(0, actor.moodFor - dt)
+    const face = actor.moodFor > 0 ? FACES[actor.mood] : actor.hats > 1 ? FACES.blind : bare ? FACES.bare : actor.grumpy ? FACES.sulky : actor.fond ? FACES.fond : FACES.calm
+    const ease = 1 - Math.exp(-dt * 10)
+    actor.smile += (face.smile - actor.smile) * ease
+    actor.browTilt += (face.tilt - actor.browTilt) * ease
+    actor.browLift += (face.lift - actor.browLift) * ease
+    // A tower over its eyes: it sways about blind and gropes with its hands, for as long as the tower stands.
+    if (actor.hats > 1 && !walking) actor.pat = Math.max(actor.pat, 0.09 + 0.06 * Math.sin(this.time * 5 + actor.phase))
   }
 
   // --- What the view draws ------------------------------------------------
@@ -427,6 +505,7 @@ export class Play {
     // A blink every few seconds, at a moment of its own.
     out.eyes = (this.time + actor.phase) % (2.6 + hash(actor.kind.length + actor.phase) * 2.4) < 0.11 ? 0.1 : 1
     out.ears = mods.ears
+    out.smile = actor.smile; out.browTilt = actor.browTilt; out.browLift = actor.browLift
     return out
   }
 }
