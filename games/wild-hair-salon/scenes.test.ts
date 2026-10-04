@@ -217,11 +217,11 @@ describe('the cape coming off', () => {
       scene.update(t)
       c.customer()!.step(1 / 60, false)
       if (footAt < 0 && c.customer()!.at('foot') > 0.3) footAt = t
-      if (ownAt < 0 && c.customer()!.started.includes('lion-treads-on-it-into-a-slow-bow')) ownAt = t
+      if (ownAt < 0 && c.customer()!.started.includes('lion-stamps-under-it-into-a-slow-bow')) ownAt = t
     }
     expect(footAt).toBeGreaterThan(2.5)
     expect(ownAt).toBeGreaterThan(footAt)
-    expect(c.customer()!.started).toContain('lion-plants-a-heavy-foot-on-it')
+    expect(c.customer()!.started).toContain('lion-plants-a-heavy-foot-under-it')
   })
 
   it('lasts 4 to 10 seconds for every customer, whatever the lock, the mane, the bow and what is worn', () => {

@@ -1,4 +1,4 @@
-import { drawFigure, features, pencil, stamp, strip, type Figure, type Wears } from './figure'
+import { drawFigure, drawLimbs, features, pencil, stamp, strip, type Figure, type Wears } from './figure'
 import { handPose, type Guidance, type HandPose } from './guidance'
 import { FAN, type Strand } from './hair'
 import { BLADES } from './hand'
@@ -98,7 +98,9 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
       hat: staging.hats,
     })
     const customer = play.customer(), other = play.friend()
-    if (customer) drawn += drawFigure(g, sprites, { who: chair, puppet: customer, at: customerAt, mane: { steps: game.mane, hair }, body: 1 - caped, wears: wearsOf('chair'), time: play.time })
+    // Its limbs come later, over the cape and the strips: a paw that pats its lock and a foot that thumps are out in front of both.
+    const seated: Figure | null = customer ? { who: chair, puppet: customer, at: customerAt, mane: { steps: game.mane, hair }, body: 1 - caped, wears: wearsOf('chair'), time: play.time, limbsLater: true } : null
+    if (seated) drawn += drawFigure(g, sprites, seated)
     // The looking glass shows the customer's face, the hair it has now, and what it thinks of both.
     if (customer && inChair && staging.hats < 0.5) drawn += reflection(g, sprites, { who: chair, puppet: customer, at: GLASS_AT, mane: null, body: 0, wears: wearsOf('chair'), time: play.time, whole: sprites.mane(chair, game.mane, hair.holds === null), flipped: true })
 
@@ -159,6 +161,7 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
       if (shape && !carriedRibbon && staging.ribbon === null && shape.kind === 'worn' && shape.as === 'bow') drawn += bow(g, shape.at.x, shape.at.y, 0)
     }
 
+    if (seated) drawn += drawLimbs(g, seated)
     if (staging.paw && customer) drawn += paw(g, chair, staging.paw, caped > 0.5)
   }
 
@@ -194,7 +197,7 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
     if (staging.ribbon) drawn += hanging(g, staging.ribbon, staging.ribbon.len * STEP, hair.strands.ribbon, play.time, RIBBON, 0, 0, true, true)
     else if (shape?.kind === 'hang' && game.ribbon.at === 'peg') drawn += hanging(g, shape.root, game.ribbon.len * shape.unit, hair.strands.ribbon, play.time, RIBBON, 0, 0, true, true)
     else if (shape?.kind === 'lie') {
-      drawn += strip(g, shape.from.x + (game.ribbon.len * shape.unit) / 2, shape.from.y, (game.ribbon.len * shape.unit) / 2, 0, 'ribbon')
+      drawn += ribbonOnFloor(g, shape.from, game.ribbon.len * shape.unit, hair.strands.ribbon.flutter, play.time)
       drawn += clip(g, shape.from.x - 8, shape.from.y, Math.PI / 2)
     }
   } else if (staging.ribbon) drawn += hanging(g, staging.ribbon, staging.ribbon.len * STEP, hair.strands.ribbon, play.time, RIBBON, 0, 0, true, true)
@@ -251,6 +254,23 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
   sprites.ahead(game.waiting[1], true)
   for (const who of CUSTOMERS) sprites.ahead(who, false)
   return drawn
+}
+
+/** The ribbon on the floor: it lies in loose waves from its clip to its free end, as a ribbon that was dropped does, never as a level bar. */
+function ribbonOnFloor(g: Ctx, from: Point, long: number, flutter: number, time: number): number {
+  // Ruffled where it lies, it twists and writhes along its length, and lies still again.
+  const half = STRIP_W / 2, bends = Math.max(2, Math.round(long / 20)), wave = (t: number): number => Math.sin(t * Math.PI * 2 * Math.max(1, long / 110) + flutter * time * 22) * (7 + flutter * 9) * Math.min(1, t * 6)
+  g.fillStyle = RIBBON.fill
+  g.strokeStyle = RIBBON.edge
+  g.lineWidth = 2.4
+  g.beginPath()
+  g.moveTo(from.x, from.y - half)
+  for (let k = 1; k <= bends; k++) g.lineTo(from.x + (long * k) / bends, from.y - half + wave(k / bends))
+  for (let k = bends; k >= 0; k--) g.lineTo(from.x + (long * k) / bends, from.y + half + wave(k / bends))
+  g.closePath()
+  g.fill()
+  g.stroke()
+  return 2
 }
 
 /** How a piece lies where it fell: tilted by a fixed amount of its own, never level, so that a piece of hair on the floor is a thing that dropped and no kind of sign. */

@@ -59,6 +59,8 @@ export type Figure = {
   whole?: Sprite | null
   /** Seen in a glass: left and right change places. */
   flipped?: boolean
+  /** Its limbs are left out here and drawn later with `drawLimbs`, over the cape and the strips: a paw or a foot out from under the cape is in front of it. */
+  limbsLater?: boolean
 }
 
 /**
@@ -144,7 +146,7 @@ export function drawFigure(g: Ctx, sprites: Sprites, figure: Figure): number {
   g.restore()
   if (live && look.ears.kind !== 'long') ears()
   // The looking glass shows the head and not the limbs: the oval is too small for them.
-  if (!figure.flipped) drawn += limbs(g, puppet, look)
+  if (!figure.flipped && !figure.limbsLater) drawn += limbs(g, puppet, look)
 
   if (figure.wears.hat > 0) {
     g.save()
@@ -154,6 +156,22 @@ export function drawFigure(g: Ctx, sprites: Sprites, figure: Figure): number {
     drawn += stamp(g, sprites.hat)
     g.restore()
   }
+  g.restore()
+  return drawn
+}
+
+/** A figure's limbs alone, where its head is now: for a customer under the cape, whose paw and foot come out in front of it. */
+export function drawLimbs(g: Ctx, figure: Figure): number {
+  const { puppet, at } = figure
+  if (at.seen <= 0 || at.s <= 0) return 0
+  const breath = Math.sin(puppet.breath * Math.PI * 2)
+  g.save()
+  g.globalAlpha *= at.seen
+  g.translate(at.x + puppet.at('shift') * 40 * at.s, at.y - at.lift - puppet.at('lift') * 46 * at.s)
+  g.scale(at.s * Math.cos(puppet.at('spin') * Math.PI * 2), at.s)
+  g.translate(puppet.lean.x.x + puppet.cheek.x.x * 0.3, puppet.lean.y.x + puppet.cheek.y.x * 0.3 + puppet.at('sink') * 64 + puppet.at('bob') * 12 + breath * 1.6)
+  g.rotate(puppet.at('tilt') * 0.17)
+  const drawn = limbs(g, puppet, LOOKS[figure.who])
   g.restore()
   return drawn
 }

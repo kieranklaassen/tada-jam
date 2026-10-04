@@ -48,7 +48,7 @@ export const TASTES: Record<CustomerId, Taste> = {
       maneHated: 'sinks-right-down-and-peeks-sideways',
       bow: 'goes-cross-eyed-and-bats-at-it',
       rub: 'purrs-and-melts-down-in-the-chair',
-      lockTooLong: 'treads-on-it-into-a-slow-bow',
+      lockTooLong: 'stamps-under-it-into-a-slow-bow',
       lockTooShort: 'pats-for-it-and-an-ear-flicks-out',
       lockAsLong: 'slow-head-toss',
     },

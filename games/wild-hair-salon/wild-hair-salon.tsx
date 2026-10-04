@@ -160,7 +160,9 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     }
     const onMove = (event: PointerEvent) => act(touch.move(event.pointerId, at(event)))
     const onUp = (event: PointerEvent) => {
-      if (cornered && cornerDownAt > 0 && event.timeStamp - cornerDownAt >= CORNER_HOLD_MS) cornerArmedUntil = event.timeStamp + CORNER_ARMED_MS
+      // The hold counts only if the finger also comes up in the corner: a slow swipe that began there does not.
+      const up = at(event)
+      if (cornered && cornerDownAt > 0 && up.x > width - 72 && up.y < 72 && event.timeStamp - cornerDownAt >= CORNER_HOLD_MS) cornerArmedUntil = event.timeStamp + CORNER_ARMED_MS
       cornerDownAt = 0
       act(touch.up(event.pointerId, at(event), event.timeStamp))
       audio.touchUp()

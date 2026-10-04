@@ -110,7 +110,7 @@ const taps = (spec: VoiceSpec, ...at: number[]): Spoken[] => at.map((after) => (
  */
 export const SAID_VOICES: Record<'lion' | 'poodle' | 'yak' | 'rabbit', Record<Said, readonly Spoken[]>> = {
   lion: {
-    // He treads on it with a thud and goes down in a long low "oof".
+    // He stamps with a thud and goes down in a long low "oof".
     lockTooLong: [{ kind: 'tone', wave: 'sine', pitch: 110, glideTo: 70, peak: 0.12, attack: 0.002, length: 0.2 }, { kind: 'tone', wave: 'triangle', pitch: 150, glideTo: 90, peak: 0.1, attack: 0.05, length: 0.6, after: 0.35 }],
     lockTooShort: [{ kind: 'tone', wave: 'sine', pitch: 196, glideTo: 262, peak: 0.1, attack: 0.03, length: 0.3 }, ...taps({ kind: 'noise', q: 3, pitch: 2000, peak: 0.05, attack: 0.001, length: 0.04 }, 0.5, 0.62, 0.74)],
     lockAsLong: [{ kind: 'tone', wave: 'sine', pitch: 196, peak: 0.1, attack: 0.04, length: 0.4 }, { kind: 'tone', wave: 'sine', pitch: 247, peak: 0.1, attack: 0.04, length: 0.4, after: 0.55 }],

@@ -436,7 +436,7 @@ describe('the cycle', () => {
 
   it('acts out the comparison the child made: the two locks side by side, and the customer\'s own reaction to its lock', () => {
     const cases: [string, (play: Play) => void, string][] = [
-      ['too long', () => {}, 'lion-treads-on-it-into-a-slow-bow'],
+      ['too long', () => {}, 'lion-stamps-under-it-into-a-slow-bow'],
       ['as long', (play) => match(play), 'lion-slow-head-toss'],
       ['too short', (play) => drag(play, [AIR, { x: LOCK_X + 40, y: COLLAR_Y + 6 * STEP - BLADES.y }, { x: LOCK_X - 20, y: COLLAR_Y + 6 * STEP - BLADES.y }]), 'lion-pats-for-it-and-an-ear-flicks-out'],
     ]

@@ -232,6 +232,17 @@ describe('the salon around them', () => {
   })
 })
 
+describe('the ribbon on the floor', () => {
+  it('lies in waves from its clip, not as a level bar', () => {
+    const play = seated({ ribbon: { len: 60, at: 'floor', x: 40 } })
+    const kept: Recording = { shapes: [], stamps: [], texts: 0 }
+    drawFrame(recordingSheet(1180, 820, kept).g as Ctx, 1180, 820, new Sprites(blankSheets, 1180, 820, 1), { play, guidance: null })
+    const band = kept.shapes.find((shape) => shape.kind === 'fill' && shape.style === hueOf('ribbon').fill && bounds(shape.points).w > 100)!
+    const top = band.points.slice(0, band.points.length / 2).map((p) => Math.round(p.y))
+    expect(Math.max(...top) - Math.min(...top)).toBeGreaterThanOrEqual(8)
+  })
+})
+
 describe('a piece on the floor', () => {
   it('lies tilted, never level, and every piece the same way, so that no two cross like a sign', () => {
     const tilts = Array.from({ length: 101 }, (_, x) => [4, 9, 20, 55].map((len) => fallen({ len, x }))).flat()
@@ -269,6 +280,29 @@ describe('limbs and the ribbon', () => {
     let seen = 0
     for (let i = 0; i < 30; i++) { rabbit.step(1 / 60, false); seen = Math.max(seen, feet(rabbit)) }
     expect(seen).toBeGreaterThan(0)
+  })
+
+  it('draws a paw and a foot of the customer under the cape after the cape, so both are seen in front of it', () => {
+    const kept: Recording = { shapes: [], stamps: [], texts: 0 }
+    const sprites = new Sprites(blankSheets, 1180, 820, 1), surface = recordingSheet(1180, 820, kept)
+    const rabbit = seated({ chair: 'rabbit', friend: 'poodle' })
+    rabbit.customer()!.react('rubLoved')
+    rabbit.customer()!.react('patsItsLock')
+    let footOver = false, pawOver = false
+    for (let i = 0; i < 30; i++) {
+      rabbit.step(1 / 60, false)
+      kept.shapes.length = 0; kept.stamps.length = 0
+      drawFrame(surface.g as Ctx, 1180, 820, sprites, { play: rabbit, guidance: null })
+      const cape = kept.stamps.find((stamp) => stamp.image === sprites.cape.sheet.canvas)!
+      for (const shape of kept.shapes) {
+        if (shape.kind !== 'fill' || shape.style !== furOf('rabbit')) continue
+        const box = bounds(shape.points)
+        if (box.w > 70 && box.w < 110 && box.h < 70 && shape.order > cape.order) footOver = true
+        if (box.w > 30 && box.w < 44 && box.y > 380 && shape.order > cape.order) pawOver = true
+      }
+    }
+    expect(footOver).toBe(true)
+    expect(pawOver).toBe(true)
   })
 
   it('lifts a blindfold for whoever wears it to peek, whichever of the four it is', () => {

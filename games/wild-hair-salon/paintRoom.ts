@@ -197,18 +197,16 @@ export function paintShelf(g: Ctx, paint: Watercolour, rng: Rng): void {
   paint.wash(g, blob(rng, PEG.x, PEG.y - 30, 9, 9, 0.05, 8), { color: ROOM.wood, edge: ROOM.woodEdge, reserve: true })
 }
 
-/** The trolley: towels rolled on top, a bottle and a brush beside them, a basin below, on four small wheels. */
+/** The trolley: folded towels on top with a bottle beside them, a basin below, on small wheels. */
 export function paintTrolley(g: Ctx, paint: Watercolour, rng: Rng): void {
   const { x, w, top } = TROLLEY, right = x + w
   for (const lx of [x + 6, right - 6]) paint.wash(g, roughBox(rng, lx - 4, top, 8, FLOOR_Y - top + 2, 1), { color: ROOM.steel, edge: ROOM.steelEdge, reserve: true })
-  // Rolled towels, three in a row and two on top of them.
-  const roll = (cx: number, cy: number, color: string): void => {
-    const end = blob(rng, cx, cy, 15, 15, 0.04, 10)
-    paint.wash(g, end, { color, edge: ROOM.steelEdge, strength: 0.9, reserve: true })
-    paint.pencil(g, end, true, 0.6)
-    paint.pencil(g, [{ x: cx + 7, y: cy }, { x: cx + 2, y: cy + 6 }, { x: cx - 5, y: cy + 1 }, { x: cx - 1, y: cy - 4 }, { x: cx + 2, y: cy }], false, 0.5)
-  }
-  roll(x + 22, top - 16, ROOM.towel[0]); roll(x + 52, top - 16, ROOM.towel[1]); roll(x + 37, top - 42, ROOM.towel[2])
+  // Folded towels in a pile, each a soft slab a little off the one below.
+  ROOM.towel.forEach((color, i) => {
+    const slab = roughBox(rng, x + 8 + i * 3, top - 15 - i * 15, 58 - i * 4, 14, 2)
+    paint.wash(g, slab, { color, edge: ROOM.steelEdge, strength: 0.9, reserve: true })
+    paint.pencil(g, slab, true, 0.6)
+  })
   bottle(g, paint, rng, right - 20, top + 2, 22, 50, ROOM.bottle[4], false)
   for (const y of [top, top + 76]) {
     const tray = roughBox(rng, x - 4, y, w + 8, 12, 1.5)
@@ -309,8 +307,7 @@ export function paintChair(g: Ctx, paint: Watercolour, rng: Rng): void {
   const back = roughBox(rng, CHAIR.x - 150, 300, 300, 250, 6)
   paint.wash(g, back, { color: ROOM.chair, edge: ROOM.chairEdge, blooms: ['#f6a17f'], reserve: true })
   paint.pencil(g, back, true)
-  // Three long seams down the padding, and a roll for a head along the top.
-  for (const sx of [-72, 2, 76]) paint.pencil(g, [{ x: CHAIR.x + sx, y: 344 }, { x: CHAIR.x + sx + rng.range(-5, 5), y: 440 }, { x: CHAIR.x + sx + rng.range(-3, 3), y: 532 }], false, 0.7)
+  // Plain padding, with a roll for a head along the top: nothing on it that could be counted or read.
   const roll = roughBox(rng, CHAIR.x - 104, 292, 208, 40, 8)
   paint.wash(g, roll, { color: ROOM.chair, edge: ROOM.chairEdge, strength: 0.6 })
   paint.pencil(g, roll, true, 0.7)

@@ -294,13 +294,14 @@ export class Play implements Cast {
         this.untilStir = STIR_EVERY
         this.stirs++
         if (game.chair === null) this.waiting?.[this.stirs % 2]?.react('looksAbout')
-        else if (game.cape === 'on') {
-          // The one want, always there to see: the customer looks from its lock to the friend's and pats its own, and the friend looks from its lock to the customer's.
+        else {
+          // The one want, always there to see, under the cape and with it off: the customer looks from its lock to the friend's and pats its own, and the friend looks from its lock to the customer's.
           // Each looks to the side the other's lock is on: the friend beside the chair is on the customer's right and looks left.
-          this.puppets.chair?.react('wantsItSo', game.seat === 'across')
+          const beside = game.cape === 'off' || game.seat === 'beside'
+          this.puppets.chair?.react('wantsItSo', !beside)
           this.puppets.chair?.react('patsItsLock')
-          this.puppets.friend?.react('wantsItSo', game.seat === 'beside')
-          if (this.stirs % 2 === 0 && this.hair.settled) this.hair.moodOf('wave', 1.3)
+          this.puppets.friend?.react('wantsItSo', beside)
+          if (game.cape === 'on' && this.stirs % 2 === 0 && this.hair.settled) this.hair.moodOf('wave', 1.3)
         }
       }
     }

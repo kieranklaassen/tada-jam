@@ -87,6 +87,8 @@ export class Hair {
     const spring = typeof held.what === 'number' ? this.tufts[held.what]?.stretch : this.strands[held.what].stretch
     if (!spring) return
     if (drawnOut > 0) { spring.x = 1 + drawnOut; spring.v = -3 } else spring.v += typeof held.what === 'number' ? 2.6 : 2.2
+    // A strip that is let go always swings a little before it hangs, however straight it was pulled: away from the strip beside it.
+    if (typeof held.what !== 'number') this.strands[held.what].swing.v += held.what === 'model' ? 1.2 : -1.2
   }
 
   /** Which hair is in the fingers, or nothing. */

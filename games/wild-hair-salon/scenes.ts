@@ -165,11 +165,11 @@ export function capeComesOff(cast: Cast, before: Game, after: Game, showing: Sho
       ...Array.from({ length: times }, (_, i) => cueAt(2.5 + i * flap, () => { if (!cast.cut) { hair.kicked('lock', (i % 2 ? -1 : 1) * 7 * big); if (i > 0) cast.cue('flap', chair) } })),
       over(2.5, times * flap, (p) => paw(lock.x - 2 + Math.sin(p * times * Math.PI) * 5, modelEnd)),
     )
-    // And then it treads on it, with a foot that comes up and comes down: its head goes down with a bump, its mane droops, and the friend
-    // cannot keep a straight face. Only then does it take it in its own way.
+    // And then it stamps a foot down under it: its head goes down with a bump, its mane droops, and the friend cannot keep a straight
+    // face. Only then does it take it in its own way.
     const tread = 2.5 + times * flap
     beats.push(
-      cueAt(tread, () => { if (!cast.cut) { customer?.react('treads'); customer?.bump(1.4); hair.moodOf('droop', 1.3); hair.kicked('lock', 9 * big); other?.react('friendRuffled'); cast.cue('landed', chair) } }),
+      cueAt(tread, () => { if (!cast.cut) { customer?.react('stamps'); customer?.bump(1.4); hair.moodOf('droop', 1.3); hair.kicked('lock', 9 * big); other?.react('friendRuffled'); cast.cue('landed', chair) } }),
       cueAt(tread + TREAD, () => { if (!cast.cut) { customer?.react(reaction); cast.say(chair, reaction) } }),
     )
     t = tread + TREAD
