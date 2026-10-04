@@ -75,14 +75,13 @@ export function farBridge(at: Site): { x0: number; x1: number; y: number } {
   return { x0, x1, y: at.right[1] + 2.75 }
 }
 
-/** The windmill on the hills over the near bank: where its cap is, in cells, or null on a sheet whose near bank is too short for a hill to stand on. Its sails turn (drift.ts). */
-export const windmill = kept((at: Site): readonly [number, number] | null => {
+/** The house on the hills over the near bank: where the foot of its chimney is, in cells, or null on a sheet whose near bank is too short for a hill to stand on, or whose road is so high that the hill would put the house behind the chief. Smoke rises from the chimney (drift.ts). */
+export const hillHouse = kept((at: Site): readonly [number, number] | null => {
   const x = at.left[0] - 5.2
   if (x < 0.8) return null
-  const cap = at.left[1] + Math.max(skyline(at, x, 0), skyline(at, x, 1)) + 0.95
-  // On a sheet whose road is high, the hill would put it behind the chief and its model: no windmill there.
-  if (x - 0.8 < CHIEF_MARGIN.right && cap + 0.8 > CHIEF_MARGIN.low) return null
-  return [x, cap]
+  const roof = at.left[1] + Math.max(skyline(at, x, 0), skyline(at, x, 1)) + 0.75
+  if (x - 0.8 < CHIEF_MARGIN.right && roof + 1.3 > CHIEF_MARGIN.low) return null
+  return [x + 0.22, roof]
 })
 /** The corner of the sheet the chief and its model stand in: left of this x and above this y, in cells (toy.ts has the chief's own place). */
 export const CHIEF_MARGIN = { right: 5.6, low: 10.5 } as const
@@ -94,8 +93,8 @@ export function trees(at: Site): { x: number; tall: number; kind: 'round' | 'pin
     for (let x = from + 0.4 + random() * 0.8; x < to; x += 1.5 + random() * 1.5) {
       const pick = random(), tall = 1.5 + random() * 1.3
       if (at.anchors.some(([ax]) => Math.abs(ax - x) < 2.3)) continue
-      // And clear of the windmill, which stands on the hill behind.
-      if (windmill(at) && Math.abs(x - (at.left[0] - 5.2)) < 1.3) continue
+      // And clear of the house, which stands on the hill behind.
+      if (hillHouse(at) && Math.abs(x - (at.left[0] - 5.2)) < 1.3) continue
       out.push({ x, tall, kind: pick < 0.45 ? 'round' : pick < 0.8 ? 'pine' : 'poplar' })
     }
   }
@@ -161,13 +160,15 @@ export function paintValley(pen: Pen, plot: Plot, at: Site) {
     }
     for (const x of [span.x0, span.x1]) stroke(pen, plot, [[x - 0.09, rail], [x - 0.09, rail + 0.42], [x, rail + 0.56], [x + 0.09, rail + 0.42], [x + 0.09, rail]], 0.014, FAINT.hills)
   }
-  // The windmill's tower, on the hill: a tapering body with a door and a cap. Its sails are drawn live.
-  const mill = windmill(at)
-  if (mill) {
-    const [mx, my] = mill, foot = my - 0.95
-    stroke(pen, plot, [[mx - 0.3, foot], [mx - 0.17, my - 0.06], [mx + 0.17, my - 0.06], [mx + 0.3, foot]], 0.02, FAINT.hills + 0.06)
-    stroke(pen, plot, [[mx - 0.2, my - 0.06], [mx, my + 0.14], [mx + 0.2, my - 0.06]], 0.02, FAINT.hills + 0.06)
-    stroke(pen, plot, [[mx - 0.08, foot], [mx - 0.08, foot + 0.24], [mx + 0.08, foot + 0.24], [mx + 0.08, foot]], 0.014, FAINT.hills)
+  // A house on the hill: four walls, a roof with a chimney at one end, a door and a window. Its smoke is drawn live.
+  const house = hillHouse(at)
+  if (house) {
+    const [cx, roof] = house, hx = cx - 0.22, foot = roof - 0.75, a = FAINT.hills + 0.06
+    stroke(pen, plot, [[hx - 0.42, foot], [hx - 0.42, foot + 0.4], [hx + 0.42, foot + 0.4], [hx + 0.42, foot]], 0.02, a)
+    stroke(pen, plot, [[hx - 0.5, foot + 0.4], [hx - 0.3, foot + 0.72], [hx + 0.3, foot + 0.72], [hx + 0.5, foot + 0.4]], 0.02, a)
+    stroke(pen, plot, [[cx - 0.06, foot + 0.72], [cx - 0.06, roof + 0.12], [cx + 0.06, roof + 0.12], [cx + 0.06, foot + 0.72]], 0.016, a)
+    stroke(pen, plot, [[hx - 0.3, foot], [hx - 0.3, foot + 0.26], [hx - 0.14, foot + 0.26], [hx - 0.14, foot]], 0.014, FAINT.hills)
+    stroke(pen, plot, [[hx + 0.08, foot + 0.12], [hx + 0.08, foot + 0.28], [hx + 0.28, foot + 0.28], [hx + 0.28, foot + 0.12]], 0.014, FAINT.hills, true)
   }
   // Trees, behind the road.
   for (const one of trees(at)) tree(pen, plot, one.x, deck, one.tall, one.kind, random)
@@ -282,7 +283,8 @@ export function paintUnderground(pen: Pen, plot: Plot, at: Site) {
       const level = deck * (1 - share), phase = random() * 6, bed: Dot[] = []
       for (let x = from; x <= to + 0.001; x += 0.25) bed.push([x, level + swing * Math.sin(x * 0.7 + phase) + 0.08 * Math.sin(x * 2.3 + phase)])
       stroke(pen, plot, bed, 0.024, FAINT.fence)
-      if (share > 0.5) for (let x = from + 0.5; x < to - 0.3; x += 0.7 + random() * 1.1) ring(pen, plot, x, level + swing * Math.sin(x * 0.7 + phase) - 0.16 - 0.1 * random(), 0.05 + 0.04 * random(), 0.016, FAINT.fence)
+      // Pebbles: short flat dashes, each a little askew. Not rings.
+      if (share > 0.5) for (let x = from + 0.5; x < to - 0.3; x += 0.7 + random() * 1.1) { const py = level + swing * Math.sin(x * 0.7 + phase) - 0.16 - 0.1 * random(), wide = 0.06 + 0.05 * random(); stroke(pen, plot, [[x - wide, py], [x, py + 0.035], [x + wide, py + 0.01]], 0.03, FAINT.fence) }
     }
   }
   // Under each tree, its roots: two uneven threads going down side by side, which never meet.
@@ -345,7 +347,7 @@ export function paintDesk(pen: Pen, plot: Plot, at: Site) {
   }
   const right = rightRoom[1] - rightRoom[0]
   if (right >= 2.9) {
-    // The title block every drawing has, ruled and left empty.
+    // The title block every drawing has, ruled and left empty: no line of writing, real or pretend.
     const x1 = rightRoom[1], x0 = x1 - 2.7, y0 = floor + 0.05, y1 = y0 + 1.35
     stroke(pen, plot, [[x0, y0], [x1, y0], [x1, y1], [x0, y1]], 0.022, a, true)
     stroke(pen, plot, [[x0, y0 + 0.45], [x1, y0 + 0.45]], 0.014, a)
@@ -355,12 +357,6 @@ export function paintDesk(pen: Pen, plot: Plot, at: Site) {
     // In its corner box, a small drawing of a plank on two pins: what the sheet is a drawing of.
     stroke(pen, plot, [[x0 + 0.2, y0 + 0.66], [x0 + 0.7, y0 + 0.66]], 0.03, a)
     for (const cx of [x0 + 0.2, x0 + 0.7]) ring(pen, plot, cx, y0 + 0.66, 0.045, 0.014, a)
-    // Wavy pencil lines where the lettering would be: nobody has filled it in.
-    for (const [lx, ly, long] of [[x0 + 1.05, y0 + 1.12, 1.3], [x0 + 1.05, y0 + 0.67, 1.4], [x0 + 0.12, y0 + 0.22, 0.6], [x0 + 1.02, y0 + 0.22, 0.6]] as const) {
-      const scribble: Dot[] = []
-      for (let t = 0; t <= long; t += 0.06) scribble.push([lx + t, ly + 0.035 * Math.sin(t * 23 + lx)])
-      stroke(pen, plot, scribble, 0.012, a * 0.75)
-    }
   }
   if (right >= 4.3 || (right >= 1.3 && right < 2.9)) {
     // A mug, seen from the side. Its steam is drawn live.

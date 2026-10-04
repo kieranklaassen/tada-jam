@@ -69,7 +69,8 @@ function beaver(pen: Pen, x: number, y: number, c: number, pose: CrewPose, rando
   pen.strokeStyle = INK.balsaEdge
   pen.lineWidth = Math.max(0.75, c * 0.016)
   pen.beginPath()
-  for (let i = 0; i < 4; i++) { pen.moveTo(-c * (0.62 - i * 0.14), -c * 0.1); pen.lineTo(-c * (0.5 - i * 0.14), c * 0.1); pen.moveTo(-c * (0.5 - i * 0.14), -c * 0.1); pen.lineTo(-c * (0.62 - i * 0.14), c * 0.1) }
+  // Scales, as rows of small arcs that open toward its tip. Nothing on it crosses.
+  for (let i = 0; i < 5; i++) for (const row of [-0.05, 0.05]) { const sx = -c * (0.62 - i * 0.12 - (row > 0 ? 0.06 : 0)); pen.moveTo(sx + c * 0.045, row * c + c * 0.04); pen.arc(sx, row * c, c * 0.045, 0.9, -0.9, true) }
   pen.stroke()
   pen.restore()
   for (const fx of [-0.2, 0.24]) cutOut(pen, c, INK.balsa, () => pen.ellipse(x + c * fx, y - c * 0.06, c * 0.2, c * 0.08, 0, 0, Math.PI * 2))
@@ -89,7 +90,9 @@ function beaver(pen: Pen, x: number, y: number, c: number, pose: CrewPose, rando
   flat(pen, INK.balsa, () => { pen.arc(hx - c * 0.02, hy - c * 0.26, c * 0.36, Math.PI, Math.PI * 2); pen.lineTo(hx + c * 0.56, hy - c * 0.24); pen.lineTo(hx + c * 0.56, hy - c * 0.18); pen.lineTo(hx - c * 0.38, hy - c * 0.18); pen.closePath() })
   pen.strokeStyle = INK.balsaEdge
   pen.lineWidth = Math.max(0.75, c * 0.02)
-  pen.beginPath(); pen.moveTo(hx - c * 0.02, hy - c * 0.62); pen.lineTo(hx - c * 0.02, hy - c * 0.2); pen.moveTo(hx - c * 0.38, hy - c * 0.185); pen.lineTo(hx + c * 0.56, hy - c * 0.185); pen.stroke()
+  // The brim's edge, and a short rib over the crown that stops well short of it.
+  pen.beginPath(); pen.moveTo(hx - c * 0.38, hy - c * 0.185); pen.lineTo(hx + c * 0.56, hy - c * 0.185); pen.stroke()
+  pen.beginPath(); pen.arc(hx - c * 0.02, hy - c * 0.26, c * 0.27, Math.PI * 1.15, Math.PI * 1.85); pen.stroke()
   // The muzzle, the nose, and the two teeth, which show more the harder it clenches.
   pen.fillStyle = INK.paperShade
   pen.beginPath(); pen.ellipse(hx + c * 0.17, hy + c * 0.17, c * 0.25, c * 0.17, 0, 0, Math.PI * 2); pen.fill()
@@ -160,8 +163,10 @@ function mole(pen: Pen, x: number, y: number, c: number, pose: CrewPose, random:
   pen.fillRect(-c * 0.65, -c * 0.92 + sag, c * 0.3, c * 0.41)
   pencil(pen, c, 0.016)
   pen.beginPath()
-  for (let i = 0; i < 4; i++) { pen.moveTo(-c * 0.62, -c * (0.85 - i * 0.09) + sag); pen.lineTo(-c * (0.4 + 0.06 * (i % 2)), -c * (0.85 - i * 0.09) + sag) }
+  // On it, a small drawing of a plank on two pins: it is a drawing board, and there is no writing on it.
+  pen.moveTo(-c * 0.6, -c * 0.7 + sag); pen.lineTo(-c * 0.4, -c * 0.7 + sag)
   pen.stroke()
+  pen.beginPath(); pen.arc(-c * 0.6, -c * 0.7 + sag, c * 0.02, 0, Math.PI * 2); pen.arc(-c * 0.4, -c * 0.7 + sag, c * 0.02, 0, Math.PI * 2); pen.fill()
   cutOut(pen, c, INK.paperShade, () => pen.ellipse(0, -c * 0.62 + sag, c * 0.56, c * 0.62, 0, 0, Math.PI * 2))
   pen.fillStyle = INK.paper
   pen.globalAlpha = 0.75

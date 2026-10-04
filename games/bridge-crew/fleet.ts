@@ -109,14 +109,13 @@ function mudguard(pen: Pen, x: number, r: number, c: number) {
   pen.beginPath(); pen.arc(x, -r, r * 1.22, Math.PI * 1.12, Math.PI * 1.88); pen.stroke()
 }
 
-/** Puffs from the exhaust: three rings that grow and thin as they fall behind, in the drafting line. */
+/** Puffs from the exhaust: three soft dabs of the drafting white that grow and thin as they fall behind, low at the tail. They are filled, never rings: a ring beside a numeral would read as a figure. */
 function puffs(pen: Pen, x: number, y: number, c: number, seconds: number) {
-  pen.strokeStyle = INK.line
-  pen.lineWidth = Math.max(1, c * 0.025)
+  pen.fillStyle = INK.line
   for (let i = 0; i < 3; i++) {
     const t = (seconds * 1.4 + i / 3) % 1
-    pen.globalAlpha = 0.75 * (1 - t)
-    pen.beginPath(); pen.arc(x - c * (0.15 + 0.75 * t), y - c * (0.05 + 0.5 * t * t), c * (0.05 + 0.13 * t), 0, Math.PI * 2); pen.stroke()
+    pen.globalAlpha = 0.42 * (1 - t)
+    pen.beginPath(); pen.ellipse(x - c * (0.15 + 0.75 * t), y + c * (0.12 - 0.2 * t * t), c * (0.06 + 0.13 * t), c * (0.045 + 0.09 * t), 0, 0, Math.PI * 2); pen.fill()
   }
   pen.globalAlpha = 1
 }
@@ -150,14 +149,15 @@ export function vehicle(pen: Pen, id: VehicleId, c: number, pose: VehiclePose, s
       cab(pen, -c * 0.3, bed - c * 0.09, c, pose)
       crate(pen, -c * (long + 0.56), bed - c * 0.09, c * 1.25)
       crate(pen, -c * (long + 0.02), bed - c * 0.09, c * 1.25)
-      // The tower of parcels: each sways or slides by its own channel of the pose.
+      // The tower of parcels, each with its label: each sways or slides by its own channel of the pose.
       for (let i = 0; i < 3; i++) {
         const w = c * (0.62 - i * 0.1), slide = pose.cargo[i] * c, fallen = Math.max(0, -pose.cargo[i] - 0.6)
         const px = -c * (long + 0.32) + (i % 2 ? c * 0.08 : -c * 0.04) + slide, py = bed - c * (0.62 + i * 0.32) + fallen * c * (0.9 + 0.3 * i)
         cutOut(pen, c, INK.paper, () => pen.rect(px, py - c * 0.29, w, c * 0.29))
         pen.strokeStyle = INK.stringTwist
         pen.lineWidth = Math.max(1, c * 0.026)
-        pen.beginPath(); pen.moveTo(px + w / 2, py - c * 0.29); pen.lineTo(px + w / 2, py); pen.moveTo(px, py - c * 0.145); pen.lineTo(px + w, py - c * 0.145); pen.stroke()
+        // A paper label in one corner. No string crosses a parcel: a cross there would read as a sign.
+        pen.beginPath(); pen.rect(px + w * 0.52, py - c * 0.23, w * 0.36, c * 0.12); pen.stroke()
       }
       crateCount(pen, spec.crates, -c * (long + 0.98), bed - c * 0.36, c, flip, counted)
       // The driver is out of the cab: its window is bare paper.

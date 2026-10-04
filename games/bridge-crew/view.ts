@@ -288,8 +288,12 @@ export class View {
         pen.arc(mx, my, r, 0, Math.PI * 2)
         for (let i = 0; i < 4; i++) { const a = (i * Math.PI) / 2 + 0.4; pen.moveTo(mx + Math.cos(a) * (r + cell * 0.08), my + Math.sin(a) * (r + cell * 0.08)); pen.lineTo(mx + Math.cos(a) * (r + cell * 0.2), my + Math.sin(a) * (r + cell * 0.2)) }
       } else if (mark.what === 'dust') {
-        // Three small curls that roll outward and up.
-        for (const [dx, lift, size] of [[-0.32, 0.1, 0.09], [0.04, 0.22, 0.07], [0.34, 0.12, 0.1]] as const) { const cx = mx + cell * dx * (0.4 + t), cy = my - cell * lift * (0.3 + 1.6 * t), r = cell * size * (0.6 + t); pen.moveTo(cx + r, cy); pen.arc(cx, cy, r, 0, Math.PI * 1.5) }
+        // Three soft dabs that roll outward and up, filled: an open curl would read as a letter.
+        pen.fillStyle = INK.line
+        pen.globalAlpha = 0.5 * Math.max(0, 1 - t)
+        for (const [dx, lift, size] of [[-0.32, 0.1, 0.09], [0.04, 0.22, 0.07], [0.34, 0.12, 0.1]] as const) { const cx = mx + cell * dx * (0.4 + t), cy = my - cell * lift * (0.3 + 1.6 * t), r = cell * size * (0.6 + t); pen.moveTo(cx + r, cy); pen.ellipse(cx, cy, r, r * 0.7, 0, 0, Math.PI * 2) }
+        pen.fill()
+        pen.beginPath()
       } else if (mark.what === 'toot') {
         // Three arcs, each wider than the last, going away from the horn.
         for (let i = 0; i < 3; i++) { const r = cell * (0.16 + 0.2 * i + 0.4 * t); pen.moveTo(mx + Math.cos(-0.7) * r, my + Math.sin(-0.7) * r); pen.arc(mx - cell * 0.2, my, r, -0.7, 0.7) }

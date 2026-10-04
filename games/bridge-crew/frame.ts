@@ -152,7 +152,7 @@ function assemble(frame: Frame, active: readonly boolean[]): Float64Array {
   return k
 }
 
-/** Cholesky factor of a symmetric positive matrix, in place in its lower triangle. */
+/** The triangular factor of a symmetric positive matrix (the matrix is the factor times its own transpose), in place in its lower triangle. */
 function factor(k: Float64Array, n: number, floor: number): Float64Array {
   for (let j = 0; j < n; j++) {
     let d = k[j * n + j]

@@ -22,7 +22,7 @@ function pencil(pen: Pen, cell: number, width = 0.022) {
   pen.lineCap = 'round'
 }
 
-/** A balsa crate: one unit of load, a small cube with its two pencil diagonals. */
+/** A balsa crate: one unit of load, a small cube with a framed panel and a nail in each corner. No brace crosses it: a crate stands beside a numeral, and two diagonals there would read as a sign. */
 export function crate(pen: Pen, x: number, y: number, cell: number) {
   const s = cell * 0.4
   cutOut(pen, cell, INK.balsa, () => pen.rect(x, y - s, s, s))
@@ -30,8 +30,10 @@ export function crate(pen: Pen, x: number, y: number, cell: number) {
   pen.strokeStyle = INK.balsaEdge
   pen.beginPath()
   pen.rect(x, y - s, s, s)
-  pen.moveTo(x, y - s); pen.lineTo(x + s, y); pen.moveTo(x + s, y - s); pen.lineTo(x, y)
+  pen.rect(x + s * 0.2, y - s * 0.8, s * 0.6, s * 0.6)
   pen.stroke()
+  pen.fillStyle = INK.balsaEdge
+  for (const [nx, ny] of [[0.1, 0.1], [0.9, 0.1], [0.1, 0.9], [0.9, 0.9]] as const) { pen.beginPath(); pen.arc(x + s * nx, y - s * ny, Math.max(0.6, s * 0.035), 0, Math.PI * 2); pen.fill() }
 }
 
 function wheel(pen: Pen, x: number, y: number, r: number, cell: number) {
@@ -82,7 +84,8 @@ export function postVan(pen: Pen, x: number, y: number, cell: number, random: ()
     cutOut(pen, cell, INK.paper, () => pen.rect(px, py - cell * 0.29, w, cell * 0.29))
     pen.strokeStyle = INK.stringTwist
     pen.lineWidth = Math.max(1, cell * 0.026)
-    pen.beginPath(); pen.moveTo(px + w / 2, py - cell * 0.29); pen.lineTo(px + w / 2, py); pen.moveTo(px, py - cell * 0.145); pen.lineTo(px + w, py - cell * 0.145); pen.stroke()
+    // A paper label in one corner: no string crosses the parcel.
+    pen.beginPath(); pen.rect(px + w * 0.52, py - cell * 0.23, w * 0.36, cell * 0.12); pen.stroke()
   }
   wheel(pen, x, y - r, r, cell)
   wheel(pen, back, y - r, r, cell)

@@ -143,7 +143,7 @@ export function reach(kind: Kind, from: Point, to: readonly [number, number]): P
 /** A plank turned over; any other kind comes back as it was, since turning changes nothing in it. */
 export const turn = (part: Part): Part => (part.kind === 'plank' ? { ...part, turned: !part.turned } : part)
 
-/** The squeeze at which a part of this length bows sideways (Euler's load for a part pinned at both ends). */
+/** The squeeze at which a part of this length bows sideways (the buckling load of a slender part pinned at both ends). */
 export const bowLoad = (kind: Kind, long: number): number => (SPEC[kind].bow > 0 ? (Math.PI ** 2 * SPEC[kind].bow) / long ** 2 : 0)
 
 /** The squeeze a part of this length holds: it crushes or it bows, whichever comes first. */

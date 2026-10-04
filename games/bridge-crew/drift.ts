@@ -2,11 +2,12 @@ import { INK, type Pen } from './look'
 import { WATER } from './pose'
 import { px, type Plot } from './sheet'
 import { COLS, type Site } from './sites'
-import { FAINT, SKY, farBridge, mugAt, reaches, siteSeed, windmill } from './valley'
+import { FAINT, SKY, farBridge, hillHouse, mugAt, reaches, siteSeed } from './valley'
 
 // What goes on at the edge of the sheet and has nothing to do with the job:
-// clouds drift, a train crosses the finished bridge far off, a fish leaps, a
-// paper boat sails the gap, and the draughtsman's mug steams. Each is a pure
+// clouds drift, smoke rises from a house on the hill, a train crosses the
+// finished bridge far off, a fish leaps, a paper boat sails the gap, and the
+// draughtsman's mug steams. Each is a pure
 // function of the attended clock, so it stops when the game does, and each is
 // drawn in the faint drafting line, under the parts: it is on the sheet, and
 // the kit lies on top of it. A splash is the one thing here the child causes.
@@ -34,8 +35,8 @@ export function balloon(at: Site, seconds: number): { x: number; y: number } {
   return { x, y: SKY.low + 0.3 + 0.9 * (0.5 + 0.5 * Math.sin(seconds * 0.07 + (siteSeed(at) % 7))) }
 }
 
-/** How fast the windmill's sails turn, in radians a second: once round in about twelve seconds. */
-export const SAILS = 0.52
+/** How fast the chimney's smoke wavers, in radians a second. */
+export const SMOKE = 1.1
 
 /** How often the far train comes, and how fast it goes, in seconds and cells a second. */
 export const TRAIN = { every: 37, speed: 0.75, long: 1.45 } as const
@@ -157,16 +158,14 @@ export function drawSky(pen: Pen, plot: Plot, at: Site, seconds: number): number
   pen.rect(bx - r * 0.2, by + r * 1.62, r * 0.4, r * 0.3)
   pen.stroke()
   drawn++
-  const mill = windmill(at)
-  if (mill) {
-    // The windmill's four sails, each a spar with a ladder of cloth, turning as slowly as a windmill does.
-    const [mx, my] = px(plot, mill[0], mill[1] + 0.04), turn = seconds * SAILS
+  const house = hillHouse(at)
+  if (house) {
+    // Smoke from the house's chimney: one thread that wavers as it rises, leans with the wind and thins out.
     line(pen, cell, 0.018, FAINT.hills + 0.08)
     pen.beginPath()
-    for (let i = 0; i < 4; i++) {
-      const a = turn + (i * Math.PI) / 2, cx = Math.cos(a), cy = Math.sin(a), long = cell * 0.78
-      pen.moveTo(mx, my); pen.lineTo(mx + cx * long, my + cy * long)
-      pen.moveTo(mx + cx * long * 0.3 - cy * cell * 0.14, my + cy * long * 0.3 + cx * cell * 0.14); pen.lineTo(mx + cx * long - cy * cell * 0.14, my + cy * long + cx * cell * 0.14); pen.lineTo(mx + cx * long, my + cy * long)
+    for (let i = 0; i <= 10; i++) {
+      const h = i * 0.11, [x, y] = px(plot, house[0] + 0.5 * h * h + 0.05 * Math.sin(seconds * SMOKE + i * 0.8) * (i / 10), house[1] + 0.14 + h)
+      if (i) pen.lineTo(x, y); else pen.moveTo(x, y)
     }
     pen.stroke()
     drawn++
@@ -193,7 +192,10 @@ export function drawSky(pen: Pen, plot: Plot, at: Site, seconds: number): number
       if (at0 < span.x0 + 0.2 || at0 > span.x1 - 0.2) continue
       pen.moveTo(x + r, y); pen.arc(x, y, r, 0, Math.PI * 2)
     }
-    pen.stroke()
+    // Filled dabs, not rings.
+    pen.fillStyle = INK.line
+    pen.globalAlpha = FAINT.hills
+    pen.fill()
     drawn++
   }
   const mug = mugAt(at)
@@ -259,7 +261,9 @@ export function drawWaterLife(pen: Pen, plot: Plot, at: Site, seconds: number, s
         const t = frac(splash.since * 0.8 + i / 3), [x, y] = px(plot, still.x + 0.08 * Math.sin(i * 4 + t * 6), WATER - 0.45 + 0.42 * t), r = cell * (0.03 + 0.03 * t)
         pen.moveTo(x + r, y); pen.arc(x, y, r, 0, Math.PI * 2)
       }
-      pen.stroke()
+      // Filled, not rings.
+      pen.fillStyle = INK.line
+      pen.fill()
       drawn++
     }
   }
