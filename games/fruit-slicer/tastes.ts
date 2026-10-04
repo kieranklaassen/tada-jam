@@ -48,8 +48,10 @@ export function tasteOf(customer: Customer, result: Served): Taste {
         end += piece.length
         const count = wholeParts(piece.length, customer.fruit, share.den)
         lifts.push(count ?? Math.max(1, Math.ceil(piece.length / part)))
-        // The ant standing under the end of a piece that stops between two marks.
-        if (count === null) flattened.push(Math.max(0, Math.min(share.num - 1, Math.floor(end / part))))
+        // The pieces lie end to end along the file. Where one stops between two marks, an ant stands under its end; a piece that
+        // stops on a mark, whatever its own length, ends between two ants and flattens nobody.
+        const under = Math.floor(end / part)
+        if (wholeParts(end, customer.fruit, share.den) === null && under < share.num) flattened.push(under)
       }
       const busy = Math.min(share.num, lifts.reduce((sum, count) => sum + count, 0))
       return { who: 'ants', liked: pieces.length === share.num && lifts.every((count) => count === 1) && flattened.length === 0, lifts, flattened: [...new Set(flattened)], idle: share.num - busy }

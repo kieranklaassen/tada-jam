@@ -97,7 +97,7 @@ describe('the taste landing', () => {
     expect(wantedCount(ants)).toBe(3)
     const lengths = [len(3, 8), len(3, 8)]
     const flavour = taste(ants, lengths)
-    expect(mid(ants, 2, 0.3)(flavour, lengths).flat).toEqual([0, 1, 1])
+    expect(mid(ants, 2, 0.3)(flavour, lengths).flat).toEqual([0, 1, 0])
     expect(mid(ants, 2, 0.9)(flavour, lengths).flat).toEqual([0, 0, 0])
     const neat = [len(1, 4), len(1, 4), len(1, 4)]
     expect(mid(ants, 3)(taste(ants, neat), neat).flat).toEqual([0, 0, 0])

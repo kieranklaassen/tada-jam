@@ -88,12 +88,14 @@ function layClear(game: Game, held: Held, lane: number, x: number, how: 'beside'
   return { game: laid.game, events: [...events, ...laid.events] }
 }
 
-/** A piece that left the tin may leave what is in it fitting: the lid then shuts by itself. */
+/** A piece that left the tin may leave what is in it fitting: the lid then shuts by itself. What is left may also be a misfit: the lid comes down on that too. */
 function shutAfter(game: Game, events: GameEvent[], before: Game, held: Held): { game: Game; events: GameEvent[] } {
   const fromTin = held.ids.some((id) => pieceOf(before.world, id)?.place.on === 'tin')
   if (!fromTin) return { game, events }
   const shut = shutIfFit(game)
-  return { game: shut.game, events: [...events, ...shut.events] }
+  // A lid that has just come down on a piece laid in does not come down a second time for what was taken out.
+  const told = events.some((event) => event.kind === 'misfit')
+  return { game: shut.game, events: [...events, ...shut.events.filter((event) => !(told && event.kind === 'misfit'))] }
 }
 
 /**

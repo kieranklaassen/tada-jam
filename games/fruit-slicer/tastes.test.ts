@@ -49,8 +49,14 @@ describe('the ants', () => {
   })
   it('flatten the ant under a piece that ends between two of them', () => {
     const result = taste(ants, [len(3, 8), len(3, 8)])
-    expect(result).toMatchObject({ liked: false, flattened: [1, 2] })
+    // The first stops halfway along the second ant; the second stops at the end of the file, which is on a mark.
+    expect(result).toMatchObject({ liked: false, flattened: [1] })
     expect(taste(ants, [len(3, 4)])).toMatchObject({ liked: false, lifts: [3], flattened: [] })
+    // It goes by where each piece ends along the file, not by the piece's own length: half a part, a part, a part and half a part
+    // end under the first ant, the second and the third, and the last of them ends on the mark.
+    expect(taste(ants, [len(1, 8), len(1, 4), len(1, 4), len(1, 8)])).toMatchObject({ liked: false, flattened: [0, 1, 2] })
+    // And a piece of a part and a half that starts half a part along ends on a mark, and flattens nobody.
+    expect(taste(ants, [len(1, 8), len(3, 8), len(1, 4)])).toMatchObject({ liked: false, flattened: [0] })
   })
 })
 

@@ -83,13 +83,20 @@ export type Actor = {
   last: string | null
   react: Reaction | null
   reactAge: number
+  /** What it does as soon as the reaction it is in has run out. */
+  then: Reaction | null
 }
 
-export const newActor = (who: Who, seed: number): Actor => ({ who, t: (seed % 97) / 10, seed, idle: null, idleAge: 0, rest: SHEETS[who].rest[0], last: null, react: null, reactAge: 0 })
+export const newActor = (who: Who, seed: number): Actor => ({ who, t: (seed % 97) / 10, seed, idle: null, idleAge: 0, rest: SHEETS[who].rest[0], last: null, react: null, reactAge: 0, then: null })
 
 /** A reaction starts at once and replaces whatever the customer was doing. */
 export function reactTo(actor: Actor, reaction: Reaction): Actor {
-  return { ...actor, react: reaction, reactAge: 0, idle: null, idleAge: 0, rest: Math.max(actor.rest, SHEETS[actor.who].rest[0] / 2) }
+  return { ...actor, react: reaction, reactAge: 0, then: null, idle: null, idleAge: 0, rest: Math.max(actor.rest, SHEETS[actor.who].rest[0] / 2) }
+}
+
+/** A flinch or a snip is its own answer to a touch, and is seen to its end: what follows it waits for it. Anything else gives way at once. */
+export function reactAfter(actor: Actor, reaction: Reaction): Actor {
+  return actor.react === 'flinch' || actor.react === 'snip' ? { ...actor, then: reaction } : reactTo(actor, reaction)
 }
 
 /** Plays `dt` seconds: a reaction runs out, a small thing ends, and after a rest the next is chosen, never the one before. */
@@ -98,7 +105,11 @@ export function stepActor(actor: Actor, dt: number): Actor {
   const next: Actor = { ...actor, t: actor.t + dt }
   if (next.react) {
     next.reactAge += dt
-    if (next.reactAge >= sheet.react[next.react]) next.react = null
+    if (next.reactAge >= sheet.react[next.react]) {
+      next.react = next.then
+      next.reactAge = 0
+      next.then = null
+    }
     return next
   }
   if (next.idle) {

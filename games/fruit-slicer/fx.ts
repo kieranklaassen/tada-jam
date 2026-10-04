@@ -76,6 +76,10 @@ export const MOUTH = { x: DOG.x + DOG.w / 2, y: DOG.y + 78 } as const
 export const CURL_FLIGHT = 0.55
 export const CURL_LIFE = 1.05
 
+/** A lid that tries a misfit starts down as the piece is laid, takes this long over it, and first strikes what sticks out this long after it started. */
+export const LID_LIFE = 0.7
+export const LID_STRIKES = LID_LIFE / 6
+
 /** A comic's mark at a place on the stage, starting after `delay` seconds. */
 export function mark(state: FxState, kind: 'star' | 'sweat' | 'shock', at: Point, delay = 0, size = 1): FxState {
   const drawn = draw(state.seed)
@@ -149,7 +153,7 @@ export function spawn(state: FxState, event: GameEvent, heads: Partial<Record<'w
       break
     case 'misfit':
       // Too long, the lid bounces on it; too short, the piece slides and rattles in the gap, by no more than the gap.
-      next.fx.push({ kind: 'lid', how: event.how, age: -0.2, life: 0.7 })
+      next.fx.push({ kind: 'lid', how: event.how, age: 0, life: LID_LIFE })
       if (event.gap > 0) shake(event.id, 'rattle', Math.min(1, event.gap / 200), 0.9)
       next.joltSpeed += 5
       break

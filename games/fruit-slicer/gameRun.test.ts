@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { FLIGHT_SECONDS } from './carry'
+import { SHEETS } from './cast'
 import { freshGame } from './cycle'
 import { CURL_FLIGHT, CURL_LIFE } from './fx'
 import { GameRun, RUN_GAP, RUN_STEP, SNACK_SECONDS, SWING } from './gameRun'
@@ -338,9 +339,14 @@ describe('the cast in the run', () => {
     const run = fresh()
     expect(run.window).toBeNull()
     run.tap(mid(QUEUE[1]))
-    expect(ids(run)).toEqual(['babble', 'step'])
-    expect(run.window).toMatchObject({ react: 'step' })
-    expect(run.queue[1]).toMatchObject({ react: 'step' })
+    const sounds = run.takeSounds()
+    expect(sounds.map((sound) => sound.id)).toEqual(['babble', 'step'])
+    // Poked, it flinches in its own way first, and steps up as the flinch ends; the step is heard then, not before.
+    expect(run.window).toMatchObject({ react: 'flinch', then: 'step' })
+    const who = run.window!.who
+    expect(sounds[1].delay).toBeCloseTo(SHEETS[who].react.flinch)
+    play(run, SHEETS[who].react.flinch + 0.05)
+    expect(run.window).toMatchObject({ react: 'step', then: null })
     expect(run.queue[0].react).toBeNull()
     expect(run.urgent).toBe(true)
   })
@@ -422,9 +428,17 @@ describe('the comedy', () => {
     // One who is in the middle of something of its own goes on with that.
     play(run, 3)
     run.tap(mid(QUEUE[1]))
-    expect(run.window).toMatchObject({ react: 'step' })
+    expect(run.window).toMatchObject({ react: 'flinch', then: 'step' })
     drag(run, { x: QUEUE[0].x + 10, y: QUEUE[0].y + 20 }, { x: QUEUE[0].x + 200, y: QUEUE[0].y + 220 }, 0.1)
-    expect(run.window).toMatchObject({ react: 'step' })
+    // The one stepping up has its flinch and its step still to come, and the one who has just joined is still arriving: neither is made to stare.
+    expect(run.window).toMatchObject({ react: 'flinch', then: 'step' })
+    expect(run.queue[0]).toMatchObject({ react: 'snip' })
+    expect(run.queue[1]).toMatchObject({ react: 'step' })
+    // One whose own snip is cut across by something to stare at finishes the snip first, and stares after.
+    play(run, 3)
+    drag(run, { x: QUEUE[0].x + 10, y: QUEUE[0].y + 20 }, { x: QUEUE[1].x + 200, y: QUEUE[1].y + 220 }, 0.1)
+    expect(run.queue.map((actor) => actor.react)).toEqual(['snip', 'snip'])
+    expect(run.queue[0].then).toBe('gawp')
   })
 
   it('has a customer lick off juice that comes down on its face, in its own way, and only when it is doing nothing else', () => {

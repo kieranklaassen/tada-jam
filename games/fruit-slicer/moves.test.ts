@@ -224,6 +224,20 @@ describe('with a customer at the window', () => {
     expect(holdsMisfit(result.game)).toBe(false)
   })
 
+  it('brings the lid down on a piece trimmed in the tin that is still too long, or now too short', () => {
+    const over = served(400)
+    const cutAt = (points: number) => slice(over, { x: X0 + points * PX, y: TIN.bodyY - 10 }, { x: X0 + points * PX, y: TIN.bodyY + TIN.bodyH + 10 }, newStroke())
+    // Trimmed, and still sticking out by 200: the lid clangs on it.
+    const still = cutAt(ordered + 200)
+    expect(kinds(still.events)).toEqual(['cut', 'misfit'])
+    expect(still.events[1]).toMatchObject({ how: 'over', by: 200, voice: 'clang', gap: 0, id: inTin(still.game.world, 0)[0].id })
+    // Trimmed too far: the jaw closes on air, and the piece rattles in a gap of exactly what is missing.
+    const short = cutAt(ordered - 300)
+    expect(kinds(short.events)).toEqual(['cut', 'misfit'])
+    expect(short.events[1]).toMatchObject({ how: 'under', by: -300, voice: 'slide', gap: 300 })
+    expect(short.game.finished).toBe(false)
+  })
+
   it('skids off the tin with sparks, once, where no piece lies under the blade', () => {
     const result = slice(start, { x: X0 + 40, y: TIN.bodyY - 10 }, { x: X0 + 40, y: TIN.bodyY + TIN.bodyH + 10 }, newStroke())
     // Shut and folded small, the tin rings one low note whatever the order: it does not give the order's length away by ear.

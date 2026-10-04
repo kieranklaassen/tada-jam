@@ -17,6 +17,13 @@ export const IN_QUEUE: Readonly<Record<Who, number>> = { pelican: 0.85, twins: 1
 /** The feet of everyone in the stall's panel stand on this line. */
 export const SILL = WINDOW.y + WINDOW.h - 4
 
+/**
+ * The twins stand nose to nose: each this far from the middle of the pair, with a snout that reaches this far
+ * from its own middle, so the two tips keep a gap between them. Two snouts that crossed would read as a sign.
+ */
+export const TWINS_APART = 60
+export const SNOUT_REACH = 55
+
 /** How many stand in a file of ants: one for each part of the order. */
 const fileOf = (customer: Customer): number => Math.max(...customer.shares.map((share) => share.num))
 

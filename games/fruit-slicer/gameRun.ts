@@ -1,8 +1,8 @@
 import { FLING_SPEED, drop, fling, grab, rollOver, type Held } from './carry'
-import { SHEETS, newActor, poseOf as castPose, reactTo, stepActor, type Actor } from './cast'
+import { SHEETS, newActor, poseOf as castPose, reactAfter, reactTo, stepActor, type Actor } from './cast'
 import type { Ending, Game } from './cycle'
 import { newDog, poseOf as dogPose, react, stepDog, type DogState, type Reaction } from './dogMotion'
-import { CURL_FLIGHT, CURL_LIFE, MOUTH, mark, newFx, rollAlong, spawn, step, whoosh, type FxState } from './fx'
+import { CURL_FLIGHT, CURL_LIFE, LID_STRIKES, MOUTH, mark, newFx, rollAlong, spawn, step, whoosh, type FxState } from './fx'
 import { guideOf, type Guide } from './guide'
 import { handPose, type Guidance, type HandPose } from './guidance'
 import { newStroke, poke, slice, thingAt, tinAt, type GameEvent, type Stroke, type Whom } from './moves'
@@ -311,10 +311,13 @@ export class GameRun {
     for (const whom of ['window', 0, 1] as const) {
       const actor = this.actorOf(whom)
       // One that is rolled flat, on its way in or on its way out stays as it is; anyone else drops what it was doing and stares.
-      if (whom === except || !actor || actor.react === 'flat' || actor.react === 'step') continue
-      this.reactAs(whom, 'gawp')
+      if (whom === except || !actor || actor.react === 'flat' || actor.react === 'step' || actor.then === 'step') continue
+      // One in the middle of its own flinch or snip finishes it first, and stares after.
+      const first = actor.react === 'flinch' || actor.react === 'snip' ? Math.max(0, SHEETS[actor.who].react[actor.react] - actor.reactAge) : 0
+      if (whom === 'window') this.window = reactAfter(actor, 'gawp')
+      else this.queue[whom] = reactAfter(actor, 'gawp')
       const head = this.headAt(this.game, whom)
-      if (head) this.fx = mark(this.fx, 'shock', { x: head.x, y: head.y - 10 }, actor.who === 'pelican' ? 0.5 : actor.who === 'cat' ? 0.75 : actor.who === 'boa' ? 0.6 : 0.05)
+      if (head) this.fx = mark(this.fx, 'shock', { x: head.x, y: head.y - 10 }, first + (actor.who === 'pelican' ? 0.5 : actor.who === 'cat' ? 0.75 : actor.who === 'boa' ? 0.6 : 0.05))
     }
   }
 
@@ -366,7 +369,9 @@ export class GameRun {
       if ('voice' in event) {
         // A customer under the roller honks as it springs back into shape, which each does in its own time, not as it goes flat.
         const rolledFlat = event.kind === 'rolled' && event.on === 'customer' && event.whom !== null ? (event.whom === 'window' ? before.window : before.queue[event.whom]) : null
-        const delay = event.kind === 'cut' || event.kind === 'curl' ? cuts++ * RUN_GAP : rolledFlat ? SHEETS[rolledFlat.who].react.flat * SPRINGS_BACK[rolledFlat.who] : 0
+        // A piece the crate chews is heard going down the dog only once the crate has let go of it; and a lid clangs as it strikes, not before.
+        const late = event.kind === 'fell' ? event.after ?? 0 : event.kind === 'misfit' && event.how === 'over' ? LID_STRIKES : 0
+        const delay = event.kind === 'cut' || event.kind === 'curl' ? cuts++ * RUN_GAP : rolledFlat ? SHEETS[rolledFlat.who].react.flat * SPRINGS_BACK[rolledFlat.who] : late
         let length = 'length' in event ? event.length : 'piece' in event ? event.piece.length : undefined
         if (event.kind === 'cut') length = this.rung = this.rung === null ? event.length : Math.min(event.length, this.rung * RUN_STEP)
         // A customer's own noise is in its own throat: its place in the cast goes with the voice.
@@ -459,8 +464,9 @@ export class GameRun {
           // A pelican that swallowed its order in more than one piece hiccups all the way out, and is heard doing it.
           if (this.departing && this.departing.customer.who === 'pelican' && this.departing.lengths.length > 1) this.sounds.push({ id: 'hiccup', count: this.departing.lengths.length - 1, delay: 0.1 })
           this.queue[event.index] = event.did === 'swapped' && this.window ? reactTo(this.window, 'step') : reactTo(newActor(game.queue[event.index].who, ++this.seed + 10), 'step')
-          this.window = reactTo(called, 'step')
-          this.sounds.push({ id: 'step', delay: 0 })
+          // One that was poked to call it flinches first, in its own way, and steps up as the flinch ends: the step is heard then.
+          this.window = reactAfter(called, 'step')
+          this.sounds.push({ id: 'step', delay: this.window.then === 'step' ? SHEETS[called.who].react.flinch - called.reactAge : 0 })
           this.urgent = true
           break
         }

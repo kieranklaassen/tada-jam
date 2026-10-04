@@ -135,7 +135,22 @@ export function land(game: Game, fruit?: Fruit): { game: Game; events: GameEvent
 /** The lid shuts by itself when what lies in the tin has come to fit: the end of the cycle, as an event. */
 export function shutIfFit(game: Game): { game: Game; events: GameEvent[] } {
   const settled = settle(game)
-  return { game: settled.game, events: settled.ending ? [{ kind: 'ending', ending: settled.ending, how: 'shut' }] : [] }
+  if (settled.ending) return { game: settled.game, events: [{ kind: 'ending', ending: settled.ending, how: 'shut' }] }
+  return { game: settled.game, events: leftOver(game) }
+}
+
+/**
+ * What is left in an open tin does not fit: the lid comes down on it as it does on a piece just laid in, and
+ * bounces on what sticks out or finds the gap. The piece it names is the last one in the compartment that is off.
+ */
+function leftOver(game: Game): GameEvent[] {
+  if (!game.window || game.finished || !game.world.tinOpen) return []
+  const result = served(game.world, game.window)
+  if (result.kind !== 'over' && result.kind !== 'under') return []
+  const off = result.parts.find((part) => part.fit.kind === result.kind && part.fit.by === result.by && part.pieces.length > 0) ?? result.parts.find((part) => part.pieces.length > 0)
+  const piece = off?.pieces[off.pieces.length - 1]
+  if (!off || !piece) return []
+  return [{ kind: 'misfit', id: piece.id, how: result.kind, by: result.by, length: piece.length, voice: result.kind === 'over' ? 'clang' : 'slide', gap: off.fit.kind === 'under' ? -off.fit.by : 0 }]
 }
 
 /**
@@ -184,7 +199,7 @@ export function slice(game: Game, a: Point, b: Point, stroke: Stroke): { game: G
     }
   }
   let now: Game = { ...game, world }
-  // A piece trimmed where it lay in the tin may now fit: the lid shuts by itself.
+  // A piece trimmed where it lay in the tin may now fit: the lid shuts by itself. Or it is still too long, or now too short: the lid comes down on it and says so.
   if (trimmed) {
     const shut = shutIfFit(now)
     now = shut.game

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { LEAVE_AT_MOST, REACTIONS, SHEETS, newActor, poseOf, reactTo, stepActor, type Actor, type CastPose } from './cast'
+import { LEAVE_AT_MOST, REACTIONS, SHEETS, newActor, poseOf, reactAfter, reactTo, stepActor, type Actor, type CastPose } from './cast'
 import type { Who } from './orders'
 
 const WHOS: Who[] = ['pelican', 'twins', 'ants', 'cat', 'boa']
@@ -76,6 +76,23 @@ describe('every customer', () => {
       const poked = reactTo(busy, 'flinch')
       expect(poked).toMatchObject({ react: 'flinch', reactAge: 0, idle: null })
       expect(play(poked, SHEETS[who].react.flinch + 0.1).react).toBeNull()
+    }
+  })
+
+  it('plays its own flinch or snip to the end before a step or a stare that follows it in the same touch', () => {
+    for (const who of WHOS) {
+      for (const own of ['flinch', 'snip'] as const) {
+        const called = reactAfter(reactTo(newActor(who, 2), own), 'step')
+        expect(called).toMatchObject({ react: own, reactAge: 0, then: 'step' })
+        expect(play(called, SHEETS[who].react[own] - 0.05).react).toBe(own)
+        const stepping = play(called, SHEETS[who].react[own] + 0.05)
+        expect(stepping).toMatchObject({ react: 'step', then: null })
+        expect(stepping.reactAge).toBeLessThan(0.1)
+        expect(play(called, SHEETS[who].react[own] + SHEETS[who].react.step + 0.1).react).toBeNull()
+      }
+      // Anything else gives way at once, and a fresh reaction forgets what was to follow the old one.
+      expect(reactAfter(reactTo(newActor(who, 2), 'lick'), 'gawp')).toMatchObject({ react: 'gawp', then: null })
+      expect(reactTo(reactAfter(reactTo(newActor(who, 2), 'flinch'), 'step'), 'flat')).toMatchObject({ react: 'flat', then: null })
     }
   })
 

@@ -129,6 +129,21 @@ describe('letting go over a customer, the dog or the crate', () => {
     expect(Math.abs(eatenFrom.y + eatenFrom.h / 2 - mid(QUEUE[1]).y)).toBeLessThan(40)
   })
 
+  it('brings the lid down on what is left when a piece taken out of the tin leaves a misfit, once', () => {
+    const exact = cutAt(start, ORDERED)
+    const rest = pieceOf(exact.game.world, exact.right)!
+    const spare = cutAt(exact.game, (rest.place.on === 'board' ? rest.place.x : 0) + 300)
+    let game = drop(spare.game, hold(spare.game, spare.left), tinPoint).game
+    game = drop(game, hold(game, exact.left), { x: tinPoint.x + 200, y: tinPoint.y }).game
+    // The exact piece is taken out and fed to one who waits: the spare alone is too short, and the jaw closes on air.
+    const out = drop(game, hold(game, exact.left, 0.5), mid(QUEUE[1]))
+    expect(kinds(out.events)).toEqual(['ate', 'misfit'])
+    expect(out.events[1]).toMatchObject({ how: 'under', id: spare.left, voice: 'slide', gap: ORDERED - 300 })
+    // A piece moved within the tin is laid in again: the lid comes down for that, and not a second time.
+    const moved = drop(game, hold(game, spare.left, 0.5), { x: tinPoint.x + 300, y: tinPoint.y })
+    expect(kinds(moved.events).filter((kind) => kind === 'misfit')).toHaveLength(1)
+  })
+
   it('shuts the lid by itself when a piece taken out of the tin and given away leaves a fit', () => {
     // An exact piece and a spare lie in the tin together: too long. The spare is taken out and given to one who waits.
     const exact = cutAt(start, ORDERED)

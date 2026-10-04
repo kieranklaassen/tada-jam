@@ -4,6 +4,7 @@ import { BLUE, FLESH, INK, RED, RIND, WHITE, YELLOW, brow, eyeOut, inked, oval, 
 import { WHOLE, type Fruit } from './measure'
 import type { Who } from './orders'
 import type { Show } from './scenes'
+import { SNOUT_REACH, TWINS_APART } from './seats'
 
 // The five customers, drawn in the look: flat colour, a dot screen on the
 // shaded side, a black brush line round everything. Each is drawn about its
@@ -13,6 +14,9 @@ import type { Show } from './scenes'
 // colour, each at its own length: the fruit is never anything but a length.
 
 type Ctx = CanvasRenderingContext2D
+
+/** Where the middle of a twin's nose tip is along its snout: the tip is a small ball, and its far side is the snout's reach. */
+const NOSE = SNOUT_REACH - 5
 type Dots = Pick<Screens, 'of'>
 /** What a figure is drawn from. `pose(member)` gives the pose of one of several bodies: a twin, or an ant of the file. */
 export type Casting = {
@@ -145,9 +149,9 @@ function shrew(ctx: Ctx, dots: Dots, cast: Casting, member: number): void {
   // The twin whose piece it is opens its mouth for the bite; in step, both do.
   const bite = feast.eater === -1 || feast.eater === member ? feast.mouth : 0
   const tip = -6 + 9 * pose.part - 10 * Math.max(pose.mouth, bite)
-  inked(ctx, poly([[-18, 4], [-8, -14], [12, -12], [50, tip], [14, 14], [-12, 14]]), GREY, 3.5)
+  inked(ctx, poly([[-18, 4], [-8, -14], [12, -12], [NOSE, tip], [14, 14], [-12, 14]]), GREY, 3.5)
   if (pose.mouth > 0.1 || bite > 0.1) inked(ctx, poly([[14, 12], [44, tip + 8 + 8 * Math.max(pose.mouth, bite)], [16, 18]]), RED, 2.5)
-  inked(ctx, oval(50, tip, 4.5, 4), RED, 2.5)
+  inked(ctx, oval(NOSE, tip, 4.5, 4), RED, 2.5)
   // A tuft of fur between the ears, which is what the blade takes off and what pops back: one filled shape, and no whiskers, since
   // strokes that fan from a snout read as a sign where the two twins stand nose to nose.
   if (pose.tuft > 0.05) inked(ctx, poly([[-8, -12], [-6, -14 - 12 * pose.tuft], [-2, -13], [1, -15 - 14 * pose.tuft], [4, -13], [8, -14 - 9 * pose.tuft], [9, -12]]), GREY, 2.5)
@@ -314,7 +318,8 @@ export function drawCustomer(ctx: Ctx, dots: Dots, cast: Casting, x: number, y: 
     for (const member of [0, 1]) {
       const side = member === 0 ? -1 : 1
       const pose = bodyPose(cast, member)
-      stand(ctx, x + side * 46 * s + feast.pull * 10 * s, y, s, pose, () => {
+      // Each stands far enough from the middle that its snout stops short of the other's: two snouts that crossed would read as a sign.
+      stand(ctx, x + side * TWINS_APART * s + feast.pull * 10 * s, y, s, pose, () => {
         // They face each other, until they turn to go.
         ctx.scale(pose.turn > 0.5 ? -1 : -side, 1)
         ctx.rotate(-0.12 * Math.abs(feast.pull))
