@@ -13,9 +13,9 @@
 - Renderer: canvas 2D with the game's own solver (`frame.ts`). matter.js is not used.
 - The guide, the cloud page, the run pages and the pilot notes did not differ on anything these runs met.
 
-- Open: for the lead to paste into the sheet part, since the builder's session is refused the edit: three sentences (second table below) and two characters with three sentences (third table below). The builder asks for no round: the sheet part is unchanged and its hash is the one that passed. Pasting them calls for round 6 of those sentences only.
+- Open: one thing waits for the lead, since the builder's session is refused the edit to the sheet part: the sheet does not yet name the two crew that the look pass added (their two rows and three sentences are below, ready to paste). Pasting them changes the hash and calls for round 6 of those sentences only. Everything else the sheet says, the game now does; the builder asks for no round, and the sheet part's hash is the one that passed.
 
-**The fourteen sentences named for the lead in the closing run, sorted as the closing page's step 2 says.** Twelve promised something a child sees or hears: each is built, so the sheet's own sentence is true and stays as it passed. Two said a detail other than the game does.
+**The fourteen sentences named for the lead in the closing run are all true of the game now.** Twelve promised something a child sees or hears and were built in the run after; the other two (the ghost hand, and the cause of the one change, with the day-15 clause that says the same) were first given here as sentences to paste, and after the third reading the game was built to match them instead, so the sheet's own words stand.
 
 | Where in the sheet | The sheet says | What the game does now | Test |
 | --- | --- | --- | --- |
@@ -32,15 +32,11 @@
 | Scenes, secrets | "under a whole arch the barge's horn comes back as a chord" | After the barge's toot, three notes on it, when the bridge has a whole arch over the channel. | `game.test.ts` |
 | Comparing, as play | "or one part can be copied from it" | A tap on a part of the laid tracing that the bridge lacks lays that part, if the kit has one. | `game.test.ts` |
 
-**For the lead to paste: sentences that say a detail other than the game does.** The builder's session was refused the edit to the sheet part (the permission layer of the session took it for a change to a shared thing), so nothing above `## The look` was touched. Pasting these changes the hash, and a round then reads only these.
+| The idle ladder | "later a ghost hand lays one part between two pins away from the gap and takes it off again." | It does exactly that: it lays the part and then drags its middle to the tray. Sending, unrolling and the piles are shown by the glow, not by the hand. | `view.test.ts` |
+| Scenes, one change | "Cause: the child runs the trolley over a bridge with a tracing laid on it" | The trolley in the hand rides the deck under the finger; run a cell or more with a tracing laid (or let go, when it trundles as far), the two designs have been compared. Standing still is not the cause. | `game.test.ts` |
+| Day 15 | "run both under the same trolley" | The same: the tracing's second line lies under the trolley at each place as it is run. | `game.test.ts` |
 
-| Where in the sheet | The sheet says | True of the game |
-| --- | --- | --- |
-| The idle ladder | "later a ghost hand lays one part between two pins away from the gap and takes it off again." | later a ghost hand shows one move for the board as it stands: it lays a part between two pins away from the gap, picks another pile, sends the vehicle once a road reaches across, unrolls the next sheet, or carries a part back to the tray when the kit is spent. |
-| Scenes, one change | "Cause: the child runs the trolley over a bridge with a tracing laid on it, and the two differ in more than one part." | Cause: the trolley stands on a bridge with a tracing laid on it, and the two differ in more than one part. |
-| What the child can do on day 15 (the same detail, not named before) | "lay a tracing of last week's bridge over today's and run both under the same trolley," | lay a tracing of last week's bridge over today's and load both with the same trolley, |
-
-**For the lead to paste as well: what the look pass added that the sheet does not name.** Two characters, and what they do in the two scenes. Again the builder could not write them into the sheet part. In the sheet's own columns (character, wants, likes, dislikes):
+**For the lead to paste: what the look pass added that the sheet does not name.** Two characters, and what they do in the two scenes. The builder's session was refused the edit to the sheet part (its permission layer took it for a change to a shared thing), so nothing above `## The look` was touched. In the sheet's own columns (character, wants, likes, dislikes):
 
 | Character | Wants | Likes | Dislikes |
 | --- | --- | --- | --- |
@@ -64,7 +60,7 @@ And three sentences: under the characters, "Neither of the crew has a taste abou
 **What is still weak.**
 
 - **Nobody has heard it.** Every sound is numbers held to a range by tests.
-- **Three sentences of the sheet still say a detail other than the game does** (second table above). Besides those: a tracing laid on the board is lifted again on load, since it is not a saved field (the sheet does not say it is).
+- **A tracing laid on the board is lifted again when the game is opened**, since which tracing is laid is not a saved field, and the sheet's table of fields does not have one. The two kept tracings themselves are saved.
 - **What the last run built has limits a child may meet.** Only the van and the caterpillar bus are light enough to ride a rail, and only on sticks one cell long; a longer stick snaps under any wheel, which is the model. The echo needs the arch above the deck: an arch under it stands in the barge's channel, and the barge then scrapes and does not toot. The driver stands by the back wheels with its arms up and the parcels come back to the tower by themselves; it does not walk to where they fell, which may be over the gap.
 - **In a give a vehicle rides over a rock in one step of half a cell**, and the longest vehicle rolls out from the lip of the gorge at up to 0.4 of a cell a frame. Tests hold both numbers; no eye has judged them in motion.
 - **Of the look pass.** No one has heard the crew (five new voices, held to the range by tests). The valley, the crew and the splash were looked at on five sheets as stills and on the first sheet in the running game; none was watched in motion. On the barge's sheet the barge lies moored in its channel, which is where a child will want a prop: a prop pinned there is drawn across the barge until a run shows what the barge thinks of it. On the sheets with cliffs the cliffs stand over the far hills and the hills show through their hatching. The fish, the boat and the splash are drawn on the sheet, under the parts, so a prop in the water stands in front of them.
@@ -72,7 +68,10 @@ And three sentences: under the characters, "Neither of the crew has a taste abou
 - **Not looked at in a browser:** the sheets after `rock-prop`, the vehicles other than the van and the jelly truck, the chief's models for the six ideas after the plank on edge, the one-change showing, and the barge. Tests draw every one of them with a recording pen and hold every number to a real number; no eye has judged them. Of the last run's work, the tightrope, the rail, the driver, the rack and the pressed model were looked at as stills drawn by the game's own modules in a browser, and the chief's look up and the kerb on the running game; none was watched in motion, and the lean, the copied part and the echo were not looked at at all.
 - **The model is harsh on the first sheet:** one weight on the trolley at the middle of a flat four-cell plank cracks it (the model's numbers: a strength of 1.2 against a bending of 1.24). True to the model, and a child may read it as the trolley being broken.
 - Only the first variant of each position has a bridge in the tests that crosses it. Taste thresholds and strengths are first values.
-- The hold that takes a pin out is still shown by nothing.
+- A pin is taken off by dragging it to the tray, as the sheet's five gestures have it; nothing but the ghost hand's own take-off shows that a pin can go the same way as a part.
+- The first sheet's third form has a gap of two cells, which a flat plank crosses: the plank on edge is not needed there. The three forms had to differ, and a wider gap cannot be crossed with planks alone.
+- At the free yard two vehicles wait and the child brings up the others by taking the one behind; nothing shows that there are three more.
+- A sheet on the rack that was judged at either end of the order (the first position, the free yard) keeps the fuller showing of strain after a change to its bridge, since what is saved cannot tell whether it was crossed.
 
 **Measured here, on the software renderer, for comparison between passes only** (not a frame rate): at the toy stage the work in a frame was a median 0.6 ms on the production build. It has not been measured again with the game on it.
 
