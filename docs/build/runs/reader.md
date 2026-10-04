@@ -1,6 +1,6 @@
 # The reader's brief
 
-Before a game is brought into the jam, someone who did not build it reads its whole folder against its design sheet. The lead has that done for every game, and so far every game has come back from it with promises unkept. So a builder has it done first, by a subagent that has not seen the builder's session: hand it this page and the path of the game folder, and nothing else. The builder fixes what comes back and has it read again, until the last line says READY, and puts that last report in the status block of `REFINEMENT.md`.
+Before a game is brought into the jam, someone who did not build it reads its whole folder against its design sheet. The lead has that done for every game, and so far every game has come back from it with promises unkept. So a builder has it done first, by a subagent that has not seen the builder's session: hand it this page and the path of the game folder, and nothing else. The reader runs on the same model as the builder: start it with no model setting of its own and as a general-purpose agent, never as an agent type that picks a smaller model by itself (the owner's rule, in `../CLOUD.md`). The builder fixes what comes back and has it read again, until the last line says READY, and puts that last report in the status block of `REFINEMENT.md`.
 
 ## For the reader
 
