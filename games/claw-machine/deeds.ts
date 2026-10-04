@@ -161,9 +161,13 @@ export function toyLetGo(world: World, toy: number, aimed: Target): Deed {
   return { type: 'rim-slide', toy, place, heavy }
 }
 
-/** The claw, bare or with a toy in its jaws, swings into a thing. `direction` is -1 toward the left, 1 toward the right. */
-export function clawSwingsInto(world: World, aimed: Target, direction: -1 | 1, carrying: boolean): Deed {
-  const target = real(world, aimed)
+/**
+ * The claw, bare or with a toy in its jaws, swings into a thing. `direction` is -1 toward the left, 1 toward the
+ * right; `carried` is the toy in the jaws, or -1. A toy in the jaws is still written down at the place it was
+ * taken from, where it is not: it is never the toy that is knocked, and what stands under its old place only rocks.
+ */
+export function clawSwingsInto(world: World, aimed: Target, direction: -1 | 1, carried = -1): Deed {
+  const target = real(world, aimed), carrying = carried >= 0
   if (target.on === 'gobbler') {
     const gobbler = crewNow(world)[target.slot]
     return carrying ? { type: 'snap-miss', gobbler } : { type: 'duck', gobbler }
@@ -171,6 +175,7 @@ export function clawSwingsInto(world: World, aimed: Target, direction: -1 | 1, c
   if (target.on === 'ledge') return someoneWaits(world) ? { type: 'lean' } : { type: 'gate-comb' }
   if (target.on === 'rail-end') return { type: 'double-ding' }
   const cycle = world.cycle, tray = trayOf(cycle), stack = tray[target.place]
+  if (carrying && stack.includes(carried)) return stack.length > 1 ? { type: 'jostle', place: target.place } : { type: 'rattle' }
   if (stack.length === 0) return { type: 'rattle' }
   const column = target.place % TRAY.columns, row = Math.floor(target.place / TRAY.columns)
   /** The place `steps` along the row, when it is on the tray and bare. */

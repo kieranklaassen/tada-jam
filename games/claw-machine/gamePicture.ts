@@ -97,7 +97,7 @@ export function turned(x: number, y: number, z: number, of: { leanX: number; lea
 
 /** The cabinet with nothing in it but the claw at rest: what is drawn before the saved state has been read. */
 export function barePicture(): Picture {
-  return { toys: [], gobblers: [], crates: [], carts: [], shadows: [], glows: [], hand: null, gate: 0, seconds: 0, watcher: { ...WATCHER_AT, squash: 1, turn: WATCHER_FACES, gazeX: 0, gazeY: 0, blink: 0 }, claw: { x: 0, z: 6, length: RAIL.top - 9.2 - 1.6, swingX: 0, swingZ: 0, open: 0.55, squash: 1, shiftX: 0, shiftZ: 0, turn: 0 } }
+  return { toys: [], gobblers: [], crates: [], carts: [], shadows: [], glows: [], hand: null, gate: 0, seconds: 0, flare: { lamp: -1, since: 0 }, watcher: { ...WATCHER_AT, squash: 1, turn: WATCHER_FACES, gazeX: 0, gazeY: 0, blink: 0 }, claw: { x: 0, z: 6, length: RAIL.top - 9.2 - 1.6, swingX: 0, swingZ: 0, open: 0.55, squash: 1, shiftX: 0, shiftZ: 0, turn: 0 } }
 }
 
 /** 0 before `a`, 1 at the middle of `a` to `b`, 0 after `b`. */
@@ -327,7 +327,7 @@ export function gamePicture(game: Game, guidance: Guidance | null): Picture {
   // between its teeth has a hair of room and no more.
   const idling = resting && game.held < 0 && game.lifted < 0 && claw.load === 0
   return {
-    toys, gobblers, shadows, glows, hand: ghost, gate: game.gateShake, seconds: game.time,
+    toys, gobblers, shadows, glows, hand: ghost, gate: game.gateShake, seconds: game.time, flare: game.flare,
     watcher: watching(game, watched),
     carts: game.crates.map((crate) => { const at = crateSpot(crate.which, game.crates.length); return { which: crate.which, x: at.x + crate.away * AWAY * (at.x < 0 ? -1 : 1), z: at.z } }),
     crates: game.crates.map((crate) => ({

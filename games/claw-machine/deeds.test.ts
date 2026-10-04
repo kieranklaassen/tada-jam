@@ -28,7 +28,7 @@ describe('the object-by-action grid', () => {
     const stackable = smalls.flatMap((a) => smalls.filter((b) => b !== a).map((b) => [a, b])).find(([a, b]) => {
       const w = world()
       toyLetGo(w, a, { on: 'place', place: placeOf(w, b) })
-      return clawSwingsInto(w, { on: 'place', place: placeOf(w, b) }, 1, false).type === 'dominoes'
+      return clawSwingsInto(w, { on: 'place', place: placeOf(w, b) }, 1).type === 'dominoes'
     }) ?? smalls
     const objects: ((w: World) => Target)[] = [
       (w) => ({ on: 'place', place: placeOf(w, toysOf(w, 'small')[0]) }), // a toy on the tray
@@ -49,7 +49,7 @@ describe('the object-by-action grid', () => {
       act((w, target) => toyLetGo(w, toysOf(w, 'small')[3], target))
       // A big toy; over a gobbler, the gobbler that takes it.
       act((w, target) => { const big = toysOf(w, 'big')[0]; return toyLetGo(w, big, target.on === 'gobbler' ? { on: 'gobbler', slot: homeOf(w, big) } : target) })
-      act((w, target) => clawSwingsInto(w, target, 1, false))
+      act((w, target) => clawSwingsInto(w, target, 1))
       act((w, target) => clawWaitsAbove(w, target))
     }
     expect(cells.length).toBe(30)
@@ -61,7 +61,7 @@ describe('the object-by-action grid', () => {
       cell(clawLands(alone(), ledge)),
       cell((() => { const w = alone(); return toyLetGo(w, toysOf(w, 'small')[0], ledge) })()),
       cell((() => { const w = alone(); return toyLetGo(w, toysOf(w, 'big')[0], ledge) })()),
-      cell(clawSwingsInto(alone(), ledge, 1, false)),
+      cell(clawSwingsInto(alone(), ledge, 1)),
       cell(clawWaitsAbove(alone(), ledge)),
     ]
     expect(own).toEqual(['gate-rattle', 'gate-roll-small', 'gate-roll-big', 'gate-comb', 'gate-creak'])
@@ -81,7 +81,7 @@ describe('the object-by-action grid', () => {
     const spat = toyLetGo(w, toy, { on: 'gobbler', slot: other })
     expect(spat.type).toBe('spit')
     expect(spat.type === 'spit' && spat.way).toBe(GOBBLER[crewNow(w)[other]].wrong)
-    expect(clawSwingsInto(w, { on: 'gobbler', slot: other }, 1, true).type).toBe('snap-miss')
+    expect(clawSwingsInto(w, { on: 'gobbler', slot: other }, 1, 0).type).toBe('snap-miss')
     expect(clawLands(w, { on: 'gobbler', slot: other })).toEqual({ type: 'lift-gobbler', gobbler: crewNow(w)[other], way: GOBBLER[crewNow(w)[other]].lifted })
   })
 })
@@ -92,7 +92,7 @@ describe('a bare tray before the first crate', () => {
     expect(clawLands(w, { on: 'place', place: 3 }).type).toBe('bonk')
     expect(clawLands(w, { on: 'gobbler', slot: 1 }).type).toBe('bonk')
     expect(clawWaitsAbove(w, { on: 'gobbler', slot: 0 }).type).toBe('breathe')
-    expect(clawSwingsInto(w, { on: 'ledge', which: 0 }, 1, false).type).toBe('lean')
+    expect(clawSwingsInto(w, { on: 'ledge', which: 0 }, 1).type).toBe('lean')
     expect(w.finished).toBe(true)
     expect(clawLands(w, { on: 'ledge', which: 0 })).toEqual({ type: 'take-crate', which: 0 })
     expect(w.cycle.toys.length).toBe(4)
@@ -139,7 +139,7 @@ describe('an error is a consequence', () => {
       const targets: Target[] = [{ on: 'place', place: next(10) }, { on: 'gobbler', slot: next(crewNow(w).length) }, { on: 'ledge', which: 0 }, { on: 'rail-end', side: next(2) ? 1 : -1 }]
       const pick = next(6)
       if (pick < 4) toyLetGo(w, toy, targets[pick])
-      else if (pick === 4) clawSwingsInto(w, targets[0], next(2) ? 1 : -1, false)
+      else if (pick === 4) clawSwingsInto(w, targets[0], next(2) ? 1 : -1)
       else clawLands(w, targets[next(4)])
       const tray = trayOf(w.cycle)
       const standing = tray.flat(), swallowed = crewNow(w).flatMap((_, slot) => bellyOf(w.cycle, slot))
@@ -164,6 +164,25 @@ describe('an error is a consequence', () => {
       const { w, place } = found
       const big = toysOf(w, 'big').find((toy) => w.cycle.where[toy].at === 'tray')!
       expect(toyLetGo(w, big, { on: 'place', place }).type, `a big toy on a stack of ${tall}`).toBe('topple')
+    }
+  })
+
+  it('never knocks the toy that is in the jaws, which is still written down at the place it was taken from', () => {
+    for (const seed of [11, 12, 13]) {
+      const w = world(seed)
+      const carried = toysOf(w, 'small')[0], from = placeOf(w, carried)
+      const before = snapshot(w)
+      // A wag over the place it was taken from: nothing stands there now, so the claw only drags over the studs.
+      expect(clawSwingsInto(w, { on: 'place', place: from }, 1, carried).type).toBe('rattle')
+      expect(snapshot(w)).toBe(before)
+      // Taken from the top of a stack, what is left of the stack only rocks.
+      const other = toysOf(w, 'small').find((toy) => toy !== carried)!
+      toyLetGo(w, carried, { on: 'place', place: placeOf(w, other) })
+      if (trayOf(w.cycle)[placeOf(w, other)].length === 2) {
+        const stacked = snapshot(w)
+        expect(clawSwingsInto(w, { on: 'place', place: placeOf(w, other) }, 1, carried).type).toBe('jostle')
+        expect(snapshot(w)).toBe(stacked)
+      }
     }
   })
 

@@ -3,7 +3,8 @@ import { BACK, STEP, WALL } from './places'
 // The lamps of the cabinet: a string of small bulbs up the back wall at one
 // end, along the front of the parapet and down the back wall at the other,
 // lit in a chase that runs round the frame. They are the machine showing off, and nothing to do with
-// the task: no lamp marks a thing to touch, and none can be touched.
+// the task: no lamp marks a thing to touch. A finger on a bulb is answered by the bulb: it flares with a
+// ting, the flare runs a little way along the string, and the claw stays where it is.
 
 export type Lamp = { x: number; y: number; z: number }
 
@@ -34,4 +35,22 @@ export function lampGlow(index: number, seconds: number): number {
   const turn = (index / 4 - seconds * 0.75) % 1
   const wave = Math.cos(turn * Math.PI * 2)
   return wave <= 0 ? 0 : wave * wave
+}
+
+/** How many bulbs there are. */
+export const LAMPS = lampSpots().length
+/** How long a bulb that a finger landed on flares, in seconds, and how far along the string the flare runs. */
+export const FLARE_SECONDS = 0.8
+const FLARE_RUNS = 3
+const FLARE_STEP = 0.06
+
+/**
+ * How bright the flare of the bulb at `index` is, 0 to 1, when the bulb at `touched` had a finger on it
+ * `since` seconds ago: full on the bulb itself, fainter and a moment later on each bulb further along.
+ */
+export function lampFlare(index: number, touched: number, since: number): number {
+  const away = Math.abs(index - touched)
+  if (away > FLARE_RUNS) return 0
+  const t = since - away * FLARE_STEP
+  return t < 0 || t > FLARE_SECONDS ? 0 : (1 - t / FLARE_SECONDS) * (1 - away / (FLARE_RUNS + 1))
 }

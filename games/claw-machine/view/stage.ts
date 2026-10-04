@@ -8,7 +8,7 @@ import { cabinetBricks, gateBricks } from '../cabinet'
 import { ON_STUDS } from '../bricks'
 import { bedMesh, cartMesh, crateMesh } from '../crateBuild'
 import { HINGE_DROP, HINGE_OUT, JAW_SWING, hubBricks, jawBricks } from '../clawBuild'
-import { LAMP_SIZE, lampGlow, lampSpots } from '../lamps'
+import { LAMP_SIZE, lampFlare, lampGlow, lampSpots, type Lamp } from '../lamps'
 import { WATCHER_BIG, WATCHER_EYE, WATCHER_EYES, watcherParts } from '../watcher'
 import { BACKDROP_HEX, BULB_DIM, BULB_LIT, CUFF, GLOVE } from '../palette'
 import { BED, TIP, deckTop } from '../layout'
@@ -39,6 +39,9 @@ export class Stage {
   private readonly cable: Mesh
   private readonly glows: InstancedMesh
   private readonly lamps: InstancedMesh
+  private readonly lampAt: Lamp[]
+  /** Whether a bulb was flaring in the last frame drawn: the bulbs are then set back to their own size once. */
+  private flared = false
   private readonly watcher = new Group()
   private readonly watcherPupils: Mesh
   private readonly colour = new Color()
@@ -100,6 +103,7 @@ export class Stage {
 
     // The lamps: one small ball for every bulb, all in one draw, each lit by its own colour.
     const spots = lampSpots()
+    this.lampAt = spots
     this.lamps = new InstancedMesh(new SphereGeometry(LAMP_SIZE / 2, 10, 8), new MeshBasicMaterial({ color: 0xffffff }), spots.length)
     this.lamps.name = 'lamps'
     spots.forEach((spot, i) => { this.lamps.setMatrixAt(i, this.matrix.makeTranslation(spot.x, spot.y, spot.z)); this.lamps.setColorAt(i, this.colour.setRGB(BULB_DIM[0], BULB_DIM[1], BULB_DIM[2], SRGBColorSpace)) })
@@ -294,10 +298,16 @@ export class Stage {
     this.watcherPupils.scale.set(1, Math.max(0.1, 1 - peer.blink), 1)
 
     // The chase of the lamps.
+    // And the flare of a bulb a finger landed on: it and its neighbours burn white for a moment and swell.
+    const flaring = picture.flare.lamp >= 0
     for (let i = 0; i < this.lamps.count; i++) {
-      const lit = lampGlow(i, picture.seconds)
-      this.lamps.setColorAt(i, this.colour.setRGB(BULB_DIM[0] + (BULB_LIT[0] - BULB_DIM[0]) * lit, BULB_DIM[1] + (BULB_LIT[1] - BULB_DIM[1]) * lit, BULB_DIM[2] + (BULB_LIT[2] - BULB_DIM[2]) * lit, SRGBColorSpace))
+      const flare = flaring ? lampFlare(i, picture.flare.lamp, picture.flare.since) : 0
+      const lit = Math.max(lampGlow(i, picture.seconds), flare)
+      this.lamps.setColorAt(i, this.colour.setRGB(BULB_DIM[0] + (BULB_LIT[0] - BULB_DIM[0]) * lit + (1 - BULB_LIT[0]) * flare, BULB_DIM[1] + (BULB_LIT[1] - BULB_DIM[1]) * lit + (1 - BULB_LIT[1]) * flare, BULB_DIM[2] + (BULB_LIT[2] - BULB_DIM[2]) * lit + (1 - BULB_LIT[2]) * flare, SRGBColorSpace))
+      if (flaring || this.flared) { const spot = this.lampAt[i]; this.lamps.setMatrixAt(i, this.matrix.makeScale(1 + 0.5 * flare, 1 + 0.5 * flare, 1 + 0.5 * flare).setPosition(spot.x, spot.y, spot.z)) }
     }
+    if (flaring || this.flared) this.lamps.instanceMatrix.needsUpdate = true
+    this.flared = flaring
     if (this.lamps.instanceColor) this.lamps.instanceColor.needsUpdate = true
 
     const rings = Math.min(MAX_GLOWS, picture.glows.length)

@@ -1,6 +1,7 @@
 import type { Aim } from './aim'
 import { MINI } from './belly'
 import { ON_STUDS } from './bricks'
+import { FLARE_SECONDS } from './lamps'
 import { fly, newBody, settle, type Body, type Landing } from './bodies'
 import { STEP, follow, hubAt, knock, letBe, newClaw, release, stepClaw, type Claw, type ClawEvent } from './claw'
 import { holdOf } from './builds'
@@ -283,6 +284,16 @@ export class Game {
   /** The watcher: it only watches, and nothing about it is saved. */
   readonly watcher: Watcher = newWatcher()
 
+  /** The bulb a finger last landed on, and how long ago in seconds; -1 when none is flaring. */
+  flare = { lamp: -1, since: 0 }
+
+  /** A finger landed on a lamp: it flares with a ting. A scene that is playing ends, as at any touch. */
+  light(lamp: number): void {
+    if (this.scene) this.endScene(true)
+    this.flare.lamp = lamp; this.flare.since = 0
+    this.events.push({ type: 'ting', nth: lamp })
+  }
+
   /** A finger landed on the watcher: it hops with a peep. A scene that is playing ends, as at any touch. */
   poke(): void {
     if (this.scene) this.endScene(true)
@@ -384,7 +395,7 @@ export class Game {
     if (++this.wagTurns < 3 || this.claw.phase !== 'ready' || this.scene) return
     this.wagTurns = 0
     knock(this.claw, way * 5, 0)
-    this.carry(clawSwingsInto(this.world, this.aim.target, way as -1 | 1, this.held >= 0))
+    this.carry(clawSwingsInto(this.world, this.aim.target, way as -1 | 1, this.held))
   }
 
   // --- Time ----------------------------------------------------------------
@@ -478,6 +489,7 @@ export class Game {
     this.leaving = this.leaving.filter((actor) => !(actor.walk === null && actor.role === 'leaving'))
     this.gateShake = Math.max(0, this.gateShake - STEP / 0.5)
     stepWatcher(this.watcher, STEP)
+    if (this.flare.lamp >= 0 && (this.flare.since += STEP) > FLARE_SECONDS + 0.3) this.flare.lamp = -1
     for (const crate of this.crates) {
       // A crate waits its turn below nought (the second sways a moment after the first); at -1 it does not sway.
       if (crate.leans > -1 && (crate.leans += STEP) > LEANS_FOR) crate.leans = -1
@@ -511,7 +523,7 @@ export class Game {
     if (this.runPeak >= 45) {
       this.rung = true
       claw.vx = -target.side * 14
-      this.carry(clawSwingsInto(this.world, target, target.side, this.held >= 0))
+      this.carry(clawSwingsInto(this.world, target, target.side, this.held))
     } else if (claw.following) {
       this.rung = true
       this.say({ type: 'bell' })

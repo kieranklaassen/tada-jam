@@ -115,6 +115,8 @@ export type Picture = {
   carts: readonly { which: number; x: number; z: number }[]
   claw: ClawLook
   watcher: WatcherLook
+  /** The bulb a finger last landed on and how long ago, in seconds; `lamp` is -1 when none is flaring. */
+  flare: { lamp: number; since: number }
   /** Round shadows on whatever is beneath. */
   shadows: readonly Shadow[]
   glows: readonly GlowLook[]

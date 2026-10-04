@@ -143,6 +143,8 @@ export function voiceOf(event: GameEvent): Part[] {
     case 'gate-creak': return [tone(210, 0.1, 0.3, { to: 330, wave: 'sawtooth', attack: 0.1 }), tone(330, 0.08, 0.25, { to: 210, wave: 'sawtooth', delay: 0.45, attack: 0.05 })]
     // --- The end of the rail ---
     case 'giggle': return [0, 1, 2, 3].map((i) => tone(1500 - i * 110, 0.06, 0.05, { to: 1750 - i * 110, delay: i * 0.085 }))
+    // A lamp: a glass ting, the bulbs along the string climbing a scale with no wrong notes in it.
+    case 'ting': { const note = step(1047, [0, 1, 2, 3.5, 4.5][event.nth % 5] + 6 * (Math.floor(event.nth / 5) % 2)); return [tone(note, 0.12, 0.3, { attack: 0.002, wave: 'triangle' }), tone(note * 2, 0.04, 0.14, { attack: 0.002 })] }
     case 'peep': return [tone(1900, 0.11, 0.07, { to: 2700 }), tone(2500, 0.08, 0.06, { to: 3300, delay: 0.09 })]
     case 'bell': return [tone(1568, 0.2, 0.55, { attack: 0.002 }), tone(3136, 0.05, 0.25, { attack: 0.002 })]
     case 'double-ding': return [tone(1568, 0.18, 0.3, { attack: 0.002 }), tone(2093, 0.18, 0.5, { delay: 0.11, attack: 0.002 })]

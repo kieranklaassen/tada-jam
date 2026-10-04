@@ -37,7 +37,7 @@ const SAMPLES: Samples = {
   ping: [{ type: 'ping', nth: 0 }, { type: 'ping', nth: 2 }],
   scrape: [{ type: 'scrape' }], comb: [{ type: 'comb' }], 'gate-creak': [{ type: 'gate-creak' }],
   bell: [{ type: 'bell' }],
-  peep: [{ type: 'peep' }], giggle: [{ type: 'giggle' }], 'double-ding': [{ type: 'double-ding' }], zip: [{ type: 'zip' }], 'rim-thud': [{ type: 'rim-thud' }], 'bell-hum': [{ type: 'bell-hum' }],
+  peep: [{ type: 'peep' }], ting: [{ type: 'ting', nth: 0 }, { type: 'ting', nth: 9 }, { type: 'ting', nth: 27 }], giggle: [{ type: 'giggle' }], 'double-ding': [{ type: 'double-ding' }], zip: [{ type: 'zip' }], 'rim-thud': [{ type: 'rim-thud' }], 'bell-hum': [{ type: 'bell-hum' }],
   'jaw-hum': [{ type: 'jaw-hum' }], 'jaw-click': [{ type: 'jaw-click' }], wind: [{ type: 'wind' }],
   show: GOBBLERS.map((who) => ({ type: 'show' as const, who })),
   tip: [{ type: 'tip', nth: 0 }, { type: 'tip', nth: 4 }],

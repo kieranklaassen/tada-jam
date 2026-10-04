@@ -1,12 +1,14 @@
 import type { Target } from './deeds'
 import { BELL, SLOT_Z, STEP, TRAY, TRAY_DEPTH, TRAY_WIDTH, WALL } from './places'
+import { lampSpots } from './lamps'
 import { nearestPlace } from './tray'
 import { WATCHER_AT, WATCHER_SIZE } from './watcher'
 
 // What a finger on the glass is pointing at. The view gives the line of sight
 // through the finger; this finds the first thing on it: a gobbler, the ledge,
 // a bell post, or else a place on the tray. A child touches the thing they
-// mean, and the claw goes there.
+// mean, and the claw goes there. The watcher and the lamps are no business of
+// the claw's: a finger on one of them is answered by it alone.
 
 export type Ray = { ox: number; oy: number; oz: number; dx: number; dy: number; dz: number }
 
@@ -35,26 +37,62 @@ function enters(ray: Ray, x0: number, y0: number, z0: number, x1: number, y1: nu
   return slab(ray.ox, ray.dx, x0, x1) && slab(ray.oy, ray.dy, y0, y1) && slab(ray.oz, ray.dz, z0, z1) ? near : Infinity
 }
 
-/** Whether the finger is on the watcher beside the tray, which the claw cannot reach: it answers by itself. */
-export function onWatcher(ray: Ray): boolean {
+/** How far along the ray it enters a gobbler as the finger sees it. Its eyes stand out a little past its sides, and a finger on an eye means the gobbler. */
+const entersGobbler = (ray: Ray, one: Standing): number => enters(ray, one.x - one.width / 2 - 1, STEP.top, SLOT_Z - 3.4, one.x + one.width / 2 + 1, STEP.top + one.height, SLOT_Z + 3.2)
+/** And a bell on its post at an end of the rail. */
+const entersBell = (ray: Ray, side: number): number => enters(ray, side * BELL.x - BELL.half - 0.6, 0, BELL.z - BELL.half - 1.5, side * BELL.x + BELL.half + 0.6, BELL.top + 1.2, BELL.z + BELL.half + 1.5)
+/** And the row the crew stands in, from end to end of the step and as high as its tallest head: the gobblers and the gaps between them. */
+const entersRow = (ray: Ray, crew: readonly Standing[]): number =>
+  crew.length === 0 ? Infinity : enters(ray, STEP.x, STEP.top, SLOT_Z - 3.4, STEP.x + STEP.w, STEP.top + Math.max(...crew.map((one) => one.height)), SLOT_Z + 3.2)
+
+/** A thing in the cabinet that the claw has nothing to do with. A finger on it is answered by that thing alone, and the claw stays where it is. */
+export type Aside = { on: 'watcher' } | { on: 'lamp'; lamp: number }
+
+const LAMPS = lampSpots()
+/** How far round a bulb a finger still means the bulb: a bulb is small and a finger is not. */
+const LAMP_REACH = 0.85
+
+/**
+ * Whether the finger is on the watcher beside the tray or on a lamp, and which. A thing the claw goes to that
+ * stands in front of it wins: a gobbler, a bell on its post (the watcher sits half behind one), and with a toy
+ * in the jaws the whole row of the crew, where the toy is meant for a mouth.
+ */
+export function asideAt(ray: Ray, crew: readonly Standing[], holding: boolean): Aside | null {
+  let best = Math.min(entersBell(ray, -1), entersBell(ray, 1), holding ? entersRow(ray, crew) : Infinity, ...crew.map((one) => entersGobbler(ray, one)))
+  let found: Aside | null = null
   const half = WATCHER_SIZE.half
-  return enters(ray, WATCHER_AT.x - half, 0, WATCHER_AT.z - half, WATCHER_AT.x + half, WATCHER_SIZE.height, WATCHER_AT.z + half) < Infinity
+  const watcher = enters(ray, WATCHER_AT.x - half, 0, WATCHER_AT.z - half, WATCHER_AT.x + half, WATCHER_SIZE.height, WATCHER_AT.z + half)
+  if (watcher < best) { best = watcher; found = { on: 'watcher' } }
+  LAMPS.forEach((spot, lamp) => {
+    const t = enters(ray, spot.x - LAMP_REACH, spot.y - LAMP_REACH, spot.z - LAMP_REACH, spot.x + LAMP_REACH, spot.y + LAMP_REACH, spot.z + LAMP_REACH)
+    if (t < best) { best = t; found = { on: 'lamp', lamp } }
+  })
+  return found
 }
 
-export function aimAt(ray: Ray, crew: readonly Standing[]): Aim {
+/**
+ * What the finger points at. `holding` is whether a toy is in the jaws: then a finger anywhere in the row of the
+ * crew, on a gobbler or in a gap between two, means the mouth nearest to it, so there is no aiming.
+ */
+export function aimAt(ray: Ray, crew: readonly Standing[], holding = false): Aim {
   let best = Infinity, target: Target | null = null
   crew.forEach((one, slot) => {
-    // Its eyes stand out a little past its sides, and a finger on an eye means the gobbler.
-    const half = one.width / 2 + 1
-    const t = enters(ray, one.x - half, STEP.top, SLOT_Z - 3.4, one.x + half, STEP.top + one.height, SLOT_Z + 3.2)
+    const t = entersGobbler(ray, one)
     if (t < best) { best = t; target = { on: 'gobbler', slot } }
   })
+  if (holding && target === null) {
+    const t = entersRow(ray, crew)
+    if (t < Infinity) {
+      const x = ray.ox + ray.dx * t
+      best = t; target = { on: 'gobbler', slot: crew.reduce((nearest, one, slot) => (Math.abs(one.x - x) < Math.abs(crew[nearest].x - x) ? slot : nearest), 0) }
+    }
+  }
   // The ledge: the parapet and everything behind it. Which crate is meant is told by the side.
   const ledge = enters(ray, -19, 0, WALL.z - 8.5, 19, WALL.top + 8, WALL.z + 1)
   const at = (t: number) => ({ x: ray.ox + ray.dx * t, z: ray.oz + ray.dz * t })
   if (ledge < best) { best = ledge; target = { on: 'ledge', which: at(ledge).x < 0 ? 0 : 1 } }
   for (const side of [-1, 1] as const) {
-    const t = enters(ray, side * BELL.x - BELL.half - 0.6, 0, BELL.z - BELL.half - 1.5, side * BELL.x + BELL.half + 0.6, BELL.top + 1.2, BELL.z + BELL.half + 1.5)
+    const t = entersBell(ray, side)
     if (t < best) { best = t; target = { on: 'rail-end', side } }
   }
   if (target) return { target, ...at(best) }

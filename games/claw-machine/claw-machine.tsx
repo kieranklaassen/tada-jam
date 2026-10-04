@@ -1,7 +1,7 @@
 // template: cartridge/game.tsx v2
 import { useEffect, useRef } from 'react'
 import type { Cartridge, CartridgeContext } from '../types'
-import { aimAt, onWatcher } from './aim'
+import { aimAt, asideAt } from './aim'
 import { AttendedClock, Attention } from './attention'
 import { GameAudio } from './audio'
 import { BACKDROP } from './config'
@@ -114,10 +114,11 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // A game with short scenes ends the one that is playing first thing in every press, before the press is
     // answered (`finish` in scene.ts). A gesture that changes the state hands it to storage here (`cadence`, above).
     // A finger on the glass points at the first thing on its line of sight, and the claw goes there.
+    /** The crew as a finger sees it: where each gobbler stands, how wide it is and how tall. */
+    const standing = (playing: Game) => playing.crew.map((actor) => ({ x: actor.x, width: shapeOf(actor.id).width, height: headTop(actor.id) }))
     const aim = (at: Point, landing: boolean) => {
       if (!game) return
-      const crew = game.crew.map((actor) => ({ x: actor.x, width: shapeOf(actor.id).width, height: headTop(actor.id) }))
-      game.point(aimAt(stage.ray(at.x / Math.max(1, width), at.y / Math.max(1, height)), crew), landing)
+      game.point(aimAt(stage.ray(at.x / Math.max(1, width), at.y / Math.max(1, height)), standing(game), game.held >= 0), landing)
     }
     // What the game says happened is heard at once, and what it changed is handed to storage: the outcome of a
     // scene and the end of a cycle at once, a toy set down at the throttle.
@@ -136,9 +137,12 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       for (const gesture of gestures) {
         // The claw answers when the finger lands: the jaws snap open and the trolley sets off. A landing also
         // ends a scene that is playing, and is then an ordinary touch.
-        // A finger that lands on the watcher is the watcher's: it hops and peeps, and the claw stays where it is
+        // A finger that lands on the watcher or on a lamp is that thing's: it answers, and the claw stays where it is
         // until the finger has left.
-        if (gesture.type === 'press' && onWatcher(stage.ray(gesture.at.x / Math.max(1, width), gesture.at.y / Math.max(1, height)))) { game.poke(); poked = true; continue }
+        if (gesture.type === 'press') {
+          const apart = asideAt(stage.ray(gesture.at.x / Math.max(1, width), gesture.at.y / Math.max(1, height)), standing(game), game.held >= 0)
+          if (apart) { if (apart.on === 'watcher') game.poke(); else game.light(apart.lamp); poked = true; continue }
+        }
         if (poked) { if (gesture.type === 'tap' || gesture.type === 'dragEnd' || gesture.type === 'pressEnd') poked = false; continue }
         if (gesture.type === 'press') { aim(gesture.at, true); dropped = false }
         else if (gesture.type === 'tap') { aim(gesture.at, false); game.lift() }

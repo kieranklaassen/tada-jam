@@ -268,6 +268,17 @@ describe('the game', () => {
     game.cancel()
   })
 
+  it('answers a finger on a lamp with the lamp alone: a ting, a flare, and the claw where it was', () => {
+    const game = begun('three-colours')
+    const before = [game.claw.x, game.claw.z, snapshot(game.world)]
+    game.light(9)
+    expect(game.takeEvents()).toEqual([{ type: 'ting', nth: 9 }])
+    expect(gamePicture(game, null).flare.lamp).toBe(9)
+    game.advance(2)
+    expect(gamePicture(game, null).flare.lamp).toBe(-1)
+    expect([game.claw.x, game.claw.z, snapshot(game.world)]).toEqual(before)
+  })
+
   it('tips the same toys back out for the next crew when the gate is hooked', () => {
     // Colour has had its showing; kind has not.
     const game = newGame({ ...newWorld(null), shown: { colour: true, kind: false, size: false }, position: 'colours-then-kinds', finished: false, crates: [], cycle: startCycle('colours-then-kinds', 7, false) } as World)

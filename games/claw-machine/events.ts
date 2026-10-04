@@ -63,6 +63,7 @@ export type GameEvent =
   | { type: 'wind' }
   // The watcher.
   | { type: 'peep' }
+  | { type: 'ting'; nth: number } // a lamp with a finger on it: a small bell, a note for each bulb
   | { type: 'giggle' }
   // The scenes.
   | { type: 'show'; who: GobblerId }
