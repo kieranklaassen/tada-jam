@@ -59,7 +59,7 @@ The things: the **fruit** (an uncut one on the board), a **piece** (anything cut
 
 1. Object: the fruit and its pieces.
 2. Picture: the ticket each customer holds, a small strip in the fruit's colour with the ordered share filled in. It is much smaller than the fruit, so it can be read for its proportion and never copied for its length.
-3. Symbol: from the position named `written` on, the fraction is laid on the filled share of the ticket and on the open tin, with a horizontal bar. From the position named `bigger`, the sign for less than, equal or greater than is laid between the cat's two tickets, which it holds side by side, once its tin has opened; its two shares are ruled one above the other on the rail under the tin.
+3. Symbol: from the position named `written` on, the fraction is laid on the filled share of the ticket and on the open tin, with a horizontal bar. From the position named `bigger`, the sign for less than, equal or greater than is laid between the cat's two tickets, which it holds side by side at the window, once its tin has opened; its two shares are ruled one above the other on the rail under the tin.
 
 It stops there for this band. A symbol is never shown without the length it names, no symbol is ever the only way to know an order, and nothing is written on a piece the child cut: a cut piece is named by nothing but its length (pack: game-design, fade-to-school-symbols.md).
 
