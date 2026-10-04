@@ -224,7 +224,7 @@ export function poseFriend(view: FriendView, pose: FriendPose): void {
   if (view.extra && view.id === 'pim') {
     // With a friend on her head the crown slips down to the side of it, out from under them.
     if (pose.pressed > 0.5) {
-      view.extra.position.set(-spec.radius * 0.86, spec.halfHeight * 1.05, spec.radius * 0.12)
+      view.extra.position.set(-spec.radius * 0.97, spec.halfHeight * 1.0, spec.radius * 0.12)
       view.extra.rotation.set(0, 0, 1.25)
     } else {
       // Set down in the sand, it slips forward off the top of her head and hangs over one eye, until she shakes it back.
