@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { emptyArrangement, isSound, placeOf, putInSand, putOnEnd, type Arrangement } from './arrangement'
 import { HALF_AWAY, Playground, seeded, type PlayEvent } from './motion'
-import { FRIEND_IDS, FRIENDS, MAX_TILT, homeOn, type FriendId } from './world'
+import { FRIEND_IDS, FRIENDS, MAX_TILT, PLANK, homeOn, plankTopAt, type FriendId } from './world'
 
 /** The first ride as it is laid out: Pim on the left end, the others in the sand on the right. */
 function firstRide(): Arrangement {
@@ -158,6 +158,36 @@ describe('the playground in motion', () => {
     }
     expect(peak('mog')).toBeCloseTo(peak('dot'), 1)
     expect(peak('pim')).toBeGreaterThan(peak('mog') + 0.3)
+  })
+
+  it('lets a friend that is let go over the middle slide down the slope on the board itself, and climb onto whoever holds the low end', () => {
+    const world = new Playground(firstRide())
+    play(world, 0.5)
+    world.grab('mog')
+    world.carryTo(0.4, PLANK.z)
+    play(world, 0.6)
+    world.release()
+    expect(world.takeEvents().some((event) => event.type === 'slide')).toBe(true)
+    expect(placeOf(world.arrangement, 'mog')).toMatchObject({ at: 'end', end: 'left', level: 1 })
+    let onBoard = 0, travelled = 0, last = world.bodies.mog.x, backwards = 0
+    play(world, 1.2, (w) => {
+      const body = w.bodies.mog
+      if (body.mode !== 'hop') return
+      // Sitting on the board: its underside on the board's top where it is.
+      if (Math.abs(body.y - plankTopAt(body.x, w.plank.tilt)) < 1e-6 && Math.abs(body.z - PLANK.z) < 1e-6) {
+        onBoard += 1
+        travelled += last - body.x
+      }
+      if (body.x > last + 1e-9) backwards += 1
+      last = body.x
+    })
+    // Half a second of it on the board, a good way down the slope, and never back up it.
+    expect(onBoard).toBeGreaterThan(24)
+    expect(travelled).toBeGreaterThan(1.2)
+    expect(backwards).toBe(0)
+    play(world, 2)
+    expect(world.bodies.mog.mode).toBe('rest')
+    expect(world.bodies.mog.y).toBeGreaterThan(world.bodies.pim.y + FRIENDS.pim.halfHeight)
   })
 
   it('shuts a friend\'s eyes for as long as a slow blink lasts', () => {

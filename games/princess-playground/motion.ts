@@ -21,6 +21,8 @@ export const TOSS = 1.25
 export const TOSS_FLOOR = 6
 /** How long a tap on the plank has its riders off the board, in seconds; they rise a finger's width. */
 export const RIDER_BOB = 0.32
+/** How long a friend let go over the middle takes to drop, slide down the board and climb onto the low end. */
+const SLIDE_SECONDS = 1.0
 /** The spring a squashed friend pops back with when Bo leaves its head. */
 const POP = 4.5
 /** A chuckle's shake of the plank: how many pushes, and the seconds between them. */
@@ -408,7 +410,7 @@ export class Playground {
     // whatever stands between when its place is a step to the side.
     const target = restingAt(this.arrangement, id, this.plank.tilt)
     const aside = Math.hypot(target.x - body.x, target.z - body.z)
-    body.hopFor = fall ? (slid ? 0.5 : 0.24 + Math.min(0.3, aside * 0.1)) : spec.hopSeconds
+    body.hopFor = fall ? (slid ? SLIDE_SECONDS : 0.24 + Math.min(0.3, aside * 0.1)) : spec.hopSeconds
     body.hopHigh = fall ? (slid ? 0.05 : Math.max(0.1, aside > 0.6 ? this.clearance(id) : 0)) : Math.max(spec.hopHeight, this.clearance(id))
     if (slid) this.events.push({ type: 'slide', id })
   }
@@ -571,9 +573,12 @@ export class Playground {
     const s = Math.min(underway ? 0.9 : 1, (body.hopT - body.gather) / body.hopFor)
     // It goes up before it goes across, and comes down from above: most of the way across is covered in the middle of the hop.
     const across = body.slid ? s : s * s * (3 - 2 * s)
-    body.x = body.fromX + (target.x - body.fromX) * across
-    body.z = body.fromZ + (target.z - body.fromZ) * across
-    body.y = body.fromY + (target.y - body.fromY) * s + 4 * body.hopHigh * s * (1 - s)
+    if (body.slid) this.slide(id, target, s)
+    else {
+      body.x = body.fromX + (target.x - body.fromX) * across
+      body.z = body.fromZ + (target.z - body.fromZ) * across
+      body.y = body.fromY + (target.y - body.fromY) * s + 4 * body.hopHigh * s * (1 - s)
+    }
     // Coming down onto a friend, it is never below that friend's head once it is over it, wherever that head has got to.
     if (place && place.at === 'end' && place.level > 0) {
       const underId = this.arrangement[place.end][place.level - 1], under = this.bodies[underId]
@@ -586,9 +591,45 @@ export class Playground {
     body.squashTo = 1.12
     body.turn = Math.max(-0.5, Math.min(0.5, (target.x - body.fromX) * 0.12)) * (1 - s)
     if (s >= 1) {
-      // The speed it comes down with: the arc's own, plus the drop.
-      const down = (4 * body.hopHigh + Math.max(0, body.fromY - target.y)) / body.hopFor
+      // The speed it comes down with: the arc's own, plus the drop. A slide ends in a small hop.
+      const down = body.slid ? 2.5 : (4 * body.hopHigh + Math.max(0, body.fromY - target.y)) / body.hopFor
       this.land(id, target, down)
+    }
+  }
+
+  /**
+   * Let go over the middle of the plank: it drops onto the board where it hangs, slides down the slope on the board
+   * itself, and at the low end hops up the side of whoever sits there and onto the top. `s` runs from 0 to 1.
+   */
+  private slide(id: FriendId, target: { x: number; y: number; z: number }, s: number): void {
+    const body = this.bodies[id], tilt = this.plank.tilt
+    const board = (x: number) => plankTopAt(Math.max(-PLANK.halfLength, Math.min(PLANK.halfLength, x)), tilt)
+    const place = placeOf(this.arrangement, id)
+    // It stops beside the stack it will climb: clear of the widest friend in it, however that one is squashed.
+    let reach = 0
+    if (place.at === 'end') for (const other of this.arrangement[place.end].slice(0, place.level)) reach = Math.max(reach, FRIENDS[other].radius * 1.3 + FRIENDS[id].radius * 1.15)
+    const way = Math.sign(target.x - body.fromX) || 1
+    let stopX = target.x - way * reach
+    if ((stopX - body.fromX) * way < 0) stopX = body.fromX
+    const smooth = (u: number) => u * u * (3 - 2 * u)
+    const DROP = 0.2, CLIMB = reach > 0 ? 0.7 : 1
+    if (s < DROP) {
+      const u = s / DROP
+      body.x = body.fromX
+      body.z = body.fromZ + (PLANK.z - body.fromZ) * smooth(u)
+      body.y = Math.max(board(body.x), body.fromY + (board(body.x) - body.fromY) * u * u)
+    } else if (s < CLIMB) {
+      // Down the slope, gathering speed, sitting on the board all the way.
+      const u = (s - DROP) / (CLIMB - DROP)
+      body.x = body.fromX + (stopX - body.fromX) * u * u
+      body.z = PLANK.z
+      body.y = board(body.x)
+    } else {
+      // Up the side of the stack first, then across onto the top of it.
+      const u = (s - CLIMB) / (1 - CLIMB), over = target.y + 0.3
+      body.x = stopX + (target.x - stopX) * smooth(Math.max(0, (u - 0.5) / 0.5))
+      body.z = PLANK.z + (target.z - PLANK.z) * u
+      body.y = u < 0.55 ? board(stopX) + (over - board(stopX)) * smooth(u / 0.55) : over + (target.y - over) * smooth((u - 0.55) / 0.45)
     }
   }
 
