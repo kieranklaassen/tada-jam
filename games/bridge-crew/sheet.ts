@@ -103,11 +103,16 @@ export function paintSheet(pen: Pen, width: number, height: number, plot: Plot, 
   const mid = (lip + far) / 2, deck = at.left[1]
   // Even dashes: a long dash over a dot, one above another, would read as a column of letters.
   for (let y = deck - 0.6; y < deck + 3.2; y += 0.55) rule(pen, ...px(plot, mid, y), ...px(plot, mid, y + 0.3), cell * 0.018, 0.45, random)
+  // The dimension line: a line the length of the gap, a dot at each end, and a witness line under each dot that stops
+  // short of it. No two of its lines cross or meet.
   const dim = deck + 2.6
-  rule(pen, ...px(plot, lip, dim), ...px(plot, far, dim), cell * 0.018, 0.5, random)
+  rule(pen, ...px(plot, lip + 0.12, dim), ...px(plot, far - 0.12, dim), cell * 0.018, 0.5, random)
   for (const x of [lip, far]) {
-    rule(pen, ...px(plot, x, deck + 0.35), ...px(plot, x, dim + 0.25), cell * 0.018, 0.5, random)
-    rule(pen, ...px(plot, x - 0.14, dim - 0.14), ...px(plot, x + 0.14, dim + 0.14), cell * 0.04, 0.7, random)
+    rule(pen, ...px(plot, x, deck + 0.35), ...px(plot, x, dim - 0.22), cell * 0.018, 0.5, random)
+    pen.fillStyle = INK.line
+    pen.globalAlpha = 0.7
+    pen.beginPath(); pen.arc(...px(plot, x, dim), cell * 0.05, 0, Math.PI * 2); pen.fill()
+    pen.globalAlpha = 1
   }
   for (const [ax, ay] of at.anchors) pin(pen, ...px(plot, ax, ay), cell, true)
 }

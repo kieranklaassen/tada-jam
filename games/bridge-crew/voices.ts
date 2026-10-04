@@ -105,7 +105,8 @@ export function takeOff(kind: Kind, long: number): VoiceSpec {
     case 'plank': return kept([{ wave: 'noise', pitch: 500, slideTo: 900, peak: 0.07, attack: 0.04, length: 0.45 }])
     // A flick, and the rattle of the sticks it lands among.
     case 'stick': return kept([{ wave: 'triangle', pitch: pitch * 2, slideTo: pitch * 3, peak: 0.08, attack: 0.002, length: 0.07 }, ...[0.09, 0.13, 0.19].map((after, i) => ({ wave: 'triangle' as const, pitch: 900 + 180 * i, peak: 0.04, attack: 0.001, length: 0.04, after }))])
-    case 'tube': return kept([{ wave: 'sine', pitch: pitch * 0.6, slideTo: pitch * 0.45, peak: 0.1, attack: 0.01, length: 0.35 }])
+    // It rolls away down the sheet, drumming as it goes: five hollow beats, each a little lower and softer.
+    case 'tube': return kept([0, 0.07, 0.15, 0.24, 0.34].map((after, i) => ({ wave: 'sine' as const, pitch: pitch * (0.62 - 0.04 * i), peak: 0.1 - 0.012 * i, attack: 0.004, length: 0.06, after })))
     case 'thread': return kept([{ wave: 'noise', pitch: 1500, slideTo: 3000, peak: 0.07, attack: 0.01, length: 0.18 }])
   }
 }
@@ -222,8 +223,31 @@ export function honk(id: string): VoiceSpec {
  * How a vehicle sounds about the ride, in its own voice: a like, a dislike or
  * neither. It is the cargo and the driver that sound, never a verdict.
  */
-export function reactVoice(id: string, mood: 'like' | 'dislike' | 'plain'): VoiceSpec {
+/**
+ * How a vehicle took its ride, heard: each vehicle has its own sound for each
+ * thing it does, by the same name the reaction has (vehicles.ts). The van's
+ * driver whistles, or its parcels thud off one by one. The jelly rolls in one
+ * slow wave, or jumps and lands, or its driver yawns. The piano's keys ripple
+ * in a chord, or it rumbles backward. The bus's necks stretch, or duck in a
+ * wave. The caterpillar's feet tick in time while it hums a scale, or tick out
+ * of step with a hiccup between. Anything else is one plain note of its horn.
+ */
+export function reactVoice(id: string, mood: 'like' | 'dislike' | 'plain', act = ''): VoiceSpec {
   const base = honk(id)[0].pitch
+  const run = (count: number, make: (i: number) => Sound): VoiceSpec => kept(Array.from({ length: count }, (_, i) => make(i)))
+  switch (act) {
+    case 'parcels-stand': return kept([{ wave: 'sine', pitch: 1568, slideTo: 1976, peak: 0.07, attack: 0.02, length: 0.2 }, { wave: 'sine', pitch: 2093, slideTo: 1760, peak: 0.07, attack: 0.02, length: 0.3, after: 0.24 }])
+    case 'parcels-slide': return run(3, (i) => ({ wave: 'triangle', pitch: 170 - 22 * i, slideTo: 110, peak: 0.1, attack: 0.002, length: 0.09, after: 0.05 + 0.2 * i }))
+    case 'jelly-rolls': return kept([{ wave: 'sine', pitch: 196, slideTo: 262, peak: 0.1, attack: 0.08, length: 0.5 }, { wave: 'sine', pitch: 262, slideTo: 196, peak: 0.08, attack: 0.08, length: 0.5, after: 0.45 }])
+    case 'jelly-jumps': return kept([{ wave: 'sine', pitch: 240, slideTo: 720, peak: 0.12, attack: 0.004, length: 0.18 }, { wave: 'noise', pitch: 500, slideTo: 260, peak: 0.1, attack: 0.004, length: 0.14, after: 0.42 }])
+    case 'driver-yawns': return kept([{ wave: 'sine', pitch: 330, slideTo: 440, peak: 0.07, attack: 0.08, length: 0.5 }, { wave: 'sine', pitch: 440, slideTo: 196, peak: 0.07, attack: 0.06, length: 0.9, after: 0.5 }])
+    case 'keys-ripple': return run(5, (i) => ({ wave: 'triangle', pitch: 262 * 2 ** ([0, 4, 7, 12, 16][i] / 12), peak: 0.07, attack: 0.004, length: 0.5, after: 0.07 * i }))
+    case 'piano-rolls-back': return kept([{ wave: 'noise', pitch: 180, slideTo: 120, peak: 0.1, attack: 0.05, length: 0.6 }, ...[0.1, 0.3, 0.52].map((after, i) => ({ wave: 'triangle' as const, pitch: 131 * (1 + 0.5 * i), peak: 0.06, attack: 0.004, length: 0.2, after }))])
+    case 'necks-stretch': return run(3, (i) => ({ wave: 'sine', pitch: 392 * (1 + 0.12 * i), slideTo: 587 * (1 + 0.12 * i), peak: 0.06, attack: 0.05, length: 0.4, after: 0.15 * i }))
+    case 'necks-duck': return run(3, (i) => ({ wave: 'sine', pitch: 587 - 40 * i, slideTo: 294 - 20 * i, peak: 0.07, attack: 0.01, length: 0.18, after: 0.18 * i }))
+    case 'hums-a-scale': return run(6, (i) => (i % 2 ? { wave: 'triangle', pitch: 1900, peak: 0.03, attack: 0.001, length: 0.03, after: 0.1 * i } : { wave: 'sine', pitch: 262 * 2 ** ([0, 2, 4][i / 2] / 12), peak: 0.07, attack: 0.03, length: 0.26, after: 0.1 * i }))
+    case 'loses-step': return kept([{ wave: 'triangle', pitch: 1900, peak: 0.035, attack: 0.001, length: 0.03 }, { wave: 'triangle', pitch: 1900, peak: 0.035, attack: 0.001, length: 0.03, after: 0.13 }, { wave: 'triangle', pitch: 1900, peak: 0.035, attack: 0.001, length: 0.03, after: 0.19 }, { wave: 'triangle', pitch: 620, peak: 0.1, attack: 0.002, length: 0.05, after: 0.26 }, { wave: 'triangle', pitch: 1900, peak: 0.035, attack: 0.001, length: 0.03, after: 0.37 }, { wave: 'triangle', pitch: 880, peak: 0.1, attack: 0.002, length: 0.05, after: 0.5 }])
+  }
   if (mood === 'like') return kept([0, 4, 7, 12].map((semis, i) => ({ wave: 'triangle' as const, pitch: base * 2 ** (semis / 12), peak: 0.07, attack: 0.01, length: 0.22, after: 0.14 * i })))
   if (mood === 'dislike') return kept([{ wave: 'triangle', pitch: base * 1.5, slideTo: base * 0.7, peak: 0.1, attack: 0.01, length: 0.35 }, { wave: 'noise', pitch: 900, peak: 0.06, attack: 0.005, length: 0.12, after: 0.3 }, { wave: 'triangle', pitch: base * 0.6, peak: 0.07, attack: 0.01, length: 0.18, after: 0.45 }])
   return kept([{ wave: 'triangle', pitch: base, peak: 0.06, attack: 0.02, length: 0.3 }])

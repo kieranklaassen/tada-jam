@@ -244,10 +244,9 @@ export function drawWaterLife(pen: Pen, plot: Plot, at: Site, seconds: number, s
     pen.translate(x, y); pen.rotate(sail.tilt); pen.scale(sail.facing, 1)
     line(pen, cell, 0.022, 0.6)
     pen.beginPath()
-    // A boat folded from a sheet of paper: the hull, the peak in the middle and its fold.
+    // A boat folded from a sheet of paper: the hull and the peak in the middle. No fold is drawn across it.
     pen.moveTo(-cell * 0.42, -cell * 0.14); pen.lineTo(cell * 0.46, -cell * 0.14); pen.lineTo(cell * 0.26, cell * 0.06); pen.lineTo(-cell * 0.26, cell * 0.06); pen.closePath()
     pen.moveTo(-cell * 0.17, -cell * 0.14); pen.lineTo(cell * 0.02, -cell * 0.46); pen.lineTo(cell * 0.2, -cell * 0.14)
-    pen.moveTo(cell * 0.02, -cell * 0.46); pen.lineTo(cell * 0.02, cell * 0.06)
     pen.stroke()
     pen.restore()
     drawn++

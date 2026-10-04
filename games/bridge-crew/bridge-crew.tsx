@@ -139,7 +139,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const putDown = () => {
       touch.clear()
       if (!toy || spike) return
-      toy.pressEnd()
+      // And a vehicle in the middle of a run is back at the near bank: a run is not saved.
+      toy.putAway()
       afterToy()
     }
     const at = (event: PointerEvent): Point => {

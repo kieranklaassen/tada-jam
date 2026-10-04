@@ -230,7 +230,11 @@ export class View {
     })
 
     // A part being laid grows from its pin toward the finger, and a ring marks the grid point it will land on.
-    if (hand?.what === 'lay') {
+    if (hand?.what === 'lay' && hand.pulling) {
+      // The pin is on its way to the tray: it is drawn under the finger, lifted, and nothing grows from it.
+      pin(pen, ...at2(hand.finger), cell * 1.5, false)
+      drawn++
+    } else if (hand?.what === 'lay') {
       const from = at2(hand.from), dx = hand.finger[0] - hand.from[0], dy = hand.finger[1] - hand.from[1]
       const far = Math.hypot(dx, dy), long = Math.min(far, length({ a: hand.from, b: hand.to }) + 0.5)
       if (far > 0.05) {
@@ -604,35 +608,32 @@ export class View {
     pen.globalAlpha = 1
   }
 
-  /** The ghost hand: one move a child could make now, shown and never told. It lays a part on the far bank, or it picks another pile. */
+  /**
+   * The ghost hand: it lays one part between two pins away from the gap, and
+   * takes it off again by dragging its middle to the tray. It shows the two
+   * gestures a bridge is made and unmade with, and never where a part belongs.
+   */
   private ghost(pen: Pen, toy: Game, guidance: Guidance): void {
-    const { cell } = this.plot, at = toy.at, piles = bays(at)
-    // With a road from lip to lip the next thing a child would want is to send the vehicle; with a roll waiting, to unroll it.
-    const sending = toy.ready && toy.waiting.length > 0 && guidance.demoIndex % 2 === 0
-    const unrolling = !sending && toy.save.next !== null && toy.ready
-    // With every part of the kit laid and still no road, the next thing is to take one back: the hand carries a part to the tray.
-    const spent = !sending && !unrolling && toy.bridge.length > 0 && piles.every((bay) => toy.left(bay.kind) === 0)
-    const picking = !sending && !unrolling && !spent && guidance.demoIndex % 2 === 1 && piles.length > 1
-    const pose = handPose(guidance.demo ?? 0, !picking && !sending && !unrolling, this.hand)
+    const { cell } = this.plot, at = toy.at, progress = guidance.demo ?? 0
+    const move = demoMove(at), from = px(this.plot, ...move.from), to = px(this.plot, ...move.to)
+    const pile = bays(at).find((bay) => bay.kind === toy.selected) ?? bays(at)[0], home = px(this.plot, (pile.x0 + pile.x1) / 2, TRAY.top - TRAY.tall / 2)
+    const laying = progress < 0.5, pose = handPose(laying ? progress / 0.5 : (progress - 0.5) / 0.5, true, this.hand)
+    const ghostPart = (a: readonly [number, number], b: readonly [number, number]) => {
+      if (toy.selected === 'thread') string(pen, a[0], a[1], b[0], b[1], cell, 0.1)
+      else wood(pen, woodOf({ kind: toy.selected, turned: false }), a[0], a[1], b[0], b[1], cell, stream(5), false, false)
+    }
     let tip: [number, number]
-    if (spent) {
-      const last = toy.drawn()[toy.bridge.length - 1], from = px(this.plot, (last.a[0] + last.b[0]) / 2, (last.a[1] + last.b[1]) / 2)
-      const to = px(this.plot, (piles[0].x0 + piles[0].x1) / 2, TRAY.top - TRAY.tall / 2)
+    pen.globalAlpha = 0.55 * (laying ? pose.opacity : 1 - pose.travel)
+    if (laying) {
+      // The part grows from the first pin to the second, under the finger.
       tip = [from[0] + (to[0] - from[0]) * pose.travel, from[1] + (to[1] - from[1]) * pose.travel]
-    } else if (sending) tip = px(this.plot, waitAt(at, 0) - 0.4, at.left[1] + 0.9)
-    else if (unrolling) tip = px(this.plot, ROLL.x - 0.2, at.right[1] + 1.4)
-    else if (picking) {
-      const other = piles[(piles.findIndex((bay) => bay.kind === toy.selected) + 1) % piles.length]
-      tip = px(this.plot, (other.x0 + other.x1) / 2, TRAY.top - TRAY.tall / 2)
-    } else {
-      const move = demoMove(at), from = px(this.plot, ...move.from), to = px(this.plot, ...move.to)
-      tip = [from[0] + (to[0] - from[0]) * pose.travel, from[1] + (to[1] - from[1]) * pose.travel]
-      pen.globalAlpha = 0.55 * pose.opacity
       pin(pen, from[0], from[1], cell, false)
-      if (pose.travel > 0.02) {
-        if (toy.selected === 'thread') string(pen, ...from, ...tip, cell, 0.1)
-        else wood(pen, woodOf({ kind: toy.selected, turned: false }), from[0], from[1], tip[0], tip[1], cell, stream(5), false, false)
-      }
+      if (pose.travel > 0.02) ghostPart(from, tip)
+    } else {
+      // Its middle is taken and carried to its pile in the tray, where it is gone.
+      const dx = (home[0] - (from[0] + to[0]) / 2) * pose.travel, dy = (home[1] - (from[1] + to[1]) / 2) * pose.travel
+      tip = [(from[0] + to[0]) / 2 + dx, (from[1] + to[1]) / 2 + dy]
+      if (pose.travel < 0.98) ghostPart([from[0] + dx, from[1] + dy], [to[0] + dx, to[1] + dy])
     }
     // The hand itself: a pale paper cut-out of a pointing finger, a little smaller while it presses.
     const s = cell * (1 - 0.12 * pose.press)

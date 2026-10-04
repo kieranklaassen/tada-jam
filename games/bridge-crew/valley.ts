@@ -105,7 +105,7 @@ export function trees(at: Site): { x: number; tall: number; kind: 'round' | 'pin
 
 function tree(pen: Pen, plot: Plot, x: number, base: number, tall: number, kind: 'round' | 'pine' | 'poplar', random: () => number) {
   const a = FAINT.trees
-  stroke(pen, plot, [[x, base], [x + 0.03, base + tall * 0.42]], 0.035, a)
+  stroke(pen, plot, [[x, base], [x + 0.03, base + tall * (kind === 'pine' ? 0.24 : 0.42)]], 0.035, a)
   if (kind === 'round') {
     // A crown drawn as an architect draws one: a ring of scallops and two loose arcs inside.
     const r = tall * 0.34, cy = base + tall * 0.66, lobes = 9
@@ -117,12 +117,11 @@ function tree(pen: Pen, plot: Plot, x: number, base: number, tall: number, kind:
     ring(pen, plot, x + r * 0.2, cy - r * 0.15, r * 0.3, 0.016, a * 0.7, 3.6, 5.6)
     stroke(pen, plot, [[x + 0.02, base + tall * 0.36], [x - r * 0.4, base + tall * 0.56]], 0.022, a)
   } else if (kind === 'pine') {
-    // Three tiers, each a little narrower, with the trunk's line running up through them.
+    // Three tiers, each a little narrower. The trunk stops under the lowest: nothing is drawn through them.
     for (let i = 0; i < 3; i++) {
       const low = base + tall * (0.24 + 0.24 * i), wide = tall * (0.3 - 0.07 * i)
       stroke(pen, plot, [[x - wide, low], [x, low + tall * 0.34], [x + wide, low], [x + wide * 0.45, low + tall * 0.03], [x - wide * 0.45, low + tall * 0.03]], 0.022, a, true)
     }
-    stroke(pen, plot, [[x, base + tall * 0.42], [x, base + tall * 0.98]], 0.014, a * 0.6)
   } else {
     // A poplar: one tall narrow leaf, with nothing drawn through it.
     const wide = tall * 0.14, steps = 10, left: Dot[] = [], right: Dot[] = []
@@ -344,9 +343,6 @@ export function paintDesk(pen: Pen, plot: Plot, at: Site) {
     stroke(pen, plot, [[x0, y0 + 0.9], [x1, y0 + 0.9]], 0.014, a)
     stroke(pen, plot, [[x0 + 0.9, y0], [x0 + 0.9, y0 + 0.9]], 0.014, a)
     stroke(pen, plot, [[x0 + 1.8, y0], [x0 + 1.8, y0 + 0.45]], 0.014, a)
-    // In its corner box, a small drawing of a plank on two pins: what the sheet is a drawing of.
-    stroke(pen, plot, [[x0 + 0.2, y0 + 0.66], [x0 + 0.7, y0 + 0.66]], 0.03, a)
-    for (const cx of [x0 + 0.2, x0 + 0.7]) stroke(pen, plot, [[cx, y0 + 0.6], [cx, y0 + 0.66]], 0.05, a)
   }
   if (right >= 4.3 || (right >= 1.3 && right < 2.9)) {
     // A mug, seen from the side. Its steam is drawn live.

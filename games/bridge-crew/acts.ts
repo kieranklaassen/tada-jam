@@ -202,7 +202,12 @@ export function reactPose(id: VehicleId, reaction: Reaction, t: number, out: Veh
         // The jelly jumps and lands on the cab roof, and slides back to its plate.
         out.upset = ease(t, 0.1, 0.3) - ease(t, 0.75, 0.95)
         out.cargo[0] = 0.35 * swell(t, 0.3, 0.5) * Math.sin(2 * Math.PI * 12 * t)
-      } else if (reaction.act === 'driver-yawns') out.pitch = 0.05 * swell(t, 0.2, 0.7)
+      } else if (reaction.act === 'driver-yawns') {
+        // A deck with no dip at all bores it: the driver yawns, mouth wide and eyes shut, and the cab leans back with it.
+        out.pitch = 0.05 * swell(t, 0.2, 0.7)
+        out.gasp = swell(t, 0.15, 0.75)
+        out.lids = ease(t, 0.2, 0.35) - ease(t, 0.7, 0.85)
+      }
       else out.cargo[0] = 0.08 * Math.sin(2 * Math.PI * 10 * t) * hold
       break
     case 'piano-mover':

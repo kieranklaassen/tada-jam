@@ -503,6 +503,21 @@ export class Game extends Toy {
     super.dragEnd()
   }
 
+  /**
+   * The game is put away, or parked under the child's hand. A run is a view of
+   * the saved bridge and is not saved: the vehicle stands at the near bank
+   * again and the bridge is as built. A scene goes on where it was when the
+   * child comes back: its outcome was saved when it started.
+   */
+  putAway(): void {
+    this.pressEnd()
+    if (!this.drive) return
+    this.drive = null
+    this.crew.beaver.brace(false)
+    this.model()
+    this.moving = this.rest.map(atRest)
+  }
+
   /** A part laid is a thing to measure: the mole does, twice, unless it is in the middle of something. */
   protected override commit(bridge: readonly Part[], added = -1): void {
     // What was just turned, if this change is a turn (the toy starts its turn's clock before it commits).
@@ -823,7 +838,7 @@ export class Game extends Toy {
       this.voices.push(chord(this.bridge.map((part) => layVoice(part.kind, length(part))[0].pitch)))
       this.bridge.forEach((_, index) => { this.rung[index] = 0.2 })
     }
-    if (what === 'react' && this.show.reaction) this.voices.push(reactVoice(drive.vehicle, this.show.reaction.mood), ...(this.bargeTook ? [bargeHorn(this.bargeTook.mood === 'like')] : []))
+    if (what === 'react' && this.show.reaction) this.voices.push(reactVoice(drive.vehicle, this.show.reaction.mood, this.show.reaction.act), ...(this.bargeTook ? [bargeHorn(this.bargeTook.mood === 'like')] : []))
     // A secret: under a whole arch the barge's toot comes back as a chord.
     if (what === 'react' && this.at.channel && this.bargeTook?.mood === 'like' && wholeArch(this.bridge, this.frame.firm, isFooting(this.at), this.at.channel)) this.voices.push(hornEcho)
     if (what === 'arrive' && (this.show.rollArrives || this.show.arriving)) this.voices.push(unrollVoice(1))
@@ -877,7 +892,7 @@ export class Game extends Toy {
     this.save = save
     const sheet = save.sheets[save.on]
     this.at = site(sheet.site, sheet.variant)
-    this.selected = (['plank', 'stick', 'tube', 'thread'] as const).find((kind) => this.at.kit[kind] > 0) ?? 'plank'
+    this.selected = this.pileFor()
     this.laidTracing = null
     this.model()
     this.moving = this.rest.map(atRest)

@@ -163,10 +163,8 @@ function mole(pen: Pen, x: number, y: number, c: number, pose: CrewPose, random:
   pen.fillRect(-c * 0.65, -c * 0.92 + sag, c * 0.3, c * 0.41)
   pencil(pen, c, 0.016)
   pen.beginPath()
-  // On it, a small drawing of a plank on two pins: it is a drawing board, and there is no writing on it.
-  pen.moveTo(-c * 0.6, -c * 0.7 + sag); pen.lineTo(-c * 0.4, -c * 0.7 + sag)
+  // A clean sheet: nothing is drawn or written on it.
   pen.stroke()
-  pen.beginPath(); pen.arc(-c * 0.6, -c * 0.7 + sag, c * 0.02, 0, Math.PI * 2); pen.arc(-c * 0.4, -c * 0.7 + sag, c * 0.02, 0, Math.PI * 2); pen.fill()
   cutOut(pen, c, INK.paperShade, () => pen.ellipse(0, -c * 0.62 + sag, c * 0.56, c * 0.62, 0, 0, Math.PI * 2))
   pen.fillStyle = INK.paper
   pen.globalAlpha = 0.75

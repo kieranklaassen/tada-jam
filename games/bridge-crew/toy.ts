@@ -16,15 +16,15 @@ import { chiefCroak, chiefRuffle, chiefTaps, fold, growCreak, knock, lay as layV
 // state changed (`takeChange`).
 //
 // Every press is answered where it lands, in the same call: a pin clicks in,
-// a part lifts, a pile stirs. What follows (a tap, a drag, a hold) builds on
-// that answer and never waits for it.
+// a part lifts, a pile stirs. What follows (a tap or a drag) builds on that
+// answer and never waits for it.
 
 /** What the finger is doing. */
 export type Hand =
-  /** On a grid point: a pin went in on touch-down. A hold pulls it out again, parts and all. */
-  | { what: 'pin'; at: Point; held: number; done: boolean }
-  /** Dragging a new part out from that pin: it grows to the grid point nearest the finger that it can reach. */
-  | { what: 'lay'; kind: Kind; from: Point; to: Point; finger: readonly [number, number] }
+  /** On a grid point: a pin went in on touch-down. */
+  | { what: 'pin'; at: Point }
+  /** Dragging a new part out from that pin: it grows to the grid point nearest the finger that it can reach. Dragged to the tray instead, it is the pin itself that is taken off (`pulling`), and the parts on it drop loose at that end. */
+  | { what: 'lay'; kind: Kind; from: Point; to: Point; finger: readonly [number, number]; pulling: boolean }
   /** On a part's body: a tap plucks or turns it, a drag carries it off. `finger` is where it is carried to. */
   | { what: 'part'; index: number; carried: boolean; from: readonly [number, number]; finger: readonly [number, number] }
   | { what: 'bay'; kind: Kind }
@@ -44,8 +44,6 @@ export type Hand =
 
 /** How long a plucked part goes on ringing, in seconds: a second tap inside it turns the part. */
 export const RING = 0.8
-/** How long a finger rests on a pin before the pin comes out. */
-export const HOLD = 0.55
 /** A carried part let go further than this from where it lay goes back to the tray; nearer, it goes back where it was. */
 export const CARRY_OFF = 1
 /** Where the crew chief stands, in cells: on a ruled ledge in the top left margin of the sheet, clear of both banks. And how near a touch must be to poke it. */
@@ -111,7 +109,7 @@ export class Toy {
     this.save = save
     const sheet = save.sheets[save.on]
     this.at = site(sheet.site, sheet.variant)
-    this.selected = (['plank', 'stick', 'tube', 'thread'] as const).find((kind) => this.at.kit[kind] > 0) ?? 'plank'
+    this.selected = this.pileFor()
     this.chief = new ChiefDirector(random)
     this.model()
     // Found as left: every part is where it rests, and nothing eases in.
@@ -119,6 +117,19 @@ export class Toy {
     this.rung = this.bridge.map(() => Infinity)
     this.turned = this.bridge.map(() => Infinity)
     this.laid = this.bridge.map(() => Infinity)
+  }
+
+  /**
+   * The pile that is picked when a sheet comes onto the board, or the game is
+   * opened again: the kind of the part laid last, so the child finds the pile
+   * it was building from, if any of that kind is left; otherwise the first
+   * pile that has a part in it.
+   */
+  protected pileFor(): Kind {
+    const kinds = ['plank', 'stick', 'tube', 'thread'] as const, parts = this.save.sheets[this.save.on].bridge, last = parts[parts.length - 1]?.kind
+    const left = (kind: Kind) => this.at.kit[kind] - parts.filter((part) => part.kind === kind).length
+    if (last && left(last) > 0) return last
+    return kinds.find((kind) => left(kind) > 0) ?? kinds.find((kind) => this.at.kit[kind] > 0) ?? 'plank'
   }
 
   get bridge(): readonly Part[] {
@@ -183,7 +194,7 @@ export class Toy {
     const target = touched(this.at, this.bridge, this.drawn(), x, y)
     if (!target) { this.hand = null; return }
     if ('pin' in target) {
-      this.hand = { what: 'pin', at: target.pin, held: 0, done: false }
+      this.hand = { what: 'pin', at: target.pin }
       this.clicked.set(key(target.pin), 0)
       this.voices.push(pinClick)
       this.mark('ring', target.pin)
@@ -200,7 +211,7 @@ export class Toy {
     const hand = this.hand
     this.hand = null
     if (!hand) return
-    if (hand.what === 'pin' && !hand.done) {
+    if (hand.what === 'pin') {
       const back = putPin(this.bridge, hand.at)
       if (back.pinned.length) { this.voices.push(back.result.voice); this.commit(back.bridge); return }
       const on = this.bridge.flatMap((part, index) => (pinsOf(part).some((p) => samePoint(p, hand.at)) ? [index] : []))
@@ -239,7 +250,7 @@ export class Toy {
   dragStart(): void {
     const hand = this.hand
     if (!hand) return
-    if (hand.what === 'pin') this.hand = hand.done ? null : { what: 'lay', kind: this.selected, from: hand.at, to: hand.at, finger: hand.at }
+    if (hand.what === 'pin') this.hand = { what: 'lay', kind: this.selected, from: hand.at, to: hand.at, finger: hand.at, pulling: false }
     if (hand.what === 'part') hand.carried = true
   }
 
@@ -248,6 +259,9 @@ export class Toy {
     if (!hand) return
     if (hand.what === 'lay') {
       hand.finger = [x, y]
+      // Over the tray nothing is being laid: the pin itself is on its way off.
+      hand.pulling = bayAt(this.at, x, y) !== null
+      if (hand.pulling) return
       const to = reach(hand.kind, hand.from, [x, y])
       if (canPin(this.at, to) && !samePoint(to, hand.to)) {
         hand.to = to
@@ -263,6 +277,18 @@ export class Toy {
     const hand = this.hand
     this.hand = null
     if (!hand) return
+    if (hand.what === 'lay' && hand.pulling) {
+      // Take off, the pin's way: dragged to the tray, it comes out with a pop, and every part on it drops loose at that
+      // end; a part that hung by that pin alone falls and goes back to its pile.
+      const pulled = pullPin(this.bridge, hand.from)
+      if (pulled.loosened.length + pulled.dropped.length === 0) return
+      this.voices.push(pulled.result.voice)
+      const now = this.drawn()
+      for (const index of pulled.dropped) this.flying.push({ part: this.bridge[index], a: now[index].a, b: now[index].b, since: 0 })
+      this.forget(pulled.dropped)
+      this.commit(pulled.bridge)
+      return
+    }
     if (hand.what === 'lay') {
       const part: Part = { kind: hand.kind, a: hand.from, b: hand.to, turned: false }
       const result = layPart(this.bridge, part, this.at.kit)
@@ -296,20 +322,6 @@ export class Toy {
   step(dt: number): void {
     this.seconds += dt
     const hand = this.hand
-    if (hand?.what === 'pin' && !hand.done) {
-      hand.held += dt
-      if (hand.held >= HOLD) {
-        hand.done = true
-        const pulled = pullPin(this.bridge, hand.at)
-        if (pulled.loosened.length + pulled.dropped.length > 0) {
-          this.voices.push(pulled.result.voice)
-          const now = this.drawn()
-          for (const index of pulled.dropped) this.flying.push({ part: this.bridge[index], a: now[index].a, b: now[index].b, since: 0 })
-          this.forget(pulled.dropped)
-          this.commit(pulled.bridge)
-        }
-      }
-    }
     // What is built leans toward a part being laid, and stands straight again once it has landed.
     const laying = hand?.what === 'lay' && !samePoint(hand.from, hand.to)
     if (hand?.what === 'lay' && laying) { this.leanTo = hand.finger; this.leanFrom = hand.from }

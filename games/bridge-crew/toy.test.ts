@@ -5,7 +5,7 @@ import { stream } from './look'
 import { deserialize, freshSave, serialize } from './save'
 import { groundAt } from './sheet'
 import { site } from './sites'
-import { CHIEF, FLIGHT, HOLD, LEAN, MARKS, RING, Toy, closedTriangle, featherAt, flightEnds } from './toy'
+import { CHIEF, FLIGHT, LEAN, MARKS, RING, Toy, closedTriangle, featherAt, flightEnds } from './toy'
 import { pinTick } from './voices'
 
 const part = (kind: Part['kind'], ax: number, ay: number, bx: number, by: number, turned = false): Part => ({ kind, a: [ax, ay], b: [bx, by], turned })
@@ -182,21 +182,25 @@ describe('the toy', () => {
     expect(toy.left('plank')).toBe(toy.at.kit.plank)
   })
 
-  it('a finger resting on a pin pulls it out: the parts on it hang loose there, and a tap puts the pin back', () => {
+  it('a pin is taken off like anything else, by dragging it to the tray: the parts on it hang loose there, and a tap puts the pin back', () => {
     const toy = fresh()
     drag(toy, [6, 6], [10, 6]); pickKind(toy, 'tube'); drag(toy, [10, 3], [10, 6]); settle(toy)
     expect(toy.frame.firm).toEqual([true, true])
     toy.takeVoices(); toy.takeChange()
+    // However long the finger rests on it, a pin stays in: there is no hold.
     toy.press(10, 6)
-    toy.step(HOLD / 2)
+    toy.step(3)
     expect(toy.bridge.some((p) => p.loose)).toBe(false)
-    toy.step(HOLD)
+    // Dragged to the tray, it comes out, and nothing is laid on the way.
+    const pile = bays(toy.at)[0]
+    toy.dragStart(); toy.dragMove(10, 4); toy.dragMove((pile.x0 + pile.x1) / 2, TRAY.top - 1)
+    expect(toy.hand).toMatchObject({ what: 'lay', pulling: true })
+    toy.dragEnd()
+    expect(toy.bridge).toHaveLength(2)
     expect(toy.bridge.map((p) => p.loose)).toEqual(['b', 'b'])
     expect(toy.takeChange()).toBe(true)
-    // The finger still down, nothing more happens; when it lifts, the lift is not a tap on the pin.
-    toy.step(1)
-    toy.tap()
-    expect(toy.bridge.map((p) => p.loose)).toEqual(['b', 'b'])
+    expect(toy.takeVoices().length).toBeGreaterThan(0)
+    // A drag that ends back over the sheet lays a part, as ever.
     settle(toy)
     expect(toy.rest.map((r) => r.how)).toEqual(['hangs', 'hangs'])
     toy.press(10, 6); toy.tap()

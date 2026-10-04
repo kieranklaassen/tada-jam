@@ -45,11 +45,10 @@ export function trolley(pen: Pen, x: number, y: number, c: number, weights: numb
     else { string(pen, -c * 0.3, -c * 0.1, -c * 0.3, drop, c * 0.8); string(pen, c * 0.3, -c * 0.1, c * 0.3, drop, c * 0.8) }
     bed = drop + c * 0.06
   }
-  // Standing on its wheels it has a push handle at its back and a rail at its front, so the stack has something to lean on.
+  // Standing on its wheels it has a push handle at its back. Nothing stands upright at its front, where its numeral is.
   if (how === 'deck' || how === 'tray') {
     wood(pen, 'stick', -c * 0.42, bed, -c * 0.58, bed - c * 0.62, c * 0.6, random)
     wood(pen, 'stick', -c * 0.58, bed - c * 0.62, -c * 0.78, bed - c * 0.62, c * 0.6, random)
-    wood(pen, 'stick', c * 0.42, bed, c * 0.42, bed - c * 0.3, c * 0.6, random)
   }
   wood(pen, 'plank', -c * 0.42, bed, c * 0.42, bed, c * 0.9, random)
   const onTop = how === 'under' ? -c * 0.1 : how === 'pin' ? null : bed + c * 0.09
@@ -198,15 +197,20 @@ export function ideaModel(pen: Pen, idea: Idea, x: number, y: number, c: number,
       break
     case 'prop':
       // The same strip dips with nothing under it, and lies level on a post.
+      // Each end of the strip rests on a block of its own, so the model is a bridge and not a bar on a post.
+      for (const bx of [-0.08, 1.24]) cutOut(pen, c, INK.balsaEdge, () => pen.rect(x + bx * w, y - 0.66 * w, 0.24 * w, 0.66 * w))
       if (holds) { stick(0, 0.7, 1.4, 0.7, 'plank'); stick(0.7, 0, 0.7, 0.7) } else { stick(0, 0.7, 0.7, 0.7 - sag, 'plank'); stick(0.7, 0.7 - sag, 1.4, 0.7, 'plank') }
       dot(0, 0.7); dot(1.4, 0.7); if (holds) dot(0.7, 0)
       break
     case 'tube':
-      // A thin post under a block bows in the middle; a rolled tube of the same height stands straight.
-      if (holds) stick(0.5, 0, 0.5, 1.1, 'tube')
-      else { stick(0.5, 0, 0.5 + 0.3 * fail, 0.55 - 0.1 * fail); stick(0.5 + 0.3 * fail, 0.55 - 0.1 * fail, 0.5, 1.1 - 0.25 * fail) }
-      stick(0.15, 1.1 - (holds ? 0 : 0.25 * fail) + 0.08, 0.85, 1.1 - (holds ? 0 : 0.25 * fail) + 0.08, 'plank')
-      dot(0.5, 0)
+      // Two thin posts under a strip with a block on it bow in the middle; two rolled tubes of the same height stand straight.
+      for (const px0 of [0.25, 1.15]) {
+        if (holds) stick(px0, 0, px0, 1.0, 'tube')
+        else { const out = px0 < 0.7 ? -1 : 1; stick(px0, 0, px0 + out * 0.26 * fail, 0.5 - 0.08 * fail); stick(px0 + out * 0.26 * fail, 0.5 - 0.08 * fail, px0, 1.0 - 0.22 * fail) }
+        dot(px0, 0)
+      }
+      stick(0.05, 1.0 - (holds ? 0 : 0.22 * fail) + 0.08, 1.35, 1.0 - (holds ? 0 : 0.22 * fail) + 0.08, 'plank')
+      cutOut(pen, c, INK.steel, () => pen.rect(x + 0.5 * w, y - (1.0 - (holds ? 0 : 0.22 * fail) + 0.16) * w - c * 0.2, 0.4 * w, c * 0.2))
       break
     case 'thread':
       // Two strips hinged in the middle drop into a V; a thread from a pin above holds the hinge up.
