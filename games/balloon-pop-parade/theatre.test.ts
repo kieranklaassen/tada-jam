@@ -488,7 +488,7 @@ describe('a bunch the child sends', () => {
     expect(theatre.troop.held).toEqual([true])
   })
 
-  it('still goes to the troop when four bunches are already in the air: it leaves the sky at the lift, and is caught when the others have had their answers, one at a time', () => {
+  it('still goes to the troop when four bunches are already in the air: it leaves the sky at the lift, and is caught when the friend has dealt with the others', () => {
     const theatre = solo('duck', ['frog', 'hippo', 'crab', 'frog', 'duck'])
     for (const slot of [0, 1, 2, 3]) { tapSlot(theatre, slot); play(theatre, 0.08) }
     expect(theatre.troop.held).toEqual([false])
@@ -497,7 +497,7 @@ describe('a bunch the child sends', () => {
     // The fifth leaves the sky at the lift, as every bunch does, and the duck has its balloon.
     expect(voices(theatre)).toEqual(expect.arrayContaining(['letGo', 'whistle']))
     expect(theatre.troop.held).toEqual([true])
-    // It is caught when the duck has given its answers to the others, one at a time.
+    // It is caught when the duck has refused the others: the first beside it, and those that waited with it.
     play(theatre, 8)
     expect(voices(theatre)).toContain('duckCatch')
   })

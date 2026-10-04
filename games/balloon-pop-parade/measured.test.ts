@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { BODIES, type KindName } from './bodies'
 import { PERSONALITIES } from './clips'
-import { GROUND, skySlots, viewFor, waitingSpot, bunchOffsets, FRIEND_SCALE } from './layout'
+import { GROUND, skySlots, viewFor, waitingSpot, bunchOffsets, FRIEND_SCALE, SKY_ROW } from './layout'
 import { saveOf } from './moments'
 import type { Pose } from './pose'
 import { freshSave } from './save'
-import { Theatre, type Painter } from './theatre'
+import { REGROW_AFTER, Theatre, type Painter } from './theatre'
 import { give, type Bunch, type Given } from './world'
 
 // What nobody sees by reading the theatre: the game is stepped frame by frame, through whole games played at
@@ -46,8 +46,9 @@ describe('whole games played fast and at random', () => {
         if (now === scene && !pressed) for (const [name, pose] of poses) {
           const was = before.get(name)
           if (!was || !name.startsWith('friend-')) continue
-          expect(Math.abs(pose.y - was.y), `${theatre.troop.kind} ${name}, age ${age}, seed ${seed}, frame ${i}`).toBeLessThan(0.3)
-          expect(Math.abs(pose.x - was.x), `${theatre.troop.kind} ${name}, age ${age}, seed ${seed}, frame ${i}`).toBeLessThan(0.45)
+          // A frame's worth of the fastest motion there is, a friend carried off in a hurry: far less than a snap, which is a whole friend's height.
+          expect(Math.abs(pose.y - was.y), `${theatre.troop.kind} ${name}, age ${age}, seed ${seed}, frame ${i}`).toBeLessThan(0.45)
+          expect(Math.abs(pose.x - was.x), `${theatre.troop.kind} ${name}, age ${age}, seed ${seed}, frame ${i}`).toBeLessThan(0.55)
         }
         scene = now
         before = new Map([...poses].map(([name, pose]) => [name, { ...pose }]))
@@ -60,8 +61,8 @@ describe('a balloon', () => {
   /** Every large balloon of one frame, by colour, and a check that each was somewhere near in the frame before: none jumps. */
   const follower = (step: number) => {
     let before: { x: number; y: number; colour: string }[] | null = null
-    const now: { x: number; y: number; colour: string }[] = []
-    const painter: Painter = { place: () => {}, drop: () => {}, balloon: (x, y, z, wide, _tall, _lean, colour) => { if (wide > 0.7 && z > -5) now.push({ x, y, colour }) }, string: () => {}, shadow: () => {}, marcher: () => {}, hand: () => {}, cloud: () => {} }
+    const now: { x: number; y: number; colour: string; wide: number }[] = []
+    const painter: Painter = { place: () => {}, drop: () => {}, balloon: (x, y, z, wide, _tall, _lean, colour) => { if (wide > 0.7 && z > -5) now.push({ x, y, colour, wide }) }, string: () => {}, shadow: () => {}, marcher: () => {}, hand: () => {}, cloud: () => {} }
     const frame = (theatre: Theatre, label: string, afresh = false) => {
       // The balloons far off, on the far hill, are small and are not followed; those in front all are.
       now.length = 0
@@ -70,6 +71,9 @@ describe('a balloon', () => {
         const near = before.filter((other) => other.colour === balloon.colour).map((other) => Math.hypot(other.x - balloon.x, other.y - balloon.y))
         // One that was not there a frame ago is new: it grows into the sky from nothing, or drifts down from above.
         if (near.length < now.filter((other) => other.colour === balloon.colour).length) continue
+        // So is one that is still growing into its place in the row: a place fills again as soon as its bunch has
+        // left, and that may be in the frame another balloon of its colour pops.
+        if (balloon.wide < 0.9 && balloon.y > SKY_ROW - 1) continue
         expect(Math.min(...near), `${label}: a balloon at ${balloon.x.toFixed(2)}, ${balloon.y.toFixed(2)}`).toBeLessThan(step)
       }
       before = now.map((balloon) => ({ ...balloon }))
@@ -287,37 +291,49 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
     expect(proud).toBeGreaterThanOrEqual(inHand)
   })
 
-  it.each(kinds)('a %s refuses two wrong bunches sent close together one at a time: each hangs beside it alone, and each is answered by a refusal of its own', (kind) => {
+  it.each(kinds)('a %s refuses two wrong bunches sent close together with one refusal: the first hangs beside it alone, the second waits in plain sight where it hangs on its way, and goes with the first when the refusal lands', (kind) => {
     const theatre = new Theatre(saveOf({ position: 'solo-two-colours', troop: { kind, size: 1, held: [false] }, sky: [{ colour: other(kind), count: 1 }, { colour: other(kind), count: 1 }, { colour: kind, count: 1 }], waiting: { kind: other(kind), size: 1 } }), 9), { poses, balloons, painter, clear } = recorder()
+    const inside = theatre as unknown as { flights: { given: Given; landed: boolean }[] }
     tap(theatre, 0)
     for (let i = 0; i < 18; i++) theatre.step(1 / 60)
     tap(theatre, 1)
-    const refusals: number[] = [], done: number[] = []
-    let most = 0, seen = 0, ends = 0
-    for (let i = 0; i < 60 * 6; i++) {
+    const refusals: number[] = []
+    let most = 0, waited = 0, both = -1, gone = -1, moved = 0, last: { x: number; y: number } | null = null
+    for (let i = 0; i < 60 * 5; i++) {
       theatre.step(1 / 60)
       const begun = theatre.sounds.filter((sound) => sound.voice === `${kind}Refuse`).length
       while (refusals.length < begun) refusals.push(i)
-      const landed = theatre.sounds.filter((sound) => sound.voice === (kind === 'hippo' ? 'raspberry' : 'pop')).length
-      while (done.length < landed) done.push(i)
       clear()
       theatre.paint(painter, VIEW)
       const pose = poses.get('friend-0')!
-      // Bunches hanging beside it: below the row, near it, and still.
-      // (A bunch on its way or hanging is drawn at its own depth; one the frog has bounced off is on its way out, in front.)
-      const beside = balloons.filter((balloon) => Math.abs(balloon.z - 0.35) < 0.03 && balloon.wide > 0.8 && balloon.y < GROUND + 2.6 && Math.abs(balloon.x - pose.x) < 2.6).length
-      most = Math.max(most, beside)
-      if (beside > 0) seen += 1
-      else if (seen > 0 && ends === 0 && done.length === 1) ends = i
+      // Bunches on their way or hanging are drawn at their own depth. Beside it: low, near it. Waiting: higher up, on its way.
+      const flying = balloons.filter((balloon) => Math.abs(balloon.z - 0.35) < 0.03 && balloon.wide > 0.8)
+      const beside = flying.filter((balloon) => balloon.y < GROUND + 2.9 && Math.abs(balloon.x - pose.x) < 2.9)
+      most = Math.max(most, beside.length)
+      const unlanded = inside.flights.filter((flight) => !flight.landed).length
+      if (inside.flights.length === 2 && unlanded === 1 && flying.length === 2) {
+        // The second waits where it hangs: seen, and hardly moving.
+        const waiting = flying.find((balloon) => !beside.includes(balloon))
+        if (waiting) {
+          waited += 1
+          if (last && waited > 12) moved = Math.max(moved, Math.hypot(waiting.x - last.x, waiting.y - last.y))
+          last = { x: waiting.x, y: waiting.y }
+        }
+      }
+      if (both < 0 && inside.flights.length === 2) both = i
+      if (both >= 0 && gone < 0 && inside.flights.length === 0) gone = i
     }
-    expect(refusals).toHaveLength(2)
-    expect(done).toHaveLength(2)
+    // One refusal for the two of them, and both are gone when it has landed.
+    expect(refusals).toHaveLength(1)
+    expect(gone).toBeGreaterThan(0)
+    expect(inside.flights).toHaveLength(0)
     expect(most, 'never two beside it at once').toBe(1)
-    const p = PERSONALITIES[kind]
-    // Each refusal lands on its own bunch, at its own moment, and the second begins when the first is over.
-    for (const k of [0, 1]) expect(done[k] - refusals[k], `refusal ${k}`).toBeGreaterThanOrEqual(Math.floor((p.cue.hit / 1.07) * 60) - 2)
-    expect(done[1] - done[0]).toBeGreaterThanOrEqual(Math.floor((p.lasts.refuse / 1.07 - p.cue.hit / 0.93) * 60))
-    expect(refusals[1]).toBeGreaterThan(done[0])
+    expect(waited, 'the second was seen waiting for a good while').toBeGreaterThan(10)
+    expect(moved, 'and hung still while it waited').toBeLessThan(0.05)
+    // The refusal lands at its own moment of the motion, and no sooner.
+    expect(gone - refusals[0]).toBeGreaterThanOrEqual(Math.floor((PERSONALITIES[kind].cue.hit / 1.07) * 60) - 2)
+    // Both were counted when they were sent: the rule is as it was.
+    expect(theatre.save.slips).toBe(2)
   })
 
   it.each(kinds)('a %s finishes the answer it is giving when it is poked or its balloon is popped meanwhile, and its start at a pop is not cut by the next balloon', (kind) => {
@@ -902,31 +918,47 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
     expect(carried).toHaveLength(2)
   })
 
-  it.each(kinds)('a %s answers every wrong bunch in full however fast they are sent: a place stays empty until its bunch is answered, so none is hurried and none shares a refusal', (kind) => {
+  it.each(kinds)('a %s answers every tap at once, however fast the taps come: the sky is never empty, what must wait waits in plain sight for less than three seconds, and one refusal takes all the wrong bunches that wait', (kind) => {
     const theatre = new Theatre(saveOf({ position: 'solo-three-colours', troop: { kind, size: 1, held: [false] }, sky: [{ colour: other(kind), count: 1 }, { colour: other(kind), count: 1 }, { colour: kind, count: 1 }, { colour: other(kind), count: 1 }, { colour: other(kind), count: 1 }], waiting: { kind: other(kind), size: 1 } }), 11)
-    const wrong = [0, 1, 3, 4], p = PERSONALITIES[kind]
-    const sent: number[] = [], begun: number[] = [], landed: number[] = []
-    let most = 0
-    for (let i = 0; i < 60 * 30; i++) {
+    const inside = theatre as unknown as { flights: { landed: boolean; slot: number }[]; places: { away: number; grow: number }[] }
+    const wrong = [0, 1, 3, 4]
+    const since = new Map<object, number>()
+    let sent = 0, hopped = 0, refusals = 0, most = 0, longest = 0, emptiest = Infinity
+    for (let i = 0; i < 60 * 20; i++) {
       // A wrong place is tapped three times a second for twelve seconds: far faster than a friend answers.
-      if (i < 60 * 12 && i % 20 === 0) tap(theatre, wrong[(i / 20) % 4])
+      if (i < 60 * 12 && i % 20 === 0) {
+        theatre.sounds.length = 0
+        const at = skySlots(theatre.sky.length, VIEW)[wrong[(i / 20) % 4]]
+        theatre.press(at.x, at.y, VIEW)
+        // The answer to the finger is in the touch itself, whatever comes of the lift.
+        expect(theatre.sounds.map((sound) => sound.voice), `tap at frame ${i}`).toContain('squeak')
+        theatre.release(VIEW)
+        if (theatre.sounds.some((sound) => sound.voice === 'letGo')) sent += 1
+        else { hopped += 1; expect(theatre.sounds.map((sound) => sound.voice)).toContain('bloop') }
+      }
       theatre.step(1 / 60)
-      const count = (voice: string) => theatre.sounds.filter((sound) => sound.voice === voice).length
-      while (sent.length < count('letGo')) sent.push(i)
-      while (begun.length < count(`${kind}Refuse`)) begun.push(i)
-      while (landed.length < count(kind === 'hippo' ? 'raspberry' : 'pop')) landed.push(i)
-      most = Math.max(most, sent.length - landed.length)
+      refusals += theatre.sounds.filter((sound) => sound.voice === `${kind}Refuse`).length
+      theatre.sounds.length = 0
+      // How long each bunch is on its way: from its lift until its refusal has landed on it.
+      for (const flight of inside.flights) if (!since.has(flight)) since.set(flight, i)
+      for (const [flight, from] of since) if (!inside.flights.includes(flight as never)) { longest = Math.max(longest, i - from); since.delete(flight) }
+      most = Math.max(most, inside.flights.filter((flight) => !flight.landed).length)
+      // A place is empty only for the moment between a lift and the next bunch drifting in.
+      if (i > 30 && i < 60 * 12) emptiest = Math.min(emptiest, inside.places.filter((place) => place.away <= 0).length)
+      for (const place of inside.places) expect(place.away).toBeLessThanOrEqual(REGROW_AFTER + 1e-9)
     }
-    expect(sent.length).toBeGreaterThan(8)
-    // Every bunch that left the sky was refused, and every refusal landed on its own bunch at its own moment.
-    expect(begun).toHaveLength(sent.length)
-    expect(landed).toHaveLength(sent.length)
-    for (let k = 0; k < sent.length; k++) {
-      expect(landed[k] - begun[k], `refusal ${k}`).toBeGreaterThanOrEqual(Math.floor((p.cue.hit / 1.07) * 60) - 2)
-      if (k > 0) expect(begun[k], `refusal ${k} begins when the one before has landed`).toBeGreaterThan(landed[k - 1])
-    }
-    // Never more on their way than the sky has wrong places.
+    expect(sent).toBeGreaterThan(12)
+    expect(sent + hopped).toBe(36)
+    // Every one that left the sky was answered, and none hangs on.
+    expect(inside.flights).toHaveLength(0)
+    expect(since.size).toBe(0)
+    expect(longest / 60, 'the longest any bunch was on its way').toBeLessThan(3)
+    // Fewer refusals than bunches: those that waited went together.
+    expect(refusals).toBeGreaterThan(3)
+    expect(refusals).toBeLessThan(sent)
+    // Never more on their way than the sky has wrong places, and the sky never bare: most of its places are full at any moment.
     expect(most).toBeLessThanOrEqual(4)
+    expect(emptiest).toBeGreaterThanOrEqual(2)
   })
 
   it('never lets a balloon of a sky that is over rise into the grown-up\'s corner, where a touch is not answered, on any shape of surface', () => {
