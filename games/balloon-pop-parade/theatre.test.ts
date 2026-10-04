@@ -151,8 +151,8 @@ describe('a bunch the child sends', () => {
     theatre.paint(painter, VIEW)
     const mine = frame.balloons.filter((balloon) => balloon.y < 2 && balloon.y > GROUND + 2)
     expect(mine).toHaveLength(1)
-    // It stands as one that has its balloon: its free arm down (the crab's claws stay up), its eyes on the balloon and no longer on the sky.
-    if (kind !== 'crab') expect(frame.poses.get('friend-0')!.armL).toBeLessThan(0.6)
+    // It stands as one that has its balloon: its free arm down, its eyes on the balloon and no longer on the sky.
+    expect(frame.poses.get('friend-0')!.armL).toBeLessThan(0.6)
     // A positive turn of the head looks to the child's right, and that is the side its balloon hangs on.
     expect(mine[0].x).toBeGreaterThan(frame.poses.get('friend-0')!.x)
     expect(frame.poses.get('friend-0')!.headTurn).toBeGreaterThan(0.05)
@@ -652,6 +652,29 @@ describe('the far hill', () => {
     expect(frame.marchers).toBe(5)
     // The sky of four, and three balloons on the far hill, each a paler one of its troop's colour.
     expect(frame.balloons).toHaveLength(7)
+  })
+})
+
+describe('a friend that has its balloon', () => {
+  it.each(KINDS)('stands unlike one that still reaches up: a %s\'s free hand is down by its body, not up by its head', (kind) => {
+    const out = { x: 0, y: 0, z: 0 }
+    const standing = (held: boolean) => {
+      const theatre = staged({ troop: { kind, size: 2, held: [held, held] }, sky: [{ colour: kind, count: 1 }], waiting: { kind: kind === 'duck' ? 'frog' : 'duck', size: 1 } }), { frame, painter } = recorder()
+      play(theatre, 0.4)
+      theatre.paint(painter, VIEW)
+      const pose = frame.poses.get('friend-1')!
+      // The hand as it is drawn, which for the crab is where its least swing leaves it.
+      handOf(BODIES[kind], pose, out, true)
+      return { hand: out.y - pose.y, x: out.x, beside: frame.poses.get('friend-0')! }
+    }
+    const reaching = standing(false).hand, holding = standing(true)
+    const height = BODIES[kind].height * 1.08
+    expect(reaching, 'reaching: above its shoulders').toBeGreaterThan(height * 0.7)
+    expect(holding.hand, 'holding: its free hand low').toBeLessThan(height * 0.45)
+    expect(holding.hand, 'and not through the hill').toBeGreaterThan(0)
+    expect(reaching - holding.hand).toBeGreaterThan(height * 0.4)
+    // The lowered hand stays on its own side of the friend beside it.
+    expect(holding.x).toBeGreaterThan(holding.beside.x + BODIES[kind].halfWidth * 0.5)
   })
 })
 

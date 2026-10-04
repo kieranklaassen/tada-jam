@@ -81,8 +81,9 @@ export function rest(kind: KindName, holds: boolean, reach: number, time: number
   pose.blink = blinkAt(kind, time, seed)
   if (holds) {
     pose.armR = reach
-    // The crab never lets a claw hang: its free one stays up beside the one that holds the string.
-    pose.armL = kind === 'crab' ? reach : 0.2
+    // Its free arm comes down, so a friend that has its balloon never looks like one that still reaches up. The
+    // crab's claw cannot hang (`lowest` in bodies.ts): it comes down as far as it goes, low and out in front.
+    pose.armL = 0.2
     pose.nod = -0.3
     // The balloon hangs to the side of its string hand, which is the child's right: a positive turn looks that way.
     pose.headTurn = 0.14

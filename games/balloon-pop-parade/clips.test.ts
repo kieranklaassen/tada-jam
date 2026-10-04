@@ -151,9 +151,8 @@ describe('the resting life', () => {
     for (const a of KINDS) for (const b of KINDS) if (a < b) expect(apart(life(a, false), life(b, false)) * (CHANNELS / 6), `${a} and ${b}`).toBeGreaterThan(0.04)
     for (const kind of KINDS) {
       expect(sample(kind, null, 0, false).armL).toBeGreaterThan(2)
-      // With a balloon the free arm comes down, except the crab's, whose claws stay up whatever it does.
-      if (kind === 'crab') expect(sample(kind, null, 0, true).armL).toBeGreaterThan(2)
-      else expect(sample(kind, null, 0, true).armL).toBeLessThan(0.5)
+      // With a balloon the free arm comes down, the crab's too: one that has its balloon never looks like one that reaches.
+      expect(sample(kind, null, 0, true).armL).toBeLessThan(0.5)
       expect(sample(kind, null, 0, true).nod).toBeGreaterThan(sample(kind, null, 0, false).nod)
       expect(sample(kind, null, 0, true).armR).toBeGreaterThan(2)
     }
