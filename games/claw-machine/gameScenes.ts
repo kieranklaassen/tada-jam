@@ -10,7 +10,7 @@ import { crewGoesBy, shapeOf } from './gobblers'
 import { BED, ON_DECK, RIDER, TIP, crewSpot, deckSpots, deckTop, handleSpot, riderSpots, tipped, waitingSpot, type Spot } from './layout'
 import { actSeconds } from './motion'
 import { CRATE, SHELF, TRAY, TRAY_DEPTH } from './places'
-import { DOWN_THE_THROAT, chew, nextLeg, overTheCrew, react, tallestOnTheWay } from './react'
+import { DOWN_THE_THROAT, chew, clearTop, nextLeg, react } from './react'
 import { Scene, type Beat } from './scene'
 import { bellyOf, crewArrives, crewNow, type World } from './world'
 
@@ -129,7 +129,7 @@ export function tipOut(game: Game, tipped: readonly number[]): void {
         const on = { x: actor.x, y: tongue, z: actor.z, seconds: 0.08, scale: DOWN_THE_THROAT, landing: 'again' as const, fixed: true }
         // Up to over the tops of its eyes, still small, and from there over them onto the tray, growing late.
         const above = { x: actor.x, y: rim + 3.2, z: actor.z, seconds: 0.2, scale: 0.5, landing: 'again' as const, fixed: true }
-        const peak = Math.max(overTheCrew(game, above, home, toySpan(body.toy).depth / 2, 1.5), tallestOnTheWay(game, toy, above, home) + 0.5)
+        const peak = clearTop(game, toy, above, home, 1.5)
         game.flights.set(body, under)
         body.legs = [on, above, { x: home.x, y: home.y, z: home.z, seconds: airTime(above.y, home.y, peak), scale: 1, landing: 'stand' }]
         toss(body, under)

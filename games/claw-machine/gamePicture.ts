@@ -49,6 +49,12 @@ export function poseOf(game: Game, actor: Actor, out: Pose): Pose {
   // The ones who wait: when the tray is clear they go up on tiptoe to look over the parapet. They do not
   // call or hurry anyone; they are only where the next thing is.
   if (actor.role === 'waiting' && !actor.walk && !actor.act && game.bodies.length > 0 && trayIsClear(game.world.cycle)) out.squash *= 1.1 + 0.03 * Math.sin(game.time * PERSONALITY[actor.id].tempo)
+  if (actor.liftedT < 0) {
+    // Standing, it leans as a thing on feet does: it rocks up onto the edge of its feet, and never down into the
+    // floor.
+    const shape = shapeOf(actor.id), foot = Math.max(1.5, shape.width / 2 - 2.5) + 1
+    out.dy += (Math.abs(Math.sin(out.leanZ)) * foot + Math.abs(Math.sin(out.leanX)) * 2) * actor.scale
+  }
   if (actor.liftedT >= 0) {
     // In the jaws it hangs from its knob: however it stretches or leans, the knob stays between the teeth. A spin
     // is about its own middle, and the claw goes round with the knob (`knobSwing`).
@@ -141,10 +147,12 @@ export function gamePicture(game: Game, guidance: Guidance | null): Picture {
       blink: pose.blink, waiting: actor.role === 'waiting' || actor.scale < 0.95,
     })
     // A snack shows in the belly of a gobbler at the tray; the ones who wait are seen from the eyes up.
-    // A snack at rest is where its gobbler is at this very moment, however fast the gobbler is being carried.
+    // A snack at rest or on the tongue is where its gobbler is at this very moment, however fast the gobbler is
+    // being carried.
     if (actor.role !== 'waiting') {
       const snack = actor.snack
       if (snack.mode === 'resting') { const home = game.snackSpot(actor); riding(actor, snack, 10000 + actor.key, { x: home.x, y: home.y + snack.hop * actor.scale, z: home.z }) }
+      else if (snack.mode === 'mouth') riding(actor, snack, 10000 + actor.key, game.mouthOf(actor))
       else riding(actor, snack, 10000 + actor.key)
     }
     actor.cargo.forEach((body, i) => riding(actor, body, 20000 + actor.key * 16 + i))

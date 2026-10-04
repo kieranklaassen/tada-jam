@@ -61,6 +61,10 @@ export default {
       a: 'gobbler-.*-body$', b: 'gobbler-.*-pupils$', kind: 'penetration', upTo: 0.75,
       reason: 'a pupil is a small ball set into the ball of its eye, so that it rides on the eye as the gobbler looks about; it is meant to sit half in it.',
     },
+    {
+      a: 'gobbler-.*-body$', b: 'gobbler-.*-pupils$', kind: 'pose', upTo: 0.75,
+      reason: 'the same pupil, as it rides round its eye with the gaze: how far it sits in the ball changes a little as it goes.',
+    },
   ],
   moments: [
     {

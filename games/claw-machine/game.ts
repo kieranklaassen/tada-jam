@@ -660,6 +660,9 @@ export class Game {
   shake(x: number, z: number, strength: number, reach: number, except = -1): void {
     this.bodies.forEach((body, toy) => {
       if (toy === except || toy === this.held || body.mode !== 'resting' || this.world.cycle.where[toy].at !== 'tray') return
+      // A toy with another in the jaws, in the air or waiting its turn right above it stays down: it would hop
+      // up into it.
+      if (this.bodies.some((over) => over !== body && over.mode !== 'resting' && over.y > body.y && Math.abs(over.x - body.x) < 3 && Math.abs(over.z - body.z) < 2.5 && over.y - body.y < body.height + 2.5)) return
       const d = Math.hypot(body.x - x, body.z - z)
       body.hopV += strength / (1 + (d / reach) * (d / reach)) / Math.sqrt(body.heavy)
     })

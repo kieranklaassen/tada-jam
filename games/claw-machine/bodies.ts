@@ -118,6 +118,9 @@ export function fly(body: Body, to: { x: number; y: number; z: number }, dt: num
   }
   body.vy -= FALL * dt
   body.x += body.vx * dt; body.y += body.vy * dt; body.z += body.vz * dt
+  // It rights itself as it flies: however it hung or lay when it was let go, it comes down level.
+  const level = Math.max(0, 1 - 9 * dt)
+  body.leanX *= level; body.leanZ *= level
   // What grows in flight grows late, and what shrinks shrinks early: it is small while it is near what it left
   // or what it is going into.
   const through = body.flown / body.flight, rest = 1 - through
