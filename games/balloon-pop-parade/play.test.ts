@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { markShown } from './showings'
 import { LADDER } from './config'
 import { KINDS } from './kinds'
 import { skyFits } from './order'
@@ -365,7 +366,7 @@ describe('calling the next troop', () => {
     }
   })
 
-  it('shows a new idea once, inside the step-in that brings it, and marks it at once', () => {
+  it('names a new idea\'s showing at the step-in that brings it and leaves its mark to the view, which sets it when the showing starts: marked, it is shown once; unmarked, it is still owed', () => {
     // From a new game for the youngest: giving is shown at the start, by the view. Then a child who knows climbs.
     let save: Save = { ...freshSave(null), shown: { give: true, each: false, bunch: false } }
     const showings: { idea: string; position: string; size: number; skyHasBunch: boolean }[] = []
@@ -377,8 +378,11 @@ describe('calling the next troop', () => {
         expect(event.showing.kind).not.toBe(after.troop.kind)
         expect(event.showing.kind).not.toBe(after.next.kind)
         showings.push({ idea: event.showing.idea, position: after.position, size: after.troop.size, skyHasBunch: after.sky.some((bunch) => bunch.count > 1) })
-        // Marked in the same save, so a put-away during the showing never shows it twice.
-        for (const mark of event.showing.marks) expect(after.shown[mark]).toBe(true)
+        // Not marked by the step-in: the showing plays later in it, and a scene's outcome is stored when the scene starts.
+        expect(after.shown).toEqual(save.shown)
+        // The view marks it as the showing starts, so a put-away during the showing never shows it twice.
+        save = { ...after, shown: markShown(after.shown, event.showing.marks) }
+        continue
       }
       save = after
     }
@@ -387,6 +391,17 @@ describe('calling the next troop', () => {
     expect(showings[0]).toMatchObject({ size: 2, skyHasBunch: false })
     expect(showings[1].skyHasBunch).toBe(true)
     expect(save.shown).toEqual({ give: true, each: true, bunch: true })
+    // Put away before the showing started, its mark is not set, and the next step-in that brings its idea names it again.
+    let owed: Save = { ...freshSave(null), shown: { give: true, each: false, bunch: false } }
+    const named: string[] = []
+    for (let troops = 0; troops < 8; troops++) {
+      owed = serveKnowing(owed).save
+      const stepped = callNext(owed), event = stepped.events[0]
+      if (event.type === 'steppedIn' && event.showing !== null) named.push(event.showing.idea)
+      owed = stepped.save
+    }
+    expect(named.length).toBeGreaterThan(2)
+    expect(owed.shown).toEqual({ give: true, each: false, bunch: false })
   })
 })
 

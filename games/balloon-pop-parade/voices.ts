@@ -26,7 +26,7 @@ export type Partial = {
 
 export type VoiceId =
   | 'squeak' | 'letGo' | 'whistle' | 'pop' | 'raspberry' | 'bloop' | 'boop' | 'squeal' | 'bonk' | 'stringHum' | 'frogSlurp'
-  | 'heels' | 'cloudSqueak' | 'patter' | 'hillBoing' | 'spout' | 'bounce' | 'cheep' | 'stomp' | 'whoop' | 'flutter'
+  | 'heels' | 'cloudSqueak' | 'patter' | 'hillBoing' | 'spout' | 'bounce' | 'cheep' | 'stomp' | 'whoop'
   | `${KindName}Catch` | `${KindName}Refuse` | `${KindName}Poke` | `${KindName}Startle` | `${KindName}LiftOff` | `${KindName}Land` | `${KindName}Step`
 
 /** The ranges every partial stays inside, and the longest a voice may last. */
@@ -73,8 +73,6 @@ export const VOICES: Record<VoiceId, readonly Partial[]> = {
   stomp: [tone('sine', 0, 120, 70, 0.3, 0.004, 0.16), hiss(0, 320, 180, 1.3, 0.08, 0.003, 0.07)],
   // The troop leaps together: a rush of air that climbs, as a slide-whistle does.
   whoop: [tone('sine', 0, 380, 1250, 0.16, 0.03, 0.42), tone('triangle', 0.02, 190, 620, 0.07, 0.03, 0.4)],
-  // Scraps of vinyl flutter down: a soft run of paper-light ticks.
-  flutter: [0, 0.09, 0.17, 0.27, 0.36, 0.47, 0.59, 0.72, 0.86].map((at, i) => hiss(at, 3000 + ((i * 410) % 900), 2400 + ((i * 410) % 900), 5, 0.045, 0.004, 0.04)),
   // The tongues go home.
   frogSlurp: [hiss(0, 700, 1900, 4, 0.14, 0.03, 0.16)],
 

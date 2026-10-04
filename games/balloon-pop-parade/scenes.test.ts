@@ -517,7 +517,6 @@ describe('the pass-by', () => {
       const served = saveOf({ position: 'bunches-own-colour', troop: { kind: 'crab', size: 1, held: [true] }, sky: [{ colour: 'crab', count: 1 }, { colour: 'crab', count: 2 }], waiting: { kind: waiting, size: 3 } })
       const theatre = new Theatre({ ...served, rng, shown: { give: true, each: true, bunch: false } })
       tapWaiting(theatre)
-      expect(theatre.save.shown.bunch).toBe(true)
       let took: { voice: string; after: number; pitch: number }[] = []
       for (let i = 0; i < 60 * 8 && took.length === 0; i++) {
         theatre.sounds.length = 0
@@ -609,13 +608,16 @@ describe('the pass-by', () => {
     until(theatre, 'ending')
     until(theatre, null)
     tapWaiting(theatre)
-    expect(theatre.save.shown.each, 'marked when the scene starts').toBe(true)
-    let most = 0, taking = false
+    // The step-in has started and the showing has not: its mark is written when the showing itself starts.
+    expect(theatre.save.shown.each, 'not marked by the step-in').toBe(false)
+    let most = 0, taking = false, marked = -1, came = -1
     for (let t = 0; t < 14 && theatre.playing === 'arrival'; t += 1 / 60) {
       theatre.step(1 / 60)
       theatre.paint(painter, VIEW)
       most = Math.max(most, inFront(poses).length)
       const first = poses.get('passer-0'), second = poses.get('passer-1'), own = poses.get('friend-0')!
+      if (marked < 0 && theatre.save.shown.each) { marked = t; expect(theatre.unsaved, 'saved at once').toBe(2) }
+      if (came < 0 && first) came = t
       if (!first || !second) continue
       // Whenever the passing pair is in view, the child's own pair stands in its places.
       if (first.x > -VIEW.width / 2 - 1) expect(own.x, 'the child\'s troop has walked in').toBeCloseTo(friendX(0, 2), 1)
@@ -625,10 +627,54 @@ describe('the pass-by', () => {
       }
     }
     expect(taking, 'the passing pair stood to the left of the child\'s pair, smaller').toBe(true)
+    // Marked in the step the passing pair came, well after the step-in began.
+    expect(marked).toBeGreaterThan(1)
+    expect(marked).toBeCloseTo(came, 1)
     // Never more than two troops in front at once.
     expect(most).toBeLessThanOrEqual(6)
     theatre.paint(painter, VIEW)
     expect(poses.has('passer-0')).toBe(false)
+  })
+
+  it('still owes a showing that had not started when the game was put away or a touch ended the step-in: the troop is found in its place with no showing playing, and the next step-in that brings the idea shows it', () => {
+    const served: Save = { ...troopOf('duck', 1), next: { kind: 'frog', size: 2 }, shown: { give: true, each: false, bunch: false } }
+    for (const how of ['put away', 'a touch'] as const) {
+      const theatre = new Theatre(served)
+      tapSlot(theatre, 0)
+      until(theatre, 'ending')
+      until(theatre, null)
+      tapWaiting(theatre)
+      play(theatre, 0.5)
+      expect(theatre.save.shown.each).toBe(false)
+      let later: Theatre
+      if (how === 'put away') {
+        // Opened again from what was saved half a second into the step-in.
+        later = new Theatre(deserializeSave(JSON.parse(JSON.stringify(serializeSave(theatre.save)))))
+        expect(later.playing).toBe(null)
+      } else {
+        // A touch on the hill ends the step-in with everyone where they were going.
+        theatre.press(3, GROUND - 1.2, VIEW)
+        theatre.cancel()
+        expect(theatre.playing).toBe(null)
+        later = theatre
+      }
+      const { poses, painter } = recorder()
+      later.paint(painter, VIEW)
+      expect(poses.has('passer-0'), how).toBe(false)
+      expect(poses.get('friend-0')!.x, how).toBeCloseTo(friendX(0, 2), 5)
+      expect(later.save.shown.each, how).toBe(false)
+      // The pair is served, and whatever troop steps in next, the idea is still to be shown if that troop is two or three.
+      const again = new Theatre({ ...later.save, troop: { ...later.save.troop, held: [true, true] }, finished: true, next: { kind: 'hippo', size: 2 } })
+      tapWaiting(again)
+      let shown = false
+      for (let t = 0; t < 14 && again.playing === 'arrival'; t += 1 / 60) {
+        again.step(1 / 60)
+        again.paint(painter, VIEW)
+        if (poses.has('passer-0') && poses.has('passer-1')) shown = true
+      }
+      expect(shown, `${how}: the pair that shows one for each came by at the next step-in`).toBe(true)
+      expect(again.save.shown.each, how).toBe(true)
+    }
   })
 
   it('crosses in the middle before a troop of three walks in, which has no room beside it, coming in as the troop before goes out: the middle is never empty for as long as a second', () => {

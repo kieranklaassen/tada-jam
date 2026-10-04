@@ -12,8 +12,8 @@ import { vinylMaterial, type VinylUniforms } from './vinyl'
 // the batches everything small is drawn from: balloons, strings, blob shadows
 // and the small pillows of faces. Each batch is one draw however many are in it.
 
-/** The most balloons in one frame: the sky (up to twelve), three held, four bunches in flight, those that got away, a troop passing with theirs, the far hill's twelve, and the scraps of a few pops, the drops of a cloud and the confetti of an ending, which are drawn as small balloons. */
-export const MAX_BALLOONS = 150
+/** The most balloons in one frame: the sky (up to twelve), three held, four bunches in flight, those that got away, a troop passing with theirs, the far hill's twelve, and the scraps of a few pops and the drops of a cloud and of the whale's spout, which are drawn as small balloons. */
+export const MAX_BALLOONS = 110
 export const MAX_STRINGS = 64
 /** The most small pillows of faces in one frame: nine friends with brows and mouths, the toys and the clouds. */
 export const MAX_BITS = 220

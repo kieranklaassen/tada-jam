@@ -1,6 +1,6 @@
 import { laySky, layTroop } from './order'
 import { PARADE_LENGTH, type Marched, type Save } from './save'
-import { markShown, showingAtStepIn, type Showing } from './showings'
+import { showingAtStepIn, type Showing } from './showings'
 import { beginCycle, finishCycle, type CycleOutcome } from './state'
 import { give, pop, troopOf, type Bunch } from './world'
 
@@ -30,7 +30,7 @@ export type PlayEvent =
   | { type: 'popped'; friend: number }
   /** The waiting troop was tapped before the troop on screen was served: it waves and nothing else. */
   | { type: 'waved' }
-  /** The served troop marched off as `marched`, the waiting troop stepped in, and `showing` passes by first when a new idea came with it. */
+  /** The served troop marched off as `marched`, the waiting troop stepped in, and `showing` passes by inside the step-in when a new idea came with it. Its marks are not yet in the save. */
   | { type: 'steppedIn'; marched: Marched; showing: Showing | null }
 
 /** How a cycle went, from its slips: none is well, one is mixed, two or more is badly. */
@@ -96,8 +96,10 @@ export function callNext(save: Save): { save: Save; events: PlayEvent[] } {
     parade: [...save.parade, marched].slice(-PARADE_LENGTH),
     rng: next.rng,
   }
-  // A scene's outcome is stored when the scene starts: the marks are set here, so a put-away during the showing never shows it twice.
+  // A first showing that comes with this step-in plays later in it, when the troop has walked in or the one before
+  // has gone. A scene's outcome is stored when the scene starts, so its mark is not set here: the view sets it when
+  // the showing itself starts (`markShown`). A game put away in between has no showing playing and still owes it,
+  // and the next step-in that brings its idea shows it.
   const showing = showingAtStepIn(steppedIn)
-  const after = showing === null ? steppedIn : { ...steppedIn, shown: markShown(steppedIn.shown, showing.marks) }
-  return { save: after, events: [{ type: 'steppedIn', marched, showing }] }
+  return { save: steppedIn, events: [{ type: 'steppedIn', marched, showing }] }
 }

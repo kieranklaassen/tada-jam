@@ -51,8 +51,7 @@ type Flight = { bunch: Bunch; slot: number; given: Given; t: number; lasts: numb
 type Held = { x: number; y: number; vx: number; vy: number; shown: boolean; bonk?: number; wait?: number; owed?: boolean; knot?: { x: number; y: number } }
 /** A balloon that has got away. `flat` is one blown off going flat; `bump` is one that is heading for the cloud over the troop and has not met it yet; `drift` is one of a sky that is over, which rises out of the top of the view without a pop. */
 type Loose = { x: number; y: number; vx: number; vy: number; colour: string; flat: boolean; t: number; popAt: number; bump?: boolean; drift?: boolean }
-/** A scrap of a pop; or, with `flutter`, a piece of an ending's confetti, which falls slowly and swings as it falls. */
-type Scrap = { x: number; y: number; vx: number; vy: number; colour: string; life: number; flutter?: number }
+type Scrap = { x: number; y: number; vx: number; vy: number; colour: string; life: number }
 /** A drop of water from a cloud, and a dimple in the hill where it was touched. */
 type Drop = { x: number; y: number; vx: number; vy: number; life: number }
 type Dimple = { x: number; t: number }
@@ -105,8 +104,6 @@ const STEPS_BACK = 0.16
 /** Seconds the leap at the end of an ending takes, from the crouch to the landing and the wobble after it, and the part of it at which the troop lands. */
 const LEAP = 1.05
 const LEAP_LANDS = 0.72
-/** How long confetti flutters down. */
-const CONFETTI_LIFE = 1.9
 /** The most an ending waits, past the moment it is due, for friends that later bunches are carrying off, in seconds. */
 const ENDING_WAITS = 3
 /** How far through a bunch's flight the friend it is coming to begins to stretch up towards it: a fifth of a second after the touch. */
@@ -166,8 +163,6 @@ const GROW = 0.5
 const SCRAP_LIFE = 0.5
 const MAX_LOOSE = 9
 const MAX_SCRAPS = 21
-/** The most scraps with an ending's confetti among them. */
-const MAX_CONFETTI = 54
 
 export class Theatre {
   /** The game as it is saved. Every touch that changes it changes it here, whole, before anything is seen to move. */
@@ -1068,14 +1063,13 @@ export class Theatre {
   /**
    * The troop lands from its leap, and everything lands with it: the air bed wobbles, the clouds bounce, the sky's
    * bunches hop, the whale blows, the keeper and the far hill's troops jump, the troop that waits bounces where it
-   * stands (it does not wave: it never beckons), the ball goes up, and confetti in the troop's colour bursts over
-   * every friend and flutters down.
+   * stands (it does not wave: it never beckons), and the ball goes up. Every part of it is something in the place
+   * moved by the landing: nothing is handed out for finishing.
    */
   private landed(): void {
-    const kind = this.troop.kind, hue = KIND_COLOURS[kind]
+    const kind = this.troop.kind
     this.sound(`${kind}Land`, 1, 0.9)
     this.sound('stomp', 0.8, 1)
-    this.sound('flutter', 1, 0.9, 0.1)
     this.sound('cheep', 1.05, 0.6, 0.15)
     this.wobbled = this.time
     for (const cloud of this.clouds) cloud.speed += 3.2
@@ -1085,24 +1079,13 @@ export class Theatre {
     this.spout(this.lastView)
     this.towerHopAt = this.time + 0.08
     if (this.ball.y <= 0.001) this.ball.vy = 5.5
-    // Confetti: the troop's own colour, its paler shade and white, thrown up over each friend that leapt.
-    const colours = [hue, shade(hue, 0.45), PALETTE.valve]
-    if (this.scraps.length > MAX_CONFETTI - 36) this.scraps.splice(0, this.scraps.length - (MAX_CONFETTI - 36))
-    const leapers = this.actors.map((actor, i) => (actor.leapAt !== undefined && this.time - actor.leapAt < LEAP ? i : -1)).filter((i) => i >= 0)
-    const each = Math.floor(36 / Math.max(1, leapers.length))
-    for (const i of leapers) {
-      const spot = this.spot(i), top = spot.y + BODIES[kind].height * FRIEND_SCALE
-      for (let k = 0; k < each; k++) {
-        const angle = Math.PI * (0.15 + 0.7 * (k / Math.max(1, each - 1))) + (this.random() - 0.5) * 0.3, speed = 4.5 + this.random() * 4
-        this.scraps.push({ x: spot.x, y: top, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed + 2.5, colour: colours[k % 3], life: CONFETTI_LIFE * (0.75 + this.random() * 0.25), flutter: this.random() * 6.28 })
-      }
-    }
   }
 
   /**
    * The arrival: the served troop marches off towards the far hill, a troop passes by when a new idea has come,
    * the next troop walks in and reaches up, the sky fills, and the troop after it comes to the edge. Everything
-   * it changes in the save was changed before it starts, and is saved at once.
+   * the step-in changes in the save was changed before it starts, and is saved at once; the mark of a first showing
+   * that plays inside it is set when that showing starts, and is saved then.
    */
   private arrive(marched: Marched | null, showing: Showing | null, held: readonly boolean[] = [], carried: Held[] = []): void {
     const actorsFor = (size: number): Actor[] => Array.from({ length: size }, () => ({ clip: null, t: 0, next: null, tug: null, landAfter: 0 }))
@@ -1158,7 +1141,19 @@ export class Theatre {
       // of three, it comes in as the one before goes out, so the middle is not left empty.
       passAt = first ? 0 : beside ? Math.max(gone * 0.9, walkAt + walkFor) : Math.max(gone * 0.3, gone - 1)
       let at = passAt
-      beats.push({ at, lasts: 0, play: () => { this.passer = passer; this.passIn = 0; this.passOut = 0; this.passTook = false } })
+      // The showing starts here, and its outcome is stored as it starts: its marks in the save, saved at once. One
+      // that a touch ends the step-in before has not started: it is not marked, and is shown at the next step-in
+      // that brings its idea. (A new game's first showing starts with the game, and is marked before it moves.)
+      beats.push({ at, lasts: 0, play: () => {
+        this.passer = passer
+        this.passIn = 0
+        this.passOut = 0
+        this.passTook = false
+        if (!this.finishing && !first) {
+          this.save = { ...this.save, shown: markShown(this.save.shown, showing.marks) }
+          this.unsaved = 2
+        }
+      } })
       if (at <= 0) { this.passer = passer; this.passIn = 0; this.passOut = 0; this.passTook = false }
       beats.push({ at, lasts: out, play: (u) => { this.passIn = u } })
       at += out + look
@@ -1637,17 +1632,9 @@ export class Theatre {
     for (let i = this.scraps.length - 1; i >= 0; i--) {
       const scrap = this.scraps[i]
       scrap.life -= dt
-      if (scrap.flutter !== undefined) {
-        // Light as it is, the air stops it soon; then it sinks slowly, swinging from side to side.
-        scrap.vx -= scrap.vx * 3.2 * dt
-        scrap.vy += (-1.5 - scrap.vy) * 3.2 * dt
-        scrap.x += (scrap.vx + Math.sin(scrap.life * 7 + scrap.flutter) * 0.9) * dt
-        scrap.y += scrap.vy * dt
-      } else {
-        scrap.vy -= 9 * dt
-        scrap.x += scrap.vx * dt
-        scrap.y += scrap.vy * dt
-      }
+      scrap.vy -= 9 * dt
+      scrap.x += scrap.vx * dt
+      scrap.y += scrap.vy * dt
       if (scrap.life <= 0) this.scraps.splice(i, 1)
     }
   }
@@ -2148,9 +2135,8 @@ export class Theatre {
       painter.balloon(balloon.x, balloon.y, 0.4, size * (balloon.flat ? 0.8 : 1), size * (balloon.flat ? 1.15 : 1.06), Math.atan2(-balloon.vx, balloon.vy) * (balloon.flat ? 1 : 0.3), balloon.colour)
     }
     for (const scrap of this.scraps) {
-      // Confetti is a flat scrap that turns as it falls, and is gone small at the end.
-      const size = scrap.flutter !== undefined ? 0.2 * Math.min(1, scrap.life / 0.35) : 0.22 * (scrap.life / SCRAP_LIFE)
-      painter.balloon(scrap.x, scrap.y, 0.45, size, size * (scrap.flutter !== undefined ? 0.3 + 0.5 * Math.abs(Math.sin(scrap.life * 9 + scrap.flutter)) : 0.7), scrap.x * 7 + scrap.life * 20, scrap.colour)
+      const size = 0.22 * (scrap.life / SCRAP_LIFE)
+      painter.balloon(scrap.x, scrap.y, 0.45, size, size * 0.7, scrap.x * 7 + scrap.life * 20, scrap.colour)
     }
 
     // The troop that waits at the edge: smaller, further back, looking at the balloons.

@@ -895,10 +895,10 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
 
   it.each(kinds)('makes the ending of three %ss the payoff of the cycle: the place takes each step of the march, the troop leaps together, and everything lands with it', (kind) => {
     const theatre = new Theatre(saveOf({ position: 'bunches-own-colour', troop: { kind, size: 3, held: [false, false, false] }, sky: [{ colour: kind, count: 1 }, { colour: kind, count: 3 }], waiting: { kind: other(kind), size: 2 } }), 5), { poses, painter } = recorder()
-    const inside = theatre as unknown as { scraps: { flutter?: number }[]; places: { hop: number }[]; clouds: { squash: number }[]; ball: { y: number } }
+    const inside = theatre as unknown as { scraps: unknown[]; places: { hop: number }[]; clouds: { squash: number }[]; ball: { y: number } }
     tap(theatre, 1)
     const heard: string[] = []
-    let together = 0, confetti = 0, hopped = 0, bounced = 0, ball = 0, towerLow = Infinity, towerHigh = -Infinity
+    let together = 0, scraps = 0, hopped = 0, bounced = 0, ball = 0, towerLow = Infinity, towerHigh = -Infinity
     for (let i = 0; i < 60 * 9; i++) {
       theatre.step(1 / 60)
       heard.push(...theatre.sounds.map((sound) => sound.voice))
@@ -907,7 +907,7 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
       const up = [0, 1, 2].map((friend) => poses.get(`friend-${friend}`)!.y - GROUND)
       // All three well off the ground in the same frame: the leap, which is higher than the jump that begins the ending.
       if (up.every((high) => high > 0.65)) together += 1
-      confetti = Math.max(confetti, inside.scraps.filter((scrap) => scrap.flutter !== undefined).length)
+      scraps = Math.max(scraps, inside.scraps.length)
       hopped = Math.max(hopped, ...inside.places.map((place) => place.hop))
       bounced = Math.max(bounced, ...inside.clouds.map((cloud) => Math.abs(cloud.squash - 1)))
       ball = Math.max(ball, inside.ball.y)
@@ -919,15 +919,15 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
     expect(heard.filter((voice) => voice === 'stomp')).toHaveLength(4)
     expect(heard.filter((voice) => voice === 'whoop')).toHaveLength(1)
     expect(together, 'the troop is in the air together').toBeGreaterThan(6)
-    // What lands with it: confetti over the friends, the whale's spout, the keeper's cheep, the bunches and the clouds, the ball and the tower.
-    expect(heard).toEqual(expect.arrayContaining(['flutter', 'spout', 'cheep', `${kind}Land`]))
-    expect(confetti).toBeGreaterThanOrEqual(30)
+    // What lands with it is the place itself: the whale's spout, the keeper's cheep, the bunches and the clouds, the ball and the tower.
+    expect(heard).toEqual(expect.arrayContaining(['spout', 'cheep', `${kind}Land`]))
+    // Nothing is handed out for finishing: no confetti, nothing thrown that the landing did not move.
+    expect(scraps).toBe(0)
     expect(hopped).toBeGreaterThan(0.05)
     expect(bounced).toBeGreaterThan(0.05)
     expect(ball).toBeGreaterThan(0.3)
     expect(towerHigh - towerLow, 'the tower of the troop that waits bounces').toBeGreaterThan(0.3)
-    // And when it is over the place is as it was: no confetti left, the ball where it lay.
-    expect(inside.scraps).toHaveLength(0)
+    // And when it is over the place is as it was: the ball where it lay.
     expect(inside.ball.y).toBe(0)
     expect(theatre.playing).toBe(null)
   })
