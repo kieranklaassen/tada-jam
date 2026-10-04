@@ -50,6 +50,9 @@ export const RUN_OVER = 1
 /** At the free yard: how far back the waiting vehicle can be drawn, how far sends it away, and how long it takes to leave, the next to draw up, and one let go early to roll up again. Cells and seconds. */
 export const PULL = { most: 2.6, sends: 1, leaves: 0.8, arrives: 1, back: 0.3 } as const
 
+/** How fast the bridge's parts jump up as the wheels leave the last plank, in cells a second: a hair of overshoot, and back. */
+export const SPRING_UP = 1.4
+
 /** How long a vehicle that makes room takes to drive off the sheet, in seconds. */
 export const LEAVE = 1.4
 
@@ -137,6 +140,7 @@ export class Game extends Toy {
   modelRung = Infinity
   /** The sounds of the reaction that is playing, each waiting for its move. Short-lived. */
   private reactDue: { at: number; voice: VoiceSpec }[] = []
+  private ringDue: { at: number; voice: VoiceSpec }[] = []
   /** Vehicles that made room on a bank of the free yard and are driving off the sheet. Short-lived: what is saved has them gone already. */
   leaving: { id: VehicleId; bank: 'near' | 'far'; place: number; since: number }[] = []
   /** Where the finger has the trolley while it is carried: on the deck, or null in the air. Undefined when it is not in the hand. Never saved. */
@@ -917,6 +921,7 @@ export class Game extends Toy {
       const wasRunning = this.scene.running
       this.scene.update(this.sceneClock)
       while (this.reactDue.length && this.show.kind === 'crossing' && this.show.react >= this.reactDue[0].at) this.voices.push(this.reactDue.shift()!.voice)
+      while (this.ringDue.length && this.show.kind === 'crossing' && this.show.spring >= this.ringDue[0].at) this.voices.push(this.ringDue.shift()!.voice)
       if (wasRunning && !this.scene.running) this.afterScene()
     }
     // The neat way after a crossing is owed by the state itself, so putting the game away in the middle of that
@@ -991,8 +996,7 @@ export class Game extends Toy {
     } else {
       const what = consequence(drive.run, this.bridge, VEHICLES[drive.vehicle].crates)
       show.kind = 'give'
-      // The chief looks up from its model, at the gap and never at the child; the beaver starts and hides its eyes.
-      this.chief.react('looks-up')
+      // The beaver starts and hides its eyes. The chief looks up from its model when the vehicle is in the water (the splash's cue).
       this.crew.beaver.brace(false); this.crew.beaver.react('flinch')
       this.gave = what.ring
       this.gaveSqueezed = drive.run.ending.kind === 'gives' && (drive.run.ending.strain === 'bow' || drive.run.ending.strain === 'squeeze')
@@ -1053,11 +1057,19 @@ export class Game extends Toy {
       const long = longOf(drive.vehicle)
       this.splash = { x: givePlace(this.show, this.at, long, TAIL[drive.vehicle]).x - long / 2, since: 0, big: 1 }
       this.crew.mole.react('splashed')
+      // The chief looks up from its model, at the gap and never at the child, and goes on looking while the vehicle
+      // paddles in, drives up and shakes itself dry: it is still looking when the bridge goes back as built.
+      this.chief.react('looks-up')
     }
     if (what === 'ring') {
       // The bridge springs up and rings with the notes of its own parts.
-      this.voices.push(chord(this.bridge.map((part) => layVoice(part.kind, length(part))[0].pitch)))
-      this.bridge.forEach((_, index) => { this.rung[index] = 0.2 })
+      // Every part's own note, lowest first, five at a time: a bridge of many parts rings on for half a second.
+      const notes = this.bridge.map((part) => layVoice(part.kind, length(part))[0].pitch).sort((a, b) => a - b)
+      const few = notes.length <= 20 ? notes : Array.from({ length: 20 }, (_, i) => notes[Math.round((i * (notes.length - 1)) / 19)])
+      this.voices.push(chord(few.slice(0, 5)))
+      this.ringDue = [1, 2, 3].flatMap((k) => (few.length > 5 * k ? [{ at: 0.3 * k, voice: chord(few.slice(5 * k, 5 * k + 5)) }] : []))
+      // And it springs up: every part that carries jumps a hair past where it lies and comes back, and shakes.
+      this.bridge.forEach((_, index) => { this.rung[index] = 0.2; if (this.rest[index]?.how === 'firm' && this.moving[index]) this.moving[index].y.speed += SPRING_UP })
     }
     // What the cargo and the driver do is heard as it is seen: each sound waits for the move it belongs to.
     if (what === 'react' && this.show.reaction) this.reactDue = reactCues(drive.vehicle, this.show.reaction.mood, this.show.reaction.act, this.show.reaction.amount)
@@ -1084,6 +1096,7 @@ export class Game extends Toy {
     this.dipped = null
     this.fading = null
     this.reactDue = []
+    this.ringDue = []
     this.show = idleShow()
     this.scene = null
     // The road is free again: the trolley is back where it stood, with its clink.

@@ -138,7 +138,7 @@ describe('the valley the gap is in', () => {
     for (const at of every) for (const [from, to] of reaches(at)) for (let x = from; x <= to; x += 0.25) expect(groundAt(at, x), `${at.id} ${x}`).toBeLessThan(WATER)
   })
 
-  it('is drawn in line only: no text, no fill but the patch behind a find, and every number a real number, on every sheet', () => {
+  it('is drawn in line: no text, no fill but the patch behind a find and the lay-by\'s paved strip, and every number a real number, on every sheet', () => {
     const plot = plotFor(1180, 820)
     for (const at of every) {
       const { pen, calls } = recording()
@@ -146,7 +146,7 @@ describe('the valley the gap is in', () => {
       expect(calls.length).toBeGreaterThan(100)
       expect(calls.filter((call) => call.name === 'fillText' || call.name === 'strokeText')).toEqual([])
       for (const call of calls) for (const arg of call.args) if (typeof arg === 'number') expect(Number.isFinite(arg), `${at.id} ${call.name}`).toBe(true)
-      expect(calls.filter((call) => call.name === 'fill').length).toBe(finds(at).length)
+      expect(calls.filter((call) => call.name === 'fill').length).toBe(finds(at).length + 1)
       // No whole ring is drawn anywhere in it: every arc is a part of a circle.
       for (const call of calls.filter((one) => one.name === 'arc')) expect(Math.abs((call.args[4] as number) - (call.args[3] as number)), at.id).toBeLessThan(Math.PI * 2 - 0.01)
     }

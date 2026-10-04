@@ -143,6 +143,15 @@ function tree(pen: Pen, plot: Plot, x: number, base: number, tall: number, kind:
 /** What stands behind the road: the far hills with the finished bridge on them, the trees, tufts of grass and a fence along each bank. Painted before the cliffs and the ground. */
 export function paintValley(pen: Pen, plot: Plot, at: Site) {
   const random = stream(siteSeed(at)), deck = at.left[1], lip = at.left[0], far = at.right[0]
+  // The lay-by on the far bank, where a vehicle that has crossed parks: a paved strip lying on the bank's top, a
+  // little paler than the sheet. Filled, with no outline.
+  {
+    const [x0, y0] = px(plot, far + 0.5, deck + 0.09), [x1, y1] = px(plot, Math.min(COLS + MARGIN.side - 0.1, far + LINE_UP), deck)
+    pen.fillStyle = INK.line
+    pen.globalAlpha = 0.13
+    pen.beginPath(); pen.roundRect(x0, y0, x1 - x0, y1 - y0, plot.cell * 0.03); pen.fill()
+    pen.globalAlpha = 1
+  }
   // Two skylines over each bank, the further one fainter and with ticks of contour on its flanks.
   for (const layer of [1, 0] as const) {
     for (const [from, to] of [[-MARGIN.side, lip - 0.5], [far + 0.5, COLS + MARGIN.side]] as const) {

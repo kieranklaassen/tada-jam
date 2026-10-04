@@ -451,11 +451,18 @@ describe('what the sheet says a child sees and hears', () => {
     const game = fresh()
     send(game)
     expect(game.show.kind).toBe('give')
+    // Not yet: it looks up when the vehicle is in the water.
+    expect(game.chief.act).not.toBe('looks-up')
+    steps(game, 1)
     expect(game.chief.act).toBe('looks-up')
-    steps(game, 0.6)
+    steps(game, 0.8)
     // Its neck is up and back, away from the model.
     expect(game.chief.pose.neck).toBeLessThan(-0.3)
-    steps(game, 6)
+    // It is still looking while the vehicle shakes itself dry and the bridge goes back as built.
+    steps(game, 3)
+    expect(game.show.restore).toBeGreaterThan(0)
+    expect(game.chief.act).toBe('looks-up')
+    steps(game, 3)
     expect(game.chief.act).not.toBe('looks-up')
   })
 
@@ -657,8 +664,8 @@ describe('the crew at the foot of the sheet, in the game', () => {
     for (let i = 0; i < 60 * 20 && game.drive; i++) game.step(1 / 60)
     expect(game.show.kind).toBe('give')
     expect(game.crew.beaver.act).toBe('flinch')
-    expect(game.chief.act).toBe('looks-up')
     steps(game, 1.2)
+    expect(game.chief.act).toBe('looks-up')
     expect(game.crew.mole.act).toBe('splashed')
     steps(game, 8)
     expect(game.crew.beaver.busy).toBe(false)
@@ -1728,6 +1735,46 @@ describe('what a full reading found of the free yard', () => {
     expect(JSON.stringify(stored(game))).not.toContain('leaving')
   })
 })
+
+describe('what a full reading found of the scenes', () => {
+  it('as the wheels leave the last plank the bridge springs up: every part that carries jumps a hair and comes back, and all its notes are heard', () => {
+    // A bridge of thirteen parts: more notes than one chord holds.
+    const game = new Game(edit(freshSave(null, 'truss-span'), CROSSINGS['truss-span']), stream(2))
+    expect(game.bridge.length).toBeGreaterThan(5)
+    tapAt(game, waitAt(game.at, 0) - 0.4, 7)
+    for (let i = 0; i < 60 * 20 && game.drive; i++) game.step(1 / 60)
+    expect(game.show.kind).toBe('crossing')
+    // The scene began: the first chord has sounded and every firm part is on its way up.
+    const first = game.takeVoices().filter((voice) => voice.length === 5 && voice.every((sound) => sound.wave === 'triangle' && sound.length === 0.8))
+    expect(first).toHaveLength(1)
+    expect(game.moving.every((moving, index) => game.rest[index].how !== 'firm' || moving.y.speed > 0)).toBe(true)
+    const rested = game.rest.map((rest) => (rest.a[1] + rest.b[1]) / 2)
+    let over = 0
+    const later: number[] = []
+    for (let i = 0; i < 60; i++) {
+      game.step(1 / 60)
+      game.drawn().forEach((ends, index) => { over = Math.max(over, (ends.a[1] + ends.b[1]) / 2 - rested[index]) })
+      later.push(...game.takeVoices().filter((voice) => voice.every((sound) => sound.wave === 'triangle' && sound.length === 0.8)).map((voice) => voice.length))
+    }
+    // A hair past where it lies, and no more than a tenth of a cell.
+    expect(over).toBeGreaterThan(0.01); expect(over).toBeLessThan(0.12)
+    // The rest of its notes, five at a time: with the first chord, one note for each part.
+    expect(5 + later.reduce((sum, n) => sum + n, 0)).toBe(Math.min(20, game.bridge.length))
+  })
+
+  it('a ring that another vehicle\'s crossing leaves is not faded by that crossing', () => {
+    const ring = { part: 0, spot: [12, 6] as const }
+    const across = crossed(edit(freshSave(null), CROSSINGS['plank-gap']), 'post-van')
+    const game = new Game({ ...across, sheets: [{ ...across.sheets[0], ring }] }, stream(2))
+    expect(game.waiting).toEqual(['jelly-truck'])
+    send(game)
+    expect(game.show.kind).toBe('crossing')
+    // The jelly truck is not this sheet's own: the ring is kept, and nothing is fading.
+    expect(game.save.sheets[0].ring).toEqual(ring)
+    expect(game.fading).toBeNull()
+  })
+})
+
 
 
 

@@ -61,7 +61,7 @@ export const REACT = {
   /** A shape that folds: it hops back with its crest and feathers on end, and settles. */
   'feathers-on-end': 1.9,
   /** Something went into the water: it looks up from its model toward the gap, its lid comes half down, it holds, and goes back to its model. */
-  'looks-up': 2.9,
+  'looks-up': 4.5,
 } as const
 export type React = keyof typeof REACT
 

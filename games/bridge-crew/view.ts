@@ -418,7 +418,10 @@ export class View {
     let drawn = 0
     // The pale pencil ring round the spot where a part gave: it fades as the job vehicle crosses.
     const ring = game.gave ?? sheet.ring ?? (show.kind === 'crossing' ? game.fading : null)
-    if (ring) { this.ring(pen, at2(ring.spot[0], ring.spot[1]), 0.34, 0.6 * (show.kind === 'crossing' ? 1 - show.fade : 1)); drawn++ }
+    // In a give it is drawn as the give ends, with the bridge going back as built; in a crossing it fades only if that
+    // crossing took it away (another vehicle's crossing leaves it, at full strength).
+    const strength = game.gave && show.kind === 'give' ? show.restore : !game.gave && !sheet.ring && show.kind === 'crossing' ? 1 - show.fade : 1
+    if (ring && strength > 0.01) { this.ring(pen, at2(ring.spot[0], ring.spot[1]), 0.34, 0.6 * strength); drawn++ }
     // Splinters where the part is giving, for as long as the bridge lies broken: four chips of the part's own stuff
     // that fly a little way out from the spot. Filled wedges, not rays: rays through one point would read as a sign.
     if (game.gave) {
@@ -514,6 +517,8 @@ export class View {
         return
       }
       const arriving = show.kind === 'crossing' && id === show.arriving && show.arrive < 1
+      // Until its beat it is not there at all: on a wide surface the margin would show it standing off the sheet.
+      if (arriving && show.arrive <= 0) return
       const drawn = held?.id === id ? held.pulled : swap && swap.id === id ? swap.pulled * (1 - Math.min(1, swap.since / PULL.back)) : 0
       const pose = restingPose(id, place === 0 && !game.playing && drawn === 0)
       put(id, (arriving ? drawUp(show.arrive, at, place) : waitAt(at, place)) + (drawn > 0 ? -drawn : pose.creep), at.left[1], 0, pose, false)
@@ -568,7 +573,7 @@ export class View {
     }
 
     // The next sheet, rolled up at the right edge, with the nose of its vehicle showing; and the sheets the child has had, on the rack.
-    if (game.save.next && game.save.on === game.save.sheets.length - 1 && game.rollIn !== -1) {
+    if (game.save.next && game.save.on === game.save.sheets.length - 1 && game.rollIn !== -1 && !(show.kind === 'crossing' && show.rollArrives && show.arrive <= 0)) {
       // It slides in when it arrives: with the crossing that brought it, or after the give that ended a cycle badly.
       const rx = show.kind === 'crossing' && show.rollArrives ? rollPlace(show.arrive, COLS) : game.rollIn < ROLL_IN ? rollPlace(game.rollIn / ROLL_IN, COLS) : ROLL.x
       const next = site(game.save.next.site, game.save.next.variant)
