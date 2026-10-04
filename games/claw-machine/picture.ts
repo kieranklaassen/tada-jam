@@ -91,6 +91,8 @@ export type CrateLook = {
   /** The place on the tray each toy of the load is going to: the load stands on the deck in that arrangement. */
   places: readonly number[]
   crews: readonly (readonly GobblerId[])[]
+  /** How many rows of seats it has: the crews that ride it, and the rows of those who have turned into gobblers of their own. */
+  rows: number
   /** The middle of its foot, and how far its bed is tipped forward, 0 to 1. */
   x: number
   y: number

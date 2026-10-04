@@ -1,5 +1,6 @@
 import { PerspectiveCamera, Vector3 } from 'three'
 import { FRAME } from '../places'
+import { WATCHER_AT, WATCHER_REACH, WATCHER_SIZE } from '../watcher'
 
 // The camera looks into the cabinet from the front and above, as a child
 // stands at a claw machine, and backs off until the whole cabinet is in the
@@ -13,6 +14,8 @@ const KEY_POINTS: readonly Vector3[] = [
   new Vector3(FRAME.minX, 0, FRAME.floorZ), new Vector3(FRAME.maxX, 0, FRAME.floorZ),
   new Vector3(FRAME.minX, FRAME.top, FRAME.topZ), new Vector3(FRAME.maxX, FRAME.top, FRAME.topZ),
   new Vector3(FRAME.minX, 0, -9), new Vector3(FRAME.maxX, 0, -9),
+  // The watcher beside the tray, to the tips of its ears.
+  new Vector3(WATCHER_AT.x + WATCHER_REACH, WATCHER_SIZE.height, WATCHER_AT.z),
   // The claw at its highest, carrying a tall toy over a gobbler.
   new Vector3(0, 19, -4.5),
 ]

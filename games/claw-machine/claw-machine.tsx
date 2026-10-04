@@ -31,6 +31,9 @@ import { newWorld } from './world'
 const VOICES_A_FRAME = 6
 /** How long a finger has to stay off the glass before its lift is the drop: a finger that skips for less than this carries on. */
 const DROPS_AFTER_MS = 125
+/** The grown-up overlay: how long a finger is held in its corner before the three taps, and how long after the lift they may come. */
+const HELD_MS = 1000
+const ARMED_MS = 4000
 
 /** `?seed=<n>` in the address lays the first crate out from that seed, so a still can be taken again. */
 function seedFrom(search: string): number | null {
@@ -167,6 +170,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // Touches in the corner kept for the grown-up overlay are no part of the game: nothing answers them, so a
     // child is given no reason to tap there (the overlay's header asks for this).
     const aside = new Set<number>()
+    // When the finger that may open the overlay came down in the corner, or -1; and until when three taps there count.
+    let heldFrom = -1, armedUntil = 0
     const at = (event: PointerEvent): Point => {
       const box = root.getBoundingClientRect()
       return { x: event.clientX - box.left, y: event.clientY - box.top }
@@ -174,9 +179,16 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const onDown = (event: PointerEvent) => {
       if (!attention.awake) return
       const where = at(event)
-      // The overlay counts single fingers: a touch that lands while another finger is down (a flat hand) is no tap.
-      if (aside.size === 0 && !touch.active) overlay.press(where.x, where.y, width, event.timeStamp)
-      if (width > 0 && where.x >= width - CORNER && where.y <= CORNER) { aside.add(event.pointerId); return }
+      const corner = width > 0 && where.x >= width - CORNER && where.y <= CORNER
+      // The overlay opens for a grown-up who means it: one finger held in the corner for a second and lifted
+      // there, and then three quick taps there. Taps that were not led in that way are not counted, and a touch
+      // that lands while another finger is down (a flat hand) is no tap. A touch anywhere else starts it all again.
+      if (!corner) { armedUntil = 0; overlay.press(where.x, where.y, width, event.timeStamp) }
+      else if (aside.size === 0 && !touch.active) {
+        if (event.timeStamp <= armedUntil) overlay.press(where.x, where.y, width, event.timeStamp)
+        else heldFrom = event.timeStamp
+      }
+      if (corner) { aside.add(event.pointerId); return }
       audio.touchDown()
       ladder.touch(clock.seconds)
       act(touch.down(event.pointerId, where, event.timeStamp))
@@ -185,12 +197,18 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     }
     const onMove = (event: PointerEvent) => act(touch.move(event.pointerId, at(event)))
     const onUp = (event: PointerEvent) => {
-      if (aside.delete(event.pointerId)) return
+      if (aside.delete(event.pointerId)) {
+        const where = at(event)
+        // Held a second in the corner and lifted there: the three taps may follow, for a few seconds.
+        if (heldFrom >= 0 && event.timeStamp - heldFrom >= HELD_MS && where.x >= width - CORNER && where.y <= CORNER) armedUntil = event.timeStamp + ARMED_MS
+        heldFrom = -1
+        return
+      }
       act(touch.up(event.pointerId, at(event), event.timeStamp))
       audio.touchUp()
     }
     const onCancel = (event: PointerEvent) => {
-      if (aside.delete(event.pointerId)) return
+      if (aside.delete(event.pointerId)) { heldFrom = -1; return }
       // The system took the finger away. That is no lift: the touch is ended and nothing is done with it.
       if (touch.cancel(event.pointerId, event.timeStamp).length > 0) { endTouch(); game?.cancel(); poked = false; hear() }
       audio.touchUp()

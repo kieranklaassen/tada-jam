@@ -65,11 +65,12 @@ function send(game: Game, body: Body, toy: number, stops: Stop[], deed?: Deed, a
  * How high a throw has to rise so that the toy passes over everything on its way from one point to another: the
  * crew at the tray, with the models on their heads and the tops of their eyes, and whatever stands on the places
  * of the tray it crosses, which it then comes down onto from above. `least` is how far over its higher end it
- * rises anyway, and `skip` a place that is not counted (the one it starts from). The throw is a plain arc under
+ * rises anyway, `skip` a place that is not counted (the one it starts from), and `there` says which of the toys
+ * the rules have on the tray stand on it yet (in a scene that brings them one by one, not all of them do). The throw is a plain arc under
  * the world's fall, so it is held over each thing at the point where it comes to it and the point where it
  * leaves it.
  */
-export function clearTop(game: Game, toy: number, from: Spot, to: Spot, least: number, skip = -1): number {
+export function clearTop(game: Game, toy: number, from: Spot, to: Spot, least: number, skip = -1, there: (toy: number) => boolean = () => true): number {
   const lowest = Math.max(from.y, to.y) + least
   const span = toySpan(game.bodies[toy].toy), dx = to.x - from.x, dz = to.z - from.z, long = Math.hypot(dx, dz)
   if (long < 0.5) return lowest
@@ -84,7 +85,7 @@ export function clearTop(game: Game, toy: number, from: Spot, to: Spot, least: n
   }
   const tray = game.tray(), reach = Math.max(span.length, span.depth) / 2 + 2.9
   for (let place = 0; place < tray.length; place++) {
-    if (place === skip || tray[place].length === 0) continue
+    if (place === skip || !tray[place].some(there)) continue
     const at = placeAt(place), under = game.stackTop(place, toy)
     if (under <= TRAY.top + 1e-6 || fromSegment(at, from, to) > 4.2) continue
     const middle = ((at.x - from.x) * dx + (at.z - from.z) * dz) / (long * long)
@@ -209,7 +210,7 @@ export function react(game: Game, deed: Deed): void {
       game.plans.set(body, { kind: 'spit', hold, started: false, released: false, place: deed.place })
       if (deed.way === 'hat') {
         // Too big for its mouth: it comes to rest on its teeth.
-        send(game, body, deed.toy, [{ at: { x: actor.x, y: actor.y + rimHeight(shapeOf(actor.id)) + ON_TEETH, z: actor.z }, landing: 'mouth', seconds: 0.24 }], deed)
+        send(game, body, deed.toy, [{ at: { x: actor.x, y: actor.y + rimHeight(shapeOf(actor.id)) + ON_TEETH, z: actor.z - 0.2 }, landing: 'mouth', seconds: 0.24 }], deed)
       } else send(game, body, deed.toy, [{ landing: 'mouth', seconds: 0.26 }], deed)
       break
     }
@@ -376,7 +377,9 @@ export function chew(game: Game, body: Body, toy: number, onEnd: (ends: 'sort' |
   // A toy that is not its sort is held up on the tongue to the height of the rim, beside the body, for as long as
   // the gobbler looks at it; a small one that will drop out between the bars only lies there.
   const heldUp = plan.kind === 'spit' && way !== 'falls-through' ? HELD_UP * Math.min(1, body.chewed / 0.22) : 0
-  body.x = at.x; body.z = at.z; body.y = onHead ? actor.y + rimHeight(shapeOf(actor.id)) + ON_TEETH : at.y + heldUp
+  // (On the head it lies a little back from the eyes, and is not squashed wide over them.)
+  body.x = at.x; body.z = onHead ? at.z - 0.2 : at.z; body.y = onHead ? actor.y + rimHeight(shapeOf(actor.id)) + ON_TEETH : at.y + heldUp
+  if (onHead && body.chewed === 0) { body.squash = 0.94; body.squashV = 0 }
   if (body.chewed === 0) {
     // The chewing of the cycle's last toy starts: the rules ended the cycle when it was let go, and what they
     // wrote (that it is finished, the position as it now stands, the crates) is saved now.

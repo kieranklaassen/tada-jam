@@ -2,7 +2,7 @@ import { bellyLayout } from './belly'
 import type { PositionId } from './config'
 import { crewGoesBy, shapeOf, snackOf, takes, type GobblerId } from './gobblers'
 import { layCycle, nextUp } from './order'
-import { PLACES } from './places'
+import { PLACES, TRAY } from './places'
 import { rng, shuffled } from './rng'
 import { STATE_VERSION, beginCycle, finishCycle, firstPosition, type CycleOutcome } from './state'
 import type { Attribute, Toy } from './toys'
@@ -208,8 +208,10 @@ export function nextCrew(world: World): number[] | null {
   const cycle = world.cycle
   if (world.finished || !trayIsClear(cycle) || cycle.sort + 1 >= cycle.crews.length) return null
   const order = cycle.crews[cycle.sort].flatMap((_, slot) => bellyOf(cycle, slot))
-  // Tipped from left to right, each onto the next free place along the back row and then the front.
-  order.forEach((toy, i) => { cycle.where[toy] = { at: 'tray', place: i, level: 0 } })
+  // Tipped from left to right, each onto the next free place along the front row and then the back: so a toy
+  // on its way to the tray never has to come down behind one that was tipped before it.
+  const row = TRAY.columns
+  order.forEach((toy, i) => { cycle.where[toy] = { at: 'tray', place: i < row ? row + i : i - row, level: 0 } })
   cycle.sort++
   cycle.tried = cycle.toys.map(() => false)
   return order

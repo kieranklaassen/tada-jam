@@ -134,7 +134,7 @@ export function crateSpot(which: number, crates: number): Spot {
  * above the deck, the height of the knob on it, and where the middle of the
  * knob's top is, measured like the deck spots.
  */
-export const ARCH = 3.6
+export const ARCH = 4.8
 export const HANDLE = 1.2
 export function handleSpot(): Spot {
   return { x: 0, y: ARCH + HANDLE, z: 2.25 }

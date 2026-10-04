@@ -9,7 +9,7 @@ import { OVER_ITS_BROWS, rimHeight } from './gobblerBuild'
 import { crewGoesBy, shapeOf } from './gobblers'
 import { BED, CRATE_STANDS, ON_DECK, RIDER, TIP, crewSpot, deckSpots, deckTop, handleSpot, riderSpots, tipped, waitingSpot, type Spot } from './layout'
 import { actSeconds } from './motion'
-import { CRATE, TRAY, TRAY_DEPTH } from './places'
+import { CRATE, REST, TRAY } from './places'
 import { DOWN_THE_THROAT, chew, clearTop, nextLeg, react } from './react'
 import { Scene, type Beat } from './scene'
 import { bellyOf, crewNow, showingOwed, type World } from './world'
@@ -24,7 +24,7 @@ import { bellyOf, crewNow, showingOwed, type World } from './world'
 /** How long a gobbler takes to show its snack and swallow it, in a first showing. */
 const SHOW_EACH = 2
 /** How long a snack that is already in a belly takes to come back up onto the tongue for a showing that was owed. */
-const COMES_UP = 0.3
+const COMES_UP = 0.4
 
 function scene(game: Game, beats: Beat[]): void {
   const playing = new Scene(beats)
@@ -71,14 +71,16 @@ function showing(game: Game, from: number, arriving = true): Beat[] {
       beats.push(over(game, from + i * SHOW_EACH, COMES_UP, (progress) => {
         const mouth = game.mouthOf(actor), home = game.snackSpot(actor)
         snack.mode = 'parked'
-        if (progress < 0.6) {
-          const u = progress / 0.6
+        // The swallow backwards, each part in its turn: from its place in the belly to under the tongue, growing
+        // no bigger than the throat; up through the throat at that size; and only on the tongue to its full size.
+        if (progress < 0.45) {
+          const u = progress / 0.45
           snack.x = home.x + (mouth.x - home.x) * u; snack.y = home.y + (mouth.y - 0.75 - home.y) * u; snack.z = home.z + (mouth.z - home.z) * u
           snack.scale = (MINI + (DOWN_THE_THROAT - MINI) * u) * actor.scale
           return
         }
-        const u = (progress - 0.6) / 0.4
-        snack.x = mouth.x; snack.y = mouth.y - 0.75 * (1 - u); snack.z = mouth.z; snack.scale = (DOWN_THE_THROAT + (1 - DOWN_THE_THROAT) * u) * actor.scale
+        if (progress < 0.65) { snack.x = mouth.x; snack.y = mouth.y - 0.75 * (1 - (progress - 0.45) / 0.2); snack.z = mouth.z; snack.scale = DOWN_THE_THROAT * actor.scale; return }
+        snack.x = mouth.x; snack.y = mouth.y; snack.z = mouth.z; snack.scale = (DOWN_THE_THROAT + (1 - DOWN_THE_THROAT) * ((progress - 0.65) / 0.35)) * actor.scale
         if (progress >= 1) snack.mode = 'mouth'
       }))
     }
@@ -114,6 +116,9 @@ export function owedShowing(game: Game): void {
   if (beats.length > 0) scene(game, beats)
 }
 
+/** How high the hinge of the claw hangs while a crew tips its toys back onto the tray: over the highest of their arcs near the front of the tray. */
+const OVER_THE_RAIN = 17
+
 /** How long a crew takes to shuffle off, and how far to the side it goes to be out of sight. */
 const OFF_SECONDS = 1.3
 const OFF = 44
@@ -143,7 +148,9 @@ export function tipOut(game: Game, tipped: readonly number[]): void {
   // The crew after next comes along the shelf from the side once the others have hopped down.
   for (const actor of game.waiting) actor.x += OFF
   // The claw, which hooked the gate, goes back over the tray: the crew that hops in comes over the gate.
-  game.claw.targetX = 0; game.claw.targetZ = TRAY.z + TRAY_DEPTH / 2
+  // It hangs high until every toy has landed: the toys come down all over the tray.
+  game.claw.targetX = REST.x; game.claw.targetZ = REST.z
+  game.hoist = OVER_THE_RAIN
   const beats: Beat[] = []
   let at = 0.2, nth = 0
   for (const actor of old) {
@@ -163,7 +170,8 @@ export function tipOut(game: Game, tipped: readonly number[]): void {
         const on = { x: actor.x, y: tongue, z: actor.z, seconds: 0.08, scale: DOWN_THE_THROAT, landing: 'again' as const, fixed: true }
         // Up to over the tops of its eyes, still small, and from there over them onto the tray, growing late.
         const above = { x: actor.x, y: rim + OVER_ITS_BROWS + 0.3, z: actor.z, seconds: 0.2, scale: 0.5, landing: 'again' as const, fixed: true }
-        const peak = clearTop(game, toy, above, home, 1.5)
+        // Held over the toys that have been tipped already; the others are still in their bellies.
+        const peak = clearTop(game, toy, above, home, 1.5, -1, (other) => other !== toy && game.bodies[other].mode !== 'parked')
         game.flights.set(body, under)
         body.legs = [on, above, { x: home.x, y: home.y, z: home.z, seconds: airTime(above.y, home.y, peak), scale: 1, landing: 'stand' }]
         toss(body, under)
@@ -174,6 +182,7 @@ export function tipOut(game: Game, tipped: readonly number[]): void {
   // The old crew shuffles off to one side; when it has gone the new one hops down, and the crew after that
   // comes along the shelf.
   const off = at + 0.5
+  beats.push(cue(game, off + 0.9, () => { game.hoist = null }))
   beats.push(cue(game, off, () => { game.say({ type: 'waddle' }); for (const actor of old) walk(actor, { x: actor.x - OFF, y: actor.y, z: actor.z }, OFF_SECONDS, 0, 1, true) }))
   const hop = off + OFF_SECONDS * 0.75
   game.crew.forEach((actor, k) => beats.push(cue(game, hop + k * 0.3, () => { game.say({ type: 'hop-in', nth: k }); walk(actor, crewSpot(actor.slot, crew.length), 0.8, 9.5) })))
@@ -269,7 +278,7 @@ export function delivery(game: Game, which: number): void {
       const at = tipped(deck[i].y + AIR, deck[i].z + (edge(i) - deck[i].z) * ease(slid[i]), crate.tip)
       body.x = crate.x + deck[i].x; body.y = top + at.y; body.z = crate.z + at.z; body.leanZ = -crate.tip * TIP
     })
-    const seat = (actor: Actor, spot: Spot) => { if (riding.has(actor)) { actor.x = crate.x + spot.x; actor.y = top + spot.y; actor.z = crate.z + spot.z } }
+    const seat = (actor: Actor, spot: Spot) => { if (riding.has(actor)) { actor.x = crate.x + spot.x; actor.y = top + spot.y + AIR; actor.z = crate.z + spot.z } }
     game.crew.forEach((actor, i) => seat(actor, rows[0][i]))
     game.waiting.forEach((actor, i) => seat(actor, rows[1][i]))
   }
@@ -327,7 +336,7 @@ export function delivery(game: Game, which: number): void {
   const down = back + 0.5
   beats.push(cue(game, down, () => {
     crate.carried = false; crate.x = home.x; crate.y = CRATE_STANDS; crate.z = home.z; game.hoist = null; claw.load = 0; claw.grip = 0
-    claw.targetX = 0; claw.targetZ = TRAY.z + TRAY_DEPTH / 2
+    claw.targetX = REST.x; claw.targetZ = REST.z
     game.say({ type: 'thud', who: 'big' })
   }))
   // Its crew hops down from it over the gate onto the step and lines up, growing as it comes.

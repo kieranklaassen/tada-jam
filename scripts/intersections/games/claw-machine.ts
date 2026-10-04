@@ -206,7 +206,7 @@ export default {
       name: 'rest',
       run: async (d) => {
         // A finger on the watcher beside the tray: it hops and peeps, and the claw stays where it is.
-        await d.tap(await at(d, 18.9, 3, 1.5)); await d.wait(1600)
+        await d.tap(await at(d, 18.1, 3, 1.5)); await d.wait(1600)
         await d.wait(4400)
       },
     },

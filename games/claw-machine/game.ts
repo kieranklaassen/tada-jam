@@ -15,11 +15,11 @@ import { CRATE_STANDS, bellySpots, crateSpot, crateTop, crewSpot, deckTop, handl
 import { LIFT_SECONDS, WRONG, actSeconds, restPose, type Act, type Pose } from './motion'
 import { poseOf } from './gamePicture'
 import { layCycle } from './order'
-import { BELL, GATE, PLACES, RAIL, SHELF, SLOT_Z, TRAY, WAIT_Z, placeAt } from './places'
+import { BELL, GATE, PLACES, RAIL, REST, SHELF, SLOT_Z, TRAY, WAIT_Z, placeAt } from './places'
 import type { Scene } from './scene'
 import type { Toy } from './toys'
 import { nearestToy, type Tray } from './tray'
-import { newWatcher, stepWatcher, watcherNotices, watcherSees, type Watcher } from './watcher'
+import { newWatcher, stepWatcher, watcherNotices, watcherSees, type Watcher, WATCHER_AT, WATCHER_JUMPS_TO } from './watcher'
 import { bellyOf, crewNow, placesFor, showingOwed, showingStarts, someoneWaits, trayOf, type World } from './world'
 
 // The game: the rules (world.ts, deeds.ts) played with a claw. It answers
@@ -76,6 +76,8 @@ export type CrateBody = {
   away: number
   /** Its bed: 0 level, 1 tipped forward to pour. */
   tip: number
+  /** How many rows of seats it has behind its load: one for each crew it brought, whether they still sit there or not. */
+  rows: number
   /** In the jaws: it hangs from its handle under the claw. */
   carried: boolean
   /** Seconds since it began to lean out of the way of a swing, or to stand up to see what waits above it; -1 when it does neither. */
@@ -92,6 +94,14 @@ export type Plan =
 export const REACH = 4.6
 /** How far from the way of a thrown toy the claw backs off: half the longest toy and the reach of its own open jaws. */
 const CLEAR_OF_A_THROW = 6.5
+/**
+ * Where the claw comes down to hook the gate: a little to one side of its middle, and with its jaws shut. The
+ * gate stands in a narrow place, between the models at the backs of the heads of a crew at the tray and the faces
+ * of the ones who wait behind it, and a gobbler that stands in front of its middle carries its model on the other side.
+ */
+/** How far the gate bar jumps and rocks when it is hooked or rattled, at the most, with a little to spare. */
+const GATE_JUMPS = 0.6
+const gateHook = () => ({ x: GATE.x + 1.8, z: GATE.z })
 /** How long a crate on the ledge leans out of the way of a swing, and how long it stands up to see what waits above it. */
 export const LEANS_FOR = 0.7
 export const PEERS_FOR = 1.6
@@ -123,7 +133,7 @@ export function newActor(key: number, id: GobblerId, slot: number, role: Actor['
 }
 
 export class Game {
-  readonly claw: Claw = newClaw(0, 6, LOWEST_RIDE)
+  readonly claw: Claw = newClaw(REST.x, REST.z, LOWEST_RIDE)
   bodies: Body[] = []
   crew: Actor[] = []
   waiting: Actor[] = []
@@ -196,7 +206,7 @@ export class Game {
   arrangeCrates(): void {
     this.crates = this.world.crates.map((crate, which) => {
       const laid = layCycle(crate.from, crate.seed), at = crateSpot(which, this.world.crates.length)
-      return { from: crate.from, seed: crate.seed, which, toys: laid.toys, places: placesFor(crate.seed).slice(0, laid.toys.length), crews: laid.crews, x: at.x, y: CRATE_STANDS, z: at.z, away: 0, tip: 0, carried: false, leans: -1, peers: -1 }
+      return { from: crate.from, seed: crate.seed, which, toys: laid.toys, places: placesFor(crate.seed).slice(0, laid.toys.length), crews: laid.crews, rows: laid.crews.length, x: at.x, y: CRATE_STANDS, z: at.z, away: 0, tip: 0, carried: false, leans: -1, peers: -1 }
     })
   }
 
@@ -327,7 +337,7 @@ export class Game {
       const nearest = this.waiting.reduce((best, actor) => (Math.abs(actor.x - aim.x) < Math.abs(best.x - aim.x) ? actor : best))
       return { x: nearest.x, z: WAIT_Z }
     }
-    return { x: GATE.x, z: GATE.z }
+    return gateHook()
   }
 
   /** The finger landed or moved. A landing ends a scene and lets a lifted gobbler go, and is then answered as a touch. */
@@ -374,6 +384,8 @@ export class Game {
     this.pending = target
     claw.targetX = Math.min(RAIL.maxX, Math.max(RAIL.minX, to.x)); claw.targetZ = Math.min(RAIL.maxZ, Math.max(RAIL.minZ, to.z))
     release(claw, true)
+    const hook = gateHook()
+    claw.shut = this.held < 0 && target.on === 'ledge' && to.x === hook.x && to.z === hook.z
     for (const actor of this.crew) actor.openT = -1
   }
 
@@ -422,7 +434,9 @@ export class Game {
       // (A gobbler under the claw stretches up on tiptoe for it or hops; the claw rides clear of it as it is now.)
       if ((beside || onTheWay) && actor.slot !== this.lifted) {
         const pose = poseOf(this, actor, standing)
-        near = Math.max(near, actor.y + Math.max(0, pose.dy) + headTop(actor.id) * Math.max(1, pose.squash))
+        // (One that rocks from side to side lifts the model on its head by as much as its lean and its width make.)
+        const rocks = (actor.id === 'duck' && this.held >= 0 ? 0.2 : Math.abs(pose.leanZ)) * (shapeOf(actor.id).width / 2 + 1)
+        near = Math.max(near, actor.y + Math.max(0, pose.dy) + headTop(actor.id) * Math.max(1, pose.squash) + rocks)
       }
     }
     if (claw.z < -5.5) {
@@ -436,6 +450,8 @@ export class Game {
       if (toy === this.held || body.mode === 'resting' || body.mode === 'parked') return
       if (Math.abs(body.x - claw.x) < 4.5 && Math.abs(body.z - claw.z) < 4) near = Math.max(near, body.y + body.height * body.scale)
     })
+    // Clear of the watcher beside the tray, which jumps at a bang: the bell it sits by is rung with the claw.
+    if (claw.x > WATCHER_AT.x - 7 && Math.abs(claw.z - WATCHER_AT.z) < 8) near = Math.max(near, WATCHER_AT.y + WATCHER_JUMPS_TO)
     // And clear of the bell on its post at either end of the rail.
     if (Math.hypot(Math.abs(claw.x) - BELL.x, claw.z - BELL.z) < 5.5) near = Math.max(near, BELL.top + 0.4)
     const below = this.held >= 0 ? this.hang(this.held) : JAW_REACH + 0.1
@@ -472,7 +488,8 @@ export class Game {
     // A crate is held by the knob on its arch, as a gobbler is by the knob on its head.
     if (this.crates.length > 0) return CRATE_STANDS + deckTop(Math.min(target.which, this.crates.length - 1)) + handleSpot().y + KNOB_HOLD
     if (Math.abs(claw.z - WAIT_Z) < 1 && this.waiting.length > 0) return SHELF.top + headTop(this.waiting[0].id) + TOUCH
-    return GATE.top + TOUCH
+    // The shut jaws stop a little over the gate bar: the bar jumps on its posts when it is hooked, up to them.
+    return GATE.top + TOUCH + GATE_JUMPS
   }
 
   private step(): void {

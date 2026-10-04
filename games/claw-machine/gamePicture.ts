@@ -52,6 +52,9 @@ export function poseOf(game: Game, actor: Actor, out: Pose): Pose {
   // The ones who wait: when the tray is clear they go up on tiptoe to look over the parapet. They do not
   // call or hurry anyone; they are only where the next thing is.
   if (actor.role === 'waiting' && !actor.walk && !actor.act && game.bodies.length > 0 && trayIsClear(game.world.cycle)) out.squash *= 1.1 + 0.03 * Math.sin(game.time * PERSONALITY[actor.id].tempo)
+  // A walk is a waddle: it rocks from foot to foot as it goes.
+  // (A step back into its own place after a lift is too short to waddle.)
+  if (actor.walk && actor.walk.arc === 0 && actor.walk.seconds > 0.5) out.leanZ += 0.14 * Math.sin(actor.walk.t * 26)
   if (actor.liftedT < 0) {
     // Standing, it leans as a thing on feet does: it rocks up onto the edge of its feet, and never down into the
     // floor.
@@ -75,9 +78,6 @@ export function poseOf(game: Game, actor: Actor, out: Pose): Pose {
       out.leanX *= 0.6; out.leanZ *= 0.6; out.squash = 1 + (out.squash - 1) * 0.6
     }
   }
-  // A walk is a waddle: it rocks from foot to foot as it goes.
-  // (A step back into its own place after a lift is too short to waddle.)
-  if (actor.walk && actor.walk.arc === 0 && actor.walk.seconds > 0.5) out.leanZ += 0.14 * Math.sin(actor.walk.t * 26)
   return out
 }
 
@@ -331,7 +331,7 @@ export function gamePicture(game: Game, guidance: Guidance | null): Picture {
     watcher: watching(game, watched),
     carts: game.crates.map((crate) => { const at = crateSpot(crate.which, game.crates.length); return { which: crate.which, x: at.x + crate.away * AWAY * (at.x < 0 ? -1 : 1), z: at.z } }),
     crates: game.crates.map((crate) => ({
-      key: `${crate.from}-${crate.seed}-${crate.toys.length}-${crate.crews.length}`, which: crate.which, toys: crate.toys, places: crate.places, crews: crate.crews,
+      key: `${crate.from}-${crate.seed}-${crate.toys.length}-${crate.crews.length}-${crate.rows}`, which: crate.which, toys: crate.toys, places: crate.places, crews: crate.crews, rows: crate.rows,
       // A crate that waits rocks a little on its foot: its riders cannot sit still.
       // On the ledge it leans out of the way of a swing, away from the middle, and stands up on its cart to see
       // what waits above it.

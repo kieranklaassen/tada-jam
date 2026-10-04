@@ -67,7 +67,7 @@ describe('the grid, played', () => {
 
   it('lifts a gobbler by its knob, each in its own way, and lets it drop back into its place', () => {
     const game = begun('three-ways')
-    const events = tap(game, { on: 'gobbler', slot: 0 }, 1.6)
+    const events = tap(game, { on: 'gobbler', slot: 0 }, 1.8)
     expect(types(events)).toContain('groan')
     expect(types(events)).toContain('lifted')
     const actor = game.crew[0], home = crewSpot(0, game.crew.length)

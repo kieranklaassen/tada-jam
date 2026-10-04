@@ -64,6 +64,13 @@ export const RAIL = {
   maxZ: 11,
 } as const
 
+/**
+ * Where the claw hangs when nothing has moved it: on a load, and after a scene. It is off the middle of the
+ * cabinet, so that its cable does not run down the middle of the gate bar and of a crate's arch behind it, and
+ * over the front row of the tray, where it hangs in front of no gobbler's belly.
+ */
+export const REST = { x: -3.9, z: 9 } as const
+
 /** What the camera frames: the whole cabinet, fitted to the surface whatever its shape. */
 export const FRAME = { minX: -18.6, maxX: 18.6, floorZ: 14.2, top: 12.2, topZ: -16 } as const
 

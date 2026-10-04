@@ -11,15 +11,19 @@ import { BLACK, WATCHER, WATCHER_DARK, WHITE } from './palette'
 // about the child. Pure: its build, where it sits, and how it is posed.
 
 /** Where it sits: the middle of its feet, on the floor beside the tray on the right, between the bell post and the step. */
-export const WATCHER_AT = { x: 18.9, y: ON_STUDS, z: 1.5 } as const
+export const WATCHER_AT = { x: 18.13, y: ON_STUDS, z: 1.5 } as const
 /** How much bigger than its build it is drawn. */
-export const WATCHER_BIG = 1.3
+export const WATCHER_BIG = 1.1
 /** How far it is turned from facing the child toward the middle of the tray, at rest. */
 export const WATCHER_FACES = -0.75
 /** The width of one of its eyes. */
 export const WATCHER_EYE = 1.5
 /** How tall it is to the top of its ears, and how wide: what a finger has to land in to be on it. */
-export const WATCHER_SIZE = { half: 2.5, height: 7.3 } as const
+export const WATCHER_SIZE = { half: 2.2, height: 6.2 } as const
+/** How far from the middle of its feet any part of it reaches, sideways: the camera keeps that much of it in the frame. */
+export const WATCHER_REACH = 2.3
+/** How high the tips of its ears get when it jumps at a bang, above its feet: the claw rides clear of that when it is near. */
+export const WATCHER_JUMPS_TO = 7.6
 
 const EYES_AT = { x: 0.78, y: 4.25, z: 0.72 } as const
 

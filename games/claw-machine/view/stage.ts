@@ -249,7 +249,7 @@ export class Stage {
       if (!crate) {
         const group = new Group()
         group.name = `crate-${look.which}-group`
-        const mesh = new Mesh(meshGeometry(crateMesh(look.which, look.toys, look.places, look.crews, !tipping)), this.shaded)
+        const mesh = new Mesh(meshGeometry(crateMesh(look.which, look.toys, look.places, look.crews, !tipping, look.rows)), this.shaded)
         mesh.name = `crate-${look.which}`
         group.add(mesh)
         let hinge: Group | null = null

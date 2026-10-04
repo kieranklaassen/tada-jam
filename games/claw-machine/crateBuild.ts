@@ -68,9 +68,9 @@ export function bedMesh(which: number): BrickMesh {
 const DOWN = 0.5
 
 /** A crate as one mesh. `withBed` is false while its bed is tipping: the stage then draws the bed by itself. */
-export function crateMesh(which: number, toys: readonly Toy[], places: readonly number[], crews: readonly (readonly GobblerId[])[], withBed = true): BrickMesh {
+export function crateMesh(which: number, toys: readonly Toy[], places: readonly number[], crews: readonly (readonly GobblerId[])[], withBed = true, rows = crews.length): BrickMesh {
   const top = deckTop(which)
-  const parts: { mesh: BrickMesh; scale?: number; at?: readonly [number, number, number] }[] = [{ mesh: buildMesh(box(which, crews.length), true) }]
+  const parts: { mesh: BrickMesh; scale?: number; at?: readonly [number, number, number] }[] = [{ mesh: buildMesh(box(which, Math.max(rows, crews.length)), true) }]
   if (withBed) parts.push({ mesh: bedMesh(which) })
   deckSpots(toys, places).forEach((spot, i) => parts.push({ mesh: buildMesh(toyBricks(toys[i]), true), scale: ON_DECK, at: [spot.x, top + spot.y, spot.z] }))
   riderSpots(crews).forEach((row, r) => row.forEach((spot, i) => {

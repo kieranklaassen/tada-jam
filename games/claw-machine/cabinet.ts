@@ -48,11 +48,13 @@ export function cabinetBricks(): Brick[] {
   // The parapet, the shelf behind it and the back wall.
   wall(out, SHELF.x, SHELF.x + SHELF.w, WALL.z, 1, plates(WALL.top), 3)
   for (let x = SHELF.x; x < SHELF.x + SHELF.w; x += 8) out.push({ x, y: plates(SHELF.top) - 3, z: SHELF.z, w: Math.min(8, SHELF.x + SHELF.w - x), d: SHELF.d, h: 3, colour: STEP_COLOUR })
-  wall(out, SHELF.x - 2, SHELF.x + SHELF.w + 2, BACK.z, 1, plates(BACK.top), 5)
+  wall(out, SHELF.x - 3, SHELF.x + SHELF.w + 3, BACK.z, 1, plates(BACK.top), 5)
   // Corner posts in the machine's own colour.
-  for (const x of [SHELF.x - 2, SHELF.x + SHELF.w]) {
-    // They stand in front of the line of the parapet, clear of whoever waits behind it.
-    for (let y = 0; y < plates(BACK.top); y += 6) out.push({ x, y, z: WALL.z, w: 2, d: 2, h: 6, colour: TRIM })
+  for (const x of [SHELF.x - 5, SHELF.x + SHELF.w + 3]) {
+    // They stand at the two ends of the back wall, beyond the shelf: out of reach of whoever waits on it and
+    // leans, of the model on the head of a gobbler at the end of the step, and of the claw over that one's knob.
+    // (No deeper than this: a crew that comes along the shelf carries its models past them.)
+    for (let y = 0; y < plates(BACK.top); y += 6) out.push({ x, y, z: BACK.z, w: 2, d: 1.3, h: 6, colour: TRIM })
   }
   // The bell post at either end of the rail: a post with a bell on it.
   for (const side of [-1, 1]) {

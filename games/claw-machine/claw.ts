@@ -39,6 +39,8 @@ export type Claw = {
   following: boolean
   /** A tap: drop (or let go) as soon as the trolley gets there. */
   dropOnArrival: boolean
+  /** The drop that is coming is made with the jaws shut: onto a thing they hook and do not take, in a narrow place. */
+  shut: boolean
   /** How heavy the thing in the jaws is: 0 nothing, 1 a small toy, 2 a big one. */
   load: number
   /** The height the hinge of the jaws rides at, and the height the hinge drops to. */
@@ -72,6 +74,8 @@ const DROP_TOP_SPEED = 46
 const CLOSE_SECONDS = 0.16
 const LET_GO_SECONDS = 0.14
 export const REST_OPEN = 0.55
+/** And how far when they come down shut. */
+const SHUT = 0.12
 
 export function newClaw(x = 0, z = 6, rideY = 12.5): Claw {
   return {
@@ -79,7 +83,7 @@ export function newClaw(x = 0, z = 6, rideY = 12.5): Claw {
     length: RAIL.top - rideY - HINGE_DROP, lengthV: 0,
     swingX: 0, swingZ: 0, swingVX: 0, swingVZ: 0,
     open: REST_OPEN, openV: 0, grip: 0, openFor: 0, squash: 1, squashV: 0,
-    phase: 'ready', t: 0, following: false, dropOnArrival: false, load: 0, rideY, landY: 0, ratchet: 0, riseFrom: 0,
+    phase: 'ready', t: 0, following: false, dropOnArrival: false, shut: false, load: 0, rideY, landY: 0, ratchet: 0, riseFrom: 0,
   }
 }
 
@@ -102,6 +106,7 @@ export function follow(claw: Claw, x: number, z: number, events: ClawEvent[]): v
   const landing = !claw.following
   claw.following = true
   claw.dropOnArrival = false
+  claw.shut = false
   claw.targetX = clamp(x, RAIL.minX, RAIL.maxX)
   claw.targetZ = clamp(z, RAIL.minZ, RAIL.maxZ)
   if (!landing) return
@@ -208,7 +213,8 @@ export function stepClaw(claw: Claw, rideY: number, landY: number, events: ClawE
 
   // The jaws and the squash are springs toward where the phase wants them.
   claw.openFor = Math.max(0, claw.openFor - dt)
-  const wantOpen = claw.phase === 'dropping' || claw.phase === 'letting-go' || claw.openFor > 0 ? 1 : claw.phase === 'closing' || claw.phase === 'rising' || claw.load > 0 ? claw.grip : claw.following ? 1 : REST_OPEN
+  const shut = claw.shut && (claw.dropOnArrival || claw.phase === 'dropping')
+  const wantOpen = shut ? SHUT : claw.phase === 'dropping' || claw.phase === 'letting-go' || claw.openFor > 0 ? 1 : claw.phase === 'closing' || claw.phase === 'rising' || claw.load > 0 ? claw.grip : claw.following ? 1 : REST_OPEN
   // The jaws shut without overshooting: they stop beside what they hold and never bite into it.
   claw.openV += ((wantOpen - claw.open) * 420 - claw.openV * 41) * dt
   claw.open = clamp(claw.open + claw.openV * dt, 0, 1.06)
