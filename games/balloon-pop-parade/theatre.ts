@@ -1,5 +1,5 @@
 import { BODIES, type KindName } from './bodies'
-import { clip, hold, PERSONALITIES, ramp, rest, stride, walk, type ClipId } from './clips'
+import { clip, hold, hump, PERSONALITIES, ramp, rest, stride, walk, type ClipId } from './clips'
 import { handPose, type Guidance, type HandPose } from './guidance'
 import { BALLOON, bunchOffsets, bunchReach, CLOUDS, FAR_HILL, farGroundAt, FRIEND_SCALE, friendX, GROUND, groundAt, HELD_HEIGHT, PARADE_SCALE, paradeSpot, seenAt, skySlots, viewFor, WAITING_SCALE, waitingSpot, type View } from './layout'
 import { KIND_COLOURS, PALETTE, shade } from './palette'
@@ -37,7 +37,7 @@ export type Painter = {
 export type Sound = { voice: VoiceId; pitch: number; gain: number; after: number; pace: number }
 
 /** What a point of the surface is on. */
-export type Hit = { on: 'held'; friend: number } | { on: 'bunch'; slot: number } | { on: 'friend'; friend: number } | { on: 'waiting' } | { on: 'cloud'; index: number } | { on: 'hill' } | { on: 'air' }
+export type Hit = { on: 'held'; friend: number } | { on: 'bunch'; slot: number } | { on: 'friend'; friend: number } | { on: 'waiting' } | { on: 'cloud'; index: number } | { on: 'parade'; troop: number } | { on: 'farHill' } | { on: 'hill' } | { on: 'air' }
 
 /** A bunch's place in the sky and its springs: how flat it is, how far it is pushed aside, how far the loose end of its string has whipped, and how long until it is back. */
 type Place = { squash: number; squashSpeed: number; pressed: boolean; push: number; pushSpeed: number; whip: number; whipSpeed: number; away: number; grow: number }
@@ -75,6 +75,8 @@ const REFUSAL_LEAD = 0.12
  */
 const OVER_PATH = { x: -7.6, across: 0.8, z: 4.6, deep: 9, dip: 2.4 } as const
 const OVER_LAG = 0.2
+/** Seconds a troop on the far hill is in the air when it jumps at a touch. */
+const FAR_JUMP = 0.45
 /** How far apart the balloons of a bunch are pulled while it carries a friend off, against how they hang in the sky: the second is then over the gap between two friends. */
 const TUG_SPLAY = 1.3
 /** How fast a balloon that got away darts at the cloud over the troop, in units a second. */
@@ -128,6 +130,8 @@ export class Theatre {
   private passIn = 0
   private passOut = 0
   private passTook = false
+  /** When each troop on the far hill last began a jump, as an answer to a touch. */
+  private readonly hopAt = [-9, -9, -9, -9]
   /** The troop that passed, on its way over the far hill, and how far over it is. */
   private over: Passing | null = null
   private overU = 0
@@ -244,6 +248,17 @@ export class Theatre {
     }
     // Below the friends' feet there is only the hill.
     if (y < groundAt(x, 0) - 0.25) return { on: 'hill' }
+    // Above it, far off: a troop that goes round the far hill, with its balloons, or the far hill itself.
+    const parade = this.save.parade, arrived = this.leaving ? parade.length - 1 : parade.length
+    for (let t = 0; t < arrived; t++) {
+      const body = BODIES[parade[t].kind]
+      for (let m = 0; m < parade[t].size; m++) {
+        const spot = paradeSpot(t, m, this.time, this.far), at = seenAt(spot.x, spot.y, spot.z, view, this.seen), size = at.scale * PARADE_SCALE
+        if (Math.abs(x - at.x) < body.halfWidth * FRIEND_SCALE * size + 0.3 && y > at.y - 0.3 && y < at.y + (HELD_HEIGHT + BALLOON) * size + 0.3) return { on: 'parade', troop: t }
+      }
+    }
+    const back = view.distance / (view.distance - FAR_HILL.z)
+    if (y / back < farGroundAt(x / back, FAR_HILL.z)) return { on: 'farHill' }
     // A near miss still counts: a small finger aimed at a bunch and landed beside it.
     let nearest = -1, nearestGap = 0.9
     for (let slot = 0; slot < slots.length; slot++) {
@@ -292,6 +307,16 @@ export class Theatre {
       this.callNext()
     } else if (hit.on === 'cloud') {
       this.shed(hit.index, view)
+    } else if (hit.on === 'parade' || hit.on === 'farHill') {
+      // Far off, so small and quiet: a troop that is touched squeaks in its kind's voice and jumps, and the others
+      // on the far hill jump after it; the far hill itself answers like the near one, and everyone on it jumps.
+      const parade = this.save.parade
+      if (hit.on === 'parade') this.sound(`${parade[hit.troop].kind}Poke`, 1.45, 0.4)
+      else this.sound('hillBoing', 1.5, 0.45)
+      for (let t = 0; t < this.hopAt.length; t++) this.hopAt[t] = this.time + (hit.on === 'parade' ? (t === hit.troop ? 0 : 0.14) : t * 0.07)
+      // The sky answers too, as it does to a touch on the air, so that an empty far hill is never a dead place.
+      const slots = this.slots(view)
+      for (let slot = 0; slot < slots.length; slot++) this.places[slot].pushSpeed += Math.sign(slots[slot].x - x || 1) * 0.8 / (1 + Math.abs(slots[slot].x - x))
     } else if (hit.on === 'hill') {
       // The hill is an air bed: a dimple where the finger is, and a wobble that everyone on it rides.
       this.sound('hillBoing', 0.9 + this.random() * 0.2)
@@ -454,6 +479,7 @@ export class Theatre {
     this.leaving = null
     this.passer = null
     this.over = null
+    this.hopAt.fill(-9)
     this.endingDue = null
     this.fromBeyond = marched === null
     if (marched) {
@@ -899,7 +925,8 @@ export class Theatre {
       const troop = parade[t], rate = PERSONALITIES[troop.kind].steps / PERSONALITIES[troop.kind].walk, hue = shade(KIND_COLOURS[troop.kind], 0.4)
       for (let m = 0; m < troop.size; m++) {
         const at = paradeSpot(t, m, time, this.far), step = time * rate + m * 0.4
-        const hop = Math.abs(Math.sin(step * Math.PI)) * (troop.kind === 'frog' ? 0.35 : 0.1)
+        // Its step, and the jump it gives when it or the far hill is touched, each friend a moment after the one in front.
+        const hop = Math.abs(Math.sin(step * Math.PI)) * (troop.kind === 'frog' ? 0.35 : 0.1) + hump(time - this.hopAt[t] - m * 0.07, 0, FAR_JUMP) * 1.1
         // The far hill slopes under them: they stand a little proud of it, so the uphill foot is not sunk in.
         painter.marcher(troop.kind, at.x, at.y + hop + 0.14, at.z, FRIEND_SCALE * PARADE_SCALE, at.turn, Math.sin(step * Math.PI) * 0.1)
         if (m >= troop.balloons) continue

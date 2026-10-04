@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { BODIES, type KindName } from './bodies'
 import { PERSONALITIES } from './clips'
 import { applyPose, buildFriend } from './friends'
-import { BALLOON, CLOUDS, friendX, GROUND, seenAt, skySlots, viewFor } from './layout'
+import { BALLOON, CLOUDS, FAR_HILL, farGroundAt, friendX, GROUND, seenAt, skySlots, viewFor } from './layout'
 import { MOMENTS, saveOf, type Moment } from './moments'
 import { freshSave } from './save'
 import { restPose, type Pose } from './pose'
@@ -742,6 +742,55 @@ describe('the scenery', () => {
 })
 
 describe('the far hill', () => {
+  it('answers a touch: a troop that is touched squeaks in its own voice, small and quiet, and jumps, and the others jump after it', () => {
+    const save = { ...saveOf(MOMENTS.solo), parade: [{ kind: 'duck' as const, size: 2 as const, balloons: 2 }, { kind: 'crab' as const, size: 3 as const, balloons: 1 }] }
+    const theatre = new Theatre(save)
+    const far: { kind: KindName; x: number; y: number; z: number }[] = []
+    const painter: Painter = { ...recorder().painter, marcher: (kind, x, y, z) => void far.push({ kind, x, y, z }) }
+    const look = () => { far.length = 0; theatre.paint(painter, VIEW); return far.map((marcher) => ({ ...marcher })) }
+    play(theatre, 0.5)
+    const before = look(), crab = before.find((marcher) => marcher.kind === 'crab')!
+    const seen = seenAt(crab.x, crab.y, crab.z, VIEW, { x: 0, y: 0, scale: 1 })
+    expect(theatre.hit(seen.x, seen.y + 0.3, VIEW)).toEqual({ on: 'parade', troop: 1 })
+    theatre.sounds.length = 0
+    theatre.press(seen.x, seen.y + 0.3, VIEW)
+    theatre.cancel()
+    expect(theatre.sounds.map((sound) => [sound.voice, sound.gain])).toEqual([['crabPoke', 0.4]])
+    // Higher than a step ever takes it: the crabs first, the ducks a moment later.
+    const highest = { crab: 0, duck: 0 }, at = { crab: -1, duck: -1 }
+    for (let i = 0; i < 50; i++) {
+      theatre.step(1 / 60)
+      look().forEach((marcher, k) => {
+        const up = marcher.y - before[k].y, kind = marcher.kind as 'crab' | 'duck'
+        if (up > highest[kind]) { highest[kind] = up; at[kind] = i }
+      })
+    }
+    expect(highest.crab).toBeGreaterThan(0.7)
+    expect(highest.duck).toBeGreaterThan(0.7)
+    expect(at.duck).toBeGreaterThan(at.crab)
+    play(theatre, 1)
+    look().forEach((marcher, k) => expect(Math.abs(marcher.y - before[k].y)).toBeLessThan(0.5))
+  })
+
+  it('answers a touch on the hill itself, with nobody on it or with a parade: a small far boing, and the sky bobs', () => {
+    const theatre = new Theatre(saveOf(MOMENTS.solo)), { frame, painter, clear } = recorder()
+    // The top of the far hill as it is seen, a little under its crest.
+    const top = seenAt(FAR_HILL.x, farGroundAt(FAR_HILL.x, FAR_HILL.z) - 0.6, FAR_HILL.z, VIEW, { x: 0, y: 0, scale: 1 })
+    expect(theatre.hit(top.x, top.y, VIEW)).toEqual({ on: 'farHill' })
+    theatre.paint(painter, VIEW)
+    const still = frame.balloons.map((balloon) => balloon.x)
+    theatre.press(top.x, top.y, VIEW)
+    theatre.cancel()
+    expect(voices(theatre)).toEqual(['hillBoing'])
+    play(theatre, 0.15)
+    clear()
+    theatre.paint(painter, VIEW)
+    expect(Math.max(...frame.balloons.map((balloon, k) => Math.abs(balloon.x - still[k])))).toBeGreaterThan(0.01)
+    // Just over its crest is sky.
+    const over = seenAt(FAR_HILL.x, farGroundAt(FAR_HILL.x, FAR_HILL.z) + 0.8, FAR_HILL.z, VIEW, { x: 0, y: 0, scale: 1 })
+    expect(theatre.hit(over.x, over.y, VIEW).on).toBe('air')
+  })
+
   it('shows the troops that were served going round with the balloons they carried off, and nothing else', () => {
     const save = { ...saveOf(MOMENTS.solo), parade: [{ kind: 'duck' as const, size: 2 as const, balloons: 2 }, { kind: 'crab' as const, size: 3 as const, balloons: 1 }] }
     const theatre = new Theatre(save), { frame, painter } = recorder()
