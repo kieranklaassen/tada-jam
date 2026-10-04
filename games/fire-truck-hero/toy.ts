@@ -27,6 +27,9 @@ export const TRICKLES_PER_S = 48
  */
 export const SPREAD = 1.8
 
+/** The springs creak this long after the gulp leaves, as the truck rocks back, in seconds. */
+export const CREAK_AFTER_S = 0.08
+
 /** What is under the finger: the truck, or a point of the yard. */
 export type Touched = { truck: boolean; point: Ground2 }
 
@@ -42,7 +45,6 @@ export class Toy {
   protected readonly variants = new Variants()
   private readonly creaks = new Variants(0x2c1b3c6d)
   private trickleOwed = 0
-  private gulpsInTouch = 0
 
   constructor(protected readonly play: (voice: VoiceSpec) => void) {}
 
@@ -62,11 +64,11 @@ export class Toy {
       this.play(honk())
       return
     }
-    this.gulpsInTouch = 0
     const gulp = this.hose.press(touched.point, now)
     this.leave(gulp)
-    // One voice, since the first sound of a first touch is the one that waits for the unlock.
-    this.play([...hoseVoice(gulp.arc.reach), ...spurt()])
+    // One voice, since the first sound of a first touch is the one that waits for the unlock: the hose, its pop,
+    // and the creak of the springs as the truck rocks back, a moment after.
+    this.play([...hoseVoice(gulp.arc.reach), ...spurt(), ...creak(this.creaks.next(3)).map((partial) => ({ ...partial, at: partial.at + CREAK_AFTER_S }))])
   }
 
   /** The finger moves: the water follows. */
@@ -122,8 +124,9 @@ export class Toy {
     this.truck.aim(turn, tilt)
     this.truck.gulp(gulp.first)
     this.drops.gulp(gulp.arc)
-    // The first gulp of a touch has its pop. In a stream the springs creak at every third gulp after it.
-    if (this.gulpsInTouch++ % 3 === 0 && !gulp.first) this.play(creak(this.creaks.next(3)))
+    // The truck creaks on its springs every time it rocks. The first gulp of a touch has its creak in the voice
+    // of the press, with its pop; each gulp of a stream after it has its own.
+    if (!gulp.first) this.play(creak(this.creaks.next(3)))
   }
 
   /** A gulp reaches the sand: it is heard, and the grid takes its water. The game sends it to what stands there. */

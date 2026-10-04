@@ -171,15 +171,17 @@ export class SeedMotion {
     this.flower.value = this.flower.target = gulps >= 3 ? 1 : 0
   }
 
-  answer(action: Action, gulps: number, strength = 1): void {
+  /** `creeping` is true when a neighbour's water is run-off on the ground and not drops in the air. */
+  answer(action: Action, gulps: number, strength = 1, creeping = true): void {
     this.gulps = gulps
     this.shoot.target = gulps >= 1 ? 1 : 0
     this.leaves.target = gulps >= 2 ? 1 : 0
     this.flower.target = gulps >= 3 ? 1 : 0
-    // Water soaked up from below grows the plant as surely, and slowly.
-    this.slow = action === 'neighbour'
-    // Soaked up from below, the dark climbs the pot's wall.
-    if (action === 'neighbour') this.soak.start()
+    // Water soaked up from below grows the plant as surely, and slowly, and the dark climbs the pot's wall.
+    // Drops flung onto it land on its leaves, which flutter.
+    this.slow = action === 'neighbour' && creeping
+    if (action === 'neighbour' && creeping) this.soak.start()
+    else if (action === 'neighbour') kick(this.flutter, 6)
     if (action === 'gulp' || action === 'fill') kick(this.pop, 5 * strength)
     else if (action === 'sweep') kick(this.flutter, 9)
     else if (action === 'too-much') this.nod.start()
@@ -303,6 +305,12 @@ export class BoatMotion {
     this.yaw.value = this.yaw.target = 0
     this.carry.start()
     kick(this.rock, 5)
+  }
+
+  /** A stream sweeps across the pool it floats in: what floats bobs. */
+  bobs(): void {
+    kick(this.bob, 3)
+    kick(this.rock, 1.5)
   }
 
   /** `away` is the way the water pushes: from the truck to the boat, as a unit step. */

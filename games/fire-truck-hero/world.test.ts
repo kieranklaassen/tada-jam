@@ -95,8 +95,9 @@ describe('water that goes on', () => {
     expect(ids(sunk.events)).toEqual(['boat-rocks', 'boat-rocks', 'boat-brims', 'boat-sinks'])
     expect(sunk.yard.things[1].gulps).toBe(0)
     const over = play(sunk.yard, gulp(0), gulp(0))
-    // The first of the two fills the pool, which holds the want here, and the second runs over.
-    expect(over.events.slice(2)).toEqual([expect.objectContaining({ id: 'pool-runs-over' }), expect.objectContaining({ id: 'boat-lifts' }), { type: 'moved', thing: 1, to: 1 }, expect.objectContaining({ id: 'patch-creeps' })])
+    // The first of the two fills the pool and the second runs over. The pool's want was met when the boat and the duck floated.
+    expect(lifted.events.at(-1)).toEqual({ type: 'want-met', thing: 0 })
+    expect(over.events.slice(1)).toEqual([expect.objectContaining({ id: 'pool-runs-over' }), expect.objectContaining({ id: 'boat-lifts' }), { type: 'moved', thing: 1, to: 1 }, expect.objectContaining({ id: 'patch-creeps' })])
     expect(over.yard.things[1]).toEqual({ kind: 'boat', spot: 1, gulps: 0 })
     expect(thingsAt(over.yard, 1)).toEqual([0, 1])
     // On sand a full boat brims over and keeps its water.
@@ -161,7 +162,10 @@ describe('the want', () => {
   it('is met by aiming at it, said once, and by nothing aimed elsewhere', () => {
     for (const kind of ['fire', 'pool', 'seed', 'patch'] as const) {
       const { yard, events } = play(yardOf([at(kind, 2), at('cat', 0)]), gulp(1), ...times(THINGS[kind].most + 2, gulp(0)))
-      expect(events.findIndex((event) => event.type === 'want-met')).toBe(events.findIndex((event) => event.type === 'result' && event.id === cellOf(kind, 'fill').id) + 1)
+      // The duck wants to float: the pool's want is met by the gulp that floats it, the one before its fill.
+      const results = events.filter((event) => event.type === 'result' && event.thing === 0)
+      const meets = kind === 'pool' ? results[FLOATS_AT - 1] : results.find((event) => event.type === 'result' && event.id === cellOf(kind, 'fill').id)
+      expect(events.findIndex((event) => event.type === 'want-met')).toBe(events.indexOf(meets!) + 1)
       expect(met(events)).toBe(1)
       expect(yard.met).toBe(true)
     }

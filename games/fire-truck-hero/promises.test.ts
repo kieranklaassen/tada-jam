@@ -903,3 +903,192 @@ describe('the low side of the pool', () => {
     expect(lowSideOf(layOut('one-thing', 2), 7)).toBe(0)
   })
 })
+
+describe('what a reader of the folder found', () => {
+  it('meets the duck\'s want when it floats, at the pool\'s third gulp, and lifts it off the floor as its ending begins', () => {
+    const t = new Table(saved('one-thing', 2))
+    const pool = t.at(0)
+    t.gulps(pool, 2)
+    expect(t.game.yard.met).toBe(false)
+    expect(t.game.motion.duck.pose.y).toBe(0)
+    let rose = true, last = 0
+    t.tap(pool).play(1.2, () => {
+      if (t.game.motion.duck.pose.y < last - 0.03) rose = false
+      last = t.game.motion.duck.pose.y
+    })
+    expect(t.game.yard.met).toBe(true)
+    expect(t.game.yard.things[0].gulps).toBe(3)
+    expect(rose).toBe(true)
+    expect(last).toBeGreaterThan(0.15)
+    // Found afloat, with nothing easing in and no ending replayed.
+    t.play(8)
+    const again = t.reload()
+    again.play(FRAME)
+    expect(again.game.sceneRunning).toBe(false)
+    expect(again.game.motion.duck.pose.y).toBeCloseTo(t.game.motion.duck.pose.y, 1)
+  })
+
+  it('sends the bee up at drops flung from the wheel, and does not darken the pot or slurp at them', () => {
+    const t = new Table(saved('round-and-round', 0))
+    const wheel = t.at(t.the('wheel'))
+    let highest = 0, soaked = 0
+    const sat = t.play(1).game.motion.bee.pose.y
+    t.game.press({ truck: false, point: wheel }, t.now)
+    t.play(1.2, () => {
+      highest = Math.max(highest, t.game.motion.bee.pose.y)
+      soaked = Math.max(soaked, t.game.motion.seed.pose.soak)
+    })
+    t.game.lift()
+    expect(highest).toBeGreaterThan(sat + 0.8)
+    expect(soaked).toBe(0)
+    expect(those(t.heard, cellVoices('seed', 'neighbour'))).toHaveLength(0)
+    expect(those(t.heard, cellVoices('seed', 'sweep')).length).toBeGreaterThan(0)
+  })
+
+  it('has a cat whom the wheel\'s ring soaks shake herself and stalk off, and one it soaks again take the truck: not a sneeze', () => {
+    const start = layOut('round-and-round', 0)
+    const wheel = indexOf(start, 'wheel'), cat = indexOf(start, 'cat')
+    const steps = pours(start, wheel, 8)
+    const hers = steps.flatMap((step) => results(step.events).filter((event) => event.thing === cat).map((event) => event.id))
+    // Drops at the wheel's fill and the first two gulps of its wide ring are drops on her nose; the third soaks her.
+    expect(hers.slice(0, 3)).toEqual(['cat-sneezes', 'cat-sneezes', 'cat-sneezes'])
+    expect(hers).toContain('cat-soaked')
+    expect(hers).toContain('cat-to-roof')
+    expect(hers.indexOf('cat-to-roof')).toBeGreaterThan(hers.indexOf('cat-soaked'))
+    // In the game she is heard to rattle and grumble, and then to scrabble up.
+    const t = new Table(saved('round-and-round', 0))
+    t.stream(t.at(t.the('wheel')), 2.8)
+    expect(those(t.heard, cellVoices('cat', 'fill', 1)).length).toBeGreaterThan(0)
+    expect(those(t.heard, cellVoices('cat', 'too-much', 1)).length).toBeGreaterThan(0)
+    expect(t.game.yard.things[t.the('cat')].spot).toBe('roof')
+  })
+
+  it('lets a fire that holds no want drip twice when it goes out, and gives it the falling hiss when a neighbour put it out', () => {
+    // The whole garden with the snail and a fire: the snail holds the want.
+    const aimed = new Table(saved('whole-garden', 3))
+    const fire = aimed.at(aimed.the('fire'))
+    expect(aimed.game.yard.want).not.toBe(aimed.the('fire'))
+    aimed.gulps(fire, 3).play(0.4)
+    const hiss = cellVoices('fire', 'fill', 1)
+    expect(those(aimed.heard, hiss)).toHaveLength(1)
+    const near = () => aimed.drops().filter((drop) => distance(drop, fire) < 1.2).length
+    expect(near()).toBe(0)
+    let rises = 0, was = 0
+    aimed.play(2.6, () => {
+      const now = near()
+      if (was === 0 && now > 0) rises++
+      was = now
+    })
+    expect(rises).toBe(2)
+    // Put out by the wheel's wide ring: the hiss is given all the same, once.
+    const flung = new Table(saved('whole-garden', 3))
+    flung.stream(flung.at(flung.the('wheel')), 2.4)
+    expect(flung.game.yard.things[flung.the('fire')].gulps).toBeGreaterThanOrEqual(3)
+    expect(those(flung.heard, hiss)).toHaveLength(1)
+  })
+
+  it('trickles faintly when run-off creeps along the ground, to open sand and to a thing', () => {
+    const trickle = cellVoices('patch', 'neighbour')
+    const alone = new Table(saved('one-thing', 2))
+    alone.gulps(alone.at(0), 4)
+    expect(those(alone.heard, trickle)).toHaveLength(0)
+    alone.gulp(alone.at(0))
+    expect(those(alone.heard, trickle)).toHaveLength(1)
+    const downhill = new Table(saved('downhill', 0))
+    downhill.gulps(downhill.at(downhill.the('pool')), 5)
+    expect(those(downhill.heard, trickle)).toHaveLength(1)
+  })
+
+  it('draws the water that crosses the rim as the pool runs over, and bobs the boat with the duck when a stream sweeps the pool', () => {
+    const t = new Table(saved('afloat', 0))
+    const pool = t.at(t.the('pool'))
+    const duckSide = { x: pool.x - 0.5, z: pool.z }
+    t.gulps(duckSide, 4).play(8)
+    expect(t.game.motion.pool.pose.spill).toBe(0)
+    let bobbed = 0
+    const rest = t.game.motion.boat.pose.bob
+    t.sweep({ x: pool.x - 0.6, z: pool.z - 3 }, { x: pool.x - 0.6, z: pool.z + 3 })
+    t.play(0.3, () => { bobbed = Math.max(bobbed, Math.abs(t.game.motion.boat.pose.bob - rest)) })
+    expect(bobbed).toBeGreaterThan(0.05)
+    let spilled = 0
+    t.tap(duckSide).play(1.6, () => { spilled = Math.max(spilled, t.game.motion.pool.pose.spill) })
+    expect(spilled).toBeGreaterThan(0.9)
+    t.play(1)
+    expect(t.game.motion.pool.pose.spill).toBeLessThan(1e-9)
+  })
+
+  it('creaks on its springs every time the truck rocks: at a tap and at each gulp of a stream', () => {
+    const heard: VoiceSpec[] = []
+    const toy = new Toy((voice) => heard.push(voice))
+    const creaky = (voice: VoiceSpec) => voice.some((partial) => partial.kind === 'tone' && partial.wave === 'triangle' && partial.frequency < 400) || voice.length <= 2
+    toy.press({ truck: false, point: { x: 9, z: 4 } }, 0)
+    // The press is one voice: the hose, its pop and the creak, a moment after.
+    expect(heard).toHaveLength(1)
+    expect(heard[0].length).toBeGreaterThan(3)
+    expect(Math.max(...heard[0].map((partial) => partial.at))).toBeGreaterThan(0.05)
+    let now = 0, gulps = 0, creaks = 0
+    const before = heard.length
+    for (let frame = 0; frame < 120; frame++) {
+      const flying = toy.hose.flying.length
+      toy.step(FRAME, (now += FRAME))
+      if (toy.hose.flying.length > flying) gulps++
+    }
+    toy.lift()
+    // Each gulp of the stream is heard twice over: the hose, and the springs.
+    creaks = heard.slice(before).filter(creaky).length
+    expect(gulps).toBeGreaterThanOrEqual(5)
+    expect(creaks).toBeGreaterThanOrEqual(gulps)
+  })
+
+  it('judges a yard mixed when the child spun the wheel to its fill or sank the boat, though neither holds water after', () => {
+    // The wheel: spun steadily, run down again, and then the bell.
+    const spun = new Table(saved('two-things', 1))
+    const position = spun.game.save.position
+    spun.stream(spun.at(spun.the('wheel')), 1.4).play(2)
+    expect(spun.game.yard.things[spun.the('wheel')].gulps).toBe(0)
+    expect(spun.game.yard.met).toBe(false)
+    for (let ring = 0; ring < 3; ring++) spun.gulp({ x: 4.6, z: 0.6 })
+    spun.play(6)
+    expect(spun.game.save.position).toBe(position)
+    // Nothing done at all, and then the bell: badly, a step down (or the first place stays the first).
+    const idle = new Table(saved('two-things', 1))
+    for (let ring = 0; ring < 3; ring++) idle.gulp({ x: 4.6, z: 0.6 })
+    idle.play(6)
+    expect(idle.game.save.position).toBe('one-thing')
+  })
+
+  it('lets water that rings the gate open while the game goes to rest take nothing with it into the next yard', () => {
+    const t = new Table(saved('one-thing', 0))
+    const bell = { x: 4.6, z: 0.6 }
+    t.gulp(bell).gulp(bell)
+    // A held stream on the bell, and the game is put away with water in the air.
+    t.game.press({ truck: false, point: bell }, t.now)
+    t.play(0.2)
+    const left = t.game.yard
+    t.game.rest()
+    expect(t.game.yard).not.toBe(left)
+    // The drive is over, the truck stands in the new yard, and the new yard is as it was laid out: dry, and nothing rung.
+    expect(t.game.sceneRunning).toBe(false)
+    expect(t.game.way).toBeNull()
+    expect(t.game.latch).toBe(0)
+    expect(t.game.yard.things.every((thing) => thing.gulps === 0)).toBe(true)
+    expect(t.game.yard.ground.every((gulps) => gulps === 0)).toBe(true)
+    const found = t.reload()
+    expect(found.game.yard).toEqual(t.game.yard)
+  })
+
+  it('lays the fire\'s logs in a heap that no line of three crosses through one middle', async () => {
+    const { buildFire } = await import('./thingModels')
+    const THREE = await import('three')
+    const fire = buildFire(new THREE.MeshBasicMaterial(), new THREE.MeshBasicMaterial())
+    // The three logs' middles, from the vertices of each third of the mesh: no two share a middle, as the spokes of a star would.
+    const position = fire.wetLogs.geometry.getAttribute('position')
+    const each = position.count / 3
+    const middles = [0, 1, 2].map((log) => {
+      let x = 0, z = 0
+      for (let i = log * each; i < (log + 1) * each; i++) { x += position.getX(i); z += position.getZ(i) }
+      return { x: x / each, z: z / each }
+    })
+    for (let a = 0; a < 3; a++) for (let b = a + 1; b < 3; b++) expect(distance(middles[a], middles[b])).toBeGreaterThan(0.15)
+  })
+})

@@ -33,7 +33,7 @@ export const POOL_SEE_THROUGH = 0.62
  * and lowers, and the level shows through the wall. The wall has a material
  * of its own, which the caller disposes of.
  */
-export function buildPool(plastic: THREE.Material, water: THREE.Material): { root: THREE.Group; sheet: THREE.Mesh; wall: THREE.Mesh } {
+export function buildPool(plastic: THREE.Material, water: THREE.Material): { root: THREE.Group; sheet: THREE.Mesh; wall: THREE.Mesh; spill: THREE.Mesh } {
   const root = new THREE.Group()
   root.name = 'pool'
   // The profile runs from the middle of the underside, up the outside of the wall, over the rim and down to the floor.
@@ -62,7 +62,14 @@ export function buildPool(plastic: THREE.Material, water: THREE.Material): { roo
   sheet.position.y = POOL.floor + 0.03
   sheet.visible = false
   root.add(sheet)
-  return { root, sheet, wall }
+  // The water that crosses the low side of the rim when the pool runs over: a tongue down its lip, which the stage
+  // draws out and takes back.
+  const spill = named('pool-spill', [at(box(0.3, 0.05, 0.62, 0.02, WATER.body), 0, 0, 0.31)], water)
+  spill.position.set(0, POOL.wall + 0.02, POOL.radius - 0.2)
+  spill.rotation.x = 0.36
+  spill.visible = false
+  root.add(spill)
+  return { root, sheet, wall, spill }
 }
 
 /** The rubber duck, who wants to float. It faces +x. */
@@ -93,10 +100,19 @@ function flame(height: number, width: number, hex: number): Part {
 
 export type FireModel = { root: THREE.Group; flames: THREE.Mesh; logs: THREE.Group; dryLogs: THREE.Mesh; wetLogs: THREE.Mesh }
 
+/**
+ * Three logs in an untidy heap: each lies its own way, off the middle, and no
+ * two cross where the third does. Laid evenly through one middle they read
+ * from above as a star, which is a sign, and a heap is not.
+ */
+const LOG_HEAP = [
+  { x: -0.1, z: 0.06, turn: 0.2, long: 1.0 },
+  { x: 0.14, z: -0.12, turn: -0.75, long: 0.9 },
+  { x: 0.04, z: 0.17, turn: 1.25, long: 0.8 },
+] as const
+
 function logs(hex: number): Part[] {
-  const parts: Part[] = []
-  for (let i = 0; i < 3; i++) parts.push(at(rod(0.12, 0.13, 1.15, hex, 10), 0, 0.2 + i * 0.02, 0, Math.PI / 2 - 0.16, (i / 3) * Math.PI))
-  return parts
+  return LOG_HEAP.map((log, i) => at(rod(0.12, 0.13, log.long, hex, 10), log.x, 0.2 + i * 0.05, log.z, Math.PI / 2 - 0.12, log.turn))
 }
 
 /** The small fire: a ring of pebbles, three logs (dry, and black and wet once it is out), and flames that the stage keeps moving. */

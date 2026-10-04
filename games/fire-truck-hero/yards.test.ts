@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { LADDER } from './config'
 import { SPOTS, distance } from './layout'
 import { THINGS, WANTING, type Kind } from './things'
-import { driestFreeSpot, gulpOn, gulpOnGround, wantMet, type Yard, type YardEvent } from './world'
+import { FLOATS_AT, driestFreeSpot, gulpOn, gulpOnGround, wantMet, type Yard, type YardEvent } from './world'
 import { ARRANGEMENTS, TURNS, arrangementsOf, isYardSpec, judge, layOut, nextTurn, nextYardSpec, type Arrangement } from './yards'
 
 const all: { place: string; number: number; plan: Arrangement }[] = LADDER.flatMap((place) => arrangementsOf(place).map((plan, number) => ({ place, number, plan })))
@@ -139,7 +139,9 @@ describe('a yard laid out', () => {
   it('has its want met within twelve gulps aimed at the thing that wants', () => {
     for (const { place, number, plan } of all) {
       const { gulps } = gulpsToMeet(layOut(place, number), plan.want)
-      expect(gulps, `${place} ${number}`).toBe(THINGS[plan.things[plan.want].kind].fill)
+      // The duck wants to float, which a pool does a gulp before its fill.
+      const kind = plan.things[plan.want].kind
+      expect(gulps, `${place} ${number}`).toBe(kind === 'pool' ? FLOATS_AT : THINGS[kind].fill)
     }
   })
 

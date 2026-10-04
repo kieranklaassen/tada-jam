@@ -60,6 +60,7 @@ export default {
     'ripples',
     'hanging-drop',
     'seed-leaf-drop',
+    'pool-spill',
     'peek-puff',
     // Soft contact shadows and the idle ring: flat decals with depth writing off, drawn over the sand.
     'shadows',

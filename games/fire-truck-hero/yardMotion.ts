@@ -197,13 +197,15 @@ export class YardMotion {
     } else if (thing.kind === 'pool') {
       this.pool.answer(action, thing.gulps, strength)
       this.duck.answer(action, strength)
+      // A sweep across the pool: what floats bobs, the boat with the duck.
+      if (action === 'sweep' && this.has.boat >= 0 && afloat(yard, this.has.boat)) this.boat.bobs()
       if (action === 'gulp' || action === 'fill') this.ripples.ring(0.1, 0, 1.0)
       else if (action === 'sweep') for (let i = 0; i < 3; i++) this.ripples.ring(-0.6 + i * 0.6, 0.1, 0.45, i * 0.09)
       else if (action === 'neighbour') for (let i = 0; i < 4; i++) this.ripples.ring(Math.cos(i * 2.4) * 0.6, Math.sin(i * 2.4) * 0.5, 0.25, i * 0.07)
     } else if (thing.kind === 'seed') {
-      this.seed.answer(action, thing.gulps, strength)
-      // Drops by her wings: the bee goes up. Water soaked up from below does not reach her.
-      if (action !== 'neighbour') this.bee.answer()
+      this.seed.answer(action, thing.gulps, strength, by !== 'drops')
+      // Drops by her wings, aimed or flung: the bee goes up. Water soaked up from below does not reach her.
+      if (action !== 'neighbour' || by === 'drops') this.bee.answer()
     } else if (thing.kind === 'patch') {
       this.patch.answer(action, thing.gulps, strength)
     } else if (thing.kind === 'boat') {
@@ -296,7 +298,9 @@ export class YardMotion {
     if (pool) {
       const pose = this.pool.step(seconds)
       const deep = pool.gulps >= FLOATS_AT
-      this.duck.step(seconds, deep, deep ? pose.level * POOL_DEEP : 0, { far: POOL_RIM - NEST.duckInPool.z, high: POOL_DEEP, floor: POOL_FLOOR }, channels)
+      // Where the duck's floating is the want of the yard, it lifts off the floor as its ending begins.
+      const lifted = this.has.pool === yard.want ? channels.liftOff : 1
+      this.duck.step(seconds, deep, deep ? pose.level * POOL_DEEP * lifted : 0, { far: POOL_RIM - NEST.duckInPool.z, high: POOL_DEEP, floor: POOL_FLOOR }, channels)
     }
     if (seed) {
       const pose = this.seed.step(seconds)

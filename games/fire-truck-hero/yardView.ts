@@ -190,6 +190,9 @@ export class YardSet {
       this.pool.sheet.position.y = inside
       this.pool.sheet.rotation.z = pose.slosh * 0.012
       this.pool.sheet.scale.setScalar(pose.level > 1 ? 1.06 : 1)
+      // Water crosses the low side of the rim as the pool runs over.
+      this.pool.spill.visible = pose.spill > 0.05
+      this.pool.spill.scale.set(1, 1, Math.max(0.05, pose.spill))
       waterY = inside * SCALE.pool
       this.shadow(place, 1.8)
       const duck = motion.duck.pose
@@ -326,7 +329,7 @@ export class YardSet {
       this.cat.paw.position.y = 0.07 + pose.paw * 0.28
       this.cat.pawFar.position.y = 0.07 + pose.pawFar * 0.28
       if (!inBoat && pose.y < 1.2) this.shadow({ x, z }, 1.05 * pose.size * (1 - Math.min(0.5, pose.y * 0.3)))
-      if (!onRoof) this.proxy(x, base + 0.75 * size, z, inBoat ? 0.5 : 0.85, { x, z })
+      if (!onRoof) this.proxy(x, base + 0.75 * size, z, inBoat ? 0.6 : 0.85, { x, z })
     }
 
     // The worm comes up where the mud is, looks about and goes down.

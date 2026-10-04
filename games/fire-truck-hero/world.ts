@@ -103,11 +103,16 @@ export function driestFreeSpot(yard: Yard, clearOf?: Place): number | null {
   return best
 }
 
-/** The want is met when the thing that holds it has had its fill. The snail's is also met by a puddle or mud under it. */
+/**
+ * The want is met when the thing that holds it has had its fill. The duck
+ * wants to float, so a pool's is met the moment it is deep enough to float
+ * what is in it, a gulp short of its fill. The snail's is also met by a
+ * puddle or mud under it.
+ */
 export function wantMet(yard: Yard): boolean {
   const thing = yard.things[yard.want]
   if (!thing || THINGS[thing.kind].with === null) return false
-  if (thing.gulps >= THINGS[thing.kind].fill) return true
+  if (thing.gulps >= (thing.kind === 'pool' ? FLOATS_AT : THINGS[thing.kind].fill)) return true
   const at = thing.kind === 'patch' ? placeOf(thing) : null
   return at !== null && ['puddle', 'mud'].includes(levelAt(yard.ground, at.x, at.z))
 }
@@ -188,7 +193,10 @@ function reach(d: Draft, events: YardEvent[], index: number, aimed: boolean, wat
   const before = thing.gulps
   // Run-off turns the wheel from below, and is not a stream on it.
   if (water && (aimed || thing.kind !== 'wheel')) thing.gulps = Math.min(most, before + 1)
-  say(d, events, index, aimed ? actionOf(thing.kind, before, thing.gulps) : 'neighbour', aimed ? undefined : by)
+  // A cat whom a neighbour's water soaks does what a soaked cat does: the gulp that brings her to her fill, or
+  // past it, is named for that, however it came. Before that it is a drop on her nose.
+  const soaks = thing.kind === 'cat' && water && thing.gulps >= fill
+  say(d, events, index, aimed || soaks ? actionOf(thing.kind, before, thing.gulps) : 'neighbour', aimed ? undefined : by)
   if (!water) return
   const over = before >= fill
   const at = placeOf(thing)

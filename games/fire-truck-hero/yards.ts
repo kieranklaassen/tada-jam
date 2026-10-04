@@ -142,10 +142,13 @@ export function nextYardSpec(position: string, turn: number): YardSpec {
  * How a yard went, when the child leaves it or its want is met. Well: the want
  * was met, by any route. Mixed: it was not, and some other thing is at its
  * fill or beyond, a puddle on the sand among them: the child was busy with an
- * idea of their own. Badly: it was not, and nothing is at its fill.
+ * idea of their own. Badly: it was not, and nothing is at its fill. `busy`
+ * says that some other thing was brought to its fill and holds it no longer:
+ * a wheel that has run down, a boat that sank and emptied itself. The yard
+ * cannot say that itself, so the game remembers it while the yard is played.
  */
-export function judge(yard: Yard): CycleOutcome {
+export function judge(yard: Yard, busy = false): CycleOutcome {
   if (yard.met || wantMet(yard)) return 'well'
   const filled = yard.things.some((thing, index) => index !== yard.want && thing.gulps >= THINGS[thing.kind].fill)
-  return filled || yard.ground.some((gulps) => gulps >= PUDDLE_AT) ? 'mixed' : 'badly'
+  return filled || busy || yard.ground.some((gulps) => gulps >= PUDDLE_AT) ? 'mixed' : 'badly'
 }

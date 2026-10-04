@@ -95,6 +95,10 @@ export class Game extends Toy {
   /** The want was met by a gulp aimed at it, whose own sound said so. */
   private metByAim = false
   private cupTipped = false
+  /** Some thing other than the want was brought to its fill in this yard: the child was busy with an idea of their own. */
+  private busy = false
+  /** Drips still to fall from the wet logs of a fire that went out and holds no want: when, and which of the two. */
+  private readonly logDrips: { at: number; n: number }[] = []
 
   /** `startedAt` is the attended clock's seconds when the game is made, so that what it times (the first showing, the truck coming to rest) counts from then. */
   constructor(play: (voice: VoiceSpec) => void, raw: unknown, childAge: number | null, private readonly seed = 1, startedAt = 0) {
@@ -145,6 +149,7 @@ export class Game extends Toy {
     }
     // The duck's beak on a dry floor is heard a few times after a touch, and then it taps in silence: an idle yard goes quiet.
     if (this.motion.duck.tapped && this.tapsHeard++ < 3) this.say(duckTapsFloor())
+    while (this.logDrips.length > 0 && this.logDrips[0].at <= now) this.dripFromLogs(this.logDrips.shift()!.n)
     // Down from its ride over the rim it stands in a puddle, which it likes.
     if (this.motion.duck.splashed) this.say(duckQuack(this.variants.next(3)))
     this.show(now)
@@ -173,10 +178,17 @@ export class Game extends Toy {
   override rest(): void {
     this.endScene()
     this.skipSounds = true
-    for (const gulp of this.hose.clear()) this.land(gulp)
+    for (const gulp of this.hose.clear()) {
+      this.land(gulp)
+      // Water that rang the gate open was the last of its yard: what was in the air behind it does not fall into the next one.
+      if (this.leaving) break
+    }
     this.skipSounds = false
+    // A scene that the landing water began (an ending, the drive) lands at its end too: the game rests as it will be found.
+    this.endScene()
     this.drops.clear()
     this.spits.length = 0
+    this.logDrips.length = 0
   }
 
   /** A scene is playing: the Mount keeps the idle ladder down meanwhile. */
@@ -309,8 +321,12 @@ export class Game extends Toy {
         const fullness = Math.min(1, (thing?.gulps ?? 0) / THINGS[event.kind].fill)
         this.say(this.voiceOf(event.kind, event.action, event.by, thing?.gulps ?? 0, fullness))
         this.motion.result(event.thing, event.action, this.yard, 1, event.by)
-        this.around(event.thing, event.kind, event.action)
+        this.around(event.thing, event.kind, event.action, event.by)
         if (event.thing === this.yard.want && event.action === 'fill') this.metByAim = true
+        // The child brought some other thing to its fill: remembered for how the yard is judged, since a wheel
+        // that runs down and a boat that sinks hold nothing afterwards.
+        if (event.thing !== this.yard.want && event.by === undefined && (event.action === 'fill' || event.action === 'too-much')) this.busy = true
+        this.wentOut(event, before)
         // What a neighbour passes on is seen on the ground on its way.
         if (event.by === 'run-off') this.runOff(before, event.thing, event.kind)
       } else if (event.action === 'neighbour' && event.cell !== undefined) {
@@ -318,6 +334,7 @@ export class Game extends Toy {
         const x = (event.cell % 16) + 0.5, z = Math.floor(event.cell / 16) + 0.5
         this.paint.splash(x, z, 1.2, 0.9)
         if (levelOf(this.yard.ground[event.cell]) !== 'damp') this.paint.puddle(x, z)
+        this.say(cellVoice(cellOf('patch', 'neighbour').voice, 0, this.variants.next(3)))
       }
     } else if (event.type === 'moved') {
       this.motion.moved(event.thing, before, this.yard)
@@ -347,6 +364,8 @@ export class Game extends Toy {
     if (kind === 'boat' && action === 'gulp' && gulps > 1) return cellVoice(cellOf('boat', 'fill').voice, fullness, variant)
     if (kind === 'fire' && by === 'run-off') return slowSizzle()
     if (kind === 'cat' && by === 'run-off') return catPaws()
+    // Drops flung onto the plant patter on its leaves; the slurp is the pot drinking from below.
+    if (kind === 'seed' && action === 'neighbour' && by === 'drops') return cellVoice(cellOf('seed', 'sweep').voice, fullness, variant)
     return cellVoice(cellOf(kind, action).voice, fullness, variant)
   }
 
@@ -361,7 +380,7 @@ export class Game extends Toy {
   }
 
   /** What the animals and the air round a thing do about a result: a quack, a buzz, drops flung off a wheel, a wet cat or a tipped flower, blobs out of mud. */
-  private around(index: number, kind: Kind, action: Action): void {
+  private around(index: number, kind: Kind, action: Action, by?: Came): void {
     const at = placeOf(this.yard, index)
     // Sprayed, the duck wriggles and quacks: every time the hose reaches its pool.
     if (kind === 'pool' && action !== 'neighbour') this.say(delayed(duckQuack(this.variants.next(3)), QUACK_AFTER_S))
@@ -371,7 +390,7 @@ export class Game extends Toy {
     else if (kind === 'seed' && action === 'sweep') {
       this.say(beeBuzz(true))
       this.drops.burst(at.x, 1.5, at.z, 4, 1.1)
-    } else if (kind === 'seed' && action !== 'neighbour') this.say(beeBuzz(true))
+    } else if (kind === 'seed' && (action !== 'neighbour' || by === 'drops')) this.say(beeBuzz(true))
     // On sand the boat slides with a scrape.
     else if (kind === 'boat' && action === 'sweep' && !afloat(this.yard, index)) this.say(delayed(boatScrapes(), 0.05))
     // The wet logs float off on their own puddle.
@@ -388,6 +407,8 @@ export class Game extends Toy {
     const from = before.things.findIndex((thing, index) => thing.kind === 'pool' && index !== to && thing.gulps >= THINGS.pool.fill)
     if (from < 0) return
     const a = placeOf(before, from), b = placeOf(before, to)
+    // The tongue creeps along the ground with a faint trickle, once for each time the pool runs over.
+    if (kind === 'cat' || before.runsTo === to) this.say(cellVoice(cellOf('patch', 'neighbour').voice, 0, this.variants.next(3)))
     if (kind === 'cat') return this.tongue(a, { x: a.x + (b.x - a.x) * 0.62, z: a.z + (b.z - a.z) * 0.62 })
     if (before.runsTo !== to) return
     const past = before.runsPast
@@ -426,7 +447,7 @@ export class Game extends Toy {
     this.wormOwed = null
     this.scene = new Scene(driveScene(this.directions()))
     this.scene.start(now, () => {
-      this.save = driveOn(withYard(this.save, left), left)
+      this.save = driveOn(withYard(this.save, left), left, this.busy)
       this.yard = yardOf(this.save)
       this.need('now')
     })
@@ -507,14 +528,10 @@ export class Game extends Toy {
     if (mark === 'arrived') return this.arrive()
     if (mark === 'worm-gone') this.wormAt = null
     // The logs drip: a drop lets go of a log's end and falls.
-    if (mark === 'drip' && this.motion.has.fire >= 0 && !this.skipSounds) {
-      const fire = placeOf(this.yard, this.motion.has.fire)
-      this.drops.drip(fire.x + (n === 0 ? 0.62 : -0.55), 0.55, fire.z + (n === 0 ? 0.2 : -0.1))
-    }
+    if (mark === 'drip') return this.skipSounds ? undefined : this.dripFromLogs(n)
     const voices: Partial<Record<Mark, () => VoiceSpec>> = {
       // A fire that a neighbour's water put out had no hiss of its own yet.
       'hiss-falls': () => (this.metByAim ? [] : cellVoice(cellOf('fire', 'fill').voice, 1, 0)),
-      drip: () => drip(n),
       'steam-fades': steamFades,
       quack: () => duckQuack(n),
       'duck-shakes': () => duckQuack(2),
@@ -528,6 +545,27 @@ export class Game extends Toy {
     }
     const voice = voices[mark]?.()
     if (voice && voice.length > 0) this.say(voice)
+  }
+
+  /** One drop lets go of the end of a wet log and falls, with its small sound. */
+  private dripFromLogs(n: number): void {
+    if (this.motion.has.fire < 0) return
+    const fire = placeOf(this.yard, this.motion.has.fire)
+    this.drops.drip(fire.x + (n === 0 ? 0.5 : -0.45), 0.55, fire.z + (n === 0 ? 0.2 : -0.1))
+    this.say(drip(n))
+  }
+
+  /**
+   * A fire went out. Where it holds the want its ending says so: the falling hiss, and the logs that drip twice.
+   * A fire that holds no want goes out just the same: it drips twice a little later, and one that a neighbour's
+   * water put out gives the falling hiss it had not given yet.
+   */
+  private wentOut(event: Extract<YardEvent, { type: 'result' }>, before: Yard): void {
+    if (event.kind !== 'fire' || event.thing === this.yard.want) return
+    const was = before.things[event.thing]?.gulps ?? 0, now = this.yard.things[event.thing]?.gulps ?? 0
+    if (was >= THINGS.fire.fill || now < THINGS.fire.fill) return
+    if (event.action === 'neighbour') this.say(cellVoice(cellOf('fire', 'fill').voice, 1, 0))
+    this.logDrips.push({ at: this.clock + 1.4, n: 0 }, { at: this.clock + 2.3, n: 1 })
   }
 
   // --- The first showing of a new thing ---------------------------------------
@@ -606,6 +644,8 @@ export class Game extends Toy {
     this.motion.settle(this.yard, this.channels)
     this.latch = 0
     this.metByAim = false
+    this.busy = false
+    this.logDrips.length = 0
     this.wormOwed = null
     this.stillSince = this.clock
     // A yard found with its want met has been played: nothing in it is shown.

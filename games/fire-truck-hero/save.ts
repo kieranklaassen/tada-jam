@@ -175,8 +175,8 @@ export function withYard(save: Save, yard: Yard): Save {
  * to wait behind it is chosen from the position as it now stands, so a moved
  * position shows in the yard after next.
  */
-export function driveOn(save: Save, left: Yard): Save {
-  const state = beginCycle(finishCycle(serialize(save), judge(left)))
+export function driveOn(save: Save, left: Yard, busy = false): Save {
+  const state = beginCycle(finishCycle(serialize(save), judge(left, busy)))
   const yard = layOut(save.next.place, save.next.arrangement)
   return toSave(state, yard, waiting(state.position, save.turn, yard), nextTurn(save.turn), save.seen)
 }
