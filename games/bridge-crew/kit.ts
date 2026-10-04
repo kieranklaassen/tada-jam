@@ -42,7 +42,7 @@ export type KindSpec = {
 export const SPEC: Readonly<Record<Kind, KindSpec>> = {
   plank: { maxLength: 4, weight: 0.12, stretch: 3000, pull: 16, squeeze: 16, bow: 40 },
   stick: { maxLength: 4, weight: 0.04, stretch: 2000, pull: 12, squeeze: 12, bow: 6 },
-  tube: { maxLength: 5, weight: 0.05, stretch: 2000, pull: 5, squeeze: 14, bow: 40 },
+  tube: { maxLength: 5, weight: 0.05, stretch: 2000, pull: 5, squeeze: 22, bow: 40 },
   thread: { maxLength: 9, weight: 0.01, stretch: 600, pull: 14, squeeze: 0, bow: 0 },
 }
 

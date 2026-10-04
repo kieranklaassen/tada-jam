@@ -636,6 +636,15 @@ export class Game extends Toy {
     const spun = added >= 0 ? -1 : this.turned.findIndex((since) => since === 0), on = this.trolleyOn(), place = this.trolley?.at
     super.commit(bridge, added)
     if (added >= 0 && this.crew && !this.crew.mole.busy) this.crew.mole.react('laid')
+    // A build that asks more of a part than it holds, under nothing but its own weight, shows it at once: the part
+    // gives where the model says, is heard, ringed and seen broken for a moment, and the bridge is as built.
+    const over = this.trolley?.at ? -1 : this.answer.parts.findIndex((state) => state.use > 1 + 1e-6)
+    if (over >= 0 && this.bridge[over]) {
+      const state = this.answer.parts[over], strain = state.strain === 'pull' || state.strain === 'bow' || state.strain === 'squeeze' ? state.strain : 'bend'
+      this.voices.push(give(strain, this.bridge[over].kind))
+      this.save = ringed(this.save, { part: over, spot: state.spot })
+      this.trolleyBroke = { part: over, spot: state.spot, squeezed: strain === 'bow' || strain === 'squeeze', since: 0 }
+    }
     const part = spun >= 0 ? this.bridge[spun] : undefined
     if (!part || !place) return
     // A tube rolls as it is turned: the trolley parked on it log-rolls off into the water with a plop.
@@ -783,7 +792,7 @@ export class Game extends Toy {
       // Each part is heard as it takes the trolley, as under a vehicle.
       if (this.trolley.at) {
         const now = this.answer.parts.map((part) => part.use)
-        for (const due of creaks(this.trolleyHeard, now)) if (this.bridge[due.part]) this.voices.push(loadVoice(this.bridge[due.part].kind, due.use))
+        for (const due of creaks(this.trolleyHeard, now)) if (this.bridge[due.part]) this.voices.push(loadVoice(this.bridge[due.part].kind, due.use, this.answer.parts[due.part]?.strain))
         this.trolleyHeard = now
         if (hand.ran >= RUN_OVER) this.compare()
       }
@@ -800,7 +809,7 @@ export class Game extends Toy {
     if (!this.trolley.at) return
     let most = -1
     this.answer.parts.forEach((state, index) => { if (state.use > 0.05 && (most < 0 || state.use > this.answer.parts[most].use)) most = index })
-    if (most >= 0 && this.bridge[most]) this.voices.push(loadVoice(this.bridge[most].kind, this.answer.parts[most].use))
+    if (most >= 0 && this.bridge[most]) this.voices.push(loadVoice(this.bridge[most].kind, this.answer.parts[most].use, this.answer.parts[most].strain))
   }
 
   private tapTracing(spot: 'pad' | 0 | 1): void {
@@ -888,7 +897,7 @@ export class Game extends Toy {
       this.rest = rests(this.bridge, drive.run.frame, answer, isFooting(this.at), (gx) => groundAt(this.at, gx))
       this.lying = { frame: drive.run.frame, moved: answer.moved }
       // Each part is heard as it takes the load, in its own kind's voice.
-      for (const due of creaks(drive.heard, answer.use)) this.voices.push(this.bridge[due.part] ? loadVoice(this.bridge[due.part].kind, due.use) : creak(due.use))
+      for (const due of creaks(drive.heard, answer.use)) this.voices.push(this.bridge[due.part] ? loadVoice(this.bridge[due.part].kind, due.use, answer.strain[due.part]) : creak(due.use))
       // A tracing laid on the board dips under the same vehicle at the same place: as far as its own run got.
       const traced = this.laidTracing === null ? null : this.save.sheets[this.save.on].tracings[this.laidTracing]
       if (drive.tracing && traced) {

@@ -108,3 +108,17 @@ describe('a pin plucked', () => {
     expect(new Set(rattle.map((sound) => `${sound.wave} ${Math.round(sound.pitch)}`)).size).toBe(3)
   })
 })
+
+describe('a part under load', () => {
+  it('a pulled part\'s sound rises, whatever it is made of; a bent plank creaks lower, and a stick squeezed short creaks lower too', () => {
+    const first = (kind: 'plank' | 'stick' | 'tube' | 'thread', use: number, strain: string) => load(kind, use, strain)[0].pitch
+    for (const kind of ['plank', 'stick', 'tube', 'thread'] as const) expect(first(kind, 0.9, 'pull'), kind).toBeGreaterThan(first(kind, 0.5, 'pull'))
+    expect(first('plank', 0.9, 'bend')).toBeLessThan(first('plank', 0.5, 'bend'))
+    expect(first('stick', 0.9, 'squeeze')).toBeLessThan(first('stick', 0.5, 'squeeze'))
+    // Squeezed long, a stick bows, and squeaks higher as it does.
+    expect(first('stick', 0.9, 'bow')).toBeGreaterThan(first('stick', 0.5, 'bow'))
+    // A pulled plank and a bent one are not one sound.
+    expect(first('plank', 0.75, 'pull')).not.toBe(first('plank', 0.75, 'bend'))
+  })
+})
+

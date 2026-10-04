@@ -118,16 +118,20 @@ export function tracingSheet(pen: Pen, x: number, y: number, wide: number, tall:
     pen.globalAlpha = 1
     return
   }
-  pen.globalAlpha = 0.92
-  cutOut(pen, c, '#e8eef6', () => pen.roundRect(x, y, wide, tall, c * 0.05))
+  // Tracing paper lying on the blue sheet: the blue shows through it, paler. What is traced on it is a white line.
+  pen.globalAlpha = 0.95
+  cutOut(pen, c, TRACING_PAPER, () => pen.roundRect(x, y, wide, tall, c * 0.05))
   pen.globalAlpha = 1
   if (parts.length === 0) return
   let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity
   for (const p of parts) for (const e of [p.a, p.b]) { x0 = Math.min(x0, e[0]); x1 = Math.max(x1, e[0]); y0 = Math.min(y0, e[1]); y1 = Math.max(y1, e[1]) }
   const scale = Math.min((wide - c * 0.2) / Math.max(x1 - x0, 1), (tall - c * 0.2) / Math.max(y1 - y0, 1))
   const at = (gx: number, gy: number): [number, number] => [x + wide / 2 + (gx - (x0 + x1) / 2) * scale, y + tall / 2 - (gy - (y0 + y1) / 2) * scale]
-  lineDrawing(pen, parts, parts, at, scale, INK.sheetDeep, 0.9)
+  lineDrawing(pen, parts, parts, at, scale, INK.line, 0.95)
 }
+
+/** Tracing paper on the blue sheet: the sheet's blue, paler where the paper lies on it. */
+export const TRACING_PAPER = '#6f93c4'
 
 /**
  * The barge, its waterline at (x, y) in pixels and its bow to the right: a

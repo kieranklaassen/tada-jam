@@ -157,8 +157,8 @@ export function wood(pen: Pen, kind: Wood, x0: number, y0: number, x1: number, y
   pen.restore()
 }
 
-/** String between two pins. Taut it is straight; slack it hangs in a shallow curve. */
-export function string(pen: Pen, x0: number, y0: number, x1: number, y1: number, cell: number, slack = 0) {
+/** String between two pins. Taut it is straight; slack it hangs in a shallow curve. `cell` sets its width, so a thinner cell draws it thin. */
+export function string(pen: Pen, x0: number, y0: number, x1: number, y1: number, cell: number, slack = 0, lift = 1) {
   const sag = slack * cell, mx = (x0 + x1) / 2, my = (y0 + y1) / 2 + sag
   const draw = (dx: number, dy: number, colour: string, width: number, dash: number[]) => {
     pen.strokeStyle = colour
@@ -172,7 +172,8 @@ export function string(pen: Pen, x0: number, y0: number, x1: number, y1: number,
     pen.setLineDash([])
   }
   const width = Math.max(1.5, cell * 0.05)
-  draw(SHADOW.x * cell, SHADOW.y * cell, INK.shadow, width, [])
+  // `lift` is how far it is off the sheet: its shadow lies that much farther from it, and lands a beat after it does.
+  draw(SHADOW.x * cell * lift, SHADOW.y * cell * lift, INK.shadow, width, [])
   draw(0, 0, INK.string, width, [])
   // The twist of the string, as short darker dashes along it.
   draw(0, 0, INK.stringTwist, width * 0.45, [width * 0.9, width * 1.5])

@@ -141,14 +141,23 @@ export const chord = (pitches: readonly number[]): VoiceSpec => [...pitches].sor
  * A part carrying a load, each kind in its own voice (grid.ts, the Load
  * column): a plank creaks lower as its curve deepens, a squeezed stick squeaks
  * higher as it bows, a tube crackles like a paper cup, and a pulled thread
- * hums. `use` is the share of the part's strength in use.
+ * hums. `use` is the share of the part's strength in use, and `strain` how
+ * it is strained: a pulled part's sound rises, whatever it is made of, and a
+ * squeezed one creaks.
  */
-export function load(kind: Kind, use: number): VoiceSpec {
-  const share = clamp(use, [0, 1])
+export function load(kind: Kind, use: number, strain: string = kind === 'plank' ? 'bend' : kind === 'thread' ? 'pull' : 'bow'): VoiceSpec {
+  const share = clamp(use, [0, 1]), pulled = strain === 'pull'
   switch (kind) {
-    case 'plank': return kept([{ wave: 'square', pitch: 220 - 110 * share, slideTo: 180 - 100 * share, peak: 0.04 + 0.06 * share, attack: 0.02, length: 0.3 }])
-    case 'stick': return kept([{ wave: 'triangle', pitch: 1400 + 900 * share, slideTo: 1700 + 1100 * share, peak: 0.04 + 0.05 * share, attack: 0.01, length: 0.18 }])
-    case 'tube': return kept([0, 0.04, 0.09, 0.16].map((after, i) => ({ wave: 'noise' as const, pitch: 1800 + 300 * i, peak: 0.03 + 0.03 * share, attack: 0.001, length: 0.03, after })))
+    // A plank pulled along its length sings upward like any pulled part; bent or squeezed it creaks lower as its curve deepens.
+    case 'plank': return kept(pulled
+      ? [{ wave: 'square', pitch: 200 + 140 * share, slideTo: 230 + 170 * share, peak: 0.04 + 0.05 * share, attack: 0.02, length: 0.3 }]
+      : [{ wave: 'square', pitch: 220 - 110 * share, slideTo: 180 - 100 * share, peak: 0.04 + 0.06 * share, attack: 0.02, length: 0.3 }])
+    // A stick pulled pings upward, and squeezed long it squeaks higher as it bows; squeezed short it only creaks, lower.
+    case 'stick': return kept(strain === 'squeeze'
+      ? [{ wave: 'square', pitch: 520 - 160 * share, slideTo: 460 - 170 * share, peak: 0.04 + 0.05 * share, attack: 0.015, length: 0.2 }]
+      : [{ wave: 'triangle', pitch: 1400 + 900 * share, slideTo: 1700 + 1100 * share, peak: 0.04 + 0.05 * share, attack: 0.01, length: 0.18 }])
+    // A tube crackles like a paper cup, and pulled, its crackle rises.
+    case 'tube': return kept([0, 0.04, 0.09, 0.16].map((after, i) => ({ wave: 'noise' as const, pitch: 1800 + 300 * i + (pulled ? 900 * share : 0), peak: 0.03 + 0.03 * share, attack: 0.001, length: 0.03, after })))
     case 'thread': return kept([{ wave: 'sine', pitch: 110 + 110 * share, peak: 0.05 + 0.04 * share, attack: 0.06, length: 0.9 }])
   }
 }

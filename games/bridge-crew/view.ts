@@ -5,7 +5,7 @@ import { CREW_SCALE } from './crew'
 import { crewFigure } from './crewfig'
 import { bargeAt, drawSky, drawSplash, drawWaterLife } from './drift'
 import { chief, chiefModel, roll } from './figures'
-import { barge, compareModels, ideaModel, ideaPieces, lineDrawing, spareWeights, tracingSheet, trolley } from './props'
+import { TRACING_PAPER, barge, compareModels, ideaModel, ideaPieces, lineDrawing, spareWeights, tracingSheet, trolley } from './props'
 import { vehicle } from './fleet'
 import { LEAVE, PULL, ROLL_IN, swingAt, type Game } from './game'
 import { handPose, type Guidance, type HandPose } from './guidance'
@@ -44,6 +44,10 @@ export function modelBuilt(idea: Idea, progress: number): number {
   const whole = ideaPieces(idea, true), common = Math.min(whole - 1, ideaPieces(idea, false))
   return (common + (whole - common) * share(0.5, 0.62)) / whole
 }
+
+/** How long a thread takes to unreel from its first pin to its second, in seconds; and how many times as far the middle of a plucked plank goes as a stiff part shifts. */
+const UNREEL = 0.25
+const WHIP = 2.2
 
 /** How long the trolley takes to turn over when it is flipped, in seconds. */
 const FLIP = 0.3
@@ -190,7 +194,9 @@ export class View {
       // A part that was never turned has been "turning" for ever: every term below is taken only inside the turn.
       const turned = toy.turned[index] < 0.4 ? toy.turned[index] : 0.4, turning = 1 - turned / 0.4
       const hop = part.kind === 'plank' ? 0.12 * Math.sin(Math.PI * Math.min(turned / 0.3, 1)) : part.kind === 'tube' ? 0.05 * turning * Math.sin(2 * Math.PI * 6 * turned) : 0
-      const off = part.kind === 'thread' ? 0 : shake + hop
+      // A stick and a tube shake as one stiff piece. A plank whips like a ruler held at its ends: its pins stay and its
+      // middle goes, so its shake is not in where its ends are but in its curve (`whip`, below).
+      const off = part.kind === 'thread' ? 0 : (part.kind === 'plank' ? 0 : shake) + hop
       const ox = (-dy / long) * off, oy = (dx / long) * off
       return { a: at2([now.a[0] + ox, now.a[1] + oy]), b: at2([now.b[0] + ox, now.b[1] + oy]), shake, turning, turned }
     })
@@ -208,7 +214,10 @@ export class View {
       if (dip && dip.part === index) { const v = at2(dip.at); string(pen, ...p.a, ...v, cell, 0); string(pen, ...v, ...p.b, cell, 0); drawn += 2; return }
       // Pulled, it draws thin, by the share of its strength in use, where strain is being shown.
       const load = carried(index), thin = load && load.strain === 'pull' && showsStrain(load.use, jobCrossed) ? 1 - 0.5 * Math.min(1, load.use) : 1
-      string(pen, ...p.a, ...p.b, cell * thin, ((toy.rest[index].slack ? 0.3 : 0) + p.shake + whirl) / thin)
+      // Just laid, it unreels from its first pin to its second, and its shadow lands a beat after it.
+      const out = toy.laid[index] < UNREEL ? toy.laid[index] / UNREEL : 1, lift = toy.laid[index] < 0.3 ? 1 + 2.5 * (1 - toy.laid[index] / 0.3) : 1
+      const end: readonly [number, number] = out < 1 ? [p.a[0] + (p.b[0] - p.a[0]) * out, p.a[1] + (p.b[1] - p.a[1]) * out] : p.b
+      string(pen, ...p.a, ...end, cell * thin, ((toy.rest[index].slack ? 0.3 : 0) + p.shake + whirl) / thin, lift)
       drawn++
     })
     toy.bridge.forEach((part, index) => {
@@ -230,14 +239,22 @@ export class View {
       if (load && shows) { const look = strainLook(load.strain, load.use); strained = 1 - 0.35 * look.thin + 0.5 * look.bulge }
       if (load && shows && load.strain === 'bow' && part.kind !== 'plank') {
         // Squeezed and long, it bows in the middle: two halves that meet off its own line, further the nearer its limit.
+        // Squeezed and long, it bows: a curve of short lengths that stands off its own line in the middle, further the
+        // nearer its limit. (Two straight halves would meet in a corner, and a corner reads as a sign.)
         const dx = p.b[0] - p.a[0], dy = p.b[1] - p.a[1], long = Math.hypot(dx, dy) || 1, out = cell * 0.3 * Math.min(1, load.use) * (index % 2 ? 1 : -1)
-        const mid: [number, number] = [(p.a[0] + p.b[0]) / 2 - (dy / long) * out, (p.a[1] + p.b[1]) / 2 + (dx / long) * out]
-        this.part(pen, woodOf(part), length(part) / 2, p.a, mid, 1, deep * strained); this.part(pen, woodOf(part), length(part) / 2, mid, p.b, 1, deep * strained)
+        const bowed = [0, 0.2, 0.4, 0.6, 0.8, 1].map((share): [number, number] => [p.a[0] + dx * share - (dy / long) * out * Math.sin(Math.PI * share), p.a[1] + dy * share + (dx / long) * out * Math.sin(Math.PI * share)])
+        for (let i = 0; i + 1 < bowed.length; i++) this.part(pen, woodOf(part), length(part) / 5, bowed[i], bowed[i + 1], i === 0 ? 1 : 0, deep * strained)
         drawn += 2
         return
       }
       // A plank bends in a smooth curve, deepest under the load: drawn as short lengths from point to point along it.
-      const curve = part.kind === 'plank' && !carried_ ? toy.bend(index) : []
+      const bent = part.kind === 'plank' && !carried_ ? toy.bend(index) : []
+      // Plucked, a plank whips like a ruler on a desk edge: its middle goes from side to side of its own line and its
+      // ends stay on their pins. The whip is added to whatever bend the load has put in it.
+      const whip = part.kind === 'plank' && !carried_ && Math.abs(p.shake) > 0.002 ? p.shake * WHIP : 0
+      const shares = whip !== 0 && bent.length === 0 ? [0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875] : bent.map((point) => point.share)
+      const whipX = (p.b[1] - p.a[1]) / (Math.hypot(p.b[0] - p.a[0], p.b[1] - p.a[1]) || 1), whipY = -(p.b[0] - p.a[0]) / (Math.hypot(p.b[0] - p.a[0], p.b[1] - p.a[1]) || 1)
+      const curve = shares.map((share, i) => ({ share, off: [(bent[i]?.off[0] ?? 0) + whipX * whip * Math.sin(Math.PI * share), (bent[i]?.off[1] ?? 0) - whipY * whip * Math.sin(Math.PI * share)] as const }))
       if (curve.some((point) => Math.abs(point.off[0]) + Math.abs(point.off[1]) > 0.012)) {
         const points: (readonly [number, number])[] = [p.a, ...curve.map((point): [number, number] => [p.a[0] + (p.b[0] - p.a[0]) * point.share + point.off[0] * cell, p.a[1] + (p.b[1] - p.a[1]) * point.share - point.off[1] * cell]), p.b]
         const each = length(part) / (points.length - 1), kind = woodOf(part)
@@ -437,6 +454,16 @@ export class View {
 
     drawn += this.tools(pen, game, glow)
     // A tracing laid on the board: the traced design as a white line drawing, lying as it would under the same load.
+    if (game.laidTracing !== null && sheet.tracings[game.laidTracing]?.length) {
+      // The tracing paper itself, lying on the board over the bridge: a pale veil as far as the traced design reaches.
+      let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity
+      for (const one of sheet.tracings[game.laidTracing]) for (const end of [one.a, one.b]) { x0 = Math.min(x0, end[0]); x1 = Math.max(x1, end[0]); y0 = Math.min(y0, end[1]); y1 = Math.max(y1, end[1]) }
+      const [vx0, vy0] = at2(x0 - 0.7, y1 + 0.7), [vx1, vy1] = at2(x1 + 0.7, y0 - 0.9)
+      pen.fillStyle = TRACING_PAPER
+      pen.globalAlpha = 0.22
+      pen.beginPath(); pen.roundRect(vx0, vy0, vx1 - vx0, vy1 - vy0, cell * 0.08); pen.fill()
+      pen.globalAlpha = 1
+    }
     if (game.laidTracing !== null && sheet.tracings[game.laidTracing]) { lineDrawing(pen, sheet.tracings[game.laidTracing], game.tracingRest, at2, cell, INK.line, 0.8, (index) => game.bend(index, true), game.tracingGave); drawn++ }
     // Where the traced design has no way under the trolley, its own trolley is drawn in line where it would be: in the water below.
     const stands = game.trolleyPlace()
@@ -644,6 +671,11 @@ export class View {
       const [sx, sy] = at2(paper.x0 + slot * half + 0.15, top - 0.15)
       tracingSheet(pen, sx, sy, (half - 0.3) * cell, cell * 0.95, cell, sheet.tracings[slot] ?? null)
       if (game.laidTracing === slot) this.brackets(pen, [sx - cell * 0.05, sy - cell * 0.05], [sx + (half - 0.3) * cell + cell * 0.05, sy + cell], 0.95)
+    }
+    // A kept tracing in the hand, on its way to the board: it is under the finger.
+    if (hand?.what === 'tracing' && hand.carried && hand.spot !== 'pad' && sheet.tracings[hand.spot]) {
+      const [fx, fy] = at2(hand.finger[0], hand.finger[1]), wide = (half - 0.3) * cell * 1.3, tall = cell * 0.95 * 1.3
+      tracingSheet(pen, fx - wide / 2, fy - tall * 0.6, wide, tall, cell, sheet.tracings[hand.spot])
     }
     return 4
   }
