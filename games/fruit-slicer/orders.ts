@@ -87,7 +87,8 @@ export function tinParts(customer: Customer): number[] {
 export function ordersFor(who: Who, fruit: Fruit, parts: readonly number[]): Share[][] {
   const single: Share[] = []
   for (const den of parts) {
-    const most = who === 'boa' ? 2 * den : who === 'pelican' || who === 'cat' ? den - 1 : den
+    // No order can be filled without a cut: nobody but the twins, whose whole is two halves, orders exactly a whole fruit, and the boa never orders exactly two.
+    const most = who === 'boa' ? 2 * den - 1 : who === 'twins' ? den : den - 1
     const least = who === 'boa' ? den + 1 : who === 'ants' ? 2 : 1
     for (let num = least; num <= most; num++) {
       const share = { num, den }
@@ -155,9 +156,9 @@ export function inRange(customer: Customer): string[] {
   for (const share of shares) {
     if (!PARTS.includes(share.den)) wrong.push(`parts not in play: ${share.den}`)
     if (!Number.isInteger(share.num) || share.num < 1) wrong.push('not a count of parts')
-    if (who !== 'boa' && who !== 'twins' && who !== 'ants' && share.num >= share.den) wrong.push('a whole or more')
-    if ((who === 'twins' || who === 'ants') && share.num > share.den) wrong.push('more than a whole')
-    if (who === 'boa' && (share.num <= share.den || share.num > 2 * share.den)) wrong.push('not between one whole and two')
+    if (who !== 'boa' && who !== 'twins' && share.num >= share.den) wrong.push('a whole or more')
+    if (who === 'twins' && share.num > share.den) wrong.push('more than a whole')
+    if (who === 'boa' && (share.num <= share.den || share.num >= 2 * share.den)) wrong.push('not between one whole and two')
     if (!Number.isInteger(shareLength(fruit, share))) wrong.push('not a whole number of points')
     if (shareLength(fruit, share) > RAIL) wrong.push('longer than the rail')
   }

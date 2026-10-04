@@ -99,7 +99,7 @@ describe('what each customer may order', () => {
     for (const [share] of all('pelican')) expect(share.num).toBeLessThan(share.den)
     for (const [share] of all('boa')) {
       expect(share.num).toBeGreaterThan(share.den)
-      expect(share.num).toBeLessThanOrEqual(2 * share.den)
+      expect(share.num).toBeLessThan(2 * share.den)
     }
     // A long fruit leaves the boa less room on the rail than a short one.
     expect(ordersFor('boa', 'long', PARTS).length).toBeLessThan(all('boa').length)
@@ -132,5 +132,20 @@ describe('what each customer may order', () => {
 
   it('gives the ants a file of at least two', () => {
     for (const [share] of all('ants')) expect(share.num).toBeGreaterThanOrEqual(2)
+  })
+
+  it('gives nobody an order that whole uncut fruits fill: every order needs a cut', () => {
+    for (const fruit of ['long', 'middle', 'short'] as const) {
+      for (const who of ['pelican', 'twins', 'ants', 'cat', 'boa'] as const) {
+        for (const shares of ordersFor(who, fruit, PARTS)) {
+          const customer: Customer = { who, fruit, shares, carries: null, written: true, lined: true }
+          // No compartment of its tin is exactly one or two whole fruits long.
+          for (const length of tinParts(customer)) expect(length % WHOLE[fruit], `${who} ${JSON.stringify(shares)}`).not.toBe(0)
+          expect(inRange(customer), `${who} ${JSON.stringify(shares)}`).toEqual([])
+        }
+      }
+    }
+    expect(inRange({ who: 'ants', fruit: 'long', shares: [{ num: 4, den: 4 }], carries: null, written: true, lined: true })).toContain('a whole or more')
+    expect(inRange({ who: 'boa', fruit: 'short', shares: [{ num: 8, den: 4 }], carries: null, written: true, lined: true })).toContain('not between one whole and two')
   })
 })

@@ -1,4 +1,4 @@
-import { WHOLE, commonParts, fitOf, giveOf, inParts, shareLength, type Fit, type Share } from './measure'
+import { RAIL, WHOLE, commonParts, fitOf, giveOf, inParts, shareLength, type Fit, type Share } from './measure'
 import { signBetween, tinParts, type Customer } from './orders'
 import { inTin, type Piece, type World } from './world'
 
@@ -62,9 +62,10 @@ export function ruling(customer: Customer): { whole: number; rows: RuledRow[]; a
   const [first, second] = customer.shares
   const parts = second ? commonParts(first, second) : first.den
   const rows = customer.shares.map((share) => ({ share, parts, lit: inParts(share, parts)?.num ?? share.num }))
-  // An order longer than one fruit is ruled along every fruit it takes: `along` is how many parts that is.
+  // An order longer than one fruit is ruled along every fruit it takes, as far as the rail goes: `along` is how many whole parts that is.
   const fruits = Math.max(1, ...customer.shares.map((share) => Math.ceil(share.num / share.den)))
-  return { whole: WHOLE[customer.fruit], rows, along: parts * fruits, sign: signBetween(customer) }
+  const strip = Math.min(RAIL, fruits * WHOLE[customer.fruit])
+  return { whole: WHOLE[customer.fruit], rows, along: Math.floor((strip * parts) / WHOLE[customer.fruit] + 1e-9), sign: signBetween(customer) }
 }
 
 /** How much of one ruled part a misfit is: the gap or the overhang as a fraction of a part, signed like `by`. */

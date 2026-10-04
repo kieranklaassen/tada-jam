@@ -81,8 +81,10 @@ describe('the ruling on the rail', () => {
   it("rules the cat's two shares into the same parts and puts the sign between them", () => {
     const cat = customer({ who: 'cat', shares: [{ num: 2, den: 3 }, { num: 3, den: 4 }] })
     expect(ruling(cat)).toEqual({ whole: 2400, rows: [{ share: { num: 2, den: 3 }, parts: 12, lit: 8 }, { share: { num: 3, den: 4 }, parts: 12, lit: 9 }], along: 12, sign: 'less' })
-    // An order longer than one fruit is ruled along both: twelve eighths is sixteen parts of rail, twelve of them lit.
-    expect(ruling(customer({ who: 'boa', shares: [{ num: 12, den: 8 }] }))).toMatchObject({ along: 16, rows: [{ parts: 8, lit: 12 }] })
+    // An order longer than one fruit is ruled along every fruit it takes, as far as the rail goes. Twelve eighths of the short fruit: sixteen parts, twelve of them lit.
+    expect(ruling(customer({ who: 'boa', fruit: 'short', shares: [{ num: 12, den: 8 }] }))).toMatchObject({ along: 16, rows: [{ parts: 8, lit: 12 }] })
+    // Six fifths of the long fruit is as long as the rail itself: six parts, and no more rail to rule.
+    expect(ruling(customer({ who: 'boa', shares: [{ num: 6, den: 5 }] }))).toMatchObject({ along: 6, rows: [{ parts: 5, lit: 6 }] })
     expect(ruling(customer({ who: 'cat', shares: [{ num: 1, den: 2 }, { num: 2, den: 4 }] }))).toMatchObject({ sign: 'equals', rows: [{ parts: 4, lit: 2 }, { parts: 4, lit: 2 }] })
   })
 })

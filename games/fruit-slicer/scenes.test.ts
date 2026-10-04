@@ -82,6 +82,20 @@ describe('the serve', () => {
     expect(heard(customer('boa', 5, 4), [[len(1, 1), len(1, 16), len(1, 16), len(1, 8)]])).toEqual([['sneeze', 2]])
   })
 
+  it('eats a piece of another fruit too when it is fed by hand: the bite is there for the body to show', () => {
+    const who = customer('pelican', 3, 4)
+    const other: Piece = { ...piece(1, 600), fruit: 'short' }
+    const result = serveOf(who, [[other]])
+    expect(result.strays).toHaveLength(1)
+    const show = restShow('serve')
+    play(serveBeats(show, { result, taste: tasteOf(who, result), outcome: 'mixed', glider: false, fed: true }, () => {}))
+    expect(show.bites).toBe(1)
+    // Laid in the tin it is no part of the order: it is picked out, and nothing of it is eaten.
+    const shut = restShow('serve')
+    play(serveBeats(shut, { result, taste: tasteOf(who, result), outcome: 'badly', glider: false, fed: false }, () => {}))
+    expect(shut.bites).toBe(0)
+  })
+
   it('starts with the lid shutting on a fit, bouncing on what sticks out, or closing on a gap', () => {
     const first = (served: Ending) => {
       const cues: string[] = []
@@ -127,10 +141,10 @@ describe('the first showing', () => {
     expect(show.fill).toBe(1)
     expect(filledEarly).toBe(false)
     expect(show.extra).toBe(0)
-    // An order longer than one fruit is ruled along both fruits: twelve eighths is sixteen parts, sixteen ticks, still inside five seconds.
+    // An order longer than one fruit is ruled along both fruits: twelve eighths of the short fruit is sixteen parts, sixteen ticks, still inside five seconds.
     const long = restShow('showing')
     let longTicks = 0
-    const beats = showingBeats(long, customer('boa', 12, 8), (id) => id === 'rule' && longTicks++)
+    const beats = showingBeats(long, { ...customer('boa', 12, 8), fruit: 'short' }, (id) => id === 'rule' && longTicks++)
     play(beats)
     expect(longTicks).toBe(16)
     expect(long.ruled).toBe(16)

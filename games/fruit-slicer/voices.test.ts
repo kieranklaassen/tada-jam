@@ -13,7 +13,7 @@ describe('every voice', () => {
         for (const count of [1, 4, 12, 40]) {
           const notes = notesOf(id, length, count)
           expect(notes.length, id).toBeGreaterThan(0)
-          expect(notes.length, id).toBeLessThanOrEqual(12)
+          expect(notes.length, id).toBeLessThanOrEqual(24)
           for (const note of notes) {
             const where = `${id} at ${length}: ${JSON.stringify(note)}`
             expect(within(note.hz, RANGE.hz), where).toBe(true)

@@ -2,7 +2,7 @@ import { feed, give, splat, treat, type Game } from './cycle'
 import { RAIL, WHOLE } from './measure'
 import { fellEvents, gone, land, shutIfFit, thingAt, tinAt, type GameEvent, type Whom } from './moves'
 import { ruling } from './serve'
-import { COUNTER, CRATE, LANE_H, PX, WALL, X0, laneTop, type Box, type Point, type Under } from './stage'
+import { COUNTER, CRATE, LANE_H, PX, TIN, WALL, X0, laneTop, type Box, type Point, type Under } from './stage'
 import { LANES, onLane, pieceOf, remove, roll, rowOf, setRowOnBoard, setOnShelf, type World } from './world'
 
 // Carrying, flinging and the roller: the other three acts of the grid. A
@@ -111,7 +111,8 @@ export function drop(game: Game, held: Held, at: Point): { game: Game; events: G
           else events.push({ kind: 'ate', whom, piece, from, voice: 'gulp' })
         }
       }
-      return { game: now, events }
+      // A piece that came out of the tin to be eaten may leave what is in the tin fitting: the lid then shuts by itself.
+      return now.finished ? { game: now, events } : shutAfter(now, events, game, held)
     }
     case 'dog':
     case 'crate': {
@@ -179,7 +180,8 @@ function intoTin(game: Game, held: Held, part: number): { game: Game; events: Ga
       events.push({ kind: 'setDown', ids: [piece.id], from: [from], how: 'put', voice: 'lay' }, ...fellEvents(now.world, given.fell, tin))
     } else {
       events.push({ kind: 'given', id: piece.id, from, opened: given.opened, firstShowing: given.firstShowing, length: piece.length, voice: given.opened ? 'spring' : 'lay' })
-      events.push(...fellEvents(now.world, given.strays, tin).map((event) => event))
+      // A piece of another fruit is picked out of the tin: it goes to the dog from the tin, where it was laid, not from where it lay before it was carried.
+      for (const stray of gone(now.world, given.strays, tin)) events.push({ kind: 'fell', piece: stray.piece, from: { x: X0 + 4, y: TIN.bodyY + (TIN.bodyH - TIN.pieceH) / 2, w: stray.from.w, h: TIN.pieceH }, voice: 'munch' })
       // A piece of another fruit: the customer will not have it in its tin. It flinches, and the piece is flicked out to the dog.
       if (given.strays.length > 0) events.push({ kind: 'flinch', whom: 'window', voice: 'babble' })
       const worst = given.result
@@ -281,7 +283,8 @@ export function rollOver(game: Game, at: Point): { game: Game; events: GameEvent
       return { game: { ...game, world: roll(game.world, hit.piece.id, parts) }, events: [{ kind: 'pressed', id: hit.piece.id, parts, length: hit.piece.length, voice: whole ? 'ticks' : 'press' }] }
     }
     case 'tin':
-      return game.world.tinOpen && !game.finished ? rolled('tin', 'rule', null, parts) : rolled('tin', 'drum')
+      // Every ruled part along the rail answers, those of the second fruit too where the order is longer than one.
+      return game.world.tinOpen && !game.finished ? rolled('tin', 'rule', null, ruling(game.window!).along) : rolled('tin', 'drum')
     case 'customer':
       return rolled('customer', 'honk', 'window')
     case 'waiting':

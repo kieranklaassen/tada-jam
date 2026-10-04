@@ -42,7 +42,8 @@ const tone = (hz: number, peak: number, attack: number, length: number, wave: No
 const hiss = (hz: number, peak: number, attack: number, length: number, to?: number, after = 0): Note => ({ kind: 'noise', hz: held(hz), to: to === undefined ? undefined : held(to), peak, attack, length, after })
 /** A run of the same short note, `count` times, each a step higher: one tick a part. */
 const run = (count: number, hz: number, step: number, gap: number, peak: number, wave: Note['wave'] = 'square', length = 0.05): Note[] => {
-  const ticks = Math.max(1, Math.min(12, Math.round(count)))
+  // As many as two fruits of twelfths: the longest rail there is to rule.
+  const ticks = Math.max(1, Math.min(24, Math.round(count)))
   // Many parts tick faster, so the whole run still ends inside the time a touch's answer may take.
   const apart = ticks > 1 ? Math.min(gap, 0.55 / (ticks - 1)) : 0
   return Array.from({ length: ticks }, (_, i) => tone(hz * step ** i, peak, 0.002, length, wave, undefined, i * apart))

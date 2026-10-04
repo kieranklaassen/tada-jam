@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { FLIGHT_SECONDS, FLING_SPEED, drop, fling, grab, landing, rollOver, type Held } from './carry'
 import { call, freshGame, type Game } from './cycle'
 import { WHOLE, giveOf } from './measure'
-import { newStroke, poke, slice, tinAt, type GameEvent } from './moves'
+import { land, newStroke, poke, slice, tinAt, type GameEvent } from './moves'
 import { tinParts } from './orders'
 import { COUNTER, CRATE, DOG, LANE_H, PX, QUEUE, ROLLER, SHELF_BOX, TIN, WINDOW, X0, laneTop, type Box, type Point } from './stage'
 import { eaten, inTin, marksOf, onLane, onShelf, pieceOf } from './world'
@@ -127,6 +127,34 @@ describe('letting go over a customer, the dog or the crate', () => {
     expect(fromCrate.y).toBeLessThan(CRATE.y)
     const eatenFrom = (drop(made.game, hold(made.game, made.left), mid(QUEUE[1])).events[0] as Extract<GameEvent, { kind: 'ate' }>).from
     expect(Math.abs(eatenFrom.y + eatenFrom.h / 2 - mid(QUEUE[1]).y)).toBeLessThan(40)
+  })
+
+  it('shuts the lid by itself when a piece taken out of the tin and given away leaves a fit', () => {
+    // An exact piece and a spare lie in the tin together: too long. The spare is taken out and given to one who waits.
+    const exact = cutAt(start, ORDERED)
+    const rest = pieceOf(exact.game.world, exact.right)!
+    const spare = cutAt(exact.game, (rest.place.on === 'board' ? rest.place.x : 0) + 300)
+    // The spare goes in first, which is too short; then the exact piece beside it, which is too long.
+    let game = drop(spare.game, hold(spare.game, spare.left), tinPoint).game
+    game = drop(game, hold(game, exact.left), { x: tinPoint.x + 200, y: tinPoint.y }).game
+    expect(game.finished).toBe(false)
+    expect(inTin(game.world, 0).map((piece) => piece.id)).toEqual([spare.left, exact.left])
+    const out = drop(game, hold(game, spare.left, 0.5), mid(QUEUE[1]))
+    expect(kinds(out.events)).toEqual(['ate', 'ending'])
+    expect(out.events[1]).toMatchObject({ how: 'shut' })
+    expect(out.game.finished).toBe(true)
+  })
+
+  it('sends a piece of another fruit to the dog from the tin it was laid in, not from where it lay before', () => {
+    const wrongFruit = start.window!.fruit === 'short' ? 'long' : 'short'
+    const landed = land(start, wrongFruit)
+    const id = landed.events.find((event) => event.kind === 'land')!
+    const piece = pieceOf(landed.game.world, (id as Extract<GameEvent, { kind: 'land' }>).id)!
+    const out = drop(landed.game, hold(landed.game, piece.id), tinPoint)
+    const fell = out.events.find((event) => event.kind === 'fell') as Extract<GameEvent, { kind: 'fell' }>
+    expect(fell.piece.id).toBe(piece.id)
+    expect(fell.from.y).toBe(TIN.bodyY + (TIN.bodyH - TIN.pieceH) / 2)
+    expect(kinds(out.events)).toContain('flinch')
   })
 
   it('lets one who waits eat it there and then, and a waiting pelican leave with a whole fruit', () => {

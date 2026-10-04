@@ -99,7 +99,8 @@ export function tinShape(lengths: readonly number[], whole: number, open = true)
     parts,
     body: { x: X0 - 8, y: TIN.bodyY, w: w + 16, h: TIN.bodyH },
     lid: { x: X0 - 8, y: TIN.lidY, w: w + 16, h: TIN.lidH },
-    ruler: { x: X0, y: TIN.rulerY, w: Math.max(w, whole * PX), h: TIN.rulerH },
+    // The ruled strip is as long as the whole fruits the order takes, one for most orders and two for one longer than a fruit, and never longer than the rail.
+    ruler: { x: X0, y: TIN.rulerY, w: Math.min(RAIL * PX, Math.max(1, Math.ceil(w / (whole * PX) - 1e-9)) * whole * PX), h: TIN.rulerH },
     open: true,
   }
 }

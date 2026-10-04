@@ -192,7 +192,8 @@ function wood(ctx: Ctx): number {
   for (let y = COUNTER.y + 62; y < COUNTER.y + COUNTER.h - 20; y += 78) {
     ctx.fillRect(COUNTER.x + 4, y, COUNTER.w - 8, 2.5)
     // Where two planks meet end to end: staggered from row to row.
-    for (let joint = 0; joint < 3; joint++) ctx.fillRect(COUNTER.x + 90 + ((joint * 397 + y * 3) % (COUNTER.w - 180)), y - 78, 2.5, 78)
+    // No joint reaches up past the counter's own top edge.
+    for (let joint = 0; joint < 3; joint++) ctx.fillRect(COUNTER.x + 90 + ((joint * 397 + y * 3) % (COUNTER.w - 180)), Math.max(COUNTER.y + 4, y - 78), 2.5, y - Math.max(COUNTER.y + 4, y - 78))
     drawn++
   }
   for (let knot = 0; knot < 9; knot++) {

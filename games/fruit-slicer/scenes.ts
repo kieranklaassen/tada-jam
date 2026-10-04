@@ -62,7 +62,8 @@ export const BITES_SHOWN = 6
  * the settling, about three seconds.
  */
 export function serveBeats(show: Show, ending: Ending, cue: Cue): Beat[] {
-  const lengths = ending.result.parts.flatMap((part) => part.pieces.map((piece) => piece.length))
+  // What is eaten: the pieces of the order, and for a customer fed by hand a piece of another fruit as well, which it eats as it is.
+  const lengths = [...ending.result.parts.flatMap((part) => part.pieces), ...(ending.fed ? ending.result.strays : [])].map((piece) => piece.length)
   const single = Math.min(lengths.length, BITES_SHOWN)
   // Each customer gulps and speaks in its own throat.
   const who = CAST.indexOf(ending.taste.who)
