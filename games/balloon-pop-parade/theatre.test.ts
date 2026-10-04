@@ -46,6 +46,18 @@ const tapSlot = (theatre: Theatre, slot: number) => {
   theatre.release(VIEW)
 }
 const voices = (theatre: Theatre) => theatre.sounds.map((sound) => sound.voice)
+/** A tap on a bunch in the sky where it is seen: beside whatever has risen in front of it, as the bunch that carries a friend off does. */
+const tapSeen = (theatre: Theatre, slot: number) => {
+  const at = skySlots(theatre.sky.length, VIEW)[slot]
+  for (const dy of [0, -0.35, 0.35, -0.7, 0.7]) for (const dx of [0, -0.35, 0.35, -0.7, 0.7]) {
+    const hit = theatre.hit(at.x + dx, at.y + dy, VIEW)
+    if (hit.on !== 'bunch' || hit.slot !== slot) continue
+    theatre.press(at.x + dx, at.y + dy, VIEW)
+    theatre.release(VIEW)
+    return
+  }
+  throw new Error(`no part of the bunch in place ${slot} is seen`)
+}
 
 describe('a touch', () => {
   it('is answered when the finger lands, with a sound in the same call, wherever it lands', () => {
@@ -681,7 +693,7 @@ describe('a friend that is being carried off', () => {
   it.each(KINDS)('goes on being carried off when a balloon of its own colour is sent to it: a %s comes down once, with a landing, and has its balloon', (kind) => {
     const theatre = carried(kind, [{ colour: kind, count: 1 }])
     theatre.sounds.length = 0
-    tapSlot(theatre, 1)
+    tapSeen(theatre, 1)
     expect(theatre.troop.held).toEqual([true])
     const { high, heard } = follow(theatre, 5)
     // It never snaps down: from one frame to the next it moves no further than a fall does.
@@ -736,7 +748,7 @@ describe('a friend that is being carried off', () => {
     const other: KindName = kind === 'duck' ? 'frog' : 'duck'
     const theatre = carried(kind, [{ colour: other, count: 1 }])
     theatre.sounds.length = 0
-    tapSlot(theatre, 1)
+    tapSeen(theatre, 1)
     const { heard } = follow(theatre, 6)
     const last = heard[heard.length - 1]
     const order = (voice: string) => heard.findIndex((voices) => voices.includes(voice))
@@ -757,7 +769,8 @@ describe('a friend that is being carried off', () => {
     const bunch = frame.balloons.filter((balloon) => balloon.tall > 1.05 && balloon.wide < 0.99)
     expect(bunch).toHaveLength(2)
     const was = frame.poses.get('friend-0')!.y - GROUND
-    // The one straight over it; the other may have risen in front of a bunch in the sky, where the touch is the sky's.
+    // The one straight over it; and the other too, also where it has risen in front of a bunch in the sky: what is drawn in front is touched.
+    for (const one of bunch) expect(theatre.hit(one.x, one.y, VIEW), 'each balloon of the carrying bunch').toEqual({ on: 'tug', friend: 0 })
     const over = bunch.sort((a, b) => Math.abs(a.x - frame.poses.get('friend-0')!.x) - Math.abs(b.x - frame.poses.get('friend-0')!.x))[0]
     expect(theatre.hit(over.x, over.y, VIEW)).toEqual({ on: 'tug', friend: 0 })
     theatre.sounds.length = 0

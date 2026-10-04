@@ -85,7 +85,7 @@ const JOINS_IN = 1.2
 const WAITS_FROM = 0.45
 /** The least time between one bunch's arrival and the next one's, in seconds. */
 const ARRIVE_APART = 0.06
-/** How far above the frogs' heads a bunch with one for each of them stops, so that their tongues cross over their heads. */
+/** How far above the frogs' heads a bunch with one for each of them stops, so that their tongues go up to it over one another's heads. */
 const FROGS_REACH = 2.5
 /** Seconds a troop that was served by one bunch is in the air when it jumps together. */
 const JUMPS_FOR = 0.5
@@ -102,12 +102,14 @@ const CARRIED_ASIDE = 0.6
 
 /**
  * Which balloon of a bunch with one for each goes to the `k`th friend of those who take it, counted from the left,
- * as a place in `bunchOffsets`. Each friend takes the one nearest it, so no string crosses another; frogs alone
- * go for the far side, so that their tongues cross in the air.
+ * as a place in `bunchOffsets`. Each friend takes the one nearest it, so no string crosses another. Two frogs
+ * alone go for the far side, so that their two tongues cross in the air, as two bows. Three frogs take the nearest
+ * as every kind does: the middle one's tongue goes straight up, and two that crossed would cross on it, three
+ * lines through one point.
  */
 function shareOf(kind: KindName, count: number, k: number): number {
   const leftToRight = count === 3 ? [0, 2, 1] : [0, 1]
-  return leftToRight[kind === 'frog' ? count - 1 - k : k] ?? 0
+  return leftToRight[kind === 'frog' && count === 2 ? 1 - k : k] ?? 0
 }
 
 /** Seconds a friend takes to fall to the ground when a motion that had it in the air is cut short by another. */
@@ -293,6 +295,16 @@ export class Theatre {
       const flight = this.flights[f], at = this.along(flight)
       for (const offset of bunchOffsets(flight.bunch.count)) if (Math.hypot(x - at.x - offset.x * view.balloon, (y - at.y - offset.y * view.balloon) / 1.12) < drawn) return { on: 'flying', flight: f }
     }
+    // Then a balloon in a hand; and then the bunch that is carrying a friend off, which is in its hand for as long
+    // as it has hold: where it has risen in front of a bunch in the sky, a finger on one of its balloons as it is
+    // drawn pops it. Beside what is drawn, a held balloon is read a little larger, and the sky comes before the
+    // carrying bunch: sending a balloon is the thing the child came to do.
+    for (let i = 0; i < this.held.length; i++) {
+      const balloon = this.held[i]
+      if (balloon.shown && Math.hypot(x - balloon.x, (y - balloon.y) / 1.12) < drawn) return { on: 'held', friend: i }
+    }
+    const carrying = this.carrying(x, y, drawn)
+    if (carrying >= 0) return { on: 'tug', friend: carrying }
     for (let i = 0; i < this.held.length; i++) {
       const balloon = this.held[i]
       if (balloon.shown && Math.hypot(x - balloon.x, (y - balloon.y) / 1.12) < BALLOON * 1.2 * view.balloon) return { on: 'held', friend: i }
@@ -303,14 +315,10 @@ export class Theatre {
       const reach = bunchReach(this.sky[slot].count)
       if (Math.abs(x - slots[slot].x) < reach.x * view.balloon + 0.3 && Math.abs(y - slots[slot].y) < reach.y * view.balloon + 0.3) return { on: 'bunch', slot }
     }
-    // The bunch that is carrying a friend off is in its hand too, for as long as it has hold. Where it has risen in
-    // front of a bunch in the sky, the touch is the sky's: sending a balloon is the thing the child came to do.
-    for (let i = 0; i < this.actors.length; i++) {
-      const actor = this.actors[i]
-      if (actor.clip !== 'liftOff' || !actor.tug) continue
-      const spot = this.spot(i), top = spot.y + this.lift(this.troop.kind, actor.t) + HELD_HEIGHT + 0.5, hung = this.hung(i, actor.tug)
-      for (let k = 0; k < actor.tug.count; k++) if (Math.hypot(x - spot.x - hung[k].x, (y - top - hung[k].y) / 1.12) < BALLOON * 1.2 * view.balloon) return { on: 'tug', friend: i }
-    }
+    // The bunch that is carrying a friend off is read a little larger than it is drawn too, where no bunch of the
+    // sky is under the finger.
+    const tugged = this.carrying(x, y, BALLOON * 1.2 * view.balloon)
+    if (tugged >= 0) return { on: 'tug', friend: tugged }
     const kind = this.troop.kind, plan = BODIES[kind]
     for (let i = 0; i < this.troop.size; i++) {
       // A friend is touched where it is: one that is in the air is up there, and not on the ground under itself.
@@ -489,6 +497,17 @@ export class Theatre {
   cancel(): void {
     if (this.pressedSlot >= 0) this.places[this.pressedSlot].pressed = false
     this.pressedSlot = -1
+  }
+
+  /** The friend whose carrying bunch has a balloon within `reach` of a point, or -1. */
+  private carrying(x: number, y: number, reach: number): number {
+    for (let i = 0; i < this.actors.length; i++) {
+      const actor = this.actors[i]
+      if (actor.clip !== 'liftOff' || !actor.tug) continue
+      const spot = this.spot(i), top = spot.y + this.lift(this.troop.kind, actor.t) + HELD_HEIGHT + 0.5, hung = this.hung(i, actor.tug)
+      for (let k = 0; k < actor.tug.count; k++) if (Math.hypot(x - spot.x - hung[k].x, (y - top - hung[k].y) / 1.12) < reach) return i
+    }
+    return -1
   }
 
   /** The friend nearest to `x`. With `wanting`, the nearest of those still without a balloon when there is one: it is the one looking for a balloon. */
@@ -843,7 +862,7 @@ export class Theatre {
         this.passTook = true
         passer.held.fill(true)
         // Each balloon is taken from where it hangs low, and goes from there to its friend's hand as that friend
-        // takes it: of a bunch, each friend takes the one nearest it, and frogs the one on the far side.
+        // takes it: of a bunch, each friend takes the one nearest it, and two frogs the one on the far side.
         const low = this.lowFor(passer)
         passer.balloons.forEach((balloon, k) => {
           const from = low[passer.idea === 'bunch' ? shareOf(passer.kind, passer.size, k) : k]
@@ -1467,7 +1486,7 @@ export class Theatre {
     const spot = this.spot(flight.friend), tall = BODIES[this.troop.kind].height * FRIEND_SCALE
     if (flight.given.result === 'taken' && flight.given.takers.length > 1) {
       // One for each: the bunch comes down over the middle of those who take from it. For frogs it stops higher,
-      // so that their tongues go up to it over one another's heads and cross in the air.
+      // so that their tongues go up to it over one another's heads, those of two crossing in the air.
       const takers = flight.given.takers
       return { x: (this.spot(takers[0]).x + this.spot(takers[takers.length - 1]).x) / 2, y: spot.y + tall + (this.troop.kind === 'frog' ? FROGS_REACH : 0.75) }
     }
@@ -1858,8 +1877,8 @@ export class Theatre {
     if (balloon.wait !== undefined && balloon.wait > 0 && balloon.knot) painter.string(tailX, tailY, 0.3, balloon.knot.x, balloon.knot.y, 0.3, shade(colour, -0.3))
     else if (!tongued) painter.string(tailX, tailY, 0.3, this.hand.x, this.hand.y, this.hand.z, shade(colour, -0.3))
     // A frog that passes takes its balloon as every frog does: the tongue out to it where it hangs, and in again
-    // with it. Two or three that take one bunch each take the balloon on the far side of it, so their tongues cross
-    // in the air.
+    // with it. Two that take one bunch each take the balloon on the far side of it, so their tongues cross in the
+    // air; three each take the nearest.
     if (troop.kind === 'frog' && actor.clip === 'catch' && actor.t >= 0) {
       const mouthY = pose.y + (plan.neck[1] + plan.mouth[1]) * pose.scale * pose.squash, mouthZ = (plan.neck[2] + plan.mouth[2]) * pose.scale
       this.lick(painter, pose.x, mouthY, mouthZ, tailX, tailY, 0.3, hold(actor.t, 0.1, 0.2, 0.2 + TONGUE_HOME, 0.3 + TONGUE_HOME), shade(colour, 0.34))
@@ -1893,7 +1912,7 @@ export class Theatre {
       if (flight.landed || flight.given.result !== 'taken') continue
       const k = flight.given.takers.indexOf(friend)
       if (k < 0) continue
-      // When two or three frogs take from one bunch, each goes for the balloon on the far side of it, so the tongues cross in the air.
+      // When two frogs take from one bunch, each goes for the balloon on the far side of it, so the tongues cross in the air; three each take the nearest.
       const takers = flight.given.takers.length
       const at = this.along(flight), offset = bunchOffsets(flight.bunch.count)[takers > 1 ? shareOf('frog', takers, k) : 0], big = this.lastView.balloon
       const tipX = at.x + offset.x * big, tipY = at.y + (offset.y - BALLOON * 1.25) * big

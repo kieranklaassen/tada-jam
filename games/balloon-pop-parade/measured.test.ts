@@ -259,7 +259,11 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
     const theatre = new Theatre(saveOf({ position: 'bunches-own-colour', troop: { kind, size: 1, held: [false] }, sky: [{ colour: kind, count: 3 }, { colour: kind, count: 1 }], waiting: { kind: other(kind), size: 1 } }), 8), { poses, balloons, painter, clear } = recorder()
     tap(theatre, 0)
     for (let i = 0; i < Math.round((0.5 + PERSONALITIES[kind].cue.grab + 0.3) * 60); i++) theatre.step(1 / 60)
-    tap(theatre, 1)
+    // The single, where it is seen: the bunch that carries the friend off may have risen in front of part of it.
+    const single = (theatre as unknown as { slots: (view: typeof VIEW) => { x: number; y: number }[] }).slots(VIEW)[1]
+    const seen = [0, -0.35, 0.35, -0.7, 0.7].flatMap((dy) => [0, -0.35, 0.35, -0.7, 0.7].map((dx) => ({ x: single.x + dx, y: single.y + dy }))).find((at) => { const hit = theatre.hit(at.x, at.y, VIEW); return hit.on === 'bunch' && hit.slot === 1 })!
+    theatre.press(seen.x, seen.y, VIEW)
+    theatre.release(VIEW)
     expect(theatre.save.finished).toBe(true)
     let caught = -1, ending = -1, inHand = -1, proud = -1
     for (let i = 0; i < 60 * 8 && proud < 0; i++) {
@@ -385,14 +389,15 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
     expect(theatre.playing).toBe('arrival')
   })
 
-  it('sends frogs\' tongues over one another\'s heads to a bunch with one for each: they cross in the air above the frogs, and none goes through a frog', () => {
-    // Three frogs and a bunch of three; and two frogs either side of one that has its balloon, with a bunch of two.
+  it('sends frogs\' tongues over one another\'s heads to a bunch with one for each: two cross in the air above the frogs, three go up side by side with no two crossing, and none goes through a frog', () => {
+    // Three frogs and a bunch of three, where two that crossed would cross on the middle one's tongue, three lines
+    // through one point; and two frogs either side of one that has its balloon, with a bunch of two.
     for (const [held, count] of [[[false, false, false], 3], [[false, true, false], 2]] as const) {
       const theatre = new Theatre(saveOf({ position: 'bunches-own-colour', troop: { kind: 'frog', size: 3, held: [...held] }, sky: [{ colour: 'frog', count: 1 }, { colour: 'frog', count }], waiting: { kind: 'duck', size: 1 } }), 4)
       const poses = new Map<string, Pose>(), tongues: { x0: number; y0: number; x1: number; y1: number }[] = []
       const painter: Painter = { place: (name, _kind, pose) => void poses.set(name, { ...pose }), drop: () => {}, balloon: () => {}, string: (x0, y0, _z0, x1, y1, _z1, _colour, thick) => { if ((thick ?? 0) > 0.05 && (thick ?? 0) < 0.1) tongues.push({ x0, y0, x1, y1 }) }, shadow: () => {}, marcher: () => {}, hand: () => {}, cloud: () => {} }
       tap(theatre, 1)
-      let crossedInAir = 0, out = 0
+      let crossedInAir = 0, crossed = 0, out = 0
       for (let i = 0; i < 90; i++) {
         theatre.step(1 / 60)
         tongues.length = 0
@@ -415,12 +420,14 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
           const p = tongues[a], q = tongues[b], d = (p.x1 - p.x0) * (q.y1 - q.y0) - (p.y1 - p.y0) * (q.x1 - q.x0)
           if (Math.abs(d) < 1e-9) continue
           const t = ((q.x0 - p.x0) * (q.y1 - q.y0) - (q.y0 - p.y0) * (q.x1 - q.x0)) / d, u = ((q.x0 - p.x0) * (p.y1 - p.y0) - (q.y0 - p.y0) * (p.x1 - p.x0)) / d
+          if (t >= 0 && t <= 1 && u >= 0 && u <= 1 && Math.floor(a / 4) !== Math.floor(b / 4)) crossed += 1
           if (t > 0.02 && t < 0.98 && u > 0.02 && u < 0.98 && p.y0 + (p.y1 - p.y0) * t > GROUND + 2.2) crossing = true
         }
         if (crossing) crossedInAir += 1
       }
       expect(out, 'the tongues are out for a good while').toBeGreaterThan(15)
-      expect(crossedInAir, `${count} for ${held.join()}: crossed in the air`).toBeGreaterThan(10)
+      if (count === 3) expect(crossed, 'three tongues: no two cross').toBe(0)
+      else expect(crossedInAir, `${count} for ${held.join()}: crossed in the air`).toBeGreaterThan(10)
     }
   })
 
