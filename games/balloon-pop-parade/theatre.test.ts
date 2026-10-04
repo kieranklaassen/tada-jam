@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { BODIES, type KindName } from './bodies'
 import { PERSONALITIES } from './clips'
 import { applyPose, buildFriend } from './friends'
-import { GROUND, skySlots, viewFor } from './layout'
+import { BALLOON, CLOUDS, friendX, GROUND, seenAt, skySlots, viewFor } from './layout'
 import { MOMENTS, saveOf, type Moment } from './moments'
 import { freshSave } from './save'
 import { restPose, type Pose } from './pose'
@@ -192,6 +192,55 @@ describe('a bunch the child sends', () => {
     expect(theatre.troop.held).toEqual([true])
     expect(voices(theatre)).toEqual(expect.arrayContaining([`${kind}LiftOff`, `${kind}Land`, 'pop', 'squeal']))
     expect(frame.balloons, 'two in the sky and the one it holds').toHaveLength(3)
+  })
+
+  it.each(KINDS)('shows a %s the bunch it cannot have: one balloon over its head and the rest over ground where nobody stands', (kind) => {
+    for (const count of [2, 3] as const) {
+      const theatre = staged({ troop: { kind, size: 2, held: [false, false] }, sky: [{ colour: kind, count: 1 }, { colour: kind, count }], waiting: { kind: kind === 'duck' ? 'frog' : 'duck', size: 1 } }), { frame, painter, clear } = recorder()
+      // Three for two, or two for one: either way one friend takes hold and the bunch has more than it can use.
+      if (count === 2) { tapSlot(theatre, 0); play(theatre, 2) }
+      tapSlot(theatre, 1)
+      play(theatre, FLIGHT + PERSONALITIES[kind].cue.grab + 0.25)
+      clear()
+      theatre.paint(painter, VIEW)
+      // The bunch that strains upwards is drawn taller than it is wide, and nothing else is.
+      const bunch = frame.balloons.filter((balloon) => balloon.tall > 1.05 && balloon.wide < 0.99)
+      expect(bunch.length, `${count} for ${kind}`).toBe(count)
+      const middle = bunch.reduce((sum, balloon) => sum + balloon.x, 0) / count
+      const grabber = Math.abs(middle - friendX(0, 2)) < Math.abs(middle - friendX(1, 2)) ? 0 : 1
+      const at = frame.poses.get(`friend-${grabber}`)!
+      const off = bunch.map((balloon) => balloon.x - at.x).sort((a, b) => Math.abs(a) - Math.abs(b))
+      expect(Math.abs(off[0]), 'one straight over it').toBeLessThan(0.2)
+      // The next is past the friend's own side and short of the friend beside it: over the gap, with nobody under it.
+      const beside = [0, 1].map((i) => friendX(i, 2)).filter((x) => Math.abs(x - friendX(grabber, 2)) > 1)[0]
+      expect(Math.max(...off.map(Math.abs)), 'another well to its side').toBeGreaterThan(1.3)
+      for (const dx of off.slice(count === 3 ? 2 : 1)) expect(Math.abs(friendX(grabber, 2) + dx - beside), 'and not over the friend beside it').toBeGreaterThan(1.2)
+    }
+  })
+
+  it('is bounced off a frog: it flies from the frog for a moment after the throat meets it, and then it pops', () => {
+    const theatre = solo('frog', ['frog', 'duck']), { frame, painter, clear } = recorder()
+    tapSlot(theatre, 1)
+    const yellow = () => { clear(); theatre.paint(painter, VIEW); return frame.balloons.filter((balloon) => balloon.y < 2 && balloon.wide > 0.8) }
+    // It hangs beside the frog until the refusal lands on it.
+    play(theatre, FLIGHT + PERSONALITIES.frog.cue.hit - 0.2)
+    const hung = yellow()
+    expect(hung).toHaveLength(1)
+    theatre.sounds.length = 0
+    let furthest = 0, flew = 0
+    for (let i = 0; i < 60; i++) {
+      theatre.step(1 / 60)
+      const now = yellow()
+      if (now.length === 0) break
+      if (voices(theatre).includes('pop')) break
+      furthest = Math.max(furthest, Math.abs(now[0].x - hung[0].x))
+      if (Math.abs(now[0].x - hung[0].x) > 0.05) flew += 1
+    }
+    expect(furthest, 'it went somewhere before it popped').toBeGreaterThan(0.9)
+    expect(flew, 'over a good many frames').toBeGreaterThan(8)
+    play(theatre, 0.5)
+    expect(voices(theatre)).toContain('pop')
+    expect(yellow()).toHaveLength(0)
   })
 
   it('is answered well inside half a second when it is the wrong colour: the friend begins to refuse it as it arrives', () => {
@@ -664,10 +713,25 @@ describe('the scenery', () => {
   })
 
   it('has the spare balloons of a bunch bigger than a served troop bump the cloud, which sheds its drops on the troop', () => {
-    const theatre = staged({ troop: { kind: 'duck', size: 2, held: [true, true] }, sky: [{ colour: 'duck', count: 1 }, { colour: 'duck', count: 3 }], waiting: { kind: 'frog', size: 1 } }), { frame, painter } = recorder()
+    const theatre = staged({ troop: { kind: 'duck', size: 2, held: [true, true] }, sky: [{ colour: 'duck', count: 1 }, { colour: 'duck', count: 3 }], waiting: { kind: 'frog', size: 1 } }), { frame, painter, clear } = recorder()
     tapSlot(theatre, 1)
-    play(theatre, FLIGHT + PERSONALITIES.duck.cue.letGo + 0.4)
+    // The cloud that hangs over the troop, as it is seen: the bunch's balloons are yellow, and nothing else yellow comes near it.
+    const cloud = CLOUDS[CLOUDS.length - 1], seen = seenAt(cloud.x, cloud.y, cloud.z, VIEW, { x: 0, y: 0, scale: 1 })
+    const near = () => {
+      clear()
+      theatre.paint(painter, VIEW)
+      return frame.balloons.filter((balloon) => balloon.wide > 0.8 && Math.abs(balloon.x - seen.x) < 2.2 * cloud.scale * seen.scale + BALLOON && Math.abs(balloon.y - seen.y) < 0.55 * cloud.scale * seen.scale + BALLOON).length
+    }
+    // Until the bunch is let go the cloud is left alone; it squeaks in the very step a balloon reaches it.
+    let squeakedAt = -1, touching = 0
+    for (let i = 0; i < 60 * (FLIGHT + PERSONALITIES.duck.cue.letGo + 0.6) && squeakedAt < 0; i++) {
+      theatre.step(1 / 60)
+      if (voices(theatre).includes('cloudSqueak')) { squeakedAt = i / 60; touching = near() }
+    }
+    expect(squeakedAt).toBeGreaterThan(FLIGHT + PERSONALITIES.duck.cue.letGo)
+    expect(touching, 'a balloon of the bunch is on the cloud as it squeaks').toBeGreaterThan(0)
     expect(voices(theatre)).toEqual(expect.arrayContaining(['cloudSqueak', 'patter']))
+    play(theatre, 0.1)
     theatre.paint(painter, VIEW)
     expect(frame.clouds[2]).not.toBe(1)
     // The troop blinks under the drops.

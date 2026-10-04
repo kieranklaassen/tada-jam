@@ -43,13 +43,14 @@ export type Hit = { on: 'held'; friend: number } | { on: 'bunch'; slot: number }
 type Place = { squash: number; squashSpeed: number; pressed: boolean; push: number; pushSpeed: number; whip: number; whipSpeed: number; away: number; grow: number }
 type Flight = { bunch: Bunch; slot: number; given: Given; t: number; fromX: number; fromY: number; landed: boolean; after: number; friend: number; met?: boolean }
 type Held = { x: number; y: number; vx: number; vy: number; shown: boolean }
-type Loose = { x: number; y: number; vx: number; vy: number; colour: string; flat: boolean; t: number; popAt: number }
+/** A balloon that has got away. `flat` is one blown off going flat; `bump` is one that is heading for the cloud over the troop and has not met it yet. */
+type Loose = { x: number; y: number; vx: number; vy: number; colour: string; flat: boolean; t: number; popAt: number; bump?: boolean }
 type Scrap = { x: number; y: number; vx: number; vy: number; colour: string; life: number }
-/** `tug` is the bunch that carries a friend off, `landAfter` puts its landing sound a little after its neighbour's when a whole troop comes down, `mirrored` has it refuse towards its other side, where the bunch hangs, `speed` is how fast this playing of a motion runs, and `lastPoke` is which way it last took a poke. */
 /** A drop of water from a cloud, and a dimple in the hill where it was touched. */
 type Drop = { x: number; y: number; vx: number; vy: number; life: number }
 type Dimple = { x: number; t: number }
-type Actor = { clip: ClipId | null; t: number; next: ClipId | null; tug: Bunch | null; landAfter: number; mirrored?: boolean; speed?: number; lastPoke?: ClipId }
+/** `tug` is the bunch that carries a friend off, `bumps` says that bunch is bigger than the whole troop and goes out by way of the cloud, `landAfter` puts its landing sound a little after its neighbour's when a whole troop comes down, `mirrored` has it refuse towards its other side, where the bunch hangs, `speed` is how fast this playing of a motion runs, and `lastPoke` is which way it last took a poke. */
+type Actor = { clip: ClipId | null; t: number; next: ClipId | null; tug: Bunch | null; bumps?: boolean; landAfter: number; mirrored?: boolean; speed?: number; lastPoke?: ClipId }
 
 /** A troop that is only passing: one that marches off, or one that crosses to show a new idea. Short-lived, and no part of the save. */
 type Passing = { kind: KindName; size: number; held: boolean[]; actors: Actor[] }
@@ -74,6 +75,10 @@ const REFUSAL_LEAD = 0.12
  */
 const OVER_PATH = { x: -7.6, across: 0.8, z: 4.6, deep: 9, dip: 2.4 } as const
 const OVER_LAG = 0.2
+/** How far apart the balloons of a bunch are pulled while it carries a friend off, against how they hang in the sky: the second is then over the gap between two friends. */
+const TUG_SPLAY = 1.3
+/** How fast a balloon that got away darts at the cloud over the troop, in units a second. */
+const BUMP_SPEED = 9
 /** Seconds a troop that passed takes over the shoulder of the far hill, at its own pace. */
 const OVER_HILL = 1.1
 /** How many straight pieces a frog's bowed tongue is drawn in. */
@@ -143,7 +148,6 @@ export class Theatre {
   private readonly dimples: Dimple[] = []
   private wobbled = -10
   /** When the cloud over the troop is bumped by balloons that got away, and until when the troop blinks under its drops. */
-  private bumpAt = -1
   private flinchUntil = -1
   private readonly far = { x: 0, y: 0, z: 0, turn: 0 }
   private readonly seen = { x: 0, y: 0, scale: 1 }
@@ -631,11 +635,19 @@ export class Theatre {
         const { letGo, land } = personality.cue
         if (before < letGo && actor.t >= letGo && actor.tug) {
           // It lets go: the whole bunch gets away, rising fast, and pops on its way.
-          const spot = this.spot(i), top = spot.y + this.lift(kind, letGo) + HELD_HEIGHT + 0.5
+          const spot = this.spot(i), top = spot.y + this.lift(kind, letGo) + HELD_HEIGHT + 0.5, hung = this.hung(i, actor.tug.count)
+          // A bunch bigger than the whole troop goes out by way of the cloud that hangs over the troop: its balloons
+          // dart at it, bump it and bounce off, and the cloud sheds its drops when the first one meets it.
+          const cloud = actor.bumps ? seenAt(CLOUDS[CLOUDS.length - 1].x, CLOUDS[CLOUDS.length - 1].y, CLOUDS[CLOUDS.length - 1].z, this.lastView, this.seen) : null
           bunchOffsets(actor.tug.count).forEach((offset, k) => {
-            this.loose.push({ x: spot.x + offset.x, y: top + offset.y, vx: (this.random() - 0.5) * 3, vy: 6 + this.random() * 2, colour: KIND_COLOURS[actor.tug!.colour], flat: false, t: 0, popAt: 0.32 + k * 0.09 })
+            const x = spot.x + hung.lead + offset.x * hung.splay, y = top + offset.y
+            if (cloud) {
+              const far = Math.hypot(cloud.x - x, cloud.y - y) || 1
+              this.loose.push({ x, y, vx: ((cloud.x - x) / far) * BUMP_SPEED, vy: ((cloud.y - y) / far) * BUMP_SPEED, colour: KIND_COLOURS[actor.tug!.colour], flat: false, t: 0, popAt: far / BUMP_SPEED + 0.5 + k * 0.09, bump: true })
+            } else this.loose.push({ x, y, vx: (this.random() - 0.5) * 3, vy: 6 + this.random() * 2, colour: KIND_COLOURS[actor.tug!.colour], flat: false, t: 0, popAt: 0.32 + k * 0.09 })
           })
           actor.tug = null
+          actor.bumps = false
         }
         if (before < land && actor.t >= land) {
           this.sound(`${kind}Land`, 1, 1, actor.landAfter)
@@ -674,6 +686,18 @@ export class Theatre {
         const vx = balloon.vx * Math.cos(turn) - balloon.vy * Math.sin(turn), vy = balloon.vx * Math.sin(turn) + balloon.vy * Math.cos(turn)
         balloon.vx = vx * (1 - 0.9 * dt)
         balloon.vy = vy * (1 - 0.9 * dt) + 2.4 * dt
+      } else if (balloon.bump) {
+        // On its way to the cloud: when it is there it bumps it, the cloud squashes and sheds, and the balloon bounces off upwards.
+        const cloud = CLOUDS[CLOUDS.length - 1], at = seenAt(cloud.x, cloud.y, cloud.z, this.lastView, this.seen)
+        if (Math.abs(balloon.x - at.x) < 2.2 * cloud.scale * at.scale + BALLOON && Math.abs(balloon.y - at.y) < 0.55 * cloud.scale * at.scale + BALLOON) {
+          balloon.bump = false
+          balloon.vx = (balloon.x < at.x ? -1 : 1) * (2 + this.random() * 2)
+          balloon.vy = 5 + this.random() * 2
+          if (this.time >= this.flinchUntil - 0.6) {
+            this.flinchUntil = this.time + 0.9
+            this.shed(CLOUDS.length - 1, this.lastView)
+          }
+        }
       } else balloon.vy += 7 * dt
       balloon.x += balloon.vx * dt
       balloon.y += balloon.vy * dt
@@ -685,12 +709,6 @@ export class Theatre {
     for (const cloud of this.clouds) {
       cloud.speed += ((1 - cloud.squash) * 160 - cloud.speed * 9) * dt
       cloud.squash += cloud.speed * dt
-    }
-    if (this.bumpAt >= 0 && this.time >= this.bumpAt) {
-      this.bumpAt = -1
-      this.flinchUntil = this.time + 0.9
-      // The cloud over the troop is the last of them; the drops are placed from where it is seen on a full-width surface.
-      this.shed(CLOUDS.length - 1, this.lastView)
     }
     for (let i = this.drops.length - 1; i >= 0; i--) {
       const drop = this.drops[i]
@@ -756,10 +774,21 @@ export class Theatre {
         this.carryOff(flight.friend, flight.bunch, 1, 0)
         // A balloon in each hand: the two rub together.
         if (everyoneHolds && flight.bunch.count === 1) this.sound('squeal', 1, 0.9, 0.15)
-        // A bunch bigger than the whole troop: its spare balloons bump the cloud on their way out, and it sheds its drops on the troop.
-        if (everyoneHolds && flight.bunch.count > this.troop.size) this.bumpAt = this.time + PERSONALITIES[this.troop.kind].cue.letGo + 0.25
+        // A bunch bigger than the whole troop: its balloons bump the cloud on their way out, and it sheds its drops on the troop.
+        if (everyoneHolds && flight.bunch.count > this.troop.size && this.actors[flight.friend].tug === flight.bunch) this.actors[flight.friend].bumps = true
       }
     }
+  }
+
+  /**
+   * How a bunch hangs over the friend it is carrying off: where its middle is from the friend's, and how far its
+   * balloons are pulled apart. A friend that had no balloon has the first one of the bunch straight over its head
+   * and the rest out over the empty ground to the child's right of it, where no friend stands: one for it, and
+   * balloons with nobody under them. One that already holds a balloon has the bunch on its other side.
+   */
+  private hung(friend: number, count: number): { lead: number; splay: number } {
+    if (this.held[friend].shown) return { lead: this.troop.kind === 'frog' ? -0.1 : -0.75, splay: 1 }
+    return { lead: -bunchOffsets(count)[0].x * TUG_SPLAY, splay: TUG_SPLAY }
   }
 
   /** A friend grabs more than it should have and is carried off. One already in the air just loses the new bunch. */
@@ -792,6 +821,8 @@ export class Theatre {
     bunchOffsets(flight.bunch.count).forEach((offset, k) => {
       const x = beside.x + offset.x, y = beside.y + offset.y
       if (kind === 'hippo') this.loose.push({ x, y, vx: beside.side * (7 + k), vy: 3 + k, colour, flat: true, t: 0, popAt: 0.85 })
+      // The frog's puffed throat bounces it off: it flies from the frog for a quarter of a second, and then it pops.
+      else if (kind === 'frog') this.loose.push({ x, y, vx: beside.side * (6.5 + k * 0.8), vy: -0.5 + k * 0.6, colour, flat: false, t: 0, popAt: 0.24 + k * 0.05 })
       else this.burst(x, y, colour)
     })
     if (kind === 'hippo') this.sound('raspberry')
@@ -994,10 +1025,11 @@ export class Theatre {
           this.hand.z = 0.3
           painter.string(mouthX, mouthY, mouthZ, this.hand.x, this.hand.y, this.hand.z, shade(colour, 0.34), 0.07)
         } else if (other) handOf(plan, pose, this.hand, true)
-        const topX = pose.x + (byTongue ? -0.1 : other ? -0.75 : -0.2) + Math.sin(time * 9) * 0.05, topY = pose.y + HELD_HEIGHT + 0.5
+        const hung = this.hung(i, actor.tug.count)
+        const topX = pose.x + hung.lead + Math.sin(time * 9) * 0.05, topY = pose.y + HELD_HEIGHT + 0.5
         for (const offset of bunchOffsets(actor.tug.count)) {
-          painter.balloon(topX + offset.x, topY + offset.y, 0.25, 0.96, 1.08, -offset.x * 0.3, hue)
-          painter.string(topX + offset.x, topY + offset.y - BALLOON * 1.4, 0.25, this.hand.x, this.hand.y, this.hand.z, line)
+          painter.balloon(topX + offset.x * hung.splay, topY + offset.y, 0.25, 0.96, 1.08, -offset.x * 0.3, hue)
+          painter.string(topX + offset.x * hung.splay, topY + offset.y - BALLOON * 1.4, 0.25, this.hand.x, this.hand.y, this.hand.z, line)
         }
       }
     }
