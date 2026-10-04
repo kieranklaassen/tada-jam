@@ -464,7 +464,7 @@ describe('a bunch the child sends', () => {
     expect(theatre.troop.held).toEqual([true])
   })
 
-  it('still goes to the troop when four bunches are already in the air: the one longest there gets its answer at once', () => {
+  it('still goes to the troop when four bunches are already in the air: it leaves the sky at the lift, and is caught when the others have had their answers, one at a time', () => {
     const theatre = solo('duck', ['frog', 'hippo', 'crab', 'frog', 'duck'])
     for (const slot of [0, 1, 2, 3]) { tapSlot(theatre, slot); play(theatre, 0.08) }
     expect(theatre.troop.held).toEqual([false])
