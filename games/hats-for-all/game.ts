@@ -24,6 +24,10 @@ import {
 // refused, rated or counted on screen.
 
 /** What a finger landed on. A creature is named as the theatre names it. */
+/** A body squashed as far as an act squashes it is this much wider; and Flop's ears, flung right out, reach this far from its middle. */
+const SQUASH_WIDENS = 1.13
+const EARS_FLUNG = 2.3
+
 export type Target = { type: 'hat'; hat: number } | { type: 'creature'; who: string } | { type: 'arch' } | { type: 'prop'; prop: PropName } | { type: 'floor'; x: number; z: number }
 
 /** Where a dragged thing is let go. */
@@ -504,7 +508,8 @@ export class Game {
     // What it does, it does towards the other one, or towards the tile: each of the two faces the other, and comes as near as leaves a finger's width between them.
     const mine = this.saved.crew.find((one) => one.kind === who)!, theirs = other ? this.saved.crew.find((one) => one.kind === other)! : null
     const here = spotX(mine.spot), there = theirs ? spotX(theirs.spot) : tileX(this.saved.tile.length)
-    const widest = (one: { kind: CreatureKind; hats: number[] }): number => Math.max(BODY[one.kind].reach + HAND.radius, ...one.hats.map((worn) => HAT_HALF[this.saved.tile[worn]]))
+    // How wide each can get while it acts: its hands, pushed out as it squashes; its hat; and Flop's ears, flung out.
+    const widest = (one: { kind: CreatureKind; hats: number[] }): number => Math.max((BODY[one.kind].reach + HAND.radius) * SQUASH_WIDENS, one.kind === 'flop' ? EARS_FLUNG : 0, ...one.hats.map((worn) => HAT_HALF[this.saved.tile[worn]]))
     const room = theirs ? (Math.abs(there - here) - widest(mine) - widest(theirs)) / 2 - 0.04 : Infinity
     const act = (one: string, name: string): void => play.act(one, name, one === who ? there : here, room)
     if (bare && action === 'to-bare-head' && other) {
