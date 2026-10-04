@@ -218,7 +218,7 @@ From the guide, each kept as written:
 From the game's own sheet:
 
 - The give of a tin is one twenty-fourth of the fruit's length to either side.
-- The parts in play are halves, quarters, eighths, thirds, sixths, fifths, tenths and twelfths; hundredths are left out.
+- The parts in play are halves through sixths, then eighths, tenths and twelfths; hundredths are left out.
 - Written fractions start at the fifth position, after halves and quarters have been cut by eye.
 - A first visit from age 11 opens where the notation first appears.
 - A piece rings by its length, as a string does.

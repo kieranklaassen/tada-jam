@@ -18,12 +18,12 @@ export const WHOLE: Readonly<Record<Fruit, number>> = { long: 2400, middle: 1920
 /** The length of the board, of the rail the tin lies on and of the longest order: twice the short fruit. */
 export const RAIL = 2880
 
-/**
- * The parts a fruit is cut into, in the order they come into play. The list is the one a record states for
- * written fractions at the lower end of the band, less hundredths (ART.md, "The records"); it is the game's
- * own choice wherever a record names none.
- */
-export const PARTS: readonly number[] = [2, 4, 8, 3, 6, 5, 10, 12]
+/** What halving a fruit gives, and halving that, twice over: the first parts a child cuts. */
+const HALVED: readonly number[] = [2, 4, 8]
+/** What cutting in three and in five gives, with their halves, and the finest part the game cuts. */
+const THIRDS_AND_FIFTHS: readonly number[] = [3, 6, 5, 10, 12]
+/** The parts the game cuts a fruit into, in the order they come into play (ART.md, "The positions"). */
+export const PARTS: readonly number[] = [...HALVED, ...THIRDS_AND_FIFTHS]
 
 /** The give of a tin's jaw is one of this many parts of the whole fruit, to either side. The game's own choice. */
 export const GIVE_PARTS = 24
