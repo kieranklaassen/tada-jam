@@ -110,7 +110,8 @@ export const VOICES = {
   washboard: () => Array.from({ length: 6 }, (_, i) => hiss(2400 + (i % 2) * 500, 0.08, 0.002, 0.04, undefined, i * 0.05)),
   // The dog.
   chomp: () => [tone(700, 0.16, 0.001, 0.04, 'square', 300), hiss(1500, 0.1, 0.001, 0.05)],
-  bark: () => [tone(480, 0.24, 0.006, 0.12, 'sawtooth', 340), hiss(1200, 0.06, 0.004, 0.08)],
+  // One bark, and the tail thumping twice after it.
+  bark: () => [tone(480, 0.24, 0.006, 0.12, 'sawtooth', 340), hiss(1200, 0.06, 0.004, 0.08), tone(90, 0.16, 0.004, 0.07, 'sine', 60, 0.16), tone(90, 0.14, 0.004, 0.07, 'sine', 60, 0.31)],
   // A long slurp, longer for a longer piece.
   munch: (length: number) => [hiss(500, 0.14, 0.06, 0.2 + 0.3 * Math.min(1, length / LONGEST), 1700), tone(ringHz(length) * 0.5, 0.08, 0.01, 0.1, 'sine', undefined, 0.5)],
   // The piece through the air, and a yip as it is caught.

@@ -27,6 +27,12 @@ export type Fx =
   | { kind: 'knock'; x: number; y: number; age: number; life: number }
   /** The tin's lid coming down on a misfit: it bounces on what sticks out, or shuts on a gap and springs back. */
   | { kind: 'lid'; how: 'over' | 'under'; age: number; life: number }
+  /** The open tin's sprung jaw snapping out and back, twice, like a castanet: when it is poked, and when it springs open. */
+  | { kind: 'jaw'; age: number; life: number }
+  /** The crate's top slat, split by the blade. It mends as the fruit that tumbled out lands. */
+  | { kind: 'slat'; age: number; life: number }
+  /** The ruled parts under the open tin answering the roller, one by one. */
+  | { kind: 'answer'; parts: number; age: number; life: number }
   /** The marks a comic puts round a head, with no letter in them: an impact star, drops of sweat flying off, and the short lines of a start. */
   | { kind: 'star'; x: number; y: number; size: number; seed: number; age: number; life: number }
   | { kind: 'sweat'; x: number; y: number; seed: number; age: number; life: number }
@@ -140,12 +146,18 @@ export function spawn(state: FxState, event: GameEvent, heads: Partial<Record<'w
       break
     case 'tinPoke':
       next.joltSpeed += event.open ? 9 : 6
+      if (event.open) next.fx.push({ kind: 'jaw', age: 0, life: 0.3 })
       break
     case 'burp':
       next.rockSpeed += 7
       break
     case 'given':
       shake(event.id, 'slide', 0, 0.2, event.from)
+      // The tin springs open: it jolts on its rail, and the jaw at its end snaps out.
+      if (event.opened) {
+        next.joltSpeed += 8
+        next.fx.push({ kind: 'jaw', age: 0, life: 0.3 })
+      }
       break
     case 'knocked':
       shake(event.id, 'slide', 0, 0.3, event.from)
@@ -153,6 +165,8 @@ export function spawn(state: FxState, event: GameEvent, heads: Partial<Record<'w
     case 'bounce':
     case 'skid':
       if (event.kind === 'skid' || event.off === 'tin') next.joltSpeed += 8
+      // A whole fruit that a flung piece bounced off shivers.
+      if (event.kind === 'bounce' && event.struck !== undefined) shake(event.struck, 'quiver', 1, 0.5)
       next.fx.push({ kind: 'burst', x: event.x, y: event.y, size: 20, fruit: 'middle', seed: random() * 1000, age: 0, life: 0.2 })
       next.fx.push({ kind: 'lines', x: event.x, y: event.y, angle: -Math.PI / 2, reach: 50, age: 0, life: 0.2 })
       break
@@ -160,9 +174,11 @@ export function spawn(state: FxState, event: GameEvent, heads: Partial<Record<'w
       next.fx.push({ kind: 'knock', x: event.x, y: event.y, age: 0, life: 0.3 })
       if (event.on === 'crate') next.rockSpeed += 6
       if (event.on === 'tin') next.joltSpeed += 5
+      if (event.on === 'tin' && event.parts > 0) next.fx.push({ kind: 'answer', parts: event.parts, age: 0, life: Math.min(0.9, 0.2 + event.parts * 0.09) })
       break
     case 'spill':
       next.rockSpeed += 9
+      next.fx.push({ kind: 'slat', age: 0, life: 0.45 })
       next.fx.push({ kind: 'burst', x: CRATE.x + CRATE.w / 2, y: CRATE.y + 30, size: 34, fruit: 'middle', seed: random() * 1000, age: 0, life: 0.25 })
       break
     case 'snap':

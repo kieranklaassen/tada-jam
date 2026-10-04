@@ -59,8 +59,8 @@ export type GameEvent =
   | { kind: 'burp'; piece: Piece; from: Box; voice: VoiceId }
   /** A flung piece hit a customer and is licked off. */
   | { kind: 'splat'; whom: Whom; piece: Piece; from: Box; voice: VoiceId }
-  /** A flung piece bounced off something and came back to the counter. */
-  | { kind: 'bounce'; id: number; off: 'tin' | 'fruit' | 'crate' | 'shelf'; x: number; y: number; length: number; voice: VoiceId }
+  /** A flung piece bounced off something and came back to the counter. `struck` is the whole fruit it bounced off, which shivers. */
+  | { kind: 'bounce'; id: number; off: 'tin' | 'fruit' | 'crate' | 'shelf'; x: number; y: number; length: number; voice: VoiceId; struck?: number }
   /** A piece was knocked along its lane by a flung one, from `from`. */
   | { kind: 'knocked'; id: number; from: Box; length: number; voice: VoiceId }
   /** The roller pressed so many equal parts into a fruit or a piece. */

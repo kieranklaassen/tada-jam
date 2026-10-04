@@ -29,15 +29,17 @@ export type DogPose = {
   spin: number
   /** The nose's wrinkle, 0 to 1, when it sniffs. */
   sniff: number
+  /** The tail's swing from where it stands, in radians: it thumps at a bark. */
+  tail: number
 }
 
 export const IDLE = ['blink', 'earFlick', 'sniff', 'headTilt', 'yawn', 'pant'] as const
 export type Idle = (typeof IDLE)[number]
-export const REACTIONS = ['bark', 'snap', 'spin', 'gulp', 'cheeks', 'ironed'] as const
+export const REACTIONS = ['bark', 'snap', 'spin', 'gulp', 'cheeks', 'ironed', 'flip'] as const
 export type Reaction = (typeof REACTIONS)[number]
 
 const IDLE_SECONDS: Readonly<Record<Idle, number>> = { blink: 0.28, earFlick: 0.5, sniff: 1.1, headTilt: 1.6, yawn: 1.9, pant: 2.4 }
-const REACTION_SECONDS: Readonly<Record<Reaction, number>> = { bark: 0.45, snap: 0.32, spin: 0.7, gulp: 0.6, cheeks: 1.5, ironed: 1.2 }
+const REACTION_SECONDS: Readonly<Record<Reaction, number>> = { bark: 0.45, snap: 0.32, spin: 0.7, gulp: 0.6, cheeks: 1.5, ironed: 1.2, flip: 0.62 }
 
 export type DogState = {
   /** Seconds the dog has been watched: its breathing runs on this. */
@@ -114,6 +116,8 @@ export function poseOf(state: DogState, look: { x: number; y: number } | null = 
     cheeks: 0,
     spin: 0,
     sniff: 0,
+    // The tail sways a beat behind the ears.
+    tail: 0.07 * Math.sin(state.t * 1.7 - 2.3),
   }
   if (state.idle) {
     const t = state.idleAge / IDLE_SECONDS[state.idle]
@@ -143,6 +147,7 @@ export function poseOf(state: DogState, look: { x: number; y: number } | null = 
         pose.jaw = 0.35
         pose.tongue = 0.8 + 0.2 * Math.sin(t * Math.PI * 14)
         pose.lift += 1.5 * Math.sin(t * Math.PI * 14)
+        pose.tail += 0.22 * Math.sin(t * Math.PI * 10)
         break
     }
   }
@@ -154,6 +159,8 @@ export function poseOf(state: DogState, look: { x: number; y: number } | null = 
         pose.lift += 14 * bump(ramp(t, 0, 0.6))
         pose.earLeft += 0.5 * bump(ramp(t, 0.15, 0.9))
         pose.earRight += 0.5 * bump(ramp(t, 0.25, 1))
+        // The tail thumps, twice, after the bark.
+        pose.tail += 0.7 * Math.sin(ramp(t, 0.3, 1) * Math.PI * 4) * (1 - 0.5 * t)
         break
       case 'snap':
         pose.jaw = t < 0.35 ? ramp(t, 0, 0.35) : 1 - ramp(t, 0.35, 0.5)
@@ -178,6 +185,14 @@ export function poseOf(state: DogState, look: { x: number; y: number } | null = 
         pose.earRight += t < 0.72 ? -0.5 * ramp(t, 0, 0.1) : -0.5 + 0.9 * bump(ramp(t, 0.72, 1)) + 0.5 * ramp(t, 0.72, 0.82)
         pose.lift -= 9 * (1 - ramp(t, 0.5, 0.6))
         pose.lids = 0.8 * (1 - ramp(t, 0.45, 0.55))
+        break
+      case 'flip':
+        // A piece caught in the air: it jumps for it and turns right over, higher the longer the piece.
+        pose.lift += (10 + 16 * state.amount) * bump(t)
+        pose.spin = Math.PI * 2 * ramp(t, 0.15, 0.85)
+        pose.jaw = 1 - ramp(t, 0.2, 0.35)
+        pose.cheeks = state.amount * bump(ramp(t, 0.35, 1))
+        pose.tail += 0.5 * bump(t)
         break
       case 'cheeks':
         // A long piece, eaten politely and with difficulty.

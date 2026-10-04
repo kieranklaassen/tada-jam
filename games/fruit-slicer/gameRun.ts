@@ -381,7 +381,9 @@ export class GameRun {
         }
         case 'fell': {
           const taste = dogTaste(event.piece.length, event.piece.fruit)
-          this.coming.push({ wait: 0.36, reaction: taste.act === 'spin' ? 'spin' : taste.act === 'snap' ? 'gulp' : 'cheeks', amount: taste.cheeks })
+          // A flung piece is caught in the air, with a flip that is bigger the longer the piece; anything else is eaten as it arrives.
+          if (event.voice === 'catch') this.coming.push({ wait: 0.14, reaction: 'flip', amount: taste.cheeks })
+          else this.coming.push({ wait: 0.36, reaction: taste.act === 'spin' ? 'spin' : taste.act === 'snap' ? 'gulp' : 'cheeks', amount: taste.cheeks })
           break
         }
         case 'rolled':

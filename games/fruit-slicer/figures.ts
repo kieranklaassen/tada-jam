@@ -123,6 +123,12 @@ export function dog(ctx: Ctx, screens: Dots, x: number, y: number, s: number, po
   ctx.save()
   ctx.translate(x, y - pose.lift * s)
   ctx.scale(s, s)
+  // The tail stands up behind the head and swings from where it stands: it thumps at a bark.
+  ctx.save()
+  ctx.translate(34, 14)
+  ctx.rotate(0.35 + pose.tail)
+  inked(ctx, oval(0, -32, 8, 30), WHITE, 5, screens.of(ctx as CanvasRenderingContext2D, INK, 0.5))
+  ctx.restore()
   // The whole head turns about its middle: a tilt, or the full circle it turns for the smallest things.
   ctx.translate(0, 44)
   ctx.rotate(pose.tilt + pose.spin)

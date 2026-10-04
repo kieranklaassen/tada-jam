@@ -17,7 +17,7 @@ function print(start: DogState, seconds: number): number[] {
   for (let i = 0; i < 24; i++) {
     state = { ...state, idleAge: state.idle ? (i / 24) * seconds : 0, reactAge: state.react ? (i / 24) * seconds : 0 }
     const pose = poseOf({ ...state, t: 0 })
-    numbers.push(pose.lift / 20, pose.tilt, pose.earLeft, pose.earRight, pose.lids, pose.jaw, pose.tongue, pose.cheeks, pose.spin / 6.3, pose.sniff)
+    numbers.push(pose.lift / 20, pose.tilt, pose.earLeft, pose.earRight, pose.lids, pose.jaw, pose.tongue, pose.cheeks, pose.spin / 6.3, pose.sniff, pose.tail)
   }
   return numbers
 }
@@ -64,7 +64,7 @@ describe('the dog at idle', () => {
 })
 
 describe('what the dog does', () => {
-  const seconds: Record<string, number> = { blink: 0.28, earFlick: 0.5, sniff: 1.1, headTilt: 1.6, yawn: 1.9, pant: 2.4, bark: 0.45, snap: 0.32, spin: 0.7, gulp: 0.6, cheeks: 1.5, ironed: 1.2 }
+  const seconds: Record<string, number> = { blink: 0.28, earFlick: 0.5, sniff: 1.1, headTilt: 1.6, yawn: 1.9, pant: 2.4, bark: 0.45, snap: 0.32, spin: 0.7, gulp: 0.6, cheeks: 1.5, ironed: 1.2, flip: 0.62 }
   const prints = [
     ...IDLE.map((idle) => ({ name: idle, numbers: print({ ...newDog(1), idle }, seconds[idle]) })),
     ...REACTIONS.map((reaction) => ({ name: reaction, numbers: print({ ...newDog(1), react: reaction, amount: 0.7 }, seconds[reaction]) })),
@@ -83,6 +83,7 @@ describe('what the dog does', () => {
         expect(part).toBeGreaterThanOrEqual(0)
         expect(part).toBeLessThanOrEqual(1.05)
       }
+      expect(Math.abs(pose.tail)).toBeLessThanOrEqual(1)
       expect(pose.spin).toBeGreaterThanOrEqual(0)
       expect(pose.spin).toBeLessThanOrEqual(Math.PI * 2 + 0.001)
     }
@@ -110,6 +111,26 @@ describe('what the dog does', () => {
       return most
     }
     expect(cheeks(0.9)).toBeGreaterThan(cheeks(0.3))
+  })
+
+  it('thumps its tail twice at a bark, and flips for a piece caught in the air, higher the longer the piece', () => {
+    let swings = 0, last = 0
+    play(react(newDog(1), 'bark'), 0.45, (state) => {
+      const tail = poseOf(state).tail
+      if (Math.abs(tail) > 0.25 && Math.sign(tail) !== Math.sign(last)) swings++
+      if (Math.abs(tail) > 0.25) last = tail
+    })
+    expect(swings).toBeGreaterThanOrEqual(3)
+    const height = (amount: number) => {
+      let most = 0, turned = 0
+      play(react(newDog(1), 'flip', amount), 0.6, (state) => {
+        most = Math.max(most, poseOf(state).lift)
+        turned = Math.max(turned, poseOf(state).spin)
+      })
+      expect(turned).toBeCloseTo(Math.PI * 2, 1)
+      return most
+    }
+    expect(height(1)).toBeGreaterThan(height(0.2) + 8)
   })
 
   it('watches the blade while a finger is down, and looks up at the board when left alone', () => {

@@ -13,6 +13,44 @@ function play(state: FxState, seconds: number, each?: (state: FxState) => void):
   return state
 }
 
+describe('what the grid promises to the eye', () => {
+  const kinds = (state: FxState) => state.fx.map((one) => one.kind)
+  it('snaps the open tin\'s jaw at a poke, and only rattles a shut one', () => {
+    expect(kinds(spawn(newFx(1), { kind: 'tinPoke', open: true, voice: 'castanet' }))).toEqual(['jaw'])
+    const shut = spawn(newFx(1), { kind: 'tinPoke', open: false, voice: 'rattle' })
+    expect(kinds(shut)).toEqual([])
+    expect(shut.joltSpeed).toBeGreaterThan(0)
+  })
+
+  it('springs the tin open for the first piece: a jolt and the jaw; a later piece only slides in', () => {
+    const from = { x: 100, y: 500, w: 60, h: 48 }
+    const first = spawn(newFx(1), { kind: 'given', id: 3, from, opened: true, firstShowing: null, length: 600, voice: 'spring' })
+    expect(kinds(first)).toEqual(['jaw'])
+    expect(first.joltSpeed).toBeGreaterThan(0)
+    const later = spawn(newFx(1), { kind: 'given', id: 3, from, opened: false, firstShowing: null, length: 600, voice: 'lay' })
+    expect(kinds(later)).toEqual([])
+    expect(later.joltSpeed).toBe(0)
+  })
+
+  it('splits a slat of the crate at a slice, and the slat has mended by the time the fruit has landed', () => {
+    const split = spawn(newFx(1), { kind: 'spill', voice: 'split' })
+    expect(kinds(split)).toContain('slat')
+    expect(kinds(play(split, 0.5))).not.toContain('slat')
+  })
+
+  it('shivers the whole fruit a flung piece bounced off', () => {
+    const hit = spawn(newFx(1), { kind: 'bounce', id: 4, off: 'fruit', x: 300, y: 500, length: 600, voice: 'boing', struck: 9 })
+    expect(hit.shakes.map((shake) => [shake.id, shake.kind])).toEqual([[9, 'quiver']])
+    expect(spawn(newFx(1), { kind: 'bounce', id: 4, off: 'tin', x: 300, y: 300, length: 600, voice: 'bong' }).shakes).toEqual([])
+  })
+
+  it('has the ruled parts answer the roller one by one on an open tin, and nothing answer on a shut one', () => {
+    const open = spawn(newFx(1), { kind: 'rolled', on: 'tin', whom: null, parts: 4, x: 200, y: 330, voice: 'rule' })
+    expect(open.fx.find((one) => one.kind === 'answer')).toMatchObject({ parts: 4 })
+    expect(kinds(spawn(newFx(1), { kind: 'rolled', on: 'tin', whom: null, parts: 0, x: 200, y: 330, voice: 'drum' }))).not.toContain('answer')
+  })
+})
+
 describe('a cut', () => {
   const after = spawn(newFx(7), CUT)
 

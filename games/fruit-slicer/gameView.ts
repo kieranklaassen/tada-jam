@@ -103,7 +103,7 @@ function awning(ctx: Ctx, time: number, flap: number): number {
   return SCALLOPS
 }
 
-function crate(ctx: Ctx, dots: Dots, rock: number, ordered: Fruit | null, time: number): number {
+function crate(ctx: Ctx, dots: Dots, rock: number, ordered: Fruit | null, time: number, split = 0): number {
   ctx.save()
   ctx.translate(CRATE.x + CRATE.w / 2, CRATE.y + CRATE.h)
   ctx.rotate(rock * 0.05)
@@ -116,8 +116,12 @@ function crate(ctx: Ctx, dots: Dots, rock: number, ordered: Fruit | null, time: 
   })
   inked(ctx, rect(0, 22, CRATE.w, CRATE.h - 22), '#d9a441', 5, dots.of(ctx, RED, 0.3))
   for (let slat = 1; slat < 3; slat++) inked(ctx, rect(0, 22 + (slat * (CRATE.h - 22)) / 3, CRATE.w, 0.01), null, 4)
+  if (split > 0) {
+    // The top slat, split by the blade: a dark wedge where the wood has parted, closing again as it mends.
+    inked(ctx, poly([[CRATE.w / 2 - 20 * split, 22], [CRATE.w / 2 + 22 * split, 22], [CRATE.w / 2 + 7 * split, 22 + 38 * split], [CRATE.w / 2 - 6 * split, 22 + 24 * split]]), INK, 3)
+  }
   ctx.restore()
-  return 6
+  return 7
 }
 
 /** The roller: a ridged drum on a handle. It hangs on its hook, or goes where the finger or a scene has it. */
@@ -131,7 +135,7 @@ function roller(ctx: Ctx, dots: Dots, at: Point): number {
 function effects(ctx: Ctx, fx: FxState, wall: boolean): number {
   let drawn = 0
   for (const one of fx.fx) {
-    if ((one.kind === 'spatter') !== wall || one.age < 0 || one.kind === 'lid') continue
+    if ((one.kind === 'spatter') !== wall || one.age < 0 || one.kind === 'lid' || one.kind === 'jaw' || one.kind === 'slat' || one.kind === 'answer') continue
     const t = one.age / one.life
     drawn++
     switch (one.kind) {
@@ -281,7 +285,9 @@ function tin(ctx: Ctx, dots: Dots, scenery: Scenery, shape: TinShape, customer: 
   if (customer.written && down < 0.5 && spin === 0) drawFraction(ctx, share, lid.x + lid.w / 2 + 6, lid.y + lid.h / 2, 17, { fill: INK, edge: WHITE, edgeWidth: 5 })
   // Shut, the lid lies over the tin and what is in it is no longer seen.
   inked(ctx, rect(body.x, body.y, body.w, body.h), down >= 0.99 ? '#c9d6e6' : '#eef3f8', 5, down >= 0.99 ? dots.of(ctx, BLUE, 0.3) : undefined)
-  // The sprung jaw at the end of each compartment, and the twins' divider between the two.
+  // The sprung jaw at the end of each compartment, and the twins' divider between the two. Poked, or springing open, the jaw snaps out and back, twice.
+  const snapping = scenery.fx.fx.find((one) => one.kind === 'jaw')
+  const bite = snapping ? Math.abs(Math.sin((snapping.age / snapping.life) * Math.PI * 2)) * (1 - snapping.age / snapping.life) : 0
   ctx.lineWidth = 3
   ctx.strokeStyle = INK
   shape.parts.forEach((part, index) => {
@@ -293,7 +299,7 @@ function tin(ctx: Ctx, dots: Dots, scenery: Scenery, shape: TinShape, customer: 
       return
     }
     ctx.beginPath()
-    for (let i = 0; i <= 6; i++) ctx.lineTo(part.x + part.w + (i % 2 ? 6 : 0), body.y + 5 + i * ((body.h - 10) / 6))
+    for (let i = 0; i <= 6; i++) ctx.lineTo(part.x + part.w + (i % 2 ? 6 + 20 * bite : -9 * bite), body.y + 5 + i * ((body.h - 10) / 6))
     ctx.stroke()
   })
   ctx.restore()
@@ -315,6 +321,12 @@ function tin(ctx: Ctx, dots: Dots, scenery: Scenery, shape: TinShape, customer: 
     const marks = Math.ceil((ruler.w / whole) * row.parts)
     for (let part = 1; part < marks; part++) if (part <= partsRuled + 0.001) ctx.fillRect(ruler.x + (whole * part) / row.parts - 1.25, y - (ruled.rows.length > 1 ? 0 : 3), 2.5, rowH + (ruled.rows.length > 1 ? 0 : 6))
   })
+  // The roller on the open tin: the ruled parts answer one by one, each standing up white for its knock.
+  const answering = scenery.fx.fx.find((one) => one.kind === 'answer')
+  if (answering && answering.kind === 'answer') {
+    const parts = ruled.rows[0].parts, at = Math.min(answering.parts - 1, Math.floor((answering.age / answering.life) * answering.parts))
+    inked(ctx, rect(ruler.x + (whole * at) / parts, ruler.y - 7, whole / parts, rowH * ruled.rows.length + 10), WHITE, 3)
+  }
   // The sign between the cat's two shares, laid just past their ends.
   if (ruled.sign && customer.written && (!showing || show.extra > 0)) {
     const end = Math.max(...ruled.rows.map((row) => (whole * row.lit) / row.parts))
@@ -440,7 +452,8 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
     drawn += ticket(ctx, customer, box.x + (long ? 8 : who === 'cat' ? 104 : beside ? 92 : 46), TICKET_TOP, long ? 0.5 : customer.shares.length > 1 ? 0.56 : 0.62, true)
   })
   drawn += awning(ctx, scenery.time, fx.flap)
-  drawn += crate(ctx, dots, fx.rock, game.window && !game.finished ? game.window.fruit : null, scenery.time)
+  const slat = fx.fx.find((one) => one.kind === 'slat')
+  drawn += crate(ctx, dots, fx.rock, game.window && !game.finished ? game.window.fruit : null, scenery.time, slat ? 1 - slat.age / slat.life : 0)
   // The tin on the rail. While the serve plays it is still there, shut on what was served, and empties as the
   // customer eats; what it held is read from the ending, since the game has already moved on.
   const serving = scenery.ending !== null && scenery.show !== null && scenery.show.kind !== 'glider' && game.window !== null

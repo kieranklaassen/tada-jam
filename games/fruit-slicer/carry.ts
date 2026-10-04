@@ -164,6 +164,8 @@ function intoTin(game: Game, held: Held, part: number): { game: Game; events: Ga
     } else {
       events.push({ kind: 'given', id: piece.id, from, opened: given.opened, firstShowing: given.firstShowing, length: piece.length, voice: given.opened ? 'spring' : 'lay' })
       events.push(...fellEvents(now.world, given.strays, tin).map((event) => event))
+      // A piece of another fruit: the customer will not have it in its tin. It flinches, and the piece is flicked out to the dog.
+      if (given.strays.length > 0) events.push({ kind: 'flinch', whom: 'window', voice: 'babble' })
       const worst = given.result
       if (given.ending) events.push({ kind: 'ending', ending: given.ending, how: 'shut' })
       else if (worst.kind === 'over' || worst.kind === 'under') events.push({ kind: 'misfit', id: piece.id, how: worst.kind, by: worst.by, length: piece.length, voice: worst.kind === 'over' ? 'clang' : 'slide' })
@@ -195,9 +197,9 @@ export function fling(game: Game, held: Held, at: Point, v: Point): { game: Game
   const rest = without(game.world, held.ids)
   const end = landing(at, v)
   const hit: Under = thingAt(game, end, held.ids)
-  const backOnBoard = (off: 'tin' | 'fruit' | 'crate' | 'shelf', voice: 'bong' | 'boing' | 'rock', from: Game = game): { game: Game; events: GameEvent[] } => {
+  const backOnBoard = (off: 'tin' | 'fruit' | 'crate' | 'shelf', voice: 'bong' | 'boing' | 'rock', from: Game = game, struck?: number): { game: Game; events: GameEvent[] } => {
     const set = setRowOnBoard(from.world, [id], laneAt(at.y), (at.x - held.dx - X0) / PX)
-    const events: GameEvent[] = [{ kind: 'bounce', id, off, x: end.x, y: end.y, length: mine.piece.length, voice }, { kind: 'setDown', ids: [id], from: [mine.from], how: 'put', voice: 'lay' }, ...fellEvents(from.world, set.fell)]
+    const events: GameEvent[] = [{ kind: 'bounce', id, off, x: end.x, y: end.y, length: mine.piece.length, voice, struck }, { kind: 'setDown', ids: [id], from: [mine.from], how: 'put', voice: 'lay' }, ...fellEvents(from.world, set.fell)]
     return shutAfter({ ...from, world: set.world }, events, game, held)
   }
   switch (hit.thing) {
@@ -221,7 +223,7 @@ export function fling(game: Game, held: Held, at: Point, v: Point): { game: Game
       const on = hit.piece.place
       if (on.on === 'tin') return backOnBoard('tin', 'bong')
       if (on.on !== 'board') return backOnBoard('shelf', 'boing')
-      if (hit.thing === 'fruit') return backOnBoard('fruit', 'boing')
+      if (hit.thing === 'fruit') return backOnBoard('fruit', 'boing', game, hit.piece.id)
       // Knocked along its lane, the way the flung piece was going, until it meets the next thing; the flung piece lands where it was.
       const lane = onLane(rest, on.lane)
       const dir = v.x < 0 ? -1 : 1

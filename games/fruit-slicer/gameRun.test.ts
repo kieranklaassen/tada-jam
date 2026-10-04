@@ -10,7 +10,8 @@ import { tinParts } from './orders'
 import { deserialize, serialize } from './save'
 import { servedShow } from './scenes'
 import { headOf } from './seats'
-import { BOARD, CRATE, DOG, LANE_H, PX, QUEUE, ROLLER, SHELF_BOX, TIN, WINDOW, X0, laneTop, type Box, type Point } from './stage'
+import { tinAt } from './moves'
+import { BOARD, CRATE, DOG, LANE_H, PX, QUEUE, ROLLER, SHELF_BOX, TIN, WINDOW, X0, laneTop, shown, type Box, type Point } from './stage'
 import { eaten, inTin, marksOf, onLane } from './world'
 
 const NEAR = laneTop(0) + LANE_H / 2
@@ -307,6 +308,23 @@ describe('the cast in the run', () => {
     run.tap(mid(QUEUE[1]))
     const noise = run.takeSounds().find((sound) => sound.id === 'babble')!
     expect(noise.count).toBe(CAST.indexOf(who))
+  })
+
+  it('flinches as a piece of another fruit is flicked out of its tin to the dog', () => {
+    const run = fresh()
+    run.tap(mid(QUEUE[0]))
+    play(run, 2)
+    // A slice through the crate tumbles out one fruit of each kind.
+    drag(run, { x: CRATE.x - 20, y: CRATE.y + 60 }, { x: CRATE.x + CRATE.w + 10, y: CRATE.y + 60 }, 0.1)
+    play(run, 2)
+    const ordered = run.game.window!.fruit
+    const wrong = shown(run.game.world, tinAt(run.game)).find(({ piece }) => piece.fruit !== ordered)!
+    run.takeSounds()
+    drag(run, { x: wrong.box.x + 12, y: wrong.box.y + wrong.box.h / 2 }, TIN_AT, 1.5)
+    expect(run.game.world.pieces.some((piece) => piece.id === wrong.piece.id)).toBe(false)
+    expect(run.window).toMatchObject({ react: 'flinch' })
+    expect(ids(run)).toContain('babble')
+    expect(run.fx.fx.some((one) => one.kind === 'fly')).toBe(true)
   })
 
   it('flinches at a poke, loses a tuft to the blade, and is rolled flat by the roller', () => {

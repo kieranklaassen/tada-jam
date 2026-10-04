@@ -231,7 +231,7 @@ function rail(ctx: Ctx): number {
   return 5
 }
 
-/** What a stall keeper leaves about: a cloth on a peg and a stack of paper bags down the left edge, and the dog's bone by its arch. */
+/** What a stall keeper leaves about: a cloth on a peg and a stack of paper bags down the left edge, and the dog's bone under its arch. */
 function clutter(ctx: Ctx, dots: Dots): number {
   // A cloth hanging from a peg beside the rail, its lower part in red dots.
   const cx = COUNTER.x + 12, cy = RAIL_BOX.y + 6
@@ -249,8 +249,8 @@ function clutter(ctx: Ctx, dots: Dots): number {
     const by = SHELF_BOX.y + SHELF_BOX.h - 34 - bag * 13, lean = (bag % 2 ? 3 : -2)
     inked(ctx, poly([[COUNTER.x + 10 + lean, by], [COUNTER.x + 52 + lean, by], [COUNTER.x + 54 + lean, by + 14], [COUNTER.x + 8 + lean, by + 14]]), PAPER, 3, bag === 3 ? dots.of(ctx, BLUE, 0.2) : undefined)
   }
-  // The dog's bone, by its arch.
-  const ox = DOG.x + 108, oy = DOG.y - 24
+  // The dog's bone, under the sill of its arch, clear of its tail and of anything that lands on its head.
+  const ox = DOG.x + DOG.w / 2, oy = DOG.y + DOG.h + 28
   inked(ctx, slab(ox - 22, oy - 5, 44, 10, 5), WHITE, 3.5)
   for (const [ex, ey] of [[-22, -6], [-22, 6], [22, -6], [22, 6]] as const) inked(ctx, oval(ox + ex, oy + ey, 7, 6), WHITE, 3.5)
   ctx.fillStyle = WHITE

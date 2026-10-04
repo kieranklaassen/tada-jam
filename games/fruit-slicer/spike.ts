@@ -23,7 +23,7 @@ const SHELF_Y = 648
 type Ctx = CanvasRenderingContext2D
 
 /** The dog as the still shows it: looking up at the board, tongue out. */
-const STILL_DOG = { lift: 0, tilt: 0, earLeft: 0, earRight: 0, eyeX: 0, eyeY: -0.7, lids: 0, jaw: 0.2, tongue: 0.6, cheeks: 0, spin: 0, sniff: 0 }
+const STILL_DOG = { lift: 0, tilt: 0, earLeft: 0, earRight: 0, eyeX: 0, eyeY: -0.7, lids: 0, jaw: 0.2, tongue: 0.6, cheeks: 0, spin: 0, sniff: 0, tail: 0 }
 
 /** A fruit or a piece of one: a flat colour, square ends and a thin darker line. Nothing else is ever drawn on it. */
 function bar(ctx: Ctx, fruit: Fruit, x: number, y: number, length: number, height: number): void {
