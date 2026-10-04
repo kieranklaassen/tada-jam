@@ -101,6 +101,8 @@ const JUMPS_FOR = 0.5
 /** How far behind the friends' line a troop that stopped beside a troop on stage goes on, and the part of its way out it spends stepping back to there. */
 const PASSES_BEHIND = 2.7
 const STEPS_BACK = 0.16
+/** How far apart the friends of a troop that passes beside the child's own stand, in widths of one of them. */
+const SHOULDERS_APART = 1.12
 /** A troop that passes by and is touched jumps where it is for this long, and is then gone in this long at the most. */
 const FLEES_AFTER = 0.3
 const FLEES_FOR = 0.7
@@ -2329,8 +2331,9 @@ export class Theatre {
   private standBeside(passer: Passing, view: View): void {
     const across = 2 * BODIES[passer.kind].halfWidth * FRIEND_SCALE
     const room = friendX(0, this.troop.size) - BODIES[this.troop.kind].halfWidth * FRIEND_SCALE + view.width / 2
-    passer.scale = Math.min(0.9, (room - 0.35) / (passer.size * across + 0.1))
-    passer.gap = across * passer.scale + 0.05
+    // A little apart, so that arms swung out in a walk or a catch do not go through the friend beside it.
+    passer.scale = Math.min(0.9, (room - 0.35) / (passer.size * across * SHOULDERS_APART + 0.1))
+    passer.gap = across * passer.scale * SHOULDERS_APART + 0.05
     passer.stopAt = -view.width / 2 + 0.05 + (passer.size * passer.gap) / 2
   }
 
