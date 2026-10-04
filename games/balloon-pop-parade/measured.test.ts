@@ -739,15 +739,18 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
   })
 
   it('begins an ending only for a troop that is seen with all its balloons, and gives a touch to the balloon drawn in front: in whole games played at random, with pops as balloons land and taps on bunches on their way', () => {
-    let endings = 0, flying = 0, got = 0
+    let endings = 0, flying = 0, got = 0, stepIns = 0
     for (const [age, seed] of [[2, 3], [3, 5], [4, 7], [4, 11], [2, 13], [4, 17], [3, 19], [4, 23]] as const) {
       const theatre = new Theatre(freshSave(age, seed), seed), { balloons, painter, clear } = recorder()
       const inside = theatre as unknown as { flights: { bunch: Bunch }[]; held: { shown: boolean }[]; loose: { x: number; y: number }[]; along: (flight: unknown) => { x: number; y: number } }
       let state = seed * 86028121
       const random = () => (state = (state * 1103515245 + 12345) % 2147483648) / 2147483648
       const full = () => theatre.troop.held.every((holds) => holds) && inside.held.slice(0, theatre.troop.size).every((balloon) => balloon.shown)
+      // No troop marches off that was never seen with all its balloons.
+      let seenFull = false, onStage = JSON.stringify([theatre.save.next, theatre.save.parade])
       for (let i = 0; i < 60 * 150; i++) {
         const before = theatre.playing
+        if (full()) seenFull = true
         if (i % 7 === 0) {
           const roll = random()
           if (roll < 0.45) {
@@ -773,12 +776,19 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
           }
         }
         if (theatre.playing === 'ending' && before !== 'ending') { endings += 1; expect(full(), `seed ${seed}, frame ${i}: an ending at a touch for a troop that is not full`).toBe(true) }
+        if (JSON.stringify([theatre.save.next, theatre.save.parade]) !== onStage) {
+          expect(seenFull, `seed ${seed}, frame ${i}: a troop marched off that was never seen with all its balloons`).toBe(true)
+          stepIns += 1
+          seenFull = false
+          onStage = JSON.stringify([theatre.save.next, theatre.save.parade])
+        }
         const still = theatre.playing
         theatre.step(1 / 60)
         if (theatre.playing === 'ending' && still !== 'ending') { endings += 1; expect(full(), `seed ${seed}, frame ${i}: an ending for a troop that is not full`).toBe(true) }
       }
     }
     expect(endings).toBeGreaterThan(40)
+    expect(stepIns).toBeGreaterThan(30)
     expect(flying).toBeGreaterThan(2000)
     expect(got).toBeGreaterThan(200)
   }, 120_000)
@@ -824,6 +834,45 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
     expect(inside.sway).toBeGreaterThan(sway)
     theatre.paint(painter, VIEW)
     for (const i of [0, 1]) expect(Math.abs(poses.get(`friend-${i}`)!.headTurn), `friend ${i}`).not.toBeCloseTo(0.55, 3)
+  })
+
+  it.each(kinds)('two %ss never march off unserved: a balloon popped while the bunch for the last friend is being caught takes the judging back, the waiting troop only waves, and the cycle is judged when the last friend has its balloon after all', (kind) => {
+    const theatre = new Theatre(saveOf({ position: 'pair-singles', troop: { kind, size: 2, held: [true, false] }, sky: [{ colour: kind, count: 1 }, { colour: other(kind), count: 1 }, { colour: kind, count: 1 }], waiting: { kind: other(kind), size: 1 } }), 3), { balloons, painter, clear } = recorder()
+    const inside = theatre as unknown as { flights: { begun?: boolean; landed: boolean }[] }
+    theatre.step(1 / 60)
+    clear()
+    theatre.paint(painter, VIEW)
+    const own = balloons.find((balloon) => balloon.z > 0.29 && balloon.z < 0.31 && balloon.wide === 1 && balloon.y < 2.2)!
+    tap(theatre, 0)
+    expect(theatre.save.finished).toBe(true)
+    expect(theatre.save.position).toBe('trio-singles')
+    // The catch has begun, and the balloon is not in the hand yet: the other friend's balloon is popped.
+    for (let i = 0; i < 60 && !inside.flights[0].begun; i++) theatre.step(1 / 60)
+    expect(inside.flights[0].begun).toBe(true)
+    expect(inside.flights[0].landed).toBe(false)
+    theatre.press(own.x, own.y, VIEW)
+    theatre.cancel()
+    // The troop was never seen with both balloons: the cycle is not judged, and the position is where it was.
+    expect(theatre.troop.held).toEqual([false, true])
+    expect(theatre.save.finished).toBe(false)
+    expect(theatre.save.position).toBe('pair-singles')
+    let endings = 0
+    for (let i = 0; i < 60 * 3; i++) { theatre.step(1 / 60); if (theatre.playing === 'ending') endings += 1 }
+    expect(endings).toBe(0)
+    // The troop that waits only waves.
+    theatre.sounds.length = 0
+    theatre.press(waitingSpot(0, VIEW).x, GROUND + 0.8, VIEW)
+    theatre.cancel()
+    expect(theatre.playing).toBe(null)
+    expect(theatre.save.parade).toHaveLength(0)
+    expect(theatre.troop.kind).toBe(kind)
+    // Given its balloon after all, the troop is served: judged now, with its ending.
+    for (let i = 0; i < 60; i++) theatre.step(1 / 60)
+    tap(theatre, 2)
+    expect(theatre.save.finished).toBe(true)
+    expect(theatre.save.position).toBe('trio-singles')
+    for (let i = 0; i < 60 * 3 && theatre.playing !== 'ending'; i++) theatre.step(1 / 60)
+    expect(theatre.playing).toBe('ending')
   })
 
   it.each(kinds)('a troop of %ss does not set off without a balloon that is on its way to a hand: the waiting troop waves until it has arrived, and the parade holds what the troop is seen to carry', (kind) => {

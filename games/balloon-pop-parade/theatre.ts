@@ -26,7 +26,7 @@ export type Painter = {
   place(name: string, kind: KindName, pose: Pose): void
   drop(name: string): void
   balloon(x: number, y: number, z: number, wide: number, tall: number, lean: number, colour: string, glow?: number): void
-  marcher(kind: KindName, x: number, y: number, z: number, scale: number, turn: number, lean: number): void
+  marcher(kind: KindName, x: number, y: number, z: number, scale: number, turn: number, lean: number, holds?: boolean): void
   hand(x: number, y: number, size: number, press: number): void
   cloud(index: number, squash: number): void
   string(x0: number, y0: number, z0: number, x1: number, y1: number, z1: number, colour: string, thick?: number): void
@@ -594,7 +594,18 @@ export class Theatre {
     // troop is not full any more, and no bunch on its way or in a hand completes it now. It is due again the next
     // time the last friend takes its balloon, which may be a bunch that is read again here (`sentAgain`).
     this.endingDue = null
-    for (const flight of this.flights) if (flight.given.result === 'taken') flight.given.served = false
+    for (const flight of this.flights) {
+      if (flight.given.result !== 'taken') continue
+      flight.given.served = false
+      // The cycle was judged at the lift of the bunch that was to serve the last friend. While that bunch has not
+      // arrived, the troop has never been seen with all its balloons, and now it will not be when it does: the
+      // judging is taken back, also where the catch has begun and the bunch itself is not read again. The cycle
+      // is judged when the last friend takes its balloon after all, and until then the waiting troop only waves.
+      if (!flight.landed && flight.judged) {
+        this.save = { ...this.save, position: flight.judged.position, finished: false }
+        flight.judged = undefined
+      }
+    }
     this.sentAgain()
     if (troop.held.filter((holds) => holds).length === troop.size - 1) {
       // A troop that had all its balloons, one friend alone too, stops swaying with a squeak of heels, and looks at the empty hand.
@@ -1889,7 +1900,7 @@ export class Theatre {
       // Its step, and the jump it gives when it or the far hill is touched, each friend a moment after the one in front.
       const hop = Math.abs(Math.sin(step * Math.PI)) * (troop.kind === 'frog' ? 0.35 : 0.1) + hump(time - hopAt - m * 0.07, 0, FAR_JUMP) * 1.1
       // The far hill slopes under them: they stand a little proud of it, so the uphill foot is not sunk in.
-      painter.marcher(troop.kind, at.x, at.y + hop + 0.14, at.z, FRIEND_SCALE * PARADE_SCALE, away > 0 && coming ? at.turn + Math.PI : at.turn, Math.sin(step * Math.PI) * 0.1)
+      painter.marcher(troop.kind, at.x, at.y + hop + 0.14, at.z, FRIEND_SCALE * PARADE_SCALE, away > 0 && coming ? at.turn + Math.PI : at.turn, Math.sin(step * Math.PI) * 0.1, m < troop.balloons)
       if (m >= troop.balloons) continue
       const by = at.y + hop + HELD_HEIGHT * PARADE_SCALE + Math.sin(time * 1.4 + place + m) * 0.08
       painter.balloon(at.x + 0.3, by, at.z, PARADE_SCALE, PARADE_SCALE, 0.06, hue)

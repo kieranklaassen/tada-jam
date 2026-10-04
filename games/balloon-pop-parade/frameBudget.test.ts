@@ -12,8 +12,12 @@ import { Theatre, type Painter } from './theatre'
 // everything else, however many balloons there are. The test plays whole games with a seeded child who taps fast
 // and at random, through every scene, and holds the most any frame asked for under the jam's bar.
 
-/** Draws a frame makes besides the friends: the sky, two hills, three clouds, the three batches, four parade batches and the ghost hand. */
-const FIXED_DRAWS = 1 + 2 + 3 + 3 + 4 + 1
+/**
+ * Draws a frame makes besides the friends and the far hill's batches: the sky, two hills, three clouds, the three
+ * batches and the ghost hand. The far hill adds one for each batch it uses in the frame: one a kind, and one more
+ * for a kind that has a friend there without a balloon.
+ */
+const FIXED_DRAWS = 1 + 2 + 3 + 3 + 1
 const DRAWS_A_FRIEND = 6
 /** The jam's bar is about 80 draw calls; the game keeps a margin under it. */
 const DRAW_BUDGET = 76
@@ -21,18 +25,18 @@ const DRAW_BUDGET = 76
 const VIEW = viewFor(1180, 820)
 
 function counter() {
-  const frame = { friends: new Map<string, KindName>(), balloons: 0, strings: 0, shadows: 0, marchers: 0 }
+  const frame = { friends: new Map<string, KindName>(), balloons: 0, strings: 0, shadows: 0, marchers: 0, batches: new Set<string>() }
   const painter: Painter = {
     place: (name: string, kind: KindName, _pose: Pose) => void frame.friends.set(name, kind),
     drop: (name) => void frame.friends.delete(name),
     balloon: () => void (frame.balloons += 1),
     string: () => void (frame.strings += 1),
     shadow: () => void (frame.shadows += 1),
-    marcher: () => void (frame.marchers += 1),
+    marcher: (kind, _x, _y, _z, _scale, _turn, _lean, holds) => { frame.marchers += 1; frame.batches.add(holds === false && BODIES[kind].lowest <= 0 ? `${kind} strolling` : kind) },
     hand: () => {},
     cloud: () => {},
   }
-  return { frame, painter, clear: () => { frame.balloons = 0; frame.strings = 0; frame.shadows = 0; frame.marchers = 0 } }
+  return { frame, painter, clear: () => { frame.balloons = 0; frame.strings = 0; frame.shadows = 0; frame.marchers = 0; frame.batches.clear() } }
 }
 
 describe('the frame budget', () => {
@@ -62,7 +66,7 @@ describe('the frame budget', () => {
         theatre.step(1 / 60)
         clear()
         theatre.paint(painter, VIEW, { glow: 1, demo: 0.4, demoIndex: i % 4 })
-        const draws = FIXED_DRAWS + [...frame.friends.values()].reduce((sum, kind) => sum + DRAWS_A_FRIEND + (BODIES[kind].jaw.length > 0 ? 1 : 0), 0)
+        const draws = FIXED_DRAWS + frame.batches.size + [...frame.friends.values()].reduce((sum, kind) => sum + DRAWS_A_FRIEND + (BODIES[kind].jaw.length > 0 ? 1 : 0), 0)
         most.draws = Math.max(most.draws, draws)
         most.friends = Math.max(most.friends, frame.friends.size)
         most.balloons = Math.max(most.balloons, frame.balloons)

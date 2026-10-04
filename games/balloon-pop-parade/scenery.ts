@@ -27,6 +27,8 @@ export type Scenery = {
   shadows: InstancedMesh
   /** The friends on the far hill, one batch a kind. */
   parade: Record<KindName, InstancedMesh>
+  /** Those of them that walk without a balloon, for the kinds that let their arms down then: one batch a kind. */
+  strolling: Partial<Record<KindName, InstancedMesh>>
   /** The ghost hand of the idle guidance: an inflated white glove, drawn over everything. */
   hand: Mesh
   dispose(): void
@@ -130,14 +132,16 @@ export function buildScenery(shared: VinylUniforms): Scenery {
   // The far hill's friends: whole toys in one geometry, hazed by the distance, a batch for each kind.
   const hazed = vinylMaterial(shared, { uGlow: 0, uWobble: 0, uHaze: 0.26 })
   const marchers: BufferGeometry[] = []
-  const batchOf = (kind: KindName): InstancedMesh => {
-    const geometry = marcherGeometry(kind)
+  const batchOf = (kind: KindName, holds = true): InstancedMesh => {
+    const geometry = marcherGeometry(kind, holds)
     marchers.push(geometry)
     const batch = new InstancedMesh(geometry, hazed, PARADE_FRIENDS)
-    batch.name = `parade-${kind}`
+    batch.name = holds ? `parade-${kind}` : `parade-${kind}-strolling`
     return batch
   }
   const parade: Record<KindName, InstancedMesh> = { duck: batchOf('duck'), frog: batchOf('frog'), hippo: batchOf('hippo'), crab: batchOf('crab') }
+  // A troop that marched off after a pop has a friend without a balloon. The crab keeps its claws up either way.
+  const strolling: Partial<Record<KindName, InstancedMesh>> = { duck: batchOf('duck', false), frog: batchOf('frog', false), hippo: batchOf('hippo', false) }
 
   // The ghost hand: a glove with one finger out, its tip at the mesh's origin. It is drawn over everything and tests no depth.
   const glove = pillows([
@@ -155,7 +159,7 @@ export function buildScenery(shared: VinylUniforms): Scenery {
   hand.visible = false
 
   const white = new Color('#ffffff')
-  for (const batch of [balloons, strings, shadows, ...Object.values(parade)]) {
+  for (const batch of [balloons, strings, shadows, ...Object.values(parade), ...Object.values(strolling)]) {
     batch.instanceMatrix.setUsage(DynamicDrawUsage)
     // The colour buffer is made on the first write; make it now, so every instance has one from the first draw.
     batch.setColorAt(0, white)
@@ -163,7 +167,7 @@ export function buildScenery(shared: VinylUniforms): Scenery {
     // Instances move every frame, so the batch's own bounds would always be stale.
     batch.frustumCulled = false
   }
-  group.add(shadows, strings, balloons, ...Object.values(parade), hand)
+  group.add(shadows, strings, balloons, ...Object.values(parade), ...Object.values(strolling), hand)
 
   return {
     group,
@@ -173,6 +177,7 @@ export function buildScenery(shared: VinylUniforms): Scenery {
     strings,
     shadows,
     parade,
+    strolling,
     hand,
     dispose() {
       for (const mesh of [backdrop, hill, farHill, balloons, strings, shadows]) {

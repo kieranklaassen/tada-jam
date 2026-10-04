@@ -29,6 +29,7 @@ export class Stage {
   private strings = 0
   private shadows = 0
   private readonly marchers: Record<KindName, number> = { duck: 0, frog: 0, hippo: 0, crab: 0 }
+  private readonly strollers: Record<KindName, number> = { duck: 0, frog: 0, hippo: 0, crab: 0 }
   private readonly matrix = new Matrix4()
   private readonly quaternion = new Quaternion()
   private readonly tilt = new Quaternion()
@@ -104,6 +105,7 @@ export class Stage {
     this.strings = 0
     this.shadows = 0
     this.marchers.duck = this.marchers.frog = this.marchers.hippo = this.marchers.crab = 0
+    this.strollers.duck = this.strollers.frog = this.strollers.hippo = this.strollers.crab = 0
     this.scenery.hand.visible = false
   }
 
@@ -142,15 +144,16 @@ export class Stage {
     this.shadows += 1
   }
 
-  /** One friend on the far hill: a whole toy at its feet's place, turned the way it walks and leaning with its step. */
-  marcher(kind: KindName, x: number, y: number, z: number, scale: number, turn: number, lean: number): void {
-    const batch = this.scenery.parade[kind], index = this.marchers[kind]
+  /** One friend on the far hill: a whole toy at its feet's place, turned the way it walks and leaning with its step, with its string hand up if it holds a balloon. */
+  marcher(kind: KindName, x: number, y: number, z: number, scale: number, turn: number, lean: number, holds = true): void {
+    const strolling = holds ? undefined : this.scenery.strolling[kind]
+    const batch = strolling ?? this.scenery.parade[kind], count = strolling ? this.strollers : this.marchers, index = count[kind]
     if (index >= batch.instanceMatrix.count) return
     this.quaternion.setFromAxisAngle(this.along.set(0, 1, 0), turn)
     this.tilt.setFromAxisAngle(this.along.set(0, 0, 1), lean)
     this.matrix.compose(this.position.set(x, y, z), this.quaternion.multiply(this.tilt), this.scale.setScalar(scale))
     batch.setMatrixAt(index, this.matrix)
-    this.marchers[kind] = index + 1
+    count[kind] = index + 1
   }
 
   /** The ghost hand: its fingertip at this point, this large (it grows in and out instead of fading), pressed this far. */
@@ -183,9 +186,13 @@ export class Stage {
       if (batch.instanceColor) batch.instanceColor.needsUpdate = true
     }
     for (const kind of KINDS) {
-      const batch = this.scenery.parade[kind]
+      const batch = this.scenery.parade[kind], strolling = this.scenery.strolling[kind]
       batch.count = this.marchers[kind]
       batch.instanceMatrix.needsUpdate = true
+      if (strolling) {
+        strolling.count = this.strollers[kind]
+        strolling.instanceMatrix.needsUpdate = true
+      }
     }
     this.renderer.render(this.scene, this.camera)
   }

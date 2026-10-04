@@ -123,10 +123,11 @@ export function buildFriend(kind: KindName, name: string, shared: VinylUniforms)
 }
 
 /**
- * A whole friend as one geometry, standing with its string hand up: what a friend on the far hill is drawn from,
- * where it is too small for its parts to be seen moving. One draw for every such friend of a kind.
+ * A whole friend as one geometry: what a friend on the far hill is drawn from, where it is too small for its
+ * parts to be seen moving. One that `holds` a balloon walks with its string hand up; one that has none walks
+ * with both arms down, as it does in front. One draw for every such friend of a kind.
  */
-export function marcherGeometry(kind: KindName): BufferGeometry {
+export function marcherGeometry(kind: KindName, holds = true): BufferGeometry {
   const plan = BODIES[kind]
   const head = pillows(plan.head).translate(...plan.neck)
   const eyes = pillows(plan.eyes)
@@ -139,7 +140,8 @@ export function marcherGeometry(kind: KindName): BufferGeometry {
   // The crab cannot let a claw hang: on the far hill it marches with both up.
   const down = plan.lowest > 0 ? plan.reach : 0.25
   const armL = pillows(plan.arm).rotateZ(-down).rotateY(forwardOf(down)).translate(...plan.shoulder)
-  const armR = pillows(mirrored(plan.arm)).rotateZ(plan.reach).rotateY(-forwardOf(plan.reach)).translate(-plan.shoulder[0], plan.shoulder[1], plan.shoulder[2])
+  const right = holds ? plan.reach : down
+  const armR = pillows(mirrored(plan.arm)).rotateZ(right).rotateY(-forwardOf(right)).translate(-plan.shoulder[0], plan.shoulder[1], plan.shoulder[2])
   const parts = [pillows(plan.body), head, eyes, extra, armL, armR]
   // A mouth that opens is shut on the far hill, and built without its lining.
   if (plan.jaw.length > 0) parts.push(pillows(plan.jaw).translate(plan.neck[0] + plan.jawPivot[0], plan.neck[1] + plan.jawPivot[1], plan.neck[2] + plan.jawPivot[2]))

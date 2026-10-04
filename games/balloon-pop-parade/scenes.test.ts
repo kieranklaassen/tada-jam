@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { KindName } from './bodies'
 import { PERSONALITIES } from './clips'
 import { LADDER } from './config'
+import { marcherGeometry } from './friends'
 import { GROUND, farGroundAt, friendX, skySlots, viewFor, waitingSpot } from './layout'
 import { saveOf } from './moments'
 import type { Pose } from './pose'
@@ -334,6 +335,39 @@ describe('the step-in', () => {
     reopened.paint(painter, VIEW)
     expect(poses.has('leaving-0')).toBe(false)
     expect(poses.get('friend-0')!.x).toBeCloseTo(friendX(0, reopened.save.troop.size), 5)
+  })
+})
+
+describe('a troop that marched off with a balloon missing', () => {
+  it('walks the far hill as it left: the friend without a balloon with its arms down, as it walks in front, and the others with a hand up', () => {
+    for (const kind of KINDS) {
+      const theatre = new Theatre(saveOf({ position: 'pair-singles', troop: { kind, size: 3, held: [true, true, false] }, sky: [{ colour: kind, count: 1 }], waiting: { kind: kind === 'duck' ? 'frog' : 'duck', size: 1 } }))
+      // Served before, by the look of the save, and one balloon popped since.
+      const served = new Theatre({ ...theatre.save, finished: true })
+      tapWaiting(served)
+      expect(served.save.parade).toEqual([{ kind, size: 3, balloons: 2 }])
+      play(served, 14)
+      const far: { kind: string; holds: boolean | undefined }[] = []
+      const painter: Painter = { place: () => {}, drop: () => {}, balloon: () => {}, string: () => {}, shadow: () => {}, marcher: (of, _x, _y, _z, _scale, _turn, _lean, holds) => void far.push({ kind: of, holds }), hand: () => {}, cloud: () => {} }
+      served.paint(painter, VIEW)
+      expect(far.map((friend) => friend.kind)).toEqual([kind, kind, kind])
+      expect(far.map((friend) => friend.holds)).toEqual([true, true, false])
+    }
+  })
+
+  it('has a shape for it: a duck, a frog and a hippo without a balloon carry their right arm lower than one that holds its string, and a crab keeps its claws up', () => {
+    // The two shapes differ in the string arm alone, so the mean height of all their points tells which way it hangs.
+    const height = (kind: KindName, holds: boolean) => {
+      const geometry = marcherGeometry(kind, holds), at = geometry.getAttribute('position')
+      let sum = 0
+      for (let i = 0; i < at.count; i++) sum += at.getY(i)
+      geometry.dispose()
+      return sum / at.count
+    }
+    for (const kind of KINDS) {
+      if (kind === 'crab') expect(height(kind, false)).toBeCloseTo(height(kind, true), 6)
+      else expect(height(kind, false), kind).toBeLessThan(height(kind, true) - 0.01)
+    }
   })
 })
 
