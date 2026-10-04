@@ -9,6 +9,7 @@ export type GameEvent =
   | { type: 'chirp'; distance: number }
   | { type: 'tick' }
   | { type: 'clack' }
+  | { type: 'jaws' }
   | { type: 'bite' }
   | { type: 'ratchet'; progress: number; heavy: number }
   | { type: 'let-go' }
@@ -21,7 +22,7 @@ export type GameEvent =
   | { type: 'teeter' }
   | { type: 'knock' }
   | { type: 'domino'; nth: number }
-  | { type: 'rattle' }
+  | { type: 'rattle'; speed: number }
   // A gobbler and a toy.
   | { type: 'catch'; heavy: number }
   | { type: 'chomp'; heavy: number; who: GobblerId }
@@ -62,6 +63,7 @@ export type GameEvent =
   | { type: 'wind' }
   // The watcher.
   | { type: 'peep' }
+  | { type: 'giggle' }
   // The scenes.
   | { type: 'show'; who: GobblerId }
   | { type: 'tip'; nth: number }

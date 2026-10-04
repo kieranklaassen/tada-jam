@@ -134,8 +134,10 @@ export function wrongPose(way: WrongWay, t: number, out: Pose): Pose {
     }
     case 'reverse': {
       // Revs on the spot, then reverses out from under the toy and rolls back.
-      out.dz = 0.18 * Math.sin(t * 150) * (1 - ramp(t, 0.24, 0.3)) - 2.1 * ramp(t, 0.28, 0.42) * (1 - ramp(t, 0.66, 0.96))
-      out.leanX = 0.14 * bump(t, 0.28, 0.5) - 0.1 * bump(t, 0.66, 0.96)
+      // (As far back as the lamps on the parapet let it, and it never leans back toward them.)
+      // It lets go standing still, and is off only once the toy is up out of its mouth.
+      out.dz = 0.18 * Math.sin(t * 150) * (1 - ramp(t, 0.2, 0.26)) - 1.2 * ramp(t, 0.42, 0.56) * (1 - ramp(t, 0.7, 0.96))
+      out.leanX = 0.14 * bump(t, 0.42, 0.62) + 0.06 * bump(t, 0.7, 0.96)
       out.looks = true; out.gazeY = 0.8 * bump(t, 0.3, 0.9)
       break
     }

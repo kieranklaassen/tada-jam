@@ -17,7 +17,8 @@ const SAMPLES: Samples = {
   click: [{ type: 'click', heavy: 1, level: 0 }, { type: 'click', heavy: 2, level: 2 }],
   boing: [{ type: 'boing' }], teeter: [{ type: 'teeter' }], knock: [{ type: 'knock' }],
   domino: [{ type: 'domino', nth: 0 }, { type: 'domino', nth: 2 }],
-  rattle: [{ type: 'rattle' }],
+  rattle: [{ type: 'rattle', speed: 0 }, { type: 'rattle', speed: 60 }],
+  jaws: [{ type: 'jaws' }],
   catch: [{ type: 'catch', heavy: 1 }, { type: 'catch', heavy: 2 }],
   chomp: GOBBLERS.map((who) => ({ type: 'chomp' as const, heavy: 1, who })),
   gulp: GOBBLERS.flatMap((who) => [{ type: 'gulp' as const, heavy: 1, who }, { type: 'gulp' as const, heavy: 2, who }]),
@@ -36,7 +37,7 @@ const SAMPLES: Samples = {
   ping: [{ type: 'ping', nth: 0 }, { type: 'ping', nth: 2 }],
   scrape: [{ type: 'scrape' }], comb: [{ type: 'comb' }], 'gate-creak': [{ type: 'gate-creak' }],
   bell: [{ type: 'bell' }],
-  peep: [{ type: 'peep' }], 'double-ding': [{ type: 'double-ding' }], zip: [{ type: 'zip' }], 'rim-thud': [{ type: 'rim-thud' }], 'bell-hum': [{ type: 'bell-hum' }],
+  peep: [{ type: 'peep' }], giggle: [{ type: 'giggle' }], 'double-ding': [{ type: 'double-ding' }], zip: [{ type: 'zip' }], 'rim-thud': [{ type: 'rim-thud' }], 'bell-hum': [{ type: 'bell-hum' }],
   'jaw-hum': [{ type: 'jaw-hum' }], 'jaw-click': [{ type: 'jaw-click' }], wind: [{ type: 'wind' }],
   show: GOBBLERS.map((who) => ({ type: 'show' as const, who })),
   tip: [{ type: 'tip', nth: 0 }, { type: 'tip', nth: 4 }],
@@ -54,7 +55,7 @@ const GRID: GameEvent[][][] = [
   // A toy on the tray.
   [[{ type: 'pop', heavy: 1, level: 0 }], [{ type: 'click', heavy: 1, level: 1 }], [{ type: 'click', heavy: 2, level: 1 }], [{ type: 'knock' }], [{ type: 'jaw-hum' }]],
   // Bare studs.
-  [[{ type: 'bonk', column: 2 }], [{ type: 'click', heavy: 1, level: 0 }], [{ type: 'click', heavy: 2, level: 0 }], [{ type: 'rattle' }], [{ type: 'jaw-click' }]],
+  [[{ type: 'bonk', column: 2 }], [{ type: 'click', heavy: 1, level: 0 }], [{ type: 'click', heavy: 2, level: 0 }], [{ type: 'rattle', speed: 20 }], [{ type: 'jaw-click' }]],
   // A stack of toys.
   [[{ type: 'pop', heavy: 1, level: 1 }, { type: 'settle' }], [{ type: 'click', heavy: 1, level: 2 }], [{ type: 'teeter' }], [{ type: 'domino', nth: 0 }], [{ type: 'wind' }]],
   // A gobbler.

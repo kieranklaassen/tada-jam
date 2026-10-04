@@ -268,8 +268,10 @@ export class Game {
     if (this.skipping) return
     this.events.push(event)
     // The watcher beside the tray takes notice of what happens, as anyone would.
-    const notices = watcherNotices(event)
+    const notices = watcherNotices(event), laughing = this.watcher.act === 'laugh'
     if (notices) watcherSees(this.watcher, notices)
+    // Its laugh is heard, once for each laugh.
+    if (this.watcher.act === 'laugh' && !laughing) this.events.push({ type: 'giggle' })
   }
 
   /** The watcher: it only watches, and nothing about it is saved. */
@@ -495,16 +497,22 @@ export class Game {
   private watchWaiting(): void {
     const claw = this.claw
     const waiting = claw.following && claw.phase === 'ready' && Math.hypot(claw.vx, claw.vz) < 1.5 && Math.hypot(claw.targetX - claw.x, claw.targetZ - claw.z) < 0.6 && !this.scene
-    if (!waiting) { this.still = 0; if (!claw.following) { this.noticed = false; for (const actor of this.crew) actor.openT = -1 } return }
+    if (!waiting) { this.still = 0; this.waitsAbove = null; if (!claw.following) { this.noticed = false; for (const actor of this.crew) actor.openT = -1 } return }
     this.still += STEP
     if (this.noticed || this.still < WAIT_SECONDS) return
     this.noticed = true
-    this.carry(clawWaitsAbove(this.world, this.aim.target))
+    const deed = clawWaitsAbove(this.world, this.aim.target)
+    this.waitsAbove = deed.type === 'spread-jaws' ? 'toy' : deed.type === 'breathe' ? 'studs' : null
+    this.carry(deed)
   }
+
+  /** What the claw has been waiting above long enough to be noticed: a toy, bare studs, or neither. Its shadow shows it. */
+  waitsAbove: 'toy' | 'studs' | null = null
 
   private answer(event: ClawEvent): void {
     const claw = this.claw
     if (event.type === 'chirp') this.say({ type: 'chirp', distance: event.distance })
+    else if (event.type === 'jaws') this.say({ type: 'jaws' })
     else if (event.type === 'tick') this.say({ type: 'tick' })
     else if (event.type === 'ratchet') this.say({ type: 'ratchet', progress: event.progress, heavy: claw.load })
     else if (event.type === 'landed') { this.say({ type: 'clack' }); this.carry(clawLands(this.world, this.pending)) }
@@ -678,6 +686,8 @@ export class Game {
     const where = this.world.cycle.where[toy]
     if (where.at !== 'tray') return
     this.say({ type: 'click', heavy: body.heavy, level: where.level })
+    // What it lands on squashes under it and springs back with it: the stack wobbles as one.
+    if (where.level > 0) for (const below of this.tray()[where.place]) if (below !== toy) { this.bodies[below].squash = body.heavy > 1 ? 0.84 : 0.92; this.bodies[below].squashV = 0 }
     // A small toy hops its neighbours; a big one hops the whole tray.
     this.shake(body.x, body.z, body.heavy === 2 ? 16 : 12, body.heavy === 2 ? 14 : 6, toy)
   }

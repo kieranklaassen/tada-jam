@@ -120,7 +120,8 @@ function faceOf(game: Game, actor: Actor): { brow: number; tongue: number; lick:
     const spec = WRONG[ways.wrong], t = actor.wrongT / spec.seconds
     return { brow: t < spec.release + 0.2 ? -1 : 0.4, tongue: swell(t, spec.release - 0.08, spec.release + 0.3), lick: 0 }
   }
-  if (actor.act === 'hold') return { brow: -1, tongue: 0, lick: 0 }
+  if (actor.act === 'hold') return { brow: -1, tongue: 1, lick: 0 }
+  if (actor.act === 'show') return { brow: 0.8, tongue: 1, lick: 0 }
   if (actor.act === 'gulp') return { brow: 0.7, tongue: swell(actor.actT, 0.74, 1), lick: swell(actor.actT, 0.74, 1) }
   if (actor.act === 'burp') return { brow: 0.6, tongue: swell(actor.actT, 0.1, 0.9), lick: 0 }
   if (actor.act === 'duck' || actor.act === 'bonked') return { brow: -0.6, tongue: 0, lick: 0 }
@@ -160,6 +161,9 @@ function inTheJaws(game: Game, toy: number, body: Body, into: ToyLook): void {
     into.x += 0.035 * much * Math.sin(t * 70)
   }
 }
+
+/** How far above the tongue a snack is held up while its gobbler shows it: at the rim. */
+export const SHOWN_AT = 1.25
 
 const peering: WatcherPose = { dy: 0, squash: 1, turn: 0, gazeX: 0, gazeY: 0, blink: 0 }
 
@@ -237,7 +241,11 @@ export function gamePicture(game: Game, guidance: Guidance | null): Picture {
     if (actor.role !== 'waiting') {
       const snack = actor.snack
       if (snack.mode === 'resting') { const home = game.snackSpot(actor); riding(actor, snack, 10000 + actor.key, { x: home.x, y: home.y + snack.hop * actor.scale, z: home.z }) }
-      else if (snack.mode === 'mouth') riding(actor, snack, 10000 + actor.key, game.mouthOf(actor))
+      else if (snack.mode === 'mouth') {
+        // On the tongue; and while its gobbler shows it, held up to the rim beside its body.
+        const mouth = game.mouthOf(actor), up = actor.act === 'show' ? Math.min(1, actor.actT / 0.12) : actor.act === 'gulp' ? 1 : 0
+        riding(actor, snack, 10000 + actor.key, { x: mouth.x, y: mouth.y + SHOWN_AT * up * actor.scale, z: mouth.z })
+      }
       else riding(actor, snack, 10000 + actor.key)
     }
     actor.cargo.forEach((body, i) => riding(actor, body, 20000 + actor.key * 16 + i))
@@ -271,6 +279,9 @@ export function gamePicture(game: Game, guidance: Guidance | null): Picture {
     }
     const one = look(game.generation * 100 + toy, body)
     if (toy === game.held) inTheJaws(game, toy, body, one)
+    // A toy of a stack that is about to come down teeters where it waits: the higher it stands, the further it
+    // slides from side to side over the one under it.
+    if (body.wait > 0) one.x += 0.07 * (body.y - TRAY.top) * Math.sin(game.time * 17)
     toys.push(one)
     // A toy in the jaws has no shadow of its own, and neither has one on a crate or behind the parapet.
     if (toy === game.held || body.z < TRAY.z - 0.5) return
@@ -284,7 +295,9 @@ export function gamePicture(game: Game, guidance: Guidance | null): Picture {
   if (claw.z > TRAY.z - 0.5 && Math.abs(claw.x) < 15.5) {
     const below = nearestPlace(claw.x, claw.z)
     const held = game.held >= 0 ? game.bodies[game.held] : null
-    shadows.push({ x: claw.x, y: game.stackTop(below), z: claw.z, r: held ? (held.heavy > 1 ? 3.1 : 2) : 1.7, a: 0.75 })
+    // A claw that waits above a toy has its shadow tighten on the toy; above bare studs its shadow breathes.
+    const waits = game.waitsAbove === 'toy' ? 0.62 : game.waitsAbove === 'studs' ? 1 + 0.22 * Math.sin(game.time * 3.4) : 1
+    shadows.push({ x: claw.x, y: game.stackTop(below), z: claw.z, r: (held ? (held.heavy > 1 ? 3.1 : 2) : 1.7) * waits, a: game.waitsAbove === 'toy' ? 0.95 : 0.75 })
   }
 
   // The idle ladder: a ring on each thing that can be touched now, and the ghost hand tapping one of them.

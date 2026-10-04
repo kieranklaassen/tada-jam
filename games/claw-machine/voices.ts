@@ -81,6 +81,7 @@ export function voiceOf(event: GameEvent): Part[] {
       const far = clamp(event.distance / 24, 0, 1)
       return [tone(300 + 380 * far, 0.07, 0.09, { to: 420 + 520 * far, wave: 'square' }), noise(2600, 1.2, 0.1, 0.035)]
     }
+    case 'jaws': return [noise(3400, 6, 0.13, 0.018), tone(880, 0.05, 0.03, { to: 620, wave: 'square', attack: 0.002 })]
     case 'tick': return [tone(1500, 0.022, 0.022, { to: 1100, wave: 'square', attack: 0.002 })]
     case 'clack': return [noise(1800, 2, 0.2, 0.05), tone(220, 0.16, 0.08, { to: 140, wave: 'triangle' })]
     case 'bite': return [noise(2400, 3, 0.16, 0.03), noise(2000, 3, 0.12, 0.03, { delay: 0.07 })]
@@ -110,7 +111,8 @@ export function voiceOf(event: GameEvent): Part[] {
     case 'teeter': return [tone(240, 0.12, 0.12, { to: 300, wave: 'triangle' }), tone(300, 0.12, 0.12, { to: 240, wave: 'triangle', delay: 0.14 })]
     case 'knock': return [0, 1, 2, 3].map((i) => noise(1700 - i * 200, 5, 0.14 - i * 0.02, 0.025, { delay: i * 0.045 }))
     case 'domino': return [noise(1400 + 260 * clamp(event.nth, 0, 4), 4, 0.2, 0.04, { delay: 0.1 * clamp(event.nth, 0, 4) })]
-    case 'rattle': return [0, 1, 2, 3, 4, 5].map((i) => noise(2800, 8, 0.1, 0.018, { delay: i * 0.035 }))
+    // A stick along a fence: quicker and higher the faster the claw is going.
+    case 'rattle': { const fast = clamp(event.speed / 40, 0, 1); return [0, 1, 2, 3, 4, 5].map((i) => noise(2200 + 1400 * fast, 8, 0.1, 0.018, { delay: i * (0.05 - 0.025 * fast) })) }
     // --- A gobbler and a toy ---
     case 'catch': return [noise(event.heavy > 1 ? 500 : 800, 1.5, 0.16, 0.06), tone(event.heavy > 1 ? 160 : 230, 0.12, 0.08)]
     case 'chomp': return [noise(event.heavy > 1 ? 700 : 1000, 2, 0.2, 0.05), tone(VOICE[event.who] * 0.75, 0.14, 0.07, { to: VOICE[event.who] * 0.5, wave: 'triangle' })]
@@ -140,6 +142,7 @@ export function voiceOf(event: GameEvent): Part[] {
     case 'comb': return [0, 1, 2, 3, 4, 5, 6].map((i) => tone(step(784, i), 0.08, 0.05, { wave: 'triangle', delay: i * 0.04 }))
     case 'gate-creak': return [tone(210, 0.1, 0.3, { to: 330, wave: 'sawtooth', attack: 0.1 }), tone(330, 0.08, 0.25, { to: 210, wave: 'sawtooth', delay: 0.45, attack: 0.05 })]
     // --- The end of the rail ---
+    case 'giggle': return [0, 1, 2, 3].map((i) => tone(1500 - i * 110, 0.06, 0.05, { to: 1750 - i * 110, delay: i * 0.085 }))
     case 'peep': return [tone(1900, 0.11, 0.07, { to: 2700 }), tone(2500, 0.08, 0.06, { to: 3300, delay: 0.09 })]
     case 'bell': return [tone(1568, 0.2, 0.55, { attack: 0.002 }), tone(3136, 0.05, 0.25, { attack: 0.002 })]
     case 'double-ding': return [tone(1568, 0.18, 0.3, { attack: 0.002 }), tone(2093, 0.18, 0.5, { delay: 0.11, attack: 0.002 })]

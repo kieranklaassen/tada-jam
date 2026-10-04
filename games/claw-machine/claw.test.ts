@@ -13,7 +13,7 @@ describe('the claw', () => {
   it('answers a landing finger at once: the jaws snap open and the trolley sets off', () => {
     const claw = newClaw(0, 6, RIDE), events: ClawEvent[] = []
     follow(claw, 8, 6, events)
-    expect(events).toEqual([{ type: 'chirp', distance: 8 }])
+    expect(events).toEqual([{ type: 'chirp', distance: 8 }, { type: 'jaws' }])
     expect(claw.open).toBe(1)
     stepClaw(claw, RIDE, 0.4, events)
     expect(claw.vx).toBeGreaterThan(0)
@@ -54,7 +54,7 @@ describe('the claw', () => {
     expect(claw.phase).toBe('dropping')
     run(claw, 2, events, 2.8)
     const order = events.map((event) => event.type).filter((type) => type !== 'tick' && type !== 'ratchet')
-    expect(order).toEqual(['chirp', 'landed', 'closed', 'up'])
+    expect(order).toEqual(['chirp', 'jaws', 'landed', 'closed', 'up'])
     expect(events.filter((event) => event.type === 'ratchet').length).toBeGreaterThanOrEqual(5)
     expect(claw.phase).toBe('ready')
     expect(claw.length).toBeCloseTo(RAIL.top - RIDE - HINGE_DROP, 1)

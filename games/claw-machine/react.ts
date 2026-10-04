@@ -1,7 +1,7 @@
 import { MINI } from './belly'
 import { ON_STUDS, PLATE, STUD_HEIGHT } from './bricks'
 import { holdOf, toySpan } from './builds'
-import { FALL, airTime, toss, type Body, type Leg } from './bodies'
+import { FALL, airTime, jolt, toss, type Body, type Leg } from './bodies'
 import { STEP } from './claw'
 import { KNOB_HALF, gripFor } from './clawBuild'
 import type { Deed } from './deeds'
@@ -29,6 +29,8 @@ type Stop = { at?: Spot; landing: Leg['landing']; peak?: number; seconds?: numbe
 export const DOWN_THE_THROAT = 0.15
 /** How far above the rim a toy lies that rests on a gobbler's teeth. */
 const ON_TEETH = 1
+/** How far a toy that is not its sort is lifted on the tongue: from the floor of the mouth to its rim. */
+const HELD_UP = 1.25
 /** How far above the bell a toy rises as it leaves it: enough that its far end is past the bell before it is lower than the bell. */
 const OFF_THE_BELL = 2.2
 /** How far above its rim a toy is lifted before it is thrown out: clear of its eyes and of its brows, raised. */
@@ -150,6 +152,9 @@ export function react(game: Game, deed: Deed): void {
       actor.liftedT = 0; actor.act = null; actor.wrongT = -1
       claw.load = 2; claw.grip = gripFor(KNOB_HALF)
       game.say({ type: 'groan' }); game.say({ type: 'lifted', way: deed.way })
+      // What is in its belly hops as it leaves the step.
+      jolt(actor.snack, 2.2, 0, 1)
+      game.bodies.forEach((body, toy) => { const where = cycle.where[toy]; if (where.at === 'belly' && where.slot === actor.slot) jolt(body, 2.2, 0, 1) })
       break
     }
     case 'bonk-waiter': {
@@ -235,11 +240,13 @@ export function react(game: Game, deed: Deed): void {
       deed.moved.forEach(({ toy }, i) => { game.say({ type: 'domino', nth: i }); send(game, game.bodies[toy], toy, [{ landing: 'stand', peak: game.bodies[toy].y + 0.6 }], deed) })
       break
     case 'rattle':
-      game.say({ type: 'rattle' })
+      // The tip of the claw dips to the studs and drags along them, like a stick along a fence.
+      game.say({ type: 'rattle', speed: Math.abs(claw.vx) + Math.abs(claw.swingVX) * 4 })
+      claw.lengthV += 7
       break
     case 'jostle':
       // Hemmed in, it rocks where it stands, with the same rattle.
-      game.say({ type: 'rattle' })
+      game.say({ type: 'rattle', speed: Math.abs(claw.vx) + Math.abs(claw.swingVX) * 4 })
       for (const toy of game.tray()[deed.place]) { game.bodies[toy].squash = 0.86; game.bodies[toy].squashV = 0 }
       break
     case 'duck': {
@@ -283,6 +290,8 @@ export function react(game: Game, deed: Deed): void {
       break
     case 'hum':
       game.say({ type: 'bell-hum' })
+      // The cable trembles.
+      claw.swingVX += 1.6; claw.swingVZ -= 1.1
       break
     case 'gate-comb':
       game.say({ type: 'comb' }); game.gateShake = 1
@@ -318,7 +327,16 @@ export function nextLeg(game: Game, body: Body, toy: number, deed: Deed | undefi
     const waiter = nearestWaiter(game, body.x)
     if (deed.heavy) { for (const one of game.waiting) game.startAct(one, 'heave'); game.say({ type: 'grunt' }); game.say({ type: 'huff' }) }
     else { if (waiter) game.startAct(waiter, 'catch'); game.say({ type: 'slap' }); game.say({ type: 'whistle' }) }
-  } else if (deed?.type === 'gate-roll') { if (deed.heavy) game.say({ type: 'scrape' }); else game.say({ type: 'ping', nth: body.legs.length }); game.gateShake = 0.6 }
+  } else if (deed?.type === 'gate-roll') {
+    // On the gate: a small toy pings along its bars; a big one thuds onto it and then scrapes off. Past the gate
+    // it only lands.
+    if (Math.abs(body.z - GATE.z) < 1.2) {
+      const first = Math.hypot(body.x - GATE.x, 0) < 0.3
+      if (!deed.heavy) game.say({ type: 'ping', nth: body.legs.length })
+      else game.say(first ? { type: 'thud', who: 'big' } : { type: 'scrape' })
+      game.gateShake = 0.6
+    }
+  }
   else if (deed?.type === 'rim-slide') { if (body.legs.length > 0) game.say({ type: 'bell' }); else game.say(deed.heavy ? { type: 'rim-thud' } : { type: 'zip' }) }
   else if (deed?.type === 'spit' && actor && body.legs.length === 0) game.startAct(actor, 'start')
   const to = next.fixed ? next : { ...next, ...game.spotOf(toy) }
@@ -335,7 +353,10 @@ export function chew(game: Game, body: Body, toy: number, onEnd: (ends: 'sort' |
   // A toy that will not go in sits on the head; any other lies on the tongue.
   const onHead = plan.kind === 'spit' && way === 'hat'
   // On the head it rests on the teeth, clear of the rim.
-  body.x = at.x; body.z = at.z; body.y = onHead ? actor.y + rimHeight(shapeOf(actor.id)) + ON_TEETH : at.y
+  // A toy that is not its sort is held up on the tongue to the height of the rim, beside the body, for as long as
+  // the gobbler looks at it; a small one that will drop out between the bars only lies there.
+  const heldUp = plan.kind === 'spit' && way !== 'falls-through' ? HELD_UP * Math.min(1, body.chewed / 0.22) : 0
+  body.x = at.x; body.z = at.z; body.y = onHead ? actor.y + rimHeight(shapeOf(actor.id)) + ON_TEETH : at.y + heldUp
   if (body.chewed === 0) {
     if (plan.kind === 'gulp') game.startAct(actor, 'gulp', plan.chomps)
     else { game.startAct(actor, 'hold'); game.say({ type: 'chomp', heavy: body.heavy, who: actor.id }); game.say({ type: 'hmm', who: actor.id }) }
@@ -382,6 +403,7 @@ export function chew(game: Game, body: Body, toy: number, onEnd: (ends: 'sort' |
   const home = game.spotOf(toy), least = way === 'straight-up' ? 9 : way === 'cannon' ? 1.2 : 1.8
   send(game, body, toy, [{ at: clear, landing: 'again', seconds: 0.16 }, { landing: 'stand', peak: clearTop(game, toy, clear, home, least) }])
   // Until it is up clear of the mouth it is still the gobbler's: however the gobbler jumps or leans as it lets the
-  // toy go, the toy leaves its mouth the same way.
-  body.rides = 1
+  // toy go, the toy leaves its mouth the same way. All but the one that reverses out from under it: that one
+  // lets go standing still, and backs away only once the toy is up over its eyes, and leaves it in the air.
+  body.rides = way === 'reverse' ? 0 : 1
 }

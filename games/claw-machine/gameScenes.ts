@@ -4,6 +4,7 @@ import { toySpan } from './builds'
 import { KNOB_HALF, gripFor } from './clawBuild'
 import type { Deed } from './deeds'
 import { AIR, Game, KNOB_HOLD, newActor, type Actor } from './game'
+import { SHOWN_AT } from './gamePicture'
 import { OVER_ITS_BROWS, rimHeight } from './gobblerBuild'
 import { crewGoesBy, shapeOf } from './gobblers'
 import { BED, CRATE_STANDS, ON_DECK, RIDER, TIP, crewSpot, deckSpots, deckTop, handleSpot, riderSpots, tipped, waitingSpot, type Spot } from './layout'
@@ -53,7 +54,7 @@ const walk = (actor: Actor, to: Spot, seconds: number, arc = 0, scaleTo = 1, gon
 function showing(game: Game, from: number): Beat[] {
   const { showing: plays } = crewArrives(game.world)
   if (!plays) return []
-  // The snacks start on the tongues, held up at the rim, full size.
+  // The snacks start on the tongues, full size; each is held up to the rim as its gobbler shows it.
   for (const actor of game.crew) actor.snack.mode = 'mouth'
   const beats: Beat[] = []
   game.crew.forEach((actor, i) => {
@@ -67,7 +68,8 @@ function showing(game: Game, from: number): Beat[] {
     beats.push(over(game, gulp + 0.12, 0.5, (progress) => {
       const mouth = game.mouthOf(actor), home = game.snackSpot(actor)
       snack.mode = 'parked'
-      if (progress < 0.35) { snack.x = mouth.x; snack.y = mouth.y; snack.z = mouth.z; snack.scale = (1 - (1 - DOWN_THE_THROAT) * (progress / 0.35)) * actor.scale; return }
+      // From where it was held up at the rim it comes down onto the tongue as it is chewed small.
+      if (progress < 0.35) { snack.x = mouth.x; snack.y = mouth.y + SHOWN_AT * (1 - progress / 0.35) * actor.scale; snack.z = mouth.z; snack.scale = (1 - (1 - DOWN_THE_THROAT) * (progress / 0.35)) * actor.scale; return }
       if (progress < 0.55) { snack.x = mouth.x; snack.y = mouth.y - 0.75 * ((progress - 0.35) / 0.2); snack.z = mouth.z; snack.scale = DOWN_THE_THROAT * actor.scale; return }
       const u = (progress - 0.55) / 0.45
       snack.x = mouth.x + (home.x - mouth.x) * u; snack.y = mouth.y - 0.75 + (home.y - (mouth.y - 0.75)) * u; snack.z = mouth.z + (home.z - mouth.z) * u

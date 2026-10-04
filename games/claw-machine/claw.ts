@@ -51,6 +51,7 @@ export type Claw = {
 
 export type ClawEvent =
   | { type: 'chirp'; distance: number } // the finger landed and the trolley set off
+  | { type: 'jaws' } // the jaws snapped open as it landed
   | { type: 'tick' } // a stud of travel
   | { type: 'buffer'; side: -1 | 1; speed: number } // the trolley hit the end of the rail
   | { type: 'landed'; x: number; z: number; swing: number } // the jaws reached what was straight under the trolley
@@ -106,7 +107,7 @@ export function follow(claw: Claw, x: number, z: number, events: ClawEvent[]): v
   claw.targetZ = clamp(z, RAIL.minZ, RAIL.maxZ)
   if (!landing) return
   events.push({ type: 'chirp', distance: Math.hypot(claw.targetX - claw.x, claw.targetZ - claw.z) })
-  if (claw.phase === 'ready' && claw.load === 0) { claw.open = 1; claw.openV = 4 }
+  if (claw.phase === 'ready' && claw.load === 0) { claw.open = 1; claw.openV = 4; events.push({ type: 'jaws' }) }
 }
 
 /** The finger lifted: the claw drops where it is, or lets go of what it holds. With `tap`, it first runs to where the tap was. */
