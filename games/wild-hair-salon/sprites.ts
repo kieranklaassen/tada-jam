@@ -2,7 +2,7 @@ import { STILL, features, stamp } from './figure'
 import { FRIEND_MANE } from './kits'
 import { CAPE, CHAIR, COLLAR_Y, FLOOR_Y, HEAD, fit } from './layout'
 import { LOOKS, tuftOutline, type Look } from './looks'
-import { ROOM, leafOutline, paintDoorway, paintLeaf, paintRoom, roughBox } from './paintRoom'
+import { ROOM, bleedFor, leafOutline, paintDoorway, paintLeaf, paintRoom, roughBox } from './paintRoom'
 import { PLAIN, capeOutline } from './paintStrips'
 import { tuftPose } from './poses'
 import { makeRng, type Rng } from './rng'
@@ -90,7 +90,8 @@ export class Sprites {
       const g = this.backdrop.g, rng = makeRng(seed + 1)
       this.paint.from(rng).paper(g, width, height)
       g.setTransform(f.scale, 0, 0, f.scale, f.dx, f.dy)
-      paintRoom(g, this.paint, rng, makeRng(seed * 31 + LEAF_N))
+      // The room is painted as far as the surface shows: a surface wider or taller than the scene has wall and floor to its edges.
+      paintRoom(g, this.paint, rng, makeRng(seed * 31 + LEAF_N), bleedFor(width, height))
       g.setTransform(1, 0, 0, 1, 0, 0)
     }
 

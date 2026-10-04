@@ -48,38 +48,61 @@ export function arch(rng: Rng, cx: number, top: number, bottom: number, w: numbe
   return out
 }
 
-/** The wall and the floor, out past every edge of the sheet: stripes above, wood panelling below, tiles underfoot. */
-export function paintWalls(g: Ctx, paint: Watercolour, rng: Rng): void {
-  paint.wash(g, roughBox(rng, -120, -120, SCENE.w + 240, DADO_Y + 130, 6), { color: ROOM.wall, edge: ROOM.wallEdge, blooms: [ROOM.wallBloom, ROOM.wallBloom, ROOM.stripe], bleed: 10, pool: 12, strength: 0.85, grain: 0.26 })
-  // Soft stripes down the paper, a hand's width apart.
-  for (let x = 26; x < SCENE.w; x += 76) {
+/** How far the room is painted past the scene on each side, in scene units: as far as the surface shows. */
+export type Bleed = { left: number; right: number; top: number; bottom: number }
+/** Past the scene by a hand's width all round: enough where the surface is the shape of the scene. */
+export const SMALL_BLEED: Bleed = { left: 120, right: 120, top: 120, bottom: 120 }
+
+/** How far past the scene a surface of this size shows, on each side, with a margin for the soft edge of a wash. */
+export function bleedFor(width: number, height: number): Bleed {
+  const scale = Math.min(width / SCENE.w, height / SCENE.h)
+  if (!(scale > 0)) return SMALL_BLEED
+  // A big wash thins out towards its corners over a couple of hundred units, so it goes that much past what is seen.
+  const side = Math.max(120, (width / scale - SCENE.w) / 2 + 240), end = Math.max(120, (height / scale - SCENE.h) / 2 + 240)
+  return { left: side, right: side, top: end, bottom: end }
+}
+
+/**
+ * The wall and the floor, out past every edge of the surface however wide or
+ * tall it is: stripes above, wood panelling below, tiles underfoot. On a wide
+ * surface the wall, its stripes, the panelling and the tiles go on to both
+ * sides; on a tall one the wall goes on up and the floor on down.
+ */
+export function paintWalls(g: Ctx, paint: Watercolour, rng: Rng, bleed: Bleed = SMALL_BLEED): void {
+  const left = -bleed.left, wide = SCENE.w + bleed.left + bleed.right, right = SCENE.w + bleed.right, top = -bleed.top
+  paint.wash(g, roughBox(rng, left, top, wide, DADO_Y + 10 - top, 6), { color: ROOM.wall, edge: ROOM.wallEdge, blooms: [ROOM.wallBloom, ROOM.wallBloom, ROOM.stripe], bleed: 10, pool: 12, strength: 0.85, grain: 0.26 })
+  // Soft stripes down the paper, a hand's width apart, from the first one past the left edge to the last one past the right.
+  for (let x = 26 - 76 * Math.ceil((bleed.left + 26) / 76); x < right; x += 76) {
     const lean = rng.range(-3, 3)
-    paint.wash(g, [{ x, y: -10 }, { x: x + 24, y: -10 }, { x: x + 24 + lean, y: DADO_Y }, { x: x + lean, y: DADO_Y }], { color: ROOM.stripe, strength: 0.3, bleed: 5, pool: 3, grain: 0.3 })
+    paint.wash(g, [{ x, y: top - 10 }, { x: x + 24, y: top - 10 }, { x: x + 24 + lean, y: DADO_Y }, { x: x + lean, y: DADO_Y }], { color: ROOM.stripe, strength: 0.3, bleed: 5, pool: 3, grain: 0.3 })
   }
   // Wood panelling to the floor, with a rail along its top.
-  const panel = roughBox(rng, -120, DADO_Y, SCENE.w + 240, FLOOR_Y - DADO_Y + 10, 3)
+  const panel = roughBox(rng, left, DADO_Y, wide, FLOOR_Y - DADO_Y + 10, 3)
   paint.wash(g, panel, { color: ROOM.panel, edge: ROOM.panelEdge, blooms: [ROOM.floorBloom, ROOM.rail], bleed: 4, pool: 8, strength: 0.9, reserve: true })
-  for (let x = 40; x < SCENE.w; x += 62) paint.pencil(g, [{ x: x + rng.range(-2, 2), y: DADO_Y + 16 }, { x: x + rng.range(-2, 2), y: FLOOR_Y - 4 }], false, 0.6)
-  const rail = roughBox(rng, -120, DADO_Y - 11, SCENE.w + 240, 22, 1.5)
+  for (let x = 40 - 62 * Math.ceil((bleed.left + 40) / 62); x < right; x += 62) paint.pencil(g, [{ x: x + rng.range(-2, 2), y: DADO_Y + 16 }, { x: x + rng.range(-2, 2), y: FLOOR_Y - 4 }], false, 0.6)
+  const rail = roughBox(rng, left, DADO_Y - 11, wide, 22, 1.5)
   paint.wash(g, rail, { color: ROOM.rail, edge: ROOM.panelEdge, strength: 0.9, reserve: true })
-  paint.pencil(g, [{ x: -10, y: DADO_Y + 9 }, { x: SCENE.w / 2, y: DADO_Y + 8 }, { x: SCENE.w + 10, y: DADO_Y + 10 }], false, 0.8)
+  paint.pencil(g, [{ x: left + 10, y: DADO_Y + 9 }, { x: SCENE.w / 2, y: DADO_Y + 8 }, { x: right - 10, y: DADO_Y + 10 }], false, 0.8)
 
-  // The floor: pale tiles, every other one a cool one, bigger towards the front.
-  paint.wash(g, roughBox(rng, -120, FLOOR_Y - 3, SCENE.w + 240, SCENE.h - FLOOR_Y + 133, 3), { color: ROOM.floor, edge: ROOM.floorEdge, blooms: [ROOM.floorBloom, ROOM.floorBloom], bleed: 6, pool: 10, strength: 0.9, reserve: true })
+  // The floor: pale tiles, every other one a cool one, bigger towards the front, in as many rows as reach the bottom.
+  const bottom = SCENE.h + bleed.bottom
+  paint.wash(g, roughBox(rng, left, FLOOR_Y - 3, wide, bottom - FLOOR_Y + 13, 3), { color: ROOM.floor, edge: ROOM.floorEdge, blooms: [ROOM.floorBloom, ROOM.floorBloom], bleed: 6, pool: 10, strength: 0.9, reserve: true })
   const rows = [{ y: FLOOR_Y, h: 46, w: 78 }, { y: FLOOR_Y + 46, h: 60, w: 96 }, { y: FLOOR_Y + 106, h: 80, w: 122 }]
+  while (rows[rows.length - 1].y + rows[rows.length - 1].h < bottom) { const last = rows[rows.length - 1]; rows.push({ y: last.y + last.h, h: Math.round(last.h * 1.3), w: Math.round(last.w * 1.26) }) }
   rows.forEach((row, r) => {
-    for (let i = -1, x = -row.w * (r % 2 ? 0.5 : 0) - 20; x < SCENE.w + 20; x += row.w, i++) {
-      if ((i + r) % 2) continue
+    const first = -Math.ceil((bleed.left + 20) / row.w) - 1
+    for (let i = first, x = -row.w * (r % 2 ? 0.5 : 0) - 20 + (first + 1) * row.w; x < right + 20; x += row.w, i++) {
+      if ((((i + r) % 2) + 2) % 2) continue
       paint.wash(g, roughBox(rng, x + 2, row.y + 2, row.w - 4, row.h - 4, 2), { color: ROOM.tile, strength: 0.5, bleed: 3, pool: 4, grain: 0.3 })
     }
   })
-  paint.pencil(g, [{ x: -10, y: FLOOR_Y + 2 }, { x: SCENE.w / 2, y: FLOOR_Y - 1 }, { x: SCENE.w + 10, y: FLOOR_Y + 3 }])
+  paint.pencil(g, [{ x: left + 10, y: FLOOR_Y + 2 }, { x: SCENE.w / 2, y: FLOOR_Y - 1 }, { x: right - 10, y: FLOOR_Y + 3 }])
 }
 
 /** Everything that stands still in the salon, back to front. */
-export function paintRoom(g: Ctx, paint: Watercolour, rng: Rng, leafRng: Rng = rng): void {
-  paintWalls(g, paint, rng)
-  paintLamps(g, paint, rng)
+export function paintRoom(g: Ctx, paint: Watercolour, rng: Rng, leafRng: Rng = rng, bleed: Bleed = SMALL_BLEED): void {
+  paintWalls(g, paint, rng, bleed)
+  paintLamps(g, paint, rng, bleed.top)
   paintMirror(g, paint, rng)
   paintLookingGlass(g, paint, rng)
   paintPictures(g, paint, rng)
@@ -142,11 +165,12 @@ export function paintPictures(g: Ctx, paint: Watercolour, rng: Rng): void {
 }
 
 /** Three lamps on cords from the ceiling, each with a pool of warm light on the wall under it. */
-export function paintLamps(g: Ctx, paint: Watercolour, rng: Rng): void {
+export function paintLamps(g: Ctx, paint: Watercolour, rng: Rng, above = 6): void {
   for (const x of [366, 700, 1040]) {
     const drop = x === 700 ? 62 : 40
     paint.wash(g, blob(rng, x, drop + 70, 74, 60, 0.08, 12), { color: ROOM.glow, strength: 0.42, bleed: 18, pool: 0.1, grain: 0.1 })
-    paint.pencil(g, [{ x, y: -6 }, { x: x + rng.range(-1, 1), y: drop }], false, 0.9)
+    // The cord comes down from wherever the top of the surface is.
+    paint.pencil(g, [{ x, y: -above }, { x: x + rng.range(-1, 1), y: drop }], false, 0.9)
     const shade: Point[] = [{ x: x - 14, y: drop }, { x: x + 14, y: drop }, { x: x + 36, y: drop + 34 }, { x: x - 36, y: drop + 34 }]
     paint.wash(g, shade, { color: ROOM.lamp, edge: ROOM.lampEdge, strength: 0.9, sharp: true, reserve: true })
     paint.pencil(g, shade, true, 0.8, true)
