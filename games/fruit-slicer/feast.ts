@@ -13,6 +13,8 @@ export type Feast = {
   lumps: { at: number; size: number; fruit: Fruit }[]
   /** The mouth opening for a bite, or held open by a piece that sticks out. */
   mouth: number
+  /** Of the twins, how many of the pieces are the first twin's (the rest are the second's), or nothing where that is not known. */
+  first: number | null
   /** Of the twins, which is biting: 0 or 1 when they eat one after the other, -1 when they eat in step, each its own piece at the same moment. */
   eater: number
   /** Off the ground: a hiccup for every seam. */
@@ -55,7 +57,7 @@ export function feastOf(customer: Customer, lengths: readonly number[], taste: T
     if (inStep ? bites <= 0 : bites <= index) return
     lumps.push({ at: Math.min(1, inStep ? bites / lengths.length : bites - index), size: Math.min(2, length / whole), fruit: fruits[index] ?? customer.fruit })
   })
-  const feast: Feast = { lumps, mouth: 0, eater: -1, hop: 0, shrug: 0, pull: 0, rope: 0, spin: 0, flat: [], cross2: [], cross: 0, gaze: 0, tail: 0, sneeze: -1, pleased: 0 }
+  const feast: Feast = { lumps, mouth: 0, first: taste && taste.who === 'twins' ? taste.first : null, eater: -1, hop: 0, shrug: 0, pull: 0, rope: 0, spin: 0, flat: [], cross2: [], cross: 0, gaze: 0, tail: 0, sneeze: -1, pleased: 0 }
   if (!show || show.kind !== 'serve') return feast
   const biting = bites - Math.floor(bites)
   feast.mouth = Math.max(bites < lengths.length ? bump(biting) : 0, sticksOut && show.lift > 0 ? 0.4 : 0)

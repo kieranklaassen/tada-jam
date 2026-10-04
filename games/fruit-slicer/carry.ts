@@ -21,6 +21,8 @@ export const FLING_SPEED = 900
 /** How long a flung piece is in the air: it comes down this many seconds of its speed away, no nearer and no further than these. */
 export const FLIGHT_SECONDS = 0.4
 export const FLIGHT_REACH = [120, 1100] as const
+/** How long the crate chews a piece before it burps it across to the dog. */
+export const CHEW_SECONDS = 0.36
 /** How far a knocked piece slides along its lane, in points, if nothing stops it sooner. */
 export const KNOCK_POINTS = 700
 
@@ -151,7 +153,7 @@ export function drop(game: Game, held: Held, at: Point): { game: Game; events: G
         // The crate chews it and burps it across: it flies to the dog from the crate's top, not from the hand.
         const out = target.thing === 'crate' ? { ...from, x: CRATE.x + CRATE.w / 2 - from.w / 2, y: CRATE.y - from.h / 2 } : from
         if (target.thing === 'crate') events.push({ kind: 'burp', piece, from, voice: 'burp' })
-        events.push({ kind: 'fell', piece, from: out, voice: 'munch' })
+        events.push({ kind: 'fell', piece, from: out, voice: 'munch', after: target.thing === 'crate' ? CHEW_SECONDS : 0 })
       }
       return shutAfter({ ...game, world }, events, game, held)
     }
@@ -219,7 +221,11 @@ function intoTin(game: Game, held: Held, part: number): { game: Game; events: Ga
       if (given.strays.length > 0) events.push({ kind: 'flinch', whom: 'window', voice: 'babble' })
       const worst = given.result
       if (given.ending) events.push({ kind: 'ending', ending: given.ending, how: 'shut' })
-      else if (worst.kind === 'over' || worst.kind === 'under') events.push({ kind: 'misfit', id: piece.id, how: worst.kind, by: worst.by, length: piece.length, voice: worst.kind === 'over' ? 'clang' : 'slide' })
+      else if (worst.kind === 'over' || worst.kind === 'under') {
+        // The piece rattles only in a gap of its own compartment: in the twins' tin, a piece that fills its side lies still while the other side is short.
+        const own = worst.parts[Math.max(0, Math.min(worst.parts.length - 1, Math.round(part)))]
+        events.push({ kind: 'misfit', id: piece.id, how: worst.kind, by: worst.by, length: piece.length, voice: worst.kind === 'over' ? 'clang' : 'slide', gap: own && own.fit.kind === 'under' ? -own.fit.by : 0 })
+      }
     }
     now = result.game
   }
@@ -277,7 +283,8 @@ export function fling(game: Game, held: Held, at: Point, v: Point): { game: Game
     case 'piece': {
       const on = hit.piece.place
       if (on.on === 'tin') return backOnBoard('tin', 'bong')
-      if (on.on !== 'board') return backOnBoard('shelf', 'boing')
+      // A piece on the shelf lies alone in its row and has nowhere to be knocked along to: the flung piece bounces off it, and it shivers.
+      if (on.on !== 'board') return backOnBoard('shelf', 'boing', game, hit.piece.id)
       if (hit.thing === 'fruit') return backOnBoard('fruit', 'boing', game, hit.piece.id)
       // Knocked along its lane, the way the flung piece was going, until it meets the next thing; the flung piece lands where it was.
       const lane = onLane(rest, on.lane)

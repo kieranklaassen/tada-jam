@@ -96,10 +96,11 @@ export function ant(ctx: Ctx, x: number, y: number, s: number, lift = 0): void {
   // A shine on the back, the one mark of the page on something this small.
   inked(ctx, oval(-28, -5, 6, 3, -0.4), RED, 0)
   eye(ctx, 26, -9, 5, 0.5, 0)
-  for (const tip of [[36, -34], [46, -22]] as const) {
+  // Two feelers, each from its own root.
+  for (const [root, tip] of [[22, [36, -34]], [29, [46, -22]]] as const) {
     ctx.beginPath()
-    ctx.moveTo(26, -17)
-    ctx.quadraticCurveTo(30, -30, tip[0], tip[1])
+    ctx.moveTo(root, -17)
+    ctx.quadraticCurveTo(root + 4, -30, tip[0], tip[1])
     ctx.stroke()
   }
   ctx.restore()

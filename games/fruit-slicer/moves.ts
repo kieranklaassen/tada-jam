@@ -27,8 +27,8 @@ export type GameEvent =
   | { kind: 'land'; id: number; fruit: Fruit; length: number; voice: VoiceId }
   /** These pieces were shoved off the far lane onto the shelf; each was at `from`. */
   | { kind: 'swept'; ids: number[]; from: Box[] }
-  /** A piece left the counter for the dog, from `from`: dropped off the shelf, given, flung, or burped across by the crate. */
-  | { kind: 'fell'; piece: Piece; from: Box; voice: VoiceId }
+  /** A piece left the counter for the dog, from `from`: dropped off the shelf, given, flung, or burped across by the crate, which chews it for `after` seconds first. */
+  | { kind: 'fell'; piece: Piece; from: Box; voice: VoiceId; after?: number }
   | { kind: 'spill'; voice: VoiceId }
   | { kind: 'snap'; x: number; y: number; voice: VoiceId }
   | { kind: 'bark'; voice: VoiceId }
@@ -49,8 +49,8 @@ export type GameEvent =
   | { kind: 'setDown'; ids: number[]; from: Box[]; how: 'put' | 'beside' | 'butted'; voice: VoiceId }
   /** A piece was laid in the tin. `opened` says the tin sprang open for it, and `firstShowing` names the idea shown now, once. */
   | { kind: 'given'; id: number; from: Box; opened: boolean; firstShowing: string | null; length: number; voice: VoiceId }
-  /** What lies in the tin does not fit: it sticks out past the jaw, or leaves a gap, by so many points. */
-  | { kind: 'misfit'; id: number; how: 'over' | 'under'; by: number; length: number; voice: VoiceId }
+  /** What lies in the tin does not fit: it sticks out past the jaw, or leaves a gap, by so many points. `gap` is the gap in the compartment this piece was laid in, in points, or nothing when that compartment is not short: only there does the piece rattle. */
+  | { kind: 'misfit'; id: number; how: 'over' | 'under'; by: number; length: number; voice: VoiceId; gap: number }
   /** A customer ate a piece from the hand with nothing judged: one who waits, or one already served. */
   | { kind: 'ate'; whom: Whom; piece: Piece; from: Box; voice: VoiceId }
   /** A waiting pelican left as the glider, with this fruit across its beak, and another customer joined the queue in its place. */

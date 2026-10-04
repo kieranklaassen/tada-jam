@@ -191,7 +191,7 @@ describe('a misfit laid in the tin', () => {
   const box = { x: 100, y: 260, w: 200, h: 42 }
 
   it('brings the lid down on what sticks out, where it bounces, and jolts the tin', () => {
-    let state = spawn(newFx(1), { kind: 'misfit', id: 4, how: 'over', by: 300, length: 900, voice: 'clang' })
+    let state = spawn(newFx(1), { kind: 'misfit', id: 4, how: 'over', by: 300, length: 900, voice: 'clang', gap: 0 })
     expect(state.fx.map((one) => one.kind)).toEqual(['lid'])
     expect(state.shakes).toEqual([])
     let furthest = 0
@@ -202,10 +202,14 @@ describe('a misfit laid in the tin', () => {
   })
 
   it('lets a piece that is too short slide and rattle in the gap, further the wider the gap, and come to rest where it lies', () => {
-    const narrow = step(spawn(newFx(1), { kind: 'misfit', id: 4, how: 'under', by: -40, length: 500, voice: 'slide' }), 0.1)
-    const wide = step(spawn(newFx(1), { kind: 'misfit', id: 4, how: 'under', by: -400, length: 500, voice: 'slide' }), 0.1)
+    const narrow = step(spawn(newFx(1), { kind: 'misfit', id: 4, how: 'under', by: -40, length: 500, voice: 'slide', gap: 40 }), 0.1)
+    const wide = step(spawn(newFx(1), { kind: 'misfit', id: 4, how: 'under', by: -400, length: 500, voice: 'slide', gap: 400 }), 0.1)
     expect(offsetOf(wide, 4, box).dx).toBeGreaterThan(offsetOf(narrow, 4, box).dx)
     expect(offsetOf(narrow, 4, box).dx).toBeGreaterThan(0)
+    // In the twins' tin a piece that fills its own side lies still, though the other side is short and the lid comes down on that.
+    const filled = step(spawn(newFx(1), { kind: 'misfit', id: 4, how: 'under', by: -600, length: 600, voice: 'slide', gap: 0 }), 0.1)
+    expect(filled.shakes).toEqual([])
+    expect(filled.fx.map((one) => one.kind)).toEqual(['lid'])
     expect(offsetOf(play(wide, 1), 4, box)).toEqual({ dx: 0, dy: 0, squash: 0 })
   })
 

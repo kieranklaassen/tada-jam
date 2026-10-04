@@ -122,7 +122,8 @@ export const VOICES = {
   // The crate.
   split: () => [hiss(1400, 0.22, 0.001, 0.09, 600), tone(180, 0.18, 0.002, 0.2, 'triangle', 90), tone(140, 0.14, 0.002, 0.14, 'triangle', undefined, 0.2), tone(120, 0.12, 0.002, 0.14, 'triangle', undefined, 0.34)],
   thump: (length: number) => [tone(ringHz(length) * 0.5, 0.26, 0.003, 0.24, 'sine', ringHz(length) * 0.3), hiss(300, 0.1, 0.002, 0.1)],
-  burp: () => [tone(110, 0.22, 0.02, 0.3, 'sawtooth', 70), hiss(260, 0.06, 0.02, 0.2)],
+  // Three chews, and then the burp.
+  burp: () => [hiss(900, 0.1, 0.004, 0.05, 500), hiss(900, 0.1, 0.004, 0.05, 500, 0.12), hiss(900, 0.1, 0.004, 0.05, 500, 0.24), tone(110, 0.22, 0.02, 0.3, 'sawtooth', 70, 0.36), hiss(260, 0.06, 0.02, 0.2, undefined, 0.36)],
   // A creak one way and back, then the fruit that jumped out.
   rock: () => [tone(150, 0.12, 0.04, 0.2, 'sawtooth', 210), tone(200, 0.1, 0.04, 0.2, 'sawtooth', 140, 0.22), tone(200, 0.16, 0.003, 0.12, 'sine', undefined, 0.48)],
   washboard: () => Array.from({ length: 6 }, (_, i) => hiss(2400 + (i % 2) * 500, 0.08, 0.002, 0.04, undefined, i * 0.05)),

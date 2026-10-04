@@ -127,7 +127,8 @@ function street(ctx: Ctx, dots: Dots): number {
     ctx.fillStyle = BLUE
     ctx.fillRect(at - 2, WALL.y + 96, 4, GROUND - WALL.y - 96)
     far(ctx, poly([[at - 9, WALL.y + 96], [at + 9, WALL.y + 96], [at + 6, WALL.y + 74], [at - 6, WALL.y + 74]]), WHITE, dots.of(ctx, YELLOW, 0.5))
-    far(ctx, poly([[at - 11, WALL.y + 74], [at + 11, WALL.y + 74], [at, WALL.y + 64]]), PAPER, dots.of(ctx, BLUE, 0.5))
+    // A low rounded cap, not a point: a point on a post reads as an arrow.
+    far(ctx, slab(at - 10, WALL.y + 68, 20, 7, 3), PAPER, dots.of(ctx, BLUE, 0.5))
     drawn += 3
   }
   // The whole street stands back behind a veil of paper, so that whoever stands at the stall is the darkest thing in the panel.

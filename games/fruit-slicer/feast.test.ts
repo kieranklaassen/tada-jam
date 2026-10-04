@@ -27,7 +27,7 @@ describe('what went in', () => {
 
   it('is all that stays once the serve is over, and on load: the pieces, at rest, and no taste', () => {
     const loaded = feastOf(pelican, lengths, null, null)
-    expect(loaded).toEqual({ lumps: [{ at: 1, size: 0.5, fruit: 'long' }, { at: 1, size: 0.25, fruit: 'long' }], mouth: 0, eater: -1, hop: 0, shrug: 0, pull: 0, rope: 0, spin: 0, flat: [], cross2: [], cross: 0, gaze: 0, tail: 0, sneeze: -1, pleased: 0 })
+    expect(loaded).toEqual({ lumps: [{ at: 1, size: 0.5, fruit: 'long' }, { at: 1, size: 0.25, fruit: 'long' }], mouth: 0, first: null, eater: -1, hop: 0, shrug: 0, pull: 0, rope: 0, spin: 0, flat: [], cross2: [], cross: 0, gaze: 0, tail: 0, sneeze: -1, pleased: 0 })
     expect(feastOf(pelican, lengths, taste(pelican, lengths), servedShow(2))).toMatchObject({ lumps: loaded.lumps, hop: 0, mouth: 0 })
   })
 

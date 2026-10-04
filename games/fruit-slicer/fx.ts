@@ -33,6 +33,8 @@ export type Fx =
   | { kind: 'slat'; age: number; life: number }
   /** The ruled parts under the open tin answering the roller, one by one. */
   | { kind: 'answer'; parts: number; age: number; life: number }
+  /** The crate chewing what it was given, before the burp: its top works like a jaw. */
+  | { kind: 'chew'; age: number; life: number }
   /** The roller on its way along what it was let go on: a fruit, a piece, the rail, the lid, a customer, the crate, the dog. */
   | { kind: 'roll'; x0: number; x1: number; y: number; age: number; life: number }
   /** The marks a comic puts round a head, with no letter in them: an impact star, drops of sweat flying off, and the short lines of a start. */
@@ -132,7 +134,7 @@ export function spawn(state: FxState, event: GameEvent, heads: Partial<Record<'w
       event.ids.forEach((id, i) => shake(id, 'slide', 0, 0.3, event.from[i]))
       break
     case 'fell':
-      next.fx.push({ kind: 'fly', x: event.from.x, y: event.from.y, tx: MOUTH.x, ty: MOUTH.y, from: event.from, fruit: event.piece.fruit, age: 0, life: 0.4 })
+      next.fx.push({ kind: 'fly', x: event.from.x, y: event.from.y, tx: MOUTH.x, ty: MOUTH.y, from: event.from, fruit: event.piece.fruit, age: -(event.after ?? 0), life: 0.4 })
       break
     case 'ate':
     case 'splat': {
@@ -148,7 +150,7 @@ export function spawn(state: FxState, event: GameEvent, heads: Partial<Record<'w
     case 'misfit':
       // Too long, the lid bounces on it; too short, the piece slides and rattles in the gap, by no more than the gap.
       next.fx.push({ kind: 'lid', how: event.how, age: -0.2, life: 0.7 })
-      if (event.how === 'under') shake(event.id, 'rattle', Math.min(1, -event.by / 200), 0.9)
+      if (event.gap > 0) shake(event.id, 'rattle', Math.min(1, event.gap / 200), 0.9)
       next.joltSpeed += 5
       break
     case 'tinPoke':
@@ -156,7 +158,9 @@ export function spawn(state: FxState, event: GameEvent, heads: Partial<Record<'w
       if (event.open) next.fx.push({ kind: 'jaw', age: 0, life: 0.3 })
       break
     case 'burp':
+      // It chews first, rocking as it does, and then burps.
       next.rockSpeed += 7
+      next.fx.push({ kind: 'chew', age: 0, life: 0.36 })
       break
     case 'given':
       shake(event.id, 'slide', 0, 0.2, event.from)
@@ -172,7 +176,7 @@ export function spawn(state: FxState, event: GameEvent, heads: Partial<Record<'w
     case 'bounce':
     case 'skid':
       if (event.kind === 'skid' || event.off === 'tin') next.joltSpeed += 8
-      // A whole fruit that a flung piece bounced off shivers.
+      // A whole fruit that a flung piece bounced off shivers, and so does anything struck where it lies on the shelf.
       if (event.kind === 'bounce' && event.struck !== undefined) shake(event.struck, 'quiver', 1, 0.5)
       next.fx.push({ kind: 'burst', x: event.x, y: event.y, size: 20, fruit: 'middle', seed: random() * 1000, age: 0, life: 0.2 })
       next.fx.push({ kind: 'lines', x: event.x, y: event.y, angle: -Math.PI / 2, reach: 50, age: 0, life: 0.2 })

@@ -12,7 +12,7 @@ import { tinAt } from './moves'
 import { signBetween, tinParts, wanted, type Customer } from './orders'
 import { paintPassers } from './passersBy'
 import { restShow } from './scenes'
-import { ruling } from './serve'
+import { ruling, served as lyingIn } from './serve'
 import { SILL, fitOf, headOf, standsAt, type Seat } from './seats'
 import { paintCounter, paintStreet } from './setting'
 import { BOARD, COUNTER, CRATE, DOG, PX, QUEUE, ROLLER, SHELF_BOX, TIN, WALL, WINDOW, laneTop, rowTop, shown, tinShape, type Box, type Point, type TinShape } from './stage'
@@ -106,7 +106,7 @@ function awning(ctx: Ctx, time: number, flap: number): number {
   return SCALLOPS
 }
 
-function crate(ctx: Ctx, dots: Dots, rock: number, ordered: Fruit | null, time: number, split = 0): number {
+function crate(ctx: Ctx, dots: Dots, rock: number, ordered: Fruit | null, time: number, split = 0, chew = 0): number {
   ctx.save()
   ctx.translate(CRATE.x + CRATE.w / 2, CRATE.y + CRATE.h)
   ctx.rotate(rock * 0.05)
@@ -119,6 +119,11 @@ function crate(ctx: Ctx, dots: Dots, rock: number, ordered: Fruit | null, time: 
   })
   inked(ctx, rect(0, 22, CRATE.w, CRATE.h - 22), '#d9a441', 5, dots.of(ctx, RED, 0.3))
   for (let slat = 1; slat < 3; slat++) inked(ctx, rect(0, 22 + (slat * (CRATE.h - 22)) / 3, CRATE.w, 0.01), null, 4)
+  if (chew > 0) {
+    // Given a piece, it chews: its top slat works up and down like a jaw, three times, before the burp.
+    const gape = 16 * Math.abs(Math.sin(chew * Math.PI * 3))
+    inked(ctx, poly([[4, 22], [CRATE.w - 4, 22], [CRATE.w - 10, 22 + gape], [10, 22 + gape]]), INK, 3)
+  }
   if (split > 0) {
     // The top slat, split by the blade: a dark wedge where the wood has parted, closing again as it mends.
     inked(ctx, poly([[CRATE.w / 2 - 20 * split, 22], [CRATE.w / 2 + 22 * split, 22], [CRATE.w / 2 + 7 * split, 22 + 38 * split], [CRATE.w / 2 - 6 * split, 22 + 24 * split]]), INK, 3)
@@ -139,7 +144,7 @@ function roller(ctx: Ctx, dots: Dots, at: Point): number {
 function effects(ctx: Ctx, fx: FxState, wall: boolean): number {
   let drawn = 0
   for (const one of fx.fx) {
-    if ((one.kind === 'spatter') !== wall || one.age < 0 || one.kind === 'lid' || one.kind === 'jaw' || one.kind === 'slat' || one.kind === 'answer' || one.kind === 'roll') continue
+    if ((one.kind === 'spatter') !== wall || one.age < 0 || one.kind === 'lid' || one.kind === 'jaw' || one.kind === 'slat' || one.kind === 'answer' || one.kind === 'roll' || one.kind === 'chew') continue
     const t = one.age / one.life
     drawn++
     switch (one.kind) {
@@ -317,7 +322,9 @@ function tin(ctx: Ctx, dots: Dots, scenery: Scenery, shape: TinShape, customer: 
     // The jaw is a thick wall across the end of the compartment, exactly where the order ends; as it snaps it jumps out past the tin's end
     // and back. It is sprung, with a little give: over a piece that is too short it closes on air, by its give and no further, and springs
     // back; and on a fit it takes up the slack, standing at the end of what was served.
-    const onAir = tried && tried.kind === 'lid' && tried.how === 'under' ? giveOf(customer.fruit) * PX * Math.sin(t * Math.PI) : 0
+    // It closes on air only when the compartment it ends is the short one.
+    const shortHere = scenery.ending === null && lyingIn(scenery.game.world, customer).parts[index]?.fit.kind === 'under'
+    const onAir = tried && tried.kind === 'lid' && tried.how === 'under' && shortHere ? giveOf(customer.fruit) * PX * Math.sin(t * Math.PI) : 0
     const served = scenery.ending && !scenery.ending.fed && scenery.ending.result.kind === 'fit' ? scenery.ending.result.parts[index] : undefined
     const slack = served ? (served.total - served.ordered) * PX * Math.min(1, closing * 2) : 0
     ctx.fillStyle = INK
@@ -490,9 +497,9 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
     drawn += ticket(ctx, customer, box.x + (long ? 8 : who === 'cat' ? 104 : beside ? 92 : 46), TICKET_TOP, long ? 0.5 : customer.shares.length > 1 ? 0.56 : 0.62, true)
   })
   drawn += awning(ctx, scenery.time, fx.flap)
-  const slat = fx.fx.find((one) => one.kind === 'slat')
+  const slat = fx.fx.find((one) => one.kind === 'slat'), chewing = fx.fx.find((one) => one.kind === 'chew')
   // The kind a tap will bring stands up out of the crate: the kind on the ticket at the window, for as long as a customer stands there.
-  drawn += crate(ctx, dots, fx.rock, game.window ? game.window.fruit : null, scenery.time, slat ? 1 - slat.age / slat.life : 0)
+  drawn += crate(ctx, dots, fx.rock, game.window ? game.window.fruit : null, scenery.time, slat ? 1 - slat.age / slat.life : 0, chewing ? Math.max(0.001, chewing.age / chewing.life) : 0)
   // The tin on the rail. While the serve plays it is still there, shut on what was served, and empties as the
   // customer eats; what it held is read from the ending, since the game has already moved on.
   // A customer fed by hand is served past its tin: there is none on the rail for its serve.
