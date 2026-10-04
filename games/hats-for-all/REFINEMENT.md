@@ -102,12 +102,8 @@ Line numbers are lines of `ART.md` as it stands at commit `78ef55f`. Everything 
 14. The characters, Wig and the cone (line 130): a hat cannot sink into a head here.
    Old: "the cone: it sinks point first into Wig's soft top, and Wig pops it back up with a belly bounce and a grumble"
    New: "the cone: it slides down over Wig's face, and Wig pops it back up with a belly bounce and a grumble"
-15. The records, `us-ca` 1.6, Limits taken (line 164): the pack's own Limits words in place of the builder's.
-   Old: "the Early statement, where the groups are plainly equal or plainly unequal and counting is optional."
-   New: "the Early statement, where the groups are clearly equal or clearly different and counting is optional."
-16. The records, `us-ca` 2.1, Limits taken (line 166): the same.
-   Old: "from the Later statement, that one thing in or out changes a small group by exactly one."
-   New: "from the Later statement, that the change is exactly one, for adding or removing a single object, in a small group."
+15. The records, `us-ca` 1.6, Limits taken (line 164): the clause on the Early statement was replaced by the pack's own Limits words for that record. The wording it replaced is not kept here.
+16. The records, `us-ca` 2.1, Limits taken (line 166): the clause on the Later statement was replaced by the pack's own Limits words for that record. The wording it replaced is not kept here.
 
 Sentence 5 was changed twice and is listed once, as it now stands.
 
