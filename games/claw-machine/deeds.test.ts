@@ -23,11 +23,18 @@ function cell(deed: Deed): string {
 describe('the object-by-action grid', () => {
   it('answers every one of its thirty cells, and no two alike', () => {
     const cells: string[] = []
+    // Two small toys that make a stack with room beside it: found by trying each pair in a world of its own.
+    const smalls = toysOf(world(), 'small').filter((_, i) => i !== 0 && i !== 3)
+    const stackable = smalls.flatMap((a) => smalls.filter((b) => b !== a).map((b) => [a, b])).find(([a, b]) => {
+      const w = world()
+      toyLetGo(w, a, { on: 'place', place: placeOf(w, b) })
+      return clawSwingsInto(w, { on: 'place', place: placeOf(w, b) }, 1, false).type === 'dominoes'
+    }) ?? smalls
     const objects: ((w: World) => Target)[] = [
       (w) => ({ on: 'place', place: placeOf(w, toysOf(w, 'small')[0]) }), // a toy on the tray
       (w) => ({ on: 'place', place: barePlace(w) }), // bare studs
-      (w) => { // a stack of two
-        const [a, b] = toysOf(w, 'small').slice(1)
+      (w) => { // a stack of two, with a bare place beside it to fall onto
+        const [a, b] = stackable
         toyLetGo(w, a, { on: 'place', place: placeOf(w, b) })
         return { on: 'place', place: placeOf(w, b) }
       },

@@ -28,6 +28,8 @@ export type Claw = {
   open: number
   openV: number
   grip: number
+  /** Seconds the jaws still stay wide open after letting something go. */
+  openFor: number
   squash: number
   squashV: number
   phase: ClawPhase
@@ -61,6 +63,10 @@ export const STEP = 1 / 120
 const TROLLEY_PULL = 150
 const TROLLEY_DAMP = 21
 const TROLLEY_TOP_SPEED = 70
+/** How long the jaws stay wide after they let something go. */
+const STAYS_OPEN = 0.45
+/** How fast the trolley moves while the claw is still lower than it has to ride here: it stands, so that teeth beside a knob or a toy never drag through it. */
+const TROLLEY_CREEP = 0
 const DROP_GRAVITY = 150
 const DROP_TOP_SPEED = 46
 const CLOSE_SECONDS = 0.16
@@ -72,7 +78,7 @@ export function newClaw(x = 0, z = 6, rideY = 12.5): Claw {
     x, z, vx: 0, vz: 0, targetX: x, targetZ: z,
     length: RAIL.top - rideY - HINGE_DROP, lengthV: 0,
     swingX: 0, swingZ: 0, swingVX: 0, swingVZ: 0,
-    open: REST_OPEN, openV: 0, grip: 0, squash: 1, squashV: 0,
+    open: REST_OPEN, openV: 0, grip: 0, openFor: 0, squash: 1, squashV: 0,
     phase: 'ready', t: 0, following: false, dropOnArrival: false, load: 0, rideY, landY: 0, ratchet: 0, riseFrom: 0,
   }
 }
@@ -140,8 +146,11 @@ export function stepClaw(claw: Claw, rideY: number, landY: number, events: ClawE
   if (free) {
     claw.vx += ((claw.targetX - claw.x) * TROLLEY_PULL - claw.vx * TROLLEY_DAMP) * dt
     claw.vz += ((claw.targetZ - claw.z) * TROLLEY_PULL - claw.vz * TROLLEY_DAMP) * dt
+    // While the hoist still has to wind up to clear what is ahead, the trolley stands: the claw lifts, then goes.
+    const low = claw.length - (RAIL.top - rideY - HINGE_DROP)
+    const most = low > 0.35 ? TROLLEY_CREEP : TROLLEY_TOP_SPEED
     const speed = Math.hypot(claw.vx, claw.vz)
-    if (speed > TROLLEY_TOP_SPEED) { claw.vx *= TROLLEY_TOP_SPEED / speed; claw.vz *= TROLLEY_TOP_SPEED / speed }
+    if (speed > most) { claw.vx *= most / speed; claw.vz *= most / speed }
   } else {
     claw.vx *= Math.max(0, 1 - 30 * dt); claw.vz *= Math.max(0, 1 - 30 * dt)
   }
@@ -175,7 +184,8 @@ export function stepClaw(claw: Claw, rideY: number, landY: number, events: ClawE
   }
 
   // The jaws and the squash are springs toward where the phase wants them.
-  const wantOpen = claw.phase === 'dropping' || claw.phase === 'letting-go' ? 1 : claw.phase === 'closing' || claw.phase === 'rising' || claw.load > 0 ? claw.grip : claw.following ? 1 : REST_OPEN
+  claw.openFor = Math.max(0, claw.openFor - dt)
+  const wantOpen = claw.phase === 'dropping' || claw.phase === 'letting-go' || claw.openFor > 0 ? 1 : claw.phase === 'closing' || claw.phase === 'rising' || claw.load > 0 ? claw.grip : claw.following ? 1 : REST_OPEN
   // The jaws shut without overshooting: they stop beside what they hold and never bite into it.
   claw.openV += ((wantOpen - claw.open) * 420 - claw.openV * 41) * dt
   claw.open = clamp(claw.open + claw.openV * dt, 0, 1.06)
@@ -187,9 +197,11 @@ export function stepClaw(claw: Claw, rideY: number, landY: number, events: ClawE
   const restLength = RAIL.top - rideY - HINGE_DROP
   if (claw.phase === 'ready') {
     // Winding to the riding height, and a tap's drop once the trolley is there and nearly still.
-    claw.lengthV += ((restLength - claw.length) * 90 - claw.lengthV * 17) * dt
+    claw.lengthV += ((restLength - claw.length) * 140 - claw.lengthV * 22) * dt
     claw.length += claw.lengthV * dt
-    if (claw.dropOnArrival && Math.hypot(claw.targetX - claw.x, claw.targetZ - claw.z) < 0.5 && Math.hypot(claw.vx, claw.vz) < 9) act(claw)
+    // It drops only once it is over the very point: its teeth close a hair beside what they hold, and a claw
+    // that came down a little to one side would close into it.
+    if (claw.dropOnArrival && Math.hypot(claw.targetX - claw.x, claw.targetZ - claw.z) < 0.1 && Math.hypot(claw.vx, claw.vz) < 4) { claw.x = claw.targetX; claw.z = claw.targetZ; claw.vx = 0; claw.vz = 0; act(claw) }
   } else if (claw.phase === 'dropping') {
     claw.lengthV = Math.min(DROP_TOP_SPEED, claw.lengthV + DROP_GRAVITY * dt)
     claw.length += claw.lengthV * dt
@@ -219,6 +231,8 @@ export function stepClaw(claw: Claw, rideY: number, landY: number, events: ClawE
       // What falls comes down under the trolley, wherever its swing has carried it.
       events.push({ type: 'let-go', x: claw.x, z: claw.z })
       claw.load = 0; claw.grip = 0
+      // The jaws stay wide for a moment: what they let go is still between them.
+      claw.openFor = STAYS_OPEN
       claw.phase = 'ready'; claw.t = 0
     }
   }

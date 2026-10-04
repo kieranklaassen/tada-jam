@@ -1,15 +1,18 @@
 import { MINI } from './belly'
+import { PLATE, STUD_HEIGHT } from './bricks'
 import { holdOf, toySpan } from './builds'
-import { airTime, toss, type Body, type Leg } from './bodies'
+import { FALL, airTime, toss, type Body, type Leg } from './bodies'
 import { STEP } from './claw'
 import { KNOB_HALF, gripFor } from './clawBuild'
 import type { Deed } from './deeds'
-import type { Actor, Game, Plan } from './game'
-import { rimHeight } from './gobblerBuild'
+import { AIR, fromSegment, type Actor, type Game, type Plan } from './game'
+import { carriedBy } from './gamePicture'
+import { EYE, rimHeight } from './gobblerBuild'
 import { GOBBLER, shapeOf } from './gobblers'
-import type { Spot } from './layout'
+import { headTop, type Spot } from './layout'
 import { WRONG, actSeconds } from './motion'
-import { BELL, GATE, SHELF, TRAY, TRAY_WIDTH } from './places'
+import { BELL, GATE, SHELF, SLOT_Z, TRAY, placeAt } from './places'
+import { nearestPlace } from './tray'
 
 // What each deed looks like as it is carried out: which bodies fly where,
 // which gobbler does what, and what is heard. The rules have already put
@@ -26,17 +29,17 @@ type Stop = { at?: Spot; landing: Leg['landing']; peak?: number; seconds?: numbe
 export const DOWN_THE_THROAT = 0.15
 /** How far above the rim a toy lies that rests on a gobbler's teeth. */
 const ON_TEETH = 0.85
+/** How far above its rim a toy is lifted before it is thrown out: clear of the tops of its eyes. */
+const OVER_ITS_EYES = 3.2
 /** How far above the higher end of a throw it rises when nothing is said: a short hop. */
 const HOP = 0.3
-/** The height a throw rises to when it has to pass over the crew at the tray, models and all. */
-const OVER_THE_CREW = 14.5
 
 /**
  * Throws a body from stop to stop. A throw takes as long as its rise needs:
  * what flies over something clears it by going high enough, and never by
  * passing through it.
  */
-function send(game: Game, body: Body, toy: number, stops: Stop[], deed?: Deed): void {
+function send(game: Game, body: Body, toy: number, stops: Stop[], deed?: Deed, after = 0): void {
   let y = body.y
   const legs: Leg[] = stops.map((stop) => {
     const at = stop.at ?? (stop.landing === 'mouth' ? game.mouthOf(game.crew[body.slot]) : game.spotOf(toy))
@@ -44,11 +47,67 @@ function send(game: Game, body: Body, toy: number, stops: Stop[], deed?: Deed): 
     y = at.y
     return { x: at.x, y: at.y, z: at.z, seconds, scale: stop.scale ?? (stop.landing === 'belly' ? MINI : 1), landing: stop.landing, fixed: stop.at !== undefined }
   })
-  body.legs = legs.slice(1)
   body.hang = 0
   if (deed) game.causes.set(body, deed)
+  // A toy that waits its turn stays where it is, with its whole way laid out, until its wait is over.
+  if (after > 0) { body.legs = legs; body.wait = after; body.mode = 'parked'; return }
+  body.legs = legs.slice(1)
   if (legs[0].fixed) game.flights.set(body, legs[0]); else game.flights.delete(body)
   toss(body, legs[0])
+}
+
+/**
+ * The top of the tallest thing standing on the way over the tray from one point to another: what a throw across
+ * the tray has to rise over. The toy that is thrown is not counted where it is going to stand.
+ */
+export function tallestOnTheWay(game: Game, toy: number, from: Spot, to: Spot, skip = -1): number {
+  let top: number = TRAY.top
+  const tray = game.tray()
+  for (let place = 0; place < tray.length; place++) {
+    if (place === skip || tray[place].length === 0) continue
+    if (fromSegment(placeAt(place), from, to) < 4.2) top = Math.max(top, game.stackTop(place, toy))
+  }
+  return top
+}
+
+/**
+ * The height a throw has to rise to so that it passes over the crew at the tray, the models on their heads and
+ * the tops of their eyes, on its way from one point to another; `least` is how far over its higher end it rises
+ * anyway. A throw that starts in front of the crew is held to nothing here.
+ */
+export function overTheCrew(game: Game, from: Spot, to: Spot, half: number, least: number): number {
+  const lowest = Math.max(from.y, to.y) + least
+  if (game.crew.length === 0 || Math.abs(to.z - from.z) < 1e-6) return lowest
+  const heads = Math.max(...game.crew.map((actor) => actor.y + headTop(actor.id))) + 0.4
+  const eyes = Math.max(...game.crew.map((actor) => actor.y + rimHeight(shapeOf(actor.id)) + EYE * 0.92)) + 0.4
+  // Over the models at the backs of their heads, and past the fronts of their eyes.
+  const bars: [number, number][] = [[SLOT_Z - 5.6 - half, heads], [SLOT_Z - 2 + half, heads], [SLOT_Z + 3.7 + half, eyes]]
+  for (let top = lowest; top < MOST_THROW; top += 0.5) {
+    const up = Math.sqrt((2 * (top - from.y)) / FALL), down = Math.sqrt((2 * (top - to.y)) / FALL)
+    const clears = bars.every(([z, bar]) => {
+      const part = (z - from.z) / (to.z - from.z)
+      if (part <= 0 || part >= 1) return true
+      const t = part * (up + down) - up
+      return top - 0.5 * FALL * t * t >= bar
+    })
+    if (clears) return top
+  }
+  return MOST_THROW
+}
+/** The highest any throw rises: under the rail. */
+const MOST_THROW = 26
+
+/**
+ * The stops of a throw from behind the crew back to a toy's own place. No throw can come down over their heads
+ * onto the back row of the tray without brushing their faces, so a toy for the back row comes down on the place
+ * in front of its own, on whatever stands there, and hops back to its place from that.
+ */
+function backOverTheCrew(game: Game, toy: number, from: Spot, least: number): Stop[] {
+  const home = game.spotOf(toy), where = game.world.cycle.where[toy], half = toySpan(game.bodies[toy].toy).depth / 2
+  if (where.at !== 'tray' || where.place >= TRAY.columns) return [{ landing: 'stand', peak: overTheCrew(game, from, home, half, least) }]
+  const front = where.place + TRAY.columns, at = placeAt(front)
+  const bounce = { x: at.x, y: game.stackTop(front) + AIR, z: at.z }
+  return [{ at: bounce, landing: 'again', peak: overTheCrew(game, from, bounce, half, least) }, { landing: 'stand', peak: Math.max(bounce.y, home.y) + 0.6 }]
 }
 
 function nearestWaiter(game: Game, x: number): Actor | null {
@@ -108,13 +167,20 @@ export function react(game: Game, deed: Deed): void {
     case 'bounce': {
       const body = game.bodies[deed.toy]
       const top = { x: body.x, y: game.stackTop(deed.off), z: body.z }
-      send(game, body, deed.toy, [{ at: top, landing: 'again', seconds: 0.24 }, { landing: 'stand', peak: top.y + 3 }], deed)
+      // It comes off the stack low: the claw that let it go is still right above it.
+      send(game, body, deed.toy, [{ at: top, landing: 'again', seconds: 0.24 }, { landing: 'stand', peak: Math.max(top.y + 0.4, tallestOnTheWay(game, deed.toy, top, game.spotOf(deed.toy), deed.off) + 0.5) }], deed)
       break
     }
     case 'topple':
       game.say({ type: 'teeter' })
-      // The top comes down first and furthest up; each one after it a little later.
-      deed.moved.forEach(({ toy }, i) => send(game, game.bodies[toy], toy, [{ landing: 'stand', peak: game.bodies[toy].y + 2 + i * 1.6 }], deed))
+      // The toy from the jaws drops onto the stack and goes off it; then the stack comes down, top first, each
+      // one after the last has gone and each a little higher, while the claw backs off out of their way.
+      deed.moved.forEach(({ toy }, i) => {
+        const body = game.bodies[toy]
+        const over = tallestOnTheWay(game, toy, body, game.spotOf(toy), nearestPlace(body.x, body.z)) + 0.5
+        if (i === 0) send(game, body, toy, [{ at: { x: body.x, y: body.y - 0.9, z: body.z }, landing: 'again', seconds: 0.2 }, { landing: 'stand', peak: Math.max(body.y - 0.5, over) }], deed)
+        else send(game, body, toy, [{ landing: 'stand', peak: Math.max(body.y + 0.8 + i * 0.6, over) }], deed, 0.5 + i * 0.3)
+      })
       break
     case 'gulp': {
       const body = game.bodies[deed.toy]
@@ -137,32 +203,40 @@ export function react(game: Game, deed: Deed): void {
     }
     case 'thrown-back': {
       const body = game.bodies[deed.toy]
-      send(game, body, deed.toy, [{ at: ledgePoint(game), landing: 'again', seconds: 0.42 }, { landing: 'stand', peak: OVER_THE_CREW + (deed.heavy ? 0 : 1.5) }], deed)
+      // Caught, bobbled once where it was caught, and thrown back: by then the claw has backed off.
+      const caught = ledgePoint(game)
+      send(game, body, deed.toy, [{ at: caught, landing: 'again', seconds: 0.42 }, { at: caught, landing: 'again', seconds: 0.3, peak: caught.y + 0.3 }, ...backOverTheCrew(game, deed.toy, caught, deed.heavy ? 1 : 2.5)], deed)
       break
     }
     case 'gate-roll': {
       const body = game.bodies[deed.toy]
       // Onto the gate, a roll along its bar, and off it over the crew onto the tray.
       const on = { x: GATE.x, y: GATE.top + 0.05, z: GATE.z }, along = { x: GATE.x + (body.x < 0 ? 1.6 : -1.6), y: GATE.top + 0.05, z: GATE.z }
-      send(game, body, deed.toy, [{ at: on, landing: 'again', seconds: 0.36 }, { at: along, landing: 'again', seconds: deed.heavy ? 0.5 : 0.3, peak: GATE.top + 0.1 }, { landing: 'stand', peak: OVER_THE_CREW }], deed)
+      send(game, body, deed.toy, [{ at: on, landing: 'again', seconds: 0.36 }, { at: along, landing: 'again', seconds: deed.heavy ? 0.5 : 0.3, peak: GATE.top + 0.1 }, ...backOverTheCrew(game, deed.toy, along, 1)], deed)
       break
     }
     case 'rim-slide': {
       const body = game.bodies[deed.toy], side = Math.sign(claw.x) || 1
-      // Onto the bell, off it onto the rim of the tray, and down the rim onto the edge studs.
-      const rim = { x: side * (TRAY_WIDTH / 2 + 0.5), y: TRAY.top + 0.45, z: BELL.z }
-      send(game, body, deed.toy, [{ at: { x: side * BELL.x, y: BELL.top + 0.05, z: BELL.z }, landing: 'again', seconds: 0.26 }, { at: rim, landing: 'again', peak: BELL.top + 1.4 }, { landing: 'stand', peak: TRAY.top + 2 + body.height }], deed)
+      // Onto the bell, a small hop on it, and off it over the rim of the tray onto the studs, low all the way.
+      const bell = { x: side * BELL.x, y: BELL.top + STUD_HEIGHT + 0.03, z: BELL.z }
+      send(game, body, deed.toy, [{ at: bell, landing: 'again', seconds: 0.26 }, { at: bell, landing: 'again', seconds: 0.22, peak: bell.y + 0.2 }, { landing: 'stand', peak: Math.max(bell.y + 0.5, tallestOnTheWay(game, deed.toy, bell, game.spotOf(deed.toy)) + 0.5) }], deed)
       break
     }
     case 'knock':
       game.say({ type: 'knock' })
-      send(game, game.bodies[deed.toy], deed.toy, [{ landing: 'stand', peak: game.bodies[deed.toy].y + 1.1 }], deed)
+      // It skitters over the studs to the place beside it: the claw that knocked it is still right above it.
+      send(game, game.bodies[deed.toy], deed.toy, [{ landing: 'stand', peak: game.bodies[deed.toy].y + 0.3 }], deed)
       break
     case 'dominoes':
-      deed.moved.forEach(({ toy }, i) => { game.say({ type: 'domino', nth: i }); send(game, game.bodies[toy], toy, [{ landing: 'stand', peak: game.bodies[toy].y + 1.6 + i * 1.4 }], deed) })
+      deed.moved.forEach(({ toy }, i) => { game.say({ type: 'domino', nth: i }); send(game, game.bodies[toy], toy, [{ landing: 'stand', peak: game.bodies[toy].y + 0.6 }], deed) })
       break
     case 'rattle':
       game.say({ type: 'rattle' })
+      break
+    case 'jostle':
+      // Hemmed in, it rocks where it stands, with the same rattle.
+      game.say({ type: 'rattle' })
+      for (const toy of game.tray()[deed.place]) { game.bodies[toy].squash = 0.86; game.bodies[toy].squashV = 0 }
       break
     case 'duck': {
       const actor = game.crew.find((one) => one.id === deed.gobbler)
@@ -224,6 +298,8 @@ export function nextLeg(game: Game, body: Body, toy: number, deed: Deed | undefi
   const next = body.legs.shift()
   if (!next) return
   const actor = game.crew[body.slot]
+  // It leaves the gobbler that carried it from where the gobbler has it at this moment.
+  if (body.rides > 0 && --body.rides === 0 && actor) { const at = carriedBy(game, actor, body); body.x = at.x; body.y = at.y; body.z = at.z }
   if (deed?.type === 'bounce') game.say({ type: 'boing' })
   else if (deed?.type === 'thrown-back') {
     const waiter = nearestWaiter(game, body.x)
@@ -262,8 +338,13 @@ export function chew(game: Game, body: Body, toy: number, onEnd: (ends: 'sort' |
     body.scale = Math.max(DOWN_THE_THROAT, body.scale - (STEP / 0.16) * (1 - DOWN_THE_THROAT))
     if (body.scale > DOWN_THE_THROAT) return
     game.plans.delete(body)
-    const under = { x: actor.x, y: at.y - 0.75, z: actor.z }
-    send(game, body, toy, [{ at: under, landing: 'again', seconds: 0.1, scale: DOWN_THE_THROAT }, { landing: 'belly', peak: Math.max(under.y, game.spotOf(toy).y) + 0.25 }])
+    // Down through the tongue to just under it, clear of the roof of the belly, and a fall from there to its
+    // place: it never comes back up.
+    const under = { x: actor.x, y: at.y - PLATE - toySpan(body.toy).height * DOWN_THE_THROAT - 0.15, z: actor.z }
+    const lands = game.spotOf(toy)
+    send(game, body, toy, [{ at: under, landing: 'again', seconds: 0.12, scale: DOWN_THE_THROAT }, { landing: 'belly', seconds: Math.sqrt((2 * Math.max(0.3, under.y - lands.y)) / FALL) }])
+    // It is inside the gobbler all the way: whatever the gobbler does meanwhile, it does too.
+    body.rides = 99
     if (plan.ends) onEnd(plan.ends)
     return
   }
@@ -277,11 +358,18 @@ export function chew(game: Game, body: Body, toy: number, onEnd: (ends: 'sort' |
   if (way === 'falls-through') {
     // The big one's mouth has wide bars in front: a small toy slides out between them, drops down its front
     // onto the rim of the tray, and tips over onto the studs.
-    const gap = { x: actor.x, y: body.y, z: actor.z + 3.2 + toySpan(body.toy).depth / 2 }
-    const rim = { x: actor.x, y: TRAY.top + 0.42, z: TRAY.z - 0.5 }
-    send(game, body, toy, [{ at: gap, landing: 'again', seconds: 0.4, peak: body.y + 0.05 }, { at: rim, landing: 'again', peak: body.y + 0.1 }, { landing: 'stand', peak: rim.y + 1.6 + body.height * 0.3 }])
+    const gap = { x: actor.x, y: body.y, z: actor.z + 3.5 + toySpan(body.toy).depth / 2 }
+    send(game, body, toy, [{ at: gap, landing: 'again', seconds: 0.4, peak: body.y + 0.05 }, { landing: 'stand', peak: Math.max(gap.y + 0.1, tallestOnTheWay(game, toy, gap, game.spotOf(toy)) + 0.5) }])
+    // Out between the bars it is still the gobbler's: it goes where the gobbler sways.
+    body.rides = 1
     return
   }
-  const clear = { x: body.x, y: body.y + 2.7, z: body.z }
-  send(game, body, toy, [{ at: clear, landing: 'again', seconds: 0.12 }, { landing: 'stand', peak: clear.y + (way === 'straight-up' ? 9 : way === 'cannon' ? 0.6 : 1.6) }])
+  // Up to well over the tops of its eyes, and no throw from there is so flat that it dips back among them.
+  const clear = { x: body.x, y: Math.max(body.y + 2.7, actor.y + rimHeight(shapeOf(actor.id)) + OVER_ITS_EYES), z: body.z }
+  const home = game.spotOf(toy), least = way === 'straight-up' ? 9 : way === 'cannon' ? 1.2 : 1.8
+  const peak = Math.max(overTheCrew(game, clear, home, toySpan(body.toy).depth / 2, least), tallestOnTheWay(game, toy, clear, home) + 0.5)
+  send(game, body, toy, [{ at: clear, landing: 'again', seconds: 0.16 }, { landing: 'stand', peak }])
+  // Until it is up clear of the mouth it is still the gobbler's: however the gobbler jumps or leans as it lets the
+  // toy go, the toy leaves its mouth the same way.
+  body.rides = 1
 }

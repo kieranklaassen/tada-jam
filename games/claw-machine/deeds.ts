@@ -36,6 +36,8 @@ export type Deed =
   // The claw swings into it.
   | { type: 'knock'; toy: number; from: number; place: number }
   | { type: 'dominoes'; moved: { toy: number; place: number }[] }
+  /** Swung into with no bare place beside it to go to: it rocks where it stands. */
+  | { type: 'jostle'; place: number }
   | { type: 'rattle' }
   | { type: 'duck'; gobbler: GobblerId }
   | { type: 'snap-miss'; gobbler: GobblerId }
@@ -170,21 +172,31 @@ export function clawSwingsInto(world: World, aimed: Target, direction: -1 | 1, c
   if (target.on === 'rail-end') return { type: 'double-ding' }
   const cycle = world.cycle, tray = trayOf(cycle), stack = tray[target.place]
   if (stack.length === 0) return { type: 'rattle' }
-  const at = placeAt(target.place)
+  const column = target.place % TRAY.columns, row = Math.floor(target.place / TRAY.columns)
+  /** The place `steps` along the row, when it is on the tray and bare. */
+  const along = (steps: number): number => {
+    const to = column + steps
+    return to >= 0 && to < TRAY.columns && tray[row * TRAY.columns + to].length === 0 ? row * TRAY.columns + to : -1
+  }
   if (stack.length === 1) {
-    // Knocked one place over, the way the swing was going, or to the nearest free place if that one is taken.
+    // Knocked one place over: the way the swing was going, or the other way, or across to the other row, onto
+    // the first of them that is bare. It skitters there over the studs, so it never goes further than the place
+    // beside it. With a toy on every side it only rocks where it stands.
     const toy = stack[0]
-    const place = freePlace(tray, at.x + direction * TRAY.cell, at.z, target.place)
+    const across = (row === 0 ? 1 : 0) * TRAY.columns + column
+    const place = [along(direction), along(-direction), tray[across].length === 0 ? across : -1].find((one) => one >= 0)
+    if (place === undefined) return { type: 'jostle', place: target.place }
     cycle.where[toy] = { at: 'tray', place, level: 0 }
     return { type: 'knock', toy, from: target.place, place }
   }
-  // A stack goes down like dominoes: the top lands furthest along, the bottom stays.
-  const moved: { toy: number; place: number }[] = []
-  stack.slice(1).forEach((toy, i) => {
-    const place = freePlace(trayOf(cycle), at.x + direction * TRAY.cell * (i + 1), at.z, target.place)
-    cycle.where[toy] = { at: 'tray', place, level: 0 }
-    moved.push({ toy, place })
-  })
+  // A stack goes down like dominoes along its row: the top lands furthest along, the bottom stays. It falls the
+  // way the swing was going where the places it would land on are bare, or else the other way; hemmed in on both
+  // sides it only rocks.
+  const falling = stack.slice(1)
+  const way = [direction, -direction].find((one) => falling.every((_, i) => along(one * (i + 1)) >= 0))
+  if (way === undefined) return { type: 'jostle', place: target.place }
+  const moved = falling.map((toy, i) => ({ toy, place: along(way * (i + 1)) }))
+  for (const { toy, place } of moved) cycle.where[toy] = { at: 'tray', place, level: 0 }
   return { type: 'dominoes', moved }
 }
 

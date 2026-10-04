@@ -2,15 +2,16 @@ import { PLATE, buildMesh, mergeMeshes, type Brick, type BrickMesh } from './bri
 import { toyBricks } from './builds'
 import { EYE, eyeCentres, gobblerParts } from './gobblerBuild'
 import { shapeOf, type GobblerId } from './gobblers'
-import { ARCH, HANDLE, ON_DECK, RIDER, RIDER_STEP, RIDER_Z, RISER, RISER_BASE, deckSpots, deckTop, handleSpot, riderSpots } from './layout'
+import { ARCH, BED, HANDLE, ON_DECK, RIDER, RIDER_STEP, RIDER_Z, RISER, RISER_BASE, deckSpots, deckTop, handleSpot, riderSpots } from './layout'
 import { STEEL } from './palette'
 import { CRATE as CRATE_COLOUR, CRATE_DARK } from './palette'
 import { CRATE } from './places'
 import type { Toy } from './toys'
 
-// A crate as one mesh: its box, the load standing small on its deck, and its
-// crews riding in rows behind, each row a step higher. It never comes apart
-// while it waits, so it is one draw. Built about the middle of its foot, with
+// A crate as one mesh: its box, its bed with the load standing small on it,
+// and its crews riding in rows behind, each row a step higher. It never comes
+// apart while it waits, so it is one draw; while it pours, its bed is a
+// second one. Built about the middle of its foot, with
 // y = 0 on the shelf it stands on.
 
 /** The angle above level at which the child looks in: a rider looks back along it. */
@@ -25,8 +26,6 @@ function box(which: number, rows: number): Brick[] {
     out.push({ x: -half, y, z: -depth, w: joint, d: CRATE.depth, h, colour, studs: y + h >= deck })
     out.push({ x: -half + joint, y, z: -depth, w: CRATE.width - joint, d: CRATE.depth, h, colour, studs: y + h >= deck })
   }
-  // A lip along the front of the deck, with the handle the claw lifts the crate by.
-  out.push({ x: -half, y: deck, z: depth - 0.2, w: CRATE.width, d: 0.2, h: 1, colour: CRATE_DARK, studs: false })
   // The arch over the front of the load, and the knob on it.
   const handle = handleSpot(), arch = Math.round(ARCH / PLATE)
   for (const side of [-1, 1]) out.push({ x: side * (half - 0.25) - 0.25, y: deck, z: handle.z - 0.25, w: 0.5, d: 0.5, h: arch - 1, colour: STEEL, studs: false })
@@ -40,9 +39,21 @@ function box(which: number, rows: number): Brick[] {
   return out
 }
 
-export function crateMesh(which: number, toys: readonly Toy[], places: readonly number[], crews: readonly (readonly GobblerId[])[]): BrickMesh {
+/** The bed: one plain plate, lying on the studs of the front of the deck. Built in the crate's own measure. */
+function bed(which: number): Brick[] {
+  return [{ x: -BED.half, y: (deckTop(which) + BED.lift) / PLATE, z: BED.back, w: BED.half * 2, d: BED.front - BED.back, h: (BED.top - BED.lift) / PLATE, colour: CRATE_DARK, studs: false }]
+}
+
+/** The bed alone, for the stage to tip. */
+export function bedMesh(which: number): BrickMesh {
+  return buildMesh(bed(which), true)
+}
+
+/** A crate as one mesh. `withBed` is false while its bed is tipping: the stage then draws the bed by itself. */
+export function crateMesh(which: number, toys: readonly Toy[], places: readonly number[], crews: readonly (readonly GobblerId[])[], withBed = true): BrickMesh {
   const top = deckTop(which)
   const parts: { mesh: BrickMesh; scale?: number; at?: readonly [number, number, number] }[] = [{ mesh: buildMesh(box(which, crews.length), true) }]
+  if (withBed) parts.push({ mesh: bedMesh(which) })
   deckSpots(toys, places).forEach((spot, i) => parts.push({ mesh: buildMesh(toyBricks(toys[i]), true), scale: ON_DECK, at: [spot.x, top + spot.y, spot.z] }))
   riderSpots(crews).forEach((row, r) => row.forEach((spot, i) => {
     const shape = shapeOf(crews[r][i]), built = gobblerParts(shape), eye = eyeCentres(shape)[0], reach = EYE / 2 - 0.12

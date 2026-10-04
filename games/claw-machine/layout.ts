@@ -1,7 +1,7 @@
 import { bellyLayout } from './belly'
 import { PLATE } from './bricks'
 import { toySpan } from './builds'
-import { rimHeight } from './gobblerBuild'
+import { EYE, rimHeight } from './gobblerBuild'
 import { shapeOf, snackOf, type GobblerId } from './gobblers'
 import { CRATE, SHELF, SLOT_Z, STEP, TRAY, WAIT_Z, crateX, slotX } from './places'
 import type { Toy } from './toys'
@@ -31,7 +31,7 @@ export function waitingSpot(slot: number, crew: number): Spot {
 /** The top of a gobbler's head above its feet: its eyes, or the model on its back. */
 export function headTop(id: GobblerId): number {
   const shape = shapeOf(id)
-  return rimHeight(shape) + (shape.model ? 0.8 + toySpan({ colour: 'red', kind: shape.model, size: 'small' }).height + 0.2 : 2.3)
+  return rimHeight(shape) + (shape.model ? 0.8 + toySpan({ colour: 'red', kind: shape.model, size: 'small' }).height + 0.2 : EYE + 0.3)
 }
 
 /** Where the snack and then the toys of a group lie in a gobbler's belly, measured from its feet, in the order they went in. */
@@ -48,29 +48,30 @@ export function deckTop(which: number): number {
 export const ON_DECK = 0.4
 
 /**
- * Where each toy of a load stands on the deck of its crate, small, measured
- * from the middle of the crate at the height of its deck. The deck is a small
- * picture of the tray the load is going to, turned front to back: the toys
- * for the tray's back row stand along the front of the deck, where they pour
- * off first and fall furthest, and each row stands in the order of its
- * places across the tray. So no toy crosses another on its way down.
- * `places` is the place on the tray of each toy.
+ * Where each toy of a load stands on the bed of its crate, small, measured
+ * from the middle of the crate at the height of its deck. The bed is a small
+ * picture of the tray the load is going to: the toys for the front row of the
+ * tray stand along the front of the bed and the others behind them, each row
+ * in the order of its places across the tray. So when the bed tips, the front
+ * row pours off first and falls furthest, and no toy crosses another on its
+ * way down. `places` is the place on the tray of each toy.
  */
 export function deckSpots(toys: readonly Toy[], places: readonly number[]): Spot[] {
-  const usable = CRATE.width - 1.2
-  // Two rows at the front of the deck, each clear of the other and of the lip in front and the riders behind,
-  // whichever toys stand in them: the deepest toy is a big car with its wheels out at either side.
-  const rowZ = [2.2, 0.62]
+  const usable = BED.half * 2 - 0.1
+  // Two rows, each clear of the other and of the riders behind, whichever toys stand in them: the deepest toy is
+  // a big car with its wheels out at either side.
+  const rowZ = [2.3, 0.75]
   const lengths = toys.map((toy) => toySpan(toy).length * ON_DECK)
-  const out: Spot[] = toys.map(() => ({ x: 0, y: 0, z: 0 }))
+  const out: Spot[] = toys.map(() => ({ x: 0, y: BED.top, z: 0 }))
   for (const row of [0, 1]) {
-    const mine = toys.map((_, i) => i).filter((i) => Math.floor((places[i] ?? i) / TRAY.columns) === row).sort((a, b) => (places[a] ?? a) - (places[b] ?? b))
+    // Places count along the back row of the tray first: the front row of the tray is the front row of the bed.
+    const mine = toys.map((_, i) => i).filter((i) => (Math.floor((places[i] ?? i) / TRAY.columns) === 0 ? 1 : 0) === row).sort((a, b) => (places[a] ?? a) - (places[b] ?? b))
     const long = mine.reduce((sum, i) => sum + lengths[i], 0)
     // Five big toys in one row stand a little closer than fewer do.
     const gap = mine.length > 1 ? Math.min(0.3, (usable - long) / (mine.length - 1)) : 0
     let x = -(long + gap * (mine.length - 1)) / 2
     for (const i of mine) {
-      out[i] = { x: x + lengths[i] / 2, y: 0, z: rowZ[row] }
+      out[i] = { x: x + lengths[i] / 2, y: BED.top, z: rowZ[row] }
       x += lengths[i] + gap
     }
   }
@@ -123,15 +124,22 @@ export function handleSpot(): Spot {
   return { x: 0, y: ARCH + HANDLE, z: 2.25 }
 }
 
-/** How far a crate tips forward to pour its load, in radians. */
-export const TIP = 1.0
+/**
+ * The bed of a crate: a plain plate on the front of its deck, which the load stands on. It rests on the studs
+ * of the deck and tips forward about its front edge to pour, like the bed of a tipper truck; the crate itself
+ * stays level, so its riders and the knob the claw holds it by never move. `lift` and `top` are heights above
+ * the top of the deck.
+ */
+export const BED = { back: -0.05, front: CRATE.depth / 2, half: CRATE.width / 2 - 0.6, lift: 0.2, top: 0.2 + PLATE } as const
+/** How far the bed tips forward to pour its load, in radians. */
+export const TIP = 0.6
 
 /**
- * Where a point of a crate is when the crate is tipped: the crate turns about
- * the front edge of its foot. `y` and `z` are measured from the middle of the
- * foot; `tip` runs from 0 upright to 1 poured.
+ * Where a point over the bed is when the bed is tipped. `above` is its height over the top of the deck and `z`
+ * is measured from the middle of the crate; `tip` runs from 0 level to 1 poured. A point past the front edge is
+ * on the line of the bed, out in the air.
  */
-export function tipped(y: number, z: number, tip: number): { y: number; z: number } {
-  const pivot = CRATE.depth / 2, a = tip * TIP, cos = Math.cos(a), sin = Math.sin(a)
-  return { y: y * cos - (z - pivot) * sin, z: pivot + y * sin + (z - pivot) * cos }
+export function tipped(above: number, z: number, tip: number): { y: number; z: number } {
+  const a = tip * TIP, cos = Math.cos(a), sin = Math.sin(a), up = above - BED.lift, out = z - BED.front
+  return { y: BED.lift + up * cos - out * sin, z: BED.front + up * sin + out * cos }
 }

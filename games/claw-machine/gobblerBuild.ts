@@ -43,8 +43,8 @@ export const BELLY_STEP = 2.5
 export const ROW_Z = 0.95
 /** The width of an eyeball. The eyes are balls, the one part of a gobbler that is not a brick. */
 export const EYE = 2.5
-/** The height of the knob on its head, in plates. */
-const KNOB = 3
+/** The height of the knob on its head, in plates: tall enough that the teeth that hold it stay clear of the rim however the gobbler leans. */
+const KNOB = 5
 /** How wide the throat in the tongue is: a toy passes it only when it is chewed small. */
 export const THROAT = 1
 /** Where the bars of a barred mouth stand, either side of the middle: the gap between them lets a small toy through and no big one. */
@@ -69,7 +69,8 @@ export function tongueTop(shape: GobblerShape): number {
 /** The middle of each eye, measured from the feet (world units). */
 export function eyeCentres(shape: GobblerShape): { x: number; y: number; z: number }[] {
   const y = rimHeight(shape) + EYE * 0.42
-  const x = shape.width / 2 - 0.3
+  // Flush with its sides: two gobblers side by side never touch eyes, however they sway.
+  const x = shape.width / 2 - EYE / 2
   return [{ x: -x, y, z: DEPTH / 2 - 0.6 }, { x, y, z: DEPTH / 2 - 0.6 }]
 }
 

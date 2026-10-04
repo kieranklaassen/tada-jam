@@ -4,7 +4,10 @@ import { STEP } from './claw'
 import type { GameEvent } from './events'
 import { newGame } from './gameScenes'
 import { feed, playCycle, sortAll, tap, watch } from './play'
-import { placeAt } from './places'
+import { CRATE, placeAt } from './places'
+import { toySpan } from './builds'
+import { shapeOf } from './gobblers'
+import { deckTop, headTop } from './layout'
 import { deserializeWorld, serializeWorld } from './save'
 import { homeOf, newWorld, startCycle, trayIsClear, type World } from './world'
 
@@ -37,6 +40,44 @@ describe('the game', () => {
     // The first showing of colour has played, once.
     expect(types(events)).toContain('show')
     expect(game.world.shown.colour).toBe(true)
+  })
+
+  it('carries a crate over the step only while no one stands there, and pours no toy through the crate', () => {
+    for (const position of ['three-colours', 'three-ways-wide'] as const) {
+      const game = begun(position)
+      playCycle(game)
+      // The taller crate where there is one: at the top of the order there is one crate only.
+      const which = game.crates.length - 1
+      game.point({ target: { on: 'ledge', which }, x: game.crates[which].x, z: -15.2 }, true); game.lift()
+      let poured = 0
+      for (let t = 0; t < 16; t += STEP * 4) {
+        game.advance(STEP * 4)
+        const crate = game.crates.find((one) => one.carried)
+        if (!crate) continue
+        // Over the step, the foot of the crate is lower than the heads of a crew: no one of full size is under it.
+        if (crate.z - CRATE.depth / 2 < -1 && crate.z + CRATE.depth / 2 > -8) {
+          for (const actor of [...game.crew, ...game.leaving]) {
+            if (actor.scale < 0.9 || crate.y > actor.y + headTop(actor.id) + 0.2) continue
+            expect(Math.abs(actor.x - crate.x)).toBeGreaterThan(CRATE.width / 2 + shapeOf(actor.id).width / 2)
+          }
+        }
+        // A toy in the air is never inside the box of the crate: its base and its top are both outside.
+        for (const body of game.bodies) {
+          if (body.mode !== 'flying') continue
+          poured++
+          const span = toySpan(body.toy), half = (span.depth * body.scale) / 2
+          for (const up of [0, span.height * body.scale]) {
+            const y = body.y + up - crate.y
+            const inside = Math.abs(body.x - crate.x) < CRATE.width / 2 && y > 0 && y < deckTop(crate.which) && body.z - half < crate.z + CRATE.depth / 2 && body.z + half > crate.z - CRATE.depth / 2
+            expect(inside).toBe(false)
+          }
+        }
+      }
+      expect(poured).toBeGreaterThan(0)
+      expect(game.scene).toBeNull()
+      for (const body of game.bodies) { expect(body.mode).toBe('resting'); expect(body.scale).toBe(1) }
+      for (const actor of game.crew) expect(actor.scale).toBe(1)
+    }
   })
 
   it('always closes on the toy it is put on, and a gobbler swallows a toy of its sort', () => {
@@ -124,7 +165,8 @@ describe('the game', () => {
   it('ends a scene on any touch with everything where the scene was taking it, and then answers the touch', () => {
     const game = begun('colours-then-kinds')
     sortAll(game)
-    tap(game, { on: 'ledge', which: 0 }, 0.9)
+    // The claw lifts over the crew, crosses to the gate and hooks it: the scene is then under way.
+    tap(game, { on: 'ledge', which: 0 }, 1.6)
     expect(game.scene).not.toBeNull()
     const where = game.world.cycle.where[0] as { place: number }
     game.point({ target: { on: 'place', place: where.place }, ...placeAt(where.place) }, true)

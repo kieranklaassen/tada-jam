@@ -12,7 +12,7 @@ import { GOBBLER, shapeOf, snackOf, type GobblerId } from './gobblers'
 import { bellySpots, crateSpot, crateTop, crewSpot, deckTop, handleSpot, headTop, waitingSpot, type Spot } from './layout'
 import { LIFT_SECONDS, WRONG, actSeconds, type Act } from './motion'
 import { layCycle } from './order'
-import { BELL, GATE, RAIL, SHELF, SLOT_Z, TRAY, WAIT_Z, placeAt } from './places'
+import { BELL, GATE, PLACES, RAIL, SHELF, SLOT_Z, TRAY, WAIT_Z, placeAt } from './places'
 import type { Scene } from './scene'
 import type { Toy } from './toys'
 import { nearestToy, type Tray } from './tray'
@@ -54,8 +54,6 @@ export type Actor = {
   cargo: Body[]
   /** Where each thing it carries off lies, measured from its feet. */
   cargoAt: Spot[]
-  /** How far forward it is tipped, in radians, by what it rides on: a rider leans with its crate. */
-  tilt: number
 }
 
 export type CrateBody = {
@@ -72,7 +70,7 @@ export type CrateBody = {
   z: number
   /** 0 standing in its place, 1 slid away to the side, out of sight. */
   away: number
-  /** 0 upright, 1 tipped forward to pour. */
+  /** Its bed: 0 level, 1 tipped forward to pour. */
   tip: number
   /** In the jaws: it hangs from its handle under the claw. */
   carried: boolean
@@ -85,6 +83,17 @@ export type Plan =
 
 /** How far from the middle of a toy the claw can land and still close on it. */
 export const REACH = 4.6
+/** How far from the way of a thrown toy the claw backs off: half the longest toy and the reach of its own open jaws. */
+const CLEAR_OF_A_THROW = 6.5
+/** How long after it lets a toy go the claw backs off: the toy has dropped out of its jaws by then, and nothing has been thrown yet. */
+const BACKS_OFF_AFTER = 0.28
+
+/** How far a point is from a stretch between two others, over the floor. */
+export function fromSegment(p: { x: number; z: number }, a: { x: number; z: number }, b: { x: number; z: number }): number {
+  const dx = b.x - a.x, dz = b.z - a.z, long = dx * dx + dz * dz
+  const t = long < 1e-9 ? 0 : Math.min(1, Math.max(0, ((p.x - a.x) * dx + (p.z - a.z) * dz) / long))
+  return Math.hypot(p.x - a.x - dx * t, p.z - a.z - dz * t)
+}
 const LOWEST_RIDE = 9.2
 /** How far above a thing the hinge stops when the shut jaws are only to touch it. */
 const TOUCH = JAW_REACH + 0.5
@@ -98,7 +107,7 @@ const WAIT_SECONDS = 0.7
 export function newActor(key: number, id: GobblerId, slot: number, role: Actor['role'], at: Spot, first: Toy | undefined): Actor {
   const snack = newBody(snackOf(id, first ?? { colour: 'yellow', kind: 'duck', size: 'small' }))
   snack.scale = MINI
-  return { key, cargoAt: [], id, slot, role, x: at.x, y: at.y, z: at.z, scale: 1, act: null, actT: 0, actFor: 1, actN: 1, wrongT: -1, liftedT: -1, openT: -1, walk: null, snack, cargo: [], tilt: 0 }
+  return { key, cargoAt: [], id, slot, role, x: at.x, y: at.y, z: at.z, scale: 1, act: null, actT: 0, actFor: 1, actN: 1, wrongT: -1, liftedT: -1, openT: -1, walk: null, snack, cargo: [] }
 }
 
 export class Game {
@@ -189,7 +198,7 @@ export class Game {
   rest(): void {
     this.bodies.forEach((body, toy) => {
       if (toy === this.held) return
-      body.mode = 'resting'; body.legs = []; body.vx = body.vy = body.vz = 0; body.hop = 0; body.hopV = 0; body.leanX = 0; body.leanZ = 0
+      body.mode = 'resting'; body.legs = []; body.wait = 0; body.rides = 0; body.vx = body.vy = body.vz = 0; body.hop = 0; body.hopV = 0; body.leanX = 0; body.leanZ = 0
       this.plans.delete(body)
       this.place(body, toy)
     })
@@ -302,6 +311,8 @@ export class Game {
   lift(): void {
     const claw = this.claw
     let target = this.aim.target
+    // A gobbler the bare claw is coming down on holds still for it, so the jaws find its knob where it stands.
+    if (target.on === 'gobbler' && this.held < 0) { const actor = this.crew[target.slot]; if (actor) { actor.act = null; actor.wrongT = -1; actor.openT = -1 } }
     let to = this.trolleyFor(this.aim)
     if (target.on === 'place') {
       // The nearest toy in reach is meant, or with a toy in the jaws the place under the finger.
@@ -370,6 +381,12 @@ export class Game {
       for (const actor of this.waiting) near = Math.max(near, actor.y + headTop(actor.id))
       for (const crate of this.crates) near = Math.max(near, SHELF.top + crateTop(crate.which, crate.crews.length))
     }
+    // Clear of a toy it has just let go, or one that is thrown up near it: it lifts away from it and never comes
+    // down onto it.
+    this.bodies.forEach((body, toy) => {
+      if (toy === this.held || body.mode === 'resting' || body.mode === 'parked') return
+      if (Math.abs(body.x - claw.x) < 4.5 && Math.abs(body.z - claw.z) < 4) near = Math.max(near, body.y + body.height * body.scale)
+    })
     // And clear of the bell on its post at either end of the rail.
     if (Math.hypot(Math.abs(claw.x) - BELL.x, claw.z - BELL.z) < 5.5) near = Math.max(near, BELL.top + 0.4)
     const below = this.held >= 0 ? this.hang(this.held) : JAW_REACH + 0.1
@@ -427,6 +444,11 @@ export class Game {
       crate.x = hub.x; crate.z = hub.z - handle.z
       crate.y = hub.y - HINGE_DROP - KNOB_HOLD - handle.y - deckTop(crate.which)
     }
+    if (this.dodge) {
+      // A finger on the glass, or a scene, has the claw: it backs off only when left alone.
+      if (claw.following || claw.phase !== 'ready' || this.scene || this.held >= 0 || this.lifted >= 0) this.dodge = null
+      else if ((this.dodge.wait -= STEP) <= 0) { const toy = this.dodge.toy; this.dodge = null; this.backOff(toy) }
+    }
     this.watchBuffer()
     this.watchWaiting()
     if (this.scene) { this.scene.update(this.time); if (!this.scene.running) this.endScene(false) }
@@ -480,7 +502,38 @@ export class Game {
       const deed = toyLetGo(this.world, toy, this.pending)
       this.held = -1
       this.carry(deed)
+      // The claw gets out of the way of whatever comes back, once the toy has dropped clear of its jaws.
+      this.dodge = { toy, wait: BACKS_OFF_AFTER }
     }
+  }
+
+  /** A toy let go a moment ago, which the claw is about to back away from. */
+  private dodge: { toy: number; wait: number } | null = null
+
+  /**
+   * A toy has been let go and is on its way somewhere: into a mouth, off a stack, back from the ledge. The claw
+   * backs off to over the nearest place that is well clear of the whole way the toy may go, so that nothing
+   * thrown ever comes up through it. A toy set down on the place under it goes nowhere, and the claw stays.
+   */
+  private backOff(toy: number): void {
+    const body = this.bodies[toy], claw = this.claw
+    if (!body || body.mode === 'resting' || body.mode === 'held') return
+    const way: { x: number; z: number }[] = [{ x: body.x, z: body.z }]
+    if (body.mode === 'flying') way.push(this.flightEnd(body, toy))
+    if (body.mode === 'mouth') { const actor = this.crew[body.slot]; if (actor) way.push(actor) }
+    for (const leg of body.legs) way.push(leg.fixed ? leg : this.spotOf(toy))
+    const where = this.world.cycle.where[toy]
+    if (where.at === 'tray') way.push(this.spotOf(toy))
+    if (this.pending.on === 'place' && way.every((stop) => Math.hypot(stop.x - claw.x, stop.z - claw.z) < 1.5)) return
+    let best: { x: number; z: number } | null = null, least = Infinity
+    for (let place = 0; place < PLACES; place++) {
+      const at = placeAt(place)
+      let clear = Infinity
+      for (let i = 0; i + 1 < way.length; i++) clear = Math.min(clear, fromSegment(at, way[i], way[i + 1]))
+      const far = Math.hypot(at.x - claw.x, at.z - claw.z)
+      if (clear >= CLEAR_OF_A_THROW && far < least) { least = far; best = at }
+    }
+    if (best) { claw.targetX = best.x; claw.targetZ = best.z }
   }
 
   /** Carries out a deed: the scenes module and `react.ts` play it. */
@@ -523,6 +576,12 @@ export class Game {
 
   private moveBody(body: Body, toy: number): void {
     settle(body, STEP)
+    // A toy that waits its turn in a tumble stays where it is until then.
+    if (body.wait > 0) {
+      body.wait -= STEP
+      if (body.wait <= 0) { body.wait = 0; this.onLeg(body, toy) }
+      return
+    }
     if (toy === this.held) {
       // Hangs under the jaws along the cable, easing from where it stood to where it hangs.
       const claw = this.claw, hub = hubAt(claw)
@@ -553,7 +612,8 @@ export class Game {
     let lift = body.hop
     if (where.at === 'tray') {
       const stack = this.tray()[where.place]
-      if (stack[0] !== toy && stack.length > 0) lift += this.bodies[stack[0]].hop
+      // A toy on a stack hops at least as high as everything under it: a stack hops as one and never into itself.
+      for (const below of stack) { if (below === toy) break; lift = Math.max(lift, this.bodies[below].hop) }
       // And it rides the squash of everything under it, so a stack squashes as one and nothing sinks into what is below.
       for (const below of stack) { if (below === toy) break; lift += this.bodies[below].height * (this.bodies[below].squash - 1) }
     }
@@ -576,7 +636,7 @@ export class Game {
     body.squash = 0.7; body.squashV = 0
     if (landing === 'again' && body.legs.length > 0) { this.onLeg(body, toy); return }
     if (landing === 'mouth') { body.mode = 'mouth'; body.chewed = 0; this.say({ type: 'catch', heavy: body.heavy }); return }
-    body.mode = 'resting'
+    body.mode = 'resting'; body.rides = 0
     if (landing === 'belly') {
       const where = toy >= 0 ? this.world.cycle.where[toy] : null
       this.say({ type: 'plink', nth: where && where.at === 'belly' ? where.nth + 1 : 0 })
@@ -615,7 +675,8 @@ export class Game {
       if (actor.liftedT < 0) return
       actor.liftedT += STEP
       actor.y = Math.max(home.y, hub.y - HINGE_DROP - KNOB_HOLD - knob.y)
-      actor.x = home.x + (hub.x - this.claw.x) * 0.5
+      // Its knob is right under the hub, wherever the swing has the hub.
+      actor.x = home.x + (hub.x - this.claw.x); actor.z = home.z + (hub.z - this.claw.z)
       return
     }
     const walk = actor.walk

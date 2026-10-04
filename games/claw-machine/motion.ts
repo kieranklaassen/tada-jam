@@ -170,6 +170,9 @@ export function wrongPose(way: WrongWay, t: number, out: Pose): Pose {
 
 /** How long a lift lasts before the claw lets go by itself, in seconds. */
 export const LIFT_SECONDS = 1.5
+/** When a lifted top begins to spin, and how fast: two whole turns by the time it is let go. */
+const SPIN_FROM = 0.6
+const SPIN = (4 * Math.PI) / (LIFT_SECONDS - SPIN_FROM)
 
 /** A gobbler in the jaws, `seconds` after it left the step. */
 export function liftedPose(way: LiftWay, seconds: number, out: Pose): Pose {
@@ -196,8 +199,8 @@ export function liftedPose(way: LiftWay, seconds: number, out: Pose): Pose {
     case 'thuds-back': // too heavy: it sags in the jaws and yawns
       out.squash = 1 - 0.1 * ramp(seconds, 0, 0.5); out.blink = seconds > 0.4 ? 1 : 0
       break
-    case 'spins': // spins like a top
-      out.turn = seconds * 13
+    case 'spins': // spins like a top, about its own middle, once it is up clear of the step: twice round, and it comes down facing front
+      out.turn = SPIN * Math.max(0, seconds - SPIN_FROM)
       break
   }
   return out
@@ -279,11 +282,12 @@ export function actPose(who: GobblerId, act: Act, t: number, n: number, out: Pos
       break
     case 'catch': // catches, winds up, lobs
       out.squash = 1 - 0.14 * bump(t, 0, 0.25) + 0.2 * bump(t, 0.45, 0.7)
-      out.leanX = -0.25 * bump(t, 0.2, 0.5) + 0.3 * bump(t, 0.5, 0.75)
+      // It winds up backward and lobs with a stretch: it never leans out over the gate in front of it.
+      out.leanX = -0.25 * bump(t, 0.2, 0.5) + 0.08 * bump(t, 0.5, 0.75)
       break
     case 'heave': // staggers under a big one, then heaves
       out.dx = 0.4 * Math.sin(t * TAU * 2) * (1 - ramp(t, 0.55, 0.65)); out.squash = 1 - 0.18 * ramp(t, 0, 0.08) * (1 - ramp(t, 0.6, 0.7)) + 0.24 * bump(t, 0.62, 0.9)
-      out.leanX = 0.3 * bump(t, 0.6, 0.85)
+      out.leanX = 0.08 * bump(t, 0.6, 0.85)
       break
     case 'land': // down onto the step: a squash that springs back, deeper for a heavy one
       out.squash = 1 - (0.2 / s) * bump(t, 0, 0.5) + 0.08 * s * bump(t, 0.5, 1)

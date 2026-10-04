@@ -20,6 +20,8 @@ export type ToyLook = {
   /** Swing, in radians, toward +x and toward +z: a toy in the jaws hangs the way the cable does. */
   leanX: number
   leanZ: number
+  /** In or on a gobbler: how the gobbler is rolled, turned and pitched. The toy is then posed exactly as it is, and its own swing is not used. */
+  ride: { leanX: number; leanZ: number; turn: number } | null
   /** 1 on the tray; a toy in a belly is drawn small. */
   scale: number
   /** Turned about its own upright, in radians: a toy in a belly turns with its gobbler. */
@@ -63,6 +65,10 @@ export type ClawLook = {
   /** 0 shut, 1 wide open. */
   open: number
   squash: number
+  /** How far the hub is carried off the end of its swing by a load that spins, and how far it is turned with it. */
+  shiftX: number
+  shiftZ: number
+  turn: number
 }
 
 export type Shadow = { x: number; y: number; z: number; r: number; a: number }
@@ -76,7 +82,7 @@ export type CrateLook = {
   /** The place on the tray each toy of the load is going to: the load stands on the deck in that arrangement. */
   places: readonly number[]
   crews: readonly (readonly GobblerId[])[]
-  /** The middle of its foot, and how far it is tipped forward, 0 to 1. */
+  /** The middle of its foot, and how far its bed is tipped forward, 0 to 1. */
   x: number
   y: number
   z: number
@@ -106,12 +112,14 @@ export type Picture = {
  * How many draws a picture costs on the stage (view/stage.ts): the cabinet,
  * the shadows, the gate, the cable and the three parts of the claw; one for
  * each toy; a body, a pair of pupils and a window for a gobbler at the
- * tray, and a body and pupils for one in the shade; one for each crate;
+ * tray, and a body and pupils for one in the shade; one for each crate, and
+ * one more for its bed while that tips;
  * and the glow and the hand when they show. The frame budget is held on this
  * count, since a test cannot draw.
  */
 export function drawsOf(picture: Picture): number {
   const fixed = 1 + 1 + 1 + 1 + 3
   const gobblers = picture.gobblers.reduce((sum, look) => sum + (look.waiting ? 2 : 3), 0)
-  return fixed + picture.toys.length + gobblers + picture.crates.length + (picture.glows.length > 0 ? 1 : 0) + (picture.hand ? 1 : 0)
+  const crates = picture.crates.reduce((sum, look) => sum + (look.tip > 0 ? 2 : 1), 0)
+  return fixed + picture.toys.length + gobblers + crates + (picture.glows.length > 0 ? 1 : 0) + (picture.hand ? 1 : 0)
 }

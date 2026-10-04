@@ -19,7 +19,7 @@ import { trayIsClear } from './world'
 const clamp = (value: number, low: number, high: number) => Math.min(high, Math.max(low, value))
 /** How far to the side a crate slides to be out of sight. */
 const AWAY = 34
-const scratch: Pose = restPose({} as Pose), idle: Pose = restPose({} as Pose)
+const scratch: Pose = restPose({} as Pose), idle: Pose = restPose({} as Pose), swung: Pose = restPose({} as Pose)
 const hand: HandPose = { travel: 0, press: 0, opacity: 0 }
 
 /** How a gobbler is posed now: its own idle life, with whatever it is doing laid over it. */
@@ -33,7 +33,7 @@ export function poseOf(game: Game, actor: Actor, out: Pose): Pose {
   else restPose(scratch)
   out.dx = scratch.dx + idle.dx; out.dy = scratch.dy + idle.dy; out.dz = scratch.dz
   out.squash = scratch.squash * idle.squash
-  out.leanX = scratch.leanX + actor.tilt; out.leanZ = scratch.leanZ + idle.leanZ; out.turn = scratch.turn
+  out.leanX = scratch.leanX; out.leanZ = scratch.leanZ + idle.leanZ; out.turn = scratch.turn
   out.looks = scratch.looks; out.gazeX = scratch.gazeX; out.gazeY = scratch.gazeY
   out.blink = Math.max(scratch.blink, idle.blink)
   if (actor.role === 'crew' && actor.liftedT < 0 && actor.scale > 0.95) {
@@ -50,9 +50,10 @@ export function poseOf(game: Game, actor: Actor, out: Pose): Pose {
   // call or hurry anyone; they are only where the next thing is.
   if (actor.role === 'waiting' && !actor.walk && !actor.act && game.bodies.length > 0 && trayIsClear(game.world.cycle)) out.squash *= 1.1 + 0.03 * Math.sin(game.time * PERSONALITY[actor.id].tempo)
   if (actor.liftedT >= 0) {
-    // In the jaws it hangs from its knob: however it stretches, leans or spins, the knob stays between the teeth.
+    // In the jaws it hangs from its knob: however it stretches or leans, the knob stays between the teeth. A spin
+    // is about its own middle, and the claw goes round with the knob (`knobSwing`).
     const knob = knobAt(shapeOf(actor.id)), wide = 1 / Math.sqrt(Math.max(0.2, out.squash))
-    const at = turned(knob.x * wide, knob.y * out.squash, knob.z * wide, out)
+    const at = turned(knob.x * wide, knob.y * out.squash, knob.z * wide, { leanX: out.leanX, leanZ: out.leanZ, turn: 0 })
     out.dx += knob.x - at.x; out.dy += knob.y - at.y; out.dz += knob.z - at.z
   }
   // A walk is a waddle: it rocks from foot to foot as it goes.
@@ -76,7 +77,34 @@ export function turned(x: number, y: number, z: number, of: { leanX: number; lea
 
 /** The cabinet with nothing in it but the claw at rest: what is drawn before the saved state has been read. */
 export function barePicture(): Picture {
-  return { toys: [], gobblers: [], crates: [], shadows: [], glows: [], hand: null, gate: 0, claw: { x: 0, z: 6, length: RAIL.top - 9.2 - 1.6, swingX: 0, swingZ: 0, open: 0.55, squash: 1 } }
+  return { toys: [], gobblers: [], crates: [], shadows: [], glows: [], hand: null, gate: 0, claw: { x: 0, z: 6, length: RAIL.top - 9.2 - 1.6, swingX: 0, swingZ: 0, open: 0.55, squash: 1, shiftX: 0, shiftZ: 0, turn: 0 } }
+}
+
+/** In flight, but still carried by the gobbler it is leaving or going down into. */
+const rides = (body: Body) => body.mode === 'flying' && body.rides > 0
+
+/**
+ * Where a thing fixed to a gobbler is in the cabinet, given where it is against the gobbler standing at rest: it
+ * shifts, leans, turns and stretches with it.
+ */
+export function carriedBy(game: Game, actor: Actor, at: { x: number; y: number; z: number }): { x: number; y: number; z: number } {
+  const pose = poseOf(game, actor, swung), wide = 1 / Math.sqrt(Math.max(0.2, pose.squash))
+  const to = turned((at.x - actor.x) * wide, (at.y - actor.y) * pose.squash, (at.z - actor.z) * wide, pose)
+  return { x: actor.x + pose.dx * actor.scale + to.x, y: actor.y + pose.dy + to.y, z: actor.z + pose.dz * actor.scale + to.z }
+}
+
+/**
+ * How far the knob of a lifted gobbler has gone round its middle, and how far it has turned: the claw that holds
+ * it goes with it, as a claw on a cable does when its load spins.
+ */
+function knobSwing(game: Game): { x: number; z: number; turn: number } {
+  const actor = game.lifted >= 0 ? game.crew[game.lifted] : undefined
+  if (!actor || actor.liftedT < 0) return { x: 0, z: 0, turn: 0 }
+  const pose = poseOf(game, actor, swung)
+  if (pose.turn === 0) return { x: 0, z: 0, turn: 0 }
+  const knob = knobAt(shapeOf(actor.id)), wide = 1 / Math.sqrt(Math.max(0.2, pose.squash))
+  const at = turned(knob.x * wide, knob.y * pose.squash, knob.z * wide, pose), unturned = turned(knob.x * wide, knob.y * pose.squash, knob.z * wide, { leanX: pose.leanX, leanZ: pose.leanZ, turn: 0 })
+  return { x: at.x - unturned.x, z: at.z - unturned.z, turn: pose.turn }
 }
 
 /** A toy bulges a little as it squashes: little enough that two big toys side by side on the tray never meet. */
@@ -85,16 +113,16 @@ const bulge = (squash: number) => 1 + (1 - Math.min(1.3, Math.max(0.5, squash)))
 export function gamePicture(game: Game, guidance: Guidance | null): Picture {
   const claw = game.claw, hub = hubAt(claw)
   const toys: ToyLook[] = [], gobblers: GobblerLook[] = [], shadows: Shadow[] = [], glows: GlowLook[] = []
-  const look = (key: number, body: Body, x = body.x, y = body.y, z = body.z, turn = 0): ToyLook => ({ key, toy: body.toy, x, y, z, squash: body.squash, wide: bulge(body.squash), leanX: body.leanX, leanZ: body.leanZ, scale: body.scale, turn })
+  const look = (key: number, body: Body, x = body.x, y = body.y, z = body.z, turn = 0): ToyLook => ({ key, toy: body.toy, x, y, z, squash: body.squash, wide: bulge(body.squash), leanX: body.leanX, leanZ: body.leanZ, ride: null, scale: body.scale, turn })
   /** A thing in or on a gobbler rides its pose as if fixed to it: it shifts, leans and turns with it and rises as it stretches. */
-  const riding = (actor: Actor, body: Body, key: number) => {
+  const riding = (actor: Actor, body: Body, key: number, from: { x: number; y: number; z: number } = body) => {
     // The body draws wider as it squashes and narrower as it stretches, and what is in it keeps its place in it.
     const wide = 1 / Math.sqrt(Math.max(0.2, pose.squash))
-    const at = turned((body.x - actor.x) * wide, (body.y - actor.y) * pose.squash, (body.z - actor.z) * wide, pose)
+    const at = turned((from.x - actor.x) * wide, (from.y - actor.y) * pose.squash, (from.z - actor.z) * wide, pose)
     const one = look(key, body, actor.x + pose.dx * actor.scale + at.x, actor.y + pose.dy + at.y, actor.z + pose.dz * actor.scale + at.z, pose.turn)
-    one.leanX += pose.leanZ; one.leanZ -= pose.leanX
+    one.ride = { leanX: pose.leanX, leanZ: pose.leanZ, turn: pose.turn }
     // It squashes and stretches with what it rides in, so two toys side by side in a belly never meet.
-    one.squash *= pose.squash; one.wide *= wide
+    one.squash *= pose.squash; one.wide = wide
     toys.push(one)
   }
 
@@ -112,14 +140,19 @@ export function gamePicture(game: Game, guidance: Guidance | null): Picture {
       blink: pose.blink, waiting: actor.role === 'waiting' || actor.scale < 0.95,
     })
     // A snack shows in the belly of a gobbler at the tray; the ones who wait are seen from the eyes up.
-    if (actor.role !== 'waiting') riding(actor, actor.snack, 10000 + actor.key)
+    // A snack at rest is where its gobbler is at this very moment, however fast the gobbler is being carried.
+    if (actor.role !== 'waiting') {
+      const snack = actor.snack
+      if (snack.mode === 'resting') { const home = game.snackSpot(actor); riding(actor, snack, 10000 + actor.key, { x: home.x, y: home.y + snack.hop * actor.scale, z: home.z }) }
+      else riding(actor, snack, 10000 + actor.key)
+    }
     actor.cargo.forEach((body, i) => riding(actor, body, 20000 + actor.key * 16 + i))
   }
   for (const actor of game.crew) {
     stand(actor)
     game.bodies.forEach((body, toy) => {
       const where = game.world.cycle.where[toy]
-      const inside = (body.mode === 'resting' && where.at === 'belly' && where.slot === actor.slot) || (body.mode === 'mouth' && body.slot === actor.slot)
+      const inside = (body.mode === 'resting' && where.at === 'belly' && where.slot === actor.slot) || ((body.mode === 'mouth' || rides(body)) && body.slot === actor.slot)
       if (inside && toy !== game.held) riding(actor, body, game.generation * 100 + toy)
     })
   }
@@ -131,7 +164,7 @@ export function gamePicture(game: Game, guidance: Guidance | null): Picture {
 
   game.bodies.forEach((body, toy) => {
     const where = game.world.cycle.where[toy]
-    const inside = toy !== game.held && ((body.mode === 'resting' && where.at === 'belly') || body.mode === 'mouth')
+    const inside = toy !== game.held && ((body.mode === 'resting' && where.at === 'belly') || body.mode === 'mouth' || (rides(body) && game.crew[body.slot] !== undefined))
     if (inside || carried.has(body)) return
     toys.push(look(game.generation * 100 + toy, body))
     // A toy in the jaws has no shadow of its own, and neither has one on a crate or behind the parapet.
@@ -162,6 +195,7 @@ export function gamePicture(game: Game, guidance: Guidance | null): Picture {
   }
 
   const resting = claw.phase === 'ready' && !claw.following && !claw.dropOnArrival
+  const swing = knobSwing(game)
   return {
     toys, gobblers, shadows, glows, hand: ghost, gate: game.gateShake,
     crates: game.crates.map((crate) => ({
@@ -174,6 +208,7 @@ export function gamePicture(game: Game, guidance: Guidance | null): Picture {
       x: claw.x, z: claw.z, length: claw.length,
       swingX: claw.swingX + (resting && game.held < 0 ? 0.012 * Math.sin(game.time * 1.3) : 0), swingZ: claw.swingZ + (resting && game.held < 0 ? 0.008 * Math.sin(game.time * 0.9 + 1) : 0),
       open: claw.open + (resting && game.held < 0 ? 0.06 * Math.sin(game.time * 1.1) : 0), squash: claw.squash,
+      shiftX: swing.x, shiftZ: swing.z, turn: swing.turn,
     },
   }
 }

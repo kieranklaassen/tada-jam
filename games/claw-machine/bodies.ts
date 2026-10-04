@@ -44,6 +44,13 @@ export type Body = {
   leanZ: number
   /** 0 just caught, 1 hanging true in the jaws. */
   hang: number
+  /**
+   * How many more legs of its flight it is carried by the gobbler it is leaving or going down into: while this is
+   * above 0 it is drawn as fixed to that gobbler, so whatever the gobbler does, it does too.
+   */
+  rides: number
+  /** Seconds it still waits, parked, before the flight that has been laid out for it begins. */
+  wait: number
   /** What a flight ends in. */
   landing: Landing
   /** The gobbler whose mouth it is in or on its way to, or -1; and seconds it has been there. */
@@ -59,7 +66,7 @@ export function newBody(toy: Toy): Body {
   return {
     toy, height: toySpan(toy).height, heavy: toy.size === 'big' ? 2 : 1, mode: 'resting',
     x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, scale: 1, scaleFrom: 1, scaleTo: 1, flight: 0, flown: 0,
-    hop: 0, hopV: 0, squash: 1, squashV: 0, leanX: 0, leanZ: 0, hang: 0, landing: 'stand', slot: -1, chewed: 0, legs: [],
+    hop: 0, hopV: 0, squash: 1, squashV: 0, leanX: 0, leanZ: 0, hang: 0, rides: 0, wait: 0, landing: 'stand', slot: -1, chewed: 0, legs: [],
   }
 }
 
@@ -111,8 +118,10 @@ export function fly(body: Body, to: { x: number; y: number; z: number }, dt: num
   }
   body.vy -= FALL * dt
   body.x += body.vx * dt; body.y += body.vy * dt; body.z += body.vz * dt
-  const through = body.flown / body.flight
-  body.scale = body.scaleFrom + (body.scaleTo - body.scaleFrom) * through * through * (3 - 2 * through)
+  // What grows in flight grows late, and what shrinks shrinks early: it is small while it is near what it left
+  // or what it is going into.
+  const through = body.flown / body.flight, rest = 1 - through
+  body.scale = body.scaleFrom + (body.scaleTo - body.scaleFrom) * (body.scaleTo > body.scaleFrom ? through * through * through : 1 - rest * rest * rest)
   return null
 }
 
