@@ -1,4 +1,4 @@
-import { inCompany, lean, placeOf, standsAt, weightOn, type Arrangement } from './arrangement'
+import { companyOf, inCompany, lean, placeOf, standsAt, weightOn, type Arrangement } from './arrangement'
 import { landingOf, perched, reactionsTo, tossed, type Landing, type Reaction } from './cells'
 import { forecast, type SandOp } from './forecast'
 import { Grains } from './grains'
@@ -6,14 +6,14 @@ import type { Guidance } from './guidance'
 import { DEEPEST, SHALLOWEST, bite as biteMark, biteDepth, furrow, rake as rakeMarks, rakeIsOut, ring as ringMark, stamp } from './marks'
 import { HOLD_HEIGHT, Playground, type PlayEvent } from './motion'
 import type { Frame } from './pose'
-import { layout, rideOf, type Kind, type Ride } from './rides'
+import { askerEnd, layout, rideOf, type Kind, type Ride } from './rides'
 import { afterMove, beginRide, endRide, markShown, rideIsOver, save, type Saved, type World } from './save'
 import { Scene, type Beat } from './scene'
 import { endingBeats, showingBeats, type Director } from './scenes'
 import { moodOf } from './tastes'
 import * as v from './voices'
 import type { Part } from './voices'
-import { FRIEND_IDS, FRIENDS, PLANK, otherEnd, type FriendId } from './world'
+import { FRIEND_IDS, FRIENDS, PLANK, otherEnd, type End, type FriendId } from './world'
 
 // The game on the toy: rides, their endings, the showings, the friends'
 // reactions, the sand's marks and what is saved, joined to the playground in
@@ -79,6 +79,10 @@ export class Game implements Director {
   private heldAt = 0
   /** Until when the friends on the plank look after Dot, who was just taken away. */
   private lookAfter = 0
+  /** Who looks after it: those it was with, on the plank or beside it in the sand. */
+  private lookers: readonly FriendId[] = []
+  private nextEndOf: World | null = null
+  private nextEndIs: End = 'left'
   /** Mog and Bo on the end that is up: whether each has yet said what it makes of it. */
   private perch: Partial<Record<FriendId, 'pending' | 'said'>> = {}
   private company: boolean
@@ -254,8 +258,14 @@ export class Game implements Director {
     const after = this.play.arrangement
     this.world = afterMove(this.world, after)
     this.landings[id] = landingOf(before, after, id)
-    // Dot taken off the plank: the friends still on it look after it for a moment.
-    if (id === 'dot' && placeOf(before, 'dot').at === 'end' && placeOf(after, 'dot').at !== 'end') this.lookAfter = this.time + 1.2
+    // Dot taken away from those it was with, on the plank or beside it in the sand: they look after it for a moment.
+    if (id === 'dot') {
+      const still = companyOf(after, 'dot'), left = companyOf(before, 'dot').filter((other) => !still.includes(other))
+      if (left.length) {
+        this.lookers = left
+        this.lookAfter = this.time + 1.2
+      }
+    }
     this.wantSave('soon')
     this.moods()
   }
@@ -576,19 +586,59 @@ export class Game implements Director {
     if (this.scene) return
     for (const id of FRIEND_IDS) {
       const at = standsAt(a, id)
-      if (a.waiting === id) play.look(id, 0, 0.7)
+      // The one who waits looks at the plank: at the end it will hop to, and up.
+      if (a.waiting === id) play.look(id, this.nextEnd() === 'left' ? -0.8 : 0.8, 0.6)
       else if (asking && id === ride.asker && placeOf(a, id).at === 'end') {
         // One who wants up looks along the plank and up. One stuck high looks down at the sand under it and back at the sky.
         const up = ride.asks === 'up' ? 0.8 : Math.floor(this.time / 1.6) % 2 === 0 ? -0.9 : 0.9
         play.look(id, ride.asks === 'up' ? (at.x < 0 ? 0.9 : -0.9) : 0, up)
-      } else if (this.time < this.lookAfter && id !== 'dot' && placeOf(a, id).at === 'end') play.look(id, Math.sign(play.bodies.dot.x - at.x) * 0.9, 0)
-      else play.look(id, Math.max(-0.7, Math.min(0.7, -at.x * 0.25)), placeOf(a, id).at === 'end' ? 0 : 0.35)
+      } else if (this.time < this.lookAfter && this.lookers.includes(id)) play.look(id, Math.sign(play.bodies.dot.x - at.x) * 0.9, 0)
+      else this.wants(id)
     }
     // After a still while the asker gives one small hop on the spot: three times at most, then it only looks.
     if (asking && this.asked < ASK_AT.length && this.idle >= ASK_AT[this.asked] && play.bodies[ride.asker].mode === 'rest' && !play.held) {
       this.asked += 1
       play.act(ride.asker, 'bounce', 0.6)
       this.voice(v.ask(ride.asker))
+    }
+  }
+
+  /** The end the friend who waits will hop to when the child touches it. */
+  private nextEnd(): End {
+    if (this.nextEndOf !== this.world) {
+      const next = beginRide(this.world)
+      this.nextEndOf = this.world
+      this.nextEndIs = askerEnd(rideOf(next.kind, next.turn))
+    }
+    return this.nextEndIs
+  }
+
+  /**
+   * What each friend always wants, shown by where it looks when nothing else has its eye: Pim at the sky and at
+   * whichever end is high, Mog at the highest seat there is, Dot at whoever is on the plank, Bo up along the plank.
+   */
+  private wants(id: FriendId): void {
+    const play = this.play, a = play.arrangement, at = standsAt(a, id)
+    const toward = (x: number) => Math.max(-0.9, Math.min(0.9, (x - at.x) * 0.3))
+    const way = lean(a)
+    // The end that is up, or none on a level or empty plank.
+    const highX = way === 0 ? null : -way * PLANK.seat
+    if (id === 'pim') play.look('pim', highX === null ? 0 : toward(highX), 0.9)
+    else if (id === 'mog') {
+      // The highest seat: the end that is up, or on a level plank the taller stack. Sitting on it, he looks about him.
+      const seat = highX ?? (a.left.length === a.right.length ? 0 : a.left.length > a.right.length ? -PLANK.seat : PLANK.seat)
+      const there = placeOf(a, 'mog')
+      const has = there.at === 'end' && Math.sign(seat) === (there.end === 'left' ? -1 : 1) && there.level === a[there.end].length - 1
+      play.look('mog', has ? 0 : toward(seat), has ? 0.2 : 0.55)
+    } else if (id === 'dot') {
+      // Whoever is on the plank; with nobody on it, the others where they stand.
+      const riders = [...a.left, ...a.right].filter((other) => other !== 'dot')
+      const them = riders.length ? riders : FRIEND_IDS.filter((other) => other !== 'dot' && a.waiting !== other)
+      const x = them.reduce((sum, other) => sum + play.bodies[other].x, 0) / Math.max(1, them.length)
+      play.look('dot', toward(x), riders.length ? 0.35 : 0.1)
+    } else {
+      // Up along the plank: to its high end, or from the sand to the far end of it.
+      play.look('bo', toward(highX ?? -Math.sign(at.x || 1) * PLANK.seat), 0.5)
     }
   }
 

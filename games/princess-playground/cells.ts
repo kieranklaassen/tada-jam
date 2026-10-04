@@ -1,4 +1,4 @@
-import { inCompany, lean, placeOf, type Arrangement } from './arrangement'
+import { companyOf, lean, placeOf, type Arrangement } from './arrangement'
 import type { Deed } from './grid'
 import type { Act } from './motion'
 import * as v from './voices'
@@ -36,6 +36,8 @@ export type Landing = {
   weightThere: number
   /** Everyone else on the plank, on either end, after the landing. */
   others: readonly FriendId[]
+  /** Whoever stands in the sand within a body's width of where it was set down. Empty on the plank. */
+  near?: readonly FriendId[]
 }
 
 export type Reaction = {
@@ -59,9 +61,9 @@ export type Reaction = {
 /** Where a friend was put, read from the arrangement before and after the child's move. */
 export function landingOf(before: Arrangement, after: Arrangement, id: FriendId): Landing {
   const place = placeOf(after, id)
-  const company = inCompany(after)
+  const company = companyOf(after).length > 0
   const others = [...after.left, ...after.right].filter((other) => other !== id)
-  if (place.at !== 'end') return { id, deed: 'in-the-sand', end: null, tips: false, levels: false, below: null, alone: false, company, weightThere: 0, others }
+  if (place.at !== 'end') return { id, deed: 'in-the-sand', end: null, tips: false, levels: false, below: null, alone: false, company, weightThere: 0, others, near: place.at === 'sand' ? companyOf(after, id) : [] }
   // The plank as it lay without this friend: that is what it landed on.
   const without = lean(before, id), now = lean(after)
   const side = place.end === 'right' ? 1 : -1
@@ -139,7 +141,11 @@ export function reactionsTo(l: Landing): Reaction[] {
       } else if (l.deed === 'on-a-friend') {
         add(0.15, { voice: v.duet(), act: 'sway', seconds: 1.4, way: 1 })
         if (l.below) out.push(react(l.below, 0.15, { act: 'sway', seconds: 1.4, way: 1 }))
-      } else if (l.company) add(0.2, { voice: v.softNote() })
+      } else if (l.company) {
+        add(0.2, { voice: v.softNote() })
+        // Whoever it was set down beside turns to it and bounces, as those on the plank do.
+        ;(l.near ?? []).forEach((other, index) => out.push(react(other, 0.25 + index * 0.12, { act: 'greet', seconds: 0.7, toward: 'dot' })))
+      }
       else add(0.5, { voice: v.scratch(), act: 'spin', seconds: 1.1, mark: 'ring' })
       break
     case 'bo':

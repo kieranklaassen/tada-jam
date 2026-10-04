@@ -28,6 +28,9 @@ const POP = 4.5
 /** A chuckle's shake of the plank: how many pushes, and the seconds between them. */
 const SHAKES = 4
 const SHAKE_EVERY = 0.18
+/** How far a friend turns toward what it looks at, at the furthest look, and how far it tips back to look up: radians. */
+export const LOOK_TURN = 0.45
+export const LOOK_NOD = 0.12
 /** How far Dot stands turned away when it is apart, in radians: half away, the face still in sight. */
 export const HALF_AWAY = 0.85
 /** A finger's width, in tray units. */
@@ -799,7 +802,8 @@ export class Playground {
       pose.lean = body.lean + (body.landed && body.mode === 'rest' ? this.plank.tilt : 0)
       pose.nod = body.mode === 'air' ? 0.25 : 0
       // Half away is away from the middle of the tray, so the face still shows from the child's side.
-      pose.turn = body.turn + body.aside * HALF_AWAY * (body.x >= 0 ? 1 : -1)
+      // A look is with the whole body, not only the pupils: it turns toward what it looks at, and tips back to look up.
+      pose.turn = body.turn + body.aside * HALF_AWAY * (body.x >= 0 ? 1 : -1) + body.gaze * LOOK_TURN * (1 - body.aside)
       const heavyLids = id === 'bo' ? 0.28 + 0.72 * body.doze : 0
       pose.lids = Math.max(body.blinkT > 0 ? 1 : 0, heavyLids, body.mood === 'put-out' && (id === 'pim' || id === 'mog') ? 0.32 : 0)
       pose.gazeX = body.gaze
@@ -813,6 +817,9 @@ export class Playground {
       // crown and Mog's ears are out of the way before the friend lands.
       const place = body.away ? null : placeOf(this.arrangement, id)
       pose.pressed = place && place.at === 'end' && place.level < this.arrangement[place.end].length - 1 ? 1 : 0
+      if (!pose.pressed && body.mode === 'rest') pose.nod += Math.max(0, body.gazeUp) * LOOK_NOD
+      // Touched, its eyes go wide at the finger for as long as the glance lasts.
+      pose.wide = body.glance > 0 ? 1 : 0
       pose.squash *= body.press
       // The one who asks shows it with its whole body, not only its eyes: it stretches toward where it wants to be.
       if (this.asking && this.asking.id === id && body.mode === 'rest') {

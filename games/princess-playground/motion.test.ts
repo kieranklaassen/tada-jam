@@ -71,7 +71,7 @@ describe('the playground in motion', () => {
     // Apart at the rim on the right: turned away from the middle of the tray, the face still toward the child's side.
     expect(world.frame().poses.dot.turn).toBeCloseTo(HALF_AWAY, 2)
     expect(HALF_AWAY).toBeLessThan(Math.PI / 2)
-    for (const id of ['pim', 'mog', 'bo'] as const) expect(world.frame().poses[id].turn).toBe(0)
+    for (const id of ['pim', 'mog', 'bo'] as const) expect(Math.abs(world.frame().poses[id].turn)).toBeLessThan(0.01)
     world.touch('dot')
     play(world, 0.3)
     expect(Math.abs(world.frame().poses.dot.turn)).toBeLessThan(0.05)

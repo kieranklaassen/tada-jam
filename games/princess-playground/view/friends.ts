@@ -87,7 +87,7 @@ export function buildFriend(id: FriendId): FriendView {
   const eyeSize = spec.radius * (id === 'bo' ? 0.19 : id === 'pim' ? 0.27 : 0.23)
   const whites = new THREE.Mesh(eyeGeometry(id, eyeSize, 0, 0.012), WHITE)
   const pupils = new THREE.Mesh(eyeGeometry(id, eyeSize * 0.56, 0, eyeSize * 0.34), INK)
-  // The mouth is half a ring lying on the body's slope. Turned one way in its own plane it smiles, the other way it is turned down.
+  // The mouth is half a ring lying on the body's slope: a smile. Put out, it is pressed flat where it lies.
   const mouthGeometry = new THREE.TorusGeometry(spec.radius * 0.16, spec.radius * 0.04, 6, 14, Math.PI)
   const mouthAt = onBody(id, 0, 0.36, 0.93)
   const mouth = new THREE.Mesh(mouthGeometry, INK)
@@ -200,11 +200,15 @@ export function poseFriend(view: FriendView, pose: FriendPose): void {
   }
   // A shut eye is a dark line: the white is put away, so the two never lie in one plane.
   view.whites.visible = open > 0.3
-  view.pupils.position.x = pose.gazeX * spec.radius * 0.05
-  view.pupils.position.y += pose.gazeY * spec.radius * 0.03
-  // A mouth turned down is the same arc turned over in its own plane, where it lies.
-  view.mouth.rotation.z = pose.frown > 0.5 ? 0 : Math.PI
-  view.mouth.scale.set(1 + pose.mouth * 0.35, 1 + pose.mouth * 0.9, 1)
+  // The pupils travel as far as the whites allow, so a look can be read from the child's side of the tray.
+  view.pupils.position.x = pose.gazeX * spec.radius * 0.085
+  view.pupils.position.y += pose.gazeY * spec.radius * 0.055
+  // At the finger the eyes go wide.
+  const eyesWide = 1 + 0.16 * pose.wide
+  view.whites.scale.x = view.pupils.scale.x = eyesWide
+  view.whites.scale.y *= eyesWide
+  // Put out, the mouth is pressed to a short flat line. It is never turned down: no sad face is turned to the child.
+  view.mouth.scale.set(pose.frown > 0.5 ? 0.7 : 1 + pose.mouth * 0.35, pose.frown > 0.5 ? 0.22 : 1 + pose.mouth * 0.9, 1)
   view.body.material.color.lerpColors(view.pale, view.full, pose.bright)
   // The crown swings on its base, and no further than it could without tipping into her head.
   const swing = Math.max(-0.3, Math.min(0.3, pose.follow))

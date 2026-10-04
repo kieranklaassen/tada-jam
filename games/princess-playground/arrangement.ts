@@ -162,19 +162,21 @@ export function drop(a: Arrangement, id: FriendId, x: number, z: number): { arra
   return { arrangement: putInSand(a, id, { x, z }), slid: false }
 }
 
+/** Who Dot is with: everyone else on the plank when it is on the plank, or whoever stands in the sand within a body's width of it. */
+export function companyOf(a: Arrangement, id: FriendId = 'dot'): FriendId[] {
+  const place = placeOf(a, id)
+  if (place.at === 'end') return [...a.left, ...a.right].filter((other) => other !== id)
+  const here = standsAt(a, id)
+  return FRIEND_IDS.filter((other) => {
+    if (other === id || placeOf(a, other).at === 'end') return false
+    const spot = standsAt(a, other)
+    return Math.hypot(spot.x - here.x, spot.z - here.z) <= FRIENDS[id].radius * 3 + FRIENDS[other].radius
+  })
+}
+
 /** Dot is in company: on the plank with anyone else on it, or in the sand within a body's width of another friend standing there. */
 export function inCompany(a: Arrangement, id: FriendId = 'dot'): boolean {
-  const place = placeOf(a, id)
-  if (place.at === 'end') return a.left.length + a.right.length > 1
-  const here = standsAt(a, id)
-  for (const other of FRIEND_IDS) {
-    if (other === id) continue
-    const there = placeOf(a, other)
-    if (there.at === 'end') continue
-    const spot = standsAt(a, other)
-    if (Math.hypot(spot.x - here.x, spot.z - here.z) <= FRIENDS[id].radius * 3 + FRIENDS[other].radius) return true
-  }
-  return false
+  return companyOf(a, id).length > 0
 }
 
 /** True when every friend is in exactly one place and every spot is inside the tray. */

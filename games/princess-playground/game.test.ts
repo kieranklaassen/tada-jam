@@ -632,10 +632,71 @@ describe('the small promises of the sheet', () => {
     run(game, 1)
     tapOn(game, 'dot')
     run(game, 0.5)
-    // Dot is off to the right; Pim, on the left end, looks that way.
+    // Dot is off to the right; Pim, on the left end, looks that way, level, and not at the sky.
     expect(game.play.bodies.pim.gazeTo).toBeGreaterThan(0.8)
+    expect(game.play.bodies.pim.gazeUpTo).toBe(0)
     run(game, 3)
-    expect(game.play.bodies.pim.gazeTo).toBeLessThan(0.8)
+    expect(game.play.bodies.pim.gazeUpTo).toBeGreaterThan(0.8)
+  })
+
+  it('those Dot is set down beside in the sand turn to it and bounce, and look after it when it is taken away again', () => {
+    const game = free([], [])
+    run(game, 0.5)
+    const mog = standsAt(game.play.arrangement, 'mog')
+    game.press({ kind: 'friend', id: 'dot' })
+    game.dragStart()
+    game.dragTo({ x: mog.x - 1.6, z: mog.z + 0.2 }, null)
+    run(game, 0.5)
+    game.dragEnd()
+    let greeted = 0, turned = 0
+    for (let i = 0; i < 150; i++) {
+      game.step(1 / 60, QUIET)
+      if (game.play.bodies.mog.act === 'greet') {
+        greeted += 1
+        turned = Math.min(turned, game.frame.poses.mog.turn)
+      }
+    }
+    expect(placeOf(game.play.arrangement, 'dot').at).toBe('sand')
+    expect(greeted).toBeGreaterThan(20)
+    // Dot is on his left: he turned that way.
+    expect(turned).toBeLessThan(-0.4)
+    expect(game.play.bodies.pim.act).not.toBe('greet')
+    // Taken to the far side of the tray: Mog looks after it.
+    game.press({ kind: 'friend', id: 'dot' })
+    game.dragStart()
+    game.dragTo({ x: -4, z: 1.5 }, null)
+    run(game, 0.5)
+    game.dragEnd()
+    run(game, 0.6)
+    expect(game.play.bodies.mog.gazeTo).toBeLessThan(-0.8)
+    expect(game.play.bodies.mog.gazeUpTo).toBe(0)
+  })
+
+  it('each friend looks at what it always wants: Pim at the sky and the high end, Mog at the highest seat, Dot at whoever is on the plank, Bo up along the plank', () => {
+    // Bo holds the right end down; the left end is up and empty.
+    const game = free([], ['bo'])
+    run(game, 2)
+    const look = (id: FriendId) => ({ side: game.play.bodies[id].gazeTo, up: game.play.bodies[id].gazeUpTo })
+    // Everyone else stands in the sand on the right, so the high end is to their left.
+    expect(look('pim').up).toBeGreaterThan(0.8)
+    expect(look('pim').side).toBeLessThan(-0.5)
+    expect(look('mog').side).toBeLessThan(-0.5)
+    expect(look('mog').up).toBeGreaterThan(0.4)
+    expect(look('bo').side).toBeLessThan(-0.5)
+    expect(look('bo').up).toBeGreaterThan(0.4)
+    // Dot looks at Bo, the one on the plank.
+    const dot = standsAt(game.play.arrangement, 'dot')
+    expect(Math.sign(look('dot').side)).toBe(Math.sign(game.play.bodies.bo.x - dot.x))
+    // No two of the four look the same way.
+    expect(new Set(FRIEND_IDS.map((id) => `${look(id).side.toFixed(2)} ${look(id).up.toFixed(2)}`)).size).toBeGreaterThanOrEqual(3)
+    // And a look can be seen: the body turns with it.
+    expect(game.frame.poses.pim.turn).toBeLessThan(-0.2)
+    // On the high perch himself, Mog has what he wants and looks about him.
+    tapOn(game, 'mog')
+    run(game, 0.2)
+    const mog = free(['mog'], ['bo'])
+    run(mog, 2)
+    expect(mog.play.bodies.mog.gazeTo).toBe(0)
   })
 
   it('a friend thrown by the plank squeaks as it comes down again', () => {
