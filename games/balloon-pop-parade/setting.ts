@@ -13,7 +13,13 @@ import type { Pillow, Vec3 } from './shapes'
 //
 // Three small toys live in it and take no part in the task: a whale in the
 // pool, a keeper bird on the far hill, and the ball. They are meshes of their
-// own, one draw each, and the theatre moves them.
+// own, one draw each, and the theatre moves them. The palms on the hill to the
+// left are a fourth mesh, so that they sway.
+//
+// Whatever is near enough to look touchable has an answer of its own (the
+// theatre's `hit`). The sea, its islands, their trees and the lighthouse are
+// far background and drawn as that: deep in the haze, a part of the sky they
+// stand in front of, and a touch there is a touch on the sky.
 //
 // What it must not do is in the tests beside this file: nothing of it stands
 // behind the row of balloons, which keeps bare sky; nothing is in the
@@ -46,6 +52,9 @@ const MINT: Mound = { x: 3.2, y: -7.4, z: -36, rx: 7.2, ry: 8, rz: 5 }
 const CREAM: Mound = { x: 17.8, y: -6.9, z: -34.5, rx: 7.6, ry: 9, rz: 5 }
 const LEFT: Mound = { x: -13.5, y: GROUND - 5.2, z: -15.5, rx: 10.5, ry: 6.6, rz: 5 }
 
+/** How deep in the haze the far background stands: the islands' trees and the lighthouse, pale shapes before the sky. */
+const FAR_OFF = 0.6
+
 /** A lollipop tree: a thin trunk and a round crown, standing on a mound. */
 function tree(on: Mound, x: number, z: number, tall: number, colour: string, haze: number): Pillow[] {
   const foot = topOf(on, x, z) - 0.1
@@ -60,7 +69,7 @@ function tree(on: Mound, x: number, z: number, tall: number, colour: string, haz
  * round it, each leaf two pillows that bend: out from the bud and then down. The leaves start at the bud's skin,
  * at uneven angles and lengths, so they are leaves hanging from a bud and never straight bars through one point.
  */
-function palm(on: Mound, x: number, z: number, tall: number, lean: number, haze: number): Pillow[] {
+function palm(on: Mound, { x, z, tall, lean }: { x: number; z: number; tall: number; lean: number }, haze: number): Pillow[] {
   const foot = topOf(on, x, z) - 0.25, parts: Pillow[] = [], rings = 5, k = tall / 4.6
   for (let i = 0; i < rings; i++) {
     const u = i / (rings - 1)
@@ -128,7 +137,7 @@ function hut(): Pillow[] {
 }
 
 function lighthouse(): Pillow[] {
-  const x = 8.6, z = MINT.z + 0.6, foot = topOf(MINT, x, z) - 0.2, haze = 0.42
+  const x = 8.6, z = MINT.z + 0.6, foot = topOf(MINT, x, z) - 0.2, haze = FAR_OFF
   return [
     { at: [x, foot + 0.6, z], size: [0.62, 0.7, 0.62], colour: C.petal, haze, detail: SMALL },
     { at: [x, foot + 1.5, z], size: [0.54, 0.6, 0.54], colour: C.coral, haze, detail: SMALL },
@@ -139,22 +148,19 @@ function lighthouse(): Pillow[] {
 
 /** Everything of the setting that stands still, as one list: one mesh, one draw. */
 export const SETTING: readonly Pillow[] = [
-  mound(SEA, C.sea, 0.3),
-  mound(LILAC, C.lilacHill, 0.4),
-  mound(MINT, C.mintHill, 0.4),
-  mound(CREAM, C.creamHill, 0.4),
-  ...tree(LILAC, -18, -36.2, 2.2, C.mintHill, 0.42),
-  ...tree(LILAC, -13.6, -35.4, 2.8, C.leaf, 0.42),
-  ...tree(LILAC, -9.2, -36.4, 2.0, C.mintHill, 0.42),
-  ...tree(MINT, 0.4, -33.8, 2.4, C.leaf, 0.42),
-  ...tree(MINT, 5.2, -33.6, 1.9, C.lilacHill, 0.42),
-  ...tree(CREAM, 14.6, -32.6, 2.3, C.leaf, 0.42),
-  ...tree(CREAM, 19.4, -32.4, 1.8, C.mintHill, 0.42),
+  mound(SEA, C.sea, 0.36),
+  mound(LILAC, C.lilacHill, FAR_OFF - 0.08),
+  mound(MINT, C.mintHill, FAR_OFF - 0.08),
+  mound(CREAM, C.creamHill, FAR_OFF - 0.08),
+  ...tree(LILAC, -18, -36.2, 2.2, C.mintHill, FAR_OFF),
+  ...tree(LILAC, -13.6, -35.4, 2.8, C.leaf, FAR_OFF),
+  ...tree(LILAC, -9.2, -36.4, 2.0, C.mintHill, FAR_OFF),
+  ...tree(MINT, 0.4, -33.8, 2.4, C.leaf, FAR_OFF),
+  ...tree(MINT, 5.2, -33.6, 1.9, C.lilacHill, FAR_OFF),
+  ...tree(CREAM, 14.6, -32.6, 2.3, C.leaf, FAR_OFF),
+  ...tree(CREAM, 19.4, -32.4, 1.8, C.mintHill, FAR_OFF),
   ...lighthouse(),
   mound(LEFT, C.peachHill, 0.2),
-  ...palm(LEFT, -7.7, -12.4, 4.1, -0.3, 0.16),
-  ...palm(LEFT, -11.0, -12.6, 3.1, 0.3, 0.17),
-  ...tree(LEFT, -6.2, -13.4, 1.5, C.mintHill, 0.16),
   ...hut(),
   ...pool(),
   ...flower(-2.7, 3.5, 0.42),
@@ -163,7 +169,7 @@ export const SETTING: readonly Pillow[] = [
   ...flower(3.2, 2.7, 0.34),
 ]
 
-export type ToyName = 'whale' | 'keeper' | 'ball'
+export type ToyName = 'whale' | 'keeper' | 'ball' | 'palms'
 
 /** A toy of the setting: its pillows, standing with its feet at y = 0 and facing +z, its face, and where the face's parts ride. */
 export type Toy = { pillows: Pillow[]; face: FacePlan; tall: number; haze: number }
@@ -224,7 +230,34 @@ export const BALL_TOY: Toy = {
   haze: 0,
 }
 
-export const TOYS: Record<ToyName, Toy> = { whale: WHALE, keeper: KEEPER_TOY, ball: BALL_TOY }
+/** The two palms on the hill to the left, and the little tree beside them. */
+const PALM_PLANS = [{ x: -7.7, z: -12.4, tall: 4.1, lean: -0.3 }, { x: -11.0, z: -12.6, tall: 3.1, lean: 0.3 }] as const
+
+/** How high the hill to the left stands at a point of it. */
+export function leftGroundAt(x: number, z: number): number {
+  return topOf(LEFT, x, z)
+}
+/** How deep the hill to the left stands, at its middle. */
+export const LEFT_HILL_Z = LEFT.z
+
+/** Where the palms stand as one thing: the foot they sway about. */
+export const PALMS = { x: -9.3, y: topOf(LEFT, -9.3, -12.5) - 0.3, z: -12.5 } as const
+
+/** Each palm's crown, where it is touched and where its leaves fall from: its middle, how far its leaves reach, and the foot of its trunk. */
+export const PALM_CROWNS = PALM_PLANS.map((plan) => {
+  const k = plan.tall / 4.6, foot = topOf(LEFT, plan.x, plan.z) - 0.25
+  return { x: plan.x + plan.lean * plan.tall * 0.3, y: foot + 4.55 * k, z: plan.z, reach: 1.7 * k, trunk: plan.x, foot }
+})
+
+/** The palms and the little tree, about their foot: one mesh, which leans as one thing when the wind or a finger sways it. */
+export const PALMS_TOY: Toy = {
+  pillows: [...palm(LEFT, PALM_PLANS[0], 0), ...palm(LEFT, PALM_PLANS[1], 0), ...tree(LEFT, -6.2, -13.4, 1.5, C.mintHill, 0)].map((part) => ({ ...part, at: [part.at[0] - PALMS.x, part.at[1] - PALMS.y, part.at[2] - PALMS.z] as const })),
+  face: { eye: [0, 0, 0], eyeSize: 0, brows: false, mouth: null, mouthWide: 0, ink: PALETTE.ink, whites: false },
+  tall: 5,
+  haze: 0.16,
+}
+
+export const TOYS: Record<ToyName, Toy> = { whale: WHALE, keeper: KEEPER_TOY, ball: BALL_TOY, palms: PALMS_TOY }
 
 /** The face printed on a cloud, in the cloud's own space: asleep until it is squeezed, and pale. */
 export const CLOUD_FACE: FacePlan = { eye: [0.42, 0.0, 0.66], eyeSize: 0.13, brows: false, mouth: [0, -0.2, 0.7], mouthWide: 0.34, ink: C.cloudInk, whites: false }

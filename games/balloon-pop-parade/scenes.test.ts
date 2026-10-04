@@ -3,7 +3,7 @@ import { BODIES, type KindName } from './bodies'
 import { PERSONALITIES } from './clips'
 import { LADDER } from './config'
 import { marcherGeometry } from './friends'
-import { GROUND, farGroundAt, friendX, skySlots, viewFor, waitingSpot, FRIEND_SCALE } from './layout'
+import { GROUND, farGroundAt, friendX, groundAt, skySlots, viewFor, waitingSpot, FRIEND_SCALE } from './layout'
 import { saveOf } from './moments'
 import type { Pose } from './pose'
 import { deserializeSave, freshSave, serializeSave, type Save } from './save'
@@ -675,6 +675,127 @@ describe('the pass-by', () => {
       expect(shown, `${how}: the pair that shows one for each came by at the next step-in`).toBe(true)
       expect(again.save.shown.each, how).toBe(true)
     }
+  })
+
+  it('lays the troop that is already coming when a new game opens out for the surface as it is measured: it stops whole inside the left edge on every surface', () => {
+    for (const [wide, high] of [[1180, 820], [1024, 768], [820, 1180], [768, 1024], [844, 390], [1366, 1024]] as const) for (const age of [2, 4]) {
+      const view = viewFor(wide, high), theatre = new Theatre(freshSave(age)), { poses, painter } = recorder()
+      let kind: KindName = 'duck'
+      const spy: Painter = { ...painter, place: (name, placed, pose) => { if (name === 'passer-0') kind = placed; painter.place(name, placed, pose) } }
+      // Painted on that surface from the first frame, as the game is.
+      theatre.paint(spy, view)
+      let stood = false
+      for (let t = 0; t < 3; t += 1 / 60) {
+        theatre.step(1 / 60)
+        theatre.paint(spy, view)
+        const first = poses.get('passer-0'), own = poses.get('friend-0')!
+        if (!first || t < 2) continue
+        stood = true
+        // Its leftmost friend is whole on the surface, and its rightmost is clear of the child's own.
+        const names = [...poses.keys()].filter((name) => name.startsWith('passer-')), half = BODIES[kind].halfWidth * first.scale
+        const left = Math.min(...names.map((name) => poses.get(name)!.x)), right = Math.max(...names.map((name) => poses.get(name)!.x))
+        expect(left - half, `${wide} by ${high}, a child of ${age}`).toBeGreaterThanOrEqual(-view.width / 2 - 1e-6)
+        expect(right + half, `${wide} by ${high}, a child of ${age}`).toBeLessThan(own.x - BODIES[theatre.troop.kind].halfWidth * FRIEND_SCALE + 1e-6)
+      }
+      expect(stood, `${wide} by ${high}`).toBe(true)
+    }
+  })
+
+  it('lets the troop that passes by answer a touch before it goes: the scene ends, and the troop squeaks, jumps and hurries off the way it came', () => {
+    for (const age of [2, 4]) {
+      const theatre = new Theatre(freshSave(age)), { poses, painter } = recorder()
+      let kind: KindName = 'duck'
+      const spy: Painter = { ...painter, place: (name, placed, pose) => { if (name === 'passer-0') kind = placed; painter.place(name, placed, pose) } }
+      play(theatre, 2.5)
+      theatre.paint(spy, VIEW)
+      const stood = { ...poses.get('passer-0')! }, saved = JSON.stringify(serializeSave(theatre.save))
+      expect(theatre.playing).toBe('arrival')
+      const at = { x: stood.x, y: stood.y + BODIES[kind].height * stood.scale * 0.5 }
+      expect(theatre.hit(at.x, at.y, VIEW)).toEqual({ on: 'passer', friend: 0 })
+      theatre.sounds.length = 0
+      theatre.press(at.x, at.y, VIEW)
+      theatre.release(VIEW)
+      // The scene is over, as after any touch, and nothing of the game is changed by it.
+      expect(theatre.playing).toBe(null)
+      expect(JSON.stringify(serializeSave(theatre.save))).toBe(saved)
+      expect(theatre.sounds.map((sound) => sound.voice)).toEqual([`${kind}Poke`])
+      // It is still there in the frame of the touch, where it stood, and its answer is seen: it leaves the ground.
+      theatre.paint(spy, VIEW)
+      expect(poses.get('passer-0')!.x).toBeCloseTo(stood.x, 5)
+      let moved = 0, gone = -1
+      for (let t = 0; t < 2 && gone < 0; t += 1 / 60) {
+        theatre.step(1 / 60)
+        theatre.paint(spy, VIEW)
+        const now = poses.get('passer-0')
+        if (!now) { gone = t; break }
+        if (t < 0.28) { moved = Math.max(moved, Math.abs(now.y - stood.y) + Math.abs(now.squash - stood.squash) + Math.abs(now.lean - stood.lean)); expect(now.x, 'it jumps where it stands first').toBeCloseTo(stood.x, 5) }
+        // And then back out by the left edge, the way it came.
+        else expect(now.x).toBeLessThanOrEqual(stood.x + 1e-6)
+      }
+      expect(moved, 'its answer is seen').toBeGreaterThan(0.03)
+      expect(gone, 'gone within a second or so').toBeGreaterThan(0.3)
+      expect(gone).toBeLessThan(1.1)
+      // The child's own troop is where it was, and the game goes on: a bunch can be sent.
+      expect(poses.get('friend-0')!.x).toBeCloseTo(friendX(0, theatre.troop.size), 5)
+      tapSlot(theatre, 0)
+      expect(theatre.playing).toBe(null)
+      // Touched again while it is still jumping, it squeaks again: every touch on it is answered.
+      const again = new Theatre(freshSave(age))
+      play(again, 2.5)
+      again.press(at.x, at.y, VIEW)
+      again.release(VIEW)
+      play(again, 0.15)
+      again.sounds.length = 0
+      expect(again.hit(at.x, at.y, VIEW)).toEqual({ on: 'passer', friend: 0 })
+      again.press(at.x, at.y, VIEW)
+      again.release(VIEW)
+      expect(again.sounds.map((sound) => sound.voice)).toEqual([`${kind}Poke`])
+    }
+  })
+
+  it('answers a second touch on a troop that is hurrying off, and takes one that was crossing the middle off behind the troop that stands there by then', () => {
+    const served = saveOf({ position: 'bunches-own-colour', troop: { kind: 'crab', size: 1, held: [true] }, sky: [{ colour: 'crab', count: 1 }, { colour: 'crab', count: 2 }], waiting: { kind: 'duck', size: 3 } })
+    const theatre = new Theatre({ ...served, rng: 2, shown: { give: true, each: true, bunch: false } }), { poses, painter } = recorder()
+    let kind: KindName = 'duck'
+    const spy: Painter = { ...painter, place: (name, placed, pose) => { if (name === 'passer-1') kind = placed; painter.place(name, placed, pose) } }
+    tapWaiting(theatre)
+    // Until the three that pass stand in the middle.
+    let middle: Pose | undefined
+    for (let t = 0; t < 12 && !middle; t += 1 / 60) {
+      theatre.step(1 / 60)
+      theatre.paint(spy, VIEW)
+      const second = poses.get('passer-1')
+      if (second && Math.abs(second.x) < 0.05) middle = { ...second }
+    }
+    expect(middle).toBeDefined()
+    expect(theatre.save.shown.bunch).toBe(true)
+    const at = { x: middle!.x, y: middle!.y + BODIES[kind].height * middle!.scale * 0.5 }
+    expect(theatre.hit(at.x, at.y, VIEW)).toEqual({ on: 'passer', friend: 1 })
+    theatre.sounds.length = 0
+    theatre.press(at.x, at.y, VIEW)
+    theatre.release(VIEW)
+    expect(theatre.playing).toBe(null)
+    expect(theatre.sounds.map((sound) => sound.voice)).toEqual([`${kind}Poke`])
+    // The child's three are in their places at once, and the three that passed are still to be seen.
+    theatre.paint(spy, VIEW)
+    expect(poses.get('friend-1')!.x).toBeCloseTo(friendX(1, 3), 5)
+    expect(poses.has('passer-1')).toBe(true)
+    // A second touch, a moment later, where it is now: it squeaks again. By then it has stepped back, behind the three.
+    play(theatre, 0.4)
+    theatre.paint(spy, VIEW)
+    const fleeing = poses.get('passer-0')!
+    expect(fleeing.z).toBeLessThan(-2)
+    const seen = VIEW.distance / (VIEW.distance - fleeing.z), top = { x: fleeing.x * seen, y: (groundAt(fleeing.x, fleeing.z) + BODIES[kind].height * fleeing.scale * 0.5) * seen }
+    theatre.sounds.length = 0
+    const under = theatre.hit(top.x, top.y, VIEW)
+    theatre.press(top.x, top.y, VIEW)
+    theatre.release(VIEW)
+    // Where one of the child's own stands in front of it, that friend is the one touched; otherwise the troop that goes answers again.
+    if (under.on === 'passer') expect(theatre.sounds.map((sound) => sound.voice)).toEqual([`${kind}Poke`])
+    else expect(under.on).toBe('friend')
+    let gone = false
+    for (let t = 0; t < 1.2 && !gone; t += 1 / 60) { theatre.step(1 / 60); theatre.paint(spy, VIEW); gone = !poses.has('passer-0') }
+    expect(gone).toBe(true)
   })
 
   it('crosses in the middle before a troop of three walks in, which has no room beside it, coming in as the troop before goes out: the middle is never empty for as long as a second', () => {

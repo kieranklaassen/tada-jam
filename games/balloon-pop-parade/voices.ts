@@ -26,7 +26,7 @@ export type Partial = {
 
 export type VoiceId =
   | 'squeak' | 'letGo' | 'whistle' | 'pop' | 'raspberry' | 'bloop' | 'boop' | 'squeal' | 'bonk' | 'stringHum' | 'frogSlurp'
-  | 'heels' | 'cloudSqueak' | 'patter' | 'hillBoing' | 'spout' | 'bounce' | 'cheep' | 'stomp' | 'whoop'
+  | 'heels' | 'cloudSqueak' | 'patter' | 'hillBoing' | 'spout' | 'bounce' | 'cheep' | 'stomp' | 'whoop' | 'rustle'
   | `${KindName}Catch` | `${KindName}Refuse` | `${KindName}Poke` | `${KindName}Startle` | `${KindName}LiftOff` | `${KindName}Land` | `${KindName}Step`
 
 /** The ranges every partial stays inside, and the longest a voice may last. */
@@ -65,6 +65,8 @@ export const VOICES: Record<VoiceId, readonly Partial[]> = {
   hillBoing: [tone('sine', 0, 140, 95, 0.25, 0.01, 0.3), tone('triangle', 0, 280, 190, 0.06, 0.01, 0.2)],
   // The whale in the pool blows: a wet rush of air going up.
   spout: [hiss(0, 700, 2600, 3, 0.16, 0.02, 0.3), tone('sine', 0.02, 320, 640, 0.08, 0.03, 0.22)],
+  // A palm is shaken: its leaves rub together, twice, dry and soft.
+  rustle: [hiss(0, 3200, 2200, 1.4, 0.07, 0.02, 0.16), hiss(0.14, 2600, 3600, 1.4, 0.05, 0.02, 0.18)],
   // The beach ball comes down on the air bed: hollow and soft.
   bounce: [tone('sine', 0, 250, 150, 0.22, 0.004, 0.14), hiss(0, 700, 400, 1.2, 0.06, 0.003, 0.05)],
   // The keeper of the far hill: two small high notes, far off.

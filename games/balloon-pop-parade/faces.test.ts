@@ -43,16 +43,6 @@ describe('a face', () => {
     }
   })
 
-  it('never leaves a brow level over a shut eye: it goes the worried way, mirrored, unless it is cross', () => {
-    for (const brow of [-1, -0.2, 0, 0.2]) {
-      const brows = eyes({ ...restFace(), blink: 1, brow }).slice(-2)
-      expect(Math.abs(brows[0].turn), `${brow}`).toBeGreaterThan(0.2)
-      expect(brows[0].turn).toBeCloseTo(-brows[1].turn, 9)
-      expect(Math.sign(brows[0].turn)).toBe(-1)
-    }
-    expect(eyes({ ...restFace(), blink: 1, brow: 1 }).slice(-2)[0].turn).toBeGreaterThan(0.3)
-  })
-
   it('prints only the two corners of a mouth that is a beak or a muzzle, which turn up and down, and the dark of it when it opens', () => {
     const plan: FacePlan = { ...PLAN, mouth: null, corners: { at: [0, 0.3, 0.5], wide: 0.6, long: 0.08, gape: { at: [0, 0.3, 0.8], wide: 0.17, tall: 0.08 } } }
     for (const smiling of [-1, -0.4, 0, 0.5, 1]) {
@@ -68,6 +58,8 @@ describe('a face', () => {
     const open = mouth({ ...restFace(), open: 1 }, plan)
     expect(open).toHaveLength(3)
     expect(open[2].tall).toBeGreaterThan(open[0].tall)
+    // Barely open, it shows no dark.
+    expect(mouth({ ...restFace(), open: 0.3 }, plan)).toHaveLength(2)
     // One that has a jaw to drop shows no printed dark.
     expect(mouth({ ...restFace(), open: 1 }, { ...plan, corners: { ...plan.corners!, gape: null } })).toHaveLength(2)
   })

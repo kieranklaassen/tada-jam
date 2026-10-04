@@ -3,7 +3,7 @@ import type { KindName } from './bodies'
 import { marcherGeometry } from './friends'
 import { BALLOON, CLOUDS, FAR_HILL, GROUND, HILL, PARADE_FRIENDS } from './layout'
 import { PALETTE } from './palette'
-import { BALL_TOY, KEEPER_TOY, SETTING, WHALE, type Toy, type ToyName } from './setting'
+import { BALL_TOY, KEEPER_TOY, PALMS_TOY, SETTING, WHALE, type Toy, type ToyName } from './setting'
 import { pillow, pillows } from './shapes'
 import { vinylMaterial, type VinylUniforms } from './vinyl'
 
@@ -165,7 +165,7 @@ export function buildScenery(shared: VinylUniforms): Scenery {
     mesh.visible = false
     return mesh
   }
-  const toys: Record<ToyName, Mesh> = { whale: toyOf('whale', WHALE), keeper: toyOf('keeper', KEEPER_TOY), ball: toyOf('ball', BALL_TOY) }
+  const toys: Record<ToyName, Mesh> = { whale: toyOf('whale', WHALE), keeper: toyOf('keeper', KEEPER_TOY), ball: toyOf('ball', BALL_TOY), palms: toyOf('palms', PALMS_TOY) }
   // The faces: small flat-coloured pillows, white in the vertices so the instance colour is the colour.
   const bits = new InstancedMesh(new SphereGeometry(1, 12, 8), new MeshBasicMaterial(), MAX_BITS)
   bits.name = 'bits'

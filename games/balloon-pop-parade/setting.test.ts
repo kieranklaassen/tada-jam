@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { BALLOON, FAR_HILL, GROWN_UP_CORNER, PARADE_RING, SKY_ROW, viewFor } from './layout'
 import { KIND_COLOURS, luminance, PALETTE, rgb, SETTING_COLOURS } from './palette'
-import { BALL, HUT, KEEPER, POOL, SETTING, seenBox, TOYS, WHALE_SCALE } from './setting'
+import { BALL, HUT, KEEPER, PALM_CROWNS, PALMS, POOL, SETTING, seenBox, TOYS, WHALE_SCALE } from './setting'
 import { BODIES } from './bodies'
 
 // The setting is painted once and takes no part in the task. What it must not
@@ -9,17 +9,19 @@ import { BODIES } from './bodies'
 // a friend walks, or cost more than one draw.
 
 const IPAD = viewFor(1180, 820)
+/** Everything of the setting that has a place of its own: what is painted once, and the palms where they stand. */
+const STANDING = [...SETTING, ...TOYS.palms.pillows.map((part) => ({ ...part, at: [part.at[0] + PALMS.x, part.at[1] + PALMS.y, part.at[2] + PALMS.z] as const }))]
 const saturation = (hex: string) => { const [r, g, b] = rgb(hex); return (Math.max(r, g, b) - Math.min(r, g, b)) / Math.max(r, g, b) }
 
 describe('the setting', () => {
   it('leaves bare sky behind the row of balloons: nothing of it stands as high as the lowest balloon of the row', () => {
     const under = SKY_ROW - BALLOON * 1.3
-    for (const pillow of SETTING) expect(seenBox(pillow).top, `the pillow at ${pillow.at.join(', ')}`).toBeLessThan(under)
+    for (const pillow of STANDING) expect(seenBox(pillow).top, `the pillow at ${pillow.at.join(', ')}`).toBeLessThan(under)
   })
 
   it('keeps out of the grown-up\'s corner', () => {
     const corner = GROWN_UP_CORNER / IPAD.pixelsPerUnit
-    for (const pillow of SETTING) {
+    for (const pillow of STANDING) {
       const box = seenBox(pillow)
       expect(box.right > IPAD.width / 2 - corner && box.top > IPAD.height / 2 - corner, `the pillow at ${pillow.at.join(', ')}`).toBe(false)
     }
@@ -56,12 +58,23 @@ describe('the setting', () => {
     }
   })
 
-  it('has three toys that live in it, each one mesh: the whale and the keeper with eyes, the ball with none', () => {
-    expect(Object.keys(TOYS).sort()).toEqual(['ball', 'keeper', 'whale'])
+  it('has three toys that live in it and the palms, each one mesh: the whale and the keeper with eyes, the ball and the palms with none', () => {
+    expect(Object.keys(TOYS).sort()).toEqual(['ball', 'keeper', 'palms', 'whale'])
     expect(TOYS.whale.face.eyeSize).toBeGreaterThan(0)
     expect(TOYS.keeper.face.eyeSize).toBeGreaterThan(0)
     expect(TOYS.ball.face.eyeSize).toBe(0)
+    expect(TOYS.palms.face.eyeSize).toBe(0)
+    // A crown is where its palm's leaves are: every leaf of a palm is within its reach.
+    expect(PALM_CROWNS).toHaveLength(2)
     for (const toy of Object.values(TOYS)) expect(toy.pillows.length).toBeGreaterThan(0)
+  })
+
+  it('draws what is too far off to answer for itself plainly as far background: the sea, the islands, their trees and the lighthouse, deep in the haze', () => {
+    // Everything behind the two hills is at least half lost in the haze; whatever stands nearer and is touched has less.
+    const farOff = SETTING.filter((part) => part.at[2] < -30)
+    expect(farOff.length).toBeGreaterThan(15)
+    for (const part of farOff) expect(part.haze ?? 0, `the pillow at ${part.at.join(', ')}`).toBeGreaterThanOrEqual(part.size[0] > 5 ? 0.36 : 0.6)
+    expect(TOYS.palms.haze).toBeLessThan(0.2)
   })
 
   it('keeps the whale and the keeper below the friends in contrast: hazed, smaller than any friend, and printed in a softer ink', () => {
@@ -92,7 +105,7 @@ describe('the setting', () => {
   })
 
   it('hangs the leaves of a palm from a bud, each bent in two: no leaf crosses another, and none is a bar through the middle', () => {
-    const leaves = SETTING.filter((part) => part.colour === SETTING_COLOURS.leaf && part.turn !== undefined)
+    const leaves = TOYS.palms.pillows.filter((part) => part.colour === SETTING_COLOURS.leaf && part.turn !== undefined)
     // Two palms, five leaves each, two pieces a leaf.
     expect(leaves).toHaveLength(20)
     type Point = { x: number; y: number }

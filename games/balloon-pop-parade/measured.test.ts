@@ -3,7 +3,7 @@ import { BODIES, type KindName } from './bodies'
 import { PERSONALITIES } from './clips'
 import { GROUND, skySlots, viewFor, waitingSpot, bunchOffsets, FRIEND_SCALE, SKY_ROW, seenAt, groundAt, farGroundAt, CLOUDS } from './layout'
 import { saveOf } from './moments'
-import { BALL, HUT, POOL } from './setting'
+import { BALL, HUT, LEFT_HILL_Z, leftGroundAt, PALM_CROWNS, POOL } from './setting'
 import type { Pose } from './pose'
 import { freshSave } from './save'
 import { REGROW_AFTER, Theatre, type Painter } from './theatre'
@@ -932,15 +932,15 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
     expect(theatre.playing).toBe(null)
   })
 
-  it('has three toys in the setting that answer a touch, each in its own way, and a cloud that starts awake: none of them changes the game', () => {
+  it('has three toys in the setting that answer a touch, each in its own way, palms that rustle and sway, a hill behind that answers as a hill, and a cloud that starts awake: none of them changes the game', () => {
     const theatre = new Theatre(saveOf({ position: 'solo-two-colours', troop: { kind: 'duck', size: 1, held: [false] }, sky: [{ colour: 'duck', count: 1 }, { colour: 'frog', count: 1 }], waiting: { kind: 'frog', size: 1 } }), 3)
-    const inside = theatre as unknown as { ball: { x: number; y: number }; drops: unknown[]; keeper: { hopAt: number }; time: number }
-    const props = new Map<string, { y: number; face?: { blink: number; open: number } }>(), clouds: { blink: number; open: number }[] = []
-    const painter: Painter = { ...recorder().painter, prop: (name, _x, y, _z, _scale, _turn, _lean, _squash, face) => void props.set(name, { y, face: face ? { blink: face.blink, open: face.open } : undefined }), cloud: (index, _squash, face) => { if (face) clouds[index] = { blink: face.blink, open: face.open } } }
+    const inside = theatre as unknown as { ball: { x: number; y: number }; drops: unknown[]; leaves: unknown[]; keeper: { hopAt: number }; time: number }
+    const props = new Map<string, { y: number; lean: number; face?: { blink: number; open: number } }>(), clouds: { blink: number; open: number }[] = []
+    const painter: Painter = { ...recorder().painter, prop: (name, _x, y, _z, _scale, _turn, lean, _squash, face) => void props.set(name, { y, lean, face: face ? { blink: face.blink, open: face.open } : undefined }), cloud: (index, _squash, face) => { if (face) clouds[index] = { blink: face.blink, open: face.open } } }
     const saved = JSON.stringify(theatre.save)
     theatre.step(1 / 60)
     theatre.paint(painter, VIEW)
-    expect([...props.keys()].sort()).toEqual(['ball', 'keeper', 'whale'])
+    expect([...props.keys()].sort()).toEqual(['ball', 'keeper', 'palms', 'whale'])
     // The whale and the keeper each have a face on screen, and the ball has none.
     expect(props.get('whale')!.face).toBeDefined()
     expect(props.get('keeper')!.face).toBeDefined()
@@ -978,6 +978,32 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
     const hut = seen(HUT.x, farGroundAt(HUT.x, HUT.z) + 1.2, HUT.z)
     expect(touch(hut.x, hut.y)).toEqual(['cheep'])
     expect(inside.keeper.hopAt).toBeCloseTo(inside.time, 5)
+    // A palm is shaken, by its crown or by its trunk: it rustles, sways and sheds a few leaves, and stands still again.
+    for (const [index, palm] of PALM_CROWNS.entries()) {
+      const crown = { ...seen(palm.x, palm.y + 0.3, palm.z) }, trunk = { ...seen(palm.trunk + (palm.x - palm.trunk) * 0.75, palm.foot + (palm.y - palm.foot) * 0.75, palm.z) }
+      // Low down, both trunks stand behind the troop that waits, which is what a finger there touches; above it, the taller palm's trunk is its own.
+      for (const at of index === 0 ? [crown, trunk] : [crown]) {
+        expect(theatre.hit(at.x, at.y, VIEW), `palm ${index}`).toEqual({ on: 'palm', index })
+        expect(touch(at.x, at.y)).toEqual(['rustle'])
+      }
+      expect(inside.leaves.length).toBeGreaterThanOrEqual(3)
+      let most = 0
+      for (let i = 0; i < 60; i++) { theatre.step(1 / 60); theatre.paint(painter, VIEW); most = Math.max(most, Math.abs(props.get('palms')!.lean)) }
+      expect(most).toBeGreaterThan(0.015)
+      expect(most).toBeLessThan(0.08)
+      for (let i = 0; i < 60 * 4; i++) theatre.step(1 / 60)
+      theatre.paint(painter, VIEW)
+      expect(Math.abs(props.get('palms')!.lean)).toBeLessThan(0.014)
+      expect(inside.leaves).toHaveLength(0)
+    }
+    // The hill they stand on is a hill too: it answers as one, higher and softer, and its palms sway.
+    const slope = { ...seen(-10.5, leftGroundAt(-10.5, LEFT_HILL_Z) - 0.9, LEFT_HILL_Z) }
+    expect(theatre.hit(slope.x, slope.y, VIEW)).toEqual({ on: 'leftHill' })
+    expect(touch(slope.x, slope.y)).toEqual(['hillBoing'])
+    theatre.step(0.2)
+    theatre.paint(painter, VIEW)
+    expect(Math.abs(props.get('palms')!.lean)).toBeGreaterThan(0.005)
+    for (let i = 0; i < 60 * 4; i++) theatre.step(1 / 60)
     // A cloud that is squeezed starts awake, and is asleep again soon after.
     const cloud = seen(CLOUDS[0].x, CLOUDS[0].y, CLOUDS[0].z)
     expect(touch(cloud.x, cloud.y)).toEqual(expect.arrayContaining(['cloudSqueak']))

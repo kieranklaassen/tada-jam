@@ -101,7 +101,7 @@ function duck(): Body {
       { at: [0, 1.1, -0.04], size: [0.08, 0.17, 0.08], turn: [0.5, 0, 0], colour: c, detail: TINY },
     ],
     // Its mouth is its beak: the corners of it are printed on the cheeks and turn up and down, and the dark of it shows on the front of the beak when it opens.
-    face: { eye: [0.27, 0.66, 0.47], eyeSize: 0.2, brows: true, mouth: null, mouthWide: 0, ink: PALETTE.ink, whites: true, corners: { at: [0, 0.37, 0.52], wide: 0.6, long: 0.085, gape: { at: [0, 0.335, 0.84], wide: 0.17, tall: 0.085 } } },
+    face: { eye: [0.27, 0.66, 0.47], eyeSize: 0.2, brows: true, mouth: null, mouthWide: 0, ink: PALETTE.ink, whites: true, corners: { at: [0, 0.37, 0.52], wide: 0.6, long: 0.085, gape: { at: [0, 0.325, 0.84], wide: 0.14, tall: 0.075 } } },
     eyes: eye(0.26, 0.64, 0.5, 0.13),
     print: [],
     arm: [{ at: [-0.06, -0.34, 0], size: [0.19, 0.42, 0.32], colour: c, panels: 2, detail: SMALL }],

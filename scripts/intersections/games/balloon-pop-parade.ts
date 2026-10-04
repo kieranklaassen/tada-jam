@@ -11,8 +11,8 @@ import type { Driver, Frac, GameAudit } from '../types.ts'
 
 const SLOT = 'tada-jam:slot:balloon-pop-parade'
 // Where the toys of the setting are, as `setting.ts` has them (that module imports others by bare names, which this
-// script cannot follow): the pool with its whale, the ball, and the hut on the far hill.
-const POOL = { x: 5.15, z: 3.3 }, BALL = { x: -4.9, z: 3.8 }, HUT = { x: 10.7, z: -18.9 }
+// script cannot follow): the pool with its whale, the ball, the hut on the far hill, and the crown of the taller palm.
+const POOL = { x: 5.15, z: 3.3 }, BALL = { x: -4.9, z: 3.8 }, HUT = { x: 10.7, z: -18.9 }, PALM = { x: -8.07, y: -1.16, z: -12.4 }
 const VIEW = viewFor(1180, 820)
 
 async function at(d: Driver, x: number, y: number, z = 0): Promise<Frac> {
@@ -75,7 +75,7 @@ export default {
     { a: '^scenery>hill', b: '^(friend|passer|leaving|waiting)-\\d>squash', kind: 'penetration', upTo: 0.3, reason: 'The hill is an air bed. A friend stands in it up to its feet, and one that lands on its bottom or its side, or sits down hard, sinks in for a moment.' },
     { a: '^scenery>far-hill', b: '^scenery>parade-', kind: 'penetration', upTo: 0.4, reason: 'The troops that were served stand upright on the far hill, whose skin slopes under them; they are a few pixels tall at that distance.' },
     { a: '^(waiting|friend)-\\d>squash', b: '^(waiting|friend)-\\d>squash', kind: 'penetration', upTo: 0.35, reason: 'The troop that waits stands as a tower: each friend stands on the head of the one below and presses into it a little, as one pool toy does on another, and brushes it as the tower comes apart when the troop sets off.' },
-    { a: '^scenery>(hill|far-hill|setting)', b: '^scenery>(setting|whale|keeper|ball)', kind: 'penetration', upTo: 0.6, reason: 'What stands in the setting stands in the air bed or in the far hill up to its foot, and the whale sits in the water of its pool: the flowers, the pool, the hut, the keeper, the ball where it lands.' },
+    { a: '^scenery>(hill|far-hill|setting)', b: '^scenery>(setting|whale|keeper|ball|palms)', kind: 'penetration', upTo: 0.6, reason: 'What stands in the setting stands in the air bed, in the hill to the left or in the far hill up to its foot, and the whale sits in the water of its pool: the flowers, the pool, the hut, the keeper, the palms, the ball where it lands.' },
   ],
   moments: [
     // The child's pair stands under a full sky from the first frame; a pair passes by to its left, takes its balloons and goes on behind it; the next troop comes to the edge.
@@ -106,13 +106,15 @@ export default {
     {
       name: 'the scenery and the step-in',
       run: async (d) => {
-        // The cloud over the troop, the hill, and the toys that live in the setting: the whale blows, the ball is
-        // kicked twice, and a knock at the hut makes its keeper jump. Then the troop that waits: the ducks march off
-        // and three frogs come down from their tower and walk in.
+        // The cloud over the troop, the hill, and the toys that live in the setting: the whale blows, twice running,
+        // the ball is kicked twice, a knock at the hut makes its keeper jump, and a palm is shaken and sways. Then
+        // the troop that waits: the ducks march off and three frogs come down from their tower and walk in.
         await d.tap(await at(d, 0.47, 0.53))
         await d.wait(700)
         await d.tap(await at(d, 3, GROUND - 0.9))
         await d.wait(1100)
+        await d.tap(await at(d, POOL.x, groundAt(POOL.x, POOL.z) + 0.7, POOL.z))
+        await d.wait(150)
         await d.tap(await at(d, POOL.x, groundAt(POOL.x, POOL.z) + 0.7, POOL.z))
         await d.wait(900)
         await d.tap(await at(d, BALL.x, groundAt(BALL.x, BALL.z) + 0.5, BALL.z))
@@ -121,6 +123,8 @@ export default {
         await d.wait(1400)
         await d.tap(await at(d, HUT.x, farGroundAt(HUT.x, HUT.z) + 1.2, HUT.z))
         await d.wait(900)
+        await d.tap(await at(d, PALM.x, PALM.y + 0.3, PALM.z))
+        await d.wait(1200)
         await d.tap(await waiting(d))
         await d.wait(5200)
       },

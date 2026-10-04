@@ -14,11 +14,11 @@ import { Theatre, type Painter } from './theatre'
 
 /**
  * Draws a frame makes besides the friends and the far hill's batches: the sky, two hills, three clouds, the setting
- * painted once, its three toys, the four batches (balloons, strings, shadows and the small pillows of faces) and
+ * painted once, its three toys and the palms, the four batches (balloons, strings, shadows and the small pillows of faces) and
  * the ghost hand. The far hill adds one for each batch it uses in the frame: one a kind, and one more for a kind
  * that has a friend there without a balloon.
  */
-const FIXED_DRAWS = 1 + 2 + 3 + 1 + 3 + 4 + 1
+const FIXED_DRAWS = 1 + 2 + 3 + 1 + 4 + 4 + 1
 /** A friend's draws: its trunk, its head, two arms and its funniest part; the crab has no head of its own, and the hippo has a jaw. */
 const drawsOf = (kind: KindName): number => 4 + (BODIES[kind].head.length > 0 ? 1 : 0) + (BODIES[kind].jaw.length > 0 ? 1 : 0)
 /** The jam's bar is about 80 draw calls; the game keeps a margin under it. */
@@ -95,7 +95,7 @@ describe('the frame budget', () => {
     // before and the one that passes have gone. So the fullest frame there could be is this one.
     const other = Math.max(drawsOf('duck'), drawsOf('frog'), drawsOf('crab'))
     const fullest = FIXED_DRAWS + 7 + 3 * drawsOf('hippo') * 2 + 3 * other
-    expect(fullest).toBe(73)
+    expect(fullest).toBe(74)
     expect(fullest).toBeLessThanOrEqual(DRAW_BUDGET)
   })
 })

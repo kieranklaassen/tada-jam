@@ -79,11 +79,9 @@ export function eyeBits(plan: FacePlan, state: FaceState, bit: Bit): void {
     bit(px - s * 0.18, py + s * 0.22 * open, ez + s * 0.5, s * 0.17, s * 0.17 * open, s * 0.1, 0, PALETTE.valve)
   }
   if (!plan.brows) return
-  // Over shut eyes a brow is never level: it goes the worried way with them, unless it is cross.
-  const brow = open < 0.25 && state.brow < 0.3 ? Math.min(state.brow, -0.6) : state.brow
   for (const side of [1, -1]) {
     // Worried, the inner end of a brow goes up; cross, it comes down.
-    const turn = side * Math.max(-1, Math.min(1, brow)) * 0.36
+    const turn = side * Math.max(-1, Math.min(1, state.brow)) * 0.36
     bit(ex * side * 1.04, ey + s * (1.46 + state.browLift * 0.4), ez + s * 0.22, s * 0.7, s * 0.12, s * 0.14, turn, plan.ink)
   }
 }
@@ -96,7 +94,9 @@ export function mouthBits(plan: FacePlan, state: FaceState, bit: Bit): void {
     const { at: [cx, cy, cz], wide, long, gape } = plan.corners
     const way = smile >= -0.15 ? 1 : -1, turned = way * (0.3 + 0.6 * Math.abs(smile))
     for (const side of [1, -1]) bit(cx + side * (wide / 2 + Math.cos(turned) * long * 0.8), cy + Math.sin(turned) * long * 0.8, cz, long, long * 0.34, long * 0.5, side * turned, plan.ink)
-    if (gape && open > 0.05) bit(gape.at[0], gape.at[1], gape.at[2], gape.wide * (0.7 + 0.3 * open), gape.tall * open, gape.tall * 0.5, 0, plan.ink)
+    // The dark of it is seen only when it is well open: an "ooh" under its breath shows none.
+    const agape = Math.max(0, (open - 0.3) / 0.7)
+    if (gape && agape > 0.05) bit(gape.at[0], gape.at[1], gape.at[2], gape.wide * (0.7 + 0.3 * agape), gape.tall * agape, gape.tall * 0.5, 0, plan.ink)
     return
   }
   if (!plan.mouth) return
