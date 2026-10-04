@@ -18,33 +18,33 @@ export const PX = 0.3
 export const X0 = 96
 
 /**
- * The panels of the page and the things on them. Above, the wall behind the stall under its awning: the
- * customer being served stands at the window on the left with its ticket, and the two who wait stand on the
- * right. Below, the counter from above: the tin on its rail, a bare strip to land a blade on, the board, the
+ * The panels of the page and the things on them. Above, the stall's front under its awning, with the street
+ * behind it: the customer being served stands at the window on the left with its ticket, and the two who wait
+ * stand on the right. The panel is tall enough for a customer to be drawn large. Below, the counter from above: the tin on its rail, a bare strip to land a blade on, the board, the
  * shelf, and down the right-hand side the roller on its hook, the crate and the dog.
  */
-export const WALL: Box = { x: 18, y: 18, w: 1144, h: 180 }
-export const COUNTER: Box = { x: 18, y: 212, w: 1144, h: 590 }
+export const WALL: Box = { x: 18, y: 14, w: 1144, h: 246 }
+export const COUNTER: Box = { x: 18, y: 270, w: 1144, h: 538 }
 /** The customer at the window, with its ticket: all of it answers a finger. */
-export const WINDOW: Box = { x: 26, y: 28, w: 610, h: 164 }
+export const WINDOW: Box = { x: 26, y: 24, w: 610, h: 230 }
 /** The two who wait, each with its ticket. The second stops short of the top right corner, which is the grown-up's. */
-export const QUEUE: readonly Box[] = [{ x: 660, y: 28, w: 236, h: 164 }, { x: 908, y: 28, w: 244, h: 164 }]
+export const QUEUE: readonly Box[] = [{ x: 660, y: 24, w: 236, h: 230 }, { x: 908, y: 24, w: 244, h: 230 }]
 /** The rail the tin lies on: the lid, the body and the ruled strip under it, all from the same left edge as the board. */
-export const RAIL_BOX: Box = { x: X0 - 12, y: 220, w: RAIL * PX + 24, h: 108 }
-export const TIN = { lidY: 220, lidH: 38, bodyY: 258, bodyH: 52, pieceH: 42, rulerY: 312, rulerH: 16 } as const
-export const BOARD: Box = { x: X0 - 16, y: 384, w: RAIL * PX + 32, h: 152 }
-export const SHELF_BOX: Box = { x: X0 - 16, y: 552, w: RAIL * PX + 32, h: SHELF * 56 + 6 }
-export const ROLLER: Box = { x: 1002, y: 222, w: 140, h: 104 }
-export const CRATE: Box = { x: 1002, y: 384, w: 140, h: 152 }
+export const RAIL_BOX: Box = { x: X0 - 12, y: 276, w: RAIL * PX + 24, h: 108 }
+export const TIN = { lidY: 276, lidH: 36, bodyY: 312, bodyH: 52, pieceH: 42, rulerY: 366, rulerH: 16 } as const
+export const BOARD: Box = { x: X0 - 16, y: 426, w: RAIL * PX + 32, h: 136 }
+export const SHELF_BOX: Box = { x: X0 - 16, y: 574, w: RAIL * PX + 32, h: SHELF * 54 + 6 }
+export const ROLLER: Box = { x: 1002, y: 280, w: 140, h: 104 }
+export const CRATE: Box = { x: 1002, y: 420, w: 140, h: 142 }
 /** Where the dog looks up over the edge of the counter: its head, as a box to touch. */
-export const DOG: Box = { x: 1002, y: 600, w: 140, h: 140 }
+export const DOG: Box = { x: 1002, y: 622, w: 140, h: 140 }
 /** A fruit on a lane or a row is this tall; the lane or row it lies in is taller, and all of that answers a finger. */
-export const LANE_H = 56
-export const ROW_H = 56
+export const LANE_H = 54
+export const ROW_H = 54
 export const PIECE_H = { board: 48, shelf: 44, tin: TIN.pieceH } as const
 
 /** The top of a lane of the board: lane 0 is the near one, lane 1 the far one, above it. */
-export const laneTop = (lane: number): number => BOARD.y + BOARD.h - 12 - (lane + 1) * LANE_H - lane * 16
+export const laneTop = (lane: number): number => BOARD.y + BOARD.h - 8 - (lane + 1) * LANE_H - lane * 12
 /** The top of a row of the shelf, 0 the oldest. */
 export const rowTop = (slot: number): number => SHELF_BOX.y + 6 + slot * ROW_H
 

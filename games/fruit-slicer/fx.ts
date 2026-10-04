@@ -190,7 +190,7 @@ export function step(state: FxState, dt: number): FxState {
         if (onWall) {
           const drawn = draw(seed)
           seed = drawn.state
-          fx.push({ kind: 'spatter', x: Math.max(WALL.x + 16, Math.min(WALL.x + WALL.w - 16, x)), y: Math.max(WALL.y + 44, y - drawn.value * 70), r: one.r * 1.9, fruit: one.fruit, seed: drawn.value * 1000, age: 0, life: 14 })
+          fx.push({ kind: 'spatter', x: Math.max(WALL.x + 16, Math.min(WALL.x + WALL.w - 16, x)), y: Math.max(WALL.y + 60, y - drawn.value * 150), r: one.r * 1.9, fruit: one.fruit, seed: drawn.value * 1000, age: 0, life: 14 })
         }
         continue
       }
@@ -266,5 +266,5 @@ export function flight(fromX: number, fromY: number, t: number, to: { x: number;
 /** Where a customer's mouth is, near enough for something to fly to: the one at the window, or one of the two who wait. */
 export function mouthOf(whom: 'window' | 0 | 1): { x: number; y: number } {
   const box = whom === 'window' ? WINDOW : QUEUE[whom]
-  return { x: box.x + (whom === 'window' ? 150 : 70), y: box.y + 70 }
+  return { x: box.x + (whom === 'window' ? 210 : 100), y: box.y + (whom === 'window' ? 96 : 150) }
 }

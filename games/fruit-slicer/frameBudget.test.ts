@@ -101,9 +101,14 @@ describe('the work of a frame', () => {
     expect(c.calls.get('save')).toBe(c.calls.get('restore'))
   })
 
-  it('paints the plate with a handful of figures, once for a size of surface', () => {
+  it('paints the whole setting onto the plate, once for a size of surface, so a frame pays for none of it', () => {
     const c = counter()
-    expect(paintPlate(c.ctx, dots)).toBeLessThan(30)
-    expect(c.total()).toBeLessThan(160)
+    // Measured after the look pass: 140 figures and 1061 calls for the street, the stall's front, the counter's wood and what lies on it.
+    expect(paintPlate(c.ctx, dots)).toBeLessThan(220)
+    expect(c.total()).toBeLessThan(1600)
+    // The plate is still: it reads no clock and draws the same thing every time.
+    const again = counter()
+    paintPlate(again.ctx, dots)
+    expect(again.total()).toBe(c.total())
   })
 })

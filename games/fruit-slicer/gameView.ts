@@ -11,6 +11,7 @@ import { FRUITS, WHOLE, type Fruit } from './measure'
 import { tinAt } from './moves'
 import { tinParts, wanted, type Customer } from './orders'
 import { ruling } from './serve'
+import { paintCounter, paintStreet, paintWear } from './setting'
 import { BOARD, COUNTER, CRATE, DOG, PX, QUEUE, ROLLER, SHELF_BOX, TIN, WALL, WINDOW, laneTop, rowTop, shown, tinShape, type Box, type Point, type TinShape } from './stage'
 import { drawFraction, drawSign } from './symbols'
 import { eaten, marksOf, SHELF, type Piece } from './world'
@@ -26,20 +27,31 @@ import { eaten, marksOf, SHELF, type Piece } from './world'
 type Ctx = CanvasRenderingContext2D
 type Dots = Pick<Screens, 'of'>
 const SCALLOPS = 16
-/** How big each customer is drawn beside the pelican, which is the tallest: the small ones are drawn larger than life, so their faces read. */
-const SIZE: Readonly<Record<Customer['who'], number>> = { pelican: 1, twins: 1.5, ants: 1.5, cat: 1.15, boa: 1.05 }
+/** How big each customer is drawn at the window, where it fills the height of its panel, and in the queue. The small ones are drawn larger than life, so their faces read. */
+const AT_WINDOW: Readonly<Record<Customer['who'], number>> = { pelican: 1.3, twins: 1.8, ants: 2, cat: 1.45, boa: 1.5 }
+const IN_QUEUE: Readonly<Record<Customer['who'], number>> = { pelican: 0.85, twins: 1.15, ants: 1.3, cat: 0.95, boa: 0.9 }
 /** Where the one at the window stands, by who it is: the middle of its feet. */
-const windowX = (who: Customer['who']): number => WINDOW.x + (who === 'ants' ? 46 : who === 'boa' ? 130 : who === 'twins' ? 118 : 92)
+const windowX = (who: Customer['who']): number => WINDOW.x + (who === 'ants' ? 60 : who === 'boa' ? 150 : who === 'twins' ? 185 : 120)
+/** How large the one at the window is drawn, and how much of the sill it may take: a short file of ants is drawn large, a long one runs on under the ticket. */
+function windowFit(customer: Customer): { s: number; room: number } {
+  if (customer.who !== 'ants') return { s: AT_WINDOW[customer.who], room: 540 }
+  return wantedCount(customer) <= 3 ? { s: AT_WINDOW.ants, room: 280 } : { s: 1.3, room: 540 }
+}
+/** The feet of everyone in the stall's panel stand on this line. */
+const SILL = WINDOW.y + WINDOW.h - 4
+/** Where a served customer's shut tin stands, by its feet, and the top of every ticket. */
+const TIN_BY_FEET = WINDOW.x + 290
+const TICKET_TOP = WALL.y + 54
 
 /** Everything that never moves: the two panels, the board, the shelf, the dog's arch and the roller's hook. Returns the figures drawn. */
 export function paintPlate(ctx: Ctx, dots: Dots): number {
+  // The stall's panel: the street behind, then the stall's own front. The counter's panel: worn wood and what lies about on it.
   panel(ctx, WALL.x, WALL.y, WALL.w, WALL.h, PAPER, dots.of(ctx, BLUE, 0.2))
+  let drawn = paintStreet(ctx, dots)
+  inked(ctx, rect(WALL.x, WALL.y, WALL.w, WALL.h), null, 6)
   panel(ctx, COUNTER.x, COUNTER.y, COUNTER.w, COUNTER.h, PAPER, dots.of(ctx, YELLOW, 0.22))
-  // The sill of the window, where the customer being served stands, and the rope the two who wait stand behind.
-  inked(ctx, rect(WINDOW.x, WINDOW.y + WINDOW.h - 4, WINDOW.w, 10), WHITE, 3)
-  ctx.fillStyle = INK
-  ctx.fillRect(QUEUE[0].x - 12, WALL.y + 60, 6, WALL.h - 60)
-  ctx.fillRect(QUEUE[0].x - 12, WALL.y + WALL.h - 12, QUEUE[1].x + QUEUE[1].w - QUEUE[0].x + 12, 6)
+  drawn += paintCounter(ctx, dots)
+  inked(ctx, rect(COUNTER.x, COUNTER.y, COUNTER.w, COUNTER.h), null, 6)
   // The board and the shelf: plain pale slabs with a hard shadow, and nothing on them but lines between the lanes.
   for (const box of [BOARD, SHELF_BOX]) {
     ctx.fillStyle = INK
@@ -47,7 +59,8 @@ export function paintPlate(ctx: Ctx, dots: Dots): number {
     inked(ctx, rect(box.x, box.y, box.w, box.h), BOARD_FILL, 5)
   }
   ctx.fillStyle = BOARD_EDGE
-  ctx.fillRect(BOARD.x + 3, laneTop(0) - 9, BOARD.w - 6, 3)
+  ctx.fillRect(BOARD.x + 3, laneTop(0) - 7.5, BOARD.w - 6, 3)
+  drawn += paintWear(ctx)
   for (let slot = 1; slot < SHELF; slot++) ctx.fillRect(SHELF_BOX.x + 3, rowTop(slot) - 1.5, SHELF_BOX.w - 6, 3)
   // The dog's way up from under the counter: a dark arch with a pale sill, which the dog looks out of.
   inked(ctx, (c) => {
@@ -62,7 +75,7 @@ export function paintPlate(ctx: Ctx, dots: Dots): number {
   ctx.fillStyle = INK
   ctx.fillRect(ROLLER.x + ROLLER.w / 2 - 3, COUNTER.y, 6, 34)
   ctx.fillRect(ROLLER.x + 30, COUNTER.y + 30, ROLLER.w - 60, 6)
-  return 16 + SHELF
+  return drawn + 12 + SHELF
 }
 
 /** A fruit or a piece: a flat colour, square ends and a thin darker line. A squash lowers it onto its own base; its length never changes. */
@@ -188,7 +201,8 @@ function ticket(ctx: Ctx, customer: Customer, x: number, top: number, s: number,
   let left = x, y = top, drawn = 0
   for (const share of customer.shares) {
     const reach = Math.max(1, share.num / share.den)
-    const w = whole * reach + 40 * s, h = (customer.written ? 122 : 62) * s
+    // The card is as wide as the whole fruits drawn on it: an order past one whole shows two.
+    const w = whole * Math.ceil(reach) + 40 * s, h = (customer.written ? 122 : 62) * s
     ctx.fillStyle = INK
     ctx.fillRect(left + 4, y + 4, w, h)
     inked(ctx, rect(left, y, w, h), WHITE, 3.5)
@@ -359,16 +373,16 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
   const departing = scenery.departing
   if (departing) {
     // The served customer on its way out, behind the one stepping up: turned about, its shut tin with it, and gone at the edge of the panel.
-    const who = departing.customer.who, s = 0.92 * SIZE[who], x = windowX(who), file = wantedCount(departing.customer)
-    const wide = who === 'ants' ? file * Math.min(44 * s, 540 / file) : 100 * s
-    const exit = Math.max(x - WALL.x + wide, WINDOW.x + 240 - WALL.x)
+    const who = departing.customer.who, { s, room } = windowFit(departing.customer), x = windowX(who), file = wantedCount(departing.customer)
+    const wide = who === 'ants' ? file * Math.min(44 * s, room / file) : 100 * s
+    const exit = Math.max(x - WALL.x + wide, TIN_BY_FEET + 72 - WALL.x)
     const last = poseOf(departing.actor, who === 'twins' ? 1 : 0)
     ctx.save()
     ctx.beginPath()
     ctx.rect(WALL.x + 3, WALL.y + 3, WALL.w - 6, WALL.h - 6)
     ctx.clip()
-    drawn += customerAt(ctx, dots, departing.customer, departing.actor, { feast: leavingFeast(departing.customer, departing.lengths, last.away) }, x, WINDOW.y + WINDOW.h - 4, s, 540, exit)
-    inked(ctx, rect(WINDOW.x + 168 - last.away * exit, WINDOW.y + WINDOW.h - 34 - last.hop, 64, 26), '#c9d6e6', 4, dots.of(ctx, BLUE, 0.3))
+    drawn += customerAt(ctx, dots, departing.customer, departing.actor, { feast: leavingFeast(departing.customer, departing.lengths, last.away) }, x, SILL, s, room, exit)
+    inked(ctx, rect(TIN_BY_FEET - last.away * exit, SILL - 30 - last.hop, 64, 26), '#c9d6e6', 4, dots.of(ctx, BLUE, 0.3))
     ctx.restore()
     drawn++
   }
@@ -379,11 +393,13 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
     const lengths = scenery.ending ? scenery.ending.result.parts.flatMap((part) => part.pieces.map((piece) => piece.length)) : eaten(game.world).map((piece) => piece.length)
     const feast = feastOf(atWindow, lengths, scenery.ending?.taste ?? null, scenery.show?.kind === 'showing' ? null : scenery.show, scenery.ending?.result.kind === 'over', scenery.ending?.outcome === 'badly')
     feasting = feast
-    drawn += customerAt(ctx, dots, atWindow, scenery.window, { feast, show: scenery.show }, windowX(atWindow.who), WINDOW.y + WINDOW.h - 4, 0.92 * SIZE[atWindow.who], 540)
-    if (game.window) drawn += ticket(ctx, atWindow, WINDOW.x + 262, WINDOW.y + 34, atWindow.shares.length > 1 || atWindow.who === 'boa' ? 0.62 : atWindow.written ? 0.82 : 1)
+    const fitted = windowFit(atWindow)
+    drawn += customerAt(ctx, dots, atWindow, scenery.window, { feast, show: scenery.show }, windowX(atWindow.who), SILL, fitted.s, fitted.room)
+    // The ticket is large and stands clear of whoever holds it: the cat's two are stacked.
+    if (game.window) drawn += ticket(ctx, atWindow, WINDOW.x + 330, TICKET_TOP, atWindow.who === 'boa' ? 0.66 : atWindow.shares.length > 1 ? 0.72 : 1.1, atWindow.shares.length > 1)
     // Served, and the serve over: it holds its tin, shut, by its feet.
     if (game.finished && !scenery.ending) {
-      inked(ctx, rect(WINDOW.x + 168, WINDOW.y + WINDOW.h - 34, 64, 26), '#c9d6e6', 4, dots.of(ctx, BLUE, 0.3))
+      inked(ctx, rect(TIN_BY_FEET, SILL - 30, 64, 26), '#c9d6e6', 4, dots.of(ctx, BLUE, 0.3))
       drawn++
     }
   }
@@ -403,13 +419,13 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
     const box = QUEUE[index], ants = customer.who === 'ants'
     // A pelican gliding out of the queue is drawn in its place until it has gone; the one who joins is seen after it.
     if (gliding && gliding.whom === index && scenery.show && scenery.show.away < 1) {
-      drawn += customerAt(ctx, dots, gliding.customer, scenery.leavingActor, { show: scenery.show }, box.x + 56, box.y + box.h - 4, 0.62, 210)
+      drawn += customerAt(ctx, dots, gliding.customer, scenery.leavingActor, { show: scenery.show }, box.x + 58, SILL, IN_QUEUE.pelican, 210)
       return
     }
-    // A long order's ticket goes above the one who holds it; the cat's two are stacked beside it; any other stands beside its ticket.
-    const long = customer.who === 'boa'
-    drawn += customerAt(ctx, dots, customer, scenery.queue[index], {}, box.x + (ants ? 14 : long ? 96 : customer.who === 'twins' ? 60 : 40), box.y + box.h - 4, (long ? 0.5 : 0.6) * SIZE[customer.who], ants ? 96 : 210)
-    drawn += ticket(ctx, customer, box.x + (long ? 8 : 122), box.y + 30, long ? 0.5 : customer.shares.length > 1 ? 0.5 : customer.written ? 0.54 : 0.6, true)
+    // The pelican and the cat stand beside their tickets, the cat's two stacked; the low ones (the twins, the ants, the boa) have theirs over their heads.
+    const who = customer.who, long = who === 'boa', beside = who === 'pelican' || who === 'cat'
+    drawn += customerAt(ctx, dots, customer, scenery.queue[index], {}, box.x + (ants ? 26 : long ? 125 : who === 'twins' ? 116 : who === 'cat' ? 62 : 58), SILL, IN_QUEUE[who], ants ? 200 : 210)
+    drawn += ticket(ctx, customer, box.x + (long ? 8 : who === 'cat' ? 104 : beside ? 92 : 46), TICKET_TOP, long ? 0.5 : customer.shares.length > 1 ? 0.56 : 0.62, true)
   })
   drawn += awning(ctx, scenery.time, fx.flap)
   drawn += crate(ctx, dots, fx.rock, game.window && !game.finished ? game.window.fruit : null, scenery.time)
