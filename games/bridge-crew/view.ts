@@ -183,7 +183,7 @@ export class View {
       if (!carried && toy.leaning > 0 && toy.rest[index].how === 'firm') for (const end of ['a', 'b'] as const) { if (part.loose === end) continue; const lean = toy.lean(part[end]); now[end][0] += lean[0]; now[end][1] += lean[1] }
       const dx = now.b[0] - now.a[0], dy = now.b[1] - now.a[1], long = Math.hypot(dx, dy) || 1
       // A plucked part shakes across its own length and dies away.
-      const rung = toy.rung[index], shake = rung < RING ? SHAKE[part.kind].far * Math.exp(-rung / 0.22) * Math.sin(2 * Math.PI * SHAKE[part.kind].beat * rung) : 0
+      const rung = toy.shakeOf(index), shake = rung < RING ? SHAKE[part.kind].far * Math.exp(-rung / 0.22) * Math.sin(2 * Math.PI * SHAKE[part.kind].beat * rung) : 0
       // A part that was never turned has been "turning" for ever: every term below is taken only inside the turn.
       const turned = toy.turned[index] < 0.4 ? toy.turned[index] : 0.4, turning = 1 - turned / 0.4
       const hop = part.kind === 'plank' ? 0.12 * Math.sin(Math.PI * Math.min(turned / 0.3, 1)) : part.kind === 'tube' ? 0.05 * turning * Math.sin(2 * Math.PI * 6 * turned) : 0

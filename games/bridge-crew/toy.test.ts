@@ -6,7 +6,7 @@ import { deserialize, freshSave, serialize } from './save'
 import { groundAt } from './sheet'
 import { site } from './sites'
 import { CHIEF, FLIGHT, LEAN, MARKS, RING, Toy, closedTriangle, featherAt, flightEnds } from './toy'
-import { pinTick } from './voices'
+import { lay as layVoice, pinTick, touchPart } from './voices'
 
 const part = (kind: Part['kind'], ax: number, ay: number, bx: number, by: number, turned = false): Part => ({ kind, a: [ax, ay], b: [bx, by], turned })
 /** The toy alone, on the free yard, where the whole kit is. */
@@ -104,18 +104,18 @@ describe('the toy', () => {
         // Both ends and three points between: how far under the drawn ground any of them is.
         for (const t of [0, 0.25, 0.5, 0.75, 1]) { const x = a[0] + (b[0] - a[0]) * t, y = a[1] + (b[1] - a[1]) * t; deepest = Math.max(deepest, groundAt(toy.at, x) - y) }
       })
-      // Every link hangs from where the part above it is now, within what a spring gives in a frame.
+      // Every link hangs from where the part above it is now, from the first frame on.
       toy.rest.forEach((rest, index) => {
         if (!rest.via) return
         const up = drawn[rest.via.part], mine = drawn[index], s = rest.via.share
         const link = [up.a[0] + (up.b[0] - up.a[0]) * s, up.a[1] + (up.b[1] - up.a[1]) * s], pin = [mine.a[0] + (mine.b[0] - mine.a[0]) * rest.pivot, mine.a[1] + (mine.b[1] - mine.a[1]) * rest.pivot]
-        if (frame > 30) widest = Math.max(widest, Math.hypot(link[0] - pin[0], link[1] - pin[1]))
+        widest = Math.max(widest, Math.hypot(link[0] - pin[0], link[1] - pin[1]))
       })
     }
     expect(toy.rest.some((rest) => rest.via)).toBe(true)
     // In pixels at 1180 by 820 a cell is 44: under a tenth of a cell is under five pixels.
     expect(deepest).toBeLessThan(0.1)
-    expect(widest).toBeLessThan(0.35)
+    expect(widest).toBeLessThan(0.02)
     // A plank swinging down from a lip knocks against the bank, and is heard.
     expect(knocks).toBeGreaterThan(0)
   })
@@ -138,16 +138,22 @@ describe('the toy', () => {
     for (let i = 0; i < toy.at.kit.tube; i++) drag(toy, [20, 6 + i], [22, 6 + i])
     expect(toy.left('tube')).toBe(0)
     toy.takeVoices()
+    // With none left in the picked pile, the next drag lays from the first pile that still has some: a drag always lays something while the kit has a part.
     const before = toy.bridge.length
     drag(toy, [20, 12], [22, 12])
-    expect(toy.bridge).toHaveLength(before)
+    expect(toy.bridge).toHaveLength(before + 1)
+    expect(toy.bridge[before].kind).toBe('plank')
+    expect(toy.selected).toBe('plank')
     expect(toy.takeVoices().length).toBeGreaterThan(0)
   })
 
   it('a tap plucks a part, a second tap while it rings turns it, and a tap after the ring only plucks again', () => {
     const toy = fresh()
     drag(toy, [4, 6], [6, 6]); settle(toy); toy.takeVoices(); toy.takeChange()
-    toy.press(5.5, 6.1); toy.tap()
+    toy.press(5.5, 6.1)
+    // The finger landing on it is heard at once, softly, in the plank's own stuff; the pluck comes with the lift.
+    expect(toy.takeVoices()).toEqual([touchPart('plank', 2)])
+    toy.tap()
     expect(toy.rung[0]).toBe(0)
     expect(toy.takeVoices()).toHaveLength(1)
     expect(toy.bridge[0].turned).toBe(false)
@@ -168,7 +174,7 @@ describe('the toy', () => {
     toy.press(5.5, 6.1); toy.dragStart(); toy.dragMove(5.7, 6.4); toy.dragEnd()
     expect(toy.bridge).toHaveLength(1)
     expect(toy.takeChange()).toBe(false)
-    expect(toy.takeVoices()).toHaveLength(1)
+    expect(toy.takeVoices()).toHaveLength(2)
     toy.press(5.5, 6.1); toy.dragStart(); toy.dragMove(9, 9)
     // In the hand it is still part of the saved bridge: a put-away now finds it where it came from.
     expect(toy.bridge).toHaveLength(1)
@@ -363,3 +369,98 @@ describe('the toy', () => {
     expect(toy.hand).toBeNull()
   })
 })
+
+describe('what a full reading of the toy found', () => {
+  it('a square whose diagonal is taken off leans into a diamond with its top on, slowly, and lies down whole', () => {
+    const toy = fresh()
+    pickKind(toy, 'stick')
+    // On the far bank of the yard: two uprights on footings, a bar across their tops, and a diagonal.
+    drag(toy, [20, 6], [20, 8]); drag(toy, [22, 6], [22, 8]); drag(toy, [20, 8], [22, 8]); drag(toy, [20, 6], [22, 8])
+    settle(toy)
+    expect(toy.frame.firm.every(Boolean)).toBe(true)
+    // The diagonal goes to the tray.
+    toy.press(21.4, 7.5); toy.dragStart(); toy.dragMove(12, -2.3); toy.dragEnd()
+    expect(toy.bridge).toHaveLength(3)
+    expect(toy.frame.firm.some(Boolean)).toBe(false)
+    expect(toy.rest[2].tie).toBeDefined()
+    let apart = 0, down = Infinity, most = 0
+    for (let frame = 0; frame < 60 * 6; frame++) {
+      toy.step(1 / 60)
+      const [left, right, bar] = toy.drawn()
+      // The bar's ends are on the uprights' tips at every moment, and it stays as long as it was cut.
+      apart = Math.max(apart, Math.hypot(bar.a[0] - left.b[0], bar.a[1] - left.b[1]), Math.hypot(bar.b[0] - right.b[0], bar.b[1] - right.b[1]))
+      most = Math.max(most, Math.abs(Math.hypot(bar.b[0] - bar.a[0], bar.b[1] - bar.a[1]) - 2))
+      // The two uprights lean the same way, side by side: a diamond, not two sticks falling apart.
+      expect(Math.abs((left.b[0] - left.a[0]) - (right.b[0] - right.a[0]))).toBeLessThan(0.05)
+      if (down === Infinity && left.b[1] < 6.4) down = frame / 60
+    }
+    expect(apart).toBeLessThan(0.02)
+    expect(most).toBeLessThan(0.05)
+    // Slowly, like a deckchair: not in a fifth of a second.
+    expect(down).toBeGreaterThan(0.35)
+    expect(down).toBeLessThan(2)
+    // And it lies where it landed.
+    const [left, , bar] = toy.drawn()
+    expect(left.b[1]).toBeLessThan(6.3); expect(bar.a[1]).toBeLessThan(6.3); expect(bar.b[1]).toBeLessThan(6.3)
+  })
+
+  it('a pin plucked shakes every part on it as far as a pluck would, each is heard as itself, and a tap on one of them after it still plucks', () => {
+    const toy = fresh()
+    // Two planks of one length meet a stick at a pin in the air.
+    drag(toy, [6, 6], [9, 6]); drag(toy, [9, 6], [12, 6])
+    pickKind(toy, 'stick'); drag(toy, [9, 6], [9, 8])
+    settle(toy); toy.takeVoices()
+    toy.press(9, 6); toy.tap()
+    const rattle = toy.takeVoices().find((voice) => voice.length === 3)!
+    expect(rattle).toBeDefined()
+    // Three parts, three different notes, though two of them are alike.
+    expect(new Set(rattle.map((sound) => Math.round(sound.pitch))).size).toBe(3)
+    for (const index of [0, 1, 2]) expect(toy.shakeOf(index)).toBe(0)
+    toy.step(0.05)
+    for (const index of [0, 1, 2]) expect(toy.shakeOf(index)).toBeLessThan(RING)
+    // A tap on the plank now plucks it: it is not turned by a tap it did not get.
+    toy.press(7.5, 6.1); toy.tap()
+    expect(toy.bridge[0].turned).toBe(false)
+  })
+
+  it('a lone part on one pin, its pin turned, goes right round once like a clock hand, ticking, and hangs straight down', () => {
+    const toy = fresh()
+    pickKind(toy, 'stick')
+    // A stick by one end on the far cliff's footing, hanging.
+    drag(toy, [19, 11], [21, 11])
+    settle(toy, 8); toy.takeVoices()
+    const start = toy.moving[0].turn.at
+    toy.press(19, 11); toy.tap(); toy.step(0.05); toy.press(19, 11); toy.tap()
+    let ticks = 0, farthest = 0
+    for (let i = 0; i < 60 * 14; i++) { toy.step(1 / 60); ticks += toy.takeVoices().filter((voice) => voice === pinTick).length; farthest = Math.max(farthest, Math.abs(toy.moving[0].turn.at - start)) }
+    // Over the top: more than a half turn from where it hung, and it comes to rest a whole turn on.
+    expect(farthest).toBeGreaterThan(Math.PI * 1.5)
+    expect(Math.abs(Math.abs(toy.moving[0].turn.at - start) - 2 * Math.PI)).toBeLessThan(0.1)
+    expect(ticks).toBeGreaterThan(12)
+    const hung = toy.drawn()[0]
+    expect(hung.b[0]).toBeCloseTo(hung.a[0], 1)
+  })
+
+  it('a hinge ticks when a part on it shifts a little, not only when it turns far, and is silent at rest', () => {
+    const toy = fresh()
+    drag(toy, [6, 6], [10, 6]); drag(toy, [10, 6], [14, 6]); drag(toy, [14, 6], [18, 6])
+    pickKind(toy, 'tube'); drag(toy, [10, 3], [10, 6])
+    settle(toy); toy.takeVoices()
+    // A stick laid onto the deck's joint: the deck dips and settles by a hair, and its hinges are heard.
+    pickKind(toy, 'stick'); drag(toy, [14, 6], [14, 9])
+    let ticks = 0
+    for (let i = 0; i < 90; i++) { toy.step(1 / 60); ticks += toy.takeVoices().filter((voice) => voice === pinTick).length }
+    expect(ticks).toBeGreaterThan(0)
+    // Never a rattle: the stick itself turns over as it falls and ticks at each notch, and the deck's hinges a handful of times.
+    expect(ticks).toBeLessThan(16)
+    settle(toy, 6); toy.takeVoices()
+    for (let i = 0; i < 120; i++) { toy.step(1 / 60); expect(toy.takeVoices()).toEqual([]) }
+  })
+
+  it('a thread lands with a slither that is lower and longer the longer the thread is', () => {
+    const short = layVoice('thread', 1)[0], long = layVoice('thread', 9)[0]
+    expect(long.pitch).toBeLessThan(short.pitch)
+    expect(long.length).toBeGreaterThan(short.length)
+  })
+})
+

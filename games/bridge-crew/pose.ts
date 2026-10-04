@@ -27,6 +27,8 @@ export type Rest = {
   slack: boolean
   /** A link of a chain: the hanging part this one hangs from, and where along that part, as a share from its a to its b. */
   via?: { part: number; share: number }
+  /** Its other end is pinned to another swinging part as well: where along that one. While the two pins are as far apart as it is long, it goes with both, as the top of a square that leans into a diamond does. */
+  tie?: { part: number; share: number }
 }
 
 export function rests(parts: readonly Part[], frame: Frame, answer: Answer, isFooting: (p: Point) => boolean, ground: (x: number) => number): Rest[] {
@@ -57,6 +59,15 @@ export function rests(parts: readonly Part[], frame: Frame, answer: Answer, isFo
     const lean = room >= below ? 0 : Math.acos(Math.max(0, room) / below) * (ground(at[0] + 0.5) <= ground(at[0] - 0.5) ? 1 : -1)
     const dx = Math.sin(lean) * down, dy = Math.cos(lean) * down
     const rest: Rest = { a: [at[0] - dx * share * long, at[1] + dy * share * long], b: [at[0] + dx * (1 - share) * long, at[1] - dy * (1 - share) * long], how: 'hangs', pivot: share, slack: false, via: owner.get(key(on)) }
+    // Pinned by its one end to a swinging part and by its other to another one: it is tied to that one too.
+    // Only where the two pins come to rest as far apart as it is long: then the three fold together, as a
+    // parallelogram does, and it lies down joined to both.
+    const via = rest.via, other = share === 0 ? part.b : share === 1 ? part.a : null, second = other && owner.get(key(other)), there = other && held.get(key(other))
+    if (via && second && there && second.part !== via.part && Math.abs(Math.hypot(there[0] - at[0], there[1] - at[1]) - long) < 0.02 * long) {
+      rest.tie = second
+      // Where it rests is between the two pins.
+      if (share === 0) { rest.a = [at[0], at[1]]; rest.b = [there[0], there[1]] } else { rest.b = [at[0], at[1]]; rest.a = [there[0], there[1]] }
+    }
     out[index] = rest
     for (const p of pinsOf(part)) {
       if (held.has(key(p))) continue
@@ -145,7 +156,8 @@ export function ends(moving: Moving, long: number): { a: [number, number]; b: [n
 /** How each way of resting moves: a firm part is stiff light wood, a hanging one swings, a fallen one drops and settles. */
 export const GAIT = {
   firm: { beat: 6.5, damp: 0.42, swing: 6.5, swingDamp: 0.5 },
-  hangs: { beat: 5, damp: 0.6, swing: 1.3, swingDamp: 0.11 },
+  // What is not held folds slowly, like a deckchair: about half a second from upright to the ground.
+  hangs: { beat: 5, damp: 0.6, swing: 0.55, swingDamp: 0.16 },
   lies: { beat: 2.2, damp: 0.75, swing: 2.2, swingDamp: 0.6 },
 } as const
 

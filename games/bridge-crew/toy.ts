@@ -7,7 +7,7 @@ import { atRest, ends, follow, rests, unrest, type Moving, type Rest } from './p
 import { edit, type Save } from './save'
 import { groundAt } from './sheet'
 import { canPin, isFooting, site, type Site } from './sites'
-import { chiefCroak, chiefRuffle, chiefTaps, fold, growCreak, knock, lay as layVoice, pick, pinClick, pinRattle, pinSwing, pinTick, putBack, snapTick, type VoiceSpec } from './voices'
+import { chiefCroak, chiefRuffle, chiefTaps, fold, growCreak, knock, touchPart, lay as layVoice, pick, pinClick, pinRattle, pinSwing, pinTick, putBack, snapTick, type VoiceSpec } from './voices'
 
 // The toy: the bridge on the board, a finger, and what the two do to each
 // other. Pure: no renderer, no DOM and no clock of its own. The Mount feeds it
@@ -50,7 +50,13 @@ export const CARRY_OFF = 1
 export const CHIEF = { x: 0.7, y: 10.9, reach: 1.5 } as const
 
 /** A hinge ticks once for each notch a part on it turns through, in radians, and no faster than one tick in `gap` seconds. The notches lie clear of the angles a part can be laid at. */
-export const NOTCH = { turn: 0.3, gap: 0.05 } as const
+export const NOTCH = { turn: 0.3, gap: 0.05, creep: 0.08, rest: 0.2 } as const
+
+/** How fast a lone part on a pin is sent round when its pin is turned, in radians a second: over the top once, and then it hangs. */
+export const SPIN = 15
+
+/** How far the two pins of a tied part may be from its own length apart, as a share of it, and still be drawn joined. */
+const TIE = 0.3
 /** What is built leans toward a part being laid: a pin in the air by up to `far` cells, less the further it is from the finger, and not at all beyond `reach`. */
 export const LEAN = { far: 0.07, reach: 5 } as const
 
@@ -86,6 +92,9 @@ export class Toy {
   moving: Moving[] = []
   /** Seconds since each part was plucked, turned and laid: what its ring, its turn and its landing are drawn from. */
   rung: number[] = []
+  /** Seconds since each part was shaken by a rattle of a pin it is on, and how far each has crept since its hinge last ticked. Short-lived, and kept by place in the bridge: both start again when a part leaves. */
+  shook: number[] = []
+  private crept: number[] = []
   turned: number[] = []
   laid: number[] = []
   /** Seconds since a pin last clicked in at each grid point, by its key. */
@@ -138,7 +147,22 @@ export class Toy {
 
   /** The two ends of every part as drawn now. */
   drawn(): { a: [number, number]; b: [number, number] }[] {
-    return this.bridge.map((part, index) => ends(this.moving[index], length(part)))
+    const out = this.bridge.map((part, index) => ends(this.moving[index], length(part)))
+    // A part pinned at each end to a part that swings goes with both, for as long as the two pins are as far apart as
+    // it is long: so a square leans into a diamond with its top on, and lies down whole.
+    this.rest.forEach((rest, index) => {
+      if (!rest || !rest.via || !rest.tie || !out[rest.via.part] || !out[rest.tie.part]) return
+      const on = (link: { part: number; share: number }): [number, number] => { const e = out[link.part]; return [e.a[0] + (e.b[0] - e.a[0]) * link.share, e.a[1] + (e.b[1] - e.a[1]) * link.share] }
+      const near = on(rest.via), far = on(rest.tie), long = length(this.bridge[index])
+      if (Math.abs(Math.hypot(far[0] - near[0], far[1] - near[1]) - long) > TIE * long) return
+      out[index] = rest.pivot === 0 ? { a: near, b: far } : { a: far, b: near }
+    })
+    return out
+  }
+
+  /** How long ago each part was shaken, by a pluck of its own or by a rattle of a pin it is on: what the view draws its shake from. */
+  shakeOf(index: number): number {
+    return Math.min(this.rung[index] ?? Infinity, this.shook[index] ?? Infinity)
   }
 
   /** How many parts of a kind are still in the tray. */
@@ -203,8 +227,9 @@ export class Toy {
       return
     }
     this.hand = { what: 'part', index: target.part, carried: false, from: [x, y], finger: [x, y] }
-    // The part lifts under the finger: it jumps a hair toward it, and the springs bring it back.
+    // The part lifts under the finger: it jumps a hair toward it, and the springs bring it back. And it is heard, softly.
     this.moving[target.part].y.speed += 1.2
+    this.voices.push(touchPart(this.bridge[target.part].kind, length(this.bridge[target.part])))
   }
 
   tap(): void {
@@ -231,14 +256,16 @@ export class Toy {
       // hand, ticking as it goes, and hangs straight down again.
       const lone = on.length === 1 && this.rest[on[0]].how === 'hangs'
       if (lone && (this.rattled.get(key(hand.at)) ?? Infinity) < RING) {
-        this.moving[on[0]].turn.speed += on[0] % 2 ? 17 : -17
+        // Fast enough to go over the top: once round, and then it swings and hangs straight down.
+        this.moving[on[0]].turn.speed += on[0] % 2 ? SPIN : -SPIN
         this.voices.push(pinSwing)
         this.rattled.delete(key(hand.at))
         return
       }
       // Every part on the pin rattles at once, each in its own voice.
       this.voices.push(pinRattle(on.map((index) => this.pluckOf(index)[0])))
-      for (const index of on) this.rung[index] = RING * 0.5
+      // Each shakes as far as if it had been plucked; a tap on one of them after this still plucks it and does not turn it.
+      for (const index of on) { this.shook[index] = 0; this.rung[index] = Math.max(this.rung[index], RING) }
       this.rattled.set(key(hand.at), 0)
     }
     if (hand.what === 'part') this.tapPart(hand.index)
@@ -263,6 +290,8 @@ export class Toy {
   dragStart(): void {
     const hand = this.hand
     if (!hand) return
+    // With none left of the picked kind, the pile that still has some is picked: a drag always lays something while the kit has a part.
+    if (hand.what === 'pin' && this.left(this.selected) <= 0) this.selected = this.pileFor()
     if (hand.what === 'pin') this.hand = { what: 'lay', kind: this.selected, from: hand.at, to: hand.at, finger: hand.at, pulling: false }
     if (hand.what === 'part') hand.carried = true
   }
@@ -351,10 +380,20 @@ export class Toy {
         carried = [now.a[0] + (now.b[0] - now.a[0]) * s - (link.a[0] + (link.b[0] - link.a[0]) * s), now.a[1] + (now.b[1] - now.a[1]) * s - (link.a[1] + (link.b[1] - link.a[1]) * s)]
       }
       follow(moving, rest, length(part), dt, carried)
+      // A link is pinned to the part it hangs from: its pin is exactly where that part's is now, with no lag.
+      if (rest.via) {
+        moving.x.at = rest.a[0] + (rest.b[0] - rest.a[0]) * rest.pivot + carried[0]; moving.x.speed = 0
+        moving.y.at = rest.a[1] + (rest.b[1] - rest.a[1]) * rest.pivot + carried[1]; moving.y.speed = 0
+      }
       this.rung[index] += dt; this.turned[index] += dt; this.laid[index] += dt
+      if (this.shook[index] !== undefined) this.shook[index] += dt
       // A pin in the air is a hinge, and it ticks as a part on it turns: once for each notch the part passes.
       const notch = (turn: number) => Math.floor(turn / NOTCH.turn - 0.5)
-      if (notch(moving.turn.at) !== notch(before) && this.ticked >= NOTCH.gap && this.hinged(index)) { this.voices.push(pinTick); this.ticked = 0 }
+      if (notch(moving.turn.at) !== notch(before) && this.ticked >= NOTCH.gap && this.hinged(index)) { this.voices.push(pinTick); this.ticked = 0; this.crept[index] = 0 }
+      // And it ticks when a part on it shifts without turning far: once for each small distance its far end has gone,
+      // and never as a rattle.
+      this.crept[index] = (this.crept[index] ?? 0) + Math.abs(moving.turn.at - before) * length(part) + (Math.abs(moving.x.speed) + Math.abs(moving.y.speed)) * dt
+      if (this.crept[index] >= NOTCH.creep && this.ticked >= NOTCH.rest && this.hinged(index)) { this.voices.push(pinTick); this.ticked = 0; this.crept[index] = 0 }
       // A swinging part does not go through the ground: where it would, it is turned back the short way until it
       // lies clear, and it comes off the ground more slowly than it met it, with a knock.
       if (rest.how !== 'hangs') continue
@@ -438,6 +477,7 @@ export class Toy {
   protected forget(gone: readonly number[]): void {
     const keep = <T,>(list: T[]) => list.filter((_, index) => !gone.includes(index))
     this.moving = keep(this.moving); this.rung = keep(this.rung); this.turned = keep(this.turned); this.laid = keep(this.laid)
+    this.shook = []; this.crept = []
   }
 
   /**

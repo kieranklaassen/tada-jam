@@ -1,5 +1,5 @@
 import { LADDER } from './config'
-import { KINDS, MAX_PARTS, layProblem, type Part, type Point } from './kit'
+import { KINDS, MAX_PARTS, layProblem, pinsOf, type Part, type Point } from './kit'
 import { JUDGE, crossedOutcome, givenUpOn, layOut, type Showing } from './order'
 import { canPin, isYard, site, type Site, type VehicleId } from './sites'
 import { beginCycle, deserialize as readBase, finishCycle, freshState, serialize as writeBase, type GameState } from './state'
@@ -191,7 +191,7 @@ const withSheet = (state: Save, change: (sheet: Sheet) => Sheet): Save => ({ ...
 export const onNewest = (state: Save): boolean => state.on === state.sheets.length - 1
 
 /** Whether two parts share a pin: the ringed part's neighbours are the parts whose change clears the ring. */
-const touches = (p: Part, q: Part) => [p.a, p.b].some((e) => [q.a, q.b].some((f) => e[0] === f[0] && e[1] === f[1]))
+const touches = (p: Part, q: Part) => pinsOf(p).some((e) => pinsOf(q).some((f) => e[0] === f[0] && e[1] === f[1]))
 const samePart = (p: Part, q: Part) => p.kind === q.kind && p.turned === q.turned && p.loose === q.loose && p.a[0] === q.a[0] && p.a[1] === q.a[1] && p.b[0] === q.b[0] && p.b[1] === q.b[1]
 
 /**

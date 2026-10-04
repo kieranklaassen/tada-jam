@@ -58,7 +58,8 @@ export function lay(kind: Kind, long: number): VoiceSpec {
     // A hollow tok.
     case 'tube': return kept([{ wave: 'sine', pitch, slideTo: pitch * 0.85, peak: 0.15, attack: 0.004, length: 0.2 }, { wave: 'noise', pitch: pitch * 2, peak: 0.04, attack: 0.004, length: 0.08 }])
     // A soft slither as it falls into its curve.
-    case 'thread': return kept([{ wave: 'noise', pitch: 2400, slideTo: 1200, peak: 0.05, attack: 0.03, length: 0.22 }])
+    // A soft slither as it falls into its curve: lower and longer the longer the thread is.
+    case 'thread': return kept([{ wave: 'noise', pitch: pitch * 4, slideTo: pitch * 2, peak: 0.05, attack: 0.03, length: 0.12 + 0.03 * Math.min(long, 9) }])
   }
 }
 
@@ -162,7 +163,16 @@ export const gurgle: VoiceSpec = [0, 0.09, 0.17, 0.28].map((after, i) => ({ wave
 export const pinTick: VoiceSpec = [{ wave: 'triangle', pitch: 2600, peak: 0.05, attack: 0.001, length: 0.03 }]
 
 /** Every part on a plucked pin rattles at once: a few quick knocks at the pitches of those parts. */
-export const pinRattle = (parts: readonly Sound[]): VoiceSpec => kept((parts.length ? parts : [{ wave: 'triangle' as const, pitch: 600, peak: 0.07, attack: 0.002, length: 0.08 }]).slice(0, 5).map((own, i) => ({ wave: own.wave, pitch: own.pitch, slideTo: own.slideTo, peak: 0.07, attack: own.attack, length: Math.min(own.length, 0.22), after: 0.035 * i })))
+export const pinRattle = (parts: readonly Sound[]): VoiceSpec => {
+  const heard: number[] = []
+  return kept((parts.length ? parts : [{ wave: 'triangle' as const, pitch: 600, peak: 0.07, attack: 0.002, length: 0.08 }]).slice(0, 6).map((own, i) => {
+    // Two parts alike in kind, length and force would sound one note twice: each one after the first is a little sharper, so every part is heard as itself.
+    let pitch = own.pitch
+    while (heard.some((other) => Math.abs(other - pitch) < pitch * 0.02)) pitch *= 1.06
+    heard.push(pitch)
+    return { wave: own.wave, pitch, slideTo: own.slideTo === undefined ? undefined : own.slideTo * (pitch / own.pitch), peak: 0.07, attack: own.attack, length: Math.min(own.length, 0.22), after: 0.035 * i }
+  }))
+}
 
 /** A lone part swings round its one pin like a clock hand, ticking. */
 export const pinSwing: VoiceSpec = [0, 0.14, 0.28, 0.42].map((after, i) => ({ wave: 'triangle' as const, pitch: i % 2 ? 1500 : 1900, peak: 0.06, attack: 0.001, length: 0.035, after }))
@@ -195,6 +205,9 @@ export const chiefRuffle: VoiceSpec = [{ wave: 'noise', pitch: 1500, slideTo: 30
 export const chiefCroak: VoiceSpec = [{ wave: 'square', pitch: 190, slideTo: 150, peak: 0.07, attack: 0.008, length: 0.16 }, { wave: 'noise', pitch: 800, peak: 0.03, attack: 0.008, length: 0.12 }]
 
 /** A part put back where it came from: a soft knock, quieter than laying it. */
+/** A finger lands on the body of a part: a soft tap in the part's own stuff, before anything else is known about the touch. */
+export const touchPart = (kind: Kind, long: number): VoiceSpec => kept([{ wave: kind === 'tube' ? 'sine' : kind === 'thread' ? 'noise' : 'triangle', pitch: byLength(kind, long) * 1.2, peak: 0.035, attack: 0.002, length: 0.035 }])
+
 export const putBack = (kind: Kind, long: number): VoiceSpec => kept([{ wave: 'triangle', pitch: byLength(kind, long) * 0.9, peak: 0.06, attack: 0.004, length: 0.08 }])
 
 /** A swinging part knocks against the bank: a wooden knock, louder the faster it came. `speed` is in radians a second. */

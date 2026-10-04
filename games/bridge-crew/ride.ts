@@ -112,7 +112,7 @@ export function crossingTime(at: Site, train: Train): number {
  * creak, and again, and again, before it gives: each part creaks once as its
  * strain passes each of these on the way up.
  */
-export const CREAK_AT = [0.5, 0.75, 0.9] as const
+export const CREAK_AT = [0.15, 0.5, 0.75, 0.9] as const
 
 /** The creaks due between two moments of a run: for each part whose strain rose past a threshold, the share it has reached. */
 export function creaks(before: readonly number[], now: readonly number[]): { part: number; use: number }[] {

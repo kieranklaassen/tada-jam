@@ -775,7 +775,7 @@ export class Game extends Toy {
     this.save = save
     this.model()
     this.moving = this.rest.map(atRest)
-    this.rung = this.bridge.map(() => Infinity); this.turned = this.bridge.map(() => Infinity); this.laid = this.bridge.map(() => Infinity)
+    this.rung = this.bridge.map(() => Infinity); this.turned = this.bridge.map(() => Infinity); this.laid = this.bridge.map(() => Infinity); this.shook = []
     this.flying = []
     this.voices.push(unrollVoice(1))
     this.changed = true
@@ -1031,7 +1031,7 @@ export class Game extends Toy {
     this.laidTracing = null
     this.model()
     this.moving = this.rest.map(atRest)
-    this.rung = this.bridge.map(() => Infinity); this.turned = this.bridge.map(() => Infinity); this.laid = this.bridge.map(() => Infinity)
+    this.rung = this.bridge.map(() => Infinity); this.turned = this.bridge.map(() => Infinity); this.laid = this.bridge.map(() => Infinity); this.shook = []
     this.flying = []; this.clicked.clear()
     this.splash = null
     this.marks = []
