@@ -1129,8 +1129,11 @@ export class Theatre {
       beats.push({ at: 0, lasts: gone, play: (u) => { this.leaveU = u; if (u >= 1) this.leaving = null } })
     }
     // When the child's troop sets off from the edge, and when it stands; when the passing troop comes, and when it has gone.
-    // A quick troop does not set off on the heels of a slow one: it comes into its places when those are clear.
-    let walkAt = first ? -1 : Math.max(0.45, gone - walkFor * 0.8), passAt = 0, clear = 0
+    // A quick troop does not come in on the heels of a slow one: it sets off so as to reach its places when the
+    // last friend of the troop before is a friend's width past the furthest of them, and no later than that.
+    const lastOut = marched ? friendX(0, marched.size) : 0, wayOut = this.lastView.width / 2 + 2.6 - lastOut
+    const clearAt = marched ? gone * Math.min(1, (friendX(this.troop.size - 1, this.troop.size) + FRIEND_GAP - lastOut) / wayOut + 0.15) : 0
+    let walkAt = first ? -1 : Math.max(0.3, clearAt - walkFor), passAt = 0, clear = 0
     if (showing) {
       const p = PERSONALITIES[showing.kind]
       // Beside a troop on stage it stands in the room there is between the left edge and that troop, shoulder to

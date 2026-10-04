@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { KindName } from './bodies'
+import { BODIES, type KindName } from './bodies'
 import { PERSONALITIES } from './clips'
 import { LADDER } from './config'
 import { marcherGeometry } from './friends'
@@ -325,6 +325,41 @@ describe('the step-in', () => {
     expect(poses.get('friend-0')!.x).toBeCloseTo(friendX(0, theatre.save.troop.size), 5)
     expect(poses.get('friend-0')!.armL, 'it reaches up').toBeGreaterThan(2)
     expect(poses.has('waiting-0')).toBe(true)
+  })
+
+  it('has no friend walk through another, whatever kinds and sizes change places; somebody is on stage in every frame, and the middle is empty no longer than the slowest kind takes to walk to it', () => {
+    for (const leaving of KINDS) for (const coming of KINDS) {
+      if (leaving === coming) continue
+      for (const [out, into] of [[1, 3], [3, 1], [3, 3], [2, 2], [3, 2], [1, 1]] as const) {
+        const served = saveOf({ position: 'trio-singles', troop: { kind: leaving, size: out, held: Array.from({ length: out }, () => true) }, sky: [{ colour: leaving, count: 1 }], waiting: { kind: coming, size: into } })
+        const theatre = new Theatre(served, 3), { poses, painter } = recorder()
+        tapWaiting(theatre)
+        let empty = 0, longest = 0
+        for (let t = 0; t < 12 && theatre.playing === 'arrival'; t += 1 / 60) {
+          theatre.step(1 / 60)
+          theatre.paint(painter, VIEW)
+          const goers = [...poses].filter(([name]) => name.startsWith('leaving-')), comers = [...poses].filter(([name]) => name.startsWith('friend-'))
+          // A friend that walks in is never beside one that marches off, as near as their two bodies are wide, unless one is well behind the other.
+          for (const [a, one] of comers) for (const [b, other] of goers) {
+            const apart = (BODIES[coming].halfWidth * one.scale + BODIES[leaving].halfWidth * other.scale) * 0.8
+            const clear = Math.abs(one.x - other.x) > apart || Math.abs(one.z - other.z) > 1.6 || Math.abs(one.y - other.y) > 2
+            expect(clear, `${out} ${leaving}s out, ${into} ${coming}s in, ${t.toFixed(2)} s: ${a} at ${one.x.toFixed(1)}, ${one.z.toFixed(1)} and ${b} at ${other.x.toFixed(1)}, ${other.z.toFixed(1)}`).toBe(true)
+          }
+          // And none that walks in is inside another that does, once the tower has come apart.
+          for (const [a, one] of comers) for (const [b, other] of comers) {
+            if (a >= b || theatre.playing !== 'arrival') continue
+            const near = Math.abs(one.x - other.x) < BODIES[coming].halfWidth * (one.scale + other.scale) * 0.6 && Math.abs(one.z - other.z) < 0.7 && Math.abs(one.y - other.y) < 0.6
+            expect(near, `${into} ${coming}s in, ${t.toFixed(2)} s: ${a} and ${b}`).toBe(false)
+          }
+          const middle = [...goers, ...comers].some(([, pose]) => Math.abs(pose.x) < VIEW.width / 4)
+          empty = middle ? 0 : empty + 1 / 60
+          longest = Math.max(longest, empty)
+          expect([...goers, ...comers].some(([, pose]) => Math.abs(pose.x) < VIEW.width / 2), `${out} ${leaving}s out, ${into} ${coming}s in, ${t.toFixed(2)} s: nobody in view`).toBe(true)
+        }
+        // A quick troop is out of the middle in a third of a second, and a hippo takes a second to walk to it from the edge.
+        expect(longest, `${out} ${leaving}s out, ${into} ${coming}s in: the longest the middle was empty`).toBeLessThan(1.2)
+      }
+    }
   })
 
   it('gives way to a touch: everyone is where they were going, and the touch is answered', () => {
