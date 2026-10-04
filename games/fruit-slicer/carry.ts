@@ -104,12 +104,14 @@ export function drop(game: Game, held: Held, at: Point): { game: Game; events: G
   const tin = tinAt(game)
   const target = thingAt(game, at, held.ids)
   const leftEdge = (at.x - held.dx - X0) / PX
-  const pieces = gone(game.world, held.ids, tin)
-  // Where each piece is when it is let go: in the hand, carried there from where it lay. What is eaten flies from there.
-  const inHand = pieces.map(({ piece, from }) => ({ piece, from: carried(from, held, at) }))
+  // Where each piece is when it is let go: in the hand, carried there from where it lay. Whatever becomes of it starts from there: it is
+  // set down from the hand, slides off the rail from the rail, and flies to a mouth from the hand.
+  const lifted: Held = { ...held, boxes: held.boxes.map((box) => carried(box, held, at)) }
+  const pieces = gone(game.world, held.ids, tin).map(({ piece }, index) => ({ piece, from: lifted.boxes[index] }))
+  const inHand = pieces
   switch (target.thing) {
     case 'tin':
-      return intoTin(game, held, target.part)
+      return intoTin(game, lifted, target.part)
     case 'customer':
     case 'waiting': {
       const whom: Whom = target.thing === 'waiting' ? target.index : 'window'
@@ -156,26 +158,26 @@ export function drop(game: Game, held: Held, at: Point): { game: Game; events: G
     case 'fruit':
     case 'piece': {
       const on = target.piece.place
-      if (on.on === 'tin') return intoTin(game, held, on.part)
-      if (on.on !== 'board') return onShelf(game, held)
+      if (on.on === 'tin') return intoTin(game, lifted, on.part)
+      if (on.on !== 'board') return onShelf(game, lifted)
       // Alongside a whole fruit, from the same left end, on the other lane; against a piece, end to end, on the side the finger is nearer.
-      if (target.thing === 'fruit') return layClear(game, held, (on.lane + 1) % LANES, on.x, 'beside')
+      if (target.thing === 'fruit') return layClear(game, lifted, (on.lane + 1) % LANES, on.x, 'beside')
       // End to end against the piece, on the side the finger is nearer; on the other side when the board ends too soon on that one.
       const total = pieces.reduce((sum, { piece }) => sum + piece.length, 0)
       const right = on.x + target.piece.length, left = on.x - total
       const fits = (x: number): boolean => x >= 0 && x + total <= RAIL
       const rightSide = at.x >= target.box.x + target.box.w / 2
       const x = rightSide ? (fits(right) ? right : left) : fits(left) ? left : right
-      return layClear(game, held, on.lane, x, 'butted')
+      return layClear(game, lifted, on.lane, x, 'butted')
     }
     case 'shelf':
-      return onShelf(game, held)
+      return onShelf(game, lifted)
     default:
-      return put(game, held, laneAt(at.y), leftEdge, 'put')
+      return put(game, lifted, laneAt(at.y), leftEdge, 'put')
   }
 }
 
-/** Where a piece in the hand is drawn when the finger is at `at`: as far from where it lay as the finger has carried the first of them. */
+/** Where a piece in the hand is drawn when the finger is at `at` (for a hold as it was taken, with its boxes where the pieces lay): as far from where it lay as the finger has carried the first of them. */
 function carried(from: Box, held: Held, at: Point): Box {
   return { ...from, x: from.x + at.x - held.dx - held.boxes[0].x, y: from.y + at.y - held.dy - held.boxes[0].y }
 }
@@ -196,7 +198,8 @@ function intoTin(game: Game, held: Held, part: number): { game: Game; events: Ga
   let now = game
   const events: GameEvent[] = []
   const tin = tinAt(game)
-  const pieces = gone(game.world, held.ids, tin)
+  // The hold comes with its boxes where the hand let go.
+  const pieces = gone(game.world, held.ids, tin).map(({ piece }, index) => ({ piece, from: held.boxes[index] }))
   const back: number[] = []
   for (const { piece, from } of pieces) {
     const result = give(now, piece.id, part)
@@ -242,23 +245,26 @@ export function fling(game: Game, held: Held, at: Point, v: Point): { game: Game
   if (held.ids.length !== 1 || speed < 1) return drop(game, held, at)
   const tin = tinAt(game)
   const id = held.ids[0]
-  const mine = gone(game.world, held.ids, tin)[0]
+  const lay = gone(game.world, held.ids, tin)[0]
+  // The piece as it is in the hand when it is let go: its flight, and whatever it does next, starts there.
+  const mine = { piece: lay.piece, from: carried(lay.from, held, at) }
+  const lifted: Held = { ...held, boxes: [mine.from] }
   const rest = without(game.world, held.ids)
   const end = landing(at, v)
   const hit: Under = thingAt(game, end, held.ids)
   const backOnBoard = (off: 'tin' | 'fruit' | 'crate' | 'shelf', voice: 'bong' | 'boing' | 'rock', from: Game = game, struck?: number): { game: Game; events: GameEvent[] } => {
     const set = setRowOnBoard(from.world, [id], laneAt(at.y), (at.x - held.dx - X0) / PX)
-    const events: GameEvent[] = [{ kind: 'bounce', id, off, x: end.x, y: end.y, length: mine.piece.length, voice, struck }, { kind: 'setDown', ids: [id], from: [mine.from], how: 'put', voice: 'lay' }, ...fellEvents(from.world, set.fell)]
+    const events: GameEvent[] = [{ kind: 'bounce', id, off, x: end.x, y: end.y, length: mine.piece.length, voice, struck }, { kind: 'setDown', ids: [id], from: [{ ...mine.from, x: end.x - mine.from.w / 2, y: end.y - mine.from.h / 2 }], how: 'put', voice: 'lay' }, ...fellEvents(from.world, set.fell)]
     return shutAfter({ ...from, world: set.world }, events, game, held)
   }
   switch (hit.thing) {
     case 'customer':
     case 'waiting': {
       const whom: Whom = hit.thing === 'waiting' ? hit.index : 'window'
-      return shutAfter(splat(game, id), [{ kind: 'splat', whom, piece: mine.piece, from: carried(mine.from, held, at), voice: 'splat' }], game, held)
+      return shutAfter(splat(game, id), [{ kind: 'splat', whom, piece: mine.piece, from: mine.from, voice: 'splat' }], game, held)
     }
     case 'dog':
-      return shutAfter({ ...game, world: remove(game.world, id) }, [{ kind: 'fell', piece: mine.piece, from: carried(mine.from, held, at), voice: 'catch' }], game, held)
+      return shutAfter({ ...game, world: remove(game.world, id) }, [{ kind: 'fell', piece: mine.piece, from: mine.from, voice: 'catch' }], game, held)
     case 'tin':
       return backOnBoard('tin', 'bong')
     case 'crate': {
@@ -288,10 +294,10 @@ export function fling(game: Game, held: Held, at: Point, v: Point): { game: Game
       return shutAfter({ ...game, world: set.world }, events, game, held)
     }
     case 'shelf':
-      return onShelf(game, held)
+      return onShelf(game, lifted)
     default:
       // On anything bare it is set down where it came down, its middle on that place; from the wall it drops to the nearest lane.
-      return put(game, held, laneAt(end.y), (end.x - mine.from.w / 2 - X0) / PX, 'put')
+      return put(game, lifted, laneAt(end.y), (end.x - mine.from.w / 2 - X0) / PX, 'put')
   }
 }
 

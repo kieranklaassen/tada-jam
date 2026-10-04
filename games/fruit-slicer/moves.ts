@@ -192,7 +192,8 @@ export function slice(game: Game, a: Point, b: Point, stroke: Stroke): { game: G
   }
   if (tin && !next.tin && touches(a, b, tin.body)) {
     next.tin = true
-    events.push({ kind: 'skid', x: b.x, y: tin.body.y + tin.body.h / 2, length: shareLength(game.window!.fruit, wanted(game.window!)), voice: 'skid' })
+    // The tin rings at the pitch of its length: open, the length of the order; shut and folded small, the same low note whatever the order, which it does not give away.
+    events.push({ kind: 'skid', x: b.x, y: tin.body.y + tin.body.h / 2, length: tin.open ? shareLength(game.window!.fruit, wanted(game.window!)) : WHOLE.long, voice: 'skid' })
   }
   if (!next.crate && touches(a, b, CRATE)) {
     next.crate = true

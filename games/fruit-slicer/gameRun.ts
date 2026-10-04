@@ -2,14 +2,14 @@ import { FLING_SPEED, drop, fling, grab, rollOver, type Held } from './carry'
 import { newActor, poseOf as castPose, reactTo, stepActor, type Actor } from './cast'
 import type { Ending, Game } from './cycle'
 import { newDog, poseOf as dogPose, react, stepDog, type DogState, type Reaction } from './dogMotion'
-import { CURL_FLIGHT, CURL_LIFE, MOUTH, mark, newFx, spawn, step, whoosh, type FxState } from './fx'
+import { CURL_FLIGHT, CURL_LIFE, MOUTH, mark, newFx, rollAlong, spawn, step, whoosh, type FxState } from './fx'
 import { guideOf, type Guide } from './guide'
 import { handPose, type Guidance, type HandPose } from './guidance'
 import { newStroke, poke, slice, thingAt, tinAt, type GameEvent, type Stroke, type Whom } from './moves'
 import { Scene, followedBy } from './scene'
 import { headOf } from './seats'
 import { gliderBeats, restShow, servedShow, serveBeats, showingBeats, type Show } from './scenes'
-import { shown, type Point } from './stage'
+import { CRATE, DOG, TIN, shown, type Point } from './stage'
 import { dogTaste } from './tastes'
 import type { VoiceId } from './voices'
 import type { Fruit } from './measure'
@@ -395,7 +395,21 @@ export class GameRun {
           else this.coming.push({ wait: 0.36, reaction: taste.act === 'spin' ? 'spin' : taste.act === 'snap' ? 'gulp' : 'cheeks', amount: taste.cheeks })
           break
         }
-        case 'rolled':
+        case 'pressed': {
+          // The roller runs the length of what it marks, as its ticks sound.
+          const box = shown(game.world, tinAt(game)).find(({ piece }) => piece.id === event.id)?.box
+          if (box) this.fx = rollAlong(this.fx, box.x, box.x + box.w, box.y + box.h / 2, Math.min(0.6, 0.15 + event.parts * 0.05))
+          break
+        }
+        case 'rolled': {
+          // And it is seen rolling over whatever else it was let go on: along the rail of an open tin as the parts answer, along the lid of a
+          // shut one, across a customer, the crate or the dog.
+          const tin = tinAt(game), head = event.whom !== null ? heads[event.whom] : undefined
+          if (event.on === 'tin' && tin) this.fx = tin.open ? rollAlong(this.fx, tin.ruler.x, tin.ruler.x + tin.ruler.w, TIN.rulerY - 6, Math.min(0.9, 0.2 + event.parts * 0.09)) : rollAlong(this.fx, tin.body.x, tin.body.x + tin.body.w, tin.body.y + tin.body.h / 2, 0.3)
+          else if (event.on === 'customer' && head) this.fx = rollAlong(this.fx, head.x - 70, head.x + 70, head.y + 30, 0.3)
+          else if (event.on === 'crate') this.fx = rollAlong(this.fx, CRATE.x + 20, CRATE.x + CRATE.w - 20, CRATE.y + CRATE.h / 2, 0.3)
+          else if (event.on === 'dog') this.fx = rollAlong(this.fx, DOG.x + 20, DOG.x + DOG.w - 20, DOG.y + 30, 0.3)
+          else this.fx = rollAlong(this.fx, event.x - 40, event.x + 40, event.y, 0.25)
           if (event.on === 'dog') this.dog = react(this.dog, 'ironed')
           if (event.on === 'customer' && event.whom !== null) {
             this.reactAs(event.whom, 'flat')
@@ -406,6 +420,7 @@ export class GameRun {
           // A customer or the dog under the roller is a thing to stare at.
           if (event.on === 'customer' || event.on === 'dog') this.stare(event.whom)
           break
+        }
         case 'spill':
           this.stare(null)
           break

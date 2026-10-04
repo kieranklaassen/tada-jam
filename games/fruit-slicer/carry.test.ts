@@ -247,6 +247,19 @@ describe('letting go over the board and the shelf', () => {
     expect(total(result.game)).toBe(total(cleared))
   })
 
+  it('sets a piece down from the hand that let it go, not from where it lay before it was carried', () => {
+    const made = cutAt(start, 600)
+    const letGo = { x: X0 + 1900 * PX, y: SHELF_BOX.y + 40 }
+    const out = drop(made.game, hold(made.game, made.left), letGo)
+    const down = out.events.find((event) => event.kind === 'setDown') as Extract<GameEvent, { kind: 'setDown' }>
+    // The box it starts from is under the finger: far from where it lay on the board.
+    expect(down.from[0].x + down.from[0].w).toBeGreaterThan(letGo.x - 10)
+    expect(Math.abs(down.from[0].y + down.from[0].h / 2 - letGo.y)).toBeLessThan(40)
+    // Laid in the tin, it comes from the hand too.
+    const given = drop(made.game, hold(made.game, made.left), tinPoint).events.find((event) => event.kind === 'given') as Extract<GameEvent, { kind: 'given' }>
+    expect(Math.abs(given.from.y + given.from.h / 2 - tinPoint.y)).toBeLessThan(40)
+  })
+
   it('puts a piece where it is let go on the board, on the shelf, and back on the board from anywhere else', () => {
     const onFar = drop(made.game, hold(made.game, made.left), { x: X0 + 1000 * PX, y: FAR })
     expect(pieceOf(onFar.game.world, made.left)!.place).toMatchObject({ on: 'board', lane: 1 })

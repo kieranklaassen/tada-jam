@@ -127,18 +127,19 @@ function crate(ctx: Ctx, dots: Dots, rock: number, ordered: Fruit | null, time: 
   return 7
 }
 
-/** The roller: a ridged drum on a handle. It hangs on its hook, or goes where the finger or a scene has it. */
+/** The roller: a drum on two cords. It hangs on its hook, or goes where the finger or a scene has it. */
 function roller(ctx: Ctx, dots: Dots, at: Point): number {
+  // A drum in a coat of dots with a dark cap at each end. It has no ridges across it: bars at even steps along a strip would read as a strip ruled into parts.
   inked(ctx, slab(at.x - 46, at.y - 20, 92, 40, 10), WHITE, 5, dots.of(ctx, BLUE, 0.4))
-  ctx.fillStyle = INK
-  for (let ridge = 1; ridge < 6; ridge++) ctx.fillRect(at.x - 46 + ridge * 15.3 - 1.5, at.y - 18, 3, 36)
-  return 2
+  inked(ctx, slab(at.x - 46, at.y - 20, 13, 40, 6), INK, 0)
+  inked(ctx, slab(at.x + 33, at.y - 20, 13, 40, 6), INK, 0)
+  return 3
 }
 
 function effects(ctx: Ctx, fx: FxState, wall: boolean): number {
   let drawn = 0
   for (const one of fx.fx) {
-    if ((one.kind === 'spatter') !== wall || one.age < 0 || one.kind === 'lid' || one.kind === 'jaw' || one.kind === 'slat' || one.kind === 'answer') continue
+    if ((one.kind === 'spatter') !== wall || one.age < 0 || one.kind === 'lid' || one.kind === 'jaw' || one.kind === 'slat' || one.kind === 'answer' || one.kind === 'roll') continue
     const t = one.age / one.life
     drawn++
     switch (one.kind) {
@@ -538,7 +539,10 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
   const running = show !== null && show.drop > 0 && show.fill <= 0 && shape !== null && game.window !== null
   const hook = { x: ROLLER.x + ROLLER.w / 2, y: ROLLER.y + 62 }
   const railAt = running ? { x: shape.ruler.x + (WHOLE[game.window!.fruit] * PX * show.ruled) / ruling(game.window!).rows[0].parts, y: TIN.rulerY - 6 } : null
-  drawn += roller(ctx, dots, scenery.roller ?? (railAt && show ? { x: hook.x + (railAt.x - hook.x) * show.drop, y: hook.y + (railAt.y - hook.y) * show.drop } : hook))
+  // Let go on something, it is seen rolling along that before it is back on its cords.
+  const rolling = fx.fx.find((one) => one.kind === 'roll')
+  const along = rolling && rolling.kind === 'roll' ? { x: rolling.x0 + (rolling.x1 - rolling.x0) * (rolling.age / rolling.life), y: rolling.y } : null
+  drawn += roller(ctx, dots, scenery.roller ?? along ?? (railAt && show ? { x: hook.x + (railAt.x - hook.x) * show.drop, y: hook.y + (railAt.y - hook.y) * show.drop } : hook))
   // What is in the hand is drawn last, lifted a little off the counter, with a hard shadow where it would fall.
   if (carried) {
     for (const { piece, box } of pieces) {

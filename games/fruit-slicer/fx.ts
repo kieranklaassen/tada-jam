@@ -33,6 +33,8 @@ export type Fx =
   | { kind: 'slat'; age: number; life: number }
   /** The ruled parts under the open tin answering the roller, one by one. */
   | { kind: 'answer'; parts: number; age: number; life: number }
+  /** The roller on its way along what it was let go on: a fruit, a piece, the rail, the lid, a customer, the crate, the dog. */
+  | { kind: 'roll'; x0: number; x1: number; y: number; age: number; life: number }
   /** The marks a comic puts round a head, with no letter in them: an impact star, drops of sweat flying off, and the short lines of a start. */
   | { kind: 'star'; x: number; y: number; size: number; seed: number; age: number; life: number }
   | { kind: 'sweat'; x: number; y: number; seed: number; age: number; life: number }
@@ -77,6 +79,11 @@ export function mark(state: FxState, kind: 'star' | 'sweat' | 'shock', at: Point
   const drawn = draw(state.seed)
   const one: Fx = kind === 'star' ? { kind, x: at.x, y: at.y, size: 26 * size, seed: drawn.value * 1000, age: -delay, life: 0.3 } : kind === 'sweat' ? { kind, x: at.x, y: at.y, seed: drawn.value * 1000, age: -delay, life: 0.7 } : { kind, x: at.x, y: at.y, r: 34 * size, age: -delay, life: 0.4 }
   return trimmed({ ...state, fx: [...state.fx, one], seed: drawn.state })
+}
+
+/** The roller, let go, runs from `x0` to `x1` at height `y` before it is back on its cords. */
+export function rollAlong(state: FxState, x0: number, x1: number, y: number, life: number): FxState {
+  return trimmed({ ...state, fx: [...state.fx.filter((one) => one.kind !== 'roll'), { kind: 'roll', x0, x1, y, age: 0, life }] })
 }
 
 /** Adds what one thing that happened sets off. `heads` says where each customer's face is, for what flies to one. */

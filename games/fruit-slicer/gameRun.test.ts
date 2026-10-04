@@ -172,6 +172,14 @@ describe('carrying', () => {
     expect(ids(run)).toEqual(['tickEnd', 'ticks'])
     expect(marksOf(onLane(run.game.world, 0)[0])).toHaveLength(run.game.window!.shares[0].den - 1)
     expect(run.frame(0, BUSY).roller).toBeNull()
+    // Let go, it is seen running the length of the fruit before it is back on its cords.
+    const rolling = run.fx.fx.find((one) => one.kind === 'roll')
+    expect(rolling).toMatchObject({ x0: X0, x1: X0 + onLane(run.game.world, 0)[0].length * PX })
+    play(run, 1)
+    expect(run.fx.fx.some((one) => one.kind === 'roll')).toBe(false)
+    // On a shut tin it runs along the lid; on an open one, along the rail as the parts answer.
+    drag(run, mid(ROLLER), TIN_AT)
+    expect(run.fx.fx.find((one) => one.kind === 'roll')).toMatchObject({ y: TIN.bodyY + TIN.bodyH / 2 })
   })
 })
 

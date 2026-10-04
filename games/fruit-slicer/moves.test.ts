@@ -226,8 +226,12 @@ describe('with a customer at the window', () => {
 
   it('skids off the tin with sparks, once, where no piece lies under the blade', () => {
     const result = slice(start, { x: X0 + 40, y: TIN.bodyY - 10 }, { x: X0 + 40, y: TIN.bodyY + TIN.bodyH + 10 }, newStroke())
-    expect(result.events).toEqual([expect.objectContaining({ kind: 'skid', voice: 'skid', length: ordered })])
+    // Shut and folded small, the tin rings one low note whatever the order: it does not give the order's length away by ear.
+    expect(result.events).toEqual([expect.objectContaining({ kind: 'skid', voice: 'skid', length: WHOLE.long })])
     expect(result.game).toEqual(start)
+    // Open, it rings at the pitch of the order's length.
+    const open = { ...start, world: { ...start.world, tinOpen: true } }
+    expect(slice(open, { x: X0 + 40, y: TIN.bodyY - 10 }, { x: X0 + 40, y: TIN.bodyY + TIN.bodyH + 10 }, newStroke()).events).toEqual([expect.objectContaining({ kind: 'skid', length: ordered })])
     expect(slice(start, { x: X0 + 60, y: TIN.bodyY + 70 }, { x: X0 + 60, y: TIN.bodyY - 10 }, result.stroke).events).toEqual([])
   })
 

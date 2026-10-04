@@ -145,13 +145,9 @@ function counter(ctx: Ctx, screens: Screens, scene: SpikeScene): void {
   ctx.fillStyle = INK
   for (const cord of [1040, 1100]) for (let dash = 0; dash < 5; dash++) ctx.fillRect(cord - 2.5, 316 + dash * 14, 5, 9)
   inked(ctx, slab(1018, 384, 104, 44, 10), WHITE, 5, screens.of(ctx, BLUE, 0.4))
-  for (let ridge = 1; ridge < 6; ridge++) {
-    ctx.beginPath()
-    ctx.moveTo(1018 + ridge * 17.3, 386)
-    ctx.lineTo(1018 + ridge * 17.3, 426)
-    ctx.lineWidth = 3
-    ctx.stroke()
-  }
+  // A dark cap at each end, and no ridges across it.
+  inked(ctx, slab(1018, 384, 14, 44, 6), INK, 0)
+  inked(ctx, slab(1108, 384, 14, 44, 6), INK, 0)
   // The crate of fresh fruit: slats, and the ends of three fruits showing.
   inked(ctx, rect(1000, 478, 140, 144), '#d9a441', 5, screens.of(ctx, RED, 0.3))
   ;(['long', 'middle', 'short'] as const).forEach((fruit, i) => {
