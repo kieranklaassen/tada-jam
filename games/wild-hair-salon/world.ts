@@ -30,7 +30,7 @@ export type Ribbon = { len: number } & RibbonPlace
 export const FACE_SPOTS = ['brow', 'lip', 'chin'] as const
 export type FaceSpot = (typeof FACE_SPOTS)[number]
 
-/** Where a cut piece lies: at a place along the floor (0 at the door side, 100 at the bench side), or stuck on a face. */
+/** Where a cut piece lies: at a place along the floor (0 at the bench side, 100 at the door side), or stuck on a face. */
 export type ClippingPlace = { on: 'floor'; x: number } | { on: 'face'; who: Who; spot: FaceSpot }
 /** A cut piece of hair or of ribbon. */
 export type Clipping = { len: number; hue: CustomerId | 'ribbon' } & ClippingPlace
@@ -89,9 +89,19 @@ const alongFloor = (x: number): number => (Number.isFinite(x) ? Math.max(0, Math
 
 /** Where along the floor the things of the salon stand, for what falls from them. */
 export function floorUnder(salon: Salon, thing: 'lock' | 'model' | 'ribbon' | Who): number {
-  if (thing === 'lock' || thing === 'chair') return 50
-  if (thing === 'ribbon') return 70
-  return salon.seat === 'beside' ? 56 : 84
+  // The friend is beside the chair when it sits on the stool and whenever the cape is off; else it is on the bench, at the low end of the floor.
+  const beside = salon.cape === 'off' || salon.seat === 'beside'
+  if (thing === 'lock') return 50
+  if (thing === 'chair') return 42
+  if (thing === 'model') return beside ? 56 : 7
+  if (thing === 'friend') return beside ? 63 : 2
+  // The ribbon: beside a lock, a little to that lock's far side; in the mane or round a face, under that head; else under its peg.
+  const at = salon.ribbon?.at
+  if (at === 'lock') return 46
+  if (at === 'model') return beside ? 60 : 11
+  if (at === 'mane') return 42
+  if (at === 'face') return salon.ribbon && 'who' in salon.ribbon && salon.ribbon.who === 'friend' ? (beside ? 63 : 2) : 42
+  return 82
 }
 
 /** Where a piece cut from this thing lands. Pieces fan out a little, by how many already lie there, so they do not pile on one spot. */

@@ -59,10 +59,14 @@ export function notesFor(happening: Happening, before: Salon, after: Salon): Not
         case 'lock/pull': return [length === null ? base : { ...base, pitch: pitchForLength(length) * 0.7, glideTo: pitchForLength(length) * 0.55 }]
         // A plucked lock is a string: lower the longer it is.
         case 'lock/poke': return [length === null ? base : { ...base, pitch: pitchForLength(length) }]
-        // The snip, and then the stump twanging up at its new length.
-        case 'lock/snip': return [base, { kind: 'tone', wave: 'triangle', pitch: pitchForLength(length ?? 50), glideTo: pitchForLength(length ?? 50) * 1.2, peak: 0.1, attack: 0.002, length: 0.22, after: 0.07 }]
-        // The friend's lock stretches with a quiet creak; its boing comes when it is let go and snaps back.
-        case 'model/pull': return [{ ...CELL_VOICES['lock/pull'], peak: 0.05 }]
+        // The snip, then the stump twanging up at its new length, and the customer's giggle at it, in its own voice.
+        case 'lock/snip': return [base, { kind: 'tone', wave: 'triangle', pitch: pitchForLength(length ?? 50), glideTo: pitchForLength(length ?? 50) * 1.2, peak: 0.1, attack: 0.002, length: 0.22, after: 0.07 }, { ...voiced(CELL_VOICES['face/poke'], after.chair), peak: 0.07, after: 0.22 }]
+        // The friend's lock stretches with a quiet creak in the friend's voice; its boing comes when it is let go and snaps back.
+        case 'model/pull': return [voiced({ ...CELL_VOICES['lock/pull'], peak: 0.05 }, after.friend)]
+        // A piece pops off the friend's lock, in that friend's voice.
+        case 'model/snip': return [voiced(base, after.friend)]
+        // Every tuft is a string too: its sproing is lower the longer it is.
+        case 'tuft/poke': { const by = length === null ? 1 : pitchForLength(length) / pitchForLength(50); return [{ ...base, pitch: base.pitch * by, ...(base.glideTo === undefined ? {} : { glideTo: base.glideTo * by }) }] }
         // A bow is tied with a rustle and then a ting.
         case 'tuft/ribbon': return [{ kind: 'noise', q: 1, pitch: 1800, peak: 0.06, attack: 0.02, length: 0.18 }, { ...base, after: 0.16 }]
         // The friend's lock hums, and its owner laughs and holds its breath, in the friend's own voice.

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { ACTIONS, GRID, OBJECTS, type ActionId, type ObjectId } from './grid'
 import { MAX_CLIPPINGS, MAX_LEN, MIN_LEN, TAIL_LEN, TUFTS } from './rules'
-import { act, seatFriend, withClipping, withRibbon, type Deed, type Salon, type Target } from './world'
+import { act, floorUnder, seatFriend, withClipping, withRibbon, type Deed, type Salon, type Target } from './world'
 
 const salon = (over: Partial<Salon> = {}): Salon => ({
   chair: 'lion', friend: 'poodle', waiting: ['yak', 'rabbit'], seed: 1,
@@ -154,7 +154,7 @@ describe('a touch on the salon', () => {
     expect(act(tiny, { object: 'clipping', index: 0 }, { action: 'snip', at: 0 }).salon.clippings).toEqual([])
     // Poked on a face, it hops off to the floor under that face.
     const hopped = act(face, { object: 'clipping', index: 0 }, { action: 'poke' }).salon.clippings[0]
-    expect(hopped).toEqual({ len: 20, hue: 'lion', on: 'floor', x: 62 })
+    expect(hopped).toEqual({ len: 20, hue: 'lion', on: 'floor', x: 69 })
     expect(act(salon(), { object: 'clipping', index: 0 }, { action: 'ruffle' }).salon.clippings).toEqual([])
     expect(act(salon(), { object: 'clipping', index: 9 }, { action: 'poke' }).cell).toBeNull()
   })
@@ -180,6 +180,21 @@ describe('a touch on the salon', () => {
     const far = act(salon({ clippings: [{ len: 20, hue: 'lion', on: 'floor', x: 40 }, { len: 9, hue: 'lion', on: 'floor', x: 41 }, { len: 9, hue: 'lion', on: 'floor', x: 60 }] }), { object: 'clipping', index: 2 }, { action: 'pull', drop: { on: 'floor', x: 40 } }).salon
     expect(Math.abs(places(far)[2] - 40)).toBeLessThanOrEqual(2)
     apart(far)
+  })
+
+  it('drops a piece under what it was cut from, wherever the friend is', () => {
+    const cutModel = (over: Partial<Salon>): number => { const done = act(salon({ clippings: [], ...over }), { object: 'model' }, { action: 'snip', at: 20 }).salon.clippings[0]; return done.on === 'floor' ? done.x : -1 }
+    // Beside the chair the friend's lock hangs a little past the middle of the floor; across the room it hangs at the bench, at the floor's low end.
+    expect(Math.abs(cutModel({ seat: 'beside' }) - floorUnder(salon(), 'model'))).toBeLessThanOrEqual(6)
+    expect(floorUnder(salon({ seat: 'beside' }), 'model')).toBeGreaterThan(50)
+    expect(cutModel({ seat: 'across' })).toBeLessThanOrEqual(13)
+    // With the cape off the friend stands beside the chair whatever its seat was.
+    expect(floorUnder(salon({ seat: 'across', cape: 'off' }), 'model')).toBe(floorUnder(salon({ seat: 'beside' }), 'model'))
+    expect(floorUnder(salon({ seat: 'across' }), 'friend')).toBeLessThan(10)
+    // The ribbon's offcut falls under the ribbon: under its peg by the door, or under the lock it hangs beside.
+    expect(floorUnder(salon({ ribbon: { len: 40, at: 'peg' } }), 'ribbon')).toBeGreaterThan(75)
+    expect(Math.abs(floorUnder(salon({ ribbon: { len: 40, at: 'lock' } }), 'ribbon') - floorUnder(salon(), 'lock'))).toBeLessThanOrEqual(6)
+    expect(floorUnder(salon({ seat: 'across', ribbon: { len: 40, at: 'model' } }), 'ribbon')).toBeLessThan(15)
   })
 
   it('keeps at most twelve clippings, lets the oldest on the floor go first and never takes one off a face', () => {

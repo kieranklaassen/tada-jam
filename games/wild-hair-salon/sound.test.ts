@@ -28,7 +28,7 @@ describe('what things sound like', () => {
       for (const rings of [null, 4, 50, 100]) {
         const notes = notesFor(cell(object, action, { rings }), salon(), salon())
         expect(notes.length, `${object}/${action}`).toBeGreaterThanOrEqual(1)
-        expect(notes.length).toBeLessThanOrEqual(2)
+        expect(notes.length).toBeLessThanOrEqual(3)
         notes.forEach(inRange)
       }
     }
@@ -99,12 +99,32 @@ describe('what things sound like', () => {
     expect(notesFor({ kind: 'button', button: 'door', at }, salon(), salon())).toEqual([])
   })
 
+  it('sounds the friend\'s lock in the friend\'s own voice: stretched, snapped back and snipped', () => {
+    const poodle = salon({ friend: 'poodle' }), yak = salon({ friend: 'yak' })
+    for (const action of ['pull', 'snip'] as const) {
+      const high = notesFor(cell('model', action, { rings: 44 }), poodle, poodle)[0], low = notesFor(cell('model', action, { rings: 44 }), yak, yak)[0]
+      expect(high.pitch, action).toBeGreaterThan(low.pitch)
+    }
+    const boing = (s: Salon): Note => notesFor({ kind: 'letGo', held: { object: 'model' }, at }, s, s)[0]
+    expect(boing(poodle).pitch).toBeGreaterThan(boing(yak).pitch)
+  })
+
+  it('has the customer giggle in its own voice when its lock is snipped, and sounds a tuft lower the longer it is', () => {
+    const lion = salon({ chair: 'lion' }), rabbit = salon({ chair: 'rabbit' })
+    const giggle = (s: Salon): Note => notesFor(cell('lock', 'snip', { rings: 40 }), s, s)[2]
+    expect(giggle(lion)).toBeDefined()
+    expect(giggle(rabbit).pitch).toBeGreaterThan(giggle(lion).pitch)
+    const sproing = (rings: number): number => notesFor(cell('tuft', 'poke', { rings }), lion, lion)[0].pitch
+    expect(sproing(10)).toBeGreaterThan(sproing(50))
+    expect(sproing(50)).toBeGreaterThan(sproing(95))
+  })
+
   it('gives every cue of a scene its notes, and none of them is a cheer or a buzzer', () => {
-    const cues: Cue[] = ['door', 'doorShut', 'step', 'hatOff', 'hairOut', 'capeOn', 'capeOff', 'landed', 'tooLong', 'tooShort', 'asLong', 'nip', 'tug', 'ribbonTaken', 'ribbonTick', 'ribbonHome']
+    const cues: Cue[] = ['door', 'doorShut', 'step', 'hatOff', 'hairOut', 'capeOn', 'capeOff', 'landed', 'tooLong', 'tooShort', 'asLong', 'flap', 'air', 'ping', 'nip', 'tug', 'ribbonTaken', 'ribbonTick', 'ribbonHome']
     for (const cue of cues) {
       const notes = notesForCue(cue, 'lion', salon())
       expect(notes.length, cue).toBeGreaterThanOrEqual(1)
-      expect(notes.length).toBeLessThanOrEqual(2)
+      expect(notes.length).toBeLessThanOrEqual(3)
       notes.forEach(inRange)
     }
     // The showing sounds the two lengths as they are: two plucks, the same two whichever way it went, and at one

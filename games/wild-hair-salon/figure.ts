@@ -140,8 +140,8 @@ export function drawFigure(g: Ctx, sprites: Sprites, figure: Figure): number {
   if (figure.mane || figure.whole || hatted) drawn += stamp(g, animal.face)
   else drawn += stamp(g, sprites.friendHead(who))
   drawn += features(g, puppet, look, at.s < 0.5)
-  // A piece on a face sits a little askew, each spot its own way, so two of them are never a pair of level bars.
-  for (const piece of figure.wears.pieces) drawn += strip(g, 0, piece.y, piece.half, piece.y < 0 ? -0.1 : piece.y > 60 ? 0.16 : 0.05, piece.hue)
+  // A piece on the brow or the lip is a strip a little askew; one on the chin lies round the chin as a beard does. No two are a pair of bars.
+  for (const piece of figure.wears.pieces) drawn += piece.y > 60 ? beard(g, piece.half, piece.hue) : strip(g, 0, piece.y, piece.half, piece.y < 0 ? -0.1 : 0.05, piece.hue)
   if (figure.wears.blindfold) drawn += blindfold(g, puppet.at('brow') > 0.5 ? 1 : 0)
   g.restore()
   if (live && look.ears.kind !== 'long') ears()
@@ -233,6 +233,21 @@ export function strip(g: Ctx, x: number, y: number, half: number, turn: number, 
   g.fill()
   g.stroke()
   g.restore()
+  return 2
+}
+
+/** A piece stuck on a chin: the same strip, as long as it is, bent round the chin from one side to the other. */
+function beard(g: Ctx, half: number, hue: string): number {
+  const colour = hueOf(hue), r = 74, h = STRIP_W / 2, swing = Math.min(1.25, half / r)
+  g.fillStyle = colour.fill
+  g.strokeStyle = colour.edge
+  g.lineWidth = 2.4
+  g.beginPath()
+  for (let k = 0; k <= 8; k++) { const a = Math.PI / 2 - swing + (2 * swing * k) / 8, x = Math.cos(a) * (r + h), y = 14 + Math.sin(a) * (r + h); if (k === 0) g.moveTo(x, y); else g.lineTo(x, y) }
+  for (let k = 8; k >= 0; k--) { const a = Math.PI / 2 - swing + (2 * swing * k) / 8; g.lineTo(Math.cos(a) * (r - h), 14 + Math.sin(a) * (r - h)) }
+  g.closePath()
+  g.fill()
+  g.stroke()
   return 2
 }
 
