@@ -196,9 +196,9 @@ export class Theatre {
 
   /** The places in the sky for this view, worked out once for each width. */
   private slots(view: View): { x: number; y: number }[] {
-    if (this.slotsFor !== view.width) {
+    if (this.slotsFor !== view.width + view.balloon * 1000) {
       this.slotsAt = skySlots(this.sky.length, view)
-      this.slotsFor = view.width
+      this.slotsFor = view.width + view.balloon * 1000
     }
     return this.slotsAt
   }
@@ -225,13 +225,13 @@ export class Theatre {
   hit(x: number, y: number, view: View): Hit {
     for (let i = 0; i < this.held.length; i++) {
       const balloon = this.held[i]
-      if (balloon.shown && Math.hypot(x - balloon.x, (y - balloon.y) / 1.12) < BALLOON * 1.2) return { on: 'held', friend: i }
+      if (balloon.shown && Math.hypot(x - balloon.x, (y - balloon.y) / 1.12) < BALLOON * 1.2 * view.balloon) return { on: 'held', friend: i }
     }
     const slots = this.slots(view)
     for (let slot = 0; slot < slots.length; slot++) {
       if (this.places[slot].away > 0) continue
       const reach = bunchReach(this.sky[slot].count)
-      if (Math.abs(x - slots[slot].x) < reach.x + 0.3 && Math.abs(y - slots[slot].y) < reach.y + 0.3) return { on: 'bunch', slot }
+      if (Math.abs(x - slots[slot].x) < reach.x * view.balloon + 0.3 && Math.abs(y - slots[slot].y) < reach.y * view.balloon + 0.3) return { on: 'bunch', slot }
     }
     const kind = this.troop.kind, plan = BODIES[kind]
     for (let i = 0; i < this.troop.size; i++) {
@@ -264,7 +264,7 @@ export class Theatre {
     for (let slot = 0; slot < slots.length; slot++) {
       if (this.places[slot].away > 0) continue
       const reach = bunchReach(this.sky[slot].count)
-      const gap = Math.hypot(Math.max(0, Math.abs(x - slots[slot].x) - reach.x), Math.max(0, Math.abs(y - slots[slot].y) - reach.y))
+      const gap = Math.hypot(Math.max(0, Math.abs(x - slots[slot].x) - reach.x * view.balloon), Math.max(0, Math.abs(y - slots[slot].y) - reach.y * view.balloon))
       if (gap < nearestGap) { nearest = slot; nearestGap = gap }
     }
     return nearest >= 0 ? { on: 'bunch', slot: nearest } : { on: 'air' }
@@ -907,7 +907,7 @@ export class Theatre {
         // One place after another, whatever hangs there: the hand shows that a bunch can be tapped, not which.
         shownSlot = (1 + Math.max(0, idle.demoIndex) * 2) % this.sky.length
         const at = this.slots(view)[shownSlot]
-        painter.hand(at.x + bunchReach(this.sky[shownSlot].count).x * 0.45, at.y - BALLOON * 0.35, this.ghost.opacity, press)
+        painter.hand(at.x + bunchReach(this.sky[shownSlot].count).x * 0.45 * view.balloon, at.y - BALLOON * 0.35 * view.balloon, this.ghost.opacity, press)
       }
     }
 
@@ -963,7 +963,8 @@ export class Theatre {
       if (place.away > 0 || !this.skyIn) continue
       const hue = KIND_COLOURS[bunch.colour], line = shade(hue, -0.3)
       // A new bunch drifts down into its place, small at first and a little past its size before it settles.
-      const grown = place.grow, size = grown < 1 ? grown * (1 + Math.sin(grown * Math.PI) * 0.18) : 1
+      // And as large as a balloon is on this surface (`balloon` in layout.ts).
+      const grown = place.grow, size = (grown < 1 ? grown * (1 + Math.sin(grown * Math.PI) * 0.18) : 1) * view.balloon
       const bob = Math.sin(time * 1.1 + slot * 1.7) * 0.07 + (1 - grown) * (1 - grown) * 1.4
       const cx = slots[slot].x + place.push, cy = slots[slot].y + bob
       // Flat under the finger, and past round for a moment when it is let go; never flatter than a pillow can be.
@@ -1034,9 +1035,9 @@ export class Theatre {
       const balloon = this.held[i]
       if (balloon.shown) {
         if (actor.clip === 'catch') this.byMouth(kind, actor.t, pose)
-        const lean = (this.hand.x - balloon.x) * -0.2 + balloon.vx * 0.03
-        painter.balloon(balloon.x, balloon.y, 0.3, 1, 1, lean, colour)
-        painter.string(balloon.x + Math.sin(lean) * BALLOON * 1.32, balloon.y - Math.cos(lean) * BALLOON * 1.32, 0.3, this.hand.x, this.hand.y, this.hand.z, cord)
+        const lean = (this.hand.x - balloon.x) * -0.2 + balloon.vx * 0.03, big = view.balloon
+        painter.balloon(balloon.x, balloon.y, 0.3, big, big, lean, colour)
+        painter.string(balloon.x + Math.sin(lean) * BALLOON * 1.32 * big, balloon.y - Math.cos(lean) * BALLOON * 1.32 * big, 0.3, this.hand.x, this.hand.y, this.hand.z, cord)
       }
       if (kind === 'frog' && actor.clip === 'catch') this.tongue(i, actor.t, pose, painter, shade(colour, 0.34))
       if (actor.clip === 'liftOff' && actor.tug) {
@@ -1070,9 +1071,13 @@ export class Theatre {
       const lean = Math.atan2(to.x - flight.fromX, flight.fromY - to.y) * 0.5 * speed
       const settle = flight.landed ? Math.sin(flight.after * 30) * Math.exp(-flight.after * 9) * 0.12 : 0
       const offsets = bunchOffsets(flight.bunch.count)
+      // It leaves the sky as large as it hung there. One that is taken stays so, since a held balloon is as large;
+      // any other is its plain size by the time it reaches the friend.
+      const big = flight.given.result === 'taken' ? view.balloon : 1 + (view.balloon - 1) * (1 - u)
       for (let k = 0; k < offsets.length; k++) {
-        painter.balloon(x + offsets[k].x, y + offsets[k].y, 0.35 - k * 0.02, 1 - speed * 0.1 + settle, 1 + speed * 0.16 - settle, lean, hue)
-        painter.string(x + offsets[k].x + Math.sin(lean) * BALLOON * 1.32, y + offsets[k].y - BALLOON * 1.32, 0.35, x - Math.sin(lean) * 0.5, y - BALLOON * 2.6 + speed * 0.3, 0.35, shade(hue, -0.3))
+        const bx = x + offsets[k].x * big, by = y + offsets[k].y * big
+        painter.balloon(bx, by, 0.35 - k * 0.02, (1 - speed * 0.1 + settle) * big, (1 + speed * 0.16 - settle) * big, lean, hue)
+        painter.string(bx + Math.sin(lean) * BALLOON * 1.32 * big, by - BALLOON * 1.32 * big, 0.35, x - Math.sin(lean) * 0.5, y - (BALLOON * 2.6 - speed * 0.3) * big, 0.35, shade(hue, -0.3))
       }
     }
 
@@ -1228,10 +1233,10 @@ export class Theatre {
       if (k < 0) continue
       // When two or three frogs take from one bunch, each goes for the balloon on the far side of it, so the tongues cross in the air.
       const takers = flight.given.takers.length
-      const at = this.along(flight), offset = bunchOffsets(flight.bunch.count)[takers > 1 ? takers - 1 - k : k]
+      const at = this.along(flight), offset = bunchOffsets(flight.bunch.count)[takers > 1 ? takers - 1 - k : k], big = this.lastView.balloon
       const plan = BODIES.frog
       const mouthX = pose.x, mouthY = pose.y + (plan.neck[1] + plan.mouth[1]) * pose.scale * pose.squash, mouthZ = (plan.neck[2] + plan.mouth[2]) * pose.scale
-      const tipX = at.x + offset.x, tipY = at.y + offset.y - BALLOON * 1.25
+      const tipX = at.x + offset.x * big, tipY = at.y + (offset.y - BALLOON * 1.25) * big
       this.lick(painter, mouthX, mouthY, mouthZ, tipX, tipY, 0.35, out, colour)
     }
   }

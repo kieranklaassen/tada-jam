@@ -6,6 +6,8 @@ import { BALLOON, bunchOffsets, bunchReach, CLOUDS, farGroundAt, FAR_HILL, FRIEN
 // measured on, and the jam's floor held at a narrow surface.
 const IPAD = viewFor(1180, 820)
 const NARROW = viewFor(820, 1180)
+/** A wide surface smaller than the iPad's, where a plain balloon would be under a hundred pixels. */
+const SMALL = viewFor(1024, 640)
 
 describe('the view', () => {
   it('shows the same world height on any wide surface and more on a narrow one', () => {
@@ -23,23 +25,39 @@ describe('the view', () => {
 })
 
 describe('the balloons', () => {
-  it('are about 100 logical pixels across on the iPad and never under the jam\'s floor', () => {
+  it('are about 100 logical pixels across on the iPad held either way, and never under the jam\'s floor on a phone', () => {
+    expect(IPAD.balloon).toBe(1)
     expect(2 * BALLOON * IPAD.pixelsPerUnit).toBeGreaterThanOrEqual(100)
-    expect(2 * BALLOON * NARROW.pixelsPerUnit).toBeGreaterThanOrEqual(48)
+    // Held upright the same world is narrower on screen, so the balloons a finger touches are drawn larger.
+    expect(NARROW.balloon).toBeGreaterThan(1.2)
+    expect(2 * BALLOON * NARROW.balloon * NARROW.pixelsPerUnit).toBeGreaterThanOrEqual(99.5)
+    // A small wide surface has one row and less room: larger, as far as the row allows.
+    expect(2 * BALLOON * SMALL.balloon * SMALL.pixelsPerUnit).toBeGreaterThanOrEqual(99.5)
+    // A phone held wide, the smallest surface the jam's shell shows a game on (it asks for an upright one to be turned).
+    const phone = viewFor(844, 390)
+    expect(2 * BALLOON * phone.balloon * phone.pixelsPerUnit).toBeGreaterThanOrEqual(48)
   })
 
   it('hang well apart: no two bunches nearer than half a balloon, whatever is in them', () => {
-    for (const view of [IPAD, NARROW]) for (const slots of [3, 4, 5]) {
+    for (const view of [IPAD, NARROW, SMALL, viewFor(390, 844), viewFor(844, 390)]) for (const slots of [3, 4, 5]) {
       const places = skySlots(slots, view)
-      // Five places hold singles; three or four may each hold a bunch of three.
-      const reach = bunchReach(slots === 5 ? 1 : 3).x
-      for (let i = 1; i < slots; i++) expect(places[i].x - places[i - 1].x - 2 * reach, `${slots} places`).toBeGreaterThan(view === IPAD ? BALLOON : 0)
+      // Five places hold singles; three or four may each hold a bunch of three. Every pair of places is held apart
+      // by the nearest two balloons of full bunches, as large as they are drawn on that surface.
+      const offsets = bunchOffsets(slots === 5 ? 1 : 3), reach = bunchReach(slots === 5 ? 1 : 3).x * view.balloon
+      for (let i = 0; i < slots; i++) for (let j = i + 1; j < slots; j++) {
+        let nearest = Infinity
+        for (const a of offsets) for (const b of offsets) nearest = Math.min(nearest, Math.hypot(places[j].x + b.x * view.balloon - places[i].x - a.x * view.balloon, places[j].y + b.y * view.balloon - places[i].y - a.y * view.balloon))
+        expect(nearest - 2 * BALLOON * view.balloon, `${slots} places, ${i} and ${j}, ${view.width.toFixed(1)} wide`).toBeGreaterThan(BALLOON * 0.5)
+      }
       expect(places[0].x - reach, 'the first is inside the view').toBeGreaterThan(-view.width / 2)
     }
   })
 
-  it('stay inside the top of the view, a bunch of three included', () => {
-    expect(SKY_ROW + bunchReach(3).y).toBeLessThan(IPAD.height / 2)
+  it('stay inside the top of the view, a bunch of three included, in one row', () => {
+    for (const view of [IPAD, NARROW, SMALL, viewFor(390, 844), viewFor(844, 390)]) {
+      for (const slots of [3, 4, 5]) for (const place of skySlots(slots, view)) expect(place.y + bunchReach(3).y * view.balloon, `${view.width.toFixed(1)} wide`).toBeLessThan(view.height / 2)
+    }
+    expect(skySlots(5, IPAD).every((place) => place.y === SKY_ROW)).toBe(true)
   })
 
   it('keep one arrangement for each number, with no balloon over another', () => {
@@ -50,10 +68,13 @@ describe('the balloons', () => {
     }
   })
 
-  it('bob above the head of the tallest friend when held, and below the row in the sky', () => {
+  it('bob above the head of the tallest friend when held, and below the row in the sky, however large they are drawn', () => {
     const tallest = Math.max(...Object.values(BODIES).map((body) => body.height)) * FRIEND_SCALE
-    expect(HELD_HEIGHT - BALLOON * 1.3).toBeGreaterThan(tallest)
-    expect(GROUND + HELD_HEIGHT + BALLOON * 1.2).toBeLessThan(SKY_ROW - BALLOON * 1.3)
+    for (const view of [IPAD, NARROW, SMALL, viewFor(390, 844), viewFor(844, 390)]) {
+      const lowest = Math.min(...skySlots(4, view).map((place) => place.y))
+      expect(HELD_HEIGHT - BALLOON * 1.3 * view.balloon, `${view.width.toFixed(1)} wide`).toBeGreaterThan(tallest)
+      expect(GROUND + HELD_HEIGHT + BALLOON * 1.2 * view.balloon, `${view.width.toFixed(1)} wide`).toBeLessThan(lowest - BALLOON * 1.3 * view.balloon)
+    }
   })
 })
 

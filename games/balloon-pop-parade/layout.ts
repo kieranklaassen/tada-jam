@@ -48,12 +48,29 @@ export type View = {
   distance: number
   /** Logical pixels to one world unit at z = 0. */
   pixelsPerUnit: number
+  /**
+   * How much larger than `BALLOON` the balloons a finger can touch are drawn here: those in the sky and those the
+   * friends hold. 1 on a surface where a balloon is a hundred logical pixels across already; more on a smaller or a
+   * narrower one, as far as the row in the sky has room for.
+   */
+  balloon: number
 }
+
+/** How wide a balloon a finger can touch should be, in logical pixels (pack: game-design, ages-2-to-4.md). */
+export const BALLOON_TARGET_PX = 100
+/**
+ * The most a balloon grows for a small surface. At this size four bunches of three still hang apart in the row, a
+ * bunch of three stays inside the top of a wide view, and a held balloon stays between its friend's head and the
+ * row; tests hold all three. It is enough for an iPad held upright.
+ */
+const LARGEST_BALLOON = 1.24
 
 export function viewFor(widthPx: number, heightPx: number): View {
   const aspect = widthPx / Math.max(1, heightPx)
   const height = Math.max(VIEW_HEIGHT, VIEW_WIDTH / aspect)
-  return { width: height * aspect, height, distance: height / 2 / Math.tan((FOV * Math.PI) / 360), pixelsPerUnit: heightPx / height }
+  const pixelsPerUnit = heightPx / height
+  const balloon = Math.min(LARGEST_BALLOON, Math.max(1, BALLOON_TARGET_PX / (2 * BALLOON * Math.max(1, pixelsPerUnit))))
+  return { width: height * aspect, height, distance: height / 2 / Math.tan((FOV * Math.PI) / 360), pixelsPerUnit, balloon }
 }
 
 /** The height of the hill's skin under a point. */
@@ -72,9 +89,9 @@ export function waitingSpot(index: number, view: View): { x: number; z: number }
   return { x: -view.width / 2 + 1.1 - index * 1.0, z: WAITING_DEPTH - index * 1.6 }
 }
 
-/** The middle of each place in the sky, for `slots` bunches. */
+/** The middle of each place in the sky, for `slots` bunches: one row, with room at each end for a balloon as large as it is drawn here. */
 export function skySlots(slots: number, view: View): { x: number; y: number }[] {
-  const room = view.width - 2 * (BALLOON * 1.9)
+  const room = view.width - 2 * (BALLOON * 1.9 * view.balloon)
   const gap = slots > 1 ? Math.min(3.6, room / (slots - 1)) : 0
   return Array.from({ length: slots }, (_, i) => ({ x: (i - (slots - 1) / 2) * gap, y: SKY_ROW }))
 }
