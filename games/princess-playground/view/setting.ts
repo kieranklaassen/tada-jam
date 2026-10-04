@@ -131,13 +131,13 @@ function paintLeafLight(): HTMLCanvasElement {
   const SIZE = 512
   const { canvas, ctx } = canvasOf(SIZE, SIZE)
   const random = scatter(37)
-  for (let i = 0; i < 46; i++) {
+  for (let i = 0; i < 64; i++) {
     const x = random() * SIZE, y = random() * SIZE, sun = random() < 0.45
     // Kept clear of the edges, so nothing is cut off where the plane ends.
     const edge = Math.min(x, y, SIZE - x, SIZE - y) / SIZE
-    const turn = random() * Math.PI, strength = 0.1 + random() * 0.09, a = 18 + random() * 24, b = 12 + random() * 16
+    const turn = random() * Math.PI, strength = 0.2 + random() * 0.14, a = 18 + random() * 24, b = 12 + random() * 16
     if (edge < 0.1) continue
-    soft(ctx, 12, sun ? `hsla(48, 60%, 86%, ${strength})` : `hsla(210, 40%, 14%, ${strength + 0.02})`, () => {
+    soft(ctx, 10, sun ? `hsla(48, 70%, 88%, ${strength * 0.8})` : `hsla(210, 40%, 14%, ${strength})`, () => {
       ctx.translate(x, y)
       ctx.rotate(turn)
       // A patch of sun is round; a leaf's shadow is long and pointed at both ends.
