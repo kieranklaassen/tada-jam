@@ -26,6 +26,9 @@ export const POOL_RIM = 1.38
 export const POOL_DEEP = 0.4
 export const POOL_FLOOR = 0.07
 
+/** How often a ring spreads from the duck while it paddles the lap of its ending, in seconds. */
+export const WAKE_EVERY_S = 0.45
+
 /** The way the cat looks when nothing has her attention: toward the child and a little toward the truck. */
 export const CAT_FACES = 2.0
 
@@ -142,6 +145,7 @@ export class YardMotion {
   private bellSwing = spring(0)
   private latch = spring(0)
   private steamOwed = 0
+  private wake = 0
   private peekHop = spring(0)
   private fireOut = false
 
@@ -267,6 +271,11 @@ export class YardMotion {
     kick(this.bellSwing, 0.4)
   }
 
+  /** The bell rang and the latch stays where it is: it only swings. */
+  swung(): void {
+    kick(this.bellSwing, 5)
+  }
+
   /** The bell rang for the nth time: it swings, and the latch lifts by a third. */
   rang(ring: number): void {
     kick(this.bellSwing, 5)
@@ -310,6 +319,13 @@ export class YardMotion {
       const deep = pool.gulps >= FLOATS_AT
       // Where the duck's floating is the want of the yard, it lifts off the floor as its ending begins.
       const lifted = this.has.pool === yard.want ? channels.liftOff : 1
+      // As it paddles its lap and dunks its head, rings spread from it; when it is done they settle.
+      const paddling = this.has.pool === yard.want && ((channels.lap > 0 && channels.lap < 1) || (channels.dunk > 0 && channels.dunk < 1))
+      this.wake = paddling ? this.wake + seconds : 0
+      if (paddling && this.wake >= WAKE_EVERY_S) {
+        this.wake = 0
+        this.ripples.ring(NEST.duckInPool.x + this.duck.pose.x, NEST.duckInPool.z + this.duck.pose.z, 0.55)
+      }
       this.duck.step(seconds, deep, deep ? pose.level * POOL_DEEP * lifted : 0, { far: POOL_RIM - NEST.duckInPool.z, high: POOL_DEEP, floor: POOL_FLOOR }, channels, pool.gulps === 0)
     }
     if (seed) {

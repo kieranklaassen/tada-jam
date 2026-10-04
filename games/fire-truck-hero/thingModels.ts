@@ -98,7 +98,10 @@ function flame(height: number, width: number, hex: number): Part {
   return lathe([[0, 0], [width * 0.8, height * 0.12], [width, height * 0.32], [width * 0.72, height * 0.58], [width * 0.3, height * 0.84], [0, height]], hex, 14)
 }
 
-export type FireModel = { root: THREE.Group; flames: THREE.Mesh; logs: THREE.Group; dryLogs: THREE.Mesh; wetLogs: THREE.Mesh }
+export type FireModel = { root: THREE.Group; flames: THREE.Mesh; logs: THREE.Group; dryLogs: THREE.Mesh; wetLogs: THREE.Mesh; wetLogsTop: THREE.Mesh }
+
+/** How many logs of the heap lie underneath. Afloat, the ones on top part from them and knock back against them. */
+export const LOGS_UNDER = 3
 
 /**
  * Five logs in an untidy heap: each lies its own way and off the middle, the
@@ -114,8 +117,8 @@ export const LOG_HEAP = [
   { x: 0.2, z: 0.12, turn: -1.5, long: 0.6 },
 ] as const
 
-function logs(hex: number): Part[] {
-  return LOG_HEAP.map((log, i) => at(rod(0.12, 0.13, log.long, hex, 10), log.x, 0.2 + i * 0.04, log.z, Math.PI / 2 - 0.1, log.turn))
+function logs(hex: number, from = 0, to: number = LOG_HEAP.length): Part[] {
+  return LOG_HEAP.slice(from, to).map((log, at0) => ({ log, i: at0 + from })).map(({ log, i }) => at(rod(0.12, 0.13, log.long, hex, 10), log.x, 0.2 + i * 0.04, log.z, Math.PI / 2 - 0.1, log.turn))
 }
 
 /** The small fire: a ring of pebbles, a heap of logs (dry, and black and wet once it is out), and flames that the stage keeps moving. */
@@ -132,9 +135,11 @@ export function buildFire(plastic: THREE.Material, glow: THREE.Material): FireMo
   const logGroup = new THREE.Group()
   logGroup.name = 'fire-logs'
   const dryLogs = named('fire-logs-dry', logs(PAINT.log), plastic)
-  const wetLogs = named('fire-logs-wet', logs(PAINT.logWet), plastic)
-  wetLogs.visible = false
-  logGroup.add(dryLogs, wetLogs)
+  // The wet logs are two mouldings, the ones underneath and the ones on top, so that afloat they can knock together.
+  const wetLogs = named('fire-logs-wet', logs(PAINT.logWet, 0, LOGS_UNDER), plastic)
+  const wetLogsTop = named('fire-logs-wet-top', logs(PAINT.logWet, LOGS_UNDER), plastic)
+  wetLogs.visible = wetLogsTop.visible = false
+  logGroup.add(dryLogs, wetLogs, wetLogsTop)
   root.add(logGroup)
   const flames = named(
     'fire-flames',
@@ -143,12 +148,15 @@ export function buildFire(plastic: THREE.Material, glow: THREE.Material): FireMo
   )
   flames.position.y = 0.22
   root.add(flames)
-  return { root, flames, logs: logGroup, dryLogs, wetLogs }
+  return { root, flames, logs: logGroup, dryLogs, wetLogs, wetLogsTop }
 }
 
-export type CatModel = { root: THREE.Group; body: THREE.Mesh; head: THREE.Group; lids: THREE.Mesh; tail: THREE.Mesh; paw: THREE.Mesh; pawFar: THREE.Mesh }
+export type CatModel = { root: THREE.Group; body: THREE.Mesh; head: THREE.Group; ears: THREE.Mesh; lids: THREE.Mesh; tail: THREE.Mesh; paw: THREE.Mesh; pawFar: THREE.Mesh }
 
-/** The cat, who wants a warm dry place. She sits facing +x. Her head, her eyelids, her tail and her two front paws move by themselves. */
+/** Where her ears are rooted on her head, as a height above the head's middle. They flatten down to there. */
+export const EARS_ROOT = 0.2
+
+/** The cat, who wants a warm dry place. She sits facing +x. Her head, her ears, her eyelids, her tail and her two front paws move by themselves. */
 export function buildCat(plastic: THREE.Material): CatModel {
   const root = new THREE.Group()
   root.name = 'cat'
@@ -187,8 +195,6 @@ export function buildCat(plastic: THREE.Material): CatModel {
       'cat-skull',
       [
         ball(0.36, PAINT.cat, [0.95, 0.88, 1.05]),
-        at(rod(0, 0.17, 0.36, PAINT.cat, 8), 0.02, 0.38, 0.22, 0.25),
-        at(rod(0, 0.17, 0.36, PAINT.cat, 8), 0.02, 0.38, -0.22, -0.25),
         at(ball(0.15, PAINT.catPale, [0.7, 0.7, 1.25], 10), 0.27, -0.08, 0),
         at(ball(0.045, PAINT.petal, [1, 0.8, 1.2], 8), 0.385, -0.03, 0),
         eye(0.3, 0.08, 0.15, 0.08),
@@ -197,12 +203,16 @@ export function buildCat(plastic: THREE.Material): CatModel {
       plastic,
     ),
   )
+  // Her ears are a moulding of their own, rooted in her head: they go flat under a stream.
+  const ears = named('cat-ears', [at(rod(0, 0.17, 0.36, PAINT.cat, 8), 0.02, 0.38 - EARS_ROOT, 0.22, 0.25), at(rod(0, 0.17, 0.36, PAINT.cat, 8), 0.02, 0.38 - EARS_ROOT, -0.22, -0.25)], plastic)
+  ears.position.y = EARS_ROOT
+  head.add(ears)
   // Eyelids: two lilac caps that come down over her eyes when she is content.
   const lids = named('cat-lids', [at(ball(0.1, PAINT.cat, [0.7, 1, 1], 8), 0.305, 0.1, 0.15), at(ball(0.1, PAINT.cat, [0.7, 1, 1], 8), 0.305, 0.1, -0.15)], plastic)
   lids.visible = false
   head.add(lids)
   root.add(head)
-  return { root, body, head, lids, tail, paw, pawFar }
+  return { root, body, head, ears, lids, tail, paw, pawFar }
 }
 
 export type PotModel = { root: THREE.Group; soil: THREE.Mesh; shoot: THREE.Mesh; leaves: THREE.Mesh; bud: THREE.Mesh; flower: THREE.Group; petals: THREE.InstancedMesh; saucerWater: THREE.Mesh; leafDrop: THREE.Mesh; damp: THREE.Mesh; dampSteps: THREE.BufferGeometry[] }

@@ -51,6 +51,8 @@ export const WORM_CLEAR = 1.7
 export const WORM_CLEAR_OF_SNAIL = 0.85
 /** The gulps at which the plant has its two leaves. */
 export const LEAVES_AT = 2
+/** A stream whose landing point moves faster than this, in yard units a second, is passing: it rings the bell and cannot open the gate. */
+export const PASSING_SPEED = 1.2
 /** How wide the stamp of the puddle is that the wet logs of a fire float on. Its water shows over the middle half of that, inside the ring of pebbles. */
 export const FIRE_PUDDLE = 1.5
 /** How far the flower's cup has nodded over when its water tips out, as a share of the whole nod. */
@@ -186,8 +188,10 @@ export class Game extends Toy {
       if (this.leaving) break
     }
     this.skipSounds = false
-    // A scene that the landing water began (an ending, the drive) lands at its end too: the game rests as it will be found.
+    // A scene that the landing water began (an ending, the drive) lands at its end too, and a worm that was
+    // owed is let go with it: the game rests as it will be found, and nothing starts by itself when it wakes.
     this.endScene()
+    this.wormOwed = null
     this.drops.clear()
     // A spit still in the air never reached its thing: that showing was not given, and is owed again.
     if (this.spits.length > 0) {
@@ -249,7 +253,8 @@ export class Game extends Toy {
   /** A gulp arrives. What stands where it lands takes it. */
   protected override land(gulp: Gulp): void {
     const { x, z } = gulp.arc.to
-    const fast = (this.launchSpeed.get(gulp.id) ?? 0) > SWEEP_SPEED
+    const speed = this.launchSpeed.get(gulp.id) ?? 0
+    const fast = speed > SWEEP_SPEED
     this.launchSpeed.delete(gulp.id)
     const target = targetAt(this.yard, x, z)
     if (target.on === 'thing') {
@@ -257,7 +262,7 @@ export class Game extends Toy {
       if (fast) return
       this.apply(gulpOn(this.yard, target.index), this.clock)
     } else if (target.on === 'bell') {
-      this.ring(this.clock)
+      this.ring(this.clock, speed > PASSING_SPEED)
     } else if (target.on === 'truck') {
       // The truck takes no water. A cat on its roof goes on washing her paw.
       const cat = this.yard.things.findIndex((thing) => thing.spot === 'roof')
@@ -371,6 +376,8 @@ export class Game extends Toy {
     if (kind === 'pool' && action === 'gulp' && gulps > 1) return cellVoice(cellOf('pool', 'fill').voice, fullness, variant)
     // Water gathers in the boat with a drumming that deepens gulp by gulp: the first gulp rings the empty hull.
     if (kind === 'boat' && action === 'gulp' && gulps > 1) return cellVoice(cellOf('boat', 'fill').voice, fullness, variant)
+    // A neighbour's water on a fire that is out already floats its logs, which knock together: nothing is left to sizzle or spit.
+    if (kind === 'fire' && action === 'neighbour' && gulps > THINGS.fire.fill) return cellVoice(cellOf('fire', 'too-much').voice, fullness, variant)
     if (kind === 'fire' && by === 'run-off') return slowSizzle()
     if (kind === 'cat' && by === 'run-off') return catPaws()
     // Drops flung onto the plant patter on its leaves; the slurp is the pot drinking from below.
@@ -410,8 +417,8 @@ export class Game extends Toy {
     else if (kind === 'seed' && (action !== 'neighbour' || by === 'drops')) this.say(beeBuzz(true))
     // On sand the boat slides with a scrape.
     else if (kind === 'boat' && action === 'sweep' && !afloat(this.yard, index)) this.say(delayed(boatScrapes(), 0.05))
-    // The wet logs float off on their own puddle.
-    else if (kind === 'fire' && action === 'too-much') this.paint.puddle(at.x, at.z, FIRE_PUDDLE)
+    // On sand a boat that is full brims over: its water slops out over the brim.
+    else if (kind === 'boat' && action === 'too-much' && !afloat(this.yard, index)) this.drops.burst(at.x, 0.45, at.z, 5, 0.9)
     else if (kind === 'wheel' && (action === 'fill' || action === 'too-much')) this.drops.burst(at.x, 1.3, at.z, action === 'fill' ? 6 : 12, action === 'fill' ? 2.2 : 3.6)
     else if (kind === 'cat' && action === 'fill') this.drops.burst(at.x, 0.9, at.z, 10, 2.4)
   }
@@ -442,7 +449,17 @@ export class Game extends Toy {
 
   // --- The bell and the way on -------------------------------------------------
 
-  private ring(now: number): void {
+  /**
+   * A gulp rings the bell and lifts the latch by a third, and the third ring opens the gate. A stream that is
+   * only passing rings it too, but its ring is never the one that opens: the latch stays at two thirds.
+   */
+  private ring(now: number, passing = false): void {
+    if (passing && this.latch >= RINGS_TO_OPEN - 1) {
+      this.lastRingAt = now
+      this.say(bellRing(this.latch))
+      this.motion.swung()
+      return
+    }
     this.latch += 1
     this.lastRingAt = now
     this.say(bellRing(this.latch))
@@ -584,6 +601,11 @@ export class Game extends Toy {
   private wentOut(event: Extract<YardEvent, { type: 'result' }>, before: Yard): void {
     if (event.kind !== 'fire') return
     const was = before.things[event.thing]?.gulps ?? 0, now = this.yard.things[event.thing]?.gulps ?? 0
+    // Past its fill, by whatever water, the wet logs float off on a puddle of their own.
+    if (now > THINGS.fire.fill) {
+      const at = placeOf(this.yard, event.thing)
+      this.paint.puddle(at.x, at.z, FIRE_PUDDLE)
+    }
     if (was >= THINGS.fire.fill || now < THINGS.fire.fill) return
     if (event.thing !== this.yard.want && event.action === 'neighbour') this.say(cellVoice(cellOf('fire', 'fill').voice, 1, 0))
     this.logDrips.push({ at: this.clock + 1.4, n: 0 }, { at: this.clock + 2.3, n: 1 })

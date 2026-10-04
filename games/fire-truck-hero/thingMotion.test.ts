@@ -264,7 +264,7 @@ describe('the water a thing holds', () => {
 // --- A yard found as it was left ------------------------------------------------
 
 /** What moves by the clock alone and shows no water: the flicker of the flame, and wet logs adrift on their puddle. */
-const BY_THE_CLOCK = ['flicker', 'logsX', 'logsZ', 'logsY', 'logsTurn']
+const BY_THE_CLOCK = ['flicker', 'logsX', 'logsZ', 'logsY', 'logsTurn', 'logsApart']
 
 describe('a thing found as it was left', () => {
   it.each(PLAIN)('stands where its water has it at once: nothing about the %s eases in', (kind) => {

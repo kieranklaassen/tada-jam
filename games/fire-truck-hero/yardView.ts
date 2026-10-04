@@ -174,7 +174,8 @@ export class YardSet {
       flames.rotation.x = (pose.lean * (place.z - TRUCK.z)) / far
       flames.rotation.y = Math.sin(pose.flicker * 2.2) * 0.5
       this.fire.dryLogs.visible = !pose.wet
-      this.fire.wetLogs.visible = pose.wet
+      this.fire.wetLogs.visible = this.fire.wetLogsTop.visible = pose.wet
+      this.fire.wetLogsTop.position.set(pose.logsApart, 0, -pose.logsApart * 0.6)
       this.fire.logs.position.set(pose.logsX, pose.logsY, pose.logsZ)
       this.fire.logs.rotation.y = pose.logsTurn
       this.shadow(place, 1.35)
@@ -326,6 +327,8 @@ export class YardSet {
       const wide = 1 / Math.sqrt(Math.max(0.4, pose.squash))
       this.cat.root.scale.set(size * wide, size * pose.squash, size * wide)
       this.cat.head.rotation.set(0, -pose.headTurn, pose.headTilt - pose.ears * 0.12)
+      // Ears flat under a stream, and pricked when she sits bolt upright.
+      this.cat.ears.scale.set(1 + Math.max(0, pose.ears) * 0.25, 1 - Math.max(-0.3, Math.min(1, pose.ears)) * 0.75, 1 + Math.max(0, pose.ears) * 0.25)
       this.cat.lids.visible = pose.eyesShut > 0.15
       this.cat.lids.scale.set(1, Math.max(0.15, pose.eyesShut), 1)
       // A bottle brush is fatter, so it is lifted to stay on the sand. Up, it swings up from its root on her near side.

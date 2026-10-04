@@ -52,8 +52,11 @@ export function hump(through: number): number {
 /** How tall the flame stands for the gulps the fire holds: lower with each, and out at its fill. */
 export const FLAME_FOR_GULPS = [1, 0.72, 0.46, 0, 0] as const
 
+/** How far the floating logs part before they knock together again, in the fire's own units. */
+export const LOGS_PART = 0.09
+
 export class FireMotion {
-  readonly pose = { flame: 1, flat: 0, lean: 0, flicker: 0, spit: 0, wet: false, logsX: 0, logsZ: 0, logsY: 0, logsTurn: 0 }
+  readonly pose = { flame: 1, flat: 0, lean: 0, flicker: 0, spit: 0, wet: false, logsX: 0, logsZ: 0, logsY: 0, logsTurn: 0, logsApart: 0 }
   private flame = spring(1)
   private flat = spring(0)
   private lean = spring(0)
@@ -77,7 +80,8 @@ export class FireMotion {
     else if (action === 'sweep') kick(this.lean, 7 * strength)
     else if (action === 'neighbour' && creeping) this.gutter.start()
     else if (action === 'neighbour') this.spit.start()
-    else this.drift.target = 1
+    // Past its fill the logs float, whichever way the water came.
+    this.drift.target = gulps > THINGS.fire.fill ? 1 : 0
   }
 
   step(seconds: number): typeof this.pose {
@@ -104,6 +108,8 @@ export class FireMotion {
     pose.logsZ = Math.sin(this.adrift * 0.37) * 0.16 * drift
     pose.logsY = (0.03 + Math.sin(this.adrift * 2.1) * 0.02) * drift
     pose.logsTurn = Math.sin(this.adrift * 0.4) * 0.5 * drift
+    // The logs on top part from the ones underneath and come back against them: they knock together, as wood does.
+    pose.logsApart = Math.abs(Math.sin(this.adrift * 1.05)) * LOGS_PART * drift
     return pose
   }
 }

@@ -23,7 +23,7 @@ export const BOAT = { length: 1.5, floor: 0.27, brim: 0.42 } as const
 
 export type BoatModel = { root: THREE.Group; hull: THREE.Mesh; inside: THREE.Mesh }
 
-/** The boat: an open tub of a dinghy with a bench and a little flag. Water gathers inside it. The bench is the hull's own colour: a pale bar across the pale rim would read from above as a struck-through ring. */
+/** The boat: an open tub of a dinghy with a mast and a little flag. Water gathers inside it. It has no bench: a bar across its oval read from above as a struck-through ring, most of all over the pale water inside it. */
 export function buildBoat(plastic: THREE.Material, water: THREE.Material): BoatModel {
   const root = new THREE.Group()
   root.name = 'boat'
@@ -36,7 +36,7 @@ export function buildBoat(plastic: THREE.Material, water: THREE.Material): BoatM
   gunwale.translate(0, BOAT.brim + 0.01, 0)
   const hull = named(
     'boat-hull',
-    [bowl, gunwale, at(box(0.18, 0.08, 0.8, 0.03, PAINT.boat), -0.1, BOAT.brim - 0.07, 0), at(rod(0.035, 0.035, 0.75, PAINT.bench, 6), -0.5, BOAT.brim + 0.33, 0), at(box(0.42, 0.28, 0.04, 0.02, TRUCK_PAINT.red), -0.28, BOAT.brim + 0.54, 0)],
+    [bowl, gunwale, at(rod(0.035, 0.035, 0.75, PAINT.bench, 6), -0.5, BOAT.brim + 0.33, 0), at(box(0.42, 0.28, 0.04, 0.02, TRUCK_PAINT.red), -0.28, BOAT.brim + 0.54, 0)],
     plastic,
   )
   root.add(hull)
@@ -123,10 +123,10 @@ export function buildSnail(plastic: THREE.Material): SnailModel {
   )
   feelers.position.set(0.52, 0.28, 0)
   body.add(feelers)
-  // The shell: a fat coil, drawn as a ball with a darker whorl on each side.
+  // The shell: a fat coil, drawn as a ball with a darker boss on each side. A boss and not a ring, which read as a nought.
   const shell = named(
     'snail-shell',
-    [at(ball(0.34, PAINT.snailShell, [1, 1, 0.72], 14), 0, 0.36, 0), at(ring(0.17, 0.045, PAINT.log, 14), 0, 0.37, 0.235, Math.PI / 2), at(ring(0.17, 0.045, PAINT.log, 14), 0, 0.37, -0.235, Math.PI / 2)],
+    [at(ball(0.34, PAINT.snailShell, [1, 1, 0.72], 14), 0, 0.36, 0), at(ball(0.17, PAINT.log, [1, 1, 0.3], 12), 0, 0.37, 0.22), at(ball(0.17, PAINT.log, [1, 1, 0.3], 12), 0, 0.37, -0.22)],
     plastic,
   )
   root.add(shell)

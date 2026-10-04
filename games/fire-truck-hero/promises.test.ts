@@ -1095,7 +1095,7 @@ describe('what a reader of the folder found', () => {
       expect(Math.abs(between - Math.PI / 2)).toBeGreaterThan(0.08)
     }
     // The logs' middles, from the vertices of each fifth of the mesh: no two share a middle, as the spokes of a star would.
-    const position = fire.wetLogs.geometry.getAttribute('position')
+    const position = fire.dryLogs.geometry.getAttribute('position')
     const each = position.count / 5
     const middles = [0, 1, 2, 3, 4].map((log) => {
       let x = 0, z = 0
@@ -1307,5 +1307,118 @@ describe('what a third reader found', () => {
     t.stream(t.at(t.the('wheel')), 1.2)
     expect(those(t.heard, cellVoices('pool', 'neighbour')).length).toBeGreaterThan(0)
     expect(those(t.heard, QUACKS).length).toBeGreaterThan(0)
+  })
+})
+
+describe('what a fourth reader found', () => {
+  it('floats the logs of a dead fire on their puddle when a neighbour\'s water takes it past its fill, as it is found again', () => {
+    const t = new Table(saved('downhill', 2))
+    const pool = t.at(t.the('pool')), fire = t.the('fire'), at = t.at(fire)
+    t.gulps(pool, 7).play(8)
+    expect(t.game.yard.things[fire].gulps).toBe(3)
+    expect(t.game.paint.at(at.x, at.z).puddle).toBe(0)
+    const before = t.heard.length
+    t.gulp(pool).play(4)
+    expect(t.game.yard.things[fire].gulps).toBe(4)
+    // The logs float and knock together, on a puddle, and nothing sizzles on a fire that is out.
+    expect(t.game.paint.at(at.x, at.z).puddle).toBeGreaterThan(96)
+    expect(Math.hypot(t.game.motion.fire.pose.logsX, t.game.motion.fire.pose.logsZ) + t.game.motion.fire.pose.logsY).toBeGreaterThan(0.01)
+    expect(those(t.heard.slice(before), cellVoices('fire', 'too-much', 1))).toHaveLength(1)
+    expect(those(t.heard.slice(before), [slowSizzle()])).toHaveLength(0)
+    const again = t.reload()
+    again.play(FRAME)
+    expect(again.game.paint.at(at.x, at.z).puddle).toBeGreaterThan(96)
+  })
+
+  it('has the floating logs part and knock together again and again, and logs that do not float lie still', () => {
+    const t = new Table(saved('one-thing', 0))
+    t.gulps(t.at(0), 3).play(8)
+    expect(t.game.motion.fire.pose.logsApart).toBe(0)
+    t.gulp(t.at(0)).play(3)
+    let knocks = 0, apart = false, widest = 0
+    t.play(20, () => {
+      const gap = t.game.motion.fire.pose.logsApart
+      widest = Math.max(widest, gap)
+      if (gap > 0.05) apart = true
+      if (apart && gap < 0.01) {
+        knocks++
+        apart = false
+      }
+    })
+    expect(widest).toBeGreaterThan(0.06)
+    expect(knocks).toBeGreaterThanOrEqual(4)
+  })
+
+  it('slops water over the brim of a full boat on the sand when it gets more', () => {
+    const t = new Table(saved('afloat', 0))
+    const pool = t.at(t.the('pool')), boat = t.the('boat')
+    t.gulps({ x: pool.x - 0.5, z: pool.z }, 5).play(4)
+    const aground = t.at(boat)
+    t.gulps(aground, 3).play(1)
+    const slopped = () => t.drops().filter((drop) => distance(drop, aground) < 1.6 && drop.y > 0.05).length
+    expect(slopped()).toBe(0)
+    let most = 0
+    t.tap(aground).play(0.36)
+    const landing = slopped()
+    t.play(0.5, () => { most = Math.max(most, slopped()) })
+    expect(t.game.yard.things[boat].gulps).toBe(4)
+    expect(most).toBeGreaterThanOrEqual(landing)
+    expect(most).toBeGreaterThanOrEqual(5)
+  })
+
+  it('spreads rings from the duck as it paddles the lap of its ending, and they settle when it is done', () => {
+    const t = new Table(saved('one-thing', 2))
+    t.gulps(t.at(0), 2).play(2)
+    const alive = () => t.game.motion.ripples.rings.filter((ring) => ring.alive).length
+    expect(alive()).toBe(0)
+    let duringLap = 0
+    t.tap(t.at(0)).play(1.5)
+    t.play(3, () => { if (t.game.channels.lap > 0 && t.game.channels.lap < 1) duringLap = Math.max(duringLap, alive()) })
+    expect(duringLap).toBeGreaterThanOrEqual(2)
+    t.play(6)
+    expect(alive()).toBe(0)
+  })
+
+  it('lets a passing stream ring the bell and open nothing, however slowly it passes; a stream that stops on the bell opens the gate', () => {
+    for (const speed of [1.5, 2, 3, 6]) {
+      const t = new Table(saved('one-thing', 0))
+      const frames = Math.round((6 / speed) * 60)
+      t.sweep({ x: 1.6, z: 0.6 }, { x: 7.6, z: 0.6 }, frames)
+      t.play(1)
+      expect(t.game.leaving, `${speed} units a second`).toBeNull()
+      expect(t.game.latch, `${speed} units a second`).toBeLessThan(3)
+    }
+    // Held still on the bell: three gulps, and the gate opens.
+    const held = new Table(saved('one-thing', 0))
+    held.game.press({ truck: false, point: { x: 4.6, z: 0.6 } }, held.now)
+    held.play(1.4)
+    expect(held.game.leaving).not.toBeNull()
+  })
+
+  it('starts nothing by itself when the game wakes: a worm owed for mud made during a scene is let go at rest', () => {
+    const t = new Table(saved('one-thing', 3))
+    t.game.press({ truck: false, point: t.at(0) }, t.now)
+    t.play(1.9)
+    t.game.lift()
+    expect(t.game.sceneRunning).toBe(true)
+    t.game.rest()
+    let came = false
+    t.play(6, () => { came ||= t.game.wormAt !== null || t.game.sceneRunning })
+    expect(came).toBe(false)
+  })
+
+  it('gives the cat ears of their own, the boat no bench, and the snail no rings', async () => {
+    const THREE = await import('three')
+    const { buildCat } = await import('./thingModels')
+    const { buildBoat, buildSnail } = await import('./moreModels')
+    const plastic = new THREE.MeshBasicMaterial()
+    const cat = buildCat(plastic)
+    expect(cat.ears.parent).toBe(cat.head)
+    // The boat's hull is a bowl, a rim, a mast and a flag: nothing lies across its opening below the rim's height but the mast's foot.
+    const hull = buildBoat(plastic, plastic).hull.geometry.getAttribute('position')
+    let across = 0
+    for (let i = 0; i < hull.count; i++) if (Math.abs(hull.getZ(i)) < 0.05 && Math.abs(hull.getX(i)) < 0.2 && hull.getY(i) > 0.3 && hull.getY(i) < 0.42) across++
+    expect(across).toBe(0)
+    expect(buildSnail(plastic).shell.geometry.getAttribute('position').count).toBeGreaterThan(0)
   })
 })
