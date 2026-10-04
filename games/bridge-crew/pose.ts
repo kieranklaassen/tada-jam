@@ -157,7 +157,7 @@ export function ends(moving: Moving, long: number): { a: [number, number]; b: [n
 export const GAIT = {
   firm: { beat: 6.5, damp: 0.42, swing: 6.5, swingDamp: 0.5 },
   // What is not held folds slowly, like a deckchair: about half a second from upright to the ground.
-  hangs: { beat: 5, damp: 0.6, swing: 0.55, swingDamp: 0.16 },
+  hangs: { beat: 5, damp: 0.6, swing: 0.55, swingDamp: 0.28 },
   lies: { beat: 2.2, damp: 0.75, swing: 2.2, swingDamp: 0.6 },
 } as const
 

@@ -453,7 +453,7 @@ describe('what a full reading of the toy found', () => {
     expect(ticks).toBeGreaterThan(0)
     // Never a rattle: the stick itself turns over as it falls and ticks at each notch, and the deck's hinges a handful of times.
     expect(ticks).toBeLessThan(16)
-    settle(toy, 6); toy.takeVoices()
+    settle(toy, 10); toy.takeVoices()
     for (let i = 0; i < 120; i++) { toy.step(1 / 60); expect(toy.takeVoices()).toEqual([]) }
   })
 

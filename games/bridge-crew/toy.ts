@@ -392,7 +392,9 @@ export class Toy {
       if (notch(moving.turn.at) !== notch(before) && this.ticked >= NOTCH.gap && this.hinged(index)) { this.voices.push(pinTick); this.ticked = 0; this.crept[index] = 0 }
       // And it ticks when a part on it shifts without turning far: once for each small distance its far end has gone,
       // and never as a rattle.
-      this.crept[index] = (this.crept[index] ?? 0) + Math.abs(moving.turn.at - before) * length(part) + (Math.abs(moving.x.speed) + Math.abs(moving.y.speed)) * dt
+      // (What it crept leaks away again, so the last hair of a settling part never adds up to a tick.)
+      const crept = this.crept[index] ?? 0
+      this.crept[index] = (this.crept[index] ?? 0) * Math.max(0, 1 - 2 * dt) + Math.abs(moving.turn.at - before) * length(part) + (Math.abs(moving.x.speed) + Math.abs(moving.y.speed)) * dt
       if (this.crept[index] >= NOTCH.creep && this.ticked >= NOTCH.rest && this.hinged(index)) { this.voices.push(pinTick); this.ticked = 0; this.crept[index] = 0 }
       // A swinging part does not go through the ground: where it would, it is turned back the short way until it
       // lies clear, and it comes off the ground more slowly than it met it, with a knock.
@@ -416,6 +418,8 @@ export class Toy {
       if (Math.abs(moving.turn.speed) > 1.2) this.voices.push(knock(part.kind, long, Math.abs(moving.turn.speed)))
       moving.turn.at = clear
       moving.turn.speed *= -0.35
+      // Held off the ground it has not shifted: a part that lies against a bank or a rock is still.
+      this.crept[index] = Math.min(this.crept[index], crept * Math.max(0, 1 - 2 * dt) + Math.abs(clear - before) * long)
     }
     for (const [point, since] of this.clicked) { if (since > 1) this.clicked.delete(point); else this.clicked.set(point, since + dt) }
     for (const [point, since] of this.rattled) { if (since > RING) this.rattled.delete(point); else this.rattled.set(point, since + dt) }
