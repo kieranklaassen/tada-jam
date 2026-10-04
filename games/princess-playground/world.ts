@@ -57,7 +57,7 @@ export const CROWN = { girth: 0.5, rise: 0.34, seat: 1.9 } as const
  * his head it sits, and where the pair is set, as a share of his half height. They are low bumps at the corners of
  * his head and do not stand above the top of it, so that he and Dot, who weigh the same, are one size to the eye.
  */
-export const EARS = { size: 0.2, out: 0.5, seat: 1.735 } as const
+export const EARS = { size: 0.26, out: 0.5, seat: 1.656 } as const
 
 export const MAX_TILT = Math.asin(PLANK.pivotHeight / PLANK.halfLength)
 /** How much further an end digs into the sand for each unit of weight on it beyond the lightest friend's: radians. */

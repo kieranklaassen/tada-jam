@@ -105,7 +105,7 @@ export function buildFriend(id: FriendId): FriendView {
   let extra: THREE.Object3D | null = null
   if (id === 'pim') extra = crown(spec.radius)
   if (id === 'dot') extra = speckles()
-  if (id === 'mog') extra = ears(body.material)
+  if (id === 'mog') extra = ears()
   if (id === 'bo') extra = lids(eyeSize)
   if (extra) {
     if (id === 'pim') extra.position.set(0, spec.halfHeight * CROWN.seat, -spec.radius * 0.18)
@@ -129,17 +129,18 @@ function crown(radius: number): THREE.Object3D {
   return shell
 }
 
-/** Mog's ear bumps: two small rounded ears on top of his head, of his own paint. They lie flat when he is put out or sat on. */
-function ears(material: THREE.Material): THREE.Object3D {
+/** Mog's ear bumps: two low rounded bumps at the corners of his head, a lighter teal than his body. They lie flat when he is put out, and are laid right back under a friend. */
+function ears(): THREE.Object3D {
   const radius = FRIENDS.mog.radius, parts: THREE.BufferGeometry[] = []
   for (const side of [-1, 1]) {
     const ear = new THREE.SphereGeometry(radius * EARS.size, 14, 10)
     ear.scale(0.85, 1, 0.6)
     ear.rotateZ(-side * 0.4)
-    ear.translate(side * radius * EARS.out, 0, -radius * 0.04)
+    ear.translate(side * radius * EARS.out, 0, radius * 0.1)
     parts.push(ear)
   }
-  const mesh = new THREE.Mesh(mergeGeometries(parts)!, material)
+  // Low as they are, they are painted a lighter teal than his body, as Pim's crown is cream and Dot's speckles are pale, so that they can be seen.
+  const mesh = new THREE.Mesh(mergeGeometries(parts)!, new THREE.MeshStandardMaterial({ color: '#8ff0e0', roughness: 0.34, metalness: 0 }))
   mesh.name = 'mog-ears'
   return mesh
 }
