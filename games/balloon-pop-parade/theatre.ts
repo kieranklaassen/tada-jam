@@ -79,7 +79,7 @@ const MAX_SCRAPS = 21
 export class Theatre {
   /** The game as it is saved. Every touch that changes it changes it here, whole, before anything is seen to move. */
   save: Save
-  /** What the save needs since it was last handed to storage: 0 nothing, 1 soon (at the throttle), 2 at once. The Mount reads it and sets it back. */
+  /** What the save needs since it was last handed to storage: 0 nothing, 1 the outcome of a tap, 2 a cycle's end or a scene's start. The Mount saves either at once and sets it back. */
   unsaved: 0 | 1 | 2 = 0
   /** Sounds since the last time they were taken. */
   readonly sounds: Sound[] = []

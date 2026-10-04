@@ -44,10 +44,11 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       for (const cue of theatre.sounds) audio.play(voiceOf(cue.voice, cue.pitch, cue.gain, cue.after, cue.pace))
       theatre.sounds.length = 0
     }
-    // What a touch or a step changed goes to storage: the end of a cycle and a troop stepping in at once, the rest at the throttle.
+    // What a touch or a step changed goes to storage at once, never at the throttle: every change this game makes
+    // is the outcome of one tap or the start of a scene, and a put-away in the next moment must find it saved.
     const keep = () => {
       if (!theatre || theatre.unsaved === 0) return
-      cadence.change(performance.now(), theatre.unsaved === 2)
+      cadence.change(performance.now(), true)
       theatre.unsaved = 0
     }
     const pinned = tierOverride(window.location.search)
@@ -69,7 +70,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     //                                            piece set down): at most once per throttle window
     //   cadence.change(performance.now(), true)  a scene's outcome, a cycle judged, the position moved: at once,
     //                                            since a put-away in the next moment must find it saved
-    // Going to rest writes whatever the throttle still holds (`cadence.settle`, below).
+    // Going to rest writes whatever the throttle still holds (`cadence.settle`, below). This game makes only the
+    // second kind of change (`keep`, above): a balloon sent, a balloon popped, a scene begun.
     const cadence = new SaveCadence(() => { if (theatre && !moment) ctxRef.current.storage.save(serializeSave(theatre.save)) })
 
     // The one place the game applies a quality tier: whatever its tiers set besides the pixel ratio, which
@@ -136,8 +138,11 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       audio.touchDown()
       ladder.touch(clock.seconds)
       const where = at(event)
-      overlay.press(where.x, where.y, width, event.timeStamp)
-      act(touch.down(event.pointerId, where, event.timeStamp))
+      const gestures = touch.down(event.pointerId, where, event.timeStamp)
+      // Only the working finger counts towards the grown-up's three taps: a palm or a second finger that lands in
+      // the corner while the child plays does not.
+      if (gestures.some((gesture) => gesture.type === 'press')) overlay.press(where.x, where.y, width, event.timeStamp)
+      act(gestures)
       // Captured, so the lift is reported even when the finger has slid off the surface.
       root.setPointerCapture(event.pointerId)
     }
