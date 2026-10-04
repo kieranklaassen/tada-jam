@@ -243,7 +243,7 @@ export class Play implements Cast {
       ])
       return
     }
-    // The empty seat: the friend goes to it, at any moment and as often as the child likes.
+    // The empty seat: the friend goes to it, at any moment while a customer is under the cape and as often as the child likes.
     const seated = sendFriend(game, button === 'stool' ? 'beside' : 'across')
     if (seated === game) return
     this.game = seated

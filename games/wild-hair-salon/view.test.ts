@@ -6,7 +6,7 @@ import { PERSONALITIES } from './personality'
 import { Play } from './play'
 import { Puppet } from './puppet'
 import { makeRng } from './rng'
-import { BUTTONS, placesOf, ribbonShape } from './poses'
+import { BUTTONS, onHead, placesOf, ribbonShape, tuftPose, tuftTip } from './poses'
 import { blankSheets, bounds, recordingSheet, type Recording } from './recorder'
 import { Sprites } from './sprites'
 import { CUSTOMERS } from './tastes'
@@ -315,6 +315,35 @@ describe('a bow', () => {
     expect(wide()).toBeLessThan(before * 0.8)
     for (let i = 0; i < 120; i++) play.step(1 / 60, true)
     expect(wide()).toBeCloseTo(before, 0)
+  })
+})
+
+describe('hair that springs back', () => {
+  it('is drawn out under the finger while it is held with the cape off, a tuft as the lock is, and is no longer when it is let go', () => {
+    const tallest = (play: Play): number => {
+      const kept: Recording = { shapes: [], stamps: [], texts: 0 }
+      const sprites = new Sprites(blankSheets, 1180, 820, 1), surface = recordingSheet(1180, 820, kept)
+      for (let i = 0; i < 3; i++) { kept.stamps.length = 0; drawFrame(surface.g as Ctx, 1180, 820, sprites, { play, guidance: null }) }
+      const sheet = sprites.tuft(play.game!.chair!, 4, 50, 9, true)!.sprite.sheet.canvas
+      return Math.max(...kept.stamps.filter((stamp) => stamp.image === sheet).map((stamp) => Math.hypot(stamp.corners[0].x - stamp.corners[3].x, stamp.corners[0].y - stamp.corners[3].y)))
+    }
+    const over = { cape: 'off', finished: true, mane: Array(9).fill(50) }
+    const rest = tallest(seated(over))
+    const play = seated(over), who = play.game!.chair!, at = placesOf(play.game!).customer!
+    const pose = tuftPose(who, 4, 50, 9), tip = tuftTip(pose)
+    const along = (t: number) => onHead(at, { x: pose.base.x + (tip.x - pose.base.x) * t, y: pose.base.y + (tip.y - pose.base.y) * t })
+    const from = along(0.7), to = along(1.6)
+    play.gesture({ type: 'press', at: from })
+    play.gesture({ type: 'dragStart', from })
+    play.gesture({ type: 'dragMove', from, at: to })
+    play.step(1 / 60, false)
+    expect(play.hair.holds).toBe(4)
+    expect(play.hand.drawnOut).toBeGreaterThan(10)
+    expect(tallest(play)).toBeGreaterThan(rest * 1.1)
+    // What is saved has not changed, and let go it is as long as it was.
+    expect(play.game!.mane[4]).toBe(50)
+    play.gesture({ type: 'dragEnd', from, at: to })
+    expect(play.game!.mane[4]).toBe(50)
   })
 })
 

@@ -73,8 +73,8 @@ const BY_THE_TAIL: Actor = { x: 232, y: 392, s: 0.65 }
 /**
  * Coming in: the door swings, the pair that was done go out past the pair
  * that waited, who walk in each with its own gait; the rain hats pop off and
- * the hair springs out; the customer hops into the chair and the cape lands
- * on it; the friend takes its seat; the customer looks from its lock to the
+ * the hair springs out; the customer walks to the chair and lands in it, and
+ * the cape lands on it; the friend takes its seat; the customer looks from its lock to the
  * friend's. `before` is the salon they come into, `after` the salon with them
  * in it.
  */
@@ -145,8 +145,8 @@ export function comingIn(cast: Cast, before: Game, after: Game): Beat[] {
 }
 
 /**
- * The cape comes off: it flies up and lands over the chair, the customer hops
- * down, the friend comes over, they stand cheek to cheek with the two locks
+ * The cape comes off: it flies up and lands over the chair, the customer is
+ * seen whole where it sat, the friend comes to its side, they stand cheek to cheek with the two locks
  * side by side, look down at the free ends, and the customer does what it
  * does about a lock that is too long, too short or as long, sized by the
  * piece or the gap; then about its mane, its bow and whatever it wears.

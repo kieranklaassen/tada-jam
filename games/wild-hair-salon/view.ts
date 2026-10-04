@@ -103,7 +103,9 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
     })
     const customer = play.customer(), other = play.friend()
     // Its limbs come later, over the cape and the strips: a paw that pats its lock and a foot that thumps are out in front of both.
-    const seated: Figure | null = customer ? { who: chair, puppet: customer, at: customerAt, mane: { steps: game.mane, hair }, body: 1 - caped, wears: wearsOf('chair'), time: play.time, limbsLater: true } : null
+    // Hair that springs back is drawn out as far as the fingers have it while they hold it: the lock below, and here a tuft of the mane with the cape off.
+    const held = hair.holds, maneNow = typeof held === 'number' && play.hand.drawnOut > 0 ? game.mane.map((steps, index) => (index === held ? steps + play.hand.drawnOut : steps)) : game.mane
+    const seated: Figure | null = customer ? { who: chair, puppet: customer, at: customerAt, mane: { steps: maneNow, hair }, body: 1 - caped, wears: wearsOf('chair'), time: play.time, limbsLater: true } : null
     if (seated) drawn += drawFigure(g, sprites, seated)
     // The looking glass shows the customer's face, the hair it has now, and what it thinks of both.
     // The glass shows the mane as it was until a tuft that a showing will change has been changed where the child can see it.

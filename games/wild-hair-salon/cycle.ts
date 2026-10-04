@@ -62,7 +62,7 @@ export function letIn(game: Game): { game: Game; came: boolean } {
   }
 }
 
-/** The child sent the friend to the stool or to the bench, at any moment and as often as they like. With nobody in the salon there is no friend to send. */
+/** The child sent the friend to the stool or to the bench, at any moment while a customer is under the cape and as often as they like. With the cape off, or with nobody in the salon, there is no friend to send. */
 export function sendFriend(game: Game, seat: Seat): Game {
   if (game.friend === null) return game
   const seated = seatFriend(game, seat)

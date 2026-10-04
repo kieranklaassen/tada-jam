@@ -65,6 +65,8 @@ export function notesFor(happening: Happening, before: Salon, after: Salon): Not
         case 'model/pull': return [voiced({ ...CELL_VOICES['lock/pull'], peak: 0.05 }, after.friend)]
         // A piece pops off the friend's lock, in that friend's voice.
         case 'model/snip': return [voiced(base, after.friend)]
+        // A snipped tuft goes with its soft poff, and the stub that stands up twangs, quietly, at the length it has now.
+        case 'tuft/snip': return [base, { kind: 'tone', wave: 'triangle', pitch: pitchForLength(length ?? 50), glideTo: pitchForLength(length ?? 50) * 1.2, peak: 0.06, attack: 0.002, length: 0.16, after: 0.06 }]
         // Every tuft is a string too: its sproing is lower the longer it is.
         case 'tuft/poke': { const by = length === null ? 1 : pitchForLength(length) / pitchForLength(50); return [{ ...base, pitch: base.pitch * by, ...(base.glideTo === undefined ? {} : { glideTo: base.glideTo * by }) }] }
         // A bow is tied with a rustle and then a ting.
@@ -73,7 +75,11 @@ export function notesFor(happening: Happening, before: Salon, after: Salon): Not
         case 'model/poke':
         case 'model/ruffle':
         case 'model/ribbon': return [voiced(base, after.friend)]
-        case 'face/pull': return [voiced(base, face ? owner(face.who) : after.chair)]
+        // A cheek snaps back with a blub and then a squeak, both in its owner's voice.
+        case 'face/pull': {
+          const whose = face ? owner(face.who) : after.chair
+          return [voiced(base, whose), { ...voiced(OTHER_VOICES.caught, whose), peak: 0.1, length: 0.09, after: 0.2 }]
+        }
         case 'face/poke': {
           const mine = voiced(base, face ? owner(face.who) : after.chair), by = PART_PITCH[face?.part ?? 'cheek']
           return [{ ...mine, pitch: mine.pitch * by, ...(mine.glideTo === undefined ? {} : { glideTo: mine.glideTo * by }) }]

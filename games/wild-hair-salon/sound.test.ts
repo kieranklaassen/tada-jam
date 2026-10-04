@@ -23,6 +23,32 @@ const inRange = (note: Note) => {
 }
 
 describe('what things sound like', () => {
+  it('gives a snipped tuft its poff and then the twang of the stub that stands up, lower the longer it is left', () => {
+    const short = notesFor(cell('tuft', 'snip', { rings: 10 }), salon(), salon()), long = notesFor(cell('tuft', 'snip', { rings: 80 }), salon(), salon())
+    expect(short).toHaveLength(2)
+    expect(short[0].kind).toBe('noise')
+    expect(short[1].kind).toBe('tone')
+    expect(long[1].pitch).toBeLessThan(short[1].pitch)
+    // Quieter than the lock's: the mane is not the thing that is measured.
+    expect(short[1].peak).toBeLessThan(0.1)
+  })
+
+  it('snaps a pulled cheek back with a blub and then a squeak, both in the voice of whoever\'s cheek it is', () => {
+    for (const who of ['chair', 'friend'] as const) {
+      const notes = notesFor(cell('face', 'pull', { held: { object: 'face', who, part: 'cheek' } }), salon(), salon())
+      expect(notes).toHaveLength(2)
+      // The blub falls; the squeak comes after it, higher and rising.
+      expect(notes[0].glideTo!).toBeLessThan(notes[0].pitch)
+      expect(notes[1].after!).toBeGreaterThan(0.1)
+      expect(notes[1].pitch).toBeGreaterThan(notes[0].pitch)
+      expect(notes[1].glideTo!).toBeGreaterThan(notes[1].pitch)
+      for (const note of notes) inRange(note)
+    }
+    const lion = notesFor(cell('face', 'pull', { held: { object: 'face', who: 'chair', part: 'cheek' } }), salon(), salon())
+    const poodle = notesFor(cell('face', 'pull', { held: { object: 'face', who: 'friend', part: 'cheek' } }), salon(), salon())
+    expect(lion[1].pitch).not.toBe(poodle[1].pitch)
+  })
+
   it('gives every cell of the grid a sound, short and inside the stated ranges', () => {
     for (const object of OBJECTS) for (const action of ACTIONS) {
       for (const rings of [null, 4, 50, 100]) {

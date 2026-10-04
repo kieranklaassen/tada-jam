@@ -37,7 +37,7 @@ export const GRID: Record<ObjectId, Record<ActionId, Cell>> = {
   lock: {
     pull: cell('stretches-longer-and-stays', 'lock/pull', 'longer'),
     snip: cell('cut-where-crossed-piece-drops-stump-twangs', 'lock/snip', 'shorter'),
-    poke: cell('plucked-like-a-string-one-slow-swing', 'lock/poke', 'nothing'),
+    poke: cell('plucked-like-a-string-swings-slowly-to-rest', 'lock/poke', 'nothing'),
     ruffle: cell('fans-out-flutters-and-falls-straight', 'lock/ruffle', 'nothing', true),
     ribbon: cell('ribbon-clips-on-beside-it-with-a-wooden-clack-tops-level', 'lock/ribbon', 'ribbon-hung'),
   },
@@ -50,7 +50,7 @@ export const GRID: Record<ObjectId, Record<ActionId, Cell>> = {
   },
   tuft: {
     pull: cell('grows-into-a-plume-that-flops-over', 'tuft/pull', 'longer'),
-    snip: cell('cut-to-a-stub-fluff-floats-up', 'tuft/snip', 'shorter'),
+    snip: cell('cut-shorter-where-crossed-fluff-floats-up', 'tuft/snip', 'shorter'),
     poke: cell('bobs-with-a-wiry-sproing-and-its-neighbours-ripple', 'tuft/poke', 'nothing'),
     ruffle: cell('whole-mane-frizzes-into-a-ball-and-sinks-back', 'tuft/ruffle', 'nothing', true),
     ribbon: cell('ribbon-ties-into-a-bow-customer-looks-up', 'tuft/ribbon', 'ribbon-hung', true),

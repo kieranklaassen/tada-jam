@@ -891,6 +891,8 @@ describe('any touch at all', () => {
     play.gesture({ type: 'dragStart', from: { x: 330, y: 150 } })
     play.gesture({ type: 'dragMove', from: { x: 330, y: 150 }, at: { x: 900, y: 150 } })
     expect(play.takeNotes().length).toBeLessThanOrEqual(4)
+    // The rest start on the frames after, a few at a time, and then there are no more.
+    for (let i = 0; i < 6; i++) expect(play.takeNotes().length).toBeLessThanOrEqual(4)
     expect(play.takeNotes()).toEqual([])
   })
 })
