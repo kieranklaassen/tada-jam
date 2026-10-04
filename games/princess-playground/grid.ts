@@ -20,21 +20,21 @@ export type Cell = {
 export const CELLS: Readonly<Record<Thing, Readonly<Record<Deed, Cell>>>> = {
   pim: {
     tap: { seen: 'quick hop on or off, crown lagging', heard: 'a squeak up' },
-    'low-end': { seen: 'end sinks a hair, she stamps', heard: 'a tiny tick' },
-    'high-end': { seen: 'tips it with a small toss, or dangles kicking', heard: 'a light clack, or a trill' },
+    'low-end': { seen: 'lands on the head there and crows; the end sinks a hair, she stamps', heard: 'a crow, then a tiny tick' },
+    'high-end': { seen: 'tips it with a small toss, or dangles wriggling and hopping on the spot', heard: 'a light clack, or a trill' },
     'on-a-friend': { seen: 'lands on top and crows', heard: 'a boing and a crow' },
     'in-the-sand': { seen: 'small dimple, crown over one eye, shaken straight', heard: 'a soft pat and a tiny rattle' },
   },
   mog: {
     tap: { seen: 'stretches long, pads on or off', heard: 'a chirrup in two' },
-    'low-end': { seen: 'circles once and sits', heard: 'a soft thud' },
+    'low-end': { seen: 'lands on the head there, circles once, kneads it and sits', heard: 'a soft thud, two pats and a purr' },
     'high-end': { seen: 'tips it with a toss, or sits tall on the perch', heard: 'a firm knock, or a purr' },
-    'on-a-friend': { seen: 'kneads the head below twice, then sits', heard: 'two muffled pats and a short chirr' },
+    'on-a-friend': { seen: 'kneads the head below twice, then sits tall', heard: 'two muffled pats and a short chirr, then a purr' },
     'in-the-sand': { seen: 'neat round hollow, one turn in it', heard: 'a dry scrunch' },
   },
   dot: {
     tap: { seen: 'warms to full colour, twirls, hops on or off; the others turn and bounce', heard: 'a rising two-note peep' },
-    'low-end': { seen: 'sits, brighter beside someone; alone on the plank it peeks over at the others', heard: 'a thud and a two-note hum, which dies away if alone' },
+    'low-end': { seen: 'sways on the head there, then both sway; alone on the plank it peeks over at the others', heard: 'a thud and a bright two-note hum, then a duet; alone, a hum that dies away' },
     'high-end': { seen: 'tips it with a toss, or sways up high toward the friend opposite', heard: 'a knock with a clear ring over it, or one long high note' },
     'on-a-friend': { seen: 'sways together with the one below', heard: 'a low duet' },
     'in-the-sand': { seen: 'stays warm beside a friend, or pales and draws one swirl with its foot', heard: 'a light tap, then one soft note or a faint slow scratch' },
