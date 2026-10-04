@@ -7,7 +7,7 @@ import { FIELD_OF_VIEW, placeCamera } from './camera'
 // are a good size in it.
 
 function framed(width: number, height: number) {
-  const camera = new THREE.PerspectiveCamera(FIELD_OF_VIEW, 1, 1, 120)
+  const camera = new THREE.PerspectiveCamera(FIELD_OF_VIEW, 1, 1, 240)
   placeCamera(camera, width / height)
   const at = (x: number, y: number, z: number) => {
     const p = new THREE.Vector3(x, y, z).project(camera)
@@ -16,7 +16,7 @@ function framed(width: number, height: number) {
   return { at, wide: (x: number, y: number, z: number, radius: number) => at(x + radius, y, z).x - at(x - radius, y, z).x }
 }
 
-const SHAPES: [number, number][] = [[1180, 820], [1024, 768], [1366, 1024], [1280, 720], [820, 1180], [700, 500]]
+const SHAPES: [number, number][] = [[1180, 820], [1024, 768], [1366, 1024], [1280, 720], [820, 1180], [700, 500], [390, 844], [2000, 600]]
 
 describe('the frame', () => {
   it('holds the whole tray with its rim, and the air above the plank, whatever the shape of the surface', () => {

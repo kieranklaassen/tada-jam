@@ -53,7 +53,7 @@ function aimFor(camera: THREE.PerspectiveCamera, distance: number, wanted: numbe
 export function placeCamera(camera: THREE.PerspectiveCamera, aspect: number): void {
   camera.aspect = aspect
   camera.updateProjectionMatrix()
-  for (let distance = 10; distance <= 90; distance *= 1.01) {
+  for (let distance = 10; distance <= 160; distance *= 1.01) {
     // The aim must come at least this far toward the child for the near rim to be in the frame,
     const nearest = aimFor(camera, distance, -MARGIN.bottom, () => seen(camera, 0, 0, HALF_DEPTH).y)
     // and no further than this, or the air above the plank is out of it.
@@ -63,4 +63,6 @@ export function placeCamera(camera: THREE.PerspectiveCamera, aspect: number): vo
     const wide = Math.max(Math.abs(seen(camera, HALF_WIDTH, 0, HALF_DEPTH).x), Math.abs(seen(camera, HALF_WIDTH, TRAY.rimHeight, -HALF_DEPTH).x), Math.abs(seen(camera, PLANK.halfLength, AIR, PLANK.z).x))
     if (wide <= MARGIN.side) return
   }
+  // A surface so narrow that nothing fits: the furthest stand, aimed at the middle of the tray.
+  stand(camera, 160, 0)
 }

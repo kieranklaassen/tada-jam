@@ -258,7 +258,7 @@ No friend is yellow, tan or brown: those belong to the sand and the tray.
 
 **Lighting.** One directional light, low from the left and a little behind, warm; one cool hemisphere fill. No shadow map and no post pass. Shadows on the sand fall to the right and stretch, as a low light makes them, and the painted shadows of the tray and the snail fall the same way.
 
-**The camera** (`view/camera.ts`). A long lens, 26 degrees, looking down at 46 degrees. It stands as near as it can with the whole tray in the frame, whatever the shape of the surface: the near rim just above the bottom edge, the sides inside the side edges, and 6.8 units of air above the plank below the top. A test holds the frame on six shapes of surface.
+**The camera** (`view/camera.ts`). A long lens, 26 degrees, looking down at 46 degrees. It stands as near as it can with the whole tray in the frame, whatever the shape of the surface: the near rim just above the bottom edge, the sides inside the side edges, and 6.8 units of air above the plank below the top. A test holds the frame on eight shapes of surface, from a phone held upright to a wide strip.
 
 **Motion rules.**
 

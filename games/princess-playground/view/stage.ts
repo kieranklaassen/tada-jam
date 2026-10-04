@@ -41,7 +41,8 @@ export class Stage {
   readonly drawn = { drawCalls: 0, triangles: 0 }
   private readonly renderer: THREE.WebGLRenderer
   private readonly scene = new THREE.Scene()
-  private readonly camera = new THREE.PerspectiveCamera(FIELD_OF_VIEW, 1, 1, 80)
+  // Far enough for the floor behind the tray on a tall, narrow surface, where the camera stands a long way back.
+  private readonly camera = new THREE.PerspectiveCamera(FIELD_OF_VIEW, 1, 1, 240)
   private readonly sand: Sand
   private readonly setting = buildSetting()
   private readonly snail = buildSnail()
