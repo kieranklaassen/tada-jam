@@ -104,6 +104,8 @@ function clear(a: Arrangement, id: FriendId, at: Spot, spare = 0): boolean {
 
 /** The room a friend moved to the nearest free place keeps beyond bare elbow room, where there is any. */
 export const SPARE_ROOM = 0.15
+/** And how much further off than the nearest free place such a roomier place may lie. */
+export const SPARE_STEP = 0.3
 
 /**
  * Nearest place to `spot` where this friend stands clear of the plank, the
@@ -117,18 +119,24 @@ export function freeSpot(a: Arrangement, id: FriendId, spot: Spot): Spot {
   // Where it was let go, if a friend may stand there: the common case, and the one a saved place always is.
   if (Math.hypot(first.x - spot.x, first.z - spot.z) < GRID && clear(a, id, first)) return first
   // Else the nearest of every place it may stand, measured from where it was let go, whichever way that lies.
-  // With a little room to spare where there is any: two neighbours crouching to hop at once spread wider than they stand.
-  for (const spare of [SPARE_ROOM, 0]) {
-    let best: Spot | null = null, bestApart = Infinity
-    for (const at of standablePlaces(radius)) {
-      const apart = Math.hypot(at.x - spot.x, at.z - spot.z)
-      if (apart >= bestApart - 1e-9 || !clear(a, id, at, spare)) continue
-      best = at
-      bestApart = apart
-    }
-    if (best) return best
+  let best: Spot | null = null, bestApart = Infinity
+  for (const at of standablePlaces(radius)) {
+    const apart = Math.hypot(at.x - spot.x, at.z - spot.z)
+    if (apart >= bestApart - 1e-9 || !clear(a, id, at)) continue
+    best = at
+    bestApart = apart
   }
-  return first
+  if (!best) return first
+  // A place with a little room to spare is taken instead when one lies hardly further off: two neighbours crouching
+  // to hop at once spread wider than they stand. Never at the price of a real step away from where it was let go.
+  let roomy: Spot | null = null, roomyApart = bestApart + SPARE_STEP
+  for (const at of standablePlaces(radius)) {
+    const apart = Math.hypot(at.x - spot.x, at.z - spot.z)
+    if (apart >= roomyApart - 1e-9 || !clear(a, id, at, SPARE_ROOM)) continue
+    roomy = at
+    roomyApart = apart
+  }
+  return roomy ?? best
 }
 
 /**

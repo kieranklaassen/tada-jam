@@ -140,6 +140,24 @@ describe('a friend let go', () => {
     expect(behind.z).toBeLessThan(PLANK.z)
   })
 
+  it('room to spare is never bought with a step away: a friend let go a hand\'s width from where it stood stays there', () => {
+    // Every opening layout, every friend standing in the sand, let go a little to each side of where it stood.
+    let tried = 0
+    for (const base of [emptyArrangement(), putOnEnd(emptyArrangement(), 'pim', 'left'), putOnEnd(putOnEnd(emptyArrangement(), 'pim', 'right'), 'mog', 'left')]) {
+      for (const id of FRIEND_IDS) {
+        const here = base.sand[id]
+        if (!here) continue
+        for (const [dx, dz] of [[0.2, 0], [-0.2, 0], [0, 0.2], [0, -0.2], [0.15, 0.15]]) {
+          const spot = { x: here.x + dx, z: here.z + dz }
+          const at = standsAt(putInSand(base, id, spot), id)
+          expect(Math.hypot(at.x - spot.x, at.z - spot.z), `${id} ${dx} ${dz}`).toBeLessThan(0.75)
+          tried += 1
+        }
+      }
+    }
+    expect(tried).toBeGreaterThan(40)
+  })
+
   it('over the middle slides to the low end, and on a level plank to the nearer end', () => {
     expect(drop(on(['pim'], []), 'mog', 0.4, PLANK.z).arrangement.left).toEqual(['pim', 'mog'])
     expect(drop(on(['pim'], []), 'mog', 0.4, PLANK.z).slid).toBe(true)

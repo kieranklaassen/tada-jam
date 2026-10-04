@@ -1568,6 +1568,26 @@ describe('a showing opens with no jump', () => {
     expect(asks.frame.poses.bo.lids).toBeLessThan(0.5)
   })
 
+  it('a showing begun by a touch on the waiting friend begins soon: within three seconds, for every kind', () => {
+    for (const kind of KINDS) {
+      const before = KINDS[(KINDS.indexOf(kind) + KINDS.length - 1) % KINDS.length]
+      let world: World = { ...opening(before), shown: KINDS.filter((k) => k !== kind), touched: true }
+      world = { ...world, state: { ...world.state, position: kind } }
+      const ended = endRide({ ...world, arrangement: layout(rideOf(before, 0)) })
+      const game = new Game({ ...ended, state: { ...ended.state, position: kind } }, 1)
+      run(game, 0.3)
+      tapOn(game, game.play.arrangement.waiting!)
+      expect(game.world.kind, kind).toBe(kind)
+      let began = -1
+      for (let i = 0; i < 600 && began < 0; i++) {
+        game.step(1 / 60, QUIET)
+        if (game.sceneRunning) began = i / 60
+      }
+      expect(began, kind).toBeGreaterThan(0)
+      expect(began, kind).toBeLessThan(3)
+    }
+  })
+
   it('a touch before a due showing has begun sends everyone to where the ride itself has them', () => {
     const game = new Game(opening('high-asks'), 1)
     expect(game.showingDue).toBe(true)

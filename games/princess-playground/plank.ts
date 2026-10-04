@@ -32,6 +32,8 @@ export const SETTLE_SPEED = 0.5
 /** A level plank is pulled back to level this hard, and loses its sway this slowly. */
 export const LEVEL_SPRING = 16
 export const LEVEL_DRAG = 0.7
+/** An empty plank loses its sway this fast: it lies still within a second. */
+export const EMPTY_DRAG = 7
 /** How fast an end that has been lightened comes up out of the hollow it dug, radians a second. */
 export const RISE = 0.4
 
@@ -43,7 +45,8 @@ export function stepPlank(state: PlankState, left: number, right: number, dt: nu
   const difference = right - left
   let pull: number
   if (difference === 0) {
-    pull = -LEVEL_SPRING * state.tilt - LEVEL_DRAG * state.spin
+    // A plank with nobody on it comes level and lies still at once; one that floats two equal ends sways on.
+    pull = -LEVEL_SPRING * state.tilt - (left === 0 ? EMPTY_DRAG : LEVEL_DRAG) * state.spin
   } else {
     pull = (TURN * difference) / (PLANK_INERTIA + left + right) - DRAG * state.spin
   }

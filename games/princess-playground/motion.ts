@@ -282,6 +282,10 @@ export class Playground {
     }
     this.held = id
     body.mode = 'held'
+    if (body.landed) {
+      body.landed = false
+      this.calmPlank()
+    }
     body.landed = false
     body.holdX = body.x
     body.holdZ = body.z
@@ -510,6 +514,18 @@ export class Playground {
     return Math.sign(right - left) * lowTilt(Math.max(left, right))
   }
 
+  /**
+   * A rider has just left the plank. If the end that is on its way down is now no heavier than the other, the swing
+   * it was given loses nearly all its speed: the tilt follows the two totals, and an end that is no longer the
+   * heavier one does not come down on the sand because it was a moment ago.
+   */
+  private calmPlank(): void {
+    const toward = Math.sign(this.plank.spin)
+    if (toward === 0) return
+    const left = this.landedOn('left'), right = this.landedOn('right')
+    if ((toward > 0 ? right : left) <= (toward > 0 ? left : right)) this.plank.spin *= 0.15
+  }
+
   private landedOn(end: End): number {
     let sum = 0
     for (const id of this.arrangement[end]) if (this.bodies[id].landed) sum += FRIENDS[id].weight
@@ -533,6 +549,7 @@ export class Playground {
     this.rocked = false
     body.mode = 'hop'
     body.landed = false
+    if (offPlank) this.calmPlank()
     body.hopT = 0
     body.leapt = false
     body.slid = slid

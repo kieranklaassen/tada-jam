@@ -265,6 +265,44 @@ describe('the playground in motion', () => {
     expect(tips).toBeGreaterThan(30)
   })
 
+  it('does not bring an end down because a friend who has left it was on it a moment ago', () => {
+    // Bo lands on the high right end against Pim and is tapped off again before the end has come down.
+    for (const wait of [0.02, 0.08, 0.15, 0.25]) {
+      const world = new Playground(firstRide())
+      play(world, 0.5)
+      world.tapFriend('bo')
+      let landed = false
+      for (let i = 0; i < 200 && !landed; i++) {
+        world.advance(1 / 60)
+        landed = world.takeEvents().some((event) => event.type === 'land' && event.id === 'bo')
+      }
+      expect(landed).toBe(true)
+      play(world, wait)
+      world.tapFriend('bo')
+      const events = play(world, 4)
+      // The right end is empty now and Pim holds the left one down: nothing knocks on the right, and she is not thrown.
+      expect(events.some((event) => event.type === 'knock' && event.end === 'right'), `${wait}`).toBe(false)
+      expect(events.some((event) => event.type === 'toss' && event.id === 'pim'), `${wait}`).toBe(false)
+      expect(world.plank.tilt, `${wait}`).toBeCloseTo(-MAX_TILT, 2)
+    }
+  })
+
+  it('stills an empty plank within a second, while one that floats two equal ends sways on', () => {
+    const empty = new Playground(firstRide())
+    play(empty, 0.5)
+    empty.tapFriend('pim')
+    play(empty, 1.6)
+    expect(Math.abs(empty.plank.tilt)).toBeLessThan(0.01)
+    expect(Math.abs(empty.plank.spin)).toBeLessThan(0.02)
+    const level = new Playground(putOnEnd(putOnEnd(emptyArrangement(), 'mog', 'left'), 'bo', 'right'))
+    play(level, 0.5)
+    level.tapFriend('bo')
+    level.tapFriend('dot')
+    let swaying = 0
+    play(level, 3, (w) => { if (Math.abs(w.plank.spin) > 0.05) swaying += 1 })
+    expect(swaying).toBeGreaterThan(60)
+  })
+
   it('has Bo doze when the only other rider is in the hand, and Dot pale when its only company is', () => {
     const world = new Playground(putOnEnd(putOnEnd(emptyArrangement(), 'bo', 'left'), 'pim', 'right'))
     play(world, 1)
