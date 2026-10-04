@@ -1,5 +1,6 @@
 import type { Aim } from './aim'
 import { MINI } from './belly'
+import { ON_STUDS } from './bricks'
 import { fly, newBody, settle, type Body, type Landing } from './bodies'
 import { STEP, follow, hubAt, letBe, newClaw, release, stepClaw, type Claw, type ClawEvent } from './claw'
 import { holdOf } from './builds'
@@ -184,7 +185,7 @@ export class Game {
   arrangeCrates(): void {
     this.crates = this.world.crates.map((crate, which) => {
       const laid = layCycle(crate.from, crate.seed), at = crateSpot(which, this.world.crates.length)
-      return { from: crate.from, seed: crate.seed, which, toys: laid.toys, places: placesFor(crate.seed).slice(0, laid.toys.length), crews: laid.crews, x: at.x, y: SHELF.top + AIR, z: at.z, away: 0, tip: 0, carried: false }
+      return { from: crate.from, seed: crate.seed, which, toys: laid.toys, places: placesFor(crate.seed).slice(0, laid.toys.length), crews: laid.crews, x: at.x, y: SHELF.top + ON_STUDS, z: at.z, away: 0, tip: 0, carried: false }
     })
   }
 
@@ -217,7 +218,7 @@ export class Game {
     })
     this.leaving = []
     if (this.world.crates.length === 0) this.crates = []
-    this.crates.forEach((crate) => { const at = crateSpot(crate.which, this.crates.length); crate.x = at.x; crate.y = SHELF.top + AIR; crate.z = at.z; crate.away = 0; crate.tip = 0; crate.carried = false })
+    this.crates.forEach((crate) => { const at = crateSpot(crate.which, this.crates.length); crate.x = at.x; crate.y = SHELF.top + ON_STUDS; crate.z = at.z; crate.away = 0; crate.tip = 0; crate.carried = false })
     if (this.hoist !== null) { this.hoist = null; this.claw.load = 0; this.claw.grip = 0; this.claw.targetX = this.claw.x; this.claw.targetZ = this.claw.z }
     this.flights.clear(); this.causes.clear()
   }
@@ -232,7 +233,7 @@ export class Game {
     let y: number = TRAY.top
     for (const toy of trayOf(this.world.cycle, this.held)[place]) {
       if (toy === upTo) break
-      y += this.bodies[toy].height
+      y += ON_STUDS + this.bodies[toy].height
     }
     return y
   }
@@ -240,9 +241,9 @@ export class Game {
   /** Where the rules have a toy: on its place on the tray, or in its place in a belly. */
   spotOf(toy: number): Spot & { scale: number } {
     const where = this.world.cycle.where[toy]
-    // A toy stands a hair above what it stands on and a hair off the lines of the grid, the more the higher
+    // A toy stands on the tops of the studs under it, and a hair off the lines of the grid, the more the higher
     // it is in a stack: two things that touch never lie in one plane.
-    if (where.at === 'tray') { const at = placeAt(where.place), off = where.level + 1; return { x: at.x + 0.013 * off, y: this.stackTop(where.place, toy) + AIR * off, z: at.z + 0.009 * off, scale: 1 } }
+    if (where.at === 'tray') { const at = placeAt(where.place), off = where.level + 1; return { x: at.x + 0.013 * off, y: this.stackTop(where.place, toy) + ON_STUDS, z: at.z + 0.009 * off, scale: 1 } }
     const actor = this.crew[where.slot]
     const group = bellyOf(this.world.cycle, where.slot).map((one) => this.world.cycle.toys[one])
     const spot = bellySpots(actor.id, this.world.cycle.toys[0], group)[where.nth + 1] ?? { x: 0, y: 2, z: 0 }
@@ -415,7 +416,8 @@ export class Game {
       const place = nearestToy(this.tray(), claw.x, claw.z, REACH)
       if (place < 0) return TRAY.top + TOUCH
       const stack = this.tray()[place], top = stack[stack.length - 1]
-      return this.stackTop(place, top) + this.hang(top)
+      // The toy is held exactly where it stands, on the studs under it.
+      return this.spotOf(top).y + this.hang(top)
     }
     if (target.on === 'gobbler') { const actor = this.crew[target.slot]; return actor ? actor.y + knobAt(shapeOf(actor.id)).y + KNOB_HOLD : TRAY.top + TOUCH }
     if (target.on === 'rail-end') return BELL.top + TOUCH

@@ -1,5 +1,6 @@
 import { MINI } from './belly'
 import { FALL, airTime, jolt, newBody, toss } from './bodies'
+import { ON_STUDS } from './bricks'
 import { toySpan } from './builds'
 import { KNOB_HALF, gripFor } from './clawBuild'
 import type { Deed } from './deeds'
@@ -240,7 +241,8 @@ export function delivery(game: Game, which: number): void {
   crate.crews = []; crate.toys = []; crate.places = []
   // The claw holds the crate by the knob on its arch and lifts it clear of the gate.
   const handle = handleSpot()
-  claw.load = 2; claw.grip = gripFor(KNOB_HALF)
+  // A crate is so heavy that the cable hangs plumb under it: it never swings off the knob it hangs by.
+  claw.load = 3; claw.grip = gripFor(KNOB_HALF)
   crate.carried = true
   game.hoist = CARRIED_AT + deckTop(crate.which) + handle.y + KNOB_HOLD
   const beats: Beat[] = []
@@ -273,10 +275,10 @@ export function delivery(game: Game, which: number): void {
   beats.push(cue(game, emptied + 0.4, () => { claw.targetX = home.x; claw.targetZ = home.z + handle.z }))
   // The trolley is given time to get all the way back before the crate comes down.
   const back = emptied + 1.3
-  beats.push(cue(game, back, () => { game.hoist = SHELF.top + AIR + deckTop(crate.which) + handle.y + KNOB_HOLD }))
+  beats.push(cue(game, back, () => { game.hoist = SHELF.top + ON_STUDS + deckTop(crate.which) + handle.y + KNOB_HOLD }))
   const down = back + 0.5
   beats.push(cue(game, down, () => {
-    crate.carried = false; crate.y = SHELF.top + AIR; game.hoist = null; claw.load = 0; claw.grip = 0
+    crate.carried = false; crate.x = home.x; crate.y = SHELF.top + ON_STUDS; crate.z = home.z; game.hoist = null; claw.load = 0; claw.grip = 0
     claw.targetX = 0; claw.targetZ = TRAY.z + TRAY_DEPTH / 2
     game.say({ type: 'thud', who: 'big' })
   }))

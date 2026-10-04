@@ -9,6 +9,8 @@
 export const PLATE = 0.4
 export const STUD_RADIUS = 0.3
 export const STUD_HEIGHT = 0.18
+/** How high over a studded top a thing stands: on the tops of its studs, with a sliver of air, as a loose brick lies on another. Nothing is ever pressed down onto studs, so nothing ever stands in them. */
+export const ON_STUDS = STUD_HEIGHT + 0.02
 /** Sides of a stud. Studs are most of the triangles, so this is kept low. */
 export const STUD_SIDES = 8
 /** Sides of a round brick. */

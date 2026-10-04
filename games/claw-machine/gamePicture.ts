@@ -57,7 +57,8 @@ export function poseOf(game: Game, actor: Actor, out: Pose): Pose {
     out.dx += knob.x - at.x; out.dy += knob.y - at.y; out.dz += knob.z - at.z
   }
   // A walk is a waddle: it rocks from foot to foot as it goes.
-  if (actor.walk && actor.walk.arc === 0) out.leanZ += 0.14 * Math.sin(actor.walk.t * 26)
+  // (A step back into its own place after a lift is too short to waddle.)
+  if (actor.walk && actor.walk.arc === 0 && actor.walk.seconds > 0.5) out.leanZ += 0.14 * Math.sin(actor.walk.t * 26)
   return out
 }
 

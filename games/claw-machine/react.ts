@@ -1,11 +1,11 @@
 import { MINI } from './belly'
-import { PLATE, STUD_HEIGHT } from './bricks'
+import { ON_STUDS, PLATE, STUD_HEIGHT } from './bricks'
 import { holdOf, toySpan } from './builds'
 import { FALL, airTime, toss, type Body, type Leg } from './bodies'
 import { STEP } from './claw'
 import { KNOB_HALF, gripFor } from './clawBuild'
 import type { Deed } from './deeds'
-import { AIR, fromSegment, type Actor, type Game, type Plan } from './game'
+import { fromSegment, type Actor, type Game, type Plan } from './game'
 import { carriedBy } from './gamePicture'
 import { EYE, rimHeight } from './gobblerBuild'
 import { GOBBLER, shapeOf } from './gobblers'
@@ -29,6 +29,8 @@ type Stop = { at?: Spot; landing: Leg['landing']; peak?: number; seconds?: numbe
 export const DOWN_THE_THROAT = 0.15
 /** How far above the rim a toy lies that rests on a gobbler's teeth. */
 const ON_TEETH = 0.85
+/** How far above the bell a toy rises as it leaves it: enough that its far end is past the bell before it is lower than the bell. */
+const OFF_THE_BELL = 2.2
 /** How far above its rim a toy is lifted before it is thrown out: clear of the tops of its eyes. */
 const OVER_ITS_EYES = 3.2
 /** How far above the higher end of a throw it rises when nothing is said: a short hop. */
@@ -106,7 +108,7 @@ function backOverTheCrew(game: Game, toy: number, from: Spot, least: number): St
   const home = game.spotOf(toy), where = game.world.cycle.where[toy], half = toySpan(game.bodies[toy].toy).depth / 2
   if (where.at !== 'tray' || where.place >= TRAY.columns) return [{ landing: 'stand', peak: overTheCrew(game, from, home, half, least) }]
   const front = where.place + TRAY.columns, at = placeAt(front)
-  const bounce = { x: at.x, y: game.stackTop(front) + AIR, z: at.z }
+  const bounce = { x: at.x, y: game.stackTop(front) + ON_STUDS, z: at.z }
   return [{ at: bounce, landing: 'again', peak: overTheCrew(game, from, bounce, half, least) }, { landing: 'stand', peak: Math.max(bounce.y, home.y) + 0.6 }]
 }
 
@@ -166,7 +168,7 @@ export function react(game: Game, deed: Deed): void {
       break
     case 'bounce': {
       const body = game.bodies[deed.toy]
-      const top = { x: body.x, y: game.stackTop(deed.off), z: body.z }
+      const top = { x: body.x, y: game.stackTop(deed.off) + ON_STUDS, z: body.z }
       // It comes off the stack low: the claw that let it go is still right above it.
       send(game, body, deed.toy, [{ at: top, landing: 'again', seconds: 0.24 }, { landing: 'stand', peak: Math.max(top.y + 0.4, tallestOnTheWay(game, deed.toy, top, game.spotOf(deed.toy), deed.off) + 0.5) }], deed)
       break
@@ -219,7 +221,7 @@ export function react(game: Game, deed: Deed): void {
       const body = game.bodies[deed.toy], side = Math.sign(claw.x) || 1
       // Onto the bell, a small hop on it, and off it over the rim of the tray onto the studs, low all the way.
       const bell = { x: side * BELL.x, y: BELL.top + STUD_HEIGHT + 0.03, z: BELL.z }
-      send(game, body, deed.toy, [{ at: bell, landing: 'again', seconds: 0.26 }, { at: bell, landing: 'again', seconds: 0.22, peak: bell.y + 0.2 }, { landing: 'stand', peak: Math.max(bell.y + 0.5, tallestOnTheWay(game, deed.toy, bell, game.spotOf(deed.toy)) + 0.5) }], deed)
+      send(game, body, deed.toy, [{ at: bell, landing: 'again', seconds: 0.26 }, { at: bell, landing: 'again', seconds: 0.22, peak: bell.y + 0.2 }, { landing: 'stand', peak: Math.max(bell.y + OFF_THE_BELL, tallestOnTheWay(game, deed.toy, bell, game.spotOf(deed.toy)) + 0.5) }], deed)
       break
     }
     case 'knock':
@@ -299,7 +301,16 @@ export function nextLeg(game: Game, body: Body, toy: number, deed: Deed | undefi
   if (!next) return
   const actor = game.crew[body.slot]
   // It leaves the gobbler that carried it from where the gobbler has it at this moment.
-  if (body.rides > 0 && --body.rides === 0 && actor) { const at = carriedBy(game, actor, body); body.x = at.x; body.y = at.y; body.z = at.z }
+  if (body.rides > 0 && --body.rides === 0 && actor) {
+    const at = carriedBy(game, actor, body)
+    body.x = at.x; body.y = at.y; body.z = at.z
+    // And the throw is worked out again from there: a gobbler that was blown back or leant over throws from
+    // where it is, and still over the eyes of the crew.
+    if (!next.fixed && next.landing === 'stand') {
+      const to = game.spotOf(toy)
+      next.seconds = Math.max(next.seconds, airTime(body.y, to.y, overTheCrew(game, body, to, toySpan(body.toy).depth / 2, 0.3)))
+    }
+  }
   if (deed?.type === 'bounce') game.say({ type: 'boing' })
   else if (deed?.type === 'thrown-back') {
     const waiter = nearestWaiter(game, body.x)

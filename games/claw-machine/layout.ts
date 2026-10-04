@@ -1,5 +1,5 @@
 import { bellyLayout } from './belly'
-import { PLATE } from './bricks'
+import { ON_STUDS, PLATE } from './bricks'
 import { toySpan } from './builds'
 import { EYE, rimHeight } from './gobblerBuild'
 import { shapeOf, snackOf, type GobblerId } from './gobblers'
@@ -20,12 +20,12 @@ export type Spot = { x: number; y: number; z: number }
 /** Where a gobbler of the crew at the tray stands. */
 export function crewSpot(slot: number, crew: number): Spot {
   // A hair above the step: a gobbler stands on its studs and is never in one plane with it.
-  return { x: slotX(slot, crew), y: STEP.top + 0.02, z: SLOT_Z }
+  return { x: slotX(slot, crew), y: STEP.top + ON_STUDS, z: SLOT_Z }
 }
 
 /** Where one of those who wait on the ledge stands: behind the parapet, seen from the eyes up. */
 export function waitingSpot(slot: number, crew: number): Spot {
-  return { x: slotX(slot, crew), y: SHELF.top + 0.02, z: WAIT_Z }
+  return { x: slotX(slot, crew), y: SHELF.top + ON_STUDS, z: WAIT_Z }
 }
 
 /** The top of a gobbler's head above its feet: its eyes, or the model on its back. */
@@ -100,7 +100,7 @@ export function riderSpots(crews: readonly (readonly GobblerId[])[]): Spot[][] {
 export const RISER_BASE = 0.4
 export const RISER = 2
 export const RIDER_Z = -1
-export const RIDER_STEP = 1.6
+export const RIDER_STEP = 1.8
 
 /** The top of everything on a crate, above the shelf: what the claw has to clear. */
 export function crateTop(which: number, crews: number): number {

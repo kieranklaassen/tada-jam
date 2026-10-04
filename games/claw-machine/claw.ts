@@ -169,7 +169,9 @@ export function stepClaw(claw: Claw, rideY: number, landY: number, events: ClawE
 
   // The cable swings against the trolley's change of speed. A load makes it swing slower and die down later.
   const heavy = 1 + 0.35 * claw.load
-  const stiffness = 62 / heavy, damping = 2.6 / heavy, push = 0.011
+  // Under a crate, the heaviest load there is, the cable hangs plumb and stays so.
+  const heaviest = claw.load >= 3
+  const stiffness = 62 / heavy, damping = heaviest ? 30 : 2.6 / heavy, push = heaviest ? 0 : 0.011
   const ax = clamp((claw.vx - before.vx) / dt, -2600, 2600), az = clamp((claw.vz - before.vz) / dt, -2600, 2600)
   claw.swingVX += (-stiffness * claw.swingX - damping * claw.swingVX - ax * push) * dt
   claw.swingVZ += (-stiffness * claw.swingZ - damping * claw.swingVZ - az * push) * dt

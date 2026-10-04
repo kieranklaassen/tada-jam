@@ -203,7 +203,7 @@ Claw Machine is designed from one California learning foundation for preschool a
 
 **The claw** is a round hub on the cable and two jaws hinged under it, each an arm with a green tooth turned inward. The teeth close beside the top plate of the highest part of a toy, or beside a knob, as wide as that part is and never into it. Only the hub squashes when the claw lands.
 
-**Nothing lies in one plane.** Two things that touch are drawn with a sliver of air between them, and a thing that stands on studs seats on them as a brick does. A jaw is a hair thinner than two studs. This is what keeps a face from flickering against another and is checked by the intersection audit.
+**Nothing lies in one plane, and nothing stands in anything.** Two things that touch are drawn with a sliver of air between them, and a thing on a studded top stands on the tops of the studs, as a loose brick lies on another: it is never pressed down onto them. A jaw is a hair thinner than two studs. This keeps a face from flickering against another, and it lets the intersection audit hold the game to a plain rule: no two things cross, except a pupil in its eye.
 
 **The working pieces stay plain.** A toy has no face, no pattern and no motion of its own; a small one and a big one of a kind are two different builds on the same grid, not one build scaled. The texture of the look is on the gobblers, the cabinet and the claw.
 
