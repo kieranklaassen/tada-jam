@@ -117,8 +117,30 @@ export function release(claw: Claw, tap: boolean): void {
   act(claw)
 }
 
+/** How wide knocks to the cable can swing it, as an angle: knocks that fall in step with the swing add up no further. */
+const KNOCKED_MOST = 0.36
+
+/**
+ * A knock to the cable (a wag of the finger, a bell rung): it sets the claw swinging. However the knocks fall,
+ * they swing it no wider than KNOCKED_MOST; only the trolley's own starts and stops swing it wider than that.
+ */
+export function knock(claw: Claw, vx: number, vz: number): void {
+  const stiffness = 62 / (1 + 0.35 * claw.load)
+  const wide = (x: number, z: number, vx: number, vz: number) => x * x + z * z + (vx * vx + vz * vz) / stiffness
+  const before = wide(claw.swingX, claw.swingZ, claw.swingVX, claw.swingVZ)
+  const most = Math.max(before, KNOCKED_MOST * KNOCKED_MOST)
+  const nx = claw.swingVX + vx, nz = claw.swingVZ + vz
+  const after = wide(claw.swingX, claw.swingZ, nx, nz)
+  // Too wide: as much of the knock as brings the swing to its limit, and no more.
+  const room = Math.max(0, most - claw.swingX * claw.swingX - claw.swingZ * claw.swingZ) * stiffness
+  const scale = after > most ? Math.sqrt(room / Math.max(1e-9, nx * nx + nz * nz)) : 1
+  claw.swingVX = nx * scale; claw.swingVZ = nz * scale
+}
+
 /** The press ended without a lift that counts (the game was parked under the finger): the claw stays as it is. */
 export function letBe(claw: Claw): void {
+  // A claw the finger has already let go is on its way to its drop: that move was made, and it stands.
+  if (claw.dropOnArrival) return
   claw.following = false
   claw.targetX = claw.x; claw.targetZ = claw.z
 }

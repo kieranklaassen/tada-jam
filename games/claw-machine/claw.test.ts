@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { STEP, follow, hubAt, newClaw, release, stepClaw, type Claw, type ClawEvent } from './claw'
+import { STEP, follow, hubAt, letBe, newClaw, release, stepClaw, type Claw, type ClawEvent } from './claw'
 import { HINGE_DROP, gripFor } from './clawBuild'
 import { RAIL } from './places'
 
@@ -123,6 +123,16 @@ describe('the claw', () => {
     run(claw, 0.5, events)
     expect(events.map((event) => event.type)).toEqual(['let-go'])
     expect(claw.load).toBe(0)
+  })
+
+  it('still makes a drop the finger has already let go, when the touch is then cut off', () => {
+    const claw = newClaw(0, 6, RIDE), events: ClawEvent[] = []
+    follow(claw, 8, 2, events)
+    release(claw, true)
+    letBe(claw)
+    run(claw, 2, events)
+    // It ran on to where the finger was and dropped there, and nowhere else.
+    expect(events.some((event) => event.type === 'landed' && Math.abs(event.x - 8) < 0.2 && Math.abs(event.z - 2) < 0.2)).toBe(true)
   })
 
   it('stops at the end of the rail when it is run hard into it', () => {

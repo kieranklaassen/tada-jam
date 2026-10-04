@@ -2,7 +2,7 @@ import { MINI } from './belly'
 import { ON_STUDS, PLATE, STUD_HEIGHT } from './bricks'
 import { holdOf, toySpan } from './builds'
 import { FALL, airTime, jolt, toss, type Body, type Leg } from './bodies'
-import { STEP } from './claw'
+import { STEP, knock } from './claw'
 import { KNOB_HALF, gripFor } from './clawBuild'
 import type { Deed } from './deeds'
 import { fromSegment, type Actor, type Game, type Plan } from './game'
@@ -52,6 +52,7 @@ function send(game: Game, body: Body, toy: number, stops: Stop[], deed?: Deed, a
     return { x: at.x, y: at.y, z: at.z, seconds, scale: stop.scale ?? (stop.landing === 'belly' ? MINI : 1), landing: stop.landing, fixed: stop.at !== undefined }
   })
   body.hang = 0
+  body.note = 0
   if (deed) game.causes.set(body, deed)
   // A toy that waits its turn stays where it is, with its whole way laid out, until its wait is over.
   if (after > 0) { body.legs = legs; body.wait = after; body.mode = 'parked'; return }
@@ -165,7 +166,7 @@ export function react(game: Game, deed: Deed): void {
     }
     case 'bell':
       game.say({ type: 'bell' })
-      claw.swingVX -= Math.sign(claw.x) * 3
+      knock(claw, -Math.sign(claw.x) * 3, 0)
       break
     case 'gate-rattle':
       game.say({ type: 'gate-rattle' }); game.gateShake = 1
@@ -189,6 +190,8 @@ export function react(game: Game, deed: Deed): void {
         const over = clearTop(game, toy, body, game.spotOf(toy), 0.3, nearestPlace(body.x, body.z))
         if (i === 0) send(game, body, toy, [{ at: { x: body.x, y: body.y - 1 + ON_STUDS, z: body.z }, landing: 'again', seconds: 0.2 }, { landing: 'stand', peak: Math.max(body.y - 0.5, over) }], deed)
         else send(game, body, toy, [{ landing: 'stand', peak: Math.max(body.y + 0.8 + i * 0.6, over) }], deed, 0.5 + i * 0.3)
+        // Each lands with its own note, a step up from the one before.
+        body.note = i
       })
       break
     case 'gulp': {
@@ -265,7 +268,8 @@ export function react(game: Game, deed: Deed): void {
       break
     }
     case 'lean':
-      game.waiting.forEach((actor, i) => { game.startAct(actor, 'lean', Math.sign(claw.vx) || 1); game.say({ type: 'creak', nth: i }) })
+      // One after another, like grass: each begins a moment after the one before it.
+      game.waiting.forEach((actor, i) => { game.startAct(actor, 'lean', Math.sign(claw.vx) || 1); actor.actT = -(i * 0.12) / actor.actFor; game.say({ type: 'creak', nth: i }) })
       // With crates on the ledge it is the crates, riders and all, that lean out of the way, one after the other.
       game.crates.forEach((crate, i) => { crate.leans = -i * 0.12; game.say({ type: 'creak', nth: i }) })
       if (game.waiting.length === 0 && game.crates.length === 0) game.say({ type: 'creak', nth: 0 })
@@ -296,7 +300,7 @@ export function react(game: Game, deed: Deed): void {
     case 'hum':
       game.say({ type: 'bell-hum' })
       // The cable trembles.
-      claw.swingVX += 1.6; claw.swingVZ -= 1.1
+      knock(claw, 1.6, -1.1)
       break
     case 'gate-comb':
       game.say({ type: 'comb' }); game.gateShake = 1

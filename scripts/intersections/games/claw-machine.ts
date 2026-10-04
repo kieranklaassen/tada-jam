@@ -124,6 +124,11 @@ export default {
         await give(d, 0, await gobbler(d, 1, 2), 3800) // three chomps
         await give(d, 1, await gobbler(d, 0, 2))
         for (const slot of [0, 1]) { await d.tap(await gobbler(d, slot, 2)); await d.wait(3600) }
+        // A wag of the finger over a gobbler: it ducks the bare claw, and the lift of the finger lifts it.
+        const head = await gobbler(d, 1, 2)
+        await d.press(head)
+        for (let i = 0; i < 8; i++) await d.move([head[0] + (i % 2 ? -0.05 : 0.05), head[1]], 130)
+        await d.wait(1200); await d.release(); await d.wait(3600)
       },
     },
     {

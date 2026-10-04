@@ -17,7 +17,7 @@ export type GameEvent =
   | { type: 'pop'; heavy: number; level: number }
   | { type: 'settle' }
   | { type: 'bonk'; column: number }
-  | { type: 'click'; heavy: number; level: number }
+  | { type: 'click'; heavy: number; level: number; note: number }
   | { type: 'boing' }
   | { type: 'teeter' }
   | { type: 'knock' }

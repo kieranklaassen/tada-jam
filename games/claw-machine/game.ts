@@ -2,7 +2,7 @@ import type { Aim } from './aim'
 import { MINI } from './belly'
 import { ON_STUDS } from './bricks'
 import { fly, newBody, settle, type Body, type Landing } from './bodies'
-import { STEP, follow, hubAt, letBe, newClaw, release, stepClaw, type Claw, type ClawEvent } from './claw'
+import { STEP, follow, hubAt, knock, letBe, newClaw, release, stepClaw, type Claw, type ClawEvent } from './claw'
 import { holdOf } from './builds'
 import { HINGE_DROP, JAW_REACH, TOOTH_DROP } from './clawBuild'
 import type { PositionId } from './config'
@@ -331,7 +331,8 @@ export class Game {
     this.aim = aim
     const to = this.trolleyFor(aim)
     follow(this.claw, to.x, to.z, this.fromClaw)
-    this.wag(to.x)
+    // A wag is the finger's: over a gobbler, the ledge or a bell the trolley stands where it is and the finger still wags.
+    this.wag(aim.x)
   }
 
   /** The finger lifted: the claw drops on what the finger pointed at, or lets its toy go there. */
@@ -376,7 +377,7 @@ export class Game {
     this.wagAt = this.time
     if (++this.wagTurns < 3 || this.claw.phase !== 'ready' || this.scene) return
     this.wagTurns = 0
-    this.claw.swingVX += way * 5
+    knock(this.claw, way * 5, 0)
     this.carry(clawSwingsInto(this.world, this.aim.target, way as -1 | 1, this.held >= 0))
   }
 
@@ -472,7 +473,8 @@ export class Game {
     this.gateShake = Math.max(0, this.gateShake - STEP / 0.5)
     stepWatcher(this.watcher, STEP)
     for (const crate of this.crates) {
-      if (crate.leans >= 0 && (crate.leans += STEP) > LEANS_FOR) crate.leans = -1
+      // A crate waits its turn below nought (the second sways a moment after the first); at -1 it does not sway.
+      if (crate.leans > -1 && (crate.leans += STEP) > LEANS_FOR) crate.leans = -1
       if (crate.peers >= 0 && (crate.peers += STEP) > PEERS_FOR) crate.peers = -1
     }
     // A crate in the jaws hangs from its handle under the hub.
@@ -507,7 +509,7 @@ export class Game {
     } else if (claw.following) {
       this.rung = true
       this.say({ type: 'bell' })
-      claw.swingVX += target.side * 2
+      knock(claw, target.side * 2, 0)
     }
   }
 
@@ -524,6 +526,34 @@ export class Game {
     const deed = clawWaitsAbove(this.world, this.aim.target)
     this.waitsAbove = deed.type === 'spread-jaws' ? 'toy' : deed.type === 'breathe' ? 'studs' : null
     this.carry(deed)
+  }
+
+  /**
+   * What lies straight under the trolley when it stands off the tray, over the thing it was sent to: how high
+   * the top of it is, and how wide a shadow it has room for. The claw's shadow lies there, so that it shows
+   * where the claw or the toy in its jaws will come down: on the tongue of a gobbler that is being fed, on the
+   * knob of one that would be lifted, in the mouth of one who waits, on the handle of a crate, the gate or a bell.
+   */
+  under(): { y: number; most: number } | null {
+    const claw = this.claw, target = this.aim.target
+    if (target.on === 'place' || claw.phase !== 'ready') return null
+    const to = this.trolleyFor(this.aim)
+    if (Math.hypot(claw.x - to.x, claw.z - to.z) > 1) return null
+    if (target.on === 'gobbler') {
+      const actor = this.crew[target.slot]
+      if (!actor || actor.walk || actor.liftedT >= 0) return null
+      return this.held >= 0 ? { y: this.mouthOf(actor).y, most: 1.9 } : { y: actor.y + knobAt(shapeOf(actor.id)).y + ON_STUDS, most: 0.8 }
+    }
+    if (target.on === 'rail-end') return { y: BELL.top + ON_STUDS, most: 0.7 }
+    if (this.crates.length > 0) {
+      const crate = this.crates[Math.min(target.which, this.crates.length - 1)]
+      return crate.carried || crate.away > 0 ? null : { y: crate.y + deckTop(crate.which) + handleSpot().y + ON_STUDS, most: 0.8 }
+    }
+    if (Math.abs(claw.z - WAIT_Z) < 1 && this.waiting.length > 0) {
+      const nearest = this.waiting.reduce((best, actor) => (Math.abs(actor.x - claw.x) < Math.abs(best.x - claw.x) ? actor : best))
+      return nearest.walk ? null : { y: this.mouthOf(nearest).y, most: 1.9 }
+    }
+    return { y: GATE.top + AIR, most: 0.5 }
   }
 
   /** The claw was sent down before the ending of the cycle began, and has not landed yet. */
@@ -716,7 +746,8 @@ export class Game {
     }
     const where = this.world.cycle.where[toy]
     if (where.at !== 'tray') return
-    this.say({ type: 'click', heavy: body.heavy, level: where.level })
+    this.say({ type: 'click', heavy: body.heavy, level: where.level, note: body.note })
+    body.note = 0
     // What it lands on squashes under it and springs back with it: the stack wobbles as one.
     if (where.level > 0) for (const below of this.tray()[where.place]) if (below !== toy) { this.bodies[below].squash = body.heavy > 1 ? 0.84 : 0.92; this.bodies[below].squashV = 0 }
     // A small toy hops its neighbours; a big one hops the whole tray.
@@ -782,7 +813,9 @@ export class Game {
     const snack = actor.snack
     settle(snack, STEP)
     const home = this.snackSpot(actor)
-    actor.cargo.forEach((body, i) => { const at = actor.cargoAt[i]; body.x = actor.x + at.x; body.y = actor.y + at.y; body.z = actor.z + at.z })
+    // What a gobbler takes away in its belly rattles as it waddles: each toy hops on its own beat.
+    const rattles = actor.walk ? 0.14 : 0
+    actor.cargo.forEach((body, i) => { const at = actor.cargoAt[i]; body.x = actor.x + at.x; body.y = actor.y + at.y + rattles * Math.abs(Math.sin(this.time * 21 + i * 1.9)); body.z = actor.z + at.z })
     if (snack.mode === 'parked') return
     if (snack.mode === 'flying') {
       if (fly(snack, home, STEP)) { snack.mode = 'resting'; snack.squash = 0.7; snack.squashV = 0; this.say({ type: 'plink', nth: 0 }) }

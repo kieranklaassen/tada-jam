@@ -14,7 +14,7 @@ const SAMPLES: Samples = {
   pop: [{ type: 'pop', heavy: 1, level: 0 }, { type: 'pop', heavy: 2, level: 2 }],
   settle: [{ type: 'settle' }],
   bonk: TRAY_NOTES.map((_, column) => ({ type: 'bonk' as const, column })),
-  click: [{ type: 'click', heavy: 1, level: 0 }, { type: 'click', heavy: 2, level: 2 }],
+  click: [{ type: 'click', heavy: 1, level: 0, note: 0 }, { type: 'click', heavy: 2, level: 2, note: 0 }, { type: 'click', heavy: 1, level: 0, note: 4 }],
   boing: [{ type: 'boing' }], teeter: [{ type: 'teeter' }], knock: [{ type: 'knock' }],
   domino: [{ type: 'domino', nth: 0 }, { type: 'domino', nth: 2 }],
   rattle: [{ type: 'rattle', speed: 0 }, { type: 'rattle', speed: 60 }],
@@ -53,11 +53,11 @@ const EVERY: GameEvent[] = Object.values(SAMPLES).flat()
 /** The sound of each cell of the grid: the events a child hears when the claw meets each thing in each way. */
 const GRID: GameEvent[][][] = [
   // A toy on the tray.
-  [[{ type: 'pop', heavy: 1, level: 0 }], [{ type: 'click', heavy: 1, level: 1 }], [{ type: 'click', heavy: 2, level: 1 }], [{ type: 'knock' }], [{ type: 'jaw-hum' }]],
+  [[{ type: 'pop', heavy: 1, level: 0 }], [{ type: 'click', heavy: 1, level: 1, note: 0 }], [{ type: 'click', heavy: 2, level: 1, note: 0 }], [{ type: 'knock' }], [{ type: 'jaw-hum' }]],
   // Bare studs.
-  [[{ type: 'bonk', column: 2 }], [{ type: 'click', heavy: 1, level: 0 }], [{ type: 'click', heavy: 2, level: 0 }], [{ type: 'rattle', speed: 20 }], [{ type: 'jaw-click' }]],
+  [[{ type: 'bonk', column: 2 }], [{ type: 'click', heavy: 1, level: 0, note: 0 }], [{ type: 'click', heavy: 2, level: 0, note: 0 }], [{ type: 'rattle', speed: 20 }], [{ type: 'jaw-click' }]],
   // A stack of toys.
-  [[{ type: 'pop', heavy: 1, level: 1 }, { type: 'settle' }], [{ type: 'click', heavy: 1, level: 2 }], [{ type: 'teeter' }], [{ type: 'domino', nth: 0 }], [{ type: 'wind' }]],
+  [[{ type: 'pop', heavy: 1, level: 1 }, { type: 'settle' }], [{ type: 'click', heavy: 1, level: 2, note: 0 }], [{ type: 'teeter' }], [{ type: 'domino', nth: 0 }], [{ type: 'wind' }]],
   // A gobbler.
   [[{ type: 'groan' }, { type: 'lifted', way: 'spins' }], [{ type: 'gulp', heavy: 1, who: 'red' }], [{ type: 'gulp', heavy: 2, who: 'red' }], [{ type: 'squeak', who: 'red' }], [{ type: 'gargle', who: 'red' }]],
   // The ledge where the next ones wait.
@@ -117,8 +117,8 @@ describe('the voices', () => {
   it('pitches by weight and by height: a big toy lower, a stack higher, the hoist higher as it climbs', () => {
     expect(voiceOf({ type: 'pop', heavy: 2, level: 0 })[0].freq).toBeLessThan(voiceOf({ type: 'pop', heavy: 1, level: 0 })[0].freq)
     expect(voiceOf({ type: 'pop', heavy: 1, level: 1 })[0].freq).toBeGreaterThan(voiceOf({ type: 'pop', heavy: 1, level: 0 })[0].freq)
-    expect(voiceOf({ type: 'click', heavy: 2, level: 0 })[1].freq).toBeLessThan(voiceOf({ type: 'click', heavy: 1, level: 0 })[1].freq)
-    expect(voiceOf({ type: 'click', heavy: 1, level: 2 })[0].freq).toBeGreaterThan(voiceOf({ type: 'click', heavy: 1, level: 0 })[0].freq)
+    expect(voiceOf({ type: 'click', heavy: 2, level: 0, note: 0 })[1].freq).toBeLessThan(voiceOf({ type: 'click', heavy: 1, level: 0, note: 0 })[1].freq)
+    expect(voiceOf({ type: 'click', heavy: 1, level: 2, note: 0 })[0].freq).toBeGreaterThan(voiceOf({ type: 'click', heavy: 1, level: 0, note: 0 })[0].freq)
     expect(voiceOf({ type: 'ratchet', progress: 1, heavy: 1 })[0].freq).toBeGreaterThan(voiceOf({ type: 'ratchet', progress: 0, heavy: 1 })[0].freq)
     // The ending's tune: low for a big toy and high for a small one.
     expect(voiceOf({ type: 'ring', size: 'big', kind: 'duck', nth: 0 })[0].freq).toBeLessThan(voiceOf({ type: 'ring', size: 'small', kind: 'duck', nth: 0 })[0].freq)

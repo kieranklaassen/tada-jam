@@ -51,6 +51,8 @@ export type Body = {
   rides: number
   /** Seconds it still waits, parked, before the flight that has been laid out for it begins. */
   wait: number
+  /** How many steps higher than its plain click its next landing sounds: each toy of a stack that comes down has its own. */
+  note: number
   /** What a flight ends in. */
   landing: Landing
   /** The gobbler whose mouth it is in or on its way to, or -1; and seconds it has been there. */
@@ -66,7 +68,7 @@ export function newBody(toy: Toy): Body {
   return {
     toy, height: toySpan(toy).height, heavy: toy.size === 'big' ? 2 : 1, mode: 'resting',
     x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, scale: 1, scaleFrom: 1, scaleTo: 1, flight: 0, flown: 0,
-    hop: 0, hopV: 0, squash: 1, squashV: 0, leanX: 0, leanZ: 0, hang: 0, rides: 0, wait: 0, landing: 'stand', slot: -1, chewed: 0, legs: [],
+    hop: 0, hopV: 0, squash: 1, squashV: 0, leanX: 0, leanZ: 0, hang: 0, rides: 0, wait: 0, note: 0, landing: 'stand', slot: -1, chewed: 0, legs: [],
   }
 }
 

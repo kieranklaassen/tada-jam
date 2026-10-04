@@ -148,6 +148,13 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       // Heard inside the touch, where the first sound can be held for the audio to unlock.
       hear()
     }
+    // A touch that is cut off (the game put away or closed under the finger) is ended and nothing is done with
+    // it: the claw stays as it is, with whatever it holds. A lift that was already made stands.
+    const endTouch = () => {
+      if (touch.clear().length === 0) return
+      game?.cancel()
+      dropped = false; poked = false
+    }
     const at = (event: PointerEvent): Point => {
       const box = root.getBoundingClientRect()
       return { x: event.clientX - box.left, y: event.clientY - box.top }
@@ -219,7 +226,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       clock.rest()
       // The touch is ended and nothing is done with it: the claw stays as it is, with whatever it holds, so that
       // putting the game away never makes a move the child did not make.
-      if (touch.clear().length > 0) { game?.cancel(); dropped = false; poked = false }
+      endTouch()
       hear()
       cadence.settle(performance.now())
     })
@@ -232,6 +239,9 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       const childAge = ctxRef.current.childAge
       const world = value === null || value === undefined ? newWorld(childAge, seedFrom(window.location.search) ?? Math.floor(Math.random() * 0x7fffffff) + 1) : deserializeWorld(value, childAge)
       game = newGame(world)
+      // A first visit is written down at once, so that the crate that waits is the same one however often the
+      // game is closed and opened before the first move.
+      if (value === null || value === undefined) { game.save = 'now'; hear() }
       // The game sets itself up from the state here, as it was left: nothing eases in and no scene replays.
       // Then the load draws the first frame itself. A game that is resting or parked when the slot comes back
       // has no frame coming, and would go on showing the surface as it was before the read.
@@ -243,8 +253,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
 
     return () => {
       disposed = true
-      // As on going to rest: the touch ends first, so the thing in hand is put down before the last save.
-      act(touch.clear())
+      // As on going to rest: the touch ends first, and makes no move.
+      endTouch()
       cadence.settle(performance.now())
       cancelAnimationFrame(frame)
       observer.disconnect()

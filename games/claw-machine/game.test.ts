@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { MINI } from './belly'
 import { STEP } from './claw'
 import type { GameEvent } from './events'
+import { gamePicture } from './gamePicture'
 import { newGame } from './gameScenes'
 import { aimOn, feed, playCycle, sortAll, tap, watch } from './play'
 import { CRATE, placeAt } from './places'
@@ -185,6 +186,79 @@ describe('the game', () => {
     game.advance(6)
     expect(game.held).toBe(0)
     expect(snapshot(game.world)).toBe(before)
+  })
+
+  /** The finger lands on a thing and wags over it without lifting. */
+  const wagOver = (game: ReturnType<typeof begun>, target: Parameters<typeof tap>[1]): GameEvent[] => {
+    const base = aimOn(game, target)
+    game.point(base, true)
+    game.advance(0.5)
+    for (let i = 0; i < 9; i++) { game.point({ ...base, x: base.x + (i % 2 ? -2.4 : 2.4) }, false); game.advance(0.13) }
+    return game.takeEvents()
+  }
+
+  it('answers a wag of the finger over a gobbler, where the trolley itself stands still', () => {
+    const game = begun('three-colours')
+    expect(types(wagOver(game, { on: 'gobbler', slot: 1 }))).toContain('squeak')
+    game.cancel()
+    // However the wags fall, they never swing the cable wide enough to reach a wall.
+    for (let i = 0; i < 40; i++) { game.point({ ...aimOn(game, { on: 'gobbler', slot: 0 }), x: i % 2 ? -14 : -9 }, i === 0); game.advance(0.2); expect(Math.abs(game.claw.swingX)).toBeLessThan(0.45) }
+  })
+
+  it('sways each crate in its turn when the claw is wagged over the ledge', () => {
+    const game = begun('two-colours')
+    sortAll(game)
+    watch(game)
+    expect(game.crates.length).toBe(2)
+    const rest = game.crates.map((crate) => gamePicture(game, null).crates.find((look) => look.which === crate.which)!.x)
+    wagOver(game, { on: 'ledge', which: 0 })
+    const most = [0, 0]
+    for (let t = 0; t < 1.5; t += 0.02) {
+      game.advance(0.02)
+      const looks = gamePicture(game, null).crates
+      game.crates.forEach((crate, i) => { most[i] = Math.max(most[i], Math.abs(looks.find((look) => look.which === crate.which)!.x - rest[i])) })
+    }
+    game.cancel()
+    for (const swayed of most) expect(swayed).toBeGreaterThan(0.4)
+  })
+
+  it('gives each toy of a stack that comes down its own note', () => {
+    for (const seed of [7, 11, 13, 17, 19]) {
+      const game = begun('kinds-then-sizes', seed), cycle = game.world.cycle
+      const smalls = cycle.toys.map((toy, i) => ({ toy, i })).filter(({ toy }) => toy.size === 'small').map(({ i }) => i)
+      const big = cycle.toys.findIndex((toy) => toy.size === 'big')
+      if (smalls.length < 2 || big < 0) continue
+      const place = () => (cycle.where[smalls[0]] as { place: number }).place
+      tap(game, { on: 'place', place: (cycle.where[smalls[1]] as { place: number }).place }, 2.2)
+      tap(game, { on: 'place', place: place() }, 2.5)
+      if (game.tray()[place()].length !== 2) continue
+      tap(game, { on: 'place', place: (cycle.where[big] as { place: number }).place }, 2.2)
+      const events = tap(game, { on: 'place', place: place() }, 6)
+      const notes = events.filter((event) => event.type === 'click').map((event) => (event as { note: number }).note)
+      // The big toy and the one it knocked off the top each land; the bottom of the stack stays where it stood.
+      expect(notes.length).toBe(2)
+      expect(new Set(notes).size).toBe(2)
+      return
+    }
+    throw new Error('no load with two small toys and a big one')
+  })
+
+  it('lays the shadow of the claw on what it stands over, off the tray as on it', () => {
+    const game = begun('three-colours')
+    const shadowUnderClaw = () => gamePicture(game, null).shadows.find((shadow) => Math.abs(shadow.x - game.claw.x) < 0.01 && Math.abs(shadow.z - game.claw.z) < 0.01)
+    // A toy in the jaws, held over a gobbler: the shadow lies on its tongue.
+    tap(game, { on: 'place', place: (game.world.cycle.where[0] as { place: number }).place }, 2.2)
+    game.point(aimOn(game, { on: 'gobbler', slot: 1 }), true)
+    game.advance(1)
+    expect(shadowUnderClaw()?.y).toBeCloseTo(game.mouthOf(game.crew[1]).y)
+    // Over a bell and over the gate.
+    game.point(aimOn(game, { on: 'rail-end', side: 1 }), false)
+    game.advance(1.5)
+    expect(shadowUnderClaw()).toBeDefined()
+    game.point(aimOn(game, { on: 'ledge', which: 0 }), false)
+    game.advance(1.5)
+    expect(shadowUnderClaw()).toBeDefined()
+    game.cancel()
   })
 
   it('tips the same toys back out for the next crew when the gate is hooked', () => {

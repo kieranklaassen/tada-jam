@@ -251,6 +251,8 @@ export function delivery(game: Game, which: number): void {
   game.hoist = CARRIED_AT + deckTop(crate.which) + handle.y + KNOB_HOLD
   const beats: Beat[] = []
   beats.push(cue(game, 0, () => { game.say({ type: 'groan' }); if (old.length > 0) game.say({ type: 'waddle' }); for (const actor of old) walk(actor, { x: actor.x - OFF, y: actor.y, z: actor.z }, OFF_SECONDS, 0, 1, true) }))
+  // Their bellies rattle as they go.
+  if (old.some((actor) => actor.cargo.length > 0)) for (const at of [0.1, 0.5, 0.9]) beats.push(cue(game, at, () => game.say({ type: 'rattle', speed: 14 })))
   // To the back of the tray, over the step, once the old crew is off it: the front of the crate just over the rim.
   beats.push(cue(game, 0.9, () => { claw.targetX = 0; claw.targetZ = TRAY.z - POURS_FROM - CRATE.depth / 2 + handle.z }))
   // Once it is past the gate it comes down low over the empty step, so that the claw that holds it and the crew

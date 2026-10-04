@@ -291,13 +291,17 @@ export function gamePicture(game: Game, guidance: Guidance | null): Picture {
     shadows.push({ x: body.x, y: ground, z: body.z, r: (body.heavy > 1 ? 3.3 : 2.1) * body.scale, a: Math.max(0.25, 1 - lift / 16) })
   })
   // The shadow of the claw lies straight under the trolley and the swing never moves it: it is where the claw,
-  // or the toy in its jaws, will land. Over the tray it lies on the tray; elsewhere there is none.
+  // or the toy in its jaws, will land. Over the tray it lies on the tray or on the toy under it.
   if (claw.z > TRAY.z - 0.5 && Math.abs(claw.x) < 15.5) {
     const below = nearestPlace(claw.x, claw.z)
     const held = game.held >= 0 ? game.bodies[game.held] : null
     // A claw that waits above a toy has its shadow tighten on the toy; above bare studs its shadow breathes.
     const waits = game.waitsAbove === 'toy' ? 0.62 : game.waitsAbove === 'studs' ? 1 + 0.22 * Math.sin(game.time * 3.4) : 1
     shadows.push({ x: claw.x, y: game.stackTop(below), z: claw.z, r: (held ? (held.heavy > 1 ? 3.1 : 2) : 1.7) * waits, a: game.waitsAbove === 'toy' ? 0.95 : 0.75 })
+  } else {
+    // Off the tray it lies on top of the thing the trolley stands over, as wide as that thing has room for.
+    const on = game.under()
+    if (on) shadows.push({ x: claw.x, y: on.y, z: claw.z, r: Math.min(on.most, game.held >= 0 ? 2 : 1.7), a: 0.9 })
   }
 
   // The idle ladder: a ring on each thing that can be touched now, and the ghost hand tapping one of them.

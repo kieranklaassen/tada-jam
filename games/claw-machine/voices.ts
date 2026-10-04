@@ -104,7 +104,7 @@ export function voiceOf(event: GameEvent): Part[] {
     }
     case 'click': {
       // Plastic onto studs: brighter higher up a stack, deeper for a big toy.
-      const high = 1 + 0.25 * clamp(event.level, 0, 2)
+      const high = step(1 + 0.25 * clamp(event.level, 0, 2), clamp(event.note, 0, 4))
       return [noise((event.heavy > 1 ? 1300 : 2100) * high, 4, 0.22, 0.035), tone((event.heavy > 1 ? 150 : 250) * high, event.heavy > 1 ? 0.24 : 0.16, event.heavy > 1 ? 0.16 : 0.09, { to: (event.heavy > 1 ? 100 : 170) * high, wave: 'triangle' })]
     }
     case 'boing': return [tone(180, 0.2, 0.28, { to: 520, attack: 0.01 })]

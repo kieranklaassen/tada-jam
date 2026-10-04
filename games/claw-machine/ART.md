@@ -216,7 +216,7 @@ Claw Machine is designed from one California learning foundation for preschool a
 
 **The lamps** (`lamps.ts`). Small cream bulbs up the back wall at one end, along the front of the parapet and down the back wall at the other, all one draw, lit one in four in a chase that runs round the frame on the game's own clock.
 
-**Shadows.** Round contact shadows on whatever is beneath, all in one draw. A shadow thins as its toy rises, and the claw's own shadow shows where it will land.
+**Shadows.** Round contact shadows on whatever is beneath, all in one draw. A shadow thins as its toy rises, and the claw's own shadow shows where it will land. Over the tray that is on the studs or on the toy under it; off the tray it lies on what the trolley stands over, no wider than that thing: the tongue of a gobbler that is being fed, the knob of one that would be lifted, the mouth of one who waits, the handle of a crate, the gate, a bell.
 
 **Motion rules.**
 
