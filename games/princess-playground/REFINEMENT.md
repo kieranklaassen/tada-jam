@@ -14,12 +14,13 @@
   - Round 6 (checker H): passed, no finding, on commit `ebd6aea` (hash `89ccbace…4d06`): the three sentences the closing run made true (Bo awake at his own ride, in two places; Mog's low-end cell).
   - Nothing was disputed in any round.
 - After round 6 the sheet was read against the game three more times: by this lane, the grid cell by cell; against the lead's list of points where the game did less than the sheet; and by readers who had not seen the build, each a fresh one, until one found nothing (the last report is below). Whatever a child should see or hear was built (listed below). The sentences that said a detail other than the game does were made true, in every place the sheet says them. None touches the mechanic, the error, the designed order, the records or the claim. Two touch what is saved or loaded: a new field `touched`, and a decided ride found ended on load.
-  - Sheet now: commit `c1d0b81330f9daacf072d2a764657c3f23ea48b1`, hash of the sheet part `9ebaba290bfe855dba24dd7c54392d0a34da8daa9b701267a0a650520605f091`, unchanged since that commit.
+  - Sheet now: commit `eb82b362746b184f4e41560b78d73a559daf0a68`, hash of the sheet part `b8111aee13a5c3e3b179f1e80f33e1bd90dce5c9aed24faa7093e7dd14b50993`, unchanged since that commit.
   - Grid, Bo, "Tap it". Old: "Rumbles, rocks twice to get going and thuds to the end on his side, or off it." New: "Rumbles, rocks twice to get going and thuds to the end on his side; tapped on the plank he rumbles and thuds off it at once."
   - Scenes, "Tidying", first two sentences. Old: "While the sand holds marks, a small rake lies at the far rim. A tap on it draws it once across the tray and leaves even raked lines." New: "While the sand holds marks, a small rake lies at the far rim, from the child's first touch of anything on: the first showing marks the sand before that touch, and no tool is on screen then. A tap on it draws it once along the far rim, from one side of the tray to the other, and the sand behind it lies in even raked lines again."
   - What is stored, `marks`, last sentence. Old: "The rake lies out while any cell holds a mark deeper than raked." New: "The rake lies out while any cell holds a mark deeper than raked, once `touched` is set."
   - What is stored, a new row after `marks`. New: "`touched`: The child has touched the game at least once, ever. It is never shown. Until it is set no tool is on screen: the rake stays away."
   - The toy, "The action", end of the last sentence. Old: "let go over the sand and it stands where it fell." New: "let go over the sand and it stands where it fell, or at the nearest free place when it fell on the plank's own ground, against a friend, at the rim, or on the place in front of the stone that is kept for the friend who waits."
+  - The toy, "What it does in an empty scene", first sentence. Old: "One plank on a stone in a tray of sand, and four painted pebbles in three plainly different sizes, two of them alike." New: "One plank on a stone in a tray of sand, and four painted pebbles in three plainly different sizes, two of them alike. Dot, standing apart at the far rim, is drawn a little smaller by the distance, as anything further off is; on the plank or beside Mog it is plainly his size."
   - The toy, "What it does in an empty scene", last sentence. Old: "A friend who lands on the high end without tipping it just dangles up there, legs kicking, and the plank creaks." New: "A friend who lands on the high end without tipping it just dangles up there and answers in its own way, and the plank creaks."
   - The grid, opening paragraph, last sentence. Old: ""Low end" and "high end" are the ends of the plank as it stands at that moment." New: ""Low end" and "high end" are the ends of the plank as it stands at that moment. The end that is down always holds someone, so a friend sent onto the low end lands on a head there: its cell under "Onto the low end" plays, and the one below answers as it does to anyone on its head. "Onto a friend's head" is a head on an end that is up or level. A friend whose landing on an empty end makes the two ends the same finds nobody up and nobody down: the plank floats, everyone on it hums and sways, and no cell of the high end plays."
   - Grid, Pim, "Onto the low end". Old: "A tiny tick; the end sinks a hair deeper and she stamps on it, cross that nothing moved." New: "She lands on the head of whoever holds it down and crows; then a tiny tick, the end sinks a hair deeper and she stamps, cross that nothing moved."
@@ -182,6 +183,16 @@
 - Grains are shivered off up and down. It was a quick shake from side to side, which after a wrong-side try could read as a shaken head.
 - The sheet says that the game is silent before the child's first touch, so a showing at the very first open is seen and not heard (listed above).
 
+**Built after the twelfth reading.** Rules 1 to 5 clean; six things under rule 6.
+
+- Dot left alone by the friend who goes to wait, at the end of a ride, draws its swirl, as when a tap takes that friend away.
+- The one below answers a landing once. A landing on a low end let the stack leave its seat for a step and land again, and the second landing was answered as well.
+- The ending begins when the asker has come down again: her toss and her delight are two things, one after the other.
+- Sand thrown onto the board runs off it whoever the child moves meanwhile.
+- A finger on a friend's body touches that friend; only a touch that misses every body goes to the nearest friend within reach. Before, where two targets overlapped, the nearer friend took a touch on the other's body.
+- The idle ladder never shows the answer first: a friend whose one tap would carry the asker there is shown after the others.
+- The sheet says that Dot at the far rim is drawn a little smaller by the distance (listed above).
+
 **Found by this lane while checking those.**
 
 - A friend held on the picture of the plank's end did not land on the plank: carried friends hang high over the tray, so it hung over the sand in front and came down there. The finger is now also read at the height of a friend sitting on the plank (`arrangement.ts`, `aimedAtPlank`), so what the child sees decides. The audit's own "carried" moment had been dropping friends in the sand all along; it now really lands them on the ends, onto a friend and over the middle.
@@ -201,6 +212,8 @@
 - The grown-up overlay opens on three taps of one finger in the top right corner, a little apart and within 700 ms. A child drumming one finger on that bare corner could open it, and its digits and letters would stay until three more taps there. The corner answers nothing, so nothing invites it; the gesture is the template's.
 - Two friends hopping to different places at the same moment can pass through each other in the air. A hop clears whoever stood in its way when it left, not whoever is flying.
 - The waiting place is beside Pim's default place; a big friend waiting there stands close to her.
+- Dot at the far rim is drawn about an eighth narrower than Mog in front, by the distance alone. The sheet says so now; a flatter view would lessen it and would change the whole picture.
+- Nobody of Mog's size or bigger can stand beside Dot at its rim place: the corner has no room. Company comes to Dot there only from Pim, or when Dot is brought in.
 - The idle glow is faint on the pale sand at tier 0 in stills.
 - A friend's hollow, a finger's poke and Bo's crater are soft bowls with no lip, shaded on one side by the low light. With the lip they were rings lying on the sand, which the fifth reader counted as a sign this band may not be shown. Without it a shallow one is faint. The idle glow is a wide soft halo under a friend; two readers looked at it and did not read it as a nought.
 - Pim's crown is now small. It is cream on coral and reads as a cap; whether it still reads as a crown is for the owner. Mog's ears are now low bumps at the corners of his head; whether he still reads as a cat is for the owner too. Both were made small because the sheet has the marks add no bulk.
