@@ -137,7 +137,7 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
       light(places.lock.x, places.lock.y + Math.max(60, game.lock * STEP) / 2, 114, Math.max(60, game.lock * STEP) + 70, glowOn('lock'))
       if (shape && !carriedRibbon && staging.ribbon === null && shape.kind === 'hang' && game.ribbon && game.ribbon.at !== 'peg') {
         const root = game.ribbon.at === 'model' ? { x: shape.root.x + dx, y: shape.root.y + dy } : shape.root
-        drawn += hanging(g, root, game.ribbon.len * shape.unit, hair.strands.ribbon, play.time, RIBBON, 0, 0, true)
+        drawn += hanging(g, root, game.ribbon.len * shape.unit, hair.strands.ribbon, play.time, RIBBON, 0, 0, true, true)
       }
       drawn += hanging(g, places.lock, lockLength * places.lock.unit, hair.strands.lock, play.time, { fill: look.lock, edge: look.lockEdge }, ROOT, staging.fx ? even : 0, false)
       // While the friend shows what the ribbon is for, its paw has the ribbon and its own lock is tucked away behind it: one strip at a time beside a tail.
@@ -145,11 +145,13 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
       if (!inPaw) drawn += hanging(g, modelRoot, modelLength * places.model.unit, hair.strands.model, play.time, { fill: LOOKS[friend].lock, edge: LOOKS[friend].lockEdge }, 0, staging.fx ? even : 0, false)
       // The friend's paw, holding the top of its lock out where the customer can see it.
       const pawAt = inPaw ?? modelRoot
+      // With the ribbon hung beside its lock, the paw that holds the lock has the ribbon's clip in it as well.
+      const both = !inPaw && shape?.kind === 'hang' && game.ribbon?.at === 'model' && !carriedRibbon ? (STRIP_W + 10) / 2 : 0
       g.fillStyle = LOOKS[friend].fur
       g.strokeStyle = LOOKS[friend].furEdge
       g.lineWidth = 2
       g.beginPath()
-      g.arc(pawAt.x, pawAt.y - 2, 15, 0, Math.PI * 2)
+      g.ellipse(pawAt.x + both, pawAt.y - 2, 15 + both, 15, 0, 0, Math.PI * 2)
       g.fill()
       g.stroke()
      drawn += 2
@@ -189,13 +191,13 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
 
   // The ribbon on its peg, on the floor, or where a showing has it.
   if (game.ribbon && !carriedRibbon) {
-    if (staging.ribbon) drawn += hanging(g, staging.ribbon, staging.ribbon.len * STEP, hair.strands.ribbon, play.time, RIBBON, 0, 0, true)
-    else if (shape?.kind === 'hang' && game.ribbon.at === 'peg') drawn += hanging(g, shape.root, game.ribbon.len * shape.unit, hair.strands.ribbon, play.time, RIBBON, 0, 0, true)
+    if (staging.ribbon) drawn += hanging(g, staging.ribbon, staging.ribbon.len * STEP, hair.strands.ribbon, play.time, RIBBON, 0, 0, true, true)
+    else if (shape?.kind === 'hang' && game.ribbon.at === 'peg') drawn += hanging(g, shape.root, game.ribbon.len * shape.unit, hair.strands.ribbon, play.time, RIBBON, 0, 0, true, true)
     else if (shape?.kind === 'lie') {
       drawn += strip(g, shape.from.x + (game.ribbon.len * shape.unit) / 2, shape.from.y, (game.ribbon.len * shape.unit) / 2, 0, 'ribbon')
       drawn += clip(g, shape.from.x - 8, shape.from.y, Math.PI / 2)
     }
-  } else if (staging.ribbon) drawn += hanging(g, staging.ribbon, staging.ribbon.len * STEP, hair.strands.ribbon, play.time, RIBBON, 0, 0, true)
+  } else if (staging.ribbon) drawn += hanging(g, staging.ribbon, staging.ribbon.len * STEP, hair.strands.ribbon, play.time, RIBBON, 0, 0, true, true)
 
   // The pieces that lie still on the floor are drawn together, one path for each colour; a piece in the air is drawn by itself.
   const lying = new Map<string, { x: number; y: number; half: number; turn: number }[]>()
@@ -213,7 +215,7 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
   for (const [hue, group] of lying) drawn += strips(g, group, hue)
   if (hair.carried) {
     const at = hair.carried.at, wriggle = Math.sin(play.time * 26) * 0.22
-    if (hair.carried.what === 'ribbon') drawn += hanging(g, { x: at.x, y: at.y - 6 }, (game.ribbon?.len ?? 20) * STEP, hair.strands.ribbon, play.time, RIBBON, 0, 0, true)
+    if (hair.carried.what === 'ribbon') drawn += hanging(g, { x: at.x, y: at.y - 6 }, (game.ribbon?.len ?? 20) * STEP, hair.strands.ribbon, play.time, RIBBON, 0, 0, true, true)
     else drawn += strip(g, at.x, at.y - 18, (hair.carried.what.len * STEP) / 2, wriggle, hair.carried.what.hue)
   }
 
@@ -340,7 +342,7 @@ function door(g: Ctx, sprites: Sprites, play: Play, game: Salon): number {
  * from that far down: the piece of a lock that reaches past its model, when
  * the cape has come off. `clipped` draws the ribbon's clip at its top.
  */
-function hanging(g: Ctx, root: Point, length: number, strand: Strand, time: number, colour: { fill: string; edge: string }, above: number, kickFrom: number, clipped: boolean): number {
+function hanging(g: Ctx, root: Point, length: number, strand: Strand, time: number, colour: { fill: string; edge: string }, above: number, kickFrom: number, clipped: boolean, twists = false): number {
   const half = STRIP_W / 2
   const long = Math.max(6, length * Math.max(0.3, strand.stretch.x))
   g.fillStyle = colour.fill
@@ -355,7 +357,20 @@ function hanging(g: Ctx, root: Point, length: number, strand: Strand, time: numb
     g.lineTo(root.x - half, root.y + 1)
     g.closePath()
   }
-  const strands = strand.flutter > 0 ? 3 : 1
+  // A ribbon that is ruffled does not fan out as hair does: it spins into a corkscrew, seen as a strip whose width comes and goes down its length, and unwinds as the spin dies.
+  if (twists && strand.flutter > 0) {
+    const turns = Math.max(3, Math.round(long / 22)), spin = time * 16
+    const widthAt = (k: number): number => half * (1 - strand.flutter + strand.flutter * Math.max(0.14, Math.abs(Math.cos(spin + k * 1.25))))
+    g.save()
+    g.translate(root.x, root.y)
+    g.rotate(-strand.swing.x)
+    g.moveTo(-widthAt(0), 0)
+    for (let k = 1; k <= turns; k++) g.lineTo(-widthAt(k), (long * k) / turns)
+    for (let k = turns; k >= 0; k--) g.lineTo(widthAt(k), (long * k) / turns)
+    g.closePath()
+    g.restore()
+  }
+  const strands = twists && strand.flutter > 0 ? 0 : strand.flutter > 0 ? 3 : 1
   for (let i = 0; i < strands; i++) {
     const spread = strands === 1 ? 0 : (i - 1) * FAN * strand.flutter + Math.sin(time * 38 + i * 2.1) * 0.07 * strand.flutter
     const w = strands === 1 ? half : half * 0.62

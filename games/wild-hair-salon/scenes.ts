@@ -187,6 +187,8 @@ export function capeComesOff(cast: Cast, before: Game, after: Game, showing: Sho
         cast.cue('ping', chair)
         customer?.bump(1.3)
         customer?.react(reaction)
+        // The yak snorts, and his own fringe flies up.
+        if (chair === 'yak') hair.moodOf('up', 0.8, 0.5)
         other?.react('friendPoked')
         hair.kicked('model', -7 * big)
       }),
@@ -211,7 +213,7 @@ export function capeComesOff(cast: Cast, before: Game, after: Game, showing: Sho
   if (showing.mane !== 'plain') {
     const reaction = showing.mane === 'liked' ? 'maneLiked' as const : 'maneHated' as const
     const at = t
-    beats.push(cueAt(at, () => { if (!cast.cut) { customer?.react(reaction); hair.moodOf(showing.mane === 'liked' ? 'wave' : 'droop', 1.4) } }), over(at, (customer?.lasts(reaction) ?? 1) + 0.2, () => {}))
+    beats.push(cueAt(at, () => { if (!cast.cut) { customer?.react(reaction); hair.moodOf(showing.mane === 'liked' ? 'wave' : 'droop', chair === 'poodle' && showing.mane === 'hated' ? 0.7 : 1.4); if (chair === 'poodle' && showing.mane === 'hated') hair.moodOf('up', 0.8, 0.75) } }), over(at, (customer?.lasts(reaction) ?? 1) + 0.2, () => {}))
     t += (customer?.lasts(reaction) ?? 1) + 0.2
   }
   if (showing.bow !== null) {

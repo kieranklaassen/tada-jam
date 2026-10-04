@@ -227,7 +227,8 @@ export class Play implements Cast {
         this.follow(gesture.at)
         this.took(game, hand.move(game, gesture.at, this.time), 0)
         return
-      case 'pressEnd':
+      // The browser took the finger away: nothing it was on is done.
+      case 'pressEnd': this.abandon(); return
       case 'dragEnd': {
         const out = hand.drawnOut
         this.took(game, hand.end(game, gesture.at), out)
@@ -237,6 +238,24 @@ export class Play implements Cast {
       case 'dragLift':
       case 'dragStart': return
     }
+  }
+
+  /**
+   * The finger is gone without letting go: the game was put away under it, or
+   * the browser took it. Nothing the child did not do is done: a door, a
+   * knot or a seat that was pressed is not touched, a ribbon or a piece that
+   * was carried is where it was picked up, and a lock that was drawn out
+   * under the cape is as long as it was drawn.
+   */
+  abandon(): void {
+    this.hand.drop()
+    this.pressed = null
+    this.pressedAt = null
+    this.hair.release()
+    this.hair.carried = null
+    this.hair.scissorsOut()
+    this.hair.scared = false
+    for (const puppet of [this.puppets.chair, this.puppets.friend]) { puppet?.pulledTowards(null); puppet?.cheekHeld(null) }
   }
 
   /** Plays `dt` seconds. `idle` says no finger is working. */
@@ -249,13 +268,13 @@ export class Play implements Cast {
     this.puppets.chair?.step(dt, calm)
     this.puppets.friend?.step(dt, calm)
     for (const puppet of this.waiting ?? []) puppet.step(dt, true)
-    // Left alone, things go on by themselves: in an empty salon the pair at the door want in, turn about; under the cape the mane stirs.
+    // Left alone, things go on by themselves: in an empty salon the pair at the door look about and rock on their heels, turn about; under the cape the mane stirs.
     if (calm) {
       this.untilStir -= dt
       if (this.untilStir <= 0) {
         this.untilStir = STIR_EVERY
         this.stirs++
-        if (game.chair === null) this.waiting?.[this.stirs % 2]?.react('wantsIn')
+        if (game.chair === null) this.waiting?.[this.stirs % 2]?.react('looksAbout')
         else if (game.cape === 'on' && this.hair.settled) this.hair.moodOf('wave', 1.3)
       }
     }
@@ -294,8 +313,8 @@ export class Play implements Cast {
     switch (h.kind) {
       case 'scissors':
         hair.scissorsIn(h.at)
-        // In an empty salon there is nothing to cut: the pair at the door bob up at its glass, wanting in.
-        if (before.chair === null) for (const puppet of this.waiting ?? []) if (!puppet.busy) puppet.react('wantsIn')
+        // In an empty salon there is nothing to cut: the pair at the door look round at what was touched. They do not knock or wave.
+        if (before.chair === null) for (const puppet of this.waiting ?? []) if (!puppet.busy) puppet.react('looksAbout')
         // The mane does not like the look of scissors: it stands on end for as long as they are out.
         hair.scared = before.chair !== null && before.cape === 'on'
         return
@@ -326,7 +345,7 @@ export class Play implements Cast {
     const react = (puppet: Puppet | null, name: Reaction, always = true): void => { if (puppet && (always || !puppet.busy)) puppet.react(name) }
     const strand = (h.object === 'lock' || h.object === 'model' || h.object === 'ribbon' ? h.object : null) as StrandId | null
     switch (h.cell.voice) {
-      case 'lock/pull': react(chair, 'pulled', false); return
+      case 'lock/pull': react(chair, 'pulled', false); hair.rippled(after.mane.length - 1, 0.3); return
       // The model answers a pull once for each press, so its owner always does: its eyes cross as its lock is drawn out.
       case 'model/pull': react(friend, 'friendPulled'); return
       case 'ribbon/pull': return
@@ -336,12 +355,12 @@ export class Play implements Cast {
         if (strand) hair.snipped(strand)
         hair.scissorsClose()
         for (const piece of added) hair.fly(after, piece, h.at)
-        if (strand === 'lock') { react(chair, 'snipped'); chair?.bump(0.7) }
+        if (strand === 'lock') { react(chair, 'snipped'); chair?.bump(0.7); hair.rippled(after.mane.length - 1) }
         if (strand === 'model') { react(friend, 'friendSnipped'); friend?.bump(1) }
         return
       case 'lock/poke': hair.plucked('lock', 1); react(chair, 'plucked'); chair?.bump(0.5); return
       case 'model/poke': hair.plucked('model', -1); react(friend, 'friendPoked'); friend?.bump(0.6); return
-      case 'ribbon/poke': hair.plucked('ribbon', 1); return
+      case 'ribbon/poke': hair.snapped('ribbon'); return
       case 'lock/ruffle': hair.ruffled('lock'); react(chair, 'fluttered'); return
       case 'model/ruffle': hair.ruffled('model'); react(friend, 'friendRuffled'); return
       case 'ribbon/ruffle': hair.ruffled('ribbon'); return

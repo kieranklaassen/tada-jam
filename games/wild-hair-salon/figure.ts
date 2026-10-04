@@ -142,6 +142,7 @@ export function drawFigure(g: Ctx, sprites: Sprites, figure: Figure): number {
   if (figure.wears.blindfold) drawn += blindfold(g, puppet.at('brow') > 0.5 ? 1 : 0)
   g.restore()
   if (live && look.ears.kind !== 'long') ears()
+  drawn += limbs(g, puppet, look)
 
   if (figure.wears.hat > 0) {
     g.save()
@@ -152,6 +153,49 @@ export function drawFigure(g: Ctx, sprites: Sprites, figure: Figure): number {
     g.restore()
   }
   g.restore()
+  return drawn
+}
+
+/**
+ * A paw, or both, out at something on its own head, and a hind foot that
+ * thumps: plain limbs of its own fur, drawn only while a move has them out.
+ */
+function limbs(g: Ctx, puppet: Puppet, look: Look): number {
+  const out = Math.max(0, Math.min(1, puppet.at('paw'))), foot = Math.max(0, Math.min(1, puppet.at('foot')))
+  let drawn = 0
+  if (out > 0.05) {
+    const x = puppet.at('pawX') * 130, y = puppet.at('pawY') * 130, sides = puppet.at('paws') > 0.5 ? [1, -1] : [x < 0 ? -1 : 1]
+    // Each arm comes up from under the chin on its own side to where its paw is.
+    const reach = sides.map((side) => { const to = { x: Math.abs(x) * side, y }, from = { x: side * 58, y: 136 }; return { from, at: { x: from.x + (to.x - from.x) * out, y: from.y + (to.y - from.y) * out }, side } })
+    g.lineCap = 'round'
+    g.strokeStyle = look.furEdge
+    g.lineWidth = 20
+    g.beginPath()
+    for (const arm of reach) { g.moveTo(arm.from.x, arm.from.y); g.quadraticCurveTo(arm.from.x + arm.side * 70, (arm.from.y + arm.at.y) / 2, arm.at.x, arm.at.y) }
+    g.stroke()
+    g.fillStyle = look.fur
+    g.lineWidth = 2
+    g.beginPath()
+    for (const arm of reach) { g.moveTo(arm.at.x + 19, arm.at.y); g.arc(arm.at.x, arm.at.y, 19, 0, Math.PI * 2) }
+    g.fill()
+    g.stroke()
+    drawn += 3
+  }
+  if (foot > 0.05) {
+    // A long hind foot, out to one side under it, that comes up and slaps down.
+    g.save()
+    g.translate(92, 330 - foot * 34)
+    g.rotate(-0.5 * foot)
+    g.fillStyle = look.fur
+    g.strokeStyle = look.furEdge
+    g.lineWidth = 2
+    g.beginPath()
+    g.ellipse(0, 0, 46, 17, 0, 0, Math.PI * 2)
+    g.fill()
+    g.stroke()
+    g.restore()
+    drawn += 2
+  }
   return drawn
 }
 

@@ -212,6 +212,38 @@ describe('the mane', () => {
     for (const hair of [droop, wave]) { run(hair, 4); expect(hair.settled).toBe(true) }
   })
 
+  it('sends the whole mane straight up for a moment, at once or a little later, and lets it down', () => {
+    const hair = fresh()
+    hair.moodOf('up', 0.8, 0.5)
+    run(hair, 0.4)
+    for (const tuft of hair.tufts) expect(tuft.stretch.x).toBeLessThan(1.05)
+    run(hair, 0.5)
+    for (const tuft of hair.tufts) expect(tuft.stretch.x).toBeGreaterThan(1.15)
+    run(hair, 4)
+    expect(hair.settled).toBe(true)
+  })
+
+  it('ripples the tufts beside the lock when something happens to it, the nearest first and most', () => {
+    const hair = fresh()
+    hair.rippled(TUFTS - 1)
+    let near = 0, far = 0
+    run(hair, 0.6, salon(), 60, () => { near = Math.max(near, Math.abs(hair.tufts[TUFTS - 1].lean.x)); far = Math.max(far, Math.abs(hair.tufts[2].lean.x)) })
+    expect(near).toBeGreaterThan(0.05)
+    expect(near).toBeGreaterThan(far * 2)
+  })
+
+  it('snaps the ribbon up short like a rubber band and drops it back to its length', () => {
+    const hair = fresh()
+    hair.snapped('ribbon')
+    expect(hair.strands.ribbon.stretch.x).toBeLessThan(0.6)
+    let longest = 0
+    run(hair, 1.5, salon(), 60, () => { longest = Math.max(longest, hair.strands.ribbon.stretch.x) })
+    expect(longest).toBeGreaterThan(1)
+    run(hair, 6)
+    expect(hair.strands.ribbon.stretch.x).toBeCloseTo(1, 2)
+    expect(hair.strands.lock.stretch.x).toBe(1)
+  })
+
   it('springs the whole head of hair out from under a hat, and it comes to its own length', () => {
     const hair = fresh()
     hair.sprungOut()

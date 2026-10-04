@@ -57,7 +57,7 @@ describe('before the slot has been read', () => {
 })
 
 describe('an empty salon', () => {
-  it('answers a touch anywhere but the door with the pair at the window, who bob up wanting in', () => {
+  it('answers a touch anywhere but the door with the pair at the door, who look round at it', () => {
     const play = opened()
     play.gesture({ type: 'press', at: { x: 520, y: 440 } })
     for (const puppet of play.waiting!) expect(puppet.busy).toBe(true)
@@ -68,11 +68,58 @@ describe('an empty salon', () => {
   })
 })
 
+describe('a touch that is cut off', () => {
+  // The game is put away under a finger, or the browser takes the finger: the Mount gives the touch up.
+  it('does not open the door, pull the cape off or move the friend when the finger was on one of them', () => {
+    const empty = opened()
+    empty.gesture({ type: 'press', at: DOOR })
+    empty.abandon()
+    expect(empty.game).toEqual(freshGame(null))
+    expect(empty.inScene).toBe(false)
+    expect(empty.pressed).toBeNull()
+    const play = seated(), before = round(play)
+    for (const at of [knotOf(play), BENCH]) { play.gesture({ type: 'press', at }); play.abandon() }
+    expect(round(play)).toEqual(before)
+    expect(play.inScene).toBe(false)
+    // The browser's own way of saying so does the same.
+    play.gesture({ type: 'press', at: knotOf(play) })
+    play.gesture({ type: 'pressEnd', at: knotOf(play) })
+    expect(round(play)).toEqual(before)
+  })
+
+  it('leaves a carried ribbon and a carried piece where they were picked up, and a lock that was drawn out as long as it was drawn', () => {
+    const play = seated({ ribbon: { len: 40, at: 'peg' }, shown: { snip: true, pull: true, ribbon: true }, clippings: [{ len: 20, hue: 'lion', on: 'floor', x: 40 }] })
+    const peg = { x: PEG.x, y: PEG.y - 12 }
+    play.gesture({ type: 'press', at: peg })
+    play.gesture({ type: 'dragStart', from: peg })
+    play.gesture({ type: 'dragMove', from: peg, at: onLock(10) })
+    play.abandon()
+    expect(play.game!.ribbon).toEqual({ len: 40, at: 'peg' })
+    expect(play.hair.carried).toBeNull()
+    const piece = { x: floorX(40), y: floorY(40) }
+    play.gesture({ type: 'press', at: piece })
+    play.gesture({ type: 'dragStart', from: piece })
+    play.gesture({ type: 'dragMove', from: piece, at: { x: HEAD.x, y: HEAD.y + 40 } })
+    play.abandon()
+    expect(play.game!.clippings).toEqual([{ len: 20, hue: 'lion', on: 'floor', x: 40 }])
+    const lock = play.game!.lock, from = onLock(Math.min(lock, 10))
+    play.gesture({ type: 'press', at: from })
+    play.gesture({ type: 'dragStart', from })
+    play.gesture({ type: 'dragMove', from, at: { x: from.x, y: from.y + 40 } })
+    const drawn = play.game!.lock
+    play.abandon()
+    expect(drawn).toBeGreaterThan(lock)
+    expect(play.game!.lock).toBe(drawn)
+    expect(play.hand.held).toBeNull()
+    expect(play.hair.holds).toBeNull()
+  })
+})
+
 describe('left alone', () => {
-  it('has the pair at the door want in, turn about, while the salon is empty, and changes nothing', () => {
+  it('has the pair at the door look about and rock on their heels, turn about, while the salon is empty, and changes nothing', () => {
     const play = opened()
     let lively = [0, 0]
-    for (let i = 0; i < 60 * 14; i++) { play.step(1 / 60, true); play.waiting!.forEach((puppet, n) => { if (puppet.started.some((id) => PERSONALITIES[play.game!.waiting[n]].reactions.wantsIn.some((bit) => bit.id === id))) lively[n] = 1 }) }
+    for (let i = 0; i < 60 * 14; i++) { play.step(1 / 60, true); play.waiting!.forEach((puppet, n) => { if (puppet.started.some((id) => PERSONALITIES[play.game!.waiting[n]].reactions.looksAbout.some((bit) => bit.id === id))) lively[n] = 1 }) }
     expect(lively).toEqual([1, 1])
     expect(play.game).toEqual(freshGame(null))
     expect(play.takeSave()).toBeNull()

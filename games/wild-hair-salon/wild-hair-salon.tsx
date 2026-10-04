@@ -155,8 +155,11 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       act(touch.up(event.pointerId, at(event), event.timeStamp))
       audio.touchUp()
     }
+    // A finger the browser takes away, and a touch still down when the game is put away, let go of nothing and
+    // press nothing: whatever was in the fingers is as it was, and a door or a knot under them is not touched.
+    const abandon = (ended: Gesture[]) => { if (ended.length > 0 && !cornered && !spike) play.abandon() }
     const onCancel = (event: PointerEvent) => {
-      act(touch.cancel(event.pointerId, event.timeStamp))
+      abandon(touch.cancel(event.pointerId, event.timeStamp))
       audio.touchUp()
     }
     root.addEventListener('pointerdown', onDown)
@@ -195,8 +198,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     }
 
     // Everything stops while unattended or hidden: the loop, the clock and sound. A touch in progress is
-    // ended, since its lift will never arrive (a drag is put down, a press ends without a tap), and the
-    // newest state is handed to storage.
+    // given up, since its lift will never arrive: it makes no move the child did not make. The newest state
+    // is handed to storage.
     const attention = new Attention(document, (awake) => {
       audio.setActive(awake)
       if (awake) {
@@ -206,7 +209,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       cancelAnimationFrame(frame)
       frame = 0
       clock.rest()
-      act(touch.clear())
+      abandon(touch.clear())
       cadence.settle(performance.now())
     })
     attendRef.current = (attended) => attention.set(attended)

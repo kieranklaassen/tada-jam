@@ -17,6 +17,9 @@ const LEAF_FALL = 240
 /** The most puffs of fluff in the air at once. */
 export const MOST_PUFFS = 8
 
+/** What the whole mane can do of its own accord. */
+export type Mood = 'droop' | 'wave' | 'up'
+
 export const STRANDS = ['lock', 'model', 'ribbon'] as const
 export type StrandId = (typeof STRANDS)[number]
 
@@ -46,7 +49,7 @@ export class Hair {
   /** Scissors are near: the whole mane stands on end and trembles for as long as this is set. */
   scared = false
   private bristle = 0
-  private mood: { kind: 'droop' | 'wave'; t: number; lasts: number } | null = null
+  private mood: { kind: Mood; t: number; lasts: number } | null = null
   readonly flights = new Map<Clipping, Flight>()
   readonly puffs: Puff[] = []
   /** The scissors: where the finger is, how far the blades are open (0 shut, 1 open), and how much of them shows. */
@@ -147,9 +150,27 @@ export class Hair {
     for (const tuft of this.tufts) { tuft.frizz = 1; tuft.lean.v += this.rng.range(-4, 4) }
   }
 
-  /** The whole mane droops, or a wave runs through it from one side to the other, for so many seconds. */
-  moodOf(kind: 'droop' | 'wave', seconds: number): void {
-    this.mood = { kind, t: 0, lasts: seconds }
+  /** The whole mane droops, flies straight up, or lets a wave run through it from one side to the other, for so many seconds, now or `after` so many. */
+  moodOf(kind: Mood, seconds: number, after = 0): void {
+    if (after > 0) this.later.push({ at: this.time + after, run: () => { this.mood = { kind, t: 0, lasts: seconds } } })
+    else this.mood = { kind, t: 0, lasts: seconds }
+  }
+
+  /** The tufts next to one end of the mane ripple, each a little later and a little less: something happened to the lock beside them. */
+  rippled(from: number, by = 1): void {
+    for (let step = 0; step < this.tufts.length; step++) {
+      const tuft = this.tufts[from - step] ?? null
+      if (!tuft) continue
+      this.later.push({ at: this.time + step * 0.06, run: () => { tuft.lean.v += (2.6 * by) / (step + 1); tuft.stretch.v += (1.6 * by) / (step + 1) } })
+    }
+  }
+
+  /** The ribbon snaps like a rubber band: it jumps up short and drops back to its length. */
+  snapped(what: StrandId): void {
+    const strand = this.strands[what]
+    strand.stretch.x = 0.55
+    strand.stretch.v = 0
+    strand.swing.v += 2
   }
 
   /** The whole head of hair springs out, from tucked away to its own length: a hat has come off. */
@@ -311,6 +332,7 @@ export class Hair {
       if (mood) {
         const swell = Math.max(0, Math.min(1, mood.t / 0.15, (mood.lasts - mood.t) / 0.25)), middle = (this.tufts.length - 1) / 2
         if (mood.kind === 'droop') { long *= 1 - 0.22 * swell; lean += ((index - middle) / Math.max(1, middle)) * 0.34 * swell }
+        else if (mood.kind === 'up') { long *= 1 + 0.32 * swell; lean -= ((index - middle) / Math.max(1, middle)) * 0.3 * swell }
         else { const phase = mood.t * 7 - index * 0.75; long *= 1 + 0.2 * swell * Math.max(0, Math.sin(phase)); lean += 0.1 * swell * Math.sin(phase) }
       }
       ease(tuft.lean, lean, stiffness, damping, dt)

@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest'
 import { BLADES } from './hand'
 import { COLLAR_Y, DOOR as DOOR_AT, LOCK_X, LOOKING_GLASS, STEP } from './layout'
 import { LOOKS, hueOf, tuftOutline } from './looks'
+import { PERSONALITIES } from './personality'
 import { Play } from './play'
+import { Puppet } from './puppet'
+import { makeRng } from './rng'
 import { BUTTONS, placesOf } from './poses'
 import { blankSheets, bounds, recordingSheet, type Recording } from './recorder'
 import { Sprites } from './sprites'
@@ -226,6 +229,72 @@ describe('the salon around them', () => {
     const passing = (time: number): boolean => { const made = frame(fresh(), time); return made.kept.stamps.some((stamp) => stamp.image === made.sprites.passer.sheet.canvas) }
     expect(passing(2)).toBe(true)
     expect(passing(9)).toBe(false)
+  })
+})
+
+describe('limbs and the ribbon', () => {
+  const drawn = (play: Play): Recording => {
+    const kept: Recording = { shapes: [], stamps: [], texts: 0 }
+    const sprites = new Sprites(blankSheets, 1180, 820, 1), surface = recordingSheet(1180, 820, kept)
+    drawFrame(surface.g as Ctx, 1180, 820, sprites, { play, guidance: null })
+    return kept
+  }
+  const furOf = (who: keyof typeof LOOKS) => LOOKS[who].fur
+
+  it('draws a paw at the head while a move has one out, both hooves for the yak who hides, and a hind foot for the rabbit who drums', () => {
+    const balls = (play: Play, who: keyof typeof LOOKS): number => drawn(play).shapes.filter((shape) => shape.kind === 'fill' && shape.style === furOf(who) && shape.parts.length > 0 && shape.parts.every((part) => bounds(part).w > 16 && bounds(part).w < 44 && bounds(part).y < 420)).reduce((n, shape) => n + shape.parts.length, 0)
+    const lion = seated({ chair: 'lion', friend: 'poodle' })
+    const calm = balls(lion, 'lion')
+    lion.customer()!.react('bowHated')
+    for (let i = 0; i < 36; i++) lion.step(1 / 60, false)
+    expect(balls(lion, 'lion')).toBe(calm + 2)
+    const yak = seated({ chair: 'yak', friend: 'poodle' })
+    const before = balls(yak, 'yak')
+    yak.customer()!.react('maneHated')
+    for (let i = 0; i < 40; i++) yak.step(1 / 60, false)
+    // Two hooves, at the customer and again in the looking glass.
+    expect(balls(yak, 'yak')).toBe(before + 4)
+    const rabbit = seated({ chair: 'rabbit', friend: 'poodle' })
+    const feet = (play: Play): number => drawn(play).shapes.filter((shape) => shape.kind === 'fill' && shape.style === furOf('rabbit') && bounds(shape.points).w > 70 && bounds(shape.points).w < 110 && bounds(shape.points).h < 70).length
+    expect(feet(rabbit)).toBe(0)
+    rabbit.customer()!.react('rubLoved')
+    let seen = 0
+    for (let i = 0; i < 30; i++) { rabbit.step(1 / 60, false); seen = Math.max(seen, feet(rabbit)) }
+    expect(seen).toBeGreaterThan(0)
+  })
+
+  it('lifts a blindfold for whoever wears it to peek, whichever of the four it is', () => {
+    for (const who of CUSTOMERS) {
+      const puppet = new Puppet(PERSONALITIES[who], makeRng(4))
+      puppet.react('blindfolded')
+      let highest = 0
+      for (let i = 0; i < 120; i++) { puppet.step(1 / 60, false); highest = Math.max(highest, puppet.at('brow')) }
+      expect(highest, who).toBeGreaterThan(0.5)
+    }
+  })
+
+  it('spins a ruffled ribbon into a corkscrew, a strip whose width comes and goes, where hair fans out in three', () => {
+    const play = seated({ ribbon: { len: 60, at: 'lock' } })
+    const ribbon = (): { parts: number; widths: number[] } => {
+      const shape = drawn(play).shapes.find((s) => s.kind === 'fill' && s.style === hueOf('ribbon').fill && bounds(s.points).h > 100)!
+      const long = shape.parts.reduce((a, b) => (bounds(b).h > bounds(a).h ? b : a))
+      const half = long.length / 2
+      return { parts: shape.parts.length, widths: long.slice(0, Math.floor(half)).map((p, i) => Math.round(Math.abs(long[long.length - 1 - i].x - p.x))) }
+    }
+    expect(new Set(ribbon().widths.slice(0, 1)).size).toBe(1)
+    play.hair.ruffled('ribbon')
+    play.step(1 / 60, false)
+    const twisted = ribbon()
+    expect(twisted.parts).toBe(1)
+    expect(Math.max(...twisted.widths) - Math.min(...twisted.widths)).toBeGreaterThan(10)
+    for (let i = 0; i < 120; i++) play.step(1 / 60, true)
+    expect(play.hair.strands.ribbon.flutter).toBe(0)
+  })
+
+  it('puts the ribbon\'s clip in the paw that holds the friend\'s lock when the ribbon hangs beside it', () => {
+    const paw = (play: Play): number => Math.max(...drawn(play).shapes.filter((shape) => shape.kind === 'fill' && shape.style === furOf('poodle') && bounds(shape.points).h < 34 && bounds(shape.points).y > 370 && bounds(shape.points).y < 400).map((shape) => bounds(shape.points).w))
+    expect(paw(seated({ ribbon: { len: 40, at: 'peg' } }))).toBeLessThan(34)
+    expect(paw(seated({ ribbon: { len: 40, at: 'model' } }))).toBeGreaterThan(60)
   })
 })
 

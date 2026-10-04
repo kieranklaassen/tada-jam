@@ -102,6 +102,12 @@ export class Hand {
     return held.object === 'tuft' ? tuftRoot(salon, held.index) : null
   }
 
+  /** The finger is gone without letting go: nothing is held any more, and nothing it was on is done. */
+  drop(): void {
+    this.holding = null
+    this.drawnOut = 0
+  }
+
   press(salon: Salon, p: Point, now: number): Step {
     this.drawnOut = 0
     const touched = whatIsAt(salon, p)
