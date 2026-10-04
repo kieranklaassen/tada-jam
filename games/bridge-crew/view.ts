@@ -1,5 +1,6 @@
 import { RAIL_TILT, poke, reactPose, waitPose, drivePose, type VehiclePose } from './acts'
 import { showsStrain, strainLook } from './consequence'
+import { drawSky, drawWaterLife } from './drift'
 import { chief, chiefModel, roll } from './figures'
 import { barge, compareModels, ideaModel, lineDrawing, spareWeights, tracingSheet, trolley } from './props'
 import { vehicle } from './fleet'
@@ -114,7 +115,10 @@ export class View {
     const at2 = (p: readonly [number, number]) => px(plot, p[0], p[1])
     let drawn = 1
     this.stamp(pen, at)
+    // What drifts on the sheet, under everything that lies on it: the sky, the water, and what lives in the water.
+    drawn += drawSky(pen, plot, at, toy.seconds)
     water(pen, plot, at, toy.seconds)
+    drawn += drawWaterLife(pen, plot, at, toy.seconds, toy.splash && toy.splash.since >= 0 ? toy.splash : null)
 
     // The tray's piles: as many parts as are left of each kind, and the pile last picked stands a little proud.
     for (const bay of bays(at)) {

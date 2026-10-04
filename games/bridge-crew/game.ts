@@ -3,6 +3,7 @@ import { layPart } from './grid'
 import { length, pinsOf, samePoint, type Part, type Point } from './kit'
 import { PART_REACH, PIN_REACH, SLIDE_OFF, TROLLEY_REACH, farFromStretch, gridPointAt, onRoll, onVehicle, parkAt, rackSlot, toolAt, touched, tracingSpot, waitAt } from './layout'
 import { modelInMargin, nearestDifferences, neatWayDue, oneChangeDue, type Difference } from './order'
+import { CALM, type Splash } from './drift'
 import { DRAWN_DIP, atRest, rests, type Rest } from './pose'
 import { answerOf, between, creaks, ended, frontAt, seat, stepAt, type Seat } from './ride'
 import type { Strain } from './frame'
@@ -69,6 +70,8 @@ export class Game extends Toy {
   gave: { part: number; spot: readonly [number, number] } | null = null
   /** During a give that began with wheels on a thread: the thread that let them down. The view draws it as a V down to the wheel. */
   dipped: { part: number } | null = null
+  /** The last thing that went into the water, until the water is calm again. Short-lived: not saved. */
+  splash: Splash | null = null
   /** Seconds since each vehicle was last touched: its answer to a poke is drawn from it. */
   poked = new Map<VehicleId, number>()
   /** The roadway reaches from lip to lip: a vehicle sent now has a road to try. */
@@ -202,6 +205,7 @@ export class Game extends Toy {
       this.save = ringed(this.save, { part: ending.part, spot: ending.spot })
     }
     this.voices.push(splash(this.trolley.weights))
+    this.splash = { x: this.trolleyFell.from[0], since: -0.45, big: 0.4 }
   }
 
   // --- Gestures ------------------------------------------------------------------
@@ -444,6 +448,7 @@ export class Game extends Toy {
     this.sceneClock += dt
     this.trolleyRung += dt
     this.modelRung += dt
+    if (this.splash && (this.splash.since += dt) > CALM) this.splash = null
     this.slidOff = this.slidOff < SLIDE_OFF ? this.slidOff + dt : Infinity
     if (this.trolleyRolled && (this.trolleyRolled.since += dt) > 0.7) this.trolleyRolled = null
     if (this.trolleyFell && (this.trolleyFell.since += dt) > 1.1) this.trolleyFell = null
@@ -532,7 +537,11 @@ export class Game extends Toy {
   private cue(what: Cue, drive: Drive): void {
     if (what === 'restore') { this.gave = null; this.dipped = null; this.model() }
     if (this.skipping) return
-    if (what === 'splash') this.voices.push(splash(VEHICLES[drive.vehicle].crates))
+    if (what === 'splash') {
+      this.voices.push(splash(VEHICLES[drive.vehicle].crates))
+      const long = longOf(drive.vehicle)
+      this.splash = { x: givePlace(this.show, this.at, long, TAIL[drive.vehicle]).x - long / 2, since: 0, big: 1 }
+    }
     if (what === 'ring') {
       // The bridge springs up and rings with the notes of its own parts.
       this.voices.push(chord(this.bridge.map((part) => layVoice(part.kind, length(part))[0].pitch)))

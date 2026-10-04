@@ -578,4 +578,24 @@ describe('what the sheet says a child sees and hears', () => {
     bare.press(12.5, 6.1)
     expect(bare.hand?.what).not.toBe('traced')
   })
+
+  it('a vehicle that goes in makes a splash that the water keeps until it is calm, and that is not saved', () => {
+    const game = fresh()
+    expect(game.splash).toBeNull()
+    send(game)
+    expect(game.splash).toBeNull()
+    steps(game, 1.2)
+    expect(game.splash).toMatchObject({ big: 1 })
+    // Where the vehicle came down, between the banks.
+    expect(game.splash!.x).toBeGreaterThan(game.at.left[0])
+    expect(game.splash!.x).toBeLessThan(game.at.right[0])
+    expect(JSON.stringify(stored(game))).not.toContain('splash')
+    steps(game, 8)
+    expect(game.splash).toBeNull()
+    // A touch that ends the scene before the vehicle is down makes none.
+    send(game)
+    game.press(1, 1)
+    steps(game, 2)
+    expect(game.splash).toBeNull()
+  })
 })

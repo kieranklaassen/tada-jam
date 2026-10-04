@@ -3,6 +3,7 @@ import { INK, hatch, pin, rule, stream, type Pen } from './look'
 import { waterDrift } from './motion'
 import { WATER } from './pose'
 import { COLS, ROWS, type Site } from './sites'
+import { paintDesk, paintUnderground, paintValley } from './valley'
 
 // The drawing sheet under the parts: the blue, the faint grid, the ground in
 // section, the water, the cliffs, and the draughtsman's marks, without any
@@ -78,6 +79,9 @@ export function paintSheet(pen: Pen, width: number, height: number, plot: Plot, 
     rule(pen, width - i, height - i, i, height - i, cell * weight, 0.8, random); rule(pen, i, height - i, i, i, cell * weight, 0.8, random)
   }
 
+  // The valley the gap is in: far hills, trees and a fence, behind everything and fainter than everything.
+  if (live) paintValley(pen, plot, at)
+
   // Cliffs stand behind the road: drawn first and fainter, each with its footing.
   for (const [ax, ay] of at.anchors) {
     const deck = at.left[1], lean = ax < COLS / 2 ? -1 : 1
@@ -91,7 +95,7 @@ export function paintSheet(pen: Pen, width: number, height: number, plot: Plot, 
   hatch(pen, ground, cell * 0.2, cell * 0.016, 0.42)
   for (let i = 2; i < ground.length - 1; i++) rule(pen, ...ground[i - 1], ...ground[i], cell * 0.055, 1, random)
 
-  if (live) trayBox(pen, plot, at, random)
+  if (live) { paintUnderground(pen, plot, at); paintDesk(pen, plot, at); trayBox(pen, plot, at, random) }
   else water(pen, plot, at, 0)
 
   // The draughtsman's marks, with no figures on them: the gap's centre line and its dimension line.
