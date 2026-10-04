@@ -93,6 +93,19 @@ describe('the cells in play', () => {
     expect(alone.every((r) => r.voice)).toBe(true)
   })
 
+  it('a landing that makes the ends the same is nobody up and nobody down: no high-perch purr, kick or long note, only Dot greeted', () => {
+    const mogMeetsDot = reactionsTo(landingOf(on(['dot'], []), putOnEnd(on(['dot'], []), 'mog', 'right'), 'mog'))
+    expect(mogMeetsDot).toEqual([])
+    const dotMeetsMog = reactionsTo(landingOf(on(['mog'], []), putOnEnd(on(['mog'], []), 'dot', 'right'), 'dot'))
+    expect(dotMeetsMog.map((r) => `${r.who}:${r.act}`)).toEqual(['mog:greet'])
+    expect(dotMeetsMog.some((r) => r.voice)).toBe(false)
+    // Onto a head on the lighter end, making them the same: that is still the head's own cell, the duet.
+    const start = on(['bo', 'pim'], ['mog'])
+    const onMog = landingOf(start, putOnEnd(start, 'dot', 'right'), 'dot')
+    expect(onMog).toMatchObject({ deed: 'on-a-friend', levels: true, below: 'mog' })
+    expect(reactionsTo(onMog).some((r) => r.who === 'dot' && r.voice && r.act === 'sway')).toBe(true)
+  })
+
   it('each friend answers each place in a way of its own: no two friends share a cell', () => {
     for (const cell of ['lowAlready', 'highTips', 'highStays', 'onFriend', 'sand'] as const) {
       const shapes = FRIEND_IDS.map((id) => shape(deeds(id)[cell]))

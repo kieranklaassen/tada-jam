@@ -143,12 +143,16 @@ export class Game implements Director {
       this.world = { ...this.world, touched: true }
       this.wantSave('soon')
     }
+    const cut = this.scene !== null
     if (this.scene) this.endScene(true)
     // The child acted before the showing began: it waits for the next time this kind is laid out.
     this.pendingShowing = null
     this.pressed = { kind: 'other' }
     if (touched.kind === 'friend') {
       this.play.touch(touched.id)
+      // A touch that ended a scene, on the friend who asks next: it was touched where it sat, not where it waits. It
+      // goes to the waiting place, and the next ride begins with a touch on it there. A second tap never begins a ride.
+      if (cut && this.world.arrangement.waiting === touched.id) return
       this.pressed = { kind: 'friend', id: touched.id }
     } else if (touched.kind === 'plank') this.tapPlank(touched.along)
     else if (touched.kind === 'sand') {

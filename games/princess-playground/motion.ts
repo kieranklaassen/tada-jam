@@ -39,6 +39,8 @@ export const HALF_AWAY = 0.85
 export const FINGER = 0.14
 /** How flat a head is pressed by a friend sitting on it. */
 export const PRESSED = 0.93
+/** How flat Mog goes in the air when the plank throws him: flat and long. */
+export const MOG_FLAT = 0.72
 /** How flat anyone is squashed for as long as Bo sits on top of them. */
 export const FLAT = 0.7
 /** How hard a landing turns the plank, per unit of weight. */
@@ -576,7 +578,8 @@ export class Playground {
       body.y += body.vy * dt
       body.x = target.x
       body.z = target.z
-      body.squashTo = 1 + Math.min(0.22, Math.abs(body.vy) * 0.012)
+      // In the air everyone stretches with their speed, but Mog thrown: he goes flat and long, and comes down the right way up.
+      body.squashTo = id === 'mog' && body.thrown ? MOG_FLAT : 1 + Math.min(0.22, Math.abs(body.vy) * 0.012)
       if (body.y <= target.y && body.vy <= 0) this.land(id, target, -body.vy)
       return
     }
@@ -844,6 +847,8 @@ export class Playground {
       pose.frown = body.mood === 'put-out' && (id === 'pim' || id === 'mog') && body.mouth < 0.3 ? 1 : 0
       pose.follow = body.follow + (id === 'mog' && body.mood === 'put-out' ? -0.5 : 0)
       pose.slip = 0
+      // Dot's speckles shimmer while it is glad, and lie still otherwise.
+      pose.shimmer = id === 'dot' && body.mood === 'glad' ? Math.sin(body.phase * 6) : 0
       // A head with a friend on it, or one on its way there, is pressed: it gives a little under the weight, and Pim's
       // crown and Mog's ears are out of the way before the friend lands.
       const place = body.away ? null : placeOf(this.arrangement, id)

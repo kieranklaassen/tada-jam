@@ -278,6 +278,40 @@ describe('the playground in motion', () => {
     expect(world.frame().poses.pim.slip).toBe(0)
   })
 
+  it('throws Mog flat and long, where anyone else stretches tall in the air', () => {
+    const flight = (id: FriendId) => {
+      const world = new Playground(putOnEnd(emptyArrangement(), id, 'left'))
+      play(world, 0.5)
+      world.tapFriend('bo')
+      let least = 9, most = 0, thrown = false
+      play(world, 4, (w) => {
+        if (w.bodies[id].mode !== 'air') return
+        thrown = true
+        least = Math.min(least, w.frame().poses[id].squash)
+        most = Math.max(most, w.frame().poses[id].squash)
+      })
+      expect(thrown, id).toBe(true)
+      expect(w0(world, id)).toBeCloseTo(1, 1)
+      return { least, most }
+    }
+    const w0 = (world: Playground, id: FriendId) => world.frame().poses[id].squash / (1 + Math.sin(world.bodies[id].phase) * 0.03)
+    expect(flight('mog').least).toBeLessThan(0.8)
+    expect(flight('dot').most).toBeGreaterThan(1.05)
+    expect(flight('dot').least).toBeGreaterThan(0.8)
+  })
+
+  it('has Dot\'s speckles shimmer while it is glad, and lie still while it is apart', () => {
+    const world = new Playground(firstRide())
+    world.setMood('dot', 'put-out')
+    let moved = 0
+    play(world, 2, (w) => { moved = Math.max(moved, Math.abs(w.frame().poses.dot.shimmer)) })
+    expect(moved).toBe(0)
+    world.setMood('dot', 'glad')
+    play(world, 3, (w) => { moved = Math.max(moved, Math.abs(w.frame().poses.dot.shimmer)) })
+    expect(moved).toBeGreaterThan(0.9)
+    for (const id of ['pim', 'mog', 'bo'] as const) expect(world.frame().poses[id].shimmer).toBe(0)
+  })
+
   it('shuts a friend\'s eyes for as long as a slow blink lasts', () => {
     const world = new Playground(firstRide())
     world.advance(0)

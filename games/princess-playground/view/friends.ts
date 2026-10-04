@@ -230,7 +230,8 @@ export function poseFriend(view: FriendView, pose: FriendPose): void {
       view.extra.rotation.set(0.1 + swing * 0.25 + slip * 0.95, 0, -swing * 0.6 - slip * 0.35)
     }
   }
-  if (view.extra && view.id === 'dot') view.extra.rotation.y = pose.follow * 0.6
+  // Dot's speckles follow its moves, and shimmer, turning to and fro on its back, while it is glad.
+  if (view.extra && view.id === 'dot') view.extra.rotation.y = pose.follow * 0.6 + pose.shimmer * 0.22
   // Mog's ears lie flat when he is put out, and flatter still under a friend.
   if (view.extra && view.id === 'mog') {
     // Under a friend they are laid right back out of the way.

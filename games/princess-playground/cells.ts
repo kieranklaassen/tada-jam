@@ -79,7 +79,7 @@ export const CHUCKLE_ROCK = 0.4
 const react = (who: FriendId, after: number, rest: Omit<Reaction, 'who' | 'after'>): Reaction => ({ who, after, ...rest })
 
 /** What a friend makes of being landed on: each in its own way. */
-function underneath(below: FriendId, by: FriendId): Reaction[] {
+export function underneath(below: FriendId, by: FriendId): Reaction[] {
   // Under Bo everyone is squashed flat with a wheeze first; the body's own squash is the motion model's. Then each
   // says what it always says to being underneath, a little later than under anyone lighter.
   const out: Reaction[] = by === 'bo' ? [react(below, 0.05, { voice: v.wheeze() })] : []
@@ -101,6 +101,12 @@ export function reactionsTo(l: Landing): Reaction[] {
   const add = (after: number, rest: Omit<Reaction, 'who' | 'after'>) => out.push(react(l.id, after, rest))
   const toward = l.end === 'right' ? -1 : 1
   if (l.below) out.push(...underneath(l.below, l.id))
+  // It made the two ends the same: nobody is up and nobody is down. The plank floats, and everyone on it hums and
+  // sways, which is the level plank's own answer and the newcomer's too; only the greeting of Dot is added.
+  if (l.levels && l.deed === 'high-end') {
+    if (l.id === 'dot') l.others.forEach((other, index) => out.push(react(other, 0.25 + index * 0.12, { act: 'greet', seconds: 0.7, toward: 'dot' })))
+    return out
+  }
   switch (l.id) {
     case 'pim':
       if (l.deed === 'low-end') {

@@ -1,5 +1,5 @@
 import { putInSand, standsAt, type Arrangement } from './arrangement'
-import { CHUCKLE_ROCK, delight, type Reaction } from './cells'
+import { CHUCKLE_ROCK, delight, underneath, type Reaction } from './cells'
 import type { Playground } from './motion'
 import { NESTLE } from './rest'
 import { askerEnd, type Ride } from './rides'
@@ -115,8 +115,15 @@ export function showingBeats(game: Director, ride: Ride): Beat[] {
           const mog = standsAt(play.arrangement, 'mog')
           play.visit('pim', { x: mog.x, y: FRIENDS.mog.halfHeight * 2 * NESTLE, z: mog.z })
         }),
-        once(game, 1.05, () => game.react([{ who: 'pim', after: 0, voice: crow(), act: 'bounce', seconds: 0.6 }, { who: 'mog', after: 0.05, act: 'duck', seconds: 0.5 }])),
-        once(game, 1.9, () => play.goHome('pim')),
+        // She crows on top, and he does what he always does when anything lands on him: ears flat, a duck and a hiss.
+        once(game, 1.05, () => {
+          play.setMood('mog', 'put-out')
+          game.react([{ who: 'pim', after: 0, voice: crow(), act: 'bounce', seconds: 0.6 }, ...underneath('mog', 'pim').map((reaction) => ({ ...reaction, after: 0.05 }))])
+        }),
+        once(game, 1.9, () => {
+          play.goHome('pim')
+          play.setMood('mog', 'plain')
+        }),
         until(2.8),
       ]
     case 'near-side': {

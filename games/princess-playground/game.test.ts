@@ -8,7 +8,7 @@ import { seeded } from './motion'
 import { KINDS, layout, rideOf, wantMet, type Kind } from './rides'
 import { endRide, freshWorld, load, rideIsOver, save, type Saved, type World } from './save'
 import { NEXT_AT } from './scenes'
-import { chuckle, purr, softNote, type Part } from './voices'
+import { chuckle, purr, softNote, spit, type Part } from './voices'
 import { FRIEND_IDS, MAX_TILT, PLANK, WAITING_PLACE, homeOn, plankTopAt, type FriendId } from './world'
 
 const QUIET: Guidance = { glow: 0, demo: null, demoIndex: -1 }
@@ -130,6 +130,21 @@ describe('the showings, one for each kind of ride', () => {
       const at = save({ ...opening(kind, turn), shown: [kind] })
       expect({ left: saves[0].saved.left, right: saves[0].saved.right, sand: saves[0].saved.sand }, kind).toEqual({ left: at.left, right: at.right, sand: at.sand })
     }
+  })
+
+  it('in the showing where Pim hops onto Mog, he does what he always does when landed on: ears flat and his hiss', () => {
+    const game = new Game(opening('big-asks', 0), 1)
+    const hiss = JSON.stringify(spit())
+    let hissed = 0, putOut = 0
+    for (let t = 0; t < 2.6; t += 1 / 60) {
+      game.step(1 / 60, QUIET)
+      hissed += game.takeCues().filter((cue) => cue.type === 'voice' && JSON.stringify(cue.parts) === hiss).length
+      if (game.frame.poses.mog.frown === 1) putOut += 1
+    }
+    expect(hissed).toBe(1)
+    expect(putOut).toBeGreaterThan(20)
+    run(game, 2)
+    expect(game.frame.poses.mog.frown).toBe(0)
   })
 
   it('each ends, played through, as the ride opens: everyone at rest where the saved world has them, and no move counted', () => {
@@ -774,6 +789,39 @@ describe('a friend carried onto the picture of the plank', () => {
     run(plain, 0.5)
     plain.dragEnd()
     expect(placeOf(plain.play.arrangement, 'bo').at).toBe('sand')
+  })
+})
+
+describe('a second tap during the ending', () => {
+  it('on the friend who lifted the asker and asks next only ends the scene: the next ride waits for a touch at the waiting place', () => {
+    const game = lifting()
+    run(game, 1)
+    expect(game.sceneRunning).toBe(true)
+    const kind = game.world.kind
+    // Mog still sits on the plank where the child put him; he is the one who asks next.
+    expect(game.world.arrangement.waiting).toBe('mog')
+    expect(placeOf(game.play.arrangement, 'mog').at).toBe('end')
+    tapOn(game, 'mog')
+    run(game, 0.1)
+    expect(game.sceneRunning).toBe(false)
+    expect(game.world.state.finished).toBe(true)
+    expect(game.world.kind).toBe(kind)
+    expect(game.world.arrangement.waiting).toBe('mog')
+    // And dragging from that same touch carries nobody and begins nothing.
+    const drag = lifting()
+    run(drag, 1)
+    drag.press({ kind: 'friend', id: 'mog' })
+    drag.dragStart()
+    drag.dragTo({ x: 0, z: 2 }, null)
+    drag.dragEnd()
+    run(drag, 0.1)
+    expect(drag.world.state.finished).toBe(true)
+    expect(drag.play.held).toBe(null)
+    // Once he waits in front of the stone, a tap on him there begins the next ride.
+    run(game, 3)
+    tapOn(game, 'mog')
+    run(game, 0.1)
+    expect(game.world.state.finished).toBe(false)
   })
 })
 
