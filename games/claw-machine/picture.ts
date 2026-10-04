@@ -39,6 +39,8 @@ export type GobblerLook = {
   z: number
   /** 1 at rest; below 1 squashed, above 1 stretched tall. */
   squash: number
+  /** Whether it bulges front to back as it squashes. One that waits on the shelf does not: the parapet is right in front of it and the wall right behind. */
+  deep: boolean
   /** Where it looks, -1 to 1 across and up. */
   gazeX: number
   gazeY: number

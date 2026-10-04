@@ -2,6 +2,7 @@ import type { Body } from './bodies'
 import { hubAt } from './claw'
 import type { Actor, Game } from './game'
 import { EYE, knobAt, rimHeight } from './gobblerBuild'
+import { crewSpot } from './layout'
 import { GOBBLER, shapeOf } from './gobblers'
 import type { Guidance } from './guidance'
 import { handPose, type HandPose } from './guidance'
@@ -57,11 +58,20 @@ export function poseOf(game: Game, actor: Actor, out: Pose): Pose {
     out.dy += (Math.abs(Math.sin(out.leanZ)) * foot + Math.abs(Math.sin(out.leanX)) * 2 * wide) * actor.scale
   }
   if (actor.liftedT >= 0) {
-    // In the jaws it hangs from its knob: however it stretches or leans, the knob stays between the teeth. A spin
-    // is about its own middle, and the claw goes round with the knob (`knobSwing`).
-    const knob = knobAt(shapeOf(actor.id)), wide = 1 / Math.sqrt(Math.max(0.2, out.squash))
-    const at = turned(knob.x * wide, knob.y * out.squash, knob.z * wide, { leanX: out.leanX, leanZ: out.leanZ, turn: 0 })
-    out.dx += knob.x - at.x; out.dy += knob.y - at.y; out.dz += knob.z - at.z
+    const shape = shapeOf(actor.id), knob = knobAt(shape), floor = crewSpot(actor.slot, game.crew.length).y
+    // In the jaws only its own way of being lifted moves it: nothing of its idle life shifts the knob between
+    // the teeth.
+    out.dx = scratch.dx; out.dy = scratch.dy; out.leanZ = scratch.leanZ
+    // It hangs from its knob: however it stretches or leans, the knob stays between the teeth. A spin is about
+    // its own middle, and the claw goes round with the knob (`knobSwing`). And it never goes down through the
+    // step: while its feet would, it stretches and swings less, so a lift begins stiff and loosens as it rises.
+    for (let tries = 0; tries < 12; tries++) {
+      const wide = 1 / Math.sqrt(Math.max(0.2, out.squash)), foot = (Math.max(1.5, shape.width / 2 - 2.5) + 1) * wide
+      const at = turned(knob.x * wide, knob.y * out.squash, knob.z * wide, { leanX: out.leanX, leanZ: out.leanZ, turn: 0 })
+      const feet = actor.y + out.dy + knob.y - at.y - Math.abs(Math.sin(out.leanZ)) * foot - Math.abs(Math.sin(out.leanX)) * 2 * wide
+      if (feet >= floor || tries === 11) { out.dx += knob.x - at.x; out.dy += knob.y - at.y; out.dz += knob.z - at.z; break }
+      out.leanX *= 0.6; out.leanZ *= 0.6; out.squash = 1 + (out.squash - 1) * 0.6
+    }
   }
   // A walk is a waddle: it rocks from foot to foot as it goes.
   // (A step back into its own place after a lift is too short to waddle.)
@@ -142,7 +152,7 @@ export function gamePicture(game: Game, guidance: Guidance | null): Picture {
     const eyeY = actor.y + (rimHeight(shape) + EYE / 2) * actor.scale
     gobblers.push({
       id: `g${actor.key}`, who: actor.id, shape, x: actor.x + pose.dx * actor.scale, y: actor.y + pose.dy, z: actor.z + pose.dz * actor.scale,
-      squash: pose.squash, leanX: pose.leanX, leanZ: pose.leanZ, turn: pose.turn, scale: actor.scale,
+      squash: pose.squash, deep: actor.role !== 'waiting', leanX: pose.leanX, leanZ: pose.leanZ, turn: pose.turn, scale: actor.scale,
       gazeX: pose.looks ? pose.gazeX : clamp((watched.x - actor.x) / 11, -1, 1),
       gazeY: pose.looks ? pose.gazeY : clamp((watched.y - eyeY) / 9 - (watched.z - actor.z) / 30, -1, 1),
       blink: pose.blink, waiting: actor.role === 'waiting' || actor.scale < 0.95,
@@ -214,6 +224,9 @@ export function gamePicture(game: Game, guidance: Guidance | null): Picture {
 
   const resting = claw.phase === 'ready' && !claw.following && !claw.dropOnArrival
   const swing = knobSwing(game)
+  // Left alone and holding nothing, the claw is never quite still. Holding anything, it is: a knob or a toy
+  // between its teeth has a hair of room and no more.
+  const idling = resting && game.held < 0 && game.lifted < 0 && claw.load === 0
   return {
     toys, gobblers, shadows, glows, hand: ghost, gate: game.gateShake,
     crates: game.crates.map((crate) => ({
@@ -224,8 +237,8 @@ export function gamePicture(game: Game, guidance: Guidance | null): Picture {
     // Left alone, the claw is never quite still: the cable sways a hair and the jaws work a little.
     claw: {
       x: claw.x, z: claw.z, length: claw.length,
-      swingX: claw.swingX + (resting && game.held < 0 ? 0.012 * Math.sin(game.time * 1.3) : 0), swingZ: claw.swingZ + (resting && game.held < 0 ? 0.008 * Math.sin(game.time * 0.9 + 1) : 0),
-      open: claw.open + (resting && game.held < 0 ? 0.06 * Math.sin(game.time * 1.1) : 0), squash: claw.squash,
+      swingX: claw.swingX + (idling ? 0.012 * Math.sin(game.time * 1.3) : 0), swingZ: claw.swingZ + (idling ? 0.008 * Math.sin(game.time * 0.9 + 1) : 0),
+      open: claw.open + (idling ? 0.06 * Math.sin(game.time * 1.1) : 0), squash: claw.squash,
       shiftX: swing.x, shiftZ: swing.z, turn: swing.turn,
     },
   }

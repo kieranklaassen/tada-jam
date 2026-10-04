@@ -1,6 +1,6 @@
 import { PLATE } from './bricks'
 import { toySpan } from './builds'
-import { BELLY_STEP, ROW_Z, bellyBox, type GobblerShape } from './gobblerBuild'
+import { BELLY_STEP, ROW_BACK, ROW_Z, bellyBox, type GobblerShape } from './gobblerBuild'
 import type { Toy } from './toys'
 
 // Where a group stands in a belly. A swallowed toy is chewed small and
@@ -31,7 +31,7 @@ export function bellyLayout(shape: GobblerShape, group: readonly Toy[]): BellyPl
     const span = toySpan(toy), length = span.length * MINI
     const row = used.findIndex((taken, r) => taken + length + GAP <= inside.w + 1e-9 && span.height * MINI + r * step <= inside.h - 0.15)
     if (row < 0) return null
-    out.push({ x: inside.x + used[row] + length / 2, y: inside.y + row * step, z: row === 0 ? ROW_Z : -ROW_Z })
+    out.push({ x: inside.x + used[row] + length / 2, y: inside.y + row * step, z: row === 0 ? ROW_Z : ROW_BACK })
     used[row] += length + GAP
   }
   return out

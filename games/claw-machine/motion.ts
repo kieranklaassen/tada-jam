@@ -101,10 +101,11 @@ export function wrongPose(way: WrongWay, t: number, out: Pose): Pose {
     case 'cannon': {
       // Goes stiff and trembles, fires, and is blown back a step by it.
       const stiff = 1 - ramp(t, 0.36, 0.42)
-      out.squash = 1 + 0.14 * stiff * ramp(t, 0, 0.12) - 0.22 * bump(t, 0.36, 0.56)
+      out.squash = 1 + 0.14 * stiff * ramp(t, 0, 0.12) - 0.12 * bump(t, 0.36, 0.56)
       out.dx = 0.08 * stiff * Math.sin(t * 190)
-      out.dz = -1.7 * ramp(t, 0.36, 0.44) * (1 - ramp(t, 0.6, 1))
-      out.leanX = -0.3 * bump(t, 0.36, 0.7)
+      // (A short step and a small lean: the parapet and a corner post are right behind it.)
+      out.dz = -0.6 * ramp(t, 0.36, 0.44) * (1 - ramp(t, 0.6, 1))
+      out.leanX = -0.06 * bump(t, 0.36, 0.7)
       break
     }
     case 'slow-slide': {
@@ -269,7 +270,7 @@ export function actPose(who: GobblerId, act: Act, t: number, n: number, out: Pos
       break
     case 'bonked': // ducks, and pops up further along, then shuffles back
       // It ducks by squashing flat where it stands, and comes up a little way along.
-      out.squash = 1 - 0.5 * bump(t, 0, 0.45) + 0.12 * s * bump(t, 0.45, 0.7)
+      out.squash = 1 - 0.3 * bump(t, 0, 0.45) + 0.12 * s * bump(t, 0.45, 0.7)
       out.dx = 0.9 * n * ramp(t, 0.15, 0.4) * (1 - ramp(t, 0.6, 1))
       out.blink = t < 0.3 ? 1 : 0
       break
@@ -284,7 +285,7 @@ export function actPose(who: GobblerId, act: Act, t: number, n: number, out: Pos
       out.squash = 1 - 0.14 * bump(t, 0, 0.25) + 0.2 * bump(t, 0.45, 0.7)
       // It winds up with a dip and lobs with a stretch: it never leans out over the gate in front of it, nor back
       // into the wall behind it.
-      out.leanX = -0.07 * bump(t, 0.2, 0.5) + 0.08 * bump(t, 0.5, 0.75)
+      out.leanX = 0.08 * bump(t, 0.5, 0.75)
       break
     case 'heave': // staggers under a big one, then heaves
       out.dx = 0.4 * Math.sin(t * TAU * 2) * (1 - ramp(t, 0.55, 0.65)); out.squash = 1 - 0.18 * ramp(t, 0, 0.08) * (1 - ramp(t, 0.6, 0.7)) + 0.24 * bump(t, 0.62, 0.9)

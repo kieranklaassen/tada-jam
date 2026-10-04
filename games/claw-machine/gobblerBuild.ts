@@ -38,9 +38,14 @@ const DEPTH = 6
 export const LEGS = 3
 /** How deep the dish of the mouth is, in plates. */
 export const DISH = 3
-/** How high the step is that the back row of a belly stands on, in plates, and how far the rows stand from the middle. */
+/**
+ * How high the step is that the back row of a belly stands on, in plates, and where the two rows stand from front
+ * to back: each as far as it can from the other, the front one just behind the window and the back one just in
+ * front of the lining, so that the deepest toy there is, a big car with its wheels out, touches neither.
+ */
 export const BELLY_STEP = 2.5
-export const ROW_Z = 0.95
+export const ROW_Z = 1.07
+export const ROW_BACK = -0.79
 /** The width of an eyeball. The eyes are balls, the one part of a gobbler that is not a brick. */
 export const EYE = 2.5
 /** The height of the knob on its head, in plates: tall enough that the teeth that hold it stay clear of the rim however the gobbler leans. */

@@ -46,7 +46,7 @@ export class GobblerRig {
     this.group.position.set(look.x, look.y, look.z)
     this.group.rotation.set(look.leanX, look.turn, look.leanZ)
     const wide = (1 / Math.sqrt(Math.max(0.2, look.squash))) * look.scale
-    this.group.scale.set(wide, look.squash * look.scale, wide)
+    this.group.scale.set(wide, look.squash * look.scale, look.deep ? wide : look.scale)
     // The pupils ride on the balls of the eyes. Looking straight ahead they face the child, who looks in from
     // the front and above; the gaze turns them from there, and never round to the back.
     const across = look.gazeX * 0.75, lift = AHEAD + look.gazeY * 0.6, r = EYE / 2 - 0.12
