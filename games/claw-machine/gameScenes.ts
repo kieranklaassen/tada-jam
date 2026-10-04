@@ -22,7 +22,7 @@ import { bellyOf, crewArrives, crewNow, type World } from './world'
 // or by a touch, everything is set at rest there.
 
 /** How long a gobbler takes to show its snack and swallow it, in a first showing. */
-const SHOW_EACH = 1.5
+const SHOW_EACH = 2
 
 function scene(game: Game, beats: Beat[]): void {
   const playing = new Scene(beats)
@@ -178,8 +178,9 @@ export function ending(game: Game): void {
     at += lasts + 0.1
   })
   game.crew.forEach((actor, i) => beats.push(cue(game, at + 0.15, () => { game.startAct(actor, 'burp'); game.say({ type: 'burp', nth: i }) })))
-  beats.push(cue(game, at + 1.0, () => game.say({ type: 'slide-in' })))
-  beats.push(over(game, at + 1.0, 1.1, (progress) => { const ease = progress * (2 - progress); for (const crate of game.crates) crate.away = 1 - ease }))
+  // They settle for a moment, and then the crates come.
+  beats.push(cue(game, at + 1.4, () => game.say({ type: 'slide-in' })))
+  beats.push(over(game, at + 1.4, 1.1, (progress) => { const ease = progress * (2 - progress); for (const crate of game.crates) crate.away = 1 - ease }))
   scene(game, beats)
 }
 

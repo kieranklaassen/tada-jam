@@ -140,7 +140,7 @@ export class Stage {
     this.hand.visible = false
     this.scene.add(this.hand)
 
-    // The cable: one thin cylinder, stretched from the gantry to the hub.
+    // The cable: one thin cylinder, stretched from the rail above the frame to the hub.
     const rope = new CylinderGeometry(0.09, 0.09, 1, 6)
     rope.translate(0, -0.5, 0)
     this.cable = new Mesh(rope, new MeshBasicMaterial({ color: 0xc9d0d8 }))
@@ -328,7 +328,7 @@ export class Stage {
     this.shadows.count = count
     this.shadows.instanceMatrix.needsUpdate = true
 
-    // The cable swings from the gantry; the hub hangs on its end and the jaws swing out from the hub.
+    // The cable swings from the rail above the frame; the hub hangs on its end and the jaws swing out from the hub.
     const claw = picture.claw
     this.position.set(Math.sin(claw.swingX), -Math.cos(claw.swingX) * Math.cos(claw.swingZ), Math.sin(claw.swingZ)).normalize()
     this.quaternion.setFromUnitVectors(UP, this.scale.copy(this.position).negate())
@@ -336,7 +336,7 @@ export class Stage {
     this.clawGroup.position.x += claw.shiftX; this.clawGroup.position.z += claw.shiftZ
     this.clawGroup.quaternion.copy(this.quaternion)
     if (claw.turn !== 0) this.clawGroup.rotateY(claw.turn)
-    // The cable runs from the gantry to wherever the hub is.
+    // The cable runs from the rail to wherever the hub is.
     this.cable.position.set(claw.x, RAIL.top, claw.z)
     this.scale.copy(this.clawGroup.position).sub(this.cable.position)
     const run = this.scale.length()

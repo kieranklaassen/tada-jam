@@ -213,7 +213,7 @@ export function liftedPose(way: LiftWay, seconds: number, out: Pose): Pose {
 export type Act = 'gulp' | 'hold' | 'open-wide' | 'duck' | 'snap' | 'start' | 'show' | 'tip' | 'drum' | 'burp' | 'bonked' | 'lean' | 'stare' | 'catch' | 'heave' | 'land'
 
 export const ACT_SECONDS: { readonly [A in Act]: number } = {
-  gulp: 0.5, hold: 0.9, 'open-wide': 1.2, duck: 0.7, snap: 0.5, start: 0.45, show: 1.1, tip: 0.9, drum: 1.0, burp: 0.7, bonked: 0.9, lean: 0.8, stare: 1.6, catch: 0.9, heave: 1.3, land: 0.5,
+  gulp: 0.5, hold: 0.9, 'open-wide': 1.2, duck: 0.7, snap: 0.5, start: 0.45, show: 1.5, tip: 0.9, drum: 1.0, burp: 0.7, bonked: 0.9, lean: 0.8, stare: 1.6, catch: 0.9, heave: 1.3, land: 0.5,
 }
 
 /** How long an act takes for this gobbler: the quick ones are quicker at everything. */

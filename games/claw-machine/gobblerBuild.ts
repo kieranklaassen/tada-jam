@@ -149,7 +149,12 @@ export function gobblerParts(shape: GobblerShape): GobblerParts {
     // A wall outside the bars, where the mouth is wide enough to have one.
     const wall = half - 1 - BAR_AT - 0.25 - 3.2
     if (wall > 0.05) for (const side of [-1, 1]) body.push(box(c, side > 0 ? BAR_AT + 0.25 + 3.2 : -half + 1, tongue - 1, 2, wall, 1, 1 + DISH, true))
-    for (const side of [-1, 1]) body.push(box(c, side * BAR_AT - 0.25, tongue - 1, 2.2, 0.5, 0.6, 1 + DISH + 3))
+    // Four bars, the two outer ones shorter: a grille with its wide gap in the middle. (Two bars alone, side by
+    // side, would be a sign.)
+    for (const side of [-1, 1]) {
+      body.push(box(c, side * BAR_AT - 0.25, tongue - 1, 2.2, 0.5, 0.6, 1 + DISH + 3))
+      body.push(box(c, side * (BAR_AT + 1.85) - 0.25, tongue - 1, 2.2, 0.5, 0.6, 1 + DISH + 2))
+    }
     body.push(box(c, -half + 1, tongue - 1, 2, shape.width - 2, 1, 1))
   } else body.push(box(c, -half + 1, tongue - 1, 2, shape.width - 2, 1, 1 + DISH, true))
   // A narrow mouth: a shoulder inside the dish on either side.

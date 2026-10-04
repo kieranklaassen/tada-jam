@@ -84,7 +84,7 @@ export default {
         await d.wait(9000)
         await d.tap(await ledge(d))
         // The delivery and the first showing of colour.
-        await d.wait(12500)
+        await d.wait(14500)
       },
     },
     {
@@ -161,7 +161,7 @@ export default {
         await d.wait(600)
         await give(d, 4, await gobbler(d, 1, 3))
         await give(d, 5, await gobbler(d, 0, 3))
-        await d.tap(await ledge(d)); await d.wait(11000)
+        await d.tap(await ledge(d)); await d.wait(14500)
       },
     },
     {
@@ -169,9 +169,14 @@ export default {
       run: async (d) => {
         await d.reload({ [SLOT]: ENDING })
         await d.wait(600)
-        await give(d, 8, await gobbler(d, 0, 2), 9500) // the last gulp, the tune, the burps and the crates
+        await give(d, 8, await gobbler(d, 0, 2), 11000) // the last gulp, the tune, the burps and the crates
         await d.wait(6000) // the ending stands, and the ladder shows the crates
-        await d.tap(await ledge(d, 8.6)); await d.wait(13000) // the taller crate
+        // The claw is wagged over the taller crate and held there: the crates sway out of its way and rise on
+        // their carts to see. Lifted, the finger takes that crate.
+        const up = await ledge(d, 8.6)
+        await d.press(up)
+        for (let i = 0; i < 8; i++) await d.move([up[0] + (i % 2 ? -0.05 : 0.05), up[1]], 130)
+        await d.wait(2600); await d.release(); await d.wait(16000)
       },
     },
     {

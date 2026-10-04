@@ -54,7 +54,7 @@ export function cabinetBricks(): Brick[] {
     // They stand in front of the line of the parapet, clear of whoever waits behind it.
     for (let y = 0; y < plates(BACK.top); y += 6) out.push({ x, y, z: WALL.z, w: 2, d: 2, h: 6, colour: TRIM })
   }
-  // The bell post at either end of the rail: a buffer brick with a bell on it.
+  // The bell post at either end of the rail: a post with a bell on it.
   for (const side of [-1, 1]) {
     out.push({ x: side * BELL.x - 1, y: 0, z: BELL.z - 1, w: 2, d: 2, h: 8, colour: TRIM })
     out.push({ x: side * BELL.x - 1, y: 8, z: BELL.z - 1, w: 2, d: 2, h: 3, colour: LAMP, round: true })

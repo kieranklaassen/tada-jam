@@ -1,7 +1,7 @@
 import type { Game } from './game'
 import { rimHeight } from './gobblerBuild'
 import { shapeOf } from './gobblers'
-import { CRATE_STANDS, crateTop, type Spot } from './layout'
+import { CRATE_STANDS, crateTop, headTop, type Spot } from './layout'
 import { GATE } from './places'
 import { trayIsClear } from './world'
 
@@ -46,10 +46,13 @@ export function hintFor(game: Game, showing: number): Hint {
     })
     return { marks, tap: marks[nth % marks.length] }
   }
-  // The tray is clear and another crew waits: the gate brings it in.
+  // The tray is clear and another crew waits: the gate brings it in. A ring lies over the head of each one
+  // who waits, since a touch anywhere on the ledge fetches them, and the hand taps the gate. (A ring round the
+  // gate itself, with the gate bar across it, would be a road sign.)
   if (trayIsClear(world.cycle) && game.someoneWaits()) {
-    const gate = { x: GATE.x, y: GATE.top + 0.3, z: GATE.z, r: 3 }
-    return { marks: [gate], tap: gate }
+    // Each ring lies over the top of a head, where it shows above the crew that stands in front.
+    const marks = game.waiting.map((actor) => ({ x: actor.x, y: actor.y + headTop(actor.id) + 0.3, z: actor.z, r: shapeOf(actor.id).width / 2 - 0.6 }))
+    return { marks, tap: { x: GATE.x, y: GATE.top + 0.3, z: GATE.z } }
   }
   return { marks: [], tap: null }
 }

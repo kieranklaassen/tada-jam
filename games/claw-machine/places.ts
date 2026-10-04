@@ -53,7 +53,7 @@ export const WAIT_Z = -15.2
 export const WALL = { z: -11, top: 13 * PLATE } as const
 export const BACK = { z: -22, top: 50 * PLATE } as const
 
-/** The gantry. The bridge itself runs above the frame; the cable hangs from it. */
+/** The rail the trolley runs on. It is above the frame and is not drawn; the cable hangs from it. */
 export const RAIL = {
   /** The height the cable hangs from. */
   top: 30,
@@ -67,7 +67,7 @@ export const RAIL = {
 /** What the camera frames: the whole cabinet, fitted to the surface whatever its shape. */
 export const FRAME = { minX: -18.6, maxX: 18.6, floorZ: 14.2, top: 12.2, topZ: -16 } as const
 
-/** The bell post at either end of the rail: a buffer brick with a bell on it, beside the tray. */
+/** The bell post at either end of the rail: a post with a bell on it, beside the tray. */
 export const BELL = { x: 17, z: 6, half: 1, top: 11 * PLATE } as const
 
 /** The gate of the ledge, in the middle of the parapet: what the claw hooks to bring the next ones in. */

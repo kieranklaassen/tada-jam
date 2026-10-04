@@ -150,9 +150,9 @@ export class Game {
   private wagTurns = 0
   private wagAt = 0
   private wagFrom = 0
-  /** The fastest the trolley has gone on its way to the end of the rail, and whether it has hit the buffer on this run. */
+  /** The fastest the trolley has gone on its way to the end of the rail, and whether the bell there has been rung on this run. */
   private runPeak = 0
-  private buffered = false
+  private rung = false
   /** The gate shaking, 1 to 0. */
   gateShake = 0
   /** While the claw carries a crate in a scene: the height its hinge rides at. Otherwise null. */
@@ -486,26 +486,26 @@ export class Game {
       if (claw.following || claw.phase !== 'ready' || this.scene || this.held >= 0 || this.lifted >= 0) this.dodge = null
       else if ((this.dodge.wait -= STEP) <= 0) { const toy = this.dodge.toy; this.dodge = null; this.backOff(toy) }
     }
-    this.watchBuffer()
+    this.watchRailEnd()
     this.watchWaiting()
     if (this.scene) { this.scene.update(this.time); if (!this.scene.running) this.endScene(false) }
   }
 
-  /** A hard slide into the end of the rail hits the buffer: a double ding, and the trolley bounces back a stud. */
-  private watchBuffer(): void {
+  /** The end of the rail: a hard slide into it is a double ding and the trolley bounces back a stud; a gentle one rings the bell once. */
+  private watchRailEnd(): void {
     const claw = this.claw, target = this.aim.target
-    if (target.on !== 'rail-end' || claw.phase !== 'ready') { this.runPeak = 0; this.buffered = false; return }
+    if (target.on !== 'rail-end' || claw.phase !== 'ready') { this.runPeak = 0; this.rung = false; return }
     const end = target.side * RAIL.maxX
     this.runPeak = Math.max(this.runPeak, claw.vx * target.side)
-    if (this.buffered || Math.abs(claw.x - end) > 0.8) return
+    if (this.rung || Math.abs(claw.x - end) > 0.8) return
     // Run hard into the end, the trolley bounces back a stud and the bell rings twice; slid up to it gently, the
     // bell rings once. (A tap rings it when the claw lands on it.)
     if (this.runPeak >= 45) {
-      this.buffered = true
+      this.rung = true
       claw.vx = -target.side * 14
       this.carry(clawSwingsInto(this.world, target, target.side, this.held >= 0))
     } else if (claw.following) {
-      this.buffered = true
+      this.rung = true
       this.say({ type: 'bell' })
       claw.swingVX += target.side * 2
     }
