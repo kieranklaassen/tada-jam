@@ -1,8 +1,11 @@
-import { awake, isRoomAt, present, roomOf, thing, type Arrangement } from './arrangement'
+import { awake, holds, isRoomAt, onEdge, present, roomOf, thing, type Arrangement } from './arrangement'
+import { madeAt } from './airs'
 import { castById, neatOf } from './casts'
 import { MOST_MOVES, ROUNDS, SET_DOWNS_PER_GUEST } from './config'
+import { otherPhase, type Phase } from './guests'
+import { doingAt } from './hours'
 import { edgesOf } from './hotel'
-import { settled } from './mood'
+import { moodOf, settled } from './mood'
 import { setDown, tap, turnWheel, type Held, type Outcome, type Target } from './moves'
 import { arrangementOf, castFor, withArrangement, withCast, type Stay } from './stay'
 import { beginCycle, finishCycle, type CycleOutcome } from './state'
@@ -32,11 +35,12 @@ export function pairingsIn(arrangement: Arrangement): Pairing[] {
   const stove = thing(arrangement, 'stove')
   const yeti = roomOf(arrangement, 'yeti')
   if (stove && isRoomAt(stove.at) && stove.dial === 3 && yeti === stove.at.room) found.push('sauna')
-  // The troll and the singer on two sides of one wall, both awake.
+  // The troll and the singer on two sides of one wall, both awake and both making their noise through it: neither rolled in the quilt, which makes no noise, and no quilt hung on that wall, which stops it.
   const troll = roomOf(arrangement, 'troll'), singer = roomOf(arrangement, 'singer')
-  if (troll !== null && singer !== null && awake(arrangement, 'troll', arrangement.phase) && awake(arrangement, 'singer', arrangement.phase)) {
+  const sounding = (id: 'troll' | 'singer') => awake(arrangement, id, arrangement.phase) && !holds(arrangement, id, 'quilt')
+  if (troll !== null && singer !== null && sounding('troll') && sounding('singer')) {
     const a = Math.min(troll, singer), b = Math.max(troll, singer)
-    if (edgesOf(arrangement.house.shape).some((edge) => edge.kind === 'wall' && edge.a === a && edge.b === b)) found.push('duet')
+    if (edgesOf(arrangement.house.shape).some((edge) => edge.kind === 'wall' && edge.a === a && edge.b === b && onEdge(arrangement, edge.id) !== 'quilt' && onEdge(arrangement, edge.id) !== 'both')) found.push('duet')
   }
   return found
 }
@@ -64,7 +68,8 @@ function after(stay: Stay, before: Arrangement, now: Arrangement, outcome: Outco
   // A view from a guest who has left with the coach is dropped.
   if (next.from !== null && next.at[next.from] === 'gone') next = { ...next, from: null }
   if (stay.finished) return { stay: next, outcome, cues }
-  if (changed) next = { ...next, moves: Math.min(MOST_MOVES, next.moves + 1) }
+  // Set-downs that change the arrangement are counted, to judge a settled cycle. Sending the lot away is not one of them: it is judged by itself, and saves no count.
+  if (changed && outcome !== 'sent-away') next = { ...next, moves: Math.min(MOST_MOVES, next.moves + 1) }
   if (outcome === 'sent-away') {
     // The child carried a guest out before the house was settled: this lot leaves, and the cycle went badly.
     return { stay: { ...next, ...finishCycle(next, 'badly'), from: null }, outcome, cues: ['sent-away'] }
@@ -80,6 +85,38 @@ function after(stay: Stay, before: Arrangement, now: Arrangement, outcome: Outco
   const cast = castById(stay.cast)
   if (cast && !judged.shown.includes(cast.position) && !sameHouse(now, neatOf(cast))) cues.push('neat-way')
   return { stay: judged, outcome, cues }
+}
+
+/** Whether the new thing of a place of the designed order is seen at work in an arrangement at one hour: the noise that is made, the smell, the quilt with something against it or round someone, the keeper of the clock up at its changed hours, the pipe with something passing, the singer singing. What a place adds that works at every hour (the boiler and the snow, the stove and the ice box, a room for two) is at work at both. */
+export function newThingAt(position: string, neat: Arrangement, phase: Phase): boolean {
+  const made = madeAt(neat, phase)
+  const doing = (kind: 'quilt' | 'pipe' | 'clock') => doingAt(neat, { thing: kind }, phase)
+  if (position === 'two-guests') return made.some((source) => source.air === 'din')
+  if (position === 'corridor') return made.some((source) => source.air === 'pong')
+  if (position === 'listener') return made.some((source) => 'guest' in source.by && source.by.guest === 'singer')
+  if (position === 'quilt') { const quilt = doing('quilt'); return quilt.kind === 'muffles' || (quilt.kind === 'stops' && quilt.airs.length > 0) }
+  if (position === 'tower-and-pipe') { const pipe = doing('pipe'); return (pipe.kind === 'carries' && pipe.airs.length > 0) || (pipe.kind === 'trumpets' && awake(neat, pipe.guest, phase)) }
+  if (position === 'alarm-clock') { const clock = doing('clock'); return clock.kind === 'turns-hours' && awake(neat, clock.guest, phase) }
+  return true
+}
+
+/**
+ * How much a neat way has to show at one hour: before anything, the new
+ * thing of its place at work; then somebody plainly happier; then the other
+ * things put to use (the quilt with something against it, the pipe with
+ * something passing); then the guests making what the house is about (a tuba
+ * played, a stew stirred, a song sung).
+ */
+export function showsAt(position: string, neat: Arrangement, phase: Phase): number {
+  const happier = neat.guests.filter((guest) => typeof guest.at === 'number' && moodOf(neat, guest.id, phase).delights.length > 0).length
+  const busy = neat.things.filter((item) => { const doing = doingAt(neat, { thing: item.kind }, phase); return (doing.kind === 'stops' || doing.kind === 'carries') && doing.airs.length > 0 }).length
+  return (newThingAt(position, neat, phase) ? 1000 : 0) + happier * 100 + busy * 10 + madeAt(neat, phase).length
+}
+
+/** The hour the porter's neat way is shown at when it is not the hour the child left the wheel at: the other one, as a view, when it has more to show there. Null: the child's own hour. */
+export function neatHourOf(position: string, neat: Arrangement, left: Phase): Phase | null {
+  const other = otherPhase(left)
+  return showsAt(position, neat, other) > showsAt(position, neat, left) ? other : null
 }
 
 /**
@@ -112,11 +149,6 @@ export function tapIn(stay: Stay, held: Held): Turn {
   }
   // A dial turned a step changes the house truly, and can be what settles it.
   return after(stay, before, move.arrangement, move.outcome, false)
-}
-
-/** The child touches the paper margin: back to the plain page. */
-export function plainPage(stay: Stay): Stay {
-  return stay.from === null ? stay : { ...stay, from: null }
 }
 
 /** The child turns the day-and-night wheel. It settles nothing by itself, but a pairing can begin at the new hour. */

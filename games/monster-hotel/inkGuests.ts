@@ -25,6 +25,10 @@ export type Pose = {
   stares?: boolean
   /** The side it looks toward for a moment, in the figure's own terms: `left` is the way it is drawn facing. */
   looks?: InkSide | null
+  /** The side its trouble comes from, in the figure's own terms as `looks` is: where a cross guest that cannot turn its body (one rolled in the quilt) turns its eyes. */
+  toward?: InkSide | null
+  /** Cross at a noise alone, with nothing too warm or too cold about it: no icicle on the lizard, no melting of the yeti. */
+  woken?: boolean
   /** Which of the figure's two drawings this is: the line boils between them, and the troll's cheeks pump. */
   frame: number
 }
@@ -58,6 +62,12 @@ export const TOP: Record<GuestId, number> = { troll: 152, bat: 136, blob: 102, y
 /** Where the troll's noise leaves the tuba, from its feet, for the marks the page draws. */
 export const TUBA_BELL = { x: 60, y: -148 }
 
+/** A run of melt hanging from a point: a tongue with a round end, of paper, as wide as `w` from side to side. */
+function run(pen: Pen, x: number, y: number, len: number, w: number): void {
+  const h = w / 2
+  pen.shape([x - h, y, x - h * 0.9, y + len - h, x - h * 0.6, y + len - h * 0.2, x, y + len, x + h * 0.6, y + len - h * 0.2, x + h * 0.9, y + len - h, x + h, y], { fill: PAPER, w: 1.1 })
+}
+
 /** Where the string of the yeti's cloud is tied, from its feet. */
 export const YETI_WRIST = { x: 44, y: -58 }
 
@@ -69,11 +79,10 @@ function troll(pen: Pen, pose: Pose): void {
   const [lookX, lookY] = glance(pose.looks ?? (pose.turnedTo === 'up' || pose.turnedTo === 'down' ? pose.turnedTo : null))
   for (const side of [-1, 1]) {
     pen.shape([side * 8, -2, side * 9, -38, side * 32, -38, side * 31, -2], { fill: PAPER, tone: 2, angle: 1.2, w: 1.6 })
-    // Happier, it keeps time with one foot: the toes come up on the beat and two short strokes mark where they left.
+    // Happier, it keeps time with one foot: the toes come up on the beat.
     const tap = side === 1 && pose.mood === 'happier' && pose.frame % 2 === 1 ? 9 : 0
     pen.shape([side * 4, 0, side * 6, -8, side * 22, -11 - tap * 0.6, side * 38, -7 - tap, side * 40, -tap], { fill: PAPER, w: 1.6 })
     for (const toe of [14, 23, 31]) pen.line([side * toe, -8 - tap * (toe / 40), side * (toe + 1), -1 - tap * (toe / 40)], 0.8)
-    if (side === 1 && pose.mood === 'happier') { pen.line([44, -3, 50, -5], 1.2); pen.line([44, 2, 51, 2], 1.2) }
   }
   // The body, hairy all over, so hatched; the hair hangs in a fringe at the hem.
   const body = [-38, -34, -50, -64, -46, -100, -30, -122, 0, -128, 30, -122, 46, -100, 50, -64, 38, -34, 20, -28, 0, -32, -20, -28]
@@ -97,8 +106,10 @@ function troll(pen: Pen, pose: Pose): void {
   pen.tube([-44, -98, -30, -78, 8, -76], 11, PAPER, 1.5)
   pen.ellipse(15, -77, 8, 7, { fill: PAPER, w: 1.5 })
   pen.ellipse(62, -92, 8.5, 6.5, { fill: PAPER, w: 1.5 })
-  pen.line([57, -94, 57, -89], 0.8)
-  pen.line([62, -95, 62, -90], 0.8)
+  // Three knuckles in a fan on the fist at the valves.
+  pen.line([57, -94, 56.5, -89], 0.8)
+  pen.line([61, -95, 61, -90], 0.8)
+  pen.line([65, -94, 65.5, -89], 0.8)
   // The head: no neck, ears out, a tuft, two small eyes close over a great nose, cheeks full of air.
   for (const side of [-1, 1]) pen.shape([side * 24, -128, side * 40, -142, side * 44, -128, side * 34, -118], { fill: PAPER, tone: 1, w: 1.5 })
   pen.shape([-28, -112, -30, -130, -18, -146, 0, -150, 18, -146, 30, -130, 28, -112, 14, -100, -14, -100], { fill: PAPER, w: 1.8 })
@@ -110,7 +121,8 @@ function troll(pen: Pen, pose: Pose): void {
     pen.line([side * (11 + puff), -109, side * (13 + puff * 1.2), -104], 0.7)
   }
   pen.shape([-8, -113, -9, -125, 0, -131, 9, -125, 8, -113, 0, -108], { fill: PAPER, tone: 1, angle: 1.2, w: 1.6 })
-  if (pose.awake || pose.looks) { pen.dot(-9 + lookX * 3.2, -132 + lookY * 2.4, 1.9); pen.dot(9 + lookX * 3.2, -132 + lookY * 2.4, 1.9) } else { shut(pen, -10, -132, 4); shut(pen, 10, -132, 4) }
+  // Asleep, something that makes it look opens one eye and no more.
+  if (pose.awake) { pen.dot(-9 + lookX * 3.2, -132 + lookY * 2.4, 1.9); pen.dot(9 + lookX * 3.2, -132 + lookY * 2.4, 1.9) } else if (pose.looks) { shut(pen, -10, -132, 4); pen.dot(9 + lookX * 3.2, -132 + lookY * 2.4, 1.9) } else { shut(pen, -10, -132, 4); shut(pen, 10, -132, 4) }
   // The brows: level and heavy, and one goes up when something makes it look round.
   pen.line([-18, -137 - (lookX < 0 || lookY < 0 ? 3 : 0) - (sulks ? 4 : 0), -5, -135 + (sulks ? 2 : 0)], sulks ? 3.4 : 2.4)
   pen.line([5, -135 + (sulks ? 2 : 0), 18, -137 - (lookX > 0 || lookY < 0 ? 3 : 0) - (sulks ? 4 : 0)], sulks ? 3.4 : 2.4)
@@ -137,12 +149,13 @@ function bat(pen: Pen, pose: Pose): void {
     pen.shape([side * 14, -78, side * 23, -88, side * 30, -88, side * 30, -74, side * 25, -62], { fill: PAPER, tone: 4, angle: 1.2, w: 1.7 })
     pen.line([side * 30, -88, side * 34, -93, side * 31, -96], 1.5)
   }
-  // Cross, it wraps itself tighter: the cloak pulled narrow and crossed over in front.
+  // Cross, it wraps itself tighter: the cloak pulled narrow, its folds drawn across one way.
   const tight = pose.mood === 'cross' ? 0.72 : 1
   const cloak = [-19, -80, -27 * tight, -44, -24 * tight, -6, -16 * tight, -14, -8 * tight, -5, 0, -13, 8 * tight, -5, 16 * tight, -14, 24 * tight, -6, 27 * tight, -44, 19, -80, 0, -86]
   pen.shape(cloak, { fill: PAPER, tone: 4, angle: 1.2, w: 1.9 })
   pen.tone(cloak, 2, 0.2, false)
-  if (tight < 1) { pen.line([-17, -74, 6, -40, 10, -12], 2.4, false, PAPER); pen.line([17, -74, -6, -46, -10, -14], 2.4, false, PAPER) }
+  // Two folds lying the same way and never meeting: two bars that crossed here would read as a sign.
+  if (tight < 1) { pen.line([-15, -74, -9, -44, -6, -12], 2.4, false, PAPER); pen.line([3, -76, 9, -44, 12, -14], 2.4, false, PAPER) }
   else for (const x of [-13, 0, 13]) pen.line([x * 0.4, -78, x * 1.1, -12], 2.2, false, PAPER)
   // The head, tipped back to stare up at a door when it stands in the lobby.
   const g = pen.ctx
@@ -175,8 +188,9 @@ function bat(pen: Pen, pose: Pose): void {
   pen.shape([0, -3, 1, 1, 2, -3], { fill: PAPER, w: 0.8, sharp: true })
   if (pose.awake) { const ex = pose.looks ? batX * 0.9 : pose.stares ? -0.5 : -0.3, ey = pose.looks ? batY * 0.9 : pose.stares ? -0.8 : 0; open(pen, -9, -13.5, 4.2, ex, ey); open(pen, 6.5, -14, 4.2, ex, ey) }
   pen.shape([-15, -22 + down, -14, -29 + down, -8, -32 + down, 0, -31 + down, 8, -32 + down, 14, -29 + down, 15, -22 + down, 9, -18 + down, 3, -19 + down, 0, -21 + down, -3, -19 + down, -9, -18 + down], { fill: SPOT, w: 1.6 })
-  pen.line([-10, -26 + down, -7, -24 + down, -4, -26 + down], 1)
-  pen.line([4, -26 + down, 7, -24 + down, 10, -26 + down], 1)
+  // Two round studs on the mask where its eyes are: a small bent stroke there would read as a tick when the mask is lifted off one of them.
+  pen.dot(-7, -25 + down, 1.4)
+  pen.dot(7, -25 + down, 1.4)
   // Asleep and disturbed, or knocked at: one corner of the mask is lifted and one eye looks out from under it.
   if (!pose.awake && (flat || pose.looks)) {
     const side = batX > 0 ? 1 : -1
@@ -194,6 +208,8 @@ function blob(pen: Pen, pose: Pose): void {
   const [lookX, lookY] = glance(pose.looks)
   const g = pen.ctx
   g.save()
+  // Cross at something that comes through its floor or its ceiling, the whole mound tips that way under its pillow: back to face the ceiling, forward to face the floor. The pillow stays over all of its eyes.
+  if (cross && !pose.looks) g.rotate(pose.turnedTo === 'up' ? -0.15 : pose.turnedTo === 'down' ? 0.15 : 0)
   if (!inBed) {
     // Up and about: two pyjama legs and slippers, and the mound comes down onto them.
     legs(pen, 15, -34, SPOT)
@@ -210,10 +226,12 @@ function blob(pen: Pen, pose: Pose): void {
   if (!cross) {
     // Content: its eyes, of which there are many, and the pillow hugged to its front.
     const eyes = [[-20, -96], [-8, -100], [5, -99], [17, -93], [-14, -86], [0, -88], [12, -83]] as const
-    // Happier, every one of its eyes is open, and wide. Asleep, a knock opens the two nearest it.
+    // Happier, every one of its eyes is open, and wide.
     const wide = pose.mood === 'happier'
-    for (const [x, y] of eyes) {
-      const roused = !!pose.looks && (lookX !== 0 ? x * lookX > 10 : y * lookY > -90 * lookY)
+    // Asleep, a knock opens one eye: the one of its many that is nearest the way it looks.
+    const nearest = eyes.reduce((best, eye, index) => (eye[0] * lookX + eye[1] * lookY > eyes[best][0] * lookX + eyes[best][1] * lookY ? index : best), 0)
+    for (const [index, [x, y]] of eyes.entries()) {
+      const roused = !!pose.looks && index === nearest
       if (pose.awake || wide || roused) open(pen, x, y, wide ? 4.3 : 3.4, pose.looks ? lookX * 0.9 : wide ? 0 : -0.5, pose.looks ? lookY * 0.9 : 0)
       else shut(pen, x, y, 3)
     }
@@ -232,11 +250,13 @@ function blob(pen: Pen, pose: Pose): void {
     pen.line([14, -128, 26, -118], 0.8)
     for (const [x, y] of [[-42, -113], [40, -115]] as const) {
       pen.ellipse(x, y, 6.5, 5.5, { fill: PAPER, w: 1.4 })
-      pen.line([x - 3, y - 1, x - 3, y + 4], 0.7)
-      pen.line([x + 1, y - 1, x + 1, y + 4], 0.7)
+      // Three knuckles in a fan: two upright bars in an oval would read as a sign.
+      pen.line([x - 4, y, x - 4.5, y + 4], 0.7)
+      pen.line([x - 0.5, y - 1, x - 0.5, y + 4], 0.7)
+      pen.line([x + 3, y, x + 3.5, y + 4], 0.7)
     }
-    pen.line([-33, -72, -29, -77, -24, -73, -19, -78, -14, -74], 1.7)
-    pen.line([-36, -84, -26, -87], 2.2)
+    // Its mouth, a long pulled thread that wavers in more than six strokes, and no brow: a short bar alone, or four strokes of zigzag, would read as a sign.
+    pen.line([-36, -73, -33, -76, -30, -73, -27, -76, -24, -73, -21, -76, -18, -73, -15, -76, -12, -74], 1.5)
     // A knock: one eye comes out from under the pillow to see.
     if (pose.looks) open(pen, lookX > 0 ? 14 : -8, -88, 3.6, lookX * 0.9, lookY * 0.9)
   }
@@ -271,8 +291,11 @@ function yeti(pen: Pen, pose: Pose): void {
     }
     return out
   }
-  const melts = pose.mood === 'cross', perky = pose.mood === 'happier'
-  const [lookX, lookY] = glance(pose.looks ?? (pose.turnedTo === 'up' || pose.turnedTo === 'down' ? pose.turnedTo : null))
+  // Cross, it frowns. Cross at warmth it melts as well: lower and wider, running at the elbows, standing in what has run off. A noise alone melts nothing.
+  const cross = pose.mood === 'cross', melts = cross && !pose.woken, perky = pose.mood === 'happier'
+  // Drawn front on, it cannot be turned to a wall by mirroring: cross, its eyes go to whichever side its trouble comes through, left or right as well as up or down.
+  // A trouble with no side (a stove in its own room) takes its eyes to the floor: it faces out of the page, and a cross guest never looks at the child.
+  const [lookX, lookY] = glance(pose.looks ?? pose.toward ?? (pose.turnedTo === 'up' || pose.turnedTo === 'down' ? pose.turnedTo : cross ? 'down' : null))
   const g = pen.ctx
   // Too warm, it sags toward a puddle: a pool spreads under the chair, and all of it is wider and lower than it was.
   if (melts) {
@@ -303,26 +326,26 @@ function yeti(pen: Pen, pose: Pose): void {
   for (const side of [-1, 1]) {
     pen.shape(shag([side * 34, -108, side * 48, -100, side * 50, -62, side * 36, -62], 3), { fill: PAPER, w: 1.5, sharp: true })
     pen.ellipse(side * 43, -56, 8.5, 7.5, { fill: SPOT, w: 1.6 })
-    pen.line([side * 39, -54, side * 39, -50], 0.8)
-    pen.line([side * 44, -53, side * 44, -49], 0.8)
+    // Three knuckles in a fan on each fist.
+    pen.line([side * 39, -54, side * 38.5, -50], 0.8)
+    pen.line([side * 43, -53, side * 43, -49], 0.8)
+    pen.line([side * 47, -54, side * 47.5, -50], 0.8)
   }
   // The face, which goes where it is looking: the whole plate of it slides in the fur.
   g.save()
   g.translate(lookX * 5, lookY * 5)
   pen.shape([-15, -112, -13, -126, 0, -131, 13, -126, 15, -112, 8, -100, 0, -97, -8, -100], { fill: SPOT, w: 1.7 })
-  if (pose.awake || pose.looks) { pen.dot(-6 + lookX * 2, -117 + lookY * 1.5, 1.8); pen.dot(6 + lookX * 2, -117 + lookY * 1.5, 1.8) } else { shut(pen, -6.5, -117, 3.6); shut(pen, 6.5, -117, 3.6) }
+  if (pose.awake) { pen.dot(-6 + lookX * 2, -117 + lookY * 1.5, 1.8); pen.dot(6 + lookX * 2, -117 + lookY * 1.5, 1.8) } else if (pose.looks) { shut(pen, -6.5, -117, 3.6); pen.dot(6 + lookX * 2, -117 + lookY * 1.5, 1.8) } else { shut(pen, -6.5, -117, 3.6); shut(pen, 6.5, -117, 3.6) }
   pen.dot(-2, -110, 0.9)
   pen.dot(2, -110, 0.9)
   pen.line([-5, -104, 5, -104], 1.5)
-  if (melts) { pen.line([-13, -122, -4, -120], 2); pen.line([4, -120, 13, -122], 2) }
+  if (cross) { pen.line([-13, -122, -4, -120], 2); pen.line([4, -120, 13, -122], 2) }
   g.restore()
   for (let x = -14; x <= 14; x += 5.5) pen.line([x, -134, x + 1.5, -127 + (Math.abs(x) > 8 ? 3 : 0)], 1)
   g.restore()
-  // Melting, it drips: beads run off its elbows and its chin.
-  if (melts) for (const [x, y, len] of [[-58, -52, 16], [56, -56, 20], [-20, -34, 14], [24, -30, 18], [0, -76, 9]] as const) {
-    pen.line([x, y, x + 0.6, y + len], 1.2, true)
-    pen.ellipse(x + 0.6, y + len + 2.4, 2.2, 2.8, { fill: PAPER, w: 1.1 })
-  }
+  // Melting, it runs: tongues of melt hang off its elbows, its fur and its chin, each one closed shape with a
+  // round end, over the pool it stands in. No stroke ends in a bead: a dot with a tail is a mark of writing.
+  if (melts) for (const [x, y, len, w] of [[-58, -52, 16, 2.6], [56, -56, 20, 3], [-20, -34, 14, 2.4], [24, -30, 18, 2.8], [0, -76, 9, 2.2]] as const) run(pen, x, y, len, w)
 }
 
 /** How wide a guest rolled in the quilt is, from its middle to its side. */
@@ -338,8 +361,11 @@ function wrapped(pen: Pen, id: GuestId, pose: Pose): void {
   // However short the guest, the roll is tall enough to be a roll.
   const half = ROLL[id], foot = inBed ? -40 : -7, top = Math.min(foot - 84, -(TOP[id] - (id === 'bat' ? 34 : id === 'troll' ? 22 : 12)))
   const tall = foot - top, eyesAt = top + tall * 0.24
-  const [lookX, lookY] = glance(pose.looks)
-  const seeing = pose.awake || !!pose.looks
+  // A knock takes its eyes; otherwise, cross, they go to the wall, floor or ceiling its trouble comes through, and to the floor when its trouble has no side: a roll faces out of the page, and a cross guest never looks at the child.
+  const cross = pose.mood === 'cross'
+  const [lookX, lookY] = glance(pose.looks ?? pose.toward ?? (cross ? 'down' : null))
+  // Asleep, whatever makes it look opens one eye and no more.
+  const seeing = pose.awake || !!pose.looks || (cross && !!pose.toward), one = !pose.awake
   // What pokes out behind or above the roll goes down first.
   if (id === 'troll') {
     pen.shape([4, top + 10, 12, top - 16, 40, top - 26, 46, top - 8, 30, top + 14], { fill: PAPER, tone: 2, angle: 0.4, w: 1.8 })
@@ -370,8 +396,12 @@ function wrapped(pen: Pen, id: GuestId, pose: Pose): void {
     for (let i = 0; i < 5; i++) pen.line([-10 - i * 4, top - 6 - i * 3.4, -15 - i * 4, top - 2 - i * 3.6], 0.8)
     pen.rect(-12, top - 3, 17, 8, { fill: PAPER, tone: 2, w: 1.5 })
   }
-  // The feet, which is all there is to see of the rest of it.
-  if (!inBed) for (const side of [-1, 1]) pen.shape([side * 3, 0, side * 4, -8, side * (half * 0.5), -10, side * (half * 0.9), -6, side * (half * 0.95), 0], { fill: PAPER, w: 1.5 })
+  // The feet, which is all there is to see of the rest of it. Happier in its roll, its toes curl up off the floor.
+  const snug = pose.mood === 'happier'
+  if (!inBed) for (const side of [-1, 1]) {
+    if (snug) pen.shape([side * 3, 0, side * 4, -8, side * (half * 0.5), -11, side * (half * 0.86), -15, side * (half * 1.02), -9, side * (half * 0.8), 0], { fill: PAPER, w: 1.5 })
+    else pen.shape([side * 3, 0, side * 4, -8, side * (half * 0.5), -10, side * (half * 0.9), -6, side * (half * 0.95), 0], { fill: PAPER, w: 1.5 })
+  }
   // The roll itself: quilted in diamonds, a turn of the edge showing down one side, a cord at the neck and at the ankles.
   const roll = [-half, foot - 4, -half - 2, foot - tall * 0.5, -half + 2, top + 8, -half * 0.5, top, half * 0.5, top, half - 2, top + 8, half + 2, foot - tall * 0.5, half, foot - 4, 0, foot]
   pen.shape(roll, { fill: SPOT, w: 0 })
@@ -392,14 +422,34 @@ function wrapped(pen: Pen, id: GuestId, pose: Pose): void {
   // The gap it looks out of, and the eyes in it: as many and of such a kind as it has.
   const gap = id === 'blob' || id === 'fly' || id === 'troll' || id === 'yeti' || id === 'cook' ? half - 6 : half - 3
   pen.shape([-gap, eyesAt, -gap + 4, eyesAt - 9, gap - 4, eyesAt - 9, gap, eyesAt, gap - 4, eyesAt + 9, -gap + 4, eyesAt + 9], { fill: PAPER, w: 1.6 })
-  const eye = (x: number, r: number) => { if (seeing) open(pen, x, eyesAt, r, lookX * 0.9, lookY * 0.9); else shut(pen, x, eyesAt, r) }
-  if (id === 'blob') for (const x of [-20, -10, 0, 10, 20]) eye(x, 3.4)
-  else if (id === 'fly') for (const x of [-10, 10]) pen.ellipse(x, eyesAt, 8, 7, { fill: PAPER, tone: 4, angle: 0.4, w: 1.5 })
+  // Happier in its roll, an eye that is open is open wide. `lead` is the one eye a sleeper opens.
+  const eye = (x: number, r: number, lead = true) => { if (seeing && (lead || !one)) open(pen, x, eyesAt, snug ? r * 1.25 : r, lookX * 0.9, lookY * 0.9); else shut(pen, x, eyesAt, r) }
+  if (id === 'blob') for (const x of [-20, -10, 0, 10, 20]) eye(x, x % 20 === 0 ? 3.4 : 2.7, x === 10)
+  else if (id === 'fly') {
+    // Its great eyes have no pupils: they shift the way it looks, and asleep each is under a lid, of which whatever makes it look lifts one.
+    for (const x of [-10, 10]) {
+      pen.ellipse(x + lookX * 2.5, eyesAt + lookY * 2, 8, 7, { fill: PAPER, tone: 4, angle: 0.4, w: 1.5 })
+      if (!pose.awake && !(seeing && x > 0)) {
+        pen.shape([x - 9, eyesAt + 0.5, x - 7.5, eyesAt - 5, x, eyesAt - 8, x + 7.5, eyesAt - 5, x + 9, eyesAt + 0.5], { fill: PAPER, w: 1.3 })
+        pen.line([x - 9.5, eyesAt + 0.5, x + 9.5, eyesAt + 0.5], 2.4, true)
+      }
+    }
+  }
   else if (id === 'lizard') { eye(-8, 4.2); pen.dot(-17, eyesAt + 3, 1) }
-  else if (id === 'singer') for (const x of [-7, 7]) pen.ellipse(x + lookX * 1.5, eyesAt + lookY, 2.6, 3.2, { fill: PAPER, w: 1.4 })
-  else { const apart = Math.min(11, half * 0.36); eye(-apart, 3.6); eye(apart, 3.6) }
+  else if (id === 'singer') for (const x of [-7, 7]) {
+    if (seeing && (x > 0 || !one)) {
+      pen.ellipse(x + lookX * 1.5, eyesAt + lookY, 2.6, 3.2, { fill: PAPER, w: 1.4 })
+      // Cross, her blank eyes get pupils, which go where she glares and never out of the page.
+      if (cross) pen.dot(x + lookX * 3, eyesAt + lookY * 2.9, 1.15)
+    } else shut(pen, x, eyesAt, 3)
+  }
+  else { const apart = Math.min(11, half * 0.36); eye(-apart, 3.6, false); eye(apart, 3.6) }
   // It minds: the brows say so, and nothing else can.
-  if (pose.mood === 'cross' && id !== 'fly') { pen.line([-gap + 3, eyesAt - 8, -3, eyesAt - 4], 2.2); pen.line([3, eyesAt - 4, gap - 3, eyesAt - 8], 2.2) }
+  if (cross) { pen.line([-gap + 3, eyesAt - 8, -3, eyesAt - 4], 2.2); pen.line([3, eyesAt - 4, gap - 3, eyesAt - 8], 2.2) }
+  // It loves it: loose feathers stand out of the roll at its neck on both sides, each a single bent stroke, and its toes are curled.
+  if (snug) for (const [x, y, lean] of [[-half - 3, top + tall * 0.36, -1], [-half - 2, top + tall * 0.47, -1], [half + 4, top + tall * 0.33, 1], [half + 2, top + tall * 0.45, 1]] as const) {
+    pen.line([x, y, x + lean * 7, y - 6, x + lean * 12, y - 4], 1.2)
+  }
   if (inBed) bedclothes(pen)
 }
 
@@ -424,16 +474,43 @@ const SEATED = 120
  */
 function lapRug(pen: Pen, half: number): void {
   const rug = [-half - 4, -40, -half * 0.5, -47, -4, -42, half * 0.5, -47, half + 4, -40, half + 7, -22, half + 4, -6, -half - 4, -6, -half - 7, -22]
-  pen.shape(rug, { fill: PAPER, tone: 2, angle: 0.5, w: 0 })
+  pen.shape(rug, { fill: PAPER, w: 0 })
   pen.inside(rug, false, () => {
-    // A plaid: a few broad bands each way.
-    for (let x = -half; x <= half; x += half * 0.5) pen.tone([x - 3, -50, x + 3, -50, x + 3, 0, x - 3, 0], 4, 1.2)
-    for (const y of [-34, -18]) pen.tone([-half - 8, y - 2.5, half + 8, y - 2.5, half + 8, y + 2.5, -half - 8, y + 2.5], 4, 0.2)
+    // Striped, in a few broad bands that all run one way and are hatched one way, on bare cloth: nothing in it crosses.
+    for (let x = -half; x <= half; x += half * 0.5) pen.tone([x - 3, -50, x + 3, -50, x + 3, 0, x - 3, 0], 2, 1.2)
   })
   pen.shape(rug, { w: 1.8 })
   for (let x = -half - 2; x <= half + 2; x += 5) pen.line([x, -6, x + 0.6, -1], 1)
   // The toes of its two feet, out from under.
   for (const side of [-1, 1]) pen.shape([side * half * 0.2, 0, side * half * 0.24, -7, side * half * 0.6, -9, side * half * 0.86, -5, side * half * 0.9, 0], { fill: PAPER, w: 1.5 })
+}
+
+/** Where each guest's bag stands in the lobby, from the middle of its feet. */
+const BAG_AT: Record<GuestId, number> = { troll: -52, bat: 40, blob: 46, yeti: 56, lizard: 40, cook: 34, fly: 40, singer: 44 }
+
+/** A box in a figure's own units, from the middle of its feet: left, top, right, bottom, as the figure is drawn before it is mirrored. */
+export type FigureBox = readonly [number, number, number, number]
+
+/**
+ * What is drawn in the spot colour and reaches out of the middle of a figure's
+ * box, where the body is: the troll's horn, the blob's arms, the yeti's hands,
+ * its cloud and the string to it, the lizard's head and arms, the singer's
+ * music, and the bag every guest stands by in the lobby. The spot colour
+ * marks what can be touched, so a finger on any of these takes the guest
+ * (`reachBoxes` in inkPlaces.ts). Measured from the drawings; a figure that
+ * is redrawn wider has its box widened here.
+ */
+export function spotReach(id: GuestId, pose: { awake: boolean; wrapped: boolean; bag: boolean }): FigureBox[] {
+  const boxes: FigureBox[] = []
+  if (pose.bag) boxes.push([BAG_AT[id] - 17, -31, BAG_AT[id] + 17, 0])
+  if (id === 'yeti') boxes.push([-37, -197, 41, -151], [20, -153, 58, -56])
+  if (pose.wrapped) return boxes
+  if (id === 'troll') boxes.push([30, -150, 86, -32])
+  if (id === 'blob') boxes.push([-66, -96, 66, -60])
+  if (id === 'yeti') boxes.push([-58, -52, 58, -38])
+  if (id === 'lizard') boxes.push([-90, -162, 20, -100], [-60, -104, -50, -44])
+  if (id === 'singer' && pose.awake) boxes.push([32, -116, 76, -42])
+  return boxes
 }
 
 /** Draws one guest in the pose given. */
@@ -450,6 +527,8 @@ export function drawGuest(pen: Pen, id: GuestId, pose: Pose): void {
   }
   if (pose.wrapped) wrapped(pen, id, pose)
   else FIGURES[id](pen, pose)
+  // In the lobby every guest has its bag stood at its feet, on the side it has its back to. The bat's is drawn with it.
+  if (pose.bag && id !== 'bat') bag(pen, BAG_AT[id])
   if (sink) {
     g.restore()
     lapRug(pen, LAP[id])

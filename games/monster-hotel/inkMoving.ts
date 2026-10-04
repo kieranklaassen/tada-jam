@@ -20,7 +20,8 @@ import { drawWhole } from './symbols'
 type Standing = readonly { guest: InkGuest; spot: Spot }[]
 
 /** How much of a cupboard slot a thing fills, and how far above the slot's foot its shelf is, in the drawing's units. */
-const SLOT_FILL = 0.8, SHELF = 9.5
+const SLOT_FILL = 0.8
+export const SHELF = 9.5
 
 /** The box a thing is drawn in and the form it takes there. In the cupboard it stands on its shelf, a little smaller than the slot. */
 function boxOf(thing: InkThing, page: PageLayout, standing: Standing): { box: Rect; form: ThingForm } | null {
@@ -34,10 +35,20 @@ function boxOf(thing: InkThing, page: PageLayout, standing: Standing): { box: Re
   return { box: { x: box.x + (box.w - w) / 2, y: box.y + box.h - SHELF * page.scale - h, w, h }, form }
 }
 
-/** The numeral of a dial, laid beside the flames or icicles it counts: ink with a paper edge, so it reads on hatching. */
-function numeral(ctx: CanvasRenderingContext2D, thing: InkThing, form: ThingForm, w: number, h: number): number {
+/** A transform turned back about a point when it has been turned half round, so what is drawn at that point stands the right way up. */
+export function upright(t: Mat, x: number, y: number): Mat {
+  return t[0] < 0 ? mul(t, [-1, 0, 0, -1, 2 * x, 2 * y]) : t
+}
+
+/**
+ * The numeral of a dial, laid beside the flames or icicles it counts: ink with a paper edge, so it reads on
+ * hatching. `t` is the thing's own transform. On a page that is turned half round (the bat's) the numeral is
+ * turned back about its own middle, so a numeral is always the right way up and never reads as anything else.
+ */
+function numeral(ctx: CanvasRenderingContext2D, thing: InkThing, form: ThingForm, w: number, h: number, t: Mat): number {
   const at = numeralSpot(thing.kind, form, w, h)
   if (!at) return 0
+  ctx.setTransform(...upright(t, at.x, at.y))
   drawWhole(ctx, thing.dial, at.x, at.y, at.size, { fill: INK, edge: PAPER, edgeWidth: at.size * 0.3 })
   return 1
 }
@@ -63,8 +74,7 @@ export function placedThing(stage: Stage, ctx: CanvasRenderingContext2D, scene: 
   const x = box.x + box.w / 2 + (body?.dx ?? 0) * u, y = box.y + box.h + (body?.dy ?? 0) * u
   stage.blit(ctx, sprite, m, x, y, flip * (body?.sx ?? 1), body?.sy ?? 1, body?.rot ?? 0)
   if (!scene.numerals) return 1
-  ctx.setTransform(...mul(m, [u, 0, 0, u, x, y]))
-  return 1 + numeral(ctx, thing, form, w, h)
+  return 1 + numeral(ctx, thing, form, w, h, mul(m, [u, 0, 0, u, x, y]))
 }
 
 /** Whether a thing belongs to a room: stands in it, is fixed to one of its walls or its floor or ceiling, or is with a guest who is in it. */
@@ -107,8 +117,7 @@ export function carriedThing(stage: Stage, ctx: CanvasRenderingContext2D, scene:
   const fx = held.x - s * tall, fy = gy + c * tall
   stage.blit(ctx, sprite, screen, fx, fy, 1, 1, held.swing)
   if (scene.numerals) {
-    ctx.setTransform(...mul(screen, [c * u, s * u, -s * u, c * u, fx, fy]))
-    count += numeral(ctx, thing, 'slot', IN_HAND, IN_HAND)
+    count += numeral(ctx, thing, 'slot', IN_HAND, IN_HAND, mul(screen, [c * u, s * u, -s * u, c * u, fx, fy]))
   }
   return count
 }
@@ -135,12 +144,12 @@ export function porter(stage: Stage, ctx: CanvasRenderingContext2D, scene: InkSc
   const x = box.x + (52 + dx) * u, y = box.y + box.h + (dy - 3) * u
   stage.blit(ctx, stage.sprite('porter', 160, 126, 62, 120, u, (pen) => drawPorter(pen)), m, x, y, 1 - slow * 0.5, 1 + slow, 0)
   if (dx === 0 && dy === 0) return 1
-  // Two spokes across the trolley's wheel, which turn by as far as he has gone.
+  // Three spokes across the trolley's wheel, a hand's turn apart, which turn by as far as he has gone. (Two at right angles would read as a sign.)
   const turn = dx / TROLLEY_WHEEL.r, r = (TROLLEY_WHEEL.r - 1.5) * u
   const hx = x + TROLLEY_WHEEL.x * u, hy = y + TROLLEY_WHEEL.y * u
   ctx.setTransform(...m)
   ctx.beginPath()
-  for (const a of [turn, turn + Math.PI / 2]) {
+  for (const a of [turn, turn + Math.PI / 3, turn + (2 * Math.PI) / 3]) {
     ctx.moveTo(hx - Math.cos(a) * r, hy - Math.sin(a) * r)
     ctx.lineTo(hx + Math.cos(a) * r, hy + Math.sin(a) * r)
   }
@@ -148,6 +157,47 @@ export function porter(stage: Stage, ctx: CanvasRenderingContext2D, scene: InkSc
   ctx.lineWidth = 1.3 * u
   ctx.stroke()
   return 2
+}
+
+/** How much of its width the coach door's leaf shows when it stands open. */
+const OPEN_LEAF = 0.62
+
+/**
+ * What the waiting coach shows besides its open door: the next coach-load
+ * looking out of the dark doorway, three pairs of eyes that blink in turn and
+ * look toward the house, and its exhaust puffing behind it.
+ */
+function waiting(ctx: CanvasRenderingContext2D, page: PageLayout, seconds: number): number {
+  const u = page.scale, door = page.coachDoor, box = page.coach
+  const whites: [number, number][] = [], pupils: [number, number][] = []
+  ;([[0.36, 0.2, 0], [0.64, 0.42, 1.3], [0.4, 0.64, 2.9]] as const).forEach(([fx, fy, phase], pair) => {
+    // Each pair is shut for a moment every few seconds, and never two together.
+    if ((seconds + phase) % (3.4 + pair * 0.5) < 0.14) return
+    const cx = door.x + door.w * fx, cy = door.y + door.h * fy + Math.sin(seconds * 1.1 + phase) * 1.2 * u
+    for (const side of [-1, 1]) { whites.push([cx + side * 5 * u, cy]); pupils.push([cx + side * 5 * u - 1.5 * u, cy + 0.3 * u]) }
+  })
+  ctx.beginPath()
+  for (const [x, y] of whites) { ctx.moveTo(x + 3.8 * u, y); ctx.ellipse(x, y, 3.8 * u, 4.4 * u, 0, 0, Math.PI * 2) }
+  ctx.fillStyle = PAPER
+  ctx.fill()
+  ctx.beginPath()
+  for (const [x, y] of pupils) { ctx.moveTo(x + 1.6 * u, y); ctx.arc(x, y, 1.6 * u, 0, Math.PI * 2) }
+  ctx.fillStyle = INK
+  ctx.fill()
+  // The exhaust, low at the back: three puffs that leave the pipe one after another, swell and thin away.
+  ctx.beginPath()
+  for (let i = 0; i < 3; i++) {
+    const t = (seconds * 0.9 + i / 3) % 1, r = (2.5 + t * 6.5) * u
+    const x = box.x - (6 + t * 26) * u, y = box.y + box.h - (12 + t * 16) * u + Math.sin(t * 5 + i) * 1.5 * u
+    ctx.moveTo(x + r, y)
+    ctx.arc(x, y, r, 0, Math.PI * 2)
+  }
+  ctx.fillStyle = PAPER
+  ctx.fill()
+  ctx.strokeStyle = INK
+  ctx.lineWidth = 1.1 * u
+  ctx.stroke()
+  return 3
 }
 
 /**
@@ -166,8 +216,9 @@ export function coach(stage: Stage, ctx: CanvasRenderingContext2D, scene: InkSce
   // On the move it rides up and down on its springs.
   const lift = Math.abs(Math.sin(seconds * 11)) * 1.8 * u
   const w = box.w / u, h = box.h / u, doorW = door.w / u, doorH = door.h / u, doorX = (door.x - box.x) / u
-  /** The door's leaf in the coach's own units: shut in its doorway, or swung out toward us on its hinges, which makes it narrow. */
-  const leafAt = open ? { x: doorX - doorW * 0.26, sx: 0.3 } : { x: doorX, sx: 1 }
+  /** The door's leaf in the coach's own units: shut in its doorway, or swung right out on its hinges and standing wide beside the doorway, most of its face still seen. An open door is the one sign that a cycle has ended, so it is no thin strip. */
+  const leafAt = open ? { x: doorX - doorW * OPEN_LEAF + 2, sx: OPEN_LEAF } : { x: doorX, sx: 1 }
+  const waits = open && !!scene.coachWaits
   if (at === 0) {
     // Standing at the kerb it is one figure: body, wheels and door together.
     const whole = stage.sprite(`coach at rest ${Number(open)}`, w + 30, h + 22, 8, 10, u, (pen) => {
@@ -180,9 +231,11 @@ export function coach(stage: Stage, ctx: CanvasRenderingContext2D, scene: InkSce
       drawCoachDoor(pen, doorW, doorH)
       g.restore()
     })
-    stage.blit(ctx, whole, m, box.x, box.y, 1, 1, 0)
-    if (open) return 1
+    // Waiting for the child with the next coach-load in it, its engine runs: the whole coach shudders on its springs.
+    stage.blit(ctx, whole, m, box.x, box.y + (waits ? Math.sin(seconds * 31) * 0.55 * u : 0), 1, 1, 0)
     ctx.setTransform(...m)
+    if (waits) return 1 + waiting(ctx, page, seconds)
+    if (open) return 1
     return 1 + lump(ctx, page, seconds)
   }
   ctx.save()

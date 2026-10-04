@@ -83,13 +83,18 @@ const BOX = 150
 
 /**
  * Where a guest's feet go on the plain page and how far it is turned there.
- * Everyone stands at its spot. The bat, on its own upside-down page, is
- * turned half round within the very box a finger finds it in, so that it
- * alone reads the right way up; `cord` is then the point on its ceiling that
- * it hangs from, by a cord to its feet.
+ * Everyone stands at its spot. The bat asleep in a room hangs: it is turned
+ * half round within the very box a finger finds it in, and `cord` is the
+ * point on its ceiling that it hangs from, by a cord to its feet. On its own
+ * upside-down page it hangs so awake or asleep, and so alone reads the right
+ * way up.
  */
 export function standOf(page: PageLayout, view: InkView | null | undefined, guest: InkGuest, spot: Spot): { x: number; y: number; turn: number; cord: { x: number; y: number } | null } {
-  if (!view || view.from !== guest.id || !HANDS[guest.id].hangs || !upsideDown(view.from, view.inHand)) return { x: spot.x, y: spot.y, turn: 0, cord: null }
+  const hangs = HANDS[guest.id].hangs
+  // The bat sleeps hanging, on whoever's page it is: head down from its ceiling, in the same box a finger finds it in. Not while it is rolled in the quilt, and not in the lobby or on the bench, where it waits awake.
+  const asleep = hangs && !guest.awake && !guest.wrapped && !guest.carried && typeof guest.place === 'object'
+  const own = !!view && view.from === guest.id && hangs && upsideDown(view.from, view.inHand)
+  if (!asleep && !own) return { x: spot.x, y: spot.y, turn: 0, cord: null }
   const u = page.scale, y = spot.y - BOX * u
   const ceiling = guest.place === 'lobby' ? page.lobby.y : guest.place === 'bench' ? null : page.rooms[guest.place.room]?.rect.y ?? null
   return { x: spot.x, y, turn: Math.PI, cord: ceiling === null ? null : { x: spot.x, y: ceiling } }

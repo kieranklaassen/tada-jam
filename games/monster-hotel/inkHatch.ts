@@ -133,7 +133,7 @@ export class Pen {
       for (let k = 0; k < count; k++) {
         const t = k / count
         if (sharp) { out.push(x1 + (x2 - x1) * t, y1 + (y2 - y1) * t); continue }
-        // A curve through the points (Catmull-Rom).
+        // A smooth curve through the points.
         const x0 = px(i - 1), y0 = py(i - 1), x3 = px(i + 2), y3 = py(i + 2), t2 = t * t, t3 = t2 * t
         out.push(
           0.5 * (2 * x1 + (x2 - x0) * t + (2 * x0 - 5 * x1 + 4 * x2 - x3) * t2 + (3 * x1 - x0 - 3 * x2 + x3) * t3),

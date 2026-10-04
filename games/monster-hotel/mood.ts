@@ -108,10 +108,15 @@ export function settled(arrangement: Arrangement): boolean {
 
 export type Side = 'left' | 'right' | 'up' | 'down'
 
-/** The side of its room an arrival came through, which is where a cross guest turns. Null when it is made in the same room. */
+/**
+ * The side of its room an arrival came through, which is where a cross guest
+ * turns. What is built into the house comes through the room's own floor or
+ * ceiling: the boiler's warmth from below, the snow hole's cold from above.
+ * Null when a guest or a thing in the same room makes it.
+ */
 export function sideOf(arrangement: Arrangement, arrival: Arrival): Side | null {
   const path = arrival.path
-  if (path.length < 2) return null
+  if (path.length < 2) return 'fixture' in arrival.source.by ? (arrival.source.by.fixture === 'boiler' ? 'down' : 'up') : null
   const here = path[path.length - 1], before = path[path.length - 2]
   const shape = arrangement.house.shape
   if (floorOf(shape, here) !== floorOf(shape, before)) return floorOf(shape, before) > floorOf(shape, here) ? 'up' : 'down'
@@ -132,6 +137,15 @@ export function turnsTo(arrangement: Arrangement, id: GuestId, phase: Phase): Si
   for (const grievance of moodOf(arrangement, id, phase).grievances) {
     const arrival = grievance.kind === 'din' || grievance.kind === 'pong' ? grievance.arrival : grievance.kind === 'too-warm' || grievance.kind === 'too-cold' ? grievance.from[0] : undefined
     const side = arrival ? sideOf(arrangement, arrival) : null
+    if (side) return side
+  }
+  return null
+}
+
+/** Where a guest made happier leans at this hour: toward the wall, floor or ceiling its first delight comes through, or nowhere when it is made in its own room or is the quilt it is rolled in. */
+export function leansTo(arrangement: Arrangement, id: GuestId, phase: Phase): Side | null {
+  for (const delight of moodOf(arrangement, id, phase).delights) {
+    const side = delight.kind === 'wrap' ? null : sideOf(arrangement, delight.arrival)
     if (side) return side
   }
   return null

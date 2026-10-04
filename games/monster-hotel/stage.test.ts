@@ -145,3 +145,15 @@ describe('a walk goes by doors and never through a wall', () => {
     }
   })
 })
+
+describe('the neat way at another hour', () => {
+  it('shows the other hour once the porter has come in and gives the child\'s hour back when he puts things away; cut short before he comes in, no hour is shown', () => {
+    const stage = restStage(), through = recorder()
+    play(neatWay(stage, house, through.hooks, 'night'), through.landing)
+    expect(through.said).toEqual(['porter-trundles', 'mark', 'house', 'porter-shows', 'hour night', 'house', 'porter-goes', 'hour null'])
+    expect(stage.hour).toBe(null)
+    const cut = recorder()
+    play(neatWay(restStage(), house, cut.hooks, 'night'), cut.landing, 0.5)
+    expect(cut.said).toEqual(['porter-trundles'])
+  })
+})

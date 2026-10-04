@@ -48,7 +48,7 @@ export function placesFor(cast: Cast, kind: ThingKind, guests: readonly GuestId[
   return places
 }
 
-/** Every way of placing the cast's things, never the quilt and the pipe on one wall. */
+/** Every way of placing the cast's things that the solver tries: it does not try two things on one wall or floor, though the game allows it. */
 export function* kits(cast: Cast, guests: readonly GuestId[]): Generator<Thing[]> {
   const options = cast.kit.map((kind) => placesFor(cast, kind, guests))
   const things: Thing[] = []

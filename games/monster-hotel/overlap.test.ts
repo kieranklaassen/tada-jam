@@ -123,8 +123,8 @@ describe('nothing passes through anything: things', () => {
           const both: Rect = { x: Math.min(a.x, b.x), y: Math.min(a.y, b.y), w: Math.max(a.x + a.w, b.x + b.w) - Math.min(a.x, b.x), h: Math.max(a.y + a.h, b.y + b.h) - Math.min(a.y, b.y) }
           expect(within(box, both, 1), `${kind} on ${edge.id} stays between its two rooms`).toBe(true)
         }
-        // The quilt and the pipe never share a wall or a floor (the rules send the one that was there back to the cupboard); the clock may hang beside either.
-        for (const [x, y] of pairs(boxes)) if (!(x.kind === 'quilt' && y.kind === 'pipe')) expect(overlap(x.box, y.box), `${x.kind} and ${y.kind} on ${edge.id}`).toBeLessThan(1e-9)
+        // The quilt, the pipe and the clock may all be fixed to one wall or floor, each clear of the others.
+        for (const [x, y] of pairs(boxes)) expect(overlap(x.box, y.box), `${x.kind} and ${y.kind} on ${edge.id}`).toBeLessThan(1e-9)
       }
     })
   }

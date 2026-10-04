@@ -8,6 +8,7 @@ import type { Phase } from './guests'
 import { SHAPES, type House } from './hotel'
 import { PAPER, mulberry32, type Pen } from './inkHatch'
 import { drawBench, drawBoiler, drawKerb, drawLamp, drawLuggage, drawPalm, drawStreetLamp } from './inkProps'
+import { treeOf } from './inkSky'
 import type { PageLayout, Rect, RoomLayout } from './layout'
 
 /** Runs `draw` in the drawing's own units, with the origin moved and, when asked, the picture mirrored. */
@@ -130,26 +131,16 @@ export function paintHouse(pen: Pen, page: PageLayout, house: House, phase: Phas
         const x = plate.x + rng() * plate.w, y = plate.y + rng() * (horizon - plate.y) * 0.85, r = (1.6 + rng() * 2) * u
         g.fillStyle = PAPER
         g.beginPath()
-        g.moveTo(x, y - r * 1.7); g.lineTo(x + r * 0.55, y - r * 0.4); g.lineTo(x + r * 1.5, y); g.lineTo(x + r * 0.55, y + r * 0.4)
-        g.lineTo(x, y + r * 1.7); g.lineTo(x - r * 0.55, y + r * 0.4); g.lineTo(x - r * 1.5, y); g.lineTo(x - r * 0.55, y - r * 0.4)
+        // A round speck, the larger ones a little lopsided: a star with four points is two bars that cross, and would read as a sign.
+        g.ellipse(x, y, r * 0.75, r * (0.62 + rng() * 0.2), rng() * Math.PI, 0, Math.PI * 2)
         g.fill()
       }
     } else {
       pen.tone([plate.x, plate.y, right, plate.y, right, plate.y + plate.h * 0.22, plate.x, plate.y + plate.h * 0.1], 1, -0.2)
     }
 
-    // A bare tree stands behind the lobby, against the sky.
-    const tree = mulberry32(2203)
-    const branch = (x: number, y: number, angle: number, length: number, weight: number, depth: number): void => {
-      const bend = (tree() - 0.5) * 0.5
-      const mx = x + Math.cos(angle + bend) * length * 0.5, my = y + Math.sin(angle + bend) * length * 0.5
-      const ex = mx + Math.cos(angle - bend) * length * 0.5, ey = my + Math.sin(angle - bend) * length * 0.5
-      pen.line([x, y, mx, my, ex, ey], weight)
-      if (depth <= 0) return
-      const forks = depth > 3 ? 2 : tree() < 0.7 ? 2 : 3
-      for (let i = 0; i < forks; i++) branch(ex, ey, angle + (i - (forks - 1) / 2) * (0.75 + tree() * 0.3) + (tree() - 0.5) * 0.3, length * (0.62 + tree() * 0.16), Math.max(0.7 * u, weight * 0.62), depth - 1)
-    }
-    branch(page.lobby.x + page.lobby.w * 0.64, page.canopy.y + page.canopy.h, -Math.PI / 2 - 0.08, Math.min(92 * u, (page.canopy.y - plate.y) * 0.36), 7 * u, 5)
+    // A bare tree stands behind the lobby, against the sky: its boughs are worked out in inkSky.ts, where the crows that sit in it live.
+    for (const bough of treeOf(page)) pen.line([bough.x, bough.y, bough.mx, bough.my, bough.ex, bough.ey], bough.weight)
 
     // The earth under everything, and the street's back wall under the lobby.
     pen.rect(plate.x - 4, ground, page.house.x + page.house.w - plate.x + 4, bottom - ground + 4, { fill: PAPER, tone: 4, angle: -0.6, w: 0 })
@@ -293,8 +284,8 @@ export function paintHouse(pen: Pen, page: PageLayout, house: House, phase: Phas
     const sy = slot.y + slot.h - 9 * u
     pen.rect(slot.x + 3 * u, sy, slot.w - 6 * u, 3.5 * u, { fill: PAPER, tone: 2, angle: 0, w: 1.1 * u })
     for (const bx of [slot.x + 12 * u, slot.x + slot.w - 12 * u]) pen.line([bx, sy + 3.5 * u, bx, sy + 9 * u, bx + (bx < slot.x + slot.w / 2 ? 5 : -5) * u, sy + 3.5 * u], 0.9 * u, true)
-    pen.dot(slot.x + slot.w / 2, slot.y + 13 * u, 1.4 * u)
-    pen.line([slot.x + slot.w / 2, slot.y + 13 * u, slot.x + slot.w / 2 + 1.5 * u, slot.y + 18 * u], 1 * u, true)
+    // The peg in the back of an empty pigeonhole: a round head and no shank, since a dot with a tail could be read as a mark of writing.
+    pen.dot(slot.x + slot.w / 2, slot.y + 13 * u, 1.6 * u)
   }
   pen.rect(lobby.x - 2 * u, cb.y + cb.h - 1 * u, lobby.w + 8 * u, 4 * u, { fill: PAPER, w: 1.2 * u })
   const glass = [canopy.x, canopy.y + canopy.h, canopy.x, canopy.y, canopy.x + canopy.w, canopy.y + canopy.h * 0.55, canopy.x + canopy.w, canopy.y + canopy.h]

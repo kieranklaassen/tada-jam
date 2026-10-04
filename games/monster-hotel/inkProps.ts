@@ -23,8 +23,9 @@ export function drawBoiler(pen: Pen, w: number, h: number): void {
   pen.rect(cx - 10, 6, 20, 5, { fill: PAPER, w: 1.2 })
   pen.tube([cx + r - 4, 58, 150, 58, 150, -2], 8, PAPER, 1.3, true)
   pen.tone([151, -2, 154, -2, 154, 54, 151, 54], 3, -1.2)
-  pen.ellipse(150, 34, 9, 3.2, { fill: PAPER, w: 1.2 })
-  pen.line([150, 34, 150, 26], 1.2, true)
+  // The stopcock: a stub out of one side of the branch with a round knob on it (a handle laid across the pipe would make a cross).
+  pen.line([154, 34, 163, 34], 2.4, true)
+  pen.dot(165, 34, 3.2)
   // The drum, round in its hatching: bare on the lit side, crossed on the dark.
   pen.shape([cx - r, bot, cx - r, top + 22, cx - r + 10, top + 6, cx, top, cx + r - 10, top + 6, cx + r, top + 22, cx + r, bot], { fill: PAPER, w: 0 })
   pen.tone([cx + 6, top, cx + r, top + 10, cx + r, bot, cx + 6, bot], 2, -1.2)
@@ -81,8 +82,9 @@ export function drawBench(pen: Pen, w: number, h: number): void {
 /** The mountain of luggage beside the bench. Origin at its bottom left. */
 export function drawLuggage(pen: Pen, w: number, h: number): void {
   // An umbrella and a rolled rug lean behind.
-  pen.line([w - 6, -4, w - 16, -h + 6], 2, true)
-  pen.line([w - 16, -h + 6, w - 21, -h + 2, w - 23, -h + 8], 1.5)
+  // The umbrella is furled: a long thin wedge with a knob on its end, and no crook (a stroke with a flag at its top would read as a numeral).
+  pen.shape([w - 4, -4, w - 9, -5, w - 18, -h + 9, w - 14, -h + 8], { fill: PAPER, tone: 3, angle: 0.9, w: 1.3 })
+  pen.dot(w - 16.5, -h + 6, 2.2)
   // A steamer trunk at the bottom, banded and studded.
   pen.rect(1, -34, w - 3, 34, { fill: PAPER, tone: 3, angle: -1.2, w: 1.6 })
   for (const x of [12, w - 14]) pen.rect(x - 3, -34, 6, 34, { fill: PAPER, w: 1 })
@@ -105,7 +107,7 @@ export function drawLuggage(pen: Pen, w: number, h: number): void {
   const cx = 26, top = -h + 2, base = -82
   pen.shape([cx - 11, base, cx - 11, top + 12, cx - 7, top + 4, cx, top, cx + 7, top + 4, cx + 11, top + 12, cx + 11, base], { fill: PAPER, w: 1.3 })
   for (let x = cx - 7; x <= cx + 7; x += 3.5) pen.line([x, base, x, top + 3 + Math.abs(x - cx) * 0.7], 0.7, true)
-  pen.line([cx - 11, base - 8, cx + 11, base - 8], 0.7, true)
+  // Bars and a tray, and no band across the bars: bars crossed by a band would be a row of crosses.
   pen.rect(cx - 13, base - 1, 26, 3, { fill: PAPER, tone: 4, w: 1.1 })
   pen.ellipse(cx, top - 3, 2.6, 2.6, { w: 1.1 })
 }
@@ -129,12 +131,12 @@ export function drawCoach(pen: Pen, w: number, h: number, doorX: number, doorW: 
   const sill = h - 34, deck = 22, cabin = w - 62
   // Shadow on the road.
   pen.tone([4, h - 6, w - 2, h - 6, w - 10, h + 2, 12, h + 2], 4, 0)
-  // Trunks roped to the roof rack.
+  // Trunks roped to the roof rack, each under a rope of its own: the two ropes do not cross.
   pen.rect(18, 4, 34, deck - 6, { fill: PAPER, tone: 3, angle: -1.2, w: 1.3 })
   pen.shape([58, deck - 2, 60, 8, 70, 3, 84, 4, 92, 10, 94, deck - 2], { fill: PAPER, tone: 2, angle: 0.5, w: 1.3 })
   pen.rect(100, 9, 26, deck - 11, { fill: PAPER, tone: 4, angle: 0.2, w: 1.3 })
   pen.line([10, deck - 2, 22, 2, 54, 4, 62, deck - 2], 0.7)
-  pen.line([56, deck - 2, 76, 0, 98, 8, 128, 6, 134, deck - 2], 0.7)
+  pen.line([66, deck - 2, 78, 0, 98, 8, 128, 6, 134, deck - 2], 0.7)
   pen.line([8, deck - 3, cabin - 4, deck - 3], 1, true)
   for (let x = 10; x < cabin - 4; x += 16) pen.line([x, deck - 9, x, deck - 2], 0.9, true)
   pen.line([8, deck - 9, cabin - 4, deck - 9], 0.9, true)
@@ -154,6 +156,15 @@ export function drawCoach(pen: Pen, w: number, h: number, doorX: number, doorW: 
   }
   // The driver's bench under the roof's overhang, and the windscreen post.
   pen.line([cabin + 2, deck + 8, cabin + 12, sill - 30], 1.6, true)
+  // The driver on the bench, facing the road: a greatcoat, a head under a peaked cap, one hand on the wheel. It waits, and has no opinion.
+  const base = sill - 32, k = (base - deck - 9) / 31, dx = cabin + 24
+  pen.shape([dx - 12 * k, base, dx - 11 * k, base - 9 * k, dx - 5 * k, base - 13 * k, dx + 5 * k, base - 13 * k, dx + 10 * k, base - 8 * k, dx + 11 * k, base], { fill: PAPER, tone: 3, angle: 0.6, w: 1.4 })
+  pen.ellipse(dx + k, base - 19 * k, 7 * k, 7.5 * k, { fill: PAPER, w: 1.4 })
+  pen.shape([dx - 7 * k, base - 23 * k, dx - 5 * k, base - 30 * k, dx + 6 * k, base - 30 * k, dx + 8 * k, base - 24 * k, dx + 15 * k, base - 23 * k, dx + 8 * k, base - 21 * k, dx - 7 * k, base - 22 * k], { fill: PAPER, tone: 4, angle: 0.2, w: 1.3 })
+  pen.dot(dx + 4 * k, base - 18.5 * k, 1.2)
+  pen.line([dx + 8 * k, base - 18 * k, dx + 11 * k, base - 16 * k, dx + 8 * k, base - 15 * k], 1.1)
+  pen.line([dx + 9 * k, base - 7 * k, dx + 16 * k, base - 10 * k], 1.8, true)
+  pen.line([dx + 15 * k, base - 16 * k, dx + 19 * k, base - 3 * k], 2.4, true)
   // The bonnet with its louvres, the radiator and one lamp on a stalk.
   pen.shape([cabin + 2, sill, cabin + 2, sill - 32, w - 12, sill - 28, w - 12, sill], { fill: PAPER, tone: 3, angle: -1.2, w: 1.6, sharp: true })
   for (let x = cabin + 10; x < w - 16; x += 5) pen.line([x, sill - 24, x, sill - 8], 1.4, true, PAPER)
@@ -169,15 +180,17 @@ export function drawCoach(pen: Pen, w: number, h: number, doorX: number, doorW: 
     const cy = h - COACH_WHEEL_UP
     pen.shape([cx - 30, cy + 2, cx - 26, cy - 20, cx - 10, cy - 30, cx + 10, cy - 30, cx + 26, cy - 20, cx + 30, cy + 2, cx + 23, cy + 2, cx + 20, cy - 14, cx + 8, cy - 23, cx - 8, cy - 23, cx - 20, cy - 14, cx - 23, cy + 2], { fill: PAPER, tone: 4, angle: 0.4, w: 1.4 })
   }
-  // The starting handle.
-  pen.line([w - 4, sill - 2, w + 3, sill - 2, w + 3, sill + 6], 1.3, true)
+  // The starting handle: a rod with a knob on its end.
+  pen.line([w - 4, sill - 2, w + 3, sill - 2], 1.3, true)
+  pen.dot(w + 4, sill - 2, 2)
   if (open) {
     // The door stands open: a dark doorway, and a step let down under it.
     pen.rect(doorX, deck - 2, doorW, sill + 12 - deck, { fill: PAPER, tone: 4, angle: -0.9, w: 1.8 })
     pen.tone([doorX + 3, deck + 2, doorX + doorW - 3, deck + 2, doorX + doorW - 3, sill + 6, doorX + 3, sill + 6], 3, 0.3)
     pen.line([doorX + 5, sill + 10, doorX + 5, sill + 20], 1.6, true)
     pen.line([doorX + doorW - 5, sill + 10, doorX + doorW - 5, sill + 20], 1.6, true)
-    pen.rect(doorX + 1, sill + 19, doorW - 2, 4, { fill: PAPER, tone: 2, angle: 0, w: 1.3 })
+    // The step is in the spot colour, like the door's leaf beside it: it is where a foot, or a finger, goes next.
+    pen.rect(doorX + 1, sill + 18, doorW - 2, 6, { fill: SPOT, w: 1.5 })
   }
 }
 
@@ -213,11 +226,17 @@ export function drawCoachDoor(pen: Pen, w: number, h: number): void {
 /** Where the hub of the porter's trolley wheel is, from between his feet, and how far out its tyre is. */
 export const TROLLEY_WHEEL = { x: 40, y: -8, r: 8 }
 
+/** Where the bell on the porter's trolley hangs, from between his feet: the rim of its mouth. */
+export const PORTER_BELL = { x: 29, y: -80 }
+
 /** The porter: an old tortoise in a pillbox cap, upright behind a luggage trolley. Ink alone. Origin between its feet. */
 export function drawPorter(pen: Pen): void {
-  // The trolley: a sack truck with a trunk and a hat box on it.
+  // The trolley: a sack truck with a trunk and a hat box on it, and a bell on a bracket at the top of its handle.
   pen.line([18, -74, 40, -6], 2.6, true)
   pen.line([12, -72, 24, -76], 2.6, true)
+  pen.line([24, -76, PORTER_BELL.x, PORTER_BELL.y - 9], 1.6, true)
+  pen.shape([PORTER_BELL.x - 6.5, PORTER_BELL.y, PORTER_BELL.x - 5, PORTER_BELL.y - 7, PORTER_BELL.x, PORTER_BELL.y - 10, PORTER_BELL.x + 5, PORTER_BELL.y - 7, PORTER_BELL.x + 6.5, PORTER_BELL.y], { fill: PAPER, tone: 1, angle: 0.5, w: 1.4 })
+  pen.dot(PORTER_BELL.x, PORTER_BELL.y + 2, 1.7)
   local2(pen, 40, -6, 0.3, () => {
     pen.rect(-2, -50, 26, 46, { fill: PAPER, tone: 3, angle: -1.2, w: 1.5 })
     pen.rect(-2, -38, 26, 5, { fill: PAPER, w: 0.9 })
@@ -235,9 +254,10 @@ export function drawPorter(pen: Pen): void {
   pen.line([-13, 0, 10, 0], 1.6, true)
   pen.shape([-4, -18, 6, -40, 4, -66, -6, -78, -16, -80, -10, -50, -12, -22], { fill: PAPER, tone: 1, angle: 0.3, w: 1.5 })
   pen.shape([-10, -16, -30, -20, -44, -38, -46, -58, -36, -76, -18, -84, -8, -78, -14, -50], { fill: PAPER, tone: 3, angle: -0.7, w: 1.8 })
-  pen.line([-22, -80, -26, -56, -20, -30], 1.2, false, PAPER)
-  pen.line([-40, -60, -27, -56, -14, -60], 1.2, false, PAPER)
-  pen.line([-38, -36, -24, -40, -13, -34], 1.2, false, PAPER)
+  // The plates of the shell: three pale seams side by side that never cross.
+  pen.line([-37, -68, -41, -52, -37, -36], 1.2, false, PAPER)
+  pen.line([-27, -79, -31, -55, -26, -27], 1.2, false, PAPER)
+  pen.line([-17, -81, -20, -56, -16, -28], 1.2, false, PAPER)
   // The long neck, wrinkled, and the head with its heavy lids.
   pen.tube([-8, -74, -2, -88, 8, -96], 9, PAPER, 1.4)
   for (const [x, y] of [[-7, -80], [-4, -86], [1, -91]] as const) pen.line([x - 4, y + 1, x + 3, y - 2], 0.7)
@@ -260,7 +280,7 @@ function flame(pen: Pen, x: number, y: number, s: number): void {
   pen.line([x, y + 2 * s, x + 0.4 * s, y - 1 * s], 0.7)
 }
 
-/** One of the five things, in a box about 60 across with the origin at its middle. The dial shows flames or icicles, never a numeral. */
+/** One of the five things, in a box about 60 across with the origin at its middle. The dial is drawn here as flames or icicles; its numeral is laid beside them by `inkMoving.ts`, through `symbols.ts`, at the place `numeralSpot` in `inkThings.ts` gives. */
 export function drawThing(pen: Pen, kind: InkThingKind, dial: 1 | 2 | 3): void {
   if (kind === 'quilt') {
     // A quilt folded in three, stitched in diamonds and tied with a cord.
@@ -274,9 +294,8 @@ export function drawThing(pen: Pen, kind: InkThingKind, dial: 1 | 2 | 3): void {
       }
     })
     pen.shape(top, { w: 1.7 })
+    // A loose tassel down one side, and no cord round the bundle: a cord across its folds would make crosses.
     pen.line([29, -2, 32, 8, 28, 20], 1.2)
-    pen.line([-4, -21, -5, 22], 2.2, false, PAPER)
-    pen.line([-4, -21, -5, 22], 0.6)
     return
   }
   if (kind === 'pipe') {
@@ -302,11 +321,15 @@ export function drawThing(pen: Pen, kind: InkThingKind, dial: 1 | 2 | 3): void {
     pen.tone([4, -19, 20, -12, 23, 6, 17, 22, 6, 22], 2, 0.4)
     pen.shape(belly, { w: 1.8 })
     pen.rect(-22, -23, 44, 5, { fill: PAPER, tone: 2, angle: 0, w: 1.4 })
-    // The dial: flames standing on a grate, as many as the step it is set to.
+    // The dial: flames standing in a fire basket, as many as the step it is set to. The basket is a dish on
+    // two feet, kept to the left and above the numeral that stands at the dial's lower right, with the dial's
+    // rim between them: a level bar ending beside the numeral would read as a stroke of it, or as a sign before it.
     pen.ellipse(0, 1, 15.5, 15.5, { fill: SPOT, w: 1.7 })
-    pen.line([-10, 9, 10, 9], 1.5, true)
-    const at = dial === 1 ? [0] : dial === 2 ? [-5, 5] : [-8, 0, 8]
-    at.forEach((x, i) => flame(pen, x, 3 - (i % 2) * 1.5, dial === 1 ? 1.5 : dial === 2 ? 1.3 : 1.1))
+    pen.line([-11.5, 3.5, -9, 7, -4, 8.2, 2, 7, 4.5, 3.5], 1.5)
+    pen.line([-7, 8, -8, 11], 1.2, true)
+    pen.line([0, 8, 1, 11], 1.2, true)
+    const at = dial === 1 ? [-3.5] : dial === 2 ? [-7, 0] : [-9.5, -3.5, 2.5]
+    at.forEach((x, i) => flame(pen, x, 1 - (i % 2) * 1.5, dial === 1 ? 1.5 : dial === 2 ? 1.3 : 1.05))
     return
   }
   if (kind === 'ice') {
@@ -327,6 +350,8 @@ export function drawThing(pen: Pen, kind: InkThingKind, dial: 1 | 2 | 3): void {
       // The cap's edge runs uneven and the icicles hang off-centre, so the dial never looks like a written sign.
       pen.shape([-22, -12, 18, -12, 18, -1, 10, 1, 2, -1.5, -6, 1, -14, -1, -22, 0.5], { fill: PAPER, w: 1.1 })
       const at = dial === 1 ? [-4] : dial === 2 ? [-7, 4] : [-9, -2, 6]
+      // A ragged fringe of drips along the whole cap, far too short to count: a bare cap over one icicle would read as a letter.
+      for (const x of [-15, -11, 3, 8, 12]) pen.shape([-3 + x - 1.6, 0, -3 + x + 1.6, 0, -3 + x + 0.4, 3.2 + ((x * 7) % 3) * 0.5], { fill: PAPER, w: 0.9, sharp: true })
       at.forEach((x, i) => pen.shape([-3 + x - 3, 0, -3 + x + 3, 0, -3 + x + 1.2, 18 - (i % 2) * 6 - (dial - 1) * 1.5], { fill: PAPER, w: 1.1, sharp: true }))
     })
     pen.shape(disc, { w: 1.7 })
@@ -418,9 +443,9 @@ export function drawStreetLamp(pen: Pen, tall: number, wide: number, lit: boolea
   pen.shape([-8, 0, -7, -12, -4, -20, 4, -20, 7, -12, 8, 0], { fill: PAPER, tone: 3, angle: -1.2, w: 1.5 })
   pen.tube([0, -20, 0, top], 3.4, PAPER, 1.3, true)
   pen.tone([0.5, -20, 2.4, -20, 2.4, top, 0.5, top], 3, -1.2)
-  pen.line([-13, top + 12, 13, top + 12], 2, true)
-  pen.dot(-13, top + 12, 1.8)
-  pen.dot(13, top + 12, 1.8)
+  // The ladder bar is a bracket to one side of the shaft, with a knob on its end: a bar across the shaft would make a cross.
+  pen.line([1.7, top + 12, 14, top + 10], 2, true)
+  pen.dot(14, top + 10, 1.8)
   // Lit, it stands in a ring of bare wall: its light is where the hatching is not.
   if (lit) pen.ellipse(0, top - 12, 30, 26, { fill: PAPER, w: 0 })
   pen.shape([-6, top, 6, top, 10, top - 18, -10, top - 18], { fill: PAPER, tone: lit ? 0 : 2, w: 1.5, sharp: true })

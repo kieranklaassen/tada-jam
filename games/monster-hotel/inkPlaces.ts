@@ -1,4 +1,5 @@
-import { GUEST_BOX, STANCE, restsInBed } from './inkGuests'
+import { GUEST_IDS } from './guests'
+import { GUEST_BOX, STANCE, restsInBed, spotReach } from './inkGuests'
 import type { InkGuest, InkView } from './inkScene'
 import type { PageLayout, Rect } from './layout'
 
@@ -25,8 +26,8 @@ export function spotOf(guest: InkGuest, page: PageLayout, lobbyPlace: number): S
     return { x: box.x + 36 * u, y: box.y + box.h, flip: false, tall: 116 }
   }
   if (guest.place === 'lobby') {
-    // The place beside the porter is the last to be taken: a small coach-load stands clear of him.
-    const order = [1, 2, 3, 4, 0]
+    // The place beside the porter is the last of a coach-load's five to be taken: a small coach-load stands clear of him. The sixth, by the front door, is the bench guest's when five already wait.
+    const order = [1, 2, 3, 4, 0, 5]
     const spot = page.lobbySpots[order[Math.min(lobbyPlace, order.length - 1)] ?? 0]
     // It faces the house, whose doors it stares at.
     return spot ? { x: spot.x, y: spot.y, flip: flipTo('left') } : null
@@ -56,20 +57,66 @@ export function spotOf(guest: InkGuest, page: PageLayout, lobbyPlace: number): S
  */
 export function spotsOf(guests: readonly InkGuest[], page: PageLayout): { guest: InkGuest; spot: Spot }[] {
   const spots: { guest: InkGuest; spot: Spot }[] = []
-  const taken = new Set<number>()
+  // Who shares a room with whom. Of two, the first is the one that comes first among the eight guests, whatever the order of the scene's list: the page hands this list back in the order it draws, and nobody may change halves for that.
+  const lodgers = new Map<number, InkGuest[]>()
+  for (const guest of guests) if (typeof guest.place === 'object') lodgers.set(guest.place.room, [...(lodgers.get(guest.place.room) ?? []), guest])
+  const rank = (guest: InkGuest) => GUEST_IDS.indexOf(guest.id)
   let place = 0
   for (const guest of guests) {
     let spot = spotOf(guest, page, place)
     if (guest.place !== 'bench') place++
     if (!spot) continue
-    if (typeof guest.place === 'object') {
-      // The second guest of a room with two beds stands at the room's second place.
-      if (taken.has(guest.place.room)) spot = secondSpot(page, guest.place.room, spot)
-      taken.add(guest.place.room)
-    }
+    const sharing = typeof guest.place === 'object' ? lodgers.get(guest.place.room) ?? [] : []
+    // Two share a room with two beds: each has a half of it.
+    if (typeof guest.place === 'object' && sharing.length > 1) spot = sharedSpot(page, guest, guest.place.room, spot, sharing.every((other) => rank(other) >= rank(guest)))
     spots.push({ guest, spot })
   }
+  // The fly's wings spread wider than its half of a shared room: it is drawn before the guest it shares with, so that its wing goes behind the other and never over its face.
+  for (let i = 1; i < spots.length; i++) {
+    const fly = spots[i]
+    if (fly.guest.id !== 'fly' || typeof fly.guest.place !== 'object') continue
+    const room = fly.guest.place.room
+    const mate = spots.findIndex((one, index) => index < i && typeof one.guest.place === 'object' && one.guest.place.room === room)
+    if (mate >= 0) { spots.splice(i, 1); spots.splice(mate, 0, fly) }
+  }
   return spots
+}
+
+/** How far from its own side wall each of two who share a room stands: as far as a guest alone stands from the door-side wall, so the widest figure stays inside the room, and the two are as far apart as the room allows. */
+const SHARED_FROM_WALL = 56
+
+/**
+ * Where one of the two guests of a room with two beds is drawn, so that both
+ * are seen whole: each has a half of the room. The first has the half with
+ * the room's own bed, stands in front of that bed and sleeps in it; the
+ * second has the half with the door and the second bed. Each faces the
+ * other across the room unless it is turned to a wall. `spot` is the place
+ * `spotOf` gives a guest that has the room to itself.
+ */
+function sharedSpot(page: PageLayout, guest: InkGuest, room: number, spot: Spot, first: boolean): Spot {
+  const layout = page.rooms[room]
+  if (!layout) return spot
+  const u = page.scale, stance = STANCE[guest.id], r = layout.rect
+  const flipTo = (way: 'left' | 'right') => stance.faces !== 'front' && stance.faces !== way
+  const turned = guest.turnedTo === 'left' || guest.turnedTo === 'right' ? guest.turnedTo : null
+  const bedWall = layout.bedSide, doorWall = layout.bedSide === 'right' ? 'left' : 'right'
+  const rests = restsInBed(guest.id, { awake: guest.awake, mood: guest.mood, turnedTo: guest.turnedTo, wrapped: guest.wrapped, bag: false, frame: 0 })
+  if (first) {
+    // In the room's own bed it is where a guest alone would be.
+    if (rests) return spot
+    const flip = flipTo(turned ?? doorWall)
+    const x = bedWall === 'right' ? r.x + r.w - SHARED_FROM_WALL * u : r.x + SHARED_FROM_WALL * u
+    return { ...spot, x: x + stance.shift * u * (flip ? -1 : 1), flip }
+  }
+  if (rests) {
+    // In the second bed, which is the room's bed mirrored: it looks down that bed, toward the middle of the room.
+    const way = turned ?? bedWall
+    const fromHead = way === bedWall ? 22 : 70
+    const bedX = 2 * (r.x + r.w / 2) - layout.bed.x - layout.bed.w
+    return { ...spot, x: bedWall === 'right' ? bedX + fromHead * u : bedX + layout.bed.w - fromHead * u, flip: flipTo(way) }
+  }
+  const x = bedWall === 'right' ? r.x + SHARED_FROM_WALL * u : r.x + r.w - SHARED_FROM_WALL * u
+  return { ...spot, x: x + stance.shift * u * (spot.flip ? -1 : 1) }
 }
 
 /** How much of a figure's box a finger can land in: its middle, where the body is, never the empty corners. */
@@ -80,6 +127,19 @@ export function bodyBox(spot: Spot, page: PageLayout): Rect {
   const u = page.scale
   const w = Math.min(GUEST_BOX.w, BODY.w) * u, h = Math.min(GUEST_BOX.h, spot.tall ?? BODY.h) * u
   return { x: spot.x - w / 2, y: spot.y - h, w, h }
+}
+
+/**
+ * The boxes beside a guest's body that a finger also takes it by: what is
+ * drawn in the spot colour out there (`spotReach`), mirrored as the figure
+ * is. A guest on the bench has none: the whole of its seat is its own already.
+ */
+export function reachBoxes(guest: InkGuest, spot: Spot, page: PageLayout): Rect[] {
+  if (guest.place === 'bench') return []
+  const u = page.scale
+  return spotReach(guest.id, { awake: guest.awake, wrapped: guest.wrapped, bag: guest.place === 'lobby' || !!guest.unpacks }).map(([x1, y1, x2, y2]) => ({
+    x: spot.x + (spot.flip ? -x2 : x1) * u, y: spot.y + y1 * u, w: (x2 - x1) * u, h: (y2 - y1) * u,
+  }))
 }
 
 // --- The page from a guest's place -------------------------------------------
@@ -140,12 +200,13 @@ export function toPlain(page: PageLayout, view: InkView | null, point: { x: numb
   return { x, y }
 }
 
-/** The other way: where a point of the plain page is drawn in a view. A point of the lens's room goes into the lens. */
-export function fromPlain(page: PageLayout, view: InkView | null, point: { x: number; y: number }): { x: number; y: number } {
+/** The other way: where a point of the plain page is drawn in a view. A point of the lens's room goes into the lens. `room` is the room the point belongs to, when it is something of a room's. */
+export function fromPlain(page: PageLayout, view: InkView | null, point: { x: number; y: number }, room: number | null = null): { x: number; y: number } {
   if (!view) return point
   let { x, y } = point
   const lens = view.large === false ? null : lensOf(page, view.room)
-  if (lens && x >= lens.from.x && x <= lens.from.x + lens.from.w && y >= lens.from.y && y <= lens.from.y + lens.from.h) {
+  // A point that belongs to the large room goes with it even where it lies a little outside: the head of a guest tipped over into its wall.
+  if (lens && ((room !== null && room === view.room) || (x >= lens.from.x && x <= lens.from.x + lens.from.w && y >= lens.from.y && y <= lens.from.y + lens.from.h))) {
     x = lens.to.x + (x - lens.from.x) * lens.scale
     y = lens.to.y + (y - lens.from.y) * lens.scale
   }
@@ -181,7 +242,8 @@ const IN_ROOM: Record<ThingLike['kind'], { fromBedWall: number; up: number; w: n
 
 /** Each thing on a wall or a floor: where along it (0 to 1, from the top of a wall or the left of a floor), and its size along and across the edge. */
 const ON_EDGE: Partial<Record<ThingLike['kind'], { along: number; len: number; across: number }>> = {
-  quilt: { along: 0.52, len: 112, across: 24 },
+  // The quilt hangs clear of where the pipe goes through and the clock hangs: all three can share one wall or floor.
+  quilt: { along: 0.6, len: 104, across: 24 },
   pipe: { along: 0.26, len: 26, across: 58 },
   clock: { along: 0.12, len: 28, across: 28 },
 }
@@ -216,7 +278,9 @@ export function thingBox(thing: ThingLike, page: PageLayout, standing: readonly 
       const cy = r.y + r.h * size.along, cx = r.x + r.w / 2
       return { x: cx - (size.across * u) / 2, y: cy - (size.len * u) / 2, w: size.across * u, h: size.len * u }
     }
-    const cx = r.x + r.w * size.along, cy = r.y + r.h / 2
+    // On a floor or a ceiling, things lie toward the bed's side of the room and clear of where its lodger stands: what comes through there is seen beside the lodger and not behind it.
+    const side = page.rooms[edge.a]?.bedSide === 'right' ? 1 - size.along : size.along
+    const cx = r.x + r.w * side, cy = r.y + r.h / 2
     return { x: cx - (size.len * u) / 2, y: cy - (size.across * u) / 2, w: size.len * u, h: size.across * u }
   }
   const held = standing.find((one) => one.guest.id === at.guest)
@@ -236,10 +300,4 @@ export function thingBox(thing: ThingLike, page: PageLayout, standing: readonly 
 export function thingTouch(box: Rect, least: number): Rect {
   const w = Math.max(box.w, least), h = Math.max(box.h, least)
   return { x: box.x + box.w / 2 - w / 2, y: box.y + box.h / 2 - h / 2, w, h }
-}
-
-/** Where the second guest of a room with two beds stands: `spotOf` gives every guest the first place, and the page moves the second one here. */
-export function secondSpot(page: PageLayout, room: number, spot: Spot): Spot {
-  const layout = page.rooms[room]
-  return layout ? { ...spot, x: layout.stand2.x, y: layout.stand2.y } : spot
 }

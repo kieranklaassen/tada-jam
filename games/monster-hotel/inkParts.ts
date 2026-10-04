@@ -1,14 +1,15 @@
 // The small parts the eight figures share: an eye shut and an eye open, the
 // way a glance goes, the bedclothes one sits up out of, a pair of legs, a bag.
 
-import { PAPER, SPOT, type Pen } from './inkHatch'
+import { INK, PAPER, SPOT, type Pen } from './inkHatch'
 import type { InkSide } from './inkScene'
 
 /** How far the eyes go toward a side. */
 export const glance = (looks: InkSide | null | undefined): [number, number] =>
   looks === 'left' ? [-1, 0] : looks === 'right' ? [1, 0] : looks === 'up' ? [0, -1] : looks === 'down' ? [0, 1] : [0, 0]
 
-export const shut = (pen: Pen, x: number, y: number, r: number) => pen.line([x - r, y - r * 0.2, x, y + r * 0.5, x + r, y - r * 0.2], 1.4)
+/** A shut eye: a lid, a thin dark crescent with its points up. Filled, so that a row of them is a row of lids and not of pen strokes that could be read as letters. */
+export const shut = (pen: Pen, x: number, y: number, r: number) => pen.shape([x - r, y - r * 0.25, x - r * 0.5, y + r * 0.3, x, y + r * 0.5, x + r * 0.5, y + r * 0.3, x + r, y - r * 0.25, x + r * 0.45, y + r * 0.05, x, y + r * 0.18, x - r * 0.45, y + r * 0.05], { fill: INK, w: 0.6 })
 export const open = (pen: Pen, x: number, y: number, r: number, lookX = 0, lookY = 0) => {
   pen.ellipse(x, y, r, r, { fill: PAPER, w: 1.2 })
   pen.dot(x + lookX * r * 0.45, y + lookY * r * 0.45, r * 0.42)
@@ -25,10 +26,11 @@ export function bedclothes(pen: Pen): void {
 export function bag(pen: Pen, x: number): void {
   pen.line([x - 7, -22, x - 5, -30, x + 5, -30, x + 7, -22], 1.5)
   pen.shape([x - 15, 0, x - 16, -18, x - 10, -24, x + 10, -24, x + 16, -18, x + 15, 0], { fill: SPOT, w: 1.7 })
+  // One belt, a clasp on it, and a rivet at either end: no strap is drawn across the belt (two strokes that cross would read as a sign).
   pen.line([x - 15, -15, x + 15, -15], 1, true)
   pen.rect(x - 3, -18, 6, 6, { fill: PAPER, w: 1 })
-  pen.line([x - 9, -24, x - 9, 0], 0.8, true)
-  pen.line([x + 9, -24, x + 9, 0], 0.8, true)
+  pen.dot(x - 10, -7, 1.1)
+  pen.dot(x + 10, -7, 1.1)
 }
 
 /** A guest's bag by itself, hanging from the top of its handle: what swings under a guest that is carried. */

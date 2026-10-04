@@ -35,7 +35,7 @@ const REACH: Record<InkThingKind, readonly [number, number, number, number]> = {
 
 /** Where the numeral of a dial goes, beside its flames or its icicles, from the middle of the cupboard drawing, and how tall it is. */
 const NUMERAL: Partial<Record<InkThingKind, { x: number; y: number; size: number }>> = {
-  stove: { x: 17.5, y: 13.5, size: 12 },
+  stove: { x: 19.5, y: 17, size: 12 },
   ice: { x: 15, y: 17.5, size: 12 },
 }
 

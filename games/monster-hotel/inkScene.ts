@@ -28,12 +28,18 @@ export type InkGuest = {
   place: { room: number } | 'lobby' | 'bench'
   awake: boolean
   mood: InkMood
-  /** The wall, floor or ceiling the trouble comes through, which a cross guest turns to. */
+  /** The wall, floor or ceiling a cross guest's trouble comes through, which it turns to; or, for a guest made happier, the one its delight comes through, which it leans to. */
   turnedTo: InkSide | null
   /** Wrapped in the quilt. */
   wrapped: boolean
+  /** Cross at a noise alone, with nothing too warm or too cold about it: the lizard is then drawn kept awake, with no icicle and no shiver, and the yeti frowns and does not melt. */
+  woken?: boolean
   /** The room whose door a guest in the lobby stares at. */
   staresAt: number | null
+  /** The room whose door a guest who has a room glances at for a moment: the one it asked for, when it has been given another. The same row of dots as its stare in the lobby. */
+  glancesAt?: number | null
+  /** Just moved into a room: its bag has landed at its feet with it, and stands there while it tests the bed. */
+  unpacks?: boolean
   /** Its own motion this frame. Left out, the page moves it by its own idle breathing. */
   body?: InkBody
   /** In the child's hand: where the finger is, in logical pixels. It dangles from there, stiff, its bag swinging by `swing`. */
@@ -63,12 +69,35 @@ export type InkTaken = 'plain' | 'loved' | 'minded' | 'faint'
 
 export type InkAir = {
   kind: 'din' | 'pong' | 'warm' | 'cold'
-  /** The rooms it passes through, in order from where it is made. */
+  /** The rooms it passes through, in order from where it is made. One room alone is the air where it is made, before it has crossed anything. */
   rooms: number[]
   /** Its strength in the last of them. */
   level: number
   /** Left out, it is `plain`. */
   taken?: InkTaken
+}
+
+/**
+ * Something small that is seen for a moment after a touch and leaves nothing
+ * behind: feathers out of the quilt, a sneeze, a breath coming back up the
+ * standing pipe, the puff a tooted pipe gives, the patch a stove scorches
+ * or an ice box frosts on a wall before it slides off into the room, and the
+ * crease a finger leaves on bare paper.
+ */
+export type InkMoment = {
+  kind: 'feathers' | 'sneeze' | 'breath' | 'puff' | 'scorch' | 'frost' | 'rustle'
+  /** Where it is, on the plain page, in logical pixels. */
+  x: number
+  y: number
+  /** The room it is in, so that it is drawn with that room when the room is drawn large; null outside the rooms. */
+  room: number | null
+  /** Seconds since it began (below zero, it has not begun), and how long it is seen for. */
+  age: number
+  lasts: number
+  /** The way it goes: -1 to the left, 1 to the right. */
+  side: -1 | 1
+  /** For the pipe's puff: what is passing through the pipe, or null when nothing is. */
+  of?: InkAir['kind'] | null
 }
 
 /** One circular redrawing of the page, spreading from a point: from one guest's place to another's or to the plain page, or from one hour to the other. */
@@ -111,19 +140,33 @@ export type InkScene = {
   /** How far the wheel has turned on from where `phase` puts it, in radians, while it spins or settles. */
   wheelTurn?: number
   /** The idle glow on what can be touched: its strength, 0 to 1, and what it lies on. */
-  glow?: { strength: number; guests: GuestId[]; wheel: boolean } | null
+  glow?: { strength: number; guests: GuestId[]; wheel: boolean; things?: InkThingKind[] } | null
   /** The ghost hand showing one move: where its fingertip is, in logical pixels, whether it is pressing, and how solid it is. */
   hand?: { x: number; y: number; down: boolean; alpha: number } | null
   /** Lamps set swinging by a touch: the room and the angle, in radians. */
   lamps?: { room: number; angle: number }[]
   /** A knock on a wall or floor: where, in logical pixels, and how long ago in seconds. Its marks last about half a second. */
   knocks?: { x: number; y: number; age: number }[]
+  /** The rooms on whose side of the hung quilt what it is stopping bunches up. Left out, nothing does. */
+  bunches?: number[]
+  /** Whether something is passing through the pipe let through a wall or a floor at this hour: it is drawn in at one flange and fanning out of the other. Left out, nothing is. */
+  passing?: boolean
+  /** On a guest's own page: what it must have and has not got, with nothing to blame for it, drawn in its room as a row of dots in the spot colour where the thing itself would be. Warmth for a guest that needs a warm room; an answer for the singer whom nobody hears. Left out or null: nothing is wanting. */
+  wants?: { room: number; kind: 'warm' | 'heard' } | null
+  /** On the page of a guest that has a room which is not the one it asked for: the room it asked for. It is ringed in dots for as long as that page is open, so that what the guest asked for is seen beside what troubles or pleases it where it is. Left out or null, there is none. */
+  asked?: number | null
+  /** What is seen for a moment after a touch. */
+  moments?: InkMoment[]
+  /** How many seconds ago a finger on the tree set the crows flying. Left out or null, they keep their own rounds. */
+  startled?: number | null
   /** Whether the coach and what waits in it are drawn. Left out, they are. */
   coach?: boolean
   /** How far the coach stands from its place at the kerb, in coach lengths: 0 is at the kerb, 1 has pulled away off the page to the right, -1 is yet to pull up from the left. Left out, 0. */
   coachAt?: number
   /** Whether the coach's door stands open. Left out, shut. */
   coachOpen?: boolean
+  /** Whether the coach is waiting for the child's touch with the next coach-load in it: the house has been judged. Then its engine runs, and whoever is inside looks out of the open door. Left out, it is not. */
+  coachWaits?: boolean
   /** How far the porter has trundled from his place by the cupboard, in the drawing's units. Left out, he stands there. */
   porterAt?: { dx: number; dy: number }
   /** Whether the numeral of each dial is drawn beside its flames or icicles (symbols.ts). Left out, it is not. */

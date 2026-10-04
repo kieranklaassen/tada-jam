@@ -1,8 +1,10 @@
 import type { GuestId } from './guests'
 import type { ThingKind } from './arrangement'
-import { bodyBox, thingBox, thingTouch, type Spot } from './inkPlaces'
+import type { House } from './hotel'
+import { bodyBox, reachBoxes, thingBox, thingTouch, type Spot } from './inkPlaces'
 import type { InkGuest, InkThing } from './inkScene'
-import type { PageLayout, Rect } from './layout'
+import { treeBox } from './inkSky'
+import type { PageLayout, Rect, RoomLayout } from './layout'
 
 // What a finger landed on. Pure arithmetic over the layout and the guests'
 // standing places, in plain-page points (a point on a page drawn from a
@@ -18,8 +20,17 @@ export type Hit =
   | { kind: 'guest'; id: GuestId; where: number }
   | { kind: 'wheel' }
   | { kind: 'coach' }
-  /** Inside a room, away from its walls. */
+  /** Inside a room, away from its walls, its door and its beds: the air under its lamp. */
   | { kind: 'room'; room: number }
+  /** The door in a room's back wall. */
+  | { kind: 'roomDoor'; room: number }
+  /** A bed in a room: its one bed, or either bed of a room for two. */
+  | { kind: 'bed'; room: number }
+  /** The boiler in its bay of the foundations. */
+  | { kind: 'boiler' }
+  /** The mountain of luggage beside the bench, and the empty bird cage on top of it. */
+  | { kind: 'luggage' }
+  | { kind: 'cage' }
   /** A wall or a floor between two rooms, with the room on the nearer side of the finger. */
   | { kind: 'edge'; id: string; nearer: number }
   | { kind: 'lobby' }
@@ -28,6 +39,8 @@ export type Hit =
   | { kind: 'door' }
   /** The roof, the foundations, an outside wall: plaster and slate that knock. */
   | { kind: 'house' }
+  /** The bare tree behind the lobby, where the crows sit. */
+  | { kind: 'tree' }
   /** Only paper: the sky, the street, the margin. */
   | { kind: 'paper' }
   /** The top right corner, which is the grown-up's (overlay.ts) and answers nothing. */
@@ -44,8 +57,15 @@ const inside = (rect: Rect, point: Point, grow = 0): boolean =>
 
 export type Standing = { guest: InkGuest; spot: Spot }
 
-/** The guest under a point, or null. Where guests stand close, as in a queue in the lobby, it is the one whose middle is nearest the finger. A guest that is being carried is in the hand, not on the page. */
-export function guestAt(page: PageLayout, standing: readonly Standing[], point: Point, except: GuestId | null = null): { id: GuestId; where: number } | null {
+/**
+ * The guest under a point, or null. Where guests stand close, as in a queue
+ * in the lobby, it is the one whose middle is nearest the finger. A guest
+ * that is being carried is in the hand, not on the page. With `reach`, a
+ * point on no guest's body but on what one holds out in the spot colour (a
+ * horn, its music, its cloud, its bag) is that guest too: the spot colour
+ * marks what can be touched. A body comes before anything held out over it.
+ */
+export function guestAt(page: PageLayout, standing: readonly Standing[], point: Point, except: GuestId | null = null, reach = false): { id: GuestId; where: number } | null {
   let found: { id: GuestId; where: number } | null = null, nearest = Infinity
   for (const { guest, spot } of standing) {
     if (guest.id === except || guest.carried) continue
@@ -57,12 +77,31 @@ export function guestAt(page: PageLayout, standing: readonly Standing[], point: 
       found = { id: guest.id, where: Math.max(0, Math.min(1, (box.y + box.h - point.y) / box.h)) }
     }
   }
+  if (found || !reach) return found
+  for (const { guest, spot } of standing) {
+    if (guest.id === except || guest.carried) continue
+    const body = bodyBox(spot, page)
+    for (const box of reachBoxes(guest, spot, page)) {
+      if (!inside(box, point)) continue
+      const distance = Math.hypot(point.x - (box.x + box.w / 2), point.y - (box.y + box.h / 2))
+      if (distance < nearest) {
+        nearest = distance
+        found = { id: guest.id, where: Math.max(0, Math.min(1, (body.y + body.h - point.y) / body.h)) }
+      }
+    }
+  }
   return found
 }
 
-function edgeAt(page: PageLayout, point: Point): { id: string; nearer: number } | null {
+/** The other bed of a room for two: its bed mirrored across the middle of the room, against the other wall. */
+const secondBed = (layout: RoomLayout): Rect => ({ ...layout.bed, x: 2 * (layout.rect.x + layout.rect.w / 2) - layout.bed.x - layout.bed.w })
+
+function edgeAt(page: PageLayout, point: Point, twins: readonly number[] = []): { id: string; nearer: number } | null {
+  // A bed answers for itself: no wall or floor reaches over one, though a finger right on the slab or the wall still lands on it. The slab under a room on the ground and the outer wall beside it lie along the bed's own sides, and a room for two has such a bed against either wall.
+  const onBed = page.rooms.some((layout, room) => inside(layout.bed, point) || (twins.includes(room) && inside(secondBed(layout), point)))
+  const reach = onBed ? 0 : EDGE_REACH * page.scale
   for (const edge of page.edges) {
-    if (!inside(edge.rect, point, EDGE_REACH * page.scale)) continue
+    if (!inside(edge.rect, point, reach)) continue
     const a = page.rooms[edge.a].rect, b = page.rooms[edge.b].rect
     // The nearer room is the one whose middle the finger is closer to, along the way the edge divides.
     const nearer = edge.kind === 'wall'
@@ -93,24 +132,44 @@ export function thingAt(page: PageLayout, standing: readonly Standing[], things:
   return found
 }
 
-/** What is under a finger that lands or taps. `things` are the things on the page, and `coach` whether the coach stands at the kerb. */
-export function hitAt(page: PageLayout, standing: readonly Standing[], point: Point, things: readonly InkThing[] = [], coach = false): Hit {
+/** What is under a point of a room that is no guest, thing or wall: its door, a bed, or the air under its lamp. `twin` is a room for two, which has a second bed against the other wall. */
+function inRoom(page: PageLayout, room: number, point: Point, twin: boolean): Hit {
+  const layout = page.rooms[room]
+  if (inside(layout.bed, point) || (twin && inside(secondBed(layout), point))) return { kind: 'bed', room }
+  if (inside(layout.door, point)) return { kind: 'roomDoor', room }
+  return { kind: 'room', room }
+}
+
+/** Where the bird cage stands on the luggage: the top of the heap, a finger wide. In the drawing's units from the heap's top left. */
+const CAGE = { x: 2, w: 48, h: 30 }
+
+/** What is under a finger that lands or taps. `things` are the things on the page, `coach` whether the coach stands at the kerb, and `house` what is built into this house: its boilers and its rooms for two. */
+export function hitAt(page: PageLayout, standing: readonly Standing[], point: Point, things: readonly InkThing[] = [], coach = false, house: Pick<House, 'fixtures' | 'twins'> | null = null): Hit {
   if (point.x >= page.width - CORNER && point.y <= CORNER) return { kind: 'corner' }
   const thing = thingAt(page, standing, things, point)
   if (thing) return { kind: 'thing', thing }
-  const guest = guestAt(page, standing, point)
+  const guest = guestAt(page, standing, point, null, true)
   if (guest) return { kind: 'guest', ...guest }
   if (inside(page.wheel, point)) return { kind: 'wheel' }
   if (coach && inside(page.coach, point)) return { kind: 'coach' }
-  const edge = edgeAt(page, point)
+  const edge = edgeAt(page, point, house?.twins)
   if (edge) return { kind: 'edge', ...edge }
   const room = page.rooms.findIndex((layout) => inside(layout.rect, point))
-  if (room >= 0) return { kind: 'room', room }
+  if (room >= 0) return inRoom(page, room, point, !!house?.twins.includes(room))
   if (inside(page.porter, point)) return { kind: 'porter' }
   if (inside(page.frontDoor, point)) return { kind: 'door' }
   if (inside(page.lobby, point)) return { kind: 'lobby' }
   if (inside(page.bench, point, 6 * page.scale) || inside(page.benchGuest, point)) return { kind: 'bench' }
+  if (inside(page.luggage, point)) {
+    const u = page.scale, lg = page.luggage
+    return point.y <= lg.y + CAGE.h * u && point.x >= lg.x + CAGE.x * u && point.x <= lg.x + (CAGE.x + CAGE.w) * u ? { kind: 'cage' } : { kind: 'luggage' }
+  }
+  for (const fixture of house?.fixtures ?? []) {
+    const bay = fixture.kind === 'boiler' ? page.cellarBays[fixture.col] : undefined
+    if (bay && inside(bay, point)) return { kind: 'boiler' }
+  }
   if (inside(page.house, point) || inside(page.roof, point) || inside(page.cellar, point) || inside(page.cupboard, point)) return { kind: 'house' }
+  if (inside(treeBox(page), point)) return { kind: 'tree' }
   return { kind: 'paper' }
 }
 

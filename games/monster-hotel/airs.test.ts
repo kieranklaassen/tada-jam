@@ -116,4 +116,15 @@ describe('what is made, and when', () => {
     expect(arrivalsAt(a, 'night')).toEqual(arrivalsAt(a, 'night'))
     expect(arrivalsAt(a, 'day').length).toBeGreaterThan(0)
   })
+
+  it('the quilt and the pipe on one wall each do what they do: the noise is stopped, and smell, warmth and cold go through the pipe', () => {
+    const wall = { id: '0-1', kind: 'wall', a: 0, b: 1 } as const, floor = { id: '0-2', kind: 'floor', a: 0, b: 2 } as const
+    expect(crosses('din', wall, 0, 'both')).toBe(false)
+    for (const air of ['pong', 'warm', 'cold'] as const) {
+      expect(crosses(air, wall, 0, 'both'), air).toBe(true)
+      expect(crosses(air, floor, 2, 'both'), air).toBe(true)
+    }
+    // With the quilt alone, warmth does not rise through the floor; with the pipe let through it, it does.
+    expect([crosses('warm', floor, 0, 'quilt'), crosses('warm', floor, 0, 'both')]).toEqual([false, true])
+  })
 })

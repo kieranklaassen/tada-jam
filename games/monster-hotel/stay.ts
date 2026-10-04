@@ -2,7 +2,7 @@ import { THING_KINDS, type Arrangement, type Dial, type GuestAt, type ThingAt, t
 import { castById, castsAt, startOf, type Cast } from './casts'
 import { LADDER, MOST_MOVES, ROUNDS } from './config'
 import { isGuestId, type GuestId, type Phase } from './guests'
-import { bedsIn, edgeById, roomCount } from './hotel'
+import { anyEdgeById, bedsIn, roomCount } from './hotel'
 import { deserialize as readPlace, freshState, serialize as writePlace, type GameState } from './state'
 
 // What is saved: the template's three fields (state.ts) and the house as the
@@ -115,7 +115,7 @@ function readThingAt(raw: unknown, kind: ThingKind, cast: Cast, places: Record<s
   if (!isRecord(raw)) return 'cupboard'
   if (isWhole(raw.room, 0, roomCount(cast.house.shape) - 1)) return { room: raw.room }
   if (kind === 'stove' || kind === 'ice') return 'cupboard'
-  if (typeof raw.edge === 'string' && edgeById(cast.house.shape, raw.edge)) return { edge: raw.edge }
+  if (typeof raw.edge === 'string' && anyEdgeById(cast.house.shape, raw.edge)) return { edge: raw.edge }
   // Only a guest who has a room holds a thing.
   if (isGuestId(raw.guest) && typeof places[raw.guest] === 'number') return { guest: raw.guest }
   return 'cupboard'
@@ -129,9 +129,6 @@ function readKit(raw: unknown, cast: Cast, places: Record<string, GuestAt>): Rec
     const saved = isRecord(record[kind]) ? (record[kind] as Record<string, unknown>) : {}
     kit[kind] = { at: readThingAt(saved.at, kind, cast, places), dial: isWhole(saved.dial, 1, 3) ? (saved.dial as Dial) : 1 }
   }
-  // A wall or floor holds the quilt or the pipe, never both.
-  const quilt = kit.quilt?.at, pipe = kit.pipe?.at
-  if (quilt && pipe && typeof quilt === 'object' && 'edge' in quilt && typeof pipe === 'object' && 'edge' in pipe && quilt.edge === pipe.edge) kit.pipe = { at: 'cupboard', dial: 1 }
   return kit
 }
 
@@ -161,7 +158,8 @@ export function writeStay(stay: Stay): Stay {
     cast: stay.cast,
     round: stay.round,
     at: { ...stay.at },
-    kit: Object.fromEntries(Object.entries(stay.kit).map(([kind, entry]) => [kind, { at: typeof entry.at === 'object' ? { ...entry.at } : entry.at, dial: entry.dial }])),
+    // Only the stove and the ice box have a dial: nothing is written for the others.
+    kit: Object.fromEntries(Object.entries(stay.kit).map(([kind, entry]) => { const at = typeof entry.at === 'object' ? { ...entry.at } : entry.at; return [kind, kind === 'stove' || kind === 'ice' ? { at, dial: entry.dial } : { at }] })) as Stay['kit'],
     phase: stay.phase,
     from: stay.from,
     moves: stay.moves,

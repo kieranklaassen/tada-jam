@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { GUEST_IDS } from './guests'
-import { FIXED, GRUNT, GRUNTS, RANGE, TUBA_TUNE, grunt, iceDial, lengthOf, lifted, stoveDial, sweepTo, takesTo, tuba, wheelTurns, yawn, type Sound } from './voices'
+import { AT_ITS_THING, FIXED, STEADY_BEAT, steady, GRUNT, GRUNTS, RANGE, TUBA_TUNE, atItsThing, buzz, duetBeat, grunt, hum, sigh, iceDial, lengthOf, lifted, sneeze, stoveDial, sweepTo, takesTo, tuba, wheelTurns, yawn, type Sound } from './voices'
 
 const within = (value: number, [least, most]: readonly [number, number]) => value >= least && value <= most
 function inRange(sound: Sound, name: string): void {
@@ -35,14 +35,21 @@ describe('every voice is numbers inside the stated ranges', () => {
       inRange(lifted(id), `${id} lifted`)
     }
     for (const id of GUEST_IDS) {
-      inRange(takesTo(id, 'stove'), `${id} takes to the stove`)
-      inRange(takesTo(id, 'ice'), `${id} takes to the ice box`)
+      for (const how of ['hugs', 'sits-and-sags', 'armchair', 'plank'] as const) inRange(takesTo(id, how), `${id} ${how}`)
+      inRange(sneeze(id), `${id} sneezes`)
+      inRange(sigh(id), `${id} sighs`)
+      expect(lengthOf(sigh(id)) + 0.5, id).toBeLessThanOrEqual(RANGE.total)
+      // A sneeze comes after the whumpf of the feathers, and still ends inside one voice.
+      expect(lengthOf(sneeze(id)) + 0.75, id).toBeLessThanOrEqual(RANGE.total)
       inRange(yawn(id), `${id} yawns`)
     }
     for (const step of [1, 2, 3]) {
       inRange(stoveDial(step), `stove dial ${step}`)
       inRange(iceDial(step), `ice dial ${step}`)
     }
+    for (const heard of ['plain', 'loved', 'minded', 'faint'] as const) inRange(buzz(heard), `the fly's buzz ${heard}`)
+    for (const step of [0, 1]) inRange(duetBeat(step), `duet beat ${step}`)
+    for (let step = 0; step < TUBA_TUNE.length; step++) for (const heard of ['plain', 'loved'] as const) { const sound = hum(step, heard); expect(sound === null).toBe(TUBA_TUNE[step] === null); if (sound) inRange(sound, `hum ${step}`) }
     inRange(wheelTurns('day'), 'wheel to day')
     inRange(wheelTurns('night'), 'wheel to night')
   })
@@ -56,6 +63,34 @@ describe('every voice is numbers inside the stated ranges', () => {
       }
     }
     expect(TUBA_TUNE.filter((step) => step === null).length).toBeGreaterThanOrEqual(2)
+  })
+})
+
+describe('awake and at its one thing, each guest has a sound of its own', () => {
+  it('every guest either makes a noise as its one thing or has a small sound of being at it, no two alike and none at the same tempo', () => {
+    const noisy = ['troll', 'singer', 'fly']
+    const seen = new Set<string>()
+    for (const id of GUEST_IDS) {
+      const sound = atItsThing(id, 0, 'plain')
+      expect(sound === null, id).toBe(noisy.includes(id))
+      expect(AT_ITS_THING[id] === undefined, id).toBe(noisy.includes(id))
+      if (!sound) continue
+      for (const nth of [0, 1]) for (const heard of ['plain', 'faint'] as const) inRange(atItsThing(id, nth, heard)!, `${id} at its thing`)
+      seen.add(JSON.stringify(sound))
+    }
+    expect(seen.size).toBe(GUEST_IDS.length - noisy.length)
+    expect(new Set(Object.values(AT_ITS_THING)).size).toBe(Object.values(AT_ITS_THING).length)
+  })
+})
+
+describe('what stands somewhere keeps sounding', () => {
+  it('the rumble, the hum with its drip, the tick, the tock, the whoosh and the patter are six different sounds in range, each at its own tempo', () => {
+    const kinds = Object.keys(STEADY_BEAT) as (keyof typeof STEADY_BEAT)[]
+    for (const kind of kinds) for (const nth of [0, 1, 2, 3]) for (const heard of ['plain', 'faint'] as const) inRange(steady(kind, nth, heard), `steady ${kind}`)
+    expect(new Set(kinds.map((kind) => JSON.stringify(steady(kind, 1, 'plain')))).size).toBe(kinds.length)
+    expect(new Set(Object.values(STEADY_BEAT)).size).toBe(kinds.length)
+    // The ice box drips now and then, not on every round of its hum.
+    expect([0, 1, 2, 3].map((nth) => steady('hum', nth, 'plain').length)).toEqual([3, 2, 2, 3])
   })
 })
 

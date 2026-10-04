@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { arrange } from './arrangement'
 import { CORNER, dropAt, guestAt, hitAt, roomUnder } from './hit'
-import { bodyBox, fromPlain, lensOf, spotsOf, toPlain, upsideDown } from './inkPlaces'
+import { GUEST_IDS } from './guests'
+import { spotReach } from './inkGuests'
+import { bodyBox, fromPlain, lensOf, reachBoxes, spotsOf, toPlain, upsideDown } from './inkPlaces'
 import { TOUCH, layoutPage } from './layout'
 import { pageOfArrangement } from './page'
 
@@ -25,6 +27,59 @@ describe('what a finger landed on', () => {
     }
   })
 
+  it('a finger on what a guest holds out in the spot colour takes that guest: the horn, its music, its cloud and string, its bag', () => {
+    // By day and by night, so that each of the four is seen awake: the singer holds her music out only while she sings.
+    const stoodAt = (phase: 'day' | 'night') => spotsOf(pageOfArrangement(arrange({ shape: 'square', fixtures: [], twins: [] }, { troll: 2, singer: 0, yeti: 1, bat: 'lobby' }, {}, { phase }), null, true).guests, page)
+    const seen = new Set<string>()
+    for (const stood of [stoodAt('day'), stoodAt('night')]) for (const { guest, spot } of stood) {
+      const body = bodyBox(spot, page)
+      for (const box of reachBoxes(guest, spot, page)) {
+        // Somewhere in the box that is on no body: there the finger used to land on the room or the lobby behind.
+        const at = [middle(box), { x: box.x + 3, y: box.y + 3 }, { x: box.x + box.w - 3, y: box.y + 3 }, { x: box.x + 3, y: box.y + box.h - 3 }, { x: box.x + box.w - 3, y: box.y + box.h - 3 }]
+          .find((point) => guestAt(page, stood, point) === null)
+        if (!at) continue
+        expect(at.x < body.x || at.x > body.x + body.w || at.y < body.y).toBe(true)
+        expect(hitAt(page, stood, at)).toMatchObject({ kind: 'guest', id: guest.id })
+        seen.add(guest.id)
+      }
+    }
+    expect([...seen].sort()).toEqual(['bat', 'singer', 'troll', 'yeti'])
+    // The horn is on the side the troll is drawn facing away from its bed, and mirrors with the figure.
+    const troll = stoodAt('day').find((entry) => entry.guest.id === 'troll')!
+    const horn = reachBoxes(troll.guest, troll.spot, page)[0]
+    expect(horn.x + horn.w / 2 > troll.spot.x).toBe(!troll.spot.flip)
+  })
+
+  it('a body comes before what another guest holds out over it, and a guest is never set down on a horn', () => {
+    const queue = arrange({ shape: 'square', fixtures: [], twins: [] }, { troll: 'lobby', bat: 'lobby', singer: 'lobby' }, {}, {})
+    const stood = spotsOf(pageOfArrangement(queue, null, true).guests, page)
+    for (const { guest, spot } of stood) {
+      const body = bodyBox(spot, page)
+      for (let x = body.x + 2; x < body.x + body.w; x += 9) {
+        for (let y = body.y + 2; y < body.y + body.h; y += 9) {
+          const plain = guestAt(page, stood, { x, y })
+          expect(guestAt(page, stood, { x, y }, null, true)).toEqual(plain)
+          expect(plain).not.toBeNull()
+        }
+      }
+      void guest
+    }
+    const troll = stood.find((entry) => entry.guest.id === 'troll')!
+    const free = reachBoxes(troll.guest, troll.spot, page).map(middle).find((point) => guestAt(page, stood, point) === null)
+    if (free) expect(dropAt(page, stood, free, 'bat').kind).not.toBe('guest')
+  })
+
+  it('every guest has a box for its bag, and a guest rolled in the quilt holds nothing out but its bag and, the yeti, its cloud', () => {
+    for (const id of GUEST_IDS) {
+      expect(spotReach(id, { awake: true, wrapped: false, bag: true }).length).toBe(spotReach(id, { awake: true, wrapped: false, bag: false }).length + 1)
+      expect(spotReach(id, { awake: true, wrapped: true, bag: false }).length).toBe(id === 'yeti' ? 2 : 0)
+      for (const [x1, y1, x2, y2] of spotReach(id, { awake: true, wrapped: false, bag: true })) {
+        expect(x2).toBeGreaterThan(x1)
+        expect(y2).toBeGreaterThan(y1)
+      }
+    }
+  })
+
   it('the wheel, a room, a wall with its nearer room, the lobby, the porter, the door, the house and the paper', () => {
     expect(hitAt(page, standing, middle(page.wheel)).kind).toBe('wheel')
     expect(hitAt(page, standing, { x: page.rooms[1].rect.x + 100, y: page.rooms[1].rect.y + 40 })).toEqual({ kind: 'room', room: 1 })
@@ -40,6 +95,31 @@ describe('what a finger landed on', () => {
     expect(hitAt(page, standing, { x: 4, y: 400 }).kind).toBe('paper')
   })
 
+  it('a room door, a bed, the boiler in its bay, the luggage and the bird cage on it are each themselves, and a house without a boiler or a second bed has plaster and air there', () => {
+    const room = page.rooms[1]
+    expect(hitAt(page, standing, middle(room.door))).toEqual({ kind: 'roomDoor', room: 1 })
+    expect(hitAt(page, standing, middle(room.bed))).toEqual({ kind: 'bed', room: 1 })
+    // The slab under a room on the ground lies along the foot of its bed and does not reach over it, and a finger on the slab itself still lands there.
+    expect(hitAt(page, standing, { x: middle(room.bed).x, y: room.bed.y + room.bed.h - 2 })).toEqual({ kind: 'bed', room: 1 })
+    expect(hitAt(page, standing, { x: middle(room.bed).x, y: room.rect.y + room.rect.h + 2 })).toEqual({ kind: 'edge', id: 'under-1', nearer: 1 })
+    const mirrored = { x: 2 * (room.rect.x + room.rect.w / 2) - (room.bed.x + room.bed.w / 2), y: room.bed.y + 4 }
+    expect(hitAt(page, standing, mirrored, [], false, { fixtures: [], twins: [] }).kind).not.toBe('bed')
+    expect(hitAt(page, standing, mirrored, [], false, { fixtures: [], twins: [1] })).toEqual({ kind: 'bed', room: 1 })
+    // Nor does the slab reach over the second bed of a room for two, which lies along it just as the first does.
+    const foot = { x: mirrored.x, y: room.bed.y + room.bed.h - 2 }
+    expect(hitAt(page, standing, foot, [], false, { fixtures: [], twins: [1] })).toEqual({ kind: 'bed', room: 1 })
+    expect(hitAt(page, standing, foot, [], false, { fixtures: [], twins: [] })).toEqual({ kind: 'edge', id: 'under-1', nearer: 1 })
+    const bay = middle(page.cellarBays[0])
+    expect(hitAt(page, standing, bay).kind).toBe('house')
+    expect(hitAt(page, standing, bay, [], false, { fixtures: [{ kind: 'snow', col: 0 }], twins: [] }).kind).toBe('house')
+    expect(hitAt(page, standing, bay, [], false, { fixtures: [{ kind: 'boiler', col: 0 }], twins: [] }).kind).toBe('boiler')
+    const lg = page.luggage
+    expect(hitAt(page, standing, { x: lg.x + lg.w / 2, y: lg.y + lg.h - 10 }).kind).toBe('luggage')
+    expect(hitAt(page, standing, { x: lg.x + 26 * page.scale, y: lg.y + 12 * page.scale }).kind).toBe('cage')
+    // Each is at least a finger across.
+    for (const rect of [room.door, room.bed, page.cellarBays[0], lg]) expect(Math.min(rect.w, rect.h)).toBeGreaterThanOrEqual(TOUCH)
+  })
+
   it('the top right corner is the grown-up and answers nothing', () => {
     expect(hitAt(page, standing, { x: 1180 - 5, y: 5 }).kind).toBe('corner')
     expect(hitAt(page, standing, { x: 1180 - CORNER - 1, y: 5 }).kind).not.toBe('corner')
@@ -49,6 +129,47 @@ describe('what a finger landed on', () => {
     const kinds = new Set<string>()
     for (let x = 0; x <= 1180; x += 20) for (let y = 0; y <= 820; y += 20) kinds.add(hitAt(page, standing, { x, y }).kind)
     for (const kind of ['guest', 'wheel', 'room', 'edge', 'lobby', 'bench', 'porter', 'door', 'house', 'paper', 'corner']) expect(kinds, kind).toContain(kind)
+  })
+})
+
+describe('two who share a room for two are both seen', () => {
+  const twins = { shape: 'square' as const, fixtures: [], twins: [0, 3] }
+  const pairs: [string, string][] = []
+  for (const a of GUEST_IDS) for (const b of GUEST_IDS) if (a < b) pairs.push([a, b])
+
+  it('each has its own half of the room, by day and by night, and a finger finds each of them', () => {
+    for (const [a, b] of pairs) for (const phase of ['day', 'night'] as const) for (const room of [0, 3]) {
+      const stood = spotsOf(pageOfArrangement(arrange(twins, { [a]: room, [b]: room }, {}, { phase }), null, true).guests, page)
+      const [one, two] = stood
+      const middle = page.rooms[room].rect.x + page.rooms[room].rect.w / 2
+      // One on either side of the middle of the room.
+      expect((one.spot.x - middle) * (two.spot.x - middle), `${a} ${b} ${phase}`).toBeLessThan(0)
+      // Their bodies are at least two thirds clear of each other, where one used to stand in front of the other.
+      const apart = Math.abs(bodyBox(one.spot, page).x - bodyBox(two.spot, page).x)
+      expect(apart / bodyBox(one.spot, page).w, `${a} ${b} ${phase}`).toBeGreaterThan(0.66)
+      for (const { guest, spot } of stood) {
+        const box = bodyBox(spot, page)
+        const own = spot.x < middle ? box.x + box.w * 0.25 : box.x + box.w * 0.75
+        expect(guestAt(page, stood, { x: own, y: box.y + box.h / 2 })?.id, `${a} ${b} ${phase}`).toBe(guest.id)
+      }
+    }
+  })
+
+  it('nobody changes halves when the list comes back in the order it was drawn, and the fly is drawn first, its wings behind the other', () => {
+    for (const [a, b] of pairs) {
+      const scene = pageOfArrangement(arrange(twins, { [a]: 0, [b]: 0 }, {}, {}), null, true)
+      const stood = spotsOf(scene.guests, page)
+      const again = spotsOf(stood.map((one) => one.guest), page)
+      const backwards = spotsOf([...scene.guests].reverse(), page)
+      for (const list of [again, backwards]) for (const { guest, spot } of list) expect(spot, `${a} ${b}`).toEqual(stood.find((one) => one.guest.id === guest.id)!.spot)
+      if (a === 'fly' || b === 'fly') expect(stood[0].guest.id).toBe('fly')
+    }
+  })
+
+  it('a guest alone in a room for two stands where it would in any room', () => {
+    const alone = spotsOf(pageOfArrangement(arrange(twins, { troll: 0 }, {}, {}), null, true).guests, page)
+    const plain = spotsOf(pageOfArrangement(arrange({ shape: 'square', fixtures: [], twins: [] }, { troll: 0 }, {}, {}), null, true).guests, page)
+    expect(alone[0].spot).toEqual(plain[0].spot)
   })
 })
 

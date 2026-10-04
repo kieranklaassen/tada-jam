@@ -3,7 +3,8 @@
 //
 // A room is a whole number: floor * cols + col, with floor 0 on the ground.
 // An edge is the wall or the floor between two rooms that touch, and it is
-// where a quilt hangs or a pipe goes through.
+// where a quilt hangs or a pipe goes through. The outer sides of the house
+// take things too (`outerEdgesOf`).
 
 export type ShapeId = 'square' | 'long' | 'tower'
 
@@ -73,6 +74,44 @@ export function edgesOf(shape: ShapeId): readonly Edge[] {
 
 export function edgeById(shape: ShapeId, id: string): Edge | null {
   return edgesOf(shape).find((edge) => edge.id === id) ?? null
+}
+
+const OUTER: Partial<Record<ShapeId, readonly Edge[]>> = {}
+
+/**
+ * The outer sides of the house, where a thing can be fixed as it can to a
+ * wall or a floor between two rooms: the floor under each room on the
+ * ground, the ceiling over each room at the top, and the outer wall of each
+ * room at either end of a floor. Each belongs to one room, which is both its
+ * `a` and its `b`. Nothing travels through them from room to room. What is
+ * built in comes through two of them: the boiler's warmth up through the
+ * ground floor of its column, the snow hole's cold down through the top
+ * ceiling of its (`behind`).
+ */
+export function outerEdgesOf(shape: ShapeId): readonly Edge[] {
+  const known = OUTER[shape]
+  if (known) return known
+  const { floors, cols } = SHAPES[shape]
+  const edges: Edge[] = []
+  for (let room = 0; room < floors * cols; room++) {
+    const floor = Math.floor(room / cols), col = room % cols
+    if (floor === 0) edges.push({ id: `under-${room}`, a: room, b: room, kind: 'floor' })
+    if (floor === floors - 1) edges.push({ id: `over-${room}`, a: room, b: room, kind: 'floor' })
+    if (col === 0) edges.push({ id: `left-${room}`, a: room, b: room, kind: 'wall' })
+    if (col === cols - 1) edges.push({ id: `right-${room}`, a: room, b: room, kind: 'wall' })
+  }
+  OUTER[shape] = edges
+  return edges
+}
+
+/** A wall or a floor of the house by its id, between two rooms or on the outside. */
+export function anyEdgeById(shape: ShapeId, id: string): Edge | null {
+  return edgeById(shape, id) ?? outerEdgesOf(shape).find((edge) => edge.id === id) ?? null
+}
+
+/** The outer side a fixture's warmth or cold comes through: the floor under the boiler's room, the ceiling over the snow hole's. */
+export function fixtureEdge(house: House, fixture: Fixture): string {
+  return `${fixture.kind === 'boiler' ? 'under' : 'over'}-${fixtureRoom(house, fixture)}`
 }
 
 /** How many guests a room sleeps. */

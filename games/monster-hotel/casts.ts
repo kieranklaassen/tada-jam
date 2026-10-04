@@ -55,12 +55,14 @@ export const CASTS: readonly Cast[] = [
     withBench: { guests: { troll: 0, bat: 1, blob: 3, fly: 2 } } },
 
   // --- heat-and-snow: the boiler, the snow hole, the lizard and the yeti -----
-  { id: 'heat-and-snow/a', position: 'heat-and-snow', house: heated('square', 0, 1), guests: ['lizard', 'yeti'], bench: 'troll', kit: [],
-    neat: { guests: { lizard: 0, yeti: 1 } },
-    withBench: { guests: { lizard: 0, yeti: 1, troll: 3 } } },
+  // The first coach-load of this place is the one a child of eleven or older meets on a first visit: two of its
+  // guests, the yeti and the bat, ask for the same cold room, so the first thing on the page is two demands for one door.
   { id: 'heat-and-snow/b', position: 'heat-and-snow', house: heated('square', 1, 0), guests: ['lizard', 'yeti', 'bat'], bench: 'troll', kit: [],
     neat: { guests: { lizard: 1, yeti: 0, bat: 2 } },
     withBench: { guests: { lizard: 1, yeti: 3, bat: 0, troll: 2 } } },
+  { id: 'heat-and-snow/a', position: 'heat-and-snow', house: heated('square', 0, 1), guests: ['lizard', 'yeti'], bench: 'troll', kit: [],
+    neat: { guests: { lizard: 0, yeti: 1 } },
+    withBench: { guests: { lizard: 0, yeti: 1, troll: 3 } } },
   { id: 'heat-and-snow/c', position: 'heat-and-snow', house: heated('square', 0, 1), guests: ['lizard', 'yeti', 'troll'], bench: 'bat', kit: [],
     neat: { guests: { lizard: 0, yeti: 1, troll: 3 } },
     withBench: { guests: { lizard: 0, yeti: 2, troll: 3, bat: 1 } } },

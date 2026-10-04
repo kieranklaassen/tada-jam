@@ -1,10 +1,15 @@
 import { describe, expect, it } from 'vitest'
+import { arrange } from './arrangement'
 import { TIERS } from './config'
 import { InkPage } from './ink'
 import { DEMO_NAMES, demoScene } from './inkDemo'
 import { GUEST_BOX } from './inkGuests'
 import { INK, PAPER, SPOT, mulberry32, type Surface } from './inkHatch'
+import { standOf } from './inkLens'
 import { spotsOf, thingBox } from './inkPlaces'
+import { layoutPage } from './layout'
+import { pageOfArrangement } from './page'
+import { upright } from './inkMoving'
 import { SPIKE_SCENE, type InkScene, type InkThing } from './inkScene'
 
 /** A 2D context that draws nothing and writes down every call and every property set. */
@@ -264,14 +269,24 @@ describe('the ink page', () => {
     expect(figures(scene, 1.3)).not.toEqual(figures(scene, 0.2))
   })
 
-  it('draws the page only once over where the tier does not afford the blob its many eyes', () => {
+  it('every guest keeps a hand of its own at the lowest tier: the blob\'s room is still seen again by its other eyes, and the fly still has facets, only fewer', () => {
     const full = new InkPage(fakeSurfaces().make), low = new InkPage(fakeSurfaces().make)
     full.resize(1180, 820, 2, 0)
     low.resize(1180, 820, 1, TIERS.length - 1)
-    const scene = demoScene('view-blob', 1)
-    const images = (page: InkPage) => frame(page, scene, 1).log.filter((call) => call.startsWith('drawImage')).length
     expect(TIERS[0]!.doubled && !TIERS[TIERS.length - 1]!.doubled).toBe(true)
-    expect(images(low)).toBeLessThan(images(full))
+    // On a surface that can be copied from (the fly's facets are copies of what is already drawn), as the real one can.
+    const images = (page: InkPage, scene: InkScene) => {
+      const log: string[] = [], ctx = fakeContext(log)
+      ;(ctx as unknown as { canvas: unknown }).canvas = {}
+      page.draw(ctx, scene, 1)
+      return log.filter((call) => call.startsWith('drawImage')).length
+    }
+    // The same page drawn from the cook's place stamps its room once and has no facets: what the blob's and the fly's stamp beyond it is their hand.
+    for (const name of ['view-blob', 'view-fly'] as const) {
+      const scene = demoScene(name, 1), plainHand = { ...scene, from: 'cook' as const, view: { ...scene.view!, from: 'cook' as const } }
+      expect(images(low, scene), name).toBeLessThan(images(full, scene))
+      expect(images(low, scene), name).toBeGreaterThan(images(low, plainHand))
+    }
   })
 
   it('sheds the boil at the lower tiers and still draws every guest', () => {
@@ -299,5 +314,79 @@ describe('the ink page', () => {
     expect(run(b)).toEqual(first)
     expect(run(c)).not.toEqual(first)
     for (const value of first) { expect(value).toBeGreaterThanOrEqual(0); expect(value).toBeLessThan(1) }
+  })
+})
+
+describe('a numeral is always the right way up', () => {
+  it('on a page turned half round its transform is turned back about its own middle, and elsewhere left alone', () => {
+    const plain = [2, 0, 0, 2, 100, 50] as const
+    expect(upright(plain, 7, 9)).toBe(plain)
+    // Turned half round: the point (7, 9) stays where it was on the screen, and the axes point the usual way again.
+    const turned = [-2, 0, 0, -2, 900, 700] as const
+    const back = upright(turned, 7, 9)
+    expect([back[0], back[1], back[2], back[3]]).toEqual([2, -0, -0, 2])
+    expect([back[0] * 7 + back[2] * 9 + back[4], back[1] * 7 + back[3] * 9 + back[5]]).toEqual([turned[0] * 7 + turned[4], turned[3] * 9 + turned[5]])
+  })
+
+  it('a guest in the lobby is drawn with one more stroke, its stare; one still in the coach or on its way to its place has none', () => {
+    const { make } = fakeSurfaces()
+    const page = new InkPage(make)
+    page.resize(1180, 820, 2, 0)
+    const bat = SPIKE_SCENE.guests.find((guest) => guest.id === 'bat')!
+    const withBat = (body: InkScene['guests'][number]['body'] | null, staresAt: number | null) => ({ ...SPIKE_SCENE, guests: SPIKE_SCENE.guests.map((guest) => (guest === bat ? { ...bat, staresAt, ...(body ? { body } : {}) } : guest)) })
+    const none = frame(page, withBat(null, null), 1).count
+    expect(frame(page, withBat(null, 5), 1).count).toBe(none + 1)
+    // Still in the coach (not seen), and walking in from the door: no stare hangs in the lobby.
+    expect(frame(page, withBat({ sx: 0.001, sy: 0.001, rot: 0, dx: 200, dy: 60 }, 5), 1).count).toBe(none)
+    expect(frame(page, withBat({ sx: 1, sy: 1, rot: 0, dx: 120, dy: 0 }, 5), 1).count).toBe(none)
+    // Arrived and only breathing, it stares.
+    expect(frame(page, withBat({ sx: 1.01, sy: 0.99, rot: 0, dx: 0.5, dy: 0 }, 5), 1).count).toBe(none + 1)
+  })
+})
+
+describe('the singer nobody hears, on her own page', () => {
+  const house = { shape: 'long' as const, fixtures: [], twins: [] }
+  /** How many dots and how many strokes of line a frame lays down. */
+  const marksOf = (scene: InkScene) => {
+    const { make } = fakeSurfaces()
+    const page = new InkPage(make)
+    page.resize(1180, 820, 2, 0)
+    const { log } = frame(page, scene, 1.3)
+    return { dots: log.filter((call) => call.startsWith('ellipse(')).length, lines: log.filter((call) => call.startsWith('lineTo(')).length }
+  }
+
+  it('has the answer she wants coming into her room in dots, through the walls and floors with rooms behind them, and her own song kept out of the room', () => {
+    // Alone in a middle room upstairs at night, everyone else still in the lobby: nobody hears her.
+    const unheard = pageOfArrangement(arrange(house, { singer: 4, blob: 'lobby' }, {}, { phase: 'night' }), 'singer', true)
+    expect(unheard.wants).toEqual({ room: 4, kind: 'heard' })
+    const drawn = marksOf(unheard)
+    // The same page with the want left out: her song fills her own room in curls, and there are no dots of an answer.
+    const { wants: _wants, ...rest } = unheard
+    const without = marksOf(rest)
+    expect(drawn.dots).toBeGreaterThan(without.dots + 30)
+    expect(drawn.lines).toBeLessThan(without.lines)
+    // A room with a neighbour on either side and one below has three ways in; a corner room downstairs has two, and fewer dots.
+    const corner = pageOfArrangement(arrange(house, { singer: 0, blob: 'lobby' }, {}, { phase: 'night' }), 'singer', true)
+    expect(corner.wants).toEqual({ room: 0, kind: 'heard' })
+    const { wants: _corner, ...cornerRest } = corner
+    expect(marksOf(corner).dots - marksOf(cornerRest).dots).toBeLessThan(drawn.dots - without.dots)
+    expect(marksOf(corner).dots - marksOf(cornerRest).dots).toBeGreaterThan(20)
+  })
+})
+
+describe('the bat sleeps hanging', () => {
+  it('asleep in a room it is turned half round in its own box and hung by a cord from its ceiling, on the plain page and on another guest\'s; awake, wrapped or in the lobby it stands', () => {
+    const page = layoutPage(1180, 820, 'long')
+    const bat = (over: Partial<InkScene['guests'][number]>): InkScene['guests'][number] => ({ id: 'bat', place: { room: 4 }, awake: false, mood: 'content', turnedTo: null, wrapped: false, staresAt: null, ...over })
+    const spot = { x: page.rooms[4].stand.x, y: page.rooms[4].stand.y, flip: false }
+    for (const view of [null, { from: 'troll' as const, room: 1 }]) {
+      const hung = standOf(page, view, bat({}), spot)
+      expect(hung.turn).toBe(Math.PI)
+      expect(hung.cord).toEqual({ x: spot.x, y: page.rooms[4].rect.y })
+      // Its feet are up where its head would be: the top of the box a finger finds it in.
+      expect(hung.y).toBeLessThan(spot.y - 100 * page.scale)
+      expect(hung.y).toBeGreaterThan(page.rooms[4].rect.y)
+    }
+    for (const up of [bat({ awake: true }), bat({ wrapped: true }), bat({ place: 'lobby', awake: true })]) expect(standOf(page, null, up, spot)).toEqual({ x: spot.x, y: spot.y, turn: 0, cord: null })
   })
 })

@@ -75,13 +75,14 @@ export function holds(arrangement: Arrangement, id: GuestId, kind: ThingKind): b
   return item !== null && isGuestAt(item.at) && item.at.guest === id
 }
 
-/** What hangs on a wall or floor: the quilt, the pipe, or nothing. The alarm clock on a wall changes nothing. */
-export function onEdge(arrangement: Arrangement, edge: string): 'quilt' | 'pipe' | null {
-  for (const kind of ['quilt', 'pipe'] as const) {
-    const item = thing(arrangement, kind)
-    if (item && isEdgeAt(item.at) && item.at.edge === edge) return kind
-  }
-  return null
+/** What is fixed to a wall or a floor. */
+export type Hung = 'quilt' | 'pipe' | 'both' | null
+
+/** What hangs on a wall or floor: the quilt, the pipe, both (the pipe let through the quilt as through the wall), or nothing. The alarm clock on a wall changes nothing. */
+export function onEdge(arrangement: Arrangement, edge: string): Hung {
+  const there = (kind: 'quilt' | 'pipe') => { const item = thing(arrangement, kind); return !!item && isEdgeAt(item.at) && item.at.edge === edge }
+  const quilt = there('quilt'), pipe = there('pipe')
+  return quilt && pipe ? 'both' : quilt ? 'quilt' : pipe ? 'pipe' : null
 }
 
 /** The hours a guest keeps: its own, or the other way round while a guest who will change holds the alarm clock. */

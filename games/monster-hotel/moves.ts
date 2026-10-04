@@ -1,6 +1,6 @@
 import { freeBeds, isEdgeAt, isGuestAt, isRoomAt, occupants, placeOf, roomOf, thing, type Arrangement, type Dial, type GuestAt, type Lodger, type Thing, type ThingAt, type ThingKind } from './arrangement'
 import { TASTES, otherPhase, type GuestId } from './guests'
-import { edgeById, roomCount } from './hotel'
+import { anyEdgeById, roomCount } from './hotel'
 
 // The object-by-action grid as rules: what happens when a guest or a thing is
 // set down somewhere or tapped. Every cell works, none is refused, and each
@@ -27,7 +27,7 @@ export type Outcome =
   // the alarm clock: kept by a guest who will change its hours, shrugged off by one who will not
   | 'clock-by-bed' | 'clock-kept' | 'clock-shrugged-off' | 'clock-on-wall' | 'clock-rings'
   // around the grid
-  | 'to-lobby' | 'to-bench' | 'to-cupboard' | 'handed-back' | 'no-bed' | 'sent-away' | 'wheel-turns' | 'nothing'
+  | 'to-lobby' | 'to-bench' | 'to-cupboard' | 'handed-back' | 'sent-away' | 'wheel-turns' | 'nothing'
 
 export type Move = {
   arrangement: Arrangement
@@ -64,8 +64,8 @@ function guestToRoom(arrangement: Arrangement, id: GuestId, room: number): Move 
   if (from === room) return same(arrangement)
   if (freeBeds(arrangement, room) > 0) return { arrangement: withGuests(arrangement, { [id]: room }), outcome: 'moves-in', changed: true }
   const there = occupants(arrangement, room)
-  // A single room that is taken: the two change places. A full room of two beds has no one guest to change with.
-  return there.length === 1 ? guestToGuest(arrangement, id, there[0]) : same(arrangement, 'no-bed')
+  // A room that is full: the newcomer changes places with the one who lodges there, and where two do, with the second of them. Nobody is turned back.
+  return guestToGuest(arrangement, id, there[there.length - 1])
 }
 
 /** Where a guest goes when another takes its room: back to where that one came from, or the lobby if that was the bench and it may not sit there. */
@@ -76,7 +76,8 @@ function placeFor(arrangement: Arrangement, id: GuestId, at: GuestAt): GuestAt {
 function guestToGuest(arrangement: Arrangement, id: GuestId, other: GuestId): Move {
   const from = placeOf(arrangement, id), to = placeOf(arrangement, other)
   if (from === null || to === null || id === other || from === to || to === 'gone') return same(arrangement)
-  if (to === 'bench') return guestTo(arrangement, id, 'bench')
+  // Given to the guest on the bench, the two change places as any two do: the bench guest comes in and takes the carried one's place, and the carried one, who may not sit on the bench, waits in the lobby.
+  if (to === 'bench') return { arrangement: withGuests(arrangement, { [other]: from, [id]: 'lobby' }), outcome: 'swaps', changed: true }
   if (typeof to === 'number' && freeBeds(arrangement, to) > 0) return { arrangement: withGuests(arrangement, { [id]: to }), outcome: 'shares', changed: true }
   return { arrangement: withGuests(arrangement, { [id]: to, [other]: placeFor(arrangement, other, from) }), outcome: 'swaps', changed: true }
 }
@@ -93,7 +94,7 @@ function guestTo(arrangement: Arrangement, id: GuestId, target: Target): Move {
   if ('guest' in target) return guestToGuest(arrangement, id, target.guest)
   if ('edge' in target) {
     // It sticks half through the plaster, then steps out into the nearer room, by the same rules as being set down there.
-    if (!edgeById(arrangement.house.shape, target.edge)) return same(arrangement)
+    if (!anyEdgeById(arrangement.house.shape, target.edge)) return same(arrangement)
     const after = guestToRoom(arrangement, id, target.nearer)
     return { ...after, outcome: 'through-the-wall' }
   }
@@ -113,9 +114,9 @@ const ON_EDGE: Record<ThingKind, Outcome> = { quilt: 'quilt-hangs', pipe: 'pipe-
 function thingTo(arrangement: Arrangement, kind: ThingKind, target: Target): Move {
   const item = thing(arrangement, kind)
   if (!item) return same(arrangement)
-  const place = (at: ThingAt, outcome: Outcome, base: Arrangement = arrangement): Move => {
-    const changed = !sameAt(item.at, at) || base !== arrangement
-    return { arrangement: changed ? withThing(base, kind, { at }) : arrangement, outcome, changed }
+  const place = (at: ThingAt, outcome: Outcome): Move => {
+    const changed = !sameAt(item.at, at)
+    return { arrangement: changed ? withThing(arrangement, kind, { at }) : arrangement, outcome, changed }
   }
   if (target === 'cupboard' || target === 'lobby' || target === 'bench' || target === 'coach') return place('cupboard', 'to-cupboard')
   if ('room' in target) return knownRoom(arrangement, target.room) ? place({ room: target.room }, IN_ROOM[kind]) : same(arrangement)
@@ -128,19 +129,29 @@ function thingTo(arrangement: Arrangement, kind: ThingKind, target: Target): Mov
     if (kind === 'pipe') return place({ guest: target.guest }, 'trumpet')
     return place({ guest: target.guest }, TASTES[target.guest].flexible ? 'clock-kept' : 'clock-shrugged-off')
   }
-  if (!edgeById(arrangement.house.shape, target.edge) || !knownRoom(arrangement, target.nearer)) return same(arrangement)
+  if (!anyEdgeById(arrangement.house.shape, target.edge) || !knownRoom(arrangement, target.nearer)) return same(arrangement)
   // The stove and the ice box mark the wall and slide into the nearer room.
   if (kind === 'stove' || kind === 'ice') return place({ room: target.nearer }, ON_EDGE[kind])
-  // A wall or floor holds the quilt or the pipe, never both: the one that was there goes back to the cupboard.
-  const rival = kind === 'quilt' ? 'pipe' : kind === 'pipe' ? 'quilt' : null
-  const there = rival ? thing(arrangement, rival) : null
-  const cleared = rival && there && isEdgeAt(there.at) && there.at.edge === target.edge ? withThing(arrangement, rival, { at: 'cupboard' }) : arrangement
-  return place({ edge: target.edge }, ON_EDGE[kind], cleared)
+  // A wall or floor takes whatever is fixed to it, and nothing that was there is taken away: the quilt and the pipe may share one, the pipe let through the quilt.
+  return place({ edge: target.edge }, ON_EDGE[kind])
+}
+
+/**
+ * A thing stays only with a guest who has a room. A guest who is carried or
+ * changed out to the lobby or the bench hands back what it held: the quilt
+ * it was wrapped in, the pipe, the alarm clock go to the cupboard, as a thing
+ * given to a guest with no room does. So the house found again is the house
+ * that was left.
+ */
+function handsBack(move: Move): Move {
+  const { arrangement } = move
+  const things = arrangement.things.map((item): Thing => (isGuestAt(item.at) && typeof placeOf(arrangement, item.at.guest) !== 'number' ? { ...item, at: 'cupboard' } : item))
+  return things.some((item, index) => item !== arrangement.things[index]) ? { ...move, arrangement: { ...arrangement, things } } : move
 }
 
 /** What happens when the child sets a guest or a thing down. */
 export function setDown(arrangement: Arrangement, held: Held, target: Target): Move {
-  return 'guest' in held ? guestTo(arrangement, held.guest, target) : thingTo(arrangement, held.thing, target)
+  return 'guest' in held ? handsBack(guestTo(arrangement, held.guest, target)) : thingTo(arrangement, held.thing, target)
 }
 
 const TAPPED: Record<ThingKind, Outcome> = { quilt: 'feathers', pipe: 'toots', stove: 'stove-dial', ice: 'ice-dial', clock: 'clock-rings' }

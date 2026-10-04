@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { SHAPES, edgesOf, roomCount, type ShapeId } from './hotel'
+import { SHAPES, edgesOf, outerEdgesOf, roomCount, type ShapeId } from './hotel'
 import { TOUCH, layoutPage, type PageLayout, type Rect } from './layout'
 
 const SHAPE_IDS = Object.keys(SHAPES) as ShapeId[]
@@ -29,7 +29,7 @@ describe('the page layout', () => {
       for (const [w, h] of SIZES) {
         const page = layoutPage(w, h, shape)
         expect(page.rooms).toHaveLength(roomCount(shape))
-        expect(page.edges.map((edge) => edge.id)).toEqual(edgesOf(shape).map((edge) => edge.id))
+        expect(page.edges.map((edge) => edge.id)).toEqual([...edgesOf(shape), ...outerEdgesOf(shape)].map((edge) => edge.id))
         expect(page.slots).toHaveLength(5)
         expect(page.roofBays).toHaveLength(SHAPES[shape].cols)
         expect(page.cellarBays).toHaveLength(SHAPES[shape].cols)
@@ -49,7 +49,7 @@ describe('the page layout', () => {
         const surface = { x: 0, y: 0, w, h }
         expect(inside(page.plate, surface)).toBe(true)
         for (const r of everything(page)) expect(inside(r, page.plate)).toBe(true)
-        for (const spot of [...page.lobbySpots, ...page.rooms.flatMap((room) => [room.stand, room.stand2])]) {
+        for (const spot of [...page.lobbySpots, ...page.rooms.map((room) => room.stand)]) {
           expect(inside({ x: spot.x, y: spot.y, w: 0, h: 0 }, page.plate)).toBe(true)
         }
       }
@@ -76,8 +76,18 @@ describe('the page layout', () => {
         const a = page.rooms[edge.a]!.rect, b = page.rooms[edge.b]!.rect
         expect(overlap(edge.rect, a)).toBe(false)
         expect(overlap(edge.rect, b)).toBe(false)
-        if (edge.kind === 'wall') expect(edge.rect.x).toBeCloseTo(a.x + a.w)
-        else expect(edge.rect.y + edge.rect.h).toBeCloseTo(a.y)
+        if (edge.a !== edge.b) {
+          if (edge.kind === 'wall') expect(edge.rect.x).toBeCloseTo(a.x + a.w)
+          else expect(edge.rect.y + edge.rect.h).toBeCloseTo(a.y)
+        } else {
+          // An outer side lies against its one room, on the side its name says, and inside the house.
+          const side = edge.id.slice(0, edge.id.indexOf('-'))
+          if (side === 'under') expect(edge.rect.y).toBeCloseTo(a.y + a.h)
+          if (side === 'over') expect(edge.rect.y + edge.rect.h).toBeCloseTo(a.y)
+          if (side === 'left') expect(edge.rect.x + edge.rect.w).toBeCloseTo(a.x)
+          if (side === 'right') expect(edge.rect.x).toBeCloseTo(a.x + a.w)
+          expect(edge.rect.x >= page.house.x - 0.5 && edge.rect.x + edge.rect.w <= page.house.x + page.house.w + 0.5 && edge.rect.y >= page.house.y - 0.5 && edge.rect.y + edge.rect.h <= page.house.y + page.house.h + 0.5, edge.id).toBe(true)
+        }
       }
       // The lobby, the street and the house do not share ground.
       expect(overlap(page.lobby, page.house)).toBe(false)
