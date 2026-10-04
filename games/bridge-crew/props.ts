@@ -160,13 +160,26 @@ type Mini = (ax: number, ay: number, bx: number, by: number, kind?: Wood) => voi
  * The small model of an idea, standing at (x, y) in pixels: first the way
  * that fails, which gives by `fail` (0 to 1), then the idea, which holds.
  * `holds` chooses which of the two is drawn. One cell of the model is `c`.
+ * `built` (0 to 1) is how far the chief has pinned it together.
  */
-export function ideaModel(pen: Pen, idea: Idea, x: number, y: number, c: number, holds: boolean, fail: number, random: () => number, failure: string | null = null) {
+export function ideaModel(pen: Pen, idea: Idea, x: number, y: number, c: number, holds: boolean, fail: number, random: () => number, failure: string | null = null, built = 1): void {
+  // Pinned together piece by piece: `built` is the share of its pieces that are on it so far.
+  modelOf(pen, idea, x, y, c, holds, fail, random, failure, built >= 1 ? Infinity : Math.max(1, Math.ceil(built * ideaPieces(idea, holds))))
+}
+
+/** How many pieces the model of an idea is pinned together from: its strips, sticks and tubes, its thread and its pins. Counted from the model itself. */
+export function ideaPieces(idea: Idea, holds: boolean): number {
+  return modelOf(null, idea, 0, 0, 1, holds, 0, () => 0.5, null, Infinity)
+}
+
+/** Draws the first `pieces` pieces of a model, or with no pen only counts them; returns how many it has in all. */
+function modelOf(pen: Pen | null, idea: Idea, x: number, y: number, c: number, holds: boolean, fail: number, random: () => number, failure: string | null, pieces: number): number {
   const w = c * 0.9
+  let laid = 0
   // The way that fails is filled in from how the child's own run failed: a build that folded goes right over, a part
   // that gave shows its splinter, and a vehicle that went in off the road's end, a tube or a thread shows the water.
   if (failure === 'folds') fail = Math.min(1, fail * 1.35)
-  if (!holds && fail > 0.8 && failure && failure !== 'folds') {
+  if (pen && !holds && fail > 0.8 && failure && failure !== 'folds') {
     pen.strokeStyle = INK.line
     pen.lineWidth = Math.max(1, c * 0.03)
     pen.globalAlpha = (fail - 0.8) / 0.2
@@ -181,8 +194,8 @@ export function ideaModel(pen: Pen, idea: Idea, x: number, y: number, c: number,
     pen.stroke()
     pen.globalAlpha = 1
   }
-  const stick: Mini = (ax, ay, bx, by, kind = 'stick') => wood(pen, kind, x + ax * w, y - ay * w, x + bx * w, y - by * w, c * 0.55, random)
-  const dot = (px: number, py: number) => pin(pen, x + px * w, y - py * w, c * 0.5, false)
+  const stick: Mini = (ax, ay, bx, by, kind = 'stick') => { if (laid++ < pieces && pen) wood(pen, kind, x + ax * w, y - ay * w, x + bx * w, y - by * w, c * 0.55, random) }
+  const dot = (px: number, py: number) => { if (laid++ < pieces && pen) pin(pen, x + px * w, y - py * w, c * 0.5, false) }
   const sag = fail * 0.35
   switch (idea) {
     case 'triangle': case 'row': {
@@ -199,12 +212,12 @@ export function ideaModel(pen: Pen, idea: Idea, x: number, y: number, c: number,
       else { stick(0, 0.5, 0.7, 0.5 - sag, 'plank'); stick(0.7, 0.5 - sag, 1.4, 0.5, 'plank') }
       dot(0, 0.5); dot(1.4, 0.5)
       // The same small block presses on both: one dips under it and the other does not.
-      cutOut(pen, c, INK.steel, () => pen.rect(x + 0.52 * w, y - (0.5 - (holds ? 0 : sag)) * w - c * (holds ? 0.36 : 0.22), 0.36 * w, c * 0.16))
+      if (pen) cutOut(pen, c, INK.steel, () => pen.rect(x + 0.52 * w, y - (0.5 - (holds ? 0 : sag)) * w - c * (holds ? 0.36 : 0.22), 0.36 * w, c * 0.16))
       break
     case 'prop':
       // The same strip dips with nothing under it, and lies level on a post.
       // Each end of the strip rests on a block of its own, so the model is a bridge and not a bar on a post.
-      for (const bx of [-0.08, 1.24]) cutOut(pen, c, INK.balsaEdge, () => pen.rect(x + bx * w, y - 0.66 * w, 0.24 * w, 0.66 * w))
+      for (const bx of [-0.08, 1.24]) if (pen) cutOut(pen, c, INK.balsaEdge, () => pen.rect(x + bx * w, y - 0.66 * w, 0.24 * w, 0.66 * w))
       if (holds) { stick(0, 0.7, 1.4, 0.7, 'plank'); stick(0.7, 0, 0.7, 0.7) } else { stick(0, 0.7, 0.7, 0.7 - sag, 'plank'); stick(0.7, 0.7 - sag, 1.4, 0.7, 'plank') }
       dot(0, 0.7); dot(1.4, 0.7); if (holds) dot(0.7, 0)
       break
@@ -216,13 +229,16 @@ export function ideaModel(pen: Pen, idea: Idea, x: number, y: number, c: number,
         dot(px0, 0)
       }
       stick(0.05, 1.0 - (holds ? 0 : 0.22 * fail) + 0.08, 1.35, 1.0 - (holds ? 0 : 0.22 * fail) + 0.08, 'plank')
-      cutOut(pen, c, INK.steel, () => pen.rect(x + 0.5 * w, y - (1.0 - (holds ? 0 : 0.22 * fail) + 0.16) * w - c * 0.2, 0.4 * w, c * 0.2))
+      if (pen) cutOut(pen, c, INK.steel, () => pen.rect(x + 0.5 * w, y - (1.0 - (holds ? 0 : 0.22 * fail) + 0.16) * w - c * 0.2, 0.4 * w, c * 0.2))
       break
     case 'thread':
-      // Two strips hinged in the middle drop into a V; a thread from a pin above holds the hinge up.
+      // Two strips hinged in the middle drop into a V inside a frame of two posts and a beam; a thread down from the
+      // middle of the beam holds the hinge up. The frame is closed all round: a thread straight up from a level strip
+      // to a lone pin would read as a letter, and so would one post with a strip.
       stick(0, 0.4, 0.7, 0.4 - (holds ? 0 : sag), 'plank'); stick(0.7, 0.4 - (holds ? 0 : sag), 1.4, 0.4, 'plank')
-      dot(0, 0.4); dot(1.4, 0.4); dot(0.7, 0.4 - (holds ? 0 : sag))
-      if (holds) { string(pen, x + 0.7 * w, y - 0.4 * w, x + 0.7 * w, y - 1.2 * w, c * 0.6); dot(0.7, 1.2) }
+      stick(0, 0.4, 0, 1.25); stick(1.4, 0.4, 1.4, 1.25); stick(0, 1.25, 1.4, 1.25)
+      dot(0, 0.4); dot(1.4, 0.4); dot(0, 1.25); dot(1.4, 1.25); dot(0.7, 0.4 - (holds ? 0 : sag))
+      if (holds) { if (laid++ < pieces && pen) string(pen, x + 0.7 * w, y - 0.4 * w, x + 0.7 * w, y - 1.25 * w, c * 0.6); dot(0.7, 1.25) }
       break
     case 'wide-base':
       // A mast on one footing topples; two legs on a wide base stand.
@@ -237,6 +253,7 @@ export function ideaModel(pen: Pen, idea: Idea, x: number, y: number, c: number,
       dot(0, 0); dot(1.4, 0)
       break
   }
+  return laid
 }
 
 /**

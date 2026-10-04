@@ -286,20 +286,27 @@ function mover(pen: Pen, c: number, x: number, seconds: number, out: number) {
   pen.stroke()
 }
 
-/** Where the van's driver stands beside the van, in cells from its front axle: from the cab door to just ahead of the back wheels, which are still on the bank. */
-export const driverAt = (long: number, out: number): number => -0.15 - (long - 0.4) * Math.min(1, out)
+/** Where the van's driver stands beside the van, in cells from its front axle: from the cab door to between the wheels, clear of both mudguards, behind the cab and under the parcels. */
+export const driverAt = (long: number, out: number): number => -0.15 - (long - 0.63) * Math.min(1, out)
 
 /** The van's driver on foot: a paper cut-out with a pencil face, standing on the ground. At the tail it reaches both arms up to the tower of parcels. */
 function driver(pen: Pen, c: number, x: number, out: number) {
   const walking = out < 1 ? Math.abs(Math.sin(out * Math.PI * 5)) : 0, y = -c * 0.03 * walking, reach = Math.max(0, (out - 0.85) / 0.15)
+  // Its arms are paper like the rest of it, and lie on what is behind them as paper lies on wood: they hang at its
+  // sides, behind its body, and go up either side of its head to the parcels. Neither lies across its head or across the other.
+  const arm = (x0: number, y0: number, x1: number, y1: number) => {
+    const far = Math.hypot(x1 - x0, y1 - y0) || 1, nx = (-(y1 - y0) / far) * c * 0.028, ny = ((x1 - x0) / far) * c * 0.028
+    cutOut(pen, c, INK.paper, () => { pen.moveTo(x0 + nx, y0 + ny); pen.lineTo(x1 + nx, y1 + ny); pen.lineTo(x1 - nx, y1 - ny); pen.lineTo(x0 - nx, y0 - ny); pen.closePath() })
+  }
+  arm(x - c * 0.1, y - c * 0.46, x - c * (0.15 + 0.07 * reach), y - c * (0.3 + 0.48 * reach))
+  arm(x + c * 0.1, y - c * 0.46, x + c * (0.15 - 0.01 * reach), y - c * (0.3 + 0.5 * reach))
   cutOut(pen, c, INK.paper, () => pen.roundRect(x - c * 0.11, y - c * 0.5, c * 0.22, c * 0.36, c * 0.05))
   cutOut(pen, c, INK.paper, () => pen.arc(x, y - c * 0.61, c * 0.12, 0, Math.PI * 2))
   pencil(pen, c, 0.03)
   // It looks at its parcels, toward the tail.
   for (const ex of [-0.07, -0.01]) { pen.beginPath(); pen.arc(x + c * ex, y - c * 0.63, c * 0.018, 0, Math.PI * 2); pen.fill() }
+  pencil(pen, c, 0.03)
   pen.beginPath()
-  pen.moveTo(x - c * 0.07, y - c * 0.44); pen.lineTo(x - c * (0.14 + 0.16 * reach), y - c * (0.3 + 0.42 * reach))
-  pen.moveTo(x + c * 0.07, y - c * 0.44); pen.lineTo(x + c * (0.14 - 0.34 * reach), y - c * (0.3 + 0.46 * reach))
   // Two legs that step as it walks.
   pen.moveTo(x - c * 0.05, y - c * 0.14); pen.lineTo(x - c * (0.05 + 0.07 * walking), 0)
   pen.moveTo(x + c * 0.05, y - c * 0.14); pen.lineTo(x + c * (0.05 + 0.07 * walking), 0)

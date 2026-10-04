@@ -68,7 +68,7 @@ export function lay(kind: Kind, long: number): VoiceSpec {
  * it is pulled and the shorter it is, as a real one does (pitch goes with the
  * root of the pull, over the length).
  */
-export function pluck(kind: Kind, force: number, long: number, slack: boolean): VoiceSpec {
+export function pluck(kind: Kind, force: number, long: number, slack: boolean, use = 0): VoiceSpec {
   const share = clamp(Math.abs(force) / SPEC[kind].pull, [0, 1])
   if (kind === 'thread') {
     if (slack) return kept([{ wave: 'noise', pitch: 300, peak: 0.05, attack: 0.02, length: 0.18 }])
@@ -77,8 +77,9 @@ export function pluck(kind: Kind, force: number, long: number, slack: boolean): 
   }
   const pitch = byLength(kind, long) * (force >= 0 ? 1 + 0.5 * share : 1 - 0.3 * share)
   switch (kind) {
-    // A low groan that whips: the pitch dips and comes back.
-    case 'plank': return kept([{ wave: 'triangle', pitch: pitch * 0.5, slideTo: pitch * 0.4, peak: 0.15, attack: 0.02, length: 0.5 }, { wave: 'sine', pitch: pitch * 0.5 * 1.5, peak: 0.05, attack: 0.02, length: 0.3 }])
+    // A low groan that whips: the pitch dips and comes back. The force in a plank is its bending as well as the pull
+    // or push along it: the more of its strength is in use, the lower it groans.
+    case 'plank': { const groan = pitch * (1 - 0.3 * clamp(use, [0, 1])); return kept([{ wave: 'triangle', pitch: groan * 0.5, slideTo: groan * 0.4, peak: 0.15, attack: 0.02, length: 0.5 }, { wave: 'sine', pitch: groan * 0.5 * 1.5, peak: 0.05, attack: 0.02, length: 0.3 }]) }
     // A ping when stretched, a knock when squeezed.
     case 'stick': return kept(force >= 0 ? [{ wave: 'triangle', pitch: pitch * 1.5, peak: 0.12, attack: 0.002, length: 0.35 }] : [{ wave: 'triangle', pitch: pitch * 0.5, slideTo: pitch * 0.4, peak: 0.14, attack: 0.002, length: 0.09 }, { wave: 'noise', pitch: 700, peak: 0.05, attack: 0.002, length: 0.05 }])
     // A hoot, like a blown bottle.

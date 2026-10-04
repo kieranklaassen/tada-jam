@@ -5,7 +5,7 @@ import { CREW_SCALE } from './crew'
 import { crewFigure } from './crewfig'
 import { bargeAt, drawSky, drawSplash, drawWaterLife } from './drift'
 import { chief, chiefModel, roll } from './figures'
-import { barge, compareModels, ideaModel, lineDrawing, spareWeights, tracingSheet, trolley } from './props'
+import { barge, compareModels, ideaModel, ideaPieces, lineDrawing, spareWeights, tracingSheet, trolley } from './props'
 import { vehicle } from './fleet'
 import { PULL, ROLL_IN, swingAt, type Game } from './game'
 import { handPose, type Guidance, type HandPose } from './guidance'
@@ -15,7 +15,7 @@ import { INK, THICK, pin, stream, string, wood, woodShadow, type Pen, type Wood 
 import { MODEL_PLACE, stringSway } from './motion'
 import { WATER, ends } from './pose'
 import { paintSheet, plotFor, px, water, type Plot } from './sheet'
-import { COLS, isFooting, site, type Site, type VehicleId } from './sites'
+import { COLS, isFooting, site, type Idea, type Site, type VehicleId } from './sites'
 import { crossingPlace, drawUp, givePlace, rollPlace } from './stage'
 import { CHIEF, FLIGHT, RING, featherAt, flightEnds } from './toy'
 import { TAIL, VEHICLES } from './vehicles'
@@ -30,6 +30,19 @@ const woodOf = (part: Pick<Part, 'kind' | 'turned'>): Wood => (part.kind === 'pl
 /** How each kind shakes when plucked: how far, in cells, and how many times a second. */
 const SHAKE: Readonly<Record<Kind, { far: number; beat: number }>> = {
   plank: { far: 0.07, beat: 8 }, stick: { far: 0.035, beat: 21 }, tube: { far: 0.03, beat: 13 }, thread: { far: 0.22, beat: 15 },
+}
+
+/**
+ * How far the chief has pinned its model together, this far through the
+ * showing: the way that fails goes together piece by piece in the first
+ * quarter; then, for the idea, the pieces the two have in common stand and
+ * the rest go on one by one.
+ */
+export function modelBuilt(idea: Idea, progress: number): number {
+  const share = (a: number, b: number) => Math.max(0, Math.min(1, (progress - a) / (b - a)))
+  if (progress < 0.5) return share(0.02, 0.26)
+  const whole = ideaPieces(idea, true), common = Math.min(whole - 1, ideaPieces(idea, false))
+  return (common + (whole - common) * share(0.5, 0.62)) / whole
 }
 
 /** A hat left on a part swings when the part is turned, and comes to rest: how far it leans, in radians, this long after the turn. */
@@ -240,10 +253,10 @@ export class View {
       pin(pen, ...at2(hand.finger), cell * 1.5, false)
       drawn++
     } else if (hand?.what === 'lay') {
-      const from = at2(hand.from), dx = hand.finger[0] - hand.from[0], dy = hand.finger[1] - hand.from[1]
-      const far = Math.hypot(dx, dy), long = Math.min(far, length({ a: hand.from, b: hand.to }) + 0.5)
-      if (far > 0.05) {
-        const tip = at2([hand.from[0] + (dx / far) * long, hand.from[1] + (dy / far) * long])
+      // Its free end is on a grid point, and goes from grid point to grid point as the finger moves: never between two.
+      const from = at2(hand.from)
+      if (length({ a: hand.from, b: hand.to }) > 0.05) {
+        const tip = at2(hand.to)
         if (hand.kind === 'thread') string(pen, ...from, ...tip, cell, 0.15)
         else wood(pen, woodOf({ kind: hand.kind, turned: false }), from[0], from[1], tip[0], tip[1], cell, stream(7), true, this.grain)
       }
@@ -307,7 +320,7 @@ export class View {
     const showing = toy.showing, t = toy.chief.progress
     const span = (a: number, b: number) => Math.max(0, Math.min(1, (t - a) / (b - a)))
     // The models are drawn large enough to read from across the sheet: a cell and a half to the model's own cell.
-    if (showing && 'idea' in showing && toy.chief.act === 'shows') ideaModel(pen, showing.idea, cx + cell * MODEL_PLACE.from, cy, (cell * MODEL_PLACE.unit) / 0.9, t >= 0.5, span(0.34, 0.46), stream(12), showing.failure)
+    if (showing && 'idea' in showing && toy.chief.act === 'shows') ideaModel(pen, showing.idea, cx + cell * MODEL_PLACE.from, cy, (cell * MODEL_PLACE.unit) / 0.9, t >= 0.5, span(0.34, 0.46), stream(12), showing.failure, modelBuilt(showing.idea, t))
     else if (showing && 'differences' in showing) compareModels(pen, showing.differences, cx + cell * 1.4, cy, cell * 1.35, t >= 0.5, t < 0.5 ? span(0.2, 0.34) : span(0.62, 0.76), stream(12))
     else if (toy.marginModel) {
       // Pressed, it gives a little on its ledge; plucked, it shakes from side to side and dies away.

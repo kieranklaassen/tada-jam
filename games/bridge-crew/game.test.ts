@@ -1445,3 +1445,38 @@ describe('what the fifth reading found the sheet promises', () => {
     }
   })
 })
+
+describe('what the seventh reading found the sheet promises', () => {
+  const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
+  const mid = (game: Game, i: number) => { const e = game.drawn()[i]; return [(e.a[0] + e.b[0]) / 2, (e.a[1] + e.b[1]) / 2] as const }
+  const heard = (game: Game, i: number) => { steps(game, 1.2); game.takeVoices(); tapAt(game, ...mid(game, i)); return game.takeVoices() }
+  const scale = (voices: unknown[]) => voices.some((voice) => same(voice, scaleStart) || [0, 1, 2, 3, 4, 5, 6, 7].some((step) => same(voice, scaleNote(step))))
+
+  it('the secret works whatever was built or taken off between two plucks: the run is of threads, never of places in a list', () => {
+    // A pluck, then the last stay is taken off, then a pluck: nothing breaks, and the run starts again.
+    const game = hung()
+    expect(scale(heard(game, 4))).toBe(false)
+    steps(game, 1.2)
+    game.press(...mid(game, 6)); game.dragStart(); game.dragMove(12, -2.3); game.dragEnd()
+    expect(game.bridge).toHaveLength(6)
+    expect(() => heard(game, 5)).not.toThrow()
+    expect(() => heard(game, 4)).not.toThrow()
+    // A thread taken off and one plucked that has taken its place in the list: it is not mistaken for the one that went.
+    const other = hung()
+    heard(other, 5)
+    steps(other, 1.2)
+    other.press(...mid(other, 5)); other.dragStart(); other.dragMove(12, -2.3); other.dragEnd()
+    expect(other.bridge.map((part) => part.kind)).toEqual(['plank', 'plank', 'plank', 'plank', 'thread', 'thread'])
+    // What was part 6 is part 5 now, and it is shorter than the one that went: after that one it would have been the scale.
+    expect(scale(heard(other, 5))).toBe(false)
+    // A part laid between two plucks that takes no thread away leaves the run as it was.
+    const third = hung()
+    const byLength = [4, 5, 6].sort((i, j) => Math.hypot(third.bridge[j].b[0] - third.bridge[j].a[0], third.bridge[j].b[1] - third.bridge[j].a[1]) - Math.hypot(third.bridge[i].b[0] - third.bridge[i].a[0], third.bridge[i].b[1] - third.bridge[i].a[1]))
+    heard(third, byLength[0])
+    steps(third, 1.2)
+    pile(third, 'stick'); drag(third, [20, 6], [22, 8])
+    expect(third.bridge).toHaveLength(8)
+    expect(scale(heard(third, byLength[1]))).toBe(true)
+  })
+})
+

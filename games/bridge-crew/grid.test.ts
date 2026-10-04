@@ -42,6 +42,18 @@ describe('the object-by-action grid', () => {
     expect(layPart(bridge, part('tube', 1, 0, 3, 0), kit).bridge).toHaveLength(2)
   })
 
+  it('a bent plank groans lower the more it is bent: the force in a plank is its bending, and the pitch follows it', () => {
+    const plank = { ...part('plank', 0, 0, 4, 0), turned: true }, state = { force: 0, bending: 0, use: 0, strain: 'bend' as const, spot: [2, 0] as [number, number] }
+    const pitch = (use: number) => plucked(plank, { ...state, use, bending: use }).voice[0].pitch
+    // On edge at a twentieth of its strength and at two thirds: not one pitch.
+    // (A sixth lower: about a minor third.)
+    expect(pitch(0.67)).toBeLessThan(pitch(0.05) * 0.85)
+    for (let use = 0.1; use <= 1.0001; use += 0.1) expect(pitch(use)).toBeLessThan(pitch(use - 0.1))
+    // Past its strength it goes no lower, and every number stays in the range.
+    expect(pitch(3)).toBe(pitch(1))
+    expect(pitch(1)).toBeGreaterThanOrEqual(RANGE.pitch[0])
+  })
+
   it('a pluck plays the force the model finds: a stick pings or knocks, a thread twangs or flops', () => {
     // A weight hung from two threads over a post that stands on a footing.
     const bridge = [part('thread', 0, 4, 2, 2), part('thread', 4, 4, 2, 2), part('stick', 2, 2, 2, 0), part('thread', 2, 0, 0, 0)]

@@ -35,7 +35,7 @@ export function laid(part: Part, problem: LayProblem | null): Result {
 /** A part plucked, by the force the model finds in it: a stick pings when stretched and knocks when squeezed, a thread twangs when taut and flops when slack. */
 export function plucked(part: Part, state: PartState): Result {
   const slack = state.strain === 'slack' || state.strain === 'loose'
-  const voice = pluckVoice(part.kind, state.force, length(part), slack)
+  const voice = pluckVoice(part.kind, state.force, length(part), slack, state.use)
   if (part.kind === 'stick') return { does: state.force < 0 ? 'knocks' : 'pings', voice }
   if (part.kind === 'thread') return { does: slack ? 'flops' : 'twangs', voice }
   return { does: GRID[part.kind].pluck, voice }

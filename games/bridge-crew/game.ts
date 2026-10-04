@@ -146,7 +146,8 @@ export class Game extends Toy {
   private owed: Idea | null = null
   private owedAfter: Ending['kind'] | null = null
   /** The threads plucked one after another, for the secret: every thread of the bridge from longest to shortest is a scale. */
-  private tune: number[] = []
+  private tune: Part[] = []
+  private tuneOn = ''
   private scene: Scene | null = null
   private urgent = false
   private sceneClock = 0
@@ -596,24 +597,33 @@ export class Game extends Toy {
    * scale, and the chief taps along. It works with any two threads or more.
    */
   protected override plucked(index: number): void {
+    const part = this.bridge[index]
     // A slack thread only flops: it sounds no note, and a run of notes ends at it.
-    if (this.bridge[index].kind !== 'thread' || this.rest[index]?.slack) { this.tune = []; return }
-    this.tune.push(index)
+    if (!part || part.kind !== 'thread' || this.rest[index]?.slack) { this.tune = []; return }
+    // The run is of threads, not of places in a list: it is kept as the threads themselves, so a part laid or taken
+    // off between two plucks cannot make it mean another thread. One of its threads gone from the bridge, or another
+    // sheet on the board, and it starts again.
+    const same = (a: Part, b: Part) => samePoint(a.a, b.a) && samePoint(a.b, b.b)
+    const where = (thread: Part) => this.bridge.findIndex((other) => other.kind === 'thread' && same(other, thread))
+    const board = this.save.sheets[this.save.on], sheet = `${board.site} ${board.variant} ${this.save.on} ${this.save.sheets.length}`
+    if (this.tuneOn !== sheet || this.tune.some((thread) => where(thread) < 0)) this.tune = []
+    this.tuneOn = sheet
+    this.tune.push(part)
     // A thread plucked by itself is only its own voice: nothing hints at the secret. Plucked after a longer one (or
     // one as long) it sounds the scale so far, and each one after that the next note, starting again when the order
     // breaks: so the threads of a bridge, from longest to shortest, play a scale.
     let run = 1
     while (run < this.tune.length && run < 8) {
       const here = this.tune[this.tune.length - run], before = this.tune[this.tune.length - run - 1]
-      if (this.tune.slice(-run).includes(before) || length(this.bridge[before]) < length(this.bridge[here]) - 1e-9) break
+      if (this.tune.slice(-run).some((thread) => same(thread, before)) || length(before) < length(here) - 1e-9) break
       run++
     }
     if (run === 2) this.voices.push(scaleStart)
     else if (run > 2) this.voices.push(scaleNote(run - 1))
     // The threads that count are the ones that hold something: a slack one has no note to give.
-    const threads = this.bridge.flatMap((part, i) => (part.kind === 'thread' && !this.rest[i]?.slack ? [i] : []))
-    const last = this.tune.slice(-threads.length), longs = last.map((i) => length(this.bridge[i]))
-    if (threads.length < 2 || last.length < threads.length || new Set(last).size < threads.length) return
+    const threads = this.bridge.flatMap((other, i) => (other.kind === 'thread' && !this.rest[i]?.slack ? [i] : []))
+    const last = this.tune.slice(-threads.length), longs = last.map((thread) => length(thread)), places = last.map(where)
+    if (threads.length < 2 || last.length < threads.length || new Set(places).size < threads.length || !places.every((place) => threads.includes(place))) return
     // From longest to shortest: threads of one length may come in either order.
     if (!longs.every((long, i) => i === 0 || long <= longs[i - 1] + 1e-9)) return
     this.tune = []

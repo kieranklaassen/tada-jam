@@ -98,22 +98,12 @@ export function paintSheet(pen: Pen, width: number, height: number, plot: Plot, 
   if (live) { paintUnderground(pen, plot, at); paintDesk(pen, plot, at); trayBox(pen, plot, at, random) }
   else water(pen, plot, at, 0)
 
-  // The draughtsman's marks, with no figures on them: the gap's centre line and its dimension line.
+  // The draughtsman's mark, with no figure on it: the gap's centre line. There is no dimension line over the gap: with
+  // witness lines it read as letters, and whole it made a cross with the grid's rule through the gap's middle.
   const lip = at.left[0], far = at.right[0]
   const mid = (lip + far) / 2, deck = at.left[1]
   // Even dashes: a long dash over a dot, one above another, would read as a column of letters.
   for (let y = deck - 0.6; y < deck + 3.2; y += 0.55) rule(pen, ...px(plot, mid, y), ...px(plot, mid, y + 0.3), cell * 0.018, 0.45, random)
-  // The dimension line: a line the length of the gap, a dot at each end, and a witness line under each dot that stops
-  // short of it. No two of its lines cross or meet.
-  const dim = deck + 2.6
-  rule(pen, ...px(plot, lip + 0.12, dim), ...px(plot, far - 0.12, dim), cell * 0.018, 0.5, random)
-  for (const x of [lip, far]) {
-    rule(pen, ...px(plot, x, deck + 0.35), ...px(plot, x, dim - 0.22), cell * 0.018, 0.5, random)
-    pen.fillStyle = INK.line
-    pen.globalAlpha = 0.7
-    pen.beginPath(); pen.arc(...px(plot, x, dim), cell * 0.05, 0, Math.PI * 2); pen.fill()
-    pen.globalAlpha = 1
-  }
   for (const [ax, ay] of at.anchors) pin(pen, ...px(plot, ax, ay), cell, true)
 }
 

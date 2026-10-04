@@ -6,11 +6,12 @@ import { RAIL_TILT, givePose, reactPose, waitPose, ROUND } from './acts'
 import { IDLES, REACTS, crewPose, type CrewAct } from './crew'
 import { crewFigure } from './crewfig'
 import { vehicle } from './fleet'
+import { ideaModel, ideaPieces } from './props'
 import { MODEL, PULL } from './game'
 import { ROLL, TRAY, bays, tools, waitAt } from './layout'
 import { edit, freshSave } from './save'
 import { Game } from './game'
-import { View, demoMove, hatSwing } from './view'
+import { View, demoMove, hatSwing, modelBuilt } from './view'
 import { canPin, isFooting } from './sites'
 
 /** A pen that draws nothing and keeps every call with its numbers, and a canvas that hands out such pens. */
@@ -293,4 +294,46 @@ describe('what the sixth reading found, drawn', () => {
     expect(numerals()).toContain('3'); expect(numerals()).not.toContain('2')
   })
 })
+
+describe('what the seventh reading found, drawn', () => {
+  it('a part being laid is drawn to a grid point, and from grid point to grid point as the finger moves: never to the finger between two', () => {
+    const toy = new Game(freshSave(null), stream(5)), { pen, calls, canvas } = recording()
+    const view = new View(1, canvas)
+    view.size(1180, 820, 2, true)
+    const frame = () => { calls.length = 0; view.draw(pen, toy, null); return JSON.stringify(numbers(calls)) }
+    // (The first frame paints the still sheet, once.)
+    frame()
+    toy.press(10, 6); toy.dragStart(); toy.dragMove(11.8, 6.1)
+    expect(toy.hand).toMatchObject({ what: 'lay', to: [12, 6] })
+    const there = frame()
+    // The finger moves about within reach of the same grid point: the drawing does not change.
+    for (const [x, y] of [[12.3, 6.2], [12.1, 5.8], [11.7, 6.3]]) { toy.dragMove(x, y); expect(toy.hand).toMatchObject({ to: [12, 6] }); expect(frame()).toBe(there) }
+    // On to the next grid point, and it does.
+    toy.dragMove(13.1, 6)
+    expect(toy.hand).toMatchObject({ to: [13, 6] })
+    expect(frame()).not.toBe(there)
+  })
+
+  it('the chief pins its model together: the way that fails piece by piece, and then the idea from what the two have in common', () => {
+    for (const idea of ['profile', 'prop', 'triangle', 'row', 'tube', 'thread', 'wide-base', 'arch'] as const) {
+      const fails = ideaPieces(idea, false), holds = ideaPieces(idea, true)
+      expect(fails).toBeGreaterThanOrEqual(3)
+      expect(holds).toBeGreaterThanOrEqual(3)
+      expect(modelBuilt(idea, 0)).toBe(0)
+      let last = 0
+      for (let t = 0; t < 0.5; t += 0.02) { const built = modelBuilt(idea, t); expect(built).toBeGreaterThanOrEqual(last); last = built }
+      expect(modelBuilt(idea, 0.14)).toBeGreaterThan(0.2); expect(modelBuilt(idea, 0.14)).toBeLessThan(0.8)
+      expect(modelBuilt(idea, 0.3)).toBe(1)
+      // The idea starts from pieces that are there already and is whole before the chief stands on it.
+      expect(modelBuilt(idea, 0.5)).toBeGreaterThan(0.3); expect(modelBuilt(idea, 0.5)).toBeLessThan(1)
+      expect(modelBuilt(idea, 0.62)).toBe(1); expect(modelBuilt(idea, 1)).toBe(1)
+      // Drawn part built, it has fewer pieces on it than drawn whole, and never none.
+      const count = (built: number) => { const { pen, calls } = recording(); ideaModel(pen, idea, 0, 0, 40, false, 0, stream(3), null, built); for (const n of numbers(calls)) expect(Number.isFinite(n)).toBe(true); return calls.length }
+      expect(count(0.01)).toBeGreaterThan(0)
+      expect(count(0.4)).toBeLessThan(count(1))
+      expect(count(0.01)).toBeLessThan(count(0.7))
+    }
+  })
+})
+
 
