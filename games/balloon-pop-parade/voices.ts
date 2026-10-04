@@ -100,7 +100,7 @@ export const VOICES: Record<VoiceId, readonly Partial[]> = {
   // The crab: clicks and snips.
   crabCatch: [hiss(0, 3600, 3000, 6, 0.26, 0.002, 0.03), hiss(0.09, 4200, 3400, 6, 0.26, 0.002, 0.03), tone('sine', 0.12, 1500, 1900, 0.1, 0.004, 0.1)],
   // A snip as it pinches, and a ping as its eyes shoot up.
-  crabRefuse: [hiss(0.3, 3800, 2600, 5, 0.3, 0.002, 0.035), tone('square', 0.32, 2100, 1500, 0.07, 0.002, 0.04), tone('sine', 0.4, 2300, 3300, 0.12, 0.004, 0.14)],
+  crabRefuse: [hiss(0.43, 3800, 2600, 5, 0.3, 0.002, 0.035), tone('square', 0.45, 2100, 1500, 0.07, 0.002, 0.04), tone('sine', 0.53, 2300, 3300, 0.12, 0.004, 0.14)],
   crabPoke: [hiss(0, 3300, 3000, 7, 0.22, 0.002, 0.025), hiss(0.08, 3900, 3400, 7, 0.22, 0.002, 0.025)],
   // A scuttle of feet, then one small blip as it peeks.
   crabStartle: [...[0, 0.05, 0.1, 0.16, 0.22].map((at) => hiss(at, 3000, 2600, 8, 0.14, 0.002, 0.02)), tone('sine', 0.52, 1500, 1900, 0.1, 0.004, 0.08)],

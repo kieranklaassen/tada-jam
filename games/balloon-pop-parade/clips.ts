@@ -39,7 +39,7 @@ export const PERSONALITIES: Record<KindName, Personality> = {
   duck: { breath: 0.42, depth: 0.02, blinkEvery: 2.6, lasts: { catch: 0.7, refuse: 1.0, liftOff: 1.9, popped: 0.9, poke: 0.6, pokeB: 0.75, wave: 0.7, proud: 1.1, march: 1.3 }, cue: { hit: 0.56, grab: 0.1, letGo: 1.0, land: 1.3 }, carried: 0.75, walk: 1.3, steps: 6 },
   frog: { breath: 0.22, depth: 0.012, blinkEvery: 4.2, lasts: { catch: 0.85, refuse: 1.05, liftOff: 2.0, popped: 0.95, poke: 0.7, pokeB: 0.9, wave: 0.8, proud: 1.3, march: 1.6 }, cue: { hit: 0.52, grab: 0.38, letGo: 1.05, land: 1.35 }, carried: 0.9, walk: 1.5, steps: 3 },
   hippo: { breath: 0.16, depth: 0.03, blinkEvery: 5.1, lasts: { catch: 1.15, refuse: 1.3, liftOff: 2.1, popped: 1.35, poke: 0.95, pokeB: 1.3, wave: 1.1, proud: 1.6, march: 2.0 }, cue: { hit: 0.72, grab: 0.5, letGo: 1.05, land: 1.22 }, carried: 0.09, walk: 2.0, steps: 4 },
-  crab: { breath: 0.6, depth: 0.014, blinkEvery: 1.9, lasts: { catch: 0.6, refuse: 0.85, liftOff: 1.8, popped: 0.86, poke: 0.5, pokeB: 0.65, wave: 0.6, proud: 0.9, march: 1.1 }, cue: { hit: 0.32, grab: 0.08, letGo: 1.0, land: 1.3 }, carried: 0.95, walk: 1.0, steps: 2 },
+  crab: { breath: 0.6, depth: 0.014, blinkEvery: 1.9, lasts: { catch: 0.6, refuse: 0.98, liftOff: 1.8, popped: 0.86, poke: 0.5, pokeB: 0.65, wave: 0.6, proud: 0.9, march: 1.1 }, cue: { hit: 0.45, grab: 0.08, letGo: 1.0, land: 1.3 }, carried: 0.95, walk: 1.0, steps: 2 },
 }
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
@@ -332,13 +332,13 @@ function crab(id: ClipId, t: number, pose: Pose, reach: number): void {
     pose.puff = 1 + hump(t, 0.05, 0.5) * 0.25
   } else if (id === 'refuse') {
     // The stalks lean to look at it and dip to look at its own shell, from one colour to the other; a pinch by mistake, and the eyes shoot up.
-    pose.wag = hold(t, 0, 0.1, 0.14, 0.22) * 0.5
+    pose.wag = hold(t, 0.06, 0.16, 0.24, 0.32) * 0.5
     pose.armL = reach
     // The claw comes down and forwards onto the balloon, and never out towards the friend beside it.
-    pose.armR = reach - hump(t, 0.24, 0.36) * 0.7
-    pose.armRForward = hump(t, 0.2, 0.4) * 1.1
-    pose.puff = 1 - hump(t, 0.14, 0.32) * 0.3 + hold(t, 0.33, 0.4, 0.62, 0.82) * 0.95
-    pose.squash += -hump(t, 0.33, 0.45) * 0.12 + wobble(t, 0.45, 34, 9) * 0.05
+    pose.armR = reach - hump(t, 0.37, 0.49) * 0.7
+    pose.armRForward = hump(t, 0.33, 0.53) * 1.1
+    pose.puff = 1 - hump(t, 0.24, 0.44) * 0.3 + hold(t, 0.46, 0.53, 0.75, 0.95) * 0.95
+    pose.squash += -hump(t, 0.46, 0.58) * 0.12 + wobble(t, 0.58, 34, 9) * 0.05
   } else if (id === 'popped') {
     // It hides its eyes behind its claws, then peeks. Quick, like everything it does.
     t *= 1.22

@@ -7,7 +7,7 @@ import { MOMENTS, saveOf, type Moment } from './moments'
 import { freshSave } from './save'
 import { restPose, type Pose } from './pose'
 import { MAX_BALLOONS, MAX_SHADOWS, MAX_STRINGS } from './scenery'
-import { FLIGHT, handOf, REGROW_AFTER, Theatre, type Painter } from './theatre'
+import { FLIGHT, handOf, REGROW_AFTER, SIDE_BY_SIDE, Theatre, type Painter } from './theatre'
 import { sharedVinyl } from './vinyl'
 import { Vector3 } from 'three'
 
@@ -166,8 +166,8 @@ describe('a bunch the child sends', () => {
     expect(voices(theatre)).toContain(`${kind}Refuse`)
     // The balloon hangs beside the friend until the refusal lands on it.
     expect(voices(theatre)).not.toContain('pop')
-    play(theatre, PERSONALITIES[kind].cue.hit + 0.05)
-    // The hippo sneezes it away flat; the others pop it.
+    // The hippo sneezes it away flat; the duck and the crab pop it where it hangs; the frog bounces it off, and then it pops.
+    play(theatre, PERSONALITIES[kind].cue.hit + (kind === 'frog' ? 0.4 : 0.05))
     expect(voices(theatre)).toContain(kind === 'hippo' ? 'raspberry' : 'pop')
     play(theatre, 2)
     expect(theatre.troop.held).toEqual([false])
@@ -194,27 +194,28 @@ describe('a bunch the child sends', () => {
     expect(frame.balloons, 'two in the sky and the one it holds').toHaveLength(3)
   })
 
-  it.each(KINDS)('shows a %s the bunch it cannot have: one balloon over its head and the rest over ground where nobody stands', (kind) => {
-    for (const count of [2, 3] as const) {
-      const theatre = staged({ troop: { kind, size: 2, held: [false, false] }, sky: [{ colour: kind, count: 1 }, { colour: kind, count }], waiting: { kind: kind === 'duck' ? 'frog' : 'duck', size: 1 } }), { frame, painter, clear } = recorder()
-      // Three for two, or two for one: either way one friend takes hold and the bunch has more than it can use.
-      if (count === 2) { tapSlot(theatre, 0); play(theatre, 2) }
+  it.each(KINDS)('shows a %s the bunch it cannot have, read against the friends one for one: a balloon over each that still reaches, the rest over ground where nobody stands', (kind) => {
+    // Two for one friend that reaches (the other has its own); three for two that reach; three for one alone.
+    for (const [held, count] of [[[true, false], 2], [[false, false], 3], [[false], 3], [[false, true, false], 3]] as const) {
+      const size = held.length
+      const theatre = staged({ troop: { kind, size, held: [...held] }, sky: [{ colour: kind, count: 1 }, { colour: kind, count }], waiting: { kind: kind === 'duck' ? 'frog' : 'duck', size: 1 } }), { frame, painter, clear } = recorder()
       tapSlot(theatre, 1)
       play(theatre, FLIGHT + PERSONALITIES[kind].cue.grab + 0.25)
       clear()
       theatre.paint(painter, VIEW)
       // The bunch that strains upwards is drawn taller than it is wide, and nothing else is.
-      const bunch = frame.balloons.filter((balloon) => balloon.tall > 1.05 && balloon.wide < 0.99)
-      expect(bunch.length, `${count} for ${kind}`).toBe(count)
-      const middle = bunch.reduce((sum, balloon) => sum + balloon.x, 0) / count
-      const grabber = Math.abs(middle - friendX(0, 2)) < Math.abs(middle - friendX(1, 2)) ? 0 : 1
-      const at = frame.poses.get(`friend-${grabber}`)!
-      const off = bunch.map((balloon) => balloon.x - at.x).sort((a, b) => Math.abs(a) - Math.abs(b))
-      expect(Math.abs(off[0]), 'one straight over it').toBeLessThan(0.2)
-      // The next is past the friend's own side and short of the friend beside it: over the gap, with nobody under it.
-      const beside = [0, 1].map((i) => friendX(i, 2)).filter((x) => Math.abs(x - friendX(grabber, 2)) > 1)[0]
-      expect(Math.max(...off.map(Math.abs)), 'another well to its side').toBeGreaterThan(1.3)
-      for (const dx of off.slice(count === 3 ? 2 : 1)) expect(Math.abs(friendX(grabber, 2) + dx - beside), 'and not over the friend beside it').toBeGreaterThan(1.2)
+      const bunch = frame.balloons.filter((balloon) => balloon.tall > 1.05 && balloon.wide < 0.99).map((balloon) => balloon.x)
+      expect(bunch.length, `${count} for ${held.join()}`).toBe(count)
+      const reaching = held.map((holds, i) => (holds ? null : frame.poses.get(`friend-${i}`)!.x)).filter((x): x is number => x !== null)
+      const everyone = held.map((_, i) => friendX(i, size))
+      // Each friend that still reaches has one straight over it.
+      for (const x of reaching) expect(bunch.filter((at) => Math.abs(at - x) < 0.35), `over the friend at ${x.toFixed(1)}`).toHaveLength(1)
+      // And every other balloon of the bunch is over a gap: more than a balloon's width from the middle of any friend.
+      const spare = bunch.filter((at) => reaching.every((x) => Math.abs(at - x) >= 0.35))
+      expect(spare, `${count} for ${held.join()}`).toHaveLength(count - reaching.length)
+      for (const at of spare) for (const x of everyone) expect(Math.abs(at - x), 'nobody under it').toBeGreaterThan(1.3)
+      // No two balloons of it overlap.
+      for (const a of bunch) for (const b of bunch) if (a !== b) expect(Math.abs(a - b)).toBeGreaterThan(1.3)
     }
   })
 
@@ -243,6 +244,34 @@ describe('a bunch the child sends', () => {
     expect(yellow()).toHaveLength(0)
   })
 
+  it.each(KINDS)('hangs beside a %s for a beat before the refusal lands on it, the two colours side by side, where colour is new and where the refusal is shorter', (kind) => {
+    const other: KindName = kind === 'duck' ? 'frog' : 'duck'
+    for (const position of ['solo-two-colours', 'bunches-mixed']) for (let seed = 1; seed <= 6; seed++) {
+      const save = saveOf({ position, troop: { kind, size: 1, held: [false] }, sky: [{ colour: kind, count: 1 }, { colour: other, count: 1 }], waiting: { kind: other, size: 1 } })
+      const theatre = new Theatre(save, seed), { frame, painter, clear } = recorder()
+      tapSlot(theatre, 1)
+      // The refused balloon is the only one below the row that is not the friend's own colour.
+      let last: { x: number; y: number } | null = null, hung = 0, began = -1
+      for (let i = 0; i < 150; i++) {
+        theatre.step(1 / 60)
+        if (began < 0 && voices(theatre).includes(`${kind}Refuse`)) began = (i + 1) / 60
+        clear()
+        theatre.paint(painter, VIEW)
+        const pose = frame.poses.get('friend-0')!
+        const it = frame.balloons.find((balloon) => balloon.y < 1.8 && balloon.wide > 0.8 && Math.abs(balloon.x - pose.x) < 3.2)
+        if (!it) { if (last) break; continue }
+        // It hangs while it stays where it is, beside the friend; the flight before and whatever the refusal does to it are not hanging.
+        if (last && Math.hypot(it.x - last.x, it.y - last.y) < 0.05 && i / 60 >= FLIGHT - 0.02) hung += 1
+        else if (hung > 0) break
+        last = { x: it.x, y: it.y }
+      }
+      expect(hung / 60, `${position}, seed ${seed}`).toBeGreaterThanOrEqual(SIDE_BY_SIDE - 0.04)
+      // And the friend's answer still begins inside half a second of the touch.
+      expect(began, `${position}, seed ${seed}`).toBeGreaterThan(0)
+      expect(began).toBeLessThanOrEqual(0.5 + 1 / 60)
+    }
+  })
+
   it('is answered well inside half a second when it is the wrong colour: the friend begins to refuse it as it arrives', () => {
     const theatre = solo('duck', ['duck', 'frog'])
     tapSlot(theatre, 1)
@@ -250,15 +279,25 @@ describe('a bunch the child sends', () => {
     expect(voices(theatre)).toContain('duckRefuse')
   })
 
-  it('is refused at full length where colour is new, and more shortly once bunches have come', () => {
-    const lasts = (position: string) => {
-      const theatre = new Theatre(saveOf({ position, troop: { kind: 'crab', size: 1, held: [false] }, sky: [{ colour: 'crab', count: 1 }, { colour: 'duck', count: 1 }], waiting: { kind: 'frog', size: 1 } }))
+  it('is refused at full length where colour is new, and more shortly once bunches have come: the look takes as long, what follows is quicker', () => {
+    const timed = (position: string) => {
+      const theatre = new Theatre(saveOf({ position, troop: { kind: 'crab', size: 1, held: [false] }, sky: [{ colour: 'crab', count: 1 }, { colour: 'duck', count: 1 }], waiting: { kind: 'frog', size: 1 } }), 3), { frame, painter } = recorder()
       tapSlot(theatre, 1)
-      let waited = 0
-      while (!voices(theatre).includes('pop') && waited < 3) { theatre.step(1 / 60); waited += 1 / 60 }
-      return waited
+      // The pop is the moment the pinch lands; the crab's eyes shoot up at it and come down again when it is over.
+      let popped = -1, over = -1, up = false
+      for (let i = 0; i < 240 && over < 0; i++) {
+        theatre.step(1 / 60)
+        if (popped < 0 && voices(theatre).includes('pop')) popped = i / 60
+        theatre.paint(painter, VIEW)
+        const puff = frame.poses.get('friend-0')!.puff
+        if (puff > 1.5) up = true
+        else if (up && puff < 1.1) over = i / 60
+      }
+      return { popped, after: over - popped }
     }
-    expect(lasts('solo-two-colours')).toBeGreaterThan(lasts('bunches-mixed') + 0.04)
+    const full = timed('solo-two-colours'), shorter = timed('bunches-mixed')
+    expect(Math.abs(full.popped - shorter.popped)).toBeLessThan(0.02)
+    expect(full.after).toBeGreaterThan(shorter.after + 0.06)
   })
 
   it('bounces the clouds when a hippo that was carried off sits down', () => {
@@ -506,7 +545,21 @@ describe('the frog\'s tongue', () => {
     throw new Error('no seed opened on a passing frog')
   })
 
-  it('is what a frog hangs by when it is carried off, its arms dangling', () => {
+  it('is what a frog that had no balloon hangs by when it is carried off, its arms dangling', () => {
+    const two = staged({ troop: { kind: 'frog', size: 1, held: [false] }, sky: [{ colour: 'frog', count: 1 }, { colour: 'frog', count: 2 }], waiting: { kind: 'duck', size: 1 } }), drawnBy = tongues(), { frame, painter } = recorder()
+    tapSlot(two, 1)
+    play(two, FLIGHT + 0.7)
+    two.paint(drawnBy.painter, VIEW)
+    two.paint(painter, VIEW)
+    const pose = frame.poses.get('friend-0')!
+    expect(pose.y - GROUND, 'in the air').toBeGreaterThan(0.5)
+    expect(drawnBy.drawn, 'one tongue, from its mouth up to the bunch').toHaveLength(1)
+    expect(drawnBy.drawn[0].y1).toBeGreaterThan(drawnBy.drawn[0].y0 + 0.3)
+    expect(pose.armL, 'its arms hang').toBeLessThan(1.2)
+    expect(pose.armR).toBeLessThan(1.2)
+  })
+
+  it('is not what a frog with a balloon takes one more by: that is its other hand, a balloon in each', () => {
     const theatre = solo('frog', ['frog', 'frog']), drawnBy = tongues(), { frame, painter } = recorder()
     tapSlot(theatre, 0)
     play(theatre, 7)
@@ -516,11 +569,9 @@ describe('the frog\'s tongue', () => {
     theatre.paint(painter, VIEW)
     const pose = frame.poses.get('friend-0')!
     expect(pose.y - GROUND, 'in the air').toBeGreaterThan(0.5)
-    expect(drawnBy.drawn, 'one tongue, from its mouth up to the bunch').toHaveLength(1)
-    expect(drawnBy.drawn[0].y1).toBeGreaterThan(drawnBy.drawn[0].y0 + 0.3)
-    expect(pose.armL, 'the free arm hangs').toBeLessThan(1.2)
-    // The hand that holds its own balloon stays up.
-    expect(pose.armR).toBeGreaterThan(2)
+    expect(drawnBy.drawn, 'no tongue').toHaveLength(0)
+    expect(pose.armL, 'its other hand is up').toBeGreaterThan(2)
+    expect(pose.armR, 'and so is the hand that holds its own').toBeGreaterThan(2)
   })
 })
 
