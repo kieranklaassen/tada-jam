@@ -70,18 +70,26 @@ export function serveBeats(show: Show, ending: Ending, cue: Cue): Beat[] {
   const beats: Beat[] = ending.fed
     ? [{ at: 0, lasts: 0, play: () => (show.lid = show.lift = 1) }]
     : [
-        { at: 0, lasts: 0, play: () => cue(ending.result.kind === 'fit' ? 'click' : ending.result.kind === 'over' ? 'clang' : 'slide') },
+        // The lid is heard when it gets there: the click as it shuts, the clang as it first strikes what sticks out, the slide as it comes down on a gap.
+        { at: ending.result.kind === 'fit' ? 0.42 : ending.result.kind === 'over' ? 0.08 : 0.2, lasts: 0, play: () => cue(ending.result.kind === 'fit' ? 'click' : ending.result.kind === 'over' ? 'clang' : 'slide') },
         { at: 0, lasts: 0.5, play: (p) => (show.lid = p) },
         { at: 0.5, lasts: 0.6, play: (p) => (show.lift = p) },
       ]
   let at = ending.fed ? 0.25 : 1.1
-  for (let i = 0; i < single; i++) {
+  // The twins, given two pieces of one length, one each, eat in step: the two pieces are one bite, taken together.
+  const inStep = ending.taste.who === 'twins' && ending.taste.liked
+  if (inStep) {
+    beats.push({ at, lasts: 0, play: () => cue('gulp', lengths[0], who) })
+    beats.push({ at, lasts: 0.6, play: (p) => (show.bites = Math.max(show.bites, lengths.length * p)) })
+    at += 0.6
+  }
+  for (let i = 0; i < single && !inStep; i++) {
     const length = lengths[i]
     if (!ending.fed) beats.push({ at, lasts: 0, play: () => cue('gulp', length, who) })
     beats.push({ at, lasts: 0.6, play: (p) => (show.bites = Math.max(show.bites, i + p)) })
     at += 0.6
   }
-  if (lengths.length > single) {
+  if (lengths.length > single && !inStep) {
     beats.push({ at, lasts: 0, play: () => cue('gulp', lengths[single], who) })
     beats.push({ at, lasts: 0.8, play: (p) => (show.bites = Math.max(show.bites, single + (lengths.length - single) * p)) })
     at += 0.8

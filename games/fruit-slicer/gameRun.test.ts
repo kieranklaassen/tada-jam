@@ -226,7 +226,8 @@ describe('the scenes', () => {
     const { run } = withCut()
     serve(run)
     run.takeSounds()
-    play(run, 3.2)
+    // The first showing, and then the lid: its click sounds as it shuts, a little under half a second into the serve.
+    play(run, 3.6)
     expect(ids(run)).toEqual(['rule', 'rule', 'click'])
     // The gulp, the taste and everything after are never heard: the touch came first.
     run.press({ x: 700, y: BOARD.y - 30 })

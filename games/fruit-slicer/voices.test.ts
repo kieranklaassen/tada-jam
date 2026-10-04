@@ -61,14 +61,22 @@ describe('a length rings as a string does', () => {
     expect(ringHz(800)).toBeCloseTo(3 * LOW_HZ)
     expect(ringHz(2880)).toBe(LOW_HZ)
     expect(ringHz(0)).toBe(LOW_HZ)
-    expect(ringHz(1)).toBe(2640)
+    // Half the length is an octave up all the way down to the thinnest piece a cut can make, which is the top of the range.
+    expect(ringHz(120)).toBeCloseTo(2 * ringHz(240))
+    expect(ringHz(60)).toBeCloseTo(2 * ringHz(120))
+    expect(ringHz(1)).toBe(ringHz(60))
   })
 
   it('so a fruit cut down from whole to slivers climbs a scale', () => {
     for (const id of ['thwack', 'snick', 'pluck', 'quiver'] as const) {
-      const pitches = [2400, 1200, 600, 300, 150].map((length) => notesOf(id, length).find((note) => note.kind === 'tone')!.hz)
+      const pitches = [2400, 1200, 600, 300, 150, 100, 60].map((length) => notesOf(id, length).find((note) => note.kind === 'tone')!.hz)
       for (let i = 1; i < pitches.length; i++) expect(pitches[i], id).toBeGreaterThan(pitches[i - 1])
     }
+  })
+
+  it('and the roller\'s ticks on a piece are higher the shorter the piece, with no two lengths alike', () => {
+    const pitches = [2400, 1920, 1440, 1200, 800, 600, 400, 300, 200, 100, 60].map((length) => notesOf('press', length, 4)[0].hz)
+    for (let i = 1; i < pitches.length; i++) expect(pitches[i]).toBeGreaterThan(pitches[i - 1])
   })
 
   it('and a roller ticks once for each part', () => {

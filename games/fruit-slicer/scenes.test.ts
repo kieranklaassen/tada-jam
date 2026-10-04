@@ -96,6 +96,24 @@ describe('the serve', () => {
     expect(shut.bites).toBe(0)
   })
 
+  it('has the twins eat in step when each has one piece of one length: one bite for the two pieces, and one gulp', () => {
+    const twins = customer('twins', 1, 2)
+    const quarter = shareLength('long', { num: 1, den: 4 })
+    const result = serveOf(twins, [[piece(1, quarter)], [piece(2, quarter)]])
+    const cues: string[] = []
+    const show = restShow('serve')
+    const beats = serveBeats(show, { result, taste: tasteOf(twins, result), outcome: 'well', glider: false, fed: false }, (id) => cues.push(id))
+    play(beats)
+    expect(cues.filter((id) => id === 'gulp')).toHaveLength(1)
+    expect(show.bites).toBe(2)
+    expect(sceneLength(beats)).toBeGreaterThanOrEqual(4)
+    // One longer than the other, they eat one after the other: two gulps.
+    const uneven = serveOf(twins, [[piece(1, quarter + 300)], [piece(2, quarter - 300)]])
+    const more: string[] = []
+    play(serveBeats(restShow('serve'), { result: uneven, taste: tasteOf(twins, uneven), outcome: 'badly', glider: false, fed: false }, (id) => more.push(id)))
+    expect(more.filter((id) => id === 'gulp')).toHaveLength(2)
+  })
+
   it('starts with the lid shutting on a fit, bouncing on what sticks out, or closing on a gap', () => {
     const first = (served: Ending) => {
       const cues: string[] = []

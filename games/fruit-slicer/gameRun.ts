@@ -1,5 +1,5 @@
 import { FLING_SPEED, drop, fling, grab, rollOver, type Held } from './carry'
-import { newActor, poseOf as castPose, reactTo, stepActor, type Actor } from './cast'
+import { SHEETS, newActor, poseOf as castPose, reactTo, stepActor, type Actor } from './cast'
 import type { Ending, Game } from './cycle'
 import { newDog, poseOf as dogPose, react, stepDog, type DogState, type Reaction } from './dogMotion'
 import { CURL_FLIGHT, CURL_LIFE, MOUTH, mark, newFx, rollAlong, spawn, step, whoosh, type FxState } from './fx'
@@ -38,6 +38,8 @@ export const SPEED_WINDOW = 0.1
 export const RUN_GAP = 0.055
 /** And each sounds at the pitch of its own piece or a step above the cut before it, whichever is higher: one stroke is a run of rising notes. */
 export const RUN_STEP = 0.94
+/** How far through being rolled flat each customer springs back into shape, as its own motion has it: that is when it honks. */
+export const SPRINGS_BACK = { pelican: 0.6, twins: 0.54, ants: 0.65, cat: 0.66, boa: 0.7 } as const
 /** How long what one who waits was given shows in its body: it goes down in the first of these seconds and is gone at the last. */
 export const SNACK_SECONDS = 5
 export const SNACK_DOWN = 0.6
@@ -362,8 +364,9 @@ export class GameRun {
     for (const event of events) {
       this.fx = spawn(this.fx, event, heads)
       if ('voice' in event) {
-        // A customer under the roller honks as it springs back into shape, half a second on, not as it goes flat.
-        const delay = event.kind === 'cut' || event.kind === 'curl' ? cuts++ * RUN_GAP : event.kind === 'rolled' && event.on === 'customer' ? 0.5 : 0
+        // A customer under the roller honks as it springs back into shape, which each does in its own time, not as it goes flat.
+        const rolledFlat = event.kind === 'rolled' && event.on === 'customer' && event.whom !== null ? (event.whom === 'window' ? before.window : before.queue[event.whom]) : null
+        const delay = event.kind === 'cut' || event.kind === 'curl' ? cuts++ * RUN_GAP : rolledFlat ? SHEETS[rolledFlat.who].react.flat * SPRINGS_BACK[rolledFlat.who] : 0
         let length = 'length' in event ? event.length : 'piece' in event ? event.piece.length : undefined
         if (event.kind === 'cut') length = this.rung = this.rung === null ? event.length : Math.min(event.length, this.rung * RUN_STEP)
         // A customer's own noise is in its own throat: its place in the cast goes with the voice.

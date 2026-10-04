@@ -181,10 +181,11 @@ export function poseOf(state: DogState, look: { x: number; y: number } | null = 
         break
       case 'ironed':
         // The roller irons its ears flat; they spring up one at a time, the left one first.
-        pose.earLeft += t < 0.5 ? -0.5 * ramp(t, 0, 0.1) : -0.5 + 0.9 * bump(ramp(t, 0.5, 0.75)) + 0.5 * ramp(t, 0.5, 0.6)
-        pose.earRight += t < 0.72 ? -0.5 * ramp(t, 0, 0.1) : -0.5 + 0.9 * bump(ramp(t, 0.72, 1)) + 0.5 * ramp(t, 0.72, 0.82)
-        pose.lift -= 9 * (1 - ramp(t, 0.5, 0.6))
-        pose.lids = 0.8 * (1 - ramp(t, 0.45, 0.55))
+        // Each ear springs as its pop sounds: a quarter of a second in, and four tenths.
+        pose.earLeft += t < 0.22 ? -0.5 * ramp(t, 0, 0.08) : -0.5 + 0.9 * bump(ramp(t, 0.22, 0.5)) + 0.5 * ramp(t, 0.22, 0.32)
+        pose.earRight += t < 0.35 ? -0.5 * ramp(t, 0, 0.08) : -0.5 + 0.9 * bump(ramp(t, 0.35, 0.65)) + 0.5 * ramp(t, 0.35, 0.45)
+        pose.lift -= 9 * (1 - ramp(t, 0.22, 0.32))
+        pose.lids = 0.8 * (1 - ramp(t, 0.18, 0.28))
         break
       case 'flip':
         // A piece caught in the air: it jumps for it and turns right over, higher the longer the piece.

@@ -13,8 +13,8 @@ import type { Piece } from './world'
 export type Taste =
   /** One smooth bulge for one piece; every further piece is a lump and a hiccup. */
   | { who: 'pelican'; liked: boolean; lumps: number[]; hiccups: number }
-  /** Two pieces of one length, one each; otherwise the longer piece is pulled between them. */
-  | { who: 'twins'; liked: boolean; pulled: 0 | 1 | null; by: number }
+  /** Two pieces of one length, one each; otherwise the longer piece is pulled between them. `first` is how many pieces the first twin has: the rest are the second's. */
+  | { who: 'twins'; liked: boolean; pulled: 0 | 1 | null; by: number; first: number }
   /** How many ants lift each piece, which ants are flattened under a piece that ends between two of them, and how many walk with nothing. */
   | { who: 'ants'; liked: boolean; lifts: number[]; flattened: number[]; idle: number }
   /** The longer tin filled; a look at the gap when it was given the smaller share; cross-eyed when the two shares are equal. */
@@ -37,7 +37,7 @@ export function tasteOf(customer: Customer, result: Served): Taste {
       const by = (a?.total ?? 0) - (b?.total ?? 0)
       const even = Math.abs(by) <= giveOf(customer.fruit)
       const oneEach = a?.pieces.length === 1 && b?.pieces.length === 1
-      return { who: 'twins', liked: even && oneEach, pulled: even ? null : by > 0 ? 0 : 1, by }
+      return { who: 'twins', liked: even && oneEach, pulled: even ? null : by > 0 ? 0 : 1, by, first: a?.pieces.length ?? 0 }
     }
     case 'ants': {
       const share = wanted(customer)

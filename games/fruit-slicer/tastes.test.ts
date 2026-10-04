@@ -26,7 +26,7 @@ describe('the pelican', () => {
 describe('the twins', () => {
   const twins = of('twins', { num: 1, den: 2 })
   it('like one piece each of the same length', () => {
-    expect(taste(twins, [len(1, 4)], [len(1, 4)])).toEqual({ who: 'twins', liked: true, pulled: null, by: 0 })
+    expect(taste(twins, [len(1, 4)], [len(1, 4)])).toEqual({ who: 'twins', liked: true, pulled: null, by: 0, first: 1 })
     expect(taste(twins, [len(1, 4) + giveOf('long')], [len(1, 4)])).toMatchObject({ liked: true, pulled: null })
   })
   it('pull the longer piece between them, whichever side it lies on', () => {

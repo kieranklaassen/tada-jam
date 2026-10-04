@@ -27,7 +27,7 @@ describe('what went in', () => {
 
   it('is all that stays once the serve is over, and on load: the pieces, at rest, and no taste', () => {
     const loaded = feastOf(pelican, lengths, null, null)
-    expect(loaded).toEqual({ lumps: [{ at: 1, size: 0.5, fruit: 'long' }, { at: 1, size: 0.25, fruit: 'long' }], mouth: 0, hop: 0, shrug: 0, pull: 0, rope: 0, spin: 0, flat: [], cross: 0, gaze: 0, tail: 0, sneeze: -1, pleased: 0 })
+    expect(loaded).toEqual({ lumps: [{ at: 1, size: 0.5, fruit: 'long' }, { at: 1, size: 0.25, fruit: 'long' }], mouth: 0, eater: -1, hop: 0, shrug: 0, pull: 0, rope: 0, spin: 0, flat: [], cross2: [], cross: 0, gaze: 0, tail: 0, sneeze: -1, pleased: 0 })
     expect(feastOf(pelican, lengths, taste(pelican, lengths), servedShow(2))).toMatchObject({ lumps: loaded.lumps, hop: 0, mouth: 0 })
   })
 
@@ -76,6 +76,16 @@ describe('the taste landing', () => {
     const pulled = mid(twins, 2, 0.08)(unfair, [len(3, 8), len(1, 8)])
     expect(pulled.pull).toBeGreaterThan(0.5)
     expect(pulled.spin).toBeGreaterThan(0)
+    // Given one piece each of one length they eat in step: both pieces go down together and both mouths open for the one bite.
+    const together = feastOf(twins, [len(1, 4), len(1, 4)], fair, during({ bites: 1 }))
+    expect(together.lumps.map((one) => one.at)).toEqual([0.5, 0.5])
+    expect(together.eater).toBe(-1)
+    expect(together.mouth).toBeGreaterThan(0.9)
+    // Otherwise one eats after the other, and only the twin whose piece it is opens its mouth.
+    const first = feastOf(twins, [len(3, 8), len(1, 8)], unfair, during({ bites: 0.5 }))
+    expect(first.lumps.map((one) => one.at)).toEqual([0.5])
+    expect(first.eater).toBe(0)
+    expect(feastOf(twins, [len(3, 8), len(1, 8)], unfair, during({ bites: 1.5 })).eater).toBe(1)
     // The rope is as long as the longer twin's share: three eighths of the fruit.
     expect(pulled.rope).toBeCloseTo(3 / 8)
     // The tin comes to rest the right way up: whole turns.
@@ -96,8 +106,10 @@ describe('the taste landing', () => {
   it('the cat looks at the gap and then at the piece when it was given the smaller share, and goes cross-eyed over equal ones', () => {
     const cat = of('cat', { num: 2, den: 3 }, { num: 3, den: 4 })
     const small = [len(2, 3)]
-    expect(mid(cat, 1, 0.25)(taste(cat, small), small).gaze).toBeLessThan(-0.5)
-    expect(mid(cat, 1, 0.75)(taste(cat, small), small).gaze).toBeGreaterThan(0.5)
+    // While the piece still lies in the tin: at the gap as the lid comes down, at the piece as the tin is lifted, and no more once it eats.
+    expect(feastOf(cat, small, taste(cat, small), { ...restShow('serve'), lid: 0.6 }).gaze).toBeLessThan(-0.5)
+    expect(feastOf(cat, small, taste(cat, small), { ...restShow('serve'), lid: 1, lift: 0.6 }).gaze).toBeGreaterThan(0.5)
+    expect(mid(cat, 1, 0.5)(taste(cat, small), small).gaze).toBe(0)
     const right = [len(3, 4)]
     expect(mid(cat, 1, 0.5)(taste(cat, right), right)).toMatchObject({ gaze: 0, cross: 0 })
     expect(mid(cat, 1, 0.5)(taste(cat, right), right).tail).toBeGreaterThan(0.3)

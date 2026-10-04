@@ -33,7 +33,8 @@ export const RANGE = { hz: [50, 5000], peak: [0.02, 0.3], attack: [0.001, 0.08],
 /** The note a length rings, in hertz: half the length, an octave up. Held inside the range the ear and a tablet's speaker manage. */
 export function ringHz(length: number): number {
   const hz = length > 0 ? (LOW_HZ * LONGEST) / length : LOW_HZ
-  return Math.max(LOW_HZ, Math.min(2640, hz))
+  // The thinnest piece a cut can make, a twenty-fourth of the short fruit, is the highest note: nothing a child can cut rings out of this range.
+  return Math.max(LOW_HZ, Math.min((LOW_HZ * LONGEST) / 60, hz))
 }
 
 /** A pitch held inside the range, however short the piece that set it. */
@@ -87,7 +88,8 @@ export const VOICES = {
   clack: (length: number) => [tone(ringHz(length) * 2, 0.16, 0.001, 0.05, 'square'), hiss(2200, 0.08, 0.001, 0.04)],
   ticks: (_: number, count = 4) => run(count, 700, 1.06, 0.07, 0.08),
   // One tick a part, higher the shorter the piece the parts are pressed into.
-  press: (length: number, count = 4) => run(count, Math.max(900, Math.min(2400, ringHz(length) * 4)), 1.05, 0.05, 0.07),
+  // The pitch climbs all the way from the longest piece to the thinnest, with no stretch of lengths that tick alike.
+  press: (length: number, count = 4) => run(count, 600 * (ringHz(length) / LOW_HZ) ** 0.4, 1.025, 0.05, 0.07),
   // The tin.
   skid: (length: number) => [hiss(4200, 0.14, 0.001, 0.1, 3000), tone(ringHz(length) * 2, 0.14, 0.001, 0.6, 'square', ringHz(length) * 1.98)],
   castanet: () => [tone(1300, 0.14, 0.001, 0.04, 'square'), tone(1300, 0.12, 0.001, 0.04, 'square', undefined, 0.09)],

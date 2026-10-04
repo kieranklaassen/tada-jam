@@ -13,6 +13,8 @@ export type Feast = {
   lumps: { at: number; size: number; fruit: Fruit }[]
   /** The mouth opening for a bite, or held open by a piece that sticks out. */
   mouth: number
+  /** Of the twins, which is biting: 0 or 1 when they eat one after the other, -1 when they eat in step, each its own piece at the same moment. */
+  eater: number
   /** Off the ground: a hiccup for every seam. */
   hop: number
   /** The shrug at a lid that will not shut, as the customer is sent off with a misfit: 0 to 1. */
@@ -21,9 +23,10 @@ export type Feast = {
   pull: number
   rope: number
   spin: number
-  /** For each ant of the file, how flat it is under the end of a piece that stops between two ants. */
+  /** For each ant of the file, how flat it is under the end of a piece that stops between two ants; and, once it has peeled itself up, how cross it is. */
   flat: number[]
-  /** The cat: eyes crossed over two equal shares; a look at the gap (-1), then at the piece (1); the tail up at the longer tin filled. */
+  cross2: number[]
+  /** The cat: eyes crossed over two equal shares; a look down at the gap at the far end of its tin (-1), then at the piece in it (1); the tail up at its tin filled. */
   cross: number
   gaze: number
   tail: number
@@ -46,15 +49,25 @@ export function feastOf(customer: Customer, lengths: readonly number[], taste: T
   const whole = WHOLE[customer.fruit]
   const bites = show ? show.bites : lengths.length
   const lumps: Feast['lumps'] = []
+  // The twins, given two pieces of one length, one each, eat in step: both pieces go down together. Everyone else eats one piece after another.
+  const inStep = taste !== null && taste.who === 'twins' && taste.liked
   lengths.forEach((length, index) => {
-    if (bites <= index) return
-    lumps.push({ at: Math.min(1, bites - index), size: Math.min(2, length / whole), fruit: fruits[index] ?? customer.fruit })
+    if (inStep ? bites <= 0 : bites <= index) return
+    lumps.push({ at: Math.min(1, inStep ? bites / lengths.length : bites - index), size: Math.min(2, length / whole), fruit: fruits[index] ?? customer.fruit })
   })
-  const feast: Feast = { lumps, mouth: 0, hop: 0, shrug: 0, pull: 0, rope: 0, spin: 0, flat: [], cross: 0, gaze: 0, tail: 0, sneeze: -1, pleased: 0 }
+  const feast: Feast = { lumps, mouth: 0, eater: -1, hop: 0, shrug: 0, pull: 0, rope: 0, spin: 0, flat: [], cross2: [], cross: 0, gaze: 0, tail: 0, sneeze: -1, pleased: 0 }
   if (!show || show.kind !== 'serve') return feast
   const biting = bites - Math.floor(bites)
   feast.mouth = Math.max(bites < lengths.length ? bump(biting) : 0, sticksOut && show.lift > 0 ? 0.4 : 0)
   feast.shrug = sentOff ? bump(show.lid) : 0
+  if (taste && taste.who === 'twins') {
+    // In step, both mouths open for the one bite; otherwise only the twin whose piece it is opens its mouth.
+    feast.eater = taste.liked ? -1 : Math.floor(bites) < taste.first ? 0 : 1
+    if (taste.liked) feast.mouth = bites < lengths.length ? bump(bites / lengths.length) : 0
+  }
+  // Given the smaller share, the cat looks at the gap in its tin as the lid comes down on it, and then at the child's piece as the tin is
+  // lifted: both while the piece still lies in the tin, before a bite is taken.
+  if (taste && taste.who === 'cat' && taste.gaveSmaller && bites <= 0) feast.gaze = show.lift > 0 ? Math.min(1, show.lift * 3) : -Math.min(1, show.lid * 3)
   if (!taste || show.taste <= 0) return feast
   const t = show.taste, easing = 1 - show.settle
   switch (taste.who) {
@@ -73,12 +86,13 @@ export function feastOf(customer: Customer, lengths: readonly number[], taste: T
     case 'ants': {
       const count = wantedCount(customer)
       feast.flat = Array.from({ length: count }, (_, ant) => (taste.flattened.includes(ant) ? (t < 0.6 ? 1 : Math.max(0, 1 - (t - 0.6) / 0.15)) : 0))
+      // Peeled up, it is cross, and stays so until the file has settled.
+      feast.cross2 = Array.from({ length: count }, (_, ant) => (taste.flattened.includes(ant) && t >= 0.75 ? easing : 0))
       feast.pleased = taste.liked ? bump(t) : 0
       break
     }
     case 'cat':
       feast.cross = taste.crossEyed ? bump(t) : 0
-      feast.gaze = taste.gaveSmaller ? (t < 0.5 ? -bump(t * 2) : bump((t - 0.5) * 2)) : 0
       feast.tail = taste.liked ? t * easing + (1 - easing) * 0.3 : 0
       feast.pleased = taste.liked ? bump(t) : 0
       break

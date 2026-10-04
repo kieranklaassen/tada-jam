@@ -140,9 +140,11 @@ function shrew(ctx: Ctx, dots: Dots, cast: Casting, member: number): void {
   ctx.translate(0, -46)
   ctx.rotate(pose.head * 0.5)
   // The long nose is its funny part: it twitches, and the tip twitches more.
-  const tip = -6 + 9 * pose.part - 10 * Math.max(pose.mouth, feast.mouth)
+  // The twin whose piece it is opens its mouth for the bite; in step, both do.
+  const bite = feast.eater === -1 || feast.eater === member ? feast.mouth : 0
+  const tip = -6 + 9 * pose.part - 10 * Math.max(pose.mouth, bite)
   inked(ctx, poly([[-18, 4], [-8, -14], [12, -12], [50, tip], [14, 14], [-12, 14]]), GREY, 3.5)
-  if (pose.mouth > 0.1 || feast.mouth > 0.1) inked(ctx, poly([[14, 12], [44, tip + 8 + 8 * Math.max(pose.mouth, feast.mouth)], [16, 18]]), RED, 2.5)
+  if (pose.mouth > 0.1 || bite > 0.1) inked(ctx, poly([[14, 12], [44, tip + 8 + 8 * Math.max(pose.mouth, bite)], [16, 18]]), RED, 2.5)
   inked(ctx, oval(50, tip, 4.5, 4), RED, 2.5)
   // A tuft of fur between the ears, which is what the blade takes off and what pops back: one filled shape, and no whiskers, since
   // strokes that fan from a snout read as a sign where the two twins stand nose to nose.
@@ -154,7 +156,7 @@ function shrew(ctx: Ctx, dots: Dots, cast: Casting, member: number): void {
   for (const foot of [-8, 8]) inked(ctx, oval(foot, 0, 8, 4), WHITE, 2.5)
 }
 
-function antBody(ctx: Ctx, pose: CastPose, flat: number): void {
+function antBody(ctx: Ctx, pose: CastPose, flat: number, cross = 0): void {
   ctx.save()
   ctx.scale(1 + 0.5 * flat, 1 - 0.85 * flat)
   ctx.rotate(pose.head > 1 ? 0 : pose.lean)
@@ -180,11 +182,15 @@ function antBody(ctx: Ctx, pose: CastPose, flat: number): void {
   inked(ctx, oval(13, -18, 9, 8.5), INK, 0)
   inked(ctx, oval(-17, -17, 4, 2, -0.4), RED, 0)
   eyeOut(ctx, 16, -20, 3.4, 0.5 + 0.5 * pose.eyeX, pose.eyeY, pose.pop, 0.7, -0.8)
+  // An ant that has been flattened and has peeled itself up is cross: a brow pressed down over its eye, and its feelers laid back.
+  if (cross > 0.05) brow(ctx, 16, -20, 3.4, -cross)
+  const feel = cross > 0.05 ? -1.2 * cross : pose.bit
   if (pose.tuft > 0.3) {
-    for (const reach of [1, 0.6]) {
+    // Two feelers, each from its own root.
+    for (const [root, reach] of [[14, 1], [18.5, 0.6]] as const) {
       ctx.beginPath()
-      ctx.moveTo(16, -25)
-      ctx.quadraticCurveTo(18, -34 - 4 * pose.bit, 18 + 10 * reach, -30 - 8 * reach - 5 * pose.bit)
+      ctx.moveTo(root, -25)
+      ctx.quadraticCurveTo(root + 2, -34 - 4 * feel, root + 2 + 10 * reach, -30 - 8 * reach - 5 * feel)
       ctx.stroke()
     }
   }
@@ -217,9 +223,10 @@ function cat(ctx: Ctx, dots: Dots, cast: Casting): void {
   for (const side of [-1, 1]) inked(ctx, poly([[side * 8, -18], [side * 26, -40 - 6 * pose.bit * side], [side * 26, -8]]), YELLOW, 3.5, side > 0 ? dots.of(ctx, RED, 0.4) : undefined)
   inked(ctx, oval(0, 0, 28, 24), YELLOW, 4, dots.of(ctx, RED, 0.25))
   for (const side of [-1, 1]) {
-    // Crossed over two equal shares; turned to the gap, then to the piece, when it was given the smaller one.
-    const look = feast.cross > 0 ? -side * feast.cross : feast.gaze !== 0 ? feast.gaze : pose.eyeX
-    eyeOut(ctx, side * 11, -4, 7 * (pose.lids < 0 ? 1.25 : 1), look, pose.eyeY + 0.3 * feast.gaze * feast.gaze, pose.pop, side * 0.5, -0.8)
+    // Crossed over two equal shares. Given the smaller one, they go down to the tin under it: far along it to the gap at its end, then back
+    // along it to the piece.
+    const look = feast.cross > 0 ? -side * feast.cross : feast.gaze < 0 ? 0.9 * -feast.gaze : feast.gaze > 0 ? -0.2 * feast.gaze : pose.eyeX
+    eyeOut(ctx, side * 11, -4, 7 * (pose.lids < 0 ? 1.25 : 1), look, feast.gaze !== 0 ? 0.9 * Math.abs(feast.gaze) : pose.eyeY, pose.pop, side * 0.5, -0.8)
     if (pose.pop < 0.05) lid(ctx, side * 11, -4, 7, Math.max(0, pose.lids, 0.7 * feast.pleased), YELLOW)
     // The one brow that goes up is the far one; the near one only follows it when something is the matter.
     brow(ctx, side * 11, -4, 7, side > 0 ? pose.brow : Math.min(pose.brow, pose.brow * 0.2))
@@ -330,7 +337,7 @@ export function drawCustomer(ctx: Ctx, dots: Dots, cast: Casting, x: number, y: 
     for (let member = 0; member < count; member++) {
       const pose = bodyPose(cast, member)
       const flat = Math.max(pose.flat, cast.feast.flat[member] ?? 0)
-      stand(ctx, x + member * gap, y, k, { ...pose, flat: 0 }, () => antBody(ctx, pose, flat), exit)
+      stand(ctx, x + member * gap, y, k, { ...pose, flat: 0 }, () => antBody(ctx, pose, flat, cast.feast.cross2[member] ?? 0), exit)
     }
     // What they carry rides above the file, each piece as long as the ants it lies across.
     let along = 0
