@@ -3,26 +3,45 @@
 
 ## Status
 
-- Resumed: 4 October, after a cut-off on 3 October. The game run stood in its last gate, "nothing passes through anything"; it was finished on 4 October and this block is its end.
-- Stage: gates. The game run is done: the game is built on the toy and is what the Mount shows.
-- Sheet: passed round 3 (checker E). The game stands on the sheet at commit `1dfee6e`, sha256 of the sheet part `17c8a0ee8deeba697f9196089f5224aaa8cd6b66a6e09c132a78a1469d856774` (`awk '/^## The look/{exit} {print}' games/claw-machine/ART.md | sha256sum`). Rounds 1 (13 findings) and 2 (3 findings) were pasted as written. Answers handled: `claw-machine-1.md`, `-2.md`, `-3.md`.
-- Look in use: Stud bricks, the first and only reserved row. The owner has not answered on it; the lead has asked for a look pass, which comes next.
+- Resumed: 4 October, after a cut-off on 3 October in the last gate of the game run. The game run, the look pass and the closing run were all finished on 4 October; this block is their end.
+- Stage: gates. The game is built on the toy and is what the Mount shows; the look pass the lead asked for is done; the folder has been read against the sheet.
+- Sheet: **passed round 3** (checker E), on the sheet at commit `1dfee6e`, sha256 of the sheet part `17c8a0ee8deeba697f9196089f5224aaa8cd6b66a6e09c132a78a1469d856774`. Answers handled: `claw-machine-1.md`, `-2.md`, `-3.md`.
+- After that pass thirteen sentences of the sheet part were replaced by the true ones, as the look page (its step 6) and the closing page (its step 2) say: the look pass added a character and a way toys move in the jaws, and the built game does a few details other than the sheet said. None touches the mechanic, the error, the designed order, the saved state, the records or the claim. The sheet now stands at commit `6d61f71`, sha256 of the sheet part `4ee2495f9bae0d26edecc2ffc24c69bc30a1809e1c77304dabd0094c9f7b8b30` (`awk '/^## The look/{exit} {print}' games/claw-machine/ART.md | sha256sum`).
+- Open: sheet ready for check, round 4
+- The sentences changed for round 4, each as it was and as it is:
+  1. Was: "click a step higher than the last and sways; on a stack of three" Now: "click a step higher than the last and wobbles; on a stack of three"
+  2. Was: "Lifted by the stud on its head: the motor groans, its legs kick, its belly rattles; let go, it drops back into its own place. Each one takes the lift its own way" Now: "Lifted by the knob on its head: the motor groans and the toys in its belly hop; let go, it drops back into its own place with a thud. Each one takes the lift its own way"
+  3. Was: "Not its sort: cheeks bulge, eyes cross, and it sneezes the toy out and rocks back on its heels" Now: "Not its sort: a deeper chomp, the same freeze with the toy held up on its tongue, and the toy sent back the gobbler's own way; where it lands the whole tray hops"
+  4. Was: "(a buffer brick with a bell, above the sloped rim of the tray)" Now: "(a buffer brick with a bell on a post, beside the rim of the tray)"
+  5. Was: "Slides down the rim with a zip and clicks onto the edge studs" Now: "Rings the bell, bobs on it, and hops off over the rim with a zip, clicking onto the studs"
+  6. Was: "Thuds onto the rim, tips over it, and the tray hops" Now: "Rings the bell, bobs on it, and tips off over the rim with a thud; the tray hops"
+  7. Was: "Nothing else about a toy varies: no face, no pattern, no motion of its own." Now: "Nothing else about a toy varies: no face and no pattern. On the tray a toy has no motion of its own; in the jaws it moves the way its kind does and no other way: a duck waggles, a car goes limp and see-saws, a rocket shivers."
+  8. Was: "the look and the comedy are on the gobblers, the cabinet and the ending" Now: "the look and the comedy are on the gobblers, the watcher, the cabinet and the ending"
+  9. Was: "and a small toy falls straight through the wide bars of the big gobbler's belly onto the tray." Now: "and a small toy slips straight out between the wide bars at the front of the big gobbler's mouth and drops onto the tray."
+  10. Was: "shakes its head until the toy flies out sideways" Now: "shakes its head until the toy flies out"
+  11. Was: "a small toy drops through the wide bars of its belly, and it looks for it everywhere but down" Now: "a small toy slips out between the wide bars at the front of its mouth, and it looks for it everywhere but down"
+  12. Was: "the claw hoists the chosen crate over the tray and tips it, and the toys rain onto their studs; the crew that rode on it lines up; the other crate slides away." Now: "the claw hoists the chosen crate off its cart to the back of the tray, the bed of the crate tips, and the toys rain onto their studs; the claw sets the crate back, the crew that rode on it hops down over the gate and lines up, and the crates slide away."
+  13. Was: "Before a toy is in its mouth, every gobbler behaves the same way toward any toy: it opens wide. The taste shows only in the chewing." Now: "Before a toy is in its mouth, every gobbler behaves the same way toward any toy: it opens wide, and with a toy in the jaws its brows go up and the tip of its tongue comes out. The taste shows only in the chewing. ¶ **The watcher.** One more creature is in the cabinet and has no part in the sorting: a small watcher that sits on the floor beside the tray, out of the claw's reach. It takes no toy and has no taste. It follows the claw with its eyes, jumps at a bang, laughs when a toy comes flying back or a stack comes down, and hops with a peep when a finger lands on it; a finger on it moves nothing else. Its feelings are about what happens in the cabinet and never about the child, and nothing about it is saved."
+- Look in use: Stud bricks, the first and only reserved row, after the look pass: a striped violet-blue cabinet with a chase of lamps, gobblers with brows and tongues, a watcher beside the tray. The owner has not answered on it.
 - Renderer: raw three.js. No physics engine: the world is a pure model stepped at 120 a second, and the view draws the picture the model hands it.
-- **What the lead should try first.** (1) A first visit, `?seed=7`, hands off for ten seconds, then a tap on the crate at the back: the delivery and the first showing of colour. (2) A toy to a gobbler that takes it and one to each that does not: each has its own way. (3) A finger on a gobbler: each takes the lift its own way. (4) Three small toys stacked, a fourth, then a big one on a stack of two. (5) Put the game away in the middle of a delivery and open it again.
+- **What the lead should try first.** (1) A first visit, `?seed=7`, hands off for ten seconds, then a tap on the crate at the back: the delivery and the first showing of colour. (2) A toy to a gobbler that takes it and one to each that does not: each has its own way, and the others look. (3) A finger on a gobbler: each takes the lift its own way. (4) Three small toys stacked, a fourth, then a big one on a stack of two. (5) A finger on the watcher. (6) Put the game away in the middle of a delivery and open it again.
+- **Asked for in the look pass and not done, with the reason.**
+  - *Toys on the tray from the first frame.* The sheet has a first visit open as an ended cycle does: a bare tray and one crate waiting, with nothing coming in until the child puts the claw on the crate (round 1, finding 10, and "How a cycle restarts" in the guide). The look page says the mechanic and the saved state do not change. So the tray is still bare in the first frame; what is new in it is the brighter cabinet, the lamps, the crate lifted into sight on its cart with its load and riders, and the watcher.
+  - *Each toy a character with a face.* The toys are the working pieces: they are what is sorted. The pack rule the look page cites (working-objects-stay-plain) keeps faces and patterns off them, and its exception covers a piece whose body is the idea only where nothing else about it varies. So a toy still has no face. What it has is a way of being in the jaws that goes with its kind and with nothing else: a duck waggles, a car goes limp and see-saws, a rocket shivers. The faces and the opinions went on the gobblers and the watcher. This is for the owner to settle (below).
+  - *A chute.* Not built. The floor beside the tray is where the watcher sits; a chute there would be a thing that looks as if it took toys and does not.
 - **Still weak.**
-  - A first visit is a dark cabinet, a bare tray and one small crate far at the back. In the cold playtest the newcomer's first finger went to the claw and to the bells, not to the crate; the glow is thin and the ghost hand reads as a white block. Every touch is answered, so nothing is stuck, but the one want of the scene is the smallest thing on the screen. The look pass is for this.
-  - The gobblers show little on their faces when nothing is in their mouths: two eyes that follow, and no more.
+  - A first visit is still the emptiest screen the game has: a bare tray and a crate at the back. In the cold playtest (before the look pass) the newcomer's first finger went to the claw and the bells, not to the crate. Every touch is answered, so nothing is stuck, and the ring and the hand are now in the frame; whether the crate reads as the thing to touch has not been tried again on a newcomer.
   - A toy carried over the back row overlaps the gobblers on the screen; only its shadow says where it is.
-  - A toy let go at the end of the rail hops off the bell onto the tray. The sheet has it slide down a sloped rim; the cabinet has no slope there, because the bell post stands where the rim would carry the toy.
-  - The crate does not tip as a whole: its bed tips, like a tipper truck's. A whole crate tipping in the claw swept its riders through the claw.
-  - The crew that rode the crate hops down from it once it is back on the ledge, over the gate, and not from the air over the tray.
+  - The crew that rode a crate hops down from it at the back, over the gate, once the crate is set down again; it is small until it lands.
+  - The tip of a gobbler's tongue is small at this size, and the one with bars for a mouth has none.
   - No frame rate has been taken (this machine draws in software), and no voice has been heard.
 - **Open.**
-  - The look pass the lead has asked for, then the closing run.
+  - The check of the thirteen sentences (round 4), which the lead has done when the game is brought in.
   - The owner's answer on the look.
   - The lead's frame rate on a graphics card, and loudness by ear.
-- **What was run on 4 October, and passed:** `npx tsc --noEmit`; `npm test` (218 files, 2110 tests); `npm run -s wordless:check`; `node scripts/egress-check.ts`; `npm run build`; `npm run egress:built`; `npm run education:built`; `npm run check:intersections -- claw-machine --ci` six times running, two of them while the machine was busy, each clean (no open finding; one allowance, a pupil in its eye). **Not run:** `npm run perf:jam` and any frame rate (software GL only); nothing was heard.
-- Draw calls, read from the grown-up overlay's counters on the production build at tier 0: 19 on a first visit, 25 with a crew of three and six toys, 28 with a crew of two, a crew waiting and eight toys. The frame-budget test holds the heaviest moments under 80. About 40,000 to 47,000 triangles.
+- **What was run on 4 October, and passed:** `npx tsc --noEmit`; `npm test`; `npm run -s wordless:check`; `node scripts/egress-check.ts`; `npm run build`; `npm run egress:built`; `npm run education:built`; `npm run check:intersections -- claw-machine --ci`, clean with the audit enforced (no open finding; the allowances are a pupil in its eye, for a gobbler and for the watcher). Before the look pass it ran six times in a row with the same result, two of them while the machine was busy. **Not run:** `npm run perf:jam` and any frame rate (software GL only); nothing was heard.
+- Draw calls, read from the grown-up overlay's counters on the production build at tier 0, after the look pass: 24 on a first visit, 30 with a crew of three and six toys, 35 with a crew of two, a crew waiting and eight toys. The frame-budget test counts 48 in the heaviest moment and holds it under 80. About 45,000 to 53,000 triangles. No shadow map and no post pass; the four tiers change the pixel ratio only.
+- Where the stills can be made again: `npm run build`, then `npx vite preview --port 4173`, and `/?chrome=0&seed=7&tier=0#/play/claw-machine` at 1180 by 820. A first visit is an empty slot. The middle of a cycle is a slot saved at `three-colours`; the funniest moment is a big toy let go on the little gobbler at `three-ways`.
 
 The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Someone with no session to read resumes from this block and the files. The parts below belong to the block.
 
@@ -38,7 +57,7 @@ The stages in order are sheet, toy, game, gates. Keep this block current: the st
 - `claw-machine.tsx` (the Mount): changed. The stage is created and disposed here, `resize` hands the size to the stage, the game is built when the slot has been read, gestures go to the game, and the loop plays the step, the sounds and the picture. **For the template:** the Mount sets the canvas size itself in `resize` (`canvas.width = ...`); a three.js game has to replace those two assignments with its renderer's own sizing, and a comment there saying so would save a search.
 - `config.ts`: changed in three places. `BACKDROP` is the cabinet's own colour, so no flash shows before the first frame. `LADDER` holds the game's nine position ids and exports their type, and `FIRST_VISIT` has a row for each age of the band. **For the template:** `FIRST_VISIT` as generated has two rows (youngest and oldest); a band three years wide wants a middle row, and the comment could say rows may be added.
 - `input.ts`: used as copied. **For the template:** a game whose action is the lift itself (here the lift drops the claw) cannot wait for `dragEnd`, which arrives only after the lift grace; it has to act on `dragLift` and remember that it did. The header could say that `dragLift` is the moment of the lift and `dragEnd` the moment the drag is given up.
-- `audio.ts`: used as copied (`tone`, `noise`, `GameAudio`).
+- `audio.ts` and `audio.test.ts`: as the template has them now, with its count of fingers in place of a flag (taken in the closing run).
 - `state.ts`: as copied. `save.ts` wraps it as its header says: it calls `deserialize` for the version, the position and the ending, and reads the same record again for the game's fields. **For the template:** a game whose ending can be told from its own state (here: the tray is clear at the last sort) has to decide whether the saved `finished` flag or the state wins when they disagree; this game lets the state win, so a damaged flag can never leave a finished load with nothing to take.
 - `guidance.ts`, `scene.ts`, `overlay.ts`: used as copied. The ladder's glow and demonstration are drawn by the stage from `guide.ts`; the four scenes run on `scene.ts`.
 - `perf.ts`, `quality.ts`, `attention.ts`, `saveCadence.ts`: frozen, untouched.
@@ -46,17 +65,18 @@ The stages in order are sheet, toy, game, gates. Keep this block current: the st
 
 ### For the owner to decide
 
-- The look: Stud bricks.
+- The look: Stud bricks, as it stands after the look pass.
 - The toy: put the claw somewhere and let it drop. Is doing it again and again a pleasure with nothing to achieve?
+- A toy has no face. The lead asked for toys with faces; the toys are what is sorted, and the rule for working pieces keeps faces off them, so the faces went on the gobblers and the watcher and a toy got only a way of being in the jaws. Should a toy have a face all the same?
+- A first visit opens on a bare tray with one crate waiting, and nothing comes in until the child touches the crate. It is the rule that the next load waits for the child's touch; it also makes the first screen the emptiest one. Should a first visit open with its load already on the tray?
 - A swallowed toy is chewed small and stands behind the belly window at under half its size, so a whole group fits a belly and can be seen as a group. Tipped out, it is full size again. Is that acceptable, or should a group be shown at full size somewhere else?
-- A toy has no face: a duck is a brick duck with no eye, so that nothing about a toy varies but its colour, kind and size. Is a duck without an eye still a duck to him?
+- The watcher: one more creature in the cabinet, with no part in the sorting. Does it stay?
 - The taller crate: when a cycle ends, a second crate offers the next step up, and choosing it never costs a step.
-- A first visit opens on a bare tray with one crate waiting, and nothing comes in until the child touches the crate. It is the rule that the next load waits for the child's touch; it also makes the first screen the emptiest one.
 - The defaults in the guide ("Symbols, and the defaults awaiting the owner") are taken as written; the game needs none of them changed.
 
 ## Pass log
 
-One row per pass. Stills are taken on software GL with a paused clock stepped from the first drawn frame, at 1180 by 820, and kept outside the repository. No frame rate can be taken on this machine. Passes 1 and 2 were on the toy; passes 3 to 6 are the game run, on the production build (`npm run build`, `vite preview`, `?chrome=0&seed=7&tier=0`).
+One row per pass. Stills are taken on software GL with a paused clock stepped from the first drawn frame, at 1180 by 820, and kept outside the repository. No frame rate can be taken on this machine. Passes 1 and 2 were on the toy; passes 3 to 6 are the game run and passes 7 to 9 the look pass, all on the production build (`npm run build`, `vite preview`, `?chrome=0&seed=7&tier=0`).
 
 | Pass | Looked at | Critique | Fix set | Frame rate | Still weak |
 | --- | --- | --- | --- | --- | --- |
@@ -66,15 +86,36 @@ One row per pass. Stills are taken on software GL with a paused clock stepped fr
 | 4 | A delivery, still by still: hoist, tip, pour, set down | "The box turned round and I couldn't see the toys come out. Then it flew through the monsters. A toy went through the box." | The crate stays level and its bed tips, like a tipper truck's. It pours from just behind the tray while no one stands on the step, the front row first, each toy straight onto its own stud. The crew rides it back and hops down over the gate. | not taken | The crew's hop down is far at the back. |
 | 5 | The delivery again after pass 4, and a first visit with hands off for ten seconds | "The box goes up so high I can't see the claw any more. And before I touch anything it's just dark and empty." | Past the gate the crate comes down low over the empty step, so the claw that holds it and its riders stay in the frame, and goes up again before it crosses back. | not taken | The first screen is still dark and bare, and the crate is its smallest thing. This is for the look pass. |
 | 6 | Feeding: a right toy, a wrong toy to red, to blue; a lift; stacks; a big toy on Little | "When the red one has the wrong duck the claw runs off and sits on my yellow duck like it wants it." | After letting a toy go the claw backs off to a bare place where there is one. (It backs off at all so that nothing spat or thrown comes up through it.) | not taken | A wrong toy on a tongue is easy to see; a gobbler's face says little about it. |
+| 7 | The look pass, first still set: a first visit at rest, at the ring and at the hand | "It's dark. Nobody's home. Where are the toys? What's the white thing?" | The cabinet became a dusky violet-blue in two tones, striped, with a string of lamps lit in a chase. A waiting crate stands on a cart that lifts it over the parapet. The ring lies round the top of the crate and the hand, now a mitten with a cuff, taps the ledge in front of it, inside the frame. | not taken | The tray is bare by rule; nobody is in the front of the frame. |
+| 8 | The same stills again, and the middle of a cycle | "Who's the purple one? I can only see half of him. The monsters just stare." | The watcher: a small orchid creature beside the tray that follows the claw, jumps, laughs and hops under a finger; moved to where it is wholly in the frame and drawn bigger. Gobblers got brows and the tip of a tongue: keen for any toy in the jaws, a frown and a tongue out for the wrong one, a lick after a swallow, and brows up at a neighbour's wrong toy. | not taken | The toys only hang in the jaws. |
+| 9 | Feeding and a wrong toy, with the faces; then the audit on the new parts | "The red one looks cross now, and the others look at him! But the duck just hangs there. And the eyebrows go into the eyes when they look up." | A toy got a way of being in the jaws that goes with its kind: a duck waggles, a car goes limp, a rocket shivers. Brows moved behind the tops of the eyes; the tongue tip lies on the studs of the rim; the lamps on the corner posts moved to the ends of the back wall, out of reach of an open jaw; the claw rides clear of a gobbler on tiptoe. The audit is clean again. | not taken | A first visit is still the emptiest screen. |
+
+## The look pass: before and after
+
+The owner found the set of games too minimal, and the lead's look at this one at rest was "a dark cabinet, a white tray that is empty, and nobody in the frame". Three stills were taken before anything was changed and the same three after (passes 7 to 9 above are the passes between). One honest line for each.
+
+Before:
+
+- **At rest, before a touch.** About nine tenths of the frame was bare: a dark floor, a dark wall and an empty tray. Nothing in it was funny. Alive: the claw swayed a hair, and two riders the size of a thumbnail rocked on a crate far at the back.
+- **The middle of a cycle** (three colours, a toy in the jaws). About half the frame was dark wall and floor. Nothing was funny until a toy was let go. Alive: three gobblers breathing, blinking and watching the toy.
+- **The funniest moment** (a big duck let go on the little gobbler, which cannot swallow it and wears it). About half the frame bare. Funny: the hat. Nobody else in the frame took any notice of it. Alive: Little staggering under it.
+
+After:
+
+- **At rest, before a touch.** About three fifths of the frame is still tray and floor: the tray is bare on a first visit by the sheet's own rule. What is in the rest is new: a cabinet light enough to see, lamps chasing round it, the crate up over the parapet on its cart with its load and its riders in sight, and the watcher looking in from behind the bell post. Funny: the watcher, a little. Alive: the lamps, the watcher (it looks at the claw and now and then at the child), the riders, the claw.
+- **The middle of a cycle.** About a third of the frame is wall and floor, and it is striped and lit. Funny: every gobbler keen for the toy, brows up and tongue out, and all of them turning to stare when one gets the wrong toy. Alive: all of that, the toy waggling in the jaws, the watcher and the lamps.
+- **The funniest moment.** The hat again; now Little frowns under it with its tongue out, the big one raises its brows at it, and the watcher shakes with laughter. About a third of the frame bare.
+
+What I would still add: someone in the front of the first frame, which the sheet's first visit leaves bare; a bigger tongue; and a second watcher on the other side, so the frame is not weighted to the right.
 
 ## The cold playtest
 
-On the production build, on 4 October, with a reader who had seen nothing of the game or its files: a fresh agent on the builder's own model, given five stills and no words about them. Four were a first visit at 1, 3, 6 and 10 seconds with hands off; the fifth was the screen after one touch on the crate and the scenes that follow.
+On the production build, on 4 October, before the look pass, with a reader who had seen nothing of the game or its files: a fresh agent on the builder's own model, given five stills and no words about them. Four were a first visit at 1, 3, 6 and 10 seconds with hands off; the fifth was the screen after one touch on the crate and the scenes that follow.
 
 - **Before the touch.** It named a brick room, an empty white board with a green edge, a claw on a string, two cream knobs on posts, and "a small jumble" far back that it could not make out. It saw the ring fade in round the jumble and "a white blocky lump" above it, which it guessed was a hand. Its first finger went to the claw, "the biggest, nearest, toy-like thing"; its second to the cream knobs, "because they look like buttons". Its words: "The thing the game wants touched is the smallest, messiest object on screen." "The board is a big empty white nothing." "The room is dark and gloomy."
 - **After the touch.** "Much better. Two big box monsters, one red and one blue, with googly eyes, white peg teeth and open glass bellies. Each has a tiny car of its own colour inside." "The monsters want to be fed cars of their own colour." It expected a child to poke a car or drag it to the monster, and guessed both outcomes: a chomp and the car in the belly, or the car spat back.
 - **What it found weak after the touch.** Whether to move the claw or the cars is not shown. The claw and its cable hang between the two gobblers. The snacks in the bellies are small. "The monsters stare with no expression; they do not look hungry or keen." The bells are unexplained. The room is dark.
-- **What that means.** The sort reads at once from the bodies and the snacks: that is the game. A first touch on the claw or a bell is answered (the tray rings, the bell dings), so a child who goes there first is playing the toy and not stuck; a poke on a toy sends the claw to take it. The first screen, the hand and the faces are what the look pass is for.
+- **What that means.** The sort reads at once from the bodies and the snacks: that is the game. A first touch on the claw or a bell is answered (the tray rings, the bell dings), so a child who goes there first is playing the toy and not stuck; a poke on a toy sends the claw to take it. The first screen, the hand and the faces were what the look pass then worked on; it has not been tried on a newcomer again.
 
 ## For the pull request
 
@@ -82,16 +123,16 @@ Written as the game is built and kept at the end of this file: the pull request 
 
 ### How the game meets the quality bar
 
-- **Alive at idle.** The gobblers breathe, blink and watch the claw or the toy in its jaws, each at its own pace; riders on a crate cannot sit still; the cable sways a hair and the jaws work a little when the claw holds nothing. All of it runs on the attended clock and stops when the game is unattended or hidden.
+- **Alive at idle.** The gobblers breathe, blink and watch the claw or the toy in its jaws, each at its own pace; riders on a crate cannot sit still; the watcher looks about and now and then out at the child; the lamps chase round the cabinet; the cable sways a hair and the jaws work a little when the claw holds nothing. All of it runs on the attended clock and stops when the game is unattended or hidden.
 - **Motion and sound on every touch.** The claw answers when the finger lands (jaws snap open, the trolley sets off, a motor chirp). Each of the thirty cells of the sheet's grid, and the five answers of the empty ledge, has its own deed with its own motion and its own voice (`deeds.test.ts`, `voices.test.ts`, `gameGrid.test.ts`). Every voice is synthesized from numbers in `voices.ts`.
 - **Weight, squash and follow-through.** The cable swings against the trolley and swings slower under a load; the hub squashes when the claw lands; a toy squashes on landing and a stack squashes and hops as one; a throw is a plain arc under one fall, worked out from where it has to land.
-- **Kid-clear.** Up to nine toys in three flat colours on a pale tray, two or three gobblers with ball eyes on a dark wall, one claw. Places on the tray are about 150 px across at 1180 by 820.
+- **Kid-clear.** Up to nine toys in three flat colours on a pale tray, two or three gobblers with ball eyes and black brows in front of a violet-blue wall that is greyer and lower in contrast than any of them, one claw. Places on the tray are about 150 px across at 1180 by 820.
 - **Wordless clarity for the declared age.** Nothing on the kid side is a word, letter, numeral or symbol; a category is a gobbler's own body. `npm run wordless:check` passes.
 - **Wordless guidance.** The idle ladder marks what can be touched with a gold ring after three seconds and shows a tap with a ghost hand after five (`guide.ts`): on the crate when a cycle has ended, on the gate when the tray is clear and a crew waits, otherwise on a toy and then on a gobbler. A touch, and any scene, sets it back.
-- **60 fps on a mid-range iPad.** Not measured here: this machine draws in software. At most 28 draw calls were seen in play and the frame-budget test holds the heaviest moments under 80; no shadow map, no post pass, pixel ratio capped at 2, four tiers that change the pixel ratio only. The lead takes the frame rate on a graphics card. No physical iPad was measured.
+- **60 fps on a mid-range iPad.** Not measured here: this machine draws in software. At most 35 draw calls were seen in play and the frame-budget test counts 48 in the heaviest moment, under its budget of 80; no shadow map, no post pass, pixel ratio capped at 2, four tiers that change the pixel ratio only. The lead takes the frame rate on a graphics card. No physical iPad was measured.
 - **Procedural or committed assets only.** No asset at all: every shape is built from numbers at load, and there is no texture.
 - **Its own art direction.** Stud bricks, written up in `ART.md` under "The look".
-- **Nothing passes through anything.** The intersection audit is enforced and clean, with one allowance: a pupil in its eye. Its moments reach a first visit, each crew with right and wrong toys and lifts, the ledge, the bells, stacks, the tip-out, the ending and a delivery. Things stand on the tops of studs, never in them, so the audit needs no cap for seating.
+- **Nothing passes through anything.** The intersection audit is enforced and clean; its allowances are a pupil in its eye, for a gobbler and for the watcher. Its moments reach a first visit, each crew with right and wrong toys and lifts, the ledge, the bells, stacks, the tip-out, the ending, a delivery and a finger on the watcher. Things stand on the tops of studs, never in them, so the audit needs no cap for seating.
 - **Found as left.** The game is built from the saved slot; what a scene changes is saved when the scene starts; a touch ends a scene with everything where it was going. Tests put the game away at more than sixty moments, scenes included, and find it as left with nothing replayed (`game.test.ts`, `save.test.ts`).
 
 ### The learning claim
@@ -107,7 +148,7 @@ The check states have to be read again on the day of the pull request.
 - Every default under "Symbols, and the defaults awaiting the owner" in the guide, as written. None is in the game's way.
 - The demo's lucky grab is gone and its verb is new (sorting), as the brief says; its swing and its drop are kept.
 - The game's own choices where the records leave things open: the three attributes are colour, kind and size; loads are four to nine toys; a sort has two or three groups.
-- A swallowed toy is shown small in the belly, and a toy has no face (both are listed for the owner in the status block).
+- A swallowed toy is shown small in the belly, and a toy has no face (both are listed for the owner above).
 
 ### What the next builder should know
 
