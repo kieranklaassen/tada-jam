@@ -60,7 +60,26 @@ describe('the serve', () => {
     expect(cues.filter(([id]) => id === 'gulp')).toHaveLength(BITES_SHOWN + 1)
     expect(show.bites).toBe(9)
     expect(cues[0][0]).toBe('click')
-    expect(cues.at(-1)![0]).toBe('babble')
+    // Nine pieces are eight seams: the pelican's taste is heard as hiccups.
+    expect(cues.at(-1)![0]).toBe('hiccup')
+  })
+
+  it('sounds the taste as it shows it: a hiccup for every seam, the twins\' tug, a squash for a flattened ant, a sneeze for every crumb, and otherwise its own noise', () => {
+    const heard = (who: Customer, lists: number[][]): [string, number | undefined][] => {
+      const result = serveOf(who, lists.map((list, part) => list.map((length, i) => piece(part * 10 + i + 1, length))))
+      const cues: [string, number | undefined][] = []
+      play(serveBeats(restShow('serve'), { result, taste: tasteOf(who, result), outcome: 'well', glider: false }, (id, _length, count) => cues.push([id, count])))
+      return cues.filter(([id]) => id !== 'gulp' && id !== 'click' && id !== 'clang' && id !== 'slide')
+    }
+    const len = (num: number, den: number) => shareLength('long', { num, den })
+    expect(heard(customer('pelican', 3, 4), [[len(3, 4)]])).toEqual([['babble', 0]])
+    expect(heard(customer('pelican', 3, 4), [[len(1, 4), len(1, 4), len(1, 4)]])).toEqual([['hiccup', 2]])
+    expect(heard(customer('twins', 1, 2), [[len(1, 4)], [len(1, 4)]])).toEqual([['babble', 1]])
+    expect(heard(customer('twins', 1, 2), [[len(3, 8)], [len(1, 8)]])).toEqual([['tug', undefined]])
+    expect(heard(customer('ants', 3, 4), [[len(1, 4), len(1, 4), len(1, 4)]])).toEqual([['babble', 2]])
+    expect(heard(customer('ants', 3, 4), [[len(3, 8), len(3, 8)]])[0][0]).toBe('squish')
+    expect(heard(customer('boa', 5, 4), [[len(1, 1), len(1, 4)]])).toEqual([['babble', 4]])
+    expect(heard(customer('boa', 5, 4), [[len(1, 1), len(1, 16), len(1, 16), len(1, 8)]])).toEqual([['sneeze', 2]])
   })
 
   it('starts with the lid shutting on a fit, bouncing on what sticks out, or closing on a gap', () => {

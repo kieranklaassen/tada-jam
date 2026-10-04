@@ -81,7 +81,20 @@ export function serveBeats(show: Show, ending: Ending, cue: Cue): Beat[] {
     beats.push({ at, lasts: 0.8, play: (p) => (show.bites = Math.max(show.bites, single + (lengths.length - single) * p)) })
     at += 0.8
   }
-  beats.push({ at, lasts: 0, play: () => cue('babble', undefined, who) })
+  // The taste is heard as it is seen: a hiccup for every seam, the creak of the twins' pull, a squash for every flattened ant, a sneeze
+  // for every crumb. A body that has nothing against these pieces only says so, in its own throat.
+  const taste = ending.taste
+  beats.push({
+    at,
+    lasts: 0,
+    play: () => {
+      if (taste.who === 'pelican' && taste.hiccups > 0) cue('hiccup', undefined, taste.hiccups)
+      else if (taste.who === 'twins' && taste.pulled !== null) cue('tug')
+      else if (taste.who === 'ants' && taste.flattened.length > 0) cue('squish', undefined, taste.flattened.length)
+      else if (taste.who === 'boa' && taste.sneezes > 0) cue('sneeze', undefined, taste.sneezes)
+      else cue('babble', undefined, who)
+    },
+  })
   beats.push({ at, lasts: 1.4, play: (p) => (show.taste = p) })
   beats.push({ at: at + 1.4, lasts: 0.9, play: (p) => (show.settle = p) })
   return beats

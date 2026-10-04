@@ -425,6 +425,8 @@ export class GameRun {
           const called = this.queue[event.index]
           // The served one leaves as the called one steps up. It left the game on the touch: this only shows it going, and no touch waits for it.
           this.departing = event.did === 'stepped' && before.window && before.finished && this.window ? { customer: before.window, actor: reactTo(this.window, 'leave'), lengths: eaten(before.world).map((piece) => piece.length) } : null
+          // A pelican that swallowed its order in more than one piece hiccups all the way out, and is heard doing it.
+          if (this.departing && this.departing.customer.who === 'pelican' && this.departing.lengths.length > 1) this.sounds.push({ id: 'hiccup', count: this.departing.lengths.length - 1, delay: 0.1 })
           this.queue[event.index] = event.did === 'swapped' && this.window ? reactTo(this.window, 'step') : reactTo(newActor(game.queue[event.index].who, ++this.seed + 10), 'step')
           this.window = reactTo(called, 'step')
           this.sounds.push({ id: 'step', delay: 0 })
