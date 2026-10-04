@@ -20,14 +20,25 @@ const begun = (position: Parameters<typeof startCycle>[0], seed = 7) => newGame(
 const snapshot = (world: World) => JSON.stringify(serializeWorld(world))
 
 describe('the game', () => {
-  it('opens a first visit on a bare tray with one crate waiting, and nothing starts by itself', () => {
+  it('opens a first visit on a bare tray, with the crew at the tray and one crate waiting, and nothing starts by itself', () => {
     const game = newGame(newWorld(null, 5))
-    game.advance(20)
+    const before = snapshot(game.world)
+    // The crew the load is for stands at the tray already, each with its snack on its tongue; the crate holds the load.
+    expect(game.crew.map((actor) => actor.id)).toEqual(startCycle('two-colours', 5, false).crews[0])
+    for (const actor of game.crew) { expect(actor.snack.mode).toBe('mouth'); expect(actor.snack.scale).toBe(1) }
+    expect(game.crates.map((crate) => [crate.toys.length > 0, crate.crews])).toEqual([[true, []]])
+    // Left alone, one of them is tempted by its snack now and then, and puts it back: without a sound, and
+    // without anything in the world changing.
+    let tempted = 0
+    for (let t = 0; t < 20; t += 0.1) { game.advance(0.1); if (game.crew.some((actor) => actor.act === 'tempted')) tempted++ }
+    expect(tempted).toBeGreaterThan(10)
+    expect(game.takeEvents()).toEqual([])
     expect(game.scene).toBeNull()
     expect(game.bodies.length).toBe(0)
-    expect(game.crew.length).toBe(0)
     expect(game.crates.length).toBe(1)
     expect(game.world.finished).toBe(true)
+    expect(snapshot(game.world)).toBe(before)
+    for (const actor of game.crew) expect(actor.snack.mode).toBe('mouth')
   })
 
   it('brings the load and its crew in when the claw is put on the crate', () => {
@@ -316,6 +327,31 @@ describe('the game', () => {
       watch(game)
       expect(game.scene).toBeNull()
       expect(but(game.world)).toBe(atStart)
+    }
+  })
+
+  it('pours a first visit\'s load over the heads of the crew that is already at the tray', () => {
+    for (const [age, seed] of [[null, 5], [5, 7], [6, 3]] as const) {
+      const game = newGame(newWorld(age, seed))
+      const crew = game.crew.slice()
+      expect(crew.length).toBeGreaterThan(1)
+      const events = [...tap(game, { on: 'ledge', which: 0 }, 2), ...watch(game)]
+      // The same gobblers stand where they stood: no one waddled off and no one hopped in.
+      expect(game.crew).toEqual(crew)
+      expect(types(events)).not.toContain('waddle')
+      expect(types(events)).not.toContain('hop-in')
+      for (const heard of ['clank', 'groan', 'pour', 'click', 'thud', 'show', 'gulp', 'plink']) expect(types(events), heard).toContain(heard)
+      // Every toy stands on its own place, full size; every snack is in its belly; the crate is gone.
+      game.bodies.forEach((body, toy) => {
+        const at = game.spotOf(toy)
+        expect(body.mode).toBe('resting')
+        expect([body.x, body.y, body.z, body.scale]).toEqual([at.x, at.y, at.z, 1])
+      })
+      for (const actor of game.crew) expect(actor.snack.mode).toBe('resting')
+      expect(game.crates).toEqual([])
+      expect(game.waiting.map((actor) => actor.id)).toEqual(game.world.cycle.crews[1] ?? [])
+      expect(game.world.shown.colour).toBe(true)
+      expect(game.scene).toBeNull()
     }
   })
 

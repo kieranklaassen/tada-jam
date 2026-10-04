@@ -8,10 +8,8 @@ import { BACKDROP } from './config'
 import type { Game } from './game'
 import { barePicture, gamePicture } from './gamePicture'
 import { newGame } from './gameScenes'
-import { shapeOf } from './gobblers'
 import { IdleLadder, type Guidance } from './guidance'
 import { ForgivingTouch, type Gesture, type Point } from './input'
-import { headTop } from './layout'
 import { clawMachineManifest } from './manifest'
 import { CORNER, Overlay } from './overlay'
 import { installJamPerf } from './perf'
@@ -117,11 +115,10 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // A game with short scenes ends the one that is playing first thing in every press, before the press is
     // answered (`finish` in scene.ts). A gesture that changes the state hands it to storage here (`cadence`, above).
     // A finger on the glass points at the first thing on its line of sight, and the claw goes there.
-    /** The crew as a finger sees it: where each gobbler stands, how wide it is and how tall. */
-    const standing = (playing: Game) => playing.crew.map((actor) => ({ x: actor.x, width: shapeOf(actor.id).width, height: headTop(actor.id) }))
     const aim = (at: Point, landing: boolean) => {
       if (!game) return
-      game.point(aimAt(stage.ray(at.x / Math.max(1, width), at.y / Math.max(1, height)), standing(game), game.held >= 0), landing)
+      const seen = game.seen()
+      game.point(aimAt(stage.ray(at.x / Math.max(1, width), at.y / Math.max(1, height)), seen.crew, game.held >= 0, seen.stacks), landing)
     }
     // What the game says happened is heard at once, and what it changed is handed to storage: the outcome of a
     // scene and the end of a cycle at once, a toy set down at the throttle.
@@ -143,7 +140,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
         // A finger that lands on the watcher or on a lamp is that thing's: it answers, and the claw stays where it is
         // until the finger has left.
         if (gesture.type === 'press') {
-          const apart = asideAt(stage.ray(gesture.at.x / Math.max(1, width), gesture.at.y / Math.max(1, height)), standing(game), game.held >= 0)
+          const seen = game.seen()
+          const apart = asideAt(stage.ray(gesture.at.x / Math.max(1, width), gesture.at.y / Math.max(1, height)), seen.crew, game.held >= 0, seen.stacks)
           if (apart) { if (apart.on === 'watcher') game.poke(); else game.light(apart.lamp); poked = true; continue }
         }
         if (poked) { if (gesture.type === 'tap' || gesture.type === 'dragEnd' || gesture.type === 'pressEnd') poked = false; continue }

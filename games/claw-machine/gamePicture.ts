@@ -13,7 +13,7 @@ import type { GlowLook, GobblerLook, Picture, Shadow, ToyLook, WatcherLook } fro
 import { RAIL, TRAY } from './places'
 import { nearestPlace } from './tray'
 import { WATCHER_AT, WATCHER_FACES, watcherPose, type WatcherPose } from './watcher'
-import { trayIsClear } from './world'
+import { cameFirst, trayIsClear } from './world'
 
 // The picture of the game for one frame: where every toy, gobbler and crate
 // is drawn, the claw, the shadows, and what the idle ladder shows. It reads
@@ -122,6 +122,8 @@ function faceOf(game: Game, actor: Actor): { brow: number; tongue: number; lick:
   }
   if (actor.act === 'hold') return { brow: -1, tongue: 1, lick: 0 }
   if (actor.act === 'show') return { brow: 0.8, tongue: 1, lick: 0 }
+  // Tempted by its own snack: keen as it lifts it, and a frown at itself as it puts it back.
+  if (actor.act === 'tempted') return { brow: actor.actT < 0.55 ? 1 : -0.6, tongue: 1, lick: actor.actT < 0.55 ? 0.5 + 0.5 * Math.sin(actor.actT * 40) : 0 }
   if (actor.act === 'gulp') return { brow: 0.7, tongue: swell(actor.actT, 0.74, 1), lick: swell(actor.actT, 0.74, 1) }
   if (actor.act === 'burp') return { brow: 0.6, tongue: swell(actor.actT, 0.1, 0.9), lick: 0 }
   if (actor.act === 'duck' || actor.act === 'bonked') return { brow: -0.6, tongue: 0, lick: 0 }
@@ -130,10 +132,14 @@ function faceOf(game: Game, actor: Actor): { brow: number; tongue: number; lick:
   if (actor.role === 'crew' && actor.scale > 0.95) {
     // A neighbour with the wrong toy on its tongue is something to see.
     if (game.crew.some((other) => other !== actor && (other.wrongT >= 0 || other.act === 'hold'))) return { brow: 0.9, tongue: 0, lick: 0 }
+    // And a neighbour that is about to eat its snack before the load has come gets a frown.
+    if (game.crew.some((other) => other !== actor && other.act === 'tempted')) return { brow: -0.7, tongue: 0, lick: 0 }
     // A bang, or a toy or a stack that comes flying: whatever makes the watcher jump or laugh raises their brows.
     if (game.watcher.act === 'start' || game.watcher.act === 'laugh') return { brow: 0.9, tongue: 0, lick: 0 }
     // A toy in the jaws: keen, whatever the toy is.
     if (game.held >= 0) return { brow: 0.6, tongue: 0.45 + 0.25 * Math.sin(time * 3), lick: 0.5 + 0.5 * Math.sin(time * 5) }
+    // At the tray before its load: hungry. Brows up, and the tip of its tongue working at the snack it is saving.
+    if (cameFirst(game.world)) return { brow: 0.55 + 0.25 * Math.sin(time * 1.3), tongue: 0.55 + 0.3 * Math.sin(time * 2.1), lick: 0.5 + 0.5 * Math.sin(time * 4) }
   }
   return { brow: 0, tongue: 0, lick: 0 }
 }
@@ -219,14 +225,17 @@ export function gamePicture(game: Game, guidance: Guidance | null): Picture {
     toys.push(one)
   }
 
-  // What the gobblers watch: the toy in the jaws, or the claw.
-  const watched = game.held >= 0 ? game.bodies[game.held] : hub
+  // What the gobblers watch: the toy in the jaws, or the claw; and in a scene a toy that is in the air, the
+  // highest of them.
+  let flying: Body | null = null
+  if (game.scene) for (const body of game.bodies) if (body.mode === 'flying' && (flying === null || body.y > flying.y)) flying = body
+  const watched = game.held >= 0 ? game.bodies[game.held] : flying ?? hub
   const stand = (actor: Actor) => {
     poseOf(game, actor, pose)
     const shape = shapeOf(actor.id)
     const eyeY = actor.y + (rimHeight(shape) + EYE / 2) * actor.scale
     // A neighbour at the tray with the wrong toy on its tongue is what everyone looks at.
-    const odd = actor.role === 'crew' ? game.crew.find((other) => other !== actor && (other.wrongT >= 0 || other.act === 'hold')) : undefined
+    const odd = actor.role === 'crew' ? game.crew.find((other) => other !== actor && (other.wrongT >= 0 || other.act === 'hold' || other.act === 'tempted')) : undefined
     const sight = odd ? { x: odd.x, y: odd.y + rimHeight(shapeOf(odd.id)), z: odd.z } : watched
     gobblers.push({
       id: `g${actor.key}`, who: actor.id, shape, x: actor.x + pose.dx * actor.scale, y: actor.y + pose.dy, z: actor.z + pose.dz * actor.scale,
@@ -243,7 +252,7 @@ export function gamePicture(game: Game, guidance: Guidance | null): Picture {
       if (snack.mode === 'resting') { const home = game.snackSpot(actor); riding(actor, snack, 10000 + actor.key, { x: home.x, y: home.y + snack.hop * actor.scale, z: home.z }) }
       else if (snack.mode === 'mouth') {
         // On the tongue; and while its gobbler shows it, held up to the rim beside its body.
-        const mouth = game.mouthOf(actor), up = actor.act === 'show' ? Math.min(1, actor.actT / 0.12) : actor.act === 'gulp' ? 1 : 0
+        const mouth = game.mouthOf(actor), up = actor.act === 'show' ? Math.min(1, actor.actT / 0.12) : actor.act === 'gulp' ? 1 : actor.act === 'tempted' ? swell(actor.actT, 0.04, 0.72) : 0
         riding(actor, snack, 10000 + actor.key, { x: mouth.x, y: mouth.y + SHOWN_AT * up * actor.scale, z: mouth.z })
       }
       else riding(actor, snack, 10000 + actor.key)

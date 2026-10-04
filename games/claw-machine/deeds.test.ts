@@ -90,8 +90,12 @@ describe('a bare tray before the first crate', () => {
   it('answers the claw everywhere, and brings the load in only from the crate', () => {
     const w = newWorld(null)
     expect(clawLands(w, { on: 'place', place: 3 }).type).toBe('bonk')
-    expect(clawLands(w, { on: 'gobbler', slot: 1 }).type).toBe('bonk')
-    expect(clawWaitsAbove(w, { on: 'gobbler', slot: 0 }).type).toBe('breathe')
+    // The crew its load is for is at the tray already: it is lifted, ducks and stretches up like any crew.
+    expect(clawLands(w, { on: 'gobbler', slot: 1 }).type).toBe('lift-gobbler')
+    expect(clawWaitsAbove(w, { on: 'gobbler', slot: 0 }).type).toBe('open-wide')
+    expect(clawSwingsInto(w, { on: 'gobbler', slot: 0 }, 1).type).toBe('duck')
+    // A gobbler that is not there is the tray.
+    expect(clawLands(w, { on: 'gobbler', slot: 3 }).type).toBe('bonk')
     expect(clawSwingsInto(w, { on: 'ledge', which: 0 }, 1).type).toBe('lean')
     expect(w.finished).toBe(true)
     expect(clawLands(w, { on: 'ledge', which: 0 })).toEqual({ type: 'take-crate', which: 0 })

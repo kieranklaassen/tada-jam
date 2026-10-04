@@ -1,12 +1,12 @@
 import { PerspectiveCamera, Vector3 } from 'three'
-import { FRAME } from '../places'
+import { FRAME, LOOKS_DOWN } from '../places'
 import { WATCHER_AT, WATCHER_REACH, WATCHER_SIZE } from '../watcher'
 
 // The camera looks into the cabinet from the front and above, as a child
 // stands at a claw machine, and backs off until the whole cabinet is in the
 // frame, whatever the shape of the surface.
 
-const PITCH = (37 * Math.PI) / 180
+const PITCH = LOOKS_DOWN
 const FOV = 26
 
 /** What has to stay in frame: the front of the tray's floor, and the top of what stands at the back. */

@@ -304,7 +304,8 @@ export class Stage {
       const flare = flaring ? lampFlare(i, picture.flare.lamp, picture.flare.since) : 0
       const lit = Math.max(lampGlow(i, picture.seconds), flare)
       this.lamps.setColorAt(i, this.colour.setRGB(BULB_DIM[0] + (BULB_LIT[0] - BULB_DIM[0]) * lit + (1 - BULB_LIT[0]) * flare, BULB_DIM[1] + (BULB_LIT[1] - BULB_DIM[1]) * lit + (1 - BULB_LIT[1]) * flare, BULB_DIM[2] + (BULB_LIT[2] - BULB_DIM[2]) * lit + (1 - BULB_LIT[2]) * flare, SRGBColorSpace))
-      if (flaring || this.flared) { const spot = this.lampAt[i]; this.lamps.setMatrixAt(i, this.matrix.makeScale(1 + 0.5 * flare, 1 + 0.5 * flare, 1 + 0.5 * flare).setPosition(spot.x, spot.y, spot.z)) }
+      // (A bulb swells away from the brick behind it, which it never touches.)
+      if (flaring || this.flared) { const spot = this.lampAt[i], big = 1 + 0.5 * flare; this.lamps.setMatrixAt(i, this.matrix.makeScale(big, big, big).setPosition(spot.x, spot.y, spot.z + (big - 1) * (LAMP_SIZE / 2))) }
     }
     if (flaring || this.flared) this.lamps.instanceMatrix.needsUpdate = true
     this.flared = flaring

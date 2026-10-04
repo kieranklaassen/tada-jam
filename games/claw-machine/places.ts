@@ -66,10 +66,14 @@ export const RAIL = {
 
 /**
  * Where the claw hangs when nothing has moved it: on a load, and after a scene. It is off the middle of the
- * cabinet, so that its cable does not run down the middle of the gate bar and of a crate's arch behind it, and
- * over the front row of the tray, where it hangs in front of no gobbler's belly.
+ * cabinet, so that its cable does not run down the middle of the gate bar and of a crate's arch behind it, but
+ * still in the gap between a crew of two; and over the front row of the tray, where it hangs in front of no
+ * gobbler's belly.
  */
-export const REST = { x: -3.9, z: 9 } as const
+export const REST = { x: -1.5, z: 9 } as const
+
+/** How steeply the child looks down into the cabinet, in radians: the pitch of the camera. */
+export const LOOKS_DOWN = (37 * Math.PI) / 180
 
 /** What the camera frames: the whole cabinet, fitted to the surface whatever its shape. */
 export const FRAME = { minX: -18.6, maxX: 18.6, floorZ: 14.2, top: 12.2, topZ: -16 } as const

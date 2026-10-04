@@ -105,7 +105,29 @@ export function newWorld(childAge: number | null, seed = FIRST_SEED): World {
 
 /** The crew at the tray: no one, on a bare tray before the first crate is taken. */
 export function crewNow(world: World): GobblerId[] {
-  return world.cycle.crews[world.cycle.sort] ?? []
+  return cameFirst(world) ? firstLaid(world).crews[0] ?? [] : world.cycle.crews[world.cycle.sort] ?? []
+}
+
+/**
+ * A first visit, before the crate is taken: no load has been sorted and one crate waits. The crew its load is for
+ * is at the tray already, hungry, and the crate holds the load. Nothing of this is saved: the crew is the first
+ * crew of the load the crate is laid out for.
+ */
+export function cameFirst(world: World): boolean {
+  return world.finished && world.cycle.toys.length === 0 && world.crates.length > 0
+}
+
+let laidFor = '', laid: ReturnType<typeof layCycle> | null = null
+/** What the crate of a first visit holds, laid out once for each crate. */
+function firstLaid(world: World): ReturnType<typeof layCycle> {
+  const crate = world.crates[0], key = `${crate.from}:${crate.seed}`
+  if (laid === null || laidFor !== key) { laid = layCycle(crate.from, crate.seed); laidFor = key }
+  return laid
+}
+
+/** The first toy of the load that waits in the crate of a first visit: what the snacks of the crew at the tray are made from. */
+export function firstToyToCome(world: World): Toy | undefined {
+  return cameFirst(world) ? firstLaid(world).toys[0] : undefined
 }
 
 /** The tray as stacks of toy numbers, bottom first. A toy in the jaws is left out of it by naming it in `held`. */

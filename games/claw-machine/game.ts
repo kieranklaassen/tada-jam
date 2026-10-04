@@ -1,4 +1,4 @@
-import type { Aim } from './aim'
+import type { Aim, Stack, Standing } from './aim'
 import { MINI } from './belly'
 import { ON_STUDS } from './bricks'
 import { FLARE_SECONDS } from './lamps'
@@ -20,7 +20,7 @@ import type { Scene } from './scene'
 import type { Toy } from './toys'
 import { nearestToy, type Tray } from './tray'
 import { newWatcher, stepWatcher, watcherNotices, watcherSees, type Watcher, WATCHER_AT, WATCHER_JUMPS_TO } from './watcher'
-import { bellyOf, crewNow, placesFor, showingOwed, showingStarts, someoneWaits, trayOf, type World } from './world'
+import { bellyOf, cameFirst, crewNow, firstToyToCome, placesFor, showingOwed, showingStarts, someoneWaits, trayOf, type World } from './world'
 
 // The game: the rules (world.ts, deeds.ts) played with a claw. It answers
 // every touch at once, carries out each deed the rules allow, and moves the
@@ -102,6 +102,8 @@ const CLEAR_OF_A_THROW = 6.5
 /** How far the gate bar jumps and rocks when it is hooked or rattled, at the most, with a little to spare. */
 const GATE_JUMPS = 0.6
 const gateHook = () => ({ x: GATE.x + 1.8, z: GATE.z })
+/** How often one of a crew that is at the tray before its load is tempted by its snack, in seconds. */
+const TEMPTED_EVERY = 6.5
 /** How long a crate on the ledge leans out of the way of a swing, and how long it stands up to see what waits above it. */
 export const LEANS_FOR = 0.7
 export const PEERS_FOR = 1.6
@@ -179,7 +181,8 @@ export class Game {
 
   /** Builds the bodies, the crew, the ones who wait and the crates from the world, all at rest: found as left. */
   arrange(): void {
-    const cycle = this.world.cycle, first = cycle.toys[0]
+    // (On a first visit the crew is at the tray before its load: its snacks are made from the load in the crate.)
+    const cycle = this.world.cycle, first = cycle.toys[0] ?? firstToyToCome(this.world)
     this.bodies = cycle.toys.map((toy) => newBody(toy))
     this.plans.clear()
     this.held = -1; this.lifted = -1
@@ -206,7 +209,9 @@ export class Game {
   arrangeCrates(): void {
     this.crates = this.world.crates.map((crate, which) => {
       const laid = layCycle(crate.from, crate.seed), at = crateSpot(which, this.world.crates.length)
-      return { from: crate.from, seed: crate.seed, which, toys: laid.toys, places: placesFor(crate.seed).slice(0, laid.toys.length), crews: laid.crews, rows: laid.crews.length, x: at.x, y: CRATE_STANDS, z: at.z, away: 0, tip: 0, carried: false, leans: -1, peers: -1 }
+      // The crate of a first visit holds its load and the crews that come later: its first crew is at the tray.
+      const crews = cameFirst(this.world) ? laid.crews.slice(1) : laid.crews
+      return { from: crate.from, seed: crate.seed, which, toys: laid.toys, places: placesFor(crate.seed).slice(0, laid.toys.length), crews, rows: crews.length, x: at.x, y: CRATE_STANDS, z: at.z, away: 0, tip: 0, carried: false, leans: -1, peers: -1 }
     })
   }
 
@@ -224,14 +229,15 @@ export class Game {
       this.plans.delete(body)
       this.place(body, toy)
     })
-    const crew = crewNow(this.world)
+    const crew = crewNow(this.world), hungry = cameFirst(this.world)
     this.crew = this.crew.filter((actor) => crew[actor.slot] === actor.id)
     for (const actor of this.crew) {
       const at = crewSpot(actor.slot, crew.length)
       actor.role = 'crew'; actor.x = at.x; actor.y = at.y; actor.z = at.z; actor.scale = 1
       actor.walk = null; actor.act = null; actor.wrongT = -1; actor.openT = -1
       if (actor.slot !== this.lifted) actor.liftedT = -1
-      actor.snack.mode = 'resting'; actor.snack.scale = MINI
+      // Its snack is in its belly; but a crew that is at the tray before its load holds it on its tongue, uneaten.
+      if (hungry) { actor.snack.mode = 'mouth'; actor.snack.scale = 1 } else { actor.snack.mode = 'resting'; actor.snack.scale = MINI }
     }
     this.waiting.forEach((actor) => {
       const at = waitingSpot(actor.slot, this.waiting.length)
@@ -293,6 +299,17 @@ export class Game {
 
   /** The watcher: it only watches, and nothing about it is saved. */
   readonly watcher: Watcher = newWatcher()
+
+  /** Seconds until one of a crew that waits for its load is next tempted by its snack, and whose turn it is. */
+  private temptedIn = 3
+  private temptedNext = 0
+
+  /** The crew and what stands on the tray, as a finger on the glass sees them (`aim.ts`). */
+  seen(): { crew: Standing[]; stacks: Stack[] } {
+    const stacks: Stack[] = []
+    this.tray().forEach((stack, place) => { if (stack.length > 0) stacks.push({ place, top: this.stackTop(place) }) })
+    return { crew: this.crew.map((actor) => ({ x: actor.x, width: shapeOf(actor.id).width, height: headTop(actor.id) })), stacks }
+  }
 
   /** The bulb a finger last landed on, and how long ago in seconds; -1 when none is flaring. */
   flare = { lamp: -1, since: 0 }
@@ -506,6 +523,18 @@ export class Game {
     this.leaving = this.leaving.filter((actor) => !(actor.walk === null && actor.role === 'leaving'))
     this.gateShake = Math.max(0, this.gateShake - STEP / 0.5)
     stepWatcher(this.watcher, STEP)
+    // A crew that is at the tray before its load has its snacks on its tongues. Left alone, every few seconds one
+    // of them is tempted: it lifts its snack to its rim, nearly swallows it, and puts it back, and the others
+    // frown at it. It is about the snack and asks nothing of anyone.
+    if (cameFirst(this.world) && !this.scene && claw.phase === 'ready' && !claw.following) {
+      this.temptedIn -= STEP
+      if (this.temptedIn <= 0) {
+        this.temptedIn = TEMPTED_EVERY
+        const actor = this.crew[this.temptedNext++ % Math.max(1, this.crew.length)]
+        // (Without a sound: nothing in a game that is left alone makes a noise by itself.)
+        if (actor && !actor.act && actor.liftedT < 0 && actor.openT < 0 && !actor.walk) this.startAct(actor, 'tempted')
+      }
+    } else this.temptedIn = Math.max(this.temptedIn, 2.5)
     if (this.flare.lamp >= 0 && (this.flare.since += STEP) > FLARE_SECONDS + 0.3) this.flare.lamp = -1
     for (const crate of this.crates) {
       // A crate waits its turn below nought (the second sways a moment after the first); at -1 it does not sway.

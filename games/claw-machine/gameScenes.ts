@@ -7,10 +7,10 @@ import { AIR, Game, KNOB_HOLD, newActor, type Actor } from './game'
 import { SHOWN_AT } from './gamePicture'
 import { OVER_ITS_BROWS, rimHeight } from './gobblerBuild'
 import { crewGoesBy, shapeOf } from './gobblers'
-import { BED, CRATE_STANDS, ON_DECK, RIDER, TIP, crewSpot, deckSpots, deckTop, handleSpot, riderSpots, tipped, waitingSpot, type Spot } from './layout'
+import { BED, CRATE_STANDS, ON_DECK, RIDER, TIP, crewSpot, deckSpots, deckTop, handleSpot, headTop, riderSpots, tipped, waitingSpot, type Spot } from './layout'
 import { actSeconds } from './motion'
 import { CRATE, REST, TRAY } from './places'
-import { DOWN_THE_THROAT, chew, clearTop, nextLeg, react } from './react'
+import { DOWN_THE_THROAT, backOverTheCrew, chew, clearTop, nextLeg, react, send } from './react'
 import { Scene, type Beat } from './scene'
 import { bellyOf, crewNow, showingOwed, type World } from './world'
 
@@ -240,6 +240,8 @@ export function ending(game: Game): void {
  * is ended, and no crates.
  */
 export function delivery(game: Game, which: number): void {
+  // On a first visit the crew is at the tray before its load, and the crate pours over its heads.
+  if (game.bodies.length === 0 && game.crew.length > 0) { firstDelivery(game); return }
   const world = game.world, cycle = world.cycle, first = cycle.toys[0]
   const old = game.crew, oldBodies = game.bodies, claw = game.claw
   const crate = game.crates[Math.min(which, game.crates.length - 1)]
@@ -353,6 +355,102 @@ export function delivery(game: Game, which: number): void {
   beats.unshift(over(game, 0, landed, carry))
   scene(game, [...beats, ...showing(game, landed)])
 }
+
+/**
+ * The delivery of a first visit. The crew the load is for is at the tray already, with its snacks on its tongues,
+ * so nothing comes over the step: the claw lifts the crate where it stands, the bed of the crate tips, and the
+ * toys rain over the heads of the crew onto their studs, the front row of the tray first and then the back row,
+ * each back-row toy by way of the place in front of its own. The claw sets the crate back and it slides away;
+ * a crew that waits next hops off it onto the shelf. What it saves when it starts is what any delivery saves.
+ */
+function firstDelivery(game: Game): void {
+  const world = game.world, cycle = world.cycle, first = cycle.toys[0], claw = game.claw
+  const crate = game.crates[0]
+  game.held = -1
+  game.plans.clear()
+  game.generation++
+  const places = cycle.where.map((where, toy) => (where.at === 'tray' ? where.place : toy))
+  const deck = deckSpots(cycle.toys, places)
+  game.bodies = cycle.toys.map((toy) => { const body = newBody(toy); body.mode = 'parked'; body.scale = ON_DECK; return body })
+  // The crew stays where it stands. The crew that waits next, where there is one, rides the crate.
+  const next = cycle.crews[1] ?? [], rows = riderSpots(cycle.crews.slice(1))
+  game.waiting = next.map((id, slot) => newActor(game.mint(), id, slot, 'waiting', waitingSpot(slot, next.length), first))
+  const riding = new Set<Actor>(game.waiting)
+  for (const actor of riding) actor.scale = RIDER
+  const aboard = new Set(game.bodies)
+  const slid = game.bodies.map(() => 0)
+  const ease = (t: number) => { const u = Math.min(1, Math.max(0, t)); return u * u * (3 - 2 * u) }
+  const edge = (toy: number) => BED.front + (toySpan(cycle.toys[toy]).depth * ON_DECK) / 2 + OFF_THE_EDGE
+  const carry = () => {
+    const top = crate.y + deckTop(crate.which)
+    game.bodies.forEach((body, i) => {
+      if (!aboard.has(body)) return
+      const at = tipped(deck[i].y + AIR, deck[i].z + (edge(i) - deck[i].z) * ease(slid[i]), crate.tip)
+      body.x = crate.x + deck[i].x; body.y = top + at.y; body.z = crate.z + at.z; body.leanZ = -crate.tip * TIP
+    })
+    game.waiting.forEach((actor, i) => { if (riding.has(actor)) { const spot = rows[0][i]; actor.x = crate.x + spot.x; actor.y = top + spot.y + AIR; actor.z = crate.z + spot.z } })
+  }
+  carry()
+  crate.crews = []; crate.toys = []; crate.places = []
+  const handle = handleSpot()
+  claw.load = 3; claw.grip = gripFor(KNOB_HALF)
+  crate.carried = true
+  // A little way up off its cart, where it stands: it stays in sight, and its bed has room to tip.
+  game.hoist = CRATE_STANDS + LIFTED_BY + deckTop(crate.which) + handle.y + KNOB_HOLD
+  const beats: Beat[] = []
+  beats.push(cue(game, 0, () => game.say({ type: 'groan' })))
+  const tips = 1.5
+  beats.push(over(game, tips, 0.45, (progress) => { crate.tip = Math.max(0.001, ease(progress)) }))
+  beats.push(cue(game, tips + 0.2, () => game.say({ type: 'pour' })))
+  // A toy slides to the edge of the bed, is kicked straight up off it to over the heads of the crew, and from up
+  // there is thrown over them onto the tray: held over their heads, and over what has landed already.
+  const there = (other: number) => game.bodies[other].mode !== 'parked'
+  const overHeads = Math.max(...game.crew.map((actor) => actor.y + headTop(actor.id) * 1.06)) + 1
+  const leave = (toy: number, at: number) => {
+    const body = game.bodies[toy]
+    beats.push(over(game, at, SLIDE, (progress) => { slid[toy] = progress }))
+    beats.push(cue(game, at + SLIDE, () => {
+      aboard.delete(body)
+      game.flights.delete(body)
+      const up = { x: body.x, y: Math.max(overHeads, body.y + 2), z: body.z + 0.5 }
+      send(game, body, toy, [{ at: up, landing: 'again', seconds: 0.3, scale: 0.55 }, ...backOverTheCrew(game, toy, up, 0.4, (other) => other !== toy && there(other))])
+    }))
+  }
+  // The front row of the tray first, whoever has furthest to go sideways first; then, when those have landed,
+  // the back row, each by a bounce on the place in front of its own.
+  const sideways = (toy: number) => Math.abs(game.spotOf(toy).x - deck[toy].x)
+  const toys = game.bodies.map((_, toy) => toy).sort((a, b) => sideways(b) - sideways(a))
+  const front = toys.filter((toy) => places[toy] >= TRAY.columns), back = toys.filter((toy) => places[toy] < TRAY.columns)
+  let at = tips + 0.3
+  for (const toy of front) { leave(toy, at); at += RAINS_EVERY }
+  if (front.length > 0 && back.length > 0) at += FRONT_LANDS
+  for (const toy of back) { leave(toy, at); at += RAINS_EVERY }
+  // The bed comes down, the crate is set back on its cart, and the claw goes to its rest over the tray.
+  const emptied = at + SLIDE + 0.3
+  beats.push(over(game, emptied, 0.35, (progress) => { crate.tip = 1 - ease(progress) }))
+  const back2 = emptied + 0.2
+  beats.push(cue(game, back2, () => { game.hoist = CRATE_STANDS + deckTop(crate.which) + handle.y + KNOB_HOLD }))
+  const down = back2 + 0.9
+  beats.push(cue(game, down, () => {
+    crate.carried = false; crate.y = CRATE_STANDS; game.hoist = null; claw.load = 0; claw.grip = 0
+    claw.targetX = REST.x; claw.targetZ = REST.z
+    game.say({ type: 'thud', who: 'big' })
+  }))
+  // The crate slides away, and a crew that waits next hops off it onto the shelf as it goes.
+  const away = down + 0.5
+  beats.push(over(game, away, 0.8, (progress) => { crate.away = progress * progress }))
+  game.waiting.forEach((actor, k) => beats.push(cue(game, away - 0.05 + k * 0.1, () => { riding.delete(actor); walk(actor, waitingSpot(actor.slot, next.length), 0.9, 6) })))
+  const landed = away + 1.0
+  beats.push(cue(game, landed, () => {}))
+  beats.unshift(over(game, 0, landed, carry))
+  scene(game, [...beats, ...showing(game, landed)])
+}
+
+/** How long after one toy the next leaves the bed of a crate that pours over the crew, and how long the front row takes to land before the back row follows. */
+const RAINS_EVERY = 0.14
+const FRONT_LANDS = 1.1
+/** How far off its cart the claw lifts a crate that pours where it stands. */
+const LIFTED_BY = 2
 
 /** How high over the floor the foot of a carried crate rides: clear of the gate with room to spare. */
 const CARRIED_AT = 7.4

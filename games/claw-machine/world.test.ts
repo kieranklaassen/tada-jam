@@ -4,7 +4,7 @@ import { toyLetGo } from './deeds'
 import { crewGoesBy } from './gobblers'
 import { nextUp } from './order'
 import { PLACES } from './places'
-import { FIRST_SEED, bellyOf, crewNow, showingOwed, showingStarts, endCycle, homeOf, judge, newWorld, nextCrew, someoneWaits, startCycle, takeCrate, trayIsClear, trayOf, type World } from './world'
+import { FIRST_SEED, bellyOf, cameFirst, crewNow, showingOwed, showingStarts, endCycle, homeOf, judge, newWorld, nextCrew, someoneWaits, startCycle, takeCrate, trayIsClear, trayOf, type World } from './world'
 
 const at = (position: PositionId, seed = 7): World => ({ ...newWorld(null), position, finished: false, crates: [], cycle: startCycle(position, seed, false) })
 
@@ -39,7 +39,11 @@ describe('the world', () => {
     const world = newWorld(5)
     expect(world.finished).toBe(true)
     expect(world.cycle.toys).toEqual([])
-    expect(crewNow(world)).toEqual([])
+    // The crew the load is for is at the tray before the load: it is the first crew of what the crate holds,
+    // and nothing of it is saved.
+    expect(cameFirst(world)).toBe(true)
+    expect(crewNow(world)).toEqual(startCycle('colours-among-kinds', FIRST_SEED, false).crews[0])
+    expect(world.cycle.crews).toEqual([])
     expect(world.crates).toEqual([{ from: 'colours-among-kinds', seed: FIRST_SEED }])
     expect(someoneWaits(world)).toBe(true)
     // Nothing comes in until the child puts the claw on the crate; then the load and its first crew do.
@@ -48,6 +52,7 @@ describe('the world', () => {
     expect(world.finished).toBe(false)
     expect(world.cycle).toEqual(startCycle('colours-among-kinds', FIRST_SEED, false))
     expect(world.position).toBe('colours-among-kinds')
+    expect(cameFirst(world)).toBe(false)
     expect(showingOwed(world)).toBe(true)
   })
 

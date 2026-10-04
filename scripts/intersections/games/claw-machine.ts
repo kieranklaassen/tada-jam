@@ -1,13 +1,14 @@
 import type { Driver, Frac, GameAudit } from '../types.ts'
 
-// Claw Machine: a first visit with its idle guidance, the crate taken and the
-// first showing; a sort by colour with a right toy, each colour gobbler's way
+// Claw Machine: a first visit with the crew at the tray before its load, its
+// idle guidance, a gobbler lifted, a lamp lit, the crate taken and the first
+// showing; a sort by colour with a right toy, each colour gobbler's way
 // with a wrong one, each lifted, the tray rung, the bells, the empty ledge
 // and the claw waiting and wagging; the size crew and the kind crew the same
 // way, with the ones who wait bonked, lobbing and heaving; the tip-out played
 // through and ended by a touch; the ending, the crates and a delivery; stacks
 // built, bounced off, toppled and knocked down; and a rest, with a finger on
-// the watcher.
+// the watcher and on the bell in front of it.
 //
 // Every moment starts from a saved state, so each reaches its part of the
 // game directly. A toy's mesh is toy-<100 + its number in the load> after a
@@ -80,10 +81,18 @@ export default {
       name: 'first-visit',
       run: async (d) => {
         await d.reload({ [SLOT]: null })
+        // The crew is at the tray before its load, hungry: one of them is tempted by its snack and puts it back.
         // The glow at three seconds and the ghost hand at five, on the crate.
         await d.wait(9000)
+        // A finger on a gobbler lifts it, on a lamp lights it, and a wag over a gobbler makes it duck.
+        await d.tap(await gobbler(d, 0, 2)); await d.wait(3600)
+        await d.tap(await at(d, 9, 4.6, -9.5)); await d.wait(1200)
+        const head = await gobbler(d, 1, 2)
+        await d.press(head)
+        for (let i = 0; i < 8; i++) await d.move([head[0] + (i % 2 ? -0.05 : 0.05), head[1]], 130)
+        await d.wait(600); await d.release(); await d.wait(3600)
         await d.tap(await ledge(d))
-        // The delivery and the first showing of colour.
+        // The delivery of a first visit, over the heads of the crew, and the first showing of colour.
         await d.wait(14500)
       },
     },
@@ -206,7 +215,9 @@ export default {
       name: 'rest',
       run: async (d) => {
         // A finger on the watcher beside the tray: it hops and peeps, and the claw stays where it is.
-        await d.tap(await at(d, 18.1, 3, 1.5)); await d.wait(1600)
+        await d.tap(await at(d, 18.13, 3, 1.5)); await d.wait(1600)
+        // The bell in front of the watcher is the bell's: the claw rings it, and the watcher jumps.
+        await d.tap(await bell(d, 1)); await d.wait(2600)
         await d.wait(4400)
       },
     },

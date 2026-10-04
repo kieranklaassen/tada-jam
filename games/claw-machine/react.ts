@@ -43,7 +43,7 @@ const HOP = 0.3
  * what flies over something clears it by going high enough, and never by
  * passing through it.
  */
-function send(game: Game, body: Body, toy: number, stops: Stop[], deed?: Deed, after = 0): void {
+export function send(game: Game, body: Body, toy: number, stops: Stop[], deed?: Deed, after = 0): void {
   let y = body.y
   const legs: Leg[] = stops.map((stop) => {
     const at = stop.at ?? (stop.landing === 'mouth' ? game.mouthOf(game.crew[body.slot]) : game.spotOf(toy))
@@ -110,12 +110,12 @@ const MOST_THROW = 26
  * onto the back row of the tray without brushing their faces, so a toy for the back row comes down on the place
  * in front of its own, on whatever stands there, and hops back to its place from that.
  */
-function backOverTheCrew(game: Game, toy: number, from: Spot, least: number): Stop[] {
+export function backOverTheCrew(game: Game, toy: number, from: Spot, least: number, there: (toy: number) => boolean = () => true): Stop[] {
   const home = game.spotOf(toy), where = game.world.cycle.where[toy]
-  if (where.at !== 'tray' || where.place >= TRAY.columns) return [{ landing: 'stand', peak: clearTop(game, toy, from, home, least) }]
+  if (where.at !== 'tray' || where.place >= TRAY.columns) return [{ landing: 'stand', peak: clearTop(game, toy, from, home, least, -1, there) }]
   const front = where.place + TRAY.columns, at = placeAt(front)
   const bounce = { x: at.x, y: game.stackTop(front) + ON_STUDS, z: at.z }
-  return [{ at: bounce, landing: 'again', peak: clearTop(game, toy, from, bounce, least) }, { landing: 'stand', peak: Math.max(bounce.y, home.y) + 0.6 }]
+  return [{ at: bounce, landing: 'again', peak: clearTop(game, toy, from, bounce, least, -1, there) }, { landing: 'stand', peak: Math.max(bounce.y, home.y) + 0.6 }]
 }
 
 function nearestWaiter(game: Game, x: number): Actor | null {

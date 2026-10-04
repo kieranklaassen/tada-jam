@@ -1,5 +1,5 @@
 import type { Target } from './deeds'
-import { BELL, SLOT_Z, STEP, TRAY, TRAY_DEPTH, TRAY_WIDTH, WALL } from './places'
+import { BELL, SLOT_Z, STEP, TRAY, TRAY_DEPTH, TRAY_WIDTH, WALL, placeAt } from './places'
 import { lampSpots } from './lamps'
 import { nearestPlace } from './tray'
 import { WATCHER_AT, WATCHER_SIZE } from './watcher'
@@ -15,12 +15,18 @@ export type Ray = { ox: number; oy: number; oz: number; dx: number; dy: number; 
 /** A gobbler as the finger sees it: where it stands and how wide and tall it is. */
 export type Standing = { x: number; width: number; height: number }
 
+/** A toy or a stack of toys on the tray as the finger sees it: its place, and how high its top is. */
+export type Stack = { place: number; top: number }
+
 export type Aim = {
   target: Target
   /** Where the line of sight meets the thing: over the tray, the point the trolley follows. */
   x: number
   z: number
 }
+
+/** How far from the middle of its place a toy on the tray reaches, as a finger sees it. */
+const STACK_HALF = { x: 2.6, z: 1.8 } as const
 
 /** The height a finger points at over the tray: about the middle of a toy standing on it. */
 export const POINTING_HEIGHT = 1.6
@@ -57,8 +63,9 @@ const LAMP_REACH = 0.85
  * stands in front of it wins: a gobbler, a bell on its post (the watcher sits half behind one), and with a toy
  * in the jaws the whole row of the crew, where the toy is meant for a mouth.
  */
-export function asideAt(ray: Ray, crew: readonly Standing[], holding: boolean): Aside | null {
+export function asideAt(ray: Ray, crew: readonly Standing[], holding: boolean, stacks: readonly Stack[] = []): Aside | null {
   let best = Math.min(entersBell(ray, -1), entersBell(ray, 1), holding ? entersRow(ray, crew) : Infinity, ...crew.map((one) => entersGobbler(ray, one)))
+  for (const stack of stacks) { const at = placeAt(stack.place); best = Math.min(best, enters(ray, at.x - STACK_HALF.x, TRAY.top, at.z - STACK_HALF.z, at.x + STACK_HALF.x, stack.top, at.z + STACK_HALF.z)) }
   let found: Aside | null = null
   const half = WATCHER_SIZE.half
   const watcher = enters(ray, WATCHER_AT.x - half, 0, WATCHER_AT.z - half, WATCHER_AT.x + half, WATCHER_SIZE.height, WATCHER_AT.z + half)
@@ -74,13 +81,21 @@ export function asideAt(ray: Ray, crew: readonly Standing[], holding: boolean): 
  * What the finger points at. `holding` is whether a toy is in the jaws: then a finger anywhere in the row of the
  * crew, on a gobbler or in a gap between two, means the mouth nearest to it, so there is no aiming.
  */
-export function aimAt(ray: Ray, crew: readonly Standing[], holding = false): Aim {
+export function aimAt(ray: Ray, crew: readonly Standing[], holding = false, stacks: readonly Stack[] = []): Aim {
   let best = Infinity, target: Target | null = null
+  // What stands on the tray stands in front of the crew: a finger on the top of a tall toy in the back row
+  // means the toy, though the gobbler behind it is on the same line of sight.
+  for (const stack of stacks) {
+    const at = placeAt(stack.place)
+    const t = enters(ray, at.x - STACK_HALF.x, TRAY.top, at.z - STACK_HALF.z, at.x + STACK_HALF.x, stack.top, at.z + STACK_HALF.z)
+    if (t < best) { best = t; target = { on: 'place', place: stack.place } }
+  }
+  const onTray = target
   crew.forEach((one, slot) => {
     const t = entersGobbler(ray, one)
     if (t < best) { best = t; target = { on: 'gobbler', slot } }
   })
-  if (holding && target === null) {
+  if (holding && target === onTray) {
     const t = entersRow(ray, crew)
     if (t < Infinity) {
       const x = ray.ox + ray.dx * t
@@ -95,6 +110,7 @@ export function aimAt(ray: Ray, crew: readonly Standing[], holding = false): Aim
     const t = entersBell(ray, side)
     if (t < best) { best = t; target = { on: 'rail-end', side } }
   }
+  if (target && target.on === 'place') { const spot = at(best); return { target, x: Math.min(TRAY.x + TRAY_WIDTH, Math.max(TRAY.x, spot.x)), z: Math.min(TRAY.z + TRAY_DEPTH, Math.max(TRAY.z, spot.z)) } }
   if (target) return { target, ...at(best) }
   // Nothing stands in the way: the finger is on the tray, or off it, where the nearest place is meant.
   const t = Math.abs(ray.dy) < 1e-9 ? 0 : (POINTING_HEIGHT - ray.oy) / ray.dy
