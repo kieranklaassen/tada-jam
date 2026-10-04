@@ -59,7 +59,8 @@ type Dimple = { x: number; t: number }
 type Actor = { clip: ClipId | null; t: number; next: ClipId | null; after?: ClipId | null; jumpAt?: number; tug: Bunch | null; proudAt?: number; catchAt?: number; jolt?: number; hang?: { x: number; y: number }[]; from?: { x: number; y: number }[]; second?: boolean; fall?: number; fallT?: number; bumps?: boolean; landAfter: number; mirrored?: boolean; brisk?: boolean; speed?: number; lastPoke?: ClipId; marchAfter?: boolean }
 
 /** A troop that is only passing: one that marches off, or one that crosses to show a new idea. Short-lived, and no part of the save. */
-type Passing = { kind: KindName; size: number; held: boolean[]; actors: Actor[]; balloons: Held[] }
+/** A troop that walks through: the one that marches off, or the one that passes by. One that passes by a troop on stage stops off to the left (`stopAt` is the middle of its stops), its friends `gap` apart and drawn `scale` of a friend in front, and goes on behind that troop. */
+type Passing = { kind: KindName; size: number; held: boolean[]; actors: Actor[]; balloons: Held[]; scale?: number; stopAt?: number; gap?: number }
 
 /** How long a troop that passes by takes to cross, in seconds (the sheet: 4 to 6). */
 export const PASS_BY = { shortest: 4, longest: 6 } as const
@@ -229,7 +230,6 @@ export class Theatre {
   /** The places of the sky that held no bunch when the touch that is being answered landed, while that touch ended a scene. */
   private unseen: boolean[] | null = null
   /** At the opening of a new game the child's troop comes in from beyond the edge, so it is not seen until it walks. */
-  private fromBeyond = false
   /** The friends who hold a balloon, in the order they came by it. Short-lived: as the game is found, those who hold one stand in it in the order they stand. */
   private took: number[] = []
   /** The other friends look at a friend whose balloon was popped, until this time. */
@@ -991,30 +991,38 @@ export class Theatre {
   private arrive(marched: Marched | null, showing: Showing | null, held: readonly boolean[] = [], carried: Held[] = []): void {
     const actorsFor = (size: number): Actor[] => Array.from({ length: size }, () => ({ clip: null, t: 0, next: null, tug: null, landAfter: 0 }))
     const beats: Beat[] = []
-    let at = 0
-    this.walkIn = 0
+    // A new game: nobody marches off, and the child's own troop is on stage from the first frame, under a full sky.
+    const first = marched === null
+    // A troop of one or two leaves room beside it: the troop that passes by stops there, to the left, while the
+    // child's own stands and watches. A troop of three fills the middle, so there the passing troop crosses first.
+    const beside = showing !== null && this.troop.size <= 2
+    const kind = this.troop.kind, walkFor = PERSONALITIES[kind].walk
+    this.walkIn = first ? 1 : 0
     this.nextIn = 0
-    this.skyIn = false
+    this.skyIn = first
     this.leaving = null
     this.passer = null
     this.over = null
     this.hopAt.fill(-9)
     this.endingDue = null
-    this.fromBeyond = marched === null
+    let gone = 0
     if (marched) {
       this.leaving = { kind: marched.kind, size: marched.size, held: [...held], actors: actorsFor(marched.size), balloons: carried }
       this.leaveU = 0
-      const lasts = PERSONALITIES[marched.kind].walk * 1.15
-      beats.push({ at: 0, lasts, play: (u) => { this.leaveU = u; if (u >= 1) this.leaving = null } })
-      at = showing ? lasts * 0.75 : 0.45
+      gone = PERSONALITIES[marched.kind].walk * 1.15
+      beats.push({ at: 0, lasts: gone, play: (u) => { this.leaveU = u; if (u >= 1) this.leaving = null } })
     }
+    // When the child's troop sets off from the edge, and when it stands; when the passing troop comes, and when it has gone.
+    let walkAt = first ? -1 : 0.45, passAt = 0, clear = 0
     if (showing) {
       const p = PERSONALITIES[showing.kind]
-      const passer = { kind: showing.kind, size: showing.size, held: Array.from({ length: showing.size }, () => false), actors: actorsFor(showing.size), idea: showing.idea, balloons: Array.from({ length: showing.size }, (): Held => ({ x: 0, y: 0, vx: 0, vy: 0, shown: false })) }
-      this.passer = passer
-      this.passIn = 0
-      this.passOut = 0
-      this.passTook = false
+      // Beside a troop on stage it stands in the room there is between the left edge and that troop, shoulder to
+      // shoulder, and is drawn as large as fits there, a little smaller than a friend in front at the most.
+      const view = this.lastView, across = 2 * BODIES[showing.kind].halfWidth * FRIEND_SCALE
+      const room = friendX(0, this.troop.size) - BODIES[kind].halfWidth * FRIEND_SCALE + view.width / 2
+      const scale = beside ? Math.min(0.9, room / (showing.size * across + 0.1)) : 1, gap = beside ? across * scale + 0.05 : FRIEND_GAP
+      const stopAt = beside ? -view.width / 2 + 0.05 + (showing.size * gap) / 2 : 0
+      const passer = { kind: showing.kind, size: showing.size, held: Array.from({ length: showing.size }, () => false), actors: actorsFor(showing.size), idea: showing.idea, balloons: Array.from({ length: showing.size }, (): Held => ({ x: 0, y: 0, vx: 0, vy: 0, shown: false })), scale, stopAt, gap }
       // In, a look up at what hangs low for it, the taking, and out: four to six seconds for any kind, the quick
       // ones looking a little longer and the slow ones wasting none.
       // A bunch for the whole troop is taken as the kind takes one, in its own row; a balloon each is taken in turn.
@@ -1026,6 +1034,12 @@ export class Theatre {
       const taking = p.lasts.catch + after, quick = Math.min(1, (PASS_BY.longest - 0.15 - 0.35 - taking) / (p.walk * 2 + OVER_HILL))
       const out = p.walk * quick, over = OVER_HILL * quick
       const look = Math.max(0.35, PASS_BY.shortest + 0.2 - (out * 2 + over + taking))
+      // Beside a troop that walks in, it comes when that troop stands and the one before has gone; before a troop
+      // of three, it comes in as the one before goes out, so the middle is not left empty.
+      passAt = first ? 0 : beside ? Math.max(gone * 0.9, walkAt + walkFor) : gone * 0.3
+      let at = passAt
+      beats.push({ at, lasts: 0, play: () => { this.passer = passer; this.passIn = 0; this.passOut = 0; this.passTook = false } })
+      if (at <= 0) { this.passer = passer; this.passIn = 0; this.passOut = 0; this.passTook = false }
       beats.push({ at, lasts: out, play: (u) => { this.passIn = u } })
       at += out + look
       // It takes what hangs low for it, in its kind's own way. Ended early, it simply has it.
@@ -1041,8 +1055,8 @@ export class Theatre {
           balloon.vx = 0
           balloon.vy = 0
           if (this.finishing) {
-            balloon.x = this.passerX(k, this.lastView) + CARRIED_ASIDE
-            balloon.y = GROUND + HELD_HEIGHT
+            balloon.x = this.passerX(k, this.lastView) + CARRIED_ASIDE * scale
+            balloon.y = GROUND + this.heldHigh(passer)
             balloon.wait = 0
           } else {
             const knot = this.knotOf(passer, passer.idea === 'bunch' ? shareOf(passer.size, k) : k, from)
@@ -1065,21 +1079,27 @@ export class Theatre {
       beats.push({ at, lasts: out, play: (u) => { this.passOut = u; if (u >= 1) this.passer = null } })
       // Gone past the edge, it is seen once more, small and far off: over the shoulder of the far hill and out of sight.
       beats.push({ at: at + out, lasts: over, play: (u) => { this.overU = u; this.over = u < 1 ? passer : null } })
-      // The child's troop walks in when the showing is over: the passing troop has left by the edge and gone over
-      // the far hill. Until then the middle is empty and the far hill is where to look.
-      at += out + over
+      // A troop of three walks in as the passing troop walks out, so the middle is never empty.
+      if (!beside) walkAt = at + out * 0.3
+      // There is room for the troop after it when the passing troop has gone.
+      clear = at + out
     }
-    const kind = this.troop.kind, walkFor = PERSONALITIES[kind].walk
-    beats.push({ at, lasts: walkFor, play: (u) => { this.walkIn = u } })
-    // The sky fills with the next bunches, one place after another.
-    beats.push({ at: at + walkFor * 0.55, lasts: 0, play: () => {
-      this.skyIn = true
-      this.places.forEach((place, slot) => {
-        place.grow = this.finishing ? 1 : 0
-        place.away = this.finishing ? 0 : 0.001 + slot * 0.09
-      })
-    } })
-    beats.push({ at: at + walkFor, lasts: PERSONALITIES[this.waiting.kind].walk * 0.8, play: (u) => { this.nextIn = u } })
+    if (!first) {
+      beats.push({ at: walkAt, lasts: walkFor, play: (u) => { this.walkIn = u } })
+      // The sky fills with the next bunches, one place after another.
+      beats.push({ at: walkAt + walkFor * 0.55, lasts: 0, play: () => {
+        this.skyIn = true
+        this.places.forEach((place, slot) => {
+          place.grow = this.finishing ? 1 : 0
+          place.away = this.finishing ? 0 : 0.001 + slot * 0.09
+        })
+      } })
+    }
+    // The troop after it comes to the edge when there is room: the one before has gone, the child's own has walked
+    // in, and a troop that passes has gone on. So there are two troops in front at most, but for the moment a troop
+    // that passes before a troop of three comes in as the one before goes out.
+    const nextAt = Math.max(first ? 0 : walkAt + walkFor, gone, clear)
+    beats.push({ at: nextAt, lasts: PERSONALITIES[this.waiting.kind].walk * 0.8, play: (u) => { this.nextIn = u } })
     this.scene = new Scene(beats)
     this.sceneKind = 'arrival'
     this.scene.start(this.time, () => { this.unsaved = 2 })
@@ -1210,7 +1230,7 @@ export class Theatre {
         if (!balloon.shown) return
         if (balloon.wait !== undefined && balloon.wait > 0) { balloon.wait -= dt; return }
         const x = troop === this.leaving ? this.leavingX(i, this.lastView) : this.passerX(i, this.lastView)
-        const targetX = x + CARRIED_ASIDE + Math.sin(this.time * 1.4 + i) * 0.1, targetY = groundAt(x, 0) + HELD_HEIGHT + Math.sin(this.time * 1.7 + i * 2) * 0.07
+        const targetX = x + CARRIED_ASIDE * (troop.scale ?? 1) + Math.sin(this.time * 1.4 + i) * 0.1, targetY = groundAt(x, 0) + this.heldHigh(troop) + Math.sin(this.time * 1.7 + i * 2) * 0.07
         balloon.vx += ((targetX - balloon.x) * 60 - balloon.vx * 8) * dt
         balloon.vy += ((targetY - balloon.y) * 60 - balloon.vy * 8) * dt
         balloon.x += balloon.vx * dt
@@ -1818,13 +1838,13 @@ export class Theatre {
       if (this.walkIn < 1) {
         // On its way in from the edge, where it waited: nearer, larger, and in its kind's own gait.
         // The friend at the head of the waiting troop, nearest the middle, goes furthest: nobody has to pass anybody.
-        const from = waitingSpot(this.troop.size - 1 - i, view), gone = stride(kind, this.walkIn), beyond = this.fromBeyond ? 3.6 : 0
+        const from = waitingSpot(this.troop.size - 1 - i, view), gone = stride(kind, this.walkIn), beyond = 0
         pose.x = from.x - beyond + (spot.x - from.x + beyond) * gone
         // They spread out sideways before they come forward, so no friend walks through another.
         pose.z = from.z * (1 - gone * gone * gone)
         // The tower comes apart as it sets off: the one at the bottom walks out from under, and each one above
         // hops down to the hill, the highest last.
-        const up = this.fromBeyond ? 0 : this.towerLift(kind, this.troop.size - 1 - i), down = Math.min(1, gone * 2.2)
+        const up = this.towerLift(kind, this.troop.size - 1 - i), down = Math.min(1, gone * 2.2)
         pose.y = groundAt(pose.x, pose.z) + (pose.y - spot.y) + up * (1 - down * down) + (up > 0 ? Math.sin(down * Math.PI) * 0.35 : 0)
         pose.scale = FRIEND_SCALE * (WAITING_SCALE + (1 - WAITING_SCALE) * gone)
         if (this.walkIn <= 0) {
@@ -1832,6 +1852,15 @@ export class Theatre {
           pose.turn = 0.45
           pose.nod = -0.25
         } else walk(kind, this.walkIn, 1, pose)
+      }
+      // While a troop passes by, it watches that troop and what it takes.
+      if (this.passer && this.walkIn >= 1) {
+        const there = this.passerX(Math.floor(this.passer.size / 2), view), look = Math.max(-1, Math.min(1, (there - pose.x) / 3))
+        pose.lookX = look
+        pose.lookY = this.passTook ? 0.5 : 0.15
+        pose.headTurn += look * 0.3
+        pose.nod += 0.2
+        pose.mouth = this.passTook ? 0.5 : pose.mouth
       }
       // Its eyes go to the finger; and whatever is coming to it, it sees it coming. Its own motion then begins from there.
       this.eyesToFinger(pose, plan.height * FRIEND_SCALE * 0.75)
@@ -2022,24 +2051,47 @@ export class Theatre {
 
   /** Where the friend `i` of the troop that passes by is now. The troop keeps its places as it crosses, each friend as far from the next as when it stands. */
   private passerX(i: number, view: View): number {
-    const passer = this.passer!, stop = friendX(i, passer.size), way = view.width / 2 + 2.4 + friendX(passer.size - 1, passer.size), from = stop - way, to = stop + way
+    const passer = this.passer!, stop = this.stopOf(passer, i), last = this.stopOf(passer, passer.size - 1), first = this.stopOf(passer, 0)
+    // In from beyond the left edge and out beyond the right one, however far to the left it stops.
+    const from = stop - (view.width / 2 + 2.4 + last), to = stop + (view.width / 2 + 2.4 - first)
     return this.passOut > 0 ? stop + (to - stop) * stride(passer.kind, this.passOut) : from + (stop - from) * stride(passer.kind, this.passIn)
+  }
+
+  /** Where friend `i` of a troop that passes by stops: in the middle, as far apart as friends stand, or beside a troop on stage, shoulder to shoulder. */
+  private stopOf(troop: Passing, i: number): number {
+    return (troop.stopAt ?? 0) + (i - (troop.size - 1) / 2) * (troop.gap ?? FRIEND_GAP)
+  }
+
+  /** How far behind the friends' line a troop that walks is at `x`: one that stopped beside a troop on stage goes on behind it. */
+  private passerZ(troop: Passing, x: number): number {
+    if (troop.gap === undefined || troop.gap === FRIEND_GAP) return 0
+    const edge = this.stopOf(troop, troop.size - 1)
+    return -1.9 * ramp(x, edge + 0.3, edge + 1.6)
+  }
+
+  /** How high above the ground a troop that walks carries its balloons: lower for one that is drawn smaller, so the string still reaches. */
+  private heldHigh(troop: Passing): number {
+    const scale = troop.scale ?? 1
+    return HELD_HEIGHT - (1 - scale) * 2.4
   }
 
   /** Where the string of a balloon that hangs low ends: the knot of the bunch it is in, or the loose end under a single one. */
   private knotOf(passer: Passing & { idea: Showing['idea'] }, k: number, at: { x: number; y: number }): { x: number; y: number } {
     const big = this.lastView.balloon
-    this.knot.x = passer.idea === 'bunch' ? 0 : at.x
+    this.knot.x = passer.idea === 'bunch' ? passer.stopAt ?? 0 : at.x
     this.knot.y = passer.idea === 'bunch' ? at.y - (bunchOffsets(passer.size)[k].y + BALLOON * 2.5) * big : at.y - BALLOON * 1.32 * big - 0.5
     return this.knot
   }
 
   /** Where each balloon that hangs low for the passing troop is now, the first `size` of the list: one over each friend, or one bunch over the middle, drifting down into place as the troop comes. */
   private lowFor(passer: Passing & { idea: Showing['idea'] }): readonly { x: number; y: number }[] {
-    const y = GROUND + HELD_HEIGHT + 0.75 + Math.sin(this.time * 1.3) * 0.06, drop = Math.min(1, this.passIn * 3), high = (1 - drop) * (1 - drop) * 3
-    const offsets = bunchOffsets(passer.size), big = this.lastView.balloon
+    const scale = passer.scale ?? 1, middle = passer.stopAt ?? 0, beside = passer.gap !== undefined && passer.gap !== FRIEND_GAP
+    // In the middle it drifts down into place as the troop comes. Beside a troop on stage the sky is full above it,
+    // so it does not come down through the row: it drifts in from the left edge, ahead of the troop.
+    const y = GROUND + this.heldHigh(passer) + 0.75 + Math.sin(this.time * 1.3) * 0.06, drop = Math.min(1, this.passIn * 3), high = beside ? 0 : (1 - drop) * (1 - drop) * 3
+    const offsets = bunchOffsets(passer.size), big = this.lastView.balloon, aside = beside ? -(1 - drop) * (1 - drop) * (middle + this.lastView.width / 2 + 2.5) : 0
     for (let k = 0; k < passer.size; k++) {
-      this.lows[k].x = passer.idea === 'bunch' ? offsets[k].x * big : friendX(k, passer.size) + 0.25
+      this.lows[k].x = aside + (passer.idea === 'bunch' ? middle + offsets[k].x * big : this.stopOf(passer, k) + 0.25 * scale)
       this.lows[k].y = passer.idea === 'bunch' ? y + 0.5 + offsets[k].y * big + high : y + high
     }
     return this.lows
@@ -2082,16 +2134,18 @@ export class Theatre {
   private passing(painter: Painter, name: string, troop: Passing, i: number, x: number, u: number, seed: number): void {
     const pose = this.pose, plan = BODIES[troop.kind], colour = KIND_COLOURS[troop.kind], actor = troop.actors[i]
     copyPose(pose, REST)
+    const scale = troop.scale ?? 1, z = this.passerZ(troop, x)
     pose.x = x
-    pose.y = groundAt(x, 0)
-    pose.scale = FRIEND_SCALE
+    pose.z = z
+    pose.y = groundAt(x, z)
+    pose.scale = FRIEND_SCALE * scale
     rest(troop.kind, troop.held[i], plan.reach, this.time, seed, pose)
     walk(troop.kind, u, 1, pose)
-    if (actor.clip && actor.t >= 0) clip(troop.kind, actor.clip, actor.t, plan.height * FRIEND_SCALE, plan.reach, pose)
+    if (actor.clip && actor.t >= 0) clip(troop.kind, actor.clip, actor.t, plan.height * FRIEND_SCALE * scale, plan.reach, pose)
     // One that was in the air when its troop set off comes down as it goes.
     if (actor.fall) pose.y += actor.fall * (1 - ((actor.fallT ?? 0) / FALLS_IN) ** 2)
     painter.place(name, troop.kind, pose)
-    painter.shadow(pose.x, groundAt(x, 0) + 0.02, 0.1, plan.halfWidth * FRIEND_SCALE * 1.05, 0.55, shade(colour, -0.35))
+    painter.shadow(pose.x, groundAt(x, z) + 0.02, z + 0.1, plan.halfWidth * FRIEND_SCALE * scale * 1.05, 0.55 * scale, shade(colour, -0.35))
     const balloon = troop.balloons[i]
     if (!balloon || !balloon.shown) return
     handOf(plan, pose, this.hand)
@@ -2101,12 +2155,12 @@ export class Theatre {
     // A duck or a hippo that passes takes the string by its mouth first, as its kind does.
     if (actor.clip === 'catch' && actor.t >= 0) this.byMouth(troop.kind, actor.t, pose)
     const big = this.lastView.balloon, tailX = bx + Math.sin(lean) * BALLOON * 1.32 * big, tailY = by - Math.cos(lean) * BALLOON * 1.32 * big
-    painter.balloon(bx, by, 0.3, big, big, lean, colour)
+    painter.balloon(bx, by, z + 0.3, big, big, lean, colour)
     // Until its friend takes it, its string still ends where it did: at the knot of the bunch, or loose under it.
     // And while a frog's tongue has it, the tongue is all that holds it. So no two strings ever cross.
     const tongued = troop.kind === 'frog' && actor.clip === 'catch' && actor.t < 0.3 + TONGUE_HOME
-    if (balloon.wait !== undefined && balloon.wait > 0 && balloon.knot) painter.string(tailX, tailY, 0.3, balloon.knot.x, balloon.knot.y, 0.3, shade(colour, -0.3))
-    else if (!tongued) painter.string(tailX, tailY, 0.3, this.hand.x, this.hand.y, this.hand.z, shade(colour, -0.3))
+    if (balloon.wait !== undefined && balloon.wait > 0 && balloon.knot) painter.string(tailX, tailY, z + 0.3, balloon.knot.x, balloon.knot.y, z + 0.3, shade(colour, -0.3))
+    else if (!tongued) painter.string(tailX, tailY, z + 0.3, this.hand.x, this.hand.y, this.hand.z, shade(colour, -0.3))
     // A frog that passes takes its balloon as every frog does: the tongue out to it where it hangs, and in again
     // with it. Those that take one bunch each take the balloon nearest them, so no two tongues cross.
     if (troop.kind === 'frog' && actor.clip === 'catch' && actor.t >= 0) {

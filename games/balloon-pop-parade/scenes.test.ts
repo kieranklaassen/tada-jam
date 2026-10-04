@@ -3,7 +3,7 @@ import type { KindName } from './bodies'
 import { PERSONALITIES } from './clips'
 import { LADDER } from './config'
 import { marcherGeometry } from './friends'
-import { GROUND, farGroundAt, friendX, skySlots, viewFor, waitingSpot } from './layout'
+import { GROUND, farGroundAt, friendX, skySlots, viewFor, waitingSpot, FRIEND_SCALE } from './layout'
 import { saveOf } from './moments'
 import type { Pose } from './pose'
 import { deserializeSave, freshSave, serializeSave, type Save } from './save'
@@ -396,19 +396,33 @@ describe('a troop that marched off with a balloon missing', () => {
 })
 
 describe('the pass-by', () => {
-  it('is already crossing when a new game opens, with its mark in the save and saved at once', () => {
+  it('is already coming when a new game opens, with its mark in the save and saved at once; and the child\'s own troop is on stage from the first frame, reaching up under a full sky', () => {
     const fresh = freshSave(2)
     expect(fresh.shown).toEqual({ give: false, each: false, bunch: false })
-    const theatre = new Theatre(fresh), { poses, painter } = recorder()
+    const theatre = new Theatre(fresh), { poses, painter, balloons, clear } = recorder()
     expect(theatre.playing).toBe('arrival')
     expect(theatre.save.shown).toEqual({ give: true, each: false, bunch: false })
     expect(theatre.unsaved).toBe(2)
     // Nothing else of the save is touched by it: no draw from the stream, no part of the sky or the parade.
     expect({ ...serializeSave(theatre.save), shown: fresh.shown }).toEqual(serializeSave(fresh))
+    // The very first frame: the child's friend stands in its place, large, with both arms up, and every bunch hangs in the sky.
+    theatre.paint(painter, VIEW)
+    const own = poses.get('friend-0')!
+    expect(own.x).toBeCloseTo(friendX(0, 1), 5)
+    expect(own.scale).toBeCloseTo(FRIEND_SCALE, 5)
+    expect(Math.min(own.armL, own.armR)).toBeGreaterThan(2)
+    expect(balloons()).toBeGreaterThanOrEqual(theatre.save.sky.length)
     play(theatre, 0.5)
+    clear()
     theatre.paint(painter, VIEW)
     expect(poses.has('passer-0')).toBe(true)
     expect(poses.has('passer-1')).toBe(false)
+    // The troop that passes stops to the left of the child's friend, clear of it, and the friend watches it.
+    play(theatre, 2)
+    theatre.paint(painter, VIEW)
+    const passer = poses.get('passer-0')!
+    expect(passer.x).toBeLessThan(own.x - 3)
+    expect(poses.get('friend-0')!.lookX).toBeLessThan(-0.5)
   })
 
   it('shows one for each to a child whose first visit opens on a pair: a pair crosses and both marks are set', () => {
@@ -510,20 +524,16 @@ describe('the pass-by', () => {
     expect(serializeSave(theatre.save)).toEqual(saved)
   })
 
-  it('sends nothing that was not on the screen: a touch on a place of the sky while a troop passes by ends the scene and counts no slip, wherever it lands', () => {
+  it('leaves the child free to begin at once on a new game: the sky is on the screen from the first frame, so a touch on a bunch while the troop passes by ends the scene and sends that bunch', () => {
     for (const [age, seed] of [[2, 1], [2, 3], [3, 5], [4, 2], [4, 7]] as const) for (let slot = 0; slot < 5; slot++) {
       const theatre = new Theatre(freshSave(age, seed))
       if (slot >= theatre.sky.length) continue
       play(theatre, 1)
-      const saved = serializeSave(theatre.save)
       theatre.sounds.length = 0
       tapSlot(theatre, slot)
       expect(theatre.playing).toBe(null)
-      // It is answered, and no bunch leaves the sky: none hung there when the finger landed.
-      expect(theatre.sounds.length).toBeGreaterThan(0)
-      expect(theatre.sounds.map((sound) => sound.voice)).not.toContain('letGo')
-      expect(serializeSave(theatre.save)).toEqual(saved)
-      expect(theatre.save.slips).toBe(0)
+      // The bunch hung there when the finger landed: it is squeezed and sent, as any bunch is.
+      expect(theatre.sounds.map((sound) => sound.voice)).toEqual(expect.arrayContaining(['squeak', 'letGo']))
     }
   })
 
@@ -553,7 +563,10 @@ describe('the pass-by', () => {
     expect(reopened.playing).toBe(null)
   })
 
-  it('plays inside the step-in when the first pair comes, before the child\'s troop walks in', () => {
+  /** The names of the friends in front that are in view in the last frame painted: one beyond the edge of the surface is not drawn. */
+  const inFront = (poses: Map<string, Pose>) => [...poses.keys()].filter((name) => /^(friend|passer|leaving|waiting)-/.test(name) && Math.abs(poses.get(name)!.x) < VIEW.width / 2 + 1.7)
+
+  it('plays inside the step-in when the first pair comes: the child\'s pair walks in and stands, and the pair that passes stops beside it, to the left and smaller', () => {
     // A solo troop served, with a pair waiting and "one for each" not yet shown.
     const save: Save = { ...troopOf('duck', 1), next: { kind: 'frog', size: 2 }, shown: { give: true, each: false, bunch: false } }
     const theatre = new Theatre(save), { poses, painter } = recorder()
@@ -562,13 +575,55 @@ describe('the pass-by', () => {
     until(theatre, null)
     tapWaiting(theatre)
     expect(theatre.save.shown.each, 'marked when the scene starts').toBe(true)
-    play(theatre, 2.2)
-    theatre.paint(painter, VIEW)
-    expect(poses.has('passer-0') && poses.has('passer-1')).toBe(true)
-    // The child's own troop is still at the edge, where it waited.
-    expect(poses.get('friend-0')!.x).toBeLessThan(friendX(0, 2) - 2)
-    until(theatre, null)
+    let most = 0, taking = false
+    for (let t = 0; t < 14 && theatre.playing === 'arrival'; t += 1 / 60) {
+      theatre.step(1 / 60)
+      theatre.paint(painter, VIEW)
+      most = Math.max(most, inFront(poses).length)
+      const first = poses.get('passer-0'), second = poses.get('passer-1'), own = poses.get('friend-0')!
+      if (!first || !second) continue
+      // Whenever the passing pair is in view, the child's own pair stands in its places.
+      if (first.x > -VIEW.width / 2 - 1) expect(own.x, 'the child\'s troop has walked in').toBeCloseTo(friendX(0, 2), 1)
+      if (Math.abs(first.x - second.x) > 0 && first.z === 0 && second.z === 0 && first.x > -VIEW.width / 2 && Math.abs(first.armR - second.armR) < 3) {
+        // Where they stop: both to the left of the child's left friend, clear of it, and drawn smaller.
+        if (second.x < own.x - 1.5 && first.scale < FRIEND_SCALE) taking = true
+      }
+    }
+    expect(taking, 'the passing pair stood to the left of the child\'s pair, smaller').toBe(true)
+    // Never more than two troops in front at once.
+    expect(most).toBeLessThanOrEqual(6)
     theatre.paint(painter, VIEW)
     expect(poses.has('passer-0')).toBe(false)
   })
+
+  it('crosses in the middle before a troop of three walks in, which has no room beside it, coming in as the troop before goes out: the middle is never empty for as long as a second', () => {
+    // A solo troop served, three waiting under a sky that will hold bunches, and bunches not yet shown.
+    for (const rng of [1, 2, 3, 4]) {
+      const served = saveOf({ position: 'bunches-own-colour', troop: { kind: 'crab', size: 1, held: [true] }, sky: [{ colour: 'crab', count: 1 }, { colour: 'crab', count: 2 }], waiting: { kind: 'duck', size: 3 } })
+      const theatre = new Theatre({ ...served, rng, shown: { give: true, each: true, bunch: false } }), { poses, painter } = recorder()
+      tapWaiting(theatre)
+      expect(theatre.save.troop.size).toBe(3)
+      let most = 0, passed = false, empty = 0, longest = 0
+      for (let t = 0; t < 16 && theatre.playing === 'arrival'; t += 1 / 60) {
+        theatre.step(1 / 60)
+        theatre.paint(painter, VIEW)
+        const names = inFront(poses)
+        most = Math.max(most, names.length)
+        const passers = names.filter((name) => name.startsWith('passer-')).map((name) => poses.get(name)!)
+        if (passers.length === 3 && passers.every((pose) => pose.scale === FRIEND_SCALE) && Math.abs(passers[1].x) < 0.2) passed = true
+        // Somebody is in the middle of the stage: the troop that goes, the one that passes, or the child's own. One
+        // troop goes out as the next comes in, so the middle half is empty only for the moment of that exchange.
+        const middle = names.filter((name) => !name.startsWith('waiting-')).some((name) => Math.abs(poses.get(name)!.x) < VIEW.width / 4)
+        empty = middle ? 0 : empty + 1 / 60
+        longest = Math.max(longest, empty)
+      }
+      expect(longest, `rng ${rng}: the longest the middle was empty`).toBeLessThan(1)
+      expect(passed, 'three passed through the middle, as large as friends in front').toBe(true)
+      // Three troops for that moment and no more: the one that goes, the one that passes, and the child's own at the edge.
+      expect(most).toBeLessThanOrEqual(9)
+      theatre.paint(painter, VIEW)
+      expect(poses.get('friend-1')!.x).toBeCloseTo(friendX(1, 3), 5)
+    }
+  })
+
 })

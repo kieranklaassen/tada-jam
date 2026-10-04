@@ -86,7 +86,16 @@ describe('the frame budget', () => {
     expect(most.shadows).toBeLessThanOrEqual(MAX_SHADOWS)
     // Four troops of three round the far hill, and a troop of three that passed going over its shoulder.
     expect(most.marchers).toBeLessThanOrEqual(15)
-    // The heaviest frame is a real one: a troop marching off, one walking in and one coming to the edge.
+    // The heaviest frame is a real one: two troops in front, or for a moment three, as one goes out and one comes in.
     expect(most.friends).toBeGreaterThanOrEqual(6)
   }, 30_000)
+
+  it('has room to spare by count: three troops of three in front at once, two of them hippos, with every batch of the far hill in use', () => {
+    // Two troops in a row are never one kind, and there are never four in front: the troop after comes when the one
+    // before and the one that passes have gone. So the fullest frame there could be is this one.
+    const other = Math.max(drawsOf('duck'), drawsOf('frog'), drawsOf('crab'))
+    const fullest = FIXED_DRAWS + 7 + 3 * drawsOf('hippo') * 2 + 3 * other
+    expect(fullest).toBe(73)
+    expect(fullest).toBeLessThanOrEqual(DRAW_BUDGET)
+  })
 })
