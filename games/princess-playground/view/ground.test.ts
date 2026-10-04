@@ -1,8 +1,8 @@
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
-import { drop, emptyArrangement, placeOf, putInSand, putOnEnd, type Arrangement } from '../arrangement'
+import { drop, emptyArrangement, placeOf, putOnEnd, type Arrangement } from '../arrangement'
 import { restFrame } from '../rest'
-import { FRIEND_IDS, FRIENDS, PLANK, homeOn, plankTopAt, type FriendId } from '../world'
+import { FRIENDS, PLANK, homeOn, plankTopAt, type FriendId } from '../world'
 import { FIELD_OF_VIEW, placeCamera } from './camera'
 import { groundUnder, type Ray } from './ground'
 
@@ -27,7 +27,6 @@ function rayAt(px: number, py: number): Ray {
 
 function on(left: FriendId[], right: FriendId[]): Arrangement {
   let a = emptyArrangement()
-  for (const id of FRIEND_IDS) a = putInSand(a, id, homeOn(id, 'right'))
   for (const id of left) a = putOnEnd(a, id, 'left')
   for (const id of right) a = putOnEnd(a, id, 'right')
   return a
@@ -70,7 +69,7 @@ describe('what the finger points at', () => {
     const a = on(['pim'], [])
     const frame = restFrame(a)
     let reached = 0
-    for (let x = -4.8; x <= 4.8; x += 0.6) for (let z = 0.6; z <= 2.4; z += 0.3) {
+    for (let x = -4.8; x <= 4.8; x += 0.6) for (let z = 1.2; z <= 3.6; z += 0.3) {
       const at = drawnAt(x, 0, z)
       const under = groundUnder(rayAt(at.px, at.py), frame, 'mog')
       // A finger on a friend's body points at that friend; anywhere else in front of the plank it points at the sand.

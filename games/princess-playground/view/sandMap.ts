@@ -5,8 +5,8 @@ import { PLANK, TRAY } from '../world'
 // its slope. Mid grey is flat sand, darker is lower, lighter is higher. The
 // plane is never displaced: every groove, dimple and crater is drawn here.
 
-export const MAP_WIDTH = 512
-export const MAP_HEIGHT = 320
+export const MAP_WIDTH = 480
+export const MAP_HEIGHT = 400
 const FLAT = 128
 /** Distance between two raked lines, in tray units. */
 const RAKE_PITCH = 0.4

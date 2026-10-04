@@ -8,7 +8,7 @@ import { STEP, seeded } from './motion'
 import { layout, rideOf } from './rides'
 import { freshWorld } from './save'
 import { NEXT_AT, endingBeats } from './scenes'
-import { FRIEND_IDS } from './world'
+import { FRIEND_IDS, PLANK } from './world'
 
 // The frame budget, counted and never timed raw: how much work one frame may
 // ask of the game, in the heaviest play a child can make. A count holds on
@@ -46,7 +46,7 @@ describe('the work of one frame', () => {
         } else if (roll < 0.85) {
           game.press({ kind: 'friend', id })
           game.dragStart()
-          game.dragTo({ x: (random() - 0.5) * 8, z: -1 }, null)
+          game.dragTo({ x: (random() - 0.5) * 8, z: PLANK.z }, null)
         } else game.press({ kind: 'sand', x: (random() - 0.5) * 10, z: 2.2 })
       }
       if (t % 15 > 9 && game.play.held) game.dragEnd()

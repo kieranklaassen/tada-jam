@@ -3,7 +3,7 @@ import { isSound, lean, placeOf, tap, type Arrangement } from './arrangement'
 import { FIRST_VISIT, LADDER } from './config'
 import { KINDS, MIXED, TURNS, askerEnd, consequence, fewestMoves, isMove, judge, kindAt, ladderIsWhole, layout, rideOf, wantMet, type Kind, type Ride } from './rides'
 import { deserialize, finishCycle, firstPosition, freshState } from './state'
-import { FRIEND_IDS, HOME, type FriendId } from './world'
+import { FRIEND_IDS, FRIENDS, HOME, PLANK, WAITING_PLACE, outerOn, type FriendId } from './world'
 
 /** The fewest taps that take the asker there, tapping only the friends given: a search over every order of taps. */
 function fewestTaps(ride: Ride, who: readonly FriendId[], limit = 6): number {
@@ -75,12 +75,32 @@ describe('each ride as it opens', () => {
       expect(wantMet(ride, a)).toBe(false)
       for (const id of FRIEND_IDS) {
         const place = placeOf(a, id)
-        if (place.at === 'sand') expect(Math.abs(place.spot.x)).toBe(HOME[id].x)
+        // Each at its own default place; Mog at the outer one when Pim has the inner one on his side.
+        if (place.at === 'sand') expect([HOME[id].x, outerOn(id, 'right').x]).toContain(Math.abs(place.spot.x))
       }
       // Dot stands apart at the rim, at the far rim of the tray.
       const dot = placeOf(a, 'dot')
       expect(dot.at).toBe('sand')
       if (dot.at === 'sand') expect(dot.spot.z).toBe(HOME.dot.z)
+    }
+  })
+
+  it('sets the friends down well apart: from each other, from the friend who may wait and from whoever may sit on an end', () => {
+    // A third of a tray unit of bare sand between two pictures, at the least: about thirty logical pixels.
+    const APART = 0.4, biggest = FRIENDS.bo.radius
+    for (const ride of everyRide()) {
+      const a = layout(ride)
+      const standing = FRIEND_IDS.filter((id) => a.sand[id])
+      for (const id of standing) {
+        const here = a.sand[id]!, r = FRIENDS[id].radius, label = `${ride.kind} ${ride.mirrored} ${id}`
+        for (const other of standing) {
+          if (other === id) continue
+          const there = a.sand[other]!
+          expect(Math.hypot(here.x - there.x, here.z - there.z) - r - FRIENDS[other].radius, `${label} and ${other}`).toBeGreaterThanOrEqual(APART)
+        }
+        expect(Math.hypot(here.x - WAITING_PLACE.x, here.z - WAITING_PLACE.z) - r - biggest, `${label} and the one who waits`).toBeGreaterThanOrEqual(APART)
+        for (const seat of [-PLANK.seat, PLANK.seat]) expect(Math.hypot(here.x - seat, here.z - PLANK.z) - r - biggest, `${label} and a seat`).toBeGreaterThanOrEqual(APART)
+      }
     }
   })
 

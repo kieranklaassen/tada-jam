@@ -1,7 +1,7 @@
-import { emptyArrangement, lean, placeOf, putInSand, putOnEnd, type Arrangement } from './arrangement'
+import { lean, placeOf, type Arrangement } from './arrangement'
 import { LADDER, MIXED_WITHIN, MOVES_CAP, WELL_WITHIN } from './config'
 import type { CycleOutcome } from './state'
-import { FRIEND_IDS, homeOn, otherEnd, type End, type FriendId } from './world'
+import { FRIEND_IDS, homeOn, otherEnd, outerOn, type End, type FriendId } from './world'
 
 // The rides: the designed order of the game. A ride is one friend on an end
 // who wants to go the other way; it ends when the plank carries that friend
@@ -78,14 +78,24 @@ export function fewestMoves(kind: Kind): number {
   return PLANS[kind].fewest
 }
 
-/** The ride as it opens: the asker on its end, everyone else in the sand at their places, Dot at the rim. */
+/**
+ * The ride as it opens: the asker on its end, everyone else in the sand at their places, Dot at the rim. The game
+ * sets them down well apart: Pim and Mog share the inner place in front of the plank, so when both stand on one
+ * side Mog takes the outer one, which Bo has then left for the plank.
+ */
 export function layout(ride: Ride): Arrangement {
   const plan = PLANS[ride.kind], near = askerEnd(ride), far = otherEnd(near)
-  let a = emptyArrangement()
-  // Sand first, so the places are the default ones whatever the order.
-  for (const id of FRIEND_IDS) a = putInSand(a, id, homeOn(id, plan.nearSide.includes(id) ? near : far))
-  a = putOnEnd(a, ride.asker, near)
-  for (const id of plan.opposite) a = putOnEnd(a, id, far)
+  const a: Arrangement = { left: [], right: [], sand: {}, waiting: null }
+  a[near].push(ride.asker)
+  for (const id of plan.opposite) a[far].push(id)
+  const riding = [ride.asker, ...plan.opposite]
+  const sideOf = (id: FriendId): End => (plan.nearSide.includes(id) ? near : far)
+  for (const id of FRIEND_IDS) {
+    if (riding.includes(id)) continue
+    const side = sideOf(id)
+    const beside = id === 'mog' && !riding.includes('pim') && sideOf('pim') === side
+    a.sand[id] = beside ? outerOn('mog', side) : homeOn(id, side)
+  }
   return a
 }
 

@@ -23,13 +23,17 @@ export type FriendSpec = {
 }
 
 export const FRIENDS: Readonly<Record<FriendId, FriendSpec>> = {
-  pim: { id: 'pim', weight: 2, radius: 0.56, halfHeight: 0.46, hopSeconds: 0.42, hopHeight: 1.9 },
-  mog: { id: 'mog', weight: 3, radius: 0.74, halfHeight: 0.56, hopSeconds: 0.56, hopHeight: 1.5 },
-  dot: { id: 'dot', weight: 3, radius: 0.74, halfHeight: 0.56, hopSeconds: 0.5, hopHeight: 0.95 },
-  bo: { id: 'bo', weight: 4, radius: 1.0, halfHeight: 0.78, hopSeconds: 0.8, hopHeight: 1.0 },
+  pim: { id: 'pim', weight: 2, radius: 0.62, halfHeight: 0.51, hopSeconds: 0.42, hopHeight: 1.9 },
+  mog: { id: 'mog', weight: 3, radius: 0.81, halfHeight: 0.62, hopSeconds: 0.56, hopHeight: 1.5 },
+  dot: { id: 'dot', weight: 3, radius: 0.81, halfHeight: 0.62, hopSeconds: 0.5, hopHeight: 0.95 },
+  bo: { id: 'bo', weight: 4, radius: 1.1, halfHeight: 0.86, hopSeconds: 0.8, hopHeight: 1.0 },
 }
 
-export const TRAY = { halfWidth: 6, halfDepth: 3.75, rimHeight: 0.45, rimThick: 0.35 } as const
+/**
+ * The tray is deep: the plank lies across its middle, the friends stand in a row in front of it, and behind it
+ * there is room at the far rim for Dot to stand truly apart, further than a body's width from anyone on the plank.
+ */
+export const TRAY = { halfWidth: 6, halfDepth: 5, rimHeight: 0.45, rimThick: 0.35 } as const
 
 export const PLANK = {
   halfLength: 3.6,
@@ -40,8 +44,8 @@ export const PLANK = {
   /** Where a stack stands, measured along the plank from the stone. */
   seat: 3.0,
   stoneRadius: 0.62,
-  /** The plank lies across the tray this far from its middle, toward the far rim, so the friends stand in front of it. */
-  z: -1.0,
+  /** The plank lies across the middle of the tray. */
+  z: 0,
 } as const
 
 /** The tilt at which an end rests on the sand, in radians. Positive is right end down. */
@@ -74,16 +78,16 @@ export function lowTilt(weight: number): number {
 export const SAND = {
   maxX: 5.15,
   /** Nearest the child. Kept off the bottom of the screen, where wrists rest. */
-  maxZ: 2.6,
-  minZ: -3.0,
+  maxZ: 3.85,
+  minZ: -4.4,
   /** Half the depth of the strip under the plank where nobody stands. */
-  plankStrip: 1.8,
+  plankStrip: 2.0,
   /** The strip reaches this far from the stone. */
   plankReach: 3.9,
 } as const
 
 /** Where the friend who asks next waits: in front of the stone. */
-export const WAITING_PLACE = { x: 0, z: 2.3 } as const
+export const WAITING_PLACE = { x: 0, z: 3.3 } as const
 
 export type Spot = { x: number; z: number }
 
@@ -123,7 +127,7 @@ export function gridLine(cell: number, origin: number): number {
 }
 
 /** The widest any friend reaches from its middle when it sits on a seat: Bo, spread by a landing and leaning with a sway. */
-const SEATED_REACH = 1.3
+const SEATED_REACH = 1.43
 
 /**
  * A friend of this radius standing at (x, z) would be in the way of the
@@ -177,15 +181,34 @@ export function standablePlaces(radius: number): readonly Spot[] {
   return places
 }
 
-/** Where each friend stands by default on the right of the tray; mirrored for the left. Dot's is the rim. */
+/**
+ * The two places in front of the plank on the right of the tray where the game sets friends down: an inner one
+ * beside the waiting place and an outer one by the side rim. They are well apart from each other and from the
+ * friend who waits, whoever stands on them.
+ */
+export const INNER: Spot = { x: 2.28, z: 3.72 }
+export const OUTER: Spot = { x: 4.5, z: 2.5 }
+
+/**
+ * Where each friend stands by default on the right of the tray; mirrored for the left. Pim and Mog stand at the
+ * inner place and Bo at the outer one; when Pim and Mog are set down on one side, Mog takes the outer place, which
+ * Bo has then left for the plank (rides.ts). Dot's is the far rim, behind the plank and further than a body's
+ * width from anyone who sits on it.
+ */
 export const HOME: Readonly<Record<FriendId, Spot>> = {
-  pim: standable({ x: 1.8, z: 2.49 }, FRIENDS.pim.radius),
-  mog: standable({ x: 2.76, z: 1.29 }, FRIENDS.mog.radius),
-  bo: standable({ x: 4.56, z: 2.37 }, FRIENDS.bo.radius),
-  dot: standable({ x: 4.68, z: -2.55 }, FRIENDS.dot.radius),
+  pim: standable(INNER, FRIENDS.pim.radius),
+  mog: standable(INNER, FRIENDS.mog.radius),
+  bo: standable(OUTER, FRIENDS.bo.radius),
+  dot: standable({ x: 4.68, z: -3.9 }, FRIENDS.dot.radius),
 }
 
 export function homeOn(id: FriendId, end: End): Spot {
   const home = HOME[id]
   return { x: end === 'left' ? -home.x : home.x, z: home.z }
+}
+
+/** The outer place on a side, for a friend of this size: where Mog is set down when Pim has the inner one. */
+export function outerOn(id: FriendId, end: End): Spot {
+  const outer = standable(OUTER, FRIENDS[id].radius)
+  return { x: end === 'left' ? -outer.x : outer.x, z: outer.z }
 }

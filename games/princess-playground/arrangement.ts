@@ -15,9 +15,10 @@ export type Arrangement = {
 
 export type Place = { at: 'end'; end: End; level: number } | { at: 'sand'; spot: Spot } | { at: 'waiting' }
 
+/** Everyone in the sand at a default place: Pim on the left, since she and Mog share the inner place of a side, and the others on the right. */
 export function emptyArrangement(): Arrangement {
   const sand: Partial<Record<FriendId, Spot>> = {}
-  for (const id of FRIEND_IDS) sand[id] = homeOn(id, 'right')
+  for (const id of FRIEND_IDS) sand[id] = homeOn(id, id === 'pim' ? 'left' : 'right')
   return { left: [], right: [], sand, waiting: null }
 }
 
@@ -177,19 +178,22 @@ export function drop(a: Arrangement, id: FriendId, x: number, z: number): { arra
   return { arrangement: putInSand(a, id, { x, z }), slid: false }
 }
 
-/** Who Dot is with: everyone else on the plank when it is on the plank, or whoever stands in the sand within a body's width of it. */
+/**
+ * Who Dot is with: everyone else on the plank when it is on the plank; and when it stands in the sand, whoever is
+ * within a body's width of it, standing in the sand or sitting on an end of the plank beside it.
+ */
 export function companyOf(a: Arrangement, id: FriendId = 'dot'): FriendId[] {
   const place = placeOf(a, id)
   if (place.at === 'end') return [...a.left, ...a.right].filter((other) => other !== id)
   const here = standsAt(a, id)
   return FRIEND_IDS.filter((other) => {
-    if (other === id || placeOf(a, other).at === 'end') return false
+    if (other === id) return false
     const spot = standsAt(a, other)
     return Math.hypot(spot.x - here.x, spot.z - here.z) <= FRIENDS[id].radius * 3 + FRIENDS[other].radius
   })
 }
 
-/** Dot is in company: on the plank with anyone else on it, or in the sand within a body's width of another friend standing there. */
+/** Dot is in company: on the plank with anyone else on it, or in the sand within a body's width of another friend, wherever that friend is. */
 export function inCompany(a: Arrangement, id: FriendId = 'dot'): boolean {
   return companyOf(a, id).length > 0
 }

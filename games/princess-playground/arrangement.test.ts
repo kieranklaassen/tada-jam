@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { CATCH_DEPTH, SPARE_ROOM, WAITING_CLEAR, drop, elbowRoom, emptyArrangement, freeSpot, inCompany, isSound, lean, lowEnd, placeOf, putInSand, putOnEnd, standsAt, tap, weightOn, type Arrangement } from './arrangement'
-import { FRIEND_IDS, FRIENDS, PLANK, SAND, WAITING_PLACE, homeOn, inTheWay, standablePlaces, type FriendId } from './world'
+import { CATCH_DEPTH, SPARE_ROOM, WAITING_CLEAR, companyOf, drop, elbowRoom, emptyArrangement, freeSpot, inCompany, isSound, lean, lowEnd, placeOf, putInSand, putOnEnd, standsAt, tap, weightOn, type Arrangement } from './arrangement'
+import { KINDS, layout, rideOf } from './rides'
+import { ENDS, FRIEND_IDS, FRIENDS, PLANK, SAND, WAITING_PLACE, homeOn, inTheWay, standablePlaces, type FriendId } from './world'
 
 const on = (left: FriendId[], right: FriendId[]): Arrangement => {
   let a = emptyArrangement()
@@ -51,8 +52,8 @@ describe('a tap', () => {
   })
 
   it('lands a friend on top of whoever already sits there', () => {
-    const a = tap(tap(emptyArrangement(), 'bo'), 'pim')
-    expect(a.right).toEqual(['bo', 'pim'])
+    const a = tap(tap(emptyArrangement(), 'bo'), 'mog')
+    expect(a.right).toEqual(['bo', 'mog'])
   })
 
   it('takes a friend off the plank into the sand on that side, and those above come down a place', () => {
@@ -192,19 +193,27 @@ describe('a friend let go', () => {
     }
   })
 
-  it('the default places themselves are free, on both sides', () => {
-    for (const end of ['left', 'right'] as const) {
-      let a = on([], [])
-      for (const id of FRIEND_IDS) a = putInSand(a, id, homeOn(id, end))
-      for (const id of FRIEND_IDS) expect(a.sand[id]).toEqual(homeOn(id, end))
-      for (const id of FRIEND_IDS) expect(freeSpot({ ...a, sand: { ...a.sand, [id]: undefined } }, id, homeOn(id, end))).toEqual(homeOn(id, end))
+  it('the default places themselves are free, on both sides: Pim and Mog share the inner one, so each is tried with the other away', () => {
+    for (const end of ['left', 'right'] as const) for (const inner of ['pim', 'mog'] as const) {
+      const other = inner === 'pim' ? 'mog' : 'pim'
+      const standing = FRIEND_IDS.filter((id) => id !== other)
+      let a = putOnEnd(on([], []), other, end)
+      for (const id of standing) a = putInSand(a, id, homeOn(id, end))
+      for (const id of standing) expect(a.sand[id]).toEqual(homeOn(id, end))
+      for (const id of standing) expect(freeSpot({ ...a, sand: { ...a.sand, [id]: undefined } }, id, homeOn(id, end))).toEqual(homeOn(id, end))
     }
   })
 })
 
 describe('Dot in company', () => {
-  it('is alone at the rim, and alone on the plank with nobody else on it', () => {
+  it('is alone at the rim, whoever sits on the plank or stands at a default place: its place is further than a body\'s width from either end', () => {
+    expect(inCompany(emptyArrangement())).toBe(false)
     expect(inCompany(on(['pim'], []))).toBe(false)
+    for (const end of ENDS) for (const id of ['pim', 'mog', 'bo'] as const) expect(inCompany(putOnEnd(emptyArrangement(), id, end)), `${id} ${end}`).toBe(false)
+    expect(inCompany(on(['pim'], ['bo', 'mog']))).toBe(false)
+    // In every ride as it opens, both ways round.
+    for (const kind of KINDS) for (const turn of [0, 1]) expect(inCompany(layout(rideOf(kind, turn))), `${kind} ${turn}`).toBe(false)
+    // And alone on the plank with nobody else on it.
     expect(inCompany(on([], ['dot']))).toBe(false)
   })
 
@@ -213,11 +222,34 @@ describe('Dot in company', () => {
     expect(inCompany(on([], ['bo', 'dot']))).toBe(true)
   })
 
-  it('is in company in the sand beside a friend, whoever walked to whom', () => {
-    const beside = putInSand(emptyArrangement(), 'dot', { x: 3.1, z: 2.7 })
-    expect(inCompany(beside)).toBe(true)
-    // Pim is small enough to stand by the far rim within a body's width of Dot.
-    const visited = putInSand(emptyArrangement(), 'pim', { x: 4.87, z: 0.2 })
-    expect(inCompany(visited)).toBe(true)
+  it('is in company in the sand within a body\'s width of a friend, whoever walked to whom, and whether that friend stands in the sand or sits on an end', () => {
+    const mog = homeOn('mog', 'right')
+    const beside = putInSand(emptyArrangement(), 'dot', { x: mog.x + 1.9, z: mog.z })
+    expect(companyOf(beside)).toContain('mog')
+    const visited = putInSand(emptyArrangement(), 'pim', { x: homeOn('dot', 'right').x - 1.9, z: homeOn('dot', 'right').z })
+    expect(companyOf(visited)).toEqual(['pim'])
+    // Set down in the sand just in front of the end Bo sits on: Bo is its company, though he is on the plank.
+    const riding = on(['bo'], ['pim'])
+    const by = putInSand(riding, 'dot', { x: -PLANK.seat, z: 2.6 })
+    expect(Math.hypot(by.sand.dot!.x + PLANK.seat, by.sand.dot!.z - 2.6)).toBeLessThan(0.1)
+    expect(companyOf(by)).toEqual(['bo'])
+    // A body's width is the gap between the two: a little further off, Dot is alone again.
+    const reach = FRIENDS.dot.radius * 3 + FRIENDS.bo.radius
+    const off = putInSand(riding, 'dot', { x: -PLANK.seat, z: reach + 0.3 })
+    expect(Math.hypot(off.sand.dot!.x + PLANK.seat, off.sand.dot!.z - PLANK.z)).toBeGreaterThan(reach)
+    expect(companyOf(off)).toEqual([])
+  })
+
+  it('there is room beside Dot at its place by the rim for a friend of any size, and one set down there is company', () => {
+    const dot = homeOn('dot', 'right')
+    for (const id of ['pim', 'mog', 'bo'] as const) {
+      const spot = { x: dot.x - FRIENDS.dot.radius - FRIENDS[id].radius - 0.5, z: dot.z }
+      const a = putInSand(emptyArrangement(), id, spot)
+      const at = a.sand[id]!
+      // It stands about where it was set down: no more than a hand's width off, and never out in front of the plank.
+      expect(Math.hypot(at.x - spot.x, at.z - spot.z), id).toBeLessThan(0.6)
+      expect(at.z, id).toBeLessThan(PLANK.z)
+      expect(companyOf(a), id).toEqual([id])
+    }
   })
 })

@@ -24,7 +24,7 @@ describe('where a friend was put', () => {
     expect(landingOf(on(['bo'], ['mog']), putOnEnd(putOnEnd(emptyArrangement(), 'bo', 'left'), 'mog', 'right'), 'mog').deed).toBe('high-end')
     // Onto the high end without tipping it, and tipping it.
     const low = on(['bo'], [])
-    expect(landingOf(low, tap(low, 'pim'), 'pim')).toMatchObject({ deed: 'high-end', end: 'right', tips: false, alone: false })
+    expect(landingOf(low, putOnEnd(low, 'pim', 'right'), 'pim')).toMatchObject({ deed: 'high-end', end: 'right', tips: false, alone: false })
     const light = on(['pim'], [])
     expect(landingOf(light, tap(light, 'bo'), 'bo')).toMatchObject({ deed: 'high-end', tips: true })
     // Onto an empty plank: it comes down under the newcomer, who is alone on it.

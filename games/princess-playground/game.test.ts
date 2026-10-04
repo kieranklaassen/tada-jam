@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { companyOf, isSound, placeOf, putInSand, putOnEnd, standsAt, tap, weightOn } from './arrangement'
+import { companyOf, emptyArrangement, isSound, placeOf, putInSand, putOnEnd, standsAt, tap, weightOn } from './arrangement'
 import { ASK_AT, Game, SNORE_EVERY, type Cue } from './game'
 import type { Guidance } from './guidance'
 import { RAKED, biteDepth, marksFromText, marksToText, rakeIsOut } from './marks'
@@ -9,7 +9,7 @@ import { KINDS, layout, rideOf, wantMet, type Kind } from './rides'
 import { endRide, freshWorld, load, rideIsOver, save, wasSaved, type Saved, type World } from './save'
 import { NEXT_AT } from './scenes'
 import { chuckle, clonk, crow, knead, lengthOf, levelHum, purr, raspberry, scratch, softNote, spit, wheeze, type Part } from './voices'
-import { FRIEND_IDS, MAX_TILT, PLANK, WAITING_PLACE, homeOn, plankTopAt, type FriendId } from './world'
+import { FRIEND_IDS, MAX_TILT, PLANK, WAITING_PLACE, homeOn, outerOn, plankTopAt, type FriendId } from './world'
 
 const QUIET: Guidance = { glow: 0, demo: null, demoIndex: -1 }
 
@@ -343,7 +343,7 @@ describe('found as left', () => {
     const held = new Game(shown(), 1)
     held.press({ kind: 'friend', id: 'mog' })
     held.dragStart()
-    held.dragTo({ x: -3, z: -1 }, null)
+    held.dragTo({ x: -3, z: PLANK.z }, null)
     run(held, 0.5)
     // In the hand: saved where it was picked up from.
     expect(held.saved().sand.mog).toEqual(save(shown()).sand.mog)
@@ -566,9 +566,9 @@ describe('one obvious want, and the friends as they are', () => {
       game.dragEnd()
       run(game, 3)
     }
-    carry('dot', -2.8, 2.5)
+    carry('dot', -2.3, 3.75)
     expect(game.play.bodies.dot.bright).toBeLessThan(0.1)
-    carry('bo', -4.6, 2.4)
+    carry('bo', -4.5, 2.5)
     expect(game.play.bodies.dot.bright).toBeGreaterThan(0.9)
     game.takeCues()
     // Then Bo is tapped away onto the plank, and Dot is left by itself.
@@ -584,8 +584,7 @@ describe('the small promises of the sheet', () => {
   /** A game in free play on a finished scene, with the arrangement given: nothing asks, so only what is tested is heard. */
   const free = (left: FriendId[], right: FriendId[]): Game => {
     const world = shown()
-    let a = layout(rideOf('little-asks', 0))
-    for (const id of FRIEND_IDS) a = putInSand(a, id, homeOn(id, 'right'))
+    let a = emptyArrangement()
     for (const id of left) a = putOnEnd(a, id, 'left')
     for (const id of right) a = putOnEnd(a, id, 'right')
     return new Game({ ...world, state: { ...world.state, finished: true }, arrangement: { ...a, waiting: null } }, 1)
@@ -644,9 +643,7 @@ describe('the small promises of the sheet', () => {
     }
     expect(together).toBeGreaterThan(180)
     // Bo under Pim is no such stack.
-    const under = free([], ['bo'])
-    run(under, 0.5)
-    tapOn(under, 'pim')
+    const under = free([], ['bo', 'pim'])
     run(under, 6)
     expect(under.play.arrangement.right).toEqual(['bo', 'pim'])
     expect(under.play.bodies.bo.act).not.toBe('sway')
@@ -658,7 +655,7 @@ describe('the small promises of the sheet', () => {
     run(game, 0.3)
     game.press({ kind: 'friend', id: 'pim' })
     game.dragStart()
-    game.dragTo({ x: 3, z: -1 }, null)
+    game.dragTo({ x: 3, z: PLANK.z }, null)
     run(game, 0.8)
     game.dragEnd()
     run(game, 6)
@@ -719,6 +716,27 @@ describe('the small promises of the sheet', () => {
     expect(game.play.bodies.pim.gazeUpTo).toBe(0)
     run(game, 3)
     expect(game.play.bodies.pim.gazeUpTo).toBeGreaterThan(0.8)
+  })
+
+  it('Dot set down in the sand within a body\'s width of a friend who sits on an end is in company with that friend', () => {
+    const game = free(['bo'], ['pim'])
+    run(game, 1)
+    expect(game.play.bodies.dot.bright).toBeLessThan(0.1)
+    game.press({ kind: 'friend', id: 'dot' })
+    game.dragStart()
+    game.dragTo({ x: -PLANK.seat, z: 2.6 }, null)
+    run(game, 0.8)
+    game.dragEnd()
+    let greeted = 0
+    for (let i = 0; i < 180; i++) {
+      game.step(1 / 60, QUIET)
+      if (game.play.bodies.bo.act === 'greet') greeted += 1
+    }
+    expect(placeOf(game.play.arrangement, 'dot').at).toBe('sand')
+    expect(companyOf(game.play.arrangement, 'dot')).toEqual(['bo'])
+    // It warms, and Bo on the plank turns to it as a friend in the sand would.
+    expect(game.play.bodies.dot.bright).toBeGreaterThan(0.9)
+    expect(greeted).toBeGreaterThan(20)
   })
 
   it('those Dot is set down beside in the sand turn to it and bounce, and look after it when it is taken away again', () => {
@@ -805,9 +823,9 @@ describe('the small promises of the sheet', () => {
     const game = free([], ['bo'])
     run(game, 2)
     const look = (id: FriendId) => ({ side: game.play.bodies[id].gazeTo, up: game.play.bodies[id].gazeUpTo })
-    // Everyone else stands in the sand on the right, so the high end is to their left.
+    // The high end is to the left of everyone in the sand: far to the left of those on the right, a little to the left of Pim.
     expect(look('pim').up).toBeGreaterThan(0.8)
-    expect(look('pim').side).toBeLessThan(-0.5)
+    expect(look('pim').side).toBeLessThan(-0.1)
     expect(look('mog').side).toBeLessThan(-0.5)
     expect(look('mog').up).toBeGreaterThan(0.4)
     expect(look('bo').side).toBeLessThan(-0.5)
@@ -818,7 +836,7 @@ describe('the small promises of the sheet', () => {
     // No two of the four look the same way.
     expect(new Set(FRIEND_IDS.map((id) => `${look(id).side.toFixed(2)} ${look(id).up.toFixed(2)}`)).size).toBeGreaterThanOrEqual(3)
     // And a look can be seen: the body turns with it.
-    expect(game.frame.poses.pim.turn).toBeLessThan(-0.2)
+    expect(game.frame.poses.mog.turn).toBeLessThan(-0.2)
     // On the high perch himself, Mog has what he wants and looks about him.
     tapOn(game, 'mog')
     run(game, 0.2)
@@ -1194,8 +1212,8 @@ describe('Dot left alone by the friend who goes to wait', () => {
     // The first ride with Dot set down beside Mog: Bo lifts Pim, and Mog, who asks next, leaves Dot for the waiting place.
     const start = shown()
     // Bo stands on the far left, out of the way; Dot is set down to the right of Mog, far from the waiting place.
-    let a = putInSand(start.arrangement, 'bo', { x: -3.6, z: 2.3 })
-    a = putInSand(a, 'dot', { x: 4.44, z: 0.6 })
+    let a = putInSand(start.arrangement, 'bo', outerOn('bo', 'left'))
+    a = putInSand(a, 'dot', { x: 4.2, z: 3.8 })
     const game = new Game({ ...start, arrangement: a, touched: true }, 1)
     run(game, 0.5)
     expect(companyOf(game.play.arrangement, 'dot')).toEqual(['mog'])
@@ -1215,8 +1233,8 @@ describe('Dot left alone by the friend who goes to wait', () => {
 describe('Dot\'s swirl is never lost to a put-away', () => {
   const beside = () => {
     const start = shown()
-    let a = putInSand(start.arrangement, 'bo', { x: -3.6, z: 2.3 })
-    a = putInSand(a, 'dot', { x: 4.44, z: 0.6 })
+    let a = putInSand(start.arrangement, 'bo', outerOn('bo', 'left'))
+    a = putInSand(a, 'dot', { x: 4.2, z: 3.8 })
     const game = new Game({ ...start, arrangement: a, touched: true }, 1)
     run(game, 0.5)
     game.press({ kind: 'friend', id: 'bo' })

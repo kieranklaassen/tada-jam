@@ -783,7 +783,8 @@ export class Playground {
     if (place && place.at === 'end' && place.level > 0) {
       const underId = this.seen[place.end][place.level - 1], under = this.bodies[underId]
       if (under.mode !== 'held' && Math.hypot(under.x - body.x, under.z - body.z) < (FRIENDS[id].radius + FRIENDS[underId].radius) * 1.1) {
-        body.y = Math.max(body.y, under.y + FRIENDS[underId].halfHeight * 2 * Math.max(1, under.squash, this.poses[underId].squash))
+        // Where that head is drawn, not only where its body is: a bounce or a hop on the spot lifts it a little further.
+        body.y = Math.max(body.y, Math.max(under.y, this.poses[underId].y) + FRIENDS[underId].halfHeight * 2 * Math.max(1, under.squash, this.poses[underId].squash))
       }
     }
     // Over the board it is never below the board's top: a plank that swings up under a hopping friend carries it.
