@@ -73,12 +73,14 @@ const [YOUNGEST, OLDEST] = clawMachineManifest.ageBand
 // --- Guidance (guidance.ts) -------------------------------------------------
 
 /**
- * How many times the ghost hand presses to show a tap. Two presses read as a
- * tap and not as a hold, but a child under 4 copies what the hand does and
- * taps twice, so a band that starts below 4 is shown one. It follows the
- * manifest band, never the child's age while playing.
+ * How many times the ghost hand presses to show a tap. The template shows two
+ * to a band that starts at 4 or above, since two presses read as a tap and
+ * not as a hold. This game shows one at every age: here a second tap is a
+ * second move (it sets down the toy the first one took, or ends the scene
+ * the first one began), and a finger held down does no harm, since the claw
+ * goes there and waits.
  */
-export const TAP_PRESSES: 1 | 2 = YOUNGEST < 4 ? 1 : 2
+export const TAP_PRESSES: 1 | 2 = 1
 
 // --- The designed order (state.ts) -----------------------------------------
 

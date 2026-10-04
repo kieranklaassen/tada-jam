@@ -30,7 +30,7 @@ import { newWorld } from './world'
 /** The most voices one frame starts: a busy moment is still a few sounds, not a wall of them. */
 const VOICES_A_FRAME = 6
 /** How long a finger has to stay off the glass before its lift is the drop: a finger that skips for less than this carries on. */
-const DROPS_AFTER_MS = 120
+const DROPS_AFTER_MS = 125
 
 /** `?seed=<n>` in the address lays the first crate out from that seed, so a still can be taken again. */
 function seedFrom(search: string): number | null {
@@ -170,7 +170,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const onDown = (event: PointerEvent) => {
       if (!attention.awake) return
       const where = at(event)
-      overlay.press(where.x, where.y, width, event.timeStamp)
+      // The overlay counts single fingers: a touch that lands while another finger is down (a flat hand) is no tap.
+      if (aside.size === 0 && !touch.active) overlay.press(where.x, where.y, width, event.timeStamp)
       if (width > 0 && where.x >= width - CORNER && where.y <= CORNER) { aside.add(event.pointerId); return }
       audio.touchDown()
       ladder.touch(clock.seconds)
@@ -246,7 +247,9 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     })
     attendRef.current = (attended) => attention.set(attended)
 
-    ctxRef.current.storage.load<unknown>().catch(() => null).then((value) => {
+    // A read that fails is played as a first visit, but is not one: nothing is written over the slot for it.
+    let unread = false
+    ctxRef.current.storage.load<unknown>().catch(() => { unread = true; return null }).then((value) => {
       if (disposed) return
       // A saved position wins; `childAge` only chooses where a first visit starts. A first visit lays its one
       // crate out from the seed in the address, or from a seed drawn for the visit.
@@ -255,7 +258,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       game = newGame(world)
       // A first visit is written down at once, so that the crate that waits is the same one however often the
       // game is closed and opened before the first move.
-      if (value === null || value === undefined) { game.save = 'now'; hear() }
+      if ((value === null || value === undefined) && !unread) { game.save = 'now'; hear() }
       // The game sets itself up from the state here, as it was left: nothing eases in and no scene replays.
       // Then the load draws the first frame itself. A game that is resting or parked when the slot comes back
       // has no frame coming, and would go on showing the surface as it was before the read.
