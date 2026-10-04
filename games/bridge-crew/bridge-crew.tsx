@@ -118,9 +118,11 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       const urgent = toy.takeUrgent()
       if (toy.takeChange() || urgent) cadence.change(performance.now(), urgent)
     }
+    let lifted = false
     const act = (gestures: Gesture[]) => {
       if (!toy || spike) return
       for (const gesture of gestures) {
+        lifted = gesture.type === 'dragLift'
         if (gesture.type === 'press') {
           // The top right corner is the grown-up's: nothing there answers a touch.
           if (gesture.at.x > width - CORNER && gesture.at.y < CORNER) continue
@@ -137,7 +139,11 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // Put away in the middle of a touch: whatever is in the hand goes back where it came from. A half-drawn part is
     // not laid, a carried part is not taken off, the trolley is not set down: no move is made that the child did not make.
     const putDown = () => {
-      touch.clear()
+      // A finger that had already lifted, inside the grace the input gives a lift, had let go: that drag is finished
+      // as the child made it. A finger still down had not.
+      const pending = touch.clear()
+      if (lifted) act(pending)
+      lifted = false
       if (!toy || spike) return
       // And a vehicle in the middle of a run is back at the near bank: a run is not saved.
       toy.putAway()

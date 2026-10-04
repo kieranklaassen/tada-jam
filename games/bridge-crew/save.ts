@@ -207,6 +207,10 @@ const samePart = (p: Part, q: Part) => p.kind === q.kind && p.turned === q.turne
  * for as long as that part is on the bridge.
  */
 export function edit(state: Save, bridge: readonly Part[]): Save {
+  // A change that changes nothing (a stick turned: a square is the same both ways) leaves the bridge as it stands, and
+  // whoever has crossed it has still crossed it.
+  const was = state.sheets[state.on].bridge
+  if (was.length === bridge.length && was.every((part, index) => samePart(part, bridge[index]))) return state
   return withSheet(state, (sheet) => {
     let ring: Sheet['ring'] = null
     const ringed = sheet.ring ? sheet.bridge[sheet.ring.part] : undefined

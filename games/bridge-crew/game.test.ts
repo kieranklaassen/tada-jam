@@ -1228,3 +1228,80 @@ describe('what the third reading found the sheet promises', () => {
     void same
   })
 })
+
+describe('what the fourth reading found the sheet promises', () => {
+  it('a give on the way home ends with the pencil ring on the spot too', () => {
+    const game = new Game(edit(freshSave(null), CROSSINGS['plank-gap']), stream(2))
+    send(game); steps(game, 16)
+    expect(game.across).toEqual(['post-van'])
+    // The plank is laid flat again while the van is parked across, and the van is sent home over it.
+    tapAt(game, 12.5, 6.1); steps(game, 0.2); tapAt(game, 12.5, 6.1); steps(game, 1)
+    expect(game.bridge[0].turned).toBe(false)
+    expect(game.save.sheets[0].ring).toBeNull()
+    tapAt(game, parkAt(game.at, 1, 0) - 0.4, 7)
+    expect(game.drive).toMatchObject({ homeward: true })
+    for (let i = 0; i < 60 * 20 && game.drive; i++) game.step(1 / 60)
+    expect(game.show.kind).toBe('give')
+    expect(game.save.sheets[0].ring).toMatchObject({ part: 0 })
+    steps(game, 7)
+    expect(game.save.sheets[0].ring).toMatchObject({ part: 0 })
+    expect(game.save.waiting).toContain('post-van')
+    expect(game.save.tries).toBe(0)
+  })
+
+  it('a tap anywhere on a part plucks it, and a second tap while it rings turns it: on a plank, at a grid point along it as well as between two', () => {
+    for (const x of [11, 11.5, 12, 12.3, 13]) {
+      const game = fresh()
+      drag(game, [10, 6], [14, 6])
+      steps(game, 1.5); game.takeVoices()
+      tapAt(game, x, 6.02)
+      expect(game.bridge[0].turned, `one tap at ${x}`).toBe(false)
+      expect(game.takeVoices().length).toBeGreaterThan(0)
+      steps(game, 0.2)
+      tapAt(game, x, 6.02)
+      expect(game.bridge[0].turned, `two taps at ${x}`).toBe(true)
+    }
+    // At a pin where a part ends, a tap is the pin's: the parts on it rattle and nothing turns.
+    const joint = fresh()
+    drag(joint, [10, 6], [14, 6])
+    steps(joint, 1.5)
+    tapAt(joint, 10, 6); steps(joint, 0.2); tapAt(joint, 10, 6)
+    expect(joint.bridge[0].turned).toBe(false)
+    // And a drag from a grid point along a plank still lays a part from there.
+    const laid = fresh()
+    drag(laid, [10, 6], [14, 6])
+    drag(laid, [12, 6], [12, 8])
+    expect(laid.bridge).toHaveLength(2)
+  })
+
+  it('a change that changes nothing leaves the bridge as it stands: a stick turned on a sheet from the rack does not send its vehicle back over the gap', () => {
+    const start = edit({ ...freshSave(null), sheets: [{ ...freshSave(null).sheets[0], site: 'first-triangle' }] }, CROSSINGS['first-triangle'])
+    const game = new Game(start, stream(2))
+    send(game); steps(game, 16)
+    expect(game.save.sheets[0].crossed).toContain('post-van')
+    const stick = game.bridge.findIndex((one) => one.kind === 'stick'), ends = game.drawn()[stick], mid: [number, number] = [(ends.a[0] + ends.b[0]) / 2, (ends.a[1] + ends.b[1]) / 2]
+    game.takeChange()
+    tapAt(game, ...mid); steps(game, 0.2); tapAt(game, ...mid)
+    expect(game.turned[stick]).toBeLessThan(1)
+    expect(game.save.sheets[0].crossed).toContain('post-van')
+    expect(game.across).toContain('post-van')
+    // A plank turned is a change: nobody has crossed the bridge as it now stands.
+    const plank = game.bridge.findIndex((one) => one.kind === 'plank'), p = game.drawn()[plank]
+    steps(game, 1.5)
+    tapAt(game, (p.a[0] * 3 + p.b[0]) / 4 + 0.02, (p.a[1] * 3 + p.b[1]) / 4 + 0.05); steps(game, 0.2); tapAt(game, (p.a[0] * 3 + p.b[0]) / 4 + 0.02, (p.a[1] * 3 + p.b[1]) / 4 + 0.05)
+    expect(game.save.sheets[0].crossed).toEqual([])
+  })
+
+  it('put away in the middle of a run home, the vehicle stands at the near bank', () => {
+    const game = new Game(edit(freshSave(null), CROSSINGS['plank-gap']), stream(2))
+    send(game); steps(game, 16)
+    tapAt(game, parkAt(game.at, 1, 0) - 0.4, 7)
+    steps(game, 0.8)
+    expect(game.drive).toMatchObject({ homeward: true })
+    game.putAway()
+    expect(game.drive).toBeNull()
+    expect(game.across).not.toContain('post-van')
+    expect(game.waiting).toContain('post-van')
+    expect(game.takeUrgent()).toBe(true)
+  })
+})

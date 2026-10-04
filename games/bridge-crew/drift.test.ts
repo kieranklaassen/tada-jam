@@ -29,7 +29,9 @@ describe('what goes on at the edge of the sheet', () => {
     expect(new Set(moved.map((far) => far.toFixed(3))).size).toBe(3)
     for (let seconds = 0; seconds < 900; seconds += 7) for (const cloud of clouds(gap, seconds)) {
       expect(cloud.x).toBeGreaterThanOrEqual(-4); expect(cloud.x).toBeLessThan(COLS + 4)
-      expect(cloud.y).toBeGreaterThanOrEqual(SKY.low); expect(cloud.y).toBeLessThanOrEqual(SKY.high)
+      expect(cloud.y).toBeGreaterThanOrEqual(SKY.low); expect(cloud.y).toBeLessThanOrEqual(SKY.clouds)
+      // Its top, under half its width above its foot, stays under the grown-up's corner at the top right of the sheet (a cell and two thirds square).
+      expect(cloud.y + cloud.wide * 0.46).toBeLessThan(14.7 - 1.67)
     }
   })
 

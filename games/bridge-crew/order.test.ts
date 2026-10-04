@@ -80,4 +80,17 @@ describe('the designed order as rules', () => {
     expect(modelInMargin('first-triangle', ['prop'])).toBeNull()
     expect(modelInMargin('jelly-run', ['triangle'])).toBeNull()
   })
+
+  it('a part moved is one difference, so a comparison of two designs that differ by one moved part is fair and the one change is not owed', () => {
+    const bridge = [part('plank', 8, 6, 12, 6, true), part('stick', 12, 3, 12, 6)], moved = [part('plank', 8, 6, 12, 6, true), part('stick', 12, 3, 11, 6)]
+    expect(differences(bridge, moved)).toBe(1)
+    expect(isFairTest(bridge, moved)).toBe(true)
+    expect(oneChangeDue(bridge, moved, [])).toBe(false)
+    expect(nearestDifferences(bridge, moved, 12)).toMatchObject([{ what: 'moved', kind: 'stick' }])
+    // Moved and turned: two things, and those two fill the showing.
+    const both = [part('plank', 8, 6, 12, 6, false), part('stick', 12, 3, 11, 6)]
+    expect(differences(bridge, both)).toBe(2)
+    expect(oneChangeDue(bridge, both, [])).toBe(true)
+    expect(nearestDifferences(bridge, both, 12).map((one) => one.what).sort()).toEqual(['moved', 'turned'])
+  })
 })

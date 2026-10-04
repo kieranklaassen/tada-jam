@@ -1,7 +1,7 @@
 import { settle, solve, type Answer, type Frame } from './frame'
 import { layPart, plucked, pullPin, putPin, takeOffPart, turnPart } from './grid'
 import { key, length, pinsOf, reach, samePoint, type Kind, type Part, type Point } from './kit'
-import { TRAY, bayAt, touched } from './layout'
+import { PART_REACH, TRAY, bayAt, farFromStretch, touched } from './layout'
 import { ChiefDirector } from './motion'
 import { atRest, ends, follow, rests, unrest, type Moving, type Rest } from './pose'
 import { edit, type Save } from './save'
@@ -215,7 +215,18 @@ export class Toy {
       const back = putPin(this.bridge, hand.at)
       if (back.pinned.length) { this.voices.push(back.result.voice); this.commit(back.bridge); return }
       const on = this.bridge.flatMap((part, index) => (pinsOf(part).some((p) => samePoint(p, hand.at)) ? [index] : []))
-      if (on.length === 0) return
+      if (on.length === 0) {
+        // No part is pinned there. If a part's body passes over that grid point (the middle of a slanting stick), the
+        // tap is a tap on that part.
+        const drawn = this.drawn()
+        let over = -1, far = PART_REACH
+        this.bridge.forEach((_, index) => { const d = farFromStretch(hand.at[0], hand.at[1], drawn[index].a, drawn[index].b); if (d <= far) { far = d; over = index } })
+        if (over >= 0) this.tapPart(over)
+        return
+      }
+      // A grid point along a plank where no part ends is the plank, not a joint: a tap there plucks the plank, and a
+      // second tap while it rings turns it. So any tap on a part plucks it, wherever along it the finger lands.
+      if (!on.some((index) => samePoint(this.bridge[index].a, hand.at) || samePoint(this.bridge[index].b, hand.at))) { this.tapPart(on[0]); return }
       // A second tap while it still rings turns the pin: a lone part that hangs on it swings right round like a clock
       // hand, ticking as it goes, and hangs straight down again.
       const lone = on.length === 1 && this.rest[on[0]].how === 'hangs'
@@ -230,20 +241,22 @@ export class Toy {
       for (const index of on) this.rung[index] = RING * 0.5
       this.rattled.set(key(hand.at), 0)
     }
-    if (hand.what === 'part') {
-      const index = hand.index
-      if (this.rung[index] < RING) {
-        const turnedOver = turnPart(this.bridge, index)
-        if (!turnedOver) return
-        this.voices.push(turnedOver.result.voice)
-        this.turned[index] = 0
-        this.rung[index] = Infinity
-        this.commit(turnedOver.bridge)
-      } else {
-        this.voices.push(this.pluckOf(index))
-        this.rung[index] = 0
-        this.plucked(index)
-      }
+    if (hand.what === 'part') this.tapPart(hand.index)
+  }
+
+  /** A tap on a part: it is plucked, and a second tap while it still rings turns it. */
+  private tapPart(index: number): void {
+    if (this.rung[index] < RING) {
+      const turnedOver = turnPart(this.bridge, index)
+      if (!turnedOver) return
+      this.voices.push(turnedOver.result.voice)
+      this.turned[index] = 0
+      this.rung[index] = Infinity
+      this.commit(turnedOver.bridge)
+    } else {
+      this.voices.push(this.pluckOf(index))
+      this.rung[index] = 0
+      this.plucked(index)
     }
   }
 

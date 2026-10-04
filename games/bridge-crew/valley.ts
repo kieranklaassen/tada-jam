@@ -98,7 +98,8 @@ export function trees(at: Site): { x: number; tall: number; kind: 'round' | 'pin
       out.push({ x, tall, kind: pick < 0.45 ? 'round' : pick < 0.8 ? 'pine' : 'poplar' })
     }
   }
-  stretch(-MARGIN.side + 0.2, at.left[0] - 1.4)
+  // On the near bank they stand well back: a waiting vehicle's numeral stands beside its crates, up to four and a half cells from the lip, and no trunk stands behind it.
+  stretch(-MARGIN.side + 0.2, at.left[0] - 4.7)
   stretch(at.right[0] + 1.4, COLS + MARGIN.side - 0.6)
   return out
 }
@@ -374,4 +375,4 @@ export const reaches = kept((at: Site): (readonly [number, number])[] => {
 })
 
 /** The sky's height on the sheet, for what drifts in it. */
-export const SKY = { low: ROWS - 3.4, high: ROWS - 0.9 } as const
+export const SKY = { low: ROWS - 3.4, high: ROWS - 0.9, clouds: ROWS - 2.4 } as const

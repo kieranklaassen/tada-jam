@@ -76,9 +76,10 @@ describe('the valley the gap is in', () => {
   it('trees stand on the banks, behind the road, clear of both lips and of the cliffs', () => {
     for (const at of every) {
       const stand = trees(at)
-      expect(stand.length, at.id).toBeGreaterThanOrEqual(2)
+      expect(stand.length, at.id).toBeGreaterThanOrEqual(1)
       for (const tree of stand) {
-        expect(tree.x < at.left[0] - 1.3 || tree.x > at.right[0] + 1.3, `${at.id} ${tree.x}`).toBe(true)
+        // On the near bank well back from the lip, where no waiting vehicle's numeral stands before a trunk.
+        expect(tree.x < at.left[0] - 4.6 || tree.x > at.right[0] + 1.3, `${at.id} ${tree.x}`).toBe(true)
         expect(tree.tall).toBeGreaterThan(1)
         expect(tree.tall).toBeLessThan(3)
         for (const [ax] of at.anchors) expect(Math.abs(ax - tree.x)).toBeGreaterThanOrEqual(2.3)

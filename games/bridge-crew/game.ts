@@ -533,7 +533,10 @@ export class Game extends Toy {
 
   putAway(): void {
     this.pressEnd()
-    if (!this.drive) return
+    const drive = this.drive
+    if (!drive) return
+    // On its way home it is home: the vehicle stands at the near bank, as after any run that was put away.
+    if (drive.homeward) { this.save = sentHome(this.save, drive.vehicle); this.changed = true; this.urgent = true }
     this.drive = null
     this.crew.beaver.brace(false)
     this.model()
@@ -854,7 +857,8 @@ export class Game extends Toy {
       if (drive.run.ending.kind === 'dunks') { this.voices.push(gurgle); this.dipped = { part: drive.run.ending.part } }
       // A vehicle that fails on its way home paddles to the near bank like any other, and is home.
       const hadNext = this.save.next !== null
-      this.save = drive.homeward ? sentHome(this.save, drive.vehicle) : failedRun(this.save, drive.vehicle, what.ring)
+      // Either way the give ends with the pencil ring on the spot.
+      this.save = drive.homeward ? (what.ring ? ringed(sentHome(this.save, drive.vehicle), what.ring) : sentHome(this.save, drive.vehicle)) : failedRun(this.save, drive.vehicle, what.ring)
       // A cycle judged badly lays out a way back in: its roll waits for this scene to end, and then slides in.
       if (!hadNext && this.save.next !== null) this.rollIn = -1
       this.scene = new Scene(giveBeats(show, cue))

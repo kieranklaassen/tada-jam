@@ -59,13 +59,8 @@ export function neatWayDue(idea: Idea | null, tries: number, ending: Ending, any
 
 const same = (p: Part, q: Part) => p.kind === q.kind && p.turned === q.turned && p.loose === q.loose && sameSpan(p, q)
 
-/** How many parts two designs differ in: a part in one and not in the other, or the same part turned, counts once. */
-export function differences(a: readonly Part[], b: readonly Part[]): number {
-  const onlyA = a.filter((p) => !b.some((q) => same(p, q))), onlyB = b.filter((q) => !a.some((p) => same(p, q)))
-  // The same span in both, of another kind or turned over, is one change and not two.
-  const swapped = onlyA.filter((p) => onlyB.some((q) => sameSpan(p, q))).length
-  return onlyA.length + onlyB.length - swapped
-}
+/** How many things two designs differ in: a part added, left out, moved, turned, or changed for another kind, each counted once (`listDifferences`). */
+export const differences = (a: readonly Part[], b: readonly Part[]): number => listDifferences(a, b).length
 
 /** A comparison is fair when the two designs differ in one part: the same load at the same place then shows what that part does. */
 export const isFairTest = (bridge: readonly Part[], tracing: readonly Part[]): boolean => differences(bridge, tracing) === 1
@@ -81,12 +76,12 @@ const middle = (p: Part): [number, number] => [(p.a[0] + p.b[0]) / 2, (p.a[1] + 
 const sharesPin = (p: Part, q: Part) => [p.a, p.b].some((e) => [q.a, q.b].some((f) => e[0] === f[0] && e[1] === f[1]))
 
 /**
- * The two things the chief's two small models differ in, when it shows one
- * clean comparison: two of the differences between the child's bridge and the
- * tracing, the two nearest the trolley. The models are never the child's
- * bridge. `x` is where the trolley stands.
+ * Every way two designs differ, each counted once: a part on the same span in
+ * both that was turned or changed for another kind; a part of one kind that
+ * has one end on the same pin in both, moved; a part only the bridge has,
+ * added; a part only the tracing has, left out.
  */
-export function nearestDifferences(bridge: readonly Part[], tracing: readonly Part[], x: number): Difference[] {
+export function listDifferences(bridge: readonly Part[], tracing: readonly Part[]): Difference[] {
   const onlyBridge = bridge.filter((p) => !tracing.some((q) => same(p, q))), onlyTracing = tracing.filter((q) => !bridge.some((p) => same(p, q)))
   const found: Difference[] = [], used = new Set<Part>()
   for (const p of onlyBridge) {
@@ -99,8 +94,17 @@ export function nearestDifferences(bridge: readonly Part[], tracing: readonly Pa
     found.push({ what: 'added', kind: p.kind, at: middle(p) })
   }
   for (const q of onlyTracing) if (!used.has(q)) found.push({ what: 'left-out', kind: q.kind, at: middle(q) })
-  return found.sort((d, e) => Math.abs(d.at[0] - x) - Math.abs(e.at[0] - x)).slice(0, 2)
+  return found
 }
+
+/**
+ * The two things the chief's two small models differ in, when it shows one
+ * clean comparison: two of the differences between the child's bridge and the
+ * tracing, the two nearest the trolley. The models are never the child's
+ * bridge. `x` is where the trolley stands.
+ */
+export const nearestDifferences = (bridge: readonly Part[], tracing: readonly Part[], x: number): Difference[] =>
+  listDifferences(bridge, tracing).sort((d, e) => Math.abs(d.at[0] - x) - Math.abs(e.at[0] - x)).slice(0, 2)
 
 /**
  * The small model that stands in the margin of a sheet: once an idea has had

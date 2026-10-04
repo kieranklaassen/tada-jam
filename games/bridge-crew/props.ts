@@ -19,12 +19,15 @@ function cutOut(pen: Pen, c: number, colour: string, path: () => void) {
   pen.beginPath(); path(); pen.fill()
 }
 
-/** One steel weight: a flat disc seen edge on. */
+/** One steel weight, as on a pair of scales: wider at its foot than at its shoulder, with a knob on top. Not a flat bar: one alone beside its numeral would read as a sign. */
 function weight(pen: Pen, x: number, y: number, c: number) {
-  cutOut(pen, c, INK.steel, () => pen.roundRect(x - c * 0.26, y - c * 0.13, c * 0.52, c * 0.13, c * 0.04))
+  const body = () => { pen.moveTo(x - c * 0.24, y); pen.lineTo(x - c * 0.17, y - c * 0.13); pen.lineTo(x + c * 0.17, y - c * 0.13); pen.lineTo(x + c * 0.24, y); pen.closePath() }
+  cutOut(pen, c, INK.steel, body)
   pen.strokeStyle = INK.steelDark
   pen.lineWidth = Math.max(0.75, c * 0.018)
-  pen.strokeRect(x - c * 0.26, y - c * 0.13, c * 0.52, c * 0.13)
+  pen.beginPath(); body(); pen.stroke()
+  pen.fillStyle = INK.steelDark
+  pen.beginPath(); pen.arc(x, y - c * 0.13, c * 0.035, Math.PI, Math.PI * 2); pen.fill()
 }
 
 /**

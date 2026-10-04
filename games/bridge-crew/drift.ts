@@ -20,12 +20,12 @@ export const CALM = 6
 
 const frac = (t: number) => t - Math.floor(t)
 
-/** Three clouds: each drifts across the sky at its own slow pace and comes round again. */
+/** Three clouds: each drifts across the sky at its own slow pace and comes round again. Their tops stay under the top right corner of the sheet, which is the grown-up's. */
 export function clouds(at: Site, seconds: number): { x: number; y: number; wide: number }[] {
   const seed = siteSeed(at) % 53
   return [0, 1, 2].map((i) => {
     const wide = 2.2 + 0.7 * ((seed + i * 7) % 3), lane = COLS + 8
-    return { x: frac((seconds * (0.07 + 0.025 * i) + seed * 0.37 + i * 9.3) / lane) * lane - 4, y: SKY.low + ((SKY.high - SKY.low) * ((seed + i * 5) % 7)) / 7, wide }
+    return { x: frac((seconds * (0.07 + 0.025 * i) + seed * 0.37 + i * 9.3) / lane) * lane - 4, y: SKY.low + ((SKY.clouds - SKY.low) * ((seed + i * 5) % 7)) / 7, wide }
   })
 }
 
