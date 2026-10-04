@@ -17,7 +17,8 @@
 - Third reading, of the folder at `3e9ec72`: rules 1 to 5 clean; rule 6, five, none of them listed (the landings of a troop carried off only heard one after another; a knocked balloon stopping short of its friend's head for three kinds; on a surface of four to three, the top balloon of a bunch of three reaching into the grown-up's corner, where no touch is answered; the oldest troop on the far hill vanishing in plain sight and the rest jumping a quarter of the ring at a step-in; a fifth bunch sent while four are in the air staying in the sky). All five were built, none by changing the sheet.
 - The third reading's note on the crab's mouth (a dark bar alone on the front of the shell, which could read as a minus) was answered then and has since been built, with the fourth's: the mouth is a curve.
 - Fourth reading, of the folder at `4c9ed4c`: rules 1 to 4 clean; rule 5, one to settle on a still (the crab's straight smile between two seams of its shell, as the bar of an H); rule 6, five (a bunch that is too many, with two friends still reaching, not shown against them one for one; a refused bunch hanging beside a crab for a fifth of a second, less than a beat; a frog with a balloon taking one more by its tongue where the sheet says its other hand; friends that are a lighter or darker shade on belly, beak, feet and claw tips where the sheet says one flat colour all over; the child's troop walking in before the passing troop's showing was over). All were built, none by changing the sheet.
-- Open: the fifth reading, of the folder as it stands with those built; its last report goes here.
+- Fifth reading, of the folder at `db8a9ea`: rules 1 to 5 clean; rule 6, five, none listed (a friend without a balloon walking with one arm up and one down, the stance of one that has its balloon; a balloon of its own colour sent to a friend that is being carried off starting the lift-off again every frame, so that it snapped to the ground with no landing and rose a second time; one of another colour sent to it popping as it arrived, with the refusal played after the landing at nothing; the bunch that carries a friend off not answering a tap as a held balloon does; the tip of a balloon's knot a darker shade). All five were built, none by changing the sheet.
+- Open: the sixth reading, of the folder as it stands with those built; its last report goes here.
 
 The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Ask for the sheet's check by writing `Open: sheet ready for check, round N` here; when it passes, record the round and the commit it judged. Someone with no session to read resumes from this block and the files. The parts below belong to the block.
 
@@ -86,6 +87,14 @@ Built after the fourth reading (the sheet's sentences stand, and its hash is unc
 - "Catches it in its other hand ... a balloon in each hand": a frog that already holds a balloon takes one more in its other hand, and by its tongue only when it had none (`theatre.ts`, tested).
 - "Before the child's troop walks in": the child's troop walks in when the passing troop has left by the edge and gone over the far hill (`theatre.ts`, `arrive`).
 - The crab's smile and the frog's mouth are curves of two short pieces, where each was one straight bar (`bodies.ts`).
+
+Built after the fifth reading (the sheet's sentences stand, and its hash is unchanged):
+
+- "Both arms up ... one hand up on the string ... the same way every time": a friend without a balloon walks with both arms down and reaches up as it stops; one arm up and one down is only ever a friend that has its balloon (`clips.ts`, `walk`, tested for every kind).
+- "Otherwise it is taken", with the lift-off as the consequence of too many: a friend that is being carried off goes on being carried off when a balloon of its own colour is sent to it, comes down once with its landing, and has the balloon in its hand (`theatre.ts`; tested for every kind).
+- "Hangs beside the friend's body for a beat": a bunch of another colour sent to a friend that is in the air hangs beside its place and waits; the refusal begins, and is heard, when the friend has landed (`theatre.ts`, `settle`; tested for every kind).
+- "A tap on a balloon a friend holds pops it at once": the bunch that is carrying a friend off pops at a tap, every balloon of it, and the friend falls from the height it had reached. Where that bunch has risen in front of a bunch in the sky, the touch is the sky's (`theatre.ts`, `hit` and `press`; tested for every kind).
+- "A balloon is one flat colour all over": the tip of the knot is the balloon's own colour (`scenery.ts`).
 
 Changed in the sheet, each a detail that touches nothing of the mechanic, the error, the designed order, the saved state, the records or the claim:
 

@@ -37,7 +37,7 @@ export type Painter = {
 export type Sound = { voice: VoiceId; pitch: number; gain: number; after: number; pace: number }
 
 /** What a point of the surface is on. */
-export type Hit = { on: 'held'; friend: number } | { on: 'bunch'; slot: number } | { on: 'friend'; friend: number } | { on: 'waiting' } | { on: 'cloud'; index: number } | { on: 'parade'; troop: number } | { on: 'farHill' } | { on: 'hill' } | { on: 'air' }
+export type Hit = { on: 'held'; friend: number } | { on: 'tug'; friend: number } | { on: 'bunch'; slot: number } | { on: 'friend'; friend: number } | { on: 'waiting' } | { on: 'cloud'; index: number } | { on: 'parade'; troop: number } | { on: 'farHill' } | { on: 'hill' } | { on: 'air' }
 
 /** A bunch's place in the sky and its springs: how flat it is, how far it is pushed aside, how far the loose end of its string has whipped, and how long until it is back. */
 type Place = { squash: number; squashSpeed: number; pressed: boolean; push: number; pushSpeed: number; whip: number; whipSpeed: number; away: number; grow: number }
@@ -256,6 +256,14 @@ export class Theatre {
       const reach = bunchReach(this.sky[slot].count)
       if (Math.abs(x - slots[slot].x) < reach.x * view.balloon + 0.3 && Math.abs(y - slots[slot].y) < reach.y * view.balloon + 0.3) return { on: 'bunch', slot }
     }
+    // The bunch that is carrying a friend off is in its hand too, for as long as it has hold. Where it has risen in
+    // front of a bunch in the sky, the touch is the sky's: sending a balloon is the thing the child came to do.
+    for (let i = 0; i < this.actors.length; i++) {
+      const actor = this.actors[i]
+      if (actor.clip !== 'liftOff' || !actor.tug) continue
+      const spot = this.spot(i), top = spot.y + this.lift(this.troop.kind, actor.t) + HELD_HEIGHT + 0.5, hung = this.hung(i, actor.tug.count)
+      for (let k = 0; k < actor.tug.count; k++) if (Math.hypot(x - spot.x - hung[k].x, (y - top - hung[k].y) / 1.12) < BALLOON * 1.2) return { on: 'tug', friend: i }
+    }
     const kind = this.troop.kind, plan = BODIES[kind]
     for (let i = 0; i < this.troop.size; i++) {
       const spot = this.spot(i), tall = plan.height * FRIEND_SCALE
@@ -316,6 +324,23 @@ export class Theatre {
       this.sound('squeak', 1.12 - this.sky[hit.slot].count * 0.1)
     } else if (hit.on === 'held') {
       this.popHeld(hit.friend)
+    } else if (hit.on === 'tug') {
+      // A tap on a balloon a friend holds pops it at once, and the bunch that is carrying it off is one: the whole
+      // bunch goes, one pop after another, and the friend comes down from where it is. Nothing of the troop's own
+      // changes, so nothing is saved: that bunch had already got away.
+      const actor = this.actors[hit.friend], spot = this.spot(hit.friend), kind = this.troop.kind
+      const tug = actor.tug!, top = spot.y + this.lift(kind, actor.t) + HELD_HEIGHT + 0.5, hung = this.hung(hit.friend, tug.count)
+      for (let k = 0; k < tug.count; k++) this.burst(spot.x + hung[k].x, top + hung[k].y, KIND_COLOURS[tug.colour])
+      this.sound(`${kind}Startle`, 1.1, 0.8)
+      actor.tug = null
+      actor.bumps = false
+      // It falls from the height it has reached: the lift-off goes on from the moment of its fall at which it is that high.
+      const { letGo, land } = PERSONALITIES[kind].cue, high = this.lift(kind, actor.t)
+      if (actor.t < letGo) {
+        let from = letGo
+        while (from < land && this.lift(kind, from) > high) from += 1 / 120
+        actor.t = from
+      }
     } else if (hit.on === 'friend') {
       this.act(hit.friend, 'poke')
       this.sound(`${this.troop.kind}Poke`)
@@ -675,9 +700,11 @@ export class Theatre {
         // The ducks jump at once and the frogs' tongues go out together; the hippos yawn in a row, one after another, and the crabs snip in a row like scissors.
         const gap = kind === 'hippo' ? 0.17 : kind === 'crab' ? 0.06 : 0
         flight.given.takers.forEach((taker, k) => {
-          if (this.actors[taker].clip === 'catch') return
+          // One that is being carried off has its hands full: its balloon is in its hand when it comes down.
+          const actor = this.actors[taker]
+          if (actor.clip === 'catch' || actor.clip === 'liftOff') return
           this.act(taker, 'catch')
-          this.actors[taker].t = -k * gap
+          actor.t = -k * gap
         })
       } else if (flight.given.result === 'refused' && !flight.met && flight.t >= FLIGHT - REFUSAL_LEAD) {
         // The friend that will refuse it turns to look as it arrives: its answer begins well inside half a second of the touch.
@@ -691,7 +718,9 @@ export class Theatre {
         // what follows the moment it lands on the bunch is played faster. The look before it is never hurried, so
         // the bunch always hangs beside the friend for its beat, the two colours side by side.
         actor.brisk = LADDER.indexOf(this.save.position) >= LADDER.indexOf('bunches-own-colour')
-        this.sound(`${kind}Refuse`, 1, 1, 0, actor.speed ?? 1)
+        // A friend that is being carried off refuses when it is down again: the bunch hangs beside its place and
+        // waits for it, and the refusal is heard when it begins.
+        if (actor.clip === 'refuse') this.sound(`${kind}Refuse`, 1, 1, 0, actor.speed ?? 1)
       }
     }
 
@@ -726,6 +755,7 @@ export class Theatre {
         actor.clip = actor.next
         actor.next = null
         actor.t = 0
+        if (actor.clip === 'refuse') this.sound(`${kind}Refuse`, 1, 1, 0, actor.speed ?? 1)
       }
     }
     const waiting = this.waitingActor
@@ -923,6 +953,8 @@ export class Theatre {
     // something else or the bunch has to make room (`now`).
     const refusing = this.actors[flight.friend]
     if (!now && refusing.clip === 'refuse' && refusing.t < cue.hit) return false
+    // Its friend is in the air and will refuse it when it is down: until then it hangs.
+    if (!now && refusing.clip === 'liftOff' && refusing.next === 'refuse') return false
     // The refusal lands on it: it pops, or with the hippo it is blown away going flat.
     const kind = this.troop.kind, colour = KIND_COLOURS[flight.bunch.colour]
     const beside = this.beside(flight.friend, flight.bunch.count)

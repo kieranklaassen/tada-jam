@@ -62,12 +62,12 @@ function cloudGeometry() {
   ])
 }
 
-/** A balloon of radius 1 with its knot at the bottom: plain, one colour, no seam. White in the vertices, so the instance colour is its colour. */
+/** A balloon of radius 1 with its knot at the bottom: plain, one flat colour all over, knot and all, and no seam. White in the vertices, so the instance colour is its colour. */
 function balloonGeometry() {
   return pillows([
     { at: [0, 0.08, 0], size: [1, 1.1, 1], colour: '#ffffff', detail: [28, 18] },
     { at: [0, -0.72, 0], size: [0.52, 0.5, 0.52], colour: '#ffffff', detail: [16, 10] },
-    { at: [0, -1.24, 0], size: [0.13, 0.1, 0.13], colour: '#d8d8d8', detail: [10, 8] },
+    { at: [0, -1.24, 0], size: [0.13, 0.1, 0.13], colour: '#ffffff', detail: [10, 8] },
   ])
 }
 

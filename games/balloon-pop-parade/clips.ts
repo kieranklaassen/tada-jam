@@ -430,8 +430,14 @@ export function walk(kind: KindName, u: number, direction: number, pose: Pose): 
     pose.y += Math.abs(Math.sin(within * Math.PI * 5)) * 0.04 * (within < 0.6 ? 1 : 0)
     pose.wag = direction * -0.35 * hold(within, 0, 0.15, 0.5, 0.65)
   }
-  // The arms come down from reaching while it walks; a hand that holds a string stays up.
-  if (pose.armL > 1) pose.armL = 0.16 + Math.sin(at * Math.PI) * 0.1
+  // A friend without a balloon walks with both arms down and swinging, as the troop that waits stands, and reaches
+  // up as it stops. One that holds a string has that hand up and its free arm down already, and keeps them so:
+  // one arm up and one down is only ever the stance of a friend that has its balloon.
+  if (pose.armL > 1) {
+    const swing = Math.sin(at * Math.PI) * 0.1
+    pose.armL += (0.16 + swing - pose.armL) * ease
+    pose.armR += (0.16 - swing - pose.armR) * ease
+  }
 }
 
 /** Carried off its feet by more balloons than it should have, each kind in its own way, then let go and down again. */

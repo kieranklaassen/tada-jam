@@ -627,6 +627,87 @@ describe('the director', () => {
   })
 })
 
+describe('a friend that is being carried off', () => {
+  /** One friend with no balloon, a bunch of two of its colour that carries it off, and whatever else hangs in the sky. */
+  const carried = (kind: KindName, others: { colour: KindName; count: 1 | 2 | 3 }[]) => {
+    const theatre = staged({ troop: { kind, size: 1, held: [false] }, sky: [{ colour: kind, count: 2 }, ...others], waiting: { kind: kind === 'duck' ? 'frog' : 'duck', size: 1 } })
+    tapSlot(theatre, 0)
+    play(theatre, FLIGHT + PERSONALITIES[kind].cue.grab + 0.3)
+    return theatre
+  }
+  /** Plays on and keeps, frame by frame, how high the friend is and what has sounded so far. */
+  const follow = (theatre: Theatre, seconds: number) => {
+    const { frame, painter } = recorder(), high: number[] = [], heard: string[][] = []
+    for (let i = 0; i < seconds * 60; i++) {
+      theatre.step(1 / 60)
+      theatre.paint(painter, VIEW)
+      high.push(frame.poses.get('friend-0')!.y - GROUND)
+      heard.push(voices(theatre))
+    }
+    return { high, heard }
+  }
+
+  it.each(KINDS)('goes on being carried off when a balloon of its own colour is sent to it: a %s comes down once, with a landing, and has its balloon', (kind) => {
+    const theatre = carried(kind, [{ colour: kind, count: 1 }])
+    theatre.sounds.length = 0
+    tapSlot(theatre, 1)
+    expect(theatre.troop.held).toEqual([true])
+    const { high, heard } = follow(theatre, 5)
+    // It never snaps down: from one frame to the next it moves no further than a fall does.
+    for (let i = 1; i < high.length; i++) expect(Math.abs(high[i] - high[i - 1]), `frame ${i}`).toBeLessThan(0.35)
+    // It lands once, and is heard landing; it does not rise a second time.
+    const landed = heard.findIndex((voices) => voices.includes(`${kind}Land`))
+    expect(landed).toBeGreaterThan(0)
+    expect(heard[heard.length - 1].filter((voice) => voice === `${kind}Land`)).toHaveLength(1)
+    expect(heard[heard.length - 1].filter((voice) => voice === `${kind}LiftOff`)).toHaveLength(0)
+    // A hop of its own is all it does after it is down; the frog's catch has one.
+    expect(Math.max(...high.slice(landed + 20))).toBeLessThan(BODIES[kind].height * PERSONALITIES[kind].carried * 0.5 + 0.35)
+  })
+
+  it.each(KINDS)('refuses another colour when it is down again: beside a %s the bunch hangs and waits, and the refusal is heard after the landing', (kind) => {
+    const other: KindName = kind === 'duck' ? 'frog' : 'duck'
+    const theatre = carried(kind, [{ colour: other, count: 1 }])
+    theatre.sounds.length = 0
+    tapSlot(theatre, 1)
+    const { heard } = follow(theatre, 6)
+    const last = heard[heard.length - 1]
+    const order = (voice: string) => heard.findIndex((voices) => voices.includes(voice))
+    expect(order(`${kind}Land`)).toBeGreaterThan(0)
+    expect(order(`${kind}Refuse`), 'the refusal begins when it has landed').toBeGreaterThan(order(`${kind}Land`))
+    // What the refusal does to the bunch comes a beat after it begins, and not while the friend is in the air.
+    // (The bunch that got away pops too, earlier: the refused balloon's pop is the last one.)
+    const pops = last.filter((voice) => voice === 'pop').length
+    const done = kind === 'hippo' ? order('raspberry') : heard.findIndex((voices) => voices.filter((voice) => voice === 'pop').length === pops)
+    expect(done - order(`${kind}Refuse`)).toBeGreaterThanOrEqual(Math.round((SIDE_BY_SIDE - 0.05) * 60))
+    expect(last.filter((voice) => voice === `${kind}Refuse`)).toHaveLength(1)
+    expect(theatre.troop.held).toEqual([false])
+  })
+
+  it.each(KINDS)('lets the bunch that carries a %s be popped: a tap on it pops it at once, and the friend comes down from where it is', (kind) => {
+    const theatre = carried(kind, [{ colour: kind, count: 1 }]), { frame, painter, clear } = recorder()
+    theatre.paint(painter, VIEW)
+    const bunch = frame.balloons.filter((balloon) => balloon.tall > 1.05 && balloon.wide < 0.99)
+    expect(bunch).toHaveLength(2)
+    const was = frame.poses.get('friend-0')!.y - GROUND
+    // The one straight over it; the other may have risen in front of a bunch in the sky, where the touch is the sky's.
+    const over = bunch.sort((a, b) => Math.abs(a.x - frame.poses.get('friend-0')!.x) - Math.abs(b.x - frame.poses.get('friend-0')!.x))[0]
+    expect(theatre.hit(over.x, over.y, VIEW)).toEqual({ on: 'tug', friend: 0 })
+    theatre.sounds.length = 0
+    theatre.press(over.x, over.y, VIEW)
+    theatre.cancel()
+    expect(voices(theatre).filter((voice) => voice === 'pop')).toHaveLength(2)
+    clear()
+    theatre.paint(painter, VIEW)
+    expect(frame.balloons.filter((balloon) => balloon.tall > 1.05 && balloon.wide < 0.99)).toHaveLength(0)
+    // It is where it was in that frame, and from there it only falls.
+    expect(Math.abs(frame.poses.get('friend-0')!.y - GROUND - was)).toBeLessThan(0.3)
+    const { high, heard } = follow(theatre, 3)
+    for (let i = 1; i < high.length; i++) expect(high[i] - high[i - 1], `frame ${i}`).toBeLessThan(0.12)
+    expect(heard[heard.length - 1]).toContain(`${kind}Land`)
+    expect(theatre.troop.held).toEqual([false])
+  })
+})
+
 describe('a balloon a friend holds', () => {
   it('popped in a troop that had all of its own stops the troop swaying, and the others look at the empty hand', () => {
     for (const kind of KINDS) {

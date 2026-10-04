@@ -130,6 +130,32 @@ describe('the hippo\'s yawn', () => {
   })
 })
 
+describe('the arms of a friend that walks', () => {
+  it('are both down while it has no balloon, and one up on the string and one down while it has one: never one up and one down without a balloon', () => {
+    for (const kind of KINDS) for (const holds of [false, true]) {
+      const reach = BODIES[kind].reach
+      for (let i = 2; i <= 18; i++) {
+        const pose = restPose()
+        rest(kind, holds, reach, 10, 0, pose)
+        walk(kind, i / 20, 1, pose)
+        if (holds) {
+          expect(pose.armR, `${kind} with a balloon`).toBeGreaterThan(2)
+          expect(pose.armL, `${kind} with a balloon`).toBeLessThan(0.6)
+        } else {
+          expect(pose.armL, `${kind} without`).toBeLessThan(0.6)
+          expect(pose.armR, `${kind} without`).toBeLessThan(0.6)
+        }
+      }
+      // Stopped, it stands as it always does: reaching with both, or holding with one.
+      const stopped = restPose()
+      rest(kind, holds, reach, 10, 0, stopped)
+      walk(kind, 1, 1, stopped)
+      expect(stopped.armR).toBeGreaterThan(2)
+      expect(stopped.armL > 2).toBe(!holds)
+    }
+  })
+})
+
 describe('a refusal', () => {
   it('begins with a look from one colour to the other: at the balloon beside it, and then down at itself, before its answer lands', () => {
     for (const kind of KINDS) {
