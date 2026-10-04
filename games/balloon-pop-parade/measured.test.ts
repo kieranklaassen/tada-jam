@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { BODIES, type KindName } from './bodies'
 import { PERSONALITIES } from './clips'
-import { GROUND, skySlots, viewFor, waitingSpot, bunchOffsets, FRIEND_SCALE, SKY_ROW } from './layout'
+import { GROUND, skySlots, viewFor, waitingSpot, bunchOffsets, FRIEND_SCALE, SKY_ROW, seenAt, groundAt, farGroundAt, CLOUDS } from './layout'
 import { saveOf } from './moments'
+import { BALL, HUT, POOL } from './setting'
 import type { Pose } from './pose'
 import { freshSave } from './save'
 import { REGROW_AFTER, Theatre, type Painter } from './theatre'
@@ -827,6 +828,8 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
     expect(began).toBeGreaterThan(0)
     expect(steps).toBe(3)
     expect(theatre.troop.held).toEqual([true])
+    // And when its late march was done it leapt, as a troop does at the end of its ending.
+    expect((theatre as unknown as { actors: { leapAt?: number }[] }).actors[0].leapAt).toBeDefined()
   })
 
   it('turns no head of a new troop to an empty hand of the troop before it: after a pop and a step-in the troop sways from its first moment', () => {
@@ -888,6 +891,121 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
     expect(theatre.save.position).toBe('trio-singles')
     for (let i = 0; i < 60 * 3 && theatre.playing !== 'ending'; i++) theatre.step(1 / 60)
     expect(theatre.playing).toBe('ending')
+  })
+
+  it.each(kinds)('makes the ending of three %ss the payoff of the cycle: the place takes each step of the march, the troop leaps together, and everything lands with it', (kind) => {
+    const theatre = new Theatre(saveOf({ position: 'bunches-own-colour', troop: { kind, size: 3, held: [false, false, false] }, sky: [{ colour: kind, count: 1 }, { colour: kind, count: 3 }], waiting: { kind: other(kind), size: 2 } }), 5), { poses, painter } = recorder()
+    const inside = theatre as unknown as { scraps: { flutter?: number }[]; places: { hop: number }[]; clouds: { squash: number }[]; ball: { y: number } }
+    tap(theatre, 1)
+    const heard: string[] = []
+    let together = 0, confetti = 0, hopped = 0, bounced = 0, ball = 0, towerLow = Infinity, towerHigh = -Infinity
+    for (let i = 0; i < 60 * 9; i++) {
+      theatre.step(1 / 60)
+      heard.push(...theatre.sounds.map((sound) => sound.voice))
+      theatre.sounds.length = 0
+      theatre.paint(painter, VIEW)
+      const up = [0, 1, 2].map((friend) => poses.get(`friend-${friend}`)!.y - GROUND)
+      // All three well off the ground in the same frame: the leap, which is higher than the jump that begins the ending.
+      if (up.every((high) => high > 0.65)) together += 1
+      confetti = Math.max(confetti, inside.scraps.filter((scrap) => scrap.flutter !== undefined).length)
+      hopped = Math.max(hopped, ...inside.places.map((place) => place.hop))
+      bounced = Math.max(bounced, ...inside.clouds.map((cloud) => Math.abs(cloud.squash - 1)))
+      ball = Math.max(ball, inside.ball.y)
+      towerLow = Math.min(towerLow, poses.get('waiting-0')!.y)
+      towerHigh = Math.max(towerHigh, poses.get('waiting-0')!.y)
+    }
+    // Three steps, each one taken by the whole place, and one more thump as the troop lands.
+    expect(heard.filter((voice) => voice === `${kind}Step`)).toHaveLength(3)
+    expect(heard.filter((voice) => voice === 'stomp')).toHaveLength(4)
+    expect(heard.filter((voice) => voice === 'whoop')).toHaveLength(1)
+    expect(together, 'the troop is in the air together').toBeGreaterThan(6)
+    // What lands with it: confetti over the friends, the whale's spout, the keeper's cheep, the bunches and the clouds, the ball and the tower.
+    expect(heard).toEqual(expect.arrayContaining(['flutter', 'spout', 'cheep', `${kind}Land`]))
+    expect(confetti).toBeGreaterThanOrEqual(30)
+    expect(hopped).toBeGreaterThan(0.05)
+    expect(bounced).toBeGreaterThan(0.05)
+    expect(ball).toBeGreaterThan(0.3)
+    expect(towerHigh - towerLow, 'the tower of the troop that waits bounces').toBeGreaterThan(0.3)
+    // And when it is over the place is as it was: no confetti left, the ball where it lay.
+    expect(inside.scraps).toHaveLength(0)
+    expect(inside.ball.y).toBe(0)
+    expect(theatre.playing).toBe(null)
+  })
+
+  it('has three toys in the setting that answer a touch, each in its own way, and a cloud that starts awake: none of them changes the game', () => {
+    const theatre = new Theatre(saveOf({ position: 'solo-two-colours', troop: { kind: 'duck', size: 1, held: [false] }, sky: [{ colour: 'duck', count: 1 }, { colour: 'frog', count: 1 }], waiting: { kind: 'frog', size: 1 } }), 3)
+    const inside = theatre as unknown as { ball: { x: number; y: number }; drops: unknown[]; keeper: { hopAt: number }; time: number }
+    const props = new Map<string, { y: number; face?: { blink: number; open: number } }>(), clouds: { blink: number; open: number }[] = []
+    const painter: Painter = { ...recorder().painter, prop: (name, _x, y, _z, _scale, _turn, _lean, _squash, face) => void props.set(name, { y, face: face ? { blink: face.blink, open: face.open } : undefined }), cloud: (index, _squash, face) => { if (face) clouds[index] = { blink: face.blink, open: face.open } } }
+    const saved = JSON.stringify(theatre.save)
+    theatre.step(1 / 60)
+    theatre.paint(painter, VIEW)
+    expect([...props.keys()].sort()).toEqual(['ball', 'keeper', 'whale'])
+    // At rest every cloud is asleep: eyes shut.
+    expect(clouds.map((face) => face.blink)).toEqual([1, 1, 1])
+    const touch = (x: number, y: number) => { theatre.sounds.length = 0; theatre.press(x, y, VIEW); theatre.cancel(); return theatre.sounds.map((sound) => sound.voice) }
+    const seen = (x: number, y: number, z: number) => seenAt(x, y, z, VIEW, { x: 0, y: 0, scale: 1 })
+    // The whale blows: a spout, drops thrown up, and its mouth open.
+    const whale = seen(POOL.x, groundAt(POOL.x, POOL.z) + 0.7, POOL.z)
+    expect(theatre.hit(whale.x, whale.y, VIEW)).toEqual({ on: 'whale' })
+    expect(touch(whale.x, whale.y)).toEqual(expect.arrayContaining(['spout']))
+    expect(inside.drops.length).toBeGreaterThan(4)
+    theatre.step(1 / 60)
+    theatre.paint(painter, VIEW)
+    expect(props.get('whale')!.face!.open).toBeGreaterThan(0.5)
+    // The ball is kicked: it goes up, comes down with a bounce, and rolls back to where it lay.
+    const ball = seen(BALL.x, groundAt(BALL.x, BALL.z) + BALL.radius, BALL.z)
+    expect(theatre.hit(ball.x, ball.y, VIEW)).toEqual({ on: 'ball' })
+    expect(touch(ball.x, ball.y)).toEqual(['bounce'])
+    let highest = 0, bounces = 0
+    for (let i = 0; i < 60 * 5; i++) { theatre.step(1 / 60); highest = Math.max(highest, inside.ball.y); bounces += theatre.sounds.filter((sound) => sound.voice === 'bounce').length; theatre.sounds.length = 0 }
+    expect(highest).toBeGreaterThan(0.8)
+    expect(bounces).toBeGreaterThanOrEqual(2)
+    expect(inside.ball.y).toBe(0)
+    expect(Math.abs(inside.ball.x)).toBeLessThan(0.05)
+    // A knock at the hut: its keeper cheeps and jumps.
+    const hut = seen(HUT.x, farGroundAt(HUT.x, HUT.z) + 1.2, HUT.z)
+    expect(touch(hut.x, hut.y)).toEqual(['cheep'])
+    expect(inside.keeper.hopAt).toBeCloseTo(inside.time, 5)
+    // A cloud that is squeezed starts awake, and is asleep again soon after.
+    const cloud = seen(CLOUDS[0].x, CLOUDS[0].y, CLOUDS[0].z)
+    expect(touch(cloud.x, cloud.y)).toEqual(expect.arrayContaining(['cloudSqueak']))
+    theatre.step(1 / 60)
+    theatre.paint(painter, VIEW)
+    expect(clouds[0].blink).toBeLessThan(0.2)
+    expect(clouds[0].open).toBeGreaterThan(0.5)
+    for (let i = 0; i < 60 * 2; i++) theatre.step(1 / 60)
+    theatre.paint(painter, VIEW)
+    expect(clouds[0].blink).toBe(1)
+    // Nothing of the game was changed by any of it.
+    expect(JSON.stringify(theatre.save)).toBe(saved)
+  })
+
+  it('stands the troop that waits as a tower, each friend on the head of the one below, touched as one thing from its feet to its top; and a friend\'s eyes go to the finger', () => {
+    for (const kind of kinds) {
+      const theatre = new Theatre(saveOf({ position: 'pair-singles', troop: { kind: other(kind), size: 1, held: [false] }, sky: [{ colour: other(kind), count: 1 }], waiting: { kind, size: 3 } }), 3), { poses, painter } = recorder()
+      theatre.step(1 / 60)
+      theatre.paint(painter, VIEW)
+      const tower = [0, 1, 2].map((i) => poses.get(`waiting-${i}`)!)
+      // One above the other: the same place, each higher than the one below by less than its own height.
+      for (const i of [1, 2]) {
+        expect(Math.abs(tower[i].x - tower[0].x), `${kind} ${i}`).toBeLessThan(0.2)
+        expect(tower[i].y - tower[i - 1].y, `${kind} ${i}`).toBeGreaterThan(0.6)
+        expect(tower[i].y - tower[i - 1].y, `${kind} ${i}`).toBeLessThan(BODIES[kind].height * tower[i].scale)
+      }
+      const at = seenAt(tower[2].x, tower[2].y + 0.4, tower[2].z, VIEW, { x: 0, y: 0, scale: 1 })
+      expect(theatre.hit(at.x, at.y, VIEW), `the top of a tower of ${kind}s`).toEqual({ on: 'waiting' })
+      // A finger down up and to the right of the child's friend: its eyes are on it, and stay for a moment after the lift.
+      const own = poses.get('friend-0')!
+      theatre.press(own.x + 2.2, own.y + 4.4, VIEW)
+      theatre.step(1 / 60)
+      theatre.paint(painter, VIEW)
+      expect(poses.get('friend-0')!.lookX, kind).toBeGreaterThan(0.6)
+      theatre.cancel()
+      for (let i = 0; i < 20; i++) theatre.step(1 / 60)
+      theatre.paint(painter, VIEW)
+      expect(poses.get('friend-0')!.lookX, kind).toBeGreaterThan(0.6)
+    }
   })
 
   it.each(kinds)('a troop of %ss does not set off without a balloon that is on its way to a hand: the waiting troop waves until it has arrived, and the parade holds what the troop is seen to carry', (kind) => {

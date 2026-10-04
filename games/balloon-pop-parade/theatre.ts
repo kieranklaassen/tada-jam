@@ -57,7 +57,7 @@ type Scrap = { x: number; y: number; vx: number; vy: number; colour: string; lif
 type Drop = { x: number; y: number; vx: number; vy: number; life: number }
 type Dimple = { x: number; t: number }
 /** `jumpAt` is when it last jumped with its troop, at the start of an ending for a troop that one bunch served. A bunch sent to a friend arrives when the answers it has to give so far are over (`schedule`). `next` and `after` are the answers it owes all the same, in order, when something reached it while it was busy. `tug` is the bunch that carries a friend off, `proudAt` the pitch of the proud move it owes when it is down and `catchAt` that it owes a catch then, `jolt` when it was last poked while carried, `hang` where its balloons hang from the friend, `from` where they were when it took hold, and `second` whether the friend already held a balloon, both as they were when it took hold, `bumps` says that bunch is bigger than the whole troop and goes out by way of the cloud, `landAfter` is how much longer than its neighbour it hangs in the air before it comes down, when a whole troop was carried off, `fall` is the height it was at when a motion was cut short in the air and `fallT` how long it has been falling from there, `mirrored` has it refuse towards its other side, where the bunch hangs, `brisk` has the part of a refusal after it lands played faster, `speed` is how fast this playing of a motion runs, and `lastPoke` is which way it last took a poke. */
-type Actor = { clip: ClipId | null; t: number; next: ClipId | null; after?: ClipId | null; jumpAt?: number; tug: Bunch | null; proudAt?: number; catchAt?: number; jolt?: number; hang?: { x: number; y: number }[]; from?: { x: number; y: number }[]; second?: boolean; fall?: number; fallT?: number; bumps?: boolean; landAfter: number; mirrored?: boolean; brisk?: boolean; speed?: number; lastPoke?: ClipId; marchAfter?: boolean; leapAt?: number }
+type Actor = { clip: ClipId | null; t: number; next: ClipId | null; after?: ClipId | null; jumpAt?: number; tug: Bunch | null; proudAt?: number; catchAt?: number; jolt?: number; hang?: { x: number; y: number }[]; from?: { x: number; y: number }[]; second?: boolean; fall?: number; fallT?: number; bumps?: boolean; landAfter: number; mirrored?: boolean; brisk?: boolean; speed?: number; lastPoke?: ClipId; marchAfter?: boolean; leapAfter?: boolean; leapAt?: number }
 
 /** A troop that is only passing: one that marches off, or one that crosses to show a new idea. Short-lived, and no part of the save. */
 /** A troop that walks through: the one that marches off, or the one that passes by. One that passes by a troop on stage stops off to the left (`stopAt` is the middle of its stops), its friends `gap` apart and drawn `scale` of a friend in front, and goes on behind that troop. */
@@ -237,6 +237,8 @@ export class Theatre {
   /** When the troop last leapt at the end of an ending, and when the troop that waits last bounced with its landing. */
   private leapt = -9
   private towerHopAt = -9
+  /** When a friend that leapt late, after its troop, lands: the place lands with it then. */
+  private lateLanding = -1
   /** A face to write into, so the frame loop makes none. */
   private readonly faceNow: FaceState = restFace()
   /** Where the finger last landed, whether it is still down, and when it landed or lifted: the friends' eyes go to it. */
@@ -308,6 +310,9 @@ export class Theatre {
     // Nobody of this troop has lost a balloon: no head is turned to an empty hand, and the troop sways.
     this.lookAt.friend = -1
     this.lookAt.until = 0
+    // And nobody of it has leapt or is about to land.
+    this.leapt = -9
+    this.lateLanding = -1
   }
 
   /** The places in the sky for this view, worked out once for each width. */
@@ -962,12 +967,14 @@ export class Theatre {
     this.finishing = true
     this.scene.finish()
     this.finishing = false
+    this.lateLanding = -1
     // On the far hill too, everything is where it was going.
     this.retiring = null
     this.joining = 1
     for (let i = 0; i < this.actors.length; i++) {
       const actor = this.actors[i]
       actor.marchAfter = false
+      actor.leapAfter = false
       if (actor.clip !== 'proud' && actor.clip !== 'march') continue
       this.cutShort(i)
       actor.clip = null
@@ -1488,10 +1495,20 @@ export class Theatre {
         actor.next = actor.after ?? null
         actor.after = null
         actor.t = 0
-        // One that was in the air or late when its troop marched marches now, if it still has its balloon.
+        // One that was in the air or late when its troop marched marches now, if it still has its balloon; and
+        // when that march is done it leaps as its troop did, and the place lands with it.
+        if (!actor.clip && actor.leapAfter) {
+          actor.leapAfter = false
+          if (this.held[i].shown) {
+            actor.leapAt = this.time
+            this.leapt = this.time
+            this.sound('whoop', 1, 0.8, LEAP * 0.2)
+            this.lateLanding = this.time + LEAP * LEAP_LANDS
+          }
+        }
         if (!actor.clip && actor.marchAfter) {
           actor.marchAfter = false
-          if (this.held[i].shown) { actor.clip = 'march'; actor.speed = 1 }
+          if (this.held[i].shown) { actor.clip = 'march'; actor.speed = 1; actor.leapAfter = true }
         }
         // What it owed begins now, and is heard now.
         if (actor.clip === 'refuse') {
@@ -1511,6 +1528,10 @@ export class Theatre {
     }
     const waiting = this.waitingActor
     if (waiting.clip && (waiting.t += dt) >= PERSONALITIES[this.waiting.kind].lasts[waiting.clip]) waiting.clip = null
+    if (this.lateLanding >= 0 && this.time >= this.lateLanding) {
+      this.lateLanding = -1
+      this.landed()
+    }
 
     // A held balloon is on a string: it follows the hand that holds it, late and bobbing.
     for (let i = 0; i < this.held.length; i++) {
