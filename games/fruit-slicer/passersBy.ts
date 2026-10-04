@@ -56,7 +56,8 @@ function umbrella(ctx: Ctx, dots: Dots, one: Passer): number {
   ctx.moveTo(hand.x, hand.y)
   ctx.lineTo(hand.x, top - 20)
   ctx.stroke()
-  far(ctx, (c) => { c.moveTo(hand.x - 34, top - 18); c.quadraticCurveTo(hand.x, top - 54, hand.x + 34, top - 18); c.closePath() }, WHITE, dots.of(ctx, RED, 0.3))
+  // The canopy's lower edge is three scallops, not a straight bar for the shaft to stand under.
+  far(ctx, (c) => { c.moveTo(hand.x - 34, top - 18); c.quadraticCurveTo(hand.x, top - 54, hand.x + 34, top - 18); c.quadraticCurveTo(hand.x + 23, top - 28, hand.x + 11, top - 18); c.quadraticCurveTo(hand.x, top - 28, hand.x - 11, top - 18); c.quadraticCurveTo(hand.x - 23, top - 28, hand.x - 34, top - 18) }, WHITE, dots.of(ctx, RED, 0.3))
   return 6
 }
 

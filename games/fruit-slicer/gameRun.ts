@@ -469,8 +469,12 @@ export class GameRun {
             const show = restShow('glider')
             // The fruit it leaves with is the one it was fed, whatever was on its ticket.
             const fed = event.ending.result.parts.flatMap((part) => part.pieces)[0] ?? event.ending.result.strays[0]
-            this.leaving = { customer, whom: 'window', fruit: fed?.fruit ?? customer.fruit }
+            // A serve that was playing for it (a piece fed just before the fruit, in one row) ends first; the pelican and how it moves are kept
+            // past that ending, since the glider is its scene too.
+            const actor = this.window
             this.start(gliderBeats(show, cue), show, event.ending)
+            this.window = actor
+            this.leaving = { customer, whom: 'window', fruit: fed?.fruit ?? customer.fruit }
             this.stare('window')
           } else {
             const show = restShow('serve')

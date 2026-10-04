@@ -268,9 +268,20 @@ export const eaten = (world: World): Piece[] =>
   world.pieces.filter((piece) => piece.place.on === 'eaten').sort((a, b) => (a.place.on === 'eaten' ? a.place.turn : 0) - (b.place.on === 'eaten' ? b.place.turn : 0))
 
 /** The customer eats these pieces, in this order: each moves from where it lay to inside the customer. */
+/** The most pieces a customer keeps inside it: as many of the thinnest pieces as lie along the whole rail. Fed more than that by hand, it keeps the last of them. */
+export const MOST_EATEN = RAIL / giveOf('short')
+
 export function eat(world: World, ids: readonly number[]): World {
   const from = eaten(world).length
   return tidy({ ...world, pieces: world.pieces.map((piece) => (ids.includes(piece.id) ? { ...piece, place: { on: 'eaten', turn: from + ids.indexOf(piece.id) } } : piece)) })
+}
+
+/** Keeps the last `most` pieces a customer ate and lets the older ones go, with the turns of those kept counted from nought again. */
+export function keepEaten(world: World, most = MOST_EATEN): World {
+  const inside = eaten(world)
+  if (inside.length <= most) return world
+  const kept = inside.slice(inside.length - most).map((piece) => piece.id)
+  return { ...world, pieces: world.pieces.filter((piece) => piece.place.on !== 'eaten' || kept.includes(piece.id)).map((piece) => (piece.place.on === 'eaten' ? { ...piece, place: { on: 'eaten', turn: kept.indexOf(piece.id) } } : piece)) }
 }
 
 /**

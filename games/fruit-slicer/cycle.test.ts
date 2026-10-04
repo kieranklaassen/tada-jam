@@ -3,8 +3,9 @@ import { LADDER } from './config'
 import { call, crate, feed, freshGame, give, judge, sendOff, settle, splat, treat, type Game } from './cycle'
 import { WHOLE, giveOf, shareLength } from './measure'
 import { ideasOf, inRange, tinParts, type Customer } from './orders'
+import { MOST_PIECES, deserialize, serialize } from './save'
 import { serveOf } from './serve'
-import { cut, eaten, inTin, isWhole, onLane, onShelf, roll, setOnShelf, type Piece } from './world'
+import { MOST_EATEN, cut, eaten, inTin, isWhole, onLane, onShelf, roll, setOnShelf, type Piece } from './world'
 
 /** Cuts a piece of exactly `length` (plus `off`) from a fresh fruit of the ordered kind, and returns its id. */
 function cutFor(game: Game, length: number, off = 0): { game: Game; id: number } {
@@ -379,6 +380,24 @@ describe('the two who wait', () => {
     expect(next.game.world.pieces.map((made) => made.id)).toEqual(before)
     expect(eaten(next.game.world)).toEqual([])
     expect(next.game.world.tinOpen).toBe(false)
+  })
+})
+
+describe('a customer fed again and again', () => {
+  it('keeps no more inside it than the rail could hold, so the save stays inside its bound however long the child goes on', () => {
+    let game = serve(call(freshGame(null), 0).game).game
+    expect(game.finished).toBe(true)
+    for (let i = 0; i < 3 * MOST_EATEN; i++) {
+      const made = cutFor(game, 100)
+      game = feed(made.game, made.id).game
+      // What is left of each fruit goes to the dog, as a child tidying up would send it: only what is eaten piles up.
+      game = { ...game, world: { ...game.world, pieces: game.world.pieces.filter((piece) => piece.place.on === 'eaten') } }
+    }
+    expect(eaten(game.world)).toHaveLength(MOST_EATEN)
+    expect(eaten(game.world).map((piece) => (piece.place.on === 'eaten' ? piece.place.turn : -1))).toEqual([...Array(MOST_EATEN).keys()])
+    expect(game.world.pieces.length).toBeLessThanOrEqual(MOST_PIECES)
+    expect(JSON.stringify(serialize(game)).length).toBeLessThan(32 * 1024)
+    expect(serialize(deserialize(JSON.parse(JSON.stringify(serialize(game)))))).toEqual(serialize(game))
   })
 })
 

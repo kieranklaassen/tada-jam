@@ -275,6 +275,33 @@ describe('the scenes', () => {
   })
 })
 
+describe('the glider, every time', () => {
+  it('plays, and is seen, when the whole fruit comes to the pelican in one row behind another piece', () => {
+    const run = fresh()
+    run.tap(mid(QUEUE[0]))
+    expect(run.game.window!.who).toBe('pelican')
+    play(run, 2)
+    // A piece is cut off the fruit on the near lane, a fresh fruit lands on the far lane, and that whole fruit is butted against the piece.
+    drag(run, { x: X0 + 300 * PX, y: BOARD.y - 30 }, { x: X0 + 300 * PX, y: NEAR + 40 })
+    run.tap(mid(CRATE))
+    const far = laneTop(1) + LANE_H / 2
+    drag(run, { x: X0 + 400 * PX, y: far }, { x: X0 + 200 * PX, y: NEAR }, 1.5)
+    const row = onLane(run.game.world, 0)
+    expect(row.map((piece) => piece.length)).toEqual([300, WHOLE[row[1].fruit]])
+    // The row is taken by the right half of the piece and let go on the pelican: the piece first, then the whole fruit.
+    play(run, 1)
+    drag(run, { x: X0 + 250 * PX, y: NEAR }, mid(WINDOW), 1.5)
+    expect(run.game).toMatchObject({ window: null, finished: false })
+    const frame = run.frame(0, BUSY)
+    expect(frame.show).toMatchObject({ kind: 'glider' })
+    expect(frame.leaving).toMatchObject({ whom: 'window', customer: { who: 'pelican' }, fruit: row[1].fruit })
+    // The pelican is still there to be drawn for as long as its glider plays.
+    expect(frame.window).not.toBeNull()
+    play(run, 6)
+    expect(run.frame(0, BUSY)).toMatchObject({ show: null, leaving: null, window: null })
+  })
+})
+
 describe('the glider from the queue', () => {
   it('plays all the same for a pelican that waits: the queue and the stream are in the game before its first beat, and the window is as it was', () => {
     const run = fresh()

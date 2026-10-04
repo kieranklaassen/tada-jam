@@ -4,7 +4,7 @@ import { serveOf, served, type Served } from './serve'
 import { beginCycle, finishCycle, freshState, type CycleOutcome, type GameState } from './state'
 import { pick } from './stream'
 import { isGlider, tasteOf, type Taste } from './tastes'
-import { clearTin, eat, eaten, emptyWorld, giveToTin, inTin, landFruit, pieceOf, remove, setOnShelf, tinTotal, type World } from './world'
+import { clearTin, eat, eaten, emptyWorld, giveToTin, inTin, keepEaten, landFruit, pieceOf, remove, setOnShelf, tinTotal, type World } from './world'
 
 // A cycle is one customer: called to the window, served, sent off. This module
 // holds the game as a whole (the place in the designed order, the customers,
@@ -113,7 +113,10 @@ export function feed(game: Game, id: number): { game: Game; ending: Ending | nul
     const tin = emptied(world)
     return { game: { ...game, window: null, finished: false, world: { ...tin.world, tinOpen: false } }, ending: { result, taste: tasteOf(customer, result), outcome: 'mixed', glider: true, fed: true }, ate: true, shelved: tin.shelved, fell: tin.fell }
   }
-  if (game.finished) return { game: { ...game, world: eat(game.world, [id]) }, ending: null, ate: true, shelved: [], fell: [] }
+  if (game.finished) {
+    // It keeps no more inside it than the rail could ever hold: fed more than that, the oldest piece inside it is gone for good.
+    return { game: { ...game, world: keepEaten(eat(game.world, [id])) }, ending: null, ate: true, shelved: [], fell: [] }
+  }
   const tin = emptied(game.world)
   const ended = end({ ...game, world: tin.world }, result, 'mixed', [id])
   return { game: ended.game, ending: { ...ended.ending, fed: true }, ate: true, shelved: tin.shelved, fell: tin.fell }

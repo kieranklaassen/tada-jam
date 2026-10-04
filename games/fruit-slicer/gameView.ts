@@ -506,8 +506,11 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
   ctx.restore()
   if (serving && shape) {
     let eatenSoFar = 0
+    // As they lay before the send-off: each compartment's pieces from its own left end, or from where the one before it ends when that sticks out.
+    let end = -Infinity
     scenery.ending!.result.parts.forEach((part, index) => {
-      let x = shape.parts[index]?.x ?? shape.parts[0].x
+      let x = Math.max(shape.parts[index]?.x ?? shape.parts[0].x, end)
+      end = x + part.pieces.reduce((sum, piece) => sum + piece.length * PX, 0)
       for (const piece of part.pieces) {
         const left = 1 - Math.max(0, Math.min(1, scenery.show!.bites - eatenSoFar))
         // Under a lid that has shut flat nothing shows; a lid that bounces on what sticks out leaves it in view.
