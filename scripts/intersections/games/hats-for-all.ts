@@ -220,6 +220,11 @@ const audit: GameAudit = {
           await d.tap(at)
           await d.wait(round === 0 ? 700 : 180)
         }
+        // And the rest of the room: a block, a bead, the cloud, the place where the balloon passes, the bare wall.
+        for (const at of [[0.19, 0.25], [0.5, 0.027], [0.5, 0.2], [0.41, 0.23], [0.3, 0.09], [0.5, 0.2], [0.41, 0.23]] as Frac[]) {
+          await d.tap(at)
+          await d.wait(260)
+        }
         await d.wait(2600)
         for (const at of [tree, ball, brick, tree, ball, brick]) {
           await d.tap(at)

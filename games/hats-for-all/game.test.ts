@@ -1028,3 +1028,43 @@ describe('what the lead\'s reader found', () => {
     expect(game.seen.at(-1)).toBe('a-crew-walks-in')
   })
 })
+
+describe('alive at rest', () => {
+  it('a creature that wears its hat does one small thing of its own now and then, silently and on its spot; a bare one, which waits, never does', () => {
+    const world: World = { crew: [{ kind: 'bop', spot: 0, hats: [0] }, { kind: 'lanky', spot: 1, hats: [1] }, { kind: 'flop', spot: 2, hats: [2] }, { kind: 'wig', spot: 3, hats: [3] }, { kind: 'pip', spot: 4, hats: [] }], tile: ['dome', 'cone', 'brim', 'brim'], loose: [], changes: [], guest: null, leaver: null, slips: 0 }
+    const game = new Game({ ...saveOf(world), finished: true }), before = serialize(game.saved), heard: { at: number; name: string }[] = []
+    const did: Record<string, string[]> = { bop: [], lanky: [], flop: [], wig: [], pip: [] }
+    run(game, 60, heard, () => {
+      for (const who of ['bop', 'lanky', 'flop', 'wig', 'pip']) {
+        const act = game.play.acting(who)
+        if (act && act !== 'pats-its-bare-head' && did[who].at(-1) !== act + '.') did[who].push(act + '.')
+        if (!act && did[who].at(-1)?.endsWith('.')) did[who].push('')
+        const pose = game.play.actorPose(who, {} as never)
+        expect(pose.x).toBeCloseTo(spotX(worldOf(game.saved).crew.find((creature) => creature.kind === who)!.spot), 6)
+        expect(pose.z).toBeCloseTo(ROW_Z, 6)
+      }
+    })
+    const times = (who: string): string[] => did[who].filter((name) => name !== '')
+    expect(new Set(times('bop'))).toEqual(new Set(['hops-and-looks-round.']))
+    expect(new Set(times('lanky'))).toEqual(new Set(['yawns.']))
+    expect(new Set(times('flop'))).toEqual(new Set(['flicks-its-ears.']))
+    expect(new Set(times('wig'))).toEqual(new Set(['wobbles-its-belly.']))
+    expect(times('pip')).toEqual([])
+    // Now and then: a few times a minute each, never one after another.
+    for (const who of ['bop', 'lanky', 'flop', 'wig']) {
+      expect(times(who).length, who).toBeGreaterThanOrEqual(3)
+      expect(times(who).length, who).toBeLessThanOrEqual(8)
+    }
+    expect(heard).toEqual([])
+    expect(serialize(game.saved)).toEqual(before)
+    expectStageIsWorld(game)
+  })
+
+  it('and not while a finger is on the glass or something else is going on', () => {
+    const world: World = { crew: [{ kind: 'bop', spot: 1, hats: [0] }], tile: ['dome'], loose: [], changes: [], guest: null, leaver: null, slips: 0 }
+    const game = new Game({ ...saveOf(world), finished: true })
+    let did = false
+    run(game, 40, [], () => { game.fingerAt(0, 1, 2); did = did || game.play.acting('bop') !== null })
+    expect(did).toBe(false)
+  })
+})

@@ -97,6 +97,13 @@ export const ACTS: Record<string, Act> = {
   'shakes-its-hat-out': { lasts: 1.6, play: (u, m) => { m.dz = 0.3 * hold(u, 0.2, 0.25); m.hatLift = 0.7 * hold(u, 0.2, 0.25); m.hatTilt = (-0.9 + 0.2 * swing(u, 6)) * hold(u, 0.2, 0.25); m.pat = 0.6 * hold(u, 0.2, 0.25); m.looks = hold(u); m.gazeY = -1 } },
   'twangs-holding-its-hat': { lasts: 1.0, play: (u, m) => { m.lean = 0.3 * swing(u, 3) * (1 - u) ** 2; m.pat = hold(u, 0.1, 0.3) } },
 
+  // --- What a hatted creature does by itself now and then, when nothing else is going on: small, silent, on its spot ---
+  'hops-and-looks-round': { lasts: 1.1, play: (u, m) => { m.dy = 0.16 * hops(u, 3) * hold(u); m.looks = hold(u); m.gazeX = swing(u, 1) } },
+  yawns: { lasts: 1.2, play: (u, m) => { m.squash = 1 + 0.1 * bump(u); m.pat = 0.35 * bump(u, 0.2, 0.85); m.lean = 0.05 * bump(u); m.looks = hold(u); m.gazeY = 0.7 } },
+  'flicks-its-ears': { lasts: 0.9, play: (u, m) => { m.ears = swing(u, 3) * hold(u); m.squash = 1 - 0.04 * bump(u) } },
+  'wobbles-its-belly': { lasts: 1.2, play: (u, m) => { m.squash = 1 + 0.09 * swing(u, 5) * hold(u); m.pat = 0.2 * bump(u, 0, 0.4) } },
+  'taps-a-foot': { lasts: 1.0, play: (u, m) => { m.dy = 0.07 * hops(u, 6) * hold(u); m.lean = 0.05 * hold(u); m.looks = hold(u); m.gazeY = -0.7; m.gazeX = -0.3 } },
+
   // --- In the scenes ---
   stamps: { lasts: 0.7, play: (u, m) => { m.dy = 0.5 * bump(u, 0, 0.6); m.squash = 1 - 0.2 * bump(u, 0.6, 1) } },
   'bows-and-tosses': { lasts: 0.9, play: (u, m) => { m.squash = 1 - 0.16 * bump(u, 0, 0.6) + 0.1 * bump(u, 0.6, 1); m.pat = bump(u, 0.4, 1) } },
@@ -118,3 +125,8 @@ export function playAct(name: string, seconds: number, m: Mods, top: number): bo
 
 /** The longest any act lasts. */
 export const LONGEST_ACT_S = Math.max(...Object.values(ACTS).map((act) => act.lasts))
+
+/** The one small thing each kind does by itself now and then while it wears its hat and nothing else is going on. */
+export const IDLE_ACT: Record<'bop' | 'lanky' | 'flop' | 'wig' | 'pip', string> = {
+  bop: 'hops-and-looks-round', lanky: 'yawns', flop: 'flicks-its-ears', wig: 'wobbles-its-belly', pip: 'taps-a-foot',
+}

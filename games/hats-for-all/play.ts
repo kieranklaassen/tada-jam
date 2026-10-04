@@ -1,4 +1,4 @@
-import { playAct, rest, type Mods } from './acts'
+import { IDLE_ACT, playAct, rest, type Mods } from './acts'
 import type { CreatureKind, HatKind } from './kinds'
 import { PERSONALITY, hash, stepSpring, type Spring } from './motion'
 import { PROPS, PROP_AT, type PropName, type RoomTouch } from './props'
@@ -92,6 +92,8 @@ type Actor = {
   /** How far a tower has slipped over its eyes, from 0 to 1: it eases there, forward of the face first and then down. */
   slip: number
   mods: Mods
+  /** How long it has stood with nothing going on, and how long that has to be before it next does its own small thing. */
+  idle: number; idleUntil: number
 }
 
 const ease = (t: number): number => t * t * (3 - 2 * t)
@@ -111,6 +113,9 @@ const blank = (): Mods => rest({} as Mods)
 
 /** A crumb of foam or a leaf in the air: where it is, how it moves, how old it is and how long it lasts, how big, what it is a crumb of, and where in its sway a leaf is. */
 export type Crumb = { x: number; y: number; z: number; vx: number; vy: number; age: number; life: number; size: number; of: HatKind | 'leaf'; sway: number }
+/** A creature left to itself does its own small thing after at least this long, and by this much longer at the most. */
+export const IDLE_FROM_S = 8
+export const IDLE_SPREAD_S = 9
 export const MOST_CRUMBS = 24
 /** A mark where the room was touched lasts this long, and there are never more of them than this. */
 export const MARK_SECONDS = 0.4
@@ -162,7 +167,7 @@ export class Play {
   /** Puts a creature on the mat at a point, standing still. */
   enter(who: string, kind: CreatureKind, at: Point): void {
     const n = this.actors.size + 1
-    this.actors.set(who, { kind, x: at.x, z: at.z, heading: 0, squash: { x: 1, v: 0 }, lean: { x: 0, v: 0 }, hop: { x: 0, v: 0 }, pressed: false, pullX: 0, pullY: 0, gazeX: 0, gazeY: 0, lookX: 0, lookY: 0, lookFor: 0, pat: 0, mouth: 0, phase: hash(n + kind.length * 7) * 6.28, walk: null, act: null, hats: 0, grumpy: false, slip: 0, mods: blank(), mood: 'plain', moodFor: 0, fond: false, smile: 0, browTilt: 0, browLift: 0 })
+    this.actors.set(who, { kind, x: at.x, z: at.z, heading: 0, squash: { x: 1, v: 0 }, lean: { x: 0, v: 0 }, hop: { x: 0, v: 0 }, pressed: false, pullX: 0, pullY: 0, gazeX: 0, gazeY: 0, lookX: 0, lookY: 0, lookFor: 0, pat: 0, mouth: 0, phase: hash(n + kind.length * 7) * 6.28, walk: null, act: null, hats: 0, grumpy: false, slip: 0, mods: blank(), mood: 'plain', moodFor: 0, fond: false, smile: 0, browTilt: 0, browLift: 0, idle: 0, idleUntil: IDLE_FROM_S + IDLE_SPREAD_S * hash(n * 1.3 + kind.length) })
   }
 
   leave(who: string): void { this.actors.delete(who) }
@@ -490,6 +495,16 @@ export class Play {
     actor.slip = Math.max(0, Math.min(1, actor.slip + (actor.hats > 1 ? 1 : -1) * dt * 4))
     actor.mouth = Math.max(0, actor.mouth - dt)
     actor.lookFor = Math.max(0, actor.lookFor - dt)
+    // Alive at rest: a creature that wears its one hat and has been left to itself for a while does one small thing of its own,
+    // silently, on its spot, and then waits a different while. It is no call to the child: a bare creature, which waits, never does it.
+    const busy = walking || actor.act !== null || actor.lookFor > 0 || actor.pressed || actor.pullX !== 0 || actor.pullY !== 0 || this.finger.left > 0
+    actor.idle = busy ? 0 : actor.idle + dt
+    if (actor.idle >= actor.idleUntil && actor.hats === 1) {
+      actor.act = { name: IDLE_ACT[actor.kind], t: 0, dir: 1, room: Infinity }
+      if (actor.kind === 'lanky') actor.mouth = 0.9
+      actor.idle = 0
+      actor.idleUntil = IDLE_FROM_S + IDLE_SPREAD_S * hash(actor.phase * 3.7 + this.time)
+    }
     const bare = actor.hats === 0
     // Its one want, shown while nothing else happens: a bare creature pats its bare head now and then, at a moment of its own.
     if (bare && !walking && actor.lookFor === 0 && (this.time * 0.22 + actor.phase) % 1 < 0.12) actor.pat = Math.max(actor.pat, 0.25)
