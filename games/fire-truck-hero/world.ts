@@ -131,7 +131,11 @@ function moveTo(d: Draft, events: YardEvent[], index: number, to: Spot): void {
 /** The patch row's column for a gulp on open sand, by the level the sand is now at. */
 const ACTION_AT: Readonly<Record<Level, Action>> = { dry: 'gulp', damp: 'gulp', puddle: 'fill', mud: 'too-much' }
 
-/** A gulp lands on the sand. It is named as aimed, as run-off, or not at all, and the worm comes up the first moment a cell is mud. */
+/**
+ * A gulp lands on the sand. It is named as aimed, as run-off, or not at all,
+ * and the worm comes up the first moment a cell is mud. Under the dry patch
+ * the sand is not named and sends no worm of its own: the patch does both.
+ */
 function wet(d: Draft, events: YardEvent[], at: Place, named: 'aimed' | 'neighbour' | null): void {
   const cell = cellAt(at.x, at.z)
   if (cell < 0) return
@@ -140,7 +144,7 @@ function wet(d: Draft, events: YardEvent[], at: Place, named: 'aimed' | 'neighbo
   const now = levelOf(d.ground[cell])
   const action = named === 'aimed' ? ACTION_AT[now] : 'neighbour'
   if (named) events.push({ type: 'result', thing: -1, kind: 'patch', action, id: cellOf('patch', action).id, cell })
-  if (was !== 'mud' && now === 'mud') events.push({ type: 'secret', id: 'worm', at: { x: at.x, z: at.z } })
+  if (named !== null && was !== 'mud' && now === 'mud') events.push({ type: 'secret', id: 'worm', at: { x: at.x, z: at.z } })
 }
 
 /** A pool got a gulp. At three gulps what is in it floats, and past its fill it runs over to what is below. */
@@ -201,7 +205,12 @@ function reach(d: Draft, events: YardEvent[], index: number, aimed: boolean, wat
   const over = before >= fill
   const at = placeOf(thing)
   if (thing.kind === 'pool') poolRose(d, events, index, before)
-  if (thing.kind === 'patch' && at) wet(d, events, at, null)
+  if (thing.kind === 'patch' && at) {
+    wet(d, events, at, null)
+    // The patch is ground: the gulp that first brings it to mud sends up the worm, however slowly the child got
+    // there. The patch keeps its water, where the open sand under it dries between slow taps.
+    if (before === fill) events.push({ type: 'secret', id: 'worm', at: { x: at.x, z: at.z } })
+  }
   // A boat full of water sinks where it floats, empties itself and pops up.
   if (thing.kind === 'boat' && aimed && over && afloat(d, index)) thing.gulps = 0
   if (thing.kind === 'wheel' && aimed && thing.gulps >= fill) {

@@ -272,17 +272,19 @@ export class DuckMotion {
    * `floats` is how high the water holds it above the pool floor, in yard
    * units (0 on the floor); `rim` is how far the low side of the rim is from
    * the duck's place, toward the child, how high the wall stands above the
-   * floor, and how far the sand lies below the floor.
+   * floor, and how far the sand lies below the floor. `dry` is true while the
+   * pool holds no water at all.
    */
-  step(seconds: number, afloat: boolean, floats: number, rim: { far: number; high: number; floor?: number }, channels: Channels): typeof this.pose {
+  step(seconds: number, afloat: boolean, floats: number, rim: { far: number; high: number; floor?: number }, channels: Channels, dry = !afloat && floats <= 0.001): typeof this.pose {
     this.time += seconds
     this.tap.step(seconds)
     this.ride.step(seconds)
     stepSpring(this.wiggle, { stiffness: 210, damping: 9 }, seconds)
     this.tapped = false
-    // On a dry floor it taps the floor with its beak, which it dislikes, every few seconds.
+    // On a dry floor it taps the floor with its beak, which it dislikes, every few seconds. With water under it,
+    // though too little to float on, the floor is not dry and it does not tap.
     this.sinceTap += seconds
-    if (!afloat && floats <= 0.001 && this.sinceTap > DUCK_TAPS_EVERY_S && !this.ride.playing(RIDE_S)) {
+    if (dry && !afloat && this.sinceTap > DUCK_TAPS_EVERY_S && !this.ride.playing(RIDE_S)) {
       this.sinceTap = 0
       this.tap.start()
       this.tapped = true

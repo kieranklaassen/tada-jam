@@ -5,7 +5,7 @@
 import { describe, expect, it } from 'vitest'
 import { DROPS_PER_GULP, Drops, SPLASH_PER_LANDING } from './drops'
 import { FLOWER_COLOURS, PETAL_COUNT, PETAL_SHUT, flowerOf, leafDrop, petalOpen } from './flower'
-import { CUP_TIPS_AT, Game, QUACK_AFTER_S, WORM_CLEAR, WORM_CLEAR_OF_SNAIL } from './game'
+import { CUP_TIPS_AT, Game, QUACK_AFTER_S, SHOW_AFTER_S, WORM_CLEAR, WORM_CLEAR_OF_SNAIL } from './game'
 import { cellOf } from './grid'
 import { cellAt, levelAt } from './ground'
 import { arcTo } from './jet'
@@ -14,7 +14,7 @@ import { lowSideOf, placeOf, targetAt } from './places'
 import { NOSE_ROUND, SOAK_S } from './thingMotion'
 import { KINDS, type Kind } from './things'
 import { Toy } from './toy'
-import type { VoiceSpec } from './voices'
+import { splat, type VoiceSpec } from './voices'
 import { CREEP_REACH, SPRAY_REACH, gulpOn, gulpOnGround, type Step, type Yard, type YardEvent } from './world'
 import { ARRANGEMENTS, layOut } from './yards'
 import { boatScrapes, catPaws, cellVoice, delayed, duckQuack, slowSizzle } from './yardVoices'
@@ -1103,5 +1103,147 @@ describe('what a reader of the folder found', () => {
       return { x: x / each, z: z / each }
     })
     for (let a = 0; a < 5; a++) for (let b = a + 1; b < 5; b++) expect(distance(middles[a], middles[b])).toBeGreaterThan(0.15)
+  })
+})
+
+describe('what a second reader found', () => {
+  /** A yard at a place with nothing shown yet, so the truck shows what stands in it. */
+  const unseen = (place: string, arrangement: number) => new Table(saved(place, arrangement, { seen: [] }))
+
+  it('shows the seed at half size: for a moment the soil darkens and a shoot pokes half way up, and it is a seed again', () => {
+    const t = unseen('one-thing', 1)
+    let soil = 0, shoot = 0
+    t.play(SHOW_AFTER_S + 1.6, () => {
+      soil = Math.max(soil, t.game.motion.seed.pose.soil)
+      shoot = Math.max(shoot, t.game.motion.seed.pose.shoot)
+    })
+    expect(t.game.save.seen).toEqual(['seed'])
+    expect(soil).toBeGreaterThan(0.9)
+    expect(shoot).toBeGreaterThan(0.3)
+    expect(shoot).toBeLessThan(0.6)
+    t.play(1.5)
+    expect(t.game.motion.seed.pose.soil).toBe(0)
+    expect(t.game.motion.seed.pose.shoot).toBe(0)
+    expect(t.game.yard.things[0].gulps).toBe(0)
+  })
+
+  it('shows the dry patch at half size: it goes half dark for a moment and is dry again', () => {
+    const t = unseen('one-thing', 3)
+    let wet = 0
+    t.play(SHOW_AFTER_S + 1.6, () => { wet = Math.max(wet, t.game.motion.patch.pose.wet) })
+    expect(wet).toBeGreaterThan(0.4)
+    expect(wet).toBeLessThanOrEqual(0.5)
+    t.play(1.5)
+    expect(t.game.motion.patch.pose.wet).toBe(0)
+    expect(t.game.yard.things[0].gulps).toBe(0)
+  })
+
+  it('owes a showing again when the game is put away with the spit still in the air', () => {
+    const t = unseen('one-thing', 0)
+    t.play(SHOW_AFTER_S + 0.05)
+    expect(t.game.save.seen).toEqual(['fire'])
+    t.game.rest()
+    expect(t.game.save.seen).toEqual([])
+    expect(t.game.needsSave).toBe('now')
+    // Landed, it stays given.
+    const landed = unseen('one-thing', 0)
+    landed.play(SHOW_AFTER_S + 1)
+    landed.game.rest()
+    expect(landed.game.save.seen).toEqual(['fire'])
+  })
+
+  it('always sends up the worm when the dry patch is brought to mud, however slowly', () => {
+    for (const gap of [0.5, 5, 12, 30]) {
+      const t = new Table(saved('one-thing', 3))
+      const home = t.at(0)
+      for (let tap = 0; tap < 3; tap++) t.gulp(home).play(gap)
+      // The snail's ending has played out by now, or is ended by this tap.
+      t.play(8)
+      expect(t.game.wormAt, `taps ${gap} s apart`).toBeNull()
+      let came = false
+      t.tap(home).play(1.5, () => { came ||= t.game.wormAt !== null && t.game.channels.wormUp > 0.2 })
+      expect(came, `taps ${gap} s apart`).toBe(true)
+      // Once: more water on the mud brings no second worm.
+      t.play(5)
+      let again = false
+      t.tap(home).play(1.5, () => { again ||= t.game.wormAt !== null })
+      expect(again, `taps ${gap} s apart`).toBe(false)
+    }
+  })
+
+  it('has the duck tap only a dry floor: with water under it, though too little to float on, it does not tap', () => {
+    const dry = new Table(saved('one-thing', 2))
+    let taps = 0
+    dry.play(8, () => { if (dry.game.motion.duck.tapped) taps++ })
+    expect(taps).toBeGreaterThanOrEqual(2)
+    for (const gulps of [1, 2]) {
+      const t = new Table(saved('one-thing', 2))
+      t.gulps(t.at(0), gulps)
+      let tapped = 0
+      t.play(10, () => { if (t.game.motion.duck.tapped) tapped++ })
+      expect(tapped, `${gulps} gulps`).toBe(0)
+    }
+  })
+
+  it('answers a sweep with what the thing has to show: no flame leans on a dead fire, no leaves rustle on a bare pot, no ripples run on a dry floor', () => {
+    const across = (t: Table, at: Place) => t.sweep({ x: at.x - 3, z: at.z + 0.3 }, { x: at.x + 3, z: at.z + 0.3 })
+    // A dead fire: its wet logs take the water and shed drops.
+    const fire = new Table(saved('one-thing', 0))
+    fire.gulps(fire.at(0), 3).play(8)
+    let before = fire.heard.length
+    across(fire, fire.at(0))
+    expect(those(fire.heard.slice(before), cellVoices('fire', 'sweep', 1))).toHaveLength(0)
+    // A lit one leans with its "fft".
+    const lit = new Table(saved('one-thing', 0))
+    across(lit, lit.at(0))
+    expect(those(lit.heard, cellVoices('fire', 'sweep', 0)).length).toBeGreaterThan(0)
+    // A bare pot: no rustle and no drops off leaves it has not got.
+    const pot = new Table(saved('one-thing', 1))
+    let shed = 0
+    const seed = pot.at(0)
+    pot.game.press({ truck: false, point: { x: seed.x - 3, z: seed.z + 0.4 } }, pot.now)
+    for (let frame = 1; frame <= 30; frame++) {
+      pot.game.move({ x: seed.x - 3 + (frame / 30) * 6, z: seed.z + 0.4 })
+      pot.play(FRAME)
+      shed = Math.max(shed, pot.drops().filter((drop) => drop.y > 1.2 && distance(drop, seed) < 1.2).length)
+    }
+    pot.game.lift()
+    expect(shed).toBe(0)
+    expect(those(pot.heard, cellVoices('seed', 'sweep', 0))).toHaveLength(0)
+    // A dry pool: it rattles, and nothing ripples.
+    const pool = new Table(saved('one-thing', 2))
+    before = pool.heard.length
+    let rings = 0
+    const at = pool.at(0)
+    pool.game.press({ truck: false, point: { x: at.x - 3, z: at.z } }, pool.now)
+    for (let frame = 1; frame <= 40; frame++) {
+      if (frame <= 30) pool.game.move({ x: at.x - 3 + (frame / 30) * 6, z: at.z })
+      pool.play(FRAME)
+      rings = Math.max(rings, pool.game.motion.ripples.rings.filter((ring) => ring.alive).length)
+    }
+    pool.game.lift()
+    expect(those(pool.heard.slice(before), cellVoices('pool', 'sweep', 0)).length).toBeGreaterThan(0)
+    expect(rings).toBe(0)
+  })
+
+  it('splats at every landing on the sand, a swept one too', () => {
+    const t = new Table(saved('one-thing', 0))
+    // The shape of a splat: a noise and a sine that both fall, with the splat's own lengths.
+    const first = splat(0, 0)
+    const isSplat = (voice: VoiceSpec) => voice.length === 2 && voice[0].kind === 'noise' && voice[1].kind === 'tone' && voice[0].peak === first[0].peak && voice[1].decay === first[1].decay
+    t.sweep({ x: 6, z: 8.6 }, { x: 15, z: 8.6 }, 60)
+    expect(t.heard.filter(isSplat).length).toBeGreaterThanOrEqual(3)
+  })
+
+  it('shows the roof light turn: a bar stands out of both sides of its dome and a lamp sits to one side of its top', async () => {
+    const { buildTruck } = await import('./truckModel')
+    const THREE = await import('three')
+    const truck = buildTruck(new THREE.MeshBasicMaterial())
+    truck.light.geometry.computeBoundingBox()
+    const box = truck.light.geometry.boundingBox!
+    // The dome is 0.3 round. The bar reaches well past it one way, and not the other way: it is not round.
+    expect(box.max.x).toBeGreaterThan(0.38)
+    expect(box.min.x).toBeLessThan(-0.38)
+    expect(box.max.z).toBeLessThan(0.32)
   })
 })

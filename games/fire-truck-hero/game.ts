@@ -49,6 +49,8 @@ export const QUACK_AFTER_S = 0.09
 /** How near a thing's middle a worm may come up, and how near the snail. */
 export const WORM_CLEAR = 1.7
 export const WORM_CLEAR_OF_SNAIL = 0.85
+/** The gulps at which the plant has its two leaves. */
+export const LEAVES_AT = 2
 /** How wide the stamp of the puddle is that the wet logs of a fire float on. Its water shows over the middle half of that, inside the ring of pebbles. */
 export const FIRE_PUDDLE = 1.5
 /** How far the flower's cup has nodded over when its water tips out, as a share of the whole nod. */
@@ -187,6 +189,12 @@ export class Game extends Toy {
     // A scene that the landing water began (an ending, the drive) lands at its end too: the game rests as it will be found.
     this.endScene()
     this.drops.clear()
+    // A spit still in the air never reached its thing: that showing was not given, and is owed again.
+    if (this.spits.length > 0) {
+      const lost = this.spits.map((spit) => this.yard.things[spit.thing]?.kind)
+      this.save = { ...this.save, seen: this.save.seen.filter((kind) => !lost.includes(kind)) }
+      this.need('now')
+    }
     this.spits.length = 0
     this.logDrips.length = 0
   }
@@ -256,7 +264,7 @@ export class Game extends Toy {
       if (cat >= 0) this.apply(gulpOn(this.yard, cat), this.clock)
       else this.say(onPlastic(this.variants.next(3)))
     } else {
-      this.landOnSand(x, z, fast)
+      this.landOnSand(x, z)
       // The one who waits beyond the fence is touchable too: water by the fence in front of it makes it hop.
       // The snail's shell waits on the gate's left post; the others wait further along the fence.
       const peekX = this.waits === 'patch' ? GATE.x - GATE.half : PEEK_X
@@ -264,7 +272,7 @@ export class Game extends Toy {
     }
   }
 
-  private landOnSand(x: number, z: number, fast: boolean): void {
+  private landOnSand(x: number, z: number): void {
     const cell = cellAt(x, z)
     const before = cell < 0 ? 0 : this.yard.ground[cell]
     const was = levelOf(before)
@@ -273,7 +281,8 @@ export class Game extends Toy {
     if (was === 'mud' && !this.skipSounds) this.drops.blobs(x, z)
     if (was === 'mud') this.say(squelch(variant))
     else if (was === 'puddle') this.say(plip(variant))
-    else if (!fast) this.say(splat(this.paint.at(x, z).damp / 255, variant))
+    // Each landing is a soft splat, a swept one too: the whisper of the line is heard over them.
+    else this.say(splat(this.paint.at(x, z).damp / 255, variant))
     const step = gulpOnGround(this.yard, x, z)
     this.apply(step, this.clock)
     if (cell < 0) return
@@ -366,6 +375,11 @@ export class Game extends Toy {
     if (kind === 'cat' && by === 'run-off') return catPaws()
     // Drops flung onto the plant patter on its leaves; the slurp is the pot drinking from below.
     if (kind === 'seed' && action === 'neighbour' && by === 'drops') return cellVoice(cellOf('seed', 'sweep').voice, fullness, variant)
+    // A sweep past a thing that has, as it stands, nothing of its sweep to show: a fire that is out has no flame
+    // to lean, so its wet logs take the water with a drip; a pot with no leaves yet has none to rustle, so the
+    // water patters on the pot.
+    if (kind === 'fire' && action === 'sweep' && gulps >= THINGS.fire.fill) return drip(variant)
+    if (kind === 'seed' && action === 'sweep' && gulps < LEAVES_AT) return onPlastic(variant)
     return cellVoice(cellOf(kind, action).voice, fullness, variant)
   }
 
@@ -386,11 +400,14 @@ export class Game extends Toy {
     if (kind === 'pool' && action !== 'neighbour') this.say(delayed(duckQuack(this.variants.next(3)), QUACK_AFTER_S))
     // Mud throws brown blobs.
     else if (kind === 'patch' && action === 'too-much') this.drops.blobs(at.x, at.z)
-    // The leaves shake off drops.
+    // The leaves shake off drops, once the plant has leaves.
     else if (kind === 'seed' && action === 'sweep') {
       this.say(beeBuzz(true))
-      this.drops.burst(at.x, 1.5, at.z, 4, 1.1)
-    } else if (kind === 'seed' && (action !== 'neighbour' || by === 'drops')) this.say(beeBuzz(true))
+      if ((this.yard.things[index]?.gulps ?? 0) >= LEAVES_AT) this.drops.burst(at.x, 1.5, at.z, 4, 1.1)
+    }
+    // A dead fire swept: drops spring off its wet logs.
+    else if (kind === 'fire' && action === 'sweep' && (this.yard.things[index]?.gulps ?? 0) >= THINGS.fire.fill) this.drops.burst(at.x, 0.5, at.z, 3, 0.9)
+    else if (kind === 'seed' && (action !== 'neighbour' || by === 'drops')) this.say(beeBuzz(true))
     // On sand the boat slides with a scrape.
     else if (kind === 'boat' && action === 'sweep' && !afloat(this.yard, index)) this.say(delayed(boatScrapes(), 0.05))
     // The wet logs float off on their own puddle.
@@ -599,16 +616,14 @@ export class Game extends Toy {
     this.stillSince = now
   }
 
-  /** The child is acting: nothing is shown any more, and what stands in this yard counts as met. */
+  /**
+   * The child is acting: nothing more is shown in this yard. A kind that was not shown before the touch is not
+   * marked: its first showing has not been given, and a later yard that is left alone for a moment gives it.
+   */
   private touched(now: number): void {
     this.stillSince = now
     this.tapsHeard = 0
-    if (this.nextShowAt === Infinity) return
     this.nextShowAt = Infinity
-    const met = this.yard.things.map((thing) => thing.kind).filter((kind) => !this.save.seen.includes(kind))
-    if (met.length === 0) return
-    this.save = { ...this.save, seen: [...this.save.seen, ...new Set<Kind>(met)] }
-    this.need('soon')
   }
 
   // --- The truck at rest -------------------------------------------------------
@@ -648,8 +663,9 @@ export class Game extends Toy {
     this.logDrips.length = 0
     this.wormOwed = null
     this.stillSince = this.clock
-    // A yard found with its want met has been played: nothing in it is shown.
-    this.nextShowAt = this.yard.met || this.yard.things.every((thing) => this.save.seen.includes(thing.kind)) ? Infinity : this.clock + SHOW_AFTER_S
+    // A yard found with water in it has been played in: a showing never comes after a touch, so nothing in it is shown.
+    const played = this.yard.met || this.yard.things.some((thing) => thing.gulps > 0) || this.yard.ground.some((gulps) => gulps > 0)
+    this.nextShowAt = played || this.yard.things.every((thing) => this.save.seen.includes(thing.kind)) ? Infinity : this.clock + SHOW_AFTER_S
   }
 
   private say(voice: VoiceSpec): void {

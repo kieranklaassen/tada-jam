@@ -201,13 +201,19 @@ describe('the first showing of a new thing', () => {
     expect(late.save.seen).toEqual(['fire'])
   })
 
-  it('never comes after a touch, and what stands in the yard then counts as met', () => {
+  it('never comes after a touch, in that yard or when it is found again; a showing that was not given is not marked as given', () => {
     const t = new Table(null, null)
     t.gulp({ x: 13, z: 8 })
     const heard = t.heard.length
     t.play(8)
     expect(t.heard.length).toBe(heard)
-    expect(t.game.save.seen).toEqual(['fire'])
+    // The fire was never shown: its first showing is still to give, in a yard that is left alone for a moment.
+    expect(t.game.save.seen).toEqual([])
+    // Found again with the child's water on the sand, the yard has been played in: nothing is shown.
+    const again = new Table(JSON.parse(JSON.stringify(t.game.snapshot())), null)
+    again.play(8)
+    expect(again.heard).toHaveLength(0)
+    expect(again.game.save.seen).toEqual([])
   })
 
   it('is not given in a yard found with its want already met', () => {

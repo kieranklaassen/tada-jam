@@ -68,10 +68,11 @@ export function buildWheel(plastic: THREE.Material): WheelModel {
     ),
   )
   const parts: Part[] = [at(ring(WHEEL.radius * 0.7, 0.07, PAINT.wheel, 24), 0, 0, 0, Math.PI / 2), at(rod(0.17, 0.17, 0.3, TRUCK_PAINT.red, 12), 0, 0, 0.02, Math.PI / 2), at(rod(0.09, 0.09, 0.34, TRUCK_PAINT.grey, 8), 0, 0, -0.18, Math.PI / 2)]
+  // A solid amber face in place of spokes: six spokes through one hub read from the front as a star in a ring.
+  parts.push(at(rod(WHEEL.radius * 0.68, WHEEL.radius * 0.68, 0.07, PAINT.wheel, 24), 0, 0, 0, Math.PI / 2))
   for (let i = 0; i < 6; i++) {
     const turn = (i / 6) * Math.PI * 2
-    // A spoke, and a fat paddle at its end to catch the water.
-    parts.push(at(box(0.08, WHEEL.radius * 0.7, 0.08, 0.03, PAINT.wheel), -Math.sin(turn) * WHEEL.radius * 0.35, Math.cos(turn) * WHEEL.radius * 0.35, 0, 0, 0, turn))
+    // A fat paddle at the rim to catch the water. They are two colours in turn, so the turning shows.
     parts.push(at(box(0.42, 0.26, 0.2, 0.08, i % 2 ? PAINT.bench : TRUCK_PAINT.red), -Math.sin(turn) * WHEEL.radius * 0.82, Math.cos(turn) * WHEEL.radius * 0.82, 0.02, 0, 0, turn))
   }
   // The wheel turns about its own axle, inside a head that leans back.

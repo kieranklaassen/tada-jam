@@ -116,9 +116,14 @@ export function buildTruck(plastic: THREE.Material): TruckModel {
   pupils.position.set(EYES.x + 0.11, EYES.y - ROCK_HEIGHT, 0)
   body.add(pupils)
 
-  // The roof light: a blue dome with a cream bar across it, so its turning shows.
+  // The roof light: a blue dome, which is round and would not show its turning, with a cream bar through it
+  // whose two ends stand well out of its sides, and a cream lamp on one side of its top. Both go round with it.
   const light = new THREE.Mesh(
-    mould([lathe([[0.3, 0], [0.3, 0.12], [0.24, 0.29], [0.12, 0.38], [0, 0.4]], PAINT.lightDome, 16), at(box(0.62, 0.1, 0.14, 0.05, PAINT.cream), 0, 0.06, 0)]),
+    mould([
+      lathe([[0.3, 0], [0.3, 0.12], [0.24, 0.29], [0.12, 0.38], [0, 0.4]], PAINT.lightDome, 16),
+      at(box(0.82, 0.12, 0.16, 0.05, PAINT.cream), 0, 0.12, 0),
+      at(ball(0.09, PAINT.cream, [1, 0.8, 1], 8), 0.15, 0.33, 0),
+    ]),
     plastic,
   )
   light.name = 'truck-light'

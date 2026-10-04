@@ -161,6 +161,7 @@ export class SeedMotion {
   private flutter = spring(0)
   private nod = new Gesture()
   private soak = new Gesture()
+  private peek = new Gesture()
   private gulps = 0
   private slow = false
 
@@ -187,9 +188,15 @@ export class SeedMotion {
     else if (action === 'too-much') this.nod.start()
   }
 
+  /** The truck shows the seed to a child who has not met it: for a moment the soil goes dark and a shoot pokes half way up, and it is a seed again. */
+  shown(): void {
+    this.peek.start()
+  }
+
   step(seconds: number): typeof this.pose {
     this.nod.step(seconds)
     this.soak.step(seconds)
+    this.peek.step(seconds)
     const grow = this.slow ? { stiffness: 6, damping: 4.6 } : SOFT
     stepSpring(this.shoot, grow, seconds)
     stepSpring(this.leaves, grow, seconds)
@@ -197,8 +204,9 @@ export class SeedMotion {
     stepSpring(this.pop, SNAPPY, seconds)
     stepSpring(this.flutter, { stiffness: 320, damping: 7 }, seconds)
     const pose = this.pose
-    pose.soil = this.gulps >= 1 ? 1 : 0
-    pose.shoot = Math.max(0, this.shoot.value)
+    const peeking = this.peek.playing(SHOWN_S) ? hump(this.peek.through(SHOWN_S)) : 0
+    pose.soil = this.gulps >= 1 ? 1 : peeking
+    pose.shoot = Math.max(0, this.shoot.value, this.gulps === 0 ? peeking * 0.5 : 0)
     pose.leaves = Math.max(0, this.leaves.value)
     // The bud is there from the first shoot until the flower takes its place.
     pose.bud = Math.max(0, pose.shoot - Math.max(0, this.flower.value))
@@ -216,6 +224,9 @@ export class SeedMotion {
   }
 }
 
+/** How long the half-size answer of a first showing lasts on a thing whose answer is a change that stays: the seed, the patch. */
+export const SHOWN_S = 1.3
+
 /** How long the pot's wall stays dark after it drank from below. */
 export const SOAK_S = 7
 
@@ -228,6 +239,12 @@ export class PatchMotion {
   private mud = spring(0)
   private blot = spring(0)
   private line = new Gesture()
+  private peek = new Gesture()
+
+  /** The truck shows the dry patch to a child who has not met it: it goes half dark for a moment, as from a small blot, and is dry again. */
+  shown(): void {
+    this.peek.start()
+  }
 
   settle(gulps: number): void {
     this.aim(gulps)
@@ -244,12 +261,13 @@ export class PatchMotion {
 
   step(seconds: number): typeof this.pose {
     this.line.step(seconds)
+    this.peek.step(seconds)
     stepSpring(this.wet, SOFT, seconds)
     stepSpring(this.puddle, SOFT, seconds)
     stepSpring(this.mud, SOFT, seconds)
     stepSpring(this.blot, SNAPPY, seconds)
     const pose = this.pose
-    pose.wet = Math.max(0, Math.min(1, this.wet.value))
+    pose.wet = Math.max(0, Math.min(1, this.wet.value), this.peek.playing(SHOWN_S) ? hump(this.peek.through(SHOWN_S)) * 0.5 : 0)
     pose.puddle = Math.max(0, this.puddle.value)
     pose.mud = Math.max(0, Math.min(1, this.mud.value))
     pose.blot = this.blot.value
