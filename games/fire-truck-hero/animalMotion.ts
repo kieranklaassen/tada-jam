@@ -88,11 +88,13 @@ export const SIZE_ON_ROOF = 0.75
 
 /** How long she lifts her paws out of creeping run-off, one at a time, before she moves over. */
 export const PAWS_S = 1.0
+/** How far she rocks to the side off a lifted paw, in radians. */
+export const PAW_ROCK = 0.2
 /** How long she looks at the wet logs and at the truck before she turns her back. */
 export const HUFF_S = 2.4
 
 export class CatMotion {
-  readonly pose = { x: 0, z: 0, y: 0, turn: 0, squash: 1, size: 1, headTurn: 0, headTilt: 0, shake: 0, ears: 0, tail: 0, tailUp: 0, paw: 0, pawFar: 0, eyesShut: 0, upright: 0 }
+  readonly pose = { x: 0, z: 0, y: 0, turn: 0, squash: 1, size: 1, headTurn: 0, headTilt: 0, shake: 0, ears: 0, tail: 0, tailUp: 0, paw: 0, pawFar: 0, lean: 0, eyesShut: 0, upright: 0 }
   private readonly going = new Going()
   private leap = spring(0)
   private upright = spring(0)
@@ -226,6 +228,8 @@ export class CatMotion {
     // A shaken paw after a gulp; on the roof, a paw washed slowly over and over.
     pose.paw = lifting < 1 ? Math.max(lift(0), lift(0.5)) : pawing < 1 && pawing > 0.3 ? Math.abs(Math.sin(pawing * Math.PI * 6)) : this.onRoof && !this.going.going ? 0.5 + 0.5 * Math.sin(this.time * 2.2) : 0
     pose.pawFar = Math.max(lift(0.25), lift(0.75))
+    // Her whole body rocks off the paw she lifts, from side to side, so the lifting shows from across the yard.
+    pose.lean = lifting < 1 ? (pose.pawFar - pose.paw) * PAW_ROCK : 0
     pose.eyesShut = this.eyes.value
     pose.upright = this.upright.value
     pose.size = this.size.value

@@ -94,19 +94,19 @@ export class Drops {
     }
   }
 
-  /** One drop that lets go of something wet (a log, a leaf, a tipped flower) and falls. */
+  /** One fat drop that lets go of something wet (a log, a tipped flower): it springs off a little way and falls. */
   drip(x: number, y: number, z: number, out = 0): void {
     const drop = this.free()
     if (!drop) return
     const turn = this.random() * Math.PI * 2
     drop.arc = null
-    drop.size = 0.085
+    drop.size = 0.12
     drop.x = x
     drop.y = y
     drop.z = z
     drop.vx = Math.cos(turn) * out
     drop.vz = Math.sin(turn) * out
-    drop.vy = 1.1
+    drop.vy = 2.4
     this.asThrown(drop, true)
   }
 

@@ -217,7 +217,7 @@ export function buildPot(plastic: THREE.Material, water: THREE.Material): PotMod
   for (let i = 0; i <= PETALS; i++) petals.setColorAt(i, i < PETALS ? pink : pink.clone().set(PAINT.bee))
   flower.add(petals)
   // The drop that hangs from a leaf's tip and falls when the flower has opened.
-  const leafDrop = named('seed-leaf-drop', [ball(0.075, WATER.body, [1, 1.2, 1], 8)], water)
+  const leafDrop = named('seed-leaf-drop', [ball(0.11, WATER.body, [1, 1.2, 1], 8)], water)
   leafDrop.visible = false
   root.add(leafDrop)
   for (const part of [shoot, leaves, bud, flower]) {

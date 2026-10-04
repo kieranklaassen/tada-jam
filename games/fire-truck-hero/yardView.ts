@@ -90,6 +90,8 @@ export class YardSet {
     this.boat.root.rotation.order = 'YXZ'
     this.wheel.root.scale.setScalar(SCALE.wheel)
     this.worm.root.scale.setScalar(SCALE.worm)
+    // She heads first and then rocks, so she rocks about the way she faces.
+    this.cat.root.rotation.order = 'YXZ'
     this.root.add(this.gate.root, this.fire.root, this.pool.root, this.duck, this.pot.root, this.bee.root, this.patch.root, this.snail.root, this.boat.root, this.wheel.root, this.cat.root, this.worm.root)
     this.own.push(this.patch.mound.material as THREE.Material, this.pot.soil.material as THREE.Material)
 
@@ -302,6 +304,7 @@ export class YardSet {
       const size = SCALE.cat * pose.size
       this.cat.root.position.set(x, base + pose.y, z)
       this.cat.root.rotation.y = -pose.turn + pose.shake
+      this.cat.root.rotation.x = pose.lean
       const wide = 1 / Math.sqrt(Math.max(0.4, pose.squash))
       this.cat.root.scale.set(size * wide, size * pose.squash, size * wide)
       this.cat.head.rotation.set(0, -pose.headTurn, pose.headTilt - pose.ears * 0.12)

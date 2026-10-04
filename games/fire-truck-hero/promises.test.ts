@@ -1,0 +1,651 @@
+// The promises of the design sheet (ART.md, above "The look") that the game
+// was found short of and now keeps, each checked against the rules or against
+// the game as it is played. A test's name is the promise.
+
+import { describe, expect, it } from 'vitest'
+import { DROPS_PER_GULP, Drops, SPLASH_PER_LANDING } from './drops'
+import { FLOWER_COLOURS, PETAL_COUNT, PETAL_SHUT, flowerOf, leafDrop, petalOpen } from './flower'
+import { CUP_TIPS_AT, Game, QUACK_AFTER_S, WORM_CLEAR, WORM_CLEAR_OF_SNAIL } from './game'
+import { cellOf } from './grid'
+import { cellAt, levelAt } from './ground'
+import { arcTo } from './jet'
+import { NOZZLE, distance, type Place } from './layout'
+import { placeOf, targetAt } from './places'
+import { KINDS, type Kind } from './things'
+import { Toy } from './toy'
+import type { VoiceSpec } from './voices'
+import { CREEP_REACH, gulpOn, gulpOnGround, type Step, type Yard, type YardEvent } from './world'
+import { ARRANGEMENTS, layOut } from './yards'
+import { catPaws, cellVoice, delayed, duckQuack, slowSizzle } from './yardVoices'
+
+const FRAME = 1 / 60
+
+/** A saved game at a place of the order, with every kind already met, so that nothing is shown unless a test asks. */
+function saved(place: string, arrangement = 0, more: Record<string, unknown> = {}): unknown {
+  return { v: 1, position: place, finished: false, yard: { place, arrangement }, seen: [...KINDS], ...more }
+}
+
+type Drop = { x: number; y: number; z: number; brown: boolean }
+
+class Table {
+  readonly heard: VoiceSpec[] = []
+  readonly game: Game
+  now = 0
+
+  constructor(raw: unknown = saved('one-thing'), childAge: number | null = null) {
+    this.game = new Game((voice) => this.heard.push(voice), raw, childAge, 7)
+  }
+
+  /** Plays frames for `seconds`. */
+  play(seconds: number, each?: () => void): this {
+    for (let frame = 0; frame < Math.round(seconds / FRAME); frame++) {
+      this.now += FRAME
+      this.game.step(FRAME, this.now)
+      each?.()
+    }
+    return this
+  }
+
+  /** One tap at a place: the water is in the air. */
+  tap(at: Place): this {
+    this.game.press({ truck: false, point: at }, this.now)
+    this.game.lift()
+    return this
+  }
+
+  /** One tap at a place, and long enough for the water to land. */
+  gulp(at: Place): this {
+    return this.tap(at).play(0.5)
+  }
+
+  gulps(at: Place, count: number): this {
+    for (let i = 0; i < count; i++) this.gulp(at)
+    return this
+  }
+
+  /** A finger held still at a place for `seconds`, and then long enough for the last of its water to land. */
+  stream(at: Place, seconds: number): this {
+    this.game.press({ truck: false, point: at }, this.now)
+    this.play(seconds)
+    this.game.lift()
+    return this.play(0.5)
+  }
+
+  /** The thing of the yard at an index: where it is. */
+  at(index: number): Place {
+    return placeOf(this.game.yard, index)
+  }
+
+  /** The index of the thing of a kind. */
+  the(kind: Kind): number {
+    return this.game.yard.things.findIndex((thing) => thing.kind === kind)
+  }
+
+  /** The drops in the air now. */
+  drops(): Drop[] {
+    const drops: Drop[] = []
+    this.game.drops.each((x, y, z, _vx, _vy, _vz, _size, brown) => drops.push({ x, y, z, brown }))
+    return drops
+  }
+
+  /** What storage would hold now, read back as a game would read it. */
+  reload(childAge: number | null = null): Table {
+    return new Table(JSON.parse(JSON.stringify(this.game.snapshot())), childAge)
+  }
+}
+
+// --- Listening ---------------------------------------------------------------
+
+const VARIANTS = [0, 1, 2]
+
+const same = (a: VoiceSpec, b: VoiceSpec) => JSON.stringify(a) === JSON.stringify(b)
+/** The voices among `heard` that are one of `voices`. */
+const those = (heard: readonly VoiceSpec[], voices: readonly VoiceSpec[]) => heard.filter((voice) => voices.some((one) => same(voice, one)))
+/** A cell's sound in each of its variants, at a fullness. */
+const cellVoices = (kind: Kind, action: Parameters<typeof cellOf>[1], fullness = 0) => VARIANTS.map((variant) => cellVoice(cellOf(kind, action).voice, fullness, variant))
+/** The duck's quack as a splash sets it off, in each of its variants. */
+const QUACKS = VARIANTS.map((variant) => delayed(duckQuack(variant), QUACK_AFTER_S))
+
+// --- The rules ---------------------------------------------------------------
+
+type Result = Extract<YardEvent, { type: 'result' }>
+type Moved = Extract<YardEvent, { type: 'moved' }>
+type Worm = Extract<YardEvent, { type: 'secret'; id: 'worm' }>
+
+const results = (events: readonly YardEvent[]) => events.filter((event): event is Result => event.type === 'result')
+const moves = (events: readonly YardEvent[]) => events.filter((event): event is Moved => event.type === 'moved')
+const worms = (events: readonly YardEvent[]) => events.filter((event): event is Worm => event.type === 'secret' && event.id === 'worm')
+const indexOf = (yard: Yard, kind: Kind) => yard.things.findIndex((thing) => thing.kind === kind)
+
+/** Gulps on one thing, one after another: every step, so a test can read the one it asks about. */
+function pours(start: Yard, index: number, count: number): Step[] {
+  const steps: Step[] = []
+  let yard = start
+  for (let i = 0; i < count; i++) {
+    const step = gulpOn(yard, index)
+    steps.push(step)
+    yard = step.yard
+  }
+  return steps
+}
+
+/** Every arrangement of every place, laid out fresh. */
+function everyYard(): Yard[] {
+  return Object.entries(ARRANGEMENTS).flatMap(([place, plans]) => plans.map((_, number) => layOut(place, number)))
+}
+
+describe('the wheel, water from a neighbour', () => {
+  it('is turned from below by run-off that passes under it, in both whole gardens where it stands on the way, and keeps no water', () => {
+    for (const number of [1, 2]) {
+      const start = layOut('whole-garden', number)
+      const pool = indexOf(start, 'pool'), wheel = indexOf(start, 'wheel')
+      expect(start.runsPast).toBe(wheel)
+      const steps = pours(start, pool, 5)
+      for (const step of steps.slice(0, 4)) expect(results(step.events).some((event) => event.kind === 'wheel')).toBe(false)
+      const over = results(steps[4].events)
+      const turned = over.findIndex((event) => event.thing === wheel && event.action === 'neighbour' && event.by === 'run-off')
+      const reached = over.findIndex((event) => event.thing === start.runsTo && event.action === 'neighbour' && event.by === 'run-off')
+      expect(turned).toBeGreaterThanOrEqual(0)
+      // The tongue passes the wheel on its way, before it reaches what it runs to.
+      expect(reached).toBeGreaterThan(turned)
+      expect(steps[4].yard.things[wheel].gulps).toBe(0)
+    }
+  })
+
+  it('happens in no yard where no wheel stands on the way down', () => {
+    for (const start of everyYard()) {
+      const pool = indexOf(start, 'pool')
+      if (pool < 0 || start.runsPast !== undefined) continue
+      for (const step of pours(start, pool, 7)) expect(results(step.events).some((event) => event.kind === 'wheel' && event.by === 'run-off')).toBe(false)
+    }
+  })
+
+  it('creaks and turns slowly in the game, and the tongue shows on the sand on both sides of it', () => {
+    const t = new Table(saved('whole-garden', 1))
+    const pool = t.at(t.the('pool')), wheel = t.at(t.the('wheel')), fire = t.at(t.the('fire'))
+    t.gulps(pool, 4)
+    expect(t.game.motion.wheel.pose.speed).toBe(0)
+    const before = t.heard.length
+    t.gulp(pool)
+    expect(those(t.heard.slice(before), cellVoices('wheel', 'neighbour'))).toHaveLength(1)
+    expect(t.game.motion.wheel.pose.speed).toBeGreaterThan(0.3)
+    expect(t.game.motion.wheel.pose.speed).toBeLessThan(1.2)
+    const half = (a: Place, b: Place) => ({ x: (a.x + b.x) / 2, z: (a.z + b.z) / 2 })
+    expect(t.game.paint.at(half(pool, wheel).x, half(pool, wheel).z).damp).toBeGreaterThan(0)
+    expect(t.game.paint.at(half(wheel, fire).x, half(wheel, fire).z).damp).toBeGreaterThan(0)
+  })
+})
+
+describe('the cat, water from a neighbour', () => {
+  it('has run-off creep toward her when she sits near a pool that runs over: she keeps dry and moves over, out of its way', () => {
+    for (const number of [0, 1]) {
+      const start = layOut('whole-garden', number)
+      const pool = indexOf(start, 'pool'), cat = indexOf(start, 'cat')
+      expect(distance(placeOf(start, cat), placeOf(start, pool))).toBeLessThanOrEqual(CREEP_REACH)
+      const steps = pours(start, pool, 6)
+      for (const step of steps.slice(0, 4)) expect(results(step.events).some((event) => event.kind === 'cat')).toBe(false)
+      const crept = results(steps[4].events).filter((event) => event.thing === cat)
+      expect(crept).toHaveLength(1)
+      expect(crept[0].action).toBe('neighbour')
+      expect(crept[0].by).toBe('run-off')
+      expect(steps[4].yard.things[cat].gulps).toBe(0)
+      expect(moves(steps[4].events).filter((event) => event.thing === cat)).toHaveLength(1)
+      expect(distance(placeOf(steps[4].yard, cat), placeOf(steps[4].yard, pool))).toBeGreaterThan(CREEP_REACH)
+      // Out of its way, the next run-off does not reach her.
+      expect(results(steps[5].events).some((event) => event.thing === cat)).toBe(false)
+    }
+  })
+
+  it('is left alone by run-off when she sits far from the pool, naps in the boat, or sits on the truck', () => {
+    const far = layOut('afloat', 1)
+    for (const step of pours(far, indexOf(far, 'pool'), 7)) expect(results(step.events).some((event) => event.kind === 'cat' && event.by === 'run-off')).toBe(false)
+    const napping = layOut('afloat', 2)
+    for (const step of pours(napping, indexOf(napping, 'pool'), 7)) expect(results(step.events).some((event) => event.kind === 'cat' && event.by === 'run-off')).toBe(false)
+    const garden = layOut('whole-garden', 1)
+    const onTruck: Yard = { ...garden, things: garden.things.map((thing) => (thing.kind === 'cat' ? { ...thing, spot: 'roof' as const } : thing)) }
+    for (const step of pours(onTruck, indexOf(onTruck, 'pool'), 7)) expect(results(step.events).some((event) => event.kind === 'cat')).toBe(false)
+  })
+
+  it('lifts her paws to the sound of paws, not a sneeze, and then walks off, in the game', () => {
+    const t = new Table(saved('whole-garden', 1))
+    const pool = t.at(t.the('pool')), cat = t.the('cat')
+    const sat = { ...t.at(cat) }
+    t.gulps(pool, 4)
+    const before = t.heard.length
+    let near = 0, far = 0
+    t.tap(pool).play(1.4, () => {
+      near = Math.max(near, t.game.motion.cat.pose.paw)
+      far = Math.max(far, t.game.motion.cat.pose.pawFar)
+    })
+    expect(those(t.heard.slice(before), [catPaws()])).toHaveLength(1)
+    expect(those(t.heard.slice(before), cellVoices('cat', 'neighbour'))).toHaveLength(0)
+    expect(near).toBeGreaterThan(0.9)
+    expect(far).toBeGreaterThan(0.9)
+    t.play(6)
+    expect(distance(t.game.motion.cat.pose, sat)).toBeGreaterThan(3)
+    expect(distance(t.game.motion.cat.pose, t.at(cat))).toBeLessThan(0.01)
+    // The tongue crept toward where she sat, and stopped short of it.
+    expect(t.game.paint.at(pool.x + (sat.x - pool.x) * 0.5, pool.z + (sat.z - pool.z) * 0.5).damp).toBeGreaterThan(0)
+    expect(t.game.paint.at(sat.x, sat.z).damp).toBe(0)
+  })
+
+  it('sneezes at drops flung from the wheel, and lifts no paw', () => {
+    const t = new Table(saved('round-and-round', 0))
+    let far = 0
+    t.stream(t.at(t.the('wheel')), 1.5)
+    t.play(0.5, () => { far = Math.max(far, t.game.motion.cat.pose.pawFar) })
+    expect(those(t.heard, cellVoices('cat', 'neighbour')).length).toBeGreaterThan(0)
+    expect(those(t.heard, [catPaws()])).toHaveLength(0)
+    expect(far).toBe(0)
+  })
+})
+
+describe('the worm', () => {
+  it('is sent up by ground brought to mud, whichever way the mud was made, once for each place, and says where', () => {
+    // Aimed at open sand.
+    let yard = layOut('one-thing', 3)
+    const sand = { x: 12.5, z: 8.1 }
+    const aimed: YardEvent[] = []
+    for (let i = 0; i < 6; i++) {
+      const step = gulpOnGround(yard, sand.x, sand.z)
+      aimed.push(...step.events)
+      yard = step.yard
+    }
+    expect(worms(aimed)).toHaveLength(1)
+    expect(cellAt(worms(aimed)[0].at.x, worms(aimed)[0].at.z)).toBe(cellAt(sand.x, sand.z))
+    // The dry patch itself, past its fill.
+    const patch = layOut('one-thing', 3)
+    const onPatch = pours(patch, 0, 5).flatMap((step) => step.events)
+    expect(worms(onPatch)).toHaveLength(1)
+    expect(distance(worms(onPatch)[0].at, placeOf(patch, 0))).toBeLessThan(0.01)
+    // A pool that runs over with nothing below it.
+    const pool = layOut('one-thing', 2)
+    const over = pours(pool, 0, 12).flatMap((step) => step.events)
+    expect(worms(over)).toHaveLength(1)
+    expect(levelAt(pours(pool, 0, 12)[11].yard.ground, worms(over)[0].at.x, worms(over)[0].at.z)).toBe('mud')
+  })
+
+  /** Plays until a worm is up or `seconds` have gone, and says where it came up. */
+  const wormWithin = (t: Table, seconds: number): Place | null => {
+    let up: Place | null = null
+    t.play(seconds, () => { if (!up && t.game.wormAt && t.game.channels.wormUp > 0.2) up = { ...t.game.wormAt } })
+    return up
+  }
+
+  it('comes up out of mud on open sand, where the mud is', () => {
+    const t = new Table(saved('one-thing', 3))
+    const sand = { x: 12.5, z: 8.1 }
+    t.gulps(sand, 3)
+    expect(t.game.wormAt).toBeNull()
+    t.tap(sand)
+    const up = wormWithin(t, 1.5)
+    expect(up).not.toBeNull()
+    expect(distance(up!, sand)).toBeLessThan(0.01)
+  })
+
+  it('comes up in the dry patch when the patch is brought to mud, clear of the snail', () => {
+    const t = new Table(saved('one-thing', 3))
+    const home = t.at(0)
+    t.gulps(home, 3).play(8)
+    t.tap(home)
+    const up = wormWithin(t, 1.5)
+    expect(up).not.toBeNull()
+    expect(distance(up!, home)).toBeLessThan(1.05)
+    const snail = { x: home.x + t.game.motion.snail.pose.x, z: home.z + t.game.motion.snail.pose.z }
+    expect(distance(up!, snail)).toBeGreaterThanOrEqual(WORM_CLEAR_OF_SNAIL)
+  })
+
+  it('comes up beside a pool whose overflow made mud, clear of the pool and of the boat that rode out', () => {
+    for (const [place, number] of [['one-thing', 2], ['afloat', 0]] as const) {
+      const t = new Table(saved(place, number))
+      const pool = t.at(t.the('pool'))
+      // Aimed at the duck's side, so a boat in the pool gets none of it.
+      const aim = { x: pool.x - 0.5, z: pool.z }
+      let up: Place | null = null
+      for (let i = 0; i < 12 && !up; i++) up = wormWithin(t.tap(aim), 0.6)
+      expect(up, `${place} ${number}`).not.toBeNull()
+      expect(levelAt(t.game.yard.ground, pool.x, pool.z + 1.5)).toBe('mud')
+      expect(distance(up!, { x: pool.x, z: pool.z + 1.5 })).toBeLessThan(2.4)
+      t.game.yard.things.forEach((_, index) => expect(distance(up!, t.at(index)), `${place} ${number}`).toBeGreaterThanOrEqual(WORM_CLEAR))
+      expect(targetAt(t.game.yard, up!.x, up!.z).on).toBe('ground')
+    }
+  })
+
+  it('waits for a scene to be over when its mud was made while the scene played, and then comes up', () => {
+    const t = new Table(saved('one-thing', 3))
+    const home = t.at(0)
+    // A finger held on the patch: the third gulp starts the snail's ending, and the stream goes on into mud.
+    t.game.press({ truck: false, point: home }, t.now)
+    let upDuringScene = false, sawScene = false
+    t.play(1.9, () => {
+      sawScene ||= t.game.sceneRunning
+      if (t.game.sceneRunning && t.game.wormAt) upDuringScene = true
+    })
+    t.game.lift()
+    expect(sawScene).toBe(true)
+    expect(levelAt(t.game.yard.ground, home.x, home.z)).toBe('mud')
+    t.play(1, () => { if (t.game.sceneRunning && t.game.wormAt && t.game.channels.wormUp === 0) upDuringScene = true })
+    expect(upDuringScene).toBe(false)
+    expect(t.game.channels.snailOut).toBeGreaterThan(0)
+    // The ending plays out, and then the worm has its turn.
+    const up = wormWithin(t, 9)
+    expect(up).not.toBeNull()
+    expect(t.game.channels.glide).toBe(1)
+  })
+})
+
+describe('the fire, water from a neighbour', () => {
+  const hiss = cellVoices('fire', 'fill', 1)
+
+  it('is put out from below by run-off with a slow sizzle, never a crackle, and then gives the long falling hiss', () => {
+    const t = new Table(saved('downhill', 2))
+    const pool = t.at(t.the('pool')), fire = t.the('fire')
+    t.gulps(pool, 4)
+    expect(those(t.heard, [slowSizzle()])).toHaveLength(0)
+    for (let over = 1; over <= 3; over++) {
+      t.gulp(pool)
+      expect(those(t.heard, [slowSizzle()])).toHaveLength(over)
+      expect(t.game.yard.things[fire].gulps).toBe(over)
+    }
+    expect(t.game.yard.met).toBe(true)
+    t.play(8)
+    expect(those(t.heard, cellVoices('fire', 'neighbour'))).toHaveLength(0)
+    expect(those(t.heard, hiss)).toHaveLength(1)
+    expect(t.game.motion.fire.pose.flame).toBeLessThan(0.02)
+    expect(t.game.motion.fire.pose.wet).toBe(true)
+  })
+
+  it('gives the long falling hiss exactly once when aimed gulps put it out', () => {
+    const t = new Table(saved('one-thing', 0))
+    t.gulps(t.at(0), 3).play(8)
+    expect(those(t.heard, hiss)).toHaveLength(1)
+  })
+
+  it('still spits and crackles at drops flung from the wheel', () => {
+    const t = new Table(saved('round-and-round', 1))
+    t.stream(t.at(t.the('wheel')), 1.2)
+    expect(those(t.heard, cellVoices('fire', 'neighbour')).length).toBeGreaterThan(0)
+    expect(those(t.heard, [slowSizzle()])).toHaveLength(0)
+  })
+})
+
+describe('the paddling pool and the duck', () => {
+  it('bonks when empty, and then each splash sounds deeper than the one before, up to its fill', () => {
+    const t = new Table(saved('one-thing', 2))
+    const pool = t.at(0)
+    const pitches: number[] = []
+    for (let gulp = 1; gulp <= 4; gulp++) {
+      const before = t.heard.length
+      t.gulp(pool)
+      const heard = t.heard.slice(before)
+      const bonks = those(heard, cellVoices('pool', 'gulp', gulp / 4))
+      const splashes = those(heard, cellVoices('pool', 'fill', gulp / 4))
+      expect(bonks, `gulp ${gulp}`).toHaveLength(gulp === 1 ? 1 : 0)
+      expect(splashes, `gulp ${gulp}`).toHaveLength(gulp === 1 ? 0 : 1)
+      if (splashes.length > 0) pitches.push(splashes[0][0].frequency)
+    }
+    expect(pitches).toHaveLength(3)
+    expect(pitches[1]).toBeLessThan(pitches[0])
+    expect(pitches[2]).toBeLessThan(pitches[1])
+  })
+
+  it('has the duck quack every time the hose reaches its pool: at each gulp, at too much, and at a sweep', () => {
+    const t = new Table(saved('one-thing', 2))
+    const pool = t.at(0)
+    for (let gulp = 1; gulp <= 6; gulp++) {
+      const before = t.heard.length
+      t.gulp(pool)
+      expect(those(t.heard.slice(before), QUACKS), `gulp ${gulp}`).toHaveLength(1)
+    }
+    // A fast stream across it.
+    const before = t.heard.length
+    t.game.press({ truck: false, point: { x: pool.x - 3, z: pool.z } }, t.now)
+    for (let frame = 0; frame < 36; frame++) {
+      t.game.move({ x: pool.x - 3 + (frame / 36) * 6, z: pool.z })
+      t.play(FRAME)
+    }
+    t.game.lift()
+    t.play(0.5)
+    expect(those(t.heard.slice(before), cellVoices('pool', 'sweep', 1)).length).toBeGreaterThan(0)
+    expect(those(t.heard.slice(before), QUACKS).length).toBeGreaterThan(0)
+  })
+})
+
+describe('what was only heard and is now drawn', () => {
+  const brown = (t: Table) => t.drops().filter((drop) => drop.brown).length
+
+  it('throws brown blobs from a landing on mud, and none from damp sand or a puddle', () => {
+    const t = new Table(saved('one-thing', 3))
+    const sand = { x: 12.5, z: 8.1 }
+    let blobs = 0
+    for (let gulp = 0; gulp < 4; gulp++) t.tap(sand).play(0.5, () => { blobs = Math.max(blobs, brown(t)) })
+    expect(levelAt(t.game.yard.ground, sand.x, sand.z)).toBe('mud')
+    expect(blobs).toBe(0)
+    t.tap(sand).play(0.5, () => { blobs = Math.max(blobs, brown(t)) })
+    expect(blobs).toBeGreaterThanOrEqual(3)
+    // They fall back and are gone.
+    t.play(1.5)
+    expect(brown(t)).toBe(0)
+  })
+
+  it('throws brown blobs when the dry patch is brought to mud', () => {
+    const t = new Table(saved('one-thing', 3))
+    let blobs = 0
+    for (let gulp = 0; gulp < 3; gulp++) t.tap(t.at(0)).play(0.5, () => { blobs = Math.max(blobs, brown(t)) })
+    expect(blobs).toBe(0)
+    t.tap(t.at(0)).play(0.5, () => { blobs = Math.max(blobs, brown(t)) })
+    expect(blobs).toBeGreaterThanOrEqual(3)
+  })
+
+  it('lets the wet logs drip twice as the fire\'s ending plays: two drops, one after the other', () => {
+    const t = new Table(saved('one-thing', 0))
+    const fire = t.at(0)
+    t.gulps(fire, 3)
+    // The splashes of the last gulp fall back first.
+    t.play(0.6)
+    const nearLogs = () => t.drops().filter((drop) => distance(drop, fire) < 1.2).length
+    expect(nearLogs()).toBe(0)
+    let rises = 0, was = 0
+    t.play(2.4, () => {
+      const now = nearLogs()
+      if (was === 0 && now > 0) rises++
+      was = now
+    })
+    expect(rises).toBe(2)
+  })
+
+  it('lets go of nothing when a touch ends the fire\'s ending early', () => {
+    const t = new Table(saved('one-thing', 0))
+    const fire = t.at(0)
+    t.gulps(fire, 3)
+    t.play(0.6)
+    t.game.rest()
+    expect(t.drops()).toHaveLength(0)
+  })
+
+  it('tips three drops out of the flower\'s cup as it nods over, and not before', () => {
+    const t = new Table(saved('one-thing', 1))
+    const seed = t.at(0)
+    t.gulps(seed, 3).play(8)
+    t.tap(seed).play(0.36)
+    // Above the reach of any splash, and near the flower.
+    const tipped = () => t.drops().filter((drop) => drop.y > 1.3 && distance(drop, seed) < 1.5).length
+    expect(tipped()).toBe(0)
+    let first = 0, nodThen = 0
+    t.play(1.2, () => {
+      if (first === 0 && tipped() > 0) {
+        first = tipped()
+        nodThen = t.game.motion.seed.pose.nod
+      }
+    })
+    expect(first).toBe(3)
+    expect(nodThen).toBeGreaterThanOrEqual(CUP_TIPS_AT)
+    // One nod tips once.
+    t.play(2)
+    expect(tipped()).toBe(0)
+  })
+
+  it('leaves small dots where the splash drops of a tap fall back, beside the blot', () => {
+    const tap = (share: number) => {
+      const toy = new Toy(() => {})
+      toy.dropsShare = share
+      toy.press({ truck: false, point: { x: 9, z: 4 } }, 0)
+      toy.lift()
+      let now = 0
+      for (let frame = 0; frame < 90; frame++) toy.step(FRAME, (now += FRAME))
+      let damp = 0
+      for (let x = 5; x < 13; x += 0.125) for (let z = 1; z < 8; z += 0.125) if (toy.paint.at(x, z).damp > 0) damp++
+      return damp
+    }
+    // With no splash drops there are no dots: the blot alone is smaller.
+    expect(tap(1)).toBeGreaterThan(tap(0) + 8)
+  })
+
+  it('counts a dot for every splash drop of a gulp, and none for the small spit of a first showing', () => {
+    const arc = arcTo(NOZZLE, { x: 9, z: 4 })
+    const run = (start: (drops: Drops) => void) => {
+      const drops = new Drops()
+      start(drops)
+      let dots = 0, landings = 0
+      for (let frame = 0; frame < 120; frame++) drops.step(FRAME, () => landings++, SPLASH_PER_LANDING, () => dots++)
+      return { dots, landings, left: drops.alive }
+    }
+    expect(run((drops) => drops.gulp(arc))).toEqual({ dots: DROPS_PER_GULP * SPLASH_PER_LANDING, landings: DROPS_PER_GULP, left: 0 })
+    expect(run((drops) => drops.spit(arc))).toEqual({ dots: 0, landings: 0, left: 0 })
+    // Drops flung off a wheel or a wet cat leave theirs, and blobs of mud leave none.
+    expect(run((drops) => drops.burst(9, 1, 4, 6, 2)).dots).toBe(6)
+    expect(run((drops) => drops.blobs(9, 4)).dots).toBe(0)
+  })
+})
+
+describe('the flower', () => {
+  it('opens in the colour of its arrangement: always the same for one yard, and not one colour for all', () => {
+    const seen = new Set<number>()
+    for (const [place, plans] of Object.entries(ARRANGEMENTS)) {
+      plans.forEach((plan, number) => {
+        if (!plan.things.some((thing) => thing.kind === 'seed')) return
+        const colour = flowerOf(place, number)
+        expect(colour).toBe(flowerOf(place, number))
+        expect(Number.isInteger(colour) && colour >= 0 && colour < FLOWER_COLOURS).toBe(true)
+        seen.add(colour)
+      })
+    }
+    expect(seen.size).toBe(FLOWER_COLOURS)
+    for (const odd of [-1, 1.5, Number.NaN]) expect(flowerOf('no-such-place', odd)).toBe(0)
+  })
+
+  it('opens petal by petal: while one petal opens, every earlier one is open and every later one shut', () => {
+    for (let step = 0; step <= 100; step++) {
+      const open = step / 100
+      const petals = Array.from({ length: PETAL_COUNT }, (_, index) => petalOpen(open, index))
+      const opening = petals.findIndex((petal) => petal > PETAL_SHUT && petal < 1)
+      petals.forEach((petal, index) => {
+        expect(petal).toBeGreaterThanOrEqual(PETAL_SHUT)
+        expect(petal).toBeLessThanOrEqual(1)
+        if (opening >= 0 && index < opening) expect(petal).toBe(1)
+        if (opening >= 0 && index > opening) expect(petal).toBe(PETAL_SHUT)
+      })
+    }
+    for (let index = 0; index < PETAL_COUNT; index++) {
+      expect(petalOpen(0, index)).toBe(PETAL_SHUT)
+      expect(petalOpen(1, index)).toBe(1)
+      expect(petalOpen(Number.NaN, index)).toBe(PETAL_SHUT)
+      expect(petalOpen(7, index)).toBe(1)
+      expect(petalOpen(-3, index)).toBe(PETAL_SHUT)
+    }
+  })
+
+  it('has a drop hang from a leaf, let go, and fall faster as it goes; before its beat and after it there is none', () => {
+    for (const out of [0, 1, -1, 2, Number.NaN]) expect(leafDrop(out)).toEqual({ size: 0, fallen: 0 })
+    let size = 0, fallen = 0, lastStep = 0
+    for (let step = 1; step < 100; step++) {
+      const drop = leafDrop(step / 100)
+      expect(drop.size).toBeGreaterThanOrEqual(size)
+      expect(drop.fallen).toBeGreaterThanOrEqual(fallen)
+      // It does not fall until it is full.
+      if (drop.fallen > 0) {
+        expect(drop.size).toBe(1)
+        expect(drop.fallen - fallen).toBeGreaterThanOrEqual(lastStep - 1e-12)
+        lastStep = drop.fallen - fallen
+      }
+      size = drop.size
+      fallen = drop.fallen
+    }
+    expect(fallen).toBeGreaterThan(0.9)
+  })
+
+  it('opens petal by petal in the game, to five notes, each higher than the last', () => {
+    const t = new Table(saved('one-thing', 1))
+    t.gulps(t.at(0), 2)
+    const before = t.heard.length
+    const opened: number[] = []
+    t.tap(t.at(0)).play(3.4, () => {
+      const open = Array.from({ length: PETAL_COUNT }, (_, index) => petalOpen(t.game.channels.petals, index)).filter((petal) => petal === 1).length
+      if (opened[opened.length - 1] !== open) opened.push(open)
+    })
+    expect(opened).toEqual([0, 1, 2, 3, 4, 5])
+    expect(t.heard.length).toBeGreaterThan(before + PETAL_COUNT)
+  })
+})
+
+describe('the snail', () => {
+  it('glides along the line the child drew, the same shape, to the wettest place', () => {
+    const t = new Table(saved('one-thing', 3))
+    const home = t.at(0)
+    // A line of water from just beside the patch, away from it and round a corner.
+    const line = [{ x: 9.5, z: 6.5 }, { x: 10.5, z: 6.5 }, { x: 11.5, z: 6.5 }, { x: 11.5, z: 5.5 }]
+    for (const at of line) t.gulp(at)
+    t.gulps(home, 3)
+    const passed: number[] = []
+    t.play(8, () => {
+      const at = { x: home.x + t.game.motion.snail.pose.x, z: home.z + t.game.motion.snail.pose.z }
+      line.forEach((point, index) => { if (distance(at, point) < 0.3 && !passed.includes(index)) passed.push(index) })
+    })
+    expect(passed).toEqual([0, 1, 2, 3])
+    const end = { x: home.x + t.game.motion.snail.pose.x, z: home.z + t.game.motion.snail.pose.z }
+    expect(distance(end, line[3])).toBeLessThan(0.01)
+  })
+
+  it('stays on its patch when the sand round it is dry, and is found on its patch after the game was put away', () => {
+    const dry = new Table(saved('one-thing', 3))
+    const home = dry.at(0)
+    dry.gulps(home, 3).play(8)
+    expect(distance({ x: home.x + dry.game.motion.snail.pose.x, z: home.z + dry.game.motion.snail.pose.z }, home)).toBeLessThan(0.8)
+
+    const t = new Table(saved('one-thing', 3))
+    for (const at of [{ x: 9.5, z: 6.5 }, { x: 10.5, z: 6.5 }, { x: 11.5, z: 6.5 }]) t.gulp(at)
+    t.gulps(home, 3).play(8)
+    expect(Math.hypot(t.game.motion.snail.pose.x, t.game.motion.snail.pose.z)).toBeGreaterThan(2)
+    // How far it had glided is short-lived: on load it is on its patch, out, and no scene replays.
+    const again = t.reload()
+    again.play(FRAME)
+    expect(Math.hypot(again.game.motion.snail.pose.x, again.game.motion.snail.pose.z)).toBeLessThan(0.8)
+    expect(again.game.sceneRunning).toBe(false)
+    expect(again.game.motion.snail.pose.out).toBeGreaterThan(0.9)
+  })
+})
+
+describe('the cat and a fire that has gone out', () => {
+  it('turns her back with her tail up, and is found that way, with nothing easing in', () => {
+    const t = new Table(saved('two-things', 2))
+    const cat = t.the('cat')
+    t.play(1)
+    const faced = t.game.motion.cat.pose.turn
+    t.gulps(t.at(t.the('fire')), 3).play(9)
+    const pose = { ...t.game.motion.cat.pose }
+    expect(Math.abs(Math.atan2(Math.sin(pose.turn - faced), Math.cos(pose.turn - faced)))).toBeGreaterThan(1.2)
+    expect(pose.tailUp).toBeGreaterThan(0.95)
+    // Her back is to the truck: the way she faces points away from it.
+    const at = t.at(cat)
+    const fromTruck = Math.atan2(at.z - 5.4, at.x - 2.6)
+    expect(Math.cos(pose.turn - fromTruck)).toBeGreaterThan(0.98)
+    const again = t.reload()
+    again.play(FRAME)
+    const found = again.game.motion.cat.pose
+    expect(Math.abs(Math.atan2(Math.sin(found.turn - pose.turn), Math.cos(found.turn - pose.turn)))).toBeLessThan(0.02)
+    expect(Math.abs(found.tailUp - pose.tailUp)).toBeLessThan(0.02)
+    const first = found.turn
+    again.play(2)
+    expect(again.game.motion.cat.pose.turn).toBeCloseTo(first, 4)
+  })
+})

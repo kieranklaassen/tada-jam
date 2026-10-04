@@ -14,14 +14,14 @@ export const WAY_MOST = 8
 /** With no wet sand to go to it glides across its own patch, to here from the patch's middle. */
 export const ACROSS: Place = { x: -0.5, z: -0.24 }
 
-/** How far from the patch's middle the way may begin: just past the patch's own reach, where the sand first takes water. */
-export const FIRST_REACH = 2.3
+/** How far from the patch's middle the way may begin: a line that comes this near the patch is joined to it. */
+export const FIRST_REACH = 3.0
 
 /**
  * The way from the patch at `home`, as points measured from `home`. It begins
- * on the wettest wet cell beside the patch and goes on, cell by cell, to the
- * wettest wet cell next to it, or over a gap of one cell where the line was
- * drawn fast. It never curls back on itself, and it ends on the wettest cell
+ * on the nearest wet cell by the patch and goes on, cell by cell, to the
+ * nearest wet cell next to it (the wetter of two as near), or over a gap of
+ * one cell where the line was drawn fast. It never curls back on itself, and it ends on the wettest cell
  * it reached, the furthest such cell if several are as wet. With no wet cell
  * beside the patch, or none it may pass to, it is the short way across the
  * patch: a snail does not cross dry sand.
@@ -33,23 +33,25 @@ export function snailWay(ground: Ground, home: Place, others: readonly Place[]):
   const way: number[] = []
   let from: Place = home
   const beside = (a: Place, b: Place) => Math.max(Math.abs(a.x - b.x), Math.abs(a.z - b.z)) < 1.5
-  /** The wet cells it may go on to from where it is: `near` picks them, and of two as wet the nearer wins. */
+  /** The wet cell it goes on to from where it is, of those `near` picks. */
   const next = (near: (at: Place) => boolean): number => {
     let best = -1
     for (let cell = 0; cell < COLS * ROWS; cell++) {
       const at = centreOf(cell)
-      if (seen.has(cell) || !(ground[cell] > 0) || !near(at)) continue
+      // The patch's own reach takes its water as the patch: the sand, and the way, begin outside it.
+      if (seen.has(cell) || !(ground[cell] > 0) || distance(at, home) <= PATCH_REACH || !near(at)) continue
       // It does not curl back: no cell beside one it passed before the one it has just left.
       if (way.slice(0, -2).some((earlier) => beside(at, centreOf(earlier)))) continue
       // The leg there is clear at its end and at its middle.
       if (!clear(at) || !clear({ x: (from.x + at.x) / 2, z: (from.z + at.z) / 2 })) continue
-      if (best < 0 || ground[cell] > ground[best] || (ground[cell] === ground[best] && distance(from, at) < distance(from, centreOf(best)))) best = cell
+      // The nearest wet cell is the next of the line, which keeps the line's shape; of two as near, the wetter.
+      const gap = distance(from, at), bestGap = best < 0 ? Infinity : distance(from, centreOf(best))
+      if (gap < bestGap - 0.01 || (Math.abs(gap - bestGap) <= 0.01 && ground[cell] > ground[best])) best = cell
     }
     return best
   }
   const within = (cells: number) => (at: Place) => Math.max(Math.abs(at.x - from.x), Math.abs(at.z - from.z)) < cells + 0.5
-  // The patch's own reach takes its water as the patch: the sand begins outside it.
-  let cell = next((at) => distance(at, home) > PATCH_REACH && distance(at, home) <= FIRST_REACH)
+  let cell = next((at) => distance(at, home) <= FIRST_REACH)
   while (cell >= 0 && way.length < WAY_MOST) {
     way.push(cell)
     seen.add(cell)

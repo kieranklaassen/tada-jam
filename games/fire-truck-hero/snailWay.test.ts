@@ -50,8 +50,17 @@ describe("the snail's way along the wet", () => {
     expect(cellsOf(snailWay(wet(dryGround(), line, 1), HOME, []))).toEqual(line)
   })
 
-  it('begins only beside the patch: wet sand a step further off is not joined to it', () => {
-    expect(snailWay(wet(dryGround(), [cell(10, 5), cell(11, 5)], 1), HOME, [])).toEqual([ACROSS])
+  it('begins only near the patch: wet sand further off is not joined to it', () => {
+    expect(snailWay(wet(dryGround(), [cell(11, 5), cell(12, 5)], 1), HOME, [])).toEqual([ACROSS])
+  })
+
+  it('never goes back onto its own patch, however wet the patch is', () => {
+    // The patch has had its fill, so the cell under it is the wettest in the yard.
+    const line = [cell(9, 5), cell(10, 5), cell(11, 5)]
+    const ground = wet(wet(dryGround(), [cellAt(HOME.x, HOME.z)], PUDDLE_AT), line, 1)
+    expect(cellsOf(snailWay(ground, HOME, []))).toEqual(line)
+    // With nothing wet but the patch itself it stays on it.
+    expect(snailWay(wet(dryGround(), [cellAt(HOME.x, HOME.z)], MUD_AT), HOME, [])).toEqual([ACROSS])
   })
 
   it('never turns back on itself in a wide wet place', () => {

@@ -59,6 +59,7 @@ export default {
     'steam',
     'ripples',
     'hanging-drop',
+    'seed-leaf-drop',
     'peek-puff',
     // Soft contact shadows and the idle ring: flat decals with depth writing off, drawn over the sand.
     'shadows',
@@ -67,6 +68,8 @@ export default {
     // The demonstration hand hovers over what it points at and is drawn see-through.
     'guide-hand',
   ],
+  // The five petals of the flower and its heart are instances of one ball: together they are one flower.
+  instances: [{ match: 'seed-petals', per: 6 }],
   allow: [
     // The truck's own joints.
     { a: 'truck-shell', b: 'truck-yoke', upTo: 0.4, reason: "the nozzle's yoke turns in its socket on top of the pedestal, which is part of the shell" },
@@ -260,6 +263,45 @@ export default {
         await d.wait(3000)
         await gulps(d, BELL, 3, 1.3)
         await d.wait(5600)
+      },
+    },
+    {
+      // The pool runs over: its run-off bends past the wheel and turns it, puts the fire out from below, and creeps
+      // toward the cat, who lifts her paws, moves over, and turns her back on the wet logs.
+      name: 'run-off-past-the-wheel-to-the-fire',
+      run: async (d) => {
+        await yard(d, 'whole-garden', 1)
+        await d.wait(1000)
+        await gulps(d, [6.2, 2.8], 5, 0, 500)
+        await d.wait(3600)
+        await gulps(d, [6.2, 2.8], 2, 0, 700)
+        await d.wait(8000)
+      },
+    },
+    {
+      // The other whole garden: the cat floats out in the boat, the run-off passes the wheel to the dry patch,
+      // the snail comes out, and more run-off makes mud of the patch and brings up the worm.
+      name: 'run-off-past-the-wheel-to-the-patch',
+      run: async (d) => {
+        await yard(d, 'whole-garden', 2)
+        await d.wait(1000)
+        await gulps(d, [9.8, 2.6], 7, 0, 500)
+        await d.wait(8000)
+        await gulps(d, [9.8, 2.6], 2, 0, 700)
+        await d.wait(4500)
+      },
+    },
+    {
+      // The child draws a line of water away from the patch and then waters the patch: the snail glides along
+      // the line. Mud on the patch then brings the worm up in it, with the snail away.
+      name: 'snail-follows-the-line',
+      run: async (d) => {
+        await yard(d, 'one-thing', 3)
+        for (const point of [[9.5, 6.5], [10.5, 6.5], [11.5, 6.5], [12.5, 5.5], [13.5, 4.5], [13.5, 4.5]] as const) await gulps(d, point, 1, 0, 450)
+        await gulps(d, SPOT[2], 3)
+        await d.wait(8200)
+        await gulps(d, SPOT[2], 2)
+        await d.wait(4600)
       },
     },
     { name: 'rest', run: (d) => d.wait(5000) },

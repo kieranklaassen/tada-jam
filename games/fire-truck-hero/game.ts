@@ -47,7 +47,7 @@ export const AT_REST_AFTER_S = 1.1
 /** The duck's quack comes this long after the splash that set it off, in seconds. */
 export const QUACK_AFTER_S = 0.09
 /** How near a thing's middle a worm may come up, and how near the snail. */
-export const WORM_CLEAR = 1.5
+export const WORM_CLEAR = 1.7
 export const WORM_CLEAR_OF_SNAIL = 0.85
 /** How far the flower's cup has nodded over when its water tips out, as a share of the whole nod. */
 export const CUP_TIPS_AT = 0.85
@@ -462,7 +462,7 @@ export class Game extends Toy {
       if (cellAt(point.x, point.z) < 0 || !(on.on === 'ground' || (on.on === 'thing' && on.index === patch))) return false
       return taken.every((other) => distance(other, point) >= WORM_CLEAR) && (snail === null || distance(snail, point) >= WORM_CLEAR_OF_SNAIL)
     }
-    const beside = [[0, 0], [-0.6, 0.5], [0.6, 0.5], [-0.6, -0.5], [0.6, -0.5], [0, 1.6], [-1.6, 0], [1.6, 0], [0, -1.6], [-1.6, 1.6], [1.6, 1.6], [-1.6, -1.6], [1.6, -1.6]].map(([x, z]) => ({ x: at.x + x, z: at.z + z }))
+    const beside = [[0, 0], [-0.6, 0.5], [0.6, 0.5], [-0.6, -0.5], [0.6, -0.5], [-1.2, 0.6], [1.2, 0.6], [0, 1.6], [-1.6, 0], [1.6, 0], [0, -1.6], [-1.6, 1.6], [1.6, 1.6], [-1.6, -1.6], [1.6, -1.6]].map(([x, z]) => ({ x: at.x + x, z: at.z + z }))
     const up = beside.find(free)
     if (!up) return
     this.wormAt = up
