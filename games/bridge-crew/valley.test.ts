@@ -5,7 +5,8 @@ import type { Pen } from './look'
 import { WATER } from './pose'
 import { MARGIN, groundAt, plotFor } from './sheet'
 import { COLS, VARIANTS, site, type Site } from './sites'
-import { FAINT, SKY, desk, farBridge, finds, mugAt, paintDesk, paintUnderground, paintValley, reaches, siteSeed, skyline, trees, windmill } from './valley'
+import { CHIEF } from './toy'
+import { CHIEF_MARGIN, FAINT, SKY, desk, farBridge, finds, mugAt, paintDesk, paintUnderground, paintValley, reaches, siteSeed, skyline, trees, windmill } from './valley'
 
 const every: Site[] = LADDER.flatMap((id) => Array.from({ length: VARIANTS }, (_, v) => site(id, v)))
 
@@ -52,20 +53,24 @@ describe('the valley the gap is in', () => {
     }
   })
 
-  it('a windmill stands on the hills over the near bank, well back from the lip, where the bank is long enough for a hill', () => {
+  it('a windmill stands on the hills over the near bank, well back from the lip, and never behind the chief and its model', () => {
+    // The chief's corner, as the valley knows it, holds the chief's ledge and the model on it.
+    expect(CHIEF_MARGIN.right).toBeGreaterThanOrEqual(CHIEF.x + 4.6)
+    expect(CHIEF_MARGIN.low).toBeLessThanOrEqual(CHIEF.y - 0.3)
     let mills = 0
     for (const at of every) {
       const mill = windmill(at)
       if (at.left[0] - 5.2 < 0.8) { expect(mill, at.id).toBeNull(); continue }
+      if (!mill) continue
       mills++
-      expect(mill![0]).toBeLessThan(at.left[0] - 4)
-      expect(mill![0]).toBeGreaterThan(0)
-      // Its sails, most of a cell long, clear the road and stay under the sky's top.
-      expect(mill![1] - 0.8).toBeGreaterThan(at.left[1] + 0.5)
-      expect(mill![1] + 0.8).toBeLessThan(SKY.high + 1)
+      expect(mill[0]).toBeLessThan(at.left[0] - 4)
+      // Its sails, most of a cell long, clear the road, and either stand right of the chief's corner or under it.
+      expect(mill[1] - 0.8).toBeGreaterThan(at.left[1] + 0.5)
+      expect(mill[0] - 0.8 >= CHIEF_MARGIN.right || mill[1] + 0.8 <= CHIEF_MARGIN.low, at.id).toBe(true)
       expect(windmill(at)).toBe(mill)
+      for (const tree of trees(at)) expect(Math.abs(tree.x - mill[0])).toBeGreaterThanOrEqual(1.3)
     }
-    expect(mills).toBeGreaterThan(every.length / 2)
+    expect(mills).toBeGreaterThan(every.length / 3)
   })
 
   it('trees stand on the banks, behind the road, clear of both lips and of the cliffs', () => {

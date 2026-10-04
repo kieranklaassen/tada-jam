@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { IdleLadder } from './guidance'
 import { stream, type Pen } from './look'
 import { CROSSINGS, part } from './bridges.fixture'
-import { RAIL_TILT, reactPose } from './acts'
+import { RAIL_TILT, givePose, reactPose, waitPose, ROUND } from './acts'
+import { IDLES, REACTS, crewPose, type CrewAct } from './crew'
+import { crewFigure } from './crewfig'
 import { vehicle } from './fleet'
 import { MODEL } from './game'
 import { ROLL, TRAY, bays, tools, waitAt } from './layout'
@@ -191,6 +193,45 @@ describe('the toy drawn', () => {
     // On a rail the back wheels come off the stick and never go under it.
     expect(RAIL_TILT).toBeGreaterThan(0)
     expect(RAIL_TILT).toBeLessThan(0.2)
+  })
+
+  it('draws the look pass with real numbers and no text: the crew in every act, every driver\'s face, a splash over a vehicle, marks, and a poked crew', () => {
+    const { pen, calls, canvas } = recording()
+    const clean = (what: string) => {
+      for (const n of numbers(calls)) if (!Number.isFinite(n)) throw new Error(`a number that is not real in ${what}`)
+      // The only text ever drawn is a whole number beside a vehicle's crates or the trolley's weights, through the symbols module.
+      const text = calls.filter((call) => call.name === 'fillText' || call.name === 'strokeText')
+      for (const call of text) expect(String(call.args[0]), what).toMatch(/^[1-6]$/)
+      return text.length
+    }
+    for (const who of ['beaver', 'mole'] as const) for (const act of [...Object.keys(IDLES[who]), ...Object.keys(REACTS[who]), 'rest', 'brace'] as CrewAct[]) for (let t = 0; t <= 1.0001; t += 0.1) {
+      calls.length = 0
+      crewFigure(pen, who, 300, 500, 53, { ...crewPose(who, act, t), lookX: 0.7, lookY: -0.4 }, stream(41))
+      expect(calls.length).toBeGreaterThan(40)
+      expect(clean(`${who} ${act} ${t}`)).toBe(0)
+    }
+    for (const id of ['post-van', 'jelly-truck', 'piano-mover', 'giraffe-bus', 'caterpillar-bus'] as const) for (const pose of [waitPose(id, ROUND[id] * 0.36, true), givePose(id, 1, { fall: 0.5, paddle: 0, climb: 0, shake: 0 }), givePose(id, 1, { fall: 1, paddle: 0.5, climb: 0, shake: 0 }), givePose(id, 1, { fall: 1, paddle: 1, climb: 1, shake: 0.5 })]) {
+      calls.length = 0
+      vehicle(pen, id, 48, pose, 1.3, stream(1))
+      clean(id)
+    }
+    // The running game: a give with its splash, marks from touches, and both crew poked.
+    const view = new View(1, canvas)
+    view.size(1180, 820, 2, true)
+    const game = new Game(freshSave(null), stream(5))
+    const frame = (seconds: number) => { let most = 0; for (let i = 0; i < seconds * 30; i++) { game.step(1 / 30); calls.length = 0; most = Math.max(most, view.draw(pen, game, null)); clean('the game') } return most }
+    const rest = frame(1)
+    game.press(10, 6); game.dragStart(); game.dragMove(14, 6); game.dragEnd()
+    expect(game.marks.length).toBeGreaterThan(1)
+    frame(0.3)
+    game.press(...game.crewAt('beaver')); game.tap(); game.press(game.crewAt('mole')[0], game.crewAt('mole')[1] + 0.5); game.tap()
+    game.press(8.8, 7); game.tap()
+    let withSplash = 0
+    for (let i = 0; i < 30 * 7; i++) { game.step(1 / 30); calls.length = 0; const drawn = view.draw(pen, game, null); clean('the give'); if (game.splash && game.splash.since < 1) withSplash = Math.max(withSplash, drawn) }
+    expect(withSplash).toBeGreaterThan(0)
+    // The whole of the look pass costs a frame a few tens of things, on any sheet.
+    expect(rest).toBeLessThan(40)
+    expect(withSplash).toBeLessThan(50)
   })
 
   it('maps a touch back to the grid it draws on, at any size', () => {

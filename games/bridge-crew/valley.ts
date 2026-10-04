@@ -79,8 +79,13 @@ export function farBridge(at: Site): { x0: number; x1: number; y: number } {
 export const windmill = kept((at: Site): readonly [number, number] | null => {
   const x = at.left[0] - 5.2
   if (x < 0.8) return null
-  return [x, at.left[1] + Math.max(skyline(at, x, 0), skyline(at, x, 1)) + 0.95]
+  const cap = at.left[1] + Math.max(skyline(at, x, 0), skyline(at, x, 1)) + 0.95
+  // On a sheet whose road is high, the hill would put it behind the chief and its model: no windmill there.
+  if (x - 0.8 < CHIEF_MARGIN.right && cap + 0.8 > CHIEF_MARGIN.low) return null
+  return [x, cap]
 })
+/** The corner of the sheet the chief and its model stand in: left of this x and above this y, in cells (toy.ts has the chief's own place). */
+export const CHIEF_MARGIN = { right: 5.6, low: 10.5 } as const
 
 /** The trees along a bank, behind the road: where each stands, how tall, and which kind. Clear of the lips and of the cliffs. */
 export function trees(at: Site): { x: number; tall: number; kind: 'round' | 'pine' | 'poplar' }[] {
@@ -90,7 +95,7 @@ export function trees(at: Site): { x: number; tall: number; kind: 'round' | 'pin
       const pick = random(), tall = 1.5 + random() * 1.3
       if (at.anchors.some(([ax]) => Math.abs(ax - x) < 2.3)) continue
       // And clear of the windmill, which stands on the hill behind.
-      if (Math.abs(x - (at.left[0] - 5.2)) < 1.3 && at.left[0] - 5.2 >= 0.8) continue
+      if (windmill(at) && Math.abs(x - (at.left[0] - 5.2)) < 1.3) continue
       out.push({ x, tall, kind: pick < 0.45 ? 'round' : pick < 0.8 ? 'pine' : 'poplar' })
     }
   }
