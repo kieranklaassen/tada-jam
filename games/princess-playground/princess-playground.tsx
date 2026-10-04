@@ -101,7 +101,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
         else if (cue.type === 'dimple') stage.map.dimple(cue.x, cue.z, cue.radius, cue.depth)
         else if (cue.type === 'groove') stage.map.groove(cue.x0, cue.z0, cue.x1, cue.z1, 0.2)
         else if (cue.type === 'bite') stage.map.bite(cue.x, PLANK.halfWidth, cue.strength)
-        else if (cue.type === 'ring') stage.map.ring(cue.x, cue.z, cue.radius)
+        else if (cue.type === 'swirl') stage.map.swirl(cue.x, cue.z, cue.radius)
         // The rake itself is drawn across by the stage, which rakes the sand behind it.
       }
       if (game.wantsSave !== 'no') {

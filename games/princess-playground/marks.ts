@@ -3,7 +3,7 @@ import { PLANK, TRAY } from './world'
 // The marks in the sand as a coarse grid: what is saved of a surface the
 // child can draw on anywhere. 32 by 20 cells, one digit each: 0 is smooth
 // sand, 1 is raked sand, and 2 to 9 say how deep a mark is. Dimples, grooves,
-// bite marks, craters, hollows and Dot's ring are all kept this way. Pure.
+// bite marks, craters, hollows and Dot's swirl are all kept this way. Pure.
 // The view draws its own fine strokes while the child plays; on a load each
 // cell is drawn from its digit alone, and anything finer is not kept.
 
@@ -72,12 +72,24 @@ export function furrow(marks: Marks, x0: number, z0: number, x1: number, z1: num
   }
 }
 
-/** Dot's ring: the cells a circle of `radius` round (x, z) passes through. Drawn once, when Dot is left alone. */
-export function ring(marks: Marks, x: number, z: number, radius: number, depth = 3): void {
-  const steps = 24
-  for (let i = 0; i < steps; i++) {
-    const angle = (i / steps) * Math.PI * 2
-    const { col, row } = cellOf(x + Math.cos(angle) * radius, z + Math.sin(angle) * radius)
+/** How many times Dot's swirl winds round. More than twice, so that it is a swirl and never a ring or a letter. */
+export const SWIRL_TURNS = 2.25
+
+/** A point of Dot's swirl, for `t` from 0 at its inner end to 1 at its outer end, in units of its radius. */
+export function swirlPoint(t: number): { dx: number; dz: number } {
+  const angle = t * Math.PI * 2 * SWIRL_TURNS, r = 0.34 + 0.66 * t
+  return { dx: Math.cos(angle) * r, dz: Math.sin(angle) * r }
+}
+
+/**
+ * Dot's swirl: the cells a line wound outward round (x, z) passes through, as far out as `radius`. Drawn once, when
+ * Dot is left alone. It is an open, winding line: a closed ring left lying in the sand would read as a nought.
+ */
+export function swirl(marks: Marks, x: number, z: number, radius: number, depth = 3): void {
+  const steps = 48
+  for (let i = 0; i <= steps; i++) {
+    const { dx, dz } = swirlPoint(i / steps)
+    const { col, row } = cellOf(x + dx * radius, z + dz * radius)
     deepen(marks, col, row, depth)
   }
 }

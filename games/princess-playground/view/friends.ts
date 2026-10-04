@@ -202,7 +202,8 @@ export function poseFriend(view: FriendView, pose: FriendPose): void {
   view.whites.visible = open > 0.3
   // The pupils travel as far as the whites allow, so a look can be read from the child's side of the tray.
   view.pupils.position.x = pose.gazeX * spec.radius * 0.085
-  view.pupils.position.y += pose.gazeY * spec.radius * 0.055
+  // Bo's heavy lids hang over the top of his eyes: his pupils rise less, so a look up never hides them.
+  view.pupils.position.y += pose.gazeY * spec.radius * (view.id === 'bo' ? 0.03 : 0.055)
   // At the finger the eyes go wide.
   const eyesWide = 1 + 0.16 * pose.wide
   view.whites.scale.x = view.pupils.scale.x = eyesWide

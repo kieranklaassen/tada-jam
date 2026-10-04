@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DEEPEST, MARK_CELLS, MARK_COLS, RAKED, SHALLOWEST, bite, biteDepth, cellOf, centreOf, furrow, marksFromText, marksToText, rake, rakeIsOut, rakedSand, ring, stamp } from './marks'
+import { DEEPEST, MARK_CELLS, MARK_COLS, RAKED, SHALLOWEST, bite, biteDepth, cellOf, centreOf, furrow, marksFromText, marksToText, rake, rakeIsOut, rakedSand, stamp, swirl, swirlPoint, SWIRL_TURNS } from './marks'
 import { TRAY } from './world'
 
 describe('the marks in the sand', () => {
@@ -51,14 +51,14 @@ describe('the marks in the sand', () => {
     expect(cellOf(centreOf(31, 19).x, centreOf(31, 19).z)).toEqual({ col: 31, row: 19 })
   })
 
-  it('every kind of mark the sheet names is kept: a dimple, a groove, a bite, a crater, a hollow and Dot’s ring', () => {
+  it('every kind of mark the sheet names is kept: a dimple, a groove, a bite, a crater, a hollow and Dot’s swirl', () => {
     const kinds: [string, (marks: Uint8Array) => void][] = [
       ['dimple', (m) => stamp(m, 0, 2, 0.24, 6)],
       ['groove', (m) => furrow(m, -2, 2, 2, 2.4)],
       ['bite', (m) => bite(m, 3.5, biteDepth(4))],
       ['crater', (m) => stamp(m, 4, 2, 0.8, 8)],
       ['hollow', (m) => stamp(m, -4, 2, 0.6, 4)],
-      ['ring', (m) => ring(m, 4.6, -2.5, 0.5)],
+      ['swirl', (m) => swirl(m, 4.6, -2.5, 0.5)],
     ]
     for (const [name, draw] of kinds) {
       const marks = rakedSand()
@@ -68,11 +68,18 @@ describe('the marks in the sand', () => {
     }
   })
 
-  it('a ring is a ring: cells round the middle are marked and the middle is not', () => {
+  it('Dot’s mark is a swirl and no ring: an open line wound more than twice round, from near the middle outward', () => {
+    expect(SWIRL_TURNS).toBeGreaterThan(2)
+    const inner = swirlPoint(0), outer = swirlPoint(1)
+    expect(Math.hypot(inner.dx, inner.dz)).toBeLessThan(0.4)
+    expect(Math.hypot(outer.dx, outer.dz)).toBeCloseTo(1, 6)
+    // It never closes on itself: every point is further out than the one a full turn before it.
+    for (let t = 1 / SWIRL_TURNS; t <= 1; t += 0.05) {
+      const now = swirlPoint(t), before = swirlPoint(t - 1 / SWIRL_TURNS)
+      expect(Math.hypot(now.dx, now.dz)).toBeGreaterThan(Math.hypot(before.dx, before.dz) + 0.2)
+    }
     const marks = rakedSand()
-    ring(marks, 0, 2, 0.8)
-    const middle = cellOf(0, 2)
-    expect(marks[middle.row * MARK_COLS + middle.col]).toBe(RAKED)
+    swirl(marks, 0, 2, 0.9)
     expect(marks.reduce((sum, cell) => sum + (cell > RAKED ? 1 : 0), 0)).toBeGreaterThanOrEqual(6)
   })
 

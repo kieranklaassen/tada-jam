@@ -206,7 +206,7 @@ export function softNote(): Part[] {
   return [tone(659, 0.07, 0.05, 0.4, 0, 'sine')]
 }
 
-/** Dot drawing its ring: a faint slow scratch. */
+/** Dot drawing its swirl: a faint slow scratch. */
 export function scratch(): Part[] {
   return [hiss(1700, 2.4, 0.04, 0.2, 0.9, 1300)]
 }

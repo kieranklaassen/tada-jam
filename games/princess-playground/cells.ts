@@ -49,7 +49,7 @@ export type Reaction = {
   way?: number
   voice?: readonly Part[]
   /** A mark to leave in the sand at the friend's feet, or sand to let run off the low end of the board. */
-  mark?: 'ring' | 'trickle' | 'settle'
+  mark?: 'swirl' | 'trickle' | 'settle'
   /** A slow blink of this many seconds. */
   blink?: number
   /** The friend it turns to as it does this. */
@@ -146,7 +146,7 @@ export function reactionsTo(l: Landing): Reaction[] {
         // Whoever it was set down beside turns to it and bounces, as those on the plank do.
         ;(l.near ?? []).forEach((other, index) => out.push(react(other, 0.25 + index * 0.12, { act: 'greet', seconds: 0.7, toward: 'dot' })))
       }
-      else add(0.5, { voice: v.scratch(), act: 'spin', seconds: 1.1, mark: 'ring' })
+      else add(0.5, { voice: v.scratch(), act: 'spin', seconds: 1.1, mark: 'swirl' })
       break
     case 'bo':
       if (l.deed === 'high-end') {

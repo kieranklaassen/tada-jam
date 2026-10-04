@@ -1,4 +1,4 @@
-import { MARK_COLS, MARK_ROWS, RAKED, SMOOTH, centreOf, type Marks } from '../marks'
+import { MARK_COLS, MARK_ROWS, RAKED, SMOOTH, centreOf, swirlPoint, type Marks } from '../marks'
 import { PLANK, TRAY } from '../world'
 
 // The sand's height as a small grey canvas, which the sand shader lights from
@@ -88,14 +88,21 @@ export class SandMap {
     ctx.fill()
   }
 
-  /** Dot's ring: a thin furrow drawn round where it stands. */
-  ring(x: number, z: number, radius: number): void {
-    const ctx = this.ctx, r = radius * this.scale
+  /** Dot's swirl: a thin furrow wound outward round where it stands, open at both ends. */
+  swirl(x: number, z: number, radius: number): void {
+    const ctx = this.ctx
+    ctx.lineCap = 'round'
+    ctx.lineJoin = 'round'
     for (const [width, style] of [[5, grey(FLAT + 30, 0.5)], [3, grey(FLAT - 44, 0.9)], [1.2, grey(FLAT - 66, 1)]] as const) {
       ctx.lineWidth = width
       ctx.strokeStyle = style
       ctx.beginPath()
-      ctx.arc(this.px(x), this.pz(z), r, 0, Math.PI * 2)
+      for (let i = 0; i <= 72; i++) {
+        const { dx, dz } = swirlPoint(i / 72)
+        const px = this.px(x + dx * radius), pz = this.pz(z + dz * radius)
+        if (i === 0) ctx.moveTo(px, pz)
+        else ctx.lineTo(px, pz)
+      }
       ctx.stroke()
     }
     this.dirty = true

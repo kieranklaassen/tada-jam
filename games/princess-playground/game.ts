@@ -3,7 +3,7 @@ import { landingOf, perched, reactionsTo, tossed, type Landing, type Reaction } 
 import { forecast, type SandOp } from './forecast'
 import { Grains } from './grains'
 import type { Guidance } from './guidance'
-import { DEEPEST, SHALLOWEST, bite as biteMark, biteDepth, furrow, rake as rakeMarks, rakeIsOut, ring as ringMark, stamp } from './marks'
+import { DEEPEST, SHALLOWEST, bite as biteMark, biteDepth, furrow, rake as rakeMarks, rakeIsOut, stamp, swirl as swirlMark } from './marks'
 import { HOLD_HEIGHT, Playground, type PlayEvent } from './motion'
 import type { Frame } from './pose'
 import { askerEnd, layout, rideOf, type Kind, type Ride } from './rides'
@@ -29,7 +29,7 @@ export type Cue =
   | { type: 'dimple'; x: number; z: number; radius: number; depth: number }
   | { type: 'groove'; x0: number; z0: number; x1: number; z1: number }
   | { type: 'bite'; x: number; strength: number }
-  | { type: 'ring'; x: number; z: number; radius: number }
+  | { type: 'swirl'; x: number; z: number; radius: number }
   | { type: 'rake' }
 
 type Pressed = { kind: 'friend'; id: FriendId } | { kind: 'sand'; x: number; z: number } | { kind: 'other' }
@@ -414,10 +414,10 @@ export class Game implements Director {
       const way = Math.sign(this.play.plank.tilt)
       if (way !== 0) this.grains.burst(way * PLANK.halfLength * 0.97, PLANK.z, 0.12, 9, PLANK.halfWidth * 1.6, 0.35)
     }
-    if (reaction.mark === 'ring') {
+    if (reaction.mark === 'swirl') {
       const at = standsAt(this.play.arrangement, reaction.who), radius = FRIENDS[reaction.who].radius * 1.25
-      ringMark(this.world.marks, at.x, at.z, radius)
-      this.cues.push({ type: 'ring', x: at.x, z: at.z, radius })
+      swirlMark(this.world.marks, at.x, at.z, radius)
+      this.cues.push({ type: 'swirl', x: at.x, z: at.z, radius })
       this.wantSave('soon')
     }
   }
@@ -679,7 +679,7 @@ export class Game implements Director {
     }
   }
 
-  /** Dot left alone in the sand, by a friend who was beside it going away, draws its one ring: once, when it is left. */
+  /** Dot left alone in the sand, by a friend who was beside it going away, draws its one swirl: once, when it is left. */
   private dotAlone(): void {
     const now = inCompany(this.play.arrangement)
     if (now === this.company) return
@@ -687,7 +687,7 @@ export class Game implements Director {
     this.company = now
     const dot = this.play.bodies.dot
     if (was && !now && placeOf(this.play.arrangement, 'dot').at === 'sand' && dot.mode === 'rest' && !dot.away) {
-      this.react([{ who: 'dot', after: 0.6, voice: v.scratch(), act: 'spin', seconds: 1.1, mark: 'ring' }])
+      this.react([{ who: 'dot', after: 0.6, voice: v.scratch(), act: 'spin', seconds: 1.1, mark: 'swirl' }])
     }
   }
 

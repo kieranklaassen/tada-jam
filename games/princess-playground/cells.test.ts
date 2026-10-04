@@ -131,10 +131,10 @@ describe('the cells in play', () => {
     expect(mogHigh.find((r) => r.who === 'mog')?.blink).toBeGreaterThan(0.5)
   })
 
-  it('Dot in the sand hums beside a friend, and alone draws its one ring', () => {
+  it('Dot in the sand hums beside a friend, and alone draws its one swirl', () => {
     const beside = reactionsTo({ id: 'dot', deed: 'in-the-sand', end: null, tips: false, levels: false, below: null, alone: false, company: true, weightThere: 0, others: [] })
-    expect(beside.some((r) => r.mark === 'ring')).toBe(false)
-    expect(deeds('dot').sand.filter((r) => r.mark === 'ring').length).toBe(1)
+    expect(beside.some((r) => r.mark === 'swirl')).toBe(false)
+    expect(deeds('dot').sand.filter((r) => r.mark === 'swirl').length).toBe(1)
     const start = on(['pim'], ['dot'])
     const off = putInSand(start, 'dot', homeOn('dot', 'right'))
     expect(landingOf(start, off, 'dot').company).toBe(false)

@@ -514,7 +514,7 @@ describe('one obvious want, and the friends as they are', () => {
     expect(cues.filter((cue) => cue.type === 'voice').length).toBe(2)
   })
 
-  it('Dot, left alone in the sand by the friend who stood beside it, draws one ring, once', () => {
+  it('Dot, left alone in the sand by the friend who stood beside it, draws one swirl, once', () => {
     const world = shown()
     const game = new Game(world, 1)
     // Carry Dot to the empty side of the tray, and Bo over to stand beside it: Dot warms.
@@ -534,7 +534,7 @@ describe('one obvious want, and the friends as they are', () => {
     // Then Bo is tapped away onto the plank, and Dot is left by itself.
     tapOn(game, 'bo')
     const { cues } = run(game, 20)
-    expect(cues.filter((cue) => cue.type === 'ring').length).toBe(1)
+    expect(cues.filter((cue) => cue.type === 'swirl').length).toBe(1)
     expect(game.play.bodies.dot.bright).toBeLessThan(0.1)
     expect(rakeIsOut(game.world.marks)).toBe(true)
   })
