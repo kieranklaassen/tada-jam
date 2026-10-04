@@ -51,7 +51,8 @@ export type View = {
   /**
    * How much larger than `BALLOON` the balloons a finger can touch are drawn here: those in the sky and those the
    * friends hold. 1 on a surface where a balloon is a hundred logical pixels across already; more on a smaller or a
-   * narrower one, as far as the row in the sky has room for.
+   * narrower one, as far as the row in the sky has room for; and less where the row has no room for that many
+   * bunches of that size, so that no two bunches ever touch.
    */
   balloon: number
 }
@@ -64,13 +65,45 @@ export const BALLOON_TARGET_PX = 100
  * row; tests hold all three. It is enough for an iPad held upright.
  */
 const LARGEST_BALLOON = 1.24
+/** How far apart the nearest balloons of two neighbouring bunches hang at the least, edge to edge, in logical pixels. */
+export const BUNCHES_APART_PX = 20
+/**
+ * The fullest rows a sky is laid out with (`order.ts`): four places with bunches of up to three or of up to two,
+ * and five with one balloon each. A row of twos gives way to the grown-up's corner further than a row of threes
+ * does, where two balloons side by side stand as high as the corner and the one on top of a three does alone.
+ */
+const FULLEST_ROWS = [{ slots: 4, count: 3 }, { slots: 4, count: 2 }, { slots: 5, count: 1 }] as const
 
 export function viewFor(widthPx: number, heightPx: number): View {
   const aspect = widthPx / Math.max(1, heightPx)
   const height = Math.max(VIEW_HEIGHT, VIEW_WIDTH / aspect)
   const pixelsPerUnit = heightPx / height
-  const balloon = Math.min(LARGEST_BALLOON, Math.max(1, BALLOON_TARGET_PX / (2 * BALLOON * Math.max(1, pixelsPerUnit))))
-  return { width: height * aspect, height, distance: height / 2 / Math.tan((FOV * Math.PI) / 360), pixelsPerUnit, balloon }
+  const view: View = { width: height * aspect, height, distance: height / 2 / Math.tan((FOV * Math.PI) / 360), pixelsPerUnit, balloon: 1 }
+  view.balloon = Math.min(LARGEST_BALLOON, Math.max(1, BALLOON_TARGET_PX / (2 * BALLOON * Math.max(1, pixelsPerUnit))))
+  // Where the fullest row would hang closer than that at this size, the balloons are drawn as large as leaves it
+  // that room: found by halving, since the row itself gives way to the grown-up's corner by the balloon's size.
+  if (bunchesApart(view) * pixelsPerUnit < BUNCHES_APART_PX) {
+    let small = 0.2, large = view.balloon
+    for (let i = 0; i < 24; i++) {
+      view.balloon = (small + large) / 2
+      if (bunchesApart(view) * pixelsPerUnit < BUNCHES_APART_PX) large = view.balloon
+      else small = view.balloon
+    }
+    view.balloon = small
+  }
+  return view
+}
+
+/** How far apart the nearest balloons of neighbouring bunches hang in the fullest rows on this surface, edge to edge, in world units. */
+function bunchesApart(view: View): number {
+  let apart = Infinity
+  for (const row of FULLEST_ROWS) {
+    const places = skySlots(row.slots, view, row.count), offsets = bunchOffsets(row.count)
+    let wide = 0
+    for (const offset of offsets) wide = Math.max(wide, Math.abs(offset.x))
+    apart = Math.min(apart, places[1].x - places[0].x - 2 * (wide + BALLOON) * view.balloon)
+  }
+  return apart
 }
 
 /** The height of the hill's skin under a point. */

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { BODIES, reachOut } from './bodies'
-import { BALLOON, bunchOffsets, bunchReach, CLOUDS, farGroundAt, FAR_HILL, FRIEND_GAP, FRIEND_SCALE, friendX, GROUND, groundAt, HELD_HEIGHT, PARADE_SCALE, PARADE_TROOPS, paradeSpot, seenAt, SKY_ROW, skySlots, toWorld, viewFor, WAITING_SCALE, waitingSpot, GROWN_UP_CORNER } from './layout'
+import { BALLOON, BUNCHES_APART_PX, CLOUDS, FAR_HILL, FRIEND_GAP, FRIEND_SCALE, GROUND, GROWN_UP_CORNER, HELD_HEIGHT, PARADE_SCALE, PARADE_TROOPS, SKY_ROW, WAITING_SCALE, bunchOffsets, bunchReach, farGroundAt, friendX, groundAt, paradeSpot, seenAt, skySlots, toWorld, viewFor, waitingSpot } from './layout'
 
 // The sizes a two-year-old needs (pack: game-design, ages-2-to-4.md), held at the size of the iPad the game is
 // measured on, and the jam's floor held at a narrow surface.
@@ -68,6 +68,24 @@ describe('the balloons', () => {
     expect(apart(viewFor(844, 390))).toBeGreaterThanOrEqual(20)
     expect(apart(viewFor(844, 390))).toBeLessThan(30)
     expect(apart(SMALL)).toBeGreaterThanOrEqual(20)
+  })
+
+  it('never touch, on a surface of any size or shape: the nearest balloons of neighbouring bunches are twenty pixels apart or more, drawn smaller where the row has no room', () => {
+    // Small tablets and windows, four to three and three to two, where a row of twos or threes gives way to the
+    // grown-up's corner; phones wide and upright; and every size in between, in steps.
+    const surfaces: [number, number][] = [[800, 600], [848, 636], [876, 584], [720, 480], [640, 480], [570, 427], [568, 320], [667, 375], [390, 844], [320, 568], [600, 600]]
+    for (let width = 320; width <= 1400; width += 36) for (let height = 320; height <= 1200; height += 44) surfaces.push([width, height])
+    for (const [width, height] of surfaces) {
+      const view = viewFor(width, height)
+      for (const [slots, count] of [[3, 3], [3, 2], [4, 3], [4, 2], [4, 1], [5, 1]] as const) {
+        const places = skySlots(slots, view, count), offsets = bunchOffsets(count)
+        let nearest = Infinity
+        for (let i = 1; i < places.length; i++) for (const a of offsets) for (const b of offsets) nearest = Math.min(nearest, Math.hypot(places[i].x + b.x * view.balloon - places[i - 1].x - a.x * view.balloon, (b.y - a.y) * view.balloon))
+        expect((nearest - 2 * BALLOON * view.balloon) * view.pixelsPerUnit, `${slots} bunches of ${count} on ${width} by ${height}`).toBeGreaterThanOrEqual(BUNCHES_APART_PX - 0.01)
+      }
+      // And a balloon is as large as that leaves room for: the jam's floor of 48 on every surface as large as a small phone held wide.
+      if (width >= 568 && height >= 320) expect(2 * BALLOON * view.balloon * view.pixelsPerUnit, `${width} by ${height}`).toBeGreaterThanOrEqual(48)
+    }
   })
 
   it('stay inside the top of the view, a bunch of three included, in one row', () => {

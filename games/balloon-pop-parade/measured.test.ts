@@ -6,6 +6,7 @@ import { saveOf } from './moments'
 import type { Pose } from './pose'
 import { freshSave } from './save'
 import { Theatre, type Painter } from './theatre'
+import { give, type Bunch, type Given } from './world'
 
 // What nobody sees by reading the theatre: the game is stepped frame by frame, through whole games played at
 // random and through each thing a bunch can do, with a painter that keeps what was drawn, and what the sheet says
@@ -615,6 +616,85 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
     expect(theatre.save.slips).toBe(0)
     expect(theatre.save.position).toBe('trio-singles')
   })
+
+  it.each(kinds)('answers every bunch as the troop is seen when it arrives, also after a pop: a two that was too many for %ss is one each for two that are seen without a balloon, though a single sent after it had been stored for one of them', (kind) => {
+    const theatre = new Theatre(saveOf({ position: 'pair-singles', troop: { kind, size: 2, held: [true, false] }, sky: [{ colour: other(kind), count: 1 }, { colour: kind, count: 2 }, { colour: kind, count: 1 }], waiting: { kind: other(kind), size: 1 } }), 3), { balloons, painter, clear } = recorder()
+    const inside = theatre as unknown as { flights: { bunch: Bunch; given: Given; landed: boolean }[]; held: { shown: boolean }[] }
+    theatre.step(1 / 60)
+    clear()
+    theatre.paint(painter, VIEW)
+    const own = balloons.find((balloon) => balloon.z > -5 && balloon.wide === 1 && balloon.y < 2.2)!
+    const answered: { count: number; result: string; seen: boolean[] }[] = []
+    for (let i = 0; i < 60 * 14; i++) {
+      // A wrong bunch, the two, the single, each a third of a second after the other, and then the pop.
+      if (i === 30) tap(theatre, 0)
+      if (i === 48) tap(theatre, 1)
+      if (i === 66) tap(theatre, 2)
+      if (i === 84) { theatre.press(own.x, own.y, VIEW); theatre.cancel() }
+      const seen = inside.held.map((balloon) => balloon.shown), coming = inside.flights.filter((flight) => !flight.landed)
+      theatre.step(1 / 60)
+      for (const flight of coming) if (flight.landed) answered.push({ count: flight.bunch.count, result: flight.bunch.colour === kind ? flight.given.result : 'refused', seen })
+    }
+    // The two arrived over two friends seen without a balloon, and each took one; the single found none wanting.
+    expect(answered).toEqual([
+      { count: 1, result: 'refused', seen: [true, false] },
+      { count: 2, result: 'taken', seen: [false, false] },
+      { count: 1, result: 'gotAway', seen: [true, true] },
+    ])
+    expect(theatre.troop.held).toEqual([true, true])
+    expect(theatre.save.finished).toBe(true)
+    // One slip, the wrong bunch: the two was taken after all, and the single came after the troop was served.
+    expect(theatre.save.slips).toBe(1)
+    expect(theatre.save.position).toBe('pair-singles')
+  })
+
+  it('answers every bunch as the troop is seen when it arrives, in whole games played at random with pops among the taps: what the rule gives for the balloons seen in hands is what the bunch gets', () => {
+    let arrived = 0, afterPop = 0
+    for (const [age, seed] of [[2, 3], [3, 5], [4, 7], [4, 11], [2, 13], [4, 17], [3, 19], [4, 23]] as const) {
+      const theatre = new Theatre(freshSave(age, seed), seed), { balloons, painter, clear } = recorder()
+      const inside = theatre as unknown as { flights: { bunch: Bunch; given: Given; landed: boolean }[]; held: { shown: boolean }[] }
+      let state = seed * 32452843, popped = -1000
+      const random = () => (state = (state * 1103515245 + 12345) % 2147483648) / 2147483648
+      for (let i = 0; i < 60 * 150; i++) {
+        if (i % 11 === 0) {
+          const roll = random()
+          if (roll < 0.6) {
+            // Mostly the troop's own bunches, so that balloons are held, and popped.
+            const own = theatre.sky.map((bunch, slot) => (bunch.colour === theatre.troop.kind ? slot : -1)).filter((slot) => slot >= 0)
+            tap(theatre, random() < 0.7 && own.length > 0 ? own[Math.floor(random() * own.length)] : Math.floor(random() * theatre.sky.length))
+          } else if (roll < 0.66) { theatre.press(waitingSpot(0, VIEW).x, GROUND + 0.8, VIEW); theatre.cancel() }
+          else {
+            clear()
+            theatre.paint(painter, VIEW)
+            const held = balloons.filter((balloon) => balloon.z > 0.29 && balloon.z < 0.31 && balloon.wide === 1 && balloon.y < 2.2)
+            if (held.length > 0) {
+              const one = held[Math.floor(random() * held.length)], before = theatre.troop.held.filter((holds) => holds).length
+              theatre.press(one.x, one.y, VIEW)
+              theatre.cancel()
+              if (theatre.troop.held.filter((holds) => holds).length < before || inside.flights.some((flight) => !flight.landed)) popped = i
+            }
+          }
+        }
+        const troop = theatre.troop, seen = inside.held.slice(0, troop.size).map((balloon) => balloon.shown), coming = inside.flights.filter((flight) => !flight.landed)
+        theatre.step(1 / 60)
+        for (const flight of coming) {
+          if (!flight.landed) continue
+          const rule = give({ kind: troop.kind, size: troop.size, held: seen }, flight.bunch).given, given = flight.given
+          arrived += 1
+          if (i - popped < 240) afterPop += 1
+          expect(given.result, `seed ${seed}, frame ${i}: a bunch of ${flight.bunch.count} for ${seen}`).toBe(rule.result)
+          // One each from the left; a friend that was already taking hold when another's balloon was popped keeps what it is taking.
+          if (given.result === 'taken' && rule.result === 'taken') {
+            expect(given.takers.length, `seed ${seed}, frame ${i}`).toBe(rule.takers.length)
+            if (i - popped > 60) expect(given.takers, `seed ${seed}, frame ${i}`).toEqual(rule.takers)
+          }
+          if (given.result === 'gotAway' && rule.result === 'gotAway') expect(given.spare, `seed ${seed}, frame ${i}`).toBe(rule.spare)
+        }
+      }
+    }
+    expect(arrived).toBeGreaterThan(400)
+    expect(afterPop).toBeGreaterThan(40)
+  }, 120_000)
 
   it.each(kinds)('a troop of %ss does not set off without a balloon that is on its way to a hand: the waiting troop waves until it has arrived, and the parade holds what the troop is seen to carry', (kind) => {
     const theatre = new Theatre(saveOf({ position: 'trio-singles', troop: { kind, size: 3, held: [true, false, false] }, sky: [{ colour: kind, count: 1 }, { colour: other(kind), count: 1 }], waiting: { kind: other(kind), size: 1 } }), 3)

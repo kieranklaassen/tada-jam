@@ -41,8 +41,8 @@ export type Hit = { on: 'held'; friend: number } | { on: 'tug'; friend: number }
 
 /** A bunch's place in the sky and its springs: how flat it is, how far it is pushed aside, how far the loose end of its string has whipped, and how long until it is back. */
 type Place = { squash: number; squashSpeed: number; pressed: boolean; push: number; pushSpeed: number; whip: number; whipSpeed: number; away: number; grow: number }
-/** A bunch on its way down. `lasts` is how long the way takes: `FLIGHT`, or longer when whoever will answer it is still busy; it is worked out again whenever that changes, so `gone` keeps how much of the way is behind it, 0 to 1, and it is never moved by a change of plan. `begun` says its answer has begun, so its arrival is settled. `owed` says its friend was busy all the same when it arrived, and owes it a refusal; `squeezed` is when a finger last landed on it; `slipped` says it was counted as a slip when it was sent; `sprung` is how flat it was under the finger when it left, from which it springs back past round. */
-type Flight = { bunch: Bunch; slot: number; given: Given; t: number; lasts: number; fromX: number; fromY: number; landed: boolean; after: number; friend: number; gone: number; begun?: boolean; met?: boolean; owed?: boolean; squeezed?: number; slipped?: boolean; sprung?: number }
+/** A bunch on its way down. `lasts` is how long the way takes: `FLIGHT`, or longer when whoever will answer it is still busy; it is worked out again whenever that changes, so `gone` keeps how much of the way is behind it, 0 to 1, and it is never moved by a change of plan. `begun` says its answer has begun, so its arrival is settled. `owed` says its friend was busy all the same when it arrived, and owes it a refusal; `squeezed` is when a finger last landed on it; `slipped` says it was counted as a slip when it was sent; `judged` says the cycle was judged by it, and holds the position before; `dueBefore` is the ending that was due when it came to serve the troop; `sprung` is how flat it was under the finger when it left, from which it springs back past round. */
+type Flight = { bunch: Bunch; slot: number; given: Given; t: number; lasts: number; fromX: number; fromY: number; landed: boolean; after: number; friend: number; gone: number; begun?: boolean; met?: boolean; owed?: boolean; squeezed?: number; slipped?: boolean; judged?: { position: string }; dueBefore?: { at: number; order: number[]; together: boolean } | null; sprung?: number }
 /** A balloon in a friend's hand. `bonk` is how long it is still on its way round to the friend's head, knocked by a refusal; `wait` is how long it still hangs where it arrived, in a bunch with one for each, before its friend's turn to take it, `owed` says it hangs there until its friend, who is busy, is free to take it, and `knot` is where its string still ends meanwhile. */
 type Held = { x: number; y: number; vx: number; vy: number; shown: boolean; bonk?: number; wait?: number; owed?: boolean; knot?: { x: number; y: number } }
 /** A balloon that has got away. `flat` is one blown off going flat; `bump` is one that is heading for the cloud over the troop and has not met it yet; `drift` is one of a sky that is over, which rises out of the top of the view without a pop. */
@@ -456,34 +456,14 @@ export class Theatre {
     if (place.away > 0) return
     const bunch = this.sky[slot]
     // The rules decide here, at the lift, and the save holds the outcome before the bunch has left the sky.
-    const slips = this.save.slips
-    const { save, events } = sendBunch(this.save, slot)
-    this.save = save
-    const first = events[0]
-    if (!first) return
-    // The cycle's slips are counted here too, past the two the save keeps them to, so that one can be taken back.
-    const slipped = save.slips !== slips || (first.type !== 'taken' && !save.finished)
-    if (slipped) this.slipped += 1
-    const serves = events.find((event) => event.type === 'served')
-    this.unsaved = serves ? 2 : Math.max(this.unsaved, 1) as 1 | 2
-    if (first.type === 'taken') this.took.push(...first.takers)
-    const given: Given = first.type === 'taken' ? { result: 'taken', takers: first.takers, served: serves !== undefined }
-      : first.type === 'gotAway' ? { result: 'gotAway', grabber: first.grabber, spare: first.spare }
-      : { result: 'refused' }
-    const at = this.slots(view)[slot]
-    // When every friend has one, the nearest friend is the one who grabs a bunch that is too many.
-    const everyoneHolds = given.result === 'gotAway' && given.spare === bunch.count
-    const friend = given.result === 'taken' ? given.takers[0] : given.result === 'gotAway' ? (everyoneHolds ? this.nearest(at.x, false) : given.grabber) : this.nearest(at.x, true)
     // One answer at a time. The bunch leaves the sky at the lift, whatever happens, and it arrives when whoever
     // will answer it is free to (`schedule`): at once when they are, and otherwise it takes its time on the way
     // down. The flat bunch springs back past round as it leaves: `sprung` is how flat it was.
-    const flight: Flight = { bunch, slot, given, t: 0, lasts: FLIGHT, gone: 0, fromX: at.x, fromY: at.y, landed: false, after: 0, friend, slipped, sprung: place.squash }
+    const at = this.slots(view)[slot]
+    const flight: Flight = { bunch, slot, given: { result: 'refused' }, t: 0, lasts: FLIGHT, gone: 0, fromX: at.x, fromY: at.y, landed: false, after: 0, friend: 0, sprung: place.squash }
+    if (!this.decide(flight, at.x)) return
     this.flights.push(flight)
     this.schedule()
-    // The ending begins with its cause: the moment the last balloon is in a hand. Its first beat is that catch.
-    if (serves && serves.type === 'served') {
-      this.endingDue = { at: Number.POSITIVE_INFINITY, order: [...this.took], together: serves.together }
-    }
     // The same bunch drifts back into the same place when this one has been answered (`back`): the sky stays as it
     // was. Until then the place is empty, so there are never more bunches on their way than the sky has places,
     // and every one of them is answered in full, in its turn.
@@ -552,42 +532,79 @@ export class Theatre {
   }
 
   /**
+   * The rules decide what becomes of a bunch, against the troop as the save has it, and the save holds the outcome
+   * at once. `false` when the sky has no such place. The cycle's slips are counted here too, past the two the save
+   * keeps them to, so that one can be taken back.
+   */
+  private decide(flight: Flight, x: number): boolean {
+    const before = this.save
+    const { save, events } = sendBunch(before, flight.slot)
+    const first = events[0]
+    if (!first) return false
+    this.save = save
+    flight.slipped = save.slips !== before.slips || (first.type !== 'taken' && !save.finished)
+    if (flight.slipped) this.slipped += 1
+    flight.judged = save.finished && !before.finished ? { position: before.position } : undefined
+    const serves = events.find((event) => event.type === 'served')
+    this.unsaved = serves ? 2 : Math.max(this.unsaved, 1) as 1 | 2
+    if (first.type === 'taken') this.took.push(...first.takers)
+    const refusedBefore = flight.given.result === 'refused' && first.type === 'refused' && flight.t > 0
+    flight.given = first.type === 'taken' ? { result: 'taken', takers: first.takers, served: serves !== undefined }
+      : first.type === 'gotAway' ? { result: 'gotAway', grabber: first.grabber, spare: first.spare }
+      : { result: 'refused' }
+    // When every friend has one, the nearest friend is the one who grabs a bunch that is too many. A bunch of
+    // another colour is for the nearest friend that wants one, and stays that friend's when it is read again.
+    const everyoneHolds = first.type === 'gotAway' && first.spare === flight.bunch.count
+    if (!refusedBefore) flight.friend = first.type === 'taken' ? first.takers[0] : first.type === 'gotAway' ? (everyoneHolds ? this.nearest(x, false) : first.grabber) : this.nearest(x, true)
+    // The ending begins with its cause: the moment the last balloon is in a hand. Its first beat is that catch.
+    flight.dueBefore = undefined
+    if (serves && serves.type === 'served') {
+      flight.dueBefore = this.endingDue
+      this.endingDue = { at: Number.POSITIVE_INFINITY, order: [...this.took], together: serves.together }
+    }
+    return true
+  }
+
+  /**
    * A balloon was popped while bunches are on their way down. The world they will arrive in is not the one they
-   * were sent into: a friend wants a balloon again. A bunch that was too many when it was sent is read against the
-   * troop as it is now, by the one rule, in this same touch: if it is no longer too many it is taken, and the save
-   * says so; if it still is, it is too many for the friends that want one now. So what arrives is always answered
-   * as the child sees the troop when it arrives.
+   * were sent into: a friend wants a balloon again. So every bunch whose answer has not begun is decided once
+   * more, by the one rule, in the order they were sent and in this same touch: what each had stored is taken back,
+   * and each is read against the troop as it will be when it arrives, the popped friend without a balloon and
+   * the bunches before it answered. The save holds the outcome at once. A bunch that was too many may be taken
+   * after all, and one sent after it, which the save had as taken, may be too many now: each is answered as the
+   * child sees the troop when it arrives.
    */
   private sentAgain(): void {
-    for (const flight of this.flights) {
-      if (flight.landed || flight.given.result !== 'gotAway') continue
-      // Read without the slip it was counted as: if it is taken after all, nothing of it got away.
-      const without = flight.slipped ? Math.min(2, Math.max(0, this.slipped - 1)) as 0 | 1 | 2 : this.save.slips
-      const again = sendBunch({ ...this.save, slips: without }, flight.slot), first = again.events[0]
-      if (!first || first.type === 'refused') continue
-      // Wherever it is going now, it goes on from where it is: a change of plan never moves it.
-      const here = this.along(flight)
-      if (first.type === 'gotAway') {
-        // Still too many: for whoever wants one now. Its slip was counted when it was sent, and is not counted twice.
-        if (flight.friend !== first.grabber || flight.given.spare !== first.spare) { flight.fromX = here.x; flight.fromY = here.y; flight.gone = 0 }
-        flight.given = { result: 'gotAway', grabber: first.grabber, spare: first.spare }
-        flight.friend = first.grabber
-        continue
+    const again = this.flights.filter((flight) => !flight.landed && !flight.begun)
+    if (again.length === 0) return
+    // What they stored is taken back: the balloons they were to bring, their slips, and the judging of the cycle
+    // with the ending it called for.
+    const held = [...this.save.troop.held]
+    let position = this.save.position, finished = this.save.finished, slips = this.save.slips
+    for (let i = again.length - 1; i >= 0; i--) {
+      const flight = again[i], given = flight.given
+      if (given.result === 'taken') {
+        for (const taker of given.takers) held[taker] = false
+        this.took = this.took.filter((friend) => !given.takers.includes(friend))
+        if (given.served) this.endingDue = flight.dueBefore ?? null
       }
-      if (first.type !== 'taken') continue
-      this.save = again.save
-      if (flight.slipped) this.slipped -= 1
-      flight.slipped = false
-      this.took.push(...first.takers)
-      const serves = again.events.find((event) => event.type === 'served')
-      flight.given = { result: 'taken', takers: first.takers, served: serves !== undefined }
-      flight.friend = first.takers[0]
-      flight.fromX = here.x
-      flight.fromY = here.y
-      flight.gone = 0
-      if (serves && serves.type === 'served') {
-        this.endingDue = { at: Number.POSITIVE_INFINITY, order: [...this.took], together: serves.together }
-        this.unsaved = 2
+      if (flight.slipped) slips = Math.min(2, Math.max(0, (this.slipped -= 1))) as 0 | 1 | 2
+      if (flight.judged) { position = flight.judged.position; finished = false }
+    }
+    this.save = { ...this.save, position, finished, slips, troop: { ...this.save.troop, held } }
+    const slots = this.slots(this.lastView)
+    for (const flight of again) {
+      const was = flight.given, friend = flight.friend, here = this.along(flight), x = here.x, y = here.y
+      this.decide(flight, slots[flight.slot].x)
+      const now = flight.given
+      const same = friend === flight.friend && was.result === now.result
+        && (was.result !== 'taken' || (now.result === 'taken' && was.takers.join() === now.takers.join()))
+        && (was.result !== 'gotAway' || (now.result === 'gotAway' && was.spare === now.spare))
+      // Wherever it is going now, it goes on from where it is: a change of plan never moves it.
+      if (!same) {
+        flight.fromX = x
+        flight.fromY = y
+        flight.gone = 0
       }
     }
     // Whoever answers each bunch now, it arrives when they are free: after the start at the pop, and in the order sent.
