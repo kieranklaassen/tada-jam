@@ -17,7 +17,7 @@ import { clearTin, eat, eaten, emptyWorld, giveToTin, inTin, keepEaten, landFrui
 export type Game = GameState & {
   /** The state of the seeded stream that lays out customers. */
   seed: number
-  /** The customer at the window, or nobody: a first visit opens with a fruit on the board and two waiting. */
+  /** The customer at the window, or nobody. A first visit opens with its first customer already there (`firstVisit`); after that the window is empty only until the child calls one who waits. */
   window: Customer | null
   /** The two who wait. Each keeps its ticket showing and does nothing about waiting. */
   queue: [Customer, Customer]

@@ -69,7 +69,7 @@ describe('the work of a frame', () => {
     const run = new GameRun(freshGame(null), 1)
     const c = counter()
     const figures = paintFrame(c.ctx, dots, run.frame(1, BUSY))
-    // Measured at the tip the reader passed: 101 figures and 609 calls, with two passers-by in the street. The setting itself is on the plate and costs a frame nothing.
+    // Measured after the last points before the merge: 112 figures and 692 calls, with two passers-by in the street. The setting itself is on the plate and costs a frame nothing.
     expect(figures).toBeLessThan(130)
     expect(c.total()).toBeLessThan(760)
     expect(c.calls.get('drawImage') ?? 0).toBe(0)
@@ -84,7 +84,7 @@ describe('the work of a frame', () => {
     expect(run.fx.fx.length).toBeGreaterThan(40)
     const c = counter()
     const figures = paintFrame(c.ctx, dots, run.frame(3, IDLE))
-    // Measured at the tip the reader passed: 326 figures and 2589 calls, with twelve ants at the window, a cat and its
+    // Measured after the last points before the merge: 337 figures and 2672 calls, with twelve ants at the window, a cat and its
     // two tickets waiting, 32 pieces and 90 effects alive, the open tin ruled into twelfths, the glow and the hand.
     expect(figures).toBeLessThan(380)
     expect(c.total()).toBeLessThan(3600)
@@ -103,7 +103,7 @@ describe('the work of a frame', () => {
 
   it('paints the whole setting onto the plate, once for a size of surface, so a frame pays for none of it', () => {
     const c = counter()
-    // Measured at the tip the reader passed: 137 figures and 1020 calls for the street, the stall's front, the counter's wood and what lies on it.
+    // Measured after the last points before the merge: 127 figures and 941 calls for the street, the stall's front, the counter's wood and what lies on it.
     expect(paintPlate(c.ctx, dots)).toBeLessThan(220)
     expect(c.total()).toBeLessThan(1600)
     // The plate is still: it reads no clock and draws the same thing every time.
