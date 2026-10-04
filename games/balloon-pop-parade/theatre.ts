@@ -833,7 +833,7 @@ export class Theatre {
    * served it is the troop that waits. Nothing of it shows while a scene plays or a bunch is in the air.
    */
   paint(painter: Painter, view: View, guidance: Guidance | null = null): void {
-    const kind = this.troop.kind, plan = BODIES[kind], colour = KIND_COLOURS[kind], cord = shade(colour, -0.3), personality = PERSONALITIES[kind]
+    const kind = this.troop.kind, plan = BODIES[kind], colour = KIND_COLOURS[kind], cord = shade(colour, -0.3)
     const pose = this.pose, time = this.time
     this.lastView = view
     const idle = guidance && !this.playing && this.flights.length === 0 && this.pressedSlot < 0 ? guidance : null
@@ -975,17 +975,7 @@ export class Theatre {
       handOf(plan, pose, this.hand)
       const balloon = this.held[i]
       if (balloon.shown) {
-        if (actor.clip === 'catch' && (kind === 'duck' || kind === 'hippo')) {
-          // The duck catches the string in its beak and the hippo lets it drop into its yawn; the hand takes it as the catch ends.
-          const taken = ramp(actor.t, personality.lasts.catch * 0.55, personality.lasts.catch * 0.92)
-          const c = Math.cos(pose.nod), n = Math.sin(pose.nod), wide = spread(pose.squash)
-          const mx = pose.x + plan.mouth[0] * wide * pose.scale
-          const my = pose.y + (plan.neck[1] + plan.mouth[1] * c - plan.mouth[2] * n) * pose.squash * pose.scale
-          const mz = pose.z + (plan.neck[2] + plan.mouth[1] * n + plan.mouth[2] * c) * wide * pose.scale
-          this.hand.x = mx + (this.hand.x - mx) * taken
-          this.hand.y = my + (this.hand.y - my) * taken
-          this.hand.z = mz + (this.hand.z - mz) * taken
-        }
+        if (actor.clip === 'catch') this.byMouth(kind, actor.t, pose)
         const lean = (this.hand.x - balloon.x) * -0.2 + balloon.vx * 0.03
         painter.balloon(balloon.x, balloon.y, 0.3, 1, 1, lean, colour)
         painter.string(balloon.x + Math.sin(lean) * BALLOON * 1.32, balloon.y - Math.cos(lean) * BALLOON * 1.32, 0.3, this.hand.x, this.hand.y, this.hand.z, cord)
@@ -1140,6 +1130,8 @@ export class Theatre {
     const trail = u > 0 && u < 1 ? -0.45 : 0.5
     const bx = this.hand.x + trail + Math.sin(this.time * 1.4 + seed) * 0.1, by = pose.y + HELD_HEIGHT + Math.sin(this.time * 1.7 + seed * 2) * 0.07
     const lean = (this.hand.x - bx) * -0.2
+    // A duck or a hippo that passes takes the string by its mouth first, as its kind does.
+    if (actor.clip === 'catch' && actor.t >= 0) this.byMouth(troop.kind, actor.t, pose)
     painter.balloon(bx, by, 0.3, 1, 1, lean, colour)
     const tailX = bx + Math.sin(lean) * BALLOON * 1.32, tailY = by - Math.cos(lean) * BALLOON * 1.32
     painter.string(tailX, tailY, 0.3, this.hand.x, this.hand.y, this.hand.z, shade(colour, -0.3))
@@ -1148,6 +1140,23 @@ export class Theatre {
       const mouthY = pose.y + (plan.neck[1] + plan.mouth[1]) * pose.scale * pose.squash, mouthZ = (plan.neck[2] + plan.mouth[2]) * pose.scale
       this.lick(painter, pose.x, mouthY, mouthZ, tailX, tailY, 0.3, hold(actor.t, 0.1, 0.2, 0.3, 0.45), shade(colour, 0.34))
     }
+  }
+
+  /**
+   * The duck catches the string in its beak and the hippo lets it drop into its yawn; the hand takes it as the catch
+   * ends. Moves `this.hand`, which holds where the string hand is, to where the string is held `t` seconds into the catch.
+   */
+  private byMouth(kind: KindName, t: number, pose: Pose): void {
+    if (kind !== 'duck' && kind !== 'hippo') return
+    const plan = BODIES[kind], lasts = PERSONALITIES[kind].lasts.catch
+    const taken = ramp(t, lasts * 0.55, lasts * 0.92)
+    const c = Math.cos(pose.nod), n = Math.sin(pose.nod), wide = spread(pose.squash)
+    const mx = pose.x + plan.mouth[0] * wide * pose.scale
+    const my = pose.y + (plan.neck[1] + plan.mouth[1] * c - plan.mouth[2] * n) * pose.squash * pose.scale
+    const mz = pose.z + (plan.neck[2] + plan.mouth[1] * n + plan.mouth[2] * c) * wide * pose.scale
+    this.hand.x = mx + (this.hand.x - mx) * taken
+    this.hand.y = my + (this.hand.y - my) * taken
+    this.hand.z = mz + (this.hand.z - mz) * taken
   }
 
   /** The frog meets its balloon with its tongue: out to the balloon as it comes down, and in with it. */

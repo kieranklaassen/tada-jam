@@ -421,6 +421,39 @@ describe('the frog\'s tongue', () => {
   })
 })
 
+describe('a duck or a hippo that passes by', () => {
+  it.each(['duck', 'hippo'] as const)('takes the string by its mouth first, as a %s does, and then has it in its hand', (wanted) => {
+    for (let seed = 1; seed < 60; seed++) {
+      const theatre = new Theatre(freshSave(2, seed), seed)
+      let kind: KindName | null = null, x = 0
+      const ends: number[] = []
+      const painter: Painter = {
+        ...recorder().painter,
+        place: (name, placed, pose) => { if (name === 'passer-0') { kind = placed; x = pose.x } },
+        // The string of the balloon it carries: the only thin string that ends on the friend, below its balloon.
+        string: (_x0, y0, _z0, x1, y1, _z1, _colour, thick) => { if ((thick ?? 0) < 0.05 && y0 > GROUND + 3 && y1 < y0 - 1 && Math.abs(x1 - x) < 2) ends.push(Math.abs(x1 - x)) },
+      }
+      theatre.paint(painter, VIEW)
+      if (kind !== wanted) continue
+      let nearest = Infinity, last = 0
+      for (let i = 0; i < 60 * 7 && kind !== null; i++) {
+        theatre.step(1 / 60)
+        ends.length = 0
+        kind = null
+        theatre.paint(painter, VIEW)
+        if (ends.length === 0) continue
+        nearest = Math.min(nearest, ends[0])
+        last = ends[0]
+      }
+      // At the mouth the string is at the middle of the friend; in the hand it is out at its side.
+      expect(nearest).toBeLessThan(0.2)
+      expect(last).toBeGreaterThan(nearest + 0.2)
+      return
+    }
+    throw new Error(`no seed opened on a passing ${wanted}`)
+  })
+})
+
 describe('the director', () => {
   it.each(KINDS)('never has a %s take a poke the same way twice running', (kind) => {
     const theatre = solo(kind, [kind, kind === 'duck' ? 'frog' : 'duck']), { frame, painter } = recorder()
