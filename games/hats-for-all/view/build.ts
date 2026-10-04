@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { CREATURE_KINDS, HAT_KINDS, MOST, type CreatureKind, type HatKind } from '../kinds'
-import { ROW_Z, holeX, spotX } from '../stage'
+import { ROW_Z, holeAcross, spotX } from '../stage'
 import { ARCH, CREATURE_DEPTH, HAND, SLAB, TILE_DEPTH } from '../sizes'
 import { BEVEL, disc, laidFlat, merged, paint, roundedRect, slab } from './foam'
 import { archOutline, creatureCut, earOutline, hatOutline, holeBase, matTileOutline, tileWidth, type Cut } from './shapes'
@@ -61,7 +61,7 @@ export function buildTile(hats: readonly HatKind[]): THREE.BufferGeometry {
   const width = tileWidth(hats.length)
   const shape = roundedRect(-width / 2, -TILE_DEPTH / 2, width, TILE_DEPTH, 0.4)
   hats.forEach((kind, hole) => {
-    const x = holeX(hole, hats.length), y = holeBase(kind)
+    const x = holeAcross(hole, hats.length), y = holeBase(kind)
     shape.holes.push(new THREE.Path(hatOutline(kind, 0.03).getPoints(10).map((p) => new THREE.Vector2(p.x + x, p.y + y))))
   })
   return laidFlat(slab(shape, SLAB, PALETTE.furniture)).translate(0, SLAB / 2, 0)

@@ -14,12 +14,27 @@ export function spotX(spot: number): number {
   return (spot - (MOST - 1) / 2) * SPOT_GAP
 }
 
-/** The hats lie in one tile in front of the row, closer together than the spots, so the two rows never line up one under the other. */
+/**
+ * The hats lie in one tile in front of the row, closer together than the spots, and the tile lies a little to one
+ * side of the row's middle: by as much, for each number of hats, as keeps every hole as far as it can be from under a
+ * round spot. So the two rows never line up one under the other, and no hat lies straight under a head.
+ */
 export const HOLE_GAP = 2.3
 export const TILE_Z = 4.1
+const TILE_SIDE = [0, 1.6, 0, 1.6, 1.6, 0.45] as const
+
+/** Where the tile's middle lies across the mat, for a tile of this many hats. */
+export function tileX(hats: number): number {
+  return TILE_SIDE[hats] ?? 0
+}
+
+/** How far a hole lies from the middle of its tile. */
+export function holeAcross(hole: number, hats: number): number {
+  return (hole - (hats - 1) / 2) * HOLE_GAP
+}
 
 export function holeX(hole: number, hats: number): number {
-  return (hole - (hats - 1) / 2) * HOLE_GAP
+  return tileX(hats) + holeAcross(hole, hats)
 }
 
 /** Where a loose hat rests: in front of its round spot, clear of the lane the creatures walk along. */

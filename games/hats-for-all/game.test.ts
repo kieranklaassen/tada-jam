@@ -1,4 +1,3 @@
-import { appendFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { waitingLead } from './cycle'
 import { Game, waits, type LetGo, type Target } from './game'
@@ -15,7 +14,8 @@ import { deserialize, freshSave, serialize } from './save'
 import { sceneLength } from './scene'
 import { changeShow, firstShowing, nextCrewShow, paradeShow } from './shows'
 import { ARCH, BODY, CREATURE_DEPTH, HAND, TILE_DEPTH } from './sizes'
-import { ARCH_X, ARCH_Z, TILE_Z } from './stage'
+import { ARCH_X, ARCH_Z, TILE_Z, holeX, tileX } from './stage'
+import { ACTS as TASTE_ACTS } from './tastes'
 import { tileWidth } from './tile'
 import { MOST } from './kinds'
 import { MOST_CRUMBS } from './play'
@@ -104,7 +104,6 @@ describe('every cell of the grid', () => {
   it.each(OBJECTS.flatMap((object) => ACTIONS.map((action) => [object, action] as const)))('%s, %s: is seen and heard as the grid has it', (object, action) => {
     const { game, heard } = playCell(object, action)
     expect(game.seen).toContain(GRID[object][action].seen)
-    if (process.env.DUMP_GRID) appendFileSync(process.env.DUMP_GRID, JSON.stringify([object, action, heard]) + '\n')
     expect(heard).toEqual(GRID[object][action].heard)
     // The world moved, or did not, as the cell says; and nothing is left in the air.
     const moved = JSON.stringify(worldOf(game.saved)) !== JSON.stringify(worldFor(object, action))
@@ -377,7 +376,7 @@ describe('nothing passes through anything', () => {
     for (const a of bodies) {
       for (const b of bodies) if (a.who < b.who) expect(overlap(a, b), `${label}: ${a.who} and ${b.who} at ${play.time.toFixed(2)} s`).toBe(false)
       // The tile, where it lies; and the two legs of the arch.
-      expect(overlap(a, { x: 0, z: play.tileZ, w: tileWidth(play.hatCount) / 2, d: TILE_DEPTH / 2 }), `${label}: ${a.who} and the tile`).toBe(false)
+      expect(overlap(a, { x: tileX(play.hatCount), z: play.tileZ, w: tileWidth(play.hatCount) / 2, d: TILE_DEPTH / 2 }), `${label}: ${a.who} and the tile`).toBe(false)
       for (const side of [-1, 1]) expect(overlap(a, { x: ARCH_X + side * (ARCH.inner + ARCH.outer) / 2, z: ARCH_Z, w: (ARCH.outer - ARCH.inner) / 2, d: ARCH.depth / 2 }), `${label}: ${a.who} and the arch`).toBe(false)
       for (let hat = 0; hat < play.hatCount; hat++) {
         if (play.seen(hat).at !== 'loose' || play.flying(hat)) continue
@@ -511,6 +510,9 @@ describe('the room', () => {
 
   it('is no touch of the crew, like the floor: a crew left alone with only the room touched still parades when its wait is up', () => {
     const game = new Game(saveOf(calm))
+    // The child taps a creature, which does its trick, and then only the room.
+    game.press({ type: 'creature', who: 'bop' })
+    game.tap()
     run(game, LEFT_ALONE_S - 0.5)
     game.press({ type: 'prop', prop: 'ball' })
     game.tap()
@@ -603,5 +605,152 @@ describe('a hat that lands on a head', () => {
     for (let n = 0; n < 40; n++) game.play.puff(0, 1, 0, 6, 'cone')
     expect(game.play.crumbs.length).toBeLessThanOrEqual(MOST_CRUMBS)
     for (const crumb of game.play.crumbs) for (const value of [crumb.x, crumb.y, crumb.z, crumb.size]) expect(Number.isFinite(value)).toBe(true)
+  })
+})
+
+describe('what the grid says is seen, and was once only heard', () => {
+  it('a hat pressed in its hole dents the tile round it, and nobody hops for that', () => {
+    const game = new Game(saveOf(everything()))
+    run(game, 1)
+    const before = game.play.dimples.length
+    game.press({ type: 'hat', hat: 4 })
+    expect(game.play.dimples.length).toBe(before + 1)
+    const dent = game.play.dimples.at(-1)!
+    expect(dent.x).toBeCloseTo(holeX(4, 5), 9)
+    expect(Math.abs(dent.z - TILE_Z)).toBeLessThan(TILE_DEPTH / 2)
+    let high = 0
+    run(game, 0.3, [], () => { for (const who of game.play.cast) high = Math.max(high, game.play.actorPose(who, {} as never).y) })
+    expect(high).toBeLessThan(0.02)
+    game.pressEnd()
+  })
+
+  it('a loose hat carried onto a hatted head lands sideways, the tower leans, and the hat rights itself', () => {
+    const { game } = (() => {
+      const game = new Game(saveOf(everything()))
+      game.press(SUBJECT['loose-hat'])
+      game.dragStart()
+      game.dragTo(0, 2, 1, 0.5, 0.2)
+      run(game, 0.2)
+      game.letGo(letGoFor('loose-hat', 'to-hatted-head'))
+      return { game }
+    })()
+    let tipped = 0, leant = 0
+    run(game, 1.6, [], () => {
+      if (game.play.seen(3).at === 'head' && !game.play.flying(3)) tipped = Math.max(tipped, Math.abs(game.play.hatPose(3).tilt))
+      leant = Math.max(leant, Math.abs(game.play.actorPose('lanky', {} as never).lean))
+    })
+    expect(tipped).toBeGreaterThan(0.9)
+    expect(leant).toBeGreaterThan(0.08)
+    run(game, 1)
+    expect(game.play.hatPose(3).tilt).toBe(0)
+  })
+
+  it('the hat under a tower\'s top spins once as the top is carried home', () => {
+    const { game } = playCell('tower-top', 'to-tile')
+    const fresh = new Game(saveOf(everything()))
+    fresh.press(SUBJECT['tower-top'])
+    fresh.dragStart()
+    fresh.dragTo(0, 2, 1, 0.5, 0.2)
+    run(fresh, 0.2)
+    fresh.letGo({ on: 'tile' })
+    let most = 0
+    run(fresh, 2, [], () => { most = Math.max(most, fresh.play.hatPose(1).turn) })
+    expect(most).toBeGreaterThan(Math.PI * 1.9)
+    expect(fresh.play.hatPose(1).turn).toBeCloseTo(0, 6)
+    expect(game.play.hatPose(1).turn).toBeCloseTo(0, 6)
+  })
+
+  it('a tower whose top is let go anywhere else is tipped: the creature under it leans right over and comes back', () => {
+    const game = new Game(saveOf(everything()))
+    game.press(SUBJECT['tower-top'])
+    game.dragStart()
+    game.dragTo(0, 2, 1, 0.5, 0.2)
+    run(game, 0.2)
+    game.letGo(letGoFor('tower-top', 'elsewhere'))
+    let leant = 0
+    run(game, 1.2, [], () => { leant = Math.max(leant, Math.abs(game.play.actorPose('flop', {} as never).lean)) })
+    expect(leant).toBeGreaterThan(0.12)
+    run(game, 3)
+    expect(Math.abs(game.play.actorPose('flop', {} as never).lean)).toBeLessThan(0.08)
+  })
+
+  it('a hatted creature that shakes its hat over the tile shrugs when nothing falls out', () => {
+    const game = new Game(saveOf(everything()))
+    game.press(SUBJECT['hatted-creature'])
+    game.dragStart()
+    game.dragTo(0, 2, 1, 0.5, 0.2)
+    run(game, 0.2)
+    game.letGo({ on: 'tile' })
+    const acts: string[] = []
+    run(game, 3, [], () => { const act = game.play.acting('lanky'); if (act && acts.at(-1) !== act) acts.push(act) })
+    expect(acts).toEqual(['shakes-its-hat-out', 'shrugs'])
+  })
+
+  it('a hat off the floor is ducked under and then gets that creature\'s own reaction to exactly that hat', () => {
+    for (const action of ['tap', 'to-bare-head'] as const) {
+      const game = new Game(saveOf(everything()))
+      game.press(SUBJECT['loose-hat'])
+      if (action === 'tap') game.tap()
+      else {
+        game.dragStart()
+        game.dragTo(0, 2, 1, 0.5, 0.2)
+        run(game, 0.2)
+        game.letGo(letGoFor('loose-hat', action))
+      }
+      const world = worldOf(game.saved), wearer = world.crew.find((creature) => creature.hats.includes(3))!
+      const acts: string[] = []
+      run(game, 4.5, [], () => { const act = game.play.acting(wearer.kind); if (act && acts.at(-1) !== act) acts.push(act) })
+      expect(acts, action).toEqual(['ducks-under', TASTE_ACTS[wearer.kind][world.tile[3]]])
+    }
+  })
+})
+
+describe('a scene ended by a touch', () => {
+  it('is not heard to its end: the voices of the beats it skips are dropped, and the touch has its own', () => {
+    const game = new Game(at('two-heads'))
+    while (carefulTap(game)) run(game, 0.7)
+    run(game, ALONE + 1.5)
+    expect(game.sceneRunning).toBe(true)
+    game.play.cues.length = 0
+    game.press({ type: 'floor', x: 0, z: 6 })
+    expect(game.play.cues.map((cue) => cue.name)).toEqual(['squeak'])
+    game.pressEnd()
+  })
+})
+
+describe('a game opened again', () => {
+  it('starts nothing by itself: a change or a parade that was held waits for a touch on a hat or a creature', () => {
+    for (const position of ['one-leaves', 'two-heads']) {
+      const game = new Game(at(position))
+      while (carefulTap(game)) run(game, 0.7)
+      const again = new Game(putAway(game.saved)), scenes = again.seen.length
+      run(again, 12)
+      expect(again.sceneRunning, position).toBe(false)
+      expect(again.seen.length, position).toBe(scenes)
+      // The floor, the arch and the room do not count; a creature does.
+      again.press({ type: 'floor', x: 0, z: 6 }); again.pressEnd()
+      again.press({ type: 'prop', prop: 'tree' }); again.pressEnd()
+      run(again, ALONE)
+      expect(again.sceneRunning, position).toBe(false)
+      again.press({ type: 'creature', who: again.saved.crew[0].kind })
+      again.tap()
+      run(again, ALONE)
+      expect(again.sceneRunning, position).toBe(true)
+    }
+  })
+
+  it('and a hat in the hand or a pulled creature, put down when the game went to rest, has made no move', () => {
+    for (const subject of [SUBJECT['hat-in-tile'], SUBJECT['hat-on-head'], SUBJECT['tower-top'], SUBJECT['loose-hat'], SUBJECT['bare-creature'], SUBJECT['hatted-creature'], { type: 'arch' } as Target]) {
+      const game = new Game({ ...saveOf(everything()), finished: subject.type === 'arch' }), before = serialize(game.saved), scenes = game.seen.length
+      game.press(subject)
+      game.dragStart()
+      game.dragTo(3, 2, 1, 0.8, 0.4)
+      run(game, 0.3)
+      game.pressEnd()
+      run(game, 1)
+      expect(serialize(game.saved)).toEqual(before)
+      expect(game.seen.length).toBe(scenes)
+      expectStageIsWorld(game)
+    }
   })
 })

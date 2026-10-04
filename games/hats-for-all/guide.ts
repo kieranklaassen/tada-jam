@@ -9,7 +9,8 @@ import { holeX, spotX } from './stage'
 // convention): a glow on what can be touched now, and then one move by the
 // ghost hand. Pure: it reads the save and names things; the view draws them.
 // It never shows a solution, only one next touch, and it shows nothing while
-// there is nothing to do but wait.
+// there is nothing to do but wait. A game opened again starts nothing by
+// itself, so there the crew is shown as what to touch.
 
 export type Hint = {
   /** What glows: the things a touch would move on now. */
@@ -20,7 +21,11 @@ export type Hint = {
 
 const hat = (index: number): Target => ({ type: 'hat', hat: index })
 
-export function hint(saved: Saved): Hint {
+/**
+ * `asleep` is true when the game was opened again with a change or a parade held and the child has not yet touched a
+ * hat or a creature: nothing comes by itself then, so the crew is what to touch.
+ */
+export function hint(saved: Saved, asleep = false): Hint {
   const world: World = worldOf(saved)
   // A tower first: its top hat is the one a finger can lift.
   const towers = world.crew.filter((creature) => creature.hats.length > 1).map((creature) => hat(creature.hats[creature.hats.length - 1]))
@@ -37,6 +42,11 @@ export function hint(saved: Saved): Hint {
   if (saved.finished && bare.length === 0) {
     const who: Target = { type: 'creature', who: waits(waitingLead(saved)) }
     return { glow: [who], hand: who }
+  }
+  // Opened again with something held: any creature of the crew wakes the game, and the hand taps the first.
+  if (asleep && world.crew.length > 0) {
+    const crew = world.crew.map((creature): Target => ({ type: 'creature', who: creature.kind }))
+    return { glow: crew, hand: crew[0] }
   }
   // Nothing to touch: a change or the parade is on its way, or a bare head waits for a hat to come free.
   return { glow: [], hand: null }

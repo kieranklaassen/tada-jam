@@ -89,7 +89,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const draw = () => {
       if (width <= 0) return
       if (game && guidance) {
-        guide.hint = hint(game.saved)
+        guide.hint = hint(game.saved, game.asleep)
         guide.glow = guidance.glow
         if (guidance.demo === null) guide.opacity = 0
         else {
@@ -182,7 +182,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       audio.touchDown()
       ladder.touch(clock.seconds)
       const where = at(event)
-      overlay.press(where.x, where.y, width, event.timeStamp)
+      // The grown-up's corner counts one finger tapping, never several landing together: a palm or a fistful of fingers opens nothing.
+      if (event.isPrimary) overlay.press(where.x, where.y, width, event.timeStamp)
       act(touch.down(event.pointerId, where, event.timeStamp))
       // Captured, so the lift is reported even when the finger has slid off the surface.
       root.setPointerCapture(event.pointerId)
@@ -235,9 +236,20 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       frame = requestAnimationFrame(loop)
     }
 
+    // A touch that is in progress when the game goes to rest has no lift coming. It makes no move the child did
+    // not make: a hat in the hand goes back where it came from, a pulled creature is let be, a press ends
+    // without a tap, and the world is as it was before the finger landed (ART.md, "What is stored").
+    const putDown = () => {
+      touch.clear()
+      if (game && held) game.pressEnd()
+      held = null
+      dragging = false
+      sound()
+      keep()
+    }
+
     // Everything stops while unattended or hidden: the loop, the clock and sound. A touch in progress is
-    // ended, since its lift will never arrive (a drag is put down, a press ends without a tap), and the
-    // newest state is handed to storage.
+    // put down as above, and the newest state is handed to storage.
     const attention = new Attention(document, (awake) => {
       audio.setActive(awake)
       if (awake) {
@@ -247,8 +259,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       cancelAnimationFrame(frame)
       frame = 0
       clock.rest()
-      act(touch.clear())
-      held = null
+      putDown()
       cadence.settle(performance.now())
     })
     attendRef.current = (attended) => attention.set(attended)
@@ -274,8 +285,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
 
     return () => {
       disposed = true
-      // As on going to rest: the touch ends first, so the thing in hand is put down before the last save.
-      act(touch.clear())
+      // As on going to rest: the touch ends first, so the thing in hand is back where it came from before the last save.
+      putDown()
       cadence.settle(performance.now())
       cancelAnimationFrame(frame)
       observer.disconnect()

@@ -41,7 +41,7 @@ export const GRID: Record<ObjectKind, Record<Action, Cell>> = {
     tap: { seen: 'hops-onto-the-nearest-bare-head-or-home-with-a-double-bounce', heard: ['creak', 'chirrup', 'bap', 'babble-grump'], moves: true },
     'to-bare-head': { seen: 'is-picked-up-and-the-bare-creature-ducks-under-it', heard: ['creak', 'thwop', 'bap', 'babble'], moves: true },
     'to-hatted-head': { seen: 'lands-sideways-the-tower-leans-and-the-hat-rights-itself', heard: ['creak', 'thwop', 'bap', 'creak', 'babble-grump'], moves: true },
-    'to-tile': { seen: 'is-pressed-home-with-a-long-creak', heard: ['creak', 'thwop', 'creak', 'fwump'], moves: true },
+    'to-tile': { seen: 'is-pressed-home-with-a-long-creak', heard: ['creak', 'thwop', 'long-creak', 'fwump'], moves: true },
     elsewhere: { seen: 'skids-spins-like-a-coin-with-a-whirr-and-scuttles-beside-the-nearest-round-spot', heard: ['creak', 'thwop', 'whirr', 'plop', 'scuttle'], moves: true },
   },
   'tower-top': {
@@ -71,7 +71,7 @@ export const GRID: Record<ObjectKind, Record<Action, Cell>> = {
 /** The names a cell may use for what is heard: the voices of voices.ts, with the babble's tune where it matters. */
 export const HEARD = [
   'creak', 'pok', 'pip', 'bap', 'fwump', 'plop', 'squeak', 'squeal', 'whirr', 'whistle', 'scuttle', 'hoot', 'babble', 'babble-ask', 'babble-grump',
-  'groan', 'paf', 'pomf', 'bloop-blip', 'squelch', 'hiss', 'plap', 'chirrup', 'bom-bom', 'thwop', 'bip', 'shoop', 'zrrp', 'rumble', 'donk', 'hum', 'twang', 'dwong', 'tok', 'flap', 'clap',
+  'groan', 'paf', 'pomf', 'bloop-blip', 'squelch', 'hiss', 'plap', 'chirrup', 'bom-bom', 'thwop', 'bip', 'shoop', 'zrrp', 'rumble', 'donk', 'hum', 'twang', 'dwong', 'tok', 'flap', 'clap', 'long-creak',
 ] as const
 
 /**

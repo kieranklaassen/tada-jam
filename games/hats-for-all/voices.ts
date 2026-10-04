@@ -54,6 +54,12 @@ export function creak(count: number): Partial[] {
   return [noise(0, 340 * v, 210 * v, 3, 0.1, 0.004, 0.09), tone(0, 190 * v, 140 * v, 0.07, 0.004, 0.07)]
 }
 
+/** A loose hat is pressed home into its hole: the same creak, drawn out. */
+export function longCreak(count: number): Partial[] {
+  const v = vary(count)
+  return [noise(0, 330 * v, 170 * v, 3, 0.1, 0.02, 0.5), tone(0, 185 * v, 118 * v, 0.07, 0.02, 0.46)]
+}
+
 /** A hat pops out of its hole. */
 export function pok(hat: HatKind, count: number): Partial[] {
   const p = HAT_PITCH[hat] * vary(count)

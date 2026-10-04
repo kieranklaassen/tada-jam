@@ -4,7 +4,7 @@ import type { Driver, Frac, GameAudit } from '../types.ts'
 // arch they come and go through. The moments start from saved worlds, so each
 // reaches its state at once: every creature under every kind of hat (the
 // fifteen acts of the tastes), towers of two and the tower of three that
-// falls, loose hats beside their spots, a hat carried about in the hand, a
+// falls, the tops of towers carried home and to the floor, loose hats beside their spots, a hat carried about in the hand, a
 // creature pulled to another, to the tile and to nowhere, each scene played
 // out and each scene ended by a touch in the middle, and a finished crew at
 // rest with the next crew's first in the arch. The room is audited with
@@ -104,6 +104,24 @@ const audit: GameAudit = {
         await d.wait(2000)
         await d.tap(await hat(d, 4))
         await d.wait(1500)
+      },
+    },
+    {
+      // The tops of two towers carried off: one home, while the hat under it spins once; one let go on the floor, which tips its tower; and that loose hat carried onto a hatted head, where it lands sideways and rights itself.
+      name: 'tower-tops-carried',
+      run: async (d) => {
+        await open(d, { crew: crew(['bop', 'flop', 'lanky'], [[0, 1], [2, 3], [4]]), tile: ['cone', 'dome', 'brim', 'cone', 'dome'] })
+        await d.wait(1200)
+        await d.drag(await hat(d, 1), TILE, 600)
+        await d.wait(2200)
+        await d.drag(await hat(d, 3), FLOOR, 600)
+        await d.wait(2600)
+        await d.drag(await hat(d, 3), await creature(d, 2), 600)
+        await d.wait(2800)
+        await d.drag(await hat(d, 3), FLOOR, 600)
+        await d.wait(2400)
+        await d.drag(await hat(d, 3), await creature(d, 0), 600)
+        await d.wait(2800)
       },
     },
     {

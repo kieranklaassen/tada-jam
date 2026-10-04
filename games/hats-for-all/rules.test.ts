@@ -52,9 +52,9 @@ describe('a tapped hat', () => {
   })
 
   it('goes to the lower spot when two bare heads are as near', () => {
-    // Two hats lie at x -1.15 and 1.15; a hat laid by itself lies at x 0, between spots 1 and 3.
-    const { world: after } = tapHat(world([1, 3], 1), 0)
-    expect(placeOf(after, 0)).toEqual({ at: 'head', spot: 1, level: 0 })
+    // A hat laid by itself lies at x 1.6, half way between spots 2 and 3.
+    const { world: after } = tapHat(world([2, 3], 1), 0)
+    expect(placeOf(after, 0)).toEqual({ at: 'head', spot: 2, level: 0 })
   })
 
   it('comes out loose when no head is bare, and that is a slip', () => {
@@ -198,10 +198,32 @@ describe('the crew', () => {
     for (const hat of [0, 1, 2]) w = tapHat(w, hat).world
     const { world: after, happened } = applyChange(w)
     expect(after.crew.map((c) => c.spot)).toEqual([2, 3])
-    expect(after.loose).toEqual([{ hat: 0, spot: 1 }])
+    const worn = w.crew.find((creature) => creature.spot === 1)!.hats[0]
+    expect(after.loose).toEqual([{ hat: worn, spot: 1 }])
     expect(happened.at(-1)).toEqual({ type: 'left', spot: 1, kind: 'bop' })
     expect(ready(after)).toBe(false)
-    expect(ready(tapHat(after, 0).world)).toBe(true)
+    expect(ready(tapHat(after, worn).world)).toBe(true)
+  })
+
+  it('always frees a hat: when the one who was to leave stands bare and another wears a hat, the hatted creature nearest to it leaves in its place', () => {
+    // Four heads and three hats: whoever is left bare, the one who walks out wears a hat, and its hat lies loose for the bare head.
+    for (const named of [1, 2, 3, 4]) for (const bare of [1, 2, 3, 4]) {
+      const w = { ...world([1, 2, 3, 4], 3, ['leave']), leaver: named }
+      let hat = 0
+      for (const creature of w.crew) if (creature.spot !== bare) creature.hats = [hat++]
+      expect(settled(w)).toBe(true)
+      const { world: after, happened } = applyChange(w), left = happened.at(-1)
+      expect(left?.type).toBe('left')
+      expect(after.loose).toHaveLength(1)
+      expect(bareSpots(after)).toEqual([bare])
+      if (left?.type === 'left') {
+        expect(left.spot).not.toBe(bare)
+        if (named !== bare) expect(left.spot).toBe(named)
+        else expect(Math.abs(left.spot - named)).toBe(1)
+      }
+      // One tap on the loose hat and every head has one.
+      expect(ready(tapHat(after, after.loose[0].hat).world)).toBe(true)
+    }
   })
 
   it('never loses its last creature and never grows past five', () => {

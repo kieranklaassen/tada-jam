@@ -3,7 +3,7 @@ import { MOST } from './kinds'
 import { ARCH, BODY, CREATURE_DEPTH, HAND, SLAB, TILE_DEPTH } from './sizes'
 import {
   ARCH_X, ARCH_Z, BACK_Z, HOLE_GAP, IN_ARCH, LANE_Z, LOOSE_Z, OFF_LEFT_X, PARADE_SPEED, PARADE_STAGGER_S, ROW_Z, SPOT_GAP, TILE_Z, TURN_LEFT_X, TURN_RIGHT_X,
-  alongWay, holeX, nearestSpot, paradeWay, spotX, wayFromArch, wayLength, wayOffLeft, wayOutByArch, wayToArch, wayToTile,
+  alongWay, holeAcross, holeX, nearestSpot, tileX, paradeWay, spotX, wayFromArch, wayLength, wayOffLeft, wayOutByArch, wayToArch, wayToTile,
 } from './stage'
 
 const widest = Math.max(...Object.values(BODY).map((body) => body.reach)) + HAND.radius
@@ -16,7 +16,16 @@ describe('the stage', () => {
     for (const spot of SPOTS) expect(nearestSpot(spotX(spot))).toBe(spot)
     expect(nearestSpot(-99)).toBe(0)
     expect(nearestSpot(99)).toBe(MOST - 1)
-    expect(holeX(0, 5)).toBe(-holeX(4, 5))
+    // The holes are evenly spaced about the tile's middle, and the tile lies to one side by as much as keeps every hole clear of every head's place.
+    for (let hats = 1; hats <= MOST; hats++) {
+      expect(holeX(0, hats) + holeX(hats - 1, hats)).toBeCloseTo(2 * tileX(hats), 9)
+      for (let hole = 0; hole < hats; hole++) {
+        expect(holeX(hole, hats)).toBeCloseTo(tileX(hats) + holeAcross(hole, hats), 9)
+        for (const spot of SPOTS) expect(Math.abs(holeX(hole, hats) - spotX(spot)), `${hats} hats: hole ${hole} and spot ${spot}`).toBeGreaterThanOrEqual(0.44)
+      }
+    }
+    // Three heads and three hats, the smallest row with a middle: no hat is nearer than 0.7 to a head, and the hat between two heads is as far from both.
+    expect(Math.min(...[0, 1, 2].flatMap((hole) => [1, 2, 3].map((spot) => Math.abs(holeX(hole, 3) - spotX(spot)))))).toBeGreaterThanOrEqual(0.69)
   })
 
   it('keeps its lanes apart: a walker in front of the row or behind it touches nobody standing, no loose hat, not the tile and not the arch', () => {

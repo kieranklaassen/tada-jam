@@ -22,18 +22,23 @@ export const LEFT_ALONE_S = 2
 
 /**
  * What the game keeps while it runs and never saves: how long the crew has
- * been left alone, and whether it has paraded for the pairs as they stand.
+ * been left alone, whether it has paraded for the pairs as they stand, and
+ * whether the child has touched a hat or a creature since the game was opened.
  */
-export type Pace = { quiet: number; paraded: boolean }
+export type Pace = { quiet: number; paraded: boolean; touched: boolean }
 
-/** The pace on load: nothing replays, so a finished crew that is still ready has had its parade. */
+/**
+ * The pace on load: nothing replays, so a finished crew that is still ready has had its parade. And nothing comes
+ * by itself: a change or a parade that was held when the game was put away waits for the child's next touch on a
+ * hat or a creature, and comes when the crew has been left alone after that.
+ */
 export function freshPace(saved: Saved): Pace {
-  return { quiet: 0, paraded: saved.finished && ready(worldOf(saved)) }
+  return { quiet: 0, paraded: saved.finished && ready(worldOf(saved)), touched: false }
 }
 
 /** The child touched a hat or a creature: the wait starts again, and a crew whose pairs are no longer right may parade again once they are. */
 export function touched(pace: Pace, saved: Saved): Pace {
-  return { quiet: 0, paraded: pace.paraded && ready(worldOf(saved)) }
+  return { quiet: 0, paraded: pace.paraded && ready(worldOf(saved)), touched: true }
 }
 
 /** `dt` seconds of attended game time went by with no touch on a hat or a creature. */
@@ -47,7 +52,7 @@ export function waited(pace: Pace, dt: number): Pace {
  * sets right again parades again, every time.
  */
 export function due(saved: Saved, pace: Pace): 'change' | 'parade' | null {
-  if (pace.quiet < LEFT_ALONE_S) return null
+  if (!pace.touched || pace.quiet < LEFT_ALONE_S) return null
   const world = worldOf(saved)
   if (changeDue(world)) return 'change'
   return ready(world) && !pace.paraded ? 'parade' : null

@@ -248,10 +248,17 @@ describe('a finished crew', () => {
     expect(beginNext(back).finished).toBe(false)
   })
 
-  it('found mid-wait after a put-away has its first parade then, since it never had one', () => {
+  it('found mid-wait after a put-away starts nothing by itself: its first parade waits for the child to touch a hat or a creature, and comes when the crew has been left alone after that', () => {
     const start = at('two-heads')
     const hatted = play(start, everyHat(start), 0.5).saved
     expect(hatted.finished).toBe(false)
-    expect(play(putAway(hatted), [], 0, ALONE).parades).toBe(1)
+    const back = putAway(hatted)
+    expect(play(back, [], 0, 10).parades).toBe(0)
+    let pace = freshPace(back)
+    pace = waited(pace, 10)
+    expect(due(back, pace)).toBe(null)
+    pace = touched(pace, back)
+    expect(due(back, waited(pace, LEFT_ALONE_S - 0.1))).toBe(null)
+    expect(due(back, waited(pace, LEFT_ALONE_S))).toBe('parade')
   })
 })

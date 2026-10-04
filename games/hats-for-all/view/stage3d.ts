@@ -5,7 +5,7 @@ import { MOST, type HatKind } from '../kinds'
 import { DIMPLE_SECONDS, MOST_CRUMBS, type ActorPose, type Play } from '../play'
 import { CREATURE_DEPTH, HAND, HAT_HALF, HAT_HEIGHT, SLAB, TILE_DEPTH } from '../sizes'
 import { BALLOON, balloonAt, BALL_RADIUS, BALL_ROLL, BRICK_HOP, BRICK_REST_Y, CLOUD_DRIFT, PROPS, PROP_AT, PROP_LEAN } from '../props'
-import { ARCH_X, ARCH_Z, LANE_Z, TILE_Z } from '../stage'
+import { ARCH_X, ARCH_Z, LANE_Z, TILE_Z, tileX } from '../stage'
 import { tileWidth } from '../tile'
 import { CREATURE_COLOUR, EAR_DEPTH, HAT_COLOUR, MAT_BACK, PALETTE, buildArch, buildMat, buildPieces, buildTile, type Pieces } from './build'
 import { BALLOON_WAY, CLOUD_AT, TINT, buildBall, buildBrick, buildCloud, buildCrown, buildRoomPlanes, buildScenery } from './room'
@@ -232,7 +232,7 @@ export class FoamStage {
     while (ear < this.ears.length) this.ears[ear++].visible = false
     if (play) {
       this.cutTile(play)
-      this.tile.position.set(0, 0, play.tileZ)
+      this.tile.position.set(tileX(play.hatCount), 0, play.tileZ)
       this.hats.forEach((mesh, hat) => {
         mesh.visible = hat < play.hatCount
         if (!mesh.visible) return
@@ -252,7 +252,7 @@ export class FoamStage {
       this.arch.scale.set(1 / Math.sqrt(play.arch.x), play.arch.x, 1)
       for (const dimple of play.dimples) {
         const size = Math.sin(Math.PI * dimple.age / DIMPLE_SECONDS) * 3.2
-        shade(dimple.x, dimple.z, size, size * 0.8, Math.abs(dimple.z - play.tileZ) < TILE_DEPTH / 2 && Math.abs(dimple.x) < tileWidth(play.hatCount) / 2 ? SLAB + 0.012 : 0.012)
+        shade(dimple.x, dimple.z, size, size * 0.8, Math.abs(dimple.z - play.tileZ) < TILE_DEPTH / 2 && Math.abs(dimple.x - tileX(play.hatCount)) < tileWidth(play.hatCount) / 2 ? SLAB + 0.012 : 0.012)
       }
     } else for (const mesh of this.hats) mesh.visible = false
     shade(ARCH_X - 2.3, ARCH_Z + 0.1, 1.5, 1.3)
@@ -404,7 +404,7 @@ export class FoamStage {
       if (seen.at === 'head' && !(held.type === 'creature' && held.who === seen.who)) return { on: 'creature', who: seen.who }
     }
     const floor = this.floorUnder(x, y)
-    if (Math.abs(floor.z - play.tileZ) < TILE_DEPTH / 2 + 0.4 && Math.abs(floor.x) < tileWidth(play.hatCount) / 2 + 0.4) return { on: 'tile' }
+    if (Math.abs(floor.z - play.tileZ) < TILE_DEPTH / 2 + 0.4 && Math.abs(floor.x - tileX(play.hatCount)) < tileWidth(play.hatCount) / 2 + 0.4) return { on: 'tile' }
     return { on: 'floor', ...floor }
   }
 

@@ -73,8 +73,9 @@ const BLOCKS: readonly (readonly [number, number, number, string])[] = [
   [10.8, 13.6, 3.2, TINT.lilac], [13.7, 16.6, 2.8, TINT.butter],
 ]
 
-/** A string of round foam beads hangs along the wall in swags, just under the top of the frame: where each swag starts and ends, and how low it hangs. */
-const SWAGS: readonly (readonly [number, number, number])[] = [[-17.5, -9.5, 0.75], [-9.5, -1.5, 0.6], [-1.5, 7.5, 0.75], [7.5, 17.5, 0.65]]
+/** A string of round foam beads hangs along the wall in swags, just under the top of the frame: where each swag starts and ends, and how low it hangs. It ends short of the top right corner, which is the grown-up's and shows nothing to touch. */
+const SWAGS: readonly (readonly [number, number, number])[] = [[-12.2, -6.6, 0.6], [-6.6, -1.0, 0.5], [-1.0, 4.6, 0.6], [4.6, 10.2, 0.5]]
+const BEADS_A_SWAG = 7
 const SWAG_Y = 4.52
 const BEAD_TINTS = [TINT.rose, TINT.butter, TINT.sky, TINT.mint, TINT.lilac, TINT.peach] as const
 
@@ -93,8 +94,8 @@ export function buildScenery(): THREE.BufferGeometry {
   parts.push(slab(disc(0.42, 0, 0.42), LAYER, TINT.sun, 12).translate(x + 1.6, FLOOR_Y + paneY + 1.25, PANE_Z + 0.08))
   // The string of beads on the wall: flat, pale and out of reach, so plainly part of the wall.
   let bead = 0
-  for (const [from, to, sag] of SWAGS) for (let i = 0; i < 9; i++) {
-    const u = (i + 0.5) / 9
+  for (const [from, to, sag] of SWAGS) for (let i = 0; i < BEADS_A_SWAG; i++) {
+    const u = (i + 0.5) / BEADS_A_SWAG
     parts.push(standing(disc(i % 3 === 1 ? 0.33 : 0.24, 0, 0), LAYER, BEAD_TINTS[bead++ % BEAD_TINTS.length], from + (to - from) * u, SWAG_Y - sag * 4 * u * (1 - u), WALL_Z + 0.08))
   }
   // The trunk of the tree; its crown is its own mesh, since it sways.

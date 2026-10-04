@@ -1,4 +1,5 @@
-import { due, freshPace, touched, waited, waitingLead, withWorld, type Pace } from './cycle'
+import { ACTS } from './acts'
+import { LEFT_ALONE_S, due, freshPace, touched, waited, waitingLead, withWorld, type Pace } from './cycle'
 import { GRID, type Action, type ObjectKind } from './grid'
 import type { CreatureKind, HatKind } from './kinds'
 import { PERSONALITY } from './motion'
@@ -12,7 +13,7 @@ import { changeShow, firstShowing, nextCrewShow, paradeShow, type Show } from '.
 import { IN_ARCH, LOOSE_Z, ROW_Z, TILE_Z, holeX, nearestSpot, spotPoint, spotX } from './stage'
 import { ACTS as TASTE_ACTS, moodFor, tasteFor } from './tastes'
 import {
-  babble, bap, bip, bloopBlip, bomBom, chirrup, clap, creak, donk, dwong, flap, fwump, groan, hiss, hoot, hum, paf, pip, plap, plop, pok, pomf, rumble, rustle, thup, trundle,
+  babble, bap, bip, bloopBlip, bomBom, chirrup, clap, creak, donk, dwong, flap, fwump, groan, hiss, hoot, hum, longCreak, paf, pip, plap, plop, pok, pomf, rumble, rustle, thup, trundle,
   scuttle, shoop, squeak, squeal, squelch, thwop, tok, twang, voiceLength, whirr, whistle, zrrp, type Mood,
 } from './voices'
 
@@ -98,12 +99,20 @@ export class Game {
     this.dress()
   }
 
+  /** Opened again with a change or a parade held, and no hat or creature touched yet: nothing comes until one is. */
+  get asleep(): boolean {
+    return !this.pace.touched && !this.sceneRunning && due(this.saved, { ...this.pace, touched: true, quiet: LEFT_ALONE_S }) !== null
+  }
+
   /** A touch ends the scene that is playing: everything is at once where the scene was taking it. */
   endScene(): void {
     if (!this.scene) return
+    // What the rest of the scene would have sounded is not heard: its beats all play at once to set the stage, and their voices together would be a noise nobody made.
+    const heard = this.play.cues.length
     this.scene.finish()
     this.scene = null
     this.play.settle()
+    this.play.cues.length = heard
     this.dress()
   }
 
@@ -187,6 +196,8 @@ export class Game {
       this.play.pressHat(target.hat, true)
       const place = placeOf(worldOf(this.saved), target.hat)
       if (place.at === 'head') this.play.bounce(this.at(place.spot), 0.93)
+      // In its hole, the hat sinks under the finger and the tile dimples round it.
+      if (place.at === 'tile') this.play.dent(holeX(target.hat, this.saved.tile.length), TILE_Z)
       this.pace = touched(this.pace, this.saved)
     } else if (target.type === 'creature') {
       this.play.pressActor(target.who, true)
@@ -356,12 +367,16 @@ export class Game {
       }
       if (event.to.at === 'tile') {
         // Carried home: a loose hat is pressed in with a long creak, any other pushed in under the finger with a rising squeak.
-        if (carried) play.cue(object === 'loose-hat' ? 'creak' : 'squeak', object === 'loose-hat' ? creak(this.next()) : squeak(this.next()))
+        if (carried) play.cue(object === 'loose-hat' ? 'long-creak' : 'squeak', object === 'loose-hat' ? longCreak(this.next()) : squeak(this.next()))
         play.moveHat(hat, { at: 'tile' }, travel, () => {
           play.cue('fwump', fwump(kind, this.next()))
           play.dimple(holeX(hat, this.saved.tile.length), TILE_Z)
           // The hat left under a tower's top spins once as the top goes home, with a quick "zrrp".
-          if (object === 'tower-top' && action === 'to-tile') play.cue('zrrp', zrrp(this.next()), 0.08)
+          if (object === 'tower-top' && action === 'to-tile' && event.from.at === 'head') {
+            play.cue('zrrp', zrrp(this.next()), 0.08)
+            const under = this.at(event.from.spot), left = play.has(under) ? play.hatOn(under, event.from.level - 1) : null
+            if (left !== null) play.after(0.08, () => play.spinHat(left))
+          }
         })
       } else if (event.to.at === 'loose') {
         const spot = event.to.spot
@@ -370,7 +385,11 @@ export class Game {
         if (carried && object === 'loose-hat') play.cue('whirr', whirr(this.next()))
         // Off a head it slides with a hiss of foam on foam; off a tipped tower it rolls with a wobbling rumble.
         if (carried && object === 'hat-on-head') play.cue('hiss', hiss(this.next()))
-        if (carried && object === 'tower-top') play.cue('rumble', rumble(this.next()))
+        // The whole tower is tipped: the creature under it leans right over and comes back as the top hat rolls off.
+        if (carried && object === 'tower-top') {
+          play.cue('rumble', rumble(this.next()))
+          if (event.from.at === 'head') play.tip(this.at(event.from.spot))
+        }
         play.moveHat(hat, { at: 'loose', spot }, travel, () => {
           // It lands with a plop; flat off a head, "plap"; and what is left of a tipped tower settles with a low "donk".
           if (carried && object === 'hat-on-head') play.cue('plap', plap(kind, this.next()))
@@ -437,7 +456,10 @@ export class Game {
     if (tower) {
       // A second hat: the tower slips over its eyes and it totters, bewildered and never hurt. A loose hat makes the
       // tower lean with a creak; the top of another tower lands with a second soft thump.
-      if (object === 'loose-hat') play.cue('creak', creak(this.next()), 0.09)
+      if (object === 'loose-hat') {
+        play.cue('creak', creak(this.next()), 0.09)
+        if (carried) play.landsAskew(hat)
+      }
       else if (object === 'tower-top') play.cue('bap', bap(kind, this.next()), 0.09)
       play.act(who, 'totters-blind')
       this.says(who, 'grump', 0.14)
@@ -448,7 +470,10 @@ export class Game {
         play.after(0.9, () => { if (play.has(other.kind) && play.worn(other.kind) === 0) play.act(other.kind, 'pats-its-bare-head') })
       }
     } else {
-      play.act(who, object === 'loose-hat' ? 'ducks-under' : TASTE_ACTS[creature.kind][kind])
+      const taste = TASTE_ACTS[creature.kind][kind]
+      play.act(who, object === 'loose-hat' ? 'ducks-under' : taste)
+      // A hat off the floor is ducked under first; then, like any hat, it gets this creature's own reaction to exactly this hat.
+      if (object === 'loose-hat') play.after(ACTS['ducks-under'].lasts + 0.06, () => { if (play.has(who) && play.hatOn(who, 0) === hat && play.worn(who) === 1 && !play.walking(who) && play.acting(who) === null) play.act(who, taste) })
       this.says(who, moodFor(tasteFor(creature.kind, kind)), 0.1)
     }
     if (creature.hats.length === 1) play.everyoneLooks(spotX(creature.spot), ROW_Z, 1.2, who)
@@ -478,6 +503,8 @@ export class Game {
       play.cue('tok', tok(this.next()), 0.3); this.says(who, 'plain', 0.4); this.says(other, 'plain', 0.6)
     } else if (action === 'to-tile') {
       play.act(who, 'shakes-its-hat-out'); play.cue('flap', flap(this.next()), 0.4); this.says(who, 'ask', 0.9)
+      // Nothing falls out, and it shrugs.
+      play.after(ACTS['shakes-its-hat-out'].lasts + 0.06, () => { if (play.has(who) && !play.walking(who) && play.acting(who) === null) play.act(who, 'shrugs') })
     } else {
       play.act(who, 'twangs-holding-its-hat'); play.cue('dwong', dwong(this.next())); this.says(who, 'plain', 0.3)
     }

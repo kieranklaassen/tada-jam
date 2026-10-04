@@ -69,7 +69,11 @@ export type Travel = 'pop' | 'hop' | 'skid' | 'carry'
 export type Cue = { name: string; voice: Partial[]; delay: number }
 
 type Flight = { fromX: number; fromY: number; fromZ: number; fromUp: number; t: number; lasts: number; arc: number; travel: Travel; land: (() => void) | null }
-type Hat = { kind: HatKind; seen: Seen; pose: HatPose; press: Spring; pressed: boolean; flight: Flight | null; hand: { x: number; y: number; z: number } }
+type Hat = {
+  kind: HatKind; seen: Seen; pose: HatPose; press: Spring; pressed: boolean; flight: Flight | null; hand: { x: number; y: number; z: number }
+  /** Seconds left of lying sideways on the hat under it before it has righted itself, and of spinning once on the head it is on. */
+  askew: number; spin: number
+}
 type Walk = { way: Point[]; gone: number; speed: number; wait: number; then: (() => void) | null }
 type Actor = {
   kind: CreatureKind; x: number; z: number; heading: number
@@ -90,6 +94,10 @@ type Actor = {
 }
 
 const ease = (t: number): number => t * t * (3 - 2 * t)
+/** How long a hat that landed sideways takes to right itself, how far over it lies at first, and how long a hat takes to spin once. */
+export const ASKEW_S = 0.7
+const ASKEW_TIP = 1.15
+export const SPIN_S = 0.42
 /** A loose hat's circle beside its round spot: how wide, and how fast it goes round, in radians a second. */
 export const LOOSE_CIRCLE = 0.3
 export const LOOSE_TURN = 1.1
@@ -123,7 +131,7 @@ export class Play {
 
   /** A new tile of hats, every one in its hole. */
   layTile(kinds: readonly HatKind[]): void {
-    this.hats = kinds.map((kind) => ({ kind, seen: { at: 'tile' }, pose: { x: 0, y: 0, z: 0, up: 0, flip: 0, tilt: 0, turn: 0, squash: 1 }, press: { x: 1, v: 0 }, pressed: false, flight: null, hand: { x: 0, y: 0, z: 0 } }))
+    this.hats = kinds.map((kind) => ({ kind, seen: { at: 'tile' }, pose: { x: 0, y: 0, z: 0, up: 0, flip: 0, tilt: 0, turn: 0, squash: 1 }, press: { x: 1, v: 0 }, pressed: false, flight: null, hand: { x: 0, y: 0, z: 0 }, askew: 0, spin: 0 }))
     this.hats.forEach((_, hat) => this.restHat(hat, this.hats[hat].pose))
   }
 
@@ -273,6 +281,31 @@ export class Play {
     if (actor) { actor.pullX = Math.max(-1, Math.min(1, x)); actor.pullY = Math.max(-1, Math.min(1, y)) }
   }
 
+  /** The tile is pressed where a hat lies in it: the tile dimples round the hat. Nothing hops: the tile is not the floor. */
+  dent(x: number, z: number): void {
+    this.dimples.push({ x, z, age: 0 })
+  }
+
+  /** A hat that has just landed on another lies sideways on it and rights itself, and the tower leans under it. */
+  landsAskew(hat: number): void {
+    const h = this.hats[hat]
+    if (!h || h.seen.at !== 'head') return
+    h.askew = ASKEW_S
+    this.tip(h.seen.who, 2.2)
+  }
+
+  /** The hat on a head spins once where it sits. */
+  spinHat(hat: number): void {
+    const h = this.hats[hat]
+    if (h) h.spin = SPIN_S
+  }
+
+  /** A creature is tipped: it leans right over, feet planted, and comes back on its own spring. */
+  tip(who: string, push = 3.2): void {
+    const actor = this.actors.get(who)
+    if (actor) actor.lean.v += push * (actor.phase % 2 < 1 ? 1 : -1)
+  }
+
   /** The floor is pressed: a dimple spreads and whatever stands near hops. */
   dimple(x: number, z: number): void {
     this.dimples.push({ x, z, age: 0 })
@@ -317,7 +350,7 @@ export class Play {
       if (!busy) break
     }
     if (this.tileSlide) { this.tileZ = this.tileSlide.to; this.tileSlide = null }
-    this.hats.forEach((hat, i) => { hat.pressed = false; hat.press.x = 1; hat.press.v = 0; this.restHat(i, hat.pose) })
+    this.hats.forEach((hat, i) => { hat.pressed = false; hat.press.x = 1; hat.press.v = 0; hat.askew = 0; hat.spin = 0; this.restHat(i, hat.pose) })
   }
 
   get busy(): boolean {
@@ -363,6 +396,8 @@ export class Play {
     }
     this.hats.forEach((h, hat) => {
       stepSpring(h.press, h.pressed ? 0.6 : 1, 300, 13, dt)
+      h.askew = Math.max(0, h.askew - dt)
+      h.spin = Math.max(0, h.spin - dt)
       const flight = h.flight, pose = h.pose
       this.restHat(hat, pose)
       if (!flight) return
@@ -471,7 +506,9 @@ export class Play {
     for (let level = 0; level < seen.level; level++) under += HAT_HEIGHT[this.hatKind(this.hatOn(seen.who, level) ?? hat)]
     // A hat that is tipped is lifted by as much as its low corner dips, so it rests on the head by that corner and never in it.
     // The hats of a tower stand square on one another, whatever act is still playing under them.
-    const tip = tower ? 0 : mods.hatTilt + (actor.grumpy ? 0.16 : 0), dip = Math.abs(Math.sin(tip)) * HAT_HALF[h.kind]
+    // The one exception is a hat that has just landed sideways on the hat under it: it lies over and rights itself.
+    const askew = h.askew > 0 ? ASKEW_TIP * ease(h.askew / ASKEW_S) * (hat % 2 === 0 ? 1 : -1) : 0
+    const tip = tower ? askew : mods.hatTilt + (actor.grumpy ? 0.16 : 0), dip = Math.abs(Math.sin(tip)) * HAT_HALF[h.kind]
     // However far an act and a slipping tower bring a hat down, it stays above the feet.
     const lean = actor.lean.x + mods.lean, head = body.top * actor.squash.x * mods.squash, top = Math.max(0.45, head + slip + mods.hatLift + dip) + under
     // A body leans as foam does: its feet stay planted and its top slides across, so the top of its head stays level.
@@ -481,7 +518,8 @@ export class Play {
     out.z = actor.z - across * Math.sin(mods.turn) + 0.02 * (seen.level + 1) + fwd * HAT_FWD
     out.up = 1
     out.tilt = tip
-    out.turn = mods.turn
+    // A hat that spins once goes round where it sits, eased in and out.
+    out.turn = mods.turn + (h.spin > 0 ? Math.PI * 2 * ease(1 - h.spin / SPIN_S) : 0)
     return out
   }
 

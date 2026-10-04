@@ -257,7 +257,10 @@ export function applyChange(before: World): Outcome {
     happened.push({ type: 'came', spot, kind })
     return { world, happened }
   }
-  const leaver = creatureAt(world, world.leaver ?? -1) ?? world.crew[world.crew.length - 1]
+  const named = creatureAt(world, world.leaver ?? -1) ?? world.crew[world.crew.length - 1]
+  // A hat always comes free: if the one who was to leave stands bare, the hatted creature nearest to it leaves in its place.
+  const hatted = world.crew.filter((creature) => creature.hats.length > 0).sort((a, b) => Math.abs(a.spot - named.spot) - Math.abs(b.spot - named.spot) || a.spot - b.spot)
+  const leaver = named.hats.length === 0 && hatted.length > 0 ? hatted[0] : named
   world.leaver = null
   if (world.crew.length <= 1) return { world, happened }
   world.crew = world.crew.filter((creature) => creature !== leaver)
