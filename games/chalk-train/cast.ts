@@ -38,7 +38,7 @@ export class RiderLife {
   /** How it takes what it is doing: as something it likes (1), dislikes (-1), or neither. It colours how it gets out at home. */
   mood: 1 | -1 | 0 = 0
   private walking = false
-  /** It is climbing into its wagon from its stop, as the train came to it. */
+  /** It is climbing into its wagon: the train came to its stop, or it has walked over. */
   climbing = false
   /** It has this moment landed in its wagon: the company sounds the thump, once. */
   justSat = false
@@ -58,7 +58,7 @@ export class RiderLife {
   /** Whether it is sitting in a wagon and has finished climbing in: the view then draws it with the wagon. */
   get settledIn(): number { return this.seat.in === 'wagon' && this.moved >= 1 ? this.seat.index : -1 }
   get moving(): boolean { return this.moved < 1 }
-  /** Walking over to the train and not yet in its wagon. */
+  /** Walking over to the train, or climbing into its wagon. */
   get onItsWay(): boolean { return this.walking || this.climbing }
   get doing(): ClipName { return this.clip }
 
@@ -114,6 +114,7 @@ export class RiderLife {
     if (this.clipT >= 1) {
       if (LOOPS.includes(this.clip)) this.clipT -= 1
       else {
+        this.climbing = false
         this.clip = standing(this.seat)
         this.clipT = 0
       }
@@ -129,9 +130,10 @@ export class RiderLife {
       this.moved = Math.min(1, this.moved + dt / this.moveSecs)
       if (this.moved >= 1 && this.seat.in === 'wagon') this.justSat = true
       if (this.moved >= 1) this.climbing = false
-      // At the end of its walk it climbs in.
+      // At the end of its walk it climbs in, which the train waits for as well.
       if (this.moved >= 1 && this.walking) {
         this.walking = false
+        this.climbing = true
         this.act('board')
       }
       const t = this.moved * this.moved * (3 - 2 * this.moved)
@@ -196,7 +198,7 @@ export class Cast {
         life = new RiderLife(want.kind, want.seat, this.rng, !quietly)
         this.riders.set(want.id, life)
         if (!quietly) drawnIn.push(want.kind)
-      } else if (!life.moving) life.put(want.seat)
+      } else if (!life.moving && !life.onItsWay) life.put(want.seat)
       life.gaze = want.gaze
     }
     return drawnIn
