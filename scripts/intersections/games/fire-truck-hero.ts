@@ -91,7 +91,7 @@ export default {
     { a: 'seed-petals', b: 'seed-shoot', kind: 'pose', upTo: 1, reason: 'the stem runs up into the heart of the flower' },
     { a: 'seed-leaves', b: 'seed-shoot', kind: 'pose', upTo: 1, reason: 'the leaves grow out of the stem' },
     { a: 'seed-pot', b: 'seed-pot-damp', kind: 'pose', upTo: 1, reason: "the dark that climbs the pot is a skin on the pot's own wall" },
-    { a: 'fire-flames', b: 'fire-logs-dry', kind: 'pose', upTo: 0.3, reason: 'the flames rise out of the heap of logs' },
+    { a: 'fire-flames', b: 'fire-logs-(dry|wet)', kind: 'pose', upTo: 0.3, reason: 'the flames rise out of the heap of logs, and die down into it as the fire goes out and the logs turn wet' },
     { a: 'fire-ring', b: 'fire-logs-wet', kind: 'pose', upTo: 0.3, reason: 'the wet logs float on their puddle and knock against the ring of pebbles' },
     { a: 'fire-logs-wet', b: 'fire-logs-wet-top', kind: 'pose', upTo: 1, reason: 'the logs on top lie on the logs underneath, and afloat they part and knock together again' },
     { a: 'cat-skull', b: 'cat-ears', kind: 'pose', upTo: 1, reason: 'her ears are rooted in her head, and flat they lie against it' },

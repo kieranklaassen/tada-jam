@@ -28,7 +28,7 @@ import { honk as honkVoice, plip, splat, squelch, SPLAT_VARIANTS, type VoiceSpec
 import { afloat, gulpOn, gulpOnGround, honk, rest as restYard, sweepOver, type Came, type Step, type Yard, type YardEvent } from './world'
 import { arrangementsOf } from './yards'
 import { YardMotion } from './yardMotion'
-import { beeBuzz, beeLands, bellRing, boatScrapes, catPaws, cellVoice, delayed, drip, duckQuack, duckTapsFloor, gateSwings, onPlastic, petalOpens, showSpit, slowSizzle, snailGlides, steamFades, truckRolls, wormPops } from './yardVoices'
+import { beeBuzz, beeLands, bellRing, boatBumps, boatScrapes, catPaws, cellVoice, delayed, drip, duckQuack, duckTapsFloor, gateSwings, onPlastic, petalOpens, showSpit, slowSizzle, snailGlides, steamFades, truckRolls, wormPops } from './yardVoices'
 
 /** A landing point that moves faster than this, in yard units a second, is sweeping. */
 export const SWEEP_SPEED = 4.2
@@ -154,6 +154,7 @@ export class Game extends Toy {
     // The duck's beak on a dry floor is heard a few times after a touch, and then it taps in silence: an idle yard goes quiet.
     if (this.motion.duck.tapped && this.tapsHeard++ < 3) this.say(duckTapsFloor())
     while (this.logDrips.length > 0 && this.logDrips[0].at <= now) this.dripFromLogs(this.logDrips.shift()!.n)
+    if (this.motion.boat.landed) this.say(boatBumps())
     // Down from its ride over the rim it stands in a puddle, which it likes.
     if (this.motion.duck.splashed) this.say(duckQuack(this.variants.next(3)))
     this.show(now)
@@ -333,7 +334,9 @@ export class Game extends Toy {
       if (event.thing >= 0) {
         const thing = this.yard.things[event.thing]
         const fullness = Math.min(1, (thing?.gulps ?? 0) / THINGS[event.kind].fill)
-        this.say(this.voiceOf(event.kind, event.action, event.by, thing?.gulps ?? 0, fullness))
+        // A boat that the overflow carries over the rim is heard when it is set down, with a bump, and not as it leaves.
+        const carried = event.kind === 'boat' && event.action === 'neighbour' && before.things[event.thing]?.in !== undefined && thing?.in === undefined
+        if (!carried) this.say(this.voiceOf(event.kind, event.action, event.by, thing?.gulps ?? 0, fullness))
         this.motion.result(event.thing, event.action, this.yard, 1, event.by)
         this.around(event.thing, event.kind, event.action, event.by)
         if (event.thing === this.yard.want && event.action === 'fill') this.metByAim = true
@@ -683,6 +686,9 @@ export class Game extends Toy {
     // How far the snail had glided is short-lived: it is found on its patch, out.
     this.channels.glide = 0
     this.motion.settle(this.yard, this.channels)
+    // Every pose is worked out now, with no time passed: the first frame drawn may come before the first frame
+    // played (a game that is found parked is drawn once and not played), and it must show the yard as it was left.
+    this.motion.step(0, this.yard, this.channels)
     this.latch = 0
     this.metByAim = false
     this.busy = false

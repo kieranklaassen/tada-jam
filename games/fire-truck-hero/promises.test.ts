@@ -17,7 +17,7 @@ import { Toy } from './toy'
 import { splat, type VoiceSpec } from './voices'
 import { CREEP_REACH, SPRAY_REACH, gulpOn, gulpOnGround, type Step, type Yard, type YardEvent } from './world'
 import { ARRANGEMENTS, layOut } from './yards'
-import { boatScrapes, catPaws, cellVoice, delayed, duckQuack, slowSizzle } from './yardVoices'
+import { boatBumps, boatScrapes, catPaws, cellVoice, delayed, duckQuack, slowSizzle } from './yardVoices'
 
 const FRAME = 1 / 60
 
@@ -1420,5 +1420,112 @@ describe('what a fourth reader found', () => {
     for (let i = 0; i < hull.count; i++) if (Math.abs(hull.getZ(i)) < 0.05 && Math.abs(hull.getX(i)) < 0.2 && hull.getY(i) > 0.3 && hull.getY(i) < 0.42) across++
     expect(across).toBe(0)
     expect(buildSnail(plastic).shell.geometry.getAttribute('position').count).toBeGreaterThan(0)
+  })
+})
+
+describe('what a fifth reader found', () => {
+  /** The furthest a pose moves over the sand from one frame to the next while `seconds` play. */
+  const biggestStep = (t: Table, seconds: number, where: () => { x: number; z: number }) => {
+    let last = { ...where() }, most = 0
+    t.play(seconds, () => {
+      const now = where()
+      most = Math.max(most, Math.hypot(now.x - last.x, now.z - last.z))
+      last = { x: now.x, z: now.z }
+    })
+    return most
+  }
+
+  it('has every animal in its place before the first frame is played: a game found parked is drawn once and not played', () => {
+    for (const [place, number] of [['two-things', 2], ['afloat', 2], ['whole-garden', 0], ['one-thing', 3]] as const) {
+      const fresh = new Table(saved(place, number))
+      const cat = fresh.the('cat')
+      const before = { ...fresh.game.motion.cat.pose }, snailBefore = { ...fresh.game.motion.snail.pose }
+      fresh.play(FRAME)
+      if (cat >= 0) {
+        expect(distance(before, fresh.game.motion.cat.pose), `${place} ${number}`).toBeLessThan(0.01)
+        expect(before.size, `${place} ${number}`).toBeCloseTo(fresh.game.motion.cat.pose.size, 3)
+      }
+      expect(distance(snailBefore, fresh.game.motion.snail.pose), `${place} ${number}`).toBeLessThan(0.01)
+    }
+  })
+
+  it('lets the duck ride out on the overflow though more water keeps coming: it is never snatched back', () => {
+    const t = new Table(saved('one-thing', 2))
+    const pool = t.at(0)
+    t.gulps(pool, 4).play(8)
+    // A held stream: an overflow gulp every third of a second.
+    t.game.press({ truck: false, point: pool }, t.now)
+    let furthest = 0
+    const most = biggestStep(t, 3, () => {
+      furthest = Math.max(furthest, t.game.motion.duck.pose.z)
+      return t.game.motion.duck.pose
+    })
+    t.game.lift()
+    expect(furthest).toBeGreaterThan(1.3)
+    expect(most).toBeLessThan(0.12)
+  })
+
+  it('keeps the bee up for as long as the water goes on, and brings her back when it stops', () => {
+    const t = new Table(saved('one-thing', 1))
+    const seed = t.at(0)
+    t.gulps(seed, 3).play(8)
+    const sat = t.game.motion.bee.pose.y
+    t.game.press({ truck: false, point: seed }, t.now)
+    t.play(0.9)
+    let lowest = Infinity, biggestDrop = 0, last = t.game.motion.bee.pose.y
+    t.play(3, () => {
+      const y = t.game.motion.bee.pose.y
+      lowest = Math.min(lowest, y)
+      biggestDrop = Math.max(biggestDrop, last - y)
+      last = y
+    })
+    t.game.lift()
+    // Up all the while, and never dropped to her flower in a frame.
+    expect(lowest).toBeGreaterThan(sat + 0.8)
+    expect(biggestDrop).toBeLessThan(0.15)
+    t.play(2.5)
+    expect(t.game.motion.bee.pose.landed).toBeGreaterThan(0.95)
+  })
+
+  it('never moves the cat across the yard in a frame: soaked and soaked again by the wheel, or honked at in the air, she goes on from where she is', () => {
+    const t = new Table(saved('round-and-round', 0))
+    t.game.press({ truck: false, point: t.at(t.the('wheel')) }, t.now)
+    const whileSpun = biggestStep(t, 3.2, () => t.game.motion.cat.pose)
+    t.game.lift()
+    expect(t.game.yard.things[t.the('cat')].spot).toBe('roof')
+    expect(whileSpun).toBeLessThan(0.25)
+    // A honk sends her off, and a second honk while she is in the air changes nothing she has to jump for.
+    t.play(3)
+    t.game.press({ truck: true, point: { x: 2.6, z: 5.4 } }, t.now)
+    t.game.lift()
+    const off = biggestStep(t, 0.3, () => t.game.motion.cat.pose)
+    t.gulp(t.at(t.the('cat')))
+    const again = biggestStep(t, 3, () => t.game.motion.cat.pose)
+    expect(Math.max(off, again)).toBeLessThan(0.25)
+  })
+
+  it('leaves the boat aground with a bump: heard and felt when it is set down, and not as it leaves the pool', () => {
+    const t = new Table(saved('afloat', 0))
+    const pool = t.at(t.the('pool')), boat = t.the('boat')
+    const duckSide = { x: pool.x - 0.5, z: pool.z }
+    t.gulps(duckSide, 4).play(8)
+    const before = t.heard.length
+    t.tap(duckSide).play(0.45)
+    expect(t.game.yard.things[boat].in).toBeUndefined()
+    // It is on its way over the rim: no knock yet.
+    expect(those(t.heard.slice(before), cellVoices('boat', 'neighbour', 0))).toHaveLength(0)
+    expect(those(t.heard.slice(before), [boatBumps()])).toHaveLength(0)
+    let landings = 0, rocked = 0
+    t.play(1.6, () => {
+      if (t.game.motion.boat.landed) landings++
+      if (landings > 0) rocked = Math.max(rocked, Math.abs(t.game.motion.boat.pose.rock))
+    })
+    expect(landings).toBe(1)
+    expect(rocked).toBeGreaterThan(0.2)
+    expect(those(t.heard.slice(before), [boatBumps()])).toHaveLength(1)
+    // A rising pool still lifts it with its knock.
+    const lifted = new Table(saved('afloat', 0))
+    lifted.gulps({ x: lifted.at(0).x - 0.5, z: lifted.at(0).z }, 3)
+    expect(those(lifted.heard, cellVoices('boat', 'neighbour', 0))).toHaveLength(1)
   })
 })

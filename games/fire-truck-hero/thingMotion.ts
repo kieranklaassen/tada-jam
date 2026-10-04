@@ -304,6 +304,9 @@ export const NOSE_ROUND = 0.4
 
 export class BoatMotion {
   readonly pose = { rock: 0, roll: 0, sunk: 0, water: 0, pushX: 0, pushZ: 0, bob: 0, brim: 0, carryX: 0, carryZ: 0, carryY: 0, yaw: 0 }
+  /** Its ride over the rim ended in this step: it is left aground with a bump, and the game plays the bump. */
+  landed = false
+  private riding = false
   private rock = spring(0)
   private pushX = spring(0)
   private pushZ = spring(0)
@@ -328,7 +331,8 @@ export class BoatMotion {
     this.pushZ.value = this.pushZ.target = 0
     this.yaw.value = this.yaw.target = 0
     this.carry.start()
-    kick(this.rock, 5)
+    this.riding = true
+    kick(this.rock, 2)
   }
 
   /** A stream sweeps across the pool it floats in: what floats bobs. */
@@ -390,6 +394,12 @@ export class BoatMotion {
     pose.brim = hump(this.brim.through(0.9))
     // The ride over the rim: out and down in about a second, lifted over the wall on the way.
     const riding = this.carry.through(CARRY_S)
+    // Set down on the sand it bumps: a hard rock on its keel, once.
+    this.landed = this.riding && riding >= 1
+    if (this.landed) {
+      this.riding = false
+      kick(this.rock, 7)
+    }
     const left = riding < 1 ? 1 - riding * riding * (3 - 2 * riding) : 0
     pose.carryX = this.carriedFrom.x * left
     pose.carryZ = this.carriedFrom.z * left

@@ -68,7 +68,8 @@ void main() {
   float damp = smoothstep(0.0, 0.34, w.r);
   sand = mix(sand, sandDamp * (0.92 + 0.12 * speck), damp);
   // Mud is dark and lumpy, with a wet shine on its lumps.
-  float lumps = detail > 0.5 ? grain(here * 6.5) : 0.5;
+  // Its lumps are drawn on every tier, and worked out only where there is mud: its texture is what the child made.
+  float lumps = w.b > 0.01 ? grain(here * 6.5) : 0.5;
   sand = mix(sand, sandMud * (0.8 + 0.5 * lumps) + smoothstep(0.72, 0.9, lumps) * 0.16, smoothstep(0.3, 0.6, w.b));
   // Standing water: a blue sheet with a pale rim where it meets the sand.
   float muddy = smoothstep(0.3, 0.6, w.b);

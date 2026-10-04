@@ -470,6 +470,14 @@ export function boatScrapes(): VoiceSpec {
   ]
 }
 
+/** The boat is left aground: one soft low bump of its hull on the sand, and the sand's short hush under it. */
+export function boatBumps(): VoiceSpec {
+  return [
+    { kind: 'tone', at: 0, frequency: 150, glideTo: 95, wave: 'sine', peak: 0.12, attack: 0.004, decay: 0.13 },
+    { kind: 'noise', at: 0, frequency: 420, q: 1, peak: 0.05, attack: 0.004, decay: 0.07 },
+  ]
+}
+
 /** A voice that starts `later` seconds on: the duck's quack after the splash that set it off. */
 export function delayed(voice: VoiceSpec, later: number): VoiceSpec {
   return voice.map((partial) => ({ ...partial, at: partial.at + later }))

@@ -162,7 +162,9 @@ export class CatMotion {
     // Onto the roof and off it she goes in one high arc, well clear of the truck's light and nozzle.
     // Paws that are being lifted are lifted first, and then she goes.
     const after = this.paws.playing(PAWS_S) ? PAWS_S * (1 - this.paws.through(PAWS_S)) : 0
-    this.going.start([this.home, ...(jump ? [] : (via ?? [])), to], jump ? 5.2 : 2.3, toRoof || this.onRoof ? 2.6 : jump ? JUMP_OVER : 0, !jump, this.onRoof ? ROOF_HEIGHT : 0, toRoof ? ROOF_HEIGHT : 0, after)
+    // She sets off from where she is, which on the way somewhere else is not where she was going.
+    const here = this.going.at(this.home)
+    this.going.start([{ x: here.x, z: here.z }, ...(jump ? [] : (via ?? [])), to], jump ? 5.2 : 2.3, toRoof || this.onRoof ? 2.6 : jump ? JUMP_OVER : 0, !jump, this.going.going ? here.y : this.onRoof ? ROOF_HEIGHT : 0, toRoof ? ROOF_HEIGHT : 0, after)
     this.size.target = toRoof ? SIZE_ON_ROOF : 1
     this.home = { ...to }
     this.facing = faces
@@ -269,8 +271,10 @@ export class DuckMotion {
 
   /** Water on the pool is water on the duck, which it likes: it wriggles. Too much and it rides out over the rim. */
   answer(action: Action, strength = 1): void {
-    if (action === 'too-much') this.ride.start()
-    else kick(this.wiggle, (action === 'sweep' || action === 'neighbour' ? 5 : 9) * strength)
+    // A ride under way goes on: more overflow while it is out does not snatch it back to the start.
+    if (action === 'too-much') {
+      if (!this.ride.playing(RIDE_S)) this.ride.start()
+    } else kick(this.wiggle, (action === 'sweep' || action === 'neighbour' ? 5 : 9) * strength)
   }
 
   /**
@@ -334,23 +338,29 @@ export class DuckMotion {
 
 // --- The bee -----------------------------------------------------------------
 
-/** How long the bee stays up after drops reach her. */
+/** About how long the bee is up for one lot of drops: she is back down within this long of the last of them. */
 export const STARTLE_S = 1.8
 
 export class BeeMotion {
   readonly pose = { x: 0, y: 0, z: 0, turn: 0, wings: 0, landed: 0 }
-  private readonly startle = new Gesture()
+  /** How far up she is from drops, 0 to 1, and until when the water counts as still coming. */
+  private up = 0
+  private wetUntil = -Infinity
   private time = 0
 
-  /** Drops near her wings, which she dislikes: she zigzags up and comes back when the water stops. */
+  /** Drops near her wings, which she dislikes: she zigzags up, stays up while the water goes on, and comes back when it stops. */
   answer(): void {
-    this.startle.start()
+    this.wetUntil = this.time + STARTLE_S * 0.4
   }
 
   /** `budTop` is how high the bud or the flower stands above the ground; `open` is true once the flower is open. */
   step(seconds: number, budTop: number, open: boolean, channels: Channels): typeof this.pose {
     this.time += seconds
-    this.startle.step(seconds)
+    // Up quickly, and down again more slowly once the water has stopped.
+    const wet = this.time < this.wetUntil
+    this.up += ((wet ? 1 : 0) - this.up) * Math.min(1, seconds * (wet ? 7 : 6))
+    if (!wet && this.up < 0.004) this.up = 0
+    const up = this.up
     const pose = this.pose
     const round = this.time * TEMPO.bee * 2 * Math.PI
     // She circles the pot, and once a lap she darts in and bumps the closed bud.
@@ -360,19 +370,15 @@ export class BeeMotion {
     let x = Math.cos(round) * radius
     let z = Math.sin(round) * radius
     let y = budTop + 0.42 - bump * 0.34 + Math.sin(this.time * 5.3) * 0.05
-    const startled = this.startle.through(STARTLE_S)
-    if (startled < 1) {
-      const up = hump(Math.min(1, startled * 1.15))
-      y += up * 1.5
-      x += Math.sin(startled * 34) * 0.32 * up
-    }
+    y += up * 1.5
+    x += Math.sin(this.time * 19) * 0.32 * up
     // On an open flower she lands, and stays. Drops on her wings send her up off it every time, and she comes back down.
-    const landed = (open ? channels.beeLands : 0) * (startled < 1 ? 1 - hump(Math.min(1, startled * 1.15)) : 1)
+    const landed = (open ? channels.beeLands : 0) * (1 - up)
     pose.x = x * (1 - landed)
     pose.z = z * (1 - landed)
     pose.y = y * (1 - landed) + (budTop + 0.2) * landed
     pose.turn = -(round + Math.PI / 2) * (1 - landed)
-    pose.wings = landed > 0.95 && startled >= 1 ? 0.25 : 1
+    pose.wings = landed > 0.95 && up === 0 ? 0.25 : 1
     pose.landed = landed
     return pose
   }
