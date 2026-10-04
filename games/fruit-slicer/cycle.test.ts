@@ -491,6 +491,30 @@ describe('a full shelf', () => {
   })
 })
 
+describe('a row fed by hand', () => {
+  it('is one serving: every piece of it is eaten, and the body makes of it what it makes of exactly those pieces', () => {
+    const start = call(freshGame(null), 0)
+    expect(start.game.window!.who).toBe('pelican')
+    // Two pieces fed together are a seam: a lump and a hiccup, not one smooth bulge.
+    const one = cutFor(start.game, 300)
+    const two = cutFor(one.game, 300)
+    const fed = feed(two.game, one.id, [two.id])
+    expect(fed).toMatchObject({ ate: true, ending: { fed: true, outcome: 'mixed', taste: { who: 'pelican', liked: false, hiccups: 1, lumps: [300, 300] } } })
+    expect(eaten(fed.game.world).map((piece) => piece.id)).toEqual([one.id, two.id])
+    // One piece alone is still one bulge.
+    expect(feed(two.game, one.id).ending).toMatchObject({ taste: { liked: true, hiccups: 0 } })
+    // The boa sneezes for every crumb in a row it is fed.
+    const boa: Customer = { who: 'boa', fruit: 'long', shares: [{ num: 5, den: 4 }], carries: null, written: true, lined: true }
+    const game: Game = { ...start.game, window: boa }
+    const crumbs = [cutFor(game, 100)]
+    crumbs.push(cutFor(crumbs[0].game, 100))
+    crumbs.push(cutFor(crumbs[1].game, 100))
+    const sneezed = feed(crumbs[2].game, crumbs[0].id, [crumbs[1].id, crumbs[2].id])
+    expect(sneezed.ending).toMatchObject({ taste: { who: 'boa', liked: false, sneezes: 3 } })
+    expect(eaten(sneezed.game.world)).toHaveLength(3)
+  })
+})
+
 describe('a piece taken from the oldest row of a full shelf', () => {
   it('is eaten by the customer it is fed to, and is not what the tin\'s pieces push off the shelf', () => {
     const start = call(freshGame(null), 0)

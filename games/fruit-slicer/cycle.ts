@@ -92,22 +92,26 @@ export function sendOff(game: Game): { game: Game; ending: Ending | null } {
  * The fruit is gone, and so is anything the pelican had already eaten; any piece in its tin is set on the
  * shelf; and the window is empty, with the two still waiting.
  */
-export function feed(game: Game, id: number): { game: Game; ending: Ending | null; ate: boolean; shelved: number[]; fell: number[] } {
+export function feed(game: Game, id: number, row: readonly number[] = []): { game: Game; ending: Ending | null; ate: boolean; shelved: number[]; fell: number[] } {
   const customer = game.window, piece = pieceOf(game.world, id)
   if (!customer || !piece) return { game, ending: null, ate: false, shelved: [], fell: [] }
+  // A row is fed as one serving: every piece of it is eaten, and the body makes of them what it makes of exactly those pieces.
+  const more = row.map((other) => pieceOf(game.world, other)).filter((other): other is NonNullable<typeof other> => other !== undefined && other.id !== id)
+  const all = [id, ...more.map((other) => other.id)]
   // What lies in the tin of a customer who is not yet served goes to the shelf, one piece after another.
   const emptied = (world: World): { world: World; shelved: number[]; fell: number[] } => {
     const fell: number[] = []
-    const shelved = game.finished ? [] : tinIds(game).filter((left) => left !== id)
+    const shelved = game.finished ? [] : tinIds(game).filter((left) => !all.includes(left))
     for (const left of shelved) {
       // The piece being fed is in the hand: it is not what the tin's pieces push off the shelf.
-      const set = setOnShelf(world, left, [id])
+      const set = setOnShelf(world, left, all)
       fell.push(...set.fell)
       world = set.world
     }
     return { world, shelved: shelved.filter((left) => !fell.includes(left)), fell }
   }
-  const result = serveOf(customer, tinParts(customer).map((_, part) => (part === 0 ? [piece] : [])))
+  const result = serveOf(customer, tinParts(customer).map((_, part) => (part === 0 ? [piece, ...more] : [])))
+  // A whole fruit first is the glider, and whatever came after it in the row stays where it lay.
   if (isGlider(customer, piece)) {
     let world = remove(game.world, id)
     for (const gone of eaten(world)) world = remove(world, gone.id)
@@ -116,10 +120,10 @@ export function feed(game: Game, id: number): { game: Game; ending: Ending | nul
   }
   if (game.finished) {
     // It keeps no more inside it than the rail could ever hold: fed more than that, the oldest piece inside it is gone for good.
-    return { game: { ...game, world: keepEaten(eat(game.world, [id])) }, ending: null, ate: true, shelved: [], fell: [] }
+    return { game: { ...game, world: keepEaten(eat(game.world, all)) }, ending: null, ate: true, shelved: [], fell: [] }
   }
   const tin = emptied(game.world)
-  const ended = end({ ...game, world: tin.world }, result, 'mixed', [id])
+  const ended = end({ ...game, world: tin.world }, result, 'mixed', all)
   return { game: ended.game, ending: { ...ended.ending, fed: true }, ate: true, shelved: tin.shelved, fell: tin.fell }
 }
 

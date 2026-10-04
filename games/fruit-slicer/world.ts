@@ -203,8 +203,10 @@ export function rowOf(world: World, id: number, side: 'left' | 'right'): number[
  * `x` on a lane. The row goes to the nearest place on that lane where it lies whole, and butts against a
  * neighbour or the board's end when it is within the give of it, so pieces set end to end touch exactly and
  * their lengths add. With no room on that lane it goes to the other, and with no room on either, to the shelf.
+ * A row laid `exact` is meant for one place (end to end against a piece, or from a fruit's own left end) and
+ * lies exactly there where there is room: it is not pulled to the board's end or to another piece near by.
  */
-export function setRowOnBoard(world: World, ids: readonly number[], lane: number, x: number): { world: World; fell: number[] } {
+export function setRowOnBoard(world: World, ids: readonly number[], lane: number, x: number, exact = false): { world: World; fell: number[] } {
   const row = ids.map((id) => pieceOf(world, id)).filter((piece): piece is Piece => piece !== undefined)
   if (row.length === 0) return { world, fell: [] }
   const total = row.reduce((sum, piece) => sum + piece.length, 0)
@@ -215,6 +217,10 @@ export function setRowOnBoard(world: World, ids: readonly number[], lane: number
     for (const gap of gaps(world, tryLane, ids)) {
       if (gap.to - gap.from < total) continue
       let at = Math.max(gap.from, Math.min(gap.to - total, Math.round(x)))
+      if (exact && at === Math.round(x)) {
+        best = at
+        break
+      }
       if (at - gap.from <= snap) at = gap.from
       else if (gap.to - (at + total) <= snap && gap.to < RAIL) at = gap.to - total
       if (best === null || Math.abs(at - x) < Math.abs(best - x)) best = at

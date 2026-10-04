@@ -5,7 +5,7 @@ import { WHOLE, giveOf } from './measure'
 import { land, newStroke, poke, slice, tinAt, type GameEvent } from './moves'
 import { tinParts } from './orders'
 import { COUNTER, CRATE, DOG, LANE_H, PX, QUEUE, ROLLER, SHELF_BOX, TIN, WINDOW, X0, laneTop, type Box, type Point } from './stage'
-import { SHELF, eaten, inTin, marksOf, onLane, onShelf, pieceOf, setOnShelf } from './world'
+import { SHELF, eaten, inTin, marksOf, onLane, onShelf, pieceOf, setOnBoard, setOnShelf } from './world'
 
 const fresh = freshGame(null)
 const start = call(fresh, 0).game
@@ -213,6 +213,31 @@ describe('letting go over the board and the shelf', () => {
     const laid = pieceOf(out.game.world, made.right)!
     expect(laid.place).toEqual({ on: 'board', lane: 0, x: far.place.on === 'board' ? far.place.x : -1 })
     expect(pieceOf(out.game.world, made.left)!.place.on).toBe('shelf')
+  })
+
+  it('lays a piece exactly where it is meant to lie: end to end against the piece, or from the fruit\'s own left end, however near the board\'s end or another piece that is', () => {
+    // A fruit cut at 600: the right part has hopped a little way off. The left part is let go on the left half of the right part.
+    const made = cutAt(start, 600)
+    const rightPart = pieceOf(made.game.world, made.right)!
+    const at = rightPart.place.on === 'board' ? rightPart.place.x : -1
+    expect(at).toBeGreaterThan(600)
+    const butted = drop(made.game, hold(made.game, made.left), { x: X0 + (at + 60) * PX, y: NEAR })
+    expect(butted.events.find((event) => event.kind === 'setDown')).toMatchObject({ how: 'butted', voice: 'butt' })
+    // It lies end to end against it, not back at the board's end a little way short of it: the two are a row.
+    expect(pieceOf(butted.game.world, made.left)!.place).toEqual({ on: 'board', lane: 0, x: at - 600 })
+    expect(hold(butted.game, made.left, 0.9).ids).toEqual([made.left, made.right])
+    // A whole fruit set down a little way along the far lane, and a piece on the near lane a little way short of that place.
+    const two = land(start).game
+    const far = onLane(two.world, 1)[0]
+    const moved: Game = { ...two, world: setOnBoard(two.world, far.id, 1, 400).world }
+    expect(pieceOf(moved.world, far.id)!.place).toEqual({ on: 'board', lane: 1, x: 400 })
+    const near = cutAt(moved, 340)
+    const piece = pieceOf(near.game.world, near.right)!
+    // The right part is laid alongside the far fruit: from the fruit's own left end, though the left part ends just short of there.
+    const beside = drop(near.game, hold(near.game, near.right, 0.5), { x: X0 + 900 * PX, y: FAR })
+    expect(piece.length + 400).toBeLessThanOrEqual(2880)
+    expect(beside.events.find((event) => event.kind === 'setDown')).toMatchObject({ how: 'beside' })
+    expect(pieceOf(beside.game.world, near.right)!.place).toEqual({ on: 'board', lane: 0, x: 400 })
   })
 
   it('lays a piece taken from the oldest row of a full shelf, and does not push that very piece off the shelf with what it sweeps there', () => {

@@ -2,6 +2,7 @@ import { feed, give, splat, treat, type Game } from './cycle'
 import { RAIL, WHOLE } from './measure'
 import { fellEvents, gone, land, shutIfFit, thingAt, tinAt, type GameEvent, type Whom } from './moves'
 import { ruling } from './serve'
+import { isGlider } from './tastes'
 import { COUNTER, CRATE, LANE_H, PX, TIN, WALL, X0, laneTop, type Box, type Point, type Under } from './stage'
 import { LANES, onLane, pieceOf, remove, roll, rowOf, setRowOnBoard, setOnShelf, type World } from './world'
 
@@ -60,7 +61,8 @@ function laneAt(y: number): number {
 
 /** Sets the pieces in the hand down on the board as a row, and says how. */
 function put(game: Game, held: Held, lane: number, x: number, how: 'put' | 'beside' | 'butted'): { game: Game; events: GameEvent[] } {
-  const set = setRowOnBoard(game.world, held.ids, lane, x)
+  // Laid against a piece or alongside a fruit, the row lies exactly there; only a row that is just put down settles against what is near.
+  const set = setRowOnBoard(game.world, held.ids, lane, x, how !== 'put')
   const events: GameEvent[] = [{ kind: 'setDown', ids: held.ids, from: held.boxes, how, voice: how === 'butted' ? 'butt' : 'lay' }, ...fellEvents(game.world, set.fell)]
   return shutAfter({ ...game, world: set.world }, events, game, held)
 }
@@ -122,25 +124,35 @@ export function drop(game: Game, held: Held, at: Point): { game: Game; events: G
       const whom: Whom = target.thing === 'waiting' ? target.index : 'window'
       let now = game
       const events: GameEvent[] = []
-      for (const { piece, from } of inHand) {
-        if (whom === 'window') {
-          const fed = feed(now, piece.id)
+      if (target.thing === 'customer') {
+        // A row is fed as one serving: the customer's body makes of it what it makes of exactly those pieces, every one of them. A whole
+        // fruit in a row fed to the pelican is the glider all the same: what came before it is the serving, and what came after it stays.
+        const customer = game.window
+        const whole = customer ? inHand.findIndex(({ piece }) => isGlider(customer, piece)) : -1
+        const servings = whole < 0 ? [inHand] : [inHand.slice(0, whole), inHand.slice(whole, whole + 1)]
+        for (const serving of servings) {
+          if (serving.length === 0) continue
+          const fed = feed(now, serving[0].piece.id, serving.slice(1).map(({ piece }) => piece.id))
           // What lay in the tin of a customer fed by hand slides to the shelf, and whatever that pushes off the shelf's end drops to the dog.
           const moved = gone(now.world, fed.shelved, tinAt(now))
           if (moved.length > 0) events.push({ kind: 'setDown', ids: moved.map((one) => one.piece.id), from: moved.map((one) => one.from), how: 'put', voice: 'lay' })
           events.push(...fellEvents(now.world, fed.fell, tinAt(now)))
           now = fed.game
-          // The piece goes from the hand to the mouth and is gulped, whether or not that ends the cycle. A whole fruit to the pelican is the glider, and stays across its beak.
-          if (fed.ate && !fed.ending?.glider) events.push({ kind: 'ate', whom, piece, from, voice: 'gulp' })
+          // Each piece goes from the hand to the mouth and is gulped, whether or not that ends the cycle. A whole fruit to the pelican is the glider, and stays across its beak.
+          if (fed.ate && !fed.ending?.glider) for (const { piece, from } of serving) events.push({ kind: 'ate', whom, piece, from, voice: 'gulp' })
           if (fed.ending) events.push({ kind: 'ending', ending: fed.ending, how: 'fed' })
-        } else if (events.some((event) => event.kind === 'gliderAway')) {
+        }
+      }
+      const waits = target.thing === 'waiting' ? target.index : null
+      for (const { piece, from } of waits === null ? [] : inHand) {
+        if (waits === null || events.some((event) => event.kind === 'gliderAway')) {
           // The pelican has gone with the fruit: what came after it in the row is not fed to whoever joins in its place, and stays where it lay.
           continue
         } else {
-          const given = treat(now, whom, piece.id)
+          const given = treat(now, waits, piece.id)
           now = given.game
           // A whole fruit to a waiting pelican is the glider: it is not swallowed, it goes across the beak and out with the pelican.
-          if (given.glider) events.push({ kind: 'gliderAway', whom, fruit: piece.fruit })
+          if (given.glider) events.push({ kind: 'gliderAway', whom: waits, fruit: piece.fruit })
           else events.push({ kind: 'ate', whom, piece, from, voice: 'gulp' })
         }
       }
