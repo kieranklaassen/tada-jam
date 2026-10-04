@@ -116,6 +116,19 @@ describe('letting go over a customer, the dog or the crate', () => {
     expect(eaten(more.game.world)).toHaveLength(2)
   })
 
+  it('lets what is eaten fly from where it was let go, and from the top of the crate when the crate burps it across', () => {
+    const fellFrom = (events: readonly GameEvent[]) => (events.find((event) => event.kind === 'fell') as Extract<GameEvent, { kind: 'fell' }>).from
+    const toDog = fellFrom(drop(made.game, hold(made.game, made.left), mid(DOG)).events)
+    expect(Math.abs(toDog.y + toDog.h / 2 - mid(DOG).y)).toBeLessThan(40)
+    expect(toDog.x).toBeLessThan(mid(DOG).x)
+    expect(toDog.x + toDog.w).toBeGreaterThan(mid(DOG).x)
+    const fromCrate = fellFrom(drop(made.game, hold(made.game, made.left), mid(CRATE)).events)
+    expect(fromCrate.x + fromCrate.w / 2).toBeCloseTo(mid(CRATE).x)
+    expect(fromCrate.y).toBeLessThan(CRATE.y)
+    const eatenFrom = (drop(made.game, hold(made.game, made.left), mid(QUEUE[1])).events[0] as Extract<GameEvent, { kind: 'ate' }>).from
+    expect(Math.abs(eatenFrom.y + eatenFrom.h / 2 - mid(QUEUE[1]).y)).toBeLessThan(40)
+  })
+
   it('lets one who waits eat it there and then, and a waiting pelican leave with a whole fruit', () => {
     const result = drop(made.game, hold(made.game, made.left), mid(QUEUE[1]))
     expect(result.events).toEqual([expect.objectContaining({ kind: 'ate', whom: 1 })])

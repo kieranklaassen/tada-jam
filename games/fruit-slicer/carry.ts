@@ -2,7 +2,7 @@ import { feed, give, splat, treat, type Game } from './cycle'
 import { RAIL, WHOLE } from './measure'
 import { fellEvents, gone, land, shutIfFit, thingAt, tinAt, type GameEvent, type Whom } from './moves'
 import { ruling } from './serve'
-import { COUNTER, LANE_H, PX, WALL, X0, laneTop, type Box, type Point, type Under } from './stage'
+import { COUNTER, CRATE, LANE_H, PX, WALL, X0, laneTop, type Box, type Point, type Under } from './stage'
 import { LANES, onLane, pieceOf, remove, roll, rowOf, setRowOnBoard, setOnShelf, type World } from './world'
 
 // Carrying, flinging and the roller: the other three acts of the grid. A
@@ -82,6 +82,8 @@ export function drop(game: Game, held: Held, at: Point): { game: Game; events: G
   const target = thingAt(game, at, held.ids)
   const leftEdge = (at.x - held.dx - X0) / PX
   const pieces = gone(game.world, held.ids, tin)
+  // Where each piece is when it is let go: in the hand, carried there from where it lay. What is eaten flies from there.
+  const inHand = pieces.map(({ piece, from }) => ({ piece, from: carried(from, held, at) }))
   switch (target.thing) {
     case 'tin':
       return intoTin(game, held, target.part)
@@ -90,7 +92,7 @@ export function drop(game: Game, held: Held, at: Point): { game: Game; events: G
       const whom: Whom = target.thing === 'waiting' ? target.index : 'window'
       let now = game
       const events: GameEvent[] = []
-      for (const { piece, from } of pieces) {
+      for (const { piece, from } of inHand) {
         if (whom === 'window') {
           const fed = feed(now, piece.id)
           // What lay in the tin of a customer fed by hand slides to the shelf, and whatever that pushes off the shelf's end drops to the dog.
@@ -114,10 +116,12 @@ export function drop(game: Game, held: Held, at: Point): { game: Game; events: G
     case 'crate': {
       let world = game.world
       const events: GameEvent[] = []
-      for (const { piece, from } of pieces) {
+      for (const { piece, from } of inHand) {
         world = remove(world, piece.id)
+        // The crate chews it and burps it across: it flies to the dog from the crate's top, not from the hand.
+        const out = target.thing === 'crate' ? { ...from, x: CRATE.x + CRATE.w / 2 - from.w / 2, y: CRATE.y - from.h / 2 } : from
         if (target.thing === 'crate') events.push({ kind: 'burp', piece, from, voice: 'burp' })
-        events.push({ kind: 'fell', piece, from, voice: 'munch' })
+        events.push({ kind: 'fell', piece, from: out, voice: 'munch' })
       }
       return shutAfter({ ...game, world }, events, game, held)
     }
@@ -137,6 +141,11 @@ export function drop(game: Game, held: Held, at: Point): { game: Game; events: G
     default:
       return put(game, held, laneAt(at.y), leftEdge, 'put')
   }
+}
+
+/** Where a piece in the hand is drawn when the finger is at `at`: as far from where it lay as the finger has carried the first of them. */
+function carried(from: Box, held: Held, at: Point): Box {
+  return { ...from, x: from.x + at.x - held.dx - held.boxes[0].x, y: from.y + at.y - held.dy - held.boxes[0].y }
 }
 
 function onShelf(game: Game, held: Held): { game: Game; events: GameEvent[] } {
@@ -212,10 +221,10 @@ export function fling(game: Game, held: Held, at: Point, v: Point): { game: Game
     case 'customer':
     case 'waiting': {
       const whom: Whom = hit.thing === 'waiting' ? hit.index : 'window'
-      return shutAfter(splat(game, id), [{ kind: 'splat', whom, piece: mine.piece, from: mine.from, voice: 'splat' }], game, held)
+      return shutAfter(splat(game, id), [{ kind: 'splat', whom, piece: mine.piece, from: carried(mine.from, held, at), voice: 'splat' }], game, held)
     }
     case 'dog':
-      return shutAfter({ ...game, world: remove(game.world, id) }, [{ kind: 'fell', piece: mine.piece, from: mine.from, voice: 'catch' }], game, held)
+      return shutAfter({ ...game, world: remove(game.world, id) }, [{ kind: 'fell', piece: mine.piece, from: carried(mine.from, held, at), voice: 'catch' }], game, held)
     case 'tin':
       return backOnBoard('tin', 'bong')
     case 'crate': {

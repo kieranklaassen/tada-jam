@@ -7,7 +7,7 @@ import { SNACK_DOWN, type Scenery } from './gameRun'
 import type { Guide } from './guide'
 import type { HandPose } from './guidance'
 import { BLUE, BOARD as BOARD_FILL, BOARD_EDGE, FLESH, INK, PAPER, RED, RIND, TINT, WHITE, YELLOW, burst, inked, panel, poly, rect, slab, speedLines, oval, type Screens } from './look'
-import { FRUITS, WHOLE, type Fruit } from './measure'
+import { FRUITS, WHOLE, giveOf, type Fruit } from './measure'
 import { tinAt } from './moves'
 import { tinParts, wanted, type Customer } from './orders'
 import { paintPassers } from './passersBy'
@@ -309,9 +309,14 @@ function tin(ctx: Ctx, dots: Dots, scenery: Scenery, shape: TinShape, customer: 
       ctx.fillRect(part.x + part.w - 2, body.y - 10 * (1 - drop), 4, body.h * drop + 10 * (1 - drop))
       return
     }
-    // The jaw is a thick wall across the end of the compartment, exactly where the order ends; as it snaps it jumps out past the tin's end and back.
+    // The jaw is a thick wall across the end of the compartment, exactly where the order ends; as it snaps it jumps out past the tin's end
+    // and back. It is sprung, with a little give: over a piece that is too short it closes on air, by its give and no further, and springs
+    // back; and on a fit it takes up the slack, standing at the end of what was served.
+    const onAir = tried && tried.kind === 'lid' && tried.how === 'under' ? giveOf(customer.fruit) * PX * Math.sin(t * Math.PI) : 0
+    const served = scenery.ending && !scenery.ending.fed && scenery.ending.result.kind === 'fit' ? scenery.ending.result.parts[index] : undefined
+    const slack = served ? (served.total - served.ordered) * PX * Math.min(1, closing * 2) : 0
     ctx.fillStyle = INK
-    ctx.fillRect(part.x + part.w + 18 * bite, body.y + 3, 7, body.h - 6)
+    ctx.fillRect(part.x + part.w + 18 * bite - onAir + slack, body.y + 3, 7, body.h - 6)
   })
   ctx.restore()
   // The rail: the whole fruit ruled into its equal parts, the ordered ones in the fruit's tint. One row for each share.
