@@ -1052,6 +1052,19 @@ describe('the scenery', () => {
   })
 })
 
+describe('the troop that waits', () => {
+  it('is one thing to touch, a hundred logical pixels across or more on every surface, whatever kind waits and however many', () => {
+    for (const [w, h] of [[1180, 820], [820, 1180], [1024, 640], [844, 390]]) for (const kind of KINDS) for (const size of [1, 2, 3] as const) {
+      const view = viewFor(w, h)
+      const theatre = staged({ troop: { kind: kind === 'duck' ? 'frog' : 'duck', size: 1, held: [false] }, sky: [{ colour: 'duck', count: 1 }], waiting: { kind, size } })
+      // Along a line at the height of its middle, from the left edge of the surface: how far the touch is the waiting troop's.
+      let wide = 0
+      for (let x = -view.width / 2; x < 0 && theatre.hit(x, GROUND + 0.6, view).on === 'waiting'; x += 0.02) wide += 0.02
+      expect(wide * view.pixelsPerUnit, `${size} ${kind}s waiting on ${w} by ${h}`).toBeGreaterThanOrEqual(100)
+    }
+  })
+})
+
 describe('the far hill', () => {
   it('answers a touch: a troop that is touched squeaks in its own voice, small and quiet, and jumps, and the others jump after it', () => {
     const save = { ...saveOf(MOMENTS.solo), parade: [{ kind: 'duck' as const, size: 2 as const, balloons: 2 }, { kind: 'crab' as const, size: 3 as const, balloons: 1 }] }
