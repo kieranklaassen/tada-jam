@@ -232,13 +232,15 @@ Not part of the sheet. First reserved look: **Blueprint and balsa**. Spiked on t
 
 **What is in the frame** (since the look pass; `valley.ts`, `drift.ts`, `crew.ts`, `crewfig.ts`). The gap is in a valley, drawn on the sheet in the same line and fainter than any part (a fifth to a half of the ground outline's strength):
 
-- *Behind the road:* two skylines of far hills over each bank, which fall away to nothing toward the gap so the sky over the gap stays clear for the bridge; on the hills over the far bank a finished bridge on round arches, somebody else's; a windmill on the hills over the near bank; trees of three kinds, grass and a fence along both banks.
-- *In the cut ground:* the beds of the ground as two uneven lines through each bank, pebbles, roots under the trees, a burrow with a bed and a lamp under the near bank, and three or four other finds (a coiled shell, a bone, a boot, an old pipe, a chest, a fish's bones), each sheet with its own.
-- *Along the foot of the sheet:* the ledge the crew stand on, and where there is room a set square, a pair of compasses, the drawing's title block ruled and left empty, and a mug.
-- *At the edge, moving:* three clouds and a balloon cross the sky; the windmill's sails turn; a train crosses the far bridge every half minute or so; a fish leaps; a paper boat sails the widest open water end to end (on the barge's sheet the barge is the boat); the mug steams.
-- *The crew,* at the foot of the sheet left of the tray, each about two cells tall: a beaver with a balsa hard hat, two paper teeth and a flag, and a mole of grey paper with spectacles, a pin for a nose, a clipboard and a folding rule.
+- *Behind the road:* two skylines of far hills over each bank, which fall away to nothing toward the gap so the sky over the gap stays clear for the bridge; on the hills over the far bank a finished bridge on round arches, somebody else's; a house on the hills over the near bank; trees of three kinds, grass and a fence along both banks.
+- *In the cut ground:* the beds of the ground as two uneven lines through each bank, pebbles as flat dashes, roots under the trees, a burrow with a bed and a lamp under the near bank, and three or four other finds (a coiled shell, a bone, a boot, an old pipe, a chest, a fish's bones), each sheet with its own.
+- *Along the foot of the sheet:* the ledge the crew stand on, and where there is room a set square, a pair of compasses, the drawing's title block ruled and left empty (no line of writing, real or pretend), and a mug.
+- *At the edge, moving:* three clouds and a balloon cross the sky; smoke rises from the house's chimney; a train crosses the far bridge every half minute or so; a fish leaps; a paper boat sails the widest open water end to end (on the barge's sheet the barge is the boat); the mug steams.
+- *The crew,* at the foot of the sheet left of the tray, each about two cells tall: a beaver with a balsa hard hat, two paper teeth, a tail in scales and a flag, and a mole of grey paper with spectacles, a pin for a nose, a board with a small drawing on it and a folding rule.
 
 All of the still part is painted once into the sheet's stamp. Nothing in it is a word, a letter or a figure, and nothing in it but the crew answers a touch or looks as if it would.
+
+**No shape that reads as a sign.** Beside a numeral above all, and anywhere on the sheet: nothing is drawn as two bars that cross, as a ring, or as a row of lines that could be writing. So a crate is a framed panel with a nail in each corner; a parcel has a label and no string; exhaust, dust, smoke and bubbles are filled dabs; the beaver's tail has scales; the hill has a house and not a windmill, whose sails would be a cross; the title block and the mole's board carry no lines.
 
 **Palette** (`INK` in `look.ts`).
 
@@ -260,7 +262,7 @@ All of the still part is painted once into the sheet's stamp. Nothing in it is a
 - *The ground* is shown cut through, as a draughtsman would: a firm outline and slanted section hatching. Cliffs stand behind the road, fainter. Water is a broken line with shorter dashes under it.
 - *A working part stays plain* (pack: game-design, working-objects-stay-plain.md): a balsa rectangle with a few grain lines and a darker cut edge, or a paper tube with its seam, and nothing else. What a child reads is its length, its depth and its pins. A plank flat is a little deeper on the sheet than a stick, and a plank on edge two and a half times as deep as a plank flat.
 - *A pin* is a steel head seen from above with one hard highlight. A footing pin sits in a small drafting triangle.
-- *The characters* are models made of the same stuff: balsa blocks, cut paper, pins for axles, string round the parcels, and faces in pencil. The look and the comedy live in them and in the setting, not in the parts.
+- *The characters* are models made of the same stuff: balsa blocks, cut paper, pins for axles, a label on each parcel, and faces in pencil. The look and the comedy live in them and in the setting, not in the parts.
 - *Shadows* are the same shape moved down and right by a fixed part of a cell, in the darker blue, with no blur.
 
 **Lighting.** None is simulated: flat daylight on a desk. Depth comes only from the hard shadows and from what lies on what (string under wood, wood under pins).
@@ -268,6 +270,8 @@ All of the still part is painted once into the sheet's stamp. Nothing in it is a
 **Motion rules** (`pose.ts`, `motion.ts`, `acts.ts`, `stage.ts`, `view.ts`).
 
 - *A firm part* is stiff light wood: it lands from a little above with its shadow a beat behind it, overshoots once and is still. Nothing is rubbery.
+- *A part that gives* breaks at its spot: its two pieces hang from their own pins, as far down as the ground lets them, and close up again as the bridge goes back as built. A tube does not break: its end pops out and it hangs whole. A stick squeezed near its limit is drawn bowed, as two halves that meet off its own line.
+- *A part taken off* goes back to the tray its own way: a plank slides out along its own length and goes down flat, a stick is flicked and spins in an arc, a tube rolls down the sheet level, a thread runs in to its near end and zips to the spool.
 - *A part the model leaves out* swings from whatever still holds it, like a pendulum, and knocks against the bank where it meets it. What hangs from it hangs from its end in turn. What nothing holds lies on the ground or on the water.
 - *A plucked part* shakes across its own length and dies away in under a second, each kind at its own rate: the plank slow and wide, the stick fast and fine, the thread widest.
 - *A turned part*: the plank swells or shrinks to its new depth with a hop; the stick flickers thin and thick as it spins; the tube jiggles; the thread whirls.
@@ -300,4 +304,4 @@ For the lead, when the look is accepted (section 3 of `docs/art-direction.md`); 
 
 | Game | Style | Art guide |
 | --- | --- | --- |
-| Bridge Crew | Blueprint and balsa (canvas 2D): a cyanotype drawing sheet with white drafting lines, a faint grid and the ground in section hatching, and on it in the same line a valley from edge to edge (far hills, a far bridge, a windmill, trees, what is buried in the ground); unstained balsa planks and sticks, rolled paper tubes, steel pins and string lying on it, each with a small hard shadow; models of balsa and cut paper with faces in pencil | `games/bridge-crew/ART.md` |
+| Bridge Crew | Blueprint and balsa (canvas 2D): a cyanotype drawing sheet with white drafting lines, a faint grid and the ground in section hatching, and on it in the same line a valley from edge to edge (far hills, a far bridge, a house, trees, what is buried in the ground); unstained balsa planks and sticks, rolled paper tubes, steel pins and string lying on it, each with a small hard shadow; models of balsa and cut paper with faces in pencil | `games/bridge-crew/ART.md` |
