@@ -3,6 +3,7 @@
 
 ## Status
 
+- Resumed: the lead's message that begins "Round 4 of your sheet passed" (record the pass, then have the folder read against the sheet) had no answer; this run takes it up.
 - Stage: gates. The game is built on the toy: the cycle, the errors as consequences, every cell of the grid, the three scenes, the idle ladder, the far hill, and the gates. Everything that is not drawing is kept out of the view (`stage.ts`, `scenery.ts`, `friends.ts`, `vinyl.ts`, `shapes.ts`), so a rejected look would mean a new view and the same rules, theatre and motion.
 - Sheet: passed in round 3 (checker: E) as it stood at commit `e8f1036`, with hash `a7795c6cba5cef96195622cc9b4442874bd47380bba00df6e0f3df4e5fa0ed49`. Since that pass six sentences of detail were changed to say what the game does (listed under "For the lead"), and nothing else. The sheet now stands at commit `5b136f9`. Hash of the sheet part (everything above `## The look`): `54dddb13995b88d52b05711c0e6c00069b358442fff5f7a87253deae09428485`.
 - Earlier rounds: round 1 (checker: B) found 9 things on the sheet at `c5edd65`, and round 2 (checker: D) found 6 on the sheet at `da72b2c`. All fifteen replacements were pasted as given; none was disputed.
