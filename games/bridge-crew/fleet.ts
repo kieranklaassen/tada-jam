@@ -164,8 +164,9 @@ export function vehicle(pen: Pen, id: VehicleId, c: number, pose: VehiclePose, s
         cutOut(pen, c, INK.paper, () => pen.rect(px, py - c * 0.29, w, c * 0.29))
         pen.strokeStyle = INK.stringTwist
         pen.lineWidth = Math.max(1, c * 0.026)
-        // A paper label in one corner. No string crosses a parcel: a cross there would read as a sign.
-        pen.beginPath(); pen.rect(px + w * 0.52, py - c * 0.23, w * 0.36, c * 0.12); pen.stroke()
+        // A paper label in one corner, filled. No string crosses a parcel: a cross there would read as a sign.
+        pen.fillStyle = INK.paperShade
+        pen.beginPath(); pen.rect(px + w * 0.52, py - c * 0.23, w * 0.36, c * 0.12); pen.fill()
       }
       crateCount(pen, spec.crates, -c * (long + 0.98), bed - c * 0.36, c, flip, counted)
       // The driver is out of the cab: its window is bare paper.
@@ -180,9 +181,11 @@ export function vehicle(pen: Pen, id: VehicleId, c: number, pose: VehiclePose, s
       const home: [number, number] = [-c * (long - 0.05), bed - c * 0.6], roof: [number, number] = [c * 0.15, bed - c * 1.2]
       const jx = home[0] + (roof[0] - home[0]) * pose.upset, jy = home[1] + (roof[1] - home[1]) * pose.upset - c * 0.8 * Math.sin(Math.PI * pose.upset)
       const lean = pose.cargo[0] * c
+      // Its plate: a shallow filled dish, no wider than the jelly. (A level line would be a bar beside the numeral.)
+      pen.fillStyle = INK.paperShade
+      pen.beginPath(); pen.moveTo(home[0] - c * 0.5, home[1] - c * 0.03); pen.lineTo(home[0] + c * 0.5, home[1] - c * 0.03); pen.quadraticCurveTo(home[0] + c * 0.34, home[1] + c * 0.09, home[0], home[1] + c * 0.09); pen.quadraticCurveTo(home[0] - c * 0.34, home[1] + c * 0.09, home[0] - c * 0.5, home[1] - c * 0.03); pen.fill()
       pen.strokeStyle = INK.paperShade
       pen.lineWidth = Math.max(1.5, c * 0.05)
-      pen.beginPath(); pen.moveTo(home[0] - c * 0.6, home[1]); pen.lineTo(home[0] + c * 0.6, home[1]); pen.stroke()
       pen.globalAlpha = 0.82
       cutOut(pen, c, '#dfeaf6', () => { pen.moveTo(jx - c * 0.5, jy); pen.bezierCurveTo(jx - c * 0.5 + lean, jy - c * 0.85, jx + c * 0.5 + lean, jy - c * 0.85, jx + c * 0.5, jy); pen.closePath() })
       pen.globalAlpha = 1
@@ -263,8 +266,14 @@ export function vehicle(pen: Pen, id: VehicleId, c: number, pose: VehiclePose, s
       }
       face(pen, c * 0.05, bed - c * 0.36, c * 0.95, pose)
       // Two antennae of balsa.
-      wood(pen, 'stick', -c * 0.02, bed - c * 0.66, c * 0.12, bed - c * 1.02, c * 0.5, random)
-      wood(pen, 'stick', c * 0.16, bed - c * 0.64, c * 0.42, bed - c * 0.94, c * 0.5, random)
+      // Each curls its own way and ends in a paper bobble: two straight sticks from one place would be a letter.
+      pen.strokeStyle = INK.balsaEdge
+      pen.lineWidth = Math.max(1.5, c * 0.045)
+      pen.lineCap = 'round'
+      for (const [fx, tx, ty, bend] of [[-0.02, -0.14, 1.0, -0.2], [0.16, 0.5, 0.86, 0.26]] as const) {
+        pen.beginPath(); pen.moveTo(c * fx, bed - c * 0.66); pen.quadraticCurveTo(c * (fx + bend), bed - c * 0.95, c * tx, bed - c * ty); pen.stroke()
+        cutOut(pen, c, INK.paper, () => pen.arc(c * tx, bed - c * ty, c * 0.055, 0, Math.PI * 2))
+      }
       crateCount(pen, spec.crates, -c * (long + 0.8), bed - c * 0.3, c, flip, counted)
       break
     }
@@ -290,9 +299,9 @@ function arm(pen: Pen, c: number, x0: number, y0: number, x1: number, y1: number
 /** The piano's mover, running behind it on the road: a paper cut-out leaning back on its heels, both arms out to the piano, its legs going. */
 function mover(pen: Pen, c: number, x: number, seconds: number, out: number) {
   const stride = Math.sin(seconds * 13), lean = 0.12 * c * Math.min(1, out * 2)
-  // Both arms out to the piano, one a little higher than the other and reaching a little farther: paper, behind its body.
-  arm(pen, c, x + c * 0.03 - lean, -c * 0.45, x + c * 0.27, -c * 0.52)
-  arm(pen, c, x + c * 0.03 - lean, -c * 0.35, x + c * 0.22, -c * 0.33)
+  // Both arms out to the piano, one up to its top and one low on its side: paper, behind its body, and nowhere near parallel.
+  arm(pen, c, x + c * 0.03 - lean, -c * 0.46, x + c * 0.3, -c * 0.72)
+  arm(pen, c, x + c * 0.03 - lean, -c * 0.36, x + c * 0.24, -c * 0.26)
   cutOut(pen, c, INK.paper, () => pen.roundRect(x - c * 0.11 - lean, -c * 0.5, c * 0.22, c * 0.36, c * 0.05))
   cutOut(pen, c, INK.paper, () => pen.arc(x - lean * 1.4, -c * 0.61, c * 0.12, 0, Math.PI * 2))
   pencil(pen, c, 0.03)

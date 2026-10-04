@@ -27,6 +27,8 @@ export const INK = {
   stringTwist: '#b8ab8a',
   /** The one warm accent, kept for the pencil. */
   pencil: '#e3b23c',
+  /** The pale pencil of the ring drawn round a spot where a part gave: greyer than the drafting white. */
+  pencilRing: '#c9d3e0',
 } as const
 
 /** A small seeded stream, so the same sheet is drawn every time. */
@@ -188,6 +190,11 @@ export function pin(pen: Pen, x: number, y: number, cell: number, footing: boole
     pen.globalAlpha = 0.9
     pen.beginPath()
     pen.moveTo(x, y); pen.lineTo(x - cell * 0.2, y + cell * 0.3); pen.lineTo(x + cell * 0.2, y + cell * 0.3); pen.closePath()
+    // A filled wedge the pin stands on, and its outline: a bare outlined triangle is a letter and the engineer's sign.
+    pen.fillStyle = INK.line
+    pen.globalAlpha = 0.35
+    pen.fill()
+    pen.globalAlpha = 0.9
     pen.stroke()
     pen.globalAlpha = 1
   }

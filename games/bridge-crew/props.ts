@@ -45,14 +45,18 @@ export function trolley(pen: Pen, x: number, y: number, c: number, weights: numb
     // It hangs: by one string from the pin, or by two from its wheels on the plank above.
     pen.rotate(how === 'pin' ? swing : 0)
     const drop = c * (how === 'pin' ? 0.7 : 0.55)
-    if (how === 'pin') string(pen, 0, 0, 0, drop, c * 0.8)
+    // From a pin it hangs by two strings to the ends of its bed: with the bed they close a triangle. (One string
+    // straight down from a pin would be a stroke with a dot over it.)
+    if (how === 'pin') { string(pen, 0, 0, -c * 0.4, drop + c * 0.04, c * 0.8); string(pen, 0, 0, c * 0.4, drop + c * 0.04, c * 0.8) }
     else { string(pen, -c * 0.3, -c * 0.1, -c * 0.3, drop, c * 0.8); string(pen, c * 0.3, -c * 0.1, c * 0.3, drop, c * 0.8) }
     bed = drop + c * 0.06
   }
   // Standing on its wheels it has a push handle at its back. Nothing stands upright at its front, where its numeral is.
   if (how === 'deck' || how === 'tray') {
+    // A hoop of three sticks, closed: an open crank would read as a figure.
     wood(pen, 'stick', -c * 0.42, bed, -c * 0.58, bed - c * 0.62, c * 0.6, random)
-    wood(pen, 'stick', -c * 0.58, bed - c * 0.62, -c * 0.78, bed - c * 0.62, c * 0.6, random)
+    wood(pen, 'stick', -c * 0.58, bed - c * 0.62, -c * 0.8, bed - c * 0.56, c * 0.6, random)
+    wood(pen, 'stick', -c * 0.8, bed - c * 0.56, -c * 0.42, bed, c * 0.6, random)
   }
   wood(pen, 'plank', -c * 0.42, bed, c * 0.42, bed, c * 0.9, random)
   const onTop = how === 'under' ? -c * 0.1 : how === 'pin' ? null : bed + c * 0.09
@@ -65,7 +69,16 @@ export function trolley(pen: Pen, x: number, y: number, c: number, weights: numb
   // numeral lies under the bed: no upright stands between the stack and its numeral.
   // At home in its compartment with the one weight it comes with, it has no numeral: the numeral names a stack the child set.
   if (!counted) { pen.restore(); return }
-  if (how === 'under') drawWhole(pen, weights, 0, bed + c * 0.44, c * 0.5, { fill: INK.line, edge: INK.sheetDeep, edgeWidth: c * 0.12 })
+  // Hanging (under the plank, or from a pin) its numeral lies beside the stack's foot, out past the end of the bed and
+  // a little below it, and is drawn upright however the trolley swings: no string stands beside it, and it is not
+  // under the stack like the lower half of a fraction.
+  if (how === 'under' || how === 'pin') {
+    pen.save()
+    pen.translate(c * 0.72, bed + c * 0.16)
+    pen.rotate(how === 'pin' ? -swing : 0)
+    drawWhole(pen, weights, 0, 0, c * 0.5, { fill: INK.line, edge: INK.sheetDeep, edgeWidth: c * 0.12 })
+    pen.restore()
+  }
   else drawWhole(pen, weights, c * 0.62, bed - c * 0.08 - (weights * c * 0.14) / 2, c * 0.5, { fill: INK.line, edge: INK.sheetDeep, edgeWidth: c * 0.12 })
   pen.restore()
 }
@@ -157,7 +170,8 @@ export function barge(pen: Pen, x: number, y: number, c: number, bob: number, sc
   cutOut(pen, c, INK.paperShade, () => { pen.moveTo(px - c * 0.14, py - c * 0.2); pen.lineTo(px + c * 0.14, py - c * 0.2); pen.lineTo(px + c * 0.09, py); pen.lineTo(px - c * 0.09, py); pen.closePath() })
   pen.strokeStyle = INK.balsaEdge
   pen.lineWidth = Math.max(1, c * 0.03)
-  pen.beginPath(); pen.moveTo(px, py - c * 0.2); pen.lineTo(px - c * 0.08, py - c * 0.42); pen.moveTo(px, py - c * 0.2); pen.lineTo(px + c * 0.1, py - c * 0.4); pen.stroke()
+  // Its plant: two paper leaves, filled. (Two bare strokes from one point would be a letter.)
+  for (const [lx, turn] of [[-0.07, -0.5], [0.08, 0.45]] as const) cutOut(pen, c, INK.paper, () => pen.ellipse(px + c * lx, py - c * 0.31, c * 0.05, c * 0.13, turn, 0, Math.PI * 2))
   pen.restore()
 }
 

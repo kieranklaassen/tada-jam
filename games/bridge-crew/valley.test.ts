@@ -90,7 +90,8 @@ describe('the valley the gap is in', () => {
       for (const slot of [0, 1]) expect(Math.abs(waitAt(at, slot) - at.left[0])).toBeLessThan(LINE_UP - 1.5)
     }
     expect(bushes).toBeGreaterThan(every.length)
-    expect(trunks).toBeGreaterThan(every.length / 2)
+    // Trees stand only beyond that stretch, so the widest gaps have none.
+    expect(trunks).toBeGreaterThan(every.length / 3)
   })
 
   it('what is buried lies inside a bank, under the road and over the sheet\'s foot, with a burrow under the near bank on every sheet', () => {

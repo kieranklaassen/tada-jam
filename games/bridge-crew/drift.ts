@@ -293,11 +293,12 @@ export function drawSplash(pen: Pen, plot: Plot, at: Site, splash: Splash | null
   // The crown: two sheets of water that stand up either side of what fell in, and curl over.
   const high = cell * 2.8 * big * Math.sin(Math.PI * Math.min(1, s / 0.7)), wide = cell * (0.7 + 1.3 * Math.min(1, s / 0.5)) * (0.6 + 0.4 * big)
   if (s < 0.7) for (const side of [-1, 1]) for (const reach of [1, 0.62]) { pen.moveTo(x + side * wide * 0.3 * reach, y); pen.quadraticCurveTo(x + side * wide * 0.42 * reach, y - high * reach, x + side * wide * reach, y - high * 0.72 * reach) }
+  const tears: [number, number, number, number][] = []
   for (const drop of drops(splash, [at.left[0] + 0.15, at.right[0] - 0.15])) {
     const [dx, dy] = px(plot, drop.x, drop.y)
-    // Each a streak along its way, never shorter than a drop.
-    const long = Math.max(0.16, Math.abs(drop.vy) * 0.04) * cell * (drop.vy >= 0 ? 1 : -1)
-    pen.moveTo(dx, dy); pen.lineTo(dx, dy + long)
+    // Each a filled drop, drawn out along its way: a tear, never an upright stroke.
+    const long = Math.max(0.16, Math.abs(drop.vy) * 0.04) * cell * (drop.vy >= 0 ? 1 : -1), wide = cell * 0.05
+    tears.push([dx, dy, long, wide])
   }
   // The ripples stop at the banks.
   const [low] = px(plot, at.left[0] + 0.1, 0), [top] = px(plot, at.right[0] - 0.1, 0), held = (v: number) => Math.max(low, Math.min(top, v))
@@ -311,6 +312,10 @@ export function drawSplash(pen: Pen, plot: Plot, at: Site, splash: Splash | null
     }
   }
   pen.stroke()
+  pen.fillStyle = INK.line
+  pen.beginPath()
+  for (const [dx, dy, long, wide] of tears) { pen.moveTo(dx, dy); pen.quadraticCurveTo(dx + wide * 1.6, dy + long * 0.75, dx, dy + long); pen.quadraticCurveTo(dx - wide * 1.6, dy + long * 0.75, dx, dy) }
+  pen.fill()
   pen.globalAlpha = 1
   return 1
 }

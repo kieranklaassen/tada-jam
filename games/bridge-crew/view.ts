@@ -45,6 +45,9 @@ export function modelBuilt(idea: Idea, progress: number): number {
   return (common + (whole - common) * share(0.56, 0.64)) / whole
 }
 
+/** How far apart the parts of a pile lie, in cells: each kind's own thickness, so they touch. */
+const PILE = { plank: 0.13, stick: 0.09, tube: 0.26, thread: 0.3 } as const
+
 /** How long a thread takes to unreel from its first pin to its second, in seconds; and how many times as far the middle of a plucked plank goes as a stiff part shifts. */
 const UNREEL = 0.25
 const WHIP = 2.2
@@ -150,16 +153,29 @@ export class View {
     for (const bay of bays(at)) {
       const left = toy.left(bay.kind), picked = toy.selected === bay.kind
       const long = Math.min(bay.x1 - bay.x0 - 0.9, 3), x0 = (bay.x0 + bay.x1 - long) / 2, base = TRAY.top - TRAY.tall + 0.35 + (picked ? 0.1 : 0)
-      const pitch = Math.min(0.32, 1.45 / Math.max(left, 1))
+      // The parts of a pile lie on one another, touching, each a little askew: a pile is one stack, and never bars apart.
+      const pitch = Math.min(PILE[bay.kind], 1.45 / Math.max(left, 1))
       if (bay.kind === 'thread') {
         // The spool: as many turns of string as there are threads left, between two balsa cheeks, and a loose end that sways.
         const mid = (bay.x0 + bay.x1) / 2
-        for (let i = 0; i < left; i++) string(pen, ...at2([mid - 0.4, base + 0.12 + i * pitch * 0.9]), ...at2([mid + 0.4, base + 0.18 + i * pitch * 0.9]), cell * 1.5)
+        // The string wound on it: one filled bobbin, fatter the more threads are left. (As many level strings as
+        // threads would be lines of writing, and with two left an equals sign.)
+        if (left > 0) {
+          const fat = 0.16 + 0.34 * Math.min(1, left / Math.max(1, at.kit.thread)), [bx0, by0] = at2([mid - fat, base + 1.42]), [bx1, by1] = at2([mid + fat, base + 0.08])
+          pen.fillStyle = INK.shadow
+          pen.beginPath(); pen.roundRect(bx0 + cell * 0.05, by0 + cell * 0.05, bx1 - bx0, by1 - by0, cell * 0.16); pen.fill()
+          pen.fillStyle = INK.string
+          pen.beginPath(); pen.roundRect(bx0, by0, bx1 - bx0, by1 - by0, cell * 0.16); pen.fill()
+          pen.fillStyle = INK.stringTwist
+          pen.globalAlpha = 0.35
+          for (let i = 0; i < 4; i++) { const [, ty] = at2([mid, base + 0.3 + 0.3 * i]); pen.beginPath(); pen.ellipse((bx0 + bx1) / 2, ty, (bx1 - bx0) / 2, cell * 0.035, -0.12, 0, Math.PI * 2); pen.fill() }
+          pen.globalAlpha = 1
+        }
         this.part(pen, 'plank', 1.2, at2([mid - 0.6, base]), at2([mid + 0.6, base]), picked ? 1.8 : 1)
         this.part(pen, 'plank', 1.2, at2([mid - 0.6, base + 1.5]), at2([mid + 0.6, base + 1.5]), picked ? 1.8 : 1)
         const sway = stringSway(toy.seconds)
         if (left > 0) string(pen, ...at2([mid + 0.4, base + 0.14]), ...at2([mid + 0.4 + Math.cos(sway) * 0.85, base + 0.1 - Math.sin(sway) * 0.3]), cell, 0.12)
-        drawn += left + 3
+        drawn += 4
       } else {
         const kind = woodOf({ kind: bay.kind, turned: false })
         // The whole pile's shadow first, then the parts: one part's shadow never hides the part under it.
@@ -550,7 +566,7 @@ export class View {
       if (place.afloat > 0) {
         // Up to its crates in the water: the sheet's blue over what is under the surface, and the rings it makes.
         // Only between the banks: the water is in the gap, and the ground beside it is not painted over.
-        const [wx0, wy0] = at2(Math.max(at.left[0] + 0.05, place.x - longOf(show.vehicle) - Math.max(1.2, TAIL[show.vehicle] + 0.4)), WATER), [wx1, wy1] = at2(Math.min(at.right[0] - 0.05, place.x + 1.2), WATER - 1.3)
+        const [wx0, wy0] = at2(Math.max(at.left[0] + 0.05, place.x - longOf(show.vehicle) - Math.max(2.3, TAIL[show.vehicle] + 0.4)), WATER), [wx1, wy1] = at2(Math.min(at.right[0] - 0.05, place.x + 1.2), WATER - 1.3)
         pen.fillStyle = INK.sheet
         pen.globalAlpha = 0.82 * place.afloat
         pen.fillRect(wx0, wy0, wx1 - wx0, wy1 - wy0)
@@ -596,8 +612,9 @@ export class View {
     }
     const count = game.save.sheets.length
     if (count > 1) for (let index = 0; index < count; index++) {
-      const [x, y] = at2(...rackAt(index, count))
-      roll(pen, x, y + cell * 0.7, cell * 1.3, cell * 0.6)
+      // Hung as they came: each a little higher or lower than the next and a little aslant, so the rack is no tally.
+      const [x, hung] = at2(...rackAt(index, count)), y = hung + cell * 0.09 * Math.sin(index * 2.3 + 0.7)
+      pen.save(); pen.translate(x, y + cell * 0.7); pen.rotate(0.07 * Math.sin(index * 1.7 + 0.4)); roll(pen, 0, 0, cell * 1.3, cell * 0.6); pen.restore()
       if (index === game.save.on) this.brackets(pen, [x - cell * 0.42, y - cell * 0.75], [x + cell * 0.42, y + cell * 0.8], 0.9)
       drawn++
     }
@@ -623,7 +640,8 @@ export class View {
     pen.globalAlpha = 0.85
     const [x0, y0] = at2(boxes[0].x0, top), [x1, y1] = at2(boxes[1].x1, low), [xm] = at2(boxes[0].x1, 0)
     pen.strokeRect(x0, y0, x1 - x0, y1 - y0)
-    pen.beginPath(); pen.moveTo(xm, y0 + cell * 0.2); pen.lineTo(xm, y1 - cell * 0.2); pen.stroke()
+    // The wall between the two compartments, from top to bottom: two closed boxes, and no loose upright.
+    pen.beginPath(); pen.moveTo(xm, y0); pen.lineTo(xm, y1); pen.stroke()
     pen.globalAlpha = 1
     if (glow > 0.01) for (const box of boxes) this.brackets(pen, at2(box.x0 + 0.1, top - 0.1), at2(box.x1 - 0.1, low + 0.1), glow * 0.9)
 
@@ -659,9 +677,9 @@ export class View {
         // A tube turned under it: it log-rolls off sideways, over and over, into the water.
         const [rx, ry] = at2(from[0] + 0.7 * f, from[1] + (WATER - from[1]) * f * f)
         pen.save(); pen.translate(rx, ry); pen.rotate(2 * Math.PI * f); trolley(pen, 0, 0, cell, cart.weights, 'tray', 0, stream(31), false); pen.restore()
-      } else if (f < 1) trolley(pen, ...at2(from[0], from[1] + (WATER - from[1]) * f * f), cell, cart.weights, 'tray', 0, stream(31))
+      } else if (f < 1) trolley(pen, ...at2(from[0], from[1] + (WATER - from[1]) * f * f), cell, cart.weights, 'tray', 0, stream(31), false)
       // On the water it bobs for a moment, and then it is back in its compartment.
-      else trolley(pen, ...at2(from[0] + (game.trolleyFell.rolled ? 0.7 : 0), WATER + 0.06 * Math.sin((game.trolleyFell.since - 0.5) * 16) * Math.max(0, 1 - (game.trolleyFell.since - 0.5) / 0.6)), cell, cart.weights, 'tray', 0, stream(31))
+      else trolley(pen, ...at2(from[0] + (game.trolleyFell.rolled ? 0.7 : 0), WATER + 0.06 * Math.sin((game.trolleyFell.since - 0.5) * 16) * Math.max(0, 1 - (game.trolleyFell.since - 0.5) / 0.6)), cell, cart.weights, 'tray', 0, stream(31), false)
     }
 
     // The tracing paper: the pad at the bottom, and the two tracings kept above it. The one laid on the board is marked.
@@ -698,10 +716,16 @@ export class View {
 
   /** A thin white ring: the pencil ring round the spot where a part gave. */
   private ring(pen: Pen, at: readonly [number, number], radius: number, alpha: number): void {
-    pen.strokeStyle = INK.line
+    // Drawn by hand in pencil: a loop that overshoots where it began and does not quite meet itself, a little out of
+    // round. A clean closed circle in the numerals' white would read as a nought beside a numeral.
+    const r = radius * this.plot.cell
+    pen.strokeStyle = INK.pencilRing
     pen.globalAlpha = alpha
-    pen.lineWidth = Math.max(1, this.plot.cell * 0.035)
-    pen.beginPath(); pen.arc(at[0], at[1], radius * this.plot.cell, 0, Math.PI * 2); pen.stroke()
+    pen.lineWidth = Math.max(1, this.plot.cell * 0.04)
+    pen.lineCap = 'round'
+    pen.beginPath()
+    for (let i = 0; i <= 40; i++) { const t = -0.5 + (i / 40) * (2 * Math.PI + 0.55), out = r * (1.08 + 0.05 * Math.sin(t * 2 + 0.6) + 0.03 * (i / 40)); if (i === 0) pen.moveTo(at[0] + Math.cos(t) * out * 1.06, at[1] + Math.sin(t) * out * 0.94); else pen.lineTo(at[0] + Math.cos(t) * out * 1.06, at[1] + Math.sin(t) * out * 0.94) }
+    pen.stroke()
     pen.globalAlpha = 1
   }
 

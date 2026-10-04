@@ -154,7 +154,8 @@ export function chief(pen: Pen, x: number, y: number, cell: number, pose: ChiefP
   }
   // The crest feather droops at rest and stands when its feathers do; and the pencil behind the ear, the one warm colour on the sheet.
   const up = pose.crest
-  pen.beginPath(); pen.moveTo(-cell * 0.1, -cell * 0.08); pen.quadraticCurveTo(-cell * 0.4, -cell * (0.1 + 0.3 * up), -cell * (0.5 - 0.15 * up), cell * (0.12 - 0.6 * up)); pen.stroke()
+  // It is rooted behind the pencil's end, so standing right up it does not cross the pencil.
+  pen.beginPath(); pen.moveTo(-cell * 0.34, -cell * 0.1); pen.quadraticCurveTo(-cell * 0.52, -cell * (0.1 + 0.3 * up), -cell * (0.62 - 0.15 * up), cell * (0.12 - 0.6 * up)); pen.stroke()
   pen.lineWidth = cell * 0.07
   pen.strokeStyle = INK.pencil
   pen.beginPath(); pen.moveTo(-cell * 0.3, -cell * 0.22); pen.lineTo(cell * 0.12, -cell * 0.12); pen.stroke()
@@ -221,7 +222,9 @@ export function roll(pen: Pen, x: number, y: number, tall: number, cell: number)
   pen.strokeStyle = INK.paper
   pen.lineWidth = Math.max(1, cell * 0.025)
   pen.beginPath(); pen.ellipse(x, y - tall, wide * 0.32, wide * 0.12, 0, 0.6, Math.PI * 2 + 2.4); pen.stroke()
-  pen.beginPath(); pen.ellipse(x, y - tall, wide * 0.15, wide * 0.05, 0, 0, Math.PI * 2); pen.stroke()
+  // The paper's inmost turn: a filled dab, not a second ring.
+  pen.fillStyle = INK.paper
+  pen.beginPath(); pen.ellipse(x, y - tall, wide * 0.1, wide * 0.035, 0, 0, Math.PI * 2); pen.fill()
   // The band.
   pen.fillStyle = INK.balsa
   pen.fillRect(x - wide / 2, y - tall * 0.45, wide, cell * 0.2)

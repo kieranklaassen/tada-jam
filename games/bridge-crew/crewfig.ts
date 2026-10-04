@@ -69,9 +69,10 @@ function beaver(pen: Pen, x: number, y: number, c: number, pose: CrewPose, rando
   pen.strokeStyle = INK.balsaEdge
   pen.lineWidth = Math.max(0.75, c * 0.016)
   pen.beginPath()
-  // Scales, as rows of small arcs that open toward its tip. Nothing on it crosses.
-  for (let i = 0; i < 5; i++) for (const row of [-0.05, 0.05]) { const sx = -c * (0.62 - i * 0.12 - (row > 0 ? 0.06 : 0)); pen.moveTo(sx + c * 0.045, row * c + c * 0.04); pen.arc(sx, row * c, c * 0.045, 0.9, -0.9, true) }
-  pen.stroke()
+  // Scales, as small filled dabs set in a stagger. Nothing on it crosses, and no row of it is a row of letters.
+  pen.fillStyle = INK.balsaEdge
+  for (let i = 0; i < 9; i++) { const sx = -c * (0.64 - i * 0.065), sy = (i % 2 ? 0.045 : -0.04) * c; pen.moveTo(sx + c * 0.03, sy); pen.ellipse(sx, sy, c * 0.03, c * 0.022, 0.5, 0, Math.PI * 2) }
+  pen.fill()
   pen.restore()
   for (const fx of [-0.2, 0.24]) cutOut(pen, c, INK.balsa, () => pen.ellipse(x + c * fx, y - c * 0.06, c * 0.2, c * 0.08, 0, 0, Math.PI * 2))
   pen.save()

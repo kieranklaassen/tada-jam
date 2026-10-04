@@ -92,7 +92,8 @@ export function trees(at: Site): { x: number; tall: number; kind: 'round' | 'pin
   // Where vehicles wait or park, two deep, there are only bushes: no trunk stands as high as a numeral beside one.
   const lineUp = (x: number) => (x > at.left[0] - LINE_UP && x < at.left[0]) || (x < at.right[0] + LINE_UP && x > at.right[0])
   const stretch = (from: number, to: number) => {
-    for (let x = from + 0.4 + random() * 0.8; x < to; x += 1.5 + random() * 1.5) {
+    // Bushes stand closer together than trees: the stretch by the gap has nothing taller, and is not left bare.
+    for (let x = from + 0.4 + random() * 0.8; x < to; x += lineUp(x) ? 0.75 + random() * 0.8 : 1.5 + random() * 1.5) {
       const pick = random(), tall = 1.5 + random() * 1.3
       if (at.anchors.some(([ax]) => Math.abs(ax - x) < 2.3)) continue
       // And clear of the house, which stands on the hill behind.
@@ -115,7 +116,9 @@ function tree(pen: Pen, plot: Plot, x: number, base: number, tall: number, kind:
     for (let i = 0; i < 5; i++) { const t = (i / 4) * Math.PI; ring(pen, plot, x + Math.cos(t) * tall * 0.62, base + Math.sin(t) * tall * 0.62, tall * 0.34, 0.022, a, Math.max(-Math.PI, -t - 1.5), Math.min(0, -t + 1.5)) }
     return
   }
-  stroke(pen, plot, [[x, base], [x + 0.03, base + tall * (kind === 'pine' ? 0.24 : 0.42)]], 0.035, a)
+  // Only the round tree shows a trunk. A pine's lowest tier and a poplar's leaf come down to the ground: a stem
+  // under tiers reads as an arrow, and under a tall narrow leaf as a figure on a stick.
+  if (kind === 'round') stroke(pen, plot, [[x, base], [x + 0.03, base + tall * 0.42]], 0.035, a)
   if (kind === 'round') {
     // A crown drawn as an architect draws one: a ring of scallops and two loose arcs inside.
     const r = tall * 0.34, cy = base + tall * 0.66, lobes = 9
@@ -129,13 +132,14 @@ function tree(pen: Pen, plot: Plot, x: number, base: number, tall: number, kind:
   } else if (kind === 'pine') {
     // Three tiers, each a little narrower. The trunk stops under the lowest: nothing is drawn through them.
     for (let i = 0; i < 3; i++) {
-      const low = base + tall * (0.24 + 0.24 * i), wide = tall * (0.3 - 0.07 * i)
+      const low = base + tall * (0.02 + 0.31 * i), wide = tall * (0.3 - 0.07 * i)
       stroke(pen, plot, [[x - wide, low], [x, low + tall * 0.34], [x + wide, low], [x + wide * 0.45, low + tall * 0.03], [x - wide * 0.45, low + tall * 0.03]], 0.022, a, true)
     }
   } else {
     // A poplar: one tall narrow leaf, with nothing drawn through it.
     const wide = tall * 0.14, steps = 10, left: Dot[] = [], right: Dot[] = []
-    for (let i = 0; i <= steps; i++) { const t = i / steps, w = wide * Math.sin(Math.PI * Math.pow(t, 0.7)); left.push([x - w, base + tall * (0.3 + 0.7 * t)]); right.unshift([x + w, base + tall * (0.3 + 0.7 * t)]) }
+    // A flame of a tree: broad low down and drawn out to a point, leaning a little, so it is no closed round.
+    for (let i = 0; i <= steps; i++) { const t = i / steps, w = wide * Math.sin(Math.PI * Math.pow(t, 0.45)) * (1 - 0.6 * t * t), lean = 0.05 * tall * t * t; left.push([x - w + lean, base + tall * (0.02 + 0.98 * t)]); right.unshift([x + w * 0.8 + lean, base + tall * (0.02 + 0.98 * t)]) }
     stroke(pen, plot, [...left, ...right], 0.022, a, true)
   }
 }
@@ -160,7 +164,9 @@ export function paintValley(pen: Pen, plot: Plot, at: Site) {
       stroke(pen, plot, line, layer ? 0.016 : 0.022, layer ? FAINT.far : FAINT.hills)
       if (layer === 0) for (let x = from + 0.6; x < to - 0.3; x += 0.9 + random() * 0.6) {
         const top = skyline(at, x, 0)
-        if (top > 0.9) stroke(pen, plot, [[x, deck + top * (0.45 + 0.3 * random())], [x + 0.32, deck + top * (0.4 + 0.3 * random())]], 0.014, FAINT.far)
+        // None behind where vehicles stand with their numerals: a short level stroke there would stand beside a numeral.
+        const a0 = random(), a1 = random(), behind = (x > lip - LINE_UP - 0.4 && x < lip) || (x > far - 0.4 && x < far + LINE_UP)
+        if (top > 0.9 && !behind) stroke(pen, plot, [[x, deck + top * (0.45 + 0.3 * a0)], [x + 0.32, deck + top * (0.4 + 0.3 * a1)]], 0.014, FAINT.far)
       }
     }
   }
@@ -169,7 +175,6 @@ export function paintValley(pen: Pen, plot: Plot, at: Site) {
   if (span.x1 - span.x0 > 2.5) {
     const rail = span.y, arches = Math.round((span.x1 - span.x0) / 0.62), wide = (span.x1 - span.x0) / arches
     stroke(pen, plot, [[span.x0 - 0.2, rail], [span.x1 + 0.2, rail]], 0.02, FAINT.hills + 0.08)
-    stroke(pen, plot, [[span.x0 - 0.2, rail - 0.09], [span.x1 + 0.2, rail - 0.09]], 0.012, FAINT.hills)
     for (let i = 0; i < arches; i++) {
       const cx = span.x0 + wide * (i + 0.5), foot = deck + Math.max(skyline(at, cx - wide / 2, 0), skyline(at, cx - wide / 2, 1))
       ring(pen, plot, cx, rail - 0.09 - wide * 0.42, wide * 0.42, 0.014, FAINT.hills, Math.PI, Math.PI * 2)
@@ -191,7 +196,8 @@ export function paintValley(pen: Pen, plot: Plot, at: Site) {
   for (const one of trees(at)) tree(pen, plot, one.x, deck, one.tall, one.kind, random)
   // Posts along each bank, behind the road, with a rope slung from top to top, which stops short of the lip with its
   // last length hanging. No rail crosses a post.
-  for (const [from, to, toward] of [[-MARGIN.side + 0.1, lip - 1.1, 1], [far + 1.1, COLS + MARGIN.side - 0.1, -1]] as const) {
+  // None where vehicles wait or park: a post is an upright stroke, and would stand beside a numeral there.
+  for (const [from, to, toward] of [[-MARGIN.side + 0.1, lip - LINE_UP, 1], [far + LINE_UP, COLS + MARGIN.side - 0.1, -1]] as const) {
     const posts: number[] = []
     for (let x = toward > 0 ? to : from; toward > 0 ? x > from : x < to; x -= toward * 0.85) posts.push(x)
     posts.forEach((x, i) => {
@@ -201,10 +207,10 @@ export function paintValley(pen: Pen, plot: Plot, at: Site) {
     })
     if (posts.length) stroke(pen, plot, [[posts[0], deck + 0.42], [posts[0] + toward * 0.12, deck + 0.2], [posts[0] + toward * 0.16, deck + 0.04]], 0.014, FAINT.fence)
   }
-  // Grass: tufts of three strokes on the banks' tops.
+  // Grass: tufts of two blades, each curving its own way from its own foot. (Strokes fanning from one point are rays.)
   for (let x = -MARGIN.side + 0.3; x < COLS + MARGIN.side; x += 0.5 + random() * 0.9) {
     if (x > lip - 0.9 && x < far + 0.9) continue
-    for (const lean of [-0.07, 0, 0.08]) stroke(pen, plot, [[x + lean * 0.4, deck], [x + lean, deck + 0.1 + 0.07 * random()]], 0.014, FAINT.fence)
+    for (const lean of [-0.08, 0.09]) { const tall = 0.1 + 0.07 * random(); stroke(pen, plot, [[x + lean * 0.9, deck], [x + lean * 1.1, deck + tall * 0.55], [x + lean * 1.9, deck + tall]], 0.014, FAINT.fence) }
   }
 }
 
@@ -239,11 +245,12 @@ function find(pen: Pen, plot: Plot, what: Find, x: number, y: number) {
   const at = (dx: number, dy: number): Dot => [x + dx, y + dy]
   switch (what) {
     case 'shell': {
-      // A coiled shell: a spiral of three turns with ribs across the outer one.
-      const coil: Dot[] = []
-      for (let t = 0; t <= 6.2 * Math.PI; t += 0.3) coil.push(at(Math.cos(t) * 0.055 * (1 + t * 0.32), Math.sin(t) * 0.055 * (1 + t * 0.32)))
-      stroke(pen, plot, coil, 0.02, a)
-      for (let i = 0; i < 7; i++) { const t = 4.4 * Math.PI + i * 0.26, r0 = 0.055 * (1 + t * 0.32), r1 = 0.055 * (1 + (t - 2 * Math.PI) * 0.32); stroke(pen, plot, [at(Math.cos(t) * r0, Math.sin(t) * r0), at(Math.cos(t) * (r1 + 0.03), Math.sin(t) * (r1 + 0.03))], 0.012, a * 0.8) }
+      // A clam shell, lying flat: a low dome with a scalloped edge and a hinge. No coil: a spiral reads as a figure.
+      const dome: Dot[] = []
+      for (let t = 0; t <= 1.001; t += 0.1) dome.push(at(-0.3 + 0.6 * t, -0.14 + 0.36 * Math.sin(Math.PI * t)))
+      stroke(pen, plot, dome, 0.02, a)
+      for (let i = 0; i < 5; i++) ring(pen, plot, x - 0.24 + 0.12 * i, y - 0.14, 0.06, 0.016, a, 0, Math.PI)
+      stroke(pen, plot, [at(-0.07, 0.2), at(0, 0.27), at(0.07, 0.2)], 0.016, a)
       break
     }
     case 'bottle':
@@ -253,7 +260,8 @@ function find(pen: Pen, plot: Plot, what: Find, x: number, y: number) {
     case 'boot':
       stroke(pen, plot, [at(-0.16, 0.3), at(-0.18, -0.1), at(-0.2, -0.22), at(0.3, -0.22), at(0.33, -0.1), at(0.1, 0.0), at(0.08, 0.3)], 0.022, a, true)
       stroke(pen, plot, [at(-0.2, -0.22), at(-0.2, -0.28), at(0.3, -0.28), at(0.3, -0.22)], 0.022, a)
-      for (const h of [0.08, 0.16, 0.24]) stroke(pen, plot, [at(-0.1, h), at(0.03, h + 0.02)], 0.012, a)
+      // Three eyelets up its front, each a small bump on its edge: no bars one above another.
+      for (const h of [0.06, 0.15, 0.24]) ring(pen, plot, x + 0.085 + 0.006 * h, y + h, 0.028, 0.012, a, -Math.PI / 2, Math.PI / 2)
       break
     case 'pot': {
       // A clay pot: a belly, a neck and a rim, with a chip out of the rim.
@@ -274,7 +282,8 @@ function find(pen: Pen, plot: Plot, what: Find, x: number, y: number) {
       stroke(pen, plot, [at(-0.6, -0.3), at(-0.6, -0.12), at(-0.05, -0.12), at(-0.05, -0.3)], 0.02, a)
       stroke(pen, plot, [at(-0.6, -0.12), at(-0.6, 0.02)], 0.02, a)
       ring(pen, plot, x - 0.45, y - 0.08, 0.09, 0.016, a, Math.PI, Math.PI * 2)
-      stroke(pen, plot, [at(0.2, 0.02), at(0.62, 0.02)], 0.02, a)
+      // The shelf is let into the burrow's wall.
+      stroke(pen, plot, [at(0.2, 0.02), at(0.68, 0.02)], 0.02, a)
       stroke(pen, plot, [at(0.3, 0.02), at(0.3, 0.16), at(0.4, 0.16), at(0.4, 0.02)], 0.014, a)
       stroke(pen, plot, [at(0.08, 0.44), at(0.08, 0.24)], 0.01, a)
       stroke(pen, plot, [at(0.02, 0.24), at(0.14, 0.24), at(0.11, 0.14), at(0.05, 0.14)], 0.014, a, true)
@@ -344,24 +353,21 @@ export function paintDesk(pen: Pen, plot: Plot, at: Site) {
     const x = leftRoom[1] - 2.0, y = floor + 0.05
     stroke(pen, plot, [[x, y], [x + 1.7, y], [x, y + 1.25]], 0.022, a, true)
     stroke(pen, plot, [[x + 0.3, y + 0.25], [x + 0.95, y + 0.25], [x + 0.3, y + 0.73]], 0.014, a, true)
-    for (let i = 1; i < 8; i++) stroke(pen, plot, [[x + i * 0.2, y], [x + i * 0.2, y + (i % 2 ? 0.07 : 0.12)]], 0.012, a)
   }
   if (left >= 4.6) {
-    // A pair of compasses, open, with the arc it has just drawn.
-    const x = leftRoom[1] - 3.6, y = floor + 0.1
-    // It leans: its point leg stands nearly upright and its pencil leg reaches well out, so the pair is no letter.
-    stroke(pen, plot, [[x - 0.45, y], [x - 0.25, y + 1.5], [x + 0.75, y + 0.12]], 0.022, a)
-    stroke(pen, plot, [[x - 0.25, y + 1.5], [x - 0.33, y + 1.8]], 0.05, a)
-    ring(pen, plot, x - 0.45, y, 1.2, 0.012, a * 0.7, -0.45, 0.05)
+    // A pair of compasses, shut, lying on the ledge: its two legs side by side, a knob at the hinge and a point.
+    const x = leftRoom[1] - 3.9, y = floor + 0.16
+    stroke(pen, plot, [[x, y + 0.06], [x + 1.45, y + 0.06], [x + 1.7, y], [x + 1.45, y - 0.06], [x, y - 0.06]], 0.02, a, true)
+    stroke(pen, plot, [[x + 0.1, y], [x + 1.4, y]], 0.012, a * 0.7)
+    stroke(pen, plot, [[x - 0.22, y - 0.07], [x, y - 0.07], [x, y + 0.07], [x - 0.22, y + 0.07]], 0.02, a, true)
   }
   const right = rightRoom[1] - rightRoom[0]
   if (right >= 2.9) {
     // The title block every drawing has, ruled and left empty: no line of writing, real or pretend.
     const x1 = rightRoom[1], x0 = x1 - 2.7, y0 = floor + 0.05, y1 = y0 + 1.35
     stroke(pen, plot, [[x0, y0], [x1, y0], [x1, y1], [x0, y1]], 0.022, a, true)
-    // Three boxes: one rule across, and one down from it to the foot. No two rules cross.
+    // Two boxes: one rule across, from side to side. No rule meets it or crosses it.
     stroke(pen, plot, [[x0, y0 + 0.9], [x1, y0 + 0.9]], 0.014, a)
-    stroke(pen, plot, [[x0 + 0.9, y0], [x0 + 0.9, y0 + 0.9]], 0.014, a)
   }
   if (right >= 4.3 || (right >= 1.3 && right < 2.9)) {
     // A mug, seen from the side. Its steam is drawn live.
