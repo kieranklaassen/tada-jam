@@ -16,7 +16,7 @@ export const CORNER = 72
 /** Three taps count when the first and the last are no further apart than this. */
 export const WITHIN_MS = 700
 /** Two touch-downs closer together than this are the fingers of one hand coming down, not two taps. */
-export const APART_MS = 120
+export const APART_MS = 80
 /** The numbers are refreshed this often, so they can be read. */
 export const EVERY_MS = 400
 
