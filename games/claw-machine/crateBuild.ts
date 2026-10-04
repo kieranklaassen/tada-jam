@@ -1,6 +1,6 @@
 import { PLATE, buildMesh, mergeMeshes, type Brick, type BrickMesh } from './bricks'
 import { toyBricks } from './builds'
-import { EYE, eyeCentres, gobblerParts } from './gobblerBuild'
+import { EYE, browsAt, eyeCentres, gobblerParts } from './gobblerBuild'
 import { shapeOf, type GobblerId } from './gobblers'
 import { ARCH, BED, CART, HANDLE, ON_DECK, RIDER, RIDER_STEP, RIDER_Z, RISER, RISER_BASE, deckSpots, deckTop, handleSpot, riderSpots } from './layout'
 import { STEEL } from './palette'
@@ -74,6 +74,8 @@ export function crateMesh(which: number, toys: readonly Toy[], places: readonly 
     const shape = shapeOf(crews[r][i]), built = gobblerParts(shape), eye = eyeCentres(shape)[0], reach = EYE / 2 - 0.12
     const at = [spot.x, top + spot.y, spot.z] as const
     parts.push({ mesh: buildMesh(built.body, true), scale: RIDER, at })
+    const over = browsAt(shape)
+    parts.push({ mesh: buildMesh(built.brows, true), scale: RIDER, at: [at[0], at[1] + over.y * RIDER, at[2] + over.z * RIDER] })
     // Its pupils, looking at the child.
     parts.push({ mesh: buildMesh(built.pupils), scale: RIDER, at: [at[0], at[1] + (eye.y + Math.sin(AHEAD) * reach) * RIDER, at[2] + (eye.z + Math.cos(AHEAD) * reach) * RIDER] })
   }))

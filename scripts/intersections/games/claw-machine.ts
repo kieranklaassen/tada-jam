@@ -6,7 +6,8 @@ import type { Driver, Frac, GameAudit } from '../types.ts'
 // and the claw waiting and wagging; the size crew and the kind crew the same
 // way, with the ones who wait bonked, lobbing and heaving; the tip-out played
 // through and ended by a touch; the ending, the crates and a delivery; stacks
-// built, bounced off, toppled and knocked down; and a rest.
+// built, bounced off, toppled and knocked down; and a rest, with a finger on
+// the watcher.
 //
 // Every moment starts from a saved state, so each reaches its part of the
 // game directly. A toy's mesh is toy-<100 + its number in the load> after a
@@ -191,6 +192,13 @@ export default {
         await d.release(); await d.wait(3000) // dominoes
       },
     },
-    { name: 'rest', run: (d) => d.wait(6000) },
+    {
+      name: 'rest',
+      run: async (d) => {
+        // A finger on the watcher beside the tray: it hops and peeps, and the claw stays where it is.
+        await d.tap(await at(d, 18.9, 3, 1.5)); await d.wait(1600)
+        await d.wait(4400)
+      },
+    },
   ],
 } satisfies GameAudit

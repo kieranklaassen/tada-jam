@@ -218,6 +218,7 @@ export class Stage {
         this.position.set(Math.sin(look.leanX), -Math.cos(look.leanX) * Math.cos(look.leanZ), Math.sin(look.leanZ)).normalize().negate()
         mesh.quaternion.setFromUnitVectors(UP, this.position)
         if (look.turn !== 0) mesh.rotateY(look.turn)
+        if (look.pitch !== 0) mesh.rotateZ(look.pitch)
       }
       mesh.scale.set(wide * look.scale, look.squash * look.scale, wide * look.scale)
     }

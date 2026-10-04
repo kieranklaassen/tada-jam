@@ -1,5 +1,5 @@
 import { Group, Mesh, MeshBasicMaterial, type ShaderMaterial } from 'three'
-import { EYE, eyeCentres, gobblerParts } from '../gobblerBuild'
+import { EYE, browsAt, eyeCentres, gobblerParts, tongueAt } from '../gobblerBuild'
 import type { GobblerLook } from '../picture'
 import { brickGeometry } from './plastic'
 
@@ -33,6 +33,19 @@ export class GobblerRig {
     this.pupils = new Mesh(brickGeometry(parts.pupils), plastic)
     this.pupils.name = `gobbler-${look.who}-pupils`
     this.group.add(this.pupils)
+    const over = browsAt(look.shape)
+    this.browY = over.y; this.browZ = over.z
+    this.brows = new Mesh(brickGeometry(parts.brows, true), plastic)
+    this.brows.name = `gobbler-${look.who}-brows`
+    this.group.add(this.brows)
+    const tip = tongueAt(look.shape)
+    if (parts.tongue && tip && !look.waiting) {
+      this.tongue = new Mesh(brickGeometry(parts.tongue, true), plastic)
+      this.tongue.name = `gobbler-${look.who}-tongue`
+      this.tongue.position.set(tip.x, tip.y, tip.z)
+      this.tongue.visible = false
+      this.group.add(this.tongue)
+    }
     // The ones who wait show no belly: they are seen from the eyes up.
     if (!look.waiting) {
       const window = new Mesh(brickGeometry(parts.window), glass)
@@ -41,6 +54,11 @@ export class GobblerRig {
       this.group.add(window)
     }
   }
+
+  private readonly brows: Mesh
+  private readonly browY: number
+  private readonly browZ: number
+  private readonly tongue: Mesh | null = null
 
   pose(look: GobblerLook): void {
     this.group.position.set(look.x, look.y, look.z)
@@ -52,6 +70,15 @@ export class GobblerRig {
     const across = look.gazeX * 0.75, lift = AHEAD + look.gazeY * 0.6, r = EYE / 2 - 0.12
     this.pupils.position.set(Math.sin(across) * Math.cos(lift) * r, this.eyeY + Math.sin(lift) * r, this.eyeZ + Math.cos(across) * Math.cos(lift) * r)
     this.pupils.scale.set(1, Math.max(0.1, 1 - look.blink), 1)
+    // The brows rise off the eyes, or tip forward into a frown; they never come down onto them.
+    this.brows.position.set(0, this.browY + 0.6 * Math.max(0, look.brow), this.browZ)
+    this.brows.rotation.x = 0.5 * Math.max(0, -look.brow)
+    // The tip of the tongue grows out over the rim and curls up; drawn in, it is not there at all.
+    if (this.tongue) {
+      this.tongue.visible = look.tongue > 0.03
+      this.tongue.scale.z = Math.max(0.03, look.tongue)
+      this.tongue.rotation.x = -0.32 * look.lick
+    }
   }
 
   dispose(): void {

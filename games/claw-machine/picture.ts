@@ -20,6 +20,8 @@ export type ToyLook = {
   /** Swing, in radians, toward +x and toward +z: a toy in the jaws hangs the way the cable does. */
   leanX: number
   leanZ: number
+  /** Tipped nose up or nose down about its own middle, in radians, on top of its swing: a toy in the jaws. */
+  pitch: number
   /** In or on a gobbler: how the gobbler is rolled, turned and pitched. The toy is then posed exactly as it is, and its own swing is not used. */
   ride: { leanX: number; leanZ: number; turn: number } | null
   /** 1 on the tray; a toy in a belly is drawn small. */
@@ -46,6 +48,11 @@ export type GobblerLook = {
   gazeY: number
   /** 0 eyes open, 1 shut. */
   blink: number
+  /** Its brows: 0 at rest, up to 1 raised high, down to -1 knitted in a frown. */
+  brow: number
+  /** How far the tip of its tongue is out over its rim, 0 to 1, and how far it is curled up, 0 to 1. */
+  tongue: number
+  lick: number
   /** Lean, in radians: forward and back, and side to side. */
   leanX: number
   leanZ: number
@@ -122,15 +129,16 @@ export type Picture = {
  * How many draws a picture costs on the stage (view/stage.ts): the cabinet,
  * the shadows, the gate, the cable, the three parts of the claw, the
  * string of lamps and the watcher's body and pupils; one for
- * each toy; a body, a pair of pupils and a window for a gobbler at the
- * tray, and a body and pupils for one in the shade; one for each crate and one
+ * each toy; a body, a pair of pupils, a pair of brows, a window and the tip of a tongue
+ * for a gobbler at the tray, and a body, pupils and brows for one in the
+ * shade; one for each crate and one
  * for its cart, and one more for its bed while that tips;
  * and the glow and the hand when they show. The frame budget is held on this
  * count, since a test cannot draw.
  */
 export function drawsOf(picture: Picture): number {
   const fixed = 1 + 1 + 1 + 1 + 3 + 1 + 2
-  const gobblers = picture.gobblers.reduce((sum, look) => sum + (look.waiting ? 2 : 3), 0)
+  const gobblers = picture.gobblers.reduce((sum, look) => sum + (look.waiting ? 3 : 5), 0)
   const crates = picture.crates.reduce((sum, look) => sum + (look.tip > 0 ? 2 : 1), 0)
   return fixed + picture.toys.length + gobblers + crates + picture.carts.length + (picture.glows.length > 0 ? 1 : 0) + (picture.hand ? 1 : 0)
 }

@@ -31,6 +31,10 @@ export type GobblerParts = {
   pupils: Brick[]
   /** The clear front of the belly. */
   window: Brick[]
+  /** Both brows, as one build about the point half-way between them: they rise and knit together. */
+  brows: Brick[]
+  /** The tip of the tongue, built from the point where it comes out over the rim, or null for a mouth it cannot come out of. */
+  tongue: Brick[] | null
 }
 
 const DEPTH = 6
@@ -77,6 +81,26 @@ export function eyeCentres(shape: GobblerShape): { x: number; y: number; z: numb
   // Flush with its sides: two gobblers side by side never touch eyes, however they sway.
   const x = shape.width / 2 - EYE / 2
   return [{ x: -x, y, z: DEPTH / 2 - 0.6 }, { x, y, z: DEPTH / 2 - 0.6 }]
+}
+
+/** Where the brows rest, measured from the feet: just over the eyes, a little to the front. */
+export function browsAt(shape: GobblerShape): { y: number; z: number } {
+  const eye = eyeCentres(shape)[0]
+  return { y: eye.y + EYE / 2 + 0.14, z: eye.z + 0.25 }
+}
+
+/** How long the tip of the tongue is when it is right out. */
+export const TONGUE_OUT = 2.2
+
+/**
+ * Where the tip of the tongue comes out, measured from the feet: over the front of the rim, a hair above it, in
+ * the gap between two of its peg teeth that is nearest the middle. Null for a mouth whose front is bars: nothing
+ * comes out over those but a toy.
+ */
+export function tongueAt(shape: GobblerShape): { x: number; y: number; z: number } | null {
+  if (shape.bars) return null
+  const half = shape.width / 2
+  return { x: -half + 3 + 2 * Math.round((half - 3) / 2), y: rimHeight(shape) + 0.03, z: DEPTH / 2 - 1 }
 }
 
 /** The inside of the belly, measured from the feet: where the group stands and what the window shows. */
@@ -141,5 +165,8 @@ export function gobblerParts(shape: GobblerShape): GobblerParts {
   const [left, right] = eyeCentres(shape)
   const dot = EYE * 0.42
   const pupils: Brick[] = [left, right].map((eye) => ({ x: eye.x - dot / 2, y: -dot / 2 / PLATE, z: -dot / 2, w: dot, d: dot, h: 0, colour: BLACK, ball: true, studs: false }))
-  return { body, pupils, window }
+  // Two dark brows, each a low bar over its eye.
+  const brows: Brick[] = [left, right].map((eye) => ({ x: eye.x - 0.95, y: 0, z: -0.35, w: 1.9, d: 0.7, h: 0.6, colour: BLACK, studs: false }))
+  const tip: Brick[] | null = shape.bars ? null : [{ x: -0.5, y: 0, z: 0, w: 1, d: TONGUE_OUT, h: 0.5, colour: TONGUE, studs: false }]
+  return { body, pupils, window, brows, tongue: tip }
 }

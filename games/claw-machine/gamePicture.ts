@@ -1,4 +1,5 @@
 import type { Body } from './bodies'
+import { holdOf } from './builds'
 import { hubAt } from './claw'
 import type { Actor, Game } from './game'
 import { EYE, knobAt, rimHeight } from './gobblerBuild'
@@ -99,6 +100,67 @@ export function barePicture(): Picture {
   return { toys: [], gobblers: [], crates: [], carts: [], shadows: [], glows: [], hand: null, gate: 0, seconds: 0, watcher: { ...WATCHER_AT, squash: 1, turn: WATCHER_FACES, gazeX: 0, gazeY: 0, blink: 0 }, claw: { x: 0, z: 6, length: RAIL.top - 9.2 - 1.6, swingX: 0, swingZ: 0, open: 0.55, squash: 1, shiftX: 0, shiftZ: 0, turn: 0 } }
 }
 
+/** 0 before `a`, 1 at the middle of `a` to `b`, 0 after `b`. */
+const swell = (t: number, a: number, b: number) => Math.sin(clamp((t - a) / (b - a), 0, 1) * Math.PI)
+
+/**
+ * What is on a gobbler's face: its brows and the tip of its tongue. Before a toy is in its mouth every gobbler
+ * looks the same way at any toy, keen, with its brows up and its tongue out; what it thinks of the toy shows
+ * only once it is chewing. It frowns at a toy that is not its sort and sticks its tongue out as it sends it
+ * back; it licks its lips after a swallow; and when its neighbour has the wrong toy it raises its brows at it.
+ */
+function faceOf(game: Game, actor: Actor): { brow: number; tongue: number; lick: number } {
+  const ways = GOBBLER[actor.id], time = game.time * PERSONALITY[actor.id].tempo
+  if (actor.liftedT >= 0) {
+    // Lifted: the one that loves it beams, the one that hates it scowls, and the rest are astonished.
+    return { brow: ways.lifted === 'kicks-and-squeals' ? 1 : ways.lifted === 'goes-rigid' || ways.lifted === 'thuds-back' ? -1 : 0.7, tongue: ways.lifted === 'kicks-and-squeals' ? 0.7 : 0, lick: 0.5 + 0.5 * Math.sin(actor.liftedT * 20) }
+  }
+  if (actor.wrongT >= 0) {
+    // Its own way with a toy that is not its sort: a frown, and its tongue out as the toy goes.
+    const spec = WRONG[ways.wrong], t = actor.wrongT / spec.seconds
+    return { brow: t < spec.release + 0.2 ? -1 : 0.4, tongue: swell(t, spec.release - 0.08, spec.release + 0.3), lick: 0 }
+  }
+  if (actor.act === 'hold') return { brow: -1, tongue: 0, lick: 0 }
+  if (actor.act === 'gulp') return { brow: 0.7, tongue: swell(actor.actT, 0.74, 1), lick: swell(actor.actT, 0.74, 1) }
+  if (actor.act === 'burp') return { brow: 0.6, tongue: swell(actor.actT, 0.1, 0.9), lick: 0 }
+  if (actor.act === 'duck' || actor.act === 'bonked') return { brow: -0.6, tongue: 0, lick: 0 }
+  if (actor.act === 'start' || actor.act === 'snap' || actor.act === 'stare' || actor.act === 'catch' || actor.act === 'heave') return { brow: 1, tongue: 0, lick: 0 }
+  if (actor.openT >= 0) return { brow: 1, tongue: 1, lick: 0.5 + 0.5 * Math.sin(actor.openT * 16) }
+  if (actor.role === 'crew' && actor.scale > 0.95) {
+    // A neighbour with the wrong toy on its tongue is something to see.
+    if (game.crew.some((other) => other !== actor && (other.wrongT >= 0 || other.act === 'hold'))) return { brow: 0.9, tongue: 0, lick: 0 }
+    // A bang, or a toy or a stack that comes flying: whatever makes the watcher jump or laugh raises their brows.
+    if (game.watcher.act === 'start' || game.watcher.act === 'laugh') return { brow: 0.9, tongue: 0, lick: 0 }
+    // A toy in the jaws: keen, whatever the toy is.
+    if (game.held >= 0) return { brow: 0.6, tongue: 0.45 + 0.25 * Math.sin(time * 3), lick: 0.5 + 0.5 * Math.sin(time * 5) }
+  }
+  return { brow: 0, tongue: 0, lick: 0 }
+}
+
+/**
+ * How a toy takes being in the jaws, which goes with its kind and with nothing else: a duck waggles from side to
+ * side, a car goes limp and see-saws, a rocket shivers. It turns and tips about the part the teeth hold, so that
+ * part stays between them; a big one does it slower. It begins once the toy is up off what it stood on and is
+ * still while the cable swings hard, so it never rocks into what is under it or out of the teeth.
+ */
+function inTheJaws(game: Game, toy: number, body: Body, into: ToyLook): void {
+  const claw = game.claw, hold = holdOf(body.toy)
+  const up = clamp((body.y - game.spotOf(toy).y) / 1.2, 0, 1), calm = 1 - clamp(Math.hypot(claw.swingX, claw.swingZ) / 0.22, 0, 1)
+  const much = up * calm, t = game.time * (body.heavy > 1 ? 0.7 : 1)
+  if (much <= 0) return
+  if (body.toy.kind === 'duck') {
+    const turn = 0.3 * much * Math.sin(t * 9)
+    into.turn = turn
+    into.x += hold.x * (1 - Math.cos(turn)); into.z += hold.x * Math.sin(turn)
+  } else if (body.toy.kind === 'car') {
+    const pitch = 0.12 * much * Math.sin(t * 3.1)
+    into.pitch = pitch
+    into.x += hold.x - (hold.x * Math.cos(pitch) - hold.top * Math.sin(pitch)); into.y += hold.top - (hold.x * Math.sin(pitch) + hold.top * Math.cos(pitch))
+  } else {
+    into.x += 0.035 * much * Math.sin(t * 70)
+  }
+}
+
 const peering: WatcherPose = { dy: 0, squash: 1, turn: 0, gazeX: 0, gazeY: 0, blink: 0 }
 
 /** The watcher, looking at what the gobblers look at: the toy in the jaws, or the claw. */
@@ -140,7 +202,7 @@ const bulge = (squash: number) => 1 + (1 - Math.min(1.3, Math.max(0.5, squash)))
 export function gamePicture(game: Game, guidance: Guidance | null): Picture {
   const claw = game.claw, hub = hubAt(claw)
   const toys: ToyLook[] = [], gobblers: GobblerLook[] = [], shadows: Shadow[] = [], glows: GlowLook[] = []
-  const look = (key: number, body: Body, x = body.x, y = body.y, z = body.z, turn = 0): ToyLook => ({ key, toy: body.toy, x, y, z, squash: body.squash, wide: bulge(body.squash), leanX: body.leanX, leanZ: body.leanZ, ride: null, scale: body.scale, turn })
+  const look = (key: number, body: Body, x = body.x, y = body.y, z = body.z, turn = 0): ToyLook => ({ key, toy: body.toy, x, y, z, squash: body.squash, wide: bulge(body.squash), leanX: body.leanX, leanZ: body.leanZ, pitch: 0, ride: null, scale: body.scale, turn })
   /** A thing in or on a gobbler rides its pose as if fixed to it: it shifts, leans and turns with it and rises as it stretches. */
   const riding = (actor: Actor, body: Body, key: number, from: { x: number; y: number; z: number } = body) => {
     // The body draws wider as it squashes and narrower as it stretches, and what is in it keeps its place in it.
@@ -159,12 +221,15 @@ export function gamePicture(game: Game, guidance: Guidance | null): Picture {
     poseOf(game, actor, pose)
     const shape = shapeOf(actor.id)
     const eyeY = actor.y + (rimHeight(shape) + EYE / 2) * actor.scale
+    // A neighbour at the tray with the wrong toy on its tongue is what everyone looks at.
+    const odd = actor.role === 'crew' ? game.crew.find((other) => other !== actor && (other.wrongT >= 0 || other.act === 'hold')) : undefined
+    const sight = odd ? { x: odd.x, y: odd.y + rimHeight(shapeOf(odd.id)), z: odd.z } : watched
     gobblers.push({
       id: `g${actor.key}`, who: actor.id, shape, x: actor.x + pose.dx * actor.scale, y: actor.y + pose.dy, z: actor.z + pose.dz * actor.scale,
       squash: pose.squash, deep: actor.role !== 'waiting', leanX: pose.leanX, leanZ: pose.leanZ, turn: pose.turn, scale: actor.scale,
-      gazeX: pose.looks ? pose.gazeX : clamp((watched.x - actor.x) / 11, -1, 1),
-      gazeY: pose.looks ? pose.gazeY : clamp((watched.y - eyeY) / 9 - (watched.z - actor.z) / 30, -1, 1),
-      blink: pose.blink, waiting: actor.role === 'waiting' || actor.scale < 0.95,
+      gazeX: pose.looks ? pose.gazeX : clamp((sight.x - actor.x) / 11, -1, 1),
+      gazeY: pose.looks ? pose.gazeY : clamp((sight.y - eyeY) / 9 - (sight.z - actor.z) / 30, -1, 1),
+      blink: pose.blink, waiting: actor.role === 'waiting' || actor.scale < 0.95, ...faceOf(game, actor),
     })
     // A snack shows in the belly of a gobbler at the tray; the ones who wait are seen from the eyes up.
     // A snack at rest or on the tongue is where its gobbler is at this very moment, however fast the gobbler is
@@ -203,7 +268,9 @@ export function gamePicture(game: Game, guidance: Guidance | null): Picture {
       toys.push(look(game.generation * 100 + toy, body, body.x + (to.x - body.x) * part, body.y + (to.y - body.y) * part, body.z + (to.z - body.z) * part))
       return
     }
-    toys.push(look(game.generation * 100 + toy, body))
+    const one = look(game.generation * 100 + toy, body)
+    if (toy === game.held) inTheJaws(game, toy, body, one)
+    toys.push(one)
     // A toy in the jaws has no shadow of its own, and neither has one on a crate or behind the parapet.
     if (toy === game.held || body.z < TRAY.z - 0.5) return
     const under = nearestPlace(body.x, body.z)
