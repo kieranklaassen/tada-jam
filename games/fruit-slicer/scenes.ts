@@ -110,7 +110,8 @@ export function serveBeats(show: Show, ending: Ending, cue: Cue): Beat[] {
  * fruit's colour up to the jaw; then the twins' divider drops, or the sign is laid between the cat's two tickets.
  */
 export function showingBeats(show: Show, customer: Customer, cue: Cue): Beat[] {
-  const parts = ruling(customer).rows[0].parts
+  // Every part along the rail is ruled, one tick each: for an order longer than one fruit, the parts of every fruit it takes.
+  const parts = ruling(customer).along
   const ruleFor = Math.max(1.2, Math.min(2.6, parts * 0.25))
   let laid = 0
   const beats: Beat[] = [

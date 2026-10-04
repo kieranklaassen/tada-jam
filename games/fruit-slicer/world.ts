@@ -133,15 +133,16 @@ export const HOP_PARTS = 4
  * A stroke crosses a piece `at` points from its left end and cuts it square there. Neither piece may be
  * thinner than the give of its fruit. On the board the left part stays where it lies and the right part hops
  * a little way off it, as far as there is room; from the shelf or the tin the left part stays and the right
- * part goes to the end of the shelf. Roller marks stay where they were pressed, on both parts.
+ * part goes to the end of the shelf. Roller marks stay where they were pressed, on both parts. `open` says
+ * whether a tin stands open as the cut is made: a piece cut then is not cut by eye.
  */
-export function cut(world: World, id: number, at: number): Cut {
+export function cut(world: World, id: number, at: number, open = world.tinOpen): Cut {
   const piece = pieceOf(world, id)
   if (!piece) return { kind: 'none', world }
   const where = Math.round(at), least = giveOf(piece.fruit)
   if (where < least) return { kind: 'curl', world, end: 'left' }
   if (piece.length - where < least) return { kind: 'curl', world, end: 'right' }
-  const blind = !world.tinOpen
+  const blind = !open
   const left: Piece = { ...piece, length: where, blind }
   const rightId = world.nextId
   let beside: Place = { on: 'shelf', slot: SHELF }

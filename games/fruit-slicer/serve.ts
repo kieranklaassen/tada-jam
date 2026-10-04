@@ -55,14 +55,16 @@ export type RuledRow = { share: Share; parts: number; lit: number }
 
 /**
  * The why of a consequence: the whole fruit ruled into equal parts along the rail, with the ordered parts
- * lit. For the cat's two shares both rows are ruled into the same parts, the fewest that both come out in,
+ * lit, along as many whole fruits as the order takes. For the cat's two shares both rows are ruled into the same parts, the fewest that both come out in,
  * and the sign is laid between the cat's two tickets once the tin is open.
  */
-export function ruling(customer: Customer): { whole: number; rows: RuledRow[]; sign: 'less' | 'equals' | 'greater' | null } {
+export function ruling(customer: Customer): { whole: number; rows: RuledRow[]; along: number; sign: 'less' | 'equals' | 'greater' | null } {
   const [first, second] = customer.shares
   const parts = second ? commonParts(first, second) : first.den
   const rows = customer.shares.map((share) => ({ share, parts, lit: inParts(share, parts)?.num ?? share.num }))
-  return { whole: WHOLE[customer.fruit], rows, sign: signBetween(customer) }
+  // An order longer than one fruit is ruled along every fruit it takes: `along` is how many parts that is.
+  const fruits = Math.max(1, ...customer.shares.map((share) => Math.ceil(share.num / share.den)))
+  return { whole: WHOLE[customer.fruit], rows, along: parts * fruits, sign: signBetween(customer) }
 }
 
 /** How much of one ruled part a misfit is: the gap or the overhang as a fraction of a part, signed like `by`. */

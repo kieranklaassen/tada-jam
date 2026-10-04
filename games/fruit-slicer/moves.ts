@@ -53,8 +53,8 @@ export type GameEvent =
   | { kind: 'misfit'; id: number; how: 'over' | 'under'; by: number; length: number; voice: VoiceId }
   /** A customer ate a piece from the hand with nothing judged: one who waits, or one already served. */
   | { kind: 'ate'; whom: Whom; piece: Piece; from: Box; voice: VoiceId }
-  /** A waiting pelican left as the glider, and another customer joined the queue in its place. */
-  | { kind: 'gliderAway'; whom: 0 | 1 }
+  /** A waiting pelican left as the glider, with this fruit across its beak, and another customer joined the queue in its place. */
+  | { kind: 'gliderAway'; whom: 0 | 1; fruit: Fruit }
   /** The crate chewed a piece and burped it across to the dog. */
   | { kind: 'burp'; piece: Piece; from: Box; voice: VoiceId }
   /** A flung piece hit a customer and is licked off. */
@@ -160,12 +160,14 @@ export function slice(game: Game, a: Point, b: Point, stroke: Stroke): { game: G
   }
   let world = game.world
   let trimmed = false
+  // A tin stands open only while its customer waits to be served: once the customer has it, or nobody is at the window, a cut is made by eye.
+  const standsOpen = game.world.tinOpen && game.window !== null && !game.finished
   for (const hit of met.sort((p, q) => p.t - q.t)) {
     if (next.made.includes(hit.id)) continue
     const piece = pieceOf(world, hit.id)
     if (!piece) continue
     const whole = piece.length
-    const result = cut(world, hit.id, hit.at)
+    const result = cut(world, hit.id, hit.at, standsOpen)
     if (result.kind === 'curl') {
       next.made.push(hit.id)
       events.push({ kind: 'curl', id: hit.id, fruit: piece.fruit, length: whole, x: hit.x, y: hit.y, voice: 'curl' })

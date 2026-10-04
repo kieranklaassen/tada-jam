@@ -275,7 +275,8 @@ function tin(ctx: Ctx, dots: Dots, scenery: Scenery, shape: TinShape, customer: 
   const ruled = ruling(customer)
   const share = wanted(customer)
   const showing = show !== null && show.drop > 0 && show.fill < 1
-  const partsRuled = showing ? show.ruled : ruled.rows[0].parts
+  // Every part along the rail is ruled, past the first whole fruit too where the order is longer than one; in a first showing, as far as the roller has got.
+  const partsRuled = showing ? show.ruled : Infinity
   const fill = showing ? show.fill : 1
   // The lid, standing open behind the tin, as long as the tin, with the fraction on it. In the serve it comes
   // down: flat on a fit, and bouncing on what sticks out.
@@ -349,20 +350,21 @@ function tin(ctx: Ctx, dots: Dots, scenery: Scenery, shape: TinShape, customer: 
 }
 
 /**
- * A customer standing in its seat with its feet on the sill. While a finger is down and the customer is doing
- * nothing else, its eyes follow the finger.
+ * A customer standing in its seat with its feet on the sill. While a finger is down its eyes follow the finger,
+ * whatever else it is doing.
  */
 function customerAt(ctx: Ctx, dots: Dots, customer: Customer, actor: Actor | null, cast: Partial<Casting>, seat: Seat, finger: Point | null = null, exit = 0): number {
   if (!actor) return 0
   const { x, y } = standsAt(customer.who, seat), { s, room } = fitOf(customer, seat)
   const head = headOf(customer, seat)
-  const watch = finger && !actor.react ? { x: Math.max(-1, Math.min(1, (finger.x - head.x) / 260)), y: Math.max(-1, Math.min(1, (finger.y - head.y) / 200)) } : null
+  const watch = finger ? { x: Math.max(-1, Math.min(1, (finger.x - head.x) / 260)), y: Math.max(-1, Math.min(1, (finger.y - head.y) / 200)) } : null
   const full: Casting = {
     who: customer.who,
     fruit: customer.fruit,
     pose: watch ? (member) => ({ ...poseOf(actor, member), eyeX: watch.x, eyeY: watch.y }) : (member) => poseOf(actor, member),
     feast: cast.feast ?? feastOf(customer, [], null, null),
     show: cast.show ?? null,
+    beak: cast.beak,
     count: wantedCount(customer),
     parts: wanted(customer).den,
   }
@@ -433,11 +435,12 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
     const feast = feastOf(atWindow, inside.map((piece) => piece.length), scenery.ending?.taste ?? null, scenery.show?.kind === 'showing' ? null : scenery.show, scenery.ending?.result.kind === 'over', scenery.ending?.outcome === 'badly', inside.map((piece) => piece.fruit))
     feasting = feast
     // A glider playing for a pelican that waits is that pelican's scene, not the scene of whoever stands at the window.
-    drawn += customerAt(ctx, dots, atWindow, scenery.window, { feast, show: gliding && gliding.whom !== 'window' ? null : scenery.show }, 'window', scenery.finger)
+    drawn += customerAt(ctx, dots, atWindow, scenery.window, { feast, show: gliding && gliding.whom !== 'window' ? null : scenery.show, beak: gliding?.fruit }, 'window', scenery.finger)
     // The ticket is large and stands clear of whoever holds it. The cat's two stand side by side, and the sign is laid between them once
     // its tin has opened, or it has been served: after the child's cut, never before, and in a first showing as the last thing shown.
     const ruling2 = scenery.show !== null && scenery.show.drop > 0 && scenery.show.fill < 1
-    const signNow = atWindow.shares.length > 1 && (game.finished || (game.world.tinOpen && !ruling2)) ? signBetween(atWindow) : null
+    // It needs the ruling under it: no sign for a cat fed by hand whose tin never opened, and none in a first showing until the parts are ruled and filled.
+    const signNow = atWindow.shares.length > 1 && game.world.tinOpen && !ruling2 ? signBetween(atWindow) : null
     if (game.window) drawn += ticket(ctx, atWindow, WINDOW.x + (atWindow.shares.length > 1 ? 306 : 330), TICKET_TOP, atWindow.who === 'boa' ? 0.66 : atWindow.shares.length > 1 ? 0.57 : 1.1, false, signNow)
     // Served, and the serve over: it holds its tin, shut, by its feet. One fed by hand has had it there from the first.
     if (game.finished && (!scenery.ending || scenery.ending.fed)) {
@@ -451,9 +454,8 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
     ctx.save()
     ctx.translate(from + 40 + 26 * Math.sin(f * Math.PI * 3), WALL.y + 50 + (WALL.h - 66) * f)
     ctx.rotate(0.7 * Math.cos(f * Math.PI * 3))
-    inked(ctx, oval(0, 0, 15, 5), WHITE, 3)
-    ctx.fillStyle = INK
-    ctx.fillRect(-15, -1, 34, 2)
+    // A feather is one pointed leaf with a notch in its edge: nothing is drawn through it.
+    inked(ctx, poly([[-18, 0], [-6, -6], [8, -5], [18, 0], [9, 2], [10, 5], [2, 4], [-8, 5]]), WHITE, 2.5)
     ctx.restore()
     drawn += 2
   }
@@ -461,7 +463,7 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
     const index = at as 0 | 1, box = QUEUE[index]
     // A pelican gliding out of the queue is drawn in its place until it has gone; the one who joins is seen after it.
     if (gliding && gliding.whom === index && scenery.show && scenery.show.away < 1) {
-      drawn += customerAt(ctx, dots, gliding.customer, scenery.leavingActor, { show: scenery.show }, index)
+      drawn += customerAt(ctx, dots, gliding.customer, scenery.leavingActor, { show: scenery.show, beak: gliding.fruit }, index)
       return
     }
     // The pelican and the cat stand beside their tickets, the cat's two stacked; the low ones (the twins, the ants, the boa) have theirs over their heads.
@@ -474,7 +476,8 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
   })
   drawn += awning(ctx, scenery.time, fx.flap)
   const slat = fx.fx.find((one) => one.kind === 'slat')
-  drawn += crate(ctx, dots, fx.rock, game.window && !game.finished ? game.window.fruit : null, scenery.time, slat ? 1 - slat.age / slat.life : 0)
+  // The kind a tap will bring stands up out of the crate: the kind on the ticket at the window, for as long as a customer stands there.
+  drawn += crate(ctx, dots, fx.rock, game.window ? game.window.fruit : null, scenery.time, slat ? 1 - slat.age / slat.life : 0)
   // The tin on the rail. While the serve plays it is still there, shut on what was served, and empties as the
   // customer eats; what it held is read from the ending, since the game has already moved on.
   // A customer fed by hand is served past its tin: there is none on the rail for its serve.

@@ -64,8 +64,8 @@ export type Scenery = {
   show: Show | null
   /** The ending whose serve is playing: the taste lands on these pieces. Nothing once the scene is over. */
   ending: Ending | null
-  /** A customer who has left the game and is still on its way out: the pelican, gliding, from the window or from its place in the queue. */
-  leaving: { customer: Customer; whom: Whom } | null
+  /** A customer who has left the game and is still on its way out: the pelican, gliding, from the window or from its place in the queue, with the fruit it was fed across its beak. */
+  leaving: { customer: Customer; whom: Whom; fruit: Fruit } | null
   /** What the two who wait have been given by hand and eaten: each piece shows in the body that ate it for a few seconds, and is in no state. */
   snacks: readonly { whom: 0 | 1; length: number; fruit: Fruit; age: number }[]
   /** The served customer on its way out with its tin, as the one who was called steps up: who it is, how it moves, and the pieces it ate. */
@@ -100,7 +100,7 @@ export class GameRun {
   private scene: Scene | null = null
   private show: Show | null = null
   private ending: Ending | null = null
-  private leaving: { customer: Customer; whom: Whom } | null = null
+  private leaving: { customer: Customer; whom: Whom; fruit: Fruit } | null = null
   private skipping = false
   private leavingActor: Actor | null = null
   private departing: { customer: Customer; actor: Actor; lengths: number[]; fruits: Fruit[] } | null = null
@@ -236,7 +236,7 @@ export class GameRun {
     for (const hit of this.fx.hits) {
       for (const whom of ['window', 0, 1] as const) {
         const actor = this.actorOf(whom), head = this.headAt(this.game, whom)
-        if (actor && head && !actor.react && !actor.idle && Math.hypot(hit.x - head.x, hit.y - head.y) < 54) this.reactAs(whom, 'lick')
+        if (actor && head && !actor.react && Math.hypot(hit.x - head.x, hit.y - head.y) < 54) this.reactAs(whom, 'lick')
       }
     }
     this.dog = stepDog(this.dog, dt)
@@ -302,13 +302,14 @@ export class GameRun {
   }
 
   /**
-   * Something absurd has happened to somebody: everyone else stares, each in its own way. One who is in the
-   * middle of something of its own goes on with that.
+   * Something absurd has happened to somebody: everyone else stares, each in its own way, and then goes back
+   * to what it was doing.
    */
   private stare(except: Whom | null): void {
     for (const whom of ['window', 0, 1] as const) {
       const actor = this.actorOf(whom)
-      if (whom === except || !actor || actor.react) continue
+      // One that is rolled flat, on its way in or on its way out stays as it is; anyone else drops what it was doing and stares.
+      if (whom === except || !actor || actor.react === 'flat' || actor.react === 'step') continue
       this.reactAs(whom, 'gawp')
       const head = this.headAt(this.game, whom)
       if (head) this.fx = mark(this.fx, 'shock', { x: head.x, y: head.y - 10 }, actor.who === 'pelican' ? 0.5 : actor.who === 'cat' ? 0.75 : actor.who === 'boa' ? 0.6 : 0.05)
@@ -449,7 +450,7 @@ export class GameRun {
           const show = restShow('glider')
           const gone = this.queue[event.whom]
           this.start(gliderBeats(show, cue), show, null)
-          this.leaving = { customer: before.queue[event.whom], whom: event.whom }
+          this.leaving = { customer: before.queue[event.whom], whom: event.whom, fruit: event.fruit }
           this.leavingActor = gone
           this.queue[event.whom] = reactTo(newActor(game.queue[event.whom].who, ++this.seed + 10), 'step')
           this.snacks = this.snacks.filter((one) => one.whom !== event.whom)
@@ -465,7 +466,9 @@ export class GameRun {
           if (event.ending.glider) {
             // The pelican has already left the game; it is kept here only for as long as its leaving is shown.
             const show = restShow('glider')
-            this.leaving = { customer, whom: 'window' }
+            // The fruit it leaves with is the one it was fed, whatever was on its ticket.
+            const fed = event.ending.result.parts.flatMap((part) => part.pieces)[0] ?? event.ending.result.strays[0]
+            this.leaving = { customer, whom: 'window', fruit: fed?.fruit ?? customer.fruit }
             this.start(gliderBeats(show, cue), show, event.ending)
             this.stare('window')
           } else {

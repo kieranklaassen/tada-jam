@@ -137,7 +137,9 @@ describe('letting go over a customer, the dog or the crate', () => {
     const whole = poke(start, mid(CRATE)).game
     const fruit = whole.world.pieces.at(-1)!
     const gone = drop(whole, hold(whole, fruit.id), mid(QUEUE[1]))
-    expect(kinds(gone.events)).toEqual(['ate', 'gliderAway'])
+    // The fruit is not swallowed: it goes across the beak, and the event says which fruit it is.
+    expect(kinds(gone.events)).toEqual(['gliderAway'])
+    expect(gone.events[0]).toMatchObject({ fruit: expect.any(String) })
     expect(gone.game.seed).not.toBe(whole.seed)
     expect(gone.game.world.pieces.some((piece) => piece.id === fruit.id)).toBe(false)
   })

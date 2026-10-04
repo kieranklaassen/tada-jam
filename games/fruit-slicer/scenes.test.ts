@@ -127,6 +127,14 @@ describe('the first showing', () => {
     expect(show.fill).toBe(1)
     expect(filledEarly).toBe(false)
     expect(show.extra).toBe(0)
+    // An order longer than one fruit is ruled along both fruits: twelve eighths is sixteen parts, sixteen ticks, still inside five seconds.
+    const long = restShow('showing')
+    let longTicks = 0
+    const beats = showingBeats(long, customer('boa', 12, 8), (id) => id === 'rule' && longTicks++)
+    play(beats)
+    expect(longTicks).toBe(16)
+    expect(long.ruled).toBe(16)
+    expect(sceneLength(beats)).toBeLessThanOrEqual(5)
   })
 
   it("rules the cat's two shares into the same parts, and adds the divider for the twins and the sign for the cat", () => {

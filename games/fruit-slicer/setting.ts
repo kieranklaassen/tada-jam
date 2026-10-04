@@ -162,7 +162,8 @@ function stallFront(ctx: Ctx, dots: Dots): number {
   inked(ctx, rect(WINDOW.x, WINDOW.y + WINDOW.h - 4, WINDOW.w, 10), WHITE, 3)
   ctx.fillStyle = INK
   ctx.fillRect(QUEUE[0].x - 12, WALL.y + 96, 6, WALL.h - 96)
-  ctx.fillRect(QUEUE[0].x - 12, WALL.y + WALL.h - 12, QUEUE[1].x + QUEUE[1].w - QUEUE[0].x + 12, 6)
+  // The rope starts a little way off the post: the two do not meet at a corner.
+  ctx.fillRect(QUEUE[0].x + 2, WALL.y + WALL.h - 12, QUEUE[1].x + QUEUE[1].w - QUEUE[0].x - 2, 6)
   // The post is capped with a rounded end of its own ink, and nothing sits on top of it.
   inked(ctx, slab(QUEUE[0].x - 14, WALL.y + 88, 10, 14, 5), INK, 0)
   // The poles that hold the awning up, one at each end, with a band of red dots wound round them.

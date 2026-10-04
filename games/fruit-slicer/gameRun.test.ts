@@ -264,6 +264,9 @@ describe('the scenes', () => {
     const frame = run.frame(0, BUSY)
     expect(frame.show).toMatchObject({ kind: 'glider' })
     expect(frame.leaving).toMatchObject({ whom: 'window', customer: { who: 'pelican' } })
+    // It leaves with the fruit it was fed across its beak, which was the long one that lay on the board, whatever is on its ticket.
+    expect(frame.leaving!.fruit).toBe('long')
+    expect(run.happened.map((event) => event.kind)).not.toContain('ate')
     const atStart = stored(run)
     play(run, 6)
     expect(stored(run)).toEqual(atStart)
@@ -469,6 +472,36 @@ describe('what the reading found', () => {
     play(run, 3.6)
     expect(run.playing).toBe(false)
     expect(run.frame(0, BUSY).show).toEqual(servedShow(1))
+  })
+})
+
+describe('after the serve', () => {
+  it('counts a piece cut then as cut by eye: the tin has gone with its customer and no tin stands open', () => {
+    const { run } = withCut(0)
+    serve(run)
+    play(run, 9)
+    expect(run.game).toMatchObject({ finished: true, world: { tinOpen: true } })
+    // A fresh fruit lands on the far lane, and a stroke cuts it for whoever is called next.
+    run.tap(mid(CRATE))
+    const far = laneTop(1) + LANE_H / 2
+    drag(run, { x: X0 + 150, y: far - 60 }, { x: X0 + 150, y: far + 20 }, 0.2)
+    const made = onLane(run.game.world, 1)
+    expect(made).toHaveLength(2)
+    for (const piece of made) expect(piece.blind).toBe(true)
+  })
+
+  it('counts a piece cut while the tin stands open and its customer waits as not cut by eye', () => {
+    const { run } = withCut(-300)
+    serve(run)
+    play(run, 6)
+    expect(run.game).toMatchObject({ finished: false, world: { tinOpen: true } })
+    const before = onLane(run.game.world, 0).length
+    const rest = onLane(run.game.world, 0)[0]
+    const x = X0 + ((rest.place.on === 'board' ? rest.place.x : 0) + rest.length / 2) * PX
+    drag(run, { x, y: NEAR - 40 }, { x, y: NEAR + 40 }, 0.2)
+    const after = onLane(run.game.world, 0)
+    expect(after.length).toBe(before + 1)
+    expect(after.filter((piece) => !piece.blind).length).toBeGreaterThanOrEqual(2)
   })
 })
 

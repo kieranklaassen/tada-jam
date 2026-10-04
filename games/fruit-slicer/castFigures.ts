@@ -1,7 +1,7 @@
 import type { CastPose } from './cast'
 import type { Feast } from './feast'
 import { BLUE, FLESH, INK, RED, RIND, WHITE, YELLOW, brow, eyeOut, inked, oval, poly, shade, type Screens } from './look'
-import type { Fruit } from './measure'
+import { WHOLE, type Fruit } from './measure'
 import type { Who } from './orders'
 import type { Show } from './scenes'
 
@@ -21,6 +21,8 @@ export type Casting = {
   pose: (member: number) => CastPose
   feast: Feast
   show: Show | null
+  /** The whole fruit a gliding pelican has across its beak: the one it was fed, which need not be the one on its ticket. */
+  beak?: Fruit
   /** For the ants: how many stand in the file, and how many parts the fruit is cut into, so a piece lies across the ants it is as long as. */
   count: number
   parts: number
@@ -105,7 +107,7 @@ function pelican(ctx: Ctx, dots: Dots, cast: Casting): void {
   for (const one of inPouch) lump(ctx, one.fruit, 100 - one.at * 80 - (one.size / most) * 30, 4 + sag * 0.5 - 4, one.size / most, 60)
   inked(ctx, poly([[16, -8], [122, 8], [118, 14 + 10 * open], [18, 4 + 6 * open]]), YELLOW, 4)
   // The whole fruit across the beak, from the first try at closing on it until it has glided away.
-  if (show?.kind === 'glider') lump(ctx, cast.fruit, 60, -2 + 5 * tries, 1, 110, 12)
+  if (show?.kind === 'glider') lump(ctx, cast.beak ?? cast.fruit, 60, -2 + 5 * tries, 1, (110 * WHOLE[cast.beak ?? cast.fruit]) / WHOLE.long, 12)
   eyeOut(ctx, 6, -4, 6 * (pose.lids < 0 ? 1 - pose.lids * 0.3 : 1), 0.5 + pose.eyeX * 0.5, pose.eyeY, pose.pop, 1, -0.5)
   if (pose.pop < 0.05) lid(ctx, 6, -4, 6, Math.max(0, pose.lids, 0.5 * feast.pleased), WHITE)
   brow(ctx, 6, -4, 6, pose.brow)

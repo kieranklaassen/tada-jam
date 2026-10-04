@@ -106,8 +106,9 @@ export function drop(game: Game, held: Held, at: Point): { game: Game; events: G
         } else {
           const given = treat(now, whom, piece.id)
           now = given.game
-          events.push({ kind: 'ate', whom, piece, from, voice: 'gulp' })
-          if (given.glider) events.push({ kind: 'gliderAway', whom })
+          // A whole fruit to a waiting pelican is the glider: it is not swallowed, it goes across the beak and out with the pelican.
+          if (given.glider) events.push({ kind: 'gliderAway', whom, fruit: piece.fruit })
+          else events.push({ kind: 'ate', whom, piece, from, voice: 'gulp' })
         }
       }
       return { game: now, events }
