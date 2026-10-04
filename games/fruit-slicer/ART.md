@@ -161,7 +161,7 @@ Each scene is a list of timed beats filled in from the state of play, and any to
 
 **How a cycle ends, and how the next one starts.** The last pose of the serve stays for as long as the child likes: the customer at the window with its tin, the board and the shelf as they were left. The two who wait are in view the whole time. Nothing new starts unless the child touches one of them; that one then steps up, and the served one leaves as it does. On load no scene replays: the world is in the state the last scene ended in, with the two waiting. The taste is seen while the serve plays, and the pelican's hiccups once more as it leaves, rebuilt from the pieces stored inside it: the last pose shows the customer, its shut tin and the pieces it ate, and nothing of how it liked them.
 
-The first customer of a first visit is not at the window either: two wait, and a fruit lies on the board to be sliced with nobody asking for anything.
+The first customer of a first visit is the one exception: it stands at the window as the game opens, with its ticket and its folded tin, and two wait behind it; a fruit of the kind it ordered lies on the board, and can be sliced for as long as the child likes before anything is brought to the tin.
 
 ## The records
 

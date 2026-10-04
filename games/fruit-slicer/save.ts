@@ -1,5 +1,5 @@
 import { LADDER } from './config'
-import { FIRST_SEED, freshGame, type Game } from './cycle'
+import { FIRST_SEED, firstVisit, type Game } from './cycle'
 import { FRUITS, RAIL, WHOLE, giveOf, type Fruit } from './measure'
 import { inRange, layOut, tinParts, type Customer, type Who } from './orders'
 import { STATE_VERSION, deserialize as readState } from './state'
@@ -131,7 +131,7 @@ export function differsFromSlot(raw: unknown, game: Game): boolean {
 }
 
 export function deserialize(raw: unknown, childAge: number | null = null, firstSeed = FIRST_SEED): Game {
-  if (!isRecord(raw) || raw.v !== STATE_VERSION) return freshGame(childAge, firstSeed)
+  if (!isRecord(raw) || raw.v !== STATE_VERSION) return firstVisit(childAge, firstSeed)
   const state = readState(raw, childAge)
   let seed = typeof raw.seed === 'number' ? seedOf(raw.seed) : FIRST_SEED
   const atWindow = readCustomer(raw.window)

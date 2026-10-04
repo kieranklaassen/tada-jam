@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { LADDER } from './config'
-import { call, crate, feed, freshGame, give, sendOff, type Game } from './cycle'
+import { call, crate, feed, firstVisit, freshGame, give, sendOff, type Game } from './cycle'
 import { RAIL, giveOf } from './measure'
 import { inRange, tinParts } from './orders'
 import { MOST_PIECES, deserialize, differsFromSlot, serialize } from './save'
@@ -37,6 +37,30 @@ function played(): Game[] {
   }
   return states
 }
+
+describe('a first visit', () => {
+  it('opens with the first customer at the window, two waiting behind it, and a fruit of the kind it ordered on the board', () => {
+    for (const seed of [1, 7, 2026, 31337]) {
+      const game = firstVisit(null, seed)
+      const fresh = freshGame(null, seed)
+      // The one who stands at the window is the one who would have been called first.
+      expect(game.window).toEqual(fresh.queue[0])
+      // The other who waited still waits where it was, and one more has joined in the place the first left.
+      expect(game.queue[1]).toEqual(fresh.queue[1])
+      expect(game.queue).toHaveLength(2)
+      expect(game.finished).toBe(false)
+      expect(game.world.tinOpen).toBe(false)
+      expect(game.shown).toEqual([])
+      expect(game.position).toBe(fresh.position)
+      // One whole fruit, of its kind, and nothing else anywhere.
+      expect(game.world.pieces).toHaveLength(1)
+      expect(game.world.pieces[0]).toMatchObject({ fruit: game.window!.fruit, place: { on: 'board', lane: 0, x: 0 } })
+      // It is what a slot with nothing in it gives, and it comes back as it was.
+      expect(deserialize(null, null, seed)).toEqual(game)
+      expect(reopened(game)).toEqual(game)
+    }
+  })
+})
 
 describe('found as left', () => {
   it('knows a first visit, or a slot that had to be repaired, from a game that came back as it was saved: the first is saved as it is laid out', () => {
@@ -133,7 +157,7 @@ describe('a record that cannot be trusted', () => {
     ['a version above this one', { ...good, v: STATE_VERSION + 1 }],
     ['no version', { ...good, v: undefined }],
   ])('gives a first visit for %s', (_, raw) => {
-    expect(deserialize(raw, null)).toEqual(freshGame(null))
+    expect(deserialize(raw, null)).toEqual(firstVisit(null))
   })
 
   it('repairs each field by itself and keeps the rest', () => {

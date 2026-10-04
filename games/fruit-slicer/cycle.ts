@@ -30,12 +30,23 @@ export type Game = GameState & {
 /** The stream every first visit starts from. */
 export const FIRST_SEED = 2026
 
-/** A first visit: two wait, and a fruit lies on the board to be sliced with nobody asking for anything. */
+/** The stall before anyone has stepped up: two wait, and a fruit lies on the board. A first visit opens one step on from here (`firstVisit`). */
 export function freshGame(childAge: number | null, seed = FIRST_SEED): Game {
   const state = freshState(childAge)
   const first = layOut(state.position, 'new', seed)
   const second = layOut(state.position, 'known', first.seed)
   return { ...state, seed: second.seed, window: null, queue: [first.customer, second.customer], world: landFruit(emptyWorld(), 'long').world, shown: [] }
+}
+
+/**
+ * A first visit as it opens: the first customer already stands at the window with its ticket and its folded
+ * tin, two wait behind it, and a fruit of the kind it ordered lies on the board. It is the one customer the
+ * child does not call: every later one waits for a touch. Nothing has been asked of the child that it has
+ * not yet seen, and the fruit can be sliced for as long as it likes before anything is brought to the tin.
+ */
+export function firstVisit(childAge: number | null, seed = FIRST_SEED): Game {
+  const fresh = freshGame(childAge, seed)
+  return call({ ...fresh, world: landFruit(emptyWorld(), fresh.queue[0].fruit).world }, 0).game
 }
 
 /**
