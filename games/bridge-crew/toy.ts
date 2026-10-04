@@ -1,7 +1,7 @@
 import { settle, solve, type Answer, type Frame } from './frame'
 import { layPart, plucked, pullPin, putPin, takeOffPart, turnPart } from './grid'
 import { key, length, pinsOf, reach, samePoint, type Kind, type Part, type Point } from './kit'
-import { bayAt, touched } from './layout'
+import { TRAY, bayAt, touched } from './layout'
 import { ChiefDirector } from './motion'
 import { atRest, ends, follow, rests, unrest, type Moving, type Rest } from './pose'
 import { edit, type Save } from './save'
@@ -56,6 +56,22 @@ export const NOTCH = { turn: 0.3, gap: 0.05 } as const
 /** What is built leans toward a part being laid: a pin in the air by up to `far` cells, less the further it is from the finger, and not at all beyond `reach`. */
 export const LEAN = { far: 0.07, reach: 5 } as const
 
+/**
+ * What a touch leaves behind for a moment, drawn in the drafting line: a ring
+ * that runs out from a pin as it clicks in, dust where a part lands or a pile
+ * is stirred, the blast of a horn, and a feather the chief loses when it is
+ * poked, which floats down to its ledge and lies there a while. Short-lived:
+ * never saved.
+ */
+export type Mark = { what: 'ring' | 'dust' | 'toot' | 'feather'; at: readonly [number, number]; since: number; life: number }
+/** How long each mark lasts, in seconds, and how many feathers lie on the ledge at most. */
+export const MARKS = { ring: 0.5, dust: 0.55, toot: 0.5, feather: 16, feathers: 2, most: 14 } as const
+/** Where a feather is at a moment of its life: it sways down from where it came loose to the chief's ledge in a second and a half, and lies still. */
+export function featherAt(mark: Mark): { x: number; y: number; turn: number } {
+  const t = Math.min(1, mark.since / 1.5), sway = Math.sin(t * Math.PI * 2.5) * (1 - t)
+  return { x: mark.at[0] + 0.5 * t + 0.35 * sway, y: mark.at[1] + (CHIEF.y + 0.06 - mark.at[1]) * t * (2 - t), turn: 0.9 * sway }
+}
+
 /** A part on its way back to the tray after it was taken off: drawn until it gets there. */
 export type Flying = { part: Part; a: readonly [number, number]; b: readonly [number, number]; since: number }
 
@@ -77,6 +93,7 @@ export class Toy {
   /** Seconds since a pin last clicked in at each grid point, by its key. */
   clicked = new Map<string, number>()
   flying: Flying[] = []
+  marks: Mark[] = []
   /** How far what is built leans toward a part being laid, 0 to 1: it eases in while the part grows and out when it lands. And where to, and the pin the part grows from, which stays put. */
   leaning = 0
   private leanTo: readonly [number, number] = [0, 0]
@@ -118,7 +135,14 @@ export class Toy {
 
   /** True while anything is still on its way to rest: the scene is alive and must be drawn. */
   get busy(): boolean {
-    return this.hand !== null || this.flying.length > 0 || this.leaning > 0.01 || this.bridge.some((part, index) => unrest(this.moving[index], this.rest[index], length(part)) > 0.002 || this.rung[index] < RING + 0.4 || this.turned[index] < 0.6 || this.laid[index] < 0.6)
+    return this.hand !== null || this.flying.length > 0 || this.marks.length > 0 || this.leaning > 0.01 || this.bridge.some((part, index) => unrest(this.moving[index], this.rest[index], length(part)) > 0.002 || this.rung[index] < RING + 0.4 || this.turned[index] < 0.6 || this.laid[index] < 0.6)
+  }
+
+  /** Leaves a mark on the sheet. Only so many at once, and only so many feathers. */
+  protected mark(what: Mark['what'], at: readonly [number, number]): void {
+    if (what === 'feather') { const lying = this.marks.filter((mark) => mark.what === 'feather'); if (lying.length >= MARKS.feathers) this.marks.splice(this.marks.indexOf(lying[0]), 1) }
+    this.marks.push({ what, at, since: 0, life: MARKS[what] })
+    if (this.marks.length > MARKS.most) this.marks.shift()
   }
 
   takeVoices(): VoiceSpec[] {
@@ -142,12 +166,16 @@ export class Toy {
       this.hand = { what: 'bay', kind: bay.kind }
       this.selected = bay.kind
       this.voices.push(pick(bay.kind))
+      // The pile stirs: a little dust at its foot.
+      this.mark('dust', [(bay.x0 + bay.x1) / 2, TRAY.top - TRAY.tall + 0.25])
       return
     }
     if (Math.hypot(x - CHIEF.x - 0.4, y - (CHIEF.y + 1.2)) <= CHIEF.reach) {
       this.hand = { what: 'chief' }
       this.chief.poke()
       this.voices.push(chiefCroak)
+      // It loses a feather, which floats down to its ledge.
+      this.mark('feather', [CHIEF.x + 0.1, CHIEF.y + 1.7])
       return
     }
     const target = touched(this.at, this.bridge, this.drawn(), x, y)
@@ -156,6 +184,7 @@ export class Toy {
       this.hand = { what: 'pin', at: target.pin, held: 0, done: false }
       this.clicked.set(key(target.pin), 0)
       this.voices.push(pinClick)
+      this.mark('ring', target.pin)
       // Every part already on that pin shivers.
       this.bridge.forEach((part, index) => { if (pinsOf(part).some((p) => samePoint(p, target.pin))) this.moving[index].turn.speed += index % 2 ? 0.9 : -0.9 })
       return
@@ -312,6 +341,8 @@ export class Toy {
       moving.turn.speed *= -0.35
     }
     for (const [point, since] of this.clicked) { if (since > 1) this.clicked.delete(point); else this.clicked.set(point, since + dt) }
+    for (const mark of this.marks) mark.since += dt
+    if (this.marks.some((mark) => mark.since >= mark.life)) this.marks = this.marks.filter((mark) => mark.since < mark.life)
     for (const flight of this.flying) flight.since += dt
     this.flying = this.flying.filter((flight) => flight.since < FLIGHT)
     this.chief.step(dt)
@@ -386,6 +417,8 @@ export class Toy {
       landing.y.at += 0.22
       landing.y.speed = -1.5
       this.moving[added] = landing; this.rung[added] = Infinity; this.turned[added] = Infinity; this.laid[added] = 0
+      // Dust where each of its ends comes down.
+      this.mark('dust', bridge[added].a); this.mark('dust', bridge[added].b)
     }
     const nowFolded = this.frame.firm.filter((firm) => !firm).length
     if (nowFolded > folded) {

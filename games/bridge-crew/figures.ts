@@ -133,14 +133,22 @@ export function chief(pen: Pen, x: number, y: number, cell: number, pose: ChiefP
   pen.beginPath(); neck(); pen.stroke()
   pen.save()
   pen.translate(headX, headY); pen.rotate(look - 0.5)
-  cutOut(pen, cell, INK.paper, () => pen.ellipse(0, 0, cell * 0.17, cell * 0.13, 0.5, 0, Math.PI * 2))
+  cutOut(pen, cell, INK.paper, () => pen.ellipse(0, 0, cell * 0.2, cell * 0.155, 0.5, 0, Math.PI * 2))
   // The beak: a long sliver of balsa.
   cutOut(pen, cell, INK.balsa, () => { pen.moveTo(cell * 0.1, -cell * 0.02); pen.lineTo(cell * 0.62, cell * 0.36); pen.lineTo(cell * 0.04, cell * 0.12); pen.closePath() })
   // The eye: a pencil dot, or a short line while it blinks.
   pen.fillStyle = INK.steelDark
   pencil(pen, cell)
-  if (pose.blink > 0.5) { pen.beginPath(); pen.moveTo(cell * 0.0, -cell * 0.02); pen.lineTo(cell * 0.08, -cell * 0.02); pen.stroke() }
-  else { pen.beginPath(); pen.arc(cell * 0.04, -cell * 0.02, cell * 0.03, 0, Math.PI * 2); pen.fill() }
+  if (pose.blink > 0.5) { pen.beginPath(); pen.moveTo(-cell * 0.01, -cell * 0.02); pen.lineTo(cell * 0.1, -cell * 0.02); pen.stroke() }
+  else {
+    pen.beginPath(); pen.arc(cell * 0.045, -cell * 0.02, cell * 0.042, 0, Math.PI * 2); pen.fill()
+    // The lid half down: a paper flap over the top of the eye, and its edge in pencil.
+    if (pose.lid > 0.1) {
+      pen.fillStyle = INK.paper
+      pen.fillRect(-cell * 0.01, -cell * 0.07, cell * 0.11, cell * 0.05 * pose.lid)
+      pen.beginPath(); pen.moveTo(-cell * 0.012, -cell * 0.07 + cell * 0.05 * pose.lid); pen.lineTo(cell * 0.1, -cell * 0.07 + cell * 0.05 * pose.lid); pen.stroke()
+    }
+  }
   // The crest feather droops at rest and stands when its feathers do; and the pencil behind the ear, the one warm colour on the sheet.
   const up = pose.crest
   pen.beginPath(); pen.moveTo(-cell * 0.1, -cell * 0.08); pen.quadraticCurveTo(-cell * 0.4, -cell * (0.1 + 0.3 * up), -cell * (0.5 - 0.15 * up), cell * (0.12 - 0.6 * up)); pen.stroke()

@@ -1,4 +1,4 @@
-import { RAIL_TILT, poke, reactPose, waitPose, drivePose, type VehiclePose } from './acts'
+import { RAIL_TILT, givePose, poke, reactPose, waitPose, drivePose, type VehiclePose } from './acts'
 import { showsStrain, strainLook } from './consequence'
 import { CREW_SCALE } from './crew'
 import { crewFigure } from './crewfig'
@@ -16,7 +16,7 @@ import { WATER, ends } from './pose'
 import { paintSheet, plotFor, px, water, type Plot } from './sheet'
 import { COLS, isFooting, site, type Site, type VehicleId } from './sites'
 import { crossingPlace, drawUp, givePlace, rollPlace } from './stage'
-import { CHIEF, FLIGHT, RING } from './toy'
+import { CHIEF, FLIGHT, RING, featherAt } from './toy'
 import { TAIL, VEHICLES } from './vehicles'
 
 // The toy drawn: the still sheet stamped once from an offscreen canvas, then
@@ -272,6 +272,44 @@ export class View {
     if (showing && (toy.chief.act === 'shows' || toy.chief.act === 'compares')) this.brackets(pen, [cx + cell * 1.05, cy - cell * 2.5], [cx + cell * 4.7, cy + cell * 0.25], 0.55 + 0.35 * Math.sin(toy.seconds * 4))
     drawn += 2
 
+    // What touches have left on the sheet: rings, dust, a horn's blast, a feather.
+    for (const mark of toy.marks) {
+      const t = mark.since / mark.life, [mx, my] = at2(mark.at)
+      pen.strokeStyle = INK.line
+      pen.lineCap = 'round'
+      pen.lineWidth = Math.max(1, cell * 0.03)
+      pen.globalAlpha = Math.max(0, 1 - t)
+      pen.beginPath()
+      if (mark.what === 'ring') {
+        // The draughtsman's circle, running out from the pin, with four ticks beyond it.
+        const r = cell * (0.16 + 0.6 * t)
+        pen.arc(mx, my, r, 0, Math.PI * 2)
+        for (let i = 0; i < 4; i++) { const a = (i * Math.PI) / 2 + 0.4; pen.moveTo(mx + Math.cos(a) * (r + cell * 0.08), my + Math.sin(a) * (r + cell * 0.08)); pen.lineTo(mx + Math.cos(a) * (r + cell * 0.2), my + Math.sin(a) * (r + cell * 0.2)) }
+      } else if (mark.what === 'dust') {
+        // Three small curls that roll outward and up.
+        for (const [dx, lift, size] of [[-0.32, 0.1, 0.09], [0.04, 0.22, 0.07], [0.34, 0.12, 0.1]] as const) { const cx = mx + cell * dx * (0.4 + t), cy = my - cell * lift * (0.3 + 1.6 * t), r = cell * size * (0.6 + t); pen.moveTo(cx + r, cy); pen.arc(cx, cy, r, 0, Math.PI * 1.5) }
+      } else if (mark.what === 'toot') {
+        // Three arcs, each wider than the last, going away from the horn.
+        for (let i = 0; i < 3; i++) { const r = cell * (0.16 + 0.2 * i + 0.4 * t); pen.moveTo(mx + Math.cos(-0.7) * r, my + Math.sin(-0.7) * r); pen.arc(mx - cell * 0.2, my, r, -0.7, 0.7) }
+      } else {
+        // A feather: a paper leaf with a pencil quill. It fades only at the end of its time on the ledge.
+        const where = featherAt(mark), [fx, fy] = at2([where.x, where.y])
+        pen.globalAlpha = Math.min(1, (mark.life - mark.since) / 2)
+        pen.save()
+        pen.translate(fx, fy); pen.rotate(where.turn)
+        pen.fillStyle = INK.paper
+        pen.beginPath(); pen.ellipse(0, -cell * 0.03, cell * 0.2, cell * 0.055, 0, 0, Math.PI * 2); pen.fill()
+        pen.strokeStyle = INK.steelDark
+        pen.lineWidth = Math.max(1, cell * 0.02)
+        pen.beginPath(); pen.moveTo(-cell * 0.26, -cell * 0.03); pen.lineTo(cell * 0.18, -cell * 0.03); pen.stroke()
+        pen.restore()
+        pen.beginPath()
+      }
+      pen.stroke()
+      pen.globalAlpha = 1
+      drawn++
+    }
+
     // The crew, at the foot of the sheet.
     for (const who of ['beaver', 'mole'] as const) { const [gx, gy] = toy.crewAt(who); crewFigure(pen, who, ...at2([gx, gy]), cell * CREW_SCALE, toy.crew[who].pose, stream(who === 'beaver' ? 41 : 43)); drawn++ }
 
@@ -356,12 +394,12 @@ export class View {
     if (game.drive && seat) {
       const flip = game.drive.homeward
       // On a stick it rides a rail, tilting, with its back wheels off; on a plank on edge it wobbles as on a kerb.
-      put(game.drive.vehicle, seat.x, seat.y, (flip ? -seat.tilt : seat.tilt) - RAIL_TILT * seat.rail, drivePose(game.drive.vehicle, game.drive.seconds, seat.kerb), flip)
+      put(game.drive.vehicle, seat.x, seat.y, (flip ? -seat.tilt : seat.tilt) - RAIL_TILT * seat.rail, drivePose(game.drive.vehicle, game.drive.seconds, seat.kerb, undefined, Math.max(0, ...game.drive.heard.filter((use) => showsStrain(use, sheet.crossed.includes(at.job))))), flip)
     }
     // In a scene: where its beats have it.
     if (show.vehicle && show.kind === 'give') {
       const place = givePlace(show, at, longOf(show.vehicle), TAIL[show.vehicle])
-      put(show.vehicle, place.x + 0.06 * place.wiggle, place.y, place.tilt, drivePose(show.vehicle, game.seconds), false)
+      put(show.vehicle, place.x + 0.06 * place.wiggle, place.y, place.tilt, givePose(show.vehicle, game.seconds, show), false)
       if (place.afloat > 0) {
         // Up to its crates in the water: the sheet's blue over what is under the surface, and the rings it makes.
         // Only between the banks: the water is in the gap, and the ground beside it is not painted over.

@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { ROUND, drivePose, poke, reactPose, waitPose, type VehiclePose } from './acts'
+import { ROUND, drivePose, givePose, poke, reactPose, waitPose, type VehiclePose } from './acts'
 import type { VehicleId } from './sites'
 import { driverAt } from './fleet'
 import { VEHICLES, type Reaction } from './vehicles'
 
 const ids = Object.keys(VEHICLES) as VehicleId[]
 const flat = (pose: VehiclePose) => [pose.bounce, pose.pitch, pose.creep, ...pose.cargo, pose.face, pose.upset]
+const looks = (pose: VehiclePose) => [pose.lookX, pose.lookY, pose.gasp, pose.lids, pose.fret, pose.puff]
 /** A pose function sampled through time, every channel. */
 const trace = (make: (t: number) => VehiclePose, seconds: number) => Array.from({ length: 81 }, (_, i) => flat(make((i / 80) * seconds)))
 const apart = (a: number[][], b: number[][]) => { let most = 0; a.forEach((row, t) => row.forEach((v, c) => { most = Math.max(most, Math.abs(v - b[t][c])) })); return most }
@@ -98,5 +99,31 @@ describe('how each vehicle moves', () => {
     // On foot it stays beside the van, between its axles: where the van stands on a bank, so does its driver.
     const long = Math.max(...VEHICLES['post-van'].axles)
     for (let out = 0; out <= 1.0001; out += 0.1) { expect(driverAt(long, out)).toBeLessThan(0); expect(driverAt(long, out)).toBeGreaterThan(-long) }
+  })
+
+  it('every driver has a face that says what it is looking at: the gap, the far bank, the road under it, the water it is in', () => {
+    for (const id of ids) {
+      // At the edge it looks down, is not sure, looks across, and backs up. Further back it only looks round at its load.
+      const down = waitPose(id, ROUND[id] * 0.36, true), across = waitPose(id, ROUND[id] * 0.6, true), behind = waitPose(id, ROUND[id] * 0.68, false)
+      expect(down.lookY, id).toBeLessThan(-0.6); expect(down.fret).toBeGreaterThan(0.6)
+      expect(across.lookX).toBeGreaterThan(0.6)
+      expect(behind.lookX).toBeLessThan(-0.5); expect(behind.fret).toBe(0)
+      // On a road that shows no strain it looks ahead. The more strain shows, the further down it looks; near the limit its mouth opens.
+      const easy = drivePose(id, 1, 0, undefined, 0.3), hard = drivePose(id, 1, 0, undefined, 0.75), limit = drivePose(id, 1, 0, undefined, 0.98)
+      expect(easy.fret).toBe(0); expect(easy.lookX).toBeGreaterThan(0.5); expect(easy.gasp).toBe(0)
+      expect(hard.fret).toBeGreaterThan(0.5); expect(hard.lookY).toBeLessThan(easy.lookY)
+      expect(limit.fret).toBe(1); expect(limit.gasp).toBeGreaterThan(0.6)
+      expect(easy.puff).toBe(1)
+      // Falling: eyes wide, mouth round. Afloat: lids half down and a flat mouth. Shaking dry: eyes shut.
+      const falling = givePose(id, 1, { fall: 0.6, paddle: 0, climb: 0, shake: 0 }), afloat = givePose(id, 1, { fall: 1, paddle: 0.5, climb: 0, shake: 0 }), shaking = givePose(id, 1, { fall: 1, paddle: 1, climb: 1, shake: 0.5 })
+      expect(falling.gasp).toBe(1); expect(falling.lids).toBe(0); expect(falling.fret).toBe(1)
+      expect(afloat.lids).toBe(0.5); expect(afloat.gasp).toBe(0); expect(Math.abs(afloat.face)).toBeLessThan(0.2)
+      expect(shaking.lids).toBe(1)
+      // A touch opens its eyes and its mouth.
+      expect(poke(id, 0.2, waitPose(id, 1, false)).gasp).toBeGreaterThan(0.5)
+      for (const pose of [down, across, behind, easy, hard, limit, falling, afloat, shaking, reactPose(id, like, 0.45), reactPose(id, dislike, 0.2), reactPose(id, plain, 0.5)]) {
+        for (const value of looks(pose)) { expect(Number.isFinite(value)).toBe(true); expect(Math.abs(value)).toBeLessThanOrEqual(1) }
+      }
+    }
   })
 })

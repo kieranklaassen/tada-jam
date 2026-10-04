@@ -45,11 +45,17 @@ export function trolley(pen: Pen, x: number, y: number, c: number, weights: numb
     else { string(pen, -c * 0.3, -c * 0.1, -c * 0.3, drop, c * 0.8); string(pen, c * 0.3, -c * 0.1, c * 0.3, drop, c * 0.8) }
     bed = drop + c * 0.06
   }
+  // Standing on its wheels it has a push handle at its back and a rail at its front, so the stack has something to lean on.
+  if (how === 'deck' || how === 'tray') {
+    wood(pen, 'stick', -c * 0.42, bed, -c * 0.58, bed - c * 0.62, c * 0.6, random)
+    wood(pen, 'stick', -c * 0.58, bed - c * 0.62, -c * 0.78, bed - c * 0.62, c * 0.6, random)
+    wood(pen, 'stick', c * 0.42, bed, c * 0.42, bed - c * 0.3, c * 0.6, random)
+  }
   wood(pen, 'plank', -c * 0.42, bed, c * 0.42, bed, c * 0.9, random)
-  const onTop = how === 'under' ? -c * 0.1 : how === 'pin' ? null : bed + c * 0.11
+  const onTop = how === 'under' ? -c * 0.1 : how === 'pin' ? null : bed + c * 0.09
   if (onTop !== null) for (const wx of [-0.3, 0.3]) {
-    cutOut(pen, c, INK.paper, () => pen.arc(c * wx, onTop, c * 0.1, 0, Math.PI * 2))
-    pin(pen, c * wx, onTop, c * 0.5, false)
+    cutOut(pen, c, INK.paper, () => pen.arc(c * wx, onTop, c * 0.13, 0, Math.PI * 2))
+    pin(pen, c * wx, onTop, c * 0.6, false)
   }
   for (let i = 0; i < weights; i++) weight(pen, 0, bed - c * 0.08 - i * c * 0.14, c)
   drawWhole(pen, weights, c * 0.62, bed - c * 0.08 - (weights * c * 0.14) / 2, c * 0.5, { fill: INK.line, edge: INK.sheetDeep, edgeWidth: c * 0.12 })

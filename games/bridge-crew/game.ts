@@ -262,6 +262,9 @@ export class Game extends Toy {
       this.hand = { what: 'vehicle', id: vehicle.id, across: vehicle.across }
       this.poked.set(vehicle.id, 0)
       this.voices.push(honk(vehicle.id))
+      // Its horn, seen: three arcs in front of its nose.
+      const long = longOf(vehicle.id), front = vehicle.across ? parkAt(this.at, long, this.across.indexOf(vehicle.id)) : waitAt(this.at, this.waiting.indexOf(vehicle.id))
+      this.mark('toot', [front + 0.85, (vehicle.across ? this.at.right[1] : this.at.left[1]) + 0.75])
       return
     }
     if (this.save.next && onNewest(this.save) && onRoll(this.at, x, y)) { this.hand = { what: 'roll' }; this.voices.push(unrollVoice(0)); return }
@@ -274,6 +277,7 @@ export class Game extends Toy {
         this.hand = { what: 'crew', who }
         this.crew[who].react('poked')
         this.voices.push(who === 'beaver' ? beaverSlap : moleDrop)
+        this.mark('dust', [cx - (who === 'beaver' ? 0.9 : -0.9), cy + 0.05])
         return
       }
     }
@@ -653,6 +657,7 @@ export class Game extends Toy {
     this.rung = this.bridge.map(() => Infinity); this.turned = this.bridge.map(() => Infinity); this.laid = this.bridge.map(() => Infinity)
     this.flying = []; this.clicked.clear()
     this.splash = null
+    this.marks = []
     for (const who of ['beaver', 'mole'] as const) this.crew[who].head = this.crewEyes(who)
     this.voices.push(unrollVoice(1))
     this.urgent = true

@@ -5,7 +5,7 @@ import { stream } from './look'
 import { deserialize, freshSave, serialize } from './save'
 import { groundAt } from './sheet'
 import { site } from './sites'
-import { FLIGHT, HOLD, LEAN, RING, Toy, closedTriangle } from './toy'
+import { CHIEF, FLIGHT, HOLD, LEAN, MARKS, RING, Toy, closedTriangle, featherAt } from './toy'
 import { pinTick } from './voices'
 
 const part = (kind: Part['kind'], ax: number, ay: number, bx: number, by: number, turned = false): Part => ({ kind, a: [ax, ay], b: [bx, by], turned })
@@ -248,6 +248,44 @@ describe('the toy', () => {
     expect(toy.lean([lx, ly + 1])).toEqual([0, 0])
     // It is not part of what is saved.
     expect(JSON.stringify(serialize(toy.save))).not.toContain('lean')
+  })
+
+  it('a touch leaves more than itself: a ring from a pin, dust where a part lands and where a pile is stirred, and none of it for long', () => {
+    const toy = fresh(), [lx, ly] = toy.at.left
+    expect(toy.marks).toEqual([])
+    toy.press(lx, ly)
+    expect(toy.marks).toMatchObject([{ what: 'ring', at: [lx, ly], since: 0 }])
+    toy.dragStart(); toy.dragMove(lx - 2, ly); toy.dragEnd()
+    // The part has landed: dust at each of its two pins.
+    expect(toy.marks.filter((mark) => mark.what === 'dust').map((mark) => mark.at)).toEqual([[lx, ly], [lx - 2, ly]])
+    settle(toy, 0.3)
+    expect(toy.marks.length).toBeGreaterThan(0)
+    settle(toy, 0.5)
+    expect(toy.marks).toEqual([])
+    pickKind(toy, 'stick')
+    expect(toy.marks).toMatchObject([{ what: 'dust' }])
+    // Never more than a handful at once, however fast the finger is, and nothing of them is saved.
+    for (let i = 0; i < 40; i++) { toy.press(lx - 1 - (i % 3), ly); toy.pressEnd() }
+    expect(toy.marks.length).toBeLessThanOrEqual(MARKS.most)
+    expect(JSON.stringify(serialize(toy.save))).not.toContain('mark')
+  })
+
+  it('poked, the chief loses a feather, which floats down to its ledge and lies there: two at most', () => {
+    const toy = fresh()
+    toy.press(CHIEF.x + 0.4, CHIEF.y + 1.2); toy.pressEnd()
+    expect(toy.marks).toMatchObject([{ what: 'feather' }])
+    const start = featherAt(toy.marks[0])
+    expect(start.y).toBeGreaterThan(CHIEF.y + 1)
+    let last = start.y
+    for (let i = 0; i < 90; i++) { toy.step(1 / 60); const now = featherAt(toy.marks[0]); expect(now.y).toBeLessThanOrEqual(last + 1e-9); expect(now.y).toBeGreaterThanOrEqual(CHIEF.y); last = now.y }
+    // On the ledge, and still.
+    settle(toy, 1)
+    expect(featherAt(toy.marks[0]).y).toBeCloseTo(CHIEF.y + 0.06)
+    expect(featherAt(toy.marks[0]).turn).toBeCloseTo(0)
+    for (let i = 0; i < 4; i++) { toy.press(CHIEF.x + 0.4, CHIEF.y + 1.2); toy.pressEnd(); settle(toy, 0.2) }
+    expect(toy.marks.filter((mark) => mark.what === 'feather')).toHaveLength(MARKS.feathers)
+    settle(toy, MARKS.feather + 1)
+    expect(toy.marks).toEqual([])
   })
 
   it('the chief has its two tastes about what was built, and a poke gets its own answer', () => {

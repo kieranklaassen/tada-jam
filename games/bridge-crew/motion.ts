@@ -25,6 +25,8 @@ export type ChiefPose = {
   peck: number
   /** The eye closed, 0 to 1. */
   blink: number
+  /** The lid half down over the eye, 0 to 1: it has seen this before. */
+  lid: number
   /** Weight on one leg: -1 on the back leg, 1 on the front. */
   lean: number
   /** The other leg drawn up under the body, 0 to 1. */
@@ -33,7 +35,7 @@ export type ChiefPose = {
   preen: number
 }
 
-export const STILL: ChiefPose = { neck: 0, tilt: 0, bob: 0, hopX: 0, hopY: 0, crest: 0, peck: 0, blink: 0, lean: 0, tuck: 0, preen: 0 }
+export const STILL: ChiefPose = { neck: 0, tilt: 0, bob: 0, hopX: 0, hopY: 0, crest: 0, peck: 0, blink: 0, lid: 0, lean: 0, tuck: 0, preen: 0 }
 
 /** What it does when nothing happens, each with its own length in seconds and its own part of the body. */
 export const IDLE = {
@@ -56,8 +58,8 @@ export const REACT = {
   'taps-and-listens': 2.4,
   /** A shape that folds: it hops back with its crest and feathers on end, and settles. */
   'feathers-on-end': 1.9,
-  /** Something went into the water: it looks up from its model toward the gap, holds, and goes back to it. */
-  'looks-up': 2.1,
+  /** Something went into the water: it looks up from its model toward the gap, its lid comes half down, it holds, and goes back to its model. */
+  'looks-up': 2.9,
 } as const
 export type React = keyof typeof REACT
 
@@ -148,6 +150,8 @@ export function poseOf(act: Act, t: number, out: ChiefPose = { ...STILL }): Chie
       out.neck = -0.5 * (ease(t, 0, 0.14) - ease(t, 0.72, 1))
       out.tilt = -0.28 * (ease(t, 0.1, 0.24) - ease(t, 0.66, 0.9))
       out.crest = 0.3 * swell(t, 0, 0.45)
+      // Having looked, its lid comes half down, and stays there until it has gone back to its model.
+      out.lid = ease(t, 0.3, 0.42) - ease(t, 0.85, 0.97)
       break
     case 'feathers-on-end':
       // It steps back to its place by the end: every act ends where it began.

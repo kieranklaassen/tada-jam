@@ -43,33 +43,82 @@ function wheel(pen: Pen, x: number, y: number, r: number, c: number, spin: numbe
   pin(pen, x, y, c * 0.8, false)
 }
 
-/** A face in pencil on a paper window: two dots that look ahead, and a mouth that says how the driver is taking it. */
-function face(pen: Pen, x: number, y: number, c: number, mood: number, blink = false) {
+/**
+ * A face in pencil on a paper window: two eyes that look where the pose says,
+ * brows, lids that come half down when it is unimpressed and shut to two arcs,
+ * and a mouth that curves with the mood or comes open and round.
+ */
+function face(pen: Pen, x: number, y: number, c: number, pose: Pick<VehiclePose, 'face' | 'lookX' | 'lookY' | 'gasp' | 'lids' | 'fret'>) {
+  const mood = pose.face
   pen.fillStyle = INK.paper
   pen.beginPath(); pen.roundRect(x - c * 0.3, y - c * 0.26, c * 0.6, c * 0.52, c * 0.06); pen.fill()
   pencil(pen, c, 0.03)
-  for (const ex of [-0.08, 0.14]) {
-    pen.beginPath()
-    if (blink) { pen.moveTo(x + c * (ex - 0.04), y - c * 0.06); pen.lineTo(x + c * (ex + 0.04), y - c * 0.06); pen.stroke() }
-    else { pen.arc(x + c * ex, y - c * 0.06, c * 0.045, 0, Math.PI * 2); pen.fill() }
+  for (const ex of [-0.1, 0.14]) {
+    const cx = x + c * ex, cy = y - c * 0.055
+    if (pose.lids > 0.8) { pen.beginPath(); pen.moveTo(cx - c * 0.055, cy); pen.quadraticCurveTo(cx, cy + c * 0.04 * (mood >= 0 ? -1 : 1), cx + c * 0.055, cy); pen.stroke(); continue }
+    // The white of the eye, a pupil that moves in it, and a lid across the top when it is half down.
+    pen.fillStyle = '#ffffff'
+    pen.beginPath(); pen.arc(cx, cy, c * 0.07, 0, Math.PI * 2); pen.fill()
+    pen.fillStyle = INK.steelDark
+    pen.beginPath(); pen.arc(cx + pose.lookX * c * 0.03, cy - pose.lookY * c * 0.028, c * (0.036 + 0.012 * pose.gasp), 0, Math.PI * 2); pen.fill()
+    if (pose.lids > 0.25) {
+      pen.fillStyle = INK.paper
+      pen.beginPath(); pen.rect(cx - c * 0.08, cy - c * 0.08, c * 0.16, c * 0.085 * Math.min(1, pose.lids * 2) * 0.95); pen.fill()
+      pen.beginPath(); pen.moveTo(cx - c * 0.075, cy - c * 0.08 + c * 0.08 * Math.min(1, pose.lids * 2) * 0.95); pen.lineTo(cx + c * 0.075, cy - c * 0.08 + c * 0.08 * Math.min(1, pose.lids * 2) * 0.95); pen.stroke()
+    }
   }
-  // Brows tip inward when it is put out and lift when it is content; the mouth curves with them.
+  // Brows tip inward when it is put out and lift when it is content, and go up in the middle when it is not sure; the
+  // mouth curves with the mood, or is an open round.
+  const tip = 0.04 * mood - 0.06 * pose.fret
   pen.beginPath()
-  pen.moveTo(x - c * 0.15, y - c * (0.17 - 0.04 * mood)); pen.lineTo(x - c * 0.02, y - c * (0.17 + 0.04 * mood))
-  pen.moveTo(x + c * 0.08, y - c * (0.17 + 0.04 * mood)); pen.lineTo(x + c * 0.21, y - c * (0.17 - 0.04 * mood))
-  pen.moveTo(x - c * 0.07, y + c * 0.11); pen.quadraticCurveTo(x + c * 0.03, y + c * (0.11 + 0.09 * mood), x + c * 0.13, y + c * 0.11)
+  pen.moveTo(x - c * 0.18, y - c * (0.18 - tip)); pen.lineTo(x - c * 0.03, y - c * (0.18 + tip))
+  pen.moveTo(x + c * 0.07, y - c * (0.18 + tip)); pen.lineTo(x + c * 0.22, y - c * (0.18 - tip))
+  if (pose.gasp < 0.25) { pen.moveTo(x - c * 0.07, y + c * 0.12); pen.quadraticCurveTo(x + c * 0.03, y + c * (0.12 + 0.09 * mood), x + c * 0.13, y + c * 0.12) }
   pen.stroke()
+  if (pose.gasp >= 0.25) { pen.beginPath(); pen.ellipse(x + c * 0.03, y + c * 0.13, c * 0.045 * (0.6 + 0.5 * pose.gasp), c * 0.06 * (0.5 + 0.6 * pose.gasp), 0, 0, Math.PI * 2); pen.fill() }
 }
 
-/** A balsa cab at the front of a vehicle, with its face. */
-function cab(pen: Pen, back: number, bed: number, c: number, mood: number, wide = 0.92, tall = 1.05) {
+/** A balsa cab at the front of a vehicle, with its face, a roof that overhangs, a door, a lamp and a bumper. */
+function cab(pen: Pen, back: number, bed: number, c: number, pose: VehiclePose, wide = 1.0, tall = 1.15) {
   cutOut(pen, c, INK.balsa, () => pen.roundRect(back, bed - c * tall, c * wide, c * tall, c * 0.08))
   pen.strokeStyle = INK.balsaGrain
   pen.lineWidth = Math.max(0.75, c * 0.016)
   pen.beginPath()
   for (let i = 1; i < 5; i++) { pen.moveTo(back + c * 0.05, bed - (c * tall * i) / 5); pen.lineTo(back + c * (wide - 0.05), bed - (c * tall * i) / 5 + c * 0.012) }
   pen.stroke()
-  face(pen, back + c * wide * 0.56, bed - c * tall * 0.62, c, mood)
+  // The roof: a strip of balsa a little wider than the cab. The bumper: another, under its nose.
+  cutOut(pen, c, INK.balsaEdge, () => pen.roundRect(back - c * 0.06, bed - c * (tall + 0.07), c * (wide + 0.16), c * 0.09, c * 0.03))
+  cutOut(pen, c, INK.balsaEdge, () => pen.roundRect(back + c * (wide - 0.12), bed - c * 0.1, c * 0.24, c * 0.1, c * 0.03))
+  // The door: a pencil line round the lower half, with a handle.
+  pen.strokeStyle = INK.balsaEdge
+  pen.lineWidth = Math.max(0.75, c * 0.02)
+  pen.beginPath(); pen.roundRect(back + c * 0.1, bed - c * tall * 0.36, c * wide * 0.5, c * tall * 0.33, c * 0.03); pen.moveTo(back + c * wide * 0.46, bed - c * tall * 0.22); pen.lineTo(back + c * wide * 0.54, bed - c * tall * 0.22); pen.stroke()
+  // The lamp: a paper disc on the nose, with a pin for its bulb.
+  cutOut(pen, c, INK.paper, () => pen.arc(back + c * (wide - 0.02), bed - c * tall * 0.28, c * 0.1, 0, Math.PI * 2))
+  pin(pen, back + c * (wide - 0.02), bed - c * tall * 0.28, c * 0.5, false)
+  face(pen, back + c * wide * 0.56, bed - c * tall * 0.66, c * 1.12, pose)
+}
+
+/** A mudguard over a wheel: a strip of balsa bent round its top. */
+function mudguard(pen: Pen, x: number, r: number, c: number) {
+  pen.lineCap = 'round'
+  pen.lineWidth = c * 0.07
+  pen.strokeStyle = INK.shadow
+  pen.beginPath(); pen.arc(x + SHADOW.x * c, -r + SHADOW.y * c, r * 1.22, Math.PI * 1.12, Math.PI * 1.88); pen.stroke()
+  pen.strokeStyle = INK.balsaEdge
+  pen.beginPath(); pen.arc(x, -r, r * 1.22, Math.PI * 1.12, Math.PI * 1.88); pen.stroke()
+}
+
+/** Puffs from the exhaust: three rings that grow and thin as they fall behind, in the drafting line. */
+function puffs(pen: Pen, x: number, y: number, c: number, seconds: number) {
+  pen.strokeStyle = INK.line
+  pen.lineWidth = Math.max(1, c * 0.025)
+  for (let i = 0; i < 3; i++) {
+    const t = (seconds * 1.4 + i / 3) % 1
+    pen.globalAlpha = 0.75 * (1 - t)
+    pen.beginPath(); pen.arc(x - c * (0.15 + 0.75 * t), y - c * (0.05 + 0.5 * t * t), c * (0.05 + 0.13 * t), 0, Math.PI * 2); pen.stroke()
+  }
+  pen.globalAlpha = 1
 }
 
 /** The numeral that names a vehicle's crates, laid beside them. `flip` undoes the mirror of a vehicle that faces home. */
@@ -98,7 +147,7 @@ export function vehicle(pen: Pen, id: VehicleId, c: number, pose: VehiclePose, s
   switch (id) {
     case 'post-van': {
       wood(pen, 'plank', -c * (long + 0.62), bed, c * 0.5, bed, c * 1.3, random)
-      cab(pen, -c * 0.3, bed - c * 0.09, c, pose.face)
+      cab(pen, -c * 0.3, bed - c * 0.09, c, pose)
       crate(pen, -c * (long + 0.56), bed - c * 0.09, c * 1.25)
       crate(pen, -c * (long + 0.02), bed - c * 0.09, c * 1.25)
       // The tower of parcels: each sways or slides by its own channel of the pose.
@@ -112,12 +161,12 @@ export function vehicle(pen: Pen, id: VehicleId, c: number, pose: VehiclePose, s
       }
       crateCount(pen, spec.crates, -c * (long + 0.98), bed - c * 0.36, c, flip, counted)
       // The driver is out of the cab: its window is bare paper.
-      if (pose.upset > 0.08) { pen.fillStyle = INK.paper; pen.beginPath(); pen.roundRect(-c * 0.3 + c * 0.92 * 0.56 - c * 0.3, bed - c * 0.09 - c * 1.05 * 0.62 - c * 0.26, c * 0.6, c * 0.52, c * 0.06); pen.fill() }
+      if (pose.upset > 0.08) { pen.fillStyle = INK.paper; pen.beginPath(); pen.roundRect(-c * 0.3 + c * 0.56 - c * 0.3 * 1.12, bed - c * 0.09 - c * 1.15 * 0.66 - c * 0.26 * 1.12, c * 0.6 * 1.12, c * 0.52 * 1.12, c * 0.07); pen.fill() }
       break
     }
     case 'jelly-truck': {
       wood(pen, 'plank', -c * (long + 0.75), bed, c * 0.5, bed, c * 1.3, random)
-      cab(pen, -c * 0.3, bed - c * 0.09, c, pose.face)
+      cab(pen, -c * 0.3, bed - c * 0.09, c, pose)
       for (let i = 0; i < 3; i++) crate(pen, -c * (long + 0.7) + i * c * 0.52, bed - c * 0.09, c * 1.2)
       // The jelly on its plate: a dome of tracing paper that leans with its wave, or is up on the cab roof.
       const home: [number, number] = [-c * (long - 0.05), bed - c * 0.6], roof: [number, number] = [c * 0.15, bed - c * 1.2]
@@ -137,7 +186,7 @@ export function vehicle(pen: Pen, id: VehicleId, c: number, pose: VehiclePose, s
     }
     case 'piano-mover': {
       wood(pen, 'plank', -c * (long + 2.1), bed, c * 0.5, bed, c * 1.3, random)
-      cab(pen, -c * 0.3, bed - c * 0.09, c, pose.face)
+      cab(pen, -c * 0.3, bed - c * 0.09, c, pose)
       for (let i = 0; i < 4; i++) crate(pen, -c * (long + 0.72) + (i % 2) * c * 0.5, bed - c * 0.09 - Math.floor(i / 2) * c * 0.5, c * 1.2)
       // The piano at the back, on its own little wheels: it rolls back when it is upset, and its keys go down one by one.
       const px = -c * (long + 2.0) - pose.upset * c * 0.8, pw = c * 1.05, ph = c * 1.15
@@ -158,7 +207,7 @@ export function vehicle(pen: Pen, id: VehicleId, c: number, pose: VehiclePose, s
       cutOut(pen, c, INK.paper, () => pen.roundRect(back, top, wide, tall, c * 0.12))
       pencil(pen, c, 0.022)
       pen.strokeRect(back + c * 0.08, top + c * 0.1, wide - c * 0.16, tall - c * 0.2)
-      face(pen, back + wide - c * 0.36, top + tall * 0.5, c * 0.9, pose.face)
+      face(pen, back + wide - c * 0.4, top + tall * 0.5, c * 1.15, pose)
       for (let i = 0; i < 3; i++) crate(pen, back + c * 0.14 + i * c * 0.46, bed - c * 0.2, c * 1.05)
       for (let i = 0; i < 3; i++) {
         const nx = back + c * (0.55 + i * 0.78), reach = c * (1.5 + 0.55 * pose.cargo[i]), sway = c * 0.12 * Math.sin(seconds * 1.1 + i * 2)
@@ -193,7 +242,7 @@ export function vehicle(pen: Pen, id: VehicleId, c: number, pose: VehiclePose, s
         pen.beginPath(); pen.arc(sx, sy, c * 0.34, -0.5, 1.4); pen.stroke()
         if (i > 0) crate(pen, sx - c * 0.2, sy - c * 0.3, c * 0.95)
       }
-      face(pen, c * 0.05, bed - c * 0.36, c * 0.85, pose.face)
+      face(pen, c * 0.05, bed - c * 0.36, c * 0.95, pose)
       // Two antennae of balsa.
       wood(pen, 'stick', -c * 0.02, bed - c * 0.66, c * 0.12, bed - c * 1.02, c * 0.5, random)
       wood(pen, 'stick', c * 0.16, bed - c * 0.64, c * 0.42, bed - c * 0.94, c * 0.5, random)
@@ -201,7 +250,11 @@ export function vehicle(pen: Pen, id: VehicleId, c: number, pose: VehiclePose, s
       break
     }
   }
+  // Behind it as it drives: puffs from the exhaust.
+  if (pose.puff > 0) puffs(pen, -c * (long + (id === 'piano-mover' ? 2.2 : 0.8)), bed, c, seconds)
   pen.restore()
+  // A mudguard over each wheel, on a vehicle that has wheels.
+  if (id !== 'caterpillar-bus') spec.axles.forEach((behind) => mudguard(pen, -c * behind, r, c))
   // The wheels stay on the road whatever the body does. The caterpillar's are its feet, and each lifts in its turn.
   spec.axles.forEach((behind, i) => wheel(pen, -c * behind, -r - (id === 'caterpillar-bus' ? pose.cargo[i] * c * 0.14 : 0), r, c, spin + i))
   if (id === 'post-van' && pose.upset > 0.08) driver(pen, c, driverAt(long, pose.upset) * c, pose.upset)
