@@ -528,6 +528,95 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
     expect(balloons.filter((balloon) => balloon.z > -5 && balloon.wide === 1 && balloon.tall === 1 && balloon.y < 2.2)).toHaveLength(1)
   })
 
+  it('answers a touch on a bunch that is on its way down, and on a balloon that has got away: the one squeaks and squashes and goes on, the other pops', () => {
+    // Two wrong bunches for a duck alone: the second takes its time on the way down while the first is refused.
+    const theatre = new Theatre(saveOf({ position: 'solo-two-colours', troop: { kind: 'duck', size: 1, held: [true] }, sky: [{ colour: 'frog', count: 1 }, { colour: 'frog', count: 1 }, { colour: 'duck', count: 2 }], waiting: { kind: 'frog', size: 1 } }), 3), { balloons, painter, clear } = recorder()
+    tap(theatre, 1)
+    for (let i = 0; i < 18; i++) theatre.step(1 / 60)
+    tap(theatre, 0)
+    for (let i = 0; i < 22; i++) theatre.step(1 / 60)
+    const flying = () => { clear(); theatre.paint(painter, VIEW); return balloons.filter((balloon) => balloon.z > 0.3 && balloon.z < 0.36 && balloon.y > 0) }
+    const before = flying()
+    expect(before.length).toBeGreaterThan(0)
+    // The one still high in the air: the other hangs beside the duck, by the balloon it holds.
+    const it = before.reduce((high, balloon) => (balloon.y > high.y ? balloon : high))
+    expect(theatre.hit(it.x, it.y, VIEW).on).toBe('flying')
+    theatre.sounds.length = 0
+    theatre.press(it.x, it.y, VIEW)
+    theatre.cancel()
+    expect(theatre.sounds.map((sound) => sound.voice)).toEqual(['squeak'])
+    theatre.step(1 / 60)
+    const after = flying().reduce((high, balloon) => (balloon.y > high.y ? balloon : high))
+    expect(Math.abs(after.wide - it.wide)).toBeGreaterThan(0.1)
+    for (let i = 0; i < 60 * 4; i++) theatre.step(1 / 60)
+    // Now two more for a duck that has one: carried off, it lets them go, and they are tapped as they get away.
+    tap(theatre, 2)
+    theatre.sounds.length = 0
+    let popped = false
+    for (let i = 0; i < 60 * 3 && !popped; i++) {
+      theatre.step(1 / 60)
+      clear()
+      theatre.paint(painter, VIEW)
+      // One that has got away is drawn in front of everything else, a little taller than wide.
+      const away = balloons.find((balloon) => Math.abs(balloon.z - 0.4) < 1e-6)
+      if (!away) continue
+      expect(theatre.hit(away.x, away.y, VIEW).on).toBe('loose')
+      const pops = theatre.sounds.filter((sound) => sound.voice === 'pop').length
+      theatre.press(away.x, away.y, VIEW)
+      theatre.cancel()
+      expect(theatre.sounds.filter((sound) => sound.voice === 'pop').length).toBe(pops + 1)
+      popped = true
+    }
+    expect(popped).toBe(true)
+  })
+
+  it('counts no slip for a bunch that is taken after all: sent as too many, read again after a pop and taken, it leaves the cycle one that went well', () => {
+    const theatre = new Theatre(saveOf({ position: 'pair-singles', troop: { kind: 'duck', size: 2, held: [true, false] }, sky: [{ colour: 'duck', count: 2 }, { colour: 'duck', count: 1 }], waiting: { kind: 'frog', size: 1 } }), 3), { balloons, painter, clear } = recorder()
+    expect(theatre.save.finished).toBe(false)
+    theatre.step(1 / 60)
+    clear()
+    theatre.paint(painter, VIEW)
+    const own = balloons.find((balloon) => balloon.z > -5 && balloon.wide === 1 && balloon.y < 2.2)!
+    tap(theatre, 0)
+    expect(theatre.save.slips).toBe(1)
+    for (let i = 0; i < 6; i++) theatre.step(1 / 60)
+    theatre.press(own.x, own.y, VIEW)
+    theatre.cancel()
+    // Both want one now, and the two is one for each: nothing was refused and nothing got away.
+    expect(theatre.troop.held).toEqual([true, true])
+    expect(theatre.save.finished).toBe(true)
+    expect(theatre.save.slips).toBe(0)
+    expect(theatre.save.position).toBe('trio-singles')
+  })
+
+  it.each(kinds)('a troop of %ss does not set off without a balloon that is on its way to a hand: the waiting troop waves until it has arrived, and the parade holds what the troop is seen to carry', (kind) => {
+    const theatre = new Theatre(saveOf({ position: 'trio-singles', troop: { kind, size: 3, held: [true, false, false] }, sky: [{ colour: kind, count: 1 }, { colour: other(kind), count: 1 }], waiting: { kind: other(kind), size: 1 } }), 3)
+    // Served before, by the look of the save: finished, with two balloons popped since.
+    const save = { ...theatre.save, finished: true }
+    const served = new Theatre(save, 3), { poses, balloons, painter, clear } = recorder()
+    const callWaiting = () => { served.press(waitingSpot(0, VIEW).x, GROUND + 0.8, VIEW); served.cancel() }
+    served.step(1 / 60)
+    tap(served, 0)
+    for (let i = 0; i < 10; i++) served.step(1 / 60)
+    callWaiting()
+    expect(served.playing, 'not while the balloon is in the air').toBe(null)
+    expect(served.save.parade).toHaveLength(0)
+    for (let i = 0; i < 60 * 3; i++) served.step(1 / 60)
+    // The ending for a troop that is not full does not play; the balloon is in a hand, and now the troop can go.
+    callWaiting()
+    if (served.playing === 'ending') callWaiting()
+    expect(served.playing).toBe('arrival')
+    expect(served.save.parade[0].balloons).toBe(2)
+    served.step(1 / 60)
+    clear()
+    served.paint(painter, VIEW)
+    // The troop that marches off is seen with as many balloons as the parade was given.
+    const leaving = [0, 1, 2].map((i) => poses.get(`leaving-${i}`)!).filter(Boolean)
+    expect(leaving).toHaveLength(3)
+    const carried = balloons.filter((balloon) => balloon.z > 0.29 && balloon.z < 0.31 && balloon.wide === 1 && balloon.y < 2.2)
+    expect(carried).toHaveLength(2)
+  })
+
   it('draws every balloon in front at one size, also where balloons are drawn larger: in the sky, in a hand, on its way, beside a friend, carrying one off and passing by', () => {
     const big = SMALL.balloon
     expect(big).toBeGreaterThan(1.1)

@@ -37,12 +37,12 @@ export type Painter = {
 export type Sound = { voice: VoiceId; pitch: number; gain: number; after: number; pace: number }
 
 /** What a point of the surface is on. */
-export type Hit = { on: 'held'; friend: number } | { on: 'tug'; friend: number } | { on: 'bunch'; slot: number } | { on: 'friend'; friend: number } | { on: 'waiting' } | { on: 'cloud'; index: number } | { on: 'parade'; troop: number } | { on: 'farHill' } | { on: 'hill' } | { on: 'air' }
+export type Hit = { on: 'held'; friend: number } | { on: 'tug'; friend: number } | { on: 'flying'; flight: number } | { on: 'loose'; balloon: number } | { on: 'bunch'; slot: number } | { on: 'friend'; friend: number } | { on: 'waiting' } | { on: 'cloud'; index: number } | { on: 'parade'; troop: number } | { on: 'farHill' } | { on: 'hill' } | { on: 'air' }
 
 /** A bunch's place in the sky and its springs: how flat it is, how far it is pushed aside, how far the loose end of its string has whipped, and how long until it is back. */
 type Place = { squash: number; squashSpeed: number; pressed: boolean; push: number; pushSpeed: number; whip: number; whipSpeed: number; away: number; grow: number }
-/** A bunch on its way down. `lasts` is how long the way takes: `FLIGHT`, or longer when whoever will answer it is still busy. `owed` says its friend was busy all the same when it arrived, and owes it a refusal. */
-type Flight = { bunch: Bunch; slot: number; given: Given; t: number; lasts: number; fromX: number; fromY: number; landed: boolean; after: number; friend: number; met?: boolean; owed?: boolean }
+/** A bunch on its way down. `lasts` is how long the way takes: `FLIGHT`, or longer when whoever will answer it is still busy. `owed` says its friend was busy all the same when it arrived, and owes it a refusal; `squeezed` is when a finger last landed on it; `slipped` says it was counted as a slip when it was sent. */
+type Flight = { bunch: Bunch; slot: number; given: Given; t: number; lasts: number; fromX: number; fromY: number; landed: boolean; after: number; friend: number; met?: boolean; owed?: boolean; squeezed?: number; slipped?: boolean }
 /** A balloon in a friend's hand. `bonk` is how long it is still on its way round to the friend's head, knocked by a refusal; `wait` is how long it still hangs where it arrived, in a bunch with one for each, before its friend's turn to take it, `owed` says it hangs there until its friend, who is busy, is free to take it, and `knot` is where its string still ends meanwhile. */
 type Held = { x: number; y: number; vx: number; vy: number; shown: boolean; bonk?: number; wait?: number; owed?: boolean; knot?: { x: number; y: number } }
 /** A balloon that has got away. `flat` is one blown off going flat; `bump` is one that is heading for the cloud over the troop and has not met it yet; `drift` is one of a sky that is over, which rises out of the top of the view without a pop. */
@@ -175,6 +175,8 @@ export class Theatre {
   private passTook = false
   /** Where the balloons of a bunch that carries a friend off hang, from that friend: written by `hung`, and made once. */
   private readonly hangs = [{ x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }]
+  /** How many bunches of the cycle on screen were refused or got away, counted past the two the save keeps: so that one read again after a pop and taken can be taken back. */
+  private slipped = 0
   /** Where the balloons that hang low for a passing troop are: written by `lowFor`. */
   private readonly lows = [{ x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }]
   private readonly knot = { x: 0, y: 0 }
@@ -246,6 +248,7 @@ export class Theatre {
     this.held = troop.held.map((holds, i) => ({ x: friendX(i, troop.size) + 0.7, y: GROUND + HELD_HEIGHT, vx: 0, vy: 0, shown: holds }))
     this.actors = troop.held.map(() => ({ clip: null, t: 0, next: null, tug: null, landAfter: 0 }))
     this.took = troop.held.map((holds, i) => (holds ? i : -1)).filter((i) => i >= 0)
+    this.slipped = this.save.slips
     this.flights.length = 0
     this.slotsFor = 0
     this.pressedSlot = -1
@@ -313,6 +316,12 @@ export class Theatre {
       const cloud = CLOUDS[index], at = seenAt(cloud.x, cloud.y, cloud.z, view, this.seen)
       if (Math.abs(x - at.x) < 2.5 * cloud.scale * at.scale && Math.abs(y - at.y) < 0.95 * cloud.scale * at.scale) return { on: 'cloud', index }
     }
+    // A bunch on its way down, and a balloon that has got away, are balloons like any other: each answers a touch.
+    for (let f = 0; f < this.flights.length; f++) {
+      const flight = this.flights[f], at = this.along(flight)
+      for (const offset of bunchOffsets(flight.bunch.count)) if (Math.hypot(x - at.x - offset.x * view.balloon, (y - at.y - offset.y * view.balloon) / 1.12) < BALLOON * 1.2 * view.balloon) return { on: 'flying', flight: f }
+    }
+    for (let b = 0; b < this.loose.length; b++) if (Math.hypot(x - this.loose[b].x, (y - this.loose[b].y) / 1.12) < BALLOON * 1.2 * view.balloon) return { on: 'loose', balloon: b }
     // Below the friends' feet there is only the hill.
     if (y < groundAt(x, 0) - 0.25) return { on: 'hill' }
     // Above it, far off: a troop that goes round the far hill, with its balloons, or the far hill itself.
@@ -360,6 +369,23 @@ export class Theatre {
       this.sound('squeak', 1.12 - this.sky[hit.slot].count * 0.1)
     } else if (hit.on === 'held') {
       this.popHeld(hit.friend)
+    } else if (hit.on === 'flying') {
+      // A bunch on its way squeaks under the finger and squashes, and goes on: where it is going was decided at its lift.
+      const flight = this.flights[hit.flight]
+      flight.squeezed = this.time
+      this.sound('squeak', 1.25 - flight.bunch.count * 0.1, 0.8)
+    } else if (hit.on === 'loose') {
+      // One that has got away pops under the finger at once. One that the hippo sneezed flat never pops: it
+      // squeaks and darts off faster.
+      const balloon = this.loose[hit.balloon]
+      if (balloon.flat) {
+        balloon.vx *= 1.6
+        balloon.vy = balloon.vy * 1.6 + 2
+        this.sound('squeak', 1.4, 0.7)
+      } else {
+        this.burst(balloon.x, balloon.y, balloon.colour)
+        this.loose.splice(hit.balloon, 1)
+      }
     } else if (hit.on === 'tug') {
       // A tap on a balloon a friend holds pops it at once, and the bunch that is carrying it off is one: the whole
       // bunch goes, one pop after another, and the friend comes down from where it is. Nothing of the troop's own
@@ -436,10 +462,14 @@ export class Theatre {
     }
     const bunch = this.sky[slot]
     // The rules decide here, at the lift, and the save holds the outcome before the bunch has left the sky.
+    const slips = this.save.slips
     const { save, events } = sendBunch(this.save, slot)
     this.save = save
     const first = events[0]
     if (!first) return
+    // The cycle's slips are counted here too, past the two the save keeps them to, so that one can be taken back.
+    const slipped = save.slips !== slips || (first.type !== 'taken' && !save.finished)
+    if (slipped) this.slipped += 1
     const serves = events.find((event) => event.type === 'served')
     this.unsaved = serves ? 2 : Math.max(this.unsaved, 1) as 1 | 2
     if (first.type === 'taken') this.took.push(...first.takers)
@@ -465,7 +495,7 @@ export class Theatre {
     const before = Math.max(0, ...this.flights.filter((flight) => !flight.landed).map((flight) => flight.lasts - flight.t)) + ARRIVE_APART
     const lasts = Math.max(Math.min(FLIGHT + LONGEST_WAIT, Math.max(FLIGHT, free + lead + 0.04 - this.time)), this.flights.some((flight) => !flight.landed) ? before : 0)
     for (const i of answering) this.actors[i].busyUntil = this.time + lasts - lead + takes / (QUICKEST - 0.14) + 0.06
-    this.flights.push({ bunch, slot, given, t: 0, lasts, fromX: at.x, fromY: at.y, landed: false, after: 0, friend })
+    this.flights.push({ bunch, slot, given, t: 0, lasts, fromX: at.x, fromY: at.y, landed: false, after: 0, friend, slipped })
     // The ending begins with its cause: the moment the last balloon is in a hand. Its first beat is that catch.
     if (serves && serves.type === 'served') {
       this.endingDue = { at: this.time + lasts, order: [...this.took], together: serves.together }
@@ -540,7 +570,9 @@ export class Theatre {
     const p = PERSONALITIES[this.troop.kind]
     for (const flight of this.flights) {
       if (flight.landed || flight.given.result !== 'gotAway') continue
-      const again = sendBunch(this.save, flight.slot), first = again.events[0]
+      // Read without the slip it was counted as: if it is taken after all, nothing of it got away.
+      const without = flight.slipped ? Math.min(2, Math.max(0, this.slipped - 1)) as 0 | 1 | 2 : this.save.slips
+      const again = sendBunch({ ...this.save, slips: without }, flight.slot), first = again.events[0]
       if (!first || first.type === 'refused') continue
       if (first.type === 'gotAway') {
         // Still too many: for whoever wants one now. Its slip was counted when it was sent, and is not counted twice.
@@ -550,13 +582,15 @@ export class Theatre {
       }
       if (first.type !== 'taken') continue
       this.save = again.save
+      if (flight.slipped) this.slipped -= 1
+      flight.slipped = false
       this.took.push(...first.takers)
       const serves = again.events.find((event) => event.type === 'served')
       flight.given = { result: 'taken', takers: first.takers, served: serves !== undefined }
       flight.friend = first.takers[0]
       // It arrives when those who take it are free: after the start at the pop.
       const free = Math.max(...first.takers.map((i) => this.actors[i].busyUntil ?? 0))
-      flight.lasts = Math.max(flight.lasts, flight.t + free + p.cue.grab + 0.04 - this.time)
+      flight.lasts = Math.max(flight.lasts, Math.min(flight.t + FLIGHT + LONGEST_WAIT, flight.t + free + p.cue.grab + 0.04 - this.time))
       for (const i of first.takers) this.actors[i].busyUntil = this.time + (flight.lasts - flight.t) - p.cue.grab + p.lasts.catch / (QUICKEST - 0.14) + 0.06
       if (serves && serves.type === 'served') {
         this.endingDue = { at: this.time + flight.lasts - flight.t, order: [...this.took], together: serves.together }
@@ -578,12 +612,14 @@ export class Theatre {
     // the air the troop is not yet seen to be served, and the troop that waits only waves, as it does before. Once
     // the balloon is in a hand, a tap on the waiting troop brings the ending on at once, and the next one steps in:
     // a child who keeps tapping is never kept waiting for long, and never loses the ending.
-    const due = this.endingDue, serving = this.flights.some((flight) => flight.given.result === 'taken' && !flight.landed) || this.held.some((balloon) => balloon.shown && balloon.owed)
-    if (due && !serving && !this.scene?.running) {
+    // And while any balloon is on its way to a hand, whether or not it is the last, the troop does not set off
+    // without it: the waiting troop waves, the balloon arrives, and the troop marches off with what it holds.
+    const due = this.endingDue, coming = this.flights.some((flight) => flight.given.result === 'taken' && !flight.landed) || this.held.some((balloon) => balloon.shown && balloon.owed)
+    if (due && !coming && !this.scene?.running) {
       this.endingDue = null
       this.endCycle(due.order, due.together)
     }
-    const { save, events } = due ? { save: this.save, events: [] } : callNext(this.save)
+    const { save, events } = due || coming ? { save: this.save, events: [] } : callNext(this.save)
     const event = events[0]
     if (!event || event.type !== 'steppedIn') {
       this.waitingActor.clip = 'wave'
@@ -1547,7 +1583,8 @@ export class Theatre {
       const { x, y, u } = this.along(flight)
       const speed = Math.sin(u * Math.PI)
       const lean = Math.atan2(to.x - flight.fromX, flight.fromY - to.y) * 0.5 * speed
-      const settle = flight.landed ? Math.sin(flight.after * 30) * Math.exp(-flight.after * 9) * 0.12 : 0
+      const squeezed = flight.squeezed === undefined ? 9 : time - flight.squeezed
+      const settle = (flight.landed ? Math.sin(flight.after * 30) * Math.exp(-flight.after * 9) * 0.12 : 0) + (squeezed < 0.5 ? Math.cos(squeezed * 32) * Math.exp(-squeezed * 9) * 0.28 : 0)
       const offsets = bunchOffsets(flight.bunch.count)
       // A balloon is one size wherever it is: as large as it hung in the sky.
       const big = view.balloon
