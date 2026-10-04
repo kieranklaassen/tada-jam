@@ -180,14 +180,22 @@ function effects(ctx: Ctx, fx: FxState, wall: boolean): number {
         const air = Math.min(1, one.age / CURL_FLIGHT), sat = one.age > CURL_FLIGHT
         const at = flight(one.fromX, one.fromY, air, { x: MOUTH.x - 4, y: DOG.y + 4 })
         if (sat) at.x += 3 * Math.sin(one.age * 20)
+        // A curl of peel is a filled sickle of the fruit's colour, turning over and over as it flies: a shape, not a line that winds.
+        const k = sat ? 1.7 : 1 + 0.7 * air
+        ctx.save()
+        ctx.translate(at.x, at.y)
+        ctx.rotate(sat ? 0.5 + 0.25 * Math.sin(one.age * 20) : air * 22)
         ctx.beginPath()
-        for (let i = 0; i <= 14; i++) {
-          const a = i * 0.55 + (sat ? 2.2 : air * 22), r = (3 + i * 0.9) * (sat ? 1.7 : 1 + 0.7 * air)
-          ctx.lineTo(at.x + Math.cos(a) * r, at.y + Math.sin(a) * r)
-        }
-        ctx.lineWidth = 5
+        ctx.moveTo(-13 * k, 4 * k)
+        ctx.quadraticCurveTo(0, -20 * k, 13 * k, 4 * k)
+        ctx.quadraticCurveTo(0, -7 * k, -13 * k, 4 * k)
+        ctx.fillStyle = FLESH[one.fruit]
+        ctx.fill()
+        ctx.lineWidth = 3
         ctx.strokeStyle = RIND[one.fruit]
+        ctx.lineJoin = 'round'
         ctx.stroke()
+        ctx.restore()
         break
       }
       case 'fly': {
