@@ -1,16 +1,20 @@
 // template: cartridge/overlay.ts v2
 
 // The grown-up performance overlay. It is no part of the game a child plays:
-// it shows only after three quick taps in the top right corner, or with
-// `?fps=1` in the address, and three more taps hide it again. It reads what
-// the Mount already measures and changes nothing, in the game or in a save.
+// it shows only after a deliberate gesture in the grown-up's corner (a finger
+// held there a second and lifted there, and then three quick taps), or with
+// `?fps=1` in the address, and the same gesture hides it again. Three quick
+// taps alone, which a child may well make, do nothing. It reads what the
+// Mount already measures and changes nothing, in the game or in a save.
 // Its readout is the only text in the game. The wordless check accepts text
 // in a file with this name alone, behind the comment the readout carries, so
 // the overlay stays in this file and nothing meant for the child goes into it.
 // Plain DOM, so it sits over a canvas 2D surface and a three.js one alike.
 
-/** The side of the corner that takes the taps, in the surface's own pixels. Keep backdrop under it, where nothing answers a touch, so a child does not open it by playing. */
-export const CORNER = 72
+/** How long the finger is held in the corner before it is lifted there: the hold that says a grown-up means it. */
+export const HOLD_MS = 1000
+/** The three taps start within this long of that lift. */
+export const ARMED_MS = 3000
 /** Three taps count when the first and the last are no further apart than this. */
 export const WITHIN_MS = 700
 /** The numbers are refreshed this often, so they can be read. */
@@ -19,6 +23,9 @@ export const EVERY_MS = 400
 export class Overlay {
   private readonly box: HTMLDivElement
   private taps: number[] = []
+  /** When a finger went down in the corner and is still there, and when a long enough hold was lifted there. */
+  private heldFrom: number | null = null
+  private armedAt: number | null = null
   private shown = false
   private frames = 0
   private sumMs = 0
@@ -36,19 +43,35 @@ export class Overlay {
     if (new URLSearchParams(search).get('fps') === '1') this.toggle()
   }
 
-  /** Every touch-down on the surface, where it landed and how wide the surface is. Three in the corner in quick succession show or hide the numbers; one anywhere else starts the count again. */
-  press(x: number, y: number, width: number, timeMs: number): void {
-    // A surface that has not been measured yet has no corner.
-    if (width <= 0 || x < width - CORNER || y > CORNER) {
-      this.taps.length = 0
+  /**
+   * Every touch-down on the surface, and whether it landed in the grown-up's corner (the Mount says where that
+   * is). A touch anywhere else starts everything again. After a hold, three in the corner in quick succession
+   * show or hide the numbers; with no hold before them they are the start of one, and three quick taps do nothing.
+   */
+  press(inCorner: boolean, timeMs: number): void {
+    if (!inCorner) {
+      this.forget()
       return
     }
-    this.taps = this.taps.filter((t) => timeMs - t <= WITHIN_MS)
-    this.taps.push(timeMs)
-    if (this.taps.length >= 3) {
-      this.taps.length = 0
-      this.toggle()
+    if (this.armedAt !== null && timeMs - this.armedAt <= ARMED_MS + WITHIN_MS && (this.taps.length > 0 || timeMs - this.armedAt <= ARMED_MS)) {
+      this.taps = this.taps.filter((t) => timeMs - t <= WITHIN_MS)
+      this.taps.push(timeMs)
+      if (this.taps.length >= 3) {
+        this.forget()
+        this.toggle()
+      }
+      return
     }
+    this.forget()
+    this.heldFrom = timeMs
+  }
+
+  /** The finger that went down in the corner lifts, in the corner or out of it. Held long enough and lifted there, it opens the way for the three taps. */
+  lift(inCorner: boolean, timeMs: number): void {
+    if (this.armedAt !== null) return
+    const held = this.heldFrom
+    this.heldFrom = null
+    if (held !== null && inCorner && timeMs - held >= HOLD_MS) this.armedAt = timeMs
   }
 
   /**
@@ -65,13 +88,19 @@ export class Overlay {
     if (nowMs - this.since < EVERY_MS) return
     this.since = nowMs
     const fps = this.frames / (this.sumMs / 1000)
-    // wordless-ok: grown-up performance overlay, reached only by three quick taps in the corner or by fps=1 in the address
+    // wordless-ok: grown-up performance overlay, reached only by a second's hold and three taps in the grown-up's corner, or by fps=1 in the address
     this.box.textContent = `${fps.toFixed(0)} fps  worst ${this.worstMs.toFixed(0)} ms\nwork ${(this.workMs / this.frames).toFixed(1)} ms  tier ${tier}\n${drawCalls} calls  ${triangles} tris`
     this.reset()
   }
 
   dispose(): void {
     this.box.remove()
+  }
+
+  private forget(): void {
+    this.taps.length = 0
+    this.heldFrom = null
+    this.armedAt = null
   }
 
   private toggle(): void {

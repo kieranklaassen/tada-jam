@@ -146,6 +146,15 @@ export type Under =
 export type People = { window: readonly Box[]; queue: readonly [readonly Box[], readonly Box[]] }
 
 /**
+ * The grown-up's corner: the top right of the page, over the end of the awning and nothing else. It is given in
+ * stage units, so that on a small surface it shrinks with the page and never comes down over a waiting
+ * customer or its ticket. Nothing of the game answers a touch there.
+ */
+export const GROWN_UP: Box = { x: PAGE.w - 112, y: 0, w: 112, h: 58 }
+/** Whether a point of the stage is in the grown-up's corner, the margin beyond the page's edge included. */
+export const inCorner = (p: Point): boolean => p.x >= GROWN_UP.x && p.y <= GROWN_UP.y + GROWN_UP.h
+
+/**
  * What is under a point of the stage. A piece answers over the whole height of its lane or row, which is
  * taller than it is drawn. `tin` is the tin at the window, when a customer stands there; `served` says whether
  * anyone stands at the window at all.

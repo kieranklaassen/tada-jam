@@ -7,14 +7,14 @@ import { BACKDROP } from './config'
 import { IdleLadder, type Guidance } from './guidance'
 import { ForgivingTouch, type Gesture, type Point } from './input'
 import { fruitSlicerManifest } from './manifest'
-import { CORNER, Overlay } from './overlay'
+import { Overlay } from './overlay'
 import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
 import { SaveCadence } from './saveCadence'
 import { deserialize, differsFromSlot, serialize } from './save'
 import { voiceFor } from './sound'
 import { SpikePlate } from './spike'
-import { fit, toStage } from './stage'
+import { fit, inCorner, toStage } from './stage'
 import { GameCanvas } from './gameCanvas'
 import { GameRun } from './gameRun'
 
@@ -41,7 +41,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const pinned = tierOverride(window.location.search)
     const governor = new TierGovernor(pinned ?? startingTier(window.matchMedia('(pointer: coarse)').matches), pinned !== null)
     const work = new PerfRing()
-    // Grown-ups only: three quick taps in the top right corner, or fps=1 in the address (overlay.ts).
+    // Grown-ups only: a finger held a second in the top right corner and lifted there, then three quick taps; or fps=1 in the address (overlay.ts).
     const overlay = new Overlay(root, window.location.search)
     // What the last draw put on the surface, for the grown-up handle and the overlay. A canvas 2D game counts the
     // sprites and figures it drew as drawCalls; a three.js game copies the renderer's own counts.
@@ -132,20 +132,32 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       const box = root.getBoundingClientRect()
       return { x: event.clientX - box.left, y: event.clientY - box.top }
     }
+    /** The fingers that went down in the grown-up's corner and have not lifted yet. */
+    const cornered = new Set<number>()
     const onDown = (event: PointerEvent) => {
       if (!attention.awake) return
       audio.touchDown()
       ladder.touch(clock.seconds)
       const where = at(event)
-      overlay.press(where.x, where.y, width, event.timeStamp)
-      // The top right corner is the grown-up's: nothing of the toy answers a touch there.
-      if (where.x >= width - CORNER && where.y <= CORNER) return
+      // The top right corner of the page is the grown-up's: nothing of the toy answers a touch there. A surface not yet measured has no corner.
+      const corner = width > 0 && height > 0 && inCorner(toStage(where, fit(width, height)))
+      overlay.press(corner, event.timeStamp)
+      if (corner) {
+        cornered.add(event.pointerId)
+        return
+      }
       act(touch.down(event.pointerId, where, event.timeStamp), event.timeStamp)
       // Captured, so the lift is reported even when the finger has slid off the surface.
       root.setPointerCapture(event.pointerId)
     }
     const onMove = (event: PointerEvent) => act(touch.move(event.pointerId, at(event)), event.timeStamp)
     const onUp = (event: PointerEvent) => {
+      // A finger that went down in the grown-up's corner is the overlay's from first to last: where it lifts is all that is told.
+      if (cornered.delete(event.pointerId)) {
+        overlay.lift(width > 0 && height > 0 && inCorner(toStage(at(event), fit(width, height))), event.timeStamp)
+        audio.touchUp()
+        return
+      }
       act(touch.up(event.pointerId, at(event), event.timeStamp), event.timeStamp)
       audio.touchUp()
     }
@@ -157,7 +169,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       run?.end()
       flush()
     }
-    const onCancel = () => {
+    const onCancel = (event: PointerEvent) => {
+      if (cornered.delete(event.pointerId)) overlay.lift(false, event.timeStamp)
       drop()
       audio.touchUp()
     }

@@ -1,12 +1,7 @@
 // template: cartridge/overlay.test.ts v2
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest'
-import { CORNER, EVERY_MS, Overlay, WITHIN_MS } from './overlay'
-
-const WIDTH = 1180
-/** A point inside the corner that takes the taps, and one in the middle of the surface. */
-const CORNER_AT = [WIDTH - CORNER / 2, CORNER / 2] as const
-const MIDDLE = [WIDTH / 2, 400] as const
+import { ARMED_MS, EVERY_MS, HOLD_MS, Overlay, WITHIN_MS } from './overlay'
 
 function mount(search = '') {
   const root = document.createElement('div')
@@ -16,37 +11,70 @@ function mount(search = '') {
     root,
     overlay,
     box,
-    /** Touch-downs at `at`, one at each of `times`. */
-    taps(at: readonly [number, number], times: number[]): void {
-      for (const time of times) overlay.press(at[0], at[1], WIDTH, time)
+    /** A finger down in the corner at `from` and lifted at `to`, in the corner unless said otherwise. */
+    hold(from: number, to: number, liftedInCorner = true): void {
+      overlay.press(true, from)
+      overlay.lift(liftedInCorner, to)
+    },
+    /** Quick taps, a touch-down at each of `times` and a lift a moment after, in the corner or out of it. */
+    taps(times: number[], inCorner = true): void {
+      for (const time of times) {
+        overlay.press(inCorner, time)
+        overlay.lift(inCorner, time + 40)
+      }
     },
   }
 }
 
 describe('the grown-up performance overlay', () => {
-  it('is hidden until three quick taps in the top right corner, and hides again the same way', () => {
-    const { box, taps } = mount()
+  it('is hidden until a finger is held a second in the corner, lifted there, and three quick taps follow; and hides again the same way', () => {
+    const { box, hold, taps } = mount()
     expect(box.style.display).toBe('none')
-    taps(CORNER_AT, [0, WITHIN_MS / 2])
+    hold(0, HOLD_MS)
     expect(box.style.display).toBe('none')
-    taps(CORNER_AT, [WITHIN_MS])
+    taps([HOLD_MS + 300, HOLD_MS + 500])
+    expect(box.style.display).toBe('none')
+    taps([HOLD_MS + 700])
     expect(box.style.display).toBe('block')
-    taps(CORNER_AT, [5000, 5200, 5400])
+    hold(10_000, 10_000 + HOLD_MS + 200)
+    taps([11_500, 11_700, 11_900])
     expect(box.style.display).toBe('none')
   })
 
-  it('is not opened by slow taps, by taps anywhere else, or by a tap elsewhere in between', () => {
-    const { overlay, box, taps } = mount()
-    taps(CORNER_AT, [0, WITHIN_MS, 2 * WITHIN_MS + 1, 3 * WITHIN_MS + 2])
-    taps(MIDDLE, [5000, 5100, 5200])
-    // Just outside the corner on either side.
-    taps([WIDTH - CORNER - 1, CORNER / 2], [6000, 6100, 6200])
-    taps([WIDTH - CORNER / 2, CORNER + 1], [7000, 7100, 7200])
-    taps(CORNER_AT, [8000, 8100])
-    taps(MIDDLE, [8200])
-    taps(CORNER_AT, [8300])
-    // A surface that has not been measured has no corner to tap.
-    for (const time of [9000, 9100, 9200]) overlay.press(0, 0, 0, time)
+  it('is not opened by three quick taps alone, however often a child drums in the corner', () => {
+    const { box, taps } = mount()
+    taps([0, 150, 300])
+    taps([1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900])
+    expect(box.style.display).toBe('none')
+    // Nor by three fingers landing there together and lifting together.
+    const { overlay, box: other } = mount()
+    for (const time of [0, 5, 10]) overlay.press(true, time)
+    for (const time of [60, 65, 70]) overlay.lift(true, time)
+    expect(other.style.display).toBe('none')
+  })
+
+  it('is not opened by a hold that is too short, or lifted outside the corner, or by taps that are slow, late or elsewhere', () => {
+    const { box, hold, taps } = mount()
+    // Lifted too soon.
+    hold(0, HOLD_MS - 1)
+    taps([HOLD_MS + 200, HOLD_MS + 400, HOLD_MS + 600])
+    // Held long enough, and slid out of the corner before lifting.
+    hold(5000, 5000 + HOLD_MS + 100, false)
+    taps([6500, 6700, 6900])
+    // Held and lifted there, but the taps come too far apart.
+    hold(10_000, 10_000 + HOLD_MS)
+    taps([11_200, 11_200 + WITHIN_MS, 11_200 + 2 * WITHIN_MS + 1])
+    // Held and lifted there, but the taps start too late.
+    hold(20_000, 20_000 + HOLD_MS)
+    taps([20_000 + HOLD_MS + ARMED_MS + 1, 20_000 + HOLD_MS + ARMED_MS + 200, 20_000 + HOLD_MS + ARMED_MS + 400])
+    // Held and lifted there, and a touch anywhere else comes before the taps are done.
+    hold(30_000, 30_000 + HOLD_MS)
+    taps([31_200, 31_400])
+    taps([31_500], false)
+    taps([31_600])
+    // Held and lifted there, and the taps are somewhere else.
+    hold(40_000, 40_000 + HOLD_MS)
+    taps([41_200, 41_400, 41_600], false)
     expect(box.style.display).toBe('none')
   })
 
@@ -78,10 +106,11 @@ describe('the grown-up performance overlay', () => {
   })
 
   it('writes nothing while it is hidden, and starts its numbers again when it is opened', () => {
-    const { overlay, box, taps } = mount()
+    const { overlay, box, hold, taps } = mount()
     for (let i = 1; i <= 100; i++) overlay.frame(i * 100, 100, 50, 3, 1, 1)
     expect(box.textContent).toBe('')
-    taps(CORNER_AT, [0, 100, 200])
+    hold(0, HOLD_MS)
+    taps([HOLD_MS + 100, HOLD_MS + 200, HOLD_MS + 300])
     for (let i = 1; i <= 2 * (EVERY_MS / 10); i++) overlay.frame(20_000 + i * 10, 10, 1, 0, 2, 0)
     expect(box.textContent).toContain('100 fps')
     expect(box.textContent).toContain('worst 10 ms')

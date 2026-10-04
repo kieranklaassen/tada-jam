@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import type { Customer } from './orders'
 import { REACTIONS, SHEETS, newActor, poseOf, reactTo, stepActor, type Actor } from './cast'
-import { AT_WINDOW, IN_QUEUE, SNOUT_GAP, SNOUT_REACH, TWINS_APART, fitOf, headOf, snoutReach, standsAt, twinsApart } from './seats'
-import { QUEUE, WALL, WINDOW } from './stage'
+import { AT_WINDOW, IN_QUEUE, SNOUT_GAP, SNOUT_REACH, TICKET_TOP, TWINS_APART, fitOf, headOf, snoutReach, standsAt, touchBoxes, twinsApart } from './seats'
+import { GROWN_UP, PAGE, QUEUE, WALL, WINDOW, inCorner, type Box } from './stage'
 
 const twins: Customer = { who: 'twins', fruit: 'long', shares: [{ num: 1, den: 2 }], carries: 'written', written: true, lined: true }
 
@@ -38,6 +38,29 @@ describe('where the customers stand', () => {
     // Leaning in together they would cross, and both would give way.
     expect(twinsApart(snoutReach(0.22), snoutReach(0.22))).toBeGreaterThan(TWINS_APART)
     expect(snoutReach(0)).toBe(SNOUT_REACH)
+  })
+
+  it('keeps the grown-up\'s corner clear of everyone who waits and of every ticket, at any size of surface: it is given in the page\'s own units', () => {
+    const overlaps = (a: Box, b: Box): boolean => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h
+    const whos = ['pelican', 'twins', 'ants', 'cat', 'boa'] as const
+    for (const who of whos) {
+      for (const written of [false, true]) {
+        for (const fruit of ['long', 'middle', 'short'] as const) {
+          const shares = who === 'cat' ? [{ num: 2, den: 3 }, { num: 3, den: 4 }] : who === 'boa' ? [{ num: 5, den: 4 }] : [{ num: 3, den: 4 }]
+          const customer: Customer = { who, fruit, shares, carries: null, written, lined: true }
+          for (const seat of ['window', 0, 1] as const) for (const box of touchBoxes(customer, seat)) expect(overlaps(box, GROWN_UP), `${who} ${fruit} ${seat}`).toBe(false)
+        }
+      }
+    }
+    // It lies in the top right of the page, over the end of the awning, and takes the margin beyond the page's edge with it.
+    expect(GROWN_UP.x + GROWN_UP.w).toBe(PAGE.w)
+    expect(GROWN_UP.y + GROWN_UP.h).toBeLessThan(TICKET_TOP)
+    expect(inCorner({ x: PAGE.w - 20, y: 20 })).toBe(true)
+    expect(inCorner({ x: PAGE.w + 30, y: -10 })).toBe(true)
+    expect(inCorner({ x: PAGE.w - 20, y: TICKET_TOP + 4 })).toBe(false)
+    expect(inCorner({ x: QUEUE[1].x + 40, y: 20 })).toBe(false)
+    // It is big enough for a grown-up's finger on a page of the size the game is drawn for.
+    expect(Math.min(GROWN_UP.w, GROWN_UP.h)).toBeGreaterThanOrEqual(48)
   })
 
   it('stands the pair inside its own panel at that distance apart', () => {
