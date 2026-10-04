@@ -78,7 +78,8 @@ export const VOICES: Record<VoiceId, readonly Partial[]> = {
 
   // The frog: a wet twang and a low double note.
   frogCatch: [tone('triangle', 0, 240, 620, 0.2, 0.005, 0.08), tone('sine', 0.07, 620, 310, 0.18, 0.006, 0.2), hiss(0, 1200, 2400, 3, 0.07, 0.004, 0.06)],
-  frogRefuse: [tone('sine', 0, 180, 420, 0.24, 0.01, 0.16), tone('sine', 0.17, 420, 200, 0.2, 0.006, 0.2)],
+  // The throat swells as it is drawn swelling, and the boing sounds as the balloon meets it (`cue.hit` in clips.ts).
+  frogRefuse: [tone('sine', 0.28, 180, 420, 0.24, 0.01, 0.16), tone('sine', 0.52, 420, 200, 0.2, 0.006, 0.2)],
   frogPoke: [tone('triangle', 0, 520, 700, 0.14, 0.005, 0.07), tone('triangle', 0.1, 600, 820, 0.14, 0.005, 0.09)],
   frogStartle: [tone('sawtooth', 0, 300, 140, 0.13, 0.006, 0.26)],
   // Carried off: a rising slide-whistle. Down again: two boings.
@@ -88,7 +89,8 @@ export const VOICES: Record<VoiceId, readonly Partial[]> = {
 
   // The hippo: low, slow and honking.
   hippoCatch: [tone('sawtooth', 0, 150, 190, 0.12, 0.03, 0.3), tone('sine', 0, 150, 190, 0.22, 0.03, 0.34)],
-  hippoRefuse: [hiss(0, 700, 1000, 2, 0.08, 0.16, 0.1), hiss(0.26, 1500, 500, 0.8, 0.4, 0.004, 0.2), tone('sine', 0.26, 190, 90, 0.24, 0.006, 0.2)],
+  // The long breath in is heard as it is drawn, and the sneeze as it folds the hippo in half (`cue.hit` in clips.ts).
+  hippoRefuse: [hiss(0.38, 700, 1000, 2, 0.08, 0.16, 0.1), hiss(0.7, 1500, 500, 0.8, 0.4, 0.004, 0.2), tone('sine', 0.7, 190, 90, 0.24, 0.006, 0.2)],
   hippoPoke: [tone('sine', 0, 260, 200, 0.2, 0.02, 0.34), tone('triangle', 0, 520, 400, 0.06, 0.02, 0.3)],
   // It does not notice for a beat: a long low hum that rises at the end.
   hippoStartle: [tone('sine', 0.42, 150, 160, 0.18, 0.08, 0.3), tone('sine', 0.72, 160, 250, 0.18, 0.05, 0.28)],

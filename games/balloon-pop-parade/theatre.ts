@@ -467,7 +467,10 @@ export class Theatre {
 
   /** The child touched the troop that waits. Before the troop on screen is served it only waves; after, it steps in. */
   private callNext(): void {
-    const { save, events } = callNext(this.save)
+    // While a bunch is still in the air, or the last balloon is in a hand and the ending it causes has not begun,
+    // the troop on screen is not yet seen to be served: the troop that waits only waves, as it does before. So the
+    // ending always plays, and nothing in the air is cut off.
+    const { save, events } = this.flights.length > 0 || this.endingDue ? { save: this.save, events: [] } : callNext(this.save)
     const event = events[0]
     if (!event || event.type !== 'steppedIn') {
       this.waitingActor.clip = 'wave'

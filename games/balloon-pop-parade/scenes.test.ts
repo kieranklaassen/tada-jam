@@ -211,6 +211,25 @@ describe('the step-in', () => {
     expect(theatre.unsaved).toBe(0)
   })
 
+  it('only makes the waiting troop wave while the bunch that serves the last friend is in the air and until the ending has begun, so the ending always plays', () => {
+    const theatre = new Theatre(troopOf('duck', 2))
+    tapSlot(theatre, 2)
+    // The lift served the troop, and the save says so; the bunch is still on its way.
+    expect(theatre.save.finished).toBe(true)
+    const before = serializeSave(theatre.save)
+    for (const wait of [0.1, 0.3, 0.3]) {
+      play(theatre, wait)
+      if (theatre.playing === 'ending') break
+      tapWaiting(theatre)
+      expect(theatre.playing).not.toBe('arrival')
+      expect(serializeSave(theatre.save)).toEqual(before)
+    }
+    until(theatre, 'ending')
+    // Once it plays, the touch ends it and is then an ordinary touch: the troop steps in.
+    tapWaiting(theatre)
+    expect(theatre.playing).toBe('arrival')
+  })
+
   it('has everything it changes in the save when it starts, saved at once', () => {
     const theatre = served(), before = serializeSave(theatre.save)
     tapWaiting(theatre)

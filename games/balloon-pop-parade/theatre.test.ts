@@ -9,7 +9,7 @@ import { restPose, type Pose } from './pose'
 import { MAX_BALLOONS, MAX_SHADOWS, MAX_STRINGS } from './scenery'
 import { FLIGHT, handOf, REGROW_AFTER, SIDE_BY_SIDE, Theatre, type Painter } from './theatre'
 import { sharedVinyl } from './vinyl'
-import { Vector3 } from 'three'
+import { type Mesh, Vector3 } from 'three'
 
 const VIEW = viewFor(1180, 820)
 const KINDS: KindName[] = ['duck', 'frog', 'hippo', 'crab']
@@ -216,6 +216,36 @@ describe('a bunch the child sends', () => {
       for (const at of spare) for (const x of everyone) expect(Math.abs(at - x), 'nobody under it').toBeGreaterThan(1.3)
       // No two balloons of it overlap.
       for (const a of bunch) for (const b of bunch) if (a !== b) expect(Math.abs(a - b)).toBeGreaterThan(1.3)
+    }
+  })
+
+  it('is swatted away by the duck\'s tail: the tail is at the balloon when the swat lands, on whichever side the balloon hangs', () => {
+    const shared = sharedVinyl(), world = new Vector3()
+    // One duck alone has the balloon on its right; the first of two has it on its left, where the motion is mirrored.
+    for (const size of [1, 2] as const) {
+      const theatre = staged({ troop: { kind: 'duck', size, held: Array.from({ length: size }, () => false) }, sky: [{ colour: 'frog', count: 1 }, { colour: 'duck', count: 1 }], waiting: { kind: 'frog', size: 1 } }), { frame, painter, clear } = recorder()
+      const rig = buildFriend('duck', 'test', shared)
+      tapSlot(theatre, 0)
+      let nearest = Infinity
+      for (let i = 0; i < 90; i++) {
+        theatre.step(1 / 60)
+        clear()
+        theatre.paint(painter, VIEW)
+        // The refused balloon is the only one below the row.
+        const it = frame.balloons.find((balloon) => balloon.y < 1.5 && balloon.wide > 0.8)
+        if (!it) continue
+        applyPose(rig, frame.poses.get('friend-0')!)
+        rig.root.updateWorldMatrix(true, true)
+        // Every point of the tail's skin, as the meshes put it.
+        const tail = rig.extra.children[0] as Mesh, at = tail.geometry.getAttribute('position')
+        for (let v = 0; v < at.count; v++) {
+          tail.localToWorld(world.fromBufferAttribute(at, v))
+          nearest = Math.min(nearest, Math.hypot(world.x - it.x, world.y - it.y))
+        }
+      }
+      rig.material.dispose()
+      // Inside the balloon's own radius: the tail is on it.
+      expect(nearest, `a troop of ${size}`).toBeLessThan(BALLOON)
     }
   })
 

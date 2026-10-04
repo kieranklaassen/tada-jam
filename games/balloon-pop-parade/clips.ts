@@ -157,7 +157,8 @@ function duck(id: ClipId, t: number, pose: Pose, reach: number): void {
     pose.headTurn = hold(t, 0, 0.14, 0.2, 0.3) * 0.5
     pose.nod = -0.1 + hump(t, 0.2, 0.4) * 0.5
     pose.armL = pose.armR = 0.3
-    pose.turn = hold(t, 0.3, 0.5, 0.72, 0.96) * Math.PI
+    // A quarter turn puts its back, and its tail, to the balloon that hangs beside it.
+    pose.turn = hold(t, 0.3, 0.5, 0.72, 0.96) * -Math.PI / 2
     pose.flick = hump(t, 0.48, 0.66) * 1.3
     pose.bow = hump(t, 0.46, 0.7) * -0.28
     pose.wag = wobble(t, 0.6, 34, 6) * 0.5

@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest'
+import { PERSONALITIES } from './clips'
 import { LIMITS, varied, voiceLength, VOICES, type VoiceId } from './voices'
 
 const ids = Object.keys(VOICES) as VoiceId[]
+
+describe('a refusal\'s voice', () => {
+  it('sounds the moment the refusal lands when the motion draws it: the slap, the boing, the sneeze, the snip', () => {
+    // The part of each voice that is the hit itself, by where it stands in the voice.
+    const hit = { duck: VOICES.duckRefuse[2], frog: VOICES.frogRefuse[1], hippo: VOICES.hippoRefuse[1], crab: VOICES.crabRefuse[1] }
+    for (const kind of ['duck', 'frog', 'hippo', 'crab'] as const) expect(Math.abs(hit[kind].at - PERSONALITIES[kind].cue.hit), kind).toBeLessThanOrEqual(0.03)
+  })
+})
 
 describe('the voices', () => {
   it('keep every partial inside the stated ranges of pitch, loudness and attack', () => {
