@@ -35,6 +35,47 @@ function counter() {
   return { frame, painter, clear: () => { frame.balloons = 0; frame.strings = 0; frame.shadows = 0; frame.marchers = 0 } }
 }
 
+describe('whole games played fast and at random', () => {
+  it('never set a friend of the troop down, or anywhere else, between one frame and the next: whatever cuts a motion short, it falls or rises from where it is', () => {
+    for (const [age, seed] of [[3, 5], [4, 11], [2, 3], [4, 17]] as const) {
+      const theatre = new Theatre(freshSave(age, seed), seed)
+      const poses = new Map<string, Pose>()
+      const painter: Painter = { place: (name, _kind, pose) => void poses.set(name, { ...pose }), drop: (name) => void poses.delete(name), balloon: () => {}, string: () => {}, shadow: () => {}, marcher: () => {}, hand: () => {}, cloud: () => {} }
+      let state = seed * 7919, before = new Map<string, Pose>(), scene = ''
+      const random = () => (state = (state * 1103515245 + 12345) % 2147483648) / 2147483648
+      for (let i = 0; i < 60 * 180; i++) {
+        let pressed = false
+        if (i % 11 === 0) {
+          const roll = random()
+          if (roll < 0.6) {
+            const own = theatre.sky.map((bunch, slot) => (bunch.colour === theatre.troop.kind ? slot : -1)).filter((slot) => slot >= 0)
+            const slot = random() < 0.6 && own.length > 0 ? own[Math.floor(random() * own.length)] : Math.floor(random() * theatre.sky.length)
+            const at = skySlots(theatre.sky.length, VIEW, Math.max(1, ...theatre.sky.map((bunch) => bunch.count)))[slot]
+            theatre.press(at.x, at.y, VIEW)
+          } else if (roll < 0.72) theatre.press(waitingSpot(0, VIEW).x, GROUND + 0.8, VIEW)
+          else theatre.press((random() - 0.5) * VIEW.width, (random() - 0.5) * VIEW.height, VIEW)
+          if (random() < 0.92) theatre.release(VIEW)
+          else theatre.cancel()
+          pressed = true
+        }
+        theatre.step(1 / 60)
+        theatre.paint(painter, VIEW)
+        theatre.sounds.length = 0
+        // A new troop is a new set of friends, and a touch may end a scene with everything where it was going.
+        const now = JSON.stringify([theatre.troop.kind, theatre.troop.size, theatre.save.parade.length, theatre.save.next])
+        if (now === scene && !pressed) for (const [name, pose] of poses) {
+          const was = before.get(name)
+          if (!was || !name.startsWith('friend-')) continue
+          expect(Math.abs(pose.y - was.y), `${theatre.troop.kind} ${name}, age ${age}, seed ${seed}, frame ${i}`).toBeLessThan(0.3)
+          expect(Math.abs(pose.x - was.x), `${theatre.troop.kind} ${name}, age ${age}, seed ${seed}, frame ${i}`).toBeLessThan(0.45)
+        }
+        scene = now
+        before = new Map([...poses].map(([name, pose]) => [name, { ...pose }]))
+      }
+    }
+  }, 60_000)
+})
+
 describe('the frame budget', () => {
   it('stays under the jam\'s bar of draw calls and inside every batch through whole games played fast and at random', () => {
     const most = { draws: 0, friends: 0, balloons: 0, strings: 0, shadows: 0, marchers: 0 }

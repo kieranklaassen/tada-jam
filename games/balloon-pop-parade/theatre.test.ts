@@ -708,6 +708,62 @@ describe('a friend that is being carried off', () => {
   })
 })
 
+describe('a troop that sets off while one of it is in the air', () => {
+  it.each(KINDS)('lets a %s come down as it goes, from where it was, and lets the bunch that had hold of it get away', (kind) => {
+    const theatre = staged({ troop: { kind, size: 1, held: [true] }, sky: [{ colour: kind, count: 1 }], waiting: { kind: kind === 'duck' ? 'frog' : 'duck', size: 1 } }), { frame, painter, clear } = recorder()
+    // One more for a friend that has its balloon: it is carried off.
+    tapSlot(theatre, 0)
+    play(theatre, FLIGHT + PERSONALITIES[kind].cue.grab + 0.3)
+    clear()
+    theatre.paint(painter, VIEW)
+    const up = frame.poses.get('friend-0')!.y - GROUND
+    expect(frame.balloons.filter((balloon) => balloon.tall > 1.05 && balloon.wide < 0.99)).toHaveLength(1)
+    // The troop that waits is tapped while it is up there.
+    theatre.press(-VIEW.width / 2 + 1.1, GROUND + 0.9, VIEW)
+    theatre.cancel()
+    theatre.step(1 / 60)
+    clear()
+    theatre.paint(painter, VIEW)
+    const leaving = frame.poses.get('leaving-0')!
+    expect(Math.abs(leaving.y - GROUND - up), 'it is where it was').toBeLessThan(0.3)
+    // The bunch is on its way out, as a balloon that got away is: taller than wide, and a little more so.
+    expect(frame.balloons.filter((balloon) => balloon.tall > 1.05 && balloon.wide < 0.99)).toHaveLength(0)
+    let high = leaving.y, lowest = Infinity
+    for (let i = 0; i < 40; i++) {
+      theatre.step(1 / 60)
+      theatre.paint(painter, VIEW)
+      const now = frame.poses.get('leaving-0')!.y
+      expect(high - now, `frame ${i}`).toBeLessThan(0.4)
+      high = now
+      lowest = Math.min(lowest, now)
+    }
+    // It is on the ground soon (a frog goes on in hops).
+    expect(lowest - GROUND).toBeLessThan(0.15)
+  })
+})
+
+describe('the bunch that has hold of a friend', () => {
+  it.each(KINDS)('hangs as it did when it took hold of a %s, also when the balloon that friend held is popped under it', (kind) => {
+    const theatre = solo(kind, [kind, kind]), { frame, painter, clear } = recorder()
+    tapSlot(theatre, 0)
+    play(theatre, 6)
+    tapSlot(theatre, 1)
+    play(theatre, FLIGHT + PERSONALITIES[kind].cue.grab + 0.25)
+    const look = () => { clear(); theatre.paint(painter, VIEW); return { pose: frame.poses.get('friend-0')!, tug: frame.balloons.filter((balloon) => balloon.tall > 1.05 && balloon.wide < 0.99), own: frame.balloons.filter((balloon) => balloon.tall === 1 && balloon.wide === 1 && balloon.y < 2.4) } }
+    const before = look()
+    expect(before.tug).toHaveLength(1)
+    expect(before.own).toHaveLength(1)
+    theatre.press(before.own[0].x, before.own[0].y, VIEW)
+    theatre.cancel()
+    expect(theatre.troop.held).toEqual([false])
+    theatre.step(1 / 60)
+    const after = look()
+    expect(after.own).toHaveLength(0)
+    expect(after.tug).toHaveLength(1)
+    expect(Math.abs((after.tug[0].x - after.pose.x) - (before.tug[0].x - before.pose.x))).toBeLessThan(0.12)
+  })
+})
+
 describe('a balloon a friend holds', () => {
   it('popped in a troop that had all of its own stops the troop swaying, and the others look at the empty hand', () => {
     for (const kind of KINDS) {

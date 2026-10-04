@@ -95,6 +95,7 @@ Built after the fifth reading (the sheet's sentences stand, and its hash is unch
 - "Hangs beside the friend's body for a beat": a bunch of another colour sent to a friend that is in the air hangs beside its place and waits; the refusal begins, and is heard, when the friend has landed (`theatre.ts`, `settle`; tested for every kind).
 - "A tap on a balloon a friend holds pops it at once": the bunch that is carrying a friend off pops at a tap, every balloon of it, and the friend falls from the height it had reached. Where that bunch has risen in front of a bunch in the sky, the touch is the sky's (`theatre.ts`, `hit` and `press`; tested for every kind).
 - "A balloon is one flat colour all over": the tip of the knot is the balloon's own colour (`scenery.ts`).
+- Probed by the builder after the fifth reading, as that reader had done, with whole games played at random, and built: whatever cuts a motion short, a friend falls or rises from where it is and is never set on the ground between one frame and the next (a pop's jump cut short by a lift-off did that); a friend that is in the air when its troop sets off comes down as it goes, and the bunch that had hold of it gets away; and the bunch that has hold of a friend hangs as it did when it took hold, also when that friend's own balloon is popped under it (`theatre.ts`, `cutShort`; a test plays four whole games and follows every friend from frame to frame).
 
 Changed in the sheet, each a detail that touches nothing of the mechanic, the error, the designed order, the saved state, the records or the claim:
 
