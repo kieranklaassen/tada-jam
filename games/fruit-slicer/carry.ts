@@ -64,13 +64,14 @@ function put(game: Game, held: Held, lane: number, x: number, how: 'put' | 'besi
 }
 
 /**
- * Lays the pieces in the hand alongside a whole fruit: on the other lane, from the same left end, so the two
- * lengths can be compared edge to edge. What lies in the way on that lane is shoved onto the shelf, as it is
- * when a fresh fruit lands there. A row too long to lie from that end within the board is only put down.
+ * Lays the pieces in the hand exactly where they are meant to lie: alongside a whole fruit, on the other lane,
+ * from the same left end, so the two lengths can be compared edge to edge; or end to end against a piece, so
+ * the two travel as a row. What lies in the way on that lane is shoved onto the shelf, as it is when a fresh
+ * fruit lands there. A row too long to lie there within the board is only put down, as near as it fits.
  */
-function layBeside(game: Game, held: Held, lane: number, x: number): { game: Game; events: GameEvent[] } {
+function layClear(game: Game, held: Held, lane: number, x: number, how: 'beside' | 'butted'): { game: Game; events: GameEvent[] } {
   const total = held.ids.reduce((sum, id) => sum + (pieceOf(game.world, id)?.length ?? 0), 0)
-  if (x + total > RAIL) return put(game, held, lane, x, 'put')
+  if (x < 0 || x + total > RAIL) return put(game, held, lane, x, 'put')
   const inWay = onLane(without(game.world, held.ids), lane).filter((piece) => piece.place.on === 'board' && piece.place.x < x + total && piece.place.x + piece.length > x)
   const swept = gone(game.world, inWay.map((piece) => piece.id))
   let world = game.world
@@ -81,7 +82,7 @@ function layBeside(game: Game, held: Held, lane: number, x: number): { game: Gam
     world = set.world
   }
   const events: GameEvent[] = swept.length > 0 ? [{ kind: 'swept', ids: swept.map(({ piece }) => piece.id), from: swept.map(({ from }) => from) }, ...fell] : []
-  const laid = put({ ...game, world }, held, lane, x, 'beside')
+  const laid = put({ ...game, world }, held, lane, x, how)
   return { game: laid.game, events: [...events, ...laid.events] }
 }
 
@@ -155,10 +156,14 @@ export function drop(game: Game, held: Held, at: Point): { game: Game; events: G
       if (on.on === 'tin') return intoTin(game, held, on.part)
       if (on.on !== 'board') return onShelf(game, held)
       // Alongside a whole fruit, from the same left end, on the other lane; against a piece, end to end, on the side the finger is nearer.
-      if (target.thing === 'fruit') return layBeside(game, held, (on.lane + 1) % LANES, on.x)
+      if (target.thing === 'fruit') return layClear(game, held, (on.lane + 1) % LANES, on.x, 'beside')
+      // End to end against the piece, on the side the finger is nearer; on the other side when the board ends too soon on that one.
       const total = pieces.reduce((sum, { piece }) => sum + piece.length, 0)
+      const right = on.x + target.piece.length, left = on.x - total
+      const fits = (x: number): boolean => x >= 0 && x + total <= RAIL
       const rightSide = at.x >= target.box.x + target.box.w / 2
-      return put(game, held, on.lane, rightSide ? on.x + target.piece.length : on.x - total, 'butted')
+      const x = rightSide ? (fits(right) ? right : left) : fits(left) ? left : right
+      return layClear(game, held, on.lane, x, 'butted')
     }
     case 'shelf':
       return onShelf(game, held)

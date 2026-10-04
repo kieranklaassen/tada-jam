@@ -200,6 +200,26 @@ describe('letting go over the board and the shelf', () => {
     expect(pieceOf(out.game.world, made.left)!.place.on).toBe('shelf')
   })
 
+  it('butts a piece end to end against another even when something lies there: what is in the way goes to the shelf, and the two travel as a row', () => {
+    // A fruit cut in two on the near lane, and a whole fruit on the far lane to take a piece from.
+    const two = land(start).game
+    const near = cutAt(two, 600)
+    const farFruit = onLane(near.game.world, 1)[0]
+    const farCut = slice(near.game, { x: X0 + 300 * PX, y: FAR - 40 }, { x: X0 + 300 * PX, y: FAR + 40 }, newStroke())
+    const piece = farCut.events.find((event) => event.kind === 'cut') as Extract<GameEvent, { kind: 'cut' }>
+    expect(piece.left).toBe(farFruit.id)
+    // The far lane's 300 is let go on the right half of the near lane's 600: where the rest of that fruit lies in the way.
+    const leftPart = pieceOf(farCut.game.world, near.left)!
+    const out = drop(farCut.game, hold(farCut.game, piece.left), { x: X0 + 500 * PX, y: NEAR })
+    expect(kinds(out.events).slice(0, 2)).toEqual(['swept', 'setDown'])
+    expect(out.events.find((event) => event.kind === 'setDown')).toMatchObject({ how: 'butted' })
+    expect(pieceOf(out.game.world, piece.left)!.place).toEqual({ on: 'board', lane: 0, x: leftPart.length })
+    expect(pieceOf(out.game.world, near.right)!.place.on).toBe('shelf')
+    // Taken by its left half, the 600 now travels with the piece butted against it.
+    expect(grab(out.game, { x: X0 + 100 * PX, y: NEAR })!.ids).toEqual([near.left])
+    expect(grab(out.game, { x: X0 + 500 * PX, y: NEAR })!.ids).toEqual([near.left, piece.left])
+  })
+
   it('lays a piece alongside a whole fruit, from the same left end, on the other lane', () => {
     // The piece goes to the shelf first, a fresh fruit lands on the far lane, and the piece is let go on that fruit.
     const shelved = drop(made.game, hold(made.game, made.left), mid(SHELF_BOX)).game

@@ -362,7 +362,8 @@ export class GameRun {
     for (const event of events) {
       this.fx = spawn(this.fx, event, heads)
       if ('voice' in event) {
-        const delay = event.kind === 'cut' || event.kind === 'curl' ? cuts++ * RUN_GAP : 0
+        // A customer under the roller honks as it springs back into shape, half a second on, not as it goes flat.
+        const delay = event.kind === 'cut' || event.kind === 'curl' ? cuts++ * RUN_GAP : event.kind === 'rolled' && event.on === 'customer' ? 0.5 : 0
         let length = 'length' in event ? event.length : 'piece' in event ? event.piece.length : undefined
         if (event.kind === 'cut') length = this.rung = this.rung === null ? event.length : Math.min(event.length, this.rung * RUN_STEP)
         // A customer's own noise is in its own throat: its place in the cast goes with the voice.

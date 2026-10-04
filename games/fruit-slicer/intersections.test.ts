@@ -132,7 +132,15 @@ function monkey(seed: number, touches: number, start: Game = freshGame(null, see
     run.tap(mid(QUEUE[0]))
     note()
     const loose = shown(run.game.world, tinAt(run.game)).find(({ piece }) => piece.place.on === 'board')
-    if (loose) throwAt(mid(loose.box), { x: RAIL_BOX.x + 30, y: RAIL_BOX.y + 60 }, 3)
+    if (loose) {
+      // Carried to the bare strip between the rail and the board, well along it, and thrown from there at the tin's end: a place that is always bare.
+      const to = { x: RAIL_BOX.x + 30, y: RAIL_BOX.y + 60 }, letGo = { x: RAIL_BOX.x + 520, y: (RAIL_BOX.y + RAIL_BOX.h + BOARD.y) / 2 }
+      const v = { x: (to.x - letGo.x) / FLIGHT_SECONDS, y: (to.y - letGo.y) / FLIGHT_SECONDS }
+      run.press(mid(loose.box), 3)
+      run.move({ x: letGo.x - v.x * 0.03, y: letGo.y - v.y * 0.03 }, 3.4)
+      run.move(letGo, 3.43)
+      run.lift()
+    }
     note()
     expectSound(run.game, `seed ${seed}, the tour`)
   }
