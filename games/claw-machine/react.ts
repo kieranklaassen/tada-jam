@@ -337,7 +337,8 @@ export function nextLeg(game: Game, body: Body, toy: number, deed: Deed | undefi
     thrown.set(body, turn + 1)
     const waiter = nearestWaiter(game, body.x)
     if (turn === 0) {
-      if (deed.heavy) { for (const one of game.waiting) game.startAct(one, 'heave'); game.say({ type: 'grunt' }) }
+      // A big one is caught by all of them, who stagger under it on pattering feet.
+      if (deed.heavy) { for (const one of game.waiting) game.startAct(one, 'heave'); game.say({ type: 'grunt' }); game.say({ type: 'waddle' }) }
       else { if (waiter) game.startAct(waiter, 'catch'); game.say({ type: 'slap' }) }
     } else if (turn === 1) game.say(deed.heavy ? { type: 'huff' } : { type: 'whistle' })
     else game.say({ type: 'boing' })
