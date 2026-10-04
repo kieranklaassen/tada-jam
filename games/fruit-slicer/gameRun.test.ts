@@ -484,6 +484,47 @@ describe('what the reading found', () => {
     expect(ids(run)).toEqual(['ring'])
   })
 
+  it('takes a finger that comes back just after a drag and lifts where it landed as a tap: the crate gives its fruit, a customer is called, a piece rings', () => {
+    const run = fresh()
+    const swing = () => drag(run, { x: 300, y: BOARD.y - 40 }, { x: 420, y: BOARD.y - 30 }, 0.1)
+    // The crate, as often as the child likes: every one of these gives a fruit.
+    for (let i = 0; i < 3; i++) {
+      swing()
+      const before = run.game.world.pieces.length
+      run.move(mid(CRATE), 1)
+      run.move({ x: mid(CRATE).x + 3, y: mid(CRATE).y + 2 }, 1.02)
+      run.lift()
+      expect(run.game.world.pieces.length).toBe(before + 1)
+      expect(run.blade).toBeNull()
+    }
+    // One who waits is poked, and steps up.
+    swing()
+    expect(run.window).toBeNull()
+    run.move(mid(QUEUE[0]), 2)
+    run.lift()
+    expect(run.window).not.toBeNull()
+    // A piece is poked where it lies: it rings, and is not picked up and set down again.
+    swing()
+    const pieces = stored(run)
+    run.takeSounds()
+    run.move({ x: X0 + 200, y: NEAR }, 3)
+    run.lift()
+    const heard = ids(run)
+    expect(stored(run)).toEqual(pieces)
+    // It is heard exactly as a plain tap there is: the pop of the hold, and the fruit's own answer to a poke.
+    run.press({ x: X0 + 200, y: NEAR }, 3.5)
+    run.tap({ x: X0 + 200, y: NEAR })
+    expect(heard).toEqual(ids(run))
+    expect(heard).toHaveLength(2)
+    expect(run.frame(0, BUSY).carried).toBeNull()
+    // Carried away from where it landed, it is a carry as before.
+    swing()
+    run.move({ x: X0 + 200, y: NEAR }, 4)
+    run.move({ x: X0 + 260, y: NEAR }, 4.1)
+    expect(run.frame(0, BUSY).carried).not.toBeNull()
+    run.end()
+  })
+
   it('shows what one who waits was given in its body for a few seconds, in no state, and takes it away with whoever leaves that place', () => {
     const { run } = withCut(-300)
     const before = run.game.world.pieces.length

@@ -93,8 +93,8 @@ function tin(ctx: Ctx, screens: Screens, scene: SpikeScene): void {
   // The jaw: a thick wall where the order ends.
   ctx.fillStyle = INK
   ctx.fillRect(X0 + ordered - 3, TIN_Y + 8, 6, 48)
-  // The piece rattles in the gap: a few marks of motion at its loose end.
-  for (const dy of [14, 32, 50]) speedLines(ctx, x + 6, TIN_Y + dy, 0, 0, 2, 18, 1)
+  // The gap between the piece's loose end and the jaw is left bare: marks of motion stacked there would read as a sign just where
+  // the piece is held against the order.
   // The rail: the whole fruit ruled into its equal parts, the ordered ones in the fruit's tint.
   const whole = WHOLE[customer.fruit] * PX, top = TIN_Y + 70
   ctx.fillStyle = WHITE

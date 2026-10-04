@@ -34,6 +34,9 @@ export type Sound = { id: VoiceId; length?: number; count?: number; delay: numbe
 export const SWING = 0
 /** The stretch of a carry, in seconds, over which its speed at the moment of letting go is taken. */
 export const SPEED_WINDOW = 0.1
+/** A finger that came back just after a lift is still tapping while it stays within this of where it landed, in stage units: the tracker's own slop for a tap. */
+const LANDED_SLOP = 14
+
 /** Cuts made by one step of a stroke sound one after another, this many seconds apart, so a long stroke is a run of notes. */
 export const RUN_GAP = 0.055
 /** And each sounds at the pitch of its own piece or a step above the cut before it, whichever is higher: one stroke is a run of rising notes. */
@@ -94,6 +97,8 @@ export class GameRun {
   /** The length the last cut of this stroke sounded at, or nothing before its first cut. */
   private rung: number | null = null
   private last: Point | null = null
+  /** Where a finger that came back just after a lift has landed, until it moves away from there: lifted where it landed, it was a tap. */
+  private landed: Point | null = null
   private held: { held: Held; at: Point; trail: { at: Point; t: number }[] } | null = null
   private roller: Point | null = null
   private sounds: Sound[] = []
@@ -131,6 +136,7 @@ export class GameRun {
    */
   press(at: Point, t = 0): void {
     this.finishScene()
+    this.landed = null
     const hit = thingAt(this.game, at)
     if (hit.thing === 'roller') {
       this.roller = at
@@ -152,6 +158,11 @@ export class GameRun {
 
   /** The finger moves: a piece or the roller goes with it; the blade's hairline goes with it and whatever the step crosses is cut. */
   move(at: Point, t = 0): void {
+    // A finger that came back and has stayed where it landed has not moved: nothing goes with it yet.
+    if (this.landed) {
+      if (Math.hypot(at.x - this.landed.x, at.y - this.landed.y) <= LANDED_SLOP) return
+      this.landed = null
+    }
     if (this.roller) {
       this.roller = at
       return
@@ -164,8 +175,10 @@ export class GameRun {
     }
     // A finger that comes back just after a lift arrives as a move with no press. It is a finger that has landed: on a piece it takes
     // hold of the piece, on the roller of the roller, and anywhere else it is the blade with its ring. Nothing is cut along the jump.
+    // Lifted again where it landed, it was a tap, and pokes what is under it as any tap does.
     if (!this.stroke || !this.last) {
       this.press(at, t)
+      this.landed = at
       return
     }
     const from = this.last
@@ -179,6 +192,10 @@ export class GameRun {
 
   /** The finger lifts after a drag: the piece is let go, flung if it was moving fast; the roller rolls what it is over; a swing that crossed nothing whistles. */
   lift(): void {
+    if (this.landed) {
+      this.tap(this.landed)
+      return
+    }
     if (this.roller) {
       const result = rollOver(this.game, this.roller)
       this.roller = null
@@ -224,6 +241,7 @@ export class GameRun {
     this.stroke = null
     this.rung = null
     this.last = null
+    this.landed = null
     this.held = null
     this.roller = null
   }
