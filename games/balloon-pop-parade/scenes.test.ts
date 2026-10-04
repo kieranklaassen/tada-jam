@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { KindName } from './bodies'
 import { PERSONALITIES } from './clips'
 import { LADDER } from './config'
-import { GROUND, friendX, skySlots, viewFor, waitingSpot } from './layout'
+import { GROUND, farGroundAt, friendX, skySlots, viewFor, waitingSpot } from './layout'
 import { saveOf } from './moments'
 import type { Pose } from './pose'
 import { deserializeSave, freshSave, serializeSave, type Save } from './save'
@@ -18,17 +18,19 @@ const KINDS: KindName[] = ['duck', 'frog', 'hippo', 'crab']
 function recorder() {
   const poses = new Map<string, Pose>()
   let balloons = 0
+  /** The far-off friends of one frame: where each is, and which way it faces. */
+  const marchers: { x: number; y: number; z: number; turn: number }[] = []
   const painter: Painter = {
     place: (name, _kind, pose) => void poses.set(name, { ...pose }),
     drop: (name) => void poses.delete(name),
     balloon: () => void (balloons += 1),
     string: () => {},
     shadow: () => {},
-    marcher: () => {},
+    marcher: (_kind, x, y, z, _scale, turn) => void marchers.push({ x, y, z, turn }),
     hand: () => {},
     cloud: () => {},
   }
-  return { poses, painter, balloons: () => balloons, clear: () => { balloons = 0 } }
+  return { poses, painter, marchers, balloons: () => balloons, clear: () => { balloons = 0; marchers.length = 0 } }
 }
 
 /** A troop of this kind and size with nobody served, under single balloons of its colour and one other. */
@@ -309,15 +311,34 @@ describe('the pass-by', () => {
 
   it('takes four to six seconds to cross, and then the child\'s own troop walks in and the sky fills', () => {
     for (const [age, seed] of [[2, 1], [2, 2], [2, 3], [2, 5], [4, 1], [4, 2], [4, 3], [4, 5], [2, undefined], [4, undefined]] as const) {
-      const theatre = new Theatre(freshSave(age, seed)), { poses, painter, balloons, clear } = recorder()
-      let crossed = 0
+      const theatre = new Theatre(freshSave(age, seed)), { poses, painter, marchers, balloons, clear } = recorder()
+      // The pass is the troop crossing in front and then going over the far hill, where nobody else is yet in a new game.
+      let crossed = 0, size = 0, far = 0, highest = -Infinity, first: { x: number; z: number } | null = null, last: { x: number; z: number; turn: number } | null = null
       for (; crossed < 12; crossed += 1 / 60) {
         theatre.step(1 / 60)
+        clear()
         theatre.paint(painter, VIEW)
-        if (!poses.has('passer-0')) break
+        if (poses.has('passer-0')) {
+          size = [...poses.keys()].filter((name) => name.startsWith('passer-')).length
+          expect(marchers, 'nobody is on the far hill while the troop is still in front').toHaveLength(0)
+          continue
+        }
+        far = Math.max(far, marchers.length)
+        if (marchers.length === 0 && first) break
+        if (marchers.length > 0) {
+          first = first ?? { x: marchers[0].x, z: marchers[0].z }
+          last = { ...marchers[0] }
+          highest = Math.max(highest, ...marchers.map((marcher) => marcher.y))
+        }
       }
       expect(crossed, `age ${age}, seed ${seed}`).toBeGreaterThanOrEqual(PASS_BY.shortest)
       expect(crossed, `age ${age}, seed ${seed}`).toBeLessThanOrEqual(PASS_BY.longest)
+      // Every friend of it was seen on the far hill at once, and it went over the top: up, away from the child, and down behind.
+      expect(far, `age ${age}, seed ${seed}`).toBe(size)
+      expect(last!.z).toBeLessThan(first!.z - 5)
+      expect(highest).toBeGreaterThan(farGroundAt(last!.x, last!.z) + 3)
+      // It faces the way it goes, which is away.
+      expect(Math.cos(last!.turn)).toBeLessThan(-0.9)
       until(theatre, null)
       play(theatre, 1.5)
       clear()

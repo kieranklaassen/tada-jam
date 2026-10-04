@@ -77,7 +77,8 @@ describe('the frame budget', () => {
     expect(most.balloons).toBeLessThanOrEqual(MAX_BALLOONS)
     expect(most.strings).toBeLessThanOrEqual(MAX_STRINGS)
     expect(most.shadows).toBeLessThanOrEqual(MAX_SHADOWS)
-    expect(most.marchers).toBeLessThanOrEqual(12)
+    // Four troops of three round the far hill, and a troop of three that passed going over its shoulder.
+    expect(most.marchers).toBeLessThanOrEqual(15)
     // The heaviest frame is a real one: a troop marching off, one walking in and one coming to the edge.
     expect(most.friends).toBeGreaterThanOrEqual(6)
   }, 30_000)

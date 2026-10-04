@@ -1,7 +1,7 @@
 import { BODIES, type KindName } from './bodies'
 import { clip, hold, PERSONALITIES, ramp, rest, stride, walk, type ClipId } from './clips'
 import { handPose, type Guidance, type HandPose } from './guidance'
-import { BALLOON, bunchOffsets, bunchReach, CLOUDS, FRIEND_SCALE, friendX, GROUND, groundAt, HELD_HEIGHT, PARADE_SCALE, paradeSpot, seenAt, skySlots, viewFor, WAITING_SCALE, waitingSpot, type View } from './layout'
+import { BALLOON, bunchOffsets, bunchReach, CLOUDS, FAR_HILL, farGroundAt, FRIEND_SCALE, friendX, GROUND, groundAt, HELD_HEIGHT, PARADE_SCALE, paradeSpot, seenAt, skySlots, viewFor, WAITING_SCALE, waitingSpot, type View } from './layout'
 import { KIND_COLOURS, PALETTE, shade } from './palette'
 import { copyPose, forwardOf, mirror, REST, restPose, spread, type Pose } from './pose'
 import { LADDER } from './config'
@@ -67,6 +67,15 @@ const GROWN_UP_CORNER = 72
 const REFUSAL_LEAD = 0.12
 
 /** Seconds a bunch takes from the sky to the friend, and before a new one drifts into its place. */
+/**
+ * The way over the far hill, from its middle: from the foot of its near side, where the near hill still hides it,
+ * to the foot of its far side, to the left of the ring the parade walks by more than a friend's width. And how far
+ * behind the one in front each friend of the troop follows, as a part of the way.
+ */
+const OVER_PATH = { x: -7.6, across: 0.8, z: 4.6, deep: 9, dip: 2.4 } as const
+const OVER_LAG = 0.2
+/** Seconds a troop that passed takes over the shoulder of the far hill, at its own pace. */
+const OVER_HILL = 1.1
 /** How many straight pieces a frog's bowed tongue is drawn in. */
 const TONGUE_PIECES = 4
 export const FLIGHT = 0.5
@@ -114,6 +123,9 @@ export class Theatre {
   private passIn = 0
   private passOut = 0
   private passTook = false
+  /** The troop that passed, on its way over the far hill, and how far over it is. */
+  private over: Passing | null = null
+  private overU = 0
   private walkIn = 1
   private nextIn = 1
   private skyIn = true
@@ -437,6 +449,7 @@ export class Theatre {
     this.skyIn = false
     this.leaving = null
     this.passer = null
+    this.over = null
     this.endingDue = null
     this.fromBeyond = marched === null
     if (marched) {
@@ -455,10 +468,14 @@ export class Theatre {
       this.passTook = false
       // In, a look up at what hangs low for it, the taking, and out: four to six seconds for any kind, the quick
       // ones looking a little longer and the slow ones wasting none.
-      const turn = showing.idea === 'bunch' ? 0.06 : 0.2, after = 0.25 + (showing.size - 1) * turn, out = p.walk
-      const look = Math.max(0.35, PASS_BY.shortest + 0.2 - (p.walk + p.lasts.catch + after + out))
-      beats.push({ at, lasts: p.walk, play: (u) => { this.passIn = u } })
-      at += p.walk + look
+      const turn = showing.idea === 'bunch' ? 0.06 : 0.2, after = 0.25 + (showing.size - 1) * turn
+      // Its walk in, its walk out and its way over the far hill are the parts that can give: a slow kind steps a
+      // little quicker here than when it comes to stay, so that the whole pass is over inside its six seconds.
+      const taking = p.lasts.catch + after, quick = Math.min(1, (PASS_BY.longest - 0.15 - 0.35 - taking) / (p.walk * 2 + OVER_HILL))
+      const out = p.walk * quick, over = OVER_HILL * quick
+      const look = Math.max(0.35, PASS_BY.shortest + 0.2 - (out * 2 + over + taking))
+      beats.push({ at, lasts: out, play: (u) => { this.passIn = u } })
+      at += out + look
       // It takes what hangs low for it, in its kind's own way. Ended early, it simply has it.
       beats.push({ at, lasts: 0, play: () => {
         this.passTook = true
@@ -472,8 +489,11 @@ export class Theatre {
       } })
       at += p.lasts.catch + after
       beats.push({ at, lasts: out, play: (u) => { this.passOut = u; if (u >= 1) this.passer = null } })
-      // The child's troop sets off as the passing one turns to go, so the middle is never left empty.
-      at += out * 0.3
+      // Gone past the edge, it is seen once more, small and far off: over the shoulder of the far hill and out of sight.
+      beats.push({ at: at + out, lasts: over, play: (u) => { this.overU = u; this.over = u < 1 ? passer : null } })
+      // The child's troop sets off while the passing one is still on its way out, so the middle is never empty for
+      // long, and late enough that it is not yet standing in front of the far hill when that troop goes over it.
+      at += out * 0.75
     }
     const kind = this.troop.kind, walkFor = PERSONALITIES[kind].walk
     beats.push({ at, lasts: walkFor, play: (u) => { this.walkIn = u } })
@@ -855,6 +875,26 @@ export class Theatre {
         const by = at.y + hop + HELD_HEIGHT * PARADE_SCALE + Math.sin(time * 1.4 + t + m) * 0.08
         painter.balloon(at.x + 0.3, by, at.z, PARADE_SCALE, PARADE_SCALE, 0.06, hue)
         painter.string(at.x + 0.3, by - BALLOON * 1.32 * PARADE_SCALE, at.z, at.x, at.y + hop + BODIES[troop.kind].height * FRIEND_SCALE * PARADE_SCALE * 0.95, at.z, hue, 0.03)
+      }
+    }
+
+    // The troop that passed by, going over the left shoulder of the far hill, clear of the ring the parade walks: up
+    // from behind the near hill, over the top and down the far side, each friend a little behind the one in front.
+    const over = this.over
+    if (over) {
+      const hue = shade(KIND_COLOURS[over.kind], 0.4), rate = PERSONALITIES[over.kind].steps / PERSONALITIES[over.kind].walk
+      for (let m = 0; m < over.size; m++) {
+        const s = this.overU * (1 + (over.size - 1) * OVER_LAG) - m * OVER_LAG
+        if (s <= 0 || s >= 1) continue
+        const x = FAR_HILL.x + OVER_PATH.x + OVER_PATH.across * s, z = FAR_HILL.z + OVER_PATH.z - OVER_PATH.deep * s
+        // It comes up from the dip between the two hills and goes down into the one behind, so that it and its balloon
+        // are below what hides them at both ends of the way and nothing appears or vanishes in plain sight.
+        const sunk = (1 - ramp(s, 0, 0.14)) * OVER_PATH.dip + ramp(s, 0.88, 1) * OVER_PATH.dip * 0.5
+        const step = time * rate + m * 0.4, hop = Math.abs(Math.sin(step * Math.PI)) * (over.kind === 'frog' ? 0.35 : 0.1), y = farGroundAt(x, z) + hop + 0.14 - sunk
+        painter.marcher(over.kind, x, y, z, FRIEND_SCALE * PARADE_SCALE, Math.atan2(OVER_PATH.across, -OVER_PATH.deep), Math.sin(step * Math.PI) * 0.1)
+        const by = y + HELD_HEIGHT * PARADE_SCALE + Math.sin(time * 1.4 + m) * 0.08
+        painter.balloon(x + 0.3, by, z, PARADE_SCALE, PARADE_SCALE, 0.06, hue)
+        painter.string(x + 0.3, by - BALLOON * 1.32 * PARADE_SCALE, z, x, y + BODIES[over.kind].height * FRIEND_SCALE * PARADE_SCALE * 0.95, z, hue, 0.03)
       }
     }
 
