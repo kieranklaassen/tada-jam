@@ -39,7 +39,8 @@ export type Sound = { voice: VoiceId; pitch: number; gain: number; after: number
 /** What a point of the surface is on. */
 export type Hit = { on: 'held'; friend: number } | { on: 'bunch'; slot: number } | { on: 'friend'; friend: number } | { on: 'waiting' } | { on: 'cloud'; index: number } | { on: 'hill' } | { on: 'air' }
 
-type Place = { squash: number; squashSpeed: number; pressed: boolean; push: number; pushSpeed: number; away: number; grow: number }
+/** A bunch's place in the sky and its springs: how flat it is, how far it is pushed aside, how far the loose end of its string has whipped, and how long until it is back. */
+type Place = { squash: number; squashSpeed: number; pressed: boolean; push: number; pushSpeed: number; whip: number; whipSpeed: number; away: number; grow: number }
 type Flight = { bunch: Bunch; slot: number; given: Given; t: number; fromX: number; fromY: number; landed: boolean; after: number; friend: number; met?: boolean }
 type Held = { x: number; y: number; vx: number; vy: number; shown: boolean }
 type Loose = { x: number; y: number; vx: number; vy: number; colour: string; flat: boolean; t: number; popAt: number }
@@ -162,7 +163,7 @@ export class Theatre {
   /** Everything in its place for the troop and the sky of the save, as found: nothing in the air, nobody in the middle of anything. */
   private setTheStage(): void {
     const troop = this.save.troop
-    this.places = this.save.sky.map(() => ({ squash: 0, squashSpeed: 0, pressed: false, push: 0, pushSpeed: 0, away: 0, grow: 1 }))
+    this.places = this.save.sky.map(() => ({ squash: 0, squashSpeed: 0, pressed: false, push: 0, pushSpeed: 0, whip: 0, whipSpeed: 0, away: 0, grow: 1 }))
     this.held = troop.held.map((holds, i) => ({ x: friendX(i, troop.size) + 0.7, y: GROUND + HELD_HEIGHT, vx: 0, vy: 0, shown: holds }))
     this.actors = troop.held.map(() => ({ clip: null, t: 0, next: null, tug: null, landAfter: 0 }))
     this.took = troop.held.map((holds, i) => (holds ? i : -1)).filter((i) => i >= 0)
@@ -249,6 +250,8 @@ export class Theatre {
       const place = this.places[hit.slot]
       place.pressed = true
       place.squashSpeed += 4
+      // Its string whips: the loose end is flung to one side and lashes back.
+      place.whipSpeed += hit.slot % 2 === 0 ? 7 : -7
       this.pressedSlot = hit.slot
       // Its neighbours bob away from it.
       for (let slot = 0; slot < this.places.length; slot++) if (slot !== hit.slot) this.places[slot].pushSpeed += Math.sign(slot - hit.slot) * 2.2 / Math.abs(slot - hit.slot)
@@ -559,6 +562,8 @@ export class Theatre {
       place.squash += place.squashSpeed * dt
       place.pushSpeed += (-place.push * 30 - place.pushSpeed * 4.5) * dt
       place.push += place.pushSpeed * dt
+      place.whipSpeed += (-place.whip * 260 - place.whipSpeed * 8) * dt
+      place.whip += place.whipSpeed * dt
       if (place.away > 0) {
         place.away -= dt
         if (place.away <= 0) { place.away = 0; this.sound('bloop', 0.9 + this.random() * 0.3, 0.6) }
@@ -874,9 +879,9 @@ export class Theatre {
         painter.balloon(x, y, -k * 0.02, wide, tall, lean, hue, next ? 0 : glow)
         const tailX = x + Math.sin(lean) * BALLOON * 1.32 * tall, tailY = y - Math.cos(lean) * BALLOON * 1.32 * tall
         if (bunch.count > 1) painter.string(tailX, tailY, 0, knotX, knotY, 0, line)
-        else painter.string(tailX, tailY, 0, tailX + Math.sin(time * 1.3 + slot) * 0.06 - place.pushSpeed * 0.05, tailY - 0.6 * size, 0, line)
+        else this.looseEnd(painter, tailX, tailY, Math.sin(time * 1.3 + slot) * 0.06 - place.pushSpeed * 0.05, 0.6 * size, place, line)
       }
-      if (bunch.count > 1) painter.string(knotX, knotY, 0, knotX + Math.sin(time * 1.3 + slot) * 0.06, knotY - 0.5 * size, 0, line)
+      if (bunch.count > 1) this.looseEnd(painter, knotX, knotY, Math.sin(time * 1.3 + slot) * 0.06, 0.5 * size, place, line)
     }
 
     // The troop.
@@ -1058,6 +1063,21 @@ export class Theatre {
         }
       }
     }
+  }
+
+  /**
+   * The loose end of a bunch's string, hanging `long` from where it is tied and drifting `drift` to the side. While
+   * it whips it is drawn in two pieces, the tip lagging behind the middle, so it lashes like a string and does not
+   * swing like a stick.
+   */
+  private looseEnd(painter: Painter, x: number, y: number, drift: number, long: number, place: Place, colour: string): void {
+    if (Math.abs(place.whip) < 0.004 && Math.abs(place.whipSpeed) < 0.06) {
+      painter.string(x, y, 0, x + drift, y - long, 0, colour)
+      return
+    }
+    const midX = x + drift * 0.5 + place.whip * long * 0.5, midY = y - long * 0.5
+    painter.string(x, y, 0, midX, midY, 0, colour)
+    painter.string(midX, midY, 0, x + drift + (place.whip - place.whipSpeed * 0.035) * long, y - long * (1 - Math.min(0.25, Math.abs(place.whip) * 0.35)), 0, colour)
   }
 
   /** One friend of a troop that is only passing, at `x`, `u` of the way through its walk. One that holds a balloon carries it along. */

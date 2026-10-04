@@ -57,6 +57,37 @@ describe('a touch', () => {
     }
   })
 
+  it('on a balloon whips its string: the loose end is flung aside from the first frame and hangs straight again soon after', () => {
+    for (const count of [1, 3] as const) {
+      const theatre = staged({ troop: { kind: 'duck', size: 3, held: [false, false, false] }, sky: [{ colour: 'duck', count }, { colour: 'frog', count: 1 }], waiting: { kind: 'frog', size: 1 } })
+      const ends: { x0: number; y0: number; x1: number; y1: number }[] = []
+      const painter: Painter = { ...recorder().painter, string: (x0, y0, _z0, x1, y1) => void ends.push({ x0, y0, x1, y1 }) }
+      const at = skySlots(2, VIEW)[0]
+      // How far the lowest end of any string under the pressed bunch is from the middle of the bunch, sideways.
+      const flung = () => {
+        ends.length = 0
+        theatre.paint(painter, VIEW)
+        const under = ends.filter((end) => Math.abs(end.x0 - at.x) < 1.6 && end.y0 > 0)
+        const lowest = under.reduce((low, end) => (end.y1 < low.y1 ? end : low))
+        return { aside: Math.abs(lowest.x1 - at.x), pieces: under.length }
+      }
+      play(theatre, 0.5)
+      const before = flung()
+      theatre.press(at.x, at.y, VIEW)
+      theatre.step(1 / 60)
+      theatre.step(1 / 60)
+      expect(flung().pieces, `a bunch of ${count}`).toBe(before.pieces + 1)
+      let most = 0
+      for (let i = 0; i < 12; i++) { theatre.step(1 / 60); most = Math.max(most, flung().aside) }
+      expect(most - before.aside, `a bunch of ${count}`).toBeGreaterThan(0.12)
+      theatre.cancel()
+      play(theatre, 2)
+      const after = flung()
+      expect(after.pieces).toBe(before.pieces)
+      expect(Math.abs(after.aside - before.aside)).toBeLessThan(0.12)
+    }
+  })
+
   it('is left alone in the top right corner, which is the grown-up\'s', () => {
     const moment = MOMENTS.mixed, theatre = new Theatre(saveOf(moment)), before = JSON.stringify(theatre.save)
     theatre.press(VIEW.width / 2 - 0.3, VIEW.height / 2 - 0.3, VIEW)
