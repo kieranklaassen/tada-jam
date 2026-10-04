@@ -2,7 +2,8 @@ import { call, crate, sendOff, settle, type Ending, type Game } from './cycle'
 import { FRUITS, WHOLE, shareLength, type Fruit } from './measure'
 import { tinParts, wanted } from './orders'
 import { served } from './serve'
-import { CRATE, DOG, PX, QUEUE, WINDOW, shown, tinShape, under, type Box, type Point, type TinShape, type Under } from './stage'
+import { figureBox, touchBoxes } from './seats'
+import { CRATE, DOG, PX, shown, tinShape, under, type Box, type People, type Point, type TinShape, type Under } from './stage'
 import type { VoiceId } from './voices'
 import { cut, landFruit, pieceOf, type Piece, type World } from './world'
 
@@ -84,7 +85,12 @@ export function tinAt(game: Game): TinShape | null {
 /** What is under a point of the stage in this game: `without` leaves out pieces in the hand, which cannot be their own target. */
 export function thingAt(game: Game, p: Point, without: readonly number[] = []): Under {
   const world = without.length > 0 ? { ...game.world, pieces: game.world.pieces.filter((piece) => !without.includes(piece.id)) } : game.world
-  return under(world, p, tinAt(game), game.window !== null)
+  return under(world, p, tinAt(game), game.window !== null, peopleOf(game))
+}
+
+/** Where the customers of a game can be touched: each on its figure and on its ticket, and nowhere else in its panel. */
+export function peopleOf(game: Game): People {
+  return { window: game.window ? touchBoxes(game.window, 'window') : [], queue: [touchBoxes(game.queue[0], 0), touchBoxes(game.queue[1], 1)] }
 }
 
 /** Whether the segment from a to b touches a box: the segment is clipped against each side of the box in turn, and touches it if anything is left. */
@@ -229,9 +235,10 @@ export function slice(game: Game, a: Point, b: Point, stroke: Stroke): { game: G
     next.dog = true
     events.push({ kind: 'snap', x: b.x, y: b.y, voice: 'chomp' })
   }
-  const customers: [Whom, Box, boolean][] = [['window', WINDOW, game.window !== null], [0, QUEUE[0], true], [1, QUEUE[1], true]]
-  for (const [whom, box, there] of customers) {
-    if (!there || next.snipped.includes(whom) || !touches(a, b, box)) continue
+  // The blade takes a tuft off a customer it crosses: the figure itself, not its ticket and not the street behind it.
+  const customers: [Whom, Box | null][] = [['window', game.window ? figureBox(game.window, 'window') : null], [0, figureBox(game.queue[0], 0)], [1, figureBox(game.queue[1], 1)]]
+  for (const [whom, box] of customers) {
+    if (!box || next.snipped.includes(whom) || !touches(a, b, box)) continue
     next.snipped.push(whom)
     events.push({ kind: 'snip', whom, voice: 'snip' })
   }

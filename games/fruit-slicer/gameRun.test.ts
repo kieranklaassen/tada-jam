@@ -15,6 +15,9 @@ import { LANDS_AFTER, tinAt } from './moves'
 import { BOARD, CRATE, DOG, LANE_H, PX, QUEUE, ROLLER, SHELF_BOX, TIN, WINDOW, X0, laneTop, shown, type Box, type Point } from './stage'
 import { cut, eaten, inTin, marksOf, onLane } from './world'
 
+/** A point on whoever stands at the window: on its figure, low on its body, not on the street behind it. */
+const ON_CUSTOMER = { x: WINDOW.x + 100, y: WINDOW.y + 190 }
+
 const NEAR = laneTop(0) + LANE_H / 2
 const fresh = () => new GameRun(freshGame(null), 11)
 const BUSY = { glow: 0, demo: null, demoIndex: -1 }
@@ -294,7 +297,7 @@ describe('the scenes', () => {
     const run = fresh()
     run.tap(mid(QUEUE[0]))
     expect(run.game.window!.who).toBe('pelican')
-    drag(run, { x: X0 + 100, y: NEAR }, mid(WINDOW), 1.5)
+    drag(run, { x: X0 + 100, y: NEAR }, ON_CUSTOMER, 1.5)
     expect(run.game).toMatchObject({ window: null, finished: false, world: { tinOpen: false } })
     expect(run.game.world.pieces).toEqual([])
     expect(run.playing).toBe(true)
@@ -328,7 +331,7 @@ describe('the glider, every time', () => {
     expect(row.map((piece) => piece.length)).toEqual([300, WHOLE[row[1].fruit]])
     // The row is taken by the right half of the piece and let go on the pelican: the piece first, then the whole fruit.
     play(run, 1)
-    drag(run, { x: X0 + 250 * PX, y: NEAR }, mid(WINDOW), 1.5)
+    drag(run, { x: X0 + 250 * PX, y: NEAR }, ON_CUSTOMER, 1.5)
     expect(run.game).toMatchObject({ window: null, finished: false })
     const frame = run.frame(0, BUSY)
     expect(frame.show).toMatchObject({ kind: 'glider' })
@@ -459,11 +462,11 @@ describe('the cast in the run', () => {
   it('flinches at a poke, loses a tuft to the blade, and is rolled flat by the roller', () => {
     const run = fresh()
     run.tap(mid(QUEUE[0]))
-    run.tap(mid(WINDOW))
+    run.tap(ON_CUSTOMER)
     expect(run.window!.react).toBe('flinch')
-    drag(run, { x: QUEUE[1].x + 10, y: QUEUE[1].y + 60 }, { x: QUEUE[1].x + 200, y: QUEUE[1].y + 70 })
+    drag(run, { x: QUEUE[1].x + 10, y: QUEUE[1].y + 160 }, { x: QUEUE[1].x + 200, y: QUEUE[1].y + 170 })
     expect(run.queue[1].react).toBe('snip')
-    drag(run, mid(ROLLER), mid(WINDOW))
+    drag(run, mid(ROLLER), ON_CUSTOMER)
     expect(run.window!.react).toBe('flat')
     drag(run, mid(ROLLER), mid(DOG))
     expect(run.dog.react).toBe('ironed')

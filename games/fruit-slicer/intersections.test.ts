@@ -12,6 +12,9 @@ import { BOARD, COUNTER, CRATE, DOG, PAGE, PX, QUEUE, RAIL_BOX, ROLLER, SHELF_BO
 import { draw } from './stream'
 import { LANES, SHELF, eaten, inTin, onLane, onShelf } from './world'
 
+/** A point on whoever stands at the window: on its figure, low on its body, not on the street behind it. */
+const ON_CUSTOMER = { x: WINDOW.x + 100, y: WINDOW.y + 190 }
+
 // Nothing passes through anything. A canvas game has no audit to read its scene, so this plays the real game
 // with seeded touches, thousands of them, on every thing it holds, and after every one measures what a child
 // would see cross: every pair of pieces as they are drawn, each piece against the slab it lies on, and the
@@ -95,7 +98,7 @@ function monkey(seed: number, touches: number, start: Game = freshGame(null, see
     return { x: box.x + box.w * (0.1 + 0.8 * random()), y: box.y + box.h / 2 }
   }
   const target = (): Point => {
-    const things: Point[] = [mid(WINDOW), mid(QUEUE[0]), mid(QUEUE[1]), mid(CRATE), mid(DOG), mid(ROLLER), { x: RAIL_BOX.x + 40 + random() * 300, y: RAIL_BOX.y + 60 }, { x: BOARD.x + random() * BOARD.w, y: BOARD.y + random() * BOARD.h }, mid(SHELF_BOX), anywhere()]
+    const things: Point[] = [ON_CUSTOMER, mid(QUEUE[0]), mid(QUEUE[1]), mid(CRATE), mid(DOG), mid(ROLLER), { x: RAIL_BOX.x + 40 + random() * 300, y: RAIL_BOX.y + 60 }, { x: BOARD.x + random() * BOARD.w, y: BOARD.y + random() * BOARD.h }, mid(SHELF_BOX), anywhere()]
     // A whole fruit on the board, and the tin, are things too: a flung piece has to find them.
     const whole = shown(run.game.world, tinAt(run.game)).find(({ piece }) => piece.place.on === 'board' && piece.length === WHOLE[piece.fruit])
     if (whole) things.push(mid(whole.box))

@@ -7,6 +7,9 @@ import { tinParts } from './orders'
 import { COUNTER, CRATE, DOG, LANE_H, PX, QUEUE, ROLLER, SHELF_BOX, TIN, WINDOW, X0, laneTop, type Box, type Point } from './stage'
 import { SHELF, eaten, inTin, marksOf, onLane, onShelf, pieceOf, setOnBoard, setOnShelf } from './world'
 
+/** A point on whoever stands at the window: on its figure, low on its body, not on the street behind it. */
+const ON_CUSTOMER = { x: WINDOW.x + 100, y: WINDOW.y + 190 }
+
 const fresh = freshGame(null)
 const start = call(fresh, 0).game
 const ORDERED = tinParts(start.window!)[0]
@@ -143,11 +146,11 @@ describe('letting go over a customer, the dog or the crate', () => {
   const made = cutAt(start, ORDERED)
 
   it('feeds the customer at the window by hand, which ends the cycle as mixed', () => {
-    const result = drop(made.game, hold(made.game, made.left), mid(WINDOW))
+    const result = drop(made.game, hold(made.game, made.left), ON_CUSTOMER)
     // The piece goes from the hand to the mouth with a gulp, and that ends the cycle.
     expect(result.events).toEqual([expect.objectContaining({ kind: 'ate', whom: 'window', voice: 'gulp' }), expect.objectContaining({ kind: 'ending', how: 'fed' })])
     expect(result.game).toMatchObject({ finished: true, position: start.position })
-    const more = drop(result.game, hold(result.game, made.right), mid(WINDOW))
+    const more = drop(result.game, hold(result.game, made.right), ON_CUSTOMER)
     expect(more.events).toEqual([expect.objectContaining({ kind: 'ate', whom: 'window', voice: 'gulp' })])
     expect(eaten(more.game.world)).toHaveLength(2)
   })
@@ -378,8 +381,8 @@ describe('a piece let go at speed', () => {
   const flung = (game: Game, id: number, to: Point) => fling(game, hold(game, id), from, towards(to))
 
   it('comes down further off the faster it is thrown, over whatever lies between, and always on the page', () => {
-    expect(landing(from, towards(mid(WINDOW))).x).toBeCloseTo(mid(WINDOW).x)
-    expect(landing(from, towards(mid(WINDOW))).y).toBeCloseTo(mid(WINDOW).y)
+    expect(landing(from, towards(ON_CUSTOMER)).x).toBeCloseTo(ON_CUSTOMER.x)
+    expect(landing(from, towards(ON_CUSTOMER)).y).toBeCloseTo(ON_CUSTOMER.y)
     expect(landing(from, { x: 0, y: -99999 }).y).toBeGreaterThan(0)
     expect(landing(from, { x: 99999, y: 0 }).x).toBeLessThan(1180)
     expect(landing(from, { x: 0, y: 0 })).toEqual(from)
@@ -388,7 +391,7 @@ describe('a piece let go at speed', () => {
   })
 
   it('splats on a customer and is licked off, and the dog catches one in the air: both are gone', () => {
-    expect(flung(made.game, made.left, mid(WINDOW)).events).toEqual([expect.objectContaining({ kind: 'splat', whom: 'window', voice: 'splat' })])
+    expect(flung(made.game, made.left, ON_CUSTOMER).events).toEqual([expect.objectContaining({ kind: 'splat', whom: 'window', voice: 'splat' })])
     expect(flung(made.game, made.left, mid(QUEUE[0])).events).toEqual([expect.objectContaining({ kind: 'splat', whom: 0 })])
     const caught = flung(made.game, made.left, mid(DOG))
     expect(caught.events).toEqual([expect.objectContaining({ kind: 'fell', voice: 'catch' })])
@@ -498,7 +501,7 @@ describe('the roller', () => {
   })
 
   it('rolls a customer flat, rattles the crate, irons the dog, and changes none of them', () => {
-    expect(rollOver(start, mid(WINDOW))).toEqual({ game: start, events: [expect.objectContaining({ on: 'customer', whom: 'window', voice: 'honk' })] })
+    expect(rollOver(start, ON_CUSTOMER)).toEqual({ game: start, events: [expect.objectContaining({ on: 'customer', whom: 'window', voice: 'honk' })] })
     expect(rollOver(start, mid(QUEUE[1])).events[0]).toMatchObject({ on: 'customer', whom: 1, voice: 'honk' })
     expect(rollOver(start, mid(CRATE)).events[0]).toMatchObject({ on: 'crate', voice: 'washboard' })
     expect(rollOver(start, mid(DOG)).events[0]).toMatchObject({ on: 'dog', voice: 'sproing' })

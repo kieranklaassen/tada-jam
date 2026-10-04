@@ -3,8 +3,12 @@ import { call, freshGame, give, type Game } from './cycle'
 import { FRUITS, WHOLE, giveOf } from './measure'
 import { tinParts } from './orders'
 import { BOARD, COUNTER, CRATE, DOG, LANE_H, PX, QUEUE, RAIL_BOX, ROLLER, SHELF_BOX, SHUT_TIN, TIN, WALL, WINDOW, X0, laneTop, rowTop, type Box, type Point } from './stage'
-import { LANDS_AFTER, holdsMisfit, newStroke, poke, slice, tinAt, touches, type GameEvent } from './moves'
+import { LANDS_AFTER, holdsMisfit, newStroke, poke, slice, thingAt, tinAt, touches, type GameEvent } from './moves'
 import { SHELF, cut, inTin, onLane, onShelf, setOnShelf } from './world'
+import { figureBox, ticketCards, touchBoxes } from './seats'
+
+/** A point on whoever stands at the window: on its figure, low on its body, not on the street behind it. */
+const ON_CUSTOMER = { x: WINDOW.x + 100, y: WINDOW.y + 190 }
 
 const game = freshGame(null)
 const NEAR = laneTop(0) + LANE_H / 2
@@ -158,7 +162,7 @@ describe('a tap', () => {
     expect(poke(game, mid(DOG)).events).toEqual([{ kind: 'bark', voice: 'bark' }])
     expect(poke(game, { x: X0 + 2700 * PX, y: NEAR }).events).toEqual([expect.objectContaining({ kind: 'knock', on: 'board' })])
     expect(poke(game, mid(SHELF_BOX)).events).toEqual([expect.objectContaining({ kind: 'knock', on: 'shelf' })])
-    expect(poke(game, mid(WINDOW)).events).toEqual([expect.objectContaining({ kind: 'knock', on: 'wall' })])
+    expect(poke(game, ON_CUSTOMER).events).toEqual([expect.objectContaining({ kind: 'knock', on: 'wall' })])
     expect(poke(game, mid(ROLLER)).events).toEqual([expect.objectContaining({ kind: 'knock', on: 'roller' })])
     expect(WALL.h).toBeGreaterThan(0)
     expect(poke(game, { x: COUNTER.x + 20, y: COUNTER.y + 20 }).events).toEqual([expect.objectContaining({ kind: 'knock', on: 'counter' })])
@@ -251,12 +255,44 @@ describe('with a customer at the window', () => {
     expect(slice(start, { x: X0 + 60, y: TIN.bodyY + 70 }, { x: X0 + 60, y: TIN.bodyY - 10 }, result.stroke).events).toEqual([])
   })
 
+  it('finds a customer on its figure and on its ticket, and nowhere else in its panel: a touch on the street behind the stall is never a touch on a customer', () => {
+    const misfit = served(400)
+    expect(holdsMisfit(misfit)).toBe(true)
+    const body = figureBox(misfit.window!, 'window'), card = ticketCards(misfit.window!, 'window')[0]
+    // On the figure, and on the ticket: the customer.
+    expect(thingAt(misfit, { x: body.x + body.w / 2, y: body.y + body.h / 2 }).thing).toBe('customer')
+    expect(thingAt(misfit, { x: card.x + card.w / 2, y: card.y + card.h / 2 }).thing).toBe('customer')
+    // Between the two, past the ticket, over its head: the street. A poke there is a knock on the wall, and sends nobody off.
+    const street = [{ x: body.x + body.w + (card.x - body.x - body.w) / 2, y: WINDOW.y + 200 }, { x: WINDOW.x + WINDOW.w - 20, y: WINDOW.y + 215 }, { x: card.x + 20, y: card.y + card.h + 30 }]
+    for (const p of street) {
+      expect(touchBoxes(misfit.window!, 'window').some((box) => p.x >= box.x && p.x <= box.x + box.w && p.y >= box.y && p.y <= box.y + box.h)).toBe(false)
+      expect(thingAt(misfit, p).thing).toBe('wall')
+      const poked = poke(misfit, p)
+      expect(kinds(poked.events)).not.toContain('ending')
+      expect(poked.game).toEqual(misfit)
+    }
+    // The two who wait likewise: the street over the pelican's head and beside it calls nobody.
+    for (const index of [0, 1] as const) {
+      const waits = figureBox(misfit.queue[index], index)
+      expect(thingAt(misfit, { x: waits.x + waits.w / 2, y: waits.y + waits.h / 2 })).toMatchObject({ thing: 'waiting', index })
+      const over = { x: QUEUE[index].x + 20, y: QUEUE[index].y + 8 }
+      expect(thingAt(misfit, over).thing).toBe('wall')
+      expect(poke(misfit, over).game).toEqual(misfit)
+    }
+  })
+
   it('snips a tuft off each customer it passes, once each, and changes nothing', () => {
-    const across = slice(start, { x: WINDOW.x + 5, y: WINDOW.y + 60 }, { x: QUEUE[1].x + 100, y: WINDOW.y + 80 }, newStroke())
+    // A stroke through the three of them, at the height of their bodies.
+    const across = slice(start, { x: WINDOW.x + 5, y: WINDOW.y + 170 }, { x: QUEUE[1].x + 100, y: WINDOW.y + 190 }, newStroke())
     expect(across.events.map((event) => (event.kind === 'snip' ? event.whom : event.kind))).toEqual(['window', 0, 1])
     expect(across.game).toEqual(start)
     // With nobody at the window there is nobody there to snip.
-    expect(kinds(slice(game, { x: WINDOW.x + 5, y: WINDOW.y + 60 }, { x: WINDOW.x + 200, y: WINDOW.y + 80 }, newStroke()).events)).toEqual([])
+    expect(kinds(slice(game, { x: WINDOW.x + 5, y: WINDOW.y + 170 }, { x: WINDOW.x + 200, y: WINDOW.y + 190 }, newStroke()).events)).toEqual([])
+    // A stroke through the street over the heads of the two who wait, or past the customer through the bare part of its panel, snips nobody: the blade
+    // takes a tuft off a figure it crosses, and the street behind the stall is not one.
+    expect(kinds(slice(start, { x: QUEUE[0].x + 5, y: WINDOW.y + 40 }, { x: QUEUE[1].x + 230, y: WINDOW.y + 44 }, newStroke()).events)).toEqual([])
+    const gap = figureBox(start.window!, 'window')
+    expect(kinds(slice(start, { x: gap.x + gap.w + 12, y: WINDOW.y + 150 }, { x: gap.x + gap.w + 14, y: WINDOW.y + 228 }, newStroke()).events)).toEqual([])
   })
 
   it('rattles the shut tin and snaps the jaw of the open one', () => {
@@ -268,12 +304,12 @@ describe('with a customer at the window', () => {
   })
 
   it('makes the customer at the window flinch, and take its order as it is when its tin holds a misfit', () => {
-    expect(poke(start, mid(WINDOW))).toEqual({ game: start, events: [{ kind: 'flinch', whom: 'window', voice: 'babble' }] })
-    const result = poke(served(-400), mid(WINDOW))
+    expect(poke(start, ON_CUSTOMER)).toEqual({ game: start, events: [{ kind: 'flinch', whom: 'window', voice: 'babble' }] })
+    const result = poke(served(-400), ON_CUSTOMER)
     expect(kinds(result.events)).toEqual(['flinch', 'ending'])
     expect(result.events[1]).toMatchObject({ how: 'sentOff', ending: { outcome: 'badly' } })
     expect(result.game.finished).toBe(true)
-    expect(kinds(poke(result.game, mid(WINDOW)).events)).toEqual(['flinch'])
+    expect(kinds(poke(result.game, ON_CUSTOMER).events)).toEqual(['flinch'])
   })
 
   it('makes one who waits flinch and step up, or change places, or send the one at the window off first', () => {

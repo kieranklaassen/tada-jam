@@ -142,12 +142,15 @@ export type Under =
   | { thing: 'waiting'; index: 0 | 1 }
   | { thing: 'customer' | 'roller' | 'crate' | 'dog' | 'board' | 'shelf' | 'wall' | 'counter' | 'nothing' }
 
+/** Where each customer can be touched: its figure and its ticket, for the one at the window and each of the two who wait. */
+export type People = { window: readonly Box[]; queue: readonly [readonly Box[], readonly Box[]] }
+
 /**
  * What is under a point of the stage. A piece answers over the whole height of its lane or row, which is
  * taller than it is drawn. `tin` is the tin at the window, when a customer stands there; `served` says whether
  * anyone stands at the window at all.
  */
-export function under(world: World, p: Point, tin: TinShape | null = null, served = tin !== null): Under {
+export function under(world: World, p: Point, tin: TinShape | null = null, served = tin !== null, people: People | null = null): Under {
   for (const { piece, box } of shown(world, tin)) {
     const tall = piece.place.on === 'board' ? LANE_H : piece.place.on === 'shelf' ? ROW_H : TIN.bodyH
     if (p.x >= box.x && p.x <= box.x + box.w && Math.abs(p.y - (box.y + box.h / 2)) <= tall / 2) return { thing: piece.length === WHOLE[piece.fruit] ? 'fruit' : 'piece', piece, box }
@@ -160,9 +163,11 @@ export function under(world: World, p: Point, tin: TinShape | null = null, serve
   if (inside(p, ROLLER)) return { thing: 'roller' }
   if (inside(p, CRATE)) return { thing: 'crate' }
   if (inside(p, DOG)) return { thing: 'dog' }
-  if (served && inside(p, WINDOW)) return { thing: 'customer' }
-  if (inside(p, QUEUE[0])) return { thing: 'waiting', index: 0 }
-  if (inside(p, QUEUE[1])) return { thing: 'waiting', index: 1 }
+  // A customer is touched where it and its ticket are (`people`); with nothing said of where that is, anywhere in its panel.
+  const on = (boxes: readonly Box[] | undefined, panel: Box): boolean => (boxes ? boxes.some((box) => inside(p, box)) : inside(p, panel))
+  if (served && on(people?.window, WINDOW)) return { thing: 'customer' }
+  if (on(people?.queue[0], QUEUE[0])) return { thing: 'waiting', index: 0 }
+  if (on(people?.queue[1], QUEUE[1])) return { thing: 'waiting', index: 1 }
   if (inside(p, BOARD)) return { thing: 'board' }
   if (inside(p, SHELF_BOX)) return { thing: 'shelf' }
   if (inside(p, WALL)) return { thing: 'wall' }

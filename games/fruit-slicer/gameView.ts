@@ -13,9 +13,9 @@ import { signBetween, tinParts, wanted, type Customer } from './orders'
 import { paintPassers } from './passersBy'
 import { restShow } from './scenes'
 import { ruling, served as lyingIn } from './serve'
-import { SILL, fitOf, headOf, standsAt, type Seat } from './seats'
+import { SILL, fitOf, headOf, standsAt, ticketAt, ticketCards, type Seat } from './seats'
 import { paintCounter, paintStreet } from './setting'
-import { BOARD, COUNTER, CRATE, DOG, PX, QUEUE, ROLLER, SHELF_BOX, TIN, WALL, WINDOW, laneTop, rowTop, shown, tinShape, type Box, type Point, type TinShape } from './stage'
+import { BOARD, COUNTER, CRATE, DOG, PX, ROLLER, SHELF_BOX, TIN, WALL, WINDOW, laneTop, rowTop, shown, tinShape, type Box, type Point, type TinShape } from './stage'
 import { drawFraction, drawSign } from './symbols'
 import { eaten, marksOf, SHELF, type Piece } from './world'
 
@@ -32,7 +32,6 @@ type Dots = Pick<Screens, 'of'>
 const SCALLOPS = 16
 /** Where a served customer's shut tin stands, by its feet, and the top of every ticket. */
 const TIN_BY_FEET = WINDOW.x + 290
-const TICKET_TOP = WALL.y + 54
 
 /** Everything that never moves: the two panels, the board, the shelf, the dog's arch and the roller's hook. Returns the figures drawn. */
 export function paintPlate(ctx: Ctx, dots: Dots): number {
@@ -225,13 +224,14 @@ function effects(ctx: Ctx, fx: FxState, wall: boolean): number {
 }
 
 /** A ticket: a card with a small strip of the fruit for each share ordered, the share filled in, and, once it is written, the fraction on a bracket over that share. */
-function ticket(ctx: Ctx, customer: Customer, x: number, top: number, s: number, stacked = false, sign: 'less' | 'equals' | 'greater' | null = null): number {
+function ticket(ctx: Ctx, customer: Customer, seat: Seat, sign: 'less' | 'equals' | 'greater' | null = null): number {
+  const { s } = ticketAt(customer, seat), cards = ticketCards(customer, seat)
   const whole = (WHOLE[customer.fruit] / WHOLE.long) * 190 * s
-  let left = x, y = top, drawn = 0
-  for (const share of customer.shares) {
+  let drawn = 0
+  for (const [index, share] of customer.shares.entries()) {
     const reach = Math.max(1, share.num / share.den)
-    // The card is as wide as the whole fruits drawn on it: an order past one whole shows two.
-    const w = whole * Math.ceil(reach) + 40 * s, h = (customer.written ? 122 : 62) * s
+    // The card is as wide as the whole fruits drawn on it: an order past one whole shows two. Where it stands is where a touch finds it (seats.ts).
+    const { x: left, y, w, h } = cards[index]
     ctx.fillStyle = INK
     ctx.fillRect(left + 4, y + 4, w, h)
     inked(ctx, rect(left, y, w, h), WHITE, 3.5)
@@ -260,8 +260,6 @@ function ticket(ctx: Ctx, customer: Customer, x: number, top: number, s: number,
     // The cat's two tickets side by side, in the order it holds them: once the truth has been shown, the sign for less than, equal or
     // greater than stands between the two strips, so it reads as it stands, the first share on its left and the second on its right.
     if (sign && share === customer.shares[0]) drawSign(ctx, sign, left + w + 17, sy + tall / 2, 24, { fill: INK, edge: WHITE, edgeWidth: 5 })
-    if (stacked) y += h + 6 * s
-    else left += w + (customer.shares.length > 1 ? 34 : 8 * s)
     drawn += 6
   }
   return drawn
@@ -469,7 +467,7 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
     const ruling2 = scenery.show !== null && scenery.show.drop > 0 && scenery.show.fill < 1
     // It needs the ruling under it: no sign for a cat fed by hand whose tin never opened, and none in a first showing until the parts are ruled and filled.
     const signNow = atWindow.shares.length > 1 && game.world.tinOpen && !ruling2 ? signBetween(atWindow) : null
-    if (game.window) drawn += ticket(ctx, atWindow, WINDOW.x + (atWindow.shares.length > 1 ? 306 : 330), TICKET_TOP, atWindow.who === 'boa' ? 0.66 : atWindow.shares.length > 1 ? 0.57 : 1.1, false, signNow)
+    if (game.window) drawn += ticket(ctx, atWindow, 'window', signNow)
     // Served, and the serve over: it holds its tin, shut, by its feet. One fed by hand has had it there from the first.
     if (game.finished && (!scenery.ending || scenery.ending.fed)) {
       // While the twins pull a piece between them the tin spins about its own length, here by their feet as it does on the rail.
@@ -490,19 +488,18 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
     drawn += 2
   }
   game.queue.forEach((customer, at) => {
-    const index = at as 0 | 1, box = QUEUE[index]
+    const index = at as 0 | 1
     // A pelican gliding out of the queue is drawn in its place until it has gone; the one who joins is seen after it.
     if (gliding && gliding.whom === index && scenery.glide && scenery.glide.away < 1) {
       drawn += customerAt(ctx, dots, gliding.customer, scenery.leavingActor, { show: scenery.glide, beak: gliding.fruit }, index)
       return
     }
-    // The pelican and the cat stand beside their tickets, the cat's two stacked; the low ones (the twins, the ants, the boa) have theirs over their heads.
-    const who = customer.who, long = who === 'boa', beside = who === 'pelican' || who === 'cat'
+    // The pelican and the cat stand beside their tickets, the cat's two stacked; the low ones (the twins, the ants, the boa) have theirs over their heads (seats.ts).
     // What it was given by hand shows in its body as it goes down, each piece at its own length and in its own colour, and for a few seconds after.
     const given = scenery.snacks.filter((one) => one.whom === index)
     const snack = given.length > 0 ? feastOf(customer, given.map((one) => one.length), null, { ...restShow('serve'), lid: 1, lift: 1, bites: given.reduce((sum, one) => sum + Math.min(1, one.age / SNACK_DOWN), 0) }, false, false, given.map((one) => one.fruit)) : undefined
     drawn += customerAt(ctx, dots, customer, scenery.queue[index], snack ? { feast: snack } : {}, index, scenery.finger)
-    drawn += ticket(ctx, customer, box.x + (long ? 8 : who === 'cat' ? 104 : beside ? 92 : 46), TICKET_TOP, long ? 0.5 : customer.shares.length > 1 ? 0.56 : 0.62, true)
+    drawn += ticket(ctx, customer, index)
   })
   drawn += awning(ctx, scenery.time, fx.flap)
   const slat = fx.fx.find((one) => one.kind === 'slat'), chewing = fx.fx.find((one) => one.kind === 'chew')
