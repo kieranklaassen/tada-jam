@@ -7,7 +7,7 @@ import { atRest, ends, follow, rests, unrest, type Moving, type Rest } from './p
 import { edit, type Save } from './save'
 import { groundAt } from './sheet'
 import { canPin, isFooting, site, type Site } from './sites'
-import { chiefCroak, chiefRuffle, chiefTaps, fold, knock, lay as layVoice, pick, pinClick, pinRattle, pinTick, putBack, snapTick, type VoiceSpec } from './voices'
+import { chiefCroak, chiefRuffle, chiefTaps, fold, growCreak, knock, lay as layVoice, pick, pinClick, pinRattle, pinTick, putBack, snapTick, type VoiceSpec } from './voices'
 
 // The toy: the bridge on the board, a finger, and what the two do to each
 // other. Pure: no renderer, no DOM and no clock of its own. The Mount feeds it
@@ -239,13 +239,14 @@ export class Toy {
       const to = reach(hand.kind, hand.from, [x, y])
       if (canPin(this.at, to) && !samePoint(to, hand.to)) {
         hand.to = to
-        this.voices.push(snapTick(hand.kind, length({ a: hand.from, b: to })))
+        // It grows with a dry creak that falls as it gets longer, and its free end ticks onto the grid point.
+        this.voices.push(growCreak(hand.kind, length({ a: hand.from, b: to })), snapTick(hand.kind, length({ a: hand.from, b: to })))
       }
     }
     if (hand.what === 'part') hand.finger = [x, y]
   }
 
-  /** The drag is over: the part is laid, or the carried part goes to the tray or back where it lay. Also where a parked game puts down what is in the hand. */
+  /** The drag is over: the part is laid, or the carried part goes to the tray or back where it lay. */
   dragEnd(): void {
     const hand = this.hand
     this.hand = null
@@ -270,7 +271,7 @@ export class Toy {
     }
   }
 
-  /** The press ended and was not a tap: the browser took the finger, or the game was parked under it. */
+  /** The press or the drag ended with nothing done: the browser took the finger, or the game was put away under it. Whatever was in the hand is where it came from: a half-drawn part is not laid, a carried part lies where it lay. */
   pressEnd(): void {
     this.hand = null
   }
@@ -439,8 +440,42 @@ const STRAIGHT: readonly [number, number] = [0, 0]
 /** How far under the drawn ground a swinging part may dip before it is turned back, in cells: a pixel or so. */
 const CLEAR = 0.03
 
-/** How long a part takes to fly back to the tray, in seconds. */
+/** How long a part takes to get back to the tray, in seconds. */
 export const FLIGHT = 0.45
+
+/**
+ * Where a part taken off is on its way to its pile, at a share `t` of the way:
+ * its two ends, in cells. Each kind goes its own way. A plank slides out along
+ * its own length and then goes down flat. A stick is flicked: it spins as it
+ * flies in an arc. A tube rolls away down the sheet, level all the way. A
+ * thread whips back: its far end runs in to its near end, and what is left
+ * zips to the spool. Every one ends lying level in its pile.
+ */
+export function flightEnds(kind: Kind, a: readonly [number, number], b: readonly [number, number], home: readonly [number, number], t: number): { a: [number, number]; b: [number, number] } {
+  const u = Math.max(0, Math.min(1, t)), e = u * u * (3 - 2 * u), long = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1, half = long / 2
+  const mid: [number, number] = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], along: [number, number] = [(b[0] - a[0]) / long, (b[1] - a[1]) / long]
+  const lie = (cx: number, cy: number, turn: number, reach = half): { a: [number, number]; b: [number, number] } => ({ a: [cx - Math.cos(turn) * reach, cy - Math.sin(turn) * reach], b: [cx + Math.cos(turn) * reach, cy + Math.sin(turn) * reach] })
+  const was = Math.atan2(along[1], along[0]), level = Math.abs(was) > Math.PI / 2 ? Math.PI * Math.sign(was || 1) : 0
+  if (kind === 'plank') {
+    // Out along itself for the first two fifths, a cell and a half, then down to the pile, turning level.
+    const out = Math.min(1, u / 0.4), rest = Math.max(0, (u - 0.4) / 0.6), r = rest * rest * (3 - 2 * rest)
+    const sx = mid[0] + along[0] * 1.5 * out, sy = mid[1] + along[1] * 1.5 * out
+    return lie(sx + (home[0] - sx) * r, sy + (home[1] - sy) * r, was + (level - was) * r)
+  }
+  if (kind === 'stick') {
+    // Two whole turns in the air, over an arc.
+    return lie(mid[0] + (home[0] - mid[0]) * e, mid[1] + (home[1] - mid[1]) * e + 1.2 * Math.sin(Math.PI * u), was + (level - was) * e + 4 * Math.PI * e)
+  }
+  if (kind === 'tube') {
+    // Level at once, then straight down the sheet with a small bounce on the way, and along to its pile.
+    const turn = was + (level - was) * Math.min(1, u * 4)
+    return lie(mid[0] + (home[0] - mid[0]) * e * e, mid[1] + (home[1] - mid[1]) * e + 0.12 * Math.abs(Math.sin(u * Math.PI * 5)) * (1 - u), turn)
+  }
+  // Thread: the far end runs in first, then the short length left goes to the spool.
+  const reel = Math.min(1, u / 0.5), go = Math.max(0, (u - 0.5) / 0.5), g = go * go * (3 - 2 * go), left = half * (1 - 0.85 * reel)
+  const from: [number, number] = [a[0] + along[0] * left, a[1] + along[1] * left]
+  return lie(from[0] + (home[0] - from[0]) * g, from[1] + (home[1] - from[1]) * g, was + (level - was) * g, left)
+}
 
 /**
  * The triangle a part just laid closes, if it closes one: three firm parts

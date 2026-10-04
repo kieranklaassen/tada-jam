@@ -235,6 +235,12 @@ export const bargeHorn = (clear: boolean): VoiceSpec => (clear ? [{ wave: 'sine'
 /** Under a whole arch the barge's toot comes back as a chord: three soft notes on the horn's own, after it. */
 export const hornEcho: VoiceSpec = [0, 4, 7].map((semis) => ({ wave: 'sine' as const, pitch: 294 * 2 ** (semis / 12), peak: 0.06, attack: 0.08, length: 0.9, after: 0.55 }))
 
+/** A part growing from its pin under the finger: a dry creak, lower the longer the part has grown. */
+export const growCreak = (kind: Kind, long: number): VoiceSpec => kept([{ wave: 'square', pitch: clamp((kind === 'thread' ? 520 : 430) - 42 * long, RANGE.pitch), slideTo: clamp((kind === 'thread' ? 480 : 390) - 42 * long, RANGE.pitch), peak: 0.03, attack: 0.004, length: 0.07 }])
+
+/** The trolley on its hook, at one end of a swing: a squeak up at one end and down at the other. */
+export const pendulumSqueak = (back: boolean): VoiceSpec => [{ wave: 'triangle', pitch: back ? 1250 : 1100, slideTo: back ? 1100 : 1250, peak: 0.05, attack: 0.03, length: 0.16 }]
+
 /** The crew. The beaver: its tail on the floor, its teeth when it cannot look, and the breath it lets go. The mole: its rule laid on a thing, lower the first time and higher the second, and the rule dropped. */
 export const beaverSlap: VoiceSpec = [{ wave: 'noise', pitch: 500, slideTo: 200, peak: 0.12, attack: 0.002, length: 0.09 }, { wave: 'triangle', pitch: 150, slideTo: 95, peak: 0.1, attack: 0.002, length: 0.12 }]
 export const beaverChatter: VoiceSpec = [0, 0.06, 0.12, 0.18, 0.24].map((after) => ({ wave: 'triangle' as const, pitch: 1150, peak: 0.04, attack: 0.001, length: 0.03, after }))

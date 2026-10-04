@@ -1,12 +1,14 @@
 import { RAIL_TILT, givePose, poke, reactPose, waitPose, drivePose, type VehiclePose } from './acts'
 import { showsStrain, strainLook } from './consequence'
+import { strainThinned } from './order'
+import { onNewest } from './save'
 import { CREW_SCALE } from './crew'
 import { crewFigure } from './crewfig'
 import { bargeAt, drawSky, drawSplash, drawWaterLife } from './drift'
 import { chief, chiefModel, roll } from './figures'
 import { barge, compareModels, ideaModel, lineDrawing, spareWeights, tracingSheet, trolley } from './props'
 import { vehicle } from './fleet'
-import type { Game } from './game'
+import { ROLL_IN, swingAt, type Game } from './game'
 import { handPose, type Guidance, type HandPose } from './guidance'
 import { key, length, samePoint, type Kind, type Part, type Point } from './kit'
 import { ROLL, SLIDE_OFF, TRAY, bays, parkAt, rackAt, slideOff, tools, waitAt } from './layout'
@@ -16,7 +18,7 @@ import { WATER, ends } from './pose'
 import { paintSheet, plotFor, px, water, type Plot } from './sheet'
 import { COLS, isFooting, site, type Site, type VehicleId } from './sites'
 import { crossingPlace, drawUp, givePlace, rollPlace } from './stage'
-import { CHIEF, FLIGHT, RING, featherAt } from './toy'
+import { CHIEF, FLIGHT, RING, featherAt, flightEnds } from './toy'
 import { TAIL, VEHICLES } from './vehicles'
 
 // The toy drawn: the still sheet stamped once from an offscreen canvas, then
@@ -151,7 +153,14 @@ export class View {
 
     // The parts where their springs have them. String lies under wood, wood under pins.
     const hand = toy.hand
-    const sheet = toy.save.sheets[toy.save.on], jobCrossed = sheet.crossed.includes(at.job)
+    const sheet = toy.save.sheets[toy.save.on], jobCrossed = strainThinned(at.job, sheet, onNewest(toy.save), toy.save.finished, toy.save.tries)
+    // What each part carries now, where a load is on the bridge: a vehicle on a run, or the trolley where it stands or hangs.
+    const carried = (index: number): { use: number; strain: string } | null => {
+      if (toy.drive) return { use: toy.drive.heard[index] ?? 0, strain: toy.drive.strain[index] ?? 'rest' }
+      const state = toy.trolley.at ? toy.answer.parts[index] : undefined
+      return state ? { use: state.use, strain: state.strain } : null
+    }
+    const broken = toy.pieces()
     const pose = toy.bridge.map((part, index) => {
       const carried = hand?.what === 'part' && hand.carried && hand.index === index
       const now = carried ? toy.carriedEnds(hand) : ends(toy.moving[index], length(part))
@@ -171,6 +180,12 @@ export class View {
       if (part.kind !== 'thread') return
       const p = pose[index], whirl = p.turning * 0.4 * Math.sin(2 * Math.PI * 3 * p.turned)
       // A thread with wheels on it is a tightrope: it goes down in a V with the wheel, to the water.
+      if (broken && broken.part === index) {
+        // It parted: two ends, each hanging slack from its own pin.
+        string(pen, ...at2(broken.near[0]), ...at2(broken.near[1]), cell, 0.12); string(pen, ...at2(broken.far[0]), ...at2(broken.far[1]), cell, 0.12)
+        drawn += 2
+        return
+      }
       const dip = toy.dipPoint()
       if (dip && dip.part === index) { const v = at2(dip.at); string(pen, ...p.a, ...v, cell, 0); string(pen, ...v, ...p.b, cell, 0); drawn += 2; return }
       string(pen, ...p.a, ...p.b, cell, (toy.rest[index].slack ? 0.3 : 0) + p.shake + whirl)
@@ -178,16 +193,30 @@ export class View {
     })
     toy.bridge.forEach((part, index) => {
       if (part.kind === 'thread') return
-      const p = pose[index], carried = hand?.what === 'part' && hand.carried && hand.index === index
+      const p = pose[index], carried_ = hand?.what === 'part' && hand.carried && hand.index === index
       const landing = toy.laid[index] < 0.3 ? 2.5 * (1 - toy.laid[index] / 0.3) : 0
       // A plank turning swells or shrinks to its new depth; a stick spinning flickers thin and thick.
       const was = part.turned ? THICK.plank / THICK['plank-edge'] : THICK['plank-edge'] / THICK.plank
       const deep = part.kind === 'plank' ? 1 + (was - 1) * p.turning ** 2 : part.kind === 'stick' ? 1 - 0.5 * p.turning * Math.abs(Math.sin(2 * Math.PI * 4 * p.turned)) : 1
+      if (broken && broken.part === index) {
+        // It broke at its spot: two pieces, each hanging from its own pin, which close up again as the bridge goes back.
+        for (const [hinge, tip] of [broken.near, broken.far]) this.part(pen, woodOf(part), Math.hypot(tip[0] - hinge[0], tip[1] - hinge[1]), at2(hinge), at2(tip), 1, deep)
+        drawn += 2
+        return
+      }
       // Under a load a pulled part draws thin and a squeezed one bulges, by the share of its strength in use.
-      const drive = toy.drive
+      const load = carried(index), shows = load !== null && showsStrain(load.use, jobCrossed)
       let strained = 1
-      if (drive && showsStrain(drive.heard[index] ?? 0, jobCrossed)) { const look = strainLook(drive.strain[index] ?? 'rest', drive.heard[index] ?? 0); strained = 1 - 0.35 * look.thin + 0.5 * look.bulge }
-      this.part(pen, woodOf(part), length(part), p.a, p.b, carried ? 3 : 1 + landing, deep * strained)
+      if (load && shows) { const look = strainLook(load.strain, load.use); strained = 1 - 0.35 * look.thin + 0.5 * look.bulge }
+      if (load && shows && load.strain === 'bow' && part.kind !== 'plank') {
+        // Squeezed and long, it bows in the middle: two halves that meet off its own line, further the nearer its limit.
+        const dx = p.b[0] - p.a[0], dy = p.b[1] - p.a[1], long = Math.hypot(dx, dy) || 1, out = cell * 0.3 * Math.min(1, load.use) * (index % 2 ? 1 : -1)
+        const mid: [number, number] = [(p.a[0] + p.b[0]) / 2 - (dy / long) * out, (p.a[1] + p.b[1]) / 2 + (dx / long) * out]
+        this.part(pen, woodOf(part), length(part) / 2, p.a, mid, 1, deep * strained); this.part(pen, woodOf(part), length(part) / 2, mid, p.b, 1, deep * strained)
+        drawn += 2
+        return
+      }
+      this.part(pen, woodOf(part), length(part), p.a, p.b, carried_ ? 3 : 1 + landing, deep * strained)
       drawn++
     })
 
@@ -232,11 +261,12 @@ export class View {
 
     // A part taken off flies to its pile in the tray.
     for (const flight of toy.flying) {
-      const bay = bays(at).find((b) => b.kind === flight.part.kind), t = Math.min(1, flight.since / FLIGHT), e = t * t * (3 - 2 * t)
-      const home: [number, number] = bay ? [(bay.x0 + bay.x1) / 2, TRAY.top - TRAY.tall / 2] : [0, 0], half = length(flight.part) / 2
-      const a = at2([flight.a[0] + (home[0] - half - flight.a[0]) * e, flight.a[1] + (home[1] - flight.a[1]) * e]), b = at2([flight.b[0] + (home[0] + half - flight.b[0]) * e, flight.b[1] + (home[1] - flight.b[1]) * e])
-      if (flight.part.kind === 'thread') string(pen, ...a, ...b, cell, 0.2)
-      else this.part(pen, woodOf(flight.part), length(flight.part), a, b, 3 - 2 * e)
+      // Each kind goes back its own way: a plank slides out, a stick is flicked, a tube rolls, a thread whips back.
+      const bay = bays(at).find((b) => b.kind === flight.part.kind), t = Math.min(1, flight.since / FLIGHT)
+      const home: [number, number] = bay ? [(bay.x0 + bay.x1) / 2, TRAY.top - TRAY.tall / 2] : [0, 0]
+      const now = flightEnds(flight.part.kind, flight.a, flight.b, home, t), a = at2(now.a), b = at2(now.b)
+      if (flight.part.kind === 'thread') string(pen, ...a, ...b, cell, 0.2 * (1 - t))
+      else this.part(pen, woodOf(flight.part), Math.hypot(now.b[0] - now.a[0], now.b[1] - now.a[1]), a, b, 3 - 2 * t)
       drawn++
     }
 
@@ -258,7 +288,7 @@ export class View {
     const showing = toy.showing, t = toy.chief.progress
     const span = (a: number, b: number) => Math.max(0, Math.min(1, (t - a) / (b - a)))
     // The models are drawn large enough to read from across the sheet: a cell and a half to the model's own cell.
-    if (showing && 'idea' in showing && toy.chief.act === 'shows') ideaModel(pen, showing.idea, cx + cell * 1.5, cy, cell * 1.9, t >= 0.5, span(0.34, 0.46), stream(12))
+    if (showing && 'idea' in showing && toy.chief.act === 'shows') ideaModel(pen, showing.idea, cx + cell * 1.5, cy, cell * 1.9, t >= 0.5, span(0.34, 0.46), stream(12), showing.failure)
     else if (showing && 'differences' in showing) compareModels(pen, showing.differences, cx + cell * 1.4, cy, cell * 1.35, t >= 0.5, t < 0.5 ? span(0.2, 0.34) : span(0.62, 0.76), stream(12))
     else if (toy.marginModel) {
       // Pressed, it gives a little on its ledge; plucked, it shakes from side to side and dies away.
@@ -334,7 +364,7 @@ export class View {
     const glow = guidance ? guidance.glow * (0.6 + 0.4 * Math.sin(game.seconds * 3)) : 0
     let drawn = 0
     // The pale pencil ring round the spot where a part gave: it fades as the job vehicle crosses.
-    const ring = game.gave ?? sheet.ring
+    const ring = game.gave ?? sheet.ring ?? (show.kind === 'crossing' ? game.fading : null)
     if (ring) { this.ring(pen, at2(ring.spot[0], ring.spot[1]), 0.34, 0.6 * (show.kind === 'crossing' ? 1 - show.fade : 1)); drawn++ }
     // A splinter where the part is giving, for as long as the bridge lies broken.
     if (game.gave) {
@@ -388,7 +418,7 @@ export class View {
     // Waiting at the near bank, the front of the line by the gap; one that has just arrived draws up from off the sheet.
     game.waiting.forEach((id, place) => {
       if (id === busy) return
-      const arriving = show.kind === 'crossing' && !show.homeward && id === at.extra && show.arrive < 1
+      const arriving = show.kind === 'crossing' && id === show.arriving && show.arrive < 1
       const pose = restingPose(id, place === 0 && !game.playing)
       put(id, (arriving ? drawUp(show.arrive, at, place) : waitAt(at, place)) + pose.creep, at.left[1], 0, pose, false)
       if (glow > 0.01 && place === 0 && game.ready) this.ring(pen, at2(waitAt(at, 0) - longOf(id) / 2, at.left[1] + 0.9), 1.05, glow * 0.7)
@@ -400,7 +430,7 @@ export class View {
     if (game.drive && seat) {
       const flip = game.drive.homeward
       // On a stick it rides a rail, tilting, with its back wheels off; on a plank on edge it wobbles as on a kerb.
-      put(game.drive.vehicle, seat.x, seat.y, (flip ? -seat.tilt : seat.tilt) - RAIL_TILT * seat.rail, drivePose(game.drive.vehicle, game.drive.seconds, seat.kerb, undefined, Math.max(0, ...game.drive.heard.filter((use) => showsStrain(use, sheet.crossed.includes(at.job))))), flip)
+      put(game.drive.vehicle, seat.x, seat.y, (flip ? -seat.tilt : seat.tilt) - RAIL_TILT * seat.rail, drivePose(game.drive.vehicle, game.drive.seconds, seat.kerb, undefined, Math.max(0, ...game.drive.heard.filter((use) => showsStrain(use, strainThinned(at.job, sheet, onNewest(game.save), game.save.finished, game.save.tries))))), flip)
     }
     // In a scene: where its beats have it.
     if (show.vehicle && show.kind === 'give') {
@@ -431,8 +461,9 @@ export class View {
     }
 
     // The next sheet, rolled up at the right edge, with the nose of its vehicle showing; and the sheets the child has had, on the rack.
-    if (game.save.next && game.save.on === game.save.sheets.length - 1) {
-      const rx = show.kind === 'crossing' && !show.homeward ? rollPlace(show.arrive, COLS) : ROLL.x
+    if (game.save.next && game.save.on === game.save.sheets.length - 1 && game.rollIn !== -1) {
+      // It slides in when it arrives: with the crossing that brought it, or after the give that ended a cycle badly.
+      const rx = show.kind === 'crossing' && show.rollArrives ? rollPlace(show.arrive, COLS) : game.rollIn < ROLL_IN ? rollPlace(game.rollIn / ROLL_IN, COLS) : ROLL.x
       const next = site(game.save.next.site, game.save.next.variant)
       pen.save()
       const [nx, ny] = at2(rx - 0.25, at.right[1])
@@ -492,7 +523,7 @@ export class View {
       const x = rolled ? rolled.from + (place[0] - rolled.from) * e * e * (3 - 2 * e) : place[0]
       const how = 'pin' in cart.at ? 'pin' : cart.at.under ? 'under' : 'deck'
       const rung = game.trolleyRung < RING ? 0.04 * Math.sin(game.trolleyRung * 60) * (1 - game.trolleyRung / RING) : 0
-      trolley(pen, ...at2(x + rung, place[1] + (how === 'deck' ? 0.11 : 0)), cell, cart.weights, how, 0.3 * Math.sin(game.seconds * 2.6), stream(31))
+      trolley(pen, ...at2(x + rung, place[1] + (how === 'deck' ? 0.11 : 0)), cell, cart.weights, how, swingAt(game.swing), stream(31))
     }
     // A part gave under it: it drops into the water where it was, and is back in its compartment.
     if (game.trolleyFell) {

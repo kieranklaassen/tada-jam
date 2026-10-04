@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { CROSSINGS, part } from './bridges.fixture'
 import { driverAt } from './fleet'
-import { Game, MODEL, wholeArch } from './game'
+import { Game, MODEL, ROLL_IN, SWING, swingAt, wholeArch } from './game'
 import { ROLL, SLIDE_OFF, TRAY, bays, parkAt, rackAt, slideOff, tools, waitAt } from './layout'
 import { stream } from './look'
 import { WATER } from './pose'
@@ -10,7 +10,9 @@ import { deserialize, edit, freshSave, serialize } from './save'
 import { isFooting, site } from './sites'
 import { CHIEF } from './toy'
 import { VEHICLES, trainOf } from './vehicles'
-import { bargeHorn, beaverChatter, beaverSigh, beaverSlap, hornEcho, moleDrop, moleRule } from './voices'
+import { bargeHorn, beaverChatter, beaverSigh, beaverSlap, hornEcho, load as loadVoice, moleDrop, moleRule, pendulumSqueak, unrollVoice } from './voices'
+import { groundAt } from './sheet'
+import { JUDGE } from './order'
 import { desk } from './valley'
 import { BUILD } from './crew'
 
@@ -315,7 +317,8 @@ describe('the trolley, the tracing paper and the two showings', () => {
     expect(game.save.shown).toEqual([])
     steps(game, 6)
     expect(game.chief.act).toBe('shows')
-    expect(game.showing).toEqual({ idea: 'profile' })
+    // Filled in from the sheet's idea and from the kind of failure it follows: the plank gave.
+    expect(game.showing).toEqual({ idea: 'profile', failure: 'gives' })
     expect(game.save.shown).toEqual(['profile'])
     expect(game.marginModel).toBe('profile')
     // It gives way to any touch, and has been given.
@@ -325,15 +328,27 @@ describe('the trolley, the tracing paper and the two showings', () => {
     expect(game.chief.act).not.toBe('shows')
   })
 
-  it('a scene a touch ended owes nothing then, and the idea is still owed at the next run that calls for it', () => {
+  it('a scene a touch ended is followed by the showing it owes all the same, and that touch does not end the showing: the next one does', () => {
     const game = fresh()
     drag(game, [10, 6], [14, 6])
     send(game); steps(game, 6)
     send(game); steps(game, 0.5)
+    expect(game.show.kind).toBe('give')
     tapAt(game, 3, 12)
-    expect(game.save.shown).toEqual([])
-    send(game); steps(game, 6)
+    expect(game.show.kind).toBeNull()
+    expect(game.chief.act).toBe('shows')
+    expect(game.showing).toEqual({ idea: 'profile', failure: 'gives' })
     expect(game.save.shown).toEqual(['profile'])
+    expect(game.takeUrgent()).toBe(true)
+    steps(game, 1)
+    expect(game.chief.act).toBe('shows')
+    // The next touch ends it where it is, and it has been given.
+    tapAt(game, 3, 12)
+    expect(game.chief.act).not.toBe('shows')
+    expect(game.marginModel).toBe('profile')
+    send(game); steps(game, 7)
+    expect(game.save.shown).toEqual(['profile'])
+    expect(game.chief.act).not.toBe('shows')
   })
 
   it('a child who crosses before any such run is shown the idea once the vehicle has parked', () => {
@@ -682,5 +697,234 @@ describe('the crew at the foot of the sheet, in the game', () => {
     const pile = bays(game.at)[0]
     game.press(pile.x0 + 0.5, TRAY.top - 1)
     expect(game.hand?.what).toBe('bay')
+  })
+})
+
+describe('what the reader found the sheet promises', () => {
+  const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
+  const paper = (game: Game) => tools(game.at).find((t) => t.tool === 'tracing')!
+  const cart = (game: Game) => tools(game.at).find((t) => t.tool === 'trolley')!
+
+  it('under a load each part is heard in its own kind\'s voice: a plank creaks lower the deeper it bends, on a run and under the trolley', () => {
+    const game = fresh()
+    drag(game, [10, 6], [14, 6])
+    game.takeVoices()
+    tapAt(game, waitAt(game.at, 0) - 0.4, 7)
+    const heard = []
+    for (let i = 0; i < 60 * 20 && game.drive; i++) { game.step(1 / 60); heard.push(...game.takeVoices()) }
+    const planks = heard.filter((voice) => voice.length === 1 && voice[0].wave === 'square' && voice[0].slideTo !== undefined)
+    expect(planks.length).toBeGreaterThanOrEqual(2)
+    // The plank's own voice (a creak that slides down), not one voice for every kind; and the same shape as the plank's cell of the grid.
+    for (const voice of planks) { expect(voice[0].slideTo!).toBeLessThan(voice[0].pitch); expect(voice[0].length).toBe(loadVoice('plank', 0.5)[0].length) }
+    // Each creak is lower than the one before: the curve deepens.
+    for (let i = 1; i < planks.length; i++) expect(planks[i][0].pitch).toBeLessThan(planks[i - 1][0].pitch)
+    steps(game, 7)
+    // The trolley set down on the plank: the plank is heard taking it.
+    const edge = new Game(edit(freshSave(null), CROSSINGS['plank-gap']), stream(2)), b = cart(edge)
+    edge.takeVoices()
+    edge.press((b.x0 + b.x1) / 2, TRAY.top - 1); edge.dragStart(); edge.dragMove(12, 6.2); edge.dragEnd()
+    expect(edge.trolley.at).not.toBeNull()
+    expect(edge.takeVoices().some((voice) => voice.length === 1 && voice[0].wave === 'square' && voice[0].slideTo !== undefined)).toBe(true)
+  })
+
+  it('a part that gives breaks at its spot: two pieces hang from their own pins, never in the ground, and close up as the bridge goes back', () => {
+    const game = fresh()
+    drag(game, [10, 6], [14, 6])
+    expect(game.pieces()).toBeNull()
+    send(game)
+    expect(game.gave).toMatchObject({ part: 0 })
+    let lowest = 6, seen = 0
+    for (let i = 0; i < 60 * 3.5; i++) {
+      game.step(1 / 60)
+      const broken = game.pieces()
+      if (!broken) continue
+      seen++
+      expect(broken).toMatchObject({ part: 0, kind: 'plank' })
+      const [nearHinge, nearTip] = broken.near, [farHinge, farTip] = broken.far
+      expect(nearHinge).toEqual([10, 6]); expect(farHinge).toEqual([14, 6])
+      // The two pieces together are as long as the plank was.
+      expect(Math.hypot(nearTip[0] - 10, nearTip[1] - 6) + Math.hypot(farTip[0] - 14, farTip[1] - 6)).toBeCloseTo(4, 6)
+      for (const [hinge, tip] of [broken.near, broken.far]) for (const share of [0.5, 0.75, 1]) expect(groundAt(game.at, hinge[0] + (tip[0] - hinge[0]) * share)).toBeLessThanOrEqual(hinge[1] + (tip[1] - hinge[1]) * share + 0.031)
+      lowest = Math.min(lowest, nearTip[1], farTip[1])
+    }
+    expect(seen).toBeGreaterThan(100)
+    // They hang well down while the vehicle is in the water.
+    expect(lowest).toBeLessThan(4.6)
+    steps(game, 0.9)
+    // Going back as built, the tips meet again where it broke, level with the pins.
+    const closing = game.pieces()
+    if (closing) { expect(closing.near[1][1]).toBeGreaterThan(5.5); expect(closing.far[1][1]).toBeGreaterThan(5.5) }
+    steps(game, 2)
+    expect(game.pieces()).toBeNull()
+    expect(game.gave).toBeNull()
+    expect(game.frame.firm).toEqual([true])
+  })
+
+  it('a tracing laid on the board dips under a vehicle as the bridge does, at the same place', () => {
+    const game = new Game(edit(freshSave(null), CROSSINGS['plank-gap']), stream(2)), b = paper(game)
+    // The tracing is of the plank on edge; the board then gets the same plank and the tracing is laid on it.
+    tapAt(game, (b.x0 + b.x1) / 2, TRAY.top - TRAY.tall + 0.3)
+    tapAt(game, b.x0 + 0.4, TRAY.top - 0.4)
+    expect(game.laidTracing).toBe(0)
+    const level = game.tracingRest[0].a[1]
+    tapAt(game, waitAt(game.at, 0) - 0.4, 7)
+    expect(game.drive?.tracing).not.toBeNull()
+    let moved = 0
+    for (let i = 0; i < 60 * 20 && game.drive; i++) {
+      game.step(1 / 60)
+      // The same design under the same load lies exactly as the bridge does.
+      expect(game.tracingRest[0].a[1]).toBeCloseTo(game.rest[0].a[1], 9)
+      moved = Math.max(moved, ...game.tracingRest.map((rest, k) => Math.abs((rest.a[1] + rest.b[1]) / 2 - (game.rest[k].a[1] + game.rest[k].b[1]) / 2)))
+    }
+    expect(moved).toBeCloseTo(0, 9)
+    steps(game, 9)
+    expect(game.tracingRest[0].a[1]).toBeCloseTo(level, 6)
+  })
+
+  it('a crossing brings the roll and the other vehicle once: a later crossing on the same sheet brings neither again', () => {
+    const game = new Game(edit(freshSave(null), CROSSINGS['plank-gap']), stream(2))
+    send(game)
+    expect(game.show).toMatchObject({ kind: 'crossing', rollArrives: true, arriving: 'jelly-truck' })
+    const first = []
+    for (let i = 0; i < 60 * 9; i++) { game.step(1 / 60); first.push(...game.takeVoices()) }
+    expect(first.filter((voice) => same(voice, unrollVoice(1)))).toHaveLength(1)
+    // The van goes home and crosses again: the roll and the truck are there already.
+    tapAt(game, parkAt(game.at, 1, 0) - 0.4, 7); steps(game, 14)
+    tapAt(game, waitAt(game.at, 1) - 0.4, 7)
+    game.takeVoices()
+    send(game)
+    expect(game.show).toMatchObject({ kind: 'crossing', rollArrives: false, arriving: null })
+    const again = []
+    for (let i = 0; i < 60 * 9; i++) { game.step(1 / 60); again.push(...game.takeVoices()) }
+    expect(again.filter((voice) => same(voice, unrollVoice(1)))).toHaveLength(0)
+  })
+
+  it('after a cycle judged badly the roll slides in when the give has ended, as it does after a crossing', () => {
+    const nearly = (): Game => { const game = new Game({ ...freshSave(null), tries: JUDGE.badly - 1 }, stream(2)); game.takeVoices(); return game }
+    const game = nearly()
+    send(game)
+    expect(game.save).toMatchObject({ finished: true, tries: JUDGE.badly })
+    expect(game.save.next).not.toBeNull()
+    // The outcome is saved, and the roll waits for the scene to end.
+    expect(game.rollIn).toBe(-1)
+    const during = []
+    for (let i = 0; i < 60 * 3; i++) { game.step(1 / 60); during.push(...game.takeVoices()) }
+    expect(game.rollIn).toBe(-1)
+    expect(during.filter((voice) => same(voice, unrollVoice(1)))).toHaveLength(0)
+    const after = []
+    for (let i = 0; i < 60 * 2.2; i++) { game.step(1 / 60); after.push(...game.takeVoices()); if (game.show.kind === null && game.rollIn < ROLL_IN) expect(game.rollIn).toBeGreaterThanOrEqual(0) }
+    expect(after.filter((voice) => same(voice, unrollVoice(1)))).toHaveLength(1)
+    steps(game, 1.5)
+    expect(game.rollIn).toBe(Infinity)
+    // A touch that ends the scene finds the roll there already, and can unroll it.
+    const quick = nearly()
+    send(quick)
+    quick.press(1, 1)
+    expect(quick.rollIn).toBe(Infinity)
+    tapAt(quick, ROLL.x - 0.3, quick.at.right[1] + 1.5)
+    expect(quick.save.sheets).toHaveLength(2)
+    // Opened again in the middle of that scene, the roll is simply there.
+    const away = nearly()
+    send(away)
+    expect(new Game(deserialize(stored(away), null), stream(1)).rollIn).toBe(Infinity)
+  })
+
+  it('the pencil ring fades through the crossing that takes it away', () => {
+    const base = edit(freshSave(null), CROSSINGS['plank-gap']), ring = { part: 0, spot: [12, 6] as const }
+    const game = new Game({ ...base, sheets: [{ ...base.sheets[0], ring }] }, stream(2))
+    expect(game.fading).toBeNull()
+    send(game)
+    expect(game.save.sheets[0].ring).toBeNull()
+    expect(game.fading).toEqual(ring)
+    steps(game, 9)
+    expect(game.fading).toBeNull()
+    // With no ring there is nothing to fade.
+    const bare = new Game(base, stream(2))
+    send(bare)
+    expect(bare.fading).toBeNull()
+  })
+
+  it('a secret that works every time: any two threads or more, plucked from longest to shortest, and threads of one length in either order', () => {
+    const game = new Game(freshSave(null, 'open-yard'), stream(8))
+    const b = (kind: number) => 5 + (14 * (kind + 0.5)) / 4
+    tapAt(game, b(3), -2.3)
+    // Two stays of one length, either side of the far cliff's footing.
+    drag(game, [19, 11], [18, 6]); drag(game, [19, 11], [20, 6])
+    expect(game.bridge).toHaveLength(2)
+    const mid = (i: number) => { const e = game.drawn()[i]; return [(e.a[0] + e.b[0]) / 2, (e.a[1] + e.b[1]) / 2] as const }
+    for (const order of [[0, 1], [1, 0]]) {
+      steps(game, 4)
+      for (const i of order) { steps(game, 1.2); tapAt(game, ...mid(i)) }
+      expect(game.chief.act, order.join()).toBe('taps-and-listens')
+    }
+  })
+
+  it('the trolley on its hook swings with a squeak at each end until it hangs still, and a tap sets it swinging again', () => {
+    expect(swingAt(0)).toBeCloseTo(SWING.far)
+    expect(swingAt(Infinity)).toBe(0)
+    expect(Math.abs(swingAt(12))).toBeLessThan(0.01)
+    const game = new Game(edit({ ...freshSave(null), sheets: [{ ...freshSave(null).sheets[0], site: 'first-triangle' }] }, CROSSINGS['first-triangle']), stream(2)), b = cart(game)
+    game.takeVoices()
+    game.press((b.x0 + b.x1) / 2, TRAY.top - 1); game.dragStart(); game.dragMove(12.1, 3.9); game.dragEnd()
+    expect(game.trolley.at).toEqual({ pin: [12, 4] })
+    expect(game.swing).toBe(0)
+    const squeaks = (seconds: number) => { let heard = 0; for (let i = 0; i < seconds * 60; i++) { game.step(1 / 60); heard += game.takeVoices().filter((voice) => same(voice, pendulumSqueak(true)) || same(voice, pendulumSqueak(false))).length } return heard }
+    expect(game.takeVoices().filter((voice) => same(voice, pendulumSqueak(false)))).toHaveLength(1)
+    // One at each end of each swing, while it swings far enough to hear.
+    expect(squeaks(6)).toBeGreaterThanOrEqual(3)
+    expect(squeaks(20)).toBe(0)
+    expect(game.swing).toBe(Infinity)
+    const place = game.trolleyPlace()!
+    tapAt(game, place[0], place[1] + 0.3)
+    expect(game.swing).toBe(0)
+    expect(squeaks(3)).toBeGreaterThanOrEqual(2)
+    expect(JSON.stringify(stored(game))).not.toContain('swing')
+  })
+
+  it('at the free yard the child has whichever vehicle it picks, and whichever it sends is the yard\'s own', () => {
+    const game = new Game({ ...edit(freshSave(null, 'open-yard'), CROSSINGS['open-yard']), position: 'open-yard' }, stream(3))
+    expect(game.waiting).toEqual(['post-van', 'jelly-truck'])
+    // A tap on the one behind brings it forward, and the next of the fleet comes up behind it.
+    tapAt(game, waitAt(game.at, 1) - 0.4, 7)
+    expect(game.waiting).toEqual(['jelly-truck', 'piano-mover'])
+    tapAt(game, waitAt(game.at, 1) - 0.4, 7)
+    expect(game.waiting).toEqual(['piano-mover', 'giraffe-bus'])
+    tapAt(game, waitAt(game.at, 1) - 0.4, 7); tapAt(game, waitAt(game.at, 1) - 0.4, 7); tapAt(game, waitAt(game.at, 1) - 0.4, 7)
+    expect(game.waiting).toEqual(['post-van', 'jelly-truck'])
+    send(game)
+    expect(game.show.kind).toBe('crossing')
+    // Its crossing judges the cycle, and the position stays at the yard.
+    expect(game.save).toMatchObject({ finished: true, position: 'open-yard', across: ['post-van'] })
+    expect(game.save.next).toMatchObject({ site: 'open-yard' })
+    expect(game.show.arriving).not.toBeNull()
+    expect(game.waiting).toHaveLength(2)
+  })
+
+  it('put away in the middle of a touch, the thing in the hand is back where it came from: no move is made that the child did not make', () => {
+    // A half-drawn part is not laid.
+    const laying = fresh()
+    laying.press(10, 6); laying.dragStart(); laying.dragMove(14, 6)
+    expect(laying.hand?.what).toBe('lay')
+    laying.pressEnd()
+    expect(laying.hand).toBeNull()
+    expect(laying.bridge).toEqual([])
+    // A carried part, well away from where it lay, is not taken off.
+    const carrying = new Game(edit(freshSave(null), CROSSINGS['plank-gap']), stream(2))
+    carrying.takeChange()
+    carrying.press(12.5, 6.1); carrying.dragStart(); carrying.dragMove(12.5, 1)
+    carrying.pressEnd()
+    expect(carrying.bridge).toHaveLength(1)
+    // The trolley in the hand is not set down, and a tracing in the hand is not swapped.
+    const b = cart(carrying), t = paper(carrying)
+    carrying.press((b.x0 + b.x1) / 2, TRAY.top - 1); carrying.dragStart(); carrying.dragMove(12, 6.2)
+    carrying.pressEnd()
+    expect(carrying.trolley.at).toBeNull()
+    tapAt(carrying, (t.x0 + t.x1) / 2, TRAY.top - TRAY.tall + 0.3)
+    const kept = JSON.stringify(stored(carrying))
+    carrying.takeChange()
+    carrying.press(t.x0 + 0.4, TRAY.top - 0.4); carrying.dragStart(); carrying.dragMove(12, 8)
+    carrying.pressEnd()
+    expect(JSON.stringify(stored(carrying))).toBe(kept)
+    expect(carrying.takeChange()).toBe(false)
   })
 })

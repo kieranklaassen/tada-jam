@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { KINDS, SPEC } from './kit'
-import { RANGE, beaverChatter, beaverSigh, beaverSlap, chord, creak, fold, give, gurgle, hornEcho, lay, load, moleDrop, moleRule, pendulum, pinClick, pinPop, pinRattle, pinSwing, pinTick, plop, play, pluck, snapTick, splash, takeOff, trolleyBells, trolleyFlip, trolleyOff, trolleySet, trolleyWeight, turn, type VoiceSpec } from './voices'
+import { RANGE, growCreak, pendulumSqueak, beaverChatter, beaverSigh, beaverSlap, chord, creak, fold, give, gurgle, hornEcho, lay, load, moleDrop, moleRule, pendulum, pinClick, pinPop, pinRattle, pinSwing, pinTick, plop, play, pluck, snapTick, splash, takeOff, trolleyBells, trolleyFlip, trolleyOff, trolleySet, trolleyWeight, turn, type VoiceSpec } from './voices'
 
 const every: [string, VoiceSpec][] = [
   ['pin', pinClick],
@@ -15,6 +15,7 @@ const every: [string, VoiceSpec][] = [
   ['chord', chord([9000, 20, 440, 330, 550, 660, 770])],
   ...KINDS.flatMap((kind) => [-1, 0, 0.5, 1, 9].map((use): [string, VoiceSpec] => [`load ${kind} ${use}`, load(kind, use)])),
   ['plop', plop], ['gurgle', gurgle], ['horn echo', hornEcho],
+  ['squeak', pendulumSqueak(false)], ['squeak back', pendulumSqueak(true)], ...KINDS.flatMap((kind) => [0, 1, 4, 9].map((long): [string, VoiceSpec] => [`grow ${kind} ${long}`, growCreak(kind, long)])),
   ['beaver slap', beaverSlap], ['beaver chatter', beaverChatter], ['beaver sigh', beaverSigh], ['mole rule', moleRule(false)], ['mole rule again', moleRule(true)], ['mole drop', moleDrop], ['pin tick', pinTick], ['pin swing', pinSwing], ['pendulum', pendulum], ['trolley set', trolleySet], ['trolley flip', trolleyFlip],
   ['rattle none', pinRattle([])], ['rattle many', pinRattle([1, 99999, 300, 400, 500, 600, 700])],
   ...[0, 1, 3, 40].flatMap((n): [string, VoiceSpec][] => [[`pop ${n}`, pinPop(n)], [`weight ${n}`, trolleyWeight(n)], [`off ${n}`, trolleyOff(n)]]),

@@ -143,8 +143,21 @@ type Mini = (ax: number, ay: number, bx: number, by: number, kind?: Wood) => voi
  * that fails, which gives by `fail` (0 to 1), then the idea, which holds.
  * `holds` chooses which of the two is drawn. One cell of the model is `c`.
  */
-export function ideaModel(pen: Pen, idea: Idea, x: number, y: number, c: number, holds: boolean, fail: number, random: () => number) {
+export function ideaModel(pen: Pen, idea: Idea, x: number, y: number, c: number, holds: boolean, fail: number, random: () => number, failure: string | null = null) {
   const w = c * 0.9
+  // The way that fails is filled in from how the child's own run failed: a build that folded goes right over, a part
+  // that gave shows its splinter, and a vehicle that went in off the road's end, a tube or a thread shows the water.
+  if (failure === 'folds') fail = Math.min(1, fail * 1.35)
+  if (!holds && fail > 0.8 && failure && failure !== 'folds') {
+    pen.strokeStyle = INK.line
+    pen.lineWidth = Math.max(1, c * 0.03)
+    pen.globalAlpha = (fail - 0.8) / 0.2
+    pen.beginPath()
+    if (failure === 'gives') for (let i = 0; i < 5; i++) { const a = i * 1.26 + 0.4; pen.moveTo(x + 0.7 * w + Math.cos(a) * c * 0.1, y - 0.28 * w + Math.sin(a) * c * 0.1); pen.lineTo(x + 0.7 * w + Math.cos(a) * c * 0.24, y - 0.28 * w + Math.sin(a) * c * 0.24) }
+    else for (const [from, to] of [[0.2, 0.55], [0.7, 1.0], [1.1, 1.35]] as const) { pen.moveTo(x + from * w, y + c * 0.1); pen.quadraticCurveTo(x + ((from + to) / 2) * w, y + c * 0.2, x + to * w, y + c * 0.1) }
+    pen.stroke()
+    pen.globalAlpha = 1
+  }
   const stick: Mini = (ax, ay, bx, by, kind = 'stick') => wood(pen, kind, x + ax * w, y - ay * w, x + bx * w, y - by * w, c * 0.55, random)
   const dot = (px: number, py: number) => pin(pen, x + px * w, y - py * w, c * 0.5, false)
   const sag = fail * 0.35

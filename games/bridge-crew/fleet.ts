@@ -258,6 +258,23 @@ export function vehicle(pen: Pen, id: VehicleId, c: number, pose: VehiclePose, s
   // The wheels stay on the road whatever the body does. The caterpillar's are its feet, and each lifts in its turn.
   spec.axles.forEach((behind, i) => wheel(pen, -c * behind, -r - (id === 'caterpillar-bus' ? pose.cargo[i] * c * 0.14 : 0), r, c, spin + i))
   if (id === 'post-van' && pose.upset > 0.08) driver(pen, c, driverAt(long, pose.upset) * c, pose.upset)
+  // The piano has rolled back, and the mover runs behind it, holding on.
+  if (id === 'piano-mover' && pose.upset > 0.08) mover(pen, c, -c * (long + 2.22) - pose.upset * c * 0.8, seconds, pose.upset)
+}
+
+/** The piano's mover, running behind it on the road: a paper cut-out leaning back on its heels, both arms out to the piano, its legs going. */
+function mover(pen: Pen, c: number, x: number, seconds: number, out: number) {
+  const stride = Math.sin(seconds * 13), lean = 0.12 * c * Math.min(1, out * 2)
+  cutOut(pen, c, INK.paper, () => pen.roundRect(x - c * 0.11 - lean, -c * 0.5, c * 0.22, c * 0.36, c * 0.05))
+  cutOut(pen, c, INK.paper, () => pen.arc(x - lean * 1.4, -c * 0.61, c * 0.12, 0, Math.PI * 2))
+  pencil(pen, c, 0.03)
+  for (const ex of [0.01, 0.07]) { pen.beginPath(); pen.arc(x - lean * 1.4 + c * ex, -c * 0.63, c * 0.018, 0, Math.PI * 2); pen.fill() }
+  pen.beginPath()
+  pen.moveTo(x + c * 0.05 - lean, -c * 0.44); pen.lineTo(x + c * 0.24, -c * 0.5)
+  pen.moveTo(x + c * 0.05 - lean, -c * 0.34); pen.lineTo(x + c * 0.24, -c * 0.36)
+  pen.moveTo(x - c * 0.04 - lean * 0.5, -c * 0.14); pen.lineTo(x - c * 0.04 + c * 0.13 * stride, 0)
+  pen.moveTo(x + c * 0.04 - lean * 0.5, -c * 0.14); pen.lineTo(x + c * 0.04 - c * 0.13 * stride, 0)
+  pen.stroke()
 }
 
 /** Where the van's driver stands beside the van, in cells from its front axle: from the cab door to just ahead of the back wheels, which are still on the bank. */

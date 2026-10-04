@@ -134,6 +134,14 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       }
       afterToy()
     }
+    // Put away in the middle of a touch: whatever is in the hand goes back where it came from. A half-drawn part is
+    // not laid, a carried part is not taken off, the trolley is not set down: no move is made that the child did not make.
+    const putDown = () => {
+      touch.clear()
+      if (!toy || spike) return
+      toy.pressEnd()
+      afterToy()
+    }
     const at = (event: PointerEvent): Point => {
       const box = root.getBoundingClientRect()
       return { x: event.clientX - box.left, y: event.clientY - box.top }
@@ -202,7 +210,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       cancelAnimationFrame(frame)
       frame = 0
       clock.rest()
-      act(touch.clear())
+      putDown()
       cadence.settle(performance.now())
     })
     attendRef.current = (attended) => attention.set(attended)
@@ -222,8 +230,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
 
     return () => {
       disposed = true
-      // As on going to rest: the touch ends first, so the thing in hand is put down before the last save.
-      act(touch.clear())
+      // As on going to rest: the touch ends first, so the thing in hand is back where it came from before the last save.
+      putDown()
       cadence.settle(performance.now())
       cancelAnimationFrame(frame)
       observer.disconnect()

@@ -34,9 +34,12 @@ export type Show = {
   arrive: number
   /** How the vehicle took the ride, for the crossing. */
   reaction: Reaction | null
+  /** What this crossing brings: the next sheet's roll, and the vehicle that draws up at the near bank. A later crossing on the same sheet brings neither again. */
+  rollArrives: boolean
+  arriving: VehicleId | null
 }
 
-export const idleShow = (): Show => ({ kind: null, vehicle: null, homeward: false, from: [0, 0], tilt: 0, snap: 0, fall: 0, paddle: 0, climb: 0, shake: 0, restore: 0, spring: 0, react: 0, park: 0, fade: 0, arrive: 0, reaction: null })
+export const idleShow = (): Show => ({ kind: null, vehicle: null, homeward: false, from: [0, 0], tilt: 0, snap: 0, fall: 0, paddle: 0, climb: 0, shake: 0, restore: 0, spring: 0, react: 0, park: 0, fade: 0, arrive: 0, reaction: null, rollArrives: false, arriving: null })
 
 /** A cue for a sound, played once when its beat begins: the game queues the voice. */
 export type Cue = 'splash' | 'ring' | 'react' | 'arrive' | 'restore'

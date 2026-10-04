@@ -5,7 +5,7 @@ import { stream } from './look'
 import { deserialize, freshSave, serialize } from './save'
 import { groundAt } from './sheet'
 import { site } from './sites'
-import { CHIEF, FLIGHT, HOLD, LEAN, MARKS, RING, Toy, closedTriangle, featherAt } from './toy'
+import { CHIEF, FLIGHT, HOLD, LEAN, MARKS, RING, Toy, closedTriangle, featherAt, flightEnds } from './toy'
 import { pinTick } from './voices'
 
 const part = (kind: Part['kind'], ax: number, ay: number, bx: number, by: number, turned = false): Part => ({ kind, a: [ax, ay], b: [bx, by], turned })
@@ -61,10 +61,13 @@ describe('the toy', () => {
     toy.dragStart()
     toy.dragMove(7.2, 6.1); toy.dragMove(7.3, 6.1); toy.dragMove(8.4, 5.9)
     expect(toy.hand).toMatchObject({ what: 'lay', kind: 'plank', from: [6, 6], to: [8, 6] })
-    // One tick for each new grid point, none for a move inside the same one, each lower as the part grows.
-    const ticks = toy.takeVoices()
+    // For each new grid point a dry creak and a tick, none for a move inside the same one, and both lower as the part grows.
+    const heard = toy.takeVoices(), creaks = heard.filter((voice) => voice[0].wave === 'square'), ticks = heard.filter((voice) => voice[0].wave !== 'square')
+    expect(heard).toHaveLength(4)
+    expect(creaks).toHaveLength(2)
     expect(ticks).toHaveLength(2)
     expect(ticks[1][0].pitch).toBeLessThan(ticks[0][0].pitch)
+    expect(creaks[1][0].pitch).toBeLessThan(creaks[0][0].pitch)
     // It reaches no further than it is long.
     toy.dragMove(30, 6)
     expect(toy.hand).toMatchObject({ to: [10, 6] })
@@ -286,6 +289,37 @@ describe('the toy', () => {
     expect(toy.marks.filter((mark) => mark.what === 'feather')).toHaveLength(MARKS.feathers)
     settle(toy, MARKS.feather + 1)
     expect(toy.marks).toEqual([])
+  })
+
+  it('taken off, each kind goes back to the tray its own way, and each ends lying level in its pile', () => {
+    const a: [number, number] = [8, 6], b: [number, number] = [11, 8], home: [number, number] = [12, -2.3], long = Math.hypot(3, 2)
+    const kinds = ['plank', 'stick', 'tube', 'thread'] as const
+    const turnOf = (ends: { a: [number, number]; b: [number, number] }) => Math.atan2(ends.b[1] - ends.a[1], ends.b[0] - ends.a[0])
+    for (const kind of kinds) {
+      const start = flightEnds(kind, a, b, home, 0), end = flightEnds(kind, a, b, home, 1)
+      expect(start.a[0]).toBeCloseTo(a[0]); expect(start.a[1]).toBeCloseTo(a[1])
+      // Level, and in the middle of its pile.
+      expect(end.a[1]).toBeCloseTo(home[1]); expect(end.b[1]).toBeCloseTo(home[1])
+      expect((end.a[0] + end.b[0]) / 2).toBeCloseTo(home[0], kind === 'thread' ? 0 : 6)
+      for (let t = 0; t <= 1; t += 0.05) { const now = flightEnds(kind, a, b, home, t); for (const n of [...now.a, ...now.b]) expect(Number.isFinite(n)).toBe(true) }
+    }
+    // A plank slides out along its own length first: its turn does not change and its middle moves along it.
+    const slid = flightEnds('plank', a, b, home, 0.3)
+    expect(turnOf(slid)).toBeCloseTo(turnOf({ a, b }))
+    expect((slid.a[0] + slid.b[0]) / 2).toBeGreaterThan(9.5 + 0.5)
+    // A stick spins: half-way it has turned far from where it lay, and it goes up before it comes down.
+    const flicked = flightEnds('stick', a, b, home, 0.5)
+    expect(Math.abs(Math.sin(turnOf(flicked) - turnOf({ a, b })))).toBeLessThan(1.01)
+    expect((flicked.a[1] + flicked.b[1]) / 2).toBeGreaterThan((7 + home[1]) / 2 + 0.8)
+    // A tube lies level almost at once and rolls down.
+    expect(Math.abs(Math.sin(turnOf(flightEnds('tube', a, b, home, 0.3))))).toBeLessThan(0.05)
+    // A thread runs in to its near end before it goes anywhere: half-way it is a short length still at that end.
+    const reeled = flightEnds('thread', a, b, home, 0.5)
+    expect(Math.hypot(reeled.b[0] - reeled.a[0], reeled.b[1] - reeled.a[1])).toBeLessThan(long * 0.2)
+    expect(Math.hypot((reeled.a[0] + reeled.b[0]) / 2 - a[0], (reeled.a[1] + reeled.b[1]) / 2 - a[1])).toBeLessThan(0.6)
+    // No two kinds are in the same place a third of the way.
+    const mids = kinds.map((kind) => { const now = flightEnds(kind, a, b, home, 0.35); return `${((now.a[0] + now.b[0]) / 2).toFixed(1)},${((now.a[1] + now.b[1]) / 2).toFixed(1)},${turnOf(now).toFixed(1)}` })
+    expect(new Set(mids).size).toBe(4)
   })
 
   it('the chief has its two tastes about what was built, and a poke gets its own answer', () => {

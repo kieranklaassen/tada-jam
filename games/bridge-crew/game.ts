@@ -1,7 +1,7 @@
 import { consequence } from './consequence'
 import { BUILD, CrewDirector, type CrewId } from './crew'
 import { layPart } from './grid'
-import { length, pinsOf, samePoint, type Part, type Point } from './kit'
+import { length, pinsOf, samePoint, type Kind, type Part, type Point } from './kit'
 import { PART_REACH, PIN_REACH, SLIDE_OFF, TROLLEY_REACH, farFromStretch, gridPointAt, onRoll, onVehicle, parkAt, rackSlot, toolAt, touched, tracingSpot, waitAt } from './layout'
 import { modelInMargin, nearestDifferences, neatWayDue, oneChangeDue, type Difference } from './order'
 import { CALM, type Splash } from './drift'
@@ -10,14 +10,14 @@ import { DRAWN_DIP, atRest, rests, type Rest } from './pose'
 import { answerOf, between, creaks, ended, frontAt, seat, stepAt, type Seat } from './ride'
 import type { Strain } from './frame'
 import { hang, lowPoint, park, roadOf, run, type Ending, type Run, type Train } from './run'
-import { crossed, failedRun, markShown, onNewest, parked, pluckHat, ringed, sentHome, setTrolley, standing, swapTracing, toFront, trace, turnTo, unroll, type Save } from './save'
+import { crossed, failedRun, leaveHats, markShown, onNewest, parked, pluckHat, ringed, sentHome, setTrolley, standing, swapTracing, toFront, trace, turnTo, unroll, type Save, type Sheet } from './save'
 import { Scene } from './scene'
 import { groundAt } from './sheet'
 import { isFooting, site, type Idea, type VehicleId } from './sites'
 import { crossingBeats, giveBeats, givePlace, idleShow, type Cue, type Show } from './stage'
 import { CHIEF, RING, Toy } from './toy'
 import { TAIL, TASTE, VEHICLES, bargeReaction, reaction, trainOf, type Reaction } from './vehicles'
-import { bargeHorn, beaverChatter, beaverSigh, beaverSlap, chiefTaps, chord, creak, give, gurgle, honk, hornEcho, plop, lay as layVoice, moleDrop, moleRule, pendulum, pinTick, pluck as pluckVoice, reactVoice, restore, snapTick, splash, trolleyBells, trolleyFlip, trolleyOff, trolleySet, trolleyWeight, unrollVoice } from './voices'
+import { bargeHorn, beaverChatter, beaverSigh, beaverSlap, chiefTaps, chord, creak, give, gurgle, honk, hornEcho, plop, lay as layVoice, load as loadVoice, moleDrop, moleRule, pendulumSqueak, pinTick, pluck as pluckVoice, reactVoice, restore, snapTick, splash, trolleyBells, trolleyFlip, trolleyOff, trolleySet, trolleyWeight, unrollVoice } from './voices'
 
 // The game on the toy: the vehicles at the two banks, a run over the bridge,
 // the two scenes a run ends in, and the sheets (the roll and the rack). Pure,
@@ -34,7 +34,17 @@ export type Drive = {
   /** Each part's strain when it was last listened to, for the creaks, and how it is strained now. */
   heard: number[]
   strain: Strain[]
+  /** The same run over the tracing laid on the board, if one is: its second line dips under the same vehicle at the same place. */
+  tracing: Run | null
 }
+
+/** The trolley on its hook swings like a pendulum and comes to rest: how fast, how far at first, and how soon it dies away. */
+export const SWING = { rate: 2.6, far: 0.3, dies: 2.6, heard: 0.05 } as const
+/** How far it has swung, in radians, this long after it was set swinging. It starts at one end. */
+export const swingAt = (since: number): number => (Number.isFinite(since) ? SWING.far * Math.exp(-since / SWING.dies) * Math.cos(SWING.rate * since) : 0)
+
+/** How long the next roll takes to slide in when it arrives outside a crossing, in seconds. */
+export const ROLL_IN = 1.1
 
 const longOf = (id: VehicleId): number => Math.max(...VEHICLES[id].axles)
 /** How tall each vehicle stands with its load, in cells: what a touch on it can reach. */
@@ -86,8 +96,14 @@ export class Game extends Toy {
   trolleyRung = Infinity
   trolleyRolled: { from: number; since: number } | null = null
   trolleyFell: { from: readonly [number, number]; since: number } | null = null
-  /** The showing the chief is giving: the neat way of an idea, or the one change with the two differences that fill its models. */
-  showing: { idea: Idea } | { differences: Difference[] } | null = null
+  /** The showing the chief is giving: the neat way of an idea, filled in from the kind of failure it follows (or none, after a crossing), or the one change with the two differences that fill its models. */
+  showing: { idea: Idea; failure: Ending['kind'] | null } | { differences: Difference[] } | null = null
+  /** The pencil ring as it was when the job vehicle crossed: it fades through the crossing's scene. What is saved has it gone already. */
+  fading: Sheet['ring'] = null
+  /** Seconds since the next roll began to slide in after a cycle judged badly; -1 while it waits for the give's scene to end; Infinity once it is there. */
+  rollIn = Infinity
+  /** Seconds since the trolley was set swinging on its hook. */
+  swing = Infinity
   /** How the barge took the last crossing, on a sheet where one passes underneath: what it does during that crossing's scene. */
   bargeTook: Reaction | null = null
   /** Seconds since the oldest sheet slid off the end of the rack, and since the model in the margin was plucked. Short-lived: not saved. */
@@ -100,6 +116,7 @@ export class Game extends Toy {
   private moleUp = false
   private tailUp = false
   private owed: Idea | null = null
+  private owedAfter: Ending['kind'] | null = null
   /** The threads plucked one after another, for the secret: every thread of the bridge from longest to shortest is a scale. */
   private tune: number[] = []
   private scene: Scene | null = null
@@ -196,6 +213,40 @@ export class Game extends Toy {
   }
 
   /**
+   * During a give, the two pieces of the part that broke: each hangs from its
+   * own pin, as far down as the ground lets it, and they close up again as the
+   * bridge goes back as built. Each piece is its hinge and its tip, in cells.
+   * Null when nothing broke in two: no part gave, or a tube's end popped out.
+   */
+  pieces(): { part: number; kind: Kind; turned: boolean; near: readonly [Point, Point]; far: readonly [Point, Point] } | null {
+    const gave = this.gave, show = this.show
+    if (!gave || show.kind !== 'give') return null
+    const part = this.bridge[gave.part]
+    if (!part || part.kind === 'tube') return null
+    const whole = length(part), dx = part.b[0] - part.a[0], dy = part.b[1] - part.a[1]
+    // Where along it the break is: its spot, kept off both ends.
+    const along = Math.max(0.15, Math.min(0.85, ((gave.spot[0] - part.a[0]) * dx + (gave.spot[1] - part.a[1]) * dy) / (whole * whole)))
+    const eased = (t: number) => { const u = Math.max(0, Math.min(1, t)); return u * u * (3 - 2 * u) }
+    const fallen = eased(show.snap * 0.4 + show.fall * 1.5) * (1 - eased(show.restore))
+    const hang = (hinge: Point, long: number, from: number): Point => {
+      // The short way round to straight down, and no further than the ground allows.
+      let turn = -Math.PI / 2 - from
+      while (turn > Math.PI) turn -= 2 * Math.PI
+      while (turn < -Math.PI) turn += 2 * Math.PI
+      let clear = 0
+      for (let k = 1; k <= 24; k++) {
+        const angle = from + (turn * k) / 24
+        if ([0.5, 0.75, 1].some((share) => groundAt(this.at, hinge[0] + Math.cos(angle) * long * share) > hinge[1] + Math.sin(angle) * long * share + 0.03)) break
+        clear = k / 24
+      }
+      const angle = from + turn * Math.min(fallen, clear)
+      return [hinge[0] + Math.cos(angle) * long, hinge[1] + Math.sin(angle) * long]
+    }
+    const was = Math.atan2(dy, dx)
+    return { part: gave.part, kind: part.kind, turned: part.turned, near: [part.a, hang(part.a, whole * along, was)], far: [part.b, hang(part.b, whole * (1 - along), was + Math.PI)] }
+  }
+
+  /**
    * The model, with the trolley where it stands or hangs: the bridge lies as
    * the frame answers under that one load. A part that gives under it gets the
    * ring, and the trolley drops back to the tray. A tracing laid on the board
@@ -242,11 +293,13 @@ export class Game extends Toy {
 
   override press(x: number, y: number): void {
     // A touch ends a scene, and is then an ordinary touch.
-    if (this.scene?.running) { this.skipping = true; this.scene.finish(); this.afterScene(); this.skipping = false }
+    let began = false
+    if (this.scene?.running) { this.skipping = true; this.scene.finish(); began = this.afterScene(); this.skipping = false }
     // While a vehicle is on the bridge the bridge is not changed under it: a touch is answered and no more.
     if (this.drive) { this.voices.push(pinTick); this.hand = null; return }
     // A touch ends a showing too: the chief stops where it is, and the showing has been given.
-    if (this.showing && (this.chief.act === 'shows' || this.chief.act === 'compares')) { this.chief.rest(); if ('differences' in this.showing) this.showing = null }
+    // A showing that this very touch let begin, by ending the scene before it, goes on: the next touch ends it.
+    if (!began && this.showing && (this.chief.act === 'shows' || this.chief.act === 'compares')) { this.chief.rest(); if ('differences' in this.showing) this.showing = null }
     this.owed = null
     const tool = toolAt(this.at, x, y)
     if (tool?.tool === 'trolley') { this.hand = { what: 'trolley', placed: false, carried: false, finger: [x, y] }; this.voices.push(pinTick); return }
@@ -388,15 +441,16 @@ export class Game extends Toy {
   /**
    * A secret, which works every time and is never hinted: the threads of a
    * bridge plucked one after another from the longest to the shortest play a
-   * scale, and the chief taps along. It needs three threads of three lengths.
+   * scale, and the chief taps along. It works with any two threads or more.
    */
   protected override plucked(index: number): void {
     if (this.bridge[index].kind !== 'thread') { this.tune = []; return }
     this.tune.push(index)
     const threads = this.bridge.flatMap((part, i) => (part.kind === 'thread' ? [i] : []))
     const last = this.tune.slice(-threads.length), longs = last.map((i) => length(this.bridge[i]))
-    if (threads.length < 3 || last.length < threads.length || new Set(last).size < threads.length) return
-    if (!longs.every((long, i) => i === 0 || long < longs[i - 1])) return
+    if (threads.length < 2 || last.length < threads.length || new Set(last).size < threads.length) return
+    // From longest to shortest: threads of one length may come in either order.
+    if (!longs.every((long, i) => i === 0 || long <= longs[i - 1] + 1e-9)) return
     this.tune = []
     this.chief.react('taps-and-listens')
     this.voices.push(chiefTaps(longs.slice(0, 3).map((long) => 440 * Math.sqrt(4 / long))))
@@ -413,7 +467,11 @@ export class Game extends Toy {
         this.voices.push(trolleyFlip)
         this.trolleyRung = Infinity
         this.changed = true
-      } else { this.voices.push(trolleyBells(trolley.weights)); this.trolleyRung = 0 }
+      } else {
+        this.voices.push(trolleyBells(trolley.weights)); this.trolleyRung = 0
+        // On its hook a tap sets it swinging again.
+        if (trolley.at && 'pin' in trolley.at) { this.swing = 0; this.voices.push(pendulumSqueak(false)) }
+      }
       return
     }
     // A tap on its compartment puts one more weight on, and after six it starts again at one.
@@ -422,6 +480,7 @@ export class Game extends Toy {
     this.voices.push(trolleyWeight(weights))
     this.changed = true
     this.model()
+    this.loadSound()
     this.compare()
   }
 
@@ -438,14 +497,25 @@ export class Game extends Toy {
       this.voices.push(trolleySet)
     } else if (Math.hypot(x - pin[0], y - pin[1]) <= 0.45 && hang(this.at, this.bridge, pin, trolley.weights) && !isFooting(this.at)(pin)) {
       this.save = setTrolley(this.save, trolley.weights, { pin })
-      this.voices.push(pendulum)
+      // It swings from where it was let go, with a squeak at each end, until it hangs still.
+      this.swing = 0
+      this.voices.push(pendulumSqueak(false))
     } else {
       this.save = setTrolley(this.save, trolley.weights, null)
       if (was) this.voices.push(trolleyOff(trolley.weights))
     }
     this.changed = true
     this.model()
+    this.loadSound()
     this.compare()
+  }
+
+  /** Under the trolley the part that works hardest is heard, in its own kind's voice: a plank creaks lower the deeper it bends, a stick squeaks higher, a tube crackles, a thread hums. */
+  private loadSound(): void {
+    if (!this.trolley.at) return
+    let most = -1
+    this.answer.parts.forEach((state, index) => { if (state.use > 0.05 && (most < 0 || state.use > this.answer.parts[most].use)) most = index })
+    if (most >= 0 && this.bridge[most]) this.voices.push(loadVoice(this.bridge[most].kind, this.answer.parts[most].use))
   }
 
   private tapTracing(spot: 'pad' | 0 | 1): void {
@@ -500,6 +570,15 @@ export class Game extends Toy {
     this.modelRung += dt
     if (this.splash && (this.splash.since += dt) > CALM) this.splash = null
     this.stepCrew(dt)
+    if (this.rollIn >= 0 && this.rollIn < Infinity && (this.rollIn += dt) >= ROLL_IN) this.rollIn = Infinity
+    // The trolley on its hook: a squeak at each end of its swing, for as long as it swings far enough to be heard.
+    if (this.swing < Infinity) {
+      const hung = this.trolley.at !== null && 'pin' in this.trolley.at, before = Math.floor((SWING.rate * this.swing) / Math.PI)
+      this.swing += dt
+      const end = Math.floor((SWING.rate * this.swing) / Math.PI), far = SWING.far * Math.exp(-this.swing / SWING.dies)
+      if (!hung || far < 0.01) this.swing = Infinity
+      else if (end !== before && far > SWING.heard) this.voices.push(pendulumSqueak(end % 2 === 1))
+    }
     this.slidOff = this.slidOff < SLIDE_OFF ? this.slidOff + dt : Infinity
     if (this.trolleyRolled && (this.trolleyRolled.since += dt) > 0.7) this.trolleyRolled = null
     if (this.trolleyFell && (this.trolleyFell.since += dt) > 1.1) this.trolleyFell = null
@@ -513,7 +592,11 @@ export class Game extends Toy {
       const answer = between(drive.run, progress)
       // The bridge lies as the model says it does under the load where it is now.
       this.rest = rests(this.bridge, drive.run.frame, answer, isFooting(this.at), (gx) => groundAt(this.at, gx))
-      for (const due of creaks(drive.heard, answer.use)) this.voices.push(creak(due.use))
+      // Each part is heard as it takes the load, in its own kind's voice.
+      for (const due of creaks(drive.heard, answer.use)) this.voices.push(this.bridge[due.part] ? loadVoice(this.bridge[due.part].kind, due.use) : creak(due.use))
+      // A tracing laid on the board dips under the same vehicle at the same place: as far as its own run got.
+      const traced = this.laidTracing === null ? null : this.save.sheets[this.save.on].tracings[this.laidTracing]
+      if (drive.tracing && traced) this.tracingRest = rests(traced, drive.tracing.frame, between(drive.tracing, Math.min(progress, drive.tracing.steps.length - 1)), isFooting(this.at), (gx) => groundAt(this.at, gx))
       drive.heard = answer.use
       drive.strain = answer.strain
       if (ended(this.at, drive.run, x, drive.homeward)) this.finishDrive(drive)
@@ -556,7 +639,8 @@ export class Game extends Toy {
     if (this.trolley.at) { this.voices.push(trolleyOff(this.trolley.weights)); this.save = setTrolley(this.save, this.trolley.weights, null); this.changed = true; this.model() }
     const train = trainOf(VEHICLES[id])
     const result = run(this.at, this.bridge, train, homeward)
-    this.drive = { vehicle: id, run: result, train, homeward, seconds: 0, heard: Array.from(result.steps[0].use), strain: result.steps[0].strain }
+    const traced = this.laidTracing === null ? null : this.save.sheets[this.save.on].tracings[this.laidTracing]
+    this.drive = { vehicle: id, run: result, train, homeward, seconds: 0, heard: Array.from(result.steps[0].use), strain: result.steps[0].strain, tracing: traced ? run(this.at, traced, train, homeward) : null }
     // The beaver cannot look, and its teeth say so.
     this.voices.push(honk(id), beaverChatter)
   }
@@ -571,8 +655,16 @@ export class Game extends Toy {
       show.kind = 'crossing'
       show.reaction = reaction(drive.vehicle, drive.run.ride)
       this.bargeTook = this.at.channel ? bargeReaction(drive.run.ride) : null
-      // Homeward, the vehicle is back at the near bank and nothing is judged; outward, it has crossed.
-      this.save = drive.homeward ? sentHome(this.save, drive.vehicle) : crossed(this.save, drive.vehicle, drive.vehicle === 'giraffe-bus' ? drive.run.ride.low[TASTE.bus.headroom - 1] : [])
+      // Homeward, the vehicle is back at the near bank and nothing is judged; outward, it has crossed. Either way the
+      // bus leaves a hat on any part lower than its heads.
+      const hats = drive.vehicle === 'giraffe-bus' ? drive.run.ride.low[TASTE.bus.headroom - 1] : []
+      const before = this.save, ring = before.sheets[before.on].ring
+      this.save = drive.homeward ? leaveHats(sentHome(this.save, drive.vehicle), hats) : crossed(this.save, drive.vehicle, hats)
+      // The ring fades through this scene if this crossing took it away. The roll slides in and a vehicle draws up
+      // only if this crossing brought them: a later crossing on the same sheet brings neither again.
+      this.fading = ring && !this.save.sheets[this.save.on].ring ? ring : null
+      show.rollArrives = before.next === null && this.save.next !== null
+      show.arriving = this.save.waiting.find((waiting) => waiting !== drive.vehicle && !before.waiting.includes(waiting) && !before.across.includes(waiting)) ?? null
       this.scene = new Scene(crossingBeats(show, cue))
       this.crew.beaver.brace(false); this.crew.beaver.react('relief'); this.crew.mole.react('crossed')
       this.voices.push(beaverSigh)
@@ -588,24 +680,37 @@ export class Game extends Toy {
       if (drive.run.ending.kind === 'rolls-off') this.voices.push(plop)
       if (drive.run.ending.kind === 'dunks') { this.voices.push(gurgle); this.dipped = { part: drive.run.ending.part } }
       // A vehicle that fails on its way home paddles to the near bank like any other, and is home.
+      const hadNext = this.save.next !== null
       this.save = drive.homeward ? sentHome(this.save, drive.vehicle) : failedRun(this.save, drive.vehicle, what.ring)
+      // A cycle judged badly lays out a way back in: its roll waits for this scene to end, and then slides in.
+      if (!hadNext && this.save.next !== null) this.rollIn = -1
       this.scene = new Scene(giveBeats(show, cue))
-      // What is left of the bridge with the part that gave let go at one end: it sags or folds from there. With no
-      // part given (the road ended, the wheels rolled off), the bridge lies as it does with nothing on it.
+      // What is left of the bridge without the part that gave: it sags or folds from there. A tube's end pops out of
+      // its pin and the tube hangs whole from the other; any other part breaks at its spot, and its two pieces are
+      // drawn hanging from their own pins (`pieces`). With no part given (the road ended, the wheels rolled off), the
+      // bridge lies as it does with nothing on it.
       const gone = what.ring?.part
-      this.rest = gone === undefined ? this.modelOf(this.bridge).rest : this.modelOf(this.bridge.map((part, index) => (index === gone ? { ...part, loose: 'a' as const } : part))).rest
+      if (gone === undefined) this.rest = this.modelOf(this.bridge).rest
+      else if (this.bridge[gone].kind === 'tube') this.rest = this.modelOf(this.bridge.map((part, index) => (index === gone ? { ...part, loose: 'a' as const } : part))).rest
+      else {
+        const rest = this.modelOf(this.bridge.filter((_, index) => index !== gone)).rest.map((one) => (one.via && one.via.part >= gone ? { ...one, via: { ...one.via, part: one.via.part + 1 } } : one))
+        rest.splice(gone, 0, { a: this.bridge[gone].a, b: this.bridge[gone].b, how: 'firm', pivot: 0, slack: false })
+        this.rest = rest
+      }
     }
     // The neat way of this sheet's idea is owed after this scene, if the rule says so: the child has tried first.
     const byJob = !drive.homeward && onNewest(this.save) && drive.vehicle === this.at.job
     const tries = drive.run.ending.kind === 'crossed' ? this.save.tries : Math.max(this.save.tries, 1)
     this.owed = neatWayDue(this.at.idea, tries, drive.run.ending, drive.run.frame.firm.some((firm) => !firm), this.save.shown, byJob) ? this.at.idea : null
+    this.owedAfter = drive.run.ending.kind === 'crossed' ? null : drive.run.ending.kind
     this.urgent = true
     this.changed = true
     this.scene.start(this.sceneClock, () => {})
   }
 
   private cue(what: Cue, drive: Drive): void {
-    if (what === 'restore') { this.gave = null; this.dipped = null; this.model() }
+    // The bridge goes back as built: the model is whole again, and the two pieces of what broke close up through this beat.
+    if (what === 'restore') { this.dipped = null; this.model() }
     if (this.skipping) return
     if (what === 'splash') {
       this.voices.push(splash(VEHICLES[drive.vehicle].crates))
@@ -621,27 +726,38 @@ export class Game extends Toy {
     if (what === 'react' && this.show.reaction) this.voices.push(reactVoice(drive.vehicle, this.show.reaction.mood), ...(this.bargeTook ? [bargeHorn(this.bargeTook.mood === 'like')] : []))
     // A secret: under a whole arch the barge's toot comes back as a chord.
     if (what === 'react' && this.at.channel && this.bargeTook?.mood === 'like' && wholeArch(this.bridge, this.frame.firm, isFooting(this.at), this.at.channel)) this.voices.push(hornEcho)
-    if (what === 'arrive') this.voices.push(unrollVoice(1))
+    if (what === 'arrive' && (this.show.rollArrives || this.show.arriving)) this.voices.push(unrollVoice(1))
     if (what === 'restore') this.voices.push(restore)
   }
 
-  /** The scene is over, by itself or by a touch: everything is where it was taking it. */
-  private afterScene(): void {
+  /**
+   * The scene is over, by itself or by a touch: everything is where it was
+   * taking it. It is followed by the showing it owes, which is marked given the
+   * moment it starts; a scene that a touch ended owes it just the same. True
+   * when a showing began.
+   */
+  private afterScene(): boolean {
     this.gave = null
     this.dipped = null
+    this.fading = null
     this.show = idleShow()
     this.scene = null
     this.model()
-    // A scene that played out by itself is followed by the showing it owes: it is marked given the moment it starts.
-    // A scene a touch ended owes nothing now, and the idea is still owed at the next run that calls for it.
-    if (this.owed && !this.skipping) {
-      this.showing = { idea: this.owed }
-      this.save = markShown(this.save, this.owed)
-      this.urgent = true
-      this.changed = true
-      this.chief.showing('shows')
+    // The way back in after a cycle judged badly: the roll slides in now, exactly as it does after a crossing. A touch
+    // that ended the scene finds it there already.
+    if (this.rollIn === -1) {
+      if (this.skipping) this.rollIn = Infinity
+      else { this.rollIn = 0; this.voices.push(unrollVoice(1)) }
     }
+    const idea = this.owed
     this.owed = null
+    if (!idea) return false
+    this.showing = { idea, failure: this.owedAfter }
+    this.save = markShown(this.save, idea)
+    this.urgent = true
+    this.changed = true
+    this.chief.showing('shows')
+    return true
   }
 
   /** Another sheet comes onto the board: the roll unrolled, or a sheet taken back from the rack. */
@@ -658,6 +774,7 @@ export class Game extends Toy {
     this.flying = []; this.clicked.clear()
     this.splash = null
     this.marks = []
+    this.rollIn = Infinity; this.swing = Infinity; this.fading = null
     for (const who of ['beaver', 'mole'] as const) this.crew[who].head = this.crewEyes(who)
     this.voices.push(unrollVoice(1))
     this.urgent = true
