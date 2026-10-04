@@ -93,9 +93,14 @@ export function drop(game: Game, held: Held, at: Point): { game: Game; events: G
       for (const { piece, from } of pieces) {
         if (whom === 'window') {
           const fed = feed(now, piece.id)
+          // What lay in the tin of a customer fed by hand slides to the shelf, and whatever that pushes off the shelf's end drops to the dog.
+          const moved = gone(now.world, fed.shelved, tinAt(now))
+          if (moved.length > 0) events.push({ kind: 'setDown', ids: moved.map((one) => one.piece.id), from: moved.map((one) => one.from), how: 'put', voice: 'lay' })
+          events.push(...fellEvents(now.world, fed.fell, tinAt(now)))
           now = fed.game
+          // The piece goes from the hand to the mouth and is gulped, whether or not that ends the cycle. A whole fruit to the pelican is the glider, and stays across its beak.
+          if (fed.ate && !fed.ending?.glider) events.push({ kind: 'ate', whom, piece, from, voice: 'gulp' })
           if (fed.ending) events.push({ kind: 'ending', ending: fed.ending, how: 'fed' })
-          else if (fed.ate) events.push({ kind: 'ate', whom, piece, from, voice: 'gulp' })
         } else {
           const given = treat(now, whom, piece.id)
           now = given.game
@@ -160,7 +165,8 @@ function intoTin(game: Game, held: Held, part: number): { game: Game; events: Ga
     }
     const given = result.given
     if (given.slidOff) {
-      events.push({ kind: 'setDown', ids: [piece.id], from: [from], how: 'put', voice: 'lay' })
+      // It slid off the end of the rail onto the shelf; what that pushed off the shelf's old end drops to the dog.
+      events.push({ kind: 'setDown', ids: [piece.id], from: [from], how: 'put', voice: 'lay' }, ...fellEvents(now.world, given.fell, tin))
     } else {
       events.push({ kind: 'given', id: piece.id, from, opened: given.opened, firstShowing: given.firstShowing, length: piece.length, voice: given.opened ? 'spring' : 'lay' })
       events.push(...fellEvents(now.world, given.strays, tin).map((event) => event))

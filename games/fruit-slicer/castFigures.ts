@@ -61,7 +61,8 @@ function pelican(ctx: Ctx, dots: Dots, cast: Casting): void {
   const pose = cast.pose(0), feast = cast.feast, show = cast.show
   const away = show?.kind === 'glider' ? show.away : 0, wings = show?.kind === 'glider' ? show.wings : 0
   const tries = show?.kind === 'glider' ? Math.abs(Math.sin(show.tries * Math.PI)) * (show.tries < 2 ? 1 : 0) : 0
-  ctx.translate(away * 760, -away * 40)
+  // Far enough to be off the page from the window, at the size it is drawn there.
+  ctx.translate(away * 900, -away * 40)
   ctx.rotate(0.2 * wings - 0.1 * away)
   for (const fx of [-14, 12]) inked(ctx, poly([[fx, -4], [fx + 20, 2], [fx + 2, 4], [fx - 10, 2]]), YELLOW, 3, dots.of(ctx, RED, 0.35))
   const body = oval(0, -52, 38, 46)
@@ -77,7 +78,7 @@ function pelican(ctx: Ctx, dots: Dots, cast: Casting): void {
   ctx.beginPath()
   body(ctx)
   ctx.clip()
-  feast.lumps.filter((one) => one.at >= 1).slice(-6).forEach((one, row) => lump(ctx, cast.fruit, -34, -28 - row * 11, Math.min(1, one.size), 70, 9))
+  feast.lumps.filter((one) => one.at >= 1).slice(-6).forEach((one, row) => lump(ctx, one.fruit, -34, -28 - row * 11, Math.min(1, one.size), 70, 9))
   ctx.restore()
   // The neck, and a head that can turn away to preen.
   inked(ctx, poly([[-4, -90], [18, -96], [24, -122], [4, -126]]), WHITE, 4)
@@ -96,7 +97,7 @@ function pelican(ctx: Ctx, dots: Dots, cast: Casting): void {
     c.lineTo(18, -4)
     c.closePath()
   }, YELLOW, 4, dots.of(ctx, RED, 0.45))
-  for (const one of inPouch) lump(ctx, cast.fruit, 100 - one.at * 80 - Math.min(1, one.size) * 30, 4 + sag * 0.5 - 4, Math.min(1, one.size), 60)
+  for (const one of inPouch) lump(ctx, one.fruit, 100 - one.at * 80 - Math.min(1, one.size) * 30, 4 + sag * 0.5 - 4, Math.min(1, one.size), 60)
   inked(ctx, poly([[16, -8], [122, 8], [118, 14 + 10 * open], [18, 4 + 6 * open]]), YELLOW, 4)
   // The whole fruit across the beak, from the first try at closing on it until it has glided away.
   if (show?.kind === 'glider') lump(ctx, cast.fruit, 60, -2 + 5 * tries, 1, 110, 12)
@@ -125,7 +126,7 @@ function shrew(ctx: Ctx, dots: Dots, cast: Casting, member: number): void {
   feast.lumps.filter((one) => one.at >= 1).forEach((one) => {
     const mine = (before + one.size / 2 < total / 2) === (member === 0)
     before += one.size
-    if (mine) lump(ctx, cast.fruit, -14, -20 - (before * 40) % 18, Math.min(1, one.size), 56, 6)
+    if (mine) lump(ctx, one.fruit, -14, -20 - (before * 40) % 18, Math.min(1, one.size), 56, 6)
   })
   for (const [ear, lift] of [[-10, 0], [8, 3]] as const) inked(ctx, oval(ear, -62 - lift - 4 * Math.abs(pose.bit), 8, 9 + 2 * pose.bit), GREY, 3, dots.of(ctx, RED, 0.5))
   ctx.save()
@@ -136,16 +137,9 @@ function shrew(ctx: Ctx, dots: Dots, cast: Casting, member: number): void {
   inked(ctx, poly([[-18, 4], [-8, -14], [12, -12], [50, tip], [14, 14], [-12, 14]]), GREY, 3.5)
   if (pose.mouth > 0.1 || feast.mouth > 0.1) inked(ctx, poly([[14, 12], [44, tip + 8 + 8 * Math.max(pose.mouth, feast.mouth)], [16, 18]]), RED, 2.5)
   inked(ctx, oval(50, tip, 4.5, 4), RED, 2.5)
-  if (pose.tuft > 0.3) {
-    ctx.lineWidth = 1.5
-    for (const dy of [-8, 0, 8]) {
-      ctx.beginPath()
-      // Short, and well back from the tip: where the two twins stand nose to nose, no whisker of one crosses a whisker of the other.
-      ctx.moveTo(24, tip * 0.5 + 2)
-      ctx.lineTo(24 + 13 * pose.tuft, tip * 0.5 - 8 + dy * 1.7)
-      ctx.stroke()
-    }
-  }
+  // A tuft of fur between the ears, which is what the blade takes off and what pops back: one filled shape, and no whiskers, since
+  // strokes that fan from a snout read as a sign where the two twins stand nose to nose.
+  if (pose.tuft > 0.05) inked(ctx, poly([[-8, -12], [-6, -14 - 12 * pose.tuft], [-2, -13], [1, -15 - 14 * pose.tuft], [4, -13], [8, -14 - 9 * pose.tuft], [9, -12]]), GREY, 2.5)
   eyeOut(ctx, 8, -2, 4.5 * (pose.lids < 0 ? 1.3 : 1), 0.6 + 0.4 * pose.eyeX, pose.eyeY, pose.pop, 0.4, -1)
   if (pose.pop < 0.05) lid(ctx, 8, -2, 4.5, Math.max(0, pose.lids, 0.6 * feast.pleased), GREY)
   brow(ctx, 8, -2, 4.5, pose.brow)
@@ -161,16 +155,17 @@ function antBody(ctx: Ctx, pose: CastPose, flat: number): void {
   ctx.strokeStyle = INK
   ctx.lineWidth = 2.6
   ctx.lineCap = 'round'
-  // Six legs that never rest: the stride is the funny part.
+  // Six legs that never rest: the stride is the funny part. Each leg has a root of its own and keeps to its own strip under the body,
+  // lifting its foot as it steps, so no leg ever crosses another.
   for (const [lx, pair] of [[-9, 0], [0, 1], [9, 2]] as const) {
-    const stride = Math.sin(pose.part * 2 + pair * 2.1) * 5
+    const step = Math.sin(pose.part * 2 + pair * 2.1)
     ctx.beginPath()
-    ctx.moveTo(lx, -10)
-    ctx.lineTo(lx - 4 + stride, -3)
-    ctx.lineTo(lx - 7 + stride, 0)
-    ctx.moveTo(lx, -10)
-    ctx.lineTo(lx + 5 - stride, -3)
-    ctx.lineTo(lx + 8 - stride, 0)
+    ctx.moveTo(lx - 2, -10)
+    ctx.lineTo(lx - 2.7 + 0.5 * step, -5)
+    ctx.lineTo(lx - 3.4 + step, -3.5 * Math.max(0, step))
+    ctx.moveTo(lx + 2, -10)
+    ctx.lineTo(lx + 2.7 - 0.5 * step, -5)
+    ctx.lineTo(lx + 3.4 - step, -3.5 * Math.max(0, -step))
     ctx.stroke()
   }
   inked(ctx, oval(-15, -14, 10, 8), INK, 0)
@@ -206,7 +201,7 @@ function cat(ctx: Ctx, dots: Dots, cast: Casting): void {
   const body = oval(0, -40, 32, 42)
   inked(ctx, body, YELLOW, 4, dots.of(ctx, RED, 0.4))
   inked(ctx, oval(4, -30, 17, 26), WHITE, 0)
-  feast.lumps.filter((one) => one.at >= 1).slice(-5).forEach((one, row) => lump(ctx, cast.fruit, -18, -18 - row * 10, Math.min(1, one.size), 44))
+  feast.lumps.filter((one) => one.at >= 1).slice(-5).forEach((one, row) => lump(ctx, one.fruit, -18, -18 - row * 10, Math.min(1, one.size), 44))
   for (const paw of [-12, 14]) inked(ctx, oval(paw, -2, 11, 6), WHITE, 3)
   ctx.save()
   ctx.translate(4, -92)
@@ -264,7 +259,7 @@ function boa(ctx: Ctx, dots: Dots, cast: Casting): void {
     const rest = 0.3 + (0.62 * (k + 0.5)) / Math.max(1, feast.lumps.length)
     const u = one.at >= 1 ? rest : 0.05 + one.at * (rest - 0.05)
     const [x, y] = at(u)
-    lump(ctx, cast.fruit, x - Math.min(1.2, one.size) * 17, y - 5, Math.min(1.2, one.size), 34, 10)
+    lump(ctx, one.fruit, x - Math.min(1.2, one.size) * 17, y - 5, Math.min(1.2, one.size), 34, 10)
   })
   const [hx, hy] = at(0)
   ctx.save()
@@ -341,7 +336,7 @@ export function drawCustomer(ctx: Ctx, dots: Dots, cast: Casting, x: number, y: 
     let along = 0
     for (const one of cast.feast.lumps) {
       const w = one.size * cast.parts * gap
-      lump(ctx, cast.fruit, x - 20 * k + along - cast.pose(0).away * exit, y - (38 + 40 * (1 - one.at)) * k, 1, w, 8 * k + 3)
+      lump(ctx, one.fruit, x - 20 * k + along - cast.pose(0).away * exit, y - (38 + 40 * (1 - one.at)) * k, 1, w, 8 * k + 3)
       along += w
     }
     return

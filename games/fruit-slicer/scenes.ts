@@ -57,22 +57,26 @@ export const BITES_SHOWN = 6
 /**
  * The serve: the ending of a cycle, 4 to 8 seconds. The lid, or the shrug at a lid that will not shut; the tin
  * is lifted; the pieces are eaten one at a time in the order they lie, up to six and then the rest in one go;
- * the taste lands; the customer settles with its tin.
+ * the taste lands; the customer settles with its tin. A customer fed by hand has no lid and no lift: the piece
+ * has gone from the hand to its mouth with a gulp already, and the serve is only its going down, the taste and
+ * the settling, about three seconds.
  */
 export function serveBeats(show: Show, ending: Ending, cue: Cue): Beat[] {
   const lengths = ending.result.parts.flatMap((part) => part.pieces.map((piece) => piece.length))
   const single = Math.min(lengths.length, BITES_SHOWN)
   // Each customer gulps and speaks in its own throat.
   const who = CAST.indexOf(ending.taste.who)
-  const beats: Beat[] = [
-    { at: 0, lasts: 0, play: () => cue(ending.result.kind === 'fit' ? 'click' : ending.result.kind === 'over' ? 'clang' : 'slide') },
-    { at: 0, lasts: 0.5, play: (p) => (show.lid = p) },
-    { at: 0.5, lasts: 0.6, play: (p) => (show.lift = p) },
-  ]
-  let at = 1.1
+  const beats: Beat[] = ending.fed
+    ? [{ at: 0, lasts: 0, play: () => (show.lid = show.lift = 1) }]
+    : [
+        { at: 0, lasts: 0, play: () => cue(ending.result.kind === 'fit' ? 'click' : ending.result.kind === 'over' ? 'clang' : 'slide') },
+        { at: 0, lasts: 0.5, play: (p) => (show.lid = p) },
+        { at: 0.5, lasts: 0.6, play: (p) => (show.lift = p) },
+      ]
+  let at = ending.fed ? 0.25 : 1.1
   for (let i = 0; i < single; i++) {
     const length = lengths[i]
-    beats.push({ at, lasts: 0, play: () => cue('gulp', length, who) })
+    if (!ending.fed) beats.push({ at, lasts: 0, play: () => cue('gulp', length, who) })
     beats.push({ at, lasts: 0.6, play: (p) => (show.bites = Math.max(show.bites, i + p)) })
     at += 0.6
   }

@@ -78,7 +78,7 @@ const [YOUNGEST, OLDEST] = fruitSlicerManifest.ageBand
  * taps twice, so a band that starts below 4 is shown one. It follows the
  * manifest band, never the child's age while playing.
  */
-export const TAP_PRESSES: 1 | 2 = YOUNGEST < 4 ? 1 : 2
+export const TAP_PRESSES: 1 | 2 = 1 // In this game a second tap on one who waits is a second move (the two change places), so the hand shows one.
 
 // --- The designed order (state.ts) -----------------------------------------
 

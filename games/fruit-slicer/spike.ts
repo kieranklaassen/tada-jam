@@ -1,6 +1,6 @@
 import { ant, dog, pelican, shrew } from './figures'
 import { BLUE, BOARD, BOARD_EDGE, FLESH, INK, PAPER, RED, RIND, Screens, TINT, WHITE, YELLOW, burst, inked, panel, poly, rect, slab, speedLines } from './look'
-import { RAIL, WHOLE, giveOf, type Fruit, type Share } from './measure'
+import { RAIL, WHOLE, type Fruit, type Share } from './measure'
 import { tinParts, wanted, type Customer } from './orders'
 import { spikeScene, type SpikeScene } from './spikeScene'
 import { drawFraction } from './symbols'
@@ -80,7 +80,6 @@ function ticket(ctx: Ctx, customer: Customer, x: number, y: number, s: number): 
 function tin(ctx: Ctx, screens: Screens, scene: SpikeScene): void {
   const customer = scene.window, share = wanted(customer)
   const ordered = tinParts(customer).reduce((sum, part) => sum + part, 0) * PX
-  const jaw = giveOf(customer.fruit) * PX
   // The lid, open, as long as the tin, with the fraction on it.
   inked(ctx, poly([[X0 - 8, TIN_Y], [X0 + 10, TIN_Y - 62], [X0 + ordered + 26, TIN_Y - 62], [X0 + ordered + 8, TIN_Y]]), '#c9d6e6', 5, screens.of(ctx, BLUE, 0.3))
   if (customer.written) drawFraction(ctx, share, X0 + ordered / 2 + 9, TIN_Y - 31, 25, { fill: INK, edge: WHITE, edgeWidth: 6 })
@@ -91,11 +90,9 @@ function tin(ctx: Ctx, screens: Screens, scene: SpikeScene): void {
     bar(ctx, piece.fruit, x, TIN_Y + 8, piece.length, 48)
     x += piece.length * PX
   }
-  ctx.beginPath()
-  for (let i = 0; i <= 6; i++) ctx.lineTo(X0 + ordered + (i % 2 ? -jaw * 0.5 : -2), TIN_Y + 8 + i * 8)
-  ctx.lineWidth = 4
-  ctx.strokeStyle = INK
-  ctx.stroke()
+  // The jaw: a thick wall where the order ends.
+  ctx.fillStyle = INK
+  ctx.fillRect(X0 + ordered - 3, TIN_Y + 8, 6, 48)
   // The piece rattles in the gap: a few marks of motion at its loose end.
   for (const dy of [14, 32, 50]) speedLines(ctx, x + 6, TIN_Y + dy, 0, 0, 2, 18, 1)
   // The rail: the whole fruit ruled into its equal parts, the ordered ones in the fruit's tint.

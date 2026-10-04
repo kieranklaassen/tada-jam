@@ -27,7 +27,7 @@ export const WALL: Box = { x: 18, y: 14, w: 1144, h: 246 }
 export const COUNTER: Box = { x: 18, y: 270, w: 1144, h: 538 }
 /** The customer at the window, with its ticket: all of it answers a finger. */
 export const WINDOW: Box = { x: 26, y: 24, w: 610, h: 230 }
-/** The two who wait, each with its ticket. The second stops short of the top right corner, which is the grown-up's. */
+/** The two who wait, each with its ticket. The top right corner of the second lies under the grown-up's corner of the page, where the Mount gives no touch to the game. */
 export const QUEUE: readonly Box[] = [{ x: 660, y: 24, w: 236, h: 230 }, { x: 908, y: 24, w: 244, h: 230 }]
 /** The rail the tin lies on: the lid, the body and the ruled strip under it, all from the same left edge as the board. */
 export const RAIL_BOX: Box = { x: X0 - 12, y: 276, w: RAIL * PX + 24, h: 108 }

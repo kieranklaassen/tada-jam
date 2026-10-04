@@ -3,7 +3,7 @@ import { drawCustomer, type Casting } from './castFigures'
 import { feastOf, leavingFeast, wantedCount, type Feast } from './feast'
 import { dog } from './figures'
 import { CURL_FLIGHT, MOUTH, flight, offsetOf, type FxState } from './fx'
-import type { Scenery } from './gameRun'
+import { SNACK_DOWN, type Scenery } from './gameRun'
 import type { Guide } from './guide'
 import type { HandPose } from './guidance'
 import { BLUE, BOARD as BOARD_FILL, BOARD_EDGE, FLESH, INK, PAPER, RED, RIND, TINT, WHITE, YELLOW, burst, inked, panel, poly, rect, slab, speedLines, oval, type Screens } from './look'
@@ -11,6 +11,7 @@ import { FRUITS, WHOLE, type Fruit } from './measure'
 import { tinAt } from './moves'
 import { tinParts, wanted, type Customer } from './orders'
 import { paintPassers } from './passersBy'
+import { restShow } from './scenes'
 import { ruling } from './serve'
 import { SILL, fitOf, headOf, standsAt, type Seat } from './seats'
 import { paintCounter, paintStreet, paintWear } from './setting'
@@ -337,10 +338,12 @@ function tin(ctx: Ctx, dots: Dots, scenery: Scenery, shape: TinShape, customer: 
     const parts = ruled.rows[0].parts, at = Math.min(answering.parts - 1, Math.floor((answering.age / answering.life) * answering.parts))
     inked(ctx, rect(ruler.x + (whole * at) / parts, ruler.y - 7, whole / parts, rowH * ruled.rows.length + 10), WHITE, 3)
   }
-  // The sign between the cat's two shares, laid just past their ends.
+  // The sign between the cat's two shares, laid between the ends of their two rows: the shorter row ends at its left and the longer at
+  // its right, so it reads as it stands, the less on the left of it. Two equal shares end at one place, and the sign sits there.
   if (ruled.sign && customer.written && (!showing || show.extra > 0)) {
-    const end = Math.max(...ruled.rows.map((row) => (whole * row.lit) / row.parts))
-    drawSign(ctx, ruled.sign, ruler.x + end + 16, ruler.y + rowH, 22, { fill: INK, edge: WHITE, edgeWidth: 5 })
+    const ends = ruled.rows.map((row) => (whole * row.lit) / row.parts)
+    const short = Math.min(...ends), long = Math.max(...ends)
+    drawSign(ctx, ruled.sign === 'equals' ? 'equals' : 'less', ruler.x + (short + long) / 2, ruler.y + rowH, Math.max(13, Math.min(22, (long - short) * 0.8 || 22)), { fill: INK, edge: WHITE, edgeWidth: 5 })
   }
   return 8 + 4 * ruled.rows.length
 }
@@ -417,7 +420,7 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
     ctx.beginPath()
     ctx.rect(WALL.x + 3, WALL.y + 3, WALL.w - 6, WALL.h - 6)
     ctx.clip()
-    drawn += customerAt(ctx, dots, departing.customer, departing.actor, { feast: leavingFeast(departing.customer, departing.lengths, last.away) }, 'window', null, exit)
+    drawn += customerAt(ctx, dots, departing.customer, departing.actor, { feast: leavingFeast(departing.customer, departing.lengths, last.away, departing.fruits) }, 'window', null, exit)
     inked(ctx, rect(TIN_BY_FEET - last.away * exit, SILL - 30 - last.hop, 64, 26), '#c9d6e6', 4, dots.of(ctx, BLUE, 0.3))
     ctx.restore()
     drawn++
@@ -426,15 +429,15 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
   const atWindow = game.window ?? (gliding?.whom === 'window' ? gliding.customer : null)
   let feasting: Feast | null = null
   if (atWindow) {
-    const lengths = scenery.ending ? scenery.ending.result.parts.flatMap((part) => part.pieces.map((piece) => piece.length)) : eaten(game.world).map((piece) => piece.length)
-    const feast = feastOf(atWindow, lengths, scenery.ending?.taste ?? null, scenery.show?.kind === 'showing' ? null : scenery.show, scenery.ending?.result.kind === 'over', scenery.ending?.outcome === 'badly')
+    const inside = scenery.ending ? scenery.ending.result.parts.flatMap((part) => part.pieces) : eaten(game.world)
+    const feast = feastOf(atWindow, inside.map((piece) => piece.length), scenery.ending?.taste ?? null, scenery.show?.kind === 'showing' ? null : scenery.show, scenery.ending?.result.kind === 'over', scenery.ending?.outcome === 'badly', inside.map((piece) => piece.fruit))
     feasting = feast
     // A glider playing for a pelican that waits is that pelican's scene, not the scene of whoever stands at the window.
     drawn += customerAt(ctx, dots, atWindow, scenery.window, { feast, show: gliding && gliding.whom !== 'window' ? null : scenery.show }, 'window', scenery.finger)
     // The ticket is large and stands clear of whoever holds it: the cat's two are stacked.
     if (game.window) drawn += ticket(ctx, atWindow, WINDOW.x + 330, TICKET_TOP, atWindow.who === 'boa' ? 0.66 : atWindow.shares.length > 1 ? 0.72 : 1.1, atWindow.shares.length > 1)
-    // Served, and the serve over: it holds its tin, shut, by its feet.
-    if (game.finished && !scenery.ending) {
+    // Served, and the serve over: it holds its tin, shut, by its feet. One fed by hand has had it there from the first.
+    if (game.finished && (!scenery.ending || scenery.ending.fed)) {
       inked(ctx, rect(TIN_BY_FEET, SILL - 30, 64, 26), '#c9d6e6', 4, dots.of(ctx, BLUE, 0.3))
       drawn++
     }
@@ -460,7 +463,10 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
     }
     // The pelican and the cat stand beside their tickets, the cat's two stacked; the low ones (the twins, the ants, the boa) have theirs over their heads.
     const who = customer.who, long = who === 'boa', beside = who === 'pelican' || who === 'cat'
-    drawn += customerAt(ctx, dots, customer, scenery.queue[index], {}, index, scenery.finger)
+    // What it was given by hand shows in its body as it goes down, each piece at its own length and in its own colour, and for a few seconds after.
+    const given = scenery.snacks.filter((one) => one.whom === index)
+    const snack = given.length > 0 ? feastOf(customer, given.map((one) => one.length), null, { ...restShow('serve'), lid: 1, lift: 1, bites: given.reduce((sum, one) => sum + Math.min(1, one.age / SNACK_DOWN), 0) }, false, false, given.map((one) => one.fruit)) : undefined
+    drawn += customerAt(ctx, dots, customer, scenery.queue[index], snack ? { feast: snack } : {}, index, scenery.finger)
     drawn += ticket(ctx, customer, box.x + (long ? 8 : who === 'cat' ? 104 : beside ? 92 : 46), TICKET_TOP, long ? 0.5 : customer.shares.length > 1 ? 0.56 : 0.62, true)
   })
   drawn += awning(ctx, scenery.time, fx.flap)
@@ -468,7 +474,8 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
   drawn += crate(ctx, dots, fx.rock, game.window && !game.finished ? game.window.fruit : null, scenery.time, slat ? 1 - slat.age / slat.life : 0)
   // The tin on the rail. While the serve plays it is still there, shut on what was served, and empties as the
   // customer eats; what it held is read from the ending, since the game has already moved on.
-  const serving = scenery.ending !== null && scenery.show !== null && scenery.show.kind !== 'glider' && game.window !== null
+  // A customer fed by hand is served past its tin: there is none on the rail for its serve.
+  const serving = scenery.ending !== null && !scenery.ending.fed && scenery.show !== null && scenery.show.kind !== 'glider' && game.window !== null
   const shape = tinAt(game) ?? (serving ? tinShape(tinParts(game.window!), WHOLE[game.window!.fruit], true) : null)
   // The tin jolts on its rail when it is poked, struck or skidded on.
   ctx.save()

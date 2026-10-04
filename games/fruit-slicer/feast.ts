@@ -1,4 +1,4 @@
-import { WHOLE } from './measure'
+import { WHOLE, type Fruit } from './measure'
 import type { Customer } from './orders'
 import type { Show } from './scenes'
 import type { Taste } from './tastes'
@@ -9,8 +9,8 @@ import type { Taste } from './tastes'
 // over, and on load, only the pieces stay. Pure.
 
 export type Feast = {
-  /** Each piece inside the customer, in the order eaten: how far down it has gone, 0 at the mouth to 1 at rest, and its length as a share of the fruit. */
-  lumps: { at: number; size: number }[]
+  /** Each piece inside the customer, in the order eaten: how far down it has gone, 0 at the mouth to 1 at rest, its length as a share of the fruit on order, and which fruit it is a piece of. */
+  lumps: { at: number; size: number; fruit: Fruit }[]
   /** The mouth opening for a bite, or held open by a piece that sticks out. */
   mouth: number
   /** Off the ground: a hiccup for every seam. */
@@ -38,15 +38,16 @@ const bump = (t: number): number => Math.sin(Math.max(0, Math.min(1, t)) * Math.
  * The body's answer to exactly these pieces. `lengths` are the pieces in the order eaten; `taste` is the
  * customer's fixed taste applied to them, or nothing once the serve is long over; `sticksOut` says the order
  * was too long, so the last piece is eaten sticking out; `sentOff` says it was sent off with a misfit, so it
- * shrugs as the lid comes down and will not shut.
+ * shrugs as the lid comes down and will not shut. `fruits` says which fruit each piece is of, where that is not
+ * the fruit on order: the body shows exactly what went in.
  */
-export function feastOf(customer: Customer, lengths: readonly number[], taste: Taste | null, show: Show | null, sticksOut = false, sentOff = false): Feast {
+export function feastOf(customer: Customer, lengths: readonly number[], taste: Taste | null, show: Show | null, sticksOut = false, sentOff = false, fruits: readonly Fruit[] = []): Feast {
   const whole = WHOLE[customer.fruit]
   const bites = show ? show.bites : lengths.length
   const lumps: Feast['lumps'] = []
   lengths.forEach((length, index) => {
     if (bites <= index) return
-    lumps.push({ at: Math.min(1, bites - index), size: Math.min(2, length / whole) })
+    lumps.push({ at: Math.min(1, bites - index), size: Math.min(2, length / whole), fruit: fruits[index] ?? customer.fruit })
   })
   const feast: Feast = { lumps, mouth: 0, hop: 0, shrug: 0, pull: 0, spin: 0, flat: [], cross: 0, gaze: 0, tail: 0, sneeze: -1, pleased: 0 }
   if (!show || show.kind !== 'serve') return feast
@@ -90,8 +91,8 @@ export function feastOf(customer: Customer, lengths: readonly number[], taste: T
  * What shows of a served customer on its way out, `away` of the way gone: the pieces it ate, at rest, and the
  * pelican still hiccuping once for every seam, all the way out.
  */
-export function leavingFeast(customer: Customer, lengths: readonly number[], away: number): Feast {
-  const feast = feastOf(customer, lengths, null, null)
+export function leavingFeast(customer: Customer, lengths: readonly number[], away: number, fruits: readonly Fruit[] = []): Feast {
+  const feast = feastOf(customer, lengths, null, null, false, false, fruits)
   if (customer.who === 'pelican' && lengths.length > 1) feast.hop = 7 * Math.abs(Math.sin(away * Math.PI * Math.min(6, lengths.length - 1)))
   return feast
 }

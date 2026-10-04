@@ -15,7 +15,7 @@ function ending(count: number, off = 0): Ending {
   const who = customer('pelican', 3, 4)
   const each = shareLength('long', { num: 3, den: 4 }) / count
   const result = serveOf(who, [Array.from({ length: count }, (_, i) => piece(i + 1, each + (i === 0 ? off : 0)))])
-  return { result, taste: tasteOf(who, result), outcome: result.kind === 'fit' ? 'well' : 'badly', glider: false }
+  return { result, taste: tasteOf(who, result), outcome: result.kind === 'fit' ? 'well' : 'badly', glider: false, fed: false }
 }
 /** Plays beats from start to finish at 60 frames a second, and returns the cues heard. */
 function play(beats: ReturnType<typeof serveBeats>, each?: () => void): void {
@@ -68,7 +68,7 @@ describe('the serve', () => {
     const heard = (who: Customer, lists: number[][]): [string, number | undefined][] => {
       const result = serveOf(who, lists.map((list, part) => list.map((length, i) => piece(part * 10 + i + 1, length))))
       const cues: [string, number | undefined][] = []
-      play(serveBeats(restShow('serve'), { result, taste: tasteOf(who, result), outcome: 'well', glider: false }, (id, _length, count) => cues.push([id, count])))
+      play(serveBeats(restShow('serve'), { result, taste: tasteOf(who, result), outcome: 'well', glider: false, fed: false }, (id, _length, count) => cues.push([id, count])))
       return cues.filter(([id]) => id !== 'gulp' && id !== 'click' && id !== 'clang' && id !== 'slide')
     }
     const len = (num: number, den: number) => shareLength('long', { num, den })

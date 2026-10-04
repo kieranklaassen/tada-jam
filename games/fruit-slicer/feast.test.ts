@@ -20,14 +20,14 @@ describe('what went in', () => {
   it('shows each piece at its own length, in the order eaten, and only those eaten so far', () => {
     expect(feastOf(pelican, lengths, null, during({ bites: 0 })).lumps).toEqual([])
     const half = feastOf(pelican, lengths, null, during({ bites: 0.5 }))
-    expect(half.lumps).toEqual([{ at: 0.5, size: 0.5 }])
+    expect(half.lumps).toEqual([{ at: 0.5, size: 0.5, fruit: 'long' }])
     expect(half.mouth).toBeGreaterThan(0.9)
-    expect(feastOf(pelican, lengths, null, during({ bites: 2 })).lumps).toEqual([{ at: 1, size: 0.5 }, { at: 1, size: 0.25 }])
+    expect(feastOf(pelican, lengths, null, during({ bites: 2 })).lumps).toEqual([{ at: 1, size: 0.5, fruit: 'long' }, { at: 1, size: 0.25, fruit: 'long' }])
   })
 
   it('is all that stays once the serve is over, and on load: the pieces, at rest, and no taste', () => {
     const loaded = feastOf(pelican, lengths, null, null)
-    expect(loaded).toEqual({ lumps: [{ at: 1, size: 0.5 }, { at: 1, size: 0.25 }], mouth: 0, hop: 0, shrug: 0, pull: 0, spin: 0, flat: [], cross: 0, gaze: 0, tail: 0, sneeze: -1, pleased: 0 })
+    expect(loaded).toEqual({ lumps: [{ at: 1, size: 0.5, fruit: 'long' }, { at: 1, size: 0.25, fruit: 'long' }], mouth: 0, hop: 0, shrug: 0, pull: 0, spin: 0, flat: [], cross: 0, gaze: 0, tail: 0, sneeze: -1, pleased: 0 })
     expect(feastOf(pelican, lengths, taste(pelican, lengths), servedShow(2))).toMatchObject({ lumps: loaded.lumps, hop: 0, mouth: 0 })
   })
 
@@ -44,6 +44,11 @@ describe('what went in', () => {
     expect(going.hop).toBeGreaterThan(3)
     expect(leavingFeast(pelican, [len(3, 4)], 0.5).hop).toBe(0)
     expect(leavingFeast(of('boa', { num: 5, den: 4 }), lengths, 0.5).hop).toBe(0)
+  })
+
+  it('shows exactly what went in: a piece of another fruit keeps its own colour', () => {
+    expect(feastOf(pelican, lengths, null, null, false, false, ['short', 'middle']).lumps.map((one) => one.fruit)).toEqual(['short', 'middle'])
+    expect(feastOf(pelican, lengths, null, null, false, false, ['short']).lumps.map((one) => one.fruit)).toEqual(['short', 'long'])
   })
 
   it('is eaten sticking out when the order was too long', () => {

@@ -108,7 +108,8 @@ describe('letting go over a customer, the dog or the crate', () => {
 
   it('feeds the customer at the window by hand, which ends the cycle as mixed', () => {
     const result = drop(made.game, hold(made.game, made.left), mid(WINDOW))
-    expect(result.events).toEqual([expect.objectContaining({ kind: 'ending', how: 'fed' })])
+    // The piece goes from the hand to the mouth with a gulp, and that ends the cycle.
+    expect(result.events).toEqual([expect.objectContaining({ kind: 'ate', whom: 'window', voice: 'gulp' }), expect.objectContaining({ kind: 'ending', how: 'fed' })])
     expect(result.game).toMatchObject({ finished: true, position: start.position })
     const more = drop(result.game, hold(result.game, made.right), mid(WINDOW))
     expect(more.events).toEqual([expect.objectContaining({ kind: 'ate', whom: 'window', voice: 'gulp' })])

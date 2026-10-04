@@ -4,7 +4,7 @@ import { call, crate, feed, freshGame, give, judge, sendOff, settle, splat, trea
 import { WHOLE, giveOf, shareLength } from './measure'
 import { inRange, tinParts, type Customer } from './orders'
 import { serveOf } from './serve'
-import { cut, eaten, inTin, isWhole, onLane, onShelf, roll, type Piece } from './world'
+import { cut, eaten, inTin, isWhole, onLane, onShelf, roll, setOnShelf, type Piece } from './world'
 
 /** Cuts a piece of exactly `length` (plus `off`) from a fresh fruit of the ordered kind, and returns its id. */
 function cutFor(game: Game, length: number, off = 0): { game: Game; id: number } {
@@ -70,7 +70,7 @@ describe('a first visit', () => {
     const id = game.world.pieces[0].id
     expect(give(game, id, 0)).toEqual({ game, given: null })
     expect(sendOff(game)).toEqual({ game, ending: null })
-    expect(feed(game, id)).toEqual({ game, ending: null, ate: false })
+    expect(feed(game, id)).toEqual({ game, ending: null, ate: false, shelved: [], fell: [] })
   })
 })
 
@@ -230,6 +230,24 @@ describe('a cycle', () => {
     expect(feed(wrong.game, wrong.id)).toMatchObject({ ending: { outcome: 'mixed', result: { kind: 'over' } }, game: { position: start.game.position } })
   })
 
+  it('sets what lay in the tin on the shelf when the customer is fed by hand, so nothing is lost when the next one steps up', () => {
+    // A piece too short lies in the tin; then the customer is fed another piece by hand.
+    const short = cutFor(start.game, tinParts(start.game.window!)[0], -400)
+    const laid = give(short.game, short.id, 0).game
+    expect(inTin(laid.world, 0).map((piece) => piece.id)).toEqual([short.id])
+    const other = cutFor(laid, 300)
+    const fed = feed(other.game, other.id)
+    expect(fed.ending).toMatchObject({ fed: true, glider: false })
+    expect(fed.shelved).toEqual([short.id])
+    expect(inTin(fed.game.world, 0)).toEqual([])
+    expect(onShelf(fed.game.world).map((piece) => piece.id)).toContain(short.id)
+    expect(eaten(fed.game.world).map((piece) => piece.id)).toEqual([other.id])
+    // The next customer steps up: the piece is still on the shelf.
+    expect(call(fed.game, 0).game.world.pieces.some((piece) => piece.id === short.id)).toBe(true)
+    // An ending by the tin is not a feeding by hand.
+    expect(serve(start.game).given!.ending).toMatchObject({ fed: false })
+  })
+
   it('lets a customer that has been served eat another piece from the hand, with nothing more judged', () => {
     const served = serve(start.game).game
     const more = cutFor(served, 300)
@@ -361,6 +379,47 @@ describe('the two who wait', () => {
     expect(next.game.world.pieces.map((made) => made.id)).toEqual(before)
     expect(eaten(next.game.world)).toEqual([])
     expect(next.game.world.tinOpen).toBe(false)
+  })
+})
+
+describe('a full shelf', () => {
+  /** The game with four whole fruits on the shelf, oldest first. */
+  function fullShelf(from: Game): { game: Game; ids: number[] } {
+    let game = from
+    const ids: number[] = []
+    for (let i = 0; i < 4; i++) {
+      const landed = crate(game)
+      game = { ...landed.game, world: setOnShelf(landed.game.world, landed.id).world }
+      ids.push(landed.id)
+    }
+    return { game, ids }
+  }
+  const start = call(freshGame(null), 0)
+
+  it('says what a piece that slides off the end of the rail pushes off the shelf, so that it can be seen going to the dog', () => {
+    let { game, ids } = fullShelf(start.game)
+    // Whole fruits are laid in the tin until one would run past the end of the rail.
+    let slid: ReturnType<typeof give>['given'] = null
+    for (let i = 0; i < 4 && !slid?.slidOff; i++) {
+      const landed = crate(game)
+      const done = give(landed.game, landed.id, 0)
+      game = done.game
+      slid = done.given
+    }
+    expect(slid).toMatchObject({ slidOff: true, fell: [ids[0]] })
+    expect(game.world.pieces.some((piece) => piece.id === ids[0])).toBe(false)
+  })
+
+  it('says what the pieces left in a hand-fed customer\'s tin push off the shelf', () => {
+    const { game } = fullShelf(start.game)
+    const short = cutFor(game, tinParts(game.window!)[0], -400)
+    const laid = give(short.game, short.id, 0).game
+    const other = cutFor(laid, 300)
+    expect(onShelf(other.game.world)).toHaveLength(4)
+    const oldest = onShelf(other.game.world)[0].id
+    const fed = feed(other.game, other.id)
+    expect(fed.shelved).toEqual([short.id])
+    expect(fed.fell).toEqual([oldest])
   })
 })
 

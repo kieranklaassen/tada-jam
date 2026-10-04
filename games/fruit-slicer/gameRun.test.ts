@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { FLIGHT_SECONDS } from './carry'
 import { freshGame } from './cycle'
 import { CURL_FLIGHT, CURL_LIFE } from './fx'
-import { GameRun, RUN_GAP, RUN_STEP, SWING } from './gameRun'
+import { GameRun, RUN_GAP, RUN_STEP, SNACK_SECONDS, SWING } from './gameRun'
 import { CAST } from './orders'
 import { IdleLadder } from './guidance'
 import { WHOLE } from './measure'
@@ -405,6 +405,65 @@ describe('the comedy', () => {
     play(run, CURL_LIFE - CURL_FLIGHT + 0.2)
     expect(run.dog.react).toBe('spin')
     expect(run.fx.fx.some((one) => one.kind === 'curl')).toBe(false)
+  })
+})
+
+describe('what the reading found', () => {
+  it('treats a finger that comes back with no press as a finger that has landed: on a piece it takes hold, on bare wood it is the blade with its ring, and it cuts nothing on the way', () => {
+    const run = fresh()
+    const pieces = stored(run)
+    run.takeSounds()
+    // A move with no press before it, on the fruit: the fruit is taken hold of, not cut.
+    run.move({ x: X0 + 200, y: NEAR }, 1)
+    expect(run.blade).toBeNull()
+    expect(ids(run)).toEqual(['pick'])
+    expect(run.frame(0, BUSY).carried).not.toBeNull()
+    run.end()
+    expect(stored(run)).toEqual(pieces)
+    // The same on bare wood: the blade, and its ring.
+    run.move({ x: 300, y: BOARD.y - 30 }, 2)
+    expect(run.blade).toEqual({ x: 300, y: BOARD.y - 30 })
+    expect(ids(run)).toEqual(['ring'])
+  })
+
+  it('shows what one who waits was given in its body for a few seconds, in no state, and takes it away with whoever leaves that place', () => {
+    const { run } = withCut(-300)
+    const before = run.game.world.pieces.length
+    drag(run, { x: X0 + 30, y: NEAR }, mid(QUEUE[1]), 1.5)
+    expect(run.game.world.pieces.length).toBe(before - 1)
+    const given = run.frame(0, BUSY).snacks
+    expect(given).toHaveLength(1)
+    expect(given[0]).toMatchObject({ whom: 1, age: 0 })
+    expect(JSON.stringify(serialize(run.game))).not.toContain('snack')
+    play(run, 2)
+    expect(run.frame(0, BUSY).snacks).toHaveLength(1)
+    play(run, SNACK_SECONDS)
+    expect(run.frame(0, BUSY).snacks).toHaveLength(0)
+  })
+
+  it('feeds the one at the window past its tin: the piece flies to its mouth with a gulp, there is no lid, and what lay in the tin goes to the shelf', () => {
+    const { run } = withCut(-300)
+    serve(run)
+    play(run, 6)
+    expect(run.game.finished).toBe(false)
+    const inTinBefore = inTin(run.game.world, 0).map((piece) => piece.id)
+    expect(inTinBefore).toHaveLength(1)
+    run.takeSounds()
+    // The rest of the fruit, carried to the customer itself.
+    const rest = onLane(run.game.world, 0)[0]
+    drag(run, { x: X0 + rest.length * PX * 0.5 + (rest.place.on === 'board' ? rest.place.x * PX : 0), y: NEAR }, { x: WINDOW.x + 120, y: WINDOW.y + 120 }, 1.5)
+    expect(run.game.finished).toBe(true)
+    const heard = ids(run)
+    expect(heard).toContain('gulp')
+    for (const lid of ['click', 'clang', 'slide']) expect(heard).not.toContain(lid)
+    expect(run.fx.fx.some((one) => one.kind === 'fly')).toBe(true)
+    expect(inTin(run.game.world, 0)).toEqual([])
+    expect(run.game.world.pieces.find((piece) => piece.id === inTinBefore[0])!.place.on).toBe('shelf')
+    expect(run.frame(0, BUSY).ending).toMatchObject({ fed: true })
+    // It lasts about three seconds, and ends in the pose a load finds.
+    play(run, 3.6)
+    expect(run.playing).toBe(false)
+    expect(run.frame(0, BUSY).show).toEqual(servedShow(1))
   })
 })
 

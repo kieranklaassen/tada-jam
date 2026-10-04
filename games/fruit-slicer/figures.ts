@@ -66,14 +66,6 @@ export function shrew(ctx: Ctx, screens: Screens, x: number, y: number, s: numbe
   inked(ctx, head, coat, 5)
   inked(ctx, oval(92, -14, 8, 7), RED, 4)
   eye(ctx, 18, -30, 8, 0.6, 0.1)
-  // Whiskers.
-  ctx.lineWidth = 2.5
-  for (const dy of [-10, 0, 10]) {
-    ctx.beginPath()
-    ctx.moveTo(62, -12)
-    ctx.lineTo(96, -34 + dy * 2.4)
-    ctx.stroke()
-  }
   for (const foot of [-16, 14]) inked(ctx, oval(foot, 68, 14, 7), WHITE, 4)
   ctx.restore()
 }
