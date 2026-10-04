@@ -12,7 +12,7 @@ import { TO_MOUTH_SECONDS, gliderBeats, restShow, servedShow, serveBeats, showin
 import { hiccupAt } from './feast'
 import { CRATE, DOG, TIN, shown, type Point } from './stage'
 import { dogTaste } from './tastes'
-import type { VoiceId } from './voices'
+import { answerSeconds, type VoiceId } from './voices'
 import type { Fruit } from './measure'
 import { CAST, type Customer } from './orders'
 import { MOST_EATEN, eaten } from './world'
@@ -467,7 +467,7 @@ export class GameRun {
           // And it is seen rolling over whatever else it was let go on: along the rail of an open tin as the parts answer, along the lid of a
           // shut one, across a customer, the crate or the dog.
           const tin = tinAt(game), head = event.whom !== null ? heads[event.whom] : undefined
-          if (event.on === 'tin' && tin) this.fx = tin.open ? rollAlong(this.fx, tin.ruler.x, tin.ruler.x + tin.ruler.w, TIN.rulerY - 6, Math.min(0.9, 0.2 + event.parts * 0.09)) : rollAlong(this.fx, tin.body.x, tin.body.x + tin.body.w, tin.body.y + tin.body.h / 2, 0.3)
+          if (event.on === 'tin' && tin) this.fx = tin.open ? rollAlong(this.fx, tin.ruler.x, tin.ruler.x + tin.ruler.w, TIN.rulerY - 6, answerSeconds(event.parts)) : rollAlong(this.fx, tin.body.x, tin.body.x + tin.body.w, tin.body.y + tin.body.h / 2, 0.3)
           else if (event.on === 'customer' && head) this.fx = rollAlong(this.fx, head.x - 70, head.x + 70, head.y + 30, 0.3)
           else if (event.on === 'crate') this.fx = rollAlong(this.fx, CRATE.x + 20, CRATE.x + CRATE.w - 20, CRATE.y + CRATE.h / 2, 0.3)
           else if (event.on === 'dog') this.fx = rollAlong(this.fx, DOG.x + 20, DOG.x + DOG.w - 20, DOG.y + 30, 0.3)

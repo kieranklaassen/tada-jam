@@ -4,10 +4,11 @@ import { call, freshGame, type Game } from './cycle'
 import { LADDER } from './config'
 import { guideOf, strokePlaces, usefulPieces } from './guide'
 import { GIVE_PARTS, WHOLE, fitOf, giveOf } from './measure'
-import { newStroke, poke, slice, tinAt } from './moves'
+import { holdsMisfit, newStroke, poke, slice, tinAt } from './moves'
 import { layOut, tinParts, wanted } from './orders'
-import { CRATE, COUNTER, LANE_H, PX, QUEUE, WINDOW, X0, boxOf, laneTop } from './stage'
-import { onLane, remove } from './world'
+import { figureBox } from './seats'
+import { CRATE, COUNTER, LANE_H, PX, X0, boxOf, laneTop } from './stage'
+import { inTin, onLane, remove } from './world'
 
 const fresh = freshGame(null)
 const start = call(fresh, 0).game
@@ -17,7 +18,7 @@ const cutAt = (game: Game, points: number): Game => slice(game, { x: X0 + points
 describe('with nobody to serve', () => {
   it('glows on the two who wait, and the hand taps one of them: a tap that calls it', () => {
     const guide = guideOf(fresh)
-    expect(guide).toMatchObject({ on: 'waiting', glow: [QUEUE[0], QUEUE[1]], hand: { drag: false } })
+    expect(guide).toMatchObject({ on: 'waiting', glow: [figureBox(fresh.queue[0], 0), figureBox(fresh.queue[1], 1)], hand: { drag: false } })
     expect(poke(fresh, guide.hand.from).game.window).toEqual(fresh.queue[0])
     expect(poke(fresh, guideOf(fresh, 1).hand.from).game.window).toEqual(fresh.queue[1])
   })
@@ -94,12 +95,40 @@ describe('with a customer to serve', () => {
     expect(drop(made, held!, guide.hand.to).events[0].kind).toBe('given')
   })
 
-  it('glows on the customer when what lies in its tin sticks out: a tap sends it off as it is', () => {
+  it('takes the piece that sticks out of the tin back to the board: the hand never shows a move that goes badly', () => {
     const ordered = tinParts(start.window!)[0]
     const made = cutAt(start, ordered + 400)
     const over = drop(made, grab(made, { x: X0 + 30, y: NEAR })!, { x: X0 + 30, y: tinAt(made)!.body.y + 20 }).game
+    expect(holdsMisfit(over)).toBe(true)
     const guide = guideOf(over)
-    expect(guide).toMatchObject({ on: 'customer', glow: [WINDOW], hand: { drag: false } })
-    expect(poke(over, guide.hand.from).game.finished).toBe(true)
+    expect(guide).toMatchObject({ on: 'board', hand: { drag: true } })
+    // The move it shows, made: the piece is taken out of the tin and set down on the board, and nobody is sent off.
+    const held = grab(over, guide.hand.from)!
+    expect(held.ids).toEqual(inTin(over.world, 0).map((piece) => piece.id))
+    const done = drop(over, held, guide.hand.to)
+    expect(done.events.some((event) => event.kind === 'ending')).toBe(false)
+    expect(done.game.finished).toBe(false)
+    expect(inTin(done.game.world, 0)).toEqual([])
+    expect(onLane(done.game.world, 0).some((piece) => piece.id === held.ids[0])).toBe(true)
+    // A tap on the customer there would have sent it off, badly: that is the child's to do, never the hand's.
+    const body = figureBox(over.window!, 'window')
+    const sent = poke(over, { x: body.x + body.w / 2, y: body.y + body.h / 2 })
+    expect(sent.events.find((event) => event.kind === 'ending')).toMatchObject({ ending: { outcome: 'badly' } })
+  })
+
+  it('never shows a move that ends a cycle badly, whatever lies where: the move it shows is made, at every state of a played visit', () => {
+    const states: Game[] = [fresh, start]
+    const ordered = tinParts(start.window!)[0]
+    for (const off of [-500, -200, 0, 300, 700]) {
+      const made = cutAt(start, ordered + off)
+      states.push(made, drop(made, grab(made, { x: X0 + 30, y: NEAR })!, { x: X0 + 30, y: tinAt(made)!.body.y + 20 }).game)
+    }
+    for (const game of states) {
+      for (let showing = 0; showing < 4; showing++) {
+        const { hand } = guideOf(game, showing)
+        const result = hand.drag ? (grab(game, hand.from) ? drop(game, grab(game, hand.from)!, hand.to) : slice(game, hand.from, hand.to, newStroke())) : poke(game, hand.from)
+        for (const event of result.events) if (event.kind === 'ending') expect(event.ending.outcome).not.toBe('badly')
+      }
+    }
   })
 })

@@ -4,7 +4,8 @@ import type { Customer } from './orders'
 import { holdsMisfit, tinAt } from './moves'
 import { tinParts, wanted } from './orders'
 import { served } from './serve'
-import { BOARD, CRATE, QUEUE, WINDOW, boxOf, type Box, type Point } from './stage'
+import { figureBox } from './seats'
+import { BOARD, CRATE, LANE_H, boxOf, laneTop, shown, type Box, type Point } from './stage'
 import { LANES, onLane, type Piece } from './world'
 
 // What the idle ladder shows: a glow on the one thing a child would want
@@ -15,7 +16,7 @@ import { LANES, onLane, type Piece } from './world'
 export type Guide = {
   /** What glows: one thing, or the two who wait when it is for the child to call one. */
   glow: Box[]
-  on: 'fruit' | 'crate' | 'waiting' | 'tin' | 'customer'
+  on: 'fruit' | 'crate' | 'waiting' | 'tin' | 'board'
   /** The move the hand makes: from one point to the other, as a stroke or a carry, or a tap where it stands. */
   hand: { from: Point; to: Point; drag: boolean }
 }
@@ -68,16 +69,25 @@ function strokeAcross(box: Box, showing: number, customer: Customer | null): Gui
  * - A customer waits to be served and nothing of its fruit has been cut: its fruit glows and the hand strokes
  *   across it, or the crate glows and the hand taps it when no such fruit lies on the board.
  * - A piece of its fruit has been cut and the tin wants more: the tin glows and the hand carries a piece to it.
- * - What lies in the tin sticks out: the customer glows and the hand taps it, which sends it off as it is.
+ * - What lies in the tin sticks out: the piece furthest along the tin glows and the hand carries it back to the board.
+ *   The hand never shows a move that goes badly, so it never sends a customer off with a tin that will not shut.
  */
 export function guideOf(game: Game, showing = 0): Guide {
   const customer = game.window
   if (!customer || game.finished) {
     const index = ((showing % 2) + 2) % 2
-    return tap([QUEUE[0], QUEUE[1]], 'waiting', mid(QUEUE[index]))
+    // Each is touched on its figure, and that is what glows and where the hand taps: the street round it is not the customer.
+    const figures = [figureBox(game.queue[0], 0), figureBox(game.queue[1], 1)]
+    return tap(figures, 'waiting', mid(figures[index]))
   }
   const tin = tinAt(game)!
-  if (holdsMisfit(game) && served(game.world, customer).kind === 'over') return tap([WINDOW], 'customer', { x: WINDOW.x + 110, y: WINDOW.y + 100 })
+  if (holdsMisfit(game) && served(game.world, customer).kind === 'over') {
+    // The piece furthest along the tin is carried straight down to the near lane, where it can be cut again: a move, and nothing is judged.
+    const lying = shown(game.world, tin).filter(({ piece }) => piece.place.on === 'tin')
+    const last = lying.reduce((far, one) => (one.box.x > far.box.x ? one : far))
+    const lane = { x: BOARD.x, y: laneTop(0), w: BOARD.w, h: LANE_H }
+    return { glow: [last.box], on: 'board', hand: { from: { x: last.box.x + Math.min(last.box.w / 2, 60), y: last.box.y + last.box.h / 2 }, to: { x: last.box.x + Math.min(last.box.w / 2, 60), y: lane.y + lane.h / 2 }, drag: true } }
+  }
   const mine = onBoard(game).filter(({ piece }) => piece.fruit === customer.fruit)
   const cut = mine.filter(({ piece }) => piece.length < WHOLE[piece.fruit])
   if (cut.length > 0) {
