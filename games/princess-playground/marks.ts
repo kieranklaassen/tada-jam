@@ -83,7 +83,8 @@ export function swirlPoint(t: number): { dx: number; dz: number } {
 
 /**
  * Dot's swirl: the cells a line wound outward round (x, z) passes through, as far out as `radius`. Drawn once, when
- * Dot is left alone. It is an open, winding line: a closed ring left lying in the sand would read as a nought.
+ * Dot is left alone. It is an open, winding line: a closed ring left lying in the sand would read as a nought, drawn
+ * live or drawn again from the saved grid.
  */
 export function swirl(marks: Marks, x: number, z: number, radius: number, depth = 3): void {
   const steps = 48
@@ -92,6 +93,9 @@ export function swirl(marks: Marks, x: number, z: number, radius: number, depth 
     const { col, row } = cellOf(x + dx * radius, z + dz * radius)
     deepen(marks, col, row, depth)
   }
+  // The grid is too coarse to keep the windings apart, and the cells the line crosses alone would close into a loop
+  // round an unmarked middle. So the whole patch is kept, middle and all: on a load it is one soft round hollow.
+  stamp(marks, x, z, radius, depth)
 }
 
 /** How deep an end bites when it comes down with this much weight on it: deeper the heavier the end. */

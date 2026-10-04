@@ -591,6 +591,27 @@ describe('the small promises of the sheet', () => {
     expect(voices(run(game, 8).cues)).toBe(0)
   })
 
+  it('a stack with Bo on top sways as one for as long as it stands, whoever is under him', () => {
+    const game = free([], ['pim'])
+    run(game, 0.5)
+    tapOn(game, 'bo')
+    run(game, 5)
+    expect(game.play.arrangement.right).toEqual(['pim', 'bo'])
+    let together = 0
+    for (let i = 0; i < 360; i++) {
+      game.step(1 / 60, QUIET)
+      if (game.play.bodies.pim.act === 'sway' && game.play.bodies.bo.act === 'sway') together += 1
+    }
+    expect(together).toBeGreaterThan(180)
+    // Bo under Pim is no such stack.
+    const under = free([], ['bo'])
+    run(under, 0.5)
+    tapOn(under, 'pim')
+    run(under, 6)
+    expect(under.play.arrangement.right).toEqual(['bo', 'pim'])
+    expect(under.play.bodies.bo.act).not.toBe('sway')
+  })
+
   it('a tower of four sways for as long as it stands', () => {
     const game = free(['pim'], ['bo', 'mog', 'dot'])
     tapOn(game, 'pim')
@@ -789,6 +810,42 @@ describe('a friend carried onto the picture of the plank', () => {
     run(plain, 0.5)
     plain.dragEnd()
     expect(placeOf(plain.play.arrangement, 'bo').at).toBe('sand')
+  })
+})
+
+describe('a finger already down when a scene begins', () => {
+  it('does nothing when it lifts or drags: nobody is moved inside the scene and no ride begins in it', () => {
+    // Mog is sent to lift Pim, and a finger comes down on Dot before the plank has carried her up.
+    const game = new Game({ ...shown(), touched: true }, 1)
+    run(game, 0.2)
+    tapOn(game, 'mog')
+    run(game, 0.3)
+    expect(game.sceneRunning).toBe(false)
+    game.press({ kind: 'friend', id: 'dot' })
+    for (let i = 0; i < 600 && !game.sceneRunning; i++) game.step(1 / 60, QUIET)
+    expect(game.sceneRunning).toBe(true)
+    const where = placeOf(game.play.arrangement, 'dot')
+    game.tap()
+    run(game, 0.2)
+    expect(game.sceneRunning).toBe(true)
+    expect(placeOf(game.play.arrangement, 'dot')).toEqual(where)
+    // The same with the next asker under the finger, lifted or dragged.
+    const next = new Game({ ...shown(), touched: true }, 1)
+    run(next, 0.2)
+    tapOn(next, 'mog')
+    run(next, 0.3)
+    next.press({ kind: 'friend', id: 'mog' })
+    for (let i = 0; i < 600 && !next.sceneRunning; i++) next.step(1 / 60, QUIET)
+    const kind = next.world.kind
+    next.dragStart()
+    next.dragTo({ x: 0, z: 2 }, null)
+    next.dragEnd()
+    next.tap()
+    run(next, 0.2)
+    expect(next.sceneRunning).toBe(true)
+    expect(next.world.kind).toBe(kind)
+    expect(next.world.state.finished).toBe(true)
+    expect(next.play.held).toBe(null)
   })
 })
 

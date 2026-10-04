@@ -332,6 +332,10 @@ export class Game implements Director {
    * first beat.
    */
   private run(kind: 'ending' | 'showing', build: (director: Director) => Beat[]): void {
+    // A finger that was already down when the scene began is no touch on the scene: its lift does nothing, and only a
+    // new touch ends the scene.
+    this.pressed = { kind: 'other' }
+    this.aim = null
     this.sceneSand = forecast(this.play, this.world.arrangement, build)
     for (const op of this.sceneSand) this.mark(op)
     this.wantSave('now')
@@ -671,8 +675,8 @@ export class Game implements Director {
 
   /**
    * The secrets that are held states: a plank that floats level hums for as
-   * long as it floats, with everyone on it swaying; a tower of four sways for
-   * as long as it stands. Each begins and ends with the arrangement, never
+   * long as it floats, with everyone on it swaying; a tower of four, or any
+   * stack with Bo on top, sways for as long as it stands. Each begins and ends with the arrangement, never
    * with the clock: the clock only spaces the hums and the sways.
    */
   private held(): void {
@@ -685,11 +689,13 @@ export class Game implements Director {
       ;[...a.left, ...a.right].forEach((id, index) => play.act(id, 'sway', 1.6, index % 2 ? -1 : 1))
       return
     }
-    const tower = a.left.length === 4 ? a.left : a.right.length === 4 ? a.right : null
-    if (tower) {
-      this.heldAt = this.time + HELD_EVERY
-      // The tower sways as one: every friend the same way.
-      for (const id of tower) play.act(id, 'sway', 1.7, 1)
+    // A tower of four, or any stack with Bo on top: it sways as one, every friend the same way, for as long as it stands.
+    for (const end of ['left', 'right'] as const) {
+      const stack = a[end]
+      if (stack.length === 4 || (stack.length >= 2 && stack[stack.length - 1] === 'bo')) {
+        this.heldAt = this.time + HELD_EVERY
+        for (const id of stack) play.act(id, 'sway', 1.7, 1)
+      }
     }
   }
 

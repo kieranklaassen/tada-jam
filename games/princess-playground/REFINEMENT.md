@@ -13,7 +13,7 @@
   - Round 5 (checker G): passed, no finding, on commit `ca35987` (hash `eea42219…b03b`).
   - Round 6 (checker H): passed, no finding, on commit `ebd6aea` (hash `89ccbace…4d06`): the three sentences the closing run made true (Bo awake at his own ride, in two places; Mog's low-end cell).
   - Nothing was disputed in any round.
-- After round 6 the sheet was read against the game three more times: by this lane, the grid cell by cell; against the lead's list of points where the game did less than the sheet; and three times by readers who had not seen the build (the last report is below). Whatever a child should see or hear was built (listed below). The sentences that said a detail other than the game does were made true, in every place the sheet says them. None touches the mechanic, the error, the designed order, the records or the claim. Two touch what is saved or loaded: a new field `touched`, and a decided ride found ended on load.
+- After round 6 the sheet was read against the game three more times: by this lane, the grid cell by cell; against the lead's list of points where the game did less than the sheet; and by readers who had not seen the build, each a fresh one, until one found nothing (the last report is below). Whatever a child should see or hear was built (listed below). The sentences that said a detail other than the game does were made true, in every place the sheet says them. None touches the mechanic, the error, the designed order, the records or the claim. Two touch what is saved or loaded: a new field `touched`, and a decided ride found ended on load.
   - Sheet now: commit `93057d402d8d7edf2350ddaa97c05961fcba5c5b`, hash of the sheet part `f4f40fde30f0b41e32e040d2fccbd0a2557cc8909f4045b9ebc05d096ed5432f`, unchanged since that commit.
   - Grid, Bo, "Tap it". Old: "Rumbles, rocks twice to get going and thuds to the end on his side, or off it." New: "Rumbles, rocks twice to get going and thuds to the end on his side; tapped on the plank he rumbles and thuds off it at once."
   - Scenes, "Tidying", first two sentences. Old: "While the sand holds marks, a small rake lies at the far rim. A tap on it draws it once across the tray and leaves even raked lines." New: "While the sand holds marks, a small rake lies at the far rim, from the child's first touch of anything on: the first showing marks the sand before that touch, and no tool is on screen then. A tap on it draws it once along the far rim, from one side of the tray to the other, and the sand behind it lies in even raked lines again."
@@ -105,6 +105,12 @@
 - A landing on an empty end that makes the two ends the same plays no high-perch cell: the plank floats and hums, which is everyone's answer.
 - The sheet now says that a showing the child gets ahead of waits for the next time its kind is laid out (listed above).
 
+**Built after the fourth reading.** It named three.
+
+- Dot's swirl as it is saved is a whole patch, middle and all, so a load draws one soft round hollow and never a loop of hollows round an untouched middle. The cells the line crosses alone closed into a ring at Dot's own rim places.
+- A finger that was already down when an ending or a showing began does nothing when it lifts or drags: nobody is moved inside the scene and no ride begins in it. Only a new touch ends a scene.
+- Any stack with Bo on top sways as one for as long as it stands, whoever is under him; before, only Bo swayed, once.
+
 **Found by this lane while checking those.**
 
 - A friend held on the picture of the plank's end did not land on the plank: carried friends hang high over the tray, so it hung over the sand in front and came down there. The finger is now also read at the height of a friend sitting on the plank (`arrangement.ts`, `aimedAtPlank`), so what the child sees decides. The audit's own "carried" moment had been dropping friends in the sand all along; it now really lands them on the ends, onto a friend and over the middle.
@@ -121,6 +127,7 @@
 - Nobody has heard the game. Every voice is numbers inside ranges; whether the thumps, squeaks and hums sit well together is unknown, and so is whether Bo's chuckle and Mog's purr now come too often in free play.
 - Motion was judged from model tests, stills and the audit's pictures, never from video.
 - The rake appears at the child's first touch, wherever that touch lands. It does not slide in; it is simply there.
+- The grown-up overlay opens on three taps of one finger in the top right corner, a little apart and within 700 ms. A child drumming one finger on that bare corner could open it, and its digits and letters would stay until three more taps there. The corner answers nothing, so nothing invites it; the gesture is the template's.
 - Two friends hopping to different places at the same moment can pass through each other in the air. A hop clears whoever stood in its way when it left, not whoever is flying.
 - The waiting place is beside Pim's default place; a big friend waiting there stands close to her.
 - The idle glow is faint on the pale sand at tier 0 in stills.

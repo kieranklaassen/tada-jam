@@ -83,6 +83,27 @@ describe('the marks in the sand', () => {
     expect(marks.reduce((sum, cell) => sum + (cell > RAKED ? 1 : 0), 0)).toBeGreaterThanOrEqual(6)
   })
 
+  it('and as it is saved it is a whole patch, never a loop of cells round an unmarked middle: a load draws no ring', () => {
+    // Dot's places at the rim on either side, and a few others.
+    for (const [x, z] of [[4.68, -2.55], [-4.68, -2.55], [0, 2], [2.3, 1.1], [-3.1, 0.4]] as const) {
+      const marks = rakedSand()
+      swirl(marks, x, z, 0.74 * 1.25)
+      const marked = (col: number, row: number) => col >= 0 && col < MARK_COLS && row >= 0 && row * MARK_COLS + col < MARK_CELLS && marks[row * MARK_COLS + col] > RAKED
+      const middle = cellOf(x, z)
+      expect(marked(middle.col, middle.row), `${x}, ${z}`).toBe(true)
+      // No unmarked cell has marked cells on all four sides of it.
+      for (let i = 0; i < MARK_CELLS; i++) {
+        const col = i % MARK_COLS, row = Math.floor(i / MARK_COLS)
+        if (marked(col, row)) continue
+        const walled = [[1, 0], [-1, 0], [0, 1], [0, -1]].every(([dc, dr]) => {
+          for (let k = 1; k < MARK_COLS; k++) if (marked(col + dc * k, row + dr * k)) return true
+          return false
+        })
+        expect(walled, `${x}, ${z}: cell ${col}, ${row}`).toBe(false)
+      }
+    }
+  })
+
   it('an end bites deeper the heavier it is, and no mark is shallower than the shallowest', () => {
     expect(biteDepth(9)).toBeGreaterThan(biteDepth(4))
     expect(biteDepth(4)).toBeGreaterThan(biteDepth(2) - 1)
