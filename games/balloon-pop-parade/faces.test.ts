@@ -58,8 +58,9 @@ describe('a face', () => {
     const open = mouth({ ...restFace(), open: 1 }, plan)
     expect(open).toHaveLength(3)
     expect(open[2].tall).toBeGreaterThan(open[0].tall)
-    // Barely open, it shows no dark.
-    expect(mouth({ ...restFace(), open: 0.3 }, plan)).toHaveLength(2)
+    // Barely open, it shows no dark; and when the dark shows it is round, never a thin level line.
+    expect(mouth({ ...restFace(), open: 0.4 }, plan)).toHaveLength(2)
+    for (const wide of [0.46, 0.6, 1]) { const dark = mouth({ ...restFace(), open: wide }, plan)[2]; expect(dark.tall, `${wide}`).toBeGreaterThan(dark.wide * 0.4) }
     // One that has a jaw to drop shows no printed dark.
     expect(mouth({ ...restFace(), open: 1 }, { ...plan, corners: { ...plan.corners!, gape: null } })).toHaveLength(2)
   })

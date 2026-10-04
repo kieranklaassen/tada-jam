@@ -696,6 +696,9 @@ describe('the pass-by', () => {
         const left = Math.min(...names.map((name) => poses.get(name)!.x)), right = Math.max(...names.map((name) => poses.get(name)!.x))
         expect(left - half, `${wide} by ${high}, a child of ${age}`).toBeGreaterThanOrEqual(-view.width / 2 - 1e-6)
         expect(right + half, `${wide} by ${high}, a child of ${age}`).toBeLessThan(own.x - BODIES[theatre.troop.kind].halfWidth * FRIEND_SCALE + 1e-6)
+        // As large as the room allows: nine tenths of a friend in front at the most, and about two fifths at the least.
+        expect(first.scale / FRIEND_SCALE, `${wide} by ${high}, a child of ${age}`).toBeLessThanOrEqual(0.9 + 1e-9)
+        expect(first.scale / FRIEND_SCALE, `${wide} by ${high}, a child of ${age}`).toBeGreaterThan(0.4)
       }
       expect(stood, `${wide} by ${high}`).toBe(true)
     }

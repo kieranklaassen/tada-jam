@@ -94,9 +94,10 @@ export function mouthBits(plan: FacePlan, state: FaceState, bit: Bit): void {
     const { at: [cx, cy, cz], wide, long, gape } = plan.corners
     const way = smile >= -0.15 ? 1 : -1, turned = way * (0.3 + 0.6 * Math.abs(smile))
     for (const side of [1, -1]) bit(cx + side * (wide / 2 + Math.cos(turned) * long * 0.8), cy + Math.sin(turned) * long * 0.8, cz, long, long * 0.34, long * 0.5, side * turned, plan.ink)
-    // The dark of it is seen only when it is well open: an "ooh" under its breath shows none.
-    const agape = Math.max(0, (open - 0.3) / 0.7)
-    if (gape && agape > 0.05) bit(gape.at[0], gape.at[1], gape.at[2], gape.wide * (0.7 + 0.3 * agape), gape.tall * agape, gape.tall * 0.5, 0, plan.ink)
+    // The dark of it is seen only when it is well open, and is round from the moment it is seen: an "ooh" under
+    // its breath shows none, and it is never a thin level line on the beak.
+    const agape = (open - 0.45) / 0.55
+    if (gape && agape > 0) bit(gape.at[0], gape.at[1], gape.at[2], gape.wide * (0.6 + 0.4 * agape), gape.tall * (0.55 + 0.45 * agape), gape.tall * 0.5, 0, plan.ink)
     return
   }
   if (!plan.mouth) return
