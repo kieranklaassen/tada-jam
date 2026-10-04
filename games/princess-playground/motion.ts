@@ -1,4 +1,4 @@
-import { drop, inCompany, placeOf, tap, weightOn, type Arrangement } from './arrangement'
+import { aimedAtPlank, drop, inCompany, placeOf, tap, weightOn, type Arrangement } from './arrangement'
 import { PERSONALITY } from './personality'
 import { nudge, stepPlank, type PlankState } from './plank'
 import type { Frame, FriendPose, Poses } from './pose'
@@ -206,13 +206,17 @@ export class Playground {
     body.holdZ = Math.max(-TRAY.halfDepth + 0.3, Math.min(TRAY.halfDepth - 0.5, z))
   }
 
-  /** The finger lets go: the friend comes down where it hangs. */
-  release(): void {
+  /**
+   * The finger lets go: the friend comes down where it hangs. `aim` is where the finger is over the tray at the height
+   * of a friend sitting on the plank: when the child holds the friend on the plank's picture, it lands on the plank
+   * there, although it hangs over the sand in front of it.
+   */
+  release(aim: { x: number; z: number } | null = null): void {
     const id = this.held
     if (!id) return
     this.held = null
     const body = this.bodies[id]
-    const result = drop(this.arrangement, id, body.x, body.z)
+    const result = aimedAtPlank(aim) ? drop(this.arrangement, id, aim!.x, PLANK.z) : drop(this.arrangement, id, body.x, body.z)
     this.arrangement = result.arrangement
     this.hop(id, true, result.slid)
   }

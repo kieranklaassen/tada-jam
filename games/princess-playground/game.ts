@@ -82,6 +82,8 @@ export class Game implements Director {
   /** Who looks after it: those it was with, on the plank or beside it in the sand. */
   private lookers: readonly FriendId[] = []
   private nextEndOf: World | null = null
+  /** Where the finger last was, read at the height of a friend sitting on the plank. */
+  private aim: { x: number; z: number } | null = null
   private nextEndIs: End = 'left'
   /** Mog and Bo on the end that is up: whether each has yet said what it makes of it. */
   private perch: Partial<Record<FriendId, 'pending' | 'said'>> = {}
@@ -178,9 +180,13 @@ export class Game implements Director {
     } else this.play.grab(pressed.id)
   }
 
-  /** The finger moved: `over` is where it is above the tray at carrying height, `sand` where it is on the sand; either may be null. */
-  dragTo(over: { x: number; z: number } | null, sand: { x: number; z: number } | null): void {
+  /**
+   * The finger moved: `over` is where it is above the tray at carrying height, `sand` where it is on the sand, and
+   * `aim` where it is at the height of a friend sitting on the plank (`AIM_HEIGHT`); any may be null.
+   */
+  dragTo(over: { x: number; z: number } | null, sand: { x: number; z: number } | null, aim: { x: number; z: number } | null = null): void {
     const pressed = this.pressed
+    this.aim = aim
     if (pressed.kind === 'friend' && this.play.held && over) this.play.carryTo(over.x, over.z)
     else if (pressed.kind === 'sand' && sand && Math.hypot(sand.x - pressed.x, sand.z - pressed.z) >= GROOVE_STEP) {
       this.play.dragSand(pressed.x, pressed.z, sand.x, sand.z)
@@ -192,7 +198,9 @@ export class Game implements Director {
   dragEnd(): void {
     const id = this.play.held
     this.pressed = { kind: 'other' }
-    if (id) this.moved(id, () => this.play.release())
+    const aim = this.aim
+    this.aim = null
+    if (id) this.moved(id, () => this.play.release(aim))
   }
 
   pressEnd(): void {
@@ -205,6 +213,7 @@ export class Game implements Director {
    */
   putAway(): void {
     this.pressed = { kind: 'other' }
+    this.aim = null
     this.play.putBack()
   }
 

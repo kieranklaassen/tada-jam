@@ -205,9 +205,10 @@ export function poseFriend(view: FriendView, pose: FriendPose): void {
   // Bo's heavy lids hang over the top of his eyes: his pupils rise less, so a look up never hides them.
   view.pupils.position.y += pose.gazeY * spec.radius * (view.id === 'bo' ? 0.03 : 0.055)
   // At the finger the eyes go wide.
-  const eyesWide = 1 + 0.16 * pose.wide
-  view.whites.scale.x = view.pupils.scale.x = eyesWide
-  view.whites.scale.y *= eyesWide
+  // The whole face grows from the middle of the body, whites and pupils together, so each pupil stays in its white as it lay.
+  view.whites.parent!.scale.setScalar(1 + 0.1 * pose.wide)
+  // Bo's lids lie over his eyes and grow with them.
+  if (view.extra && view.id === 'bo') view.extra.scale.setScalar(1 + 0.1 * pose.wide)
   // Put out, the mouth is pressed to a short flat line. It is never turned down: no sad face is turned to the child.
   view.mouth.scale.set(pose.frown > 0.5 ? 0.7 : 1 + pose.mouth * 0.35, pose.frown > 0.5 ? 0.22 : 1 + pose.mouth * 0.9, 1)
   view.body.material.color.lerpColors(view.pale, view.full, pose.bright)

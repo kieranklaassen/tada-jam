@@ -1,6 +1,7 @@
 // template: cartridge/game.tsx v2
 import { useEffect, useRef } from 'react'
 import type { Cartridge, CartridgeContext } from '../types'
+import { AIM_HEIGHT } from './arrangement'
 import { AttendedClock, Attention } from './attention'
 import { GameAudio } from './audio'
 import { BACKDROP } from './config'
@@ -139,7 +140,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
           game.press(hit as Touched)
         } else if (gesture.type === 'tap') game.tap()
         else if (gesture.type === 'dragStart') game.dragStart()
-        else if (gesture.type === 'dragMove') game.dragTo(stage.pointAt(gesture.at.x, gesture.at.y, game.carryHeight), stage.sandAt(gesture.at.x, gesture.at.y))
+        else if (gesture.type === 'dragMove') game.dragTo(stage.pointAt(gesture.at.x, gesture.at.y, game.carryHeight), stage.sandAt(gesture.at.x, gesture.at.y), stage.pointAt(gesture.at.x, gesture.at.y, AIM_HEIGHT))
         else if (gesture.type === 'dragEnd') game.dragEnd()
         else if (gesture.type === 'pressEnd') game.pressEnd()
         // A lifted finger mid-drag: the friend in hand hangs where it is and waits out the grace.

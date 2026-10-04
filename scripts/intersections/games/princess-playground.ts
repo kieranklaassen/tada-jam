@@ -121,7 +121,7 @@ export default {
   ],
   allow: [
     { a: '-whites\\b', b: '-pupils\\b', kind: 'pose', upTo: 0.7, reason: 'a pupil lies in its white and moves in it with the gaze; both flatten together as the eye shuts' },
-    { a: '-body\\b', b: '-mouth\\b', kind: 'pose', upTo: 1.3, reason: 'the mouth is half a ring lying on the body: it widens when the friend speaks, turns over in its own plane when the friend is put out, and is carried by every squash' },
+    { a: '-body\\b', b: '-mouth\\b', kind: 'pose', upTo: 1.75, reason: 'the mouth is half a ring lying on the body: it widens when the friend speaks and is carried by every squash. The measure is against its shallowest pose, and that is now a mouth pressed to a flat line when the friend is put out, which hardly crosses the body at all; a wide open mouth on a body squashed by a landing crosses it deepest, and reads as an open smile lying on the face' },
     { a: '-body\\b', b: '-(whites|pupils)\\b', kind: 'pose', upTo: 0.6, reason: 'the eyes lie on the body and flatten into it as they shut' },
     { a: 'bo-body', b: 'bo-lids', kind: 'pose', upTo: 1.0, reason: 'Bo’s lids are caps lying on his body over his eyes; his squash, the deepest of the four, carries them with it' },
     { a: 'bo-(whites|pupils)\\b', b: 'bo-lids', kind: 'pose', upTo: 0.7, reason: 'Bo’s lids lie over the top of his eyes, which flatten under them in a blink and when he dozes' },
