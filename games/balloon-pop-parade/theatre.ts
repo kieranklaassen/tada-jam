@@ -155,7 +155,7 @@ export class Theatre {
   private pressedSlot = -1
   private readonly pose: Pose = restPose()
   private readonly hand = { x: 0, y: 0, z: 0 }
-  private slotsFor = 0
+  private slotsFor = ''
   private slotsAt: { x: number; y: number }[] = []
   /** The short scene that is playing, and which one. */
   private scene: Scene | null = null
@@ -248,16 +248,18 @@ export class Theatre {
     this.took = troop.held.map((holds, i) => (holds ? i : -1)).filter((i) => i >= 0)
     this.slipped = this.save.slips
     this.flights.length = 0
-    this.slotsFor = 0
+    this.slotsFor = ''
     this.pressedSlot = -1
   }
 
   /** The places in the sky for this view, worked out once for each width. */
   private slots(view: View): { x: number; y: number }[] {
-    if (this.slotsFor !== view.width + view.balloon * 1000) {
+    // For this very surface: its shape, how large a balloon is on it, and how many pixels the grown-up's corner takes of it.
+    const surface = `${view.width} ${view.height} ${view.pixelsPerUnit} ${view.balloon}`
+    if (this.slotsFor !== surface) {
       // The largest bunch in this sky decides how near the top right corner the last place may be.
       this.slotsAt = skySlots(this.sky.length, view, Math.max(1, ...this.sky.map((bunch) => bunch.count)))
-      this.slotsFor = view.width + view.balloon * 1000
+      this.slotsFor = surface
     }
     return this.slotsAt
   }
@@ -563,8 +565,11 @@ export class Theatre {
       const without = flight.slipped ? Math.min(2, Math.max(0, this.slipped - 1)) as 0 | 1 | 2 : this.save.slips
       const again = sendBunch({ ...this.save, slips: without }, flight.slot), first = again.events[0]
       if (!first || first.type === 'refused') continue
+      // Wherever it is going now, it goes on from where it is: a change of plan never moves it.
+      const here = this.along(flight)
       if (first.type === 'gotAway') {
         // Still too many: for whoever wants one now. Its slip was counted when it was sent, and is not counted twice.
+        if (flight.friend !== first.grabber || flight.given.spare !== first.spare) { flight.fromX = here.x; flight.fromY = here.y; flight.gone = 0 }
         flight.given = { result: 'gotAway', grabber: first.grabber, spare: first.spare }
         flight.friend = first.grabber
         continue
@@ -577,6 +582,9 @@ export class Theatre {
       const serves = again.events.find((event) => event.type === 'served')
       flight.given = { result: 'taken', takers: first.takers, served: serves !== undefined }
       flight.friend = first.takers[0]
+      flight.fromX = here.x
+      flight.fromY = here.y
+      flight.gone = 0
       if (serves && serves.type === 'served') {
         this.endingDue = { at: Number.POSITIVE_INFINITY, order: [...this.took], together: serves.together }
         this.unsaved = 2
@@ -597,9 +605,10 @@ export class Theatre {
    */
   private schedule(): void {
     const p = PERSONALITIES[this.troop.kind], slowest = QUICKEST - 0.14
-    const long = (id: ClipId | null | undefined): number => (id === 'refuse' || id === 'catch' || id === 'popped' ? p.lasts[id] / slowest : 0)
+    const long = (id: ClipId | null | undefined): number => (id ? p.lasts[id] / slowest : 0)
     const free = this.actors.map((actor) => {
-      const now = actor.clip === 'liftOff' ? p.lasts.liftOff - actor.t + actor.landAfter : actor.clip === 'refuse' || actor.clip === 'catch' || actor.clip === 'popped' ? (p.lasts[actor.clip] - actor.t) / slowest : 0
+      // Whatever it is in the middle of, an answer or a poke or its proud move, is left to finish: no bunch cuts a motion short.
+      const now = actor.clip === 'liftOff' ? p.lasts.liftOff - actor.t + actor.landAfter : actor.clip ? (p.lasts[actor.clip] - actor.t) / slowest : 0
       return Math.max(0, now) + long(actor.next) + long(actor.after)
     })
     let before = -1
@@ -897,13 +906,14 @@ export class Theatre {
   }
 
   /**
-   * Whether a friend is at the point of an answer that nothing may cut short: carried off, starting at a pop, in
-   * the look before a refusal lands on the bunch, or about to take hold of a balloon. Once a refusal has landed or
-   * a balloon is in the hand, the rest of that motion gives way to a poke or a pop like any other.
+   * Whether a friend is at the point of an answer that nothing may cut short: carried off, in the look before a
+   * refusal lands on the bunch, or about to take hold of a balloon. Once a refusal has landed or a balloon is in
+   * the hand, the rest of that motion gives way to a poke or a pop like any other; and a start at a pop gives way
+   * to a poke, which is the child's own touch on that friend, though a bunch waits for the start to be over.
    */
   private answering(friend: number): boolean {
     const actor = this.actors[friend], cue = PERSONALITIES[this.troop.kind].cue
-    return actor.clip === 'liftOff' || actor.clip === 'popped' || (actor.clip === 'refuse' && actor.t < cue.hit) || (actor.clip === 'catch' && actor.t < cue.grab)
+    return actor.clip === 'liftOff' || (actor.clip === 'refuse' && actor.t < cue.hit) || (actor.clip === 'catch' && actor.t < cue.grab)
   }
 
   /**

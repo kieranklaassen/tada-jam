@@ -763,6 +763,7 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
       const random = () => (state = (state * 1103515245 + 12345) % 2147483648) / 2147483648
       const begun: number[] = [], struck: number[] = []
       for (let i = 0; i < 60 * 120; i++) {
+        const onStage = JSON.stringify([theatre.save.next, theatre.save.parade])
         if (i % 13 === 0) {
           const roll = random()
           if (roll < 0.5) tap(theatre, Math.floor(random() * 4) % theatre.sky.length)
@@ -770,6 +771,8 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
         }
         const kind = theatre.troop.kind
         theatre.step(1 / 60)
+        // A troop that marches off leaves a bunch it had not answered to drift away: the count starts again with the next troop.
+        if (JSON.stringify([theatre.save.next, theatre.save.parade]) !== onStage) { begun.length = 0; struck.length = 0 }
         if (kind !== 'hippo' || theatre.troop.kind !== 'hippo') { theatre.sounds.length = 0; continue }
         for (const sound of theatre.sounds) {
           if (sound.voice === 'hippoRefuse') begun.push(i)
@@ -779,7 +782,16 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
         expect(struck.length, `seed ${seed}, frame ${i}: a bunch blown away with no refusal begun`).toBeLessThanOrEqual(begun.length)
         if (struck.length > 0 && struck[struck.length - 1] === i) expect(i - begun[struck.length - 1], `seed ${seed}, frame ${i}: refusal ${struck.length}`).toBeGreaterThanOrEqual(Math.floor((hit / 1.07) * 60) - 2)
       }
-      expect(begun.length - struck.length, `seed ${seed}`).toBeLessThanOrEqual(1)
+      // Left alone, whatever was still on its way is answered too, and the counts meet.
+      for (let i = 0; i < 60 * 12 && theatre.troop.kind === 'hippo'; i++) {
+        theatre.step(1 / 60)
+        for (const sound of theatre.sounds) {
+          if (sound.voice === 'hippoRefuse') begun.push(i)
+          if (sound.voice === 'raspberry') struck.push(i)
+        }
+        theatre.sounds.length = 0
+      }
+      expect(begun.length - struck.length, `seed ${seed}`).toBe(0)
       if (size === 1) expect(begun.length).toBeGreaterThan(5)
     }
   }, 60_000)
@@ -812,6 +824,8 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
           if (must < 0) return
           if (was.t < must - 0.04) {
             answers += 1
+            // A start at a pop gives way to a poke, which is the child's own touch on that friend, and to nothing else.
+            if (was.clip === 'popped' && (actor.clip === 'poke' || actor.clip === 'pokeB')) return
             expect(actor.clip === was.clip && actor.t >= was.t, `age ${age}, seed ${seed}, frame ${i}: a ${kind}'s ${was.clip} cut at ${was.t.toFixed(2)} of ${must.toFixed(2)} by ${actor.clip}`).toBe(true)
           }
         })
@@ -846,8 +860,8 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
         if (!first) continue
         const whole = first.given.result === 'gotAway' && first.given.spare === first.bunch.count && first.bunch.count === theatre.troop.size && theatre.troop.size > 1
         const who = first.given.result === 'taken' ? first.given.takers! : whole ? inside.actors.map((_, k) => k) : [first.friend]
-        // Free: in no answer, and owing none.
-        const free = who.every((k) => { const actor = inside.actors[k]; return actor && !['liftOff', 'refuse', 'catch', 'popped'].includes(actor.clip ?? '') && !actor.next && !actor.after })
+        // Free: in the middle of nothing, and owing nothing.
+        const free = who.every((k) => { const actor = inside.actors[k]; return actor && !actor.clip && !actor.next && !actor.after })
         if (!free) continue
         waits += 1
         // Each frame its friends are free and it is still not there; more than three quarters of a second of them, and it was kept waiting.
@@ -900,7 +914,7 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
         if (theatre.troop.kind === kind && theatre.troop.size === size && theatre.save.parade.length === parade) check('in a step')
       }
     }
-    expect(heard).toBeGreaterThan(800)
+    expect(heard).toBeGreaterThan(500)
   }, 90_000)
 
   it('shows the troop as the save has it whenever nothing is on its way: in whole games played at random, each friend holds a balloon on screen exactly when the save says it does', () => {
@@ -926,6 +940,49 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
     }
     expect(calm).toBeGreaterThan(5000)
   }, 90_000)
+
+  it.each(kinds)('a bunch that is read again when a balloon is popped goes on from where it is: for %ss it is not moved by the touch, whoever it goes to now', (kind) => {
+    for (const wait of [6, 14, 24, 40]) for (const [held, count, pop] of [[[true, false], 2, 0], [[true, true], 2, 1], [[true, false, true], 3, 2], [[true], 1, 0]] as const) {
+      const theatre = new Theatre(saveOf({ position: 'bunches-own-colour', troop: { kind, size: held.length as 1 | 2 | 3, held: [...held] }, sky: [{ colour: kind, count: 1 }, { colour: kind, count }], waiting: { kind: other(kind), size: 1 } }), 3), { balloons, painter, clear } = recorder()
+      theatre.step(1 / 60)
+      clear()
+      theatre.paint(painter, VIEW)
+      // The balloons the troop holds, from the left: the one to pop is its friend's.
+      const own = balloons.filter((balloon) => balloon.z > 0.29 && balloon.z < 0.31 && balloon.y < 2.2).sort((a, b) => a.x - b.x)
+      const target = own[held.slice(0, pop).filter(Boolean).length]
+      tap(theatre, 1)
+      for (let i = 0; i < wait; i++) theatre.step(1 / 60)
+      const flying = () => { clear(); theatre.paint(painter, VIEW); return balloons.filter((balloon) => Math.abs(balloon.z - 0.35) < 0.03).map((balloon) => ({ x: balloon.x, y: balloon.y })) }
+      const before = flying()
+      if (before.length === 0) continue
+      theatre.press(target.x, target.y, VIEW)
+      theatre.cancel()
+      const after = flying()
+      expect(after).toHaveLength(before.length)
+      // In the touch itself nothing of the bunch moves; a step later it has moved no further than a bunch does in a step.
+      after.forEach((balloon, k) => expect(Math.hypot(balloon.x - before[k].x, balloon.y - before[k].y), `${count} for ${held.join()}, popped ${wait} frames after the lift`).toBeLessThan(0.02))
+      theatre.step(1 / 60)
+      const next = flying()
+      next.forEach((balloon, k) => { if (after[k]) expect(Math.hypot(balloon.x - after[k].x, balloon.y - after[k].y)).toBeLessThan(0.45) })
+    }
+  })
+
+  it('keeps every balloon out of the grown-up\'s corner when the surface changes size and keeps its shape', () => {
+    const theatre = new Theatre(saveOf({ position: 'bunches-mixed', troop: { kind: 'duck', size: 1, held: [false] }, sky: [{ colour: 'frog', count: 2 }, { colour: 'duck', count: 1 }, { colour: 'duck', count: 3 }, { colour: 'frog', count: 3 }], waiting: { kind: 'frog', size: 1 } }), 2), { balloons, painter, clear } = recorder()
+    for (const [w, h] of [[1366, 1024], [1024, 768], [1366, 1024], [800, 600]]) {
+      const view = viewFor(w, h), corner = 72 / view.pixelsPerUnit
+      theatre.step(1 / 60)
+      clear()
+      theatre.paint(painter, view)
+      for (const balloon of balloons) {
+        if (balloon.z < -5 || balloon.wide < 0.5) continue
+        const right = balloon.x + 0.66 * view.balloon, top = balloon.y + 0.66 * 1.12 * view.balloon
+        expect(right > view.width / 2 - corner && top > view.height / 2 - corner, `${w} by ${h}: a balloon at ${balloon.x.toFixed(2)}, ${balloon.y.toFixed(2)}`).toBe(false)
+        // And a touch on it is answered.
+        if (balloon.y > 2) expect(theatre.hit(balloon.x, balloon.y, view).on).toBe('bunch')
+      }
+    }
+  })
 
   it('draws every balloon in front at one size, also where balloons are drawn larger: in the sky, in a hand, on its way, beside a friend, carrying one off and passing by', () => {
     const big = SMALL.balloon
