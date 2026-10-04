@@ -31,6 +31,8 @@ export const DOWN_THE_THROAT = 0.15
 const ON_TEETH = 1
 /** How far a toy that is not its sort is lifted on the tongue: from the floor of the mouth to its rim. */
 const HELD_UP = 1.25
+/** How far over the gate bar a toy lies that rolls along it: over the bar as it trembles under the toy. */
+const ON_THE_GATE = 0.12
 /** How far above the bell a toy rises as it leaves it: enough that its far end is past the bell before it is lower than the bell. */
 const OFF_THE_BELL = 2.2
 /** How far above its rim a toy is lifted before it is thrown out: clear of its eyes and of its brows, raised. */
@@ -225,8 +227,8 @@ export function react(game: Game, deed: Deed): void {
     case 'gate-roll': {
       const body = game.bodies[deed.toy]
       // Onto the gate, a roll along its bar, and off it over the crew onto the tray.
-      const on = { x: GATE.x, y: GATE.top + 0.05, z: GATE.z }, along = { x: GATE.x + (body.x < 0 ? 1.6 : -1.6), y: GATE.top + 0.05, z: GATE.z }
-      send(game, body, deed.toy, [{ at: on, landing: 'again', seconds: 0.36 }, { at: along, landing: 'again', seconds: deed.heavy ? 0.5 : 0.3, peak: GATE.top + 0.1 }, ...backOverTheCrew(game, deed.toy, along, 1)], deed)
+      const on = { x: GATE.x, y: GATE.top + ON_THE_GATE, z: GATE.z }, along = { x: GATE.x + (body.x < 0 ? 1.6 : -1.6), y: GATE.top + ON_THE_GATE, z: GATE.z }
+      send(game, body, deed.toy, [{ at: on, landing: 'again', seconds: 0.36 }, { at: along, landing: 'again', seconds: deed.heavy ? 0.5 : 0.3, peak: GATE.top + ON_THE_GATE + 0.05 }, ...backOverTheCrew(game, deed.toy, along, 1)], deed)
       break
     }
     case 'rim-slide': {
@@ -355,7 +357,8 @@ export function nextLeg(game: Game, body: Body, toy: number, deed: Deed | undefi
       const first = Math.hypot(body.x - GATE.x, 0) < 0.3
       if (!deed.heavy) game.say({ type: 'ping', nth: body.legs.length })
       else game.say(first ? { type: 'thud', who: 'big' } : { type: 'scrape' })
-      game.gateShake = 0.6
+      // The bar only trembles under it: a bar that jumped as it does for the claw would jump into the toy.
+      game.gateShake = 0.15
     }
   }
   else if (deed?.type === 'rim-slide') { if (body.legs.length > 0) game.say({ type: 'bell' }); else game.say(deed.heavy ? { type: 'rim-thud' } : { type: 'zip' }) }

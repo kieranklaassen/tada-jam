@@ -19,7 +19,7 @@ import { BELL, GATE, PLACES, RAIL, REST, SHELF, SLOT_Z, TRAY, WAIT_Z, placeAt } 
 import type { Scene } from './scene'
 import type { Toy } from './toys'
 import { nearestToy, type Tray } from './tray'
-import { newWatcher, stepWatcher, watcherNotices, watcherSees, type Watcher, WATCHER_AT, WATCHER_JUMPS_TO } from './watcher'
+import { newWatcher, stepWatcher, watcherNotices, watcherSees, type Watcher } from './watcher'
 import { bellyOf, cameFirst, crewNow, firstToyToCome, placesFor, showingOwed, showingStarts, someoneWaits, trayOf, type World } from './world'
 
 // The game: the rules (world.ts, deeds.ts) played with a claw. It answers
@@ -467,8 +467,6 @@ export class Game {
       if (toy === this.held || body.mode === 'resting' || body.mode === 'parked') return
       if (Math.abs(body.x - claw.x) < 4.5 && Math.abs(body.z - claw.z) < 4) near = Math.max(near, body.y + body.height * body.scale)
     })
-    // Clear of the watcher beside the tray, which jumps at a bang: the bell it sits by is rung with the claw.
-    if (claw.x > WATCHER_AT.x - 7 && Math.abs(claw.z - WATCHER_AT.z) < 8) near = Math.max(near, WATCHER_AT.y + WATCHER_JUMPS_TO)
     // And clear of the bell on its post at either end of the rail.
     if (Math.hypot(Math.abs(claw.x) - BELL.x, claw.z - BELL.z) < 5.5) near = Math.max(near, BELL.top + 0.4)
     const below = this.held >= 0 ? this.hang(this.held) : JAW_REACH + 0.1

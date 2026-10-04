@@ -122,6 +122,9 @@ export function release(claw: Claw, tap: boolean): void {
   act(claw)
 }
 
+/** How near an end of the rail the cable is steadied across the rail. */
+const STEADIED_WITHIN = 2.5
+
 /** How wide knocks to the cable can swing it, as an angle: knocks that fall in step with the swing add up no further. */
 const KNOCKED_MOST = 0.36
 
@@ -203,6 +206,12 @@ export function stepClaw(claw: Claw, rideY: number, landY: number, events: ClawE
   claw.swingVZ += (-stiffness * claw.swingZ - damping * claw.swingVZ - az * push) * dt
   claw.swingX = clamp(claw.swingX + claw.swingVX * dt, -0.7, 0.7)
   claw.swingZ = clamp(claw.swingZ + claw.swingVZ * dt, -0.7, 0.7)
+  // At either end of the rail the cable runs in a guide: there it swings along the rail, out over the bell, and
+  // hardly across it. (What sits beside the bell post, in front of it or behind it, is out of its reach.)
+  if (Math.abs(claw.x) > RAIL.maxX - STEADIED_WITHIN) {
+    const steadied = Math.max(0, 1 - 12 * dt)
+    claw.swingZ *= steadied; claw.swingVZ *= steadied
+  }
   // A drop comes down straight under the trolley however far the cable had swung: the swing is for the eye and
   // the ear, and where the claw lands never depends on the moment the finger lifts. The cable is pulled plumb
   // as it runs out.

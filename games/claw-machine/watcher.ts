@@ -22,8 +22,6 @@ export const WATCHER_EYE = 1.5
 export const WATCHER_SIZE = { half: 2.2, height: 6.2 } as const
 /** How far from the middle of its feet any part of it reaches, sideways: the camera keeps that much of it in the frame. */
 export const WATCHER_REACH = 2.3
-/** How high the tips of its ears get when it jumps at a bang, above its feet: the claw rides clear of that when it is near. */
-export const WATCHER_JUMPS_TO = 7.6
 
 const EYES_AT = { x: 0.78, y: 4.25, z: 0.72 } as const
 
