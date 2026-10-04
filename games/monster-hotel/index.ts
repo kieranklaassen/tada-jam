@@ -2,4 +2,4 @@
 import type { JamGame } from '../types'
 import { monsterHotelCartridge } from './monster-hotel'
 
-export const game: JamGame = { cartridge: monsterHotelCartridge, emoji: '🏨' }
+export const game: JamGame = { cartridge: monsterHotelCartridge, emoji: '🛎️' }

@@ -9,7 +9,7 @@
 // the coach and the bench wait. The drawing is laid out in its own units, scaled
 // to fit the surface with its aspect kept, and centred.
 
-import { SHAPES, edgesOf, type ShapeId } from './hotel'
+import { SHAPES, edgesOf, outerEdgesOf, type ShapeId } from './hotel'
 
 export type Rect = { x: number; y: number; w: number; h: number }
 
@@ -22,10 +22,8 @@ export type RoomLayout = {
   bedSide: 'left' | 'right'
   bed: Rect
   door: Rect
-  /** Where a guest who is up stands: the middle of its feet. */
+  /** Where a guest who is up stands when it has the room to itself: the middle of its feet. Two who share a room for two have a half each (`sharedSpot` in inkPlaces.ts). */
   stand: { x: number; y: number }
-  /** Where a second guest stands in a room with two beds. */
-  stand2: { x: number; y: number }
 }
 
 export type EdgeLayout = { id: string; kind: 'wall' | 'floor'; a: number; b: number; rect: Rect }
@@ -125,14 +123,11 @@ export function layoutPage(width: number, height: number, shape: ShapeId): PageL
       const bedX = bedSide === 'right' ? x + U.roomW - bedW - 3 : x + 3
       const doorX = bedSide === 'right' ? x + 20 : x + U.roomW - 20 - 56
       const standX = bedSide === 'right' ? x + 56 : x + U.roomW - 56
-      // The second guest of a room for two stands between the two beds.
-      const second = bedSide === 'right' ? x + 118 : x + U.roomW - 118
       rooms.push({
         rect: at(x, y, U.roomW, U.roomH), floor, col, bedSide,
         bed: at(bedX, ground - bedH, bedW, bedH),
         door: at(doorX, ground - 128, 56, 128),
         stand: { x: ox + standX * s, y: oy + (ground - 3) * s },
-        stand2: { x: ox + second * s, y: oy + (ground - 3) * s },
       })
     }
   }
@@ -143,6 +138,12 @@ export function layoutPage(width: number, height: number, shape: ShapeId): PageL
     const r = edge.kind === 'wall' ? rect(a.x + a.w, a.y, b.x - a.x - a.w, a.h) : rect(a.x, b.y + b.h, a.w, a.y - b.y - b.h)
     return { id: edge.id, kind: edge.kind, a: edge.a, b: edge.b, rect: r }
   })
+  // The outer sides of the house: the slab under each ground room and over each top room, and the outer wall at either end of each floor.
+  for (const edge of outerEdgesOf(shape)) {
+    const a = rooms[edge.a]!.rect, side = edge.id.slice(0, edge.id.indexOf('-'))
+    const r = side === 'under' ? rect(a.x, a.y + a.h, a.w, U.slab * s) : side === 'over' ? rect(a.x, a.y - U.slab * s, a.w, U.slab * s) : side === 'left' ? rect(a.x - U.wall * s, a.y, U.wall * s, a.h) : rect(a.x + a.w, a.y, U.wall * s, a.h)
+    edges.push({ id: edge.id, kind: edge.kind, a: edge.a, b: edge.b, rect: r })
+  }
 
   const cellarY = houseY + houseH
   const roofBays: Rect[] = [], cellarBays: Rect[] = []
@@ -173,6 +174,8 @@ export function layoutPage(width: number, height: number, shape: ShapeId): PageL
   const firstSpot = lobbyX + Math.max(112, Math.min(176, lobbyW - 118 - 4 * 86))
   // Five places: the most guests a coach brings. In a narrow lobby they stand close, like a queue.
   for (let i = 0; i < 5; i++) lobbySpots.push({ x: ox + (firstSpot + (i * (lastSpot - firstSpot)) / 4) * s, y: oy + (floorY - 3) * s })
+  // A sixth, just inside the front door, for the guest from the bench when a coach-load of five still waits: it has come in last and stands nearest the door, where a finger can still take it.
+  lobbySpots.push({ x: ox + (lobbyX + lobbyW - 58) * s, y: oy + (floorY - 3) * s })
 
   const streetY = floorY + U.slab, groundY = cellarY + U.cellar - 6
   const kerb = at(lobbyX, streetY, lobbyW, groundY - streetY)

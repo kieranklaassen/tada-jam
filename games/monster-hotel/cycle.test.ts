@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { arrange } from './arrangement'
-import { castById, castsAt, neatOf } from './casts'
+import { CASTS, castById, castsAt, neatOf } from './casts'
 import { LADDER, ROUNDS, SET_DOWNS_PER_GUEST } from './config'
-import { howItWent, pairingsIn, plainPage, porterComesIn, sameHouse, setDownIn, tapIn, touchCoach, turnWheelIn, type Turn } from './cycle'
-import type { GuestId } from './guests'
+import { howItWent, neatHourOf, newThingAt, pairingsIn, showsAt, porterComesIn, sameHouse, setDownIn, tapIn, touchCoach, turnWheelIn, type Turn } from './cycle'
+import { PHASES, type GuestId } from './guests'
 import type { House } from './hotel'
 import { settled } from './mood'
 import { arrangementOf, freshStay, readStay, withCast, writeStay, type Stay } from './stay'
@@ -84,6 +84,8 @@ describe('a cycle', () => {
     expect(Object.values(away.stay.at)).toEqual(['gone', 'gone', 'gone'])
     expect(Object.values(away.stay.kit).every((entry) => entry.at === 'cupboard')).toBe(true)
     expect(away.stay.from).toBe(null)
+    // Sending away saves what the sheet names and no more: the count of set-downs is as the last set-down left it.
+    expect(away.stay.moves).toBe(placed.stay.moves)
     // The empty house is not judged again by anything done in it.
     expect(tapIn(away.stay, { guest: 'yeti' }).outcome).toBe('nothing')
   })
@@ -119,13 +121,25 @@ describe('a cycle', () => {
   })
 
   it('a dial turned a step can be what settles the house', () => {
+    // Not the neat way: the yeti over the lizard, so its cold sinks onto the lizard and one flame beside the lizard is too few.
     const cast = castsAt('stove-and-ice')[0]
-    const neat = neatOf(cast)
-    const turned = neat.things.find((item) => item.at !== 'cupboard' && item.dial > 1)
-    // Only meaningful when the neat way needs more than one flame or icicle; the rule itself is held by the lizard and yeti below.
-    if (turned) expect(playNeat(begin(cast.id)).stay.finished).toBe(true)
-    const house: House = { shape: 'long', fixtures: [], twins: [] }
-    expect(settled(arrange(house, { lizard: 0, yeti: 3 }, { stove: { room: 0 } }, { dials: { stove: 2 } }))).toBe(true)
+    expect([...cast.guests].sort()).toEqual(['fly', 'lizard', 'troll', 'yeti'])
+    let stay = begin(cast.id)
+    for (const [guest, room] of [['lizard', 0], ['yeti', 3], ['troll', 2], ['fly', 1]] as const) stay = setDownIn(stay, { guest }, { room }).stay
+    const placed = setDownIn(stay, { thing: 'stove' }, { room: 0 })
+    const dial = (of: Stay) => arrangementOf(of).things.find((item) => item.kind === 'stove')!.dial
+    expect(dial(placed.stay)).toBe(1)
+    // Everyone has a room and the stove stands by the lizard, and the house is not settled.
+    expect([placed.stay.finished, placed.cues, settled(arrangementOf(placed.stay))]).toEqual([false, [], false])
+    // One step of the dial, and nothing else, settles it: the tap is judged as a set-down is.
+    const turned = tapIn(placed.stay, { thing: 'stove' })
+    expect(dial(turned.stay)).toBe(2)
+    expect(arrangementOf(turned.stay).guests).toEqual(arrangementOf(placed.stay).guests)
+    expect(settled(arrangementOf(turned.stay))).toBe(true)
+    expect(turned.stay.finished).toBe(true)
+    expect(turned.cues).toContain('settled-day')
+    // A step too many would not have: three flames are too warm for somebody.
+    expect(settled(arrange(cast.house, { lizard: 0, yeti: 3, troll: 2, fly: 1 }, { stove: { room: 0 } }, { dials: { stove: 3 }, bench: cast.bench }))).toBe(false)
   })
 
   it('the neat way is cued on a settled day of a cast whose place is not yet shown, when the child settled it another way', () => {
@@ -183,14 +197,12 @@ describe('a cycle', () => {
 })
 
 describe('the toy, the wheel and the pairings', () => {
-  it('a tapped guest draws the page from its place, another takes it over, the same one or the margin gives the plain page back', () => {
+  it('a tapped guest draws the page from its place, another takes it over, and the same one tapped again gives the plain page back', () => {
     const start = begin('two-guests/b')
     const troll = tapIn(start, { guest: 'troll' }).stay
     expect(troll.from).toBe('troll')
     expect(tapIn(troll, { guest: 'blob' }).stay.from).toBe('blob')
     expect(tapIn(troll, { guest: 'troll' }).stay.from).toBe(null)
-    expect(plainPage(troll).from).toBe(null)
-    expect(plainPage(start)).toBe(start)
     // The guest on the bench can be looked from too; a guest this cast does not have cannot.
     expect(tapIn(start, { guest: castById('two-guests/b')!.bench }).stay.from).toBe(castById('two-guests/b')!.bench)
     expect(tapIn(start, { guest: 'singer' }).outcome).toBe('nothing')
@@ -242,6 +254,11 @@ describe('the toy, the wheel and the pairings', () => {
     expect(pairingsIn(arrange(house, { yeti: 4 }, { stove: { room: 4 } }, { dials: { stove: 2 } }))).toEqual([])
     expect(pairingsIn(arrange(house, { yeti: 4 }, { stove: { room: 3 } }, { dials: { stove: 3 } }))).toEqual([])
     expect(pairingsIn(arrange(house, { troll: 4, singer: 3 }, {}, { phase: 'night' }))).toEqual(['duet'])
+    // No duet through a quilt, and none with a player who makes no noise: the troll rolled in the quilt, or the quilt hung on the wall between them.
+    expect(pairingsIn(arrange(house, { troll: 4, singer: 3 }, { quilt: { guest: 'troll' } }, { phase: 'night' }))).toEqual([])
+    expect(pairingsIn(arrange(house, { troll: 4, singer: 3 }, { quilt: { guest: 'singer' } }, { phase: 'night' }))).toEqual([])
+    expect(pairingsIn(arrange(house, { troll: 4, singer: 3 }, { quilt: { edge: '3-4' } }, { phase: 'night' }))).toEqual([])
+    expect(pairingsIn(arrange(house, { troll: 4, singer: 3 }, { quilt: { edge: '4-5' } }, { phase: 'night' }))).toEqual(['duet'])
     expect(pairingsIn(arrange(house, { troll: 4, singer: 3 }, {}, { phase: 'day' }))).toEqual([])
     expect(pairingsIn(arrange(house, { troll: 4, singer: 1 }, {}, { phase: 'night' }))).toEqual([])
   })
@@ -273,5 +290,28 @@ describe('found as left', () => {
     expect(back.position).toBe(done.stay.position)
     // Opened again, the coach waits: touching it brings the next coach-load, and nothing happened by itself.
     expect(touchCoach(back).cues).toEqual(['coach-changes-over'])
+  })
+})
+
+describe('the hour the porter\'s neat way is shown at', () => {
+  it('is the hour at which the new thing of its place is at work, whichever hour the wheel was left at', () => {
+    const shownAt = (id: string, left: 'day' | 'night') => { const cast = castById(id)!; return neatHourOf(cast.position, neatOf(cast), left) ?? left }
+    // The quilt beside a troll that plays by night: by night, with the noise pressed against it.
+    for (const id of ['quilt/a', 'quilt/c']) for (const left of PHASES) expect(shownAt(id, left), id).toBe('night')
+    // The singer sings by night; the cook stews by day.
+    for (const id of ['listener/a', 'listener/b', 'listener/c']) for (const left of PHASES) expect(shownAt(id, left), id).toBe('night')
+    for (const id of ['corridor/b', 'corridor/c']) for (const left of PHASES) expect(shownAt(id, left), id).toBe('day')
+  })
+
+  it('in every cast there is an hour at which the neat way has its place\'s new thing at work, and that is the hour it is shown at', () => {
+    for (const cast of CASTS) {
+      const neat = neatOf(cast)
+      expect(PHASES.some((phase) => newThingAt(cast.position, neat, phase)), cast.id).toBe(true)
+      for (const left of PHASES) {
+        const hour = neatHourOf(cast.position, neat, left) ?? left, other = hour === 'day' ? 'night' : 'day'
+        expect(newThingAt(cast.position, neat, hour), `${cast.id} left at ${left}`).toBe(true)
+        expect(showsAt(cast.position, neat, hour), cast.id).toBeGreaterThanOrEqual(showsAt(cast.position, neat, other))
+      }
+    }
   })
 })

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { awake, holds, isEdgeAt, isGuestAt, isRoomAt, occupants, present, roomOf, thing, THING_KINDS, type Arrangement } from './arrangement'
 import { CASTS, castById, castsAt, neatOf, startOf, withBenchOf, type Cast } from './casts'
 import { FIRST_VISIT, LADDER, WHOLE_PATHS_UNTIL } from './config'
+import { demandOf } from './demand'
 import { GUEST_IDS, PHASES, TASTES } from './guests'
 import { bedsIn, edgeById, roomCount } from './hotel'
 import { heard, moodOf, settled } from './mood'
@@ -171,6 +172,14 @@ describe('how hard the places are', () => {
       const neat = neatOf(cast)
       for (const id of cast.guests) expect(PHASES.filter((phase) => awake(neat, id, phase)).length, `${cast.id} ${id}`).toBe(1)
       for (const id of cast.guests) if (holds(neat, id, 'clock')) expect(TASTES[id].flexible).toBe(true)
+    }
+  })
+
+  it('on a first visit, at whichever place it starts, two of the guests in the lobby ask for the same door', () => {
+    for (const { position } of FIRST_VISIT) {
+      const first = castsAt(position)[0]
+      const doors = first.guests.map((id) => demandOf(first.house, id))
+      expect(new Set(doors).size, first.id).toBeLessThan(doors.length)
     }
   })
 })

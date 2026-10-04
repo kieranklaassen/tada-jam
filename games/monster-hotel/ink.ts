@@ -14,11 +14,13 @@ import { drawBag } from './inkParts'
 import { INK, PAPER, SPOT, Pen, buildHatch, seedOf, type HatchTiles, type MakeSurface, type Surface } from './inkHatch'
 import { paintHouse, paintPaper } from './inkHouse'
 import { HANDS, apply, inLens, lensMat, mul, pageMat, standOf, viewLens, type Mat } from './inkLens'
-import { glowRing, knockMarks, shadowBlot, sweepEdge, sweepPath, sweepReach } from './inkMarks'
+import { askedRing, gaze, glowRing, knockMarks, shadowBlot, sweepEdge, sweepPath, sweepReach } from './inkMarks'
+import { drawMoment } from './inkMoments'
 import { carriedThing, coach, floorUnder, placedThing, porter, swingingLamps, thingInRoom } from './inkMoving'
-import { spotsOf, type Spot } from './inkPlaces'
+import { spotsOf, thingBox, type Spot } from './inkPlaces'
 import { drawCloud, drawHand, drawWheel } from './inkProps'
 import type { InkGuest, InkScene, InkSide, InkSweep, InkThing, InkView } from './inkScene'
+import { drawCrows, drawSmoke } from './inkSky'
 import type { Sprite, Stage } from './inkStage'
 import { layoutPage, type PageLayout } from './layout'
 
@@ -140,7 +142,8 @@ export class InkPage implements Stage {
   private pass(ctx: CanvasRenderingContext2D, scene: InkScene, page: PageLayout, view: InkView | null, phase: Phase, seconds: number): number {
     const u = page.scale, dpr = this.dpr, settings = this.settings
     const hand = view ? HANDS[view.from] : null
-    const doubled = !!hand?.doubled && settings.doubled
+    // The blob's hand: the page and its room seen again by its other eyes, at every tier (kept layers and two stamps of one room). On a slow tablet only the figures are drawn once.
+    const doubled = !!hand?.doubled, ghosts = doubled && settings.doubled
     const base = mul([dpr, 0, 0, dpr, 0, 0], pageMat(page, view))
     const lens = viewLens(page, view)
     const large = lens ? mul(base, lensMat(lens)) : null
@@ -153,6 +156,10 @@ export class InkPage implements Stage {
     ctx.setTransform(...base)
     ctx.drawImage(this.layer(view ? (doubled ? 'doubled' : 'pencil') : 'ink', scene, page, phase) as unknown as CanvasImageSource, 0, 0, this.width, this.height)
     count++
+
+    // The sky is alive: the chimney smokes, and the crows keep the bare tree, by day taking a turn round the sky. On a guest's page they are in pencil with the rest.
+    ctx.globalAlpha = far
+    count += drawSmoke(ctx, page, seconds) + drawCrows(ctx, page, phase, seconds, scene.startled ?? null)
 
     // The wheel, swaying a little on its spindle: moon up for the night, sun up for the day.
     ctx.globalAlpha = far
@@ -167,6 +174,14 @@ export class InkPage implements Stage {
 
     // The rooms and everyone in them, outside the large room.
     count += this.contents(ctx, scene, page, view, spots, base, null, lens ? view!.room : null, false, seconds)
+
+    // The room the viewer had asked for, when it has been given another: ringed in dots for as long as its page is open, under the large room where the two lie side by side.
+    const asked = view && !view.inHand && scene.asked !== null && scene.asked !== undefined ? page.rooms[scene.asked]?.rect : undefined
+    if (asked) {
+      ctx.globalAlpha = 1
+      ctx.setTransform(...base)
+      count += askedRing(ctx, asked.x, asked.y, asked.w, asked.h, seconds, u)
+    }
 
     // The large room: the same room from the full ink layer, enlarged, in the viewer's own hand, with whoever is in it.
     if (lens && large && view && view.room !== null) {
@@ -219,15 +234,17 @@ export class InkPage implements Stage {
         ctx.globalAlpha = 1
         count += 2
       }
-      count += this.contents(ctx, scene, page, view, spots, large, view.room, null, doubled, seconds)
+      count += this.contents(ctx, scene, page, view, spots, large, view.room, null, ghosts, seconds)
       // The fly's hand: its room again in facets, small, round the edge of the large one, each a copy of what is already drawn there.
       const drawn = (ctx as { canvas?: unknown }).canvas
-      if (hand?.facets && settings.doubled && typeof drawn === 'object' && drawn !== null) {
+      // On a slow tablet the fly keeps three of its seven facets: fewer copies, the same hand.
+      const facets = settings.doubled ? FACETS : FACETS.filter((_, index) => index % 3 === 0)
+      if (hand?.facets && typeof drawn === 'object' && drawn !== null) {
         ctx.globalAlpha = 1
         ctx.setTransform(...base)
         const corner = apply(base, to.x + to.w * 0.2, to.y + to.h * 0.16), size = { w: to.w * 0.6 * dpr, h: to.h * 0.66 * dpr }
         const r = to.w * 0.105
-        for (const [fx, fy] of FACETS) {
+        for (const [fx, fy] of facets) {
           const cx = to.x + to.w * fx, cy = to.y + to.h * fy
           ctx.save()
           ctx.beginPath()
@@ -243,15 +260,21 @@ export class InkPage implements Stage {
           ctx.lineWidth = 1.8 * u
           ctx.stroke()
         }
-        count += FACETS.length
+        count += facets.length
       }
       ctx.restore()
-      // Its frame: a trembling rule, heavier in a heavy hand and finer in a thin one, with a hatched edge that lifts it off the page.
-      const weight = hand?.heavy ? 'heavy' : hand?.thin ? 'thin' : 'plain', boil = settings.boil ? Math.floor(seconds * 6) % 2 : 0
-      const frame = this.sprite(`frame ${Math.round(to.w)} ${Math.round(to.h)} ${weight} ${boil}`, to.w + 28 * u, to.h + 28 * u, 14 * u, 14 * u, 1, (pen) => drawFrame(pen, to.w, to.h, u, weight))
       ctx.globalAlpha = 1
-      this.blit(ctx, frame, base, to.x, to.y, 1, 1, 0)
-      count++
+      if (view.large === false && !view.inHand) {
+        // The room a guest with no room yet asks for keeps its ink and has no frame: a ring of dots in the spot colour goes round it, as the page draws anything a guest wants and has not got.
+        ctx.setTransform(...base)
+        count += askedRing(ctx, to.x, to.y, to.w, to.h, seconds, u)
+      } else {
+        // Its frame: a trembling rule, heavier in a heavy hand and finer in a thin one, with a hatched edge that lifts it off the page.
+        const weight = hand?.heavy ? 'heavy' : hand?.thin ? 'thin' : 'plain', boil = settings.boil ? Math.floor(seconds * 6) % 2 : 0
+        const frame = this.sprite(`frame ${Math.round(to.w)} ${Math.round(to.h)} ${weight} ${boil}`, to.w + 28 * u, to.h + 28 * u, 14 * u, 14 * u, 1, (pen) => drawFrame(pen, to.w, to.h, u, weight))
+        this.blit(ctx, frame, base, to.x, to.y, 1, 1, 0)
+        count++
+      }
     }
 
     // The glow on what can be touched, where each is drawn.
@@ -267,6 +290,15 @@ export class InkPage implements Stage {
       if (glow.wheel) {
         ctx.setTransform(...base)
         glowRing(ctx, wheel.x + wheel.w / 2, wheel.y + wheel.h / 2, wheel.w / 2 + 5 * u, wheel.h / 2 + 5 * u, glow.strength, seconds, 11, u)
+        count++
+      }
+      // The things can be touched too, wherever they are: each has its ring.
+      for (const thing of scene.things) {
+        if (thing.carried || !glow.things?.includes(thing.kind)) continue
+        const box = thingBox(thing, page, spots)
+        if (!box) continue
+        ctx.setTransform(...(large && view && view.room !== null && thingInRoom(thing, page, scene, view.room) && !(typeof thing.at === 'object' && 'edge' in thing.at) ? large : base))
+        glowRing(ctx, box.x + box.w / 2, box.y + box.h / 2, box.w / 2 + 5 * u, box.h / 2 + 5 * u, glow.strength, seconds, 20 + scene.things.indexOf(thing), u)
         count++
       }
     }
@@ -287,11 +319,11 @@ export class InkPage implements Stage {
     let count = 0
     ctx.globalAlpha = far
     count += swingingLamps(this, ctx, scene, page, m, only, skip)
-    /** The things that have been put somewhere: first those that stand or hang, and, once the guests are drawn, those a guest holds. */
-    const things = (held: boolean) => {
+    /** The things that have been put somewhere: first those fixed to a wall or a floor, behind the figures; and, once the guests are drawn, those that stand in a room and those a guest holds, in front of them, so that a dial that has been set is always seen and the finger takes what it sees. */
+    const things = (front: boolean) => {
       for (const thing of scene.things) {
         const at = thing.at
-        if (at === 'cupboard' || 'guest' in at !== held) continue
+        if (at === 'cupboard' || !('edge' in at) !== front) continue
         // A thing fixed to a wall of the large room is drawn on both sides of the lens; anything else, on one.
         if (only !== null ? !thingInRoom(thing, page, scene, only) : skip !== null && !('edge' in at) && thingInRoom(thing, page, scene, skip)) continue
         ctx.globalAlpha = mine(thing) ? 1 : far
@@ -299,12 +331,8 @@ export class InkPage implements Stage {
       }
     }
     things(false)
-    // What travels through the house, by how the viewer takes it.
-    ctx.globalAlpha = 1
-    ctx.setTransform(...m)
-    count += drawAirs(ctx, scene, page, seconds, !view, only)
-    if (hand?.drips) { ctx.setTransform(...m); count += drips(ctx, scene, page, seconds) }
-    if (hand?.steams) { ctx.setTransform(...m); count += steam(ctx, scene, page, seconds) }
+    if (hand?.drips) { ctx.globalAlpha = 1; ctx.setTransform(...m); count += drips(ctx, scene, page, seconds) }
+    if (hand?.steams) { ctx.globalAlpha = 1; ctx.setTransform(...m); count += steam(ctx, scene, page, seconds) }
     for (const { guest, spot } of spots) {
       const inRoom = typeof guest.place === 'object' && guest.place.room === (only ?? skip)
       if (guest.carried || (only !== null ? !inRoom : skip !== null && inRoom)) continue
@@ -312,8 +340,19 @@ export class InkPage implements Stage {
       ctx.globalAlpha = (view && only === null && guest.id !== view.from ? far : 1) * (hand?.wavers ? 0.84 : 1)
       count += this.figure(ctx, scene, page, guest, spot, view, m, doubled, seconds)
     }
-    // What a guest holds is drawn over it: the clock in its hand, the pipe at its mouth, the tassel of the quilt it is rolled in.
+    // What stands in a room is drawn in front of whoever lodges there, and what a guest holds over it: the stove and its dial, the clock on the bed's head, the clock in its hand, the pipe at its mouth, the tassel of the quilt it is rolled in.
     things(true)
+    // What travels through the house, by how the viewer takes it: laid over the figures, so that what reaches a lodger is seen reaching it and is never hidden behind it.
+    ctx.globalAlpha = 1
+    ctx.setTransform(...m)
+    count += drawAirs(ctx, scene, page, seconds, !view, only)
+    // What a touch has just set off, in full ink whoever's page it is: it is the answer to the finger.
+    for (const moment of scene.moments ?? []) {
+      if (only !== null ? moment.room !== only : skip !== null && moment.room === skip) continue
+      ctx.globalAlpha = 1
+      ctx.setTransform(...m)
+      if (drawMoment(ctx, moment, page.scale)) count++
+    }
     ctx.globalAlpha = far
     ctx.setTransform(...m)
     count += snow(ctx, scene, page, seconds, this.settings.snow, null)
@@ -325,19 +364,41 @@ export class InkPage implements Stage {
   private figure(ctx: CanvasRenderingContext2D, scene: InkScene, page: PageLayout, guest: InkGuest, spot: Spot, view: InkView | null, m: Mat, doubled: boolean, seconds: number): number {
     const u = page.scale, index = scene.guests.indexOf(guest)
     const stand = standOf(page, view, guest, spot)
-    const sprite = this.guestSprite(guest, index, seconds, false, stand.turn !== 0, spot.flip, u)
+    // In the lobby it stares at the door it asks for: its eyes go that way, and a row of dots runs from them to the door.
+    // In a room it has been given, it glances for a moment at the door it had asked for, the same way, whoever's page it is: on a guest's page the row is in pencil with the rest, and in the large room it runs to the room's frame.
+    const asked = guest.place === 'lobby' ? guest.staresAt : !guest.carried ? guest.glancesAt ?? null : null
+    const door = asked !== null ? page.rooms[asked]?.door : undefined
+    const eyes = { x: spot.x, y: spot.y - TOP[guest.id] * 0.82 * u }
+    const wanted = door ? { x: door.x + door.w / 2, y: door.y + door.h * 0.4 } : null
+    const stare: InkSide | null = wanted ? (Math.abs(wanted.y - eyes.y) > Math.abs(wanted.x - eyes.x) ? (wanted.y < eyes.y ? 'up' : 'down') : wanted.x < eyes.x ? 'left' : 'right') : null
+    const sprite = this.guestSprite(guest, index, seconds, false, stand.turn !== 0, spot.flip, u, stare)
     let count = 0
+    // The bat that has just moved in asleep hangs, and its bag does not hang with it: it stands on the floor under it.
+    if (guest.unpacks && stand.turn !== 0 && view?.from !== guest.id) {
+      this.blit(ctx, this.sprite('bag', 44, 40, 22, 4, u, (pen) => drawBag(pen)), m, spot.x + 40 * u, spot.y - 31 * u, 1, 1, 0)
+      count++
+    }
+    // The row of dots is the guest's own stare: none while it is still in the coach, behind a door or on its way to its place.
+    const away = guest.body ? guest.body.sx < 0.05 || Math.abs(guest.body.dx) + Math.abs(guest.body.dy) > 6 : false
+    if (wanted && !away) {
+      ctx.setTransform(...m)
+      gaze(ctx, eyes.x, eyes.y, wanted.x, wanted.y, u)
+      count++
+    }
     // The bat on its own page hangs by a cord from its ceiling, which the turned page puts under its feet.
     if (stand.cord) {
       ctx.setTransform(...m)
       ctx.beginPath()
+      // A slack cord with a knot at its feet, and no bar across its end: a line with a bar on it would read as a letter.
       ctx.moveTo(stand.cord.x, stand.cord.y)
-      ctx.lineTo(stand.x, stand.y - 2 * u)
-      ctx.moveTo(stand.x - 9 * u, stand.y)
-      ctx.lineTo(stand.x + 9 * u, stand.y)
+      ctx.quadraticCurveTo((stand.cord.x + stand.x) / 2 + 5 * u, (stand.cord.y + stand.y) / 2, stand.x, stand.y - 2 * u)
       ctx.strokeStyle = INK
       ctx.lineWidth = 1.6 * u
       ctx.stroke()
+      ctx.beginPath()
+      ctx.arc(stand.x, stand.y - 2 * u, 2.6 * u, 0, TAU)
+      ctx.fillStyle = INK
+      ctx.fill()
       count++
     }
     let sx = 1, sy = 1, rot = 0, dx = 0, dy = 0
@@ -379,21 +440,28 @@ export class InkPage implements Stage {
   }
 
   /** The drawing of a guest for this moment: its pose from the scene, and which of its two drawings the boil has reached. */
-  private guestSprite(guest: InkGuest, index: number, seconds: number, inHand: boolean, turned: boolean, flip: boolean, u: number): Sprite {
+  private guestSprite(guest: InkGuest, index: number, seconds: number, inHand: boolean, turned: boolean, flip: boolean, u: number, stare: InkSide | null = null): Sprite {
     const frames = guest.id === 'troll' || this.settings.boil ? 2 : 1
     // The troll's two drawings are its cheeks empty and full, on its beat; everyone else's are the line boiling.
     const frame = guest.id === 'troll' ? (guest.awake && (seconds * BEAT) % 1 < 0.45 ? 1 : 0) : Math.floor(seconds * 6 + index * 0.37) % frames
     // A side of the page becomes a side of the figure: mirrored for a figure that is mirrored, and the other way about for one turned half round.
-    let looks = inHand ? null : guest.looks ?? null
+    let looks = inHand ? null : guest.looks ?? stare
     if (looks && turned) looks = OPPOSITE[looks]
     if (looks && flip && (looks === 'left' || looks === 'right')) looks = OPPOSITE[looks]
+    // The side a cross guest's trouble comes from, turned into the figure's own terms the same way.
+    let toward = inHand || guest.mood !== 'cross' ? null : guest.turnedTo
+    if (toward && turned) toward = OPPOSITE[toward]
+    if (toward && flip && (toward === 'left' || toward === 'right')) toward = OPPOSITE[toward]
+    // A cross sleeper sleeps badly: one eye is open on the wall, floor or ceiling its trouble comes through, as if something there had made it look. Not the blob, whose pillow is over all of its eyes: it turns or tips to its trouble under the pillow.
+    if (!looks && !guest.awake && toward && guest.id !== 'blob') looks = toward
     const out = inHand || guest.place === 'lobby' || guest.place === 'bench'
     const pose: Pose = {
       awake: guest.awake, mood: guest.mood, turnedTo: guest.turnedTo, wrapped: guest.wrapped,
-      bag: !inHand && guest.place === 'lobby', out, seated: !inHand && guest.place === 'bench',
+      bag: !inHand && (guest.place === 'lobby' || (!!guest.unpacks && !(turned && !guest.awake))), out, seated: !inHand && guest.place === 'bench',
       stares: !inHand && guest.place === 'lobby' && guest.staresAt !== null, looks, frame,
+      toward, woken: !!guest.woken,
     }
-    const key = `guest ${guest.id} ${Number(pose.awake)} ${pose.mood} ${pose.turnedTo} ${Number(pose.wrapped)} ${Number(pose.bag)} ${Number(out)} ${Number(pose.seated)} ${Number(pose.stares)} ${looks} ${frame}`
+    const key = `guest ${guest.id} ${Number(pose.awake)} ${pose.mood} ${pose.turnedTo} ${Number(pose.wrapped)} ${Number(pose.bag)} ${Number(out)} ${Number(pose.seated)} ${Number(pose.stares)} ${looks} ${frame} ${toward} ${Number(pose.woken)}`
     return this.sprite(key, GUEST_BOX.w, GUEST_BOX.h, GUEST_BOX.ox, GUEST_BOX.oy, u, (pen) => drawGuest(pen, guest.id, pose))
   }
 
@@ -422,6 +490,20 @@ export class InkPage implements Stage {
     ctx.stroke()
     this.blit(ctx, this.sprite('bag', 44, 40, 22, 4, u, (pen) => drawBag(pen)), screen, bx, by, 1, 1, back)
     this.blit(ctx, this.guestSprite(guest, index, seconds, true, false, false, u), screen, fx, fy, 1, 1, held.swing)
+    if (guest.id === 'yeti') {
+      // Its cloud goes where it goes, on its string, over the hand that carries it.
+      const cloudX = gx + 46 * u + Math.sin(seconds * 0.5) * 4 * u, cloudY = gy - 34 * u + Math.sin(seconds * 0.9) * 3 * u
+      const wx = fx + (c * YETI_WRIST.x - s * YETI_WRIST.y) * u, wy = fy + (s * YETI_WRIST.x + c * YETI_WRIST.y) * u
+      ctx.setTransform(...screen)
+      ctx.beginPath()
+      ctx.moveTo(wx, wy)
+      ctx.quadraticCurveTo(wx + 14 * u, (wy + cloudY) / 2, cloudX, cloudY)
+      ctx.strokeStyle = SPOT
+      ctx.lineWidth = 1.6 * u
+      ctx.stroke()
+      this.blit(ctx, this.sprite('cloud', 70, 40, 35, 36, u, (pen) => drawCloud(pen)), screen, cloudX, cloudY, 1, 1, 0)
+      count += 2
+    }
     return count + 3
   }
 

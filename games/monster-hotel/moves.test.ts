@@ -21,7 +21,6 @@ describe('the object-by-action grid', () => {
   it('every cell has a result of its own, and none is refused', () => {
     const cells = objects.flatMap((held) => actions.map((act) => act(held)))
     expect(cells).not.toContain('nothing')
-    expect(cells).not.toContain('no-bed')
     expect(new Set(cells).size).toBe(objects.length * actions.length)
   })
 
@@ -70,12 +69,15 @@ describe('setting a guest down', () => {
     expect([placeOf(out.arrangement, 'bat'), placeOf(out.arrangement, 'blob')]).toEqual([3, 'lobby'])
   })
 
-  it('a full room of two beds turns a third guest away, and nothing changes', () => {
+  it('a full room of two beds refuses nobody: a third guest set down in it changes places with the second of the two', () => {
     const full = setDown(start(), { guest: 'bat' }, { room: 5 }).arrangement
     const third = setDown(full, { guest: 'troll' }, { room: 5 })
-    expect(third.outcome).toBe('no-bed')
-    expect(third.changed).toBe(false)
-    expect(third.arrangement).toBe(full)
+    expect(third.outcome).toBe('swaps')
+    expect(third.changed).toBe(true)
+    expect(placeOf(third.arrangement, 'troll')).toBe(5)
+    const out = full.guests.filter((guest) => guest.at === 5).map((guest) => guest.id).filter((id) => placeOf(third.arrangement, id) !== 5)
+    expect(out.length).toBe(1)
+    expect(placeOf(third.arrangement, out[0])).toBe(placeOf(full, 'troll'))
     // Set down on one of the two, it changes places with that one.
     expect(setDown(full, { guest: 'troll' }, { guest: 'bat' }).outcome).toBe('swaps')
   })
@@ -105,6 +107,16 @@ describe('setting a guest down', () => {
     expect(setDown(start(), { guest: 'bat' }, 'lobby').changed).toBe(false)
   })
 
+  it('a guest given to the guest on the bench changes places with it: the bench guest comes in, and the other waits in the lobby', () => {
+    // From a room: the singer takes the troll's room.
+    const fromRoom = setDown(start(), { guest: 'troll' }, { guest: 'singer' })
+    expect(fromRoom.outcome).toBe('swaps')
+    expect([placeOf(fromRoom.arrangement, 'singer'), placeOf(fromRoom.arrangement, 'troll'), fromRoom.changed]).toEqual([4, 'lobby', true])
+    // From the lobby: the singer comes into the lobby too.
+    const fromLobby = setDown(start(), { guest: 'bat' }, { guest: 'singer' })
+    expect([placeOf(fromLobby.arrangement, 'singer'), placeOf(fromLobby.arrangement, 'bat'), fromLobby.changed]).toEqual(['lobby', 'lobby', true])
+  })
+
   it('a guest on the coach sends this lot away: every guest of the cast goes, the bench guest included, and the things go back', () => {
     const busy = setDown(setDown(start(), { thing: 'quilt' }, { guest: 'troll' }).arrangement, { thing: 'stove' }, { room: 0 }).arrangement
     const away = setDown(busy, { guest: 'blob' }, 'coach')
@@ -117,11 +129,11 @@ describe('setting a guest down', () => {
 })
 
 describe('setting a thing down', () => {
-  it('a wall or floor holds the quilt or the pipe, never both', () => {
+  it('nothing fixed to a wall is taken away by fixing another thing there: the quilt and the pipe share one, and each does what it does', () => {
     const quilted = setDown(start(), { thing: 'quilt' }, { edge: '3-4', nearer: 3 }).arrangement
     const piped = setDown(quilted, { thing: 'pipe' }, { edge: '3-4', nearer: 4 })
     expect(thing(piped.arrangement, 'pipe')!.at).toEqual({ edge: '3-4' })
-    expect(thing(piped.arrangement, 'quilt')!.at).toBe('cupboard')
+    expect(thing(piped.arrangement, 'quilt')!.at).toEqual({ edge: '3-4' })
     expect(piped.changed).toBe(true)
   })
 
@@ -191,5 +203,60 @@ describe('taps, the wheel and the numerals', () => {
     const house = tap(start(), { thing: 'ice' }).arrangement
     expect(numerals(house)).toEqual([{ value: 1, on: 'stove' }, { value: 2, on: 'ice' }])
     expect(numerals(arrange(twin, { troll: 4 }))).toEqual([])
+  })
+})
+
+describe('a thing stays only with a guest who has a room', () => {
+  it('a guest carried out to the lobby hands back what it held, and so does one changed out of its room by another', () => {
+    const wrapped = setDown(start(), { thing: 'quilt' }, { guest: 'blob' }).arrangement
+    expect(holds(wrapped, 'blob', 'quilt')).toBe(true)
+    // Carried to the lobby: the quilt is in the cupboard, and the blob is not wrapped.
+    const out = setDown(wrapped, { guest: 'blob' }, 'lobby').arrangement
+    expect([placeOf(out, 'blob'), thing(out, 'quilt')!.at]).toEqual(['lobby', 'cupboard'])
+    // The bat from the lobby onto the wrapped blob: they change places, and the blob in the lobby holds nothing.
+    const changed = setDown(wrapped, { guest: 'bat' }, { guest: 'blob' }).arrangement
+    expect([placeOf(changed, 'bat'), placeOf(changed, 'blob'), thing(changed, 'quilt')!.at]).toEqual([3, 'lobby', 'cupboard'])
+    // Carried from one room to another, it keeps what it holds.
+    const moved = setDown(wrapped, { guest: 'blob' }, { room: 0 }).arrangement
+    expect([placeOf(moved, 'blob'), holds(moved, 'blob', 'quilt')]).toEqual([0, true])
+  })
+})
+
+describe('the outer sides of the house take things too', () => {
+  const heated: House = { shape: 'square', fixtures: [{ kind: 'boiler', col: 0 }, { kind: 'snow', col: 1 }], twins: [] }
+  const at = (guests: Parameters<typeof arrange>[1]) => arrange(heated, guests, { quilt: 'cupboard', pipe: 'cupboard', stove: 'cupboard', ice: 'cupboard', clock: 'cupboard' })
+
+  it('the quilt on the floor over the boiler stops its warmth there, and on the ceiling under the snow hole its cold', () => {
+    // The yeti over the boiler is too warm; with the quilt on that floor it is content.
+    const warm = at({ yeti: 0 })
+    expect(settled(warm)).toBe(false)
+    const quilted = setDown(warm, { thing: 'quilt' }, { edge: 'under-0', nearer: 0 })
+    expect([quilted.outcome, thing(quilted.arrangement, 'quilt')!.at, quilted.changed]).toEqual(['quilt-hangs', { edge: 'under-0' }, true])
+    expect(settled(quilted.arrangement)).toBe(true)
+    // The lizard under the snow hole is too cold; the quilt on that ceiling stops the cold, though the room is then only mild.
+    const cold = at({ lizard: 3 })
+    const over = setDown(cold, { thing: 'quilt' }, { edge: 'over-3', nearer: 3 }).arrangement
+    expect(overTheDay(over, { thing: 'quilt' }).day).toEqual({ kind: 'stops', airs: ['cold'] })
+    // With the pipe let through the quilt, it comes through again.
+    const piped = setDown(quilted.arrangement, { thing: 'pipe' }, { edge: 'under-0', nearer: 0 }).arrangement
+    expect(settled(piped)).toBe(false)
+    // The pipe there carries the boiler's warmth at every hour, alone or let through the quilt: that is what it toots and whooshes with.
+    for (const house of [piped, setDown(warm, { thing: 'pipe' }, { edge: 'under-0', nearer: 0 }).arrangement]) {
+      expect(overTheDay(house, { thing: 'pipe' })).toEqual({ day: { kind: 'carries', airs: ['warm'] }, night: { kind: 'carries', airs: ['warm'] } })
+    }
+    // On an outer wall with nothing behind it, it carries nothing.
+    expect(overTheDay(setDown(warm, { thing: 'pipe' }, { edge: 'left-0', nearer: 0 }).arrangement, { thing: 'pipe' }).day).toEqual({ kind: 'carries', airs: [] })
+  })
+
+  it('nothing set on an outer wall, floor or ceiling is refused: a thing is fixed there or slides into the room, and a guest steps out into it', () => {
+    const house = at({ troll: 'lobby' })
+    expect(setDown(house, { thing: 'clock' }, { edge: 'left-2', nearer: 2 }).outcome).toBe('clock-on-wall')
+    expect(setDown(house, { thing: 'pipe' }, { edge: 'right-1', nearer: 1 }).outcome).toBe('pipe-joins')
+    const stove = setDown(house, { thing: 'stove' }, { edge: 'under-1', nearer: 1 })
+    expect([stove.outcome, thing(stove.arrangement, 'stove')!.at]).toEqual(['stove-scorches', { room: 1 }])
+    const stuck = setDown(house, { guest: 'troll' }, { edge: 'over-2', nearer: 2 })
+    expect([stuck.outcome, placeOf(stuck.arrangement, 'troll')]).toEqual(['through-the-wall', 2])
+    // An edge the house does not have is still nothing.
+    expect(setDown(house, { thing: 'quilt' }, { edge: 'under-3', nearer: 3 }).outcome).toBe('nothing')
   })
 })

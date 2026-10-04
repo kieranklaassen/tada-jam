@@ -25,7 +25,7 @@ export type Tier = {
   snow: number
   /** The paper's faint fibre speckle. */
   speckle: boolean
-  /** A view drawn several times over, slightly apart (the blob's many eyes). Without it the view is drawn once. */
+  /** The whole of a hand that draws things several times over: the figures on the blob's page seen again by its other eyes, and all seven of the fly's facets. Without it both keep their hand at less cost: the blob's page and room are still seen again but its figures are drawn once, and the fly keeps three facets. */
   doubled: boolean
 }
 
@@ -86,12 +86,16 @@ const [YOUNGEST, OLDEST] = monsterHotelManifest.ageBand
 // --- Guidance (guidance.ts) -------------------------------------------------
 
 /**
- * How many times the ghost hand presses to show a tap. Two presses read as a
- * tap and not as a hold, but a child under 4 copies what the hand does and
- * taps twice, so a band that starts below 4 is shown one. It follows the
- * manifest band, never the child's age while playing.
+ * How many times the ghost hand presses to show a tap: once. The template
+ * shows two to a band that starts at 4 or above, since two presses read as a
+ * tap and not as a hold, and asks that a second tap on the same thing do no
+ * harm wherever it does. Here it would: every tap the hand shows is one that
+ * a second tap takes back or hurries past. A second tap on a guest turns the
+ * page back from its place, a second on the wheel turns the hour back, and a
+ * second on the coach lands the changeover before it has been seen. So the
+ * hand presses once, whatever the band.
  */
-export const TAP_PRESSES: 1 | 2 = YOUNGEST < 4 ? 1 : 2
+export const TAP_PRESSES: 1 | 2 = 1
 
 // --- The designed order (state.ts) -----------------------------------------
 

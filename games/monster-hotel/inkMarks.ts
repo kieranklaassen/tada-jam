@@ -102,3 +102,57 @@ export function shadowBlot(ctx: CanvasRenderingContext2D, x: number, y: number, 
   ctx.lineWidth = 1.5 * u
   ctx.stroke()
 }
+
+/**
+ * The room a guest with no room yet asks for, on that guest's page: a ring of
+ * dots in the spot colour going slowly round it, each on a spot of bare
+ * paper so it is seen on the dark of the walls. Dots in the spot colour are
+ * the page's way of drawing what a guest wants and has not got; a ruled frame
+ * is kept for the room a guest has, so a newcomer does not take the room that
+ * is asked for as a room that is chosen. Returns how many fills it made.
+ */
+export function askedRing(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, seconds: number, u: number): number {
+  const out = 6 * u, left = x - out, top = y - out, wide = w + 2 * out, high = h + 2 * out
+  const round = 2 * (wide + high), count = Math.max(8, Math.round(round / (13 * u))), gap = round / count
+  const start = (seconds * 5 * u) % gap
+  const dots = (r: number) => {
+    ctx.beginPath()
+    for (let i = 0; i < count; i++) {
+      let d = start + i * gap, px = left, py = top
+      if (d < wide) px = left + d
+      else if ((d -= wide) < high) { px = left + wide; py = top + d }
+      else if ((d -= high) < wide) { px = left + wide - d; py = top + high }
+      else py = top + high - (d - wide)
+      ctx.moveTo(px + r, py)
+      ctx.arc(px, py, r, 0, TAU)
+    }
+  }
+  dots(3.6 * u)
+  ctx.fillStyle = PAPER
+  ctx.fill()
+  dots(2.3 * u)
+  ctx.fillStyle = SPOT
+  ctx.fill()
+  return 2
+}
+
+/**
+ * The stare of a guest who waits in the lobby: a row of small pen dots from
+ * its eyes to the door it asks for, closer together near the door, where two
+ * guests' stares meet when they ask for the same one. Dots, not dashes: a
+ * short bar by itself could be read as a sign.
+ */
+export function gaze(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number, u: number): void {
+  const length = Math.hypot(x2 - x1, y2 - y1)
+  if (length < 24 * u) return
+  const ux = (x2 - x1) / length, uy = (y2 - y1) / length, r = 1.35 * u
+  ctx.beginPath()
+  // It starts clear of the face and stops on the door.
+  for (let at = 16 * u; at < length - 2 * u; at += (10 - 4.5 * (at / length)) * u) {
+    const x = x1 + ux * at, y = y1 + uy * at
+    ctx.moveTo(x + r, y)
+    ctx.arc(x, y, r, 0, TAU)
+  }
+  ctx.fillStyle = INK
+  ctx.fill()
+}

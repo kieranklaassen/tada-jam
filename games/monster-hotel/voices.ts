@@ -120,8 +120,6 @@ export const toLobby: Sound = [hiss(0, 150, 0.1, 0.16, 1.2, 90), hiss(0.14, 280,
 /** Onto the bench: the bench creaks under it. */
 export const toBench: Sound = [tone(0, 240, 0.2, 0.07, 'sawtooth', 170, 0.03), hiss(0.02, 130, 0.1, 0.12, 1.1)]
 
-/** A full room turns a guest away: the springs twang it back. */
-export const noBed: Sound = [tone(0, 420, 0.22, 0.08, 'triangle', 640), tone(0.02, 630, 0.2, 0.05, 'triangle', 420)]
 
 /** Put back where it stood: nothing changed, just its feet. */
 export const putBack: Sound = [hiss(0, 260, 0.05, 0.08, 3), hiss(0.07, 220, 0.05, 0.06, 3)]
@@ -147,6 +145,24 @@ export const bell: Sound = [tone(0, 1568, 0.5, 0.08, 'sine', 0, 0.003), tone(0, 
 /** The front door: its latch and a short creak. */
 export const door: Sound = [hiss(0, 1400, 0.03, 0.1, 6), tone(0.05, 330, 0.24, 0.05, 'sawtooth', 250, 0.04)]
 
+/** A door in a room's back wall: two raps on wood and its latch rattling. */
+export const roomDoor: Sound = [tone(0, 420, 0.04, 0.12, 'triangle', 300, 0.003), hiss(0, 900, 0.03, 0.08, 3), tone(0.11, 400, 0.04, 0.1, 'triangle', 290, 0.003), hiss(0.11, 880, 0.03, 0.07, 3), hiss(0.2, 2600, 0.05, 0.04, 8)]
+
+/** A bed pressed with a finger: the mattress gives and its springs squeak down and up. */
+export const bedSprings: Sound = [hiss(0, 140, 0.12, 0.12, 1), tone(0.03, 980, 0.09, 0.05, 'triangle', 690), tone(0.15, 720, 0.11, 0.045, 'triangle', 1040)]
+
+/** The boiler: its iron side rung with a knuckle, and a spit of steam from its valve. */
+export const boiler: Sound = [tone(0, 233, 0.5, 0.11, 'square', 228, 0.003), tone(0, 617, 0.32, 0.04, 'sine', 0, 0.003), tone(0, 1091, 0.2, 0.025, 'sine', 0, 0.003), hiss(0.16, 3600, 0.3, 0.05, 1.2, 2400, 0.03)]
+
+/** The mountain of luggage: a hollow thump on a trunk, and a buckle. */
+export const luggage: Sound = [hiss(0, 95, 0.2, 0.2, 0.9, 60), tone(0, 104, 0.18, 0.12, 'sine', 78, 0.004), hiss(0.09, 1900, 0.03, 0.04, 7)]
+
+/** The empty bird cage on top of the luggage: its wires ring and its little door chatters. */
+export const cage: Sound = [tone(0, 3320, 0.18, 0.035, 'sine', 0, 0.003), tone(0.02, 4180, 0.14, 0.025, 'sine', 0, 0.003), hiss(0.08, 4300, 0.03, 0.03, 9), hiss(0.13, 4100, 0.03, 0.025, 9), hiss(0.18, 4400, 0.03, 0.02, 9)]
+
+/** The crows going up out of the tree: two hoarse caws and a clap of wings. */
+export const caw: Sound = [tone(0, 520, 0.16, 0.07, 'sawtooth', 390, 0.01), hiss(0, 1500, 0.14, 0.03, 2.5), tone(0.24, 480, 0.2, 0.06, 'sawtooth', 350, 0.01), hiss(0.24, 1400, 0.18, 0.025, 2.5), hiss(0.5, 700, 0.06, 0.05, 1.5), hiss(0.6, 760, 0.06, 0.04, 1.5), hiss(0.7, 820, 0.06, 0.03, 1.5)]
+
 /** The paper margin, or anything on the page that is only paper: a soft rustle. */
 export const paper: Sound = [hiss(0, 3200, 0.09, 0.03, 0.9, 2100, 0.02)]
 
@@ -165,9 +181,22 @@ export const touched = {
 export const quiltOnBed: Sound = [hiss(0, 260, 0.2, 0.14, 0.7, 150, 0.02)]
 export const wraps: Sound = [hiss(0, 1900, 0.5, 0.06, 0.8, 900, 0.08), hiss(0.25, 1300, 0.4, 0.05, 0.9, 700, 0.08)]
 export const quiltHangs: Sound = [0, 1, 2, 3].map((thump) => hiss(thump * 0.11, 170 - thump * 8, 0.06, 0.13, 2))
-export const feathers: Sound = [hiss(0, 420, 0.18, 0.13, 0.6, 240, 0.02), hiss(0.12, 3000, 0.25, 0.03, 0.8, 1800, 0.05), tone(0.5, 880, 0.05, 0.06, 'triangle', 1500), hiss(0.52, 2400, 0.1, 0.07, 1.4)]
+export const feathers: Sound = [hiss(0, 420, 0.18, 0.13, 0.6, 240, 0.02), hiss(0.12, 3000, 0.25, 0.03, 0.8, 1800, 0.05)]
+
+/** The sneeze of whoever is nearest the feathers, in its own voice: a breath drawn in, and then all of it out at once. */
+export function sneeze(id: GuestId): Sound {
+  const voice = GRUNT[id]
+  const pitch = Math.max(60, Math.min(1800, voice.pitch * 1.5))
+  return [
+    hiss(0, Math.min(4200, pitch * 5), 0.16, 0.03, 1.2, Math.min(5000, pitch * 8), 0.12),
+    hiss(0.3, 2400, 0.12, 0.09, 1.1, 900),
+    tone(0.3, pitch, Math.min(0.3, voice.length * 1.2), Math.min(0.2, voice.peak * 1.1), voice.wave, Math.max(42, pitch * 0.6)),
+  ]
+}
 
 /** The pipe: a hollow clang standing in a corner; a honk as a trumpet; the last bolt turned and a gurgle through a wall; a toot. */
+/** A guest's own breath coming back up the standing pipe: a hollow puff, and its echo. */
+export const breathBack: Sound = [hiss(0, 520, 0.16, 0.07, 2.2, 380, 0.04), hiss(0.2, 480, 0.14, 0.03, 2.2, 360, 0.04)]
 export const pipeStands: Sound = [tone(0, 311, 0.45, 0.09, 'triangle', 300), tone(0, 466, 0.3, 0.04, 'sine', 455), hiss(0, 800, 0.04, 0.08, 3)]
 export const trumpet: Sound = [tone(0, 233, 0.3, 0.12, 'sawtooth', 247, 0.03), tone(0, 466, 0.25, 0.04, 'square', 494, 0.03)]
 export const pipeJoins: Sound = [hiss(0, 1900, 0.04, 0.06, 7), hiss(0.08, 2100, 0.04, 0.06, 7), hiss(0.16, 2300, 0.04, 0.06, 7), tone(0.3, 150, 0.12, 0.08, 'sine', 95), tone(0.42, 130, 0.12, 0.07, 'sine', 180), tone(0.54, 160, 0.14, 0.06, 'sine', 90)]
@@ -189,17 +218,30 @@ export function iceDial(step: number): Sound {
   return Array.from({ length: dial }, (_, chink) => tone(chink * 0.09, 2637 + chink * 330, 0.14, 0.05, 'sine', 0, 0.003))
 }
 
-/** The stove or the ice box given to a guest: it goes into the guest's room, and the guest takes to it in its own voice. */
-export function takesTo(id: GuestId, thing: 'stove' | 'ice'): Sound {
+/**
+ * The stove or the ice box given to a guest: it goes into the guest's room,
+ * and the guest takes to it in its own way and in its own voice. Hugging the
+ * stove it purrs; sitting on it, it sags with a long wheeze; in the ice box as
+ * an armchair, the lid squeals under it; stiff as a plank, it goes over with a
+ * single knock.
+ */
+export function takesTo(id: GuestId, how: 'hugs' | 'sits-and-sags' | 'armchair' | 'plank'): Sound {
   const voice = GRUNT[id]
-  const first = thing === 'stove' ? stoveWarms.slice(0, 2) : iceChills.slice(0, 1)
-  // A long contented or bewildered sound in the guest's own voice: a purr going up, or a wheeze going down.
-  const pitch = Math.max(46, voice.pitch * (thing === 'stove' ? 1 : 0.9))
-  const glide = Math.max(42, pitch * (thing === 'stove' ? 1.18 : 0.72))
-  return [...first, tone(0.32, pitch, Math.min(0.6, voice.length * 2), voice.peak * 0.7, voice.wave, glide, 0.05)]
+  const pitch = Math.max(46, voice.pitch)
+  const first = how === 'hugs' || how === 'sits-and-sags' ? stoveWarms.slice(0, 2) : iceChills.slice(0, 1)
+  // A purr: four short swells of its own note, each a little higher.
+  if (how === 'hugs') return [...first, ...[0, 1, 2, 3].map((n) => tone(0.34 + n * 0.14, pitch * (1 + n * 0.03), 0.12, voice.peak * 0.6, voice.wave, 0, 0.04))]
+  // A long wheeze, sliding down as it sags.
+  if (how === 'sits-and-sags') return [...first, tone(0.36, pitch * 1.1, 0.9, voice.peak * 0.6, voice.wave, Math.max(42, pitch * 0.6), 0.08), hiss(0.36, Math.min(4200, pitch * 5), 0.9, 0.04, 0.9, Math.min(2000, pitch * 2.5), 0.08)]
+  // The lid squeals, and a settled sound from whoever sat on it.
+  if (how === 'armchair') return [...first, hiss(0.34, 2600, 0.22, 0.06, 9, 3900, 0.03), tone(0.62, pitch, Math.min(0.5, voice.length * 1.6), voice.peak * 0.6, voice.wave, Math.max(42, pitch * 0.88), 0.05)]
+  // One small sound of surprise, and one knock as it lands flat.
+  return [...first, tone(0.12, pitch * 1.3, 0.08, voice.peak * 0.5, voice.wave), hiss(0.5, 240, 0.09, 0.2, 1.4, 130), tone(0.5, 98, 0.1, 0.12, 'sine', 70)]
 }
 
 /** The alarm clock: ticking by a bed, a whirr as a guest who will change its hours winds it, a muffled clonk from one who will not, a slow loud tock on a wall, and its full bell. */
+/** The alarm clock by a bed at dawn and at dusk: a short trill, far shorter than its full bell. */
+export const clockTrill: Sound = [0, 1, 2, 3].map((ring) => tone(ring * 0.045, ring % 2 ? 2349 : 2093, 0.04, 0.05, 'triangle', 0, 0.003))
 export const clockByBed: Sound = [0, 1, 2, 3].map((tick) => hiss(tick * 0.16, tick % 2 ? 2300 : 2700, 0.03, 0.05, 9))
 export const clockKept: Sound = Array.from({ length: 7 }, (_, turn) => hiss(turn * 0.055, 1500 + turn * 130, 0.035, 0.05, 6)).concat([tone(0.45, 1760, 0.12, 0.05, 'sine')])
 export const clockShruggedOff: Sound = [tone(0, 1568, 0.05, 0.04, 'sine'), hiss(0.06, 260, 0.1, 0.16, 1.5, 150), tone(0.06, 110, 0.1, 0.1, 'sine', 80)]
@@ -241,6 +283,12 @@ export const porterGoes: Sound = [hiss(0, 260, 0.07, 0.08, 2), hiss(0.14, 320, 0
 /** A line of guests filing out: one soft step. */
 export const step: Sound = [hiss(0, 250, 0.045, 0.07, 3)]
 /** The pairings: the yeti in its sauna, a long sigh and a hiss of steam; the troll and the singer through one wall, a tuba note with her note a fifth above it. */
+/** Through a pairing, on its beat: a puff of steam off the yeti on the stove and a rattle of the stove's lid; the tuba's low note and the singer's high one landing together on the wall between them. */
+export const saunaPuff: Sound = [hiss(0, 3400, 0.22, 0.05, 0.9, 1900, 0.02), hiss(0.03, 1200, 0.05, 0.06, 7)]
+export function duetBeat(step: number): Sound {
+  const up = Math.floor(step) % 2 === 1
+  return [tone(0, up ? 147 : 98, 0.3, 0.09, 'triangle', 0, 0.03), tone(0, up ? 880 : 587, 0.28, 0.05, 'sine', up ? 890 : 594, 0.05), hiss(0, 180, 0.05, 0.08, 2)]
+}
 export const sauna: Sound = [hiss(0, 3200, 0.9, 0.06, 0.8, 1500, 0.1), tone(0.1, 61, 0.9, 0.12, 'triangle', 46, 0.2)]
 export const duet: Sound = [tone(0, 98, 0.9, 0.1, 'triangle', 0, 0.05), tone(0.05, 587, 0.9, 0.08, 'sine', 622, 0.1), tone(0.5, 147, 0.5, 0.07, 'triangle', 0, 0.05)]
 
@@ -287,6 +335,85 @@ export function aria(step: number, heard: HeardAs): Sound | null {
   return [tone(0, pitch, 0.42, 0.045, 'sine', pitch * 1.01, 0.08)]
 }
 
+/**
+ * The cook humming along to a noise it loves: on the steps of the tuba's
+ * tune, two octaves up and a moment behind it, through its nose. From the
+ * cook's own place it is plain to hear; from anyone else's it is not heard.
+ */
+export function hum(step: number, heard: HeardAs): Sound | null {
+  const semitones = TUBA_TUNE[((Math.floor(step) % TUBA_TUNE.length) + TUBA_TUNE.length) % TUBA_TUNE.length]
+  if (semitones === null) return null
+  const pitch = TUBA_LOW * 4 * 2 ** (semitones / 12)
+  return [tone(0.12, pitch, 0.26, heard === 'loved' ? 0.05 : 0.028, 'sine', pitch * 1.015, 0.06), hiss(0.12, pitch * 3, 0.2, 0.012, 6, 0, 0.06)]
+}
+
+/** The sigh of a guest wrapped in the quilt who loves it: its own note, let all the way down. */
+export function sigh(id: GuestId): Sound {
+  const voice = GRUNT[id]
+  const pitch = Math.max(60, voice.pitch * 1.2)
+  return [tone(0, pitch, 0.7, Math.min(0.12, voice.peak * 0.7), 'sine', Math.max(46, pitch * 0.62), 0.12), hiss(0, Math.min(3600, pitch * 6), 0.6, 0.03, 0.9, Math.min(1800, pitch * 3), 0.12)]
+}
+
+/**
+ * How often an awake guest, content and at its one thing, makes the small
+ * sound of it, in times a second: no two alike. The troll, the singer and
+ * the fly are not here, because their one thing is a noise already (the
+ * tuba, the aria, the buzz).
+ */
+export const AT_ITS_THING: Readonly<Partial<Record<GuestId, number>>> = { bat: 0.13, blob: 0.11, yeti: 0.09, lizard: 0.16, cook: 0.21 }
+
+/**
+ * The small sound of an awake guest at its one thing: the cook's stew
+ * plopping under the spoon, the bat shaking out its wings, the blob plumping
+ * its pillow, the yeti's long cold breath under its cloud, the lizard's
+ * teeth chattering over its hot-water bottle. Quiet, and quieter from
+ * another guest's place. Null for a guest whose one thing is a noise.
+ */
+export function atItsThing(id: GuestId, nth: number, heard: HeardAs): Sound | null {
+  const quiet = heard === 'faint' ? 0.5 : 1, odd = Math.floor(nth) % 2 === 1
+  const soft = (sound: Note[]): Sound => sound.map((note) => ({ ...note, peak: Math.max(RANGE.peak[0], note.peak * quiet) }))
+  if (id === 'cook') return soft([tone(0, odd ? 165 : 147, 0.07, 0.04, 'sine', 92), tone(0.19, odd ? 139 : 175, 0.07, 0.035, 'sine', 98), tone(0.34, 156, 0.08, 0.04, 'sine', 88), hiss(0.5, 900, 0.14, 0.02, 3, 700)])
+  if (id === 'bat') return soft([0, 1, 2].map((flap) => hiss(flap * 0.07, 2600 - flap * 300, 0.04, 0.03, 3)).concat([tone(0.26, odd ? 2349 : 2093, 0.05, 0.015, 'triangle')]))
+  if (id === 'blob') return soft([hiss(0, 220, 0.09, 0.05, 1.2), hiss(odd ? 0.24 : 0.2, 200, 0.09, 0.045, 1.2)])
+  if (id === 'yeti') return soft([hiss(0, 700, 0.5, 0.035, 1.5, 400, 0.15), tone(0.42, odd ? 2637 : 2349, 0.08, 0.012, 'sine')])
+  if (id === 'lizard') return soft(Array.from({ length: odd ? 5 : 6 }, (_, click) => hiss(click * 0.05, 3200, 0.03, 0.03, 8)))
+  return null
+}
+
+/**
+ * What a placed thing keeps sounding for as long as it stands there, and how
+ * often it comes round, in times a second: the stove's steady low rumble,
+ * the ice box's steady hum with a slow drip, the alarm clock ticking by a bed
+ * or in a guest's hand, its slow loud tock on a wall, the pipe's low whoosh
+ * while something passes through it, and the dull patter of what the quilt
+ * is stopping.
+ */
+export const STEADY_BEAT = { rumble: 0.55, hum: 0.4, tick: 1, tock: 0.5, whoosh: 0.33, patter: 0.45 } as const
+
+/** One round of a steady sound. Quiet, and quieter from the place of a guest in another room. The ice box drips on every third round. */
+export function steady(kind: keyof typeof STEADY_BEAT, nth: number, heard: HeardAs): Sound {
+  const quiet = heard === 'faint' ? 0.5 : 1
+  const soft = (sound: Note[]): Sound => sound.map((note) => ({ ...note, peak: Math.max(RANGE.peak[0], note.peak * quiet) }))
+  if (kind === 'rumble') return soft([tone(0, 55, 1.1, 0.04, 'triangle', 51, 0.25), hiss(0, 130, 1, 0.025, 0.7, 110, 0.25)])
+  if (kind === 'hum') return soft([tone(0, 117, 1.1, 0.02, 'sine', 0, 0.25), tone(0, 234, 1, 0.01, 'sine', 0, 0.25), ...(Math.floor(nth) % 3 === 0 ? [tone(0.6, 1568, 0.05, 0.03, 'sine', 980, 0.003)] : [])])
+  if (kind === 'tick') return soft([hiss(0, Math.floor(nth) % 2 ? 2300 : 2700, 0.03, 0.03, 9)])
+  // The pipe's low whoosh while something passes through it, and the dull patter of what is pressed against the quilt.
+  if (kind === 'whoosh') return soft([hiss(0, 300, 0.9, 0.03, 0.6, 220, 0.25)])
+  if (kind === 'patter') return soft([0, 1, 2, 3].map((tap) => hiss(tap * 0.11 + (Math.floor(nth) % 2 ? 0.03 : 0), 170 - tap * 6, 0.05, 0.035, 2)))
+  return soft([hiss(0, Math.floor(nth) % 2 ? 700 : 900, 0.07, 0.07, 5)])
+}
+
+/** How often the fly's buzz comes round, in buzzes a second. */
+export const BUZZ_BEAT = 0.4
+
+/** The fly's small buzz, which stays in its own room: a thin whine, a pleasure to the fly, a drill to a room-mate who minds it, and next to nothing to anyone else. */
+export function buzz(heard: HeardAs): Sound {
+  if (heard === 'loved') return [tone(0, 233, 0.5, 0.03, 'sawtooth', 247, 0.05), tone(0.06, 466, 0.4, 0.012, 'sine', 0, 0.05)]
+  if (heard === 'minded') return [tone(0, 239, 0.62, 0.06, 'sawtooth', 221, 0.02), tone(0.02, 478, 0.55, 0.03, 'square', 442, 0.02)]
+  if (heard === 'faint') return [tone(0, 233, 0.3, 0.012, 'sawtooth', 240, 0.05)]
+  return [tone(0, 233, 0.42, 0.022, 'sawtooth', 244, 0.05)]
+}
+
 /** How many snores a second each sleeper gives: one at the top of every third breath or so, no two alike. */
 export const SNORES: Readonly<Record<GuestId, number>> = { troll: 0.11, bat: 0.075, blob: 0.1, yeti: 0.055, lizard: 0.08, cook: 0.065, fly: 0.14, singer: 0.09 }
 
@@ -298,10 +425,10 @@ export function snore(id: GuestId, nth: number, heard: HeardAs): Sound {
 
 /** Every fixed sound by name, for the test that holds them in range. */
 export const FIXED: Readonly<Record<string, Sound>> = {
-  sweepPlain, movesIn, shares, swaps, throughTheWall, toLobby, toBench, noBed, putBack, knock, lamp, bell, door, paper,
-  quiltOnBed, wraps, quiltHangs, feathers, pipeStands, trumpet, pipeJoins, toots, stoveWarms, stoveScorches, iceChills, iceFrosts,
-  clockByBed, clockKept, clockShruggedOff, clockOnWall, clockRings, toCupboard, handedBack,
-  horn, doorOpens, doorShuts, coachLeaves, coachArrives, porterTrundles, porterShows, porterGoes, step, sauna, duet,
+  sweepPlain, movesIn, shares, swaps, throughTheWall, toLobby, toBench, putBack, knock, lamp, bell, door, roomDoor, bedSprings, boiler, luggage, cage, caw, paper,
+  quiltOnBed, wraps, quiltHangs, feathers, breathBack, pipeStands, trumpet, pipeJoins, toots, stoveWarms, stoveScorches, iceChills, iceFrosts,
+  clockByBed, clockTrill, clockKept, clockShruggedOff, clockOnWall, clockRings, toCupboard, handedBack,
+  horn, doorOpens, doorShuts, coachLeaves, coachArrives, porterTrundles, porterShows, porterGoes, step, sauna, saunaPuff, duet,
   ...Object.fromEntries(Object.entries(touched).map(([kind, sound]) => [`touched ${kind}`, sound])),
   ...Object.fromEntries(Object.entries(throughTheHour).map(([kind, sound]) => [`hour ${kind}`, sound])),
 }

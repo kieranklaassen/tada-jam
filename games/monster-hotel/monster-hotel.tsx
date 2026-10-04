@@ -39,7 +39,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const pinned = tierOverride(window.location.search)
     const governor = new TierGovernor(pinned ?? startingTier(window.matchMedia('(pointer: coarse)').matches), pinned !== null)
     const work = new PerfRing()
-    // Grown-ups only: three quick taps in the top right corner, or fps=1 in the address (overlay.ts).
+    // Grown-ups only: a finger held a second in the top right corner and lifted there, then three taps there within three seconds, or fps=1 in the address (overlay.ts).
     const overlay = new Overlay(root, window.location.search)
     // What the last draw put on the surface, for the grown-up handle and the overlay. A canvas 2D game counts the
     // sprites and figures it drew as drawCalls; a three.js game copies the renderer's own counts.
@@ -153,11 +153,18 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     }
     const onMove = (event: PointerEvent) => act(touch.move(event.pointerId, at(event)))
     const onUp = (event: PointerEvent) => {
-      act(touch.up(event.pointerId, at(event), event.timeStamp))
+      const where = at(event)
+      overlay.release(where.x, where.y, width, event.timeStamp)
+      act(touch.up(event.pointerId, where, event.timeStamp))
       audio.touchUp()
     }
     const onCancel = (event: PointerEvent) => {
-      act(touch.cancel(event.pointerId, event.timeStamp))
+      // A touch that is taken away is no lift in the corner: it arms nothing.
+      overlay.release(-1, -1, width, event.timeStamp)
+      const gestures = touch.cancel(event.pointerId, event.timeStamp)
+      act(gestures)
+      // The working finger's touch was taken, which is not a finger letting go: what is in the hand goes back where it came from unless a finger comes back for it. A palm or a second finger that is taken away is none of the carry's business.
+      if (gestures.length > 0) play?.takenAway()
       audio.touchUp()
     }
     root.addEventListener('pointerdown', onDown)
@@ -208,9 +215,10 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       cancelAnimationFrame(frame)
       frame = 0
       clock.rest()
-      act(touch.clear())
-      // A guest still in the hand goes back where it came from before the save: nothing is saved in the air.
+      // What is in the hand goes back where it came from, and only then is the touch ended: ended first, the drag
+      // would set the guest or the thing down under the finger, a move the child did not make.
       play?.rest()
+      act(touch.clear())
       settle()
       cadence.settle(performance.now())
     })
@@ -231,9 +239,9 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
 
     return () => {
       disposed = true
-      // As on going to rest: the touch ends first, so the thing in hand is put down before the last save.
-      act(touch.clear())
+      // As on going to rest: what is in the hand goes back where it came from, then the touch ends, then the last save.
       play?.rest()
+      act(touch.clear())
       settle()
       cadence.settle(performance.now())
       cancelAnimationFrame(frame)

@@ -4,7 +4,8 @@ import { LADDER, MOST_MOVES, ROUNDS } from './config'
 import { GUEST_IDS } from './guests'
 import { bedsIn, edgesOf, roomCount } from './hotel'
 import { STATE_VERSION } from './state'
-import { arrangementOf, castFor, freshStay, readStay, withArrangement, writeStay, type Stay } from './stay'
+import { setDownIn } from './cycle'
+import { arrangementOf, castFor, freshStay, readStay, withArrangement, withCast, writeStay, type Stay } from './stay'
 
 const json = (value: unknown) => JSON.parse(JSON.stringify(value)) as unknown
 
@@ -55,10 +56,13 @@ describe('what is saved', () => {
       const roomed = guests.find((guest) => typeof guest.at === 'number')!
       const things = start.things.map((item, index) => ({
         kind: item.kind,
-        dial: ((index % 3) + 1) as 1 | 2 | 3,
+        // Only the stove and the ice box have a dial the child can set; the others keep the 1 they are given and nothing is saved for them.
+        dial: (item.kind === 'stove' || item.kind === 'ice' ? (index % 3) + 1 : 1) as 1 | 2 | 3,
         at: item.kind === 'stove' || item.kind === 'ice' ? { room: index % roomCount(cast.house.shape) } : item.kind === 'clock' ? { guest: roomed.id } : { edge: edges[index % edges.length].id },
       }))
       const stay: Stay = { ...withArrangement({ ...freshStay(null), cast: cast.id, position: cast.position }, { ...start, guests, things, phase: 'night' }), from: roomed.id, moves: 7, round: 12, finished: true, shown: [LADDER[0], cast.position].filter((id, at, all) => all.indexOf(id) === at) }
+      const written = json(writeStay(stay)) as { kit: Record<string, { dial?: number }> }
+      for (const [kind, entry] of Object.entries(written.kit)) expect('dial' in entry, `${cast.id} ${kind}`).toBe(kind === 'stove' || kind === 'ice')
       const back = readStay(json(writeStay(stay)), null)
       expect(back, cast.id).toEqual(stay)
       expect(arrangementOf(back).guests, cast.id).toEqual(guests)
@@ -91,7 +95,7 @@ describe('what is saved', () => {
       ['from', 'nobody', (stay) => stay.from, null],
       ['from', GUEST_IDS.find((id) => !cast.guests.includes(id) && id !== cast.bench), (stay) => stay.from, null],
       ['shown', 'all', (stay) => stay.shown, []],
-      ['shown', ['grade-4', cast.position, cast.position, 7], (stay) => stay.shown, [cast.position]],
+      ['shown', ['no-such-place', cast.position, cast.position, 7], (stay) => stay.shown, [cast.position]],
       ['at', null, (stay) => stay.at[cast.guests[0]], 'lobby'],
       ['at', { [cast.guests[0]]: 99 }, (stay) => stay.at[cast.guests[0]], 'lobby'],
       ['at', { [cast.guests[0]]: 'bench' }, (stay) => stay.at[cast.guests[0]], 'lobby'],
@@ -109,7 +113,7 @@ describe('what is saved', () => {
     }
   })
 
-  it('never puts more guests in a room than it has beds, and never the quilt and the pipe on one wall', () => {
+  it('never puts more guests in a room than it has beds, and keeps the quilt and the pipe on one wall when that is how the house was left', () => {
     const cast = CASTS.find((one) => one.guests.length >= 3)!
     const crowded = readStay(json({ ...writeStay({ ...freshStay(null), cast: cast.id, position: cast.position }), at: Object.fromEntries(cast.guests.map((id) => [id, 1])) }), null)
     expect(cast.guests.filter((id) => crowded.at[id] === 1).length).toBe(bedsIn(cast.house, 1))
@@ -117,7 +121,7 @@ describe('what is saved', () => {
     if (both) {
       const edge = edgesOf(both.house.shape)[0].id
       const back = readStay(json({ ...writeStay({ ...freshStay(null), cast: both.id, position: both.position }), kit: { quilt: { at: { edge }, dial: 1 }, pipe: { at: { edge }, dial: 1 } } }), null)
-      expect([back.kit.quilt.at, back.kit.pipe.at]).toEqual([{ edge }, 'cupboard'])
+      expect([back.kit.quilt.at, back.kit.pipe.at]).toEqual([{ edge }, { edge }])
     }
   })
 
@@ -130,7 +134,7 @@ describe('what is saved', () => {
   })
 
   it('a place the game no longer knows falls back to the first-visit place', () => {
-    expect(readStay(json({ ...writeStay(freshStay(null)), position: 'grade-5' }), null).position).toBe(LADDER[0])
+    expect(readStay(json({ ...writeStay(freshStay(null)), position: 'no-such-place' }), null).position).toBe(LADDER[0])
   })
 
   it('the largest legal state is far under half of the 64 KB cap', () => {
@@ -157,5 +161,17 @@ describe('what is saved', () => {
     expect(largest).toBeGreaterThan(100)
     expect(largest).toBeLessThan(2048)
     expect(largest).toBeLessThan((64 * 1024) / 2)
+  })
+
+  it('found as left after a guest who held a thing is carried out of its room: what is saved and loaded is what the house then was', () => {
+    const cast = castById('corridor/b')!
+    let stay = withCast({ ...freshStay(null), position: cast.position }, cast)
+    stay = setDownIn(stay, { guest: 'blob' }, { room: 4 }).stay
+    stay = setDownIn(stay, { thing: 'quilt' }, { guest: 'blob' }).stay
+    expect(stay.kit.quilt!.at).toEqual({ guest: 'blob' })
+    stay = setDownIn(stay, { guest: 'blob' }, 'lobby').stay
+    const back = readStay(JSON.parse(JSON.stringify(writeStay(stay))), null)
+    expect(arrangementOf(back)).toEqual(arrangementOf(stay))
+    expect(back.kit.quilt!.at).toBe('cupboard')
   })
 })

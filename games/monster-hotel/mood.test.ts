@@ -78,6 +78,16 @@ describe('who is cross, and exactly why', () => {
     expect(turnsTo(arrange(long, { lizard: 0 }), 'lizard', 'day')).toBe(null)
   })
 
+  it('a trouble built into the house comes through the room\'s own floor or ceiling, and the guest turns there', () => {
+    const house = { shape: 'square', fixtures: [{ kind: 'boiler', col: 0 }, { kind: 'snow', col: 1 }], twins: [] } as const
+    // The yeti over the boiler: the warmth comes up through its floor.
+    expect(turnsTo(arrange(house, { yeti: 0 }), 'yeti', 'day')).toBe('down')
+    // The lizard under the snow hole: the cold comes down through its ceiling.
+    expect(turnsTo(arrange(house, { lizard: 3 }), 'lizard', 'day')).toBe('up')
+    // A stove in the room itself is not behind any wall: nowhere to turn.
+    expect(turnsTo(arrange({ shape: 'square', fixtures: [], twins: [] }, { bat: 1 }, { stove: { room: 1 } }, { dials: { stove: 3 } }), 'bat', 'day')).toBe(null)
+  })
+
   it('the cold the yeti brings sinks onto whoever is below, and never bothers the yeti', () => {
     const house = arrange(long, { yeti: 3, fly: 0 })
     expect(contentAllDay(house, 'yeti')).toBe(true)

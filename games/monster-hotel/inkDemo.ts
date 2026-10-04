@@ -75,7 +75,8 @@ const shelf = (kind: InkThing['kind'], dial: 1 | 2 | 3 = 1): InkThing => ({ kind
  */
 function thingsOut(): InkScene {
   return {
-    house: LONG_HOUSE, phase: 'day', from: null, numerals: true,
+    // The tuba is stopped at the quilt, on its own side of the wall; the cook's smell goes up through the pipe.
+    house: LONG_HOUSE, phase: 'day', from: null, numerals: true, bunches: [4], passing: true,
     guests: [
       guest('lizard', { room: 0 }, true), guest('cook', { room: 1 }, true, { mood: 'happier' }), guest('blob', { room: 3 }, true),
       guest('troll', { room: 4 }, true), guest('yeti', { room: 5 }, true),
@@ -193,7 +194,7 @@ export function demoScene(name: string, seconds: number): InkScene {
       airs: [],
     }
   }
-  if (name === 'coach') return { ...toyStart(), coach: true, coachOpen: true }
+  if (name === 'coach') return { ...toyStart(), coach: true, coachOpen: true, coachWaits: true }
   if (name === 'coach-away') {
     // Every seven seconds: it pulls away to the right, and the next one pulls up from the left.
     const within = ((seconds % 7) + 7) % 7

@@ -1,6 +1,6 @@
-import { awake, holds, isRoomAt, onEdge, roomOf, thing, type Arrangement } from './arrangement'
+import { awake, holds, isRoomAt, onEdge, roomOf, thing, type Arrangement, type Hung } from './arrangement'
 import { TASTES, type GuestId, type Phase } from './guests'
-import { edgesOf, fixtureHeat, fixtureRoom, type Edge } from './hotel'
+import { edgesOf, fixtureEdge, fixtureHeat, fixtureRoom, type Edge } from './hotel'
 
 // How each thing travels: the hotel's whole rule language, and it never
 // changes. Every air starts in one room at a strength and loses a step each
@@ -23,11 +23,13 @@ export type Source = { air: Air; by: Maker; room: number; strength: number }
 export type Arrival = { source: Source; room: number; level: number; path: readonly number[] }
 
 /** Whether this air can step from one room to the other across this wall or floor. */
-export function crosses(air: Air, edge: Edge, from: number, hung: 'quilt' | 'pipe' | null): boolean {
-  if (air === 'din') return hung !== 'quilt'
-  if (hung === 'pipe') return true
+export function crosses(air: Air, edge: Edge, from: number, hung: Hung): boolean {
+  // Both may be there at once, and each does what it does: the quilt stops what goes through the wall or floor itself, and the pipe is a way through it.
+  const quilt = hung === 'quilt' || hung === 'both', pipe = hung === 'pipe' || hung === 'both'
+  if (air === 'din') return !quilt
+  if (pipe) return true
   if (air === 'pong') return edge.kind === 'wall'
-  if (hung === 'quilt' || edge.kind !== 'floor') return false
+  if (quilt || edge.kind !== 'floor') return false
   // A floor edge has its lower room as `a`: warmth goes up from it, cold comes down to it.
   return air === 'warm' ? from === edge.a : from === edge.b
 }
@@ -61,6 +63,8 @@ function reachOf(arrangement: Arrangement, id: GuestId, strength: number): numbe
 export function heatSources(arrangement: Arrangement): Source[] {
   const sources: Source[] = []
   for (const fixture of arrangement.house.fixtures) {
+    // A quilt on the floor over the boiler, or on the ceiling under the snow hole, stops it there, as a quilt on any floor stops warmth and cold: nothing of it comes into the room. With the pipe let through the quilt, it comes through the pipe.
+    if (onEdge(arrangement, fixtureEdge(arrangement.house, fixture)) === 'quilt') continue
     const heat = fixtureHeat(fixture)
     sources.push({ air: heat > 0 ? 'warm' : 'cold', by: { fixture: fixture.kind }, room: fixtureRoom(arrangement.house, fixture), strength: Math.abs(heat) })
   }

@@ -115,6 +115,10 @@ describe('the frame budget of the ink page', () => {
     { name: 'a full house, during a sweep', at: () => ({ ...fullHouse(), from: 'blob', view: BLOB, under: null, sweep: { x: 300, y: 400, progress: 0.5 } }), whole: 2, numerals: 4 },
     { name: 'a full house, while the hour changes', at: () => ({ ...fullHouse(), hourUnder: 'day', hourSweep: { x: 360, y: 80, progress: 0.4 } }), whole: 2, numerals: 4 },
     { name: 'the coach changing over, ten figures on the page', at: changeover, whole: 1, numerals: 2 },
+    // The idle glow lies on every guest, the wheel and every thing at once.
+    { name: 'a full house, everything that can be touched glowing', at: () => ({ ...fullHouse(), glow: { strength: 1, guests: fullHouse().guests.map((guest) => guest.id), wheel: true, things: fullHouse().things.map((thing) => thing.kind) } }), whole: 1, numerals: 2 },
+    // What a touch sets off for a moment is a few strokes each, drawn afresh: feathers, a sneeze, a puff, a patch.
+    { name: 'a full house, with what a touch set off still in the air', at: (seconds) => ({ ...fullHouse(), moments: (['feathers', 'sneeze', 'breath', 'puff', 'scorch', 'frost'] as const).map((kind, index) => ({ kind, x: 120 + index * 90, y: 300, room: null, age: 0.1 + (seconds % 0.3), lasts: 1.5, side: 1 as const, of: 'din' as const })) }), whole: 1, numerals: 2 },
   ]
 
   for (const scene of scenes) {
