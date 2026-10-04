@@ -3,6 +3,7 @@
 
 ## Status
 
+- Resumed: taking up 'Round 6 of your sheet passed' (the points where the game does less than the sheet says, the put-away case among them), then 'to take up when the run before this one has ended' (the reader step). The work cut off in the middle (the closing run's own list) was finished first.
 - Stage: gates. Every gate this machine can run has been run at the tip and passed. **One gate could not be run here: the frame rate on a graphics card** (`npm run perf:jam -- princess-playground` in WebKit and throttled Chrome, and a physical iPad). The machine has no graphics card and no WebKit, so every frame is drawn in software and a frame rate read here would measure the software renderer. The lead runs it.
 - Sheet: **passed in round 6** (checker H), as it stood at commit `ebd6aea5b99e7246e9809cdf9577f103b048aa3e`: hash of the sheet part (everything above `## The look`) `89ccbacef6a45502243a07d4e1bf843282016fb3dd94297bd7d1af1275b24d06`. It has changed since in the sentences listed below, so round 7 is asked for.
   - Round 1 (checker B): 16 findings, on commit `132bc32` (hash `05fd9b42…d82fd6`). All 16 pasted as written in `19240ad`.
