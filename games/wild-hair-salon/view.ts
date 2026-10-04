@@ -103,7 +103,9 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
     }
     // The light on the chair, when it is the thing to touch: on the cape that hangs over it, behind the pair.
     light(CHAIR.x, 470, 440, 400, glowOn('chair'))
-    drawn += tail(g, sprites, chair, inChair ? { x: 322, y: FLOOR_Y - 20 } : { x: customerAt.x - 60 * customerAt.s, y: customerAt.y + 250 * customerAt.s }, inChair ? TAIL_OF_CUSTOMER : null, play.customer()?.at('tail') ?? 0, staging.tails, customerAt.s, customerAt.seen)
+    // In the chair its tail comes out from under the cape's hem well clear of the plain ground at the bench, so that its
+    // tuft is never behind a ribbon hung beside the friend's lock there.
+    drawn += tail(g, sprites, chair, inChair ? { x: 350, y: FLOOR_Y - 20 } : { x: customerAt.x - 60 * customerAt.s, y: customerAt.y + 250 * customerAt.s }, inChair ? TAIL_OF_CUSTOMER : null, play.customer()?.at('tail') ?? 0, staging.tails, customerAt.s, customerAt.seen)
 
     const wearsOf = (who: Who): Wears => ({
       pieces: game.clippings.filter((c) => c.on === 'face' && c.who === who && !hair.flights.has(c) && hair.carried?.what !== c).map((c) => (c.on === 'face' ? { y: SPOT_Y[c.spot], half: (c.len * STEP) / 2, hue: c.hue } : { y: 0, half: 0, hue: c.hue })),
