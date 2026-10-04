@@ -199,7 +199,9 @@ export class Play implements Cast {
 
   /** Notes what the scene that is about to start has to be followed by. */
   private owe(when: 'coming in' | 'later'): void {
-    this.owed = this.game ? ideasDue(this.game, when) : []
+    // A new customer starts the list afresh; a scene with the same customer adds to what is still waiting.
+    const due = this.game ? ideasDue(this.game, when) : []
+    this.owed = when === 'coming in' ? due : [...this.owed, ...due.filter((idea) => !this.owed.includes(idea))]
     this.showIn = 0
   }
 

@@ -236,6 +236,19 @@ describe('a thing shown once', () => {
     expect(paw).toBe(true)
   })
 
+  it('still follows when another scene with the same customer comes between: the friend sent across and back before the snip was shown', () => {
+    const play = opened()
+    tap(play, DOOR)
+    run(play, 1, true)
+    // The coming in is cut short by the touch that sends the friend across; that walk is cut short by the one that sends it back.
+    tap(play, BENCH)
+    run(play, 0.3, true)
+    tap(play, STOOL)
+    expect(play.game!.shown.snip).toBe(false)
+    through(play)
+    expect(play.game!.shown.snip).toBe(true)
+  })
+
   it('waits for its cause to come round again when the game is put away before it began, and is never begun behind the child\'s back', () => {
     const play = opened()
     tap(play, DOOR)
