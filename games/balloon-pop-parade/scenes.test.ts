@@ -113,6 +113,8 @@ describe('the march on the spot', () => {
     const theatre = new Theatre(troopOf(kind, 3)), { poses, painter } = recorder()
     tapSlot(theatre, 2)
     until(theatre, 'ending')
+    // The scene's first beat is the catch that caused it, which is left to finish; then they jump.
+    play(theatre, PERSONALITIES[kind].lasts.catch * 0.7)
     let together = 0
     const began: number[] = [-1, -1, -1]
     for (let t = 0; t < 1.2; t += 1 / 60) {

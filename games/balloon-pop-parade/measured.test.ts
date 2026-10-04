@@ -234,8 +234,8 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
     for (let i = 0; i < Math.round((0.5 + PERSONALITIES[kind].cue.grab + 0.3) * 60); i++) theatre.step(1 / 60)
     tap(theatre, 1)
     expect(theatre.save.finished).toBe(true)
-    let caught = -1, ending = -1, inHand = -1
-    for (let i = 0; i < 60 * 8 && ending < 0; i++) {
+    let caught = -1, ending = -1, inHand = -1, proud = -1
+    for (let i = 0; i < 60 * 8 && proud < 0; i++) {
       theatre.step(1 / 60)
       clear()
       theatre.paint(painter, VIEW)
@@ -243,13 +243,17 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
       const pose = poses.get('friend-0')!
       // Its own balloon is in its hand when it bobs over its string hand, as a held balloon does.
       if (inHand < 0 && balloons.some((balloon) => balloon.z > -5 && balloon.wide === 1 && Math.abs(balloon.x - pose.x - 0.7) < 0.35 && Math.abs(balloon.y - GROUND - 4) < 0.5)) inHand = i
-      if (theatre.playing === 'ending') ending = i
+      if (ending < 0 && theatre.playing === 'ending') ending = i
+      // The proud move's squeak is the quieter one.
+      if (theatre.sounds.some((sound) => sound.voice === `${kind}Poke` && sound.gain === 0.8)) proud = i
     }
     expect(caught).toBeGreaterThan(0)
     expect(inHand).toBeGreaterThan(caught)
-    // The whole catch is played, and the balloon is in the hand, before the ending begins.
-    expect(ending - caught).toBeGreaterThanOrEqual(Math.floor(PERSONALITIES[kind].lasts.catch * 0.6 * 60))
-    expect(ending).toBeGreaterThanOrEqual(inHand)
+    // The ending begins with the catch that causes it, and its proud move comes when the whole catch has been
+    // played and the balloon is in the hand.
+    expect(ending).toBeGreaterThanOrEqual(caught)
+    expect(proud - caught).toBeGreaterThanOrEqual(Math.floor(PERSONALITIES[kind].lasts.catch * 0.6 * 60))
+    expect(proud).toBeGreaterThanOrEqual(inHand)
   })
 
   it.each(kinds)('a %s refuses two wrong bunches sent close together one at a time: each hangs beside it alone, and each is answered by a refusal of its own', (kind) => {
@@ -325,33 +329,102 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
     expect(popped.troop.held).toEqual([true])
   })
 
-  it.each(kinds)('a %s whose balloon is popped before its ending has begun still gets its ending: the troop that waits only waves until the troop is full again and the ending plays', (kind) => {
+  it.each(kinds)('a %s has its ending from the moment its last balloon is in its hand: a pop a moment later is a touch that ends the scene, and the game goes on as the same save reopened would', (kind) => {
     const theatre = new Theatre(saveOf({ position: 'solo-two-colours', troop: { kind, size: 1, held: [false] }, sky: [{ colour: kind, count: 1 }, { colour: kind, count: 1 }], waiting: { kind: other(kind), size: 1 } }), 5), { balloons, painter, clear } = recorder()
-    const callWaiting = () => { theatre.press(waitingSpot(0, VIEW).x, GROUND + 0.8, VIEW); theatre.cancel() }
+    const callWaiting = (stage: Theatre) => { stage.press(waitingSpot(0, VIEW).x, GROUND + 0.8, VIEW); stage.cancel() }
     tap(theatre, 0)
     expect(theatre.save.finished).toBe(true)
-    // The balloon is in its hand; the ending has not begun.
-    for (let i = 0; i < 40 && theatre.playing === null; i++) theatre.step(1 / 60)
-    expect(theatre.playing).toBe(null)
+    // The scene begins as the balloon arrives, half a second after the lift, and not later.
+    let began = -1
+    for (let i = 0; i < 45 && began < 0; i++) { theatre.step(1 / 60); if (theatre.playing === 'ending') began = i }
+    expect(began).toBeGreaterThanOrEqual(28)
+    expect(began).toBeLessThanOrEqual(33)
+    // A third of a second on, the balloon is popped.
+    for (let i = 0; i < 20; i++) theatre.step(1 / 60)
     clear()
     theatre.paint(painter, VIEW)
     const own = balloons.filter((balloon) => balloon.z > -5 && balloon.wide === 1 && balloon.y < 2.2)[0]
     theatre.press(own.x, own.y, VIEW)
     theatre.cancel()
     expect(theatre.troop.held).toEqual([false])
-    for (let i = 0; i < 60 * 3; i++) theatre.step(1 / 60)
-    expect(theatre.playing, 'no ending for a troop that is not full').toBe(null)
-    callWaiting()
-    expect(theatre.playing, 'and no step-in before the ending has played').toBe(null)
-    expect(theatre.save.parade).toHaveLength(0)
-    // Filled again, it has its ending, and then the next troop can be called.
-    tap(theatre, 1)
-    let ending = false
-    for (let i = 0; i < 60 * 4 && !ending; i++) { theatre.step(1 / 60); ending = theatre.playing === 'ending' }
-    expect(ending).toBe(true)
-    callWaiting()
+    expect(theatre.playing, 'the touch ended the scene').toBe(null)
+    for (let i = 0; i < 60 * 2; i++) theatre.step(1 / 60)
+    // What a tap on the waiting troop does now is what it does when the same save is opened again: the troop steps in.
+    const reopened = new Theatre(JSON.parse(JSON.stringify(theatre.save)), 5)
+    callWaiting(reopened)
+    callWaiting(theatre)
+    expect(reopened.playing).toBe('arrival')
     expect(theatre.playing).toBe('arrival')
   })
+
+  it('sends frogs\' tongues over one another\'s heads to a bunch with one for each: they cross in the air above the frogs, and none goes through a frog', () => {
+    // Three frogs and a bunch of three; and two frogs either side of one that has its balloon, with a bunch of two.
+    for (const [held, count] of [[[false, false, false], 3], [[false, true, false], 2]] as const) {
+      const theatre = new Theatre(saveOf({ position: 'bunches-own-colour', troop: { kind: 'frog', size: 3, held: [...held] }, sky: [{ colour: 'frog', count: 1 }, { colour: 'frog', count }], waiting: { kind: 'duck', size: 1 } }), 4)
+      const poses = new Map<string, Pose>(), tongues: { x0: number; y0: number; x1: number; y1: number }[] = []
+      const painter: Painter = { place: (name, _kind, pose) => void poses.set(name, { ...pose }), drop: () => {}, balloon: () => {}, string: (x0, y0, _z0, x1, y1, _z1, _colour, thick) => { if ((thick ?? 0) > 0.05 && (thick ?? 0) < 0.1) tongues.push({ x0, y0, x1, y1 }) }, shadow: () => {}, marcher: () => {}, hand: () => {}, cloud: () => {} }
+      tap(theatre, 1)
+      let crossedInAir = 0, out = 0
+      for (let i = 0; i < 90; i++) {
+        theatre.step(1 / 60)
+        tongues.length = 0
+        theatre.paint(painter, VIEW)
+        if (tongues.length === 0) continue
+        out += 1
+        // No piece of a tongue is in another frog's head: a head is 0.9 either side of its middle, from 0.9 to 2.15 up.
+        // (A tongue is drawn as four pieces from its frog's mouth; the frog it starts at is its own.)
+        tongues.forEach((piece, k) => {
+          const first = tongues[k - (k % 4)]
+          for (const pose of poses.values()) {
+          const x = (piece.x0 + piece.x1) / 2, y = (piece.y0 + piece.y1) / 2
+          if (Math.abs(first.x0 - pose.x) < 0.3) continue
+          expect(Math.abs(x - pose.x) < 0.9 && y > pose.y + 0.9 && y < pose.y + 2.15, `${count} for ${held.join()}, frame ${i}: a tongue at ${x.toFixed(2)}, ${(y - GROUND).toFixed(2)} in the head of the frog at ${pose.x.toFixed(2)}`).toBe(false)
+          }
+        })
+        // Two tongues cross where a piece of one meets a piece of another, above every head.
+        let crossing = false
+        for (let a = 0; a < tongues.length; a++) for (let b = a + 1; b < tongues.length; b++) {
+          const p = tongues[a], q = tongues[b], d = (p.x1 - p.x0) * (q.y1 - q.y0) - (p.y1 - p.y0) * (q.x1 - q.x0)
+          if (Math.abs(d) < 1e-9) continue
+          const t = ((q.x0 - p.x0) * (q.y1 - q.y0) - (q.y0 - p.y0) * (q.x1 - q.x0)) / d, u = ((q.x0 - p.x0) * (p.y1 - p.y0) - (q.y0 - p.y0) * (p.x1 - p.x0)) / d
+          if (t > 0.02 && t < 0.98 && u > 0.02 && u < 0.98 && p.y0 + (p.y1 - p.y0) * t > GROUND + 2.2) crossing = true
+        }
+        if (crossing) crossedInAir += 1
+      }
+      expect(out, 'the tongues are out for a good while').toBeGreaterThan(15)
+      expect(crossedInAir, `${count} for ${held.join()}: crossed in the air`).toBeGreaterThan(10)
+    }
+  })
+
+  it('never has a catch heard that is not played: in whole games played fast and at random, a friend is taking hold whenever its catch sounds', () => {
+    let catches = 0
+    for (const [age, seed] of [[2, 3], [4, 7], [4, 23]] as const) {
+      const theatre = new Theatre(freshSave(age, seed), seed)
+      const actors = () => (theatre as unknown as { actors: { clip: string | null; next: string | null; after?: string | null }[] }).actors
+      let state = seed * 104729
+      const random = () => (state = (state * 1103515245 + 12345) % 2147483648) / 2147483648
+      for (let i = 0; i < 60 * 150; i++) {
+        if (i % 7 === 0) {
+          const roll = random()
+          if (roll < 0.75) {
+            const own = theatre.sky.map((bunch, slot) => (bunch.colour === theatre.troop.kind ? slot : -1)).filter((slot) => slot >= 0)
+            tap(theatre, random() < 0.6 && own.length > 0 ? own[Math.floor(random() * own.length)] : Math.floor(random() * theatre.sky.length))
+          } else if (roll < 0.85) { theatre.press(waitingSpot(0, VIEW).x, GROUND + 0.8, VIEW); theatre.cancel() }
+          else { theatre.press((random() - 0.5) * VIEW.width, (random() - 0.5) * VIEW.height, VIEW); theatre.cancel() }
+        }
+        theatre.sounds.length = 0
+        const kind = theatre.troop.kind
+        theatre.step(1 / 60)
+        const heard = theatre.sounds.filter((sound) => sound.voice === `${kind}Catch`).length
+        if (heard === 0) continue
+        catches += heard
+        // Each catch that sounds belongs to a friend whose catch is being played, or is the next thing it does.
+        const taking = actors().filter((actor) => actor.clip === 'catch' || actor.next === 'catch' || actor.after === 'catch').length
+        expect(taking, `age ${age}, seed ${seed}, frame ${i}`).toBeGreaterThan(0)
+      }
+    }
+    expect(catches).toBeGreaterThan(100)
+  }, 60_000)
 
   it('draws every balloon in front at one size, also where balloons are drawn larger: in the sky, in a hand, on its way, beside a friend, carrying one off and passing by', () => {
     const big = SMALL.balloon
