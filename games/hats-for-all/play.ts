@@ -141,7 +141,8 @@ export class Play {
 
   get hatCount(): number { return this.hats.length }
   hatKind(hat: number): HatKind { return this.hats[hat].kind }
-  seen(hat: number): Seen { return this.hats[hat].seen }
+  /** Where a hat is seen to be. A hat this tile does not have is nowhere but in a tile. */
+  seen(hat: number): Seen { return this.hats[hat]?.seen ?? { at: 'tile' } }
   get cast(): string[] { return [...this.actors.keys()] }
   has(who: string): boolean { return this.actors.has(who) }
   kindOf(who: string): CreatureKind { return this.actors.get(who)!.kind }
@@ -253,7 +254,9 @@ export class Play {
 
   /** A hat sets off for a new place, from wherever it is this instant; `land` runs when it comes down. */
   moveHat(hat: number, to: Seen, travel: Travel, land: (() => void) | null = null): void {
-    const h = this.hats[hat], pose = h.pose
+    const h = this.hats[hat]
+    if (!h) return
+    const pose = h.pose
     this.landNow(h)
     h.seen = to
     const target = this.restHat(hat, { ...pose }), far = Math.hypot(target.x - pose.x, target.z - pose.z)
@@ -271,6 +274,7 @@ export class Play {
   /** The child holds a hat: it follows the finger. */
   holdHat(hat: number, x: number, y: number, z: number): void {
     const h = this.hats[hat]
+    if (!h) return
     this.landNow(h)
     h.seen = { at: 'hand' }
     h.hand.x = x; h.hand.y = y; h.hand.z = z

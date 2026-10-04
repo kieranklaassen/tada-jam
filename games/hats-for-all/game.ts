@@ -340,6 +340,8 @@ export class Game {
   }
 
   private archTapped(): void {
+    // A finger that was on the arch before a scene began is not a touch on that scene: when it lifts, the scene plays on to its end.
+    if (this.scene) return
     if (this.saved.finished) return this.show(nextCrewShow(this))
     this.play.arch.v += 2.2
     this.play.cue('hoot', hoot(this.next()))
@@ -388,7 +390,7 @@ export class Game {
           if (object === 'tower-top' && action === 'to-tile' && event.from.at === 'head') {
             play.cue('zrrp', zrrp(this.next()), 0.08)
             const under = this.at(event.from.spot), left = play.has(under) ? play.hatOn(under, event.from.level - 1) : null
-            if (left !== null) play.after(0.08, () => play.spinHat(left))
+            if (left !== null) this.later(0.08, () => play.spinHat(left))
           }
         })
       } else if (event.to.at === 'loose') {
@@ -446,10 +448,10 @@ export class Game {
     const play = this.play
     play.cue('bap', bap(this.saved.tile[hats[hats.length - 1]], this.next()))
     play.act(who, 'salutes-and-topples')
-    play.after(0.5, () => { if (play.has(who)) this.crumbsAt(who, this.saved.tile[hats[hats.length - 1]], 8) })
+    this.later(0.5, () => { if (play.has(who)) this.crumbsAt(who, this.saved.tile[hats[hats.length - 1]], 8) })
     play.cue('whistle', whistle(this.next()), 0.35)
     // They leave from the top down, a moment apart, so no hat flies through the one above it.
-    hats.forEach((hat, level) => play.after(0.5 + (hats.length - 1 - level) * 0.14, () => {
+    hats.forEach((hat, level) => this.later(0.5 + (hats.length - 1 - level) * 0.14, () => {
       const kind = this.saved.tile[hat]
       // Unless the child has already taken it somewhere else.
       if (play.seen(hat).at === 'head' && placeOf(worldOf(this.saved), hat).at === 'tile') play.moveHat(hat, { at: 'tile' }, 'pop', () => play.cue('fwump', fwump(kind, this.next())))
@@ -460,6 +462,16 @@ export class Game {
   private crumbsAt(who: string, kind: HatKind, count: number): void {
     const at = this.play.actorPose(who, this.crumbPose)
     this.play.puff(at.x, BODY[this.play.kindOf(who)].top * 0.9, at.z + CREATURE_DEPTH / 2 + 0.3, count, kind)
+  }
+
+  /**
+   * Something a little later that is about the hats and creatures on the stage now. If a new tile has been laid by
+   * then (a touch ended the walk-in early, and the theatre ran what was pending), it is about things that are gone,
+   * and does not happen.
+   */
+  private later(seconds: number, run: () => void): void {
+    const laid = this.tileLaid
+    this.play.after(seconds, () => { if (laid === this.tileLaid) run() })
   }
 
   /** A creature's own reaction to exactly this kind of hat: its act, and for the one act that is a drum roll of feet, the patter of them. */
@@ -496,13 +508,13 @@ export class Game {
       for (const other of this.saved.crew) {
         if (other.hats.length > 0) continue
         play.look(other.kind, spotX(creature.spot), ROW_Z, 0.9, 0.7)
-        play.after(0.9, () => { if (play.has(other.kind) && play.worn(other.kind) === 0) play.act(other.kind, 'pats-its-bare-head') })
+        this.later(0.9, () => { if (play.has(other.kind) && play.worn(other.kind) === 0) play.act(other.kind, 'pats-its-bare-head') })
       }
     } else {
       if (object === 'loose-hat') play.act(who, 'ducks-under')
       else this.reacts(who, kind)
       // A hat off the floor is ducked under first; then, like any hat, it gets this creature's own reaction to exactly this hat.
-      if (object === 'loose-hat') play.after(ACTS['ducks-under'].lasts + 0.06, () => { if (play.has(who) && play.hatOn(who, 0) === hat && play.worn(who) === 1 && !play.walking(who) && play.acting(who) === null) this.reacts(who, kind) })
+      if (object === 'loose-hat') this.later(ACTS['ducks-under'].lasts + 0.06, () => { if (play.has(who) && play.hatOn(who, 0) === hat && play.worn(who) === 1 && !play.walking(who) && play.acting(who) === null) this.reacts(who, kind) })
       this.says(who, moodFor(tasteFor(creature.kind, kind)), 0.1)
     }
     if (creature.hats.length === 1) play.everyoneLooks(spotX(creature.spot), ROW_Z, 1.2, who)
@@ -546,7 +558,7 @@ export class Game {
     } else if (action === 'to-tile') {
       act(who, 'shakes-its-hat-out'); play.cue('flap', flap(this.next()), 0.4); this.says(who, 'ask', 0.9)
       // Nothing falls out, and it shrugs.
-      play.after(ACTS['shakes-its-hat-out'].lasts + 0.06, () => { if (play.has(who) && !play.walking(who) && play.acting(who) === null) play.act(who, 'shrugs') })
+      this.later(ACTS['shakes-its-hat-out'].lasts + 0.06, () => { if (play.has(who) && !play.walking(who) && play.acting(who) === null) play.act(who, 'shrugs') })
     } else {
       play.act(who, 'twangs-holding-its-hat'); play.cue('dwong', dwong(this.next())); this.says(who, 'plain', 0.3)
     }

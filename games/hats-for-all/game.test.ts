@@ -981,3 +981,50 @@ describe('what the fourth reading found', () => {
     }
   })
 })
+
+describe('what the lead\'s reader found', () => {
+  it('a touch that ends the walk-in early, while a toppled tower\'s hats are still on their way home, throws nothing and is answered', () => {
+    for (const seed of [3, 5, 77, 1234]) {
+      const game = new Game({ ...saveOf(everything()), finished: true, seed }), heard: { at: number; name: string }[] = []
+      // A third hat on the tower: it topples, and its hats are sent home a moment apart.
+      game.press({ type: 'hat', hat: 4 })
+      game.dragStart()
+      game.dragTo(0, 2, 1, 0.5, 0.2)
+      run(game, 0.2, heard)
+      game.letGo({ on: 'creature', who: 'flop' })
+      run(game, 0.3, heard)
+      // The arch at once: the next crew walks in, with a tile of its own, which may hold fewer hats.
+      game.press({ type: 'arch' })
+      game.tap()
+      expect(game.sceneRunning).toBe(true)
+      run(game, 0.05, heard)
+      // And a touch at once: the scene ends, the new tile is laid and everything pending is run.
+      expect(() => { game.press({ type: 'floor', x: 0, z: 6 }); game.pressEnd() }).not.toThrow()
+      expect(run(game, 0.5, heard)).toContain('squeak')
+      expectStageIsWorld(game)
+      run(game, 3)
+      expectStageIsWorld(game)
+    }
+  })
+
+  it('a finger held on the arch while the first parade starts does not cut it: when the finger lifts the parade plays on to its end, and then the arch brings the next crew', () => {
+    const game = new Game(at('two-heads'))
+    while (carefulTap(game)) run(game, 0.7)
+    game.press({ type: 'arch' })
+    run(game, ALONE + 0.4)
+    expect(game.seen.at(-1)).toBe('the-parade')
+    expect(game.sceneRunning).toBe(true)
+    game.tap()
+    expect(game.seen.at(-1)).toBe('the-parade')
+    expect(game.sceneRunning).toBe(true)
+    // It marches: someone is still walking a second later, and the scene ends by itself with the crew on its spots.
+    run(game, 1.5)
+    expect(game.play.cast.some((who) => game.play.walking(who))).toBe(true)
+    while (game.sceneRunning) run(game, 0.5)
+    expect(game.saved.finished).toBe(true)
+    expectStageIsWorld(game)
+    game.press({ type: 'arch' })
+    game.tap()
+    expect(game.seen.at(-1)).toBe('a-crew-walks-in')
+  })
+})
