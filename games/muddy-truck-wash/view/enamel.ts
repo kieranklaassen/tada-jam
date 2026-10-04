@@ -4,7 +4,7 @@ import * as THREE from 'three'
 // lit from a small procedural matcap (a studio softbox, a sharp glint and a
 // horizon), chipped to bare zinc on its edges, and carrying what the wash has
 // left on it: mud, foam, water and shine, read from two small textures that
-// the surface grid is written into. Colours are authored as they are shown
+// the surface grid is written into. Foam above wet paint runs down it. Colours are authored as they are shown
 // (the renderer converts nothing).
 
 const MATCAP = 128
@@ -118,6 +118,8 @@ void main() {
   vSurface = surface;
   vRest = rest;
   vMaskUv = (rest.xy - uSide.xy) / uSide.zw;
+  // A face that looks up, a roof or a bonnet's top, carries what the top row of the side under it carries: it reads the grid half a patch lower. The grid is seven patches high.
+  vMaskUv.y -= (0.5 / 7.0) * smoothstep(0.6, 0.95, n.y);
   vec4 world = modelMatrix * local;
   vWorld = world.xyz;
   vWorldNormal = normalize(mat3(modelMatrix) * n);
@@ -225,6 +227,11 @@ void main() {
   vec3 suds = mix(vec3(0.8, 0.88, 0.96), vec3(1.0), smoothstep(0.05, 0.4, cell)) * (0.8 + 0.26 * diffuse);
   suds = mix(suds, suds * vec3(0.78, 0.62, 0.44), brown * (0.55 + 0.45 * noise.g));
   col = mix(col, suds, foam);
+  // Suds run down wet paint from the foam on the patch above: a few thin streaks, each its own length. The grid is seven patches high.
+  float above = texture2D(uMaskA, vMaskUv + vec2(0.0, 0.6 / 7.0)).b * masked;
+  vec4 streak = texture2D(uNoise, vec2(vRest.x * 2.6 + 0.13, 0.31));
+  float runs = wet * (1.0 - foam) * smoothstep(0.74, 0.84, streak.g) * smoothstep(0.2 + 0.6 * streak.r, 0.35 + 0.6 * streak.r, above) * smoothstep(0.2, 0.7, n.z);
+  col = mix(col, suds, runs * 0.8);
 
   // The idle glow: a warm light on the edges that face away, so it reads on paint, mud and foam alike.
   col += uGlow * vec3(1.0, 0.9, 0.55) * (0.03 + 1.1 * pow(1.0 - clamp(n.z, 0.0, 1.0), 2.4));

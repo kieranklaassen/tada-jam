@@ -5,9 +5,11 @@ import { CHARACTERS, CUSTOMERS } from './customers'
 import { IdleLadder } from './guidance'
 import { Kitchen } from './kitchen'
 import type { Kind } from './kinds'
-import { BOARD, CARD, COUNTER_Y, CUSTOMER, DOOR, DOOR_SIZE, OVEN, OVEN_WAY, PIECE_R, PIZZA, SERVE, STAGE_H, STAGE_W, TUB, tubPlace } from './layout'
+import { BOARD, CARD, CARD_HOLD, COUNTER_Y, CUSTOMER, DOOR, DOOR_SIZE, OVEN, OVEN_WAY, PIECE_R, PIZZA, SERVE, STAGE_H, STAGE_W, TUB, fit, toStage, tubPlace } from './layout'
 import { useCanvases } from './marker'
-import { CORNER } from './overlay'
+import { CORNER, inCorner } from './overlay'
+import { rollsIn } from './pieceMotion'
+import { handOnStage } from './pose'
 import { Recording, recordingCanvases } from './recording'
 import { freshSave } from './save'
 import { doorSpot } from './staging'
@@ -31,6 +33,13 @@ import { KitchenView, type Show } from './view'
 //   1.5 s for a bake and a pizza handed back together (1.25 s measured).
 // - A customer walking from the door passes in front of the other one who
 //   waits there. Capped at 1.4 s a stepping up.
+// - The pizza turns and stretches a little under a landing and a tap, and each
+//   piece on it bobs on its spring: a piece is drawn off its spot by that
+//   much while the springs settle. Capped at 16 units.
+// - An olive comes down a finger-width short of its spot and rolls there, and
+//   a pepper a little short and skids, as the sheet has it, so each is drawn
+//   off its spot while it does. Capped at that distance, for the first 0.4 s
+//   after it lands.
 
 const W = 1180, H = 820
 let surface: Recording
@@ -42,6 +51,9 @@ beforeAll(() => {
   view = new KitchenView({ getContext: () => surface } as unknown as HTMLCanvasElement)
   view.resize(W, H, 1)
 })
+
+/** How far the jiggle of the pizza and the bob of a piece may carry a piece from its spot, in stage units. */
+const JIGGLE_CAP = 16
 
 type Found = { pieceOnPiece: number; pieceOffPizza: number; drawnAstray: number; pizzaOnTub: number; pizzaOnCard: number; pizzaInWallFrames: number; worstPieceGap: number; frames: number }
 
@@ -76,7 +88,12 @@ function measure(kitchen: Kitchen, found: Found): Show {
     for (const piece of pieces) {
       const x = show.pizza.x + piece.x * PIZZA.r * show.pizza.size, y = show.pizza.y + piece.y * PIZZA.r * show.pizza.size
       // A piece is drawn on its spot. While its baking move plays it may hop a little off it, and comes back.
-      if (!stamped.some((s) => Math.hypot(s.x - x, s.y - y) < (show.baking > 0 ? 18 : 6))) found.drawnAstray += 1
+      // Allowed, with a cap: an olive comes down a finger-width short and rolls to its spot in a third of a second,
+      // and a pepper skids a little, as the sheet has it, so for that moment each is drawn up to that far from where
+      // it lies and no further.
+      // And the pizza jiggles under a landing and a tap, with everything on it, while each piece bobs on its own
+      // spring: that is the toy's weight, and it is sized to be seen. Capped at 16 units, well under a piece's width.
+      if (!stamped.some((s) => Math.hypot(s.x - x, s.y - y) < (show.baking > 0 ? 18 : 6) + (piece.age < 0.4 ? rollsIn(piece.kind) : 0) + JIGGLE_CAP)) found.drawnAstray += 1
     }
   }
   return show
@@ -157,8 +174,40 @@ describe('where things stand', () => {
       expect(small.x - CHARACTERS[who].halfWidth * DOOR_SIZE).toBeGreaterThanOrEqual(DOOR.x - DOOR.w / 2)
       expect(big.x + CHARACTERS[who].halfWidth * DOOR_SIZE).toBeLessThanOrEqual(DOOR.x + DOOR.w / 2)
     }
-    // The card answers a touch, so it stays out of the corner the grown-up overlay listens in.
+    // The card answers a touch, and the corner the grown-up overlay listens in is measured in the surface's own
+    // pixels: at the stage's own size the card is clear of it, and on a smaller surface it is not.
     expect(CARD.x + CARD.w < STAGE_W - CORNER || CARD.y > CORNER).toBe(true)
+    const narrow = fit(590, 410)
+    const corner = toStage(narrow, 590 - CORNER / 2, CORNER - 12)
+    expect(corner.x > CARD.x && corner.x < CARD.x + CARD.w && corner.y > CARD.y && corner.y < CARD.y + CARD.h).toBe(true)
+    // So the Mount tells the kitchen which presses landed there, and nothing answers them (kitchen.test.ts).
+    expect(inCorner(590 - CORNER / 2, CORNER - 12, 590)).toBe(true)
+    expect(inCorner(590 - CORNER - 1, CORNER / 2, 590)).toBe(false)
+    expect(inCorner(590 - CORNER / 2, CORNER + 1, 590)).toBe(false)
+    expect(inCorner(10, 10, 0)).toBe(false)
+  })
+
+  it('holds the card by its corner, clear of every picture on it, and keeps the hand there while the customer sways', () => {
+    const HAND = 23
+    for (const id of LADDER) {
+      for (let seed = 1; seed <= 12; seed++) {
+        const kitchen = new Kitchen({ ...freshSave(null), position: id, shown: ['tap-a-tub', 'to-the-oven'] }, seed)
+        const order = kitchen.toSave().order!
+        for (const p of layOut(order.wanted, order.picture, order.seed)) {
+          expect(Math.hypot(CARD.x + p.x - CARD_HOLD.x, CARD.y + p.y - CARD_HOLD.y), `${id} seed ${seed}`).toBeGreaterThanOrEqual(HAND + PICTURED_R + 8)
+        }
+      }
+    }
+    // Forty seconds of idling, with its glances at the card and all its own small moves: the hand does not leave the corner.
+    for (const seed of [3, 4, 5, 6, 7]) {
+      const kitchen = new Kitchen({ ...freshSave(null), position: LADDER[5], shown: ['tap-a-tub', 'to-the-oven'] }, seed)
+      for (let i = 0; i < 40 * 60; i++) {
+        kitchen.step(1 / 60)
+        const c = kitchen.show(new IdleLadder(0).update(0)).customer!
+        const on = handOnStage(c.pose, c.pose.handR!)
+        expect(Math.hypot(c.x + on.x - CARD_HOLD.x, c.y + on.y - CARD_HOLD.y), `seed ${seed} at ${i}`).toBeLessThan(0.5)
+      }
+    }
   })
 
   it('draws the pictures on the card clear of each other and of its border, for every order of every place', () => {
@@ -225,7 +274,7 @@ describe('what moves', () => {
       }
       watch(kitchen, 0.6, found)
       slide(kitchen, 0, -60, found)
-      watch(kitchen, 7.4, found)
+      watch(kitchen, 9, found)
       expect(kitchen.toSave().finished, `${place}: eaten, with ${JSON.stringify(kitchen.toSave().order)} and ${kitchen.table.pieces.map((p) => p.kind).join(' ')}; pushed back ${kitchen.toSave().pushedBack}`).toBe(true)
       // The next customer, by each roll in turn, and a piece fed by hand on the way.
       const spot = doorSpot(seed % 2 === 0 ? 'big' : 'small')
@@ -314,7 +363,7 @@ describe('what moves', () => {
       slide(kitchen, 100, 0, found)
       watch(kitchen, 3.2, found)
       slide(kitchen, 0, -60, found)
-      watch(kitchen, 7.4, found)
+      watch(kitchen, 9, found)
       const spot = doorSpot(which)
       kitchen.press(spot.x, spot.y - 50)
       kitchen.tap()

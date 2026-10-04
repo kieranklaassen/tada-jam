@@ -144,6 +144,8 @@ export const WORK: Readonly<Record<Tool, readonly Patch[]>> = { hose: ['c', 'b',
  * The tool a wash would take up next, or null when the vehicle is all shiny.
  * Mud comes before foam and foam before drying: dried mud wants the hose,
  * soft mud the sponge, foam the hose again, and clean paint the cloth.
+ * The game never shows this to the child: it is the designed order written
+ * down once, and the tests wash a vehicle by it.
  */
 export function nextTool(surface: Surface): Tool | null {
   const has = (patches: readonly Patch[]): boolean => surface.some((patch) => patches.includes(patch))

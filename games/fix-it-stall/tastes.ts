@@ -29,13 +29,13 @@ const TASTES: Record<Who, readonly Taste[]> = {
   owl: [
     when((h) => h.light === 3, 'disgust', 'owl-cap-down-head-right-round'),
     when((h) => h.light === 1, 'delight', 'owl-settles-in-the-glow'),
-    when((h) => h.light > 0 && h.canPutOut, 'delight', 'owl-puts-it-out-and-on-again'),
+    when((h) => h.canPutOut, 'delight', 'owl-puts-it-out-and-on-again'),
   ],
-  // Cannot leave a lamp alone. Likes the brightest lamp there is. Dislikes a fan's wind, and the dark.
+  // Cannot leave a lamp alone. Likes the brightest lamp there is, and more lamps than one. Dislikes a fan's wind, and the dark.
   moth: [
     when((h) => h.wind < 0, 'delight', 'moth-rides-the-blade', true),
     when((h) => h.wind > 0, 'fright', 'moth-pinned-to-the-post'),
-    when((h) => h.light === 3, 'delight', 'moth-bumps-the-glass-in-bliss'),
+    when((h) => h.light === 3 || (h.light === 2 && h.lit >= 2), 'delight', 'moth-bumps-the-glass-in-bliss'),
     when((h) => h.light === 2, 'content', 'moth-circles-the-lamp'),
     when((h) => h.light <= 1, 'sulk', 'moth-droops'),
   ],
@@ -71,6 +71,13 @@ export function reaction(who: Who, handed: Handed): Reaction {
   if (!handed.ran) {
     // It does not run. A popped flag is sudden, and only the tortoise minds that; everyone else just tries it twice.
     if (handed.popped && who === 'tortoise') return { mood: 'fright', act: 'tortoise-stays-in-a-beat-longer' }
+    // A fan that sucks is not mended, and is tried all the same: while it is on, the moth is taken for a ride round
+    // the blade and the yak's fringe goes in. Then it is laid back like any other that does not run.
+    if (handed.wind < 0 && who === 'moth') return { mood: 'delight', act: 'moth-rides-the-blade', secret: true }
+    if (handed.wind < 0 && who === 'yak') return { mood: 'disgust', act: 'yak-fringe-goes-in' }
+    // The same for a lamp that stays dark when it is tried: the cockatoo is asleep at once and the moth droops, and it is laid back.
+    if (handed.dark && who === 'cockatoo') return { mood: 'asleep', act: 'cockatoo-asleep-at-once' }
+    if (handed.dark && who === 'moth') return { mood: 'sulk', act: 'moth-droops' }
     return { mood: 'shrug', act: `${who}-tries-it-twice-and-lays-it-back` }
   }
   for (const taste of TASTES[who]) {

@@ -22,7 +22,7 @@ export type WashState = GameState & {
   bay: { who: VehicleId; cells: string; came: number }
   /** The vehicle that waits at the door, with whatever the puddle or a flying blob has put on it, and how many times it has been through the puddle (0 to 2). Nothing shows the number. */
   next: { who: VehicleId; cells: string; dips: number }
-  /** The state of the seeded stream that picks who waits next and lays out mud. Not a count of anything. */
+  /** The state of the seeded stream that lays out the mud of each vehicle as it comes to the door. It does not pick who comes: the roster comes in its own order. Not a count of anything. */
   seed: number
   /** The first showings that have played. */
   shown: Showing[]
@@ -114,10 +114,12 @@ export function markShown(state: WashState, id: Showing): WashState {
 export function throughPuddle(state: WashState): WashState {
   const before = decode(state.next.cells)
   if (!before || state.next.dips >= MAX_DIPS) return state
-  const [, seed] = draw(state.seed)
+  // Where its splashes land is drawn from the saved seed and the trip's number, and the seed itself is left as it is:
+  // the seed is for the mud of vehicles coming to the door, and the puddle changes only this vehicle's mud and its count of trips.
+  const [, splash] = draw((state.seed ^ ((state.next.dips + 1) * 0x9e3779b1)) >>> 0)
   // Until the first showing has played, no mud lands on the dried patch it needs.
   const keep = keptForShowing(vehicle(state.next.who), before, state.shown)
-  return { ...state, seed, next: { ...state.next, cells: encode(puddled(before, state.next.dips, seed, keep)), dips: state.next.dips + 1 } }
+  return { ...state, next: { ...state.next, cells: encode(puddled(before, state.next.dips, splash, keep)), dips: state.next.dips + 1 } }
 }
 
 export type SendOff = { state: WashState; outcome: CycleOutcome; left: VehicleId }

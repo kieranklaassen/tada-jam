@@ -1,12 +1,13 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 import { LADDER } from './config'
+import { CHARACTERS, CUSTOMERS } from './customers'
 import { IdleLadder } from './guidance'
 import { Kitchen } from './kitchen'
-import type { Kind } from './kinds'
+import { KINDS, type Kind } from './kinds'
 import { PIZZA, tubPlace } from './layout'
 import { useCanvases } from './marker'
 import { Recording, recordingCanvases } from './recording'
-import { freshSave, type Save } from './save'
+import { deserialize, freshSave, serialize, type Save } from './save'
 import { KitchenView } from './view'
 
 // Frame budget, counted rather than timed, so it holds on a busy CI runner.
@@ -15,8 +16,15 @@ import { KitchenView } from './view'
 // real view draws into a recording context and the counts are held here, in
 // the heaviest moments a child can reach.
 
-/** What a frame may cost. Measured on 2026-10-03: 43 stamps and 61 pen strokes and fills with a full pizza, the glow and the hand; 35 and 68 at the worst of a tasting. */
-const BUDGET = { stamps: 56, pen: 96, fullSurface: 1 }
+/**
+ * What a frame may cost. Measured on 2026-10-03 after the look pass: 55 stamps and 103 pen strokes and fills with
+ * a full pizza, the glow and the hand; 47 and 113 at the worst of an ordinary tasting. Six puffs of flour and a
+ * bird can come on top of the first. Measured again on 2026-10-04 with each customer's answer to the kind it
+ * cannot stand: 150 pen strokes and fills at the worst (every hair on Mops on end while an eye rolls), 143 for
+ * Grum's lit belly and steam, and the frame's work in a browser at that moment was 0.6 ms. The jam's bar is
+ * under about 80 draws.
+ */
+const BUDGET = { stamps: 68, pen: 160, fullSurface: 1 }
 const W = 1180, H = 820, RATIO = 2
 
 let canvases: ReturnType<typeof recordingCanvases>
@@ -55,9 +63,9 @@ function frame(kitchen: Kitchen, idle: number): { stamps: number; pen: number; f
 describe('frame budget', () => {
   it('draws every sprite once, when the surface is sized, and none in a frame', () => {
     const made = canvases.made()
-    // The wall, the lip, the board, two ovens, two pizzas, the card, two rolls, six tubs, six pieces, five bodies, the halo, the hand, the crumbs.
-    expect(made).toBeGreaterThanOrEqual(30)
-    expect(made).toBeLessThanOrEqual(40)
+    // The wall, the lip, the board, two ovens, two pizzas, the card, two rolls, six tubs, six pieces raw and six baked, five bodies big and five small, two flames, a cloud, a bird, smoke, flour, the halo, the hand, the crumbs.
+    expect(made).toBeGreaterThanOrEqual(40)
+    expect(made).toBeLessThanOrEqual(52)
     const { kitchen } = busy(1)
     for (let i = 0; i < 120; i++) {
       kitchen.step(1 / 60)
@@ -101,9 +109,40 @@ describe('frame budget', () => {
     watch(3.2)
     slide(0, -60)
     expect(kitchen.busy).toBe(true)
-    watch(8.5)
+    watch(9.5)
     expect(worst.stamps).toBeLessThanOrEqual(BUDGET.stamps)
     expect(worst.pen).toBeLessThanOrEqual(BUDGET.pen)
+  })
+
+  it('keeps every customer\'s answer to the kind it cannot stand, and the mime of every missing kind, inside the budget', () => {
+    let worst = { stamps: 0, pen: 0, full: 0 }
+    for (const who of CUSTOMERS) {
+      const c = CHARACTERS[who]
+      const others = CUSTOMERS.filter((other) => other !== who)
+      for (const also of KINDS.filter((kind) => kind !== c.loves && kind !== c.cannotStand)) {
+        const save: Save = { ...freshSave(null), position: LADDER[6], shown: ['tap-a-tub', 'to-the-oven'], customer: who, order: { wanted: [{ kind: c.loves, count: 2 }, { kind: also, count: 2 }], picture: 'rows', seed: 3 }, tubs: [c.loves, also, c.cannotStand], waiting: { small: others[0], big: others[1] } }
+        const kitchen = new Kitchen(deserialize(serialize(save), null), 7)
+        const at = tubPlace(2, 3)
+        for (let i = 0; i < 2; i++) {
+          kitchen.press(at.x, at.y)
+          kitchen.tap()
+          for (let f = 0; f < 30; f++) kitchen.step(1 / 60)
+        }
+        for (const [dx, dy, seconds] of [[100, 0, 3.2], [0, -60, 9]] as const) {
+          kitchen.press(PIZZA.x, PIZZA.y + PIZZA.r * 0.95)
+          kitchen.dragMove(PIZZA.x + dx, PIZZA.y + PIZZA.r * 0.95 + dy)
+          kitchen.dragEnd()
+          for (let i = 0; i < seconds * 60; i++) {
+            kitchen.step(1 / 60)
+            const cost = frame(kitchen, 0)
+            worst = { stamps: Math.max(worst.stamps, cost.stamps), pen: Math.max(worst.pen, cost.pen), full: Math.max(worst.full, cost.full) }
+          }
+        }
+      }
+    }
+    expect(worst.stamps).toBeLessThanOrEqual(BUDGET.stamps)
+    expect(worst.pen).toBeLessThanOrEqual(BUDGET.pen)
+    expect(worst.full).toBe(1)
   })
 
   it('reports what it drew to the grown-up handle', () => {

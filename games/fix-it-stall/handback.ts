@@ -20,6 +20,8 @@ export type Handed = {
   popped: boolean
   /** The brightest lamp. */
   light: Level
+  /** How many lamps are lit. */
+  lit: number
   /** The gadget has a lamp, and none is lit. */
   dark: boolean
   /** The fastest blade: positive blows, negative sucks. */
@@ -92,6 +94,7 @@ export function handBack(circuit: Circuit): Handed {
     const off = read({ ...settled.circuit, parts: parts.map((p, i): Part => (i === s && p.kind === 'switch' ? { ...p, down: false } : p)) })
     return parts.every((p, i) => !(p.kind === 'lamp' || p.kind === 'motor' || p.kind === 'buzzer') || Math.abs(off.parts[i]) < RUNS_FROM)
   })
-  const shiny = parts.some((part, i) => part.kind === 'odd' && part.what !== 'pencil' && oddResistance(part.what) !== null && Math.abs(currents[i]) >= RUNS_FROM)
-  return { ran, popped, light, dark: lamps > 0 && light === 0, wind: wind as Handed['wind'], sound, buzzing: running.buzzer, canPutOut, lid: lidOf(circuit), shiny }
+  // Seated on the board or hanging in the loop by its leads, it is in the mend either way.
+  const shiny = all.some(({ part, current }) => part.kind === 'odd' && part.what !== 'pencil' && oddResistance(part.what) !== null && Math.abs(current) >= RUNS_FROM)
+  return { ran, popped, light, lit: running.lamp, dark: lamps > 0 && light === 0, wind: wind as Handed['wind'], sound, buzzing: running.buzzer, canPutOut, lid: lidOf(circuit), shiny }
 }

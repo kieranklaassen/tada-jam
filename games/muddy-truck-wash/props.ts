@@ -9,24 +9,57 @@ import type { Tool } from './surface'
 export const LAYOUT = {
   /** Where the vehicle being washed stands. */
   bay: { x: 0, z: 0 },
-  /** Where the next one waits, nose at the door. */
-  door: { x: 6.15, z: -0.6 },
+  /** Where the next one waits, nose at the door: far enough along that its nose is clear of the tail of the one in the bay as the child sees them. */
+  door: { x: 6.7, z: -0.6 },
   /** The far end a vehicle leaves by, past the rack. */
   exit: { x: -13.5, z: -0.5 },
-  /** The mud puddle in the yard. */
-  puddle: { x: 4.1, z: 1.45, rx: 0.78, rz: 0.5 },
+  /** The mud puddle in the yard: toward the child from the vehicle that waits, with clear dirt between the two, so a finger on one is not on the other. */
+  puddle: { x: 4.45, z: 2.05, rx: 0.7, rz: 0.48 },
   /** The rack stands toward the child, clear of the lane the vehicles leave by. */
   rack: { x: -4.45, z: 1.6 },
   /** The tap on the rack's long arm, over the nose of the vehicle in the bay. It lets a drop go only in the first showing. */
-  tap: { x: -1.85, y: 3.8, z: 0.3, hang: 4.12 },
+  tap: { x: -1.45, y: 3.8, z: 0.3, hang: 4.12 },
   wall: { z: -2.7 },
   /** The wet pad of the bay, in x and z. */
   pad: { x0: -3.2, x1: 3.0, z0: -1.9, z1: 2.0 },
   /** The drain at the front of the pad. */
   drain: { x: 0.2, z: 1.62 },
+  /** Water standing on the open floor in front of the pad: two thin pools, each an oval in x and z. */
+  pools: [{ x: -1.3, z: 3.75, rx: 1.25, rz: 0.5 }, { x: 1.75, z: 4.6, rx: 1.0, rz: 0.42 }],
+  /** The red water pipe along the back wall. */
+  pipe: { x0: -6.0, x1: 3.6, y: 3.55, r: 0.11 },
+  /** The suds bucket the sponge lives on, beside the rack's post: how far from the post, how wide at the rim, how high. */
+  bucket: { dx: 0.66, r: 0.52, top: 0.78 },
   /** Where the yard's dirt begins. */
   yardFrom: 3.3,
+  /** The shelf of soap on the back wall: the middle of its board. */
+  shelf: { x: -0.7, y: 4.25, w: 2.5 },
+  /** The window high in the back wall, in x and y. */
+  window: { x0: 1.2, x1: 2.85, y0: 4.0, y1: 4.98 },
+  /** The roller brush that stands at the wall behind the tail of the vehicle in the bay: its foot. */
+  roller: { x: 2.35, z: -2.26, y0: 0.38, y1: 3.42 },
+  /** The pinwheel on its pole in the yard: its hub. */
+  pinwheel: { x: 5.05, y: 2.05, z: -3.7 },
+  /** The lamp that hangs over the rack's end of the bay: the bottom of its shade. */
+  lamp: { x: -2.9, y: 4.55, z: -1.7 },
+  /** The yard's hill: a flat-topped bank of packed dirt the queue comes down. */
+  hill: { x: 11.6, z: -9.6, foot: 6.6, top: 5.8, h: 1.6 },
+  /**
+   * Where the two that are not yet at the door wait their turn, side by side on the hill, and how far each is turned
+   * toward the bay and the child. The head of the queue stands on the side it leaves by, round to the door; the other stands on the
+   * side the one that has just left comes back by, from behind the bay.
+   */
+  queue: [{ x: 12.0, z: -8.2, turn: 1.0 }, { x: 8.9, z: -8.9, turn: 0.9 }],
 } as const
+
+/** The hill's lower step of grass, round its far side: a second, wider and lower bank, set off from the hill's middle. */
+export const STEP = { x: LAYOUT.hill.x + 2.4, z: LAYOUT.hill.z - 2.0, foot: LAYOUT.hill.foot + 1.2, top: LAYOUT.hill.foot + 0.6, h: 0.7 } as const
+
+/** How high the yard's ground is at a spot: the floor, the hill, or the hill's lower step. */
+export function groundAt(x: number, z: number): number {
+  const bank = (b: { x: number; z: number; foot: number; top: number; h: number }): number => b.h * Math.max(0, Math.min(1, (b.foot - Math.hypot(x - b.x, z - b.z)) / (b.foot - b.top)))
+  return Math.max(bank(LAYOUT.hill), bank(STEP))
+}
 
 /** Where each tool hangs: its own origin in the world. */
 export const TOOL_HOME: Readonly<Record<Tool, readonly [number, number, number]>> = {
@@ -57,7 +90,11 @@ export function rackShape(): Shape {
   s.round(0.4, 0.62, PAINT.blue, { at: [x + 0.66, 0.43, z] }, { axis: 'y', r2: 0.5, segs: 20, bevel: 0.05 })
   s.round(0.52, 0.07, PAINT.zinc, { at: [x + 0.66, 0.74, z] }, { axis: 'y', mat: MAT.metal, segs: 20, bevel: 0.02 })
   s.ball(0.46, SUDS, { at: [x + 0.66, 0.72, z] }, { mat: MAT.soft, from: 0, squash: [1, 0.35, 1], segs: 16 })
-  // Two turns of hose on the middle arm; the nozzle hangs from them and is the tool.
+  // A reel on the middle arm: a dark back plate with a zinc boss, and two turns of hose round it. With the plate behind it the coil
+  // is a filled wheel and never an empty ring, whether the nozzle hangs in it or is in the hand.
+  s.round(0.35, 0.04, PAINT.charcoal, { at: [x + 0.63, 2.19, z - 0.2] }, { axis: 'z', segs: 24, bevel: 0.012 })
+  s.round(0.09, 0.07, PAINT.zinc, { at: [x + 0.63, 2.19, z - 0.185] }, { axis: 'z', mat: MAT.metal, segs: 12, bevel: 0.015 })
+  // The nozzle hangs in front of the plate, inside the turns, and is the tool.
   s.ring(0.44, 0.085, HOSE, { at: [x + 0.62, 2.2, z - 0.07] }, { mat: MAT.rubber, segs: 28, sides: 8 })
   s.ring(0.4, 0.085, HOSE, { at: [x + 0.65, 2.17, z + 0.09] }, { mat: MAT.rubber, segs: 28, sides: 8 })
   return s
@@ -109,8 +146,9 @@ export function bayShape(): Shape {
   const s = new Shape()
   const wall = LAYOUT.wall.z
   // A red water pipe along the wall, on zinc brackets, down to the rack.
-  s.round(0.11, 9.6, PAINT.red, { at: [-1.2, 3.55, wall + 0.2] }, { axis: 'x', segs: 12 })
-  for (const x of [-5.4, -2.4, 0.6]) s.box([0.16, 0.3, 0.3], PAINT.zinc, { at: [x, 3.55, wall + 0.14] }, { bevel: 0.04, mat: MAT.metal })
+  const pipe = LAYOUT.pipe
+  s.round(pipe.r, pipe.x1 - pipe.x0, PAINT.red, { at: [(pipe.x0 + pipe.x1) / 2, pipe.y, wall + 0.2] }, { axis: 'x', segs: 12 })
+  for (const x of [-5.4, -2.4, 0.6]) s.box([0.16, 0.3, 0.3], PAINT.zinc, { at: [x, pipe.y, wall + 0.14] }, { bevel: 0.04, mat: MAT.metal })
   // The door post: yellow with dark bands, and a lintel.
   const post = LAYOUT.yardFrom - 0.1
   s.box([0.36, 5.2, 0.36], PAINT.yellow, { at: [post, 2.6, wall + 0.2] }, { bevel: 0.05 })

@@ -77,11 +77,13 @@ export function paintCase(c: Ctx, x: number, y: number, w: number, h: number, bo
     c.lineTo(x - 24, y + 6 + ((h - 12) * i) / 6)
     c.stroke()
   }
-  c.beginPath()
-  c.ellipse(x - lw / 2 - 8, y + h / 2, 26, 62, 0, 0, Math.PI * 2)
+  // The window in the lid: a pane with square shoulders and a glint across it, so that it reads as glass and as nothing else.
+  roundRect(c, x - lw / 2 - 34, y + h / 2 - 58, 52, 116, 12)
   c.fillStyle = 'rgba(214, 236, 244, 0.85)'
   c.fill()
-  c.stroke()
+  // Two soft spots of daylight on it, one larger than the other.
+  disc(c, x - lw / 2 - 16, y + h / 2 - 34, 9, 'rgba(255, 255, 255, 0.55)')
+  disc(c, x - lw / 2 - 2, y + h / 2 - 44, 5, 'rgba(255, 255, 255, 0.45)')
   // Two hinge straps.
   c.fillStyle = INK.steelDark
   for (const hy of [y + 54, y + h - 78]) c.fillRect(x - 12, hy, 24, 24)
@@ -97,22 +99,43 @@ export function paintTray(c: Ctx, x: number, y: number): void {
     c.fillStyle = INK.trayEdge
     c.fill()
   })
-  const random = stream(23)
   for (let i = 0; i < 6; i++) {
     const cx = x + gap + (i % 2) * (cw + gap), cy = y + gap + Math.floor(i / 2) * (ch + gap)
     roundRect(c, cx, cy, cw, ch, 9)
     c.fillStyle = INK.tray
     c.fill()
-    const kind = TRAY[i]
-    for (let n = 0; n < (kind ? 3 : 0); n++) {
-      c.save()
-      c.translate(cx + 30 + random() * (cw - 60), cy + 26 + n * 34 + random() * 8)
-      c.rotate((random() - 0.5) * 1.1)
-      trayPiece(c, kind)
-      c.restore()
-    }
-    if (!kind) coil(c, cx + cw / 2, cy + ch / 2)
+    paintTrayPlace(c, i, cx, cy, 0)
   }
+}
+
+/** Where the three of each kind lie in their place of the tray, about its top left corner: scattered the same on every load. */
+const TRAY_LAY = (() => {
+  const random = stream(23)
+  return TRAY.map(() => [0, 1, 2].map((n) => ({ x: 30 + random() * (118 - 60), y: 26 + n * 34 + random() * 8, turn: (random() - 0.5) * 1.1 })))
+})()
+
+/**
+ * What lies in one place of the tray, the place's top left corner at `x`, `y`: three of a kind, or in the last place
+ * the coil of leads. `jolt` is 0 at rest; flicked, they swell where they lie and settle, drawn over themselves.
+ */
+export function paintTrayPlace(c: Ctx, i: number, x: number, y: number, jolt: number): void {
+  const kind = TRAY[i], swell = 1 + Math.abs(jolt) * 0.3
+  if (!kind) {
+    c.save()
+    c.translate(x + 118 / 2, y + 122 / 2)
+    c.scale(swell, swell)
+    coil(c, 0, 0)
+    c.restore()
+    return
+  }
+  TRAY_LAY[i].forEach((lay, n) => {
+    c.save()
+    c.translate(x + lay.x, y + lay.y)
+    c.rotate(lay.turn + jolt * 0.2 * (n - 1))
+    c.scale(swell, swell)
+    trayPiece(c, kind)
+    c.restore()
+  })
 }
 
 /** One part as it lies in the tray, drawn small about its own middle. */
@@ -161,6 +184,23 @@ export function coil(c: Ctx, x: number, y: number): void {
     c.ellipse(x + (i - 1.5) * 5, y + (i % 2 ? 4 : -4), 40 - i * 4, 34 - i * 5, i * 0.5, 0, Math.PI * 2)
     c.stroke()
   })
+  // Two clips stick out of it, so that it is a coil of leads and nothing else: steel jaws on a coloured boot.
+  for (const [cx, cy, turn, colour] of [[x + 34, y + 30, 0.7, INK.red], [x - 36, y + 26, 2.3, INK.blue]] as const) {
+    c.save()
+    c.translate(cx, cy)
+    c.rotate(turn)
+    c.fillStyle = colour
+    c.fillRect(-4, -4, 12, 8)
+    c.fillStyle = INK.steel
+    c.beginPath()
+    c.moveTo(8, -5)
+    c.lineTo(22, -1.5)
+    c.lineTo(22, 1.5)
+    c.lineTo(8, 5)
+    c.closePath()
+    c.fill()
+    c.restore()
+  }
 }
 
 /** The bench odds, lying loose in a row along the bottom of the mat. */

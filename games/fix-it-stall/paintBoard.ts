@@ -109,7 +109,8 @@ function paintCell(c: Ctx, u: number, part: Extract<Part, { kind: 'cell' }>): vo
   c.fillStyle = INK.plastic
   c.fill()
   roundRect(c, -u * 0.35, -u * 0.21, u * 0.64, u * 0.42, u * 0.07)
-  c.fillStyle = part.flat ? '#4a515a' : INK.cellBody
+  // A flat cell looks like any other: it is found by what it does, never by sight.
+  c.fillStyle = INK.cellBody
   c.fill()
   c.fillStyle = INK.cellBand
   c.fillRect(u * 0.07, -u * 0.21, u * 0.16, u * 0.42)
@@ -117,9 +118,9 @@ function paintCell(c: Ctx, u: number, part: Extract<Part, { kind: 'cell' }>): vo
   c.fillRect(-u * 0.35, -u * 0.19, u * 0.05, u * 0.38)
   roundRect(c, u * 0.29, -u * 0.09, u * 0.08, u * 0.18, u * 0.03)
   c.fill()
-  // The long daylight glint along the round body.
-  c.fillStyle = 'rgba(255, 255, 255, 0.22)'
-  c.fillRect(-u * 0.28, -u * 0.15, u * 0.54, u * 0.06)
+  // The daylight on the round body: two soft spots, one larger than the other. No bar, which on a cell would read as a sign.
+  disc(c, -u * 0.2, -u * 0.11, u * 0.045, 'rgba(255, 255, 255, 0.26)')
+  disc(c, -u * 0.08, -u * 0.12, u * 0.028, 'rgba(255, 255, 255, 0.2)')
   if (part.popped) paintFlag(c, u, 0)
 }
 
@@ -177,9 +178,11 @@ function paintLamp(c: Ctx, u: number, part: Extract<Part, { kind: 'lamp' }>): vo
   disc(c, 0, 0, u * 0.21, part.blown ? INK.glassBlown : INK.glass)
   c.lineWidth = u * 0.025
   c.strokeStyle = part.blown ? INK.black : INK.filament
+  // The filament: one small coil across the glass, a hoop between its two posts. Not a zigzag, which is a drawing's sign.
   c.beginPath()
-  c.moveTo(-u * 0.12, 0)
-  for (let i = 1; i <= 6; i++) c.lineTo(-u * 0.12 + (u * 0.24 * i) / 6, (i % 2 ? -1 : 1) * u * 0.045 * (i === 6 ? 0 : 1))
+  c.moveTo(-u * 0.11, u * 0.05)
+  c.quadraticCurveTo(-u * 0.11, -u * 0.07, 0, -u * 0.07)
+  c.quadraticCurveTo(u * 0.11, -u * 0.07, u * 0.11, u * 0.05)
   c.stroke()
   disc(c, -u * 0.08, -u * 0.09, u * 0.045, 'rgba(255, 255, 255, 0.8)')
 }
@@ -191,8 +194,9 @@ function paintMotor(c: Ctx, u: number): void {
   c.fill()
   c.fillStyle = INK.motorCap
   c.fillRect(-u * 0.3, -u * 0.17, u * 0.1, u * 0.34)
-  c.fillStyle = 'rgba(255, 255, 255, 0.35)'
-  c.fillRect(-u * 0.18, -u * 0.17, u * 0.42, u * 0.07)
+  // The daylight on the can: two soft spots, as on a cell. No bar, which would read as a sign.
+  disc(c, -u * 0.08, -u * 0.12, u * 0.045, 'rgba(255, 255, 255, 0.4)')
+  disc(c, u * 0.05, -u * 0.13, u * 0.028, 'rgba(255, 255, 255, 0.3)')
   disc(c, 0, 0, u * 0.06, INK.steelDark)
 }
 

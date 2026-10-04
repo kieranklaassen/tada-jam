@@ -44,12 +44,19 @@ export function silhouette(def: VehicleDef): Surface {
   for (let cell = 0; cell < CELLS; cell++) {
     let count = 0
     for (let i = 0; i < SAMPLES.length; i++) count += hits[cell * SAMPLES.length + i]
-    // At least two of the five points, so a patch that is mostly air stays empty.
-    surface.push(count >= 2 ? 'd' : '.')
+    // At least two of the five points, so a patch that is mostly air stays empty; or its middle, so a thin part that
+    // runs across a patch (a roof on posts) is body too, and is washed with the rest.
+    surface.push(count >= 2 || hits[cell * SAMPLES.length] ? 'd' : '.')
   }
   cache.set(def.id, surface)
   reliefs.set(def.id, proud)
   return surface.slice()
+}
+
+/** How far the vehicle's near side stands out at one patch, in its own z. */
+export function proudAt(def: VehicleDef, col: number, row: number): number {
+  if (!reliefs.has(def.id)) silhouette(def)
+  return reliefs.get(def.id)![row * GRID_W + col] || 0.92
 }
 
 /**

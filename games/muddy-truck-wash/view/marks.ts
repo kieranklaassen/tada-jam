@@ -27,6 +27,11 @@ export class FloorMarks {
     this.stale = true
   }
 
+  /** The jet of the hose on the floor: the foam there is pushed away along it. */
+  push(x: number, z: number): void {
+    if (this.floor.push(x, z)) this.stale = true
+  }
+
   /** One frame of attended time: the marks creep and dry, and the texture follows when anything changed. */
   step(dt: number): void {
     if (this.floor.step(dt)) this.stale = true

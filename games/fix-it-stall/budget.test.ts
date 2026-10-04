@@ -3,15 +3,16 @@ import { Bench } from './bench'
 import { BenchView } from './benchView'
 import { boardOf } from './board'
 import { Cast } from './cast'
-import { removeLead } from './circuit'
+import { ODD_KINDS, removeLead } from './circuit'
 import { LADDER } from './config'
 import { asBuilt } from './gadgets'
 import { IdleLadder } from './guidance'
 import { layOut } from './jobs'
+import { DOORSTEP, passing, sag, WASHING } from './lane'
 import { suggest } from './ladder'
 import { freshStall, type Stall } from './save'
 import { WORK } from './solve'
-import { HUNG, OWNER, padAt, trayPlace, WAITING, type P } from './stage'
+import { HUNG, oddPlace, OWNER, OWNER_HANDS, padAt, PRACTICE, RADIO, TOASTER, TRAY_KINDS, trayPlace, WAITING, type P } from './stage'
 
 // The frame budget, counted and not timed, so it holds on a busy runner. Two
 // things cost: solving the circuit, and drawing. A frame that only draws
@@ -68,8 +69,8 @@ function busy(): Bench {
   // Leads between every pair of rail pads, as a child who clips everything to everything would leave it.
   const rails = board.pads.flatMap((p, i) => (p.y === 0 && p.x >= 4 ? [i] : []))
   for (let i = 0; i + 1 < rails.length; i++) for (let n = 0; n < 4; n++) drag(bench, pad(rails[i]), pad(rails[i + 1]))
-  drag(bench, mid(trayPlace(1)), { x: 700, y: 230 })
-  drag(bench, mid(trayPlace(3)), { x: 520, y: 230 })
+  drag(bench, mid(trayPlace(1)), { x: 725, y: 642 })
+  drag(bench, mid(trayPlace(3)), { x: 635, y: 713 })
   return bench
 }
 
@@ -91,7 +92,7 @@ describe('the frame budget', () => {
     expect(cost(() => tap(bench, bench.midOf(bench.live.parts.findIndex((p) => p.kind === 'switch'))))).toBeLessThanOrEqual(8)
     expect(cost(() => drag(bench, bench.midOf(bench.live.parts.findIndex((p) => p.kind === 'buzzer')), mid(trayPlace(3))))).toBeLessThanOrEqual(10)
     // Handing back tries the gadget, and the customer who comes is laid out: both once, at a touch, never in a frame.
-    expect(cost(() => tap(bench, mid(OWNER)))).toBeLessThanOrEqual(40)
+    expect(cost(() => tap(bench, mid(OWNER_HANDS)))).toBeLessThanOrEqual(40)
   })
 
   it('laying out a job is bounded at every position', () => {
@@ -133,12 +134,41 @@ describe('the frame budget', () => {
     view.show(bench.marks); cast.mark(bench.marks)
     for (let i = 0; i < 60; i++) frame(10 + i / 60)
     tap(bench, bench.midOf(bench.live.parts.findIndex((p) => p.kind === 'cell')))
-    tap(bench, mid(OWNER))
+    tap(bench, mid(OWNER_HANDS))
     for (let i = 0; i < 400; i++) frame(11 + i / 60)
     tap(bench, mid(WAITING))
     for (let i = 0; i < 120; i++) frame(18 + i / 60)
     tap(bench, mid(HUNG))
     for (let i = 0; i < 60; i++) frame(20 + i / 60)
+    // The stall as it is first seen, with no board open and everything that only answers a flick flicked at once, again
+    // and again: every place of the tray, every odd, her practice board, the toaster, the radio, the washing, the
+    // pigeon, the bare wood and the wall; and whoever passes, touched as it goes by.
+    const rest = new Bench(freshStall(null)), folk = new Cast(5, rest), other = new BenchView()
+    other.draw(context, WIDTH, HEIGHT, DPR, rest, folk, null, null, 0)
+    for (let i = 0; i < 60 * 100; i++) {
+      if (i % 45 === 0) {
+        for (let place = 0; place < TRAY_KINDS.length; place++) tap(rest, mid(trayPlace(place)))
+        for (const what of ODD_KINDS) tap(rest, oddPlace(what))
+        for (const box of [PRACTICE, TOASTER, RADIO]) tap(rest, mid(box))
+        for (const item of WASHING) tap(rest, { x: item.x, y: sag(item.x) + item.drop / 2 })
+        tap(rest, { x: DOORSTEP.x, y: DOORSTEP.y - 14 })
+        tap(rest, { x: 400, y: 240 })
+        tap(rest, { x: 470, y: 150 })
+        const now = passing(rest.lane.seconds)
+        if (now) rest.lane.touch({ on: 'passer', who: now.who })
+        other.show(rest.marks); folk.mark(rest.marks)
+        rest.marks.length = 0
+      }
+      counts.calls = counts.whole = 0
+      rest.step(1 / 60)
+      folk.step(1 / 60, rest)
+      other.step(1 / 60)
+      const figures = other.draw(context, WIDTH, HEIGHT, DPR, rest, folk, null, null, i / 60)
+      expect(counts.whole).toBe(1)
+      worstCalls = Math.max(worstCalls, counts.calls)
+      worstFigures = Math.max(worstFigures, figures)
+    }
+    expect(rest.open).toBe(false)
     // Paint calls a frame, all told: fills, strokes and stamps. And the figures the view reports to the overlay.
     expect(worstCalls).toBeLessThanOrEqual(700)
     expect(worstFigures).toBeLessThanOrEqual(80)

@@ -42,7 +42,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const pinned = tierOverride(window.location.search)
     const governor = new TierGovernor(pinned ?? startingTier(window.matchMedia('(pointer: coarse)').matches), pinned !== null)
     const work = new PerfRing()
-    // Grown-ups only: three quick taps in the top right corner, or fps=1 in the address (overlay.ts).
+    // Grown-ups only: a finger held a second in the top right corner and lifted there, then three taps; or fps=1 in the address (overlay.ts).
     const overlay = new Overlay(root, window.location.search)
     // What the last draw put on the surface, for the grown-up handle and the overlay. A canvas 2D game counts the
     // sprites and figures it drew as drawCalls; a three.js game copies the renderer's own counts.
@@ -114,6 +114,13 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
 
     // The shell can resize the surface without a window resize event, so the surface watches itself.
     // Returns whether it sized the surface, and so drew it.
+    // The grown-up's corner is 72 surface pixels square at the top right. The bench is told where that is on the stage,
+    // so that nothing of the game answers a touch there.
+    const placeCorner = () => {
+      if (!bench || width <= 0) return
+      const stage = fit(width, height), size = 72 / stage.scale, corner = toStage(stage, { x: width, y: 0 })
+      bench.grownUps = { x: corner.x - size, y: corner.y, w: size, h: size }
+    }
     const resize = (): boolean => {
       const w = root.clientWidth, h = root.clientHeight
       // A parked surface measures 0×0; keep the last good size.
@@ -124,11 +131,22 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       // Sizing the backing store wipes the surface, so it is redrawn at once: a resize lands after the frame's
       // own draw, or while the game rests and no frame is coming, and either would leave the surface blank.
       canvas.width = Math.round(w * ratio); canvas.height = Math.round(h * ratio)
+      placeCorner()
       draw()
       return true
     }
     const observer = new ResizeObserver(resize)
     observer.observe(root)
+
+    // A touch in progress when the game goes to rest or is put away: its lift will never arrive; or the browser took the pointer away. The touch is
+    // forgotten, not ended as a lift, since a lift over a pad, a socket or the owner would be a move the child did
+    // not make. Whatever was in the hand goes back where it came from (`letGo` in bench.ts).
+    const putDown = () => {
+      overlay.forget()
+      touch.clear()
+      bench?.letGo()
+      flush()
+    }
 
     // What the game does with a gesture. The blank surface only answers a touch with a sound.
     // A game with short scenes ends the one that is playing first thing in every press, before the press is
@@ -166,11 +184,15 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     }
     const onMove = (event: PointerEvent) => act(touch.move(event.pointerId, at(event)))
     const onUp = (event: PointerEvent) => {
-      act(touch.up(event.pointerId, at(event), event.timeStamp))
+      const where = at(event)
+      overlay.lift(where.x, where.y, width, event.timeStamp)
+      act(touch.up(event.pointerId, where, event.timeStamp))
       audio.touchUp()
     }
-    const onCancel = (event: PointerEvent) => {
-      act(touch.cancel(event.pointerId, event.timeStamp))
+    // The browser took the pointer away. That is no lift: ending it as one over a pad, a socket or the owner would be a
+    // move the child did not make. The touch is forgotten and whatever was in the hand goes back where it came from.
+    const onCancel = () => {
+      putDown()
       audio.touchUp()
     }
     root.addEventListener('pointerdown', onDown)
@@ -214,8 +236,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     }
 
     // Everything stops while unattended or hidden: the loop, the clock and sound. A touch in progress is
-    // ended, since its lift will never arrive (a drag is put down, a press ends without a tap), and the
-    // newest state is handed to storage.
+    // forgotten and what was in the hand goes back where it came from, and the newest state is handed to storage.
     const attention = new Attention(document, (awake) => {
       audio.setActive(awake)
       if (awake) {
@@ -225,7 +246,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       cancelAnimationFrame(frame)
       frame = 0
       clock.rest()
-      act(touch.clear())
+      putDown()
       cadence.settle(performance.now())
     })
     attendRef.current = (attended) => attention.set(attended)
@@ -235,6 +256,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       // A saved position wins; `childAge` only chooses where a first visit starts.
       bench = new Bench(deserializeStall(value, ctxRef.current.childAge))
       cast = new Cast(seed, bench)
+      placeCorner()
       // The game sets itself up from the state here, as it was left: nothing eases in and no scene replays.
       // Then the load draws the first frame itself. A game that is resting or parked when the slot comes back
       // has no frame coming, and would go on showing the surface as it was before the read.
@@ -246,8 +268,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
 
     return () => {
       disposed = true
-      // As on going to rest: the touch ends first, so the thing in hand is put down before the last save.
-      act(touch.clear())
+      // As on going to rest: the touch ends first, so the thing in hand is back where it came from before the last save.
+      putDown()
       cadence.settle(performance.now())
       cancelAnimationFrame(frame)
       observer.disconnect()

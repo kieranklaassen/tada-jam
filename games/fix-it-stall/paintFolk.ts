@@ -26,9 +26,7 @@ export function paintOwlBehind(c: Ctx, x: number, y: number): void {
   c.lineWidth = 2.4
   for (let row = 0; row < 2; row++) for (let i = -2; i <= 2; i++) {
     c.beginPath()
-    c.moveTo(i * 17 - 6 + row * 8, 78 + row * 14)
-    c.lineTo(i * 17 + row * 8, 85 + row * 14)
-    c.lineTo(i * 17 + 6 + row * 8, 78 + row * 14)
+    c.arc(i * 17 + row * 8, 78 + row * 14, 6.5, 0.15, Math.PI - 0.15)
     c.stroke()
   }
   // The head, with its two tufts.
@@ -145,9 +143,8 @@ export function paintMothBody(c: Ctx, comb = 0): void {
     for (let i = 1; i <= 5; i++) {
       const t = i / 6, fx = side * (6 + 34 * t * t + 12 * t), fy = -30 - 36 * t - 6 * t * t
       c.beginPath()
-      c.moveTo(fx - 5, fy - 4)
-      c.lineTo(fx, fy)
-      c.lineTo(fx + 5, fy - 4)
+      c.moveTo(fx, fy)
+      c.lineTo(fx + side * 2, fy - 7)
       c.stroke()
     }
     c.restore()

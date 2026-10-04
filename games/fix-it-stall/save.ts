@@ -128,7 +128,8 @@ function readTicket(raw: unknown): Ticket | null | undefined {
   if (raw === null) return null
   if (!isRecord(raw)) return undefined
   const part = (['lamp', 'cell', 'switch'] as const).find((p) => p === raw.part)
-  const count = ([1, 2, 3] as const).find((n) => n === raw.count)
+  // The game asks for two or three of a part, never one.
+  const count = ([2, 3] as const).find((n) => n === raw.count)
   return part && count ? { part, count } : undefined
 }
 

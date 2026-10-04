@@ -2,6 +2,7 @@ import { type Guidance, handPose, type HandPose } from './guidance'
 import { type Ticket } from './jobs'
 import { disc, INK, roundRect, type Ctx } from './paint'
 import { trayPiece } from './paintBench'
+import { paintPart } from './paintBoard'
 import { paintLead } from './paintLive'
 import { PRACTICE, type Box, type P } from './stage'
 import { drawWhole } from './symbols'
@@ -14,81 +15,142 @@ import { drawWhole } from './symbols'
  * The old hand's practice board: a cell, a lamp, and between them the same
  * kind of break the job had. `neat` is how far she is through showing the
  * neat way: her board is broken before 0.45 and mended and running after.
- * With no idea it hangs there dark, a plain board with nothing on it.
+ * With no idea it stands there dark: its cell lies out of its place. Her
+ * paw is her own (paintOldHand.ts): it reaches here while she shows the way.
  */
-export function paintPractice(c: Ctx, idea: string | null, neat: number, seconds: number): void {
+export function paintPractice(c: Ctx, idea: string | null, neat: number, seconds: number, rock = 0): void {
   const { x, y, w, h } = PRACTICE
-  c.strokeStyle = INK.steelDark
-  c.lineWidth = 2
-  for (const hx of [x + 16, x + w - 16]) { c.beginPath(); c.moveTo(hx, y - 12); c.lineTo(hx, y + 6); c.stroke() }
+  // Touched, it rocks on the shelf it stands on, about its foot.
+  c.save()
+  c.translate(x + w / 2, y + h)
+  c.rotate(rock * 0.09)
+  c.translate(-x - w / 2, -y - h)
   roundRect(c, x + 2, y + 4, w, h, 8)
   c.fillStyle = 'rgba(28, 36, 44, 0.2)'
   c.fill()
   roundRect(c, x, y, w, h, 8)
   c.fillStyle = INK.mask
   c.fill()
-  // With no idea to show it hangs there whole and dark: a loop, a cell and a lamp.
-  const mended = neat >= 0.45 || !idea, cy = y + h / 2, left = x + 22, right = x + w - 22, mid = x + w / 2
-  // A loop of copper round the board: cell at the left, lamp at the right, the break in the top run.
+  // With no idea to show it stands there dark: a loop, a lamp, and its cell lying out of its place.
+  const mended = neat >= 0.45 || !idea, done = mended && neat >= 0.5
+  const cy = y + h / 2, left = x + 22, right = x + w - 22, mid = x + w / 2, top = y + 12, bottom = y + h - 12
+  if (!idea) idea = 'none'
+  // A loop of copper round the board: a cell in its left side, a lamp in its right. What the job's idea needs is added to
+  // it: a second cell in the bottom run, a second lamp on a rung of its own.
   c.strokeStyle = INK.copper
   c.lineWidth = 4
-  c.strokeRect(left, y + 12, right - left, h - 24)
-  if (!idea) idea = 'none'
-  const fresh = idea !== 'flat' || mended
-  roundRect(c, left - 8, cy - 14, 16, 28, 4)
-  c.fillStyle = fresh ? INK.cellBody : '#6a7078'
-  c.fill()
-  c.fillStyle = INK.cellBand
-  if (idea === 'backwards' && !mended) c.fillRect(left - 8, cy + 6, 16, 6)
-  else c.fillRect(left - 8, cy - 12, 16, 6)
-  const lampOk = !(idea === 'dead' || idea === 'double') || mended
-  const lit = mended && neat >= 0.5 && idea !== 'none'
-  disc(c, right, cy, 11, INK.steel)
-  disc(c, right, cy, 8, lit ? '#fff3c4' : lampOk ? INK.glass : INK.glassBlown)
-  if (idea === 'ticket' || idea === 'branch') {
-    // A second lamp beside the first: dark until she joins it in.
-    disc(c, right - 24, cy, 11, INK.steel)
-    disc(c, right - 24, cy, 8, lit ? '#fff3c4' : INK.glass)
+  c.strokeRect(left, top, right - left, bottom - top)
+  const second = idea === 'branch' || (idea === 'ticket' && mended), rung = mid + 6
+  if (second) {
+    c.beginPath()
+    c.moveTo(rung, top)
+    c.lineTo(rung, bottom)
+    c.stroke()
   }
-  if (lit) {
+  const cell = (cx: number, cy2: number, turn: number) => {
     c.save()
-    c.globalCompositeOperation = 'lighter'
-    disc(c, right, cy, 20 + Math.sin(seconds * 5), 'rgba(255, 214, 128, 0.35)')
+    c.translate(cx, cy2)
+    c.rotate(turn)
+    roundRect(c, -8, -14, 16, 28, 4)
+    c.fillStyle = INK.cellBody
+    c.fill()
+    c.fillStyle = INK.cellBand
+    c.fillRect(-8, -12, 16, 6)
     c.restore()
   }
-  // The break itself, and what she does about it in one plain move.
-  const top = y + 12
+  // A flat cell looks like any other. When she has changed it, the one she took out lies on its side, clear of the new one.
+  if (idea === 'flat' && mended) cell(left + 30, cy + 6, Math.PI / 2)
+  // Until she has a way to show, her board's cell lies out of its place, on its side: where it goes the loop is open
+  // between two blobs of solder, and so the board is dark. No holder is drawn empty: a dark ring would read as a nought.
+  if (idea === 'none') {
+    c.fillStyle = INK.mask
+    c.fillRect(left - 4, cy - 11, 8, 22)
+    disc(c, left, cy - 12, 3.4, INK.solder)
+    disc(c, left, cy + 12, 3.4, INK.solder)
+    cell(left + 30, cy + 6, Math.PI / 2)
+  } else cell(left, cy, 0)
+  // Two cells in one loop: the second pushes against the first until she turns it round. A lamp would not care which
+  // way one cell lay, so one cell turned would show nothing.
+  if (idea === 'backwards') cell(mid - 8, bottom, mended ? -Math.PI / 2 : Math.PI / 2)
+  // The first lamp is lit when its loop is whole. With a second lamp to be joined in, it is lit from the start.
+  const whole = idea !== 'none' && (idea === 'branch' || idea === 'ticket' || done)
+  const lamp = (lx: number, on: boolean, blown: boolean) => {
+    disc(c, lx, cy, 11, INK.steel)
+    disc(c, lx, cy, 8, on ? '#fff3c4' : blown ? INK.glassBlown : INK.glass)
+    if (!on) return
+    c.save()
+    c.globalCompositeOperation = 'lighter'
+    disc(c, lx, cy, 20 + Math.sin(seconds * 5 + lx), 'rgba(255, 214, 128, 0.35)')
+    c.restore()
+  }
+  lamp(right, whole, (idea === 'dead' || idea === 'double') && !mended)
+  if (second) lamp(rung, done, false)
+  // The break itself, and what she does about it.
   c.fillStyle = INK.mask
   if (idea === 'switch') {
+    // The switch itself, small, as it is drawn on any board: a black body, a steel lever, a red tip. Up, then thrown.
     c.fillRect(mid - 12, top - 4, 24, 8)
-    c.strokeStyle = INK.steel
-    c.lineWidth = 4
-    c.beginPath()
-    c.moveTo(mid - 12, top)
-    c.lineTo(mid + 12, mended ? top : top - 12)
-    c.stroke()
-    disc(c, mid - 12, top, 3.5, INK.solder)
+    c.save()
+    c.translate(mid, top)
+    paintPart(c, 30, { kind: 'switch', a: 0, b: 1, down: mended })
+    c.restore()
   } else if (idea === 'short') {
-    if (!mended) { c.fillStyle = INK.solder; c.fillRect(mid - 4, top, 8, h - 24) }
+    // A blob of solder from the top run to the bottom, a way round that misses the lamp: she takes it off.
+    if (!mended) { c.fillStyle = INK.solder; c.fillRect(mid - 4, top, 8, bottom - top) }
   } else if (idea === 'stuff') {
     c.fillRect(mid - 12, top - 4, 24, 8)
     if (!mended) { roundRect(c, mid - 13, top - 5, 26, 10, 4); c.fillStyle = INK.rubber; c.fill() }
-  } else if (idea !== 'flat' && idea !== 'dead' && idea !== 'backwards' && idea !== 'none') c.fillRect(mid - 9, top - 4, 18, 8)
-  if (mended && (idea === 'gap' || idea === 'stuff' || idea === 'double' || idea === 'branch' || idea === 'ticket')) {
-    paintLead(c, { x: mid - 11, y: top }, { x: mid + 11, y: top }, -16, INK.yellow, 30)
-  }
-  // Her paw comes over, does it, and goes back to the mug.
-  const reach = neat < 0 || neat >= 1 ? 0 : Math.sin(Math.min(1, neat / 0.9) * Math.PI)
-  if (reach > 0.02) {
-    c.strokeStyle = '#8a929a'
+  } else if (idea === 'gap' || idea === 'double') c.fillRect(mid - 9, top - 4, 18, 8)
+  else if (idea === 'branch') c.fillRect(rung - 4, top + 4, 8, 7)
+  if (mended && (idea === 'gap' || idea === 'stuff' || idea === 'double')) paintLead(c, { x: mid - 11, y: top }, { x: mid + 11, y: top }, -16, INK.yellow, 30)
+  // The second lamp's own rung had a gap in it: one short lead closes it, down the rung.
+  if (mended && idea === 'branch') paintLead(c, { x: rung, y: top + 1 }, { x: rung, y: top + 14 }, 10, INK.yellow, 22)
+  c.restore()
+}
+
+/**
+ * One part as an order ticket draws it: a small picture, and unmistakably one. Beside a numeral a bare ring would read
+ * as a nought and a bare bar as a minus, so a lamp is drawn with its filament and its two legs, a switch with its
+ * round red knob, and a cell aslant with its band.
+ */
+function ticketPiece(c: Ctx, part: Ticket['part']): void {
+  if (part === 'lamp') {
+    c.strokeStyle = INK.steelDark
+    c.lineWidth = 4
     c.lineCap = 'round'
-    c.lineWidth = 20
     c.beginPath()
-    c.moveTo(x - 30, y + h + 40)
-    c.lineTo(x - 30 + (mid - x + 30) * reach, y + h + 40 - (h + 40 - 14) * reach)
+    c.moveTo(-7, 12)
+    c.lineTo(-11, 24)
+    c.moveTo(7, 12)
+    c.lineTo(11, 24)
     c.stroke()
-    disc(c, x - 30 + (mid - x + 30) * reach, y + h + 40 - (h + 40 - 14) * reach, 12, '#2b3037')
+    disc(c, 0, 0, 16, INK.steel)
+    disc(c, 0, 0, 12.5, '#ffe9a8')
+    // The filament: one small coil, a ring within the glass with its two ends down to the legs. Not a zigzag.
+    c.strokeStyle = INK.filament
+    c.lineWidth = 2
+    c.beginPath()
+    c.moveTo(-5, 9)
+    c.quadraticCurveTo(-7, -6, 0, -6)
+    c.quadraticCurveTo(7, -6, 5, 9)
+    c.stroke()
+    disc(c, -4, -4, 2.4, 'rgba(255, 255, 255, 0.8)')
+    return
   }
+  if (part === 'switch') {
+    // A switch as a small thing with a knob to push: a dark body on a pale plate, and a round red knob on top of it.
+    roundRect(c, -22, 4, 44, 12, 5)
+    c.fillStyle = INK.steel
+    c.fill()
+    roundRect(c, -13, -6, 26, 14, 5)
+    c.fillStyle = INK.plastic
+    c.fill()
+    disc(c, 4, -9, 7.5, INK.red)
+    disc(c, 2, -11, 2.2, 'rgba(255, 255, 255, 0.55)')
+    return
+  }
+  c.rotate(-0.6)
+  trayPiece(c, part)
 }
 
 /** An order ticket: a small card that draws the parts asked for, with the numeral for how many laid beside them. */
@@ -120,7 +182,7 @@ export function paintTicket(c: Ctx, ticket: Ticket, at: Box): void {
     c.shadowBlur = 0
     c.shadowOffsetX = 1.5 * c.getTransform().a
     c.shadowOffsetY = 1.5 * c.getTransform().a
-    trayPiece(c, ticket.part)
+    ticketPiece(c, ticket.part)
     c.restore()
   }
   // The numeral lies beside the group it counts. The drawing carries the order without it.

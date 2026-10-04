@@ -36,7 +36,7 @@ export function roundRect(x: number, y: number, w: number, h: number, r: number,
   return ring
 }
 
-/** A smooth closed curve through a few control points (Catmull-Rom), `per` points to a span. */
+/** A smooth closed curve that passes through a few control points, `per` points to a span. */
 export function smooth(control: readonly number[], per = 6): Ring {
   const n = control.length / 2
   const at = (i: number): [number, number] => {

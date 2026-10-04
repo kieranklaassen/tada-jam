@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import type { ToolSpot } from '../play'
 import { TOOL_HANG, TOOL_HOME } from '../props'
-import { Shape } from '../shapes'
+import { MAT, Shape } from '../shapes'
 import type { Hand, Tool } from '../surface'
 import { toGeometry } from './geometry'
 
@@ -12,7 +12,7 @@ import { toGeometry } from './geometry'
 /** Where a tool sits from the point it works on, and how fast it gets there. */
 const IN_HAND: Readonly<Record<Tool, readonly [number, number, number]>> = { sponge: [0, 0, 0.21], cloth: [0, 0.44, 0.19], hose: [0.7, 0.62, 0.95] }
 /** The lowest a tool's own origin goes, so none of it dips into the floor when a wheel is washed. */
-const FLOOR: Readonly<Record<Tool, number>> = { sponge: 0.34, cloth: 1.08, hose: 0.9 }
+const FLOOR: Readonly<Record<Tool, number>> = { sponge: 0.34, cloth: 1.16, hose: 0.9 }
 const DOWN = new THREE.Vector3(0, -1, 0)
 /** A depth clear of every vehicle's proudest part: a tool in hand crosses from one spot to another out here, never through the body. */
 const CLEAR = 1.42
@@ -21,6 +21,9 @@ const TOOLS: readonly Tool[] = ['sponge', 'hose', 'cloth']
 export class ToolsView {
   private readonly jet: THREE.Mesh
   private readonly jetMaterial: THREE.MeshBasicMaterial
+  /** What the cloth has on it: a beard of foam along its hem, or a blot of mud on its face. Each is drawn only while it is there. */
+  private readonly beard: THREE.Mesh
+  private readonly blot: THREE.Mesh
   private readonly aim = new THREE.Vector3()
   private readonly want = new THREE.Vector3()
   private readonly turn = new THREE.Quaternion()
@@ -34,15 +37,38 @@ export class ToolsView {
     this.jet.visible = false
     this.jet.renderOrder = 4
     scene.add(this.jet)
+    const beard = new Shape(), blot = new Shape()
+    const suds: [number, number, number] = [0.97, 0.99, 1], mud: [number, number, number] = [0.3, 0.18, 0.09]
+    // Puffs of foam hanging from the cloth's hem, biggest in the middle.
+    for (const [x, y, r] of [[-0.3, -0.8, 0.12], [-0.12, -0.86, 0.16], [0.08, -0.87, 0.17], [0.27, -0.83, 0.14], [-0.02, -0.93, 0.11], [0.17, -0.92, 0.1]] as const) beard.ball(r, suds, { at: [x, y, 0.11] }, { mat: MAT.soft, segs: 8, squash: [1, 0.95, 0.6] })
+    for (const [x, y, r] of [[-0.1, -0.5, 0.2], [0.14, -0.62, 0.16], [0.02, -0.3, 0.12]] as const) blot.ball(r, mud, { at: [x, y, 0.135] }, { mat: MAT.soft, segs: 8, squash: [1, 0.85, 0.22] })
+    const material = tools.cloth.material as THREE.Material
+    this.beard = new THREE.Mesh(toGeometry(beard), material)
+    this.beard.name = 'tool-cloth-beard'
+    this.blot = new THREE.Mesh(toGeometry(blot), material)
+    this.blot.name = 'tool-cloth-blot'
+    for (const mesh of [this.beard, this.blot]) {
+      mesh.visible = false
+      mesh.scale.setScalar(0.01)
+      tools.cloth.add(mesh)
+    }
+    // To the intersection audit the cloth and what it has on it are one thing.
+    tools.cloth.userData.jamObject = 'tool-cloth'
     for (const tool of TOOLS) {
       tools[tool].position.set(...TOOL_HOME[tool])
       tools[tool].rotation.z = TOOL_HANG[tool]
     }
   }
 
-  /** `glowing` are the tools the idle ladder is pointing out, and `glow` how strongly, 0 to 1: they swell with it. */
-  update(dt: number, seconds: number, hand: Hand, spot: ToolSpot, glowing: readonly Tool[] = [], glow = 0): void {
+  /** `wears` is what the cloth has on it. A tool on the rack does not move by itself: the idle glow is a light on it, and nothing more. */
+  update(dt: number, seconds: number, hand: Hand, spot: ToolSpot, wears: 'foam' | 'mud' | null = null): void {
     this.jet.visible = false
+    // What the cloth has picked up swells onto it and shrinks off it again.
+    for (const [mesh, on] of [[this.beard, wears === 'foam'], [this.blot, wears === 'mud']] as const) {
+      const size = mesh.scale.x + ((on ? 1 : 0) - mesh.scale.x) * (1 - Math.exp(-dt * 12))
+      mesh.scale.setScalar(Math.max(0.01, size))
+      mesh.visible = size > 0.03
+    }
     for (const tool of TOOLS) {
       const mesh = this.tools[tool]
       const held = hand === tool
@@ -85,14 +111,14 @@ export class ToolsView {
         // A rub wiggles the sponge and the cloth; the sponge is pressed flat against the paint.
         mesh.rotation.z = work * Math.sin(seconds * 22) * (tool === 'cloth' ? 0.22 : 0.12)
         const flat = tool === 'sponge' ? work * (0.28 + 0.08 * Math.sin(seconds * 30)) : 0
-        const swell = glowing.includes(tool) ? 1 + glow * 0.08 : 1
-        mesh.scale.set((1 + flat * 0.4) * swell, (1 + flat * 0.25) * swell, (1 - flat) * swell)
+        mesh.scale.set(1 + flat * 0.4, 1 + flat * 0.25, 1 - flat)
       }
-      if (tool === 'hose') mesh.scale.setScalar(glowing.includes(tool) ? 1 + glow * 0.12 : 1)
     }
   }
 
   dispose(): void {
+    this.beard.geometry.dispose()
+    this.blot.geometry.dispose()
     this.jet.geometry.dispose()
     this.jetMaterial.dispose()
   }

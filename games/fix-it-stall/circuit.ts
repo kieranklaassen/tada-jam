@@ -167,6 +167,13 @@ export function removePart(circuit: Circuit, index: number): Circuit {
   return { ...circuit, parts: circuit.parts.filter((_, i) => i !== index) }
 }
 
+/** Move a part from where it sits to another pair of pads. Where it cannot go, nothing changes: it is never taken off and not put down. */
+export function movePart(circuit: Circuit, index: number, part: Part): Circuit {
+  if (!circuit.parts[index]) return circuit
+  const without = removePart(circuit, index), moved = placePart(without, part)
+  return moved === without ? circuit : moved
+}
+
 const bodyOf = (part: Part): Body => {
   const { a: _a, b: _b, ...body } = part
   return body as Body
@@ -313,6 +320,19 @@ export function clipLeadEnd(circuit: Circuit, index: number, b: Bite | null, at?
 export function clipLead(circuit: Circuit, a: Bite, b: Bite): Circuit {
   const started = startLead(circuit, a)
   return started.lead < 0 ? circuit : clipLeadEnd(started.circuit, started.lead, b)
+}
+
+/**
+ * Turn a lead round: its two clips swap what they bite. Nothing in the
+ * circuit changes by it. Only a lead with both clips biting can be turned; a
+ * clip that bites one of its clips follows that clip to its new end.
+ */
+export function turnLead(circuit: Circuit, index: number): Circuit {
+  const lead = circuit.leads[index]
+  if (!lead || lead.a === null || lead.b === null) return circuit
+  const follow = (bite: Bite | null): Bite | null => (bite !== null && !isPad(bite) && 'lead' in bite && bite.lead === index ? { lead: index, end: bite.end === 0 ? 1 : 0 } : bite)
+  const leads = circuit.leads.map((l, i) => (i === index ? { ...l, a: lead.b, b: lead.a } : { ...l, a: follow(l.a), b: follow(l.b) }))
+  return { ...circuit, leads, probe: [follow(circuit.probe[0]), follow(circuit.probe[1])] }
 }
 
 /** Take a lead off the mat altogether: it goes back to the coil, and any clip that bit one of its clips lets go. */

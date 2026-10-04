@@ -14,6 +14,8 @@ export type Picture = 'rows' | 'scattered'
 export const PICTURED_R = 21
 const PITCH_X = 52
 const PITCH_Y = 47
+/** How far to the side the rows of every second kind are set: a third of the pitch, which fits beside a full row of five. */
+export const KIND_STEP = 17
 
 export type Pictured = { kind: Kind; x: number; y: number }
 
@@ -23,23 +25,53 @@ export function layOut(wanted: readonly Wanted[], picture: Picture, seed = 1): P
 }
 
 function rows(wanted: readonly Wanted[]): Pictured[] {
-  const lines: { kind: Kind; n: number }[] = []
-  for (const w of wanted) for (let left = w.count; left > 0; left -= 5) lines.push({ kind: w.kind, n: Math.min(5, left) })
+  const lines: { kind: Kind; n: number; step: number }[] = []
+  wanted.forEach((w, k) => { for (let left = w.count; left > 0; left -= 5) lines.push({ kind: w.kind, n: Math.min(5, left), step: k % 2 }) })
   const widest = lines.reduce((m, l) => Math.max(m, l.n), 0)
-  // Every row starts at the same left edge, so the second row of a kind stands under the first.
-  const x0 = CARD.w / 2 - ((widest - 1) * PITCH_X) / 2
+  const stepped = lines.some((l) => l.step === 1)
+  // The rows of one kind start at the same left edge, so its second row stands under its first. The rows of the
+  // next kind are set a step to the side: two of one kind over two of another are then not one thing with four
+  // parts, such as a face, but two sets.
+  // A third of a picture's pitch: a piece of one kind stands neither under a piece of the other nor under the
+  // middle of two, so no pair with a third under it lines up as a face.
+  const step = KIND_STEP
+  const x0 = CARD.w / 2 - ((widest - 1) * PITCH_X + (stepped ? step : 0)) / 2
   const y0 = CARD.h / 2 - ((lines.length - 1) * PITCH_Y) / 2
   const out: Pictured[] = []
   lines.forEach((l, row) => {
-    for (let i = 0; i < l.n; i++) out.push({ kind: l.kind, x: x0 + i * PITCH_X, y: y0 + row * PITCH_Y })
+    for (let i = 0; i < l.n; i++) out.push({ kind: l.kind, x: x0 + l.step * step + i * PITCH_X, y: y0 + row * PITCH_Y })
   })
   return out
 }
 
+/**
+ * A scattered card always shows one picture for every piece wanted. Chance
+ * finds room for ten nearly always; when one try leaves a piece with no
+ * room, the whole card is thrown again from the next seed, and if that ever
+ * failed a number of times the pieces take spots from a fixed uneven set
+ * that holds any ten.
+ */
 function scattered(wanted: readonly Wanted[], seed: number): Pictured[] {
-  const rng = makeRng(seed)
   const kinds: Kind[] = []
   for (const w of wanted) for (let i = 0; i < w.count; i++) kinds.push(w.kind)
+  for (let attempt = 0; attempt < 24; attempt++) {
+    const out = thrown(kinds, (seed + attempt * 7919) >>> 0)
+    if (out.length === kinds.length) return out
+  }
+  const rng = makeRng(seed)
+  const spots = [...UNEVEN]
+  return kinds.map((kind) => {
+    const [x, y] = spots.splice(Math.floor(rng.next() * spots.length), 1)[0]
+    return { kind, x, y }
+  })
+}
+
+/** Eleven spots on the card, in no row and no column, every two of them further apart than two pictures are wide. */
+export const UNEVEN: readonly (readonly [number, number])[] = [[45, 45], [105, 48], [160, 42], [225, 50], [70, 105], [135, 108], [195, 102], [255, 110], [50, 165], [120, 168], [240, 165]]
+
+/** One throw of the pictures: each at a spot found by chance that is clear of the others. Shorter than `kinds` if one found no room. */
+function thrown(kinds: readonly Kind[], seed: number): Pictured[] {
+  const rng = makeRng(seed)
   const pad = PICTURED_R + 16, apart = PICTURED_R * 2 + 5
   const out: Pictured[] = []
   for (const kind of kinds) {
@@ -51,7 +83,7 @@ function scattered(wanted: readonly Wanted[], seed: number): Pictured[] {
         placed = true
       }
     }
-    // No room found by chance: a grid has room for any ten.
+    // No room found by chance: any gap on a fine grid will do.
     for (let gy = pad; gy <= CARD.h - pad && !placed; gy += 8) {
       for (let gx = pad; gx <= CARD.w - pad && !placed; gx += 8) {
         if (out.every((p) => Math.hypot(p.x - gx, p.y - gy) >= apart)) {
@@ -60,6 +92,7 @@ function scattered(wanted: readonly Wanted[], seed: number): Pictured[] {
         }
       }
     }
+    if (!placed) return out
   }
   return out
 }

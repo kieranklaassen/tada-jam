@@ -17,6 +17,7 @@ export const tractor: VehicleDef = {
     { x: 1.05, r: 0.95, z: 0.86, w: 0.56, hub: PAINT.yellow },
   ],
   eyes: EYES,
+  mouth: { at: [-2.25, 0.8, 0], w: 1.05, h: 0.5 },
   side: { x0: -2.3, x1: 2.2, y0: 0, y1: 3.1 },
   zones: {
     nose: { x0: -2.3, x1: -0.3, y0: 0.9, y1: 1.7 },
@@ -35,7 +36,7 @@ export const tractor: VehicleDef = {
     const body = new Shape()
     // A short rail: the tractor sits on its axles, nose low.
     body.box([3.2, 0.24, 0.9], PAINT.charcoal, { at: [-0.35, 0.72, 0] }, { bevel: 0.05 })
-    body.box([0.18, 0.24, 1.3], PAINT.zinc, { at: [-2.1, 0.74, 0] }, { bevel: 0.06, mat: MAT.metal })
+    body.box([0.2, 0.42, 1.2], PAINT.zinc, { at: [-2.1, 0.8, 0] }, { bevel: 0.06, mat: MAT.metal })
     for (const eye of EYES) {
       body.round(eye.r * 1.12, 0.16, PAINT.zinc, { at: [eye.at[0] + 0.1, eye.at[1], eye.at[2]] }, { axis: 'x', mat: MAT.metal, segs: 18 })
       body.ball(eye.r, PAINT.lamp, { at: [eye.at[0], eye.at[1], eye.at[2]] }, { mat: MAT.eye, segs: 18 })
@@ -51,7 +52,9 @@ export const tractor: VehicleDef = {
     body.box([1.6, 0.14, 1.5], PAINT.yellow, { at: [0.75, 2.9, 0] }, { bevel: 0.05 })
     // The steering wheel on its column.
     body.round(0.035, 0.6, PAINT.zinc, { at: [0.1, 1.6, 0], turn: { axis: 'z', by: 0.6 } }, { axis: 'y', mat: MAT.metal, segs: 8 })
-    body.ring(0.2, 0.035, PAINT.charcoal, { at: [0.28, 1.86, 0], turn: { axis: 'y', by: Math.PI / 2 } }, { mat: MAT.rubber, segs: 16, sides: 6 })
+    // A solid dished wheel with a zinc boss, as a toy's is: never an open ring.
+    body.round(0.21, 0.05, PAINT.charcoal, { at: [0.28, 1.86, 0] }, { axis: 'x', mat: MAT.rubber, segs: 16, bevel: 0.02 })
+    body.round(0.07, 0.08, PAINT.zinc, { at: [0.27, 1.86, 0] }, { axis: 'x', mat: MAT.metal, segs: 10, bevel: 0.015 })
     // Mudguards over the big wheels.
     for (const side of [-1, 1]) body.box([1.7, 0.12, 0.56], PAINT.green, { at: [1.05, 2.14, side * 0.96] }, { bevel: 0.05 })
     // The exhaust pipe on the bonnet.

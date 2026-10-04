@@ -137,6 +137,21 @@ describe('how a wash is judged', () => {
 describe('sending a vehicle off', () => {
   const start = (position: string): WashState => ({ ...freshWash(null), position })
 
+  it('a trip through the puddle changes the mud of the vehicle that waits and its count of trips, and no other field: not the seed', () => {
+    let state = freshWash(null)
+    for (let trip = 1; trip <= 2; trip++) {
+      const after = throughPuddle(state)
+      expect(after.next.dips).toBe(trip)
+      expect(after.next.cells).not.toBe(state.next.cells)
+      expect({ ...after, next: null }).toEqual({ ...state, next: null })
+      expect(after.next.who).toBe(state.next.who)
+      state = after
+    }
+    // And the two trips do not lay the same splashes.
+    const once = throughPuddle(freshWash(null))
+    expect(throughPuddle(once).next.cells).not.toBe(once.next.cells)
+  })
+
   it('brings in the one that waited, with the mud it stood in, and puts another at the door', () => {
     const before = freshWash(null)
     const { state, left } = sendOff(before)

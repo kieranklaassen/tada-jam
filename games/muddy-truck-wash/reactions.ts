@@ -38,9 +38,14 @@ export function react(hand: Hand, on: Patch, m: Moment): Reaction {
     if (met === 'c') return { voices: [voices.rasp(m.variant)], bursts: [burst(KIND.crumb, 5, 1.1, 0.8, 0.07, 1.6), burst(KIND.dust, 2, 0.4, 0.3, 0.3, 0.7), burst(KIND.blob, 2, 0.3, -0.2, 0.11, 1.2)], force: 1, kick: 0.25 }
     // Soft mud lifts into foam: bubbles off the top and brown drips below.
     if (met === 's') return { voices: [voices.scrub(m.speed, m.variant), voices.foamUp(m.variant)], bursts: [burst(KIND.bubble, 5, 0.5, 0.5, 0.13, 1.5), burst(KIND.splat, 3, 0.4, -0.3, 0.09, 1.4)], force: 1, kick: 0.3 }
-    // More foam on foam: taller, and more bubbles drift off.
-    if (met === 'b' || met === 'f') return { voices: [voices.scrub(m.speed, m.variant)], bursts: [burst(KIND.bubble, 7, 0.6, 0.7, 0.15, 1.9)], force: 0.9, kick: 0.2 }
-    return { voices: [voices.scrub(m.speed, m.variant), voices.foamUp(m.variant + 1)], bursts: [burst(KIND.bubble, 4, 0.5, 0.5, 0.12, 1.4)], force: 1, kick: 0.3 }
+    // More foam on foam: it swells taller with a soft fizz, and more bubbles drift off.
+    if (met === 'b' || met === 'f') return { voices: [voices.lather.fizz(m.variant)], bursts: [burst(KIND.bubble, 7, 0.6, 0.7, 0.15, 1.9)], force: 0.9, kick: 0.2 }
+    // Wet paint: thin foam with a wet slurp, and suds that slide down from it.
+    if (met === 'w') return { voices: [voices.lather.slurp(m.variant)], bursts: [burst(KIND.blob, 3, 0.25, -0.5, 0.1, 1.1), burst(KIND.bubble, 2, 0.4, 0.4, 0.1, 1.2)], force: 1, kick: 0.3 }
+    // Shiny paint: the foam hides the shine with a smooth hush.
+    if (met === 'p') return { voices: [voices.lather.hush(m.variant)], bursts: [burst(KIND.bubble, 3, 0.5, 0.5, 0.12, 1.4), burst(KIND.glint, 1, 0.0, 0.0, 0.3, 0.3)], force: 1, kick: 0.3 }
+    // Dull paint: thick foam that stands up in peaks, with a dry squeak going soft.
+    return { voices: [voices.lather.drySqueak(m.variant)], bursts: [burst(KIND.bubble, 5, 0.5, 0.7, 0.13, 1.5)], force: 1, kick: 0.3 }
   }
   if (hand === 'hose') {
     // Dried mud darkens and drips: the hiss sinks to a gurgle.
@@ -48,10 +53,13 @@ export function react(hand: Hand, on: Patch, m: Moment): Reaction {
     // Soft mud glistens, slumps and clings.
     if (met === 's') return { voices: [voices.spray(m.variant, false), voices.poke.squelch()], bursts: [burst(KIND.drop, 5, 1.6, 1.0, 0.07, 0.9), burst(KIND.splat, 5, 0.5, -0.5, 0.11, 1.5)], force: 0.55, kick: 0.15 }
     // Foam slides off in rafts.
-    if (met === 'b' || met === 'f') return { voices: [voices.rinse(m.variant)], bursts: [burst(KIND.blob, 5, 0.7, -0.3, 0.17, 1.6), burst(KIND.drop, 6, 1.8, 1.2, 0.07, 0.9)], force: 0.6, kick: 0.2 }
-    // Polished paint beads the water into fat drops that race off.
-    if (met === 'p') return { voices: [voices.spray(m.variant, false)], bursts: [burst(KIND.drop, 5, 1.0, 0.2, 0.13, 1.1)], force: 0.5, kick: 0.15 }
-    return { voices: [voices.spray(m.variant, false)], bursts: [burst(KIND.drop, 9, 2.0, 1.3, 0.07, 0.9)], force: 0.55, kick: 0.15 }
+    if (met === 'b' || met === 'f') return { voices: [voices.rinse(m.variant)], bursts: [burst(KIND.blob, 5, 0.7, -0.3, 0.17, 1.6), burst(KIND.drop, 6, 1.8, 1.2, 0.07, 0.9), burst(KIND.mist, 2, 0.8, 0.5, 0.55, 0.9)], force: 0.6, kick: 0.2 }
+    // Polished paint beads the water into fat drops that race off with a quick tinkle.
+    if (met === 'p') return { voices: [voices.water.tinkle(m.variant)], bursts: [burst(KIND.drop, 5, 1.0, 0.2, 0.13, 1.1)], force: 0.5, kick: 0.15 }
+    // Dull paint: beads form with a light patter.
+    if (met === 'd') return { voices: [voices.water.patter(m.variant)], bursts: [burst(KIND.drop, 5, 1.2, 0.6, 0.06, 0.8), burst(KIND.mist, 2, 0.8, 0.5, 0.5, 0.9)], force: 0.55, kick: 0.15 }
+    // Wet paint: water sheets off the sills with a steady drumming, and drops bounce.
+    return { voices: [voices.water.drum(m.variant)], bursts: [burst(KIND.drop, 9, 2.0, 1.5, 0.07, 0.9), burst(KIND.mist, 3, 0.9, 0.5, 0.5, 0.9)], force: 0.55, kick: 0.15 }
   }
   if (hand === 'cloth') {
     if (met === 'c') return { voices: [voices.scratch()], bursts: [burst(KIND.dust, 4, 0.7, 0.5, 0.34, 0.9), burst(KIND.crumb, 2, 0.8, 0.5, 0.06, 1.4)], force: 0.8, kick: 0.2 }
@@ -59,12 +67,15 @@ export function react(hand: Hand, on: Patch, m: Moment): Reaction {
     if (met === 'b' || met === 'f') return { voices: [voices.fizz()], bursts: [burst(KIND.blob, 3, 0.9, 0.3, 0.14, 1.3), burst(KIND.bubble, 2, 0.4, 0.4, 0.1, 1.1)], force: 0.8, kick: 0.2 }
     // Drying and shining: a squeak that climbs along the rub, and glints.
     if (met === 'w') return { voices: [voices.shine(m.rise)], bursts: [burst(KIND.glint, 2, 0.0, 0.0, 0.42, 0.55), burst(KIND.drop, 2, 0.8, 0.5, 0.05, 0.6)], force: 0.8, kick: 0.2 }
-    if (met === 'd') return { voices: [voices.shine(m.rise)], bursts: [burst(KIND.glint, 1, 0.0, 0.0, 0.46, 0.6)], force: 0.8, kick: 0.2 }
+    // Dull paint shines with one glint and a short low squeak.
+    if (met === 'd') return { voices: [voices.squeakLow()], bursts: [burst(KIND.glint, 1, 0.0, 0.0, 0.46, 0.6)], force: 0.8, kick: 0.2 }
     return { voices: [voices.shine(0.6 + m.rise * 0.4)], bursts: [burst(KIND.glint, 2, 0.0, 0.0, 0.5, 0.7)], force: 0.7, kick: 0.15 }
   }
   // A bare finger: a poke.
-  if (met === 'c') return { voices: [voices.poke.knock()], bursts: [burst(KIND.crumb, 5, 0.9, 0.6, 0.07, 1.6)], force: 1, kick: 0.8 }
-  if (met === 's') return { voices: [voices.poke.squelch()], bursts: [burst(KIND.splat, 2, 0.7, 0.6, 0.08, 1.0)], force: 1.2, kick: 0.6 }
+  // Dried mud: a knock, a crack that runs across it, and crumbs.
+  if (met === 'c') return { voices: [voices.poke.knock()], bursts: [burst(KIND.crack, 1, 0.0, 0.0, 0.5, 1.5), burst(KIND.crumb, 5, 0.9, 0.6, 0.07, 1.6)], force: 1, kick: 0.8 }
+  // Soft mud: a squelch and a dent that slowly fills.
+  if (met === 's') return { voices: [voices.poke.squelch()], bursts: [burst(KIND.dent, 1, 0.0, 0.0, 0.3, 1.7), burst(KIND.splat, 2, 0.7, 0.6, 0.08, 1.0)], force: 1.2, kick: 0.6 }
   if (met === 'b' || met === 'f') return { voices: [voices.pop(0.5)], bursts: [burst(KIND.bubble, 4, 0.7, 0.3, 0.11, 0.35)], force: 0.8, kick: 0.5 }
   if (met === 'w') return { voices: [voices.poke.slide()], bursts: [burst(KIND.drop, 4, 1.2, 0.8, 0.06, 0.8)], force: 1, kick: 0.7 }
   if (met === 'p') return { voices: [voices.poke.print()], bursts: [burst(KIND.glint, 1, 0.0, 0.0, 0.3, 0.35)], force: 1, kick: 0.7 }

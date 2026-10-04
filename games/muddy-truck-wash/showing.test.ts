@@ -3,11 +3,12 @@ import { LADDER } from './config'
 import { ROSTER, vehicle } from './cycle'
 import { arrive, puddled } from './mud'
 import { Play } from './play'
+import { LAYOUT } from './props'
 import { driedNosePatch, keptForShowing } from './showing'
 import { silhouette } from './silhouette'
 import { cellAt, decode, encode, tally, type Surface } from './surface'
 import { foamHat } from './tastes'
-import { freshWash, landedOnNext, throughPuddle, washed, type WashState } from './washState'
+import { deserializeWash, freshWash, landedOnNext, serializeWash, throughPuddle, washed, type WashState } from './washState'
 
 const FRAME = 1 / 60
 function run(play: Play, seconds: number): void {
@@ -45,12 +46,19 @@ describe('the dried patch on the nose that the first showing needs', () => {
     expect(dipped[cell]).toBe('c')
     const hatted = foamHat(dipped, 40, keep)
     expect(hatted[cell]).toBe('c')
-    // The foam still lands, on the patches beside it.
-    expect(tally(hatted).f).toBe(4)
+    // The foam still lands, on clean patches beside it, and on those only: no mud is turned to foam by being thrown at.
+    expect(tally(hatted).f).toBeGreaterThan(0)
+    expect(tally(hatted).f).toBeLessThanOrEqual(4)
+    hatted.forEach((p, i) => { if (p !== dipped[i]) expect(['d', 'w', 'p'], `patch ${i}`).toContain(dipped[i]) })
+    expect(tally(hatted).mud).toBe(tally(dipped).mud)
     expect(driedNosePatch(def, hatted)).toEqual(patch)
-    // Once it has played, the patch is a patch like any other.
+    // Once it has played nothing is kept back for it; thrown foam still does not land on its mud.
     expect(keptForShowing(def, surface, ['drip'])).toEqual([])
-    expect(foamHat(surface, 40)[cell]).toBe('f')
+    expect(foamHat(surface, 40)[cell]).toBe('c')
+    // The drop falls on mud and not on a lamp eye: the patch stands clear of both eyes, by more than the drop is wide, at the depth the tap hangs at.
+    for (const eye of def.eyes) expect(Math.abs(patch.x - eye.at[0]) - eye.r, `${def.id}`).toBeGreaterThan(0.2)
+    // The tap does hang over the near eye's depth, so standing clear of it along the vehicle is what keeps the drop off it.
+    expect(Math.abs(LAYOUT.tap.z - def.eyes[0].at[2])).toBeLessThan(def.eyes[0].r)
   })
 
   it('in the save: two trips through the puddle leave the waiting vehicle its dried nose while the showing is to come', () => {
@@ -89,16 +97,87 @@ describe('the dried patch on the nose that the first showing needs', () => {
     expect(tally(play.next.surface).f).toBeGreaterThan(0)
     expect(play.next.surface[cell]).toBe('c')
     expect(play.state.shown).toEqual([])
-    // It rolls in, and the showing plays: marked and saved at its start, the patch soft at its end.
+    // It rolls in. The showing is a scene of its own after the roll-in: nothing of it is marked or saved while the roll-in plays.
     play.press({ kind: 'next' })
+    run(play, 3)
+    expect(play.sceneRunning).toBe(true)
+    expect(play.state.shown).toEqual([])
+    expect(decode(play.state.bay.cells)![cell]).toBe('c')
+    // Then it starts: marked and saved at its start, the patch soft on the vehicle when the drop lands.
+    run(play, 4)
+    expect(play.sceneRunning).toBe(true)
     expect(play.state.shown).toEqual(['drip'])
     expect(decode(play.state.bay.cells)![cell]).toBe('s')
     expect(play.bay.surface[cell]).toBe('c')
-    run(play, 12)
+    run(play, 6)
     expect(play.sceneRunning).toBe(false)
     expect(play.bay.surface[cell]).toBe('s')
-    // What is seen has caught up with what was saved.
+    // What is seen has caught up with what was saved, and the foam that was thrown at it is still on it.
     expect(encode(play.bay.surface)).toBe(play.state.bay.cells)
+    expect(tally(play.bay.surface).f).toBeGreaterThan(0)
+  })
+
+  it('in play: a send-off cut short by a touch, or a put-away in the middle of it, does not lose the showing', () => {
+    const make = (): { play: Play; cell: number } => {
+      const base = freshWash(null)
+      const who = base.next.who, def = vehicle(who)
+      const cells = arrive(silhouette(def), LADDER[1], 31)
+      const patch = driedNosePatch(def, cells)!
+      return { play: new Play({ ...base, position: LADDER[1], next: { who, cells: encode(cells), dips: 0 } }), cell: cellAt(patch.col, patch.row) }
+    }
+    // A touch on nothing two seconds into the send-off ends it; the showing starts straight after, and plays.
+    const cut = make()
+    cut.play.press({ kind: 'next' })
+    run(cut.play, 2)
+    expect(cut.play.state.shown).toEqual([])
+    cut.play.press({ kind: 'none' })
+    cut.play.release()
+    expect(cut.play.sceneRunning).toBe(true)
+    expect(cut.play.state.shown).toEqual(['drip'])
+    run(cut.play, 6)
+    expect(cut.play.bay.surface[cut.cell]).toBe('s')
+    // Put away two seconds into the send-off: on return the vehicle stands in the bay with its dried patch, and the showing plays then.
+    const away = make()
+    away.play.press({ kind: 'next' })
+    run(away.play, 2)
+    const back = new Play(deserializeWash(JSON.parse(JSON.stringify(serializeWash(away.play.state))), null))
+    expect(back.state.shown).toEqual([])
+    expect(back.bay.surface[away.cell]).toBe('c')
+    run(back, 0.1)
+    expect(back.sceneRunning).toBe(true)
+    expect(back.state.shown).toEqual(['drip'])
+    run(back, 6)
+    expect(back.sceneRunning).toBe(false)
+    expect(back.bay.surface[away.cell]).toBe('s')
+    // A touch with the hose on the very patch, cutting the send-off short: the showing starts in its place, and the patch is
+    // dried still until the showing's own drop lands, so the child sees water soften it before the child's own hose does.
+    const hosed = make()
+    hosed.play.press({ kind: 'tool', tool: 'hose' })
+    hosed.play.press({ kind: 'next' })
+    run(hosed.play, 2)
+    const def = hosed.play.bay.def, at = driedNosePatch(def, hosed.play.bay.surface)!
+    hosed.play.press({ kind: 'truck', col: at.col, row: at.row, x: at.x, y: at.y })
+    hosed.play.release()
+    expect(hosed.play.sceneRunning).toBe(true)
+    expect(hosed.play.state.shown).toEqual(['drip'])
+    expect(hosed.play.bay.surface[hosed.cell]).toBe('c')
+    run(hosed.play, 6)
+    expect(hosed.play.bay.surface[hosed.cell]).toBe('s')
+    // A tap on the vehicle a second into the showing ends the showing, as any touch ends a scene: it is not taken for a second tap at the door.
+    const tapped = make()
+    tapped.play.press({ kind: 'next' })
+    run(tapped.play, 0.3)
+    tapped.play.press({ kind: 'none' })
+    tapped.play.release()
+    expect(tapped.play.sceneRunning).toBe(true)
+    run(tapped.play, 0.4)
+    tapped.play.press({ kind: 'truck', col: 6, row: 2, x: 0.2, y: 1.0 })
+    expect(tapped.play.sceneRunning).toBe(false)
+    expect(tapped.play.bay.surface[tapped.cell]).toBe('s')
+    // And once it has played it does not play again.
+    const again = new Play(deserializeWash(JSON.parse(JSON.stringify(serializeWash(back.state))), null))
+    run(again, 1)
+    expect(again.sceneRunning).toBe(false)
   })
 })
 

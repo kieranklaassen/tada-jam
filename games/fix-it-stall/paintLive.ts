@@ -14,6 +14,11 @@ type P = { x: number; y: number }
 /** The lazy curve a lead lies in between two points. `bend` is how far it bows to one side, in pixels. */
 export function leadCurve(p: P, q: P, bend: number): [P, P, P, P] {
   const dx = q.x - p.x, dy = q.y - p.y, d = Math.hypot(dx, dy) || 1
+  // Both ends in one place: a loop of nothing, which hangs down from where it is clipped and is wider the more it sways.
+  if (d < 2) {
+    const wide = 44 + Math.abs(bend) * 0.5
+    return [p, { x: p.x - wide, y: p.y + wide * 1.7 }, { x: p.x + wide, y: p.y + wide * 1.7 }, q]
+  }
   const nx = -dy / d, ny = dx / d
   return [p, { x: p.x + dx * 0.25 + nx * bend, y: p.y + dy * 0.25 + ny * bend }, { x: p.x + dx * 0.75 + nx * bend, y: p.y + dy * 0.75 + ny * bend }, q]
 }

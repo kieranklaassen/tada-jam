@@ -75,7 +75,7 @@ export type Spin = Readonly<Record<number, number>>
 type Element = { a: number; b: number; g: number; push: number }
 
 function partElement(part: Part, spin: number): Element | null {
-  const el = (ohms: number, push = 0): Element => ({ a: part.a, b: part.b, g: 1 / ohms, push })
+  const el = (resistance: number, push = 0): Element => ({ a: part.a, b: part.b, g: 1 / resistance, push })
   switch (part.kind) {
     case 'cell':
       if (part.popped) return null
@@ -86,13 +86,13 @@ function partElement(part: Part, spin: number): Element | null {
     case 'motor': return part.dead ? null : el(RESISTANCE.motor, -spin / RESISTANCE.motor)
     case 'buzzer': return part.dead ? null : el(RESISTANCE.buzzer)
     case 'odd': {
-      const ohms = LETS_THROUGH[part.what]
-      return ohms === null ? null : el(ohms)
+      const resistance = LETS_THROUGH[part.what]
+      return resistance === null ? null : el(resistance)
     }
   }
 }
 
-/** Gaussian elimination with partial pivoting. `m` is n rows of n + 1 numbers and is used up. */
+/** Elimination row by row, with partial pivoting. `m` is n rows of n + 1 numbers and is used up. */
 function eliminate(m: number[][]): number[] {
   const n = m.length
   for (let col = 0; col < n; col++) {
@@ -151,7 +151,8 @@ export function read(circuit: Circuit, spin: Spin = {}): Reading {
   const traces = board.traces.map((t, i) => (cracked.has(i) ? null : wire(t.a, t.b)))
   const leads = circuit.leads.map((_, i) => wire(clipNode(i, 0), clipNode(i, 1)))
   const parts = circuit.parts.map((part, i) => partElement(part, spin[i] ?? 0))
-  const loose = circuit.loose.map((body, i) => partElement({ ...body, a: looseFrom + 2 * i, b: looseFrom + 2 * i + 1 } as Part, 0))
+  // A part that lies loose is spun under the number -1 less its place in `loose`, so that one table serves both.
+  const loose = circuit.loose.map((body, i) => partElement({ ...body, a: looseFrom + 2 * i, b: looseFrom + 2 * i + 1 } as Part, spin[-1 - i] ?? 0))
   const [p0, p1] = circuit.probe
   const probe: Element | null = p0 === null || p1 === null || nodeOf(p0) === nodeOf(p1) ? null : { a: nodeOf(p0), b: nodeOf(p1), g: 1 / (RESISTANCE.lamp + 2 * RESISTANCE.wire), push: 0 }
 
@@ -188,7 +189,8 @@ export function read(circuit: Circuit, spin: Spin = {}): Reading {
  * straight across its legs it is held back most and stops short.
  */
 export function braking(circuit: Circuit, motor: number, push: number): number {
-  return Math.abs(read(circuit, { [motor]: push }).parts[motor])
+  const reading = read(circuit, { [motor]: push })
+  return Math.abs(motor < 0 ? reading.loose[-1 - motor] : reading.parts[motor])
 }
 
 /** How much a lamp, a motor or a buzzer is doing: nothing, a little, as meant, or too much. Never shown as a number. */

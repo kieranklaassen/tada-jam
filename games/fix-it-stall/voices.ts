@@ -88,6 +88,8 @@ export const VOICES = {
   hum: [tone('sine', 110, 0.05, 0.08, 0.6), tone('triangle', 220, 0.02, 0.08, 0.5)],
   /** A blade that is turning, struck again twice a second like the hum. Quiet. */
   whirr: [hiss(900, 1.2, 0.04, 0.08, 0.5, 1100)],
+  /** The same blade turning the other way: breathy, like air drawn in. */
+  'whirr-in': [hiss(520, 0.7, 0.05, 0.09, 0.5, 380)],
   /** A buzzer that is rasping, struck again twice a second. Quiet. */
   buzz: [tone('square', 233, 0.035, 0.03, 0.45)],
   /** A part is lifted off its pads, or out of the tray. */
@@ -108,6 +110,16 @@ export const VOICES = {
   'old-hand-grumble': [tone('sawtooth', 98, 0.07, 0.03, 0.3, 82), tone('sawtooth', 123, 0.05, 0.03, 0.22, 98, 0.14)],
   /** Her enamel mug, flicked. */
   'mug-tink': [tone('sine', 1320, 0.1, 0.001, 0.25), tone('sine', 2640, 0.03, 0.001, 0.12)],
+  /** Her plate of biscuits, touched: china. */
+  'plate-chink': [tone('sine', 1760, 0.08, 0.001, 0.12), tone('triangle', 2350, 0.04, 0.001, 0.08, undefined, 0.03)],
+  /** The old hand's knuckles on the open lid of a gadget: hollow. */
+  'lid-knock': [tone('triangle', 330, 0.1, 0.002, 0.07, 260), hiss(700, 1.2, 0.05, 0.002, 0.05)],
+  /** The clockwork mouse, wound: a ratchet going up, and it is off. */
+  'mouse-wind': [hiss(1800, 7, 0.08, 0.001, 0.03), hiss(2200, 7, 0.08, 0.001, 0.03, undefined, 0.07), hiss(2800, 7, 0.07, 0.001, 0.04, undefined, 0.14)],
+  /** The mouse in its matchbox, tapped: tin on thin wood. */
+  'mouse-rattle': [tone('triangle', 520, 0.07, 0.001, 0.05), hiss(1400, 3, 0.07, 0.001, 0.05, undefined, 0.04)],
+  /** The clutter in her corner of the bench: screws in a jar, tools in their roll. */
+  'clutter-rattle': [hiss(3200, 5, 0.09, 0.001, 0.04), hiss(2600, 5, 0.08, 0.001, 0.04, undefined, 0.05), hiss(3600, 5, 0.06, 0.001, 0.05, undefined, 0.11)],
   /** A customer steps up to the bench. */
   'step-up': [hiss(300, 0.9, 0.09, 0.004, 0.08), hiss(340, 0.9, 0.08, 0.004, 0.08, undefined, 0.18)],
   /** A customer, each in its own invented voice: one short call. */
@@ -206,6 +218,27 @@ export const VOICES = {
   'odd-flick-rubber': [hiss(160, 0.8, 0.05, 0.01, 0.12)],
   'odd-flick-stick': [tone('triangle', 520, 0.13, 0.001, 0.06), hiss(1100, 3, 0.09, 0.001, 0.05)],
   'odd-flick-string': [hiss(500, 0.7, 0.06, 0.02, 0.18)],
+  // --- What is neither a part nor a character --------------------------------------
+  /** A finger on something plain sounds as what that is: the wood of the bench, the steel of the counter, a board wall, the awning's canvas, the air of the lane. */
+  'knock-wood': [tone('triangle', 240, 0.12, 0.002, 0.06, 180), hiss(500, 1.2, 0.06, 0.002, 0.04)],
+  'knock-steel': [tone('triangle', 880, 0.08, 0.001, 0.09, 820), hiss(2600, 6, 0.05, 0.001, 0.03)],
+  'knock-wall': [tone('sine', 150, 0.12, 0.003, 0.07, 110), hiss(300, 0.8, 0.05, 0.003, 0.05)],
+  'knock-awning': [hiss(420, 0.8, 0.12, 0.01, 0.14, 260), hiss(700, 1, 0.06, 0.01, 0.1, 400, 0.08)],
+  'knock-air': [hiss(1400, 0.7, 0.04, 0.03, 0.18, 2200)],
+  /** Her practice board rocks on its shelf: a clip ticks against it. */
+  'practice-tick': [hiss(2800, 8, 0.1, 0.001, 0.03), tone('triangle', 740, 0.05, 0.001, 0.05, undefined, 0.05)],
+  /** The toaster throws its slice: a spring let go, and the ting of its wires. */
+  'toaster-pop': [tone('triangle', 180, 0.12, 0.002, 0.08, 520), hiss(1600, 3, 0.1, 0.001, 0.04), tone('sine', 1240, 0.05, 0.002, 0.3, undefined, 0.06)],
+  /** The radio: static, two notes of something, static again. */
+  'radio-burst': [hiss(1800, 1.5, 0.06, 0.01, 0.16, 3200), tone('square', 523, 0.04, 0.01, 0.14, 659, 0.14), hiss(2400, 2, 0.05, 0.01, 0.14, 900, 0.32)],
+  /** Wet cloth swung on a line. */
+  'washing-flap': [hiss(520, 0.9, 0.1, 0.008, 0.12, 300), hiss(640, 0.9, 0.07, 0.008, 0.1, 380, 0.13)],
+  /** Three claps of a pigeon's wings as it goes. */
+  'pigeon-off': [hiss(900, 2, 0.1, 0.004, 0.05), hiss(1000, 2, 0.09, 0.004, 0.05, undefined, 0.07), hiss(1100, 2, 0.08, 0.004, 0.05, undefined, 0.14)],
+  /** Whoever passes, touched: the giraffe says what it thinks, low; the crates knock and the cat on top asks who that was; the balloon squeaks. */
+  'passer-giraffe': [tone('sawtooth', 74, 0.08, 0.05, 0.4, 62), hiss(700, 1.5, 0.05, 0.01, 0.08, undefined, 0.3)],
+  'passer-crates': [tone('triangle', 210, 0.1, 0.002, 0.06, 170), tone('triangle', 190, 0.08, 0.002, 0.06, 150, 0.09), tone('sine', 700, 0.06, 0.03, 0.22, 980, 0.18)],
+  'passer-balloon': [tone('sine', 900, 0.08, 0.01, 0.16, 1500), hiss(600, 1, 0.05, 0.004, 0.06)],
 } as const satisfies Record<string, readonly Note[]>
 
 export type VoiceId = keyof typeof VOICES

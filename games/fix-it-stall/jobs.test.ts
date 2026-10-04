@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { boardFor, clipLead, clipLeadEnd, partAcross, placePart, removePart, trayPart, turnPart, type Circuit } from './circuit'
+import { boardFor, clipLead, clipLeadEnd, partAcross, placePart, removeLead, removePart, trayPart, turnPart, type Circuit } from './circuit'
 import { LADDER } from './config'
-import { hasSwitch } from './gadgets'
+import { asBuilt, hasSwitch } from './gadgets'
 import { handBack } from './handback'
 import { draw, kindsMetBy, layOut, meetsTicket, oneActMends, type Break, type BreakKind } from './jobs'
 import { CUSTOMERS } from './tastes'
@@ -165,9 +165,18 @@ describe('the designed order', () => {
 })
 
 describe('the order ticket', () => {
-  it('asks for one to three of a part, and is met by that many carrying current', () => {
+  it('counts a part that hangs in the loop by its leads as it counts one seated on the board', () => {
+    const lantern = removeLead(asBuilt('lamp'), 0), board = boardFor(lantern), [linkA, linkB] = board.linkSocket
+    // A second lamp in place of the link, lying loose and held by two leads: two lamps in a row, both carrying current.
+    const hung: Circuit = { ...lantern, loose: [{ kind: 'lamp', blown: false, at: 12 }], leads: [{ a: linkA, b: { loose: 0, end: 0 } }, { a: linkB, b: { loose: 0, end: 1 } }] }
+    expect(handBack(hung)).toMatchObject({ ran: true, lit: 2 })
+    expect(meetsTicket(hung, { part: 'lamp', count: 2 })).toBe(true)
+    expect(meetsTicket(lantern, { part: 'lamp', count: 2 })).toBe(false)
+  })
+
+  it('asks for two or three of a part, and is met by that many carrying current', () => {
     for (const { job } of laid.filter((x) => x.job.idea === 'ticket')) {
-      expect([1, 2, 3]).toContain(job.ticket!.count)
+      expect([2, 3]).toContain(job.ticket!.count)
       expect(['lamp', 'cell', 'switch']).toContain(job.ticket!.part)
     }
     const { job, breaks } = layOut('gap', 7)

@@ -1,17 +1,17 @@
 import { describe, expect, it } from 'vitest'
-import { ACTS, CHANNELS, Customer, keyed, RIGS, type Pose } from './folk'
+import { ACTS, CHANNELS, Customer, FEATURES, keyed, RIGS, WATCHED, type Pose } from './folk'
 import { type Handed } from './handback'
 import { Director, RACCOON } from './motion'
 import { CUSTOMERS, reaction } from './tastes'
 
 const run = (seconds: number, step: (dt: number) => void) => { for (let i = 0; i < Math.round(seconds * 60); i++) step(1 / 60) }
-const zero = (): Pose => ({ lean: 0, turn: 0, lids: 0, special: 0, arm: 0, hop: 0 })
+const zero = (): Pose => ({ lean: 0, turn: 0, lids: 0, special: 0, arm: 0, hop: 0, brow: 0, gape: 0 })
 
 // Every gadget a customer could be handed, across all the things they can tell apart.
 const everything: Handed[] = []
 for (const ran of [true, false]) for (const popped of [false, true]) for (const light of [0, 1, 2, 3] as const) for (const wind of [-3, -1, 0, 1, 2, 3] as const)
   for (const sound of [0, 1, 2, 3] as const) for (const canPutOut of [false, true]) for (const lid of ['flat', 'bulging', 'banded'] as const) for (const shiny of [false, true])
-    for (const buzzing of sound > 0 ? [1, 2] : [0]) everything.push({ ran, popped, light, dark: light === 0, wind, sound, buzzing, canPutOut, lid, shiny })
+    for (const buzzing of sound > 0 ? [1, 2] : [0]) for (const lit of light > 0 ? [1, 2] : [0]) everything.push({ ran, popped, light, lit, dark: light === 0, wind, sound, buzzing, canPutOut, lid, shiny })
 
 describe('keys', () => {
   it('are joined by straight lines and held at the last', () => {
@@ -88,6 +88,16 @@ describe('every character moves like itself', () => {
     const shapes = CUSTOMERS.map((who) => JSON.stringify(RIGS[who].startle))
     expect(new Set(shapes).size).toBe(CUSTOMERS.length)
   })
+
+  it('and so does each thing that happens to a gadget while its owner watches: no two take it the same way', () => {
+    for (const what of [...WATCHED, 'alarm'] as const) {
+      const shapes = CUSTOMERS.map((who) => JSON.stringify(what === 'alarm' ? RIGS[who].alarm : RIGS[who].watched[what]))
+      expect(new Set(shapes).size, what).toBe(CUSTOMERS.length)
+    }
+    // Each has something of its own that goes up and down with its spirits.
+    for (const who of CUSTOMERS) expect(Object.keys(RIGS[who].gauge).length, who).toBeGreaterThan(0)
+    expect(new Set(CUSTOMERS.map((who) => JSON.stringify(RIGS[who].gauge))).size).toBe(CUSTOMERS.length)
+  })
 })
 
 describe('a customer', () => {
@@ -126,6 +136,80 @@ describe('a customer', () => {
     customer.settle('yak-hair-streams-back')
     expect(customer.pose.special).toBe(1)
     expect(customer.pose.lids).toBe(0.8)
+  })
+
+  it('has opinions about what is done to its gadget: it starts, it is delighted, it droops, it winces, and each passes', () => {
+    for (const who of CUSTOMERS) for (const what of WATCHED) {
+      const still = new Customer(who, new Director(4)), customer = new Customer(who, new Director(4))
+      customer.react(what)
+      let apart = 0
+      run(0.5, (dt) => {
+        still.step(dt, null, true)
+        customer.step(dt, null, true)
+        apart = Math.max(apart, ...[...CHANNELS, ...FEATURES].map((c) => Math.abs(customer.pose[c] - still.pose[c])))
+      })
+      expect(apart, `${who} ${what}`).toBeGreaterThan(0.08)
+      run(6, (dt) => customer.step(dt, null, true))
+      expect(customer.watched, `${who} ${what}`).toBeNull()
+    }
+  })
+
+  it('wears its spirits: the cockatoo\'s crest is up while its gadget runs and flat while a flag stands', () => {
+    const crest = (mood: number) => {
+      const cockatoo = new Customer('cockatoo', new Director(4))
+      let sum = 0, n = 0
+      run(4, (dt) => { cockatoo.step(dt, null, true, 0, { mood }); if (!cockatoo.doing) { sum += cockatoo.pose.special; n++ } })
+      return sum / n
+    }
+    expect(crest(0.8)).toBeGreaterThan(crest(-0.15) + 0.3)
+    expect(crest(-0.15)).toBeGreaterThan(crest(-0.8) + 0.1)
+    // And every one of them shows it in its brow.
+    for (const who of CUSTOMERS) {
+      const up = new Customer(who, new Director(4)), down = new Customer(who, new Director(4))
+      let most = 0, least = 0
+      run(5, (dt) => { up.step(dt, null, true, 0, { mood: 0.8 }); down.step(dt, null, true, 0, { mood: -0.8 }); most = Math.max(most, up.pose.brow); least = Math.min(least, down.pose.brow) })
+      expect(most, who).toBeGreaterThan(0.15)
+      expect(least, who).toBeLessThan(-0.25)
+    }
+  })
+
+  it('is alarmed for as long as a part of its gadget is out in the hand, and no longer', () => {
+    for (const who of CUSTOMERS) {
+      const calm = new Customer(who, new Director(4)), alarmed = new Customer(who, new Director(4))
+      let apart = 0
+      run(3, (dt) => { calm.step(dt, null, true); alarmed.step(dt, null, true, 0, { alarm: true }) })
+      apart = Math.max(...[...CHANNELS, ...FEATURES].map((c) => Math.abs(alarmed.pose[c] - calm.pose[c])))
+      expect(apart, who).toBeGreaterThan(0.3)
+      // A tortoise takes its time.
+      run(8, (dt) => { calm.step(dt, null, true); alarmed.step(dt, null, true) })
+      for (const c of FEATURES) expect(Math.abs(alarmed.pose[c] - calm.pose[c]), `${who} ${c}`).toBeLessThan(0.2)
+    }
+  })
+
+  it('looks where the hand is, and at nothing in particular when there is no hand', () => {
+    const customer = new Customer('owl', new Director(4))
+    run(0.5, (dt) => customer.step(dt, null, true, 0, { look: { x: -200, y: 260 } }))
+    expect(customer.gaze.x).toBeLessThan(-0.4)
+    expect(customer.gaze.y).toBeGreaterThan(0.5)
+    run(0.5, (dt) => customer.step(dt, null, true, 0, { look: { x: 300, y: 40 } }))
+    expect(customer.gaze.x).toBeGreaterThan(0.6)
+    run(0.5, (dt) => customer.step(dt, null, true))
+    expect(Math.abs(customer.gaze.x)).toBeLessThan(0.05)
+    for (const g of [customer.gaze.x, customer.gaze.y]) expect(Math.abs(g)).toBeLessThanOrEqual(1)
+  })
+
+  it('has everything on end at a pop, and it lies down again', () => {
+    for (const who of CUSTOMERS) {
+      const customer = new Customer(who, new Director(4))
+      expect(customer.fright).toBe(0)
+      customer.startle()
+      expect(customer.fright).toBe(1)
+      run(0.3, (dt) => customer.step(dt, null, true))
+      expect(customer.fright, who).toBeGreaterThan(0.4)
+      expect(customer.pose.brow, who).toBeGreaterThan(0.1)
+      run(4, (dt) => customer.step(dt, null, true))
+      expect(customer.fright, who).toBe(0)
+    }
   })
 
   it('flinches at a pop and settles again', () => {

@@ -57,13 +57,27 @@ describe('fixed tastes', () => {
     }
   })
 
+  it('a touch a little way off a part, given to a patch of that part, is a touch on the part', () => {
+    const mixer = vehicle('mixer'), fire = vehicle('fire-engine')
+    // Under the tyre, off the vehicle: no part by the point alone; the wheels by the patch it was given to.
+    const wheel = mixer.wheels[0], col = Math.floor(((wheel.x - mixer.side.x0) / (mixer.side.x1 - mixer.side.x0)) * 12)
+    expect(tasteFor(mixer, 'sponge', wheel.x, -0.12)).toBeNull()
+    expect(tasteFor(mixer, 'sponge', wheel.x, -0.12, { col, row: 0 })?.id).toBe('tickle')
+    // In front of the fire engine's lamps, off its nose: the eyes by the patch.
+    const eyes = fire.zones.eyes, row = Math.floor((((eyes.y0 + eyes.y1) / 2 - fire.side.y0) / (fire.side.y1 - fire.side.y0)) * 7)
+    expect(tasteFor(fire, 'sponge', fire.side.x0 - 0.15, (eyes.y0 + eyes.y1) / 2)).toBeNull()
+    expect(tasteFor(fire, 'sponge', fire.side.x0 - 0.15, (eyes.y0 + eyes.y1) / 2, { col: 0, row })?.id).toBe('soap-eyes')
+    // A patch that is not of the part does not make a touch one on it.
+    expect(tasteFor(mixer, 'sponge', wheel.x, 1.0, { col, row: 2 })).toBeNull()
+  })
+
   it('a taste that holds anywhere gives way to one that belongs to a part', () => {
     const fire = vehicle('fire-engine'), tipper = vehicle('tipper')
     expect(tasteFor(fire, 'hose', 1, 1.4)?.id).toBe('ladder-whoop')
     expect(tasteFor(tipper, 'sponge', 1, 1.4)?.id).toBe('foam-toot')
-    // The other tools on the same spot set nothing off.
-    expect(tasteFor(tipper, 'hose', 1, 1.4)).toBeNull()
-    expect(tasteFor(tipper, 'cloth', 1, 1.4)).toBeNull()
+    // The tipper's like is for foam, whatever hand meets it or lays it; the game sets it off only where the touch met or left foam (`play.test.ts`).
+    for (const hand of ['hose', 'cloth', 'finger'] as const) expect(tasteFor(tipper, hand, 1, 1.4)?.id).toBe('foam-toot')
+    // The fire engine's like is for the hose alone.
     expect(tasteFor(fire, 'finger', 1, 1.4)).toBeNull()
   })
 })

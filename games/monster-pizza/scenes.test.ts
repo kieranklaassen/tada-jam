@@ -1,17 +1,19 @@
 import { describe, expect, it } from 'vitest'
-import { CUSTOMERS } from './customers'
-import { chooseHint, glows, type Scene as HintScene } from './hint'
+import { CHARACTERS, CUSTOMERS } from './customers'
+import { CRUST, chooseHint, glows, type Scene as HintScene } from './hint'
 import { KINDS } from './kinds'
-import { OVEN_MOUTH, OVEN_WAY, PIZZA, SERVE } from './layout'
-import type { Delta } from './motion'
+import { OVEN_MOUTH, OVEN_WAY, PIZZA, SERVE, biteOf } from './layout'
+import { CHANNELS, type Delta } from './motion'
 import { Scene, sceneLength } from './scene'
-import { EATING_SECONDS, baking, bakedAlready, cannotStandAct, delightAct, eating, fedAct, fewAct, firstShowing, handFed, mannerAct, manyAct, ovenShowing, rawTasting, steppingUp, tasting, walk } from './scenes'
+import { EATING_SECONDS, baking, bakedAlready, cannotStandAct, delightAct, eating, fedAct, fewAct, firstShowing, FED_SECONDS, PLUCKS, handFed, harpHands, mannerAct, manyAct, ovenShowing, rawTasting, steppingUp, tasting, walk } from './scenes'
 import { restStaging } from './staging'
+import { REACH } from './table'
 import { planTasting } from './tasting'
+import { bite, gulp, mannerLength, type VoiceSpec } from './voices'
 
 const hand = { sound: () => {} }
-const KEYS: (keyof Delta)[] = ['lift', 'squash', 'lean', 'mouth', 'tongue', 'part', 'lookX', 'lookY', 'blink']
-const SCALE: Record<keyof Delta, number> = { lift: 1 / 40, squash: 5, lean: 8, mouth: 1, tongue: 1, part: 1, lookX: 1, lookY: 1, blink: 1 }
+const KEYS = CHANNELS
+const SCALE: Record<keyof Delta, number> = { lift: 1 / 40, squash: 5, lean: 8, mouth: 1, tongue: 1, part: 1, lookX: 1, lookY: 1, blink: 1, brow: 1, frown: 1, smile: 1, pucker: 1, cheeks: 1, pupil: 2, upset: 1, rollX: 1, rollY: 1 }
 
 function curve(at: (u: number) => Delta): number[] {
   const out: number[] = []
@@ -87,7 +89,7 @@ describe('the scenes', () => {
     const one = sceneLength(tasting(st, plan, 'grum', () => 1, () => ({ index: 0, x: 0, y: 0 }), () => null, hand))
     expect(one).toBeGreaterThanOrEqual(3.9)
     expect(one).toBeLessThanOrEqual(8)
-    const eat = sceneLength(eating(st, 'bim', 'olive', () => {}, hand))
+    const eat = sceneLength(eating(st, 'bim', ['olive'], () => {}, hand))
     expect(eat).toBe(EATING_SECONDS)
     expect(eat).toBeGreaterThanOrEqual(6)
     expect(eat).toBeLessThanOrEqual(9)
@@ -101,7 +103,7 @@ describe('the scenes', () => {
       expect(step).toBeGreaterThanOrEqual(2.5)
       expect(step).toBeLessThanOrEqual(5)
     }
-    for (const who of CUSTOMERS) for (const kind of KINDS) expect(sceneLength(handFed(st, who, kind, () => {}, hand))).toBeLessThanOrEqual(2.5)
+    for (const who of CUSTOMERS) for (const kind of KINDS) expect(sceneLength(handFed(st, who, kind, () => {}, hand))).toBeLessThanOrEqual(2.8)
   })
 
   it('leave the pizza on the board and every body at rest, whether played through or ended by a touch', () => {
@@ -129,7 +131,7 @@ describe('the scenes', () => {
         expect([st.pizzaX, st.pizzaY, st.pizzaSize, st.pizzaHidden, st.puffed]).toEqual([PIZZA.x, PIZZA.y, 1, false, 0])
         expect(st.act).toEqual({})
         expect([st.hand, st.cardHand, st.effect, st.lookAt, st.customer, st.leaving, st.arriving]).toEqual([null, null, null, null, null, null, null])
-        expect([st.lick, st.sizzling, st.patted, st.ovenGlow, st.baking, st.cardOpen, st.tubsIn]).toEqual([0, -1, -1, 0, 0, 1, 1])
+        expect([st.lick, st.sizzling.length, st.patted.length, st.ovenGlow, st.baking, st.cardOpen, st.tubsIn]).toEqual([0, 0, 0, 0, 0, 1, 1])
         expect(st.cardCount).toBeGreaterThanOrEqual(3)
       }
     }
@@ -163,15 +165,40 @@ describe('the scenes', () => {
     const sizzled = new Set<number>(), patted = new Set<number>()
     for (let t = 0; t <= plan.seconds + 0.1; t += 1 / 60) {
       scene.update(t)
-      if (st.sizzling >= 0) sizzled.add(st.sizzling)
-      if (st.patted >= 0) patted.add(st.patted)
+      expect(st.sizzling.length).toBeLessThanOrEqual(1)
+      expect(st.patted.length).toBeLessThanOrEqual(1)
+      for (const id of st.sizzling) sizzled.add(id)
+      for (const index of st.patted) patted.add(index)
       // Never both at once: one thing is shown at a time.
-      expect(st.sizzling >= 0 && st.patted >= 0).toBe(false)
+      expect(st.sizzling.length > 0 && st.patted.length > 0).toBe(false)
       if (t > plan.lick.lasts * 0.5 && t < plan.push.at) expect(Math.hypot(st.pizzaX - SERVE.x, st.pizzaY - SERVE.y)).toBeLessThan(1)
     }
     expect([...sizzled].sort()).toEqual([10, 11])
     expect([...patted]).toEqual([5])
     run(tasting(restStaging(), plan, 'grum', () => 1, () => ({ index: 0, x: 0, y: 0 }), () => null, hand), plan.seconds + 0.2)
+  })
+
+  it('sizzle every piece that has no partner at once in a big version, and pat every picture that has none', () => {
+    const st = restStaging()
+    const plan = planTasting([{ kind: 'sock', wanted: 0, have: 5, off: 5 }, { kind: 'olive', wanted: 6, have: 1, off: -5 }])
+    expect(plan.tastes.map((t) => [t.big, t.count])).toEqual([[true, 5], [true, 5]])
+    const scene = new Scene(tasting(st, plan, 'grum', (_, index) => 20 + index, (_, index) => ({ index: 3 + index, x: 30 + index * 40, y: 30 }), () => ({ x: 200, y: 500 }), hand))
+    scene.start(0, () => {})
+    let most = 0, mostPatted = 0
+    const reached = new Set<number>()
+    for (let t = 0; t <= plan.seconds + 0.1; t += 1 / 60) {
+      scene.update(t)
+      if (st.sizzling.length > 0) expect([...st.sizzling].sort()).toEqual([20, 21, 22, 23, 24])
+      if (st.patted.length > 0) expect([...st.patted].sort()).toEqual([3, 4, 5, 6, 7])
+      most = Math.max(most, st.sizzling.length)
+      mostPatted = Math.max(mostPatted, st.patted.length)
+      // The hand goes along the pictures, one after another.
+      if (st.cardHand) reached.add(Math.round(st.cardHand.x))
+    }
+    expect(most).toBe(5)
+    expect(mostPatted).toBe(5)
+    expect(reached.size).toBe(5)
+    expect(st.sizzling.length + st.patted.length).toBe(0)
   })
 
   it('leave nothing on a customer when they end: the soot of one big flame is shaken off as the tasting ends', () => {
@@ -203,10 +230,36 @@ describe('the scenes', () => {
     }
   })
 
+  it('take a sock the customer cannot stand into its mouth and spit it back, with no pulling on and no wearing in between', () => {
+    const st = restStaging()
+    let spat = 0, drawn = 0, handed = 0
+    const scene = new Scene(handFed(st, 'bim', 'sock', () => { spat++ }, hand))
+    scene.start(0, () => {})
+    for (let t = 0; t <= 3; t += 1 / 60) {
+      scene.update(t)
+      if (st.effect) drawn += 1
+      if (st.hand) handed += 1
+      expect(st.wearing).toBe(false)
+    }
+    expect(spat).toBe(1)
+    expect(drawn).toBe(0)
+    expect(handed).toBe(0)
+    // Anyone else pulls it on with a hand, and the sock is drawn on its way there.
+    const other = restStaging()
+    let pulled = 0
+    const wears = new Scene(handFed(other, 'grum', 'sock', () => {}, hand))
+    wears.start(0, () => {})
+    for (let t = 0; t <= 1; t += 1 / 60) {
+      wears.update(t)
+      if (other.effect && other.hand) pulled += 1
+    }
+    expect(pulled).toBeGreaterThan(20)
+  })
+
   it('take three bites and leave the board bare', () => {
     const st = restStaging()
     let eaten = 0
-    const scene = new Scene(eating(st, 'ooze', 'worm', () => { eaten++ }, hand))
+    const scene = new Scene(eating(st, 'ooze', ['worm', 'cheese'], () => { eaten++ }, hand))
     scene.start(0, () => {})
     const bites: number[] = []
     for (let t = 0; t <= EATING_SECONDS + 0.1; t += 1 / 60) {
@@ -223,23 +276,25 @@ describe('the scenes', () => {
 })
 
 describe('hints', () => {
-  const scene = (over: Partial<HintScene> = {}): HintScene => ({ finished: false, baked: false, own: true, tubs: [{ x: 250, y: 468 }, { x: 250, y: 658 }], pieces: [], door: [{ x: 886, y: 334 }, { x: 986, y: 334 }], ...over })
+  const scene = (over: Partial<HintScene> = {}): HintScene => ({ finished: false, baked: false, tasting: false, own: true, tubs: [{ x: 250, y: 468 }, { x: 250, y: 658 }], handTub: { x: 250, y: 658 }, pieces: [], door: [{ x: 886, y: 334 }, { x: 986, y: 334 }], ...over })
 
-  it('show a tap on a tub when the pizza is bare, every tub in its turn', () => {
-    const taps = [0, 1, 2, 3].map((turn) => chooseHint(scene(), turn))
-    for (const hint of taps) expect(hint?.move).toBe('tap')
-    expect(new Set(taps.map((h) => (h?.move === 'tap' ? h.at.y : 0))).size).toBe(2)
+  it('show a tap on one tub when the pizza is bare: always the tub of the kind the customer loves, never the spare one', () => {
+    const taps = [0, 1, 2, 3, 4, 5].map((turn) => chooseHint(scene(), turn))
+    for (const hint of taps) expect(hint).toEqual({ move: 'tap', at: { x: 250, y: 658 } })
+    // Every tub can be touched, and every tub has the ring.
     expect(glows(scene()).length).toBe(2)
   })
 
   it('show three moves in turn once something is on the pizza: one more on, the pizza onward, one off', () => {
     const s = scene({ pieces: [{ x: 600, y: 500 }] })
     const three = [0, 1, 2].map((turn) => chooseHint(s, turn))
-    expect(three[0]).toEqual({ move: 'tap', at: s.tubs[0] })
-    expect(three[1]).toEqual({ move: 'drag', from: PIZZA, to: OVEN_WAY })
+    expect(three[0]).toEqual({ move: 'tap', at: s.handTub })
+    // The slide is shown from the crust, where a press takes the pizza and never a piece.
+    expect(three[1]).toEqual({ move: 'drag', from: CRUST, to: { x: CRUST.x + OVEN_WAY.x - PIZZA.x, y: CRUST.y + OVEN_WAY.y - PIZZA.y } })
+    expect(Math.hypot(CRUST.x - PIZZA.x, CRUST.y - PIZZA.y) / PIZZA.r).toBeGreaterThan(REACH + 0.1)
     expect(three[2]).toEqual({ move: 'tap', at: s.pieces[0] })
     // Baked, the way onward is to the customer.
-    expect(chooseHint({ ...s, baked: true }, 1)).toEqual({ move: 'drag', from: PIZZA, to: SERVE })
+    expect(chooseHint({ ...s, baked: true }, 1)).toEqual({ move: 'drag', from: CRUST, to: { x: CRUST.x + SERVE.x - PIZZA.x, y: CRUST.y + SERVE.y - PIZZA.y } })
     expect(glows(s).length).toBe(3)
     // Until the child has laid a piece itself, only the tubs are pointed at: the piece a customer showed does not count.
     const watching = { ...s, own: false }
@@ -251,5 +306,51 @@ describe('hints', () => {
     const s = scene({ finished: true })
     expect(chooseHint(s, 0)?.move).toBe('tap')
     expect(glows(s).length).toBe(2)
+  })
+})
+
+describe('the eating, bite by bite', () => {
+  it('gives each bite the crunch of the kinds that lie in the third it takes', () => {
+    const st = restStaging()
+    const heard: string[] = []
+    const listening = { sound: (spec: VoiceSpec) => { heard.push(JSON.stringify(spec)) } }
+    const scene = new Scene(eating(st, 'grum', ['olive', 'sock'], () => {}, listening, [['olive'], [], ['sock', 'olive']]))
+    scene.start(0, () => {})
+    for (let t = 0; t <= EATING_SECONDS + 0.1; t += 1 / 60) scene.update(t)
+    expect(heard).toContain(JSON.stringify(bite(0, ['olive'])))
+    expect(heard).toContain(JSON.stringify(bite(1, [])))
+    expect(heard).toContain(JSON.stringify(bite(2, ['sock', 'olive'])))
+    expect(heard).not.toContain(JSON.stringify(bite(1, ['olive', 'sock'])))
+  })
+
+  it('sends every spot on the pizza to exactly one of the three bites, and something to each', () => {
+    const counts = [0, 0, 0]
+    for (let x = -1; x <= 1; x += 0.05) for (let y = -1; y <= 1; y += 0.05) if (Math.hypot(x, y) <= 1) counts[biteOf(x, y)] += 1
+    const all = counts[0] + counts[1] + counts[2]
+    for (const n of counts) expect(n / all).toBeGreaterThan(0.2)
+  })
+
+  it('plucks the cheese at the moments its notes sound, and takes each customer as long over a piece fed by hand as its sound lasts in its manner', () => {
+    expect(PLUCKS.length).toBe(4)
+    for (const who of CUSTOMERS) {
+      for (const at of PLUCKS) {
+        expect(at).toBeGreaterThan(0.1)
+        expect(at).toBeLessThan(1)
+        // Dipped at the note, and up again between notes.
+        expect(harpHands(who, at).pluck.y - harpHands(who, at - 0.043).pluck.y, who).toBeGreaterThan(15)
+      }
+      // The pulling hand goes out to the tubs' side and holds the string there.
+      expect(harpHands(who, 0.9).pull.x).toBeLessThan(harpHands(who, 0).pull.x - 100)
+      expect(harpHands(who, 0.9).pull).toEqual(harpHands(who, 0.5).pull)
+      // The scene and the sound are stretched by the same factor, for every kind: what is heard at a share of the sound is drawn at that share of the scene.
+      for (const kind of KINDS) {
+        if (kind === CHARACTERS[who].loves || kind === CHARACTERS[who].cannotStand) continue
+        const st = restStaging()
+        const length = sceneLength(handFed(st, who, kind, () => {}, hand))
+        expect(length, `${who} ${kind}`).toBeCloseTo(FED_SECONDS * mannerLength(gulp(kind), who), 6)
+      }
+    }
+    // Quick for the quick one, slow for the slow one.
+    expect(sceneLength(handFed(restStaging(), 'bim', 'pepper', () => {}, hand))).toBeLessThan(sceneLength(handFed(restStaging(), 'grum', 'pepper', () => {}, hand)) - 0.3)
   })
 })

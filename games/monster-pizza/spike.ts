@@ -12,8 +12,8 @@ import type { Show } from './view'
 export function spikeShow(): Show {
   const table = makeTable(['cheese', 'pepper'], 20261003)
   table.pieces.push(
-    { id: 1, kind: 'cheese', x: -0.3, y: -0.22, turn: 0.4, settle: { x: 0, v: 0 } },
-    { id: 2, kind: 'cheese', x: 0.34, y: 0.26, turn: -0.9, settle: { x: 0, v: 0 } },
+    { id: 1, kind: 'cheese', x: -0.3, y: -0.22, turn: 0.4, settle: { x: 0, v: 0 }, age: 9 },
+    { id: 2, kind: 'cheese', x: 0.34, y: 0.26, turn: -0.9, settle: { x: 0, v: 0 }, age: 9 },
   )
   table.nextId = 3
   const grum = restPose()
@@ -35,10 +35,10 @@ export function spikeShow(): Show {
     pizza: { x: PIZZA.x, y: PIZZA.y, size: 1, hidden: false, bites: 0, puffed: 0 },
     customer: { who: 'grum', pose: grum, x: CUSTOMER.x, y: CUSTOMER.y, size: 1 },
     leaving: null,
-    card: { pictured: layOut([{ kind: 'cheese', count: 3 }], 'rows'), count: 99, open: 1, patted: -1, pat: 0, shake: 0 },
+    card: { pictured: layOut([{ kind: 'cheese', count: 3 }], 'rows'), count: 99, open: 1, patted: [], pat: 0, shake: 0 },
     waiting: [
-      { who: 'bim', big: false, pose: bim, up: 1 },
-      { who: 'fizz', big: true, pose: fizz, up: 1 },
+      { who: 'bim', big: false, fat: false, wave: 0, pose: bim, up: 1 },
+      { who: 'fizz', big: true, fat: true, wave: 0, pose: fizz, up: 1 },
     ],
     tubsIn: 1,
     glow: 0,
@@ -49,10 +49,16 @@ export function spikeShow(): Show {
     ovenGlow: 0,
     effect: null,
     lick: 0,
-    sizzling: -1,
+    roll: null,
+    street: null,
+    boardX: 0,
+    sizzling: [],
+    pairing: false,
+    door: 0,
     sizzle: 0,
     soot: 0,
     wearing: false,
+    puffs: [],
     baking: 0,
     crumbs: false,
   }

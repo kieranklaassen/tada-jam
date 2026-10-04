@@ -11,7 +11,8 @@ import { APART, CAPACITY, REACH } from './table'
 // damaged save never stops the kitchen from opening. Nothing is saved in the
 // air: the Mount hands over pieces at rest (table.ts, restingPieces).
 
-export type SavedPiece = { kind: Kind; x: number; y: number; turn: number }
+/** A piece on the pizza: its kind and its spot. How it lies there follows from the spot (table.ts, turnAt). */
+export type SavedPiece = { kind: Kind; x: number; y: number }
 export type SavedOrder = { wanted: Wanted[]; picture: Picture; seed: number }
 /** The new ideas a character shows once ever. */
 export const SHOWINGS = ['tap-a-tub', 'to-the-oven'] as const
@@ -55,7 +56,7 @@ function readPieces(raw: unknown): SavedPiece[] {
     if (Math.hypot(r.x, r.y) > REACH + 0.004) continue
     // Positions are saved to three places, so two pieces may read as a hair closer than they lay.
     if (out.some((p) => Math.hypot(p.x - (r.x as number), p.y - (r.y as number)) < APART - 0.004)) continue
-    out.push({ kind: r.kind, x: r.x, y: r.y, turn: typeof r.turn === 'number' && Number.isFinite(r.turn) ? r.turn : 0 })
+    out.push({ kind: r.kind, x: r.x, y: r.y })
   }
   return out
 }
@@ -75,7 +76,8 @@ function readOrder(raw: unknown): SavedOrder | null {
     total += w.count
   }
   if (total > MOST_PIECES) return null
-  return { wanted, picture: r.picture === 'scattered' ? 'scattered' : 'rows', seed: typeof r.seed === 'number' && Number.isFinite(r.seed) ? r.seed >>> 0 : 1 }
+  const picture = r.picture === 'scattered' ? 'scattered' : 'rows'
+  return { wanted, picture, seed: picture === 'scattered' && typeof r.seed === 'number' && Number.isFinite(r.seed) ? r.seed >>> 0 : 1 }
 }
 
 function readTubs(raw: unknown): Kind[] {
@@ -125,14 +127,18 @@ function readShown(raw: unknown): Showing[] {
   return Array.isArray(raw) ? SHOWINGS.filter((id) => raw.includes(id)) : []
 }
 
-export function serialize(save: Save): Save {
+/** What goes to storage: the save, with a card's seed there only when the card is scattered. */
+export type Stored = Omit<Save, 'order'> & { order: (Omit<SavedOrder, 'seed'> & { seed?: number }) | null }
+
+export function serialize(save: Save): Stored {
   return {
     ...baseSerialize(save),
     customer: save.customer,
-    order: save.order && { wanted: save.order.wanted.map((w) => ({ kind: w.kind, count: w.count })), picture: save.order.picture, seed: save.order.seed },
+    // The seed is kept for a scattered card only: a card in rows is laid out from its amounts.
+    order: save.order && { wanted: save.order.wanted.map((w) => ({ kind: w.kind, count: w.count })), picture: save.order.picture, ...(save.order.picture === 'scattered' ? { seed: save.order.seed } : {}) },
     tubs: [...save.tubs],
     bigRoll: save.bigRoll,
-    pizza: { pieces: save.pizza.pieces.map((p) => ({ kind: p.kind, x: round(p.x), y: round(p.y), turn: round(p.turn) })), baked: save.pizza.baked },
+    pizza: { pieces: save.pizza.pieces.map((p) => ({ kind: p.kind, x: round(p.x), y: round(p.y) })), baked: save.pizza.baked },
     pushedBack: save.pushedBack,
     waiting: save.waiting && { small: save.waiting.small, big: save.waiting.big },
     shown: [...save.shown],

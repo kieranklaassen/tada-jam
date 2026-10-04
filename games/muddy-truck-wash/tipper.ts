@@ -18,6 +18,7 @@ export const tipper: VehicleDef = {
     { x: 1.84, r: 0.52, z: 0.8, w: 0.44, hub: PAINT.orange },
   ],
   eyes: EYES,
+  mouth: { at: [-2.27, 0.62, 0], w: 1.5, h: 0.52 },
   side: { x0: -2.35, x1: 2.45, y0: 0, y1: 2.75 },
   zones: {
     nose: { x0: -2.35, x1: -1.5, y0: 0.4, y1: 1.3 },

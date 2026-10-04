@@ -21,9 +21,9 @@ export const CASE: Record<GadgetKind, { body: string; dark: string }> = {
 }
 
 /** What the gadget is doing, as its owner tries it. Levels run 0 to 3; `wind` is negative when a blade turns the wrong way. */
-export type Doing = { light: number; wind: number; sound: number; popped: boolean; lid: Lid; on: number; shut: number }
+export type Doing = { light: number; wind: number; sound: number; popped: boolean; lid: Lid; on: number; shut: number; lit: number; buzzing: number; switched: boolean; shiny: boolean }
 
-export const QUIET: Doing = { light: 0, wind: 0, sound: 0, popped: false, lid: 'flat', on: 0, shut: 1 }
+export const QUIET: Doing = { light: 0, wind: 0, sound: 0, popped: false, lid: 'flat', on: 0, shut: 1, lit: 0, buzzing: 0, switched: false, shiny: false }
 
 const kindOf = (gadget: GadgetKind) => gadget.replace('-plain', '') as 'lamp' | 'fan' | 'bell' | 'car' | 'robot' | 'sign'
 
@@ -77,6 +77,16 @@ function blade(c: Ctx, x: number, y: number, r: number, wind: number, seconds: n
     c.stroke()
   }
   c.globalAlpha = 1
+}
+
+/** A car's wheel, seen through its arch: a tyre, and a hub with five holes round it, turning by its motor, forward or back. Five, and no spokes, so that it never stands as a cross. */
+function wheel(c: Ctx, x: number, y: number, r: number, wind: number, seconds: number): void {
+  disc(c, x, y, r + 3, INK.steelDark)
+  disc(c, x, y, r, '#2a2f36')
+  disc(c, x, y, r * 0.62, '#e9eff2')
+  const turn = seconds * wind * 4 + 0.3
+  for (let hole = 0; hole < 5; hole++) disc(c, x + Math.cos(turn + (hole * Math.PI * 2) / 5) * r * 0.4, y + Math.sin(turn + (hole * Math.PI * 2) / 5) * r * 0.4, r * 0.11, '#2a2f36')
+  disc(c, x, y, r * 0.14, INK.steel)
 }
 
 /** A sounder, with the rings of its rasp. */
@@ -137,9 +147,10 @@ export function paintGadget(c: Ctx, gadget: GadgetKind, box: Box, doing: Doing, 
   else if (kind === 'fan') blade(c, cx, cy, r, wind, seconds)
   else if (kind === 'bell') sounder(c, cx, cy, r, sound, seconds)
   else if (kind === 'car') {
-    // A headlamp at the front and the motor's wheel at the back.
+    // A headlamp at the front and the motor's wheel at the back: it turns forward for a blade that would blow, backward
+    // for one that would suck, slowly for a little current.
     lens(c, x + w * 0.76, cy, r * 0.8, light)
-    blade(c, x + w * 0.3, cy, r * 0.9, wind, seconds)
+    wheel(c, x + w * 0.3, cy, r * 0.9, wind, seconds)
   } else if (kind === 'robot') {
     // Two eyes that are one lamp, a mouth that is the buzzer, and an arm on the motor.
     lens(c, x + w * 0.36, cy - h * 0.08, r * 0.5, light)
@@ -147,7 +158,9 @@ export function paintGadget(c: Ctx, gadget: GadgetKind, box: Box, doing: Doing, 
     sounder(c, cx, cy + h * 0.22, r * 0.34, sound, seconds)
     c.save()
     c.translate(x + w * 0.96, cy)
-    c.rotate(Math.sin(seconds * wind * 5) * 0.9)
+    // Its arm waves up and down beside it when the motor turns the way it should; turned the other way it is twisted
+    // round behind it and flails there.
+    c.rotate(wind >= 0 ? Math.sin(seconds * wind * 5) * 0.9 : Math.PI * 0.72 + Math.sin(seconds * wind * 9) * 0.35)
     c.strokeStyle = INK.steel
     c.lineWidth = 7
     c.lineCap = 'round'
@@ -158,13 +171,45 @@ export function paintGadget(c: Ctx, gadget: GadgetKind, box: Box, doing: Doing, 
     disc(c, w * 0.16, -h * 0.3, 7, INK.red)
     c.restore()
   }
+  // The switch on its edge, which its owner throws: a nub that lies to one side when it is off and the other when on.
+  // A spoon, a key or the foil that carries current in the mend sticks out from under the lid, catching the light.
+  if (doing.shiny) {
+    c.strokeStyle = INK.steel
+    c.lineWidth = 5
+    c.lineCap = 'round'
+    c.beginPath()
+    c.moveTo(x + w * 0.9, y + h * 0.55)
+    c.lineTo(x + w + 10, y + h * 0.5)
+    c.stroke()
+    c.beginPath()
+    c.ellipse(x + w + 20, y + h * 0.48, 12, 8, -0.15, 0, Math.PI * 2)
+    c.fillStyle = INK.steel
+    c.fill()
+    disc(c, x + w + 17, y + h * 0.45, 3, INK.white)
+  }
+  // A gadget with no switch in it has none on its case.
+  if (doing.switched) {
+    roundRect(c, x + w * 0.06, y - 5, w * 0.16, 9, 4)
+    c.fillStyle = INK.steelDark
+    c.fill()
+    disc(c, x + w * (0.085 + 0.11 * on), y - 1, 5.5, INK.red)
+  }
+  // Whatever was put into it that it did not come with shows through the lid as well: a lamp that is lit, a blade that
+  // turns, a buzzer that rasps. A gadget does in its owner's hands exactly what its circuit does.
+  if (light > 0 && (kind === 'fan' || kind === 'bell')) lens(c, x + w * 0.84, y + h * 0.24 - proud * doing.shut, r * 0.42, light)
+  if (wind !== 0 && (kind === 'lamp' || kind === 'bell')) blade(c, x + w * 0.16, y + h * 0.76 - proud * doing.shut, r * 0.42, wind, seconds)
+  if (sound > 0 && (kind === 'lamp' || kind === 'fan' || kind === 'car')) sounder(c, x + w * 0.84, y + h * 0.78 - proud * doing.shut, r * 0.38, sound, seconds)
+  // A second lamp or a third that is lit shows beside the first, through the lid; and a second buzzer that rasps beside it.
+  for (let extra = 1; extra < Math.min(3, doing.lit); extra++) lens(c, x + w * (0.94 - extra * 0.15), y + h * 0.2 - proud * doing.shut, r * 0.4, light)
+  if (doing.buzzing >= 2) sounder(c, x + w * 0.66, y + h * 0.8 - proud * doing.shut, r * 0.34, sound, seconds)
   if (doing.lid === 'banded' && doing.shut > 0.5) {
     // The rubber band that holds a lid that will not shut.
     c.strokeStyle = '#c99a5b'
     c.lineWidth = 6
     c.beginPath()
-    c.moveTo(x + w * 0.5 - 12, y - 4)
-    c.lineTo(x + w * 0.5 - 6, y + h + 4)
+    // It goes round the case between the switch on its edge and what is on its front: across neither.
+    c.moveTo(x + w * 0.29 - 4, y - 4)
+    c.lineTo(x + w * 0.29 + 3, y + h + 4)
     c.stroke()
   }
   if (doing.popped && on > 0.5) {

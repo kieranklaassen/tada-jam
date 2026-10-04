@@ -1,5 +1,8 @@
 import { GRID_H, GRID_W, cellAt, type Patch, type Surface } from './surface'
 
+/** The column whose top the first showing's drop falls on. `showing.ts` reads it from here: the mud is laid for the showing. */
+export const SHOWING_COL = 2
+
 // How a vehicle is muddy when it rolls in, for each place in the designed
 // order. Laid out from a seeded stream, so the same seed gives the same mud.
 
@@ -24,6 +27,31 @@ function blob(surface: Surface, col: number, row: number, size: number, patch: P
     const cell = cellAt(c, r)
     if (!over.includes(surface[cell])) continue
     surface[cell] = patch
+    placed += 1
+    frontier.push([c - 1, r], [c + 1, r], [c, r - 1], [c, r + 1])
+  }
+  return s
+}
+
+/**
+ * Grows one patch of dried mud on clean paint, in a band of rows, that touches no dried mud already there: so two
+ * patches stay two. Where there is no room for one, none is laid.
+ */
+function apart(surface: Surface, rows: readonly [number, number], size: number, seed: number): number {
+  const taken = surface.map((patch) => patch === 'c')
+  const beside = (c: number, r: number): boolean => [[c - 1, r], [c + 1, r], [c, r - 1], [c, r + 1], [c - 1, r - 1], [c + 1, r + 1], [c - 1, r + 1], [c + 1, r - 1]].some(([a, b]) => a >= 0 && a < GRID_W && b >= 0 && b < GRID_H && taken[cellAt(a, b)])
+  const free = (c: number, r: number): boolean => c >= 0 && c < GRID_W && r >= 0 && r < GRID_H && surface[cellAt(c, r)] === 'd' && !beside(c, r)
+  const starts: [number, number][] = []
+  for (let r = rows[0]; r <= rows[1]; r++) for (let c = 0; c < GRID_W; c++) if (free(c, r)) starts.push([c, r])
+  let [pick, s] = next(seed)
+  if (!starts.length) return s
+  const frontier: [number, number][] = [starts[Math.floor(pick * starts.length)]]
+  let placed = 0
+  while (frontier.length && placed < size) {
+    ;[pick, s] = next(s)
+    const [c, r] = frontier.splice(Math.floor(pick * frontier.length), 1)[0]
+    if (!free(c, r)) continue
+    surface[cellAt(c, r)] = 'c'
     placed += 1
     frontier.push([c - 1, r], [c + 1, r], [c, r - 1], [c, r + 1])
   }
@@ -62,17 +90,27 @@ export function arrive(clean: Surface, position: string, seed: number): Surface 
       if (surface[cell] !== '.' && (r === 0 || roll < 0.45)) surface[cell] = 's'
     }
   } else {
-    // Soft mud thrown up from the wheels, on about a third of the vehicle.
-    splash(0.34, [0, 2], 3, 's', ['d'])
-    // And, further on, two or three patches that have dried on.
+    // Further on, two or three patches that have dried on, each apart from the others.
     if (position === 'dried-patches') {
-      // One of them is always on top of the nose, open to the sky, where a drop can fall on it.
-      const col = 1
+      // One of them is always on top of the nose, open to the sky, where a drop can fall on it: in the column the first showing uses, behind the lamp eyes.
+      const col = SHOWING_COL
       for (let r = GRID_H - 1; r >= 0; r--) if (surface[cellAt(col, r)] !== '.') {
-        s = blob(surface, col, r, Math.max(3, Math.round(body * 0.06)), 'c', s, ['d', 's'])
+        s = blob(surface, col, r, Math.max(3, Math.round(body * 0.06)), 'c', s, ['d'])
         break
       }
-      splash(0.14, [2, GRID_H - 1], 2, 'c', ['d', 's'])
+      // One or two more, higher than the sills, none of them touching another.
+      let more: number
+      ;[more, s] = next(s)
+      for (let i = 0; i < (more < 0.5 ? 1 : 2); i++) s = apart(surface, [2, GRID_H - 1], Math.max(2, Math.round(body * 0.07)), s)
+    }
+    // Soft mud thrown up from the wheels, on about a third of the vehicle: three splashes, and more until it is a third.
+    splash(0.34, [0, 2], 3, 's', ['d'])
+    for (let i = 0; i < 8; i++) {
+      const lacking = Math.round(body * 0.31) - surface.filter((patch) => patch === 's').length
+      if (lacking <= 0) break
+      let at: [number, number] | null
+      ;[at, s] = pickIn(surface, [0, 3], s, ['d'])
+      if (at) s = blob(surface, at[0], at[1], lacking, 's', s, ['d'])
     }
   }
   return surface

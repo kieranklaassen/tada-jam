@@ -3,7 +3,7 @@ import { LADDER } from './config'
 import { ROSTER } from './cycle'
 import { MAX_DIPS, arrive, next, puddled } from './mud'
 import { patchAt, patchCentre, silhouette } from './silhouette'
-import { CELLS, GRID_H, GRID_W, cellAt, tally } from './surface'
+import { CELLS, GRID_H, GRID_W, cellAt, tally, type Surface } from './surface'
 import { tipper } from './tipper'
 
 const VEHICLES = ROSTER
@@ -69,6 +69,41 @@ describe('the mud a vehicle rolls in with', () => {
         expect(patch === '.').toBe(clean[cell] === '.')
         expect(['.', 'c', 's', 'd']).toContain(patch)
       })
+    }
+  })
+
+  it('lays soft mud on about a third of the vehicle, and at dried-patches two or three patches of dried mud that do not touch, on every vehicle and every seed tried', () => {
+    const patches = (surface: Surface): number => {
+      const seen = new Set<number>()
+      let count = 0
+      for (let cell = 0; cell < surface.length; cell++) {
+        if (surface[cell] !== 'c' || seen.has(cell)) continue
+        count += 1
+        const stack = [cell]
+        while (stack.length) {
+          const at = stack.pop()!
+          if (seen.has(at) || surface[at] !== 'c') continue
+          seen.add(at)
+          const c = at % GRID_W, r = Math.floor(at / GRID_W)
+          for (const [a, b] of [[c - 1, r], [c + 1, r], [c, r - 1], [c, r + 1]]) if (a >= 0 && a < GRID_W && b >= 0 && b < GRID_H) stack.push(b * GRID_W + a)
+        }
+      }
+      return count
+    }
+    for (const def of ROSTER) for (let seed = 1; seed <= 300; seed++) {
+      const clean = silhouette(def), body = clean.filter((patch) => patch !== '.').length
+      for (const position of [LADDER[0], LADDER[1]]) {
+        const mud = arrive(clean, position, seed * 2654435761)
+        const soft = mud.filter((patch) => patch === 's').length / body
+        expect(soft, `${def.id} ${position} seed ${seed}`).toBeGreaterThanOrEqual(0.27)
+        expect(soft, `${def.id} ${position} seed ${seed}`).toBeLessThanOrEqual(0.42)
+        const dried = patches(mud)
+        if (position === LADDER[0]) expect(dried).toBe(0)
+        else {
+          expect(dried, `${def.id} seed ${seed}`).toBeGreaterThanOrEqual(2)
+          expect(dried, `${def.id} seed ${seed}`).toBeLessThanOrEqual(3)
+        }
+      }
     }
   })
 

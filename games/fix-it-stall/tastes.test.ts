@@ -13,7 +13,7 @@ const inPlaceOfLink = (circuit: Circuit, part: Parameters<typeof placePart>[1]) 
 
 describe('what a gadget does for its owner', () => {
   it('runs as built, with a flat lid, and can be put out when it has a switch', () => {
-    expect(handBack(asBuilt('lamp'))).toEqual({ ran: true, popped: false, light: 2, dark: false, wind: 0, sound: 0, buzzing: 0, canPutOut: true, lid: 'flat', shiny: false })
+    expect(handBack(asBuilt('lamp'))).toEqual({ ran: true, popped: false, light: 2, lit: 1, dark: false, wind: 0, sound: 0, buzzing: 0, canPutOut: true, lid: 'flat', shiny: false })
     expect(handBack(asBuilt('fan-plain'))).toMatchObject({ ran: true, wind: 2, canPutOut: false })
     expect(handBack(asBuilt('robot'))).toMatchObject({ ran: true, light: 2, wind: 2, sound: 2, buzzing: 1 })
   })
@@ -74,14 +74,14 @@ describe('what a gadget does for its owner', () => {
 })
 
 describe('the customers', () => {
-  const base: Handed = { ran: true, popped: false, light: 0, dark: false, wind: 0, sound: 0, buzzing: 0, canPutOut: false, lid: 'flat', shiny: false }
+  const base: Handed = { ran: true, popped: false, light: 0, lit: 0, dark: false, wind: 0, sound: 0, buzzing: 0, canPutOut: false, lid: 'flat', shiny: false }
   const lit = (light: Handed['light']): Handed => ({ ...base, light })
 
   // Every gadget a customer could be handed, across all the things they can tell apart.
   const everything: Handed[] = []
   for (const ran of [true, false]) for (const popped of [false, true]) for (const light of [0, 1, 2, 3] as const) for (const wind of [-3, -1, 0, 1, 2, 3] as const)
     for (const sound of [0, 1, 2, 3] as const) for (const canPutOut of [false, true]) for (const lid of ['flat', 'bulging', 'banded'] as const) for (const shiny of [false, true])
-      everything.push({ ran, popped, light, dark: light === 0, wind, sound, buzzing: sound > 0 ? 2 : 0, canPutOut, lid, shiny })
+      for (const lit of light > 0 ? [1, 2] : [0]) everything.push({ ran, popped, light, lit, dark: light === 0, wind, sound, buzzing: sound > 0 ? 2 : 0, canPutOut, lid, shiny })
 
   it('each have a like and a dislike that a mend can bring out', () => {
     const likes: Mood[] = ['delight'], dislikes: Mood[] = ['disgust', 'fright', 'sulk', 'asleep']
@@ -114,6 +114,25 @@ describe('the customers', () => {
     expect(reaction('moth', suck)).toMatchObject({ mood: 'delight', secret: true })
   })
 
+  it('the moth likes the brightest lamp, and more lamps than one', () => {
+    expect(reaction('moth', { ...lit(3), lit: 1 }).act).toBe('moth-bumps-the-glass-in-bliss')
+    expect(reaction('moth', { ...lit(2), lit: 2 }).act).toBe('moth-bumps-the-glass-in-bliss')
+    expect(reaction('moth', { ...lit(2), lit: 1 }).act).toBe('moth-circles-the-lamp')
+    // A second lamp joined in beside the first is two lamps lit, each as bright as one alone.
+    const two = placePart(asBuilt('lamp-plain'), trayPart('lamp', spare[0], spare[1]))
+    expect(handBack(two)).toMatchObject({ ran: true, light: 2, lit: 2 })
+    expect(reaction('moth', handBack(two)).mood).toBe('delight')
+  })
+
+  it('a fan that sucks is not mended, and is tried all the same: the moth rides the blade and the yak\'s fringe goes in', () => {
+    const fan = asBuilt('fan-plain'), sucks = handBack(turnPart(fan, indexOf(fan, 'motor')))
+    expect(sucks).toMatchObject({ ran: false, popped: false })
+    expect(sucks.wind).toBeLessThan(0)
+    expect(reaction('moth', sucks)).toMatchObject({ act: 'moth-rides-the-blade', secret: true })
+    expect(reaction('yak', sucks).act).toBe('yak-fringe-goes-in')
+    for (const who of CUSTOMERS) if (who !== 'moth' && who !== 'yak') expect(reaction(who, sucks).act).toContain('lays-it-back')
+  })
+
   it('the owl likes it dim and likes a switch; the tortoise likes it slow; the cockatoo likes it loud; the magpie likes it neat', () => {
     expect(reaction('owl', lit(1)).mood).toBe('delight')
     expect(reaction('owl', { ...lit(2), canPutOut: true }).mood).toBe('delight')
@@ -128,9 +147,18 @@ describe('the customers', () => {
     expect(reaction('magpie', { ...base, lid: 'banded', shiny: true })).toMatchObject({ mood: 'delight', secret: true })
   })
 
+  it('a lantern that stays dark when it is tried sends the cockatoo to sleep and droops the moth, and is laid back', () => {
+    const dark = handBack(crackTrace(asBuilt('lamp'), 0))
+    expect(dark).toMatchObject({ ran: false, dark: true })
+    expect(reaction('cockatoo', dark).act).toBe('cockatoo-asleep-at-once')
+    expect(reaction('moth', dark).act).toBe('moth-droops')
+    for (const who of CUSTOMERS) if (who !== 'moth' && who !== 'cockatoo') expect(reaction(who, dark).act).toContain('lays-it-back')
+  })
+
   it('are never turned on the child: a gadget that does nothing gets a shrug and is laid back', () => {
     for (const who of CUSTOMERS) {
       const taken = reaction(who, { ...base, ran: false })
+      expect(reaction(who, { ...base, ran: false, popped: true, wind: 0 }).act).toMatch(/lays-it-back|stays-in/)
       expect(taken.mood).toBe('shrug')
       expect(taken.act).toContain('lays-it-back')
     }

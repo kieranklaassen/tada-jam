@@ -17,6 +17,7 @@ export const fireEngine: VehicleDef = {
     { x: 1.55, r: 0.46, z: 0.8, w: 0.4, hub: PAINT.cream },
   ],
   eyes: EYES,
+  mouth: { at: [-2.52, 0.62, 0], w: 1.5, h: 0.52 },
   side: { x0: -2.6, x1: 2.6, y0: 0, y1: 2.9 },
   zones: {
     nose: { x0: -2.6, x1: -1.9, y0: 0.4, y1: 1.2 },
@@ -37,6 +38,9 @@ export const fireEngine: VehicleDef = {
     body.box([1.45, 1.5, 1.84], PAINT.red, { at: [-1.62, 1.42, 0] }, { bevel: 0.1, top: { sx: 0.86, dx: 0.1, sz: 0.93 } })
     sideWindows(body, -1.5, 1.72, 0.74, 0.5, 0.88)
     body.box([0.05, 0.52, 1.36], PAINT.glass, { at: [-2.3, 1.84, 0], turn: { axis: 'z', by: -0.13 } }, { bevel: 0.015, mat: MAT.lamp })
+    // A grille low on the cab's front, between the bumper and the lamp eyes: the bubbles of its dislike come out of it.
+    body.box([0.07, 0.22, 0.9], PAINT.charcoal, { at: [-2.365, 0.98, 0] }, { bevel: 0.02 })
+    for (let i = -1; i <= 1; i++) body.box([0.05, 0.04, 0.84], PAINT.zinc, { at: [-2.4, 0.98 + i * 0.07, 0] }, { bevel: 0.012, mat: MAT.metal })
     // The roof lamp.
     body.round(0.14, 0.2, PAINT.blue, { at: [-1.5, 2.26, 0] }, { axis: 'y', mat: MAT.lamp, segs: 12 })
     // The long body, with a cream stripe and roller lockers.

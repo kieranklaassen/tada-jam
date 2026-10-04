@@ -15,6 +15,8 @@ export type Taste = {
   index: number
   /** More than three off: one big version stands for all of them. */
   big: boolean
+  /** How many pieces this beat is about: one, or all of them in a big version. */
+  count: number
   at: number
   lasts: number
 }
@@ -32,8 +34,9 @@ export type TastingPlan = {
 export const ONE_BY_ONE = 3
 /** At most this many kinds are played in one tasting. */
 export const KINDS_PLAYED = 3
-const LICK = 1.4
-const SAVOUR = 0.5
+/** The lean and the lick: the tongue reaches the pizza as this ends, and the first reaction starts at that touch. */
+const LICK = 1.9
+const SAVOUR = 0
 const BETWEEN = 0.25
 const AFTER = 0.4
 const PUSH = 0.9
@@ -44,9 +47,15 @@ const BIG_AMONG = 1.4
 export const SHORTEST = 4
 export const LONGEST = 8
 
-export function planTasting(differences: readonly Difference[]): TastingPlan {
+/**
+ * `always` is a kind whose reaction must come every time it is on the pizza:
+ * the one this customer cannot stand. It is played first, so it is never one
+ * of the kinds left out when more than three are off.
+ */
+export function planTasting(differences: readonly Difference[], always?: Kind): TastingPlan {
   // Too many first: those pieces are on the pizza, in front of the child.
-  const played = [...differences.filter((d) => d.off > 0), ...differences.filter((d) => d.off < 0)].slice(0, KINDS_PLAYED)
+  const inOrder = [...differences.filter((d) => d.off > 0), ...differences.filter((d) => d.off < 0)]
+  const played = [...inOrder.filter((d) => d.kind === always && d.off > 0), ...inOrder.filter((d) => !(d.kind === always && d.off > 0))].slice(0, KINDS_PLAYED)
   const small = played.reduce((n, d) => n + (Math.abs(d.off) <= ONE_BY_ONE ? Math.abs(d.off) : 0), 0)
   const bigs = played.filter((d) => Math.abs(d.off) > ONE_BY_ONE).length
   const big = bigs > 1 ? BIG_AMONG : BIG
@@ -60,11 +69,11 @@ export function planTasting(differences: readonly Difference[]): TastingPlan {
     const way = d.off > 0 ? 'many' : 'few'
     const n = Math.abs(d.off)
     if (n > ONE_BY_ONE) {
-      tastes.push({ kind: d.kind, way, index: 0, big: true, at, lasts: big })
+      tastes.push({ kind: d.kind, way, index: 0, big: true, count: n, at, lasts: big })
       at += big
     } else {
       for (let index = 0; index < n; index++) {
-        tastes.push({ kind: d.kind, way, index, big: false, at, lasts: each })
+        tastes.push({ kind: d.kind, way, index, big: false, count: 1, at, lasts: each })
         at += each
       }
     }
