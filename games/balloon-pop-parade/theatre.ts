@@ -389,7 +389,7 @@ export class Theatre {
   /** The finger landed. Everything is answered here, in this frame: a squash and a squeak, a pop, a poke. */
   press(x: number, y: number, view: View): void {
     this.pressedSlot = -1
-    // The top right corner is the grown-up's: three quick taps there open the frame-rate overlay, and nothing of the game answers a touch in it.
+    // The top right corner is the grown-up's: a hold and three taps there open the frame-rate overlay, and nothing of the game answers a touch in it.
     if (x > view.width / 2 - GROWN_UP_CORNER / view.pixelsPerUnit && y > view.height / 2 - GROWN_UP_CORNER / view.pixelsPerUnit) return
     // A touch ends a scene, and is then an ordinary touch: on what was on the screen when it landed. A bunch that
     // the end of the scene hangs in the sky was not there to be touched, and this touch does not press it; what

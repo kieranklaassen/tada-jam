@@ -54,7 +54,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const pinned = tierOverride(window.location.search)
     const governor = new TierGovernor(pinned ?? startingTier(window.matchMedia('(pointer: coarse)').matches), pinned !== null)
     const work = new PerfRing()
-    // Grown-ups only: three quick taps in the top right corner, or fps=1 in the address (overlay.ts).
+    // Grown-ups only: a finger held a second in the top right corner, then three taps there, or fps=1 in the address (overlay.ts).
     const overlay = new Overlay(root, window.location.search)
     // What the last draw put on the surface, for the grown-up handle and the overlay. A canvas 2D game counts the
     // sprites and figures it drew as drawCalls; a three.js game copies the renderer's own counts.
@@ -140,25 +140,40 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       const box = root.getBoundingClientRect()
       return { x: event.clientX - box.left, y: event.clientY - box.top }
     }
+    /** The finger whose touch-down the overlay was told of, until it lifts. */
+    let overlayFinger = -1
     const onDown = (event: PointerEvent) => {
       if (!attention.awake) return
       audio.touchDown()
       ladder.touch(clock.seconds)
       const where = at(event)
       const gestures = touch.down(event.pointerId, where, event.timeStamp)
-      // Only the working finger counts towards the grown-up's three taps: a palm or a second finger that lands in
-      // the corner while the child plays does not.
-      if (gestures.some((gesture) => gesture.type === 'press')) overlay.press(where.x, where.y, width, event.timeStamp)
+      // Only the working finger counts towards the grown-up's hold and three taps: a palm or a second finger that
+      // lands in the corner while the child plays does not. Its lift is told to the overlay too (`onUp`).
+      if (gestures.some((gesture) => gesture.type === 'press')) {
+        overlay.press(where.x, where.y, width, event.timeStamp)
+        overlayFinger = event.pointerId
+      }
       act(gestures)
       // Captured, so the lift is reported even when the finger has slid off the surface.
       root.setPointerCapture(event.pointerId)
     }
     const onMove = (event: PointerEvent) => act(touch.move(event.pointerId, at(event)))
     const onUp = (event: PointerEvent) => {
-      act(touch.up(event.pointerId, at(event), event.timeStamp))
+      const where = at(event)
+      if (event.pointerId === overlayFinger) {
+        overlay.lift(where.x, where.y, width, event.timeStamp)
+        overlayFinger = -1
+      }
+      act(touch.up(event.pointerId, where, event.timeStamp))
       audio.touchUp()
     }
     const onCancel = (event: PointerEvent) => {
+      // A finger the browser took away did not lift in the corner: no hold.
+      if (event.pointerId === overlayFinger) {
+        overlay.lift(-1, -1, width, event.timeStamp)
+        overlayFinger = -1
+      }
       act(touch.cancel(event.pointerId, event.timeStamp))
       audio.touchUp()
     }
