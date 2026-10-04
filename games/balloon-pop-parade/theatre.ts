@@ -234,8 +234,9 @@ export class Theatre {
   private readonly ball = { x: 0, y: 0, vx: 0, vy: 0, roll: 0 }
   private readonly keeper = { hopAt: -9 }
   private readonly cloudWoke = [-9, -9, -9]
-  /** When the troop last leapt at the end of an ending. */
+  /** When the troop last leapt at the end of an ending, and when the troop that waits last bounced with its landing. */
   private leapt = -9
+  private towerHopAt = -9
   /** A face to write into, so the frame loop makes none. */
   private readonly faceNow: FaceState = restFace()
   /** Where the finger last landed, whether it is still down, and when it landed or lifted: the friends' eyes go to it. */
@@ -1059,8 +1060,9 @@ export class Theatre {
 
   /**
    * The troop lands from its leap, and everything lands with it: the air bed wobbles, the clouds bounce, the sky's
-   * bunches hop, the whale blows, the keeper and the far hill's troops jump, the troop that waits waves, the ball
-   * goes up, and confetti in the troop's colour bursts over every friend and flutters down.
+   * bunches hop, the whale blows, the keeper and the far hill's troops jump, the troop that waits bounces where it
+   * stands (it does not wave: it never beckons), the ball goes up, and confetti in the troop's colour bursts over
+   * every friend and flutters down.
    */
   private landed(): void {
     const kind = this.troop.kind, hue = KIND_COLOURS[kind]
@@ -1074,7 +1076,7 @@ export class Theatre {
     for (let t = 0; t < this.hopAt.length; t++) this.hopAt[t] = this.time + 0.06 + t * 0.05
     this.keeper.hopAt = this.time + 0.1
     this.spout(this.lastView)
-    if (!this.waitingActor.clip) { this.waitingActor.clip = 'wave'; this.waitingActor.t = 0 }
+    this.towerHopAt = this.time + 0.08
     if (this.ball.y <= 0.001) this.ball.vy = 5.5
     // Confetti: the troop's own colour, its paler shade and white, thrown up over each friend that leapt.
     const colours = [hue, shade(hue, 0.45), PALETTE.valve]
@@ -2141,7 +2143,9 @@ export class Theatre {
       const sway = Math.sin(time * 1.3 + 0.4) * 0.05 * i
       pose.x = spot.x - (1 - stride(this.waiting.kind, this.nextIn)) * 4.5 + sway
       pose.z = spot.z + i * 0.02
-      pose.y = groundAt(pose.x, spot.z) + this.towerLift(this.waiting.kind, i)
+      // It bounces once with the landing of the troop in front, the higher ones a moment later.
+      const bounce = hump(time - this.towerHopAt - i * 0.06, 0, 0.45)
+      pose.y = groundAt(pose.x, spot.z) + this.towerLift(this.waiting.kind, i) + bounce * 0.4
       pose.scale = WAITING_SCALE * FRIEND_SCALE
       rest(this.waiting.kind, false, waitingPlan.reach, time, i + 5, pose)
       // They wait with their arms down: reaching is for the troop whose turn it is.
