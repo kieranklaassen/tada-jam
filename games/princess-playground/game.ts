@@ -87,7 +87,7 @@ export class Game implements Director {
   private asked = 0
   private said = 0
   private lastHiss = -1
-  private snoreAt = 0
+  private snoreAt = 0.8
   private heldAt = 0
   /** Until when the friends on the plank look after Dot, who was just taken away. */
   private lookAfter = 0
@@ -129,6 +129,9 @@ export class Game implements Director {
     }
     this.moods()
     this.perchesAsFound()
+    // Everyone as found: who asks is known before Bo's doze and Dot's turn are set, so nothing eases in on a load.
+    this.looks()
+    this.play.asFound()
     this.frame = this.play.frame()
   }
 
@@ -461,7 +464,10 @@ export class Game implements Director {
       this.later = []
       this.landings = {}
       // A showing ended by a touch is found finished: everyone at once where its end has them.
-      if (kind === 'showing') this.play.settleTo(this.world.arrangement)
+      if (kind === 'showing') {
+        this.play.settleTo(this.world.arrangement)
+        this.play.asFound()
+      }
     }
     if (JSON.stringify(this.play.arrangement) !== JSON.stringify(this.world.arrangement)) this.play.relayout(this.world.arrangement)
     else this.play.arrangement = this.world.arrangement
@@ -612,6 +618,8 @@ export class Game implements Director {
           this.mark(op)
           this.draw(op)
           this.grains.burst(x, PLANK.z, 0.7, 20, PLANK.halfWidth * 2)
+          // The deepest thump of all: the end driven into the sand under him.
+          this.voice(v.thump(FRIENDS.bo.weight, 'sand', 1))
           this.wantSave('soon')
         }
       }
@@ -833,7 +841,8 @@ export class Game implements Director {
    * with the clock: the clock only spaces the hums and the sways.
    */
   private held(): void {
-    const play = this.play, a = play.arrangement
+    // What sits on the plank: a friend in the hand is not on it, so lifting one off can float it level, or leave a tower of three.
+    const play = this.play, a = play.sitting
     if (this.scene || this.time < this.heldAt) return
     // Sitting, not on its way there: a held state holds from the moment everyone has landed, however the plank still sways.
     const sits = (id: FriendId) => play.bodies[id].landed && play.bodies[id].mode === 'rest'

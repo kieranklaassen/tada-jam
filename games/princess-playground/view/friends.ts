@@ -214,6 +214,8 @@ export function poseFriend(view: FriendView, pose: FriendPose): void {
   view.whites.parent!.scale.setScalar(1 + 0.1 * pose.wide)
   // Bo's lids lie over his eyes and grow with them.
   if (view.extra && view.id === 'bo') view.extra.scale.setScalar(1 + 0.1 * pose.wide)
+  // Bo's belly is his funniest part: it wobbles from side to side after he stops, on his slowest spring.
+  if (view.id === 'bo') view.body.scale.x = 1 + Math.max(-0.07, Math.min(0.07, pose.follow * 0.09))
   // Put out, the mouth is pressed to a short flat line. It is never turned down: no sad face is turned to the child.
   view.mouth.scale.set(pose.frown > 0.5 ? 0.7 : 1 + pose.mouth * 0.35, pose.frown > 0.5 ? 0.22 : 1 + pose.mouth * 0.9, 1)
   view.body.material.color.lerpColors(view.pale, view.full, pose.bright)

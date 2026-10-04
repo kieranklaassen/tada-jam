@@ -190,6 +190,15 @@ describe('the cells in play', () => {
     expect(perched('pim')).toEqual([])
   })
 
+  it('Pim: the higher the better. A greater toss is a longer, higher squeal and more of a spin', () => {
+    const low = tossed('pim', 4)[0], high = tossed('pim', 15)[0]
+    expect(high.seconds!).toBeGreaterThan(low.seconds! + 0.3)
+    expect(high.way).toBe(2)
+    expect(low.way).toBe(1)
+    expect(high.voice![0].glideTo).toBeGreaterThan(low.voice![0].glideTo + 500)
+    expect(high.voice![0].decay).toBeGreaterThan(low.voice![0].decay)
+  })
+
   it('being thrown and being carried up are each friend’s own: Pim squeals and spins, Mog yowls, Bo chuckles', () => {
     expect(new Set(FRIEND_IDS.map((id) => shape(tossed(id, 12)))).size).toBe(4)
     expect(new Set(FRIEND_IDS.map((id) => shape(delight(id)))).size).toBe(4)

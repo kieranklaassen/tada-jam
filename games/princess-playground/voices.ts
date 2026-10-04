@@ -236,9 +236,10 @@ export function chuckle(): Part[] {
   return [0, 1, 2, 3].map((n) => tone(120 - n * 6, 0.1, 0.02, 0.14, 95, 'triangle', n * 0.2))
 }
 
-/** Pim flying: a squeal. */
-export function squeal(): Part[] {
-  return [tone(1200, 0.12, 0.02, 0.5, 2300, 'triangle')]
+/** Pim flying: a squeal, higher and longer the higher she is thrown. `high` is 0 for the least toss to 1 for the greatest. */
+export function squeal(high = 0): Part[] {
+  const h = Math.min(1, Math.max(0, high))
+  return [tone(1200, 0.12, 0.02, 0.4 + 0.35 * h, 2000 + 1000 * h, 'triangle')]
 }
 
 /** The low end tapped: a dull clonk. */

@@ -51,6 +51,8 @@ export const DIP_SPEED = 0.42
 export const ROCK_SECONDS = 0.6
 /** How fast a see-sawing end must come down to throw: slower, it only bobs them. Radians a second. */
 export const ROCK_TOSS = 0.4
+/** How long Mog stretches in a hop of his own: the longest of the four. */
+export const MOG_LONG = 1.42
 /** How flat Mog goes in the air when the plank throws him: flat and long. */
 export const MOG_FLAT = 0.72
 /** Bo with a friend on his head gives a good deal less under it than anyone else, and holds very still. */
@@ -189,8 +191,21 @@ export class Playground {
       this.poses[id] = restPose()
     })
     this.out = { tilt: this.plank.tilt, poses: this.poses, glow: 0, glowOn: null }
-    this.bodies.dot.bright = inCompany(arrangement) ? 1 : 0
+    this.asFound()
     this.wasLevel = this.isLevel()
+  }
+
+  /**
+   * Everyone as they are found, with nothing easing in: Dot pale and turned half away if it is apart, warm and facing
+   * the others if not; Bo asleep if he is alone on the plank and is not the one asking. A load and a showing ended by
+   * a touch find them so.
+   */
+  asFound(): void {
+    const dot = this.bodies.dot, company = inCompany(this.arrangement)
+    dot.bright = company ? 1 : 0
+    dot.aside = !company && !dot.away && dot.mode === 'rest' && placeOf(this.arrangement, 'dot').at === 'sand' ? 1 : 0
+    const bo = this.bodies.bo
+    bo.doze = bo.landed && bo.mode === 'rest' && this.arrangement.left.length + this.arrangement.right.length === 1 && this.asking?.id !== 'bo' ? 1 : 0
   }
 
   /** Advances game time by `dt` seconds in fixed steps. The first call of a load passes 0 and plays no time. */
@@ -223,6 +238,11 @@ export class Playground {
    * Who sits where, as it is to be seen: with a friend in the hand taken out of its stack. The friends who sat on it
    * come down a place the moment it is lifted from under them; nobody hangs in the air over a gap.
    */
+  /** Who sits where, with a friend in the hand left out: what the plank carries and what a held secret is about. */
+  get sitting(): Arrangement {
+    return this.seen
+  }
+
   private get seen(): Arrangement {
     if (!this.held) return this.arrangement
     if (this.seenFor !== this.arrangement || this.seenWithout !== this.held) {
@@ -485,8 +505,8 @@ export class Playground {
   }
 
   private isLevel(): boolean {
-    const left = weightOn(this.arrangement, 'left')
-    return left > 0 && left === weightOn(this.arrangement, 'right')
+    const left = weightOn(this.seen, 'left')
+    return left > 0 && left === weightOn(this.seen, 'right')
   }
 
   /** Sends a friend from where it is to where the arrangement now has it. */
@@ -710,7 +730,8 @@ export class Playground {
     }
     // Over the board it is never below the board's top: a plank that swings up under a hopping friend carries it.
     if (Math.abs(body.z - PLANK.z) < PLANK.halfWidth && Math.abs(body.x) < PLANK.halfLength) body.y = Math.max(body.y, plankTopAt(body.x, this.plank.tilt))
-    body.squashTo = 1.12
+    // Everyone stretches a little in a hop. Mog goes long.
+    body.squashTo = id === 'mog' ? MOG_LONG : 1.12
     body.turn = Math.max(-0.5, Math.min(0.5, (target.x - body.fromX) * 0.12)) * (1 - s)
     if (s >= 1) {
       // The speed it comes down with: the arc's own, plus the drop. A slide ends in a small hop.
@@ -846,7 +867,7 @@ export class Playground {
   private live(id: FriendId, dt: number): void {
     const body = this.bodies[id], own = PERSONALITY[id]
     body.squashV += (own.springStiff * (body.squashTo - body.squash) - own.springDamp * body.squashV) * dt
-    body.squash = Math.max(0.35, Math.min(1.3, body.squash + body.squashV * dt))
+    body.squash = Math.max(0.35, Math.min(id === 'mog' ? 1.45 : 1.3, body.squash + body.squashV * dt))
     const leanPull = 140 * (body.leanTo - body.lean) - 12 * body.leanV
     body.leanV += leanPull * dt
     body.lean += body.leanV * dt
@@ -898,7 +919,7 @@ export class Playground {
   private perform(body: Body, pose: FriendPose): void {
     const t = Math.min(1, body.actT / body.actFor), bell = Math.sin(t * Math.PI), fade = 1 - t
     switch (body.act) {
-      case 'spin': pose.turn += Math.PI * 2 * (t * t * (3 - 2 * t)); break
+      case 'spin': pose.turn += Math.PI * 2 * Math.max(1, Math.round(body.actWay)) * (t * t * (3 - 2 * t)); break
       case 'stamp': pose.squash *= 1 - 0.2 * Math.abs(Math.sin(t * Math.PI * 3)); break
       case 'kick': pose.lean += 0.24 * Math.sin(t * Math.PI * 9) * fade; pose.y += 0.06 * Math.abs(Math.sin(t * Math.PI * 9)) * fade; break
       case 'tall': pose.squash *= 1 + 0.16 * bell; break
@@ -920,8 +941,8 @@ export class Playground {
       case 'toss': pose.y += FINGER * bell; break
       // A greeting: it turns to the one who came, as far as `way` says, with a bounce, and turns back.
       case 'greet': pose.turn += body.actWay * Math.min(1, bell * 1.6); pose.y += 0.3 * Math.abs(Math.sin(t * Math.PI * 2)) * (0.5 + 0.5 * fade); pose.squash *= 1 + 0.08 * Math.sin(t * Math.PI * 4); break
-      // Grains shaken off a head: a quick shiver.
-      case 'shake': pose.lean += 0.12 * Math.sin(t * Math.PI * 10) * fade; break
+      // Grains shaken off a head: a quick shiver up and down. Never from side to side: nothing shakes its head at the child.
+      case 'shake': pose.squash *= 1 + 0.05 * Math.sin(t * Math.PI * 10) * fade; break
     }
   }
 

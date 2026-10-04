@@ -1008,6 +1008,35 @@ describe('tastes hold on every landing, not only on one the child made', () => {
     expect(cues.filter((cue) => cue.type === 'voice' && JSON.stringify(cue.parts) === JSON.stringify(purr())).length).toBe(1)
   })
 
+  it('lifting a rider off can float the plank or leave a smaller tower, and the held secret holds for what still sits', () => {
+    const bare = tap(layout(rideOf('little-asks', 0)), 'pim')
+    // Mog against Dot and Pim: Pim lifted and held leaves three against three.
+    const game = new Game({ ...shown(), arrangement: putOnEnd(putOnEnd(putOnEnd(bare, 'mog', 'left'), 'dot', 'right'), 'pim', 'right'), touched: true, state: { ...shown().state, finished: true } }, 1)
+    run(game, 2)
+    game.press({ kind: 'friend', id: 'pim' })
+    game.dragStart()
+    game.dragTo({ x: 0, z: 2.6 }, null)
+    const { cues } = run(game, 8)
+    expect(game.play.held).toBe('pim')
+    expect(Math.abs(game.play.plank.tilt)).toBeLessThan(0.08)
+    const hum = JSON.stringify(levelHum())
+    expect(cues.filter((cue) => cue.type === 'voice' && JSON.stringify(cue.parts) === hum).length).toBeGreaterThanOrEqual(3)
+    // A tower of four with the top one in the hand sways as three.
+    const tower = new Game({ ...shown(), arrangement: putOnEnd(putOnEnd(putOnEnd(putOnEnd(bare, 'bo', 'left'), 'mog', 'left'), 'dot', 'left'), 'pim', 'left'), touched: true, state: { ...shown().state, finished: true } }, 1)
+    run(tower, 2)
+    tower.press({ kind: 'friend', id: 'pim' })
+    tower.dragStart()
+    tower.dragTo({ x: 2, z: 2.6 }, null)
+    run(tower, 1)
+    let swaying = 0
+    for (let i = 0; i < 240; i++) {
+      tower.step(1 / 60, QUIET)
+      if ((['bo', 'mog', 'dot'] as const).every((id) => tower.play.bodies[id].act === 'sway')) swaying += 1
+    }
+    expect(swaying).toBeGreaterThan(100)
+    expect(tower.play.bodies.pim.act).not.toBe('sway')
+  })
+
   it('the level plank goes on humming while a friend from the sand is in the hand', () => {
     const bare = tap(layout(rideOf('little-asks', 0)), 'pim')
     const game = new Game({ ...shown(), arrangement: putOnEnd(putOnEnd(bare, 'mog', 'left'), 'dot', 'right'), touched: true, state: { ...shown().state, finished: true } }, 1)
@@ -1297,6 +1326,18 @@ describe('a showing opens with no jump', () => {
       expect(game.play.arrangement, kind).toEqual(game.world.arrangement)
     }
     expect(ran).toBe(2)
+  })
+
+  it('on a load everyone is as found: Dot apart is turned away from the first frame, and Bo alone on the plank is asleep from the first frame', () => {
+    const bare = tap(layout(rideOf('little-asks', 0)), 'pim')
+    const game = new Game({ ...shown(), arrangement: putOnEnd(bare, 'bo', 'left'), touched: true, state: { ...shown().state, finished: true } }, 1)
+    expect(game.frame.poses.bo.lids).toBe(1)
+    expect(Math.abs(game.frame.poses.dot.turn)).toBeGreaterThan(0.8)
+    expect(game.frame.poses.dot.bright).toBe(0)
+    // His own ride: awake from the first frame.
+    const world = shown()
+    const asks = new Game({ ...world, state: { ...world.state, position: 'big-asks' }, kind: 'big-asks', shown: ['big-asks'], arrangement: layout(rideOf('big-asks', 0)) }, 1)
+    expect(asks.frame.poses.bo.lids).toBeLessThan(0.5)
   })
 
   it('a touch before a due showing has begun sends everyone to where the ride itself has them', () => {

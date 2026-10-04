@@ -299,6 +299,42 @@ describe('the playground in motion', () => {
     expect(placeOf(other.arrangement, 'mog').at).toBe('sand')
   })
 
+  it('finds Dot and Bo as they are, with nothing easing in: Dot apart is turned half away at once, Bo alone on the plank is asleep at once', () => {
+    let a = emptyArrangement()
+    for (const id of ['pim', 'mog'] as const) a = putInSand(a, id, homeOn(id, 'left'))
+    a = putInSand(a, 'dot', homeOn('dot', 'right'))
+    a = putOnEnd(a, 'bo', 'left')
+    const world = new Playground(a)
+    world.advance(0)
+    expect(world.frame().poses.dot.turn).toBeCloseTo(HALF_AWAY, 5)
+    expect(world.frame().poses.dot.bright).toBe(0)
+    expect(world.bodies.bo.doze).toBe(1)
+    expect(world.frame().poses.bo.lids).toBe(1)
+    // Asking, he is found awake.
+    const asking = new Playground(a)
+    asking.asking = { id: 'bo', side: 1, up: 1 }
+    asking.asFound()
+    expect(asking.bodies.bo.doze).toBe(0)
+    // In company Dot is found warm and facing the others.
+    const together = new Playground(putOnEnd(a, 'dot', 'right'))
+    expect(together.frame().poses.dot.bright).toBe(1)
+    expect(Math.abs(together.frame().poses.dot.turn)).toBeLessThan(0.01)
+  })
+
+  it('stretches Mog longest in a hop of his own', () => {
+    const tallest = (id: FriendId) => {
+      const world = new Playground(firstRide())
+      play(world, 0.5)
+      world.tapFriend(id)
+      let most = 0
+      play(world, 1.2, (w) => { if (w.bodies[id].mode === 'hop') most = Math.max(most, w.frame().poses[id].squash) })
+      return most
+    }
+    const mog = tallest('mog')
+    expect(mog).toBeGreaterThan(1.25)
+    for (const id of ['dot', 'bo'] as const) expect(mog).toBeGreaterThan(tallest(id) + 0.03)
+  })
+
   it('throws nobody when a friend lands on the end that is already down: nothing went up', () => {
     for (const lander of ['pim', 'dot', 'mog'] as const) {
       // Bo holds the left end down, a friend rides the right one high, and another lands on Bo.

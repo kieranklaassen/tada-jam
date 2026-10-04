@@ -177,7 +177,11 @@ export function reactionsTo(l: Landing): Reaction[] {
 
 /** What a friend makes of being thrown: Pim loves it, Mog hates it, Bo barely notices. */
 export function tossed(id: FriendId, speed: number): Reaction[] {
-  if (id === 'pim') return [react('pim', 0, { voice: v.squeal(), act: 'spin', seconds: 0.7 })]
+  // Pim: the higher the better. A small toss is one spin and a short squeal; a great one is two spins and a long high squeal.
+  if (id === 'pim') {
+    const high = Math.min(1, Math.max(0, (speed - 3) / 12))
+    return [react('pim', 0, { voice: v.squeal(high), act: 'spin', seconds: 0.6 + 0.5 * high, way: high > 0.5 ? 2 : 1 })]
+  }
   if (id === 'mog') return [react('mog', 0, { voice: v.yowl() })]
   return [react(id, 0, { voice: v.whoop(id, speed) })]
 }
