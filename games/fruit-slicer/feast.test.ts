@@ -20,14 +20,14 @@ describe('what went in', () => {
   it('shows each piece at its own length, in the order eaten, and only those eaten so far', () => {
     expect(feastOf(pelican, lengths, null, during({ bites: 0 })).lumps).toEqual([])
     const half = feastOf(pelican, lengths, null, during({ bites: 0.5 }))
-    expect(half.lumps).toEqual([{ at: 0.5, size: 0.5, fruit: 'long' }])
+    expect(half.lumps).toEqual([{ at: 0.5, size: 0.5, fruit: 'long', twin: 0 }])
     expect(half.mouth).toBeGreaterThan(0.9)
-    expect(feastOf(pelican, lengths, null, during({ bites: 2 })).lumps).toEqual([{ at: 1, size: 0.5, fruit: 'long' }, { at: 1, size: 0.25, fruit: 'long' }])
+    expect(feastOf(pelican, lengths, null, during({ bites: 2 })).lumps.map(({ at, size, fruit }) => ({ at, size, fruit }))).toEqual([{ at: 1, size: 0.5, fruit: 'long' }, { at: 1, size: 0.25, fruit: 'long' }])
   })
 
   it('is all that stays once the serve is over, and on load: the pieces, at rest, and no taste', () => {
     const loaded = feastOf(pelican, lengths, null, null)
-    expect(loaded).toEqual({ lumps: [{ at: 1, size: 0.5, fruit: 'long' }, { at: 1, size: 0.25, fruit: 'long' }], mouth: 0, first: null, eater: -1, hop: 0, shrug: 0, pull: 0, rope: 0, spin: 0, flat: [], cross2: [], cross: 0, gaze: 0, tail: 0, sneeze: -1, pleased: 0 })
+    expect(loaded).toEqual({ lumps: [{ at: 1, size: 0.5, fruit: 'long', twin: 0 }, { at: 1, size: 0.25, fruit: 'long', twin: 1 }], mouth: 0, eater: -1, hop: 0, shrug: 0, pull: 0, rope: 0, spin: 0, flat: [], cross2: [], cross: 0, gaze: 0, tail: 0, sneeze: -1, pleased: 0 })
     expect(feastOf(pelican, lengths, taste(pelican, lengths), servedShow(2))).toMatchObject({ lumps: loaded.lumps, hop: 0, mouth: 0 })
   })
 
@@ -89,6 +89,14 @@ describe('the taste landing', () => {
     expect(first.lumps.map((one) => one.at)).toEqual([0.5])
     expect(first.eater).toBe(0)
     expect(feastOf(twins, [len(3, 8), len(1, 8)], unfair, during({ bites: 1.5 })).eater).toBe(1)
+    // Each piece is inside the twin whose side of the tin it lay in: during the serve, by what the taste says of the first twin's pieces,
+    // and once the serve is over, by the compartment each piece keeps. The shorter piece does not pull the longer one over with it.
+    const lopsided = [550, 650]
+    const served = taste(twins, [550], [650])
+    expect(feastOf(twins, lopsided, served, servedShow(2)).lumps.map((one) => one.twin)).toEqual([0, 1])
+    expect(feastOf(twins, lopsided, null, null, false, false, [], [0, 1]).lumps.map((one) => one.twin)).toEqual([0, 1])
+    expect(leavingFeast(twins, lopsided, 0.5, [], [0, 1]).lumps.map((one) => one.twin)).toEqual([0, 1])
+    expect(feastOf(twins, [300, 300, 600], null, null, false, false, [], [0, 0, 1]).lumps.map((one) => one.twin)).toEqual([0, 0, 1])
     // The rope is as long as the longer twin's share: three eighths of the fruit.
     expect(pulled.rope).toBeCloseTo(3 / 8)
     // The tin comes to rest the right way up: whole turns.

@@ -2,6 +2,7 @@ import type { Fruit } from './measure'
 import { BOARD, COUNTER, CRATE, DOG, QUEUE, RAIL_BOX, SHELF_BOX, WALL, WINDOW, inside, type Box, type Point } from './stage'
 import { draw } from './stream'
 import type { GameEvent } from './moves'
+import { answerSeconds } from './voices'
 
 // What a touch sets off beyond itself: the burst of juice along a cut, the
 // drops that fly on and spatter the wall, the hop of the two pieces, the curl
@@ -76,6 +77,11 @@ export const MOUTH = { x: DOG.x + DOG.w / 2, y: DOG.y + 78 } as const
 export const CURL_FLIGHT = 0.55
 export const CURL_LIFE = 1.05
 
+/** A fruit out of the crate is in the air for the first part of its landing, and comes down with its thump this long after it set off. */
+const LAND_LIFE = 0.42
+const LAND_FALL = 0.55
+export const LANDS_AFTER = LAND_LIFE * LAND_FALL
+
 /** A lid that tries a misfit starts down as the piece is laid, takes this long over it, and first strikes what sticks out this long after it started. */
 export const LID_LIFE = 0.7
 export const LID_STRIKES = LID_LIFE / 6
@@ -131,7 +137,7 @@ export function spawn(state: FxState, event: GameEvent, heads: Partial<Record<'w
       shake(event.id, 'quiver', 1, 0.6)
       break
     case 'land':
-      shake(event.id, 'land', 0, 0.42)
+      shake(event.id, 'land', 0, LAND_LIFE)
       next.rockSpeed += 5
       break
     case 'swept':
@@ -189,7 +195,7 @@ export function spawn(state: FxState, event: GameEvent, heads: Partial<Record<'w
       next.fx.push({ kind: 'knock', x: event.x, y: event.y, age: 0, life: 0.3 })
       if (event.on === 'crate') next.rockSpeed += 6
       if (event.on === 'tin') next.joltSpeed += 5
-      if (event.on === 'tin' && event.parts > 0) next.fx.push({ kind: 'answer', parts: event.parts, age: 0, life: Math.min(0.9, 0.2 + event.parts * 0.09) })
+      if (event.on === 'tin' && event.parts > 0) next.fx.push({ kind: 'answer', parts: event.parts, age: 0, life: answerSeconds(event.parts) })
       break
     case 'spill':
       next.rockSpeed += 9
@@ -293,8 +299,8 @@ export function offsetOf(state: FxState, id: number, at: Box | null): Offset {
       return { dx: 0, dy: Math.sin(t * Math.PI * 7) * 4 * (1 - t), squash: 0.1 * Math.sin(t * Math.PI * 7) * (1 - t) }
     case 'land': {
       // It comes out of the crate: from over the crate's corner of the counter, up in an arc and down onto its lane, where it lands with a squash.
-      const fall = Math.min(1, t / 0.55)
-      const settle = t > 0.55 ? Math.sin(((t - 0.55) / 0.45) * Math.PI) : 0
+      const fall = Math.min(1, t / LAND_FALL)
+      const settle = t > LAND_FALL ? Math.sin(((t - LAND_FALL) / (1 - LAND_FALL)) * Math.PI) : 0
       if (!at) return { dx: 0, dy: -150 * (1 - fall * fall), squash: 0.22 * settle }
       const dx = Math.max(0, COUNTER.x + COUNTER.w - 10 - (at.x + at.w)), dy = CRATE.y - 20 - at.y
       return { dx: dx * (1 - fall), dy: dy * (1 - fall * fall) - 70 * Math.sin(fall * Math.PI), squash: 0.22 * settle }

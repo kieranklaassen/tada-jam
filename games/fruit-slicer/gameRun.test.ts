@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { FLIGHT_SECONDS } from './carry'
 import { SHEETS } from './cast'
 import { freshGame } from './cycle'
-import { CURL_FLIGHT, CURL_LIFE } from './fx'
+import { CURL_FLIGHT, CURL_LIFE, LANDS_AFTER } from './fx'
 import { GameRun, RUN_GAP, RUN_STEP, SNACK_SECONDS, SWING } from './gameRun'
 import { CAST } from './orders'
 import { IdleLadder } from './guidance'
@@ -104,7 +104,10 @@ describe('the touch', () => {
     run.tap({ x: X0 + 50, y: NEAR })
     expect(ids(run)).toEqual(['pick', 'quiver'])
     run.tap(mid(CRATE))
-    expect(ids(run)).toEqual(['thump'])
+    // The thump is heard as the fruit comes down on its lane, not as the crate is tapped.
+    const thump = run.takeSounds()
+    expect(thump.map((sound) => sound.id)).toEqual(['thump'])
+    expect(thump[0].delay).toBeCloseTo(LANDS_AFTER)
     run.tap(mid(DOG))
     expect(ids(run)).toEqual(['bark'])
     expect(run.dog.react).toBe('bark')

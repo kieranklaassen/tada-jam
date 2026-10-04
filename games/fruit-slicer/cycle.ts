@@ -116,7 +116,7 @@ export function feed(game: Game, id: number, row: readonly number[] = []): { gam
     let world = remove(game.world, id)
     for (const gone of eaten(world)) world = remove(world, gone.id)
     const tin = emptied(world)
-    return { game: { ...game, window: null, finished: false, world: { ...tin.world, tinOpen: false } }, ending: { result, taste: tasteOf(customer, result), outcome: 'mixed', glider: true, fed: true }, ate: true, shelved: tin.shelved, fell: tin.fell }
+    return { game: { ...game, window: null, finished: false, world: { ...tin.world, tinOpen: false } }, ending: { result, taste: tasteOf(customer, result, [piece]), outcome: 'mixed', glider: true, fed: true }, ate: true, shelved: tin.shelved, fell: tin.fell }
   }
   if (game.finished) {
     // It keeps no more inside it than the rail could ever hold: fed more than that, the oldest piece inside it is gone for good.
@@ -124,7 +124,8 @@ export function feed(game: Game, id: number, row: readonly number[] = []): { gam
   }
   const tin = emptied(game.world)
   const ended = end({ ...game, world: tin.world }, result, 'mixed', all)
-  return { game: ended.game, ending: { ...ended.ending, fed: true }, ate: true, shelved: tin.shelved, fell: tin.fell }
+  // Fed by hand it eats every piece as it is, one of another fruit too, and its body makes of them what it makes of exactly those.
+  return { game: ended.game, ending: { ...ended.ending, fed: true, taste: tasteOf(customer, result, [piece, ...more]) }, ate: true, shelved: tin.shelved, fell: tin.fell }
 }
 
 /**

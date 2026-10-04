@@ -25,15 +25,21 @@ export type Taste =
 /** A piece shorter than this share of its fruit is a crumb to the boa. */
 export const CRUMB_PARTS = 8
 
-/** What the customer's body makes of exactly these pieces. */
-export function tasteOf(customer: Customer, result: Served): Taste {
-  const pieces = result.parts.flatMap((part) => part.pieces)
+/**
+ * What the customer's body makes of exactly these pieces. From a tin they are the pieces of the ordered fruit
+ * in it, since any other is picked out for the dog. `fed` are the pieces a customer was fed by hand, which it
+ * eats as they are, a piece of another fruit too: every one of them is tasted.
+ */
+export function tasteOf(customer: Customer, result: Served, fed?: readonly Piece[]): Taste {
+  const pieces = fed ?? result.parts.flatMap((part) => part.pieces)
   const lengths = pieces.map((piece) => piece.length)
+  const sum = (list: readonly Piece[]): number => list.reduce((total, piece) => total + piece.length, 0)
   switch (customer.who) {
     case 'pelican':
       return { who: 'pelican', liked: pieces.length === 1, lumps: lengths, hiccups: Math.max(0, pieces.length - 1) }
     case 'twins': {
-      const [a, b] = result.parts
+      // Fed by hand, all of it went to the first twin.
+      const [a, b] = fed ? [{ pieces: fed, total: sum(fed) }, { pieces: [] as readonly Piece[], total: 0 }] : result.parts
       const by = (a?.total ?? 0) - (b?.total ?? 0)
       const even = Math.abs(by) <= giveOf(customer.fruit)
       const oneEach = a?.pieces.length === 1 && b?.pieces.length === 1
@@ -65,9 +71,10 @@ export function tasteOf(customer: Customer, result: Served): Taste {
       return { who: 'cat', liked: result.kind === 'fit', gaveSmaller, crossEyed: equal, gap: Math.max(0, -result.by) }
     }
     case 'boa': {
-      const crumb = WHOLE[customer.fruit] / CRUMB_PARTS
-      const sneezes = lengths.filter((length) => length < crumb).length
-      return { who: 'boa', liked: sneezes === 0 && pieces.length > 0, swellings: lengths.filter((length) => length >= crumb), sneezes }
+      // A crumb is a small share of its own fruit, whichever fruit that is.
+      const crumb = (piece: Piece): boolean => piece.length < WHOLE[piece.fruit] / CRUMB_PARTS
+      const sneezes = pieces.filter(crumb).length
+      return { who: 'boa', liked: sneezes === 0 && pieces.length > 0, swellings: pieces.filter((piece) => !crumb(piece)).map((piece) => piece.length), sneezes }
     }
   }
 }

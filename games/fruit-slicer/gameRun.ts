@@ -2,7 +2,7 @@ import { FLING_SPEED, drop, fling, grab, rollOver, type Held } from './carry'
 import { SHEETS, newActor, poseOf as castPose, reactAfter, reactTo, stepActor, type Actor } from './cast'
 import type { Ending, Game } from './cycle'
 import { newDog, poseOf as dogPose, react, stepDog, type DogState, type Reaction } from './dogMotion'
-import { CURL_FLIGHT, CURL_LIFE, LID_STRIKES, MOUTH, mark, newFx, rollAlong, spawn, step, whoosh, type FxState } from './fx'
+import { CURL_FLIGHT, CURL_LIFE, LANDS_AFTER, LID_STRIKES, MOUTH, mark, newFx, rollAlong, spawn, step, whoosh, type FxState } from './fx'
 import { guideOf, type Guide } from './guide'
 import { handPose, type Guidance, type HandPose } from './guidance'
 import { newStroke, poke, slice, thingAt, tinAt, type GameEvent, type Stroke, type Whom } from './moves'
@@ -75,7 +75,7 @@ export type Scenery = {
   /** What the two who wait have been given by hand and eaten: each piece shows in the body that ate it for a few seconds, and is in no state. */
   snacks: readonly { whom: 0 | 1; length: number; fruit: Fruit; age: number }[]
   /** The served customer on its way out with its tin, as the one who was called steps up: who it is, how it moves, and the pieces it ate. */
-  departing: { customer: Customer; actor: Actor; lengths: number[]; fruits: Fruit[] } | null
+  departing: { customer: Customer; actor: Actor; lengths: number[]; fruits: Fruit[]; sides: number[] } | null
   /** The idle ladder: how strongly the next thing glows, what glows, and the ghost hand when it is showing a move. */
   glow: number
   guide: Guide | null
@@ -111,7 +111,7 @@ export class GameRun {
   private leaving: { customer: Customer; whom: Whom; fruit: Fruit } | null = null
   private skipping = false
   private leavingActor: Actor | null = null
-  private departing: { customer: Customer; actor: Actor; lengths: number[]; fruits: Fruit[] } | null = null
+  private departing: { customer: Customer; actor: Actor; lengths: number[]; fruits: Fruit[]; sides: number[] } | null = null
   private snacks: { whom: 0 | 1; length: number; fruit: Fruit; age: number }[] = []
   private clock = 0
   private seed: number
@@ -389,7 +389,8 @@ export class GameRun {
         // A customer under the roller honks as it springs back into shape, which each does in its own time, not as it goes flat.
         const rolledFlat = event.kind === 'rolled' && event.on === 'customer' && event.whom !== null ? (event.whom === 'window' ? before.window : before.queue[event.whom]) : null
         // A piece the crate chews is heard going down the dog only once the crate has let go of it; and a lid clangs as it strikes, not before.
-        const late = event.kind === 'fell' ? event.after ?? 0 : event.kind === 'misfit' && event.how === 'over' ? LID_STRIKES : 0
+        // A fruit out of the crate thumps as it comes down on its lane.
+        const late = event.kind === 'fell' ? event.after ?? 0 : event.kind === 'misfit' && event.how === 'over' ? LID_STRIKES : event.kind === 'land' ? LANDS_AFTER : 0
         const delay = event.kind === 'cut' || event.kind === 'curl' ? cuts++ * RUN_GAP : rolledFlat ? SHEETS[rolledFlat.who].react.flat * SPRINGS_BACK[rolledFlat.who] : late
         let length = 'length' in event ? event.length : 'piece' in event ? event.piece.length : undefined
         if (event.kind === 'cut') length = this.rung = this.rung === null ? event.length : Math.min(event.length, this.rung * RUN_STEP)
@@ -479,7 +480,7 @@ export class GameRun {
           // Whoever stood in that place in the queue has left it, and what it had been given with it.
           this.snacks = this.snacks.filter((one) => one.whom !== event.index)
           // The served one leaves as the called one steps up. It left the game on the touch: this only shows it going, and no touch waits for it.
-          this.departing = event.did === 'stepped' && before.window && before.finished && this.window ? { customer: before.window, actor: reactTo(this.window, 'leave'), lengths: eaten(before.world).map((piece) => piece.length), fruits: eaten(before.world).map((piece) => piece.fruit) } : null
+          this.departing = event.did === 'stepped' && before.window && before.finished && this.window ? { customer: before.window, actor: reactTo(this.window, 'leave'), lengths: eaten(before.world).map((piece) => piece.length), fruits: eaten(before.world).map((piece) => piece.fruit), sides: eaten(before.world).map((piece) => (piece.place.on === 'eaten' ? piece.place.part : 0)) } : null
           // A pelican that swallowed its order in more than one piece hiccups all the way out, and is heard doing it.
           if (this.departing && this.departing.customer.who === 'pelican') {
             // One for every seam, each at the top of its own hop on the way out.

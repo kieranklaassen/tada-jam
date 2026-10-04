@@ -99,6 +99,29 @@ describe('found as left', () => {
   })
 })
 
+describe('what the twins ate', () => {
+  it('comes back inside the twin whose side of the tin it lay in', () => {
+    const twins: Game = { ...call(freshGame(null), 0).game, window: { who: 'twins', fruit: 'long', shares: [{ num: 1, den: 2 }], carries: null, written: true, lined: true } }
+    const short = cut(crate(twins).game.world, crate(twins).id, 550)
+    if (short.kind !== 'cut') throw new Error('no cut')
+    let game: Game = { ...twins, world: short.world }
+    const second = crate(game)
+    const long = cut(second.game.world, second.id, 650)
+    if (long.kind !== 'cut') throw new Error('no cut')
+    game = give({ ...second.game, world: long.world }, short.left, 0).game
+    const served = give(game, long.left, 1)
+    expect(served.game.finished).toBe(true)
+    const sides = (state: Game) => eaten(state.world).map((piece) => (piece.place.on === 'eaten' ? [piece.length, piece.place.part] : []))
+    expect(sides(served.game)).toEqual([[550, 0], [650, 1]])
+    expect(sides(reopened(served.game))).toEqual([[550, 0], [650, 1]])
+    expect(reopened(served.game)).toEqual(served.game)
+    // A record from before the compartment was kept opens with every piece in the first.
+    const old = JSON.parse(JSON.stringify(stored(served.game))) as { pieces: { place: Record<string, unknown> }[] }
+    for (const piece of old.pieces) if (piece.place.on === 'eaten') delete piece.place.part
+    expect(sides(deserialize(old))).toEqual([[550, 0], [650, 0]])
+  })
+})
+
 describe('a record that cannot be trusted', () => {
   const good = stored(played()[8]) as Record<string, unknown>
 

@@ -20,8 +20,8 @@ export type Place =
   | { on: 'shelf'; slot: number }
   /** In the tin: which compartment, and its turn in it from the left. */
   | { on: 'tin'; part: number; turn: number }
-  /** Inside the served customer: its turn among the pieces eaten. It stays there until the next customer steps up. */
-  | { on: 'eaten'; turn: number }
+  /** Inside the served customer: its turn among the pieces eaten, and the compartment of the tin it lay in (the first, if it came from the hand). It stays there until the next customer steps up. */
+  | { on: 'eaten'; turn: number; part: number }
 
 export type Piece = {
   id: number
@@ -281,9 +281,10 @@ export const eaten = (world: World): Piece[] =>
 /** The most pieces a customer keeps inside it: as many of the thinnest pieces as lie along the whole rail. Fed more than that by hand, it keeps the last of them. */
 export const MOST_EATEN = RAIL / giveOf('short')
 
-export function eat(world: World, ids: readonly number[]): World {
+export function eat(world: World, ids: readonly number[], part?: number): World {
   const from = eaten(world).length
-  return tidy({ ...world, pieces: world.pieces.map((piece) => (ids.includes(piece.id) ? { ...piece, place: { on: 'eaten', turn: from + ids.indexOf(piece.id) } } : piece)) })
+  // Which compartment of the tin it lay in goes with it: the twins' tin has two, and each piece shows in the twin whose side it lay in. One eaten from the hand lay in none, and counts as the first.
+  return tidy({ ...world, pieces: world.pieces.map((piece) => (ids.includes(piece.id) ? { ...piece, place: { on: 'eaten', turn: from + ids.indexOf(piece.id), part: part ?? (piece.place.on === 'tin' ? piece.place.part : 0) } } : piece)) })
 }
 
 /** Keeps the last `most` pieces a customer ate and lets the older ones go, with the turns of those kept counted from nought again. */
@@ -291,7 +292,7 @@ export function keepEaten(world: World, most = MOST_EATEN): World {
   const inside = eaten(world)
   if (inside.length <= most) return world
   const kept = inside.slice(inside.length - most).map((piece) => piece.id)
-  return { ...world, pieces: world.pieces.filter((piece) => piece.place.on !== 'eaten' || kept.includes(piece.id)).map((piece) => (piece.place.on === 'eaten' ? { ...piece, place: { on: 'eaten', turn: kept.indexOf(piece.id) } } : piece)) }
+  return { ...world, pieces: world.pieces.filter((piece) => piece.place.on !== 'eaten' || kept.includes(piece.id)).map((piece) => (piece.place.on === 'eaten' ? { ...piece, place: { ...piece.place, turn: kept.indexOf(piece.id) } } : piece)) }
 }
 
 /**

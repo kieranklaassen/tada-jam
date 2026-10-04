@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { LOW_HZ, RANGE, VOICES, notesOf, ringHz, type VoiceId } from './voices'
+import { LOW_HZ, RANGE, VOICES, answerSeconds, notesOf, ringHz, type VoiceId } from './voices'
 
 const IDS = Object.keys(VOICES) as VoiceId[]
 /** Lengths in points from the shortest piece there is to the longest order. */
@@ -82,6 +82,13 @@ describe('a length rings as a string does', () => {
   it('and a roller ticks once for each part', () => {
     expect(notesOf('ticks', 2400, 3)).toHaveLength(3)
     expect(notesOf('rule', 2400, 12)).toHaveLength(12)
+    // On the open tin each part stands up as its knock sounds: the parts take turns over exactly the time the knocks take, however many.
+    for (let parts = 2; parts <= 24; parts++) {
+      const knocks = notesOf('rule', 2400, parts)
+      expect(knocks).toHaveLength(parts)
+      knocks.forEach((note, i) => expect(note.after ?? 0, `${parts} parts, knock ${i}`).toBeCloseTo((answerSeconds(parts) * i) / parts))
+    }
+    expect(answerSeconds(1)).toBeGreaterThan(0)
     expect(notesOf('press', 2400, 0)).toHaveLength(1)
     // Pressed into a shorter piece, the ticks are higher.
     expect(notesOf('press', 300, 4)[0].hz).toBeGreaterThan(notesOf('press', 1200, 4)[0].hz)

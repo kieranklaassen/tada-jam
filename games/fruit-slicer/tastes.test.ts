@@ -73,6 +73,27 @@ describe('the cat', () => {
   })
 })
 
+describe('what is fed by hand', () => {
+  it('is tasted piece for piece, one of another fruit too: it is eaten as it is', () => {
+    const pelican = of('pelican', { num: 3, den: 4 }), boa = of('boa', { num: 5, den: 4 })
+    // One piece of its own fruit and one of another, fed in a row: two lumps, a seam and a hiccup.
+    const mixed = [piece(len(1, 2)), piece(300, 'short')]
+    const result = serveOf(pelican, [mixed])
+    expect(result.strays).toHaveLength(1)
+    expect(tasteOf(pelican, result)).toMatchObject({ liked: true, hiccups: 0 })
+    expect(tasteOf(pelican, result, mixed)).toMatchObject({ liked: false, hiccups: 1, lumps: [len(1, 2), 300] })
+    // A crumb of another fruit is a crumb: less than an eighth of its own fruit.
+    const crumb = [piece(WHOLE.short / 12, 'short')]
+    expect(tasteOf(boa, serveOf(boa, [crumb]), crumb)).toMatchObject({ liked: false, sneezes: 1, swellings: [] })
+    const fair = [piece(WHOLE.short / 4, 'short')]
+    expect(tasteOf(boa, serveOf(boa, [fair]), fair)).toMatchObject({ liked: true, sneezes: 0 })
+    // The twins fed by hand: all of it went to the first.
+    const twins = of('twins', { num: 1, den: 2 })
+    const two = [piece(300), piece(300)]
+    expect(tasteOf(twins, serveOf(twins, [two]), two)).toMatchObject({ liked: false, pulled: 0, first: 2 })
+  })
+})
+
 describe('the boa', () => {
   const boa = of('boa', { num: 5, den: 4 })
   it('likes long pieces', () => {

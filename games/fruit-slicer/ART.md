@@ -130,7 +130,7 @@ Only a cycle with the customer who carries the new thing of the position as it s
 - `window`: the customer at the window, or none: who it is, which fruit, the share or two shares ordered, the id of the position whose new thing it carries, or none, and whether its ticket is written and has part lines.
 - `queue`: the two who wait, each in the same form.
 - `tinOpen`: whether the tin at the window has been opened, which is when the truth was shown.
-- `pieces`: every fruit and piece in the world, an uncut fruit being a piece of its whole length: its id, its fruit, its length, where it lies (a lane of the board and how far along, a place on the shelf, a compartment of the tin and its turn in it, or inside the served customer and its turn there), whether a tin stood open when it was cut, and what parts the roller pressed into it.
+- `pieces`: every fruit and piece in the world, an uncut fruit being a piece of its whole length: its id, its fruit, its length, where it lies (a lane of the board and how far along, a place on the shelf, a compartment of the tin and its turn in it, or inside the served customer, with its turn there and the compartment of the tin it lay in), whether a tin stood open when it was cut, and what parts the roller pressed into it.
 - `nextId`: the id the next piece takes.
 - `shown`: the ids of the positions whose first showing has played, so each plays once.
 

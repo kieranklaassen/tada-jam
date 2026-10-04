@@ -41,12 +41,18 @@ export function ringHz(length: number): number {
 const held = (hz: number): number => Math.max(RANGE.hz[0], Math.min(RANGE.hz[1], hz))
 const tone = (hz: number, peak: number, attack: number, length: number, wave: Note['wave'] = 'triangle', to?: number, after = 0): Note => ({ kind: 'tone', hz: held(hz), to: to === undefined ? undefined : held(to), wave, peak, attack, length, after })
 const hiss = (hz: number, peak: number, attack: number, length: number, to?: number, after = 0): Note => ({ kind: 'noise', hz: held(hz), to: to === undefined ? undefined : held(to), peak, attack, length, after })
+/** How far apart the ticks of a run are: `gap`, or closer when there are many, so the whole run still ends inside the time a touch's answer may take. */
+const apartOf = (ticks: number, gap: number): number => (ticks > 1 ? Math.min(gap, 0.55 / (ticks - 1)) : 0)
+/** The most ticks a run has: as many as two fruits of twelfths, the longest rail there is to rule. */
+const MOST_TICKS = 24
+/** The roller on the open tin knocks once a part, this far apart at most; and the parts stand up one by one for exactly as long, each as its knock sounds. */
+const RULE_GAP = 0.11
+export const answerSeconds = (parts: number): number => (parts > 1 ? Math.min(MOST_TICKS, parts) * apartOf(Math.min(MOST_TICKS, parts), RULE_GAP) : 0.2)
+
 /** A run of the same short note, `count` times, each a step higher: one tick a part. */
 const run = (count: number, hz: number, step: number, gap: number, peak: number, wave: Note['wave'] = 'square', length = 0.05): Note[] => {
-  // As many as two fruits of twelfths: the longest rail there is to rule.
-  const ticks = Math.max(1, Math.min(24, Math.round(count)))
-  // Many parts tick faster, so the whole run still ends inside the time a touch's answer may take.
-  const apart = ticks > 1 ? Math.min(gap, 0.55 / (ticks - 1)) : 0
+  const ticks = Math.max(1, Math.min(MOST_TICKS, Math.round(count)))
+  const apart = apartOf(ticks, gap)
   return Array.from({ length: ticks }, (_, i) => tone(hz * step ** i, peak, 0.002, length, wave, undefined, i * apart))
 }
 
@@ -90,7 +96,7 @@ export const VOICES = {
   spring: (length: number) => [tone(ringHz(length), 0.16, 0.004, 0.3, 'sawtooth', ringHz(length) * 2), tone(ringHz(length) * 2, 0.1, 0.001, 0.05, 'square', undefined, 0.26)],
   bong: (length: number) => [tone(ringHz(length) * 1.5, 0.2, 0.002, 0.7, 'sine'), tone(ringHz(length) * 4.1, 0.06, 0.002, 0.3, 'sine')],
   // The ruled parts answer one by one, a hollow knock each; on a shut tin the roller only drums along the lid.
-  rule: (_: number, count = 4) => run(count, 300, 1.09, 0.11, 0.14, 'sine', 0.09),
+  rule: (_: number, count = 4) => run(count, 300, 1.09, RULE_GAP, 0.14, 'sine', 0.09),
   drum: () => Array.from({ length: 5 }, (_, i) => hiss(260, 0.1, 0.002, 0.05, 200, i * 0.06)),
   clang: (length: number) => [tone(ringHz(length) * 3, 0.2, 0.001, 0.4, 'square', ringHz(length) * 2.9), tone(ringHz(length) * 3, 0.12, 0.001, 0.2, 'square', undefined, 0.16)],
   slide: () => [hiss(700, 0.08, 0.03, 0.22, 1100), tone(900, 0.08, 0.001, 0.04, 'square', undefined, 0.22)],

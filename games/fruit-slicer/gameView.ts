@@ -437,7 +437,7 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
     ctx.beginPath()
     ctx.rect(WALL.x + 3, WALL.y + 3, WALL.w - 6, WALL.h - 6)
     ctx.clip()
-    drawn += customerAt(ctx, dots, departing.customer, departing.actor, { feast: leavingFeast(departing.customer, departing.lengths, last.away, departing.fruits) }, 'window', null, exit)
+    drawn += customerAt(ctx, dots, departing.customer, departing.actor, { feast: leavingFeast(departing.customer, departing.lengths, last.away, departing.fruits, departing.sides) }, 'window', null, exit)
     inked(ctx, rect(TIN_BY_FEET - last.away * exit, SILL - 30 - last.hop, 64, 26), '#c9d6e6', 4, dots.of(ctx, BLUE, 0.3))
     ctx.restore()
     drawn++
@@ -454,7 +454,7 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
     const mine = gliding && gliding.whom !== 'window' ? null : scenery.show
     // Fed a row of pieces by hand, it has gulped all but the last already: the serve shows the last one going down.
     const own = mine && byHand && mine.kind === 'serve' ? { ...mine, bites: mine.bites + Math.max(0, inside.length - 1) } : mine
-    const feast = feastOf(atWindow, inside.map((piece) => piece.length), scenery.ending?.taste ?? null, own?.kind === 'showing' ? null : own, !byHand && scenery.ending?.result.kind === 'over', scenery.ending?.outcome === 'badly', inside.map((piece) => piece.fruit))
+    const feast = feastOf(atWindow, inside.map((piece) => piece.length), scenery.ending?.taste ?? null, own?.kind === 'showing' ? null : own, !byHand && scenery.ending?.result.kind === 'over', scenery.ending?.outcome === 'badly', inside.map((piece) => piece.fruit), inside.map((piece) => (piece.place.on === 'tin' || piece.place.on === 'eaten' ? piece.place.part : 0)))
     feasting = feast
     // A glider playing for a pelican that waits is that pelican's scene, not the scene of whoever stands at the window.
     drawn += customerAt(ctx, dots, atWindow, scenery.window, { feast, show: gliding && gliding.whom !== 'window' ? null : scenery.show, beak: gliding?.fruit }, 'window', scenery.finger)

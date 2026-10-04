@@ -10,11 +10,9 @@ import type { Taste } from './tastes'
 
 export type Feast = {
   /** Each piece inside the customer, in the order eaten: how far down it has gone, 0 at the mouth to 1 at rest, its length as a share of the fruit on order, and which fruit it is a piece of. */
-  lumps: { at: number; size: number; fruit: Fruit }[]
+  lumps: { at: number; size: number; fruit: Fruit; twin: 0 | 1 }[]
   /** The mouth opening for a bite, or held open by a piece that sticks out. */
   mouth: number
-  /** Of the twins, how many of the pieces are the first twin's (the rest are the second's), or nothing where that is not known. */
-  first: number | null
   /** Of the twins, which is biting: 0 or 1 when they eat one after the other, -1 when they eat in step, each its own piece at the same moment. */
   eater: number
   /** Off the ground: a hiccup for every seam. */
@@ -47,17 +45,19 @@ const bump = (t: number): number => Math.sin(Math.max(0, Math.min(1, t)) * Math.
  * shrugs as the lid comes down and will not shut. `fruits` says which fruit each piece is of, where that is not
  * the fruit on order: the body shows exactly what went in.
  */
-export function feastOf(customer: Customer, lengths: readonly number[], taste: Taste | null, show: Show | null, sticksOut = false, sentOff = false, fruits: readonly Fruit[] = []): Feast {
+export function feastOf(customer: Customer, lengths: readonly number[], taste: Taste | null, show: Show | null, sticksOut = false, sentOff = false, fruits: readonly Fruit[] = [], sides: readonly number[] = []): Feast {
   const whole = WHOLE[customer.fruit]
   const bites = show ? show.bites : lengths.length
   const lumps: Feast['lumps'] = []
+  const first = taste && taste.who === 'twins' ? taste.first : null
   // The twins, given two pieces of one length, one each, eat in step: both pieces go down together. Everyone else eats one piece after another.
   const inStep = taste !== null && taste.who === 'twins' && taste.liked
   lengths.forEach((length, index) => {
     if (inStep ? bites <= 0 : bites <= index) return
-    lumps.push({ at: Math.min(1, inStep ? bites / lengths.length : bites - index), size: Math.min(2, length / whole), fruit: fruits[index] ?? customer.fruit })
+    // Which twin it is inside: the one whose side of the tin it lay in. What the pair is given with no tin (one who waits) goes to each in turn.
+    lumps.push({ at: Math.min(1, inStep ? bites / lengths.length : bites - index), size: Math.min(2, length / whole), fruit: fruits[index] ?? customer.fruit, twin: (sides[index] ?? (first !== null ? (index < first ? 0 : 1) : index % 2)) === 0 ? 0 : 1 })
   })
-  const feast: Feast = { lumps, mouth: 0, first: taste && taste.who === 'twins' ? taste.first : null, eater: -1, hop: 0, shrug: 0, pull: 0, rope: 0, spin: 0, flat: [], cross2: [], cross: 0, gaze: 0, tail: 0, sneeze: -1, pleased: 0 }
+  const feast: Feast = { lumps, mouth: 0, eater: -1, hop: 0, shrug: 0, pull: 0, rope: 0, spin: 0, flat: [], cross2: [], cross: 0, gaze: 0, tail: 0, sneeze: -1, pleased: 0 }
   if (!show || show.kind !== 'serve') return feast
   const biting = bites - Math.floor(bites)
   feast.mouth = Math.max(bites < lengths.length ? bump(biting) : 0, sticksOut && show.lift > 0 ? 0.4 : 0)
@@ -124,8 +124,8 @@ export const sneezeAt = (k: number, sneezes: number): number => k / sneezes
  * What shows of a served customer on its way out, `away` of the way gone: the pieces it ate, at rest, and the
  * pelican still hiccuping once for every seam, all the way out.
  */
-export function leavingFeast(customer: Customer, lengths: readonly number[], away: number, fruits: readonly Fruit[] = []): Feast {
-  const feast = feastOf(customer, lengths, null, null, false, false, fruits)
+export function leavingFeast(customer: Customer, lengths: readonly number[], away: number, fruits: readonly Fruit[] = [], sides: readonly number[] = []): Feast {
+  const feast = feastOf(customer, lengths, null, null, false, false, fruits, sides)
   if (customer.who === 'pelican' && lengths.length > 1) feast.hop = 7 * Math.abs(Math.sin(away * Math.PI * (lengths.length - 1)))
   return feast
 }

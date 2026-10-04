@@ -60,7 +60,8 @@ function readPlace(raw: unknown): Place | null {
   if (raw.on === 'board' && isCount(raw.lane) && raw.lane < LANES && isCount(raw.x)) return { on: 'board', lane: raw.lane, x: raw.x }
   if (raw.on === 'shelf' && isCount(raw.slot)) return { on: 'shelf', slot: raw.slot }
   if (raw.on === 'tin' && isCount(raw.part) && isCount(raw.turn)) return { on: 'tin', part: raw.part, turn: raw.turn }
-  if (raw.on === 'eaten' && isCount(raw.turn)) return { on: 'eaten', turn: raw.turn }
+  // A record from before the compartment was kept has none: the piece counts as the first compartment's.
+  if (raw.on === 'eaten' && isCount(raw.turn)) return { on: 'eaten', turn: raw.turn, part: isCount(raw.part) ? raw.part : 0 }
   return null
 }
 
@@ -96,7 +97,7 @@ function readWorld(raw: Record<string, unknown>, compartments: number, served: b
   for (const piece of [...pieces].sort((a, b) => order(a) - order(b))) {
     const place = piece.place
     if (place.on === 'eaten') {
-      if (served) world = eat({ ...world, pieces: [...world.pieces, { ...piece, place: { on: 'shelf', slot: SHELF } }] }, [piece.id])
+      if (served) world = eat({ ...world, pieces: [...world.pieces, { ...piece, place: { on: 'shelf', slot: SHELF } }] }, [piece.id], place.part < compartments ? place.part : 0)
     } else if (place.on === 'board') {
       const free = place.x + piece.length <= RAIL && onLane(world, place.lane).every((other) => other.place.on !== 'board' || place.x >= other.place.x + other.length || place.x + piece.length <= other.place.x)
       world = { ...world, pieces: [...world.pieces, free ? piece : { ...piece, place: { on: 'shelf', slot: SHELF } }] }
