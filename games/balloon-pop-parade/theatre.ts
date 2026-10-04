@@ -391,7 +391,9 @@ export class Theatre {
       const actor = this.actors[hit.friend], spot = this.spot(hit.friend), kind = this.troop.kind
       const tug = actor.tug!, top = spot.y + this.lift(kind, actor.t) + HELD_HEIGHT + 0.5, hung = this.hung(hit.friend, tug)
       for (let k = 0; k < tug.count; k++) this.burst(spot.x + hung[k].x, top + hung[k].y, KIND_COLOURS[tug.colour])
+      // It starts where it hangs, with a wobble and its kind's sound, and then it falls.
       this.sound(`${kind}Startle`, 1.1, 0.8)
+      actor.jolt = this.time
       actor.tug = null
       actor.bumps = false
       // It falls from the height it has reached: the lift-off goes on from the moment of its fall at which it is that high.

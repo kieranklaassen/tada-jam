@@ -859,6 +859,74 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
     expect(waits).toBeGreaterThan(2000)
   }, 90_000)
 
+  it('never sounds a motion that is not played: in whole games played at random, each refusal, start, poke, proud move and lift-off that is heard is one a friend is beginning in that step', () => {
+    type Seen = { clip: string | null; t: number; jolt?: number }
+    let heard = 0
+    for (const [age, seed] of [[2, 3], [3, 5], [4, 7], [4, 11]] as const) {
+      const theatre = new Theatre(freshSave(age, seed), seed)
+      const inside = theatre as unknown as { actors: Seen[]; time: number }
+      let state = seed * 67867967
+      const random = () => (state = (state * 1103515245 + 12345) % 2147483648) / 2147483648
+      for (let i = 0; i < 60 * 200; i++) {
+        theatre.sounds.length = 0
+        const stage = [theatre.troop.kind, theatre.save.parade.length] as const
+        if (i % 17 === 0) {
+          const roll = random()
+          if (roll < 0.45) tap(theatre, Math.floor(random() * theatre.sky.length))
+          else if (roll < 0.55) { theatre.press(waitingSpot(0, VIEW).x, GROUND + 0.8, VIEW); theatre.cancel() }
+          else { theatre.press((random() - 0.5) * 9, GROUND + random() * 6, VIEW); theatre.cancel() }
+        }
+        if (theatre.save.parade.length !== stage[1]) { theatre.sounds.length = 0; theatre.step(1 / 60); continue }
+        const kind = theatre.troop.kind, size = theatre.troop.size, parade = theatre.save.parade.length
+        const beginning = (clips: string[]) => inside.actors.some((actor) => clips.includes(actor.clip ?? '') && actor.t <= 0.06)
+        const wobbling = () => inside.actors.some((actor) => actor.jolt !== undefined && inside.time - actor.jolt < 0.05)
+        const check = (when: string) => {
+          for (const sound of theatre.sounds) {
+            if (sound.after > 0) continue
+            const where = `age ${age}, seed ${seed}, frame ${i}: ${sound.voice} ${when}`
+            if (sound.voice === `${kind}Refuse`) { heard += 1; expect(beginning(['refuse']), where).toBe(true) }
+            else if (sound.voice === `${kind}Startle`) { heard += 1; expect(beginning(['popped']) || wobbling(), where).toBe(true) }
+            else if (sound.voice === `${kind}LiftOff`) { heard += 1; expect(beginning(['liftOff']), where).toBe(true) }
+            else if (sound.voice === `${kind}Poke` && sound.gain === 1) { heard += 1; expect(beginning(['poke', 'pokeB']) || wobbling(), where).toBe(true) }
+            else if (sound.voice === `${kind}Poke` && sound.gain === 0.8) { heard += 1; expect(beginning(['proud']), where).toBe(true) }
+          }
+          theatre.sounds.length = 0
+        }
+        // What the touch itself sounded, in the moment of the touch; then what the step sounded. A touch that brings
+        // the next troop in changes who is on stage: its sounds belong to the troop that leaves.
+        if (theatre.save.parade.length === parade) check('at a touch')
+        theatre.sounds.length = 0
+        theatre.step(1 / 60)
+        if (theatre.troop.kind === kind && theatre.troop.size === size && theatre.save.parade.length === parade) check('in a step')
+      }
+    }
+    expect(heard).toBeGreaterThan(800)
+  }, 90_000)
+
+  it('shows the troop as the save has it whenever nothing is on its way: in whole games played at random, each friend holds a balloon on screen exactly when the save says it does', () => {
+    let calm = 0
+    for (const [age, seed] of [[2, 3], [3, 5], [4, 7], [4, 11]] as const) {
+      const theatre = new Theatre(freshSave(age, seed), seed)
+      const inside = theatre as unknown as { flights: unknown[]; held: { shown: boolean; owed?: boolean }[] }
+      let state = seed * 122949829
+      const random = () => (state = (state * 1103515245 + 12345) % 2147483648) / 2147483648
+      for (let i = 0; i < 60 * 200; i++) {
+        if (i % 17 === 0) {
+          const roll = random()
+          if (roll < 0.5) tap(theatre, Math.floor(random() * theatre.sky.length))
+          else if (roll < 0.58) { theatre.press(waitingSpot(0, VIEW).x, GROUND + 0.8, VIEW); theatre.cancel() }
+          else { theatre.press((random() - 0.5) * 9, GROUND + random() * 6, VIEW); theatre.cancel() }
+        }
+        theatre.step(1 / 60)
+        theatre.sounds.length = 0
+        if (inside.flights.length > 0) continue
+        calm += 1
+        expect(inside.held.map((balloon) => balloon.shown), `age ${age}, seed ${seed}, frame ${i}`).toEqual(theatre.save.troop.held)
+      }
+    }
+    expect(calm).toBeGreaterThan(5000)
+  }, 90_000)
+
   it('draws every balloon in front at one size, also where balloons are drawn larger: in the sky, in a hand, on its way, beside a friend, carrying one off and passing by', () => {
     const big = SMALL.balloon
     expect(big).toBeGreaterThan(1.1)
