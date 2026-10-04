@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { FLIGHT_SECONDS, FLING_SPEED, drop, fling, grab, landing, rollOver, type Held } from './carry'
 import { call, freshGame, type Game } from './cycle'
 import { WHOLE, giveOf } from './measure'
-import { SETS_DOWN_AFTER, land, newStroke, poke, slice, tinAt, type GameEvent } from './moves'
+import { LANDS_AFTER, SETS_DOWN_AFTER, STRIKES_AFTER, land, newStroke, poke, slice, tinAt, type GameEvent } from './moves'
 import { tinParts } from './orders'
 import { COUNTER, CRATE, DOG, LANE_H, PX, QUEUE, ROLLER, SHELF_BOX, TIN, WINDOW, X0, laneTop, type Box, type Point } from './stage'
 import { SHELF, eaten, inTin, marksOf, onLane, onShelf, pieceOf, setOnBoard, setOnShelf } from './world'
@@ -401,6 +401,9 @@ describe('a piece let go at speed', () => {
   it('bongs off the tin and boings off a whole fruit, back onto the board', () => {
     const off = flung(made.game, made.left, tinPoint)
     expect(off.events[0]).toMatchObject({ kind: 'bounce', off: 'tin', voice: 'bong' })
+    // It is seen flying: the bounce says where it left the hand and how long it is in the air, and what follows waits for the blow.
+    expect(off.events[0]).toMatchObject({ after: STRIKES_AFTER, from: expect.objectContaining({ w: expect.any(Number) }) })
+    expect(off.events[1]).toMatchObject({ kind: 'setDown', after: STRIKES_AFTER })
     expect(pieceOf(off.game.world, made.left)!.place.on).toBe('board')
     const other = poke(made.game, mid(CRATE)).game
     const fruit = onLane(other.world, 1)[0]
@@ -412,6 +415,9 @@ describe('a piece let go at speed', () => {
   it('rocks the crate, and a fruit jumps out by itself', () => {
     const result = flung(made.game, made.left, mid(CRATE))
     expect(kinds(result.events)).toContain('land')
+    // The fruit jumps out as the piece strikes the crate, not as the hand lets go.
+    expect(result.events.find((event) => event.kind === 'land')).toMatchObject({ after: STRIKES_AFTER })
+    for (const event of result.events) if (event.kind === 'swept') expect(event.after).toBeCloseTo(STRIKES_AFTER + LANDS_AFTER)
     expect(result.events.find((event) => event.kind === 'bounce')).toMatchObject({ off: 'crate', voice: 'rock' })
     expect(result.game.world.pieces.length).toBe(made.game.world.pieces.length + 1)
   })

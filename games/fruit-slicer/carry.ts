@@ -1,6 +1,6 @@
 import { feed, give, splat, treat, type Game } from './cycle'
 import { RAIL, WHOLE } from './measure'
-import { SETS_DOWN_AFTER, fellEvents, gone, land, shutIfFit, thingAt, tinAt, type GameEvent, type Whom } from './moves'
+import { SETS_DOWN_AFTER, STRIKES_AFTER, fellEvents, gone, land, later, shutIfFit, thingAt, tinAt, type GameEvent, type Whom } from './moves'
 import { fedAfter } from './scenes'
 import { ruling } from './serve'
 import { isGlider } from './tastes'
@@ -277,7 +277,8 @@ export function fling(game: Game, held: Held, at: Point, v: Point): { game: Game
   const hit: Under = thingAt(game, end, held.ids)
   const backOnBoard = (off: 'tin' | 'fruit' | 'crate' | 'shelf', voice: 'bong' | 'boing' | 'rock', from: Game = game, struck?: number): { game: Game; events: GameEvent[] } => {
     const set = setRowOnBoard(from.world, [id], laneAt(at.y), (at.x - held.dx - X0) / PX)
-    const events: GameEvent[] = [{ kind: 'bounce', id, off, x: end.x, y: end.y, length: mine.piece.length, voice, struck }, { kind: 'setDown', ids: [id], from: [{ ...mine.from, x: end.x - mine.from.w / 2, y: end.y - mine.from.h / 2 }], how: 'put', voice: 'lay' }, ...fellEvents(from.world, set.fell)]
+    // It is seen flying from the hand to what it strikes, and what the blow does is done as it gets there; then it comes back to the board.
+    const events: GameEvent[] = [{ kind: 'bounce', id, off, x: end.x, y: end.y, length: mine.piece.length, voice, struck, from: mine.from, after: STRIKES_AFTER }, { kind: 'setDown', ids: [id], from: [{ ...mine.from, x: end.x - mine.from.w / 2, y: end.y - mine.from.h / 2 }], how: 'put', voice: 'lay', after: STRIKES_AFTER }, ...fellEvents(from.world, set.fell, null, STRIKES_AFTER + SETS_DOWN_AFTER)]
     return shutAfter({ ...from, world: set.world }, events, game, held)
   }
   switch (hit.thing) {
@@ -295,7 +296,8 @@ export function fling(game: Game, held: Held, at: Point, v: Point): { game: Game
       // it lies nowhere, so it is not shoved to the shelf with a lane it was taken from, and is not what drops off a full shelf.
       const jumped = land({ ...game, world: rest })
       const back = backOnBoard('crate', 'rock', { ...jumped.game, world: { ...jumped.game.world, pieces: [...jumped.game.world.pieces, pieceOf(game.world, id)!] } })
-      return { game: back.game, events: [...jumped.events, ...back.events] }
+      // The fruit jumps out as the piece strikes the crate, not as the hand lets go.
+      return { game: back.game, events: [...later(jumped.events, STRIKES_AFTER), ...back.events] }
     }
     case 'fruit':
     case 'piece': {

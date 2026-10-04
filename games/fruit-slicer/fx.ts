@@ -44,11 +44,13 @@ export type Fx =
   | { kind: 'star'; x: number; y: number; size: number; seed: number; age: number; life: number }
   /** One of the things about the stall that are no part of the task, answering a tap in its own small way (decor.ts). */
   | { kind: 'decor'; what: Decor; index: number; age: number; life: number }
+  /** A knock that something on its way will give when it gets there: the tin jolts, the crate rocks. Nothing is drawn for it. */
+  | { kind: 'kick'; jolt: number; rock: number; age: number; life: number }
   | { kind: 'sweat'; x: number; y: number; seed: number; age: number; life: number }
   | { kind: 'shock'; x: number; y: number; r: number; age: number; life: number }
 
 /** How a piece moves for a moment, on top of where it lies: a hop apart after a cut, a quiver, a landing, a slide to the shelf. */
-export type Shake = { id: number; kind: 'hop' | 'quiver' | 'land' | 'slide' | 'rattle'; dir: number; from: Box | null; age: number; life: number }
+export type Shake = { id: number; kind: 'hop' | 'quiver' | 'land' | 'slide' | 'rattle' | 'thrown'; dir: number; from: Box | null; age: number; life: number; via?: Box; split?: number }
 
 export type FxState = {
   fx: Fx[]
@@ -126,6 +128,13 @@ export function spawn(state: FxState, event: GameEvent, heads: Partial<Record<'w
     next.shakes = next.shakes.filter((other) => other.id !== id)
     next.shakes.push({ id, kind, dir, from, age: -after, life })
   }
+  // A knock given now, or `after` a wait by something still on its way.
+  const kick = (jolt: number, rock: number, after = 0): void => {
+    if (after <= 0) {
+      next.joltSpeed += jolt
+      next.rockSpeed += rock
+    } else next.fx.push({ kind: 'kick', jolt, rock, age: -after, life: 0.05 })
+  }
   switch (event.kind) {
     case 'cut': {
       const big = Math.min(1, event.length / 2400)
@@ -156,8 +165,9 @@ export function spawn(state: FxState, event: GameEvent, heads: Partial<Record<'w
       shake(event.id, 'quiver', 1, 0.6)
       break
     case 'land':
-      shake(event.id, 'land', 0, LAND_LIFE)
-      next.rockSpeed += 5
+      // It comes out of the crate when the crate lets it go: not before whatever knocked it out has got there.
+      shake(event.id, 'land', 0, LAND_LIFE, null, event.after ?? 0)
+      kick(0, 5, event.after ?? 0)
       break
     case 'swept':
       event.ids.forEach((id, i) => shake(id, 'slide', 0, 0.3, event.from[i], event.after ?? 0))
@@ -174,7 +184,10 @@ export function spawn(state: FxState, event: GameEvent, heads: Partial<Record<'w
       break
     }
     case 'setDown':
-      event.ids.forEach((id, i) => shake(id, 'slide', 0, SETS_DOWN_AFTER, event.from[i]))
+      // A flung piece that bounced is already on its way, from the hand to what it struck and on to here: that flight is not cut short.
+      event.ids.forEach((id, i) => {
+        if (!next.shakes.some((other) => other.id === id && other.kind === 'thrown')) shake(id, 'slide', 0, SETS_DOWN_AFTER, event.from[i], event.after ?? 0)
+      })
       break
     case 'misfit':
       // Too long, the lid bounces on it; too short, the piece slides and rattles in the gap, by no more than the gap.
@@ -204,12 +217,22 @@ export function spawn(state: FxState, event: GameEvent, heads: Partial<Record<'w
       break
     case 'bounce':
     case 'skid':
-      if (event.kind === 'skid' || event.off === 'tin') next.joltSpeed += 8
+    {
+      // A flung piece is drawn flying from the hand to what it strikes, and from there back to where it comes to lie. The jolt, the
+      // shiver and the burst of the blow come as it strikes.
+      const wait = event.kind === 'bounce' ? event.after ?? 0 : 0
+      if (event.kind === 'bounce' && event.from) {
+        const via = { ...event.from, x: event.x - event.from.w / 2, y: event.y - event.from.h / 2 }
+        next.shakes = next.shakes.filter((other) => other.id !== event.id)
+        next.shakes.push({ id: event.id, kind: 'thrown', dir: 0, from: event.from, via, split: wait / (wait + SETS_DOWN_AFTER), age: 0, life: wait + SETS_DOWN_AFTER })
+      }
+      if (event.kind === 'skid' || event.off === 'tin') kick(8, 0, wait)
       // A whole fruit that a flung piece bounced off shivers, and so does anything struck where it lies on the shelf.
-      if (event.kind === 'bounce' && event.struck !== undefined) shake(event.struck, 'quiver', 1, 0.5)
-      next.fx.push({ kind: 'burst', x: event.x, y: event.y, size: 20, fruit: 'middle', seed: random() * 1000, age: 0, life: 0.2 })
-      next.fx.push({ kind: 'lines', x: event.x, y: event.y, angle: -Math.PI / 2, reach: 50, age: 0, life: 0.2 })
+      if (event.kind === 'bounce' && event.struck !== undefined) shake(event.struck, 'quiver', 1, 0.5, null, wait)
+      next.fx.push({ kind: 'burst', x: event.x, y: event.y, size: 20, fruit: 'middle', seed: random() * 1000, age: -wait, life: 0.2 })
+      next.fx.push({ kind: 'lines', x: event.x, y: event.y, angle: -Math.PI / 2, reach: 50, age: -wait, life: 0.2 })
       break
+    }
     case 'rolled':
       next.fx.push({ kind: 'knock', x: event.x, y: event.y, age: 0, life: 0.3 })
       if (event.on === 'crate') next.rockSpeed += 6
@@ -255,8 +278,14 @@ export function step(state: FxState, dt: number): FxState {
   const fx: Fx[] = []
   const hits: Point[] = []
   let seed = state.seed
+  // The knocks that arrive in this step: something that was on its way has got there.
+  let jolted = 0, rocked = 0
   for (const one of state.fx) {
     const age = one.age + dt
+    if (one.kind === 'kick' && one.age < 0 && age >= 0) {
+      jolted += one.jolt
+      rocked += one.rock
+    }
     if (one.kind === 'drop') {
       const x = one.x + one.vx * dt, y = one.y + one.vy * dt, vy = one.vy + GRAVITY * dt
       const onWall = one.wall && y <= WALL.y + WALL.h - 12
@@ -280,8 +309,8 @@ export function step(state: FxState, dt: number): FxState {
   }
   // Two springs, each with its own stiffness: the awning is loose cloth, the crate is heavy wood.
   const flapSpeed = (state.flapSpeed - state.flap * 60 * dt) * Math.max(0, 1 - 3.2 * dt)
-  const rockSpeed = (state.rockSpeed - state.rock * 190 * dt) * Math.max(0, 1 - 7 * dt)
-  const joltSpeed = (state.joltSpeed - state.jolt * 420 * dt) * Math.max(0, 1 - 9 * dt)
+  const rockSpeed = (state.rockSpeed + rocked - state.rock * 190 * dt) * Math.max(0, 1 - 7 * dt)
+  const joltSpeed = (state.joltSpeed + jolted - state.jolt * 420 * dt) * Math.max(0, 1 - 9 * dt)
   return trimmed({
     fx,
     shakes: state.shakes.map((shake) => ({ ...shake, age: shake.age + dt })).filter((shake) => shake.age < shake.life),
@@ -297,7 +326,8 @@ export function step(state: FxState, dt: number): FxState {
 }
 
 /** Where a piece is drawn for now, on top of its own box: an offset, and a squash that keeps its left edge and its length. */
-export type Offset = { dx: number; dy: number; squash: number }
+/** How far off its place a piece is drawn, and how squashed. `unseen`: it is not there to be drawn yet (a fruit the crate has not let go of). */
+export type Offset = { dx: number; dy: number; squash: number; unseen?: boolean }
 const STILL: Offset = { dx: 0, dy: 0, squash: 0 }
 
 /**
@@ -316,7 +346,20 @@ export function offsetOf(state: FxState, id: number, at: Box | null): Offset {
     }
     case 'quiver':
       return { dx: 0, dy: Math.sin(t * Math.PI * 7) * 4 * (1 - t), squash: 0.1 * Math.sin(t * Math.PI * 7) * (1 - t) }
+    case 'thrown': {
+      // Flung, it flies from the hand to what it strikes, in a low arc, and from there comes back to where it lies.
+      if (!shake.from || !shake.via || !at) return STILL
+      const split = shake.split ?? 0.5
+      if (t < split) {
+        const p = t / split
+        return { dx: shake.from.x + (shake.via.x - shake.from.x) * p - at.x, dy: shake.from.y + (shake.via.y - shake.from.y) * p - 40 * Math.sin(p * Math.PI) - at.y, squash: 0 }
+      }
+      const q = (t - split) / (1 - split), ease = 1 - (1 - q) * (1 - q)
+      return { dx: (shake.via.x - at.x) * (1 - ease), dy: (shake.via.y - at.y) * (1 - ease) - 24 * Math.sin(q * Math.PI), squash: 0 }
+    }
     case 'land': {
+      // Until the crate lets go of it, it is not there to be seen.
+      if (shake.age < 0) return { dx: 0, dy: 0, squash: 0, unseen: true }
       // It comes out of the crate: from over the crate's corner of the counter, up in an arc and down onto its lane, where it lands with a squash.
       const fall = Math.min(1, t / LAND_FALL)
       const settle = t > LAND_FALL ? Math.sin(((t - LAND_FALL) / (1 - LAND_FALL)) * Math.PI) : 0

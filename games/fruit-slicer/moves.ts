@@ -25,7 +25,7 @@ export type GameEvent =
   | { kind: 'curl'; id: number; fruit: Fruit; length: number; x: number; y: number; voice: VoiceId }
   | { kind: 'poke'; id: number; fruit: Fruit; length: number; voice: VoiceId }
   /** A fresh fruit lands on the board from the crate. */
-  | { kind: 'land'; id: number; fruit: Fruit; length: number; voice: VoiceId }
+  | { kind: 'land'; id: number; fruit: Fruit; length: number; voice: VoiceId; after?: number }
   /** These pieces were shoved off the far lane onto the shelf; each was at `from`. */
   | { kind: 'swept'; ids: number[]; from: Box[]; after?: number }
   /** A piece left the counter for the dog, from `from`: dropped off the shelf, given, flung, or burped across by the crate, which chews it for `after` seconds first. */
@@ -47,7 +47,7 @@ export type GameEvent =
   /** The cycle at the window ended: the serve starts. `how` is what ended it. */
   | { kind: 'ending'; ending: Ending; how: 'shut' | 'sentOff' | 'fed' }
   /** Pieces were set down on the board or the shelf, each from `from`: alongside a fruit, butted end to end against a piece, or just put there. */
-  | { kind: 'setDown'; ids: number[]; from: Box[]; how: 'put' | 'beside' | 'butted'; voice: VoiceId }
+  | { kind: 'setDown'; ids: number[]; from: Box[]; how: 'put' | 'beside' | 'butted'; voice: VoiceId; after?: number }
   /** A piece was laid in the tin. `opened` says the tin sprang open for it, and `firstShowing` names the idea shown now, once. */
   | { kind: 'given'; id: number; from: Box; opened: boolean; firstShowing: string | null; length: number; voice: VoiceId }
   /** What lies in the tin does not fit: it sticks out past the jaw, or leaves a gap, by so many points. `gap` is the gap in the compartment this piece was laid in, in points, or nothing when that compartment is not short: only there does the piece rattle. */
@@ -61,7 +61,8 @@ export type GameEvent =
   /** A flung piece hit a customer and is licked off. */
   | { kind: 'splat'; whom: Whom; piece: Piece; from: Box; voice: VoiceId }
   /** A flung piece bounced off something and came back to the counter. `struck` is the whole fruit it bounced off, which shivers. */
-  | { kind: 'bounce'; id: number; off: 'tin' | 'fruit' | 'crate' | 'shelf'; x: number; y: number; length: number; voice: VoiceId; struck?: number }
+  /** A flung piece strikes something and comes back to the board. `from` is where it left the hand, and `after` how long it is in the air before it strikes. */
+  | { kind: 'bounce'; id: number; off: 'tin' | 'fruit' | 'crate' | 'shelf'; x: number; y: number; length: number; voice: VoiceId; struck?: number; from?: Box; after?: number }
   /** A piece was knocked along its lane by a flung one, from `from`. */
   | { kind: 'knocked'; id: number; from: Box; length: number; voice: VoiceId; after?: number }
   /** The roller pressed so many equal parts into a fruit or a piece. */
@@ -123,8 +124,15 @@ export function fellEvents(before: World, ids: readonly number[], tin: TinShape 
   return gone(before, ids, tin).map(({ piece, from }) => (after > 0 ? { kind: 'fell', piece, from, voice: 'munch', after } : { kind: 'fell', piece, from, voice: 'munch' }))
 }
 
+/** The same events, each happening `wait` seconds later: for what a thing brings about that is itself still on its way. */
+export function later(events: readonly GameEvent[], wait: number): GameEvent[] {
+  return events.map((event) => (event.kind === 'swept' || event.kind === 'fell' || event.kind === 'land' || event.kind === 'knocked' || event.kind === 'setDown' || event.kind === 'bounce' ? { ...event, after: (event.after ?? 0) + wait } : event))
+}
+
 /** How long a fruit out of the crate is in the air before it comes down on its lane: what it shoves aside is shoved then, not before. */
 export const LANDS_AFTER = 0.23
+/** How long a flung piece is in the air before it strikes what it bounces off: what the blow does is done then. */
+export const STRIKES_AFTER = 0.22
 /** How long a piece that is let go takes from the hand to where it is set down: what it shoves aside or knocks along moves then, not before. */
 export const SETS_DOWN_AFTER = 0.22
 

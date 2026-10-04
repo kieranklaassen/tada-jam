@@ -3,7 +3,7 @@ import { FLIGHT_SECONDS } from './carry'
 import { SHEETS, poseOf, tuftBackAfter } from './cast'
 import { call, crate, freshGame, give, type Game } from './cycle'
 import { CURL_FLIGHT, CURL_LIFE } from './fx'
-import { GameRun, RUN_GAP, RUN_STEP, SNACK_SECONDS, SWING } from './gameRun'
+import { CAUGHT_AFTER, GameRun, RUN_GAP, RUN_STEP, SNACK_SECONDS, SWING, TO_DOG_SECONDS } from './gameRun'
 import { CAST, type Customer } from './orders'
 import { IdleLadder } from './guidance'
 import { WHOLE } from './measure'
@@ -158,7 +158,9 @@ describe('carrying', () => {
     const piecesBefore = run.game.world.pieces.length
     run.lift()
     expect(run.game.world.pieces.length).toBe(piecesBefore - 1)
-    expect(ids(run)).toContain('catch')
+    // It is heard as the dog snaps it out of the air, not as the hand lets go.
+    const caught = run.takeSounds().find((sound) => sound.id === 'catch')!
+    expect(caught.delay).toBeCloseTo(CAUGHT_AFTER)
   })
 
   it('flings only a piece that is let go at speed: one carried fast, then held still and let go, is set down where it is', () => {
@@ -479,7 +481,10 @@ describe('the cast in the run', () => {
     run.end()
     for (let i = 0; i < 8 && !run.fx.fx.some((one) => one.kind === 'fly'); i++) run.tap(mid(CRATE))
     expect(run.dog.react).toBeNull()
-    // What the landing fruit pushes off the shelf's end drops as the fruit comes down, and the dog has it when it gets there.
+    // What the landing fruit pushes off the shelf's end drops as the fruit comes down, and the dog has it when it gets there: it is heard
+    // going down then, not before.
+    const munch = run.takeSounds().filter((sound) => sound.id === 'munch').at(-1)!
+    expect(munch.delay).toBeCloseTo(LANDS_AFTER + TO_DOG_SECONDS)
     play(run, LANDS_AFTER + 0.5)
     expect(run.dog.react).toBe('cheeks')
   })

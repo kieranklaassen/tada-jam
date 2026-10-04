@@ -6,7 +6,7 @@ import { newDog, poseOf as dogPose, react, stepDog, type DogState, type Reaction
 import { CURL_FLIGHT, CURL_LIFE, LID_STRIKES, MOUTH, answer, answering, mark, newFx, rollAlong, spawn, step, whoosh, type FxState } from './fx'
 import { guideOf, type Guide } from './guide'
 import { handPose, type Guidance, type HandPose } from './guidance'
-import { LANDS_AFTER, newStroke, poke, slice, thingAt, tinAt, type GameEvent, type Stroke, type Whom } from './moves'
+import { LANDS_AFTER, SETS_DOWN_AFTER, newStroke, poke, slice, thingAt, tinAt, type GameEvent, type Stroke, type Whom } from './moves'
 import { Scene, followedBy } from './scene'
 import { headOf } from './seats'
 import { TO_MOUTH_SECONDS, gliderBeats, restShow, servedShow, serveBeats, showingBeats, type Show } from './scenes'
@@ -39,6 +39,10 @@ export type Sound = { id: VoiceId; length?: number; count?: number; delay: numbe
 export const SWING = 0
 /** The stretch of a carry, in seconds, over which its speed at the moment of letting go is taken. */
 export const SPEED_WINDOW = 0.1
+/** How long what falls to the dog is on its way before the dog has it, and how soon the dog snaps a flung piece out of the air: it is heard then. */
+export const TO_DOG_SECONDS = 0.36
+export const CAUGHT_AFTER = 0.14
+
 /** A finger that came back just after a lift is still tapping while it stays within this of where it landed, in stage units: the tracker's own slop for a tap. */
 const LANDED_SLOP = 14
 
@@ -443,7 +447,11 @@ export class GameRun {
         // A fruit out of the crate thumps as it comes down on its lane.
         // A piece on its way to a mouth or a face is heard when it gets there: the gulp, the splat.
         const flight = event.kind === 'ate' ? (event.after ?? 0) + TO_MOUTH_SECONDS : event.kind === 'splat' ? TO_MOUTH_SECONDS : 0
-        const late = event.kind === 'fell' || event.kind === 'knocked' ? event.after ?? 0 : event.kind === 'misfit' && event.how === 'over' ? LID_STRIKES : event.kind === 'land' ? LANDS_AFTER : flight
+        // What goes to the dog is heard going down as it reaches the dog's mouth, or as the dog snaps it out of the air.
+        const toDog = event.kind === 'fell' ? (event.after ?? 0) + (event.voice === 'catch' ? CAUGHT_AFTER : TO_DOG_SECONDS) : 0
+        // A piece set down is heard as it arrives, a flung one as it strikes, a fruit out of the crate as it comes down.
+        const arrives = event.kind === 'setDown' ? (event.after ?? 0) + SETS_DOWN_AFTER : event.kind === 'bounce' || event.kind === 'knocked' ? event.after ?? 0 : event.kind === 'land' ? (event.after ?? 0) + LANDS_AFTER : 0
+        const late = event.kind === 'misfit' && event.how === 'over' ? LID_STRIKES : flight + toDog + arrives
         const delay = event.kind === 'cut' || event.kind === 'curl' ? cuts++ * RUN_GAP : rolledFlat ? SHEETS[rolledFlat.who].react.flat * SPRINGS_BACK[rolledFlat.who] : late
         let length = 'length' in event ? event.length : 'piece' in event ? event.piece.length : undefined
         if (event.kind === 'cut') length = this.rung = this.rung === null ? event.length : Math.min(event.length, this.rung * RUN_STEP)
@@ -472,8 +480,8 @@ export class GameRun {
         case 'fell': {
           const taste = dogTaste(event.piece.length, event.piece.fruit)
           // A flung piece is caught in the air, with a flip that is bigger the longer the piece; anything else is eaten as it arrives.
-          if (event.voice === 'catch') this.coming.push({ wait: 0.14, reaction: 'flip', amount: taste.cheeks })
-          else this.coming.push({ wait: 0.36 + (event.after ?? 0), reaction: taste.act === 'spin' ? 'spin' : taste.act === 'snap' ? 'gulp' : 'cheeks', amount: taste.cheeks })
+          if (event.voice === 'catch') this.coming.push({ wait: CAUGHT_AFTER, reaction: 'flip', amount: taste.cheeks })
+          else this.coming.push({ wait: TO_DOG_SECONDS + (event.after ?? 0), reaction: taste.act === 'spin' ? 'spin' : taste.act === 'snap' ? 'gulp' : 'cheeks', amount: taste.cheeks })
           break
         }
         case 'pressed': {

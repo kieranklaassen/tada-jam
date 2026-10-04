@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { MOST_FX, MOST_SPATTERS, MOUTH, flight, newFx, offsetOf, settled, spawn, step, whoosh, type FxState } from './fx'
-import { BOARD, COUNTER, RAIL_BOX, SHELF_BOX, WALL, inside } from './stage'
+import { BOARD, COUNTER, RAIL_BOX, SHELF_BOX, WALL, inside, type Box } from './stage'
 import type { GameEvent } from './moves'
 
 const CUT: GameEvent = { kind: 'cut', left: 1, right: 2, fruit: 'long', length: 2400, x: 400, y: 412, h: 48, voice: 'thwack' }
@@ -62,6 +62,47 @@ describe('what the grid promises to the eye', () => {
     const open = spawn(newFx(1), { kind: 'rolled', on: 'tin', whom: null, parts: 4, x: 200, y: 330, voice: 'rule' })
     expect(open.fx.find((one) => one.kind === 'answer')).toMatchObject({ parts: 4 })
     expect(kinds(spawn(newFx(1), { kind: 'rolled', on: 'tin', whom: null, parts: 0, x: 200, y: 330, voice: 'drum' }))).not.toContain('answer')
+  })
+})
+
+describe('a flung piece that bounces', () => {
+  const hand: Box = { x: 300, y: 600, w: 180, h: 42 }, lies: Box = { x: 420, y: 500, w: 180, h: 42 }
+  const strike = { x: 200, y: 330 }
+  const BOUNCE: GameEvent = { kind: 'bounce', id: 7, off: 'tin', x: strike.x, y: strike.y, length: 600, voice: 'bong', from: hand, after: 0.22 }
+  const DOWN: GameEvent = { kind: 'setDown', ids: [7], from: [{ ...hand, x: strike.x - 90, y: strike.y - 21 }], how: 'put', voice: 'lay', after: 0.22 }
+  const at = (state: FxState) => { const off = offsetOf(state, 7, lies); return { x: lies.x + off.dx, y: lies.y + off.dy } }
+
+  it('is drawn flying from the hand to what it strikes, and from there back to where it lies', () => {
+    const thrown = spawn(spawn(newFx(1), BOUNCE), DOWN)
+    // As it is let go it is where the hand was; as it strikes, at the place it strikes; then where it lies.
+    expect(at(thrown)).toEqual({ x: hand.x, y: hand.y })
+    const midway = at(play(thrown, 0.11))
+    expect(midway.x).toBeLessThan(hand.x)
+    expect(midway.x).toBeGreaterThan(strike.x - 90)
+    const struck = at(play(thrown, 0.22))
+    // (Within a frame of the blow: the piece is at the place it strikes, give or take a few units.)
+    expect(Math.abs(struck.x - (strike.x - 90))).toBeLessThan(8)
+    expect(Math.abs(struck.y - (strike.y - 21))).toBeLessThan(12)
+    expect(offsetOf(play(thrown, 0.5), 7, lies)).toEqual({ dx: 0, dy: 0, squash: 0 })
+  })
+
+  it('jolts the tin and bursts as it strikes, not as the hand lets go', () => {
+    const thrown = spawn(newFx(1), BOUNCE)
+    expect(thrown.joltSpeed).toBe(0)
+    expect(thrown.fx.filter((one) => one.kind === 'burst').every((one) => one.age < 0)).toBe(true)
+    const before = play(thrown, 0.2)
+    expect(before.jolt).toBe(0)
+    const after = play(thrown, 0.3)
+    expect(Math.abs(after.jolt)).toBeGreaterThan(0)
+  })
+
+  it('keeps a fruit the crate has not let go of out of sight until it jumps out', () => {
+    const waiting = spawn(newFx(1), { kind: 'land', id: 9, fruit: 'long', length: 2400, voice: 'thump', after: 0.22 })
+    expect(offsetOf(play(waiting, 0.1), 9, lies).unseen).toBe(true)
+    expect(waiting.rockSpeed).toBe(0)
+    const out = play(waiting, 0.3)
+    expect(offsetOf(out, 9, lies).unseen).toBeUndefined()
+    expect(Math.abs(out.rock)).toBeGreaterThan(0)
   })
 })
 

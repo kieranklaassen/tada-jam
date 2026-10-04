@@ -144,7 +144,7 @@ function roller(ctx: Ctx, dots: Dots, at: Point): number {
 function effects(ctx: Ctx, fx: FxState, wall: boolean): number {
   let drawn = 0
   for (const one of fx.fx) {
-    if ((one.kind === 'spatter') !== wall || one.age < 0 || one.kind === 'lid' || one.kind === 'jaw' || one.kind === 'slat' || one.kind === 'answer' || one.kind === 'roll' || one.kind === 'chew' || one.kind === 'decor') continue
+    if ((one.kind === 'spatter') !== wall || one.age < 0 || one.kind === 'lid' || one.kind === 'jaw' || one.kind === 'slat' || one.kind === 'answer' || one.kind === 'roll' || one.kind === 'chew' || one.kind === 'decor' || one.kind === 'kick') continue
     const t = one.age / one.life
     drawn++
     switch (one.kind) {
@@ -552,6 +552,7 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
   for (const { piece, box } of pieces) {
     if (carried?.ids.includes(piece.id)) continue
     const off = offsetOf(fx, piece.id, box)
+    if (off.unseen) continue
     pieceBar(ctx, piece, box, off.dx, off.dy, off.squash)
     drawn++
   }
