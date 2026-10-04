@@ -99,9 +99,17 @@ describe('the friends', () => {
     for (const [kind, body] of Object.entries(BODIES)) {
       expect(2 * body.halfWidth * FRIEND_SCALE * IPAD.pixelsPerUnit, kind).toBeGreaterThanOrEqual(100)
       const far = IPAD.distance / (IPAD.distance - waitingSpot(0, IPAD).z)
-      // The waiting troop is drawn a little under that, and the touch reads it wider than it is drawn.
-      expect(2 * body.halfWidth * FRIEND_SCALE * WAITING_SCALE * far * IPAD.pixelsPerUnit, `${kind} waiting`).toBeGreaterThanOrEqual(90)
+      // The waiting troop stands back and is drawn smaller, and is still that wide on the iPad held wide.
+      expect(2 * body.halfWidth * FRIEND_SCALE * WAITING_SCALE * far * IPAD.pixelsPerUnit, `${kind} waiting`).toBeGreaterThanOrEqual(100)
     }
+    // The sizes the sheet gives for the other surfaces, by the narrowest friend, which is the duck.
+    const widest = (view: typeof IPAD, waiting: boolean) => Math.min(...Object.values(BODIES).map((body) => 2 * body.halfWidth * FRIEND_SCALE * view.pixelsPerUnit * (waiting ? WAITING_SCALE * view.distance / (view.distance - waitingSpot(0, view).z) : 1)))
+    const phone = viewFor(844, 390)
+    expect(widest(NARROW, false)).toBeGreaterThanOrEqual(100)
+    expect(Math.round(widest(NARROW, true))).toBe(86)
+    expect(Math.round(widest(phone, false))).toBe(89)
+    expect(Math.round(widest(phone, true))).toBe(51)
+    expect(Math.round(2 * BALLOON * phone.balloon * phone.pixelsPerUnit)).toBe(64)
   })
 
   it('are as wide as their plans say, arms up: no kind reaches further out than its half-width', () => {
