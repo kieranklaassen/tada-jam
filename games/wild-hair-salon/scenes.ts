@@ -113,9 +113,10 @@ export function comingIn(cast: Cast, before: Game, after: Game): Beat[] {
       if (mine) mine.at = { ...walk(goer.from, { ...DOORWAY, s: 0.6 }, p, PERSONALITIES[goer.who].gait, OUT, goer.part === 'friend' ? LOW + 24 : LOW), seen: 1 - Math.max(0, (p - 0.8) / 0.2) }
       if (p >= 1 && goer.part === 'chair') staging.leaving = []
     })),
-    // The customer leads the way in and the friend follows it, so each is seen whole.
+    // The customer leads the way in and the friend follows it, so each is seen whole. A friend whose seat is across the room
+    // goes round the front of the chair, as it does whenever it crosses, and never through the customer.
     over(0.5, WALK, (p) => { staging.customer = { ...walk({ ...DOORWAY, x: DOORWAY.x - 22 }, to.customer, p, gait.customer, WALK, goers.length ? BACK : 0), seen: 1 } }),
-    over(0.5 + BEHIND, WALK - BEHIND, (p) => { staging.friend = { ...walk({ ...DOORWAY, x: DOORWAY.x + 26 }, to.friend, p, gait.friend, WALK - BEHIND, goers.length ? BACK : 0), seen: Math.min(1, p * 6) } }),
+    over(0.5 + BEHIND, WALK - BEHIND, (p) => { staging.friend = { ...walk({ ...DOORWAY, x: DOORWAY.x + 26 }, to.friend, p, gait.friend, WALK - BEHIND, lowFor(DOORWAY, to.friend) || (goers.length ? BACK : 0)), seen: Math.min(1, p * 6) } }),
     cueAt(0.5 + WALK, () => { if (!cast.cut) { cast.cue('landed', after.chair ?? undefined); cast.customer()?.react('sitsDown'); cast.friend()?.react('sitsDown'); cast.customer()?.bump(1.2); cast.friend()?.bump(0.8) } }),
     // The hats pop off: up, over and gone.
     over(0.7 + WALK, HAT_OFF, (p) => { staging.hats = 1 - p }),

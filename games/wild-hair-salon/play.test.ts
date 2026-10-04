@@ -181,30 +181,76 @@ describe('the one want', () => {
 })
 
 describe('a thing shown once', () => {
-  it('is drawn as it was until it is shown: the tuft at its old length from the moment the pair come in, the ribbon short on its peg', () => {
+  it('is a scene of its own after the one that brings it on: marked when it starts, and drawn as it was until the paw gets there', () => {
     const play = opened()
     tap(play, DOOR)
-    const game = play.game!
-    expect(game.shown.snip).toBe(true)
-    // The game already holds the tuft at half; it is drawn at its full length until the paw nips it.
+    // Nothing is marked and no tuft is changed while the pair come in.
+    expect(play.game!.shown.snip).toBe(false)
+    const laid = [...play.game!.mane]
+    play.takeSave()
+    let frames = 0
+    while (!play.game!.shown.snip && frames++ < 600) play.step(1 / 60, true)
+    expect(play.game!.shown.snip).toBe(true)
+    // It follows the coming in without a gap, and its outcome is saved as it starts.
+    expect(play.inScene).toBe(true)
+    expect(play.takeSave()).toBe('now')
+    // The game holds the tuft at half from the showing's first moment; it is drawn at its full length until the paw nips it.
     const tuft = play.hair.tufts.findIndex((t) => t.rest > 1.2)
     expect(tuft).toBeGreaterThanOrEqual(0)
-    run(play, 3.9, true)
-    expect(play.inScene).toBe(true)
-    expect(play.hair.tufts[tuft].rest).toBeGreaterThan(1.2)
+    expect(play.game!.mane[tuft]).toBeLessThan(laid[tuft])
     expect(play.hair.tufts[tuft].stretch.x).toBeGreaterThan(1.2)
+    const saved = round(play)
     through(play)
     expect(play.hair.tufts[tuft].rest).toBe(1)
-    // The ribbon: from the touch that sends the friend across, it hangs short on its peg until the friend has drawn it out.
+    expect(round(play)).toEqual(saved)
+    // The ribbon: it is in the salon from the moment the friend, across the room, begins to show it, short on its peg until the friend has drawn it out.
     const ribbon = seated({ shown: { snip: true, pull: true, ribbon: false }, ribbon: null })
     tap(ribbon, BENCH)
+    expect(ribbon.game!.ribbon).toBeNull()
+    run(ribbon, 1.1, true)
+    expect(ribbon.inScene).toBe(true)
     expect(ribbon.game!.ribbon).toMatchObject({ len: TAIL_LEN, at: 'peg' })
     expect(ribbon.staging.ribbon).toMatchObject({ x: PEG.x, y: PEG.y })
     expect(ribbon.staging.ribbon!.len).toBeLessThan(TAIL_LEN / 2)
-    run(ribbon, 0.8, true)
-    expect(ribbon.staging.ribbon!.len).toBeLessThan(TAIL_LEN / 2)
     through(ribbon)
     expect(ribbon.staging.ribbon).toBeNull()
+  })
+
+  it('is not lost when a touch cuts short the scene before it: it is shown once the finger has been off the glass a moment', () => {
+    const play = opened()
+    tap(play, DOOR)
+    run(play, 1, true)
+    tap(play, AIR)
+    expect(play.inScene).toBe(false)
+    expect(play.game!.shown.snip).toBe(false)
+    // Not while the finger is working, and not at once.
+    run(play, 2, false)
+    expect(play.inScene).toBe(false)
+    run(play, 0.3, true)
+    expect(play.inScene).toBe(false)
+    run(play, 0.5, true)
+    expect(play.inScene).toBe(true)
+    expect(play.game!.shown.snip).toBe(true)
+    let paw = false
+    for (let i = 0; i < 600 && play.inScene; i++) { play.step(1 / 60, true); if (play.staging.paw) paw = true }
+    expect(paw).toBe(true)
+  })
+
+  it('waits for its cause to come round again when the game is put away before it began, and is never begun behind the child\'s back', () => {
+    const play = opened()
+    tap(play, DOOR)
+    run(play, 1, true)
+    // Parked where it is, or opened again from what was saved: no showing starts by itself.
+    const again = opened(round(play))
+    play.putAway()
+    for (const one of [play, again]) {
+      run(one, 4, true)
+      expect(one.inScene).toBe(false)
+      expect(one.game!.shown.snip).toBe(false)
+      // The next customer to come in is shown it.
+      tap(one, knotOf(one)); through(one); tap(one, DOOR); through(one)
+      expect(one.game!.shown.snip).toBe(true)
+    }
   })
 })
 
@@ -213,7 +259,7 @@ describe('small things the sheet has', () => {
     const looks = (seat: 'beside' | 'across'): { customer: number; friend: number } => {
       const play = seated({ seat })
       const seen = { customer: 0, friend: 0 }
-      for (let i = 0; i < 60 * 5; i++) {
+      for (let i = 0; i < 60 * 8; i++) {
         play.step(1 / 60, true)
         for (const who of ['customer', 'friend'] as const) { const x = play[who]()!.at('lookX'); if (Math.abs(x) > Math.abs(seen[who])) seen[who] = x }
       }
@@ -453,14 +499,16 @@ describe('a first visit', () => {
     expect(play.leaving).toEqual([])
   })
 
-  it('shows the snip once, right after the first pair has come in, and its outcome is saved before it plays', () => {
+  it('shows the snip once, right after the first pair has come in, and its outcome is saved as it starts', () => {
     const play = opened()
-    const laid = (() => { const other = opened(); tap(other, DOOR); return other })()
     tap(play, DOOR)
-    // Marked, and the tuft the customer will nip already at half its length in what is saved.
+    const laid = [...play.game!.mane]
+    let frames = 0
+    while (!play.game!.shown.snip && frames++ < 600) play.step(1 / 60, true)
+    // Marked as it starts, with the tuft the customer will nip already at half its length in what is saved.
     expect(play.game!.shown).toEqual({ snip: true, pull: false, ribbon: false })
-    const longest = Math.max(...laid.game!.mane.map((steps, i) => (steps === play.game!.mane[i] ? 0 : steps)), 0)
-    expect(longest).toBe(0)
+    const longest = laid.indexOf(Math.max(...laid))
+    expect(play.game!.mane[longest]).toBe(Math.round(laid[longest] / 2))
     const saved = round(play)
     through(play)
     expect(round(play)).toEqual(saved)
@@ -511,9 +559,10 @@ describe('a scene', () => {
     ['coming in', (play: Play) => { tap(play, knotOf(play)); through(play); tap(play, DOOR) }],
     ['the cape coming off', (play: Play) => tap(play, knotOf(play))],
     ['going back under the cape', (play: Play) => { tap(play, knotOf(play)); through(play); tap(play, CHAIR) }],
-    ['the friend crossing the room, and the ribbon shown', (play: Play) => tap(play, BENCH)],
+    ['the friend crossing the room', (play: Play) => tap(play, BENCH)],
   ])('saves its whole outcome when it starts: %s', (_name, start) => {
-    const play = seated()
+    // With the ribbon already shown, so that nothing follows the scene.
+    const play = seated({ shown: { snip: true, pull: true, ribbon: true }, ribbon: { len: 40, at: 'peg' } })
     play.takeSave()
     start(play)
     expect(play.inScene).toBe(true)
@@ -661,9 +710,11 @@ describe('the harder option', () => {
     const play = seated()
     expect(play.game!.ribbon).toBeNull()
     tap(play, BENCH)
-    expect(play.game).toMatchObject({ seat: 'across', ribbon: { len: TAIL_LEN, at: 'peg' }, shown: { ribbon: true } })
+    // The friend crosses first; the ribbon is in the salon when the friend begins to show it.
+    expect(play.game).toMatchObject({ seat: 'across', ribbon: null, shown: { ribbon: false } })
     let carriedAbout = false
     for (let i = 0; i < 60 * 12 && play.inScene; i++) { play.step(1 / 60, true); if (play.staging.ribbon && play.staging.tails > 0.5) carriedAbout = true }
+    expect(play.game).toMatchObject({ seat: 'across', ribbon: { len: TAIL_LEN, at: 'peg' }, shown: { ribbon: true } })
     expect(carriedAbout).toBe(true)
     expect(play.staging.ribbon).toBeNull()
     expect(play.friend()!.started).toContain('poodle-shows-it-off-with-a-flourish')

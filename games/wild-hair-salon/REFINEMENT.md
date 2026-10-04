@@ -72,7 +72,7 @@
   - The looking glass shows the head as it was when the fingers last let go of the mane, with its bow and without the mane's moods or a paw; the pair at the door are one sheet each, so only their eyes and their whole bodies move; the friend who sits across the room stands in front of the lower rim of the looking glass.
   - The first frame of a first visit has nobody in the chair, as the sheet has it: the pair are at the door, and the cape hangs over the chair and waits.
   - Coming in, the friend is seen in the doorway about a second after the customer, once the customer has left it: two heads do not fit in the door side by side without one being drawn into the other.
-  - The ribbon is not in the salon until the friend shows what it is for; it is on its peg, short, from the touch that sends the friend to show it.
+  - The ribbon is not in the salon until the friend shows what it is for; it is on its peg, short, from the moment the friend begins to show it.
   - The comparison through a third thing is shown unasked only once, when the friend shows what the ribbon is for, and there on two tails that are the same length. After that it is there only when the child carries the ribbon from one lock to the other.
   - The pair at the door are drawn from the four customers so that the one who waits to be the customer is not the one who is in the chair. Either of them can still be the same kind of animal as someone who is in the salon, and two of a kind are then on the screen.
 - **Open.**

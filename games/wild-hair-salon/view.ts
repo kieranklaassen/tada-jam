@@ -106,7 +106,8 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
     const seated: Figure | null = customer ? { who: chair, puppet: customer, at: customerAt, mane: { steps: game.mane, hair }, body: 1 - caped, wears: wearsOf('chair'), time: play.time, limbsLater: true } : null
     if (seated) drawn += drawFigure(g, sprites, seated)
     // The looking glass shows the customer's face, the hair it has now, and what it thinks of both.
-    if (customer && inChair && staging.hats < 0.5) drawn += reflection(g, sprites, { who: chair, puppet: customer, at: GLASS_AT, mane: null, body: 0, wears: wearsOf('chair'), time: play.time, whole: sprites.mane(chair, game.mane, hair.holds === null), flipped: true })
+    // The glass shows the mane as it was until a tuft that a showing will change has been changed where the child can see it.
+    if (customer && inChair && staging.hats < 0.5) drawn += reflection(g, sprites, { who: chair, puppet: customer, at: GLASS_AT, mane: null, body: 0, wears: wearsOf('chair'), time: play.time, whole: sprites.mane(chair, game.mane, hair.holds === null && hair.tufts.every((tuft) => tuft.rest === 1)), flipped: true })
 
     // The cape, over the chin when the customer ducks; it breathes a little. In the air it rises and fades.
     if (caped > 0 && inChair) {

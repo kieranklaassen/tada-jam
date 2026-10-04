@@ -156,7 +156,8 @@ export function paintRug(g: Ctx, paint: Watercolour, rng: Rng): void {
   const cx = CHAIR.x, cy = FLOOR_Y + 96
   paint.wash(g, blob(rng, cx, cy, 372, 74, 0.012, 26), { color: ROOM.towel[1], edge: ROOM.door, blooms: [ROOM.towel[0], ROOM.floorBloom], strength: 0.6, bleed: 5, pool: 9, reserve: true })
   paint.pencil(g, blob(rng, cx, cy, 340, 60, 0.01, 26), true, 0.6)
-  for (const side of [-1, 1]) for (let i = -3; i <= 3; i++) paint.pencil(g, [{ x: cx + side * (368 - Math.abs(i) * 5), y: cy + i * 10 }, { x: cx + side * (384 - Math.abs(i) * 5), y: cy + i * 11 }], false, 0.6)
+  // The fringe fans out from the rim like the spokes of a wheel: no two threads level, and none of them a dash.
+  for (const side of [-1, 1]) for (let i = -3; i <= 3; i++) paint.pencil(g, [{ x: cx + side * (368 - Math.abs(i) * 5), y: cy + i * 10 }, { x: cx + side * (386 - Math.abs(i) * 7), y: cy + i * 16 + 3 }], false, 0.6)
 }
 
 /** A bottle: a body, a neck and a stopper, standing on `base`. */
@@ -244,7 +245,8 @@ export function paintDoor(g: Ctx, paint: Watercolour, rng: Rng): void {
     const rx = x + 10 + rng.range(0, w - 26), ry = y + 10 + rng.range(0, h - 60)
     paint.pencil(g, [{ x: rx, y: ry }, { x: rx - 5, y: ry + 20 }], false, 0.55)
   }
-  for (let i = 0; i < 3; i++) paint.pencil(g, blob(rng, x + 30 + i * 52, ground + 40 + (i % 2) * 34, 16, 4, 0.05, 8), true, 0.5)
+  // Puddles: flat patches of wet, washed in and not outlined, so none is a ring.
+  for (let i = 0; i < 3; i++) paint.wash(g, blob(rng, x + 30 + i * 52, ground + 40 + (i % 2) * 34, 18, 5, 0.05, 8), { color: ROOM.glassTint, strength: 0.6 })
   // The glass over it all, and the plate at the door's foot.
   paint.wash(g, pane, { color: ROOM.glassTint, strength: 0.4, grain: 0.05 })
   paint.pencil(g, pane, true, 1.1)

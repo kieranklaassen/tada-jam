@@ -94,6 +94,23 @@ describe('coming in', () => {
     expect(nearest).toBeGreaterThan(130)
   })
 
+  it('puts no face in another face, whichever seat the friend comes in to, with a pair going out or without', () => {
+    const into = (a: { x: number; y: number; s: number; lift: number }, b: { x: number; y: number; s: number; lift: number }): number =>
+      a.s + b.s - Math.hypot((a.x - b.x) / HEAD.rx, (a.y - a.lift - b.y + b.lift) / HEAD.ry)
+    for (const seat of ['beside', 'across'] as const) for (const withGoers of [false, true]) for (const [chair, friend] of [['lion', 'poodle'], ['yak', 'rabbit'], ['rabbit', 'lion'], ['poodle', 'yak']] as const) {
+      const before: Game = withGoers ? seated({ cape: 'off' }) : freshGame(null)
+      const after = seated({ chair, friend, seat })
+      const c = cast(after)
+      c.staging.settle(before)
+      let worst = -Infinity
+      playThrough(comingIn(c, before, after), () => {
+        const seen = [c.staging.customer, c.staging.friend, ...c.staging.leaving.map((goer) => goer.at)].filter((at) => at !== null && at.seen > 0.5)
+        for (let i = 0; i < seen.length; i++) for (let j = i + 1; j < seen.length; j++) worst = Math.max(worst, into(seen[i]!, seen[j]!))
+      })
+      expect(worst, `${chair} with ${friend}, ${seat}${withGoers ? ', a pair going out' : ''}`).toBeLessThanOrEqual(0)
+    }
+  })
+
   it('springs the hair out as the hats leave it, where the spring is seen from its start', () => {
     const before = freshGame(null), after = letIn(before).game, c = cast(after)
     let hatsWhenSprung = -1

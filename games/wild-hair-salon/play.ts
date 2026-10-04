@@ -1,4 +1,4 @@
-import { backUnderCape, capeOff, ideasDue, letIn, markShown, sendFriend } from './cycle'
+import { backUnderCape, capeOff, ideasDue, letIn, markShown, sendFriend, type Idea } from './cycle'
 import { Hair, type StrandId } from './hair'
 import { Hand, type Happening, type Held } from './hand'
 import type { Gesture } from './input'
@@ -8,7 +8,7 @@ import { Puppet } from './puppet'
 import { makeRng } from './rng'
 import { TUFTS } from './rules'
 import { deserializeGame, serializeGame, type Game } from './save'
-import { Scene, followedBy, sceneLength, type Beat } from './scene'
+import { Scene, sceneLength, type Beat } from './scene'
 import { RIBBON_FIRST, capeComesOff, comingIn, shownOnce, tuftShown, type Cast, type Cue } from './scenes'
 import { MOST_NOTES, notesFor, notesForCue, notesForSaying, type Note } from './sound'
 import { RIBBON_HOME, Staging, lowFor, walk } from './staging'
@@ -32,6 +32,8 @@ const near = (salon: Salon, piece: Salon['clippings'][number], p: Point): number
 
 /** A second tap this soon after the one that began a scene, and this near it, is taken as part of the same touch. */
 const ECHO_S = 1, ECHO_REACH = 70
+/** How long the finger is off the glass before a thing that waited behind a cut scene is shown. */
+const SHOW_AFTER = 0.6
 /** The most notes that wait their turn: a few frames' worth, so nothing is heard late. */
 const MOST_WAITING = MOST_NOTES * 5
 
@@ -58,10 +60,13 @@ export class Play implements Cast {
   private notes: Note[] = []
   private said: Note[] = []
   private pressedAt: Point | null = null
-  private untilStir = STIR_EVERY / 2
+  private untilStir = STIR_EVERY
   /** Where and when the press landed that began the scene now playing. */
   private began: { at: Point; time: number } | null = null
   private echo = false
+  /** What is waiting to be shown once the scene that is playing has ended, and how long it waits after a scene that was cut short. */
+  private owed: Idea[] = []
+  private showIn = 0
   /** The finger has come off a drag and the drag has not been ended yet: the child let go, and what was in hand is to be put down there. */
   lifted = false
   private stirs = 0
@@ -86,6 +91,7 @@ export class Play implements Cast {
     const game = deserializeGame(raw, childAge)
     this.game = game
     this.scene = null
+    this.owed = []
     this.cast(game)
     this.staging.settle(game)
     this.hair.settle()
@@ -135,20 +141,22 @@ export class Play implements Cast {
 
   // --- Scenes ---------------------------------------------------------------
 
-  /** Starts a scene whose outcome is already in the game: the game is marked to be saved at once. */
-  private play(beats: Beat[]): void {
+  /** Starts a scene whose outcome is already in the game: the game is marked to be saved at once. `touched` says a touch began it. */
+  private play(beats: Beat[], touched = true): void {
     if (beats.length === 0) { this.settle(); return }
     const length = sceneLength(beats)
     // Whatever the beats leave on the way, the scene ends with everything where the model has it.
     this.scene = new Scene([...beats, { at: length, lasts: 0, play: () => this.settle() }])
     this.scene.start(this.time, () => { this.save = 'now' })
     this.scene.update(this.time)
-    this.began = this.pressedAt ? { at: this.pressedAt, time: this.time } : null
+    this.began = touched && this.pressedAt ? { at: this.pressedAt, time: this.time } : null
   }
 
   /** A touch: the scene that is playing ends now, with everything where it was going. */
   private endScene(): void {
     if (!this.scene?.running) return
+    // What waits to be shown waits a moment longer, for the finger that cut this short to be done.
+    this.showIn = SHOW_AFTER
     this.cut = true
     this.scene.finish()
     this.cut = false
@@ -166,22 +174,33 @@ export class Play implements Cast {
     }
   }
 
-  /** The showings that are due now, each marked as shown, as beats to follow whatever scene is starting. */
-  private showings(when: 'coming in' | 'later'): Beat[] {
-    let beats: Beat[] = []
-    for (const idea of this.game ? ideasDue(this.game, when) : []) {
-      const before = this.game!
+  /**
+   * The next thing that is waiting to be shown, if it is still due, as a scene
+   * of its own. It is marked as shown, and what it changes is in the game, the
+   * moment it starts, and not before: a showing that has not begun is not
+   * lost when the scene before it is cut short or the game is put away.
+   */
+  private show(): void {
+    while (this.owed.length > 0) {
+      const idea = this.owed.shift()!, before = this.game
+      if (!before || !ideasDue(before).includes(idea)) continue
       const after = markShown(before, idea)
       this.game = after
-      // The game holds what the showing will change before the showing plays. Until it does, the thing is drawn as it was:
-      // the tuft at its old length, and the ribbon short on its peg.
+      // The game holds what the showing changes from its first moment. Until the paw gets there, the thing is drawn as it
+      // was: the tuft at its old length, and the ribbon short on its peg.
       const tuft = idea === 'ribbon' ? null : tuftShown(before, after)
       const held = tuft ? this.hair.tufts[tuft.tuft] : null
       if (tuft && held) { held.rest = tuft.share; held.stretch.x = tuft.share; held.stretch.v = 0 }
       if (idea === 'ribbon') this.staging.ribbon = { x: RIBBON_HOME.x, y: RIBBON_HOME.y, len: RIBBON_FIRST }
-      beats = followedBy(beats, shownOnce(this, idea, before, after))
+      this.play(shownOnce(this, idea, before, after), false)
+      return
     }
-    return beats
+  }
+
+  /** Notes what the scene that is about to start has to be followed by. */
+  private owe(when: 'coming in' | 'later'): void {
+    this.owed = this.game ? ideasDue(this.game, when) : []
+    this.showIn = 0
   }
 
   /** One of the things that move the game on was touched. */
@@ -197,8 +216,8 @@ export class Play implements Cast {
       this.waiting = [this.puppet(done.game.waiting[0]), this.puppet(done.game.waiting[1])]
       this.game = done.game
       this.hair.settle()
-      const beats = comingIn(this, game, done.game)
-      this.play(followedBy(beats, this.showings('coming in')))
+      this.owe('coming in')
+      this.play(comingIn(this, game, done.game))
       return
     }
     if (button === 'knot') {
@@ -215,10 +234,11 @@ export class Play implements Cast {
       const from = this.staging.friend, to = placesOf(back).friend
       const gait = back.friend ? PERSONALITIES[back.friend].gait : { hop: 10, steps: 2 }
       this.cue('capeOn')
-      this.play(followedBy([
+      this.owe('later')
+      this.play([
         { at: 0, lasts: 0.45, play: (p) => { this.staging.cape = p } },
         { at: 0.1, lasts: 0.9, play: (p) => { if (from && to) this.staging.friend = from.x === to.x ? { ...to, lift: 0, seen: 1 } : walk(from, to, p, gait, 0.9, lowFor(from, to)) } },
-      ], this.showings('later')))
+      ])
       return
     }
     // The empty seat: the friend goes to it, at any moment and as often as the child likes.
@@ -227,10 +247,11 @@ export class Play implements Cast {
     this.game = seated
     const from = this.staging.friend, to = placesOf(seated).friend
     const gait = seated.friend ? PERSONALITIES[seated.friend].gait : { hop: 10, steps: 2 }
-    this.play(followedBy([
+    this.owe('later')
+    this.play([
       { at: 0, lasts: 1.0, play: (p) => { if (from && to) this.staging.friend = walk(from, to, p, gait, 1.0, lowFor(from, to)) } },
       { at: 1.0, lasts: 0, play: () => { if (!this.cut) { this.puppets.friend?.react('hopsOver'); this.cue('landed', seated.friend ?? undefined) } } },
-    ], this.showings('later')))
+    ])
   }
 
   // --- The finger -----------------------------------------------------------
@@ -307,6 +328,8 @@ export class Play implements Cast {
    */
   putAway(): void {
     this.endScene()
+    // A showing that had not begun is not begun behind the child's back: it waits for its cause to come round again.
+    this.owed = []
     this.notes = []
     this.said = []
   }
@@ -316,12 +339,21 @@ export class Play implements Cast {
     this.time += dt
     const game = this.game
     if (!game) return
+    const playing = this.inScene
     this.scene?.update(this.time)
+    // A thing to be shown follows the scene before it at once when that has played to its end; after one that was cut
+    // short, it waits until the finger has been off the glass for a moment.
+    if (!this.inScene && this.owed.length > 0) {
+      if (!idle) this.showIn = SHOW_AFTER
+      else if (playing || (this.showIn -= dt) <= 0) this.show()
+    }
     const calm = idle && !this.inScene
     this.puppets.chair?.step(dt, calm)
     this.puppets.friend?.step(dt, calm)
     for (const puppet of this.waiting ?? []) puppet.step(dt, true)
     // Left alone, things go on by themselves: in an empty salon the pair at the door look about and rock on their heels, turn about; under the cape the pair show what they want, and the mane stirs.
+    // Left alone means left alone: a touch or a scene starts the wait again.
+    if (!calm) this.untilStir = STIR_EVERY
     if (calm) {
       this.untilStir -= dt
       if (this.untilStir <= 0) {
