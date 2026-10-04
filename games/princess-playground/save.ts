@@ -121,7 +121,10 @@ export function load(raw: unknown, childAge: number | null): World {
   // Everyone else stands in the sand: where they were left, or at the nearest free place to it.
   const sand = typeof record.sand === 'object' && record.sand !== null ? (record.sand as Record<string, unknown>) : {}
   for (const id of FRIEND_IDS) if (!placed.has(id)) arrangement = putInSand(arrangement, id, fromCell(sand[id]) ?? homeOn(id, 'right'))
-  return { state, kind, turn, arrangement, moves, shown, marks, touched }
+  const world: World = { state, kind, turn, arrangement, moves, shown, marks, touched }
+  // Put away after the move that carried the asker there and before the ending began: it is found ended, with the
+  // next asker waiting. No scene starts by itself on load.
+  return rideIsOver(world) ? endRide(world) : world
 }
 
 function toWaiting(a: Arrangement, id: FriendId): Arrangement {

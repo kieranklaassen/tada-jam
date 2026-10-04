@@ -71,6 +71,24 @@ describe('found as left', () => {
   })
 })
 
+describe('a ride put away between the deciding move and its ending', () => {
+  it('is found ended on load, judged as that one ride, with the next asker waiting, and loads the same way ever after', () => {
+    // Mog sent to lift Pim, and the game put away before the plank has carried her up.
+    const decided = afterMove({ ...freshWorld(null), shown: ['little-asks'], touched: true }, tap(freshWorld(null).arrangement, 'mog'))
+    expect(rideIsOver(decided)).toBe(true)
+    expect(decided.state.finished).toBe(false)
+    const found = load(JSON.parse(JSON.stringify(save(decided))), null)
+    expect(found.state.finished).toBe(true)
+    expect(rideIsOver(found)).toBe(false)
+    expect(found.moves).toBe(0)
+    expect(found.arrangement.waiting).not.toBe(null)
+    expect(isSound(found.arrangement)).toBe(true)
+    // It is the ride the ending would have saved, but for the sand.
+    expect(save(found)).toEqual(save(endRide(decided)))
+    expect(save(load(JSON.parse(JSON.stringify(save(found))), null))).toEqual(save(found))
+  })
+})
+
 describe('whether the child has touched the game', () => {
   it('is false on a first visit, kept once set, and read as false from anything that is not plainly true', () => {
     expect(freshWorld(null).touched).toBe(false)

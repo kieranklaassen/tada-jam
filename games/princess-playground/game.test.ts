@@ -6,7 +6,7 @@ import { DEEPEST, RAKED, SHALLOWEST, biteDepth, marksToText, rakeIsOut } from '.
 import { overlap } from './overlap'
 import { seeded } from './motion'
 import { KINDS, layout, rideOf, wantMet, type Kind } from './rides'
-import { freshWorld, load, save, type Saved, type World } from './save'
+import { endRide, freshWorld, load, rideIsOver, save, type Saved, type World } from './save'
 import { NEXT_AT } from './scenes'
 import { chuckle, purr, type Part } from './voices'
 import { FRIEND_IDS, MAX_TILT, PLANK, WAITING_PLACE, homeOn, plankTopAt, type FriendId } from './world'
@@ -413,8 +413,10 @@ describe('found as left', () => {
         expect(isSound(game.world.arrangement)).toBe(true)
         expect(isSound(game.play.arrangement)).toBe(true)
         const back = load(JSON.parse(JSON.stringify(game.saved())), null)
-        expect(back.arrangement).toEqual(game.world.arrangement)
+        // Between the deciding move and its ending, a load finds the ride ended, the next asker waiting.
+        expect(back.arrangement).toEqual((rideIsOver(game.world) ? endRide(game.world) : game.world).arrangement)
         expect(back.arrangement.waiting !== null).toBe(back.state.finished)
+        expect(rideIsOver(back)).toBe(false)
         if (!game.sceneRunning && !game.play.held) expect(game.play.arrangement).toEqual(game.world.arrangement)
       }
       // Rides were ridden on the way.
@@ -709,6 +711,28 @@ describe('the small promises of the sheet', () => {
     const { cues } = run(game, 3)
     expect(game.play.bodies.pim.mode).toBe('rest')
     expect(voices(cues)).toBeGreaterThanOrEqual(4)
+  })
+})
+
+describe('a ride put away before its ending has begun', () => {
+  it('opens ended and quiet: no scene starts by itself, the asker is up and the next asker waits to be touched', () => {
+    const game = new Game({ ...shown(), touched: true }, 1)
+    run(game, 0.2)
+    tapOn(game, 'mog')
+    // Mog is still in the air: the ride is decided and its ending has not begun.
+    run(game, 0.2)
+    expect(game.sceneRunning).toBe(false)
+    expect(game.world.state.finished).toBe(false)
+    const opened = new Game(load(JSON.parse(JSON.stringify(game.saved())), null), 1)
+    const { cues } = run(opened, 8)
+    expect(opened.world.state.finished).toBe(true)
+    expect(cues.filter((cue) => cue.type === 'voice').length).toBe(0)
+    expect(opened.play.arrangement.waiting).not.toBe(null)
+    expect(placeOf(opened.play.arrangement, 'pim').at).toBe('end')
+    // The waiting friend begins the next ride when it is touched, as after any ending.
+    tapOn(opened, opened.play.arrangement.waiting!)
+    run(opened, 0.1)
+    expect(opened.world.state.finished).toBe(false)
   })
 })
 
