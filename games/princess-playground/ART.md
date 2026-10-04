@@ -42,6 +42,8 @@ Wrong uses that work and are funny: a light friend sent to lift a heavy one dang
 
 Secrets, which work every time and are never hinted at or counted: both ends the same weight and the plank floats level while everyone on it holds one long hum; all four in a tower on one end; the slide down the plank; Bo's snore.
 
+**Round the tray, and no part of the grid.** The tray stands on a woven mat on a veranda floor, with the light of a tree moving a little over the boards. All of it is ground, drawn fainter than anything in the tray, and nothing in it can be picked up. Two things outside the six answer a touch, each with one answer of its own. The stone under the plank: a small bright click, as of two pebbles touching, and a few grains hop at its foot; it moves nothing. The snail on the boards behind the tray: it creeps along slowly whatever is going on in the tray, is no part of any ride and weighs nothing on the plank. Touched, it pulls into its shell with one small hollow pop and its shell rocks; after a moment it looks out again, one eye and then the other, and creeps on. When an end of the plank comes down hard it ducks in the same way, without the pop, and when one comes down softly its eyes only flinch and turn toward the tray. It is never saved: on load it is on the boards, creeping.
+
 **Day 15.** The child sets up a fling before causing it: puts Pim alone on the low end and then sends Bo to the high one because that throws her highest, seats Mog against Dot to make the plank float, balances Bo and Pim against Mog and Dot, builds the tower, and walks Dot over to stand with someone before any ride starts. For the youngest, day 15 looks like day 1 with a surer finger and one new thing tried (pack: game-design, depth-from-combinations.md, the exception for ages 2 to 4).
 
 ## The representation
@@ -144,7 +146,7 @@ Four painted pebbles. Each has one want that can always be seen, and likes and d
 
 1. 0.0 s: the asker arrives and does its own delight: Pim squeals and spins, Mog sits tall and purrs, Bo chuckles and the plank shakes.
 2. 0.8 s: the friends on the other end, exactly the ones the child put there and in their stack order, look up and bounce one after another.
-3. 1.8 s: the plank rocks three times, see, saw, see. How far each end travels comes from the two totals as they stand, and who is tossed how high from those and from how heavy the one tossed is: two friends of one weight fly equally high.
+3. 1.8 s: the plank rocks three times, see, saw, see: the friends on the low end stamp, their end lifts well off the sand and comes down again with a knock, and whoever sits opposite is tossed. That happens at every difference between the two totals as they stand, the smallest too. A bigger difference brings the end down harder and throws higher, and a heavier friend is thrown lower: two friends of one weight fly equally high.
 4. 4.2 s: everything settles as the child left it.
 5. 4.8 s: the friend who asks next hops down from wherever it is, the plank answers its leaving as it does any friend hopping off, and it goes to the waiting place in front of the stone and looks at the plank.
 
