@@ -30,6 +30,8 @@ export type Cue =
   | { type: 'groove'; x0: number; z0: number; x1: number; z1: number }
   | { type: 'bite'; x: number; strength: number }
   | { type: 'swirl'; x: number; z: number; radius: number }
+  /** The rake has come to the far side: the sand is drawn again from the saved grid, with whatever was marked while it travelled. */
+  | { type: 'raked' }
   | { type: 'rake' }
 
 type Pressed = { kind: 'friend'; id: FriendId } | { kind: 'sand'; x: number; z: number } | { kind: 'other' }
@@ -45,6 +47,8 @@ export const SNORE_EVERY = 3.4
 export const HELD_EVERY = 1.8
 /** Seconds the rake takes to cross the tray. */
 export const RAKE_SECONDS = 1.2
+/** How long a purr or a chuckle at being lifted has to itself before an ending may begin: seconds. */
+const PERCH_SECONDS = 1
 /** The two who like being high. */
 const LIKE_HIGH = ['mog', 'bo'] as const
 /** How far a friend turns to the one it greets, in radians. */
@@ -87,10 +91,18 @@ export class Game implements Director {
   private nextEndIs: End = 'left'
   /** Mog and Bo on the end that is up: whether each has yet said what it makes of it. */
   private perch: Partial<Record<FriendId, 'pending' | 'said'>> = {}
+  /** Until when one of them is saying it, and an ending that is due waits. */
+  private perchUntil = 0
   private company: boolean
   private lastDemo = -1
   /** What the scene that is playing does to the sand, as it was read before the scene began and saved with its outcome. */
   private sceneSand: SandOp[] = []
+  /**
+   * Marks that are in the saved grid already and not yet in the picture, because what makes them has not happened
+   * on screen yet: a scene's later beats, or a friend still in the air when the game was put away. Each is drawn
+   * when its cause arrives, or all at once when something the child does changes what will happen.
+   */
+  private owed: SandOp[] = []
 
   constructor(world: World, seed: number, grains: Grains = new Grains(seed + 17)) {
     this.world = world
@@ -205,10 +217,19 @@ export class Game implements Director {
     const aim = this.aim
     this.aim = null
     if (id) this.moved(id, () => this.play.release(aim))
+    // Brought in by the hand, Dot twirls as it comes, as it does when a tap brings it in.
+    if (id === 'dot' && inCompany(this.play.arrangement)) this.play.act('dot', 'spin', 0.5)
   }
 
   pressEnd(): void {
     this.pressed = { kind: 'other' }
+  }
+
+  /** A touch that lands on nothing the game answers (the grown-up corner, or a second finger beside the one that is working): it still ends a scene, as any touch does. */
+  touchNothing(): void {
+    this.idle = 0
+    this.asked = 0
+    if (this.scene) this.endScene(true)
   }
 
   /**
@@ -219,6 +240,16 @@ export class Game implements Director {
     this.pressed = { kind: 'other' }
     this.aim = null
     this.play.putBack()
+    // Whoever is still in the air will land, and the plank will come down, with nobody watching: the marks they
+    // make go into the saved sand now, so nothing the child set going is lost. They are drawn when they happen.
+    if (!this.scene) {
+      const coming = forecast(this.play, this.world.arrangement, () => [])
+      for (const op of coming) this.mark(op)
+      if (coming.length) {
+        this.owed.push(...coming)
+        this.wantSave('now')
+      }
+    }
   }
 
   /** How high above the sand the middle of a carried friend hangs, for the Mount to find the point under the finger. */
@@ -247,13 +278,20 @@ export class Game implements Director {
     }
     if (this.rakeSweep !== null) {
       this.rakeSweep += dt / RAKE_SECONDS
-      if (this.rakeSweep >= 1) this.rakeSweep = null
+      if (this.rakeSweep >= 1) {
+        this.rakeSweep = null
+        // Whatever was marked while the rake travelled is in the saved grid: the picture is drawn from it again, so
+        // the two agree, and the rake lies out again if a mark is left.
+        this.owed = []
+        this.cues.push({ type: 'raked' })
+      }
     }
+    // Whoever the move lifted says so before the ending begins: the ending waits for it, and for the plank to lie still again.
+    this.perches()
     if (!this.scene && !this.play.held) {
       if (this.pendingShowing && this.play.settled) this.startShowing(this.pendingShowing)
-      else if (rideIsOver(this.world) && this.play.plankArrived && this.play.bodies[this.ride.asker].landed) this.startEnding()
+      else if (rideIsOver(this.world) && this.play.plankArrived && this.play.bodies[this.ride.asker].landed && !this.play.shaking && this.time >= this.perchUntil && !LIKE_HIGH.some((id) => this.perch[id] === 'pending')) this.startEnding()
     }
-    this.perches()
     this.looks()
     this.snore()
     this.held()
@@ -266,6 +304,8 @@ export class Game implements Director {
 
   /** The child moved a friend: the world takes it in, the move is counted if a ride runs, and the landing is remembered for when it lands. */
   private moved(id: FriendId, act: () => void): void {
+    // What was still to come may not come now: the picture catches up with the saved sand first.
+    this.drawOwed()
     const before = this.play.arrangement
     act()
     const after = this.play.arrangement
@@ -291,6 +331,7 @@ export class Game implements Director {
     this.wantSave('now')
     this.landings = {}
     this.later = []
+    this.drawOwed()
     this.play.relayout(this.world.arrangement)
     this.voice(v.chirp(this.ride.asker, this.said++))
     this.moods()
@@ -336,8 +377,10 @@ export class Game implements Director {
     // new touch ends the scene.
     this.pressed = { kind: 'other' }
     this.aim = null
+    this.drawOwed()
     this.sceneSand = forecast(this.play, this.world.arrangement, build)
     for (const op of this.sceneSand) this.mark(op)
+    this.owed = [...this.sceneSand]
     this.wantSave('now')
     this.cut = false
     this.sceneKind = kind
@@ -354,8 +397,9 @@ export class Game implements Director {
     this.scene = null
     this.sceneKind = null
     this.cut = false
-    // The sand ends as it was saved: whatever of the scene's bites and hollows has not been drawn is drawn now.
-    for (const op of this.sceneSand) this.draw(op)
+    // Ended by a touch, the sand ends as it was saved: whatever of the scene's bites and hollows has not happened is
+    // drawn now. Ended by itself, what its last beat set going is still on its way, and each mark is drawn as it comes.
+    if (touched) this.drawOwed()
     this.sceneSand = []
     if (touched) {
       this.later = []
@@ -375,6 +419,8 @@ export class Game implements Director {
   /** A reaction now, or after its own small delay. */
   react(reactions: readonly Reaction[]): void {
     for (const reaction of reactions) {
+      // Dot's swirl is in the saved sand the moment it is due, though Dot takes a moment to draw it.
+      if (reaction.mark === 'swirl') this.swirlMarked(reaction.who)
       if (reaction.after <= 0) this.apply(reaction)
       else this.later.push({ at: this.time + reaction.after, reaction })
     }
@@ -394,6 +440,26 @@ export class Game implements Director {
   }
 
   // --- What happened, into sound and sand ---------------------------------------
+
+  /** Dot's swirl, into the saved grid, round where it stands. */
+  private swirlMarked(who: FriendId): { x: number; z: number; radius: number } {
+    const at = standsAt(this.play.arrangement, who), radius = FRIENDS[who].radius * 1.25
+    swirlMark(this.world.marks, at.x, at.z, radius)
+    this.wantSave('soon')
+    return { x: at.x, z: at.z, radius }
+  }
+
+  /** A mark that was owed to the picture has just been drawn by its own cause. */
+  private paid(op: SandOp): void {
+    const index = this.owed.findIndex((owed) => owed.type === op.type && (owed.type === 'bite' ? Math.sign(owed.x) === Math.sign(op.x) : op.type === 'hollow' && owed.id === op.id))
+    if (index >= 0) this.owed.splice(index, 1)
+  }
+
+  /** Everything saved and not yet drawn is drawn now. */
+  private drawOwed(): void {
+    for (const op of this.owed) this.draw(op)
+    this.owed = []
+  }
 
   /** One thing done to the sand, into the saved grid. A mark never gets shallower, so doing it twice changes nothing. */
   private mark(op: SandOp): void {
@@ -432,10 +498,8 @@ export class Game implements Director {
       if (way !== 0) this.grains.burst(way * PLANK.halfLength * 0.97, PLANK.z, 0.12, 9, PLANK.halfWidth * 1.6, 0.35)
     }
     if (reaction.mark === 'swirl') {
-      const at = standsAt(this.play.arrangement, reaction.who), radius = FRIENDS[reaction.who].radius * 1.25
-      swirlMark(this.world.marks, at.x, at.z, radius)
-      this.cues.push({ type: 'swirl', x: at.x, z: at.z, radius })
-      this.wantSave('soon')
+      const { x, z, radius } = this.swirlMarked(reaction.who)
+      this.cues.push({ type: 'swirl', x, z, radius })
     }
   }
 
@@ -460,6 +524,7 @@ export class Game implements Director {
         const op: SandOp = { type: 'hollow', x: event.x, z: event.z, id: event.id }
         this.mark(op)
         this.draw(op)
+        this.paid(op)
         this.grains.burst(event.x, event.z, 0.25 + 0.15 * spec.weight, 4 + spec.weight * 3)
         this.wantSave('soon')
       }
@@ -488,6 +553,7 @@ export class Game implements Director {
       const op: SandOp = { type: 'bite', x: event.x, weight, speed: event.speed }
       this.mark(op)
       this.draw(op)
+      this.paid(op)
       // A ring of sand flies from under the end that came down, and the end that lifted lets grains slide back.
       this.grains.burst(event.x, PLANK.z, 0.35 + 0.65 * power, Math.round(8 + 22 * power), PLANK.halfWidth * 2)
       if (power > 0.45) {
@@ -554,13 +620,15 @@ export class Game implements Director {
    * carried it there, and not again until it has been down. The one who asks says it in the ending of its own ride.
    */
   private perches(): void {
+    // In a scene nothing is said or settled: when it is over, everyone is as found.
+    if (this.scene) return
     for (const id of LIKE_HIGH) {
       if (!this.high(id)) {
         delete this.perch[id]
         continue
       }
       if (this.perch[id] === 'said') continue
-      if (this.scene || this.play.asking?.id === id) {
+      if (this.play.asking?.id === id) {
         this.perch[id] = 'said'
         continue
       }
@@ -568,7 +636,9 @@ export class Game implements Director {
       const body = this.play.bodies[id]
       if (this.play.plankArrived && body.landed && body.mode === 'rest') {
         this.perch[id] = 'said'
-        this.react(perched(id))
+        // At once, and an ending that is due waits until it has been said.
+        this.react(perched(id).map((reaction) => ({ ...reaction, after: 0 })))
+        this.perchUntil = this.time + PERCH_SECONDS
       }
     }
   }
@@ -681,9 +751,11 @@ export class Game implements Director {
    */
   private held(): void {
     const play = this.play, a = play.arrangement
-    if (this.scene || play.held || this.time < this.heldAt || !play.settled) return
+    if (this.scene || play.held || this.time < this.heldAt) return
+    // Sitting, not on its way there: a held state holds from the moment everyone has landed, however the plank still sways.
+    const sits = (id: FriendId) => play.bodies[id].landed && play.bodies[id].mode === 'rest'
     const left = weightOn(a, 'left'), right = weightOn(a, 'right')
-    if (left > 0 && left === right) {
+    if (left > 0 && left === right && [...a.left, ...a.right].every(sits)) {
       this.heldAt = this.time + HELD_EVERY
       this.voice(v.levelHum())
       ;[...a.left, ...a.right].forEach((id, index) => play.act(id, 'sway', 1.6, index % 2 ? -1 : 1))
@@ -692,7 +764,7 @@ export class Game implements Director {
     // A tower of four, or any stack with Bo on top: it sways as one, every friend the same way, for as long as it stands.
     for (const end of ['left', 'right'] as const) {
       const stack = a[end]
-      if (stack.length === 4 || (stack.length >= 2 && stack[stack.length - 1] === 'bo')) {
+      if ((stack.length === 4 || (stack.length >= 2 && stack[stack.length - 1] === 'bo')) && stack.every(sits)) {
         this.heldAt = this.time + HELD_EVERY
         for (const id of stack) play.act(id, 'sway', 1.7, 1)
       }

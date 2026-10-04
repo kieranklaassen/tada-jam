@@ -103,6 +103,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
         else if (cue.type === 'groove') stage.map.groove(cue.x0, cue.z0, cue.x1, cue.z1, 0.2)
         else if (cue.type === 'bite') stage.map.bite(cue.x, PLANK.halfWidth, cue.strength)
         else if (cue.type === 'swirl') stage.map.swirl(cue.x, cue.z, cue.radius)
+        else if (cue.type === 'raked') stage.map.fromMarks(game.world.marks)
         // The rake itself is drawn across by the stage, which rakes the sand behind it.
       }
       if (game.wantsSave !== 'no') {
@@ -161,8 +162,15 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       fingers.add(event.pointerId)
       overlay.press(where.x, where.y, width, event.timeStamp, fingers.size)
       // The grown-up corner is bare cloth and answers nothing: no sound, no mark, so nothing there invites a child to tap it.
-      if (width > 0 && where.x >= width - CORNER && where.y <= CORNER) return
-      act(touch.down(event.pointerId, where, event.timeStamp))
+      // It still ends a scene, as any touch does.
+      if (width > 0 && where.x >= width - CORNER && where.y <= CORNER) {
+        game?.touchNothing()
+        return
+      }
+      const gestures = touch.down(event.pointerId, where, event.timeStamp)
+      // A second finger beside the one that is working is no gesture, but it is a touch: it ends a scene.
+      if (gestures.length === 0) game?.touchNothing()
+      act(gestures)
       // Captured, so the lift is reported even when the finger has slid off the surface.
       root.setPointerCapture(event.pointerId)
     }
@@ -226,7 +234,9 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       cancelAnimationFrame(frame)
       frame = 0
       clock.rest()
-      // A friend in the hand goes back to where it was picked up from: put away makes no move.
+      // A finger that had already let go made the child's own drop, which is made now. A friend still in the hand
+      // goes back to where it was picked up from: put away makes no move.
+      if (touch.lifted) act(touch.clear())
       game?.putAway()
       fingers.clear()
       act(touch.clear())
@@ -252,7 +262,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
 
     return () => {
       disposed = true
-      // As on going to rest: the touch ends first, and a friend in the hand goes back to where it was picked up from.
+      // As on going to rest: a drop already made is made, and a friend still in the hand goes back to where it was picked up from.
+      if (touch.lifted) act(touch.clear())
       game?.putAway()
       act(touch.clear())
       cadence.settle(performance.now())

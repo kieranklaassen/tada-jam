@@ -1,17 +1,19 @@
 import { describe, expect, it } from 'vitest'
-import { companyOf, isSound, placeOf, putInSand, putOnEnd, standsAt, tap } from './arrangement'
+import { companyOf, isSound, placeOf, putInSand, putOnEnd, standsAt, tap, weightOn } from './arrangement'
 import { ASK_AT, Game, SNORE_EVERY, type Cue } from './game'
 import type { Guidance } from './guidance'
-import { DEEPEST, RAKED, SHALLOWEST, biteDepth, marksToText, rakeIsOut } from './marks'
+import { DEEPEST, RAKED, SHALLOWEST, biteDepth, marksFromText, marksToText, rakeIsOut } from './marks'
 import { overlap } from './overlap'
 import { seeded } from './motion'
 import { KINDS, layout, rideOf, wantMet, type Kind } from './rides'
 import { endRide, freshWorld, load, rideIsOver, save, type Saved, type World } from './save'
 import { NEXT_AT } from './scenes'
-import { chuckle, purr, softNote, spit, type Part } from './voices'
+import { chuckle, levelHum, purr, softNote, spit, type Part } from './voices'
 import { FRIEND_IDS, MAX_TILT, PLANK, WAITING_PLACE, homeOn, plankTopAt, type FriendId } from './world'
 
 const QUIET: Guidance = { glow: 0, demo: null, demoIndex: -1 }
+
+const weightOnEnds = (game: Game) => [weightOn(game.play.arrangement, 'left'), weightOn(game.play.arrangement, 'right')]
 
 /** Plays `seconds` at 60 frames a second, and returns every cue and every save the game asked for on the way. */
 function run(game: Game, seconds: number, guidance: Guidance = QUIET): { cues: Cue[]; saves: { how: 'soon' | 'now'; saved: Saved }[] } {
@@ -361,7 +363,9 @@ describe('found as left', () => {
     run(game, 0.6)
     game.putAway()
     const parked = game.saved()
-    expect({ ...parked, touched: false }).toEqual(before)
+    expect({ ...parked, touched: false, marks: before.marks }).toEqual(before)
+    // The hollow Mog will make as he comes down where he stood is in the saved sand already: nothing set going is lost.
+    expect(parked.marks).not.toBe(before.marks)
     expect(game.play.held).toBe(null)
     // Opened again and left alone: Mog comes down where he stood, no ending plays and nothing was counted.
     const { cues } = run(game, 6)
@@ -372,6 +376,9 @@ describe('found as left', () => {
     expect(game.play.bodies.mog.y).toBeCloseTo(0, 5)
     expect({ ...game.saved(), marks: before.marks, touched: false }).toEqual(before)
     expect(cues.some((cue) => cue.type === 'bite')).toBe(false)
+    // And when he does come down, the sand is exactly as it was saved, and the hollow is drawn then, once.
+    expect(game.saved().marks).toBe(parked.marks)
+    expect(cues.filter((cue) => cue.type === 'dimple').length).toBe(1)
     // The finger's lift arrives after all, or never: either way nothing more happens.
     game.dragEnd()
     run(game, 2)
@@ -810,6 +817,120 @@ describe('a friend carried onto the picture of the plank', () => {
     run(plain, 0.5)
     plain.dragEnd()
     expect(placeOf(plain.play.arrangement, 'bo').at).toBe('sand')
+  })
+})
+
+describe('what the child set going, put away before it has happened', () => {
+  it('a friend in the air and the plank it will tip: their marks are in the saved sand at put-away, and a load finds them', () => {
+    const game = new Game({ ...shown(), touched: true }, 1)
+    run(game, 0.2)
+    tapOn(game, 'bo')
+    run(game, 0.3)
+    expect(game.play.bodies.bo.mode).toBe('hop')
+    const flying = game.saved().marks
+    game.putAway()
+    const parked = game.saved()
+    expect(parked.marks).not.toBe(flying)
+    expect(game.wantsSave).toBe('now')
+    // Played on instead, the sand comes to the same.
+    const played = new Game({ ...shown(), touched: true }, 1)
+    run(played, 0.2)
+    tapOn(played, 'bo')
+    for (let i = 0; i < 900 && !played.sceneRunning; i++) played.step(1 / 60, QUIET)
+    const live = marksFromText(played.saved().marks), kept = marksFromText(parked.marks)
+    // Everything the put-away kept is in the sand of the game that played on (which has its ending's marks besides).
+    for (let i = 0; i < kept.length; i++) expect(live[i]).toBeGreaterThanOrEqual(kept[i])
+  })
+
+  it('Dot left alone: its swirl is in the saved sand at once, though it takes a moment to draw it', () => {
+    const game = new Game({ ...shown(), touched: true, state: { ...shown().state, finished: true }, arrangement: (() => {
+      let a = layout(rideOf('little-asks', 0))
+      for (const id of FRIEND_IDS) a = putInSand(a, id, homeOn(id, 'right'))
+      const dot = standsAt(a, 'dot')
+      return { ...putInSand(a, 'pim', { x: dot.x + 0.3, z: dot.z + 1.65 }), waiting: null }
+    })() }, 1)
+    run(game, 0.5)
+    expect(companyOf(game.play.arrangement, 'dot')).toEqual(['pim'])
+    const before = game.saved().marks
+    tapOn(game, 'pim')
+    const { cues } = run(game, 0.2)
+    // Saved before it is drawn.
+    expect(game.saved().marks).not.toBe(before)
+    expect(cues.some((cue) => cue.type === 'swirl')).toBe(false)
+    const saved = game.saved().marks
+    expect(run(game, 2).cues.filter((cue) => cue.type === 'swirl').length).toBe(1)
+    const after = marksFromText(game.saved().marks), then = marksFromText(saved)
+    for (let i = 0; i < then.length; i++) expect(after[i]).toBeGreaterThanOrEqual(then[i])
+  })
+
+  it('a mark made while the rake travels is kept: the sand is drawn again from the saved grid when the rake arrives, and the rake lies out', () => {
+    const game = new Game({ ...shown(), touched: true }, 1)
+    run(game, 0.2)
+    game.press({ kind: 'sand', x: -3, z: 2 })
+    run(game, 0.2)
+    game.press({ kind: 'rake' })
+    run(game, 0.3)
+    game.press({ kind: 'sand', x: 3, z: 2 })
+    const { cues } = run(game, 2)
+    expect(cues.filter((cue) => cue.type === 'raked').length).toBe(1)
+    expect(rakeIsOut(game.world.marks)).toBe(true)
+    expect(game.rakeOut).toBe(true)
+  })
+})
+
+describe('the level plank hums for as long as it is level', () => {
+  it('from the moment it is made level by play, every couple of seconds, with no long silence while it still sways', () => {
+    const game = new Game({ ...shown(), touched: true }, 1)
+    run(game, 0.2)
+    // Pim sits on the left; Mog and then Dot make it three against... Mog against Dot is level once Pim is off.
+    tapOn(game, 'pim')
+    run(game, 2)
+    tapOn(game, 'mog')
+    run(game, 2)
+    game.press({ kind: 'friend', id: 'dot' })
+    game.dragStart()
+    game.dragTo({ x: -PLANK.seat, z: PLANK.z }, null)
+    run(game, 0.5)
+    game.dragEnd()
+    const hum = JSON.stringify(levelHum())
+    const times: number[] = []
+    for (let t = 0; t < 14; t += 1 / 60) {
+      game.step(1 / 60, QUIET)
+      if (game.takeCues().some((cue) => cue.type === 'voice' && JSON.stringify(cue.parts) === hum)) times.push(t)
+    }
+    expect(weightOnEnds(game)).toEqual([3, 3])
+    expect(times.length).toBeGreaterThanOrEqual(5)
+    for (let i = 1; i < times.length; i++) expect(times[i] - times[i - 1]).toBeLessThan(2.5)
+  })
+})
+
+describe('whoever the deciding move lifts', () => {
+  it('says so before the ending begins: Bo lifted by a friend added to Pim\'s end at the ride where she is stuck high', () => {
+    const world = freshWorld(null)
+    const game = new Game({ ...world, state: { ...world.state, position: 'high-asks' }, kind: 'high-asks', turn: 0, arrangement: layout(rideOf('high-asks', 0)), shown: ['high-asks'], touched: true }, 1)
+    run(game, 0.5)
+    expect(placeOf(game.play.arrangement, 'bo').at).toBe('end')
+    const pim = placeOf(game.play.arrangement, 'pim')
+    expect(pim.at).toBe('end')
+    // Mog and Dot onto Pim's end: eight against Bo's four, and he goes up.
+    const chuckled: number[] = []
+    let endingAt = -1
+    const laugh = JSON.stringify(chuckle())
+    let t = 0
+    const play = (seconds: number) => {
+      for (const end = t + seconds; t < end; t += 1 / 60) {
+        game.step(1 / 60, QUIET)
+        if (game.takeCues().some((cue) => cue.type === 'voice' && JSON.stringify(cue.parts) === laugh)) chuckled.push(t)
+        if (endingAt < 0 && game.sceneRunning) endingAt = t
+      }
+    }
+    tapOn(game, 'mog')
+    play(1.5)
+    tapOn(game, 'dot')
+    play(10)
+    expect(chuckled.length).toBe(1)
+    expect(endingAt).toBeGreaterThan(chuckled[0])
+    expect(game.world.state.finished).toBe(true)
   })
 })
 

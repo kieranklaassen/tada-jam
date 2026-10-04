@@ -39,5 +39,5 @@ export const PERSONALITY: Readonly<Record<FriendId, Personality>> = {
   // Dot: small careful moves, a soft wobble that takes a while to die away.
   dot: { breatheRate: 0.46, breatheDepth: 0.018, blinkEvery: 3.4, blinkLasts: 0.13, springStiff: 190, springDamp: 9, gather: 0.1, crouch: 0.86, landSquash: 0.76, heldStretch: 1.1, tossGain: 1.1, followStiff: 120, followDamp: 7, followReach: 0.7, windUp: 0 },
   // Bo: slow and heavy; rocks to get going; lands flat and his belly goes on wobbling.
-  bo: { breatheRate: 0.2, breatheDepth: 0.04, blinkEvery: 7.5, blinkLasts: 0.34, springStiff: 110, springDamp: 6.5, gather: 0.46, crouch: 0.82, landSquash: 0.55, heldStretch: 1.05, tossGain: 0.45, followStiff: 46, followDamp: 3.2, followReach: 1.3, windUp: 0.16 },
+  bo: { breatheRate: 0.2, breatheDepth: 0.04, blinkEvery: 7.5, blinkLasts: 0.34, springStiff: 110, springDamp: 6.5, gather: 0.6, crouch: 0.82, landSquash: 0.55, heldStretch: 1.05, tossGain: 0.45, followStiff: 46, followDamp: 3.2, followReach: 1.3, windUp: 0.2 },
 }

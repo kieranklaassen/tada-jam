@@ -111,6 +111,18 @@
 - A finger that was already down when an ending or a showing began does nothing when it lifts or drags: nobody is moved inside the scene and no ride begins in it. Only a new touch ends a scene.
 - Any stack with Bo on top sways as one for as long as it stands, whoever is under him; before, only Bo swayed, once.
 
+**Built after the fifth reading.** It named one drawn sign, seven promises and three things lost on put-away.
+
+- Dimples have no lit lip (above).
+- The level hum holds from the moment the plank is made level, every couple of seconds; it no longer waits for the plank to lie still, which left a silence of several seconds.
+- Whoever the deciding move lifts says so before the ending begins: Bo's chuckle and shake, Mog's purr. The ending waits a second for it and for the plank to lie still again.
+- Dot twirls when it is carried into company, as when a tap brings it in.
+- A mark made while the rake travels is kept: when the rake arrives the sand is drawn again from the saved grid, and the rake lies out if a mark is left.
+- A scene's marks are drawn when their cause arrives, never before it: the hollow at the waiting place appears when the next asker lands in it. They are still saved when the scene starts. If the child does something first, the picture catches up with the saved sand at once.
+- Any touch ends a scene: one in the grown-up corner, and a second finger beside the one that is working, too.
+- Bo's two rocks before he gets going are plain: over a tenth of a radian each way.
+- Put away with something still to happen, nothing is lost: Dot's swirl is in the saved sand the moment it is due; the marks of a friend still in the air and of the plank it will tip go into the saved sand at put-away; and a friend the finger had already let go of is dropped where the child let go, not put back.
+
 **Found by this lane while checking those.**
 
 - A friend held on the picture of the plank's end did not land on the plank: carried friends hang high over the tray, so it hung over the sand in front and came down there. The finger is now also read at the height of a friend sitting on the plank (`arrangement.ts`, `aimedAtPlank`), so what the child sees decides. The audit's own "carried" moment had been dropping friends in the sand all along; it now really lands them on the ends, onto a friend and over the middle.
@@ -131,7 +143,7 @@
 - Two friends hopping to different places at the same moment can pass through each other in the air. A hop clears whoever stood in its way when it left, not whoever is flying.
 - The waiting place is beside Pim's default place; a big friend waiting there stands close to her.
 - The idle glow is faint on the pale sand at tier 0 in stills.
-- A friend's hollow in the sand, and the crater Bo leaves, are round dimples with a lit lip. Both readers looking for unmeant signs passed them; from far off a single one is a small round mark. The idle glow is a wide soft halo under a friend; the second reader looked at it and did not read it as a nought.
+- A friend's hollow, a finger's poke and Bo's crater are soft bowls with no lip, shaded on one side by the low light. With the lip they were rings lying on the sand, which the fifth reader counted as a sign this band may not be shown. Without it a shallow one is faint. The idle glow is a wide soft halo under a friend; two readers looked at it and did not read it as a nought.
 - Pim's crown is now small. It is cream on coral and reads as a cap; whether it still reads as a crown is for the owner.
 - With every friend on one end the tip of the board lies about a fifth of a unit under the sand, inside the bite drawn round it.
 - A carried friend lands on the plank when the finger is on the plank's picture or when the friend hangs over it. Between the two readings there is a band in front of the plank where a friend held low lands on the plank and held high stands in the sand; the shadow shows the second.

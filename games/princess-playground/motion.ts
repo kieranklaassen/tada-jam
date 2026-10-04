@@ -377,6 +377,11 @@ export class Playground {
     nudge(this.plank, spin)
   }
 
+  /** A chuckle is shaking the plank. */
+  get shaking(): boolean {
+    return this.shakes > 0
+  }
+
   /** Shakes the plank as a chuckle does: four short pushes, one way and the other. */
   shake(strength: number): void {
     this.shakes = SHAKES
@@ -587,7 +592,9 @@ export class Playground {
     body.hopT += dt
     if (body.hopT < body.gather) {
       body.squashTo = own.crouch
-      body.leanTo = own.windUp * Math.sin((body.hopT / body.gather) * Math.PI * 4)
+      // The wind-up is the body's own doing, not a spring's: Bo rocks right over to one side and the other, twice.
+      body.lean = body.leanTo = own.windUp * Math.sin((body.hopT / body.gather) * Math.PI * 4)
+      body.leanV = 0
       return
     }
     if (!body.leapt) {

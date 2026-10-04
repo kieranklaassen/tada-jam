@@ -54,7 +54,7 @@ export const CELLS: Readonly<Record<Thing, Readonly<Record<Deed, Cell>>>> = {
     'in-the-sand': { seen: 'sand thrown on it runs off the low end in a thin stream', heard: 'a dry trickle' },
   },
   sand: {
-    tap: { seen: 'a dimple with a raised lip', heard: 'a hiss' },
+    tap: { seen: 'a dimple, shaded by the low light', heard: 'a hiss' },
     'low-end': { seen: 'a bite where the end came down, deeper the heavier the end, which stays', heard: 'a crunch' },
     'high-end': { seen: 'as an end lifts, grains slide back into the bite it leaves', heard: 'a short whisper' },
     'on-a-friend': { seen: 'thrown grains settle on heads and are shaken off', heard: 'a light patter' },

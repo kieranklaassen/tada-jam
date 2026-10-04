@@ -57,6 +57,11 @@ type Working = {
 export class ForgivingTouch {
   private working: Working | null = null
 
+  /** The finger has let go mid-drag and its drag is waiting out the grace: what it carried has been let go by the child. */
+  get lifted(): boolean {
+    return this.working !== null && this.working.id === null
+  }
+
   /** A finger is working, or a drag is waiting out a lift. */
   get active(): boolean {
     return this.working !== null

@@ -133,20 +133,17 @@ export class SandMap {
     target.putImageData(image, 0, 0)
   }
 
-  /** A finger's poke, or a small friend set down: a bowl with a soft raised lip. */
+  /**
+   * A finger's poke, or a friend set down: a soft bowl, deepest in the middle and running out to flat sand. It has
+   * no raised lip: a lip catches the low light all the way round and reads as a ring lying on the sand, and a ring
+   * is a sign this band may not be shown. The low light shades the bowl on one side only, which reads as a dent.
+   */
   dimple(x: number, z: number, radius: number, depth = 1): void {
-    const ctx = this.ctx, cx = this.px(x), cz = this.pz(z), r = radius * this.scale
-    const lip = ctx.createRadialGradient(cx, cz, r * 0.7, cx, cz, r * 1.5)
-    lip.addColorStop(0, grey(FLAT + 46 * depth, 0.9))
-    lip.addColorStop(1, grey(FLAT, 0))
-    ctx.fillStyle = lip
-    ctx.beginPath()
-    ctx.arc(cx, cz, r * 1.5, 0, Math.PI * 2)
-    ctx.fill()
+    const ctx = this.ctx, cx = this.px(x), cz = this.pz(z), r = radius * this.scale * 1.15
     const bowl = ctx.createRadialGradient(cx, cz, 0, cx, cz, r)
     bowl.addColorStop(0, grey(FLAT - 70 * depth, 1))
-    bowl.addColorStop(0.7, grey(FLAT - 40 * depth, 0.95))
-    bowl.addColorStop(1, grey(FLAT + 20 * depth, 0.5))
+    bowl.addColorStop(0.55, grey(FLAT - 44 * depth, 0.9))
+    bowl.addColorStop(1, grey(FLAT - 10 * depth, 0))
     ctx.fillStyle = bowl
     ctx.beginPath()
     ctx.arc(cx, cz, r, 0, Math.PI * 2)

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { emptyArrangement, isSound, placeOf, putInSand, putOnEnd, type Arrangement } from './arrangement'
 import { HALF_AWAY, Playground, seeded, type PlayEvent } from './motion'
+import { PERSONALITY } from './personality'
 import { restTilt } from './rest'
 import { FRIEND_IDS, FRIENDS, MAX_TILT, PLANK, homeOn, lowTilt, plankTopAt, type FriendId } from './world'
 
@@ -310,6 +311,20 @@ describe('the playground in motion', () => {
     play(world, 3, (w) => { moved = Math.max(moved, Math.abs(w.frame().poses.dot.shimmer)) })
     expect(moved).toBeGreaterThan(0.9)
     for (const id of ['pim', 'mog', 'bo'] as const) expect(world.frame().poses[id].shimmer).toBe(0)
+  })
+
+  it('has Bo rock right over, one way and the other, twice, before he gets going from the sand', () => {
+    const world = new Playground(firstRide())
+    play(world, 0.5)
+    world.tapFriend('bo')
+    const leans: number[] = []
+    play(world, 0.6, (w) => { if (!w.bodies.bo.leapt) leans.push(w.frame().poses.bo.lean) })
+    // Two swings each way, each a good tenth of a radian: plain to see on the biggest body in the tray.
+    let swings = 0
+    for (let i = 1; i < leans.length - 1; i++) if (Math.abs(leans[i]) > 0.17 && Math.abs(leans[i]) >= Math.abs(leans[i - 1]) && Math.abs(leans[i]) > Math.abs(leans[i + 1])) swings += 1
+    expect(swings).toBe(4)
+    // Nobody else winds up like that.
+    for (const id of ['pim', 'mog', 'dot'] as const) expect(PERSONALITY[id].windUp).toBe(0)
   })
 
   it('shuts a friend\'s eyes for as long as a slow blink lasts', () => {
