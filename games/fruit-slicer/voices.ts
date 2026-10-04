@@ -48,9 +48,14 @@ const run = (count: number, hz: number, step: number, gap: number, peak: number,
   return Array.from({ length: ticks }, (_, i) => tone(hz * step ** i, peak, 0.002, length, wave, undefined, i * apart))
 }
 
+/** Each customer's own throat, by its place in the cast (pelican, twins, ants, cat, boa): how high it speaks, and with what wave. */
+const THROATS: readonly { up: number; wave: Note['wave'] }[] = [{ up: 0.55, wave: 'sawtooth' }, { up: 2.4, wave: 'square' }, { up: 4.5, wave: 'square' }, { up: 1.5, wave: 'sine' }, { up: 0.8, wave: 'triangle' }]
+const throat = (who: number): { up: number; wave: Note['wave'] } => THROATS[Math.max(0, Math.min(THROATS.length - 1, Math.round(who)))]
+
 /**
  * Each voice, from the length it is about (in points) and, where it counts something, a count. A voice that
- * has nothing to do with a length ignores it.
+ * has nothing to do with a length ignores it. A customer's own noise takes, as its count, the customer's place
+ * in the cast.
  */
 export const VOICES = {
   // The slice and what surrounds it.
@@ -90,8 +95,10 @@ export const VOICES = {
   // A customer.
   // A snip, and the tuft pops back.
   pop: () => [hiss(3400, 0.1, 0.001, 0.03), tone(500, 0.16, 0.002, 0.07, 'sine', 1400, 0.12)],
-  babble: () => [tone(320, 0.14, 0.01, 0.1, 'sawtooth', 420), tone(380, 0.12, 0.01, 0.12, 'sawtooth', 300, 0.12)],
-  gulp: (length: number) => [tone(260, 0.2, 0.01, 0.16, 'sine', 120), tone(ringHz(length) * 0.5, 0.1, 0.01, 0.12, 'sine', undefined, 0.16)],
+  // Its own noise, in its own throat: the pelican low and rough, the twins and the ants high and thin, the cat a mew, the boa soft.
+  babble: (_: number, who = 0) => [tone(320 * throat(who).up, 0.14, 0.01, 0.1, throat(who).wave, 420 * throat(who).up), tone(380 * throat(who).up, 0.12, 0.01, 0.12, throat(who).wave, 300 * throat(who).up, 0.12)],
+  // A gulp of its own, and then the piece, at the pitch of its length.
+  gulp: (length: number, who = 0) => [tone(260 * throat(who).up, 0.2, 0.01, 0.16, 'sine', 120 * throat(who).up), tone(ringHz(length) * 0.5, 0.1, 0.01, 0.12, 'sine', undefined, 0.16)],
   splat: () => [hiss(900, 0.24, 0.001, 0.12, 300), hiss(400, 0.1, 0.02, 0.3, 200, 0.06)],
   honk: () => [tone(230, 0.2, 0.008, 0.26, 'square', 210), tone(345, 0.08, 0.008, 0.26, 'square')],
   // The crate.

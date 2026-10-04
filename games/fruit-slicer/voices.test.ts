@@ -38,6 +38,16 @@ describe('every voice', () => {
       }
   })
 
+  it('gives each of the five customers its own noise and its own gulp', () => {
+    for (const id of ['babble', 'gulp'] as const) {
+      const prints = [0, 1, 2, 3, 4].map((who) => JSON.stringify(notesOf(id, 1200, who)))
+      expect(new Set(prints).size, id).toBe(5)
+    }
+    // The pelican is the lowest and the ants the highest.
+    expect(notesOf('babble', 1200, 0)[0].hz).toBeLessThan(notesOf('babble', 1200, 4)[0].hz)
+    expect(notesOf('babble', 1200, 2)[0].hz).toBeGreaterThan(notesOf('babble', 1200, 1)[0].hz)
+  })
+
   it('differs from every other voice', () => {
     const prints = IDS.map((id) => JSON.stringify(notesOf(id, 1200, 4)))
     expect(new Set(prints).size).toBe(IDS.length)

@@ -9,6 +9,8 @@ import { pick } from './stream'
 // order ever laid out to them.
 
 export type Who = 'pelican' | 'twins' | 'ants' | 'cat' | 'boa'
+/** The five customers in one fixed order: a customer's place in it picks its own throat among the voices. */
+export const CAST: readonly Who[] = ['pelican', 'twins', 'ants', 'cat', 'boa']
 
 export type Customer = {
   who: Who

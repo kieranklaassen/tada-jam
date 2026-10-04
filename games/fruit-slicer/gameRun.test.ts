@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { FLIGHT_SECONDS } from './carry'
 import { freshGame } from './cycle'
 import { CURL_FLIGHT, CURL_LIFE } from './fx'
-import { GameRun, RUN_GAP, SWING } from './gameRun'
+import { GameRun, RUN_GAP, RUN_STEP, SWING } from './gameRun'
+import { CAST } from './orders'
 import { IdleLadder } from './guidance'
 import { WHOLE } from './measure'
 import { tinParts } from './orders'
@@ -65,6 +66,16 @@ describe('the touch', () => {
     run.move({ x, y: SHELF_BOX.y - 5 })
     const cuts = run.takeSounds().filter((sound) => sound.id === 'thwack' || sound.id === 'snick')
     expect(cuts.map((sound) => sound.delay)).toEqual([0, RUN_GAP])
+    // One stroke is a run of rising notes: the second cut is of a piece no shorter, and still sounds a step higher.
+    expect(cuts[1].length).toBeCloseTo(cuts[0].length! * RUN_STEP)
+    // The next stroke starts again at the pitch of its own piece.
+    run.end()
+    run.press({ x: x + 200, y: BOARD.y - 20 })
+    run.move({ x: x + 200, y: NEAR - 10 })
+    const again = run.takeSounds().filter((sound) => sound.id === 'thwack' || sound.id === 'snick')
+    expect(again).toHaveLength(1)
+    // It is the right-hand part of the first cut, whichever fruit lay there: its whole length less the 300 points cut off.
+    expect(Object.values(WHOLE).map((whole) => whole - 300)).toContain(again[0].length)
     expect(run.dirty).toBe(true)
     expect(run.fx.shakes.length).toBeGreaterThanOrEqual(2)
   })
@@ -287,6 +298,15 @@ describe('the cast in the run', () => {
     expect(run.queue[1]).toMatchObject({ react: 'step' })
     expect(run.queue[0].react).toBeNull()
     expect(run.urgent).toBe(true)
+  })
+
+  it('makes its own noise at a poke: the voice goes with its place in the cast', () => {
+    const run = fresh()
+    run.takeSounds()
+    const who = run.game.queue[1].who
+    run.tap(mid(QUEUE[1]))
+    const noise = run.takeSounds().find((sound) => sound.id === 'babble')!
+    expect(noise.count).toBe(CAST.indexOf(who))
   })
 
   it('flinches at a poke, loses a tuft to the blade, and is rolled flat by the roller', () => {

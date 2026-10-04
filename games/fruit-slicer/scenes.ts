@@ -1,5 +1,5 @@
 import type { Ending } from './cycle'
-import type { Customer } from './orders'
+import { CAST, type Customer } from './orders'
 import { ruling } from './serve'
 import type { Beat } from './scene'
 import type { VoiceId } from './voices'
@@ -62,6 +62,8 @@ export const BITES_SHOWN = 6
 export function serveBeats(show: Show, ending: Ending, cue: Cue): Beat[] {
   const lengths = ending.result.parts.flatMap((part) => part.pieces.map((piece) => piece.length))
   const single = Math.min(lengths.length, BITES_SHOWN)
+  // Each customer gulps and speaks in its own throat.
+  const who = CAST.indexOf(ending.taste.who)
   const beats: Beat[] = [
     { at: 0, lasts: 0, play: () => cue(ending.result.kind === 'fit' ? 'click' : ending.result.kind === 'over' ? 'clang' : 'slide') },
     { at: 0, lasts: 0.5, play: (p) => (show.lid = p) },
@@ -70,16 +72,16 @@ export function serveBeats(show: Show, ending: Ending, cue: Cue): Beat[] {
   let at = 1.1
   for (let i = 0; i < single; i++) {
     const length = lengths[i]
-    beats.push({ at, lasts: 0, play: () => cue('gulp', length) })
+    beats.push({ at, lasts: 0, play: () => cue('gulp', length, who) })
     beats.push({ at, lasts: 0.6, play: (p) => (show.bites = Math.max(show.bites, i + p)) })
     at += 0.6
   }
   if (lengths.length > single) {
-    beats.push({ at, lasts: 0, play: () => cue('gulp', lengths[single]) })
+    beats.push({ at, lasts: 0, play: () => cue('gulp', lengths[single], who) })
     beats.push({ at, lasts: 0.8, play: (p) => (show.bites = Math.max(show.bites, single + (lengths.length - single) * p)) })
     at += 0.8
   }
-  beats.push({ at, lasts: 0, play: () => cue('babble') })
+  beats.push({ at, lasts: 0, play: () => cue('babble', undefined, who) })
   beats.push({ at, lasts: 1.4, play: (p) => (show.taste = p) })
   beats.push({ at: at + 1.4, lasts: 0.9, play: (p) => (show.settle = p) })
   return beats

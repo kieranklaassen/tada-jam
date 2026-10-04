@@ -12,7 +12,7 @@ import { gliderBeats, restShow, servedShow, serveBeats, showingBeats, type Show 
 import { shown, type Point } from './stage'
 import { dogTaste } from './tastes'
 import type { VoiceId } from './voices'
-import type { Customer } from './orders'
+import { CAST, type Customer } from './orders'
 import { eaten } from './world'
 
 // The game while it runs: the game itself, what is moving, the cast, the
@@ -35,6 +35,8 @@ export const SWING = 60
 export const SPEED_WINDOW = 0.1
 /** Cuts made by one step of a stroke sound one after another, this many seconds apart, so a long stroke is a run of notes. */
 export const RUN_GAP = 0.055
+/** And each sounds at the pitch of its own piece or a step above the cut before it, whichever is higher: one stroke is a run of rising notes. */
+export const RUN_STEP = 0.94
 
 /** What the view needs for one frame, besides what it reads from the game. Points are in stage units. */
 export type Scenery = {
@@ -81,6 +83,8 @@ export class GameRun {
   /** What the last move did, in order: for whoever wants to follow the game without drawing it. */
   happened: readonly GameEvent[] = []
   private stroke: Stroke | null = null
+  /** The length the last cut of this stroke sounded at, or nothing before its first cut. */
+  private rung: number | null = null
   private last: Point | null = null
   private held: { held: Held; at: Point; trail: { at: Point; t: number }[] } | null = null
   private roller: Point | null = null
@@ -133,6 +137,7 @@ export class GameRun {
     this.blade = at
     this.last = at
     this.stroke = newStroke()
+    this.rung = null
     this.sounds.push({ id: 'ring', delay: 0 })
   }
 
@@ -209,6 +214,7 @@ export class GameRun {
   end(): void {
     this.blade = null
     this.stroke = null
+    this.rung = null
     this.last = null
     this.held = null
     this.roller = null
@@ -349,8 +355,11 @@ export class GameRun {
       this.fx = spawn(this.fx, event, heads)
       if ('voice' in event) {
         const delay = event.kind === 'cut' || event.kind === 'curl' ? cuts++ * RUN_GAP : 0
-        const length = 'length' in event ? event.length : 'piece' in event ? event.piece.length : undefined
-        const count = event.kind === 'pressed' || event.kind === 'rolled' ? event.parts : undefined
+        let length = 'length' in event ? event.length : 'piece' in event ? event.piece.length : undefined
+        if (event.kind === 'cut') length = this.rung = this.rung === null ? event.length : Math.min(event.length, this.rung * RUN_STEP)
+        // A customer's own noise is in its own throat: its place in the cast goes with the voice.
+        const noisy = event.kind === 'flinch' || event.kind === 'ate' ? (event.whom === 'window' ? before.window : before.queue[event.whom]) : null
+        const count = event.kind === 'pressed' || event.kind === 'rolled' ? event.parts : noisy ? CAST.indexOf(noisy.who) : undefined
         this.sounds.push({ id: event.voice, length, count, delay })
       }
       switch (event.kind) {
