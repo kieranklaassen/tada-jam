@@ -4,6 +4,7 @@ import { PERSONALITIES } from './clips'
 import { applyPose, buildFriend } from './friends'
 import { GROUND, skySlots, viewFor } from './layout'
 import { MOMENTS, saveOf, type Moment } from './moments'
+import { freshSave } from './save'
 import { restPose, type Pose } from './pose'
 import { MAX_BALLOONS, MAX_SHADOWS, MAX_STRINGS } from './scenery'
 import { FLIGHT, handOf, REGROW_AFTER, Theatre, type Painter } from './theatre'
@@ -342,25 +343,64 @@ describe('a friend that is poked', () => {
 })
 
 describe('the frog\'s tongue', () => {
-  /** A painter that keeps the thick strings of one frame: the tongues. */
+  /** A painter that keeps the thick strings of one frame: the pieces of the tongues. */
   function tongues() {
-    const drawn: { x0: number; y0: number; x1: number; y1: number }[] = []
+    const drawn: { x0: number; y0: number; x1: number; y1: number; thick: number }[] = []
     const painter: Painter = {
       place: () => {}, drop: () => {}, balloon: () => {}, shadow: () => {}, marcher: () => {}, hand: () => {}, cloud: () => {},
-      string: (x0, y0, _z0, x1, y1, _z1, _colour, thick) => { if ((thick ?? 0) > 0.05) drawn.push({ x0, y0, x1, y1 }) },
+      string: (x0, y0, _z0, x1, y1, _z1, _colour, thick) => { if ((thick ?? 0) > 0.05) drawn.push({ x0, y0, x1, y1, thick: thick ?? 0 }) },
     }
-    return { drawn, painter }
+    /** Each tongue from its mouth to its pad: the pieces follow one another, and the pad is the fat piece at the end. */
+    const whole = () => {
+      const pads = drawn.filter((piece) => piece.thick > 0.1)
+      return pads.map((pad) => {
+        const at = drawn.indexOf(pad), pieces = drawn.slice(at - 4, at)
+        return { mouthX: pieces[0].x0, mouthY: pieces[0].y0, tipX: pad.x1, tipY: pad.y1, pieces }
+      })
+    }
+    return { drawn, painter, whole }
   }
 
-  it('crosses its neighbour\'s in the air when two frogs take from one bunch', () => {
-    const theatre = staged({ troop: { kind: 'frog', size: 2, held: [false, false] }, sky: [{ colour: 'frog', count: 1 }, { colour: 'frog', count: 2 }], waiting: { kind: 'duck', size: 1 } }), { drawn, painter } = tongues()
+  it('crosses its neighbour\'s in the air when two frogs take from one bunch, each a bow with a pad and never a straight bar', () => {
+    const theatre = staged({ troop: { kind: 'frog', size: 2, held: [false, false] }, sky: [{ colour: 'frog', count: 1 }, { colour: 'frog', count: 2 }], waiting: { kind: 'duck', size: 1 } }), { painter, whole } = tongues()
     tapSlot(theatre, 1)
     play(theatre, FLIGHT - 0.12)
     theatre.paint(painter, VIEW)
-    expect(drawn).toHaveLength(2)
-    const [left, right] = drawn[0].x0 < drawn[1].x0 ? drawn : [drawn[1], drawn[0]]
+    const both = whole()
+    expect(both).toHaveLength(2)
+    const [left, right] = both[0].mouthX < both[1].mouthX ? both : [both[1], both[0]]
     // The frog on the left reaches the balloon on the right, and the other way round.
-    expect(left.x1).toBeGreaterThan(right.x1)
+    expect(left.tipX).toBeGreaterThan(right.tipX)
+    for (const tongue of both) {
+      // The middle of the tongue is off the straight line from its mouth to its tip, by more than its own thickness.
+      const middle = tongue.pieces[1], dx = tongue.tipX - tongue.mouthX, dy = tongue.tipY - tongue.mouthY
+      const off = Math.abs((middle.x1 - tongue.mouthX) * dy - (middle.y1 - tongue.mouthY) * dx) / Math.hypot(dx, dy)
+      expect(off).toBeGreaterThan(0.2)
+    }
+  })
+
+  it('is how a frog that passes by takes the balloon that hangs low for it', () => {
+    // A new game whose first showing is a frog: the child's troop is some other kind.
+    for (let seed = 1; seed < 40; seed++) {
+      const theatre = new Theatre(freshSave(2, seed), seed)
+      let kind: KindName | null = null
+      const { drawn, painter } = tongues()
+      const spy: Painter = { ...painter, place: (name, placed) => { if (name === 'passer-0') kind = placed } }
+      theatre.paint(spy, VIEW)
+      if (kind !== 'frog') continue
+      let most = 0
+      for (let i = 0; i < 60 * 7; i++) {
+        theatre.step(1 / 60)
+        drawn.length = 0
+        theatre.paint(spy, VIEW)
+        most = Math.max(most, drawn.length)
+      }
+      // A whole tongue is four pieces and a pad, and nothing of it is left when the frog has gone.
+      expect(most).toBe(5)
+      expect(drawn).toHaveLength(0)
+      return
+    }
+    throw new Error('no seed opened on a passing frog')
   })
 
   it('is what a frog hangs by when it is carried off, its arms dangling', () => {

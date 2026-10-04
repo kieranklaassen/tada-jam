@@ -1,5 +1,5 @@
 import { BODIES, type KindName } from './bodies'
-import { clip, PERSONALITIES, ramp, rest, stride, walk, type ClipId } from './clips'
+import { clip, hold, PERSONALITIES, ramp, rest, stride, walk, type ClipId } from './clips'
 import { handPose, type Guidance, type HandPose } from './guidance'
 import { BALLOON, bunchOffsets, bunchReach, CLOUDS, FRIEND_SCALE, friendX, GROUND, groundAt, HELD_HEIGHT, PARADE_SCALE, paradeSpot, seenAt, skySlots, viewFor, WAITING_SCALE, waitingSpot, type View } from './layout'
 import { KIND_COLOURS, PALETTE, shade } from './palette'
@@ -67,6 +67,8 @@ const GROWN_UP_CORNER = 72
 const REFUSAL_LEAD = 0.12
 
 /** Seconds a bunch takes from the sky to the friend, and before a new one drifts into its place. */
+/** How many straight pieces a frog's bowed tongue is drawn in. */
+const TONGUE_PIECES = 4
 export const FLIGHT = 0.5
 export const REGROW_AFTER = 0.45
 const GROW = 0.5
@@ -1099,7 +1101,13 @@ export class Theatre {
     const bx = this.hand.x + trail + Math.sin(this.time * 1.4 + seed) * 0.1, by = pose.y + HELD_HEIGHT + Math.sin(this.time * 1.7 + seed * 2) * 0.07
     const lean = (this.hand.x - bx) * -0.2
     painter.balloon(bx, by, 0.3, 1, 1, lean, colour)
-    painter.string(bx + Math.sin(lean) * BALLOON * 1.32, by - Math.cos(lean) * BALLOON * 1.32, 0.3, this.hand.x, this.hand.y, this.hand.z, shade(colour, -0.3))
+    const tailX = bx + Math.sin(lean) * BALLOON * 1.32, tailY = by - Math.cos(lean) * BALLOON * 1.32
+    painter.string(tailX, tailY, 0.3, this.hand.x, this.hand.y, this.hand.z, shade(colour, -0.3))
+    // A frog that passes takes its balloon as every frog does: the tongue out to it, and in again.
+    if (troop.kind === 'frog' && actor.clip === 'catch' && actor.t >= 0) {
+      const mouthY = pose.y + (plan.neck[1] + plan.mouth[1]) * pose.scale * pose.squash, mouthZ = (plan.neck[2] + plan.mouth[2]) * pose.scale
+      this.lick(painter, pose.x, mouthY, mouthZ, tailX, tailY, 0.3, hold(actor.t, 0.1, 0.2, 0.3, 0.45), shade(colour, 0.34))
+    }
   }
 
   /** The frog meets its balloon with its tongue: out to the balloon as it comes down, and in with it. */
@@ -1116,7 +1124,31 @@ export class Theatre {
       const plan = BODIES.frog
       const mouthX = pose.x, mouthY = pose.y + (plan.neck[1] + plan.mouth[1]) * pose.scale * pose.squash, mouthZ = (plan.neck[2] + plan.mouth[2]) * pose.scale
       const tipX = at.x + offset.x, tipY = at.y + offset.y - BALLOON * 1.25
-      painter.string(mouthX, mouthY, mouthZ, mouthX + (tipX - mouthX) * out, mouthY + (tipY - mouthY) * out, mouthZ + (0.35 - mouthZ) * out, colour, 0.07)
+      this.lick(painter, mouthX, mouthY, mouthZ, tipX, tipY, 0.35, out, colour)
+    }
+  }
+
+  /**
+   * A frog's tongue, `out` of the way from its mouth to where it is going. It is flung, so it bows out and down on
+   * its way like a thrown rope, and it ends in a fat sticky pad. Two tongues that cross are two bows with a pad
+   * each, which read as tongues; two straight bars that crossed would read as a sign.
+   */
+  private lick(painter: Painter, fromX: number, fromY: number, fromZ: number, toX: number, toY: number, toZ: number, out: number, colour: string): void {
+    const dx = toX - fromX, dy = toY - fromY, long = Math.hypot(dx, dy)
+    if (long < 1e-3 || out <= 0) return
+    // The bow is to the side the tongue leans to, and downwards: the middle of the rope lags behind its ends.
+    const side = dx >= 0 ? 1 : -1, bow = Math.min(0.9, Math.abs(dx) * 0.42)
+    const viaX = fromX + dx * 0.5 + (dy / long) * side * bow, viaY = fromY + dy * 0.5 - (Math.abs(dx) / long) * bow
+    let x = fromX, y = fromY, z = fromZ
+    for (let piece = 1; piece <= TONGUE_PIECES; piece++) {
+      const u = (piece / TONGUE_PIECES) * out, v = 1 - u
+      const nextX = v * v * fromX + 2 * v * u * viaX + u * u * toX, nextY = v * v * fromY + 2 * v * u * viaY + u * u * toY, nextZ = fromZ + (toZ - fromZ) * u
+      painter.string(x, y, z, nextX, nextY, nextZ, colour, 0.07)
+      if (piece === TONGUE_PIECES) {
+        const step = Math.hypot(nextX - x, nextY - y) || 1
+        painter.string(nextX, nextY, nextZ, nextX + ((nextX - x) / step) * 0.16, nextY + ((nextY - y) / step) * 0.16, nextZ, colour, 0.13)
+      }
+      x = nextX; y = nextY; z = nextZ
     }
   }
 
