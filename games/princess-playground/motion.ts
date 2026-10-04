@@ -157,6 +157,7 @@ export class Playground {
   private shakes = 0
   private shakeIn = 0
   private shakeBy = 0
+  private shakeWay = 1
   time = 0
   private carry = 0
   private wasLevel = false
@@ -469,6 +470,7 @@ export class Playground {
     twin.shakes = this.shakes
     twin.shakeIn = this.shakeIn
     twin.shakeBy = this.shakeBy
+    twin.shakeWay = this.shakeWay
     return twin
   }
 
@@ -478,6 +480,9 @@ export class Playground {
     // Of those who sit: a friend in the hand is not expected on the plank.
     for (const end of ENDS) for (const id of this.seen[end]) if (!this.bodies[id].landed) return false
     const target = this.restingTilt()
+    // On its way down to an end it has not arrived until that end has come down on the sand: whoever it throws is
+    // thrown first, and nothing said on arrival can push the plank before the knock.
+    if (Math.abs(target) >= MAX_TILT && this.lay !== (target > 0 ? 'right' : 'left')) return false
     return Math.abs(this.plank.tilt - target) < 0.06 && Math.abs(this.plank.spin) < 1.2
   }
 
@@ -509,6 +514,8 @@ export class Playground {
     this.shakes = SHAKES
     this.shakeIn = 0
     this.shakeBy = strength
+    // The first push lifts the end that lies down, whichever it is: the same shake either way round.
+    this.shakeWay = this.plank.tilt > 0 ? -1 : 1
   }
 
   takeEvents(): PlayEvent[] {
@@ -636,13 +643,15 @@ export class Playground {
     if (this.shakes > 0) {
       this.shakeIn -= dt
       if (this.shakeIn <= 0) {
-        nudge(this.plank, (this.shakes % 2 ? -1 : 1) * this.shakeBy)
+        nudge(this.plank, (this.shakes % 2 ? -1 : 1) * this.shakeWay * this.shakeBy)
         this.shakes -= 1
         this.shakeIn = SHAKE_EVERY
       }
     }
     const knock = stepPlank(this.plank, this.landedOn('left'), this.landedOn('right'), dt)
     if (knock) this.knocked(knock.end, knock.speed)
+    // Come down too softly to knock, it lies on that end all the same.
+    else if (this.lay === null && this.plank.spin === 0 && Math.abs(this.plank.tilt) >= MAX_TILT) this.lay = this.plank.tilt > 0 ? 'right' : 'left'
     if ((this.tapRock || this.rocked) && Math.abs(this.plank.spin) < 0.02 && Math.abs(this.plank.tilt - this.restingTilt()) < 0.01) this.tapRock = this.rocked = false
     // An end that lay in the sand has lifted well out of it: grains slide back into the bite it leaves.
     const tilt = this.plank.tilt

@@ -185,6 +185,8 @@ export class Game implements Director {
       this.wantSave('soon')
     }
     const cut = this.scene !== null
+    // A showing has this friend somewhere the ride does not: standing where the showing opens, or on its way in a beat.
+    const shown = touched.kind === 'friend' && this.shownAway(touched.id)
     if (this.scene) this.endScene(true)
     // The child acted before the showing began: it waits for the next time this kind is laid out, and everyone goes
     // to where the ride itself has them.
@@ -198,6 +200,9 @@ export class Game implements Director {
       // A touch that ended a scene, on the friend who asks next: it was touched where it sat, not where it waits. It
       // goes to the waiting place, and the next ride begins with a touch on it there. A second tap never begins a ride.
       if (cut && this.world.arrangement.waiting === touched.id) return
+      // A touch on a friend the showing had moved only ends the showing: the friend goes to where the ride has it,
+      // which is not where it was touched, and the touch moves it no further and makes no move.
+      if (shown) return
       this.pressed = { kind: 'friend', id: touched.id }
     } else if (touched.kind === 'plank') this.tapPlank(touched.along)
     else if (touched.kind === 'sand') {
@@ -205,6 +210,15 @@ export class Game implements Director {
       this.pressed = { kind: 'sand', x: touched.x, z: touched.z }
     } else if (touched.kind === 'rake') this.rake()
     else this.voice(v.poke())
+  }
+
+  /** A showing that is due or playing has this friend away from where the saved ride has it. */
+  private shownAway(id: FriendId): boolean {
+    const playing = this.sceneKind === 'showing'
+    if (!playing && !this.pendingShowing) return false
+    const body = this.play.bodies[id]
+    if (body.away || (playing && body.mode !== 'rest')) return true
+    return JSON.stringify(placeOf(this.play.arrangement, id)) !== JSON.stringify(placeOf(this.world.arrangement, id))
   }
 
   tap(): void {
@@ -882,7 +896,9 @@ export class Game implements Director {
   private held(): void {
     // What sits on the plank: a friend in the hand is not on it, so lifting one off can float it level, or leave a tower of three.
     const play = this.play, a = play.sitting
-    if (this.scene || this.time < this.heldAt) return
+    if (this.time < this.heldAt) return
+    // In a scene a held state holds as it does out of one; only a friend a beat has doing something else is left to it.
+    const free = (id: FriendId) => !this.scene || play.bodies[id].act === null || play.bodies[id].act === 'sway'
     // Sitting, not on its way there: a held state holds from the moment everyone has landed, however the plank still sways.
     const sits = (id: FriendId) => play.bodies[id].landed && play.bodies[id].mode === 'rest'
     const left = weightOn(a, 'left'), right = weightOn(a, 'right')
@@ -890,7 +906,7 @@ export class Game implements Director {
     if (left > 0 && left === right && [...a.left, ...a.right].every(sits) && Math.abs(play.plank.tilt) < MAX_TILT * 0.7) {
       this.heldAt = this.time + HUM_EVERY
       this.voice(v.levelHum())
-      ;[...a.left, ...a.right].forEach((id, index) => play.act(id, 'sway', 1.6, index % 2 ? -1 : 1))
+      ;[...a.left, ...a.right].forEach((id, index) => { if (free(id)) play.act(id, 'sway', 1.6, index % 2 ? -1 : 1) })
       return
     }
     // A stack of three or four, or any stack with Bo on top: it sways as one, every friend the same way, for as long as it stands.
@@ -899,7 +915,7 @@ export class Game implements Director {
       // A taller stack is plainly wobblier: three sway, four sway further; and Bo on top makes even two sway.
       if ((stack.length >= 3 || (stack.length === 2 && stack[1] === 'bo')) && stack.every(sits)) {
         this.heldAt = this.time + HELD_EVERY
-        for (const id of stack) play.act(id, 'sway', 1.7, WOBBLE[stack.length] ?? 1)
+        for (const id of stack) if (free(id)) play.act(id, 'sway', 1.7, WOBBLE[stack.length] ?? 1)
       }
     }
   }

@@ -1748,6 +1748,124 @@ describe('a showing opens with no jump', () => {
     expect(game.play.arrangement).toEqual(game.world.arrangement)
     expect(placeOf(game.play.arrangement, 'bo').at).toBe('end')
   })
+
+  it('a touch on the friend a showing has moved only ends the showing: the friend goes to where the ride has it, and no move is made', () => {
+    // Bo stands in the sand until his hop in the showing; the ride has him on the far end, holding Pim high.
+    for (const after of [0, 0.3, 0.8, 1.3]) {
+      const game = new Game(opening('high-asks'), 1)
+      run(game, after)
+      tapOn(game, 'bo')
+      run(game, 4)
+      expect(game.sceneRunning, `${after}`).toBe(false)
+      expect(game.world.moves, `${after}`).toBe(0)
+      expect(game.world.state.finished, `${after}`).toBe(false)
+      expect(placeOf(game.play.arrangement, 'bo').at, `${after}`).toBe('end')
+      expect(game.play.arrangement, `${after}`).toEqual(game.world.arrangement)
+    }
+    // Laid out by a touch on the friend who waits: Bo is tapped on his way to the sand, or standing in it.
+    for (const after of [0.3, 0.8, 1.3, 1.8, 2.3]) {
+      const world: World = { ...opening('near-side'), shown: KINDS.filter((k) => k !== 'high-asks'), touched: true }
+      const ended = endRide(world)
+      const game = new Game({ ...ended, state: { ...ended.state, position: 'high-asks' } }, 1)
+      run(game, 0.3)
+      tapOn(game, game.play.arrangement.waiting!)
+      expect(game.world.kind).toBe('high-asks')
+      run(game, after)
+      tapOn(game, 'bo')
+      run(game, 4)
+      expect(game.world.moves, `${after}`).toBe(0)
+      expect(game.world.state.finished, `${after}`).toBe(false)
+      expect(placeOf(game.play.arrangement, 'bo').at, `${after}`).toBe('end')
+    }
+    // Pim standing beside the plank before her hop, and Pim on the far end in the middle of her visit there.
+    const little = new Game(opening('little-asks'), 1)
+    run(little, 0.2)
+    tapOn(little, 'pim')
+    run(little, 3)
+    expect(little.world.moves).toBe(0)
+    expect(placeOf(little.play.arrangement, 'pim').at).toBe('end')
+    const middle = new Game(opening('middle-asks'), 1)
+    const pimWas = placeOf(middle.world.arrangement, 'pim')
+    run(middle, 1.3)
+    expect(placeOf(middle.play.arrangement, 'pim')).not.toEqual(pimWas)
+    tapOn(middle, 'pim')
+    run(middle, 3)
+    expect(middle.world.moves).toBe(0)
+    expect(placeOf(middle.play.arrangement, 'pim')).toEqual(pimWas)
+  })
+
+  it('once the showing has put a friend where the ride has it, a tap on it is a move as always', () => {
+    const game = new Game(opening('high-asks'), 1)
+    run(game, 2.6)
+    expect(game.sceneRunning).toBe(true)
+    expect(game.play.bodies.bo.mode).toBe('rest')
+    tapOn(game, 'bo')
+    expect(game.world.moves).toBe(1)
+    expect(placeOf(game.play.arrangement, 'bo').at).toBe('sand')
+  })
+})
+
+describe('whoever sits on the end that goes up is tossed, whichever end it is', () => {
+  it('Bo lifted by one unit is thrown the same either way round, and chuckles when he has come down again', () => {
+    const bare = tap(layout(rideOf('little-asks', 0)), 'pim')
+    const heights: number[] = []
+    for (const [his, theirs] of [['right', 'left'], ['left', 'right']] as const) {
+      const game = new Game({ ...shown(), arrangement: putOnEnd(putOnEnd(bare, 'bo', his), 'mog', theirs), touched: true, state: { ...shown().state, finished: true } }, 1)
+      run(game, 2)
+      game.takeCues()
+      game.press({ kind: 'friend', id: 'pim' })
+      game.dragStart()
+      game.dragTo({ x: (theirs === 'left' ? -1 : 1) * PLANK.seat, z: PLANK.z }, null)
+      run(game, 0.6)
+      game.takeCues()
+      game.dragEnd()
+      expect(weightOn(game.play.arrangement, theirs) - weightOn(game.play.arrangement, his)).toBe(1)
+      let thrown = false, top = 0, chuckledAt = -1, landedAt = -1
+      for (let i = 0; i < 480; i++) {
+        game.step(1 / 60, QUIET)
+        const bo = game.play.bodies.bo
+        if (bo.mode === 'air' && bo.thrown) thrown = true
+        else if (thrown && landedAt < 0 && bo.mode === 'rest') landedAt = i
+        top = Math.max(top, bo.y)
+        if (chuckledAt < 0 && game.takeCues().some((cue) => cue.type === 'voice' && JSON.stringify(cue.parts) === JSON.stringify(chuckle()))) chuckledAt = i
+      }
+      expect(thrown, his).toBe(true)
+      expect(landedAt, his).toBeGreaterThan(0)
+      expect(chuckledAt, his).toBeGreaterThanOrEqual(landedAt)
+      heights.push(top)
+    }
+    expect(Math.abs(heights[0] - heights[1])).toBeLessThan(0.02)
+  })
+})
+
+describe('a tower sways for as long as it stands, through an ending too', () => {
+  it('built on the asker\'s end by the move that ends the ride, it is swaying in the middle of the ending', () => {
+    const world = shown()
+    const game = new Game({ ...world, state: { ...world.state, position: 'high-asks' }, kind: 'high-asks', turn: 0, arrangement: layout(rideOf('high-asks', 0)), shown: ['high-asks'], touched: true }, 1)
+    run(game, 0.5)
+    const near = placeOf(game.play.arrangement, 'pim')
+    expect(near.at).toBe('end')
+    if (near.at !== 'end') return
+    for (const id of ['mog', 'dot'] as const) {
+      game.press({ kind: 'friend', id })
+      game.dragStart()
+      game.dragTo({ x: (near.end === 'left' ? -1 : 1) * PLANK.seat, z: PLANK.z }, null)
+      run(game, 0.6)
+      game.dragEnd()
+      run(game, 1.2)
+    }
+    for (let i = 0; i < 600 && !game.sceneRunning; i++) game.step(1 / 60, QUIET)
+    expect(game.sceneRunning).toBe(true)
+    expect(game.play.arrangement[near.end]).toHaveLength(3)
+    // Well into the ending, after any sway begun before it has run out.
+    run(game, 2.2)
+    let swaying = 0
+    for (let i = 0; i < 90; i++) {
+      game.step(1 / 60, QUIET)
+      if (game.sceneRunning && game.play.bodies.mog.act === 'sway' && game.play.bodies.dot.act === 'sway') swaying += 1
+    }
+    expect(swaying).toBeGreaterThan(30)
+  })
 })
 
 describe('a double tap on the friend who waits', () => {
