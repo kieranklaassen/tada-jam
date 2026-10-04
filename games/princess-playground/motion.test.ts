@@ -265,6 +265,40 @@ describe('the playground in motion', () => {
     expect(tips).toBeGreaterThan(30)
   })
 
+  it('brings the friends above down a place the moment the one under them is lifted: nobody hangs over a gap', () => {
+    let a = emptyArrangement()
+    for (const id of ['mog', 'pim', 'dot'] as const) a = putOnEnd(a, id, 'left')
+    a = putInSand(a, 'bo', homeOn('bo', 'right'))
+    const world = new Playground(a)
+    play(world, 1)
+    const pimWas = world.bodies.pim.y
+    world.grab('mog')
+    world.carryTo(2, 2)
+    play(world, 1.5)
+    // Pim sits on the board now, and Dot on Pim: each a place lower, at rest.
+    expect(world.bodies.pim.mode).toBe('rest')
+    expect(world.bodies.pim.y).toBeLessThan(pimWas - 0.8)
+    expect(world.bodies.pim.y).toBeCloseTo(plankTopAt(-PLANK.seat, world.plank.tilt), 1)
+    expect(world.bodies.dot.y).toBeGreaterThan(world.bodies.pim.y + FRIENDS.pim.halfHeight)
+    expect(world.frame().poses.dot.y - world.frame().poses.pim.y).toBeLessThan(FRIENDS.pim.halfHeight * 2 + 0.1)
+    // Put back, Mog goes onto his end on top of them: the same friends on the same ends.
+    world.putBack()
+    play(world, 3)
+    expect(world.arrangement.left).toEqual(['pim', 'dot', 'mog'])
+    expect(world.bodies.mog.mode).toBe('rest')
+    expect(isSound(world.arrangement)).toBe(true)
+    // Let go over the sand instead, he stands there and the two stay as they are.
+    const other = new Playground(a)
+    play(other, 1)
+    other.grab('mog')
+    other.carryTo(2, 2)
+    play(other, 1)
+    other.release()
+    play(other, 2)
+    expect(other.arrangement.left).toEqual(['pim', 'dot'])
+    expect(placeOf(other.arrangement, 'mog').at).toBe('sand')
+  })
+
   it('throws nobody when a friend lands on the end that is already down: nothing went up', () => {
     for (const lander of ['pim', 'dot', 'mog'] as const) {
       // Bo holds the left end down, a friend rides the right one high, and another lands on Bo.

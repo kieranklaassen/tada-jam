@@ -253,7 +253,20 @@ export class Game implements Director {
   dragAbort(): void {
     this.pressed = { kind: 'other' }
     this.aim = null
+    this.backToItsEnd()
+  }
+
+  /**
+   * The friend in the hand goes back to where it was picked up from. Lifted from under others, it goes back onto
+   * its end on top of them, since they have come down a place: the same friends on the same ends, and no move.
+   */
+  private backToItsEnd(): void {
+    if (!this.play.held) return
     this.play.putBack()
+    if (JSON.stringify(this.play.arrangement) !== JSON.stringify(this.world.arrangement)) {
+      this.world = { ...this.world, arrangement: this.play.arrangement }
+      this.wantSave('now')
+    }
   }
 
   /** A touch that lands on nothing the game answers (the grown-up corner, or a second finger beside the one that is working): it still ends a scene, as any touch does. */
@@ -270,7 +283,7 @@ export class Game implements Director {
   putAway(): void {
     this.pressed = { kind: 'other' }
     this.aim = null
-    this.play.putBack()
+    this.backToItsEnd()
     // Whoever is still in the air will land, and the plank will come down, with nobody watching: the marks they
     // make go into the saved sand now, so nothing the child set going is lost. They are drawn when they happen.
     // A swirl Dot was about to draw is in the saved sand too.

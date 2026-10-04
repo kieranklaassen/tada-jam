@@ -60,7 +60,8 @@ export function standsAt(a: Arrangement, id: FriendId): Spot {
   return place.spot
 }
 
-function lift(a: Arrangement, id: FriendId): Arrangement {
+/** The arrangement with one friend taken out of wherever it is: in the hand, on its way. Not sound by itself. */
+export function lift(a: Arrangement, id: FriendId): Arrangement {
   const next = copy(a)
   next.left = next.left.filter((other) => other !== id)
   next.right = next.right.filter((other) => other !== id)

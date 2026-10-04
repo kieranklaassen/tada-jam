@@ -1109,6 +1109,28 @@ describe('whoever the deciding move lifts', () => {
   })
 })
 
+describe('a friend lifted from under others and put away', () => {
+  it('goes back onto its end on top of them: the same friends on the same ends, no move counted, and the save says so', () => {
+    const bare = tap(layout(rideOf('little-asks', 0)), 'pim')
+    const game = new Game({ ...shown(), arrangement: putOnEnd(putOnEnd(bare, 'mog', 'left'), 'dot', 'left'), touched: true }, 1)
+    run(game, 1)
+    const moves = game.world.moves
+    game.press({ kind: 'friend', id: 'mog' })
+    game.dragStart()
+    game.dragTo({ x: 2, z: 2 }, null)
+    run(game, 1)
+    // In the hand it is saved where it was picked up from.
+    expect(game.saved().left).toEqual(['mog', 'dot'])
+    game.putAway()
+    expect(game.saved().left).toEqual(['dot', 'mog'])
+    expect(game.world.moves).toBe(moves)
+    run(game, 3)
+    expect(game.play.arrangement).toEqual(game.world.arrangement)
+    expect(game.play.bodies.mog.mode).toBe('rest')
+    expect(save(load(JSON.parse(JSON.stringify(game.saved())), null)).left).toEqual(['dot', 'mog'])
+  })
+})
+
 describe('a pointer the browser takes away mid-drag', () => {
   it('makes no move when it does not come back: the friend goes back to where it was picked up from', () => {
     const game = new Game({ ...shown(), touched: true }, 1)

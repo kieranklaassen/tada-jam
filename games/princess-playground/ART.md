@@ -121,7 +121,7 @@ A wrong try costs nothing and tells something every time, and is at least as fun
 | `marks` | Every mark in the sand as a coarse grid, 32 by 20 cells of one digit each: smooth, raked, or how deep a mark is. Dimples, grooves, bite marks, craters, hollows and Dot's swirls are all kept this way, and on load each cell is drawn from its digit alone; anything finer is not kept. The rake lies out while any cell holds a mark deeper than raked, once `touched` is set. |
 | `touched` | The child has touched the game at least once, ever. It is never shown. Until it is set no tool is on screen: the rake stays away. |
 
-A friend in the hand is saved where it was picked up from. A friend in the air, a rocking plank and a fling are views of the saved arrangement and are not saved: on load every friend sits or stands where it belongs and the plank rests on its heavier end, or level when the two ends weigh the same, an empty plank included. The largest legal state is under 2 KB, far below half of the 64 KB cap, and a test says so.
+A friend in the hand is saved where it was picked up from. One lifted from under others is put back, when the game is put away, onto that end on top of them, since they came down a place when it was lifted: the same friends on the same ends. A friend in the air, a rocking plank and a fling are views of the saved arrangement and are not saved: on load every friend sits or stands where it belongs and the plank rests on its heavier end, or level when the two ends weigh the same, an empty plank included. The largest legal state is under 2 KB, far below half of the 64 KB cap, and a test says so.
 
 ## The characters and their fixed tastes
 

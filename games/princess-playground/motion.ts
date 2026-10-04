@@ -1,4 +1,4 @@
-import { aimedAtPlank, drop, inCompany, placeOf, tap, weightOn, type Arrangement } from './arrangement'
+import { aimedAtPlank, drop, inCompany, lift, placeOf, putOnEnd, tap, weightOn, type Arrangement } from './arrangement'
 import { PERSONALITY } from './personality'
 import { LEVEL_SPRING, PLANK_INERTIA, TURN, nudge, stepPlank, type PlankState } from './plank'
 import type { Frame, FriendPose, Poses } from './pose'
@@ -153,6 +153,9 @@ export class Playground {
   private wasLevel = false
   /** The plank is rocking under a finger's tap, which throws nobody: until it lies still again, or a friend comes or goes. */
   private tapRock = false
+  private seenFor: Arrangement | null = null
+  private seenWithout: FriendId | null = null
+  private seenIs: Arrangement | null = null
   /** The plank was pushed to see-saw in an ending: its end comes down again on purpose, and throws whoever rides the other. */
   private rocked = false
   /** The end the plank lies on, or last came down on, until it has been well up off it again; not yet looked at when undefined. */
@@ -212,9 +215,32 @@ export class Playground {
     this.hop(id, false)
   }
 
+  /**
+   * Who sits where, as it is to be seen: with a friend in the hand taken out of its stack. The friends who sat on it
+   * come down a place the moment it is lifted from under them; nobody hangs in the air over a gap.
+   */
+  private get seen(): Arrangement {
+    if (!this.held) return this.arrangement
+    if (this.seenFor !== this.arrangement || this.seenWithout !== this.held) {
+      this.seenFor = this.arrangement
+      this.seenWithout = this.held
+      this.seenIs = lift(this.arrangement, this.held)
+    }
+    return this.seenIs ?? this.arrangement
+  }
+
   grab(id: FriendId): void {
     if (this.held && this.held !== id) this.release()
     const body = this.bodies[id]
+    // Whoever sat on it falls onto the one below, or onto the board.
+    const from = placeOf(this.arrangement, id)
+    if (from.at === 'end') for (const above of this.arrangement[from.end].slice(from.level + 1)) {
+      const rider = this.bodies[above]
+      if (rider.mode !== 'rest') continue
+      rider.mode = 'air'
+      rider.vy = 0
+      rider.thrown = false
+    }
     this.held = id
     body.mode = 'held'
     body.landed = false
@@ -251,6 +277,9 @@ export class Playground {
   putBack(): void {
     const id = this.held
     if (!id) return
+    // Those who sat on it have come down a place: it goes back onto its end, on top of them.
+    const from = placeOf(this.arrangement, id)
+    if (from.at === 'end' && from.level < this.arrangement[from.end].length - 1) this.arrangement = putOnEnd(this.arrangement, id, from.end)
     this.held = null
     this.hop(id, true)
   }
@@ -503,7 +532,7 @@ export class Playground {
    */
   private clearance(id: FriendId): number {
     const body = this.bodies[id], spec = FRIENDS[id]
-    const target = body.away ?? restingAt(this.arrangement, id, this.plank.tilt)
+    const target = body.away ?? restingAt(id === this.held ? this.arrangement : this.seen, id, this.plank.tilt)
     const dx = target.x - body.x, dz = target.z - body.z, length2 = dx * dx + dz * dz
     if (length2 < 0.01) return 0
     let need = 0
@@ -566,7 +595,7 @@ export class Playground {
     // It lay on this end already and has not been up since: nothing went up, so nobody is thrown.
     const again = end === this.lay
     this.lay = end
-    for (const id of this.arrangement[up]) {
+    for (const id of this.seen[up]) {
       const body = this.bodies[id]
       if (!body.landed || body.mode !== 'rest') continue
       const throwSpeed = speed * PLANK.seat * PERSONALITY[id].tossGain * TOSS
@@ -584,12 +613,12 @@ export class Playground {
       body.mouth = 1
       this.events.push({ type: 'toss', id, speed: throwSpeed })
     }
-    for (const id of this.arrangement[end]) if (this.bodies[id].mode === 'rest') this.bodies[id].squashV -= speed * 1.4
+    for (const id of this.seen[end]) if (this.bodies[id].mode === 'rest') this.bodies[id].squashV -= speed * 1.4
   }
 
   private move(id: FriendId, dt: number): void {
     const body = this.bodies[id], own = PERSONALITY[id]
-    const target = body.away ?? restingAt(this.arrangement, id, this.plank.tilt)
+    const target = body.away ?? restingAt(id === this.held ? this.arrangement : this.seen, id, this.plank.tilt)
     if (body.mode === 'held') {
       const pull = 1 - Math.exp(-dt * 16)
       let dx = (body.holdX - body.x) * pull, dz = (body.holdZ - body.z) * pull
@@ -645,10 +674,10 @@ export class Playground {
       if (body.hopHigh > 0.5) this.events.push({ type: 'leap', id })
     }
     // Landing on a friend who is in the air: it lands where that friend is, not where the seat would be.
-    const place = body.away ? null : placeOf(this.arrangement, id)
+    const place = body.away || id === this.held ? null : placeOf(this.seen, id)
     let underway = false
     if (place && place.at === 'end' && place.level > 0) {
-      const underId = this.arrangement[place.end][place.level - 1], under = this.bodies[underId]
+      const underId = this.seen[place.end][place.level - 1], under = this.bodies[underId]
       if (under.mode !== 'held') target.y = Math.max(target.y, under.y + Math.cos(this.plank.tilt) * FRIENDS[underId].halfHeight * 2 * NESTLE * Math.max(1, under.squash))
       // The friend it will sit on is still on its own way there: it hangs over it and lands when that one has.
       underway = under.mode === 'hop'
@@ -664,7 +693,7 @@ export class Playground {
     }
     // Coming down onto a friend, it is never below that friend's head once it is over it, wherever that head has got to.
     if (place && place.at === 'end' && place.level > 0) {
-      const underId = this.arrangement[place.end][place.level - 1], under = this.bodies[underId]
+      const underId = this.seen[place.end][place.level - 1], under = this.bodies[underId]
       if (under.mode !== 'held' && Math.hypot(under.x - body.x, under.z - body.z) < (FRIENDS[id].radius + FRIENDS[underId].radius) * 1.1) {
         body.y = Math.max(body.y, under.y + FRIENDS[underId].halfHeight * 2 * Math.max(1, under.squash))
       }
@@ -687,12 +716,12 @@ export class Playground {
   private slide(id: FriendId, target: { x: number; y: number; z: number }, s: number): void {
     const body = this.bodies[id], tilt = this.plank.tilt
     const board = (x: number) => plankTopAt(Math.max(-PLANK.halfLength, Math.min(PLANK.halfLength, x)), tilt)
-    const place = placeOf(this.arrangement, id)
+    const place = placeOf(this.seen, id)
     // It stops beside the stack it will climb: clear of the widest friend in it, however that one is squashed.
     // Each friend of the stack where it is now: a stack leans with the board, so its heads are not over its seat.
     const way = Math.sign(target.x - body.fromX) || 1
     let stopX = target.x, reach = 0
-    if (place.at === 'end') for (const other of this.arrangement[place.end].slice(0, place.level)) {
+    if (place.at === 'end') for (const other of this.seen[place.end].slice(0, place.level)) {
       const clear = FRIENDS[other].radius * 1.3 + FRIENDS[id].radius * 1.15
       const before = this.bodies[other].x - way * clear
       if ((before - stopX) * way < 0) stopX = before
@@ -723,7 +752,7 @@ export class Playground {
 
   private land(id: FriendId, target: { x: number; y: number; z: number }, speed: number): void {
     const body = this.bodies[id], own = PERSONALITY[id], spec = FRIENDS[id]
-    const place = placeOf(this.arrangement, id)
+    const place = placeOf(this.seen, id)
     const firstTouch = !body.landed
     // A friend landing on the plank is no finger's tap: what it knocks down throws.
     if (place.at === 'end' && firstTouch) this.tapRock = false
@@ -754,7 +783,7 @@ export class Playground {
     body.landed = true
     // It landed on a friend who is in the air: it flies on with it.
     if (place.level > 0) {
-      const under = this.bodies[this.arrangement[place.end][place.level - 1]]
+      const under = this.bodies[this.seen[place.end][place.level - 1]]
       if (under.mode === 'air') {
         body.mode = 'air'
         body.vy = under.vy
@@ -774,7 +803,7 @@ export class Playground {
     this.events.push({ type: 'land', id, on: place.level > 0 ? 'friend' : 'plank', x: target.x, z: target.z, speed, thrown: body.thrown })
     body.thrown = false
     if (place.level > 0) {
-      const below = this.bodies[this.arrangement[place.end][place.level - 1]]
+      const below = this.bodies[this.seen[place.end][place.level - 1]]
       below.squash = Math.min(below.squash, 1 - 0.1 * spec.weight * (0.5 + 0.5 * hard))
       below.mouth = 1
     }
@@ -784,7 +813,7 @@ export class Playground {
 
   /** Nobody sinks through the one below: a stack keeps its order while it flies. */
   private keepStack(end: End): void {
-    const stack = this.arrangement[end]
+    const stack = this.seen[end]
     for (let level = 1; level < stack.length; level++) {
       const below = this.bodies[stack[level - 1]], body = this.bodies[stack[level]]
       if (body.mode === 'hop' || body.mode === 'held' || below.mode === 'hop' || below.mode === 'held') continue
@@ -818,10 +847,10 @@ export class Playground {
     body.mouth = Math.max(0, body.mouth - dt * 2.2)
     // Held down by whoever sits on it. Under Bo, once he has landed, it is squashed flat for as long as he stays,
     // and pops back the moment he leaves.
-    const place = body.away ? null : placeOf(this.arrangement, id)
+    const place = body.away || id === this.held ? null : placeOf(this.seen, id)
     let hold = 1
     if (place && place.at === 'end') {
-      const above = this.arrangement[place.end].slice(place.level + 1)
+      const above = this.seen[place.end].slice(place.level + 1)
       if (above.length) hold = above.includes('bo') && this.bodies.bo.mode === 'rest' && this.bodies.bo.landed ? FLAT : id === 'bo' ? PROUD : PRESSED
     }
     if (hold > body.press + 0.1) body.squashV += POP
@@ -916,8 +945,8 @@ export class Playground {
       pose.shimmer = id === 'dot' && body.mood === 'glad' ? Math.sin(body.phase * 6) : 0
       // A head with a friend on it, or one on its way there, is pressed: it gives a little under the weight, and Pim's
       // crown and Mog's ears are out of the way before the friend lands.
-      const place = body.away ? null : placeOf(this.arrangement, id)
-      pose.pressed = place && place.at === 'end' && place.level < this.arrangement[place.end].length - 1 ? 1 : 0
+      const place = body.away || id === this.held ? null : placeOf(this.seen, id)
+      pose.pressed = place && place.at === 'end' && place.level < this.seen[place.end].length - 1 ? 1 : 0
       if (!pose.pressed && body.mode === 'rest') pose.nod += Math.max(0, body.gazeUp) * LOOK_NOD
       // Touched, its eyes go wide at the finger for as long as the glance lasts.
       pose.wide = body.glance > 0 ? 1 : 0
@@ -932,7 +961,7 @@ export class Playground {
     }
     // Whoever sits on a friend rides that friend's squash: pressed flat, it lets them down; popping back, it lifts them.
     for (const end of ENDS) {
-      const stack = this.arrangement[end]
+      const stack = this.seen[end]
       for (let level = 1; level < stack.length; level++) {
         const body = this.bodies[stack[level]], below = this.bodies[stack[level - 1]]
         const under = this.poses[stack[level - 1]], pose = this.poses[stack[level]]
