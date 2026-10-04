@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { belly, spread } from '../overlap'
 import type { FriendPose } from '../pose'
-import { CROWN, FRIENDS, type FriendId } from '../world'
+import { CROWN, EARS, FRIENDS, type FriendId } from '../world'
 
 // The four friends: smooth painted pebbles. One body, a pair of eyes that can
 // blink and look about, a small mouth, and the one part that makes each its
@@ -109,7 +109,7 @@ export function buildFriend(id: FriendId): FriendView {
   if (id === 'bo') extra = lids(eyeSize)
   if (extra) {
     if (id === 'pim') extra.position.set(0, spec.halfHeight * CROWN.seat, -spec.radius * 0.18)
-    else if (id === 'mog') extra.position.y = spec.halfHeight * 1.86
+    else if (id === 'mog') extra.position.y = spec.halfHeight * EARS.seat
     else extra.position.y = spec.halfHeight
     group.add(extra)
   }
@@ -133,10 +133,10 @@ function crown(radius: number): THREE.Object3D {
 function ears(material: THREE.Material): THREE.Object3D {
   const radius = FRIENDS.mog.radius, parts: THREE.BufferGeometry[] = []
   for (const side of [-1, 1]) {
-    const ear = new THREE.SphereGeometry(radius * 0.24, 14, 10)
-    ear.scale(0.85, 1.25, 0.6)
+    const ear = new THREE.SphereGeometry(radius * EARS.size, 14, 10)
+    ear.scale(0.85, 1, 0.6)
     ear.rotateZ(-side * 0.4)
-    ear.translate(side * radius * 0.42, radius * 0.16, -radius * 0.04)
+    ear.translate(side * radius * EARS.out, 0, -radius * 0.04)
     parts.push(ear)
   }
   const mesh = new THREE.Mesh(mergeGeometries(parts)!, material)

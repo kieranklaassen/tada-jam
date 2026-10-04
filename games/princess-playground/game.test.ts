@@ -507,8 +507,17 @@ describe('one obvious want, and the friends as they are', () => {
   it('the asker looks along the plank to where it wants to go, and hops on the spot three times at most while the child is still', () => {
     const game = new Game(shown(), 1)
     const { cues } = run(game, ASK_AT[2] + 30)
-    expect(game.play.bodies.pim.gazeTo).toBeGreaterThan(0.5)
-    expect(game.play.bodies.pim.gazeUpTo).toBeGreaterThan(0.5)
+    // She looks by turns along the plank and up, and at the friends who could help, where they stand in the sand.
+    const looks = new Set<string>()
+    for (let i = 0; i < 360; i++) {
+      game.step(1 / 60, QUIET)
+      looks.add(`${game.play.bodies.pim.gazeTo.toFixed(2)} ${game.play.bodies.pim.gazeUpTo.toFixed(2)}`)
+    }
+    expect(looks.has('0.90 0.80')).toBe(true)
+    expect(looks.size).toBe(2)
+    const helpers = [...looks].find((look) => look !== '0.90 0.80')!.split(' ').map(Number)
+    expect(helpers[0]).toBeGreaterThan(0.5)
+    expect(helpers[1]).toBeLessThan(0.2)
     const voices = cues.filter((cue) => cue.type === 'voice').length
     expect(voices).toBe(ASK_AT.length)
     expect(game.world.state.finished).toBe(false)
@@ -535,7 +544,12 @@ describe('one obvious want, and the friends as they are', () => {
     const { cues } = run(game, 12)
     expect(game.play.bodies.bo.doze).toBeLessThan(0.05)
     expect(game.play.asking).toMatchObject({ id: 'bo', up: 1 })
-    expect(game.play.bodies.bo.gazeUpTo).toBeGreaterThan(0.5)
+    const ups = new Set<number>()
+    for (let i = 0; i < 360; i++) {
+      game.step(1 / 60, QUIET)
+      ups.add(game.play.bodies.bo.gazeUpTo)
+    }
+    expect(Math.max(...ups)).toBeGreaterThan(0.5)
     // Two small hops in twelve still seconds, and no snore.
     expect(cues.filter((cue) => cue.type === 'voice').length).toBe(2)
   })
@@ -597,6 +611,24 @@ describe('the small promises of the sheet', () => {
     game.takeCues()
     // Mog alone now: no hum, and he is not Bo, so nothing is heard at all.
     expect(voices(run(game, 8).cues)).toBe(0)
+  })
+
+  it('a taller stack is plainly wobblier: two stand still, three sway, four sway further', () => {
+    const lean = (left: FriendId[]) => {
+      const game = free(left, [])
+      run(game, 2)
+      let most = 0
+      const rest = game.play.plank.tilt
+      for (let i = 0; i < 360; i++) {
+        game.step(1 / 60, QUIET)
+        most = Math.max(most, Math.abs(game.frame.poses[left[left.length - 1]].lean - rest))
+      }
+      return most
+    }
+    const two = lean(['mog', 'pim']), three = lean(['mog', 'dot', 'pim']), four = lean(['bo', 'mog', 'dot', 'pim'])
+    expect(two).toBeLessThan(0.03)
+    expect(three).toBeGreaterThan(0.08)
+    expect(four).toBeGreaterThan(three + 0.03)
   })
 
   it('a stack with Bo on top sways as one for as long as it stands, whoever is under him', () => {
@@ -1076,6 +1108,37 @@ describe('the tilt follows the two totals and nothing else', () => {
     const { cues } = run(game, 3)
     expect(game.play.arrangement.left).toEqual(['mog', 'dot'])
     expect(cues.filter((cue) => cue.type === 'voice' && JSON.stringify(cue.parts) === JSON.stringify(spit())).length).toBe(1)
+  })
+})
+
+describe('a tap on the plank', () => {
+  it('never brings the lighter end down, nor a level or empty plank to the sand: it dips, springs back, and marks nothing new', () => {
+    const bare = tap(layout(rideOf('little-asks', 0)), 'pim')
+    const cases: [FriendId[], FriendId[]][] = [[['bo'], ['mog']], [['bo', 'pim'], ['mog', 'dot']], [['mog', 'bo'], ['pim', 'dot']], [['mog'], ['dot']], [[], []], [['bo'], []]]
+    for (const [left, right] of cases) {
+      let a = bare
+      for (const id of left) a = putOnEnd(a, id, 'left')
+      for (const id of right) a = putOnEnd(a, id, 'right')
+      const game = new Game({ ...shown(), arrangement: a, touched: true, state: { ...shown().state, finished: true } }, 1)
+      run(game, 1)
+      const rest = game.play.plank.tilt, weights = weightOnEnds(game)
+      // The lighter end, or either end of a level plank: the right one here.
+      game.takeCues()
+      game.press({ kind: 'plank', along: 2 })
+      let furthest = rest
+      const cues: Cue[] = []
+      for (let i = 0; i < 240; i++) {
+        game.step(1 / 60, QUIET)
+        cues.push(...game.takeCues())
+        furthest = Math.max(furthest, game.play.plank.tilt)
+      }
+      const label = `${left} | ${right}`
+      // It dips, plainly, and stays clear of the sand on that side.
+      expect(furthest - rest, label).toBeGreaterThan(0.03)
+      expect(furthest, label).toBeLessThan(MAX_TILT - 0.03)
+      if (weights[0] === weights[1]) expect(cues.some((cue) => cue.type === 'bite'), label).toBe(false)
+      expect(Math.abs(game.play.plank.tilt - rest), label).toBeLessThan(0.02)
+    }
   })
 })
 

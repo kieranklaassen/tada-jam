@@ -49,6 +49,10 @@ export const HELD_EVERY = 1.8
 export const RAKE_SECONDS = 1.2
 /** How long after a ride has begun a tap on its asker is the tail of the touch that began it: seconds. */
 const BEGIN_SECONDS = 1.2
+/** How long the asker looks one way before it looks the other: at the plank, at the friends who could help. Seconds. */
+const ASK_LOOK = 2.2
+/** How far a stack sways, by how many it is tall. */
+const WOBBLE: Readonly<Record<number, number>> = { 2: 0.7, 3: 0.85, 4: 1.2 }
 /** The most an end can carry: all four friends. */
 const HEAVIEST = FRIEND_IDS.reduce((sum, id) => sum + FRIENDS[id].weight, 0)
 /** How long a purr or a chuckle at being lifted has to itself before an ending may begin: seconds. */
@@ -747,7 +751,12 @@ export class Game implements Director {
       else if (asking && id === ride.asker && placeOf(a, id).at === 'end') {
         // One who wants up looks along the plank and up. One stuck high looks down at the sand under it and back at the sky.
         const up = ride.asks === 'up' ? 0.8 : Math.floor(this.time / 1.6) % 2 === 0 ? -0.9 : 0.9
-        play.look(id, ride.asks === 'up' ? (at.x < 0 ? 0.9 : -0.9) : 0, up)
+        // One who wants up looks by turns along the plank and up, and at the friends who could help, where they stand.
+        const helpers = FRIEND_IDS.filter((other) => other !== id && placeOf(a, other).at === 'sand')
+        if (ride.asks === 'up' && helpers.length && Math.floor(this.time / ASK_LOOK) % 2 === 1) {
+          const x = helpers.reduce((sum, other) => sum + play.bodies[other].x, 0) / helpers.length
+          play.look(id, Math.max(-0.9, Math.min(0.9, (x - at.x) * 0.3)), 0.05)
+        } else play.look(id, ride.asks === 'up' ? (at.x < 0 ? 0.9 : -0.9) : 0, up)
       } else if (this.time < this.lookAfter && this.lookers.includes(id)) play.look(id, Math.sign(play.bodies.dot.x - at.x) * 0.9, 0)
       else this.wants(id)
     }
@@ -836,12 +845,13 @@ export class Game implements Director {
       ;[...a.left, ...a.right].forEach((id, index) => play.act(id, 'sway', 1.6, index % 2 ? -1 : 1))
       return
     }
-    // A tower of four, or any stack with Bo on top: it sways as one, every friend the same way, for as long as it stands.
+    // A stack of three or four, or any stack with Bo on top: it sways as one, every friend the same way, for as long as it stands.
     for (const end of ['left', 'right'] as const) {
       const stack = a[end]
-      if ((stack.length === 4 || (stack.length >= 2 && stack[stack.length - 1] === 'bo')) && stack.every(sits)) {
+      // A taller stack is plainly wobblier: three sway, four sway further; and Bo on top makes even two sway.
+      if ((stack.length >= 3 || (stack.length === 2 && stack[1] === 'bo')) && stack.every(sits)) {
         this.heldAt = this.time + HELD_EVERY
-        for (const id of stack) play.act(id, 'sway', 1.7, 1)
+        for (const id of stack) play.act(id, 'sway', 1.7, WOBBLE[stack.length] ?? 1)
       }
     }
   }

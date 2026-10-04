@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { PERSONALITY, type Personality } from './personality'
-import { CROWN, FRIEND_IDS, FRIENDS } from './world'
+import { CROWN, EARS, FRIEND_IDS, FRIENDS } from './world'
 
 describe('the friends move like themselves', () => {
   const keys = Object.keys(PERSONALITY.pim) as (keyof Personality)[]
@@ -30,6 +30,9 @@ describe('the friends move like themselves', () => {
       expect(FRIENDS.pim.radius * Math.max(1, CROWN.girth), id).toBeLessThan(FRIENDS[id].radius)
     }
     expect(FRIENDS.mog.radius).toBe(FRIENDS.dot.radius)
+    // Mog's ear bumps do not stand above the top of his head, nor out past his sides: he and Dot are one outline in size.
+    expect(FRIENDS.mog.halfHeight * EARS.seat + FRIENDS.mog.radius * EARS.size).toBeLessThanOrEqual(FRIENDS.dot.halfHeight * 2 + 1e-9)
+    expect(FRIENDS.mog.radius * (EARS.out + EARS.size)).toBeLessThan(FRIENDS.dot.radius)
     expect(FRIENDS.mog.halfHeight).toBe(FRIENDS.dot.halfHeight)
     expect(PERSONALITY.mog.tossGain).toBe(PERSONALITY.dot.tossGain)
     // Heavier is bigger, every time.

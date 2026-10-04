@@ -39,6 +39,10 @@ export const HALF_AWAY = 0.85
 export const FINGER = 0.14
 /** How flat a head is pressed by a friend sitting on it. */
 export const PRESSED = 0.93
+/** How hard a finger's tap pushes the end it lands on, radians a second; how far a lighter or level end dips under it, radians; and how fast at most. */
+export const TAP_PUSH = 1.7
+export const TAP_DIP = 0.13
+export const TAP_SPEED = 0.9
 /** How far an end that stays the lighter one, or only draws level, dips under a friend landing on it: radians. */
 export const DIP = 0.06
 /** And how fast at most: under the speed at which an end coming down knocks. Radians a second. */
@@ -287,7 +291,13 @@ export class Playground {
   /** A tap on the plank, `along` it from the stone: it rocks, and whoever is on it bobs. */
   tapPlank(along: number): void {
     const side = along >= 0 ? 1 : -1
-    nudge(this.plank, side * 1.7)
+    // The tapped end dips. An end that is the lighter one, or level with the other, dips only as far as the weights
+    // let it and springs back: a finger's tap never brings the lighter end down to the sand.
+    const here = this.landedOn(side > 0 ? 'right' : 'left'), there = this.landedOn(side > 0 ? 'left' : 'right')
+    let push = TAP_PUSH
+    if (here < there) push = Math.min(push, TAP_SPEED, Math.sqrt((2 * TAP_DIP * TURN * (there - here)) / (PLANK_INERTIA + here + there)))
+    else if (here === there) push = Math.min(push, Math.sqrt(LEVEL_SPRING) * TAP_DIP)
+    nudge(this.plank, side * push)
     this.tapRock = true
     this.events.push({ type: 'creak', strength: 0.6 })
     // Its riders are tossed a finger's width and come down again.
