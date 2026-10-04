@@ -6,7 +6,7 @@ import { CREATURE_KINDS, HAT_KINDS } from './kinds'
 import { BODY } from './sizes'
 import { ACTS as TASTE_ACTS } from './tastes'
 
-const FIELDS: (keyof Mods)[] = ['dx', 'dy', 'squash', 'lean', 'turn', 'pat', 'cross', 'ears', 'gazeX', 'gazeY', 'looks', 'hatLift', 'hatTilt', 'hatFwd']
+const FIELDS: (keyof Mods)[] = ['dx', 'dy', 'dz', 'squash', 'lean', 'turn', 'pat', 'cross', 'ears', 'gazeX', 'gazeY', 'looks', 'hatLift', 'hatTilt', 'hatFwd']
 const mods = (): Mods => rest({} as Mods)
 const at = (name: string, u: number, top = 2.2): Mods => { const m = mods(); ACTS[name].play(u, m, top); return m }
 const TAU = Math.PI * 2
@@ -34,6 +34,8 @@ describe('every act', () => {
         expect(m.squash, name).toBeLessThan(1.3)
         expect(m.dy, name).toBeGreaterThanOrEqual(-1e-9)
         expect(Math.abs(m.dx), name).toBeLessThan(0.6)
+        // A step towards the child or away is small: the lane in front of the row and the lane behind it stay clear.
+        expect(Math.abs(m.dz), name).toBeLessThan(0.35)
         expect(Math.abs(m.turn), name).toBeLessThanOrEqual(TAU * 2 + 1e-9)
         // A hat is brought down over a body only when it is brought forward of the face first.
         if (m.hatLift < -0.3) expect(m.hatFwd, `${name}: a lowered hat is in front`).toBeGreaterThan(0.9)

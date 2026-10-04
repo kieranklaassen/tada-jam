@@ -778,3 +778,125 @@ describe('a hat let go on the floor in front of the tile', () => {
     expect(game.play.seen(4).at).toBe('loose')
   })
 })
+
+describe('what the second reading found', () => {
+  it('a game that went to rest and is looked at again starts nothing by itself, as when it is opened', () => {
+    const game = new Game(at('one-leaves'))
+    while (carefulTap(game)) run(game, 0.7)
+    run(game, 0.5)
+    game.rested()
+    run(game, 12)
+    expect(game.sceneRunning).toBe(false)
+    expect(game.asleep).toBe(true)
+    game.press({ type: 'creature', who: game.saved.crew[0].kind })
+    game.tap()
+    run(game, ALONE)
+    expect(game.sceneRunning).toBe(true)
+  })
+
+  it('what one creature does to another it does towards it, from either side, and the two never touch', () => {
+    for (const [object, action, a, b] of [['bare-creature', 'to-bare-head', 'bop', 'wig'], ['bare-creature', 'to-hatted-head', 'bop', 'lanky'], ['hatted-creature', 'to-bare-head', 'lanky', 'bop'], ['hatted-creature', 'to-hatted-head', 'lanky', 'flop']] as const) {
+      for (const flip of [false, true]) {
+        const [who, other] = flip && action !== 'to-bare-head' && action !== 'to-hatted-head' ? [b, a] : [a, b]
+        // The same crew, and the same again in mirror order, so the other one is once to the right and once to the left.
+        const base = worldFor(object, action), world: World = flip ? { ...base, crew: base.crew.map((creature) => ({ ...creature, spot: MOST - 1 - creature.spot })) } : base
+        const game = new Game(saveOf(world))
+        game.press({ type: 'creature', who })
+        game.dragStart()
+        game.dragTo(0, 2, 1, 0.5, 0.2)
+        run(game, 0.2)
+        game.letGo({ on: 'creature', who: other })
+        const from = game.play.actorPose(who, {} as never).x, to = game.play.actorPose(other, {} as never).x, side = Math.sign(to - from)
+        let nearest = 0, gap = Infinity
+        run(game, 1.4, [], () => {
+          const mine = game.play.actorPose(who, { } as never), top = BODY[game.play.kindOf(who)].top
+          const reach = (mine.x - from) * side + Math.tan(-mine.lean * side) * top
+          nearest = Math.max(nearest, reach)
+          const theirs = game.play.actorPose(other, {} as never)
+          gap = Math.min(gap, Math.abs(theirs.x - mine.x) - BODY[game.play.kindOf(who)].reach - BODY[game.play.kindOf(other)].reach - 2 * HAND.radius)
+        })
+        expect(nearest, `${object} ${action} ${flip ? 'to the left' : 'to the right'}`).toBeGreaterThan(0.12)
+        expect(gap, `${object} ${action}`).toBeGreaterThan(0)
+      }
+    }
+  })
+
+  it('two neighbours that bounce towards each other belly first come within a hand of each other and no nearer', () => {
+    const world: World = { crew: [{ kind: 'wig', spot: 1, hats: [] }, { kind: 'bop', spot: 2, hats: [] }], tile: ['cone'], loose: [], changes: [], guest: null, leaver: null, slips: 0 }
+    const game = new Game(saveOf(world))
+    game.press({ type: 'creature', who: 'wig' })
+    game.dragStart()
+    game.dragTo(0, 2, 1, 0.5, 0.2)
+    run(game, 0.2)
+    game.letGo({ on: 'creature', who: 'bop' })
+    let gap = Infinity
+    run(game, 1.4, [], () => {
+      const a = game.play.actorPose('wig', {} as never), ax = a.x - Math.tan(a.lean) * BODY.wig.top * 0, b = game.play.actorPose('bop', {} as never)
+      gap = Math.min(gap, b.x - ax - BODY.wig.reach - BODY.bop.reach - 2 * HAND.radius)
+    })
+    expect(gap).toBeGreaterThan(0)
+    expect(gap).toBeLessThan(0.3)
+  })
+
+  it('a hat taken again while it is still in the air has landed first: the third hat topples the tower every time, and the stage is the world', () => {
+    for (const again of ['tap', 'drag', 'press'] as const) {
+      const game = new Game(saveOf(everything())), heard: { at: number; name: string }[] = []
+      game.press({ type: 'hat', hat: 4 })
+      game.dragStart()
+      game.dragTo(0, 2, 1, 0.5, 0.2)
+      run(game, 0.2, heard)
+      game.letGo({ on: 'creature', who: 'flop' })
+      expect(game.seen).toContain('the-tower-falls')
+      // One frame later, long before it has landed, the finger is on it again.
+      run(game, 1 / 60, heard)
+      game.press({ type: 'hat', hat: 4 })
+      if (again === 'tap') game.tap()
+      else if (again === 'drag') { game.dragStart(); game.dragTo(1, 2, 1, 0.3, 0.1); run(game, 0.2, heard); game.pressEnd() }
+      else game.pressEnd()
+      const names = run(game, 4, heard)
+      expect(names, again).toContain('whistle')
+      expect(game.play.acting('flop') === null || game.play.acting('flop') !== 'salutes-and-topples').toBe(true)
+      expectStageIsWorld(game)
+    }
+  })
+
+  it('a finger that lands on something a scene was taking away is on the floor: nothing throws and the touch is answered', () => {
+    const game = new Game(saveOf(everything()))
+    const heard: { at: number; name: string }[] = []
+    game.press({ type: 'hat', hat: 9 })
+    game.dragStart()
+    game.dragTo(0, 2, 1, 0.5, 0.2)
+    game.letGo({ on: 'floor', x: 0, z: 3 })
+    game.press({ type: 'creature', who: 'nobody' })
+    game.tap()
+    expect(run(game, 0.3, heard)).toEqual(['squeak', 'squeak'])
+    expectStageIsWorld(game)
+  })
+
+  it('the leader of the first showing, back on its spot, turns to look at the others before it looks at the hats left', () => {
+    const game = new Game(freshSave(2, 5))
+    game.begin()
+    const lead = game.saved.crew[0], others = game.saved.crew.slice(1)
+    const side = Math.sign(others.reduce((sum, creature) => sum + spotX(creature.spot), 0) / others.length - spotX(lead.spot))
+    let looked = 0
+    while (game.sceneRunning) run(game, 1 / 60, [], () => {
+      const pose = game.play.actorPose(lead.kind, {} as never)
+      if (!game.play.walking(lead.kind) && Math.abs(pose.x - spotX(lead.spot)) < 0.01 && game.play.worn(lead.kind) === 1) looked = Math.max(looked, pose.gazeX * side)
+    })
+    expect(looked).toBeGreaterThan(0.5)
+  })
+
+  it('Pip under the dome runs round a small circle: across and to and fro, and back where it stood', () => {
+    const world: World = { crew: [{ kind: 'pip', spot: 2, hats: [] }], tile: ['dome'], loose: [], changes: [], guest: null, leaver: null, slips: 0 }
+    const game = new Game({ ...saveOf(world), finished: false })
+    game.press({ type: 'hat', hat: 0 })
+    game.tap()
+    let wide = 0, deep = 0
+    run(game, 3.2, [], () => { const pose = game.play.actorPose('pip', {} as never); wide = Math.max(wide, Math.abs(pose.x - spotX(2))); deep = Math.max(deep, Math.abs(pose.z - ROW_Z)) })
+    expect(wide).toBeGreaterThan(0.3)
+    expect(deep).toBeGreaterThan(0.18)
+    const pose = game.play.actorPose('pip', {} as never)
+    expect(pose.x).toBeCloseTo(spotX(2), 6)
+    expect(pose.z).toBeCloseTo(ROW_Z, 6)
+  })
+})

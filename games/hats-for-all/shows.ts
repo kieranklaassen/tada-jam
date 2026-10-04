@@ -7,7 +7,7 @@ import { worldOf, type Saved } from './save'
 import type { Beat } from './scene'
 import {
   BEHIND_ARCH, IN_ARCH, LOOSE_Z, OFF_RIGHT, PARADE_SPEED, PARADE_STAGGER_S, ROW_Z, TILE_Z,
-  paradeWay, spotX, wayFromArch, wayLength, wayOffLeft, wayOutByArch, wayToArch, wayToTile,
+  paradeWay, spotX, tileX, wayFromArch, wayLength, wayOffLeft, wayOutByArch, wayToArch, wayToTile,
 } from './stage'
 import { ACTS as TASTE_ACTS, moodFor, tasteFor } from './tastes'
 import { bap, creak, pip, plop, pok, scuttle } from './voices'
@@ -29,6 +29,8 @@ export type Show = {
 }
 
 const WALK = 6.5
+/** How long the leader of the first showing looks at the others before it looks at the hats left. */
+const LOOKS_ROUND_S = 0.8
 /** How long one who leaves stands in the arch looking back. */
 const LOOKS_BACK_S = 0.9
 /** How far apart creatures walk in a line: wide enough that the two widest never brush at a turn. */
@@ -51,6 +53,8 @@ function ending(game: Game, at: number): Beat {
 export function firstShowing(game: Game): Show {
   const play = game.play, lead = game.saved.crew[0], hat = lead.hats[0] ?? 0, kind = game.saved.tile[hat], next = counter()
   const way = wayToTile(lead.spot, hat, game.saved.tile.length), walk = wayLength(way) / 5
+  // Where the rest of the crew stands, across the mat: the middle of them.
+  const rest = game.saved.crew.slice(1), others = rest.length > 0 ? rest.reduce((sum, creature) => sum + spotX(creature.spot), 0) / rest.length : spotX(lead.spot) + 3
   return {
     name: 'the-first-showing',
     save: markShown,
@@ -71,11 +75,15 @@ export function firstShowing(game: Game): Show {
             play.act(lead.kind, TASTE_ACTS[lead.kind][kind])
             game.says(lead.kind, moodFor(tasteFor(lead.kind, kind)), 0.1)
             play.everyoneLooks(way[way.length - 1].x, TILE_Z - 2, 1.5, lead.kind)
-            play.after(1.3, () => play.walk(lead.kind, [...way].reverse(), 5, 0, () => play.look(lead.kind, 0, TILE_Z, 1.5)))
+            // Back on its spot it turns to look at the others, and then at the hats left.
+            play.after(1.3, () => play.walk(lead.kind, [...way].reverse(), 5, 0, () => {
+              play.look(lead.kind, others, ROW_Z, LOOKS_ROUND_S, 0.2)
+              play.after(LOOKS_ROUND_S, () => play.look(lead.kind, tileX(game.saved.tile.length), TILE_Z, 1.5))
+            }))
           })
         })
       })),
-      ending(game, 0.8 + walk + 0.45 + 0.6 + 1.3 + walk + 0.4),
+      ending(game, 0.8 + walk + 0.45 + 0.6 + 1.3 + walk + LOOKS_ROUND_S + 0.4),
     ],
   }
 }

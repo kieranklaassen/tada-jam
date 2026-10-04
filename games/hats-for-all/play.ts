@@ -85,7 +85,8 @@ type Actor = {
   /** What it feels for a moment and for how long, and the face it has now, eased towards what it should show. */
   mood: Mood; moodFor: number; fond: boolean; smile: number; browTilt: number; browLift: number
   walk: Walk | null
-  act: { name: string; t: number } | null
+  /** The act it is playing: which way it faces (1 as written, towards the right; -1 turned to the left) and how near it may come to whoever it is for. */
+  act: { name: string; t: number; dir: number; room: number } | null
   /** How many hats are seen on its head, and whether it cannot stand the one it wears. */
   hats: number; grumpy: boolean
   /** How far a tower has slipped over its eyes, from 0 to 1: it eases there, forward of the face first and then down. */
@@ -168,9 +169,13 @@ export class Play {
     if (actor) actor.walk = { way, gone: 0, speed, wait, then }
   }
 
-  act(who: string, name: string): void {
+  /**
+   * A creature plays an act. An act for another creature, or for the tile, is turned to face `toward` (a place across the
+   * mat), and comes no nearer to it than `room`: the two never touch.
+   */
+  act(who: string, name: string, toward?: number, room = Infinity): void {
     const actor = this.actors.get(who)
-    if (actor) actor.act = { name, t: 0 }
+    if (actor) actor.act = { name, t: 0, dir: toward !== undefined && toward < actor.x ? -1 : 1, room: Math.max(0, room) }
   }
 
   /** Whether a creature cannot stand the one hat it wears (it wears it askew, with a cross face) or loves it (it smiles). The game says so from the tastes. */
@@ -249,17 +254,25 @@ export class Play {
   /** A hat sets off for a new place, from wherever it is this instant; `land` runs when it comes down. */
   moveHat(hat: number, to: Seen, travel: Travel, land: (() => void) | null = null): void {
     const h = this.hats[hat], pose = h.pose
+    this.landNow(h)
     h.seen = to
     const target = this.restHat(hat, { ...pose }), far = Math.hypot(target.x - pose.x, target.z - pose.z)
     h.flight = { fromX: pose.x, fromY: pose.y, fromZ: pose.z, fromUp: pose.up, t: 0, lasts: travel === 'carry' ? 0.22 : 0.38 + 0.022 * far, arc: travel === 'pop' ? 2.1 + 0.16 * far : travel === 'hop' ? 0.9 : travel === 'skid' ? 0.25 : 0.4, travel, land }
     h.press.v += 9
   }
 
+  /** A hat taken or sent on while it is still in the air has landed first: what its landing sets off (a creature's reaction, a tower's fall) still happens, every time. */
+  private landNow(h: Hat): void {
+    const land = h.flight?.land
+    h.flight = null
+    land?.()
+  }
+
   /** The child holds a hat: it follows the finger. */
   holdHat(hat: number, x: number, y: number, z: number): void {
     const h = this.hats[hat]
+    this.landNow(h)
     h.seen = { at: 'hand' }
-    h.flight = null
     h.hand.x = x; h.hand.y = y; h.hand.z = z
   }
 
@@ -461,6 +474,12 @@ export class Play {
     if (actor.act) {
       actor.act.t += dt
       if (!playAct(actor.act.name, actor.act.t, mods, BODY[actor.kind].top)) actor.act = null
+      else {
+        // How far its top comes across, by stepping and by leaning: held to the room it has, and then turned to face the way it is for.
+        const top = BODY[actor.kind].top, reach = mods.dx - Math.tan(mods.lean) * top
+        if (reach > actor.act.room) { const less = actor.act.room / reach; mods.dx *= less; mods.lean = Math.atan(Math.tan(mods.lean) * less) }
+        if (actor.act.dir < 0) { mods.dx = -mods.dx; mods.lean = -mods.lean; mods.gazeX = -mods.gazeX; mods.hatTilt = -mods.hatTilt }
+      }
     }
     // With nothing to look at, a bare creature looks at the hats, a hatted one up at its own, and a walker where it is going.
     // Its eyes follow the child's finger while it is on the glass and for a moment after.
@@ -524,7 +543,7 @@ export class Play {
     const across = -Math.tan(lean) * head
     out.x = actor.x + mods.dx + across * Math.cos(mods.turn)
     out.y = actor.hop.x + mods.dy + top
-    out.z = actor.z - across * Math.sin(mods.turn) + 0.02 * (seen.level + 1) + fwd * HAT_FWD
+    out.z = actor.z + mods.dz - across * Math.sin(mods.turn) + 0.02 * (seen.level + 1) + fwd * HAT_FWD
     out.up = 1
     out.tilt = tip
     // A hat that spins once goes round where it sits, eased in and out.
@@ -553,7 +572,7 @@ export class Play {
 
   actorPose(who: string, out: ActorPose): ActorPose {
     const actor = this.actors.get(who)!, mods = actor.mods
-    out.x = actor.x + mods.dx; out.y = actor.hop.x + mods.dy; out.z = actor.z
+    out.x = actor.x + mods.dx; out.y = actor.hop.x + mods.dy; out.z = actor.z + mods.dz
     out.squash = actor.squash.x * mods.squash; out.lean = actor.lean.x + mods.lean; out.turn = mods.turn
     out.gazeX = actor.gazeX; out.gazeY = actor.gazeY; out.cross = mods.cross
     out.pat = Math.max(mods.pat, Math.min(1, actor.pat * 4) * (0.8 + 0.2 * Math.sin(this.time * 16)))

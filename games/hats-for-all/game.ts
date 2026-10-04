@@ -8,9 +8,9 @@ import type { PropName } from './props'
 import { bareSpots, creatureAt, dropHat, hatsInTile, placeOf, settled, tapCreature, tapHat, type Drop, type Happened, type Outcome, type Place } from './rules'
 import { worldOf, type Saved } from './save'
 import { Scene } from './scene'
-import { BODY, CREATURE_DEPTH } from './sizes'
+import { BODY, CREATURE_DEPTH, HAND, HAT_HALF } from './sizes'
 import { changeShow, firstShowing, nextCrewShow, paradeShow, type Show } from './shows'
-import { IN_ARCH, LOOSE_Z, ROW_Z, TILE_Z, holeX, nearestSpot, spotPoint, spotX } from './stage'
+import { IN_ARCH, LOOSE_Z, ROW_Z, TILE_Z, holeX, nearestSpot, spotPoint, spotX, tileX } from './stage'
 import { ACTS as TASTE_ACTS, moodFor, tasteFor } from './tastes'
 import {
   babble, bap, bip, bloopBlip, bomBom, chirrup, clap, creak, donk, dwong, flap, fwump, groan, hiss, hoot, hum, longCreak, paf, pip, plap, plop, pok, pomf, rumble, rustle, thup, trundle,
@@ -104,6 +104,11 @@ export class Game {
     return !this.pace.touched && !this.sceneRunning && due(this.saved, { ...this.pace, touched: true, quiet: LEFT_ALONE_S }) !== null
   }
 
+  /** The game went to rest and is looked at again: as when it is opened, nothing comes by itself until a hat or a creature is touched. */
+  rested(): void {
+    this.pace = freshPace(this.saved)
+  }
+
   /** A touch ends the scene that is playing: everything is at once where the scene was taking it. */
   endScene(): void {
     if (!this.scene) return
@@ -190,6 +195,8 @@ export class Game {
   /** The finger lands: a scene ends, and the foam gives at once, before any lift. */
   press(target: Target): void {
     this.endScene()
+    // What the finger was over may have gone with the scene it ended (a hat of the old tile, a creature that walked off): the touch is then on the floor where that was.
+    if ((target.type === 'hat' && target.hat >= this.play.hatCount) || (target.type === 'creature' && !this.play.has(target.who))) target = { type: 'floor', x: 0, z: TILE_Z }
     this.held = target
     if (target.type !== 'prop') this.play.cue(target.type === 'floor' ? 'squeak' : 'creak', target.type === 'floor' ? squeak(this.next()) : creak(this.next()))
     if (target.type === 'hat') {
@@ -430,7 +437,8 @@ export class Game {
     // They leave from the top down, a moment apart, so no hat flies through the one above it.
     hats.forEach((hat, level) => play.after(0.5 + (hats.length - 1 - level) * 0.14, () => {
       const kind = this.saved.tile[hat]
-      if (play.seen(hat).at === 'head') play.moveHat(hat, { at: 'tile' }, 'pop', () => play.cue('fwump', fwump(kind, this.next())))
+      // Unless the child has already taken it somewhere else.
+      if (play.seen(hat).at === 'head' && placeOf(worldOf(this.saved), hat).at === 'tile') play.moveHat(hat, { at: 'tile' }, 'pop', () => play.cue('fwump', fwump(kind, this.next())))
     }))
   }
 
@@ -485,24 +493,31 @@ export class Game {
     this.note(bare ? 'bare-creature' : 'hatted-creature', action)
     this.pace = touched(this.pace, this.saved)
     const hat = this.saved.tile[this.saved.crew.find((one) => one.kind === who)!.hats[0] ?? 0]
+    // What it does, it does towards the other one, or towards the tile: each of the two faces the other, and comes as near as leaves a finger's width between them.
+    const mine = this.saved.crew.find((one) => one.kind === who)!, theirs = other ? this.saved.crew.find((one) => one.kind === other)! : null
+    const here = spotX(mine.spot), there = theirs ? spotX(theirs.spot) : tileX(this.saved.tile.length)
+    const widest = (one: { kind: CreatureKind; hats: number[] }): number => Math.max(BODY[one.kind].reach + HAND.radius, ...one.hats.map((worn) => HAT_HALF[this.saved.tile[worn]]))
+    const room = theirs ? (Math.abs(there - here) - widest(mine) - widest(theirs)) / 2 - 0.04 : Infinity
+    const act = (one: string, name: string): void => play.act(one, name, one === who ? there : here, room)
     if (bare && action === 'to-bare-head' && other) {
-      play.act(who, 'boings-and-pats'); play.act(other, 'boings-and-pats')
+      act(who, 'boings-and-pats'); act(other, 'boings-and-pats')
       play.cue('plop', plop(hat, this.next())); this.says(who, 'ask', 0.3); this.says(other, 'ask', 0.5)
     } else if (bare && action === 'to-hatted-head' && other) {
-      play.act(who, 'peeks-up-under'); play.act(other, 'lifts-it-like-a-lid')
+      act(who, 'peeks-up-under'); play.act(other, 'lifts-it-like-a-lid')
       play.cue('hum', hum(play.kindOf(who), this.next()), 0.15); play.speaks(who, 0.6); play.cue('pip', pip(hat, this.next()), 0.45); this.says(other, 'plain', 0.7)
     } else if (bare && action === 'to-tile') {
-      play.act(who, 'babbles-into-a-hole'); this.says(who, 'ask', 0.2); play.cue('hoot', hoot(this.next()), 0.6)
+      act(who, 'babbles-into-a-hole'); this.says(who, 'ask', 0.2); play.cue('hoot', hoot(this.next()), 0.6)
     } else if (bare) {
       play.act(who, 'twangs-back'); play.cue('twang', twang(this.next()))
     } else if (action === 'to-bare-head' && other) {
-      play.act(who, 'bows-and-tips-its-hat'); play.act(other, 'claps')
+      act(who, 'bows-and-tips-its-hat'); play.act(other, 'claps')
+      play.look(other, here, ROW_Z, 1)
       this.says(who, 'plain'); play.cue('clap', clap(this.next()), 0.4); play.cue('clap', clap(this.next()), 0.65)
     } else if (action === 'to-hatted-head' && other) {
-      play.act(who, 'knocks-hats'); play.act(other, 'knocks-hats')
+      act(who, 'knocks-hats'); act(other, 'knocks-hats')
       play.cue('tok', tok(this.next()), 0.3); this.says(who, 'plain', 0.4); this.says(other, 'plain', 0.6)
     } else if (action === 'to-tile') {
-      play.act(who, 'shakes-its-hat-out'); play.cue('flap', flap(this.next()), 0.4); this.says(who, 'ask', 0.9)
+      act(who, 'shakes-its-hat-out'); play.cue('flap', flap(this.next()), 0.4); this.says(who, 'ask', 0.9)
       // Nothing falls out, and it shrugs.
       play.after(ACTS['shakes-its-hat-out'].lasts + 0.06, () => { if (play.has(who) && !play.walking(who) && play.acting(who) === null) play.act(who, 'shrugs') })
     } else {

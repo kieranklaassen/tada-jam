@@ -8,8 +8,8 @@
 // and the others in the cells of grid.ts.
 
 export type Mods = {
-  /** Moved from its place, in mat units. */
-  dx: number; dy: number
+  /** Moved from its place, in mat units: across, up, and towards the child. */
+  dx: number; dy: number; dz: number
   /** Its height times this; its width gives way so the foam keeps its bulk. */
   squash: number
   /** Leaning to one side, and turned about its own upright, in radians. */
@@ -27,7 +27,7 @@ export type Mods = {
 }
 
 export function rest(m: Mods): Mods {
-  m.dx = 0; m.dy = 0; m.squash = 1; m.lean = 0; m.turn = 0; m.pat = 0; m.cross = 0; m.ears = 0
+  m.dx = 0; m.dy = 0; m.dz = 0; m.squash = 1; m.lean = 0; m.turn = 0; m.pat = 0; m.cross = 0; m.ears = 0
   m.gazeX = 0; m.gazeY = 0; m.looks = 0; m.hatLift = 0; m.hatTilt = 0; m.hatFwd = 0
   return m
 }
@@ -66,7 +66,8 @@ export const ACTS: Record<string, Act> = {
   'pops-it-back-up-with-a-belly-bounce': { lasts: 1.6, play: (u, m) => { m.hatFwd = forward(u); m.hatLift = -0.5 * down(u) * (u < 0.55 ? 1 : 0) * bump(u, 0.07, 0.55) + 1.1 * bump(u, 0.55, 0.9); m.squash = 1 - 0.16 * bump(u, 0.4, 0.56) + 0.12 * bump(u, 0.56, 0.75); m.looks = hold(u); m.gazeY = 1 } },
   'wobbles-once': { lasts: 1.1, play: (u, m) => { m.lean = 0.12 * swing(u, 1.5) * (1 - u); m.squash = 1 + 0.05 * swing(u, 3) * (1 - u) } },
   'tap-dances': { lasts: 1.5, play: (u, m) => { m.dy = 0.12 * hops(u, 12) * hold(u); m.lean = 0.12 * swing(u, 6) * hold(u); m.dx = 0.2 * swing(u, 1.5) * hold(u) } },
-  'runs-a-circle-under-it': { lasts: 1.9, play: (u, m, top) => { const under = down(u); m.hatLift = -(top - 0.5) * under; m.hatFwd = forward(u); m.dx = 0.5 * swing(u, 2) * under; m.dy = 0.08 * hops(u, 10) * under; m.hatTilt = 0.1 * swing(u, 2) * under } },
+  // Twice round a small circle on the mat, under the hat: across and to and fro at once.
+  'runs-a-circle-under-it': { lasts: 1.9, play: (u, m, top) => { const under = down(u); m.hatLift = -(top - 0.5) * under; m.hatFwd = forward(u); m.dx = 0.45 * swing(u, 2) * under; m.dz = 0.26 * Math.cos(u * TAU * 2) * under; m.dy = 0.08 * hops(u, 10) * under; m.hatTilt = 0.1 * swing(u, 2) * under } },
   'peeks-from-under': { lasts: 1.3, play: (u, m) => { m.hatFwd = forward(u); m.hatLift = -0.5 * down(u); m.hatTilt = -0.25 * bump(u, 0.45, 0.93); m.pat = bump(u, 0.5, 0.9) } },
 
   // --- What a creature does in a cell of the grid, or when its hats change ---
@@ -81,15 +82,16 @@ export const ACTS: Record<string, Act> = {
   'watches-it-go': { lasts: 1.4, play: (u, m) => { m.looks = hold(u); m.gazeY = -0.6; m.lean = 0.06 * bump(u) } },
   'ducks-under': { lasts: 0.8, play: (u, m) => { m.squash = 1 - 0.22 * bump(u, 0, 0.6) + 0.08 * bump(u, 0.6, 1); m.looks = hold(u); m.gazeY = 1 } },
   'waves-it-off': { lasts: 1.2, play: (u, m) => { m.pat = 0.45 * hold(u) * (0.6 + 0.4 * hops(u, 5)); m.lean = 0.08 * swing(u, 2.5) * hold(u); m.looks = hold(u); m.gazeY = -0.7 } },
-  'boings-and-pats': { lasts: 1.3, play: (u, m) => { m.squash = 1 - 0.18 * bump(u, 0, 0.25) + 0.12 * bump(u, 0.25, 0.55); m.dy = 0.3 * bump(u, 0.2, 0.6); m.pat = bump(u, 0.55, 1) } },
-  'peeks-up-under': { lasts: 1.3, play: (u, m) => { m.squash = 1 - 0.14 * hold(u, 0.2, 0.3); m.lean = 0.16 * hold(u, 0.2, 0.3); m.looks = hold(u); m.gazeY = 1; m.gazeX = 0.8 } },
+  // The acts a creature does to another, or to the tile, are written as towards the right; the theatre turns them to face whoever they are for, and holds them short of touching.
+  'boings-and-pats': { lasts: 1.3, play: (u, m) => { m.dx = 0.55 * bump(u, 0, 0.36); m.lean = -0.1 * bump(u, 0, 0.3); m.squash = 1 - 0.18 * bump(u, 0.1, 0.3) + 0.12 * bump(u, 0.3, 0.55); m.dy = 0.3 * bump(u, 0.25, 0.6); m.pat = bump(u, 0.55, 1) } },
+  'peeks-up-under': { lasts: 1.3, play: (u, m) => { m.dx = 0.4 * hold(u, 0.2, 0.3); m.squash = 1 - 0.14 * hold(u, 0.2, 0.3); m.lean = -0.16 * hold(u, 0.2, 0.3); m.looks = hold(u); m.gazeY = 1; m.gazeX = 0.8 } },
   'lifts-it-like-a-lid': { lasts: 1.3, play: (u, m) => { m.hatLift = 0.6 * hold(u, 0.25, 0.3); m.hatTilt = 0.3 * hold(u, 0.25, 0.3); m.pat = 0.6 * hold(u, 0.25, 0.3) } },
-  'babbles-into-a-hole': { lasts: 1.5, play: (u, m) => { m.squash = 1 - 0.2 * hold(u, 0.25, 0.25); m.lean = 0.05 * swing(u, 6) * hold(u); m.looks = hold(u); m.gazeY = -1 } },
+  'babbles-into-a-hole': { lasts: 1.5, play: (u, m) => { m.dx = 0.3 * hold(u, 0.25, 0.25); m.dz = 0.3 * hold(u, 0.25, 0.25); m.squash = 1 - 0.2 * hold(u, 0.25, 0.25); m.lean = -0.08 * hold(u, 0.25, 0.25) + 0.05 * swing(u, 6) * hold(u); m.looks = hold(u); m.gazeY = -1; m.gazeX = 0.5 } },
   'twangs-back': { lasts: 0.9, play: (u, m) => { m.lean = 0.3 * swing(u, 3) * (1 - u) ** 2; m.squash = 1 + 0.12 * swing(u, 3) * (1 - u) ** 2 } },
-  'bows-and-tips-its-hat': { lasts: 1.3, play: (u, m) => { m.squash = 1 - 0.12 * hold(u, 0.3, 0.3); m.hatLift = 0.45 * bump(u, 0.15, 0.85); m.hatTilt = -0.4 * bump(u, 0.15, 0.85); m.pat = 0.5 * bump(u, 0.1, 0.9) } },
+  'bows-and-tips-its-hat': { lasts: 1.3, play: (u, m) => { m.squash = 1 - 0.12 * hold(u, 0.3, 0.3); m.lean = -0.1 * hold(u, 0.3, 0.3); m.hatLift = 0.45 * bump(u, 0.15, 0.85); m.hatTilt = -0.4 * bump(u, 0.15, 0.85); m.pat = 0.5 * bump(u, 0.1, 0.9); m.looks = hold(u); m.gazeX = 0.8 } },
   claps: { lasts: 1.0, play: (u, m) => { m.dy = 0.16 * hops(u, 4) * hold(u); m.pat = 0.35 * hops(u, 4) } },
-  'knocks-hats': { lasts: 1.0, play: (u, m) => { m.lean = 0.2 * bump(u, 0, 0.4) - 0.1 * swing(u, 3) * bump(u, 0.4, 1); m.hatTilt = 0.15 * swing(u, 4) * bump(u, 0.35, 1) } },
-  'shakes-its-hat-out': { lasts: 1.6, play: (u, m) => { m.hatLift = 0.7 * hold(u, 0.2, 0.25); m.hatTilt = (-0.9 + 0.2 * swing(u, 6)) * hold(u, 0.2, 0.25); m.pat = 0.6 * hold(u, 0.2, 0.25); m.looks = hold(u); m.gazeY = -1 } },
+  'knocks-hats': { lasts: 1.0, play: (u, m) => { m.dx = 0.3 * bump(u, 0, 0.4); m.lean = -0.2 * bump(u, 0, 0.4) + 0.1 * swing(u, 3) * bump(u, 0.4, 1); m.squash = 1 + 0.05 * swing(u, 4) * bump(u, 0.4, 1) } },
+  'shakes-its-hat-out': { lasts: 1.6, play: (u, m) => { m.dz = 0.3 * hold(u, 0.2, 0.25); m.hatLift = 0.7 * hold(u, 0.2, 0.25); m.hatTilt = (-0.9 + 0.2 * swing(u, 6)) * hold(u, 0.2, 0.25); m.pat = 0.6 * hold(u, 0.2, 0.25); m.looks = hold(u); m.gazeY = -1 } },
   'twangs-holding-its-hat': { lasts: 1.0, play: (u, m) => { m.lean = 0.3 * swing(u, 3) * (1 - u) ** 2; m.pat = hold(u, 0.1, 0.3) } },
 
   // --- In the scenes ---

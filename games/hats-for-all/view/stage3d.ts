@@ -6,6 +6,7 @@ import { DIMPLE_SECONDS, MOST_CRUMBS, type ActorPose, type Play } from '../play'
 import { CREATURE_DEPTH, HAND, HAT_HALF, HAT_HEIGHT, SLAB, TILE_DEPTH } from '../sizes'
 import { BALLOON, balloonAt, BALL_RADIUS, BALL_ROLL, BRICK_HOP, BRICK_REST_Y, CLOUD_DRIFT, PROPS, PROP_AT, PROP_LEAN } from '../props'
 import { ARCH_X, ARCH_Z, LANE_Z, TILE_Z, tileX } from '../stage'
+import { countsAsDone } from '../input'
 import { tileWidth } from '../tile'
 import { CREATURE_COLOUR, EAR_DEPTH, HAT_COLOUR, MAT_BACK, PALETTE, buildArch, buildMat, buildPieces, buildTile, type Pieces } from './build'
 import { BALLOON_WAY, CLOUD_AT, TINT, buildBall, buildBrick, buildCloud, buildCrown, buildRoomPlanes, buildScenery } from './room'
@@ -396,7 +397,7 @@ export class FoamStage {
   }
 
   /** Where a dragged thing is let go: on a creature (or the hat on its head), on the tile, or on the floor. A drag counts when it gets near. */
-  letGoAt(x: number, y: number, play: Play, held: Target): LetGo {
+  letGoAt(x: number, y: number, play: Play, held: Target, from?: { x: number; y: number }): LetGo {
     const under = this.pick(x, y, play, held.type === 'hat' ? held.hat : -1)
     if (under.type === 'creature' && !(held.type === 'creature' && held.who === under.who)) return { on: 'creature', who: under.who }
     if (under.type === 'hat') {
@@ -405,6 +406,20 @@ export class FoamStage {
     }
     const floor = this.floorUnder(x, y)
     if (Math.abs(floor.z - play.tileZ) < TILE_DEPTH / 2 + 0.4 && Math.abs(floor.x - tileX(play.hatCount)) < tileWidth(play.hatCount) / 2 + 0.4) return { on: 'tile' }
+    // A drag counts when partly done: let go over the open floor at least half way from where it began to a creature, it is finished for the child, to the creature it had come nearest to.
+    if (from) {
+      let nearest: string | null = null, left = Infinity
+      const to = new THREE.Vector3()
+      for (const who of play.cast) {
+        if (held.type === 'creature' && held.who === who) continue
+        const at = this.whereIs({ type: 'creature', who }, play)
+        if (!at) continue
+        this.toScreen(at.x, at.y, at.z, to)
+        const still = Math.hypot(to.x - x, to.y - y)
+        if (countsAsDone(from, { x, y }, to) && still < left) { nearest = who; left = still }
+      }
+      if (nearest) return { on: 'creature', who: nearest }
+    }
     return { on: 'floor', ...floor }
   }
 

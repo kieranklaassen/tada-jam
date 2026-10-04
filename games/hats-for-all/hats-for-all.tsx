@@ -131,6 +131,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
         if (gesture.type === 'press') {
           // The top right corner is the grown-up's (overlay.ts): nothing of the game answers a touch there.
           if (gesture.at.x > width - CORNER && gesture.at.y < CORNER) { held = null; continue }
+          // A scene that is playing ends first, so the finger lands on the stage as the scene leaves it and not on something that is on its way out.
+          game.endScene()
           held = view.pick(gesture.at.x, gesture.at.y, game.play)
           from = gesture.at
           dragging = false
@@ -146,7 +148,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
           const point = view.handPoint(gesture.at.x, gesture.at.y)
           game.dragTo(point.x, point.y, point.z, (gesture.at.x - from.x) / PULL, (from.y - gesture.at.y) / PULL)
         } else if (gesture.type === 'dragEnd') {
-          if (dragging) game.letGo(view.letGoAt(gesture.at.x, gesture.at.y, game.play, held))
+          if (dragging) game.letGo(view.letGoAt(gesture.at.x, gesture.at.y, game.play, held, from))
           else game.tap()
           held = null
         }
@@ -260,6 +262,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       frame = 0
       clock.rest()
       putDown()
+      // And when it is looked at again nothing comes by itself, as when it is opened.
+      game?.rested()
       cadence.settle(performance.now())
     })
     attendRef.current = (attended) => attention.set(attended)

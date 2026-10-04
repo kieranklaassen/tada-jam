@@ -43,7 +43,7 @@ export class FoamView {
   }
 
   pick(x: number, y: number, play: Play): Target { return this.stage.pick(x, y, play) }
-  letGoAt(x: number, y: number, play: Play, held: Target): LetGo { return this.stage.letGoAt(x, y, play, held) }
+  letGoAt(x: number, y: number, play: Play, held: Target, from?: { x: number; y: number }): LetGo { return this.stage.letGoAt(x, y, play, held, from) }
   handPoint(x: number, y: number): { x: number; y: number; z: number } { return this.stage.handPoint(x, y) }
 
   dispose(): void {
