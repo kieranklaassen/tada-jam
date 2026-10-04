@@ -197,7 +197,7 @@ export class GameRun {
   }
 
   /** The finger lifts after a drag: the piece is let go, flung if it was moving fast; the roller rolls what it is over; a swing that crossed nothing whistles. */
-  lift(): void {
+  lift(t?: number): void {
     if (this.landed) {
       this.tap(this.landed)
       return
@@ -215,7 +215,9 @@ export class GameRun {
       const lastOne = trail[trail.length - 1]
       const first = trail.find((sample) => sample.t >= lastOne.t - SPEED_WINDOW) ?? lastOne
       const dt = lastOne.t - first.t
-      const v = dt > 0.001 ? { x: (lastOne.at.x - first.at.x) / dt, y: (lastOne.at.y - first.at.y) / dt } : { x: 0, y: 0 }
+      // A finger that has held still since then lets the piece go at rest, however fast the carry was before it stopped.
+      const rested = t !== undefined && t - lastOne.t > SPEED_WINDOW
+      const v = dt > 0.001 && !rested ? { x: (lastOne.at.x - first.at.x) / dt, y: (lastOne.at.y - first.at.y) / dt } : { x: 0, y: 0 }
       // Let go over a thing, the piece is given to that thing, however fast the hand was going: a child who hurries to the
       // tin has still reached the tin. Only a piece let go at speed over bare wood or the wall is thrown.
       const over = thingAt(this.game, at, held.ids).thing

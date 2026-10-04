@@ -66,6 +66,42 @@ describe('letting go over the tin', () => {
     expect(eaten(result.game.world).map((piece) => piece.id)).toEqual([made.left])
   })
 
+  it('lays a row as one laying: the lid comes down once, on all of it, when the last piece is in', () => {
+    /** A row of two pieces on the near lane, `first` and `second` points long, butted end to end; and the hold that takes both. */
+    const row = (first: number, second: number) => {
+      const made = cutAt(start, first)
+      const rest = pieceOf(made.game.world, made.right)!
+      const at = rest.place.on === 'board' ? rest.place.x : 0
+      const again = cutAt(made.game, at + second)
+      expect(again.left).toBe(made.right)
+      const butted = drop(again.game, hold(again.game, again.left, 0.5), { x: X0 + (first - 40) * PX, y: NEAR }).game
+      const held = hold(butted, made.left, 0.9)
+      expect(held.ids).toEqual([made.left, again.left])
+      return { game: butted, held, ids: held.ids }
+    }
+    // Two pieces that together are the order: each is laid, and the lid shuts with nothing said of the first being too short.
+    const exact = row(ORDERED - 300, 300)
+    const shut = drop(exact.game, exact.held, tinPoint)
+    expect(kinds(shut.events)).toEqual(['given', 'given', 'ending'])
+    expect(shut.game.finished).toBe(true)
+    // Together too long: one lid, bouncing on what sticks out; not the gap's lid for the first piece and then another.
+    const long = row(ORDERED - 300, 500)
+    const over = drop(long.game, long.held, tinPoint)
+    expect(kinds(over.events)).toEqual(['given', 'given', 'misfit'])
+    expect(over.events[2]).toMatchObject({ how: 'over', by: 200, voice: 'clang' })
+    // The first piece alone would fit, but it is not alone: the whole row lies in the tin, and it is too long.
+    const extra = row(ORDERED, 300)
+    const both = drop(extra.game, extra.held, tinPoint)
+    expect(kinds(both.events)).toEqual(['given', 'given', 'misfit'])
+    expect(both.game.finished).toBe(false)
+    expect(inTin(both.game.world, 0).map((piece) => piece.id)).toEqual(extra.ids)
+    // Together too short: one lid, on the gap.
+    const short = row(ORDERED - 600, 300)
+    const under = drop(short.game, short.held, tinPoint)
+    expect(kinds(under.events)).toEqual(['given', 'given', 'misfit'])
+    expect(under.events[2]).toMatchObject({ how: 'under', by: -300, voice: 'slide', gap: 300 })
+  })
+
   it('says how a misfit sits: sticking out past the jaw, or leaving a gap, by exactly so much', () => {
     const long = cutAt(start, ORDERED + 300)
     expect(drop(long.game, hold(long.game, long.left), tinPoint).events[1]).toMatchObject({ kind: 'misfit', how: 'over', by: 300, voice: 'clang' })

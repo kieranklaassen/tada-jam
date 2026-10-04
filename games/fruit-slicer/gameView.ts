@@ -466,7 +466,9 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
     if (game.window) drawn += ticket(ctx, atWindow, WINDOW.x + (atWindow.shares.length > 1 ? 306 : 330), TICKET_TOP, atWindow.who === 'boa' ? 0.66 : atWindow.shares.length > 1 ? 0.57 : 1.1, false, signNow)
     // Served, and the serve over: it holds its tin, shut, by its feet. One fed by hand has had it there from the first.
     if (game.finished && (!scenery.ending || scenery.ending.fed)) {
-      inked(ctx, rect(TIN_BY_FEET, SILL - 30, 64, 26), '#c9d6e6', 4, dots.of(ctx, BLUE, 0.3))
+      // While the twins pull a piece between them the tin spins about its own length, here by their feet as it does on the rail.
+      const turned = Math.abs(Math.cos(feast.spin)), tall = Math.max(4, 26 * turned)
+      inked(ctx, rect(TIN_BY_FEET, SILL - 17 - tall / 2, 64, tall), '#c9d6e6', 4, dots.of(ctx, BLUE, 0.3))
       drawn++
     }
   }

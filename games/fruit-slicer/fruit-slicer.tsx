@@ -123,7 +123,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
         if (gesture.type === 'press') run.press(toStage(gesture.at, by), timeMs / 1000)
         else if (gesture.type === 'dragMove') run.move(toStage(gesture.at, by), timeMs / 1000)
         else if (gesture.type === 'tap') run.tap(toStage(gesture.at, by))
-        else if (gesture.type === 'dragLift' || gesture.type === 'dragEnd') run.lift()
+        else if (gesture.type === 'dragLift' || gesture.type === 'dragEnd') run.lift(timeMs / 1000)
         else if (gesture.type === 'pressEnd') run.end()
       }
       flush()

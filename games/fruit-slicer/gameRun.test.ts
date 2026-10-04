@@ -158,6 +158,31 @@ describe('carrying', () => {
     expect(ids(run)).toContain('catch')
   })
 
+  it('flings only a piece that is let go at speed: one carried fast, then held still and let go, is set down where it is', () => {
+    const carry = () => {
+      const { run } = withCut(-400)
+      const id = onLane(run.game.world, 0)[0].id
+      run.press({ x: X0 + 30, y: NEAR }, 0)
+      run.move({ x: 300, y: BOARD.y - 30 }, 0.1)
+      // The last stretch of the carry is fast, along the bare strip above the board.
+      run.move({ x: 380, y: BOARD.y - 30 }, 0.5)
+      run.move({ x: 480, y: BOARD.y - 30 }, 0.52)
+      run.takeSounds()
+      return { run, id }
+    }
+    const x = (run: GameRun, id: number) => { const piece = run.game.world.pieces.find((one) => one.id === id)!; return piece.place.on === 'board' ? piece.place.x : -1 }
+    // Let go as the finger is moving, it is thrown on from there.
+    const thrown = carry()
+    thrown.run.lift(0.53)
+    // Held still for two seconds and then let go, it is put down under the finger.
+    const rested = carry()
+    rested.run.lift(2.52)
+    expect(x(rested.run, rested.id)).toBeGreaterThanOrEqual(0)
+    expect(x(thrown.run, thrown.id)).not.toBe(x(rested.run, rested.id))
+    expect(X0 + x(rested.run, rested.id) * PX).toBeLessThan(480)
+    expect(X0 + x(thrown.run, thrown.id) * PX).toBeGreaterThan(480)
+  })
+
   it('gives a piece to the thing it is let go over, however fast the hand was going: a child who hurries to the tin has reached the tin', () => {
     const { run } = withCut(-400)
     run.press({ x: X0 + 30, y: NEAR }, 0)

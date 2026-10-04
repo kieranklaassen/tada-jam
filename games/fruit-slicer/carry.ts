@@ -219,8 +219,9 @@ function intoTin(game: Game, held: Held, part: number): { game: Game; events: Ga
   // The hold comes with its boxes where the hand let go.
   const pieces = gone(game.world, held.ids, tin).map(({ piece }, index) => ({ piece, from: held.boxes[index] }))
   const back: number[] = []
-  for (const { piece, from } of pieces) {
-    const result = give(now, piece.id, part)
+  // A row is one laying: the lid comes down once, on all of it, when the last piece is in.
+  for (const [index, { piece, from }] of pieces.entries()) {
+    const result = give(now, piece.id, part, index < pieces.length - 1)
     if (!result.given) {
       back.push(piece.id)
       continue
@@ -235,18 +236,17 @@ function intoTin(game: Game, held: Held, part: number): { game: Game; events: Ga
       for (const stray of gone(now.world, given.strays, tin)) events.push({ kind: 'fell', piece: stray.piece, from: { x: X0 + 4, y: TIN.bodyY + (TIN.bodyH - TIN.pieceH) / 2, w: stray.from.w, h: TIN.pieceH }, voice: 'munch' })
       // A piece of another fruit: the customer will not have it in its tin. It flinches, and the piece is flicked out to the dog.
       if (given.strays.length > 0) events.push({ kind: 'flinch', whom: 'window', voice: 'babble' })
-      const worst = given.result
       if (given.ending) events.push({ kind: 'ending', ending: given.ending, how: 'shut' })
-      else if (worst.kind === 'over' || worst.kind === 'under') {
-        // The piece rattles only in a gap of its own compartment: in the twins' tin, a piece that fills its side lies still while the other side is short.
-        const own = worst.parts[Math.max(0, Math.min(worst.parts.length - 1, Math.round(part)))]
-        events.push({ kind: 'misfit', id: piece.id, how: worst.kind, by: worst.by, length: piece.length, voice: worst.kind === 'over' ? 'clang' : 'slide', gap: own && own.fit.kind === 'under' ? -own.fit.by : 0 })
-      }
     }
     now = result.game
   }
-  // A piece that left the tin on the way (one that slid off the rail's end) may leave what is in the tin fitting: the lid then shuts by itself.
-  if (back.length === 0) return now.finished ? { game: now, events } : shutAfter(now, events, game, held)
+  if (back.length === 0) {
+    if (now.finished) return { game: now, events }
+    // The lid comes down once on what now lies in the tin: it shuts if that fits (a last piece that slid off the rail's end may leave
+    // it fitting), and otherwise bounces on what sticks out or finds the gap, where a piece rattles only in a gap of its own compartment.
+    const told = shutIfFit(now)
+    return { game: told.game, events: [...events, ...told.events] }
+  }
   // Served already, or nobody there to serve: the tin takes nothing, and the pieces come back to the near lane.
   const first = pieces.find(({ piece }) => piece.id === back[0])!
   const set = setRowOnBoard(now.world, back, 0, (first.from.x - X0) / PX)

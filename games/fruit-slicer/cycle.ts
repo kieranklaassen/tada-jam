@@ -177,9 +177,10 @@ export type Given = {
 /**
  * A piece is laid in a compartment of the tin at the window. The first piece opens the tin. A piece of
  * another fruit is picked out. When every compartment is within the give the lid shuts by itself, and that
- * is the end of the cycle; otherwise everything stays as it lies.
+ * is the end of the cycle; otherwise everything stays as it lies. A row is laid piece after piece as one
+ * laying: while `more` of it is to come the lid does not move, and the last piece settles it.
  */
-export function give(game: Game, id: number, part: number): { game: Game; given: Given | null } {
+export function give(game: Game, id: number, part: number, more = false): { game: Game; given: Given | null } {
   const customer = game.window, piece = pieceOf(game.world, id)
   if (!customer || game.finished || !piece) return { game, given: null }
   const compartment = Math.max(0, Math.min(tinParts(customer).length - 1, Math.round(part)))
@@ -210,7 +211,8 @@ export function give(game: Game, id: number, part: number): { game: Game; given:
   const firstShowing = fresh.length > 0 ? fresh[fresh.length - 1] : null
   const next: Game = { ...game, world, shown: fresh.length > 0 ? [...game.shown, ...fresh] : game.shown }
   const result = served(world, customer)
-  if (result.kind !== 'fit') return { game: next, given: { opened, firstShowing, strays, slidOff: false, fell: [], result, ending: null } }
+  // With `more` of the same row still to come from the hand, nothing is settled yet: the lid waits for the whole row.
+  if (result.kind !== 'fit' || more) return { game: next, given: { opened, firstShowing, strays, slidOff: false, fell: [], result, ending: null } }
   const ended = end(next, result, judge(result), tinIds(next))
   return { game: ended.game, given: { opened, firstShowing, strays, slidOff: false, fell: [], result, ending: ended.ending } }
 }
