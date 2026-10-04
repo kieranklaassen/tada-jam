@@ -22,11 +22,13 @@ export type Pillow = {
   detail?: readonly [number, number]
   /** How far it is lost in the haze of distance, 0 to 1: a part of the setting that stands far off, painted once. */
   haze?: number
+  /** A colour for each welded panel round the form, in turn, where it is not one colour all over: a beach ball. No friend and no balloon has any. */
+  stripes?: readonly string[]
 }
 
 const matrix = new Matrix4(), quaternion = new Quaternion(), euler = new Euler(), colour = new Color()
 
-function finish(geometry: BufferGeometry, spec: { at: Vec3; turn?: Vec3; colour: string; panels?: number; haze?: number }, size: Vec3): BufferGeometry {
+function finish(geometry: BufferGeometry, spec: { at: Vec3; turn?: Vec3; colour: string; panels?: number; haze?: number; stripes?: readonly string[] }, size: Vec3): BufferGeometry {
   const turn = spec.turn ?? [0, 0, 0]
   quaternion.setFromEuler(euler.set(turn[0], turn[1], turn[2]))
   matrix.compose(new Vector3(...spec.at), quaternion, new Vector3(...size))
@@ -35,7 +37,10 @@ function finish(geometry: BufferGeometry, spec: { at: Vec3; turn?: Vec3; colour:
   const count = geometry.getAttribute('position').count
   const colours = new Float32Array(count * 3), panels = new Float32Array(count), haze = new Float32Array(count)
   colour.set(spec.colour)
+  const uv = spec.stripes ? geometry.getAttribute('uv') : null
   for (let i = 0; i < count; i++) {
+    // A striped form takes each panel's colour from how far round it the point is. The seams fall between the panels (vinyl.ts).
+    if (uv && spec.stripes) colour.set(spec.stripes[Math.min(spec.stripes.length - 1, Math.floor(((uv.getX(i) + 0.5 / spec.stripes.length) % 1) * spec.stripes.length))])
     colours[i * 3] = colour.r; colours[i * 3 + 1] = colour.g; colours[i * 3 + 2] = colour.b
     panels[i] = spec.panels ?? 0
     haze[i] = spec.haze ?? 0

@@ -26,6 +26,8 @@ export const PALETTE = {
   cloud: '#ffffff',
   /** Printed eyes. */
   ink: '#22203a',
+  /** What is printed on the whale and the keeper, who live in the setting: an ink softer than the friends', so their faces sit below the friends' in contrast. */
+  softInk: '#6f7aa6',
   /** Valves and the shine in an eye. */
   valve: '#ffffff',
   string: '#fffaf0',

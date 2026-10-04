@@ -7,7 +7,8 @@ import type { Vec3 } from './shapes'
 // (where its parts sit on whatever carries them) and a state (what it is doing
 // now), and `faceBits` turns the two into the pillows of this frame, which the
 // stage draws as one batch for every face on screen. Nothing here is a sign:
-// a brow is a short bar that never crosses anything, and a mouth is a curve.
+// a brow is a short bar that never crosses anything, a mouth is a curve, and
+// a shut eye is an arc: no face ever shows two level bars side by side.
 
 export type FacePlan = {
   /** The left eye as the child sees it; the other is its mirror in x. Its middle, in the space of whatever carries the eyes, and its half-height. */
@@ -22,6 +23,12 @@ export type FacePlan = {
   ink: string
   /** Whether the eyes have whites. A face printed on something white has none. */
   whites: boolean
+  /**
+   * A mouth that is a part of the toy (a beak, a muzzle) has no printed line: only its two corners are printed,
+   * `wide` apart and each `long`, where it meets the cheeks, and they turn up and down as a printed mouth does.
+   * `gape` is the dark of it, seen when it opens, for one that has no jaw to drop.
+   */
+  corners?: { at: Vec3; wide: number; long: number; gape: { at: Vec3; wide: number; tall: number } | null }
 }
 
 export type FaceState = {
@@ -44,6 +51,9 @@ export function restFace(): FaceState {
   return { lookX: 0, lookY: 0, blink: 0, brow: 0, browLift: 0, smile: 0.5, open: 0, wide: 1 }
 }
 
+/** How far the two ends of a shut eye turn up. */
+export const SHUT_TURN = 0.62
+
 /** One small pillow of a face: its middle, its half-sizes, its turn about the line of sight, and its colour. */
 export type Bit = (x: number, y: number, z: number, wide: number, tall: number, deep: number, turn: number, colour: string) => void
 
@@ -55,8 +65,11 @@ export function eyeBits(plan: FacePlan, state: FaceState, bit: Bit): void {
   for (const side of [1, -1]) {
     const x = ex * side
     if (open < 0.25) {
-      // Shut: a short dark line where the eye is.
-      bit(x, ey - s * 0.1, ez + s * 0.2, s * 0.8, s * 0.11, s * 0.2, side * -0.12, plan.ink)
+      // Shut: an arc where the eye is, low in the middle and up at both ends, as a lid lies on a cheek. It is three
+      // short pieces, the outer two turned up, and never one straight dash.
+      const low = ey - s * 0.22, z = ez + s * 0.2
+      bit(x, low, z, s * 0.34, s * 0.11, s * 0.2, 0, plan.ink)
+      for (const end of [1, -1]) bit(x + end * s * 0.5, low + s * 0.15, z, s * 0.34, s * 0.11, s * 0.2, end * SHUT_TURN, plan.ink)
       continue
     }
     if (plan.whites) bit(x, ey, ez, s * 0.92, s * open, s * 0.42, 0, PALETTE.valve)
@@ -66,18 +79,28 @@ export function eyeBits(plan: FacePlan, state: FaceState, bit: Bit): void {
     bit(px - s * 0.18, py + s * 0.22 * open, ez + s * 0.5, s * 0.17, s * 0.17 * open, s * 0.1, 0, PALETTE.valve)
   }
   if (!plan.brows) return
+  // Over shut eyes a brow is never level: it goes the worried way with them, unless it is cross.
+  const brow = open < 0.25 && state.brow < 0.3 ? Math.min(state.brow, -0.6) : state.brow
   for (const side of [1, -1]) {
     // Worried, the inner end of a brow goes up; cross, it comes down.
-    const turn = side * Math.max(-1, Math.min(1, state.brow)) * 0.36
+    const turn = side * Math.max(-1, Math.min(1, brow)) * 0.36
     bit(ex * side * 1.04, ey + s * (1.46 + state.browLift * 0.4), ez + s * 0.22, s * 0.7, s * 0.12, s * 0.14, turn, plan.ink)
   }
 }
 
 /** The mouth of a face, in the space of whatever carries it. A face with no mouth of this kind draws none. */
 export function mouthBits(plan: FacePlan, state: FaceState, bit: Bit): void {
+  const smile = Math.max(-1, Math.min(1, state.smile)), open = Math.max(0, Math.min(1, state.open))
+  if (plan.corners) {
+    // The corners of a beak or a muzzle: each a short piece that starts where the mouth ends and turns up or down.
+    const { at: [cx, cy, cz], wide, long, gape } = plan.corners
+    const way = smile >= -0.15 ? 1 : -1, turned = way * (0.3 + 0.6 * Math.abs(smile))
+    for (const side of [1, -1]) bit(cx + side * (wide / 2 + Math.cos(turned) * long * 0.8), cy + Math.sin(turned) * long * 0.8, cz, long, long * 0.34, long * 0.5, side * turned, plan.ink)
+    if (gape && open > 0.05) bit(gape.at[0], gape.at[1], gape.at[2], gape.wide * (0.7 + 0.3 * open), gape.tall * open, gape.tall * 0.5, 0, plan.ink)
+    return
+  }
   if (!plan.mouth) return
   const [mx, my, mz] = plan.mouth, w = plan.mouthWide
-  const smile = Math.max(-1, Math.min(1, state.smile)), open = Math.max(0, Math.min(1, state.open))
   // Two halves that meet in the middle: each turned up at its outer end for a smile, down for the other thing. It
   // is never one straight bar: at its most level it still turns up a little, as a mouth does and a sign does not.
   const up = smile >= -0.15 ? 1 : -1, turn = up * (0.14 + 0.36 * Math.abs(smile)), rise = Math.abs(Math.sin(turn)) * w * 0.25 * up

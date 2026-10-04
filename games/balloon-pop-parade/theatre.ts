@@ -10,7 +10,7 @@ import type { VoiceId } from './voices'
 import { callNext, popHeld, sendBunch } from './play'
 import { PARADE_LENGTH, type Marched, type Save } from './save'
 import { Scene, sceneLength, type Beat } from './scene'
-import { BALL, HUT, KEEPER, POOL, type ToyName } from './setting'
+import { BALL, HUT, KEEPER, POOL, WHALE_SCALE, type ToyName } from './setting'
 import { markShown, showingAtStart, type Showing } from './showings'
 import type { Bunch, Given, Troop } from './world'
 
@@ -389,8 +389,8 @@ export class Theatre {
     }
     for (let b = 0; b < this.loose.length; b++) if (Math.hypot(x - this.loose[b].x, (y - this.loose[b].y) / 1.12) < BALLOON * 1.2 * view.balloon) return { on: 'loose', balloon: b }
     // The toys that live in the setting answer too: the whale in its pool and the ball, in front of everything on the hill.
-    const whale = seenAt(POOL.x, groundAt(POOL.x, POOL.z) + 0.7, POOL.z, view, this.seen)
-    if (Math.abs(x - whale.x) < 0.95 * whale.scale && Math.abs(y - whale.y) < 0.72 * whale.scale) return { on: 'whale' }
+    const whale = seenAt(POOL.x, groundAt(POOL.x, POOL.z) + 0.2 + 0.62 * WHALE_SCALE, POOL.z, view, this.seen)
+    if (Math.abs(x - whale.x) < 0.95 * WHALE_SCALE * whale.scale && Math.abs(y - whale.y) < 0.74 * WHALE_SCALE * whale.scale) return { on: 'whale' }
     const ball = seenAt(BALL.x + this.ball.x, groundAt(BALL.x + this.ball.x, BALL.z) + this.ball.y + BALL.radius, BALL.z, view, this.seen)
     if (Math.hypot(x - ball.x, y - ball.y) < BALL.radius * 1.25 * ball.scale) return { on: 'ball' }
     // The troop that waits is touched as one thing: its whole tower, from the feet of the lowest to the top of the highest.
@@ -654,7 +654,7 @@ export class Theatre {
     face.smile = 0.8
     face.open = spouting * 0.8
     face.wide = 1
-    painter.prop('whale', POOL.x, whaleY, POOL.z, 0.95, -0.5 + Math.sin(time * 0.5) * 0.08, Math.sin(time * 1.7 + 1) * 0.04, 1 - spouting * 0.12 + Math.sin(time * 1.7) * 0.02, face)
+    painter.prop('whale', POOL.x, whaleY, POOL.z, WHALE_SCALE, -0.5 + Math.sin(time * 0.5) * 0.08, Math.sin(time * 1.7 + 1) * 0.04, 1 - spouting * 0.12 + Math.sin(time * 1.7) * 0.02, face)
     // The keeper stands by its hut and turns its head after the parade; it hops when the far hill is touched.
     const hop = hump(time - this.keeper.hopAt, 0, FAR_JUMP * 1.2)
     face.lookX = Math.sin(time * 0.35) * 0.8
@@ -662,7 +662,7 @@ export class Theatre {
     face.blink = blinkOf(time, 2.3)
     face.open = 0
     face.wide = 1 + hop * 0.4
-    painter.prop('keeper', KEEPER.x, farGroundAt(KEEPER.x, KEEPER.z) + hop * 1.3, KEEPER.z, 1, 0.25 + Math.sin(time * 0.35) * 0.3, Math.sin(time * 2.1) * 0.03, 1 + hop * 0.14 + Math.sin(time * 2.1) * 0.02)
+    painter.prop('keeper', KEEPER.x, farGroundAt(KEEPER.x, KEEPER.z) + hop * 1.3, KEEPER.z, 1, 0.25 + Math.sin(time * 0.35) * 0.3, Math.sin(time * 2.1) * 0.03, 1 + hop * 0.14 + Math.sin(time * 2.1) * 0.02, face)
     // The ball lies where it rolled back to, and squashes as it lands.
     const ball = this.ball, flat = ball.y <= 0.001 ? 1 - Math.min(0.25, Math.abs(ball.vy) * 0.03) : 1 + Math.min(0.12, Math.abs(ball.vy) * 0.012)
     painter.prop('ball', BALL.x + ball.x, groundAt(BALL.x + ball.x, BALL.z) - 0.04 + ball.y + BALL.radius * flat, BALL.z, 1, 0, ball.roll, flat)
@@ -1076,9 +1076,9 @@ export class Theatre {
     for (const place of this.places) place.hopSpeed += 4.2
     for (let t = 0; t < this.hopAt.length; t++) this.hopAt[t] = this.time + 0.06 + t * 0.05
     this.keeper.hopAt = this.time + 0.1
-    this.spout(this.lastView)
+    this.spout(this.lastView, true)
     this.towerHopAt = this.time + 0.08
-    if (this.ball.y <= 0.001) this.ball.vy = 5.5
+    if (this.ball.y <= 0.001) this.ball.vy = 7
   }
 
   /**
@@ -1221,14 +1221,15 @@ export class Theatre {
   }
 
   /** The whale blows: a rush of air, and drops thrown up out of its pool that patter down again. */
-  private spout(view: View): void {
-    if (this.time - this.whale.spoutAt < 0.25) return
+  private spout(view: View, big = false): void {
+    // Every touch on it is answered: one that comes while it is still blowing makes it blow again, from now.
     this.whale.spoutAt = this.time
-    this.sound('spout', 0.95 + this.random() * 0.2)
+    this.sound('spout', (big ? 0.85 : 0.95) + this.random() * 0.2, big ? 1 : 0.9)
     this.sound('patter', 1.1, 0.6, 0.45)
-    const at = seenAt(POOL.x, groundAt(POOL.x, POOL.z) + 1.45, POOL.z, view, this.seen)
-    if (this.drops.length > 14) this.drops.splice(0, this.drops.length - 14)
-    for (let i = 0; i < 7; i++) this.drops.push({ x: at.x + (this.random() - 0.5) * 0.2, y: at.y, vx: (i / 6 - 0.5) * 1.6, vy: 4.2 + this.random() * 1.6, life: 0.9 + this.random() * 0.2 })
+    const at = seenAt(POOL.x, groundAt(POOL.x, POOL.z) + 1.2, POOL.z, view, this.seen), drops = big ? 11 : 7
+    if (this.drops.length > 22 - drops) this.drops.splice(0, this.drops.length - (22 - drops))
+    // As the troop lands from its leap it blows higher and wider than at a touch.
+    for (let i = 0; i < drops; i++) this.drops.push({ x: at.x + (this.random() - 0.5) * 0.2, y: at.y, vx: (i / (drops - 1) - 0.5) * (big ? 2.6 : 1.6), vy: (big ? 5.6 : 4.2) + this.random() * 1.6, life: 0.9 + this.random() * 0.2 })
   }
 
   /** A cloud is squeezed: it wakes with a start, squeaks, squashes, and sheds a few drops. */

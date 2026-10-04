@@ -27,10 +27,49 @@ describe('a face', () => {
     }
   })
 
-  it('shuts its eyes to a short line each, with no white and no shine', () => {
+  it('shuts each eye to an arc, low in the middle and up at both ends, with no white and no shine: never a straight dash', () => {
     const bits = eyes({ ...restFace(), blink: 1 }, { ...PLAN, brows: false })
-    expect(bits).toHaveLength(2)
-    for (const bit of bits) { expect(bit.colour).toBe(PALETTE.ink); expect(bit.tall).toBeLessThan(bit.wide * 0.2) }
+    expect(bits).toHaveLength(6)
+    for (const bit of bits) expect(bit.colour).toBe(PALETTE.ink)
+    for (const side of [1, -1]) {
+      const [middle, outer, inner] = bits.filter((bit) => Math.sign(bit.x) === side || bit.x === 0).sort((a, b) => Math.abs(a.turn) - Math.abs(b.turn))
+      // The two ends are turned up, each away from the middle, and stand higher than it.
+      const ends = [outer, inner].sort((a, b) => a.x - b.x)
+      expect(ends[0].turn).toBeLessThan(-0.4)
+      expect(ends[1].turn).toBeGreaterThan(0.4)
+      for (const end of ends) expect(end.y).toBeGreaterThan(middle.y)
+      // And the three pieces join: each end starts inside the middle piece.
+      for (const end of ends) expect(Math.abs(end.x - middle.x) - end.wide * Math.cos(end.turn)).toBeLessThan(middle.wide)
+    }
+  })
+
+  it('never leaves a brow level over a shut eye: it goes the worried way, mirrored, unless it is cross', () => {
+    for (const brow of [-1, -0.2, 0, 0.2]) {
+      const brows = eyes({ ...restFace(), blink: 1, brow }).slice(-2)
+      expect(Math.abs(brows[0].turn), `${brow}`).toBeGreaterThan(0.2)
+      expect(brows[0].turn).toBeCloseTo(-brows[1].turn, 9)
+      expect(Math.sign(brows[0].turn)).toBe(-1)
+    }
+    expect(eyes({ ...restFace(), blink: 1, brow: 1 }).slice(-2)[0].turn).toBeGreaterThan(0.3)
+  })
+
+  it('prints only the two corners of a mouth that is a beak or a muzzle, which turn up and down, and the dark of it when it opens', () => {
+    const plan: FacePlan = { ...PLAN, mouth: null, corners: { at: [0, 0.3, 0.5], wide: 0.6, long: 0.08, gape: { at: [0, 0.3, 0.8], wide: 0.17, tall: 0.08 } } }
+    for (const smiling of [-1, -0.4, 0, 0.5, 1]) {
+      const corners = mouth({ ...restFace(), smile: smiling }, plan)
+      expect(corners).toHaveLength(2)
+      expect(corners[0].x).toBeCloseTo(-corners[1].x, 9)
+      expect(corners[0].turn).toBeCloseTo(-corners[1].turn, 9)
+      // Each starts where the mouth ends and goes outwards, up for a smile and down for the other thing; never level.
+      expect(Math.abs(corners[0].x) - corners[0].wide * Math.cos(corners[0].turn)).toBeGreaterThan(0.3 - 0.03)
+      expect(Math.abs(corners[0].turn)).toBeGreaterThan(0.25)
+      expect(Math.sign(corners[0].y - 0.3)).toBe(smiling >= -0.15 ? 1 : -1)
+    }
+    const open = mouth({ ...restFace(), open: 1 }, plan)
+    expect(open).toHaveLength(3)
+    expect(open[2].tall).toBeGreaterThan(open[0].tall)
+    // One that has a jaw to drop shows no printed dark.
+    expect(mouth({ ...restFace(), open: 1 }, { ...plan, corners: { ...plan.corners!, gape: null } })).toHaveLength(2)
   })
 
   it('turns its brows the two ways, mirrored, and keeps each clear of its eye: a brow is a bar that crosses nothing', () => {

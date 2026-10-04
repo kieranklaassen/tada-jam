@@ -149,6 +149,9 @@ export function marcherGeometry(kind: KindName, holds = true): BufferGeometry {
   return whole
 }
 
+/** How far a jaw drops, in radians, when the face opens its mouth wide. */
+export const JAW_OPENS = 0.3
+
 /** Puts a friend in a pose. The crab's funniest part is its eye stalks, which stretch upwards; the others puff all round. */
 export function applyPose(rig: FriendRig, pose: Pose): void {
   rig.root.position.set(pose.x, pose.y, pose.z)
@@ -163,7 +166,8 @@ export function applyPose(rig: FriendRig, pose: Pose): void {
   rig.armR.rotation.set(-pose.armRForward, -forwardOf(right), right)
   rig.extra.rotation.set(-pose.flick, pose.wag, 0)
   // The jaw hinges at the back of the mouth and drops at the front.
-  if (rig.jaw) rig.jaw.rotation.x = pose.jaw
+  // It drops as far as the motion says (a yawn), and a little whenever the face opens its mouth: a start, a laugh.
+  if (rig.jaw) rig.jaw.rotation.x = Math.max(pose.jaw, pose.mouth * JAW_OPENS)
   if (rig.plan.extraOnHead) rig.extra.scale.set(1, pose.puff, 1)
   else rig.extra.scale.setScalar(pose.puff)
   rig.material.uniforms.uGlow.value = pose.glow

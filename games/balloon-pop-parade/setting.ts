@@ -55,19 +55,30 @@ function tree(on: Mound, x: number, z: number, tall: number, colour: string, haz
   ]
 }
 
-/** A palm: a trunk of ringed pillows that leans a little, and a crown of long leaves with two nuts under it. */
+/**
+ * A palm: a trunk of ringed pillows that leans a little, and a crown. The crown is a round bud with five leaves
+ * round it, each leaf two pillows that bend: out from the bud and then down. The leaves start at the bud's skin,
+ * at uneven angles and lengths, so they are leaves hanging from a bud and never straight bars through one point.
+ */
 function palm(on: Mound, x: number, z: number, tall: number, lean: number, haze: number): Pillow[] {
   const foot = topOf(on, x, z) - 0.25, parts: Pillow[] = [], rings = 5, k = tall / 4.6
   for (let i = 0; i < rings; i++) {
     const u = i / (rings - 1)
     parts.push({ at: [x + lean * u * u * tall * 0.3, foot + (0.4 + u * 0.82 * 4.6) * k, z], size: [(0.36 - u * 0.1) * k, 0.56 * k, (0.36 - u * 0.1) * k], turn: [0, 0, -lean * u * 0.5], colour: C.sand, haze, detail: SMALL })
   }
-  const cx = x + lean * tall * 0.3, cy = foot + 4.5 * k
-  for (const angle of [-0.5, 0.05, 0.6, Math.PI - 0.6, Math.PI - 0.05, Math.PI + 0.5]) {
-    parts.push({ at: [cx + Math.cos(angle) * 1.25 * k, cy + Math.sin(angle) * 1.25 * k - Math.abs(Math.cos(angle)) * 0.12 * k, z], size: [1.35 * k, 0.24 * k, 0.4 * k], turn: [0, 0, angle], colour: C.leaf, haze, detail: SMALL })
+  const cx = x + lean * tall * 0.3, cy = foot + 4.55 * k
+  parts.push({ at: [cx, cy, z], size: [0.42 * k, 0.36 * k, 0.4 * k], colour: C.leaf, haze, detail: SMALL })
+  // Each leaf: which way it leaves the bud, how long its first half is, and how far its second half droops.
+  for (const [angle, long, droop] of [[0.3, 0.95, 0.75], [1.1, 0.8, 0.9], [1.8, 0.7, -0.85], [2.55, 0.9, -0.8], [3.65, 0.75, -0.6]] as const) {
+    const c = Math.cos(angle), sn = Math.sin(angle), from = 0.34 * k, half = long * k * 0.5
+    const midX = cx + c * (from + half), midY = cy + sn * (from + half)
+    parts.push({ at: [midX, midY, z], size: [half * 1.08, 0.2 * k, 0.36 * k], turn: [0, 0, angle], colour: C.leaf, haze, detail: SMALL })
+    // The second half hangs from the end of the first, turned towards the ground.
+    const endX = cx + c * (from + half * 2), endY = cy + sn * (from + half * 2), bent = angle - droop, half2 = long * k * 0.42
+    parts.push({ at: [endX + Math.cos(bent) * half2 * 0.85, endY + Math.sin(bent) * half2 * 0.85, z], size: [half2, 0.17 * k, 0.32 * k], turn: [0, 0, bent], colour: C.leaf, haze, detail: SMALL })
   }
-  parts.push({ at: [cx - 0.24 * k, cy - 0.34 * k, z + 0.2 * k], size: [0.2 * k, 0.2 * k, 0.2 * k], colour: C.coral, haze, detail: TINY })
-  parts.push({ at: [cx + 0.2 * k, cy - 0.4 * k, z + 0.2 * k], size: [0.2 * k, 0.2 * k, 0.2 * k], colour: C.coral, haze, detail: TINY })
+  parts.push({ at: [cx - 0.26 * k, cy - 0.42 * k, z + 0.2 * k], size: [0.2 * k, 0.2 * k, 0.2 * k], colour: C.coral, haze, detail: TINY })
+  parts.push({ at: [cx + 0.22 * k, cy - 0.46 * k, z + 0.2 * k], size: [0.2 * k, 0.2 * k, 0.2 * k], colour: C.coral, haze, detail: TINY })
   return parts
 }
 
@@ -82,10 +93,13 @@ function flower(x: number, z: number, size: number): Pillow[] {
   return parts
 }
 
+/** How large the whale is drawn: it lives in the setting, so it is smaller than any friend in front. */
+export const WHALE_SCALE = 0.78
+
 /** Where the paddling pool is, on the air bed in front and to the right, and how wide. */
 export const POOL = { x: 5.15, z: 3.3, radius: 1.35 } as const
 /** Where the beach ball rests, in front and to the left, and its radius. */
-export const BALL = { x: -4.9, z: 3.8, radius: 0.52 } as const
+export const BALL = { x: -4.9, z: 3.8, radius: 0.6 } as const
 /** Where the hut stands on the far hill, inside the ring the parade walks, and where its keeper stands in front of it. */
 export const HUT = { x: FAR_HILL.x + 0.3, z: FAR_HILL.z + PARADE_RING.forward - 0.6 } as const
 export const KEEPER = { x: FAR_HILL.x - 0.9, z: FAR_HILL.z + PARADE_RING.forward + 0.9 } as const
@@ -165,9 +179,11 @@ export const WHALE: Toy = {
     { at: [-0.26, 1.34, -0.9], size: [0.3, 0.12, 0.2], turn: [0, 0, -0.4], colour: C.whale, detail: SMALL },
     { at: [0.26, 1.34, -0.9], size: [0.3, 0.12, 0.2], turn: [0, 0, 0.4], colour: C.whale, detail: SMALL },
   ],
-  face: { eye: [0.36, 0.84, 0.6], eyeSize: 0.13, brows: false, mouth: [0, 0.52, 0.78], mouthWide: 0.5, ink: PALETTE.ink, whites: true },
+  // Its face is printed in a soft ink, and the whole of it is a little hazed: it sits below the friends in contrast,
+  // and never draws the eye from the one who wants a balloon.
+  face: { eye: [0.36, 0.84, 0.6], eyeSize: 0.11, brows: false, mouth: [0, 0.52, 0.78], mouthWide: 0.44, ink: PALETTE.softInk, whites: true },
   tall: 1.3,
-  haze: 0,
+  haze: 0.2,
 }
 
 /** The keeper of the far hill: a round bird with a little beak, two stub wings and a tuft. */
@@ -181,14 +197,28 @@ export const KEEPER_TOY: Toy = {
     { at: [-0.24, 0.05, 0.14], size: [0.18, 0.07, 0.24], colour: C.coral, detail: TINY },
     { at: [0.24, 0.05, 0.14], size: [0.18, 0.07, 0.24], colour: C.coral, detail: TINY },
   ],
-  face: { eye: [0.24, 0.88, 0.46], eyeSize: 0.12, brows: false, mouth: null, mouthWide: 0, ink: PALETTE.ink, whites: true },
+  face: { eye: [0.24, 0.88, 0.46], eyeSize: 0.12, brows: false, mouth: null, mouthWide: 0, ink: PALETTE.softInk, whites: true },
   tall: 1.5,
   haze: 0.24,
 }
 
-/** The beach ball: one pillow with six welded panels, round its own middle, so that it rolls about that. */
+/** How the ball's own axis is turned, and where that puts its upper pole on a ball of radius 1. */
+const BALL_TURN: Vec3 = [0.5, 0, 0.3]
+const POLE: Vec3 = [-Math.sin(BALL_TURN[2]), Math.cos(BALL_TURN[2]) * Math.cos(BALL_TURN[0]), Math.cos(BALL_TURN[2]) * Math.sin(BALL_TURN[0])]
+
+/**
+ * The beach ball: one pillow with six welded panels in three pale colours and white between them, and a button at
+ * each pole, round its own middle so that it rolls about that. It is plainly a ball: striped, round where a balloon
+ * is taller than wide, with no knot and no string, and on the ground, so nothing a child would count with the
+ * balloons. It is no larger than it is because it lies in front of the feet of the troop that waits, and must leave
+ * that troop its hundred pixels to be touched on a surface held upright.
+ */
 export const BALL_TOY: Toy = {
-  pillows: [{ at: [0, 0, 0], size: [BALL.radius, BALL.radius, BALL.radius], turn: [0.5, 0, 0.3], colour: C.ball, panels: 6, detail: [20, 14] }],
+  pillows: [
+    { at: [0, 0, 0], size: [BALL.radius, BALL.radius, BALL.radius], turn: BALL_TURN, colour: C.ball, stripes: [C.ball, C.coral, C.ball, C.aqua, C.ball, C.lilacHill], panels: 6, detail: [48, 14] },
+    { at: [POLE[0] * BALL.radius * 0.97, POLE[1] * BALL.radius * 0.97, POLE[2] * BALL.radius * 0.97], size: [0.15, 0.05, 0.15], turn: BALL_TURN, colour: C.ball, detail: TINY },
+    { at: [-POLE[0] * BALL.radius * 0.97, -POLE[1] * BALL.radius * 0.97, -POLE[2] * BALL.radius * 0.97], size: [0.15, 0.05, 0.15], turn: BALL_TURN, colour: C.ball, detail: TINY },
+  ],
   face: { eye: [0, 0, 0], eyeSize: 0, brows: false, mouth: null, mouthWide: 0, ink: PALETTE.ink, whites: false },
   tall: BALL.radius * 2,
   haze: 0,

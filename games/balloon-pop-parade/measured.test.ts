@@ -941,6 +941,10 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
     theatre.step(1 / 60)
     theatre.paint(painter, VIEW)
     expect([...props.keys()].sort()).toEqual(['ball', 'keeper', 'whale'])
+    // The whale and the keeper each have a face on screen, and the ball has none.
+    expect(props.get('whale')!.face).toBeDefined()
+    expect(props.get('keeper')!.face).toBeDefined()
+    expect(props.get('ball')!.face).toBeUndefined()
     // At rest every cloud is asleep: eyes shut.
     expect(clouds.map((face) => face.blink)).toEqual([1, 1, 1])
     const touch = (x: number, y: number) => { theatre.sounds.length = 0; theatre.press(x, y, VIEW); theatre.cancel(); return theatre.sounds.map((sound) => sound.voice) }
@@ -950,6 +954,13 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
     expect(theatre.hit(whale.x, whale.y, VIEW)).toEqual({ on: 'whale' })
     expect(touch(whale.x, whale.y)).toEqual(expect.arrayContaining(['spout']))
     expect(inside.drops.length).toBeGreaterThan(4)
+    // Every touch on it is answered, however soon after the last: it blows again, with its sound.
+    for (const soon of [1 / 60, 0.1, 0.2]) {
+      const before = inside.drops.length
+      theatre.step(soon)
+      expect(touch(whale.x, whale.y), `${soon} s after a spout`).toEqual(expect.arrayContaining(['spout']))
+      expect(inside.drops.length).toBeGreaterThan(Math.min(before, 14))
+    }
     theatre.step(1 / 60)
     theatre.paint(painter, VIEW)
     expect(props.get('whale')!.face!.open).toBeGreaterThan(0.5)

@@ -26,7 +26,8 @@ import type { Pillow, Vec3 } from './shapes'
 //   extra  the funniest part: the duck's tail, the frog's throat, the hippo's
 //          belly, the crab's eye stalks, each about `extraPivot`
 //   jaw    the hippo's alone: its lower jaw, which drops about `jawPivot` when
-//          it yawns. It rides on the head. The other kinds have none.
+//          it yawns, and a little whenever its face opens its mouth. It rides
+//          on the head. The other kinds have none.
 
 export type KindName = keyof typeof KIND_COLOURS
 
@@ -99,7 +100,8 @@ function duck(): Body {
       { at: [0, 0.36, 0.6], size: [0.3, 0.12, 0.26], colour: c, detail: SMALL },
       { at: [0, 1.1, -0.04], size: [0.08, 0.17, 0.08], turn: [0.5, 0, 0], colour: c, detail: TINY },
     ],
-    face: { eye: [0.27, 0.66, 0.47], eyeSize: 0.2, brows: true, mouth: null, mouthWide: 0, ink: PALETTE.ink, whites: true },
+    // Its mouth is its beak: the corners of it are printed on the cheeks and turn up and down, and the dark of it shows on the front of the beak when it opens.
+    face: { eye: [0.27, 0.66, 0.47], eyeSize: 0.2, brows: true, mouth: null, mouthWide: 0, ink: PALETTE.ink, whites: true, corners: { at: [0, 0.37, 0.52], wide: 0.6, long: 0.085, gape: { at: [0, 0.335, 0.84], wide: 0.17, tall: 0.085 } } },
     eyes: eye(0.26, 0.64, 0.5, 0.13),
     print: [],
     arm: [{ at: [-0.06, -0.34, 0], size: [0.19, 0.42, 0.32], colour: c, panels: 2, detail: SMALL }],
@@ -177,7 +179,8 @@ function hippo(): Body {
       ...both({ at: [0.2, 0.3, 0.8], size: [0.06, 0.045, 0.03], colour: PALETTE.ink, detail: TINY }),
       ...both({ at: [0.44, 0.84, -0.04], size: [0.14, 0.15, 0.08], turn: [0, 0, -0.4], colour: c, detail: SMALL }),
     ],
-    face: { eye: [0.27, 0.63, 0.44], eyeSize: 0.17, brows: true, mouth: null, mouthWide: 0, ink: PALETTE.ink, whites: true },
+    // Its mouth is the line where its jaw meets its muzzle: the corners of it are printed and turn up and down, and the jaw drops when it opens.
+    face: { eye: [0.27, 0.63, 0.44], eyeSize: 0.17, brows: true, mouth: null, mouthWide: 0, ink: PALETTE.ink, whites: true, corners: { at: [0, 0.12, 0.47], wide: 1.0, long: 0.1, gape: null } },
     eyes: eye(0.28, 0.68, 0.42, 0.12),
     print: [],
     arm: [{ at: [-0.04, -0.34, 0.02], size: [0.21, 0.42, 0.21], colour: c, panels: 2, detail: SMALL }],
