@@ -50,6 +50,8 @@ export type Happening =
   | { kind: 'letGo'; held: Held; at: Point }
   /** The scissors left the hand. */
   | { kind: 'away' }
+  /** A touch on an empty salon, where there is nothing to work on: the pair at the door look round at it. */
+  | { kind: 'looked'; at: Point }
 
 type Rub = { lastX: number; lastY: number; dirX: number; dirY: number; runX: number; runY: number; turns: number[]; ruffled: boolean; lastAnswer: number }
 
@@ -57,6 +59,8 @@ type Holding =
   | { mode: 'thing'; held: Held; start: Point; grip: number; before: number; heard: number; dragged: boolean; rub: Rub }
   | { mode: 'scissors'; last: Point; overFace: boolean; cut: boolean }
   | { mode: 'button'; button: Button; start: Point }
+  /** A finger on an empty salon: there is nothing to cut, so no scissors come. */
+  | { mode: 'empty' }
 
 /** A press on the door, a seat or the chair counts when the finger comes off within this of where it went down: a swipe that only began there does not. The knot is pulled, so a drag from it counts however far it goes. */
 export const BUTTON_SLOP = 70
@@ -91,7 +95,7 @@ export class Hand {
 
   /** What the fingers hold now, for the view: a thing, the scissors, or nothing. */
   get held(): Held | 'scissors' | null {
-    return !this.holding || this.holding.mode === 'button' ? null : this.holding.mode === 'scissors' ? 'scissors' : this.holding.held
+    return !this.holding || this.holding.mode === 'button' || this.holding.mode === 'empty' ? null : this.holding.mode === 'scissors' ? 'scissors' : this.holding.held
   }
 
   /** A ruffle is going on under the finger. */
@@ -115,6 +119,11 @@ export class Hand {
     this.drawnOut = 0
     const touched = whatIsAt(salon, p)
     if (!touched) {
+      // No tool before it means anything: until the first pair has come in there is no hair and nothing lies about, and no scissors come.
+      if (salon.chair === null && salon.clippings.length === 0 && salon.ribbon === null) {
+        this.holding = { mode: 'empty' }
+        return { salon, happenings: [{ kind: 'looked', at: p }] }
+      }
       this.holding = { mode: 'scissors', last: blades(p), overFace: false, cut: false }
       return { salon, happenings: [{ kind: 'scissors', at: p }] }
     }
@@ -134,7 +143,7 @@ export class Hand {
 
   move(salon: Salon, p: Point, now: number): Step {
     const holding = this.holding
-    if (!holding || holding.mode === 'button') return { salon, happenings: [] }
+    if (!holding || holding.mode === 'button' || holding.mode === 'empty') return { salon, happenings: [] }
     if (holding.mode === 'scissors') return this.snip(salon, holding, p)
     holding.dragged = true
     const happenings: Happening[] = []
@@ -186,6 +195,7 @@ export class Hand {
     this.holding = null
     this.drawnOut = 0
     if (!holding) return { salon, happenings: [] }
+    if (holding.mode === 'empty') return { salon, happenings: [{ kind: 'away' }] }
     if (holding.mode === 'button') return { salon, happenings: [{ kind: 'button', button: holding.button, at: p }] }
     if (holding.mode === 'scissors') return { salon, happenings: [{ kind: 'airSnip', at: blades(p) }, { kind: 'away' }] }
     return this.answer(salon, holding.held, { action: 'poke' }, p, [])
@@ -197,6 +207,7 @@ export class Hand {
     this.holding = null
     this.drawnOut = 0
     if (!holding) return { salon, happenings: [] }
+    if (holding.mode === 'empty') return { salon, happenings: [{ kind: 'away' }] }
     if (holding.mode === 'button') {
       const swiped = holding.button !== 'knot' && Math.hypot(p.x - holding.start.x, p.y - holding.start.y) > BUTTON_SLOP
       // A swipe that only began there: the finger has gone away and the thing is not touched.

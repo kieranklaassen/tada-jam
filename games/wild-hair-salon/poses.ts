@@ -1,4 +1,5 @@
 import { MANES } from './kits'
+import { LOOKS } from './looks'
 import { BENCH, CAPE, CHAIR, COLLAR_Y, DOOR, FLOOR_Y, HEAD, LOCK_X, BESIDE_X, PEG, STEP, STOOL, STRIP_W } from './layout'
 import type { CustomerId } from './tastes'
 import type { ClippingPlace, FaceSpot, Salon, Who } from './world'
@@ -149,10 +150,16 @@ function inHead(local: Point, grow = 1): boolean {
   return dx * dx + dy * dy <= 1
 }
 
-/** Which part of the face a point in head units is on. */
-export function facePart(local: Point): FacePart {
+/** Whether a point in head units is on one of this customer's ears, wherever its kind has them: on top, at the sides, or standing up above the head. */
+export function onEar(who: CustomerId, local: Point): boolean {
+  const ears = LOOKS[who].ears, cy = ears.y - (ears.kind === 'long' ? ears.ry * 0.8 : 0)
+  return [-1, 1].some((side) => ((local.x - side * ears.x) / (ears.rx + 6)) ** 2 + ((local.y - cy) / (ears.ry + 6)) ** 2 <= 1)
+}
+
+/** Which part of the face a point in head units is on. With `who`, an ear is where that customer's ears are drawn. */
+export function facePart(local: Point, who?: CustomerId): FacePart {
   if (Math.hypot(local.x, local.y - 24) <= 34) return 'nose'
-  if (local.y < -52 && Math.abs(local.x) > 40) return 'ear'
+  if (who ? onEar(who, local) : local.y < -52 && Math.abs(local.x) > 40) return 'ear'
   if (local.y > 50) return 'chin'
   return 'cheek'
 }
@@ -277,11 +284,11 @@ export function whatIsAt(salon: Salon, p: Point): Touched | null {
   if (places.knot && Math.hypot(p.x - places.knot.x, p.y - places.knot.y) <= KNOT_REACH) return { object: 'button', button: 'knot' }
   if (places.customer && salon.chair !== null) {
     const local = toHead(places.customer, p)
-    if (inHead(local)) return { object: 'face', who: 'chair', part: facePart(local) }
+    if (inHead(local) || onEar(salon.chair, local)) return { object: 'face', who: 'chair', part: facePart(local, salon.chair) }
   }
   // The friend stands in front of the customer's mane where the two meet.
   const friendAt = places.friend ? toHead(places.friend, p) : null
-  if (friendAt && inHead(friendAt)) return { object: 'face', who: 'friend', part: facePart(friendAt) }
+  if (friendAt && salon.friend && (inHead(friendAt) || onEar(salon.friend, friendAt))) return { object: 'face', who: 'friend', part: facePart(friendAt, salon.friend) }
   if (places.customer && salon.chair !== null) {
     let best: Touched | null = null, nearest = Infinity
     for (let index = 0; index < salon.mane.length; index++) {
@@ -297,7 +304,7 @@ export function whatIsAt(salon: Salon, p: Point): Touched | null {
     if (best) return best
   }
   // The friend's hair is not the child's to cut: its whole head, hair and all, is its face.
-  if (friendAt && inHead(friendAt, 1.3)) return { object: 'face', who: 'friend', part: facePart(friendAt) }
+  if (friendAt && inHead(friendAt, 1.3)) return { object: 'face', who: 'friend', part: facePart(friendAt, salon.friend ?? undefined) }
   if (places.seatFree && inBox(p, BUTTONS[places.seatFree])) return { object: 'button', button: places.seatFree }
   if (places.chair && inBox(p, BUTTONS.chair)) return { object: 'button', button: 'chair' }
   if (inBox(p, BUTTONS.door)) return { object: 'button', button: 'door' }

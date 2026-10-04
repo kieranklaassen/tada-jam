@@ -138,7 +138,8 @@ export function drawFigure(g: Ctx, sprites: Sprites, figure: Figure): number {
   if (figure.mane || figure.whole || hatted) drawn += stamp(g, animal.face)
   else drawn += stamp(g, sprites.friendHead(who))
   drawn += features(g, puppet, look, at.s < 0.5)
-  for (const piece of figure.wears.pieces) drawn += strip(g, 0, piece.y, piece.half, 0, piece.hue)
+  // A piece on a face sits a little askew, each spot its own way, so two of them are never a pair of level bars.
+  for (const piece of figure.wears.pieces) drawn += strip(g, 0, piece.y, piece.half, piece.y < 0 ? -0.1 : piece.y > 60 ? 0.16 : 0.05, piece.hue)
   if (figure.wears.blindfold) drawn += blindfold(g, puppet.at('brow') > 0.5 ? 1 : 0)
   g.restore()
   if (live && look.ears.kind !== 'long') ears()

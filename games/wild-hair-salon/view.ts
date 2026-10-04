@@ -253,10 +253,10 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
   return drawn
 }
 
-/** How a piece lies where it fell: tilted one way or the other by a fixed amount of its own, never level, so that a piece of hair on the floor is a thing that dropped and no kind of sign. */
-function fallen(piece: { len: number; x?: number }): number {
-  const n = (Math.round(piece.x ?? 0) * 7 + piece.len * 3) % 7
-  return (n < 3 ? n - 4 : n - 2) * 0.1
+/** How a piece lies where it fell: tilted by a fixed amount of its own, never level, so that a piece of hair on the floor is a thing that dropped and no kind of sign. */
+export function fallen(piece: { len: number; x?: number }): number {
+  // All one way, by a little or a lot, so that two pieces never cross each other like a sign.
+  return -0.12 - (((Math.round(piece.x ?? 0) * 5 + piece.len * 3) % 7) / 6) * 0.26
 }
 
 /** A head as the looking glass shows it: the other way round, smaller, and only as much of it as the oval holds. */

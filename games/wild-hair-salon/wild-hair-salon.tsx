@@ -134,8 +134,9 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     }
     const act = (gestures: Gesture[]) => {
       for (const gesture of gestures) {
+        // The corner the grown-up's numbers open from answers a touch like any other part of the wall.
         if (gesture.type === 'press') cornered = gesture.at.x > width - 72 && gesture.at.y < 72
-        if (!cornered && !spike) play.gesture(staged(gesture))
+        if (!spike) play.gesture(staged(gesture))
       }
       sound()
     }
@@ -169,13 +170,13 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // The one exception is a drag the child has already let go of, whose end the tracker was still holding back for
     // a finger that might return: that let-go is the child's own, and it lands where it was made.
     const abandon = (ended: Gesture[]) => {
-      if (ended.length === 0 || cornered || spike) return
+      if (ended.length === 0 || spike) return
       if (play.lifted) act(ended)
       else play.abandon()
     }
     const onCancel = (event: PointerEvent) => {
       // A drag the browser takes is not waited out as a lift is: it is given up at once.
-      if (touch.cancel(event.pointerId, event.timeStamp).length > 0) { touch.clear(); if (!cornered && !spike) play.abandon() }
+      if (touch.cancel(event.pointerId, event.timeStamp).length > 0) { touch.clear(); if (!spike) play.abandon() }
       audio.touchUp()
     }
     root.addEventListener('pointerdown', onDown)

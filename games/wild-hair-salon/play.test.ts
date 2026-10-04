@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { LADDER } from './config'
 import { BLADES } from './hand'
+import { alike } from './voices'
 import { BESIDE_X, COLLAR_Y, HEAD, LOCK_X, PEG, STEP } from './layout'
 import { PERSONALITIES } from './personality'
 import { Play } from './play'
@@ -69,6 +70,39 @@ describe('an empty salon', () => {
 })
 
 describe('small things the sheet has', () => {
+  it('has each of the pair look to the side the other one\'s lock is on, beside the chair and across the room', () => {
+    const looks = (seat: 'beside' | 'across'): { customer: number; friend: number } => {
+      const play = seated({ seat })
+      const seen = { customer: 0, friend: 0 }
+      for (let i = 0; i < 60 * 5; i++) {
+        play.step(1 / 60, true)
+        for (const who of ['customer', 'friend'] as const) { const x = play[who]()!.at('lookX'); if (Math.abs(x) > Math.abs(seen[who])) seen[who] = x }
+      }
+      return seen
+    }
+    // The friend on the stool is on the customer's right and its lock hangs between them: the customer looks right and the friend looks left.
+    const beside = looks('beside')
+    expect(beside.customer).toBeGreaterThan(0.4)
+    expect(beside.friend).toBeLessThan(-0.4)
+    // Across the room the friend is on the customer's left.
+    const across = looks('across')
+    expect(across.customer).toBeLessThan(-0.4)
+    expect(across.friend).toBeGreaterThan(0.4)
+  })
+
+  it('sounds the friend\'s lock snapping back when it is let go, and a bow with a rustle and then a ting', () => {
+    const play = seated()
+    play.takeNotes()
+    play.gesture({ type: 'press', at: onModel(10) })
+    play.gesture({ type: 'dragStart', from: onModel(10) })
+    play.gesture({ type: 'dragMove', from: onModel(10), at: onModel(40) })
+    const stretched = play.takeNotes()
+    play.gesture({ type: 'dragEnd', from: onModel(10), at: onModel(40) })
+    const snapped = play.takeNotes()
+    expect(snapped).toHaveLength(1)
+    expect(stretched.some((note) => alike(note, snapped[0]))).toBe(false)
+  })
+
   it('has the customer look up at a bow and be heard to like it or hate it, by its taste', () => {
     for (const [who, bit] of [['lion', 'lion-goes-cross-eyed-and-bats-at-it'], ['poodle', 'poodle-turns-her-head-at-the-mirror']] as const) {
       const play = seated({ chair: who, friend: who === 'lion' ? 'yak' : 'lion', ribbon: { len: 40, at: 'peg' }, shown: { snip: true, pull: true, ribbon: true } })
@@ -246,11 +280,20 @@ describe('a first visit', () => {
     expect(play.customer()).toBeNull()
   })
 
-  it('answers a touch on the empty salon: the scissors come, and there is nothing to cut', () => {
+  it('answers a touch on the empty salon with a sound and no scissors: there is nothing to cut, so no tool comes', () => {
     const play = opened()
-    drag(play, [AIR, { x: 500, y: 300 }, { x: 600, y: 500 }])
+    play.gesture({ type: 'press', at: AIR })
+    expect(play.hand.held).toBeNull()
+    expect(play.hair.scissors.inHand).toBe(false)
     expect(play.takeNotes().length).toBeGreaterThanOrEqual(1)
+    play.gesture({ type: 'tap', at: AIR })
+    drag(play, [AIR, { x: 500, y: 300 }, { x: 600, y: 500 }])
+    expect(play.hair.scissors.inHand).toBe(false)
     expect(play.game).toEqual(freshGame(null))
+    // With a customer in the chair the scissors are in the hand at once.
+    const seatedPlay = seated()
+    seatedPlay.gesture({ type: 'press', at: AIR })
+    expect(seatedPlay.hand.held).toBe('scissors')
   })
 
   it('lets the first pair in on a touch on the door: they are in the game at once, and the scene plays them in', () => {

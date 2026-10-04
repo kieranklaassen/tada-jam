@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { MANES } from './kits'
 import { BESIDE_X, COLLAR_Y, HEAD, LOCK_X, PEG, SCENE, STEP, STRIP_W } from './layout'
-import { BUTTONS, SLOP, clippingBox, crossedBy, dropPlace, facePart, floorX, floorY, onHead, placeOnFloor, placesOf, ribbonShape, stripOf, tuftPose, tuftRoot, tuftTip, whatIsAt, type Point } from './poses'
+import { LOOKS } from './looks'
+import { BUTTONS, SLOP, clippingBox, crossedBy, dropPlace, facePart, onEar, floorX, floorY, onHead, placeOnFloor, placesOf, ribbonShape, stripOf, tuftPose, tuftRoot, tuftTip, whatIsAt, type Point } from './poses'
 import { TUFTS } from './rules'
 import { CUSTOMERS } from './tastes'
 import type { Salon } from './world'
@@ -155,6 +156,24 @@ describe('what is under a finger', () => {
 
   it('finds nothing in the air', () => {
     for (const p of [{ x: 860, y: 80 }, { x: 330, y: 120 }, { x: 800, y: 700 }]) expect(whatIsAt(salon(), p)).toBeNull()
+  })
+})
+
+describe('an ear', () => {
+  it('answers where each customer\'s ears are drawn: on top, at the sides, or standing up above the head', () => {
+    const salonWith = (chair: (typeof CUSTOMERS)[number]): Salon => ({ chair, friend: chair === 'lion' ? 'poodle' : 'lion', waiting: ['yak', 'rabbit'], seed: 1, lock: 60, model: 44, seat: 'across', cape: 'on', mane: Array(TUFTS).fill(20), ribbon: null, clippings: [], shown: { snip: true, pull: true, ribbon: true } })
+    for (const who of CUSTOMERS) {
+      const ears = LOOKS[who].ears, middle = { x: -ears.x, y: ears.y - (ears.kind === 'long' ? ears.ry * 0.8 : 0) }
+      expect(onEar(who, middle), who).toBe(true)
+      expect(onEar(who, { x: 0, y: 30 }), who).toBe(false)
+      expect(facePart(middle, who)).toBe('ear')
+      // On the left ear of the one in the chair: a touch there is a touch on that ear.
+      expect(whatIsAt(salonWith(who), { x: HEAD.x + middle.x, y: HEAD.y + middle.y }), who).toEqual({ object: 'face', who: 'chair', part: 'ear' })
+    }
+    // The rabbit's ears stand well above its head, and the poodle's are out at the sides of her face.
+    expect(onEar('rabbit', { x: 40, y: -180 })).toBe(true)
+    expect(onEar('poodle', { x: 110, y: 30 })).toBe(true)
+    expect(onEar('lion', { x: 110, y: 30 })).toBe(false)
   })
 })
 

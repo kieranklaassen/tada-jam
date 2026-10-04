@@ -36,6 +36,8 @@ export function notesFor(happening: Happening, before: Salon, after: Salon): Not
     case 'scissors': return [OTHER_VOICES.scissors]
     case 'airSnip': return [OTHER_VOICES.airSnip]
     case 'away': return []
+    // Nothing to work on yet: a small knock of the finger, and the pair at the door look round.
+    case 'looked': return [OTHER_VOICES.caught]
     // A thing that moves the game on gives under the finger with a small sound of its own; what it sets off has its own.
     case 'pressed': return [happening.button === 'door' ? OTHER_VOICES.door : happening.button === 'knot' ? OTHER_VOICES.caught : OTHER_VOICES.hop]
     case 'button': return []
@@ -46,7 +48,8 @@ export function notesFor(happening: Happening, before: Salon, after: Salon): Not
       // A face that is caught answers in its own voice; hair gives a squeak.
       return [held.object === 'face' ? voiced(OTHER_VOICES.caught, owner(held.who)) : OTHER_VOICES.caught]
     }
-    case 'letGo': return happening.held.object === 'lock' || happening.held.object === 'tuft' || happening.held.object === 'ribbon' ? [OTHER_VOICES.letGo] : []
+    // The friend's lock, let go, snaps back to its own length with its rubbery boing, in the friend's voice.
+    case 'letGo': return happening.held.object === 'model' ? [voiced(CELL_VOICES['model/pull'], after.friend)] : happening.held.object === 'lock' || happening.held.object === 'tuft' || happening.held.object === 'ribbon' ? [OTHER_VOICES.letGo] : []
     case 'cell': {
       const base: VoiceSpec = CELL_VOICES[happening.cell.voice]
       const length = happening.rings
@@ -58,6 +61,10 @@ export function notesFor(happening: Happening, before: Salon, after: Salon): Not
         case 'lock/poke': return [length === null ? base : { ...base, pitch: pitchForLength(length) }]
         // The snip, and then the stump twanging up at its new length.
         case 'lock/snip': return [base, { kind: 'tone', wave: 'triangle', pitch: pitchForLength(length ?? 50), glideTo: pitchForLength(length ?? 50) * 1.2, peak: 0.1, attack: 0.002, length: 0.22, after: 0.07 }]
+        // The friend's lock stretches with a quiet creak; its boing comes when it is let go and snaps back.
+        case 'model/pull': return [{ ...CELL_VOICES['lock/pull'], peak: 0.05 }]
+        // A bow is tied with a rustle and then a ting.
+        case 'tuft/ribbon': return [{ kind: 'noise', q: 1, pitch: 1800, peak: 0.06, attack: 0.02, length: 0.18 }, { ...base, after: 0.16 }]
         // The friend's lock hums, and its owner laughs and holds its breath, in the friend's own voice.
         case 'model/poke':
         case 'model/ruffle':

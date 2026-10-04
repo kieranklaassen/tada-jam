@@ -3,6 +3,7 @@ import { backUnderCape, capeOff, letIn, markShown, sendFriend } from './cycle'
 import { Hair } from './hair'
 import { COLLAR_Y, HEAD, LOCK_X, STEP } from './layout'
 import { PERSONALITIES } from './personality'
+import { CUSTOMERS } from './tastes'
 import { onHead, placesOf, tuftPose, tuftTip } from './poses'
 import { Puppet } from './puppet'
 import { makeRng } from './rng'
@@ -205,6 +206,33 @@ describe('the cape coming off', () => {
     })
     expect(together).toBeGreaterThan(0)
     expect(met).toBeGreaterThan(10)
+  })
+
+  it('has the customer tread on a lock that is too long with a foot, and only then take it in its own way', () => {
+    const before = seated({ lock: 90, model: 40 }), done = capeOff(before), c = cast(done.game)
+    let footAt = -1, ownAt = -1
+    const scene = new Scene(capeComesOff(c, before, done.game, done.showing!))
+    scene.start(0, () => {})
+    for (let t = 0; scene.running && t < 12; t += 1 / 60) {
+      scene.update(t)
+      c.customer()!.step(1 / 60, false)
+      if (footAt < 0 && c.customer()!.at('foot') > 0.3) footAt = t
+      if (ownAt < 0 && c.customer()!.started.includes('lion-treads-on-it-into-a-slow-bow')) ownAt = t
+    }
+    expect(footAt).toBeGreaterThan(2.5)
+    expect(ownAt).toBeGreaterThan(footAt)
+    expect(c.customer()!.started).toContain('lion-plants-a-heavy-foot-on-it')
+  })
+
+  it('lasts 4 to 10 seconds for every customer, whatever the lock, the mane, the bow and what is worn', () => {
+    for (const chair of CUSTOMERS) for (const [lock, model] of [[100, 34], [4, 66], [50, 50]] as const) for (const mane of [4, 96]) {
+      const friend = CUSTOMERS.find((who) => who !== chair)!
+      const before = seated({ chair, friend, lock, model, mane: Array(TUFTS).fill(mane), ribbon: { len: 30, at: 'mane', tuft: 4 }, shown: { snip: true, pull: true, ribbon: true }, clippings: [{ len: 9, hue: 'lion', on: 'face', who: 'chair', spot: 'lip' }, { len: 9, hue: 'lion', on: 'face', who: 'friend', spot: 'lip' }] })
+      const done = capeOff(before), c = cast(done.game)
+      const length = sceneLength(capeComesOff(c, before, done.game, done.showing!))
+      expect(length, `${chair} ${lock}/${model} mane ${mane}`).toBeGreaterThanOrEqual(4)
+      expect(length, `${chair} ${lock}/${model} mane ${mane}`).toBeLessThanOrEqual(10)
+    }
   })
 
   it('brings a friend who sat across the room over to stand cheek to cheek', () => {

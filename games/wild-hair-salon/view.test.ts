@@ -10,7 +10,7 @@ import { BUTTONS, placesOf } from './poses'
 import { blankSheets, bounds, recordingSheet, type Recording } from './recorder'
 import { Sprites } from './sprites'
 import { CUSTOMERS } from './tastes'
-import { drawFrame } from './view'
+import { drawFrame, fallen } from './view'
 import type { Ctx, MakeSheet, Sheet } from './wash'
 
 // A stand-in for a 2D context: it takes every call and every setting, and keeps the names of what was called.
@@ -229,6 +229,14 @@ describe('the salon around them', () => {
     const passing = (time: number): boolean => { const made = frame(fresh(), time); return made.kept.stamps.some((stamp) => stamp.image === made.sprites.passer.sheet.canvas) }
     expect(passing(2)).toBe(true)
     expect(passing(9)).toBe(false)
+  })
+})
+
+describe('a piece on the floor', () => {
+  it('lies tilted, never level, and every piece the same way, so that no two cross like a sign', () => {
+    const tilts = Array.from({ length: 101 }, (_, x) => [4, 9, 20, 55].map((len) => fallen({ len, x }))).flat()
+    for (const tilt of tilts) { expect(tilt).toBeLessThanOrEqual(-0.1); expect(tilt).toBeGreaterThanOrEqual(-0.4) }
+    expect(new Set(tilts.map((tilt) => tilt.toFixed(3))).size).toBeGreaterThan(3)
   })
 })
 

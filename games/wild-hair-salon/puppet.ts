@@ -19,6 +19,9 @@ export function ease(spring: Spring, target: number, stiffness: number, damping:
   spring.x += spring.v * dt
 }
 
+/** The parts that have a left and a right: a bit played the other way round moves these the other way. */
+const SIDED: readonly Part[] = ['lookX', 'tilt', 'shift']
+
 /** The steps of play are this long, whatever the frame rate. */
 export const TICK = 1 / 120
 
@@ -27,7 +30,7 @@ export class Puppet {
   private readonly director: Director
   private readonly rng: Rng
   private readonly parts: Record<Part, Spring>
-  private playing: { bit: Bit; t: number }[] = []
+  private playing: { bit: Bit; t: number; turned: boolean }[] = []
   private untilIdle: number
   /** 0 to 1 through one breath. */
   breath = 0
@@ -60,15 +63,16 @@ export class Puppet {
     return this.playing.length > 0
   }
 
-  play(bit: Bit): void {
-    this.playing.push({ bit, t: 0 })
+  /** Plays one bit. `turned` plays it the other way round, left for right, for a look at something that is on its other side. */
+  play(bit: Bit, turned = false): void {
+    this.playing.push({ bit, t: 0, turned })
     this.started.push(bit.id)
   }
 
   /** What it does about something that happened to it: one of its reactions of that name, a different one each time. */
-  react(name: Reaction): void {
+  react(name: Reaction, turned = false): void {
     const bits = this.personality.reactions[name]
-    if (bits && bits.length > 0) this.play(this.director.pick(bits))
+    if (bits && bits.length > 0) this.play(this.director.pick(bits), turned)
   }
 
   /** How long its reaction of that name lasts at the longest, for a scene that waits for it. */
@@ -127,7 +131,7 @@ export class Puppet {
     for (const part of PARTS) {
       let target = p.rest[part] ?? 0
       // The move that started last has the part.
-      for (const { bit, t } of this.playing) for (const m of bit.moves) if (m.part === part && t >= m.at && t < m.at + m.hold) target = m.to
+      for (const { bit, t, turned } of this.playing) for (const m of bit.moves) if (m.part === part && t >= m.at && t < m.at + m.hold) target = turned && SIDED.includes(part) ? -m.to : m.to
       const heavy = HEAVY.includes(part)
       const stiffness = heavy ? p.stiffness : p.quick
       ease(this.parts[part], target, stiffness, heavy ? p.damping : 2 * Math.sqrt(stiffness) * 0.85, dt)

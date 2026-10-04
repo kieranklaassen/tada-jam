@@ -112,7 +112,7 @@ export function comingIn(cast: Cast, before: Game, after: Game): Beat[] {
     cueAt(1.3 + WALK, () => { if (!cast.cut) cast.cue('doorShut') }),
     over(1.3 + WALK, 0.35, (p) => { staging.door = 1 - p; staging.waiting = p }),
     // The one want, always visible: the customer looks from its lock to the friend's, and the friend holds its own out.
-    cueAt(1.7 + WALK, () => { if (!cast.cut) { cast.customer()?.react('wantsItSo'); cast.friend()?.react('wantsItSo') } }),
+    cueAt(1.7 + WALK, () => { if (!cast.cut) { cast.customer()?.react('wantsItSo', after.seat === 'across'); cast.friend()?.react('wantsItSo', after.seat === 'beside') } }),
     // And pats its own lock, twice, with a paw from under the cape.
     over(1.7 + WALK, Math.max(1, cast.customer()?.lasts('wantsItSo') ?? 1), (p) => {
       const lock = places.lock, out = smooth(Math.min(1, p / 0.3, (1 - p) / 0.3))
@@ -149,26 +149,33 @@ export function capeComesOff(cast: Cast, before: Game, after: Game, showing: Sho
   // The customer's paw acts out the comparison on the two ends themselves, sized by the piece or the gap.
   const lock = to.lock ?? { x: 0, y: 0, unit: STEP }
   const lockEnd = lock.y + after.lock * lock.unit, modelEnd = lock.y + after.model * lock.unit
-  const times = kind === 'too-short' ? 2 + Math.round(showing.comparison.muddle * 2) : 3 + Math.round(showing.comparison.muddle * 4)
+  const times = kind === 'too-short' ? 2 + Math.round(showing.comparison.muddle * 2) : 3 + Math.round(showing.comparison.muddle * 3)
+  /** How long a foot takes to come down on a lock, before its owner makes anything of it. */
+  const TREAD = 0.3
   const paw = (x: number, y: number): void => { staging.paw = { x, y, scissors: null } }
   const reach = (p: number, x: number, y: number): void => paw(SHOULDER.x + (x - SHOULDER.x) * smooth(p), SHOULDER.y + (y - SHOULDER.y) * smooth(p))
   const reaction = kind === 'too-long' ? 'lockTooLong' as const : kind === 'too-short' ? 'lockTooShort' as const : 'lockAsLong' as const
   let t = 2.5
   if (kind === 'too-long') {
     // It takes hold of its lock level with the friend's end. The piece below its paw is the piece things happen to: it flaps about, the bigger the wilder.
-    const flap = 0.36
+    const flap = 0.32
     beats.push(
       over(2.1, 0.4, (p) => reach(p, lock.x - 2, modelEnd)),
-      cueAt(2.5, () => { staging.fx = { kind, muddle: showing.comparison.muddle }; if (!cast.cut) { customer?.react(reaction); cast.cue('tooLong', chair); cast.say(chair, reaction) } }),
+      cueAt(2.5, () => { staging.fx = { kind, muddle: showing.comparison.muddle }; if (!cast.cut) cast.cue('tooLong', chair) }),
       ...Array.from({ length: times }, (_, i) => cueAt(2.5 + i * flap, () => { if (!cast.cut) { hair.kicked('lock', (i % 2 ? -1 : 1) * 7 * big); if (i > 0) cast.cue('flap', chair) } })),
       over(2.5, times * flap, (p) => paw(lock.x - 2 + Math.sin(p * times * Math.PI) * 5, modelEnd)),
     )
-    // And then it treads on it: its head goes down with a bump, its mane droops, and the friend cannot keep a straight face.
-    beats.push(cueAt(2.5 + times * flap, () => { if (!cast.cut) { customer?.bump(1.4); hair.moodOf('droop', 1.3); hair.kicked('lock', 9 * big); other?.react('friendRuffled'); cast.cue('landed', chair) } }))
-    t = 2.5 + times * flap
+    // And then it treads on it, with a foot that comes up and comes down: its head goes down with a bump, its mane droops, and the friend
+    // cannot keep a straight face. Only then does it take it in its own way.
+    const tread = 2.5 + times * flap
+    beats.push(
+      cueAt(tread, () => { if (!cast.cut) { customer?.react('treads'); customer?.bump(1.4); hair.moodOf('droop', 1.3); hair.kicked('lock', 9 * big); other?.react('friendRuffled'); cast.cue('landed', chair) } }),
+      cueAt(tread + TREAD, () => { if (!cast.cut) { customer?.react(reaction); cast.say(chair, reaction) } }),
+    )
+    t = tread + TREAD
   } else if (kind === 'too-short') {
     // It takes its lock by the end, feels on down for hair as far as the friend's end, and finds air; then the friend's longer end flicks over at it.
-    const grab = 0.36, feel = 0.7
+    const grab = 0.3, feel = 0.5
     beats.push(
       over(2.1, 0.4, (p) => reach(p, lock.x, lockEnd)),
       cueAt(2.5, () => { staging.fx = { kind, muddle: showing.comparison.muddle }; if (!cast.cut) cast.cue('tooShort', chair) }),
@@ -211,20 +218,20 @@ export function capeComesOff(cast: Cast, before: Game, after: Game, showing: Sho
   // The paw goes home while the customer does what it does about it.
   const lets = t
   beats.push(over(lets, 0.3, (p) => { const from = staging.paw ?? { x: SHOULDER.x, y: SHOULDER.y }; if (p >= 1) staging.paw = null; else paw(from.x + (SHOULDER.x - from.x) * p * 0.5, from.y + (SHOULDER.y - from.y) * p * 0.5) }))
-  t += Math.max(customer?.lasts(reaction) ?? 1.2, 1.2) + 0.3
+  t += Math.max(customer?.lasts(reaction) ?? 1.2, 1.2) + 0.1
   beats.push(over(lets, t - lets, () => {}))
   // Then its tastes: its mane, its bow, and whatever it wears.
   if (showing.mane !== 'plain') {
     const reaction = showing.mane === 'liked' ? 'maneLiked' as const : 'maneHated' as const
     const at = t
-    beats.push(cueAt(at, () => { if (!cast.cut) { customer?.react(reaction); cast.say(chair, reaction); hair.moodOf(showing.mane === 'liked' ? 'wave' : 'droop', chair === 'poodle' && showing.mane === 'hated' ? 0.7 : 1.4); if (chair === 'poodle' && showing.mane === 'hated') hair.moodOf('up', 0.8, 0.75) } }), over(at, (customer?.lasts(reaction) ?? 1) + 0.2, () => {}))
-    t += (customer?.lasts(reaction) ?? 1) + 0.2
+    beats.push(cueAt(at, () => { if (!cast.cut) { customer?.react(reaction); cast.say(chair, reaction); hair.moodOf(showing.mane === 'liked' ? 'wave' : 'droop', chair === 'poodle' && showing.mane === 'hated' ? 0.7 : 1.4); if (chair === 'poodle' && showing.mane === 'hated') hair.moodOf('up', 0.8, 0.75) } }), over(at, (customer?.lasts(reaction) ?? 1) + 0.1, () => {}))
+    t += (customer?.lasts(reaction) ?? 1) + 0.1
   }
   if (showing.bow !== null) {
     const reaction = taste.bow === 'loves' ? 'bowLoved' as const : 'bowHated' as const
     const at = t
-    beats.push(cueAt(at, () => { if (!cast.cut) { customer?.react(reaction); cast.say(chair, reaction) } }), over(at, (customer?.lasts(reaction) ?? 1) + 0.2, () => {}))
-    t += (customer?.lasts(reaction) ?? 1) + 0.2
+    beats.push(cueAt(at, () => { if (!cast.cut) { customer?.react(reaction); cast.say(chair, reaction) } }), over(at, (customer?.lasts(reaction) ?? 1) + 0.1, () => {}))
+    t += (customer?.lasts(reaction) ?? 1) + 0.1
   }
   if (showing.blindfold !== null || showing.worn.chair > 0 || showing.worn.friend > 0) {
     const at = t
@@ -234,8 +241,8 @@ export function capeComesOff(cast: Cast, before: Game, after: Game, showing: Sho
       else if (showing.worn.chair > 0) { customer?.react('wearing'); cast.say(chair, 'wearing') }
       if (showing.blindfold === 'friend') { other?.react('blindfolded'); cast.say(friend, 'blindfolded') }
       else if (showing.worn.friend > 0) { other?.react('wearing'); cast.say(friend, 'wearing') }
-    }), over(at, 1.1, () => {}))
-    t += 1.1
+    }), over(at, 0.9, () => {}))
+    t += 0.9
   }
   // They settle, side by side, with the haircut on show.
   beats.push(cueAt(t, () => { staging.fx = null; staging.paw = null; staging.stretch = 0; staging.cape = 0; staging.friend = { ...friendTo, lift: 0, seen: 1 } }))
@@ -279,7 +286,7 @@ export function shownOnce(cast: Cast, idea: Idea, before: Game, after: Game): Be
         const along = smooth(p)
         staging.ribbon = { x: tail.x - 30 + (beside.x - tail.x + 30) * along, y: tail.y + (beside.y - tail.y) * along + (p >= 1 ? 0 : LOW * dipAt(p)), len: TAIL_LEN }
       }),
-      cueAt(3.9, () => { if (!cast.cut) { cast.customer()?.react('wantsItSo'); cast.cue('landed', friend) } }),
+      cueAt(3.9, () => { if (!cast.cut) { cast.customer()?.react('wantsItSo', true); cast.cue('landed', friend) } }),
       over(3.9, 1.0, () => { staging.ribbon = { x: beside.x, y: beside.y, len: TAIL_LEN } }),
       // And hangs it back on its peg, where it is from then on.
       over(4.9, 1.0, (p) => {
