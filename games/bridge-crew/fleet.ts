@@ -270,16 +270,23 @@ export function vehicle(pen: Pen, id: VehicleId, c: number, pose: VehiclePose, s
   if (id === 'piano-mover' && pose.upset > 0.08) mover(pen, c, -c * (long + 2.22) - pose.upset * c * 0.8, seconds, pose.upset)
 }
 
+/** An arm of a paper figure: a strip of paper from shoulder to hand, with its shadow. */
+function arm(pen: Pen, c: number, x0: number, y0: number, x1: number, y1: number) {
+  const far = Math.hypot(x1 - x0, y1 - y0) || 1, nx = (-(y1 - y0) / far) * c * 0.028, ny = ((x1 - x0) / far) * c * 0.028
+  cutOut(pen, c, INK.paper, () => { pen.moveTo(x0 + nx, y0 + ny); pen.lineTo(x1 + nx, y1 + ny); pen.lineTo(x1 - nx, y1 - ny); pen.lineTo(x0 - nx, y0 - ny); pen.closePath() })
+}
+
 /** The piano's mover, running behind it on the road: a paper cut-out leaning back on its heels, both arms out to the piano, its legs going. */
 function mover(pen: Pen, c: number, x: number, seconds: number, out: number) {
   const stride = Math.sin(seconds * 13), lean = 0.12 * c * Math.min(1, out * 2)
+  // Both arms out to the piano, one a little higher than the other and reaching a little farther: paper, behind its body.
+  arm(pen, c, x + c * 0.03 - lean, -c * 0.45, x + c * 0.27, -c * 0.52)
+  arm(pen, c, x + c * 0.03 - lean, -c * 0.35, x + c * 0.22, -c * 0.33)
   cutOut(pen, c, INK.paper, () => pen.roundRect(x - c * 0.11 - lean, -c * 0.5, c * 0.22, c * 0.36, c * 0.05))
   cutOut(pen, c, INK.paper, () => pen.arc(x - lean * 1.4, -c * 0.61, c * 0.12, 0, Math.PI * 2))
   pencil(pen, c, 0.03)
   for (const ex of [0.01, 0.07]) { pen.beginPath(); pen.arc(x - lean * 1.4 + c * ex, -c * 0.63, c * 0.018, 0, Math.PI * 2); pen.fill() }
   pen.beginPath()
-  pen.moveTo(x + c * 0.05 - lean, -c * 0.44); pen.lineTo(x + c * 0.24, -c * 0.5)
-  pen.moveTo(x + c * 0.05 - lean, -c * 0.34); pen.lineTo(x + c * 0.24, -c * 0.36)
   // Its legs go one after the other, each lifting its own foot: they never cross.
   pen.moveTo(x - c * 0.05 - lean * 0.5, -c * 0.14); pen.lineTo(x - c * 0.09, -c * 0.08 * Math.max(0, stride))
   pen.moveTo(x + c * 0.05 - lean * 0.5, -c * 0.14); pen.lineTo(x + c * 0.09, -c * 0.08 * Math.max(0, -stride))
@@ -294,12 +301,8 @@ function driver(pen: Pen, c: number, x: number, out: number) {
   const walking = out < 1 ? Math.abs(Math.sin(out * Math.PI * 5)) : 0, y = -c * 0.03 * walking, reach = Math.max(0, (out - 0.85) / 0.15)
   // Its arms are paper like the rest of it, and lie on what is behind them as paper lies on wood: they hang at its
   // sides, behind its body, and go up either side of its head to the parcels. Neither lies across its head or across the other.
-  const arm = (x0: number, y0: number, x1: number, y1: number) => {
-    const far = Math.hypot(x1 - x0, y1 - y0) || 1, nx = (-(y1 - y0) / far) * c * 0.028, ny = ((x1 - x0) / far) * c * 0.028
-    cutOut(pen, c, INK.paper, () => { pen.moveTo(x0 + nx, y0 + ny); pen.lineTo(x1 + nx, y1 + ny); pen.lineTo(x1 - nx, y1 - ny); pen.lineTo(x0 - nx, y0 - ny); pen.closePath() })
-  }
-  arm(x - c * 0.1, y - c * 0.46, x - c * (0.15 + 0.07 * reach), y - c * (0.3 + 0.48 * reach))
-  arm(x + c * 0.1, y - c * 0.46, x + c * (0.15 - 0.01 * reach), y - c * (0.3 + 0.5 * reach))
+  arm(pen, c, x - c * 0.1, y - c * 0.46, x - c * (0.15 + 0.07 * reach), y - c * (0.3 + 0.48 * reach))
+  arm(pen, c, x + c * 0.1, y - c * 0.46, x + c * (0.15 - 0.01 * reach), y - c * (0.3 + 0.5 * reach))
   cutOut(pen, c, INK.paper, () => pen.roundRect(x - c * 0.11, y - c * 0.5, c * 0.22, c * 0.36, c * 0.05))
   cutOut(pen, c, INK.paper, () => pen.arc(x, y - c * 0.61, c * 0.12, 0, Math.PI * 2))
   pencil(pen, c, 0.03)

@@ -340,9 +340,10 @@ export function paintDesk(pen: Pen, plot: Plot, at: Site) {
   if (left >= 4.6) {
     // A pair of compasses, open, with the arc it has just drawn.
     const x = leftRoom[1] - 3.6, y = floor + 0.1
-    stroke(pen, plot, [[x - 0.45, y], [x, y + 1.5], [x + 0.5, y]], 0.022, a)
-    stroke(pen, plot, [[x, y + 1.5], [x, y + 1.8]], 0.05, a)
-    ring(pen, plot, x - 0.45, y, 0.95, 0.012, a * 0.7, -0.5, -0.02)
+    // It leans: its point leg stands nearly upright and its pencil leg reaches well out, so the pair is no letter.
+    stroke(pen, plot, [[x - 0.45, y], [x - 0.25, y + 1.5], [x + 0.75, y + 0.12]], 0.022, a)
+    stroke(pen, plot, [[x - 0.25, y + 1.5], [x - 0.33, y + 1.8]], 0.05, a)
+    ring(pen, plot, x - 0.45, y, 1.2, 0.012, a * 0.7, -0.45, 0.05)
   }
   const right = rightRoom[1] - rightRoom[0]
   if (right >= 2.9) {
