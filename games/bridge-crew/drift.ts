@@ -277,7 +277,7 @@ export const SPLASH = 1.7
 /**
  * Draws the splash itself, over whatever made it: a crown that stands up out
  * of the water and falls, the drops it throws well over the banks, and the
- * rings that run out to both walls. Returns how many things it drew.
+ * ripples that run out to both walls. Returns how many things it drew.
  */
 export function drawSplash(pen: Pen, plot: Plot, at: Site, splash: Splash | null): number {
   if (!splash || splash.since < 0 || splash.since >= SPLASH) return 0
@@ -293,12 +293,16 @@ export function drawSplash(pen: Pen, plot: Plot, at: Site, splash: Splash | null
     const long = Math.max(0.16, Math.abs(drop.vy) * 0.04) * cell * (drop.vy >= 0 ? 1 : -1)
     pen.moveTo(dx, dy); pen.lineTo(dx, dy + long)
   }
-  // The rings stop at the banks.
+  // The ripples stop at the banks.
   const [low] = px(plot, at.left[0] + 0.1, 0), [top] = px(plot, at.right[0] - 0.1, 0), held = (v: number) => Math.max(low, Math.min(top, v))
   for (let i = 0; i < 3; i++) {
     const r = cell * (0.5 + (1.5 + i * 0.9) * s) * (0.6 + 0.4 * big)
-    pen.moveTo(held(x - r), y + cell * 0.06 * i); pen.lineTo(held(x - r * 0.5), y + cell * 0.06 * i)
-    pen.moveTo(held(x + r * 0.5), y + cell * 0.06 * i); pen.lineTo(held(x + r), y + cell * 0.06 * i)
+    // Each a shallow curve, humped in the middle: never a level bar.
+    for (const side of [-1, 1]) {
+      const from = held(x + side * r * 0.5), to = held(x + side * r)
+      if (Math.abs(to - from) < cell * 0.08) continue
+      pen.moveTo(from, y + cell * 0.06 * i); pen.quadraticCurveTo((from + to) / 2, y + cell * 0.06 * i - cell * 0.12, to, y + cell * 0.06 * i)
+    }
   }
   pen.stroke()
   pen.globalAlpha = 1
