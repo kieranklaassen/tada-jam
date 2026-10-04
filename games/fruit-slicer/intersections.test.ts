@@ -81,7 +81,9 @@ function monkey(seed: number, touches: number, start: Game = freshGame(null, see
   /** Lets a piece go at speed so that it comes down on `to`. */
   const throwAt = (from: Point, to: Point, t: number): void => {
     run.press(from, t)
-    const letGo = { x: from.x + (to.x - from.x) * 0.2, y: from.y + (to.y - from.y) * 0.2 }
+    // It is carried back along the line from the target through where it lay, far enough off for the throw to be a throw, and let go there.
+    const d = Math.hypot(to.x - from.x, to.y - from.y) || 1, back = Math.max(400, 0.8 * d)
+    const letGo = { x: Math.max(COUNTER.x + 12, Math.min(COUNTER.x + COUNTER.w - 12, to.x - ((to.x - from.x) / d) * back)), y: Math.max(COUNTER.y + 12, Math.min(COUNTER.y + COUNTER.h - 12, to.y - ((to.y - from.y) / d) * back)) }
     const v = { x: (to.x - letGo.x) / FLIGHT_SECONDS, y: (to.y - letGo.y) / FLIGHT_SECONDS }
     run.move({ x: letGo.x - v.x * 0.03, y: letGo.y - v.y * 0.03 }, t + 0.4)
     run.move(letGo, t + 0.43)

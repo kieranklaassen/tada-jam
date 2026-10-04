@@ -114,9 +114,19 @@ export function treat(game: Game, index: 0 | 1, id: number): { game: Game; glide
   if (!piece) return { game, glider: false }
   const world = remove(game.world, id)
   if (!isGlider(customer, piece)) return { game: { ...game, world }, glider: false }
-  const arrival = layOut(game.position, customer.carries === null ? 'known' : 'new', game.seed)
+  const arrival = layOut(game.position, joinsAs(game, index), game.seed)
   const queue: [Customer, Customer] = index === 0 ? [arrival.customer, game.queue[1]] : [game.queue[0], arrival.customer]
   return { game: { ...game, world, queue, seed: arrival.seed }, glider: true }
+}
+
+/**
+ * What the customer who joins the queue in place `index` is laid out as. One of the two who wait always carries
+ * what is new at the position as it stands, and the other is drawn from everything before it: so the one who
+ * joins carries the new thing unless the one it joins already does. That holds after the position has moved,
+ * and after a customer has stepped back from an open tin carrying nothing.
+ */
+function joinsAs(game: Game, index: 0 | 1): 'new' | 'known' {
+  return game.queue[index === 0 ? 1 : 0].carries === game.position ? 'known' : 'new'
 }
 
 /** A piece flung at any customer splats and is licked off: it is gone, and nothing is judged. */
@@ -183,8 +193,8 @@ export function call(game: Game, index: 0 | 1): { game: Game; did: 'stepped' | '
     const queue: [Customer, Customer] = index === 0 ? [back, game.queue[1]] : [game.queue[0], back]
     return { game: { ...game, window: called, queue, world: { ...game.world, tinOpen: false } }, did: 'swapped', ending: null }
   }
-  // The one who joins takes the place in the queue of the one who stepped up: with the new thing, or without.
-  const arrival = layOut(game.position, called.carries === null ? 'known' : 'new', game.seed)
+  // The one who joins takes the place in the queue of the one who stepped up.
+  const arrival = layOut(game.position, joinsAs(game, index), game.seed)
   const queue: [Customer, Customer] = index === 0 ? [arrival.customer, game.queue[1]] : [game.queue[0], arrival.customer]
   const state = beginCycle(game)
   return { game: { ...game, finished: state.finished, seed: arrival.seed, window: called, queue, world: clearTin(game.world) }, did: 'stepped', ending: null }

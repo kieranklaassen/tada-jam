@@ -98,7 +98,7 @@ describe('a record that cannot be trusted', () => {
 
   it('repairs each field by itself and keeps the rest', () => {
     const whole = deserialize(good)
-    expect(deserialize({ ...good, position: 'grade-4' })).toEqual({ ...whole, position: LADDER[0] })
+    expect(deserialize({ ...good, position: 'elsewhere' })).toEqual({ ...whole, position: LADDER[0] })
     expect(deserialize({ ...good, seed: 'x' }).world).toEqual(whole.world)
     expect(deserialize({ ...good, shown: ['half', 'half', 'nowhere', 7] }).shown).toEqual(['half'])
     expect(deserialize({ ...good, nextId: -4 }).world.nextId).toBeGreaterThan(Math.max(...whole.world.pieces.map((piece) => piece.id)))
@@ -149,7 +149,7 @@ describe('a record that cannot be trusted', () => {
     expect(deserialize({ ...served, finished: false }).world.pieces.some((piece) => piece.place.on === 'eaten')).toBe(false)
     expect(deserialize({ ...served, window: null }).world.pieces.some((piece) => piece.place.on === 'eaten')).toBe(false)
     const window = served.window as Record<string, unknown>
-    expect(deserialize({ ...served, window: { ...window, carries: 'grade-4' } }).window!.carries).toBeNull()
+    expect(deserialize({ ...served, window: { ...window, carries: 'elsewhere' } }).window!.carries).toBeNull()
     expect(deserialize({ ...served, window: { ...window, carries: 'thirds' } }).window!.carries).toBe('thirds')
   })
 

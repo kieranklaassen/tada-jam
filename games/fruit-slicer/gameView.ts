@@ -202,7 +202,8 @@ function effects(ctx: Ctx, fx: FxState, wall: boolean): number {
         break
       }
       case 'knock':
-        for (let i = 0; i < 4; i++) speedLines(ctx, one.x, one.y, (i * Math.PI) / 2 + Math.PI / 4, 0, 8 + 14 * t, 20 + 14 * t, 1)
+        // A small white star where the knock fell: a filled shape, not strokes that cross.
+        burst(ctx, one.x, one.y, 5 + 4 * t, 12 + 9 * t, 6, one.x + one.y, WHITE, 2.5)
         break
     }
   }
@@ -291,8 +292,6 @@ function tin(ctx: Ctx, dots: Dots, scenery: Scenery, shape: TinShape, customer: 
   // The sprung jaw at the end of each compartment, and the twins' divider between the two. Poked, or springing open, the jaw snaps out and back, twice.
   const snapping = scenery.fx.fx.find((one) => one.kind === 'jaw')
   const bite = snapping ? Math.abs(Math.sin((snapping.age / snapping.life) * Math.PI * 2)) * (1 - snapping.age / snapping.life) : 0
-  ctx.lineWidth = 3
-  ctx.strokeStyle = INK
   shape.parts.forEach((part, index) => {
     const last = index === shape.parts.length - 1
     if (!last) {
@@ -301,9 +300,9 @@ function tin(ctx: Ctx, dots: Dots, scenery: Scenery, shape: TinShape, customer: 
       ctx.fillRect(part.x + part.w - 2, body.y - 10 * (1 - drop), 4, body.h * drop + 10 * (1 - drop))
       return
     }
-    ctx.beginPath()
-    for (let i = 0; i <= 6; i++) ctx.lineTo(part.x + part.w + (i % 2 ? 6 + 20 * bite : -9 * bite), body.y + 5 + i * ((body.h - 10) / 6))
-    ctx.stroke()
+    // The jaw is a thick wall across the end of the compartment, exactly where the order ends; as it snaps it jumps out past the tin's end and back.
+    ctx.fillStyle = INK
+    ctx.fillRect(part.x + part.w + 18 * bite, body.y + 3, 7, body.h - 6)
   })
   ctx.restore()
   // The rail: the whole fruit ruled into its equal parts, the ordered ones in the fruit's tint. One row for each share.
@@ -422,7 +421,8 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
     const lengths = scenery.ending ? scenery.ending.result.parts.flatMap((part) => part.pieces.map((piece) => piece.length)) : eaten(game.world).map((piece) => piece.length)
     const feast = feastOf(atWindow, lengths, scenery.ending?.taste ?? null, scenery.show?.kind === 'showing' ? null : scenery.show, scenery.ending?.result.kind === 'over', scenery.ending?.outcome === 'badly')
     feasting = feast
-    drawn += customerAt(ctx, dots, atWindow, scenery.window, { feast, show: scenery.show }, 'window', scenery.finger)
+    // A glider playing for a pelican that waits is that pelican's scene, not the scene of whoever stands at the window.
+    drawn += customerAt(ctx, dots, atWindow, scenery.window, { feast, show: gliding && gliding.whom !== 'window' ? null : scenery.show }, 'window', scenery.finger)
     // The ticket is large and stands clear of whoever holds it: the cat's two are stacked.
     if (game.window) drawn += ticket(ctx, atWindow, WINDOW.x + 330, TICKET_TOP, atWindow.who === 'boa' ? 0.66 : atWindow.shares.length > 1 ? 0.72 : 1.1, atWindow.shares.length > 1)
     // Served, and the serve over: it holds its tin, shut, by its feet.

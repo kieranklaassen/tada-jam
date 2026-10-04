@@ -145,8 +145,10 @@ function counter(ctx: Ctx, screens: Screens, scene: SpikeScene): void {
   ctx.lineWidth = 5
   ctx.strokeStyle = INK
   ctx.beginPath()
-  ctx.moveTo(1070, 312)
-  ctx.lineTo(1070, 352)
+  ctx.moveTo(1040, 312)
+  ctx.lineTo(1040, 346)
+  ctx.moveTo(1100, 312)
+  ctx.lineTo(1100, 346)
   ctx.moveTo(1034, 352)
   ctx.lineTo(1106, 352)
   ctx.lineTo(1106, 392)

@@ -98,7 +98,8 @@ function pelican(ctx: Ctx, dots: Dots, cast: Casting): void {
   }, YELLOW, 4, dots.of(ctx, RED, 0.45))
   for (const one of inPouch) lump(ctx, cast.fruit, 100 - one.at * 80 - Math.min(1, one.size) * 30, 4 + sag * 0.5 - 4, Math.min(1, one.size), 60)
   inked(ctx, poly([[16, -8], [122, 8], [118, 14 + 10 * open], [18, 4 + 6 * open]]), YELLOW, 4)
-  if (wings > 0 || away > 0) lump(ctx, cast.fruit, 60, -2, 1, 110, 12)
+  // The whole fruit across the beak, from the first try at closing on it until it has glided away.
+  if (show?.kind === 'glider') lump(ctx, cast.fruit, 60, -2 + 5 * tries, 1, 110, 12)
   eyeOut(ctx, 6, -4, 6 * (pose.lids < 0 ? 1 - pose.lids * 0.3 : 1), 0.5 + pose.eyeX * 0.5, pose.eyeY, pose.pop, 1, -0.5)
   if (pose.pop < 0.05) lid(ctx, 6, -4, 6, Math.max(0, pose.lids, 0.5 * feast.pleased), WHITE)
   brow(ctx, 6, -4, 6, pose.brow)
@@ -226,10 +227,11 @@ function cat(ctx: Ctx, dots: Dots, cast: Casting): void {
   if (pose.tuft > 0.3) {
     ctx.lineWidth = 1.6
     ctx.strokeStyle = INK
-    for (const side of [-1, 1]) for (const dy of [-4, 2]) {
+    // Three whiskers a side, each from a root of its own and each a curve: no two start at one point and open out.
+    for (const side of [-1, 1]) for (const hair of [0, 1, 2]) {
       ctx.beginPath()
-      ctx.moveTo(side * 10, 9)
-      ctx.lineTo(side * (10 + 26 * pose.tuft), 9 + dy * 2 + 3 * pose.bit)
+      ctx.moveTo(side * (9 + hair), 5 + hair * 3.5)
+      ctx.quadraticCurveTo(side * 22, 3 + hair * 4 - 2 * pose.bit, side * (12 + 24 * pose.tuft), 1 + hair * 6.5 + 3 * pose.bit)
       ctx.stroke()
     }
   }

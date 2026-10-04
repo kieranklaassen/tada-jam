@@ -87,7 +87,7 @@ export function thingAt(game: Game, p: Point, without: readonly number[] = []): 
   return under(world, p, tinAt(game), game.window !== null)
 }
 
-/** Whether the segment from a to b touches a box (Liang and Barsky). */
+/** Whether the segment from a to b touches a box: the segment is clipped against each side of the box in turn, and touches it if anything is left. */
 export function touches(a: Point, b: Point, box: Box): boolean {
   let t0 = 0, t1 = 1
   const dx = b.x - a.x, dy = b.y - a.y

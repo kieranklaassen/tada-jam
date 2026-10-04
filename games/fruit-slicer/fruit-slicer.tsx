@@ -149,8 +149,16 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       act(touch.up(event.pointerId, at(event), event.timeStamp), event.timeStamp)
       audio.touchUp()
     }
-    const onCancel = (event: PointerEvent) => {
-      act(touch.cancel(event.pointerId, event.timeStamp))
+    // The touch ends without the child having lifted the finger: the browser took the pointer away, or the game
+    // goes to rest or is put away. That is not a lift, so it makes no move: the blade goes, and a piece or the
+    // roller in the hand stays where it was in the game, which is where it is saved.
+    const drop = () => {
+      touch.clear()
+      run?.end()
+      flush()
+    }
+    const onCancel = () => {
+      drop()
       audio.touchUp()
     }
     root.addEventListener('pointerdown', onDown)
@@ -200,7 +208,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       cancelAnimationFrame(frame)
       frame = 0
       clock.rest()
-      act(touch.clear())
+      drop()
       cadence.settle(performance.now())
     })
     attendRef.current = (attended) => attention.set(attended)
@@ -220,8 +228,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
 
     return () => {
       disposed = true
-      // As on going to rest: the touch ends first, so the thing in hand is put down before the last save.
-      act(touch.clear())
+      // As on going to rest: the touch ends first, with no move made, before the last save.
+      drop()
       cadence.settle(performance.now())
       cancelAnimationFrame(frame)
       observer.disconnect()

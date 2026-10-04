@@ -364,6 +364,54 @@ describe('the two who wait', () => {
   })
 })
 
+describe('who joins the queue', () => {
+  it('carries what is new unless the one it joins already does, so known work keeps coming back and one who waits always carries the new thing', () => {
+    for (const seed of [3, 11, 2026]) {
+      let game = freshGame(null, seed)
+      let known = 0, fresh = 0
+      for (let i = 0; i < 60; i++) {
+        const index = (i % 3 === 0 ? 1 : 0) as 0 | 1
+        const other = game.queue[index === 0 ? 1 : 0]
+        const position = game.position
+        game = call(game, index).game
+        const joined = game.queue[index]
+        // The one it joins carries the new thing of the position as it stands: then it is known work. Otherwise it brings the new thing.
+        if (LADDER.indexOf(position) > 0) expect(joined.carries, `seed ${seed}, cycle ${i}`).toBe(other.carries === position ? null : position)
+        expect(game.queue.some((customer) => customer.carries === game.position), `seed ${seed}, cycle ${i}`).toBe(true)
+        if (joined.carries === null) known++
+        else fresh++
+        game = serve(game).game
+      }
+      expect(known, `seed ${seed}`).toBeGreaterThan(10)
+      expect(fresh, `seed ${seed}`).toBeGreaterThan(10)
+    }
+  })
+
+  it('never leaves the position with nobody to move it: after a customer steps back from an open tin carrying nothing, the next to join brings the new thing', () => {
+    let game = call(freshGame(null), 0).game
+    // The tin springs open for a piece of the wrong fruit, which is picked out: open and empty.
+    const wrong = crate({ ...game, window: { ...game.window!, fruit: game.window!.fruit === 'short' ? 'long' : 'short' } })
+    game = give({ ...wrong.game, window: game.window }, wrong.id, 0).game
+    game = call(game, 1).game
+    expect(game.queue[1].carries).toBeNull()
+    // However the child goes on from here, somebody who can move the position is always within one call.
+    for (let i = 0; i < 12; i++) {
+      game = serve(game).game
+      game = call(game, (i % 2) as 0 | 1).game
+      expect([game.window!, ...game.queue].some((customer) => customer.carries === game.position), `cycle ${i}`).toBe(true)
+    }
+    // And the position does move again.
+    let moved = false
+    const from = game.position
+    for (let i = 0; i < 12 && !moved; i++) {
+      game = serve(game).game
+      moved = game.position !== from
+      game = call(game, game.queue[0].carries === game.position ? 0 : 1).game
+    }
+    expect(moved).toBe(true)
+  })
+})
+
 describe('many visits', () => {
   it('walk the whole designed order one step at a time when every first cut fits, with every customer in range', () => {
     let game = freshGame(null)
