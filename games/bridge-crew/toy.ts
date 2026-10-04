@@ -34,7 +34,7 @@ export type Hand =
   | { what: 'roll' }
   | { what: 'rack'; index: number }
   /** The trolley in its compartment or on the bridge, and the tracing paper: `spot` is the pad or one of the two kept tracings. */
-  | { what: 'trolley'; placed: boolean; carried: boolean; finger: readonly [number, number] }
+  | { what: 'trolley'; placed: boolean; carried: boolean; finger: readonly [number, number]; ran: number; home: { x: number; under: boolean } | { pin: Point } | null }
   | { what: 'tracing'; spot: 'pad' | 0 | 1; carried: boolean; finger: readonly [number, number] }
   /** The small model in the margin, pressed; and one part of the tracing laid on the board, to be copied. */
   | { what: 'model' }

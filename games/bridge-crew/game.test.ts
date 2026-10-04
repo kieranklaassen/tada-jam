@@ -14,6 +14,7 @@ import { bargeHorn, beaverChatter, beaverSigh, beaverSlap, hornEcho, load as loa
 import { groundAt } from './sheet'
 import { plop, pinSwing, splash as splashVoice } from './voices'
 import { DRAWN_DIP } from './pose'
+import { MODEL_PLACE, MODEL_TOP, perchOn } from './motion'
 import { JUDGE } from './order'
 import { desk } from './valley'
 import { BUILD } from './crew'
@@ -297,7 +298,15 @@ describe('the trolley, the tracing paper and the two showings', () => {
     const changed = new Game(game.save, stream(3))
     tapTool(changed, 'tracing', 0)
     expect(changed.showing).toBeNull()
-    carryTrolley(changed, [10.5, 6.2])
+    // Set down and left standing, nothing is compared: the trolley has to be run over the bridge.
+    const b2 = bay(changed, 'trolley')
+    changed.press((b2.x0 + b2.x1) / 2, TRAY.top - 1); changed.dragStart(); changed.dragMove(10.5, 6.2)
+    expect(changed.trolley.at).toEqual({ x: 10.5, under: false })
+    expect(changed.chief.act).not.toBe('compares')
+    // Run a cell and a half along the deck under the finger, it has been.
+    changed.dragMove(11.2, 6.2); changed.dragMove(12, 6.2)
+    expect(changed.trolley.at).toEqual({ x: 12, under: false })
+    changed.dragEnd()
     expect(changed.chief.act).toBe('compares')
     expect(changed.showing).toMatchObject({ differences: [{ what: 'turned' }, { what: 'turned' }] })
     expect(changed.save.shown).toContain('one-change')
@@ -1094,5 +1103,128 @@ describe('what the second reading found the sheet promises', () => {
     const lost = new Game({ ...freshSave(null), finished: true, tries: JUDGE.badly, next: { site: 'plank-gap', variant: 1 } }, stream(1))
     steps(lost, 1)
     expect(lost.chief.act).not.toBe('shows')
+  })
+})
+
+describe('what the third reading found the sheet promises', () => {
+  const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
+  const paper = (game: Game) => tools(game.at).find((t) => t.tool === 'tracing')!
+  const cart = (game: Game) => tools(game.at).find((t) => t.tool === 'trolley')!
+
+  it('the trolley is run over the bridge under the finger: the deck lies under it at each place, and lifted off or let go of in the middle of it, it is where it should be', () => {
+    const game = new Game(edit(freshSave(null), CROSSINGS['plank-gap']), stream(2)), b = cart(game)
+    game.takeVoices()
+    game.press((b.x0 + b.x1) / 2, TRAY.top - 1); game.dragStart(); game.dragMove(11, 6.3)
+    expect(game.trolley.at).toEqual({ x: 11, under: false })
+    expect(game.takeVoices().length).toBeGreaterThan(0)
+    const at11 = game.answer.moved(game.frame.at.get('12,6')!)[1]
+    game.dragMove(12, 6.3)
+    expect(game.trolley.at).toEqual({ x: 12, under: false })
+    // In the middle the plank is lower than with the trolley near its end.
+    expect(game.answer.moved(game.frame.at.get('12,6')!)[1]).toBeLessThan(at11)
+    expect(game.hand).toMatchObject({ what: 'trolley', ran: 1 })
+    // Lifted well off the deck it is in the hand again, and the plank lies with nothing on it.
+    game.dragMove(12, 9)
+    expect(game.trolley.at).toBeNull()
+    game.dragMove(13, 6.2)
+    expect(game.trolley.at).toEqual({ x: 13, under: false })
+    // Put away now, it is back where the finger took it from: the tray.
+    game.putAway()
+    expect(game.hand).toBeNull()
+    expect(game.trolley.at).toBeNull()
+    // Let go of on the deck, it stays, and trundles to the lowest point.
+    game.press((b.x0 + b.x1) / 2, TRAY.top - 1); game.dragStart(); game.dragMove(11, 6.3); game.dragEnd()
+    expect(game.trolley.at).toEqual({ x: 12, under: false })
+  })
+
+  it('where the traced design has no way under the trolley, that is shown, and not a design that looks the stiffer', () => {
+    // On the sheet with the rock: the traced design is the first plank on its prop and no further; the bridge goes right across.
+    const onRock = (bridge: typeof CROSSINGS['rock-prop']) => edit({ ...freshSave(null), sheets: [{ ...freshSave(null).sheets[0], site: 'rock-prop' }] }, bridge)
+    const whole = CROSSINGS['rock-prop'], rock = site('rock-prop', 0).left[0] + 4
+    const half = whole.filter((one) => Math.max(one.a[0], one.b[0]) <= rock)
+    expect(half.length).toBeGreaterThan(0)
+    expect(half.length).toBeLessThan(whole.length)
+    const short = new Game(onRock(half), stream(2)), t = paper(short)
+    expect(short.frame.firm.every(Boolean)).toBe(true)
+    tapAt(short, (t.x0 + t.x1) / 2, TRAY.top - TRAY.tall + 0.3)
+    const game = new Game(edit(short.save, whole), stream(2)), b = cart(game)
+    tapAt(game, t.x0 + 0.4, TRAY.top - 0.4)
+    expect(game.laidTracing).toBe(0)
+    expect(game.tracingMisses).toBe(false)
+    game.press((b.x0 + b.x1) / 2, TRAY.top - 1); game.dragStart(); game.dragMove(rock + 1.5, 6.3)
+    expect(game.trolley.at).toEqual({ x: rock + 1.5, under: false })
+    // The traced design stops at the rock: nothing of it is under the trolley beyond.
+    expect(game.tracingMisses).toBe(true)
+    game.dragMove(rock - 2, 6.3)
+    expect(game.trolley.at).toEqual({ x: rock - 2, under: false })
+    expect(game.tracingMisses).toBe(false)
+    game.dragEnd()
+  })
+
+  it('the chief stands on the model it has built: its hop takes its feet to the top of that idea\'s model', () => {
+    for (const idea of Object.keys(MODEL_TOP)) {
+      const [across, up] = perchOn(idea)
+      // Inside the model's width, which begins a cell and a half from its feet, and at the model's own height.
+      expect(across * MODEL_PLACE.chief).toBeGreaterThan(MODEL_PLACE.from)
+      expect(across * MODEL_PLACE.chief).toBeLessThan(MODEL_PLACE.from + 2.1 * MODEL_PLACE.unit)
+      expect(up * MODEL_PLACE.chief).toBeCloseTo(MODEL_TOP[idea][1] * MODEL_PLACE.unit)
+      expect(up * MODEL_PLACE.chief).toBeLessThan(1.9)
+    }
+    const game = fresh()
+    drag(game, [10, 6], [14, 6])
+    send(game); steps(game, 6); send(game); steps(game, 6)
+    expect(game.chief.act).toBe('shows')
+    let stood = false
+    for (let i = 0; i < 60 * 9 && game.chief.act === 'shows'; i++) {
+      game.step(1 / 60)
+      if (game.chief.pose.perch > 0.999) {
+        stood = true
+        expect(-game.chief.pose.hopX).toBeCloseTo(perchOn('profile')[0], 6)
+        expect(game.chief.pose.hopY).toBeCloseTo(perchOn('profile')[1], 2)
+        // On it, once it has landed, its neck is bent down to look at it.
+        if (game.chief.progress > 0.89 && game.chief.progress < 0.93) expect(game.chief.pose.neck).toBeGreaterThan(0.5)
+      }
+    }
+    expect(stood).toBe(true)
+    // Back on its ledge when the showing is over.
+    steps(game, 0.2)
+    expect(Math.abs(game.chief.pose.hopX)).toBeLessThan(1e-6)
+  })
+
+  it('put away in the middle of a run, the vehicle stands at the near bank again and the bridge is as built: a run is not saved', () => {
+    const game = new Game(edit(freshSave(null), CROSSINGS['plank-gap']), stream(2))
+    const before = JSON.stringify(stored(game))
+    game.takeChange(); game.takeUrgent()
+    tapAt(game, waitAt(game.at, 0) - 0.4, 7)
+    steps(game, 1.2)
+    expect(game.drive).not.toBeNull()
+    game.putAway()
+    expect(game.drive).toBeNull()
+    expect(game.show.kind).toBeNull()
+    expect(game.waiting).toEqual(['post-van'])
+    expect(game.crew.beaver.act).not.toBe('brace')
+    expect(JSON.stringify(stored(game))).toBe(before)
+    expect(game.takeUrgent()).toBe(false)
+    // And the plank lies as built, at once.
+    const ends = game.drawn()[0]
+    expect(ends.a[1]).toBeCloseTo(game.rest[0].a[1], 6)
+    // A scene, whose outcome was saved when it started, goes on where it was.
+    send(game)
+    expect(game.show.kind).toBe('crossing')
+    game.putAway()
+    expect(game.show.kind).toBe('crossing')
+  })
+
+  it('opened again, the pile the child was building from is the one picked', () => {
+    const game = new Game(freshSave(null, 'rock-prop'), stream(2))
+    expect(game.selected).toBe('plank')
+    const sticks = bays(game.at).find((bay) => bay.kind === 'stick')!
+    tapAt(game, (sticks.x0 + sticks.x1) / 2, TRAY.top - 1)
+    drag(game, [12, 3], [12, 5])
+    expect(game.bridge[0].kind).toBe('stick')
+    expect(new Game(deserialize(stored(game), null), stream(1)).selected).toBe('stick')
+    // With nothing laid, or none of that kind left, it is the first pile that has a part in it.
+    expect(new Game(freshSave(null, 'rock-prop'), stream(1)).selected).toBe('plank')
+    void same
   })
 })

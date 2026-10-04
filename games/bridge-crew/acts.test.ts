@@ -126,4 +126,15 @@ describe('how each vehicle moves', () => {
       }
     }
   })
+
+  it('a deck with no dip at all bores the jelly truck: its driver yawns, mouth wide and eyes shut', () => {
+    const bored: Reaction = { mood: 'plain', act: 'driver-yawns', amount: 1, parts: [] }
+    const mid = reactPose('jelly-truck', bored, 0.5)
+    expect(mid.gasp).toBeGreaterThan(0.8)
+    expect(mid.lids).toBeCloseTo(1)
+    expect(reactPose('jelly-truck', bored, 0).gasp).toBe(0)
+    expect(reactPose('jelly-truck', bored, 1).gasp).toBeCloseTo(0)
+    // A ride that was neither, without the yawn, keeps its mouth shut.
+    expect(reactPose('jelly-truck', plain, 0.5).gasp).toBe(0)
+  })
 })

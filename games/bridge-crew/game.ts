@@ -6,6 +6,7 @@ import { PART_REACH, PIN_REACH, SLIDE_OFF, TROLLEY_REACH, farFromStretch, gridPo
 import { givenUpOn, modelInMargin, nearestDifferences, neatWayDue, oneChangeDue, type Difference } from './order'
 import { CALM, type Splash } from './drift'
 import { desk } from './valley'
+import { perchOn } from './motion'
 import { DRAWN_DIP, atRest, rests, type Rest } from './pose'
 import { answerOf, between, creaks, ended, frontAt, seat, stepAt, type Seat } from './ride'
 import type { Frame, Strain } from './frame'
@@ -15,7 +16,7 @@ import { Scene } from './scene'
 import { groundAt } from './sheet'
 import { isFooting, site, type Idea, type VehicleId } from './sites'
 import { crossingBeats, giveBeats, givePlace, idleShow, type Cue, type Show } from './stage'
-import { CHIEF, RING, Toy } from './toy'
+import { CHIEF, RING, Toy, type Hand } from './toy'
 import { TAIL, TASTE, VEHICLES, bargeReaction, reaction, trainOf, type Reaction } from './vehicles'
 import { bargeHorn, beaverChatter, beaverSigh, beaverSlap, chiefTaps, chord, creak, give, gurgle, honk, hornEcho, plop, lay as layVoice, load as loadVoice, moleDrop, moleRule, pendulumSqueak, pinTick, pluck as pluckVoice, reactVoice, restore, snapTick, splash, trolleyBells, trolleyFlip, trolleyOff, trolleySet, trolleyWeight, unrollVoice } from './voices'
 
@@ -42,6 +43,9 @@ export type Drive = {
 export const SWING = { rate: 2.6, far: 0.3, dies: 2.6, heard: 0.05 } as const
 /** How far it has swung, in radians, this long after it was set swinging. It starts at one end. */
 export const swingAt = (since: number): number => (Number.isFinite(since) ? SWING.far * Math.exp(-since / SWING.dies) * Math.cos(SWING.rate * since) : 0)
+
+/** How far the trolley must go along the deck, in cells, to have been run over the bridge: by the hand, or by trundling to the lowest point. */
+export const RUN_OVER = 1
 
 /** How long the next roll takes to slide in when it arrives outside a crossing, in seconds. */
 export const ROLL_IN = 1.1
@@ -106,6 +110,10 @@ export class Game extends Toy {
   /** What the bridge and the laid tracing lie by now: the frame and how far each of its points has moved. A plank's curve is read from it. */
   private lying: Lying | null = null
   private tracingLying: Lying | null = null
+  /** The traced design has no way under the trolley where it stands: in that design the load would not be held at all. */
+  tracingMisses = false
+  /** Each part's share in use when the trolley was last heard on it, for the sounds as it is run along the deck. */
+  private trolleyHeard: number[] = []
   /** Where the trolley last stood or hung: where it drops from when what held it is taken away. */
   private trolleyWas: readonly [number, number] | null = null
   /** The pencil ring as it was when the job vehicle crossed: it fades through the crossing's scene. What is saved has it gone already. */
@@ -324,6 +332,7 @@ export class Game extends Toy {
     this.trolleyWas = this.trolleyPlace() ?? this.trolleyWas
     const tracing = this.laidTracing === null || this.laidTracing === undefined ? null : this.save.sheets[this.save.on].tracings[this.laidTracing]
     this.tracingGave = null
+    this.tracingMisses = false
     if (!tracing) { this.tracingRest = []; this.tracingLying = null; return }
     // The tracing under the same load at the same place. A design that would give under it is still drawn under it, and
     // the part that would give is drawn broken: the weaker design looks the weaker.
@@ -334,6 +343,8 @@ export class Game extends Toy {
       this.tracingLying = { frame: loaded.frame, moved: answer.moved }
       if (loaded.ending?.kind === 'gives') this.tracingGave = loaded.ending.part
     } else {
+      // No way passes that place in the traced design: the same load there would go straight into the water.
+      this.tracingMisses = this.trolley.at !== null
       const alone = this.modelOf(tracing)
       this.tracingRest = alone.rest
       this.tracingLying = { frame: alone.frame, moved: alone.answer.moved }
@@ -373,10 +384,10 @@ export class Game extends Toy {
     if (!began && this.showing && (this.chief.act === 'shows' || this.chief.act === 'compares')) { this.chief.rest(); if ('differences' in this.showing) this.showing = null }
     this.owed = null
     const tool = toolAt(this.at, x, y)
-    if (tool?.tool === 'trolley') { this.hand = { what: 'trolley', placed: false, carried: false, finger: [x, y] }; this.voices.push(pinTick); return }
+    if (tool?.tool === 'trolley') { this.hand = { what: 'trolley', placed: false, carried: false, finger: [x, y], ran: 0, home: this.trolley.at }; this.voices.push(pinTick); return }
     if (tool?.tool === 'tracing') { this.hand = { what: 'tracing', spot: tracingSpot(tool, x, y), carried: false, finger: [x, y] }; this.voices.push(unrollVoice(0)); return }
     const cart = this.trolleyPlace()
-    if (cart && Math.hypot(x - cart[0], y - cart[1] - 0.3) <= TROLLEY_REACH) { this.hand = { what: 'trolley', placed: true, carried: false, finger: [x, y] }; this.voices.push(pinTick); return }
+    if (cart && Math.hypot(x - cart[0], y - cart[1] - 0.3) <= TROLLEY_REACH) { this.hand = { what: 'trolley', placed: true, carried: false, finger: [x, y], ran: 0, home: this.trolley.at }; this.voices.push(pinTick); return }
     // A hat hanging on a part comes off at a touch, and the chief wears it.
     const sheet = this.save.sheets[this.save.on], ends = this.drawn()
     const hat = sheet.hats.find((index) => ends[index] && Math.hypot(x - (ends[index].a[0] + ends[index].b[0]) / 2, y - (ends[index].a[1] + ends[index].b[1]) / 2 - 0.2) <= 0.45)
@@ -468,7 +479,7 @@ export class Game extends Toy {
       // One part of the tracing is copied onto the bridge, if the kit still has one of its kind.
       const copy = layPart(this.bridge, { kind: part.kind, a: part.a, b: part.b, turned: part.turned }, this.at.kit)
       this.voices.push(copy.result.voice)
-      if (copy.bridge.length > this.bridge.length) { this.commit(copy.bridge, this.bridge.length); this.compare() }
+      if (copy.bridge.length > this.bridge.length) this.commit(copy.bridge, this.bridge.length)
       return
     }
     if (hand?.what === 'rack') { this.hand = null; if (hand.index !== this.save.on) this.turn(turnTo(this.save, hand.index)); return }
@@ -483,13 +494,14 @@ export class Game extends Toy {
 
   override dragMove(x: number, y: number): void {
     const hand = this.hand
-    if (hand?.what === 'trolley' || hand?.what === 'tracing') { hand.finger = [x, y]; return }
+    if (hand?.what === 'tracing') { hand.finger = [x, y]; return }
+    if (hand?.what === 'trolley') { hand.finger = [x, y]; if (hand.carried) this.runTrolley(hand, x, y); return }
     super.dragMove(x, y)
   }
 
   override dragEnd(): void {
     const hand = this.hand
-    if (hand?.what === 'trolley') { this.hand = null; if (hand.carried) this.dropTrolley(hand.finger[0], hand.finger[1]); return }
+    if (hand?.what === 'trolley') { this.hand = null; if (hand.carried) this.dropTrolley(hand.finger[0], hand.finger[1], hand.ran); return }
     if (hand?.what === 'tracing') {
       this.hand = null
       // A kept tracing carried up onto the board changes places with the bridge.
@@ -509,6 +521,16 @@ export class Game extends Toy {
    * again and the bridge is as built. A scene goes on where it was when the
    * child comes back: its outcome was saved when it started.
    */
+  /** The touch ended with nothing done. The trolley in the hand, which may have been riding the deck under the finger, is back where it was taken from. */
+  override pressEnd(): void {
+    const hand = this.hand
+    super.pressEnd()
+    if (hand?.what !== 'trolley' || JSON.stringify(hand.home) === JSON.stringify(this.trolley.at)) return
+    this.save = setTrolley(this.save, this.trolley.weights, hand.home)
+    this.changed = true
+    this.model()
+  }
+
   putAway(): void {
     this.pressEnd()
     if (!this.drive) return
@@ -579,11 +601,10 @@ export class Game extends Toy {
     this.changed = true
     this.model()
     this.loadSound()
-    this.compare()
   }
 
   /** The trolley let go at a place: on the deck it trundles to the low point, at a pin it hangs, anywhere else it goes back to the tray. */
-  private dropTrolley(x: number, y: number): void {
+  private dropTrolley(x: number, y: number, hadRun = 0): void {
     const trolley = this.trolley, snapped = Math.round(x * 2) / 2, was = trolley.at
     const onDeck = park(this.at, this.bridge, snapped, trolley.weights)
     // The height of the way at that place: at one of its points, or between two (a tube has a point only at each pin).
@@ -591,11 +612,14 @@ export class Game extends Toy {
     const before = way.filter((n) => n.x <= snapped).pop(), after = way.find((n) => n.x >= snapped)
     const deckY = before && after ? (after.x === before.x ? before.y : before.y + ((after.y - before.y) * (snapped - before.x)) / (after.x - before.x)) : Infinity
     const pin = [Math.round(x), Math.round(y)] as const
+    let ran = hadRun
     if (onDeck && Math.abs(y - deckY) <= 1 && snapped > this.at.left[0] && snapped < this.at.right[0]) {
       const rest = lowPoint(this.at, this.bridge, snapped, trolley.weights) ?? snapped
       this.save = setTrolley(this.save, trolley.weights, { x: rest, under: false })
       this.trolleyRolled = { from: snapped, since: 0 }
       this.voices.push(trolleySet)
+      // Let go, it trundles on to the lowest point: that is a run too.
+      ran += Math.abs(rest - snapped)
     } else if (Math.hypot(x - pin[0], y - pin[1]) <= 0.45 && hang(this.at, this.bridge, pin, trolley.weights) && !isFooting(this.at)(pin)) {
       this.save = setTrolley(this.save, trolley.weights, { pin })
       // It swings from where it was let go, with a squeak at each end, until it hangs still.
@@ -608,7 +632,43 @@ export class Game extends Toy {
     this.changed = true
     this.model()
     this.loadSound()
-    this.compare()
+    if (ran >= RUN_OVER) this.compare()
+  }
+
+  /**
+   * The trolley in the hand, over the deck: it rides the deck under the finger,
+   * half a cell at a time, and the bridge (and a tracing laid on it) lies under
+   * it as the model answers at each place. Off the deck it is in the hand
+   * again. Run a cell or more along a bridge with a tracing laid on it, the
+   * two designs have been compared.
+   */
+  private runTrolley(hand: Extract<Hand, { what: 'trolley' }>, x: number, y: number): void {
+    const trolley = this.trolley, snapped = Math.round(x * 2) / 2, was = trolley.at
+    const onDeck = snapped > this.at.left[0] && snapped < this.at.right[0] ? park(this.at, this.bridge, snapped, trolley.weights) : null
+    const way = onDeck ? roadOf(this.at, onDeck.frame).nodes.map((n) => onDeck.frame.nodes[n]) : []
+    const before = way.filter((n) => n.x <= snapped).pop(), after = way.find((n) => n.x >= snapped)
+    const deckY = before && after ? (after.x === before.x ? before.y : before.y + ((after.y - before.y) * (snapped - before.x)) / (after.x - before.x)) : Infinity
+    if (onDeck && Math.abs(y - deckY) <= 1) {
+      if (was && 'x' in was && was.x === snapped) return
+      if (was && 'x' in was) hand.ran += Math.abs(snapped - was.x)
+      else { this.voices.push(trolleySet); this.trolleyHeard = [] }
+      this.save = setTrolley(this.save, trolley.weights, { x: snapped, under: false })
+      this.changed = true
+      this.model()
+      // Each part is heard as it takes the trolley, as under a vehicle.
+      if (this.trolley.at) {
+        const now = this.answer.parts.map((part) => part.use)
+        for (const due of creaks(this.trolleyHeard, now)) if (this.bridge[due.part]) this.voices.push(loadVoice(this.bridge[due.part].kind, due.use))
+        this.trolleyHeard = now
+        if (hand.ran >= RUN_OVER) this.compare()
+      }
+    } else if (was && 'x' in was) {
+      // Lifted off the deck: it is in the hand, the deck springs back and the weights jingle.
+      this.voices.push(trolleyOff(trolley.weights))
+      this.save = setTrolley(this.save, trolley.weights, null)
+      this.changed = true
+      this.model()
+    }
   }
 
   /** Under the trolley the part that works hardest is heard, in its own kind's voice: a plank creaks lower the deeper it bends, a stick squeaks higher, a tube crackles, a thread hums. */
@@ -636,7 +696,6 @@ export class Game extends Toy {
     this.laidTracing = this.laidTracing === spot ? null : spot
     this.voices.push(unrollVoice(1))
     this.model()
-    this.compare()
   }
 
   /** With a tracing laid and the trolley on the bridge, the two are compared. The first time they differ in more than one part, the chief shows one clean comparison. */
@@ -876,7 +935,7 @@ export class Game extends Toy {
     this.save = markShown(this.save, idea)
     this.urgent = true
     this.changed = true
-    this.chief.showing('shows')
+    this.chief.showing('shows', perchOn(idea))
     return true
   }
 

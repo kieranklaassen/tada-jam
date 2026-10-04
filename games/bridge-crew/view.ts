@@ -12,7 +12,7 @@ import { handPose, type Guidance, type HandPose } from './guidance'
 import { key, length, samePoint, type Kind, type Part, type Point } from './kit'
 import { ROLL, SLIDE_OFF, TRAY, bays, parkAt, rackAt, slideOff, tools, waitAt } from './layout'
 import { INK, THICK, pin, stream, string, wood, woodShadow, type Pen, type Wood } from './look'
-import { stringSway } from './motion'
+import { MODEL_PLACE, stringSway } from './motion'
 import { WATER, ends } from './pose'
 import { paintSheet, plotFor, px, water, type Plot } from './sheet'
 import { COLS, isFooting, site, type Site, type VehicleId } from './sites'
@@ -296,21 +296,21 @@ export class View {
     pen.lineWidth = Math.max(1.5, cell * 0.05)
     pen.beginPath(); pen.moveTo(cx - cell * 0.7, cy); pen.lineTo(cx + cell * 4.6, cy); pen.stroke()
     pen.globalAlpha = 1
-    chief(pen, cx, cy, cell * 1.1, toy.chief.pose, stream(11), toy.chiefHat)
+    chief(pen, cx, cy, cell * MODEL_PLACE.chief, toy.chief.pose, stream(11), toy.chiefHat)
     // The model in front of it: the way that fails and then the idea while it shows the neat way; two models side by
     // side while it shows the one change; the idea's model once shown; and its own small triangle otherwise.
     const showing = toy.showing, t = toy.chief.progress
     const span = (a: number, b: number) => Math.max(0, Math.min(1, (t - a) / (b - a)))
     // The models are drawn large enough to read from across the sheet: a cell and a half to the model's own cell.
-    if (showing && 'idea' in showing && toy.chief.act === 'shows') ideaModel(pen, showing.idea, cx + cell * 1.5, cy, cell * 1.9, t >= 0.5, span(0.34, 0.46), stream(12), showing.failure)
+    if (showing && 'idea' in showing && toy.chief.act === 'shows') ideaModel(pen, showing.idea, cx + cell * MODEL_PLACE.from, cy, (cell * MODEL_PLACE.unit) / 0.9, t >= 0.5, span(0.34, 0.46), stream(12), showing.failure)
     else if (showing && 'differences' in showing) compareModels(pen, showing.differences, cx + cell * 1.4, cy, cell * 1.35, t >= 0.5, t < 0.5 ? span(0.2, 0.34) : span(0.62, 0.76), stream(12))
     else if (toy.marginModel) {
       // Pressed, it gives a little on its ledge; plucked, it shakes from side to side and dies away.
       const rung = toy.modelRung, shake = rung < RING ? 0.06 * Math.exp(-rung / 0.2) * Math.sin(2 * Math.PI * 16 * rung) : 0
       pen.save()
-      pen.translate(cx + cell * (1.5 + shake), cy)
+      pen.translate(cx + cell * (MODEL_PLACE.from + shake), cy)
       if (hand?.what === 'model') pen.scale(1.03, 0.9)
-      ideaModel(pen, toy.marginModel, 0, 0, cell * 1.9, true, 0, stream(12))
+      ideaModel(pen, toy.marginModel, 0, 0, (cell * MODEL_PLACE.unit) / 0.9, true, 0, stream(12))
       pen.restore()
     }
     else chiefModel(pen, cx + cell * 1.2, cy, cell * 1.1, stream(12))
@@ -412,6 +412,20 @@ export class View {
     drawn += this.tools(pen, game, glow)
     // A tracing laid on the board: the traced design as a white line drawing, lying as it would under the same load.
     if (game.laidTracing !== null && sheet.tracings[game.laidTracing]) { lineDrawing(pen, sheet.tracings[game.laidTracing], game.tracingRest, at2, cell, INK.line, 0.8, (index) => game.bend(index, true), game.tracingGave); drawn++ }
+    // Where the traced design has no way under the trolley, its own trolley is drawn in line where it would be: in the water below.
+    const stands = game.trolleyPlace()
+    if (game.tracingMisses && stands) {
+      const [wx, wy] = at2(stands[0], WATER)
+      pen.strokeStyle = INK.line
+      pen.globalAlpha = 0.8
+      pen.lineWidth = Math.max(1, cell * 0.03)
+      pen.beginPath()
+      pen.roundRect(wx - cell * 0.42, wy - cell * 0.3, cell * 0.84, cell * 0.22, cell * 0.04)
+      for (const side of [-1, 1]) { pen.moveTo(wx + side * cell * 0.6, wy); pen.quadraticCurveTo(wx + side * cell * 0.85, wy - cell * 0.14, wx + side * cell * 1.1, wy) }
+      pen.stroke()
+      pen.globalAlpha = 1
+      drawn++
+    }
     // The barge, on a sheet where one passes: moored by the near bank, nosing forward and back, and under the bridge and back while a crossing is shown.
     if (at.channel) {
       const passing = show.kind === 'crossing' && game.bargeTook ? Math.sin(Math.PI * show.react) : 0, took = game.bargeTook
@@ -538,11 +552,13 @@ export class View {
     const cart = game.trolley, carried = hand?.what === 'trolley' && hand.carried ? hand.finger : null
     const home = at2((boxes[0].x0 + boxes[0].x1) / 2 - 0.25, low + 0.55)
     spareWeights(pen, ...at2(boxes[0].x0 + 0.5, low + 1.6), cell * 0.9, 6 - cart.weights)
-    if (carried) trolley(pen, ...at2(carried[0], carried[1] - 0.2), cell, cart.weights, 'tray', 0, stream(31))
+    // In the hand it is under the finger, unless the finger has it on the deck, where it rides.
+    const riding = carried !== null && cart.at !== null && 'x' in cart.at
+    if (carried && !riding) trolley(pen, ...at2(carried[0], carried[1] - 0.2), cell, cart.weights, 'tray', 0, stream(31))
     else if (!cart.at && !game.trolleyFell) trolley(pen, home[0], home[1], cell * 1.15, cart.weights, 'tray', 0, stream(31))
     // On the bridge: trundling from where it was set down to where it rests, riding under the plank, or swinging from a pin.
     const place = game.trolleyPlace()
-    if (place && cart.at && !carried) {
+    if (place && cart.at && (!carried || riding)) {
       const rolled = game.trolleyRolled, e = rolled ? Math.min(1, rolled.since / 0.6) : 1
       const x = rolled ? rolled.from + (place[0] - rolled.from) * e * e * (3 - 2 * e) : place[0]
       const how = 'pin' in cart.at ? 'pin' : cart.at.under ? 'under' : 'deck'

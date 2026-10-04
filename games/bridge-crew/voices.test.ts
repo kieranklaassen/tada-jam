@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { KINDS, SPEC } from './kit'
-import { RANGE, growCreak, pendulumSqueak, beaverChatter, beaverSigh, beaverSlap, chord, creak, fold, give, gurgle, hornEcho, lay, load, moleDrop, moleRule, pendulum, pinClick, pinPop, pinRattle, pinSwing, pinTick, plop, play, pluck, snapTick, splash, takeOff, trolleyBells, trolleyFlip, trolleyOff, trolleySet, trolleyWeight, turn, type VoiceSpec } from './voices'
+import { RANGE, reactVoice, growCreak, pendulumSqueak, beaverChatter, beaverSigh, beaverSlap, chord, creak, fold, give, gurgle, hornEcho, lay, load, moleDrop, moleRule, pendulum, pinClick, pinPop, pinRattle, pinSwing, pinTick, plop, play, pluck, snapTick, splash, takeOff, trolleyBells, trolleyFlip, trolleyOff, trolleySet, trolleyWeight, turn, type VoiceSpec } from './voices'
 
 const every: [string, VoiceSpec][] = [
   ['pin', pinClick],
@@ -16,6 +16,8 @@ const every: [string, VoiceSpec][] = [
   ...KINDS.flatMap((kind) => [-1, 0, 0.5, 1, 9].map((use): [string, VoiceSpec] => [`load ${kind} ${use}`, load(kind, use)])),
   ['plop', plop], ['gurgle', gurgle], ['horn echo', hornEcho],
   ['squeak', pendulumSqueak(false)], ['squeak back', pendulumSqueak(true)], ...KINDS.flatMap((kind) => [0, 1, 4, 9].map((long): [string, VoiceSpec] => [`grow ${kind} ${long}`, growCreak(kind, long)])),
+  ...['parcels-stand', 'parcels-slide', 'jelly-rolls', 'jelly-jumps', 'driver-yawns', 'keys-ripple', 'piano-rolls-back', 'necks-stretch', 'necks-duck', 'hums-a-scale', 'loses-step'].map((act): [string, VoiceSpec] => [`react ${act}`, reactVoice('post-van', 'plain', act)]),
+  ...['post-van', 'caterpillar-bus'].flatMap((id) => (['like', 'dislike', 'plain'] as const).map((mood): [string, VoiceSpec] => [`react ${id} ${mood}`, reactVoice(id, mood)])),
   ['beaver slap', beaverSlap], ['beaver chatter', beaverChatter], ['beaver sigh', beaverSigh], ['mole rule', moleRule(false)], ['mole rule again', moleRule(true)], ['mole drop', moleDrop], ['pin tick', pinTick], ['pin swing', pinSwing], ['pendulum', pendulum], ['trolley set', trolleySet], ['trolley flip', trolleyFlip],
   ['rattle none', pinRattle([])], ['rattle many', pinRattle([1, 99999, 300, 400, 500, 600, 700])],
   ...[0, 1, 3, 40].flatMap((n): [string, VoiceSpec][] => [[`pop ${n}`, pinPop(n)], [`weight ${n}`, trolleyWeight(n)], [`off ${n}`, trolleyOff(n)]]),
@@ -73,5 +75,23 @@ describe('the voices, as numbers', () => {
     expect(calls).toEqual(['tone 10 233 triangle', 'noise 10 900'])
     play(trolleyBells(2), 1, (at) => calls.push(`bell ${at.toFixed(2)}`), () => {})
     expect(calls.slice(2)).toEqual(['bell 1.00', 'bell 1.08'])
+  })
+
+  it('each thing a vehicle does about its ride has a sound of its own, and a tube drums as it rolls back to the tray', () => {
+    const acts = ['parcels-stand', 'parcels-slide', 'jelly-rolls', 'jelly-jumps', 'driver-yawns', 'keys-ripple', 'piano-rolls-back', 'necks-stretch', 'necks-duck', 'hums-a-scale', 'loses-step']
+    expect(new Set(acts.map((act) => JSON.stringify(reactVoice('post-van', 'plain', act)))).size).toBe(acts.length)
+    // The caterpillar's feet tick while it hums; out of step, the ticks are uneven and two hiccups come between them.
+    const hum = reactVoice('caterpillar-bus', 'like', 'hums-a-scale'), lost = reactVoice('caterpillar-bus', 'dislike', 'loses-step')
+    expect(hum.filter((sound) => sound.pitch > 1500)).toHaveLength(3)
+    expect(hum.filter((sound) => sound.wave === 'sine').map((sound) => sound.pitch)).toEqual([...hum.filter((sound) => sound.wave === 'sine').map((sound) => sound.pitch)].sort((a, b) => a - b))
+    const ticks = lost.filter((sound) => sound.pitch > 1500).map((sound) => sound.after ?? 0)
+    expect(new Set(ticks.slice(1).map((after, i) => (after - ticks[i]).toFixed(2))).size).toBeGreaterThan(1)
+    expect(lost.filter((sound) => sound.pitch < 1000)).toHaveLength(2)
+    // The yawn goes up and then a long way down.
+    const yawn = reactVoice('jelly-truck', 'plain', 'driver-yawns')
+    expect(yawn[1].slideTo!).toBeLessThan(yawn[1].pitch / 2)
+    const drum = takeOff('tube', 3)
+    expect(drum.length).toBeGreaterThanOrEqual(4)
+    for (let i = 1; i < drum.length; i++) { expect(drum[i].after!).toBeGreaterThan(drum[i - 1].after ?? 0); expect(drum[i].pitch).toBeLessThan(drum[i - 1].pitch) }
   })
 })

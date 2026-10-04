@@ -27,6 +27,8 @@ export type ChiefPose = {
   blink: number
   /** The lid half down over the eye, 0 to 1: it has seen this before. */
   lid: number
+  /** Up on the model it has built, 0 to 1: the director turns this into a hop to where the model's top is. */
+  perch: number
   /** Weight on one leg: -1 on the back leg, 1 on the front. */
   lean: number
   /** The other leg drawn up under the body, 0 to 1. */
@@ -35,7 +37,7 @@ export type ChiefPose = {
   preen: number
 }
 
-export const STILL: ChiefPose = { neck: 0, tilt: 0, bob: 0, hopX: 0, hopY: 0, crest: 0, peck: 0, blink: 0, lid: 0, lean: 0, tuck: 0, preen: 0 }
+export const STILL: ChiefPose = { neck: 0, tilt: 0, bob: 0, hopX: 0, hopY: 0, crest: 0, peck: 0, blink: 0, lid: 0, perch: 0, lean: 0, tuck: 0, preen: 0 }
 
 /** What it does when nothing happens, each with its own length in seconds and its own part of the body. */
 export const IDLE = {
@@ -125,11 +127,12 @@ export function poseOf(act: Act, t: number, out: ChiefPose = { ...STILL }): Chie
     case 'shows':
       // Head down, pinning: four pecks for the way that fails; it draws back as that folds; four more for the way that
       // holds; then up onto the model, where it stands and looks down at it.
-      out.neck = 0.8 * (ease(t, 0, 0.06) - ease(t, 0.3, 0.36)) + 0.8 * (ease(t, 0.46, 0.52) - ease(t, 0.72, 0.78)) - 0.35 * swell(t, 0.34, 0.46) + 0.35 * swell(t, 0.84, 0.98)
+      out.neck = 0.8 * (ease(t, 0, 0.06) - ease(t, 0.3, 0.36)) + 0.8 * (ease(t, 0.46, 0.52) - ease(t, 0.72, 0.78)) - 0.35 * swell(t, 0.34, 0.46) + 0.7 * (ease(t, 0.84, 0.88) - ease(t, 0.94, 0.98))
       for (let i = 0; i < 4; i++) out.peck += swell(t, 0.07 + 0.055 * i, 0.12 + 0.055 * i) + swell(t, 0.53 + 0.045 * i, 0.575 + 0.045 * i)
       out.crest = 0.6 * swell(t, 0.34, 0.46)
-      out.hopY = 0.3 * swell(t, 0.76, 0.84) + 0.42 * (ease(t, 0.8, 0.84) - ease(t, 0.96, 1))
-      out.hopX = -0.9 * (ease(t, 0.76, 0.84) - ease(t, 0.96, 1))
+      // One hop takes it onto the model, where it stands with its neck bent down to look at it, and one hop back.
+      out.perch = ease(t, 0.76, 0.84) - ease(t, 0.96, 1)
+      out.hopY = 0.3 * (swell(t, 0.76, 0.84) + swell(t, 0.96, 1))
       break
     case 'compares':
       // It looks at one model, then the other, and again: its head goes from side to side. In the middle it swaps a part.
@@ -190,11 +193,12 @@ export class ChiefDirector {
     this.span = REACT[what]
   }
 
-  /** One of its two showings begins. */
-  showing(what: Showing): void {
+  /** One of its two showings begins. `perch` is where the top of the model it will stand on is, from its own feet: across and up, in its own cells. */
+  showing(what: Showing, perch: readonly [number, number] = [0.9, 0.4]): void {
     this.act = what
     this.into = 0
     this.span = SHOWING[what]
+    this.perchAt = perch
   }
 
   /** Whatever it was doing, it stops and stands at rest: a touch ended a showing. */
@@ -230,6 +234,9 @@ export class ChiefDirector {
       }
     }
     poseOf(this.act, this.progress, this.pose)
+    // Up on its model: the hop goes to where that model's top is.
+    this.pose.hopX -= this.pose.perch * this.perchAt[0]
+    this.pose.hopY += this.pose.perch * this.perchAt[1]
     // It breathes all the time, slowly.
     this.pose.bob += 0.012 * Math.sin(this.breath += dt * 1.9)
     this.blinkIn -= dt
@@ -240,6 +247,23 @@ export class ChiefDirector {
   }
 
   private breath = 0
+  private perchAt: readonly [number, number] = [0.9, 0.4]
+}
+
+/**
+ * The small model in the margin, as the view lays it out: how far right of the
+ * chief's feet it begins, how many cells one unit of a model is, and how large
+ * the chief itself is drawn, all in grid cells. And for each idea, where on
+ * its model a bird can stand, in the model's own units: its top.
+ */
+export const MODEL_PLACE = { from: 1.5, unit: 1.44, chief: 1.1 } as const
+export const MODEL_TOP: Readonly<Record<string, readonly [number, number]>> = {
+  profile: [0.7, 0.62], prop: [0.4, 0.78], triangle: [0.5, 1.06], row: [1, 1.06], tube: [1.1, 1.14], thread: [0.3, 0.46], 'wide-base': [0.5, 1.24], arch: [0.7, 1.02],
+}
+/** Where the chief hops to, to stand on the model of an idea: across and up from its feet, in its own cells. */
+export const perchOn = (idea: string): readonly [number, number] => {
+  const top = MODEL_TOP[idea] ?? [0.5, 0.5]
+  return [(MODEL_PLACE.from + top[0] * MODEL_PLACE.unit) / MODEL_PLACE.chief, (top[1] * MODEL_PLACE.unit) / MODEL_PLACE.chief]
 }
 
 /** The slow drift of the water's dashes, in cells: each row slides at its own pace and comes round again. */
