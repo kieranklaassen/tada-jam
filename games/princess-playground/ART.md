@@ -118,7 +118,8 @@ A wrong try costs nothing and tells something every time, and is at least as fun
 | `waiting` | The friend at the waiting place after a ride has ended, or none. |
 | `moves` | The moves made in the ride on screen, held only so a ride put away halfway is judged as one ride. It stops counting at a cap and is never shown. |
 | `shown` | The ids of the kinds whose one showing has played. |
-| `marks` | Every mark in the sand as a coarse grid, 32 by 20 cells of one digit each: smooth, raked, or how deep a mark is. Dimples, grooves, bite marks, craters, hollows and Dot's rings are all kept this way, and on load each cell is drawn from its digit alone; anything finer is not kept. The rake lies out while any cell holds a mark deeper than raked. |
+| `marks` | Every mark in the sand as a coarse grid, 32 by 20 cells of one digit each: smooth, raked, or how deep a mark is. Dimples, grooves, bite marks, craters, hollows and Dot's rings are all kept this way, and on load each cell is drawn from its digit alone; anything finer is not kept. The rake lies out while any cell holds a mark deeper than raked, once `touched` is set. |
+| `touched` | The child has touched the game at least once, ever. It is never shown. Until it is set no tool is on screen: the rake stays away. |
 
 A friend in the hand is saved where it was picked up from. A friend in the air, a rocking plank and a fling are views of the saved arrangement and are not saved: on load every friend sits or stands where it belongs and the plank rests on its heavier end, or level when the two ends weigh the same, an empty plank included. The largest legal state is under 2 KB, far below half of the 64 KB cap, and a test says so.
 
@@ -161,7 +162,7 @@ Any touch ends it at once with every beat at its end, and is then an ordinary to
 
 **How a ride ends and the next begins.** The ending stays as long as the child likes. Every friend but the one waiting can still be tapped, carried and stacked, and nothing is asked. The one who asks next waits in front of the stone, looking at the plank, and never hurries anyone. If the child does nothing, nothing starts. A tap on the waiting friend begins the next ride as a consequence of that touch: it hops to its end, the others hop down to their places, and Dot steps back to the rim, from where one tap brings it in again. On load nothing replays: the world is as the last ride left it, with the next asker waiting, or mid-ride exactly as it was.
 
-**Tidying.** While the sand holds marks, a small rake lies at the far rim. A tap on it draws it once along the far rim, from one side of the tray to the other, and the sand behind it lies in even raked lines again. It moves no friend and ends nothing, and it is not there when the sand is already smooth.
+**Tidying.** While the sand holds marks, a small rake lies at the far rim, from the child's first touch of anything on: the first showing marks the sand before that touch, and no tool is on screen then. A tap on it draws it once along the far rim, from one side of the tray to the other, and the sand behind it lies in even raked lines again. It moves no friend and ends nothing, and it is not there when the sand is already smooth.
 
 ## The records
 
@@ -270,7 +271,7 @@ No friend is yellow, tan or brown: those belong to the sand and the tray.
 
 **The small things.**
 
-- The rake: a small terracotta rake lying on top of the far rim, in the middle, where nothing ever stands in front of it. It is out only while the sand holds a mark. Touched, it is drawn along the rim from one side of the tray to the other, and the sand is raked again across its whole depth as it passes.
+- The rake: a small terracotta rake lying on top of the far rim, in the middle, where nothing ever stands in front of it. It is out only while the sand holds a mark, and never before the child's first touch of anything. Touched, it is drawn along the rim from one side of the tray to the other, and the sand is raked again across its whole depth as it passes.
 - The grains: a fixed pool of 72 pale points thrown up by a knock or a landing, running off the low end of the board, or sliding back into a bite as an end lifts; each falls back in about half a second. One draw, no body, no mark.
 - The ghost hand of the idle ladder: a pale mitten with one finger out, drawn once on a canvas, tilted so that it comes in from the side and comes down on the top of a head, never over a face. It is a picture of a hand, not a sign to read.
 - The idle glow: a warm ring of light on the sand under the one friend the ladder shows, drawn in the sand's own shader.
