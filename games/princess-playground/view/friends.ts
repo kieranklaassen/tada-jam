@@ -223,8 +223,11 @@ export function poseFriend(view: FriendView, pose: FriendPose): void {
     } else {
       // Set down in the sand, it slips forward off the top of her head and hangs over one eye, until she shakes it back.
       const slip = pose.slip, over = onBody('pim', EYE.x, EYE.y + 0.35, EYE.z, SCRATCH)
-      view.extra.position.set(over.x * slip, spec.halfHeight * CROWN.seat * (1 - slip) + (over.y + spec.halfHeight) * slip, -spec.radius * 0.18 * (1 - slip) + (over.z + 0.02) * slip)
-      view.extra.rotation.set(0.1 + swing * 0.4 + slip * 0.95, 0, -swing - slip * 0.35)
+      // On its way it rides up and forward over the round of her head, never through it.
+      const round = Math.sin(slip * Math.PI) * spec.radius
+      view.extra.position.set(over.x * slip, spec.halfHeight * CROWN.seat * (1 - slip) + (over.y + spec.halfHeight) * slip + round * 0.22, -spec.radius * 0.18 * (1 - slip) + (over.z + 0.02) * slip + round * 0.3)
+      // A low wide crown tips less far than a tall one before its rim would dig into her head.
+      view.extra.rotation.set(0.1 + swing * 0.25 + slip * 0.95, 0, -swing * 0.6 - slip * 0.35)
     }
   }
   if (view.extra && view.id === 'dot') view.extra.rotation.y = pose.follow * 0.6
