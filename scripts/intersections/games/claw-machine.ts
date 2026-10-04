@@ -45,7 +45,7 @@ const ENDING = {"v":1,"position":"three-ways-wide","finished":false,"cycle":{"fr
 const STACKS = {"v":1,"position":"three-ways","finished":false,"cycle":{"from":"three-ways","harder":false,"crews":[["little","big"],["duck","car"],["red","yellow"]],"sort":0,"toys":[{"colour":"yellow","kind":"car","size":"small","place":6,"level":0},{"colour":"yellow","kind":"duck","size":"small","place":5,"level":0},{"colour":"red","kind":"duck","size":"small","place":8,"level":0},{"colour":"red","kind":"car","size":"big","place":0,"level":0},{"colour":"red","kind":"duck","size":"big","place":9,"level":0},{"colour":"red","kind":"car","size":"small","place":3,"level":0},{"colour":"yellow","kind":"duck","size":"big","place":7,"level":0},{"colour":"yellow","kind":"car","size":"big","place":4,"level":0}],"tried":[false,false,false,false,false,false,false,false],"misses":0},"shown":{"colour":true,"kind":true,"size":true},"crates":[]}
 
 export default {
-  enforce: false,
+  enforce: true,
   query: 'tier=0&seed=7',
   ignore: [
     // Flat round contact shadows and the glow rings: decals with depth writing off, drawn on whatever is under them.
