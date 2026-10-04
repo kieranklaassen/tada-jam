@@ -2,7 +2,7 @@ import { PLATE, buildMesh, mergeMeshes, type Brick, type BrickMesh } from './bri
 import { toyBricks } from './builds'
 import { EYE, eyeCentres, gobblerParts } from './gobblerBuild'
 import { shapeOf, type GobblerId } from './gobblers'
-import { ARCH, BED, HANDLE, ON_DECK, RIDER, RIDER_STEP, RIDER_Z, RISER, RISER_BASE, deckSpots, deckTop, handleSpot, riderSpots } from './layout'
+import { ARCH, BED, CART, HANDLE, ON_DECK, RIDER, RIDER_STEP, RIDER_Z, RISER, RISER_BASE, deckSpots, deckTop, handleSpot, riderSpots } from './layout'
 import { STEEL } from './palette'
 import { CRATE as CRATE_COLOUR, CRATE_DARK } from './palette'
 import { CRATE } from './places'
@@ -37,6 +37,21 @@ function box(which: number, rows: number): Brick[] {
     out.push({ x: -half, y: deck, z: front - RIDER_STEP + 0.02, w: CRATE.width, d: RIDER_STEP - 0.04, h: Math.round((RISER_BASE + row * RISER) / PLATE), colour: row % 2 === 0 ? CRATE_DARK : CRATE_COLOUR, studs: false })
   }
   return out
+}
+
+/**
+ * The cart a crate waits on: a deck on four legs and four wheels, built about the middle of its foot with y = 0 on
+ * the studs of the shelf. Its top is `CART` high.
+ */
+export function cartMesh(): BrickMesh {
+  const half = CRATE.width / 2 - 0.2, depth = CRATE.depth / 2 - 0.2, top = Math.round(CART / PLATE)
+  const out: Brick[] = [{ x: -half, y: top - 1, z: -depth, w: half * 2, d: depth * 2, h: 1, colour: STEEL, studs: false }]
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+    out.push({ x: sx * (half - 1.5) - 0.5, y: 2, z: sz * (depth - 1.6) - 0.5, w: 1, d: 1, h: top - 3, colour: CRATE_DARK, studs: false })
+    // A wheel: a disc on its side under each leg.
+    out.push({ x: sx * (half - 1.5) - 1, y: 0, z: sz * (depth - 1.6) - 0.3, w: 2, d: 0.6, h: 2 / PLATE, colour: CRATE_DARK, round: true, axis: 'z', studs: false })
+  }
+  return buildMesh(out, true)
 }
 
 /** The bed: one plain plate, lying on the studs of the front of the deck. Built in the crate's own measure. */

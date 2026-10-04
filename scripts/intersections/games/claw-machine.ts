@@ -65,6 +65,14 @@ export default {
       a: 'gobbler-.*-body$', b: 'gobbler-.*-pupils$', kind: 'pose', upTo: 0.75,
       reason: 'the same pupil, as it rides round its eye with the gaze: how far it sits in the ball changes a little as it goes.',
     },
+    {
+      a: '^watcher-body$', b: '^watcher-pupils$', kind: 'penetration', upTo: 0.6,
+      reason: 'the watcher beside the tray has the same eyes as a gobbler: each pupil is a small ball set half into the ball of its eye.',
+    },
+    {
+      a: '^watcher-body$', b: '^watcher-pupils$', kind: 'pose', upTo: 0.6,
+      reason: 'the same pupil, as it rides round the watcher\'s eye with its gaze.',
+    },
   ],
   moments: [
     {

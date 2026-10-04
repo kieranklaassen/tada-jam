@@ -21,8 +21,11 @@ function wall(out: Brick[], x0: number, x1: number, z: number, d: number, plates
   for (let y = 0, row = 0; y < plates; y += 3, row++) {
     const h = Math.min(3, plates - y)
     // A few bricks a shade lighter, placed by a fixed rule, so the wall is not one flat sheet.
-    const colour = (i: number) => ((i * 7 + row * 13 + seed) % 11 === 0 ? WALL_LIGHT : WALL_COLOUR)
-    course(out, colour, x0, x1, y, z, d, h, 4, row % 2 === 0 ? 0 : 2)
+    // Two tones in broad upright stripes, like the cloth of a fairground stall, each stripe two bricks wide and
+    // the bond stepping from course to course inside it.
+    const offset = row % 2 === 0 ? 0 : 2
+    const colour = (i: number) => (Math.floor((i * 4 - offset + 400 + seed) / 8) % 2 === 0 ? WALL_COLOUR : WALL_LIGHT)
+    course(out, colour, x0, x1, y, z, d, h, 4, offset)
   }
 }
 

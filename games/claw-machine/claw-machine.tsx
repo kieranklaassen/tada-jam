@@ -1,7 +1,7 @@
 // template: cartridge/game.tsx v2
 import { useEffect, useRef } from 'react'
 import type { Cartridge, CartridgeContext } from '../types'
-import { aimAt } from './aim'
+import { aimAt, onWatcher } from './aim'
 import { AttendedClock, Attention } from './attention'
 import { GameAudio } from './audio'
 import { BACKDROP } from './config'
@@ -55,7 +55,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // The game is built when the saved state has been read, and not before.
     let game: Game | null = null
     // What the idle ladder last said, and whether the drop of this drag has been made.
-    let guidance: Guidance | null = null, dropped = false
+    let guidance: Guidance | null = null, dropped = false, poked = false
     // What the last draw put on the surface, for the grown-up handle and the overlay. A canvas 2D game counts the
     // sprites and figures it drew as drawCalls; a three.js game copies the renderer's own counts.
     const drawn = { drawCalls: 0, triangles: 0 }
@@ -132,6 +132,10 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       for (const gesture of gestures) {
         // The claw answers when the finger lands: the jaws snap open and the trolley sets off. A landing also
         // ends a scene that is playing, and is then an ordinary touch.
+        // A finger that lands on the watcher is the watcher's: it hops and peeps, and the claw stays where it is
+        // until the finger has left.
+        if (gesture.type === 'press' && onWatcher(stage.ray(gesture.at.x / Math.max(1, width), gesture.at.y / Math.max(1, height)))) { game.poke(); poked = true; continue }
+        if (poked) { if (gesture.type === 'tap' || gesture.type === 'dragEnd' || gesture.type === 'pressEnd') poked = false; continue }
         if (gesture.type === 'press') { aim(gesture.at, true); dropped = false }
         else if (gesture.type === 'tap') { aim(gesture.at, false); game.lift() }
         else if (gesture.type === 'dragMove') { aim(gesture.at, false); dropped = false }

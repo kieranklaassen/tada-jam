@@ -6,7 +6,7 @@ import { clawMachineManifest } from './manifest'
 // template and a template fix can be copied over them.
 
 /** The colour behind the stage: the dark of the cabinet, so no pale flash shows before the first frame. */
-export const BACKDROP = '#303a4a'
+export const BACKDROP = '#3d4478'
 
 // --- Adaptive quality (quality.ts) -----------------------------------------
 

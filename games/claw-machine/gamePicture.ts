@@ -2,15 +2,16 @@ import type { Body } from './bodies'
 import { hubAt } from './claw'
 import type { Actor, Game } from './game'
 import { EYE, knobAt, rimHeight } from './gobblerBuild'
-import { crewSpot } from './layout'
+import { crateSpot, crewSpot } from './layout'
 import { GOBBLER, shapeOf } from './gobblers'
 import type { Guidance } from './guidance'
 import { handPose, type HandPose } from './guidance'
 import { hintFor } from './guide'
 import { PERSONALITY, WRONG, actPose, idlePose, liftedPose, restPose, wrongPose, type Pose } from './motion'
-import type { GlowLook, GobblerLook, Picture, Shadow, ToyLook } from './picture'
+import type { GlowLook, GobblerLook, Picture, Shadow, ToyLook, WatcherLook } from './picture'
 import { RAIL, TRAY } from './places'
 import { nearestPlace } from './tray'
+import { WATCHER_AT, WATCHER_FACES, watcherPose, type WatcherPose } from './watcher'
 import { trayIsClear } from './world'
 
 // The picture of the game for one frame: where every toy, gobbler and crate
@@ -95,7 +96,15 @@ export function turned(x: number, y: number, z: number, of: { leanX: number; lea
 
 /** The cabinet with nothing in it but the claw at rest: what is drawn before the saved state has been read. */
 export function barePicture(): Picture {
-  return { toys: [], gobblers: [], crates: [], shadows: [], glows: [], hand: null, gate: 0, claw: { x: 0, z: 6, length: RAIL.top - 9.2 - 1.6, swingX: 0, swingZ: 0, open: 0.55, squash: 1, shiftX: 0, shiftZ: 0, turn: 0 } }
+  return { toys: [], gobblers: [], crates: [], carts: [], shadows: [], glows: [], hand: null, gate: 0, seconds: 0, watcher: { ...WATCHER_AT, squash: 1, turn: WATCHER_FACES, gazeX: 0, gazeY: 0, blink: 0 }, claw: { x: 0, z: 6, length: RAIL.top - 9.2 - 1.6, swingX: 0, swingZ: 0, open: 0.55, squash: 1, shiftX: 0, shiftZ: 0, turn: 0 } }
+}
+
+const peering: WatcherPose = { dy: 0, squash: 1, turn: 0, gazeX: 0, gazeY: 0, blink: 0 }
+
+/** The watcher, looking at what the gobblers look at: the toy in the jaws, or the claw. */
+function watching(game: Game, at: { x: number; y: number; z: number }): WatcherLook {
+  const pose = watcherPose(game.watcher, game.time, clamp((at.x - WATCHER_AT.x) / 26, -1, 0.3), clamp((at.y - 4) / 12 - (at.z - WATCHER_AT.z) / 40, -1, 1), peering)
+  return { x: WATCHER_AT.x, y: WATCHER_AT.y + pose.dy, z: WATCHER_AT.z, squash: pose.squash, turn: WATCHER_FACES + pose.turn, gazeX: pose.gazeX, gazeY: pose.gazeY, blink: pose.blink }
 }
 
 /** In flight, but still carried by the gobbler it is leaving or going down into. */
@@ -228,7 +237,9 @@ export function gamePicture(game: Game, guidance: Guidance | null): Picture {
   // between its teeth has a hair of room and no more.
   const idling = resting && game.held < 0 && game.lifted < 0 && claw.load === 0
   return {
-    toys, gobblers, shadows, glows, hand: ghost, gate: game.gateShake,
+    toys, gobblers, shadows, glows, hand: ghost, gate: game.gateShake, seconds: game.time,
+    watcher: watching(game, watched),
+    carts: game.crates.map((crate) => { const at = crateSpot(crate.which, game.crates.length); return { which: crate.which, x: at.x + crate.away * AWAY * (at.x < 0 ? -1 : 1), z: at.z } }),
     crates: game.crates.map((crate) => ({
       key: `${crate.from}-${crate.seed}-${crate.toys.length}-${crate.crews.length}`, which: crate.which, toys: crate.toys, places: crate.places, crews: crate.crews,
       // A crate that waits rocks a little on its foot: its riders cannot sit still.

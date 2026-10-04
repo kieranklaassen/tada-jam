@@ -1,8 +1,8 @@
 import type { Game } from './game'
 import { rimHeight } from './gobblerBuild'
 import { shapeOf } from './gobblers'
-import { crateTop, type Spot } from './layout'
-import { GATE, SHELF } from './places'
+import { CRATE_STANDS, crateTop, type Spot } from './layout'
+import { GATE } from './places'
 import { trayIsClear } from './world'
 
 // What the idle ladder shows, chosen from the state of play: a glow on what
@@ -25,9 +25,12 @@ export function hintFor(game: Game, showing: number): Hint {
   if (game.scene) return { marks: [], tap: null }
   // A cycle has ended, or none has begun: the crates wait for the claw.
   if (world.finished) {
-    // The ring lies over the riders at the top of the crate, where it shows above whoever stands at the tray.
-    const marks = game.crates.map((crate) => ({ x: crate.x, y: SHELF.top + crateTop(crate.which, crate.crews.length) - 0.4, z: crate.z - 1.4, r: 4.2 }))
-    return { marks, tap: marks.length > 0 ? marks[nth % marks.length] : null }
+    // The ring lies round the top of the crate, over its load and its riders, where it shows above whoever
+    // stands at the tray. The hand taps the ledge in front of the crate, where it is wholly in sight: a touch
+    // anywhere on the ledge on that side means that crate.
+    const marks = game.crates.map((crate) => ({ x: crate.x, y: CRATE_STANDS + crateTop(crate.which, crate.crews.length) - 1.6, z: crate.z, r: 5.4 }))
+    const taps = game.crates.map((crate) => ({ x: crate.x, y: GATE.top + 0.5, z: GATE.z + 0.6 }))
+    return { marks, tap: taps.length > 0 ? taps[nth % taps.length] : null }
   }
   // A toy is in the jaws: it can go to any gobbler, and the hand shows another one each time.
   if (game.held >= 0) {

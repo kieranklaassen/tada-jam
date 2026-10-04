@@ -107,6 +107,15 @@ export function crateTop(which: number, crews: number): number {
   return deckTop(which) + Math.max(ARCH + HANDLE, RISER_BASE + Math.max(0, crews - 1) * RISER + 2.5)
 }
 
+/**
+ * A crate waits on a cart: a low truck on the shelf that holds it up over the parapet, so that the whole crate,
+ * its load and its riders are seen from the front. The claw lifts the crate off its cart and sets it back on it;
+ * the cart stays where it is, and slides away with the crate at the end. `CART` is how high its top is over the
+ * studs of the shelf, and `CRATE_STANDS` the height of the foot of a crate that stands on it.
+ */
+export const CART = 3.6
+export const CRATE_STANDS = SHELF.top + ON_STUDS + CART + 0.02
+
 /** Where a crate stands. */
 export function crateSpot(which: number, crates: number): Spot {
   return { x: crateX(which, crates), y: 0, z: CRATE.z }

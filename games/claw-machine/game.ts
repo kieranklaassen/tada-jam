@@ -10,13 +10,14 @@ import { clawLands, clawSwingsInto, clawWaitsAbove, toyLetGo, type Deed, type Ta
 import type { GameEvent } from './events'
 import { knobAt, tongueTop } from './gobblerBuild'
 import { GOBBLER, shapeOf, snackOf, type GobblerId } from './gobblers'
-import { bellySpots, crateSpot, crateTop, crewSpot, deckTop, handleSpot, headTop, waitingSpot, type Spot } from './layout'
+import { CRATE_STANDS, bellySpots, crateSpot, crateTop, crewSpot, deckTop, handleSpot, headTop, type Spot, waitingSpot } from './layout'
 import { LIFT_SECONDS, WRONG, actSeconds, type Act } from './motion'
 import { layCycle } from './order'
 import { BELL, GATE, PLACES, RAIL, SHELF, SLOT_Z, TRAY, WAIT_Z, placeAt } from './places'
 import type { Scene } from './scene'
 import type { Toy } from './toys'
 import { nearestToy, type Tray } from './tray'
+import { newWatcher, stepWatcher, watcherNotices, watcherSees, type Watcher } from './watcher'
 import { bellyOf, crewNow, placesFor, someoneWaits, trayOf, type World } from './world'
 
 // The game: the rules (world.ts, deeds.ts) played with a claw. It answers
@@ -185,7 +186,7 @@ export class Game {
   arrangeCrates(): void {
     this.crates = this.world.crates.map((crate, which) => {
       const laid = layCycle(crate.from, crate.seed), at = crateSpot(which, this.world.crates.length)
-      return { from: crate.from, seed: crate.seed, which, toys: laid.toys, places: placesFor(crate.seed).slice(0, laid.toys.length), crews: laid.crews, x: at.x, y: SHELF.top + ON_STUDS, z: at.z, away: 0, tip: 0, carried: false }
+      return { from: crate.from, seed: crate.seed, which, toys: laid.toys, places: placesFor(crate.seed).slice(0, laid.toys.length), crews: laid.crews, x: at.x, y: CRATE_STANDS, z: at.z, away: 0, tip: 0, carried: false }
     })
   }
 
@@ -218,7 +219,7 @@ export class Game {
     })
     this.leaving = []
     if (this.world.crates.length === 0) this.crates = []
-    this.crates.forEach((crate) => { const at = crateSpot(crate.which, this.crates.length); crate.x = at.x; crate.y = SHELF.top + ON_STUDS; crate.z = at.z; crate.away = 0; crate.tip = 0; crate.carried = false })
+    this.crates.forEach((crate) => { const at = crateSpot(crate.which, this.crates.length); crate.x = at.x; crate.y = CRATE_STANDS; crate.z = at.z; crate.away = 0; crate.tip = 0; crate.carried = false })
     if (this.hoist !== null) { this.hoist = null; this.claw.load = 0; this.claw.grip = 0; this.claw.targetX = this.claw.x; this.claw.targetZ = this.claw.z }
     this.flights.clear(); this.causes.clear()
   }
@@ -261,7 +262,21 @@ export class Game {
   }
 
   say(event: GameEvent): void {
-    if (!this.skipping) this.events.push(event)
+    if (this.skipping) return
+    this.events.push(event)
+    // The watcher beside the tray takes notice of what happens, as anyone would.
+    const notices = watcherNotices(event)
+    if (notices) watcherSees(this.watcher, notices)
+  }
+
+  /** The watcher: it only watches, and nothing about it is saved. */
+  readonly watcher: Watcher = newWatcher()
+
+  /** A finger landed on the watcher: it hops with a peep. A scene that is playing ends, as at any touch. */
+  poke(): void {
+    if (this.scene) this.endScene(true)
+    watcherSees(this.watcher, 'peep')
+    this.events.push({ type: 'peep' })
   }
 
   startAct(actor: Actor, act: Act, n = 1): void {
@@ -380,7 +395,7 @@ export class Game {
     if (claw.z < -5.5) {
       near = Math.max(near, GATE.top + 0.6)
       for (const actor of this.waiting) near = Math.max(near, actor.y + headTop(actor.id))
-      for (const crate of this.crates) near = Math.max(near, SHELF.top + crateTop(crate.which, crate.crews.length))
+      for (const crate of this.crates) near = Math.max(near, CRATE_STANDS + crateTop(crate.which, crate.crews.length))
     }
     // Clear of a toy it has just let go, or one that is thrown up near it: it lifts away from it and never comes
     // down onto it.
@@ -422,7 +437,7 @@ export class Game {
     if (target.on === 'gobbler') { const actor = this.crew[target.slot]; return actor ? actor.y + knobAt(shapeOf(actor.id)).y + KNOB_HOLD : TRAY.top + TOUCH }
     if (target.on === 'rail-end') return BELL.top + TOUCH
     // A crate is held by the knob on its arch, as a gobbler is by the knob on its head.
-    if (this.crates.length > 0) return SHELF.top + deckTop(Math.min(target.which, this.crates.length - 1)) + handleSpot().y + KNOB_HOLD
+    if (this.crates.length > 0) return CRATE_STANDS + deckTop(Math.min(target.which, this.crates.length - 1)) + handleSpot().y + KNOB_HOLD
     if (Math.abs(claw.z - WAIT_Z) < 1 && this.waiting.length > 0) return SHELF.top + headTop(this.waiting[0].id) + TOUCH
     return GATE.top + TOUCH
   }
@@ -440,6 +455,7 @@ export class Game {
     for (const actor of this.leaving) { this.moveActor(actor); this.moveSnack(actor) }
     this.leaving = this.leaving.filter((actor) => !(actor.walk === null && actor.role === 'leaving'))
     this.gateShake = Math.max(0, this.gateShake - STEP / 0.5)
+    stepWatcher(this.watcher, STEP)
     // A crate in the jaws hangs from its handle under the hub.
     for (const crate of this.crates) if (crate.carried) {
       const hub = hubAt(claw), handle = handleSpot()

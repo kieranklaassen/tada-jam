@@ -1,15 +1,14 @@
 import { MINI } from './belly'
 import { FALL, airTime, jolt, newBody, toss } from './bodies'
-import { ON_STUDS } from './bricks'
 import { toySpan } from './builds'
 import { KNOB_HALF, gripFor } from './clawBuild'
 import type { Deed } from './deeds'
 import { AIR, Game, KNOB_HOLD, newActor, type Actor } from './game'
 import { rimHeight } from './gobblerBuild'
 import { crewGoesBy, shapeOf } from './gobblers'
-import { BED, ON_DECK, RIDER, TIP, crewSpot, deckSpots, deckTop, handleSpot, riderSpots, tipped, waitingSpot, type Spot } from './layout'
+import { BED, CRATE_STANDS, ON_DECK, RIDER, TIP, crewSpot, deckSpots, deckTop, handleSpot, riderSpots, tipped, waitingSpot, type Spot } from './layout'
 import { actSeconds } from './motion'
-import { CRATE, SHELF, TRAY, TRAY_DEPTH } from './places'
+import { CRATE, TRAY, TRAY_DEPTH } from './places'
 import { DOWN_THE_THROAT, chew, clearTop, nextLeg, react } from './react'
 import { Scene, type Beat } from './scene'
 import { bellyOf, crewArrives, crewNow, type World } from './world'
@@ -283,10 +282,10 @@ export function delivery(game: Game, which: number): void {
   beats.push(cue(game, emptied + 0.4, () => { claw.targetX = home.x; claw.targetZ = home.z + handle.z }))
   // The trolley is given time to get all the way back before the crate comes down.
   const back = emptied + 1.3
-  beats.push(cue(game, back, () => { game.hoist = SHELF.top + ON_STUDS + deckTop(crate.which) + handle.y + KNOB_HOLD }))
+  beats.push(cue(game, back, () => { game.hoist = CRATE_STANDS + deckTop(crate.which) + handle.y + KNOB_HOLD }))
   const down = back + 0.5
   beats.push(cue(game, down, () => {
-    crate.carried = false; crate.x = home.x; crate.y = SHELF.top + ON_STUDS; crate.z = home.z; game.hoist = null; claw.load = 0; claw.grip = 0
+    crate.carried = false; crate.x = home.x; crate.y = CRATE_STANDS; crate.z = home.z; game.hoist = null; claw.load = 0; claw.grip = 0
     claw.targetX = 0; claw.targetZ = TRAY.z + TRAY_DEPTH / 2
     game.say({ type: 'thud', who: 'big' })
   }))

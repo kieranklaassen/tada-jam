@@ -1,15 +1,18 @@
 import {
   BufferAttribute, BufferGeometry, CircleGeometry, Color, CylinderGeometry, DynamicDrawUsage, Group, InstancedMesh, Matrix4, Mesh, MeshBasicMaterial,
-  PerspectiveCamera, Quaternion, RingGeometry, Scene, ShaderMaterial, Vector3, WebGLRenderer,
+  PerspectiveCamera, Quaternion, RingGeometry, SRGBColorSpace, Scene, ShaderMaterial, SphereGeometry, Vector3, WebGLRenderer,
 } from 'three'
 import type { Ray } from '../aim'
 import { toyBricks } from '../builds'
 import { cabinetBricks, gateBricks } from '../cabinet'
-import { bedMesh, crateMesh } from '../crateBuild'
+import { ON_STUDS } from '../bricks'
+import { bedMesh, cartMesh, crateMesh } from '../crateBuild'
 import { HINGE_DROP, HINGE_OUT, JAW_SWING, hubBricks, jawBricks } from '../clawBuild'
-import { BACKDROP_HEX, GLOVE } from '../palette'
+import { LAMP_SIZE, lampGlow, lampSpots } from '../lamps'
+import { WATCHER_BIG, WATCHER_EYE, WATCHER_EYES, watcherParts } from '../watcher'
+import { BACKDROP_HEX, BULB_DIM, BULB_LIT, CUFF, GLOVE } from '../palette'
 import { BED, TIP, deckTop } from '../layout'
-import { GATE, RAIL } from '../places'
+import { GATE, RAIL, SHELF } from '../places'
 import { fitCamera } from './fit'
 import type { Picture, ToyLook } from '../picture'
 import { GobblerRig } from './gobblerRig'
@@ -35,10 +38,16 @@ export class Stage {
   private readonly shadows: InstancedMesh
   private readonly cable: Mesh
   private readonly glows: InstancedMesh
+  private readonly lamps: InstancedMesh
+  private readonly watcher = new Group()
+  private readonly watcherPupils: Mesh
+  private readonly colour = new Color()
   private readonly gate: Mesh
   private readonly hand: Mesh
   private readonly ghost: ShaderMaterial
   private readonly crates = new Map<number, { key: string; group: Group; hinge: Group | null }>()
+  private readonly carts = new Map<number, Mesh>()
+  private cartGeometry: BufferGeometry | null = null
   private readonly clawGroup = new Group()
   private readonly jaws: Mesh[] = []
   private readonly hub: Mesh
@@ -53,7 +62,7 @@ export class Stage {
     this.plastic = plasticMaterial()
     this.shaded = plasticMaterial()
     this.shaded.uniforms.uTint.value = 0.3
-    this.shaded.uniforms.uTintColor.value = new Vector3(0.19, 0.23, 0.29)
+    this.shaded.uniforms.uTintColor.value = new Vector3(0.3, 0.33, 0.56)
     this.scene.matrixAutoUpdate = false
 
     const cabinet = new Mesh(brickGeometry(cabinetBricks()), this.plastic)
@@ -73,7 +82,7 @@ export class Stage {
 
     // The glow on what can be touched: a gold ring with a dark edge, so it reads on the pale tray and on the
     // dark wall alike. Every ring is as strong as every other, so one material serves them all.
-    const ring = new RingGeometry(0.86, 1, 32, 2)
+    const ring = new RingGeometry(0.8, 1, 40, 2)
     ring.rotateX(-Math.PI / 2)
     const tint = new Float32Array(ring.getAttribute('position').count * 3)
     for (let i = 0; i < tint.length / 3; i++) {
@@ -89,6 +98,24 @@ export class Stage {
     this.glows.count = 0
     this.scene.add(this.glows)
 
+    // The lamps: one small ball for every bulb, all in one draw, each lit by its own colour.
+    const spots = lampSpots()
+    this.lamps = new InstancedMesh(new SphereGeometry(LAMP_SIZE / 2, 10, 8), new MeshBasicMaterial({ color: 0xffffff }), spots.length)
+    this.lamps.name = 'lamps'
+    spots.forEach((spot, i) => { this.lamps.setMatrixAt(i, this.matrix.makeTranslation(spot.x, spot.y, spot.z)); this.lamps.setColorAt(i, this.colour.setRGB(BULB_DIM[0], BULB_DIM[1], BULB_DIM[2], SRGBColorSpace)) })
+    this.lamps.instanceMatrix.needsUpdate = true
+    this.scene.add(this.lamps)
+
+    // The watcher beside the tray: a body, and two pupils that ride on its eyes.
+    const watcher = watcherParts()
+    this.watcher.name = 'watcher'
+    const watcherBody = new Mesh(brickGeometry(watcher.body, true), this.plastic)
+    watcherBody.name = 'watcher-body'
+    this.watcherPupils = new Mesh(brickGeometry(watcher.pupils), this.plastic)
+    this.watcherPupils.name = 'watcher-pupils'
+    this.watcher.add(watcherBody, this.watcherPupils)
+    this.scene.add(this.watcher)
+
     this.gate = new Mesh(brickGeometry(gateBricks()), this.plastic)
     this.gate.name = 'gate'
     this.gate.position.set(GATE.x, GATE.top, GATE.z)
@@ -98,12 +125,17 @@ export class Stage {
     this.ghost = plasticMaterial(false)
     this.ghost.transparent = true
     this.ghost.depthWrite = false
+    // A mitten: one long finger down, three knuckles curled beside it, a thumb out to the side and a cuff.
     this.hand = new Mesh(brickGeometry([
-      { x: -0.5, y: 0, z: -0.5, w: 1, d: 1, h: 6, colour: GLOVE, round: true, studs: false },
-      { x: -1.5, y: 6, z: -0.7, w: 3.2, d: 1.4, h: 6, colour: GLOVE, studs: false },
-      { x: 1.2, y: 4, z: -0.45, w: 0.9, d: 0.9, h: 3, colour: GLOVE, round: true, studs: false },
+      { x: -0.55, y: 0, z: -0.55, w: 1.1, d: 1.1, h: 8, colour: GLOVE, round: true, studs: false },
+      { x: 0.6, y: 5, z: -0.5, w: 1, d: 1, h: 3, colour: GLOVE, round: true, studs: false },
+      { x: 1.6, y: 5.5, z: -0.5, w: 1, d: 1, h: 2.5, colour: GLOVE, round: true, studs: false },
+      { x: -0.9, y: 8, z: -0.8, w: 3.8, d: 1.6, h: 5, colour: GLOVE, studs: false },
+      { x: -2.2, y: 8.5, z: -0.5, w: 1.3, d: 1, h: 2.5, colour: GLOVE, round: true, axis: 'z', studs: false },
+      { x: -0.5, y: 13, z: -0.7, w: 3, d: 1.4, h: 2.5, colour: CUFF, studs: false },
     ]), this.ghost)
     this.hand.name = 'ghost-hand'
+    this.hand.scale.setScalar(1.2)
     this.hand.renderOrder = 4
     this.hand.visible = false
     this.scene.add(this.hand)
@@ -232,10 +264,40 @@ export class Stage {
       if (crate.hinge) crate.hinge.rotation.x = look.tip * TIP
     }
     for (const [which, crate] of this.crates) if (!standing.has(which)) { this.dropCrate(crate.group); this.crates.delete(which) }
+    // The carts: one build for all of them, each where its crate waits.
+    const parked = new Set<number>()
+    for (const look of picture.carts) {
+      parked.add(look.which)
+      let cart = this.carts.get(look.which)
+      if (!cart) {
+        cart = new Mesh(this.cartGeometry ?? (this.cartGeometry = meshGeometry(cartMesh())), this.shaded)
+        cart.name = `cart-${look.which}`
+        this.carts.set(look.which, cart)
+        this.scene.add(cart)
+      }
+      cart.position.set(look.x, SHELF.top + ON_STUDS, look.z)
+    }
+    for (const [which, cart] of this.carts) if (!parked.has(which)) { this.scene.remove(cart); this.carts.delete(which) }
 
     // The gate jumps on its posts and rocks as it comes down: it is always higher than its rocking dips an end.
     this.gate.rotation.z = picture.gate * 0.07 * Math.sin(picture.gate * 40)
     this.gate.position.y = GATE.top + picture.gate * (0.3 + 0.08 * Math.abs(Math.sin(picture.gate * 31)))
+
+    // The watcher: it squashes about its feet and turns where it sits; its pupils ride on its eyes as a gobbler's do.
+    const peer = picture.watcher, bulge = 1 / Math.sqrt(Math.max(0.2, peer.squash))
+    this.watcher.position.set(peer.x, peer.y, peer.z)
+    this.watcher.rotation.y = peer.turn
+    this.watcher.scale.set(bulge * WATCHER_BIG, peer.squash * WATCHER_BIG, bulge * WATCHER_BIG)
+    const across = peer.gazeX * 0.75, lift = 0.5 + peer.gazeY * 0.6, reach = WATCHER_EYE / 2 - 0.08
+    this.watcherPupils.position.set(Math.sin(across) * Math.cos(lift) * reach, WATCHER_EYES.y + Math.sin(lift) * reach, WATCHER_EYES.z + Math.cos(across) * Math.cos(lift) * reach)
+    this.watcherPupils.scale.set(1, Math.max(0.1, 1 - peer.blink), 1)
+
+    // The chase of the lamps.
+    for (let i = 0; i < this.lamps.count; i++) {
+      const lit = lampGlow(i, picture.seconds)
+      this.lamps.setColorAt(i, this.colour.setRGB(BULB_DIM[0] + (BULB_LIT[0] - BULB_DIM[0]) * lit, BULB_DIM[1] + (BULB_LIT[1] - BULB_DIM[1]) * lit, BULB_DIM[2] + (BULB_LIT[2] - BULB_DIM[2]) * lit, SRGBColorSpace))
+    }
+    if (this.lamps.instanceColor) this.lamps.instanceColor.needsUpdate = true
 
     const rings = Math.min(MAX_GLOWS, picture.glows.length)
     for (let i = 0; i < rings; i++) {
@@ -295,6 +357,7 @@ export class Stage {
   dispose(): void {
     for (const rig of this.rigs.values()) rig.dispose()
     for (const geometry of this.toyGeometry.values()) geometry.dispose()
+    this.cartGeometry?.dispose()
     this.scene.traverse((object) => {
       const mesh = object as Mesh
       if (mesh.isMesh) mesh.geometry.dispose()

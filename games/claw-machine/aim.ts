@@ -1,6 +1,7 @@
 import type { Target } from './deeds'
 import { BELL, SLOT_Z, STEP, TRAY, TRAY_DEPTH, TRAY_WIDTH, WALL } from './places'
 import { nearestPlace } from './tray'
+import { WATCHER_AT, WATCHER_SIZE } from './watcher'
 
 // What a finger on the glass is pointing at. The view gives the line of sight
 // through the finger; this finds the first thing on it: a gobbler, the ledge,
@@ -32,6 +33,12 @@ function enters(ray: Ray, x0: number, y0: number, z0: number, x1: number, y1: nu
     return near <= far
   }
   return slab(ray.ox, ray.dx, x0, x1) && slab(ray.oy, ray.dy, y0, y1) && slab(ray.oz, ray.dz, z0, z1) ? near : Infinity
+}
+
+/** Whether the finger is on the watcher beside the tray, which the claw cannot reach: it answers by itself. */
+export function onWatcher(ray: Ray): boolean {
+  const half = WATCHER_SIZE.half
+  return enters(ray, WATCHER_AT.x - half, 0, WATCHER_AT.z - half, WATCHER_AT.x + half, WATCHER_SIZE.height, WATCHER_AT.z + half) < Infinity
 }
 
 export function aimAt(ray: Ray, crew: readonly Standing[]): Aim {

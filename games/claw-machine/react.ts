@@ -11,7 +11,7 @@ import { EYE, rimHeight } from './gobblerBuild'
 import { GOBBLER, shapeOf } from './gobblers'
 import { headTop, type Spot } from './layout'
 import { WRONG, actSeconds } from './motion'
-import { BELL, GATE, SHELF, SLOT_Z, TRAY, placeAt } from './places'
+import { BELL, GATE, SLOT_Z, TRAY, placeAt } from './places'
 import { nearestPlace } from './tray'
 
 // What each deed looks like as it is carried out: which bodies fly where,
@@ -122,7 +122,7 @@ function ledgePoint(game: Game): Spot {
   const waiter = nearestWaiter(game, game.claw.x)
   if (waiter) return { x: waiter.x, y: waiter.y + rimHeight(shapeOf(waiter.id)) + 2.2, z: waiter.z }
   const crate = game.crates.reduce<Game['crates'][number] | null>((best, one) => (!best || Math.abs(one.x - game.claw.x) < Math.abs(best.x - game.claw.x) ? one : best), null)
-  if (crate) return { x: crate.x, y: SHELF.top + 12, z: crate.z }
+  if (crate) return { x: crate.x, y: crate.y + 12, z: crate.z }
   return { x: GATE.x, y: GATE.top + 0.2, z: GATE.z }
 }
 

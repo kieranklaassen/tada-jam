@@ -140,6 +140,7 @@ export function voiceOf(event: GameEvent): Part[] {
     case 'comb': return [0, 1, 2, 3, 4, 5, 6].map((i) => tone(step(784, i), 0.08, 0.05, { wave: 'triangle', delay: i * 0.04 }))
     case 'gate-creak': return [tone(210, 0.1, 0.3, { to: 330, wave: 'sawtooth', attack: 0.1 }), tone(330, 0.08, 0.25, { to: 210, wave: 'sawtooth', delay: 0.45, attack: 0.05 })]
     // --- The end of the rail ---
+    case 'peep': return [tone(1900, 0.11, 0.07, { to: 2700 }), tone(2500, 0.08, 0.06, { to: 3300, delay: 0.09 })]
     case 'bell': return [tone(1568, 0.2, 0.55, { attack: 0.002 }), tone(3136, 0.05, 0.25, { attack: 0.002 })]
     case 'double-ding': return [tone(1568, 0.18, 0.3, { attack: 0.002 }), tone(2093, 0.18, 0.5, { delay: 0.11, attack: 0.002 })]
     case 'zip': return [noise(1500, 6, 0.14, 0.2, { to: 3600 })]

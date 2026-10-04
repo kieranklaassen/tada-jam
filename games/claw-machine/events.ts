@@ -60,6 +60,8 @@ export type GameEvent =
   | { type: 'jaw-hum' }
   | { type: 'jaw-click' }
   | { type: 'wind' }
+  // The watcher.
+  | { type: 'peep' }
   // The scenes.
   | { type: 'show'; who: GobblerId }
   | { type: 'tip'; nth: number }
