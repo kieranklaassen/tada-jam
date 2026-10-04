@@ -284,9 +284,12 @@ export function offsetOf(state: FxState, id: number, at: Box | null): Offset {
     case 'quiver':
       return { dx: 0, dy: Math.sin(t * Math.PI * 7) * 4 * (1 - t), squash: 0.1 * Math.sin(t * Math.PI * 7) * (1 - t) }
     case 'land': {
+      // It comes out of the crate: from over the crate's corner of the counter, up in an arc and down onto its lane, where it lands with a squash.
       const fall = Math.min(1, t / 0.55)
       const settle = t > 0.55 ? Math.sin(((t - 0.55) / 0.45) * Math.PI) : 0
-      return { dx: 0, dy: -150 * (1 - fall * fall), squash: 0.22 * settle }
+      if (!at) return { dx: 0, dy: -150 * (1 - fall * fall), squash: 0.22 * settle }
+      const dx = Math.max(0, COUNTER.x + COUNTER.w - 10 - (at.x + at.w)), dy = CRATE.y - 20 - at.y
+      return { dx: dx * (1 - fall), dy: dy * (1 - fall * fall) - 70 * Math.sin(fall * Math.PI), squash: 0.22 * settle }
     }
     case 'rattle':
       // It slides back and forth in the gap, further the wider the gap, and comes to rest where it lies.

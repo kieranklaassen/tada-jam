@@ -127,11 +127,13 @@ describe('how a piece moves for a moment', () => {
     expect(offsetOf(state, 1, box)).toEqual({ dx: 0, dy: 0, squash: 0 })
   })
 
-  it('quivers when poked, drops in from above when it lands, and slides from where it was to the shelf', () => {
+  it('quivers when poked, comes out of the crate when it lands, and slides from where it was to the shelf', () => {
     const poked = step(spawn(newFx(1), { kind: 'poke', id: 5, fruit: 'long', length: 600, voice: 'pluck' }), 0.05)
     expect(offsetOf(poked, 5, box).dy).not.toBe(0)
     const landed = spawn(newFx(1), { kind: 'land', id: 6, fruit: 'short', length: 1440, voice: 'thump' })
-    expect(offsetOf(landed, 6, box).dy).toBeLessThan(-100)
+    // It comes out of the crate: from the crate's side of the counter, and down onto its lane.
+    expect(offsetOf(landed, 6, box).dx).toBeGreaterThan(100)
+    expect(offsetOf(play(landed, 0.2), 6, box).dx).toBeLessThan(offsetOf(landed, 6, box).dx)
     expect(offsetOf(play(landed, 0.5), 6, box)).toEqual({ dx: 0, dy: 0, squash: 0 })
     const from = { x: 96, y: 316, w: 200, h: 48 }
     const swept = spawn(newFx(1), { kind: 'swept', ids: [9], from: [from] })
