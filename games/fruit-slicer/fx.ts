@@ -1,5 +1,5 @@
 import type { Fruit } from './measure'
-import { COUNTER, CRATE, DOG, QUEUE, WALL, WINDOW, type Box } from './stage'
+import { BOARD, COUNTER, CRATE, DOG, QUEUE, RAIL_BOX, SHELF_BOX, WALL, WINDOW, inside, type Box, type Point } from './stage'
 import { draw } from './stream'
 import type { GameEvent } from './moves'
 
@@ -15,7 +15,7 @@ export type Fx =
   | { kind: 'burst'; x: number; y: number; size: number; fruit: Fruit; seed: number; age: number; life: number }
   /** A drop in flight. One that reaches the wall leaves a spatter there. */
   | { kind: 'drop'; x: number; y: number; vx: number; vy: number; r: number; fruit: Fruit; wall: boolean; age: number; life: number }
-  /** A spatter on the wall. It dries and goes: short-lived, and never saved. */
+  /** A spatter on the wall, or a smaller one on the bare wood of the counter. It dries and goes: short-lived, and never saved. */
   | { kind: 'spatter'; x: number; y: number; r: number; fruit: Fruit; seed: number; age: number; life: number }
   /** The lines a blade leaves behind it. */
   | { kind: 'lines'; x: number; y: number; angle: number; reach: number; age: number; life: number }
@@ -27,6 +27,10 @@ export type Fx =
   | { kind: 'knock'; x: number; y: number; age: number; life: number }
   /** The tin's lid coming down on a misfit: it bounces on what sticks out, or shuts on a gap and springs back. */
   | { kind: 'lid'; how: 'over' | 'under'; age: number; life: number }
+  /** The marks a comic puts round a head, with no letter in them: an impact star, drops of sweat flying off, and the short lines of a start. */
+  | { kind: 'star'; x: number; y: number; size: number; seed: number; age: number; life: number }
+  | { kind: 'sweat'; x: number; y: number; seed: number; age: number; life: number }
+  | { kind: 'shock'; x: number; y: number; r: number; age: number; life: number }
 
 /** How a piece moves for a moment, on top of where it lies: a hop apart after a cut, a quiver, a landing, a slide to the shelf. */
 export type Shake = { id: number; kind: 'hop' | 'quiver' | 'land' | 'slide' | 'rattle'; dir: number; from: Box | null; age: number; life: number }
@@ -43,11 +47,13 @@ export type FxState = {
   /** The tin's jolt when it is poked, struck or skidded on: a stiff little spring. */
   jolt: number
   joltSpeed: number
+  /** Where drops of juice came down on the stall's panel in the last step: whoever stands there has juice on its face. */
+  hits: Point[]
   /** The state of the stream the effects scatter by. */
   seed: number
 }
 
-export const newFx = (seed: number): FxState => ({ fx: [], shakes: [], flap: 0, flapSpeed: 0, rock: 0, rockSpeed: 0, jolt: 0, joltSpeed: 0, seed })
+export const newFx = (seed: number): FxState => ({ fx: [], shakes: [], flap: 0, flapSpeed: 0, rock: 0, rockSpeed: 0, jolt: 0, joltSpeed: 0, hits: [], seed })
 
 /** The most effects alive at once, and the most spatters on the wall: the oldest go first. */
 export const MOST_FX = 90
@@ -56,8 +62,19 @@ const GRAVITY = 1500
 /** Where the dog's mouth is, for whatever flies to it. */
 export const MOUTH = { x: DOG.x + DOG.w / 2, y: DOG.y + 78 } as const
 
-/** Adds what one thing that happened sets off. */
-export function spawn(state: FxState, event: GameEvent): FxState {
+/** How long a curl of peel is in the air before it comes down on the dog's head, where it sits until the dog has it. */
+export const CURL_FLIGHT = 0.55
+export const CURL_LIFE = 1.05
+
+/** A comic's mark at a place on the stage, starting after `delay` seconds. */
+export function mark(state: FxState, kind: 'star' | 'sweat' | 'shock', at: Point, delay = 0, size = 1): FxState {
+  const drawn = draw(state.seed)
+  const one: Fx = kind === 'star' ? { kind, x: at.x, y: at.y, size: 26 * size, seed: drawn.value * 1000, age: -delay, life: 0.3 } : kind === 'sweat' ? { kind, x: at.x, y: at.y, seed: drawn.value * 1000, age: -delay, life: 0.7 } : { kind, x: at.x, y: at.y, r: 34 * size, age: -delay, life: 0.4 }
+  return trimmed({ ...state, fx: [...state.fx, one], seed: drawn.state })
+}
+
+/** Adds what one thing that happened sets off. `heads` says where each customer's face is, for what flies to one. */
+export function spawn(state: FxState, event: GameEvent, heads: Partial<Record<'window' | 0 | 1, Point>> = {}): FxState {
   const next: FxState = { ...state, fx: [...state.fx], shakes: [...state.shakes] }
   const random = (): number => {
     const drawn = draw(next.seed)
@@ -72,9 +89,9 @@ export function spawn(state: FxState, event: GameEvent): FxState {
     case 'cut': {
       const big = Math.min(1, event.length / 2400)
       // The burst pops above the piece, clear of the cut itself, which is the thing to be read.
-      next.fx.push({ kind: 'burst', x: event.x, y: event.y - event.h / 2 - 14, size: 16 + 18 * big, fruit: event.fruit, seed: random() * 1000, age: 0, life: 0.28 })
-      next.fx.push({ kind: 'lines', x: event.x, y: event.y - event.h / 2 - 4, angle: Math.PI / 2, reach: 60 + 40 * big, age: 0, life: 0.22 })
-      const drops = 4 + Math.round(3 * big)
+      next.fx.push({ kind: 'burst', x: event.x, y: event.y - event.h / 2 - 18, size: 24 + 26 * big, fruit: event.fruit, seed: random() * 1000, age: 0, life: 0.3 })
+      next.fx.push({ kind: 'lines', x: event.x, y: event.y - event.h / 2 - 4, angle: Math.PI / 2, reach: 70 + 50 * big, age: 0, life: 0.24 })
+      const drops = 7 + Math.round(4 * big)
       for (let i = 0; i < drops; i++) {
         // Most drops go up and on to the wall; a few fall short onto the counter.
         const wall = i % 3 !== 2
@@ -88,7 +105,7 @@ export function spawn(state: FxState, event: GameEvent): FxState {
       break
     }
     case 'curl':
-      next.fx.push({ kind: 'curl', x: event.x, y: event.y, fromX: event.x, fromY: event.y, fruit: event.fruit, age: 0, life: 0.55 })
+      next.fx.push({ kind: 'curl', x: event.x, y: event.y, fromX: event.x, fromY: event.y, fruit: event.fruit, age: 0, life: CURL_LIFE })
       shake(event.id, 'quiver', 1, 0.3)
       break
     case 'poke':
@@ -107,7 +124,7 @@ export function spawn(state: FxState, event: GameEvent): FxState {
     case 'ate':
     case 'splat': {
       // To a customer's mouth, or onto its face, where it bursts.
-      const to = mouthOf(event.whom)
+      const to = heads[event.whom] ?? mouthOf(event.whom)
       next.fx.push({ kind: 'fly', x: event.from.x, y: event.from.y, tx: to.x, ty: to.y, from: event.from, fruit: event.piece.fruit, age: 0, life: 0.3 })
       if (event.kind === 'splat') next.fx.push({ kind: 'burst', x: to.x, y: to.y, size: 30, fruit: event.piece.fruit, seed: random() * 1000, age: -0.3, life: 0.3 })
       break
@@ -180,6 +197,7 @@ function trimmed(state: FxState): FxState {
 /** Plays `dt` seconds: everything ages, drops fly and fall, a drop that reaches the wall leaves a spatter, and what is over goes. */
 export function step(state: FxState, dt: number): FxState {
   const fx: Fx[] = []
+  const hits: Point[] = []
   let seed = state.seed
   for (const one of state.fx) {
     const age = one.age + dt
@@ -190,7 +208,12 @@ export function step(state: FxState, dt: number): FxState {
         if (onWall) {
           const drawn = draw(seed)
           seed = drawn.state
-          fx.push({ kind: 'spatter', x: Math.max(WALL.x + 16, Math.min(WALL.x + WALL.w - 16, x)), y: Math.max(WALL.y + 60, y - drawn.value * 150), r: one.r * 1.9, fruit: one.fruit, seed: drawn.value * 1000, age: 0, life: 14 })
+          const at = { x: Math.max(WALL.x + 22, Math.min(WALL.x + WALL.w - 22, x)), y: Math.max(WALL.y + 60, y - drawn.value * 150) }
+          fx.push({ kind: 'spatter', x: at.x, y: at.y, r: one.r * 1.9, fruit: one.fruit, seed: drawn.value * 1000, age: 0, life: 14 })
+          hits.push(at)
+        } else if (!one.wall && inside({ x, y }, COUNTER) && ![BOARD, SHELF_BOX, RAIL_BOX, CRATE, DOG].some((box) => inside({ x, y }, { x: box.x - 10, y: box.y - 10, w: box.w + 20, h: box.h + 20 }))) {
+          // A drop that falls short leaves a small splat on the bare wood, never on the board, the shelf or the rail.
+          fx.push({ kind: 'spatter', x, y, r: one.r * 1.2, fruit: one.fruit, seed: x + y, age: 0, life: 8 })
         }
         continue
       }
@@ -212,6 +235,7 @@ export function step(state: FxState, dt: number): FxState {
     rockSpeed,
     jolt: state.jolt + joltSpeed * dt,
     joltSpeed,
+    hits,
     seed,
   })
 }

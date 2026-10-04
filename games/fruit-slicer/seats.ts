@@ -1,0 +1,45 @@
+import type { Customer, Who } from './orders'
+import { QUEUE, WINDOW, type Point } from './stage'
+
+// Where each customer stands in the stall's panel and how large it is drawn
+// there: the one at the window fills the height of the panel, the two who
+// wait are smaller, and the small ones are drawn larger than life so their
+// faces read. From these the view places the figures, and everything that
+// has to find a face (a drop of juice, a comic mark, a pair of eyes that
+// follow the finger) finds it. Pure: no canvas.
+
+/** Which customer: the one at the window, or one of the two who wait. */
+export type Seat = 'window' | 0 | 1
+
+/** How big each customer is drawn at the window and in the queue, beside its figure's own units. */
+export const AT_WINDOW: Readonly<Record<Who, number>> = { pelican: 1.3, twins: 1.8, ants: 2, cat: 1.45, boa: 1.5 }
+export const IN_QUEUE: Readonly<Record<Who, number>> = { pelican: 0.85, twins: 1.15, ants: 1.3, cat: 0.95, boa: 0.9 }
+/** The feet of everyone in the stall's panel stand on this line. */
+export const SILL = WINDOW.y + WINDOW.h - 4
+
+/** How many stand in a file of ants: one for each part of the order. */
+const fileOf = (customer: Customer): number => Math.max(...customer.shares.map((share) => share.num))
+
+/** How large a customer is drawn in its seat, and how much of the sill a file of ants may take: a short file is drawn large, a long one runs on under the ticket. */
+export function fitOf(customer: Customer, seat: Seat): { s: number; room: number } {
+  if (seat !== 'window') return { s: IN_QUEUE[customer.who], room: customer.who === 'ants' ? 200 : 210 }
+  if (customer.who !== 'ants') return { s: AT_WINDOW[customer.who], room: 540 }
+  return fileOf(customer) <= 3 ? { s: AT_WINDOW.ants, room: 280 } : { s: 1.3, room: 540 }
+}
+
+/** Where a customer's feet are, by who it is: the middle of them, or the first ant of a file. */
+export function standsAt(who: Who, seat: Seat): Point {
+  if (seat === 'window') return { x: WINDOW.x + (who === 'ants' ? 60 : who === 'boa' ? 150 : who === 'twins' ? 185 : 120), y: SILL }
+  return { x: QUEUE[seat].x + (who === 'ants' ? 26 : who === 'boa' ? 125 : who === 'twins' ? 116 : who === 'cat' ? 62 : 58), y: SILL }
+}
+
+/** Where each figure's head is from its feet, in the figure's own units: the middle of the face. */
+const HEAD: Readonly<Record<Who, Point>> = { pelican: { x: 16, y: -124 }, twins: { x: 0, y: -48 }, ants: { x: 16, y: -20 }, cat: { x: 4, y: -92 }, boa: { x: 74, y: -80 } }
+
+/** The middle of a customer's face on the stage: of the pair for the twins, and of the first ant for a file. */
+export function headOf(customer: Customer, seat: Seat): Point {
+  const feet = standsAt(customer.who, seat), { s, room } = fitOf(customer, seat)
+  // A file of ants is drawn at the size its spacing allows.
+  const k = customer.who === 'ants' ? Math.min(44 * s, room / fileOf(customer)) / 44 : s
+  return { x: feet.x + HEAD[customer.who].x * k, y: feet.y + HEAD[customer.who].y * k }
+}

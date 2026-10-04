@@ -10,7 +10,7 @@ function play(actor: Actor, seconds: number, each?: (actor: Actor) => void): Act
   }
   return actor
 }
-const numbers = (pose: CastPose): number[] => [pose.bob / 10, pose.lean, pose.flat, pose.stretch, pose.head, pose.mouth, pose.lids, pose.eyeX, pose.eyeY, Math.sin(pose.part), pose.bit, pose.tuft, pose.hop / 10, pose.away, pose.turn]
+const numbers = (pose: CastPose): number[] => [pose.bob / 10, pose.lean, pose.flat, pose.stretch, pose.head, pose.mouth, pose.lids, pose.eyeX, pose.eyeY, Math.sin(pose.part), pose.bit, pose.tuft, pose.hop / 10, pose.away, pose.turn, pose.brow, pose.pop]
 /** What one action looks like: the pose sampled through it, with the breathing taken out by starting every one at the same moment. */
 function print(who: Who, set: Partial<Actor>, seconds: number): number[] {
   const out: number[] = []
@@ -58,7 +58,7 @@ describe('every customer', () => {
     const check = (pose: CastPose, where: string) => {
       for (const [name, value, low, high] of [
         ['bob', pose.bob, -6, 6], ['lean', pose.lean, -0.7, 0.7], ['flat', pose.flat, 0, 1], ['stretch', pose.stretch, 0, 0.4], ['mouth', pose.mouth, 0, 1.01],
-        ['lids', pose.lids, -1, 1.01], ['eyeX', pose.eyeX, -1, 1], ['eyeY', pose.eyeY, -1, 1], ['bit', pose.bit, -1.3, 1.3], ['tuft', pose.tuft, 0, 1.31], ['hop', pose.hop, 0, 16], ['away', pose.away, 0, 1], ['turn', pose.turn, 0, 1],
+        ['lids', pose.lids, -1, 1.01], ['eyeX', pose.eyeX, -1, 1], ['eyeY', pose.eyeY, -1, 1], ['bit', pose.bit, -1.3, 1.3], ['tuft', pose.tuft, 0, 1.31], ['hop', pose.hop, 0, 16], ['away', pose.away, 0, 1], ['turn', pose.turn, 0, 1], ['brow', pose.brow, -1, 1], ['pop', pose.pop, 0, 1],
       ] as const) {
         expect(value, `${where} ${name}`).toBeGreaterThanOrEqual(low)
         expect(value, `${where} ${name}`).toBeLessThanOrEqual(high)
@@ -108,6 +108,22 @@ describe('every customer', () => {
     const cat = play(reactTo(newActor('cat', 2), 'leave'), 0.2)
     expect(poseOf(cat)).toMatchObject({ away: 0, turn: 0 })
     expect(poseOf(cat).stretch).toBeGreaterThan(0.1)
+  })
+
+  it('stares in its own way when something absurd happens to somebody else: eyes out on stalks, and back in before it is over', () => {
+    for (const who of WHOS) {
+      expect(poseOf(newActor(who, 2)).pop, who).toBe(0)
+      let most = 0
+      const after = play(reactTo(newActor(who, 2), 'gawp'), SHEETS[who].react.gawp - 0.02, (actor) => (most = Math.max(most, poseOf(actor).pop)))
+      expect(most, who).toBeGreaterThan(0.5)
+      expect(poseOf(after).pop, who).toBeLessThan(0.2)
+    }
+    // The pelican is the last to notice, and the cat looks away first.
+    expect(poseOf(play(reactTo(newActor('pelican', 2), 'gawp'), 0.3)).pop).toBe(0)
+    expect(poseOf(play(reactTo(newActor('twins', 2), 'gawp'), 0.15)).pop).toBe(1)
+    const cat = poseOf(play(reactTo(newActor('cat', 2), 'gawp'), 0.4))
+    expect(cat.pop).toBe(0)
+    expect(cat.lids).toBe(1)
   })
 
   it('is rolled flat as a page and springs back', () => {

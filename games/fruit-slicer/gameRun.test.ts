@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { FLIGHT_SECONDS } from './carry'
 import { freshGame } from './cycle'
+import { CURL_FLIGHT, CURL_LIFE } from './fx'
 import { GameRun, RUN_GAP, SWING } from './gameRun'
 import { IdleLadder } from './guidance'
 import { WHOLE } from './measure'
 import { tinParts } from './orders'
 import { deserialize, serialize } from './save'
 import { servedShow } from './scenes'
+import { headOf } from './seats'
 import { BOARD, CRATE, DOG, LANE_H, PX, QUEUE, ROLLER, SHELF_BOX, TIN, WINDOW, X0, laneTop, type Box, type Point } from './stage'
 import { eaten, inTin, marksOf, onLane } from './world'
 
@@ -309,6 +311,62 @@ describe('the cast in the run', () => {
     expect(run.dog.react).toBeNull()
     play(run, 0.5)
     expect(run.dog.react).toBe('cheeks')
+  })
+})
+
+describe('the comedy', () => {
+  it('has every eye in the stall follow the finger while it is down', () => {
+    const run = fresh()
+    expect(run.frame(0, BUSY).finger).toBeNull()
+    run.press({ x: 300, y: BOARD.y - 30 })
+    expect(run.frame(0, BUSY).finger).toEqual({ x: 300, y: BOARD.y - 30 })
+    run.end()
+    expect(run.frame(0, BUSY).finger).toBeNull()
+  })
+
+  it('has everyone else stare when something absurd happens to one of them, with the marks a comic puts round a head', () => {
+    const run = fresh()
+    run.tap(mid(QUEUE[0]))
+    play(run, 2.5)
+    // A swipe across the one at the window: it loses its tuft and sweats, and the two who wait stare.
+    drag(run, { x: WINDOW.x + 40, y: WINDOW.y + 20 }, { x: WINDOW.x + 260, y: WINDOW.y + 220 }, 0.1)
+    expect(run.window).toMatchObject({ react: 'snip' })
+    expect(run.queue.map((actor) => actor.react)).toEqual(['gawp', 'gawp'])
+    const marks = run.fx.fx.map((one) => one.kind)
+    expect(marks).toContain('sweat')
+    expect(marks.filter((kind) => kind === 'shock')).toHaveLength(2)
+    // Nothing of it is in the game.
+    expect(run.dirty && !run.game.finished).toBe(true)
+    // One who is in the middle of something of its own goes on with that.
+    play(run, 3)
+    run.tap(mid(QUEUE[1]))
+    expect(run.window).toMatchObject({ react: 'step' })
+    drag(run, { x: QUEUE[0].x + 10, y: QUEUE[0].y + 20 }, { x: QUEUE[0].x + 200, y: QUEUE[0].y + 220 }, 0.1)
+    expect(run.window).toMatchObject({ react: 'step' })
+  })
+
+  it('has a customer lick off juice that comes down on its face, in its own way, and only when it is doing nothing else', () => {
+    const run = fresh()
+    play(run, 0.2)
+    const head = headOf(run.game.queue[0], 0)
+    const drops = Array.from({ length: 40 }, (_, k) => ({ kind: 'drop' as const, x: head.x, y: head.y + k * 4, vx: 0, vy: -10, r: 5, fruit: 'long' as const, wall: true, age: 0, life: 0.5 }))
+    run.queue = [{ ...run.queue[0], react: null, idle: null }, { ...run.queue[1], react: null, idle: null }]
+    run.fx = { ...run.fx, fx: drops }
+    run.step(1 / 60)
+    expect(run.queue[0]).toMatchObject({ react: 'lick' })
+    expect(run.queue[1].react).toBeNull()
+  })
+
+  it('lands a curl of peel on the dog, which looks up at it and only then turns its circle', () => {
+    const run = fresh()
+    // A stroke right at the end of the fruit takes off a curl.
+    drag(run, { x: X0 + 6, y: BOARD.y - 20 }, { x: X0 + 6, y: NEAR + 40 }, 0.1)
+    expect(run.fx.fx.some((one) => one.kind === 'curl')).toBe(true)
+    play(run, CURL_FLIGHT + 0.1)
+    expect(run.frame(0, BUSY).dog).toMatchObject({ eyeY: -1, spin: 0 })
+    play(run, CURL_LIFE - CURL_FLIGHT + 0.2)
+    expect(run.dog.react).toBe('spin')
+    expect(run.fx.fx.some((one) => one.kind === 'curl')).toBe(false)
   })
 })
 

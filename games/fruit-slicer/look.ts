@@ -156,3 +156,38 @@ export function eye(ctx: CanvasRenderingContext2D, x: number, y: number, r: numb
   ctx.fillStyle = INK
   ctx.fill()
 }
+
+/**
+ * An eye that may be out on a stalk, as a comic draws a stare: `pop` of the way out towards (ox, oy), given in
+ * eye radii, and larger the further out it is. At rest it is an eye like any other.
+ */
+export function eyeOut(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, dx: number, dy: number, pop: number, ox: number, oy: number): void {
+  if (pop <= 0.02) {
+    eye(ctx, x, y, r, dx, dy)
+    return
+  }
+  const ex = x + ox * r * 4.2 * pop, ey = y + oy * r * 4.2 * pop
+  ctx.lineCap = 'round'
+  ctx.beginPath()
+  ctx.moveTo(x, y)
+  ctx.lineTo(ex, ey)
+  ctx.lineWidth = Math.max(3, r * 0.9)
+  ctx.strokeStyle = INK
+  ctx.stroke()
+  ctx.lineWidth = Math.max(1, r * 0.4)
+  ctx.strokeStyle = WHITE
+  ctx.stroke()
+  eye(ctx, ex, ey, r * (1 + 0.9 * pop), dx, dy)
+}
+
+/** A brow over an eye: one short brush stroke. Raised (1) it stands high and level; pressed down (-1) it sits on the eye and slopes to the front. */
+export function brow(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, raise: number): void {
+  const up = r * (1.55 + 0.8 * raise), slope = raise < 0 ? -raise * r * 0.55 : 0
+  ctx.beginPath()
+  ctx.moveTo(x - r * 1.15, y - up - slope * 0.4)
+  ctx.lineTo(x + r * 1.15, y - up + slope)
+  ctx.lineWidth = Math.max(2, r * 0.5)
+  ctx.strokeStyle = INK
+  ctx.lineCap = 'round'
+  ctx.stroke()
+}

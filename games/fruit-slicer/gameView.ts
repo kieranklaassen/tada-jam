@@ -2,7 +2,7 @@ import { poseOf, type Actor } from './cast'
 import { drawCustomer, type Casting } from './castFigures'
 import { feastOf, leavingFeast, wantedCount, type Feast } from './feast'
 import { dog } from './figures'
-import { MOUTH, flight, offsetOf, type FxState } from './fx'
+import { CURL_FLIGHT, MOUTH, flight, offsetOf, type FxState } from './fx'
 import type { Scenery } from './gameRun'
 import type { Guide } from './guide'
 import type { HandPose } from './guidance'
@@ -11,6 +11,7 @@ import { FRUITS, WHOLE, type Fruit } from './measure'
 import { tinAt } from './moves'
 import { tinParts, wanted, type Customer } from './orders'
 import { ruling } from './serve'
+import { SILL, fitOf, headOf, standsAt, type Seat } from './seats'
 import { paintCounter, paintStreet, paintWear } from './setting'
 import { BOARD, COUNTER, CRATE, DOG, PX, QUEUE, ROLLER, SHELF_BOX, TIN, WALL, WINDOW, laneTop, rowTop, shown, tinShape, type Box, type Point, type TinShape } from './stage'
 import { drawFraction, drawSign } from './symbols'
@@ -27,18 +28,6 @@ import { eaten, marksOf, SHELF, type Piece } from './world'
 type Ctx = CanvasRenderingContext2D
 type Dots = Pick<Screens, 'of'>
 const SCALLOPS = 16
-/** How big each customer is drawn at the window, where it fills the height of its panel, and in the queue. The small ones are drawn larger than life, so their faces read. */
-const AT_WINDOW: Readonly<Record<Customer['who'], number>> = { pelican: 1.3, twins: 1.8, ants: 2, cat: 1.45, boa: 1.5 }
-const IN_QUEUE: Readonly<Record<Customer['who'], number>> = { pelican: 0.85, twins: 1.15, ants: 1.3, cat: 0.95, boa: 0.9 }
-/** Where the one at the window stands, by who it is: the middle of its feet. */
-const windowX = (who: Customer['who']): number => WINDOW.x + (who === 'ants' ? 60 : who === 'boa' ? 150 : who === 'twins' ? 185 : 120)
-/** How large the one at the window is drawn, and how much of the sill it may take: a short file of ants is drawn large, a long one runs on under the ticket. */
-function windowFit(customer: Customer): { s: number; room: number } {
-  if (customer.who !== 'ants') return { s: AT_WINDOW[customer.who], room: 540 }
-  return wantedCount(customer) <= 3 ? { s: AT_WINDOW.ants, room: 280 } : { s: 1.3, room: 540 }
-}
-/** The feet of everyone in the stall's panel stand on this line. */
-const SILL = WINDOW.y + WINDOW.h - 4
 /** Where a served customer's shut tin stands, by its feet, and the top of every ticket. */
 const TIN_BY_FEET = WINDOW.x + 290
 const TICKET_TOP = WALL.y + 54
@@ -164,11 +153,29 @@ function effects(ctx: Ctx, fx: FxState, wall: boolean): number {
       case 'drop':
         inked(ctx, oval(one.x, one.y, one.r, one.r), FLESH[one.fruit], 2.5)
         break
+      case 'star':
+        burst(ctx, one.x, one.y, one.size * 0.42, one.size * (0.7 + 0.5 * t), 7, one.seed, WHITE, 3.5)
+        burst(ctx, one.x, one.y, one.size * 0.16, one.size * 0.4, 5, one.seed + 2, YELLOW, 2.5)
+        break
+      case 'sweat':
+        // Three drops fly off the head and fall away.
+        for (let drop = 0; drop < 3; drop++) {
+          const a = -3.5 + drop * 0.55 + 0.25 * Math.sin(one.seed + drop), reach = 34 + 50 * t
+          const dx = one.x + Math.cos(a) * reach, dy = one.y + Math.sin(a) * reach + 50 * t * t
+          inked(ctx, (c) => { c.moveTo(dx, dy - 14); c.quadraticCurveTo(dx + 11, dy + 3, dx, dy + 9); c.quadraticCurveTo(dx - 11, dy + 3, dx, dy - 14) }, '#c9d6e6', 3)
+        }
+        break
+      case 'shock':
+        speedLines(ctx, one.x, one.y, -Math.PI / 2, 2.6, one.r * (0.75 + 0.2 * t), one.r * (1.2 + 0.3 * t), 7)
+        break
       case 'curl': {
-        const at = flight(one.fromX, one.fromY, t)
+        // In the air to the dog; then it sits on the dog's head, rocking, until the dog has it.
+        const air = Math.min(1, one.age / CURL_FLIGHT), sat = one.age > CURL_FLIGHT
+        const at = flight(one.fromX, one.fromY, air, { x: MOUTH.x - 4, y: DOG.y + 4 })
+        if (sat) at.x += 3 * Math.sin(one.age * 20)
         ctx.beginPath()
         for (let i = 0; i <= 14; i++) {
-          const a = i * 0.55 + t * 22, r = 3 + i * 0.9
+          const a = i * 0.55 + (sat ? 2.2 : air * 22), r = (3 + i * 0.9) * (sat ? 1.7 : 1 + 0.7 * air)
           ctx.lineTo(at.x + Math.cos(a) * r, at.y + Math.sin(a) * r)
         }
         ctx.lineWidth = 5
@@ -316,13 +323,19 @@ function tin(ctx: Ctx, dots: Dots, scenery: Scenery, shape: TinShape, customer: 
   return 8 + 4 * ruled.rows.length
 }
 
-/** A customer and its ticket, standing with its feet on the sill at `x`, in a box `room` wide. */
-function customerAt(ctx: Ctx, dots: Dots, customer: Customer, actor: Actor | null, cast: Partial<Casting>, x: number, y: number, s: number, room: number, exit = 0): number {
+/**
+ * A customer standing in its seat with its feet on the sill. While a finger is down and the customer is doing
+ * nothing else, its eyes follow the finger.
+ */
+function customerAt(ctx: Ctx, dots: Dots, customer: Customer, actor: Actor | null, cast: Partial<Casting>, seat: Seat, finger: Point | null = null, exit = 0): number {
   if (!actor) return 0
+  const { x, y } = standsAt(customer.who, seat), { s, room } = fitOf(customer, seat)
+  const head = headOf(customer, seat)
+  const watch = finger && !actor.react ? { x: Math.max(-1, Math.min(1, (finger.x - head.x) / 260)), y: Math.max(-1, Math.min(1, (finger.y - head.y) / 200)) } : null
   const full: Casting = {
     who: customer.who,
     fruit: customer.fruit,
-    pose: (member) => poseOf(actor, member),
+    pose: watch ? (member) => ({ ...poseOf(actor, member), eyeX: watch.x, eyeY: watch.y }) : (member) => poseOf(actor, member),
     feast: cast.feast ?? feastOf(customer, [], null, null),
     show: cast.show ?? null,
     count: wantedCount(customer),
@@ -373,7 +386,7 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
   const departing = scenery.departing
   if (departing) {
     // The served customer on its way out, behind the one stepping up: turned about, its shut tin with it, and gone at the edge of the panel.
-    const who = departing.customer.who, { s, room } = windowFit(departing.customer), x = windowX(who), file = wantedCount(departing.customer)
+    const who = departing.customer.who, { s, room } = fitOf(departing.customer, 'window'), x = standsAt(who, 'window').x, file = wantedCount(departing.customer)
     const wide = who === 'ants' ? file * Math.min(44 * s, room / file) : 100 * s
     const exit = Math.max(x - WALL.x + wide, TIN_BY_FEET + 72 - WALL.x)
     const last = poseOf(departing.actor, who === 'twins' ? 1 : 0)
@@ -381,7 +394,7 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
     ctx.beginPath()
     ctx.rect(WALL.x + 3, WALL.y + 3, WALL.w - 6, WALL.h - 6)
     ctx.clip()
-    drawn += customerAt(ctx, dots, departing.customer, departing.actor, { feast: leavingFeast(departing.customer, departing.lengths, last.away) }, x, SILL, s, room, exit)
+    drawn += customerAt(ctx, dots, departing.customer, departing.actor, { feast: leavingFeast(departing.customer, departing.lengths, last.away) }, 'window', null, exit)
     inked(ctx, rect(TIN_BY_FEET - last.away * exit, SILL - 30 - last.hop, 64, 26), '#c9d6e6', 4, dots.of(ctx, BLUE, 0.3))
     ctx.restore()
     drawn++
@@ -393,8 +406,7 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
     const lengths = scenery.ending ? scenery.ending.result.parts.flatMap((part) => part.pieces.map((piece) => piece.length)) : eaten(game.world).map((piece) => piece.length)
     const feast = feastOf(atWindow, lengths, scenery.ending?.taste ?? null, scenery.show?.kind === 'showing' ? null : scenery.show, scenery.ending?.result.kind === 'over', scenery.ending?.outcome === 'badly')
     feasting = feast
-    const fitted = windowFit(atWindow)
-    drawn += customerAt(ctx, dots, atWindow, scenery.window, { feast, show: scenery.show }, windowX(atWindow.who), SILL, fitted.s, fitted.room)
+    drawn += customerAt(ctx, dots, atWindow, scenery.window, { feast, show: scenery.show }, 'window', scenery.finger)
     // The ticket is large and stands clear of whoever holds it: the cat's two are stacked.
     if (game.window) drawn += ticket(ctx, atWindow, WINDOW.x + 330, TICKET_TOP, atWindow.who === 'boa' ? 0.66 : atWindow.shares.length > 1 ? 0.72 : 1.1, atWindow.shares.length > 1)
     // Served, and the serve over: it holds its tin, shut, by its feet.
@@ -405,7 +417,7 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
   }
   // The glider's last beat: one feather drifts down where the pelican stood.
   if (gliding && scenery.show && scenery.show.kind === 'glider' && scenery.show.feather > 0 && scenery.show.feather < 1) {
-    const f = scenery.show.feather, from = gliding.whom === 'window' ? windowX('pelican') : QUEUE[gliding.whom].x + 56
+    const f = scenery.show.feather, from = standsAt('pelican', gliding.whom).x
     ctx.save()
     ctx.translate(from + 40 + 26 * Math.sin(f * Math.PI * 3), WALL.y + 50 + (WALL.h - 66) * f)
     ctx.rotate(0.7 * Math.cos(f * Math.PI * 3))
@@ -415,16 +427,16 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
     ctx.restore()
     drawn += 2
   }
-  game.queue.forEach((customer, index) => {
-    const box = QUEUE[index], ants = customer.who === 'ants'
+  game.queue.forEach((customer, at) => {
+    const index = at as 0 | 1, box = QUEUE[index]
     // A pelican gliding out of the queue is drawn in its place until it has gone; the one who joins is seen after it.
     if (gliding && gliding.whom === index && scenery.show && scenery.show.away < 1) {
-      drawn += customerAt(ctx, dots, gliding.customer, scenery.leavingActor, { show: scenery.show }, box.x + 58, SILL, IN_QUEUE.pelican, 210)
+      drawn += customerAt(ctx, dots, gliding.customer, scenery.leavingActor, { show: scenery.show }, index)
       return
     }
     // The pelican and the cat stand beside their tickets, the cat's two stacked; the low ones (the twins, the ants, the boa) have theirs over their heads.
     const who = customer.who, long = who === 'boa', beside = who === 'pelican' || who === 'cat'
-    drawn += customerAt(ctx, dots, customer, scenery.queue[index], {}, box.x + (ants ? 26 : long ? 125 : who === 'twins' ? 116 : who === 'cat' ? 62 : 58), SILL, IN_QUEUE[who], ants ? 200 : 210)
+    drawn += customerAt(ctx, dots, customer, scenery.queue[index], {}, index, scenery.finger)
     drawn += ticket(ctx, customer, box.x + (long ? 8 : who === 'cat' ? 104 : beside ? 92 : 46), TICKET_TOP, long ? 0.5 : customer.shares.length > 1 ? 0.56 : 0.62, true)
   })
   drawn += awning(ctx, scenery.time, fx.flap)

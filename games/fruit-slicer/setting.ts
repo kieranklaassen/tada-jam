@@ -231,7 +231,7 @@ function rail(ctx: Ctx): number {
   return 5
 }
 
-/** What a stall keeper leaves about: a cloth on a peg and a stack of paper bags down the left edge, and the dog's bowl and bone by its arch. */
+/** What a stall keeper leaves about: a cloth on a peg and a stack of paper bags down the left edge, and the dog's bone by its arch. */
 function clutter(ctx: Ctx, dots: Dots): number {
   // A cloth hanging from a peg beside the rail, its lower part in red dots.
   const cx = COUNTER.x + 12, cy = RAIL_BOX.y + 6
@@ -249,18 +249,15 @@ function clutter(ctx: Ctx, dots: Dots): number {
     const by = SHELF_BOX.y + SHELF_BOX.h - 34 - bag * 13, lean = (bag % 2 ? 3 : -2)
     inked(ctx, poly([[COUNTER.x + 10 + lean, by], [COUNTER.x + 52 + lean, by], [COUNTER.x + 54 + lean, by + 14], [COUNTER.x + 8 + lean, by + 14]]), PAPER, 3, bag === 3 ? dots.of(ctx, BLUE, 0.2) : undefined)
   }
-  // The dog's bowl and its bone, between the crate and the arch.
-  const bx = DOG.x + 36, by = DOG.y - 30
-  inked(ctx, poly([[bx - 30, by], [bx + 30, by], [bx + 22, by + 22], [bx - 22, by + 22]]), WHITE, 4, dots.of(ctx, RED, 0.4))
-  inked(ctx, oval(bx, by, 30, 7), WHITE, 4)
-  const ox = DOG.x + 104, oy = DOG.y - 16
+  // The dog's bone, by its arch.
+  const ox = DOG.x + 108, oy = DOG.y - 24
   inked(ctx, slab(ox - 22, oy - 5, 44, 10, 5), WHITE, 3.5)
   for (const [ex, ey] of [[-22, -6], [-22, 6], [22, -6], [22, 6]] as const) inked(ctx, oval(ox + ex, oy + ey, 7, 6), WHITE, 3.5)
   ctx.fillStyle = WHITE
   ctx.fillRect(ox - 20, oy - 3, 40, 6)
   // A peg rail over the roller's hook.
   inked(ctx, rect(ROLLER.x - 4, COUNTER.y + 3, ROLLER.w + 8, 9), '#d9a441', 3)
-  return 14
+  return 12
 }
 
 /** Nicks a blade has left in the board, as short pale scratches: the board is a board that has been used. Painted on the board, under everything that lies on it. */

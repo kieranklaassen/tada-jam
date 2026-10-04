@@ -2,11 +2,12 @@ import { FLING_SPEED, drop, fling, grab, rollOver, type Held } from './carry'
 import { newActor, poseOf as castPose, reactTo, stepActor, type Actor } from './cast'
 import type { Ending, Game } from './cycle'
 import { newDog, poseOf as dogPose, react, stepDog, type DogState, type Reaction } from './dogMotion'
-import { MOUTH, newFx, spawn, step, whoosh, type FxState } from './fx'
+import { CURL_FLIGHT, CURL_LIFE, MOUTH, mark, newFx, spawn, step, whoosh, type FxState } from './fx'
 import { guideOf, type Guide } from './guide'
 import { handPose, type Guidance, type HandPose } from './guidance'
 import { newStroke, poke, slice, thingAt, tinAt, type GameEvent, type Stroke, type Whom } from './moves'
 import { Scene, followedBy } from './scene'
+import { headOf } from './seats'
 import { gliderBeats, restShow, servedShow, serveBeats, showingBeats, type Show } from './scenes'
 import { shown, type Point } from './stage'
 import { dogTaste } from './tastes'
@@ -47,6 +48,8 @@ export type Scenery = {
   leavingActor: Actor | null
   time: number
   blade: Point | null
+  /** Where the finger is while it is down, whatever it holds: every eye in the stall follows it. */
+  finger: Point | null
   /** The pieces in the hand, and how far they have been carried from where they lie in the world. */
   carried: { ids: number[]; dx: number; dy: number } | null
   /** The roller: where the finger has it, or nothing while it hangs on its hook. */
@@ -217,6 +220,13 @@ export class GameRun {
     this.scene?.update(this.clock)
     if (this.scene && !this.scene.running) this.sceneOver()
     this.fx = step(this.fx, dt)
+    // Juice that came down where somebody's face is: it licks it off, in its own way, unless it is busy with something else.
+    for (const hit of this.fx.hits) {
+      for (const whom of ['window', 0, 1] as const) {
+        const actor = this.actorOf(whom), head = this.headAt(this.game, whom)
+        if (actor && head && !actor.react && !actor.idle && Math.hypot(hit.x - head.x, hit.y - head.y) < 54) this.reactAs(whom, 'lick')
+      }
+    }
     this.dog = stepDog(this.dog, dt)
     if (this.window) this.window = stepActor(this.window, dt)
     this.queue = [stepActor(this.queue[0], dt), stepActor(this.queue[1], dt)]
@@ -244,11 +254,13 @@ export class GameRun {
     const hand = guide && guidance.demo !== null ? handPose(guidance.demo, guide.hand.drag, this.hand) : null
     // While a finger is down the dog watches it; otherwise it looks up at the board by itself.
     const finger = this.blade ?? this.held?.at ?? this.roller
-    const look = finger ? { x: (finger.x - MOUTH.x) / 420, y: (finger.y - MOUTH.y) / 260 } : null
+    // A curl of peel that has come down on its head: it looks up at it, cross as that makes it.
+    const hat = this.fx.fx.some((one) => one.kind === 'curl' && one.age >= CURL_FLIGHT)
+    const look = hat ? { x: 0, y: -1 } : finger ? { x: (finger.x - MOUTH.x) / 420, y: (finger.y - MOUTH.y) / 260 } : null
     const carried = this.held ? { ids: this.held.held.ids, dx: this.held.at.x - this.held.held.dx - this.held.held.boxes[0].x, dy: this.held.at.y - this.held.held.dy - this.held.held.boxes[0].y } : null
     // With no scene playing, a served customer is in the last pose of its serve: that is what a load finds.
     const show = this.show ?? (this.game.window && this.game.finished ? servedShow(eaten(this.game.world).length) : null)
-    return { game: this.game, fx: this.fx, dog: dogPose(this.dog, look), window: this.window, queue: this.queue, leavingActor: this.leavingActor, departing: this.departing, time, blade: this.blade, carried, roller: this.roller, show, ending: this.ending, leaving: this.leaving, glow: idle ? guidance.glow : 0, guide, hand }
+    return { game: this.game, fx: this.fx, dog: dogPose(this.dog, look), window: this.window, queue: this.queue, leavingActor: this.leavingActor, departing: this.departing, time, blade: this.blade, finger: finger ?? null, carried, roller: this.roller, show, ending: this.ending, leaving: this.leaving, glow: idle ? guidance.glow : 0, guide, hand }
   }
 
   /** A customer's pose, for the view: the one at the window or one who waits, and which of its bodies. */
@@ -257,6 +269,12 @@ export class GameRun {
   private passedAnEnd(fromX: number, toX: number): boolean {
     const low = Math.min(fromX, toX), high = Math.max(fromX, toX)
     return shown(this.game.world, tinAt(this.game)).some(({ box }) => (box.x > low && box.x <= high) || (box.x + box.w > low && box.x + box.w <= high))
+  }
+
+  /** Where a customer's face is on the stage, or nothing when nobody is in that seat. */
+  private headAt(game: Game, whom: Whom): Point | null {
+    const customer = whom === 'window' ? game.window : game.queue[whom]
+    return customer ? headOf(customer, whom) : null
   }
 
   private actorOf(whom: Whom): Actor | null {
@@ -268,6 +286,20 @@ export class GameRun {
     if (!actor) return
     if (whom === 'window') this.window = reactTo(actor, reaction)
     else this.queue[whom] = reactTo(actor, reaction)
+  }
+
+  /**
+   * Something absurd has happened to somebody: everyone else stares, each in its own way. One who is in the
+   * middle of something of its own goes on with that.
+   */
+  private stare(except: Whom | null): void {
+    for (const whom of ['window', 0, 1] as const) {
+      const actor = this.actorOf(whom)
+      if (whom === except || !actor || actor.react) continue
+      this.reactAs(whom, 'gawp')
+      const head = this.headAt(this.game, whom)
+      if (head) this.fx = mark(this.fx, 'shock', { x: head.x, y: head.y - 10 }, actor.who === 'pelican' ? 0.5 : actor.who === 'cat' ? 0.75 : actor.who === 'boa' ? 0.6 : 0.05)
+    }
   }
 
   /** A touch ends the scene that is playing: every beat lands at its end, and none of the sounds it had not reached is heard. */
@@ -312,8 +344,9 @@ export class GameRun {
     }
     let cuts = 0
     let showing: string | null = null
+    const heads = { window: this.headAt(before, 'window') ?? undefined, 0: this.headAt(before, 0) ?? undefined, 1: this.headAt(before, 1) ?? undefined }
     for (const event of events) {
-      this.fx = spawn(this.fx, event)
+      this.fx = spawn(this.fx, event, heads)
       if ('voice' in event) {
         const delay = event.kind === 'cut' || event.kind === 'curl' ? cuts++ * RUN_GAP : 0
         const length = 'length' in event ? event.length : 'piece' in event ? event.piece.length : undefined
@@ -328,8 +361,15 @@ export class GameRun {
           this.dog = react(this.dog, 'snap')
           break
         case 'curl':
-          this.coming.push({ wait: 0.5, reaction: 'spin', amount: 0 })
+          // The peel comes down on the dog's head and sits there a moment; then the dog turns its full circle and has it.
+          this.coming.push({ wait: CURL_LIFE, reaction: 'spin', amount: 0 })
           break
+        case 'misfit': {
+          // A lid that will not shut on its order: the customer sweats.
+          const head = heads.window
+          if (head) this.fx = mark(this.fx, 'sweat', head, 0.1)
+          break
+        }
         case 'fell': {
           const taste = dogTaste(event.piece.length, event.piece.fruit)
           this.coming.push({ wait: 0.36, reaction: taste.act === 'spin' ? 'spin' : taste.act === 'snap' ? 'gulp' : 'cheeks', amount: taste.cheeks })
@@ -337,16 +377,34 @@ export class GameRun {
         }
         case 'rolled':
           if (event.on === 'dog') this.dog = react(this.dog, 'ironed')
-          if (event.on === 'customer' && event.whom !== null) this.reactAs(event.whom, 'flat')
+          if (event.on === 'customer' && event.whom !== null) {
+            this.reactAs(event.whom, 'flat')
+            // As it springs back into shape: a start.
+            const head = heads[event.whom]
+            if (head) this.fx = mark(this.fx, 'shock', head, 0.6, 1.3)
+          }
+          // A customer or the dog under the roller is a thing to stare at.
+          if (event.on === 'customer' || event.on === 'dog') this.stare(event.whom)
           break
-        case 'flinch':
+        case 'spill':
+          this.stare(null)
+          break
+        case 'flinch': {
           this.reactAs(event.whom, 'flinch')
+          const head = heads[event.whom]
+          if (head) this.fx = mark(this.fx, 'star', { x: head.x - 26, y: head.y - 22 })
           break
-        case 'snip':
+        }
+        case 'snip': {
           this.reactAs(event.whom, 'snip')
+          const head = heads[event.whom]
+          if (head) this.fx = mark(this.fx, 'sweat', head)
+          this.stare(event.whom)
           break
+        }
         case 'splat':
           this.reactAs(event.whom, 'lick')
+          this.stare(event.whom)
           break
         case 'ate':
           this.reactAs(event.whom, 'gulp')
@@ -370,6 +428,7 @@ export class GameRun {
           this.leaving = { customer: before.queue[event.whom], whom: event.whom }
           this.leavingActor = gone
           this.queue[event.whom] = reactTo(newActor(game.queue[event.whom].who, ++this.seed + 10), 'step')
+          this.stare(event.whom)
           break
         }
         case 'given':
@@ -383,10 +442,13 @@ export class GameRun {
             const show = restShow('glider')
             this.leaving = { customer, whom: 'window' }
             this.start(gliderBeats(show, cue), show, event.ending)
+            this.stare('window')
           } else {
             const show = restShow('serve')
             const serve = serveBeats(show, event.ending, cue)
             this.start(showing ? followedBy(showingBeats(show, customer, cue), serve) : serve, show, event.ending)
+            // Sent off with a tin that will not shut: the two who wait have seen it.
+            if (event.ending.outcome === 'badly') this.stare('window')
           }
           showing = null
           break

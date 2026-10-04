@@ -1,6 +1,6 @@
 import type { CastPose } from './cast'
 import type { Feast } from './feast'
-import { BLUE, FLESH, INK, RED, RIND, WHITE, YELLOW, eye, inked, oval, poly, shade, type Screens } from './look'
+import { BLUE, FLESH, INK, RED, RIND, WHITE, YELLOW, brow, eyeOut, inked, oval, poly, shade, type Screens } from './look'
 import type { Fruit } from './measure'
 import type { Who } from './orders'
 import type { Show } from './scenes'
@@ -99,8 +99,9 @@ function pelican(ctx: Ctx, dots: Dots, cast: Casting): void {
   for (const one of inPouch) lump(ctx, cast.fruit, 100 - one.at * 80 - Math.min(1, one.size) * 30, 4 + sag * 0.5 - 4, Math.min(1, one.size), 60)
   inked(ctx, poly([[16, -8], [122, 8], [118, 14 + 10 * open], [18, 4 + 6 * open]]), YELLOW, 4)
   if (wings > 0 || away > 0) lump(ctx, cast.fruit, 60, -2, 1, 110, 12)
-  eye(ctx, 6, -4, 6 * (pose.lids < 0 ? 1 - pose.lids * 0.3 : 1), 0.5 + pose.eyeX * 0.5, pose.eyeY)
-  lid(ctx, 6, -4, 6, Math.max(0, pose.lids, 0.5 * feast.pleased), WHITE)
+  eyeOut(ctx, 6, -4, 6 * (pose.lids < 0 ? 1 - pose.lids * 0.3 : 1), 0.5 + pose.eyeX * 0.5, pose.eyeY, pose.pop, 1, -0.5)
+  if (pose.pop < 0.05) lid(ctx, 6, -4, 6, Math.max(0, pose.lids, 0.5 * feast.pleased), WHITE)
+  brow(ctx, 6, -4, 6, pose.brow)
   ctx.restore()
 }
 
@@ -143,8 +144,9 @@ function shrew(ctx: Ctx, dots: Dots, cast: Casting, member: number): void {
       ctx.stroke()
     }
   }
-  eye(ctx, 8, -2, 4.5 * (pose.lids < 0 ? 1.3 : 1), 0.6 + 0.4 * pose.eyeX, pose.eyeY)
-  lid(ctx, 8, -2, 4.5, Math.max(0, pose.lids, 0.6 * feast.pleased), GREY)
+  eyeOut(ctx, 8, -2, 4.5 * (pose.lids < 0 ? 1.3 : 1), 0.6 + 0.4 * pose.eyeX, pose.eyeY, pose.pop, 0.4, -1)
+  if (pose.pop < 0.05) lid(ctx, 8, -2, 4.5, Math.max(0, pose.lids, 0.6 * feast.pleased), GREY)
+  brow(ctx, 8, -2, 4.5, pose.brow)
   ctx.restore()
   for (const foot of [-8, 8]) inked(ctx, oval(foot, 0, 8, 4), WHITE, 2.5)
 }
@@ -173,7 +175,7 @@ function antBody(ctx: Ctx, pose: CastPose, flat: number): void {
   inked(ctx, oval(0, -13, 6, 6), INK, 0)
   inked(ctx, oval(13, -18, 9, 8.5), INK, 0)
   inked(ctx, oval(-17, -17, 4, 2, -0.4), RED, 0)
-  eye(ctx, 16, -20, 3.4, 0.5, 0)
+  eyeOut(ctx, 16, -20, 3.4, 0.5 + 0.5 * pose.eyeX, pose.eyeY, pose.pop, 0.7, -0.8)
   if (pose.tuft > 0.3) {
     for (const reach of [1, 0.6]) {
       ctx.beginPath()
@@ -212,8 +214,10 @@ function cat(ctx: Ctx, dots: Dots, cast: Casting): void {
   for (const side of [-1, 1]) {
     // Crossed over two equal shares; turned to the gap, then to the piece, when it was given the smaller one.
     const look = feast.cross > 0 ? -side * feast.cross : feast.gaze !== 0 ? feast.gaze : pose.eyeX
-    eye(ctx, side * 11, -4, 7 * (pose.lids < 0 ? 1.25 : 1), look, pose.eyeY + 0.3 * feast.gaze * feast.gaze)
-    lid(ctx, side * 11, -4, 7, Math.max(0, pose.lids, 0.7 * feast.pleased), YELLOW)
+    eyeOut(ctx, side * 11, -4, 7 * (pose.lids < 0 ? 1.25 : 1), look, pose.eyeY + 0.3 * feast.gaze * feast.gaze, pose.pop, side * 0.5, -0.8)
+    if (pose.pop < 0.05) lid(ctx, side * 11, -4, 7, Math.max(0, pose.lids, 0.7 * feast.pleased), YELLOW)
+    // The one brow that goes up is the far one; the near one only follows it when something is the matter.
+    brow(ctx, side * 11, -4, 7, side > 0 ? pose.brow : Math.min(pose.brow, pose.brow * 0.2))
   }
   inked(ctx, poly([[-3, 6], [3, 6], [0, 10]]), RED, 2)
   const open = Math.max(pose.mouth, feast.mouth)
@@ -278,8 +282,9 @@ function boa(ctx: Ctx, dots: Dots, cast: Casting): void {
   if (open > 0.08) inked(ctx, poly([[4, 6], [30, 6 + 16 * open], [4, 12]]), RED, 3)
   inked(ctx, oval(8, 0, 22, 13), WHITE, 4, dots.of(ctx, BLUE, 0.5))
   if (pose.tuft > 0.3) inked(ctx, poly([[-6, -11], [-2, -11 - 12 * pose.tuft], [4, -12], [8, -12 - 10 * pose.tuft], [12, -11]]), RED, 2.5)
-  eye(ctx, 14, -4, 5 * (pose.lids < 0 ? 1.3 : 1), 0.5 + 0.5 * pose.eyeX, pose.eyeY)
-  lid(ctx, 14, -4, 5, Math.max(0, pose.lids, 0.6 * feast.pleased), WHITE)
+  eyeOut(ctx, 14, -4, 5 * (pose.lids < 0 ? 1.3 : 1), 0.5 + 0.5 * pose.eyeX, pose.eyeY, pose.pop, 0.3, -1)
+  if (pose.pop < 0.05) lid(ctx, 14, -4, 5, Math.max(0, pose.lids, 0.6 * feast.pleased), WHITE)
+  brow(ctx, 14, -4, 5, pose.brow)
   ctx.restore()
 }
 

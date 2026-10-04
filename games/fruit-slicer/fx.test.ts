@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { MOST_FX, MOST_SPATTERS, MOUTH, flight, newFx, offsetOf, settled, spawn, step, whoosh, type FxState } from './fx'
-import { COUNTER, WALL } from './stage'
+import { BOARD, COUNTER, RAIL_BOX, SHELF_BOX, WALL, inside } from './stage'
 import type { GameEvent } from './moves'
 
 const CUT: GameEvent = { kind: 'cut', left: 1, right: 2, fruit: 'long', length: 2400, x: 400, y: 412, h: 48, voice: 'thwack' }
@@ -23,16 +23,29 @@ describe('a cut', () => {
     expect(after.shakes.map((shake) => [shake.id, shake.kind, shake.dir])).toEqual([[1, 'hop', -1], [2, 'hop', 1]])
   })
 
-  it('throws drops that spatter the wall and stay inside it', () => {
+  it('throws drops that spatter the wall and stay inside it; one that falls short marks only bare wood', () => {
     const later = play(after, 1.2)
     const spatters = later.fx.filter((one) => one.kind === 'spatter')
-    expect(spatters.length).toBeGreaterThan(0)
-    for (const one of spatters) {
+    const onWall = spatters.filter((one) => one.y < COUNTER.y)
+    expect(onWall.length).toBeGreaterThan(0)
+    for (const one of onWall) {
       expect(one.x).toBeGreaterThan(WALL.x)
       expect(one.x).toBeLessThan(WALL.x + WALL.w)
       expect(one.y).toBeGreaterThan(WALL.y)
       expect(one.y).toBeLessThan(WALL.y + WALL.h)
     }
+    // The board, the shelf and the rail stay clean: they are what the child measures on.
+    for (const one of spatters.filter((other) => other.y >= COUNTER.y)) for (const slab of [BOARD, SHELF_BOX, RAIL_BOX]) expect(inside({ x: one.x, y: one.y }, slab)).toBe(false)
+  })
+
+  it('says where juice came down on the stall, for one step only', () => {
+    let seen = 0
+    const later = play(after, 1.2, (state) => {
+      seen += state.hits.length
+      for (const hit of state.hits) expect(hit.y).toBeLessThan(WALL.y + WALL.h)
+    })
+    expect(seen).toBeGreaterThan(0)
+    expect(step(later, 1 / 60).hits).toEqual([])
   })
 
   it('never lets a drop leave the page, and everything but the spatter is over within a second', () => {

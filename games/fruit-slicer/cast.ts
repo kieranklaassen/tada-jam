@@ -4,8 +4,9 @@ import { draw, pick } from './stream'
 // The five customers as numbers. Each moves like itself and like no other:
 // its own tempo, its own funny part, its own small things at idle and its own
 // way of taking a poke, a snip, the roller, a splat, a bite or a step, and its
-// own way of leaving with what it was served. The state machine that paces
-// them is shared; not one curve is. Pure: it runs on
+// own way of leaving with what it was served, and its own way of staring
+// when something absurd happens to somebody else. The state machine that
+// paces them is shared; not one curve is. Pure: it runs on
 // the seconds it is handed and a stream of its own.
 //
 // - The pelican: slow, heavy, deadpan. Its pouch is the funny part.
@@ -42,10 +43,14 @@ export type CastPose = {
   away: number
   /** 0 facing as it stands, 1 turned about to go. */
   turn: number
+  /** The brow: 1 raised, -1 pressed down flat, 0 at ease. */
+  brow: number
+  /** The eyes out on stalks, 0 to 1, as a comic draws a stare. */
+  pop: number
 }
 
-export type Reaction = 'flinch' | 'snip' | 'flat' | 'lick' | 'gulp' | 'step' | 'leave'
-export const REACTIONS: readonly Reaction[] = ['flinch', 'snip', 'flat', 'lick', 'gulp', 'step', 'leave']
+export type Reaction = 'flinch' | 'snip' | 'flat' | 'lick' | 'gulp' | 'step' | 'leave' | 'gawp'
+export const REACTIONS: readonly Reaction[] = ['flinch', 'snip', 'flat', 'lick', 'gulp', 'step', 'leave', 'gawp']
 /** The longest any customer takes to leave: a second. A touch never waits for it. */
 export const LEAVE_AT_MOST = 1
 
@@ -61,11 +66,11 @@ type Sheet = {
 }
 
 export const SHEETS: Readonly<Record<Who, Sheet>> = {
-  pelican: { tempo: 0.9, idle: { blink: 0.34, preen: 2.2, gape: 1.7, shuffle: 1.3 }, react: { flinch: 0.7, snip: 0.9, flat: 1.1, lick: 1.2, gulp: 0.9, step: 1.1, leave: 1 }, rest: [2.2, 5] },
-  twins: { tempo: 2.6, idle: { sniff: 0.7, startle: 0.45, squabble: 1.1, groom: 1.3 }, react: { flinch: 0.35, snip: 0.5, flat: 0.7, lick: 0.6, gulp: 0.4, step: 0.5, leave: 0.55 }, rest: [0.6, 1.8] },
-  ants: { tempo: 4.2, idle: { feelers: 0.5, drill: 0.9, aboutFace: 0.8 }, react: { flinch: 0.3, snip: 0.4, flat: 0.8, lick: 0.5, gulp: 0.35, step: 0.6, leave: 0.7 }, rest: [0.8, 2.2] },
-  cat: { tempo: 0.5, idle: { slowBlink: 1.5, tailFlick: 0.4, yawn: 2.1, lookAway: 1.9 }, react: { flinch: 0.9, snip: 1.3, flat: 1.4, lick: 1.6, gulp: 0.8, step: 1.2, leave: 0.9 }, rest: [2.6, 6] },
-  boa: { tempo: 0.35, idle: { tongue: 0.5, sway: 2.6, coil: 1.9 }, react: { flinch: 1.2, snip: 1.1, flat: 1.6, lick: 1.4, gulp: 1.3, step: 1.8, leave: 1 }, rest: [3, 6.5] },
+  pelican: { tempo: 0.9, idle: { blink: 0.34, preen: 2.2, gape: 1.7, shuffle: 1.3 }, react: { flinch: 0.7, snip: 0.9, flat: 1.1, lick: 1.2, gulp: 0.9, step: 1.1, leave: 1, gawp: 1.7 }, rest: [2.2, 5] },
+  twins: { tempo: 2.6, idle: { sniff: 0.7, startle: 0.45, squabble: 1.1, groom: 1.3 }, react: { flinch: 0.35, snip: 0.5, flat: 0.7, lick: 0.6, gulp: 0.4, step: 0.5, leave: 0.55, gawp: 0.9 }, rest: [0.6, 1.8] },
+  ants: { tempo: 4.2, idle: { feelers: 0.5, drill: 0.9, aboutFace: 0.8 }, react: { flinch: 0.3, snip: 0.4, flat: 0.8, lick: 0.5, gulp: 0.35, step: 0.6, leave: 0.7, gawp: 0.75 }, rest: [0.8, 2.2] },
+  cat: { tempo: 0.5, idle: { slowBlink: 1.5, tailFlick: 0.4, yawn: 2.1, lookAway: 1.9 }, react: { flinch: 0.9, snip: 1.3, flat: 1.4, lick: 1.6, gulp: 0.8, step: 1.2, leave: 0.9, gawp: 1.5 }, rest: [2.6, 6] },
+  boa: { tempo: 0.35, idle: { tongue: 0.5, sway: 2.6, coil: 1.9 }, react: { flinch: 1.2, snip: 1.1, flat: 1.6, lick: 1.4, gulp: 1.3, step: 1.8, leave: 1, gawp: 1.9 }, rest: [3, 6.5] },
 }
 
 export type Actor = {
@@ -119,7 +124,7 @@ export function stepActor(actor: Actor, dt: number): Actor {
 
 const bump = (t: number): number => Math.sin(Math.max(0, Math.min(1, t)) * Math.PI)
 const ramp = (t: number, from: number, to: number): number => Math.max(0, Math.min(1, (t - from) / (to - from)))
-const REST: CastPose = { bob: 0, lean: 0, flat: 0, stretch: 0, head: 0, mouth: 0, lids: 0, eyeX: 0, eyeY: 0, part: 0, bit: 0, tuft: 1, hop: 0, away: 0, turn: 0 }
+const REST: CastPose = { bob: 0, lean: 0, flat: 0, stretch: 0, head: 0, mouth: 0, lids: 0, eyeX: 0, eyeY: 0, part: 0, bit: 0, tuft: 1, hop: 0, away: 0, turn: 0, brow: 0, pop: 0 }
 
 /**
  * A customer's pose now. `member` is which of several bodies this is: 0 or 1 for the twins, the place in the
@@ -136,16 +141,20 @@ export function poseOf(actor: Actor, member = 0): CastPose {
       pose.bob = 1.6 * Math.sin(t * 0.9)
       pose.part = 0.12 * Math.sin(t * 0.9 - 1.3)
       pose.lids = 0.35
+      // A flat heavy brow that almost nothing moves: the deadpan.
+      pose.brow = -0.7
       if (idle === 'blink') pose.lids = 0.35 + 0.65 * bump(i)
       if (idle === 'preen') { pose.head = -0.9 * bump(i); pose.bit = bump(ramp(i, 0.2, 0.9)); pose.lids = 0.7 }
       if (idle === 'gape') { pose.mouth = 0.8 * ramp(i, 0, 0.7) * (i < 0.86 ? 1 : 0); pose.part = 0.4 * bump(ramp(i, 0.86, 1)) }
       if (idle === 'shuffle') { pose.lean = 0.07 * Math.sin(i * Math.PI * 4); pose.hop = 2 * Math.abs(Math.sin(i * Math.PI * 4)) }
-      if (react === 'flinch') { pose.stretch = 0.16 * bump(ramp(r, 0, 0.5)); pose.lids = -0.5 * (1 - r); pose.part = 0.7 * Math.sin(r * 9) * (1 - r) }
+      if (react === 'flinch') { pose.stretch = 0.16 * bump(ramp(r, 0, 0.5)); pose.lids = -0.5 * (1 - r); pose.part = 0.7 * Math.sin(r * 9) * (1 - r); pose.brow = 1 - 1.7 * r }
       if (react === 'snip') { pose.tuft = r < 0.55 ? 0 : ramp(r, 0.55, 0.7) * (1 + 0.3 * bump(ramp(r, 0.7, 1))); pose.eyeY = -0.9 * (1 - r); pose.lids = 0 }
       if (react === 'flat') { pose.flat = r < 0.55 ? ramp(r, 0, 0.12) : 1 - ramp(r, 0.55, 0.66); pose.stretch = 0.3 * bump(ramp(r, 0.66, 1)); pose.part = 0.6 * bump(ramp(r, 0.66, 1)) }
       if (react === 'lick') { pose.mouth = 0.5 * bump(r); pose.head = 0.35 * Math.sin(r * Math.PI * 2); pose.lids = 0.9 * bump(r) }
       if (react === 'gulp') { pose.mouth = bump(ramp(r, 0, 0.4)); pose.part = bump(ramp(r, 0.3, 1)); pose.stretch = 0.1 * bump(ramp(r, 0.3, 0.7)) }
       if (react === 'step') { pose.lean = 0.13 * Math.sin(r * Math.PI * 3); pose.hop = 3 * Math.abs(Math.sin(r * Math.PI * 3)); pose.part = 0.5 * Math.sin(r * Math.PI * 3 - 1) }
+      // It stares late and little: nothing at all, then the eyes creep out, the beak sags open, and one slow blink shuts the matter.
+      if (react === 'gawp') { pose.pop = 0.75 * bump(ramp(r, 0.25, 0.85)); pose.mouth = 0.45 * bump(ramp(r, 0.4, 0.95)); pose.brow = -0.7 + 1.5 * bump(ramp(r, 0.25, 0.85)); pose.lids = r > 0.85 ? ramp(r, 0.85, 0.93) : 0; pose.head = 0.25 * bump(ramp(r, 0.2, 1)) }
       // It waddles out at one heavy pace, rocking from foot to foot, and the pouch swings after it.
       if (react === 'leave') { pose.turn = 1; pose.away = r; pose.lean = 0.16 * Math.sin(r * Math.PI * 6); pose.hop = 4 * Math.abs(Math.sin(r * Math.PI * 6)); pose.part = 0.9 * Math.sin(r * Math.PI * 6 - 1.3); pose.lids = 0.6 }
       break
@@ -156,6 +165,7 @@ export function poseOf(actor: Actor, member = 0): CastPose {
       const burst = Math.max(0, Math.sin(t * 1.3 + m * 2.4))
       pose.part = 0.5 * Math.sin(t * 17 + m * 3.1) * burst
       pose.bit = 0.15 * Math.sin(t * 2.6 + m * 1.7 - 0.6)
+      pose.brow = 0.25
       if (idle === 'sniff') { pose.part = Math.sin(i * Math.PI * 12 + m); pose.head = 0.25 * bump(i) * (m ? -1 : 1) }
       if (idle === 'startle') { pose.hop = 9 * bump(ramp(i, m * 0.18, 0.6 + m * 0.18)); pose.bit = 1 - i; pose.lids = -0.6 * (1 - i) }
       if (idle === 'squabble') { pose.lean = 0.22 * Math.sin(i * Math.PI * 5) * (m ? -1 : 1); pose.mouth = 0.6 * Math.abs(Math.sin(i * Math.PI * 5 + m * 1.5)) }
@@ -166,6 +176,8 @@ export function poseOf(actor: Actor, member = 0): CastPose {
       if (react === 'lick') { pose.mouth = Math.abs(Math.sin(r * Math.PI * 6)); pose.part = Math.sin(r * 60) }
       if (react === 'gulp') { pose.mouth = bump(r); pose.hop = 4 * bump(r) }
       if (react === 'step') { pose.hop = 7 * Math.abs(Math.sin(r * Math.PI * 4 + m)); pose.lean = 0.1 * Math.sin(r * Math.PI * 8) }
+      // Both pairs of eyes are out at once; then one twin looks at the other, to see what it makes of it.
+      if (react === 'gawp') { pose.pop = r < 0.7 ? Math.min(1, r * 12) : 1 - ramp(r, 0.7, 0.85); pose.hop = 5 * bump(ramp(r, 0, 0.2)); pose.bit = 1; pose.part = 0; pose.brow = 1; pose.head = m ? 0.9 * bump(ramp(r, 0.45, 1)) : 0; pose.mouth = 0.5 * (1 - r) }
       // They scurry, one bolting first and the other after it, ears back and noses going.
       if (react === 'leave') { pose.turn = 1; pose.away = ramp(r, m * 0.3, 0.7 + m * 0.3); pose.hop = 10 * Math.abs(Math.sin(r * Math.PI * 5 + m * 1.3)); pose.part = Math.sin(r * 70 + m); pose.bit = -0.8; pose.lean = -0.25 }
       break
@@ -184,6 +196,8 @@ export function poseOf(actor: Actor, member = 0): CastPose {
       if (react === 'lick') { pose.lean = 0.5 * Math.sin(r * Math.PI * 4 + m); pose.part = r * 40 }
       if (react === 'gulp') { pose.mouth = bump(r); pose.stretch = 0.3 * bump(r) }
       if (react === 'step') { pose.part = t * 4.2 * 2 - m * 0.7; pose.bob = 2 * Math.sin(r * Math.PI * 6 - m) }
+      // The whole file stops mid-stride, feelers straight up, and a start runs down it from the front.
+      if (react === 'gawp') { pose.part = 1.3; pose.bit = 1.2 * bump(ramp(r, 0, 0.9)); pose.pop = 0.8 * bump(ramp(r, m * 0.05, 0.9)); pose.hop = 5 * bump(ramp(r, m * 0.08, m * 0.08 + 0.25)); pose.bob = 0 }
       // They turn about as one and march off in step, every ant at the same height at the same moment.
       if (react === 'leave') { pose.turn = 1; pose.away = r; pose.part = t * 4.2 * 3; pose.bob = 2.4 * Math.sin(r * Math.PI * 8); pose.bit = 0.9 }
       break
@@ -193,6 +207,8 @@ export function poseOf(actor: Actor, member = 0): CastPose {
       pose.bob = 0.7 * Math.sin(t * 0.5)
       pose.part = 0.5 + 0.35 * Math.sin(t * 0.5 * 1.3) + 0.25 * Math.max(0, Math.sin(t * 0.21)) ** 12 * Math.sin(t * 19)
       pose.lids = 0.45
+      // One brow a little up: nothing here is worth both.
+      pose.brow = 0.4
       if (idle === 'slowBlink') pose.lids = 0.45 + 0.55 * bump(i)
       if (idle === 'tailFlick') pose.part += 0.9 * bump(i)
       if (idle === 'yawn') { pose.mouth = bump(ramp(i, 0.15, 0.85)); pose.lids = 1; pose.stretch = 0.12 * bump(i); pose.bit = bump(i) }
@@ -203,6 +219,8 @@ export function poseOf(actor: Actor, member = 0): CastPose {
       if (react === 'lick') { pose.mouth = 0.4 * bump(r); pose.head = 0.5 * bump(ramp(r, 0, 0.5)) - 0.5 * bump(ramp(r, 0.5, 1)); pose.lids = 1; pose.bit = Math.sin(r * Math.PI * 5) }
       if (react === 'gulp') { pose.mouth = 0.7 * bump(ramp(r, 0, 0.5)); pose.lids = 0.9 }
       if (react === 'step') { pose.stretch = 0.2 * bump(ramp(r, 0, 0.5)); pose.lean = -0.08 * bump(r); pose.part = 1.1 * ramp(r, 0, 1) }
+      // It will not be seen to look: it turns its head away with its eyes shut, and then one quick look gets out all the same, and the tail gives it away.
+      if (react === 'gawp') { pose.head = -0.7 * bump(ramp(r, 0, 0.5)); pose.lids = r < 0.5 ? 1 : 0.45; pose.pop = bump(ramp(r, 0.5, 0.78)); pose.brow = r < 0.5 ? -0.6 : 1; pose.part = 0.5 + 1.1 * bump(ramp(r, 0.45, 1)); pose.bit = bump(ramp(r, 0.5, 0.8)) }
       // It does not hurry: a long stretch first, eyes shut, then it turns its back and is gone, tail straight up.
       if (react === 'leave') { pose.stretch = 0.24 * bump(ramp(r, 0, 0.35)); pose.lids = 1 - 0.4 * ramp(r, 0.3, 0.5); pose.turn = ramp(r, 0.28, 0.32); pose.away = ramp(r, 0.3, 1) ** 2; pose.part = 1.7; pose.head = -0.5 * ramp(r, 0.3, 0.5) }
       break
@@ -213,6 +231,7 @@ export function poseOf(actor: Actor, member = 0): CastPose {
       pose.part = t * 0.35
       pose.bit = 0
       pose.lids = 0.2
+      pose.brow = -0.2
       if (idle === 'tongue') pose.bit = Math.abs(Math.sin(i * Math.PI * 3))
       if (idle === 'sway') { pose.head = 0.5 * Math.sin(i * Math.PI * 2); pose.lean = 0.1 * Math.sin(i * Math.PI * 2 - 0.8) }
       if (idle === 'coil') { pose.stretch = 0.15 * bump(i); pose.part = t * 0.35 + 1.5 * bump(i) }
@@ -222,6 +241,8 @@ export function poseOf(actor: Actor, member = 0): CastPose {
       if (react === 'lick') { pose.bit = Math.abs(Math.sin(r * Math.PI * 4)); pose.head = 0.4 * bump(r) }
       if (react === 'gulp') { pose.mouth = bump(ramp(r, 0, 0.3)); pose.hop = 0; pose.stretch = 0.2 * bump(ramp(r, 0.2, 1)) }
       if (react === 'step') { pose.part = t * 0.35 + 4 * r; pose.head = 0.3 * bump(r) }
+      // The head comes up slowly on its neck, the tongue is forgotten and hangs out, and the far end hears of it last.
+      if (react === 'gawp') { pose.stretch = 0.3 * bump(ramp(r, 0, 0.8)); pose.bit = r < 0.85 ? ramp(r, 0.1, 0.3) : 1 - ramp(r, 0.85, 1); pose.pop = 0.6 * bump(ramp(r, 0.3, 0.9)); pose.brow = bump(ramp(r, 0.2, 0.9)); pose.part = t * 0.35 + 2 * bump(ramp(r, 0.6, 1)); pose.head = -0.35 * bump(ramp(r, 0, 0.8)) }
       // It pours itself out head first, slowly and then all at once, and the far end is the last of it to go.
       if (react === 'leave') { pose.turn = 1; pose.away = r * r; pose.part = t * 0.35 + 8 * r; pose.head = 0.3 * Math.sin(r * Math.PI * 2); pose.bit = bump(r) }
       break
