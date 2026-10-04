@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { KINDS, SPEC } from './kit'
-import { RANGE, scaleNote, reactVoice, growCreak, pendulumSqueak, beaverChatter, beaverSigh, beaverSlap, chord, creak, fold, give, gurgle, hornEcho, lay, load, moleDrop, moleRule, pendulum, pinClick, pinPop, pinRattle, pinSwing, pinTick, plop, play, pluck, snapTick, splash, takeOff, trolleyBells, trolleyFlip, trolleyOff, trolleySet, trolleyWeight, turn, type VoiceSpec } from './voices'
+import { RANGE, footTick, reactCues, scaleNote, reactVoice, growCreak, pendulumSqueak, beaverChatter, beaverSigh, beaverSlap, chord, creak, fold, give, gurgle, hornEcho, lay, load, moleDrop, moleRule, pendulum, pinClick, pinPop, pinRattle, pinSwing, pinTick, plop, play, pluck, snapTick, splash, takeOff, trolleyBells, trolleyFlip, trolleyOff, trolleySet, trolleyWeight, turn, type VoiceSpec } from './voices'
 
 const every: [string, VoiceSpec][] = [
   ['pin', pinClick],
@@ -81,13 +81,18 @@ describe('the voices, as numbers', () => {
   it('each thing a vehicle does about its ride has a sound of its own, and a tube drums as it rolls back to the tray', () => {
     const acts = ['parcels-stand', 'parcels-slide', 'jelly-rolls', 'jelly-jumps', 'driver-yawns', 'keys-ripple', 'piano-rolls-back', 'necks-stretch', 'necks-duck', 'hums-a-scale', 'loses-step']
     expect(new Set(acts.map((act) => JSON.stringify(reactVoice('post-van', 'plain', act)))).size).toBe(acts.length)
-    // The caterpillar's feet tick while it hums; out of step, the ticks are uneven and two hiccups come between them.
+    // The caterpillar hums six notes of a scale, upward; out of step it hiccups three times, once for each hop it makes.
     const hum = reactVoice('caterpillar-bus', 'like', 'hums-a-scale'), lost = reactVoice('caterpillar-bus', 'dislike', 'loses-step')
-    expect(hum.filter((sound) => sound.pitch > 1500)).toHaveLength(3)
-    expect(hum.filter((sound) => sound.wave === 'sine').map((sound) => sound.pitch)).toEqual([...hum.filter((sound) => sound.wave === 'sine').map((sound) => sound.pitch)].sort((a, b) => a - b))
-    const ticks = lost.filter((sound) => sound.pitch > 1500).map((sound) => sound.after ?? 0)
-    expect(new Set(ticks.slice(1).map((after, i) => (after - ticks[i]).toFixed(2))).size).toBeGreaterThan(1)
-    expect(lost.filter((sound) => sound.pitch < 1000)).toHaveLength(2)
+    expect(hum).toHaveLength(6)
+    expect(hum.map((sound) => sound.pitch)).toEqual([...hum.map((sound) => sound.pitch)].sort((a, b) => a - b))
+    expect(new Set(hum.map((sound) => Math.round(sound.pitch))).size).toBe(6)
+    expect(lost.filter((sound) => sound.pitch < 1000)).toHaveLength(3)
+    // Its feet are heard between the notes, evenly, and anyhow when it has lost step.
+    const feet = (cues: { at: number; voice: VoiceSpec }[]) => cues.filter((cue) => cue.voice === footTick).map((cue) => cue.at)
+    const even = feet(reactCues('caterpillar-bus', 'like', 'hums-a-scale')), uneven = feet(reactCues('caterpillar-bus', 'dislike', 'loses-step'))
+    expect(even).toHaveLength(6)
+    expect(new Set(even.slice(1).map((at, k) => (at - even[k]).toFixed(2))).size).toBe(1)
+    expect(new Set(uneven.slice(1).map((at, k) => (at - uneven[k]).toFixed(2))).size).toBeGreaterThan(2)
     // The yawn goes up and then a long way down.
     const yawn = reactVoice('jelly-truck', 'plain', 'driver-yawns')
     expect(yawn[1].slideTo!).toBeLessThan(yawn[1].pitch / 2)
@@ -121,4 +126,29 @@ describe('a part under load', () => {
     expect(first('plank', 0.75, 'pull')).not.toBe(first('plank', 0.75, 'bend'))
   })
 })
+
+describe('a reaction heard as it is seen', () => {
+  it('each sound of a reaction waits for the move it belongs to: in order, inside the beat, and with no delay of its own', () => {
+    const acts = ['parcels-stand', 'parcels-slide', 'jelly-rolls', 'jelly-jumps', 'driver-yawns', 'keys-ripple', 'piano-rolls-back', 'necks-stretch', 'necks-duck', 'hums-a-scale', 'loses-step']
+    for (const act of acts) {
+      const cues = reactCues('post-van', 'dislike', act)
+      expect(cues.length, act).toBeGreaterThanOrEqual(2)
+      cues.forEach((cue, k) => {
+        expect(cue.at).toBeGreaterThan(0); expect(cue.at).toBeLessThan(0.9)
+        if (k) expect(cue.at).toBeGreaterThanOrEqual(cues[k - 1].at)
+        for (const sound of cue.voice) expect(sound.after ?? 0).toBe(0)
+      })
+    }
+    // A parcel is heard as it lands: one thud for each that slides, and as many as slide.
+    expect(reactCues('post-van', 'dislike', 'parcels-slide', 0).map((cue) => cue.at)).toEqual([0.22])
+    expect(reactCues('post-van', 'dislike', 'parcels-slide', 0.5).map((cue) => cue.at)).toEqual([0.22, 0.36])
+    expect(reactCues('post-van', 'dislike', 'parcels-slide', 1).map((cue) => cue.at)).toEqual([0.22, 0.36, 0.5])
+    // Three hiccups at the three hops; the keys heard at both ripples.
+    expect(reactCues('caterpillar-bus', 'dislike', 'loses-step').filter((cue) => cue.voice !== footTick).map((cue) => cue.at)).toEqual([0.2, 0.45, 0.68])
+    expect(reactCues('piano-mover', 'like', 'keys-ripple')).toHaveLength(10)
+    // A reaction with no act of its own is its horn's own phrase, at the start of the beat.
+    expect(reactCues('post-van', 'like')).toEqual([{ at: 0.08, voice: reactVoice('post-van', 'like') }])
+  })
+})
+
 

@@ -255,12 +255,13 @@ export function honk(id: string): VoiceSpec {
  * wave. The caterpillar's feet tick in time while it hums a scale, or tick out
  * of step with a hiccup between. Anything else is one plain note of its horn.
  */
-export function reactVoice(id: string, mood: 'like' | 'dislike' | 'plain', act = ''): VoiceSpec {
+export function reactVoice(id: string, mood: 'like' | 'dislike' | 'plain', act = '', amount = 1): VoiceSpec {
   const base = honk(id)[0].pitch
   const run = (count: number, make: (i: number) => Sound): VoiceSpec => kept(Array.from({ length: count }, (_, i) => make(i)))
   switch (act) {
     case 'parcels-stand': return kept([{ wave: 'sine', pitch: 1568, slideTo: 1976, peak: 0.07, attack: 0.02, length: 0.2 }, { wave: 'sine', pitch: 2093, slideTo: 1760, peak: 0.07, attack: 0.02, length: 0.3, after: 0.24 }])
-    case 'parcels-slide': return run(3, (i) => ({ wave: 'triangle', pitch: 170 - 22 * i, slideTo: 110, peak: 0.1, attack: 0.002, length: 0.09, after: 0.05 + 0.2 * i }))
+    // One thud for each parcel that slides off: one, two or three, by how bad the ride was.
+    case 'parcels-slide': return run(1 + Math.round(2 * clamp(amount, [0, 1])), (i) => ({ wave: 'triangle', pitch: 170 - 22 * i, slideTo: 110, peak: 0.1, attack: 0.002, length: 0.09, after: 0.05 + 0.2 * i }))
     case 'jelly-rolls': return kept([{ wave: 'sine', pitch: 196, slideTo: 262, peak: 0.1, attack: 0.08, length: 0.5 }, { wave: 'sine', pitch: 262, slideTo: 196, peak: 0.08, attack: 0.08, length: 0.5, after: 0.45 }])
     case 'jelly-jumps': return kept([{ wave: 'sine', pitch: 240, slideTo: 720, peak: 0.12, attack: 0.004, length: 0.18 }, { wave: 'noise', pitch: 500, slideTo: 260, peak: 0.1, attack: 0.004, length: 0.14, after: 0.42 }])
     case 'driver-yawns': return kept([{ wave: 'sine', pitch: 330, slideTo: 440, peak: 0.07, attack: 0.08, length: 0.5 }, { wave: 'sine', pitch: 440, slideTo: 196, peak: 0.07, attack: 0.06, length: 0.9, after: 0.5 }])
@@ -268,12 +269,46 @@ export function reactVoice(id: string, mood: 'like' | 'dislike' | 'plain', act =
     case 'piano-rolls-back': return kept([{ wave: 'noise', pitch: 180, slideTo: 120, peak: 0.1, attack: 0.05, length: 0.6 }, ...[0.1, 0.3, 0.52].map((after, i) => ({ wave: 'triangle' as const, pitch: 131 * (1 + 0.5 * i), peak: 0.06, attack: 0.004, length: 0.2, after }))])
     case 'necks-stretch': return run(3, (i) => ({ wave: 'sine', pitch: 392 * (1 + 0.12 * i), slideTo: 587 * (1 + 0.12 * i), peak: 0.06, attack: 0.05, length: 0.4, after: 0.15 * i }))
     case 'necks-duck': return run(3, (i) => ({ wave: 'sine', pitch: 587 - 40 * i, slideTo: 294 - 20 * i, peak: 0.07, attack: 0.01, length: 0.18, after: 0.18 * i }))
-    case 'hums-a-scale': return run(6, (i) => (i % 2 ? { wave: 'triangle', pitch: 1900, peak: 0.03, attack: 0.001, length: 0.03, after: 0.1 * i } : { wave: 'sine', pitch: 262 * 2 ** ([0, 2, 4][i / 2] / 12), peak: 0.07, attack: 0.03, length: 0.26, after: 0.1 * i }))
-    case 'loses-step': return kept([{ wave: 'triangle', pitch: 1900, peak: 0.035, attack: 0.001, length: 0.03 }, { wave: 'triangle', pitch: 1900, peak: 0.035, attack: 0.001, length: 0.03, after: 0.13 }, { wave: 'triangle', pitch: 1900, peak: 0.035, attack: 0.001, length: 0.03, after: 0.19 }, { wave: 'triangle', pitch: 620, peak: 0.1, attack: 0.002, length: 0.05, after: 0.26 }, { wave: 'triangle', pitch: 1900, peak: 0.035, attack: 0.001, length: 0.03, after: 0.37 }, { wave: 'triangle', pitch: 880, peak: 0.1, attack: 0.002, length: 0.05, after: 0.5 }])
+    // Six notes of a scale, one after another, hummed.
+    case 'hums-a-scale': return run(6, (i) => ({ wave: 'sine', pitch: 262 * 2 ** ([0, 2, 4, 5, 7, 9][i] / 12), peak: 0.07, attack: 0.03, length: 0.26, after: 0.1 * i }))
+    // Three hiccups, one for each hop it makes, and its feet between them, anyhow.
+    case 'loses-step': return kept([{ wave: 'triangle', pitch: 620, peak: 0.1, attack: 0.002, length: 0.05, after: 0.12 }, { wave: 'triangle', pitch: 880, peak: 0.1, attack: 0.002, length: 0.05, after: 0.3 }, { wave: 'triangle', pitch: 700, peak: 0.1, attack: 0.002, length: 0.05, after: 0.52 }, { ...footTick[0] }, { ...footTick[0], after: 0.19 }, { ...footTick[0], after: 0.41 }])
   }
   if (mood === 'like') return kept([0, 4, 7, 12].map((semis, i) => ({ wave: 'triangle' as const, pitch: base * 2 ** (semis / 12), peak: 0.07, attack: 0.01, length: 0.22, after: 0.14 * i })))
   if (mood === 'dislike') return kept([{ wave: 'triangle', pitch: base * 1.5, slideTo: base * 0.7, peak: 0.1, attack: 0.01, length: 0.35 }, { wave: 'noise', pitch: 900, peak: 0.06, attack: 0.005, length: 0.12, after: 0.3 }, { wave: 'triangle', pitch: base * 0.6, peak: 0.07, attack: 0.01, length: 0.18, after: 0.45 }])
   return kept([{ wave: 'triangle', pitch: base, peak: 0.06, attack: 0.02, length: 0.3 }])
+}
+
+/** One foot of the caterpillar bus coming down. */
+export const footTick: VoiceSpec = [{ wave: 'triangle', pitch: 1900, peak: 0.035, attack: 0.001, length: 0.03 }]
+
+/**
+ * What a vehicle does about its ride, as sounds each cued by the move it
+ * belongs to: `at` is the share of the reaction's beat at which that move
+ * happens (acts.ts, `reactPose`), so a parcel is heard as it lands, the jelly
+ * as it lands on the cab roof, and a hiccup at each hop.
+ */
+export function reactCues(id: string, mood: 'like' | 'dislike' | 'plain', act = '', amount = 1): { at: number; voice: VoiceSpec }[] {
+  const whole = reactVoice(id, mood, act, amount)
+  const each = (times: readonly number[], from = 0) => times.flatMap((at, i) => (whole[from + i] ? [{ at, voice: [{ ...whole[from + i], after: undefined }] as VoiceSpec }] : []))
+  switch (act) {
+    case 'parcels-stand': return each([0.12, 0.36])
+    case 'parcels-slide': return each([0.22, 0.36, 0.5])
+    case 'jelly-rolls': return each([0.08, 0.5])
+    case 'jelly-jumps': return each([0.1, 0.3])
+    case 'driver-yawns': return each([0.15, 0.45])
+    // The keys ripple twice, and are heard twice.
+    case 'keys-ripple': return [...each([0, 1, 2, 3, 4].map((i) => 0.12 + 0.03 * i)), ...each([0, 1, 2, 3, 4].map((i) => 0.45 + 0.02 * i))]
+    // It rumbles as it rolls back, the mover's feet are heard behind it, and it rumbles again as it is hauled up.
+    case 'piano-rolls-back': return [...each([0.08, 0.14, 0.22, 0.3]), ...each([0.6])]
+    case 'necks-stretch': return each([0.1, 0.18, 0.26])
+    case 'necks-duck': return each([0.08, 0.2, 0.32])
+    // A note of the scale at each sixth of the hum, and a foot between each two.
+    case 'hums-a-scale': return [...each([0, 1, 2, 3, 4, 5].map((i) => 0.1 + 0.12 * i)), ...[0, 1, 2, 3, 4, 5].map((i) => ({ at: 0.16 + 0.12 * i, voice: footTick }))].sort((a, b) => a.at - b.at)
+    // A hiccup at each of its three hops, and its feet anyhow.
+    case 'loses-step': return [...each([0.2, 0.45, 0.68]), ...[0.06, 0.15, 0.31, 0.37, 0.58, 0.63, 0.82].map((at) => ({ at, voice: footTick }))].sort((a, b) => a.at - b.at)
+  }
+  return [{ at: 0.08, voice: whole }]
 }
 
 /** The barge under the bridge: a long low toot for open water, and a scrape and a plop for a prop in its way. */

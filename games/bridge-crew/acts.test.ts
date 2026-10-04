@@ -138,3 +138,36 @@ describe('how each vehicle moves', () => {
     expect(reactPose('jelly-truck', plain, 0.5).gasp).toBe(0)
   })
 })
+
+describe('what a full reading found of the characters', () => {
+  const at = (id: Parameters<typeof reactPose>[0], mood: 'like' | 'dislike', amount: number, t: number, act = '') => ({ ...reactPose(id, { mood, act, amount, parts: [] }, t) })
+
+  it('the van\'s driver is seen whistling: its mouth is a small round while the parcels stand', () => {
+    expect(at('post-van', 'like', 1, 0.3).gasp).toBeGreaterThan(0.25)
+    expect(at('post-van', 'like', 1, 0.3).gasp).toBeLessThan(0.45)
+    expect(at('post-van', 'like', 1, 0.02).gasp).toBe(0)
+    expect(at('post-van', 'like', 1, 0.8).gasp).toBe(0)
+  })
+
+  it('the parcels slide off the back one at a time: each is down before the next begins to go', () => {
+    const gone = (t: number) => { const pose = at('post-van', 'dislike', 1, t); return [pose.cargo[2], pose.cargo[1], pose.cargo[0]].map((c) => -c / 1.6) }
+    for (let t = 0; t <= 0.6; t += 0.01) {
+      const [top, middle, bottom] = gone(t)
+      // The next one has not started until the one before it is all the way off.
+      if (middle > 0.001) expect(top).toBeGreaterThan(0.999)
+      if (bottom > 0.001) expect(middle).toBeGreaterThan(0.999)
+    }
+    expect(gone(0.52).every((share) => share > 0.999)).toBe(true)
+    // And as each lands it is heard: the three thuds are at the three landings.
+    for (const [k, landed] of [0.22, 0.36, 0.5].entries()) expect(gone(landed)[k]).toBeGreaterThan(0.999)
+  })
+
+  it('the jelly rolls in one slow wave: over to one side and to the other, once', () => {
+    const lean = Array.from({ length: 99 }, (_, i) => at('jelly-truck', 'like', 1, (i + 1) / 100).cargo[0])
+    let turns = 0
+    for (let i = 1; i < lean.length; i++) if (Math.sign(lean[i]) !== Math.sign(lean[i - 1]) && lean[i] !== 0 && lean[i - 1] !== 0) turns++
+    expect(turns).toBe(1)
+    expect(Math.max(...lean)).toBeGreaterThan(0.3); expect(Math.min(...lean)).toBeLessThan(-0.3)
+  })
+})
+

@@ -4,7 +4,7 @@ import { layPart } from './grid'
 import { length, pinsOf, samePoint, type Kind, type Part, type Point } from './kit'
 import { PART_REACH, PIN_REACH, SLIDE_OFF, TROLLEY_REACH, farFromStretch, gridPointAt, onRoll, onVehicle, parkAt, rackSlot, toolAt, touched, tracingSpot, waitAt } from './layout'
 import { givenUpOn, modelInMargin, nearestDifferences, neatWayDue, oneChangeDue, type Difference } from './order'
-import { CALM, type Splash } from './drift'
+import { CALM, type Splash, BARGE, bargeAt } from './drift'
 import { desk } from './valley'
 import { perchOn } from './motion'
 import { DRAWN_DIP, WATER, atRest, rests, type Rest } from './pose'
@@ -18,7 +18,7 @@ import { isFooting, isYard, site, type Idea, type VehicleId } from './sites'
 import { crossingBeats, giveBeats, givePlace, idleShow, type Cue, type Show } from './stage'
 import { CHIEF, RING, Toy, type Hand } from './toy'
 import { TAIL, TASTE, VEHICLES, bargeReaction, reaction, trainOf, type Reaction } from './vehicles'
-import { fold as foldVoiceOf, bargeHorn, beaverChatter, beaverSigh, beaverSlap, chiefTaps, chord, creak, give, gurgle, honk, hornEcho, plop, lay as layVoice, load as loadVoice, moleDrop, moleRule, pendulumSqueak, scaleStart, pinTick, pluck as pluckVoice, reactVoice, restore, scaleNote, snapTick, splash, trolleyBells, trolleyFlip, trolleyOff, trolleySet, trolleyWeight, unrollVoice } from './voices'
+import { fold as foldVoiceOf, bargeHorn, beaverChatter, beaverSigh, beaverSlap, chiefTaps, chord, creak, give, gurgle, honk, hornEcho, plop, lay as layVoice, load as loadVoice, moleDrop, moleRule, pendulumSqueak, scaleStart, pinTick, pluck as pluckVoice, reactCues, restore, scaleNote, snapTick, splash, trolleyBells, trolleyFlip, trolleyOff, trolleySet, trolleyWeight, unrollVoice, type VoiceSpec } from './voices'
 
 // The game on the toy: the vehicles at the two banks, a run over the bridge,
 // the two scenes a run ends in, and the sheets (the roll and the rack). Pure,
@@ -135,6 +135,8 @@ export class Game extends Toy {
   /** Seconds since the oldest sheet slid off the end of the rack, and since the model in the margin was plucked. Short-lived: not saved. */
   slidOff = Infinity
   modelRung = Infinity
+  /** The sounds of the reaction that is playing, each waiting for its move. Short-lived. */
+  private reactDue: { at: number; voice: VoiceSpec }[] = []
   /** Vehicles that made room on a bank of the free yard and are driving off the sheet. Short-lived: what is saved has them gone already. */
   leaving: { id: VehicleId; bank: 'near' | 'far'; place: number; since: number }[] = []
   /** Where the finger has the trolley while it is carried: on the deck, or null in the air. Undefined when it is not in the hand. Never saved. */
@@ -914,6 +916,7 @@ export class Game extends Toy {
     if (this.scene) {
       const wasRunning = this.scene.running
       this.scene.update(this.sceneClock)
+      while (this.reactDue.length && this.show.kind === 'crossing' && this.show.react >= this.reactDue[0].at) this.voices.push(this.reactDue.shift()!.voice)
       if (wasRunning && !this.scene.running) this.afterScene()
     }
     // The neat way after a crossing is owed by the state itself, so putting the game away in the middle of that
@@ -1056,7 +1059,14 @@ export class Game extends Toy {
       this.voices.push(chord(this.bridge.map((part) => layVoice(part.kind, length(part))[0].pitch)))
       this.bridge.forEach((_, index) => { this.rung[index] = 0.2 })
     }
-    if (what === 'react' && this.show.reaction) this.voices.push(reactVoice(drive.vehicle, this.show.reaction.mood, this.show.reaction.act), ...(this.bargeTook ? [bargeHorn(this.bargeTook.mood === 'like')] : []))
+    // What the cargo and the driver do is heard as it is seen: each sound waits for the move it belongs to.
+    if (what === 'react' && this.show.reaction) this.reactDue = reactCues(drive.vehicle, this.show.reaction.mood, this.show.reaction.act, this.show.reaction.amount)
+    if (what === 'react' && this.bargeTook) {
+      const horn = bargeHorn(this.bargeTook.mood === 'like')
+      // The barge toots as it sets off, and the toot is seen at its bow. With a prop in its way it scrapes as it passes, and its pot is heard when it reaches the water.
+      if (this.bargeTook.mood === 'like') { this.voices.push(horn); const bow = bargeAt(this.at, this.seconds, 0); if (bow !== null) this.mark('toot', [bow + BARGE.bow + 0.35, WATER + 0.55]) }
+      else this.reactDue = [...this.reactDue, { at: 0.25, voice: [{ ...horn[0], after: undefined }] }, { at: 0.5, voice: horn.slice(1).map((sound) => ({ ...sound, after: Math.max(0, (sound.after ?? 0) - (horn[1]?.after ?? 0)) })) }].sort((a, b) => a.at - b.at)
+    }
     // A secret: under a whole arch the barge's toot comes back as a chord.
     if (what === 'react' && this.at.channel && this.bargeTook?.mood === 'like' && wholeArch(this.bridge, this.frame.firm, isFooting(this.at), this.at.channel)) this.voices.push(hornEcho)
     if (what === 'arrive' && (this.show.rollArrives || this.show.arriving)) this.voices.push(unrollVoice(1))
@@ -1073,6 +1083,7 @@ export class Game extends Toy {
     this.gave = null
     this.dipped = null
     this.fading = null
+    this.reactDue = []
     this.show = idleShow()
     this.scene = null
     // The road is free again: the trolley is back where it stood, with its clink.

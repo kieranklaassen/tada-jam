@@ -189,15 +189,20 @@ export function reactPose(id: VehicleId, reaction: Reaction, t: number, out: Veh
         // The parcels stand: the tower gives one neat hop and the driver whistles.
         for (let i = 0; i < 3; i++) out.cargo[i] = 0
         out.bounce = 0.08 * swell(t, 0.1, 0.3) + 0.05 * swell(t, 0.35, 0.5)
+        // It whistles: its mouth is a small round while the two notes sound.
+        out.gasp = 0.32 * (ease(t, 0.1, 0.14) - ease(t, 0.56, 0.62))
+        out.lids = swell(t, 0.62, 0.9)
       } else if (mood === 'dislike') {
         // The parcels slide off the back one at a time. Then the driver gets out, walks to the tail and restacks them, and gets in again.
         const off = 1 + Math.round(2 * amount)
-        for (let i = 0; i < 3; i++) if (3 - i <= off) out.cargo[i] = -1.6 * (ease(t, 0.1 + 0.12 * (2 - i), 0.3 + 0.12 * (2 - i)) - ease(t, 0.78, 0.96))
+        // One at a time, the top one first: each is down before the next begins to go.
+        for (let i = 0; i < 3; i++) if (3 - i <= off) out.cargo[i] = -1.6 * (ease(t, 0.08 + 0.14 * (2 - i), 0.22 + 0.14 * (2 - i)) - ease(t, 0.78, 0.96))
         out.upset = ease(t, 0.52, 0.68) - ease(t, 0.92, 1)
       } else for (let i = 0; i < 3; i++) out.cargo[i] = -0.12 * (i + 1) * amount * hold
       break
     case 'jelly-truck':
-      if (mood === 'like') out.cargo[0] = (0.2 + 0.25 * amount) * Math.sin(2 * Math.PI * 2 * t) * hold
+      // One slow wave: over to one side, back through the middle and over to the other, once.
+      if (mood === 'like') out.cargo[0] = (0.2 + 0.25 * amount) * Math.sin(2 * Math.PI * t) * hold
       else if (mood === 'dislike') {
         // The jelly jumps and lands on the cab roof, and slides back to its plate.
         out.upset = ease(t, 0.1, 0.3) - ease(t, 0.75, 0.95)
