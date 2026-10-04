@@ -1,0 +1,7 @@
+# Answers for Muddy Truck Wash: the check of the sheet, round 5
+
+Checked: the sheet part of `games/muddy-truck-wash/ART.md` (everything above `## The look`) whose sha256 is `c601653f1ddce1f22f1d29570a867ed977a2e740f6977244fe0454b71d25d0c2`. Checker: the lead, from the diff. Outcome: **PASSED round 5**.
+
+Round 4 (checker F) had five findings, each with its exact replacement (which vehicles toot and hop where they stand, the mixer that keeps trying against the dried mud, a tap on the puddle once the vehicle has been through twice, a first showing that is still owed after a put-away, and the foundation on memory taken in part, in the records and in the claim), and the lead added one change of a few words under ruling 9 in the Limits line of `us-ca 2.3`. The diff of the sheet part as round 4 read it (sha256 `7fa67128f90d6f6c95b292a3b17db3ceb8f2ce531d3ef13123b0e71d9dde0a70`) against the sheet part now shows eight changed places, in lines 13, 106, 116, 133, 136, 147, 153 and 181; each holds its replacement as it was written, word for word, and the words the lead's change replaced are gone. Nothing else above `## The look` changed, so no checker read it again: the replacements were written by someone who is not the builder, and the builder pasted them and nothing more.
+
+The sheet has passed. The sheet part must keep this hash until the update is merged; if you change it, ask for a new round.
