@@ -10,6 +10,7 @@ import { BLUE, BOARD as BOARD_FILL, BOARD_EDGE, FLESH, INK, PAPER, RED, RIND, TI
 import { FRUITS, WHOLE, type Fruit } from './measure'
 import { tinAt } from './moves'
 import { tinParts, wanted, type Customer } from './orders'
+import { paintPassers } from './passersBy'
 import { ruling } from './serve'
 import { SILL, fitOf, headOf, standsAt, type Seat } from './seats'
 import { paintCounter, paintStreet, paintWear } from './setting'
@@ -51,6 +52,9 @@ export function paintPlate(ctx: Ctx, dots: Dots): number {
   ctx.fillRect(BOARD.x + 3, laneTop(0) - 7.5, BOARD.w - 6, 3)
   drawn += paintWear(ctx)
   for (let slot = 1; slot < SHELF; slot++) ctx.fillRect(SHELF_BOX.x + 3, rowTop(slot) - 1.5, SHELF_BOX.w - 6, 3)
+  // Every other slat of the shelf is a shade deeper: it is a rack of slats, still plain and still pale.
+  ctx.fillStyle = '#d0dde3'
+  for (let slot = 1; slot < SHELF; slot += 2) ctx.fillRect(SHELF_BOX.x + 3, rowTop(slot) + 1.5, SHELF_BOX.w - 6, 51)
   // The dog's way up from under the counter: a dark arch with a pale sill, which the dog looks out of.
   inked(ctx, (c) => {
     c.moveTo(DOG.x + 6, DOG.y + DOG.h + 6)
@@ -393,7 +397,8 @@ function ghostHand(ctx: Ctx, guide: Guide, hand: HandPose): number {
 /** One frame of the game, on top of the plate. Returns the figures drawn. */
 export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
   const { game, fx } = scenery
-  let drawn = effects(ctx, fx, true)
+  // Whoever is going by in the street, behind everything at the stall; then the juice on the wall.
+  let drawn = paintPassers(ctx, dots, scenery.time) + effects(ctx, fx, true)
   // The customer at the window, with its ticket; or one still on its way out.
   const departing = scenery.departing
   if (departing) {
