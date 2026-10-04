@@ -11,10 +11,10 @@ import { DRAWN_DIP, WATER, atRest, rests, type Rest } from './pose'
 import { answerOf, between, creaks, ended, frontAt, seat, stepAt, type Seat } from './ride'
 import type { Frame, Strain } from './frame'
 import { hang, lowPoint, park, roadOf, run, type Ending, type Run, type Train } from './run'
-import { crossed, failedRun, leaveHats, markShown, onNewest, parked, pluckHat, ringed, sentHome, setTrolley, standing, swapTracing, toFront, trace, turnTo, unringed, unroll, type Save, type Sheet } from './save'
+import { crossed, failedRun, leaveHats, markShown, onNewest, parked, pluckHat, ringed, sentAway, sentHome, setTrolley, standing, swapTracing, toFront, trace, turnTo, unringed, unroll, type Save, type Sheet } from './save'
 import { Scene } from './scene'
 import { groundAt } from './sheet'
-import { isFooting, site, type Idea, type VehicleId } from './sites'
+import { isFooting, isYard, site, type Idea, type VehicleId } from './sites'
 import { crossingBeats, giveBeats, givePlace, idleShow, type Cue, type Show } from './stage'
 import { CHIEF, RING, Toy, type Hand } from './toy'
 import { TAIL, TASTE, VEHICLES, bargeReaction, reaction, trainOf, type Reaction } from './vehicles'
@@ -46,6 +46,9 @@ export const swingAt = (since: number): number => (Number.isFinite(since) ? SWIN
 
 /** How far the trolley must go along the deck, in cells, to have been run over the bridge: by the hand, or by trundling to the lowest point. */
 export const RUN_OVER = 1
+
+/** At the free yard: how far back the waiting vehicle can be drawn, how far sends it away, and how long it takes to leave, the next to draw up, and one let go early to roll up again. Cells and seconds. */
+export const PULL = { most: 2.6, sends: 1, leaves: 0.8, arrives: 1, back: 0.3 } as const
 
 /** How long the next roll takes to slide in when it arrives outside a crossing, in seconds. */
 export const ROLL_IN = 1.1
@@ -127,6 +130,13 @@ export class Game extends Toy {
   /** Seconds since the oldest sheet slid off the end of the rack, and since the model in the margin was plucked. Short-lived: not saved. */
   slidOff = Infinity
   modelRung = Infinity
+  /**
+   * At the free yard: the vehicle the child drew back from the gap and let go
+   * of. `away`, it is leaving for the next of the fleet, which draws up after
+   * it; or it rolls up to the gap again. Short-lived: the line it leaves
+   * behind is saved the moment it is let go.
+   */
+  swap: { id: VehicleId; pulled: number; since: number; away: boolean } | null = null
   /** A hat the chief has plucked off a part and wears until the next sheet is unrolled. Short-lived: not saved. */
   chiefHat = false
   /** The two who watch from the foot of the sheet. Their moves are short-lived: not saved. */
@@ -395,7 +405,7 @@ export class Game extends Toy {
     if (hat !== undefined) { this.save = pluckHat(this.save, hat); this.chiefHat = true; this.changed = true; this.voices.push(unrollVoice(0)); this.chief.poke(); this.hand = null; return }
     const vehicle = this.vehicleAt(x, y)
     if (vehicle) {
-      this.hand = { what: 'vehicle', id: vehicle.id, across: vehicle.across }
+      this.hand = { what: 'vehicle', id: vehicle.id, across: vehicle.across, from: x, pulled: 0 }
       this.poked.set(vehicle.id, 0)
       this.voices.push(honk(vehicle.id))
       // Its horn, seen: three arcs in front of its nose.
@@ -456,6 +466,8 @@ export class Game extends Toy {
       this.hand = null
       const id = hand.id as VehicleId
       if (hand.across) { this.send(id, true); return }
+      // One that is leaving the yard, or drawing up to it, is not sent.
+      if (this.swap) return
       // Only the vehicle at the front of the line sets off; one behind it comes to the front first.
       if (this.waiting[0] === id) this.send(id, false)
       else { this.save = toFront(this.save, id); this.changed = true }
@@ -490,11 +502,19 @@ export class Game extends Toy {
   override dragStart(): void {
     const hand = this.hand
     if (hand?.what === 'trolley' || hand?.what === 'tracing') { hand.carried = true; return }
+    if (hand?.what === 'vehicle') return
     super.dragStart()
+  }
+
+  /** At the free yard the one vehicle that waits can be drawn back from the gap and sent away for the next of the fleet. */
+  private pulls(id: string): boolean {
+    return isYard(this.at) && onNewest(this.save) && !this.swap && !this.drive && this.show.kind === null && this.waiting.length === 1 && this.waiting[0] === id
   }
 
   override dragMove(x: number, y: number): void {
     const hand = this.hand
+    // The waiting vehicle rolls back with the finger, as far as its own length.
+    if (hand?.what === 'vehicle') { if (!hand.across && this.pulls(hand.id)) hand.pulled = Math.max(0, Math.min(PULL.most, hand.from - x)); return }
     if (hand?.what === 'tracing') { hand.finger = [x, y]; return }
     if (hand?.what === 'trolley') { hand.finger = [x, y]; if (hand.carried) this.runTrolley(hand, x, y); return }
     super.dragMove(x, y)
@@ -502,6 +522,14 @@ export class Game extends Toy {
 
   override dragEnd(): void {
     const hand = this.hand
+    if (hand?.what === 'vehicle') {
+      this.hand = null
+      const id = hand.id as VehicleId, next = hand.pulled >= PULL.sends ? sentAway(this.save, id) : this.save
+      // Drawn back far enough, it goes; let go sooner, it rolls up to the gap again.
+      this.swap = { id, pulled: hand.pulled, since: 0, away: next !== this.save }
+      if (next !== this.save) { this.save = next; this.changed = true; this.voices.push(honk(id)) }
+      return
+    }
     if (hand?.what === 'trolley') { this.hand = null; if (hand.carried) this.dropTrolley(hand.finger[0], hand.finger[1], hand.ran); return }
     if (hand?.what === 'tracing') {
       this.hand = null
@@ -747,6 +775,13 @@ export class Game extends Toy {
 
   override step(dt: number): void {
     this.sceneClock += dt
+    if (this.swap) {
+      const before = this.swap.since
+      this.swap.since += dt
+      // The next of the fleet sounds its horn as it draws up.
+      if (this.swap.away && before < PULL.leaves && this.swap.since >= PULL.leaves && this.waiting[0]) this.voices.push(honk(this.waiting[0]))
+      if (this.swap.since >= (this.swap.away ? PULL.leaves + PULL.arrives : PULL.back)) this.swap = null
+    }
     this.trolleyRung += dt
     this.modelRung += dt
     if (this.splash && (this.splash.since += dt) > CALM) this.splash = null

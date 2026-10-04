@@ -7,7 +7,7 @@ import { bargeAt, drawSky, drawSplash, drawWaterLife } from './drift'
 import { chief, chiefModel, roll } from './figures'
 import { barge, compareModels, ideaModel, lineDrawing, spareWeights, tracingSheet, trolley } from './props'
 import { vehicle } from './fleet'
-import { ROLL_IN, swingAt, type Game } from './game'
+import { PULL, ROLL_IN, swingAt, type Game } from './game'
 import { handPose, type Guidance, type HandPose } from './guidance'
 import { key, length, samePoint, type Kind, type Part, type Point } from './kit'
 import { ROLL, SLIDE_OFF, TRAY, bays, parkAt, rackAt, slideOff, tools, waitAt } from './layout'
@@ -31,6 +31,9 @@ const woodOf = (part: Pick<Part, 'kind' | 'turned'>): Wood => (part.kind === 'pl
 const SHAKE: Readonly<Record<Kind, { far: number; beat: number }>> = {
   plank: { far: 0.07, beat: 8 }, stick: { far: 0.035, beat: 21 }, tube: { far: 0.03, beat: 13 }, thread: { far: 0.22, beat: 15 },
 }
+
+/** A hat left on a part swings when the part is turned, and comes to rest: how far it leans, in radians, this long after the turn. */
+export const hatSwing = (since: number): number => (since >= 0 && since < 1.4 ? 0.9 * Math.sin(since * 11) * (1 - since / 1.4) : 0)
 
 /** The move the ghost hand shows: a part laid between two points on the far bank, away from the gap and clear of the chief and its model. */
 export const demoMove = (at: Site): { from: Point; to: Point } => ({ from: [at.right[0] + 1, at.right[1]], to: [at.right[0] + 3, at.right[1] + 1] })
@@ -407,7 +410,7 @@ export class View {
       if (!where) continue
       const [hx, hy] = at2((where.a[0] + where.b[0]) / 2, (where.a[1] + where.b[1]) / 2)
       // Whatever hangs on a part swings when the part is turned, and comes to rest.
-      const since = game.turned[index] ?? Infinity, swing = since < 1.4 ? 0.9 * Math.sin(since * 11) * (1 - since / 1.4) : 0
+      const swing = hatSwing(game.turned[index] ?? Infinity)
       pen.save()
       pen.translate(hx, hy); pen.rotate(swing)
       pen.fillStyle = INK.paper
@@ -457,12 +460,21 @@ export class View {
     const busy = game.drive?.vehicle ?? show.vehicle
     const restingPose = (id: VehicleId, front: boolean) => poke(id, game.poked.get(id) ?? 9, waitPose(id, game.seconds, front))
     // Waiting at the near bank, the front of the line by the gap; one that has just arrived draws up from off the sheet.
+    // At the free yard: the one that waits rolls back with the finger; let go far enough back, it leaves by the
+    // edge of the sheet, and only then does the next of the fleet draw up in its place.
+    const swap = game.swap, held = game.hand?.what === 'vehicle' && !game.hand.across ? game.hand : null
+    if (swap?.away) { const out = Math.min(1, swap.since / PULL.leaves), stand = waitAt(at, 0) - swap.pulled; put(swap.id, stand - (stand + 4) * out * out, at.left[1], 0, restingPose(swap.id, false), false) }
     game.waiting.forEach((id, place) => {
       if (id === busy) return
+      if (swap?.away && place === 0) {
+        if (swap.since > PULL.leaves) put(id, drawUp((swap.since - PULL.leaves) / PULL.arrives, at, 0), at.left[1], 0, restingPose(id, false), false)
+        return
+      }
       const arriving = show.kind === 'crossing' && id === show.arriving && show.arrive < 1
-      const pose = restingPose(id, place === 0 && !game.playing)
-      put(id, (arriving ? drawUp(show.arrive, at, place) : waitAt(at, place)) + pose.creep, at.left[1], 0, pose, false)
-      if (glow > 0.01 && place === 0 && game.ready) this.brackets(pen, at2(waitAt(at, 0) - longOf(id) - 0.9, at.left[1] + 2.2), at2(waitAt(at, 0) + 0.8, at.left[1] - 0.1), glow * 0.8)
+      const drawn = held?.id === id ? held.pulled : swap && swap.id === id ? swap.pulled * (1 - Math.min(1, swap.since / PULL.back)) : 0
+      const pose = restingPose(id, place === 0 && !game.playing && drawn === 0)
+      put(id, (arriving ? drawUp(show.arrive, at, place) : waitAt(at, place)) + (drawn > 0 ? -drawn : pose.creep), at.left[1], 0, pose, false)
+      if (glow > 0.01 && place === 0 && game.ready && drawn === 0) this.brackets(pen, at2(waitAt(at, 0) - longOf(id) - 0.9, at.left[1] + 2.2), at2(waitAt(at, 0) + 0.8, at.left[1] - 0.1), glow * 0.8)
     })
     // Parked in the lay-by on the far bank.
     game.across.forEach((id, place) => { if (id !== busy) put(id, parkAt(at, longOf(id), place), at.right[1], 0, restingPose(id, false), false) })

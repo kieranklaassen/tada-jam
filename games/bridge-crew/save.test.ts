@@ -3,7 +3,7 @@ import { CROSSINGS, part } from './bridges.fixture'
 import { FIRST_VISIT, LADDER } from './config'
 import { KINDS, MAX_PARTS, SPEC, type Part } from './kit'
 import { JUDGE, movedAfter, strainThinned } from './order'
-import { RACK, TRACINGS, crossed, deserialize, edit, failedRun, freshSave, leaveHats, markShown, onNewest, parked, pluckHat, sentHome, serialize, setTrolley, standing, swapTracing, toFront, trace, turnTo, unroll, type Save } from './save'
+import { RACK, TRACINGS, crossed, deserialize, edit, failedRun, freshSave, leaveHats, markShown, onNewest, parked, pluckHat, sentAway, sentHome, serialize, setTrolley, standing, swapTracing, toFront, trace, turnTo, unroll, type Save } from './save'
 import { COLS, ROWS, canPin, site } from './sites'
 import { STATE_VERSION } from './state'
 
@@ -246,21 +246,29 @@ describe('the saved state', () => {
     expect(canPin(site('open-yard', 0), [COLS, ROWS])).toBe(true)
   })
 
-  it('at the free yard the child has whichever vehicle it picks: two wait, and the one behind brought forward brings the next up', () => {
+  it('at the free yard one vehicle waits, and the child has whichever it picks: the one that waits, sent away, brings the next of the fleet', () => {
     let state = freshSave(null, 'open-yard')
-    expect(state.waiting).toEqual(['post-van', 'jelly-truck'])
+    // While the child builds, the only vehicle waiting is the sheet's own.
+    expect(state.waiting).toEqual(['post-van'])
     const seen = new Set<string>(state.waiting)
-    for (let i = 0; i < 5; i++) { state = toFront(state, state.waiting[1]); expect(state.waiting).toHaveLength(2); expect(new Set(state.waiting).size).toBe(2); seen.add(state.waiting[1]) }
+    for (let i = 0; i < 5; i++) { state = sentAway(state, state.waiting[0]); expect(state.waiting).toHaveLength(1); seen.add(state.waiting[0]) }
     expect(seen.size).toBe(5)
-    expect(state.waiting[0]).toBe('post-van')
-    // Whichever is sent is the yard's own: its failed runs count and its crossing judges the cycle.
-    state = toFront(state, 'jelly-truck')
+    expect(state.waiting).toEqual(['post-van'])
+    // Only the one that waits can be sent away, only at the yard, and only on the newest sheet.
+    expect(sentAway(state, 'jelly-truck')).toBe(state)
+    expect(sentAway(freshSave(null), 'post-van').waiting).toEqual(['post-van'])
+    // Whichever is sent across is the yard's own: its failed runs count and its crossing judges the cycle.
+    state = sentAway(state, 'post-van')
+    expect(state.waiting).toEqual(['jelly-truck'])
     expect(failedRun(state, 'jelly-truck', null).tries).toBe(1)
     const over = crossed(state, 'jelly-truck')
     expect(over.finished).toBe(true)
     expect(over.across).toEqual(['jelly-truck'])
-    expect(over.waiting).toHaveLength(2)
-    expect(over.waiting).not.toContain('jelly-truck')
+    // The next of the fleet draws up, and it alone.
+    expect(over.waiting).toEqual(['piano-mover'])
+    // One that is parked across is not the one that comes.
+    expect(sentAway(over, 'piano-mover').waiting).toEqual(['giraffe-bus'])
+    expect(sentAway(sentAway(sentAway(over, 'piano-mover'), 'giraffe-bus'), 'caterpillar-bus').waiting).toEqual(['post-van'])
     // Two park at most, and one sent home stands behind the one at the front.
     let busy = over
     for (let i = 0; i < 3; i++) busy = crossed(busy, busy.waiting[0])

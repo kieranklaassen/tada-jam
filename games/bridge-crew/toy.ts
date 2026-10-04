@@ -30,7 +30,7 @@ export type Hand =
   | { what: 'bay'; kind: Kind }
   | { what: 'chief' }
   /** The game's own (game.ts): a vehicle at either bank, the next sheet's roll, a sheet on the rack. */
-  | { what: 'vehicle'; id: string; across: boolean }
+  | { what: 'vehicle'; id: string; across: boolean; from: number; pulled: number }
   | { what: 'roll' }
   | { what: 'rack'; index: number }
   /** The trolley in its compartment or on the bridge, and the tracing paper: `spot` is the pad or one of the two kept tracings. */

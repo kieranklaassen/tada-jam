@@ -83,14 +83,8 @@ function successor(after: VehicleId, taken: readonly VehicleId[]): VehicleId | n
   return null
 }
 
-/** The line at the free yard's near bank: the vehicle at the front, and the next of the fleet behind it. Bringing the one behind to the front brings the next one up, so the child can have whichever vehicle it picks. */
-function yardLine(front: VehicleId, across: readonly VehicleId[]): VehicleId[] {
-  const behind = successor(front, across)
-  return behind ? [front, behind] : [front]
-}
-
-/** Who waits at a sheet's near bank while the child builds: the sheet's own vehicle, and at the free yard one more behind it. */
-const lineFor = (at: Site): VehicleId[] => (isYard(at) ? yardLine(at.job, []) : [at.job])
+/** Who waits at a sheet's near bank while the child builds: the sheet's own vehicle, and no other. At the free yard it is the first of the fleet, until the child sends it away for another. */
+const lineFor = (at: Site): VehicleId[] => [at.job]
 
 export function freshSave(childAge: number | null, startOn: string | null = null): Save {
   const base = freshState(childAge), first = layOut(startOn ?? base.position, {})
@@ -266,7 +260,7 @@ export function crossed(state: Save, vehicle: VehicleId, hats: readonly number[]
     // Two are parked at most: a third arriving, the first of them has gone on its way. And the line fills up behind.
     across = across.slice(-2)
     const front = waiting[0] ?? successor(vehicle, across)
-    waiting = front ? yardLine(front, across) : []
+    waiting = front ? [front, ...waiting.slice(1)] : []
   } else if (vehicle === at.job && !waiting.includes(at.extra) && !across.includes(at.extra)) {
     // The other vehicle draws up when the job vehicle first reaches the far bank, however the cycle was judged.
     waiting = [...waiting, at.extra]
@@ -358,10 +352,21 @@ export function parked(state: Save): VehicleId[] {
 /** The child brought a waiting vehicle to the front of the line at the near bank. */
 export function toFront(state: Save, vehicle: VehicleId): Save {
   if (!onNewest(state) || !state.waiting.includes(vehicle)) return state
-  const board = state.sheets[state.on]
-  // At the free yard the next of the fleet comes up behind it, so every vehicle can be had in turn.
-  if (isYard({ id: board.site })) return { ...state, waiting: yardLine(vehicle, state.across) }
   return { ...state, waiting: [vehicle, ...state.waiting.filter((id) => id !== vehicle)] }
+}
+
+/**
+ * At the free yard the child sent the waiting vehicle away: it leaves, and the
+ * next of the fleet draws up in its place. One waits at a time, and by sending
+ * away the ones it does not want the child has whichever vehicle it picks.
+ * Anywhere else, and when no other vehicle is free to come, nothing changes.
+ */
+export function sentAway(state: Save, vehicle: VehicleId): Save {
+  if (!onNewest(state) || state.waiting[0] !== vehicle) return state
+  const board = state.sheets[state.on]
+  if (!isYard({ id: board.site })) return state
+  const next = successor(vehicle, [...state.across, ...state.waiting])
+  return next ? { ...state, waiting: [next, ...state.waiting.slice(1)] } : state
 }
 
 /** A part gave under the test trolley: the one ring moves to its spot. No run is counted. */

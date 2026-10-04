@@ -6,11 +6,11 @@ import { RAIL_TILT, givePose, reactPose, waitPose, ROUND } from './acts'
 import { IDLES, REACTS, crewPose, type CrewAct } from './crew'
 import { crewFigure } from './crewfig'
 import { vehicle } from './fleet'
-import { MODEL } from './game'
+import { MODEL, PULL } from './game'
 import { ROLL, TRAY, bays, tools, waitAt } from './layout'
 import { edit, freshSave } from './save'
 import { Game } from './game'
-import { View, demoMove } from './view'
+import { View, demoMove, hatSwing } from './view'
 import { canPin, isFooting } from './sites'
 
 /** A pen that draws nothing and keeps every call with its numbers, and a canvas that hands out such pens. */
@@ -252,3 +252,45 @@ describe('the toy drawn', () => {
     expect(isFooting(toy.at)(move.from)).toBe(true)
   })
 })
+
+describe('what the sixth reading found, drawn', () => {
+  it('a hat on a part swings when the part is turned, both ways, less and less, and hangs still again', () => {
+    expect(hatSwing(Infinity)).toBe(0)
+    expect(hatSwing(0)).toBe(0)
+    const leans = Array.from({ length: 28 }, (_, i) => hatSwing((i + 1) * 0.05))
+    expect(Math.max(...leans)).toBeGreaterThan(0.5)
+    expect(Math.min(...leans)).toBeLessThan(-0.3)
+    expect(Math.max(...leans.slice(14).map(Math.abs))).toBeLessThan(Math.max(...leans.slice(0, 14).map(Math.abs)))
+    expect(hatSwing(1.4)).toBe(0)
+  })
+
+  it('at the free yard the one that waits is drawn rolling back with the finger, then leaving, and the next of the fleet only after it has gone', () => {
+    const toy = new Game(freshSave(null, 'open-yard'), stream(5)), { pen, calls, canvas } = recording()
+    const view = new View(1, canvas)
+    view.size(1180, 820, 2, true)
+    const frame = () => { calls.length = 0; const drawn = view.draw(pen, toy, null); for (const n of numbers(calls)) expect(Number.isFinite(n)).toBe(true); return drawn }
+    // Each vehicle has its crates' numeral beside it: the van's two, the truck's three.
+    const numerals = () => calls.filter((call) => call.name === 'fillText').map((call) => String(call.args[0]))
+    const x = waitAt(toy.at, 0) - 0.4
+    frame()
+    expect(numerals().filter((n) => n === '2')).toHaveLength(1)
+    toy.press(x, 7); toy.dragStart(); toy.dragMove(x - 1.5, 7)
+    frame()
+    expect(numerals().filter((n) => n === '2')).toHaveLength(1)
+    toy.dragEnd()
+    expect(toy.swap).toMatchObject({ id: 'post-van', away: true })
+    // Leaving: the van still, with its two crates, and the truck with its three not yet.
+    toy.step(PULL.leaves / 2)
+    frame()
+    expect(numerals()).toContain('2'); expect(numerals()).not.toContain('3')
+    // Then the truck draws up, alone.
+    toy.step(PULL.leaves / 2 + PULL.arrives / 2)
+    frame()
+    expect(numerals()).toContain('3')
+    toy.step(PULL.arrives)
+    expect(toy.swap).toBeNull()
+    frame()
+    expect(numerals()).toContain('3'); expect(numerals()).not.toContain('2')
+  })
+})
+

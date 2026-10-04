@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { CROSSINGS, part } from './bridges.fixture'
 import { driverAt } from './fleet'
-import { Game, MODEL, ROLL_IN, SWING, swingAt, wholeArch } from './game'
+import { Game, MODEL, PULL, ROLL_IN, SWING, swingAt, wholeArch } from './game'
 import { ROLL, SLIDE_OFF, TRAY, bays, parkAt, rackAt, slideOff, tools, waitAt } from './layout'
 import { stream } from './look'
 import { WATER } from './pose'
@@ -890,23 +890,63 @@ describe('what the reader found the sheet promises', () => {
     expect(JSON.stringify(stored(game))).not.toContain('swing')
   })
 
-  it('at the free yard the child has whichever vehicle it picks, and whichever it sends is the yard\'s own', () => {
+  it('at the free yard one vehicle waits; drawn back from the gap and let go it leaves, the next of the fleet draws up, and whichever is sent across is the yard\'s own', () => {
     const game = new Game({ ...edit(freshSave(null, 'open-yard'), CROSSINGS['open-yard']), position: 'open-yard' }, stream(3))
-    expect(game.waiting).toEqual(['post-van', 'jelly-truck'])
-    // A tap on the one behind brings it forward, and the next of the fleet comes up behind it.
-    tapAt(game, waitAt(game.at, 1) - 0.4, 7)
-    expect(game.waiting).toEqual(['jelly-truck', 'piano-mover'])
-    tapAt(game, waitAt(game.at, 1) - 0.4, 7)
-    expect(game.waiting).toEqual(['piano-mover', 'giraffe-bus'])
-    tapAt(game, waitAt(game.at, 1) - 0.4, 7); tapAt(game, waitAt(game.at, 1) - 0.4, 7); tapAt(game, waitAt(game.at, 1) - 0.4, 7)
-    expect(game.waiting).toEqual(['post-van', 'jelly-truck'])
+    expect(game.waiting).toEqual(['post-van'])
+    const front = () => [waitAt(game.at, 0) - 0.4, 7] as const
+    const pull = (by: number) => { const [x, y] = front(); game.press(x, y); game.dragStart(); game.dragMove(x - by / 2, y); game.dragMove(x - by, y) }
+    // It rolls back with the finger, and no farther than a little more than its length.
+    pull(0.6)
+    expect(game.hand).toMatchObject({ what: 'vehicle', id: 'post-van' })
+    expect((game.hand as { pulled: number }).pulled).toBeCloseTo(0.6, 6)
+    game.dragMove(front()[0] - 9, 7)
+    expect(game.hand).toMatchObject({ pulled: PULL.most })
+    game.dragMove(front()[0] + 3, 7)
+    expect(game.hand).toMatchObject({ pulled: 0 })
+    // Let go too soon, it rolls up to the gap again and nothing has changed.
+    game.dragMove(front()[0] - 0.6, 7); game.takeChange(); game.dragEnd()
+    expect(game.swap).toMatchObject({ id: 'post-van', away: false })
+    expect(game.waiting).toEqual(['post-van'])
+    expect(game.takeChange()).toBe(false)
+    steps(game, PULL.back + 0.1)
+    expect(game.swap).toBeNull()
+    // Drawn back a cell or more and let go, it leaves: the line is the next of the fleet from that moment, and is saved so.
+    pull(1.4); game.dragEnd()
+    expect(game.swap).toMatchObject({ id: 'post-van', away: true })
+    expect(game.waiting).toEqual(['jelly-truck'])
+    expect(game.takeChange()).toBe(true)
+    expect(deserialize(stored(game)).waiting).toEqual(['jelly-truck'])
+    // While one leaves and the next draws up, a tap sends nobody.
+    tapAt(game, ...front())
+    expect(game.drive).toBeNull()
+    steps(game, PULL.leaves + PULL.arrives + 0.1)
+    expect(game.swap).toBeNull()
+    // Every vehicle of the fleet can be had so, and the first comes round again.
+    const had = ['post-van', 'jelly-truck']
+    for (let i = 0; i < 4; i++) { pull(1.2); game.dragEnd(); steps(game, PULL.leaves + PULL.arrives + 0.1); had.push(game.waiting[0]) }
+    expect(new Set(had).size).toBe(5)
+    expect(game.waiting).toEqual(['post-van'])
+    // A touch that is put away in the middle leaves the vehicle where it was.
+    pull(2); game.pressEnd()
+    expect(game.hand).toBeNull(); expect(game.swap).toBeNull(); expect(game.waiting).toEqual(['post-van'])
     send(game)
     expect(game.show.kind).toBe('crossing')
     // Its crossing judges the cycle, and the position stays at the yard.
     expect(game.save).toMatchObject({ finished: true, position: 'open-yard', across: ['post-van'] })
     expect(game.save.next).toMatchObject({ site: 'open-yard' })
-    expect(game.show.arriving).not.toBeNull()
-    expect(game.waiting).toHaveLength(2)
+    expect(game.show.arriving).toBe('jelly-truck')
+    expect(game.waiting).toEqual(['jelly-truck'])
+  })
+
+  it('on any other sheet the waiting vehicle is not drawn back: a drag on it does nothing', () => {
+    const game = new Game(edit(freshSave(null), CROSSINGS['plank-gap']), stream(2)), x = waitAt(game.at, 0) - 0.4
+    game.takeChange()
+    game.press(x, 7); game.dragStart(); game.dragMove(x - 2, 7)
+    expect(game.hand).toMatchObject({ what: 'vehicle', pulled: 0 })
+    game.dragEnd()
+    expect(game.waiting).toEqual(['post-van'])
+    expect(game.drive).toBeNull()
+    expect(game.takeChange()).toBe(false)
   })
 
   it('put away in the middle of a touch, the thing in the hand is back where it came from: no move is made that the child did not make', () => {
