@@ -1,18 +1,22 @@
-import { BufferAttribute, type BufferGeometry, CircleGeometry, Color, CylinderGeometry, DynamicDrawUsage, Group, InstancedMesh, Mesh, MeshBasicMaterial, PlaneGeometry, ShaderMaterial } from 'three'
+import { BufferAttribute, type BufferGeometry, CircleGeometry, Color, CylinderGeometry, DynamicDrawUsage, Group, InstancedMesh, Mesh, MeshBasicMaterial, PlaneGeometry, ShaderMaterial, SphereGeometry } from 'three'
 import type { KindName } from './bodies'
 import { marcherGeometry } from './friends'
 import { BALLOON, CLOUDS, FAR_HILL, GROUND, HILL, PARADE_FRIENDS } from './layout'
 import { PALETTE } from './palette'
+import { BALL_TOY, KEEPER_TOY, SETTING, WHALE, type Toy, type ToyName } from './setting'
 import { pillow, pillows } from './shapes'
 import { vinylMaterial, type VinylUniforms } from './vinyl'
 
-// What never changes: the sky, the two hills and the clouds; and the three
-// batches everything small is drawn from: balloons, strings and blob shadows.
-// Each batch is one draw however many are in it.
+// What never changes: the sky, the two hills, the clouds and the setting, which
+// is painted once as one mesh; the three toys that live in the setting; and
+// the batches everything small is drawn from: balloons, strings, blob shadows
+// and the small pillows of faces. Each batch is one draw however many are in it.
 
 /** The most balloons in one frame: the sky (up to twelve), three held, four bunches in flight, those that got away, a troop passing with theirs, the far hill's twelve, and the scraps of a few pops and the drops of a cloud, which are drawn as small balloons. */
 export const MAX_BALLOONS = 96
 export const MAX_STRINGS = 64
+/** The most small pillows of faces in one frame: nine friends with brows and mouths, the toys and the clouds. */
+export const MAX_BITS = 220
 export const MAX_SHADOWS = 16
 
 /** How far behind the friends the sky stands, and the clouds in front of it. */
@@ -25,6 +29,12 @@ export type Scenery = {
   balloons: InstancedMesh
   strings: InstancedMesh
   shadows: InstancedMesh
+  /** Everything of the setting that stands still, painted once: one mesh. */
+  setting: Mesh
+  /** The three toys that live in the setting, each one mesh: hidden until the frame draws it. */
+  toys: Record<ToyName, Mesh>
+  /** The small pillows of every face on screen: eyes, pupils, brows and mouths, one batch. */
+  bits: InstancedMesh
   /** The friends on the far hill, one batch a kind. */
   parade: Record<KindName, InstancedMesh>
   /** Those of them that walk without a balloon, for the kinds that let their arms down then: one batch a kind. */
@@ -143,6 +153,21 @@ export function buildScenery(shared: VinylUniforms): Scenery {
   // A troop that marched off after a pop has a friend without a balloon. The crab keeps its claws up either way.
   const strolling: Partial<Record<KindName, InstancedMesh>> = { duck: batchOf('duck', false), frog: batchOf('frog', false), hippo: batchOf('hippo', false) }
 
+  // The setting, painted once: every pillow of it in one mesh, each with its own haze.
+  const setting = new Mesh(pillows(SETTING), still)
+  setting.name = 'setting'
+  // The toys that live in it.
+  const toyOf = (name: ToyName, toy: Toy): Mesh => {
+    const mesh = new Mesh(pillows(toy.pillows.map((spec) => ({ ...spec, haze: toy.haze }))), still)
+    mesh.name = name
+    mesh.visible = false
+    return mesh
+  }
+  const toys: Record<ToyName, Mesh> = { whale: toyOf('whale', WHALE), keeper: toyOf('keeper', KEEPER_TOY), ball: toyOf('ball', BALL_TOY) }
+  // The faces: small flat-coloured pillows, white in the vertices so the instance colour is the colour.
+  const bits = new InstancedMesh(new SphereGeometry(1, 12, 8), new MeshBasicMaterial(), MAX_BITS)
+  bits.name = 'bits'
+
   // The ghost hand: a glove with one finger out, its tip at the mesh's origin. It is drawn over everything and tests no depth.
   const glove = pillows([
     // A mitten: a round palm, one finger out with its tip at the origin, and a cuff.
@@ -159,7 +184,7 @@ export function buildScenery(shared: VinylUniforms): Scenery {
   hand.visible = false
 
   const white = new Color('#ffffff')
-  for (const batch of [balloons, strings, shadows, ...Object.values(parade), ...Object.values(strolling)]) {
+  for (const batch of [balloons, strings, shadows, bits, ...Object.values(parade), ...Object.values(strolling)]) {
     batch.instanceMatrix.setUsage(DynamicDrawUsage)
     // The colour buffer is made on the first write; make it now, so every instance has one from the first draw.
     batch.setColorAt(0, white)
@@ -167,7 +192,7 @@ export function buildScenery(shared: VinylUniforms): Scenery {
     // Instances move every frame, so the batch's own bounds would always be stale.
     batch.frustumCulled = false
   }
-  group.add(shadows, strings, balloons, ...Object.values(parade), ...Object.values(strolling), hand)
+  group.add(setting, ...Object.values(toys), shadows, strings, balloons, bits, ...Object.values(parade), ...Object.values(strolling), hand)
 
   return {
     group,
@@ -176,11 +201,14 @@ export function buildScenery(shared: VinylUniforms): Scenery {
     balloons,
     strings,
     shadows,
+    setting,
+    toys,
+    bits,
     parade,
     strolling,
     hand,
     dispose() {
-      for (const mesh of [backdrop, hill, farHill, balloons, strings, shadows]) {
+      for (const mesh of [backdrop, hill, farHill, balloons, strings, shadows, setting, bits, ...Object.values(toys)]) {
         mesh.geometry.dispose()
         const material = mesh.material
         if (Array.isArray(material)) for (const one of material) one.dispose()

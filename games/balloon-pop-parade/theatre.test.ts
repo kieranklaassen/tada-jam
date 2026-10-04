@@ -2,11 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { BODIES, type KindName } from './bodies'
 import { PERSONALITIES } from './clips'
 import { applyPose, buildFriend } from './friends'
-import { BALLOON, CLOUDS, FAR_HILL, farGroundAt, friendX, GROUND, seenAt, skySlots, viewFor, hillSeenTop, groundAt } from './layout'
+import { BALLOON, CLOUDS, FAR_HILL, farGroundAt, friendX, GROUND, seenAt, skySlots, viewFor, hillSeenTop, groundAt, FRIEND_SCALE } from './layout'
 import { MOMENTS, saveOf, type Moment } from './moments'
 import { freshSave } from './save'
 import { restPose, type Pose } from './pose'
 import { MAX_BALLOONS, MAX_SHADOWS, MAX_STRINGS } from './scenery'
+import { HUT } from './setting'
 import { FLIGHT, handOf, REGROW_AFTER, SIDE_BY_SIDE, Theatre, type Painter } from './theatre'
 import { sharedVinyl } from './vinyl'
 import { type Mesh, Vector3 } from 'three'
@@ -137,8 +138,10 @@ describe('a touch', () => {
     for (const x of [-6.8, -4, -2.2, 2.2, 4, 6.8]) {
       const top = hillSeenTop(x, VIEW)
       expect(top, `the crest is above the feet at ${x}`).toBeGreaterThan(groundAt(x, 0) + 0.1)
-      expect(theatre.hit(x, top - 0.04, VIEW).on === 'hill' || theatre.hit(x, top - 0.04, VIEW).on === 'waiting', `just under the crest at ${x}`).toBe(true)
-      expect(theatre.hit(x, GROUND - 0.05, VIEW).on === 'hill' || theatre.hit(x, GROUND - 0.05, VIEW).on === 'waiting', `at the feet's height at ${x}`).toBe(true)
+      // (Or whatever stands on the hill in front of that strip: the troop that waits, the whale in its pool, the ball.)
+      const onHill = ['hill', 'waiting', 'whale', 'ball']
+      expect(onHill, `just under the crest at ${x}`).toContain(theatre.hit(x, top - 0.04, VIEW).on)
+      expect(onHill, `at the feet's height at ${x}`).toContain(theatre.hit(x, GROUND - 0.05, VIEW).on)
       expect(theatre.hit(x, top + 0.12, VIEW).on, `just over the crest at ${x}`).not.toBe('hill')
     }
     expect(theatre.hit(0, GROUND + 1, VIEW)).toEqual({ on: 'friend', friend: 0 })
@@ -470,7 +473,7 @@ describe('a bunch the child sends', () => {
       if (bonk && bonkAt < 0) bonkAt = i + Math.round(bonk.after * 60)
       clear()
       theatre.paint(painter, VIEW)
-      const pose = frame.poses.get('friend-0')!, top = pose.y + BODIES[kind].height * 1.08 * pose.squash
+      const pose = frame.poses.get('friend-0')!, top = pose.y + BODIES[kind].height * FRIEND_SCALE * pose.squash
       const own = frame.balloons.filter((balloon) => balloon.y < 2.2 && balloon.y > pose.y + 1.2 && balloon.tall === 1 && balloon.wide === 1)[0]
       if (!own) continue
       const gap = own.y - BALLOON * 1.12 - top
@@ -1101,7 +1104,8 @@ describe('the far hill', () => {
     theatre.sounds.length = 0
     theatre.press(seen.x, seen.y + 0.3, VIEW)
     theatre.cancel()
-    expect(theatre.sounds.map((sound) => [sound.voice, sound.gain])).toEqual([['crabPoke', 0.4]])
+    // And the keeper by its hut cheeps after it, quieter.
+    expect(theatre.sounds.map((sound) => [sound.voice, sound.gain])).toEqual([['crabPoke', 0.4], ['cheep', 0.5]])
     // Higher than a step ever takes it: the crabs first, the ducks a moment later.
     const highest = { crab: 0, duck: 0 }, at = { crab: -1, duck: -1 }
     for (let i = 0; i < 50; i++) {
@@ -1163,23 +1167,30 @@ describe('the far hill', () => {
     expect(before.every((marcher) => !hidden(marcher))).toBe(true)
   })
 
-  it('answers a touch on the hill itself, with nobody on it or with a parade: a small far boing, and the sky bobs', () => {
+  it('answers a touch on the hill itself, with nobody on it or with a parade: a small far boing, a cheep from its keeper, and the sky bobs', () => {
     const theatre = new Theatre(saveOf(MOMENTS.solo)), { frame, painter, clear } = recorder()
-    // The top of the far hill as it is seen, a little under its crest.
-    const top = seenAt(FAR_HILL.x, farGroundAt(FAR_HILL.x, FAR_HILL.z) - 0.6, FAR_HILL.z, VIEW, { x: 0, y: 0, scale: 1 })
+    // The far hill as it is seen, a little under its crest and to the right of the hut.
+    const top = seenAt(FAR_HILL.x + 3.4, farGroundAt(FAR_HILL.x + 3.4, FAR_HILL.z) - 0.6, FAR_HILL.z, VIEW, { x: 0, y: 0, scale: 1 })
     expect(theatre.hit(top.x, top.y, VIEW)).toEqual({ on: 'farHill' })
     theatre.paint(painter, VIEW)
     const still = frame.balloons.map((balloon) => balloon.x)
     theatre.press(top.x, top.y, VIEW)
     theatre.cancel()
-    expect(voices(theatre)).toEqual(['hillBoing'])
+    expect(voices(theatre)).toEqual(['hillBoing', 'cheep'])
     play(theatre, 0.15)
     clear()
     theatre.paint(painter, VIEW)
     expect(Math.max(...frame.balloons.map((balloon, k) => Math.abs(balloon.x - still[k])))).toBeGreaterThan(0.01)
-    // Just over its crest is sky.
-    const over = seenAt(FAR_HILL.x, farGroundAt(FAR_HILL.x, FAR_HILL.z) + 0.8, FAR_HILL.z, VIEW, { x: 0, y: 0, scale: 1 })
+    // Just over its crest, to the right of the hut that stands on it, is sky.
+    const over = seenAt(FAR_HILL.x + 3.4, farGroundAt(FAR_HILL.x + 3.4, FAR_HILL.z) + 0.8, FAR_HILL.z, VIEW, { x: 0, y: 0, scale: 1 })
     expect(theatre.hit(over.x, over.y, VIEW).on).toBe('air')
+    // The hut and its keeper are one thing to touch: a knock at the door, and the keeper cheeps and jumps.
+    const door = seenAt(HUT.x, farGroundAt(HUT.x, HUT.z) + 1.2, HUT.z, VIEW, { x: 0, y: 0, scale: 1 })
+    expect(theatre.hit(door.x, door.y, VIEW)).toEqual({ on: 'keeper' })
+    theatre.sounds.length = 0
+    theatre.press(door.x, door.y, VIEW)
+    theatre.cancel()
+    expect(voices(theatre)).toEqual(['cheep'])
   })
 
   it('shows the troops that were served going round with the balloons they carried off, and nothing else', () => {
@@ -1205,7 +1216,7 @@ describe('a friend that has its balloon', () => {
       return { hand: out.y - pose.y, x: out.x, beside: frame.poses.get('friend-0')! }
     }
     const reaching = standing(false).hand, holding = standing(true)
-    const height = BODIES[kind].height * 1.08
+    const height = BODIES[kind].height * FRIEND_SCALE
     expect(reaching, 'reaching: above its shoulders').toBeGreaterThan(height * 0.7)
     expect(holding.hand, 'holding: its free hand low').toBeLessThan(height * 0.45)
     expect(holding.hand, 'and not through the hill').toBeGreaterThan(0)

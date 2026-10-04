@@ -29,6 +29,7 @@ export type VinylUniforms = {
 
 const VERTEX = /* glsl */ `
 attribute float panels;
+attribute float haze;
 uniform float uTime;
 uniform float uWobble;
 varying vec3 vNormal;
@@ -36,6 +37,7 @@ varying vec3 vView;
 varying vec3 vColour;
 varying vec2 vUv;
 varying float vPanels;
+varying float vHaze;
 
 void main() {
   vec3 colour = vec3(1.0);
@@ -59,6 +61,7 @@ void main() {
   vColour = colour;
   vUv = uv;
   vPanels = panels;
+  vHaze = haze;
   gl_Position = projectionMatrix * seen;
 }
 `
@@ -75,6 +78,7 @@ varying vec3 vView;
 varying vec3 vColour;
 varying vec2 vUv;
 varying float vPanels;
+varying float vHaze;
 
 void main() {
   vec3 n = normalize(vNormal);
@@ -110,7 +114,8 @@ void main() {
   colour = mix(colour, mix(vColour, uSky, 0.35) * 0.5 + 0.5, rim * 0.62);
 
   colour = mix(colour, uGlowColour, uGlow * (0.22 + rim * 0.5));
-  colour = mix(colour, uSky * 0.35 + 0.65, uHaze);
+  // A form is hazed as a whole (the far hill's friends), or part by part where the setting was painted once.
+  colour = mix(colour, uSky * 0.35 + 0.65, max(uHaze, vHaze));
   gl_FragColor = vec4(colour, 1.0);
   #include <colorspace_fragment>
 }

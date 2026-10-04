@@ -1,9 +1,11 @@
-import { Color, Matrix4, PerspectiveCamera, Quaternion, Scene, Vector3, WebGLRenderer } from 'three'
+import { Color, Euler, Matrix4, PerspectiveCamera, Quaternion, Scene, Vector3, WebGLRenderer } from 'three'
 import type { KindName } from './bodies'
+import { eyeBits, mouthBits, type Bit, type FacePlan, type FaceState } from './faces'
 import { applyPose, buildFriend, disposeFriends, type FriendRig } from './friends'
 import { BALLOON, FOV, viewFor, type View } from './layout'
 import type { Pose } from './pose'
-import { buildScenery, MAX_BALLOONS, MAX_SHADOWS, MAX_STRINGS, type Scenery } from './scenery'
+import { buildScenery, MAX_BALLOONS, MAX_BITS, MAX_SHADOWS, MAX_STRINGS, type Scenery } from './scenery'
+import { CLOUD_FACE, TOYS, type ToyName } from './setting'
 import { sharedVinyl, type VinylUniforms } from './vinyl'
 
 // The stage draws what it is told and decides nothing. Each frame the game
@@ -28,6 +30,11 @@ export class Stage {
   private balloons = 0
   private strings = 0
   private shadows = 0
+  private bits = 0
+  /** What carries the face being written: its place in the world. */
+  private carrier = new Matrix4()
+  private readonly local = new Matrix4()
+  private readonly euler = new Euler()
   private readonly marchers: Record<KindName, number> = { duck: 0, frog: 0, hippo: 0, crab: 0 }
   private readonly strollers: Record<KindName, number> = { duck: 0, frog: 0, hippo: 0, crab: 0 }
   private readonly matrix = new Matrix4()
@@ -104,6 +111,8 @@ export class Stage {
     this.balloons = 0
     this.strings = 0
     this.shadows = 0
+    this.bits = 0
+    for (const toy of Object.values(this.scenery.toys)) toy.visible = false
     this.marchers.duck = this.marchers.frog = this.marchers.hippo = this.marchers.crab = 0
     this.strollers.duck = this.strollers.frog = this.strollers.hippo = this.strollers.crab = 0
     this.scenery.hand.visible = false
@@ -167,21 +176,58 @@ export class Stage {
     hand.scale.set(grown * (1 + press * 0.1), grown * (1 - press * 0.12), grown)
   }
 
-  /** A cloud squashed or stretched: 1 at rest. */
-  cloud(index: number, squash: number): void {
+  /** A cloud squashed or stretched: 1 at rest. With `face`, the face printed on it, as it is now. */
+  cloud(index: number, squash: number, face?: FaceState): void {
     const cloud = this.scenery.clouds[index]
     if (!cloud) return
     const scale = cloud.scale.z
     cloud.scale.set(scale / Math.sqrt(Math.max(0.3, squash)), scale * squash, scale)
+    if (face) {
+      cloud.updateMatrixWorld()
+      this.face(cloud.matrixWorld, cloud.matrixWorld, CLOUD_FACE, face)
+    }
+  }
+
+  /** One of the toys that live in the setting: where its feet are, how large, turned and leaning how far, squashed how flat, and its face if it has one. */
+  prop(name: ToyName, x: number, y: number, z: number, scale: number, turn: number, lean: number, squash: number, face?: FaceState): void {
+    const toy = this.scenery.toys[name], wide = scale / Math.sqrt(Math.max(0.3, squash))
+    toy.visible = true
+    toy.position.set(x, y, z)
+    toy.rotation.set(0, turn, lean)
+    toy.scale.set(wide, scale * squash, wide)
+    if (face && TOYS[name].face.eyeSize > 0) {
+      toy.updateMatrixWorld()
+      this.face(toy.matrixWorld, toy.matrixWorld, TOYS[name].face, face)
+    }
+  }
+
+  /** Writes a face into the batch: its eyes on whatever carries the eyes, its mouth on whatever carries the mouth. */
+  private face(eyesOn: Matrix4, mouthOn: Matrix4, plan: FacePlan, state: FaceState): void {
+    this.carrier = eyesOn
+    eyeBits(plan, state, this.bit)
+    this.carrier = mouthOn
+    mouthBits(plan, state, this.bit)
+  }
+
+  /** One small pillow of a face, in the space of what carries it. */
+  private readonly bit: Bit = (x, y, z, wide, tall, deep, turn, colour) => {
+    if (this.bits >= MAX_BITS) return
+    this.quaternion.setFromEuler(this.euler.set(0, 0, turn))
+    this.local.compose(this.position.set(x, y, z), this.quaternion, this.scale.set(wide, Math.max(1e-3, tall), deep))
+    this.matrix.multiplyMatrices(this.carrier, this.local)
+    this.scenery.bits.setMatrixAt(this.bits, this.matrix)
+    this.scenery.bits.setColorAt(this.bits, this.colourOf(colour))
+    this.bits += 1
   }
 
   /** Ends the frame's lists and draws. */
   render(): void {
-    const { balloons, strings, shadows } = this.scenery
+    const { balloons, strings, shadows, bits } = this.scenery
     balloons.count = this.balloons
     strings.count = this.strings
     shadows.count = this.shadows
-    for (const batch of [balloons, strings, shadows]) {
+    bits.count = this.bits
+    for (const batch of [balloons, strings, shadows, bits]) {
       batch.instanceMatrix.needsUpdate = true
       if (batch.instanceColor) batch.instanceColor.needsUpdate = true
     }

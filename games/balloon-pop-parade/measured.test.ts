@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { BODIES, type KindName } from './bodies'
 import { PERSONALITIES } from './clips'
-import { GROUND, skySlots, viewFor, waitingSpot, bunchOffsets } from './layout'
+import { GROUND, skySlots, viewFor, waitingSpot, bunchOffsets, FRIEND_SCALE } from './layout'
 import { saveOf } from './moments'
 import type { Pose } from './pose'
 import { freshSave } from './save'
@@ -84,7 +84,7 @@ describe('a balloon', () => {
 
   it('is never in two places from one frame to the next in whole games played at random, with pops and pokes among the taps', () => {
     for (const [age, seed] of [[2, 3], [3, 5], [4, 7], [4, 11]] as const) {
-      const theatre = new Theatre(freshSave(age, seed), seed), { frame } = follower(0.62)
+      const theatre = new Theatre(freshSave(age, seed), seed), { frame } = follower(0.62 * (FRIEND_SCALE / 1.08))
       let state = seed * 32452843
       const random = () => (state = (state * 1103515245 + 12345) % 2147483648) / 2147483648
       let scene = ''
@@ -205,7 +205,7 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
     for (let i = 0; i < 60 * 9; i++) {
       theatre.step(1 / 60)
       theatre.paint(painter, VIEW)
-      const pose = poses.get('friend-0')!, high = pose.y - GROUND, tall = BODIES[kind].height * 1.08
+      const pose = poses.get('friend-0')!, high = pose.y - GROUND, tall = BODIES[kind].height * FRIEND_SCALE
       if (!poked && high > tall * 0.35 && kind !== 'hippo') {
         // Its head is up there; the ground under it is bare.
         expect(theatre.hit(pose.x, pose.y + tall * 0.7, VIEW), 'its head, in the air').toEqual({ on: 'friend', friend: 0 })

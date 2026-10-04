@@ -14,19 +14,22 @@ export const VIEW_WIDTH = 13.4
 export const FOV = 26
 
 /** Where the friends' feet are. Below it is only the hill: the strip where wrists rest. */
-export const GROUND = -3.3
+export const GROUND = -3.45
 /** A balloon's radius, and the height of the row of bunches in the sky. */
 export const BALLOON = 0.66
-export const SKY_ROW = 3.1
+export const SKY_ROW = 3.2
 /** How high above the ground a held balloon bobs, at its middle. */
-export const HELD_HEIGHT = 4.0
+export const HELD_HEIGHT = 4.5
 /** From the middle of one friend of a troop to the next. */
-export const FRIEND_GAP = 2.95
+export const FRIEND_GAP = 3.45
 /** The friends are drawn this much larger than their plans in bodies.ts. */
-export const FRIEND_SCALE = 1.08
-/** The troop that waits stands back and to the left, smaller. */
-export const WAITING_SCALE = 0.66
-export const WAITING_DEPTH = -3.2
+export const FRIEND_SCALE = 1.28
+/**
+ * The troop that waits stands at the left edge, a little back and smaller, and it stands as a tower: each friend on
+ * the head of the one below, so that three read as three in the narrow place beside a troop of three.
+ */
+export const WAITING_SCALE = 0.5
+export const WAITING_DEPTH = -1.2
 
 /** The hill is the top of a wide pillow. */
 export const HILL = { x: 0, z: -0.4, rx: 22, ry: 4.6, rz: 10 } as const
@@ -133,9 +136,9 @@ export function friendX(index: number, size: number): number {
   return (index - (size - 1) / 2) * FRIEND_GAP
 }
 
-/** Where friend `index` of the waiting troop stands: the first in view at the left edge, the others behind it and further out. */
-export function waitingSpot(index: number, view: View): { x: number; z: number } {
-  return { x: -view.width / 2 + 1.1 - index * 1.0, z: WAITING_DEPTH - index * 1.6 }
+/** Where the waiting troop's tower stands: at the left edge. Friend `index` is that many friends up it; how high that is depends on its kind (`seat` in bodies.ts). */
+export function waitingSpot(_index: number, view: View): { x: number; z: number } {
+  return { x: -view.width / 2 + 0.85, z: WAITING_DEPTH }
 }
 
 /** The top right corner is the grown-up's: this many logical pixels each way, where nothing of the game is drawn to be touched and no touch is answered (`overlay.ts`). */
@@ -191,6 +194,9 @@ export function farGroundAt(x: number, z: number): number {
   return FAR_HILL.y + FAR_HILL.ry * Math.sqrt(Math.max(0, 1 - dx * dx - dz * dz))
 }
 
+/** How wide the place of the troop that waits is to a finger at the least, in logical pixels: it is touched as one thing (pack: game-design, ages-2-to-4.md). */
+export const WAITING_TARGET_PX = 100
+
 /** How many troops go round the far hill at most, and the friends in them. */
 export const PARADE_TROOPS = 4
 export const PARADE_FRIENDS = PARADE_TROOPS * 3
@@ -201,7 +207,7 @@ export const PARADE_STEP = (Math.PI * 2) / PARADE_FRIENDS
 const PARADE_PAST = 0.08
 const PARADE_SINK = 2.8
 /** They are drawn a little smaller than the friends in front, on top of what the distance does. */
-export const PARADE_SCALE = 0.8
+export const PARADE_SCALE = 0.675
 
 /**
  * Where friend `member` of troop `troop` of the parade is at `time`: the troops go slowly round the top of the

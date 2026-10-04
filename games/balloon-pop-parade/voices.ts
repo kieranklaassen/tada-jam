@@ -26,7 +26,7 @@ export type Partial = {
 
 export type VoiceId =
   | 'squeak' | 'letGo' | 'whistle' | 'pop' | 'raspberry' | 'bloop' | 'boop' | 'squeal' | 'bonk' | 'stringHum' | 'frogSlurp'
-  | 'heels' | 'cloudSqueak' | 'patter' | 'hillBoing'
+  | 'heels' | 'cloudSqueak' | 'patter' | 'hillBoing' | 'spout' | 'bounce' | 'cheep'
   | `${KindName}Catch` | `${KindName}Refuse` | `${KindName}Poke` | `${KindName}Startle` | `${KindName}LiftOff` | `${KindName}Land` | `${KindName}Step`
 
 /** The ranges every partial stays inside, and the longest a voice may last. */
@@ -63,6 +63,12 @@ export const VOICES: Record<VoiceId, readonly Partial[]> = {
   patter: [0, 0.07, 0.13, 0.21, 0.27, 0.36, 0.44].map((at, i) => tone('sine', at, 1900 + ((i * 370) % 800), 1500 + ((i * 370) % 800), 0.07, 0.003, 0.035)),
   // The hill is an air bed: a touch on it sends a slow wobble through.
   hillBoing: [tone('sine', 0, 140, 95, 0.25, 0.01, 0.3), tone('triangle', 0, 280, 190, 0.06, 0.01, 0.2)],
+  // The whale in the pool blows: a wet rush of air going up.
+  spout: [hiss(0, 700, 2600, 3, 0.16, 0.02, 0.3), tone('sine', 0.02, 320, 640, 0.08, 0.03, 0.22)],
+  // The beach ball comes down on the air bed: hollow and soft.
+  bounce: [tone('sine', 0, 250, 150, 0.22, 0.004, 0.14), hiss(0, 700, 400, 1.2, 0.06, 0.003, 0.05)],
+  // The keeper of the far hill: two small high notes, far off.
+  cheep: [tone('sine', 0, 2100, 2700, 0.08, 0.005, 0.06), tone('sine', 0.1, 2300, 3000, 0.08, 0.005, 0.07)],
   // The tongues go home.
   frogSlurp: [hiss(0, 700, 1900, 4, 0.14, 0.03, 0.16)],
 

@@ -37,6 +37,34 @@ export const PALETTE = {
   glow: '#fff3b0',
 } as const
 
+/**
+ * The setting: a seaside of pool toys, painted once. Every colour here is paler than any balloon and is hazed
+ * further by its distance, so the setting stands lower in contrast than what can be touched.
+ */
+export const SETTING_COLOURS = {
+  sea: '#c4ecf3',
+  lilacHill: '#e0d4f7',
+  mintHill: '#d2f1e0',
+  creamHill: '#fdeccb',
+  peachHill: '#ffdfc8',
+  sand: '#f3dcb8',
+  leaf: '#b7e8cd',
+  coral: '#ffb9a8',
+  aqua: '#bfe9f5',
+  water: '#9bd9ee',
+  petal: '#ffffff',
+  pollen: '#ffe9a6',
+  /** The whale in the paddling pool, the keeper on the far hill, and the beach ball. */
+  whale: '#b9c9f4',
+  belly: '#f4f7ff',
+  keeper: '#ffd9c2',
+  ball: '#fff6dc',
+  /** What is printed on a cloud: a pale ink, so a cloud's face is seen only when one looks for it. */
+  cloudInk: '#b2c6da',
+  /** A cheek. */
+  blush: '#ffc2cf',
+} as const
+
 /** A hex colour as three sRGB numbers from 0 to 1. */
 export function rgb(hex: string): Rgb {
   const n = Number.parseInt(hex.slice(1), 16)

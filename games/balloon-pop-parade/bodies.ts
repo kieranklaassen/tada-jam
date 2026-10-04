@@ -55,6 +55,8 @@ export type Body = {
   reach: number
   /** The least an arm may swing out from hanging: the crab's claws are long enough to go through the hill if they hung straight down. */
   lowest: number
+  /** How high above its feet another of its kind stands on it, when the troop that waits stands as a tower. */
+  seat: number
 }
 
 const SMALL: readonly [number, number] = [16, 10]
@@ -104,6 +106,7 @@ function duck(): Body {
     halfWidth: 1.06,
     reach: 2.75,
     lowest: 0,
+    seat: 1.95,
   }
 }
 
@@ -141,6 +144,7 @@ function frog(): Body {
     halfWidth: 1.2,
     reach: 2.8,
     lowest: 0,
+    seat: 1.45,
   }
 }
 
@@ -177,6 +181,7 @@ function hippo(): Body {
     halfWidth: 1.3,
     reach: 2.95,
     lowest: 0,
+    seat: 2.15,
   }
 }
 
@@ -215,6 +220,7 @@ function crab(): Body {
     halfWidth: 1.34,
     reach: 2.95,
     lowest: 1.0,
+    seat: 1.3,
   }
 }
 
