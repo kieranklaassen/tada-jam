@@ -4,31 +4,39 @@
 ## Status
 
 - Resumed: on 4 October, after the session was cut off on 3 October at about 21:21 UTC. Taking up, in order: "Thank you for the closing run. One short run more" (in hand when it stopped: five commits of it are pushed, its status block is not); then the look pass ("after the run that pastes your sentences"); then "to take up when the look pass has ended" (the reader step).
-- Stage: gates. The game is built on the toy; the closing run made this folder say what the game is and built nothing new.
+- Stage: gates. The game is built on the toy. The closing run made this folder say what the game is; the run after it built what the sheet says a child sees and hears and the game had left out.
 - **The sheet has passed.** Round 5, checker G, passed the sheet part with sha256 `2ec1e59ab4516efa6b02745fc8117d801e0efede06b7be2c900c97a365f2ca42`. The commit that holds that sheet is `55b19cb`. Nothing above `## The look` has changed since, and the hash is the same today.
 - The rounds before it: round 1 (checker B, 14 findings) pasted at `b7c2270`; round 2 (D, 5) at `4f2a5d5`; round 3 (E, 4) at `0a76b32`; round 4 (F, 2, with the lead's sentence on the numerals) at `55b19cb`. No finding of any round was refused.
 - Look in use: first reserved choice, Blueprint and balsa. Built on at the builder's own risk: the owner has seen the toy and has not answered.
 - Renderer: canvas 2D with the game's own solver (`frame.ts`). matter.js is not used.
 - The guide, the cloud page, the run pages and the pilot notes did not differ on anything these runs met.
 
-**For the lead: sentences of the passed sheet that the built game does not match.** None is edited; each is given with the sentence that would be true of the game as built. Building the missing thing would make the sheet's own sentence true instead.
+- Open: three sentences of the sheet part for the lead to paste (second table below). The builder asks for no round: the sheet part is unchanged and its hash is the one that passed.
 
-| Where in the sheet | The sheet says | True of the game as built |
+**The fourteen sentences named for the lead in the closing run, sorted as the closing page's step 2 says.** Twelve promised something a child sees or hears: each is built, so the sheet's own sentence is true and stays as it passed. Two said a detail other than the game does.
+
+| Where in the sheet | The sheet says | What the game does now | Test |
+| --- | --- | --- | --- |
+| The toy, while dragging | "what is already built leans toward the new weight a little." | Pins in the air near the finger lean toward it by up to 0.07 of a cell and stand straight when the part lands; a footing never leans. | `toy.test.ts` |
+| Grid, Plank by Turn | "A vehicle crosses it wobbling, as on a kerb." | On a plank on edge the body rocks and hops; its wheels never go under the road. | `ride.test.ts`, `acts.test.ts` |
+| Grid, Stick by Load | "As a road a vehicle rides it like a rail, one wheel off, tilting." | On a stick it tilts with its back wheels off, most between two pins. | `ride.test.ts` |
+| Grid, Thread by Load | "the vehicle dips into a V with its wheels gurgling in the water." | The thread goes down in a V with the wheel to the water and is straight again as the vehicle paddles off. | `game.test.ts` |
+| Grid, Pin by Lay | "a hinge that ticks when a part on it shifts." | A hinge ticks once for each notch (0.3 radian) a part on it turns through. | `toy.test.ts` |
+| Grid, Pin by Turn | "swings round like a clock hand, ticking" | The same ticks, as a part on one pin swings down; silent at rest. | `toy.test.ts` |
+| Saved state, `sheets` | "the oldest slides off the end of the rack, in view." | It slides along the rack past its end, drops and fades in 0.8 s. Not saved; nothing replays. | `game.test.ts` |
+| Characters, Post van, dislikes | "the driver gets out and restacks them" | The driver leaves the cab, walks to the tail, reaches up as the parcels go back, and gets in. | `acts.test.ts`, `game.test.ts` |
+| Scenes, the give | "the chief looks up from its model" | It does, at the gap, for two seconds. | `game.test.ts`, `motion.test.ts` |
+| Scenes, the neat way | "and can be pressed and plucked" | Pressed, the model gives a little with a creak; plucked, it pings and shakes. | `game.test.ts` |
+| Scenes, secrets | "under a whole arch the barge's horn comes back as a chord" | After the barge's toot, three notes on it, when the bridge has a whole arch over the channel. | `game.test.ts` |
+| Comparing, as play | "or one part can be copied from it" | A tap on a part of the laid tracing that the bridge lacks lays that part, if the kit has one. | `game.test.ts` |
+
+**For the lead to paste: sentences that say a detail other than the game does.** The builder's session was refused the edit to the sheet part (the permission layer of the session took it for a change to a shared thing), so nothing above `## The look` was touched. Pasting these changes the hash, and a round then reads only these.
+
+| Where in the sheet | The sheet says | True of the game |
 | --- | --- | --- |
-| The toy, while dragging | "what is already built leans toward the new weight a little." | Leave the clause out: what is built does not move until the part is laid. |
-| Grid, Plank by Turn | "A vehicle crosses it wobbling, as on a kerb." | Leave the sentence out: a vehicle crosses a plank on edge as it crosses any plank. |
-| Grid, Stick by Load | "As a road a vehicle rides it like a rail, one wheel off, tilting." | As a road it carries a wheel between its pins by bending, and snaps under it. |
-| Grid, Thread by Load | "As a road it makes a tightrope: the vehicle dips into a V with its wheels gurgling in the water." | As a road it lets the vehicle down into the water with a gurgle. |
-| Grid, Pin by Lay | "in the air it is a hinge that ticks when a part on it shifts." | in the air it is a hinge. |
-| Grid, Pin by Turn | "swings round like a clock hand, ticking, and hangs straight down." | swings round like a clock hand and hangs straight down. |
-| Saved state, `sheets` | "the oldest slides off the end of the rack, in view." | the oldest leaves the rack. |
-| Characters, Post van, dislikes | "the driver gets out and restacks them" | and they are back on the tower when the reaction ends |
 | The idle ladder | "later a ghost hand lays one part between two pins away from the gap and takes it off again." | later a ghost hand shows one move for the board as it stands: it lays a part between two pins away from the gap, picks another pile, sends the vehicle once a road reaches across, unrolls the next sheet, or carries a part back to the tray when the kit is spent. |
-| Scenes, the give | "the chief looks up from its model" | Leave the clause out. |
-| Scenes, the neat way | "and can be pressed and plucked" | Leave the clause out: the model stands in the margin and a touch there pokes the chief. |
 | Scenes, one change | "Cause: the child runs the trolley over a bridge with a tracing laid on it, and the two differ in more than one part." | Cause: the trolley stands on a bridge with a tracing laid on it, and the two differ in more than one part. |
-| Scenes, secrets | "under a whole arch the barge's horn comes back as a chord;" | Leave the clause out: two secrets are built, the scale of the threads and the hat. |
-| Comparing, as play | "or one part can be copied from it" | Leave the clause out: a tracing is laid, compared and swapped whole. |
+| What the child can do on day 15 (the same detail, not named before) | "lay a tracing of last week's bridge over today's and run both under the same trolley," | lay a tracing of last week's bridge over today's and load both with the same trolley, |
 
 **What the lead should try first.** Open `?chrome=0&seed=7#/play/bridge-crew` with a fresh slot.
 
@@ -38,13 +46,16 @@
 4. Drag the trolley (the small cart, right of the tray) onto the plank; tap its compartment to add weights. Tap the pad with the pencil to keep a tracing; tap the kept tracing to lay it on the board.
 5. Tap the roll. On the second sheet, with the rock: build, and use the rack at the top right to go back.
 6. `seed=<n>` fixes the visit; `tier=3` is the lowest tier; `spike=1` is the still spike of run 1.
+7. Of what the last run built, the first sheet shows four: tap the van with nothing built and watch the chief; cross on the plank on edge and watch the van's body; let a plank hang by one pin and listen; after the second failed run, press the model in the margin. The rail, the tightrope, the driver, the echo and the rack need sticks, thread, a deep dip, the barge's sheet and a seventh sheet.
 
 **What is still weak.**
 
 - **Nobody has heard it.** Every sound is numbers held to a range by tests.
-- **Where the game falls short of the sheet's words** is in the table above, sentence by sentence. Besides those: a tracing laid on the board is lifted again on load, since it is not a saved field (the sheet does not say it is).
+- **Three sentences of the sheet still say a detail other than the game does** (second table above). Besides those: a tracing laid on the board is lifted again on load, since it is not a saved field (the sheet does not say it is).
+- **What the last run built has limits a child may meet.** Only the van and the caterpillar bus are light enough to ride a rail, and only on sticks one cell long; a longer stick snaps under any wheel, which is the model. The echo needs the arch above the deck: an arch under it stands in the barge's channel, and the barge then scrapes and does not toot. The driver stands by the back wheels with its arms up and the parcels come back to the tower by themselves; it does not walk to where they fell, which may be over the gap.
+- **In a give a vehicle rides over a rock in one step of half a cell**, and the longest vehicle rolls out from the lip of the gorge at up to 0.4 of a cell a frame. Tests hold both numbers; no eye has judged them in motion.
 - **A side view lets things overlap that stand side by side:** a vehicle drives in front of posts and stays that rise from the deck, which is what the bus's hats are about. Two vehicles parked on the far bank of the widest gaps run off the right edge of the sheet, and the second stands under the roll.
-- **Not looked at in a browser:** the sheets after `rock-prop`, the vehicles other than the van and the jelly truck, the chief's models for the six ideas after the plank on edge, the one-change showing, and the barge. Tests draw every one of them with a recording pen and hold every number to a real number; no eye has judged them.
+- **Not looked at in a browser:** the sheets after `rock-prop`, the vehicles other than the van and the jelly truck, the chief's models for the six ideas after the plank on edge, the one-change showing, and the barge. Tests draw every one of them with a recording pen and hold every number to a real number; no eye has judged them. Of the last run's work, the tightrope, the rail, the driver, the rack and the pressed model were looked at as stills drawn by the game's own modules in a browser, and the chief's look up and the kerb on the running game; none was watched in motion, and the lean, the copied part and the echo were not looked at at all.
 - **The model is harsh on the first sheet:** one weight on the trolley at the middle of a flat four-cell plank cracks it (the model's numbers: a strength of 1.2 against a bending of 1.24). True to the model, and a child may read it as the trolley being broken.
 - Only the first variant of each position has a bridge in the tests that crosses it. Taste thresholds and strengths are first values.
 - The hold that takes a pin out is still shown by nothing.
@@ -75,6 +86,7 @@ The stages in order are sheet, toy, game, gates. Keep this block current: the st
 - **The tracing's second line**: a traced design laid on the board is drawn as it would lie under the same load. A picture of how a thing behaves, or a reading on the object?
 - **More than one "better"**: the jelly truck likes a soft deck and is bored by a stiff one.
 - **The hold on a pin**: the only hold in the game, half a second.
+- **How full the frame is at rest.** On the first sheet about a fifth of the frame holds a thing: the chief and its model in the top left margin, the van at the lip, the tray and the two tools along the bottom. The rest is the grid and the hatched ground. It fills as the child builds and as sheets go on (cliffs, rocks, a second vehicle, the rack, the roll, the barge), and by design a working part stays plain. If the set is to look fuller, the places to add are the margins and the far bank, not the parts.
 - **One weight cracks a flat plank.** Should the first sheet's plank be a little stronger laid flat, so the trolley has something to show before it breaks it? It is a number in `kit.ts`; the frame model stays as true either way.
 
 ## Pass log
@@ -89,6 +101,7 @@ One row per pass. Passes 1 and 2 were on the spike, pass 3 on the toy, and passe
 | 4 | The game on the dev build, seed 7: two failed runs and the chief's showing, the trolley, a tracing, the crossing, the next sheet | "The truck falling in is the best bit. The bird did something with a tiny stick up in the corner and I could not see what. What are the three grey squares? The number by the boxes is good, I can see it carries two." | Reading the margin and the tools: the chief's models drawn at nearly twice the size, with a block that presses on them; the tracing pad drawn as paper with a pencil; the trolley larger in its compartment | Not measured (software renderer) | The showing happens far from where the eye is; nothing leads to it |
 | 5 | Cold playtest proxy on the production build, fresh slot, seed 11: ten seconds hands off, then a newcomer's minute (the truck first, a short plank, a stray drag, a plank across, a run, another, a turn, a crossing) | Invites at ten seconds: the van at the edge of the gap with its 2, rings on the two lips, marks round the tray and the tools, the ghost hand laying a part on the far bank. Unclear moments, six: a pale box painted over the bank beside the floating van; with all three planks laid in the wrong places nothing showed how to take one back; the chief's showing went unseen in the corner; three things glow at once at the start; one weight on the trolley broke the flat plank at once; the grey squares in the tools box | What to do next is shown: the water's veil kept between the banks; with the kit spent and no road the ghost hand carries a part to the tray; corner marks round the chief's models while it shows. And found by the overlap test written in this pass: a floating vehicle went through rocks and ledges and through the bank's corner on its way out, so it now clambers over and leaps out beside the bank | Not measured | Three things still glow at once; the trolley on the first sheet |
 | 6 | The same proxy again on a new production build | Of the six, four are gone (the pale box, the kit spent, the unseen showing, the grey squares after this pass's fix). Two remain: three things glow at once at the start, and one weight breaks the flat plank. One new: the nose of the next vehicle behind the roll was too small to read | Empty places read as places: an empty tracing slot is a dashed outline; the vehicle behind the roll is drawn larger; a tube rolling its load off and wheels on a thread have their own sounds | Not measured | The glow at the start marks pins, tray and tools together; the first sheet's flat plank against the trolley is the owner's to decide |
+| 7 | Stills of what the last run built, on the dev build at 1180 by 820, pixel ratio 2: the frame at rest, the chief at a give, the van on the plank on edge, and, drawn by the game's own modules into a canvas of the same size, the tightrope with the piano mover, the rail, the full rack with the model pressed, and the driver through its reaction | "The rope goes down like a V, I like that. But the back of the piano truck is inside the wall. The little driver is funny when it puts its arms up. The bird stands up straight when the truck falls in." | One thing: the whole vehicle stays out of the banks in a give, not only its wheels (it rolls out over open water before it drops, comes ashore beyond the foot of a sloping wall, and is level before it is over the bank). Looked at again: the piano mover on the tightrope sits clear of both walls | Not measured | At rest the first sheet is sparse (next section, "For the owner to decide"). Nothing of this run was watched in motion or heard |
 
 ## For the pull request
 
@@ -107,7 +120,7 @@ As the game stands at its gates.
 - **60 fps:** not measured. One full-surface stamp a frame, sprites for parts, and a test that bounds the canvas calls for the fullest bridge. A run is computed once when the vehicle sets off (a few milliseconds) and read out after.
 - **Procedural or committed assets only:** everything is drawn and synthesized in code.
 - **Its own art direction:** Blueprint and balsa; the registry row's text is at the end of `ART.md`.
-- **Nothing passes through anything** (a canvas game's own tests): a folding bridge is played for twelve seconds and no part goes into the ground; the give is played on every sheet for every vehicle and no wheel goes into a bank, a rock or a ledge. What a side view cannot avoid is listed under "still weak".
+- **Nothing passes through anything** (a canvas game's own tests): a folding bridge is played for twelve seconds and no part goes into the ground; the give is played on every sheet for every vehicle and no wheel, and no part of the body back to the end of its tail, goes into a bank, a rock or a ledge. What a side view cannot avoid is listed under "still weak".
 - **Found as left:** every scene's outcome is in the saved state the moment it starts and is saved at once; tests put the game away mid-run and mid-scene and open it again.
 
 ### The learning claim
