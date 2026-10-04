@@ -153,9 +153,9 @@ function duck(id: ClipId, t: number, pose: Pose, reach: number): void {
     pose.wag = wobble(t, 0.2, 40, 4.5) * 0.8
     pose.flick = hump(t, 0.2, 0.7) * 0.35
   } else if (id === 'refuse') {
-    // A look at it, a turn of the back, a swat with the tail, and round again.
-    pose.headTurn = hold(t, 0, 0.18, 0.3, 0.4) * 0.5
-    pose.nod = -0.1
+    // A look at it and a look down at itself, from one colour to the other; a turn of the back, a swat with the tail, and round again.
+    pose.headTurn = hold(t, 0, 0.14, 0.2, 0.3) * 0.5
+    pose.nod = -0.1 + hump(t, 0.2, 0.4) * 0.5
     pose.armL = pose.armR = 0.3
     pose.turn = hold(t, 0.3, 0.5, 0.72, 0.96) * Math.PI
     pose.flick = hump(t, 0.48, 0.66) * 1.3
@@ -213,13 +213,13 @@ function frog(id: ClipId, t: number, pose: Pose): void {
     pose.y += hump(t, 0.46, 0.72) * 0.28
     pose.armL = 0.3
   } else if (id === 'refuse') {
-    // A look, the throat blown up like a ball, and the balloon bounced off it.
-    pose.headTurn = hold(t, 0, 0.2, 0.3, 0.42) * 0.4
+    // A look at it and a look down at itself, from one colour to the other; the throat blown up like a ball, and the balloon bounced off it.
+    pose.headTurn = hold(t, 0, 0.14, 0.2, 0.3) * 0.4
     pose.armL = pose.armR = 0.5 + hump(t, 0.3, 0.7) * 0.5
     pose.puff = 1 + hold(t, 0.28, 0.5, 0.56, 0.74) * 0.95 + wobble(t, 0.54, 30, 6) * 0.2
     pose.bow = hump(t, 0.4, 0.66) * -0.2
     pose.squash += hump(t, 0.3, 0.52) * 0.08
-    pose.nod = -0.5
+    pose.nod = -0.5 + hump(t, 0.18, 0.42) * 0.8
   } else if (id === 'popped') {
     // The throat goes flat, stays flat, and swells again past where it was.
     pose.puff = 1 - hold(t, 0, 0.14, 0.5, 0.66) * 0.7 + wobble(t, 0.62, 18, 5) * 0.35
@@ -274,10 +274,10 @@ function hippo(id: ClipId, t: number, pose: Pose): void {
     pose.armL = 0.25
     pose.tilt += hump(t, 0.55, 1.1) * 0.12
   } else if (id === 'refuse') {
-    // A look, a long breath in, and a sneeze that folds it in half.
-    pose.headTurn = hold(t, 0, 0.25, 0.36, 0.5) * 0.35
+    // A look at it and a slow look down at its own belly, from one colour to the other; a long breath in, and a sneeze that folds it in half.
+    pose.headTurn = hold(t, 0, 0.16, 0.22, 0.34) * 0.35
     pose.armL = pose.armR = 0.4
-    pose.nod = -0.2 - hold(t, 0.36, 0.66, 0.68, 0.74) * 0.5 + hump(t, 0.7, 0.95) * 0.5
+    pose.nod = -0.2 + hump(t, 0.2, 0.42) * 0.5 - hold(t, 0.4, 0.66, 0.68, 0.74) * 0.5 + hump(t, 0.7, 0.95) * 0.5
     pose.bow = -hold(t, 0.36, 0.66, 0.68, 0.74) * 0.16 + hump(t, 0.7, 1.0) * 0.5
     pose.squash += hold(t, 0.36, 0.66, 0.68, 0.74) * 0.1 - hump(t, 0.7, 0.9) * 0.14
     pose.puff = 1 + hold(t, 0.36, 0.66, 0.7, 0.76) * 0.18 + wobble(t, 0.72, 14, 3.5) * 0.2
@@ -331,13 +331,13 @@ function crab(id: ClipId, t: number, pose: Pose, reach: number): void {
     pose.x += Math.sin(t * 30) * 0.1 * hold(t, 0.2, 0.25, 0.4, 0.55)
     pose.puff = 1 + hump(t, 0.05, 0.5) * 0.25
   } else if (id === 'refuse') {
-    // The stalks lean to look, a pinch by mistake, and the eyes shoot up.
-    pose.wag = hold(t, 0, 0.14, 0.22, 0.3) * 0.5
+    // The stalks lean to look at it and dip to look at its own shell, from one colour to the other; a pinch by mistake, and the eyes shoot up.
+    pose.wag = hold(t, 0, 0.1, 0.14, 0.22) * 0.5
     pose.armL = reach
     // The claw comes down and forwards onto the balloon, and never out towards the friend beside it.
     pose.armR = reach - hump(t, 0.24, 0.36) * 0.7
     pose.armRForward = hump(t, 0.2, 0.4) * 1.1
-    pose.puff = 1 + hold(t, 0.33, 0.4, 0.62, 0.82) * 0.95
+    pose.puff = 1 - hump(t, 0.14, 0.32) * 0.3 + hold(t, 0.33, 0.4, 0.62, 0.82) * 0.95
     pose.squash += -hump(t, 0.33, 0.45) * 0.12 + wobble(t, 0.45, 34, 9) * 0.05
   } else if (id === 'popped') {
     // It hides its eyes behind its claws, then peeks. Quick, like everything it does.

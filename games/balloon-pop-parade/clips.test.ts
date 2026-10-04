@@ -130,6 +130,26 @@ describe('the hippo\'s yawn', () => {
   })
 })
 
+describe('a refusal', () => {
+  it('begins with a look from one colour to the other: at the balloon beside it, and then down at itself, before its answer lands', () => {
+    for (const kind of KINDS) {
+      const still = sample(kind, null, 0), hit = PERSONALITIES[kind].cue.hit
+      let lookedAt = -1, lookedDown = -1
+      for (let t = 0; t < hit; t += 1 / 120) {
+        const pose = sample(kind, 'refuse', t)
+        // The crab has no head to turn: its eyes lean over on their stalks, and dip towards its shell.
+        const aside = kind === 'crab' ? pose.wag - still.wag : pose.headTurn - still.headTurn
+        // Down is below level for a head, which at rest looks up; for the crab's eyes it is in towards the shell.
+        const down = kind === 'crab' ? still.puff - pose.puff > 0.22 : pose.nod > 0.12
+        if (lookedAt < 0 && aside > 0.28) lookedAt = t
+        if (lookedDown < 0 && down) lookedDown = t
+      }
+      expect(lookedAt, `${kind} looks at the balloon`).toBeGreaterThanOrEqual(0)
+      expect(lookedDown, `${kind} looks at itself`).toBeGreaterThan(lookedAt)
+    }
+  })
+})
+
 describe('a poke', () => {
   it('always has what its kind is known for, whichever of its two ways it is taken', () => {
     const most = (kind: KindName, id: ClipId, read: (pose: Pose, still: Pose) => number) => {

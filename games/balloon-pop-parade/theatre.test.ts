@@ -621,7 +621,8 @@ describe('a balloon a friend holds', () => {
     const mine = frame.balloons.find((balloon) => balloon.y < 2 && balloon.y > GROUND + 2)!
     theatre.sounds.length = 0
     theatre.press(mine.x, mine.y, VIEW)
-    expect(voices(theatre)).toEqual(expect.arrayContaining(['pop', 'crabStartle']))
+    // One friend alone is a troop too: it had all its balloons, so its heels squeak as it stops still.
+    expect(voices(theatre)).toEqual(expect.arrayContaining(['pop', 'crabStartle', 'heels']))
     expect(theatre.troop.held).toEqual([false])
     theatre.release(VIEW)
     play(theatre, 2)
