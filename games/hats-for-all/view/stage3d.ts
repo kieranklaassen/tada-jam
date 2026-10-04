@@ -6,7 +6,7 @@ import { DIMPLE_SECONDS, MOST_CRUMBS, type ActorPose, type Play } from '../play'
 import { CREATURE_DEPTH, HAND, HAT_HALF, HAT_HEIGHT, SLAB, TILE_DEPTH } from '../sizes'
 import { BALLOON, balloonAt, BALL_RADIUS, BALL_ROLL, BRICK_HOP, BRICK_REST_Y, CLOUD_DRIFT, PROPS, PROP_AT, PROP_LEAN } from '../props'
 import { ARCH_X, ARCH_Z, LANE_Z, TILE_Z, tileX } from '../stage'
-import { countsAsDone } from '../input'
+import { COUNTS_FROM } from '../input'
 import { tileWidth } from '../tile'
 import { CREATURE_COLOUR, EAR_DEPTH, HAT_COLOUR, MAT_BACK, PALETTE, buildArch, buildMat, buildPieces, buildTile, type Pieces } from './build'
 import { BALLOON_WAY, CLOUD_AT, TINT, buildBall, buildBrick, buildCloud, buildCrown, buildRoomPlanes, buildScenery } from './room'
@@ -21,6 +21,9 @@ import { RING_CLEAR, blobTexture, foamMaterials, handTexture, ringTexture } from
 const BODIES = MOST * 2
 const BLOBS = BODIES + MOST + 11
 const GLOWS = MOST
+/** A drag that counts when partly done was aimed: it began at least this far from the creature, in pixels, and was let go no further to the side of the straight line to it than this share of the line's length. */
+const AIMED_FROM_PX = 90
+const AIMED_WITHIN = 0.2
 /** The dots of a face: two pupils, the open mouth, two cheeks, two brows and the two halves of the shut mouth's line. */
 const DOTS = 9
 const CHEEK = new THREE.Color('#ff8fa6')
@@ -372,6 +375,11 @@ export class FoamStage {
   }
 
   /** What is under a finger. A small hand is given room: the nearest thing within its reach wins, and `but` (a hat in the hand) is passed over. */
+  /** The mat under a finger, and nothing that stands on it: for a touch that is to be answered and to move nothing. */
+  floorAt(x: number, y: number): Target {
+    return { type: 'floor', ...this.floorUnder(x, y) }
+  }
+
   pick(x: number, y: number, play: Play, but = -1): Target {
     let best: Target | null = null, bestScore = 1
     const centre = new THREE.Vector3(), edge = new THREE.Vector3()
@@ -406,7 +414,9 @@ export class FoamStage {
     }
     const floor = this.floorUnder(x, y)
     if (Math.abs(floor.z - play.tileZ) < TILE_DEPTH / 2 + 0.4 && Math.abs(floor.x - tileX(play.hatCount)) < tileWidth(play.hatCount) / 2 + 0.4) return { on: 'tile' }
-    // A drag counts when partly done: let go over the open floor at least half way from where it began to a creature, it is finished for the child, to the creature it had come nearest to.
+    // A drag counts when partly done: let go over the open floor at least half way along the straight line from where it began to a
+    // creature, and close to that line, it is finished for the child. Only a drag that was plainly going to that creature counts:
+    // one let go to the side of the line, or beyond the creature, or going nowhere near one, is let go where it is.
     if (from) {
       let nearest: string | null = null, left = Infinity
       const to = new THREE.Vector3()
@@ -415,8 +425,11 @@ export class FoamStage {
         const at = this.whereIs({ type: 'creature', who }, play)
         if (!at) continue
         this.toScreen(at.x, at.y, at.z, to)
+        const lineX = to.x - from.x, lineY = to.y - from.y, long = Math.hypot(lineX, lineY)
+        if (long < AIMED_FROM_PX) continue
+        const along = ((x - from.x) * lineX + (y - from.y) * lineY) / (long * long), aside = Math.abs((x - from.x) * lineY - (y - from.y) * lineX) / long
         const still = Math.hypot(to.x - x, to.y - y)
-        if (countsAsDone(from, { x, y }, to) && still < left) { nearest = who; left = still }
+        if (along >= COUNTS_FROM && along <= 1 && aside <= AIMED_WITHIN * long && still < left) { nearest = who; left = still }
       }
       if (nearest) return { on: 'creature', who: nearest }
     }

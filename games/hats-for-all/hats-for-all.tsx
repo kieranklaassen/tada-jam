@@ -61,6 +61,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     let game: Game | null = null
     // What the finger that is down landed on and where, and whether it has slid far enough to be dragging.
     let held: Target | null = null, from: Point = { x: 0, y: 0 }, dragging = false
+    // Whether the finger of a drag has lifted and its let-go is still waiting out the grace it is given (input.ts).
+    let lifted = false
     // What the idle ladder shows this frame, kept from the loop for `draw`.
     let guidance: Guidance | null = null
     const hand: HandPose = { travel: 0, press: 0, opacity: 0 }
@@ -129,13 +131,14 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       if (!game) return
       for (const gesture of gestures) {
         if (gesture.type === 'press') {
-          // The top right corner is the grown-up's (overlay.ts): nothing of the game answers a touch there.
-          if (gesture.at.x > width - CORNER && gesture.at.y < CORNER) { held = null; continue }
           // A scene that is playing ends first, so the finger lands on the stage as the scene leaves it and not on something that is on its way out.
           game.endScene()
-          held = view.pick(gesture.at.x, gesture.at.y, game.play)
+          // The top right corner is the grown-up's (overlay.ts): a touch there is answered as the bare floor is, with a squeak and a dimple, and moves nothing, whatever stands behind it.
+          const corner = gesture.at.x > width - CORNER && gesture.at.y < CORNER
+          held = corner ? view.floorAt(gesture.at.x, gesture.at.y) : view.pick(gesture.at.x, gesture.at.y, game.play)
           from = gesture.at
           dragging = false
+          lifted = false
           watch(gesture.at)
           game.press(held)
         } else if (!held) continue
@@ -143,7 +146,12 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
         else if (gesture.type === 'pressEnd') { game.pressEnd(); held = null }
         else if (gesture.type === 'dragMove' || gesture.type === 'dragLift') {
           watch(gesture.at)
-          if (!dragging && Math.hypot(gesture.at.x - from.x, gesture.at.y - from.y) < SMEAR) continue
+          lifted = gesture.type === 'dragLift'
+          if (!dragging && Math.hypot(gesture.at.x - from.x, gesture.at.y - from.y) < SMEAR) {
+            // A smeared tap is a tap, and is answered when the finger lifts: it does not wait out the grace a real drag is given.
+            if (lifted) { touch.clear(); game.tap(); held = null }
+            continue
+          }
           if (!dragging) { dragging = true; game.dragStart() }
           const point = view.handPoint(gesture.at.x, gesture.at.y)
           game.dragTo(point.x, point.y, point.z, (gesture.at.x - from.x) / PULL, (from.y - gesture.at.y) / PULL)
@@ -242,6 +250,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // not make: a hat in the hand goes back where it came from, a pulled creature is let be, a press ends
     // without a tap, and the world is as it was before the finger landed (ART.md, "What is stored").
     const putDown = () => {
+      // The one touch that is finished as the child left it: a drag whose finger had already lifted. Its let-go is the child's own, only not yet counted.
+      if (lifted && dragging) return act(touch.clear())
       touch.clear()
       if (game && held) game.pressEnd()
       held = null

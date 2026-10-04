@@ -49,6 +49,22 @@ describe('a drag that is let go', () => {
     expect(stage.letGoAt(other.x, other.y, game.play, { type: 'hat', hat: 0 }, hat)).toEqual({ on: 'creature', who: 'lanky' })
   })
 
+  it('counts only when it was plainly going there: to the side of the straight line, or past the creature, it is let go where it is', () => {
+    const { game, stage, hat, bop, lanky } = scene()
+    const long = Math.hypot(bop.x - hat.x, bop.y - hat.y), acrossX = -(bop.y - hat.y) / long, acrossY = (bop.x - hat.x) / long
+    const on = between(hat, bop, 0.7)
+    for (const side of [-1, 1]) {
+      const wide = { x: on.x + side * acrossX * long * 0.35, y: on.y + side * acrossY * long * 0.35 }
+      expect(stage.letGoAt(wide.x, wide.y, game.play, { type: 'hat', hat: 0 }, hat)).not.toEqual({ on: 'creature', who: 'bop' })
+    }
+    // A hat taken off a head and let go on the mat straight below it lies there: it goes to no neighbour, and not back.
+    const head = stage.screenOf(spotX(1), BODY.bop.top + 0.4, ROW_Z), below = { x: head.x, y: head.y + 260 }
+    expect(stage.letGoAt(below.x, below.y, game.play, { type: 'hat', hat: 0 }, head).on).toBe('floor')
+    // And one carried to the front corner of the mat is nowhere near a head.
+    expect(stage.letGoAt(30, 790, game.play, { type: 'hat', hat: 0 }, hat).on).toBe('floor')
+    expect(lanky.x).toBeGreaterThan(bop.x)
+  })
+
   it('away from every creature is on the floor, and over the tile is on the tile', () => {
     const { game, stage, hat } = scene()
     expect(stage.letGoAt(hat.x - 40, 800, game.play, { type: 'hat', hat: 0 }, hat).on).toBe('floor')

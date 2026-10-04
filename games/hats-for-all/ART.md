@@ -68,7 +68,7 @@ Six objects by five actions. A tap is the essential action; every drag is an ext
 
 There are three ways to be off, and each shows where and why in the world, costs nothing, and leaves everything where it is (pack: game-design, errors-show-as-consequences.md).
 
-- **One hat too many taken out.** The hat has nobody under it: it lands on the floor, skids to the nearest round spot that has no loose hat beside it and scuttles in a small circle beside it, slowly enough for a two-year-old's tap, and every creature turns to watch it. It shows by itself that every head already has one. One tap sends it home.
+- **One hat too many taken out.** The hat has nobody under it: it lands on the floor beside the nearest round spot that has no loose hat beside it and scuttles in a small circle there, slowly enough for a two-year-old's tap, and every creature turns to watch it. It shows by itself that every head already has one. One tap sends it home.
 - **Two hats on one head.** The tower slips over that creature's eyes and it totters about, bewildered and never hurt, while the one left bare looks from the tower to its own head and pats it. One tap on the top hat sends it home, and one drag moves it to the bare head.
 - **A hat taken off again, or a head missed.** That creature stands bare in plain view, pats its head and looks at the hole its hat is in. It waits for as long as the child likes and never hurries or sulks.
 

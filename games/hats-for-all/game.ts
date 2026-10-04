@@ -510,8 +510,13 @@ export class Game {
     const here = spotX(mine.spot), there = theirs ? spotX(theirs.spot) : tileX(this.saved.tile.length)
     // How wide each can get while it acts: its hands, pushed out as it squashes; its hat; and Flop's ears, flung out.
     const widest = (one: { kind: CreatureKind; hats: number[] }): number => Math.max((BODY[one.kind].reach + HAND.radius) * SQUASH_WIDENS, one.kind === 'flop' ? EARS_FLUNG : 0, ...one.hats.map((worn) => HAT_HALF[this.saved.tile[worn]]))
-    const room = theirs ? (Math.abs(there - here) - widest(mine) - widest(theirs)) / 2 - 0.04 : Infinity
-    const act = (one: string, name: string): void => play.act(one, name, one === who ? there : here, room)
+    // Each has the room between it and whoever stands nearest on the side it turns to, which need not be the one it turns to: half of it, less a finger's width.
+    const roomFor = (one: { kind: CreatureKind; spot: number; hats: number[] }, toward: number): number => {
+      const side = Math.sign(toward - spotX(one.spot)) || 1
+      const beside = this.saved.crew.filter((next) => (next.spot - one.spot) * side > 0).sort((a, b) => Math.abs(a.spot - one.spot) - Math.abs(b.spot - one.spot))[0]
+      return beside ? (Math.abs(spotX(beside.spot) - spotX(one.spot)) - widest(one) - widest(beside)) / 2 - 0.04 : Infinity
+    }
+    const act = (one: string, name: string): void => play.act(one, name, one === who ? there : here, roomFor(one === who || !theirs ? mine : theirs, one === who ? there : here))
     if (bare && action === 'to-bare-head' && other) {
       act(who, 'boings-and-pats'); act(other, 'boings-and-pats')
       play.cue('plop', plop(hat, this.next())); this.says(who, 'ask', 0.3); this.says(other, 'ask', 0.5)
