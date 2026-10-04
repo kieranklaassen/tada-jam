@@ -101,21 +101,24 @@ function flame(height: number, width: number, hex: number): Part {
 export type FireModel = { root: THREE.Group; flames: THREE.Mesh; logs: THREE.Group; dryLogs: THREE.Mesh; wetLogs: THREE.Mesh }
 
 /**
- * Three logs in an untidy heap: each lies its own way, off the middle, and no
- * two cross where the third does. Laid evenly through one middle they read
- * from above as a star, which is a sign, and a heap is not.
+ * Five logs in an untidy heap: each lies its own way and off the middle, the
+ * shorter ones on top. Three laid evenly through one middle read from above
+ * as a star, and any three sticks read as some letter; a heap of five reads
+ * as a heap.
  */
-const LOG_HEAP = [
-  { x: -0.1, z: 0.06, turn: 0.2, long: 1.0 },
-  { x: 0.14, z: -0.12, turn: -0.75, long: 0.9 },
-  { x: 0.04, z: 0.17, turn: 1.25, long: 0.8 },
+export const LOG_HEAP = [
+  { x: -0.12, z: 0.05, turn: 0.2, long: 0.95 },
+  { x: 0.15, z: -0.12, turn: -0.75, long: 0.85 },
+  { x: 0.02, z: 0.2, turn: 1.25, long: 0.75 },
+  { x: -0.05, z: -0.2, turn: 2.0, long: 0.7 },
+  { x: 0.2, z: 0.12, turn: -1.5, long: 0.6 },
 ] as const
 
 function logs(hex: number): Part[] {
-  return LOG_HEAP.map((log, i) => at(rod(0.12, 0.13, log.long, hex, 10), log.x, 0.2 + i * 0.05, log.z, Math.PI / 2 - 0.12, log.turn))
+  return LOG_HEAP.map((log, i) => at(rod(0.12, 0.13, log.long, hex, 10), log.x, 0.2 + i * 0.04, log.z, Math.PI / 2 - 0.1, log.turn))
 }
 
-/** The small fire: a ring of pebbles, three logs (dry, and black and wet once it is out), and flames that the stage keeps moving. */
+/** The small fire: a ring of pebbles, a heap of logs (dry, and black and wet once it is out), and flames that the stage keeps moving. */
 export function buildFire(plastic: THREE.Material, glow: THREE.Material): FireModel {
   const root = new THREE.Group()
   root.name = 'fire'

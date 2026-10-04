@@ -1083,18 +1083,25 @@ describe('what a reader of the folder found', () => {
     expect(found.game.yard).toEqual(t.game.yard)
   })
 
-  it('lays the fire\'s logs in a heap that no line of three crosses through one middle', async () => {
-    const { buildFire } = await import('./thingModels')
+  it('lays the fire\'s logs in a heap of five, no two through one middle and no two lying the same way', async () => {
+    const { buildFire, LOG_HEAP } = await import('./thingModels')
     const THREE = await import('three')
     const fire = buildFire(new THREE.MeshBasicMaterial(), new THREE.MeshBasicMaterial())
-    // The three logs' middles, from the vertices of each third of the mesh: no two share a middle, as the spokes of a star would.
+    expect(LOG_HEAP).toHaveLength(5)
+    // No two lie the same way or straight across each other, as the bars of a letter or a sign would.
+    for (let a = 0; a < 5; a++) for (let b = a + 1; b < 5; b++) {
+      const between = Math.abs(Math.atan2(Math.sin(2 * (LOG_HEAP[a].turn - LOG_HEAP[b].turn)), Math.cos(2 * (LOG_HEAP[a].turn - LOG_HEAP[b].turn)))) / 2
+      expect(between).toBeGreaterThan(0.2)
+      expect(Math.abs(between - Math.PI / 2)).toBeGreaterThan(0.08)
+    }
+    // The logs' middles, from the vertices of each fifth of the mesh: no two share a middle, as the spokes of a star would.
     const position = fire.wetLogs.geometry.getAttribute('position')
-    const each = position.count / 3
-    const middles = [0, 1, 2].map((log) => {
+    const each = position.count / 5
+    const middles = [0, 1, 2, 3, 4].map((log) => {
       let x = 0, z = 0
       for (let i = log * each; i < (log + 1) * each; i++) { x += position.getX(i); z += position.getZ(i) }
       return { x: x / each, z: z / each }
     })
-    for (let a = 0; a < 3; a++) for (let b = a + 1; b < 3; b++) expect(distance(middles[a], middles[b])).toBeGreaterThan(0.15)
+    for (let a = 0; a < 5; a++) for (let b = a + 1; b < 5; b++) expect(distance(middles[a], middles[b])).toBeGreaterThan(0.15)
   })
 })
