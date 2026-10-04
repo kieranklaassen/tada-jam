@@ -121,6 +121,11 @@ describe('the puppet', () => {
     expect(Math.abs(puppet.at('blink'))).toBeLessThan(0.02)
   })
 
+  it('puts no more of a smile into a lock that is as long than into one that is too long or too short: no face says which is right', () => {
+    const smiles = (who: (typeof CUSTOMERS)[number], name: 'lockAsLong' | 'lockTooLong' | 'lockTooShort'): number => Math.max(0, ...PERSONALITIES[who].reactions[name][0].moves.filter((m) => m.part === 'smile').map((m) => m.to))
+    for (const who of CUSTOMERS) expect(smiles(who, 'lockAsLong'), who).toBeLessThanOrEqual(Math.max(smiles(who, 'lockTooLong'), smiles(who, 'lockTooShort')))
+  })
+
   it('gives every customer eyes that go from its own lock to the other and back', () => {
     for (const who of CUSTOMERS) {
       const looks = PERSONALITIES[who].reactions.wantsItSo[0].moves.filter((m) => m.part === 'lookX').sort((a, b) => a.at - b.at)

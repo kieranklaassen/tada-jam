@@ -115,7 +115,7 @@ A lock under the cape that is held in the fingers is stored at the length it has
 
 Four customers. Each comes as the customer on one day and as somebody's friend on another, and is the same animal in both parts.
 
-**The one want, always visible.** The customer wants its lock as long as its friend's. Its eyes go from its own lock to the friend's and back, and a paw pats its own. The friend wants the same thing for the customer: it holds its own lock out where the customer can see it, and its eyes go from that lock to the customer's and back. The lock held out is there the whole time; the looks and the pat come as the pair come in, and again each time the salon has been left alone for six seconds. Both wants are about two things in the scene and are never about the child.
+**The one want, always visible.** The customer wants its lock as long as its friend's. Its eyes go from its own lock to the friend's and back, and a paw pats its own. The friend wants the same thing for the customer: it holds its own lock out where the customer can see it, and its eyes go from that lock to the customer's and back. From the moment the rain hats are off the lock held out is there the whole time, but for the few seconds in which the friend shows what the ribbon is for, when its paw has the ribbon and its lock is tucked behind it; the looks and the pat come as the pair come in, and again each time the salon has been left alone for six seconds. Both wants are about two things in the scene and are never about the child.
 
 **The tastes never change.** A child can learn them and try them on purpose, and a dislike is as good to watch as a like.
 

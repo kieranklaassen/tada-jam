@@ -32,7 +32,8 @@ export const REACTIONS = [
   'wearing', 'floorWatched', 'blindfolded', 'bowLoved', 'bowHated',
   // As the friend, about its own lock.
   'friendPulled', 'friendSnipped', 'friendPoked', 'friendRuffled', 'holdsBreath',
-  // When the cape comes off.
+  // When the cape comes off. What a customer does about a lock that is as long as its friend's is a move like the other two,
+  // with no more of a smile in it than they have: no face says which of the three is right.
   'lockTooLong', 'stamps', 'lockTooShort', 'lockAsLong', 'maneLiked', 'maneHated',
   // Coming, going and waiting.
   'hatOff', 'sitsDown', 'wantsItSo', 'patsItsLock', 'ducksAndPeeks', 'looksAbout', 'hopsOver', 'showsAMove',
@@ -110,7 +111,7 @@ const LION: Personality = {
     lockTooLong: [bit('lion-stamps-under-it-into-a-slow-bow', m('wide', 0.8, 0, 0.3), m('shift', 0.5, 0.1, 0.3), m('tilt', 1, 0.35, 0.9), m('sink', 0.5, 0.35, 0.9), m('blink', 1, 0.6, 0.6), m('tail', 1, 0.4, 0.8))],
     stamps: [bit('lion-plants-a-heavy-foot-under-it', m('foot', 1, 0, 0.3), m('lookY', 1, 0, 0.4))],
     lockTooShort: [bit('lion-pats-for-it-and-an-ear-flicks-out', m('lookY', 1, 0, 0.9), m('brow', 1, 0.1, 0.9), m('earR', 1, 0.5, 0.1), m('earR', -1, 0.62, 0.1), m('earR', 1, 0.74, 0.1), m('mouthOpen', 0.4, 0.3, 0.5), m('paw', 1, 0.35, 0.6), m('pawX', 0.52, 0.3, 0.7), m('pawY', 1, 0.35, 0.14), m('pawY', 0.86, 0.51, 0.1), m('pawY', 1, 0.63, 0.14), m('pawY', 0.86, 0.79, 0.1))],
-    lockAsLong: [bit('lion-slow-head-toss', m('tilt', -0.8, 0, 0.5), m('tilt', 0.8, 0.55, 0.5), m('smile', 1, 0, 1.2), m('blink', 1, 0.2, 0.3))],
+    lockAsLong: [bit('lion-slow-head-toss', m('tilt', -0.8, 0, 0.5), m('tilt', 0.8, 0.55, 0.5), m('blink', 1, 0.2, 0.3), m('tail', 1, 0.55, 0.5))],
     maneLiked: [bit('lion-shakes-it-out-and-rumbles', m('tilt', 0.9, 0, 0.22), m('tilt', -0.9, 0.26, 0.22), m('tilt', 0.9, 0.52, 0.22), m('smile', 1, 0, 1.1), m('mouthOpen', 0.5, 0.2, 0.7), m('tail', 1, 0, 1))],
     maneHated: [bit('lion-sinks-right-down-and-peeks-sideways', m('sink', 1, 0, 1.1), m('blink', 1, 0, 0.5), m('lookX', 0.8, 0.6, 0.5), m('brow', -0.6, 0, 1.1), m('tail', -1, 0, 1.1))],
     hatOff: [bit('lion-shakes-his-mane-free', m('tilt', 0.7, 0, 0.2), m('tilt', -0.7, 0.24, 0.2), m('blink', 1, 0, 0.3))],
@@ -240,7 +241,7 @@ const YAK: Personality = {
     lockTooLong: [bit('yak-looks-down-at-it-and-chews', m('lookY', 1, 0, 0.4), m('mouthOpen', 0.5, 0.4, 0.2), m('mouthOpen', 0.5, 0.75, 0.2), m('mouthOpen', 0.5, 1.1, 0.2), m('shift', 0.2, 0.4, 0.3), m('shift', -0.2, 0.8, 0.3), m('lookY', -0.5, 0.5, 0.9), m('brow', 0.4, 0.5, 0.9))],
     stamps: [bit('yak-sets-a-hoof-down-under-it-slowly', m('foot', 1, 0, 0.5), m('nose', 0.6, 0.2, 0.3))],
     lockTooShort: [bit('yak-snorts-and-his-fringe-flies-up', m('lookY', 1, 0, 0.5), m('nose', 1, 0.5, 0.25), m('bob', -0.7, 0.5, 0.25), m('wide', 0.8, 0.55, 0.6), m('brow', 1, 0.55, 0.6))],
-    lockAsLong: [bit('yak-low-hum-rocking-side-to-side', m('shift', 0.5, 0, 0.5), m('shift', -0.5, 0.55, 0.5), m('shift', 0.5, 1.1, 0.4), m('blink', 1, 0, 1.4), m('smile', 1, 0, 1.5), m('mouthOpen', 0.2, 0, 1.4))],
+    lockAsLong: [bit('yak-low-hum-rocking-side-to-side', m('shift', 0.5, 0, 0.5), m('shift', -0.5, 0.55, 0.5), m('shift', 0.5, 1.1, 0.4), m('blink', 1, 0, 1.4), m('mouthOpen', 0.2, 0, 1.5))],
     // He likes it long: he plays peekaboo, eyes shut and then wide, with a low chuckle.
     maneLiked: [bit('yak-peekaboo-low-chuckle', m('blink', 1, 0, 0.5), m('wide', 0.8, 0.55, 0.25), m('blink', 1, 0.85, 0.4), m('wide', 0.8, 1.3, 0.25), m('smile', 1, 0, 1.6), m('nose', 0.6, 0.55, 0.25))],
     // He hates it short: he hides his eyes behind his hooves.
@@ -306,7 +307,7 @@ const RABBIT: Personality = {
     lockTooLong: [bit('rabbit-spins-like-a-spindle-and-unspins', m('spin', 1, 0, 0.35), m('lift', 0.3, 0, 0.35), m('spin', -1, 0.45, 0.35), m('earL', -1, 0, 0.8), m('wide', 1, 0.45, 0.4), m('cross', 0.8, 0.8, 0.3))],
     stamps: [bit('rabbit-stamps-under-it-three-times', m('foot', 1, 0, 0.05), m('foot', 1, 0.1, 0.05), m('foot', 1, 0.2, 0.05), m('earR', -1, 0, 0.3))],
     lockTooShort: [bit('rabbit-ears-shoot-up-and-one-droops', m('earL', 1, 0, 0.6), m('earR', 1, 0, 0.25), m('earR', -1, 0.3, 0.5), m('wide', 1, 0, 0.3), m('lookY', 1, 0.3, 0.4))],
-    lockAsLong: [bit('rabbit-jump-with-a-twist', m('lift', 1, 0, 0.22), m('spin', 1, 0.02, 0.3), m('earL', 1, 0, 0.35), m('earR', 1, 0, 0.35), m('smile', 1, 0, 0.5))],
+    lockAsLong: [bit('rabbit-jump-with-a-twist', m('lift', 1, 0, 0.22), m('spin', 1, 0.02, 0.3), m('earL', 1, 0, 0.35), m('earR', 1, 0, 0.5))],
     // It likes its mane short so the ears stand free: the ears pop up and twirl.
     maneLiked: [bit('rabbit-ears-pop-up-and-twirl', m('earL', 1, 0, 0.1), m('earR', 1, 0.05, 0.1), m('earL', -1, 0.15, 0.1), m('earR', -1, 0.2, 0.1), m('earL', 1, 0.3, 0.1), m('earR', 1, 0.35, 0.1), m('lift', 0.4, 0, 0.45), m('smile', 1, 0, 0.5))],
     // It hates it long: the ears flop like wet socks and it hops in a circle.

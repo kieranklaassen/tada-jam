@@ -113,7 +113,8 @@ export const SAID_VOICES: Record<'lion' | 'poodle' | 'yak' | 'rabbit', Record<Sa
     // He stamps with a thud and goes down in a long low "oof".
     lockTooLong: [{ kind: 'tone', wave: 'sine', pitch: 110, glideTo: 70, peak: 0.12, attack: 0.002, length: 0.2 }, { kind: 'tone', wave: 'triangle', pitch: 150, glideTo: 90, peak: 0.1, attack: 0.05, length: 0.6, after: 0.35 }],
     lockTooShort: [{ kind: 'tone', wave: 'sine', pitch: 196, glideTo: 262, peak: 0.1, attack: 0.03, length: 0.3 }, ...taps({ kind: 'noise', q: 3, pitch: 2000, peak: 0.05, attack: 0.001, length: 0.04 }, 0.5, 0.62, 0.74)],
-    lockAsLong: [{ kind: 'tone', wave: 'sine', pitch: 196, peak: 0.1, attack: 0.04, length: 0.4 }, { kind: 'tone', wave: 'sine', pitch: 247, peak: 0.1, attack: 0.04, length: 0.4, after: 0.55 }],
+    // One note for each way of the toss, the second a little under the first: it does not rise where his other two fall.
+    lockAsLong: [{ kind: 'tone', wave: 'sine', pitch: 196, peak: 0.1, attack: 0.04, length: 0.4 }, { kind: 'tone', wave: 'sine', pitch: 185, peak: 0.1, attack: 0.04, length: 0.4, after: 0.55 }],
     // The rumble.
     maneLiked: [{ kind: 'tone', wave: 'sawtooth', pitch: 72, glideTo: 62, peak: 0.1, attack: 0.08, length: 0.8 }],
     maneHated: [{ kind: 'tone', wave: 'sine', pitch: 180, glideTo: 110, peak: 0.09, attack: 0.04, length: 0.5 }],

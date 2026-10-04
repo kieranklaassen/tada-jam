@@ -280,7 +280,7 @@ describe('the cape coming off', () => {
     expect(met).toBeGreaterThan(10)
   })
 
-  it('has the customer tread on a lock that is too long with a foot, and only then take it in its own way', () => {
+  it('has the customer stamp a foot under a lock that is too long, and only then take it in its own way', () => {
     const before = seated({ lock: 90, model: 40 }), done = capeOff(before), c = cast(done.game)
     let footAt = -1, ownAt = -1
     const scene = new Scene(capeComesOff(c, before, done.game, done.showing!))
