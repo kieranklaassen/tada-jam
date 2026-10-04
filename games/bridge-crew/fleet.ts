@@ -197,7 +197,15 @@ export function vehicle(pen: Pen, id: VehicleId, c: number, pose: VehiclePose, s
       cab(pen, -c * 0.3, bed - c * 0.09, c, pose)
       for (let i = 0; i < 4; i++) crate(pen, -c * (long + 0.72) + (i % 2) * c * 0.5, bed - c * 0.09 - Math.floor(i / 2) * c * 0.5, c * 1.2)
       // The piano at the back, on its own little wheels: it rolls back when it is upset, and its keys go down one by one.
-      const px = -c * (long + 2.0) - pose.upset * c * 0.8, pw = c * 1.05, ph = c * 1.15
+      // Upset, it rolls back off the end of the deck and down a short ramp to the road, and is hauled up it again: it
+      // is never in the air. The ramp is let down for as long as the piano is on it.
+      const off = pose.upset * c * 0.8, pw = c * 1.05, ph = c * 1.15, steep = Math.atan2(-bed, c * 0.9) * Math.min(1, pose.upset * 2.5)
+      if (pose.upset > 0.02) wood(pen, 'plank', -c * (long + 2.1), bed, -c * (long + 3.0), 0, c * 1.1, random)
+      pen.save()
+      pen.translate(-c * (long + 2.0) + pw / 2 - off, bed - c * 0.02 + Math.min(1, pose.upset * 1.25) * -bed * 0.78)
+      pen.rotate(-steep)
+      pen.translate(-pw / 2, -(bed - c * 0.02))
+      const px = 0
       cutOut(pen, c, INK.balsaEdge, () => pen.roundRect(px, bed - c * 0.14 - ph, pw, ph, c * 0.05))
       pen.fillStyle = INK.balsa
       pen.fillRect(px + c * 0.06, bed - c * 0.14 - ph + c * 0.08, pw - c * 0.12, ph * 0.42)
@@ -206,7 +214,10 @@ export function vehicle(pen: Pen, id: VehicleId, c: number, pose: VehiclePose, s
         pen.fillRect(px + c * 0.08 + (i * (pw - c * 0.16)) / 6, bed - c * 0.14 - ph * 0.42 + pose.cargo[i] * c * 0.07, (pw - c * 0.2) / 6, c * 0.2)
       }
       pin(pen, px + c * 0.2, bed - c * 0.02, c * 0.7, false); pin(pen, px + pw - c * 0.2, bed - c * 0.02, c * 0.7, false)
+      pen.restore()
       crateCount(pen, spec.crates, -c * (long + 0.22), bed - c * 1.45, c, flip, counted)
+      // The mover is out of the cab and behind the piano: the cab's window is bare paper.
+      if (pose.upset > 0.08) { pen.fillStyle = INK.paper; pen.beginPath(); pen.roundRect(-c * 0.3 + c * 0.56 - c * 0.3 * 1.12, bed - c * 0.09 - c * 1.15 * 0.66 - c * 0.26 * 1.12, c * 0.6 * 1.12, c * 0.52 * 1.12, c * 0.07); pen.fill() }
       break
     }
     case 'giraffe-bus': {

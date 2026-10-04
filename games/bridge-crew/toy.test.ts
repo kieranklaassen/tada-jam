@@ -464,3 +464,27 @@ describe('what a full reading of the toy found', () => {
   })
 })
 
+describe('what a full reading found of the chief', () => {
+  it('it taps a triangle and listens however the triangle was closed: by a part laid, and by a pin put back', () => {
+    const toy = fresh()
+    pickKind(toy, 'stick')
+    drag(toy, [20, 6], [22, 6]); drag(toy, [20, 6], [21, 8])
+    expect(toy.chief.act).not.toBe('taps-and-listens')
+    drag(toy, [22, 6], [21, 8])
+    expect(toy.chief.act).toBe('taps-and-listens')
+    settle(toy, 6)
+    // The pin at the top goes to the tray: both sticks hang loose there, and the triangle is open.
+    toy.press(21, 8); toy.dragStart(); toy.dragMove(12, -2.3); toy.dragEnd()
+    expect(toy.bridge.filter((part) => part.loose).length).toBe(2)
+    settle(toy, 6)
+    expect(toy.chief.act).not.toBe('taps-and-listens')
+    // A tap puts the pin back: the triangle is closed again, and the chief taps it.
+    toy.takeVoices()
+    toy.press(21, 8); toy.tap()
+    expect(toy.bridge.some((part) => part.loose)).toBe(false)
+    expect(toy.chief.act).toBe('taps-and-listens')
+    expect(toy.takeVoices().some((voice) => voice.length === 3)).toBe(true)
+  })
+})
+
+

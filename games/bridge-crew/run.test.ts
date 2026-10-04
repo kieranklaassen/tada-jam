@@ -144,3 +144,18 @@ describe('a run over the bridge as built', () => {
     expect(took).toBeLessThan(400)
   })
 })
+
+describe('what a full reading found of the ride', () => {
+  it('a kink is where two planks meet at an angle: one plank from lip to lip has none, however far it dips', () => {
+    const gap = site('plank-gap', 0), van = trainOf(VEHICLES['post-van'])
+    const one = run(gap, [part('plank', 10, 6, 14, 6, true)], van)
+    expect(one.ending.kind).toBe('crossed')
+    expect(one.ride.dip).toBeGreaterThan(0)
+    expect(one.ride.kink).toBe(0)
+    // Two planks that meet at a pin over a prop, on the rock's sheet, do have one where they meet.
+    const two = run(site('rock-prop', 0), CROSSINGS['rock-prop'], van)
+    expect(two.ending.kind).toBe('crossed')
+    expect(two.ride.kink).toBeGreaterThan(0)
+  })
+})
+

@@ -494,7 +494,8 @@ export class View {
     }
 
     const longOf = (id: VehicleId) => Math.max(...VEHICLES[id].axles)
-    const hatsOn = 3 - Math.min(3, sheet.hats.length)
+    // A hat is in one place: on a giraffe, hanging on a part, or on the chief.
+    const hatsOn = 3 - Math.min(3, sheet.hats.length + game.chiefHat)
     const put = (id: VehicleId, x: number, y: number, tilt: number, pose: VehiclePose, flip: boolean) => {
       const [sx, sy] = at2(x, y)
       pen.save()
@@ -733,11 +734,15 @@ export class View {
       tip = [from[0] + (to[0] - from[0]) * pose.travel, from[1] + (to[1] - from[1]) * pose.travel]
       pin(pen, from[0], from[1], cell, false)
       if (pose.travel > 0.02) ghostPart(from, tip)
+      // Between two pins: the second is there when the part has reached it.
+      if (pose.travel > 0.98) pin(pen, to[0], to[1], cell, false)
     } else {
       // Its middle is taken and carried to its pile in the tray, where it is gone.
       const dx = (home[0] - (from[0] + to[0]) / 2) * pose.travel, dy = (home[1] - (from[1] + to[1]) / 2) * pose.travel
       tip = [(from[0] + to[0]) / 2 + dx, (from[1] + to[1]) / 2 + dy]
       if (pose.travel < 0.98) ghostPart([from[0] + dx, from[1] + dy], [to[0] + dx, to[1] + dy])
+      // Its two pins stay where it was laid until it has gone.
+      if (pose.travel < 0.3) { pin(pen, from[0], from[1], cell, false); pin(pen, to[0], to[1], cell, false) }
     }
     // The hand itself: a pale paper cut-out of a pointing finger, a little smaller while it presses.
     const s = cell * (1 - 0.12 * pose.press)

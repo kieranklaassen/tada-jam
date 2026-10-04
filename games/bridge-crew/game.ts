@@ -18,7 +18,7 @@ import { isFooting, isYard, site, type Idea, type VehicleId } from './sites'
 import { crossingBeats, giveBeats, givePlace, idleShow, type Cue, type Show } from './stage'
 import { CHIEF, RING, Toy, type Hand } from './toy'
 import { TAIL, TASTE, VEHICLES, bargeReaction, reaction, trainOf, type Reaction } from './vehicles'
-import { fold as foldVoiceOf, bargeHorn, beaverChatter, beaverSigh, beaverSlap, chiefTaps, chord, creak, give, gurgle, honk, hornEcho, plop, lay as layVoice, load as loadVoice, moleDrop, moleRule, pendulumSqueak, scaleStart, pinTick, pluck as pluckVoice, reactCues, restore, scaleNote, snapTick, splash, trolleyBells, trolleyFlip, trolleyOff, trolleySet, trolleyWeight, unrollVoice, type VoiceSpec } from './voices'
+import { fold as foldVoiceOf, bargeHorn, beaverChatter, beaverSigh, beaverSlap, chiefRuffle, chiefTaps, chord, creak, give, gurgle, honk, hornEcho, plop, lay as layVoice, load as loadVoice, moleDrop, moleRule, pendulumSqueak, scaleStart, pinTick, pluck as pluckVoice, reactCues, restore, scaleNote, snapTick, splash, trolleyBells, trolleyFlip, trolleyOff, trolleySet, trolleyWeight, unrollVoice, type VoiceSpec } from './voices'
 
 // The game on the toy: the vehicles at the two banks, a run over the bridge,
 // the two scenes a run ends in, and the sheets (the roll and the rack). Pure,
@@ -159,7 +159,7 @@ export class Game extends Toy {
    */
   swap: { id: VehicleId; pulled: number; since: number; away: boolean } | null = null
   /** A hat the chief has plucked off a part and wears until the next sheet is unrolled. Short-lived: not saved. */
-  chiefHat = false
+  chiefHat = 0
   /** The two who watch from the foot of the sheet. Their moves are short-lived: not saved. */
   readonly crew: Readonly<Record<CrewId, CrewDirector>>
   private moleUp = false
@@ -417,7 +417,7 @@ export class Game extends Toy {
       this.save = ringed(this.save, { part: ending.part, spot: ending.spot })
       // And it is seen: the part hangs in two pieces where it gave, for a moment, and closes up again.
       this.trolleyBroke = { part: ending.part, spot: ending.spot, squeezed: ending.strain === 'bow' || ending.strain === 'squeeze', since: 0 }
-    } else if (ending.kind === 'folds') this.voices.push(foldVoiceOf(this.bridge.length))
+    } else if (ending.kind === 'folds') { this.voices.push(foldVoiceOf(this.bridge.length), chiefRuffle); this.chief.react('feathers-on-end') }
     this.voices.push(splash(this.trolley.weights))
     this.splash = { x: this.trolleyFell.from[0], since: -0.45, big: 0.4 }
   }
@@ -457,7 +457,8 @@ export class Game extends Toy {
     // A hat hanging on a part comes off at a touch, and the chief wears it.
     const sheet = this.save.sheets[this.save.on], ends = this.drawn()
     const hat = sheet.hats.find((index) => ends[index] && Math.hypot(x - (ends[index].a[0] + ends[index].b[0]) / 2, y - (ends[index].a[1] + ends[index].b[1]) / 2 - 0.2) <= 0.45)
-    if (hat !== undefined) { this.save = pluckHat(this.save, hat); this.chiefHat = true; this.changed = true; this.voices.push(unrollVoice(0)); this.chief.poke(); this.hand = null; return }
+    // It comes off when the finger lifts, as a tap: a touch that goes on to be a drag takes nothing.
+    if (hat !== undefined) { this.hand = { what: 'hat', index: hat }; this.voices.push(pinTick); return }
     // The roll, before a vehicle parked in front of it: a touch on the roll unrolls.
     if (this.save.next && onNewest(this.save) && onRoll(this.at, x, y)) {
       if (coming?.roll) { this.hand = null; return }
@@ -536,11 +537,17 @@ export class Game extends Toy {
       else { this.save = toFront(this.save, id); this.changed = true }
       return
     }
+    if (hand?.what === 'hat') {
+      this.hand = null
+      // The chief wears it, on top of any it has already.
+      if (this.save.sheets[this.save.on].hats.includes(hand.index)) { this.save = pluckHat(this.save, hand.index); this.chiefHat += 1; this.changed = true; this.voices.push(unrollVoice(0)); this.chief.poke() }
+      return
+    }
     if (hand?.what === 'trolley') { this.hand = null; this.tapTrolley(hand.placed); return }
     if (hand?.what === 'tracing') { this.hand = null; this.tapTracing(hand.spot); return }
     if (hand?.what === 'roll') {
       this.hand = null
-      this.chiefHat = false
+      this.chiefHat = 0
       const had = this.save.sheets
       this.turn(unroll(this.save))
       // The rack was full: the oldest sheet slides off its end, in view.
@@ -692,6 +699,8 @@ export class Game extends Toy {
     }
     if (run === 2) this.voices.push(scaleStart)
     else if (run > 2) this.voices.push(scaleNote(run - 1))
+    // From the scale's first notes on the chief taps along: one knock to each note.
+    if (run >= 2) { this.chief.react('taps-and-listens'); this.voices.push(chiefTaps([440 * Math.sqrt(4 / length(part))])) }
     // The threads that count are the ones that hold something: a slack one has no note to give.
     const threads = this.bridge.flatMap((other, i) => (other.kind === 'thread' && !this.rest[i]?.slack ? [i] : []))
     const last = this.tune.slice(-threads.length), longs = last.map((thread) => length(thread)), places = last.map(where)
@@ -852,8 +861,12 @@ export class Game extends Toy {
 
   /** The bridge on the board was changed for another whole: every part is found where it rests. */
   private reseat(save: Save): void {
+    // The bridge that comes onto the board is a change like any other to the chief: a triangle in it that the one
+    // before did not have gets its taps, and one that folds more gets its feathers.
+    const before = this.tasteBefore()
     this.save = save
     this.model()
+    this.taste(before)
     this.moving = this.rest.map(atRest)
     this.rung = this.bridge.map(() => Infinity); this.turned = this.bridge.map(() => Infinity); this.laid = this.bridge.map(() => Infinity); this.shook = []
     this.flying = []
@@ -982,7 +995,9 @@ export class Game extends Toy {
       this.bargeTook = this.at.channel ? bargeReaction(drive.run.ride) : null
       // Homeward, the vehicle is back at the near bank and nothing is judged; outward, it has crossed. Either way the
       // bus leaves a hat on any part lower than its heads.
-      const hats = drive.vehicle === 'giraffe-bus' ? drive.run.ride.low[TASTE.bus.headroom - 1] : []
+      // The bus has three hats to lose: the ones still hanging and the ones the chief wears are not lost again.
+      const lost = this.save.sheets[this.save.on].hats.length + this.chiefHat
+      const hats = drive.vehicle === 'giraffe-bus' ? drive.run.ride.low[TASTE.bus.headroom - 1].filter((index) => !this.save.sheets[this.save.on].hats.includes(index)).slice(0, Math.max(0, 3 - lost)) : []
       const before = this.save, ring = before.sheets[before.on].ring
       this.save = drive.homeward ? leaveHats(unringed(sentHome(crossedHome(this.save, drive.vehicle), drive.vehicle), drive.vehicle), hats) : crossed(this.save, drive.vehicle, hats)
       // The ring fades through this scene if this crossing took it away. The roll slides in and a vehicle draws up
@@ -1027,6 +1042,8 @@ export class Game extends Toy {
       }
       const last = drive.run.steps[drive.run.steps.length - 1]
       if (drive.run.ending.kind === 'folds') {
+        // A shape that folds: the chief steps back with its feathers on end, before it looks up at the splash.
+        this.chief.react('feathers-on-end'); this.voices.push(chiefRuffle)
         // A stay went slack under the load and the shape is no longer held: the build folds, slowly, like a deckchair,
         // into what it is without those stays, which hang slack where they are pinned.
         this.rest = without((index) => this.bridge[index].kind === 'thread' && last.strain[index] === 'slack', (part) => ({ a: part.a, b: part.b, how: 'firm', pivot: 0, slack: true }))

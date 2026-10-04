@@ -17,7 +17,7 @@ import { plop, pinSwing, splash as splashVoice } from './voices'
 import { DRAWN_DIP } from './pose'
 import { MODEL_PLACE, MODEL_TOP, perchOn } from './motion'
 import { modelDip, modelSides } from './props'
-import { pinTick, pluck as pluckVoice, scaleNote, scaleStart, trolleyFlip, trolleyOff, trolleySet, trolleyWeight } from './voices'
+import { chiefTaps, pinTick, pluck as pluckVoice, scaleNote, scaleStart, trolleyFlip, trolleyOff, trolleySet, trolleyWeight } from './voices'
 import { lowPoint } from './run'
 import { JUDGE } from './order'
 import { desk } from './valley'
@@ -380,10 +380,25 @@ describe('the trolley, the tracing paper and the two showings', () => {
     const built = edit({ ...freshSave(null), sheets: [{ ...freshSave(null).sheets[0], site: 'tall-bus' }] }, CROSSINGS['high-thread'])
     const game = new Game({ ...built, sheets: [{ ...built.sheets[0], hats: [2] }] }, stream(4))
     expect(game.save.sheets[0].hats).toEqual([2])
-    const ends = game.drawn()[2]
-    game.press((ends.a[0] + ends.b[0]) / 2, (ends.a[1] + ends.b[1]) / 2 + 0.2)
+    const ends = game.drawn()[2], on = [(ends.a[0] + ends.b[0]) / 2, (ends.a[1] + ends.b[1]) / 2 + 0.2] as const
+    // A touch that goes on to be a drag takes nothing: the hat comes off at a tap.
+    game.press(...on); game.dragStart(); game.dragMove(on[0] + 2, on[1]); game.dragEnd()
+    expect(game.save.sheets[0].hats).toEqual([2])
+    expect(game.chiefHat).toBe(0)
+    game.press(...on)
+    expect(game.save.sheets[0].hats).toEqual([2])
+    game.tap()
     expect(game.save.sheets[0].hats).toEqual([])
-    expect(game.chiefHat).toBe(true)
+    expect(game.chiefHat).toBe(1)
+  })
+
+  it('a hat is in one place, and the bus has three to lose: a second one plucked goes on top of the first on the chief', () => {
+    const built = edit({ ...freshSave(null), sheets: [{ ...freshSave(null).sheets[0], site: 'tall-bus' }] }, CROSSINGS['high-thread'])
+    const game = new Game({ ...built, sheets: [{ ...built.sheets[0], hats: [2, 3] }] }, stream(4))
+    for (const index of [2, 3]) { const ends = game.drawn()[index]; tapAt(game, (ends.a[0] + ends.b[0]) / 2, (ends.a[1] + ends.b[1]) / 2 + 0.2); steps(game, 0.3) }
+    expect(game.save.sheets[0].hats).toEqual([])
+    expect(game.chiefHat).toBe(2)
+    expect(JSON.stringify(stored(game))).not.toContain('chiefHat')
   })
 
   it('a secret that works every time: the threads plucked from longest to shortest play a scale and the chief taps along', () => {
@@ -392,12 +407,25 @@ describe('the trolley, the tracing paper and the two showings', () => {
     const mid = (i: number) => { const e = game.drawn()[i]; return [(e.a[0] + e.b[0]) / 2, (e.a[1] + e.b[1]) / 2] as const }
     const pluck = (i: number) => { steps(game, 1.2); tapAt(game, ...mid(i)) }
     const byLength = [4, 5, 6].sort((i, j) => Math.hypot(game.bridge[j].b[0] - game.bridge[j].a[0], game.bridge[j].b[1] - game.bridge[j].a[1]) - Math.hypot(game.bridge[i].b[0] - game.bridge[i].a[0], game.bridge[i].b[1] - game.bridge[i].a[1]))
-    // In any other order nothing happens.
-    pluck(byLength[2]); pluck(byLength[0]); pluck(byLength[1])
+    // The three knocks that end the secret: one for each of the first three threads, at their own pitches.
+    const long = (i: number) => Math.hypot(game.bridge[i].b[0] - game.bridge[i].a[0], game.bridge[i].b[1] - game.bridge[i].a[1])
+    const knocks = JSON.stringify(chiefTaps(byLength.map((i) => 440 * Math.sqrt(4 / long(i)))))
+    const three = () => game.takeVoices().some((voice) => JSON.stringify(voice) === knocks)
+    // In any other order the secret is not done: the chief taps along with a run of two, and there are no three knocks.
+    game.takeVoices()
+    pluck(byLength[2]); pluck(byLength[0])
     expect(game.chief.act).not.toBe('taps-and-listens')
+    pluck(byLength[1])
+    expect(game.chief.act).toBe('taps-and-listens')
+    expect(three()).toBe(false)
+    steps(game, 4)
     for (const again of [0, 1]) {
-      pluck(byLength[0]); pluck(byLength[1]); pluck(byLength[2])
+      pluck(byLength[0]); expect(game.chief.act).not.toBe('taps-and-listens')
+      // It taps along from the second note on.
+      pluck(byLength[1]); expect(game.chief.act).toBe('taps-and-listens')
+      pluck(byLength[2])
       expect(game.chief.act, `time ${again + 1}`).toBe('taps-and-listens')
+      expect(three(), `time ${again + 1}`).toBe(true)
       steps(game, 4)
     }
   })

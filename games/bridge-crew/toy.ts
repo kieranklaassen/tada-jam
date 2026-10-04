@@ -31,6 +31,7 @@ export type Hand =
   | { what: 'chief' }
   /** The game's own (game.ts): a vehicle at either bank, the next sheet's roll, a sheet on the rack. */
   | { what: 'vehicle'; id: string; across: boolean; from: number; pulled: number }
+  | { what: 'hat'; index: number }
   | { what: 'roll' }
   | { what: 'rack'; index: number }
   /** The trolley in its compartment or on the bridge, and the tracing paper: `spot` is the pad or one of the two kept tracings. */
@@ -477,6 +478,42 @@ export class Toy {
     return { frame, answer, rest: rests(bridge, frame, answer, footing, (x) => groundAt(this.at, x)) }
   }
 
+  /** What the chief's two tastes are judged against: how much of the bridge was not held, and which triangles it had, before a change. */
+  protected tasteBefore(): { folded: number; triangles: Set<string> } {
+    return { folded: this.frame.firm.filter((firm) => !firm).length, triangles: new Set(this.triangles().keys()) }
+  }
+
+  /** Every firm triangle of the bridge, each named by its three parts as laid, so it is the same triangle after any other change. */
+  private triangles(): Map<string, [number, number, number]> {
+    const out = new Map<string, [number, number, number]>(), bridge = this.bridge
+    bridge.forEach((_, index) => {
+      const found = closedTriangle(bridge, index, this.frame.firm)
+      if (found) out.set(found.map((i) => `${bridge[i].kind} ${key(bridge[i].a)} ${key(bridge[i].b)}`).sort().join('|'), found)
+    })
+    return out
+  }
+
+  /**
+   * The chief's two tastes, after any change to the bridge, however it was
+   * made (a part laid or taken off, a pin put back or pulled, a tracing
+   * swapped onto the board): more of it folds than did, and its feathers stand
+   * on end; a triangle is closed that was not there, and it taps it and listens.
+   */
+  protected taste(before: { folded: number; triangles: Set<string> }): void {
+    const folded = this.frame.firm.filter((firm) => !firm).length
+    if (folded > before.folded) {
+      this.chief.react('feathers-on-end')
+      this.voices.push(fold(folded - before.folded), chiefRuffle)
+      return
+    }
+    for (const [name, triangle] of this.triangles()) {
+      if (before.triangles.has(name)) continue
+      this.chief.react('taps-and-listens')
+      this.voices.push(chiefTaps(triangle.map((index) => layVoice(this.bridge[index].kind, length(this.bridge[index]))[0].pitch)))
+      return
+    }
+  }
+
   /** Drops what the toy keeps beside each part, for parts that have left the bridge. */
   protected forget(gone: readonly number[]): void {
     const keep = <T,>(list: T[]) => list.filter((_, index) => !gone.includes(index))
@@ -490,7 +527,7 @@ export class Toy {
    * from a little above. Then the chief is told what the change did.
    */
   protected commit(bridge: readonly Part[], added = -1): void {
-    const folded = this.frame.firm.filter((firm) => !firm).length
+    const before = this.tasteBefore()
     this.save = edit(this.save, bridge)
     this.changed = true
     this.model()
@@ -503,17 +540,7 @@ export class Toy {
       // Dust where each of its ends comes down.
       this.mark('dust', bridge[added].a); this.mark('dust', bridge[added].b)
     }
-    const nowFolded = this.frame.firm.filter((firm) => !firm).length
-    if (nowFolded > folded) {
-      this.chief.react('feathers-on-end')
-      this.voices.push(fold(nowFolded - folded), chiefRuffle)
-    } else if (added >= 0) {
-      const triangle = closedTriangle(bridge, added, this.frame.firm)
-      if (triangle) {
-        this.chief.react('taps-and-listens')
-        this.voices.push(chiefTaps(triangle.map((index) => layVoice(bridge[index].kind, length(bridge[index]))[0].pitch)))
-      }
-    }
+    this.taste(before)
   }
 }
 

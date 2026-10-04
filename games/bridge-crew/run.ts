@@ -248,7 +248,8 @@ export function run(at: Site, parts: readonly Part[], train: Train, homeward = f
       const slopeIn = r > 0 ? slope(road.nodes[r - 1], n, step.moved) : 0
       const slopeOut = r + 1 < road.nodes.length ? slope(n, road.nodes[r + 1], step.moved) : 0
       ride.slope = Math.max(ride.slope, Math.abs(slopeIn))
-      const handsOver = r === 0 || r + 1 === road.nodes.length || road.parts[r] !== road.parts[r - 1]
+      // A kink is where two planks meet at an angle: not where the road meets a bank, and not where a plank meets a part of another kind.
+      const handsOver = r > 0 && r + 1 < road.nodes.length && road.parts[r] !== road.parts[r - 1] && parts[road.parts[r]]?.kind === 'plank' && parts[road.parts[r - 1]]?.kind === 'plank'
       if (handsOver) ride.kink = Math.max(ride.kink, Math.abs(slopeOut - slopeIn))
     }
   }
