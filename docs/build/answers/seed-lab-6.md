@@ -95,3 +95,7 @@ change 55: in the sheet
 change 56: in the sheet
 
 OPEN round 6: 4 findings
+
+## From the lead
+
+On finding 1: the lead gives no ruling that lets the one who waits keep its want hidden. A character's want is always visible, the visitor at the edge included, so paste both replacements of finding 1 as they stand and draw the sketch open at the edge, turned to the child.
