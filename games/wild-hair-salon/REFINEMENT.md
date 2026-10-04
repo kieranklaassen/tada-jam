@@ -66,6 +66,15 @@
 
 The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Ask for the sheet's check by writing `Open: sheet ready for check, round N` here; when it passes, record the round and the commit it judged. Someone with no session to read resumes from this block and the files. The two parts below belong to the block.
 
+### The reader's last report
+
+The folder has been read twice so far against the sheet, each time by a reader who had seen neither the work nor an earlier report. This is the last line of the second reading and what was done about each count; the full report of the reading after it goes here in its place.
+
+> NOT READY: rule 1: 0, rule 2: 0, rule 3: 0, rule 4: 0, rule 5: 2, rule 6: 11
+
+- Rule 5, two shapes: both drawn otherwise now (pieces on the floor all tilt one way; a piece on a face sits askew).
+- Rule 6, eleven promises: eight built, three made true in the sheet (the Reader 2 row of the pass log names each).
+
 ### Template notes
 
 One entry a file copied from the template.
