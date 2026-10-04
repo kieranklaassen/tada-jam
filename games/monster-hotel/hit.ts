@@ -4,7 +4,7 @@ import type { House } from './hotel'
 import { bodyBox, reachBoxes, thingBox, thingTouch, type Spot } from './inkPlaces'
 import type { InkGuest, InkThing } from './inkScene'
 import { treeBox } from './inkSky'
-import type { PageLayout, Rect } from './layout'
+import type { PageLayout, Rect, RoomLayout } from './layout'
 
 // What a finger landed on. Pure arithmetic over the layout and the guests'
 // standing places, in plain-page points (a point on a page drawn from a
@@ -93,9 +93,13 @@ export function guestAt(page: PageLayout, standing: readonly Standing[], point: 
   return found
 }
 
-function edgeAt(page: PageLayout, point: Point): { id: string; nearer: number } | null {
-  // A bed answers for itself: no wall or floor reaches over one, though a finger right on the slab or the wall still lands on it. The slab under a room on the ground and the outer wall beside it lie along the bed's own sides.
-  const reach = page.rooms.some((layout) => inside(layout.bed, point)) ? 0 : EDGE_REACH * page.scale
+/** The other bed of a room for two: its bed mirrored across the middle of the room, against the other wall. */
+const secondBed = (layout: RoomLayout): Rect => ({ ...layout.bed, x: 2 * (layout.rect.x + layout.rect.w / 2) - layout.bed.x - layout.bed.w })
+
+function edgeAt(page: PageLayout, point: Point, twins: readonly number[] = []): { id: string; nearer: number } | null {
+  // A bed answers for itself: no wall or floor reaches over one, though a finger right on the slab or the wall still lands on it. The slab under a room on the ground and the outer wall beside it lie along the bed's own sides, and a room for two has such a bed against either wall.
+  const onBed = page.rooms.some((layout, room) => inside(layout.bed, point) || (twins.includes(room) && inside(secondBed(layout), point)))
+  const reach = onBed ? 0 : EDGE_REACH * page.scale
   for (const edge of page.edges) {
     if (!inside(edge.rect, point, reach)) continue
     const a = page.rooms[edge.a].rect, b = page.rooms[edge.b].rect
@@ -131,8 +135,7 @@ export function thingAt(page: PageLayout, standing: readonly Standing[], things:
 /** What is under a point of a room that is no guest, thing or wall: its door, a bed, or the air under its lamp. `twin` is a room for two, which has a second bed against the other wall. */
 function inRoom(page: PageLayout, room: number, point: Point, twin: boolean): Hit {
   const layout = page.rooms[room]
-  const second: Rect = { ...layout.bed, x: 2 * (layout.rect.x + layout.rect.w / 2) - layout.bed.x - layout.bed.w }
-  if (inside(layout.bed, point) || (twin && inside(second, point))) return { kind: 'bed', room }
+  if (inside(layout.bed, point) || (twin && inside(secondBed(layout), point))) return { kind: 'bed', room }
   if (inside(layout.door, point)) return { kind: 'roomDoor', room }
   return { kind: 'room', room }
 }
@@ -149,7 +152,7 @@ export function hitAt(page: PageLayout, standing: readonly Standing[], point: Po
   if (guest) return { kind: 'guest', ...guest }
   if (inside(page.wheel, point)) return { kind: 'wheel' }
   if (coach && inside(page.coach, point)) return { kind: 'coach' }
-  const edge = edgeAt(page, point)
+  const edge = edgeAt(page, point, house?.twins)
   if (edge) return { kind: 'edge', ...edge }
   const room = page.rooms.findIndex((layout) => inside(layout.rect, point))
   if (room >= 0) return inRoom(page, room, point, !!house?.twins.includes(room))
