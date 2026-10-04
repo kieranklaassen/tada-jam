@@ -532,12 +532,15 @@ export class Game {
       ways.push(way)
     })
     if (this.pending.on === 'place' && ways.every((way) => way.every((stop) => Math.hypot(stop.x - claw.x, stop.z - claw.z) < 1.5))) return
+    // The nearest clear place, and a bare one before one with a toy on it: over a toy the waiting claw looks as
+    // if it were about to take it.
+    const tray = this.tray()
     let best: { x: number; z: number } | null = null, least = Infinity
     for (let place = 0; place < PLACES; place++) {
       const at = placeAt(place)
       let clear = Infinity
       for (const way of ways) for (let i = 0; i + 1 < way.length; i++) clear = Math.min(clear, fromSegment(at, way[i], way[i + 1]))
-      const far = Math.hypot(at.x - claw.x, at.z - claw.z)
+      const far = Math.hypot(at.x - claw.x, at.z - claw.z) + (tray[place].length > 0 ? 100 : 0)
       if (clear >= CLEAR_OF_A_THROW && far < least) { least = far; best = at }
     }
     if (best) { claw.targetX = best.x; claw.targetZ = best.z }

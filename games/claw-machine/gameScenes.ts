@@ -249,8 +249,11 @@ export function delivery(game: Game, which: number): void {
   beats.push(cue(game, 0, () => { game.say({ type: 'groan' }); if (old.length > 0) game.say({ type: 'waddle' }); for (const actor of old) walk(actor, { x: actor.x - OFF, y: actor.y, z: actor.z }, OFF_SECONDS, 0, 1, true) }))
   // To the back of the tray, over the step, once the old crew is off it: the front of the crate just over the rim.
   beats.push(cue(game, 0.9, () => { claw.targetX = 0; claw.targetZ = TRAY.z - POURS_FROM - CRATE.depth / 2 + handle.z }))
+  // Once it is past the gate it comes down low over the empty step, so that the claw that holds it and the crew
+  // that rides it stay in sight while it pours.
+  beats.push(cue(game, 1.45, () => { game.hoist = POURS_AT + deckTop(crate.which) + handle.y + KNOB_HOLD }))
   // Its bed tips, and the toys rain onto their studs: the front row of the bed first, then the row behind it.
-  const tips = 1.9
+  const tips = 1.95
   beats.push(over(game, tips, 0.45, (progress) => { crate.tip = Math.max(0.001, ease(progress)) }))
   beats.push(cue(game, tips + 0.2, () => game.say({ type: 'pour' })))
   // Row by row from the front, and in a row whoever has furthest to go sideways first: so a toy that is on its way
@@ -275,6 +278,8 @@ export function delivery(game: Game, which: number): void {
   // The bed comes down; back to the ledge, set down where it comes to rest, and the claw goes back over the tray.
   const emptied = leaves + SLIDE + 0.35
   beats.push(over(game, emptied, 0.35, (progress) => { crate.tip = 1 - ease(progress) }))
+  // Up again to clear the gate: the trolley stands until the hoist has wound, and then goes.
+  beats.push(cue(game, emptied, () => { game.hoist = CARRIED_AT + deckTop(crate.which) + handle.y + KNOB_HOLD }))
   beats.push(cue(game, emptied + 0.4, () => { claw.targetX = home.x; claw.targetZ = home.z + handle.z }))
   // The trolley is given time to get all the way back before the crate comes down.
   const back = emptied + 1.3
@@ -302,6 +307,8 @@ export function delivery(game: Game, which: number): void {
 
 /** How high over the floor the foot of a carried crate rides: clear of the gate with room to spare. */
 const CARRIED_AT = 7.4
+/** How high over the floor its foot is while it pours: low over the step, where no one stands. */
+const POURS_AT = 4
 /** How far behind the back of the tray the front of the crate hangs while it pours. */
 const POURS_FROM = 0.3
 /** How far past the front edge of the bed a toy slides before it falls, and how long the slide takes. */
