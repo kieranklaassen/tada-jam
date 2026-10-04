@@ -140,6 +140,16 @@ describe('the sky a position lays out', () => {
     })).toEqual([])
   })
 
+  it('hangs a bigger bunch of the troop\'s colour beside its single one wherever bunches hang, whatever else is in the sky', () => {
+    for (const position of ['bunches-own-colour', 'bunches-mixed']) for (const kind of KINDS) for (const size of [1, 2, 3] as const) for (let seed = 1; seed <= 200; seed++) {
+      const { sky } = laySky(position, { kind, size }, seed * 2654435761 >>> 0)
+      const single = sky.findIndex((bunch) => bunch.colour === kind && bunch.count === 1)
+      expect(single, `${position}, ${size} ${kind}, seed ${seed}`).toBeGreaterThanOrEqual(0)
+      const beside = [sky[single - 1], sky[single + 1]].filter((bunch): bunch is Bunch => bunch !== undefined)
+      expect(beside.some((bunch) => bunch.colour === kind && bunch.count > 1), `${position}, ${size} ${kind}, seed ${seed}: ${sky.map((bunch) => bunch.colour + bunch.count).join(' ')}`).toBe(true)
+    }
+  })
+
   it('shuffles the bunches into their places', () => {
     for (const position of LADDER) {
       const places = new Set(SEEDS.map((seed) => laySky(position, { kind: 'hippo', size: 2 }, seed).sky.findIndex((bunch) => bunch.colour === 'hippo' && bunch.count === 1)))

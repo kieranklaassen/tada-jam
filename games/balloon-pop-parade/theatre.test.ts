@@ -692,6 +692,43 @@ describe('a friend that is being carried off', () => {
     expect(heard[heard.length - 1].filter((voice) => voice === `${kind}LiftOff`)).toHaveLength(0)
     // A hop of its own is all it does after it is down; the frog's catch has one.
     expect(Math.max(...high.slice(landed + 20))).toBeLessThan(BODIES[kind].height * PERSONALITIES[kind].carried * 0.5 + 0.35)
+    // Its catch is heard when it is played, which is when it is down: never heard and not seen.
+    const caught = heard.findIndex((voices) => voices.includes(`${kind}Catch`))
+    expect(caught, 'the catch is heard').toBeGreaterThan(0)
+    expect(caught, 'after the landing').toBeGreaterThanOrEqual(landed)
+    expect(heard[heard.length - 1].filter((voice) => voice === `${kind}Catch`)).toHaveLength(1)
+  })
+
+  it.each(KINDS)('starts where it hangs when the balloon it holds is popped under it: a %s wobbles and is heard at once, and has no start left over for the ground', (kind) => {
+    const theatre = solo(kind, [kind, kind]), { frame, painter, clear } = recorder()
+    tapSlot(theatre, 0)
+    play(theatre, 6)
+    tapSlot(theatre, 1)
+    play(theatre, FLIGHT + PERSONALITIES[kind].cue.grab + 0.3)
+    clear()
+    theatre.paint(painter, VIEW)
+    const own = frame.balloons.filter((balloon) => balloon.tall === 1 && balloon.wide === 1 && balloon.y < 2.4)[0]
+    theatre.sounds.length = 0
+    theatre.press(own.x, own.y, VIEW)
+    theatre.cancel()
+    expect(voices(theatre)).toEqual(expect.arrayContaining(['pop', `${kind}Startle`]))
+    // In the air it wobbles at once.
+    let wobble = 0, last = frame.poses.get('friend-0')!.squash
+    for (let i = 0; i < 12; i++) {
+      theatre.step(1 / 60)
+      theatre.paint(painter, VIEW)
+      wobble = Math.max(wobble, Math.abs(frame.poses.get('friend-0')!.squash - last))
+      last = frame.poses.get('friend-0')!.squash
+    }
+    expect(wobble).toBeGreaterThan(0.02)
+    // And when it is down it reaches up again: it does not start a second time (a duck would leap, a crab hide its eyes).
+    const { high, heard } = follow(theatre, 5)
+    const landed = heard.findIndex((voices) => voices.includes(`${kind}Land`))
+    expect(landed).toBeGreaterThan(0)
+    expect(Math.max(...high.slice(landed + 25))).toBeLessThan(0.3)
+    expect(heard[heard.length - 1].filter((voice) => voice === `${kind}Startle`)).toHaveLength(1)
+    theatre.paint(painter, VIEW)
+    expect(frame.poses.get('friend-0')!.armL).toBeGreaterThan(2)
   })
 
   it.each(KINDS)('refuses another colour when it is down again: beside a %s the bunch hangs and waits, and the refusal is heard after the landing', (kind) => {

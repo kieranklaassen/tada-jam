@@ -83,7 +83,14 @@ export function laySky(position: string, troop: TroopPlan, rng: number): { sky: 
     bunches = [{ colour: own, count: 1 }, { colour: own, count: larger }, { colour: second, count: troop.size }, { colour: third, count: differs.value }]
   }
   const placed = shuffled(bunches, state)
-  return { sky: placed.items, rng: placed.rng }
+  // The harder option hangs beside the single: wherever the places fell, the troop's larger bunch is moved next to
+  // its single one, so the child sees the two side by side and picks.
+  const sky = placed.items, single = sky.findIndex((bunch) => bunch.colour === own && bunch.count === 1), larger = sky.findIndex((bunch) => bunch.colour === own && bunch.count > 1)
+  if (single >= 0 && larger >= 0 && Math.abs(single - larger) !== 1) {
+    const beside = single + 1 < sky.length ? single + 1 : single - 1
+    ;[sky[beside], sky[larger]] = [sky[larger], sky[beside]]
+  }
+  return { sky, rng: placed.rng }
 }
 
 /** A sky a troop of this kind can always be served from: it holds a single of that colour, and no more bunches or balloons than the view has room for. */
