@@ -86,7 +86,8 @@ export const ACTS: Record<string, Act> = {
   'boings-and-pats': { lasts: 1.3, play: (u, m) => { m.dx = 0.55 * bump(u, 0, 0.36); m.lean = -0.1 * bump(u, 0, 0.3); m.squash = 1 - 0.18 * bump(u, 0.1, 0.3) + 0.12 * bump(u, 0.3, 0.55); m.dy = 0.3 * bump(u, 0.25, 0.6); m.pat = bump(u, 0.55, 1) } },
   'peeks-up-under': { lasts: 1.3, play: (u, m) => { m.dx = 0.4 * hold(u, 0.2, 0.3); m.squash = 1 - 0.14 * hold(u, 0.2, 0.3); m.lean = -0.16 * hold(u, 0.2, 0.3); m.looks = hold(u); m.gazeY = 1; m.gazeX = 0.8 } },
   'lifts-it-like-a-lid': { lasts: 1.3, play: (u, m) => { m.hatLift = 0.6 * hold(u, 0.25, 0.3); m.hatTilt = 0.3 * hold(u, 0.25, 0.3); m.pat = 0.6 * hold(u, 0.25, 0.3) } },
-  'babbles-into-a-hole': { lasts: 1.5, play: (u, m) => { m.dx = 0.3 * hold(u, 0.25, 0.25); m.dz = 0.3 * hold(u, 0.25, 0.25); m.squash = 1 - 0.2 * hold(u, 0.25, 0.25); m.lean = -0.08 * hold(u, 0.25, 0.25) + 0.05 * swing(u, 6) * hold(u); m.looks = hold(u); m.gazeY = -1; m.gazeX = 0.5 } },
+  // It bends down where it stands and looks at the tile: a squashed body is wide, and a step or a lean would bring it into its neighbour.
+  'babbles-into-a-hole': { lasts: 1.5, play: (u, m) => { m.squash = 1 - 0.2 * hold(u, 0.25, 0.25); m.lean = 0.05 * swing(u, 6) * hold(u); m.looks = hold(u); m.gazeY = -1; m.gazeX = 0.5 } },
   'twangs-back': { lasts: 0.9, play: (u, m) => { m.lean = 0.3 * swing(u, 3) * (1 - u) ** 2; m.squash = 1 + 0.12 * swing(u, 3) * (1 - u) ** 2 } },
   'bows-and-tips-its-hat': { lasts: 1.3, play: (u, m) => { m.squash = 1 - 0.12 * hold(u, 0.3, 0.3); m.lean = -0.1 * hold(u, 0.3, 0.3); m.hatLift = 0.45 * bump(u, 0.15, 0.85); m.hatTilt = -0.4 * bump(u, 0.15, 0.85); m.pat = 0.5 * bump(u, 0.1, 0.9); m.looks = hold(u); m.gazeX = 0.8 } },
   claps: { lasts: 1.0, play: (u, m) => { m.dy = 0.16 * hops(u, 4) * hold(u); m.pat = 0.35 * hops(u, 4) } },
