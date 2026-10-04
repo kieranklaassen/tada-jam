@@ -204,7 +204,10 @@ export function poseFriend(view: FriendView, pose: FriendPose): void {
   // The pupils travel as far as the whites allow, so a look can be read from the child's side of the tray.
   view.pupils.position.x = pose.gazeX * spec.radius * 0.085
   // Bo's heavy lids hang over the top of his eyes: his pupils rise less, so a look up never hides them.
-  view.pupils.position.y += pose.gazeY * spec.radius * (view.id === 'bo' ? 0.03 : 0.055)
+  // A look down travels less: the whites are shallower below the pupil, where the face curves under.
+  view.pupils.position.y += pose.gazeY * spec.radius * (view.id === 'bo' ? 0.03 : pose.gazeY < 0 ? 0.03 : 0.055)
+  // Lower on the face the body comes further forward: a pupil that looks down comes forward with it, or it would sink out of sight.
+  view.pupils.position.z = Math.max(0, -pose.gazeY) * spec.radius * 0.05
   // At the finger the eyes go wide.
   // The whole face grows from the middle of the body, whites and pupils together, so each pupil stays in its white as it lay.
   view.whites.parent!.scale.setScalar(1 + 0.1 * pose.wide)
