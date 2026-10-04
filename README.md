@@ -86,6 +86,8 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 | Monster Pizza | `games/monster-pizza/` | 4–7 | A pizza counter drawn in felt-tip: a monster holds up a card of toppings, the child taps pieces on until the pizza matches, and the customer tastes what came out. A learning game on counting and comparing small sets. |
 | Fix-it Stall | `games/fix-it-stall/` | 9–12 | A repair stall seen from above: an animal brings a gadget that has stopped, and the child clips leads, swaps parts and tests with a lamp until the circuit is whole. A learning game on closed circuits. |
 | Monster Hotel | `games/monster-hotel/` | 9–12 | A cut-away hotel in pen and ink: monsters arrive with wants that pull against each other, and the child gives out rooms until the whole house settles. A learning game on conflicts and answers that suit every side. |
+| Night Camp | `games/night-camp/` | 9–12 | A camp on a survey map: the child lays in wood, lamp oil and water along a ruler of hours from cards that give an amount for a span of hours, then lets the night run and sees who stays warm. A learning game on rates and amounts for one. |
+| Bread Day | `games/bread-day/` | 4–6 | A badger's bakery cut in lino: push and pull the dough, hand it flour, water and seeds, let it rise or stiffen, bake it, and give each customer the bread it is showing it wants. A learning game on how stuff changes and on telling what someone wants. |
 
 ## Showcases
 
