@@ -89,7 +89,7 @@ export function comingIn(cast: Cast, before: Game, after: Game): Beat[] {
     ? [{ who: before.chair, part: 'chair' as const, from: old.customer, lock: before.lock, mane: before.mane }, { who: before.friend, part: 'friend' as const, from: old.friend, lock: before.model, mane: null }]
       .map((goer) => ({ ...goer, worn: before.clippings.flatMap((c) => (c.on === 'face' && c.who === goer.part ? [{ spot: c.spot, len: c.len, hue: c.hue }] : [])) }))
     : []
-  const WALK = 1.6, OUT = 0.9, BEHIND = 0.65, HAT_OFF = 0.35
+  const WALK = 1.6, OUT = 0.9, BEHIND = 0.65, HAT_OFF = 0.35, IN_SIGHT = 0.15
   // Along the back wall, a little above the straight way, when there is a pair going out to pass.
   const BACK = -40
   const beats: Beat[] = [
@@ -104,6 +104,9 @@ export function comingIn(cast: Cast, before: Game, after: Game): Beat[] {
       if (!cast.cut) cast.cue('door')
     }),
     over(0, 0.4, (p) => { staging.door = p }),
+    // The customer is in the doorway as the glass swings away, so the door never opens on nobody. Two heads do not fit in
+    // it side by side: the friend is seen in it as soon as the customer has left it.
+    over(0, IN_SIGHT, (p) => { if (staging.customer) staging.customer = { ...staging.customer, seen: p } }),
     // The pair that was done go out along the front of the floor, the friend first, past the pair coming in along the back.
     ...goers.map((goer) => over(goer.part === 'friend' ? 0.1 : 0.4, OUT, (p) => {
       const mine = staging.leaving.find((other) => other.part === goer.part)
@@ -111,14 +114,15 @@ export function comingIn(cast: Cast, before: Game, after: Game): Beat[] {
       if (p >= 1 && goer.part === 'chair') staging.leaving = []
     })),
     // The customer leads the way in and the friend follows it, so each is seen whole.
-    over(0.5, WALK, (p) => { staging.customer = { ...walk({ ...DOORWAY, x: DOORWAY.x - 22 }, to.customer, p, gait.customer, WALK, goers.length ? BACK : 0), seen: Math.min(1, p * 6) } }),
+    over(0.5, WALK, (p) => { staging.customer = { ...walk({ ...DOORWAY, x: DOORWAY.x - 22 }, to.customer, p, gait.customer, WALK, goers.length ? BACK : 0), seen: 1 } }),
     over(0.5 + BEHIND, WALK - BEHIND, (p) => { staging.friend = { ...walk({ ...DOORWAY, x: DOORWAY.x + 26 }, to.friend, p, gait.friend, WALK - BEHIND, goers.length ? BACK : 0), seen: Math.min(1, p * 6) } }),
     cueAt(0.5 + WALK, () => { if (!cast.cut) { cast.cue('landed', after.chair ?? undefined); cast.customer()?.react('sitsDown'); cast.friend()?.react('sitsDown'); cast.customer()?.bump(1.2); cast.friend()?.bump(0.8) } }),
     // The hats pop off: up, over and gone.
     over(0.7 + WALK, HAT_OFF, (p) => { staging.hats = 1 - p }),
+    // The hair springs out as the hat leaves it, where the whole of the spring is seen: the customer's mane tuft by tuft, the friend's with a pop of its whole head.
+    cueAt(0.7 + WALK + HAT_OFF / 2, () => { if (!cast.cut) { hair.sprungOut(); cast.friend()?.bump(1.3) } }),
     cueAt(0.7 + WALK, () => {
       if (cast.cut) return
-      hair.sprungOut()
       cast.cue('hatOff')
       cast.cue('hairOut')
       cast.customer()?.react('hatOff')
@@ -300,7 +304,7 @@ export function shownOnce(cast: Cast, idea: Idea, before: Game, after: Game): Be
       over(0, 1.0, (p) => { staging.friend = walk(home, BY_THE_PEG, p, gait, 1.0, lowFor(home, BY_THE_PEG)) }),
       cueAt(1.0, () => { if (!cast.cut) cast.cue('ribbonTaken') }),
       // It holds the ribbon beside its own tail, and pulls it until it is as long as the tail.
-      over(1.0, 0.5, (p) => { staging.tails = p; staging.ribbon = { x: RIBBON_HOME.x + (tail.x - 30 - RIBBON_HOME.x) * p, y: RIBBON_HOME.y + (tail.y - RIBBON_HOME.y) * p, len: 16 } }),
+      over(1.0, 0.5, (p) => { staging.ownTail = p; staging.ribbon = { x: RIBBON_HOME.x + (tail.x - 30 - RIBBON_HOME.x) * p, y: RIBBON_HOME.y + (tail.y - RIBBON_HOME.y) * p, len: 16 } }),
       over(1.5, 1.1, (p) => {
         const len = Math.round(16 + (TAIL_LEN - 16) * p)
         if (!cast.cut && staging.ribbon && len !== staging.ribbon.len && len % 4 === 0) cast.cue('ribbonTick')
@@ -311,6 +315,9 @@ export function shownOnce(cast: Cast, idea: Idea, before: Game, after: Game): Be
       over(2.8, 1.1, (p) => {
         // Round the front of the chair, with the ribbon in its paw all the way.
         staging.friend = walk(BY_THE_PEG, BY_THE_TAIL, p, gait, 1.1, LOW)
+        // Its own tail is let go as it sets off, and the customer's is held out straight as it gets there: one straight tail at a time.
+        staging.ownTail = 1 - Math.min(1, p * 3)
+        staging.tails = Math.max(0, p * 3 - 2)
         const along = smooth(p)
         staging.ribbon = { x: tail.x - 30 + (beside.x - tail.x + 30) * along, y: tail.y + (beside.y - tail.y) * along + (p >= 1 ? 0 : LOW * dipAt(p)), len: TAIL_LEN }
       }),
@@ -323,7 +330,7 @@ export function shownOnce(cast: Cast, idea: Idea, before: Game, after: Game): Be
         staging.ribbon = { x: beside.x + (RIBBON_HOME.x - beside.x) * along, y: beside.y + (RIBBON_HOME.y - beside.y) * along + (p >= 1 ? 0 : LOW * dipAt(p)), len: TAIL_LEN }
         staging.tails = 1 - p
       }),
-      cueAt(5.9, () => { staging.ribbon = null; staging.tails = 0; if (!cast.cut) cast.cue('ribbonHome') }),
+      cueAt(5.9, () => { staging.ribbon = null; staging.tails = 0; staging.ownTail = 0; if (!cast.cut) cast.cue('ribbonHome') }),
       over(5.9, 1.0, (p) => { staging.friend = p >= 1 ? stand(home) : walk(BY_THE_PEG, home, p, gait, 1.0, lowFor(BY_THE_PEG, home)) }),
     ]
   }

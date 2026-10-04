@@ -152,6 +152,21 @@ describe('put away in the middle of a scene', () => {
   })
 })
 
+describe('the pair at the door', () => {
+  it('look about and rock on their heels with somebody in the salon too, one and then the other', () => {
+    const play = seated()
+    const lively = [0, 0]
+    for (let i = 0; i < 60 * 14; i++) { play.step(1 / 60, true); play.waiting!.forEach((puppet, n) => { if (puppet.started.some((id) => PERSONALITIES[play.game!.waiting[n]].reactions.looksAbout.some((bit) => bit.id === id))) lively[n] = 1 }) }
+    expect(lively).toEqual([1, 1])
+    // Each has a look to the side and a move of its whole figure in it, which is what is drawn of it behind the glass.
+    for (const who of ['lion', 'poodle', 'yak', 'rabbit'] as const) {
+      const parts = PERSONALITIES[who].reactions.looksAbout[0].moves.map((m) => m.part)
+      expect(parts, who).toContain('lookX')
+      expect(parts.some((part) => ['tilt', 'shift', 'bob', 'sink', 'lift'].includes(part)), who).toBe(true)
+    }
+  })
+})
+
 describe('the one want', () => {
   it('has the customer look at its own lock, on its right, and then at the friend\'s, on whichever side the friend sits', () => {
     for (const seat of ['beside', 'across'] as const) {

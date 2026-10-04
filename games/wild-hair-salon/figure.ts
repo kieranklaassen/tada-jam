@@ -45,6 +45,8 @@ export type Wears = {
   hat: number
   /** The ribbon tied as a bow, where it sits relative to the head's centre. */
   bow?: Point | null
+  /** How far a worn ribbon has sprung in on itself at a poke: 1 at rest, less while it jumps up short. */
+  snap?: number
 }
 
 export type Figure = {
@@ -144,13 +146,13 @@ export function drawFigure(g: Ctx, sprites: Sprites, figure: Figure): number {
   drawn += features(g, puppet, look, at.s < 0.5)
   // A piece on the brow or the lip is a strip a little askew; one on the chin lies round the chin as a beard does. No two are a pair of bars.
   for (const piece of figure.wears.pieces) drawn += piece.y > 60 ? beard(g, piece.half, piece.hue) : strip(g, 0, piece.y, piece.half, piece.y < 0 ? -0.1 : 0.05, piece.hue)
-  if (figure.wears.blindfold) drawn += blindfold(g, puppet.at('brow') > 0.5 ? 1 : 0)
+  if (figure.wears.blindfold) drawn += blindfold(g, puppet.at('brow') > 0.5 ? 1 : 0, figure.wears.snap ?? 1)
   g.restore()
   if (live && look.ears.kind !== 'long') ears()
   // The looking glass shows the head and not the limbs: the oval is too small for them.
   if (!figure.flipped && !figure.limbsLater) drawn += limbs(g, puppet, look)
 
-  if (figure.wears.bow) drawn += bow(g, figure.wears.bow.x, figure.wears.bow.y)
+  if (figure.wears.bow) drawn += bow(g, figure.wears.bow.x, figure.wears.bow.y, figure.wears.snap ?? 1)
 
   if (figure.wears.hat > 0) {
     g.save()
@@ -258,10 +260,12 @@ function beard(g: Ctx, half: number, hue: string): number {
 }
 
 /** The ribbon round a head as a blindfold: a flat band over the eyes with a knot at the side. Lifted a little when its wearer peeks. */
-function blindfold(g: Ctx, lifted: number): number {
+function blindfold(g: Ctx, lifted: number, snap: number): number {
   g.save()
   g.translate(0, -14 - lifted * 22)
   g.rotate(lifted * -0.12)
+  // Poked, it jumps in on itself like a rubber band and comes back.
+  g.scale(1, Math.max(0.3, Math.min(1.4, snap)))
   g.fillStyle = RIBBON.fill
   g.strokeStyle = RIBBON.edge
   g.lineWidth = 2.4
@@ -420,9 +424,11 @@ export function features(g: Ctx, puppet: Puppet, look: Look, small: boolean, par
 }
 
 /** The ribbon tied as a bow: two loops, a knot and two short ends. */
-function bow(g: Ctx, x: number, y: number): number {
+function bow(g: Ctx, x: number, y: number, snap: number): number {
   g.save()
   g.translate(x, y)
+  // Poked, it jumps in on itself like a rubber band and comes back.
+  g.scale(Math.max(0.3, Math.min(1.4, snap)), Math.max(0.3, Math.min(1.4, snap)))
   g.fillStyle = RIBBON.fill
   g.strokeStyle = RIBBON.edge
   g.lineWidth = 2.2

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { MANES } from './kits'
 import { BESIDE_X, COLLAR_Y, HEAD, LOCK_X, PEG, SCENE, STEP, STRIP_W } from './layout'
 import { LOOKS } from './looks'
-import { BUTTONS, SLOP, clippingBox, crossedBy, dropPlace, facePart, onEar, floorX, floorY, onHead, placeOnFloor, placesOf, ribbonShape, stripOf, tuftPose, tuftRoot, tuftTip, whatIsAt, type Point } from './poses'
+import { BUTTONS, SLOP, clippingBox, crossedBy, dropPlace, facePart, modelRootAt, onEar, floorX, floorY, onHead, placeOnFloor, placesOf, ribbonShape, stripOf, tuftPose, tuftRoot, tuftTip, whatIsAt, type Point } from './poses'
 import { TUFTS } from './rules'
 import { CUSTOMERS } from './tastes'
 import type { Salon } from './world'
@@ -75,6 +75,22 @@ describe('who stands where', () => {
     expect(across.model!.unit).toBe(across.lock!.unit)
     expect(across.seatFree).toBe('stool')
     expect(across.friend!.x).toBeLessThan(250)
+  })
+
+  it('hangs the friend\'s lock at its cheek on the customer\'s side in either seat, and takes it from one cheek to the other as the friend goes, never at a jump', () => {
+    const beside = placesOf(salon()), across = placesOf(salon({ seat: 'across' }))
+    expect(modelRootAt(beside.friend!)).toEqual({ x: beside.model!.x, y: beside.model!.y })
+    expect(modelRootAt(across.friend!)).toEqual({ x: across.model!.x, y: across.model!.y })
+    // Beside the chair the lock is on the friend's left, towards the customer; across the room, on its right.
+    expect(beside.model!.x).toBeLessThan(beside.friend!.x)
+    expect(across.model!.x).toBeGreaterThan(across.friend!.x)
+    let last = modelRootAt(across.friend!)
+    for (let k = 1; k <= 100; k++) {
+      const at = { x: across.friend!.x + ((beside.friend!.x - across.friend!.x) * k) / 100, y: across.friend!.y + ((beside.friend!.y - across.friend!.y) * k) / 100 }
+      const root = modelRootAt(at)
+      expect(Math.hypot(root.x - last.x, root.y - last.y)).toBeLessThan(12)
+      last = root
+    }
   })
 
   it('stands the pair cheek to cheek once the cape is off, whatever seat the friend had', () => {

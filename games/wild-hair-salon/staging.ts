@@ -77,8 +77,10 @@ export class Staging {
   paw: { x: number; y: number; scissors: number | null } | null = null
   /** Where the ribbon is drawn and how long, while the friend shows what it is for. */
   ribbon: { x: number; y: number; len: number } | null = null
-  /** How far the two tails are held out straight to be measured, 0 to 1. */
+  /** How far the customer's tail is held out straight to be measured, 0 to 1. */
   tails = 0
+  /** How far the friend's own tail is held out straight, 0 to 1: at the peg, and not when it stands at the customer's tail, where one straight tail is the thing to see. */
+  ownTail = 0
   /** How many steps longer the customer's lock is drawn, while its own paw draws it out to see if it will reach. */
   stretch = 0
 
@@ -96,6 +98,7 @@ export class Staging {
     this.paw = null
     this.ribbon = null
     this.tails = 0
+    this.ownTail = 0
     this.stretch = 0
   }
 }

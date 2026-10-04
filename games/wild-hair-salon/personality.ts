@@ -183,7 +183,7 @@ const POODLE: Personality = {
     sitsDown: [bit('poodle-perches-and-arranges-herself', m('lift', 0.3, 0, 0.1), m('tail', 1, 0.12, 0.08), m('tail', -1, 0.22, 0.08), m('smile', 1, 0.1, 0.3))],
     wantsItSo: [bit('poodle-points-her-nose-at-each-in-turn', m('tilt', -0.3, 0, 0.3), m('lookX', 0.4, 0, 0.3), m('tilt', 0.3, 0.35, 0.3), m('lookX', 1, 0.35, 0.3), m('tilt', -0.3, 0.7, 0.25), m('lookX', 0.4, 0.7, 0.25), m('lookY', 0.9, 0, 0.95), m('brow', 1, 0, 0.95))],
     patsItsLock: [bit('poodle-dabs-her-lock-three-times', m('paw', 1, 0.1, 0.6), m('pawX', 0.52, 0, 0.8), m('pawY', 1, 0.1, 0.08), m('pawY', 0.9, 0.2, 0.08), m('pawY', 1, 0.3, 0.08), m('pawY', 0.9, 0.4, 0.08), m('pawY', 1, 0.5, 0.08), m('pawY', 0.9, 0.6, 0.08))],
-    looksAbout: [bit('poodle-looks-about-on-tiptoe', m('lift', 0.4, 0, 0.5), m('lookX', -1, 0, 0.25), m('lookX', 1, 0.3, 0.25))],
+    looksAbout: [bit('poodle-looks-about-on-tiptoe', m('lift', 0.4, 0, 0.5), m('lookX', -1, 0, 0.25), m('lookX', 1, 0.3, 0.25), m('tilt', 0.35, 0.55, 0.2), m('tilt', -0.35, 0.78, 0.2))],
     ducksAndPeeks: [bit('poodle-pops-down-and-up-twice', m('sink', 0.7, 0, 0.14), m('sink', 0.7, 0.3, 0.14), m('wide', 0.8, 0.14, 0.16))],
     hopsOver: [bit('poodle-lands-on-tiptoe', m('lift', 0.4, 0, 0.1), m('tail', 1, 0, 0.08))],
     showsAMove: [bit('poodle-shows-it-off-with-a-flourish', m('tilt', 0.4, 0, 0.4), m('lookY', -0.8, 0, 0.9), m('lift', 0.3, 0.9, 0.12), m('smile', 1, 0.8, 0.4))],

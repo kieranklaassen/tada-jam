@@ -32,6 +32,18 @@ const ACROSS: Actor = { x: BENCH.x + BENCH.w / 2 + 16, y: 432, s: FRIEND_SIZE }
 /** Where the friend's lock hangs when it sits across the room: at its cheek, on the side of the room. */
 const ACROSS_MODEL: Hang = { x: ACROSS.x + 63, y: 470, unit: STEP }
 
+/**
+ * Where the friend's lock hangs while the friend is at this place: at its
+ * cheek, on the side the customer is on. On its way between its two seats the
+ * lock goes from one cheek to the other as the friend goes, so it is never at
+ * one cheek one moment and at the other the next.
+ */
+export function modelRootAt(at: Point): Point {
+  const far = Math.max(0, Math.min(1, (at.x - ACROSS.x) / (BESIDE.x - ACROSS.x)))
+  const across = { x: ACROSS_MODEL.x - ACROSS.x, y: ACROSS_MODEL.y - ACROSS.y }, beside = { x: BESIDE_X - BESIDE.x, y: COLLAR_Y - BESIDE.y }
+  return { x: at.x + across.x + (beside.x - across.x) * far, y: at.y + across.y + (beside.y - across.y) * far }
+}
+
 export type Button = 'door' | 'stool' | 'bench' | 'knot' | 'chair'
 
 export type Places = {

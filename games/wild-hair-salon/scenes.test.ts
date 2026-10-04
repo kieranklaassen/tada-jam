@@ -78,6 +78,30 @@ describe('the staging', () => {
 })
 
 describe('coming in', () => {
+  it('opens the door on the customer, who is in the doorway at once, and shows the friend there when the customer has left it', () => {
+    const before = freshGame(null), after = letIn(before).game, c = cast(after)
+    let customerBy = -1, friendBy = -1, nearest = Infinity
+    playThrough(comingIn(c, before, after), (t) => {
+      const customer = c.staging.customer!, friend = c.staging.friend!
+      if (customerBy < 0 && customer.seen > 0.9) customerBy = t
+      if (friendBy < 0 && friend.seen > 0.5) friendBy = t
+      if (customer.seen > 0.5 && friend.seen > 0.5) nearest = Math.min(nearest, Math.abs(customer.x - friend.x))
+    })
+    expect(customerBy).toBeLessThan(0.2)
+    expect(friendBy).toBeGreaterThan(customerBy)
+    expect(friendBy).toBeLessThan(1.5)
+    // Never two heads in a doorway that has room for one.
+    expect(nearest).toBeGreaterThan(130)
+  })
+
+  it('springs the hair out as the hats leave it, where the spring is seen from its start', () => {
+    const before = freshGame(null), after = letIn(before).game, c = cast(after)
+    let hatsWhenSprung = -1
+    playThrough(comingIn(c, before, after), () => { if (hatsWhenSprung < 0 && c.hair.tufts[0].stretch.x < 0.5) hatsWhenSprung = c.staging.hats })
+    expect(hatsWhenSprung).toBeGreaterThan(0.3)
+    expect(hatsWhenSprung).toBeLessThanOrEqual(0.55)
+  })
+
   it('pops the rain hats off where they can be seen going: they are not there one frame and gone the next', () => {
     const before = freshGame(null), after = letIn(before).game, c = cast(after)
     let going = 0
@@ -353,8 +377,16 @@ describe('a thing shown once', () => {
     c.staging.settle(before)
     const beats = shownOnce(c, 'ribbon', before, after)
     const lengths: number[] = [], xs: number[] = []
-    let tails = 0
-    const length = playThrough(beats, () => { if (c.staging.ribbon) { lengths.push(c.staging.ribbon.len); xs.push(c.staging.ribbon.x) } tails = Math.max(tails, c.staging.tails) })
+    let tails = 0, own = 0, both = 0
+    const length = playThrough(beats, () => {
+      if (c.staging.ribbon) { lengths.push(c.staging.ribbon.len); xs.push(c.staging.ribbon.x) }
+      tails = Math.max(tails, c.staging.tails)
+      own = Math.max(own, c.staging.ownTail)
+      if (c.staging.tails > 0.2 && c.staging.ownTail > 0.2) both++
+    })
+    // One straight tail at a time beside the ribbon: the friend's own at the peg, the customer's when the friend has come over.
+    expect(own).toBe(1)
+    expect(both).toBe(0)
     expect(length).toBeGreaterThanOrEqual(3)
     expect(length).toBeLessThanOrEqual(8)
     expect(Math.min(...lengths)).toBeLessThan(TAIL_LEN)
@@ -362,7 +394,7 @@ describe('a thing shown once', () => {
     expect(tails).toBe(1)
     // It was by the peg, and across the room by the customer's tail.
     expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(400)
-    expect(c.staging).toMatchObject({ ribbon: null, tails: 0, friend: { x: placesOf(after).friend!.x } })
+    expect(c.staging).toMatchObject({ ribbon: null, tails: 0, ownTail: 0, friend: { x: placesOf(after).friend!.x } })
     expect(c.cues).toEqual(expect.arrayContaining(['ribbonTaken', 'ribbonTick', 'ribbonHome']))
     expect(after.ribbon).toEqual({ len: TAIL_LEN, at: 'peg' })
     expect(tailOf({ x: 0, y: 0, s: 1 }).x).toBeGreaterThan(0)

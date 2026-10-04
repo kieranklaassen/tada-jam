@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { FLOOR_Y, HEAD, SCENE, STRIP_W } from './layout'
 import { LOOKS, RIBBON } from './looks'
 import type { Play } from './play'
-import { clippingBox, placesOf, ribbonShape } from './poses'
+import { clippingBox, modelRootAt, placesOf, ribbonShape } from './poses'
 import { blankSheets, recordingSheet, type P, type Recording } from './recorder'
 import { Sprites } from './sprites'
 import type { Shown } from './staging'
@@ -82,7 +82,8 @@ function measure(seed: number) {
     if (game.friend) met.add(game.friend)
 
     if (game.chair && game.friend && places.lock && places.model && places.friend && staging.friend && staging.hats < 0.5) {
-      const dx = staging.friend.x - places.friend.x, dy = staging.friend.y - places.friend.y - staging.friend.lift
+      const root = modelRootAt({ x: staging.friend.x, y: staging.friend.y - staging.friend.lift })
+      const dx = root.x - places.model.x, dy = root.y - places.model.y
       const shape = ribbonShape(game)
       const hung: Strip[][] = [
         hanging(kept, LOOKS[game.chair].lock, places.lock),

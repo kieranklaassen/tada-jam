@@ -327,8 +327,9 @@ export class Play implements Cast {
       if (this.untilStir <= 0) {
         this.untilStir = STIR_EVERY
         this.stirs++
-        if (game.chair === null) this.waiting?.[this.stirs % 2]?.react('looksAbout')
-        else {
+        // The pair at the door look about and rock on their heels, one and then the other, whoever is in the salon.
+        this.waiting?.[this.stirs % 2]?.react('looksAbout')
+        if (game.chair !== null) {
           // The one want, always there to see, under the cape and with it off: the customer looks from its lock to the friend's and pats its own, and the friend looks from its lock to the customer's.
           // Each looks to the side the other's lock is on: the friend beside the chair is on the customer's right and looks left.
           // With the friend across the room, the customer's own lock is still on its right, so only its second look goes the other way.

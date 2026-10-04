@@ -6,7 +6,7 @@ import { hintFor, type Hint } from './ladder'
 import { BESIDE_X, CHAIR, COLLAR_Y, DOOR, FLOOR_Y, HEAD, LOCK_X, LOOKING_GLASS, PEG, STEP, STRIP_W, fit } from './layout'
 import { FLUFF, LOOKS, RIBBON, hueOf } from './looks'
 import type { Play } from './play'
-import { SPOT_Y, bowOn, clippingBox, onHead, placesOf, ribbonShape, tuftPose, tuftTip, type Point } from './poses'
+import { SPOT_Y, bowOn, clippingBox, modelRootAt, onHead, placesOf, ribbonShape, tuftPose, tuftTip, type Point } from './poses'
 import { TAIL_LEN } from './rules'
 import { PAW_HOME, SHOULDER, TAIL_OF_CUSTOMER, tailOf } from './scenes'
 import type { Sprites } from './sprites'
@@ -76,11 +76,14 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
   const customerAt = staging.customer, friendAt = staging.friend
   const caped = staging.cape
 
+  // With nobody in the chair the cape hangs over it and waits for the first customer.
+  if (!chair) drawn += stamp(g, sprites.drape)
+
   if (chair && friend && customerAt && friendAt && places.customer && places.friend) {
     const look = LOOKS[chair]
     const inChair = customerAt.x === places.customer.x && customerAt.y === places.customer.y
-    // Off the customer, the cape hangs over the chair behind the pair.
-    if (caped < 1 && inChair) {
+    // Off the customer, the cape hangs over the chair behind the pair, and waits there while a pair walks in.
+    if (caped < 1) {
       g.save()
       g.globalAlpha = 1 - caped
       drawn += stamp(g, sprites.drape)
@@ -88,7 +91,7 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
     }
     // The light on the chair, when it is the thing to touch: on the cape that hangs over it, behind the pair.
     light(CHAIR.x, 470, 440, 400, glowOn('chair'))
-    drawn += tail(g, sprites, chair, inChair ? { x: 322, y: FLOOR_Y - 20 } : { x: customerAt.x - 60 * customerAt.s, y: customerAt.y + 250 * customerAt.s }, inChair ? TAIL_OF_CUSTOMER : null, play.customer()?.at('tail') ?? 0, staging.tails, customerAt.s)
+    drawn += tail(g, sprites, chair, inChair ? { x: 322, y: FLOOR_Y - 20 } : { x: customerAt.x - 60 * customerAt.s, y: customerAt.y + 250 * customerAt.s }, inChair ? TAIL_OF_CUSTOMER : null, play.customer()?.at('tail') ?? 0, staging.tails, customerAt.s, customerAt.seen)
 
     const wearsOf = (who: Who): Wears => ({
       pieces: game.clippings.filter((c) => c.on === 'face' && c.who === who && !hair.flights.has(c) && hair.carried?.what !== c).map((c) => (c.on === 'face' ? { y: SPOT_Y[c.spot], half: (c.len * STEP) / 2, hue: c.hue } : { y: 0, half: 0, hue: c.hue })),
@@ -96,6 +99,7 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
       hat: staging.hats,
       // A bow sits on the end of its tuft and goes wherever the head goes.
       bow: who === 'chair' && !carriedRibbon && staging.ribbon === null ? bowOn(game) : null,
+      snap: hair.strands.ribbon.stretch.x,
     })
     const customer = play.customer(), other = play.friend()
     // Its limbs come later, over the cape and the strips: a paw that pats its lock and a foot that thumps are out in front of both.
@@ -127,13 +131,13 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
     }
 
     // The friend, in front of the customer's mane where the two meet, with a paw on the top of its own lock.
-    drawn += tail(g, sprites, friend, { x: friendAt.x + 44 * friendAt.s, y: friendAt.y + 300 * friendAt.s }, tailOf(friendAt), other?.at('tail') ?? 0, staging.tails, friendAt.s)
+    drawn += tail(g, sprites, friend, { x: friendAt.x + 44 * friendAt.s, y: friendAt.y + 300 * friendAt.s }, tailOf(friendAt), other?.at('tail') ?? 0, staging.ownTail, friendAt.s, friendAt.seen)
     if (other) drawn += drawFigure(g, sprites, { who: friend, puppet: other, at: friendAt, mane: null, body: 1, wears: wearsOf('friend'), time: play.time })
 
     // The three strips. The friend's lock goes with the friend while it is on its way somewhere.
     if (staging.hats < 0.5 && places.lock && places.model) {
-      const dx = friendAt.x - places.friend.x, dy = friendAt.y - places.friend.y - friendAt.lift
-      const modelRoot = { x: places.model.x + dx, y: places.model.y + dy }
+      const modelRoot = modelRootAt({ x: friendAt.x, y: friendAt.y - friendAt.lift })
+      const dx = modelRoot.x - places.model.x, dy = modelRoot.y - places.model.y
       const lockLength = game.lock + staging.stretch + (hair.holds === 'lock' ? play.hand.drawnOut : 0), modelLength = game.model + (hair.holds === 'model' ? play.hand.drawnOut : 0)
       const even = Math.min(game.lock, game.model) * STEP
       light(places.lock.x, places.lock.y + Math.max(60, game.lock * STEP) / 2, 114, Math.max(60, game.lock * STEP) + 70, glowOn('lock'))
@@ -469,7 +473,9 @@ function strips(g: Ctx, group: readonly { x: number; y: number; half: number; tu
  * swishes. Held out to be measured (`out` from 0 to 1) it hangs straight
  * down from `straight`, as long as the ribbon is made.
  */
-function tail(g: Ctx, sprites: Sprites, who: CustomerId, from: Point, straight: Point | null, swish: number, out: number, s: number): number {
+function tail(g: Ctx, sprites: Sprites, who: CustomerId, from: Point, straight: Point | null, swish: number, out: number, s: number, seen: number): number {
+  // A tail is seen as much as its owner is, and no tail stands in a doorway by itself.
+  if (seen <= 0) return 0
   const end = sprites.animal(who).tailEnd
   const held = straight ? out : 0
   const sway = swish * 0.55
@@ -478,8 +484,9 @@ function tail(g: Ctx, sprites: Sprites, who: CustomerId, from: Point, straight: 
   const x = straight ? tipX + (straight.x - tipX) * held : tipX
   const y = straight ? tipY + (straight.y + long - tipY) * held : tipY
   const rootX = straight ? from.x + (straight.x - from.x) * held : from.x, rootY = straight ? from.y + (straight.y - from.y) * held : from.y
-  pencil(g, [{ x: rootX, y: rootY }, { x: rootX + (x - rootX) * 0.5 - 30 * s * (1 - held), y: rootY + (y - rootY) * 0.4 }, { x, y }], 1.6 + held * 6, 0.6 + held * 0.3)
   g.save()
+  g.globalAlpha *= seen
+  pencil(g, [{ x: rootX, y: rootY }, { x: rootX + (x - rootX) * 0.5 - 30 * s * (1 - held), y: rootY + (y - rootY) * 0.4 }, { x, y }], 1.6 + held * 6, 0.6 + held * 0.3)
   g.translate(x, y)
   g.rotate((0.5 + sway) * (1 - held) + Math.PI * held)
   g.scale(s, s)

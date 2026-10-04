@@ -202,6 +202,26 @@ describe('the salon around them', () => {
     expect(frame(fresh()).kept.stamps.some((stamp) => inBox(stamp.corners, glass) && bounds(stamp.corners).w < 400)).toBe(false)
   })
 
+  it('hangs the cape over the chair whenever nobody wears it: on a first visit, and while a pair walks in', () => {
+    const first = fresh(), empty = frame(first)
+    expect(empty.kept.stamps.filter((stamp) => stamp.image === empty.sprites.drape.sheet.canvas)).toHaveLength(1)
+    tap(first, DOOR)
+    for (let i = 0; i < 40; i++) first.step(1 / 60, true)
+    const walking = frame(first, first.time)
+    expect(walking.kept.stamps.filter((stamp) => stamp.image === walking.sprites.drape.sheet.canvas)).toHaveLength(1)
+  })
+
+  it('draws no tail in the doorway before its owner is seen there', () => {
+    const play = fresh()
+    tap(play, DOOR)
+    for (let i = 0; i < 18; i++) play.step(1 / 60, true)
+    expect(play.staging.customer!.seen).toBeGreaterThan(0.9)
+    expect(play.staging.friend!.seen).toBe(0)
+    const { kept, sprites } = frame(play, play.time)
+    expect(kept.stamps.filter((stamp) => stamp.image === sprites.animal(play.game!.chair!).tailEnd.sheet.canvas)).toHaveLength(1)
+    expect(kept.stamps.filter((stamp) => stamp.image === sprites.animal(play.game!.friend!).tailEnd.sheet.canvas)).toHaveLength(0)
+  })
+
   it('lays the whole mane together again only when a length has changed and nothing is in the fingers', () => {
     const sprites = new Sprites(blankSheets, 1180, 820, 1), mane = [40, 90, 12, 50, 55, 61, 47, 33, 58]
     const first = sprites.mane('lion', mane, true)!
@@ -279,6 +299,22 @@ describe('a bow', () => {
     for (let i = 0; i < 30; i++) play.step(1 / 60, false)
     expect(play.customer()!.at('sink')).toBeGreaterThan(0.3)
     expect(bowAt().y).toBeGreaterThan(rest.y + 12)
+  })
+
+  it('jumps in on itself at a poke and comes back, as the ribbon does where it hangs', () => {
+    const play = seated({ ribbon: { len: 40, at: 'mane', tuft: 4 }, shown: { snip: true, pull: true, ribbon: true } })
+    const wide = (): number => {
+      const kept: Recording = { shapes: [], stamps: [], texts: 0 }
+      drawFrame(recordingSheet(1180, 820, kept).g as Ctx, 1180, 820, new Sprites(blankSheets, 1180, 820, 1), { play, guidance: null })
+      return Math.max(...kept.shapes.filter((shape) => shape.kind === 'fill' && shape.style === hueOf('ribbon').fill).map((shape) => bounds(shape.points)).filter((box) => box.y < 300 && box.x > 300).map((box) => box.w))
+    }
+    for (let i = 0; i < 30; i++) play.step(1 / 60, true)
+    const before = wide(), shape = ribbonShape(play.game!)!
+    tap(play, shape.kind === 'worn' ? shape.at : { x: 0, y: 0 })
+    play.step(1 / 60, false)
+    expect(wide()).toBeLessThan(before * 0.8)
+    for (let i = 0; i < 120; i++) play.step(1 / 60, true)
+    expect(wide()).toBeCloseTo(before, 0)
   })
 })
 
