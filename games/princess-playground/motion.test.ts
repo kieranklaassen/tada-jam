@@ -120,6 +120,46 @@ describe('the playground in motion', () => {
     expect(JSON.stringify(world.arrangement)).toBe(before)
   })
 
+  it('squashes whoever is under Bo flat for as long as he sits there, and pops them back when he leaves', () => {
+    const under = (top: FriendId) => {
+      const world = new Playground(firstRide())
+      play(world, 0.5)
+      world.grab(top)
+      world.carryTo(-3, -1)
+      play(world, 0.5)
+      world.release()
+      play(world, 4)
+      expect(placeOf(world.arrangement, top)).toMatchObject({ at: 'end', end: 'left', level: 1 })
+      return world
+    }
+    const mog = under('mog'), bo = under('bo')
+    expect(mog.frame().poses.pim.squash).toBeGreaterThan(0.88)
+    expect(bo.frame().poses.pim.squash).toBeLessThan(0.76)
+    // Still flat a good while later: it is held, not a bounce.
+    play(bo, 5)
+    expect(bo.frame().poses.pim.squash).toBeLessThan(0.76)
+    // And Bo sits that much lower on her.
+    expect(bo.frame().poses.bo.y - bo.frame().poses.pim.y).toBeLessThan(FRIENDS.pim.halfHeight * 2 * 0.8)
+    // He leaves: she pops back, past her own height for a moment, and settles.
+    bo.tapFriend('bo')
+    let tallest = 0
+    play(bo, 1, (w) => { tallest = Math.max(tallest, w.frame().poses.pim.squash) })
+    expect(tallest).toBeGreaterThan(1.04)
+    play(bo, 3)
+    expect(bo.frame().poses.pim.squash).toBeCloseTo(1, 1)
+  })
+
+  it('throws two friends of one weight equally high: the toss comes from the weights', () => {
+    const peak = (id: FriendId) => {
+      const world = new Playground(putOnEnd(emptyArrangement(), id, 'left'))
+      play(world, 0.5)
+      world.tapFriend('bo')
+      return peakOf(world, id, 4)
+    }
+    expect(peak('mog')).toBeCloseTo(peak('dot'), 1)
+    expect(peak('pim')).toBeGreaterThan(peak('mog') + 0.3)
+  })
+
   it('shuts a friend\'s eyes for as long as a slow blink lasts', () => {
     const world = new Playground(firstRide())
     world.advance(0)

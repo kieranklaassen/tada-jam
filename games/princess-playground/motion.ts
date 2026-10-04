@@ -21,6 +21,8 @@ export const TOSS = 1.25
 export const TOSS_FLOOR = 6
 /** How long a tap on the plank has its riders off the board, in seconds; they rise a finger's width. */
 export const RIDER_BOB = 0.32
+/** The spring a squashed friend pops back with when Bo leaves its head. */
+const POP = 4.5
 /** A chuckle's shake of the plank: how many pushes, and the seconds between them. */
 const SHAKES = 4
 const SHAKE_EVERY = 0.18
@@ -30,6 +32,8 @@ export const HALF_AWAY = 0.85
 export const FINGER = 0.14
 /** How flat a head is pressed by a friend sitting on it. */
 export const PRESSED = 0.93
+/** How flat anyone is squashed for as long as Bo sits on top of them. */
+export const FLAT = 0.7
 /** How hard a landing turns the plank, per unit of weight. */
 export const LANDING_PUSH = 0.5
 
@@ -75,6 +79,8 @@ type Body = {
   turn: number
   /** Dot only: how far it stands turned half away, 0 to 1. */
   aside: number
+  /** How flat it is held by whoever sits on it: 1 with nobody there, `PRESSED` under a friend, `FLAT` under Bo. */
+  press: number
   /** A place it has gone to for a showing, away from where the arrangement has it; null when it is where it belongs. */
   away: { x: number; y: number; z: number } | null
   act: Act | null
@@ -139,7 +145,7 @@ export class Playground {
         fromX: at.x, fromY: at.y, fromZ: at.z, hopT: 0, hopFor: 0, hopHigh: 0, gather: 0, slid: false, leapt: false, vy: 0,
         squash: 1, squashV: 0, squashTo: 1, lean: 0, leanV: 0, leanTo: 0, follow: 0, followV: 0,
         holdX: at.x, holdZ: at.z, blinkIn: 0.6 + index * 0.9 + this.random() * 2, blinkT: 0, mouth: 0,
-        bright: 1, doze: 0, phase: index * 1.7, turn: 0, aside: 0,
+        bright: 1, doze: 0, phase: index * 1.7, turn: 0, aside: 0, press: 1,
         away: null, act: null, actT: 0, actFor: 0, actWay: 0, mood: 'plain', gaze: 0, gazeTo: 0, gazeUp: 0, gazeUpTo: 0, glance: 0, thrown: false,
       }
       this.poses[id] = restPose()
@@ -671,6 +677,16 @@ export class Playground {
     body.followV += (own.followStiff * (drive * own.followReach - body.follow) - own.followDamp * body.followV) * dt
     body.follow += body.followV * dt
     body.mouth = Math.max(0, body.mouth - dt * 2.2)
+    // Held down by whoever sits on it. Under Bo, once he has landed, it is squashed flat for as long as he stays,
+    // and pops back the moment he leaves.
+    const place = body.away ? null : placeOf(this.arrangement, id)
+    let hold = 1
+    if (place && place.at === 'end') {
+      const above = this.arrangement[place.end].slice(place.level + 1)
+      if (above.length) hold = above.includes('bo') && this.bodies.bo.mode === 'rest' && this.bodies.bo.landed ? FLAT : PRESSED
+    }
+    if (hold > body.press + 0.1) body.squashV += POP
+    body.press = hold < body.press ? Math.max(hold, body.press - dt * 3) : hold
     if (body.act) {
       body.actT += dt
       if (body.actT >= body.actFor) body.act = null
@@ -756,7 +772,7 @@ export class Playground {
       // crown and Mog's ears are out of the way before the friend lands.
       const place = body.away ? null : placeOf(this.arrangement, id)
       pose.pressed = place && place.at === 'end' && place.level < this.arrangement[place.end].length - 1 ? 1 : 0
-      if (pose.pressed) pose.squash *= PRESSED
+      pose.squash *= body.press
       // The one who asks shows it with its whole body, not only its eyes: it stretches toward where it wants to be.
       if (this.asking && this.asking.id === id && body.mode === 'rest') {
         pose.nod += 0.34 * this.asking.up

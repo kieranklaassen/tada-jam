@@ -37,7 +37,7 @@ export const PERSONALITY: Readonly<Record<FriendId, Personality>> = {
   // Mog: smooth and unhurried, then sudden; goes long when lifted; lands softly, as a cat does.
   mog: { breatheRate: 0.34, breatheDepth: 0.024, blinkEvery: 5.2, blinkLasts: 0.22, springStiff: 250, springDamp: 20, gather: 0.2, crouch: 0.7, landSquash: 0.84, heldStretch: 1.34, tossGain: 1.1, followStiff: 160, followDamp: 14, followReach: 0.5, windUp: 0 },
   // Dot: small careful moves, a soft wobble that takes a while to die away.
-  dot: { breatheRate: 0.46, breatheDepth: 0.018, blinkEvery: 3.4, blinkLasts: 0.13, springStiff: 190, springDamp: 9, gather: 0.1, crouch: 0.86, landSquash: 0.76, heldStretch: 1.1, tossGain: 1.0, followStiff: 120, followDamp: 7, followReach: 0.7, windUp: 0 },
+  dot: { breatheRate: 0.46, breatheDepth: 0.018, blinkEvery: 3.4, blinkLasts: 0.13, springStiff: 190, springDamp: 9, gather: 0.1, crouch: 0.86, landSquash: 0.76, heldStretch: 1.1, tossGain: 1.1, followStiff: 120, followDamp: 7, followReach: 0.7, windUp: 0 },
   // Bo: slow and heavy; rocks to get going; lands flat and his belly goes on wobbling.
   bo: { breatheRate: 0.2, breatheDepth: 0.04, blinkEvery: 7.5, blinkLasts: 0.34, springStiff: 110, springDamp: 6.5, gather: 0.46, crouch: 0.82, landSquash: 0.55, heldStretch: 1.05, tossGain: 0.45, followStiff: 46, followDamp: 3.2, followReach: 1.3, windUp: 0.16 },
 }
