@@ -66,10 +66,14 @@ describe('the voices', () => {
     for (let i = 0; i < rubs.length; i++) for (let j = i + 1; j < rubs.length; j++) expect(alike(rubs[i][1], rubs[j][1]), `${rubs[i][0]} and ${rubs[j][0]}`).toBe(false)
   })
 
-  it('is no louder at its loudest than a quarter of full scale, and a snip is the loudest touch', () => {
+  it('is no louder at its loudest than a quarter of full scale, and the uses a grown-up would call wrong are the loudest', () => {
     const peaks = all.map(([, v]) => v.peak)
     expect(Math.max(...peaks)).toBeLessThanOrEqual(0.25)
-    expect(CELL_VOICES['lock/snip'].peak).toBe(Math.max(...Object.values(CELL_VOICES).map((v) => v.peak)))
+    // Snipping the model, pulling a cheek, and a clipping stuck on a face as a moustache: nothing else is as loud.
+    const wrong = [CELL_VOICES['model/snip'], CELL_VOICES['face/pull'], OTHER_VOICES.smack]
+    const loudest = Math.max(...peaks)
+    for (const voice of wrong) expect(voice.peak).toBe(loudest)
+    expect(all.filter(([, v]) => v.peak === loudest)).toHaveLength(wrong.length)
   })
 
   it('sounds a lock lower the longer it is, over two octaves', () => {
