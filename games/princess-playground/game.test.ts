@@ -8,7 +8,7 @@ import { seeded } from './motion'
 import { KINDS, layout, rideOf, wantMet, type Kind } from './rides'
 import { endRide, freshWorld, load, rideIsOver, save, type Saved, type World } from './save'
 import { NEXT_AT } from './scenes'
-import { chuckle, crow, levelHum, purr, raspberry, scratch, softNote, spit, wheeze, type Part } from './voices'
+import { chuckle, crow, knead, levelHum, purr, raspberry, scratch, softNote, spit, wheeze, type Part } from './voices'
 import { FRIEND_IDS, MAX_TILT, PLANK, WAITING_PLACE, homeOn, plankTopAt, type FriendId } from './world'
 
 const QUIET: Guidance = { glow: 0, demo: null, demoIndex: -1 }
@@ -1118,6 +1118,54 @@ describe('a landing is answered by what is there when the friend lands', () => {
     const bites = cues.filter((cue) => cue.type === 'bite').map((cue) => (cue.type === 'bite' ? cue.strength : 0))
     expect(bites.length).toBeGreaterThan(0)
     expect(Math.max(...bites)).toBeCloseTo((4 + 1) / (12 + 1), 5)
+  })
+})
+
+describe('two friends sent to one end one straight after the other', () => {
+  it('the first to land is answered by what is there when it lands, not by the one still on its way', () => {
+    // The first ride: Pim low on the left. Mog is tapped, and Bo before Mog has landed; both go to the right end.
+    const game = new Game({ ...shown(), touched: true }, 1)
+    run(game, 0.3)
+    game.takeCues()
+    tapOn(game, 'mog')
+    run(game, 0.1)
+    tapOn(game, 'bo')
+    expect(game.play.arrangement.right).toEqual(['mog', 'bo'])
+    const cues: Cue[] = []
+    let mogLanded = -1
+    for (let i = 0; i < 90 && mogLanded < 0; i++) {
+      game.step(1 / 60, QUIET)
+      cues.push(...game.takeCues())
+      if (game.play.bodies.mog.landed) mogLanded = i
+    }
+    expect(mogLanded).toBeGreaterThan(0)
+    expect(game.play.bodies.bo.landed).toBe(false)
+    for (let i = 0; i < 20; i++) {
+      game.step(1 / 60, QUIET)
+      cues.push(...game.takeCues())
+    }
+    // He landed alone on the high end and tips it: he does not circle or knead a head that is not there.
+    expect(game.play.bodies.mog.act).not.toBe('spin')
+    expect(cues.some((cue) => cue.type === 'voice' && JSON.stringify(cue.parts) === JSON.stringify(knead()))).toBe(false)
+  })
+})
+
+describe('a friend put back onto a head', () => {
+  it('is answered by that head, as any landing on it is', () => {
+    const bare = tap(layout(rideOf('little-asks', 0)), 'pim')
+    const game = new Game({ ...shown(), arrangement: putOnEnd(putOnEnd(bare, 'pim', 'right'), 'bo', 'right'), touched: true, state: { ...shown().state, finished: true } }, 1)
+    run(game, 2)
+    game.press({ kind: 'friend', id: 'bo' })
+    game.dragStart()
+    game.dragTo({ x: 0, z: 2.6 }, null)
+    run(game, 1)
+    game.takeCues()
+    game.putAway()
+    const { cues } = run(game, 4)
+    expect(game.play.arrangement.right).toEqual(['pim', 'bo'])
+    const heard = (voice: readonly Part[]) => cues.filter((cue) => cue.type === 'voice' && JSON.stringify(cue.parts) === JSON.stringify(voice)).length
+    expect(heard(wheeze())).toBe(1)
+    expect(heard(raspberry())).toBe(1)
   })
 })
 

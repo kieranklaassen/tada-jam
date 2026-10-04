@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { emptyArrangement, putInSand, putOnEnd, tap, type Arrangement } from './arrangement'
-import { delight, landingOf, perched, reactionsTo, tossed, type Reaction } from './cells'
+import { cameDownOn, delight, landingOf, perched, reactionsTo, tossed, type Reaction } from './cells'
 import { FRIEND_IDS, homeOn, type FriendId } from './world'
 
 const on = (left: FriendId[], right: FriendId[]): Arrangement => {
@@ -104,6 +104,13 @@ describe('the cells in play', () => {
     const onMog = landingOf(start, putOnEnd(start, 'dot', 'right'), 'dot')
     expect(onMog).toMatchObject({ deed: 'on-a-friend', levels: true, below: 'mog' })
     expect(reactionsTo(onMog).some((r) => r.who === 'dot' && r.voice && r.act === 'sway')).toBe(true)
+  })
+
+  it('a friend that comes down on a head it was not sent to is answered by that head, and Pim crows and Dot sings there too', () => {
+    expect(cameDownOn('pim', 'mog').map((r) => `${r.who}:${r.act}`)).toEqual(['mog:duck', 'pim:bounce'])
+    expect(cameDownOn('dot', 'pim').map((r) => `${r.who}:${r.act}`)).toEqual(['pim:puff', 'dot:sway', 'pim:sway'])
+    expect(cameDownOn('mog', 'bo')).toEqual([])
+    expect(cameDownOn('bo', 'dot').filter((r) => r.voice).length).toBe(2)
   })
 
   it('each friend answers each place in a way of its own: no two friends share a cell', () => {

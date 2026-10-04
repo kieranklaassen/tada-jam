@@ -219,6 +219,12 @@
 - A landing is answered by what is there when the friend lands. The cell was read when the child let go; a head tapped away while the friend was still on its way was wheezed at and puffed all the same, and the bite was drawn for a weight the end no longer held.
 - Past the board's tip, as beside it, sand is sand: a friend let go there stands at the nearest free place. A friend held over one who sits on the plank comes down on that end's seat, however the stack leans.
 
+**Built after the seventeenth reading.** Rules 1 to 5 clean; three things under rule 6.
+
+- A landing is answered by who has arrived. Of two friends sent to one end one straight after the other, the first to land was answered as if the second already sat there; the weight of an end that bites and the heads the grains settle on are read the same way now.
+- Mog's ears are laid flat under a friend and stay in sight at the corners of his head; they were hidden there.
+- A friend put back onto a head, at a put-away or when its pointer was taken, is answered by that head. A friend that comes down on a head it was not sent to says its own piece too: Pim crows, Dot sings its duet.
+
 **Found by this lane while checking those.**
 
 - A friend held on the picture of the plank's end did not land on the plank: carried friends hung under the finger, high over the tray, so it hung over the sand in front and came down there. A first cure read the finger at the height of a seated friend; it took too much of the sand for the plank and was replaced after the thirteenth reading (above): a carried friend now hangs over the place the finger points at. The audit's own "carried" moment had been dropping friends in the sand all along; it now really lands them on the ends, onto a friend and over the middle.

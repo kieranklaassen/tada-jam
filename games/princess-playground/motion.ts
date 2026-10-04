@@ -246,6 +246,17 @@ export class Playground {
     return this.seen
   }
 
+  /**
+   * Who is on the plank now: those who sit, without a friend in the hand and without anyone still on the way there.
+   * What a landing is answered by, what an end weighs when it bites, and whose heads the grains settle on.
+   */
+  get arrived(): Arrangement {
+    const seen = this.seen
+    const here = (id: FriendId) => this.bodies[id].landed
+    if (seen.left.every(here) && seen.right.every(here)) return seen
+    return { ...seen, left: seen.left.filter(here), right: seen.right.filter(here) }
+  }
+
   private get seen(): Arrangement {
     if (!this.held) return this.arrangement
     if (this.seenFor !== this.arrangement || this.seenWithout !== this.held) {

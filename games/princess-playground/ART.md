@@ -275,7 +275,7 @@ No friend is yellow, tan or brown: those belong to the sand and the tray.
 - The grains: a fixed pool of 72 pale points thrown up by a knock or a landing, running off the low end of the board, or sliding back into a bite as an end lifts; each falls back in about half a second. One draw, no body, no mark.
 - The ghost hand of the idle ladder: a pale mitten with one finger out, drawn once on a canvas, tilted so that it comes in from the side and comes down on the top of a head, never over a face. It is a picture of a hand, not a sign to read.
 - The idle glow: a warm halo of light on the sand under the one friend the ladder shows, drawn in the sand's own shader, when that friend stands in the sand. A friend sitting on the plank or on a head has no sand under it: it glows itself, a soft pulse of its own colour, and no ring of light lies empty on the sand.
-- A shut eye is a dark line: the white is put away. Pim's crown slips to the side of her head when a friend sits on her, and over one eye when she is set down in the sand; Mog's ears lie flat when he is put out and are laid right back under a friend.
+- A shut eye is a dark line: the white is put away. Pim's crown slips to the side of her head when a friend sits on her, and over one eye when she is set down in the sand; Mog's ears lie flat when he is put out and under a friend, where they stay in sight at the corners of his head.
 
 **Budget.** 25 to 27 draw calls and about 16,400 triangles with everything on screen, read from the renderer. No shadow map, no post pass, pixel ratio capped at 2, one 512 by 320 texture sent again only in a frame that marked the sand. Every program is compiled and drawn once, hidden, at mount. No frame rate has been measured: this machine has no graphics card.
 

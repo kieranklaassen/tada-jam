@@ -1,5 +1,5 @@
 import { companyOf, inCompany, lean, placeOf, standsAt, tap, weightOn, type Arrangement } from './arrangement'
-import { landingOf, perched, reactionsTo, tossed, underneath, type Landing, type Reaction } from './cells'
+import { cameDownOn, landingOf, perched, reactionsTo, tossed, type Landing, type Reaction } from './cells'
 import { forecast, type SandOp } from './forecast'
 import { Grains } from './grains'
 import type { Guidance } from './guidance'
@@ -267,8 +267,11 @@ export class Game implements Director {
    * its end on top of them, since they have come down a place: the same friends on the same ends, and no move.
    */
   private backToItsEnd(): void {
-    if (!this.play.held) return
+    const id = this.play.held
+    if (!id) return
     this.play.putBack()
+    // Where it comes down is answered as any landing is: a head it lands on says so.
+    this.landings[id] = landingOf(this.play.arrangement, this.play.arrangement, id)
     if (JSON.stringify(this.play.arrangement) !== JSON.stringify(this.world.arrangement)) {
       this.world = { ...this.world, arrangement: this.play.arrangement }
       this.wantSave('now')
@@ -597,20 +600,18 @@ export class Game implements Director {
         this.voice(v.chirp(event.id, this.said++))
         // Thrown and down again on the head it sat on: that head says what it always says to being landed on, and
         // Pim, on top of someone once more, crows.
-        const place = placeOf(this.play.sitting, event.id)
-        if (event.on === 'friend' && place.at === 'end' && place.level > 0) {
-          this.react(underneath(this.play.sitting[place.end][place.level - 1], event.id))
-          if (event.id === 'pim') this.react([{ who: 'pim', after: 0.1, voice: v.crow(), act: 'bounce', seconds: 0.5 }])
-        }
+        const place = placeOf(this.play.arrived, event.id)
+        if (event.on === 'friend' && place.at === 'end' && place.level > 0) this.react(cameDownOn(event.id, this.play.arrived[place.end][place.level - 1]))
       }
       // The cell is read when the friend lands, from what is there then: a head taken away meanwhile is not landed on.
-      const sent = this.landings[event.id], sitting = this.play.sitting
+      // And from who has arrived: a friend sent to the same end and still on its way is not there yet.
+      const sent = this.landings[event.id], sitting = this.play.arrived
       const landing = sent ? landingOf(sitting, sitting, event.id) : undefined
       // Come down a place onto a head, because the friend between was taken away: that head answers as it does to anyone landing on it.
       if (event.fell && !landing && !this.scene && event.on === 'friend') {
         // With a friend in the hand, the stack is the one that still sits.
-        const place = placeOf(this.play.sitting, event.id)
-        if (place.at === 'end' && place.level > 0) this.react(underneath(this.play.sitting[place.end][place.level - 1], event.id))
+        const place = placeOf(sitting, event.id)
+        if (place.at === 'end' && place.level > 0) this.react(cameDownOn(event.id, sitting[place.end][place.level - 1]))
       }
       if (landing) {
         delete this.landings[event.id]
@@ -630,8 +631,8 @@ export class Game implements Director {
         }
       }
     } else if (event.type === 'knock') {
-      // What sits on the end that came down: a friend in the hand is not on it.
-      const weight = weightOn(this.play.sitting, event.end), power = Math.min(1, event.speed / 3)
+      // What has arrived on the end that came down: a friend in the hand, or one still on its way, is not on it.
+      const weight = weightOn(this.play.arrived, event.end), power = Math.min(1, event.speed / 3)
       this.voice(v.knock(event.speed))
       this.voice(v.crunch(weight))
       const op: SandOp = { type: 'bite', x: event.x, weight, speed: event.speed }
@@ -644,7 +645,7 @@ export class Game implements Director {
         // Sand thrown onto the board runs off its low end.
         this.react([{ who: 'pim', after: 0.6, voice: v.trickle(), mark: 'trickle' }])
         // Thrown grains settle on the heads of whoever rides.
-        const riders = this.play.arrangement[event.end]
+        const riders = this.play.arrived[event.end]
         if (riders.length) {
           // They settle on the head that is uppermost there, with a light patter.
           this.react([{ who: riders[riders.length - 1], after: 0.35, voice: v.patter(), mark: 'settle' }])

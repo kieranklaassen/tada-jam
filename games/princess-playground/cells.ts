@@ -95,6 +95,18 @@ export function underneath(below: FriendId, by: FriendId): Reaction[] {
   return out
 }
 
+/**
+ * A friend comes down on a head it was not sent to by this move: thrown by the plank and down again, or come down a
+ * place because the one between was taken away. The head answers as it does to anyone landing on it, and the two
+ * whose taste is to be on top of someone, or with whoever is under them, say so.
+ */
+export function cameDownOn(id: FriendId, below: FriendId): Reaction[] {
+  const out = underneath(below, id)
+  if (id === 'pim') out.push(react('pim', 0.1, { voice: v.crow(), act: 'bounce', seconds: 0.5 }))
+  if (id === 'dot') out.push(react('dot', 1.0, { voice: v.duet(), act: 'sway', seconds: 1.4, way: 1 }), react(below, 1.0, { act: 'sway', seconds: 1.4, way: 1 }))
+  return out
+}
+
 /** The cell's own motion and sound for a friend that has just landed where the child put it. */
 export function reactionsTo(l: Landing): Reaction[] {
   const out: Reaction[] = []

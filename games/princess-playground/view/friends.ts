@@ -240,8 +240,7 @@ export function poseFriend(view: FriendView, pose: FriendPose): void {
   if (view.extra && view.id === 'dot') view.extra.rotation.y = pose.follow * 0.6 + pose.shimmer * 0.22
   // Mog's ears lie flat when he is put out, and flatter still under a friend.
   if (view.extra && view.id === 'mog') {
-    // Under a friend they are laid right back out of the way.
-    view.extra.visible = pose.pressed < 0.5
-    view.extra.scale.y = pose.frown > 0.5 ? 0.45 : 1
+    // Under a friend, as when he is put out, they are laid flat: low bumps at the corners of his head, they stay in sight beside whoever sits on him.
+    view.extra.scale.y = pose.frown > 0.5 || pose.pressed > 0.5 ? 0.4 : 1
   }
 }
