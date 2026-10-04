@@ -419,7 +419,8 @@ export class Game {
       this.says(this.at(event.spot), 'ask', 0.1)
     } else if (event.type === 'trick') {
       const who = this.at(event.spot), hat = this.saved.tile[event.hat], tower = creatureAt(worldOf(this.saved), event.spot)!.hats.length > 1
-      play.act(who, tower ? 'totters-blind' : TASTE_ACTS[play.kindOf(who)][hat])
+      if (tower) play.act(who, 'totters-blind')
+      else this.reacts(who, hat)
       this.says(who, tower ? 'grump' : moodFor(tasteFor(play.kindOf(who), hat)))
     } else if (event.type === 'towerFell') this.seen.push('the-tower-falls')
   }
@@ -446,6 +447,13 @@ export class Game {
   private crumbsAt(who: string, kind: HatKind, count: number): void {
     const at = this.play.actorPose(who, this.crumbPose)
     this.play.puff(at.x, BODY[this.play.kindOf(who)].top * 0.9, at.z + CREATURE_DEPTH / 2 + 0.3, count, kind)
+  }
+
+  /** A creature's own reaction to exactly this kind of hat: its act, and for the one act that is a drum roll of feet, the patter of them. */
+  reacts(who: string, hat: HatKind): void {
+    const act = TASTE_ACTS[this.play.kindOf(who)][hat]
+    this.play.act(who, act)
+    if (act === 'tap-dances') this.play.cue('scuttle', scuttle(this.next()), 0.12)
   }
 
   /** A hat comes down on a head: the creature gives under it and reacts to exactly this hat, and the others look. */
@@ -478,10 +486,10 @@ export class Game {
         play.after(0.9, () => { if (play.has(other.kind) && play.worn(other.kind) === 0) play.act(other.kind, 'pats-its-bare-head') })
       }
     } else {
-      const taste = TASTE_ACTS[creature.kind][kind]
-      play.act(who, object === 'loose-hat' ? 'ducks-under' : taste)
+      if (object === 'loose-hat') play.act(who, 'ducks-under')
+      else this.reacts(who, kind)
       // A hat off the floor is ducked under first; then, like any hat, it gets this creature's own reaction to exactly this hat.
-      if (object === 'loose-hat') play.after(ACTS['ducks-under'].lasts + 0.06, () => { if (play.has(who) && play.hatOn(who, 0) === hat && play.worn(who) === 1 && !play.walking(who) && play.acting(who) === null) play.act(who, taste) })
+      if (object === 'loose-hat') play.after(ACTS['ducks-under'].lasts + 0.06, () => { if (play.has(who) && play.hatOn(who, 0) === hat && play.worn(who) === 1 && !play.walking(who) && play.acting(who) === null) this.reacts(who, kind) })
       this.says(who, moodFor(tasteFor(creature.kind, kind)), 0.1)
     }
     if (creature.hats.length === 1) play.everyoneLooks(spotX(creature.spot), ROW_Z, 1.2, who)

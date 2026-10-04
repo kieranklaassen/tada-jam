@@ -900,3 +900,16 @@ describe('what the second reading found', () => {
     expect(pose.z).toBeCloseTo(ROW_Z, 6)
   })
 })
+
+describe('Pip under the cone', () => {
+  it('tap-dances a drum roll that is heard as well as seen', () => {
+    const world: World = { crew: [{ kind: 'pip', spot: 2, hats: [] }], tile: ['cone'], loose: [], changes: [], guest: null, leaver: null, slips: 0 }
+    const game = new Game(saveOf(world)), heard: { at: number; name: string }[] = []
+    game.press({ type: 'hat', hat: 0 })
+    game.tap()
+    let danced = false
+    const names = run(game, 2.5, heard, () => { danced = danced || game.play.acting('pip') === 'tap-dances' })
+    expect(danced).toBe(true)
+    expect(names).toContain('scuttle')
+  })
+})

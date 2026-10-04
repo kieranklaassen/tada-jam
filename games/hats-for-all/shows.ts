@@ -9,7 +9,7 @@ import {
   BEHIND_ARCH, IN_ARCH, LOOSE_Z, OFF_RIGHT, PARADE_SPEED, PARADE_STAGGER_S, ROW_Z, TILE_Z,
   paradeWay, spotX, tileX, wayFromArch, wayLength, wayOffLeft, wayOutByArch, wayToArch, wayToTile,
 } from './stage'
-import { ACTS as TASTE_ACTS, moodFor, tasteFor } from './tastes'
+import { moodFor, tasteFor } from './tastes'
 import { bap, creak, pip, plop, pok, scuttle } from './voices'
 
 // The short scenes (ART.md, "The scenes"), each a list of timed beats on the
@@ -72,7 +72,7 @@ export function firstShowing(game: Game): Show {
           play.moveHat(hat, { at: 'head', who: lead.kind, level: 0 }, 'pop', () => {
             play.cue('bap', bap(kind, next()))
             play.bounce(lead.kind, 1 - PERSONALITY[lead.kind].bounce)
-            play.act(lead.kind, TASTE_ACTS[lead.kind][kind])
+            game.reacts(lead.kind, kind)
             game.says(lead.kind, moodFor(tasteFor(lead.kind, kind)), 0.1)
             play.everyoneLooks(way[way.length - 1].x, TILE_Z - 2, 1.5, lead.kind)
             // Back on its spot it turns to look at the others, and then at the hats left.
