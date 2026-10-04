@@ -132,12 +132,10 @@ function shrew(ctx: Ctx, dots: Dots, cast: Casting, member: number): void {
   shade(ctx, body, dots.of(ctx, INK, 0.28), oval(-12, -16, 24, 24))
   inked(ctx, oval(3, -20, 11, 15), WHITE, 0)
   // Its share of what the two ate, each piece at its own length, inside the twin that ate it.
-  let before = 0
-  for (const one of feast.lumps) {
-    // Each piece is inside the twin whose side of the tin it lay in, during the serve and for as long as it shows afterwards.
-    before += one.size
-    if (one.at >= 1 && one.twin === member) lump(ctx, one.fruit, -14, -20 - (before * 40) % 18, one.size / longest(feast), 56, 6)
-  }
+  // Each piece is inside the twin whose side of the tin it lay in, during the serve and for as long as it shows afterwards: one row a
+  // piece, each at its own length from one left edge, and the rows close up to make room, so that no piece lies over another.
+  const mine = feast.lumps.filter((one) => one.at >= 1 && one.twin === member), pitch = Math.min(8, 30 / Math.max(1, mine.length))
+  mine.forEach((one, row) => lump(ctx, one.fruit, -14, -12 - (row + 1) * pitch, one.size / longest(feast), 56, pitch * 0.75))
   for (const [ear, lift] of [[-10, 0], [8, 3]] as const) inked(ctx, oval(ear, -62 - lift - 4 * Math.abs(pose.bit), 8, 9 + 2 * pose.bit), GREY, 3, dots.of(ctx, RED, 0.5))
   ctx.save()
   ctx.translate(0, -46)

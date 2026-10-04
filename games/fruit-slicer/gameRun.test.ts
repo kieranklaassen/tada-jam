@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { FLIGHT_SECONDS } from './carry'
 import { SHEETS, poseOf, tuftBackAfter } from './cast'
 import { freshGame } from './cycle'
-import { CURL_FLIGHT, CURL_LIFE, LANDS_AFTER } from './fx'
+import { CURL_FLIGHT, CURL_LIFE } from './fx'
 import { GameRun, RUN_GAP, RUN_STEP, SNACK_SECONDS, SWING } from './gameRun'
 import { CAST } from './orders'
 import { IdleLadder } from './guidance'
@@ -11,7 +11,7 @@ import { tinParts } from './orders'
 import { deserialize, serialize } from './save'
 import { TO_MOUTH_SECONDS, servedShow } from './scenes'
 import { headOf } from './seats'
-import { tinAt } from './moves'
+import { LANDS_AFTER, tinAt } from './moves'
 import { BOARD, CRATE, DOG, LANE_H, PX, QUEUE, ROLLER, SHELF_BOX, TIN, WINDOW, X0, laneTop, shown, type Box, type Point } from './stage'
 import { eaten, inTin, marksOf, onLane } from './world'
 
@@ -425,7 +425,8 @@ describe('the cast in the run', () => {
     run.end()
     for (let i = 0; i < 8 && !run.fx.fx.some((one) => one.kind === 'fly'); i++) run.tap(mid(CRATE))
     expect(run.dog.react).toBeNull()
-    play(run, 0.5)
+    // What the landing fruit pushes off the shelf's end drops as the fruit comes down, and the dog has it when it gets there.
+    play(run, LANDS_AFTER + 0.5)
     expect(run.dog.react).toBe('cheeks')
   })
 })

@@ -1,6 +1,6 @@
 import { feed, give, splat, treat, type Game } from './cycle'
 import { RAIL, WHOLE } from './measure'
-import { fellEvents, gone, land, shutIfFit, thingAt, tinAt, type GameEvent, type Whom } from './moves'
+import { SETS_DOWN_AFTER, fellEvents, gone, land, shutIfFit, thingAt, tinAt, type GameEvent, type Whom } from './moves'
 import { fedAfter } from './scenes'
 import { ruling } from './serve'
 import { isGlider } from './tastes'
@@ -84,10 +84,11 @@ function layClear(game: Game, held: Held, lane: number, x: number, how: 'beside'
   for (const { piece } of swept) {
     // The pieces being laid are in the hand: they are not what the swept ones push off the shelf.
     const set = setOnShelf(world, piece.id, held.ids)
-    fell.push(...fellEvents(world, set.fell))
+    fell.push(...fellEvents(world, set.fell, null, SETS_DOWN_AFTER))
     world = set.world
   }
-  const events: GameEvent[] = swept.length > 0 ? [{ kind: 'swept', ids: swept.map(({ piece }) => piece.id), from: swept.map(({ from }) => from) }, ...fell] : []
+  // What lies in the way is shoved aside as the piece from the hand gets there, not as the hand lets go.
+  const events: GameEvent[] = swept.length > 0 ? [{ kind: 'swept', ids: swept.map(({ piece }) => piece.id), from: swept.map(({ from }) => from), after: SETS_DOWN_AFTER }, ...fell] : []
   const laid = put({ ...game, world }, held, lane, x, how)
   return { game: laid.game, events: [...events, ...laid.events] }
 }
@@ -314,7 +315,7 @@ export function fling(game: Game, held: Held, at: Point, v: Point): { game: Game
       const slid = setRowOnBoard(rest, [hit.piece.id], on.lane, on.x + dir * Math.min(KNOCK_POINTS, Math.max(0, room)))
       const world: World = { ...slid.world, pieces: [...slid.world.pieces, pieceOf(game.world, id)!] }
       const set = setRowOnBoard(world, [id], on.lane, on.x)
-      const events: GameEvent[] = [{ kind: 'knocked', id: hit.piece.id, from: hit.box, length: hit.piece.length, voice: 'clack' }, { kind: 'setDown', ids: [id], from: [mine.from], how: 'put', voice: 'lay' }, ...fellEvents(world, set.fell)]
+      const events: GameEvent[] = [{ kind: 'knocked', id: hit.piece.id, from: hit.box, length: hit.piece.length, voice: 'clack', after: SETS_DOWN_AFTER }, { kind: 'setDown', ids: [id], from: [mine.from], how: 'put', voice: 'lay' }, ...fellEvents(world, set.fell)]
       return shutAfter({ ...game, world: set.world }, events, game, held)
     }
     case 'shelf':

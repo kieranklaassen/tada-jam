@@ -2,10 +2,10 @@ import { FLING_SPEED, drop, fling, grab, rollOver, type Held } from './carry'
 import { SHEETS, newActor, poseOf as castPose, reactAfter, reactTo, stepActor, tuftBackAfter, type Actor } from './cast'
 import type { Ending, Game } from './cycle'
 import { newDog, poseOf as dogPose, react, stepDog, type DogState, type Reaction } from './dogMotion'
-import { CURL_FLIGHT, CURL_LIFE, LANDS_AFTER, LID_STRIKES, MOUTH, mark, newFx, rollAlong, spawn, step, whoosh, type FxState } from './fx'
+import { CURL_FLIGHT, CURL_LIFE, LID_STRIKES, MOUTH, mark, newFx, rollAlong, spawn, step, whoosh, type FxState } from './fx'
 import { guideOf, type Guide } from './guide'
 import { handPose, type Guidance, type HandPose } from './guidance'
-import { newStroke, poke, slice, thingAt, tinAt, type GameEvent, type Stroke, type Whom } from './moves'
+import { LANDS_AFTER, newStroke, poke, slice, thingAt, tinAt, type GameEvent, type Stroke, type Whom } from './moves'
 import { Scene, followedBy } from './scene'
 import { headOf } from './seats'
 import { TO_MOUTH_SECONDS, gliderBeats, restShow, servedShow, serveBeats, showingBeats, type Show } from './scenes'
@@ -408,7 +408,7 @@ export class GameRun {
         // A fruit out of the crate thumps as it comes down on its lane.
         // A piece on its way to a mouth or a face is heard when it gets there: the gulp, the splat.
         const flight = event.kind === 'ate' ? (event.after ?? 0) + TO_MOUTH_SECONDS : event.kind === 'splat' ? TO_MOUTH_SECONDS : 0
-        const late = event.kind === 'fell' ? event.after ?? 0 : event.kind === 'misfit' && event.how === 'over' ? LID_STRIKES : event.kind === 'land' ? LANDS_AFTER : flight
+        const late = event.kind === 'fell' || event.kind === 'knocked' ? event.after ?? 0 : event.kind === 'misfit' && event.how === 'over' ? LID_STRIKES : event.kind === 'land' ? LANDS_AFTER : flight
         const delay = event.kind === 'cut' || event.kind === 'curl' ? cuts++ * RUN_GAP : rolledFlat ? SHEETS[rolledFlat.who].react.flat * SPRINGS_BACK[rolledFlat.who] : late
         let length = 'length' in event ? event.length : 'piece' in event ? event.piece.length : undefined
         if (event.kind === 'cut') length = this.rung = this.rung === null ? event.length : Math.min(event.length, this.rung * RUN_STEP)

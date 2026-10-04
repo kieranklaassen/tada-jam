@@ -1,7 +1,7 @@
 import type { Fruit } from './measure'
 import { BOARD, COUNTER, CRATE, DOG, QUEUE, RAIL_BOX, SHELF_BOX, WALL, WINDOW, inside, type Box, type Point } from './stage'
 import { draw } from './stream'
-import type { GameEvent } from './moves'
+import { LANDS_AFTER, SETS_DOWN_AFTER, type GameEvent } from './moves'
 import { TO_MOUTH_SECONDS } from './scenes'
 import { answerSeconds } from './voices'
 
@@ -79,9 +79,8 @@ export const CURL_FLIGHT = 0.55
 export const CURL_LIFE = 1.05
 
 /** A fruit out of the crate is in the air for the first part of its landing, and comes down with its thump this long after it set off. */
-const LAND_LIFE = 0.42
 const LAND_FALL = 0.55
-export const LANDS_AFTER = LAND_LIFE * LAND_FALL
+const LAND_LIFE = LANDS_AFTER / LAND_FALL
 
 /** A lid that tries a misfit starts down as the piece is laid, takes this long over it, and first strikes what sticks out this long after it started. */
 export const LID_LIFE = 0.7
@@ -107,9 +106,10 @@ export function spawn(state: FxState, event: GameEvent, heads: Partial<Record<'w
     next.seed = drawn.state
     return drawn.value
   }
-  const shake = (id: number, kind: Shake['kind'], dir: number, life: number, from: Box | null = null): void => {
+  // A shake that starts `after` a wait holds the piece where it was until then.
+  const shake = (id: number, kind: Shake['kind'], dir: number, life: number, from: Box | null = null, after = 0): void => {
     next.shakes = next.shakes.filter((other) => other.id !== id)
-    next.shakes.push({ id, kind, dir, from, age: 0, life })
+    next.shakes.push({ id, kind, dir, from, age: -after, life })
   }
   switch (event.kind) {
     case 'cut': {
@@ -142,7 +142,7 @@ export function spawn(state: FxState, event: GameEvent, heads: Partial<Record<'w
       next.rockSpeed += 5
       break
     case 'swept':
-      event.ids.forEach((id, i) => shake(id, 'slide', 0, 0.3, event.from[i]))
+      event.ids.forEach((id, i) => shake(id, 'slide', 0, 0.3, event.from[i], event.after ?? 0))
       break
     case 'fell':
       next.fx.push({ kind: 'fly', x: event.from.x, y: event.from.y, tx: MOUTH.x, ty: MOUTH.y, from: event.from, fruit: event.piece.fruit, age: -(event.after ?? 0), life: 0.4 })
@@ -156,7 +156,7 @@ export function spawn(state: FxState, event: GameEvent, heads: Partial<Record<'w
       break
     }
     case 'setDown':
-      event.ids.forEach((id, i) => shake(id, 'slide', 0, 0.22, event.from[i]))
+      event.ids.forEach((id, i) => shake(id, 'slide', 0, SETS_DOWN_AFTER, event.from[i]))
       break
     case 'misfit':
       // Too long, the lid bounces on it; too short, the piece slides and rattles in the gap, by no more than the gap.
@@ -182,7 +182,7 @@ export function spawn(state: FxState, event: GameEvent, heads: Partial<Record<'w
       }
       break
     case 'knocked':
-      shake(event.id, 'slide', 0, 0.3, event.from)
+      shake(event.id, 'slide', 0, 0.3, event.from, event.after ?? 0)
       break
     case 'bounce':
     case 'skid':
@@ -289,7 +289,7 @@ const STILL: Offset = { dx: 0, dy: 0, squash: 0 }
 export function offsetOf(state: FxState, id: number, at: Box | null): Offset {
   const shake = state.shakes.find((one) => one.id === id)
   if (!shake) return STILL
-  const t = Math.min(1, shake.age / shake.life)
+  const t = Math.max(0, Math.min(1, shake.age / shake.life))
   switch (shake.kind) {
     case 'hop': {
       const up = Math.sin(Math.min(1, t / 0.7) * Math.PI)

@@ -26,7 +26,7 @@ export type GameEvent =
   /** A fresh fruit lands on the board from the crate. */
   | { kind: 'land'; id: number; fruit: Fruit; length: number; voice: VoiceId }
   /** These pieces were shoved off the far lane onto the shelf; each was at `from`. */
-  | { kind: 'swept'; ids: number[]; from: Box[] }
+  | { kind: 'swept'; ids: number[]; from: Box[]; after?: number }
   /** A piece left the counter for the dog, from `from`: dropped off the shelf, given, flung, or burped across by the crate, which chews it for `after` seconds first. */
   | { kind: 'fell'; piece: Piece; from: Box; voice: VoiceId; after?: number }
   | { kind: 'spill'; voice: VoiceId }
@@ -62,7 +62,7 @@ export type GameEvent =
   /** A flung piece bounced off something and came back to the counter. `struck` is the whole fruit it bounced off, which shivers. */
   | { kind: 'bounce'; id: number; off: 'tin' | 'fruit' | 'crate' | 'shelf'; x: number; y: number; length: number; voice: VoiceId; struck?: number }
   /** A piece was knocked along its lane by a flung one, from `from`. */
-  | { kind: 'knocked'; id: number; from: Box; length: number; voice: VoiceId }
+  | { kind: 'knocked'; id: number; from: Box; length: number; voice: VoiceId; after?: number }
   /** The roller pressed so many equal parts into a fruit or a piece. */
   | { kind: 'pressed'; id: number; parts: number; length: number; voice: VoiceId }
   /** The roller ran over something it leaves no mark on. `parts` is how many ruled parts answered, on an open tin. */
@@ -113,9 +113,14 @@ export function gone(before: World, ids: readonly number[], tin: TinShape | null
   })
 }
 
-export function fellEvents(before: World, ids: readonly number[], tin: TinShape | null = null): GameEvent[] {
-  return gone(before, ids, tin).map(({ piece, from }) => ({ kind: 'fell', piece, from, voice: 'munch' }))
+export function fellEvents(before: World, ids: readonly number[], tin: TinShape | null = null, after = 0): GameEvent[] {
+  return gone(before, ids, tin).map(({ piece, from }) => (after > 0 ? { kind: 'fell', piece, from, voice: 'munch', after } : { kind: 'fell', piece, from, voice: 'munch' }))
 }
+
+/** How long a fruit out of the crate is in the air before it comes down on its lane: what it shoves aside is shoved then, not before. */
+export const LANDS_AFTER = 0.23
+/** How long a piece that is let go takes from the hand to where it is set down: what it shoves aside or knocks along moves then, not before. */
+export const SETS_DOWN_AFTER = 0.22
 
 /** A fresh fruit lands: on an empty lane, or on the far lane, shoving what lay there onto the shelf and the shelf's oldest to the dog. */
 export function land(game: Game, fruit?: Fruit): { game: Game; events: GameEvent[] } {
@@ -125,8 +130,9 @@ export function land(game: Game, fruit?: Fruit): { game: Game; events: GameEvent
   const landed = { world: made.game.world, id: made.id, swept: made.swept, fell: made.fell }
   const swept = gone(game.world, landed.swept)
   const events: GameEvent[] = []
-  if (swept.length > 0) events.push({ kind: 'swept', ids: swept.map(({ piece }) => piece.id), from: swept.map(({ from }) => from) })
-  events.push(...fellEvents(game.world, landed.fell))
+  // What lay on the lane is shoved to the shelf as the fruit comes down on it, and what that pushes off the shelf's end drops then.
+  if (swept.length > 0) events.push({ kind: 'swept', ids: swept.map(({ piece }) => piece.id), from: swept.map(({ from }) => from), after: LANDS_AFTER })
+  events.push(...fellEvents(game.world, landed.fell, null, LANDS_AFTER))
   const piece = pieceOf(landed.world, landed.id)!
   events.push({ kind: 'land', id: landed.id, fruit: piece.fruit, length: piece.length, voice: 'thump' })
   return { game: made.game, events }

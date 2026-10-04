@@ -316,7 +316,9 @@ function tin(ctx: Ctx, dots: Dots, scenery: Scenery, shape: TinShape, customer: 
     if (!last) {
       const drop = show && show.drop > 0 && show.extra < 1 ? show.extra : 1
       ctx.fillStyle = INK
-      ctx.fillRect(part.x + part.w - 2, body.y - 10 * (1 - drop), 4, body.h * drop + 10 * (1 - drop))
+      // It comes down inside the tin from its top edge. Before it has started there is nothing of it: a short upright bar standing on the
+      // edge would lie over the lid, against the fraction there, and read as a digit.
+      if (drop > 0) ctx.fillRect(part.x + part.w - 2, body.y, 4, body.h * drop)
       return
     }
     // The jaw is a thick wall across the end of the compartment, exactly where the order ends; as it snaps it jumps out past the tin's end

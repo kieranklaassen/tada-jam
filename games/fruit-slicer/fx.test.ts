@@ -139,6 +139,14 @@ describe('how a piece moves for a moment', () => {
     const swept = spawn(newFx(1), { kind: 'swept', ids: [9], from: [from] })
     expect(offsetOf(swept, 9, box)).toEqual({ dx: from.x - box.x, dy: from.y - box.y, squash: 0 })
     expect(offsetOf(play(swept, 0.35), 9, box)).toEqual({ dx: 0, dy: 0, squash: 0 })
+    // Shoved by something that is still on its way, it waits where it lay until that arrives, and only then goes.
+    const waiting = spawn(newFx(1), { kind: 'swept', ids: [9], from: [from], after: 0.23 })
+    expect(offsetOf(play(waiting, 0.2), 9, box)).toEqual({ dx: from.x - box.x, dy: from.y - box.y, squash: 0 })
+    expect(Math.abs(offsetOf(play(waiting, 0.35), 9, box).dx)).toBeLessThan(Math.abs(from.x - box.x))
+    expect(offsetOf(play(waiting, 0.6), 9, box)).toEqual({ dx: 0, dy: 0, squash: 0 })
+    const knocked = spawn(newFx(1), { kind: 'knocked', id: 9, from, length: 600, voice: 'clack', after: 0.22 })
+    expect(offsetOf(play(knocked, 0.2), 9, box)).toEqual({ dx: from.x - box.x, dy: from.y - box.y, squash: 0 })
+    expect(offsetOf(play(knocked, 0.6), 9, box)).toEqual({ dx: 0, dy: 0, squash: 0 })
     expect(offsetOf(swept, 404, box)).toEqual({ dx: 0, dy: 0, squash: 0 })
   })
 

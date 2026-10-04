@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { FLIGHT_SECONDS, FLING_SPEED, drop, fling, grab, landing, rollOver, type Held } from './carry'
 import { call, freshGame, type Game } from './cycle'
 import { WHOLE, giveOf } from './measure'
-import { land, newStroke, poke, slice, tinAt, type GameEvent } from './moves'
+import { SETS_DOWN_AFTER, land, newStroke, poke, slice, tinAt, type GameEvent } from './moves'
 import { tinParts } from './orders'
 import { COUNTER, CRATE, DOG, LANE_H, PX, QUEUE, ROLLER, SHELF_BOX, TIN, WINDOW, X0, laneTop, type Box, type Point } from './stage'
 import { SHELF, eaten, inTin, marksOf, onLane, onShelf, pieceOf, setOnBoard, setOnShelf } from './world'
@@ -245,6 +245,8 @@ describe('letting go over the board and the shelf', () => {
     const far = onLane(made.game.world, 1)[0]
     const out = drop(made.game, hold(made.game, made.right), { x: X0 + 1200 * PX, y: FAR })
     expect(kinds(out.events).slice(0, 2)).toEqual(['swept', 'setDown'])
+    // What is in the way is shoved aside as the piece from the hand gets there.
+    expect(out.events[0]).toMatchObject({ after: SETS_DOWN_AFTER })
     expect(out.events.find((event) => event.kind === 'setDown')).toMatchObject({ how: 'beside' })
     const laid = pieceOf(out.game.world, made.right)!
     expect(laid.place).toEqual({ on: 'board', lane: 0, x: far.place.on === 'board' ? far.place.x : -1 })
@@ -450,6 +452,8 @@ describe('a piece let go at speed', () => {
     const aim = { x: X0 + (wasAt + 200) * PX, y: NEAR }
     const result = fling(shelved, hold(shelved, made.left), { x: aim.x - 400, y: NEAR }, { x: 400 / FLIGHT_SECONDS, y: 0 })
     expect(kinds(result.events)).toEqual(['knocked', 'setDown'])
+    // The piece it strikes is knocked along, and clacks, as the flung piece gets there: not as the hand lets go.
+    expect(result.events[0]).toMatchObject({ after: SETS_DOWN_AFTER })
     const moved = pieceOf(result.game.world, made.right)!.place
     expect(moved.on === 'board' ? moved.x : -1).toBeGreaterThan(wasAt)
     expect(moved.on === 'board' ? moved.x + target.length : 9999).toBeLessThanOrEqual(2880)

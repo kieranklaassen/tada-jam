@@ -3,7 +3,7 @@ import { call, freshGame, give, type Game } from './cycle'
 import { FRUITS, WHOLE, giveOf } from './measure'
 import { tinParts } from './orders'
 import { BOARD, COUNTER, CRATE, DOG, LANE_H, PX, QUEUE, RAIL_BOX, ROLLER, SHELF_BOX, SHUT_TIN, TIN, WALL, WINDOW, X0, laneTop, rowTop, type Box, type Point } from './stage'
-import { holdsMisfit, newStroke, poke, slice, tinAt, touches, type GameEvent } from './moves'
+import { LANDS_AFTER, holdsMisfit, newStroke, poke, slice, tinAt, touches, type GameEvent } from './moves'
 import { SHELF, cut, inTin, onLane, onShelf, setOnShelf } from './world'
 
 const game = freshGame(null)
@@ -91,6 +91,8 @@ describe('a stroke', () => {
     const landed = result.events.filter((event) => event.kind === 'land')
     expect(landed.map((event) => (event.kind === 'land' ? event.fruit : ''))).toEqual([...FRUITS])
     expect(kinds(result.events)).toContain('swept')
+    // What lay on the lane is shoved to the shelf as a fruit comes down on it, and what that pushes off the shelf drops then: neither before.
+    for (const event of result.events) if (event.kind === 'swept' || event.kind === 'fell') expect(event.after).toBe(LANDS_AFTER)
     expect(slice(result.game, through[1], through[0], result.stroke).events).toEqual([])
   })
 
