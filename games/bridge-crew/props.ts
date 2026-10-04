@@ -60,7 +60,10 @@ export function trolley(pen: Pen, x: number, y: number, c: number, weights: numb
     pin(pen, c * wx, onTop, c * 0.6, false)
   }
   for (let i = 0; i < weights; i++) weight(pen, 0, bed - c * 0.08 - i * c * 0.14, c)
-  drawWhole(pen, weights, c * 0.62, bed - c * 0.08 - (weights * c * 0.14) / 2, c * 0.5, { fill: INK.line, edge: INK.sheetDeep, edgeWidth: c * 0.12 })
+  // The numeral beside its stack. Riding under the plank it hangs on a string each side of the stack, so there the
+  // numeral lies under the bed: no upright stands between the stack and its numeral.
+  if (how === 'under') drawWhole(pen, weights, 0, bed + c * 0.44, c * 0.5, { fill: INK.line, edge: INK.sheetDeep, edgeWidth: c * 0.12 })
+  else drawWhole(pen, weights, c * 0.62, bed - c * 0.08 - (weights * c * 0.14) / 2, c * 0.5, { fill: INK.line, edge: INK.sheetDeep, edgeWidth: c * 0.12 })
   pen.restore()
 }
 
@@ -242,33 +245,44 @@ export function ideaModel(pen: Pen, idea: Idea, x: number, y: number, c: number,
  * two things `differences` names until `swapped`, and in one of them after.
  * `load` (0 to 1) presses both, and each dips by what holds it.
  */
+/** One side of one of the chief's two models: what holds that half of the deck up, where its foot is, and whether that half of the deck is on edge. */
+type Side = { strut: Wood | 'thread' | null; foot: number; edge: boolean }
+
+/**
+ * How far a model dips under the block, as a share of its own unit: each strut
+ * or stay, and each half on edge, makes it stiffer, each by its own amount: a
+ * tube more than a stick, a stay less, a strut whose foot has been moved toward
+ * the middle less again. So any one difference between two models shows.
+ */
+export function modelDip(left: Side, right: Side): number {
+  const hold = (side: Side) => (side.strut ? ({ tube: 1.5, stick: 1, thread: 0.6, plank: 1.2, 'plank-edge': 1.35 } as const)[side.strut] * (side.foot > 0 ? 0.6 : 1) : 0) + (side.edge ? 1 : 0)
+  return Math.max(0.05, 0.34 - 0.1 * (hold(left) + hold(right)))
+}
+
+/**
+ * What a difference is in the first of the two models and in the second, by
+ * what it is: a part added (only the second has it), left out (only the
+ * first), moved (both have it, its foot elsewhere), turned (that half of the
+ * deck flat in one and on edge in the other), or changed for another kind.
+ */
+export function modelSides(d: Difference | undefined): [Side, Side] {
+  const bare: Side = { strut: null, foot: 0, edge: false }
+  if (!d) return [bare, bare]
+  const strut: Wood | 'thread' = d.kind === 'thread' ? 'thread' : d.kind === 'plank' ? 'plank-edge' : d.kind
+  switch (d.what) {
+    case 'added': return [bare, { ...bare, strut }]
+    case 'left-out': return [{ ...bare, strut }, bare]
+    case 'moved': return [{ ...bare, strut }, { ...bare, strut, foot: 0.3 }]
+    case 'turned': return [bare, { ...bare, edge: true }]
+    case 'changed': return [{ ...bare, strut: strut === 'stick' ? 'tube' : 'stick' }, { ...bare, strut }]
+  }
+}
+
 export function compareModels(pen: Pen, differences: readonly Difference[], x: number, y: number, c: number, swapped: boolean, load: number, random: () => number) {
   const w = c * 0.9
-  const kindOf = (d: Difference): Wood | 'thread' => (d.kind === 'thread' ? 'thread' : d.kind === 'plank' ? 'plank-edge' : d.kind)
-  /** One side of a model: what holds that half of the deck up, where its foot is, and whether that half of the deck is on edge. */
-  type Side = { strut: Wood | 'thread' | null; foot: number; edge: boolean }
-  const bare: Side = { strut: null, foot: 0, edge: false }
-  /**
-   * What each difference is in the first model and in the second, by what it
-   * is: a part added (only the second has it), left out (only the first),
-   * moved (both have it, its foot elsewhere), turned (that half of the deck
-   * flat in one and on edge in the other), or changed for another kind.
-   */
-  const sides = (d: Difference | undefined): [Side, Side] => {
-    if (!d) return [bare, bare]
-    const strut = kindOf(d)
-    switch (d.what) {
-      case 'added': return [bare, { ...bare, strut }]
-      case 'left-out': return [{ ...bare, strut }, bare]
-      case 'moved': return [{ ...bare, strut }, { ...bare, strut, foot: 0.3 }]
-      case 'turned': return [bare, { ...bare, edge: true }]
-      case 'changed': return [{ ...bare, strut: strut === 'stick' ? 'tube' : 'stick' }, { ...bare, strut }]
-    }
-  }
+  const sides = modelSides
   const model = (ox: number, left: Side, right: Side) => {
-    // Each strut or stay, and each half on edge, makes it stiffer: the more of them, the less it dips.
-    const stiff = [left, right].reduce((sum, side) => sum + (side.strut ? 1 : 0) + (side.edge ? 1 : 0), 0)
-    const dip = load * w * Math.max(0.06, 0.34 - 0.1 * stiff)
+    const dip = load * w * modelDip(left, right)
     wood(pen, left.edge ? 'plank-edge' : 'plank', ox, y - w * 0.6, ox + w * 0.6, y - w * 0.6 + dip, c * 0.55, random)
     wood(pen, right.edge ? 'plank-edge' : 'plank', ox + w * 0.6, y - w * 0.6 + dip, ox + w * 1.2, y - w * 0.6, c * 0.55, random)
     ;[left, right].forEach((side, i) => {

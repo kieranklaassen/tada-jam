@@ -36,6 +36,9 @@ export const ended = (at: Site, run: Run, x: number, homeward = false): boolean 
  * load is off the bridge and it lies as it does at rest (step 0).
  */
 export function between(run: Run, progress: number): Answer & { use: number[]; strain: Strain[] } {
+  // A step at which the build folded has no shape to read: a stay went slack and nothing holds. The bridge is read up
+  // to the step before it, and what it folds into is the game's to show (it settles the bridge without the slack stays).
+  if (run.ending.kind === 'folds') progress = Math.max(0, Math.min(progress, run.steps.length - 2))
   const low = Math.floor(progress), high = Math.min(run.steps.length - 1, low + 1), t = progress - low
   const a: Step = run.steps[low], b: Step = run.steps[high]
   const use = Array.from(a.use, (value, index) => value + (b.use[index] - value) * t)

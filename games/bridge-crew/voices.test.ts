@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { KINDS, SPEC } from './kit'
-import { RANGE, reactVoice, growCreak, pendulumSqueak, beaverChatter, beaverSigh, beaverSlap, chord, creak, fold, give, gurgle, hornEcho, lay, load, moleDrop, moleRule, pendulum, pinClick, pinPop, pinRattle, pinSwing, pinTick, plop, play, pluck, snapTick, splash, takeOff, trolleyBells, trolleyFlip, trolleyOff, trolleySet, trolleyWeight, turn, type VoiceSpec } from './voices'
+import { RANGE, scaleNote, reactVoice, growCreak, pendulumSqueak, beaverChatter, beaverSigh, beaverSlap, chord, creak, fold, give, gurgle, hornEcho, lay, load, moleDrop, moleRule, pendulum, pinClick, pinPop, pinRattle, pinSwing, pinTick, plop, play, pluck, snapTick, splash, takeOff, trolleyBells, trolleyFlip, trolleyOff, trolleySet, trolleyWeight, turn, type VoiceSpec } from './voices'
 
 const every: [string, VoiceSpec][] = [
   ['pin', pinClick],
@@ -18,6 +18,7 @@ const every: [string, VoiceSpec][] = [
   ['squeak', pendulumSqueak(false)], ['squeak back', pendulumSqueak(true)], ...KINDS.flatMap((kind) => [0, 1, 4, 9].map((long): [string, VoiceSpec] => [`grow ${kind} ${long}`, growCreak(kind, long)])),
   ...['parcels-stand', 'parcels-slide', 'jelly-rolls', 'jelly-jumps', 'driver-yawns', 'keys-ripple', 'piano-rolls-back', 'necks-stretch', 'necks-duck', 'hums-a-scale', 'loses-step'].map((act): [string, VoiceSpec] => [`react ${act}`, reactVoice('post-van', 'plain', act)]),
   ...['post-van', 'caterpillar-bus'].flatMap((id) => (['like', 'dislike', 'plain'] as const).map((mood): [string, VoiceSpec] => [`react ${id} ${mood}`, reactVoice(id, mood)])),
+  ...[-1, 0, 3, 7, 12].map((step): [string, VoiceSpec] => [`scale ${step}`, scaleNote(step)]),
   ['beaver slap', beaverSlap], ['beaver chatter', beaverChatter], ['beaver sigh', beaverSigh], ['mole rule', moleRule(false)], ['mole rule again', moleRule(true)], ['mole drop', moleDrop], ['pin tick', pinTick], ['pin swing', pinSwing], ['pendulum', pendulum], ['trolley set', trolleySet], ['trolley flip', trolleyFlip],
   ['rattle none', pinRattle([])], ['rattle many', pinRattle([1, 99999, 300, 400, 500, 600, 700])],
   ...[0, 1, 3, 40].flatMap((n): [string, VoiceSpec][] => [[`pop ${n}`, pinPop(n)], [`weight ${n}`, trolleyWeight(n)], [`off ${n}`, trolleyOff(n)]]),

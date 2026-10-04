@@ -15,6 +15,9 @@ import { groundAt } from './sheet'
 import { plop, pinSwing, splash as splashVoice } from './voices'
 import { DRAWN_DIP } from './pose'
 import { MODEL_PLACE, MODEL_TOP, perchOn } from './motion'
+import { modelDip, modelSides } from './props'
+import { scaleNote, trolleyFlip } from './voices'
+import { lowPoint } from './run'
 import { JUDGE } from './order'
 import { desk } from './valley'
 import { BUILD } from './crew'
@@ -1303,5 +1306,65 @@ describe('what the fourth reading found the sheet promises', () => {
     expect(game.across).not.toContain('post-van')
     expect(game.waiting).toContain('post-van')
     expect(game.takeUrgent()).toBe(true)
+  })
+})
+
+describe('what the fifth reading found the sheet promises', () => {
+  const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
+
+  it('a build that folds under a load is seen folding: nothing leaves the sheet, the slack stay hangs, and the bridge goes back as built', () => {
+    // A deck on a prop, with a stay down to the river bed at its far end, which goes slack as the truck comes on.
+    const bridge = [part('plank', 7, 6, 8, 6, true), part('plank', 8, 6, 12, 6, true), part('stick', 10, 3, 10, 6), part('thread', 12, 6, 12, 0)]
+    const game = new Game(edit({ ...freshSave(null), sheets: [{ ...freshSave(null).sheets[0], site: 'barge-below' }], waiting: ['jelly-truck'] }, bridge), stream(2))
+    tapAt(game, waitAt(game.at, 0) - 0.4, 7)
+    expect(game.drive?.run.ending.kind).toBe('folds')
+    const onSheet = () => { for (const ends of game.drawn()) for (const n of [...ends.a, ...ends.b]) { expect(Number.isFinite(n)).toBe(true); expect(Math.abs(n)).toBeLessThan(40) } }
+    for (let i = 0; i < 60 * 20 && game.drive; i++) { game.step(1 / 60); onSheet() }
+    expect(game.show.kind).toBe('give')
+    // The stay hangs slack, and the deck it held is no longer where it was built: it folds down from there.
+    expect(game.rest[3].slack).toBe(true)
+    let lowest = 6
+    for (let i = 0; i < 60 * 3; i++) { game.step(1 / 60); onSheet(); lowest = Math.min(lowest, game.drawn()[1].b[1]) }
+    expect(lowest).toBeLessThan(5.5)
+    steps(game, 4)
+    expect(game.show.kind).toBeNull()
+    expect(game.drawn()[1].b[1]).toBeGreaterThan(5.8)
+  })
+
+  it('the threads of a bridge, plucked from longest to shortest, play a scale note by note, and it starts again when the order breaks', () => {
+    const game = new Game(freshSave(null, 'open-yard'), stream(8))
+    const b = (kind: number) => 5 + (14 * (kind + 0.5)) / 4
+    tapAt(game, b(3), -2.3)
+    drag(game, [19, 11], [18, 6]); drag(game, [19, 11], [23, 6]); drag(game, [19, 11], [22, 6])
+    const mid = (i: number) => { const e = game.drawn()[i]; return [(e.a[0] + e.b[0]) / 2, (e.a[1] + e.b[1]) / 2] as const }
+    const long = (i: number) => Math.hypot(game.bridge[i].b[0] - game.bridge[i].a[0], game.bridge[i].b[1] - game.bridge[i].a[1])
+    const byLength = [0, 1, 2].sort((i, j) => long(j) - long(i))
+    const note = (i: number) => { steps(game, 1.2); game.takeVoices(); tapAt(game, ...mid(i)); const heard = game.takeVoices(); return [0, 1, 2, 3, 4, 5, 6, 7].find((step) => heard.some((voice) => same(voice, scaleNote(step)))) }
+    expect([note(byLength[0]), note(byLength[1]), note(byLength[2])]).toEqual([0, 1, 2])
+    // A longer one after a shorter breaks the order: it is the first note again.
+    expect(note(byLength[0])).toBe(0)
+    expect(note(byLength[2])).toBe(1)
+  })
+
+  it('flipped, the trolley rolls to the lowest point as the deck lies now', () => {
+    const game = new Game(edit(freshSave(null), CROSSINGS['plank-gap']), stream(2)), cart = tools(game.at).find((t) => t.tool === 'trolley')!
+    game.press((cart.x0 + cart.x1) / 2, TRAY.top - 1); game.dragStart(); game.dragMove(11, 6.3); game.dragEnd()
+    const low = lowPoint(game.at, game.bridge, 11, 1)!
+    expect(game.trolley.at).toEqual({ x: low, under: false })
+    steps(game, 1.5); game.takeVoices()
+    const place = game.trolleyPlace()!
+    tapAt(game, place[0], place[1] + 0.3); steps(game, 0.1); tapAt(game, place[0], place[1] + 0.3)
+    expect(game.takeVoices().some((voice) => same(voice, trolleyFlip))).toBe(true)
+    expect(game.trolley.at).toEqual({ x: lowPoint(game.at, game.bridge, low, 1)!, under: true })
+    // It rolls there from where it was: the view reads that from when it was set rolling.
+    expect(game.trolleyRolled).toMatchObject({ from: low })
+  })
+
+  it('whatever one thing the chief\'s two models differ in after the swap, the difference shows: they dip by different amounts', () => {
+    for (const what of ['added', 'left-out', 'moved', 'turned', 'changed'] as const) for (const kind of ['plank', 'stick', 'tube', 'thread'] as const) {
+      const [first, second] = modelSides({ what, kind, at: [0, 0] }), [same1] = modelSides({ what: 'added', kind: 'stick', at: [0, 0] })
+      // With the other side the same in both, the dips differ.
+      expect(Math.abs(modelDip(first, same1) - modelDip(second, same1)), `${what} ${kind}`).toBeGreaterThan(0.02)
+    }
   })
 })

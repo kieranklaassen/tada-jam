@@ -15,6 +15,10 @@
 
 - Open: one thing waits for the lead, since the builder's session is refused the edit to the sheet part: the sheet does not yet name the two crew that the look pass added (their two rows and three sentences are below, ready to paste). Pasting them changes the hash and calls for round 6 of those sentences only. Everything else the sheet says, the game now does; the builder asks for no round, and the sheet part's hash is the one that passed.
 
+**The reader.** The folder has been read against the sheet by a reader that had not seen the builder's session, five times so far, and what each reading found was built before the next: 2 names, 6 shapes and 13 promises; then 5 shapes and 9 promises; then 6 and 11; then 1 and 6; then 3 and 6. Each reading went deeper than the one before; none found again what an earlier one had. One finding is answered here and not built:
+
+- The fifth reading has the trolley's flip (`under`) as saved and not named by the sheet. The sheet's row for `sheets` names "the trolley's weights and where it stands or hangs": ridden under the plank on its wheels it hangs there, and `under` is that (`save.ts:26`, where a place on the deck is `{ x, under }`).
+
 **The fourteen sentences named for the lead in the closing run are all true of the game now.** Twelve promised something a child sees or hears and were built in the run after; the other two (the ghost hand, and the cause of the one change, with the day-15 clause that says the same) were first given here as sentences to paste, and after the third reading the game was built to match them instead, so the sheet's own words stand.
 
 | Where in the sheet | The sheet says | What the game does now | Test |

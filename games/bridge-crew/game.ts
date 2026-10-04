@@ -18,7 +18,7 @@ import { isFooting, site, type Idea, type VehicleId } from './sites'
 import { crossingBeats, giveBeats, givePlace, idleShow, type Cue, type Show } from './stage'
 import { CHIEF, RING, Toy, type Hand } from './toy'
 import { TAIL, TASTE, VEHICLES, bargeReaction, reaction, trainOf, type Reaction } from './vehicles'
-import { bargeHorn, beaverChatter, beaverSigh, beaverSlap, chiefTaps, chord, creak, give, gurgle, honk, hornEcho, plop, lay as layVoice, load as loadVoice, moleDrop, moleRule, pendulumSqueak, pinTick, pluck as pluckVoice, reactVoice, restore, snapTick, splash, trolleyBells, trolleyFlip, trolleyOff, trolleySet, trolleyWeight, unrollVoice } from './voices'
+import { bargeHorn, beaverChatter, beaverSigh, beaverSlap, chiefTaps, chord, creak, give, gurgle, honk, hornEcho, plop, lay as layVoice, load as loadVoice, moleDrop, moleRule, pendulumSqueak, pinTick, pluck as pluckVoice, reactVoice, restore, scaleNote, snapTick, splash, trolleyBells, trolleyFlip, trolleyOff, trolleySet, trolleyWeight, unrollVoice } from './voices'
 
 // The game on the toy: the vehicles at the two banks, a run over the bridge,
 // the two scenes a run ends in, and the sheets (the roll and the rack). Pure,
@@ -569,6 +569,15 @@ export class Game extends Toy {
   protected override plucked(index: number): void {
     if (this.bridge[index].kind !== 'thread') { this.tune = []; return }
     this.tune.push(index)
+    // Each thread plucked after a longer one (or one as long) sounds the next note of a scale, starting again from the
+    // first note when the order breaks: so the threads of a bridge, from longest to shortest, play a scale.
+    let run = 1
+    while (run < this.tune.length && run < 8) {
+      const here = this.tune[this.tune.length - run], before = this.tune[this.tune.length - run - 1]
+      if (this.tune.slice(-run).includes(before) || length(this.bridge[before]) < length(this.bridge[here]) - 1e-9) break
+      run++
+    }
+    this.voices.push(scaleNote(run - 1))
     const threads = this.bridge.flatMap((part, i) => (part.kind === 'thread' ? [i] : []))
     const last = this.tune.slice(-threads.length), longs = last.map((i) => length(this.bridge[i]))
     if (threads.length < 2 || last.length < threads.length || new Set(last).size < threads.length) return
@@ -586,10 +595,14 @@ export class Game extends Toy {
     if (placed) {
       // A tap rings one bell for each weight; a second tap while it rings flips it to ride under the plank, or back.
       if (this.trolleyRung < RING && trolley.at && 'x' in trolley.at) {
-        this.save = setTrolley(this.save, trolley.weights, { x: trolley.at.x, under: !trolley.at.under })
+        // It flips with a clank to ride under the plank, or back on top, and rolls to the lowest point as the deck lies now.
+        const low = lowPoint(this.at, this.bridge, trolley.at.x, trolley.weights) ?? trolley.at.x
+        this.trolleyRolled = { from: trolley.at.x, since: 0 }
+        this.save = setTrolley(this.save, trolley.weights, { x: low, under: !trolley.at.under })
         this.voices.push(trolleyFlip)
         this.trolleyRung = Infinity
         this.changed = true
+        this.model()
       } else {
         this.voices.push(trolleyBells(trolley.weights)); this.trolleyRung = 0
         // On its hook a tap sets it swinging again.
@@ -868,13 +881,22 @@ export class Game extends Toy {
       // bridge lies as it does with nothing on it.
       const gone = what.ring?.part
       this.lying = null
-      if (gone === undefined) this.rest = this.modelOf(this.bridge).rest
-      else if (this.bridge[gone].kind === 'tube') this.rest = this.modelOf(this.bridge.map((part, index) => (index === gone ? { ...part, loose: 'a' as const } : part))).rest
-      else {
-        const rest = this.modelOf(this.bridge.filter((_, index) => index !== gone)).rest.map((one) => (one.via && one.via.part >= gone ? { ...one, via: { ...one.via, part: one.via.part + 1 } } : one))
-        rest.splice(gone, 0, { a: this.bridge[gone].a, b: this.bridge[gone].b, how: 'firm', pivot: 0, slack: false })
-        this.rest = rest
+      /** The bridge without some of its parts, settled, with a place kept for each part left out: what is left sags, swings or lies down. */
+      const without = (out: (index: number) => boolean, place: (part: Part) => Rest): Rest[] => {
+        const kept = this.bridge.flatMap((_, index) => (out(index) ? [] : [index]))
+        const settled = this.modelOf(kept.map((index) => this.bridge[index])).rest
+        const rest: Rest[] = this.bridge.map((part) => place(part))
+        kept.forEach((index, k) => { const one = settled[k]; rest[index] = one.via ? { ...one, via: { ...one.via, part: kept[one.via.part] } } : one })
+        return rest
       }
+      const last = drive.run.steps[drive.run.steps.length - 1]
+      if (drive.run.ending.kind === 'folds') {
+        // A stay went slack under the load and the shape is no longer held: the build folds, slowly, like a deckchair,
+        // into what it is without those stays, which hang slack where they are pinned.
+        this.rest = without((index) => this.bridge[index].kind === 'thread' && last.strain[index] === 'slack', (part) => ({ a: part.a, b: part.b, how: 'firm', pivot: 0, slack: true }))
+      } else if (gone === undefined) this.rest = this.modelOf(this.bridge).rest
+      else if (this.bridge[gone].kind === 'tube') this.rest = this.modelOf(this.bridge.map((part, index) => (index === gone ? { ...part, loose: 'a' as const } : part))).rest
+      else this.rest = without((index) => index === gone, (part) => ({ a: part.a, b: part.b, how: 'firm', pivot: 0, slack: false }))
     }
     // The neat way of this sheet's idea is owed after this scene, if the rule says so: the child has tried first.
     const byJob = !drive.homeward && onNewest(this.save) && drive.vehicle === this.at.job

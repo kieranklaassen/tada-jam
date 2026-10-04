@@ -265,6 +265,9 @@ export const growCreak = (kind: Kind, long: number): VoiceSpec => kept([{ wave: 
 /** The trolley on its hook, at one end of a swing: a squeak up at one end and down at the other. */
 export const pendulumSqueak = (back: boolean): VoiceSpec => [{ wave: 'triangle', pitch: back ? 1250 : 1100, slideTo: back ? 1100 : 1250, peak: 0.05, attack: 0.03, length: 0.16 }]
 
+/** One note of the scale the threads play when they are plucked from longest to shortest: the first is the lowest, and the eighth is the first again an octave up. */
+export const scaleNote = (step: number): VoiceSpec => { const pitch = 262 * 2 ** ([0, 2, 4, 5, 7, 9, 11, 12][Math.max(0, Math.min(7, Math.round(step)))] / 12); return [{ wave: 'sine', pitch, peak: 0.09, attack: 0.004, length: 0.5 }, { wave: 'triangle', pitch: pitch * 2, peak: 0.03, attack: 0.004, length: 0.2 }] }
+
 /** The crew. The beaver: its tail on the floor, its teeth when it cannot look, and the breath it lets go. The mole: its rule laid on a thing, lower the first time and higher the second, and the rule dropped. */
 export const beaverSlap: VoiceSpec = [{ wave: 'noise', pitch: 500, slideTo: 200, peak: 0.12, attack: 0.002, length: 0.09 }, { wave: 'triangle', pitch: 150, slideTo: 95, peak: 0.1, attack: 0.002, length: 0.12 }]
 export const beaverChatter: VoiceSpec = [0, 0.06, 0.12, 0.18, 0.24].map((after) => ({ wave: 'triangle' as const, pitch: 1150, peak: 0.04, attack: 0.001, length: 0.03, after }))

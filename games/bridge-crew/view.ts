@@ -187,7 +187,9 @@ export class View {
       }
       const dip = toy.dipPoint()
       if (dip && dip.part === index) { const v = at2(dip.at); string(pen, ...p.a, ...v, cell, 0); string(pen, ...v, ...p.b, cell, 0); drawn += 2; return }
-      string(pen, ...p.a, ...p.b, cell, (toy.rest[index].slack ? 0.3 : 0) + p.shake + whirl)
+      // Pulled, it draws thin, by the share of its strength in use, where strain is being shown.
+      const load = carried(index), thin = load && load.strain === 'pull' && showsStrain(load.use, jobCrossed) ? 1 - 0.5 * Math.min(1, load.use) : 1
+      string(pen, ...p.a, ...p.b, cell * thin, ((toy.rest[index].slack ? 0.3 : 0) + p.shake + whirl) / thin)
       drawn++
     })
     toy.bridge.forEach((part, index) => {

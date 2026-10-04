@@ -340,10 +340,9 @@ export function paintDesk(pen: Pen, plot: Plot, at: Site) {
     // The title block every drawing has, ruled and left empty: no line of writing, real or pretend.
     const x1 = rightRoom[1], x0 = x1 - 2.7, y0 = floor + 0.05, y1 = y0 + 1.35
     stroke(pen, plot, [[x0, y0], [x1, y0], [x1, y1], [x0, y1]], 0.022, a, true)
-    stroke(pen, plot, [[x0, y0 + 0.45], [x1, y0 + 0.45]], 0.014, a)
+    // Three boxes: one rule across, and one down from it to the foot. No two rules cross.
     stroke(pen, plot, [[x0, y0 + 0.9], [x1, y0 + 0.9]], 0.014, a)
     stroke(pen, plot, [[x0 + 0.9, y0], [x0 + 0.9, y0 + 0.9]], 0.014, a)
-    stroke(pen, plot, [[x0 + 1.8, y0], [x0 + 1.8, y0 + 0.45]], 0.014, a)
   }
   if (right >= 4.3 || (right >= 1.3 && right < 2.9)) {
     // A mug, seen from the side. Its steam is drawn live.

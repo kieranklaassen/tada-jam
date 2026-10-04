@@ -272,8 +272,9 @@ function mover(pen: Pen, c: number, x: number, seconds: number, out: number) {
   pen.beginPath()
   pen.moveTo(x + c * 0.05 - lean, -c * 0.44); pen.lineTo(x + c * 0.24, -c * 0.5)
   pen.moveTo(x + c * 0.05 - lean, -c * 0.34); pen.lineTo(x + c * 0.24, -c * 0.36)
-  pen.moveTo(x - c * 0.04 - lean * 0.5, -c * 0.14); pen.lineTo(x - c * 0.04 + c * 0.13 * stride, 0)
-  pen.moveTo(x + c * 0.04 - lean * 0.5, -c * 0.14); pen.lineTo(x + c * 0.04 - c * 0.13 * stride, 0)
+  // Its legs go one after the other, each lifting its own foot: they never cross.
+  pen.moveTo(x - c * 0.05 - lean * 0.5, -c * 0.14); pen.lineTo(x - c * 0.09, -c * 0.08 * Math.max(0, stride))
+  pen.moveTo(x + c * 0.05 - lean * 0.5, -c * 0.14); pen.lineTo(x + c * 0.09, -c * 0.08 * Math.max(0, -stride))
   pen.stroke()
 }
 
