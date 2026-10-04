@@ -1,6 +1,6 @@
 import { Color, Euler, Matrix4, PerspectiveCamera, Quaternion, Scene, Vector3, WebGLRenderer } from 'three'
 import type { KindName } from './bodies'
-import { eyeBits, mouthBits, type Bit, type FacePlan, type FaceState } from './faces'
+import { eyeBits, mouthBits, restFace, type Bit, type FacePlan, type FaceState } from './faces'
 import { applyPose, buildFriend, disposeFriends, type FriendRig } from './friends'
 import { BALLOON, FOV, viewFor, type View } from './layout'
 import type { Pose } from './pose'
@@ -35,6 +35,7 @@ export class Stage {
   private carrier = new Matrix4()
   private readonly local = new Matrix4()
   private readonly euler = new Euler()
+  private readonly faceState: FaceState = restFace()
   private readonly marchers: Record<KindName, number> = { duck: 0, frog: 0, hippo: 0, crab: 0 }
   private readonly strollers: Record<KindName, number> = { duck: 0, frog: 0, hippo: 0, crab: 0 }
   private readonly matrix = new Matrix4()
@@ -96,9 +97,21 @@ export class Stage {
     this.friends.delete(name)
   }
 
-  /** Poses the friend of that name, building it if this is the first frame it is on. */
+  /** Poses the friend of that name, building it if this is the first frame it is on, and draws its face as the pose has it. */
   place(name: string, kind: KindName, pose: Pose): void {
-    applyPose(this.friend(name, kind), pose)
+    const rig = this.friend(name, kind)
+    applyPose(rig, pose)
+    rig.root.updateMatrixWorld(true)
+    const state = this.faceState
+    state.lookX = pose.lookX
+    state.lookY = pose.lookY
+    state.blink = pose.blink
+    state.brow = pose.brow
+    state.browLift = pose.browLift
+    state.smile = pose.smile
+    state.open = pose.mouth
+    state.wide = pose.wide
+    this.face(rig.eyesOn.matrixWorld, rig.head.matrixWorld, rig.plan.face, state)
   }
 
   drop(name: string): void {

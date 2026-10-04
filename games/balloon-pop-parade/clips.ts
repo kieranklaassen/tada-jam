@@ -88,11 +88,22 @@ export function rest(kind: KindName, holds: boolean, reach: number, time: number
     // The balloon hangs to the side of its string hand, which is the child's right: a positive turn looks that way.
     pose.headTurn = 0.14
     pose.tilt = -0.07
+    // Content: its eyes on its balloon, up and to the child's right, and a smile where it has a mouth to smile with.
+    pose.lookX = 0.55
+    pose.lookY = 0.75
+    pose.smile = 0.8
   } else {
     pose.armL = reach
     pose.armR = reach
     pose.nod = -0.42
     pose.squash += 0.03
+    // Wanting: its eyes go along the row in the sky, its brows are up in the middle, and its mouth says "ooh" now and then.
+    pose.lookX = Math.sin(t * 0.8) * 0.7
+    pose.lookY = 0.9
+    pose.brow = -0.5
+    pose.browLift = 0.45
+    pose.smile = 0.1
+    pose.mouth = Math.max(0, Math.sin(t * 1.1)) * 0.35
   }
   if (kind === 'duck') {
     // Quick and light: up on its toes, the tail never quite still.
@@ -139,8 +150,91 @@ export function clip(kind: KindName, id: ClipId, t: number, height: number, reac
   else if (kind === 'frog') frog(id, t, scratch)
   else if (kind === 'hippo') hippo(id, t, scratch)
   else crab(id, t, scratch, reach)
+  expression(id, t, p, scratch)
   const weight = ramp(t, 0, BLEND_IN) * (1 - ramp(t, p.lasts[id] - BLEND_OUT, p.lasts[id]))
   for (const channel of CHANNELS) pose[channel] += (scratch[channel] - pose[channel]) * weight
+}
+
+/**
+ * The face that goes with a motion, the same for every kind: what the body does is the kind's own, and the face
+ * says what the friend makes of it. A result is read from across a room by the body; the face is the small joke
+ * on top of it. Nothing here is aimed at the child: the looks are at the balloon, the bunch, the empty hand.
+ */
+function expression(id: ClipId, t: number, p: Personality, pose: Pose): void {
+  const lasts = p.lasts[id]
+  if (id === 'catch') {
+    // Eyes wide on what comes; delight as the string is in hand; then a settled smile.
+    const got = ramp(t, p.cue.grab, p.cue.grab + 0.12)
+    pose.lookX = 0.3
+    pose.lookY = 0.95
+    pose.brow = 0
+    pose.browLift = 0.7 * (1 - got * 0.5)
+    pose.wide = 1.35 - got * 0.3
+    pose.smile = 0.3 + got * 0.7
+    pose.mouth = hump(t, p.cue.grab, lasts) * 0.75
+  } else if (id === 'refuse') {
+    // A doubtful look at it, a look down at itself; cross as it deals with it; and pleased with itself after.
+    const hit = p.cue.hit, done = ramp(t, hit + 0.08, hit + 0.3)
+    pose.lookX = hold(t, 0, 0.12, hit * 0.45, hit * 0.6) * 0.9 + done * 0.5
+    pose.lookY = hold(t, 0, 0.12, hit * 0.45, hit * 0.6) * 0.3 - hump(t, hit * 0.45, hit) * 0.7
+    pose.brow = ramp(t, 0.05, hit * 0.8) * (1 - done * 0.6)
+    pose.browLift = 0
+    pose.wide = 1 + hump(t, 0, hit * 0.5) * 0.25
+    pose.smile = -0.7 * ramp(t, 0.05, hit * 0.7) * (1 - done) + done * 0.7
+    pose.mouth = hump(t, hit - 0.06, hit + 0.16) * 0.5
+    pose.blink = Math.max(pose.blink, hump(t, hit - 0.05, hit + 0.14) * 0.85)
+  } else if (id === 'liftOff') {
+    // Surprise as it goes up, a look down at the ground with worried brows, eyes shut as it lets go, and sheepish when it is down.
+    const up = ramp(t, 0.05, 0.3), down = ramp(t, p.cue.land, p.cue.land + 0.2)
+    pose.lookX = 0
+    pose.lookY = up * -0.9 * (1 - down) + down * 0.2
+    pose.brow = -0.9 * up * (1 - down) - 0.3 * down
+    pose.browLift = (1 - up) * 0.9 + 0.3
+    pose.wide = 1.6 - down * 0.5
+    pose.smile = -0.2 + down * 0.8
+    pose.mouth = (1 - down) * 0.9 + down * 0.25
+    pose.blink = Math.max(pose.blink, hold(t, p.cue.letGo - 0.05, p.cue.letGo + 0.05, p.cue.land - 0.05, p.cue.land + 0.1) * 0.9)
+  } else if (id === 'popped') {
+    // A start: eyes and mouth wide. Then its eyes go to the empty hand, and its brows and mouth turn the sad way.
+    const sad = ramp(t, lasts * 0.4, lasts * 0.65)
+    pose.lookX = sad * 0.6
+    pose.lookY = sad * 0.5
+    pose.brow = -sad
+    pose.browLift = (1 - sad) * 1 + sad * 0.3
+    pose.wide = 1.7 - sad * 0.6
+    pose.smile = -0.75 * sad
+    pose.mouth = (1 - sad) * 1 + sad * 0.15
+  } else if (id === 'poke' || id === 'pokeB') {
+    // A giggle: eyes squeezed, mouth open and up at the corners.
+    pose.lookX = 0
+    pose.lookY = 0
+    pose.brow = 0
+    pose.browLift = 0.4
+    pose.smile = 1
+    pose.mouth = 0.4 + Math.abs(Math.sin(t * 22)) * 0.4
+    pose.blink = Math.max(pose.blink, hump(t, 0, lasts) * 0.8)
+  } else if (id === 'wave') {
+    pose.browLift = 0.5
+    pose.smile = 1
+    pose.mouth = hump(t, 0, lasts) * 0.5
+  } else if (id === 'proud') {
+    // Smug: chin up, lids half down, a wide smile.
+    pose.lookX = 0
+    pose.lookY = 0.3
+    pose.brow = 0.3
+    pose.browLift = 0.2
+    pose.smile = 1
+    pose.mouth = hump(t, lasts * 0.3, lasts * 0.8) * 0.4
+    pose.blink = Math.max(pose.blink, hold(t, 0.1, 0.3, lasts - 0.3, lasts - 0.1) * 0.5)
+  } else {
+    // The march: a laugh on every step.
+    pose.lookX = 0
+    pose.lookY = 0.2
+    pose.brow = 0
+    pose.browLift = 0.3
+    pose.smile = 1
+    pose.mouth = 0.25 + Math.abs(Math.sin((t / lasts) * Math.PI * 3)) * 0.5
+  }
 }
 
 function duck(id: ClipId, t: number, pose: Pose, reach: number): void {

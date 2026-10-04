@@ -52,7 +52,9 @@ describe('a face', () => {
     }
     expect(smile[0].turn).toBeGreaterThan(0.3)
     expect(frown[0].turn).toBeLessThan(-0.3)
-    expect(level[0].turn).toBe(0)
+    // Level, it still turns up a little: a mouth is never one straight bar.
+    expect(level[0].turn).toBeGreaterThan(0.1)
+    for (const smiling of [-1, -0.5, -0.2, -0.1, 0, 0.3, 1]) expect(Math.abs(mouth({ ...restFace(), smile: smiling })[0].turn), `${smiling}`).toBeGreaterThan(0.1)
     const open = mouth({ ...restFace(), smile: 0, open: 1 }), laugh = mouth({ ...restFace(), smile: 1, open: 1 })
     expect(open).toHaveLength(3)
     expect(open[2].tall).toBeGreaterThan(open[0].tall * 1.5)

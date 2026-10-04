@@ -68,8 +68,8 @@ export function eyeBits(plan: FacePlan, state: FaceState, bit: Bit): void {
   if (!plan.brows) return
   for (const side of [1, -1]) {
     // Worried, the inner end of a brow goes up; cross, it comes down.
-    const turn = side * state.brow * 0.42
-    bit(ex * side * 1.04, ey + s * (1.62 + state.browLift * 0.5), ez + s * 0.22, s * 0.74, s * 0.13, s * 0.14, turn, plan.ink)
+    const turn = side * Math.max(-1, Math.min(1, state.brow)) * 0.36
+    bit(ex * side * 1.04, ey + s * (1.46 + state.browLift * 0.4), ez + s * 0.22, s * 0.7, s * 0.12, s * 0.14, turn, plan.ink)
   }
 }
 
@@ -78,9 +78,10 @@ export function mouthBits(plan: FacePlan, state: FaceState, bit: Bit): void {
   if (!plan.mouth) return
   const [mx, my, mz] = plan.mouth, w = plan.mouthWide
   const smile = Math.max(-1, Math.min(1, state.smile)), open = Math.max(0, Math.min(1, state.open))
-  // Two halves that meet in the middle: each turned up at its outer end for a smile, down for the other thing.
-  const turn = smile * 0.5, rise = Math.abs(Math.sin(turn)) * w * 0.25 * Math.sign(smile)
-  for (const side of [1, -1]) bit(mx + side * w * 0.235 * Math.cos(turn), my + rise * 0.5 - open * w * 0.06, mz, w * 0.27, w * 0.055, w * 0.07, side * turn, plan.ink)
+  // Two halves that meet in the middle: each turned up at its outer end for a smile, down for the other thing. It
+  // is never one straight bar: at its most level it still turns up a little, as a mouth does and a sign does not.
+  const up = smile >= -0.15 ? 1 : -1, turn = up * (0.14 + 0.36 * Math.abs(smile)), rise = Math.abs(Math.sin(turn)) * w * 0.25 * up
+  for (const side of [1, -1]) bit(mx + side * w * 0.235 * Math.cos(turn), my + rise * 0.5 - open * w * 0.04, mz, w * 0.27, w * 0.038, w * 0.07, side * turn, plan.ink)
   // Open, the middle of it is dark and round: an "oh", or a laugh when the corners are up.
-  if (open > 0.05) bit(mx, my - open * w * 0.12 + rise * 0.1, mz - w * 0.02, w * (0.16 + 0.12 * open + 0.06 * Math.max(0, smile)), w * 0.24 * open, w * 0.06, 0, plan.ink)
+  if (open > 0.05) bit(mx, my - open * w * 0.1 + rise * 0.1, mz - w * 0.02, w * (0.12 + 0.1 * open + 0.06 * Math.max(0, smile)), w * 0.2 * open, w * 0.06, 0, plan.ink)
 }

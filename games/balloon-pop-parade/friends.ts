@@ -6,8 +6,10 @@ import { forwardOf, spread, type Pose } from './pose'
 import { peg, pillows, type Pillow } from './shapes'
 import { vinylMaterial, type VinylUniforms } from './vinyl'
 
-// A friend as meshes: six draws, one per part that moves by itself, and a
-// seventh for the hippo, whose jaw drops when it yawns. The
+// A friend as meshes: five draws, one per part that moves by itself (four for
+// the crab, whose face is on its shell), and one more for the hippo, whose jaw
+// drops when it yawns. Its face is not a mesh of its own: the stage draws it
+// from small pillows, in one batch for every face on screen (`faces.ts`). The
 // geometry of each kind is built once and shared by every friend of that kind;
 // a friend owns only its groups and one material, which carries its own glow.
 // Every mesh is named and the root is tagged as one object, so the
@@ -21,7 +23,8 @@ export type FriendRig = {
   /** Everything above the feet; scaled for squash and stretch. */
   squash: Group
   head: Group
-  eyes: Mesh
+  /** What carries the eyes: the head, or the crab's stalks. */
+  eyesOn: Group
   armL: Group
   armR: Group
   extra: Group
@@ -32,7 +35,7 @@ export type FriendRig = {
   hand: Vector3
 }
 
-type Parts = { body: BufferGeometry; head: BufferGeometry; eyes: BufferGeometry; armL: BufferGeometry; armR: BufferGeometry; extra: BufferGeometry; jaw: BufferGeometry | null; eyeHeight: number }
+type Parts = { body: BufferGeometry; head: BufferGeometry | null; armL: BufferGeometry; armR: BufferGeometry; extra: BufferGeometry; jaw: BufferGeometry | null }
 
 const built = new Map<KindName, Parts>()
 
@@ -53,14 +56,11 @@ function partsOf(kind: KindName): Parts {
     ]
     parts = {
       body: pillows(plan.body, valve),
-      head: pillows(plan.head),
-      // The eyes are built round their own middle, so a blink closes them where they are.
-      eyes: pillows(plan.eyes).translate(0, -plan.eyes[0].at[1], 0),
+      head: plan.head.length > 0 ? pillows(plan.head) : null,
       armL: pillows(plan.arm),
       armR: pillows(mirrored(plan.arm)),
       extra: pillows(plan.extra),
       jaw: plan.jaw.length > 0 ? pillows([...plan.jaw, ...plan.inside]) : null,
-      eyeHeight: plan.eyes[0].at[1],
     }
     built.set(kind, parts)
   }
@@ -87,7 +87,7 @@ export function buildFriend(kind: KindName, name: string, shared: VinylUniforms)
   const head = new Group()
   head.name = 'head'
   head.position.set(...plan.neck)
-  head.add(mesh(parts.head, 'face'))
+  if (parts.head) head.add(mesh(parts.head, 'face'))
   squash.add(head)
 
   let jaw: Group | null = null
@@ -106,9 +106,7 @@ export function buildFriend(kind: KindName, name: string, shared: VinylUniforms)
   ;(plan.extraOnHead ? head : squash).add(extra)
 
   // The eyes ride on whatever carries them: the head, or the crab's stalks.
-  const eyes = mesh(parts.eyes, 'eyes')
-  eyes.position.y = parts.eyeHeight
-  ;(plan.extraOnHead ? extra : head).add(eyes)
+  const eyesOn = plan.extraOnHead ? extra : head
 
   const armL = new Group(), armR = new Group()
   armL.name = 'armL'
@@ -119,7 +117,7 @@ export function buildFriend(kind: KindName, name: string, shared: VinylUniforms)
   armR.add(mesh(parts.armR, 'limb'))
   squash.add(armL, armR)
 
-  return { kind, plan, root, squash, head, eyes, armL, armR, extra, jaw, material, hand: new Vector3(-plan.hand[0], plan.hand[1], plan.hand[2]) }
+  return { kind, plan, root, squash, head, eyesOn, armL, armR, extra, jaw, material, hand: new Vector3(-plan.hand[0], plan.hand[1], plan.hand[2]) }
 }
 
 /**
@@ -129,7 +127,8 @@ export function buildFriend(kind: KindName, name: string, shared: VinylUniforms)
  */
 export function marcherGeometry(kind: KindName, holds = true): BufferGeometry {
   const plan = BODIES[kind]
-  const head = pillows(plan.head).translate(...plan.neck)
+  // The face is printed still at that distance: the eyes on what carries them, the mouth on the head.
+  const head = pillows([...plan.head, ...plan.print]).translate(...plan.neck)
   const eyes = pillows(plan.eyes)
   const extra = pillows(plan.extra).translate(...plan.extraPivot)
   if (plan.extraOnHead) {
@@ -167,7 +166,6 @@ export function applyPose(rig: FriendRig, pose: Pose): void {
   if (rig.jaw) rig.jaw.rotation.x = pose.jaw
   if (rig.plan.extraOnHead) rig.extra.scale.set(1, pose.puff, 1)
   else rig.extra.scale.setScalar(pose.puff)
-  rig.eyes.scale.y = 1 - pose.blink * 0.9
   rig.material.uniforms.uGlow.value = pose.glow
 }
 

@@ -7,7 +7,7 @@ describe('a pose', () => {
     const keys = Object.keys(from) as (keyof Pose)[]
     keys.forEach((key, i) => { from[key] = 100 + i; into[key] = -1 })
     expect(copyPose(into, from)).toEqual(from)
-    expect(keys.length).toBe(21)
+    expect(keys.length).toBe(28)
   })
 
   it('has a rest that cannot be written to', () => {

@@ -1,3 +1,4 @@
+import type { FacePlan } from './faces'
 import { KIND_COLOURS, PALETTE } from './palette'
 import type { Pillow, Vec3 } from './shapes'
 
@@ -8,13 +9,18 @@ import type { Pillow, Vec3 } from './shapes'
 // Each is one flat colour all over, the colour of its balloons: beak, belly,
 // feet and claw tips too, which are told from the trunk by their shape and
 // the sheen on them, never by a second shade. What is printed on a friend is
-// in ink: its eyes, its nostrils, the line of its mouth and the inside of it.
-// The valve is white.
+// in ink: its pupils, its brows, its nostrils, the line of its mouth and the
+// inside of it. The valve and the whites of its eyes are white.
+// A friend in front has a face that moves (`face`: eyes that look, brows, and
+// a mouth where it has a printed one), drawn from small pillows by the stage.
+// On the far hill, where a face is a few pixels, it is printed still: `eyes`
+// and `print` are that face, and belong to the far hill's whole-toy shapes.
 // Every friend has the same few parts that move by themselves, so one set of
 // motions can drive all four while each keeps its own shape:
 //   body   the trunk, the legs and whatever never moves against the trunk
 //   head   turns and nods about `neck`
-//   eyes   blink and look, inside the head
+//   face   its eyes blink and look, its brows turn and its mouth changes,
+//          on the head (the crab's eyes on its stalks)
 //   armL   swings about `shoulderL`; the pillows hang down from the pivot
 //   armR   the same on the other side, and holds the string at `hand`
 //   extra  the funniest part: the duck's tail, the frog's throat, the hippo's
@@ -27,7 +33,11 @@ export type KindName = keyof typeof KIND_COLOURS
 export type Body = {
   body: Pillow[]
   head: Pillow[]
+  /** The face of a friend in front: where its eyes sit on what carries them (the head, or the crab's stalks), and its mouth on the head. */
+  face: FacePlan
+  /** The same face printed still, for a friend on the far hill: its eyes on what carries them, and its mouth on the head. */
   eyes: Pillow[]
+  print: Pillow[]
   /** The left arm, hanging from its pivot at the origin. The right arm is its mirror. */
   arm: Pillow[]
   extra: Pillow[]
@@ -89,7 +99,9 @@ function duck(): Body {
       { at: [0, 0.36, 0.6], size: [0.3, 0.12, 0.26], colour: c, detail: SMALL },
       { at: [0, 1.1, -0.04], size: [0.08, 0.17, 0.08], turn: [0.5, 0, 0], colour: c, detail: TINY },
     ],
+    face: { eye: [0.27, 0.66, 0.47], eyeSize: 0.2, brows: true, mouth: null, mouthWide: 0, ink: PALETTE.ink, whites: true },
     eyes: eye(0.26, 0.64, 0.5, 0.13),
+    print: [],
     arm: [{ at: [-0.06, -0.34, 0], size: [0.19, 0.42, 0.32], colour: c, panels: 2, detail: SMALL }],
     extra: [{ at: [0, 0.2, -0.14], size: [0.22, 0.32, 0.22], turn: [-0.7, 0, 0], colour: c, detail: SMALL }],
     jaw: [],
@@ -121,10 +133,11 @@ function frog(): Body {
     head: [
       { at: [0, 0.3, 0.06], size: [0.82, 0.46, 0.62], colour: c },
       ...both({ at: [0.4, 0.68, 0.04], size: [0.26, 0.26, 0.24], colour: c, detail: SMALL }),
-      // The wide mouth is two pieces that meet low in the middle and turn up at the ends: a curve, and not one straight bar.
-      ...both({ at: [0.235, 0.15, 0.6], size: [0.255, 0.028, 0.07], turn: [0, 0, 0.14], colour: PALETTE.ink, detail: SMALL }),
     ],
+    // The wide mouth is two pieces that meet in the middle and turn up at the ends: a curve, and not one straight bar.
+    face: { eye: [0.4, 0.75, 0.2], eyeSize: 0.2, brows: true, mouth: [0, 0.15, 0.61], mouthWide: 1.0, ink: PALETTE.ink, whites: true },
     eyes: eye(0.4, 0.74, 0.23, 0.14),
+    print: both({ at: [0.235, 0.15, 0.6], size: [0.255, 0.028, 0.07], turn: [0, 0, 0.14], colour: PALETTE.ink, detail: SMALL }),
     arm: [
       { at: [-0.04, -0.3, 0.04], size: [0.13, 0.36, 0.13], colour: c, detail: SMALL },
       { at: [-0.06, -0.66, 0.06], size: [0.2, 0.17, 0.17], colour: c, detail: SMALL },
@@ -164,7 +177,9 @@ function hippo(): Body {
       ...both({ at: [0.2, 0.3, 0.8], size: [0.06, 0.045, 0.03], colour: PALETTE.ink, detail: TINY }),
       ...both({ at: [0.44, 0.84, -0.04], size: [0.14, 0.15, 0.08], turn: [0, 0, -0.4], colour: c, detail: SMALL }),
     ],
+    face: { eye: [0.27, 0.63, 0.44], eyeSize: 0.17, brows: true, mouth: null, mouthWide: 0, ink: PALETTE.ink, whites: true },
     eyes: eye(0.28, 0.68, 0.42, 0.12),
+    print: [],
     arm: [{ at: [-0.04, -0.34, 0.02], size: [0.21, 0.42, 0.21], colour: c, panels: 2, detail: SMALL }],
     extra: [{ at: [0, 0, 0], size: [0.72, 0.56, 0.3], colour: c, detail: SMALL }],
     jaw: [{ at: [0, -0.1, 0.34], size: [0.58, 0.17, 0.36], colour: c }],
@@ -192,11 +207,13 @@ function crab(): Body {
     // Eight panels, so the welded seams fall either side of the smile and none runs down the middle of it: a bar
     // across a line would read as a sign.
     body: [{ at: [0, 0.66, 0], size: [0.94, 0.54, 0.72], colour: c, panels: 8 }, ...legs],
-    // The crab has no head of its own: its face is on its shell, so the part that nods holds the smile. The smile
-    // is two short pieces that meet low in the middle and turn up at the ends: a curve, which is a mouth, where one
-    // straight bar under two eyes and between two seams could be taken for a sign.
-    head: both({ at: [0.115, -0.165, 0.4], size: [0.135, 0.035, 0.06], turn: [0, 0, 0.32], colour: PALETTE.ink, detail: SMALL }),
+    // The crab has no head of its own: its face is on its shell, so the part that nods holds the smile and nothing
+    // else. The smile is two short pieces that meet in the middle and turn up at the ends: a curve, which is a
+    // mouth, where one straight bar under two eyes and between two seams could be taken for a sign.
+    head: [],
+    face: { eye: [0.3, 0.65, 0.12], eyeSize: 0.17, brows: true, mouth: [0, -0.165, 0.4], mouthWide: 0.5, ink: PALETTE.ink, whites: true },
     eyes: eye(0.3, 0.64, 0.15, 0.12),
+    print: both({ at: [0.115, -0.165, 0.4], size: [0.135, 0.035, 0.06], turn: [0, 0, 0.32], colour: PALETTE.ink, detail: SMALL }),
     arm: [
       { at: [-0.1, -0.28, 0.02], size: [0.13, 0.34, 0.13], turn: [0, 0, -0.3], colour: c, detail: SMALL },
       { at: [-0.2, -0.72, 0.04], size: [0.3, 0.34, 0.2], colour: c, panels: 2, detail: SMALL },

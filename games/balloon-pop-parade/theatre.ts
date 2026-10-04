@@ -218,6 +218,8 @@ export class Theatre {
   private readonly cloudWoke = [-9, -9, -9]
   /** A face to write into, so the frame loop makes none. */
   private readonly faceNow: FaceState = restFace()
+  /** Where the finger last landed, whether it is still down, and when it landed or lifted: the friends' eyes go to it. */
+  private readonly finger = { x: 0, y: 0, at: -9, down: false }
   /** The troop that passed, on its way over the far hill, and how far over it is. */
   private over: Passing | null = null
   private overU = 0
@@ -416,6 +418,10 @@ export class Theatre {
   /** The finger landed. Everything is answered here, in this frame: a squash and a squeak, a pop, a poke. */
   press(x: number, y: number, view: View): void {
     this.pressedSlot = -1
+    this.finger.x = x
+    this.finger.y = y
+    this.finger.at = this.time
+    this.finger.down = true
     // The top right corner is the grown-up's: a hold and three taps there open the frame-rate overlay, and nothing of the game answers a touch in it.
     if (x > view.width / 2 - GROWN_UP_CORNER / view.pixelsPerUnit && y > view.height / 2 - GROWN_UP_CORNER / view.pixelsPerUnit) return
     // A touch ends a scene, and is then an ordinary touch: on what was on the screen when it landed. A bunch that
@@ -538,6 +544,7 @@ export class Theatre {
   release(view: View): void {
     const slot = this.pressedSlot
     this.pressedSlot = -1
+    if (this.finger.down) { this.finger.down = false; this.finger.at = this.time }
     if (slot < 0) return
     const place = this.places[slot]
     place.pressed = false
@@ -565,6 +572,7 @@ export class Theatre {
 
   /** The press ended without a tap: the surface was parked or the browser took the finger. The bunch springs back and stays. */
   cancel(): void {
+    if (this.finger.down) { this.finger.down = false; this.finger.at = this.time }
     if (this.pressedSlot >= 0) this.places[this.pressedSlot].pressed = false
     this.pressedSlot = -1
   }
@@ -576,6 +584,17 @@ export class Theatre {
     const low = this.lowFor(passer)
     for (let k = 0; k < passer.size; k++) if (Math.hypot(x - low[k].x, (y - low[k].y) / 1.12) < BALLOON * 1.2 * view.balloon) return { x: low[k].x, y: low[k].y, colour: KIND_COLOURS[passer.kind] }
     return null
+  }
+
+  /** A friend's eyes go to the finger while it is down, and stay on where it was for a moment after it has lifted. */
+  private eyesToFinger(pose: Pose, headHigh: number): void {
+    const since = this.finger.down ? 0 : this.time - this.finger.at
+    if (since > 1.3 || this.finger.at < 0) return
+    const weight = 1 - ramp(since, 0.8, 1.3)
+    const lookX = Math.max(-1, Math.min(1, (this.finger.x - pose.x) / 2.5)), lookY = Math.max(-1, Math.min(1, (this.finger.y - pose.y - headHigh) / 2.5))
+    pose.lookX += (lookX - pose.lookX) * weight
+    pose.lookY += (lookY - pose.lookY) * weight
+    pose.headTurn += lookX * 0.12 * weight
   }
 
   /** The face printed on a cloud: asleep, with a small smile, until it is squeezed; then its eyes fly open and its mouth is round, for a moment. */
@@ -1814,7 +1833,8 @@ export class Theatre {
           pose.nod = -0.25
         } else walk(kind, this.walkIn, 1, pose)
       }
-      // Whatever is coming to it, it sees it coming; its own motion then begins from there.
+      // Its eyes go to the finger; and whatever is coming to it, it sees it coming. Its own motion then begins from there.
+      this.eyesToFinger(pose, plan.height * FRIEND_SCALE * 0.75)
       this.watch(i, pose)
       if (actor.clip) {
         const flip = actor.clip === 'refuse' && actor.mirrored === true
@@ -1949,6 +1969,14 @@ export class Theatre {
       if (this.nextIn < 1 && i === 0) walk(this.waiting.kind, this.nextIn, 1, pose)
       // Whoever has another on its head is pressed a little flat by it.
       if (i < this.waiting.size - 1) pose.squash *= 0.94
+      // They watch the balloons, and long for them a little; and their eyes go to the finger too.
+      pose.lookX = 0.75
+      pose.lookY = 0.8
+      pose.brow = -0.3
+      pose.browLift = 0.3
+      pose.smile = 0.4
+      pose.mouth = 0
+      this.eyesToFinger(pose, waitingPlan.height * FRIEND_SCALE * WAITING_SCALE * 0.75)
       if (this.waitingActor.clip) clip(this.waiting.kind, this.waitingActor.clip, Math.max(0, this.waitingActor.t - i * 0.08), waitingPlan.height, waitingPlan.reach, pose)
       pose.glow = next ? glow : 0
       painter.place(`waiting-${i}`, this.waiting.kind, pose)
@@ -2180,6 +2208,12 @@ export class Theatre {
       const u = Math.max(0, Math.min(1, 1 - (flight.lasts - flight.t) / FLIGHT))
       pose.headTurn += Math.max(-0.5, Math.min(0.5, (flight.fromX - pose.x) * 0.12)) * (1 - u)
       pose.nod -= 0.15 * (1 - u)
+      // Its eyes are on it all the way down, wide.
+      const at = this.along(flight)
+      pose.lookX = Math.max(-1, Math.min(1, (at.x - pose.x) / 2.5))
+      pose.lookY = Math.max(-1, Math.min(1, (at.y - pose.y - 1.8) / 2.5))
+      pose.wide = 1.2
+      pose.browLift = 0.6
       // Its reaction begins well inside half a second of the touch, whatever the bunch will turn out to be: from a
       // fifth of a second on it stretches up on its toes towards what is coming, and is down again as it arrives.
       const up = hump(u, WATCHES_FROM, 1)

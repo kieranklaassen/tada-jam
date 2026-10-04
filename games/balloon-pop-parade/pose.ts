@@ -32,6 +32,17 @@ export type Pose = {
   jaw: number
   /** 0 open, 1 shut. */
   blink: number
+  /** Where the eyes look, each from -1 to 1: to the child's right, and up. */
+  lookX: number
+  lookY: number
+  /** The brows: -1 worried, 0 level, 1 cross; and how far they are raised, 0 to 1. */
+  brow: number
+  browLift: number
+  /** The printed mouth, where a kind has one: -1 turned down, 0 level, 1 a wide smile; and how far it is open, 0 to 1. */
+  smile: number
+  mouth: number
+  /** How wide the eyes are: 1 at rest, more in surprise. */
+  wide: number
   /** The breathing glow, 0 to 1. */
   glow: number
 }
@@ -41,7 +52,8 @@ export function restPose(): Pose {
     x: 0, y: 0, z: 0, scale: 1, turn: 0, lean: 0, bow: 0, squash: 1,
     nod: 0, headTurn: 0, tilt: 0,
     armL: 0.12, armR: 0.12, armLForward: 0, armRForward: 0,
-    wag: 0, flick: 0, puff: 1, jaw: 0, blink: 0, glow: 0,
+    wag: 0, flick: 0, puff: 1, jaw: 0, blink: 0,
+    lookX: 0, lookY: 0, brow: 0, browLift: 0, smile: 0.5, mouth: 0, wide: 1, glow: 0,
   }
 }
 
@@ -55,6 +67,7 @@ export function copyPose(into: Pose, from: Readonly<Pose>): Pose {
   into.nod = from.nod; into.headTurn = from.headTurn; into.tilt = from.tilt
   into.armL = from.armL; into.armR = from.armR; into.armLForward = from.armLForward; into.armRForward = from.armRForward
   into.wag = from.wag; into.flick = from.flick; into.puff = from.puff; into.jaw = from.jaw; into.blink = from.blink; into.glow = from.glow
+  into.lookX = from.lookX; into.lookY = from.lookY; into.brow = from.brow; into.browLift = from.browLift; into.smile = from.smile; into.mouth = from.mouth; into.wide = from.wide
   return into
 }
 
@@ -78,6 +91,7 @@ export function mirror(pose: Pose): void {
   pose.headTurn = -pose.headTurn
   pose.tilt = -pose.tilt
   pose.wag = -pose.wag
+  pose.lookX = -pose.lookX
 }
 
 /**

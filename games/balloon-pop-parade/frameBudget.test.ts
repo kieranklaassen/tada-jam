@@ -7,18 +7,20 @@ import { MAX_BALLOONS, MAX_SHADOWS, MAX_STRINGS } from './scenery'
 import { Theatre, type Painter } from './theatre'
 
 // The frame budget, counted and not timed, so it holds on a busy machine. What a frame costs the renderer is fixed
-// by what the theatre asks the stage to draw: six draws for each friend on stage (seven for a hippo, whose jaw is
-// a part of its own), and a fixed handful for
-// everything else, however many balloons there are. The test plays whole games with a seeded child who taps fast
+// by what the theatre asks the stage to draw: five draws for each friend on stage (six for a hippo, whose jaw is
+// a part of its own, and four for a crab, whose face is on its shell), and a fixed handful for everything else,
+// however many balloons and faces there are. The test plays whole games with a seeded child who taps fast
 // and at random, through every scene, and holds the most any frame asked for under the jam's bar.
 
 /**
- * Draws a frame makes besides the friends and the far hill's batches: the sky, two hills, three clouds, the three
- * batches and the ghost hand. The far hill adds one for each batch it uses in the frame: one a kind, and one more
- * for a kind that has a friend there without a balloon.
+ * Draws a frame makes besides the friends and the far hill's batches: the sky, two hills, three clouds, the setting
+ * painted once, its three toys, the four batches (balloons, strings, shadows and the small pillows of faces) and
+ * the ghost hand. The far hill adds one for each batch it uses in the frame: one a kind, and one more for a kind
+ * that has a friend there without a balloon.
  */
-const FIXED_DRAWS = 1 + 2 + 3 + 3 + 1
-const DRAWS_A_FRIEND = 6
+const FIXED_DRAWS = 1 + 2 + 3 + 1 + 3 + 4 + 1
+/** A friend's draws: its trunk, its head, two arms and its funniest part; the crab has no head of its own, and the hippo has a jaw. */
+const drawsOf = (kind: KindName): number => 4 + (BODIES[kind].head.length > 0 ? 1 : 0) + (BODIES[kind].jaw.length > 0 ? 1 : 0)
 /** The jam's bar is about 80 draw calls; the game keeps a margin under it. */
 const DRAW_BUDGET = 76
 
@@ -66,7 +68,7 @@ describe('the frame budget', () => {
         theatre.step(1 / 60)
         clear()
         theatre.paint(painter, VIEW, { glow: 1, demo: 0.4, demoIndex: i % 4 })
-        const draws = FIXED_DRAWS + frame.batches.size + [...frame.friends.values()].reduce((sum, kind) => sum + DRAWS_A_FRIEND + (BODIES[kind].jaw.length > 0 ? 1 : 0), 0)
+        const draws = FIXED_DRAWS + frame.batches.size + [...frame.friends.values()].reduce((sum, kind) => sum + drawsOf(kind), 0)
         most.draws = Math.max(most.draws, draws)
         most.friends = Math.max(most.friends, frame.friends.size)
         most.balloons = Math.max(most.balloons, frame.balloons)
