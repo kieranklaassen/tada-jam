@@ -139,8 +139,9 @@ function shrew(ctx: Ctx, dots: Dots, cast: Casting, member: number): void {
     ctx.lineWidth = 1.5
     for (const dy of [-8, 0, 8]) {
       ctx.beginPath()
-      ctx.moveTo(34, tip + 2)
-      ctx.lineTo(34 + 18 * pose.tuft, tip - 10 + dy * 1.6)
+      // Short, and well back from the tip: where the two twins stand nose to nose, no whisker of one crosses a whisker of the other.
+      ctx.moveTo(24, tip * 0.5 + 2)
+      ctx.lineTo(24 + 13 * pose.tuft, tip * 0.5 - 8 + dy * 1.7)
       ctx.stroke()
     }
   }

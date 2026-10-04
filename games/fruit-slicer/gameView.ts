@@ -64,10 +64,9 @@ export function paintPlate(ctx: Ctx, dots: Dots): number {
     c.closePath()
   }, INK, 5)
   inked(ctx, slab(DOG.x - 6, DOG.y + DOG.h, DOG.w + 12, 14, 5), WHITE, 4)
-  // The roller's hook.
+  // The roller hangs from the peg rail on two short cords, each a run of dashes: no bar here meets another to make a shape that could be read.
   ctx.fillStyle = INK
-  ctx.fillRect(ROLLER.x + ROLLER.w / 2 - 3, COUNTER.y, 6, 34)
-  ctx.fillRect(ROLLER.x + 30, COUNTER.y + 30, ROLLER.w - 60, 6)
+  for (const cord of [ROLLER.x + ROLLER.w / 2 - 34, ROLLER.x + ROLLER.w / 2 + 34]) for (let dash = 0; dash < 3; dash++) ctx.fillRect(cord - 2.5, COUNTER.y + 14 + dash * 12, 5, 8)
   return drawn + 12 + SHELF
 }
 

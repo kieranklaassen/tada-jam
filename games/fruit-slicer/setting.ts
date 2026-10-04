@@ -163,7 +163,8 @@ function stallFront(ctx: Ctx, dots: Dots): number {
   ctx.fillStyle = INK
   ctx.fillRect(QUEUE[0].x - 12, WALL.y + 96, 6, WALL.h - 96)
   ctx.fillRect(QUEUE[0].x - 12, WALL.y + WALL.h - 12, QUEUE[1].x + QUEUE[1].w - QUEUE[0].x + 12, 6)
-  inked(ctx, oval(QUEUE[0].x - 9, WALL.y + 92, 8, 8), YELLOW, 3)
+  // The post is capped with a rounded end of its own ink, and nothing sits on top of it.
+  inked(ctx, slab(QUEUE[0].x - 14, WALL.y + 88, 10, 14, 5), INK, 0)
   // The poles that hold the awning up, one at each end, with a band of red dots wound round them.
   for (const px of [WALL.x + 3, WALL.x + WALL.w - 15]) {
     inked(ctx, rect(px, WALL.y + 3, 12, WALL.h - 6), WHITE, 3)
@@ -245,10 +246,12 @@ function clutter(ctx: Ctx, dots: Dots): number {
   inked(ctx, poly([[cx, cy], [cx + 40, cy], [cx + 42, cy + 86], [cx + 32, cy + 80], [cx + 22, cy + 88], [cx + 10, cy + 80], [cx - 2, cy + 86]]), WHITE, 3, dots.of(ctx, RED, 0.45))
   ctx.restore()
   // Paper bags, stacked flat, beside the shelf.
-  for (let bag = 0; bag < 4; bag++) {
-    const by = SHELF_BOX.y + SHELF_BOX.h - 34 - bag * 13, lean = (bag % 2 ? 3 : -2)
-    inked(ctx, poly([[COUNTER.x + 10 + lean, by], [COUNTER.x + 52 + lean, by], [COUNTER.x + 54 + lean, by + 14], [COUNTER.x + 8 + lean, by + 14]]), PAPER, 3, bag === 3 ? dots.of(ctx, BLUE, 0.2) : undefined)
-  }
+  // An untidy heap of three, the top one folded over: not a neat stack of bars.
+  const heap: readonly [number, number, number][] = [[10, 0, 46], [15, 15, 38], [8, 31, 42]]
+  heap.forEach(([dx, up, w], bag) => {
+    const by = SHELF_BOX.y + SHELF_BOX.h - 22 - up
+    inked(ctx, poly([[COUNTER.x + dx, by], [COUNTER.x + dx + w, by - (bag === 2 ? 7 : 0)], [COUNTER.x + dx + w + 3, by + 16], [COUNTER.x + dx - 2, by + 16 + (bag === 1 ? 3 : 0)]]), PAPER, 3, bag === 2 ? dots.of(ctx, BLUE, 0.2) : undefined)
+  })
   // The dog's bone, under the sill of its arch, clear of its tail and of anything that lands on its head.
   const ox = DOG.x + DOG.w / 2, oy = DOG.y + DOG.h + 28
   inked(ctx, slab(ox - 22, oy - 5, 44, 10, 5), WHITE, 3.5)
