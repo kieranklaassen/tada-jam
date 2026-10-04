@@ -450,7 +450,7 @@ export class View {
       pen.translate(sx, sy)
       if (flip) pen.scale(-1, 1)
       pen.rotate(-tilt)
-      vehicle(pen, id, cell, pose, game.seconds, stream(21), flip, hatsOn)
+      vehicle(pen, id, cell, pose, game.seconds, stream(21), flip, hatsOn, true, tilt)
       pen.restore()
       drawn++
     }

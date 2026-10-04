@@ -7,7 +7,7 @@ import { givenUpOn, modelInMargin, nearestDifferences, neatWayDue, oneChangeDue,
 import { CALM, type Splash } from './drift'
 import { desk } from './valley'
 import { perchOn } from './motion'
-import { DRAWN_DIP, atRest, rests, type Rest } from './pose'
+import { DRAWN_DIP, WATER, atRest, rests, type Rest } from './pose'
 import { answerOf, between, creaks, ended, frontAt, seat, stepAt, type Seat } from './ride'
 import type { Frame, Strain } from './frame'
 import { hang, lowPoint, park, roadOf, run, type Ending, type Run, type Train } from './run'
@@ -262,9 +262,10 @@ export class Game extends Toy {
     const [a, b] = thread.a[0] <= thread.b[0] ? [thread.a, thread.b] : [thread.b, thread.a]
     const wheel = givePlace(show, this.at, longOf(show.vehicle), TAIL[show.vehicle])
     const x = Math.max(a[0] + 0.1, Math.min(b[0] - 0.1, show.from[0])), level = a[1] + ((b[1] - a[1]) * (x - a[0])) / Math.max(b[0] - a[0], 0.2)
-    // It lets go of the wheel in the first third of the paddle and is straight again.
+    // It goes down with the wheel as far as the water's surface. It lets go of the wheel in the first third of the
+    // paddle and is straight again.
     const held = 1 - Math.min(1, show.paddle * 3)
-    return held <= 0 ? null : { part: dipped.part, at: [x + (wheel.x - x) * held * show.fall, level + (Math.min(level, wheel.y) - level) * held] }
+    return held <= 0 ? null : { part: dipped.part, at: [x + (wheel.x - x) * held * show.fall, level + (Math.min(level, Math.max(WATER, wheel.y)) - level) * held] }
   }
 
   /**

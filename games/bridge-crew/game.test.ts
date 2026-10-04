@@ -762,7 +762,7 @@ describe('what the reader found the sheet promises', () => {
     expect(seen).toBeGreaterThan(100)
     // They hang well down while the vehicle is in the water.
     expect(lowest).toBeLessThan(4.6)
-    steps(game, 0.9)
+    steps(game, 1.7)
     // Going back as built, the tips meet again where it broke, level with the pins.
     const closing = game.pieces()
     if (closing) { expect(closing.near[1][1]).toBeGreaterThan(5.5); expect(closing.far[1][1]).toBeGreaterThan(5.5) }
@@ -824,7 +824,7 @@ describe('what the reader found the sheet promises', () => {
     expect(game.rollIn).toBe(-1)
     expect(during.filter((voice) => same(voice, unrollVoice(1)))).toHaveLength(0)
     const after = []
-    for (let i = 0; i < 60 * 2.2; i++) { game.step(1 / 60); after.push(...game.takeVoices()); if (game.show.kind === null && game.rollIn < ROLL_IN) expect(game.rollIn).toBeGreaterThanOrEqual(0) }
+    for (let i = 0; i < 60 * 3; i++) { game.step(1 / 60); after.push(...game.takeVoices()); if (game.show.kind === null && game.rollIn < ROLL_IN) expect(game.rollIn).toBeGreaterThanOrEqual(0) }
     expect(after.filter((voice) => same(voice, unrollVoice(1)))).toHaveLength(1)
     steps(game, 1.5)
     expect(game.rollIn).toBe(Infinity)

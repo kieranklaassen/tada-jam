@@ -121,10 +121,15 @@ function puffs(pen: Pen, x: number, y: number, c: number, seconds: number) {
 }
 
 /** The numeral that names a vehicle's crates, laid beside them. `flip` undoes the mirror of a vehicle that faces home. */
+/** How far the caller has tipped the vehicle being drawn, in radians: its numeral is turned back by as much. */
+let tipped = 0
+
 function crateCount(pen: Pen, n: number, x: number, y: number, c: number, flip: boolean, counted = true) {
   if (!counted) return
   pen.save()
   pen.translate(x, y)
+  // The numeral stays upright beside its crates however the vehicle is tipped: a numeral on its side is no numeral.
+  pen.rotate(tipped)
   if (flip) pen.scale(-1, 1)
   drawWhole(pen, n, 0, 0, c * 0.52, { fill: INK.line, edge: INK.sheetDeep, edgeWidth: c * 0.12 })
   pen.restore()
@@ -134,9 +139,12 @@ function crateCount(pen: Pen, n: number, x: number, y: number, c: number, flip: 
  * One vehicle, in the frame the caller has set: front axle on the ground at
  * the origin, facing along +x, `c` pixels to a cell. `hats` is how many of the
  * bus's passengers still have theirs. `afloat` (0 to 1) sinks it to its crates
- * in the water. Returns nothing: every number it needs is in the pose.
+ * in the water. `tilt` is how far the caller has tipped the frame, nose up:
+ * the crates' numeral is drawn upright all the same. Returns nothing: every
+ * number it needs is in the pose.
  */
-export function vehicle(pen: Pen, id: VehicleId, c: number, pose: VehiclePose, seconds: number, random: () => number, flip = false, hats = 3, counted = true) {
+export function vehicle(pen: Pen, id: VehicleId, c: number, pose: VehiclePose, seconds: number, random: () => number, flip = false, hats = 3, counted = true, tilt = 0) {
+  tipped = tilt
   const spec = VEHICLES[id], long = Math.max(...spec.axles), r = c * (id === 'caterpillar-bus' ? 0.2 : 0.31), bed = -r * 1.3
   const lift = -pose.bounce * c
   pen.save()
