@@ -252,6 +252,23 @@ describe('every scene', () => {
     expect(game.saved.changes).toEqual([])
   })
 
+  it('lasts that long from every spot: whoever leaves or comes, from the nearest spot to the arch and from the furthest', () => {
+    const lengths: number[] = []
+    for (let spot = 0; spot < MOST; spot++) {
+      const world: World = { crew: [{ kind: 'pip', spot, hats: [0] }, { kind: 'bop', spot: (spot + 2) % MOST, hats: [1] }], tile: ['cone', 'dome'], loose: [], changes: ['leave'], guest: null, leaver: spot, slips: 0 }
+      const leaves = changeShow(new Game(saveOf(world)))
+      expect(leaves.name).toBe('one-leaves')
+      lengths.push(sceneLength(leaves.beats))
+      const others = [0, 1, 2, 3, 4].filter((other) => other !== spot).map((other, i) => ({ kind: (['bop', 'lanky', 'flop', 'wig'] as const)[i], spot: other, hats: [i] }))
+      const comes: World = { crew: others, tile: ['cone', 'dome', 'brim', 'cone', 'dome'], loose: [], changes: ['come'], guest: 'pip', leaver: null, slips: 0 }
+      const show = changeShow(new Game(saveOf(comes)))
+      expect(show.name).toBe('one-comes')
+      lengths.push(sceneLength(show.beats))
+    }
+    expect(Math.min(...lengths)).toBeGreaterThanOrEqual(4)
+    expect(Math.max(...lengths)).toBeLessThanOrEqual(10)
+  })
+
   it('gives way to a touch at any moment and leaves the stage as the save has it', () => {
     for (const position of ['one-leaves', 'one-comes']) for (const when of [0.1, 0.6, 1.3, 2.5, 3.4]) {
       const game = new Game(at(position))

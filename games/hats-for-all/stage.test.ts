@@ -39,7 +39,27 @@ describe('the stage', () => {
   it('makes an arch every creature fits through, bare', () => {
     expect(widest * 1.08).toBeLessThan(ARCH.inner)
     expect(Math.max(...Object.values(BODY).map((body) => body.top))).toBeLessThan(ARCH.straight + ARCH.inner * 0.9)
-    expect(IN_ARCH).toEqual({ x: ARCH_X, z: ARCH_Z })
+    // Whoever stands in it stands between its legs, a little forward: its ears and hands, which lie in front of its body, are clear of the foam.
+    expect(IN_ARCH.x).toBe(ARCH_X)
+    expect(IN_ARCH.z + CREATURE_DEPTH / 2).toBeGreaterThan(ARCH_Z + ARCH.depth / 2)
+    expect(IN_ARCH.z - CREATURE_DEPTH / 2).toBeLessThan(ARCH_Z + ARCH.depth / 2)
+  })
+
+  it('stands the arch where nobody who comes or goes by it has to cross the row: its way runs behind every spot but its own, clear of whoever stands there', () => {
+    const reach = widest
+    for (const spot of SPOTS) {
+      const way = wayFromArch(spot), at = { x: 0, z: 0, heading: 0 }
+      for (let d = 0; d <= wayLength(way); d += 0.05) {
+        alongWay(way, d, at)
+        for (const other of SPOTS) {
+          if (other === spot) continue
+          const apart = Math.abs(at.x - spotX(other)) >= 2 * reach || Math.abs(at.z - ROW_Z) >= CREATURE_DEPTH + HAND.front
+          expect(apart, `to spot ${spot}, passing spot ${other} at ${at.x.toFixed(1)}, ${at.z.toFixed(1)}`).toBe(true)
+        }
+      }
+    }
+    // And the parade, which passes in front of the arch, is clear of whoever waits in it.
+    expect(BACK_Z - CREATURE_DEPTH / 2).toBeGreaterThan(IN_ARCH.z + HAND.front)
   })
 })
 

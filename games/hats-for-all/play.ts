@@ -37,21 +37,25 @@ export type ActorPose = {
   eyes: number
   /** Flop's ears, from -1 drooped to 1 flung out. */
   ears: number
-  /** Its face: the mouth from -1 turned down and tight to 1 wide in a smile; the brows from -1 worried (inner ends up) to 1 cross (inner ends down), and how far they are raised, 0 to 1. */
+  /** Its face: the mouth from -1 turned down and tight to 1 wide in a smile; the brows from -1 wondering (inner ends up) to 1 cross (inner ends down), and how far they are raised, 0 to 1. */
   smile: number; browTilt: number; browLift: number
 }
 
-/** What a creature's face shows, as the three numbers of its pose. */
+/**
+ * What a creature's face shows, as the three numbers of its pose. A face is about the hats: glad of one, cross at one,
+ * lost under a tower. A bare creature looks on with its brows up, waiting calmly; no face here is sad, and none is
+ * about the child (ART.md, "The characters").
+ */
 type Face = { smile: number; tilt: number; lift: number }
 const FACES: Record<Mood | 'bare' | 'fond' | 'sulky' | 'blind' | 'calm', Face> = {
   glad: { smile: 1, tilt: 0, lift: 1 },
   grump: { smile: -1, tilt: 1, lift: 0 },
-  ask: { smile: -0.3, tilt: -1, lift: 0.6 },
+  ask: { smile: 0, tilt: -0.3, lift: 1 },
   plain: { smile: 0.35, tilt: 0, lift: 0.2 },
-  bare: { smile: -0.15, tilt: -0.55, lift: 0.3 },
+  bare: { smile: 0.1, tilt: 0, lift: 0.7 },
   fond: { smile: 0.65, tilt: 0, lift: 0.4 },
   sulky: { smile: -0.6, tilt: 0.7, lift: 0 },
-  blind: { smile: -0.2, tilt: -0.8, lift: 0.8 },
+  blind: { smile: 0, tilt: -0.35, lift: 1 },
   calm: { smile: 0.2, tilt: 0, lift: 0 },
 }
 
@@ -326,7 +330,12 @@ export class Play {
     this.time += dt
     for (let i = this.dimples.length - 1; i >= 0; i--) if ((this.dimples[i].age += dt) > DIMPLE_SECONDS) this.dimples.splice(i, 1)
     stepSpring(this.arch, this.archPressed ? 0.94 : 1, 120, 7, dt)
-    for (const prop of PROPS) stepSpring(this.props[prop], 0, prop === 'tree' ? 30 : 46, prop === 'ball' ? 3.2 : 2.6, dt)
+    for (const prop of PROPS) {
+      const spring = this.props[prop]
+      stepSpring(spring, 0, prop === 'tree' ? 30 : 46, prop === 'ball' ? 3.2 : 2.6, dt)
+      // However often it is poked, it goes no further than its place allows: the ball stays on its block.
+      if (Math.abs(spring.x) > 1) { spring.x = Math.sign(spring.x); spring.v = 0 }
+    }
     this.finger.left = Math.max(0, this.finger.left - dt)
     for (let i = this.crumbs.length - 1; i >= 0; i--) {
       const crumb = this.crumbs[i], leaf = crumb.of === 'leaf'

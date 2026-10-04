@@ -8,7 +8,7 @@ export const PROPS = ['tree', 'ball', 'brick'] as const
 export type PropName = (typeof PROPS)[number]
 
 /** The low wall of soft blocks stands just behind the mat's back edge; the ball and the brick sit on two of its blocks. */
-export const BLOCKS_Z = -7.4
+export const BLOCKS_Z = -7.75
 
 /** Where the middle of each is, and its reach. */
 export const PROP_AT: Record<PropName, { x: number; y: number; z: number; reach: number }> = {
@@ -27,5 +27,14 @@ export const BALL_ROLL = 0.5
 export const BRICK_HOP = 0.7
 export const PROP_LEAN = 0.22
 
-/** The cloud in the window drifts from side to side all the time and answers nothing: how far each way, and how slowly. */
-export const CLOUD_DRIFT = { far: 1.5, speed: 0.11 } as const
+/** A balloon rises past the window now and then, outside, where no finger reaches: how often in seconds, how long it takes, and how far it sways. */
+export const BALLOON = { every: 13, takes: 6.5, sway: 0.22 } as const
+
+/** How far up the pane the balloon is at a time, from 0 (below it) to 1 (above it), or -1 when none is passing. */
+export function balloonAt(time: number): number {
+  const since = time % BALLOON.every
+  return since < BALLOON.takes ? since / BALLOON.takes : -1
+}
+
+/** The cloud in the window drifts from side to side all the time and answers nothing: how far each way, which keeps all of it inside the pane, and how slowly. */
+export const CLOUD_DRIFT = { far: 1.25, speed: 0.11 } as const

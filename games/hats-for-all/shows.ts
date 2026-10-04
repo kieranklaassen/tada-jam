@@ -29,6 +29,8 @@ export type Show = {
 }
 
 const WALK = 6.5
+/** How long one who leaves stands in the arch looking back. */
+const LOOKS_BACK_S = 0.9
 /** How far apart creatures walk in a line: wide enough that the two widest never brush at a turn. */
 const LINE_GAP = 4
 /** How far the tile slides to be out of sight, towards the child. */
@@ -110,6 +112,8 @@ export function changeShow(game: Game): Show {
   if (left?.type !== 'left') return { name: 'nothing-changes', save, beats: [ending(game, 0)] }
   // The world has already let it go; on the stage it still stands on its spot, with its hat on if it had one.
   const who = left.kind, tossed = outcome.happened.find((event) => event.type === 'hatMoved'), way = wayOutByArch(left.spot)
+  // The way out has the arch in the middle of it: as far as the arch, and on from there.
+  const inArch = way.indexOf(IN_ARCH), toArch = way.slice(0, inArch + 1), away = way.slice(inArch)
   return {
     name: 'one-leaves',
     save,
@@ -128,8 +132,14 @@ export function changeShow(game: Game): Show {
           play.everyoneLooks(spotX(left.spot), LOOSE_Z, 2, who)
         })
       }),
-      cue(1.1, () => play.walk(who, way, WALK, 0, () => play.leave(who))),
-      ending(game, 1.1 + wayLength(way) / WALK + 0.2),
+      // It walks behind the row to the arch, stops in it, looks back at the row with a hop and a word of its own, and goes.
+      cue(1.1, () => play.walk(who, toArch, WALK, 0, () => {
+        play.look(who, 0, ROW_Z, LOOKS_BACK_S)
+        play.bounce(who, 0.9, 0.5)
+        game.says(who, 'plain')
+        play.after(LOOKS_BACK_S, () => play.walk(who, away, WALK, 0, () => play.leave(who)))
+      })),
+      ending(game, 1.1 + wayLength(way) / WALK + LOOKS_BACK_S + 0.2),
     ],
   }
 }

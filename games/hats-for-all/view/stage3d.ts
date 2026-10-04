@@ -4,11 +4,11 @@ import type { Hint } from '../guide'
 import { MOST, type HatKind } from '../kinds'
 import { DIMPLE_SECONDS, MOST_CRUMBS, type ActorPose, type Play } from '../play'
 import { CREATURE_DEPTH, HAND, HAT_HALF, HAT_HEIGHT, SLAB, TILE_DEPTH } from '../sizes'
-import { BALL_RADIUS, BALL_ROLL, BRICK_HOP, BRICK_REST_Y, CLOUD_DRIFT, PROPS, PROP_AT, PROP_LEAN } from '../props'
+import { BALLOON, balloonAt, BALL_RADIUS, BALL_ROLL, BRICK_HOP, BRICK_REST_Y, CLOUD_DRIFT, PROPS, PROP_AT, PROP_LEAN } from '../props'
 import { ARCH_X, ARCH_Z, LANE_Z, TILE_Z } from '../stage'
 import { tileWidth } from '../tile'
 import { CREATURE_COLOUR, EAR_DEPTH, HAT_COLOUR, MAT_BACK, PALETTE, buildArch, buildMat, buildPieces, buildTile, type Pieces } from './build'
-import { CLOUD_AT, TINT, buildBall, buildBrick, buildCloud, buildCrown, buildRoomPlanes, buildScenery } from './room'
+import { BALLOON_WAY, CLOUD_AT, TINT, buildBall, buildBrick, buildCloud, buildCrown, buildRoomPlanes, buildScenery } from './room'
 import { RING_CLEAR, blobTexture, foamMaterials, handTexture, ringTexture } from './foam'
 
 // The foam scene as three.js objects, with no renderer: it is built once,
@@ -122,14 +122,14 @@ export class FoamStage {
     }
     const flat = (colour: string, opacity: number, map = 0): THREE.MeshBasicMaterial => new THREE.MeshBasicMaterial({ color: colour, map: this.textures[map], transparent: true, opacity, depthWrite: false })
     this.hands = instanced('hands', this.pieces.hand, this.foam.plain, BODIES * 2)
-    this.dots = instanced('dots', this.pieces.dot, new THREE.MeshBasicMaterial({ color: '#ffffff' }), BODIES * DOTS + MOST_CRUMBS)
+    this.dots = instanced('dots', this.pieces.dot, new THREE.MeshBasicMaterial({ color: '#ffffff' }), BODIES * DOTS + MOST_CRUMBS + 3)
     this.blobs = instanced('shadow-blobs', this.pieces.blob, flat(PALETTE.shadow, 0.5), BLOBS)
     this.glows = instanced('glow-blobs', this.pieces.blob, flat(PALETTE.glow, 1, 2), GLOWS)
     this.blobs.renderOrder = 1
     this.glows.renderOrder = 2
     // The owners of each hand and each dot, for a check that reads the scene: they belong to their creature.
     this.hands.userData.jamInstanceObjects = Array.from({ length: BODIES * 2 }, (_, i) => `creature-${Math.floor(i / 2)}`)
-    this.dots.userData.jamInstanceObjects = Array.from({ length: BODIES * DOTS + MOST_CRUMBS }, (_, i) => (i < BODIES * DOTS ? `creature-${Math.floor(i / DOTS)}` : 'crumbs'))
+    this.dots.userData.jamInstanceObjects = Array.from({ length: BODIES * DOTS + MOST_CRUMBS + 3 }, (_, i) => (i < BODIES * DOTS ? `creature-${Math.floor(i / DOTS)}` : 'crumbs'))
     this.hand = new THREE.Sprite(new THREE.SpriteMaterial({ map: this.textures[1], transparent: true, depthTest: false, depthWrite: false }))
     this.hand.name = 'ghost-hand'
     this.hand.center.set(0.5, 1)
@@ -263,6 +263,18 @@ export class FoamStage {
       this.dots.setMatrixAt(dotCount, this.m.compose(this.v.set(crumb.x, crumb.y, crumb.z), this.q.setFromAxisAngle(this.w.set(0, 0, 1), crumb.sway + crumb.age * (crumb.y > 0.05 ? 5 : 0)), this.s.set(size * (leaf ? 1.5 : 1), size, 1)))
       this.dots.setColorAt(dotCount++, crumb.of === 'leaf' ? this.colour.set(TINT.crown) : this.colour.set(HAT_COLOUR[crumb.of]).lerp(WHITE, 0.45))
     }
+    // The room's passer-by: a balloon on its string rises past the window, outside, and is gone behind the board. Three more dots.
+    const up = balloonAt(play ? play.time : 0)
+    if (up >= 0) {
+      const x = BALLOON_WAY.x + BALLOON.sway * Math.sin(up * 7), y = BALLOON_WAY.from + (BALLOON_WAY.to - BALLOON_WAY.from) * up
+      const put = (dy: number, wide: number, high: number, tint: string): void => {
+        this.dots.setMatrixAt(dotCount, this.m.compose(this.v.set(x, y + dy, BALLOON_WAY.z), this.q.identity(), this.s.set(wide, high, 1)))
+        this.dots.setColorAt(dotCount++, this.colour.set(tint))
+      }
+      put(0, 0.27, 0.33, TINT.balloon)
+      put(-0.36, 0.05, 0.05, TINT.balloon)
+      put(-0.62, 0.014, 0.24, TINT.string)
+    }
     this.dots.count = dotCount
     if (this.dots.instanceColor) this.dots.instanceColor.needsUpdate = true
     this.hands.count = hand
@@ -310,7 +322,9 @@ export class FoamStage {
   private swing(ear: THREE.Mesh, slot: number, side: number, top: number, pose: ActorPose): void {
     ear.visible = true
     ear.userData.jamObject = `creature-${slot}`
-    this.q.setFromAxisAngle(this.v.set(0, 0, 1), side * (0.2 + 0.5 * pose.pat + 0.9 * Math.max(0, pose.ears) - 0.15 * Math.max(0, -pose.ears)) - pose.lean * 1.5 + side * (1 - pose.squash) * 1.0)
+    // An ear swings out from where it hangs and never in across the face: the eyes stand proud of the face, and an ear lies flat on it.
+    const out = 0.2 + 0.5 * pose.pat + 0.9 * Math.max(0, pose.ears) - 0.15 * Math.max(0, -pose.ears) - side * pose.lean * 1.5 + (1 - pose.squash) * 1.0
+    this.q.setFromAxisAngle(this.v.set(0, 0, 1), side * Math.max(0.12, out))
     // In front of the body's face and behind its hands.
     ear.matrix.compose(this.v.set(side * 0.78, top - 0.42, CREATURE_DEPTH / 2 + EAR_DEPTH / 2 + 0.01), this.q, this.s.set(1, 1, 1)).premultiply(this.body)
     ear.matrixWorldNeedsUpdate = true

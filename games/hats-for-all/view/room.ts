@@ -16,6 +16,7 @@ import { disc, merged, paint, roundedRect, slab } from './foam'
 export const TINT = {
   wall: '#f6efe2', floor: '#eadfcd', pane: '#d9edf6',
   peach: '#f4d3bf', mint: '#cfe9d8', lilac: '#dcd4ee', butter: '#f5e8b9', sky: '#cbe4ef', rose: '#f3d0d8',
+  balloon: '#f3bcb0', string: '#cfc6b6',
   hill: '#c4e2c0', hillFar: '#d6ecd2', sun: '#f8e7a6', cloud: '#fbf8f0', frame: '#fbf6ea',
   trunk: '#e2cdb6', crown: '#bfe0b4', crownLight: '#d0e9c6',
 } as const
@@ -24,8 +25,10 @@ const WALL_Z = MAT_BACK - 3.2
 const FLOOR_Y = -SLAB
 /** The window board among the blocks: where it stands, how wide and high it is, and the pane cut in it. */
 export const WINDOW = { x: -0.5, wide: 6.2, high: 3.9, paneWide: 5.0, paneHigh: 2.4, paneY: 0.7 } as const
-/** The pane's sky is a flat sheet just behind the board; the hills, the sun and the cloud stand between the two. */
+/** The pane's sky is a flat sheet inside the board's thickness. In front of it, each in a layer of its own so nothing touches: the far hill and the sun, the near hill, the balloon, the cloud, and the bar. */
 const PANE_Z = BLOCKS_Z - 0.2
+const LAYER = 0.12
+const BOARD_DEPTH = 0.9
 
 /** The flat things: the floor, the wall and the sky in the window. Planes, with nothing to pass through. */
 export function buildRoomPlanes(): THREE.BufferGeometry {
@@ -83,29 +86,32 @@ export function buildScenery(): THREE.BufferGeometry {
   const { x, wide, high, paneWide, paneHigh, paneY } = WINDOW
   const board = roundedRect(-wide / 2, 0, wide, high, 0.4)
   board.holes.push(new THREE.Path(roundedRect(-paneWide / 2, paneY, paneWide, paneHigh, 0.3).getPoints(5)))
-  parts.push(standing(board, 0.5, TINT.frame, x, FLOOR_Y, BLOCKS_Z))
-  parts.push(standing(roundedRect(-0.11, 0, 0.22, paneHigh, 0.08), 0.3, TINT.frame, x, FLOOR_Y + paneY, BLOCKS_Z))
-  parts.push(standing(hill(4.6, 1.5), 0.05, TINT.hillFar, x - 0.9, FLOOR_Y + paneY, PANE_Z + 0.05))
-  parts.push(standing(hill(3.6, 1.0), 0.05, TINT.hill, x + 1.2, FLOOR_Y + paneY, PANE_Z + 0.11))
-  parts.push(standing(disc(0.42, 0, 0.42), 0.05, TINT.sun, x + 1.6, FLOOR_Y + paneY + 1.25, PANE_Z + 0.05))
+  parts.push(standing(board, BOARD_DEPTH, TINT.frame, x, FLOOR_Y, BLOCKS_Z))
+  parts.push(standing(roundedRect(-0.11, 0, 0.22, paneHigh, 0.08), LAYER, TINT.frame, x, FLOOR_Y + paneY, PANE_Z + 0.52))
+  parts.push(standing(hill(4.6, 1.5), LAYER, TINT.hillFar, x - 0.9, FLOOR_Y + paneY, PANE_Z + 0.08))
+  parts.push(standing(hill(3.6, 1.0), LAYER, TINT.hill, x + 1.2, FLOOR_Y + paneY, PANE_Z + 0.21))
+  parts.push(slab(disc(0.42, 0, 0.42), LAYER, TINT.sun, 12).translate(x + 1.6, FLOOR_Y + paneY + 1.25, PANE_Z + 0.08))
   // The string of beads on the wall: flat, pale and out of reach, so plainly part of the wall.
   let bead = 0
   for (const [from, to, sag] of SWAGS) for (let i = 0; i < 9; i++) {
     const u = (i + 0.5) / 9
-    parts.push(standing(disc(i % 3 === 1 ? 0.33 : 0.24, 0, 0), 0.08, BEAD_TINTS[bead++ % BEAD_TINTS.length], from + (to - from) * u, SWAG_Y - sag * 4 * u * (1 - u), WALL_Z + 0.05))
+    parts.push(standing(disc(i % 3 === 1 ? 0.33 : 0.24, 0, 0), LAYER, BEAD_TINTS[bead++ % BEAD_TINTS.length], from + (to - from) * u, SWAG_Y - sag * 4 * u * (1 - u), WALL_Z + 0.08))
   }
   // The trunk of the tree; its crown is its own mesh, since it sways.
-  parts.push(standing(roundedRect(-0.42, 0, 0.84, 3.3, 0.3), 0.6, TINT.trunk, PROP_AT.tree.x, 0, PROP_AT.tree.z))
+  parts.push(standing(roundedRect(-0.42, 0, 0.84, 3.3, 0.3), 0.6, TINT.trunk, PROP_AT.tree.x, 0.02, PROP_AT.tree.z))
   return merged(parts)
 }
 
 /** The cloud in the window: its own mesh, since it drifts. Drawn about its middle. */
 export function buildCloud(): THREE.BufferGeometry {
-  return slab(cloudOutline(), 0.05, TINT.cloud, 5).translate(0, -0.3, 0)
+  return slab(cloudOutline(), LAYER, TINT.cloud, 5).translate(0, -0.3, 0)
 }
 
+/** The balloon's way up the pane, between the near hill and the cloud, inside the board's thickness, so it shows only through the pane: across, from below the pane to behind the board's top, and how far back. */
+export const BALLOON_WAY = { x: WINDOW.x - 1.35, from: FLOOR_Y + WINDOW.paneY - 0.55, to: FLOOR_Y + WINDOW.paneY + WINDOW.paneHigh + 0.4, z: PANE_Z + 0.3 } as const
+
 /** Where the cloud drifts about, in the upper left of the pane, between the sky and the hills. */
-export const CLOUD_AT = { x: WINDOW.x - 0.9, y: FLOOR_Y + WINDOW.paneY + 1.75, z: PANE_Z + 0.08 } as const
+export const CLOUD_AT = { x: WINDOW.x - 0.05, y: FLOOR_Y + WINDOW.paneY + 1.75, z: PANE_Z + 0.38 } as const
 
 /** The tree's crown: a big soft blob with two lighter tufts, hung on the trunk's top and in front of it. Drawn about the point it sways from. */
 export function buildCrown(): THREE.BufferGeometry {

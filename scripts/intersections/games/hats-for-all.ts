@@ -7,7 +7,9 @@ import type { Driver, Frac, GameAudit } from '../types.ts'
 // falls, loose hats beside their spots, a hat carried about in the hand, a
 // creature pulled to another, to the tile and to nowhere, each scene played
 // out and each scene ended by a touch in the middle, and a finished crew at
-// rest with the next crew's first in the arch.
+// rest with the next crew's first in the arch. The room is audited with
+// them: its blocks, window board and tree stand still, and its crown, cloud,
+// ball and brick move, alone and with a crew walking past.
 
 const SLOT = 'tada-jam:slot:hats-for-all'
 const KINDS = ['bop', 'lanky', 'flop', 'wig', 'pip'] as const
@@ -34,9 +36,12 @@ async function open(d: Driver, world: World | null): Promise<void> {
 const crew = (kinds: readonly Kind[], hats: number[][] = []): Creature[] => kinds.map((kind, i) => ({ kind, spot: kinds.length === 5 ? i : i + 1, hats: hats[i] ?? [] }))
 const hat = async (d: Driver, n: number): Promise<Frac> => (await d.find(`^hat-${n}( |$)`)) ?? [0.4, 0.68]
 const creature = async (d: Driver, n: number): Promise<Frac> => (await d.find(`^creature-${n}-body( |$)`)) ?? [0.4, 0.45]
-const TILE: Frac = [0.2, 0.7]
-const FLOOR: Frac = [0.55, 0.9]
-const ARCH: Frac = [0.79, 0.3]
+// Fixed places on the glass at 1180 by 820: the tile's front edge under its middle hole, bare mat in front of the tile, and the top of the arch.
+const TILE: Frac = [0.5, 0.865]
+const FLOOR: Frac = [0.3, 0.95]
+const ARCH: Frac = [0.855, 0.105]
+/** A thing of the room, by the name of its mesh, or where it stands at rest. */
+const thing = async (d: Driver, name: string, at: Frac): Promise<Frac> => (await d.find(`^${name}( |$)`)) ?? at
 
 /** Every creature of the five under one kind of hat: five of the fifteen acts, and then one walks out. */
 function tastes(kind: Hat) {
@@ -68,7 +73,7 @@ const audit: GameAudit = {
     'ghost-hand',
     // Pupils and mouths: flat discs with no thickness, laid just in front of the face.
     '^dots',
-    // The room's floor and wall: two planes behind and under everything.
+    // The room's floor, wall and window sky: three planes behind and under everything.
     '^room$',
   ],
   allow: [],
@@ -185,6 +190,24 @@ const audit: GameAudit = {
         const loose = await hat(d, 1)
         await d.tap(loose)
         await d.wait(13000)
+      },
+    },
+    {
+      // The room touched: the tree shaken, the ball rolled and the brick hopped, each again and again while it still moves, with the crew on its spots; then one of the crew walks out past them while they settle and a balloon passes the window.
+      name: 'the-room-touched',
+      run: async (d) => {
+        await open(d, { crew: crew(KINDS, [[0], [1], [2], [3], [4]]), tile: ['cone', 'dome', 'brim', 'cone', 'dome'], changes: ['leave'], leaver: 0, position: 'one-leaves' })
+        const tree = await thing(d, 'tree-crown', [0.06, 0.17]), ball = await thing(d, 'ball', [0.28, 0.18]), brick = await thing(d, 'brick', [0.17, 0.13])
+        for (let round = 0; round < 3; round++) for (const at of [tree, ball, brick, ball, tree, brick]) {
+          await d.tap(at)
+          await d.wait(round === 0 ? 700 : 180)
+        }
+        await d.wait(2600)
+        for (const at of [tree, ball, brick, tree, ball, brick]) {
+          await d.tap(at)
+          await d.wait(500)
+        }
+        await d.wait(6500)
       },
     },
     {

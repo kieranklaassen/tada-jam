@@ -25,8 +25,8 @@ export function holeX(hole: number, hats: number): number {
 /** Where a loose hat rests: in front of its round spot, clear of the lane the creatures walk along. */
 export const LOOSE_Z = ROW_Z + 2.7
 
-/** The foam arch the creatures come in through, behind the right end of the row. */
-export const ARCH_X = 6.4
+/** The foam arch the creatures come in through, behind the right end of the row and a little to the right of its last spot, so whoever waits in it shows beside whoever stands there. */
+export const ARCH_X = 7.4
 export const ARCH_Z = -4.0
 
 /** The spot whose x is nearest to this x; the lower spot wins a tie. */
@@ -39,7 +39,9 @@ export function nearestSpot(x: number): number {
 // --- The ways the creatures walk -----------------------------------------
 // Every way is a line of straight stretches on the mat. They keep clear of
 // one another by lanes: the row stands on z = ROW_Z, a walker passes in front
-// of it on LANE_Z or behind it on BACK_Z, a loose hat rests further forward,
+// of it on LANE_Z or behind it on BACK_Z (the arch stands behind the row, so
+// whoever comes or goes by it walks behind the row and steps onto its spot
+// from the back), a loose hat rests further forward,
 // and the tile lies in front of that. So a creature walking never passes
 // through one standing, through a loose hat, the tile or the arch.
 
@@ -51,7 +53,8 @@ export const BACK_Z = -2.4
 /** Off the mat's view to the right, behind the arch, and to the left along the lane. */
 export const OFF_RIGHT: Point = { x: ARCH_X + 8.5, z: ARCH_Z - 1.6 }
 export const BEHIND_ARCH: Point = { x: ARCH_X, z: ARCH_Z - 1.6 }
-export const IN_ARCH: Point = { x: ARCH_X, z: ARCH_Z }
+/** Whoever stands in the arch stands a little forward in it: its body is between the legs of the arch and its ears and hands are in front of them, so nothing it does with them meets the foam. */
+export const IN_ARCH: Point = { x: ARCH_X, z: ARCH_Z + 0.2 }
 export const OFF_LEFT_X = -14.5
 /** Where the parade turns, at either end of the row. */
 export const TURN_LEFT_X = -7.4
@@ -66,9 +69,9 @@ export function wayToArch(): Point[] {
   return [OFF_RIGHT, BEHIND_ARCH, IN_ARCH]
 }
 
-/** From the arch to a round spot: out of the arch, along the lane in front of the row, and back onto the spot. */
+/** From the arch to a round spot: out of the arch, along the lane behind the row, and forward onto the spot. */
 export function wayFromArch(spot: number): Point[] {
-  return [IN_ARCH, { x: ARCH_X, z: LANE_Z }, { x: spotX(spot), z: LANE_Z }, spotPoint(spot)]
+  return [IN_ARCH, { x: ARCH_X, z: BACK_Z }, { x: spotX(spot), z: BACK_Z }, spotPoint(spot)]
 }
 
 /** From a round spot out through the arch and off the mat. */
