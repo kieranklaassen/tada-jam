@@ -185,7 +185,7 @@ function stallFront(ctx: Ctx, dots: Dots): number {
   return drawn + 4
 }
 
-/** The counter as worn wood: plank seams running its whole width (no upright joints: one near the rail would stand like a ruler's tick), a few knots, and the pale stains of old juice. All of it fainter than the dots it lies on. */
+/** The counter as worn wood: plank seams running its whole width (no upright joints: one near the rail would stand like a ruler's tick), a few knots and the pale stains of old juice, all of them off the ends of the board and none along the lengths. All of it fainter than the dots it lies on. */
 function wood(ctx: Ctx): number {
   const seam = '#dcb23a'
   ctx.fillStyle = seam
@@ -195,15 +195,18 @@ function wood(ctx: Ctx): number {
     drawn++
   }
   for (let knot = 0; knot < 9; knot++) {
-    const kx = COUNTER.x + 30 + chance(knot + 3) * (COUNTER.w - 60), ky = COUNTER.y + 24 + chance(knot + 31) * (COUNTER.h - 48)
+    // A knot is a mark too: each lies off one end of the board or the other, never along the lengths.
+    const left = knot % 2 === 0, room = left ? BOARD.x - COUNTER.x - 28 : COUNTER.x + COUNTER.w - (BOARD.x + BOARD.w) - 28
+    const kx = (left ? COUNTER.x + 14 : BOARD.x + BOARD.w + 14) + chance(knot + 3) * room, ky = COUNTER.y + 24 + chance(knot + 31) * (COUNTER.h - 48)
     ctx.beginPath()
     ctx.ellipse(kx, ky, 7, 3.5, 0, 0, Math.PI * 2)
     ctx.fill()
     drawn++
   }
-  // Old juice, long dried: flat pale blots of the three fruit colours, round the edges of the board and under the crate.
+  // Old juice, long dried: flat pale blots of the three fruit colours, off both ends of the board and under the crate. None lies in the
+  // bare strip between the rail and the board, or anywhere along the lengths: a mark there would read as a tick on a ruler.
   const blots: readonly [number, number, number, keyof typeof TINT][] = [
-    [BOARD.x - 26, BOARD.y + 40, 16, 'long'], [BOARD.x + 300, BOARD.y - 18, 12, 'middle'], [BOARD.x + 640, BOARD.y - 22, 15, 'long'], [BOARD.x + BOARD.w + 12, SHELF_BOX.y + 30, 11, 'short'],
+    [BOARD.x - 26, BOARD.y + 40, 16, 'long'], [BOARD.x - 34, BOARD.y - 18, 12, 'middle'], [BOARD.x - 30, SHELF_BOX.y - 8, 15, 'long'], [BOARD.x + BOARD.w + 12, SHELF_BOX.y + 30, 11, 'short'],
     [CRATE.x + 30, CRATE.y + CRATE.h + 14, 14, 'middle'], [BOARD.x - 30, SHELF_BOX.y + 150, 13, 'short'], [RAIL_BOX.x + RAIL_BOX.w + 20, RAIL_BOX.y + 60, 10, 'long'],
   ]
   for (const [bx, by, r, fruit] of blots) {

@@ -120,6 +120,15 @@ function readWorld(raw: Record<string, unknown>, compartments: number, served: b
  * first visit, whose stream starts from `firstSeed`. Inside a record each field is repaired by itself, and a
  * saved place wins over the child's age.
  */
+/**
+ * Whether what the slot held is anything other than this game as it would be saved: a first visit, an older
+ * shape, or something that had to be repaired. Such a game is handed to storage as soon as it has been laid
+ * out, so that one put away before its first change opens again with the same two waiting.
+ */
+export function differsFromSlot(raw: unknown, game: Game): boolean {
+  return JSON.stringify(raw) !== JSON.stringify(serialize(game))
+}
+
 export function deserialize(raw: unknown, childAge: number | null = null, firstSeed = FIRST_SEED): Game {
   if (!isRecord(raw) || raw.v !== STATE_VERSION) return freshGame(childAge, firstSeed)
   const state = readState(raw, childAge)

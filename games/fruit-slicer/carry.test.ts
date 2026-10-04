@@ -350,6 +350,38 @@ describe('a piece let go at speed', () => {
     expect(result.game.world.pieces.length).toBe(made.game.world.pieces.length + 1)
   })
 
+  it('is in the air as that fruit lands: it is not shoved to the shelf with the lane it came from, and is not what a full shelf drops', () => {
+    // Both lanes in use and the shelf full; the piece flung is the only one on the far lane.
+    const two = land(start).game
+    const far = onLane(two.world, 1)[0]
+    let world = two.world
+    for (let slot = 0; slot < SHELF; slot++) world = { ...world, pieces: [...world.pieces, { id: world.nextId, fruit: 'long', length: 200, place: { on: 'shelf', slot }, blind: true, ruled: 0, mark: 0 }], nextId: world.nextId + 1 }
+    const full: Game = { ...two, world }
+    const shelf = onShelf(full.world).map((piece) => piece.id)
+    const out = flung(full, far.id, mid(CRATE))
+    // The fruit lands on the lane the piece was taken from; nothing is swept there, and nothing drops off the shelf for it.
+    expect(kinds(out.events)).not.toContain('swept')
+    expect(kinds(out.events).slice(0, 3)).toEqual(['land', 'bounce', 'setDown'])
+    const kept = onShelf(out.game.world).map((piece) => piece.id)
+    // With no room left on either lane the piece itself goes to the shelf, and only then does the oldest row drop, seen going.
+    expect(pieceOf(out.game.world, far.id)).toBeDefined()
+    if (pieceOf(out.game.world, far.id)!.place.on === 'shelf') {
+      expect(kept).toEqual([...shelf.slice(1), far.id])
+      expect(out.events.filter((event) => event.kind === 'fell')).toHaveLength(1)
+    } else {
+      expect(kept).toEqual(shelf)
+      expect(kinds(out.events)).not.toContain('fell')
+    }
+    // Taken as the oldest row of the full shelf, it is not what drops while it is in the air.
+    const oldest = shelf[0]
+    const held = grab(full, { x: X0 + 20, y: SHELF_BOX.y + 30 })!
+    expect(held.ids).toEqual([oldest])
+    const thrown = fling(full, held, from, towards(mid(CRATE)))
+    expect(pieceOf(thrown.game.world, oldest)).toBeDefined()
+    const named = thrown.events.flatMap((event) => (event.kind === 'bounce' ? [event.id] : event.kind === 'setDown' ? event.ids : []))
+    for (const id of named) expect(pieceOf(thrown.game.world, id)).toBeDefined()
+  })
+
   it('knocks a piece along its lane until it meets the next thing, and lands where that piece was', () => {
     const shelved = drop(made.game, hold(made.game, made.left), mid(SHELF_BOX)).game
     const target = pieceOf(shelved.world, made.right)!

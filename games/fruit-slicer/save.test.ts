@@ -3,7 +3,7 @@ import { LADDER } from './config'
 import { call, crate, feed, freshGame, give, sendOff, type Game } from './cycle'
 import { RAIL, giveOf } from './measure'
 import { inRange, tinParts } from './orders'
-import { MOST_PIECES, deserialize, serialize } from './save'
+import { MOST_PIECES, deserialize, differsFromSlot, serialize } from './save'
 import { STATE_VERSION } from './state'
 import { LANES, SHELF, cut, eaten, onLane, onShelf, setOnBoard, setOnShelf, type Piece } from './world'
 
@@ -39,6 +39,23 @@ function played(): Game[] {
 }
 
 describe('found as left', () => {
+  it('knows a first visit, or a slot that had to be repaired, from a game that came back as it was saved: the first is saved as it is laid out', () => {
+    // Nothing in the slot: the game laid out for this visit is not what the slot holds, and is handed to storage before any touch.
+    const first = deserialize(null, null, 12345)
+    expect(differsFromSlot(null, first)).toBe(true)
+    expect(differsFromSlot(undefined, first)).toBe(true)
+    // Put away untouched and opened again, on a visit that drew another seed, the same two wait.
+    const again = deserialize(stored(first), null, 999)
+    expect(again).toEqual(first)
+    expect(again.queue).toEqual(first.queue)
+    expect(differsFromSlot(stored(first), again)).toBe(false)
+    // Without that save the second visit would have laid out its own.
+    expect(deserialize(null, null, 999).seed).not.toBe(first.seed)
+    // A slot that did not hold a game of this shape is replaced by what was opened from it.
+    expect(differsFromSlot({ version: 0 }, deserialize({ version: 0 }, null, 5))).toBe(true)
+    for (const game of played()) expect(differsFromSlot(stored(game), reopened(game))).toBe(false)
+  })
+
   it('opens every state of a visit exactly as it was put away', () => {
     const states = played()
     expect(states.length).toBeGreaterThan(20)

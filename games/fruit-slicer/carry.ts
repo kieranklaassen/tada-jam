@@ -277,9 +277,10 @@ export function fling(game: Game, held: Held, at: Point, v: Point): { game: Game
     case 'tin':
       return backOnBoard('tin', 'bong')
     case 'crate': {
-      // The crate rocks and a fruit jumps out by itself; the piece comes back to the board.
-      const jumped = land(game)
-      const back = backOnBoard('crate', 'rock', jumped.game)
+      // The crate rocks and a fruit jumps out by itself; the piece comes back to the board. The piece is in the air as the fruit lands:
+      // it lies nowhere, so it is not shoved to the shelf with a lane it was taken from, and is not what drops off a full shelf.
+      const jumped = land({ ...game, world: rest })
+      const back = backOnBoard('crate', 'rock', { ...jumped.game, world: { ...jumped.game.world, pieces: [...jumped.game.world.pieces, pieceOf(game.world, id)!] } })
       return { game: back.game, events: [...jumped.events, ...back.events] }
     }
     case 'fruit':
@@ -313,7 +314,8 @@ export function fling(game: Game, held: Held, at: Point, v: Point): { game: Game
 
 /**
  * The roller is let go at `at` and rolls what is under it. A fruit or a piece has the equal parts of the
- * ticket at the window pressed into it, as if it were a whole of its own; with no order waiting to be filled
+ * ticket at the window pressed into it (for the cat, the same parts both its shares are ruled into on the
+ * rail), as if it were a whole of its own; with no order waiting to be filled
  * there are no parts to press, and the roller only drums. An open tin's ruled parts answer one by one, and a
  * shut one drums and takes no mark. A customer is rolled flat and springs back, the crate's slats rattle, and
  * the dog's ears are ironed.

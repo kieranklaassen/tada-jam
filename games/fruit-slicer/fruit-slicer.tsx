@@ -11,7 +11,7 @@ import { CORNER, Overlay } from './overlay'
 import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
 import { SaveCadence } from './saveCadence'
-import { deserialize, serialize } from './save'
+import { deserialize, differsFromSlot, serialize } from './save'
 import { voiceFor } from './sound'
 import { SpikePlate } from './spike'
 import { fit, toStage } from './stage'
@@ -217,6 +217,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       if (disposed) return
       // A saved position wins; `childAge` only chooses where a first visit starts.
       run = new GameRun(deserialize(value, ctxRef.current.childAge, seed), seed)
+      // A first visit is saved as it is laid out, before any touch: put away untouched, it opens again with the same two waiting.
+      if (differsFromSlot(value, run.game)) cadence.change(performance.now(), true)
       // The game sets itself up from the state here, as it was left: nothing eases in and no scene replays.
       // Then the load draws the first frame itself. A game that is resting or parked when the slot comes back
       // has no frame coming, and would go on showing the surface as it was before the read.
