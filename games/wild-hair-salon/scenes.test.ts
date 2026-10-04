@@ -78,6 +78,14 @@ describe('the staging', () => {
 })
 
 describe('coming in', () => {
+  it('pops the rain hats off where they can be seen going: they are not there one frame and gone the next', () => {
+    const before = freshGame(null), after = letIn(before).game, c = cast(after)
+    let going = 0
+    playThrough(comingIn(c, before, after), () => { if (c.staging.hats > 0.05 && c.staging.hats < 0.95) going++ })
+    expect(going).toBeGreaterThan(12)
+    expect(c.staging.hats).toBe(0)
+  })
+
   it('brings the pair from the doorway to their places, hats off and cape on, in 4 to 6 seconds', () => {
     const before = freshGame(null), after = letIn(before).game, c = cast(after)
     const beats = comingIn(c, before, after)
@@ -243,6 +251,18 @@ describe('the cape coming off', () => {
     expect(startX).toBeLessThan(250)
     expect(c.staging.friend!.x).toBe(placesOf(done.game).friend!.x)
     expect(c.staging.friend!.x).toBeGreaterThan(600)
+  })
+
+  it('answers to the ribbon round a face and to a piece stuck on the same face, one after the other, and still ends in time', () => {
+    for (const chair of CUSTOMERS) for (const [lock, model] of [[100, 34], [4, 66], [50, 50]] as const) for (const mane of [4, 96]) {
+      const friend = CUSTOMERS.find((who) => who !== chair)!
+      const both = seated({ chair, friend, lock, model, mane: Array(TUFTS).fill(mane), ribbon: { len: 30, at: 'face', who: 'chair' }, shown: { snip: true, pull: true, ribbon: true }, clippings: [{ len: 9, hue: 'lion', on: 'face', who: 'chair', spot: 'lip' }] })
+      const done = capeOff(both), c = cast(done.game)
+      const length = playThrough(capeComesOff(c, both, done.game, done.showing!))
+      expect(c.said.indexOf(`${chair} blindfolded`), chair).toBeGreaterThanOrEqual(0)
+      expect(c.said.indexOf(`${chair} wearing`), chair).toBeGreaterThan(c.said.indexOf(`${chair} blindfolded`))
+      expect(length, `${chair} ${lock}/${model} mane ${mane}`).toBeLessThanOrEqual(10)
+    }
   })
 
   it('stars the exact haircut: the mane the customer likes or hates, its bow, and what it wears', () => {

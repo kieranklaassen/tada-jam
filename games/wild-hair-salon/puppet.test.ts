@@ -121,6 +121,24 @@ describe('the puppet', () => {
     expect(Math.abs(puppet.at('blink'))).toBeLessThan(0.02)
   })
 
+  it('looks from one thing to another the way round it is asked: as written, the other way, or only its second look the other way', () => {
+    const looks = (turned: boolean | 'second'): { first: number; second: number } => {
+      const puppet = new Puppet(LION, makeRng(5)), seen: number[] = []
+      puppet.react('wantsItSo', turned)
+      for (let i = 0; i < 90; i++) { puppet.step(1 / 60, false); seen.push(puppet.at('lookX')) }
+      return { first: seen[25], second: seen[70] }
+    }
+    // Both things on its right: its own lock, and the friend's beyond it.
+    expect(looks(false).first).toBeGreaterThan(0.2)
+    expect(looks(false).second).toBeGreaterThan(0.5)
+    // Both on its left.
+    expect(looks(true).first).toBeLessThan(-0.2)
+    expect(looks(true).second).toBeLessThan(-0.5)
+    // Its own lock on its right and the friend's across the room on its left.
+    expect(looks('second').first).toBeGreaterThan(0.2)
+    expect(looks('second').second).toBeLessThan(-0.5)
+  })
+
   it('reacts with one of its own reactions, knows how long it lasts, and can be put to rest at once', () => {
     const puppet = new Puppet(LION, makeRng(6))
     puppet.react('rubLoved')

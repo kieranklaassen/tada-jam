@@ -197,6 +197,28 @@ describe('a touch on the salon', () => {
     expect(floorUnder(salon({ seat: 'across', ribbon: { len: 40, at: 'model' } }), 'ribbon')).toBeLessThan(15)
   })
 
+  it('keeps one piece to a spot on a face: a second one let go there knocks the first off to the floor under that face', () => {
+    const two = salon({ clippings: [{ len: 20, hue: 'lion', on: 'face', who: 'friend', spot: 'brow' }, { len: 12, hue: 'poodle', on: 'floor', x: 40 }] })
+    const after = act(two, { object: 'clipping', index: 1 }, { action: 'pull', drop: { on: 'face', who: 'friend', spot: 'brow' } }).salon.clippings
+    expect(after[1]).toEqual({ len: 12, hue: 'poodle', on: 'face', who: 'friend', spot: 'brow' })
+    expect(after[0]).toMatchObject({ len: 20, hue: 'lion', on: 'floor', x: floorUnder(two, 'friend') })
+    // Another spot, or the other face, is left alone.
+    const other = act(two, { object: 'clipping', index: 1 }, { action: 'pull', drop: { on: 'face', who: 'friend', spot: 'chin' } }).salon.clippings
+    expect(other.filter((c) => c.on === 'face')).toHaveLength(2)
+    // So with every spot on both faces taken, six of twelve pieces lie on the floor, and a thirteenth falls and stays while the oldest of those goes.
+    let full = salon({ clippings: [] })
+    for (let i = 0; i < 12; i++) full = withClipping(full, { len: 10 + i, hue: 'lion', on: 'floor', x: 5 + i * 7 })
+    for (let i = 0; i < 12; i++) {
+      const from = full.clippings.findIndex((c) => c.on === 'floor' && c.len === 10 + i)
+      full = act(full, { object: 'clipping', index: from }, { action: 'pull', drop: { on: 'face', who: i % 2 ? 'chair' : 'friend', spot: (['brow', 'lip', 'chin'] as const)[i % 3] } }).salon
+    }
+    expect(full.clippings.filter((c) => c.on === 'face')).toHaveLength(6)
+    const more = withClipping(full, { len: 77, hue: 'poodle', on: 'floor', x: 50 })
+    expect(more.clippings).toHaveLength(MAX_CLIPPINGS)
+    expect(more.clippings.some((c) => c.len === 77 && c.on === 'floor')).toBe(true)
+    expect(more.clippings.filter((c) => c.on === 'face')).toHaveLength(6)
+  })
+
   it('keeps at most twelve clippings, lets the oldest on the floor go first and never takes one off a face', () => {
     let s = salon({ clippings: [{ len: 9, hue: 'lion', on: 'face', who: 'chair', spot: 'lip' }] })
     for (let i = 0; i < 30; i++) s = withClipping(s, { len: 10 + i, hue: 'poodle', on: 'floor', x: 50 })

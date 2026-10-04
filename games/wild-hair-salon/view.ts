@@ -26,8 +26,6 @@ const STEEL = '#cfd2dc', STEEL_EDGE = '#8a8fa0', HANDLE = '#ee7c62'
 const LEAF = '#b94a3a', RAIN = 'rgba(75,74,87,0.4)'
 /** Somebody goes by in the street every so many seconds, and takes this long to cross the door's glass. */
 const PASSER = { every: 13, takes: 5 }
-/** How far above the line its length is taken from a lock comes out of the mane. */
-const ROOT = 44
 /** Where the customer's head shows in the looking glass, and how big. */
 const GLASS_AT: Shown = { x: LOOKING_GLASS.x, y: LOOKING_GLASS.y + 18, s: 0.5, lift: 0, seen: 1 }
 /** A lock on someone who is walking: it only swings. */
@@ -139,12 +137,12 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
       light(places.lock.x, places.lock.y + Math.max(60, game.lock * STEP) / 2, 114, Math.max(60, game.lock * STEP) + 70, glowOn('lock'))
       if (shape && !carriedRibbon && staging.ribbon === null && shape.kind === 'hang' && game.ribbon && game.ribbon.at !== 'peg') {
         const root = game.ribbon.at === 'model' ? { x: shape.root.x + dx, y: shape.root.y + dy } : shape.root
-        drawn += hanging(g, root, game.ribbon.len * shape.unit, hair.strands.ribbon, play.time, RIBBON, 0, 0, true, true)
+        drawn += hanging(g, root, game.ribbon.len * shape.unit, hair.strands.ribbon, play.time, RIBBON, 0, true, true)
       }
-      drawn += hanging(g, places.lock, lockLength * places.lock.unit, hair.strands.lock, play.time, { fill: look.lock, edge: look.lockEdge }, ROOT, staging.fx ? even : 0, false)
+      drawn += hanging(g, places.lock, lockLength * places.lock.unit, hair.strands.lock, play.time, { fill: look.lock, edge: look.lockEdge }, staging.fx ? even : 0, false)
       // While the friend shows what the ribbon is for, its paw has the ribbon and its own lock is tucked away behind it: one strip at a time beside a tail.
       const inPaw = staging.ribbon !== null && (staging.ribbon.x !== PEG.x || staging.ribbon.y !== PEG.y) ? staging.ribbon : null
-      if (!inPaw) drawn += hanging(g, modelRoot, modelLength * places.model.unit, hair.strands.model, play.time, { fill: LOOKS[friend].lock, edge: LOOKS[friend].lockEdge }, 0, staging.fx ? even : 0, false)
+      if (!inPaw) drawn += hanging(g, modelRoot, modelLength * places.model.unit, hair.strands.model, play.time, { fill: LOOKS[friend].lock, edge: LOOKS[friend].lockEdge }, staging.fx ? even : 0, false)
       // The friend's paw, holding the top of its lock out where the customer can see it.
       const pawAt = inPaw ?? modelRoot
       // With the ribbon hung beside its lock, the paw that holds the lock has the ribbon's clip in it as well.
@@ -177,7 +175,7 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
     g.globalAlpha = goer.at.seen
     g.translate(goer.at.x, goer.at.y - goer.at.lift)
     g.scale(size, size)
-    drawn += hanging(g, { x: home.x - goer.from.x, y: home.y - goer.from.y }, goer.lock * STEP, WALKING, play.time, { fill: LOOKS[goer.who].lock, edge: LOOKS[goer.who].lockEdge }, 0, 0, false)
+    drawn += hanging(g, { x: home.x - goer.from.x, y: home.y - goer.from.y }, goer.lock * STEP, WALKING, play.time, { fill: LOOKS[goer.who].lock, edge: LOOKS[goer.who].lockEdge }, 0, false)
     if (goer.part === 'friend') {
       // The friend still has the top of its lock in its paw.
       g.fillStyle = LOOKS[goer.who].fur
@@ -194,13 +192,13 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
 
   // The ribbon on its peg, on the floor, or where a showing has it.
   if (game.ribbon && !carriedRibbon) {
-    if (staging.ribbon) drawn += hanging(g, staging.ribbon, staging.ribbon.len * STEP, hair.strands.ribbon, play.time, RIBBON, 0, 0, true, true)
-    else if (shape?.kind === 'hang' && game.ribbon.at === 'peg') drawn += hanging(g, shape.root, game.ribbon.len * shape.unit, hair.strands.ribbon, play.time, RIBBON, 0, 0, true, true)
+    if (staging.ribbon) drawn += hanging(g, staging.ribbon, staging.ribbon.len * STEP, hair.strands.ribbon, play.time, RIBBON, 0, true, true)
+    else if (shape?.kind === 'hang' && game.ribbon.at === 'peg') drawn += hanging(g, shape.root, game.ribbon.len * shape.unit, hair.strands.ribbon, play.time, RIBBON, 0, true, true)
     else if (shape?.kind === 'lie') {
       drawn += ribbonOnFloor(g, shape.from, game.ribbon.len * shape.unit, hair.strands.ribbon.flutter, play.time)
       drawn += clip(g, shape.from.x - 8, shape.from.y, Math.PI / 2)
     }
-  } else if (staging.ribbon) drawn += hanging(g, staging.ribbon, staging.ribbon.len * STEP, hair.strands.ribbon, play.time, RIBBON, 0, 0, true, true)
+  } else if (staging.ribbon) drawn += hanging(g, staging.ribbon, staging.ribbon.len * STEP, hair.strands.ribbon, play.time, RIBBON, 0, true, true)
 
   // The pieces that lie still on the floor are drawn together, one path for each colour; a piece in the air is drawn by itself.
   const lying = new Map<string, { x: number; y: number; half: number; turn: number }[]>()
@@ -218,7 +216,7 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
   for (const [hue, group] of lying) drawn += strips(g, group, hue)
   if (hair.carried) {
     const at = hair.carried.at, wriggle = Math.sin(play.time * 26) * 0.22
-    if (hair.carried.what === 'ribbon') drawn += hanging(g, { x: at.x, y: at.y - 6 }, (game.ribbon?.len ?? 20) * STEP, hair.strands.ribbon, play.time, RIBBON, 0, 0, true, true)
+    if (hair.carried.what === 'ribbon') drawn += hanging(g, { x: at.x, y: at.y - 6 }, (game.ribbon?.len ?? 20) * STEP, hair.strands.ribbon, play.time, RIBBON, 0, true, true)
     else drawn += strip(g, at.x, at.y - 18, (hair.carried.what.len * STEP) / 2, wriggle, hair.carried.what.hue)
   }
 
@@ -363,26 +361,19 @@ function door(g: Ctx, sprites: Sprites, play: Play, game: Salon): number {
 
 /**
  * A strip that hangs from a root: as long as it is, swinging, fanned out
- * while it is ruffled. `above` draws where a lock comes out of the mane above
- * the line its length is taken from. `kickFrom` bends the end of it aside
+ * while it is ruffled. Its top is the line its length is taken from, flat
+ * and level with the top of whatever hangs beside it. `kickFrom` bends the end of it aside
  * from that far down: the piece of a lock that reaches past its model, when
  * the cape has come off. `clipped` draws the ribbon's clip at its top.
  */
-function hanging(g: Ctx, root: Point, length: number, strand: Strand, time: number, colour: { fill: string; edge: string }, above: number, kickFrom: number, clipped: boolean, twists = false): number {
+function hanging(g: Ctx, root: Point, length: number, strand: Strand, time: number, colour: { fill: string; edge: string }, kickFrom: number, clipped: boolean, twists = false): number {
   const half = STRIP_W / 2
   const long = Math.max(6, length * Math.max(0.3, strand.stretch.x))
   g.fillStyle = colour.fill
   g.strokeStyle = colour.edge
   g.lineWidth = 2
-  // The whole strip is one path, filled once and lined once: where it comes out of the mane, each strand, and the piece past a bend.
+  // The whole strip is one path, filled once and lined once: each strand, and the piece past a bend.
   g.beginPath()
-  if (above > 0) {
-    g.moveTo(root.x - half * 0.55, root.y - above)
-    g.lineTo(root.x + half * 0.55, root.y - above)
-    g.lineTo(root.x + half, root.y + 1)
-    g.lineTo(root.x - half, root.y + 1)
-    g.closePath()
-  }
   // A ribbon that is ruffled does not fan out as hair does: it spins into a corkscrew, seen as a strip whose width comes and goes down its length, and unwinds as the spin dies.
   if (twists && strand.flutter > 0) {
     const turns = Math.max(3, Math.round(long / 22)), spin = time * 16

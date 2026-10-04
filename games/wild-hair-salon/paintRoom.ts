@@ -288,6 +288,8 @@ export function paintBench(g: Ctx, paint: Watercolour, rng: Rng): void {
 
 export function paintStool(g: Ctx, paint: Watercolour, rng: Rng): void {
   const top = roughBox(rng, STOOL.x - 46, STOOL.seatY, 92, 18, 2)
+  // Three legs, the one at the back shorter as it stands further off: a seat on two legs alone is the shape of a sign.
+  paint.wash(g, [{ x: STOOL.x - 5, y: STOOL.seatY + 16 }, { x: STOOL.x + 5, y: STOOL.seatY + 16 }, { x: STOOL.x + 9, y: FLOOR_Y - 14 }, { x: STOOL.x - 1, y: FLOOR_Y - 14 }], { color: ROOM.woodEdge, edge: ROOM.woodEdge, sharp: true, reserve: true })
   paint.wash(g, top, { color: ROOM.wood, edge: ROOM.woodEdge, reserve: true })
   for (const side of [-1, 1]) {
     const x = STOOL.x + side * 30
@@ -297,7 +299,7 @@ export function paintStool(g: Ctx, paint: Watercolour, rng: Rng): void {
 }
 
 export function paintChair(g: Ctx, paint: Watercolour, rng: Rng): void {
-  // A fat padded chair with arms, buttoned down the back. With a customer in it only its edges and its foot show.
+  // A fat padded chair with arms. With a customer in it only its edges and its foot show.
   for (const side of [-1, 1]) {
     const arm = roughBox(rng, CHAIR.x + side * 168 - 30, 440, 60, 96, 8)
     paint.wash(g, arm, { color: ROOM.chair, edge: ROOM.chairEdge, blooms: [ROOM.chairEdge], strength: 0.9, reserve: true })

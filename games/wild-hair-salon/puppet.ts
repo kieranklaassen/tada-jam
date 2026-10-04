@@ -22,6 +22,9 @@ export function ease(spring: Spring, target: number, stiffness: number, damping:
 /** The parts that have a left and a right: a bit played the other way round moves these the other way. */
 const SIDED: readonly Part[] = ['lookX', 'tilt', 'shift']
 
+/** Which way round a bit is played: as written, the other way round, or the other way round from its second look on. */
+export type Turn = boolean | 'second'
+
 /** The steps of play are this long, whatever the frame rate. */
 export const TICK = 1 / 120
 
@@ -30,7 +33,7 @@ export class Puppet {
   private readonly director: Director
   private readonly rng: Rng
   private readonly parts: Record<Part, Spring>
-  private playing: { bit: Bit; t: number; turned: boolean }[] = []
+  private playing: { bit: Bit; t: number; from: number }[] = []
   private untilIdle: number
   /** 0 to 1 through one breath. */
   breath = 0
@@ -63,14 +66,20 @@ export class Puppet {
     return this.playing.length > 0
   }
 
-  /** Plays one bit. `turned` plays it the other way round, left for right, for a look at something that is on its other side. */
-  play(bit: Bit, turned = false): void {
-    this.playing.push({ bit, t: 0, turned })
+  /**
+   * Plays one bit. `turned` plays it the other way round, left for right, for
+   * a look at something that is on its other side; `'second'` plays its first
+   * look as written and everything after that the other way round, for a look
+   * from one thing to another that is on the other side of it.
+   */
+  play(bit: Bit, turned: Turn = false): void {
+    const later = bit.moves.filter((m) => SIDED.includes(m.part) && m.at > 0).map((m) => m.at)
+    this.playing.push({ bit, t: 0, from: turned === true ? 0 : turned === 'second' && later.length > 0 ? Math.min(...later) : Infinity })
     this.started.push(bit.id)
   }
 
   /** What it does about something that happened to it: one of its reactions of that name, a different one each time. */
-  react(name: Reaction, turned = false): void {
+  react(name: Reaction, turned: Turn = false): void {
     const bits = this.personality.reactions[name]
     if (bits && bits.length > 0) this.play(this.director.pick(bits), turned)
   }
@@ -131,7 +140,7 @@ export class Puppet {
     for (const part of PARTS) {
       let target = p.rest[part] ?? 0
       // The move that started last has the part.
-      for (const { bit, t, turned } of this.playing) for (const m of bit.moves) if (m.part === part && t >= m.at && t < m.at + m.hold) target = turned && SIDED.includes(part) ? -m.to : m.to
+      for (const { bit, t, from } of this.playing) for (const m of bit.moves) if (m.part === part && t >= m.at && t < m.at + m.hold) target = m.at >= from && SIDED.includes(part) ? -m.to : m.to
       const heavy = HEAVY.includes(part)
       const stiffness = heavy ? p.stiffness : p.quick
       ease(this.parts[part], target, stiffness, heavy ? p.damping : 2 * Math.sqrt(stiffness) * 0.85, dt)

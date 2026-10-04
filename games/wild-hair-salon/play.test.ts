@@ -66,6 +66,11 @@ describe('an empty salon', () => {
     // Nothing else changed: nobody came in and nothing is saved.
     expect(play.game).toEqual(freshGame(null))
     expect(play.inScene).toBe(false)
+    // One that is in the middle of something else looks round all the same: every touch is answered by both.
+    const busy = opened()
+    for (const puppet of busy.waiting!) puppet.react('ducksAndPeeks')
+    busy.gesture({ type: 'press', at: { x: 300, y: 300 } })
+    busy.waiting!.forEach((puppet, n) => expect(puppet.started.some((id) => PERSONALITIES[busy.game!.waiting[n]].reactions.looksAbout.some((bit) => bit.id === id))).toBe(true))
   })
 })
 
@@ -97,6 +102,19 @@ describe('a second tap', () => {
     tap(door, DOOR)
     expect(door.inScene).toBe(true)
     expect(door.game!.chair).not.toBeNull()
+  })
+})
+
+describe('the one want', () => {
+  it('has the customer look at its own lock, on its right, and then at the friend\'s, on whichever side the friend sits', () => {
+    for (const seat of ['beside', 'across'] as const) {
+      const play = seated({ seat })
+      let right = 0, left = 0
+      for (let i = 0; i < 60 * 9; i++) { play.step(1 / 60, true); const x = play.customer()!.at('lookX'); if (x > 0.3) right++; if (x < -0.5) left++ }
+      expect(right, seat).toBeGreaterThan(10)
+      if (seat === 'across') expect(left, seat).toBeGreaterThan(10)
+      else expect(left, seat).toBe(0)
+    }
   })
 })
 

@@ -116,11 +116,11 @@ function freePlace(clippings: readonly Clipping[], x: number): number {
   return x
 }
 
-/** Adds a piece. Past the most the salon keeps, the oldest piece on the floor turns to fluff; a face keeps what it wears. */
+/** Adds a piece. Past the most the salon keeps, the oldest piece on the floor turns to fluff; a face keeps what it wears, and a face has room for three, so there is always an older one on the floor. */
 export function withClipping(salon: Salon, piece: Clipping): Salon {
   const clippings = [...salon.clippings, piece.on === 'floor' ? { ...piece, x: freePlace(salon.clippings, piece.x) } : piece]
   if (clippings.length > MAX_CLIPPINGS) {
-    const oldestOnFloor = clippings.findIndex((c) => c.on === 'floor')
+    const oldestOnFloor = clippings.slice(0, -1).findIndex((c) => c.on === 'floor')
     clippings.splice(oldestOnFloor >= 0 ? oldestOnFloor : 0, 1)
   }
   return { ...salon, clippings }
@@ -255,7 +255,17 @@ function onClipping(salon: Salon, index: number, deed: Deed): Done {
       const drop = deed.drop
       if (!drop) return answer(salon, 'clipping', 'pull')
       // A piece can be stuck on a face only while somebody is there to wear it.
-      if (drop.on === 'face') return salon.chair === null ? answer(salon, 'clipping', 'pull') : answer(swap({ ...bare, on: 'face', who: drop.who, spot: drop.spot }), 'clipping', 'pull')
+      if (drop.on === 'face') {
+        if (salon.chair === null) return answer(salon, 'clipping', 'pull')
+        // A spot on a face holds one piece: the one that was there drops off to the floor under that face.
+        const under = alongFloor(floorUnder(salon, drop.who))
+        const clippings = salon.clippings.map((c, i): Clipping => {
+          if (i === index) return { ...bare, on: 'face', who: drop.who, spot: drop.spot }
+          if (c.on === 'face' && c.who === drop.who && c.spot === drop.spot) return { len: c.len, hue: c.hue, on: 'floor', x: freePlace(others(), under) }
+          return c
+        })
+        return answer({ ...salon, clippings }, 'clipping', 'pull')
+      }
       return answer(swap({ ...bare, on: 'floor', x: freePlace(others(), alongFloor(drop.x)) }), 'clipping', 'pull')
     }
     case 'snip': {

@@ -316,8 +316,9 @@ export class Play implements Cast {
         else {
           // The one want, always there to see, under the cape and with it off: the customer looks from its lock to the friend's and pats its own, and the friend looks from its lock to the customer's.
           // Each looks to the side the other's lock is on: the friend beside the chair is on the customer's right and looks left.
+          // With the friend across the room, the customer's own lock is still on its right, so only its second look goes the other way.
           const beside = game.cape === 'off' || game.seat === 'beside'
-          this.puppets.chair?.react('wantsItSo', !beside)
+          this.puppets.chair?.react('wantsItSo', beside ? false : 'second')
           this.puppets.chair?.react('patsItsLock')
           this.puppets.friend?.react('wantsItSo', beside)
           if (game.cape === 'on' && this.stirs % 2 === 0 && this.hair.settled) this.hair.moodOf('wave', 1.3)
@@ -358,7 +359,7 @@ export class Play implements Cast {
     const chair = this.puppets.chair, friend = this.puppets.friend
     switch (h.kind) {
       // In an empty salon there is nothing to cut and no scissors come: the pair at the door look round at what was touched. They do not knock or wave.
-      case 'looked': for (const puppet of this.waiting ?? []) if (!puppet.busy) puppet.react('looksAbout'); return
+      case 'looked': for (const puppet of this.waiting ?? []) puppet.react('looksAbout'); return
       case 'scissors':
         hair.scissorsIn(h.at)
         // The mane does not like the look of scissors: it stands on end for as long as they are out.
