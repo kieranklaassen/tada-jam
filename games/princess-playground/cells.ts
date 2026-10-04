@@ -138,15 +138,16 @@ export function reactionsTo(l: Landing): Reaction[] {
       if (l.deed === 'low-end') {
         // A bright two-note hum, and then its duet with the one it has landed on, both swaying.
         add(0.1, { voice: v.hum(false), act: 'sway', seconds: 0.6, way: toward })
-        add(0.75, { voice: v.duet(), act: 'sway', seconds: 1.4, way: 1 })
-        if (l.below) out.push(react(l.below, 0.75, { act: 'sway', seconds: 1.4, way: 1 }))
+        add(1.0, { voice: v.duet(), act: 'sway', seconds: 1.4, way: 1 })
+        if (l.below) out.push(react(l.below, 1.0, { act: 'sway', seconds: 1.4, way: 1 }))
       } else if (l.deed === 'high-end') {
         add(0.1, l.tips ? { voice: v.ringOver() } : { voice: v.longNote(), act: 'sway', seconds: 1.4, way: toward })
         // Alone on the plank: the hum dies away, and Dot peeks over at the others.
         if (l.alone) add(0.7, { voice: v.hum(true), act: 'look', seconds: 1, way: toward })
       } else if (l.deed === 'on-a-friend') {
-        add(0.15, { voice: v.duet(), act: 'sway', seconds: 1.4, way: 1 })
-        if (l.below) out.push(react(l.below, 0.15, { act: 'sway', seconds: 1.4, way: 1 }))
+        // The one below says its own piece to being landed on first; then the two sway together through the duet.
+        add(1.0, { voice: v.duet(), act: 'sway', seconds: 1.4, way: 1 })
+        if (l.below) out.push(react(l.below, 1.0, { act: 'sway', seconds: 1.4, way: 1 }))
       } else if (l.company) {
         add(0.2, { voice: v.softNote() })
         // Whoever it was set down beside turns to it and bounces, as those on the plank do.

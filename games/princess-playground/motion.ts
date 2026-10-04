@@ -1,6 +1,6 @@
 import { aimedAtPlank, drop, inCompany, placeOf, tap, weightOn, type Arrangement } from './arrangement'
 import { PERSONALITY } from './personality'
-import { PLANK_INERTIA, TURN, nudge, stepPlank, type PlankState } from './plank'
+import { LEVEL_SPRING, PLANK_INERTIA, TURN, nudge, stepPlank, type PlankState } from './plank'
 import type { Frame, FriendPose, Poses } from './pose'
 import { restPose } from './pose'
 import { NESTLE, restingAt, restTilt } from './rest'
@@ -39,6 +39,10 @@ export const HALF_AWAY = 0.85
 export const FINGER = 0.14
 /** How flat a head is pressed by a friend sitting on it. */
 export const PRESSED = 0.93
+/** How far an end that stays the lighter one, or only draws level, dips under a friend landing on it: radians. */
+export const DIP = 0.06
+/** And how fast at most: under the speed at which an end coming down knocks. Radians a second. */
+export const DIP_SPEED = 0.42
 /** How long one rock of an ending takes, up and down again: three fit between its beats. Seconds. */
 export const ROCK_SECONDS = 0.6
 /** How fast a see-sawing end must come down to throw: slower, it only bobs them. Radians a second. */
@@ -685,10 +689,15 @@ export class Playground {
     const board = (x: number) => plankTopAt(Math.max(-PLANK.halfLength, Math.min(PLANK.halfLength, x)), tilt)
     const place = placeOf(this.arrangement, id)
     // It stops beside the stack it will climb: clear of the widest friend in it, however that one is squashed.
-    let reach = 0
-    if (place.at === 'end') for (const other of this.arrangement[place.end].slice(0, place.level)) reach = Math.max(reach, FRIENDS[other].radius * 1.3 + FRIENDS[id].radius * 1.15)
+    // Each friend of the stack where it is now: a stack leans with the board, so its heads are not over its seat.
     const way = Math.sign(target.x - body.fromX) || 1
-    let stopX = target.x - way * reach
+    let stopX = target.x, reach = 0
+    if (place.at === 'end') for (const other of this.arrangement[place.end].slice(0, place.level)) {
+      const clear = FRIENDS[other].radius * 1.3 + FRIENDS[id].radius * 1.15
+      const before = this.bodies[other].x - way * clear
+      if ((before - stopX) * way < 0) stopX = before
+      reach = Math.max(reach, clear)
+    }
     if ((stopX - body.fromX) * way < 0) stopX = body.fromX
     const smooth = (u: number) => u * u * (3 - 2 * u)
     const DROP = 0.2, CLIMB = reach > 0 ? 0.7 : 1
@@ -753,7 +762,15 @@ export class Playground {
     }
     const side = place.end === 'right' ? 1 : -1
     const before = Math.sign(this.plank.tilt)
-    if (!(body.thrown && body.rocked)) nudge(this.plank, side * spec.weight * LANDING_PUSH * (firstTouch ? 1 : 0.35) * (0.5 + 0.5 * hard))
+    let push = spec.weight * LANDING_PUSH * (firstTouch ? 1 : 0.35) * (0.5 + 0.5 * hard)
+    // The tilt follows the two totals and nothing else. A landing on the end that stays the lighter one, or that only
+    // makes the two the same, must not carry that end down to the sand: it dips a little under the newcomer and the
+    // weights bring it back. Only an end that is now the heavier comes down, and the landing helps it on its way.
+    const here = this.landedOn(place.end), there = this.landedOn(otherEnd(place.end))
+    // And gently enough that the heavy end, coming back, only touches the sand it lay on: no second knock.
+    if (here < there) push = Math.min(push, DIP_SPEED, Math.sqrt((2 * DIP * TURN * (there - here)) / (PLANK_INERTIA + here + there)))
+    else if (here === there) push = Math.min(push, Math.sqrt(LEVEL_SPRING) * DIP)
+    if (!(body.thrown && body.rocked)) nudge(this.plank, side * push)
     this.events.push({ type: 'land', id, on: place.level > 0 ? 'friend' : 'plank', x: target.x, z: target.z, speed, thrown: body.thrown })
     body.thrown = false
     if (place.level > 0) {

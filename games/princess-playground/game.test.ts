@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { companyOf, isSound, placeOf, putInSand, putOnEnd, standsAt, tap, weightOn } from './arrangement'
 import { ASK_AT, Game, SNORE_EVERY, type Cue } from './game'
 import type { Guidance } from './guidance'
-import { DEEPEST, RAKED, SHALLOWEST, biteDepth, marksFromText, marksToText, rakeIsOut } from './marks'
+import { RAKED, biteDepth, marksFromText, marksToText, rakeIsOut } from './marks'
 import { overlap } from './overlap'
 import { seeded } from './motion'
 import { KINDS, layout, rideOf, wantMet, type Kind } from './rides'
@@ -653,7 +653,7 @@ describe('the small promises of the sheet', () => {
     }
     // The crater is deeper than the bite Mog's end had made alone: drawn and saved from the weight now on it.
     const bites = cues.filter((cue) => cue.type === 'bite').map((cue) => (cue.type === 'bite' ? cue.strength : 0))
-    expect(Math.max(...bites)).toBeCloseTo((biteDepth(7) - SHALLOWEST) / (DEEPEST - SHALLOWEST), 5)
+    expect(Math.max(...bites)).toBeCloseTo((7 + 1) / (12 + 1), 5)
     expect(biteDepth(7)).toBeGreaterThan(biteDepth(3))
     expect(Math.max(...game.world.marks)).toBe(biteDepth(7))
     expect(flew).toBeGreaterThanOrEqual(20)
@@ -672,6 +672,9 @@ describe('the small promises of the sheet', () => {
     expect(drawn('pim')).toBeLessThan(drawn('mog'))
     expect(drawn('mog')).toBe(drawn('dot'))
     expect(drawn('mog')).toBeLessThan(drawn('bo'))
+    // Every weight an end can carry is drawn apart from the next, though the saved grid keeps eight depths.
+    expect(drawn('pim')).toBeCloseTo(3 / 13, 5)
+    expect(drawn('bo')).toBeCloseTo(5 / 13, 5)
   })
 
   it('the friends still on the plank look after Dot when it is taken away', () => {
@@ -950,9 +953,9 @@ describe('the level plank hums for as long as it is level', () => {
 
 describe('tastes hold on every landing, not only on one the child made', () => {
   it('a friend thrown by the plank that comes down on the head it sat on is hissed at by Mog, and Pim on top crows again', () => {
-    // Pim sits on Mog on the left; Bo slams the right end down and both fly.
+    // Pim sits on Mog on the left, Dot rides the right end high; Bo lands beside Dot, the right end comes down and both on the left fly.
     const bare = tap(layout(rideOf('little-asks', 0)), 'pim')
-    const game = new Game({ ...shown(), arrangement: putOnEnd(putOnEnd(bare, 'mog', 'left'), 'pim', 'left'), touched: true, state: { ...shown().state, finished: true } }, 1)
+    const game = new Game({ ...shown(), arrangement: putOnEnd(putOnEnd(putOnEnd(bare, 'mog', 'left'), 'pim', 'left'), 'dot', 'right'), touched: true, state: { ...shown().state, finished: true } }, 1)
     run(game, 1)
     game.takeCues()
     tapOn(game, 'bo')
@@ -984,6 +987,95 @@ describe('tastes hold on every landing, not only on one the child made', () => {
     const hum = JSON.stringify(levelHum())
     expect(cues.filter((cue) => cue.type === 'voice' && JSON.stringify(cue.parts) === hum).length).toBeGreaterThanOrEqual(3)
     expect(game.play.held).toBe('pim')
+  })
+})
+
+describe('the tilt follows the two totals and nothing else', () => {
+  const made = (left: FriendId[], right: FriendId[]) => {
+    const bare = tap(layout(rideOf('little-asks', 0)), 'pim')
+    let a = bare
+    for (const id of left) a = putOnEnd(a, id, 'left')
+    for (const id of right) a = putOnEnd(a, id, 'right')
+    return new Game({ ...shown(), arrangement: a, touched: true, state: { ...shown().state, finished: true } }, 1)
+  }
+
+  it('a friend too light to tip it never brings its end down: no knock, no bite, nobody thrown, and the plank creaks and stays', () => {
+    for (const [low, lander] of [[['bo'], 'mog'], [['bo'], 'dot'], [['bo'], 'pim'], [['mog'], 'pim'], [['mog', 'dot'], 'bo'], [['pim', 'mog'], 'bo'], [['bo', 'pim'], 'mog']] as const) {
+      const game = made([...low], [])
+      run(game, 1)
+      const marks = game.saved().marks
+      game.takeCues()
+      game.press({ kind: 'friend', id: lander })
+      game.dragStart()
+      game.dragTo({ x: PLANK.seat, z: PLANK.z }, null)
+      run(game, 0.4)
+      game.dragEnd()
+      let furthest = -1
+      const cues: Cue[] = []
+      for (let i = 0; i < 300; i++) {
+        game.step(1 / 60, QUIET)
+        cues.push(...game.takeCues())
+        furthest = Math.max(furthest, game.play.plank.tilt)
+      }
+      const label = `${low} against ${lander}`
+      expect(placeOf(game.play.arrangement, lander), label).toMatchObject({ at: 'end', end: 'right' })
+      // The light end stays well up: it never reaches level, let alone the sand.
+      expect(furthest, label).toBeLessThan(-0.1)
+      // Bo, high for once, chuckles and shakes the plank, which knocks the heavy end on the sand it lies in: that is his shake, not the landing.
+      if (lander !== 'bo') {
+        expect(cues.some((cue) => cue.type === 'bite'), label).toBe(false)
+        expect(game.saved().marks, label).toBe(marks)
+      }
+      expect(game.play.plank.tilt, label).toBeLessThan(-MAX_TILT + 0.01)
+    }
+  })
+
+  it('a friend who makes the two ends the same floats the plank: no end touches the sand, nobody is thrown, and it hums once it is afloat', () => {
+    for (const [low, lander] of [[['mog'], 'dot'], [['dot'], 'mog'], [['pim', 'bo'], 'mog']] as const) {
+      const game = made([...low], lander === 'mog' && low.length === 2 ? ['dot'] : [])
+      run(game, 1)
+      const marks = game.saved().marks
+      game.takeCues()
+      game.press({ kind: 'friend', id: lander })
+      game.dragStart()
+      game.dragTo({ x: PLANK.seat, z: PLANK.z }, null)
+      run(game, 0.4)
+      game.dragEnd()
+      const hum = JSON.stringify(levelHum())
+      let reach = 0, firstHum = -1, tiltAtHum = 9
+      const cues: Cue[] = []
+      for (let i = 0; i < 480; i++) {
+        game.step(1 / 60, QUIET)
+        const now = game.takeCues()
+        cues.push(...now)
+        reach = Math.max(reach, game.play.plank.tilt)
+        if (firstHum < 0 && now.some((cue) => cue.type === 'voice' && JSON.stringify(cue.parts) === hum)) {
+          firstHum = i / 60
+          tiltAtHum = Math.abs(game.play.plank.tilt)
+        }
+      }
+      const label = `${low} and ${lander}`
+      expect(weightOnEnds(game)[0], label).toBe(weightOnEnds(game)[1])
+      // The newcomer's end swings past level and back, and stays clear of the sand.
+      expect(reach, label).toBeLessThan(MAX_TILT - 0.02)
+      expect(cues.some((cue) => cue.type === 'bite'), label).toBe(false)
+      expect(game.saved().marks, label).toBe(marks)
+      expect(firstHum, label).toBeGreaterThan(0)
+      expect(firstHum, label).toBeLessThan(3)
+      expect(tiltAtHum, label).toBeLessThan(MAX_TILT * 0.7)
+      expect(Math.abs(game.play.plank.tilt), label).toBeLessThan(0.05)
+    }
+  })
+
+  it('a friend left on a head when the one between is taken away is answered by that head', () => {
+    // Bo, Pim and Mog on the left: Pim is tapped away from between, and Mog comes down onto Bo... and Dot onto Mog.
+    const game = made(['mog', 'pim', 'dot'], [])
+    run(game, 1)
+    game.takeCues()
+    tapOn(game, 'pim')
+    const { cues } = run(game, 3)
+    expect(game.play.arrangement.left).toEqual(['mog', 'dot'])
+    expect(cues.filter((cue) => cue.type === 'voice' && JSON.stringify(cue.parts) === JSON.stringify(spit())).length).toBe(1)
   })
 })
 

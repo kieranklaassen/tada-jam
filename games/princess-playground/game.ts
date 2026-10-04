@@ -3,7 +3,7 @@ import { landingOf, perched, reactionsTo, tossed, underneath, type Landing, type
 import { forecast, type SandOp } from './forecast'
 import { Grains } from './grains'
 import type { Guidance } from './guidance'
-import { DEEPEST, SHALLOWEST, bite as biteMark, biteDepth, furrow, rake as rakeMarks, rakeIsOut, stamp, swirl as swirlMark } from './marks'
+import { bite as biteMark, biteDepth, furrow, rake as rakeMarks, rakeIsOut, stamp, swirl as swirlMark } from './marks'
 import { HOLD_HEIGHT, Playground, type PlayEvent } from './motion'
 import type { Frame } from './pose'
 import { askerEnd, layout, rideOf, type Kind, type Ride } from './rides'
@@ -13,7 +13,7 @@ import { endingBeats, showingBeats, showingOpens, type Director } from './scenes
 import { moodOf } from './tastes'
 import * as v from './voices'
 import type { Part } from './voices'
-import { FRIEND_IDS, FRIENDS, PLANK, otherEnd, type End, type FriendId } from './world'
+import { FRIEND_IDS, FRIENDS, MAX_TILT, PLANK, otherEnd, type End, type FriendId } from './world'
 
 // The game on the toy: rides, their endings, the showings, the friends'
 // reactions, the sand's marks and what is saved, joined to the playground in
@@ -49,6 +49,8 @@ export const HELD_EVERY = 1.8
 export const RAKE_SECONDS = 1.2
 /** How long after a ride has begun a tap on its asker is the tail of the touch that began it: seconds. */
 const BEGIN_SECONDS = 1.2
+/** The most an end can carry: all four friends. */
+const HEAVIEST = FRIEND_IDS.reduce((sum, id) => sum + FRIENDS[id].weight, 0)
 /** How long a purr or a chuckle at being lifted has to itself before an ending may begin: seconds. */
 const PERCH_SECONDS = 1
 /** The two who like being high. */
@@ -505,7 +507,8 @@ export class Game implements Director {
   /** The same thing, for the eye. */
   private draw(op: SandOp): void {
     // Deeper the heavier the end: drawn from the weight that came down, as it is saved, never from how fast it fell.
-    if (op.type === 'bite') this.cues.push({ type: 'bite', x: op.x, strength: (biteDepth(op.weight) - SHALLOWEST) / (DEEPEST - SHALLOWEST) })
+    // The saved grid keeps eight depths; the picture keeps every weight apart, so a heavier end is always drawn deeper.
+    if (op.type === 'bite') this.cues.push({ type: 'bite', x: op.x, strength: Math.min(1, (op.weight + 1) / (HEAVIEST + 1)) })
     else this.cues.push({ type: 'dimple', x: op.x, z: op.z, radius: FRIENDS[op.id].radius * 0.8, depth: Math.min(1, 0.35 + 0.16 * FRIENDS[op.id].weight) })
   }
 
@@ -575,6 +578,11 @@ export class Game implements Director {
         }
       }
       const landing = this.landings[event.id]
+      // Come down a place onto a head, because the friend between was taken away: that head answers as it does to anyone landing on it.
+      if (!landing && !event.thrown && !this.scene && event.on === 'friend') {
+        const place = placeOf(this.play.arrangement, event.id)
+        if (place.at === 'end' && place.level > 0) this.react(underneath(this.play.arrangement[place.end][place.level - 1], event.id))
+      }
       if (landing) {
         delete this.landings[event.id]
         this.react(reactionsTo(landing))
@@ -808,7 +816,8 @@ export class Game implements Director {
     // Sitting, not on its way there: a held state holds from the moment everyone has landed, however the plank still sways.
     const sits = (id: FriendId) => play.bodies[id].landed && play.bodies[id].mode === 'rest'
     const left = weightOn(a, 'left'), right = weightOn(a, 'right')
-    if (left > 0 && left === right && [...a.left, ...a.right].every(sits)) {
+    // Level by its weights, everyone sitting, and floating clear of the sand: while it is still on its way up off an end it is not yet level.
+    if (left > 0 && left === right && [...a.left, ...a.right].every(sits) && Math.abs(play.plank.tilt) < MAX_TILT * 0.7) {
       this.heldAt = this.time + HELD_EVERY
       this.voice(v.levelHum())
       ;[...a.left, ...a.right].forEach((id, index) => play.act(id, 'sway', 1.6, index % 2 ? -1 : 1))
