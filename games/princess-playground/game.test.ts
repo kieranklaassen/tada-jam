@@ -1991,8 +1991,8 @@ describe('whoever sits on the end that goes up is tossed, whichever end it is', 
   })
 })
 
-describe('a tower sways for as long as it stands, through an ending too', () => {
-  it('built on the asker\'s end by the move that ends the ride, it is swaying in the middle of the ending', () => {
+describe('a tower sways whenever it stands, in an ending too', () => {
+  it('built on the asker\'s end by the move that ends the ride: a new sway begins while the ending plays, before the plank\'s rocks and after them', () => {
     const world = shown()
     const game = new Game({ ...world, state: { ...world.state, position: 'high-asks' }, kind: 'high-asks', turn: 0, arrangement: layout(rideOf('high-asks', 0)), shown: ['high-asks'], touched: true }, 1)
     run(game, 0.5)
@@ -2010,15 +2010,19 @@ describe('a tower sways for as long as it stands, through an ending too', () => 
     for (let i = 0; i < 600 && !game.sceneRunning; i++) game.step(1 / 60, QUIET)
     expect(game.sceneRunning).toBe(true)
     expect(game.play.arrangement[near.end]).toHaveLength(3)
-    // Well into the ending, after any sway begun before it has run out. The plank's three rocks toss the tower off
-    // its seat for a moment each time; whenever it stands, it sways.
-    run(game, 1.75)
-    let swaying = 0
-    for (let i = 0; i < 175; i++) {
+    // A sway begun before the ending runs out by itself. One that begins while the ending plays is the held state
+    // holding in the scene: all three start it together. While the plank rocks, the tower on the low end stamps
+    // with it and is tossed off its seat, and has that to do instead.
+    let begun = 0, was = 0, together = 0
+    for (let i = 0; i < 240 && game.sceneRunning; i++) {
       game.step(1 / 60, QUIET)
-      if (game.sceneRunning && game.play.bodies.mog.act === 'sway' && game.play.bodies.dot.act === 'sway') swaying += 1
+      const mog = game.play.bodies.mog
+      if (mog.act === 'sway' && mog.actT < was) begun += 1
+      was = mog.act === 'sway' ? mog.actT : Infinity
+      if (mog.act === 'sway' && game.play.bodies.dot.act === 'sway' && game.play.bodies.pim.act === 'sway') together += 1
     }
-    expect(swaying).toBeGreaterThan(30)
+    expect(begun).toBeGreaterThanOrEqual(1)
+    expect(together).toBeGreaterThan(20)
   })
 })
 

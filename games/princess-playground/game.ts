@@ -931,7 +931,8 @@ export class Game implements Director {
     // What sits on the plank: a friend in the hand is not on it, so lifting one off can float it level, or leave a tower of three.
     const play = this.play, a = play.sitting
     if (this.time < this.heldAt) return
-    // In a scene a held state holds as it does out of one; only a friend a beat has doing something else is left to it.
+    // In a scene a held state holds as it does out of one. A friend a beat has doing something else is left to it:
+    // the sway waits a moment for that friend and then begins for all of them together, so they sway as one.
     const free = (id: FriendId) => !this.scene || play.bodies[id].act === null || play.bodies[id].act === 'sway'
     // Sitting, not on its way there: a held state holds from the moment everyone has landed, however the plank still sways.
     const sits = (id: FriendId) => play.bodies[id].landed && play.bodies[id].mode === 'rest'
@@ -940,7 +941,7 @@ export class Game implements Director {
     if (left > 0 && left === right && [...a.left, ...a.right].every(sits) && Math.abs(play.plank.tilt) < MAX_TILT * 0.7) {
       this.heldAt = this.time + HUM_EVERY
       this.voice(v.levelHum())
-      ;[...a.left, ...a.right].forEach((id, index) => { if (free(id)) play.act(id, 'sway', 1.6, index % 2 ? -1 : 1) })
+      if ([...a.left, ...a.right].every(free)) [...a.left, ...a.right].forEach((id, index) => play.act(id, 'sway', 1.6, index % 2 ? -1 : 1))
       return
     }
     // A stack of three or four, or any stack with Bo on top: it sways as one, every friend the same way, for as long as it stands.
@@ -948,8 +949,12 @@ export class Game implements Director {
       const stack = a[end]
       // A taller stack is plainly wobblier: three sway, four sway further; and Bo on top makes even two sway.
       if ((stack.length >= 3 || (stack.length === 2 && stack[1] === 'bo')) && stack.every(sits)) {
+        if (!stack.every(free)) {
+          this.heldAt = this.time + 0.1
+          continue
+        }
         this.heldAt = this.time + HELD_EVERY
-        for (const id of stack) if (free(id)) play.act(id, 'sway', 1.7, WOBBLE[stack.length] ?? 1)
+        for (const id of stack) play.act(id, 'sway', 1.7, WOBBLE[stack.length] ?? 1)
       }
     }
   }
