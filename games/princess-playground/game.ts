@@ -45,6 +45,8 @@ export const ASK_AT = [2.5, 10.5, 26.5] as const
 export const SNORE_EVERY = 3.4
 /** Seconds between the hums of a plank that floats level, and between the sways of a tower of four, for as long as each holds. */
 export const HELD_EVERY = 1.8
+/** How often the level hum is struck: a little sooner than one hum dies away, so that it is one long hum for as long as the plank is level. */
+export const HUM_EVERY = 1.25
 /** Seconds the rake takes to cross the tray. */
 export const RAKE_SECONDS = 1.2
 /** How long after a ride has begun a tap on its asker is the tail of the touch that began it: seconds. */
@@ -113,6 +115,8 @@ export class Game implements Director {
   private owed: SandOp[] = []
   /** Dot's swirl, saved already because what leaves it alone is on its way, and not yet drawn by Dot. */
   private owedSwirl: { x: number; z: number; radius: number } | null = null
+  /** For a friend the child has sent and that has not landed yet: the moves counted before it left, and the end it left, or null for the sand. */
+  private flights: Partial<Record<FriendId, { base: number; from: End | null }>> = {}
 
   constructor(world: World, seed: number, grains: Grains = new Grains(seed + 17)) {
     this.world = world
@@ -360,10 +364,21 @@ export class Game implements Director {
     // Whatever the friend was about to do where it was, it no longer does: it has been taken from there.
     // The sand running off the board is nobody's doing and runs all the same.
     this.later = this.later.filter((item) => item.reaction.who !== id || item.reaction.mark === 'trickle')
-    const before = this.play.arrangement
+    const before = this.play.arrangement, movesBefore = this.world.moves
+    // In the air already, from a move not yet landed: this touch turns it round.
+    const flight = this.play.bodies[id].mode === 'hop' ? this.flights[id] : undefined
     act()
     const after = this.play.arrangement
     this.world = afterMove(this.world, after)
+    // A move is a friend arriving on an end or leaving one. Turned round in the air, a friend has made one move from
+    // where it last stood, or none if it goes back there: tapping it to and fro before it lands counts nothing more.
+    const onEnd = (a: Arrangement) => { const place = placeOf(a, id); return place.at === 'end' ? place.end : null }
+    if (flight) this.world = { ...this.world, moves: Math.min(this.world.moves, flight.base + (onEnd(after) === flight.from ? 0 : 1)) }
+    else {
+      this.flights[id] = { base: movesBefore, from: onEnd(before) }
+      // A move by another friend meanwhile counts for itself in every flight that is under way.
+      for (const other of FRIEND_IDS) if (other !== id && this.flights[other]) this.flights[other]!.base += this.world.moves - movesBefore
+    }
     this.landings[id] = landingOf(before, after, id)
     // Dot taken away from those it was with, on the plank or beside it in the sand: they look after it for a moment.
     if (id === 'dot') {
@@ -384,6 +399,7 @@ export class Game implements Director {
     if (this.world === before) return
     this.wantSave('now')
     this.landings = {}
+    this.flights = {}
     this.later = []
     this.drawOwed()
     this.pendingShowing = this.world.shown.includes(this.world.kind) ? null : this.world.kind
@@ -579,8 +595,10 @@ export class Game implements Director {
     else if (event.type === 'creak') this.voice(v.creak(event.strength))
     else if (event.type === 'toss') this.react(tossed(event.id, event.speed))
     else if (event.type === 'level') {
+      // The hum is one: struck when the plank comes level, unless it is sounding already, and again as each dies away.
+      if (this.time < this.heldAt) return
       this.voice(v.levelHum())
-      this.heldAt = this.time + HELD_EVERY
+      this.heldAt = this.time + HUM_EVERY
       // Everyone on the floating plank sways with it, one after another.
       const riders = [...this.play.arrangement.left, ...this.play.arrangement.right]
       riders.forEach((id, index) => this.react([{ who: id, after: index * 0.12, act: 'sway', seconds: 1.6, way: index % 2 ? -1 : 1 }]))
@@ -603,6 +621,7 @@ export class Game implements Director {
         const place = placeOf(this.play.arrived, event.id)
         if (event.on === 'friend' && place.at === 'end' && place.level > 0) this.react(cameDownOn(event.id, this.play.arrived[place.end][place.level - 1]))
       }
+      delete this.flights[event.id]
       // The cell is read when the friend lands, from what is there then: a head taken away meanwhile is not landed on.
       // And from who has arrived: a friend sent to the same end and still on its way is not there yet.
       const sent = this.landings[event.id], sitting = this.play.arrived
@@ -681,7 +700,8 @@ export class Game implements Director {
     this.play.tapPlank(along)
     // The motion model answers every plank tap with a creak; the ends have sounds of their own on top.
     if (Math.abs(tilt) < 0.05) return
-    if (Math.sign(tilt) === side) {
+    // The clonk and its grains are an end knocked on the sand it lies in; an end that is in the air twangs.
+    if (Math.sign(tilt) === side && Math.abs(tilt) >= MAX_TILT * 0.92) {
       this.voice(v.clonk())
       this.grains.burst(side * PLANK.halfLength * 0.96, PLANK.z, 0.3, 6, PLANK.halfWidth * 2)
     } else this.voice(v.twang())
@@ -868,7 +888,7 @@ export class Game implements Director {
     const left = weightOn(a, 'left'), right = weightOn(a, 'right')
     // Level by its weights, everyone sitting, and floating clear of the sand: while it is still on its way up off an end it is not yet level.
     if (left > 0 && left === right && [...a.left, ...a.right].every(sits) && Math.abs(play.plank.tilt) < MAX_TILT * 0.7) {
-      this.heldAt = this.time + HELD_EVERY
+      this.heldAt = this.time + HUM_EVERY
       this.voice(v.levelHum())
       ;[...a.left, ...a.right].forEach((id, index) => play.act(id, 'sway', 1.6, index % 2 ? -1 : 1))
       return

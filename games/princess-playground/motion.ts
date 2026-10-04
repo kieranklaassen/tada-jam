@@ -329,11 +329,26 @@ export class Playground {
     // The tapped end dips. An end that is the lighter one, or level with the other, dips only as far as the weights
     // let it and springs back: a finger's tap never brings the lighter end down to the sand.
     const here = this.landedOn(side > 0 ? 'right' : 'left'), there = this.landedOn(side > 0 ? 'left' : 'right')
-    let push = TAP_PUSH
-    if (here < there) push = Math.min(push, TAP_SPEED, Math.sqrt((2 * TAP_DIP * TURN * (there - here)) / (PLANK_INERTIA + here + there)))
-    else if (here === there) push = Math.min(push, Math.sqrt(LEVEL_SPRING) * TAP_DIP)
-    nudge(this.plank, side * push)
-    this.tapRock = true
+    // A finger's tap on a plank that lies still is its own rocking, which throws nobody. A tap on a plank that is
+    // already on its way down under a friend who has just landed is not: that knock throws as it would have.
+    const still = Math.abs(this.plank.spin) < 0.05 && Math.abs(this.plank.tilt - this.restingTilt()) < 0.02
+    if (here > there) nudge(this.plank, side * TAP_PUSH)
+    else {
+      // Taps do not add up: however fast the finger drums, the end dips no further than one tap dips it. The speed
+      // it is given is what carries it from where it is now to that depth, and no more.
+      const moving = this.plank.spin * side
+      let wanted: number
+      if (here < there) {
+        const pull = (TURN * (there - here)) / (PLANK_INERTIA + here + there)
+        const dipped = Math.max(0, (this.plank.tilt - this.restingTilt()) * side)
+        wanted = Math.min(TAP_SPEED, Math.sqrt(2 * pull * Math.max(0, TAP_DIP - dipped)))
+      } else {
+        const off = this.plank.tilt * side
+        wanted = off >= TAP_DIP ? 0 : Math.sqrt(LEVEL_SPRING * Math.max(0, TAP_DIP * TAP_DIP - off * off))
+      }
+      if (wanted > moving) nudge(this.plank, side * (wanted - moving))
+    }
+    if (still) this.tapRock = true
     this.events.push({ type: 'creak', strength: 0.6 })
     // Its riders are tossed a finger's width and come down again.
     for (const id of FRIEND_IDS) {

@@ -237,6 +237,13 @@
 - **Only the heavier end ever comes down on the sand**, as a rule of the plank itself (`plank.ts`): an end that is no heavier than the other is turned back just short of the sand, however it was set swinging. A finger drumming on the lighter end, and a friend arriving on the other end mid-swing, could still knock it down; the cures before this one each covered one way of pushing. A test pushes the plank hard at random with every pair of weights.
 - Mog and Bo say that they are high though the friend who lifts them was tapped almost at once: a landing marks it as said only when the landing's own cell said it. Mog asking, left on top of a stack on the low end, purrs.
 
+**Built after the twentieth reading.** Rules 1 to 5 clean; four things under rule 6.
+
+- Taps on the plank do not add up: however fast a finger drums on the lighter end, that end dips no further than one tap dips it, so the heavier end is always the lower one. The clonk and its grains sound only on an end that lies in the sand.
+- A tap on the plank while a landing is bringing an end down does not rob the rider of its toss: only a tap on a plank that lies still makes the plank's knocks its own.
+- A move is a friend arriving on an end or leaving one: a friend tapped to and fro before it lands has made one move, or none if it ends where it stood. Before, every turn in the air was counted, and a ride could be judged badly for it.
+- The level hum is one long hum: each is struck a little before the one before it has died away, and never two at once.
+
 **Found by this lane while checking those.**
 
 - A friend held on the picture of the plank's end did not land on the plank: carried friends hung under the finger, high over the tray, so it hung over the sand in front and came down there. A first cure read the finger at the height of a seated friend; it took too much of the sand for the plank and was replaced after the thirteenth reading (above): a carried friend now hangs over the place the finger points at. The audit's own "carried" moment had been dropping friends in the sand all along; it now really lands them on the ends, onto a friend and over the middle.
@@ -249,7 +256,7 @@
 - On the low end several things now happen in a row (Pim crows and then stamps; Mog circles, kneads and purrs; Dot hums and then sings its duet), up to about two seconds in all. Whether that is lively or too much has not been heard or seen in motion.
 - The grains that lie on a head are a few small points for under half a second. They are there, and small.
 - A load draws the sand from the coarse grid alone, as the sheet says, so a groove the child drew comes back as a row of soft hollows, and Dot's swirl as a soft round patch.
-- The held secrets sound for as long as they hold: a plank left level hums every couple of seconds, and Bo left alone snores every few, until the child changes something or puts the game away. That is the sheet; whether it wears is for someone who can hear it.
+- The held secrets sound for as long as they hold: a plank left level hums on without a break, and Bo left alone snores every few seconds, until the child changes something or puts the game away. That is the sheet; whether it wears is for someone who can hear it.
 - Nobody has heard the game. Every voice is numbers inside ranges; whether the thumps, squeaks and hums sit well together is unknown, and so is whether Bo's chuckle and Mog's purr now come too often in free play.
 - Motion was judged from model tests, stills and the audit's pictures, never from video.
 - The rake appears at the child's first touch, wherever that touch lands. It does not slide in; it is simply there.

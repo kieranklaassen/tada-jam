@@ -8,7 +8,7 @@ import { seeded } from './motion'
 import { KINDS, layout, rideOf, wantMet, type Kind } from './rides'
 import { endRide, freshWorld, load, rideIsOver, save, type Saved, type World } from './save'
 import { NEXT_AT } from './scenes'
-import { chuckle, crow, knead, levelHum, purr, raspberry, scratch, softNote, spit, wheeze, type Part } from './voices'
+import { chuckle, clonk, crow, knead, lengthOf, levelHum, purr, raspberry, scratch, softNote, spit, wheeze, type Part } from './voices'
 import { FRIEND_IDS, MAX_TILT, PLANK, WAITING_PLACE, homeOn, plankTopAt, type FriendId } from './world'
 
 const QUIET: Guidance = { glow: 0, demo: null, demoIndex: -1 }
@@ -935,8 +935,13 @@ describe('the level plank hums for as long as it is level', () => {
       if (game.takeCues().some((cue) => cue.type === 'voice' && JSON.stringify(cue.parts) === hum)) times.push(t)
     }
     expect(weightOnEnds(game)).toEqual([3, 3])
-    expect(times.length).toBeGreaterThanOrEqual(5)
-    for (let i = 1; i < times.length; i++) expect(times[i] - times[i - 1]).toBeLessThan(2.5)
+    expect(times.length).toBeGreaterThanOrEqual(8)
+    // One long hum: each is struck before the one before it has died away, and never two at once.
+    const lasts = lengthOf(levelHum())
+    for (let i = 1; i < times.length; i++) {
+      expect(times[i] - times[i - 1]).toBeLessThan(lasts)
+      expect(times[i] - times[i - 1]).toBeGreaterThan(1)
+    }
   })
 })
 
@@ -1354,6 +1359,83 @@ describe('however fast the child goes, only the heavier end comes down', () => {
       expect(cues.filter((cue) => cue.type === 'bite' && cue.x > 0).length, label).toBe(0)
       if (weightOnEnds(game)[0] === weightOnEnds(game)[1]) expect(game.saved().marks, label).toBe(marks)
     }
+  })
+
+  it('a drumming finger never holds the heavier end up: taps do not add up, and the heavier end stays the lower one', () => {
+    for (const [left, right] of [[['mog'], ['pim']], [['bo'], ['mog']], [['bo'], ['pim']], [['dot', 'pim'], ['bo']]] as [FriendId[], FriendId[]][]) for (const gap of [0.1, 0.2, 0.35]) {
+      const game = made(left, right)
+      run(game, 1)
+      const rest = game.play.plank.tilt
+      expect(rest).toBeLessThan(0)
+      let highest = rest
+      const cues: Cue[] = []
+      for (let n = 0; n < 30; n++) {
+        game.press({ kind: 'plank', along: 2 })
+        for (let i = 0; i < gap * 60; i++) {
+          game.step(1 / 60, QUIET)
+          cues.push(...game.takeCues())
+          highest = Math.max(highest, game.play.plank.tilt)
+        }
+      }
+      const label = `${left} | ${right} every ${gap}`
+      // The left end is the heavier: it is never lifted to level, let alone above the other.
+      expect(highest, label).toBeLessThan(-0.08)
+      expect(highest - rest, label).toBeLessThan(0.2)
+      // And the tapped end, in the air, never clonks on sand.
+      expect(cues.some((cue) => cue.type === 'voice' && JSON.stringify(cue.parts) === JSON.stringify(clonk())), label).toBe(false)
+    }
+  })
+
+  it('a tap on the plank while a friend\'s landing is bringing an end down does not rob the rider of its toss', () => {
+    for (const wait of [0.1, 0.2, 0.3]) {
+      const game = new Game({ ...shown(), touched: true, state: { ...shown().state, finished: true } }, 1)
+      run(game, 0.3)
+      tapOn(game, 'bo')
+      let landed = false
+      for (let i = 0; i < 200 && !landed; i++) {
+        game.step(1 / 60, QUIET)
+        game.takeCues()
+        landed = game.play.bodies.bo.landed
+      }
+      run(game, wait)
+      game.press({ kind: 'plank', along: 2 })
+      let flew = 0
+      const sat = game.play.bodies.pim.y
+      for (let i = 0; i < 240; i++) {
+        game.step(1 / 60, QUIET)
+        game.takeCues()
+        flew = Math.max(flew, game.play.bodies.pim.y - sat)
+      }
+      expect(flew, `${wait}`).toBeGreaterThan(1)
+    }
+  })
+
+  it('a friend tapped to and fro before it lands has made one move, or none if it ends where it stood', () => {
+    const world = freshWorld(5)
+    const game = new Game({ ...world, shown: ['middle-asks'], touched: true }, 1)
+    run(game, 0.5)
+    expect(game.world.moves).toBe(0)
+    for (let n = 0; n < 6; n++) {
+      tapOn(game, 'pim')
+      run(game, 0.08)
+      expect(game.world.moves).toBeLessThanOrEqual(1)
+    }
+    run(game, 3)
+    // Six taps: she ends where she started, in the sand, and nothing was counted.
+    expect(placeOf(game.play.arrangement, 'pim').at).toBe('sand')
+    expect(game.world.moves).toBe(0)
+    // One tap more: she arrives, and that is one move.
+    tapOn(game, 'pim')
+    run(game, 3)
+    expect(game.world.moves).toBe(1)
+    // An odd number of quick taps: she arrives, one move more in all.
+    for (let n = 0; n < 3; n++) {
+      tapOn(game, 'pim')
+      run(game, 0.08)
+    }
+    run(game, 3)
+    expect(placeOf(game.play.arrangement, 'pim').at).toBe('sand')
+    expect(game.world.moves).toBe(2)
   })
 
   it('a friend arriving on the other end while the plank is still swinging stops the swing short of the sand when that end is no longer the heavier', () => {
