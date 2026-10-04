@@ -38,7 +38,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const pinned = tierOverride(window.location.search)
     const governor = new TierGovernor(pinned ?? startingTier(window.matchMedia('(pointer: coarse)').matches), pinned !== null)
     const work = new PerfRing()
-    // Grown-ups only: three quick taps in the top right corner, or fps=1 in the address (overlay.ts).
+    // Grown-ups only: a finger held a second in the top right corner and lifted there, then three taps there, or fps=1 in the address (overlay.ts).
     const overlay = new Overlay(root, window.location.search)
     // What the last draw put on the surface, for the grown-up handle and the overlay. A canvas 2D game counts the
     // sprites and figures it drew as drawCalls; a three.js game copies the renderer's own counts.
@@ -194,11 +194,14 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const onMove = (event: PointerEvent) => act(touch.move(event.pointerId, at(event)))
     const onUp = (event: PointerEvent) => {
       fingers.delete(event.pointerId)
-      act(touch.up(event.pointerId, at(event), event.timeStamp))
+      const where = at(event)
+      overlay.lift(where.x, where.y, width, event.timeStamp)
+      act(touch.up(event.pointerId, where, event.timeStamp))
       audio.touchUp()
     }
     const onCancel = (event: PointerEvent) => {
       fingers.delete(event.pointerId)
+      overlay.cancel()
       act(touch.cancel(event.pointerId, event.timeStamp))
       audio.touchUp()
     }
