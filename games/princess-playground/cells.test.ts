@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { emptyArrangement, putInSand, putOnEnd, tap, type Arrangement } from './arrangement'
-import { delight, landingOf, reactionsTo, tossed, type Reaction } from './cells'
+import { delight, landingOf, perched, reactionsTo, tossed, type Reaction } from './cells'
 import { FRIEND_IDS, homeOn, type FriendId } from './world'
 
 const on = (left: FriendId[], right: FriendId[]): Arrangement => {
@@ -83,13 +83,12 @@ describe('the cells in play', () => {
     const boHigh = reactionsTo(landingOf(on(['pim', 'mog'], []), putOnEnd(on(['pim', 'mog'], []), 'bo', 'right'), 'bo'))
     expect(boHigh.find((r) => r.act)).toMatchObject({ who: 'bo', act: 'chuckle' })
     expect(boHigh.find((r) => r.act)?.rock).toBeGreaterThan(0)
-    // Lifted by the others he chuckles too, unless he is the one asking, whose chuckle is the ending's.
-    expect(tossed('bo', 4).some((r) => r.act === 'chuckle' && r.rock)).toBe(true)
-    expect(tossed('bo', 4, true).some((r) => r.act === 'chuckle')).toBe(false)
+    // Lifted there by the others he chuckles too.
+    expect(perched('bo').some((r) => r.act === 'chuckle' && r.rock)).toBe(true)
     // High and not tipping it, Mog sits tall, purrs and blinks slowly.
-    const perched = reactionsTo(landingOf(on(['bo'], []), putOnEnd(on(['bo'], []), 'mog', 'right'), 'mog'))
-    expect(perched.find((r) => r.who === 'mog')).toMatchObject({ act: 'tall' })
-    expect(perched.find((r) => r.who === 'mog')?.blink).toBeGreaterThan(0.5)
+    const mogHigh = reactionsTo(landingOf(on(['bo'], []), putOnEnd(on(['bo'], []), 'mog', 'right'), 'mog'))
+    expect(mogHigh.find((r) => r.who === 'mog')).toMatchObject({ act: 'tall' })
+    expect(mogHigh.find((r) => r.who === 'mog')?.blink).toBeGreaterThan(0.5)
   })
 
   it('Dot in the sand hums beside a friend, and alone draws its one ring', () => {
@@ -101,15 +100,38 @@ describe('the cells in play', () => {
     expect(landingOf(start, off, 'dot').company).toBe(false)
   })
 
-  it('the friends on the plank answer Dot’s coming: each bounces, and nobody bounces for anyone else', () => {
+  it('the friends on the plank answer Dot’s coming: each turns to it and bounces, and nobody does so for anyone else', () => {
     const start = on(['pim'], ['bo'])
     const dotComes = reactionsTo(landingOf(start, putOnEnd(start, 'dot', 'right'), 'dot'))
-    expect(dotComes.filter((r) => r.act === 'bounce').map((r) => r.who).sort()).toEqual(['pim'])
+    expect(dotComes.filter((r) => r.act === 'greet' && r.toward === 'dot').map((r) => r.who).sort()).toEqual(['pim'])
     const lonely = on(['pim', 'mog'], [])
     const greeted = reactionsTo(landingOf(lonely, putOnEnd(lonely, 'dot', 'right'), 'dot'))
-    expect(greeted.filter((r) => r.act === 'bounce').map((r) => r.who).sort()).toEqual(['mog', 'pim'])
+    expect(greeted.filter((r) => r.act === 'greet' && r.toward === 'dot').map((r) => r.who).sort()).toEqual(['mog', 'pim'])
     const mogComes = reactionsTo(landingOf(start, putOnEnd(start, 'mog', 'right'), 'mog'))
-    expect(mogComes.some((r) => r.who === 'pim' && r.act === 'bounce')).toBe(false)
+    expect(mogComes.some((r) => r.who === 'pim' && (r.act === 'bounce' || r.act === 'greet'))).toBe(false)
+  })
+
+  it('a taste given as every time is every time: under Bo too, on top of a stack too, and thrown up onto the high end too', () => {
+    const under = (below: FriendId, by: FriendId) => reactionsTo(landingOf(on([below], []), putOnEnd(on([below], []), by, 'left'), by)).filter((r) => r.who === below)
+    const heard = (reactions: Reaction[]) => reactions.filter((r) => r.voice).map((r) => r.voice!.map((p) => `${p.kind}${Math.round(p.frequency)}`).join('+'))
+    // Pim underneath: cheeks out and a raspberry, whoever sits on her; under Bo the wheeze comes first.
+    for (const by of ['mog', 'dot', 'bo'] as const) expect(under('pim', by).some((r) => r.act === 'puff' && r.voice), by).toBe(true)
+    expect(under('pim', 'bo').length).toBe(2)
+    // Mog landed on: his hiss, a voice of its own, whoever lands.
+    const hiss = heard(under('mog', 'pim'))[0]
+    for (const by of ['pim', 'dot', 'bo'] as const) expect(heard(under('mog', by)), by).toContain(hiss)
+    expect(hiss).not.toBe(heard(reactionsTo(landingOf(on([], []), putInSand(on([], []), 'mog', homeOn('mog', 'right')), 'mog')))[0])
+    // Dot under anyone: its duet.
+    const duet = heard(reactionsTo(landingOf(on(['pim'], []), putOnEnd(on(['pim'], []), 'dot', 'left'), 'dot')).filter((r) => r.who === 'dot'))[0]
+    for (const by of ['pim', 'mog', 'bo'] as const) expect(heard(under('dot', by)), by).toContain(duet)
+    // Mog on top of a stack: he kneads, then purrs and blinks slowly, as on the high end.
+    const purr = shape(perched('mog'))
+    const onTop = reactionsTo(landingOf(on(['pim'], []), putOnEnd(on(['pim'], []), 'mog', 'left'), 'mog')).filter((r) => r.who === 'mog')
+    expect(onTop.map((r) => r.act)).toEqual(['knead', 'tall'])
+    expect(shape([onTop[1]])).toBe(purr)
+    expect(onTop[1].blink).toBeGreaterThan(0.5)
+    expect(perched('mog')[0].blink).toBeGreaterThan(0.5)
+    expect(perched('pim')).toEqual([])
   })
 
   it('being thrown and being carried up are each friend’s own: Pim squeals and spins, Mog yowls, Bo chuckles', () => {

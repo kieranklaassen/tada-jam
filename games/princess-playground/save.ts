@@ -23,6 +23,8 @@ export type World = {
   /** The kinds whose one showing has played. */
   shown: Kind[]
   marks: Marks
+  /** The child has touched the game at least once, ever. Until then no tool is on screen: the rake stays away. */
+  touched: boolean
 }
 
 /** The saved shape: plain JSON. A place in the sand is two whole numbers, in hundredths of the tray's width. */
@@ -36,6 +38,7 @@ export type Saved = GameState & {
   moves: number
   shown: Kind[]
   marks: string
+  touched: boolean
 }
 
 function toCell(spot: Spot): [number, number] {
@@ -57,7 +60,7 @@ function isFriend(value: unknown): value is FriendId {
 export function freshWorld(childAge: number | null): World {
   const state = freshState(childAge)
   const kind = kindAt(state.position, 0)
-  return { state, kind, turn: 0, arrangement: layout(rideOf(kind, 0)), moves: 0, shown: [], marks: rakedSand() }
+  return { state, kind, turn: 0, arrangement: layout(rideOf(kind, 0)), moves: 0, shown: [], marks: rakedSand(), touched: false }
 }
 
 export function save(world: World): Saved {
@@ -74,6 +77,7 @@ export function save(world: World): Saved {
     moves: world.moves,
     shown: [...world.shown],
     marks: marksToText(world.marks),
+    touched: world.touched,
   }
 }
 
@@ -94,10 +98,11 @@ export function load(raw: unknown, childAge: number | null): World {
   const moves = typeof record.moves === 'number' && Number.isFinite(record.moves) ? Math.max(0, Math.min(MOVES_CAP, Math.floor(record.moves))) : 0
   const shown = Array.isArray(record.shown) ? KINDS.filter((k) => (record.shown as unknown[]).includes(k)) : []
   const marks = marksFromText(record.marks)
+  const touched = record.touched === true
 
   // Who is where. Without both stacks there is nothing to repair from: the ride is laid out as it opens.
   if (!Array.isArray(record.left) || !Array.isArray(record.right)) {
-    return { state: { ...state, finished: false }, kind, turn, arrangement: layout(rideOf(kind, turn)), moves: 0, shown, marks }
+    return { state: { ...state, finished: false }, kind, turn, arrangement: layout(rideOf(kind, turn)), moves: 0, shown, marks, touched }
   }
   const placed = new Set<FriendId>()
   let arrangement: Arrangement = { left: [], right: [], sand: {}, waiting: null }
@@ -116,7 +121,7 @@ export function load(raw: unknown, childAge: number | null): World {
   // Everyone else stands in the sand: where they were left, or at the nearest free place to it.
   const sand = typeof record.sand === 'object' && record.sand !== null ? (record.sand as Record<string, unknown>) : {}
   for (const id of FRIEND_IDS) if (!placed.has(id)) arrangement = putInSand(arrangement, id, fromCell(sand[id]) ?? homeOn(id, 'right'))
-  return { state, kind, turn, arrangement, moves, shown, marks }
+  return { state, kind, turn, arrangement, moves, shown, marks, touched }
 }
 
 function toWaiting(a: Arrangement, id: FriendId): Arrangement {
@@ -172,6 +177,6 @@ export function markShown(world: World, kind: Kind): World {
 export function largestSaved(): Saved {
   let arrangement = emptyArrangement()
   for (const id of FRIEND_IDS) arrangement = putInSand(arrangement, id, { x: -TRAY.halfWidth + FRIENDS[id].radius, z: TRAY.halfDepth })
-  const world: World = { state: { ...freshState(null), position: 'middle-asks', finished: false }, kind: 'middle-asks', turn: 9, arrangement, moves: MOVES_CAP, shown: [...KINDS], marks: rakedSand().fill(9) }
+  const world: World = { state: { ...freshState(null), position: 'middle-asks', finished: false }, kind: 'middle-asks', turn: 9, arrangement, moves: MOVES_CAP, shown: [...KINDS], marks: rakedSand().fill(9), touched: true }
   return save(world)
 }

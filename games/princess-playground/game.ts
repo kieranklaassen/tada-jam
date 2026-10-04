@@ -1,5 +1,5 @@
-import { inCompany, placeOf, standsAt, weightOn, type Arrangement } from './arrangement'
-import { landingOf, reactionsTo, tossed, type Landing, type Reaction } from './cells'
+import { inCompany, lean, placeOf, standsAt, weightOn, type Arrangement } from './arrangement'
+import { landingOf, perched, reactionsTo, tossed, type Landing, type Reaction } from './cells'
 import { forecast, type SandOp } from './forecast'
 import { Grains } from './grains'
 import type { Guidance } from './guidance'
@@ -45,6 +45,10 @@ export const SNORE_EVERY = 3.4
 export const HELD_EVERY = 1.8
 /** Seconds the rake takes to cross the tray. */
 export const RAKE_SECONDS = 1.2
+/** The two who like being high. */
+const LIKE_HIGH = ['mog', 'bo'] as const
+/** How far a friend turns to the one it greets, in radians. */
+const GREET_TURN = 1.1
 
 export class Game implements Director {
   world: World
@@ -75,6 +79,8 @@ export class Game implements Director {
   private heldAt = 0
   /** Until when the friends on the plank look after Dot, who was just taken away. */
   private lookAfter = 0
+  /** Mog and Bo on the end that is up: whether each has yet said what it makes of it. */
+  private perch: Partial<Record<FriendId, 'pending' | 'said'>> = {}
   private company: boolean
   private lastDemo = -1
   /** What the scene that is playing does to the sand, as it was read before the scene began and saved with its outcome. */
@@ -87,6 +93,7 @@ export class Game implements Director {
     this.company = inCompany(world.arrangement)
     this.pendingShowing = this.wantsShowing() ? world.kind : null
     this.moods()
+    this.perchesAsFound()
     this.frame = this.play.frame()
   }
 
@@ -105,7 +112,8 @@ export class Game implements Director {
   }
 
   get rakeOut(): boolean {
-    return this.rakeSweep !== null || rakeIsOut(this.world.marks)
+    // No tool is on screen before it means something: the rake stays away until the child has touched the game once.
+    return this.rakeSweep !== null || (this.world.touched && rakeIsOut(this.world.marks))
   }
 
   /** What goes to storage now: who is where, never a friend in the air or in the hand. */
@@ -125,6 +133,10 @@ export class Game implements Director {
   press(touched: Touched): void {
     this.idle = 0
     this.asked = 0
+    if (!this.world.touched) {
+      this.world = { ...this.world, touched: true }
+      this.wantSave('soon')
+    }
     if (this.scene) this.endScene(true)
     // The child acted before the showing began: it waits for the next time this kind is laid out.
     this.pendingShowing = null
@@ -183,6 +195,15 @@ export class Game implements Director {
     this.pressed = { kind: 'other' }
   }
 
+  /**
+   * The game is put away. A friend in the hand goes back to where it was picked up from, which is where it is saved:
+   * putting the game away makes no move the child did not make, and none is counted.
+   */
+  putAway(): void {
+    this.pressed = { kind: 'other' }
+    this.play.putBack()
+  }
+
   /** How high above the sand the middle of a carried friend hangs, for the Mount to find the point under the finger. */
   get carryHeight(): number {
     return HOLD_HEIGHT + (this.play.held ? FRIENDS[this.play.held].halfHeight : 0)
@@ -215,6 +236,7 @@ export class Game implements Director {
       if (this.pendingShowing && this.play.settled) this.startShowing(this.pendingShowing)
       else if (rideIsOver(this.world) && this.play.plankArrived && this.play.bodies[this.ride.asker].landed) this.startEnding()
     }
+    this.perches()
     this.looks()
     this.snore()
     this.held()
@@ -249,6 +271,7 @@ export class Game implements Director {
     this.play.relayout(this.world.arrangement)
     this.voice(v.chirp(this.ride.asker, this.said++))
     this.moods()
+    this.perchesAsFound()
     this.pendingShowing = this.world.shown.includes(this.world.kind) ? null : this.world.kind
   }
 
@@ -316,6 +339,7 @@ export class Game implements Director {
     if (JSON.stringify(this.play.arrangement) !== JSON.stringify(this.world.arrangement)) this.play.relayout(this.world.arrangement)
     else this.play.arrangement = this.world.arrangement
     this.moods()
+    this.perchesAsFound()
     this.company = inCompany(this.world.arrangement)
   }
 
@@ -357,7 +381,14 @@ export class Game implements Director {
   }
 
   private apply(reaction: Reaction): void {
-    if (reaction.act) this.play.act(reaction.who, reaction.act, reaction.seconds ?? 0.6, reaction.way ?? 0)
+    let way = reaction.way ?? 0
+    if (reaction.toward) {
+      // It turns to the friend it greets: most of the way round to it, never so far that its face is lost to the child.
+      const me = this.play.bodies[reaction.who], other = this.play.bodies[reaction.toward]
+      const dx = other.x - me.x, dz = other.z - me.z
+      way = Math.hypot(dx, dz) < 0.3 ? 0 : Math.max(-GREET_TURN, Math.min(GREET_TURN, Math.atan2(dx, dz) * 0.7))
+    }
+    if (reaction.act) this.play.act(reaction.who, reaction.act, reaction.seconds ?? 0.6, way)
     if (reaction.voice) this.voice(reaction.voice)
     if (reaction.blink) this.play.blink(reaction.who, reaction.blink)
     // Never in a scene: its sand was forecast and saved when it began, and a shake would bite it again.
@@ -387,7 +418,7 @@ export class Game implements Director {
     else if (event.type === 'lift') this.voice(v.lift(event.id))
     else if (event.type === 'slide') this.voice(v.slide())
     else if (event.type === 'creak') this.voice(v.creak(event.strength))
-    else if (event.type === 'toss') this.react(tossed(event.id, event.speed, this.play.asking?.id === event.id))
+    else if (event.type === 'toss') this.react(tossed(event.id, event.speed))
     else if (event.type === 'level') {
       this.voice(v.levelHum())
       this.heldAt = this.time + HELD_EVERY
@@ -410,6 +441,8 @@ export class Game implements Director {
       if (landing) {
         delete this.landings[event.id]
         this.react(reactionsTo(landing))
+        // Landed on the end that is up: the cell has said what it makes of being high.
+        if (this.high(event.id)) this.perch[event.id] = 'said'
         // Bo on the low end digs it in: a crater under that end, and a ring of sand flies.
         if (event.id === 'bo' && landing.deed === 'low-end' && landing.end) {
           const x = (landing.end === 'left' ? -1 : 1) * PLANK.halfLength * Math.cos(this.play.plank.tilt)
@@ -473,9 +506,47 @@ export class Game implements Director {
     } else this.voice(v.twang())
   }
 
-  /** The rake is drawn once across the tray: even lines again, and nothing else changes. */
+  /** The arrangement has this friend on the end that is up. */
+  private high(id: FriendId): boolean {
+    const a = this.play.arrangement, place = placeOf(a, id)
+    return place.at === 'end' && lean(a) === (place.end === 'left' ? 1 : -1)
+  }
+
+  /** Found as it stands: whoever is high already has said so, and says nothing on a load or when a scene is over. */
+  private perchesAsFound(): void {
+    for (const id of LIKE_HIGH) {
+      if (this.high(id)) this.perch[id] = 'said'
+      else delete this.perch[id]
+    }
+  }
+
+  /**
+   * Mog and Bo like being high, every time. Lifted onto the up end by the others, each says so once the plank has
+   * carried it there, and not again until it has been down. The one who asks says it in the ending of its own ride.
+   */
+  private perches(): void {
+    for (const id of LIKE_HIGH) {
+      if (!this.high(id)) {
+        delete this.perch[id]
+        continue
+      }
+      if (this.perch[id] === 'said') continue
+      if (this.scene || this.play.asking?.id === id) {
+        this.perch[id] = 'said'
+        continue
+      }
+      this.perch[id] = 'pending'
+      const body = this.play.bodies[id]
+      if (this.play.plankArrived && body.landed && body.mode === 'rest') {
+        this.perch[id] = 'said'
+        this.react(perched(id))
+      }
+    }
+  }
+
+  /** The rake is drawn once along the far rim: even lines again, and nothing else changes. */
   private rake(): void {
-    if (this.rakeSweep !== null || !rakeIsOut(this.world.marks)) return
+    if (!this.rakeOut || this.rakeSweep !== null) return
     rakeMarks(this.world.marks)
     this.rakeSweep = 0
     this.cues.push({ type: 'rake' })

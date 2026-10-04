@@ -206,7 +206,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     }
 
     // Everything stops while unattended or hidden: the loop, the clock and sound. A touch in progress is
-    // ended, since its lift will never arrive (a drag is put down, a press ends without a tap), and the
+    // ended, since its lift will never arrive (a carried friend goes back to where it was picked up from, a press
+    // ends without a tap), and the
     // newest state is handed to storage.
     const attention = new Attention(document, (awake) => {
       audio.setActive(awake)
@@ -217,6 +218,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       cancelAnimationFrame(frame)
       frame = 0
       clock.rest()
+      // A friend in the hand goes back to where it was picked up from: put away makes no move.
+      game?.putAway()
       act(touch.clear())
       cadence.settle(performance.now())
     })
@@ -240,7 +243,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
 
     return () => {
       disposed = true
-      // As on going to rest: the touch ends first, so the thing in hand is put down before the last save.
+      // As on going to rest: the touch ends first, and a friend in the hand goes back to where it was picked up from.
+      game?.putAway()
       act(touch.clear())
       cadence.settle(performance.now())
       cancelAnimationFrame(frame)

@@ -66,8 +66,22 @@ describe('found as left', () => {
 
   it('saves nothing in the air: only places, as whole numbers and ids', () => {
     const saved = save(freshWorld(null))
-    expect(Object.keys(saved).sort()).toEqual(['finished', 'kind', 'left', 'marks', 'moves', 'position', 'right', 'sand', 'shown', 'turn', 'v', 'waiting'])
+    expect(Object.keys(saved).sort()).toEqual(['finished', 'kind', 'left', 'marks', 'moves', 'position', 'right', 'sand', 'shown', 'touched', 'turn', 'v', 'waiting'])
     for (const cell of Object.values(saved.sand)) expect(cell!.every((n) => Number.isInteger(n))).toBe(true)
+  })
+})
+
+describe('whether the child has touched the game', () => {
+  it('is false on a first visit, kept once set, and read as false from anything that is not plainly true', () => {
+    expect(freshWorld(null).touched).toBe(false)
+    const touched = { ...freshWorld(null), touched: true }
+    expect(load(JSON.parse(JSON.stringify(save(touched))), null).touched).toBe(true)
+    for (const odd of [undefined, null, 1, 'true', {}, []]) expect(load({ ...save(touched), touched: odd }, null).touched).toBe(false)
+    // It rides through every step of the designed order untouched.
+    let world: World = touched
+    world = afterMove(world, tap(world.arrangement, 'mog'))
+    world = beginRide(endRide(world))
+    expect(markShown(world, world.kind).touched).toBe(true)
   })
 })
 

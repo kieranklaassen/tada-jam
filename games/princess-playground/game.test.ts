@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isSound, placeOf, putInSand, putOnEnd, standsAt } from './arrangement'
+import { isSound, placeOf, putInSand, putOnEnd, standsAt, tap } from './arrangement'
 import { ASK_AT, Game, SNORE_EVERY, type Cue } from './game'
 import type { Guidance } from './guidance'
 import { RAKED, marksToText, rakeIsOut } from './marks'
@@ -8,6 +8,7 @@ import { seeded } from './motion'
 import { KINDS, layout, rideOf, wantMet, type Kind } from './rides'
 import { freshWorld, load, save, type Saved, type World } from './save'
 import { NEXT_AT } from './scenes'
+import { chuckle, purr, type Part } from './voices'
 import { FRIEND_IDS, MAX_TILT, PLANK, WAITING_PLACE, homeOn, plankTopAt, type FriendId } from './world'
 
 const QUIET: Guidance = { glow: 0, demo: null, demoIndex: -1 }
@@ -334,6 +335,59 @@ describe('found as left', () => {
     expect(held.saved().left).toEqual(['pim', 'mog'])
   })
 
+  it('a put-away with a friend in the hand makes no move: it goes back to where it was picked up from, nothing is counted and no ride ends', () => {
+    // Mog carried over the far end, where letting go would lift Pim and end the ride.
+    const game = new Game(shown(), 1)
+    run(game, 0.2)
+    const before = game.saved()
+    game.press({ kind: 'friend', id: 'mog' })
+    game.dragStart()
+    game.dragTo({ x: PLANK.seat, z: PLANK.z }, null)
+    run(game, 0.6)
+    game.putAway()
+    const parked = game.saved()
+    expect({ ...parked, touched: false }).toEqual(before)
+    expect(game.play.held).toBe(null)
+    // Opened again and left alone: Mog comes down where he stood, no ending plays and nothing was counted.
+    const { cues } = run(game, 6)
+    expect(game.sceneRunning).toBe(false)
+    expect(game.world.state.finished).toBe(false)
+    expect(game.world.moves).toBe(0)
+    expect(game.play.bodies.mog.mode).toBe('rest')
+    expect(game.play.bodies.mog.y).toBeCloseTo(0, 5)
+    expect({ ...game.saved(), marks: before.marks, touched: false }).toEqual(before)
+    expect(cues.some((cue) => cue.type === 'bite')).toBe(false)
+    // The finger's lift arrives after all, or never: either way nothing more happens.
+    game.dragEnd()
+    run(game, 2)
+    expect(game.world.moves).toBe(0)
+    // Loaded instead of opened again: the same world.
+    expect(save(load(JSON.parse(JSON.stringify(parked)), null))).toEqual(parked)
+  })
+
+  it('a put-away with a friend lifted off the plank puts it back on its end: the finished ride stays finished and nothing replays', () => {
+    const game = lifting()
+    run(game, 9)
+    expect(game.sceneRunning).toBe(false)
+    // Play on the finished scene: Bo sent onto the plank, then lifted off it again and carried over the sand.
+    tapOn(game, 'bo')
+    run(game, 4)
+    const before = game.saved()
+    expect(before.finished).toBe(true)
+    expect([...before.left, ...before.right]).toContain('bo')
+    game.press({ kind: 'friend', id: 'bo' })
+    game.dragStart()
+    game.dragTo({ x: 0, z: 2 }, null)
+    run(game, 0.8)
+    game.putAway()
+    expect({ ...game.saved(), marks: before.marks }).toEqual(before)
+    const { cues } = run(game, 6)
+    expect(game.sceneRunning).toBe(false)
+    expect(game.play.bodies.bo.landed).toBe(true)
+    expect({ ...game.saved(), marks: before.marks }).toEqual(before)
+    expect(cues.some((cue) => cue.type === 'rake')).toBe(false)
+  })
+
   it('through two minutes of seeded play the saved world is always sound and always what the playground holds', () => {
     for (const seed of [1, 2, 3]) {
       const random = seeded(seed * 31)
@@ -578,7 +632,53 @@ describe('the small promises of the sheet', () => {
   })
 })
 
+describe('tastes, every time', () => {
+  it('Mog thrown up by the plank and down again on the high end purrs and blinks slowly, and Bo lifted by the others chuckles', () => {
+    // Mog alone on the left end; Bo sent to the right end slams it down and throws him.
+    const bare = tap(layout(rideOf('little-asks', 0)), 'pim')
+    expect(bare.left.length + bare.right.length).toBe(0)
+    let arrangement = putOnEnd(bare, 'mog', 'left')
+    const game = new Game({ ...shown(), arrangement, touched: true }, 1)
+    run(game, 0.5)
+    tapOn(game, 'bo')
+    const heard = (cues: Cue[], voice: readonly Part[]) => cues.filter((cue) => cue.type === 'voice' && JSON.stringify(cue.parts) === JSON.stringify(voice)).length
+    const thrown = run(game, 5).cues
+    expect(heard(thrown, purr())).toBe(1)
+    // Bo alone on the right end; Pim's end already holds Mog, and Dot sent there lifts him.
+    arrangement = putOnEnd(putOnEnd(bare, 'bo', 'right'), 'mog', 'left')
+    const lift = new Game({ ...shown(), arrangement, touched: true }, 1)
+    run(lift, 0.5)
+    lift.press({ kind: 'friend', id: 'dot' })
+    lift.dragStart()
+    lift.dragTo({ x: -PLANK.seat, z: PLANK.z }, null)
+    run(lift, 0.4)
+    lift.dragEnd()
+    expect(heard(run(lift, 5).cues, chuckle())).toBe(1)
+  })
+})
+
 describe('the rake', () => {
+  it('is not on screen before the child has touched anything, though the first showing has marked the sand', () => {
+    const game = new Game(freshWorld(null), 1)
+    run(game, 8)
+    expect(game.sceneRunning).toBe(false)
+    expect(rakeIsOut(game.world.marks)).toBe(true)
+    expect(game.rakeOut).toBe(false)
+    expect(game.saved().touched).toBe(false)
+    // Found as left before any touch: still no rake.
+    const again = new Game(load(JSON.parse(JSON.stringify(game.saved())), null), 1)
+    run(again, 1)
+    expect(again.rakeOut).toBe(false)
+    // The first touch of anything brings it in, and it is saved that the child has touched.
+    game.press({ kind: 'friend', id: 'bo' })
+    game.pressEnd()
+    const { saves } = run(game, 0.1)
+    expect(game.rakeOut).toBe(true)
+    expect(saves.some((entry) => entry.saved.touched)).toBe(true)
+    const later = new Game(load(JSON.parse(JSON.stringify(game.saved())), null), 1)
+    expect(later.rakeOut).toBe(true)
+  })
+
   it('lies out only while the sand holds a mark; drawn across, it leaves even lines, moves no friend and ends nothing', () => {
     const game = new Game(shown(), 1)
     expect(game.rakeOut).toBe(false)

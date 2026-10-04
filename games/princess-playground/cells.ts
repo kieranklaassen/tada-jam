@@ -45,6 +45,8 @@ export type Reaction = {
   mark?: 'ring' | 'trickle' | 'settle'
   /** A slow blink of this many seconds. */
   blink?: number
+  /** The friend it turns to as it does this. */
+  toward?: FriendId
   /** The plank is shaken this hard, as a chuckle shakes it. */
   rock?: number
 }
@@ -71,14 +73,19 @@ const react = (who: FriendId, after: number, rest: Omit<Reaction, 'who' | 'after
 
 /** What a friend makes of being landed on: each in its own way. */
 function underneath(below: FriendId, by: FriendId): Reaction[] {
-  // Under Bo everyone is squashed flat with a wheeze; the body's own squash is the motion model's.
-  if (by === 'bo') return [react(below, 0.05, { voice: v.wheeze() })]
+  // Under Bo everyone is squashed flat with a wheeze first; the body's own squash is the motion model's. Then each
+  // says what it always says to being underneath, a little later than under anyone lighter.
+  const out: Reaction[] = by === 'bo' ? [react(below, 0.05, { voice: v.wheeze() })] : []
+  const late = by === 'bo' ? 0.25 : 0
   // Pim underneath: cheeks out and a raspberry.
-  if (below === 'pim') return [react('pim', 0.35, { voice: v.raspberry(), act: 'puff', seconds: 0.6 })]
-  // Mog underneath: he ducks, ears flat, and hisses.
-  if (below === 'mog') return [react('mog', 0.2, { voice: v.spit(), act: 'duck', seconds: 0.5 })]
-  if (below === 'bo') return [react('bo', 0.3, { act: 'tall', seconds: 0.9 })]
-  return [react('dot', 0.3, { act: 'sway', seconds: 1.2, way: 1 })]
+  if (below === 'pim') out.push(react('pim', 0.35 + late, { voice: v.raspberry(), act: 'puff', seconds: 0.6 }))
+  // Mog underneath: he ducks, ears flat, and hisses. Under Bo he is flat already.
+  else if (below === 'mog') out.push(react('mog', 0.2 + late, by === 'bo' ? { voice: v.spit() } : { voice: v.spit(), act: 'duck', seconds: 0.5 }))
+  // Bo underneath holds very still, proud: he only draws himself up.
+  else if (below === 'bo') out.push(react('bo', 0.3, { act: 'tall', seconds: 0.9 }))
+  // Dot underneath hums its duet with whoever is over it, and sways.
+  else out.push(react('dot', 0.3 + late, { voice: v.duet(), act: 'sway', seconds: 1.2, way: 1 }))
+  return out
 }
 
 /** The cell's own motion and sound for a friend that has just landed where the child put it. */
@@ -99,14 +106,15 @@ export function reactionsTo(l: Landing): Reaction[] {
       else if (l.deed === 'high-end') {
         if (!l.tips) add(0.3, { voice: v.purr(), act: 'tall', seconds: 1.2, blink: 0.7 })
       } else if (l.deed === 'on-a-friend') {
-        // On top of a stack he kneads with his eyes shut: his slow blink.
-        add(0.1, { voice: v.knead(), act: 'knead', seconds: 0.7, blink: 0.7 })
+        // On top of a stack he kneads the head below, then sits tall with his purr and his slow blink.
+        add(0.1, { voice: v.knead(), act: 'knead', seconds: 0.5 })
+        add(0.6, { voice: v.purr(), act: 'tall', seconds: 1.2, blink: 0.7 })
       }
       else add(0.1, { voice: v.scrunch(), act: 'spin', seconds: 0.7 })
       break
     case 'dot':
       // The friends already on the plank turn to Dot and bounce, one after another: it is their answer to its coming.
-      if (l.end) l.others.forEach((other, index) => { if (other !== l.below) out.push(react(other, 0.25 + index * 0.12, { act: 'bounce', seconds: 0.5 })) })
+      if (l.end) l.others.forEach((other, index) => { if (other !== l.below) out.push(react(other, 0.25 + index * 0.12, { act: 'greet', seconds: 0.7, toward: 'dot' })) })
       if (l.deed === 'low-end') add(0.1, { voice: v.hum(l.alone), act: l.alone ? 'look' : 'sway', seconds: 1, way: toward })
       else if (l.deed === 'high-end') add(0.1, l.tips ? { voice: v.ringOver() } : { voice: v.longNote(), act: 'sway', seconds: 1.4, way: toward })
       else if (l.deed === 'on-a-friend') {
@@ -132,15 +140,21 @@ export function reactionsTo(l: Landing): Reaction[] {
   return out
 }
 
-/**
- * What a friend makes of being thrown: Pim loves it, Mog hates it, Bo barely notices, and finds himself high for once:
- * his chuckle, which shakes the plank. When Bo is the one asking, the chuckle is his delight in the ending instead.
- */
-export function tossed(id: FriendId, speed: number, asking = false): Reaction[] {
+/** What a friend makes of being thrown: Pim loves it, Mog hates it, Bo barely notices. */
+export function tossed(id: FriendId, speed: number): Reaction[] {
   if (id === 'pim') return [react('pim', 0, { voice: v.squeal(), act: 'spin', seconds: 0.7 })]
   if (id === 'mog') return [react('mog', 0, { voice: v.yowl() })]
-  if (id === 'bo' && !asking) return [react('bo', 0, { voice: v.whoop('bo', speed) }), react('bo', 0.6, { voice: v.chuckle(), act: 'chuckle', seconds: 1, rock: CHUCKLE_ROCK })]
   return [react(id, 0, { voice: v.whoop(id, speed) })]
+}
+
+/**
+ * A friend finds itself on the end that is up, lifted there by the others: what the two who like being high say to it,
+ * every time. Mog sits tall with his purr and slow blink; Bo gives his slow chuckle, which shakes the plank.
+ */
+export function perched(id: FriendId): Reaction[] {
+  if (id === 'mog') return [react('mog', 0.3, { voice: v.purr(), act: 'tall', seconds: 1.2, blink: 0.7 })]
+  if (id === 'bo') return [react('bo', 0.3, { voice: v.chuckle(), act: 'chuckle', seconds: 1, rock: CHUCKLE_ROCK })]
+  return []
 }
 
 /** The asker has been carried where it wanted: its own delight. */

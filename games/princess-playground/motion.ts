@@ -24,6 +24,8 @@ export const RIDER_BOB = 0.32
 /** A chuckle's shake of the plank: how many pushes, and the seconds between them. */
 const SHAKES = 4
 const SHAKE_EVERY = 0.18
+/** How far Dot stands turned away when it is apart, in radians: half away, the face still in sight. */
+export const HALF_AWAY = 0.85
 /** A finger's width, in tray units. */
 export const FINGER = 0.14
 /** How flat a head is pressed by a friend sitting on it. */
@@ -47,7 +49,7 @@ export type PlayEvent =
 type Mode = 'rest' | 'hop' | 'air' | 'held'
 
 /** A small thing a friend does with its body where it sits or stands. Each lasts a moment and changes no place. */
-export type Act = 'spin' | 'stamp' | 'kick' | 'tall' | 'knead' | 'sway' | 'sink' | 'duck' | 'lean' | 'chuckle' | 'bounce' | 'look' | 'slip' | 'shake' | 'puff' | 'toss'
+export type Act = 'spin' | 'stamp' | 'kick' | 'tall' | 'knead' | 'sway' | 'sink' | 'duck' | 'lean' | 'chuckle' | 'bounce' | 'look' | 'slip' | 'shake' | 'puff' | 'toss' | 'greet'
 
 export type Mood = 'glad' | 'put-out' | 'plain'
 
@@ -71,6 +73,8 @@ type Body = {
   doze: number
   phase: number
   turn: number
+  /** Dot only: how far it stands turned half away, 0 to 1. */
+  aside: number
   /** A place it has gone to for a showing, away from where the arrangement has it; null when it is where it belongs. */
   away: { x: number; y: number; z: number } | null
   act: Act | null
@@ -135,7 +139,7 @@ export class Playground {
         fromX: at.x, fromY: at.y, fromZ: at.z, hopT: 0, hopFor: 0, hopHigh: 0, gather: 0, slid: false, leapt: false, vy: 0,
         squash: 1, squashV: 0, squashTo: 1, lean: 0, leanV: 0, leanTo: 0, follow: 0, followV: 0,
         holdX: at.x, holdZ: at.z, blinkIn: 0.6 + index * 0.9 + this.random() * 2, blinkT: 0, mouth: 0,
-        bright: 1, doze: 0, phase: index * 1.7, turn: 0,
+        bright: 1, doze: 0, phase: index * 1.7, turn: 0, aside: 0,
         away: null, act: null, actT: 0, actFor: 0, actWay: 0, mood: 'plain', gaze: 0, gazeTo: 0, gazeUp: 0, gazeUpTo: 0, glance: 0, thrown: false,
       }
       this.poses[id] = restPose()
@@ -200,6 +204,14 @@ export class Playground {
     const result = drop(this.arrangement, id, body.x, body.z)
     this.arrangement = result.arrangement
     this.hop(id, true, result.slid)
+  }
+
+  /** The game is put away with a friend in the hand: it goes back to where it was picked up from. Nobody is moved. */
+  putBack(): void {
+    const id = this.held
+    if (!id) return
+    this.held = null
+    this.hop(id, true)
   }
 
   /** A tap on the plank, `along` it from the stone: it rocks, and whoever is on it bobs. */
@@ -676,6 +688,9 @@ export class Playground {
     if (id === 'dot') {
       const warm = body.mode === 'held' || inCompany(this.arrangement) ? 1 : 0
       body.bright += Math.max(-dt * 0.9, Math.min(dt * 3, warm - body.bright))
+      // Apart in the sand it stands turned half away; touched, carried or in company it turns back at once.
+      const apart = !warm && body.mode === 'rest' && body.glance <= 0 && !body.away && placeOf(this.arrangement, 'dot').at === 'sand' ? 1 : 0
+      body.aside += Math.max(-dt * 5, Math.min(dt * 1.2, apart - body.aside))
     }
     if (id === 'bo') {
       // Alone on the plank he dozes, unless he is the one who asks: then he is wide awake, looking up along the plank.
@@ -706,6 +721,8 @@ export class Playground {
       case 'puff': pose.squash *= 1 - 0.14 * bell; break
       // Tossed a finger's width by a tap on the plank, and down again.
       case 'toss': pose.y += FINGER * bell; break
+      // A greeting: it turns to the one who came, as far as `way` says, with a bounce, and turns back.
+      case 'greet': pose.turn += body.actWay * Math.min(1, bell * 1.6); pose.y += 0.3 * Math.abs(Math.sin(t * Math.PI * 2)) * (0.5 + 0.5 * fade); pose.squash *= 1 + 0.08 * Math.sin(t * Math.PI * 4); break
       // Grains shaken off a head: a quick shiver.
       case 'shake': pose.lean += 0.12 * Math.sin(t * Math.PI * 10) * fade; break
     }
@@ -722,7 +739,8 @@ export class Playground {
       pose.squash = body.squash * (1 + breathe)
       pose.lean = body.lean + (body.landed && body.mode === 'rest' ? this.plank.tilt : 0)
       pose.nod = body.mode === 'air' ? 0.25 : 0
-      pose.turn = body.turn
+      // Half away is away from the middle of the tray, so the face still shows from the child's side.
+      pose.turn = body.turn + body.aside * HALF_AWAY * (body.x >= 0 ? 1 : -1)
       const heavyLids = id === 'bo' ? 0.28 + 0.72 * body.doze : 0
       pose.lids = Math.max(body.blinkT > 0 ? 1 : 0, heavyLids, body.mood === 'put-out' && (id === 'pim' || id === 'mog') ? 0.32 : 0)
       pose.gazeX = body.gaze

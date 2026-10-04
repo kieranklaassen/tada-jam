@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { emptyArrangement, isSound, placeOf, putInSand, putOnEnd, type Arrangement } from './arrangement'
-import { Playground, seeded, type PlayEvent } from './motion'
+import { HALF_AWAY, Playground, seeded, type PlayEvent } from './motion'
 import { FRIEND_IDS, FRIENDS, MAX_TILT, homeOn, type FriendId } from './world'
 
 /** The first ride as it is laid out: Pim on the left end, the others in the sand on the right. */
@@ -63,6 +63,61 @@ describe('the playground in motion', () => {
     play(world, 0.5)
     play(twin, 0.5)
     expect(twin.plank.tilt).toBeCloseTo(world.plank.tilt, 6)
+  })
+
+  it('has Dot stand turned half away while it is apart in the sand, and turn back the moment it is touched or in company', () => {
+    const world = new Playground(firstRide())
+    play(world, 2)
+    // Apart at the rim on the right: turned away from the middle of the tray, the face still toward the child's side.
+    expect(world.frame().poses.dot.turn).toBeCloseTo(HALF_AWAY, 2)
+    expect(HALF_AWAY).toBeLessThan(Math.PI / 2)
+    for (const id of ['pim', 'mog', 'bo'] as const) expect(world.frame().poses[id].turn).toBe(0)
+    world.touch('dot')
+    play(world, 0.3)
+    expect(Math.abs(world.frame().poses.dot.turn)).toBeLessThan(0.05)
+    // Brought onto the plank beside Pim it stays turned to the others.
+    world.tapFriend('dot')
+    play(world, 3)
+    expect(world.frame().poses.dot.turn).toBeCloseTo(0, 2)
+    // Tapped off again and alone in the sand, it turns half away once more.
+    world.tapFriend('dot')
+    play(world, 4)
+    expect(Math.abs(world.frame().poses.dot.turn)).toBeCloseTo(HALF_AWAY, 2)
+  })
+
+  it('turns a friend to the one it greets, with a bounce, and back again', () => {
+    const world = new Playground(firstRide())
+    play(world, 1)
+    world.act('pim', 'greet', 0.7, 0.9)
+    let furthest = 0, highest = 0
+    const rest = world.frame().poses.pim.y
+    play(world, 0.7, (w) => {
+      furthest = Math.max(furthest, w.frame().poses.pim.turn)
+      highest = Math.max(highest, w.frame().poses.pim.y - rest)
+    })
+    expect(furthest).toBeCloseTo(0.9, 1)
+    expect(highest).toBeGreaterThan(0.1)
+    play(world, 0.5)
+    expect(world.frame().poses.pim.turn).toBe(0)
+  })
+
+  it('puts a friend in the hand back where it was picked up from when the game is put away, and moves nobody', () => {
+    const world = new Playground(firstRide())
+    play(world, 0.5)
+    const before = JSON.stringify(world.arrangement)
+    const home = { x: world.bodies.bo.x, z: world.bodies.bo.z }
+    world.grab('bo')
+    world.carryTo(-3, -1)
+    play(world, 0.6)
+    world.putBack()
+    expect(world.held).toBe(null)
+    expect(JSON.stringify(world.arrangement)).toBe(before)
+    play(world, 3)
+    expect(world.bodies.bo.mode).toBe('rest')
+    expect(world.bodies.bo.x).toBeCloseTo(home.x, 5)
+    expect(world.bodies.bo.z).toBeCloseTo(home.z, 5)
+    expect(world.bodies.bo.y).toBeCloseTo(0, 5)
+    expect(JSON.stringify(world.arrangement)).toBe(before)
   })
 
   it('shuts a friend\'s eyes for as long as a slow blink lasts', () => {
