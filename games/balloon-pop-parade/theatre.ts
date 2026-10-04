@@ -42,16 +42,16 @@ export type Hit = { on: 'held'; friend: number } | { on: 'tug'; friend: number }
 /** A bunch's place in the sky and its springs: how flat it is, how far it is pushed aside, how far the loose end of its string has whipped, and how long until it is back. */
 type Place = { squash: number; squashSpeed: number; pressed: boolean; push: number; pushSpeed: number; whip: number; whipSpeed: number; away: number; grow: number }
 type Flight = { bunch: Bunch; slot: number; given: Given; t: number; fromX: number; fromY: number; landed: boolean; after: number; friend: number; met?: boolean; aside?: boolean }
-/** A balloon in a friend's hand. `bonk` is how long it is still on its way round to the friend's head, knocked by a refusal; `wait` is how long it still hangs where it arrived, in a bunch with one for each, before its friend's turn to take it, and `knot` is where its string still ends meanwhile. */
-type Held = { x: number; y: number; vx: number; vy: number; shown: boolean; bonk?: number; wait?: number; knot?: { x: number; y: number } }
+/** A balloon in a friend's hand. `bonk` is how long it is still on its way round to the friend's head, knocked by a refusal; `wait` is how long it still hangs where it arrived, in a bunch with one for each, before its friend's turn to take it, `owed` says it hangs there until its friend, who is busy, is free to take it, and `knot` is where its string still ends meanwhile. */
+type Held = { x: number; y: number; vx: number; vy: number; shown: boolean; bonk?: number; wait?: number; owed?: boolean; knot?: { x: number; y: number } }
 /** A balloon that has got away. `flat` is one blown off going flat; `bump` is one that is heading for the cloud over the troop and has not met it yet; `drift` is one of a sky that is over, which rises out of the top of the view without a pop. */
 type Loose = { x: number; y: number; vx: number; vy: number; colour: string; flat: boolean; t: number; popAt: number; bump?: boolean; drift?: boolean }
 type Scrap = { x: number; y: number; vx: number; vy: number; colour: string; life: number }
 /** A drop of water from a cloud, and a dimple in the hill where it was touched. */
 type Drop = { x: number; y: number; vx: number; vy: number; life: number }
 type Dimple = { x: number; t: number }
-/** `tug` is the bunch that carries a friend off, `proudAt` the pitch of the proud move it owes when it is down and `catchAt` that it owes a catch then, `jolt` when it was last poked while carried, `hang` where its balloons hang from the friend, `from` where they were when it took hold, and `second` whether the friend already held a balloon, both as they were when it took hold, `bumps` says that bunch is bigger than the whole troop and goes out by way of the cloud, `landAfter` is how much longer than its neighbour it hangs in the air before it comes down, when a whole troop was carried off, `fall` is the height it was at when a motion was cut short in the air and `fallT` how long it has been falling from there, `mirrored` has it refuse towards its other side, where the bunch hangs, `brisk` has the part of a refusal after it lands played faster, `speed` is how fast this playing of a motion runs, and `lastPoke` is which way it last took a poke. */
-type Actor = { clip: ClipId | null; t: number; next: ClipId | null; tug: Bunch | null; proudAt?: number; catchAt?: number; jolt?: number; hang?: { x: number; y: number }[]; from?: { x: number; y: number }[]; second?: boolean; fall?: number; fallT?: number; bumps?: boolean; landAfter: number; mirrored?: boolean; brisk?: boolean; speed?: number; lastPoke?: ClipId }
+/** `next` and `after` are the answers a friend owes, in order, while it is busy with one. `tug` is the bunch that carries a friend off, `proudAt` the pitch of the proud move it owes when it is down and `catchAt` that it owes a catch then, `jolt` when it was last poked while carried, `hang` where its balloons hang from the friend, `from` where they were when it took hold, and `second` whether the friend already held a balloon, both as they were when it took hold, `bumps` says that bunch is bigger than the whole troop and goes out by way of the cloud, `landAfter` is how much longer than its neighbour it hangs in the air before it comes down, when a whole troop was carried off, `fall` is the height it was at when a motion was cut short in the air and `fallT` how long it has been falling from there, `mirrored` has it refuse towards its other side, where the bunch hangs, `brisk` has the part of a refusal after it lands played faster, `speed` is how fast this playing of a motion runs, and `lastPoke` is which way it last took a poke. */
+type Actor = { clip: ClipId | null; t: number; next: ClipId | null; after?: ClipId | null; tug: Bunch | null; proudAt?: number; catchAt?: number; jolt?: number; hang?: { x: number; y: number }[]; from?: { x: number; y: number }[]; second?: boolean; fall?: number; fallT?: number; bumps?: boolean; landAfter: number; mirrored?: boolean; brisk?: boolean; speed?: number; lastPoke?: ClipId }
 
 /** A troop that is only passing: one that marches off, or one that crosses to show a new idea. Short-lived, and no part of the save. */
 type Passing = { kind: KindName; size: number; held: boolean[]; actors: Actor[]; balloons: Held[] }
@@ -80,6 +80,8 @@ const OVER_LAG = 0.2
 /** Seconds the oldest troop takes down from the far hill's ring and out of sight; and seconds the newest takes up to its place, once the oldest has gone and it has itself left by the edge in front. */
 const RETIRES_IN = 1.3
 const JOINS_IN = 1.2
+/** Seconds a troop that was served by one bunch is in the air when it jumps together. */
+const JUMPS_FOR = 0.5
 /** The most an ending waits, past the moment it is due, for friends that later bunches are carrying off, in seconds. */
 const ENDING_WAITS = 3
 /** How far through a bunch's flight the friend it is coming to begins to stretch up towards it: a fifth of a second after the touch. */
@@ -178,6 +180,8 @@ export class Theatre {
   private turned = 0
   private retiring: { troop: Marched; place: number; u: number } | null = null
   private joining = 1
+  /** When the troop last jumped together, at the start of an ending for a troop served by one bunch. */
+  private jumpedAt = -9
   /** When each troop on the far hill last began a jump, as an answer to a touch. */
   private readonly hopAt = [-9, -9, -9, -9]
   /** The troop that passed, on its way over the far hill, and how far over it is. */
@@ -503,7 +507,7 @@ export class Theatre {
     // the air the troop is not yet seen to be served, and the troop that waits only waves, as it does before. Once
     // the balloon is in a hand, a tap on the waiting troop brings the ending on at once, and the next one steps in:
     // a child who keeps tapping is never kept waiting for long, and never loses the ending.
-    const due = this.endingDue, serving = this.flights.some((flight) => flight.given.result === 'taken' && !flight.landed)
+    const due = this.endingDue, serving = this.flights.some((flight) => flight.given.result === 'taken' && !flight.landed) || this.held.some((balloon) => balloon.shown && balloon.owed)
     if (due && !serving && !this.scene?.running) {
       this.endingDue = null
       this.endCycle(due.order, due.together)
@@ -524,7 +528,7 @@ export class Theatre {
     // Whoever is in the air comes down as the troop sets off, from where it is, and a bunch that has hold of a
     // friend gets away: nobody is set on the ground between one frame and the next.
     const falls = this.actors.map((actor, i) => {
-      this.cutShort(i)
+      this.cutShort(i, true)
       if (actor.tug) this.letLoose(i, actor.tug, this.spot(i).y + (actor.fall ?? 0) + HELD_HEIGHT + 0.5, false)
       return actor.fall ?? 0
     })
@@ -583,12 +587,15 @@ export class Theatre {
     // The friends take their turns in the order the balloons were taken. After a load that order is gone for those
     // who already held one: they go first, in the order they stand, and those served since follow as they were served.
     const turns = [...order, ...Array.from({ length: size }, (_, i) => i).filter((i) => !order.includes(i))]
-    const gap = together ? 0.14 : Math.min(0.7, p.lasts.proud * 0.75)
+    // Balloons that came one at a time: the friends take turns. One bunch for all: they jump together, in the same
+    // moment, each with its own proud move.
+    const gap = together ? 0 : Math.min(0.7, p.lasts.proud * 0.75)
     const beats: Beat[] = []
     turns.forEach((friend, k) => beats.push({ at: 0.15 + k * gap, lasts: 0, play: this.cue(() => {
       // One that is in the air does its proud move when it is down, and is heard then: never heard and not seen.
       const actor = this.actors[friend]
-      if (actor.clip === 'liftOff') { actor.next = 'proud'; actor.proudAt = 1.18 + k * 0.05; return }
+      if (together && size > 1) this.jumpedAt = this.time
+      if (actor.clip === 'liftOff') { this.owe(actor, 'proud'); actor.proudAt = 1.18 + k * 0.05; return }
       this.act(friend, 'proud')
       this.sound(`${kind}Poke`, 1.18 + k * 0.05, 0.8)
     }) }))
@@ -730,7 +737,7 @@ export class Theatre {
   private act(friend: number, id: ClipId): void {
     const actor = this.actors[friend]
     if (actor.clip === 'liftOff') {
-      if (id !== 'poke') actor.next = id
+      if (id !== 'poke') this.owe(actor, id)
       return
     }
     // The director: a poke is never taken the same way twice running, and no motion a touch starts runs at quite the same speed twice.
@@ -745,17 +752,36 @@ export class Theatre {
   }
 
   /**
+   * One answer at a time. A friend that is in the middle of one (carried off, refusing, taking) owes the next, and
+   * gives it when it is free: `id` is put in line, at the head of it when `first`. Whatever it is the answer to
+   * waits where it is meanwhile, so an answer is never heard and not seen, and never cut off by the next.
+   */
+  private owe(actor: Actor, id: ClipId, first = false): void {
+    if (actor.next === id || actor.after === id) return
+    if (first) {
+      actor.after = actor.next ?? actor.after ?? null
+      actor.next = id
+    } else if (!actor.next) actor.next = id
+    else actor.after = id
+  }
+
+  private owes(actor: Actor, id: ClipId): boolean {
+    return actor.next === id || actor.after === id
+  }
+
+  /**
    * A motion is about to be cut short by another. If it had the friend in the air, the friend falls from there
    * while the new motion begins, and is never set down on the ground between one frame and the next.
    */
-  private cutShort(friend: number): void {
-    const actor = this.actors[friend], high = this.highOf(friend)
+  private cutShort(friend: number, leavesTheGround = false): void {
+    // The jump a troop makes together goes on under any motion but being carried off, so it is counted only there.
+    const actor = this.actors[friend], high = this.highOf(friend, leavesTheGround)
     actor.fall = high > 0.04 ? high : 0
     actor.fallT = 0
   }
 
   /** How far above its place on the ground a friend is now: what its motion has lifted it, and what is left of a fall. */
-  private highOf(friend: number): number {
+  private highOf(friend: number, withJump = true): number {
     const actor = this.actors[friend], kind = this.troop.kind
     let high = actor.fall ? actor.fall * (1 - ((actor.fallT ?? 0) / FALLS_IN) ** 2) : 0
     if (actor.clip && actor.t > 0) {
@@ -763,6 +789,8 @@ export class Theatre {
       clip(kind, actor.clip, actor.t, BODIES[kind].height * FRIEND_SCALE, BODIES[kind].reach, pose)
       high += pose.y
     }
+    // And the jump a troop makes together as its ending begins.
+    if (withJump && actor.clip !== 'liftOff' && this.time - this.jumpedAt < JUMPS_FOR) high += hump(this.time - this.jumpedAt, 0, JUMPS_FOR) * 0.6
     return high
   }
 
@@ -808,8 +836,9 @@ export class Theatre {
     // no friend that a bunch sent since is carrying off. It does not wait for ever: a child who keeps sending
     // bunches gets the ending after a few seconds all the same, and whoever is in the air then does its proud
     // move when it is down.
-    const calm = this.flights.length === 0 && !this.actors.some((actor) => actor.clip === 'liftOff')
-    const served = !this.flights.some((flight) => flight.given.result === 'taken' && !flight.landed)
+    const owed = this.held.some((balloon) => balloon.shown && balloon.owed)
+    const calm = this.flights.length === 0 && !owed && !this.actors.some((actor) => actor.clip === 'liftOff')
+    const served = !owed && !this.flights.some((flight) => flight.given.result === 'taken' && !flight.landed)
     if (this.endingDue && this.time >= this.endingDue.at && !this.scene?.running && (calm || (served && this.time >= this.endingDue.at + ENDING_WAITS))) {
       const due = this.endingDue
       this.endingDue = null
@@ -844,16 +873,20 @@ export class Theatre {
         const gap = kind === 'hippo' ? 0.17 : kind === 'crab' ? 0.06 : 0
         flight.given.takers.forEach((taker, k) => {
           // One that is being carried off has its hands full: its balloon is in its hand when it comes down.
+          // One that is refusing another bunch finishes that first. Either way the balloon waits where it arrives (`land`).
           const actor = this.actors[taker]
-          if (actor.clip === 'catch' || actor.clip === 'liftOff') return
+          if (actor.clip === 'catch' || actor.clip === 'liftOff' || actor.clip === 'refuse') return
           this.act(taker, 'catch')
           actor.t = -k * gap
         })
       } else if (flight.given.result === 'refused' && !flight.met && flight.t >= FLIGHT - REFUSAL_LEAD) {
         // The friend that will refuse it turns to look as it arrives: its answer begins well inside half a second of the touch.
         flight.met = true
-        this.act(flight.friend, 'refuse')
         const actor = this.actors[flight.friend]
+        // One answer at a time: a friend that is carried off, taking a balloon or refusing another bunch refuses
+        // this one when it is free, and the bunch hangs beside it until then.
+        if (actor.clip === 'liftOff' || actor.clip === 'catch' || actor.clip === 'refuse') this.owe(actor, 'refuse')
+        else this.act(flight.friend, 'refuse')
         // The motions are written for a bunch that hangs to the right of the friend as the child sees it; one that
         // hangs to its left is refused the other way round, never across the friend beside it.
         actor.mirrored = this.beside(flight.friend, flight.bunch.count).side < 0
@@ -861,9 +894,8 @@ export class Theatre {
         // what follows the moment it lands on the bunch is played faster. The look before it is never hurried, so
         // the bunch always hangs beside the friend for its beat, the two colours side by side.
         actor.brisk = LADDER.indexOf(this.save.position) >= LADDER.indexOf('bunches-own-colour')
-        // A friend that is being carried off refuses when it is down again: the bunch hangs beside its place and
-        // waits for it, and the refusal is heard when it begins.
-        if (actor.clip === 'refuse') this.sound(`${kind}Refuse`, 1, 1, 0, actor.speed ?? 1)
+        // The refusal is heard when it begins: now, or when the friend is free.
+        if (actor.clip === 'refuse' && actor.t === 0) this.sound(`${kind}Refuse`, 1, 1, 0, actor.speed ?? 1)
       }
     }
 
@@ -897,13 +929,18 @@ export class Theatre {
       }
       if (actor.t >= personality.lasts[actor.clip]) {
         actor.clip = actor.next
-        actor.next = null
+        actor.next = actor.after ?? null
+        actor.after = null
         actor.t = 0
+        // What it owed begins now, and is heard now.
         if (actor.clip === 'refuse') this.sound(`${kind}Refuse`, 1, 1, 0, actor.speed ?? 1)
-        if (actor.clip === 'proud' && actor.proudAt) this.sound(`${kind}Poke`, actor.proudAt, 0.8)
-        if (actor.clip === 'catch' && actor.catchAt) this.sound(`${kind}Catch`)
-        actor.catchAt = 0
-        if (actor.clip !== 'proud') actor.proudAt = 0
+        if (actor.clip === 'proud' && actor.proudAt) { this.sound(`${kind}Poke`, actor.proudAt, 0.8); actor.proudAt = 0 }
+        if (actor.clip === 'catch' && actor.catchAt) {
+          this.sound(`${kind}Catch`)
+          actor.catchAt = 0
+          // An ending that this catch causes follows it, as it follows every catch that causes one.
+          if (this.endingDue) this.endingDue.at = Math.max(this.endingDue.at, this.time + personality.lasts.catch * 0.7)
+        }
       }
     }
     const waiting = this.waitingActor
@@ -915,6 +952,11 @@ export class Theatre {
       const lifted = actor.clip === 'liftOff' ? this.lift(kind, actor.t) : 0
       // One of a bunch with one for each hangs where it arrived until its friend's turn.
       if (balloon.wait !== undefined && balloon.wait > 0) { balloon.wait -= dt; continue }
+      // One that its friend owes a catch hangs where it arrived until the catch has hold of it.
+      if (balloon.owed) {
+        if (actor.clip === 'liftOff' || actor.clip === 'refuse' || this.owes(actor, 'catch') || (actor.clip === 'catch' && actor.t < personality.cue.grab)) continue
+        balloon.owed = false
+      }
       let targetX = spot.x + 0.7 + Math.sin(this.time * 1.2 + i) * 0.1, targetY = spot.y + lifted + HELD_HEIGHT + Math.sin(this.time * 1.5 + i * 2) * 0.06, pull = 60, drag = 6
       if (balloon.bonk !== undefined && balloon.bonk > 0) {
         // Knocked by a refusal, it swings round on its string and comes down on its friend's head: its underside
@@ -1021,14 +1063,14 @@ export class Theatre {
         // Until its friend takes it, its string ends where it did: at the knot of the bunch, or loose under it.
         balloon.knot = shared ? { x: at.x, y: at.y - BALLOON * 2.5 * big } : { x: balloon.x, y: balloon.y - BALLOON * 1.32 * big - 0.5 }
         const actor = this.actors[taker]
-        if (actor.clip === 'liftOff') {
-          // Its friend is in the air: the balloon hangs where it arrived until the friend is down, and is caught
-          // then, in its kind's way and with its kind's sound.
-          actor.next = 'catch'
+        if (actor.clip === 'liftOff' || actor.clip === 'refuse') {
+          // Its friend is in the air, or refusing another bunch: the balloon hangs where it arrived until the
+          // friend is free, and is caught then, in its kind's way and with its kind's sound.
+          this.owe(actor, 'catch')
           actor.catchAt = 1
           balloon.vx = 0
           balloon.vy = 0
-          balloon.wait = Math.max(0, PERSONALITIES[kind].lasts.liftOff - actor.t) + (actor.landAfter ?? 0) + PERSONALITIES[kind].cue.grab
+          balloon.owed = true
           return
         }
         // A bunch with one for each: the ducks' boings in a run, the frogs' twangs on top of one another, the hippos'
@@ -1099,10 +1141,12 @@ export class Theatre {
   private carryOff(friend: number, bunch: Bunch, pitch: number, landAfter: number, bumps = false, arrived?: { x: number; y: number }[]): void {
     const actor = this.actors[friend], kind = this.troop.kind
     if (actor.clip !== 'liftOff') {
-      this.cutShort(friend)
+      // A refusal it had begun and not yet landed is still owed, and comes first when it is down.
+      const unlanded = actor.clip === 'refuse' && actor.t < PERSONALITIES[kind].cue.hit
+      this.cutShort(friend, true)
       actor.clip = 'liftOff'
       actor.t = 0
-      actor.next = null
+      if (unlanded) this.owe(actor, 'refuse', true)
       const hang = this.hung(friend, bunch).slice(0, bunch.count).map((place) => ({ x: place.x, y: place.y }))
       actor.hang = hang
       actor.from = undefined
@@ -1149,8 +1193,8 @@ export class Theatre {
     // something else or the bunch has to make room (`now`).
     const refusing = this.actors[flight.friend]
     if (!now && refusing.clip === 'refuse' && refusing.t < cue.hit) return false
-    // Its friend is in the air and will refuse it when it is down: until then it hangs.
-    if (!now && refusing.clip === 'liftOff' && refusing.next === 'refuse') return false
+    // Its friend is busy and owes it a refusal: until that has begun and landed on it, it hangs.
+    if (!now && this.owes(refusing, 'refuse')) return false
     // The refusal lands on it: it pops, or with the hippo it is blown away going flat.
     const kind = this.troop.kind, colour = KIND_COLOURS[flight.bunch.colour]
     const beside = this.beside(flight.friend, flight.bunch.count), big = this.lastView.balloon
@@ -1260,7 +1304,6 @@ export class Theatre {
         painter.marcher(over.kind, x, y, z, FRIEND_SCALE * PARADE_SCALE, Math.atan2(OVER_PATH.across, -OVER_PATH.deep), Math.sin(step * Math.PI) * 0.1)
         const by = y + HELD_HEIGHT * PARADE_SCALE + Math.sin(time * 1.4 + m) * 0.08
         painter.balloon(x + 0.3, by, z, PARADE_SCALE, PARADE_SCALE, 0.06, hue)
-        painter.string(x + 0.3, by - BALLOON * 1.32 * PARADE_SCALE, z, x, y + BODIES[over.kind].height * FRIEND_SCALE * PARADE_SCALE * 0.95, z, hue, 0.03)
       }
     }
 
@@ -1332,6 +1375,12 @@ export class Theatre {
       }
       // What is left of a fall from a motion that was cut short in the air.
       if (actor.fall) pose.y += actor.fall * (1 - ((actor.fallT ?? 0) / FALLS_IN) ** 2)
+      // A troop served by one bunch jumps together as its ending begins.
+      if (actor.clip !== 'liftOff' && time - this.jumpedAt < JUMPS_FOR) {
+        const up = hump(time - this.jumpedAt, 0, JUMPS_FOR)
+        pose.y += up * 0.6
+        pose.squash += up * 0.08
+      }
       // Poked while it is carried off, it wobbles where it hangs.
       if (actor.jolt !== undefined && time - actor.jolt < 0.6) {
         const wobbled = Math.sin((time - actor.jolt) * 38) * Math.exp(-(time - actor.jolt) * 7)
@@ -1360,7 +1409,7 @@ export class Theatre {
         const tongued = kind === 'frog' && actor.clip === 'catch' && actor.t < PERSONALITIES.frog.cue.grab + TONGUE_HOME
         const tailX = balloon.x + Math.sin(lean) * BALLOON * 1.32 * big, tailY = balloon.y - Math.cos(lean) * BALLOON * 1.32 * big
         // One that still hangs where it arrived, until its friend's turn or until its friend is down, has its string as it had.
-        if (balloon.wait !== undefined && balloon.wait > 0 && balloon.knot) painter.string(tailX, tailY, 0.3, balloon.knot.x, balloon.knot.y, 0.3, cord)
+        if (((balloon.wait !== undefined && balloon.wait > 0) || balloon.owed) && balloon.knot) painter.string(tailX, tailY, 0.3, balloon.knot.x, balloon.knot.y, 0.3, cord)
         else if (!tongued) painter.string(tailX, tailY, 0.3, this.hand.x, this.hand.y, this.hand.z, cord)
       }
       if (kind === 'frog' && actor.clip === 'catch') this.tongue(i, actor.t, pose, painter, shade(colour, 0.34))
@@ -1520,7 +1569,6 @@ export class Theatre {
       if (m >= troop.balloons) continue
       const by = at.y + hop + HELD_HEIGHT * PARADE_SCALE + Math.sin(time * 1.4 + place + m) * 0.08
       painter.balloon(at.x + 0.3, by, at.z, PARADE_SCALE, PARADE_SCALE, 0.06, hue)
-      painter.string(at.x + 0.3, by - BALLOON * 1.32 * PARADE_SCALE, at.z, at.x, at.y + hop + BODIES[troop.kind].height * FRIEND_SCALE * PARADE_SCALE * 0.95, at.z, hue, 0.03)
     }
   }
 

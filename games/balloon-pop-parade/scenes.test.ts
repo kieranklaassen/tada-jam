@@ -86,21 +86,45 @@ describe('the march on the spot', () => {
     }
   })
 
-  it('starts only when the last balloon is in a hand, and has every friend do its proud move in turn', () => {
+  it('starts only when the last balloon is in a hand, and has every friend do its proud move in turn when the balloons came one at a time', () => {
     const theatre = new Theatre(troopOf('frog', 3)), { poses, painter } = recorder()
-    tapSlot(theatre, 2)
+    // Three single balloons, one after another.
+    for (let given = 0; given < 2; given++) { tapSlot(theatre, 0); play(theatre, 1.6) }
+    tapSlot(theatre, 0)
     const waited = until(theatre, 'ending')
     expect(waited).toBeGreaterThan(FLIGHT)
-    // The throat is the frog's proud move: each friend's swells after the one before it.
+    // The throat is the frog's proud move: each friend's swells after the one before it, and nobody jumps.
     const swelled: number[] = [-1, -1, -1]
-    for (let t = 0; t < 3; t += 1 / 60) {
+    let together = 0
+    for (let t = 0; t < 3.5; t += 1 / 60) {
       theatre.step(1 / 60)
       theatre.paint(painter, VIEW)
       for (let i = 0; i < 3; i++) if (swelled[i] < 0 && poses.get(`friend-${i}`)!.puff > 1.6) swelled[i] = t
+      if ([0, 1, 2].every((i) => poses.get(`friend-${i}`)!.y - GROUND > 0.3)) together += 1
     }
-    expect(swelled[0]).toBeGreaterThanOrEqual(0)
-    expect(swelled[1]).toBeGreaterThan(swelled[0])
-    expect(swelled[2]).toBeGreaterThan(swelled[1])
+    const turns = [...swelled].sort((a, b) => a - b)
+    expect(turns[0]).toBeGreaterThanOrEqual(0)
+    expect(turns[1]).toBeGreaterThan(turns[0] + 0.3)
+    expect(turns[2]).toBeGreaterThan(turns[1] + 0.3)
+    expect(together).toBe(0)
+  })
+
+  it.each(['duck', 'frog', 'hippo', 'crab'] as const)('has a troop of %ss that one bunch served jump together: all of them off the ground in the same moment, each with its proud move', (kind) => {
+    const theatre = new Theatre(troopOf(kind, 3)), { poses, painter } = recorder()
+    tapSlot(theatre, 2)
+    until(theatre, 'ending')
+    let together = 0
+    const began: number[] = [-1, -1, -1]
+    for (let t = 0; t < 1.2; t += 1 / 60) {
+      theatre.step(1 / 60)
+      theatre.paint(painter, VIEW)
+      const up = [0, 1, 2].map((i) => poses.get(`friend-${i}`)!.y - GROUND)
+      up.forEach((high, i) => { if (began[i] < 0 && high > 0.08) began[i] = t })
+      if (up.every((high) => high > 0.3)) together += 1
+    }
+    // In the air together for a good part of the jump, and off the ground within a frame of one another.
+    expect(together).toBeGreaterThan(8)
+    expect(Math.max(...began) - Math.min(...began)).toBeLessThanOrEqual(2 / 60)
   })
 
   /** The order in which the friends of a frog troop swell their throats, which is the frog's proud move. */

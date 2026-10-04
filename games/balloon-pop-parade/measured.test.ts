@@ -205,6 +205,53 @@ describe('what the sheet says of every kind, measured on a theatre that is stepp
     expect(theatre.sounds.filter((sound) => sound.voice === `${kind}Poke` && sound.gain === 0.8)).toHaveLength(1)
   })
 
+  it.each(kinds)('a %s gives one answer at a time: a balloon sent while it refuses another waits for the refusal, and one refused while it takes its own waits for the catch', (kind) => {
+    for (const first of ['other', 'own'] as const) {
+      const sky = first === 'other' ? [{ colour: other(kind), count: 1 as const }, { colour: kind, count: 1 as const }] : [{ colour: kind, count: 1 as const }, { colour: other(kind), count: 1 as const }]
+      const theatre = new Theatre(saveOf({ position: 'solo-two-colours', troop: { kind, size: 1, held: [false] }, sky, waiting: { kind: other(kind), size: 1 } }), 6)
+      tap(theatre, 0)
+      for (let i = 0; i < 24; i++) theatre.step(1 / 60)
+      tap(theatre, 1)
+      const heard: Record<string, number> = {}
+      for (let i = 0; i < 60 * 6; i++) {
+        theatre.step(1 / 60)
+        for (const sound of theatre.sounds) heard[sound.voice] = heard[sound.voice] ?? i + Math.round(sound.after * 60)
+      }
+      const p = PERSONALITIES[kind], done = heard[kind === 'hippo' ? 'raspberry' : 'pop']
+      expect(theatre.troop.held, first).toEqual([true])
+      expect(heard[`${kind}Catch`], first).toBeGreaterThanOrEqual(0)
+      expect(heard[`${kind}Refuse`], first).toBeGreaterThanOrEqual(0)
+      // The refusal lands on the bunch when its motion has got there, and not before: the whole look is seen.
+      expect(done - heard[`${kind}Refuse`], `${first} first: the refusal is played before it lands`).toBeGreaterThanOrEqual(Math.floor((p.cue.hit / 1.07) * 60) - 2)
+      if (first === 'other') expect(heard[`${kind}Catch`], 'the catch comes after the refusal has landed').toBeGreaterThanOrEqual(done)
+      else expect(heard[`${kind}Refuse`], 'the refusal begins when the catch is over').toBeGreaterThanOrEqual(heard[`${kind}Catch`] + Math.floor(((p.lasts.catch - p.cue.grab) / 1.07) * 60) - 2)
+    }
+  })
+
+  it.each(kinds)('a %s that is served by a balloon sent while it is carried off catches it when it is down, and its ending waits for that catch', (kind) => {
+    const theatre = new Theatre(saveOf({ position: 'bunches-own-colour', troop: { kind, size: 1, held: [false] }, sky: [{ colour: kind, count: 3 }, { colour: kind, count: 1 }], waiting: { kind: other(kind), size: 1 } }), 8), { poses, balloons, painter, clear } = recorder()
+    tap(theatre, 0)
+    for (let i = 0; i < Math.round((0.5 + PERSONALITIES[kind].cue.grab + 0.3) * 60); i++) theatre.step(1 / 60)
+    tap(theatre, 1)
+    expect(theatre.save.finished).toBe(true)
+    let caught = -1, ending = -1, inHand = -1
+    for (let i = 0; i < 60 * 8 && ending < 0; i++) {
+      theatre.step(1 / 60)
+      clear()
+      theatre.paint(painter, VIEW)
+      if (caught < 0 && theatre.sounds.some((sound) => sound.voice === `${kind}Catch`)) caught = i
+      const pose = poses.get('friend-0')!
+      // Its own balloon is in its hand when it bobs over its string hand, as a held balloon does.
+      if (inHand < 0 && balloons.some((balloon) => balloon.z > -5 && balloon.wide === 1 && Math.abs(balloon.x - pose.x - 0.7) < 0.35 && Math.abs(balloon.y - GROUND - 4) < 0.5)) inHand = i
+      if (theatre.playing === 'ending') ending = i
+    }
+    expect(caught).toBeGreaterThan(0)
+    expect(inHand).toBeGreaterThan(caught)
+    // The whole catch is played, and the balloon is in the hand, before the ending begins.
+    expect(ending - caught).toBeGreaterThanOrEqual(Math.floor(PERSONALITIES[kind].lasts.catch * 0.6 * 60))
+    expect(ending).toBeGreaterThanOrEqual(inHand)
+  })
+
   it('draws every balloon in front at one size, also where balloons are drawn larger: in the sky, in a hand, on its way, beside a friend, carrying one off and passing by', () => {
     const big = SMALL.balloon
     expect(big).toBeGreaterThan(1.1)
