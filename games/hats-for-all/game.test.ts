@@ -13,7 +13,7 @@ import { bareSpots, hatsInTile, ready } from './rules'
 import { deserialize, freshSave, serialize } from './save'
 import { sceneLength } from './scene'
 import { changeShow, firstShowing, nextCrewShow, paradeShow } from './shows'
-import { ARCH, BODY, CREATURE_DEPTH, HAND, TILE_DEPTH } from './sizes'
+import { ARCH, BODY, CREATURE_DEPTH, HAND, SLAB, TILE_DEPTH } from './sizes'
 import { ARCH_X, ARCH_Z, TILE_Z, holeX, tileX } from './stage'
 import { ACTS as TASTE_ACTS } from './tastes'
 import { tileWidth } from './tile'
@@ -752,5 +752,29 @@ describe('a game opened again', () => {
       expect(game.seen.length).toBe(scenes)
       expectStageIsWorld(game)
     }
+  })
+})
+
+describe('a hat let go on the floor in front of the tile', () => {
+  it('skids to its place above the tile and has stopped spinning before it comes down beside it', () => {
+    const game = new Game(saveOf(everything()))
+    game.press(SUBJECT['hat-in-tile'])
+    game.dragStart()
+    game.dragTo(-2, 1.4, TILE_Z + 2.4, 0.5, 0.2)
+    run(game, 0.2)
+    game.letGo({ on: 'floor', x: -2, z: TILE_Z + 2.4 })
+    let frames = 0
+    run(game, 1.5, [], () => {
+      if (!game.play.flying(4)) return
+      frames++
+      const pose = game.play.hatPose(4), turned = Math.abs(Math.sin(pose.turn)) > 0.02
+      // While it is as low as the tile's top it no longer turns, and it is already over its place, behind the tile's back edge.
+      if (pose.y < SLAB) {
+        expect(turned).toBe(false)
+        expect(pose.z + CREATURE_DEPTH / 2).toBeLessThan(TILE_Z - TILE_DEPTH / 2)
+      }
+    })
+    expect(frames).toBeGreaterThan(10)
+    expect(game.play.seen(4).at).toBe('loose')
   })
 })

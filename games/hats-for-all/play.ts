@@ -94,6 +94,9 @@ type Actor = {
 }
 
 const ease = (t: number): number => t * t * (3 - 2 * t)
+/** A skidding hat is over its place and has stopped spinning by this share of its way, and until then it is at least this high: clear of the top of the tile. */
+const SKID_ACROSS = 0.7
+const SKID_HEIGHT = SLAB + 0.4
 /** How long a hat that landed sideways takes to right itself, how far over it lies at first, and how long a hat takes to spin once. */
 export const ASKEW_S = 0.7
 const ASKEW_TIP = 1.15
@@ -407,14 +410,20 @@ export class Play {
       const bounce = flight.travel === 'hop' ? Math.max(Math.abs(Math.sin(u * Math.PI * 2)), 0.45 * Math.sin(u * Math.PI)) : Math.sin(u * Math.PI)
       // And a hat on its way to a head is as high as the head before it comes in over it, so it never rises through the hat it lands on.
       const toHead = h.seen.at === 'head'
-      const over = h.seen.at === 'tile' ? ease(Math.min(1, u / 0.7)) : toHead ? ease(Math.max(0, (u - 0.3) / 0.7)) : e
+      // A hat let go to the floor skids there in the air, spinning like a coin, and only then comes down: it is over its place
+      // and has stopped turning before it is as low as the tile, so no corner of it sweeps through the tile's edge.
+      const skid = flight.travel === 'skid', across = ease(Math.min(1, u / SKID_ACROSS))
+      const over = h.seen.at === 'tile' ? ease(Math.min(1, u / 0.7)) : toHead ? ease(Math.max(0, (u - 0.3) / 0.7)) : skid ? across : e
       pose.x = flight.fromX + (pose.x - flight.fromX) * over
       pose.z = flight.fromZ + (pose.z - flight.fromZ) * over
-      pose.y = flight.fromY + (pose.y - flight.fromY) * (toHead ? ease(Math.min(1, u / 0.55)) : e) + bounce * flight.arc
+      if (skid) {
+        const held = Math.max(flight.fromY, SKID_HEIGHT), down = ease(Math.max(0, (u - SKID_ACROSS) / (1 - SKID_ACROSS)))
+        pose.y = (flight.fromY + (held - flight.fromY) * ease(Math.min(1, u / 0.2))) * (1 - down) + pose.y * down + bounce * flight.arc
+      } else pose.y = flight.fromY + (pose.y - flight.fromY) * (toHead ? ease(Math.min(1, u / 0.55)) : e) + bounce * flight.arc
       // It lies down, or stands up, in the high middle of its way and not at either end, where it would sweep through what it leaves or lands on.
       pose.up = flight.fromUp + (pose.up - flight.fromUp) * ease(Math.max(0, Math.min(1, (u - 0.2) / 0.6)))
       pose.flip = flight.travel === 'pop' ? e * Math.PI * 2 : 0
-      pose.turn = flight.travel === 'skid' ? e * Math.PI * 4 : 0
+      pose.turn = skid ? across * Math.PI * 4 : 0
       if (u < 1) return
       pose.flip = 0; pose.turn = 0
       h.flight = null
