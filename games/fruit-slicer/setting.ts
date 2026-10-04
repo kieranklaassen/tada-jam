@@ -1,5 +1,5 @@
-import { BLUE, BOARD_EDGE, INK, PAPER, RED, TINT, WHITE, YELLOW, inked, oval, poly, rect, slab, type Screens } from './look'
-import { BOARD, COUNTER, CRATE, DOG, LANE_H, QUEUE, RAIL_BOX, ROLLER, SHELF_BOX, TIN, WALL, WINDOW, X0, laneTop } from './stage'
+import { BLUE, INK, PAPER, RED, TINT, WHITE, YELLOW, inked, oval, poly, rect, slab, type Screens } from './look'
+import { BOARD, COUNTER, CRATE, DOG, QUEUE, RAIL_BOX, ROLLER, SHELF_BOX, TIN, WALL, WINDOW, X0 } from './stage'
 
 // The place the game happens in, painted once onto the plate: a street of
 // gabled houses behind the stall, in thin blue line and pale dots, the
@@ -263,18 +263,6 @@ function clutter(ctx: Ctx, dots: Dots): number {
   // A peg rail over the roller's hook.
   inked(ctx, rect(ROLLER.x - 4, COUNTER.y + 3, ROLLER.w + 8, 9), '#d9a441', 3)
   return 12
-}
-
-/** Nicks a blade has left in the board, as short pale scratches: the board is a board that has been used. Painted on the board, under everything that lies on it. */
-export function paintWear(ctx: Ctx): number {
-  ctx.fillStyle = BOARD_EDGE
-  for (let nick = 0; nick < 16; nick++) {
-    // Each nick lies wholly inside one lane: none reaches the line between the lanes, where it would make a cross.
-    const tall = 9 + 10 * chance(nick + 110), top = laneTop(nick % 2)
-    const nx = BOARD.x + 30 + chance(nick + 70) * (BOARD.w - 60), ny = top + 6 + chance(nick + 90) * (LANE_H - 12 - tall)
-    ctx.fillRect(nx, ny, 1.6, tall)
-  }
-  return 1
 }
 
 /** The street, behind everything in the stall's panel. Painted before the stall's own front. */

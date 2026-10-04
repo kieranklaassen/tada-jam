@@ -27,7 +27,7 @@ describe('what went in', () => {
 
   it('is all that stays once the serve is over, and on load: the pieces, at rest, and no taste', () => {
     const loaded = feastOf(pelican, lengths, null, null)
-    expect(loaded).toEqual({ lumps: [{ at: 1, size: 0.5, fruit: 'long' }, { at: 1, size: 0.25, fruit: 'long' }], mouth: 0, hop: 0, shrug: 0, pull: 0, spin: 0, flat: [], cross: 0, gaze: 0, tail: 0, sneeze: -1, pleased: 0 })
+    expect(loaded).toEqual({ lumps: [{ at: 1, size: 0.5, fruit: 'long' }, { at: 1, size: 0.25, fruit: 'long' }], mouth: 0, hop: 0, shrug: 0, pull: 0, rope: 0, spin: 0, flat: [], cross: 0, gaze: 0, tail: 0, sneeze: -1, pleased: 0 })
     expect(feastOf(pelican, lengths, taste(pelican, lengths), servedShow(2))).toMatchObject({ lumps: loaded.lumps, hop: 0, mouth: 0 })
   })
 
@@ -76,6 +76,8 @@ describe('the taste landing', () => {
     const pulled = mid(twins, 2, 0.08)(unfair, [len(3, 8), len(1, 8)])
     expect(pulled.pull).toBeGreaterThan(0.5)
     expect(pulled.spin).toBeGreaterThan(0)
+    // The rope is as long as the longer twin's share: three eighths of the fruit.
+    expect(pulled.rope).toBeCloseTo(3 / 8)
     // The tin comes to rest the right way up: whole turns.
     expect(Math.cos(mid(twins, 2, 1)(unfair, [len(3, 8), len(1, 8)]).spin)).toBeCloseTo(1)
   })

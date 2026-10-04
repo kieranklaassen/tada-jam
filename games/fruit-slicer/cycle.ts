@@ -175,9 +175,16 @@ export function give(game: Game, id: number, part: number): { game: Game; given:
   if (!customer || game.finished || !piece) return { game, given: null }
   const compartment = Math.max(0, Math.min(tinParts(customer).length - 1, Math.round(part)))
   // The rail is as long as the board: what would run off its end, counting every compartment, slides off onto the shelf.
-  // A piece that already lies in the tin and is laid in it again is counted once.
-  const already = piece.place.on === 'tin' ? piece.length : 0
-  if (tinParts(customer).reduce((sum, _, part) => sum + tinTotal(game.world, part), 0) - already + piece.length > RAIL) {
+  // Where what lies in the tin would end along the rail with this piece laid in: each compartment's pieces lie from its own left end, or
+  // from where the compartment before it ends when that one sticks out. A piece that already lies in the tin and is laid in it again is
+  // counted once. What would run past the end of the rail slides off onto the shelf.
+  let reach = 0, from = 0
+  tinParts(customer).forEach((ordered, part) => {
+    const lying = tinTotal(game.world, part) - (piece.place.on === 'tin' && piece.place.part === part ? piece.length : 0) + (part === compartment ? piece.length : 0)
+    reach = Math.max(from, reach) + lying
+    from += ordered
+  })
+  if (reach > RAIL) {
     const set = setOnShelf(game.world, id)
     return { game: { ...game, world: set.world }, given: { opened: false, firstShowing: null, strays: [], slidOff: true, fell: set.fell, result: served(set.world, customer), ending: null } }
   }

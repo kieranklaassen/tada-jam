@@ -184,6 +184,22 @@ describe('letting go over a customer, the dog or the crate', () => {
 describe('letting go over the board and the shelf', () => {
   const made = cutAt(start, 600)
 
+  it('lays a piece alongside a whole fruit from the same left end even when the other lane is in use there: what is in the way goes to the shelf', () => {
+    // A whole fruit on each lane, and a piece cut from a third that has been set on the shelf.
+    const two = land(start).game
+    const fruits = [onLane(two.world, 0)[0], onLane(two.world, 1)[0]]
+    expect(fruits.every((fruit) => fruit && fruit.length === WHOLE[fruit.fruit])).toBe(true)
+    const made = cutAt(two, 600)
+    // The right part of the near fruit, laid alongside the far fruit: the other lane is the near one, where the left part lies in the way.
+    const far = onLane(made.game.world, 1)[0]
+    const out = drop(made.game, hold(made.game, made.right), { x: X0 + 1200 * PX, y: FAR })
+    expect(kinds(out.events).slice(0, 2)).toEqual(['swept', 'setDown'])
+    expect(out.events.find((event) => event.kind === 'setDown')).toMatchObject({ how: 'beside' })
+    const laid = pieceOf(out.game.world, made.right)!
+    expect(laid.place).toEqual({ on: 'board', lane: 0, x: far.place.on === 'board' ? far.place.x : -1 })
+    expect(pieceOf(out.game.world, made.left)!.place.on).toBe('shelf')
+  })
+
   it('lays a piece alongside a whole fruit, from the same left end, on the other lane', () => {
     // The piece goes to the shelf first, a fresh fruit lands on the far lane, and the piece is let go on that fruit.
     const shelved = drop(made.game, hold(made.game, made.left), mid(SHELF_BOX)).game

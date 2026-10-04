@@ -14,7 +14,7 @@ import { paintPassers } from './passersBy'
 import { restShow } from './scenes'
 import { ruling } from './serve'
 import { SILL, fitOf, headOf, standsAt, type Seat } from './seats'
-import { paintCounter, paintStreet, paintWear } from './setting'
+import { paintCounter, paintStreet } from './setting'
 import { BOARD, COUNTER, CRATE, DOG, PX, QUEUE, ROLLER, SHELF_BOX, TIN, WALL, WINDOW, laneTop, rowTop, shown, tinShape, type Box, type Point, type TinShape } from './stage'
 import { drawFraction, drawSign } from './symbols'
 import { eaten, marksOf, SHELF, type Piece } from './world'
@@ -51,7 +51,6 @@ export function paintPlate(ctx: Ctx, dots: Dots): number {
   }
   ctx.fillStyle = BOARD_EDGE
   ctx.fillRect(BOARD.x + 3, laneTop(0) - 7.5, BOARD.w - 6, 3)
-  drawn += paintWear(ctx)
   for (let slot = 1; slot < SHELF; slot++) ctx.fillRect(SHELF_BOX.x + 3, rowTop(slot) - 1.5, SHELF_BOX.w - 6, 3)
   // Every other slat of the shelf is a shade deeper: it is a rack of slats, still plain and still pale.
   ctx.fillStyle = '#d0dde3'
@@ -281,7 +280,9 @@ function tin(ctx: Ctx, dots: Dots, scenery: Scenery, shape: TinShape, customer: 
   // The lid, standing open behind the tin, as long as the tin, with the fraction on it. In the serve it comes
   // down: flat on a fit, and bouncing on what sticks out.
   const closing = show !== null && show.kind === 'serve' && scenery.ending !== null ? show.lid : 0
-  const bounce = closing > 0 && scenery.ending!.result.kind === 'over' ? 0.35 + 0.25 * Math.abs(Math.sin(closing * Math.PI * 3)) : 1
+  // A lid that will not shut: on what sticks out it bounces; on a gap it comes down, finds nothing to hold it and springs back open. Only a fit shuts it.
+  const how = closing > 0 ? scenery.ending!.result.kind : 'fit'
+  const bounce = how === 'over' ? 0.35 + 0.25 * Math.abs(Math.sin(closing * Math.PI * 3)) : how === 'under' ? (closing > 0 ? Math.sin(closing * Math.PI) / closing : 1) * 0.92 : 1
   // Outside the serve, a misfit just laid in brings the lid down too: it bounces on what sticks out, or shuts on a gap, and springs back open.
   const tried = scenery.fx.fx.find((one) => one.kind === 'lid' && one.age >= 0)
   const t = tried ? tried.age / tried.life : 0
@@ -338,7 +339,12 @@ function tin(ctx: Ctx, dots: Dots, scenery: Scenery, shape: TinShape, customer: 
     ctx.strokeRect(ruler.x, y, ruler.w, rowH)
     ctx.fillStyle = INK
     const marks = Math.ceil((ruler.w / whole) * row.parts)
-    for (let part = 1; part < marks; part++) if (part <= partsRuled + 0.001) ctx.fillRect(ruler.x + (whole * part) / row.parts - 1.25, y - (ruled.rows.length > 1 ? 0 : 3), 2.5, rowH + (ruled.rows.length > 1 ? 0 : 6))
+    for (let part = 1; part < marks; part++) {
+      if (part > partsRuled + 0.001) continue
+      // Where one whole fruit ends and the next begins the mark is heavier and taller than a part's: the whole is ruled on the rail too.
+      const whole2 = part % row.parts === 0
+      ctx.fillRect(ruler.x + (whole * part) / row.parts - (whole2 ? 2.5 : 1.25), y - (ruled.rows.length > 1 ? 0 : whole2 ? 8 : 3), whole2 ? 5 : 2.5, rowH + (ruled.rows.length > 1 ? 0 : whole2 ? 16 : 6))
+    }
   })
   // The roller on the open tin: the ruled parts answer one by one, each standing up white for its knock.
   const answering = scenery.fx.fx.find((one) => one.kind === 'answer')
@@ -505,7 +511,7 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
       for (const piece of part.pieces) {
         const left = 1 - Math.max(0, Math.min(1, scenery.show!.bites - eatenSoFar))
         // Under a lid that has shut flat nothing shows; a lid that bounces on what sticks out leaves it in view.
-        if (left > 0.02 && !(scenery.show!.lid >= 0.99 && scenery.ending!.result.kind !== 'over')) bar(ctx, piece.fruit, { x, y: TIN.bodyY + (TIN.bodyH - TIN.pieceH) / 2 - up, w: piece.length * PX * left, h: TIN.pieceH })
+        if (left > 0.02 && !(scenery.show!.lid >= 0.99 && scenery.ending!.result.kind === 'fit')) bar(ctx, piece.fruit, { x, y: TIN.bodyY + (TIN.bodyH - TIN.pieceH) / 2 - up, w: piece.length * PX * left, h: TIN.pieceH })
         x += piece.length * PX
         eatenSoFar++
         drawn++

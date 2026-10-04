@@ -256,10 +256,11 @@ describe('the tin', () => {
     expect(cleared.tinOpen).toBe(false)
     expect(cleared.pieces.map((piece) => piece.id).sort()).toEqual([second.left, second.right].sort())
     expect(cleared.pieces.every((piece) => !piece.blind)).toBe(true)
-    // Cut again with every tin shut, a piece is cut by eye once more.
+    // Cut again with every tin shut, it is still not a piece cut by eye: one of its ends was cut against an open tin, and stays so.
     const again = cut(cleared, second.left, 150)
     if (again.kind !== 'cut') throw new Error('no cut')
-    expect(pieceOf(again.world, again.left)!.blind).toBe(true)
+    expect(pieceOf(again.world, again.left)!.blind).toBe(false)
+    expect(pieceOf(again.world, again.right)!.blind).toBe(false)
   })
 
   it('moves what a customer eats to inside the customer, in order, and takes it away with the customer', () => {

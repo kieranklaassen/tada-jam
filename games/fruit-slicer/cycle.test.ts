@@ -446,6 +446,19 @@ describe('a full shelf', () => {
     expect(game.world.pieces.some((piece) => piece.id === ids[0])).toBe(false)
   })
 
+  it('lets nothing lie past the end of the rail: where the pieces end is what counts, not how much is in the tin', () => {
+    // The twins order a whole long fruit: two compartments of half a fruit each. An uncut long fruit laid in the second would end far past the rail.
+    const twins: Customer = { who: 'twins', fruit: 'long', shares: [{ num: 2, den: 2 }], carries: null, written: true, lined: true }
+    const game: Game = { ...start.game, window: twins }
+    const landed = crate(game)
+    const second = give(landed.game, landed.id, 1)
+    expect(second.given).toMatchObject({ slidOff: true })
+    expect(inTin(second.game.world, 1)).toEqual([])
+    // In the first compartment it ends inside the rail, and stays.
+    const first = give(landed.game, landed.id, 0)
+    expect(first.given).toMatchObject({ slidOff: false })
+  })
+
   it('says what the pieces left in a hand-fed customer\'s tin push off the shelf', () => {
     const { game } = fullShelf(start.game)
     const short = cutFor(game, tinParts(game.window!)[0], -400)

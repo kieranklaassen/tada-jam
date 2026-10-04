@@ -142,7 +142,8 @@ export function cut(world: World, id: number, at: number, open = world.tinOpen):
   const where = Math.round(at), least = giveOf(piece.fruit)
   if (where < least) return { kind: 'curl', world, end: 'left' }
   if (piece.length - where < least) return { kind: 'curl', world, end: 'right' }
-  const blind = !open
+  // Once a piece has been cut with a tin standing open it is never again a piece cut by eye, however it is trimmed afterwards.
+  const blind = piece.blind && !open
   const left: Piece = { ...piece, length: where, blind }
   const rightId = world.nextId
   let beside: Place = { on: 'shelf', slot: SHELF }

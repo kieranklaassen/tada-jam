@@ -317,7 +317,8 @@ export function drawCustomer(ctx: Ctx, dots: Dots, cast: Casting, x: number, y: 
       ctx.save()
       ctx.translate(x + feast.pull * 16 * s, y - 50 * s)
       ctx.scale(s, s)
-      lump(ctx, cast.fruit, -24, -4, 1, 48, 8)
+      // As long as the piece it is: a whole fruit would be 96 units of rope, a half 48.
+      lump(ctx, cast.fruit, -48 * feast.rope, -4, feast.rope, 96, 8)
       ctx.restore()
     }
     return

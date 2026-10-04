@@ -17,8 +17,9 @@ export type Feast = {
   hop: number
   /** The shrug at a lid that will not shut, as the customer is sent off with a misfit: 0 to 1. */
   shrug: number
-  /** The twins' longer piece pulled between them: -1 to 1. And the tin spinning under it, in radians. */
+  /** The twins' longer piece pulled between them: -1 to 1. How long that piece is, as a share of the fruit. And the tin spinning under it, in radians. */
   pull: number
+  rope: number
   spin: number
   /** For each ant of the file, how flat it is under the end of a piece that stops between two ants. */
   flat: number[]
@@ -49,7 +50,7 @@ export function feastOf(customer: Customer, lengths: readonly number[], taste: T
     if (bites <= index) return
     lumps.push({ at: Math.min(1, bites - index), size: Math.min(2, length / whole), fruit: fruits[index] ?? customer.fruit })
   })
-  const feast: Feast = { lumps, mouth: 0, hop: 0, shrug: 0, pull: 0, spin: 0, flat: [], cross: 0, gaze: 0, tail: 0, sneeze: -1, pleased: 0 }
+  const feast: Feast = { lumps, mouth: 0, hop: 0, shrug: 0, pull: 0, rope: 0, spin: 0, flat: [], cross: 0, gaze: 0, tail: 0, sneeze: -1, pleased: 0 }
   if (!show || show.kind !== 'serve') return feast
   const biting = bites - Math.floor(bites)
   feast.mouth = Math.max(bites < lengths.length ? bump(biting) : 0, sticksOut && show.lift > 0 ? 0.4 : 0)
@@ -63,6 +64,8 @@ export function feastOf(customer: Customer, lengths: readonly number[], taste: T
       break
     case 'twins':
       feast.pull = taste.pulled === null ? 0 : (taste.pulled === 0 ? 1 : -1) * Math.sin(t * Math.PI * 6) * easing
+      // The rope is the longer twin's share, at its own length: half of all they were given and half of what one has over the other.
+      feast.rope = taste.pulled === null ? 0 : (lengths.reduce((sum, length) => sum + length, 0) + Math.abs(taste.by)) / 2 / whole
       // Two whole turns, so it comes to rest the right way up.
       feast.spin = taste.pulled === null ? 0 : t * Math.PI * 4
       feast.pleased = taste.liked ? bump(t) : 0

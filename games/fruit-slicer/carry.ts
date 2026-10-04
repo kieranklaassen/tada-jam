@@ -63,6 +63,28 @@ function put(game: Game, held: Held, lane: number, x: number, how: 'put' | 'besi
   return shutAfter({ ...game, world: set.world }, events, game, held)
 }
 
+/**
+ * Lays the pieces in the hand alongside a whole fruit: on the other lane, from the same left end, so the two
+ * lengths can be compared edge to edge. What lies in the way on that lane is shoved onto the shelf, as it is
+ * when a fresh fruit lands there. A row too long to lie from that end within the board is only put down.
+ */
+function layBeside(game: Game, held: Held, lane: number, x: number): { game: Game; events: GameEvent[] } {
+  const total = held.ids.reduce((sum, id) => sum + (pieceOf(game.world, id)?.length ?? 0), 0)
+  if (x + total > RAIL) return put(game, held, lane, x, 'put')
+  const inWay = onLane(without(game.world, held.ids), lane).filter((piece) => piece.place.on === 'board' && piece.place.x < x + total && piece.place.x + piece.length > x)
+  const swept = gone(game.world, inWay.map((piece) => piece.id))
+  let world = game.world
+  const fell: GameEvent[] = []
+  for (const { piece } of swept) {
+    const set = setOnShelf(world, piece.id)
+    fell.push(...fellEvents(world, set.fell))
+    world = set.world
+  }
+  const events: GameEvent[] = swept.length > 0 ? [{ kind: 'swept', ids: swept.map(({ piece }) => piece.id), from: swept.map(({ from }) => from) }, ...fell] : []
+  const laid = put({ ...game, world }, held, lane, x, 'beside')
+  return { game: laid.game, events: [...events, ...laid.events] }
+}
+
 /** A piece that left the tin may leave what is in it fitting: the lid then shuts by itself. */
 function shutAfter(game: Game, events: GameEvent[], before: Game, held: Held): { game: Game; events: GameEvent[] } {
   const fromTin = held.ids.some((id) => pieceOf(before.world, id)?.place.on === 'tin')
@@ -133,7 +155,7 @@ export function drop(game: Game, held: Held, at: Point): { game: Game; events: G
       if (on.on === 'tin') return intoTin(game, held, on.part)
       if (on.on !== 'board') return onShelf(game, held)
       // Alongside a whole fruit, from the same left end, on the other lane; against a piece, end to end, on the side the finger is nearer.
-      if (target.thing === 'fruit') return put(game, held, (on.lane + 1) % LANES, on.x, 'beside')
+      if (target.thing === 'fruit') return layBeside(game, held, (on.lane + 1) % LANES, on.x)
       const total = pieces.reduce((sum, { piece }) => sum + piece.length, 0)
       const rightSide = at.x >= target.box.x + target.box.w / 2
       return put(game, held, on.lane, rightSide ? on.x + target.piece.length : on.x - total, 'butted')
