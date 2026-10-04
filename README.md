@@ -92,6 +92,8 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 | Chalk Train | `games/chalk-train/` | 2–4 | Chalk on tar: draw a line with a finger and the chalk train rides along it to a rider at a stop and on to the rider's home. A learning game on making marks on purpose. |
 | Tea Time | `games/tea-time/` | 4–6 | A tea table in blue-and-white pottery: hold the pot to pour, fill each guest's cup as far as that guest likes it, lay a saucer and a spoon at each place, and wipe up what runs over. A learning game on comparing how much cups hold and on judging enough. |
 | Who Made That Sound | `games/who-made-that-sound/` | 2–4 | Eggs on a page of painted tissue: tap one to hear who is inside and tap again to let it out, then find by ear the egg that sounds like the one who is calling. A learning game on noticing and exploring sound. |
+| Princess Playground | `games/princess-playground/` | 2–5 | A seesaw in a tray of sand in three.js: tap a painted pebble friend onto the plank, see which end goes down, and find who or how many will lift the one who asks. A learning game on exploring and comparing how heavy things are. |
+| Seed Lab | `games/seed-lab/` | 9–12 | A page of a naturalist's journal: carry pollen from one flower to another, watch six young come up alike or unlike, and breed by seed or by runner towards the plant a visitor has sketched. A learning game on what young inherit and what their surroundings change. |
 
 ## Showcases
 
