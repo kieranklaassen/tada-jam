@@ -1,4 +1,4 @@
-import { companyOf, inCompany, lean, placeOf, standsAt, weightOn, type Arrangement } from './arrangement'
+import { companyOf, inCompany, lean, placeOf, standsAt, tap, weightOn, type Arrangement } from './arrangement'
 import { landingOf, perched, reactionsTo, tossed, underneath, type Landing, type Reaction } from './cells'
 import { forecast, type SandOp } from './forecast'
 import { Grains } from './grains'
@@ -6,7 +6,7 @@ import type { Guidance } from './guidance'
 import { bite as biteMark, biteDepth, furrow, rake as rakeMarks, rakeIsOut, stamp, swirl as swirlMark } from './marks'
 import { HOLD_HEIGHT, Playground, type PlayEvent } from './motion'
 import type { Frame } from './pose'
-import { askerEnd, layout, rideOf, type Kind, type Ride } from './rides'
+import { askerEnd, layout, rideOf, wantMet, type Kind, type Ride } from './rides'
 import { afterMove, beginRide, endRide, markShown, rideIsOver, save, type Saved, type World } from './save'
 import { Scene, type Beat } from './scene'
 import { endingBeats, showingBeats, showingOpens, type Director } from './scenes'
@@ -343,7 +343,7 @@ export class Game implements Director {
     this.perches()
     if (!this.scene && !this.play.held) {
       if (this.pendingShowing && this.play.settled) this.startShowing(this.pendingShowing)
-      else if (rideIsOver(this.world) && this.play.plankArrived && this.play.bodies[this.ride.asker].landed && !this.play.shaking && this.time >= this.perchUntil && !LIKE_HIGH.some((id) => this.perch[id] === 'pending')) this.startEnding()
+      else if (rideIsOver(this.world) && this.play.plankArrived && this.play.bodies[this.ride.asker].landed && this.play.bodies[this.ride.asker].mode === 'rest' && !this.play.shaking && this.time >= this.perchUntil && !LIKE_HIGH.some((id) => this.perch[id] === 'pending')) this.startEnding()
     }
     this.looks()
     this.snore()
@@ -360,7 +360,8 @@ export class Game implements Director {
     // What was still to come may not come now: the picture catches up with the saved sand first.
     this.drawOwed()
     // Whatever the friend was about to do where it was, it no longer does: it has been taken from there.
-    this.later = this.later.filter((item) => item.reaction.who !== id)
+    // The sand running off the board is nobody's doing and runs all the same.
+    this.later = this.later.filter((item) => item.reaction.who !== id || item.reaction.mark === 'trickle')
     const before = this.play.arrangement
     act()
     const after = this.play.arrangement
@@ -473,7 +474,7 @@ export class Game implements Director {
     else this.play.arrangement = this.world.arrangement
     this.moods()
     this.perchesAsFound()
-    this.company = inCompany(this.world.arrangement)
+    // Dot's company is not reset here: if the friend who went to wait stood beside it, Dot has been left alone, and says so.
   }
 
   // --- What the scenes may do (scenes.ts) -------------------------------------
@@ -602,7 +603,7 @@ export class Game implements Director {
       }
       const landing = this.landings[event.id]
       // Come down a place onto a head, because the friend between was taken away: that head answers as it does to anyone landing on it.
-      if (!landing && !event.thrown && !this.scene && event.on === 'friend') {
+      if (event.fell && !landing && !this.scene && event.on === 'friend') {
         const place = placeOf(this.play.arrangement, event.id)
         if (place.at === 'end' && place.level > 0) this.react(underneath(this.play.arrangement[place.end][place.level - 1], event.id))
       }
@@ -907,7 +908,10 @@ export class Game implements Director {
       const asker = this.world.state.finished ? null : this.ride.asker
       // The one who asks has been taken off the plank: it is the one to tap, back onto its end.
       const strayed = asker !== null && placeOf(a, asker).at === 'sand' && this.play.bodies[asker].mode === 'rest'
-      const standing = strayed ? [asker] : (['mog', 'bo', 'pim', 'dot'] as const).filter((id) => id !== asker && placeOf(a, id).at === 'sand' && this.play.bodies[id].mode === 'rest')
+      const idle = (['mog', 'bo', 'pim', 'dot'] as const).filter((id) => id !== asker && placeOf(a, id).at === 'sand' && this.play.bodies[id].mode === 'rest')
+      // Never the answer first: a friend whose one tap would carry the asker there is shown after the others.
+      const answers = (id: FriendId) => asker !== null && wantMet(this.ride, tap(a, id))
+      const standing = strayed ? [asker] : [...idle.filter((id) => !answers(id)), ...idle.filter(answers)]
       const turn = Math.max(0, guidance.demoIndex >= 0 ? guidance.demoIndex : this.lastDemo)
       on = standing.length ? standing[turn % standing.length] : (a.right[a.right.length - 1] ?? a.left[a.left.length - 1] ?? null)
     }

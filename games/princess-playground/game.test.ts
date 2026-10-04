@@ -8,7 +8,7 @@ import { seeded } from './motion'
 import { KINDS, layout, rideOf, wantMet, type Kind } from './rides'
 import { endRide, freshWorld, load, rideIsOver, save, type Saved, type World } from './save'
 import { NEXT_AT } from './scenes'
-import { chuckle, crow, levelHum, purr, scratch, softNote, spit, type Part } from './voices'
+import { chuckle, crow, levelHum, purr, raspberry, scratch, softNote, spit, type Part } from './voices'
 import { FRIEND_IDS, MAX_TILT, PLANK, WAITING_PLACE, homeOn, plankTopAt, type FriendId } from './world'
 
 const QUIET: Guidance = { glow: 0, demo: null, demoIndex: -1 }
@@ -1137,6 +1137,82 @@ describe('the tilt follows the two totals and nothing else', () => {
     const { cues } = run(game, 3)
     expect(game.play.arrangement.left).toEqual(['mog', 'dot'])
     expect(cues.filter((cue) => cue.type === 'voice' && JSON.stringify(cue.parts) === JSON.stringify(spit())).length).toBe(1)
+  })
+})
+
+describe('the one below answers once', () => {
+  it('a friend landing on a head on the low end is hissed at, puffed at or sung to once, not twice', () => {
+    const bare = tap(layout(rideOf('little-asks', 0)), 'pim')
+    for (const [below, lander, voice] of [['mog', 'dot', spit()], ['mog', 'bo', spit()], ['pim', 'mog', raspberry()], ['pim', 'bo', raspberry()]] as const) {
+      const game = new Game({ ...shown(), arrangement: putOnEnd(bare, below, 'right'), touched: true, state: { ...shown().state, finished: true } }, 1)
+      run(game, 1)
+      game.takeCues()
+      tapOn(game, lander)
+      const { cues } = run(game, 4)
+      expect(placeOf(game.play.arrangement, lander), `${lander} on ${below}`).toMatchObject({ at: 'end', level: 1 })
+      expect(cues.filter((cue) => cue.type === 'voice' && JSON.stringify(cue.parts) === JSON.stringify(voice)).length, `${lander} on ${below}`).toBe(1)
+    }
+  })
+})
+
+describe('Dot left alone by the friend who goes to wait', () => {
+  it('draws its swirl, as when a tap takes that friend away', () => {
+    // The first ride with Dot set down beside Mog: Bo lifts Pim, and Mog, who asks next, leaves Dot for the waiting place.
+    const start = shown()
+    // Bo stands on the far left, out of the way; Dot is set down to the right of Mog, far from the waiting place.
+    let a = putInSand(start.arrangement, 'bo', { x: -3.6, z: 2.3 })
+    a = putInSand(a, 'dot', { x: 4.44, z: 0.6 })
+    const game = new Game({ ...start, arrangement: a, touched: true }, 1)
+    run(game, 0.5)
+    expect(companyOf(game.play.arrangement, 'dot')).toEqual(['mog'])
+    game.press({ kind: 'friend', id: 'bo' })
+    game.dragStart()
+    game.dragTo({ x: PLANK.seat, z: PLANK.z }, null)
+    run(game, 0.5)
+    game.dragEnd()
+    const { cues } = run(game, 14)
+    expect(game.world.arrangement.waiting).toBe('mog')
+    expect(cues.filter((cue) => cue.type === 'swirl').length).toBe(1)
+    const scratchy = JSON.stringify(scratch())
+    expect(cues.filter((cue) => cue.type === 'voice' && JSON.stringify(cue.parts) === scratchy).length).toBe(1)
+  })
+})
+
+describe('the ending begins when the asker has arrived', () => {
+  it('not while the plank still has her in the air: her toss and her delight are two things, one after the other', () => {
+    const game = new Game({ ...shown(), touched: true }, 1)
+    run(game, 0.2)
+    tapOn(game, 'bo')
+    let tossedAt = -1, endingAt = -1, inAirAtStart = false
+    for (let i = 0; i < 600 && endingAt < 0; i++) {
+      game.step(1 / 60, QUIET)
+      game.takeCues()
+      if (tossedAt < 0 && game.play.bodies.pim.mode === 'air') tossedAt = i / 60
+      if (game.sceneRunning) {
+        endingAt = i / 60
+        inAirAtStart = game.play.bodies.pim.mode !== 'rest'
+      }
+    }
+    expect(tossedAt).toBeGreaterThan(0)
+    expect(endingAt).toBeGreaterThan(tossedAt + 0.3)
+    expect(inAirAtStart).toBe(false)
+  })
+})
+
+describe('the idle ladder', () => {
+  it('never shows the answer first: the friend whose one tap would carry the asker there comes after the others', () => {
+    const world = freshWorld(5)
+    expect(world.kind).toBe('middle-asks')
+    const game = new Game({ ...world, shown: ['middle-asks'], touched: true }, 1)
+    run(game, 1)
+    const shownFirst: FriendId[] = []
+    for (const demoIndex of [0, 1, 2]) {
+      game.step(1 / 60, { glow: 1, demo: 0.5, demoIndex })
+      shownFirst.push(game.guide.on!)
+    }
+    // Bo alone lifts Mog: he is shown last. Pim is too light and Dot only floats the plank.
+    expect(shownFirst[2]).toBe('bo')
+    expect([...shownFirst].sort()).toEqual(['bo', 'dot', 'pim'])
   })
 })
 

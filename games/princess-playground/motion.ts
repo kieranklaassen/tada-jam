@@ -65,7 +65,7 @@ export const LANDING_PUSH = 0.5
 export type PlayEvent =
   | { type: 'touch'; id: FriendId }
   | { type: 'leap'; id: FriendId }
-  | { type: 'land'; id: FriendId; on: 'plank' | 'sand' | 'friend'; x: number; z: number; speed: number; thrown: boolean }
+  | { type: 'land'; id: FriendId; on: 'plank' | 'sand' | 'friend'; x: number; z: number; speed: number; thrown: boolean; fell?: boolean }
   | { type: 'knock'; end: End; speed: number; x: number }
   | { type: 'toss'; id: FriendId; speed: number }
   | { type: 'creak'; strength: number }
@@ -125,6 +125,9 @@ type Body = {
   glance: number
   /** It was thrown by the plank and has not landed yet. */
   thrown: boolean
+  /** How high in its stack it sat when last looked at, or -1 off the plank; and whether it is coming down a place because the friend under it was taken away. */
+  level: number
+  fell: boolean
   /** Thrown by a see-saw of an ending, not by a friend landing: it comes down again without pushing the plank, so the three rocks stay three. */
   rocked: boolean
 }
@@ -186,7 +189,7 @@ export class Playground {
         squash: 1, squashV: 0, squashTo: 1, lean: 0, leanV: 0, leanTo: 0, follow: 0, followV: 0,
         holdX: at.x, holdZ: at.z, blinkIn: 0.6 + index * 0.9 + this.random() * 2, blinkT: 0, mouth: 0,
         bright: 1, doze: 0, phase: index * 1.7, turn: 0, aside: 0, press: 1,
-        away: null, act: null, actT: 0, actFor: 0, actWay: 0, mood: 'plain', gaze: 0, gazeTo: 0, gazeUp: 0, gazeUpTo: 0, glance: 0, thrown: false, rocked: false,
+        away: null, act: null, actT: 0, actFor: 0, actWay: 0, mood: 'plain', gaze: 0, gazeTo: 0, gazeUp: 0, gazeUpTo: 0, glance: 0, thrown: false, rocked: false, level: -1, fell: false,
       }
       this.poses[id] = restPose()
     })
@@ -264,6 +267,7 @@ export class Playground {
       rider.mode = 'air'
       rider.vy = 0
       rider.thrown = false
+      rider.fell = true
     }
     this.held = id
     body.mode = 'held'
@@ -672,6 +676,11 @@ export class Playground {
       // Riding: it sits where its seat is. A seat that dropped away under it leaves it in the air.
       body.x = target.x
       body.z = target.z
+      // The friend under it was taken away: it comes down a place.
+      const here = id === this.held || body.away ? null : placeOf(this.seen, id)
+      const level = here && here.at === 'end' ? here.level : -1
+      if (level >= 0 && body.level > level) body.fell = true
+      body.level = level
       if (body.y > target.y + 0.03) {
         body.mode = 'air'
         body.vy = 0
@@ -831,8 +840,10 @@ export class Playground {
     if (here < there) push = Math.min(push, DIP_SPEED, Math.sqrt((2 * DIP * TURN * (there - here)) / (PLANK_INERTIA + here + there)))
     else if (here === there) push = Math.min(push, Math.sqrt(LEVEL_SPRING) * DIP)
     if (!(body.thrown && body.rocked)) nudge(this.plank, side * push)
-    this.events.push({ type: 'land', id, on: place.level > 0 ? 'friend' : 'plank', x: target.x, z: target.z, speed, thrown: body.thrown })
+    this.events.push({ type: 'land', id, on: place.level > 0 ? 'friend' : 'plank', x: target.x, z: target.z, speed, thrown: body.thrown, fell: body.fell })
     body.thrown = false
+    body.fell = false
+    body.level = place.level
     if (place.level > 0) {
       const below = this.bodies[this.seen[place.end][place.level - 1]]
       below.squash = Math.min(below.squash, 1 - 0.1 * spec.weight * (0.5 + 0.5 * hard))

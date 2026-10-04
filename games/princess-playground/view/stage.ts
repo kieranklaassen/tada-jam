@@ -202,6 +202,19 @@ export class Stage {
   /** What lies under a point of the surface, in CSS pixels: a friend first, then the rake, then the plank, then the sand. */
   pick(x: number, y: number, frame: Frame): Hit {
     this.aim(x, y)
+    // A finger on a friend's body touches that friend, whoever else stands near. Only a touch that misses every body
+    // goes to the nearest friend within a small hand's reach.
+    let onBody: FriendId | null = null, onBodyAt = Infinity
+    for (const id of FRIEND_IDS) {
+      const body = this.friends[id].body
+      body.updateWorldMatrix(true, false)
+      const hit = this.ray.intersectObject(body, false)[0]
+      if (hit && hit.distance < onBodyAt) {
+        onBody = id
+        onBodyAt = hit.distance
+      }
+    }
+    if (onBody) return { kind: 'friend', id: onBody }
     let best: FriendId | null = null, bestAt = Infinity
     const centre = this.scratch
     for (const id of FRIEND_IDS) {
