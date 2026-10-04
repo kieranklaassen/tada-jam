@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { companyOf, emptyArrangement, isSound, placeOf, putInSand, putOnEnd, standsAt, tap, weightOn } from './arrangement'
-import { ASK_AT, Game, SNORE_EVERY, type Cue } from './game'
+import { companyOf, emptyArrangement, isSound, placeOf, putInSand, putOnEnd, standsAt, tap, weightOn, type Arrangement } from './arrangement'
+import { ASK_AT, Game, SNORE_EVERY, topToShow, type Cue } from './game'
 import type { Guidance } from './guidance'
 import { RAKED, biteDepth, marksFromText, marksToText, rakeIsOut } from './marks'
 import { overlap } from './overlap'
@@ -2203,5 +2203,46 @@ describe('the idle ladder', () => {
     game.step(1 / 60, idle(0))
     game.step(1 / 60, QUIET)
     expect(game.guide).toEqual({ on: null, glow: 0, hand: null })
+  })
+
+  it('shows a move that is not the answer first where there is one; and where every friend it can show is the answer, it shows the answer', () => {
+    const first = (kind: Kind, turn = 0) => {
+      const world = shown()
+      const game = new Game({ ...world, state: { ...world.state, position: kind }, kind, turn, arrangement: layout(rideOf(kind, turn)), shown: [kind], touched: true }, 1)
+      game.step(1 / 60, idle(0))
+      const on = game.guide.on!
+      return { on, answers: wantMet(rideOf(kind, turn), tap(game.play.arrangement, on)) }
+    }
+    // Mog asks: Pim is too light to lift him, and she is shown before Bo, who would. Bo asks: no one friend lifts him.
+    expect(first('middle-asks')).toEqual({ on: 'pim', answers: false })
+    expect(first('big-asks').answers).toBe(false)
+    // The first kind and the last: every friend the hand can show is the answer, so the hand shows the answer.
+    expect(first('little-asks').answers).toBe(true)
+    expect(first('high-asks').answers).toBe(true)
+  })
+
+  it('with nobody but Dot in the sand, shows the same friend whichever side the stacks are on', () => {
+    const mirror = (a: Arrangement): Arrangement => ({ left: [...a.right], right: [...a.left], sand: Object.fromEntries(Object.entries(a.sand).map(([id, spot]) => [id, { x: -spot!.x, z: spot!.z }])), waiting: a.waiting })
+    const stacks: [FriendId[], FriendId[]][] = [[['pim'], ['mog', 'bo']], [['pim', 'mog'], ['bo']], [['bo'], ['pim', 'mog']], [['mog'], ['pim', 'bo']], [['pim', 'mog', 'bo'], []], [['bo', 'pim'], ['mog']], [['mog', 'pim'], ['bo']]]
+    for (const [left, right] of stacks) {
+      let a = emptyArrangement()
+      for (const id of left) a = putOnEnd(a, id, 'left')
+      for (const id of right) a = putOnEnd(a, id, 'right')
+      const shownOn = topToShow(a)
+      expect(shownOn, `${left} | ${right}`).not.toBe(null)
+      expect(shownOn, `${left} | ${right}`).not.toBe('dot')
+      expect(topToShow(mirror(a)), `${left} | ${right}`).toBe(shownOn)
+      // And it is the friend the game shows, during play after a ride.
+      const world = shown()
+      for (const way of [a, mirror(a)]) {
+        const game = new Game({ ...world, state: { ...world.state, finished: true }, arrangement: way, touched: true }, 1)
+        game.step(1 / 60, idle(0))
+        expect(game.guide.on, `${left} | ${right}`).toBe(shownOn)
+      }
+    }
+    // Dot on top of a stack is passed over: the other end's top is shown, or nobody.
+    let a = putOnEnd(putOnEnd(emptyArrangement(), 'mog', 'left'), 'dot', 'left')
+    for (const id of ['pim', 'bo'] as const) a = putOnEnd(a, id, 'right')
+    expect(topToShow(a)).toBe('bo')
   })
 })

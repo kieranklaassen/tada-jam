@@ -14,7 +14,7 @@ import { moodOf } from './tastes'
 import { Snail } from './visitor'
 import * as v from './voices'
 import type { Part } from './voices'
-import { FRIEND_IDS, FRIENDS, MAX_TILT, PLANK, otherEnd, type End, type FriendId } from './world'
+import { ENDS, FRIEND_IDS, FRIENDS, MAX_TILT, PLANK, otherEnd, type End, type FriendId } from './world'
 
 // The game on the toy: rides, their endings, the showings, the friends'
 // reactions, the sand's marks and what is saved, joined to the playground in
@@ -979,9 +979,14 @@ export class Game implements Director {
 
   /**
    * What an idle child is shown: a glow under one friend, then a ghost hand
-   * that taps it once. It shows a move, never the answer: after a ride the
-   * friend who waits, and during one a friend standing in the sand, taken in
-   * turn and not for being the one that would do it.
+   * that taps it once. After a ride it is the friend who waits. During one it
+   * is a friend standing in the sand, taken in turn, and a friend whose one
+   * tap would not carry the asker there comes before one whose tap would. So
+   * where some friend's tap is not the answer the hand begins with that one;
+   * where every friend it can show is the answer (the first kind of ride and
+   * the last) the hand shows the answer, as the showing of that kind does not.
+   * Dot is never shown. With nobody but Dot in the sand it is a friend on top
+   * of a stack, chosen the same way whichever side the stacks are on.
    */
   private guideFrom(guidance: Guidance): void {
     const guide = this.guide, a = this.play.arrangement
@@ -1003,12 +1008,11 @@ export class Game implements Director {
       const strayed = asker !== null && placeOf(a, asker).at === 'sand' && this.play.bodies[asker].mode === 'rest'
       // Dot is never shown: bringing it in is never asked for.
       const idle = (['mog', 'bo', 'pim'] as const).filter((id) => id !== asker && placeOf(a, id).at === 'sand' && this.play.bodies[id].mode === 'rest')
-      // Never the answer first: a friend whose one tap would carry the asker there is shown after the others.
+      // Not the answer first: a friend whose one tap would carry the asker there is shown after the others.
       const answers = (id: FriendId) => asker !== null && wantMet(this.ride, tap(a, id))
       const standing = strayed ? [asker] : [...idle.filter((id) => !answers(id)), ...idle.filter(answers)]
       const turn = Math.max(0, guidance.demoIndex >= 0 ? guidance.demoIndex : this.lastDemo)
-      const tops = [a.right[a.right.length - 1], a.left[a.left.length - 1]].filter((id): id is FriendId => id !== undefined && id !== 'dot')
-      on = standing.length ? standing[turn % standing.length] : (tops[0] ?? null)
+      on = standing.length ? standing[turn % standing.length] : topToShow(a)
     }
     guide.on = on
     guide.glow = guidance.glow
@@ -1018,4 +1022,18 @@ export class Game implements Director {
       if (on) this.play.bodies[on].squashV -= 4
     }
   }
+}
+
+/**
+ * With nobody to show in the sand: the friend on top of a stack. Of the two ends, the one that is down; on a level
+ * plank the taller stack, and of two as tall the one with the lighter friend on top. Dot is never shown, so an end
+ * with Dot on top is passed over. Nothing here asks which side an end is on: mirrored, the same friend is shown.
+ */
+export function topToShow(a: Arrangement): FriendId | null {
+  const low = lean(a)
+  const tops = ENDS.map((end) => ({ end, id: a[end][a[end].length - 1], tall: a[end].length })).filter((top): top is { end: End; id: FriendId; tall: number } => top.id !== undefined && top.id !== 'dot')
+  if (tops.length === 0) return null
+  const down = (end: End) => (low !== 0 && (low > 0 ? 'right' : 'left') === end ? 1 : 0)
+  tops.sort((p, q) => down(q.end) - down(p.end) || q.tall - p.tall || FRIENDS[p.id].weight - FRIENDS[q.id].weight)
+  return tops[0].id
 }

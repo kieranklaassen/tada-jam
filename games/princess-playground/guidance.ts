@@ -6,9 +6,11 @@ import { TAP_PRESSES } from './config'
 // the child could make now. The demonstrations back off and stop after a few,
 // the glow fades after the last one, and any touch clears everything at once,
 // so an idle game goes quiet instead of nagging.
-// The hand shows a move, never a solution: how a thing is picked up or where
-// things can go, chosen from what is on screen, and not the answer to the
-// task in front of the child.
+// The hand shows a move: how a thing is picked up or where things can go,
+// chosen from what is on screen. Which move it shows is the game's to say
+// (game.ts, `guideFrom`): here a move that is not the answer to the ride in
+// front of the child comes first wherever there is one, and where every move
+// it could show is the answer, it shows that.
 // Time is the attended clock's seconds, passed in.
 
 export const IDLE_BEFORE_GLOW = 3
