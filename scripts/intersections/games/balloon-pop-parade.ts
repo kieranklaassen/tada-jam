@@ -189,6 +189,23 @@ export default {
         await d.wait(11000)
       },
     },
+    {
+      // A touch on the troop that passes by: a pair that stands beside the child's pair squeaks, jumps and hurries
+      // back out by the left edge; three that stand in the middle step back and go off behind the child's three.
+      name: 'a touch on the troop that passes by',
+      run: async (d) => {
+        await open(d, saved('trio-singles', 'duck', [true], [one('duck'), one('frog')], { kind: 'frog', size: 2 }, { shown: { give: true, each: false, bunch: false } }))
+        await d.tap(await waiting(d))
+        await d.wait(4600)
+        await d.tap(await at(d, -VIEW.width / 2 + 1.1, GROUND + 0.5))
+        await d.wait(1600)
+        await open(d, saved('bunches-own-colour', 'crab', [true], [one('crab'), { colour: 'crab', count: 2 }], { kind: 'duck', size: 3 }, { shown: { give: true, each: true, bunch: false } }))
+        await d.tap(await waiting(d))
+        await d.wait(3900)
+        await d.tap(await at(d, 0, GROUND + 1))
+        await d.wait(1600)
+      },
+    },
     { name: 'rest', run: (d) => d.wait(3000) },
   ],
 } satisfies GameAudit
