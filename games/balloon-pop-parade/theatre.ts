@@ -664,7 +664,7 @@ export class Theatre {
     painter.prop('keeper', KEEPER.x, farGroundAt(KEEPER.x, KEEPER.z) + hop * 1.3, KEEPER.z, 1, 0.25 + Math.sin(time * 0.35) * 0.3, Math.sin(time * 2.1) * 0.03, 1 + hop * 0.14 + Math.sin(time * 2.1) * 0.02)
     // The ball lies where it rolled back to, and squashes as it lands.
     const ball = this.ball, flat = ball.y <= 0.001 ? 1 - Math.min(0.25, Math.abs(ball.vy) * 0.03) : 1 + Math.min(0.12, Math.abs(ball.vy) * 0.012)
-    painter.prop('ball', BALL.x + ball.x, groundAt(BALL.x + ball.x, BALL.z) - 0.04 + ball.y, BALL.z, 1, 0, ball.roll, flat)
+    painter.prop('ball', BALL.x + ball.x, groundAt(BALL.x + ball.x, BALL.z) - 0.04 + ball.y + BALL.radius * flat, BALL.z, 1, 0, ball.roll, flat)
   }
 
   /** How high above the hill friend `index` of the waiting troop's tower stands: on the heads of those below it. */

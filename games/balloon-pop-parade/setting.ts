@@ -186,9 +186,9 @@ export const KEEPER_TOY: Toy = {
   haze: 0.24,
 }
 
-/** The beach ball: one pillow with six welded panels. */
+/** The beach ball: one pillow with six welded panels, round its own middle, so that it rolls about that. */
 export const BALL_TOY: Toy = {
-  pillows: [{ at: [0, BALL.radius, 0], size: [BALL.radius, BALL.radius, BALL.radius], turn: [0.5, 0, 0.3], colour: C.ball, panels: 6, detail: [20, 14] }],
+  pillows: [{ at: [0, 0, 0], size: [BALL.radius, BALL.radius, BALL.radius], turn: [0.5, 0, 0.3], colour: C.ball, panels: 6, detail: [20, 14] }],
   face: { eye: [0, 0, 0], eyeSize: 0, brows: false, mouth: null, mouthWide: 0, ink: PALETTE.ink, whites: false },
   tall: BALL.radius * 2,
   haze: 0,

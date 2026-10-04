@@ -7,10 +7,12 @@
 // bigger than the troop, and a first showing of bunches inside a step-in.
 
 import { farGroundAt, friendX, GROUND, groundAt, HELD_HEIGHT, skySlots, viewFor, waitingSpot } from '../../../games/balloon-pop-parade/layout.ts'
-import { BALL, HUT, POOL } from '../../../games/balloon-pop-parade/setting.ts'
 import type { Driver, Frac, GameAudit } from '../types.ts'
 
 const SLOT = 'tada-jam:slot:balloon-pop-parade'
+// Where the toys of the setting are, as `setting.ts` has them (that module imports others by bare names, which this
+// script cannot follow): the pool with its whale, the ball, and the hut on the far hill.
+const POOL = { x: 5.15, z: 3.3 }, BALL = { x: -4.9, z: 3.8 }, HUT = { x: 10.7, z: -18.9 }
 const VIEW = viewFor(1180, 820)
 
 async function at(d: Driver, x: number, y: number, z = 0): Promise<Frac> {
