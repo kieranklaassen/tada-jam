@@ -21,10 +21,12 @@ export type Tier = {
   dpr: number
   /** How much of the sand's grain is drawn, 0 to 1: the speckle, the tilted grains and the flashes. */
   grain: number
+  /** Whether the moving leaf light lies over the floor round the tray: one blended layer over the whole frame. */
+  leafLight: boolean
 }
 
 /** Tier 0 is full quality; each later tier is cheaper to draw. Whatever a tier change needs is compiled before it happens. */
-export const TIERS: readonly Tier[] = [{ dpr: 2, grain: 1 }, { dpr: 1.5, grain: 1 }, { dpr: 1.25, grain: 0.7 }, { dpr: 1, grain: 0.5 }]
+export const TIERS: readonly Tier[] = [{ dpr: 2, grain: 1, leafLight: true }, { dpr: 1.5, grain: 1, leafLight: true }, { dpr: 1.25, grain: 0.7, leafLight: true }, { dpr: 1, grain: 0.5, leafLight: false }]
 
 /** The governor's thresholds. The rules they feed are at the top of quality.ts. */
 export const GOVERNOR = {

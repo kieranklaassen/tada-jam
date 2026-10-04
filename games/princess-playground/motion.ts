@@ -51,6 +51,12 @@ export const DIP_SPEED = 0.42
 export const ROCK_SECONDS = 0.6
 /** How fast a see-sawing end must come down to throw: slower, it only bobs them. Radians a second. */
 export const ROCK_TOSS = 0.4
+/**
+ * In an ending the friends on the low end stamp as the plank rocks: this much pull, in radians a second squared, is
+ * added to what the two totals give. So the rock is plain to see, the end knocks and whoever sits opposite is tossed
+ * at every difference, the smallest too; and a bigger difference still swings further and throws higher.
+ */
+export const STAMP = 3.4
 /** How long Mog stretches in a hop of his own: the longest of the four. */
 export const MOG_LONG = 1.42
 /** How flat Mog goes in the air when the plank throws him: flat and long. */
@@ -499,9 +505,14 @@ export class Playground {
   seeSaw(): void {
     const left = this.landedOn('left'), right = this.landedOn('right')
     const way = Math.sign(this.plank.tilt) || 1
-    const pull = left === right ? 1.5 : (TURN * Math.abs(right - left)) / (PLANK_INERTIA + left + right)
-    nudge(this.plank, -way * pull * ROCK_SECONDS * 0.5)
+    // The friends on the low end stamp as it rocks, so it comes down again harder than their weight alone would bring it.
+    const pull = (left === right ? 1.5 : (TURN * Math.abs(right - left)) / (PLANK_INERTIA + left + right)) + STAMP
+    // Never so hard that the heavy end swings up past level: the plank rocks, it does not tip over.
+    const most = Math.sqrt(2 * pull * 0.9 * Math.abs(this.restingTilt()))
+    nudge(this.plank, -way * Math.min(pull * ROCK_SECONDS * 0.5, most))
     this.rocked = true
+    // The stamp is seen: whoever sits on the low end hops on the spot as it goes up.
+    for (const id of this.seen[way > 0 ? 'right' : 'left']) if (this.bodies[id].landed && this.bodies[id].mode === 'rest') this.act(id, 'bounce', 0.4)
   }
 
   /** A chuckle is shaking the plank. */
@@ -647,6 +658,11 @@ export class Playground {
         this.shakes -= 1
         this.shakeIn = SHAKE_EVERY
       }
+    }
+    // An ending's rock: while the heavy end is up off the sand, the stamp pulls it down again.
+    if (this.rocked) {
+      const rest = this.restingTilt()
+      if (rest !== 0 && this.plank.tilt * Math.sign(rest) < Math.abs(rest) - 1e-4) nudge(this.plank, Math.sign(rest) * STAMP * dt)
     }
     const knock = stepPlank(this.plank, this.landedOn('left'), this.landedOn('right'), dt)
     if (knock) this.knocked(knock.end, knock.speed)

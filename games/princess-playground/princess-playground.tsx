@@ -48,7 +48,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const grainPool = new Grains()
     const stage = new Stage(canvas, grainPool.positions)
     const drawn = stage.drawn
-    const view: StageView = { frame: null as never, hand: null, rakeOut: false, rakeSweep: null, grainsFlying: false }
+    const view: StageView = { frame: null as never, hand: null, rakeOut: false, rakeSweep: null, grainsFlying: false, seconds: 0, snail: null as never }
     // A fixed seed for stills: `seed=<n>` in the address. Otherwise each visit draws its own, which only picks ordinary detail.
     const seedText = new URLSearchParams(window.location.search).get('seed')
     const seed = seedText !== null && Number.isFinite(Number(seedText)) ? Number(seedText) : Math.floor(Math.random() * 2 ** 31)
@@ -73,6 +73,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const applyTier = () => {
       canvas.dataset.tier = String(governor.tier)
       stage.setGrain(governor.settings.grain)
+      stage.setLeafLight(governor.settings.leafLight)
     }
 
     // The one place the game draws its frame; the blank surface draws nothing. The loop calls it on every frame,
@@ -89,6 +90,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       view.rakeOut = game.rakeOut
       view.rakeSweep = game.rakeSweep
       view.grainsFlying = game.grains.flying > 0
+      view.seconds = game.seconds
+      view.snail = game.snail.pose
       stage.render(view)
     }
 

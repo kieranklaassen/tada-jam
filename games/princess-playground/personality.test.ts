@@ -23,16 +23,20 @@ describe('the friends move like themselves', () => {
     expect(PERSONALITY.mog.heldStretch).toBeGreaterThan(PERSONALITY.dot.heldStretch + 0.15)
   })
 
-  it('size alone shows weight: Pim with her crown on is still the lowest and narrowest outline, and the two of one weight are one size', () => {
-    const pimTop = FRIENDS.pim.halfHeight * CROWN.seat + FRIENDS.pim.radius * CROWN.rise
+  it('size alone shows weight: the bodies are in order of weight, the two of one weight are one size, and a mark is plainly a mark', () => {
     for (const id of ['mog', 'dot', 'bo'] as const) {
-      expect(pimTop, id).toBeLessThan(FRIENDS[id].halfHeight * 2)
-      expect(FRIENDS.pim.radius * Math.max(1, CROWN.girth), id).toBeLessThan(FRIENDS[id].radius)
+      expect(FRIENDS.pim.radius, id).toBeLessThan(FRIENDS[id].radius)
+      expect(FRIENDS.pim.halfHeight, id).toBeLessThan(FRIENDS[id].halfHeight)
     }
     expect(FRIENDS.mog.radius).toBe(FRIENDS.dot.radius)
-    // Mog's ear bumps do not stand above the top of his head, nor out past his sides: he and Dot are one outline in size.
-    expect(FRIENDS.mog.halfHeight * EARS.seat + FRIENDS.mog.radius * EARS.size).toBeLessThanOrEqual(FRIENDS.dot.halfHeight * 2 + 1e-9)
+    // Pim's crown and Mog's ears are far narrower than the body they sit on, so neither reads as more body; and with
+    // them on, neither stands as high as Bo, the heaviest.
+    expect(CROWN.girth).toBeLessThan(0.5)
+    expect(EARS.size).toBeLessThan(0.3)
     expect(FRIENDS.mog.radius * (EARS.out + EARS.size)).toBeLessThan(FRIENDS.dot.radius)
+    const boTop = FRIENDS.bo.halfHeight * 2
+    expect(FRIENDS.pim.halfHeight * CROWN.seat + FRIENDS.pim.radius * CROWN.rise).toBeLessThan(boTop)
+    expect(FRIENDS.mog.halfHeight * EARS.seat + FRIENDS.mog.radius * EARS.size * EARS.tall).toBeLessThan(boTop)
     expect(FRIENDS.mog.halfHeight).toBe(FRIENDS.dot.halfHeight)
     expect(PERSONALITY.mog.tossGain).toBe(PERSONALITY.dot.tossGain)
     // Heavier is bigger, every time.

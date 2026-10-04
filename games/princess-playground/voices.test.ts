@@ -21,6 +21,9 @@ function everyVoice(): { name: string; voice: Part[] }[] {
   for (const alone of [true, false]) all.push({ name: `hum ${alone}`, voice: voices.hum(alone) })
   for (const weight of [0, 2, 4, 9, 30]) all.push({ name: `crunch ${weight}`, voice: voices.crunch(weight) })
   for (const id of FRIEND_IDS) all.push({ name: `ask ${id}`, voice: voices.ask(id) })
+  // The stone and the snail, which are no part of the grid: each has one sound of its own.
+  all.push({ name: 'pebble', voice: voices.pebble() })
+  for (const again of [false, true]) all.push({ name: `pop ${again}`, voice: voices.pop(again) })
   return all
 }
 
@@ -51,6 +54,18 @@ describe('the voices, as numbers', () => {
     const held = new Set(everyVoice().map(({ name }) => name.split(' ')[0]))
     const makers = Object.entries(voices).filter(([, value]) => typeof value === 'function').map(([name]) => name).filter((name) => name !== 'lengthOf')
     for (const name of makers) expect(held.has(name === 'levelHum' ? 'level' : name), name).toBe(true)
+  })
+
+  it('the stone and the snail each sound like nothing else in the game', () => {
+    const shape = (voice: Part[]) => JSON.stringify(voice)
+    const others = everyVoice().filter(({ name }) => !name.startsWith('pebble') && !name.startsWith('pop')).map(({ voice }) => shape(voice))
+    for (const own of [voices.pebble(), voices.pop(), voices.pop(true)]) expect(others).not.toContain(shape(own))
+    // The stone is the brightest short sound there is: nothing of wood or sand in it. The snail's pop falls, and is lower when it is already in.
+    expect(Math.min(...voices.pebble().filter((part) => part.kind === 'tone').map((part) => part.frequency))).toBeGreaterThan(2000)
+    expect(lengthOf(voices.pebble())).toBeLessThan(0.12)
+    const pop = voices.pop()[0], again = voices.pop(true)[0]
+    expect(pop.glideTo).toBeLessThan(pop.frequency * 0.5)
+    expect(again.frequency).toBeLessThan(pop.frequency)
   })
 
   it('a bigger friend speaks lower and lands lower', () => {

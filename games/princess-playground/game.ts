@@ -11,6 +11,7 @@ import { afterMove, beginRide, endRide, markShown, rideIsOver, save, type Saved,
 import { Scene, type Beat } from './scene'
 import { endingBeats, showingBeats, showingOpens, type Director } from './scenes'
 import { moodOf } from './tastes'
+import { Snail } from './visitor'
 import * as v from './voices'
 import type { Part } from './voices'
 import { FRIEND_IDS, FRIENDS, MAX_TILT, PLANK, otherEnd, type End, type FriendId } from './world'
@@ -21,7 +22,7 @@ import { FRIEND_IDS, FRIENDS, MAX_TILT, PLANK, otherEnd, type End, type FriendId
 // and plays the cues it hands back. Nothing here rates, counts for the child
 // or praises: the only count is the hidden one of moves in a ride.
 
-export type Touched = { kind: 'friend'; id: FriendId } | { kind: 'plank'; along: number } | { kind: 'sand'; x: number; z: number } | { kind: 'rake' } | { kind: 'none' }
+export type Touched = { kind: 'friend'; id: FriendId } | { kind: 'plank'; along: number } | { kind: 'sand'; x: number; z: number } | { kind: 'rake' } | { kind: 'stone' } | { kind: 'snail' } | { kind: 'none' }
 
 /** What the Mount does for the game: a sound to play, or a mark to draw in the sand. */
 export type Cue =
@@ -68,6 +69,8 @@ export class Game implements Director {
   world: World
   readonly play: Playground
   readonly grains: Grains
+  /** The snail on the boards behind the tray: no part of any ride, and never saved. */
+  readonly snail: Snail
   time = 0
   /** What the Mount should do about storage: nothing, at the throttle, or at once. It clears this when it has. */
   wantsSave: 'no' | 'soon' | 'now' = 'no'
@@ -125,6 +128,7 @@ export class Game implements Director {
     this.world = world
     this.play = new Playground(world.arrangement, seed)
     this.grains = grains
+    this.snail = new Snail(seed)
     this.company = inCompany(world.arrangement)
     // A showing plays by itself only at the very first open. One that was due and had not begun when the game was
     // put away is still owed: the ride is found laid out, and the showing plays the next time its kind is laid out.
@@ -161,6 +165,11 @@ export class Game implements Director {
   /** A scene is playing: an ending or a showing. The Mount keeps the idle ladder at the bottom meanwhile. */
   get sceneRunning(): boolean {
     return this.scene !== null
+  }
+
+  /** The game's own clock: it runs only while the game is played. */
+  get seconds(): number {
+    return this.time
   }
 
   get rakeOut(): boolean {
@@ -214,7 +223,18 @@ export class Game implements Director {
       this.play.pokeSand(touched.x, touched.z)
       this.pressed = { kind: 'sand', x: touched.x, z: touched.z }
     } else if (touched.kind === 'rake') this.rake()
-    else this.voice(v.poke())
+    else if (touched.kind === 'stone') this.tapStone()
+    else if (touched.kind === 'snail') {
+      // The snail's one answer: in it goes, with its own small pop, and its shell rocks.
+      this.voice(v.pop(this.snail.tucked))
+      this.snail.poke()
+    } else this.voice(v.poke())
+  }
+
+  /** The stone under the plank answers as a stone: a bright click of its own, and a few grains hop at its foot. It moves nothing. */
+  private tapStone(): void {
+    this.voice(v.pebble())
+    for (const side of [-1, 1]) this.grains.burst(side * PLANK.stoneRadius * 1.25, PLANK.z + PLANK.stoneRadius * 0.9, 0.22, 4, PLANK.stoneRadius)
   }
 
   /** A showing that is due or playing has this friend away from where the saved ride has it. */
@@ -346,6 +366,7 @@ export class Game implements Director {
     }
     this.play.advance(dt)
     this.grains.step(dt)
+    this.snail.step(dt)
     for (const event of this.play.takeEvents()) this.answer(event)
     if (this.later.length) {
       const due = this.later.filter((item) => item.at <= this.time)
@@ -686,6 +707,8 @@ export class Game implements Director {
       this.paid(op)
       // A ring of sand flies from under the end that came down, and the end that lifted lets grains slide back.
       this.grains.burst(event.x, PLANK.z, 0.35 + 0.65 * power, Math.round(8 + 22 * power), PLANK.halfWidth * 2)
+      // The snail behind the tray minds a knock: a hard one sends it into its shell, a soft one makes its eyes flinch.
+      this.snail.startle(power)
       if (power > 0.45) {
         // Sand thrown onto the board runs off its low end.
         this.react([{ who: 'pim', after: 0.6, voice: v.trickle(), mark: 'trickle' }])

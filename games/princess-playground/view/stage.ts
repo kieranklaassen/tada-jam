@@ -8,12 +8,15 @@ import { groundUnder, type Ground } from './ground'
 import { RAKE_AT, RAKE_REACH, buildGrains, buildHand, buildRake } from './props'
 import { LIGHT, Sand } from './sand'
 import { SandMap } from './sandMap'
+import { buildSetting } from './setting'
+import { buildSnail, poseSnail } from './snail'
+import { SNAIL, type SnailPose } from '../visitor'
 
-// The stage: a shallow wooden tray of pale sand on a cool cloth, a slate plank
+// The stage: a shallow wooden tray of pale sand on a woven mat on a veranda floor, a slate plank
 // on a dark stone, and the four friends, under one low raking light. Raw
 // three.js on the Mount's canvas. No shadow maps and no post pass.
 
-export type Hit = { kind: 'friend'; id: FriendId } | { kind: 'plank'; along: number } | { kind: 'sand'; x: number; z: number } | { kind: 'rake' } | { kind: 'none' }
+export type Hit = { kind: 'friend'; id: FriendId } | { kind: 'plank'; along: number } | { kind: 'sand'; x: number; z: number } | { kind: 'rake' } | { kind: 'stone' } | { kind: 'snail' } | { kind: 'none' }
 
 /** Everything the stage draws in one frame: the playground, and the small things round it. */
 export type StageView = {
@@ -25,9 +28,14 @@ export type StageView = {
   rakeSweep: number | null
   /** Grains are in the air. */
   grainsFlying: boolean
+  /** The game's own clock, in seconds: the leaf light round the tray moves by it, and stops when the game does. */
+  seconds: number
+  /** The snail behind the tray. */
+  snail: SnailPose
 }
 
-const CLOTH = '#6f8794'
+/** Behind everything, should the floor ever end: the floor's own grey. */
+const CLOTH = '#66747e'
 export class Stage {
   readonly map = new SandMap()
   readonly drawn = { drawCalls: 0, triangles: 0 }
@@ -35,6 +43,10 @@ export class Stage {
   private readonly scene = new THREE.Scene()
   private readonly camera = new THREE.PerspectiveCamera(FIELD_OF_VIEW, 1, 1, 80)
   private readonly sand: Sand
+  private readonly setting = buildSetting()
+  private readonly snail = buildSnail()
+  private readonly stone = stone()
+  private snailAt: SnailPose | null = null
   private readonly plank: THREE.Mesh
   private readonly friends: Record<FriendId, FriendView>
   private readonly rake = buildRake()
@@ -60,7 +72,8 @@ export class Stage {
     this.scene.add(sun)
 
     this.sand = new Sand(this.map)
-    this.scene.add(this.sand.mesh, tray(), stone())
+    this.scene.add(...this.setting.parts, this.sand.mesh, tray(), this.stone, this.snail.group)
+    this.snail.group.visible = false
     this.plank = plank()
     this.scene.add(this.plank)
     this.friends = Object.fromEntries(FRIEND_IDS.map((id) => [id, buildFriend(id)])) as Record<FriendId, FriendView>
@@ -114,12 +127,21 @@ export class Stage {
     this.sand.material.uniforms.uGrain.value = grain
   }
 
+  /** Whether the leaf light moves over the floor: the cheapest tier leaves it out. */
+  setLeafLight(shown: boolean): void {
+    this.setting.setLeafLight(shown)
+  }
+
   /** Draws a frame. With no view yet (the slot is still being read) it draws the bare tray: sand, rim and stone. */
   render(view: StageView | null): void {
     const frame = view?.frame ?? null
     this.plank.visible = frame !== null
     for (const id of FRIEND_IDS) this.friends[id].group.visible = frame !== null
     if (view && frame) this.lay(view, frame)
+    if (view) this.setting.sway(view.seconds)
+    this.snail.group.visible = view !== null
+    this.snailAt = view?.snail ?? null
+    if (view) poseSnail(this.snail, view.snail)
     this.sand.sync()
     this.renderer.render(this.scene, this.camera)
     this.drawn.drawCalls = this.renderer.info.render.calls
@@ -222,6 +244,10 @@ export class Stage {
     }
     const plank = this.ray.intersectObject(this.plank, false)[0]
     if (plank) return { kind: 'plank', along: plank.point.x }
+    // The stone, where it shows under the plank: it has an answer of its own.
+    if (this.ray.intersectObject(this.stone, false)[0]) return { kind: 'stone' }
+    // The snail behind the tray, with a small hand's reach round it.
+    if (this.snailAt && this.ray.ray.distanceSqToPoint(this.scratch.set(this.snailAt.x, 0.3, this.snailAt.z)) < SNAIL.touch * SNAIL.touch) return { kind: 'snail' }
     const sand = this.onPlane(0)
     if (sand && Math.abs(sand.x) <= TRAY.halfWidth && Math.abs(sand.z) <= TRAY.halfDepth) return { kind: 'sand', x: sand.x, z: sand.z }
     return { kind: 'none' }

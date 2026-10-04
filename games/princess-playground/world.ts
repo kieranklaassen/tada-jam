@@ -48,21 +48,22 @@ export const PLANK = {
   z: 0,
 } as const
 
-/** The tilt at which an end rests on the sand, in radians. Positive is right end down. */
 /**
  * Pim's crown, in her own measures: how wide it is at its base and how high it rises, as shares of her radius, and
- * where its base sits, as a share of her half height. It is low and wide, so that with it on she is still plainly
- * the smallest outline in the tray: a mark may tell a friend apart and must add no bulk.
+ * where its base sits, as a share of her half height. A tall spiral shell, the funniest mark in the tray: it is far
+ * narrower than her body, so it reads as something she wears, and her body alone is still plainly the smallest.
  */
-export const CROWN = { girth: 0.5, rise: 0.34, seat: 1.9 } as const
+export const CROWN = { girth: 0.44, rise: 0.8, seat: 1.9 } as const
 
 /**
- * Mog's ear bumps, in his own measures: how big each is, as a share of his radius, how far out from the middle of
- * his head it sits, and where the pair is set, as a share of his half height. They are low bumps at the corners of
- * his head and do not stand above the top of it, so that he and Dot, who weigh the same, are one size to the eye.
+ * Mog's ears, in his own measures: how big each is, as a share of his radius, how much taller than wide, how far
+ * out from the middle of his head it sits, and where the pair is set, as a share of his half height. Two pointed
+ * bumps that stand up from the corners of his head, about as high as Pim's crown; his body and Dot's, which weigh
+ * the same, are one size.
  */
-export const EARS = { size: 0.26, out: 0.5, seat: 1.656 } as const
+export const EARS = { size: 0.24, tall: 1.25, out: 0.5, seat: 1.9 } as const
 
+/** The tilt at which an end rests on the sand, in radians. Positive is right end down. */
 export const MAX_TILT = Math.asin(PLANK.pivotHeight / PLANK.halfLength)
 /** How much further an end digs into the sand for each unit of weight on it beyond the lightest friend's: radians. */
 export const DIG = 0.007

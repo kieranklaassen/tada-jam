@@ -129,17 +129,17 @@ function crown(radius: number): THREE.Object3D {
   return shell
 }
 
-/** Mog's ear bumps: two low rounded bumps at the corners of his head, a lighter teal than his body. They lie flat when he is put out, and are laid right back under a friend. */
+/** Mog's ear bumps: two pointed bumps standing up from the corners of his head, a lighter teal than his body. They lie flat when he is put out, and are laid right back under a friend. */
 function ears(): THREE.Object3D {
   const radius = FRIENDS.mog.radius, parts: THREE.BufferGeometry[] = []
   for (const side of [-1, 1]) {
     const ear = new THREE.SphereGeometry(radius * EARS.size, 14, 10)
-    ear.scale(0.85, 1, 0.6)
+    ear.scale(0.85, EARS.tall, 0.6)
     ear.rotateZ(-side * 0.4)
     ear.translate(side * radius * EARS.out, 0, radius * 0.1)
     parts.push(ear)
   }
-  // Low as they are, they are painted a lighter teal than his body, as Pim's crown is cream and Dot's speckles are pale, so that they can be seen.
+  // They are painted a lighter teal than his body, as Pim's crown is cream and Dot's speckles are pale: a mark, not more of him.
   const mesh = new THREE.Mesh(mergeGeometries(parts)!, new THREE.MeshStandardMaterial({ color: '#8ff0e0', roughness: 0.34, metalness: 0 }))
   mesh.name = 'mog-ears'
   return mesh
@@ -232,15 +232,15 @@ export function poseFriend(view: FriendView, pose: FriendPose): void {
       // On its way it rides up and forward over the round of her head, never through it.
       const round = Math.sin(slip * Math.PI) * spec.radius
       view.extra.position.set(over.x * slip, spec.halfHeight * CROWN.seat * (1 - slip) + (over.y + spec.halfHeight) * slip + round * 0.22, -spec.radius * 0.18 * (1 - slip) + (over.z + 0.02) * slip + round * 0.3)
-      // A low wide crown tips less far than a tall one before its rim would dig into her head.
-      view.extra.rotation.set(0.1 + swing * 0.25 + slip * 0.95, 0, -swing * 0.6 - slip * 0.35)
+      // A tall crown swings wide: it is her funniest part, and lags behind every move she makes.
+      view.extra.rotation.set(0.1 + swing * 0.4 + slip * 0.95, 0, -swing * 1.1 - slip * 0.35)
     }
   }
   // Dot's speckles follow its moves, and shimmer, turning to and fro on its back, while it is glad.
   if (view.extra && view.id === 'dot') view.extra.rotation.y = pose.follow * 0.6 + pose.shimmer * 0.22
   // Mog's ears lie flat when he is put out, and flatter still under a friend.
   if (view.extra && view.id === 'mog') {
-    // Under a friend, as when he is put out, they are laid flat: low bumps at the corners of his head, they stay in sight beside whoever sits on him.
-    view.extra.scale.y = pose.frown > 0.5 || pose.pressed > 0.5 ? 0.4 : 1
+    // Under a friend, as when he is put out, they are laid flat: at the corners of his head, they stay in sight beside whoever sits on him.
+    view.extra.scale.y = pose.frown > 0.5 || pose.pressed > 0.5 ? 0.3 : 1
   }
 }

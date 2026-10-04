@@ -8,7 +8,7 @@ import { seeded } from './motion'
 import { KINDS, layout, rideOf, wantMet, type Kind } from './rides'
 import { endRide, freshWorld, load, rideIsOver, save, wasSaved, type Saved, type World } from './save'
 import { NEXT_AT } from './scenes'
-import { chuckle, clonk, crow, knead, lengthOf, levelHum, purr, raspberry, scratch, softNote, spit, wheeze, type Part } from './voices'
+import { chuckle, clonk, crow, knead, lengthOf, levelHum, pebble, pop, purr, raspberry, scratch, softNote, spit, wheeze, type Part } from './voices'
 import { FRIEND_IDS, MAX_TILT, PLANK, WAITING_PLACE, homeOn, outerOn, plankTopAt, type FriendId } from './world'
 
 const QUIET: Guidance = { glow: 0, demo: null, demoIndex: -1 }
@@ -1528,6 +1528,82 @@ describe('a move is a friend arriving on an end or leaving one', () => {
   })
 })
 
+describe('the place round the tray: the snail and the stone', () => {
+  const settled = () => {
+    const game = new Game({ ...shown(), touched: true }, 1)
+    run(game, 1)
+    game.takeCues()
+    game.wantsSave = 'no'
+    return game
+  }
+  const same = (a: readonly Part[], b: readonly Part[]) => JSON.stringify(a) === JSON.stringify(b)
+
+  it('the snail answers a touch as itself: its own pop, and in it goes; nothing in the tray changes, no move is counted and nothing of it is saved', () => {
+    const game = settled()
+    const saved = JSON.stringify(game.saved()), tilt = game.play.plank.tilt
+    expect(game.snail.tucked).toBe(false)
+    game.press({ kind: 'snail' })
+    game.tap()
+    expect(game.snail.tucked).toBe(true)
+    const { cues, saves } = run(game, 0.6)
+    expect(cues.length).toBe(1)
+    expect(cues[0].type === 'voice' && same(cues[0].parts, pop())).toBe(true)
+    expect(saves).toEqual([])
+    expect(JSON.stringify(game.saved())).toBe(saved)
+    expect(game.world.moves).toBe(0)
+    expect(game.play.plank.tilt).toBeCloseTo(tilt, 5)
+    // Touched again while it is in: the duller pop, and it stays in.
+    game.press({ kind: 'snail' })
+    game.tap()
+    const again = run(game, 0.3).cues
+    expect(again.length).toBe(1)
+    expect(again[0].type === 'voice' && same(again[0].parts, pop(true))).toBe(true)
+    expect(game.snail.tucked).toBe(true)
+    // Left alone it comes out again by itself.
+    run(game, 5)
+    expect(game.snail.tucked).toBe(false)
+  })
+
+  it('the snail minds a hard knock in the tray: Bo\'s slam sends it into its shell, and it looks out again', () => {
+    const game = settled()
+    tapOn(game, 'bo')
+    let hid = false
+    for (let i = 0; i < 240; i++) {
+      game.step(1 / 60, QUIET)
+      hid = hid || game.snail.tucked
+    }
+    expect(hid).toBe(true)
+    run(game, 12)
+    expect(game.snail.tucked).toBe(false)
+  })
+
+  it('the stone answers a tap as a stone: a bright click of its own and a few grains at its foot; it marks nothing and moves nothing', () => {
+    const game = settled()
+    const saved = JSON.stringify(game.saved()), tilt = game.play.plank.tilt, places = JSON.stringify(game.play.arrangement)
+    game.press({ kind: 'stone' })
+    game.tap()
+    expect(game.grains.flying).toBeGreaterThan(0)
+    const { cues, saves } = run(game, 1)
+    expect(cues.length).toBe(1)
+    expect(cues[0].type === 'voice' && same(cues[0].parts, pebble())).toBe(true)
+    expect(saves).toEqual([])
+    expect(JSON.stringify(game.saved())).toBe(saved)
+    expect(JSON.stringify(game.play.arrangement)).toBe(places)
+    expect(game.play.plank.tilt).toBeCloseTo(tilt, 5)
+    expect(game.grains.flying).toBe(0)
+  })
+
+  it('a touch on either is a touch: it ends a scene, as any touch does, and makes no move', () => {
+    for (const kind of ['snail', 'stone'] as const) {
+      const game = lifting()
+      game.press({ kind })
+      game.tap()
+      expect(game.sceneRunning, kind).toBe(false)
+      expect(game.world.state.finished, kind).toBe(true)
+    }
+  })
+})
+
 describe('a tap on the plank', () => {
   it('never brings the lighter end down, nor a level or empty plank to the sand: it dips, springs back, and marks nothing new', () => {
     const bare = tap(layout(rideOf('little-asks', 0)), 'pim')
@@ -1934,10 +2010,11 @@ describe('a tower sways for as long as it stands, through an ending too', () => 
     for (let i = 0; i < 600 && !game.sceneRunning; i++) game.step(1 / 60, QUIET)
     expect(game.sceneRunning).toBe(true)
     expect(game.play.arrangement[near.end]).toHaveLength(3)
-    // Well into the ending, after any sway begun before it has run out.
-    run(game, 2.2)
+    // Well into the ending, after any sway begun before it has run out. The plank's three rocks toss the tower off
+    // its seat for a moment each time; whenever it stands, it sways.
+    run(game, 1.75)
     let swaying = 0
-    for (let i = 0; i < 90; i++) {
+    for (let i = 0; i < 175; i++) {
       game.step(1 / 60, QUIET)
       if (game.sceneRunning && game.play.bodies.mog.act === 'sway' && game.play.bodies.dot.act === 'sway') swaying += 1
     }

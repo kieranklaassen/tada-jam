@@ -118,6 +118,17 @@ export function poke(): Part[] {
   return [hiss(1900, 0.8, 0.09, 0.004, 0.11, 900), tone(180, 0.05, 0.004, 0.07, 110)]
 }
 
+/** The stone under the plank, tapped: a small bright click, as of two pebbles touching, with nothing of wood or sand in it. */
+export function pebble(): Part[] {
+  return [tone(2300, 0.1, 0.002, 0.035, 1900, 'sine'), tone(3100, 0.05, 0.002, 0.03, 0, 'triangle', 0.045), hiss(2800, 6, 0.04, 0.002, 0.03)]
+}
+
+/** The snail pulling into its shell: one small hollow pop, falling. `again` is a touch on the shell while it is already in: duller and lower. */
+export function pop(again = false): Part[] {
+  const from = again ? 330 : 520
+  return [tone(from, again ? 0.09 : 0.12, 0.004, 0.09, from * 0.36, 'sine'), hiss(700, 3, 0.03, 0.003, 0.04)]
+}
+
 /** A finger drawn through the sand: a short dry hiss, a little higher the faster it goes. `speed` is tray units a second. */
 export function drag(speed: number): Part[] {
   const s = Math.min(1, speed / 12)

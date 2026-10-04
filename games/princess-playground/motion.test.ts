@@ -439,12 +439,49 @@ describe('the playground in motion', () => {
         t += 1 / 60
         watch()
       }
-      expect(backs, `${left} | ${right}`).toBe(3)
-      // Plain to see, and never so far that the plank tips over.
-      expect(furthest, `${left} | ${right}`).toBeGreaterThan(0.04)
+      expect(backs, `${left} | ${right}`).toBeGreaterThanOrEqual(3)
+      // Plain to see at every difference, the smallest too: the heavy end lifts ten degrees or more. And never so far that the plank tips over.
+      expect(furthest, `${left} | ${right}`).toBeGreaterThan(0.17)
       expect(furthest, `${left} | ${right}`).toBeLessThan(Math.abs(rest))
       expect(Math.abs(world.plank.tilt - rest), `${left} | ${right}`).toBeLessThan(0.01)
     }
+  })
+
+  it('every rock of an ending is a payoff, at every difference: the end knocks, and whoever sits opposite is tossed; a bigger difference throws higher', () => {
+    const rocked = (left: FriendId[], right: FriendId[], watch: FriendId) => {
+      let a = emptyArrangement()
+      for (const id of left) a = putOnEnd(a, id, 'left')
+      for (const id of right) a = putOnEnd(a, id, 'right')
+      const world = new Playground(a)
+      play(world, 0.5)
+      world.takeEvents()
+      const seat = world.bodies[watch].y
+      const knocks: number[] = []
+      let tosses = 0, highest = 0
+      for (const at of [0, 0.8, 1.6]) {
+        world.seeSaw()
+        for (let t = 0; t < 0.8; t += 1 / 60) {
+          world.advance(1 / 60)
+          highest = Math.max(highest, world.bodies[watch].y - seat)
+          for (const event of world.takeEvents()) {
+            if (event.type === 'knock') knocks.push(event.speed)
+            if (event.type === 'toss' && event.id === watch) tosses += 1
+          }
+        }
+        expect(at).toBeLessThan(2)
+      }
+      return { knocks, tosses, highest }
+    }
+    // One unit of difference, which is most rides: Pim lifted by Mog, Mog by Bo, Bo by Pim and Mog together.
+    for (const [left, right, up] of [[['pim'], ['mog'], 'pim'], [['mog'], ['bo'], 'mog'], [['bo'], ['mog', 'pim'], 'bo']] as const) {
+      const one = rocked([...left], [...right], up)
+      expect(one.knocks.filter((speed) => speed > 0.9).length, `${left} | ${right}`).toBeGreaterThanOrEqual(3)
+      expect(one.tosses, `${left} | ${right}`).toBeGreaterThanOrEqual(3)
+      // Off the seat by a good part of its own height; Bo, the heaviest, is thrown lowest, and leaves his seat all the same.
+      expect(one.highest, `${left} | ${right}`).toBeGreaterThan(up === 'bo' ? 0.05 : 0.3)
+    }
+    // Two units throw Pim higher than one.
+    expect(rocked(['pim'], ['bo'], 'pim').highest).toBeGreaterThan(rocked(['pim'], ['mog'], 'pim').highest + 0.1)
   })
 
   it('holds Bo very still while a friend sits on his head: not a breath', () => {
