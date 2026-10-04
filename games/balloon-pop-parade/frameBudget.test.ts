@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { BODIES, type KindName } from './bodies'
 import { GROUND, skySlots, viewFor, waitingSpot } from './layout'
 import type { Pose } from './pose'
+import { PERSONALITIES } from './clips'
+import { saveOf } from './moments'
 import { freshSave } from './save'
 import { MAX_BALLOONS, MAX_SHADOWS, MAX_STRINGS } from './scenery'
 import { Theatre, type Painter } from './theatre'
@@ -74,6 +76,76 @@ describe('whole games played fast and at random', () => {
       }
     }
   }, 60_000)
+})
+
+describe('a balloon', () => {
+  /** Every large balloon of one frame, by colour, and a check that each was somewhere near in the frame before: none jumps. */
+  const follower = (step: number) => {
+    let before: { x: number; y: number; colour: string }[] | null = null
+    const now: { x: number; y: number; colour: string }[] = []
+    const painter: Painter = { place: () => {}, drop: () => {}, balloon: (x, y, z, wide, _tall, _lean, colour) => { if (wide > 0.7 && z > -5) now.push({ x, y, colour }) }, string: () => {}, shadow: () => {}, marcher: () => {}, hand: () => {}, cloud: () => {} }
+    const frame = (theatre: Theatre, label: string) => {
+      // The balloons far off, on the far hill, are small and are not followed; those in front all are.
+      now.length = 0
+      theatre.paint(painter, VIEW)
+      if (before) for (const balloon of now) {
+        const near = before.filter((other) => other.colour === balloon.colour).map((other) => Math.hypot(other.x - balloon.x, other.y - balloon.y))
+        // One that was not there a frame ago is new: it grows into the sky from nothing, or drifts down from above.
+        if (near.length < now.filter((other) => other.colour === balloon.colour).length) continue
+        expect(Math.min(...near), `${label}: a balloon at ${balloon.x.toFixed(2)}, ${balloon.y.toFixed(2)}`).toBeLessThan(step)
+      }
+      before = now.map((balloon) => ({ ...balloon }))
+    }
+    return { frame }
+  }
+  const tap = (theatre: Theatre, slot: number) => {
+    const at = skySlots(theatre.sky.length, VIEW, Math.max(1, ...theatre.sky.map((bunch) => bunch.count)))[slot]
+    theatre.press(at.x, at.y, VIEW)
+    theatre.release(VIEW)
+  }
+
+  it.each(['duck', 'frog', 'hippo', 'crab'] as const)('of a bunch with one for each goes from the bunch to the hand of the %s that takes it, and is never in two places from one frame to the next', (kind) => {
+    for (const size of [2, 3] as const) {
+      const save = saveOf({ position: 'bunches-own-colour', troop: { kind, size, held: Array.from({ length: size }, () => false) }, sky: [{ colour: kind, count: 1 }, { colour: kind, count: size }], waiting: { kind: kind === 'duck' ? 'frog' : 'duck', size: 1 } })
+      const theatre = new Theatre(save, 3), { frame } = follower(0.5)
+      theatre.step(1 / 60)
+      frame(theatre, 'before')
+      tap(theatre, 1)
+      for (let i = 0; i < 60 * 4; i++) { theatre.step(1 / 60); frame(theatre, `${size} ${kind}s, frame ${i}`) }
+      expect(theatre.troop.held.every(Boolean)).toBe(true)
+    }
+  })
+
+  it.each(['duck', 'frog', 'hippo', 'crab'] as const)('of a bunch that is too many, or one more each, is pulled to where it hangs over a %s and never jumps there', (kind) => {
+    for (const [held, count] of [[[false, false], 3], [[true, false], 2], [[true, true], 2], [[true, true, true], 3], [[true], 3]] as const) {
+      const save = saveOf({ position: 'bunches-own-colour', troop: { kind, size: held.length as 1 | 2 | 3, held: [...held] }, sky: [{ colour: kind, count: 1 }, { colour: kind, count }], waiting: { kind: kind === 'duck' ? 'frog' : 'duck', size: 1 } })
+      const theatre = new Theatre(save, 5), { frame } = follower(0.6)
+      theatre.step(1 / 60)
+      frame(theatre, 'before')
+      tap(theatre, 1)
+      // Until it is let go and gets away, which is fast and ends in a pop.
+      for (let i = 0; i < 60 * (0.5 + PERSONALITIES[kind].cue.letGo) - 2; i++) { theatre.step(1 / 60); frame(theatre, `${count} for ${held.join()}, ${kind}, frame ${i}`) }
+    }
+  })
+
+  it('that a passing troop takes goes from where it hung low to the hand that takes it, and follows as the troop walks off', () => {
+    // New games of every first-visit start, and the first bunches shown inside a step-in, for each kind that can pass.
+    const games: Theatre[] = []
+    for (const age of [2, 3, 4]) for (const seed of [1, 2, 3, 5, 8, 13]) games.push(new Theatre(freshSave(age, seed), seed))
+    for (const kind of ['duck', 'frog', 'hippo', 'crab'] as const) for (const seed of [1, 2, 3]) {
+      const save = { ...saveOf({ position: 'bunches-own-colour', troop: { kind, size: 1, held: [true] }, sky: [{ colour: kind, count: 1 }], waiting: { kind: kind === 'duck' ? 'frog' : 'duck', size: 3 } }), shown: { give: true, each: true, bunch: false } }
+      const theatre = new Theatre(save, seed)
+      theatre.step(1 / 60)
+      theatre.press(waitingSpot(0, VIEW).x, GROUND + 0.8, VIEW)
+      theatre.cancel()
+      expect(theatre.playing).toBe('arrival')
+      games.push(theatre)
+    }
+    games.forEach((theatre, g) => {
+      const { frame } = follower(0.5)
+      for (let i = 0; i < 60 * 9; i++) { theatre.step(1 / 60); frame(theatre, `game ${g}, frame ${i}`) }
+    })
+  })
 })
 
 describe('the frame budget', () => {
