@@ -17,10 +17,10 @@ export const SNAIL = {
   reach: 6.4,
   /** Tray units a second, at its fastest. */
   speed: 0.12,
-  /** Half the width of its shell: a little smaller than the smallest friend. */
-  shell: 0.5,
+  /** Half the width of its shell: about the size of the smallest friend. */
+  shell: 0.6,
   /** How near its middle a finger counts as on it. */
-  touch: 0.95,
+  touch: 1.1,
 } as const
 
 /** Seconds it stays in its shell after a touch, and after a hard knock in the tray. */

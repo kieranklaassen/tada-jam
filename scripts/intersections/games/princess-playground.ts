@@ -6,8 +6,9 @@ import type { Driver, Frac, GameAudit } from '../types.ts'
 // finished scene; the next ride begun and its showing; an ending and a
 // showing each ended by a touch; a tower on one end, taken down from the
 // bottom; friends carried over an end, onto a friend, over the middle and
-// into the sand; the plank tapped, fingers in the sand and the rake; then the
-// game put away and found as left, at rest under the idle ladder.
+// into the sand; the plank tapped, fingers in the sand and the rake; the place
+// round the tray: the stone, the snail, and a friend set down beside Dot;
+// then the game put away and found as left, at rest under the idle ladder.
 
 type Name = 'pim' | 'mog' | 'dot' | 'bo'
 
@@ -20,11 +21,16 @@ async function tapFriend(d: Driver, id: Name, then = 2600): Promise<void> {
   await d.wait(then)
 }
 
-const SAND_LEFT: Frac = [0.22, 0.74]
-const SAND_MID: Frac = [0.4, 0.8]
-const LEFT_END: Frac = [0.33, 0.44]
-const RIGHT_END: Frac = [0.69, 0.44]
-const MIDDLE: Frac = [0.5, 0.47]
+// Places in the frame, as the camera stands for the audit's surface. The sand beside the left end of the plank and
+// the strip of sand along the near rim are places where no friend ever stands.
+const SAND_LEFT: Frac = [0.159, 0.601]
+const SAND_MID: Frac = [0.414, 0.873]
+const LEFT_END: Frac = [0.305, 0.47]
+const RIGHT_END: Frac = [0.695, 0.47]
+const MIDDLE: Frac = [0.559, 0.47]
+const STONE: Frac = [0.529, 0.557]
+// In the sand at the far rim, beside the place where Dot stands apart.
+const BESIDE_DOT: Frac = [0.648, 0.301]
 
 export default {
   enforce: true,
@@ -103,16 +109,31 @@ export default {
         await d.wait(900)
         await d.tap(RIGHT_END)
         await d.wait(900)
-        await d.drag([0.2, 0.7], [0.45, 0.76], 700)
+        await d.drag([0.141, 0.877], [0.385, 0.886], 700)
         await d.wait(500)
-        await d.tap((await d.find('rake')) ?? [0.5, 0.38])
+        await d.tap((await d.find('rake')) ?? [0.5, 0.22])
         await d.wait(2500)
+      },
+    },
+    {
+      name: 'round the tray: the stone tapped, the snail touched and looking out again, and a friend set down beside Dot at the rim',
+      run: async (d) => {
+        await d.tap(STONE)
+        await d.wait(900)
+        await d.tap((await d.find('snail-shell')) ?? [0.5, 0.076])
+        await d.wait(1200)
+        await d.tap((await d.find('snail-shell')) ?? [0.5, 0.076])
+        await d.wait(5200)
+        await tapFriend(d, 'dot', 2200)
+        await tapFriend(d, 'dot', 2200)
+        await d.drag(await friend(d, 'mog'), BESIDE_DOT, 900)
+        await d.wait(3000)
       },
     },
     {
       name: 'put away and found as left, at rest under the idle ladder',
       run: async (d) => {
-        await d.tap([0.75, 0.78])
+        await d.tap([0.6, 0.873])
         await d.wait(600)
         await d.reload()
         await d.wait(9000)
@@ -132,5 +153,8 @@ export default {
     { a: 'dot-body', b: 'dot-speckles', kind: 'pose', upTo: 0.5, reason: 'the speckles lie on Dot’s back and shimmer by turning a little on it' },
     { a: '^friend-', b: '^friend-', kind: 'penetration', upTo: 0.15, reason: 'a friend sits on the very top of the one below, touching it; when the two sway or spring a little out of step, the rim of one presses into the other for a moment' },
     { a: '^plank', b: '^friend-', kind: 'penetration', upTo: 0.1, reason: 'a friend sits on the plank on its rounded underside; when it sways or kicks, the rim of that underside presses a little into the board' },
+    { a: 'snail-shell', b: 'snail-foot', kind: 'pose', upTo: 0.6, reason: 'the snail’s foot comes out from under its shell and is drawn back into it when it is touched: that is the one thing the snail does' },
+    { a: 'snail-shell', b: 'snail-eye', kind: 'pose', upTo: 1.0, reason: 'the snail’s eyes come out at the rim of its shell one at a time and go back in with its foot' },
+    { a: 'snail-foot', b: 'snail-eye', kind: 'pose', upTo: 0.4, reason: 'the eye stalks stand on the snail’s head, and shorten into it when it flinches or pulls in' },
   ],
 } satisfies GameAudit
