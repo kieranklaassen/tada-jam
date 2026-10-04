@@ -4,7 +4,7 @@ import { Hand, type Happening, type Held } from './hand'
 import type { Gesture } from './input'
 import { PERSONALITIES, type Reaction } from './personality'
 import { bowOn, clippingBox, placesOf, stripOf, tuftRoot, whatIsAt, type Button, type Point } from './poses'
-import { Puppet } from './puppet'
+import { Puppet, ease, type Spring } from './puppet'
 import { makeRng } from './rng'
 import { TUFTS } from './rules'
 import { deserializeGame, serializeGame, type Game } from './save'
@@ -64,6 +64,8 @@ export class Play implements Cast {
   /** Where and when the press landed that began the scene now playing. */
   private began: { at: Point; time: number } | null = null
   private echo = false
+  /** How far the face in the looking glass has swollen towards a finger that touched it: a spring that settles at nothing. */
+  readonly glass: Spring = { x: 0, v: 0 }
   /** What is waiting to be shown once the scene that is playing has ended, and how long it waits after a scene that was cut short. */
   private owed: Idea[] = []
   private showIn = 0
@@ -347,6 +349,7 @@ export class Play implements Cast {
     this.time += dt
     const game = this.game
     if (!game) return
+    ease(this.glass, 0, 300, 14, dt)
     const playing = this.inScene
     this.scene?.update(this.time)
     // A thing to be shown follows the scene before it at once when that has played to its end; after one that was cut
@@ -416,6 +419,12 @@ export class Play implements Cast {
     switch (h.kind) {
       // In an empty salon there is nothing to cut and no scissors come: the pair at the door look round at what was touched. They do not knock or wave.
       case 'looked': for (const puppet of this.waiting ?? []) puppet.react('looksAbout'); return
+      // The room's own two things. The face in the looking glass swells towards the finger and settles (its giggle is the
+      // poke that follows); the swept-up hair sends up a puff of fluff.
+      case 'room':
+        if (h.thing === 'glass') this.glass.v += 9
+        else hair.fluff({ x: h.at.x, y: h.at.y - 6 }, 'fluff', 3)
+        return
       case 'scissors':
         hair.scissorsIn(h.at)
         // The mane does not like the look of scissors: it trembles for as long as they are out.

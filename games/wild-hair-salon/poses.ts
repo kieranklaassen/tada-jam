@@ -1,6 +1,6 @@
 import { MANES } from './kits'
 import { LOOKS } from './looks'
-import { BENCH, CAPE, CHAIR, COLLAR_Y, DOOR, FLOOR_Y, HEAD, LOCK_X, BESIDE_X, PEG, STEP, STOOL, STRIP_W } from './layout'
+import { BENCH, BESIDE_X, CAPE, CHAIR, COLLAR_Y, DOOR, FLOOR_Y, HEAD, LOCK_X, LOOKING_GLASS, PEG, STEP, STOOL, STRIP_W, TROLLEY } from './layout'
 import type { CustomerId } from './tastes'
 import type { ClippingPlace, FaceSpot, Salon, Who } from './world'
 
@@ -85,6 +85,10 @@ export const BUTTONS: Record<Exclude<Button, 'knot'>, Box> = {
   bench: { x: BENCH.x, y: BENCH.backY - 10, w: BENCH.w, h: FLOOR_Y - BENCH.backY + 14 },
   chair: { x: CHAIR.x - 150, y: 300, w: 300, h: FLOOR_Y - 300 },
 }
+/** Where the customer's head shows in the looking glass, and how big: seen the other way round. */
+export const GLASS_AT: Actor = { x: LOOKING_GLASS.x, y: LOOKING_GLASS.y + 18, s: 0.5 }
+/** The heap of swept-up hair by the trolley's wheel, and how near it a touch is on it. */
+export const SWEEPINGS = { x: TROLLEY.x + TROLLEY.w + 28, y: FLOOR_Y + 12, reach: 30 } as const
 /** How near the knot a touch is on it. */
 export const KNOT_REACH = 44
 
@@ -251,6 +255,9 @@ export type Touched =
   | { object: 'face'; who: Who; part: FacePart }
   | { object: 'clipping'; index: number }
   | { object: 'button'; button: Button }
+  /** One of the two things of the room that answer for themselves: the customer's face in the looking glass, and the heap of swept-up hair by the trolley. */
+  | { object: 'room'; thing: 'glass'; part: FacePart }
+  | { object: 'room'; thing: 'sweepings' }
 
 /** How far along a segment the nearest point to `p` is (0 to 1), and how far away it is. */
 function nearestOn(a: Point, b: Point, p: Point): { t: number; distance: number } {
@@ -324,6 +331,12 @@ export function whatIsAt(salon: Salon, p: Point): Touched | null {
   }
   // The friend's hair is not the child's to cut: its whole head, hair and all, is its face.
   if (friendAt && inHead(friendAt, 1.3)) return { object: 'face', who: 'friend', part: facePart(friendAt, salon.friend ?? undefined) }
+  // The room's own two things, in front of whatever is behind them: the face in the looking glass, the other way round, and the swept-up hair.
+  if (salon.chair !== null) {
+    const local = { x: -(p.x - GLASS_AT.x) / GLASS_AT.s, y: (p.y - GLASS_AT.y) / GLASS_AT.s }
+    if (inHead(local)) return { object: 'room', thing: 'glass', part: facePart(local, salon.chair) }
+  }
+  if (Math.hypot(p.x - SWEEPINGS.x, p.y - SWEEPINGS.y) <= SWEEPINGS.reach) return { object: 'room', thing: 'sweepings' }
   if (places.seatFree && inBox(p, BUTTONS[places.seatFree])) return { object: 'button', button: places.seatFree }
   if (places.chair && inBox(p, BUTTONS.chair)) return { object: 'button', button: 'chair' }
   if (inBox(p, BUTTONS.door)) return { object: 'button', button: 'door' }

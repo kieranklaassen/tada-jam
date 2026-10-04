@@ -6,11 +6,11 @@ import { hintFor, type Hint } from './ladder'
 import { BESIDE_X, CHAIR, COLLAR_Y, DOOR, FLOOR_Y, HEAD, LOCK_X, LOOKING_GLASS, PEG, STEP, STRIP_W, fit } from './layout'
 import { FLUFF, LOOKS, RIBBON, hueOf } from './looks'
 import type { Play } from './play'
-import { SPOT_Y, bowOn, clippingBox, modelRootAt, onHead, placesOf, ribbonShape, tuftPose, tuftTip, type Point } from './poses'
+import { GLASS_AT, SPOT_Y, bowOn, clippingBox, modelRootAt, onHead, placesOf, ribbonShape, tuftPose, tuftTip, type Point } from './poses'
 import { TAIL_LEN } from './rules'
 import { PAW_HOME, SHOULDER, TAIL_OF_CUSTOMER, tailOf } from './scenes'
 import type { Sprites } from './sprites'
-import { WINDOW, type Shown } from './staging'
+import { WINDOW } from './staging'
 import { CUSTOMERS, type CustomerId } from './tastes'
 import { GRAPHITE, PAPER, type Ctx } from './wash'
 import type { Salon, Who } from './world'
@@ -28,8 +28,6 @@ const RAIN = 'rgba(75,74,87,0.4)'
 const OPEN_BY = 0.86
 /** Somebody goes by in the street every so many seconds, and takes this long to cross the door's glass. */
 const PASSER = { every: 13, takes: 5 }
-/** Where the customer's head shows in the looking glass, and how big. */
-const GLASS_AT: Shown = { x: LOOKING_GLASS.x, y: LOOKING_GLASS.y + 18, s: 0.5, lift: 0, seen: 1 }
 /** A lock on someone who is walking: it only swings. */
 const WALKING: Strand = { swing: { x: 0, v: 0 }, stretch: { x: 1, v: 0 }, flutter: 0, kick: { x: 0, v: 0 } }
 
@@ -111,7 +109,7 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
     if (seated) drawn += drawFigure(g, sprites, seated)
     // The looking glass shows the customer's face, the hair it has now, and what it thinks of both.
     // The glass shows the mane as it was until a tuft that a showing will change has been changed where the child can see it.
-    if (customer && inChair && staging.hats < 0.5) drawn += reflection(g, sprites, { who: chair, puppet: customer, at: GLASS_AT, mane: null, body: 0, wears: wearsOf('chair'), time: play.time, whole: sprites.mane(chair, game.mane, hair.holds === null && hair.tufts.every((tuft) => tuft.rest === 1)), flipped: true })
+    if (customer && inChair && staging.hats < 0.5) drawn += reflection(g, sprites, { who: chair, puppet: customer, at: { ...GLASS_AT, s: GLASS_AT.s * (1 + 0.25 * Math.max(-0.4, Math.min(0.6, play.glass.x))), lift: 0, seen: 1 }, mane: null, body: 0, wears: wearsOf('chair'), time: play.time, whole: sprites.mane(chair, game.mane, hair.holds === null && hair.tufts.every((tuft) => tuft.rest === 1)), flipped: true })
 
     // The cape, over the chin when the customer ducks; it breathes a little. In the air it rises and fades.
     if (caped > 0 && inChair) {

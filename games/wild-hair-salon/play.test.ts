@@ -5,7 +5,7 @@ import { alike } from './voices'
 import { BESIDE_X, COLLAR_Y, HEAD, LOCK_X, PEG, STEP } from './layout'
 import { PERSONALITIES } from './personality'
 import { Play } from './play'
-import { BUTTONS, floorX, floorY, placesOf, ribbonShape } from './poses'
+import { BUTTONS, GLASS_AT, SWEEPINGS, floorX, floorY, placesOf, ribbonShape } from './poses'
 import { MEET, TAIL_LEN, TUFTS } from './rules'
 import { deserializeGame, freshGame, serializeGame, type Game } from './save'
 import { DOORWAY } from './staging'
@@ -102,6 +102,32 @@ describe('a second tap', () => {
     tap(door, DOOR)
     expect(door.inScene).toBe(true)
     expect(door.game!.chair).not.toBeNull()
+  })
+})
+
+describe('the room\'s own two things', () => {
+  it('answer for themselves: the face in the looking glass swells, clinks and giggles with the customer, and the swept-up hair puffs and rustles', () => {
+    const play = seated()
+    play.takeNotes()
+    const before = play.customer()!.started.length
+    tap(play, { x: GLASS_AT.x, y: GLASS_AT.y + 12 })
+    play.step(1 / 60, false)
+    expect(play.glass.x).toBeGreaterThan(0)
+    expect(play.customer()!.started.length).toBeGreaterThan(before)
+    expect(play.takeNotes().length).toBeGreaterThanOrEqual(2)
+    expect(play.hand.held).toBeNull()
+    run(play, 2, true)
+    expect(Math.abs(play.glass.x)).toBeLessThan(0.01)
+    // Nothing that is saved has changed.
+    const saved = round(play)
+    tap(play, { x: SWEEPINGS.x, y: SWEEPINGS.y })
+    expect(play.hair.puffs.length).toBe(3)
+    expect(play.takeNotes().length).toBe(1)
+    expect(round(play)).toEqual(saved)
+    // On a first visit, before anybody is in the chair, the heap answers the same way.
+    const first = opened()
+    tap(first, { x: SWEEPINGS.x, y: SWEEPINGS.y })
+    expect(first.hair.puffs.length).toBe(3)
   })
 })
 

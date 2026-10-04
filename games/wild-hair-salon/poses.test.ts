@@ -3,7 +3,7 @@ import { MANES } from './kits'
 import { BENCH_GROUND, BESIDE_X, COLLAR_Y, HEAD, LOCK_X, PEG, SCENE, STEP, STRIP_W } from './layout'
 import { benchGroundOutline } from './paintStrips'
 import { LOOKS } from './looks'
-import { BUTTONS, SLOP, clippingBox, crossedBy, dropPlace, facePart, modelRootAt, onEar, floorX, floorY, onHead, placeOnFloor, placesOf, ribbonShape, stripOf, tuftPose, tuftRoot, tuftTip, whatIsAt, type Point } from './poses'
+import { BUTTONS, GLASS_AT, SLOP, SWEEPINGS, clippingBox, crossedBy, dropPlace, facePart, modelRootAt, onEar, floorX, floorY, onHead, placeOnFloor, placesOf, ribbonShape, stripOf, tuftPose, tuftRoot, tuftTip, whatIsAt, type Point } from './poses'
 import { TUFTS } from './rules'
 import { CUSTOMERS } from './tastes'
 import type { Salon } from './world'
@@ -190,6 +190,20 @@ describe('what is under a finger', () => {
     const off = salon({ cape: 'off' })
     expect(whatIsAt(off, { x: BUTTONS.chair.x + 30, y: BUTTONS.chair.y + 200 })).toEqual({ object: 'button', button: 'chair' })
     expect(whatIsAt(s, { x: BUTTONS.chair.x + 30, y: BUTTONS.chair.y + 200 })).toBeNull()
+  })
+
+  it('finds the room\'s own two things: the customer\'s face in the looking glass, the other way round, and the swept-up hair by the trolley', () => {
+    const s = salon()
+    expect(whatIsAt(s, { x: GLASS_AT.x, y: GLASS_AT.y + 12 })).toEqual({ object: 'room', thing: 'glass', part: 'nose' })
+    expect(whatIsAt(s, { x: GLASS_AT.x + 30, y: GLASS_AT.y - 6 })).toMatchObject({ object: 'room', thing: 'glass', part: 'cheek' })
+    expect(whatIsAt(s, { x: GLASS_AT.x, y: GLASS_AT.y + 36 })).toMatchObject({ object: 'room', thing: 'glass', part: 'chin' })
+    // Outside the face the glass is wall, and with nobody in the chair there is no face in it.
+    expect(whatIsAt(s, { x: GLASS_AT.x, y: GLASS_AT.y - 80 })).toBeNull()
+    expect(whatIsAt(salon({ chair: null, friend: null }), { x: GLASS_AT.x, y: GLASS_AT.y })).toBeNull()
+    expect(whatIsAt(s, { x: SWEEPINGS.x, y: SWEEPINGS.y })).toEqual({ object: 'room', thing: 'sweepings' })
+    expect(whatIsAt(salon({ chair: null, friend: null }), { x: SWEEPINGS.x + 10, y: SWEEPINGS.y - 8 })).toEqual({ object: 'room', thing: 'sweepings' })
+    // The door beside the heap is still the door.
+    expect(whatIsAt(s, { x: SWEEPINGS.x + 60, y: SWEEPINGS.y - 60 })).toEqual({ object: 'button', button: 'door' })
   })
 
   it('finds nothing in the air', () => {

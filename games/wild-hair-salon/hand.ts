@@ -50,6 +50,8 @@ export type Happening =
   | { kind: 'letGo'; held: Held; at: Point }
   /** The scissors left the hand. */
   | { kind: 'away' }
+  /** A press landed on one of the room's own two things: it answers for itself, at once, and nothing is in the hand. */
+  | { kind: 'room'; thing: 'glass' | 'sweepings'; at: Point }
   /** A touch on an empty salon, where there is nothing to work on: the pair at the door look round at it. */
   | { kind: 'looked'; at: Point }
 
@@ -77,7 +79,7 @@ const targetOf = (held: Held): Target => {
   }
 }
 
-const heldOf = (touched: Exclude<Touched, { object: 'button' }>): Held => {
+const heldOf = (touched: Exclude<Touched, { object: 'button' } | { object: 'room' }>): Held => {
   switch (touched.object) {
     case 'tuft': return { object: 'tuft', index: touched.index }
     case 'clipping': return { object: 'clipping', index: touched.index }
@@ -130,6 +132,16 @@ export class Hand {
     if (touched.object === 'button') {
       this.holding = { mode: 'button', button: touched.button, start: p }
       return { salon, happenings: [{ kind: 'pressed', button: touched.button, at: p }] }
+    }
+    if (touched.object === 'room') {
+      // The room's own things answer the moment the finger lands, and nothing is held. The face in the looking glass is
+      // the customer's face: a touch on it there is a poke, where the finger is on it.
+      this.holding = { mode: 'empty' }
+      const room: Happening = { kind: 'room', thing: touched.thing, at: p }
+      if (touched.thing === 'sweepings') return { salon, happenings: [room] }
+      const poked = this.answer(salon, { object: 'face', who: 'chair', part: touched.part }, { action: 'poke' }, p, [])
+      this.holding = { mode: 'empty' }
+      return { salon: poked.salon, happenings: [room, ...poked.happenings] }
     }
     const held = heldOf(touched)
     const strip = Hand.root(held, salon)
@@ -230,7 +242,7 @@ export class Hand {
     // A piece stuck on a face is part of that face to the ribbon, which goes round the head.
     const worn = under?.object === 'clipping' ? salon.clippings[under.index] : null
     const held: Held = worn?.on === 'face' ? { object: 'face', who: worn.who, part: 'cheek' }
-      : !under || under.object === 'button' || under.object === 'ribbon' || under.object === 'ribbonClip' ? { object: 'ribbon' } : heldOf(under)
+      : !under || under.object === 'button' || under.object === 'room' || under.object === 'ribbon' || under.object === 'ribbonClip' ? { object: 'ribbon' } : heldOf(under)
     const done = act(salon, targetOf(held), { action: 'ribbon' })
     if (!done.cell) return { salon, happenings: [{ kind: 'letGo', held: { object: 'ribbonClip' }, at: p }] }
     return { salon: done.salon, happenings: [{ kind: 'cell', object: targetOf(held).object as ObjectId, action: 'ribbon', cell: done.cell, held, at: p, rings: null, piece: null, place: null, sprangBack: false }] }

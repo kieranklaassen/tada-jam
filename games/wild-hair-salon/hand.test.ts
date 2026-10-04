@@ -3,7 +3,7 @@ import { GRID } from './grid'
 import { BLADES, Hand, RUB_STROKE, type Happening } from './hand'
 import { MANES } from './kits'
 import { BESIDE_X, COLLAR_Y, HEAD, LOCK_X, PEG, STEP } from './layout'
-import { BUTTONS, clippingBox, crossedBy, floorX, floorY, onHead, placeOnFloor, placesOf, tuftPose, tuftTip, type Point } from './poses'
+import { BUTTONS, GLASS_AT, SWEEPINGS, clippingBox, crossedBy, floorX, floorY, onHead, placeOnFloor, placesOf, tuftPose, tuftTip, type Point } from './poses'
 import { TUFTS } from './rules'
 import type { Salon } from './world'
 
@@ -231,6 +231,27 @@ describe('the finger', () => {
     expect(step.salon.clippings).toHaveLength(12)
     expect(step.salon.clippings).not.toContain(theOne)
     expect(step.salon.clippings).toContain(itsNeighbour)
+  })
+
+  it('lets the room\'s own two things answer the moment the finger lands, with no scissors and nothing held', () => {
+    const s = salon()
+    const hand = new Hand()
+    const glass = hand.press(s, { x: GLASS_AT.x, y: GLASS_AT.y + 12 }, 0)
+    expect(glass.happenings.map((h) => h.kind)).toEqual(['room', 'cell'])
+    const poke = cells(glass.happenings)[0]
+    expect(poke.cell).toBe(GRID.face.poke)
+    expect(poke.held).toEqual({ object: 'face', who: 'chair', part: 'nose' })
+    expect(hand.held).toBeNull()
+    // The rest of that touch does nothing more, as a tap or as a drag through the hair.
+    expect(hand.tap(glass.salon, { x: GLASS_AT.x, y: GLASS_AT.y + 12 }).happenings).toEqual([{ kind: 'away' }])
+    const dragged = drag(new Hand(), s, [{ x: GLASS_AT.x, y: GLASS_AT.y }, bladesAt({ x: LOCK_X + 40, y: tipY(20) }), bladesAt({ x: LOCK_X - 40, y: tipY(20) })])
+    expect(dragged.salon).toEqual(s)
+    expect(dragged.happenings.some((h) => h.kind === 'scissors')).toBe(false)
+    const heap = new Hand().press(s, { x: SWEEPINGS.x, y: SWEEPINGS.y }, 0)
+    expect(heap.happenings).toEqual([{ kind: 'room', thing: 'sweepings', at: { x: SWEEPINGS.x, y: SWEEPINGS.y } }])
+    // In a salon with nobody in it yet the heap still answers as itself.
+    const empty = salon({ chair: null, friend: null, clippings: [] })
+    expect(new Hand().press(empty, { x: SWEEPINGS.x, y: SWEEPINGS.y }, 0).happenings.map((h) => h.kind)).toEqual(['room'])
   })
 
   it('gives every press one ending, and holds nothing afterwards', () => {

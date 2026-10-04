@@ -83,6 +83,8 @@ export const OTHER_VOICES = {
   smack: { kind: 'noise', q: 1, pitch: 600, peak: 0.2, attack: 0.002, length: 0.06 },
   sigh: { kind: 'noise', q: 0.6, pitch: 900, glideTo: 500, peak: 0.05, attack: 0.06, length: 0.5 },
   ooh: { kind: 'tone', wave: 'sine', pitch: 330, glideTo: 440, peak: 0.1, attack: 0.04, length: 0.3 },
+  clink: { kind: 'tone', wave: 'sine', pitch: 1760, peak: 0.06, attack: 0.001, length: 0.12 },
+  rustle: { kind: 'noise', q: 0.8, pitch: 1500, peak: 0.07, attack: 0.02, length: 0.25 },
 } as const satisfies Record<string, VoiceSpec>
 
 /** A head rub is answered by each customer in its own way, and each answer has its sound: a purr, a huff, a groan, a drumming foot. */

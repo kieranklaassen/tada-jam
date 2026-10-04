@@ -38,6 +38,8 @@ export function notesFor(happening: Happening, before: Salon, after: Salon): Not
     case 'away': return []
     // Nothing to work on yet: a small knock of the finger, and the pair at the door look round.
     case 'looked': return [OTHER_VOICES.caught]
+    // The room's own things: the looking glass clinks on its nail (the face in it giggles for itself), and swept-up hair rustles.
+    case 'room': return [happening.thing === 'glass' ? OTHER_VOICES.clink : OTHER_VOICES.rustle]
     // A thing that moves the game on gives under the finger with a small sound of its own; what it sets off has its own.
     case 'pressed': return [happening.button === 'door' ? OTHER_VOICES.door : happening.button === 'knot' ? OTHER_VOICES.caught : OTHER_VOICES.hop]
     case 'button': return []
