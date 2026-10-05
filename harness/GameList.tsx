@@ -1,13 +1,13 @@
-import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react'
+import { Fragment, useEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react'
 import '@fontsource/albert-sans/400.css'
 import '@fontsource/albert-sans/500.css'
 import '@fontsource/albert-sans/600.css'
 import '@fontsource/albert-sans/700.css'
 import foxLandscape from './assets/fox-landscape.webp'
 import tadaMark from './assets/tada-mark.svg'
-import yourApp from './assets/your-app.svg'
 import type { JamGame, JamShowcase } from './contract'
 import { DemoShelf } from './DemoShelf'
+import { fallbackColours } from './home-tiles'
 import './home.css'
 
 // The jam's home page, after the tada.computer landing hero (Figma
@@ -15,31 +15,10 @@ import './home.css'
 // bottom, and the games as glossy app tiles. Everything enters in a short
 // choreographed sequence; reduced motion shows the finished page at once.
 
-const HEADLINE = "Tiny games your kids can't break. Build together"
-// Games without their own tile art still get a colour of their own, picked from the key.
-const TILE_COLOURS: readonly [string, string][] = [
-  ['#d055b1', '#ea82d0'], ['#2f7fd8', '#7fc0f5'], ['#2f9c7a', '#8fdcb4'], ['#e0763a', '#f7c16a'],
-  ['#7a5bd6', '#b9a4f5'], ['#c9453e', '#f29a7a'], ['#3a8f9e', '#8fd3d6'], ['#b5842c', '#f0d27a'],
-]
-function fallbackColours(key: string) {
-  let hash = 0
-  for (const char of key) hash = (hash * 31 + char.charCodeAt(0)) >>> 0
-  return TILE_COLOURS[hash % TILE_COLOURS.length]
-}
+const HEADLINE = 'Little worlds. Big imaginations.'
 const LAUNCH_MS = 420
 
-/** Two crossing arrows: a child who cannot read the button still sees it picks something for them. */
-function ShuffleIcon() {
-  return (
-    <svg className="home-cta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M3 7h3.5c2.2 0 3.6 1.2 4.8 3.2l1.4 2.6c1.2 2 2.6 3.2 4.8 3.2H21" />
-      <path d="M3 17h3.5c1.3 0 2.3-.4 3.1-1.2M14.4 8.2c.8-.8 1.8-1.2 3.1-1.2H21" />
-      <path d="m18 4 3 3-3 3M18 14l3 3-3 3" />
-    </svg>
-  )
-}
-
-function Tile({ game, index, chosen, requires, onPick }: { game: JamGame; index: number; chosen: boolean; requires?: string; onPick: (key: string) => void }) {
+function Tile({ game, index, requires, onPick }: { game: JamGame; index: number; requires?: string; onPick: (key: string) => void }) {
   const { cartridge, emoji, tile } = game
   const ref = useRef<HTMLButtonElement>(null)
   const [launching, setLaunching] = useState(false)
@@ -64,13 +43,6 @@ function Tile({ game, index, chosen, requires, onPick }: { game: JamGame; index:
     setLaunching(true)
     window.setTimeout(() => onPick(cartridge.manifest.key), LAUNCH_MS)
   }
-  // "Surprise me" picks a tile: it bounces, then opens as if tapped.
-  useEffect(() => {
-    if (!chosen) return
-    const timer = window.setTimeout(launch, 650)
-    return () => window.clearTimeout(timer)
-  }, [chosen])
-
   const [from, to] = tile ? [tile.from, tile.to] : fallbackColours(cartridge.manifest.key)
   const face: CSSProperties = { backgroundImage: `linear-gradient(45deg, ${from} 0%, ${to} 83%)` }
   return (
@@ -78,7 +50,7 @@ function Tile({ game, index, chosen, requires, onPick }: { game: JamGame; index:
       <button
         ref={ref}
         type="button"
-        className={`home-tile${launching ? ' is-launching' : ''}${chosen ? ' is-chosen' : ''}`}
+        className={`home-tile${launching ? ' is-launching' : ''}`}
         onPointerMove={lean}
         onPointerLeave={settle}
         onPointerCancel={settle}
@@ -100,7 +72,6 @@ function Tile({ game, index, chosen, requires, onPick }: { game: JamGame; index:
 }
 
 export function GameList({ games, showcases = [], onPick }: { games: readonly JamGame[]; showcases?: readonly JamShowcase[]; onPick: (key: string) => void }) {
-  const [surprise, setSurprise] = useState<number | null>(null)
   const frameRef = useRef<HTMLDivElement>(null)
 
   // The landscape drifts a touch against the pointer, like looking through a window.
@@ -115,11 +86,6 @@ export function GameList({ games, showcases = [], onPick }: { games: readonly Ja
     return () => window.removeEventListener('pointermove', move)
   }, [])
 
-  const surpriseMe = () => {
-    if (!games.length || surprise !== null) return
-    setSurprise(Math.floor(Math.random() * games.length))
-  }
-
   return (
     <div className="home">
       <div className="home-frame" ref={frameRef}>
@@ -133,45 +99,36 @@ export function GameList({ games, showcases = [], onPick }: { games: readonly Ja
           <p className="home-eyebrow">Tada Jam</p>
           <h1 className="home-title" aria-label={HEADLINE}>
             {HEADLINE.split(' ').map((word, i) => (
-              <span key={i} className="home-word" style={{ '--w': i } as CSSProperties} aria-hidden>
-                {word}
-              </span>
+              <Fragment key={i}>
+                <span className="home-word" style={{ '--w': i } as CSSProperties} aria-hidden>{word}</span>
+                {i === 1 && <br />}
+              </Fragment>
             ))}
           </h1>
-          <p className="home-lede">Experimental Tada cartridges made in the jam.</p>
-
-          <ul className={`home-dock${surprise !== null ? ' is-choosing' : ''}`} aria-label="Games">
-            {games.map((game, i) => (
-              <Tile key={game.cartridge.manifest.key} game={game} index={i} chosen={surprise === i} onPick={onPick} />
-            ))}
-            <li className="home-tile-slot" style={{ '--i': games.length } as CSSProperties} aria-hidden>
-              <span className="home-tile home-tile-yours">
-                <img src={yourApp} alt="" width={80} height={80} className="home-tile-dashed" />
-                <span className="home-tile-name">Your game</span>
-                <span className="home-tile-age">add a folder</span>
-              </span>
-            </li>
-          </ul>
-
-          {showcases.length > 0 && (
-            <section className="home-showcases" aria-label="Showcases">
-              <p className="home-showcases-label">Showcase · not a Tada cartridge</p>
-              <ul className="home-dock home-dock-showcase">
-                {showcases.map((showcase, i) => (
-                  <Tile key={showcase.cartridge.manifest.key} game={showcase} index={games.length + 1 + i} chosen={false} requires={showcase.requires} onPick={onPick} />
-                ))}
-              </ul>
-            </section>
-          )}
-
-          {games.length > 0 && (
-            <button type="button" className="home-cta" onClick={surpriseMe}>
-              <ShuffleIcon />
-              Surprise me
-            </button>
-          )}
+          <p className="home-lede">Build a castle. Mix a colour. Make a little mess.<br />Explore playful demos from the Tada lab.</p>
 
           <DemoShelf />
+
+          <details className="home-originals">
+            <summary>More from the jam <span>Original games &amp; showcase</span></summary>
+            <ul className="home-dock" aria-label="Original jam games">
+              {games.map((game, i) => (
+                <Tile key={game.cartridge.manifest.key} game={game} index={i} onPick={onPick} />
+              ))}
+            </ul>
+
+            {showcases.length > 0 && (
+              <section className="home-showcases" aria-label="Showcases">
+                <p className="home-showcases-label">Showcase · not a Tada cartridge</p>
+                <ul className="home-dock home-dock-showcase">
+                  {showcases.map((showcase, i) => (
+                    <Tile key={showcase.cartridge.manifest.key} game={showcase} index={games.length + 1 + i} requires={showcase.requires} onPick={onPick} />
+                  ))}
+                </ul>
+              </section>
+            )}
+
+          </details>
 
         </main>
 
