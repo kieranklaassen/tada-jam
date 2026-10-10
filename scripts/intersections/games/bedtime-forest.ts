@@ -3,8 +3,9 @@
 // the glow and a ghost-hand demo play, then quick taps for tricks and knocks
 // on the homes, carries to the wrong homes (the bear bumps out of the burrow,
 // the fish flops out of the nest, the owl hops out and flies to its hollow),
-// everyone carried to bed in a rush, and the night and the dawn that follow,
-// when they wake one by one and wander again.
+// everyone carried to bed in a rush, the night, which stays until a touch
+// after the lullaby, and the dawn that touch brings, when they wake one by
+// one and wander again.
 
 import type { Driver, Frac, GameAudit } from '../types.ts'
 
@@ -112,9 +113,16 @@ export default {
       },
     },
     {
-      name: 'the night, then dawn waking them one by one, songbird first and bear last, to wander again',
+      name: 'the night, then a touch after the lullaby brings the dawn, waking them one by one, songbird first and bear last, to wander again',
       run: async (d) => {
-        await d.wait(43000)
+        // The night never ends by itself (cycle.ts `callMorning`): the lullaby is over about 30 s into this
+        // moment. Two touches on the meadow, so one lands after it whatever the carries above took; a touch
+        // during the lullaby is a sparkle and one at dawn a rustle.
+        await d.wait(32000)
+        await d.tap([0.5, 0.8])
+        await d.wait(3000)
+        await d.tap([0.5, 0.8])
+        await d.wait(15000)
       },
     },
   ],
