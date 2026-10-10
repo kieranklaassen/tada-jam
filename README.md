@@ -9,13 +9,19 @@ npm install
 npm run dev
 ```
 
-Open the printed URL (Vite binds to your LAN too, so an iPad on the same network can open it), pick a game, and play. The strip above the game holds grown-up controls that stand in for the Tada shell:
+Open the printed URL (Vite binds to your LAN too, so an iPad on the same network can open it), pick a game, and play. On the home page a grown-up sets the child's age once; the games made for that age come first and every game reads it.
+
+A game opens full screen under one round home control at the top centre. A tap on it goes home. A finger held on it for a second shows a strip of grown-up controls that stand in for the Tada shell (`?chrome=1` opens with the strip):
 
 - **Age** and **Language** set `ctx.childAge` and `ctx.language` (changing them reopens the game, as in Tada).
 - **Attended** toggles `ctx.attention.attended`, to check that loops and sound pause.
 - **Park / Bring back** simulates put-away: storage flushes and the Mount is hidden but stays mounted.
-- **Reset slot** forgets the game's saved state.
-- **Hide** removes the strip for full-bleed play; a small dot in the top-right corner brings it back. Start hidden with `?chrome=0`.
+- **Reset slot** forgets the game's saved state, on a second tap within three seconds.
+- **Hide** puts the strip away again.
+
+`?chrome=0` draws nothing over the game at all, not even the home control. The performance probe and the intersection audit load games that way.
+
+Demos are on the home page too, as tiles of the same kind under the games, grouped by what they try out and marked as demos. A demo opens in the same frame under the same home control; holding the control leads to the demo player, where it can be rated. Demos are built from `lab/`, so they appear on a production build (`npm run serve:lan`, or the deployed jam) and not on the dev server. A demo that has become a game is listed once, as the game.
 
 **Judging smoothness on an iPad: use a production build.** The dev server serves unbundled modules with React in development mode and HMR, which is slower and not what a child would run. `npm run serve:lan` builds and serves the production bundle on your LAN at port 4173 (open `http://<this-machine's-LAN-IP>:4173/?chrome=0#/play/<key>` on the iPad). Pebble Table has a hidden grown-up overlay for frame rate and quality tier: triple-tap the top-left corner. `npm run perf:pebble` profiles it in Chrome, WebKit, or a software GPU against that server.
 
