@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { demoHref, parseDemoCatalog } from './demos'
+import { demoPlayerHref, demoRoute, findDemo, listedDemos, parseDemoCatalog } from './demos'
 
 const demo = { key: 'bread-day', name: 'Bread Day', emoji: '🍞', ages: [3, 7], pitch: 'Knead dough.', question: 'Is kneading fun?' }
 
@@ -33,8 +33,51 @@ describe('parseDemoCatalog', () => {
   })
 })
 
-describe('demoHref', () => {
-  it('points at the demo player by file, so it works with or without a trailing slash', () => {
-    expect(demoHref('bread-day')).toBe('lab/arcade/index.html#/play/bread-day')
+describe('what a demo became and how it was rated', () => {
+  const catalog = (demos: unknown[]) => parseDemoCatalog({ groups: [{ id: 'g', title: 'G', testing: 'T.', demos }] })
+
+  it('keeps the game a demo became and the verdict, and drops a malformed one of either', () => {
+    const [group] = catalog([
+      { ...demo, key: 'campfire-nights', game: 'night-camp', verdict: 'build' },
+      { ...demo, key: 'odd', game: '../escape', verdict: 'great' },
+    ])
+    expect(group.demos[0]).toMatchObject({ game: 'night-camp', verdict: 'build' })
+    expect(group.demos[1].game).toBeUndefined()
+    expect(group.demos[1].verdict).toBeUndefined()
+  })
+
+  it('lists a demo once: not when its key is a game, not when the game it became is one', () => {
+    const groups = catalog([demo, { ...demo, key: 'campfire-nights', game: 'night-camp' }, { ...demo, key: 'tiny-island' }, { ...demo, key: 'draw-a-bridge', game: 'bridge-crew' }])
+    const listed = listedDemos(groups, new Set(['bread-day', 'night-camp']))
+    expect(listed[0].demos.map((d) => d.key)).toEqual(['tiny-island', 'draw-a-bridge'])
+  })
+
+  it('does not list a demo rated "No", and keeps the other verdicts', () => {
+    const groups = catalog([{ ...demo, key: 'peg-blaster', verdict: 'no' }, { ...demo, key: 'claw-machine', verdict: 'build' }, { ...demo, key: 'mutant-garden', verdict: 'maybe' }])
+    expect(listedDemos(groups, new Set())[0].demos.map((d) => d.key)).toEqual(['claw-machine', 'mutant-garden'])
+  })
+
+  it('drops a group left with no demo', () => {
+    expect(listedDemos(catalog([demo]), new Set(['bread-day']))).toEqual([])
+  })
+
+  it('finds a demo by key in any group, listed or not', () => {
+    const groups = catalog([{ ...demo, key: 'peg-blaster', verdict: 'no' }])
+    expect(findDemo(groups, 'peg-blaster')?.name).toBe('Bread Day')
+    expect(findDemo(groups, 'nope')).toBeUndefined()
+  })
+})
+
+describe('where a demo opens', () => {
+  it('opens in the jam under its own route', () => {
+    expect(demoRoute('bread-day')).toBe('#/demo/bread-day')
+  })
+
+  it('frames the demo player by file, without its strip, so it works with or without a trailing slash', () => {
+    expect(demoPlayerHref('bread-day', false)).toBe('lab/arcade/index.html?chrome=0#/play/bread-day')
+  })
+
+  it('leads a grown-up to the demo with its rating strip', () => {
+    expect(demoPlayerHref('bread-day', true)).toBe('lab/arcade/index.html#/play/bread-day')
   })
 })

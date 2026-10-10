@@ -240,7 +240,9 @@ function card(entry: Entry): HTMLElement {
 
 function renderPlay(route: PlayRoute): () => void {
   const entry = entries.get(route.key)!
-  const root = el('div', 'play')
+  // Without the strip the demo is being shown, not rated: the letterbox takes
+  // the jam's cream so a framed demo sits in the jam's own page.
+  const root = el('div', route.chrome ? 'play' : 'play play-bare')
   const field = el('div', 'field')
   let stage: MountedStage | null = null
   let alive = true

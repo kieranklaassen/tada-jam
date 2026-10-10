@@ -264,6 +264,10 @@ body {
   -webkit-user-select: none;
 }
 
+.play-bare {
+  background: #fbf8e4;
+}
+
 .strip {
   flex: none;
   display: flex;
