@@ -3,9 +3,10 @@
 
 ## Status
 
-- Stage: sheet, being written (run 1). Base commit ef85be4d. Answers handled: none yet (no file for this game on the base branch).
+- Stage: sheet (run 1). Base commit ef85be4d. Answers handled: none (no file for this game on the base branch).
+- Sheet: whole, play-first, no records part. Hash of the sheet part: `ee5b06197ebd6a1a2bf8d7683a22a49d69cfa32f0021770e2bb0318607c50783`. The commit that holds it is named in the line below once it is pushed.
 - Look in use: none yet. First reserved look: Ant farm behind glass.
-- Open: the design sheet in `ART.md` is not whole yet.
+- Open: sheet ready for check, round 1
 
 The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Ask for the sheet's check by writing `Open: sheet ready for check, round N` here; when it passes, record the round and the commit it judged. Someone with no session to read resumes from this block and the files. The two parts below belong to the block.
 
