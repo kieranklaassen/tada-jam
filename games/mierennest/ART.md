@@ -62,7 +62,7 @@ No school skill is claimed. The game's own idea is a defence built from three ma
 One fixed stage with the whole farm in view, 1180 by 820 stage units, fitted into the surface without scroll or zoom. So a drag is always a dig, a raid is read at a glance, and the save holds no camera.
 
 - A wooden frame 30 units wide runs round the stage. Inside it, the top 172 units are sky, grass and the invaders' camp. Below that the ground is a grid of **40 columns by 21 rows of square cells, 28 units a side** (1120 by 588 units).
-- **The cell size comes from two bounds, taken together.** The finger's mouthful is two cells across, 56 units, about the width of a fingertip on the smallest surface the jam serves, so a drag leaves a tunnel two cells high; and a creature that fits that tunnel must still be about a tenth of the frame wide or more. Insects are long and low, so both hold at 28: the child's ant is 112 units long and one cell high, a raider ant 118 long and one cell high, a beetle 124 long and two cells high, a fly 118 across its wings and two cells high, a dung ball 84 across (three cells) with its beetle behind it. A smaller cell makes the creatures smaller than a tenth; a larger one leaves too few cells to build with.
+- **The cell size comes from two bounds, taken together.** The finger's mouthful is two cells across, 56 units, which on a surface 1180 wide is 56 pixels and above the jam's floor of 48 for a target, so a drag leaves a tunnel two cells high; and a creature that fits that tunnel must still be about a tenth of the frame wide or more. Insects are long and low, so both hold at 28: the child's ant is 112 units long and one cell high, a raider ant 118 long and one cell high, a beetle 124 long and two cells high, a fly 118 across its wings and two cells high, a dung ball 84 across (three cells) with its beetle behind it. A smaller cell makes the creatures smaller than a tenth; a larger one leaves too few cells to build with.
 - Row 0 is turf and row 20 is bedrock: neither can be dug. The **mouth** of the nest is the two middle cells of the turf (columns 19 and 20), always open, with the hill round it. Nothing can be set down in the mouth. A new nest has a short shaft under the mouth, three cells deep, with the ant at its foot.
 - **The largest kingdom this ground holds.** The 760 cells between turf and bedrock can each be any kind. The most rooms that fit, each with earth between it and the next, is 32. The size test saves a ground in which no two neighbouring cells are alike, with both machines loaded and every mark set.
 
@@ -108,7 +108,7 @@ An invader that leans pushes the run of lumps in front of it, along its way, unt
 - **A run with earth or rock behind it** cannot be shoved. Loose sand at its front is ploughed through all the same: the pusher changes places with it. So sand alone never stops a beetle, wherever it is put.
 - A lone stone on a flat floor has room beyond it, so it rolls ahead of the push until something stops it.
 
-So one material alone is weak in its own way (sand is loose, a stone rolls, a little mud is light), and a combination is stronger than its parts: sand and mud, 4 against 1 and 3; mud and stone, 8 against 3 and 2.
+So one material alone is weak in its own way (sand is loose, a stone rolls, a little mud is light), and a combination is stronger than its parts: packed sand and mud, 5 against 1 and 3; mud and a bedded stone, 8 against 3 and 2.
 
 ### What a chamber is
 
@@ -126,17 +126,101 @@ True as far as it claims: dry sand does pour and come to rest at a slope, wet mu
 
 ## The four mechanic questions
 
-One sentence each for swap, attention, fun and guess.
+Answered for the game's own idea, a defence built from three true materials and tested by a raid. No school skill is claimed, so none of these answers is a claim about learning.
+
+- **Swap.** No: take away how sand, mud and stone behave and there is no game left, because what the child builds, why it holds and where it gives are all that behaviour.
+- **Attention.** At the moment of decision the child looks at one place in the nest and thinks about what is there and what it rests on: which lump goes where, what will bear it, and which camper will meet it. Aiming and timing come in only when a machine is fired, and a machine is never needed to turn a raid back.
+- **Fun.** Yes: the best moments are the pour of sand into a new tunnel, the wall that holds with a beetle straining at it, and the wall that does not, and each is the material doing what it does.
+- **Guess.** Not by tapping: a defence is a place, a material and a shape, chosen among hundreds of cells, and the same raid against the same nest plays the same way every time, so a lucky try does not exist. Trying things one at a time does work, and is the point: each try shows what that one change did.
 
 ## The error as a consequence
 
-What a wrong attempt does in the world, where it shows, and that the state stays so the child changes one thing and tries again.
+A defence that does not work is shown by the raid itself, at the place it failed and for the reason it failed (pack: game-design, errors-show-as-consequences.md).
+
+- **It follows from the world's own rules.** The wall of sand goes at its foot under the first beetle; the stone that nothing bore drops when the ant under it walks on; the mud patch one cell long holds one raider ant and the next walks over its back; the pit with earth walls holds the beetle and the ants climb out.
+- **It shows where and why.** The invader that got in is seen getting in, by the way it took. Where a wall gave, the lumps lie where they fell for as long as the raid lasts.
+- **The state stays, and the try is free.** A raid runs on a copy of the nest. When it is over the workers put every fallen lump back where the child had built it, grumbling, and the nest stands as built. The child never rebuilds by hand what an invader broke.
+- **The place that gave stays readable.** A scuff of pale dust and a ring of footprints mark each cell where a wall was shoved or a lump fell, and a worker stands by the worst one, looking at it with its hands on its hips. The marks are short-lived: they are cleared when the next raid is called and are gone on load. So the child can change one thing there and call the same raid again, and it plays the same way up to the thing that changed.
+- **It is as good to watch as success.** An invader that reaches a chamber does its own act there once, and each act is a joke at the invader's expense (see the characters). Then it trudges home by itself.
+- **Nothing gives a verdict.** No buzzer, no cross, no face turned to the child. The queen's feelings are about the beetle in her room. Success is a consequence too: the campers come back out the way they went in, muddy, sandy or backwards, and sit down at their camp to sulk.
+- **Outside a raid** an error is smaller and just as plain: sand set as a column slumps as it lands, mud set in the air plops to the floor, a stone set on nothing drops. Each can be picked up again at once.
 
 ## The designed order, and what is stored
 
-The order of challenges with one new thing at a time, the positions with their stable ids as they stand in `config.ts`, what a cycle that goes well or badly is, and every field of the saved state.
+### A raid, and how it is judged
 
-Where the next customer already waits on screen while the child works, say which customer a new position lays out: the position moves when a cycle is judged, and the one who waits was laid out before that, so the change shows on the customer after next.
+- The party that will come next sits at the **log beside the mouth**, in front of the camp, in plain view. The child calls it by tapping the **dewdrop bell** that hangs on a grass stalk over the mouth. Nothing else starts a raid: no clock, no amount of building, nothing while the game is unattended or put away.
+- A raid is one cycle. It runs on game time on a copy of the nest, and it ends by itself: every invader is turned back, or gives up at something it cannot pass and trudges home, or reaches a chamber, does its own act there once and trudges home. A machine sends an invader out sooner, and is never the only way a raid ends.
+- With no shot fired, the same party against the same nest plays the same way every time, invader for invader. The party's moves come from the nest and the party alone; chance decides nothing in a raid.
+- **A raid went well** when no invader finished its act in a chamber. An invader that got inside and was sent out before its act was over does not spoil it.
+- **A raid did not go well** when any invader finished its act in a chamber.
+- **A raid is not judged** when the kingdom had no chamber as it was called (the campers come, look down the mouth, find nothing to want, shrug at each other and go back), or when the game is put away while it runs.
+
+### The order
+
+The position moves forward one place after a raid that went well, and never back: after a raid that did not go well, or one that was not judged, it stays where it is. It moves only when a raid is judged, never during one. Each place is the party at the log, and one new thing that party brings; the later places combine what is known. A larger or stranger party looks it, sitting at the log, and it is the child who rings the bell.
+
+| Id | The party at the log | What is new |
+| --- | --- | --- |
+| `first-chamber` | One scout ant. | A room to defend, the bell, and one habit: raider ants go anywhere open and stick in mud. |
+| `ant-file` | Three raider ants in a file. | Number: one cell of mud holds one ant, and the next walks over its back. A sand face cannot be climbed. |
+| `first-beetle` | One beetle. | A pusher that is too heavy to climb: walls and what they hold, pits, a stone in the way. |
+| `beetle-pair` | Two beetles. | Pushing together: a wall that held one may not hold two. Combinations of lumps. |
+| `ants-and-beetles` | Two ants and two beetles. | No new thing: what stops one kind lets the other through. |
+| `first-fly` | One fly. | A flier: over walls, pits and patches, and stopped by a low way. |
+| `the-catapult` | Two flies and two ants. | The catapult arrives. A lobbed shot, and the three loads. |
+| `mixed-party` | An ant, a beetle and a fly. | No new thing: all three kinds at once. |
+| `the-cannon` | Two beetles and two flies. | The cannon arrives. A level shot down a hall. |
+| `full-camp` | Three ants, three beetles and two flies. | No new thing: number. |
+| `dung-scout` | One dung beetle with its ball. | The ball: it breaks what is thin and widens what is soft, and stone stops it. |
+| `great-raid` | Five dung beetles with their balls, led by the dung fly. | The army follows the fly. |
+| `open-kingdom` | A mixed party, a different one after each raid that went well, in a fixed round of six. | Nothing: the kingdom is safe and stays open to play. |
+
+- The ids are the ones in `LADDER` in `config.ts`. They name places in the game's own order and never a grade, a groep or a level. An id the game does not know reads as `first-chamber`.
+- **Every visit of every age starts at `first-chamber`**, and a saved position wins. `ctx.childAge` sets no starting place (see the band).
+- **Nothing shows the position**: no number, bar, map, badge or name. The party at the log is the only sign of it, and that party is a thing in the world.
+- **Which party a new position lays out.** The party at the log is laid out from the position at load and again when a raid has been judged and the invaders are home. So after a raid that went well, the next party walks to the log while the last one sits down to sulk, and it is the party of the new position. No party is laid out a place behind.
+- **A harder option the child picks.** In `open-kingdom` the round of six parties runs from the lightest to the heaviest, and each sits at the log looking as heavy as it is. Before that, the child makes any raid harder by building less and easier by building more.
+
+### How the kingdom grows
+
+Growth follows what is built and is seen in the nest, never as a number, a bar or a name.
+
+- **Chambers.** Each chamber of the kingdom is lived in: two workers move in, with their things, as soon as air reaches it. The crowd of workers stops growing at sixteen; past that the kingdom grows in rooms and halls.
+- **The queen** lives in the largest chamber, and moves house, carried and complaining, when another becomes larger.
+- **The hill** over the mouth is the spoil of everything dug, and is as high as the nest is hollow.
+- **What can be built** grows with what has arrived: the catapult from `the-catapult`, the cannon from `the-cannon`, and with every lump the child has moved to where it is wanted.
+- Workers, queen and hill are worked out from the saved ground each time and are not stored.
+
+### Every field of the saved state
+
+| Field | What it holds |
+| --- | --- |
+| `v` | The version of the shape. |
+| `position` | The id of the place in the order. |
+| `finished` | The template's field. Always false in this game: a raid is never saved, so no judged cycle is ever on screen at load. |
+| `ground` | The 840 cells as built, as a run-length string. Lumps that lie loose are cells of it like any other. |
+| `ant` | The cell the child's ant stands in. |
+| `machines` | For each machine that has arrived: its kind, the cell it stands on, the way it faces, and its load (none, sand, mud or stone). |
+| `muster` | Which of the six parties of `open-kingdom` sits at the log. |
+| `shown` | The marks of the first showings that have started, by their ids. |
+| `ended` | The great raid was turned back. |
+
+**Never saved, and gone on load:** a raid and the copy of the ground it runs on; what it knocked down; where invaders stand (they are at their camp); the marks where a wall gave; a shot in the air; and a lump in the ant's jaws, which goes back to the cell it was picked from, whether it is put away under a dragging finger or the drag is taken away. A machine fired in a raid has its load again when the raid is over. A machine fired outside a raid has really thrown its lump: the lump lies where it landed, as a cell of the ground, and the machine is saved empty.
+
+**When it is saved.** On every change the child makes: a mouthful dug, a lump set down, a machine set, turned, loaded or fired outside a raid, and when the ground has come to rest after any of them. While the ground is still falling the save holds it as it will come to rest, so nothing is saved in the air. When a raid is judged, `position` (and `muster`, and `ended` after the great raid) are saved in that instant.
+
+**Size.** The largest ground, with both machines and every mark, is under 2 KB as a string; the test holds it under half of the 64 KB cap.
+
+### The guidance ladder
+
+On attended time, with no word and no numeral, and never a solution (pack: game-design, ages-9-to-12.md). It starts after the wait the band sets and backs off at any touch.
+
+1. **What can be touched.** The child's ant looks out of the screen, then scratches at the earth beside it, and the earth there glints. If lumps lie in reach, one of them glints in turn; if a party waits and a chamber exists, the bell sways and a drop on it catches the light.
+2. **One possible move.** The ghost hand makes one short drag through plain earth beside the ant, away from anything built, and lets go. It shows that a drag digs, and nothing about where to dig or what to build.
+3. It then waits twice as long before showing either again.
+
+The hand never shows a lump being set in a place, a machine being loaded or aimed, or the bell being rung: each of those is part of a plan, and the plan is the child's.
 
 ## The characters and their fixed tastes
 
