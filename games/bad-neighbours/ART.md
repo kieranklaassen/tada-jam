@@ -6,7 +6,9 @@ Bad Neighbours' own visual style: flat, pixel-crisp apartment façades drawn in 
 
 - **Every building is a little street of lives.** Seven façades (café, laundromat, terracotta terrace, bluebird apartments, red row, olive shop, night owl), each with brickwork, shutters, sills, plants and air conditioners drawn inside the exact square-cell collision outline. Nothing decorative sticks out past the physics.
 - **Residents are the charm.** Tiny pixel people walk behind the windows, curtains slide, the laundromat drum spins and the Night Owl's television flickers. Tipping a building makes them throw up their arms and spill books, socks, plants and papers; a lost building sends its resident down on a parachute.
-- **Kid-clear.** Saturated, warm façades against a pale, cool sky and a desaturated skyline. One falling building at a time, a dotted drop guide, and the next delivery pinned on a paper note.
+- **Kid-clear.** Saturated, warm façades against a pale, cool sky and a desaturated skyline. One building in the air at a time, a dotted drop guide, and the next delivery pinned on a paper note.
+- **Child-paced.** A delivery hangs where it arrived until the child touches it (a nudge, a drag, a turn or a drop); only then does it start down, at a pace set from the child's age as a default (gentlest for four and under and for an unknown age, briskest from seven). Nothing lands by itself, and a street left alone stays exactly as it is.
+- **Clear of the home control.** The view follows the tower early enough that the waiting delivery, even stood on end, stays below the jam's home control at the top centre ([`camera.ts`](camera.ts), held by its test at six surface sizes).
 - **Wordless.** Every window has the same small wall lamp where an address plaque would be: nothing is numbered or counted. The controls are icons only.
 
 ## Palette
