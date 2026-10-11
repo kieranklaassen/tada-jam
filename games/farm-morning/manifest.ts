@@ -6,6 +6,6 @@ export const farmMorningManifest = {
   name: 'Farm Morning',
   ageBand: [2, 5],
   permissions: ['storage'],
-  iconIdentity: { family: 'learn', contrast: 'paper' },
+  iconIdentity: { family: 'play', contrast: 'paper' },
   windowShape: 'full',
 } as const satisfies CartridgeManifest
