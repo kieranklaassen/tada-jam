@@ -246,7 +246,7 @@ const EFFECTS: Record<Effect, (ctx: Ctx, p: number) => void> = {
     line(ctx, MUD.shine, 2, [-4.4, -2.6, -1.6, -5])
     oval(ctx, 1.4, -5.4, 0.9, 0.9, 0, MUD.shine)
   },
-  // A stone in flight to the right, 18 across, with one wisp of speed behind it: two short round bars.
+  // A stone in flight to the right, 18 across, with a wisp of speed behind it: three round bars of three lengths.
   stoneShot: (ctx, p) => {
     const slip = Math.sin(p * Math.PI * 2) * 1.2
     // Three streaks of three lengths, so that no two of them read as a sign.
