@@ -235,3 +235,27 @@ describe('the page from a guest place and the finger agree', () => {
     expect(turned.y).toBeCloseTo(page.plate.y + page.plate.h - 10)
   })
 })
+
+describe('the home control the shell lays over the game', () => {
+  // One round control, 48 px across, at the top centre of the surface and 10 px down. A touch on it never reaches the game.
+  const home = (width: number) => ({ x: width / 2 - 24, y: 10, w: 48, h: 48 })
+  const meet = (a: { x: number; y: number; w: number; h: number }, b: { x: number; y: number; w: number; h: number }) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h
+  const SIZES = [[1180, 820], [1024, 768], [1133, 744], [1366, 1024], [1400, 700], [760, 560], [820, 1180]] as const
+
+  it('is over nothing a finger takes or turns, on the plain page and on the bat\'s page turned half round, where the street is at the top', () => {
+    for (const shape of ['square', 'long', 'tower'] as const) {
+      const lodged = arrange({ shape, fixtures: [], twins: [] }, { troll: 0, bat: 'lobby', blob: 'bench' }, {}, { bench: 'blob' })
+      for (const [width, height] of SIZES) {
+        const at = layoutPage(width, height, shape), control = home(width), where = `the ${shape} house at ${width} by ${height}`
+        const bodies = spotsOf(pageOfArrangement(lodged, null, true).guests, at).map(({ guest, spot }) => ({ id: guest.id, box: bodyBox(spot, at) }))
+        for (const box of [at.wheel, at.coachDoor, ...at.slots]) expect(meet(box, control), where).toBe(false)
+        for (const { id, box } of bodies) expect(meet(box, control), `${id} in ${where}`).toBe(false)
+        // Turned, a box is the box between its two turned corners.
+        for (const { id, box } of bodies) {
+          const a = fromPlain(at, { from: 'bat', room: null }, { x: box.x, y: box.y }), b = fromPlain(at, { from: 'bat', room: null }, { x: box.x + box.w, y: box.y + box.h })
+          expect(meet({ x: Math.min(a.x, b.x), y: Math.min(a.y, b.y), w: box.w, h: box.h }, control), `${id} on the bat's page in ${where}`).toBe(false)
+        }
+      }
+    }
+  })
+})
