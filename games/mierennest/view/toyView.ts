@@ -239,11 +239,11 @@ export class ToyView {
         this.stamps!.stamp(pen, `machine/${item.kind}/${item.load ?? 'empty'}/${item.pose}`, MACHINE_BOX, (own) => paintMachine(own, item.kind, item.load, item.pose), item.x, item.y, item.flip)
         break
       case 'stand':
-        pen.strokeStyle = 'rgba(255,255,255,0.6)'
-        pen.lineWidth = 2
+        // Where the machine would stand: a soft pale patch that fills its place, not an outline.
+        pen.fillStyle = 'rgba(255,255,255,0.22)'
         pen.beginPath()
         pen.roundRect(item.x - CELL + 2, item.y - CELL + 2, 2 * CELL - 4, 2 * CELL - 4, 9)
-        pen.stroke()
+        pen.fill()
         break
       case 'thing':
         this.stamps!.stamp(pen, `thing/${item.thing}/${item.lit ? 'lit' : 'dark'}`, THING_BOX, (own) => paintThing(own, item.thing, item.lit), item.x, item.y)

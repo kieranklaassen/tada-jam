@@ -33,6 +33,8 @@ function crowded(): Game {
   put(g, 16, 9, STONE)
   settle(g)
   game.ant = { x: 17, y: 9 }
+  // The ant has had its first showing, so that the bell calls the party at once.
+  game.shown.push('ant')
   return game
 }
 
@@ -332,6 +334,27 @@ describe('a touch on the surface', () => {
     const queen = sprites(display.items(null), 'queen')
     expect(queen.length).toBe(1)
     expect(['wedged', 'wedged2']).toContain(queen[0].pose)
+  })
+
+  it('shows the shrug of a party with balls and riders: the ball stays at the log, and whoever sat on something walks on the grass', () => {
+    for (const position of ['dung-scout', 'ants-and-beetles'] as const) {
+      const game = freshGame(null, 1)
+      game.position = position
+      game.shown.push('ant', 'beetle', 'fly', 'dungBeetle', 'dungFly', 'catapult', 'cannon')
+      const k = new Kingdom(game), display = new ToyDisplay(k, 1)
+      expect(k.toy.realm.chambers.length).toBe(0)
+      const ball = display.camp.find((camper) => camper.id.startsWith('partyBall'))
+      k.bell()
+      expect(k.scene?.is).toBe('shrug')
+      for (let n = 0; n < 75; n++) { k.step(1 / 30); display.seeGame(k.drainEvents(), k.drainRaidEvents()); display.advance(1 / 30) }
+      // Halfway: everyone of the party stands at the mouth, on the grass.
+      const items = display.items(null).filter((item): item is Extract<Item, { is: 'sprite' }> => item.is === 'sprite')
+      for (const item of items) expect(Number.isFinite(item.x) && Number.isFinite(item.y), `${position} ${item.who}`).toBe(true)
+      const walkers = items.filter((item) => ['raider', 'beetle', 'dungBeetle'].includes(item.who) && item.x > 400 && item.x < 560)
+      expect(walkers.length, position).toBe(k.party.length)
+      for (const one of walkers) expect(one.y, `${position} ${one.who}`).toBe(GRASS_Y)
+      if (ball) expect(sprites(display.items(null), 'dungBall').some((one) => one.x === ball.x && one.y === ball.y)).toBe(true)
+    }
   })
 
   it('swings the bell back to rest', () => {

@@ -286,8 +286,9 @@ export class Kingdom {
   bell(): void {
     this.events.push({ type: 'bell' })
     // A touch ends the scene that is playing, and is then an ordinary touch: the bell rings, unless what follows
-    // that scene has begun.
-    this.endScene()
+    // that scene has begun. It is a first touch like any other: a showing that is owed starts at it, and the party
+    // waits for the next ring.
+    this.touch()
     // A move of the queen that waited for that scene plays first: the bell has rung, and the party waits for the next ring.
     if (!this.raid && !this.scene && this.toy.atRest) this.seeToTheQueen()
     if (this.raid || this.scene) return

@@ -18,6 +18,8 @@ function nestGame(position = 'first-chamber', floorMud = 0): Game {
   settle(g)
   game.position = position
   game.ant = { x: 20, y: 5 }
+  // Every kind has had its first showing, so that the bell calls the party at once; a test of a showing takes them out again.
+  game.shown.push('ant', 'beetle', 'fly', 'dungBeetle', 'dungFly')
   return game
 }
 const play = (k: Kingdom, seconds: number, events: KingdomEvent[] = [], raidEvents: RaidEvent[] = []) => {
@@ -432,8 +434,35 @@ describe('the queen moves in', () => {
 })
 
 describe('first showings', () => {
+  /** A nest whose kinds have not been shown yet. */
+  const unshown = (position?: string) => {
+    const game = nestGame(position)
+    game.shown.length = 0
+    return game
+  }
+
+  it('starts at a first touch that lands on the bell as well: the showing plays, and the party comes at the next ring', () => {
+    const k = new Kingdom(unshown())
+    k.bell()
+    expect(k.scene).toMatchObject({ is: 'showing', kind: 'ant' })
+    expect(k.raid).toBeNull()
+    expect(k.game.shown).toEqual(['ant'])
+    // The second ring ends the showing and calls the party.
+    k.bell()
+    expect(k.scene).toBeNull()
+    expect(k.raid).not.toBeNull()
+    // A machine that is owed is in the nest before the raid it was brought for.
+    const late = unshown('the-catapult')
+    late.shown.push('ant', 'beetle', 'fly')
+    const kl = new Kingdom(late)
+    kl.bell()
+    expect(kl.scene).toMatchObject({ is: 'arrives', machine: 'catapult' })
+    expect(kl.raid).toBeNull()
+    expect(late.machines.map((m) => m.kind)).toEqual(['catapult'])
+  })
+
   it('owes the first kind at the first touch of a first visit, marks it as it starts, and never shows it again', () => {
-    const k = new Kingdom(nestGame())
+    const k = new Kingdom(unshown())
     expect(k.scene).toBeNull()
     k.press(10.5, 10.5, 0)
     expect(k.scene).toMatchObject({ is: 'showing', kind: 'ant' })

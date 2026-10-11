@@ -145,7 +145,7 @@ describe('the effects', () => {
       for (const progress of [undefined, 0, 0.5, 1, -3, 7]) {
         const s = standIn()
         expect(() => paintEffect(s.ctx, effect, progress)).not.toThrow()
-        plain(s, effect === 'twang' ? 'stroke' : 'fill')
+        plain(s, 'fill')
         expect(s.seen.join(' ')).not.toContain('NaN')
       }
     })

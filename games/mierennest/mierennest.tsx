@@ -16,7 +16,7 @@ import { seedOf } from './rng'
 import { deserialize, serialize } from './save'
 import { fit, toStage } from './stage'
 import { Kingdom } from './kingdom'
-import type { ToyEvent } from './toy'
+
 import { ToyDisplay, drawsOf } from './view/display'
 import { GROUND } from './view/layout'
 import { ToyView } from './view/toyView'
@@ -100,31 +100,44 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
 
     // What the toy says happened is heard and seen here: every event of one moment is played as one voice, and a
     // kind of event that comes fast (a mouthful, a landing, a pour) is kept a little apart from its last.
-    const lastHeard: Partial<Record<ToyEvent['type'], number>> = {}
+    const lastHeard: Record<string, number> = {}
     const voices = new Map<readonly Note[], Voice>()
+    // A moment with more than one thing to say says them as one voice, so that all of it is heard: the audio holds
+    // only the newest voice for the unlock, and the first touch of a visit has a crunch and a scene's voice at once.
+    const together = new Map<string, Voice>()
+    const names = new Map<readonly Note[], number>()
     let unsaved = false
     const answer = (extra: readonly Note[] | null = null) => {
       if (!kingdom || !display) return
       const toy = kingdom.toy, now = performance.now() / 1000
       const events = toy.drainEvents(), gameEvents = kingdom.drainEvents(), raidEvents = kingdom.drainRaidEvents()
-      // A moment plays at most three voices, the first that came. Each list of notes is one voice, made the first
-      // time it is heard and kept, so that a mouthful makes nothing new.
-      let said = 0
+      // A moment says at most three things, the first that came, as one voice. Each list of notes, and each set of
+      // lists said together, is one voice, made the first time it is heard and kept, so that a mouthful makes nothing new.
+      const moment: (readonly Note[])[] = []
       const say = (notes: readonly Note[] | null) => {
-        if (!notes || said >= 3) return
-        said++
-        let voice = voices.get(notes)
-        if (!voice) voices.set(notes, (voice = voiceOf(notes)))
-        audio.play(voice)
+        if (notes && moment.length < 3 && !moment.includes(notes)) moment.push(notes)
       }
       say(extra)
       for (const event of events) {
-        if (now - (lastHeard[event.type] ?? -1) < APART[event.type]) continue
-        lastHeard[event.type] = now
+        // The gap is kept for each kind of thing: a bite that meets sand and a stone at once is heard as both.
+        const key = 'kind' in event ? `${event.type} ${event.kind}` : event.type
+        if (now - (lastHeard[key] ?? -1) < APART[event.type]) continue
+        lastHeard[key] = now
         say(voiceFor(event))
       }
       for (const event of gameEvents) say(voiceForGame(event))
       for (const event of raidEvents) say(voiceForRaid(event))
+      if (moment.length === 1) {
+        let voice = voices.get(moment[0])
+        if (!voice) voices.set(moment[0], (voice = voiceOf(moment[0])))
+        audio.play(voice)
+      } else if (moment.length > 1) {
+        for (const notes of moment) if (!names.has(notes)) names.set(notes, names.size)
+        const key = moment.map((notes) => names.get(notes)).join(' ')
+        let voice = together.get(key)
+        if (!voice) together.set(key, (voice = voiceOf(moment.flat())))
+        audio.play(voice)
+      }
       if (events.length > 0) display.see(events)
       if (gameEvents.length > 0 || raidEvents.length > 0) display.seeGame(gameEvents, raidEvents)
       // The ground that is shown may be the raid's copy; the view is told which, and which of its cells changed.

@@ -486,16 +486,19 @@ export class ToyDisplay {
       // The one a first showing shows is one of the party: it has stepped out to the front of the camp.
       if (camper.id === shownOut) continue
       const move = this.moveOf(camper.id, camper.kind, camper.phase, slot++)
-      let x = camper.x, pose = camper.poses[move.second ? 1 : 0]
-      if (inFile && scene?.is === 'shrug') {
-        // To the mouth, a look down it, a shrug, and back to the file.
+      let x = camper.x, y = camper.y, pose = camper.poses[move.second ? 1 : 0]
+      if (inFile && scene?.is === 'shrug' && camper.kind !== 'dungBall') {
+        // To the mouth, a look down it, a shrug, and back to the file. A ball stays at the log; whoever sat on a
+        // ball or rode a back gets down and walks on the grass, and a flier keeps its height.
         const n = Number(camper.id.slice(5)), u = scene.t / scene.length
         const there = MOUTH_STEP.x - n * 34
         const go = Math.min(1, u / 0.3), back = Math.min(1, Math.max(0, (u - 0.7) / 0.3))
-        x = back > 0 ? there + (camper.x - there) * back : camper.x + (there - camper.x) * go
+        const away = back > 0 ? 1 - back : go
+        x = camper.x + (there - camper.x) * away
+        if (camper.kind !== 'fly' && camper.kind !== 'dungFly') y = camper.y + (GRASS_Y - camper.y) * Math.min(1, away * 4)
         pose = u > 0.3 && u < 0.7 ? SHRUG[camper.kind] ?? pose : pose
       }
-      list.push({ is: 'sprite', who: camper.kind, pose, x, y: camper.y, flip: camper.flip, size: camper.size ?? 1, tall: 1, move, turn: 0 })
+      list.push({ is: 'sprite', who: camper.kind, pose, x, y, flip: camper.flip, size: camper.size ?? 1, tall: 1, move, turn: 0 })
     }
     if (raided && !k.raid && scene?.is === 'putBack') {
       // Those who got home by themselves sit in the file; the others are carried out.

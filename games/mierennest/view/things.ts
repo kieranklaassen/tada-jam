@@ -386,15 +386,16 @@ const EFFECTS: Record<Effect, (ctx: Ctx, p: number) => void> = {
   // The shake of a catapult after it lets go, about the middle of the machine's place: curved cream lines either
   // side of the arm, three behind it and two before it, each shorter than the last, that spread and fade.
   twang: (ctx, p) => {
+    // Pale puffs flung off the arm as it lets go, three behind it and two before: each a filled patch that drifts
+    // out and thins. Nothing here is a line, so nothing here can be read as a mark.
     const fade = 1 - p * 0.9
     ctx.globalAlpha *= fade
     ctx.translate(7, -8)
     ctx.rotate(0.26)
     const spread = p * 9
-    for (const [side, far, half, w] of [[-1, 13, 0.52, 3.4], [-1, 19.6, 0.36, 2.8], [-1, 26, 0.22, 2.2], [1, 12, 0.42, 3.2], [1, 18.4, 0.25, 2.4]]) {
-      const mid = side < 0 ? Math.PI : 0
+    for (const [side, far, up, size] of [[-1, 13, -7, 4.6], [-1, 20, 3, 3.6], [-1, 27, -3, 2.6], [1, 12, -9, 4], [1, 19, 0, 3]]) {
       const r = far + spread
-      bow(ctx, CLOUD, w, 0, side < 0 ? 0 : -3, r, r * 1.36, 0, mid - half, mid + half)
+      oval(ctx, side * r, up - spread * 0.4, size * (1 + p * 0.5), size * (0.8 + p * 0.4), side * 0.4, CLOUD)
     }
     ctx.globalAlpha /= fade
   },
