@@ -294,6 +294,22 @@ export class Kingdom {
     if (this.raid || this.scene) return
     this.toy.cancel()
     this.dropMachine()
+    // While the ground is still falling the party waits: it is called when the ground has come to rest, so that the
+    // raid runs on the nest as it lies and no machine is left in the air.
+    if (!this.toy.atRest) {
+      this.rung = true
+      return
+    }
+    this.callParty()
+  }
+
+  /** The bell was rung while the ground was still falling: the party comes when it has come to rest. */
+  private rung = false
+  /** The game was put away and has not been touched since: nothing starts by itself until the next touch. */
+  private untouched = false
+
+  /** The party at the log is called in, or comes for nothing where the kingdom has no chamber. */
+  private callParty(): void {
     if (this.toy.realm.chambers.length === 0) {
       this.scene = { is: 'shrug', t: 0, length: SCENE_SECONDS.shrug }
       this.events.push({ type: 'scene', is: 'shrug' })
@@ -302,7 +318,7 @@ export class Kingdom {
     this.marks = []
     this.landShots()
     this.reloading = this.game.machines.map(() => 0)
-    // The raid runs on the nest as it will come to rest: nothing is copied in the air.
+    // The raid runs on the nest as it lies, at rest: nothing is copied in the air.
     this.raid = callRaid(asSaved(this.game.ground), this.party, MOUTH, this.game.machines.flatMap((machine) => cellsOf(machine, this.game.ground.cols)))
     this.sinceTick = 0
     this.events.push({ type: 'called', party: this.party })
@@ -325,6 +341,10 @@ export class Kingdom {
     this.reloading = this.game.machines.map(() => 0)
     // A move of the queen that was still owed is not played after a put-away: she is found where she lives, as on load.
     this.settleQueen()
+    // And nothing starts by itself on return: a bell that was waiting for the ground is forgotten, and a move the
+    // ground still owes her when it comes to rest waits for the next touch.
+    this.rung = false
+    this.untouched = true
   }
 
   /**
@@ -495,6 +515,7 @@ export class Kingdom {
   touch(): void {
     const wasOwed = this.owedAtTouch
     this.owedAtTouch = false
+    this.untouched = false
     this.endScene()
     if (wasOwed && !this.scene && !this.raid) this.startOwed()
   }
@@ -647,7 +668,13 @@ export class Kingdom {
     const wasResting = this.toy.atRest
     this.toy.step(dt)
     if (!wasResting && this.toy.atRest && !this.raid) this.restMachines()
-    if (this.toy.atRest && !this.raid && !this.scene && this.queenLives !== this.queenRoomCells()) this.seeToTheQueen()
+    if (this.toy.atRest && !this.raid && !this.scene && !this.untouched && this.queenLives !== this.queenRoomCells()) this.seeToTheQueen()
+    // The bell that was rung while the ground was falling: her move, if the ground owed her one, is seen first and
+    // the party waits for the next ring; otherwise the party comes now.
+    if (this.rung && this.toy.atRest) {
+      this.rung = false
+      if (!this.raid && !this.scene) this.callParty()
+    }
     for (const flying of this.flying) flying.t += dt
     for (let n = 0; n < this.flying.length; n++) {
       // A ball of mud or a stone stops at the first invader it meets, the moment it gets there.

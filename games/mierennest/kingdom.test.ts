@@ -82,6 +82,57 @@ describe('the bell', () => {
   })
 })
 
+describe('the bell and a ground that is still falling', () => {
+  it('waits for the ground to rest: the raid starts by itself then, and no machine is left in the air', () => {
+    const game = nestGame('the-cannon')
+    game.shown.push('catapult', 'cannon')
+    game.machines.push({ kind: 'cannon', x: 32, y: 5, facing: -1, load: 'stone' })
+    const k = new Kingdom(game)
+    // The floor under the cannon is dug away, and the bell is rung before anything has come down.
+    k.press(33, 6.9, 0)
+    k.drag(33, 8.5, 0.1)
+    k.release()
+    expect(k.toy.atRest).toBe(false)
+    k.bell()
+    expect(k.raid).toBeNull()
+    const events: KingdomEvent[] = []
+    for (let n = 0; n < 600 && !k.raid; n++) { k.step(1 / 30); events.push(...k.drainEvents()) }
+    expect(k.raid).not.toBeNull()
+    expect(k.toy.atRest).toBe(true)
+    expect(events.filter((e) => e.type === 'called').length).toBe(1)
+    const cannon = k.game.machines[0]
+    expect(cannon.y).toBeGreaterThan(5)
+    expect(at(k.game.ground, cannon.x, cannon.y + 1)).not.toBe(OPEN)
+    // The copy the raid runs on is the ground as it lies, and the cells it keeps clear of waiters are where the machine stands now.
+    expect(equal(k.raid!.ground, k.game.ground)).toBe(true)
+    expect(k.raid!.machines.has(cannon.y * 40 + cannon.x)).toBe(true)
+  })
+
+  it('a game put away before the ground has come to rest plays no scene on return: the queen\'s move is owed, and starts at the next touch', () => {
+    const game = freshGame(null, 1), g = game.ground
+    for (let y = 1; y < g.rows - 1; y++) for (let x = 0; x < g.cols; x++) put(g, x, y, MOUTH.includes(x) && y <= 6 ? OPEN : EARTH)
+    for (const y of [4, 5]) for (let x = 22; x <= 27; x++) put(g, x, y, OPEN)
+    settle(g)
+    game.shown.push('ant')
+    const k = new Kingdom(game)
+    // The stroke that finishes the first room, and the game put away in the same instant.
+    k.press(22.5, 6, 0)
+    for (let n = 1; n <= 10; n++) k.drag(22.5 + n * 0.5, 6, n * 0.05)
+    k.release()
+    expect(k.toy.atRest).toBe(false)
+    k.putAway()
+    // Back again: the ground comes to rest, the room is there, and nothing plays by itself.
+    expect(play(k, 10).filter((e) => e.type === 'scene')).toEqual([])
+    expect(k.toy.realm.chambers.length).toBe(1)
+    expect(k.queenStays).toBe('mouth')
+    // The next touch, wherever it lands, and her move begins.
+    k.press(5.5, 5.5, 20)
+    k.release()
+    const after = play(k, 1)
+    expect(after.filter((e) => e.type === 'scene').map((e) => (e as { is: string }).is)).toEqual(['moves'])
+  })
+})
+
 describe('a raid on call', () => {
   it('is judged when it ends by itself, and the position moves one place forward after one that went well', () => {
     const k = new Kingdom(nestGame('first-chamber', 1))
