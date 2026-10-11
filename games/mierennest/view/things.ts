@@ -249,8 +249,10 @@ const EFFECTS: Record<Effect, (ctx: Ctx, p: number) => void> = {
   // A stone in flight to the right, 18 across, with one wisp of speed behind it: two short round bars.
   stoneShot: (ctx, p) => {
     const slip = Math.sin(p * Math.PI * 2) * 1.2
-    line(ctx, WISP, 3, [-24 - slip, -2.6, -13.5 - slip, -2.6])
-    line(ctx, WISP, 2.2, [-17 + slip, 3.4, -13 + slip, 3.4])
+    // Three streaks of three lengths, so that no two of them read as a sign.
+    line(ctx, WISP, 3, [-27 - slip, -4.8, -12.5 - slip, -4.8])
+    line(ctx, WISP, 1.8, [-17 + slip, 0.4, -13.5 + slip, 0.4])
+    line(ctx, WISP, 2.4, [-22 - slip * 0.5, 5.2, -11.5 - slip * 0.5, 5.2])
     oval(ctx, 0, 0, 9, 8.6, 0.3, STONE.edge)
     oval(ctx, -0.6, -1, 7.8, 7, 0.3, STONE.fill)
     bow(ctx, STONE.shine, 2.2, -0.4, -0.6, 5.2, 4.6, 0.3, -2.7, -1.5)
