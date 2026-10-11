@@ -687,14 +687,15 @@ export class ToyDisplay {
       if (k.grabbed?.index === index) return
       const shown = showMachine(machine, k.reloading[index] ?? 0, this.seconds - (this.fired.get(index) ?? -9))
       if (scene?.is === 'arrives' && scene.machine === machine.kind) {
-        // The workers lower it down the mouth to where it will stand, and fire it once to see.
+        // Two workers lower it down the mouth to where it will stand, and it fires once, empty, to show that it
+        // works. They stand at the mouth, one at each lip: one on the grass, hands out over the hole, and the one on
+        // the hill, who has put the spoil down to watch. Nobody goes down with it.
         const u = Math.min(1, scene.t / (scene.length * 0.6))
         const from = { x: MOUTH_X, y: GRASS_Y - 30 }
         shown.x = from.x + (shown.x - from.x) * u
         shown.y = from.y + (shown.y - from.y) * u
         shown.pose = scene.t > scene.length * 0.75 && scene.t < scene.length * 0.75 + FLUNG ? 'fired' : 'ready'
-        list.push({ is: 'sprite', id: '', who: 'worker', pose: 'carry', x: shown.x - 44, y: shown.y, flip: false, size: 1, tall: 1, move: null, turn: 0 })
-        list.push({ is: 'sprite', id: '', who: 'worker', pose: 'walk', x: shown.x + 44, y: shown.y, flip: true, size: 1, tall: 1, move: null, turn: 0 })
+        list.push({ is: 'sprite', id: '', who: 'worker', pose: u < 1 && Math.floor(this.seconds * 4) % 2 === 0 ? 'carry' : 'walk', x: MOUTH_STEP.x - 14, y: GRASS_Y, flip: false, size: 1, tall: 1, move: null, turn: 0 })
       }
       list.push({ is: 'machine', kind: shown.kind, load: shown.load, pose: shown.pose, x: shown.x, y: shown.y, flip: shown.flip })
     })
@@ -705,7 +706,7 @@ export class ToyDisplay {
     // A mouthful dug: it catches the spoil at the mouth and trots it up to the top of the hill.
     const trot = Math.min(1, (this.seconds - this.spoilAt) / SPOIL_TROT)
     const top = { x: MOUTH_X + LIP + hump.reach * 0.32, y: GRASS_Y - hump.height + 3 }, lip = { x: MOUTH_X + LIP + 6, y: GRASS_Y }
-    if (trot < 1) list.push({ is: 'sprite', id: '', who: 'worker', pose: Math.floor(this.seconds * 10) % 2 === 0 ? 'carry' : 'walk2', x: lip.x + (top.x - lip.x) * trot, y: lip.y + (top.y - lip.y) * trot, flip: false, size: 1, tall: 1, move: null, turn: 0 })
+    if (trot < 1 && scene?.is !== 'arrives') list.push({ is: 'sprite', id: '', who: 'worker', pose: Math.floor(this.seconds * 10) % 2 === 0 ? 'carry' : 'walk2', x: lip.x + (top.x - lip.x) * trot, y: lip.y + (top.y - lip.y) * trot, flip: false, size: 1, tall: 1, move: null, turn: 0 })
     else list.push({ is: 'sprite', id: '', who: 'worker', pose: spoilMove.second ? 'walk2' : 'carry', x: top.x, y: top.y, flip: true, size: 1, tall: 1, move: spoilMove, turn: 0 })
     if (ending) {
       // The dung fly sits on the hill beside the worker, who hands it a leaf: it wipes its eyes.

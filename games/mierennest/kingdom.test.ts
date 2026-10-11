@@ -179,6 +179,25 @@ describe('a raid on call', () => {
     expect(k.marks).toEqual([])
   })
 
+  it('marks the cells where a wall was shoved or a lump fell, the first that gave first: not where a ball dug earth, a stone rolled through, or a lump came to lie', () => {
+    // A dung beetle and its ball: the tunnel is two cells high, so the ball digs the earth over it all the way;
+    // then it meets a lump of sand on the floor, which it shoves along, and a stone, which rolls.
+    const game = nestGame('dung-scout')
+    game.shown.push('catapult', 'cannon')
+    put(game.ground, 24, 5, 2)
+    put(game.ground, 27, 5, STONE)
+    const k = new Kingdom(game)
+    const built = clone(game.ground)
+    k.bell()
+    settleAll(k)
+    expect(k.marks.length).toBeGreaterThan(0)
+    // Every mark is a cell where the child had built a lump that the raid moved: the sand, the stone.
+    for (const cell of k.marks) expect([2, STONE], `mark at ${cell % 40},${Math.floor(cell / 40)}`).toContain(built.cells[cell])
+    expect(k.marks[0]).toBe(5 * 40 + 24)
+    expect(k.marks).toContain(5 * 40 + 27)
+    expect(new Set(k.marks).size).toBe(k.marks.length)
+  })
+
   it('does not let the nest be built on while it runs: a touch digs nothing, takes nothing and moves no machine', () => {
     const game = nestGame('the-cannon')
     put(game.ground, 26, 5, STONE)

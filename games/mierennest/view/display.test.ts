@@ -8,7 +8,7 @@ import { workerSpots } from '../residents'
 import { freshGame, type Game } from '../save'
 import { Kingdom } from '../kingdom'
 import { DRAWS, LADDER_BEAT, LADDER_SWAY, MOST_CRUMBS, QUEEN_WEDGED, ROOTS_SWING, SHOWING_AT, SPOIL_TROT, ToyDisplay, drawsOf, type Item } from './display'
-import { GRASS_Y, GROUND } from './layout'
+import { GRASS_Y, GROUND, MOUTH_X } from './layout'
 import { BELL } from './props'
 import { covers, shownFace } from './raidShow'
 
@@ -516,6 +516,52 @@ describe('the kingdom\'s own make way', () => {
       }
     }
     expect(looked).toBeGreaterThan(300)
+  })
+})
+
+describe('a machine arrives', () => {
+  it('two workers at the mouth lower it down the shaft to its foot, where it fires once, empty: nobody stands in the earth', () => {
+    for (const position of ['the-catapult', 'the-cannon'] as const) {
+      const game = freshGame(null, 1)
+      game.position = position
+      game.shown.push('ant', 'beetle', 'fly')
+      if (position === 'the-cannon') game.shown.push('catapult')
+      const k = new Kingdom(game), display = new ToyDisplay(k, 1)
+      k.press(5.5, 10.5, 0)
+      k.release()
+      expect(k.scene?.is).toBe('arrives')
+      const machine = k.game.machines[k.game.machines.length - 1]
+      // Set at the foot of the shaft: under the mouth, on its floor.
+      expect(MOUTH).toContain(machine.x)
+      expect(machine.y).toBe(3)
+      let fired = 0, tried = 0, lowest = 0
+      while (k.scene?.is === 'arrives') {
+        k.step(1 / 30)
+        const events = k.drainEvents()
+        tried += events.filter((event) => event.type === 'tried').length
+        display.seeGame(events, k.drainRaidEvents())
+        display.advance(1 / 30)
+        if (k.scene?.is !== 'arrives') break
+        const items = display.items(null)
+        const shown = items.find((item): item is Extract<Item, { is: 'machine' }> => item.is === 'machine')!
+        expect(shown.load).toBeNull()
+        if (shown.pose === 'fired') fired++
+        lowest = Math.max(lowest, shown.y)
+        // Everyone of the kingdom who is drawn stands in the open: on the grass, on the hill, or in an open cell.
+        const workers = sprites(items, 'worker')
+        expect(workers.length).toBe(2)
+        for (const worker of workers) {
+          if (worker.y <= GRASS_Y) continue
+          expect(at(k.game.ground, Math.floor((worker.x - GROUND.x) / CELL), Math.floor((worker.y - 1 - GROUND.y) / CELL)), `${position}: a worker at ${worker.x.toFixed(0)},${worker.y.toFixed(0)}`).toBe(OPEN)
+        }
+        // One at each lip of the mouth, facing it.
+        expect(workers.some((worker) => worker.x < MOUTH_X && !worker.flip), position).toBe(true)
+        expect(workers.some((worker) => worker.x > MOUTH_X && worker.flip), position).toBe(true)
+      }
+      expect(tried).toBe(1)
+      expect(fired).toBeGreaterThan(5)
+      expect(lowest).toBe(GROUND.y + (machine.y + 1) * CELL)
+    }
   })
 })
 

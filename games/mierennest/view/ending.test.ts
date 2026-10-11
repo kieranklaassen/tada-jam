@@ -137,8 +137,9 @@ describe('the ending', () => {
       litBefore = lit
     })
     expect(frames).toBeGreaterThan(SCENE_SECONDS.ending * 30)
-    // Nothing flies about and nothing points: no crumbs, no glint, no hand and no shot.
-    expect([...kinds].sort()).toEqual(['drop', 'dusk', 'effect', 'sprite', 'thing'])
+    // Nothing flies about and nothing points: no crumbs, no glint, no hand and no shot; and no mark on a floor,
+    // since no lump of the fort gave.
+    expect([...kinds].sort()).toEqual(['drop', 'dusk', 'sprite', 'thing'])
     expect(Object.keys(DRAWS)).toContain('dusk')
     expect(litBefore).toBe(rooms)
     expect(dusk).toBe(1)

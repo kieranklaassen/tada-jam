@@ -1,5 +1,5 @@
 import { asSaved } from './build'
-import { MOUTH, OPEN, STONE, at, clone, put, type Ground, type Kind, type Lump } from './ground'
+import { MOUTH, OPEN, STONE, at, clone, isLump, put, type Ground, type Kind, type Lump } from './ground'
 import { HABITS, type InvaderKind, type Shot } from './habits'
 import { LUMP_OF, RELOAD, SHOT_OF, arrivalPlace, canStand, cellsOf, machineAt, shotPath, restPlace } from './machines'
 import { after, judge, owed, partyAt, type MachineKind, type Party, type Verdict } from './order'
@@ -644,7 +644,9 @@ export class Kingdom {
     this.game.muster = next.muster
     this.game.ended = next.ended
     this.endingOwed = next.ended && !wasEnded
-    this.marks = [...raid.gave]
+    // The place that gave: each cell where the child had built a lump that the raid shoved away or let fall, the
+    // first that gave first. Earth a ball dug, a floor a stone rolled over and a cell a lump came to lie in are not it.
+    this.marks = [...raid.gave].filter((cell) => isLump(this.game.ground.cells[cell] as Kind) && raid.ground.cells[cell] !== this.game.ground.cells[cell])
     const built = this.game.ground, cols = built.cols
     const cells: number[] = []
     for (let i = 0; i < built.cells.length; i++) if (built.cells[i] !== raid.ground.cells[i]) cells.push(i)
