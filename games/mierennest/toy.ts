@@ -54,6 +54,8 @@ export class Toy {
   antState: AntState = 'idle'
   /** What follows from the ground and is never stored. Worked out again each time the ground comes to rest. */
   realm: ReturnType<typeof kingdom>
+  /** Raised whenever a cell of the ground changes: what is worked out from the ground alone can be kept until it is. */
+  groundStamp = 0
 
   private events: ToyEvent[] = []
   private dirty: number[] = []
@@ -119,6 +121,7 @@ export class Toy {
     this.unsaved = true
     this.resting = false
     this.way = null
+    this.groundStamp++
   }
 
   private bite(fromX: number, fromY: number, toX: number, toY: number): boolean {
@@ -287,6 +290,7 @@ export class Toy {
     this.dirty.push(...moves)
     this.unsaved = true
     this.way = null
+    this.groundStamp++
   }
 
   /** The cell the ant makes for: where the finger is if its open way reaches there, else the nearest cell of its way. */

@@ -7,7 +7,7 @@ import type { Party } from '../order'
 import { gaitOf, type Raid, type RaidEvent } from '../raid'
 import { roomOf } from '../routes'
 import type { Machine } from '../save'
-import { QUEEN_HALF, WEDGED, demoDrag, floorOf, queenSeat, workerSpots } from '../residents'
+import { QUEEN_HALF, WEDGED, demoDrag, floorOf, queenSeat, workerSpots, type Floor, type Standing } from '../residents'
 import { below, makeRng, type Rng } from '../rng'
 import type { Toy, ToyEvent } from '../toy'
 import { GRASS_Y, GROUND, MOUTH_X, TOADSTOOL } from './layout'
@@ -514,6 +514,23 @@ export class ToyDisplay {
     return { x: stands, flip: ant !== null ? stands < ant : flip }
   }
 
+  /**
+   * What follows from the nest's ground and the kingdom alone: the floor of each chamber, the queen's seat, where the
+   * workers stand apart and huddled, and the things on the walls for the glow-worms that are lit. All are kept from
+   * frame to frame and worked out again when a cell of the ground changes or the kingdom is another one.
+   */
+  private roomsNow(): NonNullable<ToyDisplay['kept']> {
+    const toy = this.toy, realm = toy.realm, kept = this.kept
+    if (kept && kept.stamp === toy.groundStamp && kept.realm === realm) return kept
+    const ground = toy.game.ground, floors = realm.chambers.map((room) => floorOf(ground, room))
+    return (this.kept = { stamp: toy.groundStamp, realm, floors, throne: queenSeat(ground, realm.chambers, realm.queenRoom, floors), apart: null, huddled: null, things: null, lit: 0, open: false })
+  }
+  private kept: {
+    stamp: number; realm: Toy['realm']; floors: Floor[]; throne: ReturnType<typeof queenSeat>
+    apart: Standing[] | null; huddled: Standing[] | null
+    things: ReturnType<typeof showFurnishings> | null; lit: number; open: boolean
+  } | null = null
+
   /** One of a raid as an item: one who stands and waits fidgets as its kind does at the camp. */
   private shown(one: Shown, slot: number): Item {
     // One of the party who sits at the log answers a poke as it does before the raid: it is the same camper.
@@ -597,16 +614,20 @@ export class ToyDisplay {
       list.push({ is: 'sprite', id: shownOut ?? '', who: showing.who, pose: habitPose(scene.kind, scene.t / scene.length, scene.t), x: at.x, y: at.y, flip: false, size: at.size, tall: 1, move: hop, turn: 0 })
     }
     // The things on the back wall of the rooms, and the marks where a wall gave, lie behind everyone.
-    // The floor of each chamber is found once a frame, for her seat, the workers' places and the things on the walls.
-    const realm = toy.realm
-    const floors = realm.chambers.map((room) => floorOf(ground, room))
-    const throne = queenSeat(ground, realm.chambers, realm.queenRoom, floors)
+    // The floor of each chamber, her seat, the workers' places and the things on the walls follow from the ground
+    // alone, and are kept from frame to frame until it changes.
+    const realm = toy.realm, rooms = this.roomsNow(), floors = rooms.floors, throne = rooms.throne
     const queenSpan = throne && realm.queenRoom !== null ? { room: realm.queenRoom, from: throne.x - QUEEN_HALF * throne.fit, to: throne.x + QUEEN_HALF * throne.fit } : null
     // Once the kingdom is open a glow-worm is lit in every chamber; in the ending they are lit one by one, nearest the mouth first.
-    const rooms = realm.chambers.length
+    const chambers = realm.chambers.length
     const open = k.game.ended && !k.awaitsEnding
-    const lit = !open ? 0 : ending ? Math.max(0, Math.min(rooms, Math.ceil(((ending.t - ENDING.lightFrom) / (ENDING.lightTo - ENDING.lightFrom)) * rooms))) : rooms
-    for (const thing of showFurnishings(ground, realm.chambers, lit, queenSpan, open, floors)) list.push({ is: 'thing', thing: thing.thing, x: thing.x, y: thing.y, lit: thing.lit })
+    const lit = !open ? 0 : ending ? Math.max(0, Math.min(chambers, Math.ceil(((ending.t - ENDING.lightFrom) / (ENDING.lightTo - ENDING.lightFrom)) * chambers))) : chambers
+    if (!rooms.things || rooms.lit !== lit || rooms.open !== open) {
+      rooms.things = showFurnishings(ground, realm.chambers, lit, queenSpan, open, floors)
+      rooms.lit = lit
+      rooms.open = open
+    }
+    for (const thing of rooms.things) list.push({ is: 'thing', thing: thing.thing, x: thing.x, y: thing.y, lit: thing.lit })
     // The dung fly's leaf, hung on a stalk at the camp, once the ending is over.
     if (open && !ending) list.push({ is: 'thing', thing: 'leaf', x: LEAF_AT.x, y: LEAF_AT.y, lit: false })
     // A mark lies on a floor: under each cell that gave which has something firm beneath it.
@@ -617,7 +638,8 @@ export class ToyDisplay {
     // her room: they are drawn before her then, and look out from either side of her.
     const huddled = k.raid !== null
     const workers = () => {
-      workerSpots(ground, realm.chambers, realm.queenRoom, realm.workers, huddled, floors).forEach((spot, n) => {
+      const spots = huddled ? (rooms.huddled ??= workerSpots(ground, realm.chambers, realm.queenRoom, realm.workers, true, floors)) : (rooms.apart ??= workerSpots(ground, realm.chambers, realm.queenRoom, realm.workers, false, floors))
+      spots.forEach((spot, n) => {
         const stands = this.makeWay(spot.x, BODY.worker.width / 2 / CELL, spot.y, 1, faceRadius('worker'), n % 2 === 1)
         const p = toStage(stands.x, spot.y + 1)
         const move = this.moveOf(`worker${n}`, 'worker', (n * 0.37) % 1, slot++)

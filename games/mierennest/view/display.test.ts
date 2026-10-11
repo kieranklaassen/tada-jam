@@ -4,13 +4,13 @@ import { LADDER } from '../config'
 import { CELL, EARTH, MOUTH, OPEN, STONE, at, put, settle } from '../ground'
 import type { Guidance } from '../guidance'
 import { ROUND } from '../order'
-import { workerSpots } from '../residents'
+import { queenSeat, workerSpots } from '../residents'
 import { freshGame, type Game } from '../save'
 import { Kingdom } from '../kingdom'
 import { DRAWS, LADDER_BEAT, LADDER_SWAY, MOST_CRUMBS, QUEEN_WEDGED, ROOTS_SWING, SHOWING_AT, SPOIL_TROT, ToyDisplay, drawsOf, type Item } from './display'
 import { GRASS_Y, GROUND, MOUTH_X } from './layout'
 import { BELL } from './props'
-import { covers, shownFace } from './raidShow'
+import { covers, showFurnishings, shownFace } from './raidShow'
 
 /** The most draws a frame may make. */
 const DRAW_BUDGET = 80
@@ -57,6 +57,39 @@ describe('a frame of the toy', () => {
     // Six campers (the scout at the log is the raider ant, so its puddle is empty), the queen, the worker on the hill and the ant.
     expect(items.filter((item) => item.is === 'sprite').length).toBe(6 + 3)
     expect(items[0].is).toBe('drop')
+  })
+
+  it('shows the rooms as the ground lies at every frame, though what follows from the ground is kept between frames', () => {
+    const k = new Kingdom(crowded()), display = new ToyDisplay(k, 1)
+    const hung = (items: Item[]) => items.flatMap((item) => (item.is === 'thing' ? [[item.thing, item.x, item.y, item.lit]] : []))
+    // Worked out afresh from the ground as it lies now, with nothing kept.
+    const afresh = () => {
+      const g = k.game.ground, realm = k.toy.realm, throne = queenSeat(g, realm.chambers, realm.queenRoom)
+      const span = throne && realm.queenRoom !== null ? { room: realm.queenRoom, from: throne.x - 2.2 * throne.fit, to: throne.x + 2.2 * throne.fit } : null
+      return { things: showFurnishings(g, realm.chambers, 0, span, false).map((thing) => [thing.thing, thing.x, thing.y, thing.lit]), workers: workerSpots(g, realm.chambers, realm.queenRoom, realm.workers).length }
+    }
+    let t = 0, changes = 0, last = ''
+    for (let n = 0; n < 160; n++) {
+      // Strokes all over the nest, many of them through the floor of a room, and four frames after each.
+      const x = ((n * 7.3) % 37) + 1.5, y = 4.5 + ((n * 3.7) % 13)
+      k.press(x, y, t)
+      k.drag((x + 2 + (n % 5)) % 38, 4.5 + ((y + (n % 3)) % 13), (t += 0.1))
+      k.release()
+      for (let f = 0; f < 4; f++) {
+        k.step(1 / 30)
+        display.see(k.toy.drainEvents())
+        display.advance(1 / 30)
+        const items = display.items(null), now = afresh()
+        expect(hung(items), `stroke ${n}, frame ${f}`).toEqual(now.things)
+        expect(sprites(items, 'worker').length, `stroke ${n}, frame ${f}`).toBeGreaterThanOrEqual(now.workers)
+        const told = JSON.stringify(now)
+        if (told !== last) changes++
+        last = told
+      }
+      t += 0.3
+    }
+    // The rooms did change under the display, many times.
+    expect(changes).toBeGreaterThan(10)
   })
 
   it('stays under the draw budget at its fullest: a full kingdom, a lump in the jaws, crumbs of every colour and the hand', () => {
