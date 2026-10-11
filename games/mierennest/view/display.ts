@@ -72,6 +72,8 @@ export const ROOTS_SWING = { seconds: 1.4, near: 3 } as const
 /** How deep, in cells, a mouthful is still felt at the camp above it; and how long the ant looks at its work when the finger lets go. */
 export const FELT_DEPTH = 3.5
 export const LOOK_SECONDS = 1.2
+/** How long after the finger has lifted the kingdom's own still keep out of the cell it pressed, in seconds. */
+export const ASIDE_SECONDS = 0.5
 /** What each kind does when the bell rang for nothing. */
 const SHRUG: Partial<Record<Mover, string>> = { raider: 'shrug', beetle: 'sit', fly: 'peer', dungBeetle: 'lost', dungFly: 'arms' }
 /**
@@ -170,6 +172,9 @@ export class ToyDisplay {
   private readonly poked = new Map<string, { at: number; count: number }>()
   /** Whom the finger pressed, and when: that one acts out its own habit for a while. The bell and a falling stone startle; they ask for nothing. */
   private readonly asked = new Map<string, number>()
+  /** The cell under the finger, and until when the kingdom's own keep out of it: while it is down and a moment after. */
+  private asideCell: { x: number; y: number } | null = null
+  private asideUntil = -1
   private sway = 0
   private swing = 0
   private carriedAt: { x: number; y: number } | null = null
@@ -331,6 +336,10 @@ export class ToyDisplay {
     this.sway += this.swing * dt
     // When the finger lets go the ant sits back and looks at what it made, for a moment.
     const down = this.toy.finger !== null
+    if (this.toy.finger) {
+      this.asideCell = { x: Math.floor(this.toy.finger.x), y: Math.floor(this.toy.finger.y) }
+      this.asideUntil = this.seconds + ASIDE_SECONDS
+    }
     if (this.wasDown && !down) this.lookUntil = this.seconds + LOOK_SECONDS
     this.wasDown = down
     const carried = this.toy.carried
@@ -448,6 +457,12 @@ export class ToyDisplay {
     return toStage(this.toy.antAt.x, this.toy.antAt.y + 0.5)
   }
 
+  /** The child's ant as a body on the stage, standing along its floor. */
+  private antBox(): { left: number; right: number; top: number; bottom: number } {
+    const feet = this.antFeet()
+    return { left: feet.x - BODY.ant.width / 2, right: feet.x + BODY.ant.width / 2, top: feet.y - BODY.ant.height, bottom: feet.y }
+  }
+
   /** Where the carried lump rides: by its kind. */
   private jaws(): { x: number; y: number } {
     const feet = this.antFeet(), rides = RIDES[this.toy.carried?.kind ?? -1] ?? JAWS
@@ -470,6 +485,37 @@ export class ToyDisplay {
     const at = this.asked.get(id), kind = HABIT_OF[who]
     if (at === undefined || kind === undefined || this.seconds - at >= HABIT_SECONDS) return null
     return habitPose(kind, (this.seconds - at) / HABIT_SECONDS, this.seconds - at)
+  }
+
+  /**
+   * Where one of the kingdom's own stands this frame, and which way it faces: where it lives, unless it has to make
+   * way. It steps aside from the cell under the finger, which is always that cell's and never its own, and from the
+   * child's ant, turning its face away from it, so that its face is never under the ant. It stays on its own floor:
+   * where the floor has no room to make way, it stays where it is. `x` is the middle of its feet in cell units,
+   * `half` half its width in cells, `y` the row of its floor, `high` how many rows it stands in, and `radius` that
+   * of its face in stage units.
+   */
+  private makeWay(x: number, half: number, y: number, high: number, radius: number, flip: boolean): { x: number; flip: boolean } {
+    const ground = this.shownGround, toy = this.toy
+    const pressed = this.asideCell && this.seconds < this.asideUntil && this.asideCell.y <= y && this.asideCell.y > y - high ? this.asideCell : null
+    const ant = Math.floor(toy.antAt.y) === y ? toy.antAt.x : null
+    // The least its middle may be from the ant's for its face to be clear of the ant's body, facing away.
+    const apart = ant === null ? 0 : (BODY.ant.width / 2 + radius + 2 - (half * CELL - radius - 2)) / CELL
+    const fits = (at: number) => (!pressed || at + half <= pressed.x || at - half >= pressed.x + 1) && (ant === null || Math.abs(at - ant) >= apart)
+    if (fits(x)) return { x, flip: ant !== null && Math.abs(x - ant) < half + BODY.ant.width / 2 / CELL ? x < ant : flip }
+    // The floor it stands on, from end to end.
+    let from = Math.floor(x), to = Math.floor(x)
+    const floor = (cx: number) => at(ground, cx, y) === OPEN && at(ground, cx, y + 1) !== OPEN
+    while (floor(from - 1)) from--
+    while (floor(to + 1)) to++
+    let best: number | null = null
+    const tries = [pressed ? pressed.x - half - 0.05 : x, pressed ? pressed.x + 1 + half + 0.05 : x, ant !== null ? ant - apart - 0.05 : x, ant !== null ? ant + apart + 0.05 : x, from + half, to + 1 - half]
+    for (const at of tries) {
+      if (at - half < from - 1e-6 || at + half > to + 1 + 1e-6 || !fits(at)) continue
+      if (best === null || Math.abs(at - x) < Math.abs(best - x)) best = at
+    }
+    const stands = best ?? x
+    return { x: stands, flip: ant !== null ? stands < ant : flip }
   }
 
   /** One of a raid as an item: one who stands and waits fidgets as its kind does at the camp. */
@@ -538,10 +584,12 @@ export class ToyDisplay {
       }
       list.push({ is: 'sprite', id: camper.id, who: camper.kind, pose, x, y, flip: camper.flip, size: camper.size ?? 1, tall: 1, move, turn: 0 })
     }
+    // The child's ant is drawn after everyone of a raid: one whose face it would lie over ducks.
+    const antOver = [this.antBox()]
     if (raided && !k.raid && scene?.is === 'putBack') {
       // Those who got home by themselves sit in the file; the others are carried out.
       const home = showRaid(raided, this.raidParty, this.seconds).filter((one) => one.id >= 0 && raided.invaders[one.id].state === 'home')
-      for (const one of [...home, ...showCarriedOut(scene, raided, this.raidParty)]) list.push(this.shown(one, slot++))
+      for (const one of [...home, ...showCarriedOut(scene, raided, this.raidParty, antOver)]) list.push(this.shown(one, slot++))
     }
     if (scene?.is === 'showing' && showing) {
       // The kind is caught out by its own habit at the front of the camp, once, large, where what catches it out is.
@@ -571,9 +619,10 @@ export class ToyDisplay {
     const huddled = k.raid !== null
     const workers = () => {
       workerSpots(ground, realm.chambers, realm.queenRoom, realm.workers, huddled).forEach((spot, n) => {
-        const p = toStage(spot.x, spot.y + 1)
+        const stands = this.makeWay(spot.x, BODY.worker.width / 2 / CELL, spot.y, 1, Math.min(18, BODY.worker.height * 0.45), n % 2 === 1)
+        const p = toStage(stands.x, spot.y + 1)
         const move = this.moveOf(`worker${n}`, 'worker', (n * 0.37) % 1, slot++)
-        list.push({ is: 'sprite', id: '', who: 'worker', pose: move.second ? 'walk2' : 'walk', x: p.x, y: p.y, flip: n % 2 === 1, size: 1, tall: 1, move, turn: 0 })
+        list.push({ is: 'sprite', id: '', who: 'worker', pose: move.second ? 'walk2' : 'walk', x: p.x, y: p.y, flip: stands.flip, size: 1, tall: 1, move, turn: 0 })
       })
     }
     if (huddled) workers()
@@ -601,7 +650,8 @@ export class ToyDisplay {
         list.push({ is: 'sprite', id: 'queen', who: 'queen', pose: tries < ends.length - 1 ? 'sit2' : 'sit', x: ends[tries].x, y: ends[tries].y, flip: false, size: seat.fit, tall: 1, move: queenMove, turn: 0 })
       }
     } else if (seat) {
-      const p = toStage(seat.x, seat.y + 1)
+      const stands = this.makeWay(seat.x, (BODY.queen.width / 2 / CELL) * seat.fit, seat.y, Math.ceil((BODY.queen.height * seat.fit) / CELL), Math.min(18, BODY.queen.height * 0.45) * seat.fit, false)
+      const p = toStage(stands.x, seat.y + 1)
       // In the ending she puts her egg down at last.
       const down = ending !== null && ending.t >= ENDING.egg
       // She dislikes guests: one that does its act in her room gets her whole opinion, eyebrows first, for as long as it is at it.
@@ -610,7 +660,7 @@ export class ToyDisplay {
       if (guest && raid) {
         const at = invaderAt(guest, cols)
         list.push({ is: 'sprite', id: 'queen', who: 'queen', pose: Math.floor(this.seconds * 3) % 2 === 0 ? 'glare' : 'glare2', x: p.x, y: p.y, flip: at.x < p.x, size: seat.fit, tall: 1, move: null, turn: 0 })
-      } else list.push({ is: 'sprite', id: 'queen', who: 'queen', pose: down ? (queenMove.second ? 'eggDown2' : 'eggDown') : queenMove.second ? 'sit2' : 'sit', x: p.x, y: p.y, flip: false, size: seat.fit, tall: 1, move: queenMove, turn: 0 })
+      } else list.push({ is: 'sprite', id: 'queen', who: 'queen', pose: down ? (queenMove.second ? 'eggDown2' : 'eggDown') : queenMove.second ? 'sit2' : 'sit', x: p.x, y: p.y, flip: stands.flip, size: seat.fit, tall: 1, move: queenMove, turn: 0 })
     } else {
       const p = toStage(WEDGED.x, WEDGED.y + 1)
       list.push({ is: 'sprite', id: 'queen', who: 'queen', pose: queenMove.second ? 'wedged2' : 'wedged', x: p.x, y: p.y, flip: false, size: QUEEN_WEDGED.size, tall: QUEEN_WEDGED.tall, move: queenMove, turn: 0 })
@@ -648,7 +698,7 @@ export class ToyDisplay {
       }
       list.push({ is: 'machine', kind: shown.kind, load: shown.load, pose: shown.pose, x: shown.x, y: shown.y, flip: shown.flip })
     })
-    if (k.raid) for (const one of showRaid(k.raid, this.raidParty, this.seconds)) list.push(this.shown(one, slot++))
+    if (k.raid) for (const one of showRaid(k.raid, this.raidParty, this.seconds, antOver)) list.push(this.shown(one, slot++))
     // The worker who carries the spoil stands on the hill, as high as the hill is.
     const hump = hillShape(this.hill).right
     const spoilMove = this.moveOf('spoil', 'worker', 0.6, slot++)

@@ -227,29 +227,35 @@ export function covers(box: { left: number; right: number; top: number; bottom: 
  * Whoever is drawn later lies over whoever is drawn earlier. One whose face would lie under another ducks: it
  * hides its face in its own way until the other has gone by, so that no face is ever under anybody.
  */
-function duckUnder(list: Shown[]): void {
+function duckUnder(list: Shown[], over: readonly Box[] = []): void {
   for (let n = 0; n < list.length; n++) {
     const one = list[n], duck = DUCKS[one.who]
     if (!duck || one.y <= GRASS_Y) continue
     const face = shownFace(one)
     if (!face) continue
-    for (let m = n + 1; m < list.length; m++) {
-      if (list[m].id === one.id || list[m].y <= GRASS_Y) continue
-      if (covers(shownBox(list[m]), face)) {
-        one.pose = duck
-        one.idle = false
-        break
-      }
+    let covered = over.some((box) => covers(box, face))
+    for (let m = n + 1; m < list.length && !covered; m++) {
+      // Its own ball, drawn with it, is not somebody else; the worker that hauls it is.
+      if ((list[m].id === one.id && list[m].who !== 'worker') || list[m].y <= GRASS_Y) continue
+      covered = covers(shownBox(list[m]), face)
+    }
+    if (covered) {
+      one.pose = duck
+      one.idle = false
     }
   }
 }
 
+/** A body on the stage that is drawn after the raid's own: the child's ant. */
+export type Box = { left: number; right: number; top: number; bottom: number }
+
 /**
  * Everyone of a raid, as they are shown, in the order they are drawn. One still at the log sits in its place
  * there; the next to come in walks to the mouth and waits there, in view, until it can; one in the nest is where
- * the raid has it; one that is home sits at the log again. A dung beetle's ball is shown with it.
+ * the raid has it; one that is home sits at the log again. A dung beetle's ball is shown with it. `over` is what is
+ * drawn after them all, the child's ant: one whose face it would cover ducks.
  */
-export function showRaid(raid: Raid, party: Party, seconds: number): Shown[] {
+export function showRaid(raid: Raid, party: Party, seconds: number, over: readonly Box[] = []): Shown[] {
   const ground = raid.ground, cols = ground.cols, file = partyFile(party)
   const out: Shown[] = []
   // The balls that were left where they lay.
@@ -325,7 +331,7 @@ export function showRaid(raid: Raid, party: Party, seconds: number): Shown[] {
     const goingUp = narrow || Math.floor(headedFor(invader) / cols) < Math.floor(invader.cell / cols)
     out.push({ who, pose, x: at.x, y: at.y, flip: invader.facing < 0, turn: upright ? (goingUp ? -1 : 1) * (invader.facing < 0 ? -1 : 1) * (Math.PI / 2) : 0, size: 1, id: invader.id, idle: invader.state === 'waiting' })
   })
-  duckUnder(out)
+  duckUnder(out, over)
   return out
 }
 
@@ -349,10 +355,24 @@ function alongWay(way: readonly { x: number; y: number }[], share: number): { x:
  * Those the workers carry out when a raid is over, and the balls that were left: each goes out the way it came
  * in, through the open and not through the earth, back along its own trail to the mouth, and then to the log.
  */
-export function showCarriedOut(scene: Extract<Scene, { is: 'putBack' }>, raid: Raid, party: Party): Shown[] {
+export function showCarriedOut(scene: Extract<Scene, { is: 'putBack' }>, raid: Raid, party: Party, over: readonly Box[] = []): Shown[] {
   const cols = raid.ground.cols, file = partyFile(party), p = Math.min(1, scene.t / scene.length)
   const out: Shown[] = []
-  const a = Math.min(1, p / 0.6), b = Math.min(1, Math.max(0, (p - 0.6) / 0.4))
+  const all = Math.min(1, p / 0.6), b = Math.min(1, Math.max(0, (p - 0.6) / 0.4))
+  // They leave one after another, the one with the shortest way out first, so that they do not go up in one heap.
+  const ways = new Map<number, { x: number; y: number }[]>()
+  for (const id of scene.held) {
+    const invader = raid.invaders[id]
+    if (!invader || !file[id] || invader.cell < 0) continue
+    const way = [invaderAt(invader, cols)]
+    for (let n = invader.trail.length - 1; n >= 0; n--) way.push(feetAt(invader.kind, invader.trail[n], cols))
+    way.push(MOUTH_STEP)
+    ways.set(id, way)
+  }
+  const lengthOf = (way: readonly { x: number; y: number }[]) => way.reduce((sum, point, n) => (n === 0 ? 0 : sum + Math.hypot(point.x - way[n - 1].x, point.y - way[n - 1].y)), 0)
+  const order = [...ways.keys()].sort((one, other) => lengthOf(ways.get(one)!) - lengthOf(ways.get(other)!) || one - other)
+  const lag = order.length > 1 ? 0.5 / order.length : 0
+  const a = all
   for (const ball of raid.balls) {
     if (ball.cell < 0 || b > 0) continue
     const way = [toStage((ball.cell % cols) + 0.5, Math.floor(ball.cell / cols) + 1)]
@@ -364,7 +384,7 @@ export function showCarriedOut(scene: Extract<Scene, { is: 'putBack' }>, raid: R
   for (const id of scene.held) {
     const invader = raid.invaders[id], seat = file[id]
     if (!invader || !seat || invader.cell < 0) continue
-    const from = invaderAt(invader, cols), who = PLAYED_BY[invader.kind]
+    const who = PLAYED_BY[invader.kind]
     if (invader.left > 0) out.push({ who: 'dungBall', pose: 'plain', x: seat.x, y: GRASS_Y, flip: false, turn: 0, size: (seat.size ?? 1) * ballSize(invader.left), id, idle: false })
     const pose = invader.kind === 'ant' ? (invader.lastShot === 'mud' ? 'balled' : 'stuck') : invader.kind === 'beetle' || invader.kind === 'dungBeetle' ? 'sit' : invader.kind === 'dungFly' ? 'down' : 'bump'
     const size = seat.size ?? 1
@@ -372,18 +392,19 @@ export function showCarriedOut(scene: Extract<Scene, { is: 'putBack' }>, raid: R
       out.push({ who, pose, x: MOUTH_STEP.x + (seat.x - MOUTH_STEP.x) * b, y: GRASS_Y + (seat.y - GRASS_Y) * b, flip: false, turn: 0, size: 1 + (size - 1) * b, id, idle: false })
       continue
     }
-    const way = [from]
-    for (let n = invader.trail.length - 1; n >= 0; n--) way.push(feetAt(invader.kind, invader.trail[n], cols))
-    way.push(MOUTH_STEP)
-    const at = alongWay(way, a)
+    const way = ways.get(id)!, turn = order.indexOf(id)
+    const mine = Math.min(1, Math.max(0, (all - turn * lag) / (1 - (order.length - 1) * lag)))
+    const at = alongWay(way, mine)
     if (invader.ball > 0) out.push({ who: 'dungBall', pose: invader.ball > 3 ? 'sandy' : 'plain', x: at.x, y: at.y, flip: false, turn: (at.x + at.y) / (BALL_HALF * ballSize(invader.ball)), size: ballSize(invader.ball), id, idle: false })
     out.push({ who, pose, x: at.x, y: invader.ball > 0 ? at.y - (BODY.dungBall.height - 4) * ballSize(invader.ball) : at.y, flip: false, turn: 0, size: 1, id, idle: false })
-    // A worker hauls it: one of the kingdom's own goes a little ahead of it on its way, tugging, as far as the mouth.
-    let far = 0
-    for (let n = 1; n < way.length; n++) far += Math.hypot(way[n].x - way[n - 1].x, way[n].y - way[n - 1].y)
-    const lead = alongWay(way, Math.min(1, a + (BODY[who].width / 2 + 18) / Math.max(1, far)))
-    out.push({ who: 'worker', pose: Math.floor(scene.t * 8) % 2 === 0 ? 'carry' : 'walk2', x: lead.x, y: lead.y, flip: lead.x < at.x, turn: 0, size: 1, id: -1, idle: false })
+    // A worker hauls it: one of the kingdom's own goes ahead of it on its way, tugging, as far as the mouth, a
+    // body clear of it so that it never stands in front of its face. It comes for it when its turn has come.
+    if (all < turn * lag) continue
+    const lead = alongWay(way, Math.min(1, mine + (BODY[who].width / 2 + BODY.worker.width / 2 + 8) / Math.max(1, lengthOf(way))))
+    out.push({ who: 'worker', pose: Math.floor(scene.t * 8) % 2 === 0 ? 'carry' : 'walk2', x: lead.x, y: lead.y, flip: lead.x < at.x, turn: 0, size: 1, id, idle: false })
   }
+  // One who is passed by another on its way out ducks until it has gone by.
+  duckUnder(out, over)
   return out
 }
 

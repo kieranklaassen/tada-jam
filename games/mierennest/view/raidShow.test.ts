@@ -290,6 +290,39 @@ describe('who is where in a raid', () => {
     expect(ducking / ticks).toBeLessThan(0.35)
   })
 
+  it('at no moment of the put-back lies the face of one who is carried out under anybody: one who is passed ducks, and no worker hauls from in front of a face', () => {
+    let looked = 0, ducked = 0
+    for (const place of ['full-camp', 'ants-and-beetles', 'great-raid'] as const) {
+      const game = nestOf(1), party = partyAt(place, 0)
+      const raid = playOut(callRaid(game.ground, party))
+      const held = raid.invaders.filter((invader) => invader.state !== 'home').map((invader) => invader.id)
+      expect(held.length, place).toBeGreaterThan(2)
+      const scene = { is: 'putBack' as const, t: 0, length: 8, cells: [], ground: raid.ground, held }
+      for (let n = 0; n <= 240; n++) {
+        scene.t = (8 * n) / 240
+        const shown = showCarriedOut(scene, raid, party)
+        shown.forEach((one, at) => {
+          if (one.who === 'dungBall' || one.who === 'worker' || one.y <= GRASS_Y) return
+          looked++
+          const face = shownFace(one)
+          if (!face) {
+            expect(one.pose).toBe(DUCKS[one.who])
+            ducked++
+            return
+          }
+          for (let m = at + 1; m < shown.length; m++) {
+            if (shown[m].id === one.id && shown[m].who !== 'worker') continue
+            if (shown[m].y <= GRASS_Y) continue
+            expect(covers(shownBox(shown[m]), face), `${place} at ${scene.t.toFixed(2)}: ${shown[m].who} over ${one.who} ${one.id}`).toBe(false)
+          }
+        })
+      }
+    }
+    expect(looked).toBeGreaterThan(1000)
+    // They do not all leave in one heap: fewer than half of those looks are a duck.
+    expect(ducked / looked).toBeLessThan(0.5)
+  })
+
   it('gives one who waits at a door the fidget of its kind at the camp', () => {
     // One chamber, so that the second ant has a door to wait at while the first is at its act.
     const game = freshGame(null, 1), party = ['ant', 'beetle', 'fly'] as const
