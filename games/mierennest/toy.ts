@@ -116,6 +116,28 @@ export class Toy {
     this.meeting = answer.met
   }
 
+  /** Cells of the ground that something other than the finger changed (a machine's lump, a load taken): they are repainted, saved and let come to rest. */
+  touched(cells: readonly number[]): void {
+    this.changed(cells)
+  }
+
+  /**
+   * The finger lands on the ground and only points: nothing is bitten and nothing is taken. The ant runs to the
+   * place to look, and a lump under the finger answers as it does when the dig meets it. This is every touch on
+   * the ground while a raid runs.
+   */
+  point(x: number, y: number, t: number): void {
+    if (!this.inGround(x, y)) return
+    this.finger = { x, y }
+    this.going = null
+    this.lastFinger = { x, y, t }
+    this.speed = 0
+    this.meeting = []
+    this.idle = true
+    const kind = at(this.game.ground, Math.floor(x), Math.floor(y))
+    if (isLump(kind)) this.events.push({ type: 'met', kind, x, y })
+  }
+
   /** The finger lands on the ground. On a lump it bites nothing: the ant takes the lump if it can reach it. Anywhere else is a mouthful. */
   press(x: number, y: number, t: number): void {
     if (!this.inGround(x, y)) return

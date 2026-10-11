@@ -60,7 +60,7 @@ export function arrivalPlace(ground: Ground, machines: readonly Machine[]): { x:
 
 /**
  * The cells a shot passes, in order, from the machine to the last open cell before something stops it. The
- * cannon fires level along its upper row; the catapult lobs in an arc, up three cells and six along, and on down.
+ * cannon fires level along the floor it stands on, where a raider ant walks; the catapult lobs in an arc, up three cells and six along, and on down.
  * A low roof stops a lob short. An empty list means the shot has nowhere to go.
  */
 export function shotPath(ground: Ground, machine: Machine): number[] {
@@ -77,7 +77,7 @@ export function shotPath(ground: Ground, machine: Machine): number[] {
   }
   if (machine.kind === 'cannon') {
     const reach = machine.load === 'sand' ? SAND_CARRIES : cols
-    for (let n = 0, x = machine.facing > 0 ? machine.x + 2 : machine.x - 1; n < reach; n++, x += machine.facing) if (!take(x, machine.y - 1)) break
+    for (let n = 0, x = machine.facing > 0 ? machine.x + 2 : machine.x - 1; n < reach; n++, x += machine.facing) if (!take(x, machine.y)) break
     return path
   }
   // The cup lets go over the middle of the machine, at the height of its top.

@@ -47,10 +47,10 @@ describe('where a machine stands', () => {
 })
 
 describe('a shot', () => {
-  it('from the cannon goes level along its upper row as far as the way is open', () => {
+  it('from the cannon goes level along the floor it stands on as far as the way is open', () => {
     const ground = fromPicture(hall)
-    expect(xy(shotPath(ground, machine('cannon', 2, 5)))).toEqual([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].map((x) => [x, 4]))
-    expect(xy(shotPath(ground, machine('cannon', 8, 5, -1)))).toEqual([7, 6, 5, 4, 3, 2, 1].map((x) => [x, 4]))
+    expect(xy(shotPath(ground, machine('cannon', 2, 5)))).toEqual([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].map((x) => [x, 5]))
+    expect(xy(shotPath(ground, machine('cannon', 8, 5, -1)))).toEqual([7, 6, 5, 4, 3, 2, 1].map((x) => [x, 5]))
   })
 
   it('of sand from the cannon is short', () => {
@@ -59,9 +59,9 @@ describe('a shot', () => {
 
   it('from the cannon stops at the first thing in its way', () => {
     const picture = hall.slice()
-    picture[4] = '#......o.......#'
-    expect(xy(shotPath(fromPicture(picture), machine('cannon', 2, 5)))).toEqual([[4, 4], [5, 4], [6, 4]])
-    picture[4] = '#...o..........#'
+    picture[5] = '#......o.......#'
+    expect(xy(shotPath(fromPicture(picture), machine('cannon', 2, 5)))).toEqual([[4, 5], [5, 5], [6, 5]])
+    picture[5] = '#...o..........#'
     expect(shotPath(fromPicture(picture), machine('cannon', 2, 5))).toEqual([])
   })
 
@@ -104,7 +104,7 @@ describe('firing in the nest', () => {
     expect(cannon.load).toBeNull()
     settle(ground)
     expect(count(ground, MUD)).toBe(1)
-    expect(at(ground, 14, 4)).toBe(MUD)
+    expect(at(ground, 14, 5)).toBe(MUD)
     expect(fireInNest(ground, cannon)).toBeNull()
   })
 
@@ -122,11 +122,11 @@ describe('firing in the nest', () => {
 
   it('changes nothing where the shot has nowhere to go', () => {
     const picture = hall.slice()
-    picture[4] = '#...o..........#'
+    picture[5] = '#...o..........#'
     const ground = fromPicture(picture)
     const cannon = machine('cannon', 2, 5, 1, 'stone')
     expect(fireInNest(ground, cannon)).toBeNull()
     expect(cannon.load).toBe('stone')
-    expect(at(ground, 5, 4)).toBe(OPEN)
+    expect(at(ground, 5, 5)).toBe(OPEN)
   })
 })
