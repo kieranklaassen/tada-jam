@@ -212,6 +212,17 @@ describe('the ant', () => {
     expect(Math.abs(toy.antAt.x - 0.5) + Math.abs(toy.antAt.y - 3.5)).toBeLessThan(0.01)
   })
 
+  it('still comes to where the finger was after a tap, and then sits idle', () => {
+    const toy = new Toy(gameOn(['XXXXXXXX', '........', '.######.', '........', 'XXXXXXXX'], [0, 1]))
+    toy.press(6.5, 3.5, 0)
+    toy.release()
+    toy.step(1 / 60)
+    expect(toy.antState).toBe('run')
+    play(toy, 3)
+    expect(toy.game.ant).toEqual({ x: 6, y: 3 })
+    expect(toy.antState).toBe('idle')
+  })
+
   it('stops at the nearest open cell and waits where no open way reaches the finger, and digs nothing', () => {
     const toy = new Toy(gameOn(['XXXXXXXX', '...#....', '...#....', 'XXXXXXXX'], [0, 1]))
     const before = clone(toy.game.ground)

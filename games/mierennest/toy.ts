@@ -57,6 +57,8 @@ export class Toy {
   private way: Uint8Array | null = null
   /** The kinds the last bite met. */
   private meeting: Kind[] = []
+  /** Where the finger was when it let go, until the ant has come there. */
+  private going: { x: number; y: number } | null = null
   /** The touch landed on a lump the ant cannot take: it digs nothing until it is let go. */
   private idle = false
   private cameFrom: Int32Array | null = null
@@ -118,6 +120,7 @@ export class Toy {
   press(x: number, y: number, t: number): void {
     if (!this.inGround(x, y)) return
     this.finger = { x, y }
+    this.going = null
     this.lastFinger = { x, y, t }
     this.speed = 0
     this.meeting = []
@@ -157,6 +160,8 @@ export class Toy {
     const carried = this.carried, finger = this.finger
     this.carried = null
     this.finger = null
+    // The ant still comes to where the finger was, and sits down there.
+    this.going = finger
     this.lastFinger = null
     if (!carried || !finger) return
     const to = setDown(this.game.ground, this.game.ant, carried, finger.x, finger.y)
@@ -172,6 +177,7 @@ export class Toy {
     const carried = this.carried
     this.carried = null
     this.finger = null
+    this.going = null
     this.lastFinger = null
     if (carried) this.events.push({ type: 'back', kind: carried.kind, cell: carried.from })
   }
@@ -237,7 +243,7 @@ export class Toy {
 
   /** The cell the ant makes for: where the finger is if its open way reaches there, else the nearest cell of its way. */
   private goal(way: Uint8Array): number | null {
-    const finger = this.finger
+    const finger = this.finger ?? this.going
     if (!finger) return null
     const { cols, rows } = this.game.ground
     let best = -1, bestFar = Infinity
@@ -321,8 +327,9 @@ export class Toy {
     }
     const finger = this.finger
     const there = goal !== null && next === null && far <= 0.05
+    if (!finger && (there || goal === null)) this.going = null
     if (this.carried) this.antState = 'carry'
-    else if (!finger) this.antState = far > 0.05 ? 'run' : 'idle'
+    else if (!finger) this.antState = far > 0.05 || this.going ? 'run' : 'idle'
     else if (!there) this.antState = 'run'
     else this.antState = Math.hypot(finger.x - this.antAt.x, finger.y - this.antAt.y) <= 2.5 ? 'dig' : 'wait'
     if (finger && there && Math.abs(finger.x - this.antAt.x) > 0.3) this.antHeading.x = Math.sign(finger.x - this.antAt.x)
