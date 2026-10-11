@@ -761,7 +761,7 @@ export class ToyDisplay {
     for (const burst of this.bursts) list.push({ is: 'effect', effect: burst.effect, x: burst.x, y: burst.y, progress: (this.seconds - burst.at) / burstSeconds(burst.effect), flip: burst.flip })
     const grabbed = k.grabbed, holding = k.holding
     if (grabbed && holding) {
-      // A machine under the finger: where it would stand is outlined, and it rides at the finger.
+      // A machine under the finger: where it would stand is shown as a soft pale patch, and it rides at the finger.
       const stand = k.standUnder()
       if (stand && grabbed.moved) {
         const p = toStage(stand.x + 1, stand.y)

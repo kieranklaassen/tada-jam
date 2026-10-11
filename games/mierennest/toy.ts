@@ -392,7 +392,7 @@ export class Toy {
     if (finger && there && Math.abs(finger.x - this.antAt.x) > 0.3) this.antHeading.x = Math.sign(finger.x - this.antAt.x)
   }
 
-  /** The ant cannot leave a stone alone: it taps every stone it passes, beside it, under it or over it, and not the same one again for a while. */
+  /** The ant cannot leave a stone alone: with empty jaws it taps a stone it passes, beside it, under it or over it, and not the same one again for a few seconds. */
   private tapStones(): void {
     const ground = this.game.ground, ant = this.game.ant
     if (this.carried) return

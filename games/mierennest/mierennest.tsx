@@ -22,11 +22,11 @@ import { GROUND } from './view/layout'
 import { ToyView } from './view/toyView'
 import { APART, BOING, SPOKEN, voiceFor, voiceForGame, voiceForRaid } from './voices'
 
-// The Mount, showing a blank surface. Everything a game needs around its
-// renderer is wired and running: the saved state, attention, the attended
-// clock, touch, sound from the first touch, the idle ladder, adaptive quality,
-// the grown-up performance handle and the grown-up overlay. The renderer, the
-// rules and the sounds go in where the comments say.
+// The Mount. Everything the game needs around its renderer is wired here: the
+// saved state, attention, the attended clock, touch, sound from the first
+// touch, the idle ladder, adaptive quality, the grown-up performance handle and
+// the grown-up overlay. The rules are in kingdom.ts, which wraps the toy and
+// the raid; what a frame shows is in view/display.ts, and view/toyView.ts paints it.
 
 function Mount({ ctx }: { ctx: CartridgeContext }) {
   const rootRef = useRef<HTMLDivElement>(null)
@@ -182,11 +182,10 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const observer = new ResizeObserver(resize)
     observer.observe(root)
 
-    // What the game does with a gesture. The blank surface only answers a touch with a sound (`tick`, which goes
-    // with its import when the game plays its own voices). The points are in the surface's CSS pixels: a canvas
-    // 2D game turns each into stage units first, with `toStage` and the one fit made from `width` and `height`.
-    // A game with short scenes ends the one that is playing first thing in every press, before the press is
-    // answered (`finish` in scene.ts). A gesture that changes the state hands it to storage here (`cadence`, above).
+    // What the game does with a gesture. The points are in the surface's CSS pixels: each is turned into stage
+    // units first, with `toStage` and the one fit made from `width` and `height`, and from there into cells of the
+    // ground. A scene that is playing ends first thing in every press, before the press is answered (`touch` in
+    // kingdom.ts). A gesture that changes the state hands it to storage here (`cadence`, above).
     // Two endings are not the child's doing, and neither makes a move: on `dragCancel` the thing in hand goes
     // back where it came from, and a `pressEnd` lets go of what the press lit and is not a tap. Every gesture has
     // a case of its own, so a game that leaves one out, a cancelled drag above all, does not compile.

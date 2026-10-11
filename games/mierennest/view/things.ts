@@ -396,8 +396,7 @@ const EFFECTS: Record<Effect, (ctx: Ctx, p: number) => void> = {
     cloud(CLOUD, 0.86, -1.4 * grow)
     ctx.globalAlpha /= fade
   },
-  // The shake of a catapult after it lets go, about the middle of the machine's place: curved cream lines either
-  // side of the arm, three behind it and two before it, each shorter than the last, that spread and fade.
+  // The shake of a catapult after it lets go, about the middle of the machine's place.
   twang: (ctx, p) => {
     // Pale puffs flung off the arm as it lets go, three behind it and two before: each a filled patch that drifts
     // out and thins. Nothing here is a line, so nothing here can be read as a mark.

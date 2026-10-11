@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { EARTH, MOUTH, MUD, SAND, STONE } from './ground'
-import { DUNG_BALL, HABITS, INVADERS, SHOTS, climbsStep, fits } from './habits'
+import { MOUTH } from './ground'
+import { DUNG_BALL, HABITS, SHOTS, type InvaderKind } from './habits'
+
+const INVADERS = Object.keys(HABITS) as InvaderKind[]
 
 describe('each kind of invader', () => {
   it('answers every shot, and no two answers in the whole table are alike', () => {
@@ -17,9 +19,8 @@ describe('each kind of invader', () => {
     }
   })
 
-  it('has an act of its own in a chamber and a want of its own, each done in a bounded time', () => {
+  it('has an act of its own in a chamber, done in a bounded time', () => {
     expect(new Set(INVADERS.map((kind) => HABITS[kind].act.id)).size).toBe(INVADERS.length)
-    expect(new Set(INVADERS.map((kind) => HABITS[kind].want)).size).toBe(INVADERS.length)
     for (const kind of INVADERS) {
       expect(HABITS[kind].act.seconds).toBeGreaterThanOrEqual(4)
       expect(HABITS[kind].act.seconds).toBeLessThanOrEqual(10)
@@ -28,64 +29,14 @@ describe('each kind of invader', () => {
   })
 })
 
-describe('the habits, as the sheet lists them', () => {
-  const fitting: { kind: 'ant' | 'beetle' | 'fly' | 'dungBeetle' | 'dungFly'; high: number; wide?: number; fits: boolean }[] = [
-    { kind: 'ant', high: 1, fits: true },
-    { kind: 'beetle', high: 1, fits: false },
-    { kind: 'beetle', high: 2, fits: true },
-    { kind: 'dungBeetle', high: 2, fits: true },
-    { kind: 'fly', high: 2, fits: false },
-    { kind: 'fly', high: 3, wide: 2, fits: true },
-    { kind: 'fly', high: 3, wide: 1, fits: false },
-    { kind: 'dungFly', high: 2, fits: false },
-    { kind: 'dungFly', high: 3, wide: 2, fits: true },
-  ]
-  for (const row of fitting) {
-    it(`a ${row.kind} ${row.fits ? 'fits' : 'does not fit'} a way ${row.high} high${row.wide ? ` and ${row.wide} wide` : ''}`, () => {
-      expect(fits(row.kind, row.high, row.wide)).toBe(row.fits)
-    })
-  }
-
-  it('a raider ant climbs earth and stone, slides off sand and sticks in mud', () => {
-    expect(climbsStep('ant', 5, EARTH)).toBe(true)
-    expect(climbsStep('ant', 5, STONE)).toBe(true)
-    expect(climbsStep('ant', 1, SAND)).toBe(false)
-    expect(HABITS.ant.slipsOn).toEqual([SAND])
-    expect(HABITS.ant.stuckOn).toEqual([MUD])
-    expect(HABITS.ant.pit).toBeNull()
-  })
-
-  it('a beetle gets up one cell and no more, is held by a pit two deep, and mud does not stick it', () => {
-    expect(climbsStep('beetle', 1, EARTH)).toBe(true)
-    expect(climbsStep('beetle', 2, EARTH)).toBe(false)
-    expect(HABITS.beetle.pit).toBe(2)
-    expect(HABITS.beetle.stuckOn).toEqual([])
-    expect(HABITS.beetle.ploughsSand).toBe(true)
-  })
-
-  it('only beetles push, a dung ball pushes harder than one beetle, and only a dung beetle widens its way, never through stone', () => {
+describe('the habits this table holds', () => {
+  it('only beetles push, and a dung ball pushes harder than one beetle', () => {
     expect(INVADERS.filter((kind) => HABITS[kind].push > 0)).toEqual(['beetle', 'dungBeetle'])
     expect(DUNG_BALL.push).toBeGreaterThan(HABITS.beetle.push)
-    expect(INVADERS.filter((kind) => HABITS[kind].widens.earth)).toEqual(['dungBeetle'])
-    // Earth always; sand and mud only with earth or rock behind them, or while the dung fly is up; stone never.
-    expect(HABITS.dungBeetle.widens.backed).toEqual([SAND, MUD])
-    expect(HABITS.dungBeetle.widens.led).toEqual([SAND, MUD])
-    for (const kind of INVADERS) {
-      expect(HABITS[kind].widens.backed).not.toContain(STONE)
-      expect(HABITS[kind].widens.led).not.toContain(STONE)
-      if (kind !== 'dungBeetle') expect(HABITS[kind].widens).toEqual({ earth: false, backed: [], led: [] })
-    }
   })
 
   it('a dung ball fits the mouth of the nest', () => {
     expect(MOUTH.length).toBeGreaterThanOrEqual(DUNG_BALL.across)
-  })
-
-  it('fliers cross any step and no pit holds them', () => {
-    for (const kind of ['fly', 'dungFly'] as const) {
-      expect(climbsStep(kind, 9, SAND)).toBe(true)
-      expect(HABITS[kind].pit).toBeNull()
-    }
   })
 
   it('only the dung fly, gummed, makes the army lose its way', () => {

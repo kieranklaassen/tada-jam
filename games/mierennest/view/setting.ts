@@ -281,7 +281,7 @@ function paintSurface(pen: Pen): void {
   toadstool(pen, 990, GRASS_Y, 74, '#d9463a', 0.05)
   toadstool(pen, 52, GRASS_Y, 46, '#e8743a', -0.1)
   log(pen, LOG.x, GRASS_Y, LOG.length)
-  // A washing line between two stalks, with a leaf and a sock on it.
+  // A washing line between two stalks, with three plain cloths pegged on it.
   pen.strokeStyle = P.GRASS.dark
   pen.lineWidth = 4
   pen.lineCap = 'round'

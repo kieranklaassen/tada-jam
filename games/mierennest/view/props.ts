@@ -95,9 +95,3 @@ export function paintDrop(pen: Pen, sway = 0, glint = 0): void {
   pen.ellipse(drop.x - 5, drop.y + 1, 3 + glint * 2, 5.5 + glint * 2, 0.4, 0, Math.PI * 2)
   pen.fill()
 }
-
-/** The whole bell at once, for a still scene. */
-export function paintBell(pen: Pen, sway = 0): void {
-  paintStalk(pen)
-  paintDrop(pen, sway)
-}

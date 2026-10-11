@@ -6,7 +6,7 @@ import { after, judge, owed, partyAt, type MachineKind, type Party, type Verdict
 import { TICK, bodyOf, callRaid, endOf, hit, knockInRaid, landInRaid, stepRaid, type Raid, type RaidEvent } from './raid'
 import { lean } from './walls'
 import { WEDGED, queenSeat } from './residents'
-import type { Game, Machine } from './save'
+import type { Game } from './save'
 import { Toy } from './toy'
 
 // The game round the toy: the bell that calls a raid, the raid itself, the machines, the put-back, the position in
@@ -729,10 +729,5 @@ export class Kingdom {
         }
       }
     }
-  }
-
-  /** The cells a machine stands in, for the view and for the ground's repaint. */
-  machineCells(machine: Machine): number[] {
-    return cellsOf(machine, this.game.ground.cols)
   }
 }

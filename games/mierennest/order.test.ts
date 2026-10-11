@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { LADDER } from './config'
-import { INVADERS } from './habits'
+import { HABITS } from './habits'
 import { PARTY, ROUND, SHOWINGS, after, arrived, judge, owed, partyAt, weight, type Progress } from './order'
 
 describe('the places of the order', () => {
@@ -29,7 +29,7 @@ describe('the places of the order', () => {
       expect(fresh.length, id).toBeLessThanOrEqual(1)
       for (const kind of fresh) met.add(kind)
     }
-    expect([...met].sort()).toEqual([...INVADERS].sort())
+    expect([...met].sort()).toEqual(Object.keys(HABITS).sort())
   })
 
   it('never brings a new kind and a machine at the same place', () => {

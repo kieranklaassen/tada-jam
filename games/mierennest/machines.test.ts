@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { LUMPS, MUD, OPEN, SAND, STONE, at, count, fromPicture, settle } from './ground'
-import { LOB, SAND_CARRIES, arrivalPlace, canStand, cellsOf, fireInNest, machineAt, nearestStand, shotPath } from './machines'
+import { OPEN, at, fromPicture } from './ground'
+import { LOB, SAND_CARRIES, arrivalPlace, canStand, cellsOf, machineAt, nearestStand, shotPath } from './machines'
 import type { Machine } from './save'
 
 const hall = ['XXXXXXXXXXXXXXXX', '#..............#', '#..............#', '#..............#', '#..............#', '#..............#', '################', 'XXXXXXXXXXXXXXXX']
@@ -103,46 +103,9 @@ describe('the mouth', () => {
       const path = shotPath(ground, machine('catapult', 6, 3, facing, 'mud'))
       expect(path.length).toBeGreaterThan(0)
       for (const [, y] of xy(path)) expect(y).toBeGreaterThanOrEqual(1)
-      const fired = fireInNest(ground, machine('catapult', 6, 3, facing, 'mud'))!
-      expect(Math.floor(fired.landed / 16)).toBeGreaterThanOrEqual(1)
+      // Where it comes to lie is the last cell of its way: below the turf, and the mouth stays open.
+      expect(Math.floor(path[path.length - 1] / 16)).toBeGreaterThanOrEqual(1)
       for (const x of [6, 7, 8]) expect(at(ground, x, 0)).toBe(OPEN)
-      ground.cells[fired.landed] = OPEN
     }
-  })
-})
-
-describe('firing in the nest', () => {
-  it('really throws the lump: it lies where it landed and the machine is empty', () => {
-    const ground = fromPicture(hall)
-    const cannon = machine('cannon', 2, 5, 1, 'mud')
-    const fired = fireInNest(ground, cannon)!
-    expect(fired.shot).toBe('mud')
-    expect(cannon.load).toBeNull()
-    settle(ground)
-    expect(count(ground, MUD)).toBe(1)
-    expect(at(ground, 14, 5)).toBe(MUD)
-    expect(fireInNest(ground, cannon)).toBeNull()
-  })
-
-  it('lets sand and a stone fall where they land, and mud stick', () => {
-    for (const [load, kind] of [['sand', SAND], ['stone', STONE]] as const) {
-      const ground = fromPicture(hall)
-      fireInNest(ground, machine('catapult', 2, 5, 1, load))
-      settle(ground)
-      expect(count(ground, kind)).toBe(1)
-      expect(LUMPS.reduce((sum, lump) => sum + count(ground, lump), 0)).toBe(1)
-      const row5 = [...Array(16).keys()].filter((x) => at(ground, x, 5) === kind)
-      expect(row5.length).toBe(1)
-    }
-  })
-
-  it('changes nothing where the shot has nowhere to go', () => {
-    const picture = hall.slice()
-    picture[5] = '#...o..........#'
-    const ground = fromPicture(picture)
-    const cannon = machine('cannon', 2, 5, 1, 'stone')
-    expect(fireInNest(ground, cannon)).toBeNull()
-    expect(cannon.load).toBe('stone')
-    expect(at(ground, 5, 5)).toBe(OPEN)
   })
 })

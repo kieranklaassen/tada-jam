@@ -1,4 +1,4 @@
-import { MOUTH, OPEN, at, put, type Ground, type Lump } from './ground'
+import { MOUTH, OPEN, at, type Ground, type Lump } from './ground'
 import type { Shot } from './habits'
 import type { Machine } from './save'
 
@@ -122,23 +122,4 @@ export function shotFlight(ground: Ground, machine: Machine): { path: number[]; 
 /** The cells a shot passes, and no more. */
 export function shotPath(ground: Ground, machine: Machine): number[] {
   return shotFlight(ground, machine).path
-}
-
-/** What firing a machine outside a raid did: the cells the lump flew through, and the cell it came to lie in. */
-export type Fired = { shot: Shot; path: number[]; landed: number }
-
-/**
- * Fires a loaded machine in the nest itself. The lump really flies: it lies where it landed, as a cell of the
- * ground, and the machine is empty. Null, with nothing changed, where the machine is empty or its shot has nowhere
- * to go. The caller lets the ground come to rest.
- */
-export function fireInNest(ground: Ground, machine: Machine): Fired | null {
-  if (!machine.load) return null
-  const path = shotPath(ground, machine)
-  if (path.length === 0) return null
-  const landed = path[path.length - 1]
-  put(ground, landed % ground.cols, Math.floor(landed / ground.cols), LUMP_OF[machine.load])
-  const shot = machine.load
-  machine.load = null
-  return { shot, path, landed }
 }
