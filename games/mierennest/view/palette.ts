@@ -5,10 +5,13 @@ export const WOOD = { light: '#c8914f', mid: '#a86f37', dark: '#7a4c22', grain: 
 export const SKY = { top: '#8fd0ee', low: '#d9f1f4', cloud: '#ffffff', hill: '#9ccf86', far: '#b7dca0' } as const
 export const GRASS = { blade: '#4c9a3c', light: '#7cc35a', dark: '#2f6f2c', turf: '#3d7f33', root: '#d9c79a' } as const
 /** Packed earth, lighter near the surface and darker with depth, and the dug-out dark behind an open cell. */
-export const EARTH = { strata: ['#bd8a55', '#a06a3e', '#84583a'], top: '#bd8a55', speck: '#5a371d', deep: '#4f3020', open: '#2b1a12', openLow: '#1f120c' } as const
+export const EARTH = { strata: ['#bd8a55', '#a06a3e', '#84583a'], top: '#bd8a55', speck: '#5a371d', deep: '#4f3020', open: '#24150e', openLow: '#1c100b' } as const
 export const SAND = { fill: '#f1d58a', edge: '#d8b560' } as const
-/** Wet mud: a dark, cool brown no earth has, a paler lip where it stands free, and a pale glint for the wet. */
-export const MUD = { fill: '#3f3134', edge: '#2a2022', lip: '#6f5a5c', shine: '#d9e6ea' } as const
+/**
+ * Wet mud: a cool, greyed brown no earth has, well lighter than the dark of a tunnel, where a patch of it on the
+ * floor has to read best; a paler lip where it stands free, and a pale glint for the wet.
+ */
+export const MUD = { fill: '#5d4b4c', edge: '#3a2d2e', lip: '#927e7e', shine: '#e6eff2' } as const
 export const STONE = { fill: '#9aa3ad', edge: '#6f7882', shine: '#d4dae0' } as const
 export const ROCK = { turf: '#3d7f33', bed: '#4b4f58', bedEdge: '#33363d' } as const
 export const GLASS = { sheen: 'rgba(255,255,255,0.10)', sheenEdge: 'rgba(255,255,255,0.22)', scratch: 'rgba(255,255,255,0.20)', smudge: 'rgba(255,255,255,0.07)' } as const

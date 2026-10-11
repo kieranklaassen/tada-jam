@@ -10,12 +10,11 @@
   - 3 (`docs/build/answers/mierennest-3.md`), the sheet's second check: all four replacements pasted as written, nothing else above `## The look` changed; the toy's touch-down and the dung ball's habits brought into line (commit `8e509d5`).
 - Sheet, round 1: checker cloud-1, on `bb54b24`. Open, 17 findings, all pasted; the lead confirmed the pastes.
 - Sheet, round 2: checker cloud-2, on `42676f5` (hash `ed5c668a...48cd15`). Open, 4 findings, all pasted as written; none left out.
-- Sheet now: commit `734513b`. Hash of the sheet part: `49a588ec48b43cfce6492461afa1db4a7e440ce46f4496f1c48f651e71cebebb`. Nothing above `## The look` has changed since. No line of this round is the builder's own.
+- **Sheet: PASSED round 3**, confirmed by the lead from the diff (answers file 4), at commit `734513b`. Hash of the sheet part: `49a588ec48b43cfce6492461afa1db4a7e440ce46f4496f1c48f651e71cebebb`. Nothing above `## The look` has changed since. Sentences of the sheet the built game makes untrue, for the closing run: none yet.
 - Rules and toy: written against the sheet at `734513b`, at the builder's own risk until round 3 is confirmed.
 - Look in use: the first reserved look, Ant farm behind glass. The lead's four points of answers file 2 are mended, each to its test (see "The four points of the look").
 - Sound: every voice is numbers in `voices.ts`, held in range by a test. **Nobody has listened to any of them.**
 - Frame cost: no frame rate was measured anywhere, and no physical iPad. See "Frame cost of the toy" below: the toy's own work a frame is under the bar at the median and when idle, and over it at the ninety-fifth percentile while a finger digs without pause.
-- Open: sheet ready for check, round 3
 
 **Stills.** Branch `stills/mierennest-ec7b85a3`, three files under `docs/build/stills/mierennest/`: `1-first-frame.png` (2.6 s of idle), `2-dig-and-carry.png` (sand in the ant's jaws just after a pit was dug, crumbs still in the air), `3-small-nest.png` (a tunnel, a pit, a room with the queen in it, and sand, mud and a stone carried to its far end). Seed 1. Taken at 1180 by 820 from the production build of this lane at `ec7b85a3`, on a paused clock stepped 33 ms at a time, with the same scripted touches each time, on software drawing.
 

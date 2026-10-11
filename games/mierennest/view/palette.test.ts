@@ -21,7 +21,7 @@ const EARTHS = [...P.EARTH.strata, P.EARTH.deep]
 describe('the three materials', () => {
   it('are far apart in lightness: sand lightest, then stone, then mud', () => {
     expect(contrast(P.SAND.fill, P.STONE.fill)).toBeGreaterThan(1.6)
-    expect(contrast(P.STONE.fill, P.MUD.fill)).toBeGreaterThan(4)
+    expect(contrast(P.STONE.fill, P.MUD.fill)).toBeGreaterThan(3)
     expect(light(P.SAND.fill)).toBeGreaterThan(light(P.STONE.fill))
     expect(light(P.STONE.fill)).toBeGreaterThan(light(P.MUD.fill))
   })
@@ -29,26 +29,33 @@ describe('the three materials', () => {
   it('each lean their own way: sand warm and full, stone cool, mud near grey and dark', () => {
     expect(warm(P.SAND.fill)).toBeGreaterThan(0.3)
     expect(warm(P.STONE.fill)).toBeLessThan(0)
-    expect(colourful(P.MUD.fill)).toBeLessThan(0.08)
+    expect(colourful(P.MUD.fill)).toBeLessThan(0.09)
     expect(colourful(P.SAND.fill)).toBeGreaterThan(colourful(P.STONE.fill) + 0.25)
   })
 
   it('are none of them the colour of the earth: sand and stone lighter than any of it, mud darker and far less brown', () => {
     for (const earth of EARTHS.slice(0, 3)) {
       expect(contrast(P.SAND.fill, earth)).toBeGreaterThan(1.9)
-      expect(contrast(P.MUD.fill, earth)).toBeGreaterThan(1.9)
+      // Mud lies between the earth and the dark of a tunnel in lightness. In the darkest stratum it is told from
+      // the earth less by lightness than by being grey where the earth is brown, and by its lip and its glint.
+      expect(contrast(P.MUD.fill, earth)).toBeGreaterThan(1.3)
       expect(warm(earth) - warm(P.STONE.fill)).toBeGreaterThan(0.3)
     }
     for (const earth of EARTHS) expect(warm(earth) - warm(P.MUD.fill)).toBeGreaterThan(0.08)
   })
 
-  it('stand out of the dark of an open tunnel: mud by its body a little and by its lip and its glint a lot', () => {
+  it('hold mud apart from the dark of a tunnel by at least the margin they hold sand apart from the earth', () => {
+    const sandFromEarth = Math.min(...P.EARTH.strata.map((earth) => contrast(P.SAND.fill, earth)))
+    expect(sandFromEarth).toBeGreaterThan(2)
+    for (const dark of [P.EARTH.open, P.EARTH.openLow]) expect(contrast(P.MUD.fill, dark)).toBeGreaterThanOrEqual(sandFromEarth)
+  })
+
+  it('stand out of the dark of an open tunnel, mud by its lip and its glint as well as its body', () => {
     for (const dark of [P.EARTH.open, P.EARTH.openLow]) {
       expect(contrast(P.SAND.fill, dark)).toBeGreaterThan(9)
       expect(contrast(P.STONE.fill, dark)).toBeGreaterThan(5)
-      expect(contrast(P.MUD.fill, dark)).toBeGreaterThan(1.2)
-      expect(contrast(P.MUD.lip, dark)).toBeGreaterThan(2.5)
-      expect(contrast(P.MUD.shine, P.MUD.fill)).toBeGreaterThan(8)
+      expect(contrast(P.MUD.lip, dark)).toBeGreaterThan(4)
+      expect(contrast(P.MUD.shine, P.MUD.fill)).toBeGreaterThan(6)
     }
   })
 })
