@@ -62,6 +62,17 @@ describe('creatures', () => {
     expect(creature.bed).toEqual({ x: 20, y: 0 })
   })
 
+  it('found awake, it is simply up: no second waking in its light, and the usual linger once its light is gone', () => {
+    const creature = makeCreature(1, 'fish', RED, 4.6, { x: 0, y: 0 }, true)
+    expect(creature.phase).toBe('awake')
+    expect(Number.isFinite(creature.wokeAt)).toBe(true)
+    expect(creature.wokeAt + WAKING_SECONDS.fish).toBeLessThan(-1.4)
+    const lit = run(creature, RED, 5)
+    expect(lit.events).toEqual([])
+    const dark = run(creature, 0, LINGER + 1, lit.now)
+    expect(dark.events).toEqual(['drowsy'])
+  })
+
   it('a drowsy creature perks up if its light comes back', () => {
     const creature = makeCreature(1, 'fish', RED, 4.6, { x: 0, y: 0 })
     let { now } = run(creature, RED, 3)

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { CREATURE_BODY, KNOB_BODY, PIECE_BODY } from './bodies'
 import { GardenController, pieceHeight, type PieceSim, type Projector, type Sound } from './controller'
-import { isAwake } from './creatures'
+import { DROWSY_SECONDS, isAwake, LINGER } from './creatures'
 import { KNOB, onPanel, slotPoint, TURN_STEP, type CreatureKind, type Point } from './layout'
 import { lightAt } from './optics'
 import { REST_BEFORE_PACING } from './tiers'
@@ -44,6 +44,9 @@ const drag = (garden: GardenController, from: Point, to: Point, lift = true) => 
   run(garden, 0.4)
   if (lift) garden.pointerUp(2, px(to), (clock += 300))
 }
+
+const noop = () => {}
+const quiet: Sound = { unlock: noop, setActive: noop, dispose: noop, pick: noop, drop: noop, turn: noop, tick: noop, home: noop, ripple: noop, creature: noop, poke: noop, garden: noop }
 
 const piece = (garden: GardenController, id: string) => garden.pieces.find((p) => p.spec.id === id)!
 
@@ -176,6 +179,55 @@ describe('GardenController', () => {
     expect(Math.hypot(fish.c.bed.x - 20, fish.c.bed.y - 0)).toBeLessThan(8)
     const saved = deserialize(save.mock.lastCall![0], 7)
     expect(saved.beds[fish.c.index].x).toBeCloseTo(fish.c.bed.x, 0)
+  })
+
+  it('put away with the moth awake, the garden is found with the moth awake and no waking plays again', () => {
+    const { garden, save } = makeGarden(7)
+    const lamp = piece(garden, 'lampA')
+    tap(garden, { x: lamp.x, y: lamp.y })
+    run(garden, 1)
+    expect(garden.creatures[0].c.phase).toBe('waking')
+    garden.setRunning(false)
+    const saved = deserialize(JSON.parse(JSON.stringify(save.mock.lastCall![0])), 7)
+    expect(saved.awake).toEqual([true, false, false, false])
+
+    const creature = vi.fn<Sound['creature']>()
+    const sound: Sound = { ...quiet, creature }
+    const again = new GardenController(saved, { save: () => {}, sound })
+    again.setProjector(topDown)
+    expect(again.creatures[0].c.phase).toBe('awake')
+    const ripplesBefore = again.ripples.filter((r) => r.t0 >= 0).length
+    run(again, 3)
+    expect(again.creatures[0].c.phase).toBe('awake')
+    expect(creature.mock.calls.filter(([, event]) => event === 'wake' || event === 'awake')).toEqual([])
+    expect(again.ripples.filter((r) => r.t0 >= 0).length).toBe(ripplesBefore)
+  })
+
+  it('a garden left with all four awake opens without its all-awake chord and wave', () => {
+    const state = defaultGarden(7)
+    state.awake = [true, true, true, true]
+    const chord = vi.fn()
+    const garden = new GardenController(state, { save: () => {}, sound: { ...quiet, garden: chord } })
+    garden.setProjector(topDown)
+    run(garden, 2)
+    expect(garden.creatures.every((c) => isAwake(c.c))).toBe(true)
+    expect(chord).not.toHaveBeenCalled()
+    expect(garden.gardenAt).toBe(-Infinity)
+  })
+
+  it('a creature walking off to nap is saved asleep where it is going, so the walk never plays twice', () => {
+    const state = defaultGarden(7)
+    state.awake = [true, false, false, false]
+    const save = vi.fn<(state: GardenState) => void>()
+    const garden = new GardenController(state, { save })
+    garden.setProjector(topDown)
+    const moth = garden.creatures[0].c
+    for (let i = 0; i < 60 * (LINGER + DROWSY_SECONDS + 1) && moth.phase !== 'wandering'; i++) garden.step(1 / 60)
+    expect(moth.phase).toBe('wandering')
+    const saved = save.mock.lastCall![0]
+    expect(saved.awake[0]).toBe(false)
+    expect(saved.beds[0].x).toBeCloseTo(moth.to.x, 1)
+    expect(saved.beds[0].y).toBeCloseTo(moth.to.y, 1)
   })
 
   it('an awake creature flies round a sleeping one instead of through it', () => {
