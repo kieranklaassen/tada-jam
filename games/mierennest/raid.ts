@@ -67,6 +67,8 @@ export type Invader = {
   acted: boolean
   /** It has touched a chamber and is on its way to where it does its act. */
   insideSince: boolean
+  /** The place it chose for its act, or -1. */
+  spot: number
   /** What it does when it stops being dazed, and the last shot that hit it. */
   after: 'going' | 'leaving'
   lastShot: Shot | null
@@ -125,7 +127,7 @@ export function callRaid(built: Ground, party: Party, mouth: readonly number[] =
     if (!kind) continue
     invaders.push({
       id: invaders.length, kind, state: 'coming', cell: -1, from: -1, along: 0, facing: 1, wait: APART * (invaders.length + 1),
-      way: [], step: 0, trail: [], leaning: null, acted: false, insideSince: false, after: 'going', lastShot: null, answer: null,
+      way: [], step: 0, trail: [], leaning: null, acted: false, insideSince: false, spot: -1, after: 'going', lastShot: null, answer: null,
     })
   }
   return {
@@ -151,6 +153,7 @@ function setOff(invader: Invader, way: number[]): void {
 /** Sends an invader home by the places it came through, last first. Where it once dropped further than it can climb, it stops and is held. */
 function sendHome(invader: Invader): void {
   invader.state = 'leaving'
+  invader.spot = -1
   invader.leaning = null
   const back = invader.trail.slice().reverse()
   if (back[0] !== invader.cell) back.unshift(invader.cell)
@@ -169,7 +172,9 @@ function leaningWith(raid: Raid, invader: Invader): number {
 }
 
 /** How far into a chamber a walker goes before it does its act, in steps of its own, at most. */
-export const INTO_THE_ROOM = 5
+export const INTO_THE_ROOM = 10
+/** How many cells apart two invaders do their acts, so that each is seen. */
+export const ELBOW_ROOM = 3
 
 /** Where a walker that has just come inside does its act: the place on a floor inside a chamber that is furthest in, up to a few steps, and reached first among those. */
 function actSpot(raid: Raid, invader: Invader): number {
@@ -181,11 +186,19 @@ function actSpot(raid: Raid, invader: Invader): number {
     if (cell !== invader.cell) steps[cell] = steps[found.from[cell]] + 1
     if (steps[cell] > INTO_THE_ROOM) break
     if (steps[cell] <= bestSteps || !isInside(ground, invader.kind, cell, raid.inside)) continue
-    if (at(ground, cell % cols, Math.floor(cell / cols) + 1) === OPEN) continue
+    // A walker does its act on a floor; a flier where it hangs.
+    if (invader.kind !== 'fly' && at(ground, cell % cols, Math.floor(cell / cols) + 1) === OPEN) continue
     if (invader.kind === 'ant' && sticks(ground, cell % cols, Math.floor(cell / cols), raid.covered)) continue
+    // Not on top of another one's act.
+    let taken = false
+    for (const other of raid.invaders) {
+      if (other !== invader && other.spot >= 0 && Math.floor(other.spot / cols) === Math.floor(cell / cols) && Math.abs((other.spot % cols) - (cell % cols)) < ELBOW_ROOM) taken = true
+    }
+    if (taken) continue
     best = cell
     bestSteps = steps[cell]
   }
+  invader.spot = best
   return best
 }
 
@@ -193,12 +206,12 @@ function actSpot(raid: Raid, invader: Invader): number {
 function decide(raid: Raid, invader: Invader): void {
   const { ground } = raid
   if (isInside(ground, invader.kind, invader.cell, raid.inside)) {
-    // It is inside from the first cell of a chamber it touches. A walker then goes on to a place on the chamber's
-    // floor, well into the room, and does its act there; a flier does it where it hangs.
+    // It is inside from the first cell of a chamber it touches. It then goes on, well into the room, and does
+    // its act there: a walker on the floor, a flier in the air.
     if (!invader.insideSince) {
       invader.insideSince = true
       raid.events.push({ type: 'inside', id: invader.id, kind: invader.kind, cell: invader.cell })
-      const spot = invader.kind === 'fly' ? invader.cell : actSpot(raid, invader)
+      const spot = actSpot(raid, invader)
       if (spot !== invader.cell) {
         setOff(invader, wayTo(reach(ground, invader.kind, invader.cell), spot))
         return
@@ -209,6 +222,7 @@ function decide(raid: Raid, invader: Invader): void {
     return
   }
   invader.insideSince = false
+  invader.spot = -1
   const way = wayIn(ground, invader.kind, invader.cell, raid.inside)
   if (way && way.length > 1) {
     setOff(invader, way)

@@ -85,6 +85,9 @@ export function invaderAt(invader: Invader, cols: number): { x: number; y: numbe
   return { x: a.x + (b.x - a.x) * invader.along, y: a.y + (b.y - a.y) * invader.along }
 }
 
+/** How far behind the one in front an invader stands when two stand still in one place, in stage units. */
+export const QUEUE_STEP = 40
+
 /** Where the party steps off the grass into the mouth. */
 export const MOUTH_STEP = { x: MOUTH_X - 46, y: GRASS_Y }
 
@@ -104,6 +107,12 @@ export function showRaid(raid: Raid, party: Party, seconds: number): Shown[] {
     }
     if ((invader.state === 'home' || invader.cell < 0) && seat) return { who, pose, x: seat.x, y: seat.y, flip: false, turn: 0 }
     const at = invaderAt(invader, cols)
+    // Those who stand still in the same place stand one behind the other, each a little further back, so each is seen.
+    if (invader.along === 0 && invader.state !== 'going' && invader.state !== 'leaving') {
+      let ahead = 0
+      for (let m = 0; m < n; m++) if (raid.invaders[m].cell === invader.cell && raid.invaders[m].along === 0 && raid.invaders[m].state !== 'home') ahead++
+      at.x -= ahead * QUEUE_STEP * invader.facing
+    }
     const upright = pose === 'climb'
     const goingUp = Math.floor(invader.cell / cols) < Math.floor(invader.from / cols)
     return { who, pose, x: at.x, y: at.y, flip: invader.facing < 0, turn: upright ? (goingUp ? -1 : 1) * (invader.facing < 0 ? -1 : 1) * (Math.PI / 2) : 0 }
@@ -174,16 +183,25 @@ export function roomFloor(ground: Ground, room: Room): { y: number; from: number
   return best
 }
 
-/** What each chamber has on its back wall, and where: one thing near each end of its floor. */
-export function showFurnishings(ground: Ground, chambers: readonly Room[], lit: boolean): { thing: Thing; x: number; y: number; lit: boolean }[] {
+/**
+ * What each chamber has on its back wall, and where: two things, a third and two thirds of the way along its
+ * floor. In the queen's room they hang on the part of the wall she does not sit in front of: `queen` is the
+ * room she is in and the span of the floor she takes, in cell units.
+ */
+export function showFurnishings(ground: Ground, chambers: readonly Room[], lit: boolean, queen: { room: number; from: number; to: number } | null = null): { thing: Thing; x: number; y: number; lit: boolean }[] {
   const out: { thing: Thing; x: number; y: number; lit: boolean }[] = []
   chambers.slice(0, FURNISHED).forEach((room, n) => {
     const floor = roomFloor(ground, room)
-    if (floor.to - floor.from < 2) return
+    let from = floor.from, to = floor.to + 1
+    if (queen && queen.room === n) {
+      // The longer stretch of floor beside her.
+      if (queen.from - from >= to - queen.to) to = queen.from
+      else from = queen.to
+    }
+    if (to - from < 3) return
     const pair = FURNISHINGS[n % FURNISHINGS.length]
-    const ends = [floor.from + 0.9, floor.to + 0.1]
     pair.forEach((thing, i) => {
-      const p = toStage(ends[i], floor.y + 1)
+      const p = toStage(from + (to - from) * (i === 0 ? 0.3 : 0.7), floor.y + 1)
       out.push({ thing, x: p.x, y: p.y - (HUNG[thing] ?? 0), lit: thing === 'lamp' && lit })
     })
   })

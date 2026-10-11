@@ -344,7 +344,9 @@ export class ToyDisplay {
       }
     }
     // The things on the back wall of the rooms, and the marks where a wall gave, lie behind everyone.
-    for (const thing of showFurnishings(ground, toy.realm.chambers, k.game.ended)) list.push({ is: 'thing', thing: thing.thing, x: thing.x, y: thing.y, lit: thing.lit })
+    const throne = queenSeat(ground, toy.realm.chambers, toy.realm.queenRoom)
+    const queenSpan = throne && toy.realm.queenRoom !== null ? { room: toy.realm.queenRoom, from: throne.x - 2.2 * throne.fit, to: throne.x + 2.2 * throne.fit } : null
+    for (const thing of showFurnishings(ground, toy.realm.chambers, k.game.ended, queenSpan)) list.push({ is: 'thing', thing: thing.thing, x: thing.x, y: thing.y, lit: thing.lit })
     // A mark lies on a floor: under each cell that gave which has something firm beneath it.
     const marks = k.raid ? [] : showMarks(k.marks.filter((cell) => at(ground, cell % cols, Math.floor(cell / cols) + 1) !== OPEN), cols)
     marks.forEach((mark, n) => list.push({ is: 'effect', effect: n === 0 ? 'prints' : 'scuff', x: mark.x, y: mark.y, progress: 0.5, flip: false }))

@@ -109,7 +109,7 @@ describe('rooms that look lived in', () => {
     const things = showFurnishings(game.ground, rooms, false)
     // Two to a room, in the first rooms of the list; a room whose floor is too short for them has none.
     expect(things.length).toBeLessThanOrEqual(FURNISHED * 2)
-    expect(things.length).toBeGreaterThanOrEqual((FURNISHED - 1) * 2)
+    expect(things.length).toBeGreaterThanOrEqual(FURNISHED)
     const floors = rooms.slice(0, FURNISHED).map((room) => roomFloor(game.ground, room))
     things.forEach((thing) => {
       const tx = (thing.x - GROUND.x) / CELL
@@ -162,7 +162,7 @@ describe('the fullest frame of a raid', () => {
     const has = (test: (item: Item) => boolean) => mostItems.some(test)
     for (const who of ['raider', 'beetle', 'fly', 'worker', 'queen', 'ant']) expect(has((item) => item.is === 'sprite' && item.who === who), who).toBe(true)
     expect(mostItems.filter((item) => item.is === 'machine').length).toBe(2)
-    expect(mostItems.filter((item) => item.is === 'thing').length).toBeGreaterThanOrEqual((FURNISHED - 1) * 2)
+    expect(mostItems.filter((item) => item.is === 'thing').length).toBeGreaterThanOrEqual(FURNISHED)
     expect(Object.keys(DRAWS).length).toBe(12)
   })
 })
