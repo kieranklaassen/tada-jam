@@ -7,7 +7,7 @@ import type { Mover } from '../motion'
 import type { Party } from '../order'
 import type { InvaderKind } from '../habits'
 import { APART, type Invader, type Raid } from '../raid'
-import { floorOf } from '../residents'
+import { floorOf, type Floor } from '../residents'
 import type { Machine } from '../save'
 import { GRASS_Y, GROUND, MOUTH_X } from './layout'
 import type { Effect, Thing } from './things'
@@ -447,16 +447,17 @@ export function lightingOrder(ground: Ground, chambers: readonly Room[]): number
  * floor. In the queen's room they hang on the part of the wall she does not sit in front of: `queen` is the
  * room she is in and the span of the floor she takes, in cell units. `lit` is how many chambers have their
  * glow-worm awake, nearest the mouth first. Once the kingdom is open (`every`), every chamber has a lantern: one
- * that had none hangs one between its two things.
+ * that had none hangs one between its two things. `floors` is the floor of each chamber, for a caller that has
+ * found them already.
  */
-export function showFurnishings(ground: Ground, chambers: readonly Room[], lit: number, queen: { room: number; from: number; to: number } | null = null, every = false): { thing: Thing; x: number; y: number; lit: boolean }[] {
+export function showFurnishings(ground: Ground, chambers: readonly Room[], lit: number, queen: { room: number; from: number; to: number } | null = null, every = false, floors?: readonly Floor[]): { thing: Thing; x: number; y: number; lit: boolean }[] {
   const out: { thing: Thing; x: number; y: number; lit: boolean }[] = []
   const awake = new Set(lightingOrder(ground, chambers).slice(0, Math.max(0, lit)))
   // Six chambers have their things: the first six of the list that have wall to hang them on. The list and the
   // walls come from the ground alone, never from when a room was dug, so the same six are found on load.
   let hung = 0
   chambers.forEach((room, n) => {
-    const floor = floorOf(ground, room)
+    const floor = floors ? floors[n] : floorOf(ground, room)
     let from = floor.from, to = floor.to + 1
     if (queen && queen.room === n) {
       // The longer stretch of floor beside her.

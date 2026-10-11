@@ -597,25 +597,27 @@ export class ToyDisplay {
       list.push({ is: 'sprite', id: shownOut ?? '', who: showing.who, pose: habitPose(scene.kind, scene.t / scene.length, scene.t), x: at.x, y: at.y, flip: false, size: at.size, tall: 1, move: hop, turn: 0 })
     }
     // The things on the back wall of the rooms, and the marks where a wall gave, lie behind everyone.
-    const throne = queenSeat(ground, toy.realm.chambers, toy.realm.queenRoom)
-    const queenSpan = throne && toy.realm.queenRoom !== null ? { room: toy.realm.queenRoom, from: throne.x - QUEEN_HALF * throne.fit, to: throne.x + QUEEN_HALF * throne.fit } : null
+    // The floor of each chamber is found once a frame, for her seat, the workers' places and the things on the walls.
+    const realm = toy.realm
+    const floors = realm.chambers.map((room) => floorOf(ground, room))
+    const throne = queenSeat(ground, realm.chambers, realm.queenRoom, floors)
+    const queenSpan = throne && realm.queenRoom !== null ? { room: realm.queenRoom, from: throne.x - QUEEN_HALF * throne.fit, to: throne.x + QUEEN_HALF * throne.fit } : null
     // Once the kingdom is open a glow-worm is lit in every chamber; in the ending they are lit one by one, nearest the mouth first.
-    const rooms = toy.realm.chambers.length
+    const rooms = realm.chambers.length
     const open = k.game.ended && !k.awaitsEnding
     const lit = !open ? 0 : ending ? Math.max(0, Math.min(rooms, Math.ceil(((ending.t - ENDING.lightFrom) / (ENDING.lightTo - ENDING.lightFrom)) * rooms))) : rooms
-    for (const thing of showFurnishings(ground, toy.realm.chambers, lit, queenSpan, open)) list.push({ is: 'thing', thing: thing.thing, x: thing.x, y: thing.y, lit: thing.lit })
+    for (const thing of showFurnishings(ground, realm.chambers, lit, queenSpan, open, floors)) list.push({ is: 'thing', thing: thing.thing, x: thing.x, y: thing.y, lit: thing.lit })
     // The dung fly's leaf, hung on a stalk at the camp, once the ending is over.
     if (open && !ending) list.push({ is: 'thing', thing: 'leaf', x: LEAF_AT.x, y: LEAF_AT.y, lit: false })
     // A mark lies on a floor: under each cell that gave which has something firm beneath it.
     const marks = k.raid ? [] : showMarks(k.marks.filter((cell) => at(ground, cell % cols, Math.floor(cell / cols) + 1) !== OPEN), cols)
     marks.forEach((mark, n) => list.push({ is: 'effect', effect: n === 0 ? 'prints' : 'scuff', x: mark.x, y: mark.y, progress: 0.5, flip: false }))
     // The queen: wedged under the mouth while the kingdom has no chamber, and on the floor of the largest once it has.
-    const realm = toy.realm
     // While a raid runs the workers stand close together at the far end of their floor, and behind the queen in
     // her room: they are drawn before her then, and look out from either side of her.
     const huddled = k.raid !== null
     const workers = () => {
-      workerSpots(ground, realm.chambers, realm.queenRoom, realm.workers, huddled).forEach((spot, n) => {
+      workerSpots(ground, realm.chambers, realm.queenRoom, realm.workers, huddled, floors).forEach((spot, n) => {
         const stands = this.makeWay(spot.x, BODY.worker.width / 2 / CELL, spot.y, 1, faceRadius('worker'), n % 2 === 1)
         const p = toStage(stands.x, spot.y + 1)
         const move = this.moveOf(`worker${n}`, 'worker', (n * 0.37) % 1, slot++)
@@ -625,7 +627,7 @@ export class ToyDisplay {
     if (huddled) workers()
     // While her move waits for another scene to end she is still where she was: on her old seat, or under the mouth.
     const stays = k.raid ? null : k.queenStays
-    const seat = stays === 'mouth' ? null : (stays ?? queenSeat(ground, realm.chambers, realm.queenRoom))
+    const seat = stays === 'mouth' ? null : (stays ?? throne)
     const queenMove = this.moveOf('queen', 'queen', 0, slot++)
     if (seat && scene?.is === 'moves') {
       // She is carried to her new room by two workers, complaining, tries each end of its floor, and sits.
@@ -641,7 +643,7 @@ export class ToyDisplay {
         list.push({ is: 'sprite', id: '', who: 'worker', pose: kick ? 'walk2' : 'walk', x: at.x + 46 * seat.fit, y: at.y, flip: true, size: 1, tall: 1, move: null, turn: 0 })
       } else {
         // Each end of the floor in turn, then her own place.
-        const floor = floorOf(ground, realm.chambers[realm.queenRoom!])
+        const floor = floors[realm.queenRoom!]
         const half = QUEEN_HALF * seat.fit, ends = [toStage(floor.from + half, seat.y + 1), toStage(floor.to + 1 - half, seat.y + 1), home]
         const tries = Math.min(ends.length - 1, Math.floor(((u - MOVES.carried) / (1 - MOVES.carried)) * ends.length))
         list.push({ is: 'sprite', id: 'queen', who: 'queen', pose: tries < ends.length - 1 ? 'sit2' : 'sit', x: ends[tries].x, y: ends[tries].y, flip: false, size: seat.fit, tall: 1, move: queenMove, turn: 0 })

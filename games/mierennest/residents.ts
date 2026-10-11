@@ -10,7 +10,9 @@ import { EARTH, MOUTH, OPEN, SHAFT_DEPTH, at, type Ground } from './ground'
 export type Standing = { x: number; y: number }
 
 /** The floor of a room: its lowest row, and the first and last cell of the longest stretch of it with something firm under it. */
-export function floorOf(ground: Ground, room: Room): { y: number; from: number; to: number } {
+export type Floor = { y: number; from: number; to: number }
+
+export function floorOf(ground: Ground, room: Room): Floor {
   const { cols } = ground
   const lowest = Math.floor(room.cells[room.cells.length - 1] / cols)
   let best = { y: lowest, from: 0, to: -1 }
@@ -39,11 +41,12 @@ const mouthIsLeft = (floor: { from: number; to: number }) => Math.abs(floor.from
 /**
  * Where the queen sits: at the end of the floor of her room that is further from the mouth, and how much of her
  * full size she is drawn at there. A floor shorter than she is wide seats her in its middle, a little smaller, so
- * that she stands in nothing. Null while the kingdom has no chamber: she is wedged under the mouth.
+ * that she stands in nothing. Null while the kingdom has no chamber: she is wedged under the mouth. `floors` is
+ * the floor of each room, for a caller that has found them already.
  */
-export function queenSeat(ground: Ground, rooms: readonly Room[], queenRoom: number | null): (Standing & { fit: number }) | null {
+export function queenSeat(ground: Ground, rooms: readonly Room[], queenRoom: number | null, floors?: readonly Floor[]): (Standing & { fit: number }) | null {
   if (queenRoom === null) return null
-  const floor = floorOf(ground, rooms[queenRoom])
+  const floor = floors ? floors[queenRoom] : floorOf(ground, rooms[queenRoom])
   const length = floor.to - floor.from + 1
   if (length <= 0) return null
   const fit = Math.min(1, length / (2 * QUEEN_HALF))
@@ -67,17 +70,17 @@ export const HUDDLED = 0.9
  * the mouth, and in the queen's room behind the queen, peering out either side of her, so that the rest of the
  * floor is left to whoever comes in.
  */
-export function workerSpots(ground: Ground, rooms: readonly Room[], queenRoom: number | null, most: number, huddled = false): Standing[] {
+export function workerSpots(ground: Ground, rooms: readonly Room[], queenRoom: number | null, most: number, huddled = false, floors?: readonly Floor[]): Standing[] {
   const spots: Standing[] = []
   rooms.forEach((room, n) => {
-    const floor = floorOf(ground, room)
+    const floor = floors ? floors[n] : floorOf(ground, room)
     // The stretch of floor that is free, from its left edge to its right edge in cell units.
     const queenLeft = n === queenRoom && !mouthIsLeft(floor), queenRight = n === queenRoom && mouthIsLeft(floor)
     const left = queenLeft ? floor.from + 2 * QUEEN_HALF : floor.from, right = queenRight ? floor.to + 1 - 2 * QUEEN_HALF : floor.to + 1
     const free = right - left
     let here = free >= 4 * WORKER_HALF ? [left + WORKER_HALF, right - WORKER_HALF] : free >= 2 * WORKER_HALF ? [(left + right) / 2] : []
     if (huddled && here.length > 0) {
-      const seat = n === queenRoom ? queenSeat(ground, rooms, queenRoom) : null
+      const seat = n === queenRoom ? queenSeat(ground, rooms, queenRoom, floors) : null
       if (seat) here = here.map((_, k) => seat.x + (k === 0 ? -1 : 1) * HUDDLED * seat.fit)
       else {
         // The end of the floor away from the mouth.
