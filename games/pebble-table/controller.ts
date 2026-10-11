@@ -3,7 +3,7 @@ import { freeSpotOnPlate, GUEST_ARM, GUEST_RADIUS, GUEST_REACH, GUEST_TOP, gazeT
 import { chooseHint, guestsShouldReach, handPose, HintScheduler, type HandPose, type Hint, type TableSummary } from './guidance'
 import { GestureTracker, type Intent, type Target } from './input'
 import { albumSlot, BAG, BAG_MOUTH, DOOR, FEEDING, MAT_KEYS, SCALE, SHELF, shelfTile, TABLE, type MatKey, type Point, type Quarters } from './layout'
-import { GRAVITY, HOLD_HEIGHT, LONGEST_FRAME, STEP, STEP_SLACK, stoneRadius3, TablePhysics, to3, toWorld2, UNIT, type Vec3 } from './physics3d'
+import { GRAVITY, HOLD_HEIGHT, LONGEST_FRAME, PAN_REST_HEIGHT, STEP, STEP_SLACK, stoneRadius3, TablePhysics, to3, toWorld2, UNIT, type Vec3 } from './physics3d'
 import { JAR_REACH, partDepth, partRest, STOOL_REACH, STOOL_TOP } from './partShape'
 import { STONE_REACH, stoneRest } from './stoneShape'
 import { feedingFloor, PAN_RIM, panRimReach, surfaceUnder } from './surfaces'
@@ -308,8 +308,16 @@ export class TableController {
     }
     this.pour()
     if (this.state.liveMat === 'scale') {
-      this.beam = stepBeam(this.beam, targetTilt(this.panLoad()), dt)
-      this.sway = stepSway(this.sway, this.beam.velocity, dt)
+      const target = targetTilt(this.panLoad())
+      const lowered = target < this.beam.angle ? 0 : target > this.beam.angle ? 1 : null
+      if (lowered !== null && this.physics.panRests(lowered)) {
+        // A pan come down on a stone or part lying under it rests there, and the beam and the swing with it, until that is taken away or the other pan outweighs it.
+        this.beam = { angle: (lowered === 0 ? -1 : 1) * ((PAN_REST_HEIGHT - this.physics.panY(lowered)) / UNIT / SCALE.maxDrop) * SCALE.maxTilt, velocity: 0, settledLevel: false }
+        this.sway = { x: this.physics.panSwung(lowered), v: 0 }
+      } else {
+        this.beam = stepBeam(this.beam, target, dt)
+        this.sway = stepSway(this.sway, this.beam.velocity, dt)
+      }
       this.physics.setPanDrops(panDrops(this.beam.angle), swayOf(this.sway))
       const sound = creak(this.beam)
       this.sound.creak(sound.gain, sound.pitch)

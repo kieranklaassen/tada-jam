@@ -105,7 +105,7 @@ Every run stayed at the full tier, with 20 to 34 draw calls. Fair Feeding is wit
 ## Still weak (intersections)
 
 - The Honest Scale's worst second at Chrome 20× (8 to 10 fps) is below `main`'s (13 to 20), though its average is near and its CPU a frame lower; pours at 20× still stall a frame or two. A table opened straight from a link waits about 50 ms at 1× (130 ms at 6×, 180 ms in WebKit) for Rapier to load; from the jam's home it does not wait.
-- The scale coming out clears stones from under its pans, but a stone or part that comes to rest on the table under a pan's rim during play could still be pressed by the pan coming down as the beam tips. No audit run has shown one.
+- A pan now comes down only as far as onto a stone or part lying on the table under it, and the beam stops with it (the audit showed the left pan's rim 0.48 cm into an acorn at `scale @ 37.41 s`; the pan's dish was also drawn lumpy, up to 0.8 cm outside its collider, and is now drawn true to its profile). So the scale reads short while something lies under a pan: the heavier pan rests on it until it is taken away. A pan stopped while swinging stays where it stopped until then. Nothing yet moves such a thing out from under the pan by itself.
 - The fur shells and quills are outside the audit and reviewed by eye only.
 - A mouse carrying a fallen stone home runs straight from the table's edge to the bag, just above the table, through any stone lying in its way. No audit moment drops a stone off the table, so the audit has not seen it.
 - A stone landing fast against a fixture's side (the bowl's, a plate's, a pan's rim) is held by continuous collision like any landing, but only stone-on-stone and part-on-stone landings are bounded by a test.

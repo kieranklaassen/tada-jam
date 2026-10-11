@@ -125,10 +125,15 @@ export function radiusAt(line: readonly (readonly [number, number])[], height: n
   return line[line.length - 1][0]
 }
 
-/** Scale pan profile (unit radius) and its drawn depth: a flat floor with a steep inner rim. */
+/**
+ * Scale pan profile (unit radius) and its drawn depth: a flat floor with a
+ * steep inner rim. The dish is drawn exactly so, outside too (the physics
+ * holds what lies under a pan or leans on it off this outline), so its
+ * outside runs clear of its floor and inner rim all the way up.
+ */
 export const DISH_PROFILE: readonly [number, number][] = [
   [0, -0.05],
-  [0.85, -0.04],
+  [0.92, -0.04],
   [1.02, 0.08],
   [1.06, 0.13],
   [1.0, 0.13],
