@@ -90,6 +90,13 @@ export function laySky(position: string, troop: TroopPlan, rng: number): { sky: 
     const beside = single + 1 < sky.length ? single + 1 : single - 1
     ;[sky[beside], sky[larger]] = [sky[larger], sky[beside]]
   }
+  // The middle place of a row of three is the one under the shell's home control on a wide surface (`HOME_CONTROL`
+  // in layout.ts), and a bunch of three stands highest, its top balloon under that control. So it never hangs
+  // there: it changes places with the single, which then has a bigger bunch on either side of it.
+  if (sky.length === 3 && sky[1].count === 3) {
+    const one = sky.findIndex((bunch) => bunch.count === 1)
+    if (one >= 0) [sky[1], sky[one]] = [sky[one], sky[1]]
+  }
   return { sky, rng: placed.rng }
 }
 

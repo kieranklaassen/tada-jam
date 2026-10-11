@@ -145,6 +145,13 @@ export function waitingSpot(_index: number, view: View): { x: number; z: number 
 export const GROWN_UP_CORNER = 72
 
 /**
+ * The shell's home control: one round control it draws over the game in the middle of the top edge, where a touch
+ * goes home and never reaches the game. Half its width, and how far down from the top edge it comes, in logical
+ * pixels. The game draws nothing there to be touched (`laySky` in order.ts; the test beside it holds the row clear).
+ */
+export const HOME_CONTROL = { halfWidth: 24, bottom: 58 } as const
+
+/**
  * The middle of each place in the sky, for `slots` bunches: one row, with room at each end for a balloon as large
  * as it is drawn here. `largest` is the most balloons any bunch of this sky holds. Where the top of such a bunch
  * would stand as high as the grown-up's corner, the row ends short of the corner, so no balloon is ever in it.

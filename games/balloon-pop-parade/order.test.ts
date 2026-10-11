@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { LADDER } from './config'
 import { KINDS, type Kind } from './kinds'
+import { BALLOON, HOME_CONTROL, bunchOffsets, skySlots, viewFor } from './layout'
 import { LAID_POSITIONS, MOST_BUNCHES, laySky, layTroop, skyFits, type TroopPlan } from './order'
 import { give, served, troopOf, type Bunch, type Count } from './world'
 
@@ -148,6 +149,32 @@ describe('the sky a position lays out', () => {
       const beside = [sky[single - 1], sky[single + 1]].filter((bunch): bunch is Bunch => bunch !== undefined)
       expect(beside.some((bunch) => bunch.colour === kind && bunch.count > 1), `${position}, ${size} ${kind}, seed ${seed}: ${sky.map((bunch) => bunch.colour + bunch.count).join(' ')}`).toBe(true)
     }
+  })
+
+  it('hangs no balloon under the shell\'s home control at the top centre, on the iPad held wide or on a narrower surface', () => {
+    // The shell draws one round control over the game, in the middle of the top edge, and a touch on it goes home.
+    // A balloon is under it when any of its round is in the control's column and as high as the control's lower edge.
+    for (const [width, height] of [[1180, 820], [1024, 768], [1080, 810], [1366, 1024], [1280, 720], [1024, 640], [1000, 820], [900, 820], [820, 1180], [768, 1024]]) {
+      const view = viewFor(width, height), round = BALLOON * view.balloon
+      const column = HOME_CONTROL.halfWidth / view.pixelsPerUnit, under = view.height / 2 - HOME_CONTROL.bottom / view.pixelsPerUnit
+      const covered: string[] = []
+      for (const position of LADDER) for (const troop of TROOPS) for (const seed of SEEDS.slice(0, 120)) {
+        const { sky } = laySky(position, troop, seed), places = skySlots(sky.length, view, Math.max(...sky.map((bunch) => bunch.count)))
+        sky.forEach((bunch, place) => {
+          for (const offset of bunchOffsets(bunch.count)) {
+            const x = places[place].x + offset.x * view.balloon, y = places[place].y + offset.y * view.balloon
+            if (Math.abs(x) < column + round && y + round > under) covered.push(`${position}, ${troop.size} ${troop.kind}, seed ${seed}: ${sky.map((each) => each.count).join(' ')}`)
+          }
+        })
+      }
+      expect(covered.slice(0, 3), `${width} by ${height}`).toEqual([])
+    }
+  })
+
+  it('still hangs the bunch of three in either end place of a row of three, and the single in every place', () => {
+    const skies = SEEDS.map((seed) => laySky('bunches-own-colour', { kind: 'frog', size: 3 }, seed).sky.map((bunch) => bunch.count))
+    expect(new Set(skies.map((sky) => sky.indexOf(3)))).toEqual(new Set([0, 2]))
+    expect(new Set(skies.map((sky) => sky.indexOf(1)))).toEqual(new Set([0, 1, 2]))
   })
 
   it('shuffles the bunches into their places', () => {
