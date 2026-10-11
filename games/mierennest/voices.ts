@@ -1,8 +1,10 @@
 import type { Note } from './audio'
-import { MUD, ROCK, SAND, STONE, type Kind } from './ground'
+import { MUD, ROCK, SAND, STONE, isLump, type Kind } from './ground'
 import type { KingdomEvent } from './kingdom'
 import type { RaidEvent } from './raid'
-import type { InvaderKind } from './habits'
+import type { InvaderKind, Shot } from './habits'
+import { SHOT_OF } from './machines'
+import type { Mover } from './motion'
 import type { ToyEvent } from './toy'
 
 // Every sound of the game as plain numbers: pitch, peak, attack and length. Nobody has heard them: they are written
@@ -23,7 +25,7 @@ export const RANGE = {
 const tone = (frequency: number, peak: number, attack: number, decay: number, more: Partial<Note> = {}): Note => ({ kind: 'tone', frequency, peak, attack, decay, ...more })
 const hiss = (frequency: number, peak: number, attack: number, decay: number, more: Partial<Note> = {}): Note => ({ kind: 'noise', frequency, peak, attack, decay, ...more })
 
-export type Material = 'sand' | 'mud' | 'stone'
+export type Material = Shot
 
 /** How many steps of speed the dig's crunch has. Every voice that takes a number is made once, at load, a step at a time: playing one makes nothing new. */
 export const DIG_STEPS = 12
@@ -93,7 +95,7 @@ export const BELL: Note[] = [tone(1320, 0.14, 0.003, 0.8), tone(1980, 0.07, 0.00
 /** The hill, a toadstool or the log, poked: a soft boing. */
 export const BOING: Note[] = [tone(220, 0.12, 0.006, 0.22, { glideTo: 440 })]
 
-export type Speaker = 'ant' | 'worker' | 'queen' | 'raider' | 'beetle' | 'fly' | 'dungBeetle' | 'dungFly' | 'dungBall'
+export type Speaker = Mover
 
 /** Each creature's own voice when it is poked: invented babble, never a word. */
 export const SPOKEN: Record<Speaker, Note[]> = {
@@ -111,7 +113,7 @@ export const SPOKEN: Record<Speaker, Note[]> = {
 /** How long a voice lasts, in seconds. */
 export const lengthOf = (notes: readonly Note[]): number => Math.max(0, ...notes.map((note) => (note.delay ?? 0) + note.attack + note.decay))
 
-const materialOf = (kind: Kind): Material | null => (kind === SAND ? 'sand' : kind === MUD ? 'mud' : kind === STONE ? 'stone' : null)
+const materialOf = (kind: Kind): Material | null => (isLump(kind) ? SHOT_OF(kind) : null)
 
 /** The voice of something the toy says happened, or null where it makes no sound. */
 export function voiceFor(event: ToyEvent): Note[] | null {

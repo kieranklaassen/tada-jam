@@ -1,14 +1,17 @@
 import { HIGHLIGHT, MACHINE, MUD, SAND, STONE, WOOD } from './palette'
 import { bow, line, oval, shape } from './parts'
 import type { Ctx } from './parts'
+import type { Shot } from '../habits'
+import type { MachineKind } from '../order'
 
 // The two machines the workers built from what grows over the nest: a catapult of grass blades with a leaf bowl,
 // and a cannon that is one fat length of hollow green reed. Each fills its place of two cells by two and is the
 // one fresh green thing under the grass. Flat colour, a darker edge and one hard highlight on each glossy part,
 // like the creatures who made them. What is loaded is the largest thing on the machine after the machine itself.
 
-export type MachineKind = 'catapult' | 'cannon'
-export type Load = 'sand' | 'mud' | 'stone' | null
+export type { MachineKind }
+/** What is in the cup: one of the three shots, or nothing. */
+export type Load = Shot | null
 export type MachinePose = 'ready' | 'fired'
 
 /** The box of a machine: two cells wide and two high. */

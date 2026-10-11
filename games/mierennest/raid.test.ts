@@ -3,6 +3,7 @@ import { LADDER } from './config'
 import { EARTH, MOUTH, MUD, OPEN, SAND, STONE, at, clone, equal, fromPicture, generate, put, settle, toPicture, type Ground } from './ground'
 import { HABITS } from './habits'
 import { PARTY, ROUND, judge, partyAt, type Party } from './order'
+import { below, makeRng, pick } from './rng'
 import { roomOf } from './routes'
 import { DIG, LONGEST, QUEUE_GAP, ROLL, SEEN_FOR, TICK, callRaid, endOf, gaitOf, hit, playOut, stepRaid, type Raid, type RaidEvent } from './raid'
 
@@ -298,6 +299,26 @@ describe('walls and beetles', () => {
   })
 })
 
+describe('a beetle on its way down the shaft', () => {
+  it('finishes its step when the copy changes under the party, and is not sent home from the mouth', () => {
+    // The first of the pair shoves a lump of sand along the tunnel while the second is between the mouth's row and
+    // the foot of the shaft: both get in.
+    const ground = generate(1)
+    for (let y = 1; y <= 5; y++) for (const x of MOUTH) put(ground, x, y, OPEN)
+    for (let y = 4; y <= 5; y++) for (let x = 22; x <= 27; x++) put(ground, x, y, OPEN)
+    for (let y = 3; y <= 5; y++) for (let x = 28; x <= 33; x++) put(ground, x, y, OPEN)
+    settle(ground)
+    const clear = playOut(callRaid(ground, PARTY['beetle-pair']))
+    expect(clear.acts).toBe(2)
+    put(ground, 24, 5, SAND)
+    const raid = callRaid(ground, PARTY['beetle-pair'])
+    const events = watch(raid, () => {})
+    expect(kinds(events, 'gave').length).toBeGreaterThan(0)
+    expect(kinds(events, 'givesUp')).toEqual([])
+    expect(raid.acts).toBe(2)
+  })
+})
+
 describe('a stone that is shoved rolls', () => {
   /** A tunnel two cells high from the shaft to a room at its far end; `floor` is the bottom row of both. */
   const way = (floor: string) => ['X.XXXXXXXXXXXXXXXXXX', '#.##################', '#.##################', '#.##########.......#', '#..................#', `#${floor}#`, '####################', 'XXXXXXXXXXXXXXXXXXXX']
@@ -375,6 +396,19 @@ describe('what a raid leaves behind', () => {
     expect(judge(endOf(raid))).toBe('not-judged')
     expect(judge(endOf(raid, true))).toBe('not-judged')
   })
+
+  it('is not judged where it was cut off with invaders still on their way, as one that was put away is not', () => {
+    const raid = raidOn(nest(), ['ant'])
+    while (raid.invaders[0].state !== 'going') stepRaid(raid)
+    raid.time = LONGEST - TICK
+    stepRaid(raid)
+    expect([raid.over, raid.cutOff, raid.acts]).toEqual([true, true, 0])
+    expect(judge(endOf(raid))).toBe('not-judged')
+    // One that ends by itself is judged, at whatever time it ends.
+    const whole = playOut(raidOn(nest(), ['ant']))
+    expect(whole.cutOff).toBe(false)
+    expect(judge(endOf(whole))).toBe('not-well')
+  })
 })
 
 describe('a shot', () => {
@@ -428,7 +462,11 @@ describe('a shot', () => {
       const raid = at3([kind], 3)
       hit(raid, 0, shot)
       playOut(raid)
-      expect(['home', 'held', 'stuck']).toContain(raid.invaders[0].state)
+      // The raid ended by itself, and the one that was hit ended where its habit says: a raider ant rolled up in
+      // mud is held until the workers come, and every other goes home on its own feet.
+      expect(raid.time, `${kind} ${shot}`).toBeLessThan(LONGEST)
+      expect(raid.cutOff, `${kind} ${shot}`).toBe(false)
+      expect(raid.invaders[0].state, `${kind} ${shot}`).toBe(kind === 'ant' && shot === 'mud' ? 'held' : 'home')
       expect(raid.invaders.length).toBe(1)
     }
   })
@@ -470,6 +508,84 @@ describe('at every place of the order', () => {
     while (!raid.over) { stepRaid(raid); ticks++ }
     expect(ticks * TICK).toBeCloseTo(raid.time, 6)
     expect(ticks).toBeLessThan(LONGEST / TICK)
+  })
+})
+
+/**
+ * A nest nobody planned, on the game's own ground: the shaft dug deeper, one to five rooms, a hall one to three
+ * cells high from the shaft to each, mouthfuls bitten out of floors, and up to thirty lumps set down anywhere.
+ */
+function randomNest(seed: number): Ground {
+  const rng = makeRng(seed), ground = generate(seed)
+  const dig = (x0: number, y0: number, x1: number, y1: number) => {
+    for (let y = Math.max(1, y0); y <= Math.min(ground.rows - 2, y1); y++) for (let x = Math.max(1, x0); x <= Math.min(ground.cols - 2, x1); x++) if (at(ground, x, y) !== OPEN) put(ground, x, y, OPEN)
+  }
+  for (let n = 1 + below(rng, 5); n > 0; n--) {
+    const wide = 4 + below(rng, 6), high = 3 + below(rng, 3)
+    const x = 1 + below(rng, ground.cols - wide - 2), floor = 4 + below(rng, ground.rows - 7)
+    dig(x, floor - high + 1, x + wide - 1, floor)
+    // The shaft goes down to the room's floor, and a hall leads from it to the room.
+    const tall = 1 + below(rng, 3)
+    dig(MOUTH[0], 1, MOUTH[2], floor)
+    dig(Math.min(x, MOUTH[0]), floor - tall + 1, Math.max(x, MOUTH[2]), floor)
+    // A mouthful bitten out of the floor, now and then.
+    if (below(rng, 2) === 0) { const at = x + below(rng, wide - 1); dig(at, floor + 1, at + below(rng, 2), floor + 1) }
+  }
+  settle(ground)
+  for (let n = below(rng, 31); n > 0; n--) {
+    const x = 1 + below(rng, ground.cols - 2), y = 1 + below(rng, ground.rows - 2)
+    if (at(ground, x, y) === OPEN) put(ground, x, y, pick(rng, [SAND, MUD, STONE] as const))
+    settle(ground)
+  }
+  return ground
+}
+
+describe('a lump between two of the party', () => {
+  it('is not shoved from under one of them nor onto one: two beetles in a pit beside a bed of sand do not pass a lump to and fro, and the raid ends by itself', () => {
+    // The shaft dug down to a pit, a room up a hall that a beetle at the foot of the shaft cannot climb back to, and
+    // a bed of sand beside the pit with earth behind it. The first beetle ploughs a lump behind itself; the second
+    // must not shove it forward again into the place the first is stepping into.
+    const ground = generate(1)
+    const fill = (x0: number, x1: number, y0: number, y1: number, kind: typeof EARTH | typeof OPEN | typeof SAND) => {
+      for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) put(ground, x, y, kind)
+    }
+    fill(12, 38, 1, 14, EARTH)
+    fill(19, 21, 1, 12, OPEN)
+    fill(22, 25, 5, 6, OPEN)
+    fill(26, 32, 4, 6, OPEN)
+    fill(22, 24, 11, 12, OPEN)
+    fill(25, 31, 11, 12, SAND)
+    settle(ground)
+    for (const party of [['beetle', 'beetle'], ['beetle', 'beetle', 'beetle']] as Party[]) {
+      const raid = callRaid(ground, party)
+      const gave = kinds(watch(raid, () => {}), 'gave').length
+      expect(raid.cutOff, party.join()).toBe(false)
+      expect(raid.time, party.join()).toBeLessThan(30)
+      // Each lump is passed back once by each beetle that comes to it, and no more.
+      expect(gave, party.join()).toBeLessThan(20)
+      expect(states(raid).every((state) => state === 'held'), party.join()).toBe(true)
+    }
+  })
+})
+
+describe('on nests nobody planned', () => {
+  it('no raid of any party of the order or the round is cut off by the clock: every one ends by itself', () => {
+    const parties: Party[] = [...new Map([...Object.values(PARTY), ...ROUND].map((party) => [party.join(), party])).values()]
+    let played = 0
+    const cut: string[] = []
+    // The first twenty-four, two of which had invaders waiting for each other at a dip in a floor, and three in which
+    // beetles in a pit beside a bed of sand shoved one lump to and fro between them for as long as the raid ran.
+    for (const seed of [...Array.from({ length: 24 }, (_, n) => n + 1), 176, 240, 597]) {
+      const ground = randomNest(seed)
+      for (const party of parties) {
+        const raid = playOut(callRaid(ground, party))
+        played++
+        if (raid.cutOff || raid.time >= LONGEST) cut.push(`seed ${seed}, ${party.join()}`)
+      }
+    }
+    expect(played).toBeGreaterThan(400)
+    expect(parties.length).toBe(18)
+    expect(cut).toEqual([])
   })
 })
 
@@ -610,6 +726,16 @@ describe('one invader in a chamber at a time', () => {
       // It did not wait for the first to be gone: it was at its act within the time it takes to walk in.
       expect(raid.time - hitAt, shot).toBeLessThan(3)
     }
+    // A fly gummed where it hung, dazed before it goes home: the next flies in past it.
+    const airy = ['X...XXXXXX', '#...######', '#........#', '#........#', '#........#', '##########', 'XXXXXXXXXX']
+    const flies = raidOn(airy, ['fly', 'fly'])
+    while (!flies.over && flies.invaders[0].state !== 'acting') stepRaid(flies)
+    hit(flies, 0, 'mud')
+    expect([flies.invaders[0].state, flies.invaders[0].after]).toEqual(['dazed', 'leaving'])
+    const gummedAt = flies.time
+    while (!flies.over && flies.invaders[1].state !== 'acting') stepRaid(flies)
+    expect(flies.invaders[1].state).toBe('acting')
+    expect(flies.time - gummedAt).toBeLessThan(3)
   })
 
   it('nobody waits behind one who came later, so no two ever wait for each other', () => {
@@ -627,6 +753,23 @@ describe('one invader in a chamber at a time', () => {
     const raid = playOut(raidOn(picture, ['ant', 'ant', 'ant', 'ant']))
     expect(raid.time).toBeLessThan(LONGEST)
     expect(raid.acts).toBe(4)
+    // A room whose floor has a mouthful bitten out of it: the way to a place in the room dips out of the room and
+    // back. One who has the chamber goes to its place past one who waits, and every one of the file does its act.
+    const dip = [
+      'XXXX...XXXXXXXXXXXXXXXXX',
+      '####...#################',
+      '####...#################',
+      '####...........#########',
+      '########.........#######',
+      '########.........#######',
+      '###########..###########',
+      '########################',
+      'XXXXXXXXXXXXXXXXXXXXXXXX',
+    ]
+    const dipped = playOut(raidOn(dip, ['ant', 'ant', 'ant']))
+    expect(dipped.time).toBeLessThan(LONGEST)
+    expect(dipped.acts).toBe(3)
+    expect(dipped.cutOff).toBe(false)
   })
 })
 
@@ -701,7 +844,10 @@ describe('a dung beetle and its ball', () => {
       const picture = hall([EARTHS, CLEAR, wall])
       const before = fromPicture(picture)
       const raid = dungRaid(picture, ['dungBeetle', 'dungBeetle', 'dungBeetle'])
-      const events = watch(raid, () => {})
+      let together = 0
+      const events = watch(raid, () => { together = Math.max(together, raid.invaders.filter((one) => one.state === 'straining').length) })
+      // All three lean on it at once, and it holds all the same.
+      expect(together, wall).toBe(3)
       expect(raid.acts, wall).toBe(0)
       expect(kinds(events, 'gave'), wall).toEqual([])
       expect(toPicture(raid.ground)[4], wall).toBe(toPicture(before)[4])
@@ -711,6 +857,11 @@ describe('a dung beetle and its ball', () => {
     expect(three.acts).toBeGreaterThan(0)
     const two = playOut(dungRaid(hall([EARTHS, CLEAR, '....mo.....']), ['beetle', 'beetle']))
     expect(two.acts).toBe(0)
+    // And the push of one ball is 6, not 5: sand packed by mud, which holds 5, gives to it.
+    const packed = dungRaid(hall([EARTHS, CLEAR, '....sm.....']))
+    const gave = kinds(watch(packed, () => {}), 'gave')
+    expect(gave.length).toBeGreaterThan(0)
+    expect(packed.acts).toBe(1)
   })
 
   it('meets lumps set under the mouth as a wall like any other: it is not left on the grass for one lump in a column', () => {

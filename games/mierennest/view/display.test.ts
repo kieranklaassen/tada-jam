@@ -1,16 +1,16 @@
 import { describe, expect, it } from 'vitest'
-import { BODY, campers } from '../camp'
+import { BODY, campers, faceCircle } from '../camp'
 import { LADDER } from '../config'
 import { CELL, EARTH, MOUTH, OPEN, STONE, at, put, settle } from '../ground'
 import type { Guidance } from '../guidance'
 import { ROUND } from '../order'
-import { workerSpots } from '../residents'
+import { queenSeat, workerSpots } from '../residents'
 import { freshGame, type Game } from '../save'
 import { Kingdom } from '../kingdom'
 import { DRAWS, LADDER_BEAT, LADDER_SWAY, MOST_CRUMBS, QUEEN_WEDGED, ROOTS_SWING, SHOWING_AT, SPOIL_TROT, ToyDisplay, drawsOf, type Item } from './display'
 import { GRASS_Y, GROUND, MOUTH_X } from './layout'
 import { BELL } from './props'
-import { covers, shownFace } from './raidShow'
+import { covers, showFurnishings, shownFace } from './raidShow'
 
 /** The most draws a frame may make. */
 const DRAW_BUDGET = 80
@@ -57,6 +57,39 @@ describe('a frame of the toy', () => {
     // Six campers (the scout at the log is the raider ant, so its puddle is empty), the queen, the worker on the hill and the ant.
     expect(items.filter((item) => item.is === 'sprite').length).toBe(6 + 3)
     expect(items[0].is).toBe('drop')
+  })
+
+  it('shows the rooms as the ground lies at every frame, though what follows from the ground is kept between frames', () => {
+    const k = new Kingdom(crowded()), display = new ToyDisplay(k, 1)
+    const hung = (items: Item[]) => items.flatMap((item) => (item.is === 'thing' ? [[item.thing, item.x, item.y, item.lit]] : []))
+    // Worked out afresh from the ground as it lies now, with nothing kept.
+    const afresh = () => {
+      const g = k.game.ground, realm = k.toy.realm, throne = queenSeat(g, realm.chambers, realm.queenRoom)
+      const span = throne && realm.queenRoom !== null ? { room: realm.queenRoom, from: throne.x - 2.2 * throne.fit, to: throne.x + 2.2 * throne.fit } : null
+      return { things: showFurnishings(g, realm.chambers, 0, span, false).map((thing) => [thing.thing, thing.x, thing.y, thing.lit]), workers: workerSpots(g, realm.chambers, realm.queenRoom, realm.workers).length }
+    }
+    let t = 0, changes = 0, last = ''
+    for (let n = 0; n < 160; n++) {
+      // Strokes all over the nest, many of them through the floor of a room, and four frames after each.
+      const x = ((n * 7.3) % 37) + 1.5, y = 4.5 + ((n * 3.7) % 13)
+      k.press(x, y, t)
+      k.drag((x + 2 + (n % 5)) % 38, 4.5 + ((y + (n % 3)) % 13), (t += 0.1))
+      k.release()
+      for (let f = 0; f < 4; f++) {
+        k.step(1 / 30)
+        display.see(k.toy.drainEvents())
+        display.advance(1 / 30)
+        const items = display.items(null), now = afresh()
+        expect(hung(items), `stroke ${n}, frame ${f}`).toEqual(now.things)
+        expect(sprites(items, 'worker').length, `stroke ${n}, frame ${f}`).toBeGreaterThanOrEqual(now.workers)
+        const told = JSON.stringify(now)
+        if (told !== last) changes++
+        last = told
+      }
+      t += 0.3
+    }
+    // The rooms did change under the display, many times.
+    expect(changes).toBeGreaterThan(10)
   })
 
   it('stays under the draw budget at its fullest: a full kingdom, a lump in the jaws, crumbs of every colour and the hand', () => {
@@ -461,11 +494,7 @@ describe('the kingdom\'s own make way', () => {
     return game
   }
   const boxOf = (item: Extract<Item, { is: 'sprite' }>) => ({ left: item.x - (BODY[item.who].width / 2) * item.size, right: item.x + (BODY[item.who].width / 2) * item.size, top: item.y - BODY[item.who].height * item.size * item.tall, bottom: item.y })
-  const faceOf = (item: Extract<Item, { is: 'sprite' }>) => {
-    const body = BODY[item.who], radius = Math.min(18, body.height * 0.45) * item.size
-    return { x: item.x + (item.flip ? -1 : 1) * ((body.width / 2) * item.size - radius - 2), y: item.y - body.height * 0.55 * item.size, radius }
-  }
-  const covers = (box: ReturnType<typeof boxOf>, face: ReturnType<typeof faceOf>) => Math.hypot(Math.max(box.left - face.x, 0, face.x - box.right), Math.max(box.top - face.y, 0, face.y - box.bottom)) < face.radius
+  const faceOf = (item: Extract<Item, { is: 'sprite' }>) => faceCircle(item.who, item.x, item.y, item.flip, item.size)
 
   it('a worker or the queen standing in a cell that is pressed steps aside, and the cell is answered', () => {
     for (const who of ['worker', 'queen'] as const) {

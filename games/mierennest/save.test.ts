@@ -3,7 +3,7 @@ import { pickUp } from './build'
 import { LADDER } from './config'
 import { COLS, EARTH, LUMPS, MOUTH, MUD, OPEN, ROCK, ROWS, SAND, STONE, at, clone, count, equal, generate, makeGround, put, settle, type Kind } from './ground'
 import { canStand } from './machines'
-import { SHOWINGS } from './order'
+import { SHOWINGS, owed } from './order'
 import { decodeGround, deserialize, encodeGround, freshGame, serialize, type Game } from './save'
 import { STATE_VERSION } from './state'
 import { lean } from './walls'
@@ -203,6 +203,26 @@ describe('reading a slot that is not a good save', () => {
   })
 
   it('keeps only marks that are showings, each once', () => {
-    expect(deserialize({ ...good(), shown: ['fly', 'fly', 'boss', 7, 'ant'] }, null, SEED).shown).toEqual(['ant', 'fly'])
+    expect(deserialize({ ...good(), machines: [], shown: ['fly', 'fly', 'boss', 7, 'ant'] }, null, SEED).shown).toEqual(['ant', 'fly'])
+    // With both machines in the nest, each has had its showing whatever the marks say.
+    expect(deserialize({ ...good(), shown: ['fly', 'fly', 'boss', 7, 'ant'] }, null, SEED).shown).toEqual(['ant', 'fly', 'catapult', 'cannon'])
+  })
+
+  it('reads a machine and the mark of its showing together: one that is kept has had its showing, and one that has not arrived has no mark', () => {
+    // A machine in the nest whose mark was lost: it is not shown again, and no second one arrives.
+    const raw = good()
+    raw.machines = [(raw.machines as unknown[])[0]]
+    raw.shown = ['ant', 'beetle', 'fly']
+    const game = deserialize(raw, null, SEED)
+    expect(game.machines.map((m) => m.kind)).toEqual(['catapult'])
+    expect(game.shown).toEqual(['ant', 'beetle', 'fly', 'catapult'])
+    expect(owed(game.position, game.muster, game.shown)).toEqual(['cannon'])
+    // A place in the order that was lost, with the marks kept: the machines have not arrived, and are still owed their showing when they do.
+    const early = deserialize({ ...good(), position: 'first-fly' }, null, SEED)
+    expect(early.machines).toEqual([])
+    expect(early.shown).toEqual(['ant', 'beetle', 'fly'])
+    expect(owed('the-catapult', 0, early.shown)).toContain('catapult')
+    // A whole record reads back as it was.
+    expect(deserialize(good(), null, SEED).shown).toEqual(['ant', 'beetle', 'fly', 'catapult', 'cannon'])
   })
 })

@@ -1,5 +1,6 @@
 import { BODY } from '../camp'
-import { CELL, MUD, SAND, type Ground, type Lump } from '../ground'
+import { BACKDROP } from '../config'
+import { CELL, MUD, SAND, STONE, type Ground, type Lump } from '../ground'
 import { fit } from '../stage'
 import { POSES, type CreatureKind } from './creatures'
 import type { Item } from './display'
@@ -9,7 +10,7 @@ import { GRASS_Y, GROUND, MOUTH_X, SURFACE } from './layout'
 import * as P from './palette'
 import { LIP, hillShape, paintDrop, paintHill, paintStalk } from './props'
 import { paintSetting } from './setting'
-import { Sprites, Stamps } from './sprites'
+import { Sprites, Stamps, letGo } from './sprites'
 import { paintMachine } from './machines'
 import { paintEffect, paintThing } from './things'
 
@@ -42,7 +43,7 @@ const EFFECT_BOX = { width: 96, height: 96, originX: 48, originY: 48 } as const
 /** How many steps of its course a changing effect is painted in. */
 const EFFECT_STEPS = 4
 
-const LUMP_FILL: Record<Lump, string> = { 2: P.SAND.fill, 3: P.MUD.fill, 4: P.STONE.fill }
+const LUMP_FILL: Record<Lump, string> = { [SAND]: P.SAND.fill, [MUD]: P.MUD.fill, [STONE]: P.STONE.fill }
 
 export class ToyView {
   private readonly pen: CanvasRenderingContext2D | null
@@ -68,9 +69,15 @@ export class ToyView {
     this.glass = layerOf(canvas, true)
   }
 
+  /** The layers leave the page, and every canvas this view made lets its store go. */
   dispose(): void {
     this.back.remove()
     this.glass.remove()
+    for (const canvas of [this.back, this.glass, this.setting]) letGo(canvas)
+    this.setting = null
+    this.sprites?.release()
+    this.stamps?.release()
+    this.madeFor = ''
   }
 
   /** The ground to show. Null before the save has been read: then the setting stands alone, with the dark of the farm under it. */
@@ -107,9 +114,10 @@ export class ToyView {
     const doc = this.canvas.ownerDocument
     // The setting is kept apart as well, so the strip under the hill can be put back when the hill grows.
     const region = hillRegion()
+    letGo(this.setting)
     this.setting = Object.assign(doc.createElement('canvas'), { width: Math.ceil(region.width * k), height: Math.ceil(region.height * k) })
     const back = this.back.getContext('2d')!
-    back.fillStyle = P.WOOD.dark
+    back.fillStyle = BACKDROP
     back.fillRect(0, 0, this.back.width, this.back.height)
     back.setTransform(k, 0, 0, k, x, y)
     paintSetting(back)

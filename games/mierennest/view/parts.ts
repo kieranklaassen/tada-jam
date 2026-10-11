@@ -1,3 +1,4 @@
+import type { Mover } from '../motion'
 import { EYE, HIGHLIGHT, INK } from './palette'
 
 // The shared brushes of the creatures: flat glossy blobs with one hard highlight, thick tapered legs with round
@@ -6,7 +7,8 @@ import { EYE, HIGHLIGHT, INK } from './palette'
 
 /** Where the eyes look, x and y each from -1 to 1. */
 export type Look = { x: number; y: number }
-export type CreatureKind = 'ant' | 'queen' | 'worker' | 'raider' | 'beetle' | 'fly' | 'dungBeetle' | 'dungBall' | 'dungFly'
+/** The nine creatures that are painted: the same nine that move (motion.ts). */
+export type CreatureKind = Mover
 export type Ctx = CanvasRenderingContext2D
 export type P = readonly [number, number]
 /** One painter per kind: the pose, where the eyes look, and the seconds of game time. */

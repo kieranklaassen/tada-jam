@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { LADDER } from './config'
 import { EARTH, LUMPS, MOUTH, MUD, OPEN, STONE, at, clone, count, equal, put, settle } from './ground'
 import { Kingdom, SCENE_SECONDS, type KingdomEvent } from './kingdom'
-import { RELOAD } from './machines'
+import { RELOAD, nearestStand } from './machines'
 import type { RaidEvent } from './raid'
 import { deserialize, freshGame, serialize, type Game } from './save'
 
@@ -106,6 +106,42 @@ describe('the bell and a ground that is still falling', () => {
     // The copy the raid runs on is the ground as it lies, and the cells it keeps clear of waiters are where the machine stands now.
     expect(equal(k.raid!.ground, k.game.ground)).toBe(true)
     expect(k.raid!.machines.has(cannon.y * 40 + cannon.x)).toBe(true)
+  })
+
+  it('empties the hand before the party comes: a finger that went back to work while the bell waited bites nothing once the raid runs', () => {
+    const k = new Kingdom(nestGame())
+    // A mouthful is bitten, the bell is rung before the ground has come to rest, and the finger goes straight back to the earth.
+    k.press(33, 6.9, 0)
+    k.drag(33, 7.5, 0.1)
+    k.release()
+    expect(k.toy.atRest).toBe(false)
+    k.bell()
+    k.press(10.5, 10.5, 0.2)
+    for (let n = 0; n < 600 && !k.raid; n++) k.step(1 / 30)
+    expect(k.raid).not.toBeNull()
+    const before = clone(k.game.ground)
+    k.drag(14.5, 10.5, 1)
+    play(k, 0.5)
+    k.drag(16.5, 10.5, 1.5)
+    k.release()
+    expect(equal(k.game.ground, before)).toBe(true)
+    // A machine held in the same way is back where it stood, and is not moved while the raid runs.
+    const game = nestGame('the-cannon')
+    game.shown.push('catapult', 'cannon')
+    game.machines.push({ kind: 'cannon', x: 32, y: 5, facing: -1, load: null })
+    const armed = new Kingdom(game)
+    armed.press(24, 6.9, 0)
+    armed.drag(24, 7.5, 0.1)
+    armed.release()
+    armed.bell()
+    armed.press(32.5, 5.5, 0.2)
+    armed.drag(31.5, 5.5, 0.3)
+    for (let n = 0; n < 600 && !armed.raid; n++) armed.step(1 / 30)
+    expect(armed.raid).not.toBeNull()
+    expect(armed.grabbed).toBeNull()
+    armed.drag(26.5, 5.5, 1)
+    armed.release()
+    expect(armed.game.machines[0]).toMatchObject({ x: 32, y: 5, facing: -1 })
   })
 
   it('a game put away before the ground has come to rest plays no scene on return: the queen\'s move is owed, and starts at the next touch', () => {
@@ -750,6 +786,27 @@ describe('a machine', () => {
     expect(k.game.machines[0]).toMatchObject({ x: 32, y: 6 })
   })
 
+  it('makes no stone where the stone its level shot strikes is in the ant\'s jaws by then: the kit is whole', () => {
+    const k = armed('stone')
+    put(k.game.ground, 28, 5, OPEN)
+    put(k.game.ground, 23, 5, STONE)
+    const before = whole(k.game)
+    // The cannon is tapped, and the stone at the far end of the hall is taken up while the shot is still in the air.
+    k.press(32.5, 5.5, 0)
+    k.release()
+    expect(k.flying.length).toBe(1)
+    play(k, 0.1)
+    k.press(23.5, 5.5, 0.1)
+    expect(k.toy.carried?.kind).toBe(STONE)
+    expect(k.flying.length).toBe(1)
+    k.drag(26.5, 5.5, 0.2)
+    play(k, 1)
+    k.release()
+    play(k, 2)
+    expect(whole(k.game)).toEqual(before)
+    expect(whole(saved(k.game))).toEqual(before)
+  })
+
   it('a shot that meets the ground is answered by what it met: sand, mud and stone each say so, and a free stone struck by a level shot rolls one cell on', () => {
     const shoot = (target: number, beyond: number = OPEN) => {
       const k = armed('stone')
@@ -892,18 +949,57 @@ describe('a machine', () => {
 
 describe('a whole game played carelessly', () => {
   it('never throws, never loses a lump, never moves the position by chance, and reads back from any instant', () => {
+    let raids = 0, onAMachine = 0, heldThroughTheBell = 0, reloads = 0
     for (const seed of [1, 2, 3]) {
-      let k = new Kingdom(freshGame(null, seed))
-      let t = 0
-      const start = whole(k.game)
+      const first = freshGame(null, seed)
+      if (seed === 3) {
+        // The third game is found further on, from a save: a hall off the shaft, and both machines in the nest.
+        for (const y of [2, 3]) for (let x = 22; x <= 30; x++) if (at(first.ground, x, y) === EARTH) put(first.ground, x, y, OPEN)
+        settle(first.ground)
+        first.position = 'the-cannon'
+        first.shown.push('ant', 'beetle', 'fly', 'catapult', 'cannon')
+        for (const [kind, near] of [['catapult', 24], ['cannon', 28]] as const) {
+          const place = nearestStand(first.ground, first.machines, near, 3)
+          expect(place, kind).not.toBeNull()
+          first.machines.push({ kind, x: place!.x, y: place!.y, facing: 1, load: null })
+        }
+      }
+      let k = new Kingdom(seed === 3 ? saved(first) : first)
+      expect(k.game.machines.length).toBe(seed === 3 ? 2 : 0)
+      let t = 0, wells = 0
+      const start = whole(k.game), startAt = LADDER.indexOf(k.game.position as (typeof LADDER)[number])
+      const drain = () => {
+        for (const event of k.drainEvents()) {
+          if (event.type === 'called') raids++
+          if (event.type === 'judged' && event.verdict === 'well') wells++
+        }
+        k.drainRaidEvents()
+      }
       for (let n = 0; n < 220; n++) {
         const x = ((n * 7.3 + seed) % 38) + 1, y = 1.5 + ((n * 3.7) % 17)
-        const before = clone(k.game.ground)
+        const before = clone(k.game.ground), raidBefore = k.raid
         k.press(x, y, t)
         k.drag((x + 3 + (n % 7)) % 39, 1.5 + ((y + (n % 4)) % 17), (t += 0.1))
         if (n % 9 === 0) k.cancel()
         else k.release()
-        if (n % 13 === 5) k.bell()
+        if (n % 13 === 5) {
+          k.bell()
+          if (n % 2 === 1) {
+            // The finger goes straight back to work and stays down while the bell waits for the ground, and after:
+            // once the raid runs, nothing it does builds.
+            k.press((x + 5) % 39, y, (t += 0.1))
+            for (let f = 0; f < 60 && !k.raid && !k.scene; f++) k.step(1 / 30)
+            if (k.raid) {
+              heldThroughTheBell++
+              const built = clone(k.game.ground)
+              k.drag((x + 9) % 39, y, (t += 0.1))
+              for (let f = 0; f < 3; f++) k.step(1 / 30)
+              expect(equal(k.game.ground, built), `seed ${seed}, turn ${n}`).toBe(true)
+              expect(k.grabbed).toBeNull()
+            }
+            k.release()
+          }
+        }
         for (let f = 0; f < 3; f++) k.step(1 / 30)
         // A lump that has just moved is on its way down: the finger snatches at it and lets go somewhere else, on a machine now and then.
         const falling = k.game.ground.cells.findIndex((kind, i) => LUMPS.includes(kind as (typeof LUMPS)[number]) && before.cells[i] === OPEN)
@@ -911,27 +1007,49 @@ describe('a whole game played carelessly', () => {
           k.press((falling % 40) + 0.5, Math.floor(falling / 40) + 0.5, t)
           for (let f = 0; f < 3; f++) k.step(1 / 30)
           const machine = k.game.machines[n % 2]
-          if (machine && n % 4 === 0) k.drag(machine.x + 0.5, machine.y + 0.5, (t += 0.1))
-          else k.drag((x + 9) % 39, 1.5 + ((y + 6) % 17), (t += 0.1))
+          if (machine && n % 4 === 0) {
+            if (k.toy.carried) onAMachine++
+            k.drag(machine.x + 0.5, machine.y + 0.5, (t += 0.1))
+          } else k.drag((x + 9) % 39, 1.5 + ((y + 6) % 17), (t += 0.1))
           if (n % 5 === 0) k.cancel()
           else k.release()
         }
         for (let f = 0; f < 3; f++) k.step(1 / 30)
-        k.drainEvents()
-        k.drainRaidEvents()
+        // A raid that ran through the whole turn: the nest as built is as it was, whatever the finger did.
+        if (raidBefore && k.raid === raidBefore) expect(equal(k.game.ground, before), `seed ${seed}, turn ${n}`).toBe(true)
+        drain()
         t += 0.2
         if (n % 31 === 17) {
           k.putAway()
-          k = new Kingdom(saved(k.game))
+          drain()
+          // What is stored reads back as it was stored: the kit, the place in the order, the machines, and the
+          // ground as it comes to rest; and a game opened from it plays nothing by itself.
+          const record = saved(k.stored())
+          expect(whole(record), `seed ${seed}, turn ${n}`).toEqual(start)
+          k = new Kingdom(saved(k.stored()))
+          reloads++
           expect(k.raid).toBeNull()
           expect(k.scene).toBeNull()
+          expect(whole(k.game)).toEqual(whole(record))
+          expect(equal(k.game.ground, record.ground)).toBe(true)
+          expect([k.game.position, k.game.muster, k.game.ended, k.game.shown]).toEqual([record.position, record.muster, record.ended, record.shown])
+          expect(k.game.machines.map((machine) => [machine.kind, machine.load])).toEqual(record.machines.map((machine) => [machine.kind, machine.load]))
+          // And read back once more it is the same again.
+          expect(equal(saved(k.game).ground, k.game.ground)).toBe(true)
         }
       }
       k.putAway()
       for (let f = 0; f < 300; f++) k.step(1 / 30)
+      drain()
       expect(whole(k.game), `seed ${seed}`).toEqual(start)
-      expect(LADDER as readonly string[]).toContain(k.game.position)
+      // The position has moved one place for each raid that went well, and by nothing else.
+      expect(LADDER.indexOf(k.game.position as (typeof LADDER)[number]), `seed ${seed}`).toBe(Math.min(LADDER.length - 1, startAt + wells))
       expect(at(k.game.ground, k.game.ant.x, k.game.ant.y)).toBe(OPEN)
     }
+    // The careless games did meet what they are here to meet.
+    expect(raids).toBeGreaterThan(3)
+    expect(onAMachine).toBeGreaterThan(0)
+    expect(heldThroughTheBell).toBeGreaterThan(0)
+    expect(reloads).toBeGreaterThan(15)
   })
 })

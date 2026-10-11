@@ -1,12 +1,13 @@
-import { BODY, partyFile, type Camper } from '../camp'
+import { BODY, bodyBox, faceCircle, partyFile, type Box, type Camper, type Face } from '../camp'
 import type { Room } from '../chambers'
-import { CELL, OPEN, at, type Ground } from '../ground'
+import { CELL, OPEN, type Ground } from '../ground'
 import type { Flying, Scene } from '../kingdom'
 import { RELOAD } from '../machines'
 import type { Mover } from '../motion'
 import type { Party } from '../order'
 import type { InvaderKind } from '../habits'
 import { APART, type Invader, type Raid } from '../raid'
+import { floorOf, type Floor } from '../residents'
 import type { Machine } from '../save'
 import { GRASS_Y, GROUND, MOUTH_X } from './layout'
 import type { Effect, Thing } from './things'
@@ -14,7 +15,8 @@ import type { Effect, Thing } from './things'
 // What a raid, the machines and the rooms show, as numbers and names with no canvas in sight: which creature in
 // which pose stands where. The display list (display.ts) turns these into things to draw.
 
-const toStage = (cx: number, cy: number) => ({ x: GROUND.x + cx * CELL, y: GROUND.y + cy * CELL })
+/** A point of the ground, in cell units, on the stage. */
+export const toStage = (cx: number, cy: number) => ({ x: GROUND.x + cx * CELL, y: GROUND.y + cy * CELL })
 
 /** The creature that plays each kind of invader. */
 export const PLAYED_BY: Record<InvaderKind, Mover> = { ant: 'raider', beetle: 'beetle', fly: 'fly', dungBeetle: 'dungBeetle', dungFly: 'dungFly' }
@@ -191,35 +193,30 @@ function seatY(raid: Raid, file: readonly Camper[], n: number): number {
 }
 
 /** The body of something shown, as a box on the stage: turned on end where it climbs. */
-export function shownBox(one: Shown): { left: number; right: number; top: number; bottom: number } {
-  const body = BODY[one.who], w = body.width * one.size, h = body.height * one.size
+export function shownBox(one: Shown): Box {
   if (Math.abs(Math.abs(one.turn) - Math.PI / 2) < 0.01 && one.who !== 'dungBall') {
     // Turned about the middle of its body: as long up and down as it was wide.
+    const body = BODY[one.who], w = body.width * one.size, h = body.height * one.size
     const cy = one.y - h / 2
     return { left: one.x - h / 2, right: one.x + h / 2, top: cy - w / 2, bottom: cy + w / 2 }
   }
-  return { left: one.x - w / 2, right: one.x + w / 2, top: one.y - h, bottom: one.y }
+  return bodyBox(one.who, one.x, one.y, one.size)
 }
 
 /** The face of something shown: a circle at the front of its body. A ball has none, and neither has one who ducks. */
-export function shownFace(one: Shown): { x: number; y: number; radius: number } | null {
+export function shownFace(one: Shown): Face | null {
   if (one.who === 'dungBall' || DUCKS[one.who] === one.pose) return null
-  const body = BODY[one.who], w = body.width * one.size, h = body.height * one.size
-  const radius = Math.min(18, body.height * 0.45) * one.size, front = one.flip ? -1 : 1
   // As it stands: at the front, a little over the middle of its height.
-  let dx = front * (w / 2 - radius - 2), dy = -h * 0.55
-  if (one.turn !== 0 && Math.abs(Math.abs(one.turn) - Math.PI / 2) < 0.01) {
-    // Turned about the middle of its body.
-    const ry = dy + h / 2, cos = Math.cos(one.turn), sin = Math.sin(one.turn)
-    const tx = dx * cos - ry * sin, ty = dx * sin + ry * cos
-    dx = tx
-    dy = ty - h / 2
-  }
-  return { x: one.x + dx, y: one.y + dy, radius }
+  const face = faceCircle(one.who, one.x, one.y, one.flip, one.size)
+  if (one.turn === 0 || Math.abs(Math.abs(one.turn) - Math.PI / 2) >= 0.01) return face
+  // Turned about the middle of its body.
+  const h = BODY[one.who].height * one.size, dx = face.x - one.x, ry = face.y - one.y + h / 2
+  const cos = Math.cos(one.turn), sin = Math.sin(one.turn)
+  return { x: one.x + dx * cos - ry * sin, y: one.y + dx * sin + ry * cos - h / 2, radius: face.radius }
 }
 
 /** Whether a face is touched by a box. */
-export function covers(box: { left: number; right: number; top: number; bottom: number }, face: { x: number; y: number; radius: number }): boolean {
+export function covers(box: Box, face: Face): boolean {
   return Math.hypot(Math.max(box.left - face.x, 0, face.x - box.right), Math.max(box.top - face.y, 0, face.y - box.bottom)) < face.radius
 }
 
@@ -246,17 +243,15 @@ function duckUnder(list: Shown[], over: readonly Box[] = []): void {
   }
 }
 
-/** A body on the stage that is drawn after the raid's own: the child's ant. */
-export type Box = { left: number; right: number; top: number; bottom: number }
-
 /**
  * Everyone of a raid, as they are shown, in the order they are drawn. One still at the log sits in its place
  * there; the next to come in walks to the mouth and waits there, in view, until it can; one in the nest is where
- * the raid has it; one that is home sits at the log again. A dung beetle's ball is shown with it. `over` is what is
- * drawn after them all, the child's ant: one whose face it would cover ducks.
+ * the raid has it; one that is home sits at the log again. A dung beetle's ball is shown with it. `over` is the
+ * bodies that are drawn after them all, the child's ant: one whose face it would cover ducks. `file` is the party's
+ * file at the log, which stands from the bell to the end of the put-back: a caller that keeps it hands it in.
  */
-export function showRaid(raid: Raid, party: Party, seconds: number, over: readonly Box[] = []): Shown[] {
-  const ground = raid.ground, cols = ground.cols, file = partyFile(party)
+export function showRaid(raid: Raid, party: Party, seconds: number, over: readonly Box[] = [], file: readonly Camper[] = partyFile(party)): Shown[] {
+  const ground = raid.ground, cols = ground.cols
   const out: Shown[] = []
   // The balls that were left where they lay.
   for (const ball of raid.balls) {
@@ -338,7 +333,7 @@ export function showRaid(raid: Raid, party: Party, seconds: number, over: readon
 }
 
 /** A point this share of the way along a line of points. */
-function alongWay(way: readonly { x: number; y: number }[], share: number): { x: number; y: number } {
+export function alongWay(way: readonly { x: number; y: number }[], share: number): { x: number; y: number } {
   let whole = 0
   for (let n = 1; n < way.length; n++) whole += Math.hypot(way[n].x - way[n - 1].x, way[n].y - way[n - 1].y)
   let left = whole * share
@@ -357,8 +352,8 @@ function alongWay(way: readonly { x: number; y: number }[], share: number): { x:
  * Those the workers carry out when a raid is over, and the balls that were left: each goes out the way it came
  * in, through the open and not through the earth, back along its own trail to the mouth, and then to the log.
  */
-export function showCarriedOut(scene: Extract<Scene, { is: 'putBack' }>, raid: Raid, party: Party, over: readonly Box[] = []): Shown[] {
-  const cols = raid.ground.cols, file = partyFile(party), p = Math.min(1, scene.t / scene.length)
+export function showCarriedOut(scene: Extract<Scene, { is: 'putBack' }>, raid: Raid, party: Party, over: readonly Box[] = [], file: readonly Camper[] = partyFile(party)): Shown[] {
+  const cols = raid.ground.cols, p = Math.min(1, scene.t / scene.length)
   const out: Shown[] = []
   const all = Math.min(1, p / 0.6), b = Math.min(1, Math.max(0, (p - 0.6) / 0.4))
   // They leave one after another, the one with the shortest way out first, so that they do not go up in one heap.
@@ -440,23 +435,6 @@ export const FURNISHED = 6
 /** Things that hang on the wall, and how high over the floor they hang. */
 const HUNG: Partial<Record<Thing, number>> = { shelf: 34, lamp: 40, washing: 36 }
 
-/** The floor of a room: its lowest row, and the first and last cell of the longest stretch of it with something firm under it. */
-export function roomFloor(ground: Ground, room: Room): { y: number; from: number; to: number } {
-  const cols = ground.cols
-  const lowest = Math.floor(room.cells[room.cells.length - 1] / cols)
-  const inRow = new Set(room.cells.filter((i) => Math.floor(i / cols) === lowest).map((i) => i % cols))
-  let best = { y: lowest, from: 0, to: -1 }, from = -1
-  for (let x = 0; x <= cols; x++) {
-    const floor = inRow.has(x) && at(ground, x, lowest + 1) !== OPEN
-    if (floor && from < 0) from = x
-    if (!floor && from >= 0) {
-      if (x - 1 - from > best.to - best.from) best = { y: lowest, from, to: x - 1 }
-      from = -1
-    }
-  }
-  return best
-}
-
 /** The chambers in the order their glow-worms are lit: nearest the mouth first, by the first cell of each. */
 export function lightingOrder(ground: Ground, chambers: readonly Room[]): number[] {
   const cols = ground.cols, mouthX = MOUTH_X / CELL - GROUND.x / CELL
@@ -469,16 +447,17 @@ export function lightingOrder(ground: Ground, chambers: readonly Room[]): number
  * floor. In the queen's room they hang on the part of the wall she does not sit in front of: `queen` is the
  * room she is in and the span of the floor she takes, in cell units. `lit` is how many chambers have their
  * glow-worm awake, nearest the mouth first. Once the kingdom is open (`every`), every chamber has a lantern: one
- * that had none hangs one between its two things.
+ * that had none hangs one between its two things. `floors` is the floor of each chamber, for a caller that has
+ * found them already.
  */
-export function showFurnishings(ground: Ground, chambers: readonly Room[], lit: number, queen: { room: number; from: number; to: number } | null = null, every = false): { thing: Thing; x: number; y: number; lit: boolean }[] {
+export function showFurnishings(ground: Ground, chambers: readonly Room[], lit: number, queen: { room: number; from: number; to: number } | null = null, every = false, floors?: readonly Floor[]): { thing: Thing; x: number; y: number; lit: boolean }[] {
   const out: { thing: Thing; x: number; y: number; lit: boolean }[] = []
   const awake = new Set(lightingOrder(ground, chambers).slice(0, Math.max(0, lit)))
   // Six chambers have their things: the first six of the list that have wall to hang them on. The list and the
   // walls come from the ground alone, never from when a room was dug, so the same six are found on load.
   let hung = 0
   chambers.forEach((room, n) => {
-    const floor = roomFloor(ground, room)
+    const floor = floors ? floors[n] : floorOf(ground, room)
     let from = floor.from, to = floor.to + 1
     if (queen && queen.room === n) {
       // The longer stretch of floor beside her.

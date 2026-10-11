@@ -1,8 +1,8 @@
-import { chambers, kingdom } from './chambers'
-import { EARTH, MOUTH, MUD, OPEN, ROCK, SAND, SHAFT_DEPTH, STONE, at, clone, isLump, put, settle, type Ground, type Kind, type Lump } from './ground'
+import { chambers, inShaft, kingdom } from './chambers'
+import { EARTH, MOUTH, MUD, OPEN, ROCK, SAND, STONE, at, clone, floorUnder, isLump, put, settle, type Ground, type Kind, type Lump } from './ground'
 import { DUNG_BALL, HABITS, PUSHERS_IN_A_LINE, type InvaderKind, type Shot } from './habits'
-import type { Party } from './order'
-import { queenSeat, workerSpots } from './residents'
+import type { Party, RaidEnd } from './order'
+import { QUEEN_HALF, WORKER_HALF, queenSeat, workerSpots } from './residents'
 import { bodyCells, chamberCells, entries, farFromChambers, nearestTo, reach, roomCells, roomOf, sticks, wallToLeanOn, wayIn, wayTo, type Lean, type Walker } from './routes'
 import { HOLD, holdOfCell, lean } from './walls'
 
@@ -70,7 +70,8 @@ export type Invader = {
   state: InvaderState
   /**
    * The place it is in, the one it is on its way to, and how far it is between them, from 0 to 1. Standing, it is
-   * on its way nowhere: `toward` is `cell`. `from` is the place it was in before this one. All -1 before it has come in.
+   * on its way nowhere: `toward` is `cell`. `from` is the place it was in before this one, which only a test reads.
+   * All -1 before it has come in.
    */
   cell: number
   from: number
@@ -93,12 +94,10 @@ export type Invader = {
   insideSince: boolean
   /** The chamber it has taken for itself, counted from 1: nobody else comes in while it has it. 0 for none. */
   room: number
-  /** The place it chose for its act, or -1. */
-  spot: number
   /** What it does when it stops being dazed, and the last shot that hit it. */
   after: 'going' | 'leaving'
   lastShot: Shot | null
-  /** The name of the answer to the last shot, for the view. */
+  /** The name of its answer to the last shot. The view goes by `lastShot`, and the `hit` event carries the name: only a test reads this. */
   answer: string | null
   /** How many cells across the dung ball it rolls is: 0 for none. */
   ball: number
@@ -173,11 +172,11 @@ export type Raid = {
   /** The kinds one of whom has begun its act in this raid: a later one of the same kind does a short one. */
   begun: InvaderKind[]
   over: boolean
+  /** It was ended by the clock with someone still on its way, and not because everyone had settled: such a raid is not judged. */
+  cutOff: boolean
   /** How long nothing more has been going to happen. */
   settled: number
   events: RaidEvent[]
-  /** Raised whenever the copy changes, so every way is looked for again. */
-  changes: number
   /** The cells of the kingdom's chambers as the raid was called, 1 or 0 a cell. */
   inside: Uint8Array
   /** For every cell, the chamber it is in, counted from 1; 0 for none. */
@@ -207,10 +206,10 @@ function residents(ground: Ground, mouth: readonly number[]): Raid['keepClear'] 
   const realm = kingdom(ground, mouth)
   const out: Raid['keepClear'] = []
   const seat = queenSeat(ground, realm.chambers, realm.queenRoom)
-  if (seat) out.push({ y: seat.y, x: seat.x, half: 2.2 * seat.fit })
+  if (seat) out.push({ y: seat.y, x: seat.x, half: QUEEN_HALF * seat.fit })
   // The workers huddle while a raid runs: those of the queen's room stand behind her and take no floor of their own.
   for (const spot of workerSpots(ground, realm.chambers, realm.queenRoom, realm.workers, true)) {
-    if (!seat || spot.y !== seat.y || Math.abs(spot.x - seat.x) > 2.2) out.push({ y: spot.y, x: spot.x, half: 1.5 })
+    if (!seat || spot.y !== seat.y || Math.abs(spot.x - seat.x) > QUEEN_HALF) out.push({ y: spot.y, x: spot.x, half: WORKER_HALF })
   }
   return out
 }
@@ -221,12 +220,12 @@ export function callRaid(built: Ground, party: Party, mouth: readonly number[] =
   const inside = chamberCells(ground, mouth)
   const invaders: Invader[] = party.map((kind, id) => ({
     id, kind, state: 'coming', cell: -1, from: -1, toward: -1, along: 0, facing: 1, wait: APART,
-    way: [], step: 0, trail: [], leaning: null, acted: false, insideSince: false, room: 0, spot: -1, after: 'going', lastShot: null, answer: null,
+    way: [], step: 0, trail: [], leaning: null, acted: false, insideSince: false, room: 0, after: 'going', lastShot: null, answer: null,
     ball: kind === 'dungBeetle' ? DUNG_BALL.across : 0, left: 0, backing: false, rolledOut: false, jammed: 0, lostIn: -1, queued: false, wake: [],
   }))
   return {
     ground, invaders, time: 0, chambersWhenCalled: chambers(ground, mouth).length, acts: 0, gave: new Set(), covered: new Set(), balls: [], rolling: [], machines: new Set(machines),
-    led: false, lost: false, begun: [], over: false, settled: 0, events: [], changes: 0, inside, rooms: roomCells(ground, mouth), far: farFromChambers(ground, inside),
+    led: false, lost: false, begun: [], over: false, cutOff: false, settled: 0, events: [], inside, rooms: roomCells(ground, mouth), far: farFromChambers(ground, inside),
     queenRoom: (kingdom(ground, mouth).queenRoom ?? -1) + 1, keepClear: residents(ground, mouth), mouth,
   }
 }
@@ -234,13 +233,14 @@ export function callRaid(built: Ground, party: Party, mouth: readonly number[] =
 /**
  * The copy changed: every way is looked for again. `gave` says a wall gave there, which stays readable. The
  * chambers stay the ones the kingdom had as the raid was called: nothing a raid shoves or digs makes a new one.
+ * One in the middle of a step finishes it, and looks for its way from where it lands.
  */
 function changed(raid: Raid, cells: readonly number[], gave = true): void {
   if (gave) for (const cell of cells) raid.gave.add(cell)
-  raid.changes++
   for (const invader of raid.invaders) {
     if (invader.state === 'going' || invader.state === 'straining' || invader.state === 'waiting' || invader.state === 'widening') {
-      invader.way = []
+      if (invader.along > 0) setOff(invader, [invader.cell, invader.toward])
+      else invader.way = []
       if (invader.state !== 'straining') invader.state = 'going'
     }
   }
@@ -255,7 +255,6 @@ function setOff(invader: Invader, way: number[]): void {
 function sendHome(invader: Invader): void {
   invader.state = 'leaving'
   invader.wake = []
-  invader.spot = -1
   invader.leaning = null
   const back = invader.trail.slice().reverse()
   if (back[0] !== invader.cell) back.unshift(invader.cell)
@@ -278,11 +277,18 @@ function pushOn(raid: Raid, invader: Invader): number {
   return Math.max(ball, Math.min(beetles, PUSHERS_IN_A_LINE) * HABITS.beetle.push)
 }
 
+/** Whether a cell has someone other than this one standing in it or stepping into it: a lump is not shoved from under such a one, nor onto it. */
+const someoneElseIn = (raid: Raid, invader: Invader) => (cell: number) =>
+  raid.invaders.some((other) => other !== invader && other.cell >= 0 && other.state !== 'home' && gaitOf(other) !== 'fly' && (other.cell === cell || (other.along > 0 && other.toward === cell)))
+
 /** How far into a chamber a walker goes before it does its act, in steps of its own, at most. */
 export const INTO_THE_ROOM = 6
 /** How far in it goes at most, where every nearer place has someone standing or sitting in it. */
 export const FURTHER_IN = 14
-/** Half the length of each kind along a floor, in cells. */
+/**
+ * Half the length of each kind along a floor, in cells: the same measure as `QUEEN_HALF` and `WORKER_HALF` are for
+ * the kingdom's own (residents.ts), rounded from the body widths the camp is laid out by (`BODY` in camp.ts).
+ */
 const HALF: Record<Walker, number> = { ant: 2.1, beetle: 2.2, fly: 2.1, crawler: 2.2 }
 
 /**
@@ -325,7 +331,6 @@ function actSpot(raid: Raid, invader: Invader): number {
       bestOwn = own
     }
   }
-  invader.spot = best
   return best
 }
 
@@ -372,7 +377,9 @@ function holdUp(raid: Raid, invader: Invader, gait: Walker, way: readonly number
   for (let k = from; k <= last; k++) {
     const room = roomOf(raid.ground, gait, way[k], raid.rooms)
     if (room !== 0 && room !== invader.room && taken(raid, room, invader)) return room
-    if (queueAhead(raid, invader, way, k)) return 'queue'
+    // One who has a chamber goes to its place past one who waits: the way to a place in a room can leave the room,
+    // down a dip in its floor, and whoever then waits at the door must not hold up the one it waits for.
+    if (invader.room === 0 && queueAhead(raid, invader, way, k)) return 'queue'
     // Someone right ahead on this stretch, bound the same way, will have the chamber first.
     if (k > from && raid.invaders.some((other) => other !== invader && other.kind !== 'dungFly' && !settledState(other.state) && (other.cell === way[k - 1] || (other.along > 0 && other.toward === way[k - 1])))) return 'queue'
   }
@@ -413,7 +420,7 @@ function waitHere(raid: Raid, invader: Invader): void {
 function tooHigh(raid: Raid, from: number, to: number): boolean {
   const cols = raid.ground.cols, y = Math.floor(from / cols)
   if (y - Math.floor(to / cols) <= 1) return false
-  return !(from % cols === to % cols && raid.mouth.includes(from % cols) && y <= SHAFT_DEPTH)
+  return !(from % cols === to % cols && inShaft(from % cols, y, raid.mouth))
 }
 
 /** Whether the way home still has such a climb in it. */
@@ -504,7 +511,6 @@ function decide(raid: Raid, invader: Invader): void {
     return
   }
   invader.insideSince = false
-  invader.spot = -1
   invader.state = 'going'
   const way = wayToARoom(raid, invader, gait)
   if (way && way.length > 1) {
@@ -627,10 +633,11 @@ function digsLump(raid: Raid, x: number, y: number, dx: number): boolean {
 /** A beetle that leans pushes with everyone who leans with it. The wall gives, or it holds until their patience is gone. */
 function strain(raid: Raid, invader: Invader): void {
   const wall = invader.leaning!
-  const before = raid.ground.cells.slice()
-  const did = lean(raid.ground, wall.x, wall.y, wall.dx, pushOn(raid, invader))
+  const did = lean(raid.ground, wall.x, wall.y, wall.dx, pushOn(raid, invader), someoneElseIn(raid, invader))
   if (did.did === 'shoved' || did.did === 'ploughed') {
-    const moved = settleAndTell(raid, before, did.cells)
+    // The copy is taken only now that the wall has given: a wall that holds, the usual case, costs no copy. The
+    // cells the shove itself moved are told by the lean; the copy finds what came to rest after it.
+    const moved = settleAndTell(raid, raid.ground.cells.slice(), did.cells)
     for (const other of raid.invaders) {
       if (other.state === 'straining' && other.leaning && other.leaning.x === wall.x && other.leaning.y === wall.y) {
         other.state = 'going'
@@ -652,6 +659,7 @@ function strain(raid: Raid, invader: Invader): void {
     invader.jammed += TICK
     if (invader.jammed >= DIG) {
       invader.jammed = 0
+      const before = raid.ground.cells.slice()
       put(raid.ground, wall.x, wall.y, OPEN)
       const moved = settleAndTell(raid, before, [wall.y * raid.ground.cols + wall.x])
       invader.state = 'going'
@@ -736,7 +744,7 @@ function widen(raid: Raid, invader: Invader): void {
   if (wall >= 0) {
     // A lump over the way is leaned on along the way; one beside a drop is leaned on outwards, away from the drop.
     const beside = (wall % cols) - (next % cols)
-    const did = lean(ground, wall % cols, Math.floor(wall / cols), beside !== 0 ? beside : dx, DUNG_BALL.push)
+    const did = lean(ground, wall % cols, Math.floor(wall / cols), beside !== 0 ? beside : dx, DUNG_BALL.push, someoneElseIn(raid, invader))
     if (did.did === 'shoved' || did.did === 'ploughed') {
       const moved = settleAndTell(raid, before, did.cells)
       invader.jammed = 0
@@ -750,6 +758,20 @@ function widen(raid: Raid, invader: Invader): void {
   if (invader.jammed === 0) raid.events.push({ type: 'strain', id: invader.id, cell: invader.cell, on: wall >= 0 ? at(ground, wall % cols, Math.floor(wall / cols)) : ROCK })
   invader.jammed += DIG
   if (invader.jammed >= HABITS.dungBeetle.patience) leaveBall(raid, invader)
+}
+
+/** The column of the mouth one comes in by: the first that is open to it from which it finds a way to a chamber, and otherwise the first that is open to it. */
+function wayDown(raid: Raid, gait: Walker): number | undefined {
+  const ways = entries(raid.ground, gait, raid.mouth)
+  return ways.find((cell) => wayIn(raid.ground, gait, cell, raid.inside) !== null) ?? ways[0]
+}
+
+/** The mouth is shut to it: it looks, gives up with a sigh, and is back at the log. */
+function shutOut(raid: Raid, invader: Invader): void {
+  raid.events.push({ type: 'givesUp', id: invader.id, kind: invader.kind })
+  invader.state = 'home'
+  invader.cell = -1
+  raid.events.push({ type: 'home', id: invader.id, kind: invader.kind })
 }
 
 /**
@@ -775,15 +797,9 @@ function downFromTheMouth(raid: Raid, invader: Invader): void {
       return
     }
     start = entry.foot
-  } else {
-    const ways = entries(ground, gait, raid.mouth)
-    start = ways.find((cell) => wayIn(ground, gait, cell, raid.inside) !== null) ?? ways[0]
-  }
+  } else start = wayDown(raid, gait)
   if (start === undefined) {
-    raid.events.push({ type: 'givesUp', id: invader.id, kind: invader.kind })
-    invader.state = 'home'
-    invader.cell = -1
-    raid.events.push({ type: 'home', id: invader.id, kind: invader.kind })
+    shutOut(raid, invader)
     return
   }
   const top = gait === 'fly' ? start : start % cols
@@ -853,9 +869,7 @@ function ballEntry(raid: Raid): { top: number; foot: number } | null {
   const { ground, mouth } = raid, cols = ground.cols
   const x = mouth[Math.floor(mouth.length / 2)]
   if (mouth.length < DUNG_BALL.across || at(ground, x - 1, 0) !== OPEN || at(ground, x, 0) !== OPEN || at(ground, x + 1, 0) !== OPEN || at(ground, x, 1) !== OPEN) return null
-  let y = 1
-  while (y + 1 < ground.rows && at(ground, x, y + 1) === OPEN) y++
-  return { top: x, foot: y * cols + x }
+  return { top: x, foot: floorUnder(ground, x, 1) * cols + x }
 }
 
 /** One at the log comes in: at the top of the mouth, and from there to its first place. Gives false while it has to wait at the mouth. */
@@ -867,17 +881,12 @@ function comeIn(raid: Raid, invader: Invader): boolean {
     top = withBall.top
     start = withBall.foot
   } else {
-    // Any column of the mouth that is open to it will do: the first from which it finds a way to a chamber, and
-    // otherwise the first it can come in by.
-    const ways = entries(ground, gait, raid.mouth)
-    start = ways.find((cell) => wayIn(ground, gait, cell, raid.inside) !== null) ?? ways[0] ?? null
+    // Any column of the mouth that is open to it will do.
+    start = wayDown(raid, gait) ?? null
     top = start === null ? raid.mouth[0] : gait === 'fly' ? start : start % ground.cols
   }
   if (start === null) {
-    // The mouth is shut to it: it looks, gives up with a sigh, and goes back to the log.
-    raid.events.push({ type: 'givesUp', id: invader.id, kind: invader.kind })
-    invader.state = 'home'
-    raid.events.push({ type: 'home', id: invader.id, kind: invader.kind })
+    shutOut(raid, invader)
     return true
   }
   // It does not come down onto one who waits: it waits its turn on the grass at the mouth, in view.
@@ -1078,6 +1087,7 @@ export function stepRaid(raid: Raid): void {
   if (done && raid.invaders.some((invader) => invader.state !== 'home')) raid.settled += TICK
   else raid.settled = done ? SEEN_FOR : 0
   if ((done && raid.settled >= SEEN_FOR) || raid.time >= LONGEST) {
+    raid.cutOff = !done
     for (const invader of raid.invaders) if (invader.state !== 'home' && invader.state !== 'stuck') invader.state = 'held'
     raid.over = true
     raid.events.push({ type: 'over' })
@@ -1091,13 +1101,17 @@ export function bodyOf(raid: Raid, invader: Invader, place: number, out: number[
   return n
 }
 
+/** Whether a shot can meet this one: it is in the nest, and neither held, nor on its way home, nor home. */
+export const canBeHit = (invader: Invader): boolean =>
+  invader.cell >= 0 && invader.state !== 'home' && invader.state !== 'held' && invader.state !== 'leaving' && invader.state !== 'coming'
+
 /**
  * A shot hits an invader. Nobody is hurt and nobody is removed: by its habits it goes home, is held where it is
  * until the raid is over, or carries on after a moment, thrown back along the way it came.
  */
 export function hit(raid: Raid, id: number, shot: Shot): void {
   const invader = raid.invaders[id]
-  if (!invader || invader.cell < 0 || invader.state === 'home' || invader.state === 'held' || invader.state === 'leaving' || invader.state === 'coming') return
+  if (!invader || !canBeHit(invader)) return
   const habit = HABITS[invader.kind].shots[shot]
   const again = invader.state === 'dazed' && invader.lastShot === shot && habit.twiceIsHome === true
   const wasStuck = invader.state === 'stuck'
@@ -1155,15 +1169,12 @@ export function landInRaid(raid: Raid, cell: number, lump: Lump): void {
   if (at(raid.ground, cell % cols, Math.floor(cell / cols)) !== OPEN) return
   const before = raid.ground.cells.slice()
   put(raid.ground, cell % cols, Math.floor(cell / cols), lump)
-  settle(raid.ground)
-  const moved: number[] = []
-  for (let i = 0; i < before.length; i++) if (before[i] !== raid.ground.cells[i]) moved.push(i)
-  changed(raid, moved, false)
+  changed(raid, settleAndTell(raid, before, []), false)
 }
 
-/** How the raid ended, for the judging. */
-export function endOf(raid: Raid, putAway = false): { chambersWhenCalled: number; actsFinished: number; putAway: boolean } {
-  return { chambersWhenCalled: raid.chambersWhenCalled, actsFinished: raid.acts, putAway }
+/** How the raid ended, for the judging. A put-away drops its raid without judging it, so only a test passes `putAway`. */
+export function endOf(raid: Raid, putAway = false): RaidEnd {
+  return { chambersWhenCalled: raid.chambersWhenCalled, actsFinished: raid.acts, putAway, cutOff: raid.cutOff }
 }
 
 /** Plays a raid to its end. For tests and for a raid that must be over at once. */

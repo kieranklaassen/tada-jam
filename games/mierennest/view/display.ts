@@ -1,18 +1,18 @@
-import { BODY, camperAt, campers, onBell, type Camper } from '../camp'
+import { BODY, bodyBox, camperAt, campers, faceRadius, onBell, partyFile, type Box, type Camper } from '../camp'
 import { CELL, MUD, OPEN, ROCK, SAND, STONE, at, type Ground, type Lump } from '../ground'
 import { handPose, type Guidance, type HandPose } from '../guidance'
 import { idleMove, pokeMove, POKE_SECONDS, type Move, type Mover } from '../motion'
-import type { Kingdom, KingdomEvent } from '../kingdom'
+import { TRIED_AT, type Kingdom, type KingdomEvent } from '../kingdom'
 import type { Party } from '../order'
-import { gaitOf, type RaidEvent } from '../raid'
+import { gaitOf, type Raid, type RaidEvent } from '../raid'
 import { roomOf } from '../routes'
 import type { Machine } from '../save'
-import { WEDGED, demoDrag, queenSeat, workerSpots } from '../residents'
+import { QUEEN_HALF, WEDGED, demoDrag, floorOf, queenSeat, workerSpots, type Floor, type Standing } from '../residents'
 import { below, makeRng, type Rng } from '../rng'
 import type { Toy, ToyEvent } from '../toy'
 import { GRASS_Y, GROUND, MOUTH_X, TOADSTOOL } from './layout'
 import { BELL, LIP, dropAt, hillGrown, hillShape } from './props'
-import { FLUNG, MOUTH_STEP, invaderAt, roomFloor as showFloor, showCarriedOut, showFurnishings, showMachine, showMarks, showRaid, showShot, type Shown } from './raidShow'
+import { FLUNG, MOUTH_STEP, alongWay, invaderAt, showCarriedOut, showFurnishings, showMachine, showMarks, showRaid, showShot, toStage, type Shown } from './raidShow'
 import type { Effect, Thing } from './things'
 
 // What a frame of the toy shows, as a list of things to draw, with no canvas in sight: the view paints the list,
@@ -118,23 +118,10 @@ const burstSeconds = (effect: Effect) => BURST[effect] ?? BURST_SECONDS
 /** On the idle ladder: how long the ant looks out before it scratches, and scratches before it looks out again, in seconds; and how far the bell sways by itself, in radians. */
 export const LADDER_BEAT = 0.9
 export const LADDER_SWAY = 0.16
+/** How far through the put-back the last cell is back in its place: the cells go back one by one until then. */
+const PUT_BACK_BY = 0.8
 /** How much of the scene in which the queen moves in she is carried for; for the rest she tries the floor. */
 const MOVES = { carried: 0.7 } as const
-/** A point this share of the way along a line of points. */
-function alongLine(points: readonly { x: number; y: number }[], share: number): { x: number; y: number } {
-  let whole = 0
-  for (let n = 1; n < points.length; n++) whole += Math.hypot(points[n].x - points[n - 1].x, points[n].y - points[n - 1].y)
-  let left = whole * share
-  for (let n = 1; n < points.length; n++) {
-    const leg = Math.hypot(points[n].x - points[n - 1].x, points[n].y - points[n - 1].y)
-    if (left <= leg) {
-      const u = leg > 0 ? left / leg : 1
-      return { x: points[n - 1].x + (points[n].x - points[n - 1].x) * u, y: points[n - 1].y + (points[n].y - points[n - 1].y) * u }
-    }
-    left -= leg
-  }
-  return points[points.length - 1]
-}
 /** Where a machine's smoke or twang is shown, from the middle of its base, facing right. */
 const MUZZLE = { x: 23, y: -37 } as const
 const ARM = { x: 0, y: -28 } as const
@@ -150,7 +137,6 @@ const CRUMB = { earth: '#c79a63', dust: '#d9dde2', sand: '#f1d58a', spark: '#ffe
 
 type Crumb = { x: number; y: number; vx: number; vy: number; life: number; size: number; colour: string }
 
-const toStage = (cx: number, cy: number) => ({ x: GROUND.x + cx * CELL, y: GROUND.y + cy * CELL })
 const cellMiddle = (cell: number, cols: number) => toStage((cell % cols) + 0.5, Math.floor(cell / cols) + 0.5)
 
 export class ToyDisplay {
@@ -232,7 +218,8 @@ export class ToyDisplay {
   private present(): readonly Camper[] {
     const raid = this.k.raid
     if (!raid) return this.camp
-    const seated = showRaid(raid, this.raidParty, this.seconds).filter((one) => one.id >= 0 && one.y <= GRASS_Y)
+    const laid = this.partyOf(raid)
+    const seated = showRaid(raid, laid.party, this.seconds, [], laid.file).filter((one) => one.id >= 0 && one.y <= GRASS_Y)
     return this.camp.filter((camper) => {
       const place = /^party(?:Ball)?(\d+)$/.exec(camper.id)
       if (!place) return true
@@ -421,6 +408,8 @@ export class ToyDisplay {
   /** Follows which ground is shown, and puts back what a raid knocked down a cell at a time while the workers carry it. */
   private follow(): void {
     const k = this.k, built = k.game.ground, scene = k.scene
+    // The file of a raid is kept no longer than the raid and its put-back.
+    if (this.laidOut && this.laidOut.raid !== k.raid && this.laidOut.raid !== k.lastRaid) this.laidOut = null
     const camp = `${k.game.position}/${k.game.muster}`
     // The party at the log is laid out again when a raid and what follows it are over: the army sits out the ending.
     if (camp !== this.campFor && !k.raid && scene?.is !== 'putBack' && scene?.is !== 'ending') {
@@ -432,7 +421,7 @@ export class ToyDisplay {
     else if (scene?.is === 'putBack') {
       shown = scene.ground
       // As many cells are back as the scene is far along; each is copied from the nest as built.
-      const back = Math.min(scene.cells.length, Math.floor((scene.t / (scene.length * 0.8)) * scene.cells.length))
+      const back = Math.min(scene.cells.length, Math.floor((scene.t / (scene.length * PUT_BACK_BY)) * scene.cells.length))
       for (let n = 0; n < back; n++) {
         const cell = scene.cells[n]
         if (shown.cells[cell] !== built.cells[cell]) {
@@ -458,9 +447,9 @@ export class ToyDisplay {
   }
 
   /** The child's ant as a body on the stage, standing along its floor. */
-  private antBox(): { left: number; right: number; top: number; bottom: number } {
+  private antBox(): Box {
     const feet = this.antFeet()
-    return { left: feet.x - BODY.ant.width / 2, right: feet.x + BODY.ant.width / 2, top: feet.y - BODY.ant.height, bottom: feet.y }
+    return bodyBox('ant', feet.x, feet.y)
   }
 
   /** Where the carried lump rides: by its kind. */
@@ -474,11 +463,18 @@ export class ToyDisplay {
     return this.moves[n]
   }
 
-  /** The party of the raid that runs, or of the one whose put-back plays: the position may have moved on since. */
-  private get raidParty(): Party {
-    const raid = this.k.raid ?? this.k.lastRaid
-    return raid ? raid.invaders.map((invader) => invader.kind) : this.k.party
+  /**
+   * The party of a raid and its file at the log. Both stand from the bell to the end of the put-back, whatever the
+   * position has moved on to since, so they are laid out once for each raid and kept.
+   */
+  private partyOf(raid: Raid): { party: Party; file: readonly Camper[] } {
+    if (this.laidOut?.raid !== raid) {
+      const party = raid.invaders.map((invader) => invader.kind)
+      this.laidOut = { raid, party, file: partyFile(party) }
+    }
+    return this.laidOut
   }
+  private laidOut: { raid: Raid; party: Party; file: readonly Camper[] } | null = null
 
   /** The pose of the habit a camper was asked for by a press, while it acts it out; null when it was not asked or is done. */
   private habitAsked(id: string, who: Mover): string | null {
@@ -517,6 +513,23 @@ export class ToyDisplay {
     const stands = best ?? x
     return { x: stands, flip: ant !== null ? stands < ant : flip }
   }
+
+  /**
+   * What follows from the nest's ground and the kingdom alone: the floor of each chamber, the queen's seat, where the
+   * workers stand apart and huddled, and the things on the walls for the glow-worms that are lit. All are kept from
+   * frame to frame and worked out again when a cell of the ground changes or the kingdom is another one.
+   */
+  private roomsNow(): NonNullable<ToyDisplay['kept']> {
+    const toy = this.toy, realm = toy.realm, kept = this.kept
+    if (kept && kept.stamp === toy.groundStamp && kept.realm === realm) return kept
+    const ground = toy.game.ground, floors = realm.chambers.map((room) => floorOf(ground, room))
+    return (this.kept = { stamp: toy.groundStamp, realm, floors, throne: queenSeat(ground, realm.chambers, realm.queenRoom, floors), apart: null, huddled: null, things: null, lit: 0, open: false })
+  }
+  private kept: {
+    stamp: number; realm: Toy['realm']; floors: Floor[]; throne: ReturnType<typeof queenSeat>
+    apart: Standing[] | null; huddled: Standing[] | null
+    things: ReturnType<typeof showFurnishings> | null; lit: number; open: boolean
+  } | null = null
 
   /** One of a raid as an item: one who stands and waits fidgets as its kind does at the camp. */
   private shown(one: Shown, slot: number): Item {
@@ -588,8 +601,9 @@ export class ToyDisplay {
     const antOver = [this.antBox()]
     if (raided && !k.raid && scene?.is === 'putBack') {
       // Those who got home by themselves sit in the file; the others are carried out.
-      const home = showRaid(raided, this.raidParty, this.seconds).filter((one) => one.id >= 0 && raided.invaders[one.id].state === 'home')
-      for (const one of [...home, ...showCarriedOut(scene, raided, this.raidParty, antOver)]) list.push(this.shown(one, slot++))
+      const laid = this.partyOf(raided)
+      const home = showRaid(raided, laid.party, this.seconds, [], laid.file).filter((one) => one.id >= 0 && raided.invaders[one.id].state === 'home')
+      for (const one of [...home, ...showCarriedOut(scene, raided, laid.party, antOver, laid.file)]) list.push(this.shown(one, slot++))
     }
     if (scene?.is === 'showing' && showing) {
       // The kind is caught out by its own habit at the front of the camp, once, large, where what catches it out is.
@@ -600,26 +614,33 @@ export class ToyDisplay {
       list.push({ is: 'sprite', id: shownOut ?? '', who: showing.who, pose: habitPose(scene.kind, scene.t / scene.length, scene.t), x: at.x, y: at.y, flip: false, size: at.size, tall: 1, move: hop, turn: 0 })
     }
     // The things on the back wall of the rooms, and the marks where a wall gave, lie behind everyone.
-    const throne = queenSeat(ground, toy.realm.chambers, toy.realm.queenRoom)
-    const queenSpan = throne && toy.realm.queenRoom !== null ? { room: toy.realm.queenRoom, from: throne.x - 2.2 * throne.fit, to: throne.x + 2.2 * throne.fit } : null
+    // The floor of each chamber, her seat, the workers' places and the things on the walls follow from the ground
+    // alone, and are kept from frame to frame until it changes.
+    const realm = toy.realm, rooms = this.roomsNow(), floors = rooms.floors, throne = rooms.throne
+    const queenSpan = throne && realm.queenRoom !== null ? { room: realm.queenRoom, from: throne.x - QUEEN_HALF * throne.fit, to: throne.x + QUEEN_HALF * throne.fit } : null
     // Once the kingdom is open a glow-worm is lit in every chamber; in the ending they are lit one by one, nearest the mouth first.
-    const rooms = toy.realm.chambers.length
+    const chambers = realm.chambers.length
     const open = k.game.ended && !k.awaitsEnding
-    const lit = !open ? 0 : ending ? Math.max(0, Math.min(rooms, Math.ceil(((ending.t - ENDING.lightFrom) / (ENDING.lightTo - ENDING.lightFrom)) * rooms))) : rooms
-    for (const thing of showFurnishings(ground, toy.realm.chambers, lit, queenSpan, open)) list.push({ is: 'thing', thing: thing.thing, x: thing.x, y: thing.y, lit: thing.lit })
+    const lit = !open ? 0 : ending ? Math.max(0, Math.min(chambers, Math.ceil(((ending.t - ENDING.lightFrom) / (ENDING.lightTo - ENDING.lightFrom)) * chambers))) : chambers
+    if (!rooms.things || rooms.lit !== lit || rooms.open !== open) {
+      rooms.things = showFurnishings(ground, realm.chambers, lit, queenSpan, open, floors)
+      rooms.lit = lit
+      rooms.open = open
+    }
+    for (const thing of rooms.things) list.push({ is: 'thing', thing: thing.thing, x: thing.x, y: thing.y, lit: thing.lit })
     // The dung fly's leaf, hung on a stalk at the camp, once the ending is over.
     if (open && !ending) list.push({ is: 'thing', thing: 'leaf', x: LEAF_AT.x, y: LEAF_AT.y, lit: false })
     // A mark lies on a floor: under each cell that gave which has something firm beneath it.
     const marks = k.raid ? [] : showMarks(k.marks.filter((cell) => at(ground, cell % cols, Math.floor(cell / cols) + 1) !== OPEN), cols)
     marks.forEach((mark, n) => list.push({ is: 'effect', effect: n === 0 ? 'prints' : 'scuff', x: mark.x, y: mark.y, progress: 0.5, flip: false }))
     // The queen: wedged under the mouth while the kingdom has no chamber, and on the floor of the largest once it has.
-    const realm = toy.realm
     // While a raid runs the workers stand close together at the far end of their floor, and behind the queen in
     // her room: they are drawn before her then, and look out from either side of her.
     const huddled = k.raid !== null
     const workers = () => {
-      workerSpots(ground, realm.chambers, realm.queenRoom, realm.workers, huddled).forEach((spot, n) => {
-        const stands = this.makeWay(spot.x, BODY.worker.width / 2 / CELL, spot.y, 1, Math.min(18, BODY.worker.height * 0.45), n % 2 === 1)
+      const spots = huddled ? (rooms.huddled ??= workerSpots(ground, realm.chambers, realm.queenRoom, realm.workers, true, floors)) : (rooms.apart ??= workerSpots(ground, realm.chambers, realm.queenRoom, realm.workers, false, floors))
+      spots.forEach((spot, n) => {
+        const stands = this.makeWay(spot.x, BODY.worker.width / 2 / CELL, spot.y, 1, faceRadius('worker'), n % 2 === 1)
         const p = toStage(stands.x, spot.y + 1)
         const move = this.moveOf(`worker${n}`, 'worker', (n * 0.37) % 1, slot++)
         list.push({ is: 'sprite', id: '', who: 'worker', pose: move.second ? 'walk2' : 'walk', x: p.x, y: p.y, flip: stands.flip, size: 1, tall: 1, move, turn: 0 })
@@ -628,7 +649,7 @@ export class ToyDisplay {
     if (huddled) workers()
     // While her move waits for another scene to end she is still where she was: on her old seat, or under the mouth.
     const stays = k.raid ? null : k.queenStays
-    const seat = stays === 'mouth' ? null : (stays ?? queenSeat(ground, realm.chambers, realm.queenRoom))
+    const seat = stays === 'mouth' ? null : (stays ?? throne)
     const queenMove = this.moveOf('queen', 'queen', 0, slot++)
     if (seat && scene?.is === 'moves') {
       // She is carried to her new room by two workers, complaining, tries each end of its floor, and sits.
@@ -637,20 +658,20 @@ export class ToyDisplay {
       const home = toStage(seat.x, seat.y + 1)
       feet[feet.length - 1] = home
       if (carried < 1) {
-        const at = alongLine(feet, carried)
+        const at = alongWay(feet, carried)
         const kick = Math.floor(this.seconds * 5) % 2 === 0
         list.push({ is: 'sprite', id: '', who: 'worker', pose: kick ? 'walk' : 'walk2', x: at.x - 46 * seat.fit, y: at.y, flip: false, size: 1, tall: 1, move: null, turn: 0 })
         list.push({ is: 'sprite', id: 'queen', who: 'queen', pose: kick ? 'carried' : 'carried2', x: at.x, y: at.y - 12, flip: false, size: seat.fit, tall: 1, move: null, turn: 0 })
         list.push({ is: 'sprite', id: '', who: 'worker', pose: kick ? 'walk2' : 'walk', x: at.x + 46 * seat.fit, y: at.y, flip: true, size: 1, tall: 1, move: null, turn: 0 })
       } else {
         // Each end of the floor in turn, then her own place.
-        const floor = showFloor(ground, realm.chambers[realm.queenRoom!])
-        const half = 2.2 * seat.fit, ends = [toStage(floor.from + half, seat.y + 1), toStage(floor.to + 1 - half, seat.y + 1), home]
+        const floor = floors[realm.queenRoom!]
+        const half = QUEEN_HALF * seat.fit, ends = [toStage(floor.from + half, seat.y + 1), toStage(floor.to + 1 - half, seat.y + 1), home]
         const tries = Math.min(ends.length - 1, Math.floor(((u - MOVES.carried) / (1 - MOVES.carried)) * ends.length))
         list.push({ is: 'sprite', id: 'queen', who: 'queen', pose: tries < ends.length - 1 ? 'sit2' : 'sit', x: ends[tries].x, y: ends[tries].y, flip: false, size: seat.fit, tall: 1, move: queenMove, turn: 0 })
       }
     } else if (seat) {
-      const stands = this.makeWay(seat.x, (BODY.queen.width / 2 / CELL) * seat.fit, seat.y, Math.ceil((BODY.queen.height * seat.fit) / CELL), Math.min(18, BODY.queen.height * 0.45) * seat.fit, false)
+      const stands = this.makeWay(seat.x, (BODY.queen.width / 2 / CELL) * seat.fit, seat.y, Math.ceil((BODY.queen.height * seat.fit) / CELL), faceRadius('queen', seat.fit), false)
       const p = toStage(stands.x, seat.y + 1)
       // In the ending she puts her egg down at last.
       const down = ending !== null && ending.t >= ENDING.egg
@@ -673,7 +694,7 @@ export class ToyDisplay {
     }
     if (scene?.is === 'putBack' && scene.cells.length > 0) {
       // Workers carry back what fell: one is at the cell that is being put back now, and one at the next.
-      const at0 = Math.min(scene.cells.length - 1, Math.floor((scene.t / (scene.length * 0.8)) * scene.cells.length))
+      const at0 = Math.min(scene.cells.length - 1, Math.floor((scene.t / (scene.length * PUT_BACK_BY)) * scene.cells.length))
       for (const n of [at0, at0 + 1]) {
         if (n >= scene.cells.length) continue
         const p = cellMiddle(scene.cells[n], cols)
@@ -694,12 +715,15 @@ export class ToyDisplay {
         const from = { x: MOUTH_X, y: GRASS_Y - 30 }
         shown.x = from.x + (shown.x - from.x) * u
         shown.y = from.y + (shown.y - from.y) * u
-        shown.pose = scene.t > scene.length * 0.75 && scene.t < scene.length * 0.75 + FLUNG ? 'fired' : 'ready'
+        shown.pose = scene.t > scene.length * TRIED_AT && scene.t < scene.length * TRIED_AT + FLUNG ? 'fired' : 'ready'
         list.push({ is: 'sprite', id: '', who: 'worker', pose: u < 1 && Math.floor(this.seconds * 4) % 2 === 0 ? 'carry' : 'walk', x: MOUTH_STEP.x - 14, y: GRASS_Y, flip: false, size: 1, tall: 1, move: null, turn: 0 })
       }
       list.push({ is: 'machine', kind: shown.kind, load: shown.load, pose: shown.pose, x: shown.x, y: shown.y, flip: shown.flip })
     })
-    if (k.raid) for (const one of showRaid(k.raid, this.raidParty, this.seconds, antOver)) list.push(this.shown(one, slot++))
+    if (k.raid) {
+      const laid = this.partyOf(k.raid)
+      for (const one of showRaid(k.raid, laid.party, this.seconds, antOver, laid.file)) list.push(this.shown(one, slot++))
+    }
     // The worker who carries the spoil stands on the hill, as high as the hill is.
     const hump = hillShape(this.hill).right
     const spoilMove = this.moveOf('spoil', 'worker', 0.6, slot++)

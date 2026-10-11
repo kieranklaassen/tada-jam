@@ -16,6 +16,10 @@ describe('where a machine stands', () => {
     expect(canStand(ground, [], 2, 3)).toBe(false)
     expect(canStand(ground, [], 3, 3)).toBe(false)
     expect(canStand(ground, [], 5, 2)).toBe(false)
+    // Half a floor is no floor: with one side over a hole it does not stand, though all four of its cells are clear.
+    expect(canStand(fromPicture(['XXXX', '#..#', '#..#', '##.#', 'XXXX']), [], 1, 2)).toBe(false)
+    expect(canStand(fromPicture(['XXXX', '#..#', '#..#', '#.##', 'XXXX']), [], 1, 2)).toBe(false)
+    expect(canStand(fromPicture(['XXXX', '#..#', '#..#', '####', 'XXXX']), [], 1, 2)).toBe(true)
   })
 
   it('never in the top rows, at an edge, or in another machine', () => {

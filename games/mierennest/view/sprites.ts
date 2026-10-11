@@ -25,30 +25,46 @@ export const FOOT_UP = 22
 
 export type Sprite = { image: CanvasImageSource; scale: number }
 
+type Painted = HTMLCanvasElement | OffscreenCanvas
+/**
+ * Lets a painted canvas go: its store is given back at once and not when the canvas is collected. A tablet keeps
+ * a small store for canvases, and a few changes of scale in a row can otherwise meet its limit.
+ */
+export function letGo(canvas: { width: number; height: number } | null): void {
+  if (!canvas) return
+  canvas.width = 0
+  canvas.height = 0
+}
+
 export class Sprites {
-  private readonly made = new Map<string, Sprite>()
+  private readonly made = new Map<string, Sprite & { image: Painted }>()
 
   /** `scale` is canvas pixels a stage unit: the pixel ratio times the stage's fit. A change of scale makes them all again. */
-  constructor(private scale: number, private readonly canvasOf: (width: number, height: number) => HTMLCanvasElement | OffscreenCanvas) {}
+  constructor(private scale: number, private readonly canvasOf: (width: number, height: number) => Painted) {}
 
   rescale(scale: number): void {
     if (scale === this.scale) return
     this.scale = scale
+    this.release()
+  }
+
+  /** Every sprite made so far is dropped, and its canvas let go. */
+  release(): void {
+    for (const sprite of this.made.values()) letGo(sprite.image)
     this.made.clear()
   }
 
   get(kind: CreatureKind, pose: string, look?: Look): Sprite {
     const key = `${kind}/${pose}`
-    let sprite = this.made.get(key)
-    if (!sprite) {
-      const box = BOX[kind]
-      const canvas = this.canvasOf(Math.ceil(box.width * this.scale), Math.ceil(box.height * this.scale))
-      const pen = canvas.getContext('2d') as CanvasRenderingContext2D
-      pen.setTransform(this.scale, 0, 0, this.scale, (box.width / 2) * this.scale, (box.height - FOOT_UP) * this.scale)
-      paintCreature(pen, kind, pose, look, 0)
-      sprite = { image: canvas, scale: this.scale }
-      this.made.set(key, sprite)
-    }
+    const had = this.made.get(key)
+    if (had) return had
+    const box = BOX[kind]
+    const canvas = this.canvasOf(Math.ceil(box.width * this.scale), Math.ceil(box.height * this.scale))
+    const pen = canvas.getContext('2d') as CanvasRenderingContext2D
+    pen.setTransform(this.scale, 0, 0, this.scale, (box.width / 2) * this.scale, (box.height - FOOT_UP) * this.scale)
+    paintCreature(pen, kind, pose, look, 0)
+    const sprite = { image: canvas, scale: this.scale }
+    this.made.set(key, sprite)
     return sprite
   }
 
@@ -86,13 +102,19 @@ export class Sprites {
  * with the size of its box and where in the box its origin lies; a change of scale makes them all again.
  */
 export class Stamps {
-  private readonly made = new Map<string, HTMLCanvasElement | OffscreenCanvas>()
+  private readonly made = new Map<string, Painted>()
 
-  constructor(private scale: number, private readonly canvasOf: (width: number, height: number) => HTMLCanvasElement | OffscreenCanvas) {}
+  constructor(private scale: number, private readonly canvasOf: (width: number, height: number) => Painted) {}
 
   rescale(scale: number): void {
     if (scale === this.scale) return
     this.scale = scale
+    this.release()
+  }
+
+  /** Every stamp made so far is dropped, and its canvas let go. */
+  release(): void {
+    for (const image of this.made.values()) letGo(image)
     this.made.clear()
   }
 

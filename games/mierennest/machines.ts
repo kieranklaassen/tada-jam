@@ -1,4 +1,4 @@
-import { MOUTH, OPEN, at, type Ground, type Lump } from './ground'
+import { MOUTH, MUD, OPEN, SAND, STONE, at, floorUnder, type Ground, type Lump } from './ground'
 import type { Shot } from './habits'
 import type { Machine } from './save'
 
@@ -12,8 +12,8 @@ export const LOB = { up: 3, along: 6 } as const
 /** Seconds in a raid before a machine has its own lump in its cup again. */
 export const RELOAD = 2
 
-export const LUMP_OF: Record<Shot, Lump> = { sand: 2, mud: 3, stone: 4 }
-export const SHOT_OF = (lump: Lump): Shot => (lump === 2 ? 'sand' : lump === 3 ? 'mud' : 'stone')
+export const LUMP_OF: Record<Shot, Lump> = { sand: SAND, mud: MUD, stone: STONE }
+export const SHOT_OF = (lump: Lump): Shot => (lump === SAND ? 'sand' : lump === MUD ? 'mud' : 'stone')
 
 /** The four cells a machine stands in. */
 export function cellsOf(machine: { x: number; y: number }, cols: number): number[] {
@@ -64,11 +64,20 @@ export function restPlace(ground: Ground, machines: readonly Machine[], index: n
   return canStand(ground, machines, machine.x, y, index) ? { x: machine.x, y } : nearestStand(ground, machines, machine.x, y, index)
 }
 
+/** Each machine of a list is stood where it comes to rest in this ground, in the list's order; one the nest has no place for stays as it is. */
+export function standAtRest(ground: Ground, machines: Machine[]): void {
+  machines.forEach((machine, index) => {
+    const place = restPlace(ground, machines, index)
+    if (place) {
+      machine.x = place.x
+      machine.y = place.y
+    }
+  })
+}
+
 /** Where a machine is first set when the workers bring it: as near the foot of the shaft as it can stand. */
 export function arrivalPlace(ground: Ground, machines: readonly Machine[]): { x: number; y: number } | null {
-  let y = 1
-  while (y + 1 < ground.rows && at(ground, MOUTH[0], y + 1) === OPEN) y++
-  return nearestStand(ground, machines, MOUTH[0], y)
+  return nearestStand(ground, machines, MOUTH[0], floorUnder(ground, MOUTH[0], 1))
 }
 
 /**

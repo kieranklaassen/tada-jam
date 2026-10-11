@@ -54,14 +54,17 @@ export type RaidEnd = {
   actsFinished: number
   /** The game was put away while the raid ran. */
   putAway: boolean
+  /** The raid was ended by the clock with invaders still on their way. */
+  cutOff?: boolean
 }
 
 /**
  * A raid went well when no invader finished its act in a chamber. It is not judged when the kingdom had no chamber
- * as it was called, or when the game was put away while it ran.
+ * as it was called, when the game was put away while it ran, or when the clock cut it off with invaders still on
+ * their way: nobody was turned back in such a raid, and it never moves the position.
  */
 export function judge(end: RaidEnd): Verdict {
-  if (end.putAway || end.chambersWhenCalled <= 0) return 'not-judged'
+  if (end.putAway || end.cutOff || end.chambersWhenCalled <= 0) return 'not-judged'
   return end.actsFinished === 0 ? 'well' : 'not-well'
 }
 
@@ -81,12 +84,13 @@ export function after(progress: Progress, verdict: Verdict): Progress {
 }
 
 export type MachineKind = 'catapult' | 'cannon'
+export const MACHINE_KINDS: readonly MachineKind[] = ['catapult', 'cannon']
 const ARRIVES_AT: Record<MachineKind, Place> = { catapult: 'the-catapult', cannon: 'the-cannon' }
 
 /** The machines that have arrived by this place. */
 export function arrived(position: string): MachineKind[] {
   const at = (LADDER as readonly string[]).indexOf(position)
-  return (['catapult', 'cannon'] as const).filter((kind) => at >= LADDER.indexOf(ARRIVES_AT[kind]))
+  return MACHINE_KINDS.filter((kind) => at >= LADDER.indexOf(ARRIVES_AT[kind]))
 }
 
 /** The ids a first showing can have: each invader kind and each machine. */

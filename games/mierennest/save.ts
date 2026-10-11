@@ -1,8 +1,8 @@
 import { asSaved } from './build'
-import { COLS, MOUTH, OPEN, ROCK, ROWS, at, generate, makeGround, put, settle, type Ground, type Kind } from './ground'
+import { COLS, MOUTH, OPEN, ROCK, ROWS, at, floorUnder, generate, makeGround, put, settle, type Ground, type Kind } from './ground'
 import { SHOTS, type Shot } from './habits'
-import { restPlace } from './machines'
-import { ROUND, SHOWINGS, arrived, type MachineKind } from './order'
+import { standAtRest } from './machines'
+import { MACHINE_KINDS, ROUND, SHOWINGS, arrived, type MachineKind } from './order'
 import { STATE_VERSION, deserialize as readPosition, isReadable, type GameState } from './state'
 
 // What goes into ctx.storage for this game, wrapped round the template's state.ts as its header asks: the position
@@ -86,9 +86,7 @@ function repairGround(ground: Ground): Ground {
 
 /** Where the ant stands in a new nest, and where anything is put that has lost its place: the foot of the shaft. */
 function shaftFoot(ground: Ground): { x: number; y: number } {
-  let y = 0
-  while (y + 1 < ground.rows && at(ground, MOUTH[0], y + 1) === OPEN) y++
-  return { x: MOUTH[0], y: Math.max(1, y) }
+  return { x: MOUTH[0], y: Math.max(1, floorUnder(ground, MOUTH[0], 0)) }
 }
 
 export function freshGame(childAge: number | null, seed: number): Game {
@@ -105,13 +103,7 @@ export function freshGame(childAge: number | null, seed: number): Game {
 export function serialize(game: Game): Save {
   const ground = asSaved(game.ground)
   const machines = game.machines.map((m) => ({ kind: m.kind, x: m.x, y: m.y, facing: m.facing, load: m.load }))
-  machines.forEach((machine, index) => {
-    const place = restPlace(ground, machines, index)
-    if (place) {
-      machine.x = place.x
-      machine.y = place.y
-    }
-  })
+  standAtRest(ground, machines)
   return {
     v: STATE_VERSION,
     position: game.position,
@@ -148,25 +140,27 @@ export function deserialize(raw: unknown, childAge: number | null, seed: number)
   const ground = read ? repairGround(read) : generate(seed)
   const foot = shaftFoot(ground)
   const antCell = isWhole(raw.ant) && raw.ant >= 0 && raw.ant < ground.cells.length && ground.cells[raw.ant] === OPEN ? raw.ant : foot.y * ground.cols + foot.x
-  const shown = Array.isArray(raw.shown) ? SHOWINGS.filter((id) => (raw.shown as unknown[]).includes(id)) : []
+  const marks: unknown[] = Array.isArray(raw.shown) ? raw.shown : []
   const allowed = arrived(position)
   const machines: Machine[] = []
   for (const entry of Array.isArray(raw.machines) ? raw.machines.slice(0, 8) : []) {
     const machine = readMachine(entry, ground, allowed)
     if (machine && !machines.some((m) => m.kind === machine.kind)) machines.push(machine)
   }
+  // A machine and the mark of its showing are read together: one that is kept has had its showing, so that it is
+  // not shown again and no second one arrives; and one that has not arrived by this place has no mark, so that it
+  // still comes when its place is reached.
+  const shown = SHOWINGS.filter((id) => {
+    const kind = MACHINE_KINDS.find((machine) => machine === id)
+    if (!kind) return marks.includes(id)
+    return allowed.includes(kind) && (marks.includes(id) || machines.some((machine) => machine.kind === kind))
+  })
   // A machine whose showing has started is in the nest. One that lost its entry stands at the foot of the shaft, empty.
   for (const kind of allowed) {
     if (shown.includes(kind) && !machines.some((m) => m.kind === kind)) machines.push({ kind, x: foot.x, y: foot.y, facing: 1, load: null })
   }
   // One that cannot stand where its entry says keeps what it holds, and stands where it would have come to rest.
-  machines.forEach((machine, index) => {
-    const place = restPlace(ground, machines, index)
-    if (place) {
-      machine.x = place.x
-      machine.y = place.y
-    }
-  })
+  standAtRest(ground, machines)
   const muster = isWhole(raw.muster) && raw.muster >= 0 && raw.muster < ROUND.length ? raw.muster : 0
   // The kingdom is open only after the great raid was turned back, so the two cannot disagree.
   return { position, ground, ant: { x: antCell % ground.cols, y: Math.floor(antCell / ground.cols) }, machines, muster, shown, ended: position === 'open-kingdom' }

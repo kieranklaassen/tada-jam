@@ -1,5 +1,5 @@
 import { chambers } from './chambers'
-import { EARTH, MOUTH, MUD, OPEN, ROCK, SAND, STONE, at, type Ground } from './ground'
+import { EARTH, MOUTH, MUD, OPEN, ROCK, SAND, STONE, at, floorUnder, type Ground } from './ground'
 
 // Where each kind of invader can be, and how it gets from one place to the next: its habits (habits.ts) turned
 // into steps on the grid. Pure: a ground in, places and ways out, the same every time.
@@ -92,9 +92,7 @@ export function nextPlaces(ground: Ground, kind: Walker, cell: number, out: numb
     const nx = x + side
     if (nx < 0 || nx >= cols) continue
     if (open(ground, nx, y) && clear(nx, y - 1)) {
-      let ly = y
-      while (ly + 1 < rows && open(ground, nx, ly + 1)) ly++
-      out[n++] = ly * cols + nx
+      out[n++] = floorUnder(ground, nx, y) * cols + nx
     } else if (!open(ground, nx, y) && y >= 2 && open(ground, nx, y - 1) && clear(nx, y - 2) && clear(x, y - 2)) {
       // A ball is not rolled up onto a lump: lumps are a wall to it, the gap over them included.
       const step = at(ground, nx, y)
@@ -110,7 +108,7 @@ export function nextPlaces(ground: Ground, kind: Walker, cell: number, out: numb
  * column of the mouth that is open to it, nearest the camp first. Empty where it cannot come in at all.
  */
 export function entries(ground: Ground, kind: Walker, mouth: readonly number[] = MOUTH): number[] {
-  const { cols, rows } = ground
+  const { cols } = ground
   const out: number[] = []
   for (const x of mouth) {
     if (kind === 'ant') {
@@ -120,9 +118,7 @@ export function entries(ground: Ground, kind: Walker, mouth: readonly number[] =
       if (mouth.includes(x + 1) && canBe(ground, 'fly', x, 2)) out.push(2 * cols + x)
     } else if (open(ground, x, 0) && open(ground, x, 1)) {
       // A beetle steps off the grass into the mouth and drops to the first floor.
-      let y = 1
-      while (y + 1 < rows && open(ground, x, y + 1)) y++
-      out.push(y * cols + x)
+      out.push(floorUnder(ground, x, 1) * cols + x)
     }
   }
   return out

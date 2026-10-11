@@ -320,13 +320,14 @@ describe('the ant', () => {
   })
 
   it('scrambles out when sand pours where it stood', () => {
-    const toy = new Toy(gameOn(['XXXXX', '#sss#', '#sss#', '#####', '.####', '#####', 'XXXXX'], [0, 4]))
-    toy.press(1, 5, 0)
-    toy.drag(4, 5, 0.2)
+    // A bed of sand over the roof of the hall the ant stands in: one mouthful out of that roof, right over its head, and the sand pours onto it.
+    const toy = new Toy(gameOn(['XXXXX', '#sss#', '#####', '#...#', 'XXXXX'], [2, 3]))
+    toy.press(2.5, 2.5, 0)
     const events = play(toy, 3)
     toy.release()
+    expect(events.filter((e) => e.type === 'buried').length).toBe(1)
+    expect(at(toy.game.ground, 2, 3)).not.toBe(OPEN)
     expect(at(toy.game.ground, toy.game.ant.x, toy.game.ant.y)).toBe(OPEN)
-    expect(events.filter((e) => e.type === 'buried').length).toBeLessThanOrEqual(3)
   })
 })
 

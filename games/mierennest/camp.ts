@@ -156,7 +156,7 @@ export function fileEnd(file: readonly Camper[]): number {
  * left also make room when the party is long.
  */
 export function campers(party: Party): Camper[] {
-  const file = [...partyBalls(party), ...partyFile(party)], end = fileEnd(file)
+  const laid = layOut(party), file = [...laid.balls, ...laid.members], end = fileEnd(file)
   const away = (kind: InvaderKind) => party.includes(kind)
   const left: Camper[] = [
     ...(away('ant') ? [] : [{ id: 'stuck', kind: 'raider', x: 100, y: GRASS_Y, flip: true, poses: ['stuck', 'stuck2'], phase: 0.3 } as Camper]),
@@ -174,18 +174,33 @@ export function campers(party: Party): Camper[] {
 }
 
 export type Box = { left: number; right: number; top: number; bottom: number }
+export type Face = { x: number; y: number; radius: number }
+
+// One measure says who covers whom, at the camp, in a raid and in the kingdom: the box of a body, and the circle of
+// its face. Who ducks, who makes way and what the tests accept all go by these three.
+
+/** The box of a body of this kind with the middle of its feet at (x, y), at this share of its full size. */
+export function bodyBox(kind: Mover, x: number, y: number, size = 1): Box {
+  const body = BODY[kind]
+  return { left: x - (body.width / 2) * size, right: x + (body.width / 2) * size, top: y - body.height * size, bottom: y }
+}
+
+/** How large the face of a kind is: the radius of its circle, at this share of its full size. */
+export const faceRadius = (kind: Mover, size = 1): number => Math.min(18, BODY[kind].height * 0.45) * size
+
+/** The face of a body that stands along its floor: a circle at its front, a little in from the end and a little over the middle of its height. */
+export function faceCircle(kind: Mover, x: number, y: number, flip: boolean, size = 1): Face {
+  const body = BODY[kind], front = flip ? -1 : 1, radius = faceRadius(kind, size)
+  return { x: x + front * ((body.width / 2) * size - radius - 2), y: y - body.height * 0.55 * size, radius }
+}
 
 export function boxOf(camper: Camper): Box {
-  const body = BODY[camper.kind], size = camper.size ?? 1
-  return { left: camper.x - (body.width / 2) * size, right: camper.x + (body.width / 2) * size, top: camper.y - body.height * size, bottom: camper.y }
+  return bodyBox(camper.kind, camper.x, camper.y, camper.size ?? 1)
 }
 
 /** Where a camper's face is: a circle at the front of its body. The ball has no face. */
-export function faceOf(camper: Camper): { x: number; y: number; radius: number } | null {
-  if (camper.kind === 'dungBall') return null
-  const body = BODY[camper.kind], front = camper.flip ? -1 : 1, size = camper.size ?? 1
-  const radius = Math.min(18, body.height * 0.45) * size
-  return { x: camper.x + front * ((body.width / 2) * size - radius - 2), y: camper.y - body.height * 0.55 * size, radius }
+export function faceOf(camper: Camper): Face | null {
+  return camper.kind === 'dungBall' ? null : faceCircle(camper.kind, camper.x, camper.y, camper.flip, camper.size ?? 1)
 }
 
 /** A touch rings the bell when it lands within its reach. */

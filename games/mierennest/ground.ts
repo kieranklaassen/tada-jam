@@ -36,6 +36,12 @@ export function at(ground: Ground, x: number, y: number): Kind {
   return ground.cells[y * ground.cols + x] as Kind
 }
 
+/** The row of the first floor under a cell: the lowest open cell straight down from it, and its own row where it has something right under it. */
+export function floorUnder(ground: Ground, x: number, y: number): number {
+  while (y + 1 < ground.rows && at(ground, x, y + 1) === OPEN) y++
+  return y
+}
+
 export function put(ground: Ground, x: number, y: number, kind: Kind): void {
   if (x < 0 || y < 0 || x >= ground.cols || y >= ground.rows) return
   ground.cells[y * ground.cols + x] = kind

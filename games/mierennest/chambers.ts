@@ -40,6 +40,12 @@ export function aired(ground: Ground, mouth: readonly number[] = MOUTH): Uint8Ar
 }
 
 /**
+ * Whether a cell is one of the shaft a new nest starts with: the mouth's own row and the three rows under it, in the
+ * mouth's columns. That shaft is the way in and no part of any room, and the way out that every kind climbs.
+ */
+export const inShaft = (x: number, y: number, mouth: readonly number[] = MOUTH): boolean => y >= 0 && y <= SHAFT_DEPTH && mouth.includes(x)
+
+/**
  * The rooms in the ground. Every clear block of the room's measure is found; blocks that overlap or touch along a
  * side are one room. No block is counted in the cells of the shaft under the mouth. Rooms come in a fixed order,
  * by their first cell.
@@ -47,15 +53,11 @@ export function aired(ground: Ground, mouth: readonly number[] = MOUTH): Uint8Ar
 export function rooms(ground: Ground, mouth: readonly number[] = MOUTH): Room[] {
   const { cols, rows, cells } = ground
   const inBlock = new Uint8Array(cells.length)
-  // The shaft a new nest starts with is the way in and no part of any room: no block is counted in its cells, which
-  // are the mouth's own row and the three rows under it.
-  const shaft = new Uint8Array(cells.length)
-  for (const x of mouth) for (let y = 0; y <= SHAFT_DEPTH && y < rows; y++) if (x < cols) shaft[y * cols + x] = 1
   for (let y = 0; y + ROOM.height <= rows; y++) {
     for (let x = 0; x + ROOM.width <= cols; x++) {
       let clear = true
       for (let dy = 0; dy < ROOM.height && clear; dy++) for (let dx = 0; dx < ROOM.width; dx++) {
-        if (at(ground, x + dx, y + dy) !== OPEN || shaft[(y + dy) * cols + x + dx] === 1) {
+        if (at(ground, x + dx, y + dy) !== OPEN || inShaft(x + dx, y + dy, mouth)) {
           clear = false
           break
         }

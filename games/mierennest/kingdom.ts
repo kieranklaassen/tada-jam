@@ -3,10 +3,10 @@ import { MOUTH, OPEN, STONE, at, clone, isLump, put, type Ground, type Kind, typ
 import { HABITS, type InvaderKind, type Shot } from './habits'
 import { LUMP_OF, RELOAD, SHOT_OF, arrivalPlace, canStand, cellsOf, machineAt, shotFlight, restPlace } from './machines'
 import { after, judge, owed, partyAt, type MachineKind, type Party, type Verdict } from './order'
-import { TICK, bodyOf, callRaid, endOf, hit, knockInRaid, landInRaid, stepRaid, type Raid, type RaidEvent } from './raid'
+import { TICK, bodyOf, callRaid, canBeHit, endOf, hit, knockInRaid, landInRaid, stepRaid, type Invader, type Raid, type RaidEvent } from './raid'
 import { lean } from './walls'
 import { WEDGED, queenSeat } from './residents'
-import type { Game } from './save'
+import type { Game, Machine } from './save'
 import { Toy } from './toy'
 
 // The game round the toy: the bell that calls a raid, the raid itself, the machines, the put-back, the position in
@@ -111,6 +111,30 @@ export type KingdomEvent =
 /** The cells of no room at all: the queen is wedged under the mouth. */
 const NO_ROOM: number[] = []
 
+/** How far along a shot's way the body of an invader first lies, where it is or where it is stepping to; Infinity where it is not on it. */
+function whereOnPath(raid: Raid, invader: Invader, path: readonly number[]): number {
+  let where = Infinity
+  for (const place of [invader.cell, invader.toward]) {
+    const n = bodyOf(raid, invader, place, body)
+    for (let i = 0; i < n; i++) {
+      const k = path.indexOf(body[i])
+      if (k >= 0 && k < where) where = k
+    }
+  }
+  return where
+}
+const body: number[] = []
+
+/** Where a shot comes to lie in the nest: the last cell of its way that is open and in no machine; -1 where it has none. */
+function landingCell(ground: Ground, machines: readonly Machine[], path: readonly number[]): number {
+  const cols = ground.cols
+  for (let n = path.length - 1; n >= 0; n--) {
+    const x = path[n] % cols, y = Math.floor(path[n] / cols)
+    if (at(ground, x, y) === OPEN && machineAt(machines, x, y) < 0) return path[n]
+  }
+  return -1
+}
+
 export class Kingdom {
   readonly toy: Toy
   raid: Raid | null = null
@@ -202,8 +226,7 @@ export class Kingdom {
     }
     if (this.scene || this.raid) return
     this.settleQueen()
-    const ground = this.game.ground, cols = ground.cols, realm = this.toy.realm
-    const seat = queenSeat(ground, realm.chambers, realm.queenRoom)
+    const ground = this.game.ground, cols = ground.cols, seat = this.queenSat
     if (!seat) return
     // Where she was: the floor of her old room, or wedged under the mouth.
     const from = before.length > 0 ? before[before.length - 1] : Math.floor(WEDGED.y) * cols + Math.floor(WEDGED.x)
@@ -266,8 +289,11 @@ export class Kingdom {
 
   /** A touch ends the scene that is playing, with its outcome already in place, and is then an ordinary touch. */
   private endScene(): void {
-    const scene = this.scene
-    if (!scene) return
+    if (this.scene) this.finishScene(this.scene)
+  }
+
+  /** A scene is over, by a touch or by itself: its outcome has been in place since it began, and what follows it starts. */
+  private finishScene(scene: Scene): void {
     this.scene = null
     if (scene.is === 'putBack') this.lastRaid = null
     this.afterScene(scene)
@@ -359,12 +385,8 @@ export class Kingdom {
     if (shots.length === 0) return this.game
     const ground = clone(this.game.ground), cols = ground.cols
     for (const shot of shots) {
-      for (let n = shot.path.length - 1; n >= 0; n--) {
-        const cell = shot.path[n], x = cell % cols, y = Math.floor(cell / cols)
-        if (at(ground, x, y) !== OPEN || machineAt(this.game.machines, x, y) >= 0) continue
-        put(ground, x, y, LUMP_OF[shot.shot])
-        break
-      }
+      const cell = landingCell(ground, this.game.machines, shot.path)
+      if (cell >= 0) put(ground, cell % cols, Math.floor(cell / cols), LUMP_OF[shot.shot])
     }
     return { ...this.game, ground }
   }
@@ -409,28 +431,19 @@ export class Kingdom {
 
   /** How far along a shot's way the first invader it can meet is, looking no further than `upTo`; -1 for nobody. */
   private firstMet(raid: Raid, path: readonly number[], upTo: number, shot: Shot): number {
-    const body: number[] = []
     let first = -1
     for (const invader of raid.invaders) {
-      if (invader.cell < 0 || invader.state === 'home' || invader.state === 'held' || invader.state === 'leaving' || invader.state === 'coming') continue
-      if (stepsAside(invader.kind, shot)) continue
-      for (const place of [invader.cell, invader.toward]) {
-        const n = bodyOf(raid, invader, place, body)
-        for (let i = 0; i < n; i++) {
-          const k = path.indexOf(body[i])
-          if (k >= 0 && k <= upTo && (first < 0 || k < first)) first = k
-        }
-      }
+      if (!canBeHit(invader) || stepsAside(invader.kind, shot)) continue
+      const where = whereOnPath(raid, invader, path)
+      if (where <= upTo && (first < 0 || where < first)) first = where
     }
     return first
   }
 
   /** Those who step aside for this shot and are in its way as far as it has flown: each is told once, and the shot goes by. */
   private goBy(raid: Raid, flying: Flying, upTo: number): void {
-    const body: number[] = []
     for (const invader of raid.invaders) {
-      if (invader.cell < 0 || !stepsAside(invader.kind, flying.shot) || flying.passed.includes(invader.id)) continue
-      if (invader.state === 'home' || invader.state === 'held' || invader.state === 'leaving' || invader.state === 'coming') continue
+      if (!canBeHit(invader) || !stepsAside(invader.kind, flying.shot) || flying.passed.includes(invader.id)) continue
       const n = bodyOf(raid, invader, invader.cell, body)
       for (let i = 0; i < n; i++) {
         const k = flying.path.indexOf(body[i])
@@ -458,7 +471,9 @@ export class Kingdom {
     if (kind !== STONE || !flying.level) return
     if (this.raid && flying.inRaid) knockInRaid(this.raid, flying.hit, flying.facing)
     else {
-      const did = lean(ground, sx, sy, flying.facing, 3)
+      // A stone the ant took up while the shot flew is let go first: it is back in its cell when the shot strikes it.
+      if (this.toy.carried?.from === flying.hit) this.toy.cancel()
+      const did = lean(ground, sx, sy, flying.facing, HABITS.beetle.push)
       if (did.did === 'shoved') this.toy.touched(did.cells)
     }
   }
@@ -469,21 +484,12 @@ export class Kingdom {
     if (flying.inRaid) {
       const raid = this.raid
       if (!raid) return
-      const body: number[] = []
       let first = -1, firstAt = Infinity
       const struck: number[] = []
       for (const invader of raid.invaders) {
-        if (invader.cell < 0 || invader.state === 'home' || invader.state === 'held' || invader.state === 'leaving' || invader.state === 'coming') continue
         // One who steps aside for this shot was told as it went by.
-        if (stepsAside(invader.kind, flying.shot)) continue
-        let where = Infinity
-        for (const place of [invader.cell, invader.toward]) {
-          const n = bodyOf(raid, invader, place, body)
-          for (let i = 0; i < n; i++) {
-            const k = flying.path.indexOf(body[i])
-            if (k >= 0 && k < where) where = k
-          }
-        }
+        if (!canBeHit(invader) || stepsAside(invader.kind, flying.shot)) continue
+        const where = whereOnPath(raid, invader, flying.path)
         if (where === Infinity) continue
         struck.push(invader.id)
         if (where < firstAt) { firstAt = where; first = invader.id }
@@ -499,9 +505,8 @@ export class Kingdom {
     }
     // In the nest: the last cell of its way that is still open, in case the ground changed under it as it flew.
     const ground = this.game.ground, cols = ground.cols
-    for (let n = flying.path.length - 1; n >= 0; n--) {
-      const cell = flying.path[n]
-      if (at(ground, cell % cols, Math.floor(cell / cols)) !== OPEN || machineAt(this.game.machines, cell % cols, Math.floor(cell / cols)) >= 0) continue
+    const cell = landingCell(ground, this.game.machines, flying.path)
+    if (cell >= 0) {
       put(ground, cell % cols, Math.floor(cell / cols), lump)
       this.toy.touched([cell])
       this.events.push({ type: 'shotLanded', shot: flying.shot, cell })
@@ -677,7 +682,13 @@ export class Kingdom {
     // the party waits for the next ring; otherwise the party comes now.
     if (this.rung && this.toy.atRest) {
       this.rung = false
-      if (!this.raid && !this.scene) this.callParty()
+      if (!this.raid && !this.scene) {
+        // The hand is emptied first, as when the bell rings on ground at rest: a finger that went back to work
+        // while the bell waited builds nothing once the raid runs.
+        this.toy.cancel()
+        this.dropMachine()
+        this.callParty()
+      }
     }
     for (const flying of this.flying) flying.t += dt
     for (let n = 0; n < this.flying.length; n++) {
@@ -722,11 +733,7 @@ export class Kingdom {
         if (scene.is === 'ending') {
           // It holds on its last beat as long as the child likes.
           scene.t = scene.length
-        } else {
-          this.scene = null
-          if (scene.is === 'putBack') this.lastRaid = null
-          this.afterScene(scene)
-        }
+        } else this.finishScene(scene)
       }
     }
   }

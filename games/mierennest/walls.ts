@@ -56,12 +56,17 @@ export type Leaned =
  * - A push greater than the run's hold, with room beyond, shoves the whole run one cell on.
  * - A push that is not greater is held.
  * - A run with earth or rock behind it cannot be shoved; loose sand at its front is ploughed through all the same.
+ * - `taken` says a cell has somebody else standing in it. A run is not shoved from under anybody nor onto anybody:
+ *   with one of them in a cell of the run or in the cell beyond it, the run has no room, as with earth behind it.
  */
-export function lean(ground: Ground, x: number, y: number, dx: number, push: number): Leaned {
+export function lean(ground: Ground, x: number, y: number, dx: number, push: number, taken?: (cell: number) => boolean): Leaned {
   const front = at(ground, x, y)
   if (front === OPEN) return { did: 'nothing' }
   if (front === EARTH || front === ROCK) return { did: 'held', hold: Infinity }
   const run = runFrom(ground, x, y, dx)
+  if (run.room && taken) {
+    for (let n = 0; n <= run.cells.length && run.room; n++) if (taken(y * ground.cols + x + n * dx)) run.room = false
+  }
   if (run.room && push > run.hold) {
     const changed: number[] = []
     for (let n = run.cells.length - 1; n >= 0; n--) {
