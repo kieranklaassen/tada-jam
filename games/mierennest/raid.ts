@@ -633,10 +633,11 @@ function digsLump(raid: Raid, x: number, y: number, dx: number): boolean {
 /** A beetle that leans pushes with everyone who leans with it. The wall gives, or it holds until their patience is gone. */
 function strain(raid: Raid, invader: Invader): void {
   const wall = invader.leaning!
-  const before = raid.ground.cells.slice()
   const did = lean(raid.ground, wall.x, wall.y, wall.dx, pushOn(raid, invader), someoneElseIn(raid, invader))
   if (did.did === 'shoved' || did.did === 'ploughed') {
-    const moved = settleAndTell(raid, before, did.cells)
+    // The copy is taken only now that the wall has given: a wall that holds, the usual case, costs no copy. The
+    // cells the shove itself moved are told by the lean; the copy finds what came to rest after it.
+    const moved = settleAndTell(raid, raid.ground.cells.slice(), did.cells)
     for (const other of raid.invaders) {
       if (other.state === 'straining' && other.leaning && other.leaning.x === wall.x && other.leaning.y === wall.y) {
         other.state = 'going'
@@ -658,6 +659,7 @@ function strain(raid: Raid, invader: Invader): void {
     invader.jammed += TICK
     if (invader.jammed >= DIG) {
       invader.jammed = 0
+      const before = raid.ground.cells.slice()
       put(raid.ground, wall.x, wall.y, OPEN)
       const moved = settleAndTell(raid, before, [wall.y * raid.ground.cols + wall.x])
       invader.state = 'going'
