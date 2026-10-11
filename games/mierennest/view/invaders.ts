@@ -12,15 +12,6 @@ import { paintRaidDungBeetle, paintRaidDungFly, RAID_DUNG_BEETLE, RAID_DUNG_FLY,
 
 type Invader = 'raider' | 'beetle' | 'fly' | 'dungBeetle' | 'dungBall' | 'dungFly'
 
-export const INVADER_SIZE: Record<Invader, { width: number; height: number }> = {
-  raider: { width: 118, height: 28 },
-  beetle: { width: 124, height: 56 },
-  fly: { width: 118, height: 56 },
-  dungBeetle: { width: 124, height: 56 },
-  dungBall: { width: 84, height: 84 },
-  dungFly: { width: 118, height: 56 },
-}
-
 /** The poses of each kind. Two whose names differ only by a number at the end are partners: one movement. */
 export const INVADER_POSES = {
   raider: ['pillow', 'walk', 'stuck', 'nap', 'walk2', 'stuck2', 'nap2', ...RAID_RAIDER],

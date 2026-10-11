@@ -1,4 +1,5 @@
-import { invaderPainters, INVADER_POSES, INVADER_SIZE } from './invaders'
+import { BODY } from '../camp'
+import { invaderPainters, INVADER_POSES } from './invaders'
 import { ANT, EARTH, GRASS, INK, QUEEN, WORKER } from './palette'
 import { blob, edged, eyes, feeler, line, mouth, oval, shine } from './parts'
 import type { CreatureKind, Ctx, Face, Look, Painter } from './parts'
@@ -339,12 +340,7 @@ const paintQueen: Painter = (ctx, pose, look, t) => {
  *  wings and props may reach a little outside it. The queen's box is that of her `sit` pose; wedged in the shaft
  *  she is 56 wide and 96 tall, carried she keeps inside 120 by 80, and a worker with its hands on its hips is
  *  about 28 wide and 56 tall. */
-export const SIZE: Record<CreatureKind, { width: number; height: number }> = {
-  ant: { width: 112, height: 28 },
-  queen: { width: 120, height: 72 },
-  worker: { width: 84, height: 24 },
-  ...INVADER_SIZE,
-}
+export const SIZE: Record<CreatureKind, { width: number; height: number }> = BODY
 
 /** The poses each kind has. The first is the one a kind falls back on when it is asked for a pose it has not. */
 export const POSES: { [K in CreatureKind]: readonly string[] } = {
