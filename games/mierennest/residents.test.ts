@@ -63,6 +63,17 @@ describe('where the kingdom stands', () => {
     expect(others[1].x - others[0].x).toBeGreaterThanOrEqual(3)
   })
 
+  it('seats the queen in the middle of a floor shorter than she is wide, drawn small enough to stand in nothing', () => {
+    const ground = nest()
+    // A pit under the right of her room leaves her four cells of floor.
+    for (const x of [28, 29, 30]) put(ground, x, 7, OPEN)
+    const realm = kingdom(ground)
+    const seat = queenSeat(ground, realm.chambers, realm.queenRoom)!
+    expect(seat.fit).toBeLessThan(1)
+    const half = 2.2 * seat.fit
+    for (let x = Math.floor(seat.x - half + 0.01); x <= Math.floor(seat.x + half - 0.01); x++) expect(at(ground, x, seat.y)).toBe(OPEN)
+  })
+
   it('stands nobody when the count of workers is nought', () => {
     const ground = nest()
     const realm = kingdom(ground)

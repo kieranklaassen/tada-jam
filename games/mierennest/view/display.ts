@@ -210,7 +210,7 @@ export class ToyDisplay {
     const queenMove = this.moveOf('queen', 'queen', 0, slot++)
     if (seat) {
       const p = toStage(seat.x, seat.y + 1)
-      list.push({ is: 'sprite', who: 'queen', pose: queenMove.second ? 'sit2' : 'sit', x: p.x, y: p.y, flip: false, size: 1, tall: 1, move: queenMove, turn: 0 })
+      list.push({ is: 'sprite', who: 'queen', pose: queenMove.second ? 'sit2' : 'sit', x: p.x, y: p.y, flip: false, size: seat.fit, tall: 1, move: queenMove, turn: 0 })
     } else {
       const p = toStage(WEDGED.x, WEDGED.y + 1)
       list.push({ is: 'sprite', who: 'queen', pose: queenMove.second ? 'wedged2' : 'wedged', x: p.x, y: p.y, flip: false, size: QUEEN_WEDGED.size, tall: QUEEN_WEDGED.tall, move: queenMove, turn: 0 })

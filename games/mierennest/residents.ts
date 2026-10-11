@@ -31,11 +31,18 @@ function floorOf(ground: Ground, room: Room): { y: number; from: number; to: num
 const QUEEN_HALF = 2.2
 const WORKER_HALF = 1.5
 
-/** Where the queen sits: at the left end of the floor of her room. Null while the kingdom has no chamber: she is wedged under the mouth. */
-export function queenSeat(ground: Ground, rooms: readonly Room[], queenRoom: number | null): Standing | null {
+/**
+ * Where the queen sits: at the left end of the floor of her room, and how much of her full size she is drawn at
+ * there. A floor shorter than she is wide seats her in its middle, a little smaller, so that she stands in nothing.
+ * Null while the kingdom has no chamber: she is wedged under the mouth.
+ */
+export function queenSeat(ground: Ground, rooms: readonly Room[], queenRoom: number | null): (Standing & { fit: number }) | null {
   if (queenRoom === null) return null
   const floor = floorOf(ground, rooms[queenRoom])
-  return { x: Math.min(floor.from + QUEEN_HALF, (floor.from + floor.to + 1) / 2), y: floor.y }
+  const length = floor.to - floor.from + 1
+  if (length <= 0) return null
+  const fit = Math.min(1, length / (2 * QUEEN_HALF))
+  return { x: fit < 1 ? floor.from + length / 2 : floor.from + QUEEN_HALF, y: floor.y, fit }
 }
 
 /**
