@@ -6,7 +6,7 @@ import type { Guidance } from '../guidance'
 import { ROUND } from '../order'
 import { freshGame, type Game } from '../save'
 import { Kingdom } from '../kingdom'
-import { DRAWS, LADDER_BEAT, LADDER_SWAY, MOST_CRUMBS, QUEEN_WEDGED, ROOTS_SWING, SPOIL_TROT, ToyDisplay, drawsOf, type Item } from './display'
+import { DRAWS, LADDER_BEAT, LADDER_SWAY, MOST_CRUMBS, QUEEN_WEDGED, ROOTS_SWING, SHOWING_AT, SPOIL_TROT, ToyDisplay, drawsOf, type Item } from './display'
 import { GRASS_Y, GROUND } from './layout'
 import { BELL } from './props'
 
@@ -443,6 +443,93 @@ describe('the queen and her guests', () => {
     expect(seen.glaring).toBeGreaterThan(60)
     expect(seen.sitting).toBeGreaterThan(10)
     expect(seen.queens).toBe(1)
+  })
+})
+
+describe('a habit shown and a habit asked for', () => {
+  const plain = (position: string, shown: string[]) => {
+    const game = freshGame(null, 1)
+    game.position = position
+    game.shown.push(...shown)
+    const k = new Kingdom(game)
+    return { k, display: new ToyDisplay(k, 1) }
+  }
+  const step = (k: Kingdom, display: ToyDisplay) => {
+    k.step(1 / 30)
+    display.see(k.toy.drainEvents())
+    display.seeGame(k.drainEvents(), k.drainRaidEvents())
+    display.advance(1 / 30)
+  }
+
+  it('a first showing plays at the place of what caught the kind out, in beats that follow one another and never flick back', () => {
+    const cases: [string, string[], string, readonly string[], readonly string[]][] = [
+      ['first-chamber', [], 'raider', ['stuck', 'stuck2'], []],
+      ['first-beetle', ['ant'], 'beetle', ['onBack', 'onBack2'], []],
+      ['first-fly', ['ant', 'beetle'], 'fly', ['bump'], []],
+      ['dung-scout', ['ant', 'beetle', 'fly', 'catapult', 'cannon'], 'dungBeetle', ['heave', 'push'], ['lost']],
+      ['great-raid', ['ant', 'beetle', 'fly', 'dungBeetle', 'catapult', 'cannon'], 'dungFly', ['point', 'point2'], ['arms']],
+    ]
+    for (const [position, shown, who, first, then] of cases) {
+      const { k, display } = plain(position, shown)
+      k.press(5.5, 10.5, 0)
+      k.release()
+      expect(k.scene?.is, position).toBe('showing')
+      const at = SHOWING_AT[who as keyof typeof SHOWING_AT]
+      const poses: string[] = []
+      while (k.scene?.is === 'showing') {
+        const one = sprites(display.items(null), who).filter((item) => item.size > 1)
+        expect(one.length, position).toBe(1)
+        expect([one[0].x, one[0].y], position).toEqual([at.x, at.y])
+        poses.push(one[0].pose)
+        if (who === 'dungBeetle') {
+          // Its ball lies before it, against the two pebbles of the camp.
+          const ball = sprites(display.items(null), 'dungBall')
+          expect(ball.length).toBe(1)
+          expect(ball[0].x).toBeGreaterThan(one[0].x)
+          expect(ball[0].x).toBeLessThan(1128)
+        }
+        step(k, display)
+      }
+      const turn = then.length > 0 ? poses.findIndex((pose) => then.includes(pose)) : poses.length
+      expect(turn, position).toBeGreaterThan(poses.length * 0.4)
+      expect(poses.slice(0, turn).every((pose) => first.includes(pose)), `${position}: ${[...new Set(poses)].join()}`).toBe(true)
+      expect(poses.slice(turn).every((pose) => then.includes(pose)), position).toBe(true)
+      if (then.length > 0) expect(poses.length - turn, position).toBeGreaterThan(poses.length * 0.2)
+    }
+  })
+
+  it('a press on a camper makes it act out its own habit at once, at its spot or at the log, and then it is as it was', () => {
+    // At the log: the party of beetle-pair, pressed, rocks on its back as it would under the toadstool.
+    const { k, display } = plain('beetle-pair', ['ant', 'beetle', 'fly'])
+    const waiting = display.camp.find((camper) => camper.id === 'party0')!
+    expect(sprites(display.items(null), 'beetle').find((item) => item.id === 'party0')!.pose).toBe('napkin')
+    expect(display.poke(waiting.x, waiting.y - 20)).toEqual({ on: 'camper', kind: 'beetle' })
+    const seen = new Set<string>()
+    for (let n = 0; n < 30; n++) {
+      step(k, display)
+      seen.add(sprites(display.items(null), 'beetle').find((item) => item.id === 'party0')!.pose)
+    }
+    expect([...seen].sort()).toEqual(['onBack', 'onBack2'])
+    // The one beside it was not asked, and goes on waiting.
+    expect(sprites(display.items(null), 'beetle').find((item) => item.id === 'party1')!.pose).toBe('napkin')
+    for (let n = 0; n < 90; n++) step(k, display)
+    expect(sprites(display.items(null), 'beetle').find((item) => item.id === 'party0')!.pose).toBe('napkin')
+    // At its spot: the dung fly on its toadstool points, and then folds its arms.
+    const leader = display.camp.find((camper) => camper.id === 'leader')!
+    expect(display.poke(leader.x, leader.y - 20)).toEqual({ on: 'camper', kind: 'dungFly' })
+    const beats: string[] = []
+    for (let n = 0; n < 70; n++) {
+      step(k, display)
+      beats.push(sprites(display.items(null), 'dungFly')[0].pose)
+    }
+    const folded = beats.indexOf('arms')
+    expect(folded).toBeGreaterThan(10)
+    expect(beats.slice(0, folded).every((pose) => pose === 'point' || pose === 'point2')).toBe(true)
+    // The bell makes everyone look up and nobody act anything out.
+    for (let n = 0; n < 60; n++) step(k, display)
+    display.poke(BELL.x, BELL.y)
+    step(k, display)
+    expect(sprites(display.items(null), 'dungFly')[0].pose.startsWith('point')).toBe(true)
   })
 })
 

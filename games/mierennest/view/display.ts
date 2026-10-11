@@ -10,7 +10,7 @@ import type { Machine } from '../save'
 import { WEDGED, demoDrag, queenSeat, workerSpots } from '../residents'
 import { below, makeRng, type Rng } from '../rng'
 import type { Toy, ToyEvent } from '../toy'
-import { GRASS_Y, GROUND, MOUTH_X } from './layout'
+import { GRASS_Y, GROUND, MOUTH_X, TOADSTOOL } from './layout'
 import { BELL, LIP, dropAt, hillGrown, hillShape } from './props'
 import { FLUNG, MOUTH_STEP, invaderAt, roomFloor as showFloor, showCarriedOut, showFurnishings, showMachine, showMarks, showRaid, showShot, type Shown } from './raidShow'
 import type { Effect, Thing } from './things'
@@ -74,16 +74,41 @@ export const FELT_DEPTH = 3.5
 export const LOOK_SECONDS = 1.2
 /** What each kind does when the bell rang for nothing. */
 const SHRUG: Partial<Record<Mover, string>> = { raider: 'shrug', beetle: 'sit', fly: 'peer', dungBeetle: 'lost', dungFly: 'arms' }
-/** How each kind is caught out by its own habit in its first showing: the creature and the two poses it flicks between. */
-const SHOWN_AS: Record<string, { who: Mover; poses: readonly [string, string] }> = {
-  ant: { who: 'raider', poses: ['stuck', 'stuck2'] },
-  beetle: { who: 'beetle', poses: ['onBack', 'onBack2'] },
-  fly: { who: 'fly', poses: ['bump', 'peer'] },
-  dungBeetle: { who: 'dungBeetle', poses: ['heave', 'lost'] },
-  dungFly: { who: 'dungFly', poses: ['point', 'arms'] },
+/**
+ * How each kind is caught out by its own habit: the creature, the two frames of what it does first, and the two
+ * of what it does then, where its habit has a second beat. The beats follow one another and never flick back.
+ */
+const HABIT: Record<string, { who: Mover; first: readonly [string, string]; then?: readonly [string, string] }> = {
+  ant: { who: 'raider', first: ['stuck', 'stuck2'] },
+  beetle: { who: 'beetle', first: ['onBack', 'onBack2'] },
+  fly: { who: 'fly', first: ['bump', 'bump'] },
+  dungBeetle: { who: 'dungBeetle', first: ['heave', 'push'], then: ['lost', 'lost'] },
+  dungFly: { who: 'dungFly', first: ['point', 'point2'], then: ['arms', 'arms'] },
 }
-/** Where a first showing is played: in front of the camp, to the left of the log, half as large again. */
-export const SHOWING_AT = { x: 250, y: GRASS_Y, size: 1.5 } as const
+const HABIT_OF: Partial<Record<Mover, keyof typeof HABIT>> = { raider: 'ant', beetle: 'beetle', fly: 'fly', dungBeetle: 'dungBeetle', dungFly: 'dungFly' }
+/** How much of a habit's time its first beat takes, where it has two; and how long a habit that was asked for by a press is acted out, in seconds. */
+const FIRST_BEAT = 0.6
+export const HABIT_SECONDS = 2.4
+/** The pose of a habit this far through it, from 0 to 1, at this second. */
+function habitPose(kind: keyof typeof HABIT, through: number, seconds: number): string {
+  const habit = HABIT[kind], beat = habit.then && through >= FIRST_BEAT ? habit.then : habit.first
+  return beat[Math.floor(seconds * 2.4) % 2]
+}
+/**
+ * Where a first showing is played, by the creature it shows: at the front of the camp, where what catches that kind
+ * out is. The ant at its puddle, the fly under the low twig, the beetle under the toadstool it cannot climb, the dung
+ * beetle behind its ball, which lies against the two pebbles, and the dung fly on the toadstool. Each is larger than
+ * at the log.
+ */
+export const SHOWING_AT: Record<string, { x: number; y: number; size: number }> = {
+  raider: { x: 108, y: GRASS_Y, size: 1.3 },
+  fly: { x: 230, y: GRASS_Y, size: 1.3 },
+  beetle: { x: 900, y: GRASS_Y, size: 1.3 },
+  dungBeetle: { x: 1010, y: GRASS_Y, size: 1.15 },
+  dungFly: { x: TOADSTOOL.x, y: GRASS_Y - TOADSTOOL.top, size: 1.3 },
+}
+/** Where the ball lies in the dung beetle's showing: before the two pebbles, which it will not go between. */
+const SHOWN_BALL = { x: 1100, y: GRASS_Y } as const
 /** How long a puff or a splat is seen where a shot landed, and the smoke and the twang of a machine that fired, in seconds. */
 export const BURST_SECONDS = 0.45
 const BURST: Partial<Record<Effect, number>> = { smoke: 0.7, twang: 0.4 }
@@ -143,6 +168,8 @@ export class ToyDisplay {
   private readonly crumbs: Crumb[] = Array.from({ length: MOST_CRUMBS }, () => ({ x: 0, y: 0, vx: 0, vy: 0, life: 0, size: 2, colour: '' }))
   private readonly groups = new Map<string, Crumb[]>()
   private readonly poked = new Map<string, { at: number; count: number }>()
+  /** Whom the finger pressed, and when: that one acts out its own habit for a while. The bell and a falling stone startle; they ask for nothing. */
+  private readonly asked = new Map<string, number>()
   private sway = 0
   private swing = 0
   private carriedAt: { x: number; y: number } | null = null
@@ -185,6 +212,7 @@ export class ToyDisplay {
     const camper = camperAt(this.present(), x, y)
     if (camper) {
       this.startle(camper.id)
+      this.asked.set(camper.id, this.seconds)
       return { on: 'camper', kind: camper.kind }
     }
     this.puff(x, y, 4, CRUMB.dust, 40)
@@ -437,10 +465,18 @@ export class ToyDisplay {
     return raid ? raid.invaders.map((invader) => invader.kind) : this.k.party
   }
 
+  /** The pose of the habit a camper was asked for by a press, while it acts it out; null when it was not asked or is done. */
+  private habitAsked(id: string, who: Mover): string | null {
+    const at = this.asked.get(id), kind = HABIT_OF[who]
+    if (at === undefined || kind === undefined || this.seconds - at >= HABIT_SECONDS) return null
+    return habitPose(kind, (this.seconds - at) / HABIT_SECONDS, this.seconds - at)
+  }
+
   /** One of a raid as an item: one who stands and waits fidgets as its kind does at the camp. */
   private shown(one: Shown, slot: number): Item {
     // One of the party who sits at the log answers a poke as it does before the raid: it is the same camper.
     const move = one.idle ? this.moveOf(`party${one.id}`, one.who, ((one.id + 1) * 0.37) % 1, slot) : null
+    if (one.idle && one.id >= 0 && one.y <= GRASS_Y) one = { ...one, pose: this.habitAsked(`party${one.id}`, one.who) ?? one.pose }
     return { is: 'sprite', id: one.who === 'worker' || one.id < 0 ? '' : one.who === 'dungBall' ? `partyBall${one.id}` : `party${one.id}`, who: one.who, pose: one.pose, x: one.x, y: one.y, flip: one.flip, size: one.size, tall: 1, move, turn: one.turn }
   }
 
@@ -476,17 +512,19 @@ export class ToyDisplay {
     // The party of a raid, or of the put-back after it, is shown by the raid; otherwise it stands in its file at the log.
     const raided = k.raid ?? (scene?.is === 'putBack' ? k.lastRaid : null)
     const ending = scene?.is === 'ending' ? scene : null
-    const showing = scene?.is === 'showing' ? SHOWN_AS[scene.kind] : undefined
-    const shownOut = showing ? this.camp.find((camper) => camper.id.startsWith('party') && camper.kind === showing.who)?.id : undefined
+    const showing = scene?.is === 'showing' ? HABIT[scene.kind] : undefined
+    const shownOut = showing ? this.camp.find((camper) => /^party\d+$/.test(camper.id) && camper.kind === showing.who)?.id : undefined
+    // The dung beetle that is shown has its ball with it, at the pebbles.
+    const shownBall = shownOut ? shownOut.replace('party', 'partyBall') : undefined
     for (const camper of this.camp) {
       const inFile = camper.id.startsWith('party')
       if (inFile && raided) continue
       // In the ending the dung fly is not at the log: it sits on the hill.
       if (ending && camper.kind === 'dungFly' && inFile) continue
       // The one a first showing shows is one of the party: it has stepped out to the front of the camp.
-      if (camper.id === shownOut) continue
+      if (camper.id === shownOut || camper.id === shownBall) continue
       const move = this.moveOf(camper.id, camper.kind, camper.phase, slot++)
-      let x = camper.x, y = camper.y, pose = camper.poses[move.second ? 1 : 0]
+      let x = camper.x, y = camper.y, pose = this.habitAsked(camper.id, camper.kind) ?? camper.poses[move.second ? 1 : 0]
       if (inFile && scene?.is === 'shrug' && camper.kind !== 'dungBall') {
         // To the mouth, a look down it, a shrug, and back to the file. A ball stays at the log; whoever sat on a
         // ball or rode a back gets down and walks on the grass, and a flier keeps its height.
@@ -505,14 +543,13 @@ export class ToyDisplay {
       const home = showRaid(raided, this.raidParty, this.seconds).filter((one) => one.id >= 0 && raided.invaders[one.id].state === 'home')
       for (const one of [...home, ...showCarriedOut(scene, raided, this.raidParty)]) list.push(this.shown(one, slot++))
     }
-    if (scene?.is === 'showing') {
-      // The kind is caught out by its own habit at the front of the camp, once, large.
-      const show = SHOWN_AS[scene.kind]
-      if (show) {
-        const move = this.move(slot++)
-        const hop = pokeMove(show.who, scene.t % POKE_SECONDS, Math.floor(scene.t / POKE_SECONDS), move)
-        list.push({ is: 'sprite', id: shownOut ?? '', who: show.who, pose: show.poses[Math.floor(scene.t * 2.4) % 2], x: SHOWING_AT.x, y: SHOWING_AT.y, flip: false, size: SHOWING_AT.size, tall: 1, move: hop, turn: 0 })
-      }
+    if (scene?.is === 'showing' && showing) {
+      // The kind is caught out by its own habit at the front of the camp, once, large, where what catches it out is.
+      const at = SHOWING_AT[showing.who]
+      const move = this.move(slot++)
+      const hop = pokeMove(showing.who, scene.t % POKE_SECONDS, Math.floor(scene.t / POKE_SECONDS), move)
+      if (showing.who === 'dungBeetle') list.push({ is: 'sprite', id: shownBall ?? '', who: 'dungBall', pose: 'plain', x: SHOWN_BALL.x, y: SHOWN_BALL.y, flip: false, size: 1, tall: 1, move: null, turn: 0 })
+      list.push({ is: 'sprite', id: shownOut ?? '', who: showing.who, pose: habitPose(scene.kind, scene.t / scene.length, scene.t), x: at.x, y: at.y, flip: false, size: at.size, tall: 1, move: hop, turn: 0 })
     }
     // The things on the back wall of the rooms, and the marks where a wall gave, lie behind everyone.
     const throne = queenSeat(ground, toy.realm.chambers, toy.realm.queenRoom)
