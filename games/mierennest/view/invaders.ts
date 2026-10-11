@@ -5,6 +5,7 @@ import { antFigure, flyFigure } from './parts2'
 import type { AntBuild, AntPose, FlyBuild, FlyPose } from './parts2'
 import { paintRaidRaider, RAID_RAIDER } from './invaders2'
 import { paintRaidBeetle, paintRaidFly, RAID_BEETLE, RAID_FLY } from './invaders3'
+import { paintRaidDungBeetle, paintRaidDungFly, RAID_DUNG_BEETLE, RAID_DUNG_FLY } from './invaders4'
 
 // The campers who raid the nest: the raider ant, the beetle, the fly, the dung beetle with its ball, and the dung
 // fly who leads them. Each is painted with the middle of its feet at the origin, facing right.
@@ -25,9 +26,9 @@ export const INVADER_POSES = {
   raider: ['pillow', 'walk', 'stuck', 'nap', 'walk2', 'stuck2', 'nap2', ...RAID_RAIDER],
   beetle: ['napkin', 'walk', 'onBack', 'lean', 'walk2', 'onBack2', ...RAID_BEETLE],
   fly: ['hands', 'fly', 'bump', 'hands2', 'fly2', ...RAID_FLY],
-  dungBeetle: ['polish', 'push', 'sit', 'polish2', 'walk', 'walk2'],
+  dungBeetle: ['polish', 'push', 'sit', 'polish2', 'walk', 'walk2', ...RAID_DUNG_BEETLE],
   dungBall: ['plain', 'sandy'],
-  dungFly: ['point', 'fly', 'point2', 'fly2'],
+  dungFly: ['point', 'fly', 'point2', 'fly2', ...RAID_DUNG_FLY],
 } as const
 
 // The few colours the palette has not got: the near legs of the dung beetle, cloth for the pillow and the rag with
@@ -268,6 +269,7 @@ function rag(ctx: Ctx, x: number, y: number, t: number): void {
 }
 
 const paintDungBeetle: Painter = (ctx, pose, look, t) => {
+  if (paintRaidDungBeetle(ctx, DUNG_BUILD, pose, look, t)) return
   const p = DUNG_POSES[pose] ?? DUNG_POSES.sit
   beetleFigure(ctx, DUNG_BUILD, p, look, t)
   if (pose === 'polish' || pose === 'polish2') rag(ctx, (p.far ?? p.legs)[2][0] + 3, (p.far ?? p.legs)[2][1] - 3, t)
@@ -376,6 +378,7 @@ const DUNG_FLY_POSES: Record<string, FlyPose & { twig: P }> = {
 }
 
 const paintDungFly: Painter = (ctx, pose, look, t) => {
+  if (paintRaidDungFly(ctx, DUNG_FLY_BUILD, pose, look, t)) return
   const p = DUNG_FLY_POSES[pose] ?? DUNG_FLY_POSES.fly
   flyFigure(ctx, DUNG_FLY_BUILD, p, look, t)
   // The twig it conducts with, from its near front hand, with one small side shoot.

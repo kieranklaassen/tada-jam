@@ -1,15 +1,16 @@
-import { MUD } from './palette'
-import { beetleFigure, enter, line, mouth, oval, place, TONGUE } from './parts'
+import { HIGHLIGHT, INK, MUD } from './palette'
+import { beetleFigure, bow, enter, feeler, limb, line, mouth, oval, place, shine, TONGUE } from './parts'
 import type { BeetleBuild, BeetlePose, Ctx, Legs, Look } from './parts'
 import { flyFigure } from './parts2'
 import type { FlyBuild, FlyPose } from './parts2'
 
 // The raid goes wrong for the beetle and the fly too: one sits down and eats the stores, walks about with mud on
 // its eyes and falls through the floor; the other tastes everything it lands on, its own foot included, gets its
-// wings gummed up and is knocked out of the air. Nobody is hurt. Each pose stays in the box of its kind.
+// wings gummed up and is knocked out of the air. Nobody is hurt. Each pose stays in the box of its kind. The last
+// pose of each is for when somebody walks past: it ducks, and hides its face.
 
-export const RAID_BEETLE = ['eat', 'burp', 'blind', 'strain', 'sit', 'fall'] as const
-export const RAID_FLY = ['taste', 'tasteFoot', 'gummed', 'tumble', 'peer', 'dodge'] as const
+export const RAID_BEETLE = ['eat', 'burp', 'blind', 'strain', 'sit', 'fall', 'duck'] as const
+export const RAID_FLY = ['taste', 'tasteFoot', 'gummed', 'tumble', 'peer', 'dodge', 'duck'] as const
 
 // Three colours the palette has not got: a pale seed with its shaded side, and the blush of an embarrassed cheek.
 const SEED = '#f7ecc8'
@@ -17,11 +18,11 @@ const SEED_SHADE = '#d2bd88'
 const BLUSH = '#ee8fa6'
 
 /** Feet that keep moving while a pose holds: each swings by up to `by`, all still at t = 0. */
-const wave = (legs: Legs, t: number, by: number, only?: number): Legs =>
+export const wave = (legs: Legs, t: number, by: number, only?: number): Legs =>
   legs.map((l, i) => (only !== undefined && i !== only ? l : [l[0] + Math.sin(t * 7) * by * (i % 2 ? -1 : 1), l[1] + Math.sin(t * 7 + 1) * by * 0.4 - Math.sin(1) * by * 0.4, l[2] ?? 0, l[3] ?? 0]))
 
 /** A splat of mud about (0, 0) with fingers that run down from it, in half widths `rx` and `ry`. */
-function splat(ctx: Ctx, rx: number, ry: number, drips: readonly number[]): void {
+export function splat(ctx: Ctx, rx: number, ry: number, drips: readonly number[]): void {
   const body = (fill: string, grow: number) => {
     oval(ctx, 0, 0, rx + grow, ry + grow, 0, fill)
     for (let i = 0; i < drips.length; i += 3) {
@@ -92,7 +93,7 @@ const BEETLES: Record<string, BeetlePose> = {
 }
 
 /** Moves the drawing frame into the head of a posed beetle. The caller restores it. */
-function beetleHead(ctx: Ctx, p: BeetlePose): void {
+export function beetleHead(ctx: Ctx, p: BeetlePose): void {
   const [hx = 0, hy = 0, hr = 0] = p.hd ?? []
   enter(ctx, p.at)
   ctx.translate(45 + hx, -22 + hy)
@@ -101,7 +102,7 @@ function beetleHead(ctx: Ctx, p: BeetlePose): void {
 
 /** A full cheek, in the frame of the head: one round bulge under the near eye that swells past the chin, and the
  *  mouth shut tight beside it. */
-function cheeks(ctx: Ctx, b: BeetleBuild, chew: number, lift = 0): void {
+export function cheeks(ctx: Ctx, b: BeetleBuild, chew: number, lift = 0): void {
   ctx.translate(0, -lift)
   oval(ctx, 3, 11.4 + chew, 7.8, 6.2, 0.1, b.dark)
   oval(ctx, 2.8, 10.2 + chew, 7.5, 5.6, 0.1, b.shell)
@@ -109,8 +110,48 @@ function cheeks(ctx: Ctx, b: BeetleBuild, chew: number, lift = 0): void {
   mouth(ctx, 12, 10.5 + chew * 0.5, 4.6, 'smile')
 }
 
+/** A beetle that ducks: its head pulled in under its shell like a tortoise. A smooth dome low on six short legs, a
+ *  dark hollow at the front where the head went, and out of it only the tip of the horn, or of the two feelers. */
+export function tucked(ctx: Ctx, b: BeetleBuild, t: number): void {
+  const breath = Math.sin(t * 1.8) * 0.7
+  const peep = Math.sin(t * 2.6) * 1.2
+  const dome = (fill: string, x: number, top: number, half: number, foot: number) => {
+    ctx.fillStyle = fill
+    ctx.beginPath()
+    ctx.moveTo(x - half, foot)
+    ctx.bezierCurveTo(x - half - 3, top, x + half + 3, top, x + half, foot)
+    ctx.quadraticCurveTo(x, foot + 9, x - half, foot)
+    ctx.fill()
+  }
+  for (const x of [-27, -3, 23]) limb(ctx, b.dark, 6.5, x, -10, x + 5, -3.4, 2, -1)
+  oval(ctx, -5, -9, 46, 7.5, 0, b.belly)
+  dome(b.dark, -6, -66 - breath, 52, -10)
+  dome(b.shell, -6.5, -65 - breath, 50.5, -13.5)
+  // The edge of the wing case and the seam of the neck plate, which is all that is left of a neck.
+  bow(ctx, b.dark, 2.2, -12, -34, 40, 20, 0, Math.PI * 0.16, Math.PI * 0.8)
+  bow(ctx, b.dark, 2.2, 4, -26, 24, 22, 0, -0.8, 0.3)
+  shine(ctx, -6, -29, 50, 23.5)
+  // The hollow, cut to the roundness of the shell, and what looks out of it.
+  ctx.fillStyle = INK
+  ctx.beginPath()
+  ctx.moveTo(26, -6.5)
+  ctx.bezierCurveTo(26, -23, 43, -25, 45.5, -11.5)
+  ctx.quadraticCurveTo(36, -6, 26, -6.5)
+  ctx.fill()
+  if (b.horn) line(ctx, b.horn, 7, [37, -11, 51, -11, 53, -23 - peep], true)
+  else {
+    feeler(ctx, b.leg, 2.6, 38, -11, 55, -16 + peep, 0.3)
+    feeler(ctx, b.leg, 2.6, 36, -13, 51, -26 - peep, 0.3)
+  }
+  for (const x of [-35, -11, 15]) limb(ctx, b.leg, 6.5, x, -10, x - 4, -3.4, -2, -1)
+}
+
 /** Paints a beetle in one of the raid's poses and says so; says no, and paints nothing, for any other pose. */
 export function paintRaidBeetle(ctx: Ctx, build: BeetleBuild, pose: string, look: Look, t: number): boolean {
+  if (pose === 'duck') {
+    tucked(ctx, build, t)
+    return true
+  }
   const p = BEETLES[pose]
   if (!p) return false
   const moving = pose === 'fall' ? { ...p, legs: wave(p.legs, t, 4), far: wave(p.far ?? [], t, -4) } : pose === 'blind' ? { ...p, legs: wave(p.legs, t, 2.5, 2), far: wave(p.far ?? [], t, -2.5, 2) } : p
@@ -173,14 +214,48 @@ const FLIES: Record<string, FlyPose> = {
     legs: [[4, -5, 4, 2], [17, -3, 4, 2], [33, -9, 5, 1]],
     face: { brows: [-0.3, -0.2], lid: 0.4, tilt: 0.15, mouth: 'grin', bias: [-1.6, -0.2] },
   },
+  // Ducking: sat down with its wings folded flat on its back and both front hands clapped over its eyes. The two
+  // arms are painted over the head, so only the back four legs are listed.
+  duck: {
+    at: [5, -2, -0.24], wings: 'flat', nod: 0.12,
+    legs: [[24, 0, 3, -6], [37, 0, 4, -7]],
+    far: [[32, 0, 3, -6], [46, 0, 4, -7]],
+    face: { hidden: true, mouth: 'none' },
+  },
 }
 
 /** Moves the drawing frame into the head of a posed fly, nod and all. The caller restores it. */
-function flyHead(ctx: Ctx, p: FlyPose): void {
+export function flyHead(ctx: Ctx, p: FlyPose): void {
   enter(ctx, p.at)
   ctx.translate(22, -22)
   ctx.rotate(p.nod ?? 0)
   ctx.translate(-22, 22)
+}
+
+/** Over a fly whose face is hidden: its two front arms, bent up from the chest with the elbows out in front, and
+ *  a hand with three fingers flat over the place of each eye, the far one first. `r` is the size of the near hand. */
+export function handsOverEyes(ctx: Ctx, f: FlyBuild, p: FlyPose, r = 13): void {
+  const n = p.nod ?? 0
+  // A point of the head, nod and all, in the frame of the body.
+  const head = (x: number, y: number): readonly [number, number] => [22 + (x - 22) * Math.cos(n) - (y + 22) * Math.sin(n), -22 + (x - 22) * Math.sin(n) + (y + 22) * Math.cos(n)]
+  const hand = (arm: readonly number[], x: number, y: number, size: number) => {
+    const [hx, hy] = head(x, y)
+    const ray = (a: number, from: number, to: number) => [hx + Math.cos(a + n) * size * from, hy + Math.sin(a + n) * size * from, hx + Math.cos(a + n) * size * to, hy + Math.sin(a + n) * size * to]
+    // The hand is in the colour of the body inside a dark edge, like the head it lies on, so that it shows on it.
+    const mitt = (fill: string, grow: number) => {
+      for (const a of [-2.35, -1.7, -1.05]) line(ctx, fill, size * 0.6 + grow * 2, ray(a, 0.3, 0.76))
+      oval(ctx, hx, hy + size * 0.14, size * 0.94 + grow, size * 0.8 + grow, n, fill)
+    }
+    line(ctx, f.dark, 4.4, [...arm, hx + 1.5, hy + size * 0.6])
+    mitt(f.dark, 1.5)
+    mitt(f.body, 0)
+    for (const a of [-2.02, -1.38]) line(ctx, f.dark, 1.5, ray(a, 0.5, 1.02))
+    line(ctx, HIGHLIGHT, 1.8, [hx - size * 0.5, hy + size * 0.2, hx - size * 0.28, hy - size * 0.06])
+  }
+  enter(ctx, p.at)
+  hand([40, -10, 53, -13], 44.2, -30.6, r * 0.84)
+  hand([19, -15, 39, -7], 30, -32, r)
+  ctx.restore()
 }
 
 /** A tongue from the mouth to where it tastes: pink, round at the end, with a wet streak. */
@@ -213,7 +288,8 @@ export function paintRaidFly(ctx: Ctx, build: FlyBuild, pose: string, look: Look
     ctx.rotate(0.3)
     splat(ctx, 12, 9, [-6, 9, -1, 5, 11, 1])
     ctx.restore()
-  } else if (pose === 'peer') {
+  } else if (pose === 'duck') handsOverEyes(ctx, build, p)
+  else if (pose === 'peer') {
     // The forearm from the elbow to the brow, and the hand flat over both eyes.
     const [ex, ey] = p.legs[2]
     line(ctx, build.dark, 3, [ex, ey - 1.8, 33, -50])

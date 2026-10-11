@@ -207,8 +207,9 @@ export function mouth(ctx: Ctx, x: number, y: number, w: number, kind: Mouth, in
   }
 }
 
-/** A face: the angle of the near and the far brow, and `raise` lifts the near one; lids, mouth and jaws; `bias` adds to where the eyes look. */
-export type Face = { brows?: P; raise?: number; lid?: number; tilt?: number; shut?: Shut; mouth?: Mouth; jaws?: number; bias?: P; dizzy?: boolean }
+/** A face: the angle of the near and the far brow, and `raise` lifts the near one; lids, mouth and jaws; `bias` adds to where the eyes look.
+ *  A face that is `hidden` is behind a helmet or a pair of hands: no eye and no brow is painted, and an ant's jaws are tucked away. */
+export type Face = { brows?: P; raise?: number; lid?: number; tilt?: number; shut?: Shut; mouth?: Mouth; jaws?: number; bias?: P; dizzy?: boolean; hidden?: boolean }
 export type Legs = readonly (readonly number[])[]
 /** Something held under an arm: painted over the body and under the near legs. */
 export type Held = (ctx: Ctx) => void
@@ -216,6 +217,7 @@ export type Held = (ctx: Ctx) => void
 /** The eyes of a head, in the head's own frame: the far one first, then the near one over it, then the brows.
  *  `dizzy` sends the two pupils different ways, whatever there is to look at. `more` is passed on to both eyes. */
 export function eyes(ctx: Ctx, x: number, y: number, r: number, gap: number, look: Look, f: Face, skin: string, rim: string, white?: string, more: EyeOpts = {}): void {
+  if (f.hidden) return
   const lx = clamp(look.x + (f.bias?.[0] ?? 0))
   const ly = clamp(look.y + (f.bias?.[1] ?? 0))
   // The head may be tilted or mirrored, and the pupils must still look at the same place on the stage.
@@ -282,6 +284,14 @@ export function beetleFigure(ctx: Ctx, b: BeetleBuild, p: BeetlePose, look: Look
   const [hx = 0, hy = 0, hr = 0] = p.hd ?? []
   ctx.translate(45 + hx, -22 + hy)
   ctx.rotate(hr)
+  beetleFace(ctx, b, f, look, t)
+  ctx.restore()
+  p.held?.(ctx)
+  legs(p.legs, b.leg, 0)
+}
+
+/** The head of a beetle in its own frame: the horn or the two feelers, the skull, the mouth and the eyes. */
+export function beetleFace(ctx: Ctx, b: BeetleBuild, f: Face, look: Look, t: number): void {
   const twitch = Math.sin(t * 2.6) * 1.5
   if (b.horn) {
     // The short horn of a stag beetle: one thick tine bent upward and a small one under it.
@@ -297,7 +307,4 @@ export function beetleFigure(ctx: Ctx, b: BeetleBuild, p: BeetlePose, look: Look
   eyes(ctx, 0, -5, 8.4, 10.8, look, f, b.shell, b.dark)
   // The dung beetle's lashes: three short strokes at the outer corner of its near eye.
   if (b.lash) for (const a of [-2.75, -2.3, -1.85]) line(ctx, INK, 1.6, [Math.cos(a) * 8, -5 + Math.sin(a) * 8, Math.cos(a) * 12.5, -5 + Math.sin(a) * 12.5])
-  ctx.restore()
-  p.held?.(ctx)
-  legs(p.legs, b.leg, 0)
 }

@@ -175,10 +175,10 @@ function antHead(ctx: Ctx, a: AntBuild, p: AntPose, look: Look, twitch: number):
     ctx.stroke()
     ctx.restore()
   }
-  jaw(-1, 1.5)
+  if (!f.hidden) jaw(-1, 1.5)
   blob(ctx, 0, 0, rx, ry, 0, a.body, a.dark, false)
   if (!g) shine(ctx, -rx * 0.3, 0, rx * 0.7, ry, 0)
-  jaw(1, 0)
+  if (!f.hidden) jaw(1, 0)
   if (a.cheek) oval(ctx, -rx * 0.12, ry * 0.42, rx * 0.22, ry * 0.17, 0, a.cheek)
   mouth(ctx, rx * 0.52, ry * 0.58, rx * 0.5, f.mouth ?? 'smile')
   if (g) {
@@ -203,8 +203,9 @@ function antHead(ctx: Ctx, a: AntBuild, p: AntPose, look: Look, twitch: number):
 // along the body, and in flight their blur is a low fan behind the shoulder.
 
 export type FlyBuild = { body: string; dark: string; wing: string; wingEdge: string; eye: string; goggles?: string; strap?: string }
-/** A pose. `wings` at rest, dazed, or one of the two halves of a beat; `nod` tips the head on its neck. */
-export type FlyPose = { at: Stance; wings: 'rest' | 'droop' | 'up' | 'down'; legs: Legs; far?: Legs; face?: Face; bump?: boolean; nod?: number }
+/** A pose. `wings` at rest, dazed, folded flat on the back, or one of the two halves of a beat; `nod` tips the head
+ *  on its neck. */
+export type FlyPose = { at: Stance; wings: 'rest' | 'droop' | 'flat' | 'up' | 'down'; legs: Legs; far?: Legs; face?: Face; bump?: boolean; nod?: number }
 
 /** One wing from its root, pointing backward and lifted by `turn`. A beating wing is only its glassy shape. */
 function wing(ctx: Ctx, f: FlyBuild, x: number, y: number, length: number, wide: number, turn: number, beating = false): void {
@@ -237,9 +238,10 @@ export function flyFigure(ctx: Ctx, f: FlyBuild, p: FlyPose, look: Look, t: numb
     })
   const beat = Math.sin(t * 40) * 0.08
   const wings = (near: boolean) => {
-    // At rest the wings lie back along the body, the far one a little higher; dazed, one sticks up.
-    if (p.wings === 'rest' || p.wings === 'droop') {
-      const lift = p.wings === 'rest' ? [0.3, 0.1] : [0.42, -0.12]
+    // At rest the wings lie back along the body, the far one a little higher; dazed, one sticks up; folded flat,
+    // both lie down along the rump.
+    if (p.wings === 'rest' || p.wings === 'droop' || p.wings === 'flat') {
+      const lift = p.wings === 'rest' ? [0.3, 0.1] : p.wings === 'droop' ? [0.42, -0.12] : [-0.14, -0.3]
       return wing(ctx, f, near ? 6 : 8, -38, near ? 55 : 50, 12, lift[near ? 1 : 0])
     }
     // In flight they are a blur: a glassy fan with two streaks in it, and the wing itself at one end of its beat,

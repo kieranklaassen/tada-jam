@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { paintCreature, POSES, SIZE } from './creatures'
 import type { CreatureKind } from './creatures'
+import { DUNG_FLY, EYE, FLY, RAIDER } from './palette'
 
 // The painters need no canvas to be checked: a stand-in context takes every call, remembers its name and its
 // numbers, and follows the drawing frame, so that it also knows where on the stage every painted path lies.
@@ -11,12 +12,16 @@ import type { CreatureKind } from './creatures'
 // stroke counts half its line width more on every side. What they do not cover: a clip is ignored, so a shape cut
 // by one counts whole, and rect, fillRect and images are not followed, because no painter uses them. The bounds
 // can therefore be a little too wide and never too narrow.
+//
+// It also remembers the colour of every fill, so that a test can ask whether the brush of an eye was used at all.
 
 type Bounds = { left: number; right: number; top: number; bottom: number }
 
-function standIn(): { ctx: CanvasRenderingContext2D; calls: string[]; seen: string[]; bounds: Bounds } {
+function standIn(): { ctx: CanvasRenderingContext2D; calls: string[]; seen: string[]; fills: string[]; bounds: Bounds } {
   const calls: string[] = []
   const seen: string[] = []
+  const fills: string[] = []
+  let colour = ''
   const bounds: Bounds = { left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity }
   let m = [1, 0, 0, 1, 0, 0]
   let width = 1
@@ -89,7 +94,10 @@ function standIn(): { ctx: CanvasRenderingContext2D; calls: string[]; seen: stri
       add(x1, y1)
       add(x2, y2)
     },
-    fill: () => paint(0),
+    fill: () => {
+      fills.push(colour)
+      paint(0)
+    },
     stroke: () => paint((width / 2) * Math.sqrt(Math.abs(m[0] * m[3] - m[1] * m[2]))),
   }
   const ctx = new Proxy(
@@ -104,11 +112,12 @@ function standIn(): { ctx: CanvasRenderingContext2D; calls: string[]; seen: stri
         },
       set: (_, name, value) => {
         if (name === 'lineWidth') width = value
+        if (name === 'fillStyle') colour = String(value)
         return true
       },
     },
   ) as unknown as CanvasRenderingContext2D
-  return { ctx, calls, seen, bounds }
+  return { ctx, calls, seen, fills, bounds }
 }
 
 /** What a pose paints, at rest and a while later. */
@@ -141,14 +150,40 @@ const PARTNERS: [CreatureKind, string, string][] = [
   ['beetle', 'lean', 'strain'],
   ['beetle', 'eat', 'burp'],
   ['fly', 'taste', 'tasteFoot'],
+  ['dungBeetle', 'onBack', 'onBack2'],
+  ['dungFly', 'conduct', 'conduct2'],
+  ['dungFly', 'weep', 'weep2'],
+  ['queen', 'eggDown', 'eggDown2'],
 ]
 
-/** The poses of a raid that goes wrong, added after the others. */
+/** The poses of a raid that goes wrong, added after the others; the last of each of the first three is its duck. */
 const RAID: [CreatureKind, string[]][] = [
-  ['raider', ['buried', 'balled', 'flat', 'shrug', 'lie', 'climb']],
-  ['beetle', ['eat', 'burp', 'blind', 'strain', 'sit', 'fall']],
-  ['fly', ['taste', 'tasteFoot', 'gummed', 'tumble', 'peer', 'dodge']],
+  ['raider', ['buried', 'balled', 'flat', 'shrug', 'lie', 'climb', 'duck']],
+  ['beetle', ['eat', 'burp', 'blind', 'strain', 'sit', 'fall', 'duck']],
+  ['fly', ['taste', 'tasteFoot', 'gummed', 'tumble', 'peer', 'dodge', 'duck']],
+  ['dungBeetle', ['duck', 'heave', 'lost', 'onBack', 'onBack2']],
+  ['dungFly', ['duck', 'conduct', 'conduct2', 'down', 'tumble', 'arms', 'weep', 'weep2']],
 ]
+
+/** The poses added last of all: a duck for every invader, the dung beetle's and the dung fly's, and the queen's. */
+const NEW: [CreatureKind, string[]][] = [
+  ['raider', ['duck']],
+  ['beetle', ['duck']],
+  ['fly', ['duck']],
+  ['dungBeetle', ['duck', 'heave', 'lost', 'onBack', 'onBack2']],
+  ['dungFly', ['duck', 'conduct', 'conduct2', 'down', 'tumble', 'arms', 'weep', 'weep2']],
+  ['queen', ['eggDown', 'eggDown2']],
+]
+
+/** What only an eye is painted with: its white, or the tint a kind has for it; its pupil; the wash of a shut lid. */
+const LID_WASH = 'rgba(255,255,255,0.2)'
+const EYE_COLOURS: Partial<Record<CreatureKind, string[]>> = {
+  raider: [EYE.pupil, LID_WASH, EYE.white, RAIDER.eye],
+  beetle: [EYE.pupil, LID_WASH, EYE.white],
+  fly: [EYE.pupil, LID_WASH, EYE.white, FLY.eye],
+  dungBeetle: [EYE.pupil, LID_WASH, EYE.white],
+  dungFly: [EYE.pupil, LID_WASH, EYE.white, DUNG_FLY.eye],
+}
 
 describe('the creatures', () => {
   it('have the sizes the ground was cut for', () => {
@@ -168,14 +203,14 @@ describe('the creatures', () => {
   it('have the poses the scenes ask for, the first ones in their old order', () => {
     expect(KINDS).toHaveLength(9)
     expect(POSES.ant).toEqual(['stand', 'dig', 'look', 'walk1', 'walk2', 'carry', 'wait'])
-    expect(POSES.queen).toEqual(['wedged', 'sit', 'wedged2', 'sit2'])
+    expect(POSES.queen).toEqual(['wedged', 'sit', 'wedged2', 'sit2', 'eggDown', 'eggDown2'])
     expect(POSES.worker).toEqual(['walk', 'carry', 'hips', 'walk2'])
     expect(POSES.raider.slice(0, 7)).toEqual(['pillow', 'walk', 'stuck', 'nap', 'walk2', 'stuck2', 'nap2'])
     expect(POSES.beetle.slice(0, 6)).toEqual(['napkin', 'walk', 'onBack', 'lean', 'walk2', 'onBack2'])
     expect(POSES.fly.slice(0, 5)).toEqual(['hands', 'fly', 'bump', 'hands2', 'fly2'])
-    expect(POSES.dungBeetle).toEqual(['polish', 'push', 'sit', 'polish2', 'walk', 'walk2'])
+    expect(POSES.dungBeetle.slice(0, 6)).toEqual(['polish', 'push', 'sit', 'polish2', 'walk', 'walk2'])
     expect(POSES.dungBall).toEqual(['plain', 'sandy'])
-    expect(POSES.dungFly).toEqual(['point', 'fly', 'point2', 'fly2'])
+    expect(POSES.dungFly.slice(0, 4)).toEqual(['point', 'fly', 'point2', 'fly2'])
   })
 
   for (const kind of KINDS) {
@@ -199,6 +234,8 @@ describe('the creatures', () => {
     expect(POSES.raider.slice(7)).toEqual(RAID[0][1])
     expect(POSES.beetle.slice(6)).toEqual(RAID[1][1])
     expect(POSES.fly.slice(5)).toEqual(RAID[2][1])
+    expect(POSES.dungBeetle.slice(6)).toEqual(RAID[3][1])
+    expect(POSES.dungFly.slice(4)).toEqual(RAID[4][1])
     for (const [kind, poses] of RAID) {
       const pictures = POSES[kind].map((pose) => painted(kind, pose, 0).seen.join('\n'))
       expect(new Set(pictures).size, kind).toBe(POSES[kind].length)
@@ -222,6 +259,51 @@ describe('the creatures', () => {
         }
       })
     }
+  }
+
+  // Every pose added last is in the list of its kind, paints at every time with shapes alone and gives back what
+  // it saves, and is a picture of its own: not the kind's first pose, which is what a name nobody knows would get,
+  // and not any other pose of the kind.
+  for (const [kind, poses] of NEW) {
+    for (const pose of poses) {
+      it(`paints ${kind} in the new pose ${pose} as a picture of its own`, () => {
+        expect(POSES[kind]).toContain(pose)
+        expect(POSES[kind].indexOf(pose)).toBeGreaterThan(0)
+        for (const t of TIMES) {
+          const s = standIn()
+          expect(() => paintCreature(s.ctx, kind, pose, { x: 0.4, y: -0.6 }, t)).not.toThrow()
+          expect(s.calls).toContain('fill')
+          expect(s.calls).not.toContain('fillText')
+          expect(s.calls).not.toContain('strokeText')
+          expect(s.calls.filter((c) => c === 'save')).toHaveLength(s.calls.filter((c) => c === 'restore').length)
+          for (const other of POSES[kind]) if (other !== pose) expect(s.seen, `${other}, t = ${t}`).not.toEqual(painted(kind, other, t).seen)
+        }
+      })
+    }
+  }
+
+  // A creature that ducks hides its face. Every eye is painted by one brush, which fills a white (or the tint of
+  // the kind), a pupil and, when the eye is shut, a pale wash over the lid; the pupil's colour and the wash are
+  // filled by nothing else. So a duck may fill none of them. The first check shows that the stand-in would see an
+  // eye if there were one: open on every kind as it walks or flies, shut in the raider's nap.
+  it('sees the brush of an eye where there is one', () => {
+    for (const kind of Object.keys(EYE_COLOURS) as CreatureKind[]) expect(painted(kind, kind.endsWith('ly') ? 'fly' : 'walk', 0).fills, kind).toContain(EYE.pupil)
+    expect(painted('raider', 'walk', 0).fills).toContain(RAIDER.eye)
+    expect(painted('fly', 'hands', 0).fills).toContain(FLY.eye)
+    expect(painted('dungFly', 'point', 0).fills).toContain(DUNG_FLY.eye)
+    expect(painted('beetle', 'walk', 0).fills).toContain(EYE.white)
+    expect(painted('raider', 'nap', 0).fills).toContain(LID_WASH)
+    expect(painted('raider', 'nap', 0).fills).not.toContain(EYE.pupil)
+  })
+
+  for (const kind of Object.keys(EYE_COLOURS) as CreatureKind[]) {
+    it(`paints no eye on ${kind} when it ducks`, () => {
+      expect(POSES[kind]).toContain('duck')
+      for (const t of TIMES) {
+        const { fills } = painted(kind, 'duck', t)
+        for (const colour of EYE_COLOURS[kind] ?? []) expect(fills, `${colour}, t = ${t}`).not.toContain(colour)
+      }
+    })
   }
 
   it('paints the first pose of a kind when asked for one it has not, and needs neither a look nor a time', () => {

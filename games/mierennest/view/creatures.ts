@@ -1,5 +1,5 @@
 import { invaderPainters, INVADER_POSES, INVADER_SIZE } from './invaders'
-import { ANT, EARTH, QUEEN, WORKER } from './palette'
+import { ANT, EARTH, GRASS, QUEEN, WORKER } from './palette'
 import { blob, edged, eyes, feeler, mouth, oval, shine } from './parts'
 import type { CreatureKind, Ctx, Face, Look, Painter } from './parts'
 import { antFigure } from './parts2'
@@ -179,7 +179,8 @@ function egg(ctx: Ctx, at: readonly number[], far: readonly number[], near: read
 }
 
 // What changes between the two frames of each of her poses: wedged, she squirms, hugs the egg tighter and rolls
-// her eyes up; enthroned, she shifts the egg and lifts one eyebrow.
+// her eyes up; enthroned, she shifts the egg and lifts one eyebrow. `eggDown` and `eggDown2` are the same throne
+// with the egg at last on the floor.
 const WEDGED = {
   wedged: {
     rolls: [[-3, 22, 1], [-23, 21, 1], [-42, 24, 0]], feet: [-15, 14], egg: [5, -53, 0.3], far: [23, -62, 6, 5], near: [-23, -62, -7, 7], head: -82,
@@ -194,6 +195,16 @@ const SIT = {
   sit: { egg: [40, -31, 0.3], face: { brows: [-0.55, 0.35], lid: 0.3, tilt: 0.12, mouth: 'flat' } },
   sit2: { egg: [43, -34, 0.62], face: { brows: [0.2, 0.35], raise: 0.55, lid: 0.14, tilt: 0.12, mouth: 'wavy' } },
 } as const
+
+/** The egg set down at last, standing in a little cushion of moss on the floor in front of her. */
+function eggOnMoss(ctx: Ctx, x: number): void {
+  for (const [dx, r] of [[-8, 5.4], [0, 6.4], [8, 5.4]]) oval(ctx, x + dx, -4.6, r + 1.6, r, 0, GRASS.dark)
+  blob(ctx, x, -17.5, 10.5, 13.5, 0.08, QUEEN.egg, EGG_SHADE, false)
+  for (const [dx, r] of [[-10.5, 4.2], [-4, 5], [4, 4.8], [10.5, 4]]) {
+    oval(ctx, x + dx, -3.4, r + 1, r * 0.82, 0, GRASS.blade)
+    oval(ctx, x + dx - 0.8, -4.8, r * 0.5, r * 0.3, -0.3, GRASS.light)
+  }
+}
 
 const paintQueen: Painter = (ctx, pose, look, t) => {
   const breath = Math.sin(t * 1.6)
@@ -216,7 +227,10 @@ const paintQueen: Painter = (ctx, pose, look, t) => {
   // Enthroned on her own rump: three great rolls behind her, a short chest, the egg in her arms, and her two hind
   // legs folded in front of her with the knees up.
   const s = SIT[pose === 'sit2' ? 'sit2' : 'sit']
-  edged(ctx, QUEEN.leg, QUEEN.arm, 7.6, 32, -13, 57, -3.8, 7.5, -11, true)
+  // With the egg set down her feet are drawn in, to make room for it on the floor.
+  const down = pose === 'eggDown' || pose === 'eggDown2'
+  if (down) edged(ctx, QUEEN.leg, QUEEN.arm, 7.6, 32, -13, 42, -3.8, 6, -11, true)
+  else edged(ctx, QUEEN.leg, QUEEN.arm, 7.6, 32, -13, 57, -3.8, 7.5, -11, true)
   for (const [x, y, rx, ry] of [[-38, -19, 22, 19], [-17, -24, 25, 24 + breath * 0.6], [7, -23, 21, 22]]) {
     // A roll: a dark edge, the pale belly under it, and the lit back over both.
     oval(ctx, x, y, rx, ry, 0, QUEEN.dark)
@@ -225,6 +239,19 @@ const paintQueen: Painter = (ctx, pose, look, t) => {
     shine(ctx, x, y, rx, ry)
   }
   blob(ctx, 21, -37, 15, 18, -0.25, QUEEN.body, QUEEN.dark, false)
+  if (down) {
+    // The egg is on its moss, and her arms are her own again: both flung wide in a long stretch, eyes shut with
+    // the relief of it; in the second frame the far hand comes down and pats the egg.
+    const stretch = Math.sin(t * 1.6) * 1.2
+    const pat = Math.abs(Math.sin(t * 5)) * 2.4
+    edged(ctx, QUEEN.leg, QUEEN.dark, 7.6, 26, -10, 35, -3.8, 6, -10.5, true)
+    eggOnMoss(ctx, 56.5)
+    if (pose === 'eggDown2') edged(ctx, QUEEN.leg, QUEEN.arm, 8, 31, -44, 56, -34.5 - pat, 8, -9)
+    else edged(ctx, QUEEN.leg, QUEEN.arm, 8, 31, -44, 63, -62 - stretch, 4, 7)
+    edged(ctx, QUEEN.leg, QUEEN.dark, 8, 16, -42, -9, -63 - stretch, -3, 8)
+    queenHead(ctx, 32, -57, 17.5, 14.5, 0, { brows: [-0.3, 0.25], shut: 'joy', mouth: 'smile' }, look, t)
+    return
+  }
   edged(ctx, QUEEN.leg, QUEEN.dark, 7.6, 26, -10, 47, -3.8, 7, -10.5, true)
   egg(ctx, [s.egg[0], s.egg[1] - breath * 0.4, s.egg[2]], [31, -44, 9, 2], [16, -42, 1, 9], t)
   queenHead(ctx, 32, -57, 17.5, 14.5, 0, s.face, look, t)
@@ -245,7 +272,7 @@ export const SIZE: Record<CreatureKind, { width: number; height: number }> = {
 /** The poses each kind has. The first is the one a kind falls back on when it is asked for a pose it has not. */
 export const POSES: { [K in CreatureKind]: readonly string[] } = {
   ant: ['stand', 'dig', 'look', 'walk1', 'walk2', 'carry', 'wait'],
-  queen: ['wedged', 'sit', 'wedged2', 'sit2'],
+  queen: ['wedged', 'sit', 'wedged2', 'sit2', 'eggDown', 'eggDown2'],
   worker: ['walk', 'carry', 'hips', 'walk2'],
   ...INVADER_POSES,
 }

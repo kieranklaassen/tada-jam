@@ -1,5 +1,5 @@
-import { MUD, RAIDER, SAND } from './palette'
-import { bow, edged, eye, line, oval } from './parts'
+import { HIGHLIGHT, MUD, RAIDER, SAND } from './palette'
+import { bow, edged, eye, line, oval, shape } from './parts'
 import type { Ctx, Look } from './parts'
 import { antFigure } from './parts2'
 import type { AntBuild, AntPose } from './parts2'
@@ -7,9 +7,9 @@ import type { AntBuild, AntPose } from './parts2'
 // The raid goes wrong, and the raiders take it badly: buried, rolled up, rolled flat, shrugging, making themselves
 // at home, and going up a wall. Nobody is hurt; everybody is bewildered, sulking or embarrassed. Each pose stays in
 // the box of its kind and is painted with the middle of its feet at the origin, facing right. The beetle's and the
-// fly's are in `invaders3`.
+// fly's are in `invaders3`. The last pose is for when somebody walks past: it ducks, and hides its face.
 
-export const RAID_RAIDER = ['buried', 'balled', 'flat', 'shrug', 'lie', 'climb'] as const
+export const RAID_RAIDER = ['buried', 'balled', 'flat', 'shrug', 'lie', 'climb', 'duck'] as const
 
 const POSES: Record<string, AntPose> = {
   // Sand up to its feelers: the body is somewhere under the heap, and only the top of the head looks out.
@@ -53,6 +53,13 @@ const POSES: Record<string, AntPose> = {
     legs: [[-40, 0, -7, -2], [-2, 0, -6, 0], [44, 0, 8, -2]],
     far: [[-24, 0, -6, -3], [15, 0, 5, -1], [31, 0, 5, -3]],
     feel: [6, -6, 0.3], flick: [2, 6], face: { lid: 0.12, mouth: 'tongue', jaws: 0.25, bias: [0.7, -0.3] },
+  },
+  // Ducking: flat on its belly with its feet tucked in and its helmet pulled right down over its face, so that
+  // nobody can see it. The head is painted small, inside the helmet that is painted over it, feelers and all.
+  duck: {
+    ab: [-32, -9, 0.03], th: [0, -8.6, 0.03], hd: [25, -8.5, 0],
+    legs: [[-20, 0, -3, -3], [-6, 0, -3, -2], [4, 0, 2, -2]],
+    feel: [-9, 0, 0], face: { hidden: true, mouth: 'none' },
   },
 }
 
@@ -132,6 +139,27 @@ function shrugging(ctx: Ctx, b: AntBuild, p: AntPose, t: number): void {
   if (p.far) hand(p.far[2], b.dark)
 }
 
+/** Over a ducking raider: its helmet, sat on the floor like a pot with the head gone inside it, and the two feelers
+ *  that come out from under the brim and stand up in front of it to feel who is there. `x` is the middle of it. */
+function potHelmet(ctx: Ctx, b: AntBuild, x: number, t: number): void {
+  const g = b.gear
+  if (!g) return
+  const feel = Math.sin(t * 5) * 1.6
+  for (const [pts, core] of [[[x + 12, -3, x + 25, -11 + feel, x + 32, -6 + feel], b.dark], [[x + 15, -3, x + 19, -19 - feel, x + 28, -17.5 - feel], b.lit]] as const) {
+    line(ctx, b.leg, 3.5, pts)
+    line(ctx, core, 1.4, pts)
+  }
+  shape(ctx, g.helmet, [x - 9, -16, x + 3, -16.5, x - 6, -28])
+  ctx.fillStyle = g.helmet
+  ctx.beginPath()
+  ctx.moveTo(x - 17.5, -2)
+  ctx.bezierCurveTo(x - 18.5, -24.5, x + 13, -25, x + 17, -3)
+  ctx.closePath()
+  ctx.fill()
+  line(ctx, g.brim, 3.8, [x - 20, -2.2, x + 20.5, -3])
+  bow(ctx, HIGHLIGHT, 2.2, x - 1.5, -6, 11.5, 10, 0, -2.3, -1.5)
+}
+
 /** Paints a raider in one of the raid's poses and says so; says no, and paints nothing, for any other pose. */
 export function paintRaidRaider(ctx: Ctx, build: AntBuild, pose: string, look: Look, t: number): boolean {
   const p = POSES[pose]
@@ -163,8 +191,9 @@ export function paintRaidRaider(ctx: Ctx, build: AntBuild, pose: string, look: L
     const wag = Math.sin(t * 2.2) * 2.5
     antFigure(ctx, build, { ...p, legs: p.legs.map((l, i) => (i === 0 ? [l[0] + wag, l[1], l[2], l[3], l[4]] : l)) }, look, t)
   } else {
-    antFigure(ctx, build, p, look, t)
+    antFigure(ctx, pose === 'duck' ? { ...build, hd: [7, 5] } : build, p, look, t)
     if (pose === 'shrug') shrugging(ctx, build, p, t)
+    else if (pose === 'duck') potHelmet(ctx, build, p.hd[0] + 3, t)
   }
   return true
 }
