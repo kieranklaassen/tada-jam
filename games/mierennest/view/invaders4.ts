@@ -1,5 +1,5 @@
 import { EARTH, GRASS, HIGHLIGHT, SKY } from './palette'
-import { beetleFace, beetleFigure, blob, bow, enter, limb, line, oval, place, shine } from './parts'
+import { beetleFace, beetleFigure, blob, bow, enter, limb, line, oval, place, shape, shine } from './parts'
 import type { BeetleBuild, BeetlePose, Ctx, Face, Legs, Look } from './parts'
 import { flyFigure } from './parts2'
 import type { FlyBuild, FlyPose } from './parts2'
@@ -14,7 +14,7 @@ import { beetleHead, cheeks, flyHead, handsOverEyes, splat, tucked } from './inv
 export const RAID_DUNG_BEETLE = ['duck', 'heave', 'lost', 'onBack', 'onBack2'] as const
 export const RAID_DUNG_FLY = ['duck', 'conduct', 'conduct2', 'down', 'tumble', 'arms', 'weep', 'weep2'] as const
 
-// The bark of the twig, as in `invaders`. The leaf is the palest green of the palette and the tear its sky blue.
+// The bark of the twig. The leaf is the palest green of the palette and the tear its sky blue.
 const TWIG = '#5b3a1c'
 const LEAF = SKY.far
 const TEAR = SKY.top
@@ -171,10 +171,53 @@ const FLIES: Record<string, FlyPose> = {
   },
 }
 
-/** The twig from a hand at (x, y), reaching (dx, dy) from it, with one small side shoot. */
-function twig(ctx: Ctx, x: number, y: number, dx: number, dy: number): void {
-  line(ctx, TWIG, 3.2, [x - dx * 0.25, y - dy * 0.25, x + dx, y + dy])
-  line(ctx, TWIG, 2.2, [x + dx * 0.5, y + dy * 0.5, x + dx * 0.5 + dy * 0.3, y + dy * 0.5 - dx * 0.3 - 2])
+/** The twig from a hand at (x, y), reaching (dx, dy) from it: a little bent, stout where it is held and thin at
+ *  the tip, where one small leaf leaves it at a slant. It has no side shoot: a bar with a stub standing square on
+ *  its middle read as a sign, most of all where the twig lies level at the feet of its fly. */
+export function twig(ctx: Ctx, x: number, y: number, dx: number, dy: number): void {
+  const len = Math.hypot(dx, dy) || 1
+  // The side the twig bows to and its leaf grows on: upward, for a twig that points forward.
+  const nx = dy / len
+  const ny = -dx / len
+  const x0 = x - dx * 0.25
+  const y0 = y - dy * 0.25
+  const x2 = x + dx * 0.75
+  const y2 = y + dy * 0.75
+  const cx = (x0 + x2) / 2 + nx * len * 0.16
+  const cy = (y0 + y2) / 2 + ny * len * 0.16
+  // The wood: one filled shape along the bow, 4.2 thick at the butt and 2.2 at the tip, round at both ends.
+  const near: number[] = []
+  const far: number[] = []
+  let tx = dx / len
+  let ty = dy / len
+  for (let i = 0; i <= 8; i++) {
+    const k = i / 8
+    const px = (1 - k) * (1 - k) * x0 + 2 * k * (1 - k) * cx + k * k * x2
+    const py = (1 - k) * (1 - k) * y0 + 2 * k * (1 - k) * cy + k * k * y2
+    const gx = (1 - k) * (cx - x0) + k * (x2 - cx)
+    const gy = (1 - k) * (cy - y0) + k * (y2 - cy)
+    const g = Math.hypot(gx, gy) || 1
+    tx = gx / g
+    ty = gy / g
+    const half = 2.1 - k
+    near.push(px - ty * half, py + tx * half)
+    far.unshift(px + ty * half, py - tx * half)
+  }
+  shape(ctx, TWIG, [...near, ...far])
+  oval(ctx, x0, y0, 2.1, 2.1, 0, TWIG)
+  oval(ctx, x2, y2, 1.1, 1.1, 0, TWIG)
+  // The leaf: a pale pointed blade from the tip, turned a little to the side the twig bows to.
+  const reach = Math.max(6, Math.min(9, len * 0.4))
+  const lx = tx * Math.cos(0.45) + nx * Math.sin(0.45)
+  const ly = ty * Math.cos(0.45) + ny * Math.sin(0.45)
+  const bx = x2 - tx * 0.8
+  const by = y2 - ty * 0.8
+  ctx.fillStyle = LEAF
+  ctx.beginPath()
+  ctx.moveTo(bx, by)
+  ctx.quadraticCurveTo(bx + lx * reach * 0.45 - ly * reach * 0.5, by + ly * reach * 0.45 + lx * reach * 0.5, bx + lx * reach, by + ly * reach)
+  ctx.quadraticCurveTo(bx + lx * reach * 0.45 + ly * reach * 0.5, by + ly * reach * 0.45 - lx * reach * 0.5, bx, by)
+  ctx.fill()
 }
 
 /** Its goggles in the frame of its head, off its eyes: the strap, and two rims at (x, y) seen flat by `flat`. */

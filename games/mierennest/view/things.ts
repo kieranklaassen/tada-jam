@@ -147,25 +147,40 @@ const THINGS: Record<Thing, (ctx: Ctx, lit: boolean) => void> = {
     oval(ctx, 12.6, -15.8, 1.6, 1, -0.4, PALE)
   },
   // A lantern: a seed husk on a thread with a glow-worm curled up in it, dark and asleep, or awake and glowing.
+  // The husk is one filled pale pod, and the worm lies in a small window cut low in one side of it, which it all
+  // but fills: a husk drawn as a rim round a dark middle read as a sign.
   lamp: (ctx, lit) => {
     if (lit) {
-      oval(ctx, 0, -14, 15, 14, 0, HALO)
-      oval(ctx, 0, -14, 10.5, 10, 0, HALO)
+      oval(ctx, 1, -12.6, 14, 12.4, 0, HALO)
+      oval(ctx, 1.4, -12, 9.6, 8.6, 0, HALO)
     }
-    line(ctx, PALE, 1.2, [0, -40, 0, -25])
-    // The husk: a cap, a rib at each side and a floor, open in the middle so that the worm shows.
-    shape(ctx, LIGHT, [-5, -22.6, 5, -22.6, 2.6, -27, -2.6, -27])
-    oval(ctx, 0, -14, 7.4, 9.4, 0, lit ? GLOW : SHADE)
-    if (lit) oval(ctx, -0.6, -14.6, 3.6, 4.6, 0, GLOW_CORE)
-    else {
-      // Asleep: the worm is a dull curl at the bottom of the husk.
-      bow(ctx, WORM, 2.6, 0, -11.4, 3.6, 2.8, 0, 0.2, Math.PI * 1.25)
-      oval(ctx, 2.8, -12.6, 1.7, 1.7, 0, WORM)
+    line(ctx, PALE, 1.2, [0, -40, 0, -27])
+    // The pod: a drop that hangs by its cap and ends in a point, in shade at its edge and underneath.
+    const pod = (fill: string, k: number, dx: number, dy: number) => {
+      ctx.fillStyle = fill
+      ctx.beginPath()
+      ctx.moveTo(dx, -25 * k + dy)
+      ctx.bezierCurveTo(5.2 * k + dx, -25 * k + dy, 8.4 * k + dx, -20.4 * k + dy, 8.4 * k + dx, -15.4 * k + dy)
+      ctx.bezierCurveTo(8.4 * k + dx, -9 * k + dy, 3.6 * k + dx, -5.4 * k + dy, 0.8 * k + dx, -1.4 * k + dy)
+      ctx.bezierCurveTo(-3.2 * k + dx, -5.4 * k + dy, -8 * k + dx, -9 * k + dy, -8 * k + dx, -15.4 * k + dy)
+      ctx.bezierCurveTo(-8 * k + dx, -20.4 * k + dy, -5 * k + dx, -25 * k + dy, dx, -25 * k + dy)
+      ctx.fill()
     }
-    bow(ctx, LIGHT, 2, 0, -14, 7.6, 9.6, 0, Math.PI * 0.62, Math.PI * 1.38)
-    bow(ctx, LIGHT, 2, 0, -14, 7.6, 9.6, 0, -Math.PI * 0.38, Math.PI * 0.38)
-    oval(ctx, 0, -4.4, 4.6, 1.9, 0, LIGHT)
-    oval(ctx, 0, -2.2, 1.4, 1.4, 0, LIGHT)
+    pod(WALL, 1, 0, 0)
+    pod(lit ? PALE : LIGHT, 0.86, -0.5, -2.6)
+    shape(ctx, lit ? PALE : LIGHT, [-5, -22.8, 5, -22.8, 2.6, -27.4, -2.6, -27.4])
+    line(ctx, lit ? PALER : PALE, 1.4, [-4.6, -18.6, -5, -15.6, -4.2, -12.6], true)
+    // The window, low on the side that faces the room.
+    ctx.fillStyle = lit ? GLOW : SHADE
+    ctx.beginPath()
+    ctx.moveTo(-3, -11)
+    ctx.bezierCurveTo(-3, -16.4, 6.6, -17, 6.8, -11.6)
+    ctx.bezierCurveTo(6.9, -7.6, 3.6, -5.2, 1.6, -5.4)
+    ctx.bezierCurveTo(-1.4, -5.6, -3, -8.2, -3, -11)
+    ctx.fill()
+    // The worm: a fat curl with its head tucked in, dull when it sleeps and the brightest thing when it wakes.
+    oval(ctx, 2.7, -9.4, 3.9, 2.9, -0.25, lit ? GLOW_CORE : WORM)
+    oval(ctx, 0, -12.2, 2.3, 2, 0, lit ? GLOW_CORE : WORM)
   },
   // A washing line: a thread between two pegs in the wall, with two tiny leaves pegged on it to dry.
   washing: (ctx) => {

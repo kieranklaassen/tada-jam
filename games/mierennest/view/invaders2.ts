@@ -120,16 +120,15 @@ function crossedEyes(ctx: Ctx, b: AntBuild, hd: readonly number[]): void {
   ctx.restore()
 }
 
-/** Over a shrug: the two brows, gone up so far that they sit on the helmet, and the two hands turned up. */
-function shrugging(ctx: Ctx, b: AntBuild, p: AntPose, t: number): void {
+/** Over a shrug: one dent in the front of the helmet, and the two hands turned up. The dent is a small filled patch
+ *  in the dark of the brim: two pale dashes side by side on the helmet read as a sign. */
+function shrugging(ctx: Ctx, b: AntBuild, p: AntPose): void {
   const g = b.gear
   if (!g) return
-  const lift = Math.sin(t * 3) * 0.5
   ctx.save()
   ctx.translate(p.hd[0], p.hd[1])
   ctx.rotate(p.hd[2] ?? 0)
-  line(ctx, g.eye, 2, [0.4, -9.6 + lift, 6.4, -10.4 + lift])
-  line(ctx, g.eye, 1.8, [9.6, -9.4 + lift, 14, -8.8 + lift])
+  oval(ctx, 7.4, -10, 3.3, 1.8, 0.22, g.brim)
   ctx.restore()
   const hand = (l: readonly number[], core: string) => {
     oval(ctx, l[0], l[1] - 3.6, 5.2, 2.6, -0.1, b.leg)
@@ -192,7 +191,7 @@ export function paintRaidRaider(ctx: Ctx, build: AntBuild, pose: string, look: L
     antFigure(ctx, build, { ...p, legs: p.legs.map((l, i) => (i === 0 ? [l[0] + wag, l[1], l[2], l[3], l[4]] : l)) }, look, t)
   } else {
     antFigure(ctx, pose === 'duck' ? { ...build, hd: [7, 5] } : build, p, look, t)
-    if (pose === 'shrug') shrugging(ctx, build, p, t)
+    if (pose === 'shrug') shrugging(ctx, build, p)
     else if (pose === 'duck') potHelmet(ctx, build, p.hd[0] + 3, t)
   }
   return true

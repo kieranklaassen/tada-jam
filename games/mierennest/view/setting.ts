@@ -54,8 +54,9 @@ function toadstool(pen: Pen, x: number, foot: number, size: number, cap: string,
   pen.restore()
 }
 
-/** A tent pitched from one big leaf over a twig, its door a dark slit. */
-function leafTent(pen: Pen, x: number, foot: number, size: number, leaf: string, vein: string): void {
+/** A tent pitched from one big leaf over a twig, its door a dark slit. With `pole` the tip of the twig shows over
+ *  the ridge. */
+function leafTent(pen: Pen, x: number, foot: number, size: number, leaf: string, vein: string, pole = true): void {
   pen.fillStyle = leaf
   pen.beginPath()
   pen.moveTo(x - size * 0.62, foot)
@@ -73,8 +74,10 @@ function leafTent(pen: Pen, x: number, foot: number, size: number, leaf: string,
   pen.strokeStyle = vein
   pen.lineWidth = 2
   pen.beginPath()
-  pen.moveTo(x, foot - size * 0.78)
-  pen.lineTo(x + size * 0.02, foot - size * 0.96)
+  if (pole) {
+    pen.moveTo(x, foot - size * 0.78)
+    pen.lineTo(x + size * 0.02, foot - size * 0.96)
+  }
   pen.moveTo(x - size * 0.4, foot - size * 0.1)
   pen.quadraticCurveTo(x - size * 0.3, foot - size * 0.3, x - size * 0.12, foot - size * 0.56)
   pen.moveTo(x + size * 0.44, foot - size * 0.1)
@@ -111,6 +114,121 @@ function log(pen: Pen, x: number, foot: number, length: number): void {
   pen.fillStyle = P.GRASS.light
   pen.beginPath()
   pen.ellipse(x + length * 0.14, foot - 45, 9, 5, -0.6, 0, Math.PI * 2)
+  pen.fill()
+}
+
+/** A bough through points that each give its place and its thickness there: one filled shape with soft bends and a
+ *  round end. `core` paints a thinner bough along its upper, lit side. */
+function bough(pen: Pen, fill: string, pts: readonly (readonly [number, number, number])[], core = false): void {
+  const at = (i: number) => pts[Math.max(0, Math.min(pts.length - 1, i))]
+  const path: number[][] = []
+  for (let i = 0; i < pts.length - 1; i++) {
+    for (let step = 0; step < 6; step++) {
+      const k = step / 6
+      // A soft curve through the points: each stretch is pulled by the point before it and the point after it.
+      const mix = (n: 0 | 1 | 2) => {
+        const [a, b, c, d] = [at(i - 1)[n], at(i)[n], at(i + 1)[n], at(i + 2)[n]]
+        return 0.5 * (2 * b + (c - a) * k + (2 * a - 5 * b + 4 * c - d) * k * k + (3 * b - a - 3 * c + d) * k * k * k)
+      }
+      path.push([mix(0), mix(1), mix(2)])
+    }
+  }
+  path.push([...pts[pts.length - 1]])
+  const near: number[][] = []
+  const far: number[][] = []
+  path.forEach(([px, py, wide], i) => {
+    const [ax, ay] = path[Math.max(0, i - 1)]
+    const [bx, by] = path[Math.min(path.length - 1, i + 1)]
+    const len = Math.hypot(bx - ax, by - ay) || 1
+    // The side that is up for a bough that reaches right, and left for a stem that stands.
+    const nx = (by - ay) / len
+    const ny = -(bx - ax) / len
+    const mid = core ? wide * 0.16 : 0
+    const half = core ? wide * 0.26 : wide * 0.5
+    near.push([px + nx * (mid + half), py + ny * (mid + half)])
+    far.unshift([px + nx * (mid - half), py + ny * (mid - half)])
+  })
+  pen.fillStyle = fill
+  pen.beginPath()
+  for (const [px, py] of [...near, ...far]) pen.lineTo(px, py)
+  pen.closePath()
+  pen.fill()
+  const [ex, ey, wide] = path[path.length - 1]
+  if (!core) blob(pen, ex, ey, wide * 0.5, wide * 0.5)
+}
+
+/** A small leaf from its stalk at (x, y) to its tip, with a midrib that stops short of the tip. */
+function sprig(pen: Pen, x: number, y: number, tx: number, ty: number, wide: number, fill: string, rib: string): void {
+  const len = Math.hypot(tx - x, ty - y) || 1
+  const ox = (-(ty - y) / len) * wide
+  const oy = ((tx - x) / len) * wide
+  const mx = x + (tx - x) * 0.45
+  const my = y + (ty - y) * 0.45
+  pen.fillStyle = fill
+  pen.beginPath()
+  pen.moveTo(x, y)
+  pen.quadraticCurveTo(mx + ox, my + oy, tx, ty)
+  pen.quadraticCurveTo(mx - ox, my - oy, x, y)
+  pen.fill()
+  pen.strokeStyle = rib
+  pen.lineWidth = 1.2
+  pen.lineCap = 'round'
+  pen.beginPath()
+  pen.moveTo(x, y)
+  pen.lineTo(x + (tx - x) * 0.7, y + (ty - y) * 0.7)
+  pen.stroke()
+}
+
+/** The low twig the camp's fly flew into: a short woody stem that leans, bends over and reaches out level over the
+ *  fly's spot at just the height of its head, thinner all the way to its tip and sagging a little, with three small
+ *  leaves. Stem and branch are one bent bough, so that they make no corner that could be read. */
+function lowTwig(pen: Pen, foot: number): void {
+  const line = (
+    [[182, -6, 13], [181, 0, 12.5], [177, 13, 10], [177.6, 29, 8.8], [181.5, 45, 8.2], [187.5, 57.5, 7.8], [196, 65.6, 7.2], [207, 67.6, 6.2], [221, 65.8, 5.4], [236, 65.4, 4.6], [251, 63.8, 3.8], [265, 62.8, 3], [274, 61.2, 2.2], [281, 59, 1.5]] as const
+  ).map(([x, high, wide]) => [x, foot - high, wide] as const)
+  // The stem starts under the turf and is cut off level at the grass line.
+  pen.save()
+  pen.beginPath()
+  pen.rect(160, foot - 90, 130, 91)
+  pen.clip()
+  bough(pen, '#6d4426', line)
+  bough(pen, '#8a5a34', line, true)
+  pen.restore()
+  // Two knots in the bark, one low on the stem and one small one out on the bough.
+  pen.fillStyle = '#6d4426'
+  pen.beginPath()
+  pen.ellipse(178.6, foot - 24, 1.9, 3, 0.15, 0, Math.PI * 2)
+  pen.fill()
+  pen.beginPath()
+  pen.ellipse(244, foot - 64.8, 1.8, 1, -0.1, 0, Math.PI * 2)
+  pen.fill()
+  // Three leaves of three sizes, each at its own slant: one at the bend, one on the bough, one hanging at the tip.
+  sprig(pen, 190.5, foot - 66.6, 180.4, foot - 81, 5, P.GRASS.blade, P.GRASS.dark)
+  sprig(pen, 226, foot - 67.4, 239.6, foot - 76.4, 4, P.GRASS.blade, P.GRASS.dark)
+  sprig(pen, 280, foot - 59.6, 288.4, foot - 53.6, 3.2, P.GRASS.blade, P.GRASS.dark)
+}
+
+/** A pebble that sits in the grass: an uneven lump `wide` by `high` that leans by `lean`, darker underneath and on
+ *  its far side, with one small glint. */
+function pebble(pen: Pen, x: number, foot: number, wide: number, high: number, lean: number): void {
+  const lump = (fill: string, k: number, dx: number, dy: number) => {
+    const w = wide * k
+    const h = high * k
+    const cx = x + dx
+    const base = foot + 1 + dy
+    pen.fillStyle = fill
+    pen.beginPath()
+    pen.moveTo(cx - w * 0.5, base)
+    pen.bezierCurveTo(cx - w * 0.6, base - h * 0.72, cx - w * 0.3 + lean * w * 0.2, base - h * 1.04, cx + lean * w * 0.24, base - h)
+    pen.bezierCurveTo(cx + w * 0.34 + lean * w * 0.1, base - h * (0.98 - lean * 0.3), cx + w * 0.62, base - h * 0.5, cx + w * 0.5, base)
+    pen.closePath()
+    pen.fill()
+  }
+  lump(P.STONE.edge, 1, 0, 0)
+  lump(P.STONE.fill, 0.84, -wide * 0.05, -high * 0.14)
+  pen.fillStyle = P.STONE.shine
+  pen.beginPath()
+  pen.ellipse(x - wide * 0.17 + lean * wide * 0.1, foot - high * 0.68, wide * 0.15, high * 0.1, -0.5, 0, Math.PI * 2)
   pen.fill()
 }
 
@@ -154,7 +272,9 @@ function paintSurface(pen: Pen): void {
     blade(pen, gx, GRASS_Y, h, ((n * 31) % 17) - 8, 7)
   }
   leafTent(pen, 120, GRASS_Y, 118, '#5fae4a', '#3f8436')
-  leafTent(pen, 236, GRASS_Y, 86, '#8fc15a', '#5f943a')
+  // The small tent stands under the low twig, a little lower than it: its ridge is clear of the bough, and its own
+  // twig does not show, since an upright under a level bough would read as a sign.
+  leafTent(pen, 236, GRASS_Y, 72, '#8fc15a', '#5f943a', false)
   leafTent(pen, 1068, GRASS_Y, 104, '#d2a441', '#9c7426')
   toadstool(pen, TOADSTOOL.x, GRASS_Y, TOADSTOOL.size, '#d9463a', -0.06)
   toadstool(pen, 898, GRASS_Y, 62, '#e8743a', 0.12)
@@ -201,6 +321,15 @@ function paintSurface(pen: Pen): void {
   blob(pen, 310, GRASS_Y - 13, 4, 5.4)
   pen.fillStyle = '#8a5a34'
   blob(pen, 293, GRASS_Y - 20, 4, 3)
+  lowTwig(pen, GRASS_Y)
+  // Two pebbles just right of where the dung beetle's ball rests, with a gap between them far too narrow for the
+  // ball: a flat one next to the ball, low enough to show under its flank, and a rounder, taller one at the frame.
+  pebble(pen, 1128.5, GRASS_Y, 15, 8.8, 0.6)
+  pebble(pen, 1147.6, GRASS_Y, 13.2, 12, -0.4)
+  // Both sit in the grass: a short blade stands before each, and none in the gap.
+  pen.fillStyle = P.GRASS.blade
+  blade(pen, 1123, GRASS_Y + 2, 5.6, -2, 4.6)
+  blade(pen, 1147.4, GRASS_Y + 2, 5, 1.6, 4.4)
   // Grass in front, lighter, and a few daisies.
   pen.fillStyle = P.GRASS.blade
   for (let n = 0; n < 190; n++) {

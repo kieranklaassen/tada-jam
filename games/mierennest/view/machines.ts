@@ -243,13 +243,23 @@ function cannon(ctx: Ctx, load: Load, pose: MachinePose): void {
     line(ctx, MACHINE.trim, 2, [-18, -10.4, -24.5, -11.4, -19.4, -17, -23.6, -16.6], true)
     oval(ctx, -23.8, -16.6, 1.7, 1.7, 0, WOOD.peg)
   }
-  // Two cream bindings round the reed, and its one highlight.
-  for (const x of [-13, 1]) {
-    line(ctx, TRIM_SHADE, 5, [x, -9.6, x - 1.4, 0, x, 9.6], true)
-    line(ctx, MACHINE.trim, 3, [x, -9.4, x - 1.4, -1, x, 6.4], true)
+  // One broad cream binding round the reed behind its middle, bowed as the reed is round, standing a little proud
+  // of it above and below and in shade underneath. Two bindings with a highlight between them made a sign.
+  const band = (fill: string, x0: number, x1: number, top: number, low: number) => {
+    const mid = (top + low) / 2
+    ctx.fillStyle = fill
+    ctx.beginPath()
+    ctx.moveTo(x0, top)
+    ctx.quadraticCurveTo(x0 - 3.2, mid, x0, low)
+    ctx.lineTo(x1, low)
+    ctx.quadraticCurveTo(x1 - 3.2, mid, x1, top)
+    ctx.closePath()
+    ctx.fill()
   }
-  line(ctx, HIGHLIGHT, 2.6, [-9, -6, -3.4, -6])
-  oval(ctx, 5.6, -6.2, 1.3, 1.3, 0, HIGHLIGHT)
+  band(TRIM_SHADE, -14.4, -5.6, -12, 11.8)
+  band(MACHINE.trim, -13.4, -6.6, -11.2, 6.8)
+  // Its one highlight, well forward of the binding and short of the lip: it rises with the flare and joins nothing.
+  line(ctx, HIGHLIGHT, 2.6, [2, -6, 6.6, -6, 10.4, -7.8], true)
   // The mouth: a lit lip round the dark of the bore, and what bulges out of it.
   oval(ctx, 18, 0, 5.2, 16, 0, MACHINE.dark)
   oval(ctx, 18, -0.4, 4.2, 15, 0, MACHINE.lit)

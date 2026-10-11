@@ -5,7 +5,7 @@ import { antFigure, flyFigure } from './parts2'
 import type { AntBuild, AntPose, FlyBuild, FlyPose } from './parts2'
 import { paintRaidRaider, RAID_RAIDER } from './invaders2'
 import { paintRaidBeetle, paintRaidFly, RAID_BEETLE, RAID_FLY } from './invaders3'
-import { paintRaidDungBeetle, paintRaidDungFly, RAID_DUNG_BEETLE, RAID_DUNG_FLY } from './invaders4'
+import { paintRaidDungBeetle, paintRaidDungFly, RAID_DUNG_BEETLE, RAID_DUNG_FLY, twig } from './invaders4'
 
 // The campers who raid the nest: the raider ant, the beetle, the fly, the dung beetle with its ball, and the dung
 // fly who leads them. Each is painted with the middle of its feet at the origin, facing right.
@@ -32,15 +32,13 @@ export const INVADER_POSES = {
 } as const
 
 // The few colours the palette has not got: the near legs of the dung beetle, cloth for the pillow and the rag with
-// its shaded side and its stripe, the lit top of a lump of dung, and the leather and the bark of the dung fly's
-// strap and twig.
+// its shaded side and its stripe, the lit top of a lump of dung, and the leather of the dung fly's strap.
 const DUNG_LEG = '#2f2060'
 const CLOTH = '#fbf3df'
 const CLOTH_SHADE = '#d6c6a2'
 const CLOTH_STRIPE = '#9fc3e6'
 const BALL_LIGHT = '#94703f'
 const STRAP = '#6b4a2a'
-const TWIG = '#5b3a1c'
 
 // ---- The raider ant: crimson and slate, long and low, helmeted and masked, a bit of a rascal. ----
 
@@ -383,11 +381,10 @@ const paintDungFly: Painter = (ctx, pose, look, t) => {
   if (paintRaidDungFly(ctx, DUNG_FLY_BUILD, pose, look, t)) return
   const p = DUNG_FLY_POSES[pose] ?? DUNG_FLY_POSES.fly
   flyFigure(ctx, DUNG_FLY_BUILD, p, look, t)
-  // The twig it conducts with, from its near front hand, with one small side shoot.
+  // The twig it conducts with, from its near front hand: the same twig as in a raid, with its leaf at the tip.
   const [x, y] = p.legs[2]
   const [dx, dy] = p.twig
-  line(ctx, TWIG, 3.2, [x - dx * 0.25, y - dy * 0.25, x + dx, y + dy])
-  line(ctx, TWIG, 2.2, [x + dx * 0.5, y + dy * 0.5, x + dx * 0.5 + dy * 0.3, y + dy * 0.5 - dx * 0.3 - 2])
+  twig(ctx, x, y, dx, dy)
   oval(ctx, x, y, 2.8, 2.8, 0, DUNG_FLY.dark)
 }
 
