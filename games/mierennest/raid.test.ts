@@ -203,12 +203,16 @@ describe('walls and beetles', () => {
   })
 
   it('what stops a beetle lets an ant through, unless there is mud on top of it', () => {
-    // Sand and a stone hold one beetle; an ant walks over them.
-    const dry = playOut(raidOn(nest('..........', '....so....'), ['ant', 'beetle']))
+    // A stone and sand hold one beetle; an ant climbs the stone and walks over them.
+    const dry = playOut(raidOn(nest('..........', '....os....'), ['ant', 'beetle']))
     expect(dry.invaders[0].acted).toBe(true)
     expect(dry.invaders[1].acted).toBe(false)
+    // With the sand in front it does not get up: a face of sand, one cell high, is not climbed.
+    const sandy = playOut(raidOn(nest('..........', '....so....'), ['ant', 'beetle']))
+    expect(sandy.invaders[0].acted).toBe(false)
+    expect(sandy.acts).toBe(0)
     // With mud in the wall the ant that walks over it sticks on the mud.
-    const bound = playOut(raidOn(nest('..........', '....smo...'), ['ant', 'beetle']))
+    const bound = playOut(raidOn(nest('..........', '....oms...'), ['ant', 'beetle']))
     expect(bound.invaders[0].state).toBe('stuck')
     expect(bound.invaders[1].acted).toBe(false)
     expect(bound.acts).toBe(0)

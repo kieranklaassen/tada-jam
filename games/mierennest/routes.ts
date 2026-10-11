@@ -1,5 +1,5 @@
 import { chambers } from './chambers'
-import { EARTH, MOUTH, MUD, OPEN, ROCK, STONE, at, type Ground } from './ground'
+import { EARTH, MOUTH, MUD, OPEN, ROCK, SAND, STONE, at, type Ground } from './ground'
 
 // Where each kind of invader can be, and how it gets from one place to the next: its habits (habits.ts) turned
 // into steps on the grid. Pure: a ground in, places and ways out, the same every time.
@@ -27,7 +27,8 @@ export function canBe(ground: Ground, kind: Walker, x: number, y: number): boole
     return climbable(ground, x - 1, y) || climbable(ground, x + 1, y) || at(ground, x - 1, y) === MUD || at(ground, x + 1, y) === MUD
   }
   if (kind === 'beetle') return y >= 1 && open(ground, x, y - 1) && !open(ground, x, y + 1)
-  if (kind === 'crawler') return !open(ground, x, y + 1)
+  // A dung beetle behind its ball fits where a beetle does; earth over it is dug by the ball as it comes.
+  if (kind === 'crawler') return y >= 1 && !open(ground, x, y + 1) && (open(ground, x, y - 1) || at(ground, x, y - 1) === EARTH)
   return y >= 2 && open(ground, x + 1, y) && open(ground, x, y - 1) && open(ground, x + 1, y - 1) && open(ground, x, y - 2) && open(ground, x + 1, y - 2)
 }
 
@@ -66,7 +67,8 @@ export function nextPlaces(ground: Ground, kind: Walker, cell: number, out: numb
         const nx = x + side
         if (nx < 0 || nx >= cols) continue
         if (y < rows - 1 && !open(ground, x, y + 1) && open(ground, nx, y) && canBe(ground, 'ant', nx, y + 1)) out[n++] = cell + cols + side
-        if (y > 0 && !open(ground, nx, y) && open(ground, x, y - 1) && canBe(ground, 'ant', nx, y - 1)) out[n++] = cell - cols + side
+        // Not up a face of sand, one cell high or more: sand gives it nothing to hold. Up onto mud it goes, and sticks.
+        if (y > 0 && !open(ground, nx, y) && at(ground, nx, y) !== SAND && open(ground, x, y - 1) && canBe(ground, 'ant', nx, y - 1)) out[n++] = cell - cols + side
       }
       // Where the way on is open air, with no floor and no face to hold, it lets go and drops to the first place
       // below where it can be: straight down where the face it is on ends, or off the edge of the floor it stands
@@ -83,16 +85,17 @@ export function nextPlaces(ground: Ground, kind: Walker, cell: number, out: numb
     }
     return n
   }
-  // How many cells high the way has to be for it: two for a beetle, one for a dung beetle behind its ball.
-  const high = kind === 'crawler' ? 1 : 2
+  // The way has to be two cells high for a beetle, with its ball or without. Behind its ball it counts earth over
+  // the way as no roof: the ball digs it as it comes, which only slows it.
+  const clear = (cx: number, cy: number) => open(ground, cx, cy) || (kind === 'crawler' && at(ground, cx, cy) === EARTH)
   for (const side of [-1, 1]) {
     const nx = x + side
     if (nx < 0 || nx >= cols) continue
-    if (open(ground, nx, y) && (high === 1 || open(ground, nx, y - 1))) {
+    if (open(ground, nx, y) && clear(nx, y - 1)) {
       let ly = y
       while (ly + 1 < rows && open(ground, nx, ly + 1)) ly++
       out[n++] = ly * cols + nx
-    } else if (!open(ground, nx, y) && y >= high && open(ground, nx, y - 1) && (high === 1 || open(ground, nx, y - 2)) && open(ground, x, y - high)) {
+    } else if (!open(ground, nx, y) && y >= 2 && open(ground, nx, y - 1) && clear(nx, y - 2) && clear(x, y - 2)) {
       // A ball is not rolled up onto a lump: lumps are a wall to it, the gap over them included.
       const step = at(ground, nx, y)
       if (kind === 'crawler' && step !== EARTH && step !== ROCK) continue

@@ -140,7 +140,7 @@ describe('the way in', () => {
 })
 
 describe('with no way in', () => {
-  // A lump of sand on the floor of a tunnel two cells high: air and an ant pass over it, a beetle does not.
+  // A lump of sand on the floor of a tunnel two cells high: air passes over it; a beetle and a raider ant do not.
   const walled = ['X.XXXXXXXXXX', '#.##########', '#..........#', '#...s......#', '######.....#', '############', 'XXXXXXXXXXXX']
 
   it('a beetle leans on the wall that stands nearest a chamber, from the place before it', () => {
@@ -158,9 +158,10 @@ describe('with no way in', () => {
     const ground = fromPicture(walled), mouth = mouthOf(walled)
     const inside = chamberCells(ground, mouth)
     const found = reach(ground, 'ant', entry(ground, 'ant', mouth)!)
-    // The ant walks over the sand and gets in, so the place nearest a chamber is inside one.
+    // The ant does not climb the sand either, one cell high as it is: the place nearest a chamber is the one before it.
     const near = nearestTo(found, farFromChambers(ground, inside))
-    expect(isInside(ground, 'ant', near, inside)).toBe(true)
+    expect(isInside(ground, 'ant', near, inside)).toBe(false)
+    expect(near % 12).toBe(3)
     const beetle = reach(ground, 'beetle', entry(ground, 'beetle', mouth)!)
     expect(nearestTo(beetle, farFromChambers(ground, inside)) % 12).toBe(3)
   })
@@ -226,5 +227,33 @@ describe('the mouth, column by column', () => {
     const narrow = ['XXXX...XXXX', '####mm.####', '####...####', '####...####', '###########', 'XXXXXXXXXXX']
     expect(entry(fromPicture(narrow), 'beetle', mouth)! % 11).toBe(6)
     expect(entry(fromPicture(narrow), 'fly', mouth)).toBeNull()
+  })
+})
+
+describe('a face of sand', () => {
+  it('is not climbed by a raider ant, one cell high or more: it does not get onto a lump of sand from the floor beside it', () => {
+    const low = ['X.XXXXXXXXXX', '#.##########', '#..........#', '#...s......#', '######.....#', '############', 'XXXXXXXXXXXX']
+    expect(nexts(low, 'ant', 3, 3)).not.toContainEqual([4, 2])
+    // A stone or a step of earth the same height it does get onto.
+    expect(nexts(low.map((row) => row.replace('s', 'o')), 'ant', 3, 3)).toContainEqual([4, 2])
+    expect(nexts(low.map((row, y) => (y === 3 ? row.replace('s', '#') : row)), 'ant', 3, 3)).toContainEqual([4, 2])
+    // So one lump of sand on the floor of a low way keeps it out, and it goes as near as it can get.
+    expect(wayOf(low, 'ant')).toBeNull()
+  })
+})
+
+describe('a dung beetle behind its ball', () => {
+  it('needs a way two cells high, as a plain beetle does: it does not follow a crawl one cell high', () => {
+    // A crawl with a roof of stones: nothing the ball could dig.
+    const crawl = ['X.XXXXXXXX', '#.########', '#.oooo####', '#....#####', '##########', 'XXXXXXXXXX']
+    expect(nexts(crawl, 'crawler', 1, 3)).toEqual([])
+    expect(nexts(crawl, 'beetle', 1, 3)).toEqual([])
+    expect(canBe(fromPicture(crawl), 'crawler', 2, 3)).toBe(false)
+    // Under a roof of earth the ball digs as it comes: that way is open to it, and to no plain beetle.
+    const earthen = ['X.XXXXXXXX', '#.########', '#.########', '#....#####', '##########', 'XXXXXXXXXX']
+    expect(nexts(earthen, 'crawler', 1, 3)).toEqual([[2, 3]])
+    expect(nexts(earthen, 'beetle', 1, 3)).toEqual([])
+    const tunnel = ['X.XXXXXXXX', '#.########', '#....#####', '#....#####', '##########', 'XXXXXXXXXX']
+    expect(nexts(tunnel, 'crawler', 1, 3)).toEqual([[2, 3]])
   })
 })
