@@ -160,7 +160,7 @@ export function campers(party: Party): Camper[] {
   const away = (kind: InvaderKind) => party.includes(kind)
   const left: Camper[] = [
     ...(away('ant') ? [] : [{ id: 'stuck', kind: 'raider', x: 100, y: GRASS_Y, flip: true, poses: ['stuck', 'stuck2'], phase: 0.3 } as Camper]),
-    ...(away('fly') ? [] : [{ id: 'fly', kind: 'fly', x: 230, y: GRASS_Y, flip: false, poses: ['hands', 'hands2'], phase: 0 } as Camper]),
+    ...(away('fly') ? [] : [{ id: 'fly', kind: 'fly', x: 230, y: GRASS_Y, flip: false, poses: ['bump', 'hands'], phase: 0 } as Camper]),
   ]
   const right: Camper[] = [
     ...(away('dungFly') ? [] : [{ id: 'leader', kind: 'dungFly', x: TOADSTOOL.x, y: GRASS_Y - TOADSTOOL.top, flip: true, poses: ['point', 'point2'], phase: 0.1 } as Camper]),

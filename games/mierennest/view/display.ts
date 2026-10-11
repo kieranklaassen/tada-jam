@@ -249,8 +249,8 @@ export class ToyDisplay {
         const p = cellMiddle(event.cell, cols)
         const colour = event.kind === SAND ? CRUMB.sand : event.kind === MUD ? CRUMB.mud : CRUMB.dust
         this.puff(p.x, p.y + CELL / 2, event.kind === STONE ? 5 : 3, colour, event.kind === STONE ? 80 : 45)
-        // A stone that fell is felt at the camp through the feet.
-        if (event.type === 'landed' && event.kind === STONE && event.fell >= 1) for (const camper of this.camp) this.startle(camper.id)
+        // A stone that is set down or has fallen is felt at the camp through the feet.
+        if (event.kind === STONE && (event.type === 'set' || event.fell >= 1)) for (const camper of this.camp) this.startle(camper.id)
       } else if (event.type === 'tapped') {
         // The ant taps a stone it passes: a spark off the stone, and a small shake.
         const p = cellMiddle(event.cell, cols)

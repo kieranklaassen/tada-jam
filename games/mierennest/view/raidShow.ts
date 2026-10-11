@@ -453,8 +453,15 @@ export function showFurnishings(ground: Ground, chambers: readonly Room[], lit: 
       if (queen.from - from >= to - queen.to) to = queen.from
       else from = queen.to
     }
-    if (to - from < 3) return
     const pair = FURNISHINGS[n % FURNISHINGS.length]
+    if (to - from < 3) {
+      // No room on the wall for its two things; its lantern hangs over the middle of the floor all the same.
+      if (every) {
+        const p = toStage((floor.from + floor.to + 1) / 2, floor.y + 1)
+        out.push({ thing: 'lamp', x: p.x, y: p.y - HUNG.lamp!, lit: awake.has(n) })
+      }
+      return
+    }
     if (furnished) {
       pair.forEach((thing, i) => {
         const p = toStage(from + (to - from) * (i === 0 ? 0.3 : 0.7), floor.y + 1)
