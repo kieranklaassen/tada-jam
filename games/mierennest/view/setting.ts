@@ -1,5 +1,5 @@
 import { STAGE } from '../stage'
-import { FRAME, GRASS_Y, GROUND, LOG, MOUTH_X, SURFACE } from './layout'
+import { FRAME, GRASS_Y, GROUND, LOG, MOUTH_X, SURFACE, TOADSTOOL } from './layout'
 import * as P from './palette'
 
 // What stands still: the sky, the far hills, the grass and the invaders' camp, and the wooden frame of the farm.
@@ -158,9 +158,9 @@ function paintSurface(pen: Pen): void {
   leafTent(pen, 120, GRASS_Y, 118, '#5fae4a', '#3f8436')
   leafTent(pen, 236, GRASS_Y, 86, '#8fc15a', '#5f943a')
   leafTent(pen, 1068, GRASS_Y, 104, '#d2a441', '#9c7426')
-  toadstool(pen, 800, GRASS_Y, 96, '#d9463a', -0.06)
-  toadstool(pen, 874, GRASS_Y, 62, '#e8743a', 0.12)
-  toadstool(pen, 968, GRASS_Y, 74, '#d9463a', 0.05)
+  toadstool(pen, TOADSTOOL.x, GRASS_Y, TOADSTOOL.size, '#d9463a', -0.06)
+  toadstool(pen, 898, GRASS_Y, 62, '#e8743a', 0.12)
+  toadstool(pen, 990, GRASS_Y, 74, '#d9463a', 0.05)
   toadstool(pen, 52, GRASS_Y, 46, '#e8743a', -0.1)
   log(pen, LOG.x, GRASS_Y, LOG.length)
   // A washing line between two stalks, with a leaf and a sock on it.
@@ -168,30 +168,30 @@ function paintSurface(pen: Pen): void {
   pen.lineWidth = 4
   pen.lineCap = 'round'
   pen.beginPath()
-  pen.moveTo(884, GRASS_Y)
-  pen.lineTo(888, GRASS_Y - 92)
-  pen.moveTo(1016, GRASS_Y)
-  pen.lineTo(1012, GRASS_Y - 96)
+  pen.moveTo(914, GRASS_Y)
+  pen.lineTo(918, GRASS_Y - 92)
+  pen.moveTo(1046, GRASS_Y)
+  pen.lineTo(1042, GRASS_Y - 96)
   pen.stroke()
   pen.strokeStyle = '#f3ead2'
   pen.lineWidth = 1.5
   pen.beginPath()
-  pen.moveTo(888, GRASS_Y - 90)
-  pen.quadraticCurveTo(950, GRASS_Y - 76, 1012, GRASS_Y - 94)
+  pen.moveTo(918, GRASS_Y - 90)
+  pen.quadraticCurveTo(980, GRASS_Y - 76, 1042, GRASS_Y - 94)
   pen.stroke()
   pen.fillStyle = '#e2573a'
   pen.beginPath()
-  pen.roundRect(912, GRASS_Y - 86, 9, 22, 4)
-  pen.roundRect(912, GRASS_Y - 70, 17, 8, 4)
+  pen.roundRect(942, GRASS_Y - 86, 9, 22, 4)
+  pen.roundRect(942, GRASS_Y - 70, 17, 8, 4)
   pen.fill()
   pen.fillStyle = '#f1d58a'
   pen.beginPath()
-  pen.roundRect(942, GRASS_Y - 82, 22, 18, 3)
+  pen.roundRect(972, GRASS_Y - 82, 22, 18, 3)
   pen.fill()
   pen.fillStyle = '#6a4fb0'
   pen.beginPath()
-  pen.roundRect(976, GRASS_Y - 88, 9, 20, 4)
-  pen.roundRect(976, GRASS_Y - 74, 16, 8, 4)
+  pen.roundRect(1006, GRASS_Y - 88, 9, 20, 4)
+  pen.roundRect(1006, GRASS_Y - 74, 16, 8, 4)
   pen.fill()
   // A ring of pebbles with twigs laid for a fire that is never lit.
   pen.fillStyle = P.STONE.edge

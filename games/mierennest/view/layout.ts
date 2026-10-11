@@ -22,3 +22,6 @@ export const cellUnder = (sx: number, sy: number) => ({ x: Math.floor((sx - GROU
 
 /** The log beside the mouth, where the next party waits: its left end, its length and its height on the grass. */
 export const LOG = { x: 368, length: 150, height: 26 } as const
+
+/** The big toadstool the dung fly stands on: where its stalk stands, its size, and how high its cap is. */
+export const TOADSTOOL = { x: 826, size: 96, top: 100 } as const

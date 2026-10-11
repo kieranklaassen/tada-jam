@@ -7,8 +7,13 @@ import * as P from './palette'
 
 type Pen = CanvasRenderingContext2D
 
-/** Where the dewdrop hangs at rest, and how near a touch must land to ring it: well over the jam's 48 for a target. */
-export const BELL = { x: MOUTH_X + 100, y: GRASS_Y - 100, radius: 17, reach: 34 } as const
+/**
+ * Where the dewdrop hangs at rest, and how near a touch must land to ring it: well over the jam's 48 for a target.
+ * It hangs high over the right of the hill, above the head of anyone who could stand under it.
+ */
+export const BELL = { x: MOUTH_X + 100, y: GRASS_Y - 124, radius: 17, reach: 34 } as const
+/** Where the bell's stalk stands in the grass, and the tip the thread hangs from. */
+export const STALK = { footX: BELL.x + 46, tipX: BELL.x, tipY: BELL.y - 40, thread: 40 } as const
 
 /** Half the width of the mouth, and a little: where the hill's two humps begin, so the mouth stays open. */
 export const LIP = (MOUTH.length * CELL) / 2 + 2
@@ -52,28 +57,34 @@ export function paintHill(pen: Pen, grown: number): void {
   }
 }
 
-/** The bell: a dewdrop on a thread from a bent grass stalk. `sway` swings it, in radians. */
-export function paintBell(pen: Pen, sway = 0): void {
-  const foot = { x: BELL.x + 46, y: GRASS_Y }, tip = { x: BELL.x, y: BELL.y - 40 }
+/** The bell's stalk: a bent blade of grass with one leaf. It stands still, so it is painted with the setting. */
+export function paintStalk(pen: Pen): void {
   pen.strokeStyle = P.GRASS.dark
   pen.lineWidth = 5
   pen.lineCap = 'round'
   pen.beginPath()
-  pen.moveTo(foot.x, foot.y)
-  pen.bezierCurveTo(foot.x + 6, foot.y - 80, foot.x - 4, tip.y - 34, tip.x, tip.y)
+  pen.moveTo(STALK.footX, GRASS_Y)
+  pen.bezierCurveTo(STALK.footX + 6, GRASS_Y - 96, STALK.footX - 4, STALK.tipY - 30, STALK.tipX, STALK.tipY)
   pen.stroke()
   pen.fillStyle = P.GRASS.light
   pen.beginPath()
-  pen.ellipse(foot.x + 13, foot.y - 46, 15, 5, -0.9, 0, Math.PI * 2)
+  pen.ellipse(STALK.footX + 13, GRASS_Y - 52, 15, 5, -0.9, 0, Math.PI * 2)
   pen.fill()
-  const drop = { x: tip.x + Math.sin(sway) * 40, y: tip.y + Math.cos(sway) * 40 }
+}
+
+/** Where the drop hangs for a swing of `sway` radians. */
+export const dropAt = (sway: number) => ({ x: STALK.tipX + Math.sin(sway) * STALK.thread, y: STALK.tipY + Math.cos(sway) * STALK.thread })
+
+/** The dewdrop on its thread, swung by `sway` radians. Three draws. `glint` from 0 to 1 brightens it for the idle ladder. */
+export function paintDrop(pen: Pen, sway = 0, glint = 0): void {
+  const drop = dropAt(sway)
   pen.strokeStyle = 'rgba(255,255,255,0.8)'
   pen.lineWidth = 1.2
   pen.beginPath()
-  pen.moveTo(tip.x, tip.y)
+  pen.moveTo(STALK.tipX, STALK.tipY)
   pen.lineTo(drop.x, drop.y - BELL.radius)
   pen.stroke()
-  pen.fillStyle = '#8fdcf5'
+  pen.fillStyle = glint > 0.5 ? '#c9f1ff' : '#8fdcf5'
   pen.beginPath()
   pen.moveTo(drop.x, drop.y - BELL.radius - 7)
   pen.bezierCurveTo(drop.x + BELL.radius * 1.3, drop.y - 2, drop.x + BELL.radius, drop.y + BELL.radius, drop.x, drop.y + BELL.radius)
@@ -81,6 +92,12 @@ export function paintBell(pen: Pen, sway = 0): void {
   pen.fill()
   pen.fillStyle = 'rgba(255,255,255,0.9)'
   pen.beginPath()
-  pen.ellipse(drop.x - 5, drop.y + 1, 3, 5.5, 0.4, 0, Math.PI * 2)
+  pen.ellipse(drop.x - 5, drop.y + 1, 3 + glint * 2, 5.5 + glint * 2, 0.4, 0, Math.PI * 2)
   pen.fill()
+}
+
+/** The whole bell at once, for a still scene. */
+export function paintBell(pen: Pen, sway = 0): void {
+  paintStalk(pen)
+  paintDrop(pen, sway)
 }
