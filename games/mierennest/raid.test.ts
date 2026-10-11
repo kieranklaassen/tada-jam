@@ -540,6 +540,34 @@ function randomNest(seed: number): Ground {
   return ground
 }
 
+describe('a lump between two of the party', () => {
+  it('is not shoved from under one of them nor onto one: two beetles in a pit beside a bed of sand do not pass a lump to and fro, and the raid ends by itself', () => {
+    // The shaft dug down to a pit, a room up a hall that a beetle at the foot of the shaft cannot climb back to, and
+    // a bed of sand beside the pit with earth behind it. The first beetle ploughs a lump behind itself; the second
+    // must not shove it forward again into the place the first is stepping into.
+    const ground = generate(1)
+    const fill = (x0: number, x1: number, y0: number, y1: number, kind: typeof EARTH | typeof OPEN | typeof SAND) => {
+      for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) put(ground, x, y, kind)
+    }
+    fill(12, 38, 1, 14, EARTH)
+    fill(19, 21, 1, 12, OPEN)
+    fill(22, 25, 5, 6, OPEN)
+    fill(26, 32, 4, 6, OPEN)
+    fill(22, 24, 11, 12, OPEN)
+    fill(25, 31, 11, 12, SAND)
+    settle(ground)
+    for (const party of [['beetle', 'beetle'], ['beetle', 'beetle', 'beetle']] as Party[]) {
+      const raid = callRaid(ground, party)
+      const gave = kinds(watch(raid, () => {}), 'gave').length
+      expect(raid.cutOff, party.join()).toBe(false)
+      expect(raid.time, party.join()).toBeLessThan(30)
+      // Each lump is passed back once by each beetle that comes to it, and no more.
+      expect(gave, party.join()).toBeLessThan(20)
+      expect(states(raid).every((state) => state === 'held'), party.join()).toBe(true)
+    }
+  })
+})
+
 describe('on nests nobody planned', () => {
   it('no raid of any party of the order or the round is cut off by the clock: every one ends by itself', () => {
     const parties: Party[] = [...new Map([...Object.values(PARTY), ...ROUND].map((party) => [party.join(), party])).values()]
