@@ -3,6 +3,7 @@ import type { Shot } from './habits'
 import { LUMP_OF, RELOAD, SHOT_OF, arrivalPlace, canStand, cellsOf, machineAt, nearestStand, shotPath } from './machines'
 import { after, judge, owed, partyAt, type MachineKind, type Party, type Verdict } from './order'
 import { TICK, bodyOf, callRaid, endOf, hit, landInRaid, stepRaid, type Raid, type RaidEvent } from './raid'
+import { WEDGED, queenSeat } from './residents'
 import type { Game, Machine } from './save'
 import { Toy } from './toy'
 
@@ -24,14 +25,46 @@ export type Scene =
   /** The workers carry back what the raid knocked down. `cells` are the cells that differ, nearest the mouth first. */
   | { is: 'putBack'; cells: number[]; ground: Ground; held: number[]; t: number; length: number }
   /**
+   * The largest chamber of the kingdom has changed, the first time included: workers carry the queen, complaining,
+   * from where she was to her new room by the way that is open, and she tries each end of its floor before she
+   * sits. `way` is the cells she is carried through, the first of them where she was.
+   */
+  | { is: 'moves'; way: number[]; t: number; length: number }
+  /**
    * The great raid was turned back: the dung fly is handed a leaf, the workers light a glow-worm in every chamber,
    * the queen puts her egg down and dusk comes over the camp. It plays once, and holds on its last beat until a touch.
    */
   | { is: 'ending'; t: number; length: number }
 
-export const SCENE_SECONDS = { shrug: 5, showing: 5, arrives: 7, putBackLeast: 4, putBackMost: 10, ending: 20 } as const
+export const SCENE_SECONDS = { shrug: 5, showing: 5, arrives: 7, moves: 6, putBackLeast: 4, putBackMost: 10, ending: 20 } as const
 
 export type Flying = { shot: Shot; path: number[]; t: number; length: number; inRaid: boolean; machine: number }
+/**
+ * A way through open cells from one cell to another, both ends included; where no open way joins them, the two
+ * ends alone. The same every time.
+ */
+export function openWayBetween(ground: Ground, from: number, to: number): number[] {
+  const { cols, rows, cells } = ground
+  const came = new Int32Array(cells.length).fill(-1)
+  const queue = [from]
+  came[from] = from
+  for (let head = 0; head < queue.length && came[to] < 0; head++) {
+    const i = queue[head], x = i % cols, y = Math.floor(i / cols)
+    for (const [nx, ny] of [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]]) {
+      if (nx < 0 || ny < 0 || nx >= cols || ny >= rows) continue
+      const n = ny * cols + nx
+      if (came[n] < 0 && cells[n] === OPEN) {
+        came[n] = i
+        queue.push(n)
+      }
+    }
+  }
+  if (came[to] < 0) return [from, to]
+  const way = [to]
+  while (way[way.length - 1] !== from) way.push(came[way[way.length - 1]])
+  return way.reverse()
+}
+
 /** How fast a shot flies, in cells a second, and the least time it is in the air. */
 export const SHOT_SPEED = 26
 export const SHOT_LEAST = 0.22
@@ -84,10 +117,43 @@ export class Kingdom {
     return this.endingOwed
   }
 
+  /** The cells of the room the queen lives in, as it was when she was last seen to: empty while she is wedged under the mouth. */
+  private queenLives: number[]
+
   constructor(readonly game: Game) {
     this.toy = new Toy(game)
     this.reloading = game.machines.map(() => 0)
     this.owedAtTouch = this.owed().length > 0
+    // No scene plays on load: she is found where she lives.
+    this.queenLives = this.queenRoomCells()
+  }
+
+  private queenRoomCells(): number[] {
+    const realm = this.toy.realm
+    return realm.queenRoom === null ? [] : realm.chambers[realm.queenRoom].cells
+  }
+
+  /**
+   * The queen's room is looked at once the ground has come to rest outside a raid. A room that has only grown or
+   * shrunk is the same room; a room that shares no cell with the one she lived in is a new one, and she is carried to it.
+   */
+  private seeToTheQueen(): void {
+    const now = this.queenRoomCells(), before = this.queenLives
+    if (now.length === 0) {
+      this.queenLives = now
+      return
+    }
+    const same = before.length > 0 && now.some((cell) => before.includes(cell))
+    this.queenLives = now
+    if (same || this.scene) return
+    const ground = this.game.ground, cols = ground.cols, realm = this.toy.realm
+    const seat = queenSeat(ground, realm.chambers, realm.queenRoom)
+    if (!seat) return
+    // Where she was: the floor of her old room, or wedged under the mouth.
+    const from = before.length > 0 ? before[before.length - 1] : Math.floor(WEDGED.y) * cols + Math.floor(WEDGED.x)
+    const to = seat.y * cols + Math.floor(seat.x)
+    this.scene = { is: 'moves', way: openWayBetween(ground, from, to), t: 0, length: SCENE_SECONDS.moves }
+    this.events.push({ type: 'scene', is: 'moves' })
   }
 
   get party(): Party {
@@ -165,6 +231,9 @@ export class Kingdom {
   /** The bell is rung. With a chamber in the kingdom the party at the log comes in; with none it comes, shrugs and goes back. */
   bell(): void {
     this.events.push({ type: 'bell' })
+    // A touch ends the scene that is playing, and is then an ordinary touch: the bell rings, unless what follows
+    // that scene has begun.
+    this.endScene()
     if (this.raid || this.scene) return
     this.toy.cancel()
     this.dropMachine()
@@ -285,12 +354,17 @@ export class Kingdom {
     if (machine && !machine.load) machine.load = flying.shot
   }
 
-  /** The finger lands on the ground. */
-  press(x: number, y: number, t: number): void {
+  /** A touch anywhere, on the ground or on the surface: it ends the scene that is playing, and the first one of a visit starts a showing that is owed. */
+  touch(): void {
     const wasOwed = this.owedAtTouch
     this.owedAtTouch = false
     this.endScene()
     if (wasOwed && !this.scene && !this.raid) this.startOwed()
+  }
+
+  /** The finger lands on the ground. */
+  press(x: number, y: number, t: number): void {
+    this.touch()
     const cx = Math.floor(x), cy = Math.floor(y)
     const index = machineAt(this.game.machines, cx, cy)
     if (this.raid) {
@@ -437,7 +511,10 @@ export class Kingdom {
   step(dt: number): void {
     const wasResting = this.toy.atRest
     this.toy.step(dt)
-    if (!wasResting && this.toy.atRest && !this.raid) this.restMachines()
+    if (!wasResting && this.toy.atRest && !this.raid) {
+      this.restMachines()
+      this.seeToTheQueen()
+    }
     for (const flying of this.flying) flying.t += dt
     for (let n = 0; n < this.flying.length; n++) {
       // A ball of mud or a stone stops at the first invader it meets, the moment it gets there.

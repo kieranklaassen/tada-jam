@@ -7,7 +7,7 @@ import type { InvaderKind } from '../habits'
 import { ROUND } from '../order'
 import { freshGame, type Game } from '../save'
 import { Kingdom } from '../kingdom'
-import { DRAWS, MOST_CRUMBS, QUEEN_WEDGED, ToyDisplay, drawsOf, type Item } from './display'
+import { DRAWS, LADDER_BEAT, LADDER_SWAY, MOST_CRUMBS, QUEEN_WEDGED, ToyDisplay, drawsOf, type Item } from './display'
 import { GRASS_Y, GROUND } from './layout'
 import { BELL } from './props'
 
@@ -141,6 +141,49 @@ describe('a frame of the toy', () => {
   })
 })
 
+describe('the first rung of the idle ladder', () => {
+  const glow: Guidance = { glow: 1, demo: null, demoIndex: -1 }
+
+  it('has the ant look out of the screen and then scratch at the earth beside it, where the glint is', () => {
+    const k = new Kingdom(crowded()), display = new ToyDisplay(k, 1)
+    const poses = new Set<string>()
+    let scratchedToward = false
+    for (let n = 0; n < 4 * 30; n++) {
+      display.advance(1 / 30)
+      const items = display.items(glow)
+      const ant = sprites(items, 'ant')[0]
+      poses.add(ant.pose)
+      const glint = items.find((item) => item.is === 'glint' && item.y > GRASS_Y) as Extract<Item, { is: 'glint' }> | undefined
+      if (ant.pose === 'dig') {
+        // It faces the earth that glints, and it moves as it scratches.
+        expect(glint).toBeDefined()
+        expect(ant.flip).toBe(glint!.x < ant.x)
+        if (ant.move && ant.move.dy < 0) scratchedToward = true
+      }
+    }
+    expect([...poses].sort()).toEqual(['dig', 'look'])
+    expect(scratchedToward).toBe(true)
+    // With no guidance it does neither by itself.
+    const still = new Set<string>()
+    for (let n = 0; n < 4 * 30; n++) { display.advance(1 / 30); still.add(sprites(display.items(null), 'ant')[0].pose) }
+    expect(still.has('dig')).toBe(false)
+    expect(LADDER_BEAT).toBeGreaterThan(0.5)
+  })
+
+  it('sways the bell of a kingdom that can be raided, and leaves the bell of one that cannot at rest', () => {
+    const swing = (display: ToyDisplay) => {
+      let most = 0
+      for (let n = 0; n < 3 * 30; n++) {
+        display.advance(1 / 30)
+        most = Math.max(most, Math.abs((display.items(glow)[0] as Extract<Item, { is: 'drop' }>).sway))
+      }
+      return most
+    }
+    expect(swing(new ToyDisplay(new Kingdom(crowded()), 1))).toBeGreaterThan(LADDER_SWAY * 0.8)
+    expect(swing(fresh().display)).toBeLessThan(0.05)
+  })
+})
+
 describe('the answer to a dig, beyond the mouthful', () => {
   it('is felt on the hill and by the camper right above a shallow tunnel, and by nobody over a deep one', () => {
     const hopOf = (display: ToyDisplay, who: string, n = 0) => sprites(display.items(null), who)[n].move!.dy
@@ -207,6 +250,88 @@ describe('a touch on the surface', () => {
     display.poke(BELL.x + 4, BELL.y)
     for (let n = 0; n < 600; n++) display.advance(1 / 60)
     expect(Math.abs((display.items(null)[0] as Extract<Item, { is: 'drop' }>).sway)).toBeLessThan(0.05)
+  })
+})
+
+describe('the queen moves in', () => {
+  it('is carried by two workers through the open from under the mouth to her new room, tries each end of its floor, and sits', () => {
+    const game = freshGame(null, 1), g = game.ground
+    for (let y = 1; y < g.rows - 1; y++) for (let x = 0; x < g.cols; x++) put(g, x, y, MOUTH.includes(x) && y <= 2 ? OPEN : EARTH)
+    game.shown.push('ant')
+    const k = new Kingdom(game), display = new ToyDisplay(k, 1)
+    const stroke = (from: [number, number], to: [number, number]) => {
+      const steps = Math.ceil(Math.max(Math.abs(to[0] - from[0]), Math.abs(to[1] - from[1])) * 2)
+      k.press(from[0], from[1], 0)
+      for (let n = 1; n <= steps; n++) { k.drag(from[0] + ((to[0] - from[0]) * n) / steps, from[1] + ((to[1] - from[1]) * n) / steps, n * 0.05); k.step(0.05) }
+      k.release()
+    }
+    stroke([20.5, 3.5], [20.5, 6.5])
+    stroke([22.5, 5], [28.5, 5])
+    stroke([22.5, 6], [28.5, 6])
+    for (let n = 0; n < 40 && k.scene?.is !== 'moves'; n++) k.step(1 / 30)
+    expect(k.scene?.is).toBe('moves')
+    const poses: string[] = [], places = new Set<number>()
+    for (let n = 0; n < 400 && k.scene?.is === 'moves'; n++) {
+      k.step(1 / 30)
+      display.see(k.toy.drainEvents())
+      display.seeGame(k.drainEvents(), k.drainRaidEvents())
+      display.advance(1 / 30)
+      if (k.scene?.is !== 'moves') break
+      const items = display.items(null)
+      const queen = sprites(items, 'queen')
+      // She is drawn once, wherever she is.
+      expect(queen.length).toBe(1)
+      poses.push(queen[0].pose)
+      if (queen[0].pose.startsWith('carried')) {
+        // Two workers carry her, one either side, and her middle is in the open.
+        const carriers = sprites(items, 'worker').filter((worker) => Math.abs(worker.y - (queen[0].y + 12)) < 1 && Math.abs(worker.x - queen[0].x) < 60)
+        expect(carriers.length).toBe(2)
+        const cx = Math.floor((queen[0].x - GROUND.x) / CELL), cy = Math.floor((queen[0].y - CELL / 2 - GROUND.y) / CELL)
+        expect(at(k.game.ground, cx, cy)).toBe(OPEN)
+      } else places.add(Math.round(queen[0].x))
+    }
+    expect(poses[0]).toMatch(/^carried/)
+    expect(new Set(poses.filter((pose) => pose.startsWith('carried'))).size).toBe(2)
+    expect(poses[poses.length - 1]).toBe('sit')
+    // Each end of the floor, and then her own place.
+    expect(places.size).toBeGreaterThanOrEqual(2)
+    expect(k.scene).toBeNull()
+  })
+})
+
+describe('the queen and her guests', () => {
+  it('gives an invader that does its act in her room her whole opinion for as long as it is at it, facing it, and nobody else', () => {
+    const game = freshGame(null, 1), g = game.ground
+    for (let y = 3; y <= 6; y++) for (const x of MOUTH) put(g, x, y, OPEN)
+    for (let y = 4; y <= 6; y++) for (let x = 22; x <= 33; x++) put(g, x, y, OPEN)
+    settle(g)
+    game.ant = { x: 20, y: 6 }
+    game.shown.push('ant')
+    const k = new Kingdom(game), display = new ToyDisplay(k, 1)
+    k.bell()
+    const seen = { glaring: 0, sitting: 0, queens: 0 }
+    for (let n = 0; n < 2000 && k.raid; n++) {
+      k.step(1 / 30)
+      const raidEvents = k.drainRaidEvents()
+      seen.queens += raidEvents.filter((event) => event.type === 'acts' && event.queens).length
+      display.seeGame(k.drainEvents(), raidEvents)
+      display.advance(1 / 30)
+      if (!k.raid) break
+      const items = display.items(null)
+      const queen = sprites(items, 'queen')[0], guest = sprites(items, 'raider')[0]
+      const acting = k.raid.invaders[0].state === 'acting'
+      if (acting) {
+        expect(['glare', 'glare2']).toContain(queen.pose)
+        expect(queen.flip).toBe(guest.x < queen.x)
+        seen.glaring++
+      } else {
+        expect(['sit', 'sit2']).toContain(queen.pose)
+        seen.sitting++
+      }
+    }
+    expect(seen.glaring).toBeGreaterThan(60)
+    expect(seen.sitting).toBeGreaterThan(10)
+    expect(seen.queens).toBe(1)
   })
 })
 

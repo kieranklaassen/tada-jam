@@ -171,7 +171,9 @@ export function voiceForGame(event: KingdomEvent): Note[] | null {
     case 'turned': return CLICK
     case 'machineSet': case 'machineFell': return KNOCK
     case 'machineBack': return BACK
-    case 'judged': case 'scene': return null
+    // The queen complains as she is carried to a new room.
+    case 'scene': return event.is === 'moves' ? SPOKEN.queen : null
+    case 'judged': return null
   }
 }
 
@@ -185,6 +187,8 @@ export function voiceForRaid(event: RaidEvent): Note[] | null {
     case 'widened': return SPOKEN.dungBall
     case 'lost': return LOST
     case 'givesUp': case 'held': case 'leftBall': return SIGH
+    // The queen has something to say to a guest who makes itself at home in her room.
+    case 'acts': return event.queens ? SPOKEN.queen : null
     case 'in': case 'home': case 'over': case 'waits': return null
   }
 }

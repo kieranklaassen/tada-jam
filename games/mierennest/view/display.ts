@@ -4,14 +4,15 @@ import { handPose, type Guidance, type HandPose } from '../guidance'
 import { idleMove, pokeMove, POKE_SECONDS, type Move, type Mover } from '../motion'
 import type { Kingdom, KingdomEvent } from '../kingdom'
 import type { Party } from '../order'
-import type { RaidEvent } from '../raid'
+import { gaitOf, type RaidEvent } from '../raid'
+import { roomOf } from '../routes'
 import type { Machine } from '../save'
 import { WEDGED, demoDrag, queenSeat, workerSpots } from '../residents'
 import { below, makeRng, type Rng } from '../rng'
 import type { Toy, ToyEvent } from '../toy'
 import { GRASS_Y, GROUND, MOUTH_X } from './layout'
 import { BELL, LIP, dropAt, hillGrown, hillShape } from './props'
-import { FLUNG, MOUTH_STEP, showCarriedOut, showFurnishings, showMachine, showMarks, showRaid, showShot, type Shown } from './raidShow'
+import { FLUNG, MOUTH_STEP, invaderAt, roomFloor as showFloor, showCarriedOut, showFurnishings, showMachine, showMarks, showRaid, showShot, type Shown } from './raidShow'
 import type { Effect, Thing } from './things'
 
 // What a frame of the toy shows, as a list of things to draw, with no canvas in sight: the view paints the list,
@@ -76,6 +77,26 @@ export const SHOWING_AT = { x: 250, y: GRASS_Y, size: 1.5 } as const
 export const BURST_SECONDS = 0.45
 const BURST: Partial<Record<Effect, number>> = { smoke: 0.7, twang: 0.4 }
 const burstSeconds = (effect: Effect) => BURST[effect] ?? BURST_SECONDS
+/** On the idle ladder: how long the ant looks out before it scratches, and scratches before it looks out again, in seconds; and how far the bell sways by itself, in radians. */
+export const LADDER_BEAT = 0.9
+export const LADDER_SWAY = 0.16
+/** How much of the scene in which the queen moves in she is carried for; for the rest she tries the floor. */
+const MOVES = { carried: 0.7 } as const
+/** A point this share of the way along a line of points. */
+function alongLine(points: readonly { x: number; y: number }[], share: number): { x: number; y: number } {
+  let whole = 0
+  for (let n = 1; n < points.length; n++) whole += Math.hypot(points[n].x - points[n - 1].x, points[n].y - points[n - 1].y)
+  let left = whole * share
+  for (let n = 1; n < points.length; n++) {
+    const leg = Math.hypot(points[n].x - points[n - 1].x, points[n].y - points[n - 1].y)
+    if (left <= leg) {
+      const u = leg > 0 ? left / leg : 1
+      return { x: points[n - 1].x + (points[n].x - points[n - 1].x) * u, y: points[n - 1].y + (points[n].y - points[n - 1].y) * u }
+    }
+    left -= leg
+  }
+  return points[points.length - 1]
+}
 /** Where a machine's smoke or twang is shown, from the middle of its base, facing right. */
 const MUZZLE = { x: 23, y: -37 } as const
 const ARM = { x: 0, y: -28 } as const
@@ -140,6 +161,8 @@ export class ToyDisplay {
       this.k.bell()
       return { on: 'bell' }
     }
+    // Any touch ends a scene that is playing.
+    this.k.touch()
     const camper = camperAt(this.camp, x, y)
     if (camper) {
       this.startle(camper.id)
@@ -353,7 +376,8 @@ export class ToyDisplay {
     const k = this.k, scene = k.scene, cols = ground.cols
     // A kingdom with a chamber can be raided: the idle ladder then lights the drop as well, which calls the raid.
     const callable = glow > 0 && toy.realm.chambers.length > 0 && !k.raid && !scene
-    const sway = this.sway + Math.sin(this.seconds * 0.9) * 0.03
+    // On the idle ladder the bell of a kingdom that can be raided sways by itself, and its drop catches the light.
+    const sway = this.sway + Math.sin(this.seconds * 0.9) * 0.03 + (callable ? Math.sin(this.seconds * 3.1) * LADDER_SWAY * glow : 0)
     list.push({ is: 'drop', sway, glint: callable ? glow : 0 })
     // The party of a raid, or of the put-back after it, is shown by the raid; otherwise it stands in its file at the log.
     const raided = k.raid ?? (scene?.is === 'putBack' ? k.lastRaid : null)
@@ -421,11 +445,36 @@ export class ToyDisplay {
     if (huddled) workers()
     const seat = queenSeat(ground, realm.chambers, realm.queenRoom)
     const queenMove = this.moveOf('queen', 'queen', 0, slot++)
-    if (seat) {
+    if (seat && scene?.is === 'moves') {
+      // She is carried to her new room by two workers, complaining, tries each end of its floor, and sits.
+      const u = scene.t / scene.length, carried = Math.min(1, u / MOVES.carried)
+      const feet = scene.way.map((cell) => toStage((cell % cols) + 0.5, Math.floor(cell / cols) + 1))
+      const home = toStage(seat.x, seat.y + 1)
+      feet[feet.length - 1] = home
+      if (carried < 1) {
+        const at = alongLine(feet, carried)
+        const kick = Math.floor(this.seconds * 5) % 2 === 0
+        list.push({ is: 'sprite', who: 'worker', pose: kick ? 'carry' : 'walk2', x: at.x - 46 * seat.fit, y: at.y, flip: false, size: 1, tall: 1, move: null, turn: 0 })
+        list.push({ is: 'sprite', who: 'queen', pose: kick ? 'carried' : 'carried2', x: at.x, y: at.y - 12, flip: false, size: seat.fit, tall: 1, move: null, turn: 0 })
+        list.push({ is: 'sprite', who: 'worker', pose: kick ? 'walk2' : 'carry', x: at.x + 46 * seat.fit, y: at.y, flip: true, size: 1, tall: 1, move: null, turn: 0 })
+      } else {
+        // Each end of the floor in turn, then her own place.
+        const floor = showFloor(ground, realm.chambers[realm.queenRoom!])
+        const half = 2.2 * seat.fit, ends = [toStage(floor.from + half, seat.y + 1), toStage(floor.to + 1 - half, seat.y + 1), home]
+        const tries = Math.min(ends.length - 1, Math.floor(((u - MOVES.carried) / (1 - MOVES.carried)) * ends.length))
+        list.push({ is: 'sprite', who: 'queen', pose: tries < ends.length - 1 ? 'sit2' : 'sit', x: ends[tries].x, y: ends[tries].y, flip: false, size: seat.fit, tall: 1, move: queenMove, turn: 0 })
+      }
+    } else if (seat) {
       const p = toStage(seat.x, seat.y + 1)
       // In the ending she puts her egg down at last.
       const down = ending !== null && ending.t >= ENDING.egg
-      list.push({ is: 'sprite', who: 'queen', pose: down ? (queenMove.second ? 'eggDown2' : 'eggDown') : queenMove.second ? 'sit2' : 'sit', x: p.x, y: p.y, flip: false, size: seat.fit, tall: 1, move: queenMove, turn: 0 })
+      // She dislikes guests: one that does its act in her room gets her whole opinion, eyebrows first, for as long as it is at it.
+      const raid = k.raid
+      const guest = raid ? raid.invaders.find((invader) => invader.state === 'acting' && roomOf(raid.ground, gaitOf(invader), invader.cell, raid.rooms) === raid.queenRoom) : undefined
+      if (guest && raid) {
+        const at = invaderAt(guest, cols)
+        list.push({ is: 'sprite', who: 'queen', pose: Math.floor(this.seconds * 3) % 2 === 0 ? 'glare' : 'glare2', x: p.x, y: p.y, flip: at.x < p.x, size: seat.fit, tall: 1, move: null, turn: 0 })
+      } else list.push({ is: 'sprite', who: 'queen', pose: down ? (queenMove.second ? 'eggDown2' : 'eggDown') : queenMove.second ? 'sit2' : 'sit', x: p.x, y: p.y, flip: false, size: seat.fit, tall: 1, move: queenMove, turn: 0 })
     } else {
       const p = toStage(WEDGED.x, WEDGED.y + 1)
       list.push({ is: 'sprite', who: 'queen', pose: queenMove.second ? 'wedged2' : 'wedged', x: p.x, y: p.y, flip: false, size: QUEEN_WEDGED.size, tall: QUEEN_WEDGED.tall, move: queenMove, turn: 0 })
@@ -495,14 +544,17 @@ export class ToyDisplay {
     let room = 1
     for (const side of [-1, 1]) for (let x = toy.game.ant.x + side; at(ground, x, toy.game.ant.y) === OPEN && room < ANT_LENGTH; x += side) room++
     const cramped = room < ANT_LENGTH
+    // On the idle ladder it looks out of the screen, then scratches at the earth beside it, where the glint is.
+    const hint = glow > 0 && state === 'idle' ? demoDrag(ground, toy.game.ant) : null
+    const scratches = hint !== null && Math.floor(this.seconds / LADDER_BEAT) % 2 === 1
     const pose =
       state === 'run' ? (Math.floor(this.seconds * 12) % 2 === 0 ? 'walk1' : 'walk2')
-      : state === 'dig' ? 'dig'
+      : state === 'dig' || scratches ? 'dig'
       : state === 'carry' ? 'carry'
       : state === 'wait' ? 'wait'
-      : cramped || antMove.second || this.seconds < this.lookUntil ? 'look' : 'stand'
-    const flip = toy.antHeading.x < 0
-    if (state === 'dig') antMove.dy = -Math.abs(Math.sin(this.seconds * 18)) * 2
+      : cramped || antMove.second || hint !== null || this.seconds < this.lookUntil ? 'look' : 'stand'
+    const flip = scratches ? toStage(hint!.from.x, 0).x < feet.x : toy.antHeading.x < 0
+    if (state === 'dig' || scratches) antMove.dy = -Math.abs(Math.sin(this.seconds * 18)) * 2
     list.push({ is: 'sprite', who: 'ant', pose, x: feet.x, y: feet.y, flip, size: 1, tall: 1, move: state === 'idle' || state === 'dig' ? antMove : null, turn: climbing ? (toy.antHeading.y > 0 ? 1 : -1) * (flip ? -1 : 1) * (Math.PI / 2) : 0 })
     if (carried && this.carriedAt) list.push({ is: 'lump', lump: carried.kind, x: this.carriedAt.x, y: this.carriedAt.y })
     for (const flying of k.flying) {

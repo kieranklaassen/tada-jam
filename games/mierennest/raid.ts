@@ -120,6 +120,8 @@ export type RaidEvent =
   | { type: 'leftBall'; id: number; cell: number }
   /** The dung fly is down: every dung beetle loses its way. */
   | { type: 'lost' }
+  /** One begins its own act in a chamber; `queens` says it is the queen's own room. */
+  | { type: 'acts'; id: number; kind: InvaderKind; queens: boolean }
   | { type: 'acted'; id: number; kind: InvaderKind }
   | { type: 'givesUp'; id: number; kind: InvaderKind }
   | { type: 'held'; id: number; kind: InvaderKind }
@@ -159,6 +161,8 @@ export type Raid = {
   inside: Uint8Array
   /** For every cell, the chamber it is in, counted from 1; 0 for none. */
   rooms: Uint8Array
+  /** The chamber the queen lives in, counted from 1; 0 while she has none. */
+  queenRoom: number
   far: Int32Array
   /** Where the kingdom's own stand: along a floor row, the middle and half the width of each, in cells. An act is done clear of them where there is room. */
   keepClear: { y: number; x: number; half: number }[]
@@ -202,7 +206,7 @@ export function callRaid(built: Ground, party: Party, mouth: readonly number[] =
   return {
     ground, invaders, time: 0, chambersWhenCalled: chambers(ground, mouth).length, acts: 0, gave: new Set(), covered: new Set(), balls: [],
     led: false, lost: false, begun: [], over: false, settled: 0, events: [], changes: 0, inside, rooms: roomCells(ground, mouth), far: farFromChambers(ground, inside),
-    keepClear: residents(ground, mouth), mouth,
+    queenRoom: (kingdom(ground, mouth).queenRoom ?? -1) + 1, keepClear: residents(ground, mouth), mouth,
   }
 }
 
@@ -381,6 +385,7 @@ function decide(raid: Raid, invader: Invader): void {
     invader.state = 'acting'
     invader.wait = raid.begun.includes(invader.kind) ? act.again : act.seconds
     if (!raid.begun.includes(invader.kind)) raid.begun.push(invader.kind)
+    raid.events.push({ type: 'acts', id: invader.id, kind: invader.kind, queens: room === raid.queenRoom })
     return
   }
   invader.insideSince = false

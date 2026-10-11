@@ -304,6 +304,89 @@ describe('the great raid and the ending', () => {
   })
 })
 
+describe('the queen moves in', () => {
+  /** Drags the finger through the ground from one place to another, as a child digs. */
+  const dig = (k: Kingdom, from: [number, number], to: [number, number], t = 0) => {
+    const steps = Math.max(2, Math.ceil(Math.max(Math.abs(to[0] - from[0]), Math.abs(to[1] - from[1])) * 2))
+    k.press(from[0], from[1], t)
+    for (let n = 1; n <= steps; n++) {
+      k.drag(from[0] + ((to[0] - from[0]) * n) / steps, from[1] + ((to[1] - from[1]) * n) / steps, t + n * 0.05)
+      k.step(0.05)
+    }
+    k.release()
+  }
+  /** A fresh game whose first showing has been seen, so that nothing else is owed. */
+  const shownGame = () => {
+    const game = freshGame(null, 1), g = game.ground
+    // Plain earth under the shaft, so that a stroke digs what it is drawn through.
+    for (let y = 1; y < g.rows - 1; y++) for (let x = 0; x < g.cols; x++) put(g, x, y, MOUTH.includes(x) && y <= 2 ? OPEN : EARTH)
+    game.shown.push('ant')
+    return game
+  }
+  /** Digs a room beside the shaft, on rows 4 to 6, from column `from` to column `to`. */
+  const digRoom = (k: Kingdom, from: number, to: number, events: KingdomEvent[]) => {
+    const a = Math.min(from, to) + 0.5, b = Math.max(from, to) + 0.5
+    dig(k, [20.5, 3.5], [20.5, 6.5])
+    // A mouthful is two cells across, so two strokes open three rows.
+    for (const y of [5, 6]) {
+      dig(k, from < to ? [a, y] : [b, y], from < to ? [b, y] : [a, y])
+      events.push(...k.drainEvents())
+    }
+    for (let n = 0; n < 60; n++) { k.step(1 / 30); events.push(...k.drainEvents()) }
+  }
+
+  it('is a scene of her own when the kingdom gets its first chamber: it saves nothing, a touch ends it, and she is in her room from its start', () => {
+    const k = new Kingdom(shownGame())
+    expect(k.toy.realm.queenRoom).toBeNull()
+    const events: KingdomEvent[] = []
+    digRoom(k, 22, 27, events)
+    expect(k.toy.realm.chambers.length).toBe(1)
+    expect(events.filter((e) => e.type === 'scene')).toEqual([{ type: 'scene', is: 'moves' }])
+    expect(k.scene?.is).toBe('moves')
+    const scene = k.scene as Extract<NonNullable<Kingdom['scene']>, { is: 'moves' }>
+    // She is carried from under the mouth, through open cells, to her seat.
+    expect(scene.way.length).toBeGreaterThan(3)
+    for (const cell of scene.way.slice(1)) expect(at(k.game.ground, cell % 40, Math.floor(cell / 40))).toBe(OPEN)
+    expect(scene.length).toBe(SCENE_SECONDS.moves)
+    // Where she lives follows from the ground: a save in the middle of the scene reads back with her in her room and plays nothing.
+    const back = new Kingdom(saved(k.game))
+    expect(back.toy.realm.queenRoom).not.toBeNull()
+    expect(play(back, 10).filter((e) => e.type === 'scene')).toEqual([])
+    // A touch ends it, and is then an ordinary touch.
+    k.press(24.5, 5.5, 9)
+    k.release()
+    expect(k.scene).toBeNull()
+    // It plays out by itself too, and not again while she lives in the same room, however it grows.
+    const again = new Kingdom(shownGame()), more: KingdomEvent[] = []
+    digRoom(again, 22, 27, more)
+    play(again, SCENE_SECONDS.moves + 1, more)
+    expect(again.scene).toBeNull()
+    for (const y of [5, 6]) dig(again, [28.5, y], [31.5, y])
+    play(again, 4, more)
+    expect(more.filter((e) => e.type === 'scene').length).toBe(1)
+  })
+
+  it('plays again when another room becomes the largest, and never on load or after a put-away', () => {
+    const k = new Kingdom(shownGame()), events: KingdomEvent[] = []
+    digRoom(k, 22, 26, events)
+    play(k, SCENE_SECONDS.moves + 1, events)
+    // A larger room further down, at the foot of a shaft dug from the first.
+    dig(k, [24, 7.5], [24, 11.5])
+    events.push(...k.drainEvents())
+    for (const y of [11, 12]) { dig(k, [22.5, y], [33.5, y]); events.push(...k.drainEvents()) }
+    play(k, 3, events)
+    expect(k.toy.realm.chambers.length).toBe(2)
+    expect(events.filter((e) => e.type === 'scene').length).toBe(2)
+    expect(k.scene?.is).toBe('moves')
+    // Put away in the middle of it: nothing is lost, and nothing replays in this visit or the next.
+    k.putAway()
+    expect(k.scene).toBeNull()
+    expect(play(k, 10).filter((e) => e.type === 'scene')).toEqual([])
+    const back = new Kingdom(saved(k.game))
+    expect(play(back, 10).filter((e) => e.type === 'scene')).toEqual([])
+  })
+})
+
 describe('first showings', () => {
   it('owes the first kind at the first touch of a first visit, marks it as it starts, and never shows it again', () => {
     const k = new Kingdom(nestGame())
