@@ -1,6 +1,6 @@
 # A demo becomes a game: a builder's brief
 
-On 2026-10-10 the owner chose "Every demo": each demo under `lab/arcade/protos/` that has no game yet is rebuilt as a real jam game, except the five he rated No. The plan is `docs/plans/2026-10-10-2345-feat-every-demo-a-jam-game-plan.md`. This page is the standing brief for the builder of one of those games. It adds no rule of its own: the rules are in `AGENTS.md`, the guide `docs/solutions/conventions/building-a-jam-game.md` and the game-design pack, and where this page is shorter than they are, they decide.
+On 2026-10-10 the owner chose "Every demo": each demo under `lab/arcade/protos/` that has no game yet is rebuilt as a real jam game, except the five rated No. The plan is `docs/plans/2026-10-10-2345-feat-every-demo-a-jam-game-plan.md`. This page is the standing brief for the builder of one of those games. It adds no rule of its own: the rules are in `AGENTS.md`, the guide `docs/solutions/conventions/building-a-jam-game.md` and the game-design pack, and where this page is shorter than they are, they decide.
 
 You are a **local builder in a wave**, in the guide's words. Your message names your game's key, name, band, emoji, kind (canvas or three.js), its two reserved looks in order, the paragraph of the plan that is your game, your worktree, your scratch folder, your port and the run you are on.
 
