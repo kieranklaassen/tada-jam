@@ -158,11 +158,12 @@ describe('a room under the shaft, and a mouth partly shut', () => {
       const raid = playOut(raidOn(plugged, [kind]))
       expect(raid.acts, kind).toBe(1)
     }
-    // A dung ball is three columns wide: it is left on the grass, and its beetle comes in without it.
+    // A dung ball is three columns wide: one lump of mud in a column, with earth behind it, it digs, and comes in.
     const scout = raidOn(plugged, ['dungBeetle'])
     const events: RaidEvent[] = []
     while (!scout.over) { stepRaid(scout); events.push(...scout.events.splice(0)) }
-    expect(kinds(events, 'leftBall').length).toBe(1)
+    expect(kinds(events, 'leftBall').length).toBe(0)
+    expect(kinds(events, 'widened').length).toBeGreaterThan(0)
     expect(scout.acts).toBe(1)
     // All three columns shut: nobody gets in, each gives up at the mouth and is heard, and the raid is over.
     const shut = ['XXXX...XXXX', '####mmm####', '####...####', '####...####', '#.........#', '#.........#', '#.........#', '###########', 'XXXXXXXXXXX']
@@ -641,6 +642,53 @@ describe('a dung beetle and its ball', () => {
     expect(three.acts).toBeGreaterThan(0)
     const two = playOut(dungRaid(hall([EARTHS, CLEAR, '....mo.....']), ['beetle', 'beetle']))
     expect(two.acts).toBe(0)
+  })
+
+  it('meets lumps set under the mouth as a wall like any other: it is not left on the grass for one lump in a column', () => {
+    // One lump of mud stuck in the top of the shaft's left column: mud with earth behind it, which the ball digs.
+    const one = hall([CLEAR, CLEAR, CLEAR])
+    one[1] = '##m..###################'
+    const raid = dungRaid(one)
+    const events = watch(raid, () => {})
+    expect(kinds(events, 'leftBall')).toEqual([])
+    expect(kinds(events, 'widened').length).toBeGreaterThan(0)
+    expect(raid.invaders[0].ball).toBe(3)
+    expect(raid.acts).toBe(1)
+    expect(mudIn(raid)).toBe(0)
+    // On the game's own ground the army keeps its five balls for one lump of mud in the mouth's left column.
+    const ground = generate(1)
+    for (let y = 1; y <= 3; y++) for (let x = 22; x <= 31; x++) put(ground, x, y, OPEN)
+    put(ground, MOUTH[0], 1, MUD)
+    settle(ground)
+    expect(at(ground, MOUTH[0], 1)).toBe(MUD)
+    const army = callRaid(ground, PARTY['great-raid'])
+    const heard = watch(army, () => {})
+    expect(kinds(heard, 'leftBall')).toEqual([])
+    expect(army.acts).toBe(6)
+  })
+
+  it('leaves the ball on the grass only where the lumps under the mouth hold or a stone there jams it, and comes in without it', () => {
+    // Two lumps of mud across the left and the middle column hold 6: the ball's push is not greater.
+    const plug = hall([CLEAR, CLEAR, CLEAR])
+    plug[1] = '##mm.###################'
+    const held = dungRaid(plug)
+    const events = watch(held, () => {})
+    expect(kinds(events, 'leftBall')).toEqual([{ type: 'leftBall', id: 0, cell: -1 }])
+    expect(held.invaders[0].ball).toBe(0)
+    expect(held.invaders[0].left).toBe(3)
+    expect(mudIn(held)).toBe(2)
+    expect(held.acts).toBe(1)
+    // A stone on the floor of the shaft's left column: the ball can neither dig nor shove it, heaves, and is left at the mouth.
+    const stone = hall([CLEAR, CLEAR, CLEAR])
+    stone[4] = `##o..${CLEAR}......##`
+    const jammed = dungRaid(stone)
+    const more = watch(jammed, () => {})
+    expect(kinds(more, 'strain').length).toBeGreaterThan(0)
+    expect(kinds(more, 'leftBall').length).toBe(1)
+    expect(jammed.invaders[0].left).toBe(3)
+    expect(jammed.balls).toEqual([])
+    expect(jammed.acts).toBe(1)
+    expect(toPicture(jammed.ground)[4].slice(0, 5)).toBe('##o..')
   })
 
   it('digs sand and mud that have earth or rock behind them', () => {

@@ -622,6 +622,22 @@ describe('a machine', () => {
     expect(k.drainEvents().some((event) => event.type === 'fired')).toBe(true)
   })
 
+  it('shuts no column of the mouth where it stands under it: every invader of the party still comes in', () => {
+    const game = freshGame(null, 1), g = game.ground
+    for (let y = 1; y <= 3; y++) for (let x = 22; x <= 31; x++) put(g, x, y, OPEN)
+    settle(g)
+    game.position = 'the-catapult'
+    game.shown.push('ant', 'beetle', 'fly', 'catapult')
+    // Where the workers set it down: at the foot of the shaft, under the mouth.
+    game.machines.push({ kind: 'catapult', x: MOUTH[0], y: 3, facing: 1, load: null })
+    const k = new Kingdom(game)
+    k.bell()
+    const raidEvents: RaidEvent[] = []
+    for (let n = 0; n < 3000 && k.raid; n++) { k.step(1 / 30); k.drainEvents(); raidEvents.push(...k.drainRaidEvents()) }
+    expect(raidEvents.filter((event) => event.type === 'in').length).toBe(4)
+    expect(raidEvents.filter((event) => event.type === 'acted').length).toBe(4)
+  })
+
   it('answers a tap in a raid when it has nothing in it yet, with a cough', () => {
     const k = armed()
     k.bell()

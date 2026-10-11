@@ -263,6 +263,8 @@ export function showRaid(raid: Raid, party: Party, seconds: number): Shown[] {
     const pose = invaderPose(invader, seconds, cols)
     const rolled = invader.ball > 0 ? ballSize(invader.ball) : 0
     const ballPose = invader.ball > 3 ? 'sandy' : 'plain'
+    // A ball the mouth held was left on the grass: it lies at the log where it lay, wherever its beetle is.
+    if (invader.left > 0 && seat) out.push({ who: 'dungBall', pose: 'plain', x: seat.x, y: GRASS_Y, flip: false, turn: 0, size: (seat.size ?? 1) * ballSize(invader.left), id: invader.id, idle: false })
     if (invader.state === 'coming' && seat) {
       // The next to come in walks to the mouth while it waits its turn; the others sit where they sat.
       const before = raid.invaders[n - 1]
@@ -363,6 +365,7 @@ export function showCarriedOut(scene: Extract<Scene, { is: 'putBack' }>, raid: R
     const invader = raid.invaders[id], seat = file[id]
     if (!invader || !seat || invader.cell < 0) continue
     const from = invaderAt(invader, cols), who = PLAYED_BY[invader.kind]
+    if (invader.left > 0) out.push({ who: 'dungBall', pose: 'plain', x: seat.x, y: GRASS_Y, flip: false, turn: 0, size: (seat.size ?? 1) * ballSize(invader.left), id, idle: false })
     const pose = invader.kind === 'ant' ? (invader.lastShot === 'mud' ? 'balled' : 'stuck') : invader.kind === 'beetle' || invader.kind === 'dungBeetle' ? 'sit' : invader.kind === 'dungFly' ? 'down' : 'bump'
     const size = seat.size ?? 1
     if (b > 0) {

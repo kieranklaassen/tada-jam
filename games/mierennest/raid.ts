@@ -102,6 +102,8 @@ export type Invader = {
   answer: string | null
   /** How many cells across the dung ball it rolls is: 0 for none. */
   ball: number
+  /** How many cells across the ball it left on the grass is, where the mouth held it: 0 for none. It lies at the log. */
+  left: number
   /** Seconds it has heaved at something its ball cannot pass and it cannot dig. */
   jammed: number
   /** The steps it has left once the army has lost its way; -1 while it has not, -2 once it has turned for home. */
@@ -213,7 +215,7 @@ export function callRaid(built: Ground, party: Party, mouth: readonly number[] =
   const invaders: Invader[] = party.map((kind, id) => ({
     id, kind, state: 'coming', cell: -1, from: -1, toward: -1, along: 0, facing: 1, wait: APART,
     way: [], step: 0, trail: [], leaning: null, acted: false, insideSince: false, room: 0, spot: -1, after: 'going', lastShot: null, answer: null,
-    ball: kind === 'dungBeetle' ? DUNG_BALL.across : 0, jammed: 0, lostIn: -1, queued: false, wake: [],
+    ball: kind === 'dungBeetle' ? DUNG_BALL.across : 0, left: 0, jammed: 0, lostIn: -1, queued: false, wake: [],
   }))
   return {
     ground, invaders, time: 0, chambersWhenCalled: chambers(ground, mouth).length, acts: 0, gave: new Set(), covered: new Set(), balls: [], rolling: [],
@@ -688,9 +690,56 @@ function widen(raid: Raid, invader: Invader): void {
   if (invader.jammed >= HABITS.dungBeetle.patience) leaveBall(raid, invader)
 }
 
+/**
+ * One that stands in the mouth's own row, not yet in the nest, sets off down from there again: a dung beetle with
+ * its ball down the middle column, anyone else by a column that is open to it. One the mouth is shut to gives up
+ * with a sigh and goes back to the log.
+ */
+function downFromTheMouth(raid: Raid, invader: Invader): void {
+  const { ground } = raid, cols = ground.cols, gait = gaitOf(invader)
+  let start: number | undefined
+  if (invader.ball > 0) {
+    const entry = ballEntry(raid)
+    if (!entry) {
+      leaveBall(raid, invader)
+      return
+    }
+    start = entry.foot
+  } else {
+    const ways = entries(ground, gait, raid.mouth)
+    start = ways.find((cell) => wayIn(ground, gait, cell, raid.inside) !== null) ?? ways[0]
+  }
+  if (start === undefined) {
+    raid.events.push({ type: 'givesUp', id: invader.id, kind: invader.kind })
+    invader.state = 'home'
+    invader.cell = -1
+    raid.events.push({ type: 'home', id: invader.id, kind: invader.kind })
+    return
+  }
+  const top = gait === 'fly' ? start : start % cols
+  invader.cell = top
+  invader.from = top
+  invader.toward = top
+  invader.along = 0
+  invader.trail = [top]
+  invader.state = 'going'
+  setOff(invader, top === start ? [top] : [top, start])
+}
+
 /** A dung beetle gives up its ball where it stands and goes on as a plain beetle. */
 function leaveBall(raid: Raid, invader: Invader): void {
   if (invader.ball === 0) return
+  const cols = raid.ground.cols
+  if (invader.cell < cols) {
+    // Jammed at the mouth itself, before it was ever in the nest: the ball stays on the grass, and its beetle
+    // comes in without it by a column that is open to a plain beetle, or goes back to the log with a sigh.
+    invader.left = invader.ball
+    invader.ball = 0
+    invader.jammed = 0
+    raid.events.push({ type: 'leftBall', id: invader.id, cell: -1 })
+    downFromTheMouth(raid, invader)
+    return
+  }
   raid.balls.push({ cell: invader.cell, size: invader.ball, trail: invader.trail.slice() })
   invader.ball = 0
   invader.jammed = 0
@@ -725,16 +774,17 @@ function move(raid: Raid, invader: Invader, speed: number): boolean {
 }
 
 /**
- * The place under the mouth a dung beetle comes down to with its ball, in the middle column: as far down as the
- * shaft is as wide as the ball. Null where the ball does not fit the mouth.
+ * The place under the mouth a dung beetle comes down to with its ball: the first floor of the middle column. The
+ * ball needs all three columns of the mouth, and what stands in its way beside that column on the way down is a
+ * wall to it like any other: it digs it, leans on it or is jammed by it as it goes. Null where the mouth is
+ * narrower than the ball, or where lumps lie across the middle column right under the turf: those hold it.
  */
 function ballEntry(raid: Raid): { top: number; foot: number } | null {
   const { ground, mouth } = raid, cols = ground.cols
   const x = mouth[Math.floor(mouth.length / 2)]
-  const wide = (row: number) => at(ground, x - 1, row) === OPEN && at(ground, x, row) === OPEN && at(ground, x + 1, row) === OPEN
-  if (mouth.length < DUNG_BALL.across || !wide(0) || !wide(1)) return null
+  if (mouth.length < DUNG_BALL.across || at(ground, x - 1, 0) !== OPEN || at(ground, x, 0) !== OPEN || at(ground, x + 1, 0) !== OPEN || at(ground, x, 1) !== OPEN) return null
   let y = 1
-  while (y + 1 < ground.rows && wide(y + 1)) y++
+  while (y + 1 < ground.rows && at(ground, x, y + 1) === OPEN) y++
   return { top: x, foot: y * cols + x }
 }
 
@@ -769,8 +819,9 @@ function comeIn(raid: Raid, invader: Invader): boolean {
     const room = roomOf(ground, gait, way[0], raid.rooms) || roomOf(ground, gait, first, raid.rooms)
     if (room !== 0 && way.length <= 2 && taken(raid, room, invader)) return false
   }
-  // A ball that does not fit the mouth is left on the grass.
+  // A ball the mouth is shut to is left on the grass, where it lay at the log.
   if (invader.ball > 0 && !withBall) {
+    invader.left = invader.ball
     invader.ball = 0
     raid.events.push({ type: 'leftBall', id: invader.id, cell: -1 })
   }
@@ -830,7 +881,9 @@ export function stepRaid(raid: Raid): void {
       case 'waiting':
       case 'going': {
         if (invader.step + 1 >= invader.way.length) {
-          decide(raid, invader)
+          // One whose way was lost while it stood in the mouth's row, as when its ball dug there, goes on down.
+          if (invader.cell >= 0 && invader.cell < cols && invader.along === 0 && gait !== 'fly' && gait !== 'ant') downFromTheMouth(raid, invader)
+          else decide(raid, invader)
           break
         }
         if (invader.along === 0) {

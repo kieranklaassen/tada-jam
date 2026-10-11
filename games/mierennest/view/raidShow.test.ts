@@ -168,6 +168,37 @@ describe('where a raid is shown', () => {
     expect(rolled).toBeGreaterThan(20)
   })
 
+  it('draws a ball that was left on the grass on the grass, where it lay at the log, for as long as its beetle is away and when it is carried out', () => {
+    // Two lumps of mud across the mouth's left and middle columns hold the ball; its beetle comes in by the third.
+    const game = freshGame(null, 1), g = game.ground
+    for (let y = 1; y <= 3; y++) for (let x = 22; x <= 31; x++) put(g, x, y, OPEN)
+    put(g, MOUTH[0], 1, 3)
+    put(g, MOUTH[1], 1, 3)
+    settle(g)
+    const party = ['dungBeetle'] as const, seat = partyFile(party)[0]
+    const raid = callRaid(g, party)
+    let seen = 0
+    while (!raid.over) {
+      stepRaid(raid)
+      const invader = raid.invaders[0]
+      if (invader.left === 0) continue
+      const balls = showRaid(raid, party, raid.time).filter((one) => one.who === 'dungBall')
+      expect(balls.length).toBe(1)
+      expect(balls[0].x).toBe(seat.x)
+      expect(balls[0].y).toBe(GRASS_Y)
+      seen++
+    }
+    expect(raid.invaders[0].left).toBe(3)
+    expect(raid.acts).toBe(1)
+    expect(seen).toBeGreaterThan(100)
+    // One that is carried out has its ball waiting at the log too.
+    raid.invaders[0].state = 'held'
+    const scene = { is: 'putBack' as const, t: 1, length: 4, cells: [], ground: raid.ground, held: [0] }
+    const out = showCarriedOut(scene, raid, party).filter((one) => one.who === 'dungBall')
+    expect(out.length).toBe(1)
+    expect([out[0].x, out[0].y]).toEqual([seat.x, GRASS_Y])
+  })
+
   it('shows a machine empty in a raid until its own lump is back, and flung just after it fired', () => {
     const cannon = { kind: 'cannon', x: 30, y: 9, facing: -1, load: 'stone' } as const
     expect(showMachine(cannon, 0, 9)).toMatchObject({ load: 'stone', pose: 'ready', flip: true })
