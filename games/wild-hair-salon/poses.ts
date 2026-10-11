@@ -1,6 +1,6 @@
 import { MANES } from './kits'
 import { LOOKS } from './looks'
-import { BENCH, BESIDE_X, CAPE, CHAIR, COLLAR_Y, DOOR, FLOOR_Y, HEAD, LOCK_X, LOOKING_GLASS, PEG, STEP, STOOL, STRIP_W, TROLLEY } from './layout'
+import { BENCH, BESIDE_X, CAPE, CHAIR, COLLAR_Y, DOOR, FLOOR_Y, HEAD, HOME_CONTROL, LOCK_X, LOOKING_GLASS, PEG, STEP, STOOL, STRIP_W, TROLLEY } from './layout'
 import type { CustomerId } from './tastes'
 import type { ClippingPlace, FaceSpot, Salon, Who } from './world'
 
@@ -142,11 +142,24 @@ export function tuftTip(pose: TuftPose): Point {
   return { x: pose.base.x + Math.sin(pose.angle) * pose.reach, y: pose.base.y - Math.cos(pose.angle) * pose.reach }
 }
 
-/** Where a bow sits, relative to the customer's head: the free end of the tuft it is tied on. Nothing when the ribbon is not a bow. */
+/** How far a bow is drawn from its knot, to each side and up (figure.ts), and how far it keeps from the home control. */
+export const BOW = { half: 38, up: 18, clear: 8 } as const
+
+/**
+ * Where a bow sits, relative to the customer's head: the free end of the tuft it is tied on. A free end that is up
+ * under the shell's home control would put the bow there, where a finger that goes for it goes home instead, so on
+ * such a tuft the bow is tied lower on the same tuft, just clear of the control. Nothing when the ribbon is not a bow.
+ */
 export function bowOn(salon: Salon): Point | null {
   const ribbon = salon.ribbon
   if (!ribbon || ribbon.at !== 'mane' || salon.chair === null) return null
-  return tuftTip(tuftPose(salon.chair, ribbon.tuft, salon.mane[ribbon.tuft] ?? 0, salon.mane.length))
+  const pose = tuftPose(salon.chair, ribbon.tuft, salon.mane[ribbon.tuft] ?? 0, salon.mane.length), tip = tuftTip(pose)
+  // The highest the knot may be, in head units, while the bow is not clear of the control to either side.
+  const top = HOME_CONTROL.bottom + BOW.clear + BOW.up - HEAD.y, x = HEAD.x + tip.x
+  const beside = x - BOW.half >= HOME_CONTROL.right + BOW.clear || x + BOW.half <= HOME_CONTROL.left - BOW.clear
+  if (beside || tip.y >= top || pose.base.y <= top) return tip
+  const along = (pose.base.y - top) / (pose.base.y - tip.y)
+  return { x: pose.base.x + (tip.x - pose.base.x) * along, y: top }
 }
 
 /** A point given in an actor's head units, in the scene. */
@@ -241,8 +254,8 @@ export function ribbonShape(salon: Salon): RibbonShape | null {
     case 'floor': return { kind: 'lie', from: { x: floorX(ribbon.x) - 40, y: floorY(ribbon.x) + STRIP_W + 6 }, unit: STEP }
     case 'mane': {
       if (!places.customer || salon.chair === null) return peg
-      const steps = salon.mane[ribbon.tuft] ?? 0
-      return { kind: 'worn', at: onHead(places.customer, tuftTip(tuftPose(salon.chair, ribbon.tuft, steps, salon.mane.length))), half: 34, as: 'bow' }
+      const at = bowOn(salon)
+      return at ? { kind: 'worn', at: onHead(places.customer, at), half: 34, as: 'bow' } : peg
     }
     case 'face': {
       const actor = ribbon.who === 'chair' ? places.customer : places.friend

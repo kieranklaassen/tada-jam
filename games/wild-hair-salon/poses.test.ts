@@ -277,6 +277,32 @@ describe('the ribbon', () => {
     expect(whatIsAt(blind, (ribbonShape(blind) as { at: Point }).at)).toEqual({ object: 'ribbonClip' })
   })
 
+  it('is never tied as a bow under the home control at the top centre: on a tuft that reaches up there it sits lower on that tuft', () => {
+    // The shell's home control on a surface the size of the scene: a disc 48 across, 10 from the top edge, in the middle.
+    const home = { left: SCENE.w / 2 - 24, right: SCENE.w / 2 + 24, bottom: 58 }
+    // The bow as figure.ts draws it about its knot: its loops reach 38 to each side and 18 up. It keeps 8 clear of the control.
+    const half = 38, up = 18, clear = 8
+    const moved = new Map<string, number[]>()
+    for (const who of CUSTOMERS) for (let tuft = 0; tuft < TUFTS; tuft++) for (let steps = 4; steps <= 100; steps++) {
+      const mane = Array<number>(TUFTS).fill(60)
+      mane[tuft] = steps
+      const s = salon({ chair: who, friend: who === 'lion' ? 'poodle' : 'lion', mane, ribbon: { len: 44, at: 'mane', tuft } })
+      const at = (ribbonShape(s) as { at: Point }).at, doing = `${who}, tuft ${tuft} at ${steps}`
+      expect(at.y - up >= home.bottom + clear || at.x - half >= home.right + clear || at.x + half <= home.left - clear, doing).toBe(true)
+      // It is on its tuft: at the free end, or between the free end and the root where the free end is under the control.
+      const base = onHead(customer, tuftPose(who, tuft, steps).base), tip = tipOf(tuft, steps, who)
+      const along = ((at.x - base.x) * (tip.x - base.x) + (at.y - base.y) * (tip.y - base.y)) / ((tip.x - base.x) ** 2 + (tip.y - base.y) ** 2)
+      expect(along, doing).toBeGreaterThan(0.6)
+      expect(along, doing).toBeLessThanOrEqual(1 + 1e-9)
+      expect(Math.hypot(base.x + (tip.x - base.x) * along - at.x, base.y + (tip.y - base.y) * along - at.y), doing).toBeLessThan(1e-6)
+      if (along < 1 - 1e-9) moved.set(`${who} ${tuft}`, [...(moved.get(`${who} ${tuft}`) ?? []), steps])
+      // And it is picked up where it is drawn.
+      expect(whatIsAt(s, at), doing).toEqual({ object: 'ribbonClip' })
+    }
+    // Only where it has to: the top tuft, at the lengths that bring its free end up under the control.
+    expect(Object.fromEntries([...moved].map(([which, lengths]) => [which, `${lengths[0]} to ${lengths[lengths.length - 1]}`]))).toEqual({ 'lion 4': '66 to 100', 'poodle 4': '99 to 100', 'yak 4': '60 to 65' })
+  })
+
   it('lies on the floor beside a piece, and goes back to its peg when what it hung on is gone', () => {
     const lying = salon({ ribbon: { len: 30, at: 'floor', x: 40 } }), shape = ribbonShape(lying) as { kind: string; from: Point }
     expect(shape.kind).toBe('lie')

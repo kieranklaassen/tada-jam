@@ -5,6 +5,13 @@
 
 export const SCENE = { w: 1180, h: 820 } as const
 
+/**
+ * The shell draws one round home control over the top centre of a game: 48 across, 10 from the top edge. On a
+ * surface the size of the scene that is this much of it, in scene units; on a narrower surface the scene sits lower
+ * and the control is clear of more. Nothing the child picks up is put under it.
+ */
+export const HOME_CONTROL = { left: SCENE.w / 2 - 24, right: SCENE.w / 2 + 24, bottom: 58 } as const
+
 /** Where the wall meets the floor. */
 export const FLOOR_Y = 640
 
