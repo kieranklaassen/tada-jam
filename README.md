@@ -121,6 +121,7 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 | Hop Across | `games/hop-across/` | 5–9 | A folding board game seen from above: a rabbit leads three small ones over roads, rivers and rails to a picnic, one hop for each tap, and everything else on the board takes one step each time she lands. A flattened pawn peels up, a log carries her to the fish and back, and nothing is ever lost. |
 | Snack Merge | `games/snack-merge/` | 5–9 | A sweet shop by lamp light: drop six jelly-sweet foods into a glass jar, where two that touch pop into a new snack that acts like both, then tip the jar into a monster's mouth and watch how each of three monsters takes every bite. |
 | Wash Day | `games/wash-day/` | 3–6 | An embroidered washing yard: rub, soap, wring and peg out the muddy clothes of a pig, a heron and a goat, then dress them any way you like and watch each answer in its own manner. Everything in the yard can be washed, the cat included. |
+| Farm Morning | `games/farm-morning/` | 2–5 | A board-book farmyard: bring a scoop, a bucket, a brush or a fork to hens, a pony, a goat and a pig, and every pairing answers with its own joke. The four right ones bring the full morning, and sliding the henhouse door shut brings the night and a new morning. |
 
 ## Showcases
 
