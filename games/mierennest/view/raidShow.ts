@@ -463,7 +463,7 @@ export function lightingOrder(ground: Ground, chambers: readonly Room[]): number
 }
 
 /**
- * What each chamber has on its back wall, and where: two things, a third and two thirds of the way along its
+ * What six chambers have on their back wall, and where: two things, a third and two thirds of the way along the
  * floor. In the queen's room they hang on the part of the wall she does not sit in front of: `queen` is the
  * room she is in and the span of the floor she takes, in cell units. `lit` is how many chambers have their
  * glow-worm awake, nearest the mouth first. Once the kingdom is open (`every`), every chamber has a lantern: one
@@ -472,9 +472,10 @@ export function lightingOrder(ground: Ground, chambers: readonly Room[]): number
 export function showFurnishings(ground: Ground, chambers: readonly Room[], lit: number, queen: { room: number; from: number; to: number } | null = null, every = false): { thing: Thing; x: number; y: number; lit: boolean }[] {
   const out: { thing: Thing; x: number; y: number; lit: boolean }[] = []
   const awake = new Set(lightingOrder(ground, chambers).slice(0, Math.max(0, lit)))
+  // Six chambers have their things: the first six of the list that have wall to hang them on. The list and the
+  // walls come from the ground alone, never from when a room was dug, so the same six are found on load.
+  let hung = 0
   chambers.forEach((room, n) => {
-    const furnished = n < FURNISHED
-    if (!furnished && !every) return
     const floor = roomFloor(ground, room)
     let from = floor.from, to = floor.to + 1
     if (queen && queen.room === n) {
@@ -482,6 +483,9 @@ export function showFurnishings(ground: Ground, chambers: readonly Room[], lit: 
       if (queen.from - from >= to - queen.to) to = queen.from
       else from = queen.to
     }
+    const furnished = to - from >= 3 && hung < FURNISHED
+    if (furnished) hung++
+    if (!furnished && !every) return
     const pair = FURNISHINGS[n % FURNISHINGS.length]
     if (to - from < 3) {
       // No room on the wall for its two things; its lantern hangs over the middle of the floor all the same.

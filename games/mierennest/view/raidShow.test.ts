@@ -7,7 +7,7 @@ import { Kingdom } from '../kingdom'
 import { partyAt } from '../order'
 import { callRaid, hit, playOut, stepRaid } from '../raid'
 import { queenSeat, workerSpots } from '../residents'
-import { freshGame, type Game } from '../save'
+import { deserialize, freshGame, serialize, type Game } from '../save'
 import { POSES } from './creatures'
 import { DRAWS, ToyDisplay, drawsOf, type Item } from './display'
 import { GRASS_Y, GROUND } from './layout'
@@ -429,10 +429,9 @@ describe('rooms that look lived in', () => {
     const rooms = k.toy.realm.chambers
     expect(rooms.length).toBeGreaterThanOrEqual(6)
     const things = showFurnishings(game.ground, rooms, 0)
-    // Two to a room, in the first rooms of the list; a room whose floor is too short for them has none.
-    expect(things.length).toBeLessThanOrEqual(FURNISHED * 2)
-    expect(things.length).toBeGreaterThanOrEqual(FURNISHED)
-    const floors = rooms.slice(0, FURNISHED).map((room) => roomFloor(game.ground, room))
+    // Two to a room, in the first six rooms of the list that have wall for them.
+    expect(things.length).toBe(FURNISHED * 2)
+    const floors = rooms.map((room) => roomFloor(game.ground, room))
     things.forEach((thing) => {
       const tx = (thing.x - GROUND.x) / CELL
       const floor = floors.find((f) => tx >= f.from && tx <= f.to + 1 && thing.y <= GROUND.y + (f.y + 1) * CELL && thing.y > GROUND.y + (f.y - 2) * CELL)!
@@ -449,6 +448,38 @@ describe('rooms that look lived in', () => {
     expect(things[0].thing).not.toBe(things[2].thing)
     expect(showFurnishings(game.ground, rooms, rooms.length).some((thing) => thing.lit)).toBe(true)
     expect(things.some((thing) => thing.lit)).toBe(false)
+  })
+
+  it('six chambers have their things: the first six, in the order the saved ground gives, with wall to hang them on, and the same six on load', () => {
+    // Seven rooms. The queen's, the first of the list, is five cells long and she fills its wall.
+    const game = freshGame(null, 1), g = game.ground
+    for (let y = 1; y < g.rows - 1; y++) for (let x = 0; x < g.cols; x++) put(g, x, y, EARTH)
+    const open = (x0: number, x1: number, y0: number, y1: number) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) put(g, x, y, OPEN) }
+    open(19, 21, 1, 4)
+    open(2, 6, 2, 4)
+    for (const x of [8, 13, 24, 29]) open(x, x + 3, 2, 4)
+    for (const x of [7, 12, 17, 18, 22, 23, 28]) open(x, x, 3, 4)
+    open(3, 3, 5, 7)
+    open(2, 5, 8, 10)
+    open(6, 7, 9, 10)
+    open(8, 11, 8, 10)
+    settle(g)
+    const things = (from: Game) => {
+      const realm = new Kingdom(from).toy.realm
+      const seat = queenSeat(from.ground, realm.chambers, realm.queenRoom)!
+      return { realm, things: showFurnishings(from.ground, realm.chambers, 0, { room: realm.queenRoom!, from: seat.x - 2.2 * seat.fit, to: seat.x + 2.2 * seat.fit }) }
+    }
+    const { realm, things: hung } = things(game)
+    expect(realm.chambers.length).toBe(7)
+    expect(realm.queenRoom).toBe(0)
+    expect(hung.length).toBe(FURNISHED * 2)
+    // None hangs in her room, and the seventh room of the list has its two.
+    const inRoom = (room: number) => hung.filter((thing) => { const floor = roomFloor(g, realm.chambers[room]), tx = (thing.x - GROUND.x) / CELL; return tx >= floor.from && tx <= floor.to + 1 && Math.abs(thing.y - (GROUND.y + (floor.y + 1) * CELL)) < 3 * CELL })
+    expect(inRoom(0)).toEqual([])
+    expect(inRoom(6).length).toBe(2)
+    // From the saved ground alone: the same things in the same places on load.
+    const back = deserialize(JSON.parse(JSON.stringify(serialize(game))), null, 1)
+    expect(things(back).things).toEqual(hung)
   })
 
   it('are bare where there is no chamber', () => {

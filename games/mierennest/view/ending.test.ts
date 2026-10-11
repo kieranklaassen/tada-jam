@@ -184,6 +184,27 @@ describe('the ending', () => {
     expect(again.party).toEqual(ROUND[0])
   })
 
+  it('seats the army at the log for as long as the ending holds, and the party of the open kingdom when it gives way to a touch, and on load', () => {
+    const { k, display } = ended()
+    const atLog = () => display.items(null).filter((item): item is Extract<Item, { is: 'sprite' }> => item.is === 'sprite' && /^party\d+$/.test(item.id) && item.x < MOUTH_X - 40).map((item) => item.who).sort()
+    // Well past its twenty seconds: it holds on its last beat, and the five dung beetles sit there still.
+    for (const seconds of [1, 10, 25, 60]) {
+      play(k, display, () => false, 30 * seconds - Math.round(display.seconds * 30) % (30 * seconds))
+      expect(k.scene?.is, String(seconds)).toBe('ending')
+      expect(atLog(), String(seconds)).toEqual(['dungBeetle', 'dungBeetle', 'dungBeetle', 'dungBeetle', 'dungBeetle'])
+    }
+    expect(k.game.position).toBe('open-kingdom')
+    // A touch: the ending gives way, and the party of the open kingdom takes the log.
+    k.press(22.5, 4.5, 0)
+    k.release()
+    play(k, display, () => false, 3)
+    const round = [...ROUND[0]].map((kind) => (kind === 'ant' ? 'raider' : kind)).sort()
+    expect(atLog()).toEqual(round)
+    // And is there on load.
+    const again = new Kingdom(deserialize(JSON.parse(JSON.stringify(serialize(k.game))), null, 1)), shown = new ToyDisplay(again, 1)
+    expect(shown.items(null).filter((item): item is Extract<Item, { is: 'sprite' }> => item.is === 'sprite' && /^party\d+$/.test(item.id)).map((item) => item.who).sort()).toEqual(round)
+  })
+
   it('hangs the leaf where it covers nobody: clear of the bell, of its stalk, of the hill at its largest and of every camper', () => {
     const leaf = { left: LEAF_AT.x - THING_SIZE.leaf.width / 2, right: LEAF_AT.x + THING_SIZE.leaf.width / 2, top: LEAF_AT.y - THING_SIZE.leaf.height, bottom: LEAF_AT.y }
     expect(leaf.bottom).toBe(GRASS_Y)
