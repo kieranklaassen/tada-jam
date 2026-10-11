@@ -118,6 +118,9 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 | Hats for All | `games/hats-for-all/` | 2–4 | A foam play mat in 3D: press a foam hat out of its tile and it pops onto a bare head, until every creature has one hat. A learning game on pairing one with one and comparing two small groups. |
 | Wild Hair Salon | `games/wild-hair-salon/` | 4–6 | A salon in watercolour: pull a lock longer or snip it shorter until it is as long as the friend's lock, then pull off the cape and see the two side by side. A learning game on comparing two lengths. |
 | Flower Table | `games/flower-table/` | 4–7 | A walled garden in oil paint: cut flowers in the bed with a finger, stand them in a visitor's vase, and hand the bouquet over. Four visitors with tastes of their own, three vases, and every plant behaves its own way cut, carried, dropped and sniffed. |
+| Hop Across | `games/hop-across/` | 5–9 | A folding board game seen from above: a rabbit leads three small ones over roads, rivers and rails to a picnic, one hop for each tap, and everything else on the board takes one step each time she lands. A flattened pawn peels up, a log carries her to the fish and back, and nothing is ever lost. |
+| Snack Merge | `games/snack-merge/` | 5–9 | A sweet shop by lamp light: drop six jelly-sweet foods into a glass jar, where two that touch pop into a new snack that acts like both, then tip the jar into a monster's mouth and watch how each of three monsters takes every bite. |
+| Wash Day | `games/wash-day/` | 3–6 | An embroidered washing yard: rub, soap, wring and peg out the muddy clothes of a pig, a heron and a goat, then dress them any way you like and watch each answer in its own manner. Everything in the yard can be washed, the cat included. |
 
 ## Showcases
 
