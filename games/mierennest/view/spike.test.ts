@@ -10,8 +10,8 @@ import { SPIKE_SEED, spikeScene, type Cast } from './spike'
 // ground, nobody floats, and nobody is cut off by the frame.
 
 const SCENES = [1, 2, 3]
-/** The draws of a spike frame that are not creatures: the wood, the setting, the ground, the hill and bell, the glass. */
-const STILL_DRAWS = 5
+/** A spike frame draws its creatures and nothing else: what stands still is on layers of its own, painted once. */
+const STILL_DRAWS = 0
 const DRAW_BUDGET = 80
 
 /** The body box of a cast member in stage units. The wedged queen and the upright worker have boxes of their own. */

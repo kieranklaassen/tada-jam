@@ -260,6 +260,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       root.removeEventListener('pointerup', onUp)
       root.removeEventListener('pointercancel', onCancel)
       uninstallPerf()
+      view.dispose()
       overlay.dispose()
       audio.dispose()
     }

@@ -1,56 +1,66 @@
-import { STAGE, fit } from '../stage'
+import { fit } from '../stage'
 import { paintGlass } from './glass'
 import { paintAll } from './groundSheet'
-import { GRASS_Y, GROUND, MOUTH_X } from './layout'
+import { GROUND } from './layout'
 import * as P from './palette'
 import { paintBell, paintHill } from './props'
 import { paintSetting } from './setting'
 import type { SpikeScene } from './spike'
 import { Sprites } from './sprites'
 
-// Draws a spike scene. Everything that stands still is painted once for a size of surface into cached sheets, and
-// a frame is a handful of stamps: the wood behind the stage, the setting, the ground, the hill and bell, one for
-// each creature, and the glass.
+// Draws a spike scene in three layers, each a canvas of its own laid over the last: what stands still (the wood,
+// the setting, the ground, the hill and bell), the creatures, and the glass. The still layers are painted once
+// for a size of surface and left alone, so a frame's work is the creatures: one stamp each. Putting the layers
+// together is the browser's, not the game's.
 
-/** The piece of the stage the hill and the bell are cached in. */
-const PROPS = { x: MOUTH_X - 190, y: GRASS_Y - 160, width: 400, height: 166 } as const
+/** A layer under or over the Mount's own canvas, the same size, that takes no touch. */
+function layerOf(canvas: HTMLCanvasElement, over: boolean): HTMLCanvasElement {
+  const layer = canvas.ownerDocument.createElement('canvas')
+  layer.setAttribute('aria-hidden', 'true')
+  Object.assign(layer.style, { position: 'absolute', inset: '0', width: '100%', height: '100%', display: 'block', pointerEvents: 'none' })
+  canvas.parentElement?.insertBefore(layer, over ? canvas.nextSibling : canvas)
+  return layer
+}
 
 export class SpikeView {
   private readonly pen: CanvasRenderingContext2D | null
-  private setting: HTMLCanvasElement | null = null
-  private ground: HTMLCanvasElement | null = null
-  private props: HTMLCanvasElement | null = null
-  private glass: HTMLCanvasElement | null = null
+  private readonly back: HTMLCanvasElement
+  private readonly glass: HTMLCanvasElement
   private sprites: Sprites | null = null
   private madeFor = ''
 
   constructor(private readonly canvas: HTMLCanvasElement, private readonly scene: SpikeScene) {
     this.pen = canvas.getContext('2d')
+    this.back = layerOf(canvas, false)
+    this.glass = layerOf(canvas, true)
   }
 
-  private sheet(width: number, height: number, k: number, x: number, y: number, paint: (pen: CanvasRenderingContext2D) => void): HTMLCanvasElement {
-    const sheet = this.canvas.ownerDocument.createElement('canvas')
-    sheet.width = Math.ceil(width * k)
-    sheet.height = Math.ceil(height * k)
-    const pen = sheet.getContext('2d')!
-    pen.setTransform(k, 0, 0, k, -x * k, -y * k)
-    paint(pen)
-    return sheet
+  /** Takes the two layers out again. */
+  dispose(): void {
+    this.back.remove()
+    this.glass.remove()
   }
 
-  /** Paints the cached sheets for this many canvas pixels a stage unit. Done at load and on a resize, never in a frame. */
-  private make(k: number): void {
+  /** Paints the still layers for this size of surface. Done at load and on a resize, never in a frame. */
+  private make(k: number, x: number, y: number): void {
+    for (const layer of [this.back, this.glass]) {
+      layer.width = this.canvas.width
+      layer.height = this.canvas.height
+    }
+    const back = this.back.getContext('2d')!
+    back.fillStyle = P.WOOD.dark
+    back.fillRect(0, 0, this.back.width, this.back.height)
+    back.setTransform(k, 0, 0, k, x, y)
+    paintSetting(back)
+    back.setTransform(1, 0, 0, 1, x + GROUND.x * k, y + GROUND.y * k)
+    paintAll(back, this.scene.ground, k)
+    back.setTransform(k, 0, 0, k, x, y)
+    paintHill(back, this.scene.hill)
+    paintBell(back, this.scene.bell)
+    const glass = this.glass.getContext('2d')!
+    glass.setTransform(k, 0, 0, k, x, y)
+    paintGlass(glass)
     const doc = this.canvas.ownerDocument
-    this.setting = this.sheet(STAGE.width, STAGE.height, k, 0, 0, paintSetting)
-    this.ground = this.sheet(GROUND.width, GROUND.height, k, 0, 0, (pen) => {
-      pen.setTransform(1, 0, 0, 1, 0, 0)
-      paintAll(pen, this.scene.ground, k)
-    })
-    this.props = this.sheet(PROPS.width, PROPS.height, k, PROPS.x, PROPS.y, (pen) => {
-      paintHill(pen, this.scene.hill)
-      paintBell(pen, this.scene.bell)
-    })
-    this.glass = this.sheet(STAGE.width, STAGE.height, k, 0, 0, paintGlass)
     const canvasOf = (width: number, height: number) => Object.assign(doc.createElement('canvas'), { width, height })
     if (this.sprites) this.sprites.rescale(k)
     else this.sprites = new Sprites(k, canvasOf)
@@ -60,26 +70,15 @@ export class SpikeView {
   draw(width: number, height: number, dpr: number): number {
     const pen = this.pen, by = fit(width, height)
     if (!pen || by.scale <= 0) return 0
-    const k = dpr * by.scale, key = `${width}x${height}@${dpr}`
+    const k = dpr * by.scale, key = `${this.canvas.width}x${this.canvas.height}@${k}`
     if (key !== this.madeFor) {
-      this.make(k)
+      this.make(k, dpr * by.x, dpr * by.y)
       this.madeFor = key
     }
-    let draws = 0
     pen.setTransform(1, 0, 0, 1, 0, 0)
-    pen.fillStyle = P.WOOD.dark
-    pen.fillRect(0, 0, this.canvas.width, this.canvas.height)
-    draws++
+    pen.clearRect(0, 0, this.canvas.width, this.canvas.height)
     pen.setTransform(k, 0, 0, k, dpr * by.x, dpr * by.y)
-    pen.drawImage(this.setting!, 0, 0, STAGE.width, STAGE.height)
-    pen.drawImage(this.ground!, GROUND.x, GROUND.y, GROUND.width, GROUND.height)
-    pen.drawImage(this.props!, PROPS.x, PROPS.y, PROPS.width, PROPS.height)
-    draws += 3
-    for (const one of this.scene.cast) {
-      this.sprites!.stamp(pen, one.kind, one.pose, one.x, one.y, one.flip === true)
-      draws++
-    }
-    pen.drawImage(this.glass!, 0, 0, STAGE.width, STAGE.height)
-    return draws + 1
+    for (const one of this.scene.cast) this.sprites!.stamp(pen, one.kind, one.pose, one.x, one.y, one.flip === true)
+    return this.scene.cast.length
   }
 }
