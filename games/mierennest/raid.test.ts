@@ -216,8 +216,10 @@ describe('a stone that is shoved rolls', () => {
     expect(mud.row.slice(11, 13)).toBe('om')
     const stone = rollOn('.....o.....o......')
     expect(kinds(stone.events, 'stopped')[0]).toEqual({ type: 'stopped', cell: 5 * COLS + 11, by: STONE })
-    // The first stopped where it struck, and the second rolled on to the end.
-    expect(stone.row).toBe('#..........o......o#')
+    // The first stopped where it struck and the second rolled on to the end; the beetle came on, shoved the first
+    // again, and it rolled up behind the second.
+    expect(kinds(stone.events, 'stopped').map((e) => (e as Extract<RaidEvent, { type: 'stopped' }>).by)).toEqual([STONE, EARTH, STONE])
+    expect(stone.row).toBe('#................oo#')
   })
 
   it('plays the same way twice, and the raid is not over while a stone still rolls', () => {
