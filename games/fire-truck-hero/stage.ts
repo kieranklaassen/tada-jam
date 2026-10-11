@@ -8,10 +8,11 @@
 // pass.
 
 import * as THREE from 'three'
+import { CAMERA_FOV, frameCamera } from './camera'
 import { TIERS } from './config'
 import type { Game } from './game'
-import { FENCE_Z, HEDGE_STEP, buildFarSide, buildGround, buildHedges, skyColour, type Ground3 } from './gardenModel'
-import { COLS, ROWS } from './ground'
+import { HEDGE_STEP, buildFarSide, buildGround, buildHedges, skyColour, type Ground3 } from './gardenModel'
+import { COLS } from './ground'
 import type { HandPose } from './guidance'
 import { buildGuideView } from './guideView'
 import type { Ground2 } from './jet'
@@ -26,20 +27,6 @@ import { YardSet } from './yardView'
 export const TRUCK_TURN = -0.25
 /** The truck is the biggest toy in the yard. layout.ts places the nozzle for this size and turn. */
 export const TRUCK_SCALE = 1.25
-
-/** What the camera looks at, and from where: over the near edge of the yard, well above it. */
-const LOOK_AT = new THREE.Vector3(COLS / 2, 0.5, ROWS / 2 - 0.6)
-const CAMERA_PITCH = (55 * Math.PI) / 180
-const CAMERA_FOV = 26
-
-/** The corners the camera keeps in view at every size of surface. */
-const KEEP_IN_VIEW: readonly THREE.Vector3[] = [
-  // The sand, corner to corner. The hedges at the sides may run off the surface.
-  new THREE.Vector3(-0.2, 0, 9.6), new THREE.Vector3(COLS + 0.2, 0, 9.6),
-  new THREE.Vector3(-0.2, 0, 0), new THREE.Vector3(COLS + 0.2, 0, 0),
-  // The top of the gate's tall post, and the truck's roof.
-  new THREE.Vector3(GATE.x + GATE.half, 3.3, FENCE_Z), new THREE.Vector3(TRUCK.x - 1.6, 2.8, TRUCK.z),
-]
 
 export type StageCounts = { drawCalls: number; triangles: number }
 
@@ -143,25 +130,7 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
   for (const object of waiting) object.visible = false
 
   let width = 0, height = 0
-  const projected = new THREE.Vector3()
-  const fits = (): boolean => {
-    camera.updateMatrixWorld()
-    for (const corner of KEEP_IN_VIEW) {
-      projected.copy(corner).project(camera)
-      if (Math.abs(projected.x) > 0.97 || projected.y > 0.95 || projected.y < -0.99) return false
-    }
-    return true
-  }
-  const frame = () => {
-    camera.aspect = width / Math.max(1, height)
-    camera.updateProjectionMatrix()
-    // Back off until the whole yard is in view. A wide surface is bound by its height, a tall one by its width.
-    for (let far = 14; far < 90; far *= 1.03) {
-      camera.position.set(LOOK_AT.x, LOOK_AT.y + Math.sin(CAMERA_PITCH) * far, LOOK_AT.z + Math.cos(CAMERA_PITCH) * far)
-      camera.lookAt(LOOK_AT)
-      if (fits()) break
-    }
-  }
+  const frame = () => frameCamera(camera, width, height)
 
   const ray = new THREE.Raycaster()
   const pointer = new THREE.Vector2()

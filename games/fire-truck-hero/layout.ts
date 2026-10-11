@@ -43,9 +43,18 @@ export const GATE = { x: 2.6, z: -0.85, half: 1.6 } as const
  */
 export const BELL: Place = { x: 4.6, z: 0.6 }
 
-/** Where the one who waits in the next yard shows, along the far fence and beyond it; and how near the fence water must land to reach it. */
-export const PEEK_X = GATE.x + GATE.half + 3.4
+/**
+ * Where the one who waits in the next yard shows, along the far fence and
+ * beyond it; and how near the fence water must land to reach it. It stands
+ * close beside the gate, left of the middle of the fence: the middle of the
+ * far edge is the top centre of the screen, where the jam draws its home
+ * control (camera.test.ts).
+ */
+export const PEEK_X = GATE.x + GATE.half + 1.8
 export const PEEK_REACH_Z = 1.3
+
+/** How much room the one who waits takes: how far beyond the fence it stands, how far to either side of its place the bee circles, and how high the wisp of smoke rises. */
+export const PEEK = { beyond: 1.5, wide: 0.7, high: 3.1 } as const
 
 /** From one yard's far fence to the next yard's: a yard and the lane of grass between two yards. */
 export const YARD_PITCH = 15

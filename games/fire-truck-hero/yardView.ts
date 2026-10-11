@@ -8,7 +8,7 @@
 import * as THREE from 'three'
 import { PETAL_COUNT, flowerOf, leafDrop, petalOpen } from './flower'
 import { FENCE_Z } from './gardenModel'
-import { BELL, GATE, PEEK_X, SPOTS, TRUCK, type Place } from './layout'
+import { BELL, GATE, PEEK, PEEK_X, SPOTS, TRUCK, type Place } from './layout'
 import { FLOWER_PAINT, SAND, THINGS_PAINT, WATER } from './look'
 import { BOAT, PATCH, WHEEL, buildBee, buildBoat, buildPatch, buildSnail, buildWheel, buildWorm } from './moreModels'
 import { NEST, lowSideOf, placeOf } from './places'
@@ -376,19 +376,19 @@ export class YardSet {
 
   /** What waits beyond the fence, to the right of the gate, alive and in no hurry. */
   private peek(kind: Kind | null, time: number, hop: number): void {
-    const x = PEEK_X, z = FENCE_Z - 1.5
+    const x = PEEK_X, z = FENCE_Z - PEEK.beyond
     for (const [of, model] of Object.entries(this.peeks)) model.visible = of === kind
     if (kind === 'fire') {
       this.peeks.fire.children.forEach((puff, i) => {
         const rise = (time * 0.35 + i / 3) % 1
-        puff.position.set(x + Math.sin(rise * 5 + i) * 0.25, 0.5 + rise * 2.6 + hop, z - 0.4)
+        puff.position.set(x + Math.sin(rise * 5 + i) * 0.25, 0.5 + rise * (PEEK.high - 0.5) + hop, z - 0.4)
         puff.scale.setScalar(0.22 + rise * 0.38 * (1 - Math.max(0, rise - 0.7) / 0.3))
       })
     } else if (kind === 'pool') {
       this.peeks.pool.position.set(x, Math.abs(Math.sin(time * 1.7)) * 0.1 + hop, z)
       this.peeks.pool.rotation.y = -Math.PI / 2 + Math.sin(time * 0.8) * 0.5
     } else if (kind === 'seed') {
-      this.peeks.seed.position.set(x + Math.cos(time * 2.3) * 0.7, 1.7 + Math.sin(time * 5.3) * 0.08 + hop * 1.5, z + Math.sin(time * 2.3) * 0.5)
+      this.peeks.seed.position.set(x + Math.cos(time * 2.3) * PEEK.wide, 1.7 + Math.sin(time * 5.3) * 0.08 + hop * 1.5, z + Math.sin(time * 2.3) * 0.5)
       this.peeks.seed.rotation.y = -(time * 2.3 + Math.PI / 2)
     } else if (kind === 'patch') {
       // A shell on the gate's left post.
