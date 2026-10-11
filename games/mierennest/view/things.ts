@@ -1,13 +1,13 @@
-import { MUD, SAND, STONE } from './palette'
+import { GRASS, HIGHLIGHT, MUD, SAND, STONE } from './palette'
 import { bow, line, oval, shape } from './parts'
 import type { Ctx } from './parts'
 
-// The small things on the back wall of a room, and a few effects. A thing is furniture: it is painted behind the
-// creatures in muted earth colours a step or two lighter than the dark of a tunnel, so that it reads as a bed or a
-// shelf and never competes with what can be touched. An effect is painted over the scene, in the plain colours of
-// sand, mud and stone.
+// The small things on the back wall of a room, one keepsake of the camp on the grass, and the effects. A thing of
+// a room is furniture: it is painted behind the creatures in muted earth colours a step or two lighter than the
+// dark of a tunnel, so that it reads as a bed or a shelf and never competes with what can be touched. An effect is
+// painted over the scene, in the plain colours of sand, mud, stone and smoke.
 
-export type Thing = 'seeds' | 'bed' | 'cup' | 'shelf' | 'lamp' | 'washing'
+export type Thing = 'seeds' | 'bed' | 'cup' | 'shelf' | 'lamp' | 'washing' | 'leaf'
 
 /** How wide and high each thing is, in stage units. Each stands on y = 0 with its middle at x = 0. */
 export const THING_SIZE: Record<Thing, { width: number; height: number }> = {
@@ -17,6 +17,7 @@ export const THING_SIZE: Record<Thing, { width: number; height: number }> = {
   shelf: { width: 46, height: 30 },
   lamp: { width: 30, height: 40 },
   washing: { width: 50, height: 28 },
+  leaf: { width: 30, height: 44 },
 }
 
 // The colours of the back wall: three browns from shade to light, a pale one for seed, thread and rim, two tired
@@ -35,6 +36,11 @@ const GLOW_CORE = '#fbffd2'
 const HALO = 'rgba(214,236,110,0.16)'
 const WORM = '#6b5a3a'
 const DUSTY = '#e9dcc0'
+// The keepsake leaf hangs in daylight over grass and sky: a pale leaf with a darker edge, and its damp spot.
+const KEPT = '#eef0b6'
+const KEPT_EDGE = '#93a653'
+const KEPT_FOLD = '#cfd88c'
+const DAMP = '#a9c9a4'
 
 /** A seed: a pale drop, round at one end and pointed at the other, with a shaded underside and a lit streak. */
 function seed(ctx: Ctx, x: number, y: number, turn: number, r = 5): void {
@@ -170,9 +176,38 @@ const THINGS: Record<Thing, (ctx: Ctx, lit: boolean) => void> = {
     leaf(ctx, 8, -22.8, 11, -10.5, 4.6, LEAF_LIGHT, LEAF)
     for (const [x, y] of [[-9, -23.4], [8, -23.2]]) line(ctx, PALER, 2, [x, y - 2.2, x, y + 1.8])
   },
+  // A keepsake of the camp: one small leaf pegged on a bent grass stalk, a little crumpled, with a damp spot.
+  leaf: (ctx) => {
+    // The stalk: up from the foot and bent over at the top, with a short blade at its root.
+    line(ctx, GRASS.dark, 3.4, [-3, -1, -10, -9, -13, -17], true)
+    line(ctx, GRASS.dark, 4.6, [-7, -1, -13, -30, -4, -42, 5, -37], true)
+    line(ctx, GRASS.light, 2, [-7, -1, -13, -30, -4, -42, 5, -37], true)
+    // The leaf hangs from the tip: an edge, a pale face, one crumpled corner folded over, a rib.
+    const face = (fill: string, k: number) => {
+      ctx.fillStyle = fill
+      ctx.beginPath()
+      ctx.moveTo(5, -36 + (1 - k) * 4)
+      ctx.bezierCurveTo(5 + 12 * k, -33, 5 + 11 * k, -17, 5.6 + 3 * k, -9 - (1 - k) * 3)
+      ctx.lineTo(5.6 + 1.6 * k, -13)
+      ctx.lineTo(5.6 - 2.4 * k, -8.4 - (1 - k) * 4)
+      ctx.bezierCurveTo(5 - 10 * k, -16, 5 - 11 * k, -30, 5, -36 + (1 - k) * 4)
+      ctx.fill()
+    }
+    face(KEPT_EDGE, 1)
+    face(KEPT, 0.8)
+    shape(ctx, KEPT_FOLD, [10.4, -31.4, 13.2, -24.6, 8.6, -27])
+    line(ctx, KEPT_EDGE, 1.2, [5.2, -33, 6, -22, 5.2, -14], true)
+    line(ctx, KEPT_EDGE, 1, [5.6, -24, 9.6, -21])
+    // The damp spot, with its glint.
+    oval(ctx, 1.6, -21.6, 2.9, 3.6, 0.2, DAMP)
+    oval(ctx, 0.9, -23, 0.8, 0.8, 0, HIGHLIGHT)
+    // The peg: a split bit of straw clipped over the tip.
+    line(ctx, LIGHT, 4, [5, -39.6, 5, -34.4])
+    line(ctx, PALER, 2.2, [5, -39.6, 5, -34.6])
+  },
 }
 
-/** Paints one thing of the back wall, standing on y = 0 with its middle at x = 0. Only the lamp is ever `lit`. */
+/** Paints one thing, standing on y = 0 with its middle at x = 0. Only the lamp is ever `lit`. */
 export function paintThing(ctx: CanvasRenderingContext2D, thing: Thing, lit = false): void {
   ctx.save()
   THINGS[thing](ctx, lit)
@@ -181,7 +216,7 @@ export function paintThing(ctx: CanvasRenderingContext2D, thing: Thing, lit = fa
 
 // ---- The effects. ----
 
-export type Effect = 'scuff' | 'prints' | 'sandBlast' | 'mudBall' | 'stoneShot' | 'puff' | 'splat'
+export type Effect = 'scuff' | 'prints' | 'sandBlast' | 'mudBall' | 'stoneShot' | 'puff' | 'splat' | 'smoke' | 'twang'
 
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v))
 /** A fixed scatter: the same number between 0 and 1 for the same grain every time. */
@@ -189,7 +224,20 @@ const scatter = (i: number, k: number) => {
   const v = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453
   return v - Math.floor(v)
 }
-const WISP = 'rgba(255,255,255,0.55)'
+const WISP = 'rgba(255,255,255,0.6)'
+/** Many ovals [x, y, rx, ry, turn] filled as one shape, so that where they overlap a faded cloud stays even. */
+function blobs(ctx: Ctx, fill: string, list: readonly number[][]): void {
+  ctx.fillStyle = fill
+  ctx.beginPath()
+  for (const [x, y, rx, ry, turn] of list) {
+    ctx.moveTo(x + Math.cos(turn) * rx, y + Math.sin(turn) * rx)
+    ctx.ellipse(x, y, Math.max(0.1, rx), Math.max(0.1, ry), turn, 0, Math.PI * 2)
+  }
+  ctx.fill()
+}
+// Smoke and the lines of a shake: a cream white, with a shade for the underside of a cloud.
+const CLOUD = '#f8f3e2'
+const CLOUD_SHADE = '#cfc6ab'
 
 const EFFECTS: Record<Effect, (ctx: Ctx, p: number) => void> = {
   // Where a wall gave way: a low patch of pale dust on the floor, 28 wide, with a few crumbs in it.
@@ -218,86 +266,147 @@ const EFFECTS: Record<Effect, (ctx: Ctx, p: number) => void> = {
     }
     ctx.globalAlpha /= 0.7
   },
-  // A blast of sand: a fan of pale grains from the origin that opens to the right, about 40 long. As it goes on
-  // the grains fly further apart and get smaller and fainter. Their places follow a fixed rule and never jump.
+  // A blast of sand from the origin that opens to the right, 46 long and 40 wide at its end: a solid pale fan at
+  // its root that breaks into grains. As it goes on the fan reaches further, and the grains fly on and get
+  // smaller. Their places follow a fixed rule and never jump.
   sandBlast: (ctx, p) => {
-    const fade = 1 - p * 0.5
+    const fade = 1 - p * 0.2
     ctx.globalAlpha *= fade
-    for (let i = 0; i < 30; i++) {
-      const u = scatter(i, 1)
-      const v = scatter(i, 2) - 0.5
-      const d = (3 + u * 37) * (0.4 + p * 0.6)
-      const a = v * (0.6 + p * 0.4) * 0.9
-      const r = (2.7 - u * 1.2) * (1 - p * 0.4)
-      oval(ctx, Math.cos(a) * d, Math.sin(a) * d, r * 1.25, r, a, i % 5 === 0 ? SAND.edge : SAND.fill)
+    const reach = 15 + p * 9
+    const fan = (fill: string, dy: number) => {
+      ctx.fillStyle = fill
+      ctx.beginPath()
+      ctx.moveTo(0, -2.6 + dy)
+      ctx.arc(0, dy, reach, -0.4, 0.4)
+      ctx.lineTo(0, 2.6 + dy)
+      ctx.closePath()
+      ctx.fill()
     }
+    fan(SAND.edge, 0.9)
+    fan(SAND.fill, -0.5)
+    const grains: number[][][] = [[], []]
+    for (let i = 0; i < 56; i++) {
+      const u = scatter(i, 1)
+      const v = scatter(i, 2) * 2 - 1
+      const d = reach * 0.86 + u * (43 - reach * 0.86) * (0.6 + p * 0.4)
+      const a = v * 0.43
+      const r = (4.2 - u * 2.4) * (1 - p * 0.2)
+      grains[i % 5 === 0 ? 0 : 1].push([Math.cos(a) * d, Math.sin(a) * d, r * 1.15, r, a])
+    }
+    blobs(ctx, SAND.edge, grains[0])
+    blobs(ctx, SAND.fill, grains[1])
     ctx.globalAlpha /= fade
   },
-  // A ball of wet mud in flight to the right, 18 across: a pale lip on top, a glint, and a short trail of drops.
+  // A ball of wet mud in flight to the right, 26 across: a pale lip on top, a glint, and behind it a trail of
+  // four drops that get smaller, out to 44.
   mudBall: (ctx, p) => {
-    const wob = Math.sin(p * Math.PI * 2) * 0.6
-    oval(ctx, -13.5, 1 + wob, 3.2, 2.4, 0, MUD.lip)
-    oval(ctx, -13.5, 1.5 + wob, 2.6, 1.9, 0, MUD.fill)
-    oval(ctx, -19, -1.5 - wob, 1.9, 1.5, 0, MUD.lip)
-    oval(ctx, 0, 0, 9, 9, 0, MUD.lip)
-    oval(ctx, 0.5, 1, 8, 7.6, 0, MUD.fill)
-    oval(ctx, 1.5, 3, 5.6, 4.4, 0, MUD.edge)
-    oval(ctx, 0.6, 1.2, 6.4, 5.4, 0, MUD.fill)
-    line(ctx, MUD.shine, 2, [-4.4, -2.6, -1.6, -5])
-    oval(ctx, 1.4, -5.4, 0.9, 0.9, 0, MUD.shine)
+    const wob = Math.sin(p * Math.PI * 2) * 0.9
+    for (const [x, y, r] of [[-18.5, 2.4, 4.6], [-27, -2.6, 3.6], [-34.4, 2, 2.8], [-41, -1, 2]]) {
+      const dy = y + (y > 0 ? wob : -wob)
+      oval(ctx, x, dy, r * 1.25, r, 0, MUD.lip)
+      oval(ctx, x + 0.3, dy + 0.5, r * 1.25 - 1.1, r - 1, 0, MUD.fill)
+    }
+    oval(ctx, 0, 0, 13, 13, 0, MUD.lip)
+    oval(ctx, 0.6, 1.3, 11.6, 11.2, 0, MUD.fill)
+    oval(ctx, 2.2, 4.4, 8, 6.2, 0, MUD.edge)
+    oval(ctx, 0.9, 1.8, 9.2, 7.8, 0, MUD.fill)
+    line(ctx, MUD.shine, 2.8, [-6.4, -3.6, -2.4, -7.2])
+    oval(ctx, 2, -7.8, 1.3, 1.3, 0, MUD.shine)
   },
-  // A stone in flight to the right, 18 across, with a wisp of speed behind it: three round bars of three lengths.
+  // A boulder in flight to the right, 26 across, with a wisp of speed behind it: three streaks of three lengths,
+  // each fat at the stone and pointed at its tail, out to 44.
   stoneShot: (ctx, p) => {
-    const slip = Math.sin(p * Math.PI * 2) * 1.2
+    const slip = Math.sin(p * Math.PI * 2) * 1.6
     // Three streaks of three lengths, so that no two of them read as a sign.
-    line(ctx, WISP, 3, [-27 - slip, -4.8, -12.5 - slip, -4.8])
-    line(ctx, WISP, 1.8, [-17 + slip, 0.4, -13.5 + slip, 0.4])
-    line(ctx, WISP, 2.4, [-22 - slip * 0.5, 5.2, -11.5 - slip * 0.5, 5.2])
-    oval(ctx, 0, 0, 9, 8.6, 0.3, STONE.edge)
-    oval(ctx, -0.6, -1, 7.8, 7, 0.3, STONE.fill)
-    bow(ctx, STONE.shine, 2.2, -0.4, -0.6, 5.2, 4.6, 0.3, -2.7, -1.5)
-    oval(ctx, 3.4, 2.8, 1.5, 1.1, 0.3, STONE.edge)
+    const streak = (tail: number, head: number, y: number, w: number) => {
+      shape(ctx, WISP, [tail, y, head, y - w / 2, head, y + w / 2])
+      oval(ctx, head, y, w / 2, w / 2, 0, WISP)
+    }
+    streak(-42 - slip, -13, -7.4, 5)
+    streak(-23 + slip, -15, 0.8, 3.2)
+    streak(-33 - slip * 0.5, -12, 8, 4.2)
+    oval(ctx, 0, 0, 13, 12.4, 0.3, STONE.edge)
+    oval(ctx, -0.9, -1.4, 11.3, 10.2, 0.3, STONE.fill)
+    bow(ctx, STONE.shine, 3, -0.6, -0.9, 7.6, 6.7, 0.3, -2.7, -1.5)
+    line(ctx, HIGHLIGHT, 2, [-5.6, -7.6, -2.8, -9.4])
+    oval(ctx, 5, 4, 2.2, 1.6, 0.3, STONE.edge)
+    oval(ctx, -3.6, 5.6, 1.4, 1, 0.3, STONE.edge)
   },
-  // A puff of dust: three round blobs that swell, drift apart and fade.
+  // A puff of dust where a shot lands: four round blobs that swell to 40 across, drift apart and fade.
   puff: (ctx, p) => {
-    const fade = 1 - p * p
-    const grow = 0.55 + p * 0.75
+    const fade = 1 - p * p * p
+    const grow = 0.66 + p * 0.5
+    const apart = 0.66 + p * 0.62
     ctx.globalAlpha *= fade
-    for (const [x, y, r] of [[-5, 1.5, 6], [4.5, 2.5, 5], [0.5, -4.5, 4.4]]) oval(ctx, x * (0.7 + p * 0.9), y * (0.7 + p * 0.9) - p * 2, r * grow, r * grow, 0, DUSTY)
+    blobs(ctx, DUSTY, [[-8.6, 2, 9.6], [7.6, 3.6, 8.4], [1, -7, 7.6], [-1.4, 6, 6.4]].map(([x, y, r]) => [x * apart, y * apart - p * 3, r * grow, r * grow, 0]))
     ctx.globalAlpha /= Math.max(fade, 1e-6)
   },
-  // Where mud hit: a splat 30 across, with three fingers and a few flying drops.
+  // Where mud hit: a splat 40 across, with three fingers and a few flying drops.
   splat: (ctx) => {
     const body = (fill: string, k: number) => {
-      oval(ctx, 0, 0, 9.4 * k, 8.4 * k, 0, fill)
+      oval(ctx, 0, 0, 12.6 * k, 11.2 * k, 0, fill)
       for (const a of [-2.5, -0.5, 1.45]) {
         const c = Math.cos(a)
         const s = Math.sin(a)
         ctx.strokeStyle = fill
-        ctx.lineWidth = 5.6 * k
+        ctx.lineWidth = 7.4 * k
         ctx.lineCap = 'round'
         ctx.beginPath()
-        ctx.moveTo(c * 5, s * 5)
-        ctx.lineTo(c * 11.6, s * 11.6)
+        ctx.moveTo(c * 6.6, s * 6.6)
+        ctx.lineTo(c * 15.4, s * 15.4)
         ctx.stroke()
-        oval(ctx, c * 12, s * 12, 3.3 * k, 3.3 * k, 0, fill)
+        oval(ctx, c * 16, s * 16, 4.4 * k, 4.4 * k, 0, fill)
       }
     }
     body(MUD.lip, 1)
     body(MUD.fill, 0.8)
-    for (const [x, y, r] of [[12.4, 7.2, 1.7], [-12.6, 3.4, 1.4], [3.4, -13.2, 1.5]]) {
-      oval(ctx, x, y, r + 0.7, r + 0.7, 0, MUD.lip)
+    for (const [x, y, r] of [[16.4, 9.6, 2.3], [-16.8, 4.6, 1.9], [4.6, -17.4, 2]]) {
+      oval(ctx, x, y, r + 0.9, r + 0.9, 0, MUD.lip)
       oval(ctx, x, y, r, r, 0, MUD.fill)
     }
-    line(ctx, MUD.shine, 2, [-4.6, -2.4, -1.4, -4.6])
-    oval(ctx, 1.6, -4.8, 0.9, 0.9, 0, MUD.shine)
+    oval(ctx, 2, 3.6, 6.4, 4.6, 0, MUD.edge)
+    oval(ctx, 1, 1.6, 7.2, 5.4, 0, MUD.fill)
+    line(ctx, MUD.shine, 2.6, [-6.2, -3.2, -2, -6.2])
+    oval(ctx, 2.2, -6.4, 1.2, 1.2, 0, MUD.shine)
+  },
+  // The smoke at a cannon's mouth, or the dust off a catapult's bowl, the moment it fires. It starts at the origin
+  // and opens to the right: a round cream cloud of five blobs, 30 across, that swells to 44, drifts up and to the
+  // right, and fades. Round blobs only.
+  smoke: (ctx, p) => {
+    const fade = 1 - p * p * p * 0.85
+    const grow = 1 + p * 0.47
+    const cx = 15 + p * 7.5
+    const cy = -p * 8.5
+    ctx.globalAlpha *= fade
+    const cloud = (fill: string, k: number, dy: number) =>
+      blobs(ctx, fill, [[-7, 2.4, 8], [4.6, 4.2, 9], [8.4, -4.4, 6.4], [-2.4, -6, 8.4], [1.4, 0.6, 9.6]].map(([x, y, r]) => [cx + x * grow, cy + y * grow + dy, r * grow * k, r * grow * k, 0]))
+    cloud(CLOUD_SHADE, 1, 0)
+    cloud(CLOUD, 0.86, -1.4 * grow)
+    ctx.globalAlpha /= fade
+  },
+  // The shake of a catapult after it lets go, about the middle of the machine's place: curved cream lines either
+  // side of the arm, three behind it and two before it, each shorter than the last, that spread and fade.
+  twang: (ctx, p) => {
+    const fade = 1 - p * 0.9
+    ctx.globalAlpha *= fade
+    ctx.translate(7, -8)
+    ctx.rotate(0.26)
+    const spread = p * 9
+    for (const [side, far, half, w] of [[-1, 13, 0.52, 3.4], [-1, 19.6, 0.36, 2.8], [-1, 26, 0.22, 2.2], [1, 12, 0.42, 3.2], [1, 18.4, 0.25, 2.4]]) {
+      const mid = side < 0 ? Math.PI : 0
+      const r = far + spread
+      bow(ctx, CLOUD, w, 0, side < 0 ? 0 : -3, r, r * 1.36, 0, mid - half, mid + half)
+    }
+    ctx.globalAlpha /= fade
   },
 }
 
-/** Paints one effect about the origin. `scuff` lies on y = 0; `prints`, `puff` and `splat` have their middle at
- *  the origin; `mudBall` and `stoneShot` fly to the right with their middle at the origin and their trail behind;
- *  `sandBlast` starts at the origin and opens to the right. `progress` runs from 0 to 1 through an effect that
- *  changes (the blast, the puff; the trail of a ball), and is ignored by the others. */
+/** Paints one effect about the origin, within 46 of it each way. `scuff` lies on y = 0; `prints`, `puff` and
+ *  `splat` have their middle at the origin; `mudBall` and `stoneShot` fly to the right with their middle at the
+ *  origin and their trail behind; `sandBlast` and `smoke` start at the origin (the mouth of a cannon, the bowl of
+ *  a catapult) and open to the right; `twang` has the middle of the machine's place at the origin, 28 above its
+ *  base. `progress` runs from 0 to 1 through an effect that changes (the blast, the puff, the smoke, the shake;
+ *  the trail of a ball), and is ignored by the others. */
 export function paintEffect(ctx: CanvasRenderingContext2D, effect: Effect, progress = 0.5): void {
   ctx.save()
   EFFECTS[effect](ctx, clamp01(progress))
