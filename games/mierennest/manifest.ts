@@ -6,6 +6,6 @@ export const mierennestManifest = {
   name: 'Mierennest',
   ageBand: [9, 12],
   permissions: ['storage'],
-  iconIdentity: { family: 'learn', contrast: 'paper' },
+  iconIdentity: { family: 'play', contrast: 'paper' },
   windowShape: 'full',
 } as const satisfies CartridgeManifest
