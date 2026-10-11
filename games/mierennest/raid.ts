@@ -1,5 +1,5 @@
 import { chambers, kingdom } from './chambers'
-import { EARTH, MOUTH, MUD, OPEN, ROCK, SAND, STONE, at, clone, isLump, put, settle, type Ground, type Kind, type Lump } from './ground'
+import { EARTH, MOUTH, MUD, OPEN, ROCK, SAND, SHAFT_DEPTH, STONE, at, clone, isLump, put, settle, type Ground, type Kind, type Lump } from './ground'
 import { DUNG_BALL, HABITS, PUSHERS_IN_A_LINE, type InvaderKind, type Shot } from './habits'
 import type { Party } from './order'
 import { queenSeat, workerSpots } from './residents'
@@ -253,17 +253,20 @@ function sendHome(invader: Invader): void {
   setOff(invader, back)
 }
 
-/** How hard the wall this one leans on is pushed: a dung ball pushes as itself, a plain beetle as one of a line, the three strongest together. */
+/**
+ * How hard the wall this one leans on is pushed. Plain beetles in a line push together, up to three of them. A
+ * dung ball pushes 6 and no more, however many balls lean there: balls do not push together, nor with beetles.
+ */
 function pushOn(raid: Raid, invader: Invader): number {
   const wall = invader.leaning
   if (!wall) return 0
-  const pushes: number[] = []
+  let beetles = 0, ball = 0
   for (const other of raid.invaders) {
     if (other.state !== 'straining' || !other.leaning || other.leaning.x !== wall.x || other.leaning.y !== wall.y || other.leaning.dx !== wall.dx) continue
-    pushes.push(other.ball > 0 ? DUNG_BALL.push : HABITS.beetle.push)
+    if (other.ball > 0) ball = DUNG_BALL.push
+    else beetles++
   }
-  pushes.sort((a, b) => b - a)
-  return pushes.slice(0, PUSHERS_IN_A_LINE).reduce((sum, push) => sum + push, 0)
+  return Math.max(ball, Math.min(beetles, PUSHERS_IN_A_LINE) * HABITS.beetle.push)
 }
 
 /** How far into a chamber a walker goes before it does its act, in steps of its own, at most. */
@@ -343,9 +346,20 @@ function waitHere(raid: Raid, invader: Invader): void {
   raid.events.push({ type: 'waits', id: invader.id, kind: invader.kind })
 }
 
-/** Whether the way home still has a climb of two cells or more straight through the air, which only a drop could have made. */
-function dropsOnTheWay(invader: Invader, cols: number): boolean {
-  for (let n = invader.step; n + 1 < invader.way.length; n++) if (Math.floor(invader.way[n] / cols) - Math.floor(invader.way[n + 1] / cols) > 1) return true
+/**
+ * Whether the step from one place up to another is a climb nobody makes by itself: two cells or more straight up,
+ * anywhere but in the shaft a new nest starts with. That shaft is the way out as it is the way in, and every kind
+ * that came down it climbs back up it; only a pit the child dug holds one until the workers haul it out.
+ */
+function tooHigh(raid: Raid, from: number, to: number): boolean {
+  const cols = raid.ground.cols, y = Math.floor(from / cols)
+  if (y - Math.floor(to / cols) <= 1) return false
+  return !(from % cols === to % cols && raid.mouth.includes(from % cols) && y <= SHAFT_DEPTH)
+}
+
+/** Whether the way home still has such a climb in it. */
+function climbsItCannotMake(raid: Raid, invader: Invader): boolean {
+  for (let n = invader.step; n + 1 < invader.way.length; n++) if (tooHigh(raid, invader.way[n], invader.way[n + 1])) return true
   return false
 }
 
@@ -881,8 +895,8 @@ export function stepRaid(raid: Raid): void {
         // A raider ant that let go and dropped on its way in cannot climb back through the air either: it goes back
         // as far as the foot of its drop, shrugs, and waits for the workers the same way.
         // One that can climb all its way home walks over whoever sits in it, as it does over a beetle's back.
-        const cannotClimb = plods(gait) || (gait === 'ant' && dropsOnTheWay(invader, cols))
-        if (cannotClimb && invader.along === 0 && (Math.floor(invader.cell / cols) - Math.floor(next / cols) > 1 || heldAhead(raid, invader))) {
+        const cannotClimb = (plods(gait) || gait === 'ant') && climbsItCannotMake(raid, invader)
+        if (cannotClimb && invader.along === 0 && (tooHigh(raid, invader.cell, next) || heldAhead(raid, invader))) {
           invader.state = 'held'
           raid.events.push({ type: 'held', id: invader.id, kind: invader.kind })
           break

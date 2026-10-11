@@ -39,11 +39,30 @@ describe('a raid with nothing in the way', () => {
     }
   })
 
-  it('an ant walks all the way home, and a beetle sits down at the foot of the shaft it cannot climb', () => {
+  it('every kind climbs back up the shaft a new nest starts with by itself: nobody is left at its foot', () => {
     expect(states(playOut(raidOn(nest(), ['ant'])))).toEqual(['home'])
-    const raid = playOut(raidOn(nest(), ['beetle']))
+    expect(states(playOut(raidOn(nest(), ['beetle'])))).toEqual(['home'])
+    expect(states(playOut(raidOn(nest(), ['beetle', 'beetle', 'ant'])))).toEqual(['home', 'home', 'home'])
+    // On the game's own ground, with a hall dug off the foot of the shaft: the whole camp, and the army with its balls.
+    const ground = generate(1)
+    for (let y = 1; y <= 3; y++) for (let x = 22; x <= 31; x++) put(ground, x, y, OPEN)
+    settle(ground)
+    for (const party of [PARTY['full-camp'], PARTY['great-raid']]) {
+      const raid = playOut(callRaid(ground, party))
+      expect(raid.acts).toBeGreaterThan(0)
+      for (const invader of raid.invaders) expect(invader.state, invader.kind).toBe('home')
+    }
+  })
+
+  it('only a pit the child dug holds a beetle: where the shaft was dug deeper, it sits down at the foot and waits for the workers', () => {
+    const deep = ['X.XXXXXXXXXXXXXXXXXX', '#.##################', '#.##################', '#.##################', '#................###', '#................###', '##########.......###', '####################', 'XXXXXXXXXXXXXXXXXXXX']
+    const raid = playOut(raidOn(deep, ['beetle']))
+    expect(raid.acts).toBe(1)
     expect(states(raid)).toEqual(['held'])
     expect(raid.invaders[0].cell % COLS).toBe(1)
+    expect(Math.floor(raid.invaders[0].cell / COLS)).toBe(5)
+    // An ant climbs out of the same pit.
+    expect(states(playOut(raidOn(deep, ['ant'])))).toEqual(['home'])
   })
 
   it('a fly does not come into a tunnel two cells high: it peers, gives up and goes home', () => {
@@ -563,6 +582,23 @@ describe('a dung beetle and its ball', () => {
     // It keeps its ball, and it ends at the foot of the shaft it cannot climb.
     expect(bound.invaders[0].ball).toBe(3)
     expect(bound.invaders[0].state).toBe('held')
+  })
+
+  it('pushes 6 however many balls lean on the wall: balls do not push together', () => {
+    for (const wall of ['....mm.....', '....mo.....', '....smo....']) {
+      const picture = hall([EARTHS, CLEAR, wall])
+      const before = fromPicture(picture)
+      const raid = dungRaid(picture, ['dungBeetle', 'dungBeetle', 'dungBeetle'])
+      const events = watch(raid, () => {})
+      expect(raid.acts, wall).toBe(0)
+      expect(kinds(events, 'gave'), wall).toEqual([])
+      expect(toPicture(raid.ground)[4], wall).toBe(toPicture(before)[4])
+    }
+    // Plain beetles still push together, three of them 9: the wall that holds 8 gives to three and not to two.
+    const three = playOut(dungRaid(hall([EARTHS, CLEAR, '....mo.....']), ['beetle', 'beetle', 'beetle']))
+    expect(three.acts).toBeGreaterThan(0)
+    const two = playOut(dungRaid(hall([EARTHS, CLEAR, '....mo.....']), ['beetle', 'beetle']))
+    expect(two.acts).toBe(0)
   })
 
   it('digs sand and mud that have earth or rock behind them', () => {
