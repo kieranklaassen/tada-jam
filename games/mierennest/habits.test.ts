@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { EARTH, MUD, SAND, STONE } from './ground'
+import { EARTH, MOUTH, MUD, SAND, STONE } from './ground'
 import { DUNG_BALL, HABITS, INVADERS, SHOTS, climbsStep, fits } from './habits'
 
 describe('each kind of invader', () => {
@@ -68,6 +68,10 @@ describe('the habits, as the sheet lists them', () => {
     expect(DUNG_BALL.push).toBeGreaterThan(HABITS.beetle.push)
     expect(INVADERS.filter((kind) => HABITS[kind].widens.length > 0)).toEqual(['dungBeetle'])
     expect(HABITS.dungBeetle.widens).not.toContain(STONE)
+  })
+
+  it('a dung ball fits the mouth of the nest', () => {
+    expect(MOUTH.length).toBeGreaterThanOrEqual(DUNG_BALL.across)
   })
 
   it('fliers cross any step and no pit holds them', () => {

@@ -1,4 +1,4 @@
-import { CELL } from '../ground'
+import { CELL, MOUTH } from '../ground'
 import { GRASS_Y, MOUTH_X } from './layout'
 import * as P from './palette'
 
@@ -8,36 +8,47 @@ import * as P from './palette'
 type Pen = CanvasRenderingContext2D
 
 /** Where the dewdrop hangs at rest, and how near a touch must land to ring it: well over the jam's 48 for a target. */
-export const BELL = { x: MOUTH_X + 96, y: GRASS_Y - 96, radius: 17, reach: 34 } as const
+export const BELL = { x: MOUTH_X + 100, y: GRASS_Y - 100, radius: 17, reach: 34 } as const
 
-/** The hill, from 0 (a new nest) to 1 (as hollow as the ground can be). It leaves the mouth open. */
-export function paintHill(pen: Pen, grown: number): void {
+/** Half the width of the mouth, and a little: where the hill's two humps begin, so the mouth stays open. */
+export const LIP = (MOUTH.length * CELL) / 2 + 2
+
+/**
+ * How far the hill has grown, from 0 to under 1, for how hollow the nest is (the share of its cells that are
+ * open): fast at first and then ever more slowly, up to a height it never passes.
+ */
+export const hillGrown = (hollow: number): number => 1 - Math.exp(-4 * Math.max(0, hollow))
+
+/**
+ * The size of the hill's two humps for a growth from 0 to 1. The spoil is tipped to the right, away from the log:
+ * at its largest the left hump still stops short of the party at the log, and the right one stands clear of the
+ * bell and of its stalk.
+ */
+export function hillShape(grown: number): { left: { reach: number; height: number }; right: { reach: number; height: number } } {
   const g = Math.max(0, Math.min(1, grown))
-  const height = 20 + 44 * g, reach = 62 + 70 * g, lip = CELL + 2
+  return { left: { reach: 30 + 8 * g, height: 16 + 14 * g }, right: { reach: 50 + 42 * g, height: 20 + 36 * g } }
+}
+
+/** The hill for a growth from 0 to 1. It leaves the mouth open. */
+export function paintHill(pen: Pen, grown: number): void {
+  const shape = hillShape(grown)
   for (const side of [-1, 1]) {
+    const { reach, height } = side < 0 ? shape.left : shape.right
     pen.fillStyle = side < 0 ? '#9c6a3c' : '#8f5f35'
     pen.beginPath()
-    pen.moveTo(MOUTH_X + side * lip, GRASS_Y + 2)
-    pen.quadraticCurveTo(MOUTH_X + side * (lip + 2), GRASS_Y - height * 1.05, MOUTH_X + side * (lip + reach * 0.3), GRASS_Y - height)
-    pen.quadraticCurveTo(MOUTH_X + side * (lip + reach * 0.75), GRASS_Y - height * 0.8, MOUTH_X + side * (lip + reach), GRASS_Y + 2)
+    pen.moveTo(MOUTH_X + side * LIP, GRASS_Y + 2)
+    pen.quadraticCurveTo(MOUTH_X + side * (LIP + 2), GRASS_Y - height * 1.05, MOUTH_X + side * (LIP + reach * 0.3), GRASS_Y - height)
+    pen.quadraticCurveTo(MOUTH_X + side * (LIP + reach * 0.75), GRASS_Y - height * 0.8, MOUTH_X + side * (LIP + reach), GRASS_Y + 2)
     pen.closePath()
     pen.fill()
-  }
-  // Crumbs on the slopes: the spoil is carried up a mouthful at a time.
-  pen.fillStyle = '#b98650'
-  for (let n = 0; n < 10; n++) {
-    const side = n % 2 === 0 ? -1 : 1, along = 0.18 + ((n * 37) % 60) / 100
-    const cx = MOUTH_X + side * (lip + reach * along), cy = GRASS_Y - height * (1 - along) * 0.82
-    pen.beginPath()
-    pen.ellipse(cx, cy, 5, 3.4, 0, 0, Math.PI * 2)
-    pen.fill()
-  }
-  pen.fillStyle = '#5a371d'
-  for (let n = 0; n < 6; n++) {
-    const side = n % 2 === 0 ? 1 : -1, along = 0.3 + ((n * 53) % 50) / 100
-    pen.beginPath()
-    pen.ellipse(MOUTH_X + side * (lip + reach * along), GRASS_Y - height * (1 - along) * 0.5, 3.5, 2.4, 0, 0, Math.PI * 2)
-    pen.fill()
+    // Crumbs on the slope: the spoil is carried up a mouthful at a time.
+    for (let n = 0; n < (side < 0 ? 3 : 6); n++) {
+      const along = 0.2 + ((n * 37 + (side < 0 ? 11 : 0)) % 55) / 100
+      pen.fillStyle = n % 2 === 0 ? '#b98650' : '#5a371d'
+      pen.beginPath()
+      pen.ellipse(MOUTH_X + side * (LIP + reach * along), GRASS_Y - height * (1 - along) * (n % 2 === 0 ? 0.8 : 0.5), 4.5 - (n % 2), 3.2 - (n % 2) * 0.8, 0, 0, Math.PI * 2)
+      pen.fill()
+    }
   }
 }
 

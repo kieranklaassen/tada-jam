@@ -8,9 +8,9 @@ export const COLS = 40
 export const ROWS = 21
 /** The side of a cell in stage units. */
 export const CELL = 28
-/** The two columns of the turf that are always open. */
-export const MOUTH: readonly number[] = [19, 20]
-/** How deep the shaft of a new nest goes under the mouth, in cells. */
+/** The three columns of the turf that are always open: the mouth, wide enough for a dung ball. */
+export const MOUTH: readonly number[] = [19, 20, 21]
+/** How deep the shaft of a new nest goes under the mouth, in cells. It is as wide as the mouth. */
 export const SHAFT_DEPTH = 3
 
 export const OPEN = 0
@@ -189,11 +189,11 @@ export function generate(seed: number): Ground {
     put(ground, x, ROWS - 1, ROCK)
   }
   // The seams keep clear of the shaft and the earth round its foot, where the first room will be dug.
-  const clear = (x: number, y: number) => y >= 1 && y <= ROWS - 2 && x >= 0 && x < COLS && !(x >= 16 && x <= 23 && y <= 6)
+  const clear = (x: number, y: number) => y >= 1 && y <= ROWS - 2 && x >= 0 && x < COLS && !(x >= 16 && x <= 24 && y <= 6)
   const lay = (x: number, y: number, kind: Lump) => {
     if (clear(x, y) && at(ground, x, y) === EARTH) put(ground, x, y, kind)
   }
-  for (const [from, to] of [[2, 15], [24, 37]] as [number, number][]) {
+  for (const [from, to] of [[2, 15], [25, 37]] as [number, number][]) {
     let top = 8 + below(rng, 2)
     for (let x = from; x <= to; x++) {
       if (x > from && below(rng, 3) === 0) top = Math.max(7, Math.min(10, top + below(rng, 3) - 1))

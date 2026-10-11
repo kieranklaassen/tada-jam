@@ -2,12 +2,16 @@ import { CELL, EARTH, OPEN, at, generate, isLump, put, settle, type Ground, type
 import { kingdom } from '../chambers'
 import type { CreatureKind } from './creatures'
 import { GRASS_Y, GROUND, MOUTH_X } from './layout'
+import { hillGrown } from './props'
 
 // The scenes of the look spike: the game's real ground, laid out from a fixed seed, with its cast standing where
 // the game will put them. Nothing here is played: the Mount shows one of these at load until the toy replaces it.
 
-export type Cast = { kind: CreatureKind; pose: string; x: number; y: number; flip?: boolean }
+export type Cast = { kind: CreatureKind; pose: string; x: number; y: number; flip?: boolean; size?: number }
 export type SpikeScene = { ground: Ground; cast: Cast[]; hill: number; bell: number }
+
+/** How much larger than her pose the wedged queen is drawn: one and a half times, the width of the shaft. */
+export const QUEEN_WEDGED = 1.5
 
 /** The seed every spike scene is laid out from. */
 export const SPIKE_SEED = 1
@@ -47,18 +51,19 @@ function camp(waiting: Cast[]): Cast[] {
 /** A new nest: the queen wedged in the shaft, the ant at its first mouthfuls, and the whole camp watching. */
 function firstFrame(): SpikeScene {
   const ground = generate(SPIKE_SEED)
-  hollow(ground, 21, 1, 25, 2)
+  hollow(ground, 22, 1, 26, 2)
   settle(ground)
-  const dig = onFloor(22.6, 2)
+  const dig = onFloor(23.6, 2)
   return {
     ground,
-    hill: kingdom(ground).hollow,
+    hill: hillGrown(kingdom(ground).hollow),
     bell: 0.12,
     cast: [
       ...camp([{ kind: 'raider', pose: 'pillow', x: 446, y: GRASS_Y - 26 }]),
-      { kind: 'worker', pose: 'carry', x: MOUTH_X - 62, y: GRASS_Y - 14 },
-      { kind: 'worker', pose: 'hips', x: MOUTH_X + 50, y: GRASS_Y - 16, flip: true },
-      { kind: 'queen', pose: 'wedged', x: MOUTH_X, y: GROUND.y + 3 * CELL },
+      { kind: 'worker', pose: 'carry', x: MOUTH_X - 70, y: GRASS_Y - 12 },
+      { kind: 'worker', pose: 'hips', x: MOUTH_X + 66, y: GRASS_Y - 16, flip: true },
+      // The shaft is three cells wide and she is drawn half as large again as her pose, so she fills it from side to side.
+      { kind: 'queen', pose: 'wedged', x: MOUTH_X, y: GROUND.y + 4 * CELL, size: QUEEN_WEDGED },
       { kind: 'ant', pose: 'dig', x: dig.x, y: dig.y },
     ],
   }
@@ -67,26 +72,26 @@ function firstFrame(): SpikeScene {
 /** A kingdom some days on: rooms, halls and defences of the child's own plan, built from the lumps of this ground. */
 function builtNest(): Ground {
   const ground = generate(SPIKE_SEED)
-  hollow(ground, 19, 1, 20, 15)
+  hollow(ground, 19, 1, 21, 15)
   hollow(ground, 11, 5, 18, 6)
   hollow(ground, 4, 4, 10, 6)
-  hollow(ground, 21, 5, 26, 6)
+  hollow(ground, 22, 5, 26, 6)
   hollow(ground, 27, 3, 35, 6)
   hollow(ground, 10, 13, 18, 15)
   hollow(ground, 3, 13, 9, 15)
-  hollow(ground, 21, 15, 25, 16)
+  hollow(ground, 22, 15, 25, 16)
   hollow(ground, 26, 14, 31, 16)
   carry(ground, [
     // A long low crawl with a mud floor in the left tunnel: the lower cells filled, the upper left open for air.
-    [15, 5, 13, 6], [14, 4, 14, 6], [31, 6, 12, 6], [20, 8, 11, 6],
-    // What lay in the queen's room is built into her tunnel: a stone bedded in mud, beside the mud that hangs there.
-    [28, 6, 23, 6], [30, 6, 22, 6], [32, 6, 24, 6], [31, 5, 12, 15],
+    [13, 5, 13, 6], [14, 5, 14, 6], [15, 5, 12, 6], [20, 8, 11, 6],
+    // What lay in the queen's room is built into her tunnel: two stones and the mud that beds them.
+    [28, 6, 24, 6], [31, 5, 23, 6], [20, 9, 25, 6], [20, 14, 26, 6],
     // The mud that narrowed the shaft is a floor in the deep tunnel on the right.
-    [20, 9, 23, 16], [20, 10, 22, 16], [20, 11, 24, 16],
-    // The deep hall is cleared: its mud packs the sand at the far room's door, and three stones wait beside it.
-    [19, 15, 8, 14], [20, 15, 9, 14], [4, 13, 10, 15], [6, 13, 11, 15],
-    // The far right room keeps its stones against the wall, bedded with the last of the shaft's mud.
-    [28, 15, 31, 16], [30, 15, 30, 16], [20, 14, 30, 15], [21, 14, 31, 15],
+    [20, 10, 22, 16], [20, 11, 23, 16], [21, 11, 24, 16],
+    // The deep hall is cleared: its mud packs the sand at the far room's door, and three bedded stones wait beside it.
+    [19, 15, 8, 14], [20, 15, 9, 14], [4, 13, 10, 15], [6, 13, 11, 15], [4, 14, 12, 15], [21, 14, 10, 14], [32, 3, 11, 14],
+    // The mud that hung in the queen's room hangs in a corner of the first room, and one stone moves to the far wall.
+    [33, 3, 10, 4], [33, 4, 9, 4], [28, 15, 30, 14],
   ])
   settle(ground)
   return ground
@@ -97,14 +102,14 @@ function grownKingdom(): SpikeScene {
   const f = onFloor
   return {
     ground,
-    hill: Math.min(1, kingdom(ground).hollow * 4),
+    hill: hillGrown(kingdom(ground).hollow),
     bell: -0.1,
     cast: [
       ...camp([{ kind: 'beetle', pose: 'napkin', x: 446, y: GRASS_Y - 26 }]),
-      { kind: 'worker', pose: 'carry', x: MOUTH_X + 78, y: GRASS_Y - 34 },
+      { kind: 'worker', pose: 'carry', x: MOUTH_X + 84, y: GRASS_Y - 24 },
       { kind: 'queen', pose: 'sit', x: f(28.7, 6).x, y: f(28, 6).y },
       { kind: 'worker', pose: 'walk', x: f(33, 6).x, y: f(33, 6).y, flip: true },
-      { kind: 'worker', pose: 'hips', x: f(21, 6).x, y: f(21, 6).y },
+      { kind: 'worker', pose: 'hips', x: f(22, 6).x, y: f(22, 6).y },
       { kind: 'worker', pose: 'carry', x: f(5, 6).x, y: f(5, 6).y },
       { kind: 'worker', pose: 'walk', x: f(8.5, 6).x, y: f(8, 6).y, flip: true },
       { kind: 'worker', pose: 'walk', x: f(4.5, 15).x, y: f(4, 15).y },
@@ -121,13 +126,13 @@ function raid(): SpikeScene {
   const f = onFloor
   return {
     ground,
-    hill: Math.min(1, kingdom(ground).hollow * 4),
+    hill: hillGrown(kingdom(ground).hollow),
     bell: 0.5,
     cast: [
       { kind: 'raider', pose: 'nap', x: 92, y: GRASS_Y },
       { kind: 'dungFly', pose: 'point', x: 800, y: GRASS_Y - 100, flip: true },
       { kind: 'beetle', pose: 'onBack', x: 908, y: GRASS_Y },
-      { kind: 'worker', pose: 'hips', x: MOUTH_X + 56, y: GRASS_Y - 34, flip: true },
+      { kind: 'worker', pose: 'hips', x: MOUTH_X + 70, y: GRASS_Y - 24, flip: true },
       { kind: 'queen', pose: 'sit', x: f(28.7, 6).x, y: f(28, 6).y },
       // The fly's wings reach about a cell over its body box, so it hovers a row under the roof.
       { kind: 'fly', pose: 'fly', x: f(33.2, 5).x, y: f(33, 5).y - 4, flip: true },
@@ -136,7 +141,6 @@ function raid(): SpikeScene {
       { kind: 'beetle', pose: 'lean', x: f(17.72, 6).x, y: f(17, 6).y, flip: true },
       { kind: 'dungBall', pose: 'plain', x: f(14, 15).x, y: f(14, 15).y },
       { kind: 'dungBeetle', pose: 'push', x: f(17.72, 15).x, y: f(17, 15).y, flip: true },
-      { kind: 'worker', pose: 'hips', x: f(26, 16).x, y: f(26, 16).y, flip: true },
       { kind: 'worker', pose: 'walk', x: f(27.6, 16).x, y: f(27, 16).y },
       { kind: 'ant', pose: 'stand', x: f(5, 15).x, y: f(5, 15).y },
     ],

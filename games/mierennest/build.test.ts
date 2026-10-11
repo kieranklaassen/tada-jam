@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { asSaved, canPickUp, dig, digAlong, mouthful, pickUp, putBack, setDown } from './build'
-import { EARTH, LUMPS, MUD, OPEN, ROCK, SAND, STONE, at, clone, count, equal, fromPicture, generate, settle, toPicture } from './ground'
+import { asSaved, canPickUp, dig, digAlong, mouthful, pickUp, setDown } from './build'
+import { EARTH, LUMPS, MOUTH, MUD, OPEN, ROCK, SAND, STONE, at, clone, count, equal, fromPicture, generate, settle, toPicture } from './ground'
 
 describe('digging', () => {
   it('bites the two-by-two block whose middle is nearest the finger', () => {
@@ -50,7 +50,7 @@ describe('digging', () => {
     digAlong(ground, 0, 0, 40, 0.4)
     digAlong(ground, 0, 20.6, 40, 21)
     for (let x = 0; x < ground.cols; x++) {
-      expect(at(ground, x, 0)).toBe(x === 19 || x === 20 ? OPEN : ROCK)
+      expect(at(ground, x, 0)).toBe(MOUTH.includes(x) ? OPEN : ROCK)
       expect(at(ground, x, 20)).toBe(ROCK)
     }
   })
@@ -65,67 +65,91 @@ describe('digging', () => {
 })
 
 describe('carrying and setting down', () => {
-  it('picks up a lump that has open ground beside it, and leaves its cell open', () => {
-    const ground = fromPicture(['.s#', '###', 'XXX'])
-    expect(canPickUp(ground, 1, 0)).toBe(true)
-    expect(pickUp(ground, 1, 0)).toEqual({ kind: SAND, from: 1 })
-    expect(at(ground, 1, 0)).toBe(OPEN)
-  })
-
-  it('does not pick up earth, rock, open ground or a lump buried on all four sides', () => {
-    const ground = fromPicture(['#####', '##o##', '#.#X#', 'XXXXX'])
+  it('takes a lump the ant can reach by an open way, and leaves the ground as it was', () => {
+    const ground = fromPicture(['..s#', '####', 'XXXX'])
     const before = clone(ground)
-    for (const [x, y] of [[0, 0], [2, 1], [1, 2], [3, 2]]) expect(pickUp(ground, x, y)).toBeNull()
+    expect(canPickUp(ground, { x: 0, y: 0 }, 2, 0)).toBe(true)
+    expect(pickUp(ground, { x: 0, y: 0 }, 2, 0)).toEqual({ kind: SAND, from: 2 })
     expect(equal(ground, before)).toBe(true)
   })
 
-  it('sets a lump down in the open cell nearest the finger', () => {
-    const ground = fromPicture(['.....', '.....', 'XXXXX'])
-    expect(setDown(ground, { kind: STONE, from: 0 }, 3.4, 1.6)).toBe(8)
-    expect(at(ground, 3, 1)).toBe(STONE)
+  it('does not take earth, rock, open ground, a buried lump, or a lump no open way reaches', () => {
+    const ground = fromPicture(['.####.', '.#o#s.', '.#.#X#', 'XXXXXX'])
+    const ant = { x: 0, y: 0 }
+    for (const [x, y] of [[1, 0], [2, 1], [0, 1], [4, 2], [4, 1]]) expect(pickUp(ground, ant, x, y), `${x},${y}`).toBeNull()
+    // The same sand is taken by an ant that stands on its side of the earth.
+    expect(pickUp(ground, { x: 5, y: 0 }, 4, 1)).toEqual({ kind: SAND, from: 10 })
   })
 
-  it('sets it beside a full cell when the finger is on one, within reach', () => {
-    const ground = fromPicture(['#####', '#.###', 'XXXXX'])
-    expect(setDown(ground, { kind: MUD, from: 0 }, 3.5, 1.5)).toBe(6)
-  })
-
-  it('sets nothing down where there is no room in reach, and nothing in the top row', () => {
-    const full = fromPicture(['#####', '#####', 'XXXXX'])
-    expect(setDown(full, { kind: MUD, from: 0 }, 2.5, 0.5)).toBeNull()
-    const mouth = fromPicture(['..', '##', 'XX'])
-    const before = clone(mouth)
-    expect(setDown(mouth, { kind: SAND, from: 0 }, 0.5, 0.5)).toBeNull()
-    expect(equal(mouth, before)).toBe(true)
-  })
-
-  it('puts a lump back in the cell it came from', () => {
-    const ground = fromPicture(['###', '.o#', '###', 'XXX'])
+  it('keeps bearing what stood on it while it is carried', () => {
+    const ground = fromPicture(['#.#.', '#s#.', '#o..', '##..', 'XXXX'])
     const before = clone(ground)
-    const carried = pickUp(ground, 1, 1)!
-    putBack(ground, carried)
-    expect(equal(ground, before)).toBe(true)
-  })
-
-  it('puts it back on top when sand has poured into its cell meanwhile', () => {
-    const ground = fromPicture(['#.#', '#s#', '#o#', '#.#', 'XXX'])
-    const carried = pickUp(ground, 1, 2)!
+    const carried = pickUp(ground, { x: 2, y: 2 }, 1, 2)!
+    expect(carried.kind).toBe(STONE)
     settle(ground)
-    expect(toPicture(ground)).toEqual(['#.#', '#.#', '#.#', '#s#', 'XXX'])
-    putBack(ground, carried)
-    expect(toPicture(ground)).toEqual(['#.#', '#.#', '#o#', '#s#', 'XXX'])
+    expect(equal(ground, before)).toBe(true)
   })
 
-  it('is saved with the lump back where it came from and nothing in the air', () => {
-    const ground = fromPicture(['#.#', '#s#', '#o#', '#.#', 'XXX'])
-    const whole = LUMPS.map((kind) => count(ground, kind))
-    const carried = pickUp(ground, 1, 2)!
-    const saved = asSaved(ground, carried)
-    expect(LUMPS.map((kind) => count(saved, kind))).toEqual(whole)
-    // Earth holds the stone on both sides, so the save is the ground as it was before the lump was picked.
-    expect(toPicture(saved)).toEqual(['#.#', '#s#', '#o#', '#.#', 'XXX'])
-    // The ground in play is not changed by working out what a save holds.
-    expect(at(ground, 1, 2)).toBe(OPEN)
-    expect(count(ground, EARTH)).toBe(8)
+  it('sets the lump down in the open cell where the finger lets go, and the cell it left is open', () => {
+    const ground = fromPicture(['.....', '.o...', 'XXXXX'])
+    const ant = { x: 0, y: 1 }
+    const carried = pickUp(ground, ant, 1, 1)!
+    expect(setDown(ground, ant, carried, 3.4, 1.6)).toBe(8)
+    expect(toPicture(ground)).toEqual(['.....', '...o.', 'XXXXX'])
+  })
+
+  it('lets what stood on it fall once it is set down elsewhere', () => {
+    const ground = fromPicture(['#.#.', '#s#.', '#o..', '##..', 'XXXX'])
+    const ant = { x: 2, y: 2 }
+    const carried = pickUp(ground, ant, 1, 2)!
+    expect(setDown(ground, ant, carried, 3.5, 3.5)).toBe(15)
+    settle(ground)
+    expect(toPicture(ground)).toEqual(['#.#.', '#.#.', '#...', '##so', 'XXXX'])
+  })
+
+  const nowhere: { name: string; picture: string[]; ant: [number, number]; lump: [number, number]; drop: [number, number] }[] = [
+    { name: 'on earth', picture: ['.s.#', 'XXXX'], ant: [0, 0], lump: [1, 0], drop: [3.5, 0.5] },
+    { name: 'on another lump', picture: ['.s.o', 'XXXX'], ant: [0, 0], lump: [1, 0], drop: [3.5, 0.5] },
+    { name: 'on itself', picture: ['.s..', 'XXXX'], ant: [0, 0], lump: [1, 0], drop: [1.5, 0.5] },
+    { name: 'in the top row, where the mouth is', picture: ['...', '.s.', 'XXX'], ant: [0, 1], lump: [1, 1], drop: [1.5, 0.5] },
+    { name: 'in an open cell no open way reaches', picture: ['.s#.', 'XXXX'], ant: [0, 0], lump: [1, 0], drop: [3.5, 0.5] },
+    { name: 'outside the ground', picture: ['.s.', 'XXX'], ant: [0, 0], lump: [1, 0], drop: [7, 0.5] },
+  ]
+  for (const row of nowhere) {
+    it(`let go ${row.name}, the lump is back where it came from and nothing has changed`, () => {
+      // The pictures stand a row down from the top, so only the case about the top row is in it.
+      const ground = fromPicture(row.name.startsWith('in the top') ? row.picture : ['####', ...row.picture].map((r) => r.padEnd(4, '#')))
+      const down = row.name.startsWith('in the top') ? 0 : 1
+      const before = clone(ground)
+      const ant = { x: row.ant[0], y: row.ant[1] + down }
+      const carried = pickUp(ground, ant, row.lump[0], row.lump[1] + down)!
+      expect(carried).not.toBeNull()
+      expect(setDown(ground, ant, carried, row.drop[0], row.drop[1] + down)).toBeNull()
+      expect(equal(ground, before)).toBe(true)
+    })
+  }
+
+  it('is saved with nothing in the air, and working that out does not change the ground in play', () => {
+    const ground = fromPicture(['.s.', '...', '...', 'XXX'])
+    const saved = asSaved(ground)
+    expect(toPicture(saved)).toEqual(['...', '...', '.s.', 'XXX'])
+    expect(toPicture(ground)).toEqual(['.s.', '...', '...', 'XXX'])
+    expect(count(saved, EARTH)).toBe(0)
+  })
+
+  it('makes and loses no lump, however lumps are carried about', () => {
+    const ground = generate(6)
+    for (let y = 2; y <= 12; y++) for (let x = 5; x <= 34; x++) if (at(ground, x, y) === EARTH) ground.cells[y * ground.cols + x] = OPEN
+    settle(ground)
+    const before = LUMPS.map((kind) => count(ground, kind))
+    const ant = { x: 20, y: 1 }
+    let moved = 0
+    for (let n = 0; n < 800; n++) {
+      const carried = pickUp(ground, ant, (n * 7) % 40, 1 + ((n * 11) % 19))
+      if (carried && setDown(ground, ant, carried, ((n * 13) % 40) + 0.5, 1.5 + ((n * 5) % 12)) !== null) moved++
+      settle(ground)
+    }
+    expect(moved).toBeGreaterThan(5)
+    expect(LUMPS.map((kind) => count(ground, kind))).toEqual(before)
   })
 })

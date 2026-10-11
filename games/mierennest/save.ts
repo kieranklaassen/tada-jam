@@ -1,4 +1,4 @@
-import { asSaved, type Carried } from './build'
+import { asSaved } from './build'
 import { COLS, MOUTH, OPEN, ROCK, ROWS, at, generate, makeGround, put, settle, type Ground, type Kind } from './ground'
 import { SHOTS, type Shot } from './habits'
 import { ROUND, SHOWINGS, arrived, type MachineKind } from './order'
@@ -6,7 +6,8 @@ import { STATE_VERSION, deserialize as readPosition, isReadable, type GameState 
 
 // What goes into ctx.storage for this game, wrapped round the template's state.ts as its header asks: the position
 // is read there, and every other field is read here, each repaired by itself. A save holds the nest as built and
-// never a raid: no invader, no shot in the air, no mark where a wall gave, and no lump in the ant's jaws.
+// never a raid: no invader, no shot in the air, no mark where a wall gave, and nothing in the jaws or under the
+// finger, since a carried lump and a dragged machine stay where they were until they are set down.
 
 export type Machine = {
   kind: MachineKind
@@ -94,13 +95,16 @@ export function freshGame(childAge: number | null, seed: number): Game {
   return { position: readPosition(undefined, childAge).position, ground, ant: shaftFoot(ground), machines: [], muster: 0, shown: [], ended: false }
 }
 
-/** The record to store. A lump in the jaws is back where it came from and the ground is as it will come to rest. */
-export function serialize(game: Game, carried: Carried | null = null): Save {
+/**
+ * The record to store. The ground is saved as it will come to rest. A lump in the jaws is still in the cell it
+ * was picked from, and a machine under the finger still stands where it stood, so neither needs a word here.
+ */
+export function serialize(game: Game): Save {
   return {
     v: STATE_VERSION,
     position: game.position,
     finished: false,
-    ground: encodeGround(asSaved(game.ground, carried)),
+    ground: encodeGround(asSaved(game.ground)),
     ant: game.ant.y * game.ground.cols + game.ant.x,
     machines: game.machines.map((m) => ({ kind: m.kind, x: m.x, y: m.y, facing: m.facing, load: m.load })),
     muster: game.muster,

@@ -77,6 +77,28 @@ describe('leaning on a wall', () => {
     expect(lean(packed, 1, 1, 1, BEETLE).did).toBe('held')
   })
 
+  it('three cells of loose sand in a row with room beyond hold one beetle and no more', () => {
+    const picture = ['#######', '.sss...', 'XXXXXXX']
+    expect(lean(fromPicture(picture), 1, 1, 1, BEETLE)).toEqual({ did: 'held', hold: 3 })
+    expect(lean(fromPicture(picture), 1, 1, 1, BEETLE * 2).did).toBe('shoved')
+    for (const thin of ['.s.....', '.ss....']) expect(lean(fromPicture(['#######', thin, 'XXXXXXX']), 1, 1, 1, BEETLE).did).toBe('shoved')
+  })
+
+  it('sand with earth behind it never stops a beetle, however thick', () => {
+    const ground = fromPicture(['########', '.ssssss#', 'XXXXXXXX'])
+    let x = 1
+    while (x <= 6 && lean(ground, x, 1, 1, BEETLE).did === 'ploughed') x++
+    expect(x).toBe(7)
+    expect(toPicture(ground)).toEqual(['########', 'ssssss.#', 'XXXXXXXX'])
+  })
+
+  it('a stone that stood on a sand wall comes down when a beetle shoves the wall from under it', () => {
+    const ground = fromPicture(['######', '..o...', '..s...', 'XXXXXX'])
+    expect(lean(ground, 2, 2, 1, BEETLE).did).toBe('shoved')
+    settle(ground)
+    expect(toPicture(ground)).toEqual(['######', '......', '..os..', 'XXXXXX'])
+  })
+
   it('pushes to the left as it does to the right, moves nothing that holds, and answers open ground and earth', () => {
     const ground = fromPicture(['#####', '..s..', 'XXXXX'])
     expect(lean(ground, 2, 1, -1, BEETLE).did).toBe('shoved')

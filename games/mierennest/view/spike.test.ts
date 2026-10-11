@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { CELL, COLS, OPEN, ROWS, at, atRest, generate } from '../ground'
+import { CELL, COLS, MOUTH, OPEN, ROWS, at, atRest, generate } from '../ground'
 import { kingdom } from '../chambers'
 import { STAGE } from '../stage'
 import { POSES, SIZE } from './creatures'
 import { FRAME, GRASS_Y, GROUND, cellUnder } from './layout'
-import { SPIKE_SEED, spikeScene, type Cast } from './spike'
+import { QUEEN_WEDGED, SPIKE_SEED, spikeScene, type Cast } from './spike'
 
 // The spike's scenes are still, so their overlap test is a test of where things stand: nobody stands inside the
 // ground, nobody floats, and nobody is cut off by the frame.
@@ -16,7 +16,7 @@ const DRAW_BUDGET = 80
 
 /** The body box of a cast member in stage units. The wedged queen and the upright worker have boxes of their own. */
 function box(one: Cast): { left: number; right: number; top: number; bottom: number } {
-  const size = one.kind === 'queen' && one.pose === 'wedged' ? { width: 56, height: 96 } : one.kind === 'worker' && one.pose === 'hips' ? { width: 28, height: 56 } : SIZE[one.kind]
+  const size = one.kind === 'queen' && one.pose === 'wedged' ? { width: 56 * QUEEN_WEDGED, height: 96 * QUEEN_WEDGED } : one.kind === 'worker' && one.pose === 'hips' ? { width: 28, height: 56 } : SIZE[one.kind]
   return { left: one.x - size.width / 2, right: one.x + size.width / 2, top: one.y - size.height, bottom: one.y }
 }
 
@@ -69,10 +69,12 @@ describe('the spike scenes', () => {
   it('wedge the queen in the shaft of the first frame, which is too narrow for her', () => {
     const queen = spikeScene(1).cast.find((one) => one.kind === 'queen')!
     const b = box(queen)
-    expect(b.right - b.left).toBe(2 * CELL)
-    expect(cellUnder(b.left + 1, queen.y - 1).x).toBe(19)
-    expect(cellUnder(b.right - 1, queen.y - 1).x).toBe(20)
-    expect(SIZE.queen.width).toBeGreaterThan(2 * CELL)
+    expect(b.right - b.left).toBe(MOUTH.length * CELL)
+    expect(cellUnder(b.left + 1, queen.y - 1).x).toBe(MOUTH[0])
+    expect(cellUnder(b.right - 1, queen.y - 1).x).toBe(MOUTH[MOUTH.length - 1])
+    expect(SIZE.queen.width).toBeGreaterThan(MOUTH.length * CELL)
+    // She is taller than the shaft is deep, so her head stands out of the mouth.
+    expect(b.top).toBeLessThan(GRASS_Y)
   })
 
   it('lay the ground out as the stage says', () => {

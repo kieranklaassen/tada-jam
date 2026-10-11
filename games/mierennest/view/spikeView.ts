@@ -78,7 +78,7 @@ export class SpikeView {
     pen.setTransform(1, 0, 0, 1, 0, 0)
     pen.clearRect(0, 0, this.canvas.width, this.canvas.height)
     pen.setTransform(k, 0, 0, k, dpr * by.x, dpr * by.y)
-    for (const one of this.scene.cast) this.sprites!.stamp(pen, one.kind, one.pose, one.x, one.y, one.flip === true)
+    for (const one of this.scene.cast) this.sprites!.stamp(pen, one.kind, one.pose, one.x, one.y, one.flip === true, one.size ?? 1)
     return this.scene.cast.length
   }
 }

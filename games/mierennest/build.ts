@@ -1,7 +1,8 @@
 import { EARTH, OPEN, at, clone, isLump, put, settle, type Ground, type Kind, type Lump } from './ground'
 
 // What the child's ant does to the ground: it digs earth, picks up one lump, and sets it down. Pure: each call
-// changes the ground it is given and says what happened, and the caller lets the ground come to rest.
+// changes the ground it is given and says what happened, and the caller lets the ground come to rest. No cell is
+// ever dug that the finger did not touch.
 // Points are in cell units: (2.5, 4.5) is the middle of the cell in column 2, row 4.
 
 /** What a dig did: the cells it opened, and the kinds it met that it cannot bite, each once. */
@@ -38,65 +39,71 @@ export function digAlong(ground: Ground, fromX: number, fromY: number, toX: numb
   return answer
 }
 
-/** A lump in the ant's jaws: what it is and the cell it was picked from. It is in no cell while it is carried. */
+/** A cell of the grid. */
+export type Cell = { x: number; y: number }
+
+/** Every open cell the ant can walk to from where it stands, 1 or 0 a cell: its open way. */
+export function openWay(ground: Ground, ant: Cell): Uint8Array {
+  const { cols, rows, cells } = ground
+  const way = new Uint8Array(cells.length)
+  if (at(ground, ant.x, ant.y) !== OPEN) return way
+  const queue = [ant.y * cols + ant.x]
+  way[queue[0]] = 1
+  while (queue.length > 0) {
+    const i = queue.pop()!
+    const x = i % cols, y = Math.floor(i / cols)
+    for (const [nx, ny] of [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]]) {
+      if (nx < 0 || ny < 0 || nx >= cols || ny >= rows) continue
+      const n = ny * cols + nx
+      if (way[n] === 0 && cells[n] === OPEN) {
+        way[n] = 1
+        queue.push(n)
+      }
+    }
+  }
+  return way
+}
+
+/**
+ * A lump in the ant's jaws: what it is and the cell it was picked from. The lump stays in that cell of the ground
+ * for as long as it is carried, so the cell still bears what stood on it and nothing moves into it; the ground
+ * changes only when the lump is set down in another cell.
+ */
 export type Carried = { kind: Lump; from: number }
 
-/** Whether the ant can bite this cell loose: it is a lump with open ground on one of its four sides. */
-export function canPickUp(ground: Ground, x: number, y: number): boolean {
+/** Whether the ant can take this lump: it is a lump, and the ant's open way reaches one of its four sides. */
+export function canPickUp(ground: Ground, ant: Cell, x: number, y: number): boolean {
   if (!isLump(at(ground, x, y))) return false
-  return at(ground, x - 1, y) === OPEN || at(ground, x + 1, y) === OPEN || at(ground, x, y - 1) === OPEN || at(ground, x, y + 1) === OPEN
+  const way = openWay(ground, ant)
+  const reached = (cx: number, cy: number) => cx >= 0 && cy >= 0 && cx < ground.cols && cy < ground.rows && way[cy * ground.cols + cx] === 1
+  return reached(x - 1, y) || reached(x + 1, y) || reached(x, y - 1) || reached(x, y + 1)
 }
 
-/** Picks the lump up, leaving its cell open. Gives null, and changes nothing, where there is no lump to bite loose. */
-export function pickUp(ground: Ground, x: number, y: number): Carried | null {
-  if (!canPickUp(ground, x, y)) return null
-  const kind = at(ground, x, y) as Lump
-  put(ground, x, y, OPEN)
-  return { kind, from: y * ground.cols + x }
-}
-
-/** How far from the finger a lump may be set down, in cells. */
-export const REACH = 2
-
-/**
- * Sets the lump down in the open cell nearest the finger, within reach, and never in the top row, where the mouth
- * is. Gives the cell it went to, or null, with nothing changed, where there is no room: the caller then puts it back.
- */
-export function setDown(ground: Ground, carried: Carried, cx: number, cy: number): number | null {
-  const fx = Math.floor(cx), fy = Math.floor(cy)
-  let best: { x: number; y: number; far: number } | null = null
-  for (let y = fy - REACH; y <= fy + REACH; y++) {
-    for (let x = fx - REACH; x <= fx + REACH; x++) {
-      if (y < 1 || at(ground, x, y) !== OPEN) continue
-      const far = Math.hypot(x + 0.5 - cx, y + 0.5 - cy)
-      if (best === null || far < best.far - 1e-9) best = { x, y, far }
-    }
-  }
-  if (best === null) return null
-  put(ground, best.x, best.y, carried.kind)
-  return best.y * ground.cols + best.x
+/** Takes the lump in the jaws. The ground is not changed. Gives null where there is no lump the ant can reach. */
+export function pickUp(ground: Ground, ant: Cell, x: number, y: number): Carried | null {
+  if (!canPickUp(ground, ant, x, y)) return null
+  return { kind: at(ground, x, y) as Lump, from: y * ground.cols + x }
 }
 
 /**
- * Puts the lump back where it came from: its own cell, or, when something has fallen into that cell meanwhile, the
- * first open cell straight above it. A drag that is taken away and a put-away under a dragging finger both end here.
+ * Sets the lump down in the cell where the finger lets go: an open cell on the ant's open way, never in the top
+ * row, where the mouth is. The lump leaves the cell it came from and lies in the new one; the caller then lets
+ * the ground come to rest. Let go anywhere else, nothing changes: the lump is still where it was picked up, and
+ * null is given. A drag that is taken away and a put-away under a dragging finger need no call at all.
  */
-export function putBack(ground: Ground, carried: Carried): number {
-  const x = carried.from % ground.cols
-  for (let y = Math.floor(carried.from / ground.cols); y >= 1; y--) {
-    if (at(ground, x, y) === OPEN) {
-      put(ground, x, y, carried.kind)
-      return y * ground.cols + x
-    }
-  }
-  // A whole column filled to the turf cannot happen while a lump is out of it: the lump left one cell open.
-  throw new Error('no cell to put the lump back in')
+export function setDown(ground: Ground, ant: Cell, carried: Carried, cx: number, cy: number): number | null {
+  const x = Math.floor(cx), y = Math.floor(cy)
+  if (y < 1 || x < 0 || x >= ground.cols || y >= ground.rows || at(ground, x, y) !== OPEN) return null
+  const to = y * ground.cols + x
+  if (openWay(ground, ant)[to] !== 1) return null
+  put(ground, carried.from % ground.cols, Math.floor(carried.from / ground.cols), OPEN)
+  put(ground, x, y, carried.kind)
+  return to
 }
 
-/** The ground as a save holds it: the lump in the jaws back where it came from, and everything come to rest. */
-export function asSaved(ground: Ground, carried: Carried | null): Ground {
+/** The ground as a save holds it: everything come to rest, so nothing is saved in the air. A carried lump is in its own cell already. */
+export function asSaved(ground: Ground): Ground {
   const saved = clone(ground)
-  if (carried) putBack(saved, carried)
   settle(saved)
   return saved
 }

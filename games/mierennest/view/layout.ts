@@ -19,3 +19,6 @@ export const MOUTH_X = GROUND.x + ((MOUTH[0] + MOUTH[MOUTH.length - 1] + 1) / 2)
 export const cellAt = (x: number, y: number) => ({ x: GROUND.x + x * CELL, y: GROUND.y + y * CELL })
 /** The cell under a point of the stage, which may lie outside the grid. */
 export const cellUnder = (sx: number, sy: number) => ({ x: Math.floor((sx - GROUND.x) / CELL), y: Math.floor((sy - GROUND.y) / CELL) })
+
+/** The log beside the mouth, where the next party waits: its left end, its length and its height on the grass. */
+export const LOG = { x: 368, length: 150, height: 26 } as const

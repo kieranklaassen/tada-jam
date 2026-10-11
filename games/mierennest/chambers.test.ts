@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { MOST_WORKERS, aired, chambers, kingdom, rooms } from './chambers'
-import { OPEN, fromPicture, generate, put } from './ground'
+import { MOST_WORKERS, ROOM, aired, chambers, kingdom, rooms } from './chambers'
+import { EARTH, OPEN, fromPicture, generate, put } from './ground'
 
 // In these pictures the mouth is the open cell in the top row.
 const mouthOf = (picture: string[]) => [picture[0].indexOf('.')]
@@ -27,6 +27,22 @@ describe('rooms', () => {
     expect(rooms(fromPicture(joined), mouthOf(joined)).length).toBe(1)
     const apart = ['X.XXXXXXXXXX', '#.##########', '#....##....#', '#....##....#', '#....##....#', 'XXXXXXXXXXXX']
     expect(rooms(fromPicture(apart), mouthOf(apart)).length).toBe(2)
+  })
+})
+
+describe('the largest kingdom', () => {
+  it('holds forty rooms, eight across and five down, each with one cell between it and the next', () => {
+    const ground = generate(1)
+    for (let y = 1; y < ground.rows - 1; y++) for (let x = 0; x < ground.cols; x++) put(ground, x, y, EARTH)
+    for (let row = 0; row < 5; row++) for (let col = 0; col < 8; col++) {
+      for (let y = 0; y < ROOM.height; y++) for (let x = 0; x < ROOM.width; x++) put(ground, col * 5 + x, 1 + row * 4 + y, OPEN)
+    }
+    expect(rooms(ground).length).toBe(40)
+    // A ninth across or a sixth down does not fit between the turf and the bedrock.
+    expect(8 * (ROOM.width + 1) - 1).toBeLessThanOrEqual(ground.cols)
+    expect(9 * (ROOM.width + 1) - 1).toBeGreaterThan(ground.cols)
+    expect(5 * (ROOM.height + 1) - 1).toBeLessThanOrEqual(ground.rows - 2)
+    expect(6 * (ROOM.height + 1) - 1).toBeGreaterThan(ground.rows - 2)
   })
 })
 

@@ -1,5 +1,5 @@
 import { STAGE } from '../stage'
-import { FRAME, GRASS_Y, GROUND, MOUTH_X, SURFACE } from './layout'
+import { FRAME, GRASS_Y, GROUND, LOG, MOUTH_X, SURFACE } from './layout'
 import * as P from './palette'
 
 // What stands still: the sky, the far hills, the grass and the invaders' camp, and the wooden frame of the farm.
@@ -152,7 +152,7 @@ function paintSurface(pen: Pen): void {
   pen.fillStyle = P.GRASS.dark
   for (let n = 0; n < 150; n++) {
     const gx = x + ((n * 97) % 1117) + 2, h = 22 + ((n * 53) % 30)
-    if (Math.abs(gx - MOUTH_X) < 60) continue
+    if (Math.abs(gx - MOUTH_X) < 74) continue
     blade(pen, gx, GRASS_Y, h, ((n * 31) % 17) - 8, 7)
   }
   leafTent(pen, 120, GRASS_Y, 118, '#5fae4a', '#3f8436')
@@ -162,7 +162,7 @@ function paintSurface(pen: Pen): void {
   toadstool(pen, 874, GRASS_Y, 62, '#e8743a', 0.12)
   toadstool(pen, 968, GRASS_Y, 74, '#d9463a', 0.05)
   toadstool(pen, 52, GRASS_Y, 46, '#e8743a', -0.1)
-  log(pen, 368, GRASS_Y, 150)
+  log(pen, LOG.x, GRASS_Y, LOG.length)
   // A washing line between two stalks, with a leaf and a sock on it.
   pen.strokeStyle = P.GRASS.dark
   pen.lineWidth = 4
@@ -208,13 +208,13 @@ function paintSurface(pen: Pen): void {
   pen.fillStyle = P.GRASS.blade
   for (let n = 0; n < 190; n++) {
     const gx = x + ((n * 59) % 1119) + 1, h = 8 + ((n * 37) % 15)
-    if (Math.abs(gx - MOUTH_X) < 34) continue
+    if (Math.abs(gx - MOUTH_X) < 48) continue
     blade(pen, gx, GRASS_Y + 2, h, ((n * 23) % 11) - 5, 6)
   }
   pen.fillStyle = P.GRASS.light
   for (let n = 0; n < 70; n++) {
     const gx = x + ((n * 131) % 1113) + 4
-    if (Math.abs(gx - MOUTH_X) < 34) continue
+    if (Math.abs(gx - MOUTH_X) < 48) continue
     blade(pen, gx, GRASS_Y + 2, 7 + ((n * 41) % 9), ((n * 29) % 9) - 4, 5)
   }
   for (const [dx, dy] of [[196, 20], [660, 26], [724, 18], [1120, 24]] as const) {

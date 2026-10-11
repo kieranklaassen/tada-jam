@@ -66,12 +66,12 @@ describe('a save', () => {
     expect(save.finished).toBe(false)
   })
 
-  it('holds a lump in the jaws back where it came from, and no lump is lost', () => {
+  it('holds a lump in the jaws in the cell it came from, and no lump is lost', () => {
     const game = builtGame()
     const whole = LUMPS.map((kind) => count(game.ground, kind))
-    const carried = pickUp(game.ground, 24, 5)!
+    const carried = pickUp(game.ground, game.ant, 24, 5)!
     expect(carried.kind).toBe(STONE)
-    const back = deserialize(JSON.parse(JSON.stringify(serialize(game, carried))), null, SEED)
+    const back = through(game)
     expect(LUMPS.map((kind) => count(back.ground, kind))).toEqual(whole)
     expect(at(back.ground, 24, 5)).toBe(STONE)
   })
