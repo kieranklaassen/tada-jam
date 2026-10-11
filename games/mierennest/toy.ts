@@ -276,6 +276,9 @@ export class Toy {
       next.set(to, (still.get(from) ?? 0) + 1)
       still.delete(from)
       if (ground.cells[to] === SAND) sand++
+      // A lump that was taken while it fell is in one place: the cell it is in now is the one it leaves when it is
+      // set down, wherever the ground has taken it meanwhile.
+      if (this.carried && this.carried.from === from) this.carried = { kind: this.carried.kind, from: to }
     }
     // What was falling and did not move this step has come to rest.
     for (const [cell, fell] of still) if (isLump(ground.cells[cell] as Kind)) this.events.push({ type: 'landed', kind: ground.cells[cell] as Lump, cell, fell })

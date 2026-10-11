@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { EARTH, LUMPS, MUD, OPEN, ROCK, SAND, STONE, at, atRest, clone, count, equal, fromPicture, put, type Ground } from './ground'
+import { EARTH, LUMPS, MUD, OPEN, ROCK, SAND, STONE, at, atRest, clone, count, equal, fromPicture, put, type Ground, type Lump } from './ground'
 import { deserialize, freshGame, serialize, type Game } from './save'
 import { DRAGGING_A_STONE, GROUND_STEP, TAPS_AGAIN, Toy, type ToyEvent } from './toy'
 
@@ -197,6 +197,71 @@ describe('carrying', () => {
       play(toy, 0.5)
       expect(equal(toy.game.ground, before)).toBe(true)
       expect(toy.carried).toBeNull()
+    }
+  })
+
+  it('a lump picked up while it falls is in one place: set down, it has left the air it was falling through', () => {
+    const toy = new Toy(gameOn(['XXXXXXXX', '...o....', '...#....', '........', '........', '........', '........', '########', 'XXXXXXXX'], [0, 6]))
+    const ground = toy.game.ground
+    // The earth under the stone is gone: it starts to fall.
+    put(ground, 3, 2, OPEN)
+    toy.touched([2 * 8 + 3])
+    toy.step(GROUND_STEP)
+    expect(at(ground, 3, 2)).toBe(STONE)
+    // The finger takes it in mid-air, carries it off while the ground goes on coming to rest, and sets it down.
+    toy.press(3.5, 2.5, 0)
+    expect(toy.carried?.kind).toBe(STONE)
+    play(toy, 0.5)
+    toy.drag(6.5, 6.5, 0.6)
+    play(toy, 0.3)
+    toy.release()
+    play(toy, 2)
+    expect(count(ground, STONE)).toBe(1)
+    expect(at(ground, 6, 6)).toBe(STONE)
+    // Taken away in mid-air instead, it is where it fell to, once.
+    const again = new Toy(gameOn(['XXXXXXXX', '...o....', '...#....', '........', '........', '........', '........', '########', 'XXXXXXXX'], [0, 6]))
+    put(again.game.ground, 3, 2, OPEN)
+    again.touched([2 * 8 + 3])
+    again.step(GROUND_STEP)
+    again.press(3.5, 2.5, 0)
+    play(again, 0.5)
+    again.cancel()
+    play(again, 2)
+    expect(count(again.game.ground, STONE)).toBe(1)
+    expect(at(again.game.ground, 3, 6)).toBe(STONE)
+  })
+
+  it('makes and loses no lump through a long, careless play that picks up lumps as they fall', () => {
+    for (const seed of [5, 6, 7]) {
+      const game = freshGame(null, seed)
+      const whole = LUMPS.map((kind) => count(game.ground, kind))
+      const toy = new Toy(game)
+      let t = 0, taken = 0
+      for (let n = 0; n < 300; n++) {
+        const x = (n * 7.3) % 40, y = 1 + ((n * 3.1) % 19)
+        const before = clone(game.ground)
+        toy.press(x, y, t)
+        toy.drag((x + 5 + (n % 9)) % 40, 1 + ((y + (n % 5)) % 19), (t += 0.1))
+        if (n % 7 === 0) toy.cancel()
+        else toy.release()
+        play(toy, 0.1)
+        // A lump that has just moved is on its way down: the finger snatches at it, and lets go somewhere else.
+        const falling = game.ground.cells.findIndex((kind, i) => LUMPS.includes(kind as Lump) && before.cells[i] === OPEN)
+        if (falling >= 0) {
+          toy.press((falling % 40) + 0.5, Math.floor(falling / 40) + 0.5, t)
+          if (toy.carried) taken++
+          play(toy, 0.1)
+          toy.drag((x + 11) % 40, 1 + ((y + 7) % 19), (t += 0.1))
+          if (n % 5 === 0) toy.cancel()
+          else toy.release()
+        }
+        play(toy, 0.1)
+        t += 0.2
+      }
+      play(toy, 5)
+      expect(taken, `seed ${seed}`).toBeGreaterThan(3)
+      expect(LUMPS.map((kind) => count(game.ground, kind)), `seed ${seed}`).toEqual(whole)
+      expect(atRest(game.ground)).toBe(true)
     }
   })
 

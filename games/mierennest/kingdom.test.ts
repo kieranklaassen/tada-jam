@@ -739,12 +739,25 @@ describe('a whole game played carelessly', () => {
       const start = whole(k.game)
       for (let n = 0; n < 220; n++) {
         const x = ((n * 7.3 + seed) % 38) + 1, y = 1.5 + ((n * 3.7) % 17)
+        const before = clone(k.game.ground)
         k.press(x, y, t)
         k.drag((x + 3 + (n % 7)) % 39, 1.5 + ((y + (n % 4)) % 17), (t += 0.1))
         if (n % 9 === 0) k.cancel()
         else k.release()
         if (n % 13 === 5) k.bell()
-        for (let f = 0; f < 6; f++) k.step(1 / 30)
+        for (let f = 0; f < 3; f++) k.step(1 / 30)
+        // A lump that has just moved is on its way down: the finger snatches at it and lets go somewhere else, on a machine now and then.
+        const falling = k.game.ground.cells.findIndex((kind, i) => LUMPS.includes(kind as (typeof LUMPS)[number]) && before.cells[i] === OPEN)
+        if (falling >= 0) {
+          k.press((falling % 40) + 0.5, Math.floor(falling / 40) + 0.5, t)
+          for (let f = 0; f < 3; f++) k.step(1 / 30)
+          const machine = k.game.machines[n % 2]
+          if (machine && n % 4 === 0) k.drag(machine.x + 0.5, machine.y + 0.5, (t += 0.1))
+          else k.drag((x + 9) % 39, 1.5 + ((y + 6) % 17), (t += 0.1))
+          if (n % 5 === 0) k.cancel()
+          else k.release()
+        }
+        for (let f = 0; f < 3; f++) k.step(1 / 30)
         k.drainEvents()
         k.drainRaidEvents()
         t += 0.2
