@@ -107,10 +107,11 @@ describe('the camp', () => {
   })
 
   it('is longer for a larger party, and the two campers on the left make room for it', () => {
-    const one = campers(partyAt('first-chamber', 0)), full = campers(partyAt('full-camp', 0))
+    const one = campers(partyAt('first-beetle', 0)), full = campers(['beetle', 'beetle', 'beetle', 'dungBeetle'])
     expect(fileEnd(partyFile(partyAt('full-camp', 0)))).toBeLessThan(fileEnd(partyFile(partyAt('first-chamber', 0))) - 200)
     expect(one.map((c) => c.id)).toContain('fly')
     expect(one.map((c) => c.id)).toContain('stuck')
+    // No fly and no ant is in this party, so both are at their spots unless the party reaches them.
     expect(full.map((c) => c.id)).not.toContain('fly')
   })
 

@@ -84,8 +84,8 @@ describe('the fullest frame of the great raid', () => {
     expect(most).toBeLessThanOrEqual(DRAW_BUDGET)
     expect(most).toBeGreaterThan(45)
     const has = (who: string) => mostItems.filter((item) => item.is === 'sprite' && item.who === who).length
-    // The five of the army, and the one who is always at the camp polishing its ball.
-    expect(has('dungBeetle')).toBe(6)
+    // The five of the army: the one who is always at the camp polishing its ball is one of them.
+    expect(has('dungBeetle')).toBe(5)
     expect(has('dungBall')).toBeGreaterThanOrEqual(5)
     expect(has('dungFly')).toBeGreaterThanOrEqual(1)
     expect(mostItems.filter((item) => item.is === 'machine').length).toBe(2)
@@ -173,7 +173,7 @@ describe('the ending', () => {
       dusk: items.filter((item) => item.is === 'dusk').length,
       army: items.filter((item) => item.is === 'sprite' && (item.who === 'dungBeetle' || item.who === 'dungFly')).length,
     })
-    // The two campers who are always there are a dung beetle and the dung fly: the army itself has gone from the log.
+    // The dung beetle and the dung fly are back at their own spots at the camp: the army has gone from the log.
     expect(marks(display.items(null))).toEqual({ lit: 2, leaf: 1, dusk: 0, army: 2 })
     expect(equal(k.game.ground, before)).toBe(true)
     // Found as left: opened again from the save, the same two marks and no scene.

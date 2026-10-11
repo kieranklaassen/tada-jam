@@ -151,22 +151,26 @@ export function fileEnd(file: readonly Camper[]): number {
 
 /**
  * The campers, in the order they are drawn. Each of those who are always there is caught out by its own habit.
- * The two on the left make room when the party at the log is long: they have joined it.
+ * A creature is in one place: one whose kind is in the party at the log is in that party, and its own spot at the
+ * camp is empty while it is away (the dung beetle takes its ball along, the dung fly its twig). The two on the
+ * left also make room when the party is long.
  */
 export function campers(party: Party): Camper[] {
   const file = [...partyBalls(party), ...partyFile(party)], end = fileEnd(file)
+  const away = (kind: InvaderKind) => party.includes(kind)
   const left: Camper[] = [
-    { id: 'stuck', kind: 'raider', x: 100, y: GRASS_Y, flip: true, poses: ['stuck', 'stuck2'], phase: 0.3 },
-    { id: 'fly', kind: 'fly', x: 230, y: GRASS_Y, flip: false, poses: ['hands', 'hands2'], phase: 0 },
+    ...(away('ant') ? [] : [{ id: 'stuck', kind: 'raider', x: 100, y: GRASS_Y, flip: true, poses: ['stuck', 'stuck2'], phase: 0.3 } as Camper]),
+    ...(away('fly') ? [] : [{ id: 'fly', kind: 'fly', x: 230, y: GRASS_Y, flip: false, poses: ['hands', 'hands2'], phase: 0 } as Camper]),
   ]
-  return [
-    ...left.filter((camper) => camper.x + BODY[camper.kind].width / 2 + 6 <= end),
-    ...file,
-    { id: 'leader', kind: 'dungFly', x: TOADSTOOL.x, y: GRASS_Y - TOADSTOOL.top, flip: true, poses: ['point', 'point2'], phase: 0.1 },
-    { id: 'beetle', kind: 'beetle', x: 900, y: GRASS_Y, flip: false, poses: ['onBack', 'onBack2'], phase: 0.5 },
-    { id: 'ball', kind: 'dungBall', x: 1106, y: GRASS_Y, flip: false, poses: ['plain', 'plain'], phase: 0 },
-    { id: 'polisher', kind: 'dungBeetle', x: 1030, y: GRASS_Y, flip: false, poses: ['polish', 'polish2'], phase: 0.8 },
+  const right: Camper[] = [
+    ...(away('dungFly') ? [] : [{ id: 'leader', kind: 'dungFly', x: TOADSTOOL.x, y: GRASS_Y - TOADSTOOL.top, flip: true, poses: ['point', 'point2'], phase: 0.1 } as Camper]),
+    ...(away('beetle') ? [] : [{ id: 'beetle', kind: 'beetle', x: 900, y: GRASS_Y, flip: false, poses: ['onBack', 'onBack2'], phase: 0.5 } as Camper]),
+    ...(away('dungBeetle') ? [] : [
+      { id: 'ball', kind: 'dungBall', x: 1106, y: GRASS_Y, flip: false, poses: ['plain', 'plain'], phase: 0 } as Camper,
+      { id: 'polisher', kind: 'dungBeetle', x: 1030, y: GRASS_Y, flip: false, poses: ['polish', 'polish2'], phase: 0.8 } as Camper,
+    ]),
   ]
+  return [...left.filter((camper) => camper.x + BODY[camper.kind].width / 2 + 6 <= end), ...file, ...right]
 }
 
 export type Box = { left: number; right: number; top: number; bottom: number }

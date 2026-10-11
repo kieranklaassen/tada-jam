@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
+import { campers } from '../camp'
+import { LADDER } from '../config'
 import { CELL, EARTH, MOUTH, OPEN, STONE, at, put, settle } from '../ground'
 import type { Guidance } from '../guidance'
+import type { InvaderKind } from '../habits'
+import { ROUND } from '../order'
 import { freshGame, type Game } from '../save'
 import { Kingdom } from '../kingdom'
 import { DRAWS, MOST_CRUMBS, QUEEN_WEDGED, ToyDisplay, drawsOf, type Item } from './display'
@@ -47,8 +51,8 @@ describe('a frame of the toy', () => {
     expect(ant.pose).toBe('look')
     expect(ant.y).toBe(GROUND.y + 4 * CELL)
     expect(ant.y - CELL).toBeGreaterThanOrEqual(queen.y)
-    // Seven campers, the queen, the worker on the hill and the ant.
-    expect(items.filter((item) => item.is === 'sprite').length).toBe(7 + 3)
+    // Six campers (the scout at the log is the raider ant, so its puddle is empty), the queen, the worker on the hill and the ant.
+    expect(items.filter((item) => item.is === 'sprite').length).toBe(6 + 3)
     expect(items[0].is).toBe('drop')
   })
 
@@ -177,7 +181,7 @@ describe('a touch on the surface', () => {
     display.advance(0.4)
     const items = display.items(null)
     const hops = items.filter((item): item is Extract<Item, { is: 'sprite' }> => item.is === 'sprite' && item.y <= GRASS_Y && item.who !== 'queen').map((item) => item.move!.dy)
-    expect(hops.length).toBe(8)
+    expect(hops.length).toBe(7)
     expect(new Set(hops.map((dy) => dy.toFixed(2))).size).toBeGreaterThanOrEqual(5)
     expect(hops.every((dy) => dy <= 0)).toBe(true)
     expect(sprites(items, 'beetle')[0].move!.dy).not.toBe(before)
@@ -205,3 +209,74 @@ describe('a touch on the surface', () => {
     expect(Math.abs((display.items(null)[0] as Extract<Item, { is: 'drop' }>).sway)).toBeLessThan(0.05)
   })
 })
+
+describe('a creature is in one place', () => {
+  const KIND_OF: Record<string, InvaderKind> = { raider: 'ant', beetle: 'beetle', fly: 'fly', dungBeetle: 'dungBeetle', dungFly: 'dungFly' }
+  /** The game's own ground with a hall off the shaft. */
+  const hallGame = (seed: number) => {
+    const game = freshGame(null, seed), g = game.ground
+    for (let y = 3; y <= 6; y++) for (const x of MOUTH) put(g, x, y, OPEN)
+    for (let y = 4; y <= 6; y++) for (let x = 22; x <= 33; x++) put(g, x, y, OPEN)
+    settle(g)
+    game.ant = { x: 30, y: 6 }
+    return game
+  }
+
+  it('at the camp: one whose kind is in the party at the log is not also at its own spot', () => {
+    expect(campers(['beetle']).map((c) => c.id)).toEqual(['stuck', 'fly', 'party0', 'leader', 'ball', 'polisher'])
+    expect(campers(['dungFly', 'dungBeetle']).filter((c) => c.kind === 'dungFly').length).toBe(1)
+    expect(campers(['dungFly', 'dungBeetle']).filter((c) => c.kind === 'dungBeetle').length).toBe(1)
+    expect(campers(['dungFly', 'dungBeetle']).filter((c) => c.kind === 'dungBall').length).toBe(1)
+  })
+
+  it('in every frame, for every party of the order and of the round, through the first showing, the raid and the put-back: nobody is drawn twice', () => {
+    const laid: { position: string; muster: number }[] = [
+      ...LADDER.filter((place) => place !== 'open-kingdom').map((position) => ({ position: position as string, muster: 0 })),
+      ...ROUND.map((_, muster) => ({ position: 'open-kingdom', muster })),
+    ]
+    let frames = 0
+    for (const seed of [1, 2]) for (const { position, muster } of laid) {
+      const game = hallGame(seed)
+      game.position = position
+      game.muster = muster
+      game.ended = position === 'open-kingdom'
+      // The machines have been shown; the kinds have not, so each first showing plays.
+      game.shown.push('catapult', 'cannon')
+      const k = new Kingdom(game), display = new ToyDisplay(k, seed)
+      const party = k.party
+      const most = (who: string) => {
+        if (who === 'dungBall') return Math.max(1, party.filter((kind) => kind === 'dungBeetle').length)
+        const kind = KIND_OF[who]
+        // As many as the party has of the kind; with none in the party, the one who is always at the camp.
+        return Math.max(1, party.filter((member) => member === kind).length)
+      }
+      const look = () => {
+        frames++
+        const count = new Map<string, number>()
+        for (const item of display.items(null)) {
+          if (item.is !== 'sprite' || (KIND_OF[item.who] === undefined && item.who !== 'dungBall')) continue
+          count.set(item.who, (count.get(item.who) ?? 0) + 1)
+        }
+        for (const [who, n] of count) expect(n, `${seed} ${position} ${muster} at ${display.seconds.toFixed(2)}: ${who}`).toBeLessThanOrEqual(most(who))
+      }
+      const play = (until: () => boolean, most = 6000) => {
+        for (let n = 0; n < most && !until(); n++) {
+          k.step(1 / 30)
+          display.see(k.toy.drainEvents())
+          display.seeGame(k.drainEvents(), k.drainRaidEvents())
+          display.advance(1 / 30)
+          look()
+        }
+      }
+      look()
+      // The first touch starts the first showing that is owed; then the bell.
+      k.press(24.5, 5.5, 0)
+      k.release()
+      play(() => k.scene === null, 600)
+      k.bell()
+      play(() => k.raid === null && (k.scene === null || k.scene.is === 'ending'))
+    }
+    expect(frames).toBeGreaterThan(5000)
+  })
+})
+

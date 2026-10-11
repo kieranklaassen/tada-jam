@@ -358,11 +358,15 @@ export class ToyDisplay {
     // The party of a raid, or of the put-back after it, is shown by the raid; otherwise it stands in its file at the log.
     const raided = k.raid ?? (scene?.is === 'putBack' ? k.lastRaid : null)
     const ending = scene?.is === 'ending' ? scene : null
+    const showing = scene?.is === 'showing' ? SHOWN_AS[scene.kind] : undefined
+    const shownOut = showing ? this.camp.find((camper) => camper.id.startsWith('party') && camper.kind === showing.who)?.id : undefined
     for (const camper of this.camp) {
       const inFile = camper.id.startsWith('party')
       if (inFile && raided) continue
       // In the ending the dung fly is not at the log: it sits on the hill.
       if (ending && camper.kind === 'dungFly' && inFile) continue
+      // The one a first showing shows is one of the party: it has stepped out to the front of the camp.
+      if (camper.id === shownOut) continue
       const move = this.moveOf(camper.id, camper.kind, camper.phase, slot++)
       let x = camper.x, pose = camper.poses[move.second ? 1 : 0]
       if (inFile && scene?.is === 'shrug') {
