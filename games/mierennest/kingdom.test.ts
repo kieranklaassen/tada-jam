@@ -40,6 +40,8 @@ const settleAll = (k: Kingdom, events: KingdomEvent[] = []) => {
   return events
 }
 const saved = (game: Game) => deserialize(JSON.parse(JSON.stringify(serialize(game))), null, 1)
+/** The nest as it lies in the game's own ground, come to rest. */
+const asLoaded = (k: Kingdom) => deserialize(JSON.parse(JSON.stringify(serialize(k.game))), null, 1).ground
 const whole = (game: Game) => LUMPS.map((kind) => count(game.ground, kind) + game.machines.filter((m) => m.load === ['', '', 'sand', 'mud', 'stone'][kind]).length)
 
 describe('with no raid called', () => {
@@ -601,6 +603,26 @@ describe('a machine', () => {
       expect(whole(k.game), how).toEqual(before)
       expect(count(k.game.ground, STONE), how).toBe(1)
       expect(whole(saved(k.game)), how).toEqual(before)
+    }
+  })
+
+  it('fired outside a raid, is stored at every instant with its lump a cell of the ground where it lands and its cup empty: never in neither', () => {
+    for (const load of ['sand', 'mud', 'stone'] as const) {
+      const k = armed(load)
+      put(k.game.ground, 28, 5, OPEN)
+      const before = whole(k.game)
+      k.press(32.5, 5.5, 0)
+      k.release()
+      // From the instant it lets go, through every frame of the flight and after it has landed.
+      for (let n = 0; n < 40; n++) {
+        const stored = saved(k.stored())
+        expect(whole(stored), `${load} at frame ${n}`).toEqual(before)
+        expect(stored.machines[0].load, `${load} at frame ${n}`).toBeNull()
+        expect(count(stored.ground, LUMPS[['sand', 'mud', 'stone'].indexOf(load)]), `${load} at frame ${n}`).toBe(count(asLoaded(k), LUMPS[['sand', 'mud', 'stone'].indexOf(load)]) + (k.flying.length > 0 ? 1 : 0))
+        k.step(1 / 30)
+      }
+      expect(k.flying).toEqual([])
+      expect(k.stored()).toBe(k.game)
     }
   })
 

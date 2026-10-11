@@ -69,7 +69,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // Going to rest writes whatever the throttle still holds (`cadence.settle`, below).
     // A game whose saved state is more than `state.ts` holds wraps it in a module of its own, as the header of
     // state.ts describes, and `serialize` and `deserialize` here become the wrapper's.
-    const cadence = new SaveCadence(() => { if (kingdom) ctxRef.current.storage.save(serialize(kingdom.game)) })
+    const cadence = new SaveCadence(() => { if (kingdom) ctxRef.current.storage.save(serialize(kingdom.stored())) })
 
     // The one place the game applies a quality tier: whatever its tiers set besides the pixel ratio, which
     // `resize` applies. It runs once before the first frame and again each time the governor changes tier, ahead

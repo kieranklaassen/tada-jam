@@ -1,5 +1,5 @@
 import { asSaved } from './build'
-import { MOUTH, OPEN, STONE, at, put, type Ground, type Kind, type Lump } from './ground'
+import { MOUTH, OPEN, STONE, at, clone, put, type Ground, type Kind, type Lump } from './ground'
 import { HABITS, type InvaderKind, type Shot } from './habits'
 import { LUMP_OF, RELOAD, SHOT_OF, arrivalPlace, canStand, cellsOf, machineAt, shotPath, restPlace } from './machines'
 import { after, judge, owed, partyAt, type MachineKind, type Party, type Verdict } from './order'
@@ -325,6 +325,26 @@ export class Kingdom {
     this.reloading = this.game.machines.map(() => 0)
     // A move of the queen that was still owed is not played after a put-away: she is found where she lives, as on load.
     this.settleQueen()
+  }
+
+  /**
+   * The game as it is stored. A machine fired outside a raid has thrown its lump: from the instant it lets go the
+   * lump is a cell of the ground where it lands and the machine is empty, so a save taken while the shot is still
+   * seen in the air holds the lump where it will lie, never in neither place.
+   */
+  stored(): Game {
+    const shots = this.flying.filter((shot) => !shot.inRaid)
+    if (shots.length === 0) return this.game
+    const ground = clone(this.game.ground), cols = ground.cols
+    for (const shot of shots) {
+      for (let n = shot.path.length - 1; n >= 0; n--) {
+        const cell = shot.path[n], x = cell % cols, y = Math.floor(cell / cols)
+        if (at(ground, x, y) !== OPEN || machineAt(this.game.machines, x, y) >= 0) continue
+        put(ground, x, y, LUMP_OF[shot.shot])
+        break
+      }
+    }
+    return { ...this.game, ground }
   }
 
   /** A shot in the air over the nest lands at once, so that no lump is ever lost; a shot of a raid is gone with the raid. */
