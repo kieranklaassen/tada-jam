@@ -3,7 +3,10 @@ import { TRAY } from './world'
 
 // The snail: the one living thing in the place round the tray. It creeps
 // along the boards behind the tray, slowly, whatever is going on in it; it is
-// no part of any ride, weighs nothing on the plank and is never saved. It has
+// no part of any ride, weighs nothing on the plank and is never saved. It
+// keeps to the left part of the boards: the shell that holds the game lays its
+// home control over the middle of the top edge, and a finger meant for the
+// snail must never land on that. It has
 // one answer to a finger and one to a hard knock in the tray: it pulls into
 // its shell, and after a moment looks out again, one eye at a time. Pure, on
 // game time: it stops when the game does.
@@ -11,10 +14,15 @@ import { TRAY } from './world'
 /** How far the mat under the tray reaches beyond the tray's rim. */
 export const MAT_REACH = 1.7
 
-/** Where it lives: a line across the boards behind the tray and its mat, and how far along it the snail goes before it turns. */
+/**
+ * Where it lives: a line along the boards behind the tray and its mat, on the left, from `reach` out from the middle
+ * in to `near`, and it turns at each end. `near` leaves the middle of the top edge alone on every shape of surface:
+ * a test of the camera holds that neither the snail's picture nor its reach comes under the home control.
+ */
 export const SNAIL = {
   z: -TRAY.halfDepth - TRAY.rimThick - MAT_REACH - 1.45,
   reach: 6.4,
+  near: 2.8,
   /** Tray units a second, at its fastest. */
   speed: 0.12,
   /** Half the width of its shell: about the size of the smallest friend. */
@@ -69,7 +77,7 @@ export class Snail {
   constructor(seed = 1) {
     const random = seeded(seed + 101)
     this.way = random() < 0.5 ? 1 : -1
-    this.pose = { x: (random() - 0.5) * 7, z: SNAIL.z, heading: this.way > 0 ? 0 : Math.PI, out: 1, first: 1, second: 1, look: 0, rock: 0, stretch: 0 }
+    this.pose = { x: -SNAIL.near - random() * (SNAIL.reach - SNAIL.near), z: SNAIL.z, heading: this.way > 0 ? 0 : Math.PI, out: 1, first: 1, second: 1, look: 0, rock: 0, stretch: 0 }
   }
 
   /** In its shell, or not yet all the way out. */
@@ -140,6 +148,6 @@ export class Snail {
     // Creeping: the foot stretches forward and gathers, and it moves only while it stretches.
     pose.stretch = 0.5 - 0.5 * Math.cos(this.phase * 2.1)
     pose.x += this.way * SNAIL.speed * pose.stretch * dt * (this.looking > 0 ? 0.2 : 1)
-    if (pose.x * this.way >= SNAIL.reach) this.turning = 0
+    if (this.way > 0 ? pose.x >= -SNAIL.near : pose.x <= -SNAIL.reach) this.turning = 0
   }
 }

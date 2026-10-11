@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
+import { SNAIL } from '../visitor'
 import { FRIENDS, HOME, PLANK, SAND, TRAY } from '../world'
 import { FIELD_OF_VIEW, placeCamera } from './camera'
 
@@ -13,7 +14,13 @@ function framed(width: number, height: number) {
     const p = new THREE.Vector3(x, y, z).project(camera)
     return { x: ((p.x + 1) / 2) * width, y: ((1 - p.y) / 2) * height }
   }
-  return { at, wide: (x: number, y: number, z: number, radius: number) => at(x + radius, y, z).x - at(x - radius, y, z).x }
+  /** How far the line of sight through a point of the surface passes from a place in the world. */
+  const ray = new THREE.Raycaster()
+  const passes = (px: number, py: number, x: number, y: number, z: number) => {
+    ray.setFromCamera(new THREE.Vector2((px / width) * 2 - 1, 1 - (py / height) * 2), camera)
+    return Math.sqrt(ray.ray.distanceSqToPoint(new THREE.Vector3(x, y, z)))
+  }
+  return { at, passes, wide: (x: number, y: number, z: number, radius: number) => at(x + radius, y, z).x - at(x - radius, y, z).x }
 }
 
 const SHAPES: [number, number][] = [[1180, 820], [1024, 768], [1366, 1024], [1280, 720], [820, 1180], [700, 500], [390, 844], [2000, 600]]
@@ -61,5 +68,24 @@ describe('the frame', () => {
     const { at } = framed(1180, 820)
     // The nearest a friend's underside comes to the child: at the front of the sand.
     expect(at(0, 0, SAND.maxZ + FRIENDS.pim.radius).y).toBeLessThan(820 * 0.9)
+  })
+
+  // The shell that holds the game lays one round home control over it: 48 px across, 10 px from the top edge, in the
+  // middle. A finger on it goes home, so nothing of the game's that answers a finger may lie under it.
+  it('keeps the snail clear of the home control at the top centre, whatever the shape of the surface: neither its picture nor its reach comes under it', () => {
+    const control = { radius: 24, top: 10 }
+    for (const [width, height] of SHAPES) {
+      const { at, passes } = framed(width, height)
+      const label = `${width} by ${height}`
+      // The nearest it comes to the middle: at the inner end of its line, facing the middle, its foot stretched and its eyes out.
+      const head = at(-SNAIL.near + 1.55, 0.5, SNAIL.z)
+      expect(head.x, label).toBeLessThan(width / 2 - control.radius)
+      // And no finger on the control touches it there: the reach round it that counts as a touch ends short of the control.
+      for (let step = 0; step < 16; step++) {
+        const angle = (step / 16) * Math.PI * 2
+        const px = width / 2 + Math.cos(angle) * control.radius, py = control.top + control.radius + Math.sin(angle) * control.radius
+        expect(passes(px, py, -SNAIL.near, 0.3, SNAIL.z), label).toBeGreaterThan(SNAIL.touch)
+      }
+    }
   })
 })
