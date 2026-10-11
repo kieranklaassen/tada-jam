@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { MOST_WORKERS, ROOM, aired, chambers, kingdom, rooms } from './chambers'
 import { EARTH, MOUTH, OPEN, fromPicture, generate, put } from './ground'
 
-// In these pictures the mouth is the open cell in the top row, and the shaft under it is three cells deep.
+// In these pictures the mouth is the open cell in the top row, and the shaft is the three cells under it.
 const mouthOf = (picture: string[]) => [picture[0].indexOf('.')]
 
 describe('rooms', () => {
   it('finds a clear block four wide and three high', () => {
-    const picture = ['XX.XXXXX', '##.#####', '##.#####', '##....##', '##....##', '##....##', 'XXXXXXXX']
+    const picture = ['XX.XXXXX', '##.#####', '##.#####', '##.#####', '##....##', '##....##', '##....##', 'XXXXXXXX']
     const found = rooms(fromPicture(picture), mouthOf(picture))
     expect(found.length).toBe(1)
     expect(found[0].cells.length).toBe(12)
@@ -16,18 +16,21 @@ describe('rooms', () => {
 
   it('counts no block in the cells of the shaft: a room dug beside it is a room without them', () => {
     // Four wide only with the shaft's own cell: no room.
-    const needsTheShaft = ['XX.XXXXX', '##.#####', '##....##', '##....##', '##....##', 'XXXXXXXX']
+    const needsTheShaft = ['XX.XXXXX', '##....##', '##....##', '##....##', '########', 'XXXXXXXX']
     expect(rooms(fromPicture(needsTheShaft), mouthOf(needsTheShaft))).toEqual([])
     // Four wide beside the shaft: a room, and no cell of the shaft is in it.
-    const beside = ['XX.XXXXXX', '##.######', '##.....##', '##.....##', '##.....##', 'XXXXXXXXX']
+    const beside = ['XX.XXXXXX', '##.....##', '##.....##', '##.....##', '#########', 'XXXXXXXXX']
     const found = rooms(fromPicture(beside), mouthOf(beside))
     expect(found.length).toBe(1)
     expect(found[0].cells.length).toBe(12)
     expect(found[0].cells.some((cell) => cell % 9 === 2)).toBe(false)
     expect(found[0].aired).toBe(true)
     // Below the shaft's three cells the same column is ground like any other.
-    const below = ['XX.XXXXX', '##.#####', '##.#####', '##....##', '##....##', '##....##', 'XXXXXXXX']
-    expect(rooms(fromPicture(below), mouthOf(below))[0].cells).toContain(3 * 8 + 2)
+    const below = ['XX.XXXXX', '##.#####', '##.#####', '##.#####', '##....##', '##....##', '##....##', 'XXXXXXXX']
+    expect(rooms(fromPicture(below), mouthOf(below))[0].cells).toContain(4 * 8 + 2)
+    // A room one row lower than the shaft's foot would have to use that foot: no room.
+    const atTheFoot = ['XX.XXXXX', '##.#####', '##.#####', '##....##', '##....##', '##....##', 'XXXXXXXX']
+    expect(rooms(fromPicture(atTheFoot), mouthOf(atTheFoot))).toEqual([])
     // On the real ground: three cells dug beside the shaft over three rows are no room, though with the shaft's
     // nearest column the clear block is four wide.
     const ground = generate(1)
@@ -39,16 +42,16 @@ describe('rooms', () => {
 
   const notRooms: { name: string; picture: string[] }[] = [
     { name: 'a tunnel two cells high, however long', picture: ['XX.XXXXXXX', '##.#######', '##........', '##........', 'XXXXXXXXXX'] },
-    { name: 'a block three wide', picture: ['XX.XXXXX', '##.#####', '##.#####', '##...###', '##...###', '##...###', 'XXXXXXXX'] },
-    { name: 'a block with a lump in it', picture: ['XX.XXXXX', '##.#####', '##.#####', '##....##', '##.s..##', '##....##', 'XXXXXXXX'] },
+    { name: 'a block three wide', picture: ['XX.XXXXX', '##.#####', '##.#####', '##.#####', '##...###', '##...###', '##...###', 'XXXXXXXX'] },
+    { name: 'a block with a lump in it', picture: ['XX.XXXXX', '##.#####', '##.#####', '##.#####', '##....##', '##.s..##', '##....##', 'XXXXXXXX'] },
     { name: 'the shaft', picture: ['X..X', '#..#', '#..#', '#..#', '#..#', 'XXXX'] },
   ]
   for (const row of notRooms) it(`does not take ${row.name} for a room`, () => expect(rooms(fromPicture(row.picture), mouthOf(row.picture))).toEqual([]))
 
   it('takes blocks that overlap or touch along a side as one room, and blocks apart as two', () => {
-    const joined = ['XX.XXXXXXX', '##.#######', '##.......#', '##.......#', '##.......#', '######...#', 'XXXXXXXXXX']
+    const joined = ['XX.XXXXXXX', '##.#######', '##.#######', '##.#######', '##.......#', '##.......#', '##.......#', '######...#', 'XXXXXXXXXX']
     expect(rooms(fromPicture(joined), mouthOf(joined)).length).toBe(1)
-    const apart = ['X.XXXXXXXXXX', '#.##########', '#.##########', '#....##....#', '#....##....#', '#....##....#', 'XXXXXXXXXXXX']
+    const apart = ['X.XXXXXXXXXX', '#.##########', '#.##########', '#.##########', '#....##....#', '#....##....#', '#....##....#', 'XXXXXXXXXXXX']
     expect(rooms(fromPicture(apart), mouthOf(apart)).length).toBe(2)
   })
 })
@@ -72,7 +75,7 @@ describe('the largest kingdom', () => {
 })
 
 describe('chambers of the kingdom', () => {
-  const sealed = ['XX.XXXXX', '##.#####', '########', '##....##', '##....##', '##....##', 'XXXXXXXX']
+  const sealed = ['XX.XXXXX', '##.#####', '##.#####', '##.#####', '########', '##....##', '##....##', '##....##', 'XXXXXXXX']
 
   it('does not count a room that air does not reach', () => {
     const ground = fromPicture(sealed)
@@ -82,7 +85,7 @@ describe('chambers of the kingdom', () => {
 
   it('counts it again once a way is opened, however narrow', () => {
     const ground = fromPicture(sealed)
-    put(ground, 2, 2, OPEN)
+    put(ground, 2, 4, OPEN)
     expect(chambers(ground, [2]).length).toBe(1)
   })
 

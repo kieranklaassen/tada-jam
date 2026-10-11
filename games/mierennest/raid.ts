@@ -66,9 +66,13 @@ export type Invader = {
   id: number
   kind: InvaderKind
   state: InvaderState
-  /** The place it is in, and the one it came from, with how far it is between them, from 0 to 1. Both -1 before it has come in. */
+  /**
+   * The place it is in, the one it is on its way to, and how far it is between them, from 0 to 1. Standing, it is
+   * on its way nowhere: `toward` is `cell`. `from` is the place it was in before this one. All -1 before it has come in.
+   */
   cell: number
   from: number
+  toward: number
   along: number
   /** Which way it faces along the row. */
   facing: -1 | 1
@@ -199,7 +203,7 @@ export function callRaid(built: Ground, party: Party, mouth: readonly number[] =
   const ground = clone(built)
   const inside = chamberCells(ground, mouth)
   const invaders: Invader[] = party.map((kind, id) => ({
-    id, kind, state: 'coming', cell: -1, from: -1, along: 0, facing: 1, wait: APART,
+    id, kind, state: 'coming', cell: -1, from: -1, toward: -1, along: 0, facing: 1, wait: APART,
     way: [], step: 0, trail: [], leaning: null, acted: false, insideSince: false, room: 0, spot: -1, after: 'going', lastShot: null, answer: null,
     ball: kind === 'dungBeetle' ? DUNG_BALL.across : 0, jammed: 0, lostIn: -1, queued: false, wake: [],
   }))
@@ -574,8 +578,8 @@ function leaveBall(raid: Raid, invader: Invader): void {
 function move(raid: Raid, invader: Invader, speed: number): boolean {
   const next = invader.way[invader.step + 1]
   if (next === undefined) return false
-  if (invader.from !== invader.cell || invader.along === 0) {
-    invader.from = invader.cell
+  if (invader.along === 0) {
+    invader.toward = next
     const dx = (next % raid.ground.cols) - (invader.cell % raid.ground.cols)
     if (dx !== 0) invader.facing = dx > 0 ? 1 : -1
   }
@@ -589,6 +593,7 @@ function move(raid: Raid, invader: Invader, speed: number): boolean {
   if (invader.wake.length > WAKE) invader.wake.length = WAKE
   invader.from = invader.cell
   invader.cell = next
+  invader.toward = next
   invader.step++
   invader.queued = false
   return true
@@ -642,6 +647,7 @@ function comeIn(raid: Raid, invader: Invader): boolean {
   }
   invader.cell = top
   invader.from = top
+  invader.toward = top
   invader.trail = [top]
   invader.state = 'going'
   if (start !== top) setOff(invader, [top, start])
@@ -843,6 +849,7 @@ export function hit(raid: Raid, id: number, shot: Shot): void {
     for (let n = 0; n < back && invader.trail.length > 1; n++) invader.trail.pop()
     invader.from = invader.cell
     invader.cell = invader.trail[invader.trail.length - 1]
+    invader.toward = invader.cell
     invader.along = 0
   }
   invader.way = []

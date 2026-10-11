@@ -47,9 +47,10 @@ export function aired(ground: Ground, mouth: readonly number[] = MOUTH): Uint8Ar
 export function rooms(ground: Ground, mouth: readonly number[] = MOUTH): Room[] {
   const { cols, rows, cells } = ground
   const inBlock = new Uint8Array(cells.length)
-  // The shaft a new nest starts with is the way in and no part of any room: no block is counted in its cells.
+  // The shaft a new nest starts with is the way in and no part of any room: no block is counted in its cells, which
+  // are the mouth's own row and the three rows under it.
   const shaft = new Uint8Array(cells.length)
-  for (const x of mouth) for (let y = 0; y < SHAFT_DEPTH && y < rows; y++) if (x < cols) shaft[y * cols + x] = 1
+  for (const x of mouth) for (let y = 0; y <= SHAFT_DEPTH && y < rows; y++) if (x < cols) shaft[y * cols + x] = 1
   for (let y = 0; y + ROOM.height <= rows; y++) {
     for (let x = 0; x + ROOM.width <= cols; x++) {
       let clear = true

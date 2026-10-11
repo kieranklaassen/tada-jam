@@ -11,7 +11,7 @@ import { freshGame, type Game } from '../save'
 import { POSES } from './creatures'
 import { DRAWS, ToyDisplay, drawsOf, type Item } from './display'
 import { GRASS_Y, GROUND } from './layout'
-import { DUCKS, FURNISHED, MOUTH_STEP, PLAYED_BY, RAID_POSES, covers, invaderPose, roomFloor, showCarriedOut, showFurnishings, showMachine, showRaid, showShot, shownBox, shownFace } from './raidShow'
+import { DUCKS, FURNISHED, MOUTH_STEP, PLAYED_BY, RAID_POSES, covers, invaderAt, invaderPose, roomFloor, showCarriedOut, showFurnishings, showMachine, showRaid, showShot, shownBox, shownFace } from './raidShow'
 import { THING_SIZE } from './things'
 
 const DRAW_BUDGET = 80
@@ -93,6 +93,33 @@ describe('where a raid is shown', () => {
     showRaid(raid, party, 60).forEach((one) => {
       if (raid.invaders[one.id].state === 'home') expect(one.x).toBe(file[one.id].x)
     })
+  })
+
+  it('draws an invader where the raid has it: in its place when it stands, and between its place and the next as it goes, never a place behind', () => {
+    const party = ['ant', 'beetle', 'fly'] as const
+    const raid = callRaid(fullKingdom().ground, party), cols = raid.ground.cols
+    const feet = (kind: string, cell: number) => (kind === 'fly' ? GROUND.x + ((cell % cols) + 1) * CELL : GROUND.x + ((cell % cols) + 0.5) * CELL)
+    let standing = 0, going = 0
+    while (!raid.over) {
+      stepRaid(raid)
+      for (const invader of raid.invaders) {
+        if (invader.cell < 0 || invader.state === 'home' || invader.state === 'coming') continue
+        const at = invaderAt(invader, cols)
+        const a = feet(invader.kind, invader.cell), b = feet(invader.kind, invader.toward)
+        if (invader.along === 0) {
+          expect(invader.toward).toBe(invader.cell)
+          expect(at.x).toBeCloseTo(a, 6)
+          standing++
+        } else {
+          expect(at.x).toBeGreaterThanOrEqual(Math.min(a, b) - 1e-6)
+          expect(at.x).toBeLessThanOrEqual(Math.max(a, b) + 1e-6)
+          if (a !== b) expect(Math.abs(at.x - a)).toBeGreaterThan(0)
+          going++
+        }
+      }
+    }
+    expect(standing).toBeGreaterThan(100)
+    expect(going).toBeGreaterThan(100)
   })
 
   it('seats one who rode a beetle to the log on the grass while that beetle is away, and on its back again when it is home', () => {

@@ -298,7 +298,7 @@ export class Kingdom {
     let first = -1
     for (const invader of raid.invaders) {
       if (invader.cell < 0 || invader.state === 'home' || invader.state === 'held' || invader.state === 'leaving' || invader.state === 'coming') continue
-      for (const place of [invader.cell, invader.from]) {
+      for (const place of [invader.cell, invader.toward]) {
         const n = bodyOf(raid, invader, place, body)
         for (let i = 0; i < n; i++) {
           const k = path.indexOf(body[i])
@@ -321,7 +321,7 @@ export class Kingdom {
       for (const invader of raid.invaders) {
         if (invader.cell < 0 || invader.state === 'home' || invader.state === 'held' || invader.state === 'leaving' || invader.state === 'coming') continue
         let where = Infinity
-        for (const place of [invader.cell, invader.from]) {
+        for (const place of [invader.cell, invader.toward]) {
           const n = bodyOf(raid, invader, place, body)
           for (let i = 0; i < n; i++) {
             const k = flying.path.indexOf(body[i])

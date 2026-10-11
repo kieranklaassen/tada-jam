@@ -45,8 +45,10 @@ export const DUCKS: Partial<Record<Mover, string>> = { raider: 'duck', beetle: '
 /** The pose of an invader, from what it is doing. Every state of every kind has a pose of its own. */
 export function invaderPose(invader: Invader, seconds: number, cols: number): string {
   const { kind, state } = invader
-  const rows = Math.floor(invader.cell / cols) - Math.floor(invader.from / cols)
-  const upright = invader.cell !== invader.from && invader.cell % cols === invader.from % cols
+  // Where it is headed: the place it is on its way to, or between two steps the next place of its way.
+  const next = headedFor(invader)
+  const rows = Math.floor(next / cols) - Math.floor(invader.cell / cols)
+  const upright = next !== invader.cell && next % cols === invader.cell % cols
   if (kind === 'ant') {
     switch (state) {
       case 'coming': return flick(seconds, 9) ? 'walk' : 'walk2'
@@ -111,6 +113,13 @@ export function invaderPose(invader: Invader, seconds: number, cols: number): st
   return 'fly'
 }
 
+/** The place an invader is headed for: the one it is on its way to, or, between two steps of a way, the next one. */
+export function headedFor(invader: Invader): number {
+  if (invader.along > 0) return invader.toward
+  const moving = invader.state === 'going' || invader.state === 'leaving'
+  return moving ? invader.way[invader.step + 1] ?? invader.cell : invader.cell
+}
+
 /** Every pose `invaderPose` and the ducking can name, by the creature that plays it: a test holds each of them to exist. */
 export const RAID_POSES: Record<'raider' | 'beetle' | 'fly' | 'dungBeetle' | 'dungFly', readonly string[]> = {
   raider: ['walk', 'walk2', 'climb', 'pillow', 'stuck', 'stuck2', 'lie', 'nap', 'nap2', 'flat', 'buried', 'balled', 'shrug', 'duck'],
@@ -131,7 +140,7 @@ function feetAt(kind: InvaderKind, cell: number, cols: number): { x: number; y: 
 
 /** Where an invader in the nest is, between the place it came from and the one it is in. */
 export function invaderAt(invader: Invader, cols: number): { x: number; y: number } {
-  const a = feetAt(invader.kind, invader.from, cols), b = feetAt(invader.kind, invader.cell, cols)
+  const a = feetAt(invader.kind, invader.cell, cols), b = feetAt(invader.kind, invader.along > 0 ? invader.toward : invader.cell, cols)
   return { x: a.x + (b.x - a.x) * invader.along, y: a.y + (b.y - a.y) * invader.along }
 }
 
@@ -154,7 +163,8 @@ const behindBall = (size: number) => BALL_HALF * size + BODY.dungBeetle.width / 
  */
 function behindOnWake(invader: Invader, ball: { x: number; y: number }, far: number, cols: number): { x: number; y: number; dx: number; dy: number; foot: number } {
   const points = [ball]
-  if (invader.along > 0) points.push(feetAt(invader.kind, invader.from, cols))
+  // The ball is between the place it is in and the one it is on its way to; behind it lie that place and the ones before.
+  if (invader.along > 0) points.push(feetAt(invader.kind, invader.cell, cols))
   for (const cell of invader.wake) points.push(feetAt(invader.kind, cell, cols))
   let left = far
   for (let n = 1; n < points.length; n++) {
@@ -283,7 +293,7 @@ export function showRaid(raid: Raid, party: Party, seconds: number): Shown[] {
       for (let m = 0; m < n; m++) if (raid.invaders[m].cell === invader.cell && raid.invaders[m].along === 0 && raid.invaders[m].state !== 'home') ahead++
       at.x -= ahead * QUEUE_STEP * invader.facing
     }
-    const falling = invader.along > 0 && invader.cell % cols === invader.from % cols
+    const falling = invader.along > 0 && invader.cell % cols === invader.toward % cols
     if (rolled > 0) {
       // The ball lies where the beetle's place is, and the beetle is behind it; down a shaft the beetle comes after it.
       const bx = at.x - invader.facing * CELL * 0.25
@@ -310,7 +320,7 @@ export function showRaid(raid: Raid, party: Party, seconds: number): Shown[] {
     // An ant held fast where the way is one cell wide has no room to lie along it: it stands on end, pulling to get up.
     const narrow = invader.kind === 'ant' && invader.state === 'stuck' && ground.cells[invader.cell - 1] !== OPEN && ground.cells[invader.cell + 1] !== OPEN
     const upright = pose === 'climb' || narrow
-    const goingUp = narrow || Math.floor(invader.cell / cols) < Math.floor(invader.from / cols)
+    const goingUp = narrow || Math.floor(headedFor(invader) / cols) < Math.floor(invader.cell / cols)
     out.push({ who, pose, x: at.x, y: at.y, flip: invader.facing < 0, turn: upright ? (goingUp ? -1 : 1) * (invader.facing < 0 ? -1 : 1) * (Math.PI / 2) : 0, size: 1, id: invader.id, idle: invader.state === 'waiting' })
   })
   duckUnder(out)
