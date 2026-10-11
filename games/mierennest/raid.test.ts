@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { LADDER } from './config'
-import { EARTH, MOUTH, MUD, OPEN, SAND, STONE, at, clone, equal, fromPicture, generate, put, settle, type Ground } from './ground'
+import { EARTH, MOUTH, MUD, OPEN, SAND, STONE, at, clone, equal, fromPicture, generate, put, settle, toPicture, type Ground } from './ground'
 import { HABITS } from './habits'
 import { PARTY, ROUND, judge, partyAt, type Party } from './order'
 import { roomOf } from './routes'
-import { DIG, LONGEST, QUEUE_GAP, SEEN_FOR, TICK, callRaid, endOf, gaitOf, hit, playOut, stepRaid, type Raid, type RaidEvent } from './raid'
+import { DIG, LONGEST, QUEUE_GAP, ROLL, SEEN_FOR, TICK, callRaid, endOf, gaitOf, hit, playOut, stepRaid, type Raid, type RaidEvent } from './raid'
 
 // Whole raids, played from a nest and a party to their end. In the pictures the mouth is the open cell of the top
 // row, a tunnel is two cells high and a room is four wide and three high.
@@ -179,6 +179,51 @@ describe('walls and beetles', () => {
     expect(raid.invaders[0].acted).toBe(false)
     expect(raid.invaders[0].state).toBe('held')
     expect(raid.invaders[1].acted).toBe(true)
+  })
+})
+
+describe('a stone that is shoved rolls', () => {
+  /** A tunnel two cells high from the shaft to a room at its far end; `floor` is the bottom row of both. */
+  const way = (floor: string) => ['X.XXXXXXXXXXXXXXXXXX', '#.##################', '#.##################', '#.##########.......#', '#..................#', `#${floor}#`, '####################', 'XXXXXXXXXXXXXXXXXXXX']
+  const rollOn = (floor: string) => {
+    // Two rows: the beetle cannot step over a stone under a roof two cells high, so it leans.
+    const raid = raidOn(way(floor), ['beetle'])
+    const events: RaidEvent[] = []
+    while (!raid.over) {
+      stepRaid(raid)
+      events.push(...raid.events)
+      raid.events.length = 0
+    }
+    return { raid, events, row: toPicture(raid.ground)[5] }
+  }
+
+  it('ahead of the push, by itself, until the ground stops it', () => {
+    const { events, row, raid } = rollOn('.....o............')
+    expect(row).toBe('#.................o#')
+    expect(kinds(events, 'rolled').length).toBe(11)
+    expect(kinds(events, 'stopped')).toEqual([{ type: 'stopped', cell: 5 * COLS + 18, by: EARTH }])
+    expect(raid.rolling).toEqual([])
+    // It rolled faster than the beetle walks.
+    expect(ROLL).toBeLessThan(1 / 5.5)
+  })
+
+  it('into sand, which stops it; into mud, which holds it; and into another stone, which rolls on in its place', () => {
+    const sand = rollOn('.....o.....s......')
+    expect(kinds(sand.events, 'stopped')[0]).toEqual({ type: 'stopped', cell: 5 * COLS + 11, by: SAND })
+    const mud = rollOn('.....o.....m......')
+    expect(kinds(mud.events, 'stopped')[0]).toEqual({ type: 'stopped', cell: 5 * COLS + 11, by: MUD })
+    // Held by the mud it touches, it is bedded and rolls no more.
+    expect(mud.row.slice(11, 13)).toBe('om')
+    const stone = rollOn('.....o.....o......')
+    expect(kinds(stone.events, 'stopped')[0]).toEqual({ type: 'stopped', cell: 5 * COLS + 11, by: STONE })
+    // The first stopped where it struck, and the second rolled on to the end.
+    expect(stone.row).toBe('#..........o......o#')
+  })
+
+  it('plays the same way twice, and the raid is not over while a stone still rolls', () => {
+    const one = rollOn('.....o............'), two = rollOn('.....o............')
+    expect(one.raid.time).toBe(two.raid.time)
+    expect(equal(one.raid.ground, two.raid.ground)).toBe(true)
   })
 })
 

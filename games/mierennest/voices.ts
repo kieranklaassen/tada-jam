@@ -148,7 +148,7 @@ export const APART: Record<ToyEvent['type'], number> = { dug: 0.07, met: 0.12, p
 export const TAP: Note[] = [tone(2300, 0.07, 0.002, 0.05, { wave: 'triangle' })]
 /** A beat of carrying: grains of sand patter, mud drips with a small wet smack, a stone scrapes along the floor. */
 export const CARRYING: Record<Material, Note[]> = {
-  sand: [hiss(5200, 0.035, 0.004, 0.05, { q: 1.2 }), hiss(4600, 0.03, 0.004, 0.05, { q: 1.2, delay: 0.08 })],
+  sand: [hiss(3800, 0.035, 0.004, 0.05, { q: 1.2 }), hiss(3300, 0.03, 0.004, 0.05, { q: 1.2, delay: 0.08 })],
   mud: [tone(210, 0.07, 0.01, 0.07, { glideTo: 120 }), hiss(700, 0.035, 0.005, 0.05, { q: 3, delay: 0.05 })],
   stone: [hiss(420, 0.07, 0.02, 0.2, { q: 2.5 }), tone(96, 0.05, 0.02, 0.18, { wave: 'triangle' })],
 }
@@ -171,6 +171,19 @@ export const MARCH: Note[] = [tone(294, 0.09, 0.004, 0.08, { wave: 'triangle' })
 export const LOST: Note[] = [tone(930, 0.08, 0.005, 0.1, { wave: 'sawtooth', glideTo: 700 }), tone(620, 0.08, 0.005, 0.12, { wave: 'sawtooth', delay: 0.12, glideTo: 440 }), tone(392, 0.08, 0.01, 0.3, { wave: 'sawtooth', delay: 0.26, glideTo: 220 })]
 
 const speakerOf = (kind: InvaderKind): Speaker => (kind === 'ant' ? 'raider' : kind)
+/** Who speaks in each first showing of a kind. */
+const SHOWN_BY: Record<string, Speaker> = { ant: 'raider', beetle: 'beetle', fly: 'fly', dungBeetle: 'dungBeetle', dungFly: 'dungFly' }
+/** What a shot's meeting each material sounds like. */
+export const SHOT_HIT: Record<Material, Note[]> = {
+  sand: [hiss(3200, 0.1, 0.01, 0.3, { q: 0.8, glideTo: 1400 })],
+  mud: [tone(170, 0.14, 0.01, 0.12, { glideTo: 90 }), tone(120, 0.1, 0.02, 0.14, { delay: 0.09, glideTo: 70 })],
+  stone: [tone(1568, 0.12, 0.002, 0.5, { wave: 'triangle' }), tone(2349, 0.06, 0.002, 0.35, { wave: 'sine' })],
+}
+/** A rolling stone, and what stops it. */
+export const RUMBLE: Note[] = [tone(70, 0.1, 0.01, 0.1, { wave: 'triangle', glideTo: 58 }), hiss(240, 0.04, 0.01, 0.08, { q: 1.5 })]
+export const SCRUNCH: Note[] = [hiss(2600, 0.09, 0.01, 0.34, { q: 0.9, glideTo: 900 })]
+export const SCHLUP: Note[] = [tone(150, 0.13, 0.015, 0.16, { glideTo: 60 }), hiss(500, 0.05, 0.01, 0.1, { q: 3 })]
+export const CLACK: Note[] = [tone(1900, 0.13, 0.001, 0.05, { wave: 'square' }), tone(980, 0.08, 0.001, 0.07, { wave: 'triangle', delay: 0.02 })]
 
 /** The voice of something the game says happened, or null where it makes no sound. */
 export function voiceForGame(event: KingdomEvent): Note[] | null {
@@ -184,8 +197,20 @@ export function voiceForGame(event: KingdomEvent): Note[] | null {
     case 'turned': return CLICK
     case 'machineSet': case 'machineFell': return KNOCK
     case 'machineBack': return BACK
-    // The queen complains as she is carried to a new room.
-    case 'scene': return event.is === 'moves' ? SPOKEN.queen : null
+    // What stopped a shot answers: sand bursts with a whoosh, mud takes it with a glug, a stone rings.
+    case 'shotHit': {
+      const material = materialOf(event.kind)
+      return material ? SHOT_HIT[material] : null
+    }
+    case 'tried': return event.machine === 'catapult' ? TWANG : POP
+    // The queen complains as she is carried to a new room, the workers mutter as they put things back, the party
+    // that came for nothing sighs, and a kind shown for the first time speaks up.
+    case 'scene':
+      if (event.is === 'moves') return SPOKEN.queen
+      if (event.is === 'putBack') return SPOKEN.worker
+      if (event.is === 'shrug') return SIGH
+      if (event.is === 'showing' && event.who && event.who in SHOWN_BY) return SPOKEN[SHOWN_BY[event.who]]
+      return null
     case 'judged': return null
   }
 }
@@ -202,6 +227,9 @@ export function voiceForRaid(event: RaidEvent): Note[] | null {
     case 'givesUp': case 'held': case 'leftBall': return SIGH
     // The queen has something to say to a guest who makes itself at home in her room.
     case 'acts': return event.queens ? SPOKEN.queen : null
+    // A stone rolls with a low rumble, and what stops it says so: sand scrunches, mud goes schlup, a stone clacks.
+    case 'rolled': return RUMBLE
+    case 'stopped': return event.by === SAND ? SCRUNCH : event.by === MUD ? SCHLUP : event.by === STONE ? CLACK : KNOCK
     case 'in': case 'home': case 'over': case 'waits': return null
   }
 }

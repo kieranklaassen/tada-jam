@@ -513,6 +513,105 @@ describe('a machine', () => {
     expect(count(game.ground, STONE)).toBe(0)
   })
 
+  it('never loses its lump: a shot in the air over the nest lands at once when the game is put away, or the bell is rung', () => {
+    for (const how of ['put away', 'the bell'] as const) {
+      const k = armed('stone')
+      put(k.game.ground, 28, 5, OPEN)
+      const before = whole(k.game)
+      k.press(32.5, 5.5, 0)
+      k.release()
+      k.step(1 / 30)
+      expect(k.flying.length).toBe(1)
+      if (how === 'put away') k.putAway()
+      else k.bell()
+      expect(k.flying.filter((shot) => !shot.inRaid)).toEqual([])
+      expect(whole(k.game), how).toEqual(before)
+      expect(count(k.game.ground, STONE), how).toBe(1)
+      expect(whole(saved(k.game)), how).toEqual(before)
+    }
+  })
+
+  it('answers a tap in a raid when it has nothing in it yet, with a cough', () => {
+    const k = armed()
+    k.bell()
+    play(k, 1)
+    k.drainEvents()
+    k.press(32.5, 5.5, 2)
+    k.release()
+    expect(k.drainEvents()).toContainEqual({ type: 'fizzled', machine: 'cannon' })
+    expect(k.game.machines[0].facing).toBe(-1)
+  })
+
+  it('whose floor was dug away before a put-away comes down to the floor it finds when the game is opened again', () => {
+    const game = nestGame('the-cannon')
+    game.shown.push('ant', 'beetle', 'fly', 'catapult', 'cannon')
+    game.machines.push({ kind: 'cannon', x: 32, y: 5, facing: -1, load: null })
+    for (const x of [32, 33]) put(game.ground, x, 6, OPEN)
+    const k = new Kingdom(saved(game))
+    expect(k.game.machines[0]).toMatchObject({ x: 32, y: 6 })
+  })
+
+  it('a shot that meets the ground is answered by what it met: sand, mud and stone each say so, and a free stone struck by a level shot rolls one cell on', () => {
+    const shoot = (target: number, beyond: number = OPEN) => {
+      const k = armed('stone')
+      put(k.game.ground, 28, 5, OPEN)
+      put(k.game.ground, 25, 5, target as never)
+      put(k.game.ground, 24, 5, beyond as never)
+      settle(k.game.ground)
+      const before = whole(k.game)
+      k.press(32.5, 5.5, 0)
+      k.release()
+      const events = play(k, 2)
+      expect(whole(k.game)).toEqual(before)
+      return { k, hit: events.find((e) => e.type === 'shotHit') }
+    }
+    const sand = shoot(2)
+    expect(sand.hit).toEqual({ type: 'shotHit', kind: 2, cell: 5 * 40 + 25 })
+    // The shot lies against it.
+    expect(at(sand.k.game.ground, 26, 5)).toBe(STONE)
+    expect(shoot(MUD).hit).toEqual({ type: 'shotHit', kind: MUD, cell: 5 * 40 + 25 })
+    // A free stone rolls one cell on, and the shot lies where it stopped.
+    const stone = shoot(STONE)
+    expect(stone.hit).toEqual({ type: 'shotHit', kind: STONE, cell: 5 * 40 + 25 })
+    expect([at(stone.k.game.ground, 24, 5), at(stone.k.game.ground, 25, 5), at(stone.k.game.ground, 26, 5)]).toEqual([STONE, OPEN, STONE])
+    // A stone bedded in mud rings and does not move.
+    const bedded = shoot(STONE, MUD)
+    expect(bedded.hit).toEqual({ type: 'shotHit', kind: STONE, cell: 5 * 40 + 25 })
+    expect([at(bedded.k.game.ground, 24, 5), at(bedded.k.game.ground, 25, 5), at(bedded.k.game.ground, 26, 5)]).toEqual([MUD, STONE, STONE])
+  })
+
+  it('a stone goes by a fly, which steps aside, and meets whoever is behind it', () => {
+    const game = nestGame('first-fly')
+    game.shown.push('ant', 'beetle', 'fly', 'catapult', 'cannon')
+    // A hall three high all the way, so the fly gets in, and the cannon at its far end.
+    for (let x = 22; x <= 29; x++) put(game.ground, x, 3, OPEN)
+    game.machines.push({ kind: 'cannon', x: 34, y: 5, facing: -1, load: 'stone' })
+    const k = new Kingdom(game)
+    k.bell()
+    const raidEvents: RaidEvent[] = []
+    for (let n = 0; n < 3000 && !(k.raid && k.raid.invaders[0].cell >= 0 && k.raid.invaders[0].cell % 40 >= 23); n++) { k.step(1 / 30); raidEvents.push(...k.drainRaidEvents()) }
+    k.press(34.5, 5.5, 5)
+    k.release()
+    const events: KingdomEvent[] = []
+    for (let n = 0; n < 40; n++) { k.step(1 / 30); events.push(...k.drainEvents()); raidEvents.push(...k.drainRaidEvents()) }
+    const hits = raidEvents.filter((e) => e.type === 'hit') as Extract<RaidEvent, { type: 'hit' }>[]
+    expect(hits.map((e) => [e.kind, e.shot, e.answer])).toEqual([['fly', 'stone', 'steps-aside']])
+    // The stone flew on past it to the end of its way and lies there, in the raid's copy.
+    const landed = events.find((e) => e.type === 'shotLanded') as Extract<KingdomEvent, { type: 'shotLanded' }>
+    expect(landed.cell % 40).toBeLessThan(22)
+  })
+
+  it('that has just arrived fires once to show that it works, three quarters of the way through its scene', () => {
+    const game = nestGame('the-catapult')
+    game.shown.push('ant', 'beetle', 'fly')
+    const k = new Kingdom(game)
+    k.press(22.5, 4.5, 0)
+    k.release()
+    expect(k.scene?.is).toBe('arrives')
+    const events = play(k, SCENE_SECONDS.arrives + 1)
+    expect(events.filter((e) => e.type === 'tried')).toEqual([{ type: 'tried', machine: 'catapult' }])
+  })
+
   it('falls to the floor when the floor under it is dug away', () => {
     const k = armed()
     k.press(32.5, 6.9, 0)

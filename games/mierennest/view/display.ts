@@ -133,6 +133,8 @@ export class ToyDisplay {
   private campFor = ''
   private readonly toy: Toy
   private shownGround: Ground
+  /** The cells as they were last handed to the repaint. */
+  private painted: Uint8Array
   private dirty: number[] = []
   private readonly fired = new Map<number, number>()
   private bursts: { effect: Effect; x: number; y: number; at: number; flip: boolean }[] = []
@@ -159,6 +161,7 @@ export class ToyDisplay {
     this.camp = campers(k.party)
     this.campFor = `${k.game.position}/${k.game.muster}`
     this.shownGround = k.game.ground
+    this.painted = k.game.ground.cells.slice()
     // The crumbs take their chance from a stream of their own, so nothing looked at can change what is played.
     this.rng = makeRng(seed ^ 0x5eed)
   }
@@ -320,6 +323,20 @@ export class ToyDisplay {
       } else if (event.type === 'shotLanded') {
         const p = cellMiddle(event.cell, cols)
         this.bursts.push({ effect: event.shot === 'mud' ? 'splat' : 'puff', x: p.x, y: p.y, at: this.seconds, flip: false })
+      } else if (event.type === 'shotHit') {
+        // Sand bursts into a fan of grains, a stone throws sparks; mud takes the shot with its splat.
+        const p = cellMiddle(event.cell, cols)
+        if (event.kind === SAND) {
+          this.bursts.push({ effect: 'sandBlast', x: p.x, y: p.y, at: this.seconds, flip: false })
+          this.puff(p.x, p.y, 6, CRUMB.sand, 90)
+        } else if (event.kind === STONE) this.puff(p.x, p.y, 4, CRUMB.spark, 160)
+        else if (event.kind === MUD) this.puff(p.x, p.y, 3, CRUMB.mud, 40)
+      } else if (event.type === 'tried') {
+        const index = this.k.game.machines.findIndex((m) => m.kind === event.machine), machine = this.k.game.machines[index]
+        if (machine) {
+          const base = toStage(machine.x + 1, machine.y + 1), at = machine.kind === 'cannon' ? MUZZLE : ARM
+          this.bursts.push({ effect: machine.kind === 'cannon' ? 'smoke' : 'twang', x: base.x + at.x * machine.facing, y: base.y + at.y, at: this.seconds, flip: machine.facing < 0 })
+        }
       } else if (event.type === 'called') for (const camper of this.camp) this.startle(camper.id)
     }
     for (const event of raidEvents) {
@@ -331,6 +348,12 @@ export class ToyDisplay {
         this.dirty.push(...event.cells)
         const p = cellMiddle(event.cells[0], cols)
         this.puff(p.x, p.y, 4, CRUMB.earth, 60)
+      } else if (event.type === 'rolled') {
+        const p = cellMiddle(event.cell, cols)
+        this.puff(p.x, p.y + CELL / 2, 1, CRUMB.dust, 30)
+      } else if (event.type === 'stopped') {
+        const p = cellMiddle(event.cell, cols)
+        this.puff(p.x, p.y, 4, event.by === SAND ? CRUMB.sand : event.by === MUD ? CRUMB.mud : CRUMB.spark, 80)
       } else if (event.type === 'stuck') {
         const p = cellMiddle(event.cell, cols)
         this.puff(p.x, p.y + CELL / 2, 3, CRUMB.mud, 30)
@@ -361,11 +384,16 @@ export class ToyDisplay {
         }
       }
     }
-    if (shown !== this.shownGround) {
-      // A different ground is shown: every cell that differs from the one shown before is repainted.
-      for (let i = 0; i < shown.cells.length; i++) if (shown.cells[i] !== this.shownGround.cells[i]) this.dirty.push(i)
-      this.shownGround = shown
+    // Every cell that is not as it was painted is painted again: a different ground is shown, or the one that is
+    // shown has changed under a raid (a wall gave, a way was dug wider, a stone rolled, a shot came to lie).
+    const painted = this.painted
+    for (let i = 0; i < shown.cells.length; i++) {
+      if (shown.cells[i] !== painted[i]) {
+        painted[i] = shown.cells[i]
+        this.dirty.push(i)
+      }
     }
+    this.shownGround = shown
   }
 
   private antFeet(): { x: number; y: number } {

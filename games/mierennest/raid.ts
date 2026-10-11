@@ -1,10 +1,10 @@
 import { chambers, kingdom } from './chambers'
-import { EARTH, MOUTH, MUD, OPEN, ROCK, SAND, at, clone, isLump, put, settle, type Ground, type Lump } from './ground'
+import { EARTH, MOUTH, MUD, OPEN, ROCK, SAND, STONE, at, clone, isLump, put, settle, type Ground, type Kind, type Lump } from './ground'
 import { DUNG_BALL, HABITS, PUSHERS_IN_A_LINE, type InvaderKind, type Shot } from './habits'
 import type { Party } from './order'
 import { queenSeat, workerSpots } from './residents'
 import { bodyCells, chamberCells, entry, farFromChambers, nearestTo, reach, roomCells, roomOf, sticks, wallToLeanOn, wayIn, wayTo, type Lean, type Walker } from './routes'
-import { lean } from './walls'
+import { HOLD, holdOfCell, lean } from './walls'
 
 // A raid: the party at the log comes into a copy of the nest and each invader goes by its habits. Pure and on
 // game time alone, a fixed step at a time, with no chance in it: the same party against the same nest plays the
@@ -30,6 +30,8 @@ export const SEEN_FOR = 2
 export const QUEUE_GAP = 5
 /** Seconds a dung ball takes to dig one cell of its way wider. */
 export const DIG = 0.3
+/** Seconds a rolling stone takes from one cell to the next. */
+export const ROLL = 0.09
 /** How many of the places it was last in an invader remembers. */
 export const WAKE = 5
 /** How many more steps a dung beetle takes once the army has lost its way, and how long it then stands wondering. */
@@ -122,6 +124,10 @@ export type RaidEvent =
   | { type: 'widened'; id: number; cells: number[] }
   /** A dung beetle gave up its ball and goes on as a plain beetle. */
   | { type: 'leftBall'; id: number; cell: number }
+  /** A stone that was shoved or knocked rolls along a floor: it has just rolled into this cell. */
+  | { type: 'rolled'; cell: number }
+  /** A rolling stone was stopped in this cell by what lies beyond it: sand, mud, another stone, or the ground itself. */
+  | { type: 'stopped'; cell: number; by: Kind }
   /** The dung fly is down: every dung beetle loses its way. */
   | { type: 'lost' }
   /** One begins its own act in a chamber; `queens` says it is the queen's own room. */
@@ -149,6 +155,8 @@ export type Raid = {
   covered: Set<number>
   /** The dung balls that were left where they lay: the place each lies in, how many cells across it is, and the way it was rolled there. */
   balls: { cell: number; size: number; trail: number[] }[]
+  /** The stones that are rolling: the cell each is in, which way it rolls, and the seconds until its next cell. */
+  rolling: { cell: number; dx: number; wait: number }[]
   /** The dung fly is in the nest and up: a ball that meets soft ground digs on. */
   led: boolean
   /** The dung fly was brought down: the army has lost its way. */
@@ -208,7 +216,7 @@ export function callRaid(built: Ground, party: Party, mouth: readonly number[] =
     ball: kind === 'dungBeetle' ? DUNG_BALL.across : 0, jammed: 0, lostIn: -1, queued: false, wake: [],
   }))
   return {
-    ground, invaders, time: 0, chambersWhenCalled: chambers(ground, mouth).length, acts: 0, gave: new Set(), covered: new Set(), balls: [],
+    ground, invaders, time: 0, chambersWhenCalled: chambers(ground, mouth).length, acts: 0, gave: new Set(), covered: new Set(), balls: [], rolling: [],
     led: false, lost: false, begun: [], over: false, settled: 0, events: [], changes: 0, inside, rooms: roomCells(ground, mouth), far: farFromChambers(ground, inside),
     queenRoom: (kingdom(ground, mouth).queenRoom ?? -1) + 1, keepClear: residents(ground, mouth), mouth,
   }
@@ -434,6 +442,77 @@ function settleAndTell(raid: Raid, before: Uint8Array, first: readonly number[])
   return [...moved]
 }
 
+/**
+ * A shove moved these cells. A lone stone that was shoved along a floor, with nothing bedding it, rolls on by itself
+ * until something stops it.
+ */
+function startRolling(raid: Raid, moved: readonly number[], dx: number): void {
+  const { ground } = raid, cols = ground.cols
+  for (const cell of moved) {
+    const x = cell % cols, y = Math.floor(cell / cols)
+    if (at(ground, x, y) !== STONE || holdOfCell(ground, x, y) !== HOLD.stone) continue
+    // The cell it was shoved out of is open behind it, and it lies on something.
+    if (at(ground, x - dx, y) !== OPEN || at(ground, x, y + 1) === OPEN) continue
+    if (!raid.rolling.some((roller) => roller.cell === cell)) raid.rolling.push({ cell, dx, wait: ROLL })
+  }
+}
+
+/** The rolling stones roll: one cell on while the way is open, and where it is not, what stops each is told. A stone it strikes rolls on in its place. */
+function roll(raid: Raid): void {
+  const { ground } = raid, cols = ground.cols
+  for (let n = 0; n < raid.rolling.length; n++) {
+    const roller = raid.rolling[n]
+    roller.wait -= TICK
+    if (roller.wait > 0) continue
+    roller.wait = ROLL
+    const x = roller.cell % cols, y = Math.floor(roller.cell / cols)
+    // It is no longer there: it has fallen.
+    if (at(ground, x, y) !== STONE || at(ground, x, y + 1) === OPEN) {
+      raid.rolling.splice(n--, 1)
+      continue
+    }
+    // Mud has it: it stops dead, bedded, and rolls no more.
+    if (holdOfCell(ground, x, y) !== HOLD.stone) {
+      raid.events.push({ type: 'stopped', cell: roller.cell, by: MUD })
+      raid.rolling.splice(n--, 1)
+      continue
+    }
+    const beyond = at(ground, x + roller.dx, y)
+    if (beyond === OPEN) {
+      const before = ground.cells.slice()
+      put(ground, x, y, OPEN)
+      put(ground, x + roller.dx, y, STONE)
+      roller.cell += roller.dx
+      const moved = settleAndTell(raid, before, [y * cols + x, roller.cell])
+      raid.events.push({ type: 'rolled', cell: roller.cell })
+      changed(raid, moved)
+      continue
+    }
+    raid.events.push({ type: 'stopped', cell: roller.cell, by: beyond })
+    raid.rolling.splice(n--, 1)
+    // Clack: the stone it struck rolls on in its place, where it is free and has room.
+    const struck = roller.cell + roller.dx
+    if (beyond === STONE && holdOfCell(ground, x + roller.dx, y) === HOLD.stone && at(ground, x + 2 * roller.dx, y) === OPEN && at(ground, x + roller.dx, y + 1) !== OPEN) {
+      raid.rolling.push({ cell: struck, dx: roller.dx, wait: ROLL })
+    }
+  }
+}
+
+/**
+ * A shot knocks the lump in a cell along the row: a free stone rolls one cell on. Gives the cells that changed,
+ * none where nothing moved.
+ */
+export function knockInRaid(raid: Raid, cell: number, dx: number): number[] {
+  const cols = raid.ground.cols, x = cell % cols, y = Math.floor(cell / cols)
+  if (at(raid.ground, x, y) !== STONE || holdOfCell(raid.ground, x, y) !== HOLD.stone) return []
+  const before = raid.ground.cells.slice()
+  const did = lean(raid.ground, x, y, dx, HABITS.beetle.push)
+  if (did.did !== 'shoved') return []
+  const moved = settleAndTell(raid, before, did.cells)
+  changed(raid, moved)
+  return moved
+}
+
 /** Whether a lump of sand or mud is one a dung ball digs: always with earth or rock behind it, and anywhere while the dung fly is up. */
 function digsLump(raid: Raid, x: number, y: number, dx: number): boolean {
   const kind = at(raid.ground, x, y)
@@ -457,6 +536,7 @@ function strain(raid: Raid, invader: Invader): void {
     }
     raid.events.push({ type: 'gave', id: invader.id, cells: moved })
     changed(raid, moved)
+    if (did.did === 'shoved') startRolling(raid, did.cells, wall.dx)
     return
   }
   if (did.did === 'nothing') {
@@ -554,6 +634,7 @@ function widen(raid: Raid, invader: Invader): void {
       invader.jammed = 0
       raid.events.push({ type: 'gave', id: invader.id, cells: moved })
       changed(raid, moved)
+      if (did.did === 'shoved') startRolling(raid, did.cells, beside !== 0 ? beside : dx)
       return
     }
   }
@@ -661,6 +742,7 @@ export function stepRaid(raid: Raid): void {
   raid.time += TICK
   const { ground } = raid
   const cols = ground.cols
+  roll(raid)
   raid.led = !raid.lost && raid.invaders.some((one) => one.kind === 'dungFly' && one.cell >= 0 && one.state !== 'home' && one.state !== 'held' && one.state !== 'leaving')
   for (const invader of raid.invaders) {
     const gait = gaitOf(invader)
@@ -794,7 +876,7 @@ export function stepRaid(raid: Raid): void {
         invader.state satisfies never
     }
   }
-  const done = raid.invaders.every((invader) => settledState(invader.state))
+  const done = raid.invaders.every((invader) => settledState(invader.state)) && raid.rolling.length === 0
   // One that is stuck or held is seen for a while where it is; a raid that has all gone home is over at once.
   if (done && raid.invaders.some((invader) => invader.state !== 'home')) raid.settled += TICK
   else raid.settled = done ? SEEN_FOR : 0
