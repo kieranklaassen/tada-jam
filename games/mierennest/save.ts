@@ -1,5 +1,5 @@
 import { asSaved } from './build'
-import { COLS, MOUTH, OPEN, ROCK, ROWS, at, generate, makeGround, put, settle, type Ground, type Kind } from './ground'
+import { COLS, MOUTH, OPEN, ROCK, ROWS, at, floorUnder, generate, makeGround, put, settle, type Ground, type Kind } from './ground'
 import { SHOTS, type Shot } from './habits'
 import { restPlace } from './machines'
 import { MACHINE_KINDS, ROUND, SHOWINGS, arrived, type MachineKind } from './order'
@@ -86,9 +86,7 @@ function repairGround(ground: Ground): Ground {
 
 /** Where the ant stands in a new nest, and where anything is put that has lost its place: the foot of the shaft. */
 function shaftFoot(ground: Ground): { x: number; y: number } {
-  let y = 0
-  while (y + 1 < ground.rows && at(ground, MOUTH[0], y + 1) === OPEN) y++
-  return { x: MOUTH[0], y: Math.max(1, y) }
+  return { x: MOUTH[0], y: Math.max(1, floorUnder(ground, MOUTH[0], 0)) }
 }
 
 export function freshGame(childAge: number | null, seed: number): Game {

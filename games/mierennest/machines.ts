@@ -1,4 +1,4 @@
-import { MOUTH, OPEN, at, type Ground, type Lump } from './ground'
+import { MOUTH, OPEN, at, floorUnder, type Ground, type Lump } from './ground'
 import type { Shot } from './habits'
 import type { Machine } from './save'
 
@@ -66,9 +66,7 @@ export function restPlace(ground: Ground, machines: readonly Machine[], index: n
 
 /** Where a machine is first set when the workers bring it: as near the foot of the shaft as it can stand. */
 export function arrivalPlace(ground: Ground, machines: readonly Machine[]): { x: number; y: number } | null {
-  let y = 1
-  while (y + 1 < ground.rows && at(ground, MOUTH[0], y + 1) === OPEN) y++
-  return nearestStand(ground, machines, MOUTH[0], y)
+  return nearestStand(ground, machines, MOUTH[0], floorUnder(ground, MOUTH[0], 1))
 }
 
 /**

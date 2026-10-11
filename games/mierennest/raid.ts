@@ -1,5 +1,5 @@
-import { chambers, kingdom } from './chambers'
-import { EARTH, MOUTH, MUD, OPEN, ROCK, SAND, SHAFT_DEPTH, STONE, at, clone, isLump, put, settle, type Ground, type Kind, type Lump } from './ground'
+import { chambers, inShaft, kingdom } from './chambers'
+import { EARTH, MOUTH, MUD, OPEN, ROCK, SAND, STONE, at, clone, floorUnder, isLump, put, settle, type Ground, type Kind, type Lump } from './ground'
 import { DUNG_BALL, HABITS, PUSHERS_IN_A_LINE, type InvaderKind, type Shot } from './habits'
 import type { Party, RaidEnd } from './order'
 import { QUEEN_HALF, WORKER_HALF, queenSeat, workerSpots } from './residents'
@@ -292,7 +292,7 @@ export const INTO_THE_ROOM = 6
 export const FURTHER_IN = 14
 /**
  * Half the length of each kind along a floor, in cells: the same measure as `QUEEN_HALF` and `WORKER_HALF` are for
- * the kingdom's own (residents.ts), rounded up from the body widths the camp is laid out by (`BODY` in camp.ts).
+ * the kingdom's own (residents.ts), rounded from the body widths the camp is laid out by (`BODY` in camp.ts).
  */
 const HALF: Record<Walker, number> = { ant: 2.1, beetle: 2.2, fly: 2.1, crawler: 2.2 }
 
@@ -426,7 +426,7 @@ function waitHere(raid: Raid, invader: Invader): void {
 function tooHigh(raid: Raid, from: number, to: number): boolean {
   const cols = raid.ground.cols, y = Math.floor(from / cols)
   if (y - Math.floor(to / cols) <= 1) return false
-  return !(from % cols === to % cols && raid.mouth.includes(from % cols) && y <= SHAFT_DEPTH)
+  return !(from % cols === to % cols && inShaft(from % cols, y, raid.mouth))
 }
 
 /** Whether the way home still has such a climb in it. */
@@ -866,9 +866,7 @@ function ballEntry(raid: Raid): { top: number; foot: number } | null {
   const { ground, mouth } = raid, cols = ground.cols
   const x = mouth[Math.floor(mouth.length / 2)]
   if (mouth.length < DUNG_BALL.across || at(ground, x - 1, 0) !== OPEN || at(ground, x, 0) !== OPEN || at(ground, x + 1, 0) !== OPEN || at(ground, x, 1) !== OPEN) return null
-  let y = 1
-  while (y + 1 < ground.rows && at(ground, x, y + 1) === OPEN) y++
-  return { top: x, foot: y * cols + x }
+  return { top: x, foot: floorUnder(ground, x, 1) * cols + x }
 }
 
 /** One at the log comes in: at the top of the mouth, and from there to its first place. Gives false while it has to wait at the mouth. */
