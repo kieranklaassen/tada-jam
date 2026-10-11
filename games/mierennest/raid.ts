@@ -70,7 +70,8 @@ export type Invader = {
   state: InvaderState
   /**
    * The place it is in, the one it is on its way to, and how far it is between them, from 0 to 1. Standing, it is
-   * on its way nowhere: `toward` is `cell`. `from` is the place it was in before this one. All -1 before it has come in.
+   * on its way nowhere: `toward` is `cell`. `from` is the place it was in before this one, which only a test reads.
+   * All -1 before it has come in.
    */
   cell: number
   from: number
@@ -93,12 +94,10 @@ export type Invader = {
   insideSince: boolean
   /** The chamber it has taken for itself, counted from 1: nobody else comes in while it has it. 0 for none. */
   room: number
-  /** The place it chose for its act, or -1. */
-  spot: number
   /** What it does when it stops being dazed, and the last shot that hit it. */
   after: 'going' | 'leaving'
   lastShot: Shot | null
-  /** The name of the answer to the last shot, for the view. */
+  /** The name of its answer to the last shot. The view goes by `lastShot`, and the `hit` event carries the name: only a test reads this. */
   answer: string | null
   /** How many cells across the dung ball it rolls is: 0 for none. */
   ball: number
@@ -178,8 +177,6 @@ export type Raid = {
   /** How long nothing more has been going to happen. */
   settled: number
   events: RaidEvent[]
-  /** Raised whenever the copy changes, so every way is looked for again. */
-  changes: number
   /** The cells of the kingdom's chambers as the raid was called, 1 or 0 a cell. */
   inside: Uint8Array
   /** For every cell, the chamber it is in, counted from 1; 0 for none. */
@@ -223,12 +220,12 @@ export function callRaid(built: Ground, party: Party, mouth: readonly number[] =
   const inside = chamberCells(ground, mouth)
   const invaders: Invader[] = party.map((kind, id) => ({
     id, kind, state: 'coming', cell: -1, from: -1, toward: -1, along: 0, facing: 1, wait: APART,
-    way: [], step: 0, trail: [], leaning: null, acted: false, insideSince: false, room: 0, spot: -1, after: 'going', lastShot: null, answer: null,
+    way: [], step: 0, trail: [], leaning: null, acted: false, insideSince: false, room: 0, after: 'going', lastShot: null, answer: null,
     ball: kind === 'dungBeetle' ? DUNG_BALL.across : 0, left: 0, backing: false, rolledOut: false, jammed: 0, lostIn: -1, queued: false, wake: [],
   }))
   return {
     ground, invaders, time: 0, chambersWhenCalled: chambers(ground, mouth).length, acts: 0, gave: new Set(), covered: new Set(), balls: [], rolling: [], machines: new Set(machines),
-    led: false, lost: false, begun: [], over: false, cutOff: false, settled: 0, events: [], changes: 0, inside, rooms: roomCells(ground, mouth), far: farFromChambers(ground, inside),
+    led: false, lost: false, begun: [], over: false, cutOff: false, settled: 0, events: [], inside, rooms: roomCells(ground, mouth), far: farFromChambers(ground, inside),
     queenRoom: (kingdom(ground, mouth).queenRoom ?? -1) + 1, keepClear: residents(ground, mouth), mouth,
   }
 }
@@ -240,7 +237,6 @@ export function callRaid(built: Ground, party: Party, mouth: readonly number[] =
  */
 function changed(raid: Raid, cells: readonly number[], gave = true): void {
   if (gave) for (const cell of cells) raid.gave.add(cell)
-  raid.changes++
   for (const invader of raid.invaders) {
     if (invader.state === 'going' || invader.state === 'straining' || invader.state === 'waiting' || invader.state === 'widening') {
       if (invader.along > 0) setOff(invader, [invader.cell, invader.toward])
@@ -259,7 +255,6 @@ function setOff(invader: Invader, way: number[]): void {
 function sendHome(invader: Invader): void {
   invader.state = 'leaving'
   invader.wake = []
-  invader.spot = -1
   invader.leaning = null
   const back = invader.trail.slice().reverse()
   if (back[0] !== invader.cell) back.unshift(invader.cell)
@@ -336,7 +331,6 @@ function actSpot(raid: Raid, invader: Invader): number {
       bestOwn = own
     }
   }
-  invader.spot = best
   return best
 }
 
@@ -517,7 +511,6 @@ function decide(raid: Raid, invader: Invader): void {
     return
   }
   invader.insideSince = false
-  invader.spot = -1
   invader.state = 'going'
   const way = wayToARoom(raid, invader, gait)
   if (way && way.length > 1) {
@@ -1177,7 +1170,7 @@ export function landInRaid(raid: Raid, cell: number, lump: Lump): void {
   changed(raid, moved, false)
 }
 
-/** How the raid ended, for the judging. */
+/** How the raid ended, for the judging. A put-away drops its raid without judging it, so only a test passes `putAway`. */
 export function endOf(raid: Raid, putAway = false): RaidEnd {
   return { chambersWhenCalled: raid.chambersWhenCalled, actsFinished: raid.acts, putAway, cutOff: raid.cutOff }
 }
