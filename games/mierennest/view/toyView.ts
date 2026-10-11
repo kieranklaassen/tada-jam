@@ -1,6 +1,7 @@
 import { BODY } from '../camp'
 import { CELL, MUD, SAND, type Ground, type Lump } from '../ground'
 import { fit } from '../stage'
+import { POSES, type CreatureKind } from './creatures'
 import type { Item } from './display'
 import { paintGlass } from './glass'
 import { paintAll, repaint, touchedBy } from './groundSheet'
@@ -112,6 +113,8 @@ export class ToyView {
     const canvasOf = (width: number, height: number) => Object.assign(doc.createElement('canvas'), { width, height })
     if (this.sprites) this.sprites.rescale(k)
     else this.sprites = new Sprites(k, canvasOf)
+    // Every pose is painted now, at load, so that the first time a creature changes pose is not a frame that stalls.
+    for (const kind of Object.keys(POSES) as CreatureKind[]) for (const pose of POSES[kind]) this.sprites.get(kind, pose)
   }
 
   /** Brings the still layer up to date: the cells that wait, at most a frame's budget of them, and the hill if it grew. */

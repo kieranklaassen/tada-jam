@@ -101,6 +101,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // What the toy says happened is heard and seen here: every event of one moment is played as one voice, and a
     // kind of event that comes fast (a mouthful, a landing, a pour) is kept a little apart from its last.
     const lastHeard: Partial<Record<ToyEvent['type'], number>> = {}
+    let unsaved = false
     const answer = (extra: readonly Note[] = []) => {
       if (!toy || !display) return
       const events = toy.drainEvents(), now = performance.now() / 1000, notes: Note[] = [...extra]
@@ -113,7 +114,15 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       if (notes.length > 0) audio.play(voiceOf(notes))
       display.see(events)
       view.changed(toy.drainDirty(), toy.finger)
-      if (toy.drainUnsaved()) cadence.change(performance.now())
+      // A change is handed to storage once the ground has come to rest: working out where falling sand will lie is
+      // not a thing to do every few hundred milliseconds of a pour. Until then it is only marked, and a put-away
+      // meanwhile writes it at once, with the ground as it will come to rest (`cadence.settle`).
+      if (toy.drainUnsaved()) unsaved = true
+      if (!unsaved) return
+      if (toy.atRest) {
+        unsaved = false
+        cadence.change(performance.now())
+      } else cadence.mark()
     }
 
     // The shell can resize the surface without a window resize event, so the surface watches itself.

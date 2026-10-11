@@ -1,8 +1,8 @@
 import { EYE, HIGHLIGHT, INK } from './palette'
 
 // The shared brushes of the creatures: flat glossy blobs with one hard highlight, thick tapered legs with round
-// ends, springy feelers and large eyes. The two body plans at the foot of the file, the ant's and the beetle's, are
-// built from these and posed by the two creature files; the fly's plan is with the invaders.
+// ends, springy feelers and large eyes. The beetle's body plan at the foot of the file is built from these; the
+// ant's plan is in `parts2`, the fly's is with the invaders, and the two creature files pose all three.
 
 /** Where the eyes look, x and y each from -1 to 1. */
 export type Look = { x: number; y: number }
@@ -94,34 +94,54 @@ export function blob(ctx: Ctx, x: number, y: number, rx: number, ry: number, rot
 }
 
 /** A leg or an arm: one springy bow, thick from the hip to the knee and thinner from the knee to the foot, round
- *  at every end, with a small round foot or fist. The knee is the middle of the limb moved by (kx, ky). */
-export function limb(ctx: Ctx, colour: string, width: number, x0: number, y0: number, x1: number, y1: number, kx = 0, ky = 0): void {
+ *  at every end, with a small round foot or fist. The knee is the middle of the limb moved by (kx, ky). A `sharp`
+ *  limb is two straight bones with a pointed elbow and a larger fist: an arm set on a hip, a folded leg. */
+export function limb(ctx: Ctx, colour: string, width: number, x0: number, y0: number, x1: number, y1: number, kx = 0, ky = 0, sharp = false): void {
   const mx = (x0 + x1) / 2 + kx
   const my = (y0 + y1) / 2 + ky
+  if (sharp) {
+    line(ctx, colour, width * 0.8, [x0, y0, mx, my, x1, y1])
+    line(ctx, colour, width, [x0, y0, mx, my])
+    oval(ctx, x1, y1, width * 0.66, width * 0.66, 0, colour)
+    return
+  }
   // The whole bow at the width of the shin, then its first half again at the width of the thigh.
   line(ctx, colour, width * 0.7, [x0, y0, mx + kx, my + ky, x1, y1], true)
   line(ctx, colour, width, [x0, y0, (x0 + mx + kx) / 2, (y0 + my + ky) / 2, mx, my], true)
   oval(ctx, x1, y1, width * 0.52, width * 0.52, 0, colour)
 }
 
-/** A feeler: a springy curve from the head to a blob at its tip. `curl` bows it forward or back. */
-export function feeler(ctx: Ctx, colour: string, width: number, x0: number, y0: number, x1: number, y1: number, curl = 0.3): void {
+/** A limb with a dark edge round a lit core: the edge reads on pale ground and the core in a dark tunnel. */
+export function edged(ctx: Ctx, edge: string, core: string, width: number, x0: number, y0: number, x1: number, y1: number, kx = 0, ky = 0, sharp = false): void {
+  limb(ctx, edge, width, x0, y0, x1, y1, kx, ky, sharp)
+  limb(ctx, core, width - 2.2, x0, y0, x1, y1, kx, ky, sharp)
+}
+
+/** A feeler: a springy curve from the head to a blob at its tip. `curl` bows it forward or back. With a `core`
+ *  colour the stem and the blob are lit inside a dark edge. */
+export function feeler(ctx: Ctx, colour: string, width: number, x0: number, y0: number, x1: number, y1: number, curl = 0.3, core?: string): void {
   const dx = x1 - x0
   const dy = y1 - y0
-  line(ctx, colour, width, [x0, y0, x0 + dx * 0.5 + dy * curl, y0 + dy * 0.5 - dx * curl, x1, y1], true)
+  const pts = [x0, y0, x0 + dx * 0.5 + dy * curl, y0 + dy * 0.5 - dx * curl, x1, y1]
+  line(ctx, colour, width, pts, true)
   oval(ctx, x1, y1, width * 1.15, width * 1.15, 0, colour)
+  if (!core) return
+  line(ctx, core, width * 0.4, pts, true)
+  oval(ctx, x1, y1, width * 0.72, width * 0.72, 0, core)
 }
 
 /** A wash over a shut eye, so that the lid is a shade paler than the head it is on. */
 const LID = 'rgba(255,255,255,0.2)'
 
 export type Shut = 'sleep' | 'joy' | 'squeeze'
-export type EyeOpts = { white?: string; lid?: number; tilt?: number; skin?: string; shut?: Shut; pupil?: number }
+export type EyeOpts = { white?: string; lid?: number; tilt?: number; skin?: string; shut?: Shut; pupil?: number; ink?: string; spark?: boolean }
 
 /** A large round eye. The pupil shifts by `look`, so the eyes can follow the finger. `lid` from 0 to 1 lowers a
- *  flat lid in the colour of the skin, tilted by `tilt`; `shut` closes the eye to a curve instead. */
+ *  flat lid in the colour of the skin, tilted by `tilt`; `shut` closes the eye to a curve instead, drawn in `ink`.
+ *  `spark` puts a second small light in the pupil: a bright, eager eye. */
 export function eye(ctx: Ctx, x: number, y: number, r: number, look: Look, o: EyeOpts = {}): void {
   const skin = o.skin ?? INK
+  const ink = o.ink ?? INK
   if (o.shut) {
     oval(ctx, x, y, r, r, 0, skin)
     oval(ctx, x, y, r, r, 0, LID)
@@ -129,9 +149,9 @@ export function eye(ctx: Ctx, x: number, y: number, r: number, look: Look, o: Ey
     ctx.translate(x, y)
     ctx.rotate(o.tilt ?? 0)
     // Asleep the lid hangs like a hammock, pleased it arches, squeezed it is a short hard crease.
-    if (o.shut === 'sleep') line(ctx, INK, r * 0.3, [-r * 0.6, -r * 0.05, 0, r * 0.6, r * 0.6, -r * 0.05], true)
-    else if (o.shut === 'joy') line(ctx, INK, r * 0.3, [-r * 0.6, r * 0.25, 0, -r * 0.6, r * 0.6, r * 0.25], true)
-    else line(ctx, INK, r * 0.36, [-r * 0.65, -r * 0.1, 0, r * 0.25, r * 0.65, -r * 0.1], true)
+    if (o.shut === 'sleep') line(ctx, ink, r * 0.34, [-r * 0.66, -r * 0.2, 0, r * 0.78, r * 0.66, -r * 0.2], true)
+    else if (o.shut === 'joy') line(ctx, ink, r * 0.3, [-r * 0.6, r * 0.25, 0, -r * 0.6, r * 0.6, r * 0.25], true)
+    else line(ctx, ink, r * 0.36, [-r * 0.65, -r * 0.1, 0, r * 0.25, r * 0.65, -r * 0.1], true)
     ctx.restore()
     return
   }
@@ -143,6 +163,7 @@ export function eye(ctx: Ctx, x: number, y: number, r: number, look: Look, o: Ey
   const py = y + (clamp(look.y) / far) * reach
   oval(ctx, px, py, pr, pr, 0, EYE.pupil)
   oval(ctx, px - pr * 0.36, py - pr * 0.4, pr * 0.34, pr * 0.34, 0, EYE.white)
+  if (o.spark) oval(ctx, px + pr * 0.38, py + pr * 0.36, pr * 0.2, pr * 0.2, 0, EYE.white)
   const lid = clamp(o.lid ?? 0, 0, 0.95)
   if (lid <= 0) return
   // The lid is the top slice of the eye's circle, cut off by a straight edge.
@@ -155,17 +176,22 @@ export function eye(ctx: Ctx, x: number, y: number, r: number, look: Look, o: Ey
   ctx.fill()
 }
 
-export type Mouth = 'smile' | 'grin' | 'teeth' | 'o' | 'flat' | 'frown' | 'wavy' | 'tongue'
+export type Mouth = 'smile' | 'grin' | 'teeth' | 'o' | 'flat' | 'frown' | 'wavy' | 'tongue' | 'none'
 
-/** A mouth of width `w` with its middle at (x, y). Each shape is a different mood. */
+/** A mouth of width `w` with its middle at (x, y). Each shape is a different mood; `none` is a mouth that is hidden
+ *  behind what the jaws hold. */
 export function mouth(ctx: Ctx, x: number, y: number, w: number, kind: Mouth, ink: string = INK): void {
+  if (kind === 'none') return
   const h = w / 2
   const pen = Math.max(1.3, w * 0.2)
   if (kind === 'smile') line(ctx, ink, pen, [x - h, y - h * 0.35, x, y + h * 0.75, x + h, y - h * 0.5], true)
   else if (kind === 'frown') line(ctx, ink, pen, [x - h, y + h * 0.4, x, y - h * 0.7, x + h, y + h * 0.4], true)
   else if (kind === 'flat') line(ctx, ink, pen, [x - h, y, x + h, y - h * 0.1])
   else if (kind === 'wavy') line(ctx, ink, pen, [x - h, y, x - h * 0.4, y - h * 0.7, x + h * 0.3, y + h * 0.7, x + h, y - h * 0.1], true)
-  else if (kind === 'o') oval(ctx, x, y, h * 0.6, h * 0.75, 0, ink)
+  else if (kind === 'o') {
+    oval(ctx, x, y, h * 0.62, h * 0.8, 0, ink)
+    oval(ctx, x, y + h * 0.36, h * 0.36, h * 0.3, 0, TONGUE)
+  }
   else {
     // An open mouth: a dark bowl hanging from a straight lip, with a tongue or a row of teeth in it.
     ctx.fillStyle = ink
@@ -181,30 +207,22 @@ export function mouth(ctx: Ctx, x: number, y: number, w: number, kind: Mouth, in
   }
 }
 
-// The ant plan: rump, waist and head in a row with six legs under the waist. The child's ant, the workers and
-// the raiders are all built on it, each with its own colours, proportions and poses.
-
-export type Face = { brows?: P; lid?: number; tilt?: number; shut?: Shut; mouth?: Mouth; jaws?: number; bias?: P; dizzy?: boolean }
-/** The build of one kind of ant: its colours, the half width and half height of rump, waist and head, the size of
- *  its eye and the thickness of its legs. A mask is the raider's, a blush on the cheek the child's ant's. */
-export type AntBuild = { body: string; dark: string; leg: string; ab: P; th: P; hd: P; eye: number; limb: number; mask?: string; cheek?: string }
-/** A pose. A body part is [x, y, turn]; a leg is [footX, footY, kneeDx, kneeDy], near legs from back to front;
- *  `feel` is how far the tips of the feelers reach from the brow, and their curl. */
-export type AntPose = { ab: readonly number[]; th: readonly number[]; hd: readonly number[]; legs: Legs; far?: Legs; feel: readonly number[]; face?: Face; held?: Held }
+/** A face: the angle of the near and the far brow, and `raise` lifts the near one; lids, mouth and jaws; `bias` adds to where the eyes look. */
+export type Face = { brows?: P; raise?: number; lid?: number; tilt?: number; shut?: Shut; mouth?: Mouth; jaws?: number; bias?: P; dizzy?: boolean }
 export type Legs = readonly (readonly number[])[]
 /** Something held under an arm: painted over the body and under the near legs. */
 export type Held = (ctx: Ctx) => void
 
 /** The eyes of a head, in the head's own frame: the far one first, then the near one over it, then the brows.
- *  `dizzy` sends the two pupils different ways, whatever there is to look at. */
-export function eyes(ctx: Ctx, x: number, y: number, r: number, gap: number, look: Look, f: Face, skin: string, rim: string, white?: string): void {
+ *  `dizzy` sends the two pupils different ways, whatever there is to look at. `more` is passed on to both eyes. */
+export function eyes(ctx: Ctx, x: number, y: number, r: number, gap: number, look: Look, f: Face, skin: string, rim: string, white?: string, more: EyeOpts = {}): void {
   const lx = clamp(look.x + (f.bias?.[0] ?? 0))
   const ly = clamp(look.y + (f.bias?.[1] ?? 0))
   // The head may be tilted or mirrored, and the pupils must still look at the same place on the stage.
   const far = Math.hypot(lx, ly)
   const [dx, dy] = toLocal(ctx, lx, ly)
   const at = { x: dx * far, y: dy * far }
-  const o: EyeOpts = { lid: f.lid, tilt: f.tilt, shut: f.shut, skin, white }
+  const o: EyeOpts = { ...more, lid: f.lid, tilt: f.tilt, shut: f.shut, skin, white }
   eye(ctx, x + gap, y + r * 0.12, r * 0.84, f.dizzy ? { x: 0.8, y: 0.7 } : at, { ...o, tilt: -(f.tilt ?? 0) })
   // A dark sliver round the near eye keeps the two from running into one.
   oval(ctx, x, y, r * 1.14, r * 1.14, 0, rim)
@@ -212,75 +230,9 @@ export function eyes(ctx: Ctx, x: number, y: number, r: number, gap: number, loo
   if (!f.brows) return
   // A brow is one thick stroke over an eye. A positive angle drops its front end, which reads as cross.
   const brow = (bx: number, by: number, half: number, angle: number, width: number) =>
-    line(ctx, INK, width, [bx - Math.cos(angle) * half, by - Math.sin(angle) * half, bx + Math.cos(angle) * half, by + Math.sin(angle) * half])
+    line(ctx, more.ink ?? INK, width, [bx - Math.cos(angle) * half, by - Math.sin(angle) * half, bx + Math.cos(angle) * half, by + Math.sin(angle) * half])
   brow(x + gap + r * 0.1, y - r * 0.92, r * 0.65, f.brows[1], r * 0.3)
-  brow(x - r * 0.1, y - r * 1.1, r * 0.75, f.brows[0], r * 0.34)
-}
-
-export function antFigure(ctx: Ctx, a: AntBuild, p: AntPose, look: Look, t: number): void {
-  const f = p.face ?? {}
-  const breath = Math.sin(t * 2.4) * 0.5
-  const twitch = Math.sin(t * 3.1) * 2
-  const [ax, ay, ar = 0] = p.ab
-  const [tx, ty, tr = 0] = p.th
-  const [hx, hy, hr = 0] = p.hd
-  const hip = (i: number): P => {
-    const lx = (i - 1) * a.th[0] * 0.55
-    const ly = a.th[1] * (i === 1 ? 0.6 : 0.4)
-    return [tx + lx * Math.cos(tr) - ly * Math.sin(tr), ty + lx * Math.sin(tr) + ly * Math.cos(tr)]
-  }
-  const leg = (l: readonly number[], i: number, colour: string, dx: number) => {
-    const [x0, y0] = hip(i)
-    // A foot is given by the point of the ground it stands on, so its round end is lifted by its own radius.
-    limb(ctx, colour, a.limb, x0 + dx, y0, l[0], l[1] - a.limb * 0.5, l[2] ?? 0, l[3] ?? -5)
-  }
-  // The far legs first, a little forward of the near ones and darker, then the body from the rump to the head.
-  const far = p.far ?? p.legs.map((l) => [l[0] + a.limb * 1.2, l[1], l[2] ?? 0, l[3] ?? -5])
-  far.forEach((l, i) => leg(l, i, a.leg, 2))
-  ctx.save()
-  ctx.translate(ax, ay)
-  ctx.rotate(ar)
-  blob(ctx, 0, 0, a.ab[0], a.ab[1] + breath, 0, a.body, a.dark, false)
-  // Two seams across the rump, each a bow that follows its roundness.
-  for (const k of [-0.3, 0.22]) bow(ctx, a.dark, a.limb * 0.36, k * a.ab[0] + 4, -1, 5, a.ab[1] * Math.sqrt(1 - k * k) * 0.86, 0, Math.PI * 0.55, Math.PI * 1.45)
-  shine(ctx, 0, 0, a.ab[0], a.ab[1], 0)
-  ctx.restore()
-  blob(ctx, tx, ty, a.th[0], a.th[1], tr, a.body, a.dark)
-  ctx.save()
-  ctx.translate(hx, hy)
-  ctx.rotate(hr)
-  const [rx, ry] = a.hd
-  const [fx, fy, curl = 0.3] = p.feel
-  feeler(ctx, a.leg, a.limb * 0.5, rx * 0.5, -ry * 0.7, rx * 0.5 + fx + 6, -ry * 0.7 + fy + 3 + twitch, curl)
-  // The jaws: two dark claws at the front of the head that close on each other. The far one goes behind the head.
-  const open = (f.jaws ?? 0.3) * ry
-  const jaw = (s: number, back: number) => {
-    const y = ry * 0.56
-    ctx.fillStyle = a.leg
-    ctx.beginPath()
-    ctx.moveTo(rx * 0.72, y)
-    ctx.quadraticCurveTo(rx * 1.14 - back, y + s * (ry * 0.42 + open), rx * 1.36 - back, y + s * open * 0.55)
-    ctx.quadraticCurveTo(rx * 1.1 - back, y + s * (ry * 0.1 + open * 0.5), rx * 0.86, y + s * ry * 0.2)
-    ctx.closePath()
-    ctx.fill()
-  }
-  jaw(-1, 1.5)
-  blob(ctx, 0, 0, rx, ry, 0, a.body, a.dark, false)
-  shine(ctx, -rx * 0.3, 0, rx * 0.7, ry, 0)
-  jaw(1, 0)
-  if (a.mask) {
-    // The raider's mask: a dark band across both eyes, with the two ends of its knot flying behind the head.
-    line(ctx, a.mask, a.eye * 1.5, [-rx * 0.62, -ry * 0.4, rx * 0.86, -ry * 0.3])
-    line(ctx, a.mask, a.limb * 0.6, [-rx * 0.8, -ry * 0.45, -rx * 1.25, -ry * 0.75 + twitch * 0.5])
-    line(ctx, a.mask, a.limb * 0.6, [-rx * 0.8, -ry * 0.4, -rx * 1.3, -ry * 0.2 - twitch * 0.5])
-  }
-  if (a.cheek) oval(ctx, -rx * 0.12, ry * 0.42, rx * 0.22, ry * 0.17, 0, a.cheek)
-  mouth(ctx, rx * 0.52, ry * 0.58, rx * 0.5, f.mouth ?? 'smile')
-  eyes(ctx, rx * 0.16, -ry * 0.36, a.eye, a.eye * 1.3, look, f, a.body, a.dark)
-  feeler(ctx, a.dark, a.limb * 0.5, rx * 0.1, -ry * 0.85, rx * 0.1 + fx, -ry * 0.85 + fy - twitch, curl)
-  ctx.restore()
-  p.held?.(ctx)
-  p.legs.forEach((l, i) => leg(l, i, a.dark, 0))
+  brow(x - r * 0.1, y - r * (1.1 + (f.raise ?? 0)), r * 0.75, f.brows[0], r * 0.34)
 }
 
 // The beetle plan: a domed shell over a pale belly, a neck plate, a low head and six short legs. The beetle and
@@ -315,7 +267,7 @@ export function beetleFigure(ctx: Ctx, b: BeetleBuild, p: BeetlePose, look: Look
   const legs = (list: Legs, colour: string, dx: number) =>
     list.forEach((l, i) => {
       const [x, y] = place(p.at, hips[i][0] + dx, hips[i][1])
-      limb(ctx, colour, 6.5, x, y, l[0], l[1] - 3.4, l[2] ?? 0, l[3] ?? 0)
+      limb(ctx, colour, 6.5, x, y, l[0], l[1] - 3.4, l[2] ?? 0, l[3] ?? 0, !!l[4])
     })
   legs(p.far ?? p.legs.map((l) => [l[0] + 10, l[1], l[2] ?? 0, l[3] ?? 0]), b.dark, 8)
   enter(ctx, p.at)

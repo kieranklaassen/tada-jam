@@ -1,20 +1,22 @@
 import { invaderPainters, INVADER_POSES, INVADER_SIZE } from './invaders'
 import { ANT, EARTH, QUEEN, WORKER } from './palette'
-import { antFigure, blob, eyes, feeler, limb, mouth, oval, shine } from './parts'
-import type { AntBuild, AntPose, CreatureKind, Ctx, Face, Look, Painter } from './parts'
+import { blob, edged, eyes, feeler, mouth, oval, shine } from './parts'
+import type { CreatureKind, Ctx, Face, Look, Painter } from './parts'
+import { antFigure } from './parts2'
+import type { AntBuild, AntPose } from './parts2'
 
-// The kingdom: the child's own ant, the queen and a worker. Each is painted with the middle of its feet at the
-// origin, facing right, in flat colour with one hard highlight on each glossy part and large eyes. This file is
-// also the one door to every creature: `paintCreature` hands the invaders on to their own file.
+// The kingdom: the child's own ant, the queen and a worker, all honey-gold and round. Each is painted with the
+// middle of its feet at the origin, facing right, in flat colour with one hard highlight on each glossy part and
+// large eyes. This file is also the one door to every creature: `paintCreature` hands the invaders on to their own
+// file. Poses whose names differ only by a number at the end are partners: swapping between them is one movement.
 
 export type { CreatureKind, Look } from './parts'
 
-// Four colours the palette has not got: the lit top of a crumb of earth, the shaded side of the queen's egg, her
-// far arms and legs (darker than the near ones, as on the ants), and the blush of a cheek.
+// Three colours the palette has not got: the lit top of a crumb of earth, the shaded side of the queen's egg, and
+// the blush of a cheek.
 const CRUMB_LIGHT = '#d29a5c'
 const EGG_SHADE = '#e6cfa0'
-const QUEEN_ARM = '#6e2c14'
-const CHEEK = '#e2764a'
+const CHEEK = '#ff8a5c'
 
 /** A crumb of dug earth: a small lump with a lit top. */
 function crumb(ctx: Ctx, x: number, y: number, r: number): void {
@@ -24,9 +26,12 @@ function crumb(ctx: Ctx, x: number, y: number, r: number): void {
   oval(ctx, x - r * 0.3, y - r * 0.4, r * 0.3, r * 0.16, -0.5, CRUMB_LIGHT)
 }
 
-// ---- The child's ant: warm orange-brown, eager and bright. ----
+// ---- The child's ant: the brightest gold, eager, with a blue neckerchief that nobody else wears. ----
 
-const ANT_BUILD: AntBuild = { ...ANT, ab: [24, 10.5], th: [14, 8.5], hd: [15, 12.5], eye: 7, limb: 4.4, cheek: CHEEK }
+const ANT_BUILD: AntBuild = {
+  body: ANT.body, dark: ANT.dark, leg: ANT.leg, lit: ANT.lit, jaw: ANT.jaw,
+  ab: [22, 12], th: [13, 8.5], hd: [15.5, 13.5], eye: 7.8, limb: 5.6, cheek: CHEEK, scarf: [ANT.scarf, ANT.scarfDark], spark: true,
+}
 
 const ANT_POSES: Record<string, AntPose> = {
   // Alert: head up, feelers straight up, a wide grin.
@@ -41,17 +46,46 @@ const ANT_POSES: Record<string, AntPose> = {
     legs: [[-22, 0, -5, -7], [0, 0, -5, 0], [17, 0, 5, -2]],
     feel: [14, -6, -0.3], face: { brows: [0.35, 0.3], mouth: 'tongue', jaws: 0.9, bias: [0.3, 0.6] },
   },
-  // Sitting back on its rump and wiping its jaws with a foreleg, eyes shut with pleasure.
+  // Sat down with its rump tucked under it, wiping its jaws with a foreleg, eyes shut with pleasure. Both sitting
+  // poses are compact: no wider than 80 and no higher than 34, to fit the foot of a new nest's shaft.
   look: {
-    ab: [-30, -11, 0.12], th: [0, -14, -0.5], hd: [24, -18.5, -0.2],
-    legs: [[-20, 0, -4, -7], [-3, 0, -5, 0], [39, -12, 1, 8]],
-    far: [[-13, 0, -4, -7], [5, 0, -5, 0], [20, 0, 5, -3]],
-    feel: [-9, -12, -0.4], face: { shut: 'joy', brows: [-0.3, -0.2], mouth: 'smile', jaws: 0.1 },
+    ab: [-21, -12, 0.2], th: [-3, -14.5, -0.7], hd: [12, -16.5, -0.12], tails: -0.3,
+    legs: [[-14, 0, -2, -3], [0, 0, -2, -2], [29, -8, 2, 7]],
+    far: [[-10, 0, -2, -3], [5, 0, -2, -2], [17, 0, 3, -3]],
+    feel: [-13, 2, 0.2], face: { shut: 'joy', brows: [-0.12, -0.1], mouth: 'smile', jaws: 0.1 },
+  },
+  // A scuttle in two frames: the three legs that stand in one are in the air in the other, and the body bobs.
+  walk1: {
+    ab: [-31, -14, -0.04], th: [2, -12.5, 0], hd: [33, -15.5, 0.03],
+    legs: [[-28, 0, -2, -8], [6, 0, -4, 0], [14, 0, 3, -5]],
+    far: [[-11, -3, -5, -7], [-7, 0, -3, 0], [31, -3, 3, -6]],
+    feel: [9, -14, 0.3], face: { brows: [-0.2, -0.1], mouth: 'grin' },
+  },
+  walk2: {
+    ab: [-31, -15.5, -0.1], th: [2, -13.5, -0.03], hd: [33, -17, -0.06],
+    legs: [[-12, -3, -5, -7], [-7, 0, -3, 0], [29, -3, 3, -6]],
+    far: [[-27, 0, -2, -8], [8, 0, -4, 0], [16, 0, 3, -5]],
+    feel: [2, -17, 0.2], face: { brows: [-0.2, -0.1], mouth: 'grin' },
+  },
+  // Carrying: head thrown back, jaws wide open round the lump that the game paints in them, feelers laid back.
+  carry: {
+    ab: [-32, -13, 0.06], th: [1, -13.5, -0.22], hd: [31.5, -18.5, -0.75],
+    legs: [[-23, 0, -4, -8], [-1, 0, -4, 0], [19, 0, 4, -6]],
+    feel: [-7, -15, -0.3], face: { brows: [-0.2, -0.1], mouth: 'none', jaws: 1.15, bias: [0.6, -0.5] },
+  },
+  // Waiting: sat down below something out of reach, head tipped up at it, one foreleg held up toward it.
+  wait: {
+    ab: [-21, -12, 0.2], th: [-3, -14.5, -0.7], hd: [12, -16.5, -0.28], tails: -0.3,
+    legs: [[-14, 0, -2, -3], [0, 0, -2, -2], [16, 0, 3, -3]],
+    far: [[-10, 0, -2, -3], [5, 0, -2, -2], [35, -26, 4, 5]],
+    feel: [-12, -1.5, 0.2], face: { brows: [0.1, 0.25], mouth: 'o', bias: [0.5, -0.9] },
   },
 }
+/** Sat down, its rump is tucked under it and shows short. */
+const ANT_SAT: AntBuild = { ...ANT_BUILD, ab: [16, 12] }
 
 const paintAnt: Painter = (ctx, pose, look, t) => {
-  antFigure(ctx, ANT_BUILD, ANT_POSES[pose] ?? ANT_POSES.stand, look, t)
+  antFigure(ctx, pose === 'look' || pose === 'wait' ? ANT_SAT : ANT_BUILD, ANT_POSES[pose] ?? ANT_POSES.stand, look, t)
   if (pose !== 'dig') return
   // The crumbs it throws up, on their way over its shoulder.
   crumb(ctx, 57, -13, 4)
@@ -60,16 +94,27 @@ const paintAnt: Painter = (ctx, pose, look, t) => {
   crumb(ctx, 29, -34, 2.8)
 }
 
-// ---- A worker: smaller, lighter, and tidy to a fault. ----
+// ---- A worker: smaller, a shade duller, bare-necked, and tidy to a fault. ----
 
-const WORKER_BUILD: AntBuild = { ...WORKER, ab: [17, 8.5], th: [10.5, 7], hd: [12.5, 10.5], eye: 5.8, limb: 3.6 }
+const WORKER_BUILD: AntBuild = {
+  body: WORKER.body, dark: WORKER.dark, leg: WORKER.leg, lit: WORKER.lit, jaw: WORKER.jaw,
+  ab: [16, 9.5], th: [10.5, 7], hd: [12.5, 11], eye: 5.6, limb: 4.8,
+}
+/** Upright it is seen from behind its shoulder, and its rump is short. */
+const WORKER_UPRIGHT: AntBuild = { ...WORKER_BUILD, ab: [11.5, 9.5] }
 
 const WORKER_POSES: Record<string, AntPose> = {
   walk: {
     ab: [-23, -11.5, -0.06], th: [1, -10.5, 0], hd: [25, -12.5, 0],
     legs: [[-20, 0, -2, -7], [3, 0, -4, 0], [13, 0, 3, -4]],
-    far: [[-10, 0, -4, -6], [-4, 0, -3, 0], [22, 0, 3, -5]],
+    far: [[-10, -2, -4, -6], [-4, 0, -3, 0], [22, -2, 3, -5]],
     feel: [8, -12, 0.3], face: { brows: [0.1, 0.1], mouth: 'flat' },
+  },
+  walk2: {
+    ab: [-23, -12.5, -0.1], th: [1, -11.5, -0.03], hd: [25, -13.5, -0.05],
+    legs: [[-10, -2, -4, -6], [-5, 0, -3, 0], [21, -2, 3, -5]],
+    far: [[-19, 0, -2, -7], [5, 0, -4, 0], [14, 0, 3, -4]],
+    feel: [3, -14, 0.2], face: { brows: [0.1, 0.1], mouth: 'flat' },
   },
   // A crumb of earth balanced on its head: it walks carefully and watches the crumb.
   carry: {
@@ -77,18 +122,19 @@ const WORKER_POSES: Record<string, AntPose> = {
     legs: [[-17, 0, -3, -7], [0, 0, -4, 0], [16, 0, 3, -5]],
     feel: [-13, -3, 0.5], face: { brows: [-0.35, -0.2], mouth: 'o', bias: [-0.2, -0.9] },
   },
-  // Upright on its back legs with its hands on its hips, looking down at the damage and muttering.
+  // Upright on its two back legs, a fist on each hip and both elbows out, scowling down at the damage. The middle
+  // pair of legs is folded small on its belly.
   hips: {
-    ab: [-9, -15, 1.15], th: [1, -28, -1.35], hd: [5, -43.5, 0.15],
-    legs: [[-1, 0, -2, 0], [4, 0, 3, 0], [-1, -24, -11, -2]],
-    far: [[6, 0, 2, 0], [10, 0, 3, 0], [5, -24, 10, -2]],
-    feel: [-11, -6, 0.5], face: { brows: [0.45, 0.4], lid: 0.3, mouth: 'wavy', bias: [0.2, 0.9] },
+    ab: [-8, -12.5, -0.55], th: [2, -24.5, -1.4], hd: [5, -42, 0.12],
+    legs: [[0, 0, 2.5, 1], [7, -19, 1, 1], [-1, -18.5, -11, -3, 1]],
+    far: [[10, 0, 2.5, 1], [9, -21, 1, 1], [9, -18.5, 8.5, -3, 1]],
+    feel: [-10, -7, 0.45], face: { brows: [0.55, 0.5], lid: 0.34, mouth: 'frown', bias: [0.3, 0.8] },
   },
 }
 
 const paintWorker: Painter = (ctx, pose, look, t) => {
-  antFigure(ctx, WORKER_BUILD, WORKER_POSES[pose] ?? WORKER_POSES.walk, look, t)
-  if (pose === 'carry') crumb(ctx, 23, -25.5, 6.5)
+  antFigure(ctx, pose === 'hips' ? WORKER_UPRIGHT : WORKER_BUILD, WORKER_POSES[pose] ?? WORKER_POSES.walk, look, t)
+  if (pose === 'carry') crumb(ctx, 23, -26, 6.5)
 }
 
 // ---- The queen: very large, with an egg she will not put down. ----
@@ -106,11 +152,11 @@ function pill(ctx: Ctx, x: number, y: number, w: number, h: number, r: number, f
   ctx.fill()
 }
 
-/** Her head, the same in both poses: wide, with heavy lids, cheeks, and a tuft of three feelers that stand like
+/** Her head, the same in every pose: wide, with heavy lids, cheeks, and a tuft of three feelers that stand like
  *  the points of a crown. `squash` is how hard the shaft presses her cheeks. */
 function queenHead(ctx: Ctx, x: number, y: number, rx: number, ry: number, squash: number, f: Face, look: Look, t: number): void {
   const sway = Math.sin(t * 2.2) * 1.5
-  for (const k of [-1, 1, 0]) feeler(ctx, QUEEN.dark, 2.8, x + k * rx * 0.2, y - ry * 0.8, x + k * rx * 0.42 + sway, y - ry - (k === 0 ? 12 : 8), k * 0.3)
+  for (const k of [-1, 1, 0]) feeler(ctx, QUEEN.leg, 3.6, x + k * rx * 0.2, y - ry * 0.8, x + k * rx * 0.42 + sway, y - ry - (k === 0 ? 12 : 8), k * 0.3, QUEEN.body)
   if (squash > 0) {
     pill(ctx, x - rx, y - ry, rx * 2, ry * 2, ry * 0.86, QUEEN.dark)
     pill(ctx, x - rx + 1, y - ry, rx * 2 - 2, ry * 2 - 3, ry * 0.84, QUEEN.body)
@@ -123,34 +169,54 @@ function queenHead(ctx: Ctx, x: number, y: number, rx: number, ry: number, squas
   eyes(ctx, x - rx * 0.12, y - ry * 0.2, r, r * 1.75, look, f, QUEEN.body, QUEEN.dark)
 }
 
-/** Her egg, held against her chest by two arms. */
-function egg(ctx: Ctx, x: number, y: number, far: readonly number[], near: readonly number[], t: number): void {
+/** Her egg at [x, y, turn], held against her chest by two arms, each [shoulderX, shoulderY, elbowDx, elbowDy]. */
+function egg(ctx: Ctx, at: readonly number[], far: readonly number[], near: readonly number[], t: number): void {
   const hug = Math.sin(t * 1.6) * 0.6
-  limb(ctx, QUEEN_ARM, 7, far[0], far[1], x + 8, y + 5 - hug, far[2], far[3])
-  blob(ctx, x, y, 10.5, 13.5, 0.3, QUEEN.egg, EGG_SHADE, false)
-  limb(ctx, QUEEN.dark, 7, near[0], near[1], x - 1, y + 9 + hug, near[2], near[3])
+  const [x, y, turn] = at
+  edged(ctx, QUEEN.leg, QUEEN.arm, 8, far[0], far[1], x + 8, y + 5 - hug, far[2], far[3])
+  blob(ctx, x, y, 10.5, 13.5, turn, QUEEN.egg, EGG_SHADE, false)
+  edged(ctx, QUEEN.leg, QUEEN.dark, 8, near[0], near[1], x - 1, y + 9 + hug, near[2], near[3])
 }
+
+// What changes between the two frames of each of her poses: wedged, she squirms, hugs the egg tighter and rolls
+// her eyes up; enthroned, she shifts the egg and lifts one eyebrow.
+const WEDGED = {
+  wedged: {
+    rolls: [[-3, 22, 1], [-23, 21, 1], [-42, 24, 0]], feet: [-15, 14], egg: [5, -53, 0.3], far: [23, -62, 6, 5], near: [-23, -62, -7, 7], head: -82,
+    face: { brows: [-0.5, 0.5], lid: 0.42, tilt: -0.25, mouth: 'wavy', bias: [0.1, 0.9] },
+  },
+  wedged2: {
+    rolls: [[-3, 19, 1], [-20, 25, 1], [-43, 21, 0]], feet: [-10, 18], egg: [1, -58, -0.2], far: [23, -61, 9, 9], near: [-23, -61, -11, 10], head: -80.5,
+    face: { brows: [-0.15, -0.75], lid: 0.08, mouth: 'frown', bias: [-0.5, -1.6] },
+  },
+} as const
+const SIT = {
+  sit: { egg: [40, -31, 0.3], face: { brows: [-0.55, 0.35], lid: 0.3, tilt: 0.12, mouth: 'flat' } },
+  sit2: { egg: [43, -34, 0.62], face: { brows: [0.2, 0.35], raise: 0.55, lid: 0.14, tilt: 0.12, mouth: 'wavy' } },
+} as const
 
 const paintQueen: Painter = (ctx, pose, look, t) => {
   const breath = Math.sin(t * 1.6)
-  if (pose === 'wedged') {
+  if (pose === 'wedged' || pose === 'wedged2') {
     // Stuck upright in a shaft two cells wide like a cork: two small feet that find no floor, then three rolls of
     // her, each squeezed as wide as the shaft. The pale belly bulges on the lower two; the egg lies on the third.
-    limb(ctx, QUEEN_ARM, 5, -12, -9, -15, -2.6, -3, 0)
-    limb(ctx, QUEEN_ARM, 5, 10, -9, 14, -2.6, 3, 0)
-    for (const [y, h, belly] of [[-3, 22, 1], [-23, 21, 1], [-42, 24, 0]]) {
+    const w = WEDGED[pose]
+    edged(ctx, QUEEN.leg, QUEEN.arm, 6.4, -12, -9, w.feet[0], -3.2, -3, 0)
+    edged(ctx, QUEEN.leg, QUEEN.arm, 6.4, 10, -9, w.feet[1], -3.2, 3, 0)
+    for (const [y, h, belly] of w.rolls) {
       pill(ctx, -28, y - h, 56, h, 10.5, QUEEN.dark)
       pill(ctx, -27.5, y - h, 55, h - 3, 10, QUEEN.body)
       if (belly) pill(ctx, -11, y - h + 2.5, 31, h - 8, 7.5, QUEEN.belly)
       shine(ctx, -3, y - h / 2 - 1, 26, h / 2)
     }
-    egg(ctx, 5, -53 - breath * 0.5, [23, -62, 6, 5], [-23, -62, -7, 7], t)
-    queenHead(ctx, 0, -82, 27, 14.5, 2.5, { brows: [-0.5, 0.5], lid: 0.42, tilt: -0.25, mouth: 'wavy', bias: [0.1, 0.9] }, look, t)
+    egg(ctx, [w.egg[0], w.egg[1] - breath * 0.5, w.egg[2]], w.far, w.near, t)
+    queenHead(ctx, 0, w.head, 27, 14.5, 2.5, w.face, look, t)
     return
   }
-  // Enthroned on her own rump: three great rolls behind her, a short chest, the egg in her arms.
-  limb(ctx, QUEEN_ARM, 6.5, 30, -14, 56, -3.4, 1, -8)
-  limb(ctx, QUEEN_ARM, 6.5, 20, -12, 39, -3.4, 1, -7)
+  // Enthroned on her own rump: three great rolls behind her, a short chest, the egg in her arms, and her two hind
+  // legs folded in front of her with the knees up.
+  const s = SIT[pose === 'sit2' ? 'sit2' : 'sit']
+  edged(ctx, QUEEN.leg, QUEEN.arm, 7.6, 32, -13, 57, -3.8, 7.5, -11, true)
   for (const [x, y, rx, ry] of [[-38, -19, 22, 19], [-17, -24, 25, 24 + breath * 0.6], [7, -23, 21, 22]]) {
     // A roll: a dark edge, the pale belly under it, and the lit back over both.
     oval(ctx, x, y, rx, ry, 0, QUEEN.dark)
@@ -159,10 +225,9 @@ const paintQueen: Painter = (ctx, pose, look, t) => {
     shine(ctx, x, y, rx, ry)
   }
   blob(ctx, 21, -37, 15, 18, -0.25, QUEEN.body, QUEEN.dark, false)
-  limb(ctx, QUEEN.dark, 6.5, 26, -13, 50, -3.4, 0, -8)
-  limb(ctx, QUEEN.dark, 6.5, 16, -9, 33, -3.4, 0, -7)
-  egg(ctx, 40, -31 - breath * 0.4, [31, -44, 9, 2], [16, -42, 1, 9], t)
-  queenHead(ctx, 32, -57, 17.5, 14.5, 0, { brows: [-0.55, 0.35], lid: 0.3, tilt: 0.12, mouth: 'flat' }, look, t)
+  edged(ctx, QUEEN.leg, QUEEN.dark, 7.6, 26, -10, 47, -3.8, 7, -10.5, true)
+  egg(ctx, [s.egg[0], s.egg[1] - breath * 0.4, s.egg[2]], [31, -44, 9, 2], [16, -42, 1, 9], t)
+  queenHead(ctx, 32, -57, 17.5, 14.5, 0, s.face, look, t)
 }
 
 // ---- Every creature through one door. ----
@@ -179,9 +244,9 @@ export const SIZE: Record<CreatureKind, { width: number; height: number }> = {
 
 /** The poses each kind has. The first is the one a kind falls back on when it is asked for a pose it has not. */
 export const POSES: { [K in CreatureKind]: readonly string[] } = {
-  ant: ['stand', 'dig', 'look'],
-  queen: ['wedged', 'sit'],
-  worker: ['walk', 'carry', 'hips'],
+  ant: ['stand', 'dig', 'look', 'walk1', 'walk2', 'carry', 'wait'],
+  queen: ['wedged', 'sit', 'wedged2', 'sit2'],
+  worker: ['walk', 'carry', 'hips', 'walk2'],
   ...INVADER_POSES,
 }
 

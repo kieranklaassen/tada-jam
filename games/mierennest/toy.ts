@@ -57,6 +57,8 @@ export class Toy {
   private way: Uint8Array | null = null
   /** The kinds the last bite met. */
   private meeting: Kind[] = []
+  private cameFrom: Int32Array | null = null
+  private queue: Int32Array | null = null
 
   constructor(readonly game: Game) {
     this.antAt = { x: game.ant.x + 0.5, y: game.ant.y + 0.5 }
@@ -244,22 +246,21 @@ export class Toy {
     const { cols, rows, cells } = this.game.ground
     const start = this.game.ant.y * cols + this.game.ant.x
     if (goal === start) return null
-    // Walk back from the goal, so the first step off the ant's cell falls out at the end.
-    const from = new Int32Array(cells.length).fill(-1)
-    const queue = [goal]
+    // Walk back from the goal, so the first step off the ant's cell falls out at the end. This runs every frame
+    // the finger is down, so it keeps its two lists between calls and makes nothing new.
+    const from = this.cameFrom ?? (this.cameFrom = new Int32Array(cells.length)), queue = this.queue ?? (this.queue = new Int32Array(cells.length))
+    from.fill(-1)
+    let tail = 0
+    queue[tail++] = goal
     from[goal] = goal
-    for (let head = 0; head < queue.length; head++) {
+    for (let head = 0; head < tail; head++) {
       const i = queue[head]
       if (i === start) break
-      const x = i % cols, y = Math.floor(i / cols)
-      for (const [nx, ny] of [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]]) {
-        if (nx < 0 || ny < 0 || nx >= cols || ny >= rows) continue
-        const n = ny * cols + nx
-        if (from[n] < 0 && cells[n] === OPEN) {
-          from[n] = i
-          queue.push(n)
-        }
-      }
+      const x = i % cols
+      if (x > 0 && from[i - 1] < 0 && cells[i - 1] === OPEN) { from[i - 1] = i; queue[tail++] = i - 1 }
+      if (x < cols - 1 && from[i + 1] < 0 && cells[i + 1] === OPEN) { from[i + 1] = i; queue[tail++] = i + 1 }
+      if (i >= cols && from[i - cols] < 0 && cells[i - cols] === OPEN) { from[i - cols] = i; queue[tail++] = i - cols }
+      if (i < cols * (rows - 1) && from[i + cols] < 0 && cells[i + cols] === OPEN) { from[i + cols] = i; queue[tail++] = i + cols }
     }
     if (from[start] < 0) return null
     return { x: from[start] % cols, y: Math.floor(from[start] / cols) }
