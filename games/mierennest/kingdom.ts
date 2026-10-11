@@ -320,6 +320,8 @@ export class Kingdom {
     this.scene = null
     this.endingOwed = false
     this.owedAtTouch = this.owed().length > 0
+    // A machine that fired in the raid has its lump again: it is ready at the next touch.
+    this.reloading = this.game.machines.map(() => 0)
     // A move of the queen that was still owed is not played after a put-away: she is found where she lives, as on load.
     this.settleQueen()
   }
@@ -483,8 +485,9 @@ export class Kingdom {
     const index = machineAt(this.game.machines, cx, cy)
     if (this.raid) {
       // While a raid runs the finger fires the machines and nothing else changes.
+      // What the finger points at is what is shown: the raid's own copy of the ground, with what it has moved.
       if (index >= 0) this.fire(index)
-      else this.toy.point(x, y, t)
+      else this.toy.point(x, y, t, this.raid.ground)
       return
     }
     if (index >= 0) {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { EARTH, LUMPS, MUD, OPEN, ROCK, SAND, STONE, at, atRest, clone, count, equal, fromPicture, type Ground } from './ground'
+import { EARTH, LUMPS, MUD, OPEN, ROCK, SAND, STONE, at, atRest, clone, count, equal, fromPicture, put, type Ground } from './ground'
 import { deserialize, freshGame, serialize, type Game } from './save'
 import { DRAGGING_A_STONE, GROUND_STEP, TAPS_AGAIN, Toy, type ToyEvent } from './toy'
 
@@ -96,6 +96,11 @@ describe('digging', () => {
     // A finger that only points, as every touch on the ground does while a raid runs, is answered the same way.
     toy.point(5.5, 2.5, 1)
     expect(toy.drainEvents()).toEqual([{ type: 'called', x: 5.5, y: 2.5 }])
+    // In a raid the finger points at what is shown, the raid's own copy of the ground: a lump shoved there answers there.
+    const copy = clone(toy.game.ground)
+    put(copy, 2, 3, STONE)
+    toy.point(2.5, 3.5, 1.5, copy)
+    expect(toy.drainEvents()).toEqual([{ type: 'met', kind: STONE, x: 2.5, y: 3.5 }])
     // Beside a wall there is something to bite, and the bite is the answer.
     toy.press(4.5, 3.9, 2)
     expect(toy.drainEvents().map((event) => event.type)).toEqual(['dug'])

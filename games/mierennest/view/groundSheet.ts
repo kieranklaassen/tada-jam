@@ -131,7 +131,17 @@ export function paintCell(pen: SheetPen, ground: Ground, x: number, y: number, s
   pen.fillStyle = buried ? earthAt(ground, x, y) : dark
   pen.fillRect(px, py, s, s)
   const free = (a: Kind, b: Kind, r: number) => (a === OPEN && b === OPEN ? r * u : 0)
+  // What mud does to its neighbours is seen on them: a stone it touches is bedded, and sand it touches is packed.
+  const muddy = up === MUD || down === MUD || left === MUD || right === MUD
   if (kind === STONE) {
+    if (muddy) {
+      // Bedded: the mud has crept up round it, a dark collar on each side the mud is on.
+      pen.fillStyle = P.MUD.fill
+      if (down === MUD) pen.fillRect(px, py + s - 9 * u, s, 9 * u)
+      if (up === MUD) pen.fillRect(px, py, s, 8 * u)
+      if (left === MUD) pen.fillRect(px, py, 8 * u, s)
+      if (right === MUD) pen.fillRect(px + s - 8 * u, py, 8 * u, s)
+    }
     pen.fillStyle = P.STONE.edge
     rounded(pen, px + 1 * u, py + 1 * u, s - 2 * u, [11 * u, 11 * u, 9 * u, 9 * u])
     pen.fillStyle = P.STONE.fill
@@ -141,10 +151,11 @@ export function paintCell(pen: SheetPen, ground: Ground, x: number, y: number, s
     return
   }
   if (kind === SAND) {
-    pen.fillStyle = P.SAND.fill
+    // Packed sand is damp: a shade darker, and its grains stand close.
+    pen.fillStyle = muddy ? P.SAND.packed : P.SAND.fill
     rounded(pen, px, py, s, [free(up, left, 10), free(up, right, 10), free(down, right, 4), free(down, left, 4)])
     pen.fillStyle = P.SAND.edge
-    for (let n = 0; n < 3; n++) pen.fillRect(px + (4 + speck(x, y, n) * 18) * u, py + (5 + speck(x, y, n + 3) * 17) * u, 2 * u, 2 * u)
+    for (let n = 0; n < (muddy ? 9 : 3); n++) pen.fillRect(px + (4 + speck(x, y, n) * 18) * u, py + (5 + speck(x, y, n + 9) * 17) * u, 2 * u, 2 * u)
     return
   }
   // Mud is one dark flat colour. What says it is wet is small: a paler lip along a free top that sags in the

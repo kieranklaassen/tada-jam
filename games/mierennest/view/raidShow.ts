@@ -377,6 +377,11 @@ export function showCarriedOut(scene: Extract<Scene, { is: 'putBack' }>, raid: R
     const at = alongWay(way, a)
     if (invader.ball > 0) out.push({ who: 'dungBall', pose: invader.ball > 3 ? 'sandy' : 'plain', x: at.x, y: at.y, flip: false, turn: (at.x + at.y) / (BALL_HALF * ballSize(invader.ball)), size: ballSize(invader.ball), id, idle: false })
     out.push({ who, pose, x: at.x, y: invader.ball > 0 ? at.y - (BODY.dungBall.height - 4) * ballSize(invader.ball) : at.y, flip: false, turn: 0, size: 1, id, idle: false })
+    // A worker hauls it: one of the kingdom's own goes a little ahead of it on its way, tugging, as far as the mouth.
+    let far = 0
+    for (let n = 1; n < way.length; n++) far += Math.hypot(way[n].x - way[n - 1].x, way[n].y - way[n - 1].y)
+    const lead = alongWay(way, Math.min(1, a + (BODY[who].width / 2 + 18) / Math.max(1, far)))
+    out.push({ who: 'worker', pose: Math.floor(scene.t * 8) % 2 === 0 ? 'carry' : 'walk2', x: lead.x, y: lead.y, flip: lead.x < at.x, turn: 0, size: 1, id: -1, idle: false })
   }
   return out
 }

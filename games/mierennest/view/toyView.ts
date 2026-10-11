@@ -197,11 +197,11 @@ export class ToyView {
         pen.fillRect(item.x - CELL / 2, item.y - CELL / 2, CELL, CELL)
         break
       case 'target':
-        pen.strokeStyle = 'rgba(255,255,255,0.6)'
-        pen.lineWidth = 2
+        // Where the lump would lie: a soft pale patch that fills the cell, not an outline.
+        pen.fillStyle = 'rgba(255,255,255,0.26)'
         pen.beginPath()
         pen.roundRect(item.x - CELL / 2 + 2, item.y - CELL / 2 + 2, CELL - 4, CELL - 4, 7)
-        pen.stroke()
+        pen.fill()
         break
       case 'crumbs':
         pen.fillStyle = item.colour

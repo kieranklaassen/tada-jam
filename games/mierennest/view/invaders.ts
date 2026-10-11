@@ -69,7 +69,9 @@ function pillow(ctx: Ctx, x: number, y: number, turn: number): void {
   ctx.clip()
   ctx.translate(-0.8, -1.4)
   cushion(15.4, 9.6, CLOTH)
-  for (const sx of [-6.5, 5.5]) line(ctx, CLOTH_STRIPE, 2.6, [sx, -12, sx + 1.5, 0, sx, 12], true)
+  // One broad stripe, off the middle, and a patch sewn on at the other end: never two bars side by side.
+  line(ctx, CLOTH_STRIPE, 4.2, [-5.5, -12, -4, 0, -5.5, 12], true)
+  oval(ctx, 7.4, 2.2, 3.4, 2.6, 0.4, CLOTH_STRIPE)
   ctx.restore()
 }
 

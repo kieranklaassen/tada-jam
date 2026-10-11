@@ -6,7 +6,7 @@ export const SKY = { top: '#8fd0ee', low: '#d9f1f4', cloud: '#ffffff', hill: '#9
 export const GRASS = { blade: '#4c9a3c', light: '#7cc35a', dark: '#2f6f2c', turf: '#3d7f33', root: '#d9c79a' } as const
 /** Packed earth, lighter near the surface and darker with depth, and the dug-out dark behind an open cell. */
 export const EARTH = { strata: ['#bd8a55', '#a06a3e', '#84583a'], top: '#bd8a55', speck: '#5a371d', deep: '#4f3020', open: '#24150e', openLow: '#1c100b' } as const
-export const SAND = { fill: '#f1d58a', edge: '#d8b560' } as const
+export const SAND = { fill: '#f1d58a', edge: '#d8b560', packed: '#e4c06c' } as const
 /**
  * Wet mud: a cool, greyed brown no earth has, well lighter than the dark of a tunnel, where a patch of it on the
  * floor has to read best; a paler lip where it stands free, and a pale glint for the wet.

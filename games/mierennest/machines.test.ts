@@ -95,6 +95,22 @@ describe('a shot', () => {
   })
 })
 
+describe('the mouth', () => {
+  it('is never where a lob ends: the turf row stops it like a roof, and it drops short into the shaft', () => {
+    // The catapult where it arrives in a new nest, at the foot of the shaft, turned either way.
+    const ground = fromPicture(['XXXXXX...XXXXXXX', '######...#######', '######...#######', '######...#######', '################', 'XXXXXXXXXXXXXXXX'])
+    for (const facing of [-1, 1] as const) {
+      const path = shotPath(ground, machine('catapult', 6, 3, facing, 'mud'))
+      expect(path.length).toBeGreaterThan(0)
+      for (const [, y] of xy(path)) expect(y).toBeGreaterThanOrEqual(1)
+      const fired = fireInNest(ground, machine('catapult', 6, 3, facing, 'mud'))!
+      expect(Math.floor(fired.landed / 16)).toBeGreaterThanOrEqual(1)
+      for (const x of [6, 7, 8]) expect(at(ground, x, 0)).toBe(OPEN)
+      ground.cells[fired.landed] = OPEN
+    }
+  })
+})
+
 describe('firing in the nest', () => {
   it('really throws the lump: it lies where it landed and the machine is empty', () => {
     const ground = fromPicture(hall)

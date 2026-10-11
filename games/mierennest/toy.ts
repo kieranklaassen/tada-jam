@@ -1,6 +1,6 @@
 import { digAlong, openWay, pickUp, setDown, type Carried, type Cell } from './build'
 import { kingdom } from './chambers'
-import { OPEN, SAND, STONE, at, atRest, isLump, step as groundStep, type Kind, type Lump } from './ground'
+import { OPEN, SAND, STONE, at, atRest, isLump, step as groundStep, type Ground, type Kind, type Lump } from './ground'
 import type { Game } from './save'
 
 // The toy: what the finger does to the nest and how the nest answers, with no renderer and no clock of its own.
@@ -141,7 +141,7 @@ export class Toy {
    * place to look, and a lump under the finger answers as it does when the dig meets it. This is every touch on
    * the ground while a raid runs.
    */
-  point(x: number, y: number, t: number): void {
+  point(x: number, y: number, t: number, shown: Ground = this.game.ground): void {
     if (!this.inGround(x, y)) return
     this.finger = { x, y }
     this.going = null
@@ -150,7 +150,7 @@ export class Toy {
     this.meeting = []
     this.idle = true
     this.turnTo(x)
-    const kind = at(this.game.ground, Math.floor(x), Math.floor(y))
+    const kind = at(shown, Math.floor(x), Math.floor(y))
     if (isLump(kind)) this.events.push({ type: 'met', kind, x, y })
     else this.events.push({ type: 'called', x, y })
   }

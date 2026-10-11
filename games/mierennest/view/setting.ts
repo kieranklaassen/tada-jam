@@ -94,11 +94,9 @@ function log(pen: Pen, x: number, foot: number, length: number): void {
   pen.fill()
   pen.fillStyle = '#d9b07a'
   blob(pen, x + length - 5, foot - 13, 9, 13)
-  pen.strokeStyle = '#a97a48'
-  pen.lineWidth = 2
-  pen.beginPath()
-  pen.ellipse(x + length - 5, foot - 13, 4.5, 7, 0, 0, Math.PI * 2)
-  pen.stroke()
+  // The heartwood is a filled patch, darker than the cut: no ring stands empty on the log's end.
+  pen.fillStyle = '#b98a58'
+  blob(pen, x + length - 5.6, foot - 12.4, 4.2, 6.6)
   pen.fillStyle = '#6d4426'
   pen.fillRect(x + length * 0.3, foot - 9, 14, 2)
   pen.fillRect(x + length * 0.55, foot - 15, 10, 2)

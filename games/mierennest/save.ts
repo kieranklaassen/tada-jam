@@ -147,7 +147,7 @@ export function deserialize(raw: unknown, childAge: number | null, seed: number)
   const read = decodeGround(raw.ground)
   const ground = read ? repairGround(read) : generate(seed)
   const foot = shaftFoot(ground)
-  const antCell = isWhole(raw.ant) && raw.ant >= ground.cols && raw.ant < ground.cells.length && ground.cells[raw.ant] === OPEN ? raw.ant : foot.y * ground.cols + foot.x
+  const antCell = isWhole(raw.ant) && raw.ant >= 0 && raw.ant < ground.cells.length && ground.cells[raw.ant] === OPEN ? raw.ant : foot.y * ground.cols + foot.x
   const shown = Array.isArray(raw.shown) ? SHOWINGS.filter((id) => (raw.shown as unknown[]).includes(id)) : []
   const allowed = arrived(position)
   const machines: Machine[] = []

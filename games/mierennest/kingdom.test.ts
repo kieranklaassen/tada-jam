@@ -575,6 +575,24 @@ describe('a machine', () => {
     }
   })
 
+  it('is ready again after a put-away in the middle of a raid, however soon after its shot', () => {
+    const k = armed('stone')
+    k.bell()
+    play(k, 1)
+    k.press(32.5, 5.5, 1)
+    k.release()
+    play(k, 0.3)
+    expect(k.reloading.some((left) => left > 0)).toBe(true)
+    k.putAway()
+    expect(k.reloading.every((left) => left === 0)).toBe(true)
+    expect(k.game.machines[0].load).toBe('stone')
+    // The next tap, outside a raid, fires it for good.
+    k.drainEvents()
+    k.press(32.5, 5.5, 2)
+    k.release()
+    expect(k.drainEvents().some((event) => event.type === 'fired')).toBe(true)
+  })
+
   it('answers a tap in a raid when it has nothing in it yet, with a cough', () => {
     const k = armed()
     k.bell()

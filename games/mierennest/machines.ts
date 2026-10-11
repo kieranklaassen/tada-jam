@@ -81,7 +81,8 @@ export function shotPath(ground: Ground, machine: Machine): number[] {
   const path: number[] = []
   const own = cellsOf(machine, cols)
   const take = (x: number, y: number): boolean => {
-    if (x < 0 || y < 0 || x >= cols || y >= rows) return false
+    // The turf's row is a roof to a shot, the mouth in it too: nothing is thrown out of the nest or left lying in its mouth.
+    if (x < 0 || y < 1 || x >= cols || y >= rows) return false
     const cell = y * cols + x
     if (own.includes(cell) || path[path.length - 1] === cell) return true
     if (at(ground, x, y) !== OPEN) return false

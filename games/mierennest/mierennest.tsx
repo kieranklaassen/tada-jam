@@ -8,7 +8,7 @@ import { CELL } from './ground'
 import { IdleLadder, type Guidance } from './guidance'
 import { ForgivingTouch, type Gesture, type Point } from './input'
 import { mierennestManifest } from './manifest'
-import { Overlay, inCorner } from './overlay'
+import { Overlay } from './overlay'
 import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
 import { SaveCadence } from './saveCadence'
@@ -180,7 +180,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // The game queues its voices as it answers, and they are played here, inside the handler, and again after
     // the step in the loop: the first sound of a visit then falls inside the touch, where audio.ts holds it for
     // the unlock. Everything one touch sets off is played as one voice (`voiceOf` in audio.ts).
-    // A press in the grown-up's corner (`inCorner` in overlay.ts) is answered as bare backdrop is, or not at all.
+    // A press in the grown-up's corner (overlay.ts) is answered as bare backdrop is, like any other press on the setting.
     const act = (gestures: Gesture[]) => {
       if (!kingdom || !display) return
       const game = kingdom
@@ -197,7 +197,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
             if (p.y >= 0 && p.x >= 0 && p.x < game.game.ground.cols && p.y < game.game.ground.rows) {
               game.press(p.x, p.y, seconds)
               answer()
-            } else if (!inCorner(gesture.at.x, gesture.at.y, width)) {
+            } else {
               // A touch above the ground or on the frame round it: the bell rings and calls the party, a camper
               // answers as itself, the setting and the frame give a puff of dust and a soft boing.
               const hit = display.poke(p.stage.x, p.stage.y)

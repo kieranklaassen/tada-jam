@@ -325,6 +325,16 @@ describe('an ant held fast in the mud', () => {
     }
     scene.t = 4
     expect(showCarriedOut(scene, raid, ['ant'])[0].x).toBe(partyFile(['ant'])[0].x)
+    // A worker hauls it: while it is in the nest one goes ahead of it on its way, in the open too, and none once it is on the grass.
+    for (let n = 0; n < 100; n++) {
+      scene.t = (4 * 0.6 * n) / 100
+      const [hauled, worker] = showCarriedOut(scene, raid, ['ant'])
+      expect(worker.who).toBe('worker')
+      if (n < 60) expect(Math.hypot(worker.x - hauled.x, worker.y - hauled.y), `at ${n}`).toBeGreaterThan(20)
+      if (worker.y > GROUND.y + CELL) expect(at(g, Math.floor((worker.x - GROUND.x) / CELL), Math.floor((worker.y - CELL / 2 - GROUND.y) / CELL)), `worker at ${n}`).toBe(OPEN)
+    }
+    scene.t = 3.6
+    expect(showCarriedOut(scene, raid, ['ant']).map((one) => one.who)).toEqual(['raider'])
   })
 })
 

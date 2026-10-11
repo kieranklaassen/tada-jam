@@ -4,7 +4,7 @@
 ## Status
 
 - Stage: gates, closed by run 5 (the closing run). The whole order is played, from `first-chamber` to the open kingdom and its round of six. Base commit ef85be4d.
-- **Open: sheet ready for check, round 4.** The sheet passed round 3 (confirmed by the lead from the diff, answers file 4) at commit `734513b`, hash `49a588ec48b43cfce6492461afa1db4a7e440ce46f4496f1c48f651e71cebebb`. Since then 61 sentences above `## The look` have changed, all listed under "Sentences changed since round 3" below with the old and the new: the lead's own line (answers file 5), the 39 rooms it made necessary, and what the closing run found by reading the sheet against the game. The sheet now stands at commit `0c60e1a`, hash `6f1ef4eec983872d573113d4ce6bd7d45a99e46fe8166acb717f7d435e507315`. Round 4 reads only those sentences.
+- **Open: sheet ready for check, round 4.** The sheet passed round 3 (confirmed by the lead from the diff, answers file 4) at commit `734513b`, hash `49a588ec48b43cfce6492461afa1db4a7e440ce46f4496f1c48f651e71cebebb`. Since then 63 sentences above `## The look` have changed, all listed under "Sentences changed since round 3" below with the old and the new: the lead's own line (answers file 5), the 39 rooms it made necessary, and what the closing run found by reading the sheet against the game. The sheet now stands at commit `0c60e1a`, hash `6f1ef4eec983872d573113d4ce6bd7d45a99e46fe8166acb717f7d435e507315`. Round 4 reads only those sentences.
 - Answers handled: 1 to 6, read on the base branch at `93133aa2`. A higher-numbered file is looked for again before the last push of the run, and what was found is in the last row of the pass log.
 - **The lead's four points of answers file 6.**
   1. *A creature is in one place.* One whose kind is in the party at the log is in that party, and its own spot at the camp is empty while it is away (`camp.ts`). The dung beetle takes its ball along and the dung fly its twig, since it conducts with it; the toadstool, the tent and the puddle's place stay. The one a first showing shows is one of the party, stepped out to the front. `view/display.test.ts` plays every party of the order and of the round on two seeds through the first showing, the raid and the put-back, and holds that in no frame is anybody drawn twice.
@@ -26,7 +26,7 @@
 - Sound: every voice is numbers in `voices.ts`, held in range by a test. **Nobody has listened to any of them.**
 - Frame cost: no frame rate was measured anywhere, and no physical iPad.
 
-**Sentences changed since round 3** (above `## The look`; for the checker of round 4). 1 is the lead's; 2 follows from it; 3 to 12 are the sentences the lead named in answers file 6; the rest were found by reading the sheet against the built game in this run, the last of them (in 12, 36, 37 and 43, and 59 to 61) after the reader's first reading. None changes the mechanic, the error, the designed order or the saved state: each says a look, a sound or a detail as the game does it, except 28, which writes down the rule the lead asked for after the game's stills (one invader in a chamber at a time) and the short act of answers file 6.
+**Sentences changed since round 3** (above `## The look`; for the checker of round 4). 1 is the lead's; 2 follows from it; 3 to 12 are the sentences the lead named in answers file 6; the rest were found by reading the sheet against the built game in this run, the last of them (in 12, 36, 37 and 43, and 59 to 61) after the reader's first reading and (in 56, and 62 and 63) after its second. None changes the mechanic, the error, the designed order or the saved state: each says a look, a sound or a detail as the game does it, except 28, which writes down the rule the lead asked for after the game's stills (one invader in a chamber at a time) and the short act of answers file 6.
 
 1. Was: A **room** is open space that holds a clear block at least 4 cells wide and 3 cells high. All such blocks that overlap or touch along a side are one room. A tunnel two cells high is never a room, however long.
    Now: The same, with the lead's sentence added: "The shaft a new nest starts with (the three columns under the mouth, three cells deep) is the way in and no part of any room: no block is counted in its cells, so an invader coming down it is not yet inside." (answers file 5, pasted as it stands)
@@ -139,7 +139,7 @@
 55. Was: The largest chamber of the kingdom changes, the first time included.
    Now: The queen's room becomes another room, the first time included. A room that only grows is the same room.
 56. Was: Each invader still in the nest trudges or is carried out by the way it came. The workers carry each fallen lump back to where the child had built it, nearest first, tamp back the earth a dung ball dug away, and one stands by the place that gave.
-   Now: Each invader still in the nest goes out by the way it came. The workers carry each fallen lump back to where the child had built it, nearest the mouth first, the earth a dung ball dug away is back as they pass, and one stands by the place that gave.
+   Now: Each invader still in the nest goes out by the way it came, a worker hauling it as far as the mouth. The workers carry each fallen lump back to where the child had built it, nearest the mouth first, the earth a dung ball dug away is back as they pass, and one stands by the place that gave.
 57. Was: The game's own work stays under 8 ms a frame at six times CPU throttle.
    Now: The budget for the game's own work is 8 ms a frame at six times CPU throttle.
 58. Was: at the camp each kind acts out its own habit for anyone who looks, a press on a camper makes it do so at once, and the idle ladder never shows a solution.
@@ -150,6 +150,10 @@
    Now: While the ground is still falling the save holds it as it will come to rest, so nothing is saved in the air; a machine whose floor is on its way down, or into whose place a lump is falling, is saved where it comes to stand, with what it holds.
 61. Was: (the ending) Dusk comes over the camp, and the dung beetles sit on their balls round a small glow.
    Now: The same, with a sentence added: "It opens with three soft notes going down, and is quiet after them."
+62. Was: Under a low ceiling the shot hits the ceiling and drops short.
+   Now: The same, with a sentence added: "The turf's row stops it the same way, the mouth in it too: nothing is thrown out of the nest or comes to lie in its mouth."
+63. Was: (what a wall holds, under the table) The hold of a run is the sum of its cells.
+   Now: The same, with a line added before it: "Both are seen: packed sand is a shade darker with its grains close together, and a bedded stone has the mud up round it on each side the mud is on."
 
 **Frame cost.** No frame rate was measured, on any machine, and no physical iPad. What was measured is the game's own work a frame, in ms, on the production build of commit `b131b75` (the commit after it changes one voice and no frame), in Chromium on software drawing, tier 0 pinned, pixel ratio 2, six times CPU throttle, in a kingdom with its full crowd:
 

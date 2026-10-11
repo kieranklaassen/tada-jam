@@ -179,6 +179,12 @@ describe('reading a slot that is not a good save', () => {
     expect(deserialize(raw, null, SEED).machines.find((m) => m.kind === 'catapult')).toEqual(catapult)
   })
 
+  it('finds the ant where it was left, in the mouth too', () => {
+    const game = builtGame()
+    game.ant = { x: MOUTH[1], y: 0 }
+    expect(through(game).ant).toEqual({ x: MOUTH[1], y: 0 })
+  })
+
   it('reads a ground with its edges damaged as a nest again, with nothing in the air', () => {
     const game = builtGame()
     put(game.ground, 3, 0, OPEN)
