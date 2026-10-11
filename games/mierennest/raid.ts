@@ -758,6 +758,20 @@ function widen(raid: Raid, invader: Invader): void {
   if (invader.jammed >= HABITS.dungBeetle.patience) leaveBall(raid, invader)
 }
 
+/** The column of the mouth one comes in by: the first that is open to it from which it finds a way to a chamber, and otherwise the first that is open to it. */
+function wayDown(raid: Raid, gait: Walker): number | undefined {
+  const ways = entries(raid.ground, gait, raid.mouth)
+  return ways.find((cell) => wayIn(raid.ground, gait, cell, raid.inside) !== null) ?? ways[0]
+}
+
+/** The mouth is shut to it: it looks, gives up with a sigh, and is back at the log. */
+function shutOut(raid: Raid, invader: Invader): void {
+  raid.events.push({ type: 'givesUp', id: invader.id, kind: invader.kind })
+  invader.state = 'home'
+  invader.cell = -1
+  raid.events.push({ type: 'home', id: invader.id, kind: invader.kind })
+}
+
 /**
  * One that stands in the mouth's own row, not yet in the nest, sets off down from there again: a dung beetle with
  * its ball down the middle column, anyone else by a column that is open to it. One the mouth is shut to gives up
@@ -781,15 +795,9 @@ function downFromTheMouth(raid: Raid, invader: Invader): void {
       return
     }
     start = entry.foot
-  } else {
-    const ways = entries(ground, gait, raid.mouth)
-    start = ways.find((cell) => wayIn(ground, gait, cell, raid.inside) !== null) ?? ways[0]
-  }
+  } else start = wayDown(raid, gait)
   if (start === undefined) {
-    raid.events.push({ type: 'givesUp', id: invader.id, kind: invader.kind })
-    invader.state = 'home'
-    invader.cell = -1
-    raid.events.push({ type: 'home', id: invader.id, kind: invader.kind })
+    shutOut(raid, invader)
     return
   }
   const top = gait === 'fly' ? start : start % cols
@@ -871,17 +879,12 @@ function comeIn(raid: Raid, invader: Invader): boolean {
     top = withBall.top
     start = withBall.foot
   } else {
-    // Any column of the mouth that is open to it will do: the first from which it finds a way to a chamber, and
-    // otherwise the first it can come in by.
-    const ways = entries(ground, gait, raid.mouth)
-    start = ways.find((cell) => wayIn(ground, gait, cell, raid.inside) !== null) ?? ways[0] ?? null
+    // Any column of the mouth that is open to it will do.
+    start = wayDown(raid, gait) ?? null
     top = start === null ? raid.mouth[0] : gait === 'fly' ? start : start % ground.cols
   }
   if (start === null) {
-    // The mouth is shut to it: it looks, gives up with a sigh, and goes back to the log.
-    raid.events.push({ type: 'givesUp', id: invader.id, kind: invader.kind })
-    invader.state = 'home'
-    raid.events.push({ type: 'home', id: invader.id, kind: invader.kind })
+    shutOut(raid, invader)
     return true
   }
   // It does not come down onto one who waits: it waits its turn on the grass at the mouth, in view.
@@ -1164,10 +1167,7 @@ export function landInRaid(raid: Raid, cell: number, lump: Lump): void {
   if (at(raid.ground, cell % cols, Math.floor(cell / cols)) !== OPEN) return
   const before = raid.ground.cells.slice()
   put(raid.ground, cell % cols, Math.floor(cell / cols), lump)
-  settle(raid.ground)
-  const moved: number[] = []
-  for (let i = 0; i < before.length; i++) if (before[i] !== raid.ground.cells[i]) moved.push(i)
-  changed(raid, moved, false)
+  changed(raid, settleAndTell(raid, before, []), false)
 }
 
 /** How the raid ended, for the judging. A put-away drops its raid without judging it, so only a test passes `putAway`. */

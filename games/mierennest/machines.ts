@@ -64,6 +64,17 @@ export function restPlace(ground: Ground, machines: readonly Machine[], index: n
   return canStand(ground, machines, machine.x, y, index) ? { x: machine.x, y } : nearestStand(ground, machines, machine.x, y, index)
 }
 
+/** Each machine of a list is stood where it comes to rest in this ground, in the list's order; one the nest has no place for stays as it is. */
+export function standAtRest(ground: Ground, machines: Machine[]): void {
+  machines.forEach((machine, index) => {
+    const place = restPlace(ground, machines, index)
+    if (place) {
+      machine.x = place.x
+      machine.y = place.y
+    }
+  })
+}
+
 /** Where a machine is first set when the workers bring it: as near the foot of the shaft as it can stand. */
 export function arrivalPlace(ground: Ground, machines: readonly Machine[]): { x: number; y: number } | null {
   return nearestStand(ground, machines, MOUTH[0], floorUnder(ground, MOUTH[0], 1))

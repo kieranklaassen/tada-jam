@@ -226,8 +226,7 @@ export class Kingdom {
     }
     if (this.scene || this.raid) return
     this.settleQueen()
-    const ground = this.game.ground, cols = ground.cols, realm = this.toy.realm
-    const seat = queenSeat(ground, realm.chambers, realm.queenRoom)
+    const ground = this.game.ground, cols = ground.cols, seat = this.queenSat
     if (!seat) return
     // Where she was: the floor of her old room, or wedged under the mouth.
     const from = before.length > 0 ? before[before.length - 1] : Math.floor(WEDGED.y) * cols + Math.floor(WEDGED.x)
@@ -290,8 +289,11 @@ export class Kingdom {
 
   /** A touch ends the scene that is playing, with its outcome already in place, and is then an ordinary touch. */
   private endScene(): void {
-    const scene = this.scene
-    if (!scene) return
+    if (this.scene) this.finishScene(this.scene)
+  }
+
+  /** A scene is over, by a touch or by itself: its outcome has been in place since it began, and what follows it starts. */
+  private finishScene(scene: Scene): void {
     this.scene = null
     if (scene.is === 'putBack') this.lastRaid = null
     this.afterScene(scene)
@@ -731,11 +733,7 @@ export class Kingdom {
         if (scene.is === 'ending') {
           // It holds on its last beat as long as the child likes.
           scene.t = scene.length
-        } else {
-          this.scene = null
-          if (scene.is === 'putBack') this.lastRaid = null
-          this.afterScene(scene)
-        }
+        } else this.finishScene(scene)
       }
     }
   }

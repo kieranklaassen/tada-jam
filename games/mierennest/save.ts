@@ -1,7 +1,7 @@
 import { asSaved } from './build'
 import { COLS, MOUTH, OPEN, ROCK, ROWS, at, floorUnder, generate, makeGround, put, settle, type Ground, type Kind } from './ground'
 import { SHOTS, type Shot } from './habits'
-import { restPlace } from './machines'
+import { standAtRest } from './machines'
 import { MACHINE_KINDS, ROUND, SHOWINGS, arrived, type MachineKind } from './order'
 import { STATE_VERSION, deserialize as readPosition, isReadable, type GameState } from './state'
 
@@ -103,13 +103,7 @@ export function freshGame(childAge: number | null, seed: number): Game {
 export function serialize(game: Game): Save {
   const ground = asSaved(game.ground)
   const machines = game.machines.map((m) => ({ kind: m.kind, x: m.x, y: m.y, facing: m.facing, load: m.load }))
-  machines.forEach((machine, index) => {
-    const place = restPlace(ground, machines, index)
-    if (place) {
-      machine.x = place.x
-      machine.y = place.y
-    }
-  })
+  standAtRest(ground, machines)
   return {
     v: STATE_VERSION,
     position: game.position,
@@ -166,13 +160,7 @@ export function deserialize(raw: unknown, childAge: number | null, seed: number)
     if (shown.includes(kind) && !machines.some((m) => m.kind === kind)) machines.push({ kind, x: foot.x, y: foot.y, facing: 1, load: null })
   }
   // One that cannot stand where its entry says keeps what it holds, and stands where it would have come to rest.
-  machines.forEach((machine, index) => {
-    const place = restPlace(ground, machines, index)
-    if (place) {
-      machine.x = place.x
-      machine.y = place.y
-    }
-  })
+  standAtRest(ground, machines)
   const muster = isWhole(raw.muster) && raw.muster >= 0 && raw.muster < ROUND.length ? raw.muster : 0
   // The kingdom is open only after the great raid was turned back, so the two cannot disagree.
   return { position, ground, ant: { x: antCell % ground.cols, y: Math.floor(antCell / ground.cols) }, machines, muster, shown, ended: position === 'open-kingdom' }
