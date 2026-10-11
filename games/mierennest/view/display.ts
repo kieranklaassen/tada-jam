@@ -20,8 +20,8 @@ import type { Effect, Thing } from './things'
 // swing of the bell, who was poked and when.
 
 export type Item =
-  /** A creature, by the middle of its feet. `size` scales it both ways and `tall` its height again. */
-  | { is: 'sprite'; who: Mover; pose: string; x: number; y: number; flip: boolean; size: number; tall: number; move: Move | null; turn: number }
+  /** A creature, by the middle of its feet. `size` scales it both ways and `tall` its height again. `id` says which creature it is: one of the camp, of the party, the queen or the child's ant; a worker, one of a crowd, has none. */
+  | { is: 'sprite'; id: string; who: Mover; pose: string; x: number; y: number; flip: boolean; size: number; tall: number; move: Move | null; turn: number }
   /** A carried lump, by its middle. `drip` is how far a drip of mud hangs under it, in stage units. */
   | { is: 'lump'; lump: Lump; x: number; y: number; drip: number }
   /** The roots that hang from the turf into what was dug right under it, each by the point it hangs from and how far it swings, in radians. */
@@ -441,7 +441,7 @@ export class ToyDisplay {
   private shown(one: Shown, slot: number): Item {
     // One of the party who sits at the log answers a poke as it does before the raid: it is the same camper.
     const move = one.idle ? this.moveOf(`party${one.id}`, one.who, ((one.id + 1) * 0.37) % 1, slot) : null
-    return { is: 'sprite', who: one.who, pose: one.pose, x: one.x, y: one.y, flip: one.flip, size: one.size, tall: 1, move, turn: one.turn }
+    return { is: 'sprite', id: one.who === 'worker' || one.id < 0 ? '' : one.who === 'dungBall' ? `partyBall${one.id}` : `party${one.id}`, who: one.who, pose: one.pose, x: one.x, y: one.y, flip: one.flip, size: one.size, tall: 1, move, turn: one.turn }
   }
 
   /** The idle move of a creature, or its answer to a poke while that lasts. */
@@ -498,7 +498,7 @@ export class ToyDisplay {
         if (camper.kind !== 'fly' && camper.kind !== 'dungFly') y = camper.y + (GRASS_Y - camper.y) * Math.min(1, away * 4)
         pose = u > 0.3 && u < 0.7 ? SHRUG[camper.kind] ?? pose : pose
       }
-      list.push({ is: 'sprite', who: camper.kind, pose, x, y, flip: camper.flip, size: camper.size ?? 1, tall: 1, move, turn: 0 })
+      list.push({ is: 'sprite', id: camper.id, who: camper.kind, pose, x, y, flip: camper.flip, size: camper.size ?? 1, tall: 1, move, turn: 0 })
     }
     if (raided && !k.raid && scene?.is === 'putBack') {
       // Those who got home by themselves sit in the file; the others are carried out.
@@ -511,7 +511,7 @@ export class ToyDisplay {
       if (show) {
         const move = this.move(slot++)
         const hop = pokeMove(show.who, scene.t % POKE_SECONDS, Math.floor(scene.t / POKE_SECONDS), move)
-        list.push({ is: 'sprite', who: show.who, pose: show.poses[Math.floor(scene.t * 2.4) % 2], x: SHOWING_AT.x, y: SHOWING_AT.y, flip: false, size: SHOWING_AT.size, tall: 1, move: hop, turn: 0 })
+        list.push({ is: 'sprite', id: shownOut ?? '', who: show.who, pose: show.poses[Math.floor(scene.t * 2.4) % 2], x: SHOWING_AT.x, y: SHOWING_AT.y, flip: false, size: SHOWING_AT.size, tall: 1, move: hop, turn: 0 })
       }
     }
     // The things on the back wall of the rooms, and the marks where a wall gave, lie behind everyone.
@@ -536,7 +536,7 @@ export class ToyDisplay {
       workerSpots(ground, realm.chambers, realm.queenRoom, realm.workers, huddled).forEach((spot, n) => {
         const p = toStage(spot.x, spot.y + 1)
         const move = this.moveOf(`worker${n}`, 'worker', (n * 0.37) % 1, slot++)
-        list.push({ is: 'sprite', who: 'worker', pose: move.second ? 'walk2' : 'walk', x: p.x, y: p.y, flip: n % 2 === 1, size: 1, tall: 1, move, turn: 0 })
+        list.push({ is: 'sprite', id: '', who: 'worker', pose: move.second ? 'walk2' : 'walk', x: p.x, y: p.y, flip: n % 2 === 1, size: 1, tall: 1, move, turn: 0 })
       })
     }
     if (huddled) workers()
@@ -553,15 +553,15 @@ export class ToyDisplay {
       if (carried < 1) {
         const at = alongLine(feet, carried)
         const kick = Math.floor(this.seconds * 5) % 2 === 0
-        list.push({ is: 'sprite', who: 'worker', pose: kick ? 'walk' : 'walk2', x: at.x - 46 * seat.fit, y: at.y, flip: false, size: 1, tall: 1, move: null, turn: 0 })
-        list.push({ is: 'sprite', who: 'queen', pose: kick ? 'carried' : 'carried2', x: at.x, y: at.y - 12, flip: false, size: seat.fit, tall: 1, move: null, turn: 0 })
-        list.push({ is: 'sprite', who: 'worker', pose: kick ? 'walk2' : 'walk', x: at.x + 46 * seat.fit, y: at.y, flip: true, size: 1, tall: 1, move: null, turn: 0 })
+        list.push({ is: 'sprite', id: '', who: 'worker', pose: kick ? 'walk' : 'walk2', x: at.x - 46 * seat.fit, y: at.y, flip: false, size: 1, tall: 1, move: null, turn: 0 })
+        list.push({ is: 'sprite', id: 'queen', who: 'queen', pose: kick ? 'carried' : 'carried2', x: at.x, y: at.y - 12, flip: false, size: seat.fit, tall: 1, move: null, turn: 0 })
+        list.push({ is: 'sprite', id: '', who: 'worker', pose: kick ? 'walk2' : 'walk', x: at.x + 46 * seat.fit, y: at.y, flip: true, size: 1, tall: 1, move: null, turn: 0 })
       } else {
         // Each end of the floor in turn, then her own place.
         const floor = showFloor(ground, realm.chambers[realm.queenRoom!])
         const half = 2.2 * seat.fit, ends = [toStage(floor.from + half, seat.y + 1), toStage(floor.to + 1 - half, seat.y + 1), home]
         const tries = Math.min(ends.length - 1, Math.floor(((u - MOVES.carried) / (1 - MOVES.carried)) * ends.length))
-        list.push({ is: 'sprite', who: 'queen', pose: tries < ends.length - 1 ? 'sit2' : 'sit', x: ends[tries].x, y: ends[tries].y, flip: false, size: seat.fit, tall: 1, move: queenMove, turn: 0 })
+        list.push({ is: 'sprite', id: 'queen', who: 'queen', pose: tries < ends.length - 1 ? 'sit2' : 'sit', x: ends[tries].x, y: ends[tries].y, flip: false, size: seat.fit, tall: 1, move: queenMove, turn: 0 })
       }
     } else if (seat) {
       const p = toStage(seat.x, seat.y + 1)
@@ -572,17 +572,17 @@ export class ToyDisplay {
       const guest = raid ? raid.invaders.find((invader) => invader.state === 'acting' && roomOf(raid.ground, gaitOf(invader), invader.cell, raid.rooms) === raid.queenRoom) : undefined
       if (guest && raid) {
         const at = invaderAt(guest, cols)
-        list.push({ is: 'sprite', who: 'queen', pose: Math.floor(this.seconds * 3) % 2 === 0 ? 'glare' : 'glare2', x: p.x, y: p.y, flip: at.x < p.x, size: seat.fit, tall: 1, move: null, turn: 0 })
-      } else list.push({ is: 'sprite', who: 'queen', pose: down ? (queenMove.second ? 'eggDown2' : 'eggDown') : queenMove.second ? 'sit2' : 'sit', x: p.x, y: p.y, flip: false, size: seat.fit, tall: 1, move: queenMove, turn: 0 })
+        list.push({ is: 'sprite', id: 'queen', who: 'queen', pose: Math.floor(this.seconds * 3) % 2 === 0 ? 'glare' : 'glare2', x: p.x, y: p.y, flip: at.x < p.x, size: seat.fit, tall: 1, move: null, turn: 0 })
+      } else list.push({ is: 'sprite', id: 'queen', who: 'queen', pose: down ? (queenMove.second ? 'eggDown2' : 'eggDown') : queenMove.second ? 'sit2' : 'sit', x: p.x, y: p.y, flip: false, size: seat.fit, tall: 1, move: queenMove, turn: 0 })
     } else {
       const p = toStage(WEDGED.x, WEDGED.y + 1)
-      list.push({ is: 'sprite', who: 'queen', pose: queenMove.second ? 'wedged2' : 'wedged', x: p.x, y: p.y, flip: false, size: QUEEN_WEDGED.size, tall: QUEEN_WEDGED.tall, move: queenMove, turn: 0 })
+      list.push({ is: 'sprite', id: 'queen', who: 'queen', pose: queenMove.second ? 'wedged2' : 'wedged', x: p.x, y: p.y, flip: false, size: QUEEN_WEDGED.size, tall: QUEEN_WEDGED.tall, move: queenMove, turn: 0 })
     }
     if (!huddled) workers()
     if (marks.length > 0) {
       // One worker stands by the place that gave worst, looking at it with its hands on its hips.
       const move = this.moveOf('hips', 'worker', 0.2, slot++)
-      list.push({ is: 'sprite', who: 'worker', pose: 'hips', x: marks[0].x + 30, y: marks[0].y, flip: true, size: 1, tall: 1, move, turn: 0 })
+      list.push({ is: 'sprite', id: '', who: 'worker', pose: 'hips', x: marks[0].x + 30, y: marks[0].y, flip: true, size: 1, tall: 1, move, turn: 0 })
     }
     if (scene?.is === 'putBack' && scene.cells.length > 0) {
       // Workers carry back what fell: one is at the cell that is being put back now, and one at the next.
@@ -590,7 +590,7 @@ export class ToyDisplay {
       for (const n of [at0, at0 + 1]) {
         if (n >= scene.cells.length) continue
         const p = cellMiddle(scene.cells[n], cols)
-        list.push({ is: 'sprite', who: 'worker', pose: Math.floor(this.seconds * 6) % 2 === 0 ? 'carry' : 'walk2', x: p.x, y: p.y + CELL / 2, flip: n % 2 === 1, size: 1, tall: 1, move: null, turn: 0 })
+        list.push({ is: 'sprite', id: '', who: 'worker', pose: Math.floor(this.seconds * 6) % 2 === 0 ? 'carry' : 'walk2', x: p.x, y: p.y + CELL / 2, flip: n % 2 === 1, size: 1, tall: 1, move: null, turn: 0 })
         // What it carries back it holds over its head, where it is seen: the lump the child had built there.
         const lump = k.game.ground.cells[scene.cells[n]]
         if (lump === SAND || lump === MUD || lump === STONE) list.push({ is: 'lump', lump, x: p.x, y: p.y + CELL / 2 - BODY.worker.height - CELL / 2 - 2, drip: 0 })
@@ -606,8 +606,8 @@ export class ToyDisplay {
         shown.x = from.x + (shown.x - from.x) * u
         shown.y = from.y + (shown.y - from.y) * u
         shown.pose = scene.t > scene.length * 0.75 && scene.t < scene.length * 0.75 + FLUNG ? 'fired' : 'ready'
-        list.push({ is: 'sprite', who: 'worker', pose: 'carry', x: shown.x - 44, y: shown.y, flip: false, size: 1, tall: 1, move: null, turn: 0 })
-        list.push({ is: 'sprite', who: 'worker', pose: 'walk', x: shown.x + 44, y: shown.y, flip: true, size: 1, tall: 1, move: null, turn: 0 })
+        list.push({ is: 'sprite', id: '', who: 'worker', pose: 'carry', x: shown.x - 44, y: shown.y, flip: false, size: 1, tall: 1, move: null, turn: 0 })
+        list.push({ is: 'sprite', id: '', who: 'worker', pose: 'walk', x: shown.x + 44, y: shown.y, flip: true, size: 1, tall: 1, move: null, turn: 0 })
       }
       list.push({ is: 'machine', kind: shown.kind, load: shown.load, pose: shown.pose, x: shown.x, y: shown.y, flip: shown.flip })
     })
@@ -618,12 +618,12 @@ export class ToyDisplay {
     // A mouthful dug: it catches the spoil at the mouth and trots it up to the top of the hill.
     const trot = Math.min(1, (this.seconds - this.spoilAt) / SPOIL_TROT)
     const top = { x: MOUTH_X + LIP + hump.reach * 0.32, y: GRASS_Y - hump.height + 3 }, lip = { x: MOUTH_X + LIP + 6, y: GRASS_Y }
-    if (trot < 1) list.push({ is: 'sprite', who: 'worker', pose: Math.floor(this.seconds * 10) % 2 === 0 ? 'carry' : 'walk2', x: lip.x + (top.x - lip.x) * trot, y: lip.y + (top.y - lip.y) * trot, flip: false, size: 1, tall: 1, move: null, turn: 0 })
-    else list.push({ is: 'sprite', who: 'worker', pose: spoilMove.second ? 'walk2' : 'carry', x: top.x, y: top.y, flip: true, size: 1, tall: 1, move: spoilMove, turn: 0 })
+    if (trot < 1) list.push({ is: 'sprite', id: '', who: 'worker', pose: Math.floor(this.seconds * 10) % 2 === 0 ? 'carry' : 'walk2', x: lip.x + (top.x - lip.x) * trot, y: lip.y + (top.y - lip.y) * trot, flip: false, size: 1, tall: 1, move: null, turn: 0 })
+    else list.push({ is: 'sprite', id: '', who: 'worker', pose: spoilMove.second ? 'walk2' : 'carry', x: top.x, y: top.y, flip: true, size: 1, tall: 1, move: spoilMove, turn: 0 })
     if (ending) {
       // The dung fly sits on the hill beside the worker, who hands it a leaf: it wipes its eyes.
       const wiping = ending.t >= ENDING.leaf
-      list.push({ is: 'sprite', who: 'dungFly', pose: wiping ? (Math.floor(this.seconds * 0.8) % 2 === 0 ? 'weep' : 'weep2') : 'down', x: MOUTH_X + LIP + hump.reach * 0.3 + 96, y: GRASS_Y, flip: true, size: 1, tall: 1, move: null, turn: 0 })
+      list.push({ is: 'sprite', id: this.camp.find((camper) => camper.kind === 'dungFly' && camper.id.startsWith('party'))?.id ?? '', who: 'dungFly', pose: wiping ? (Math.floor(this.seconds * 0.8) % 2 === 0 ? 'weep' : 'weep2') : 'down', x: MOUTH_X + LIP + hump.reach * 0.3 + 96, y: GRASS_Y, flip: true, size: 1, tall: 1, move: null, turn: 0 })
       // Dusk comes over the camp, and the army sits on its balls round a small glow.
       const dusk = Math.max(0, Math.min(1, (ending.t - ENDING.duskFrom) / (ENDING.duskTo - ENDING.duskFrom)))
       if (dusk > 0) list.push({ is: 'dusk', strength: dusk, x: GLOW_AT.x, y: GLOW_AT.y })
@@ -663,7 +663,7 @@ export class ToyDisplay {
     // It leans forward into the weight of a stone it drags.
     const drags = state === 'carry' && carried?.kind === STONE
     if (drags) antMove.turn = (flip ? -1 : 1) * 0.12
-    list.push({ is: 'sprite', who: 'ant', pose, x: feet.x, y: feet.y, flip, size: 1, tall: 1, move: state === 'idle' || state === 'dig' || rattles || drags ? antMove : null, turn: climbing ? (toy.antHeading.y > 0 ? 1 : -1) * (flip ? -1 : 1) * (Math.PI / 2) : 0 })
+    list.push({ is: 'sprite', id: 'ant', who: 'ant', pose, x: feet.x, y: feet.y, flip, size: 1, tall: 1, move: state === 'idle' || state === 'dig' || rattles || drags ? antMove : null, turn: climbing ? (toy.antHeading.y > 0 ? 1 : -1) * (flip ? -1 : 1) * (Math.PI / 2) : 0 })
     // Mud hangs from the jaws in a drip that stretches and snaps back.
     if (carried && this.carriedAt) list.push({ is: 'lump', lump: carried.kind, x: this.carriedAt.x, y: this.carriedAt.y, drip: carried.kind === MUD ? 7 + 9 * Math.abs(Math.sin(this.seconds * 4.5)) : 0 })
     for (const flying of k.flying) {

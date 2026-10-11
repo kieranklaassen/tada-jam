@@ -3,7 +3,6 @@ import { campers } from '../camp'
 import { LADDER } from '../config'
 import { CELL, EARTH, MOUTH, OPEN, STONE, at, put, settle } from '../ground'
 import type { Guidance } from '../guidance'
-import type { InvaderKind } from '../habits'
 import { ROUND } from '../order'
 import { freshGame, type Game } from '../save'
 import { Kingdom } from '../kingdom'
@@ -448,7 +447,6 @@ describe('the queen and her guests', () => {
 })
 
 describe('a creature is in one place', () => {
-  const KIND_OF: Record<string, InvaderKind> = { raider: 'ant', beetle: 'beetle', fly: 'fly', dungBeetle: 'dungBeetle', dungFly: 'dungFly' }
   /** The game's own ground with a hall off the shaft. */
   const hallGame = (seed: number) => {
     const game = freshGame(null, seed), g = game.ground
@@ -466,12 +464,34 @@ describe('a creature is in one place', () => {
     expect(campers(['dungFly', 'dungBeetle']).filter((c) => c.kind === 'dungBall').length).toBe(1)
   })
 
-  it('in every frame, for every party of the order and of the round, through the first showing, the raid and the put-back: nobody is drawn twice', () => {
+  /** Every creature drawn in this frame, by its own name: none twice, and everyone of the party exactly once. */
+  const lookAt = (display: ToyDisplay, party: number, where: string) => {
+    const seen = new Map<string, number>()
+    for (const item of display.items(null)) if (item.is === 'sprite' && item.id !== '') seen.set(item.id, (seen.get(item.id) ?? 0) + 1)
+    for (const [id, n] of seen) expect(n, `${where} at ${display.seconds.toFixed(2)}: ${id}`).toBe(1)
+    for (let n = 0; n < party; n++) expect(seen.get(`party${n}`), `${where} at ${display.seconds.toFixed(2)}: party${n}`).toBe(1)
+    expect(seen.get('queen'), where).toBe(1)
+    expect(seen.get('ant'), where).toBe(1)
+  }
+  const playing = (k: Kingdom, display: ToyDisplay, where: string, count: { frames: number }) => (until: () => boolean, most = 6000) => {
+    for (let n = 0; n < most && !until(); n++) {
+      k.step(1 / 30)
+      display.see(k.toy.drainEvents())
+      display.seeGame(k.drainEvents(), k.drainRaidEvents())
+      display.advance(1 / 30)
+      count.frames++
+      // The party is the one the frame belongs to: the raid's while it runs or is put back and in the ending, else the one at the log.
+      const raided = k.raid ?? (k.scene?.is === 'putBack' || k.scene?.is === 'ending' ? k.lastRaid : null)
+      lookAt(display, raided ? raided.invaders.length : display.camp.filter((camper) => /^party\d+$/.test(camper.id)).length, where)
+    }
+  }
+
+  it('in every frame, for every party of the order and of the round, through the first showing, the raid and the put-back: nobody is drawn twice, creature by creature', () => {
     const laid: { position: string; muster: number }[] = [
       ...LADDER.filter((place) => place !== 'open-kingdom').map((position) => ({ position: position as string, muster: 0 })),
       ...ROUND.map((_, muster) => ({ position: 'open-kingdom', muster })),
     ]
-    let frames = 0
+    const count = { frames: 0 }
     for (const seed of [1, 2]) for (const { position, muster } of laid) {
       const game = hallGame(seed)
       game.position = position
@@ -480,32 +500,7 @@ describe('a creature is in one place', () => {
       // The machines have been shown; the kinds have not, so each first showing plays.
       game.shown.push('catapult', 'cannon')
       const k = new Kingdom(game), display = new ToyDisplay(k, seed)
-      const party = k.party
-      const most = (who: string) => {
-        if (who === 'dungBall') return Math.max(1, party.filter((kind) => kind === 'dungBeetle').length)
-        const kind = KIND_OF[who]
-        // As many as the party has of the kind; with none in the party, the one who is always at the camp.
-        return Math.max(1, party.filter((member) => member === kind).length)
-      }
-      const look = () => {
-        frames++
-        const count = new Map<string, number>()
-        for (const item of display.items(null)) {
-          if (item.is !== 'sprite' || (KIND_OF[item.who] === undefined && item.who !== 'dungBall')) continue
-          count.set(item.who, (count.get(item.who) ?? 0) + 1)
-        }
-        for (const [who, n] of count) expect(n, `${seed} ${position} ${muster} at ${display.seconds.toFixed(2)}: ${who}`).toBeLessThanOrEqual(most(who))
-      }
-      const play = (until: () => boolean, most = 6000) => {
-        for (let n = 0; n < most && !until(); n++) {
-          k.step(1 / 30)
-          display.see(k.toy.drainEvents())
-          display.seeGame(k.drainEvents(), k.drainRaidEvents())
-          display.advance(1 / 30)
-          look()
-        }
-      }
-      look()
+      const play = playing(k, display, `${seed} ${position} ${muster}`, count)
       // The first touch starts the first showing that is owed; then the bell.
       k.press(24.5, 5.5, 0)
       k.release()
@@ -513,7 +508,54 @@ describe('a creature is in one place', () => {
       k.bell()
       play(() => k.raid === null && (k.scene === null || k.scene.is === 'ending'))
     }
-    expect(frames).toBeGreaterThan(5000)
+    expect(count.frames).toBeGreaterThan(5000)
+  })
+
+  it('through the ending too, the shrug of every party, and the arrival of each machine', () => {
+    const count = { frames: 0 }
+    // The great raid turned back with one ball of mud, the put-back, the whole ending, and the touch that ends it.
+    const great = hallGame(1)
+    great.position = 'great-raid'
+    great.shown.push('ant', 'beetle', 'fly', 'dungBeetle', 'dungFly', 'catapult', 'cannon')
+    great.machines.push({ kind: 'cannon', x: 26, y: 6, facing: -1, load: 'mud' })
+    const k = new Kingdom(great), display = new ToyDisplay(k, 1)
+    const play = playing(k, display, 'the ending', count)
+    k.bell()
+    play(() => count.frames >= 75)
+    k.press(26.5, 5.5, 3)
+    k.release()
+    play(() => k.scene?.is === 'ending')
+    expect(k.game.ended).toBe(true)
+    let ending = 0
+    play(() => ++ending > 30 * 24)
+    expect(k.scene?.is).toBe('ending')
+    k.press(5.5, 10.5, 99)
+    k.release()
+    play(() => count.frames > 3000, 60)
+    expect(k.scene).toBeNull()
+    // The shrug: every party of the order comes for nothing where the kingdom has no chamber.
+    for (const position of LADDER.filter((place) => place !== 'open-kingdom')) {
+      const game = freshGame(null, 1)
+      game.position = position
+      game.shown.push('ant', 'beetle', 'fly', 'dungBeetle', 'dungFly', 'catapult', 'cannon')
+      const none = new Kingdom(game), shown = new ToyDisplay(none, 1)
+      none.bell()
+      expect(none.scene?.is, position).toBe('shrug')
+      playing(none, shown, `shrug ${position}`, count)(() => none.scene === null, 400)
+    }
+    // An arrival: the workers bring each machine at its place.
+    for (const position of ['the-catapult', 'the-cannon']) {
+      const game = hallGame(1)
+      game.position = position
+      game.shown.push('ant', 'beetle', 'fly')
+      if (position === 'the-cannon') game.shown.push('catapult')
+      const brought = new Kingdom(game), shown = new ToyDisplay(brought, 1)
+      brought.press(24.5, 5.5, 0)
+      brought.release()
+      expect(brought.scene?.is, position).toBe('arrives')
+      playing(brought, shown, `arrival ${position}`, count)(() => brought.scene === null, 400)
+    }
+    expect(count.frames).toBeGreaterThan(1500)
   })
 })
 
