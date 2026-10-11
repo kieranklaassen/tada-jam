@@ -196,6 +196,9 @@ describe('a raider ant with nothing to hold', () => {
     for (const [, y] of nexts(ledge, 'ant', 7, 2)) expect(y).toBeLessThanOrEqual(3)
     // At the mouth it clings to the turf: it does not jump into the middle of a wide shaft.
     for (const [, y] of nexts(under, 'ant', 4, 0)) expect(y).toBeLessThanOrEqual(1)
+    // Where the corner under the edge is sand, which gives it no face to go down, it steps off the edge and drops.
+    const sandy = ['X.XXXXXX', '#.....##', '###s..##', '####..##', '########', 'XXXXXXXX']
+    expect(nexts(sandy, 'ant', 3, 1)).toContainEqual([4, 3])
   })
 
   it('climbs where it can and drops only where it gets no further: the way it finds without a drop comes first', () => {
@@ -203,6 +206,12 @@ describe('a raider ant with nothing to hold', () => {
     const walled = ['XXXX...XXXX', '####...####', '####...####', '####...####', '####......#', '####......#', '####......#', '###########', 'XXXXXXXXXXX']
     const way = wayOf(walled, 'ant')!.map((cell) => [cell % 11, Math.floor(cell / 11)])
     for (let n = 1; n < way.length; n++) expect(Math.abs(way[n][1] - way[n - 1][1])).toBeLessThanOrEqual(1)
+    // A drop that is right at hand and a way round without one that is longer: it takes the way round, down the far
+    // face, and comes into the room there.
+    const round = ['XX.XXXXXXX', '##.#######', '##......##', '##.####.##', '#.......##', '#.......##', '#.......##', '##########', 'XXXXXXXXXX']
+    const longer = wayOf(round, 'ant')!.map((cell) => [cell % 10, Math.floor(cell / 10)])
+    expect(longer[longer.length - 1]).toEqual([7, 4])
+    for (let n = 1; n < longer.length; n++) expect(Math.abs(longer[n][1] - longer[n - 1][1])).toBeLessThanOrEqual(1)
     // And a reach lists every place found without a drop before any found only by one.
     const ground = fromPicture(under), found = reach(ground, 'ant', 4)
     const firstDropped = found.order.findIndex((cell) => Math.floor(cell / 11) >= 4)

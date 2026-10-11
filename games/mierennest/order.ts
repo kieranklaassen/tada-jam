@@ -84,12 +84,13 @@ export function after(progress: Progress, verdict: Verdict): Progress {
 }
 
 export type MachineKind = 'catapult' | 'cannon'
+export const MACHINE_KINDS: readonly MachineKind[] = ['catapult', 'cannon']
 const ARRIVES_AT: Record<MachineKind, Place> = { catapult: 'the-catapult', cannon: 'the-cannon' }
 
 /** The machines that have arrived by this place. */
 export function arrived(position: string): MachineKind[] {
   const at = (LADDER as readonly string[]).indexOf(position)
-  return (['catapult', 'cannon'] as const).filter((kind) => at >= LADDER.indexOf(ARRIVES_AT[kind]))
+  return MACHINE_KINDS.filter((kind) => at >= LADDER.indexOf(ARRIVES_AT[kind]))
 }
 
 /** The ids a first showing can have: each invader kind and each machine. */
