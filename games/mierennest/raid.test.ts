@@ -856,9 +856,26 @@ describe('a dung beetle and its ball', () => {
     const stone = dungRaid(tunnel)
     until(stone, 12)
     hit(stone, 0, 'stone')
-    // Back to the end of the tunnel behind it: the foot of the shaft. From there the ball rolls out, and that beetle is home.
-    expect(stone.invaders[0].state).toBe('home')
-    expect(stone.invaders[0].acted).toBe(false)
+    // Back to the end of the tunnel behind it: the foot of the shaft. From there the ball rolls out of the mouth,
+    // its beetle with it, and that beetle is home: the roll is played, up the shaft, and not skipped.
+    const beetle = stone.invaders[0]
+    expect(beetle.state).toBe('leaving')
+    expect(beetle.ball).toBe(3)
+    const foot = Math.floor(beetle.cell / WIDE)
+    expect(foot).toBeGreaterThan(3)
+    const rows: number[] = []
+    let ticks = 0
+    while (beetle.state === 'leaving' && ticks++ < 200) {
+      stepRaid(stone)
+      if (beetle.state === 'leaving') rows.push(Math.floor(beetle.cell / WIDE) - (beetle.along > 0 ? beetle.along * (Math.floor(beetle.cell / WIDE) - Math.floor(beetle.toward / WIDE)) : 0))
+    }
+    expect(beetle.state).toBe('home')
+    // It was seen on its way up for a good many ticks, higher each time, and was out within two seconds.
+    expect(rows.length).toBeGreaterThan(8)
+    expect(rows.length).toBeLessThan(40)
+    for (let n = 1; n < rows.length; n++) expect(rows[n]).toBeLessThanOrEqual(rows[n - 1])
+    expect(rows[rows.length - 1]).toBeLessThan(1.5)
+    expect(beetle.acted).toBe(false)
     playOut(stone)
     expect(stone.acts).toBe(0)
   })

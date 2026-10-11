@@ -149,6 +149,31 @@ describe('where a raid is shown', () => {
     expect(onBack).toBe(raid.invaders[1].state === 'home')
   })
 
+  it('shows a beetle that climbs out of the shaft by itself on end, head up, walking', () => {
+    const game = freshGame(null, 1), g = game.ground
+    for (let y = 1; y <= 3; y++) for (let x = 22; x <= 30; x++) put(g, x, y, OPEN)
+    for (let y = 1; y <= 3; y++) put(g, 18, y, EARTH)
+    for (let x = 18; x <= 31; x++) put(g, x, 4, EARTH)
+    settle(g)
+    const party = ['beetle'] as const
+    const raid = callRaid(g, party)
+    let climbing = 0
+    while (!raid.over) {
+      stepRaid(raid)
+      const beetle = raid.invaders[0]
+      if (beetle.state !== 'leaving' || beetle.along === 0 || beetle.toward % 40 !== beetle.cell % 40 || beetle.toward >= beetle.cell) continue
+      const [shown] = showRaid(raid, party, raid.time)
+      climbing++
+      expect(Math.abs(shown.turn)).toBeCloseTo(Math.PI / 2)
+      expect(['walk', 'walk2']).toContain(shown.pose)
+      // Between the foot of the shaft and the grass, in the shaft's own columns.
+      expect(shown.y).toBeLessThan(GROUND.y + 4 * CELL + 1)
+      expect(shown.y).toBeGreaterThan(GROUND.y)
+    }
+    expect(raid.invaders[0].state).toBe('home')
+    expect(climbing).toBeGreaterThan(5)
+  })
+
   it('shows a dung beetle behind its ball, and the ball where the raid has it', () => {
     const party = ['dungBeetle'] as const
     const raid = callRaid(fullKingdom().ground, party)

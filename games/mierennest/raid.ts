@@ -102,6 +102,8 @@ export type Invader = {
   answer: string | null
   /** How many cells across the dung ball it rolls is: 0 for none. */
   ball: number
+  /** A stone knocked its ball back to the foot of the shaft: the ball rolls out of the mouth and it goes with it. */
+  rolledOut: boolean
   /** It is backing off a machine it found itself in front of when it had to wait: it waits one place before it. */
   backing: boolean
   /** How many cells across the ball it left on the grass is, where the mouth held it: 0 for none. It lies at the log. */
@@ -220,7 +222,7 @@ export function callRaid(built: Ground, party: Party, mouth: readonly number[] =
   const invaders: Invader[] = party.map((kind, id) => ({
     id, kind, state: 'coming', cell: -1, from: -1, toward: -1, along: 0, facing: 1, wait: APART,
     way: [], step: 0, trail: [], leaning: null, acted: false, insideSince: false, room: 0, spot: -1, after: 'going', lastShot: null, answer: null,
-    ball: kind === 'dungBeetle' ? DUNG_BALL.across : 0, left: 0, backing: false, jammed: 0, lostIn: -1, queued: false, wake: [],
+    ball: kind === 'dungBeetle' ? DUNG_BALL.across : 0, left: 0, backing: false, rolledOut: false, jammed: 0, lostIn: -1, queued: false, wake: [],
   }))
   return {
     ground, invaders, time: 0, chambersWhenCalled: chambers(ground, mouth).length, acts: 0, gave: new Set(), covered: new Set(), balls: [], rolling: [], machines: new Set(machines),
@@ -1033,7 +1035,7 @@ export function stepRaid(raid: Raid): void {
         // A raider ant that let go and dropped on its way in cannot climb back through the air either: it goes back
         // as far as the foot of its drop, shrugs, and waits for the workers the same way.
         // One that can climb all its way home walks over whoever sits in it, as it does over a beetle's back.
-        const cannotClimb = (plods(gait) || gait === 'ant') && climbsItCannotMake(raid, invader)
+        const cannotClimb = (plods(gait) || gait === 'ant') && !invader.rolledOut && climbsItCannotMake(raid, invader)
         if (cannotClimb && invader.along === 0 && (tooHigh(raid, invader.cell, next) || heldAhead(raid, invader))) {
           invader.state = 'held'
           raid.events.push({ type: 'held', id: invader.id, kind: invader.kind })
@@ -1113,10 +1115,12 @@ export function hit(raid: Raid, id: number, shot: Shot): void {
   invader.wake = []
   if (invader.room !== 0) invader.room = roomOf(raid.ground, gaitOf(invader), invader.cell, raid.rooms) === invader.room ? invader.room : 0
   if (wasStuck) raid.covered.delete(invader.cell)
-  // A ball knocked back to the foot of the shaft rolls out of the mouth, and its beetle after it: that one is home.
+  // A ball knocked back to the foot of the shaft rolls on, up the shaft and out of the mouth, and its beetle with it:
+  // that one is home when the ball is out. The roll is played, however deep the shaft.
   if (invader.ball > 0 && habit.back === 'hall' && invader.trail.length <= 2) {
-    invader.state = 'home'
-    raid.events.push({ type: 'home', id, kind: invader.kind })
+    invader.state = 'leaving'
+    invader.rolledOut = true
+    setOff(invader, invader.trail.length > 1 ? [invader.cell, invader.trail[0]] : [invader.cell])
     return
   }
   invader.state = 'dazed'
