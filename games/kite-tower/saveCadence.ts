@@ -1,6 +1,6 @@
 // When to hand the playroom to ctx.storage. The storage layer debounces and
-// the shell flushes on put-away; this makes sure the newest poses (a piece
-// mid-drag, a tower still settling) are what the last save carried.
+// the shell flushes on put-away; this makes sure the newest poses (a tower
+// still settling, a piece just lifted out of it) are what the last save carried.
 
 export const DRAG_SAVE_MS = 400
 
