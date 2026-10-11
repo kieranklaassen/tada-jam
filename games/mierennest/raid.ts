@@ -21,6 +21,8 @@ export const HOME_FASTER = 1.6
 export const APART = 1.1
 /** A raid that has not ended by itself by now is ended: everyone still inside sits down where they are. */
 export const LONGEST = 150
+/** How long an invader that is stuck or held is left to be seen, once nothing else is going to happen, before the raid is over. */
+export const SEEN_FOR = 2.5
 
 export type InvaderState =
   /** Walking from the log to the mouth. */
@@ -105,6 +107,8 @@ export type Raid = {
   /** The places where an ant is stuck in mud: the next walks over its back. */
   covered: Set<number>
   over: boolean
+  /** How long nothing more has been going to happen. */
+  settled: number
   events: RaidEvent[]
   /** Raised whenever the copy changes, so every way is looked for again. */
   changes: number
@@ -132,7 +136,7 @@ export function callRaid(built: Ground, party: Party, mouth: readonly number[] =
   }
   return {
     ground, invaders, time: 0, chambersWhenCalled: chambers(ground, mouth).length, acts: 0, gave: new Set(), covered: new Set(),
-    over: false, events: [], changes: 0, inside, far: farFromChambers(ground, inside), mouth,
+    over: false, settled: 0, events: [], changes: 0, inside, far: farFromChambers(ground, inside), mouth,
   }
 }
 
@@ -402,7 +406,10 @@ export function stepRaid(raid: Raid): void {
     }
   }
   const done = raid.invaders.every((invader) => invader.state === 'home' || invader.state === 'held' || invader.state === 'stuck')
-  if (done || raid.time >= LONGEST) {
+  // One that is stuck or held is seen for a while where it is; a raid that has all gone home is over at once.
+  if (done && raid.invaders.some((invader) => invader.state !== 'home')) raid.settled += TICK
+  else raid.settled = done ? SEEN_FOR : 0
+  if ((done && raid.settled >= SEEN_FOR) || raid.time >= LONGEST) {
     for (const invader of raid.invaders) if (invader.state !== 'home' && invader.state !== 'stuck') invader.state = 'held'
     raid.over = true
     raid.events.push({ type: 'over' })

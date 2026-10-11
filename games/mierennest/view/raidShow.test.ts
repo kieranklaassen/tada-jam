@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { partyFile } from '../camp'
-import { CELL, EARTH, MOUTH, OPEN, STONE, at, put, settle } from '../ground'
+import { CELL, EARTH, MOUTH, OPEN, STONE, at, fromPicture, put, settle } from '../ground'
 import type { Guidance } from '../guidance'
 import { Kingdom } from '../kingdom'
 import { partyAt } from '../order'
@@ -9,7 +9,7 @@ import { freshGame, type Game } from '../save'
 import { POSES } from './creatures'
 import { DRAWS, ToyDisplay, drawsOf, type Item } from './display'
 import { GRASS_Y, GROUND } from './layout'
-import { FURNISHED, MOUTH_STEP, PLAYED_BY, RAID_POSES, invaderPose, roomFloor, showFurnishings, showMachine, showRaid, showShot } from './raidShow'
+import { FURNISHED, MOUTH_STEP, PLAYED_BY, RAID_POSES, invaderPose, roomFloor, showCarriedOut, showFurnishings, showMachine, showRaid, showShot } from './raidShow'
 import { THING_SIZE } from './things'
 
 const DRAW_BUDGET = 80
@@ -97,6 +97,54 @@ describe('where a raid is shown', () => {
     expect(b.x - a.x).toBe(3 * CELL)
     expect([a.effect, a.flip]).toEqual(['mudBall', false])
     expect(showShot({ ...flying, shot: 'sand', path: [103, 102, 101] }, 40)).toMatchObject({ effect: 'sandBlast', flip: true })
+  })
+})
+
+describe('an ant held fast in the mud', () => {
+  /** A shaft one cell wide below the mouth, onto a floor of mud, with a room off it. */
+  const muddy = () => {
+    const g = fromPicture([
+      'XXX...XXXXXXXX',
+      '###...########',
+      '####.#########',
+      '####.#########',
+      '####......####',
+      '####......####',
+      '####......####',
+      '####m#########',
+      'XXXXXXXXXXXXXX',
+    ])
+    const raid = callRaid(g, ['ant'], [3, 4, 5])
+    while (raid.invaders[0].state !== 'stuck') stepRaid(raid)
+    return raid
+  }
+
+  it('stands on end where the way is one cell wide, and lies along a floor that has room', () => {
+    const narrow = fromPicture(['XXX...XXXX', '###...####', '####.#####', '###m.m####', '####....##', '####....##', '####....##', '##########', 'XXXXXXXXXX'])
+    const tight = callRaid(narrow, ['ant'], [3, 4, 5])
+    while (!tight.over && tight.invaders[0].state !== 'stuck') stepRaid(tight)
+    expect(tight.invaders[0].state).toBe('stuck')
+    expect(Math.abs(showRaid(tight, ['ant'], 0)[0].turn)).toBeCloseTo(Math.PI / 2)
+    const raid = muddy()
+    expect(showRaid(raid, ['ant'], 0)[0].turn).toBe(0)
+  })
+
+  it('is carried out the way it came, through the open and never through the earth', () => {
+    const raid = muddy(), g = raid.ground
+    playOut(raid)
+    const scene = { is: 'putBack' as const, t: 0, length: 4, cells: [], ground: g, held: [0] }
+    for (let n = 0; n <= 200; n++) {
+      scene.t = (4 * n) / 200
+      const [one] = showCarriedOut(scene, raid, ['ant'])
+      // Below the turf, that is: from the top of the mouth it steps out onto the grass.
+      if (one.y > GROUND.y + CELL) {
+        // Its middle is in an open cell: it stands on a floor or swings round a corner, as it did coming in.
+        const cx = Math.floor((one.x - GROUND.x) / CELL), cy = Math.floor((one.y - CELL / 2 - GROUND.y) / CELL)
+        expect(at(g, cx, cy), `at ${n}`).toBe(OPEN)
+      }
+    }
+    scene.t = 4
+    expect(showCarriedOut(scene, raid, ['ant'])[0].x).toBe(partyFile(['ant'])[0].x)
   })
 })
 

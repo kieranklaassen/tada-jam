@@ -121,6 +121,20 @@ describe('a frame of the toy', () => {
     const hand = shown.find((item) => item.is === 'hand') as Extract<Item, { is: 'hand' }>
     expect(hand.y).toBeGreaterThan(GRASS_Y + CELL)
   })
+
+  it('lights the drop on the idle ladder once the kingdom has a chamber to raid, and not before or while a raid runs', () => {
+    const dropOf = (display: ToyDisplay) => display.items({ glow: 1, demo: null, demoIndex: -1 })[0] as Extract<Item, { is: 'drop' }>
+    expect(dropOf(fresh().display).glint).toBe(0)
+    const k = new Kingdom(crowded())
+    const display = new ToyDisplay(k, 1)
+    expect(dropOf(display).glint).toBe(1)
+    const glints = display.items({ glow: 1, demo: null, demoIndex: -1 }).filter((item) => item.is === 'glint') as Extract<Item, { is: 'glint' }>[]
+    expect(glints.some((glint) => glint.y < GRASS_Y)).toBe(true)
+    expect((display.items(null)[0] as Extract<Item, { is: 'drop' }>).glint).toBe(0)
+    k.bell()
+    expect(k.raid).not.toBeNull()
+    expect(dropOf(display).glint).toBe(0)
+  })
 })
 
 describe('the answer to a dig, beyond the mouthful', () => {

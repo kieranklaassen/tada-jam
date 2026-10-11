@@ -9,7 +9,7 @@ import { WEDGED, demoDrag, queenSeat, workerSpots } from '../residents'
 import { below, makeRng, type Rng } from '../rng'
 import type { Toy, ToyEvent } from '../toy'
 import { GRASS_Y, GROUND, MOUTH_X } from './layout'
-import { BELL, LIP, hillGrown, hillShape } from './props'
+import { BELL, LIP, dropAt, hillGrown, hillShape } from './props'
 import { FLUNG, MOUTH_STEP, showCarriedOut, showFurnishings, showMachine, showMarks, showRaid, showShot } from './raidShow'
 import type { Effect, Thing } from './things'
 
@@ -310,8 +310,11 @@ export class ToyDisplay {
     const toy = this.toy, ground = toy.game.ground, list: Item[] = []
     let slot = 0
     const glow = guidance?.glow ?? 0
-    list.push({ is: 'drop', sway: this.sway + Math.sin(this.seconds * 0.9) * 0.03, glint: 0 })
     const k = this.k, scene = k.scene, cols = ground.cols
+    // A kingdom with a chamber can be raided: the idle ladder then lights the drop as well, which calls the raid.
+    const callable = glow > 0 && toy.realm.chambers.length > 0 && !k.raid && !scene
+    const sway = this.sway + Math.sin(this.seconds * 0.9) * 0.03
+    list.push({ is: 'drop', sway, glint: callable ? glow : 0 })
     // The party of a raid, or of the put-back after it, is shown by the raid; otherwise it stands in its file at the log.
     const raided = k.raid ?? (scene?.is === 'putBack' ? k.lastRaid : null)
     for (const camper of this.camp) {
@@ -465,6 +468,10 @@ export class ToyDisplay {
       if (lump !== null) {
         const p = cellMiddle(lump, ground.cols)
         list.push({ is: 'glint', x: p.x, y: p.y, strength: glow * (0.6 + 0.4 * Math.sin(this.seconds * 4 + 2)) })
+      }
+      if (callable) {
+        const p = dropAt(sway)
+        list.push({ is: 'glint', x: p.x, y: p.y, strength: glow * (0.6 + 0.4 * Math.sin(this.seconds * 4 + 4)) })
       }
       if (drag && guidance && guidance.demo !== null) {
         handPose(guidance.demo, true, this.hand)

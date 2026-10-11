@@ -3,7 +3,7 @@ import { LADDER } from './config'
 import { EARTH, MOUTH, MUD, OPEN, SAND, STONE, at, clone, equal, fromPicture, generate, put, settle, type Ground } from './ground'
 import { HABITS } from './habits'
 import { PARTY, judge, partyAt, type Party } from './order'
-import { LONGEST, TICK, callRaid, endOf, hit, playOut, stepRaid, type Raid, type RaidEvent } from './raid'
+import { LONGEST, SEEN_FOR, TICK, callRaid, endOf, hit, playOut, stepRaid, type Raid, type RaidEvent } from './raid'
 
 // Whole raids, played from a nest and a party to their end. In the pictures the mouth is the open cell of the top
 // row, a tunnel is two cells high and a room is four wide and three high.
@@ -79,6 +79,18 @@ describe('mud and raider ants', () => {
     const three = playOut(raidOn(nest('..........', '....m.....'), ['ant', 'ant', 'ant']))
     expect(states(three).filter((state) => state === 'stuck').length).toBe(1)
     expect(three.acts).toBe(2)
+  })
+
+  it('an ant that is stuck is seen for a while before the raid is over, and one that goes home ends the raid at once', () => {
+    const raid = raidOn(nest('..........', '....m.....'), ['ant'])
+    while (raid.invaders[0].state !== 'stuck') stepRaid(raid)
+    const stuckAt = raid.time
+    playOut(raid)
+    expect(raid.time - stuckAt).toBeGreaterThanOrEqual(SEEN_FOR - TICK)
+    expect(raid.time - stuckAt).toBeLessThan(SEEN_FOR + 2 * TICK)
+    const home = raidOn(nest(), ['ant'])
+    while (home.invaders[0].state !== 'home') stepRaid(home)
+    expect(home.over).toBe(true)
   })
 
   it('three cells of mud hold a file of three', () => {

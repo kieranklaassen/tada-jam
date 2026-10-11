@@ -96,7 +96,7 @@ export const MOUTH_STEP = { x: MOUTH_X - 46, y: GRASS_Y }
  * over the time it waits; one in the nest is where the raid has it; one that is home sits in the file again.
  */
 export function showRaid(raid: Raid, party: Party, seconds: number): Shown[] {
-  const cols = raid.ground.cols, file = partyFile(party)
+  const ground = raid.ground, cols = ground.cols, file = partyFile(party)
   return raid.invaders.map((invader, n) => {
     const who = PLAYED_BY[invader.kind], seat: Camper | undefined = file[n]
     const pose = invaderPose(invader, seconds, cols)
@@ -113,8 +113,10 @@ export function showRaid(raid: Raid, party: Party, seconds: number): Shown[] {
       for (let m = 0; m < n; m++) if (raid.invaders[m].cell === invader.cell && raid.invaders[m].along === 0 && raid.invaders[m].state !== 'home') ahead++
       at.x -= ahead * QUEUE_STEP * invader.facing
     }
-    const upright = pose === 'climb'
-    const goingUp = Math.floor(invader.cell / cols) < Math.floor(invader.from / cols)
+    // An ant held fast where the way is one cell wide has no room to lie along it: it stands on end, pulling to get up.
+    const narrow = invader.kind === 'ant' && invader.state === 'stuck' && ground.cells[invader.cell - 1] !== OPEN && ground.cells[invader.cell + 1] !== OPEN
+    const upright = pose === 'climb' || narrow
+    const goingUp = narrow || Math.floor(invader.cell / cols) < Math.floor(invader.from / cols)
     return { who, pose, x: at.x, y: at.y, flip: invader.facing < 0, turn: upright ? (goingUp ? -1 : 1) * (invader.facing < 0 ? -1 : 1) * (Math.PI / 2) : 0 }
   })
 }
@@ -129,8 +131,29 @@ export function showCarriedOut(scene: Extract<Scene, { is: 'putBack' }>, raid: R
     const from = invaderAt(invader, cols), who = PLAYED_BY[invader.kind]
     const pose = invader.kind === 'ant' ? (invader.lastShot === 'mud' ? 'balled' : 'stuck') : invader.kind === 'beetle' ? 'sit' : 'bump'
     const a = Math.min(1, p / 0.6), b = Math.min(1, Math.max(0, (p - 0.6) / 0.4))
-    const x = b > 0 ? MOUTH_STEP.x + (seat.x - MOUTH_STEP.x) * b : from.x + (MOUTH_STEP.x - from.x) * a
-    const y = b > 0 ? GRASS_Y : from.y + (GRASS_Y - from.y) * a
+    if (b > 0) {
+      out.push({ who, pose, x: MOUTH_STEP.x + (seat.x - MOUTH_STEP.x) * b, y: GRASS_Y, flip: false, turn: 0 })
+      continue
+    }
+    // Out the way it came in, through the open and not through the earth: back along its own trail to the mouth.
+    const way = [from]
+    for (let n = invader.trail.length - 1; n >= 0; n--) way.push(feetAt(invader.kind, invader.trail[n], cols))
+    way.push(MOUTH_STEP)
+    let whole = 0
+    for (let n = 1; n < way.length; n++) whole += Math.hypot(way[n].x - way[n - 1].x, way[n].y - way[n - 1].y)
+    let left = whole * a, x = from.x, y = from.y
+    for (let n = 1; n < way.length; n++) {
+      const leg = Math.hypot(way[n].x - way[n - 1].x, way[n].y - way[n - 1].y)
+      if (left <= leg) {
+        const u = leg > 0 ? left / leg : 1
+        x = way[n - 1].x + (way[n].x - way[n - 1].x) * u
+        y = way[n - 1].y + (way[n].y - way[n - 1].y) * u
+        break
+      }
+      left -= leg
+      x = way[n].x
+      y = way[n].y
+    }
     out.push({ who, pose, x, y, flip: false, turn: 0 })
   }
   return out
