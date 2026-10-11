@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { Note } from './audio'
 import { EARTH, MUD, ROCK, SAND, STONE } from './ground'
 import type { ToyEvent } from './toy'
-import { APART, BACK, BELL, BOING, CALLED, CARRYING, ENDING, CLACK, CLICK, FIZZLE, GAVE, KNOCK, LOST, MARCH, MET, RUMBLE, SCHLUP, SCRUNCH, SHOT_HIT, TAP, PICKED, POP, RANGE, SET_DOWN, SIGH, SPOKEN, TWANG, digVoice, landedVoice, lengthOf, pourVoice, voiceFor, voiceForGame, voiceForRaid } from './voices'
+import { APART, BACK, BELL, BOING, CALLED, CARRYING, ENDING, CLACK, CLICK, CREAK, SUCK, FIZZLE, GAVE, KNOCK, LOST, MARCH, MET, RUMBLE, SCHLUP, SCRUNCH, SHOT_HIT, TAP, PICKED, POP, RANGE, SET_DOWN, SIGH, SPOKEN, TWANG, digVoice, landedVoice, lengthOf, pourVoice, voiceFor, voiceForGame, voiceForRaid } from './voices'
 
 const MATERIALS = ['sand', 'mud', 'stone'] as const
 
@@ -23,7 +23,7 @@ const ALL: Record<string, Note[]> = {
   ...Object.fromEntries(Object.entries(SPOKEN).map(([k, v]) => [`spoken ${k}`, v])),
 }
 
-for (const [name, notes] of Object.entries({ ending: ENDING, called: CALLED, twang: TWANG, pop: POP, click: CLICK, knock: KNOCK, fizzle: FIZZLE, gave: GAVE, sigh: SIGH, march: MARCH, lost: LOST, tap: TAP, rumble: RUMBLE, scrunch: SCRUNCH, schlup: SCHLUP, clack: CLACK })) ALL[name] = notes
+for (const [name, notes] of Object.entries({ ending: ENDING, called: CALLED, creak: CREAK, suck: SUCK, twang: TWANG, pop: POP, click: CLICK, knock: KNOCK, fizzle: FIZZLE, gave: GAVE, sigh: SIGH, march: MARCH, lost: LOST, tap: TAP, rumble: RUMBLE, scrunch: SCRUNCH, schlup: SCHLUP, clack: CLACK })) ALL[name] = notes
 for (const [material, notes] of Object.entries(CARRYING)) ALL[`carrying ${material}`] = notes
 for (const [material, notes] of Object.entries(SHOT_HIT)) ALL[`shot hits ${material}`] = notes
 
@@ -189,6 +189,19 @@ describe('the grid is heard: every material answers each thing that is done to i
     expect(voiceForRaid({ type: 'stopped', cell: 1, by: STONE })).toBe(CLACK)
     expect(voiceForRaid({ type: 'stopped', cell: 1, by: EARTH })).toBe(KNOCK)
     expect(new Set([SCRUNCH, SCHLUP, CLACK].map((v) => JSON.stringify(v))).size).toBe(3)
+  })
+
+  it('the mud cell has its own two sounds under an invader: a slow creak where it holds a pusher, a sucking pop where an ant sticks', () => {
+    const creak = voiceForRaid({ type: 'strain', id: 0, cell: 1, on: MUD })!
+    const pop = voiceForRaid({ type: 'stuck', id: 0, cell: 1 })!
+    expect(creak).toBe(CREAK)
+    expect(pop).toBe(SUCK)
+    // Neither is the squelch of the dig that meets mud, nor the other, nor the grunt of a pusher at any other wall.
+    expect(new Set([creak, pop, MET.mud, SPOKEN.beetle].map((voice) => JSON.stringify(voice))).size).toBe(4)
+    expect(voiceForRaid({ type: 'strain', id: 0, cell: 1, on: STONE })).toBe(SPOKEN.beetle)
+    // A creak is slow and low; a pop is short and falls.
+    expect(lengthOf(creak)).toBeGreaterThan(0.5)
+    expect(lengthOf(pop)).toBeLessThan(0.4)
   })
 
   it('a scene is heard: the queen as she is carried, the workers at the put-back, the party that came for nothing, a kind at its first showing, a machine tried', () => {

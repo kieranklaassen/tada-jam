@@ -121,7 +121,8 @@ export type RaidEvent =
   | { type: 'inside'; id: number; kind: InvaderKind; cell: number }
   | { type: 'waits'; id: number; kind: InvaderKind }
   | { type: 'stuck'; id: number; cell: number }
-  | { type: 'strain'; id: number; cell: number }
+  /** A pusher strains at a wall that holds, or a ball at what jams it: `on` is what the wall begins with. */
+  | { type: 'strain'; id: number; cell: number; on: Kind }
   /** A wall gave: these cells of the copy changed. */
   | { type: 'gave'; id: number; cells: number[] }
   /** A dung ball dug its way wider: these cells of the copy changed. */
@@ -520,7 +521,7 @@ function decide(raid: Raid, invader: Invader): void {
       invader.facing = wall.dx as -1 | 1
       invader.state = 'straining'
       invader.wait = HABITS[invader.kind].patience
-      raid.events.push({ type: 'strain', id: invader.id, cell: invader.cell })
+      raid.events.push({ type: 'strain', id: invader.id, cell: invader.cell, on: at(ground, wall.x, wall.y) })
       return
     }
   }
@@ -739,7 +740,7 @@ function widen(raid: Raid, invader: Invader): void {
     }
   }
   // Stone it cannot shove, or the rock itself: the ball is jammed. The beetle heaves, then leaves it and walks on.
-  if (invader.jammed === 0) raid.events.push({ type: 'strain', id: invader.id, cell: invader.cell })
+  if (invader.jammed === 0) raid.events.push({ type: 'strain', id: invader.id, cell: invader.cell, on: wall >= 0 ? at(ground, wall % cols, Math.floor(wall / cols)) : ROCK })
   invader.jammed += DIG
   if (invader.jammed >= HABITS.dungBeetle.patience) leaveBall(raid, invader)
 }

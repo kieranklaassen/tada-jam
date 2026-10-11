@@ -254,6 +254,13 @@ describe('walls and beetles', () => {
     expect(two.acts).toBeGreaterThan(0)
   })
 
+  it('says what the pusher strains at: the mud that holds it, or whatever else the wall begins with', () => {
+    const muddy = playOut(raidOn(nest('..........', '....mm....'), ['beetle']))
+    expect(kinds(muddy.events, 'strain')).toEqual([expect.objectContaining({ on: MUD })])
+    const stony = playOut(raidOn(nest('..........', '....om....'), ['beetle']))
+    expect(kinds(stony.events, 'strain')).toEqual([expect.objectContaining({ on: STONE })])
+  })
+
   it('with a stone bedded in the mud it holds two beetles, and three', () => {
     const wall = nest('..........', '....smo...')
     for (const party of [['beetle', 'beetle'], ['beetle', 'beetle', 'beetle']] as Party[]) {

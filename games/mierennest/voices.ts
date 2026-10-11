@@ -148,6 +148,10 @@ export const APART: Record<ToyEvent['type'], number> = { dug: 0.07, met: 0.12, p
 
 /** The ant taps a stone it passes: one small clink, higher and softer than a bite's. */
 export const TAP: Note[] = [tone(2300, 0.07, 0.002, 0.05, { wave: 'triangle' })]
+/** Mud that holds under a pusher: a slow, low creak that bends down and back, with a little grit in it. */
+export const CREAK: Note[] = [tone(96, 0.1, 0.06, 0.5, { wave: 'sawtooth', glideTo: 78 }), tone(118, 0.06, 0.05, 0.4, { wave: 'sawtooth', glideTo: 132, delay: 0.3 }), hiss(380, 0.03, 0.05, 0.4, { q: 4, delay: 0.1 })]
+/** A raider ant's feet going into mud: a short sucking pop, a wet tone that falls fast and a small click of air after it. */
+export const SUCK: Note[] = [tone(420, 0.14, 0.004, 0.11, { glideTo: 110 }), hiss(900, 0.07, 0.003, 0.05, { q: 3, delay: 0.09 }), tone(260, 0.07, 0.003, 0.05, { glideTo: 520, delay: 0.14 })]
 /** The ending opens with three soft notes going down, like the end of a lullaby. */
 export const ENDING: Note[] = [tone(392, 0.09, 0.03, 0.5, { wave: 'triangle' }), tone(330, 0.08, 0.03, 0.5, { wave: 'triangle', delay: 0.3 }), tone(262, 0.09, 0.03, 0.6, { wave: 'triangle', delay: 0.6 })]
 /** The ant called to a place already dug: a small patter of feet, three quick soft ticks. */
@@ -225,8 +229,10 @@ export function voiceForGame(event: KingdomEvent): Note[] | null {
 /** The voice of something a raid says happened, or null where it makes no sound. */
 export function voiceForRaid(event: RaidEvent): Note[] | null {
   switch (event.type) {
-    case 'stuck': return MET.mud
-    case 'strain': return SPOKEN.beetle
+    // Mud under an invader has two sounds of its own: a sucking pop where a raider ant sticks in it, and a slow creak
+    // where it holds a pusher. At any other wall the pusher grunts.
+    case 'stuck': return SUCK
+    case 'strain': return event.on === MUD ? CREAK : SPOKEN.beetle
     case 'gave': return GAVE
     case 'inside': case 'acted': case 'hit': return SPOKEN[speakerOf(event.kind)]
     case 'widened': return SPOKEN.dungBall
