@@ -49,7 +49,8 @@ describe('the ground sheet', () => {
       const rec = recorder()
       paintCell(rec.pen, ground, 1, row, 1)
       // The colour of the lump is the one its body is filled with: the fill after the dark it lies on.
-      return rec.colours[kind === STONE ? 2 : 1]
+      // Stone has an edge under its body, and mud that stands free a lip over it.
+      return rec.colours[kind === SAND ? 1 : 2]
     }
     const colours = ([SAND, MUD, STONE] as Kind[]).map((kind) => fillsOf(kind, 2))
     expect(new Set(colours).size).toBe(3)

@@ -7,7 +7,8 @@ export const GRASS = { blade: '#4c9a3c', light: '#7cc35a', dark: '#2f6f2c', turf
 /** Packed earth, lighter near the surface and darker with depth, and the dug-out dark behind an open cell. */
 export const EARTH = { strata: ['#bd8a55', '#a06a3e', '#84583a'], top: '#bd8a55', speck: '#5a371d', deep: '#4f3020', open: '#2b1a12', openLow: '#1f120c' } as const
 export const SAND = { fill: '#f1d58a', edge: '#d8b560' } as const
-export const MUD = { fill: '#4a2c3a', edge: '#35202b', shine: '#7a566a' } as const
+/** Wet mud: a dark, cool brown no earth has, a paler lip where it stands free, and a pale glint for the wet. */
+export const MUD = { fill: '#3f3134', edge: '#2a2022', lip: '#6f5a5c', shine: '#d9e6ea' } as const
 export const STONE = { fill: '#9aa3ad', edge: '#6f7882', shine: '#d4dae0' } as const
 export const ROCK = { turf: '#3d7f33', bed: '#4b4f58', bedEdge: '#33363d' } as const
 export const GLASS = { sheen: 'rgba(255,255,255,0.10)', sheenEdge: 'rgba(255,255,255,0.22)', scratch: 'rgba(255,255,255,0.20)', smudge: 'rgba(255,255,255,0.07)' } as const

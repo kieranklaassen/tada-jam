@@ -139,15 +139,59 @@ export function paintCell(pen: SheetPen, ground: Ground, x: number, y: number, s
     rounded(pen, px + 7 * u, py + 5 * u, 7 * u, [3 * u, 3 * u, 3 * u, 3 * u])
     return
   }
-  pen.fillStyle = kind === SAND ? P.SAND.fill : P.MUD.fill
-  rounded(pen, px, py, s, [free(up, left, 10), free(up, right, 10), free(down, right, 4), free(down, left, 4)])
   if (kind === SAND) {
+    pen.fillStyle = P.SAND.fill
+    rounded(pen, px, py, s, [free(up, left, 10), free(up, right, 10), free(down, right, 4), free(down, left, 4)])
     pen.fillStyle = P.SAND.edge
     for (let n = 0; n < 3; n++) pen.fillRect(px + (4 + speck(x, y, n) * 18) * u, py + (5 + speck(x, y, n + 3) * 17) * u, 2 * u, 2 * u)
-  } else {
-    pen.fillStyle = P.MUD.shine
-    rounded(pen, px + 6 * u, py + 6 * u, 5 * u, [2.5 * u, 2.5 * u, 2.5 * u, 2.5 * u])
+    return
   }
+  // Mud is one dark flat colour. What says it is wet is small: a paler lip along a free top that sags in the
+  // middle, a drip under a free foot, and one long glint.
+  const topFree = up === OPEN, footFree = down === OPEN
+  if (topFree) {
+    // The lip is a band along the top only, with the same round corners as the body under it.
+    const band = 9 * u, cl = free(up, left, 11), cr = free(up, right, 11)
+    pen.fillStyle = P.MUD.lip
+    pen.beginPath()
+    pen.moveTo(px, py + band)
+    pen.lineTo(px, py + cl)
+    pen.quadraticCurveTo(px, py, px + Math.max(cl, 1), py)
+    pen.lineTo(px + s - Math.max(cr, 1), py)
+    pen.quadraticCurveTo(px + s, py, px + s, py + cr)
+    pen.lineTo(px + s, py + band)
+    pen.closePath()
+    pen.fill()
+  }
+  pen.fillStyle = P.MUD.fill
+  pen.beginPath()
+  const top = py + (topFree ? 3 * u : 0), rl = free(up, left, 11), rr = free(up, right, 11)
+  pen.moveTo(px, py + s - (footFree ? 6 * u : 0))
+  pen.lineTo(px, top + rl)
+  pen.quadraticCurveTo(px, top, px + Math.max(rl, 1), top)
+  // The top sags a little between its corners, as something soft does.
+  pen.quadraticCurveTo(px + s / 2, top + (topFree ? 4 * u : 0), px + s - Math.max(rr, 1), top)
+  pen.quadraticCurveTo(px + s, top, px + s, top + rr)
+  pen.lineTo(px + s, py + s - (footFree ? 6 * u : 0))
+  if (footFree) {
+    // A free foot hangs in two soft bulges, one of them a drip.
+    const drip = px + (8 + speck(x, y, 30) * 10) * u
+    pen.quadraticCurveTo(px + s - 3 * u, py + s - 1 * u, drip + 6 * u, py + s - 4 * u)
+    pen.quadraticCurveTo(drip + 3 * u, py + s, drip, py + s)
+    pen.quadraticCurveTo(drip - 3 * u, py + s, drip - 5 * u, py + s - 4 * u)
+    pen.quadraticCurveTo(px + 2 * u, py + s - 2 * u, px, py + s - 6 * u)
+  } else pen.lineTo(px, py + s)
+  pen.closePath()
+  pen.fill()
+  pen.fillStyle = P.MUD.shine
+  const gx = px + (5 + speck(x, y, 31) * 6) * u, gy = py + (8 + speck(x, y, 32) * 4) * u
+  pen.beginPath()
+  pen.moveTo(gx, gy + 2 * u)
+  pen.quadraticCurveTo(gx + 5 * u, gy - 2.5 * u, gx + 11 * u, gy)
+  pen.quadraticCurveTo(gx + 5 * u, gy - 0.5 * u, gx, gy + 2 * u)
+  pen.closePath()
+  pen.fill()
+  pen.fillRect(gx + 13.5 * u, gy + 0.5 * u, 2 * u, 1.6 * u)
 }
 
 /** Paints the whole grid. For the load and a resize only. */
