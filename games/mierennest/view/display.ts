@@ -1,5 +1,5 @@
 import { BODY, camperAt, campers, onBell, type Camper } from '../camp'
-import { CELL, MUD, OPEN, SAND, STONE, at, type Ground, type Lump } from '../ground'
+import { CELL, MUD, OPEN, ROCK, SAND, STONE, at, type Ground, type Lump } from '../ground'
 import { handPose, type Guidance, type HandPose } from '../guidance'
 import { idleMove, pokeMove, POKE_SECONDS, type Move, type Mover } from '../motion'
 import type { Kingdom, KingdomEvent } from '../kingdom'
@@ -22,8 +22,10 @@ import type { Effect, Thing } from './things'
 export type Item =
   /** A creature, by the middle of its feet. `size` scales it both ways and `tall` its height again. */
   | { is: 'sprite'; who: Mover; pose: string; x: number; y: number; flip: boolean; size: number; tall: number; move: Move | null; turn: number }
-  /** A carried lump, by the middle of its cell. */
-  | { is: 'lump'; lump: Lump; x: number; y: number }
+  /** A carried lump, by its middle. `drip` is how far a drip of mud hangs under it, in stage units. */
+  | { is: 'lump'; lump: Lump; x: number; y: number; drip: number }
+  /** The roots that hang from the turf into what was dug right under it, each by the point it hangs from and how far it swings, in radians. */
+  | { is: 'roots'; at: { x: number; y: number; swing: number }[] }
   /** The cell a carried lump was taken from, shown empty while it is in the jaws. */
   | { is: 'hole'; x: number; y: number }
   /** The open cell under the finger where a carried lump would be set down. */
@@ -46,7 +48,7 @@ export type Item =
   | { is: 'dusk'; strength: number; x: number; y: number }
 
 /** How many draws each kind of item costs. */
-export const DRAWS: Record<Item['is'], number> = { sprite: 1, lump: 2, hole: 1, target: 1, crumbs: 1, drop: 3, glint: 1, hand: 2, machine: 1, stand: 1, thing: 1, effect: 1, dusk: 3 }
+export const DRAWS: Record<Item['is'], number> = { sprite: 1, lump: 3, roots: 1, hole: 1, target: 1, crumbs: 1, drop: 3, glint: 1, hand: 2, machine: 1, stand: 1, thing: 1, effect: 1, dusk: 3 }
 export const drawsOf = (items: readonly Item[]): number => items.reduce((sum, item) => sum + DRAWS[item.is], 0)
 
 /**
@@ -56,8 +58,17 @@ export const drawsOf = (items: readonly Item[]): number => items.reduce((sum, it
 export const QUEEN_WEDGED = { size: 1.5, tall: 0.8 } as const
 /** The fewest open cells in a row that the ant can stand at full length in. In less it sits. */
 export const ANT_LENGTH = 4
-/** Where the carried lump rides, from the ant's feet: in its jaws. */
+/**
+ * Where a carried lump rides, from the ant's feet, facing right: sand as a heap on its head, mud hanging from its
+ * jaws, and a stone dragged behind it on the floor.
+ */
 const JAWS = { x: 58, y: -30 }
+const RIDES: Record<number, { x: number; y: number }> = { [SAND]: { x: 30, y: -46 }, [MUD]: { x: 60, y: -24 }, [STONE]: { x: -72, y: -13 } }
+/** How long the ant shakes after its jaws rang on a stone, and how long the worker takes to trot a mouthful of spoil up the hill, in seconds. */
+export const RATTLE_SECONDS = 0.35
+export const SPOIL_TROT = 0.7
+/** How long the roots under the turf swing after a mouthful near them, in seconds, and how near, in cells. */
+export const ROOTS_SWING = { seconds: 1.4, near: 3 } as const
 /** How deep, in cells, a mouthful is still felt at the camp above it; and how long the ant looks at its work when the finger lets go. */
 export const FELT_DEPTH = 3.5
 export const LOOK_SECONDS = 1.2
@@ -136,7 +147,12 @@ export class ToyDisplay {
   private readonly hand: HandPose = { travel: 0, press: 0, opacity: 0 }
   private wasDown = false
   private lookUntil = -1
+  private rattleUntil = -1
+  private spoilAt = -9
+  /** Where and when the last mouthful near the turf was dug: the roots there swing for a while. */
+  private rootsShook: { x: number; at: number } = { x: 0, at: -9 }
   private readonly moves: Move[] = []
+  private readonly roots: { x: number; y: number; swing: number }[] = []
 
   constructor(private readonly k: Kingdom, seed = 1) {
     this.toy = k.toy
@@ -210,21 +226,39 @@ export class ToyDisplay {
         // The spoil goes up to the hill, where the worker who carries it gives a hop; and a camper right above a
         // fresh tunnel feels it through its feet.
         this.startleOnce('spoil')
+        if (this.seconds - this.spoilAt > SPOIL_TROT) this.spoilAt = this.seconds
+        if (event.y < ROOTS_SWING.near + 1) this.rootsShook = { x: event.x, at: this.seconds }
         if (event.y < FELT_DEPTH) {
           const above = this.camp.find((camper) => camper.y === GRASS_Y && Math.abs(camper.x - p.x) < BODY[camper.kind].width / 2)
           if (above) this.startleOnce(above.id)
         }
       } else if (event.type === 'met') {
         const p = toStage(event.x, event.y)
-        if (event.kind === STONE) this.puff(p.x, p.y, 2, CRUMB.spark, 150)
-        else if (event.kind === SAND) this.puff(p.x, p.y, 3, CRUMB.sand, 30)
+        if (event.kind === STONE) {
+          // The jaws ring on it: one spark, and the ant shakes to its feelers.
+          this.puff(p.x, p.y, 2, CRUMB.spark, 150)
+          this.rattleUntil = this.seconds + RATTLE_SECONDS
+        } else if (event.kind === SAND) this.puff(p.x, p.y, 3, CRUMB.sand, 30)
         else if (event.kind === MUD) this.puff(p.x, p.y, 2, CRUMB.mud, 25)
+        // The turf and the bedrock do not give: a little dust, and that is all.
+        else if (event.kind === ROCK) this.puff(p.x, p.y, 2, CRUMB.dust, 35)
       } else if (event.type === 'set' || event.type === 'landed') {
         const p = cellMiddle(event.cell, cols)
         const colour = event.kind === SAND ? CRUMB.sand : event.kind === MUD ? CRUMB.mud : CRUMB.dust
         this.puff(p.x, p.y + CELL / 2, event.kind === STONE ? 5 : 3, colour, event.kind === STONE ? 80 : 45)
-        // A stone that fell far is felt at the camp through the feet.
-        if (event.type === 'landed' && event.kind === STONE && event.fell >= 2) for (const camper of this.camp) this.startle(camper.id)
+        // A stone that fell is felt at the camp through the feet.
+        if (event.type === 'landed' && event.kind === STONE && event.fell >= 1) for (const camper of this.camp) this.startle(camper.id)
+      } else if (event.type === 'tapped') {
+        // The ant taps a stone it passes: a spark off the stone, and a small shake.
+        const p = cellMiddle(event.cell, cols)
+        this.puff(p.x, p.y - CELL / 2, 1, CRUMB.spark, 90)
+        this.rattleUntil = this.seconds + RATTLE_SECONDS * 0.6
+      } else if (event.type === 'carrying') {
+        // Sand leaks a thread of grains from the heap, mud lets a drop fall, a stone scrapes dust off the floor.
+        const feet = toStage(event.x, event.y + 0.5), back = this.toy.antHeading.x < 0 ? 1 : -1
+        if (event.kind === SAND) this.puff(feet.x + back * 10, feet.y - 40, 2, CRUMB.sand, 18)
+        else if (event.kind === MUD) this.puff(feet.x - back * 58, feet.y - 10, 1, CRUMB.mud, 10)
+        else this.puff(feet.x + back * 72, feet.y - 2, 2, CRUMB.dust, 30)
       }
     }
   }
@@ -338,9 +372,10 @@ export class ToyDisplay {
     return toStage(this.toy.antAt.x, this.toy.antAt.y + 0.5)
   }
 
+  /** Where the carried lump rides: by its kind. */
   private jaws(): { x: number; y: number } {
-    const feet = this.antFeet()
-    return { x: feet.x + JAWS.x * (this.toy.antHeading.x < 0 ? -1 : 1), y: feet.y + JAWS.y }
+    const feet = this.antFeet(), rides = RIDES[this.toy.carried?.kind ?? -1] ?? JAWS
+    return { x: feet.x + rides.x * (this.toy.antHeading.x < 0 ? -1 : 1), y: feet.y + rides.y }
   }
 
   private move(n: number): Move {
@@ -379,6 +414,16 @@ export class ToyDisplay {
     // On the idle ladder the bell of a kingdom that can be raided sways by itself, and its drop catches the light.
     const sway = this.sway + Math.sin(this.seconds * 0.9) * 0.03 + (callable ? Math.sin(this.seconds * 3.1) * LADDER_SWAY * glow : 0)
     list.push({ is: 'drop', sway, glint: callable ? glow : 0 })
+    // The roots that hang from the turf into what was dug right under it: they swing when a mouthful is dug near them.
+    this.roots.length = 0
+    const since = this.seconds - this.rootsShook.at
+    for (let x = 0; x < cols; x++) {
+      if (ground.cells[cols + x] !== OPEN || ground.cells[x] === OPEN) continue
+      const near = Math.abs(x + 0.5 - this.rootsShook.x)
+      const swing = since < ROOTS_SWING.seconds && near <= ROOTS_SWING.near ? 0.5 * (1 - since / ROOTS_SWING.seconds) * (1 - near / (ROOTS_SWING.near + 1)) * Math.sin(since * 16 + x) : 0
+      for (const off of [0.3, 0.72]) this.roots.push({ x: GROUND.x + (x + off) * CELL, y: GROUND.y + CELL, swing: swing * (off < 0.5 ? 1 : -0.7) })
+    }
+    if (this.roots.length > 0) list.push({ is: 'roots', at: this.roots })
     // The party of a raid, or of the put-back after it, is shown by the raid; otherwise it stands in its file at the log.
     const raided = k.raid ?? (scene?.is === 'putBack' ? k.lastRaid : null)
     const ending = scene?.is === 'ending' ? scene : null
@@ -494,7 +539,7 @@ export class ToyDisplay {
         list.push({ is: 'sprite', who: 'worker', pose: Math.floor(this.seconds * 6) % 2 === 0 ? 'carry' : 'walk2', x: p.x, y: p.y + CELL / 2, flip: n % 2 === 1, size: 1, tall: 1, move: null, turn: 0 })
         // What it carries back it holds over its head, where it is seen: the lump the child had built there.
         const lump = k.game.ground.cells[scene.cells[n]]
-        if (lump === SAND || lump === MUD || lump === STONE) list.push({ is: 'lump', lump, x: p.x, y: p.y + CELL / 2 - BODY.worker.height - CELL / 2 - 2 })
+        if (lump === SAND || lump === MUD || lump === STONE) list.push({ is: 'lump', lump, x: p.x, y: p.y + CELL / 2 - BODY.worker.height - CELL / 2 - 2, drip: 0 })
       }
     }
     k.game.machines.forEach((machine, index) => {
@@ -516,7 +561,11 @@ export class ToyDisplay {
     // The worker who carries the spoil stands on the hill, as high as the hill is.
     const hump = hillShape(this.hill).right
     const spoilMove = this.moveOf('spoil', 'worker', 0.6, slot++)
-    list.push({ is: 'sprite', who: 'worker', pose: spoilMove.second ? 'walk2' : 'carry', x: MOUTH_X + LIP + hump.reach * 0.32, y: GRASS_Y - hump.height + 3, flip: true, size: 1, tall: 1, move: spoilMove, turn: 0 })
+    // A mouthful dug: it catches the spoil at the mouth and trots it up to the top of the hill.
+    const trot = Math.min(1, (this.seconds - this.spoilAt) / SPOIL_TROT)
+    const top = { x: MOUTH_X + LIP + hump.reach * 0.32, y: GRASS_Y - hump.height + 3 }, lip = { x: MOUTH_X + LIP + 6, y: GRASS_Y }
+    if (trot < 1) list.push({ is: 'sprite', who: 'worker', pose: Math.floor(this.seconds * 10) % 2 === 0 ? 'carry' : 'walk2', x: lip.x + (top.x - lip.x) * trot, y: lip.y + (top.y - lip.y) * trot, flip: false, size: 1, tall: 1, move: null, turn: 0 })
+    else list.push({ is: 'sprite', who: 'worker', pose: spoilMove.second ? 'walk2' : 'carry', x: top.x, y: top.y, flip: true, size: 1, tall: 1, move: spoilMove, turn: 0 })
     if (ending) {
       // The dung fly sits on the hill beside the worker, who hands it a leaf: it wipes its eyes.
       const wiping = ending.t >= ENDING.leaf
@@ -555,8 +604,14 @@ export class ToyDisplay {
       : cramped || antMove.second || hint !== null || this.seconds < this.lookUntil ? 'look' : 'stand'
     const flip = scratches ? toStage(hint!.from.x, 0).x < feet.x : toy.antHeading.x < 0
     if (state === 'dig' || scratches) antMove.dy = -Math.abs(Math.sin(this.seconds * 18)) * 2
-    list.push({ is: 'sprite', who: 'ant', pose, x: feet.x, y: feet.y, flip, size: 1, tall: 1, move: state === 'idle' || state === 'dig' ? antMove : null, turn: climbing ? (toy.antHeading.y > 0 ? 1 : -1) * (flip ? -1 : 1) * (Math.PI / 2) : 0 })
-    if (carried && this.carriedAt) list.push({ is: 'lump', lump: carried.kind, x: this.carriedAt.x, y: this.carriedAt.y })
+    const rattles = this.seconds < this.rattleUntil
+    if (rattles) antMove.dx = Math.sin(this.seconds * 70) * 2.2
+    // It leans forward into the weight of a stone it drags.
+    const drags = state === 'carry' && carried?.kind === STONE
+    if (drags) antMove.turn = (flip ? -1 : 1) * 0.12
+    list.push({ is: 'sprite', who: 'ant', pose, x: feet.x, y: feet.y, flip, size: 1, tall: 1, move: state === 'idle' || state === 'dig' || rattles || drags ? antMove : null, turn: climbing ? (toy.antHeading.y > 0 ? 1 : -1) * (flip ? -1 : 1) * (Math.PI / 2) : 0 })
+    // Mud hangs from the jaws in a drip that stretches and snaps back.
+    if (carried && this.carriedAt) list.push({ is: 'lump', lump: carried.kind, x: this.carriedAt.x, y: this.carriedAt.y, drip: carried.kind === MUD ? 7 + 9 * Math.abs(Math.sin(this.seconds * 4.5)) : 0 })
     for (const flying of k.flying) {
       const shot = showShot(flying, cols)
       list.push({ is: 'effect', effect: shot.effect, x: shot.x, y: shot.y, progress: shot.progress, flip: shot.flip })

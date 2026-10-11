@@ -379,6 +379,6 @@ describe('the fullest frame of a raid', () => {
     for (const who of ['raider', 'beetle', 'fly', 'worker', 'queen', 'ant']) expect(has((item) => item.is === 'sprite' && item.who === who), who).toBe(true)
     expect(mostItems.filter((item) => item.is === 'machine').length).toBe(2)
     expect(mostItems.filter((item) => item.is === 'thing').length).toBeGreaterThanOrEqual(FURNISHED)
-    expect(Object.keys(DRAWS).length).toBe(13)
+    expect(Object.keys(DRAWS).length).toBe(14)
   })
 })

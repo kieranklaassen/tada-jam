@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { EARTH, LUMPS, MUD, OPEN, ROCK, SAND, STONE, at, atRest, clone, count, equal, fromPicture, type Ground } from './ground'
 import { deserialize, freshGame, serialize, type Game } from './save'
-import { GROUND_STEP, Toy, type ToyEvent } from './toy'
+import { DRAGGING_A_STONE, GROUND_STEP, TAPS_AGAIN, Toy, type ToyEvent } from './toy'
 
 /** A game on a small picture, with the ant in the given cell. The top row of a picture stands in for the turf. */
 function gameOn(picture: string[], ant: [number, number]): Game {
@@ -144,7 +144,8 @@ describe('carrying', () => {
     const before = clone(toy.game.ground)
     toy.press(1.5, 2.5, 0)
     expect(toy.carried).toEqual({ kind: SAND, from: 15 })
-    expect(toy.drainEvents()).toEqual([{ type: 'picked', kind: SAND, cell: 15 }])
+    // The lump answers as the dig's meeting it does, and is taken.
+    expect(toy.drainEvents()).toEqual([{ type: 'met', kind: SAND, x: 1.5, y: 2.5 }, { type: 'picked', kind: SAND, cell: 15 }])
     toy.drag(3.5, 1.5, 0.2)
     expect(equal(toy.game.ground, before)).toBe(true)
     expect(toy.drainUnsaved()).toBe(false)
@@ -155,7 +156,7 @@ describe('carrying', () => {
     toy.press(1.5, 2.5, 0)
     toy.drag(4.5, 1.5, 0.2)
     toy.release()
-    expect(types(toy.drainEvents())).toEqual(['picked', 'set'])
+    expect(types(toy.drainEvents()).filter((type) => type !== 'carrying')).toEqual(['met', 'picked', 'set'])
     const events = play(toy, 1)
     expect(types(events)).toContain('landed')
     expect(at(toy.game.ground, 4, 3)).toBe(SAND)
@@ -171,7 +172,7 @@ describe('carrying', () => {
       toy.drag(5.5, 2.5, 0.2)
       if (end === 'cancel') toy.cancel()
       else toy.release()
-      expect(types(toy.drainEvents())).toEqual(['picked', 'back'])
+      expect(types(toy.drainEvents()).filter((type) => type !== 'carrying')).toEqual(['met', 'picked', 'back'])
       expect(toy.drainUnsaved()).toBe(false)
       play(toy, 0.5)
       expect(equal(toy.game.ground, before)).toBe(true)
@@ -287,3 +288,53 @@ describe('put away at any instant', () => {
     expect(back.ant).toEqual(toy.game.ant)
   })
 })
+
+describe('the ant and the lumps it meets', () => {
+  // A tunnel with a stone in its floor and a stone and a lump of sand lying in it.
+  const picture = ['X.XXXXXXXXXX', '#.##########', '#..........#', '#....o.s...#', '######o#####', 'XXXXXXXXXXXX']
+
+  it('turns to the finger the moment it lands', () => {
+    const toy = new Toy(gameOn(picture, [5, 2]))
+    toy.press(1.5, 2.5, 0)
+    expect(toy.antHeading.x).toBe(-1)
+    toy.cancel()
+    toy.press(9.5, 2.5, 1)
+    expect(toy.antHeading.x).toBe(1)
+  })
+
+  it('taps every stone it passes, once, and the same stone again only after a while', () => {
+    const toy = new Toy(gameOn(picture, [1, 3]))
+    toy.press(10.5, 3.5, 0)
+    for (let n = 0; n < 120; n++) toy.step(1 / 60)
+    const tapped = (toy.drainEvents().filter((event) => event.type === 'tapped') as Extract<ToyEvent, { type: 'tapped' }>[]).map((event) => event.cell)
+    // The stone that lies in the tunnel: it runs up to it and over it, and taps it once.
+    expect(tapped).toEqual([3 * 12 + 5])
+    toy.release()
+    toy.press(1.5, 3.5, 3)
+    for (let n = 0; n < 120; n++) toy.step(1 / 60)
+    expect(toy.drainEvents().some((event) => event.type === 'tapped')).toBe(false)
+    expect(TAPS_AGAIN).toBeGreaterThan(2)
+  })
+
+  it('runs slower with a stone than with sand, and gives a beat of carrying as it goes', () => {
+    const run = (x: number) => {
+      const toy = new Toy(gameOn(picture, [x - 1, 3]))
+      toy.press(x + 0.5, 3.5, 0)
+      expect(toy.carried).not.toBeNull()
+      toy.drag(1.5, 2.5, 0.1)
+      const from = { ...toy.antAt }
+      for (let n = 0; n < 12; n++) toy.step(1 / 60)
+      const far = Math.abs(toy.antAt.x - from.x) + Math.abs(toy.antAt.y - from.y)
+      for (let n = 0; n < 14; n++) toy.step(1 / 60)
+      const beats = toy.drainEvents().filter((event) => event.type === 'carrying') as Extract<ToyEvent, { type: 'carrying' }>[]
+      return { far, beats }
+    }
+    const stone = run(5), sand = run(7)
+    expect(stone.far).toBeLessThan(sand.far * 0.7)
+    expect(stone.far).toBeGreaterThan(0)
+    expect(sand.beats.length).toBeGreaterThan(0)
+    expect(sand.beats[0].kind).toBe(SAND)
+    expect(DRAGGING_A_STONE).toBeLessThan(0.7)
+  })
+})
+

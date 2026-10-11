@@ -7,7 +7,7 @@ import type { InvaderKind } from '../habits'
 import { ROUND } from '../order'
 import { freshGame, type Game } from '../save'
 import { Kingdom } from '../kingdom'
-import { DRAWS, LADDER_BEAT, LADDER_SWAY, MOST_CRUMBS, QUEEN_WEDGED, ToyDisplay, drawsOf, type Item } from './display'
+import { DRAWS, LADDER_BEAT, LADDER_SWAY, MOST_CRUMBS, QUEEN_WEDGED, ROOTS_SWING, SPOIL_TROT, ToyDisplay, drawsOf, type Item } from './display'
 import { GRASS_Y, GROUND } from './layout'
 import { BELL } from './props'
 
@@ -190,17 +190,63 @@ describe('the answer to a dig, beyond the mouthful', () => {
     const shallow = fresh().display
     shallow.advance(1)
     const beetle = shallow.camp.find((camper) => camper.id === 'beetle')!
+    const rests = sprites(shallow.items(null), 'worker')[0]
     shallow.see([{ type: 'dug', x: (beetle.x - GROUND.x) / CELL, y: 2, cells: 4, speed: 0.5 }])
     shallow.advance(0.4)
     expect(hopOf(shallow, 'beetle')).toBeLessThan(-1)
-    expect(hopOf(shallow, 'worker')).toBeLessThan(-1)
     expect(hopOf(shallow, 'fly')).toBeGreaterThan(-1)
+    // The worker has caught the spoil at the mouth and is trotting it up the hill: it is on the slope, below its place.
+    const trotting = sprites(shallow.items(null), 'worker')[0]
+    expect(trotting.x).toBeLessThan(rests.x)
+    expect(trotting.y).toBeGreaterThan(rests.y)
+    expect(['carry', 'walk2']).toContain(trotting.pose)
+    shallow.advance(SPOIL_TROT)
+    expect(sprites(shallow.items(null), 'worker')[0].x).toBe(rests.x)
     const deep = fresh().display
     deep.advance(1)
     deep.see([{ type: 'dug', x: (beetle.x - GROUND.x) / CELL, y: 9, cells: 4, speed: 0.5 }])
     deep.advance(0.4)
     expect(hopOf(deep, 'beetle')).toBeGreaterThan(-1)
-    expect(hopOf(deep, 'worker')).toBeLessThan(-1)
+    expect(sprites(deep.items(null), 'worker')[0].x).toBeLessThan(rests.x)
+  })
+
+  it('swings the roots that hang from the turf into a tunnel dug right under it, and lets them come to rest', () => {
+    const game = freshGame(null, 1), g = game.ground
+    for (let x = 23; x <= 28; x++) put(g, x, 1, OPEN)
+    const display = new ToyDisplay(new Kingdom(game), 1)
+    const rootsOf = () => (display.items(null).find((item) => item.is === 'roots') as Extract<Item, { is: 'roots' }>).at
+    // Two roots a cell of open ground under the turf, and none in the mouth, which has no turf over it.
+    expect(rootsOf().length).toBe(12)
+    expect(rootsOf().every((root) => root.swing === 0)).toBe(true)
+    display.see([{ type: 'dug', x: 25.5, y: 1.5, cells: 2, speed: 0.5 }])
+    let most = 0
+    for (let n = 0; n < 20; n++) { display.advance(1 / 30); most = Math.max(most, ...rootsOf().map((root) => Math.abs(root.swing))) }
+    expect(most).toBeGreaterThan(0.2)
+    display.advance(ROOTS_SWING.seconds)
+    expect(rootsOf().every((root) => root.swing === 0)).toBe(true)
+    expect(fresh().display.items(null).some((item) => item.is === 'roots')).toBe(false)
+  })
+
+  it('shows a carried lump by its kind: sand on the head, mud hanging from the jaws in a drip, a stone dragged behind', () => {
+    const hold = (cell: [number, number], kind: 2 | 3 | 4) => {
+      const game = crowded()
+      put(game.ground, cell[0], cell[1], kind)
+      const k = new Kingdom(game), display = new ToyDisplay(k, 1)
+      k.toy.press(cell[0] + 0.5, cell[1] + 0.5, 0)
+      expect(k.toy.carried?.kind).toBe(kind)
+      for (let n = 0; n < 40; n++) { k.toy.step(1 / 60); display.advance(1 / 60) }
+      const items = display.items(null)
+      const lump = items.find((item) => item.is === 'lump') as Extract<Item, { is: 'lump' }>, ant = sprites(items, 'ant')[0]
+      return { dx: (lump.x - ant.x) * (ant.flip ? -1 : 1), dy: lump.y - ant.y, drip: lump.drip }
+    }
+    const sand = hold([16, 9], 2), mud = hold([16, 9], 3), stone = hold([16, 9], STONE)
+    // Sand rides high, over the head; mud hangs in front, lower, with a drip; a stone lies behind, on the floor.
+    expect(sand.dy).toBeLessThan(mud.dy - 10)
+    expect(mud.dx).toBeGreaterThan(sand.dx)
+    expect(mud.drip).toBeGreaterThan(0)
+    expect([sand.drip, stone.drip]).toEqual([0, 0])
+    expect(stone.dx).toBeLessThan(-40)
+    expect(stone.dy).toBeGreaterThan(mud.dy)
   })
 
   it('ends with the ant sitting back to look at what it made', () => {

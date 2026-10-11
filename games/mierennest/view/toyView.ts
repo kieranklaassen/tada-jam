@@ -170,8 +170,28 @@ export class ToyView {
         pen.beginPath()
         pen.roundRect(item.x - 7, item.y - 8, 7, 6, 3)
         pen.fill()
+        if (item.drip > 0) {
+          // The drip of mud under it: a bar that stretches and snaps back, with a drop at its end.
+          pen.fillStyle = LUMP_FILL[item.lump]
+          pen.beginPath()
+          pen.roundRect(item.x - 3, item.y + s / 2 - 4, 6, item.drip + 4, 3)
+          pen.ellipse(item.x, item.y + s / 2 + item.drip, 4, 5, 0, 0, Math.PI * 2)
+          pen.fill()
+        }
         break
       }
+      case 'roots':
+        // Fine pale roots, each a short curve from the turf that leans by its swing. One stroke for all of them.
+        pen.strokeStyle = P.GRASS.root
+        pen.lineWidth = 1.6
+        pen.lineCap = 'round'
+        pen.beginPath()
+        for (const root of item.at) {
+          pen.moveTo(root.x, root.y)
+          pen.quadraticCurveTo(root.x + Math.sin(root.swing) * 6, root.y + 8, root.x + Math.sin(root.swing) * 13, root.y + 15)
+        }
+        pen.stroke()
+        break
       case 'hole':
         pen.fillStyle = 'rgba(38,23,16,0.86)'
         pen.fillRect(item.x - CELL / 2, item.y - CELL / 2, CELL, CELL)

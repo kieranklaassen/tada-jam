@@ -134,11 +134,24 @@ export function voiceFor(event: ToyEvent): Note[] | null {
       return pourVoice(event.cells)
     case 'buried':
       return SPOKEN.ant
+    case 'tapped':
+      return TAP
+    case 'carrying':
+      return CARRYING[materialOf(event.kind)!]
   }
 }
 
 /** The least time between two voices of the same kind of event, in seconds, so a fast drag crunches and does not roar. */
-export const APART: Record<ToyEvent['type'], number> = { dug: 0.07, met: 0.12, picked: 0, set: 0, back: 0, landed: 0.09, pour: 0.28, buried: 0.5 }
+export const APART: Record<ToyEvent['type'], number> = { dug: 0.07, met: 0.12, picked: 0, set: 0, back: 0, landed: 0.09, pour: 0.28, buried: 0.5, tapped: 0.15, carrying: 0.3 }
+
+/** The ant taps a stone it passes: one small clink, higher and softer than a bite's. */
+export const TAP: Note[] = [tone(2300, 0.07, 0.002, 0.05, { wave: 'triangle' })]
+/** A beat of carrying: grains of sand patter, mud drips with a small wet smack, a stone scrapes along the floor. */
+export const CARRYING: Record<Material, Note[]> = {
+  sand: [hiss(5200, 0.035, 0.004, 0.05, { q: 1.2 }), hiss(4600, 0.03, 0.004, 0.05, { q: 1.2, delay: 0.08 })],
+  mud: [tone(210, 0.07, 0.01, 0.07, { glideTo: 120 }), hiss(700, 0.035, 0.005, 0.05, { q: 3, delay: 0.05 })],
+  stone: [hiss(420, 0.07, 0.02, 0.2, { q: 2.5 }), tone(96, 0.05, 0.02, 0.18, { wave: 'triangle' })],
+}
 
 /** The catapult's arm lets go with a twang, the cannon with a hollow pop; an empty machine turns with a click, and a machine set down knocks. */
 export const TWANG: Note[] = [tone(330, 0.14, 0.003, 0.16, { wave: 'triangle', glideTo: 520 }), hiss(900, 0.05, 0.003, 0.06, { q: 2 })]

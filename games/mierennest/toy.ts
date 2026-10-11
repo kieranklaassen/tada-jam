@@ -1,6 +1,6 @@
 import { digAlong, openWay, pickUp, setDown, type Carried, type Cell } from './build'
 import { kingdom } from './chambers'
-import { OPEN, SAND, at, atRest, isLump, step as groundStep, type Kind, type Lump } from './ground'
+import { OPEN, SAND, STONE, at, atRest, isLump, step as groundStep, type Kind, type Lump } from './ground'
 import type { Game } from './save'
 
 // The toy: what the finger does to the nest and how the nest answers, with no renderer and no clock of its own.
@@ -22,11 +22,19 @@ export type ToyEvent =
   | { type: 'pour'; cells: number }
   /** Something fell where the ant stood, and it scrambled to the nearest open cell. */
   | { type: 'buried'; cell: number }
+  /** The ant passed a stone and tapped it: it cannot leave a stone alone. */
+  | { type: 'tapped'; cell: number }
+  /** A beat of carrying, as the ant runs with a lump: grains leak from sand, mud drips, a stone scrapes along behind. */
+  | { type: 'carrying'; kind: Lump; x: number; y: number }
 
 /** Seconds of game time between two steps of the ground coming to rest. */
 export const GROUND_STEP = 0.06
-/** How fast the ant runs, in cells a second. */
+/** How fast the ant runs, in cells a second, and how much of that is left when it drags a stone behind it. */
 export const ANT_SPEED = 16
+export const DRAGGING_A_STONE = 0.55
+/** Seconds between two beats of carrying, and before the ant taps the same stone again. */
+export const CARRY_BEAT = 0.32
+export const TAPS_AGAIN = 4
 /** The finger speed, in cells a second, that counts as a fast drag. */
 export const FAST_DRAG = 24
 
@@ -55,6 +63,10 @@ export class Toy {
   /** How far each lump on the move has fallen, by the cell it is in now. */
   private falling = new Map<number, number>()
   private way: Uint8Array | null = null
+  /** Seconds of game time the toy has played, the time since the last beat of carrying, and when each stone was last tapped. */
+  private clock = 0
+  private sinceBeat = 0
+  private readonly tapped = new Map<number, number>()
   /** The kinds the last bite met. */
   private meeting: Kind[] = []
   /** Where the finger was when it let go, until the ant has come there. */
@@ -134,8 +146,14 @@ export class Toy {
     this.speed = 0
     this.meeting = []
     this.idle = true
+    this.turnTo(x)
     const kind = at(this.game.ground, Math.floor(x), Math.floor(y))
     if (isLump(kind)) this.events.push({ type: 'met', kind, x, y })
+  }
+
+  /** The ant turns to the finger the moment it lands. */
+  private turnTo(x: number): void {
+    if (Math.abs(x - this.antAt.x) > 0.3) this.antHeading.x = Math.sign(x - this.antAt.x)
   }
 
   /** The finger lands on the ground. On a lump it bites nothing: the ant takes the lump if it can reach it. Anywhere else is a mouthful. */
@@ -147,19 +165,19 @@ export class Toy {
     this.speed = 0
     this.meeting = []
     this.idle = false
+    this.turnTo(x)
     const cx = Math.floor(x), cy = Math.floor(y)
     const kind = at(this.game.ground, cx, cy)
     if (isLump(kind)) {
-      // A touch that lands on a lump bites nothing, not the earth beside it either. A lump the ant can reach is
-      // taken; one it cannot reach answers as the dig's meeting it does, and the drag that follows does nothing.
+      // A touch that lands on a lump bites nothing, not the earth beside it either. The lump answers as the dig's
+      // meeting it does; one the ant can reach is taken as well, and with one it cannot reach the drag that
+      // follows does nothing.
+      this.events.push({ type: 'met', kind, x, y })
       const lump = pickUp(this.game.ground, this.game.ant, cx, cy)
       if (lump) {
         this.carried = lump
         this.events.push({ type: 'picked', kind: lump.kind, cell: lump.from })
-      } else {
-        this.idle = true
-        this.events.push({ type: 'met', kind, x, y })
-      }
+      } else this.idle = true
       return
     }
     this.bite(x, y, x, y)
@@ -332,7 +350,15 @@ export class Toy {
     const next = goal === null ? null : this.nextToward(goal)
     const target = next ?? ant
     const dx = target.x + 0.5 - this.antAt.x, dy = target.y + 0.5 - this.antAt.y
-    const far = Math.hypot(dx, dy), reach = ANT_SPEED * dt
+    const far = Math.hypot(dx, dy), reach = ANT_SPEED * (this.carried?.kind === STONE ? DRAGGING_A_STONE : 1) * dt
+    this.clock += dt
+    if (this.carried && far > 1e-6) {
+      this.sinceBeat += dt
+      if (this.sinceBeat >= CARRY_BEAT) {
+        this.sinceBeat = 0
+        this.events.push({ type: 'carrying', kind: this.carried.kind, x: this.antAt.x, y: this.antAt.y })
+      }
+    }
     if (far > 1e-6) {
       const part = Math.min(1, reach / far)
       this.antAt.x += dx * part
@@ -346,6 +372,7 @@ export class Toy {
       ant.x = next.x
       ant.y = next.y
       this.unsaved = true
+      this.tapStones()
     }
     const finger = this.finger
     const there = goal !== null && next === null && far <= 0.05
@@ -355,6 +382,20 @@ export class Toy {
     else if (!there) this.antState = 'run'
     else this.antState = Math.hypot(finger.x - this.antAt.x, finger.y - this.antAt.y) <= 2.5 ? 'dig' : 'wait'
     if (finger && there && Math.abs(finger.x - this.antAt.x) > 0.3) this.antHeading.x = Math.sign(finger.x - this.antAt.x)
+  }
+
+  /** The ant cannot leave a stone alone: it taps every stone it passes, beside it, under it or over it, and not the same one again for a while. */
+  private tapStones(): void {
+    const ground = this.game.ground, ant = this.game.ant
+    if (this.carried) return
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const x = ant.x + dx, y = ant.y + dy
+      if (at(ground, x, y) !== STONE) continue
+      const cell = y * ground.cols + x, last = this.tapped.get(cell)
+      if (last !== undefined && this.clock - last < TAPS_AGAIN) continue
+      this.tapped.set(cell, this.clock)
+      this.events.push({ type: 'tapped', cell })
+    }
   }
 
   /** Plays this many seconds of game time: the ground comes to rest a step at a time, and the ant runs. */
