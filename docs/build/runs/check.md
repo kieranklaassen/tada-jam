@@ -25,6 +25,8 @@ Your brief is the sections "The design sheet" and "The check of the sheet" of `d
 
 Your brief is the section "For the reader" of [`reader.md`](reader.md): six rules, the report under 600 words, and its one verdict line. The folder is `games/<key>/` at the named commit, and `scripts/intersections/games/<key>.ts` where there is one. The message may add what the lead wants looked at in particular.
 
+Where the game's rules are pure modules, play them: import them from scripts of your own, kept outside the repository, and run the game's cycles on inputs made by a seed (random layouts, random play through the entry points the Mount uses), holding what the sheet says of every cycle. Report the smallest case that fails and how many of how many failed. This finds what reading does not ([have a reviewer run a game's pure rules](../../solutions/workflow-issues/have-a-reviewer-run-a-games-pure-rules-on-inputs-nobody-planned-before-the-readers.md)). It is the one thing a reading runs.
+
 ## How you hand it over
 
 1. Cut a branch from the base branch: `check/<key>-r<N>` for a check, `read/<key>-<first eight of the commit>` for a reading.
@@ -36,4 +38,4 @@ Your brief is the section "For the reader" of [`reader.md`](reader.md): six rule
 - No official wording of any learning standard in the report, California's or Dutch; a suspected paste is reported by heading and line number only, with a replacement in the game's own words.
 - No name of any AI model, vendor or coding assistant anywhere. A subagent, if you use one, runs on your own model with no model setting.
 - Nothing is sent to any service outside the repository's own remote.
-- No test suite and no build: a check runs the lookup and reads files; a reading reads files.
+- No test suite and no build: a check runs the lookup and reads files; a reading reads files and may play the game's pure modules from scripts of its own.
