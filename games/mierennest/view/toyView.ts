@@ -238,9 +238,12 @@ export class ToyView {
         break
       }
       case 'dusk': {
-        // Dusk over the sky and the camp: one wash of evening blue, and one small warm glow on the grass.
+        // Dusk over the sky and the camp: a wash of evening blue, a lighter one over the ground, and one small warm glow on the grass.
         pen.fillStyle = `rgba(38, 32, 92, ${(0.42 * item.strength).toFixed(3)})`
         pen.fillRect(SURFACE.x, SURFACE.y, SURFACE.width, SURFACE.height)
+        // The ground under it darkens a little too, so that the glow-worms in the chambers show.
+        pen.fillStyle = `rgba(20, 16, 48, ${(0.22 * item.strength).toFixed(3)})`
+        pen.fillRect(GROUND.x, GROUND.y, GROUND.width, GROUND.height)
         const glow = pen.createRadialGradient(item.x, item.y, 2, item.x, item.y, 84)
         glow.addColorStop(0, `rgba(255, 214, 120, ${(0.85 * item.strength).toFixed(3)})`)
         glow.addColorStop(1, 'rgba(255, 214, 120, 0)')

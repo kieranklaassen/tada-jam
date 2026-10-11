@@ -45,7 +45,7 @@ export type Item =
   | { is: 'dusk'; strength: number; x: number; y: number }
 
 /** How many draws each kind of item costs. */
-export const DRAWS: Record<Item['is'], number> = { sprite: 1, lump: 2, hole: 1, target: 1, crumbs: 1, drop: 3, glint: 1, hand: 2, machine: 1, stand: 1, thing: 1, effect: 1, dusk: 2 }
+export const DRAWS: Record<Item['is'], number> = { sprite: 1, lump: 2, hole: 1, target: 1, crumbs: 1, drop: 3, glint: 1, hand: 2, machine: 1, stand: 1, thing: 1, effect: 1, dusk: 3 }
 export const drawsOf = (items: readonly Item[]): number => items.reduce((sum, item) => sum + DRAWS[item.is], 0)
 
 /**
@@ -394,10 +394,11 @@ export class ToyDisplay {
     const queenSpan = throne && toy.realm.queenRoom !== null ? { room: toy.realm.queenRoom, from: throne.x - 2.2 * throne.fit, to: throne.x + 2.2 * throne.fit } : null
     // Once the kingdom is open a glow-worm is lit in every chamber; in the ending they are lit one by one, nearest the mouth first.
     const rooms = toy.realm.chambers.length
-    const lit = !k.game.ended ? 0 : ending ? Math.max(0, Math.min(rooms, Math.ceil(((ending.t - ENDING.lightFrom) / (ENDING.lightTo - ENDING.lightFrom)) * rooms))) : rooms
-    for (const thing of showFurnishings(ground, toy.realm.chambers, lit, queenSpan, k.game.ended)) list.push({ is: 'thing', thing: thing.thing, x: thing.x, y: thing.y, lit: thing.lit })
+    const open = k.game.ended && !k.awaitsEnding
+    const lit = !open ? 0 : ending ? Math.max(0, Math.min(rooms, Math.ceil(((ending.t - ENDING.lightFrom) / (ENDING.lightTo - ENDING.lightFrom)) * rooms))) : rooms
+    for (const thing of showFurnishings(ground, toy.realm.chambers, lit, queenSpan, open)) list.push({ is: 'thing', thing: thing.thing, x: thing.x, y: thing.y, lit: thing.lit })
     // The dung fly's leaf, hung on a stalk at the camp, once the ending is over.
-    if (k.game.ended && !ending) list.push({ is: 'thing', thing: 'leaf', x: LEAF_AT.x, y: LEAF_AT.y, lit: false })
+    if (open && !ending) list.push({ is: 'thing', thing: 'leaf', x: LEAF_AT.x, y: LEAF_AT.y, lit: false })
     // A mark lies on a floor: under each cell that gave which has something firm beneath it.
     const marks = k.raid ? [] : showMarks(k.marks.filter((cell) => at(ground, cell % cols, Math.floor(cell / cols) + 1) !== OPEN), cols)
     marks.forEach((mark, n) => list.push({ is: 'effect', effect: n === 0 ? 'prints' : 'scuff', x: mark.x, y: mark.y, progress: 0.5, flip: false }))

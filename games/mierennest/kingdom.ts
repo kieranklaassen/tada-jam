@@ -79,6 +79,11 @@ export class Kingdom {
    */
   private endingOwed = false
 
+  /** The great raid has just been turned back and its ending has not begun: nothing of the ending is seen yet. */
+  get awaitsEnding(): boolean {
+    return this.endingOwed
+  }
+
   constructor(readonly game: Game) {
     this.toy = new Toy(game)
     this.reloading = game.machines.map(() => 0)
@@ -216,6 +221,23 @@ export class Kingdom {
       this.unsaved = true
     }
     this.events.push({ type: 'fired', machine: machine.kind, shot })
+  }
+
+  /** How far along a shot's way the first invader it can meet is, looking no further than `upTo`; -1 for nobody. */
+  private firstMet(raid: Raid, path: readonly number[], upTo: number): number {
+    const body: number[] = []
+    let first = -1
+    for (const invader of raid.invaders) {
+      if (invader.cell < 0 || invader.state === 'home' || invader.state === 'held' || invader.state === 'leaving' || invader.state === 'coming') continue
+      for (const place of [invader.cell, invader.from]) {
+        const n = bodyOf(raid, invader, place, body)
+        for (let i = 0; i < n; i++) {
+          const k = path.indexOf(body[i])
+          if (k >= 0 && k <= upTo && (first < 0 || k < first)) first = k
+        }
+      }
+    }
+    return first
   }
 
   /** A shot arrives. In a raid it bewilders whoever is in its way, or lies where it landed in the copy; in the nest it lies where it landed. */
@@ -418,6 +440,16 @@ export class Kingdom {
     if (!wasResting && this.toy.atRest && !this.raid) this.restMachines()
     for (const flying of this.flying) flying.t += dt
     for (let n = 0; n < this.flying.length; n++) {
+      // A ball of mud or a stone stops at the first invader it meets, the moment it gets there.
+      const flying = this.flying[n]
+      if (flying.inRaid && this.raid && flying.shot !== 'sand' && flying.t < flying.length) {
+        const reached = Math.floor((flying.t / flying.length) * (flying.path.length - 1))
+        const met = this.firstMet(this.raid, flying.path, reached)
+        if (met >= 0) {
+          flying.path = flying.path.slice(0, met + 1)
+          flying.t = flying.length
+        }
+      }
       if (this.flying[n].t >= this.flying[n].length) {
         const [done] = this.flying.splice(n--, 1)
         this.arrive(done)

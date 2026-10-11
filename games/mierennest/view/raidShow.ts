@@ -149,9 +149,10 @@ const behindBall = (size: number) => BALL_HALF * size + BODY.dungBeetle.width / 
 
 /**
  * Where a dung beetle is, this far behind the middle of its ball along the places it was last in. `dx` and `dy`
- * say which way from the ball it lies. With no wake to go by, it is straight behind the ball, away from where it faces.
+ * say which way from the ball it lies, and `foot` is the lower end of the stretch it is on. With no wake to go by,
+ * it is straight behind the ball, away from where it faces.
  */
-function behindOnWake(invader: Invader, ball: { x: number; y: number }, far: number, cols: number): { x: number; y: number; dx: number; dy: number } {
+function behindOnWake(invader: Invader, ball: { x: number; y: number }, far: number, cols: number): { x: number; y: number; dx: number; dy: number; foot: number } {
   const points = [ball]
   if (invader.along > 0) points.push(feetAt(invader.kind, invader.from, cols))
   for (const cell of invader.wake) points.push(feetAt(invader.kind, cell, cols))
@@ -162,11 +163,11 @@ function behindOnWake(invader: Invader, ball: { x: number; y: number }, far: num
     if (left <= leg || n === points.length - 1) {
       // On this leg, or past the end of what it remembers: straight on the way the last leg ran.
       const u = left / leg
-      return { x: a.x + (b.x - a.x) * u, y: a.y + (b.y - a.y) * u, dx: b.x - a.x, dy: b.y - a.y }
+      return { x: a.x + (b.x - a.x) * u, y: a.y + (b.y - a.y) * u, dx: b.x - a.x, dy: b.y - a.y, foot: Math.max(a.y, b.y) }
     }
     left -= leg
   }
-  return { x: ball.x - invader.facing * far, y: ball.y, dx: -invader.facing, dy: 0 }
+  return { x: ball.x - invader.facing * far, y: ball.y, dx: -invader.facing, dy: 0, foot: ball.y }
 }
 
 /** Where one of the party sits at the log: one who rides a beetle's back sits on the grass while that beetle is away. */
@@ -296,8 +297,11 @@ export function showRaid(raid: Raid, party: Party, seconds: number): Shown[] {
       // The beetle walks where the ball has just been: behind it along the way it came, round a corner and down a shaft.
       const behind = behindOnWake(invader, at, behindBall(rolled), cols)
       const upright = Math.abs(behind.dy) > Math.abs(behind.dx)
+      // On end in a shaft it is as long up and down as it was wide, and it does not hang below the shaft's foot.
+      const long = BODY.dungBeetle.width, high = BODY.dungBeetle.height
+      const middle = Math.min(behind.y - long / 2, behind.foot - long / 2)
       out.push({
-        who, pose: upright && falling ? pose : upright ? 'push' : pose, x: behind.x, y: behind.y + (upright ? BODY.dungBeetle.width / 2 - BODY.dungBeetle.height / 2 : 0),
+        who, pose: upright && falling ? pose : upright ? 'push' : pose, x: behind.x, y: upright ? middle + high / 2 : behind.y,
         flip: upright ? false : behind.dx > 0 ? true : behind.dx < 0 ? false : invader.facing < 0,
         turn: upright ? (behind.dy < 0 ? Math.PI / 2 : -Math.PI / 2) : 0, size: 1, id: invader.id, idle: invader.state === 'waiting',
       })
