@@ -307,27 +307,42 @@ Put away at any instant: the ground is saved as it will come to rest; a lump in 
 
 ## The look
 
-**Ant farm behind glass**, the first look reserved for this game in the ledger of `docs/art-direction.md`. Spiked in run 1 on the game's real scene; the second reserved look was not spiked.
+**Ant farm behind glass**, the first look reserved for this game in the ledger of `docs/art-direction.md`. Spiked in run 1 on the game's real scene; the lead looked at its stills and the look stands. The second reserved look was not spiked.
 
 **What it is.** A slab of real ground seen straight on, pressed between two panes in a wooden frame, in full colour: a strip of sky, grass and camp on top, the earth below in three wavy strata that darken with depth, and the glass itself in the picture. The creatures are chunky, glossy insects in flat colour with one hard highlight and large eyes. No raking light, no pen line, no hatching, no bare paper.
 
-**Palette** (`view/palette.ts` holds every colour).
+**Palette** (`view/palette.ts` holds every colour; `view/palette.test.ts` holds the materials and the two ant peoples apart).
 
 | Thing | Colour | Why |
 | --- | --- | --- |
 | Earth | Three browns, lighter at the top, with a few fixed specks a cell and fine roots under the turf | It is ground and not a panel, and stays lower in contrast than anything that can be carried. |
 | Open ground | Near-black brown, with a roof's shadow and round corners where two firm sides meet | A tunnel reads as a hole at a glance, and a creature in it stands out. |
-| Sand | One flat pale yellow, with a few grains | The lightest thing in the ground. |
-| Mud | One flat dark plum-brown, with one wet glint | The darkest lump, and a hue no earth has. |
-| Stone | One flat cool grey, a rounded boulder a cell, with one highlight | The only cool colour in the ground. The three are far apart in hue and lightness and carry nothing else (pack: game-design, working-objects-stay-plain.md). |
-| The kingdom | Warm orange-browns | The child's ant, the queen and the workers are one family. |
-| The invaders | Red (raider ants), blue (beetles), teal (flies), purple (dung beetles), gold (the dung fly) | Each kind is one hue, so a party is read from across the room. |
+| Sand | One flat pale yellow, with a few grains | The lightest thing in the ground, and the only one that is warm and full of colour. |
+| Mud | One flat dark, cool brown that is nearly grey, with a paler lip along a free top that sags, a drip under a free foot and one long pale glint | The darkest lump. What says it is wet is small, and the cell stays plain. |
+| Stone | One flat cool grey, a rounded boulder a cell, with one highlight | The only cool, light thing in the ground. The three are far apart in lightness and each leans its own way, and they carry nothing else (pack: game-design, working-objects-stay-plain.md). |
+| The kingdom | Honey-gold, round and soft | The child's ant, the queen and the workers are one family, told from a raider by colour and by outline both, at a quarter of their size. |
+| The child's ant | The brightest gold, larger than a worker, with a blue kerchief in every pose | It is the one thing in the nest that is blue. |
+| The raider ants | Crimson, low and pointed, in grey helmets and dark masks | Theirs, at a glance. |
+| The other invaders | Blue (beetles), teal (flies), purple (dung beetles), gold-green with goggles (the dung fly) | Each kind is one hue, so a party is read from across the room. |
 | Wood, sky, grass | Honey wood, a pale blue sky, two greens | The frame and the camp hold the texture and the comedy. |
 
-**Materials and light.** Everything is flat fill. Gloss is one crisp white shape on each rounded part of a creature, on a stone and on the dewdrop. There is no light source in the ground: depth is the stratum's colour. The glass has two slanting bands of sheen, a few fine scratches, a thumb smudge low on the right, and the frame's shadow along its top and left.
+**Materials and light.** Everything is flat fill. Gloss is one crisp white shape on each rounded part of a creature, on a stone, on mud and on the dewdrop. There is no light source in the ground: depth is the stratum's colour. The glass has two slanting bands of sheen, a few fine scratches, a thumb smudge low on the right, and the frame's shadow along its top and left.
 
-**How it is drawn.** Three layers, each a canvas of its own: what stands still (the wood, the setting, the ground as a sheet painted cell by cell, the hill and bell), the creatures, and the glass. The still layers are painted at load and on a resize. A frame clears the middle layer and stamps each creature from a sprite painted once a pose. A change to the ground repaints the changed cells and the eight round each, at most 24 cells a frame (`view/groundSheet.ts`).
+**How it is drawn.** Three layers, each a canvas of its own. What stands still (the wood, the setting, the bell's stalk, the ground as a sheet painted cell by cell, the hill) is painted at load and on a resize; after that only the cells that changed, with the eight round each, are repainted, at most 24 a frame, nearest the finger first, and the hill when it has grown. What moves is the middle layer: a frame clears it and draws a list of things (`view/display.ts`), one stamp a creature from a sprite painted once a pose at load, a carried lump, crumbs as one draw a colour, the bell's drop. The glass is the third layer, painted once. A test counts the list's draws on the fullest frame against the budget of 80.
 
-**Motion rules** (for the toy and after; the spike is still). Nothing in the ground moves by itself except by the ground's own rules, one cell a step. The materials have no idle motion. Every creature has its own tempo, weight and funniest part: the child's ant is quick and its feelers lead; the queen is slow and her eyebrows do the talking; workers mutter with their shoulders; raider ants scuttle and overshoot; beetles are heavy, late and dignified; flies are jittery and rub their hands; dung beetles are careful with their ball and careless with everything else; the dung fly holds still and points.
+**Motion** (`motion.ts`). Nothing in the ground moves by itself except by the ground's own rules, one cell a step, and the materials have no idle motion. Every creature has a row of its own, with its own shape, tempo and weight, and a test holds every row apart from every other:
+
+| Who | What it is busy with |
+| --- | --- |
+| The child's ant | Quick and light: a twitch of the feelers; it scuttles in two frames, sits back to look when the finger lets go, and sits small where the row is too short for it. |
+| The queen | A long breath that widens her, and a squirm now and then. |
+| A worker | A short double shrug, as if muttering. |
+| A raider ant | Tugs at its stuck foot: a sharp pull up, a slow sag back. |
+| A beetle | On its back it rocks like a bowl, late and dignified, legs waving. |
+| A fly | Rubs its hands very fast, stops dead, starts again. |
+| A dung beetle | Careful little circles of its rag on the ball, then a step back to look. |
+| The dung fly | Holds still and points; now and then one stiff tap of its twig. |
+
+A poke is answered when the finger lands, with a squash and then a hop by the creature's weight, each kind in two ways taken in turn. The bell is a damped swing, and the whole camp looks up when it rings. A stone that lands is felt at the camp; a mouthful dug just under a camper is felt by that camper.
 
 **The tiers** (`config.ts`). A tier sets the pixel ratio of all three layers and nothing else, so the lowest tier is the same picture with softer edges.

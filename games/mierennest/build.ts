@@ -47,19 +47,17 @@ export function openWay(ground: Ground, ant: Cell): Uint8Array {
   const { cols, rows, cells } = ground
   const way = new Uint8Array(cells.length)
   if (at(ground, ant.x, ant.y) !== OPEN) return way
-  const queue = [ant.y * cols + ant.x]
+  // This runs on every change to the ground while a finger drags, so it walks by index and makes one list.
+  const queue = new Int32Array(cells.length)
+  let tail = 0
+  queue[tail++] = ant.y * cols + ant.x
   way[queue[0]] = 1
-  while (queue.length > 0) {
-    const i = queue.pop()!
-    const x = i % cols, y = Math.floor(i / cols)
-    for (const [nx, ny] of [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]]) {
-      if (nx < 0 || ny < 0 || nx >= cols || ny >= rows) continue
-      const n = ny * cols + nx
-      if (way[n] === 0 && cells[n] === OPEN) {
-        way[n] = 1
-        queue.push(n)
-      }
-    }
+  for (let head = 0; head < tail; head++) {
+    const i = queue[head], x = i % cols
+    if (x > 0 && way[i - 1] === 0 && cells[i - 1] === OPEN) { way[i - 1] = 1; queue[tail++] = i - 1 }
+    if (x < cols - 1 && way[i + 1] === 0 && cells[i + 1] === OPEN) { way[i + 1] = 1; queue[tail++] = i + 1 }
+    if (i >= cols && way[i - cols] === 0 && cells[i - cols] === OPEN) { way[i - cols] = 1; queue[tail++] = i - cols }
+    if (i < cols * (rows - 1) && way[i + cols] === 0 && cells[i + cols] === OPEN) { way[i + cols] = 1; queue[tail++] = i + cols }
   }
   return way
 }

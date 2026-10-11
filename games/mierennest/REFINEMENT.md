@@ -3,74 +3,94 @@
 
 ## Status
 
-- Stage: sheet. Run 1 is done: the sheet, the look spike and the pure rules, and after them the pastes of the sheet's first check. Nothing is played yet. Base commit ef85be4d.
-- Answers handled: 1 and 2, read on the base branch at `94bb46a`.
-  - 1 (`docs/build/answers/mierennest-1.md`): its sheet part and its rules part are done in this run. Its last part, going on to the toy, is not: this run's message ended it at the rules, so the toy is the next run's.
-  - 2 (`docs/build/answers/mierennest-2.md`), the lead's look at the first stills: **the look stands**. It names four things to mend in the toy run, in the look only, and one for the game run. None is done yet; they are listed under "Open for the toy run" below.
-- Sheet, round 1: checker cloud-1, on commit `bb54b24` (hash `ee5b0619...c50783`). Outcome: open, 17 findings. All seventeen replacements are pasted as written; none was left out.
-- Sheet now: commit `42676f5`. Hash of the sheet part: `ed5c668a648f280ff29eeb0918fd968a59ca4ac5fb17efdc9f2a642eef48cd15`. **One line of this round is not a paste**, asked for by the lead: under "What a chamber is", the third bullet, which begins "A wall built right across a way shuts the air out". Nothing above `## The look` has changed since that commit.
-- Rules: at commit `a46ec4f`, written against the sheet at `42676f5`, at the builder's own risk while round 2 is checked: `ground.ts`, `build.ts`, `chambers.ts`, `walls.ts`, `habits.ts`, `order.ts`, `save.ts`, and the ladder in `config.ts`, each with its tests. Brought into line with round 1: the mouth and shaft three cells wide (finding 1); the sand rule held by tests (2); a carried lump stays in its cell until it is set down, and is set down only where the finger lets go, along the ant's open way (5, 7); nothing dug that the finger did not touch (8); the stone on a shoved wall (11); forty rooms (12); the hill bounded and held clear of the bell, the log and the mouth by a test (9). Findings 4, 6, 10, 13, 14 and 15 are about the raid, the machines, the rooms' furnishing and the guidance, which later runs build from the sheet as it now stands. No raid is played yet: `raid.ts` and `machines.ts` are run 3.
-- Look in use: the first reserved look, Ant farm behind glass. Spiked on the game's real scene; clear at the youngest age by the builder's own reading. The Mount shows the spike at load from the fixed seed 1: the first frame, `spike=2` in the address for a grown kingdom, `spike=3` for a raid. The second reserved look was not spiked.
-- Frame cost: no frame rate was measured anywhere. On this machine's software drawing, Chromium, tier 0 pinned, pixel ratio 2, production build, six times CPU throttle: the game's own work a frame was about 1.5 ms at the median and 2 to 3 ms at the ninetieth percentile, for 12 to 18 draws a frame (one a creature). Measured at `fecaca0`, before the mouth was widened; the drawing has not changed since. Before the still parts were moved to layers of their own it was about 80 ms.
-- Open: sheet ready for check, round 2
+- Stage: toy. Run 2 is done: the Mount opens the toy, in the look. No raid, no machine, no designed order yet; the rules for them from run 1 are unwired. Base commit ef85be4d.
+- **What to try first.** Drag a finger through the earth to the right of the shaft: a tunnel opens behind it, crumbs fly, and the ant with the blue kerchief runs along it. Dig under the pale sand and it pours. Press a stone, mud or sand that lies beside open ground and drag: the ant carries it and sets it down where the finger lets go. Dig a room four cells wide and three high and the queen moves in. Tap the dewdrop, a camper, a toadstool. Leave it alone for six seconds and the idle ladder shows.
+- Answers handled: 1, 2 and 3, read on the base branch at `8cc8c341`.
+  - 1 and 2: done in run 1 and this run (see below).
+  - 3 (`docs/build/answers/mierennest-3.md`), the sheet's second check: all four replacements pasted as written, nothing else above `## The look` changed; the toy's touch-down and the dung ball's habits brought into line (commit `8e509d5`).
+- Sheet, round 1: checker cloud-1, on `bb54b24`. Open, 17 findings, all pasted; the lead confirmed the pastes.
+- Sheet, round 2: checker cloud-2, on `42676f5` (hash `ed5c668a...48cd15`). Open, 4 findings, all pasted as written; none left out.
+- Sheet now: commit `734513b`. Hash of the sheet part: `49a588ec48b43cfce6492461afa1db4a7e440ce46f4496f1c48f651e71cebebb`. Nothing above `## The look` has changed since. No line of this round is the builder's own.
+- Rules and toy: written against the sheet at `734513b`, at the builder's own risk until round 3 is confirmed.
+- Look in use: the first reserved look, Ant farm behind glass. The lead's four points of answers file 2 are mended, each to its test (see "The four points of the look").
+- Sound: every voice is numbers in `voices.ts`, held in range by a test. **Nobody has listened to any of them.**
+- Frame cost: no frame rate was measured anywhere, and no physical iPad. See "Frame cost of the toy" below: the toy's own work a frame is under the bar at the median and when idle, and over it at the ninety-fifth percentile while a finger digs without pause.
+- Open: sheet ready for check, round 3
 
-**Stills.** Branch `stills/mierennest-a46ec4f9`, three files under `docs/build/stills/mierennest/`: `1-first-frame.png`, `2-grown-kingdom.png` (`spike=2`), `3-raid.png` (`spike=3`). Seed 1. Taken at 1180 by 820 from the production build of this lane at `a46ec4f9`, on a paused clock, one frame after the first drawn frame, on software drawing. An earlier set, from before the first check (the mouth two cells wide), is on `stills/mierennest-fecaca06` and can be deleted.
+**Stills.** STILLS_LINE
 
-**The frame, in three answers** (pack: game-design, a-full-frame-with-large-funny-characters.md), for the first frame:
+**The four points of the look** (answers file 2), each with what now holds it:
 
-- *What share is empty.* None is bare page. The top fifth is the camp, full from edge to edge. The other four fifths are the ground, which is the surface the child works on: it holds the three seams, the roots, the queen and the ant, and stays otherwise plain on purpose. A new nest has no room in it yet; the grown kingdom and the raid show the same ground lived in.
-- *What is funny.* The queen wedged in a shaft far too narrow for her, with her feelers out of the mouth and her egg held tight; a raider ant asleep at its tent and another stuck in a puddle by one foot; a beetle on its back, legs waving, under the toadstool it could not climb; a dung beetle polishing its ball; the dung fly in goggles pointing its twig at the mouth; the fly rubbing its hands.
-- *What is alive.* Nothing moves yet: the spike is a still scene. Each creature is drawn in the middle of doing something, and the idle motion is the toy run's.
+1. *Ours and theirs.* The kingdom is honey-gold and round; the raider ants are crimson, low and pointed, in grey helmets and dark masks. `view/palette.test.ts` holds the two apart in lightness and hue; the painter rendered one ant, two workers and three raiders at a quarter of their size and they were told apart by colour and by outline. By the builder's eye this holds; nobody else has looked.
+2. *Which ant is the child's.* It is the brightest gold, larger than a worker, and wears a blue kerchief in every pose: the only blue thing in the nest. By the builder's eye a newcomer points at it in the first frame; nobody else has looked.
+3. *Mud that reads as mud.* A dark, cool, nearly grey brown, with a paler sagging lip on a free top, a drip under a free foot and one long glint; the cell is otherwise plain. `view/palette.test.ts` holds it apart from sand, stone, earth and the dark of a tunnel. Shown one cell of each on white and on dark, the builder names all three; nobody else has looked. In a tunnel its body is only a little lighter than the dark behind it, and it is told there by its lip and its glint.
+4. *A camp that keeps clear of the bell.* The bell hangs higher, over the hill; the camp is a layout in `camp.ts`. `camp.test.ts` holds the bell's whole reach clear of every camper by 8 units and of the hill at its largest, whoever waits at the log, holds that no camper covers another's face, and that no two stand in each other but the polisher at its ball. The layout is in stage units, so it holds at every surface size.
 
-**Open for the toy run, from answers file 2** (each with the test that has to hold):
+For the game run, from the same file: a room that looks lived in. Not done; rooms hold the queen and the workers and nothing else.
 
-1. Ours and theirs: in the raid still shrunk to a quarter, every ant can be told as the kingdom's or a raider, by colour and by outline both.
-2. Which ant is the child: a person who has never seen the game points at the child's ant in the first frame without being told.
-3. Mud that reads as mud: shown one cell of each of the three on their own, a person names sand, mud and stone. The cell stays plain; what says "wet" is small.
-4. The camp is crowded where it matters: the overlap test holds the bell clear of every camper and of the hill at each surface size, and no two campers cover each other's faces. (The hill is already held clear of the bell by `view/props.test.ts`; the campers are not.)
+**Frame cost of the toy.** Chromium on this machine's software drawing, production build, tier 0 pinned, pixel ratio 2, 1180 by 820. The game's own work a frame (`window.__jamPerf.cpuMs`), under CPU throttle:
 
-And for the game run: a room looks lived in, with the workers' things on its back wall.
+| What | Throttle | Frames | Median | 90th | 95th | Most draws |
+| --- | --- | --- | --- | --- | --- | --- |
+| A finger digging fast without pause through a kingdom of four chambers, five runs of 12 s | 6x | 95 to 99 | 4.2 to 4.9 ms | 9.0 to 11.7 ms | 13.0 to 17.3 ms | 19 |
+| The same kingdom, idle, 10 s | 6x | 77 | 2.6 ms | 3.7 ms | 4.6 ms | 15 |
+| Digging as above, 10 s | 4x | 153 | 2.7 ms | 5.2 ms | 6.1 ms | 18 |
+| Digging as above, 6 s | none | 343 | 0.3 ms | 0.8 ms | 1.0 ms | 18 |
+
+- The bar is 8 ms at the ninety-fifth percentile at six times throttle. Idle meets it. Digging does not: 13 to 17 ms.
+- What the tail is, from a profile of the same run on the dev build: garbage collection, then building voices (a mouthful is heard every 70 ms; on this machine, with no sound card, the audio context is also built again at every touch), then the sprite stamps. At eight frames a second a frame also carries a tenth of a second of game time, six times what a frame at sixty carries, so each frame here settles several steps of ground and several mouthfuls at once. None of that was measured on a graphics card.
+- What was done about it in this run: the still parts on layers of their own (run 1); sprites the size of their creature instead of one large box; a straight stamp where nothing turns; every pose painted at load; no garbage from the ant's pathfinding; a save only once the ground rests. The idle ninety-fifth percentile went from 16 ms to 4.6 ms.
+- The fullest frame the toy can show (sixteen workers, a lump in the jaws, crumbs of four colours, the glints and the hand) is 40 draws, counted by `view/display.test.ts` against the budget of 80. The fullest frame reached by play in the measured runs was 19. Cells repainted in a frame are held to 24.
+
+**The frame, in three answers** (pack: game-design, a-full-frame-with-large-funny-characters.md), for the toy's first frame:
+
+- *What share is empty.* None is bare page. The top fifth is the camp, full from edge to edge; the rest is the ground the child works on, with its three seams, the roots, the queen and the ant.
+- *What is funny.* The queen wedged in the shaft with her brow out of the mouth and the ant sitting small under her; a raider ant tugging at a foot stuck in a puddle; a beetle on its back, rocking, under the toadstool it could not climb; the fly rubbing its hands; the dung beetle polishing its ball and stepping back to look; the dung fly in goggles pointing its twig; a raider on the log hugging a pillow.
+- *What is alive.* Every one of them moves like itself, the bell sways, the worker on the hill mutters; a touch on any of them is answered at once, and the bell makes the whole camp look up.
+
+**Findings not fixed.**
+
+- The ant runs in front of the queen and the workers when the finger takes it through their room; nothing stops it, and the two sprites overlap for that moment.
+- The queen moves into a new largest room at once, with no scene: the scene is the game run's.
+- The dung beetle's handstand reads as one only with the ball beside it; its rump stands 10 units outside its box in the polishing pose; the worker with its hands on its hips is 43 wide, not 28; the queen's legs dangle when she sits; a raider's mask is lost in a dark tunnel; the fly's two hand poses differ little; beetle and fly legs are low in contrast in a tunnel. All from the painter's own list.
+- A lump that falls moves a whole cell a step; it is not eased between cells.
+- The spoil does not travel: the hill grows as the nest is hollowed, and the worker on it hops at each mouthful, but no crumb is carried up the shaft.
+- The party at the log is its first member only. Seats for a whole party are the game run's.
 
 **For the next checker and the lead.**
 
-- The queen of the first frame is drawn one and a half times the size of her wedged pose, so that she fills the shaft now that it is three cells wide; the sheet's "far too big for it" holds, and her sprite is softer for the scaling until it is painted at that size.
-- The creatures were painted by a subagent on the same model, in this checkout, from a brief; the builder looked at them at three times their size and in all three scenes.
-
-**Findings not fixed, all in the creatures** (their painter's own list, for the toy run):
-
-- The worker with its hands on its hips is a small tangle at its real size, and wider than its box.
-- The napping raider's face is muddled at real size; the raider with the pillow is too like the walking one.
-- The dung beetle's rag reads as a hanky when the ball is not beside it; its handstand reads as a nosedive.
-- The fliers' wings reach about a cell over their body box (the fly in the raid scene hovers a row lower for it), and the wing blur is stiff.
-- The queen's legs bunch under the egg when she sits.
-- Ants' legs and feelers are low in contrast against undug earth; they are clear in a tunnel and on the grass.
-- `view/parts.ts` is 351 lines.
-
-The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Ask for the sheet's check by writing `Open: sheet ready for check, round N` here; when it passes, record the round and the commit it judged. Someone with no session to read resumes from this block and the files. The two parts below belong to the block.
+- With the mouth and shaft three cells wide (round 1, finding 1), one more cell dug beside the shaft over three rows is a clear block four wide and three high, so it is a room by the sheet's measure and the queen moves into it. The sheet's sentence is unchanged and the rules follow it; the lead may want the shaft left out of the measure.
+- The creatures were painted by a subagent on the same model, in this checkout, from a brief, in both runs; the builder looked at its sheets and at the stills.
 
 ### Template notes
 
-- `symbols.ts` and `symbols.test.ts`: removed. The generator copies them into every game whose band starts at 6 or above, and this game draws no numeral (its brief says so). Nothing imported them.
-- `config.ts`: the ladder is the game's thirteen places, typed as a tuple (`Place`); `FIRST_VISIT` has one row, since every age starts at the first place; `FIRST_CUE` and `firstCueAfter` are new, for the one thing the age hint sets; `BACKDROP` is the frame's dark wood. `OLDEST` is no longer read from the band.
-- The Mount (`mierennest.tsx`): three changes. It makes the spike's view, `draw` calls it, and the cleanup disposes of it. Nothing else is touched, and `state.ts` is still what it saves: the wrapper `save.ts` is not wired in until the toy.
-- `state.ts`: used as copied. `save.ts` wraps it as its header asks, and never moves the position back: a raid that did not go well is not a `badly`.
-- `rng.ts`, `stage.ts`: used as copied. `input.ts`, `audio.ts`, `guidance.ts`, `scene.ts`, `overlay.ts`: untouched and not yet used by the game.
-- **For the template:** a canvas game that stamps its still parts over the whole surface every frame pays for it in its own work on software drawing (about 80 ms a frame here at six times throttle, against 1.5 ms once they were layers of their own). The Mount has one canvas and its comments describe one draw; a line there saying that what stands still can be a canvas under or over the Mount's own would have saved the detour.
-- **For the template:** the generator's `symbols.ts` is copied for every band from 6 up whether or not the game draws a numeral; a flag to leave it out would save the removal.
+- `symbols.ts` and `symbols.test.ts`: removed. The generator copies them into every game whose band starts at 6 or above, and this game draws no numeral (its brief says so).
+- `config.ts`: the ladder is the game's thirteen places, typed as a tuple (`Place`); `FIRST_VISIT` has one row; `FIRST_CUE` and `firstCueAfter` are new, for the one thing the age hint sets; `BACKDROP` is the frame's dark wood.
+- The Mount (`mierennest.tsx`): the toy is wired in where the comments say: the save is the wrapper's (`save.ts`), the seed comes from the address, `act` has a case for every gesture, `dragLift` lets go at once (`touch.letGo()`), a `pressEnd` and a `dragCancel` both put a carried lump back, voices are played inside the handler and again after the step, and the idle ladder's result goes to the draw. One thing differs from the template's comments: a change is handed to the cadence only once the ground rests, and `cadence.mark()` holds it until then.
+- `state.ts`: used as copied, wrapped by `save.ts`. `finished` is always false.
+- `guidance.ts`: changed. `IdleLadder` takes the wait before its first cue and the number of demonstrations, so the wait can follow the child's age and the ladder can stop after three; with no arguments it is the template's. Three tests added to its test file.
+- `audio.ts`, `input.ts`, `overlay.ts`, `rng.ts`, `stage.ts`: used as copied. `scene.ts`: untouched and not used yet.
+- **For the template:** a canvas game that stamps its still parts over the whole surface every frame pays for it in its own work on software drawing (about 80 ms a frame here at six times throttle, against 1.5 ms once they were layers of their own). A line in the Mount saying that what stands still can be a canvas under or over the Mount's own would have saved the detour. The same for sprites: one box for every creature cost twice what a box a kind does, and a pose first painted in the frame that needs it is a frame that stalls.
+- **For the template:** `IdleLadder` with its wait and its count as arguments, as here, would let a sheet set them without editing the file.
+- **For the template:** on a machine with no sound card the audio context is built again at every touch (`build` in `audio.ts` shows in a profile); a failed build could be remembered for the visit.
+- **For the template:** the jam shell writes a slot two seconds after the last save or on put-away; a still or a probe that reloads the page sooner finds nothing saved. A line in the cloud page would save the next builder the question.
 
 ### For the owner to decide
 
-- The look: whether Ant farm behind glass is full and funny enough, from the three stills of the spike.
-- Whether a raid may be called with a bell the child taps, and whether "a raid went well when no invader finished its act in a chamber" is the right line.
+- The toy: whether digging is a pleasure in the hand, and whether carrying feels right. Nobody has put a finger on it.
+- The look, as mended: the stills of the toy are on the stills branch named above.
+- The sound: nobody has heard any voice of the game.
+- Whether a raid may be called with a bell the child taps (in the toy the bell only rings and the camp looks up), and whether "a raid went well when no invader finished its act in a chamber" is the right line.
 - Whether the ending may leave two small marks in the world for good (glow-worms lit in the chambers, the dung fly's leaf on a stalk at the camp), or whether the kingdom should look exactly as before.
 - None of the guide's defaults awaiting the owner needs a different answer for this game.
 
 ## Pass log
 
-No pass yet. One row per pass: what was looked at, the critique written as the child, the one themed fix set, what was reverted, the measured frame rate, and what is still weak.
+One row per pass. No frame rate has been measured: the column holds the game's own work a frame on software drawing, as the status block gives it.
 
 | Pass | Looked at | Critique | Fix set | Frame rate | Still weak |
 | --- | --- | --- | --- | --- | --- |
+| 1 (toy) | Three stills of the toy at 1180 by 820 from the production build, seed 1, on a paused clock: the first frame at idle, a carry just after a dig, a small nest. Also one cell of each material alone, and the glint and the hand of the idle ladder. | As the child, on the first stills of the toy: "The queen is stuck, that's funny. Why is my ant inside the queen at the start? Why is the queen so big in that tiny room, she's in the wall. My ant is standing on top of her." And the lead's four points on the spike, in the same voice: "The bad ants look like my ants. Which one is mine? What's the purple stuff, is it rock? I can't get at the bell, the fly is in front of it." | One set, on what a child reads at a glance: the kingdom gold and the raiders crimson in helmets; a blue kerchief on the child's ant; mud a dark wet brown with a lip, a drip and a glint; the bell raised over the hill and the camp spaced by a tested layout; the queen fitted to a short floor; the queen wedged a cell higher so the ant has the shaft's foot, where it sits small. Nothing reverted. | None measured. Own work at six times throttle: 2.6 ms median idle, 4.2 to 4.9 ms median digging, 13 to 17 ms at the ninety-fifth percentile digging. | The ant still runs in front of the queen in her room. Mud in a tunnel is told by its lip and glint more than by its body. The rooms are bare. Lumps fall a cell at a time. |
 
 ## For the pull request
 
@@ -78,16 +98,17 @@ Written as the game is built and kept at the end of this file: the pull request 
 
 ### How the game meets the quality bar
 
-So far (run 1: the sheet, the look spike, the pure rules; nothing is played yet).
+So far (run 2: the toy. No raid, no machine, no designed order yet).
 
-- **Alive at idle.** Not yet: the spike is a still scene. The sheet gives every camper an idle of its own, and the camp gags are the habits shown.
-- **Motion and sound on every touch.** Not yet. The sheet's grid gives each of its eighteen cells a look and a sound of its own.
-- **Weight, squash and follow-through.** Not yet. In the rules, weight is real: a stone falls unless borne, sand slumps to a slope, mud holds.
-- **Kid-clear silhouettes and tappables.** The three materials are flat and far apart in hue and lightness (pale sand, dark mud, grey stone) on brown earth; a touch within 34 stage units of the bell rings it, a target 68 across against the floor of 48; and a test holds the hill clear of the bell, the log and the mouth at its largest.
+- **Alive at idle.** Every creature idles in a way of its own (`motion.ts`, one row a kind, held apart by a test); the bell sways; the worker on the hill mutters.
+- **Motion and sound on every touch.** A touch on the ground is answered in the call the finger lands in: a mouthful, crumbs, a crunch whose pitch follows the finger's speed, and the ant running. Each material answers the dig, the jaws and a set-down in its own look and voice; a poke of any camper, the bell or the setting is answered at once. Voices are played inside the touch handler. Nobody has heard them.
+- **Weight, squash and follow-through.** Sand pours and slumps, mud holds, a stone drops and its landing is felt at the camp, harder the further it fell. A poke is a squash, then a hop by the creature's weight.
+- **Kid-clear silhouettes and tappables.** The three materials are flat and far apart in lightness, each leaning its own way, held by a test; the kingdom's ants are told from the raiders by colour and outline; the child's ant wears the only blue in the nest. A touch within 34 stage units of the bell rings it, and a test holds the bell clear of every camper and of the hill at its largest; every camper is found by a target of 48 or more.
 - **Wordless clarity for 9 to 12.** No word, letter or numeral is drawn; the game has no `symbols.ts`. The wordless check passes.
-- **Wordless idle guidance.** Designed in the sheet (what can be touched, then one drag through plain earth, never a solution); not built yet.
-- **Frame rate.** No frame rate has been measured, on any machine, and no physical iPad. The spike's frame is one draw a creature: 12 in the first frame, 18 in the grown kingdom and 13 in the raid, against a budget of 80. What stands still is on two layers of its own, painted at load and on a resize; the ground is painted cell by cell, and `repaint` holds a frame to 24 cells. The game's own work a frame, in Chromium on software drawing at six times CPU throttle with tier 0 pinned at pixel ratio 2 on the production build, was about 1.5 ms at the median and 2 to 3 ms at the ninetieth percentile (two runs of six seconds, about 40 to 55 frames each, so a rough reading). The frame-budget test comes with the toy.
-- **Procedural assets only.** Everything is canvas paths; no image, font or sound file, and no network request.
+- **Wordless idle guidance.** After six seconds of stillness (ten for a child of 10 or older) the earth beside the ant and a lump in reach glint; then a ghost hand makes one short drag through plain earth that touches nothing built. It waits twice as long each time and stops after three.
+- **Found as left.** The nest is saved as it changes, as it will come to rest; a lump in the jaws stays in its cell until it is set down, so a put-away under a dragging finger loses nothing. Played on the production build: a stone carried half way, the game put away and the page loaded again, and the stone was where it had been picked up, the tunnels were there, and the ant stood where it had been.
+- **Frame rate.** No frame rate has been measured, on any machine, and no physical iPad. The game's own work a frame on software drawing, production build, tier 0 pinned, pixel ratio 2, six times CPU throttle: 2.6 ms at the median and 4.6 ms at the ninety-fifth percentile idle; 4.2 to 4.9 ms at the median and 13 to 17 ms at the ninety-fifth percentile while a finger digs fast without pause, which is over the bar of 8 ms. The fullest frame is 40 draws by a test, against a budget of 80; a frame repaints at most 24 cells of the ground.
+- **Procedural assets only.** Everything is canvas paths and synthesized notes; no image, font or sound file, and no network request.
 
 ### The learning claim
 
@@ -106,5 +127,7 @@ None. Mierennest is a play-first game: it claims no school skill, its sheet has 
 - Write a picture test for a ground rule by hand from the rule, then run it: two of this run's first pictures were wrong (the edge of a picture is rock, so mud in the top row is held; sand on a single post slides off), and the rule was right.
 - The generator copies `symbols.ts` into every game whose band starts at 6 or above. A game that draws no numeral removes it and its test.
 - A subagent painting creatures needs the palette frozen before it starts: a key renamed under it breaks its typecheck.
+- Simulate a scripted play against the rules before turning it into touches for a still: three scripts written by eye went wrong (a "dig" that started on a stone was a carry), and one run of the same list of moves through `toy.ts` showed why.
+- Measure the work of a frame with a profile, not by guessing: here it was the sprites' size, poses first painted in play, and garbage from pathfinding, none of which the rules or the draw count showed.
 - Look for an answers file on the base branch before the last push of a run, not only at its start: this run's arrived while its stills were being taken.
 - A fixture that carries real lumps about a seeded ground breaks when the ground's layout changes; `carry` in `view/spike.ts` throws by name of the cell, which made the second layout a matter of minutes.
