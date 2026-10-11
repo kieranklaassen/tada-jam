@@ -144,6 +144,16 @@ export function trailPoint(board: Board, cell: number): Point {
   return { x: board.inset + (((cell % TRAIL_COLS) + 0.5) / TRAIL_COLS) * (right - board.inset), y: board.inset + ((Math.floor(cell / TRAIL_COLS) + 0.5) / TRAIL_ROWS) * (bottom - board.inset) }
 }
 
+/**
+ * The shell draws one round home control over the game in the middle of the top edge: so many pixels across and so
+ * far down from the edge, at any size of surface. A touch on it goes home and never reaches the game.
+ */
+export const HOME_CONTROL = { size: 48, top: 10 } as const
+/** Whether a thing a finger would press at a point, the least size anything that answers has, lies under the home control in any part. */
+export function underHomeControl(board: Board, p: Point): boolean {
+  return Math.hypot(p.x - board.w / 2, p.y - (HOME_CONTROL.top + HOME_CONTROL.size / 2)) < HOME_CONTROL.size / 2 + LEAST
+}
+
 /** The dog's way from where it lies to a row's end: straight down to the walkway, then along it. */
 export function dogPath(board: Board, supply: Supply, units: number): Point[] {
   return [board.dog.at, { x: board.dog.at.x, y: board.walkway }, { x: rowEnd(board, supply, units).x, y: board.walkway }]
