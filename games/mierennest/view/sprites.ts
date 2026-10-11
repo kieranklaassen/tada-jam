@@ -4,9 +4,24 @@ import { paintCreature, type CreatureKind, type Look } from './creatures'
 // A creature in one pose is painted once into a small canvas of its own and stamped from then on, so a creature
 // costs one draw a frame however many shapes it is made of.
 
-/** A sprite's canvas is this many stage units wide and high, with the creature's feet at `FOOT`: room for the largest pose, its feelers, wings and props. */
-export const SPRITE = { width: 240, height: 190 } as const
-export const FOOT = { x: 120, y: 150 } as const
+/**
+ * The sprite box of each kind, in stage units: its width and height, with the creature's feet in the middle of
+ * its width and `FOOT_UP` above its lower edge. Each is its body with room round it for feelers, wings and what
+ * it holds, and no more: a stamp costs by its area.
+ */
+export const BOX: Record<CreatureKind, { width: number; height: number }> = {
+  ant: { width: 170, height: 84 },
+  worker: { width: 140, height: 100 },
+  queen: { width: 200, height: 150 },
+  raider: { width: 180, height: 96 },
+  beetle: { width: 190, height: 116 },
+  fly: { width: 190, height: 124 },
+  dungBeetle: { width: 190, height: 128 },
+  dungFly: { width: 190, height: 124 },
+  dungBall: { width: 120, height: 116 },
+}
+/** How far above the lower edge of its box a creature's feet are: room for a puddle, a shadow, a dangling leg. */
+export const FOOT_UP = 22
 
 export type Sprite = { image: CanvasImageSource; scale: number }
 
@@ -26,9 +41,10 @@ export class Sprites {
     const key = `${kind}/${pose}`
     let sprite = this.made.get(key)
     if (!sprite) {
-      const canvas = this.canvasOf(Math.ceil(SPRITE.width * this.scale), Math.ceil(SPRITE.height * this.scale))
+      const box = BOX[kind]
+      const canvas = this.canvasOf(Math.ceil(box.width * this.scale), Math.ceil(box.height * this.scale))
       const pen = canvas.getContext('2d') as CanvasRenderingContext2D
-      pen.setTransform(this.scale, 0, 0, this.scale, FOOT.x * this.scale, FOOT.y * this.scale)
+      pen.setTransform(this.scale, 0, 0, this.scale, (box.width / 2) * this.scale, (box.height - FOOT_UP) * this.scale)
       paintCreature(pen, kind, pose, look, 0)
       sprite = { image: canvas, scale: this.scale }
       this.made.set(key, sprite)
@@ -36,29 +52,21 @@ export class Sprites {
     return sprite
   }
 
-  /** Stamps a creature with the middle of its feet at (x, y) in stage units. One draw. */
-  stamp(pen: CanvasRenderingContext2D, kind: CreatureKind, pose: string, x: number, y: number, flip = false, size = 1, look?: Look): void {
-    const sprite = this.get(kind, pose, look)
-    const w = SPRITE.width * size, h = SPRITE.height * size
-    if (flip) {
-      pen.save()
-      pen.translate(x, y)
-      pen.scale(-1, 1)
-      pen.drawImage(sprite.image, -FOOT.x * size, -FOOT.y * size, w, h)
-      pen.restore()
-    } else pen.drawImage(sprite.image, x - FOOT.x * size, y - FOOT.y * size, w, h)
-  }
-
   /**
-   * Stamps a creature as its motion has it: shifted, turned about its feet and squashed, then turned again by
-   * `turn` about the middle of its body, which is how the ant climbs a shaft. One draw.
+   * Stamps a creature with the middle of its feet at (x, y) in stage units, as its motion has it: shifted, turned
+   * about its feet and squashed, then turned again by `turn` about the middle of its body, which is how the ant
+   * climbs a shaft. `size` scales it both ways and `tall` its height again. One draw. A creature that is neither
+   * turned nor squashed is stamped straight, which is the cheap way and the usual one.
    */
-  stampMoved(pen: CanvasRenderingContext2D, kind: CreatureKind, pose: string, x: number, y: number, flip: boolean, size: number, tall: number, move: Move | null, turn: number, bodyHeight: number): void {
-    if (!move && turn === 0 && tall === 1) {
-      this.stamp(pen, kind, pose, x, y, flip, size)
+  stamp(pen: CanvasRenderingContext2D, kind: CreatureKind, pose: string, x: number, y: number, flip = false, size = 1, tall = 1, move: Move | null = null, turn = 0, bodyHeight = 0): void {
+    const sprite = this.get(kind, pose), box = BOX[kind]
+    const w = box.width * size, h = box.height * size, left = -(box.width / 2) * size, top = -(box.height - FOOT_UP) * size
+    const lean = move ? move.turn : 0, sx = move ? move.sx : 1, sy = (move ? move.sy : 1) * tall
+    const straight = Math.abs(lean) < 0.004 && turn === 0 && Math.abs(sx - 1) < 0.004 && Math.abs(sy - 1) < 0.004
+    if (straight && !flip) {
+      pen.drawImage(sprite.image, x + (move?.dx ?? 0) + left, y + (move?.dy ?? 0) + top, w, h)
       return
     }
-    const sprite = this.get(kind, pose)
     pen.save()
     pen.translate(x + (move?.dx ?? 0), y + (move?.dy ?? 0))
     if (turn !== 0) {
@@ -66,9 +74,9 @@ export class Sprites {
       pen.rotate(turn)
       pen.translate(0, bodyHeight / 2)
     }
-    if (move) pen.rotate(move.turn)
-    pen.scale((flip ? -1 : 1) * (move?.sx ?? 1), (move?.sy ?? 1) * tall)
-    pen.drawImage(sprite.image, -FOOT.x * size, -FOOT.y * size, SPRITE.width * size, SPRITE.height * size)
+    if (!straight && lean !== 0) pen.rotate(lean)
+    pen.scale((flip ? -1 : 1) * sx, sy)
+    pen.drawImage(sprite.image, left, top, w, h)
     pen.restore()
   }
 }

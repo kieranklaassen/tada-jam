@@ -138,7 +138,7 @@ export class ToyView {
   private paint(pen: CanvasRenderingContext2D, item: Item): void {
     switch (item.is) {
       case 'sprite':
-        this.sprites!.stampMoved(pen, item.who, item.pose, item.x, item.y, item.flip, item.size, item.tall, item.move, item.turn, BODY[item.who].height)
+        this.sprites!.stamp(pen, item.who, item.pose, item.x, item.y, item.flip, item.size, item.tall, item.move, item.turn, BODY[item.who].height)
         break
       case 'lump': {
         const s = CELL - 4
