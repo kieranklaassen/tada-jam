@@ -471,7 +471,7 @@ export class Kingdom {
     else {
       // A stone the ant took up while the shot flew is let go first: it is back in its cell when the shot strikes it.
       if (this.toy.carried?.from === flying.hit) this.toy.cancel()
-      const did = lean(ground, sx, sy, flying.facing, 3)
+      const did = lean(ground, sx, sy, flying.facing, HABITS.beetle.push)
       if (did.did === 'shoved') this.toy.touched(did.cells)
     }
   }

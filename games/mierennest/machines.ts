@@ -1,4 +1,4 @@
-import { MOUTH, OPEN, at, floorUnder, type Ground, type Lump } from './ground'
+import { MOUTH, MUD, OPEN, SAND, STONE, at, floorUnder, type Ground, type Lump } from './ground'
 import type { Shot } from './habits'
 import type { Machine } from './save'
 
@@ -12,8 +12,8 @@ export const LOB = { up: 3, along: 6 } as const
 /** Seconds in a raid before a machine has its own lump in its cup again. */
 export const RELOAD = 2
 
-export const LUMP_OF: Record<Shot, Lump> = { sand: 2, mud: 3, stone: 4 }
-export const SHOT_OF = (lump: Lump): Shot => (lump === 2 ? 'sand' : lump === 3 ? 'mud' : 'stone')
+export const LUMP_OF: Record<Shot, Lump> = { sand: SAND, mud: MUD, stone: STONE }
+export const SHOT_OF = (lump: Lump): Shot => (lump === SAND ? 'sand' : lump === MUD ? 'mud' : 'stone')
 
 /** The four cells a machine stands in. */
 export function cellsOf(machine: { x: number; y: number }, cols: number): number[] {

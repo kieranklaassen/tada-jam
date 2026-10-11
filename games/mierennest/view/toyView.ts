@@ -1,5 +1,6 @@
 import { BODY } from '../camp'
-import { CELL, MUD, SAND, type Ground, type Lump } from '../ground'
+import { BACKDROP } from '../config'
+import { CELL, MUD, SAND, STONE, type Ground, type Lump } from '../ground'
 import { fit } from '../stage'
 import { POSES, type CreatureKind } from './creatures'
 import type { Item } from './display'
@@ -42,7 +43,7 @@ const EFFECT_BOX = { width: 96, height: 96, originX: 48, originY: 48 } as const
 /** How many steps of its course a changing effect is painted in. */
 const EFFECT_STEPS = 4
 
-const LUMP_FILL: Record<Lump, string> = { 2: P.SAND.fill, 3: P.MUD.fill, 4: P.STONE.fill }
+const LUMP_FILL: Record<Lump, string> = { [SAND]: P.SAND.fill, [MUD]: P.MUD.fill, [STONE]: P.STONE.fill }
 
 export class ToyView {
   private readonly pen: CanvasRenderingContext2D | null
@@ -116,7 +117,7 @@ export class ToyView {
     letGo(this.setting)
     this.setting = Object.assign(doc.createElement('canvas'), { width: Math.ceil(region.width * k), height: Math.ceil(region.height * k) })
     const back = this.back.getContext('2d')!
-    back.fillStyle = P.WOOD.dark
+    back.fillStyle = BACKDROP
     back.fillRect(0, 0, this.back.width, this.back.height)
     back.setTransform(k, 0, 0, k, x, y)
     paintSetting(back)

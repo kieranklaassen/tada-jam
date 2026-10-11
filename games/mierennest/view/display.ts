@@ -2,7 +2,7 @@ import { BODY, bodyBox, camperAt, campers, faceRadius, onBell, type Box, type Ca
 import { CELL, MUD, OPEN, ROCK, SAND, STONE, at, type Ground, type Lump } from '../ground'
 import { handPose, type Guidance, type HandPose } from '../guidance'
 import { idleMove, pokeMove, POKE_SECONDS, type Move, type Mover } from '../motion'
-import type { Kingdom, KingdomEvent } from '../kingdom'
+import { TRIED_AT, type Kingdom, type KingdomEvent } from '../kingdom'
 import type { Party } from '../order'
 import { gaitOf, type RaidEvent } from '../raid'
 import { roomOf } from '../routes'
@@ -118,6 +118,8 @@ const burstSeconds = (effect: Effect) => BURST[effect] ?? BURST_SECONDS
 /** On the idle ladder: how long the ant looks out before it scratches, and scratches before it looks out again, in seconds; and how far the bell sways by itself, in radians. */
 export const LADDER_BEAT = 0.9
 export const LADDER_SWAY = 0.16
+/** How far through the put-back the last cell is back in its place: the cells go back one by one until then. */
+const PUT_BACK_BY = 0.8
 /** How much of the scene in which the queen moves in she is carried for; for the rest she tries the floor. */
 const MOVES = { carried: 0.7 } as const
 /** Where a machine's smoke or twang is shown, from the middle of its base, facing right. */
@@ -416,7 +418,7 @@ export class ToyDisplay {
     else if (scene?.is === 'putBack') {
       shown = scene.ground
       // As many cells are back as the scene is far along; each is copied from the nest as built.
-      const back = Math.min(scene.cells.length, Math.floor((scene.t / (scene.length * 0.8)) * scene.cells.length))
+      const back = Math.min(scene.cells.length, Math.floor((scene.t / (scene.length * PUT_BACK_BY)) * scene.cells.length))
       for (let n = 0; n < back; n++) {
         const cell = scene.cells[n]
         if (shown.cells[cell] !== built.cells[cell]) {
@@ -657,7 +659,7 @@ export class ToyDisplay {
     }
     if (scene?.is === 'putBack' && scene.cells.length > 0) {
       // Workers carry back what fell: one is at the cell that is being put back now, and one at the next.
-      const at0 = Math.min(scene.cells.length - 1, Math.floor((scene.t / (scene.length * 0.8)) * scene.cells.length))
+      const at0 = Math.min(scene.cells.length - 1, Math.floor((scene.t / (scene.length * PUT_BACK_BY)) * scene.cells.length))
       for (const n of [at0, at0 + 1]) {
         if (n >= scene.cells.length) continue
         const p = cellMiddle(scene.cells[n], cols)
@@ -678,7 +680,7 @@ export class ToyDisplay {
         const from = { x: MOUTH_X, y: GRASS_Y - 30 }
         shown.x = from.x + (shown.x - from.x) * u
         shown.y = from.y + (shown.y - from.y) * u
-        shown.pose = scene.t > scene.length * 0.75 && scene.t < scene.length * 0.75 + FLUNG ? 'fired' : 'ready'
+        shown.pose = scene.t > scene.length * TRIED_AT && scene.t < scene.length * TRIED_AT + FLUNG ? 'fired' : 'ready'
         list.push({ is: 'sprite', id: '', who: 'worker', pose: u < 1 && Math.floor(this.seconds * 4) % 2 === 0 ? 'carry' : 'walk', x: MOUTH_STEP.x - 14, y: GRASS_Y, flip: false, size: 1, tall: 1, move: null, turn: 0 })
       }
       list.push({ is: 'machine', kind: shown.kind, load: shown.load, pose: shown.pose, x: shown.x, y: shown.y, flip: shown.flip })
