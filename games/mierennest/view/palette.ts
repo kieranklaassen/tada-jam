@@ -28,3 +28,9 @@ export const BEETLE = { shell: '#2f6fb3', dark: '#214f84', belly: '#f0c86a', hor
 export const FLY = { body: '#3f9c8f', dark: '#2a6f66', wing: 'rgba(214,240,255,0.72)', wingEdge: '#9cc7d9', eye: '#e2573a' } as const
 export const DUNG_BEETLE = { shell: '#6a4fb0', dark: '#4a3585', belly: '#e9b96a', ball: '#7b5a35', ballDark: '#5a4026', straw: '#d8c27a' } as const
 export const DUNG_FLY = { body: '#b89a2f', dark: '#8a7220', wing: 'rgba(255,240,200,0.72)', wingEdge: '#d9c58c', eye: '#3ac0d8', goggles: '#f4f1e6' } as const
+/**
+ * The two machines: a fresh leaf green that nothing else under the grass has, so that a machine is found at a
+ * glance among gold ants, crimson, blue, teal and purple invaders and brown ground. The load is the lump itself.
+ */
+export const MACHINE = { body: '#86d64a', dark: '#4d9426', lit: '#c4f08c', trim: '#f4f1e6', wheel: '#2f5c1c' } as const
+

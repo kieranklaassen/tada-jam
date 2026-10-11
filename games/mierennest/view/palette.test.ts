@@ -69,3 +69,29 @@ describe('ours and theirs', () => {
     expect(green(P.ANT.body)).toBeGreaterThan(green(P.RAIDER.body) + 0.25)
   })
 })
+
+describe('the machines', () => {
+  /** The hue of a colour in degrees round the wheel. */
+  const hue = (hex: string) => {
+    const [r, g, b] = rgb(hex), max = Math.max(r, g, b), d = max - Math.min(r, g, b)
+    if (d === 0) return 0
+    const h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4
+    return (h * 60 + 360) % 360
+  }
+  const apart = (a: string, b: string) => Math.min(Math.abs(hue(a) - hue(b)), 360 - Math.abs(hue(a) - hue(b)))
+
+  it('have a hue nothing else under the grass has: no creature, no lump and no earth is within forty degrees of it', () => {
+    const under = [
+      P.ANT.body, P.QUEEN.body, P.WORKER.body, P.ANT.scarf, P.RAIDER.body, P.BEETLE.shell, P.FLY.body, P.DUNG_BEETLE.shell, P.DUNG_BEETLE.ball,
+      P.DUNG_FLY.body, P.SAND.fill, P.STONE.fill, P.MUD.fill, ...EARTHS,
+    ]
+    for (const other of under) expect(apart(P.MACHINE.body, other), other).toBeGreaterThanOrEqual(40)
+    expect(colourful(P.MACHINE.body)).toBeGreaterThan(0.5)
+  })
+
+  it('stand out of the dark of a tunnel and of every stratum of the earth', () => {
+    for (const dark of [P.EARTH.open, P.EARTH.openLow]) expect(contrast(P.MACHINE.body, dark)).toBeGreaterThan(8)
+    // A machine stands in open ground; from the earth round it it is told by its hue more than by its lightness.
+    for (const earth of EARTHS) expect(contrast(P.MACHINE.body, earth)).toBeGreaterThan(1.6)
+  })
+})
