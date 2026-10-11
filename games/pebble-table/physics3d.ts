@@ -57,6 +57,11 @@ export const GRAVITY = -981
 export const STEP = 1 / 120
 export const HOLD_HEIGHT = 11
 export const PAN_REST_HEIGHT = 6
+/** A pan lies on a stone or part under it once they are this close (cm), and comes no closer than `PAN_SKIN`. */
+const PAN_TOUCH = 0.03
+const PAN_SKIN = 0.01
+/** A face of a pan bears down on what it meets when it is turned at least this far downward (the y of the direction it faces). */
+const PAN_BEARS = -0.2
 /**
  * The most time (s) one frame catches up, in whole steps: two display frames
  * at 60 Hz and a leftover step never reach it, so an on-time frame never
@@ -290,6 +295,8 @@ export class TablePhysics {
   private readonly tops = new Map<string, { circle: Circle; height: number; over?: number }>()
   private readonly openJars = new Set<PartKind>()
   private readonly pans: RigidBody[] = []
+  /** Each pan's colliders, each with a sphere (centre from where the pan hangs, radius) that holds it. */
+  private readonly panShapes: Shape[][] = []
   private readonly brooms = new Map<number, RigidBody>()
   private panDrops: [number, number] = [0, 0]
   private panSway = 0
@@ -345,16 +352,19 @@ export class TablePhysics {
    * A wall of boxes around the y axis whose inner face runs along `line`
    * ((radius, height) points up the wall) and whose inner corners touch it,
    * so nothing resting against the wall reaches into what is drawn there.
+   * Where the line runs back down a wall's outside, the middles of the faces
+   * touch it instead, and their corners stand out past it.
    */
-  private wall(body: RigidBody, line: readonly (readonly [number, number])[], thickness: number, baseY = 0): void {
+  private wall(body: RigidBody, line: readonly (readonly [number, number])[], thickness: number, baseY = 0): Shape[] {
     const inset = Math.cos(Math.PI / BOWL_SEGMENTS)
+    const shapes: Shape[] = []
     for (let band = 0; band + 1 < line.length; band++) {
       const [r0, h0] = line[band]
       const [r1, h1] = line[band + 1]
       const length = Math.hypot(r1 - r0, h1 - h0)
       const along = { r: (r1 - r0) / length, h: (h1 - h0) / length }
       const out = { r: along.h, h: -along.r }
-      const ring = out.r < 0 ? (2 * inset) / (1 + inset) : inset
+      const ring = out.r < 0 ? 1 : inset
       const centre = { r: ((r0 + r1) / 2) * ring + (out.r * thickness) / 2, h: baseY + (h0 + h1) / 2 + (out.h * thickness) / 2 }
       const half = [thickness / 2, length / 2, Math.tan(Math.PI / BOWL_SEGMENTS) * (Math.max(r0, r1) + thickness)] as const
       const tilt = new Quat().setFromAxisAngle({ x: 0, y: 0, z: 1 }, Math.atan2(-along.r, along.h))
@@ -364,19 +374,23 @@ export class TablePhysics {
         const desc = this.R.ColliderDesc.cuboid(...half)
           .setTranslation(Math.cos(angle) * centre.r, centre.h, Math.sin(angle) * centre.r)
           .setRotation(turn)
-        this.world.createCollider(this.wood(desc), body)
+        shapes.push({ collider: this.world.createCollider(this.wood(desc), body), center: new V3(Math.cos(angle) * centre.r, centre.h, Math.sin(angle) * centre.r), r: Math.hypot(...half) })
       }
     }
+    return shapes
   }
 
   /** Solid pieces (see `prismPieces`) on a body. */
-  private pieces(body: RigidBody, pieces: readonly V3[][]): void {
-    for (const points of pieces) this.world.createCollider(this.wood(this.R.ColliderDesc.convexHull(flat(points))!), body)
+  private pieces(body: RigidBody, pieces: readonly V3[][]): Shape[] {
+    return pieces.map((points) => {
+      const center = points.reduce((sum, p) => sum.vadd(p, sum), new V3()).scale(1 / points.length)
+      return { collider: this.world.createCollider(this.wood(this.R.ColliderDesc.convexHull(flat(points))!), body), center, r: Math.max(...points.map((p) => p.distanceTo(center))) }
+    })
   }
 
   /** A flat disc from `bottom` to `top` (relative to its body) whose twelve corners reach `radius`, so it never sticks out past what is drawn. */
-  private disc(body: RigidBody, radius: number, bottom: number, top: number): void {
-    this.pieces(body, prismPieces(roundCorners(radius, DISC_SIDES), bottom, top))
+  private disc(body: RigidBody, radius: number, bottom: number, top: number): Shape[] {
+    return this.pieces(body, prismPieces(roundCorners(radius, DISC_SIDES), bottom, top))
   }
 
   /**
@@ -432,6 +446,7 @@ export class TablePhysics {
       this.targets.delete(pan)
     }
     this.pans.length = 0
+    this.panShapes.length = 0
     this.removeFixture('bowl')
     this.removeFixture('rug')
     for (let arc = 0; arc < HEM_ARCS; arc++) this.removeFixture(`hem-${arc}`)
@@ -452,8 +467,7 @@ export class TablePhysics {
       const at = to3(pan)
       const body = this.world.createRigidBody(this.R.RigidBodyDesc.kinematicPositionBased().setTranslation(at.x, PAN_REST_HEIGHT, at.z))
       const r = pan.r * UNIT
-      this.disc(body, r * PAN_RIM, DISH_PROFILE[0][1] * PAN_DEPTH, PAN_FLOOR)
-      this.wall(body, panOutline(r), 0.8)
+      this.panShapes.push([...this.disc(body, r * PAN_RIM, DISH_PROFILE[0][1] * PAN_DEPTH, PAN_FLOOR), ...this.wall(body, panOutline(r), 0.8)])
       this.pans.push(body)
     }
     this.setFixture('post', { ...SCALE.post, r: 18 }, 30, true)
@@ -562,6 +576,65 @@ export class TablePhysics {
   /** The top of a pan's floor, where pieces in it rest. */
   panFloor(side: 0 | 1): number {
     return this.panY(side) + PAN_FLOOR
+  }
+
+  /**
+   * What pan `side` bears down on: for each loose stone or part within
+   * `within` cm of a face of the pan turned downward (its underside, the
+   * flare of its dish, the lower half of its rolled rim), the gap between
+   * them (cm, below zero if they overlap) and the direction from the pan
+   * across it. What lies in the pan is carried, not borne down on, and is
+   * left out.
+   */
+  private underPan(side: number, within: number): { gap: number; normal: V3 }[] {
+    const pan = this.pans[side]
+    const found: { gap: number; normal: V3 }[] = []
+    if (!pan) return found
+    const hung = pan.translation()
+    const r = SCALE.pans[side].r * UNIT
+    const rim = panRimReach(r)
+    // The pan's collider lies inside this: out to the corners of its rim's boxes (see `wall`), from its underside to its rim's top.
+    const out = rim.out / Math.cos(Math.PI / BOWL_SEGMENTS) + within
+    const [low, high] = [hung.y + DISH_PROFILE[0][1] * PAN_DEPTH - within, hung.y + rim.top + within]
+    const placed = new Map<TableBody, PlacedShape[]>()
+    for (const { body } of this.stones.values()) {
+      const off = Math.hypot(body.position.x - hung.x, body.position.z - hung.z)
+      if (body.held || off - body.boundingRadius > out || body.position.y + body.boundingRadius < low || body.position.y - body.boundingRadius > high) continue
+      if (off < r * PAN_RIM && body.position.y > hung.y + PAN_FLOOR) continue
+      // A body placed by hand since the last step is where it now lies.
+      if (placed.size === 0) this.world.propagateModifiedBodyPositionsToColliders()
+      for (const mine of placedShapes(body, placed)) {
+        if (mine.at.y + mine.r < low || mine.at.y - mine.r > high || Math.hypot(mine.at.x - hung.x, mine.at.z - hung.z) - mine.r > out) continue
+        for (const { collider, center, r: size } of this.panShapes[side]) {
+          const reach = mine.r + size + within
+          if ((mine.at.x - hung.x - center.x) ** 2 + (mine.at.y - hung.y - center.y) ** 2 + (mine.at.z - hung.z - center.z) ** 2 > reach * reach) continue
+          const hit = collider.contactCollider(mine.collider, within, this.contact)
+          if (hit && hit.normal1.y < PAN_BEARS) found.push({ gap: hit.distance, normal: new V3(hit.normal1.x, hit.normal1.y, hit.normal1.z) })
+        }
+      }
+    }
+    return found
+  }
+
+  /**
+   * Whether pan `side` lies on a loose stone or part under it. A pan is
+   * moved by the beam, whatever is in its way, so it is stopped here: it
+   * comes down or swings no further than onto what lies under it (see
+   * `step`), and the beam is held where that leaves it (see
+   * `TableController.tick`).
+   */
+  panRests(side: 0 | 1): boolean {
+    return this.underPan(side, PAN_TOUCH).some(({ gap }) => gap < PAN_TOUCH)
+  }
+
+  /** How much (0 to 1) of a move of (`dx`, `dy`, `dz`) cm pan `side` makes before it lies on a loose stone or part under it. */
+  private panRoom(side: number, dx: number, dy: number, dz: number): number {
+    let room = 1
+    for (const { gap, normal } of this.underPan(side, Math.hypot(dx, dy, dz) + PAN_TOUCH)) {
+      const closing = dx * normal.x + dy * normal.y + dz * normal.z
+      if (closing > 0) room = Math.min(room, Math.max(0, gap - PAN_SKIN) / closing)
+    }
+    return room
   }
 
   /**
@@ -1022,7 +1095,11 @@ export class TablePhysics {
         const p = rigid.translation()
         const [dx, dy, dz] = [target.x - p.x, target.y - p.y, target.z - p.z]
         // One already there (to Rapier's single precision) is left still, so what rests on it can fall asleep.
-        if (dx * dx + dy * dy + dz * dz > 1e-8) rigid.setNextKinematicTranslation({ x: p.x + dx / left, y: p.y + dy / left, z: p.z + dz / left })
+        if (dx * dx + dy * dy + dz * dz <= 1e-8) continue
+        // A pan goes only as far as onto what lies under it.
+        const side = this.pans.indexOf(rigid)
+        const go = (side < 0 ? 1 : this.panRoom(side, dx / left, dy / left, dz / left)) / left
+        if (go > 0) rigid.setNextKinematicTranslation({ x: p.x + dx * go, y: p.y + dy * go, z: p.z + dz * go })
       }
       this.before.clear()
       for (const { body } of this.stones.values()) if (!body.rigid.isSleeping()) this.before.set(body.rigid.handle, new V3().copy(body.rigid.linvel()))

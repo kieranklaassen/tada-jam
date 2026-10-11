@@ -1,13 +1,16 @@
 // The forest's calm loop: dusk (play) → nightfall (the moon rises) → night
 // (stars and the lullaby) → dawn (everyone wakes) → dusk again. Night only
-// starts when every animal is asleep, and the loop never counts anything.
-// Time here is attended time: it stands still while the forest is put away.
+// starts when every animal is asleep, and it stays for as long as the child
+// likes: once the lullaby has played, the morning waits for a touch. The
+// loop never counts anything. Time here is attended time: it stands still
+// while the forest is put away.
 
 export type Phase = 'dusk' | 'nightfall' | 'night' | 'dawn'
 
 export const SETTLE_BEFORE_NIGHT = 1.2
 export const NIGHTFALL_SECONDS = 4.5
 export const LULLABY_SECONDS = 26
+/** The lullaby and a breath after it. From then on the night waits for the child's touch. */
 export const NIGHT_SECONDS = LULLABY_SECONDS + 3
 export const DAWN_SECONDS = 9
 export const WAKE_START = 1.2
@@ -37,9 +40,23 @@ export class ForestCycle {
   entered: Phase | null = null
   readonly sky: Sky = { night: 0, morning: 0, moon: 0, stars: 0 }
 
-  /** Start the night straight away (a forest saved with everyone asleep). */
-  startNight(): void {
-    this.enter('nightfall')
+  /**
+   * A forest saved with everyone asleep opens in the night it was left in: the moon up, the stars out, the
+   * lullaby over, and the morning waiting. No nightfall plays again.
+   */
+  resumeNight(): void {
+    this.enter('night')
+    this.t = NIGHT_SECONDS
+    this.entered = null
+    this.updateSky()
+  }
+
+  /** The child touched the forest: once the lullaby has played, that brings the morning. Returns whether it did. */
+  callMorning(): boolean {
+    if (this.phase !== 'night' || this.t < NIGHT_SECONDS) return false
+    this.enter('dawn')
+    this.updateSky()
+    return true
   }
 
   step(dt: number, allAsleep: boolean): void {
@@ -55,7 +72,7 @@ export class ForestCycle {
         if (this.t >= NIGHTFALL_SECONDS) this.enter('night')
         break
       case 'night':
-        if (this.t >= NIGHT_SECONDS) this.enter('dawn')
+        // No morning by itself: the sleeping forest stays until `callMorning`.
         break
       case 'dawn':
         if (this.t >= DAWN_SECONDS) {

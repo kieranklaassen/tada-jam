@@ -1,7 +1,7 @@
 import { chooseHint, handPose, HintScheduler, type GuidanceFrame, type HandPose, type Hint, type Point3 } from './guidance'
 import { GestureTracker, type Intent, type Point } from './input'
-import { BALL_SWELL, ballReach, ballRest, BASKET_KEEP_OUT, clearBall, hopPast, MAX_STRETCH, type BallScene } from './balls'
-import { canOffer, give, isFull, knitRow, paintStitch, summonIfReady, unravelRow } from './knitting'
+import { BALL_SWELL, ballReach, ballRest, BASKET_KEEP_OUT, clearBall, hopPast, liftBall, MAX_STRETCH, type BallScene } from './balls'
+import { bringOutBall, canOffer, give, isFull, knitRow, paintStitch, summonIfReady, unravelRow } from './knitting'
 import { BASKET_FOOTPRINT, LOOM_FOOTPRINT, planRoute, type Obstacle, type Point2 } from './paths'
 import {
   BALL_RADIUS,
@@ -17,6 +17,7 @@ import {
   NEEDLE_BAR,
   NEEDLES_FLOOR,
   SCARF,
+  WAIT_SPOT,
   cellAt,
   cellCentre,
   groundY,
@@ -30,7 +31,7 @@ import {
 import { completedRepeat, stripeColours, suggestColour } from './pattern'
 import { SaveCadence } from './saveCadence'
 import { clamp01, smooth, spring, springStep, type Spring } from './springs'
-import { ANIMALS, ballsForAge, offerRowsForAge, WIDTH, type AnimalKey, type GameState, type Scarf } from './state'
+import { ANIMALS, ballsFor, offerRowsForAge, WIDTH, type AnimalKey, type GameState, type Scarf } from './state'
 
 // Cosy Scarf while it is on screen: touch, the knitting rules, the gift
 // sequence, the animals' comings and goings, guidance, sound cues and
@@ -157,6 +158,8 @@ const CARRY_Z = SCARF.z + NEEDLE_BAR.z + NEEDLE_BAR.apart + NEEDLE_BAR.radius + 
 const CARRY_STIFFNESS = 700
 const CARRY_DAMPING = 30
 const RETURN_SECONDS = 0.5
+/** A ball brought out of the basket comes up from the snow just behind it, where the basket and the balls in it hide it. */
+const BEHIND_BASKET = BASKET.radius + BALL_RADIUS + 3
 /** Yarn let go over the animal waiting at the loom flies into the loom and is knitted there, then goes home. */
 const TO_LOOM_SECONDS = 0.45
 const GRAVITY = 260
@@ -238,7 +241,8 @@ export type ActorView = {
   walkProgress: number
   /** When the walk's first leg started. */
   walkBegan: number
-  destination: 'loom' | 'hill' | null
+  /** 'wait': in view at the edge of the blanket, until the child's touch brings it to the loom. */
+  destination: 'loom' | 'hill' | 'wait' | null
   /** 0 shivering cold, 1 cosy. */
   warm: number
   warmAt: number
@@ -349,28 +353,8 @@ export class ScarfController {
     )
     this.scheduler = new HintScheduler(0)
 
-    const count = ballsForAge(options.childAge)
-    this.balls = Array.from({ length: count }, (_, colour) => {
-      const rest = ballRest(colour, count)
-      return {
-        colour,
-        rest,
-        pos: { ...rest },
-        hopY: 0,
-        hopV: 0,
-        squash: spring(0),
-        spin: colour * 1.7,
-        spinV: 0,
-        held: null,
-        carry: { x: spring(rest.x), y: spring(rest.y), z: spring(rest.z) },
-        returning: -1,
-        returnFrom: { ...rest },
-        toLoom: false,
-        launchAt: -Infinity,
-        launchV: 0,
-        airborne: false,
-      }
-    })
+    const count = ballsFor(state, options.childAge)
+    this.balls = Array.from({ length: count }, (_, colour) => newBall(colour, ballRest(colour, count)))
     this.ballPositions = this.balls.map((ball) => ball.pos)
     this.ballRests = this.balls.map((ball) => ball.rest)
     this.ballReaches = this.balls.map(() => BALL_RADIUS)
@@ -499,12 +483,34 @@ export class ScarfController {
       actor.warmAt = -10
       actor.destination = 'hill'
     }
-    const atLoom = this.state.atLoom
-    if (atLoom) this.walkTo(this.actors[atLoom], LOOM_SPOT, 'loom', 0.6)
-    else if (summonIfReady(this.state, this.offerRows)) this.walkTo(this.actors[this.state.atLoom!], LOOM_SPOT, 'loom', 0.6)
+    // Found as left: nobody walks in on open. Whoever the loom's scarf is for stands at the loom;
+    // a cold animal with nothing knitted for it yet waits in view for the child's touch.
+    const atLoom = this.state.atLoom ?? summonIfReady(this.state, this.offerRows)
+    if (!atLoom) return
+    const actor = this.actors[atLoom]
+    const waits = this.state.loom.length === 0 && this.state.scarves[atLoom].length === 0
+    const spot = waits ? WAIT_SPOT : LOOM_SPOT
+    actor.visible = true
+    actor.x = spot.x
+    actor.z = spot.z
+    actor.yaw = spot.yaw
+    actor.destination = waits ? 'wait' : 'loom'
   }
 
-  private walkTo(actor: ActorView, spot: Spot, destination: 'loom' | 'hill', delay: number): void {
+  /**
+   * The child's touch, wherever it lands, brings the animal waiting in view
+   * to the loom. One that has not yet set off for its waiting place sets off
+   * no sooner for the touch, so the friend walking home still clears the
+   * loom's window first.
+   */
+  private callIn(): void {
+    const animal = this.state.atLoom
+    if (!animal) return
+    const actor = this.actors[animal]
+    if (actor.destination === 'wait') this.walkTo(actor, LOOM_SPOT, 'loom', Math.max(0, actor.walkBegan - this.t))
+  }
+
+  private walkTo(actor: ActorView, spot: Spot, destination: 'loom' | 'hill' | 'wait', delay: number): void {
     if (destination === 'loom' && actor.destination === 'loom' && actor.visible) return
     if (!actor.visible) {
       actor.visible = true
@@ -574,6 +580,7 @@ export class ScarfController {
     switch (intent.type) {
       case 'press':
         this.scheduler.touch(this.t)
+        this.callIn()
         this.press(intent.target)
         return
       case 'tap':
@@ -628,6 +635,7 @@ export class ScarfController {
       case 'basket':
         this.basketAt = this.t
         this.sound.basket()
+        if (this.bringOut()) return
         for (const ball of this.balls) if (ball.held === null && ball.returning < 0) this.launch(ball, 22 + ball.colour * 3, 0.02 * ball.colour)
         return
       case 'snow':
@@ -921,9 +929,9 @@ export class ScarfController {
       if (this.state.atLoom !== gift.to) this.walkTo(actor, HILL_SPOTS[gift.to], 'hill', 0)
       const next = this.state.atLoom
       if (!next || next === gift.to) return
-      // The next cold animal arrives as the friend walking home behind the loom leaves its window, so its first rows are knitted over plain snow.
-      const walkIn = this.walkSeconds(next, ENTRY, LOOM_SPOT)
-      this.walkTo(this.actors[next], LOOM_SPOT, 'loom', Math.max(NEXT_ARRIVES_AFTER, this.inWindowUntil(actor) - walkIn))
+      // The next cold animal comes into view as the friend walking home behind the loom leaves its window, and waits there: it steps up to the loom at the child's next touch.
+      const walkIn = this.walkSeconds(next, ENTRY, WAIT_SPOT)
+      this.walkTo(this.actors[next], WAIT_SPOT, 'wait', Math.max(NEXT_ARRIVES_AFTER, this.inWindowUntil(actor) - walkIn))
     })
   }
 
@@ -989,6 +997,43 @@ export class ScarfController {
     ball.launchAt = this.t + delay
     ball.launchV = speed
     ball.squash.v += 5
+  }
+
+  /**
+   * A tap on the basket while a colour is still inside: the next ball comes
+   * up from behind it with its own note, and the others hop to make room.
+   * The count is saved, and from then on wins over the age.
+   */
+  private bringOut(): boolean {
+    const colour = bringOutBall(this.state, this.balls.length)
+    if (colour === null) return false
+    const count = this.balls.length + 1
+    for (const ball of this.balls) {
+      Object.assign(ball.rest, ballRest(ball.colour, count))
+      if (ball.held !== null || ball.toLoom) continue
+      // A hop in the air ends where it is: the arc to the new place starts from there.
+      ball.hopY = 0
+      ball.hopV = 0
+      ball.launchV = 0
+      ball.airborne = false
+      this.sendHome(ball)
+    }
+    const ball = newBall(colour, ballRest(colour, count))
+    ball.pos.x = BASKET.x
+    ball.pos.y = 0
+    ball.pos.z = BASKET.z - BEHIND_BASKET
+    liftBall(ball.pos, BALL_RADIUS)
+    this.balls.push(ball)
+    this.ballPositions.push(ball.pos)
+    this.ballRests.push(ball.rest)
+    this.ballReaches.push(BALL_RADIUS)
+    this.ballTargets.push({ kind: 'ball', index: colour })
+    this.sendHome(ball)
+    this.sound.hop(colour)
+    // The basket holds another colour now: the guidance chooses again.
+    this.hintVersion = -1
+    this.cadence.change(this.t * 1000, true)
+    return true
   }
 
   /** Just under the needles, in front of the scarf: where a row is knitted. */
@@ -1510,6 +1555,27 @@ export class ScarfController {
     let count = 0
     for (const view of this.worn) if (view.holder === animal && view.leavingAt < 0) count++
     return count
+  }
+}
+
+function newBall(colour: number, rest: Point3): BallView {
+  return {
+    colour,
+    rest,
+    pos: { ...rest },
+    hopY: 0,
+    hopV: 0,
+    squash: spring(0),
+    spin: colour * 1.7,
+    spinV: 0,
+    held: null,
+    carry: { x: spring(rest.x), y: spring(rest.y), z: spring(rest.z) },
+    returning: -1,
+    returnFrom: { ...rest },
+    toLoom: false,
+    launchAt: -Infinity,
+    launchV: 0,
+    airborne: false,
   }
 }
 

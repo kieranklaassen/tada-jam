@@ -44,3 +44,9 @@ In the browser: an interleaved A/B, main against this pass, in Playwright's bund
 - plain street: cpuP95 median 10.7 ms (7.1–22.5) → 10.9 ms (5.4–15.9), cpuP50 3.0 → 3.0 ms, and after is lower in 4 of 6 pairs.
 
 The pairs differ both ways by more than the medians move, so no change is measurable against the shared VM's noise. Tier 0 held in every run. `frameBudget.test.ts` passes unchanged, and the governor and tiers are untouched.
+
+## Pass log
+
+| Date | Pass | What the audit found | What changed | Still weak |
+| --- | --- | --- | --- | --- |
+| 2026-10-10 | Depth and age | Depth holds as a building toy: seven shapes, four turns, the slab and scaffolding combine through the physics, and the street is kept. The game played itself: each delivery fell and landed with no touch, so an attended, untouched street grew to the delivery cap. An unknown age took the middle pace, not the youngest. A building put away in the instant between touching down and settling was in neither the saved street nor the queue. Above a tall tower the delivery hung under the jam's home control (its top 8 px from the top edge at 1180 by 820). | A delivery waits where it arrived until the child's first touch (`Game.waiting`). `paceForAge(null)` is the gentlest pace. `queue()` returns every unsettled building to the front. The view follows the tower from a height that keeps a waiting delivery below the home control (`camera.ts`). Tests first, in `model.test.ts` and `camera.test.ts`. | Nothing draws the eye to the waiting delivery beyond its residents and the drop guide. For about half a second after a landing the view is still catching up, and a fresh delivery can sit a little higher than its resting place. The neighbours do not react to who they are stacked beside. Age changes fall speed only. The level-landing chime with its gold burst, and the tick on a locked building, are close to approval marks; left as they are for the owner. |

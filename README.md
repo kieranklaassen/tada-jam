@@ -9,13 +9,19 @@ npm install
 npm run dev
 ```
 
-Open the printed URL (Vite binds to your LAN too, so an iPad on the same network can open it), pick a game, and play. The strip above the game holds grown-up controls that stand in for the Tada shell:
+Open the printed URL (Vite binds to your LAN too, so an iPad on the same network can open it), pick a game, and play. On the home page a grown-up sets the child's age once; the games made for that age come first and every game reads it.
+
+A game opens full screen under one round home control at the top centre. A tap on it goes home. A finger held on it for a second shows a strip of grown-up controls that stand in for the Tada shell (`?chrome=1` opens with the strip):
 
 - **Age** and **Language** set `ctx.childAge` and `ctx.language` (changing them reopens the game, as in Tada).
 - **Attended** toggles `ctx.attention.attended`, to check that loops and sound pause.
 - **Park / Bring back** simulates put-away: storage flushes and the Mount is hidden but stays mounted.
-- **Reset slot** forgets the game's saved state.
-- **Hide** removes the strip for full-bleed play; a small dot in the top-right corner brings it back. Start hidden with `?chrome=0`.
+- **Reset slot** forgets the game's saved state, on a second tap within three seconds.
+- **Hide** puts the strip away again.
+
+`?chrome=0` draws nothing over the game at all, not even the home control. The performance probe and the intersection audit load games that way.
+
+Demos are on the home page too, as tiles of the same kind under the games, grouped by what they try out and marked as demos. A demo opens in the same frame under the same home control; holding the control leads to the demo player, where it can be rated. Demos are built from `lab/`, so they appear on a production build (`npm run serve:lan`, or the deployed jam) and not on the dev server. A demo that has become a game is listed once, as the game.
 
 **Judging smoothness on an iPad: use a production build.** The dev server serves unbundled modules with React in development mode and HMR, which is slower and not what a child would run. `npm run serve:lan` builds and serves the production bundle on your LAN at port 4173 (open `http://<this-machine's-LAN-IP>:4173/?chrome=0#/play/<key>` on the iPad). Pebble Table has a hidden grown-up overlay for frame rate and quality tier: triple-tap the top-left corner. `npm run perf:pebble` profiles it in Chrome, WebKit, or a software GPU against that server.
 
@@ -80,6 +86,16 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 | Game | Folder | Ages | What it is |
 | --- | --- | --- | --- |
 | Pebble Table | `games/pebble-table/` | 3–7 | A claymation table in 3D: a bag of ten clay stones, the Honest Scale, and Fair Feeding with clay guests, where quantity is felt through play. Plan: `docs/plans/2026-09-22-001-feat-pebble-table-plan.md`. |
+| Felt Meadow | `games/felt-meadow/` | 4–7 | A needle-felted hillside in 3D: drag felt seeds into molehills and watch them bloom, and a felt bee that has visited two colours drops a seed of the mixed colour. The meadow's look follows the real season. Plan: `docs/plans/2026-09-23-felt-meadow-plan.md`. |
+| Light Garden | `games/light-garden/` | 7–10 | A light table in a dim room in 3D: place and turn lamps, mirrors, a prism and colour filters to steer beams, and each sleeping sea-glass creature wakes when light of its own colour reaches it. Plan: `docs/plans/2026-09-23-light-garden-plan.md`. |
+| Frog Choir | `games/frog-choir/` | 4–8 | A lily pond at dusk in 3D: five frogs sit on pads and each sings when the firefly passes over it. Where a frog sits sets its note, so moving frogs composes a melody. Plan: `games/frog-choir/PLAN.md`. |
+| Shadow Lantern | `games/shadow-lantern/` | 6–10 | A cut-paper theatre: slide and turn paper shapes between a lamp and a screen until their shadows fill the outline of a sleeping creature, which wakes and joins the paper night sky. A shape nearer the lamp throws a bigger shadow. Plan: `docs/plans/2026-09-23-shadow-lantern-plan.md`. |
+| Bedtime Forest | `games/bedtime-forest/` | 4–6 | A forest clearing at dusk, painted like a picture book in 3D: carry each of six yawning animals to its home, and when all are asleep the moon rises, a lullaby plays, and morning wakes everyone again. Plan: `docs/plans/2026-09-23-bedtime-forest-plan.md`. |
+| Turning Tower | `games/turning-tower/` | 7–10 | Small faceted towers at dusk in three.js: turn handles and slide platforms until the paths line up, some of them only from the camera's view, then tap to walk the wanderer to the glowing door. Plan: `docs/plans/2026-09-23-turning-tower-plan.md`. |
+| Critter Clay | `games/critter-clay/` | 4–9 | A clay workshop bench in 3D: press legs, eyes, ears, tails and horns onto a sleepy lump of plasticine, tap its nose, and it wakes and walks with a gait that comes from what it was given. Parts pull off again. Plan: `docs/plans/2026-09-23-critter-clay-plan.md`. |
+| Hillside Spring | `games/hillside-spring/` | 6–10 | A painted terraced garden in 3D: place and turn bamboo pipes, a sluice gate and a waterwheel so that water from the spring runs downhill to the dry plots, which bloom. Plan: `docs/plans/2026-09-23-hillside-spring-plan.md`. |
+| Cosy Scarf | `games/cosy-scarf/` | 5–10 | A knitted snowy hillside in 3D: tap yarn balls to knit stripes on a loom, and when the scarf is long enough it wraps the cold animal, which dances before the next one comes in. Plan: `docs/plans/2026-09-23-cosy-scarf-plan.md`. |
+| Kite Tower | `games/kite-tower/` | 5–8 | A playroom of rainbow wood in 3D: stack arches, blocks, half-moons and planks so the peg doll can climb to a kite stuck on a shelf. Towers sway and topple softly, and a kite that is reached moves to a new perch. Plan: `docs/plans/2026-09-23-kite-tower-plan.md`. |
 | Bad Neighbours | `games/bad-neighbours/` | 4–8 | Drop wobbly apartment buildings onto a construction slab and watch the residents live in them. Physics stacking (matter.js) with secured foundations; a fallen building parachutes its resident out and returns to the queue. No score, no lives. |
 | Moon Phases | `games/moon-phases/` | 6–10 | A brass orrery on a table in three.js: the sun lamp always lights half the moon, and a round window shows the sky from the child's home on a turning Earth, day or night, with the moon up or set and flipped south of the equator. |
 | Muddy Truck Wash | `games/muddy-truck-wash/` | 2–4 | A wash bay in three.js: rub the mud off die-cast toy vehicles with a sponge, a hose and a cloth, and send each one out shining. A learning game: its design sheet in `ART.md` names the records it is designed from. |
@@ -94,6 +110,13 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 | Who Made That Sound | `games/who-made-that-sound/` | 2–4 | Eggs on a page of painted tissue: tap one to hear who is inside and tap again to let it out, then find by ear the egg that sounds like the one who is calling. A learning game on noticing and exploring sound. |
 | Princess Playground | `games/princess-playground/` | 2–5 | A seesaw in a tray of sand in three.js: tap a painted pebble friend onto the plank, see which end goes down, and find who or how many will lift the one who asks. A learning game on exploring and comparing how heavy things are. |
 | Seed Lab | `games/seed-lab/` | 9–12 | A page of a naturalist's journal: carry pollen from one flower to another, watch six young come up alike or unlike, and breed by seed or by runner towards the plant a visitor has sketched. A learning game on what young inherit and what their surroundings change. |
+| Balloon Pop Parade | `games/balloon-pop-parade/` | 2–4 | A seaside of inflatable pool toys in 3D: tap a balloon in the sky and it flies down to a friend, who keeps one of its own colour and lets any other go. A learning game on sorting by colour and giving one to each. |
+| Bridge Crew | `games/bridge-crew/` | 9–12 | A blueprint sheet with balsa parts lying on it: drag from pin to pin to lay planks, sticks, tubes and thread across a gap, test the bridge with a trolley of weights, and send a loaded vehicle over. A learning game on what makes a crossing stable and sturdy, found by testing and improving. |
+| Claw Machine | `games/claw-machine/` | 4–6 | A claw machine built of stud bricks in 3D: move the claw with a finger, let it drop on a toy, and drop the toy into the gobbler that takes its colour, kind or size. Then the same toys are tipped out and sorted another way. A learning game on sorting a set by one attribute and then by another. |
+| Fire Truck Hero | `games/fire-truck-hero/` | 2–4 | A sand pit of garden toys in 3D: touch the yard and the fire truck sends water there, to fill a pool, float a duck, turn a wheel, water a plant or put out a fire. A learning game on cause and effect with water. |
+| Fruit Slicer | `games/fruit-slicer/` | 9–12 | A market stall drawn as a comic page: cut a fruit by eye to the share on a customer's ticket, bring the piece to the customer's tin, and see the true length open beside it. A learning game on fractions as shares of a length. |
+| Hats for All | `games/hats-for-all/` | 2–4 | A foam play mat in 3D: press a foam hat out of its tile and it pops onto a bare head, until every creature has one hat. A learning game on pairing one with one and comparing two small groups. |
+| Wild Hair Salon | `games/wild-hair-salon/` | 4–6 | A salon in watercolour: pull a lock longer or snip it shorter until it is as long as the friend's lock, then pull off the cape and see the two side by side. A learning game on comparing two lengths. |
 
 ## Showcases
 

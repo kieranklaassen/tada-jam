@@ -90,7 +90,7 @@ function liftOf(body: TableBody, sunk: ReadonlyMap<TableBody, V3>): V3 | undefin
 }
 
 /** Parts as physics has them, but never drawn dipping into the table, a pan's floor, a stone or another part for the frames physics takes to push a landing part back out. */
-function partStates(table: TableController): PartState[] {
+export function partStates(table: TableController): PartState[] {
   const states: PartState[] = []
   const surfaces = table.physics.surfaces(table.state.liveMat, table.state.seats)
   const placed = table.state.parts.flatMap((part) => {

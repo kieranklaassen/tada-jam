@@ -123,7 +123,7 @@ export class ForestController implements BrainWorld {
       if (saved.asleep) creature.sleepAtHome()
       else creature.placeAt(saved.x, saved.z)
     }
-    if (this.allAsleep()) this.cycle.startNight()
+    if (this.allAsleep()) this.cycle.resumeNight()
   }
 
   setProjector(projector: Projector): void {
@@ -141,11 +141,11 @@ export class ForestController implements BrainWorld {
     this.sound.dispose()
   }
 
-  /** The forest was put away, faded, or hidden mid-carry: every animal is set down where it is. */
+  /** The forest was put away, faded, or hidden mid-carry: every animal is set down where it is, awake. */
   pause(): void {
     this.tracker.reset()
     this.screens.clear()
-    for (let i = 0; i < this.creatures.length; i++) if (this.holder[i] !== NO_POINTER) this.letGo(i, false)
+    for (let i = 0; i < this.creatures.length; i++) if (this.holder[i] !== NO_POINTER) this.setDown(i)
     this.endDemo()
     this.cadence.settle(performance.now())
   }
@@ -374,6 +374,8 @@ export class ForestController implements BrainWorld {
 
   pointerDown(pointerId: number, screen: ScreenPoint, timeMs: number): void {
     this.sound.unlock()
+    // The sleeping forest stays until the child touches it: after the lullaby, a touch brings the morning.
+    if (this.cycle.callMorning()) this.sound.phase('dawn')
     this.scheduler.touch(this.t)
     this.endDemo()
     this.screens.set(pointerId, { x: screen.x, y: screen.y })
@@ -402,7 +404,7 @@ export class ForestController implements BrainWorld {
   pointerCancel(pointerId: number): void {
     const index = this.holder.indexOf(pointerId)
     this.tracker.cancel(pointerId)
-    if (index >= 0) this.letGo(index, false)
+    if (index >= 0) this.setDown(index)
     this.screens.delete(pointerId)
   }
 
@@ -423,7 +425,7 @@ export class ForestController implements BrainWorld {
       case 'cancelAll':
         for (const pointerId of intent.pointerIds) {
           const index = this.holder.indexOf(pointerId)
-          if (index >= 0) this.letGo(index, false)
+          if (index >= 0) this.setDown(index)
         }
         return
       default: {
@@ -510,6 +512,15 @@ export class ForestController implements BrainWorld {
     if (home >= 0) creature.sendTo(HOME_KEYS[home])
     else creature.drop(quick)
     this.cadence.change(performance.now(), true)
+  }
+
+  /**
+   * The finger never let go (the forest was put away, a resting hand, a cancelled touch): that is no drop, so
+   * there is no trip into a home, and the animal is set down on the grass where it hangs.
+   */
+  private setDown(index: number): void {
+    this.hovering[index] = -1
+    this.letGo(index, false)
   }
 
   // --- hit tests (screen space: the forest is seen at an angle) ---------------

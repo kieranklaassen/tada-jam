@@ -1,7 +1,7 @@
-import { COLUMN_SPACING, COLUMNS, columnX, PADS, ROWS, rowZ } from './layout'
+import { COLUMN_SPACING, COLUMNS, columnX, PADS, ROWS, rowZ, SHORE_Z } from './layout'
 
 // The firefly's loop. It crosses the six columns one beat each, then spends
-// two beats arcing back over the far shore: an eight-beat loop that never
+// two beats arcing back along the far shore: an eight-beat loop that never
 // ends and counts nothing. Beat k happens at k × beatSeconds of attended time;
 // beats 0–5 of each loop are columns, 6 and 7 are the flight home.
 //
@@ -11,8 +11,14 @@ import { COLUMN_SPACING, COLUMNS, columnX, PADS, ROWS, rowZ } from './layout'
 
 export const STEPS = 8
 export const CRUISE_Y = 1.7
-export const HOME_Y = 3.6
-export const HOME_Z = rowZ(ROWS - 1) - 3.2
+/**
+ * The top of the flight home: over the waterline of the far shore, above the
+ * reeds there. On screen that is in front of the far bank, well below the top
+ * centre of the frame, where the shell draws its home control: a child who
+ * reaches for the firefly must not land on that.
+ */
+export const HOME_Y = 3
+export const HOME_Z = SHORE_Z
 const DIP = 0.32
 const HOME_SPEED = 7.4
 
@@ -97,7 +103,7 @@ export function fireflyAt(phase: number, targets: ArrayLike<number>, occupied: A
     out.y = CRUISE_Y - (singer ? DIP * Math.exp(-(off * off) / 0.035) : 0)
     return out
   }
-  // Home: exit to the right, climb and swing back over the far shore, drop in on the left.
+  // Home: exit to the right, climb and swing back along the far shore, drop in on the left.
   const u = (s - (last + 0.5)) / (STEPS - COLUMNS)
   const exitX = columnX(last) + COLUMN_SPACING / 2
   const entryX = columnX(0) - COLUMN_SPACING / 2

@@ -16,6 +16,8 @@ export const SECURE_STILL_TIME = 400
 const STABILITY_DISTANCE = 0.45
 const STABILITY_ANGLE = 0.006
 export const MAX_DELIVERIES = 150
+/** A delivery arrives with its centre this far above the top of the tower. */
+export const SPAWN_CLEARANCE = 155
 export type Shape = 'O' | 'T' | 'L' | 'J' | 'I' | 'S' | 'Z'
 export const SHAPES: Record<Shape, number[][]> = {
   O: [[0, 0], [1, 0], [0, 1], [1, 1]],
@@ -53,10 +55,12 @@ export function outlineCenter(body: Matter.Body) {
   const { min, max } = Matter.Bounds.create(body.vertices)
   return { x: (min.x + max.x) / 2, y: (min.y + max.y) / 2 }
 }
-/** Deliveries fall at this speed times the pace; age sets the pace as a hint. */
+/**
+ * Deliveries fall at this speed times the pace; age sets the pace as a hint. An unknown age takes
+ * the gentlest pace, and the ends are open: younger than four falls like four, older than seven like seven.
+ */
 export function paceForAge(age: number | null) {
-  if (age === null) return 1
-  if (age <= 4) return 0.8
+  if (age === null || age <= 4) return 0.8
   if (age >= 7) return 1.25
   return 1
 }
@@ -100,6 +104,8 @@ export class Game {
   maxHeight = 0
   height = 0
   hardDropping = false
+  /** A delivery hangs where it arrived until the child touches it; nothing comes down by itself. */
+  waiting = false
   spawnAt = 0
   onEvent: (event: GameEvent) => void
   private accumulator = 0
@@ -161,12 +167,13 @@ export class Game {
     Composite.add(this.engine.world, body); this.pieces.push(piece); this.spawned++; this.placed++
   }
   /**
-   * The next three deliveries as they should be saved. A building the child is
-   * still steering is not settled, so it goes back to the front of the queue and
-   * comes down again after put-away instead of being lost.
+   * The next three deliveries as they should be saved. A building that is not
+   * settled, whether the child is still steering it or it has only just touched
+   * down, is not in `snapshot()`, so it goes back to the front of the queue and
+   * is delivered again after put-away instead of being lost.
    */
   queue(): Shape[] {
-    return (this.active ? [this.active.shape, ...this.next] : this.next).slice(0, 3)
+    return [...this.pieces.filter(p => !p.scored).map(p => p.shape), ...this.next].slice(0, 3)
   }
   /** Scaffolds between settled buildings (and the slab), indexed like `snapshot()`. */
   bondPairs(): [number, number][] {
@@ -192,16 +199,23 @@ export class Game {
     if (this.full) return
     const shape = this.next.shift()!; this.next.push(this.takeShape())
     const highest = Math.min(FLOOR, ...this.pieces.filter(p => p.landed && p.body.position.y < FLOOR).map(p => p.body.bounds.min.y))
-    const y = Math.min(FLOOR - 270, highest - 155)
+    const y = Math.min(FLOOR - 270, highest - SPAWN_CLEARANCE)
     const body = buildingBody(shape, `building-${this.spawned}`)
     const center = outlineCenter(body)
     Body.translate(body, { x: -center.x, y: y - center.y }); Body.setInertia(body, Infinity)
     const piece: Piece = { body, shape, landed: false, scored: false, glued: false, contactTime: 0, born: this.time, securedAt: 0, stableSince: 0, stablePose: null }
-    Composite.add(this.engine.world, body); this.pieces.push(piece); this.active = piece; this.spawned++
+    Composite.add(this.engine.world, body); this.pieces.push(piece); this.active = piece; this.waiting = true; this.spawned++
     this.onEvent({ type: 'spawn', piece })
+  }
+  /** The child's first touch on a waiting delivery lets it start down. */
+  private touch() {
+    if (!this.active || !this.waiting) return
+    this.waiting = false
+    Sleeping.set(this.active.body, false)
   }
   move(direction: number) {
     if (!this.active || this.hardDropping) return
+    this.touch()
     const body = this.active.body
     const old = { ...body.position }
     const center = outlineCenter(body), step = CELL / 2
@@ -213,11 +227,13 @@ export class Game {
   }
   aim(x: number) {
     if (!this.active || this.hardDropping) return
+    this.touch()
     const steps = Math.round((x - outlineCenter(this.active.body).x) / (CELL / 2))
     for (let i = 0; i < Math.min(24, Math.abs(steps)); i++) this.move(Math.sign(steps))
   }
   rotate(direction = 1) {
     if (!this.active || this.hardDropping) return false
+    this.touch()
     const body = this.active.body, angle = body.angle, position = { ...body.position }
     const center = outlineCenter(body)
     Body.setAngle(body, angle + direction * Math.PI / 2)
@@ -229,7 +245,7 @@ export class Game {
     }
     Body.setAngle(body, angle); Body.setPosition(body, position); return false
   }
-  drop() { if (this.active) { this.hardDropping = true; Body.setVelocity(this.active.body, { x: 0, y: 11 }) } }
+  drop() { if (this.active) { this.touch(); this.hardDropping = true; Body.setVelocity(this.active.body, { x: 0, y: 11 }) } }
   /** Scaffolding braces touching, still-moving buildings. There are no charges to spend. */
   glue() {
     if (this.bonds >= 100) return false
@@ -355,7 +371,13 @@ export class Game {
   }
   private tick(softDrop: boolean) {
     this.time += STEP
-    if (this.active) {
+    if (this.active && softDrop) this.touch()
+    if (this.active && this.waiting) {
+      // Held still: no fall speed, and the engine's own gravity term is cancelled exactly.
+      const body = this.active.body
+      Body.setVelocity(body, { x: 0, y: 0 }); Body.setAngularVelocity(body, 0)
+      body.force.y -= body.mass * this.engine.gravity.y * this.engine.gravity.scale
+    } else if (this.active) {
       const body = this.active.body
       const speed = this.hardDropping ? 11 : softDrop ? 6 : 0.85 * this.pace
       Body.setVelocity(body, { x: 0, y: this.prepareLanding(body, speed) }); Body.setAngularVelocity(body, 0)

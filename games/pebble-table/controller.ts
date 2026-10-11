@@ -3,7 +3,7 @@ import { freeSpotOnPlate, GUEST_ARM, GUEST_RADIUS, GUEST_REACH, GUEST_TOP, gazeT
 import { chooseHint, guestsShouldReach, handPose, HintScheduler, type HandPose, type Hint, type TableSummary } from './guidance'
 import { GestureTracker, type Intent, type Target } from './input'
 import { albumSlot, BAG, BAG_MOUTH, DOOR, FEEDING, MAT_KEYS, SCALE, SHELF, shelfTile, TABLE, type MatKey, type Point, type Quarters } from './layout'
-import { GRAVITY, HOLD_HEIGHT, LONGEST_FRAME, STEP, STEP_SLACK, stoneRadius3, TablePhysics, to3, toWorld2, UNIT, type Vec3 } from './physics3d'
+import { GRAVITY, HOLD_HEIGHT, LONGEST_FRAME, PAN_REST_HEIGHT, STEP, STEP_SLACK, stoneRadius3, TablePhysics, to3, toWorld2, UNIT, type Vec3 } from './physics3d'
 import { JAR_REACH, partDepth, partRest, STOOL_REACH, STOOL_TOP } from './partShape'
 import { STONE_REACH, stoneRest } from './stoneShape'
 import { feedingFloor, PAN_RIM, panRimReach, surfaceUnder } from './surfaces'
@@ -197,8 +197,10 @@ export class TableController {
   /** When each guest's tummy last rumbled. */
   readonly rumbles = new Map<number, number>()
   private rumbleStretch = { lastIdle: 0, count: 0, next: RUMBLE_AFTER }
-  /** Empty stools stay hidden until the first shared meal, so a first-time child sees only who is hungry. */
-  stoolsShown: boolean
+  /** Empty stools stay hidden until the first shared meal or the first guest carried off, so a first-time child sees only who is hungry; then they stay out, saved with the table. */
+  get stoolsShown(): boolean {
+    return this.state.stools
+  }
   /** The first-open story beat: a stone rolls out toward the hungry guest and the ghost hand carries it to the plate. */
   private story: Story | null = null
   /** When each jar was last tipped or touched, for its wobble. */
@@ -218,13 +220,17 @@ export class TableController {
     this.cadence = new SaveCadence(() => options.save(serialize(this.state)))
     this.tracker = new GestureTracker(() => this.hitTest())
     this.scheduler = new HintScheduler(0)
+    // No stone has ever left this bag. The first showings (the story, the scale's question) belong to that table alone: a table found tidy, or with its pans empty, stays as it was left.
+    const fresh = this.state.nextId === 1
+    this.feeding = viewFeeding(this.state.pieces, this.state.seats)
+    if (this.state.seats.filter(Boolean).length > 2) this.state.stools = true
+    // A meal already eaten is not eaten again when the table is opened; one shared but not yet eaten (the stools are still in) is.
+    this.shareWasComplete = this.state.stools && this.state.liveMat === 'feeding' && this.feeding.shareComplete
     this.physics.addBag()
     this.enterMat()
     for (const piece of this.state.pieces) this.addPieceBody(piece)
     for (const part of this.state.parts) this.physics.addPart(part.id, part.kind, part)
-    this.feeding = viewFeeding(this.state.pieces, this.state.seats)
-    this.stoolsShown = this.state.seats.filter(Boolean).length > 2
-    if (this.untouchedTable() && this.state.liveMat === 'feeding' && this.state.seats.some(Boolean)) {
+    if (fresh && this.untouchedTable() && this.state.liveMat === 'feeding' && this.state.seats.some(Boolean)) {
       this.story = { phase: 'waiting', at: 0, stoneId: null, from: null, spot: null }
       // The story feeds the hungry guest nearest the bag, so the stone's roll stays short and in view.
       const nearest = FEEDING.seats
@@ -233,7 +239,7 @@ export class TableController {
         .sort((a, b) => a.distance - b.distance)[0]
       if (nearest) this.dealCursor = (nearest.index - 1 + FEEDING.seats.length) % FEEDING.seats.length
     }
-    this.inviteOnScale()
+    if (fresh) this.inviteOnScale()
     this.updateWanting()
     this.guidance = this.computeGuidance()
   }
@@ -302,8 +308,16 @@ export class TableController {
     }
     this.pour()
     if (this.state.liveMat === 'scale') {
-      this.beam = stepBeam(this.beam, targetTilt(this.panLoad()), dt)
-      this.sway = stepSway(this.sway, this.beam.velocity, dt)
+      const target = targetTilt(this.panLoad())
+      const lowered = target < this.beam.angle ? 0 : target > this.beam.angle ? 1 : null
+      if (lowered !== null && this.physics.panRests(lowered)) {
+        // A pan come down on a stone or part lying under it rests there, and the beam and the swing with it, until that is taken away or the other pan outweighs it.
+        this.beam = { angle: (lowered === 0 ? -1 : 1) * ((PAN_REST_HEIGHT - this.physics.panY(lowered)) / UNIT / SCALE.maxDrop) * SCALE.maxTilt, velocity: 0, settledLevel: false }
+        this.sway = { x: this.physics.panSwung(lowered), v: 0 }
+      } else {
+        this.beam = stepBeam(this.beam, target, dt)
+        this.sway = stepSway(this.sway, this.beam.velocity, dt)
+      }
       this.physics.setPanDrops(panDrops(this.beam.angle), swayOf(this.sway))
       const sound = creak(this.beam)
       this.sound.creak(sound.gain, sound.pitch)
@@ -368,10 +382,11 @@ export class TableController {
       this.sound.munch()
       this.sound.chord()
       if (!this.stoolsShown) {
-        this.stoolsShown = true
+        this.state.stools = true
         this.clearStools()
         this.syncGuests()
         this.changed()
+        this.cadence.change(performance.now(), true)
       }
     }
     this.shareWasComplete = view.shareComplete
@@ -1360,6 +1375,11 @@ export class TableController {
       const home = FEEDING.seats[seat].guest
       if (Math.hypot(dropped.x - home.x, dropped.y - home.y) > 130) {
         this.state.seats[seat] = false
+        // Its stool stays behind, so the guest can always be seated again.
+        if (!this.stoolsShown) {
+          this.state.stools = true
+          this.clearStools()
+        }
         this.sound.hop()
         this.changed()
         this.cadence.change(performance.now(), true)

@@ -589,15 +589,17 @@ export const PERSONALITIES: Record<CreatureKind, Personality> = { bird, fish, sn
  * Placed by their projection: clear of the moon's halo, each other, the pine
  * tops and the top edge, and (in the screen plane, not just on screen) of the
  * proscenium, even at the whale's size: a creature that only perspective
- * lifts clear would still pass behind the valance on its way back.
+ * lifts clear would still pass behind the valance on its way back. None
+ * rests under the jam's home control at the top centre, where a tap goes
+ * home: the home above the crest stands to one side of it.
  */
 export const SKY_HOMES: readonly { x: number; y: number }[] = [
   { x: -24, y: 55.5 },
-  { x: 26, y: 55.5 },
+  { x: 34, y: 55.5 },
   { x: -46, y: 55 },
   { x: 60, y: 35 },
   { x: -61, y: 41 },
-  { x: 0, y: 59.5 },
+  { x: 15, y: 59.5 },
   { x: -66, y: 28 },
   { x: 62, y: 25.5 },
 ]

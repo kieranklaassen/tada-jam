@@ -23,6 +23,12 @@ export const HANDLE = 48
 /** A plant's measures at scale 1: the length of one stem joint, the stalk from the top joint to the flower, the flower's radius, the reach of a leaf from the stem, and the pot and the board it stands on. */
 export const PLANT = { joint: 40, stalk: 38, flower: 26, leaf: 29, potW: 58, potH: 50, board: 12, headroom: 16 } as const
 
+/**
+ * The home control the shell lays over every game: round, this many CSS pixels across, in the middle of the top edge
+ * and this far down from it. A tap on it goes home and never reaches the page. `clear` is the room left beside it.
+ */
+export const HOME = { size: 48, top: 10, clear: 6 } as const
+
 export const POTS_PER_ROW = 6
 export const BORDER_PLACES = 18
 export const PACKET_PLACES = 4
@@ -172,13 +178,28 @@ export function layoutOf(width: number, height: number): Layout {
     waiting = { x: m + bandW * 0.78, y: y + bandH * 0.3, w: bandW * 0.22, h: bandH * 0.6 }
   }
 
-  const keptH = top - gap, keptW = Math.min(keptH * 1.5, (rowsW - gap * 3) / KEPT_PLACES)
+  // The top margin, from the right: the kept drawings, newest first, and then the sketches. The shell's home control
+  // (HOME) lies over the middle of it, so the cards stand on both sides of the control and none under it: as many to
+  // its right as leaves the cards widest, and the rest to its left. The right-hand end keeps clear of the tape at the
+  // plate's corner, and the left-hand cards leave the eight sketches their least room.
+  const keptH = top - gap, marginX = rowsX + keptH * 1.1, marginEnd = rowsX + rowsW - 20 * k
+  const homeLeft = w / 2 - HOME.size / 2 - HOME.clear, homeRight = w / 2 + HOME.size / 2 + HOME.clear
+  const rightRoom = marginEnd - homeRight, leftRoom = homeLeft - marginX - gap - SKETCH_PLACES * 8
+  let keptW = 0, onRight = 0
+  for (let n = 0; n <= KEPT_PLACES; n++) {
+    const left = KEPT_PLACES - n
+    const fits = Math.min(keptH * 1.5, n > 0 ? (rightRoom - (n - 1) * gap) / n : Infinity, left > 0 ? (leftRoom - (left - 1) * gap) / left : Infinity)
+    if (fits >= keptW) { keptW = fits; onRight = n }
+  }
   const kept: Rect[] = []
-  for (let i = 0; i < KEPT_PLACES; i++) kept.push({ x: rowsX + rowsW - keptW * 0.5 - (i + 1) * keptW - i * gap, y: m, w: keptW, h: keptH })
-  // The sketches fill the top margin from the rows' left edge up to the kept drawings.
-  const sketchRoom = kept[KEPT_PLACES - 1].x - gap - (rowsX + keptH * 1.1), sketchW = Math.max(8, Math.min(keptH * 0.62, sketchRoom / SKETCH_PLACES))
+  for (let i = 0; i < KEPT_PLACES; i++) {
+    const from = i < onRight ? marginEnd : homeLeft, nth = i < onRight ? i : i - onRight
+    kept.push({ x: from - (nth + 1) * keptW - nth * gap, y: m, w: keptW, h: keptH })
+  }
+  // The sketches fill the top margin from the rows' left edge up to the kept drawings, and stop short of the home control.
+  const sketchRoom = Math.min(kept[KEPT_PLACES - 1].x - gap, homeLeft) - marginX, sketchW = Math.max(8, Math.min(keptH * 0.62, sketchRoom / SKETCH_PLACES))
   const sketches: Rect[] = []
-  for (let i = 0; i < SKETCH_PLACES; i++) sketches.push({ x: rowsX + keptH * 1.1 + i * sketchW, y: m, w: sketchW, h: keptH })
+  for (let i = 0; i < SKETCH_PLACES; i++) sketches.push({ x: marginX + i * sketchW, y: m, w: sketchW, h: keptH })
   // A plant offered stands at the left of the visitor's place and the plants it has kept at the right, the visitor between them (walker.ts).
   const offer = { x: visitor.x + visitor.w * (wide ? 0.2 : 0.12), y: visitor.y + visitor.h * 0.97 }
   const given = wide

@@ -168,13 +168,16 @@ const LEAN_RATE = 10
  * and is let go with it. `free` is where the finger would hold it if Pip were
  * not in the way, and `raised` says she is lifting it higher than that.
  */
-type Drag = { pointer: number; id: number; offset: Vec2; goal: Vec2; at: Vec2; lastX: number; vx: number; angle: number; lean: number; free: number; raised: boolean }
+/** `home` is where the piece was when the finger took it: its pose on the plane, or null for its slot in the tray. */
+type Drag = { pointer: number; id: number; home: Pose | null; offset: Vec2; goal: Vec2; at: Vec2; lastX: number; vx: number; angle: number; lean: number; free: number; raised: boolean }
 /** A piece let go of near Pip: it stays in the air while she is under it, then sets down to `y` and falls from there. */
 type Pending = { id: number; since: number; y: number }
 /** Longest a let-go piece waits over Pip; she is always out well before this. */
 const PENDING_SECONDS = 2.5
 /** Close enough to the height a waiting piece sets down to. */
 const SET_DOWN = 0.02
+/** A piece put back at a known pose is lifted only when it would sit deeper than this in what is under it. */
+const REST_SKIN = 0.058
 /** How far Pip's outline slopes out at her feet for a dragged piece, which rides up her sides instead of jumping over her. */
 const PIP_SLOPE = 0.8
 /** Room kept between Pip's outline and a piece she hops away from. */
@@ -447,7 +450,7 @@ export class KiteController {
     onPlane.sort((a, b) => lowest(a) - lowest(b))
     for (const piece of onPlane) {
       const shape = pieceShape(piece.id)
-      const rest = restHeight(shape, piece.a, piece.x, this.placedList()) - 0.058
+      const rest = restHeight(shape, piece.a, piece.x, this.placedList()) - REST_SKIN
       this.physics.add(piece.id, { x: piece.x, y: Math.max(piece.y, rest), angle: piece.a })
       this.trayed[piece.id] = false
     }
@@ -471,7 +474,7 @@ export class KiteController {
     this.running = running
     this.sound?.setActive(running)
     if (!running) {
-      for (const drag of [...this.drags]) this.drop(drag)
+      for (const drag of [...this.drags]) this.cancelDrag(drag)
       this.gestures.reset()
       this.sound?.wind(false)
       this.saves.settle(this.t)
@@ -485,10 +488,13 @@ export class KiteController {
 
   // ---- state -------------------------------------------------------------
 
+  /** A piece in the hand is saved where the finger took it from, never in the air. */
   snapshot(): KiteState {
     const pieces: SavedPiece[] = PIECES.map((p) => {
       if (this.trayed[p.id] || !this.physics.has(p.id)) return { id: p.id, tray: true }
-      const pose = this.physics.pose(p.id, this.poseScratch)
+      const drag = this.drags.find((d) => d.id === p.id)
+      if (drag && !drag.home) return { id: p.id, tray: true }
+      const pose = drag?.home ?? this.physics.pose(p.id, this.poseScratch)
       return { id: p.id, tray: false, x: pose.x, y: pose.y, a: pose.angle }
     })
     return serialize({ v: this.state.v, perch: this.state.perch, pieces })
@@ -810,7 +816,7 @@ export class KiteController {
       const y = this.lift(id, 0, x, this.heldScale(id), PIP_SLOPE)
       this.physics.add(id, { x: this.liftX, y, angle: 0 })
       this.physics.hold(id)
-      this.drags.push({ pointer, id, offset: { x: 0, y: 0 }, goal: { x, y: 0 }, at: { x, y }, lastX: x, vx: 0, angle: 0, lean: 0, free: y, raised: false })
+      this.drags.push({ pointer, id, home: null, offset: { x: 0, y: 0 }, goal: { x, y: 0 }, at: { x, y }, lastX: x, vx: 0, angle: 0, lean: 0, free: y, raised: false })
       this.sound?.pickup()
       this.version += 1
     } else if (target.kind === 'piece') {
@@ -820,7 +826,7 @@ export class KiteController {
       const pose = this.physics.pose(id, this.poseScratch)
       this.supportLost(id)
       this.physics.hold(id)
-      this.drags.push({ pointer, id, offset: { x: pose.x - p.x, y: pose.y - p.y }, goal: { x: pose.x, y: pose.y }, at: { x: pose.x, y: pose.y }, lastX: pose.x, vx: 0, angle: pose.angle, lean: 0, free: pose.y, raised: false })
+      this.drags.push({ pointer, id, home: { x: pose.x, y: pose.y, angle: pose.angle }, offset: { x: pose.x - p.x, y: pose.y - p.y }, goal: { x: pose.x, y: pose.y }, at: { x: pose.x, y: pose.y }, lastX: pose.x, vx: 0, angle: pose.angle, lean: 0, free: pose.y, raised: false })
       this.sound?.pickup()
     } else return
     this.onDragMove(pointer, at)
@@ -866,6 +872,34 @@ export class KiteController {
     this.letGo(drag.id, drag.vx * 0.35, drag.raised ? Math.min(drag.at.y, drag.free) : drag.at.y)
     this.noticeDrop(drag.id)
     this.saves.change(this.t, true)
+  }
+
+  /**
+   * Put away under a finger that is still dragging: no drop. The piece goes
+   * back where the finger took it from, its tray slot or its place on the
+   * plane, on top of anything that fell into that place meanwhile; if Pip
+   * walked there, it waits over her while she hops out, like any piece let
+   * go over her.
+   */
+  private cancelDrag(drag: Drag): void {
+    this.removeDrag(drag)
+    this.held.length = 0
+    const id = drag.id
+    this.physics.remove(id)
+    this.wobbly = null
+    this.version += 1
+    const home = drag.home
+    this.saves.mark()
+    if (!home) {
+      this.trayed[id] = true
+      return
+    }
+    const shape = pieceShape(id)
+    const y = Math.max(home.y, restHeight(shape, home.angle, home.x, this.placedList(id)) - REST_SKIN)
+    const over = Math.max(y, restHeight(shape, home.angle, home.x, this.pipOutline()))
+    this.physics.add(id, { x: home.x, y: over, angle: home.angle })
+    this.physics.hold(id)
+    this.letGo(id, 0, y)
   }
 
   private noticeDrop(id: number): void {

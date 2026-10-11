@@ -49,13 +49,13 @@ Never share the dev server as "the game" when the owner is going to judge feel o
    ipconfig getifaddr en0
    ```
 
-3. Share this URL shape, with the grown-up strip hidden and the game opened directly:
+3. Share this URL shape, with the game opened directly and nothing drawn over it:
 
    ```
    http://<LAN IP>:4173/?chrome=0#/play/<key>
    ```
 
-   The `#/play/<key>` hash is what `harness/main.tsx` routes on; `?chrome=0` starts with the strip hidden (README "Run it").
+   The `#/play/<key>` hash is what `harness/main.tsx` routes on; `?chrome=0` draws nothing over the game; without it the game opens under the home control, and the strip is behind a one-second hold on that control (README "Run it").
 
 4. Run the preview in its own tmux session (for example `tada-jam-prod`) so the dev server session keeps running for iteration.
 

@@ -108,7 +108,7 @@ export class CosyScene {
     for (const texture of [this.materials.textures.knitNormal, this.materials.textures.knitShade]) texture.anisotropy = anisotropy
     this.world = buildWorld(this.materials)
     this.scene.add(this.world.group)
-    this.props = new Props(this.materials, game.balls.length)
+    this.props = new Props(this.materials)
     this.scene.add(this.props.group)
     this.animals = buildAnimals(this.materials)
     for (const animal of ANIMALS) this.scene.add(this.animals[animal].root)

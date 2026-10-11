@@ -15,8 +15,16 @@ describe('the snail behind the tray', () => {
     const snail = new Snail(1)
     play(snail, 600, (s) => {
       expect(s.pose.z).toBe(SNAIL.z)
-      expect(Math.abs(s.pose.x)).toBeLessThanOrEqual(SNAIL.reach + 0.05)
+      expect(s.pose.x).toBeGreaterThanOrEqual(-SNAIL.reach - 0.05)
     })
+  })
+
+  it('keeps to the left part of the boards whatever the seed: it never creeps into the middle, where the shell that holds the game lays its home control over the top edge', () => {
+    for (const seed of [1, 2, 3, 7, 12345]) {
+      const snail = new Snail(seed)
+      expect(snail.pose.x).toBeLessThanOrEqual(-SNAIL.near)
+      play(snail, 600, (s) => expect(s.pose.x).toBeLessThanOrEqual(-SNAIL.near + 0.05))
+    }
   })
 
   it('creeps slowly, stretching and gathering, and turns round at the end of its line', () => {
@@ -35,7 +43,7 @@ describe('the snail behind the tray', () => {
     })
     // It has faced both ways, and been to both ends of its line.
     expect(headings.has(1) && headings.has(-1)).toBe(true)
-    expect(rightmost - leftmost).toBeGreaterThan(SNAIL.reach * 1.9)
+    expect(rightmost - leftmost).toBeGreaterThan((SNAIL.reach - SNAIL.near) * 0.95)
   })
 
   it('touched, it pulls into its shell at once, its shell rocks, and it looks out again one eye at a time and creeps on', () => {

@@ -587,6 +587,121 @@ describe('KiteController', () => {
   })
 })
 
+describe('put away under a finger that is still dragging', () => {
+  const cubeAt = (game: KiteController, id: number) => {
+    const b = game.physics.body(id)!
+    return { x: b.position.x, y: b.position.y }
+  }
+
+  it('a piece on its way out of the tray is back in the tray, and no save ever held it in the air', () => {
+    const { game, saves } = make(defaultState(5))
+    run(game, 0.2)
+    game.pointerDown(1, slotScreen(0), 0)
+    game.pointerMove(1, { x: 0, y: 40 })
+    game.pointerMove(1, { x: -1, y: 3 })
+    run(game, 0.6)
+    expect(game.isHeld(0)).toBe(true)
+    game.setRunning(false)
+    expect(game.trayed[0]).toBe(true)
+    expect(game.isHeld(0)).toBe(false)
+    expect(saves.length).toBeGreaterThan(0)
+    for (const save of saves) expect(save.pieces[0]).toEqual({ id: 0, tray: true })
+    game.setRunning(true)
+    run(game, 2)
+    expect(game.trayed[0]).toBe(true)
+    expect(game.snapshot().pieces[0]).toEqual({ id: 0, tray: true })
+  })
+
+  it('a block lifted off a tower is back on it, not dropped where the finger was', () => {
+    const tower: SavedPiece[] = [
+      { id: 0, tray: false, x: 2, y: 0.5, a: 0 },
+      { id: 1, tray: false, x: 2, y: 1.5, a: 0 },
+    ]
+    const { game, saves } = make(withPieces(tower, 3))
+    run(game, 1)
+    saves.length = 0
+    game.pointerDown(1, { x: 2, y: 1.5 }, 0)
+    game.pointerMove(1, { x: 2, y: 30 })
+    game.pointerMove(1, { x: -1, y: 4 })
+    run(game, 0.6)
+    expect(game.isHeld(1)).toBe(true)
+    game.setRunning(false)
+    expect(game.isHeld(1)).toBe(false)
+    expect(saves.length).toBeGreaterThan(0)
+    for (const save of saves) {
+      const piece = save.pieces[1]
+      expect(piece.tray).toBe(false)
+      if (piece.tray) continue
+      expect(piece.x).toBeCloseTo(2, 1)
+      expect(piece.y).toBeCloseTo(1.5, 1)
+    }
+    game.setRunning(true)
+    run(game, 2)
+    expect(cubeAt(game, 1).x).toBeCloseTo(2, 1)
+    expect(cubeAt(game, 1).y).toBeCloseTo(1.5, 1)
+    expect(cubeAt(game, 0).y).toBeCloseTo(0.5, 1)
+  })
+
+  it('a block pulled out from under another goes back on top of the one that fell into its place', () => {
+    const tower: SavedPiece[] = [
+      { id: 0, tray: false, x: 2, y: 0.5, a: 0 },
+      { id: 1, tray: false, x: 2, y: 1.5, a: 0 },
+    ]
+    const { game } = make(withPieces(tower, 3))
+    run(game, 1)
+    game.pointerDown(1, { x: 2, y: 0.5 }, 0)
+    game.pointerMove(1, { x: 2, y: 30 })
+    game.pointerMove(1, { x: -1, y: 4 })
+    run(game, 1.5)
+    expect(cubeAt(game, 1).y).toBeCloseTo(0.5, 1)
+    game.setRunning(false)
+    game.setRunning(true)
+    run(game, 2)
+    expect(cubeAt(game, 0).x).toBeCloseTo(2, 1)
+    expect(cubeAt(game, 0).y).toBeCloseTo(1.5, 1)
+    expect(cubeAt(game, 1).y).toBeCloseTo(0.5, 1)
+  })
+
+  it('Pip standing where the block was: it waits over her while she hops out, and never lies inside her', () => {
+    const perch = PERCHES[2]
+    const home = perch.x - 0.65
+    const { game } = make(withPieces([{ id: 0, tray: false, x: home, y: 0.5, a: 0 }], 2))
+    run(game, 4)
+    expect(game.hero.on).toBe(0)
+    game.pointerDown(1, { x: home, y: 0.5 }, 0)
+    game.pointerMove(1, { x: home, y: 30 })
+    game.pointerMove(1, { x: -3, y: 4 })
+    run(game, 5)
+    expect(game.hero.mode).toBe('stand')
+    expect(Math.abs(game.hero.x - home)).toBeLessThan(0.5)
+    game.setRunning(false)
+    expect(game.isHeld(0)).toBe(true)
+    expect(pipInBlock(game).depth).toBe(0)
+    game.setRunning(true)
+    let deepest = 0
+    run(game, 4, () => {
+      deepest = Math.max(deepest, pipInBlock(game).depth)
+    })
+    expect(deepest).toBeLessThan(0.02)
+    expect(game.isHeld(0)).toBe(false)
+    expect(cubeAt(game, 0).x).toBeCloseTo(home, 1)
+    expect(cubeAt(game, 0).y).toBeCloseTo(0.5, 1)
+  })
+
+  it('a fourth finger is still a drop: the child is there', () => {
+    const { game } = make(defaultState(5))
+    run(game, 0.2)
+    game.pointerDown(1, slotScreen(0), 0)
+    game.pointerMove(1, { x: 0, y: 40 })
+    game.pointerMove(1, { x: -1, y: 3 })
+    run(game, 0.3)
+    for (const pointer of [2, 3, 4]) game.pointerDown(pointer, { x: 4 + pointer, y: 6 }, 10)
+    run(game, 2)
+    expect(game.trayed[0]).toBe(false)
+    expect(cubeAt(game, 0).x).toBeCloseTo(-1, 0)
+  })
+})
+
 describe('Pip never ends up inside a block', () => {
   it('tumbled out in front, she hops back in beside a block set down where she fell, not into it', () => {
     const perch = PERCHES[2]

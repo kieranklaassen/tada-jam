@@ -102,6 +102,19 @@ export function placeCreature(group: THREE.Object3D, pose: CreaturePose): void {
   group.scale.set(pose.sx * s * facing, pose.sy * s, s)
 }
 
+/** Aims a camera so the whole theatre fits a surface of this aspect, whichever way the surface is tighter. */
+export function frameTheatre(camera: THREE.PerspectiveCamera, aspect: number): void {
+  const vHalf = THREE.MathUtils.degToRad(FOV / 2)
+  const hHalf = Math.atan(Math.tan(vHalf) * aspect)
+  const distance = Math.max(HALF_HEIGHT / Math.tan(vHalf), HALF_WIDTH / Math.tan(hHalf))
+  camera.fov = FOV
+  camera.aspect = aspect
+  camera.position.set(TARGET.x, TARGET.y + Math.sin(PITCH) * distance, TARGET.z + Math.cos(PITCH) * distance)
+  camera.lookAt(TARGET)
+  camera.updateProjectionMatrix()
+  camera.updateMatrixWorld()
+}
+
 export type ViewOptions = { overlay: boolean; tierOverride: number | null }
 
 export class TheatreView {
@@ -542,15 +555,7 @@ export class TheatreView {
     this.width = width
     this.height = height
     this.renderer.setSize(width, height, false)
-    const aspect = width / height
-    const vHalf = THREE.MathUtils.degToRad(FOV / 2)
-    const hHalf = Math.atan(Math.tan(vHalf) * aspect)
-    const distance = Math.max(HALF_HEIGHT / Math.tan(vHalf), HALF_WIDTH / Math.tan(hHalf))
-    this.camera.aspect = aspect
-    this.camera.position.set(TARGET.x, TARGET.y + Math.sin(PITCH) * distance, TARGET.z + Math.cos(PITCH) * distance)
-    this.camera.lookAt(TARGET)
-    this.camera.updateProjectionMatrix()
-    this.camera.updateMatrixWorld()
+    frameTheatre(this.camera, width / height)
     // The halo and hand face the camera; the flame turns to it about the vertical.
     this.halo.quaternion.copy(this.camera.quaternion)
     this.hand.quaternion.copy(this.camera.quaternion)

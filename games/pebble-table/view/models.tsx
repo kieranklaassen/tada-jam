@@ -35,7 +35,7 @@ import {
   type Ball,
   type Lumped,
 } from '../partShape'
-import { BOWL_LUMP, BOWL_PROFILE, BOWL_SCALE, DECAL_LIFT, decalReach, DISH_PROFILE, feedingFloor, HEM_POINTS, hemAt, ON_RUG, PAN_DEPTH, PAN_ROLL, PAN_SEGMENTS, PLATE_HEIGHT, PLATE_LUMP, PLATE_PROFILE, ROPE_KNOT, RUG, RUG_HEM, RUG_HEM_Y, type Surfaces } from '../surfaces'
+import { BOWL_LUMP, BOWL_PROFILE, BOWL_SCALE, DECAL_LIFT, decalReach, feedingFloor, HEM_POINTS, hemAt, ON_RUG, PAN_DEPTH, PAN_ROLL, PAN_SEGMENTS, PLATE_HEIGHT, PLATE_LUMP, PLATE_PROFILE, ROPE_KNOT, RUG, RUG_HEM, RUG_HEM_Y, type Surfaces } from '../surfaces'
 import { furTime, MAX_SHELLS } from './fur'
 import { installClayToneMapping } from './finish'
 import { ARM_AT, CHEEK_AT, EAR_AT, GUEST_SIZE, guestFloor, NECK_Y, poseGuest, soleDepth, speciesShapes } from './guest'
@@ -741,9 +741,14 @@ function coilGeometry(): THREE.BufferGeometry {
   return merge([piece(geometry, PALETTE.pan, {}, { ground: null })])
 }
 
+/**
+ * A pan: its dish true to its profile inside and out, since stones and parts
+ * lie in it, lean on it and lie under it, and the physics holds them off that
+ * profile (surfaces.ts). Only the rolled rim is lumpy.
+ */
 function panGeometry(radius: number): THREE.BufferGeometry {
   return merge([
-    piece(geo.dish(PAN_SEGMENTS), PALETTE.pan, { scale: [radius, PAN_DEPTH, radius] }, { lump: 0.3, frequency: 0.35, seed: 5, ground: null, hold: holdLathe(DISH_PROFILE.slice(4)) }),
+    piece(geo.dish(PAN_SEGMENTS), PALETTE.pan, { scale: [radius, PAN_DEPTH, radius] }, { ground: null }),
     piece(geo.torus(40, PAN_ROLL.tube), PALETTE.pan, { position: [0, PAN_ROLL.y, 0], rotation: [Math.PI / 2, 0, 0], scale: radius * PAN_ROLL.radius }, { lump: 0.04, frequency: 0.5, ground: null }),
   ])
 }

@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { DANCE_SECONDS, DANCE_START, PAINT_DWELL_S, POWDER_PUFF, ScarfController, silentSound, type Projector, type Sound } from './controller'
 import type { Point } from './input'
-import { BASKET, CELL_H, HILL_SPOTS, LOOM, LOOM_SPOT, SCARF, cellCentre, groundY, needlesY } from './layout'
+import { ballRest } from './balls'
+import { BASKET, CELL_H, HILL_SPOTS, LOOM, LOOM_SPOT, SCARF, WAIT_SPOT, cellCentre, groundY, needlesY } from './layout'
 import { suggestColour } from './pattern'
-import { ANIMALS, initialState, WIDTH, type GameState, type Row } from './state'
+import { ANIMALS, COLOURS, deserialize, initialState, WIDTH, type GameState, type Row } from './state'
 
 const PPU = 10
 const projector: Projector = {
@@ -166,14 +167,15 @@ describe('ScarfController', () => {
 
   it('puffs snow where a touch meets the slope, and flurries in the sky above the hill', () => {
     const { game } = setup()
-    tap(game, screenOf(-60, 5))
+    // To the right of the basket: the cold animal waits on the left.
+    tap(game, screenOf(62, 5))
     const [onSlope, ...spray] = game.puffs.filter((puff) => puff.t0 === game.t)
     expect(onSlope.z).toBeLessThan(-16)
     expect(spray).toHaveLength(2)
     expect([onSlope, ...spray].every((puff) => puff.colour === POWDER_PUFF)).toBe(true)
     expect(onSlope.y - onSlope.size * 0.6).toBeCloseTo(groundY(onSlope.x, onSlope.z), 1)
     expect(groundY(onSlope.x, onSlope.z)).toBeCloseTo(5, 0)
-    tap(game, screenOf(-60, 40))
+    tap(game, screenOf(62, 40))
     const inSky = game.puffs.filter((puff) => puff.t0 === game.t && puff !== onSlope && !spray.includes(puff))
     expect(inSky).toHaveLength(1)
     expect(inSky[0].y).toBeCloseTo(40)
@@ -182,7 +184,10 @@ describe('ScarfController', () => {
 
   it('answers every touch with a sound: a ball lifted and set back down, and a stroke on anything that does not follow a finger', () => {
     const { sound, heard } = listening()
-    const { game } = setup(initialState(), 5, sound)
+    // Every colour is out already, so the basket has no more to give.
+    const state = initialState()
+    state.balls = COLOURS
+    const { game } = setup(state, 5, sound)
     run(game, 4)
     const listen = (touch: () => void): string[] => {
       heard.length = 0
@@ -195,7 +200,7 @@ describe('ScarfController', () => {
     const bunny = game.actors.bunny
     expect(listen(stroke(screenOf(bunny.x, groundY(bunny.x, bunny.z) + 8)))).toEqual(['shiver'])
     expect(listen(stroke(screenOf(BASKET.x, 0.5)))).toEqual(['basket'])
-    expect(listen(stroke(screenOf(-60, 5)))).toEqual(['crunch'])
+    expect(listen(stroke(screenOf(62, 5)))).toEqual(['crunch'])
     const frame = cellCentre(4, 1)
     expect(listen(stroke(screenOf(frame.x, frame.y)))).toContain('hop')
   })
@@ -308,11 +313,11 @@ describe('ScarfController', () => {
     expect(saves.at(-1)?.loom).toEqual([row(0)])
   })
 
-  it('gives a long enough scarf to the waiting animal, who warms, dances and walks home while the next one waddles in', () => {
+  it('gives a long enough scarf to the waiting animal, who warms, dances and walks home; the next one comes into view and waits there for a touch', () => {
     const state = initialState()
     state.loom = Array.from({ length: 8 }, (_, i) => row(i % 2))
     const { game, saves } = setup(state, 5)
-    run(game, 4)
+    run(game, 0.5)
     expect(game.actors.bunny.x).toBeCloseTo(LOOM_SPOT.x)
     expect(game.offered).toBe(true)
     const middle = cellCentre(4, 2)
@@ -328,28 +333,123 @@ describe('ScarfController', () => {
     run(game, DANCE_SECONDS.bunny + 12)
     expect(game.actors.bunny.x).toBeCloseTo(HILL_SPOTS.bunny.x)
     expect(game.actors.bunny.warm).toBe(1)
-    expect(game.actors.penguin.x).toBeCloseTo(LOOM_SPOT.x)
     expect(game.worn[0].wrap).toBe(1)
+    const penguin = game.actors.penguin
+    expect(penguin.visible).toBe(true)
+    expect(penguin.x).toBeCloseTo(WAIT_SPOT.x)
+    // Left alone, it goes on waiting where it is: nothing new starts by itself.
+    run(game, 60)
+    expect(penguin.walking).toBe(false)
+    expect(penguin.x).toBeCloseTo(WAIT_SPOT.x)
+    tap(game, ballAt(game, 1))
+    run(game, 6)
+    expect(penguin.x).toBeCloseTo(LOOM_SPOT.x)
+    expect(penguin.z).toBeCloseTo(LOOM_SPOT.z)
+    expect(penguin.destination).toBe('loom')
   })
 
-  it('lets the friend walking home behind the loom clear its window before the next cold animal arrives', () => {
-    const state = initialState()
-    state.scarves.bunny = [[row(0), row(1)]]
-    state.atLoom = 'penguin'
-    state.loom = Array.from({ length: 8 }, (_, i) => row(i % 2))
-    const { game } = setup(state, 5)
-    run(game, 10)
-    expect(game.offered).toBe(true)
-    tap(game, screenOf(SCARF.x, SCARF.top - 10))
-    const penguin = game.actors.penguin
-    const fox = game.actors.fox
-    let arrivedWith = Number.NaN
-    for (let i = 0; i < 60 * 25 && Number.isNaN(arrivedWith); i++) {
-      game.step(1 / 60)
-      if (fox.destination === 'loom' && fox.visible && !fox.walking) arrivedWith = penguin.x
+  it('lets the friend walking home behind the loom clear its window before the next cold animal comes into view, or up to the loom when a touch has already called it', () => {
+    for (const called of [false, true]) {
+      const state = initialState()
+      state.scarves.bunny = [[row(0), row(1)]]
+      state.atLoom = 'penguin'
+      state.loom = Array.from({ length: 8 }, (_, i) => row(i % 2))
+      const { game } = setup(state, 5)
+      run(game, 0.5)
+      expect(game.offered).toBe(true)
+      tap(game, screenOf(SCARF.x, SCARF.top - 10))
+      const penguin = game.actors.penguin
+      const fox = game.actors.fox
+      let arrivedWith = Number.NaN
+      for (let i = 0; i < 60 * 25 && Number.isNaN(arrivedWith); i++) {
+        game.step(1 / 60)
+        // A touch as soon as the penguin sets off for home, before the fox has shown itself.
+        if (called && penguin.walking && fox.destination === 'wait') tap(game, screenOf(62, 5))
+        if (fox.destination === (called ? 'loom' : 'wait') && fox.visible && !fox.walking) arrivedWith = penguin.x
+      }
+      expect(arrivedWith).toBeGreaterThan(LOOM.x + LOOM.postX)
+      expect(penguin.x).toBeLessThan(HILL_SPOTS.penguin.x)
     }
-    expect(arrivedWith).toBeGreaterThan(LOOM.x + LOOM.postX)
-    expect(penguin.x).toBeLessThan(HILL_SPOTS.penguin.x)
+  })
+
+  it('opens with the cold animal waiting in view, and it steps up to the loom at the first touch, wherever that lands', () => {
+    const { game } = setup()
+    const bunny = game.actors.bunny
+    expect(bunny.visible).toBe(true)
+    expect([bunny.x, bunny.z, bunny.walking]).toEqual([WAIT_SPOT.x, WAIT_SPOT.z, false])
+    run(game, 30)
+    expect([bunny.x, bunny.z, bunny.walking]).toEqual([WAIT_SPOT.x, WAIT_SPOT.z, false])
+    tap(game, screenOf(-12, 0.2))
+    expect(bunny.walking).toBe(true)
+    run(game, 3)
+    expect(bunny.x).toBeCloseTo(LOOM_SPOT.x)
+    expect(bunny.z).toBeCloseTo(LOOM_SPOT.z)
+    expect(bunny.walking).toBe(false)
+  })
+
+  it('is found as left: whoever a scarf is on the loom for stands at the loom on open, and nobody walks in', () => {
+    const cold = initialState()
+    cold.scarves.bunny = [[row(0), row(1)]]
+    cold.atLoom = 'penguin'
+    cold.loom = [row(2)]
+    const first = setup(cold).game
+    expect([first.actors.penguin.x, first.actors.penguin.z, first.actors.penguin.walking]).toEqual([LOOM_SPOT.x, LOOM_SPOT.z, false])
+    expect(first.actors.bunny.walking).toBe(false)
+
+    // A cosy friend called down for one more scarf is found at the loom too, not walking down again.
+    const cosy = initialState()
+    for (const animal of ANIMALS) cosy.scarves[animal] = [[row(0), row(1)]]
+    cosy.atLoom = 'fox'
+    cosy.loom = Array.from({ length: 8 }, () => row(1))
+    const second = setup(cosy).game
+    expect([second.actors.fox.x, second.actors.fox.z, second.actors.fox.walking]).toEqual([LOOM_SPOT.x, LOOM_SPOT.z, false])
+    run(second, 0.5)
+    expect(second.offered).toBe(true)
+
+    // The next cold one, with nothing knitted for it yet, is found waiting where it waited.
+    const next = initialState()
+    next.scarves.bunny = [[row(0), row(1)]]
+    next.atLoom = 'penguin'
+    const third = setup(next).game
+    expect([third.actors.penguin.x, third.actors.penguin.walking, third.actors.penguin.destination]).toEqual([WAIT_SPOT.x, false, 'wait'])
+  })
+
+  it('brings one more yarn ball out of the basket at each tap on it, up to every colour, and keeps that over the age', () => {
+    const { sound, heard } = listening()
+    const { game, saves } = setup(initialState(), 5, sound)
+    expect(game.balls).toHaveLength(4)
+    const basket = screenOf(BASKET.x, 1)
+    tap(game, basket)
+    expect(game.balls).toHaveLength(5)
+    expect(game.balls[4].colour).toBe(4)
+    expect(saves.at(-1)?.balls).toBe(5)
+    run(game, 1.5)
+    // The basket, the new ball's own note, then every ball landing in its new place.
+    expect(heard).toEqual(['basket', 'hop', 'settle', 'settle', 'settle', 'settle', 'settle'])
+    game.balls.forEach((ball, i) => {
+      expect(ball.rest).toEqual(ballRest(i, 5))
+      expect(ball.pos).toEqual(ball.rest)
+    })
+    // The new colour knits like any other.
+    tap(game, ballAt(game, 4))
+    expect(game.state.loom).toEqual([row(4)])
+    tap(game, basket)
+    run(game, 1.5)
+    tap(game, basket)
+    run(game, 1.5)
+    expect(game.balls).toHaveLength(COLOURS)
+    expect(saves.at(-1)?.balls).toBe(COLOURS)
+    game.balls.forEach((ball, i) => expect(ball.pos).toEqual(ballRest(i, COLOURS)))
+    expect(setup(deserialize(saves.at(-1)), 5).game.balls).toHaveLength(COLOURS)
+  })
+
+  it('sets the basket from the age only until the child has tipped it', () => {
+    expect(setup(initialState(), null).game.balls).toHaveLength(4)
+    expect(setup(initialState(), 7).game.balls).toHaveLength(5)
+    expect(setup(initialState(), 12).game.balls).toHaveLength(6)
+    const tipped = initialState()
+    tipped.balls = 5
+    expect(setup(tipped, 9).game.balls).toHaveLength(5)
   })
 
   it('does not give a scarf that is still short', () => {

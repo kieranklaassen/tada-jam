@@ -1,9 +1,9 @@
 import { clampToPanel, CREATURES, defaultLayout, PIECE_IDS, PIECES, slotPoint, trayAngle, type PieceId, type PiecePose, type Point } from './layout'
 
 // The garden's saved shape: where every piece stands and which way it
-// faces, and where each creature last lay down to sleep. Whether a creature
-// is awake is not saved; they nap while the table is put away, and wake
-// again as soon as their light finds them.
+// faces, where each creature's bed is, and which creatures are up. A garden
+// is found as it was left: whoever was awake is awake, with no second
+// waking, and one that was walking off to nap is asleep where it was going.
 
 export const STATE_VERSION = 1
 
@@ -11,11 +11,13 @@ export type GardenState = {
   v: typeof STATE_VERSION
   pieces: PiecePose[]
   beds: Point[]
+  /** Which creatures are up, by creature index. A save from before this was kept reads as all asleep. */
+  awake: boolean[]
 }
 
 export function defaultGarden(childAge: number | null): GardenState {
   const { pieces, beds } = defaultLayout(childAge)
-  return { v: STATE_VERSION, pieces, beds }
+  return { v: STATE_VERSION, pieces, beds, awake: beds.map(() => false) }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -66,7 +68,8 @@ export function deserialize(raw: unknown, childAge: number | null): GardenState 
     if (x === null || y === null) return bed
     return clampToPanel({ x, y }, CREATURES[index].radius + 1)
   })
-  return { v: STATE_VERSION, pieces, beds }
+  const awake = fallback.beds.map((_, index) => Array.isArray(raw.awake) && raw.awake[index] === true)
+  return { v: STATE_VERSION, pieces, beds, awake }
 }
 
 const round = (value: number, places: number) => Math.round(value * 10 ** places) / 10 ** places
@@ -76,5 +79,6 @@ export function serialize(state: GardenState): GardenState {
     v: STATE_VERSION,
     pieces: state.pieces.map((piece) => ({ id: piece.id, x: round(piece.x, 1), y: round(piece.y, 1), angle: round(wrapAngle(piece.angle), 3), inTray: piece.inTray })),
     beds: state.beds.map((bed) => ({ x: round(bed.x, 1), y: round(bed.y, 1) })),
+    awake: state.awake.map((up) => up === true),
   }
 }
