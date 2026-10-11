@@ -343,6 +343,12 @@ function waitHere(raid: Raid, invader: Invader): void {
   raid.events.push({ type: 'waits', id: invader.id, kind: invader.kind })
 }
 
+/** Whether the way home still has a climb of two cells or more straight through the air, which only a drop could have made. */
+function dropsOnTheWay(invader: Invader, cols: number): boolean {
+  for (let n = invader.step; n + 1 < invader.way.length; n++) if (Math.floor(invader.way[n] / cols) - Math.floor(invader.way[n + 1] / cols) > 1) return true
+  return false
+}
+
 /** Whether one who sits held on the ground is within a body's length ahead on this one's way home. */
 function heldAhead(raid: Raid, invader: Invader): boolean {
   for (const other of raid.invaders) {
@@ -874,7 +880,9 @@ export function stepRaid(raid: Raid): void {
         // workers. The next one sits down a body's length behind it, so that each is seen.
         // A raider ant that let go and dropped on its way in cannot climb back through the air either: it goes back
         // as far as the foot of its drop, shrugs, and waits for the workers the same way.
-        if ((plods(gait) || gait === 'ant') && invader.along === 0 && (Math.floor(invader.cell / cols) - Math.floor(next / cols) > 1 || heldAhead(raid, invader))) {
+        // One that can climb all its way home walks over whoever sits in it, as it does over a beetle's back.
+        const cannotClimb = plods(gait) || (gait === 'ant' && dropsOnTheWay(invader, cols))
+        if (cannotClimb && invader.along === 0 && (Math.floor(invader.cell / cols) - Math.floor(next / cols) > 1 || heldAhead(raid, invader))) {
           invader.state = 'held'
           raid.events.push({ type: 'held', id: invader.id, kind: invader.kind })
           break

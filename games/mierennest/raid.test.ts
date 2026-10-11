@@ -80,6 +80,11 @@ describe('a room under the shaft, and a mouth partly shut', () => {
     expect(states(raid)).toEqual(['held'])
     expect(Math.floor(raid.invaders[0].cell / 11)).toBe(6)
     expect(judge(endOf(raid))).toBe('not-well')
+    // One that climbed all its way in goes home past a beetle that sits held in its way.
+    const walled = ['XXXX...XXXX', '####...####', '####...####', '####...####', '####......#', '####......#', '####......#', '###########', 'XXXXXXXXXXX']
+    const mixed = playOut(raidOn(walled, ['beetle', 'ant']))
+    expect(mixed.acts).toBe(2)
+    expect(states(mixed)).toEqual(['held', 'home'])
     // A file of them sits a body's length apart, none in another.
     const file = playOut(raidOn(under, ['ant', 'ant', 'ant']))
     expect(file.acts).toBe(3)
