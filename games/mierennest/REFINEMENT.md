@@ -4,7 +4,9 @@
 ## Status
 
 - Stage: sheet. Run 1 is done: the sheet, the look spike and the pure rules, and after them the pastes of the sheet's first check. Nothing is played yet. Base commit ef85be4d.
-- Answers handled: 1 (`docs/build/answers/mierennest-1.md`, read on the base branch at `93e53de`). Its sheet part and its rules part are done in this run. Its last part, going on to the toy, is not: this run's message ended it at the rules, so the toy is the next run's.
+- Answers handled: 1 and 2, read on the base branch at `94bb46a`.
+  - 1 (`docs/build/answers/mierennest-1.md`): its sheet part and its rules part are done in this run. Its last part, going on to the toy, is not: this run's message ended it at the rules, so the toy is the next run's.
+  - 2 (`docs/build/answers/mierennest-2.md`), the lead's look at the first stills: **the look stands**. It names four things to mend in the toy run, in the look only, and one for the game run. None is done yet; they are listed under "Open for the toy run" below.
 - Sheet, round 1: checker cloud-1, on commit `bb54b24` (hash `ee5b0619...c50783`). Outcome: open, 17 findings. All seventeen replacements are pasted as written; none was left out.
 - Sheet now: commit `42676f5`. Hash of the sheet part: `ed5c668a648f280ff29eeb0918fd968a59ca4ac5fb17efdc9f2a642eef48cd15`. **One line of this round is not a paste**, asked for by the lead: under "What a chamber is", the third bullet, which begins "A wall built right across a way shuts the air out". Nothing above `## The look` has changed since that commit.
 - Rules: at commit `a46ec4f`, written against the sheet at `42676f5`, at the builder's own risk while round 2 is checked: `ground.ts`, `build.ts`, `chambers.ts`, `walls.ts`, `habits.ts`, `order.ts`, `save.ts`, and the ladder in `config.ts`, each with its tests. Brought into line with round 1: the mouth and shaft three cells wide (finding 1); the sand rule held by tests (2); a carried lump stays in its cell until it is set down, and is set down only where the finger lets go, along the ant's open way (5, 7); nothing dug that the finger did not touch (8); the stone on a shoved wall (11); forty rooms (12); the hill bounded and held clear of the bell, the log and the mouth by a test (9). Findings 4, 6, 10, 13, 14 and 15 are about the raid, the machines, the rooms' furnishing and the guidance, which later runs build from the sheet as it now stands. No raid is played yet: `raid.ts` and `machines.ts` are run 3.
@@ -19,6 +21,15 @@
 - *What share is empty.* None is bare page. The top fifth is the camp, full from edge to edge. The other four fifths are the ground, which is the surface the child works on: it holds the three seams, the roots, the queen and the ant, and stays otherwise plain on purpose. A new nest has no room in it yet; the grown kingdom and the raid show the same ground lived in.
 - *What is funny.* The queen wedged in a shaft far too narrow for her, with her feelers out of the mouth and her egg held tight; a raider ant asleep at its tent and another stuck in a puddle by one foot; a beetle on its back, legs waving, under the toadstool it could not climb; a dung beetle polishing its ball; the dung fly in goggles pointing its twig at the mouth; the fly rubbing its hands.
 - *What is alive.* Nothing moves yet: the spike is a still scene. Each creature is drawn in the middle of doing something, and the idle motion is the toy run's.
+
+**Open for the toy run, from answers file 2** (each with the test that has to hold):
+
+1. Ours and theirs: in the raid still shrunk to a quarter, every ant can be told as the kingdom's or a raider, by colour and by outline both.
+2. Which ant is the child: a person who has never seen the game points at the child's ant in the first frame without being told.
+3. Mud that reads as mud: shown one cell of each of the three on their own, a person names sand, mud and stone. The cell stays plain; what says "wet" is small.
+4. The camp is crowded where it matters: the overlap test holds the bell clear of every camper and of the hill at each surface size, and no two campers cover each other's faces. (The hill is already held clear of the bell by `view/props.test.ts`; the campers are not.)
+
+And for the game run: a room looks lived in, with the workers' things on its back wall.
 
 **For the next checker and the lead.**
 
