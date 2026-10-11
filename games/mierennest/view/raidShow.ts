@@ -247,10 +247,11 @@ function duckUnder(list: Shown[], over: readonly Box[] = []): void {
  * Everyone of a raid, as they are shown, in the order they are drawn. One still at the log sits in its place
  * there; the next to come in walks to the mouth and waits there, in view, until it can; one in the nest is where
  * the raid has it; one that is home sits at the log again. A dung beetle's ball is shown with it. `over` is the
- * bodies that are drawn after them all, the child's ant: one whose face it would cover ducks.
+ * bodies that are drawn after them all, the child's ant: one whose face it would cover ducks. `file` is the party's
+ * file at the log, which stands from the bell to the end of the put-back: a caller that keeps it hands it in.
  */
-export function showRaid(raid: Raid, party: Party, seconds: number, over: readonly Box[] = []): Shown[] {
-  const ground = raid.ground, cols = ground.cols, file = partyFile(party)
+export function showRaid(raid: Raid, party: Party, seconds: number, over: readonly Box[] = [], file: readonly Camper[] = partyFile(party)): Shown[] {
+  const ground = raid.ground, cols = ground.cols
   const out: Shown[] = []
   // The balls that were left where they lay.
   for (const ball of raid.balls) {
@@ -351,8 +352,8 @@ export function alongWay(way: readonly { x: number; y: number }[], share: number
  * Those the workers carry out when a raid is over, and the balls that were left: each goes out the way it came
  * in, through the open and not through the earth, back along its own trail to the mouth, and then to the log.
  */
-export function showCarriedOut(scene: Extract<Scene, { is: 'putBack' }>, raid: Raid, party: Party, over: readonly Box[] = []): Shown[] {
-  const cols = raid.ground.cols, file = partyFile(party), p = Math.min(1, scene.t / scene.length)
+export function showCarriedOut(scene: Extract<Scene, { is: 'putBack' }>, raid: Raid, party: Party, over: readonly Box[] = [], file: readonly Camper[] = partyFile(party)): Shown[] {
+  const cols = raid.ground.cols, p = Math.min(1, scene.t / scene.length)
   const out: Shown[] = []
   const all = Math.min(1, p / 0.6), b = Math.min(1, Math.max(0, (p - 0.6) / 0.4))
   // They leave one after another, the one with the shortest way out first, so that they do not go up in one heap.

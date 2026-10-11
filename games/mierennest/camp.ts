@@ -156,7 +156,7 @@ export function fileEnd(file: readonly Camper[]): number {
  * left also make room when the party is long.
  */
 export function campers(party: Party): Camper[] {
-  const file = [...partyBalls(party), ...partyFile(party)], end = fileEnd(file)
+  const laid = layOut(party), file = [...laid.balls, ...laid.members], end = fileEnd(file)
   const away = (kind: InvaderKind) => party.includes(kind)
   const left: Camper[] = [
     ...(away('ant') ? [] : [{ id: 'stuck', kind: 'raider', x: 100, y: GRASS_Y, flip: true, poses: ['stuck', 'stuck2'], phase: 0.3 } as Camper]),

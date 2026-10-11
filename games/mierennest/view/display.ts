@@ -1,10 +1,10 @@
-import { BODY, bodyBox, camperAt, campers, faceRadius, onBell, type Box, type Camper } from '../camp'
+import { BODY, bodyBox, camperAt, campers, faceRadius, onBell, partyFile, type Box, type Camper } from '../camp'
 import { CELL, MUD, OPEN, ROCK, SAND, STONE, at, type Ground, type Lump } from '../ground'
 import { handPose, type Guidance, type HandPose } from '../guidance'
 import { idleMove, pokeMove, POKE_SECONDS, type Move, type Mover } from '../motion'
 import { TRIED_AT, type Kingdom, type KingdomEvent } from '../kingdom'
 import type { Party } from '../order'
-import { gaitOf, type RaidEvent } from '../raid'
+import { gaitOf, type Raid, type RaidEvent } from '../raid'
 import { roomOf } from '../routes'
 import type { Machine } from '../save'
 import { QUEEN_HALF, WEDGED, demoDrag, floorOf, queenSeat, workerSpots } from '../residents'
@@ -218,7 +218,8 @@ export class ToyDisplay {
   private present(): readonly Camper[] {
     const raid = this.k.raid
     if (!raid) return this.camp
-    const seated = showRaid(raid, this.raidParty, this.seconds).filter((one) => one.id >= 0 && one.y <= GRASS_Y)
+    const laid = this.partyOf(raid)
+    const seated = showRaid(raid, laid.party, this.seconds, [], laid.file).filter((one) => one.id >= 0 && one.y <= GRASS_Y)
     return this.camp.filter((camper) => {
       const place = /^party(?:Ball)?(\d+)$/.exec(camper.id)
       if (!place) return true
@@ -407,6 +408,8 @@ export class ToyDisplay {
   /** Follows which ground is shown, and puts back what a raid knocked down a cell at a time while the workers carry it. */
   private follow(): void {
     const k = this.k, built = k.game.ground, scene = k.scene
+    // The file of a raid is kept no longer than the raid and its put-back.
+    if (this.laidOut && this.laidOut.raid !== k.raid && this.laidOut.raid !== k.lastRaid) this.laidOut = null
     const camp = `${k.game.position}/${k.game.muster}`
     // The party at the log is laid out again when a raid and what follows it are over: the army sits out the ending.
     if (camp !== this.campFor && !k.raid && scene?.is !== 'putBack' && scene?.is !== 'ending') {
@@ -460,11 +463,18 @@ export class ToyDisplay {
     return this.moves[n]
   }
 
-  /** The party of the raid that runs, or of the one whose put-back plays: the position may have moved on since. */
-  private get raidParty(): Party {
-    const raid = this.k.raid ?? this.k.lastRaid
-    return raid ? raid.invaders.map((invader) => invader.kind) : this.k.party
+  /**
+   * The party of a raid and its file at the log. Both stand from the bell to the end of the put-back, whatever the
+   * position has moved on to since, so they are laid out once for each raid and kept.
+   */
+  private partyOf(raid: Raid): { party: Party; file: readonly Camper[] } {
+    if (this.laidOut?.raid !== raid) {
+      const party = raid.invaders.map((invader) => invader.kind)
+      this.laidOut = { raid, party, file: partyFile(party) }
+    }
+    return this.laidOut
   }
+  private laidOut: { raid: Raid; party: Party; file: readonly Camper[] } | null = null
 
   /** The pose of the habit a camper was asked for by a press, while it acts it out; null when it was not asked or is done. */
   private habitAsked(id: string, who: Mover): string | null {
@@ -574,8 +584,9 @@ export class ToyDisplay {
     const antOver = [this.antBox()]
     if (raided && !k.raid && scene?.is === 'putBack') {
       // Those who got home by themselves sit in the file; the others are carried out.
-      const home = showRaid(raided, this.raidParty, this.seconds).filter((one) => one.id >= 0 && raided.invaders[one.id].state === 'home')
-      for (const one of [...home, ...showCarriedOut(scene, raided, this.raidParty, antOver)]) list.push(this.shown(one, slot++))
+      const laid = this.partyOf(raided)
+      const home = showRaid(raided, laid.party, this.seconds, [], laid.file).filter((one) => one.id >= 0 && raided.invaders[one.id].state === 'home')
+      for (const one of [...home, ...showCarriedOut(scene, raided, laid.party, antOver, laid.file)]) list.push(this.shown(one, slot++))
     }
     if (scene?.is === 'showing' && showing) {
       // The kind is caught out by its own habit at the front of the camp, once, large, where what catches it out is.
@@ -685,7 +696,10 @@ export class ToyDisplay {
       }
       list.push({ is: 'machine', kind: shown.kind, load: shown.load, pose: shown.pose, x: shown.x, y: shown.y, flip: shown.flip })
     })
-    if (k.raid) for (const one of showRaid(k.raid, this.raidParty, this.seconds, antOver)) list.push(this.shown(one, slot++))
+    if (k.raid) {
+      const laid = this.partyOf(k.raid)
+      for (const one of showRaid(k.raid, laid.party, this.seconds, antOver, laid.file)) list.push(this.shown(one, slot++))
+    }
     // The worker who carries the spoil stands on the hill, as high as the hill is.
     const hump = hillShape(this.hill).right
     const spoilMove = this.moveOf('spoil', 'worker', 0.6, slot++)
