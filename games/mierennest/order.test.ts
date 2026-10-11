@@ -66,6 +66,7 @@ describe('how a raid is judged', () => {
     { name: 'no chamber as it was called: not judged', end: { chambersWhenCalled: 0, actsFinished: 0, putAway: false }, verdict: 'not-judged' },
     { name: 'put away while it ran: not judged', end: { chambersWhenCalled: 3, actsFinished: 0, putAway: true }, verdict: 'not-judged' },
     { name: 'put away after an act was finished: still not judged', end: { chambersWhenCalled: 3, actsFinished: 2, putAway: true }, verdict: 'not-judged' },
+    { name: 'cut off by the clock with invaders still on their way: not judged, though no act was finished', end: { chambersWhenCalled: 2, actsFinished: 0, putAway: false, cutOff: true }, verdict: 'not-judged' },
   ]
   for (const row of cases) it(row.name, () => expect(judge(row.end)).toBe(row.verdict))
 })

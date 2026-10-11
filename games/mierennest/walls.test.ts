@@ -77,6 +77,23 @@ describe('leaning on a wall', () => {
     expect(lean(packed, 1, 1, 1, BEETLE).did).toBe('held')
   })
 
+  it('a run is not shoved from under anybody nor onto anybody: with someone in it or beyond it, it has no room', () => {
+    const cols = 7, picture = ['#######', '.s.....', 'XXXXXXX']
+    const inCell = (x: number) => (cell: number) => cell === cols + x
+    // Nobody near: shoved. Someone three cells on: shoved all the same.
+    expect(lean(fromPicture(picture), 1, 1, 1, BEETLE, inCell(4)).did).toBe('shoved')
+    // Someone in the cell beyond it, or in its own cell: loose sand is passed behind the pusher instead, and stays out of the way.
+    for (const x of [1, 2]) {
+      const ground = fromPicture(picture)
+      expect(lean(ground, 1, 1, 1, BEETLE, inCell(x)).did, `${x}`).toBe('ploughed')
+      expect(toPicture(ground)).toEqual(['#######', 's......', 'XXXXXXX'])
+    }
+    // A stone there holds, whatever the push.
+    const stone = fromPicture(['#######', '.o.....', 'XXXXXXX'])
+    expect(lean(stone, 1, 1, 1, BEETLE * 3, inCell(2))).toEqual({ did: 'held', hold: Infinity })
+    expect(toPicture(stone)).toEqual(['#######', '.o.....', 'XXXXXXX'])
+  })
+
   it('three cells of loose sand in a row with room beyond hold one beetle and no more', () => {
     const picture = ['#######', '.sss...', 'XXXXXXX']
     expect(lean(fromPicture(picture), 1, 1, 1, BEETLE)).toEqual({ did: 'held', hold: 3 })

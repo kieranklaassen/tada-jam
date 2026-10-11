@@ -54,14 +54,17 @@ export type RaidEnd = {
   actsFinished: number
   /** The game was put away while the raid ran. */
   putAway: boolean
+  /** The raid was ended by the clock with invaders still on their way. */
+  cutOff?: boolean
 }
 
 /**
  * A raid went well when no invader finished its act in a chamber. It is not judged when the kingdom had no chamber
- * as it was called, or when the game was put away while it ran.
+ * as it was called, when the game was put away while it ran, or when the clock cut it off with invaders still on
+ * their way: nobody was turned back in such a raid, and it never moves the position.
  */
 export function judge(end: RaidEnd): Verdict {
-  if (end.putAway || end.chambersWhenCalled <= 0) return 'not-judged'
+  if (end.putAway || end.cutOff || end.chambersWhenCalled <= 0) return 'not-judged'
   return end.actsFinished === 0 ? 'well' : 'not-well'
 }
 
