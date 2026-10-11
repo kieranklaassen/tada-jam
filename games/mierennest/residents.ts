@@ -57,11 +57,17 @@ export function queenSeat(ground: Ground, rooms: readonly Room[], queenRoom: num
  */
 export const WEDGED: Standing = { x: (MOUTH[0] + MOUTH[MOUTH.length - 1] + 1) / 2, y: SHAFT_DEPTH - 1 }
 
+/** How far apart two workers stand when they keep out of a visitor's way together: much closer than they are wide. */
+export const HUDDLED = 0.9
+
 /**
  * Where the workers stand, up to `most` of them: two to a chamber where its floor has room for two, one where it
- * has room for one, and in the queen's room only what is left beside her. Nobody stands in anybody.
+ * has room for one, and in the queen's room only what is left beside her. Nobody stands in anybody. While a raid
+ * runs they are `huddled`: the same workers stand close together at the end of their floor that is further from
+ * the mouth, and in the queen's room behind the queen, peering out either side of her, so that the rest of the
+ * floor is left to whoever comes in.
  */
-export function workerSpots(ground: Ground, rooms: readonly Room[], queenRoom: number | null, most: number): Standing[] {
+export function workerSpots(ground: Ground, rooms: readonly Room[], queenRoom: number | null, most: number, huddled = false): Standing[] {
   const spots: Standing[] = []
   rooms.forEach((room, n) => {
     const floor = floorOf(ground, room)
@@ -69,7 +75,16 @@ export function workerSpots(ground: Ground, rooms: readonly Room[], queenRoom: n
     const queenLeft = n === queenRoom && !mouthIsLeft(floor), queenRight = n === queenRoom && mouthIsLeft(floor)
     const left = queenLeft ? floor.from + 2 * QUEEN_HALF : floor.from, right = queenRight ? floor.to + 1 - 2 * QUEEN_HALF : floor.to + 1
     const free = right - left
-    const here = free >= 4 * WORKER_HALF ? [left + WORKER_HALF, right - WORKER_HALF] : free >= 2 * WORKER_HALF ? [(left + right) / 2] : []
+    let here = free >= 4 * WORKER_HALF ? [left + WORKER_HALF, right - WORKER_HALF] : free >= 2 * WORKER_HALF ? [(left + right) / 2] : []
+    if (huddled && here.length > 0) {
+      const seat = n === queenRoom ? queenSeat(ground, rooms, queenRoom) : null
+      if (seat) here = here.map((_, k) => seat.x + (k === 0 ? -1 : 1) * HUDDLED * seat.fit)
+      else {
+        // The end of the floor away from the mouth.
+        const far = mouthIsLeft(floor) ? right - WORKER_HALF : left + WORKER_HALF, inward = mouthIsLeft(floor) ? -1 : 1
+        here = here.map((_, k) => far + inward * HUDDLED * k)
+      }
+    }
     for (const x of here) if (spots.length < most) spots.push({ x, y: floor.y })
   })
   return spots

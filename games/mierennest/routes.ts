@@ -6,9 +6,10 @@ import { EARTH, MOUTH, MUD, OPEN, ROCK, STONE, at, type Ground } from './ground'
 //
 // A place is the cell an invader's feet are in. A raider ant is one cell high; a beetle is two, so the cell over
 // its feet is clear as well; a fly needs a clear block two cells wide and three high, and its place is the lower
-// left cell of that block.
+// left cell of that block. A dung beetle behind its ball goes like a beetle wherever a way is open at all, one
+// cell high: what the ball needs over that, the ball makes for itself or is stopped by (raid.ts).
 
-export type Walker = 'ant' | 'beetle' | 'fly'
+export type Walker = 'ant' | 'beetle' | 'fly' | 'crawler'
 
 const open = (ground: Ground, x: number, y: number) => at(ground, x, y) === OPEN
 /** Earth, stone and rock give a raider ant a face to climb; sand slides away under it and mud holds it fast. */
@@ -26,6 +27,7 @@ export function canBe(ground: Ground, kind: Walker, x: number, y: number): boole
     return climbable(ground, x - 1, y) || climbable(ground, x + 1, y) || at(ground, x - 1, y) === MUD || at(ground, x + 1, y) === MUD
   }
   if (kind === 'beetle') return y >= 1 && open(ground, x, y - 1) && !open(ground, x, y + 1)
+  if (kind === 'crawler') return !open(ground, x, y + 1)
   return y >= 2 && open(ground, x + 1, y) && open(ground, x, y - 1) && open(ground, x + 1, y - 1) && open(ground, x, y - 2) && open(ground, x + 1, y - 2)
 }
 
@@ -51,7 +53,7 @@ export function nextPlaces(ground: Ground, kind: Walker, cell: number, out: numb
   const { cols, rows } = ground
   const x = cell % cols, y = Math.floor(cell / cols)
   let n = 0
-  if (kind !== 'beetle') {
+  if (kind !== 'beetle' && kind !== 'crawler') {
     if (x > 0 && canBe(ground, kind, x - 1, y)) out[n++] = cell - 1
     if (x < cols - 1 && canBe(ground, kind, x + 1, y)) out[n++] = cell + 1
     if (y > 0 && canBe(ground, kind, x, y - 1)) out[n++] = cell - cols
@@ -68,14 +70,19 @@ export function nextPlaces(ground: Ground, kind: Walker, cell: number, out: numb
     }
     return n
   }
+  // How many cells high the way has to be for it: two for a beetle, one for a dung beetle behind its ball.
+  const high = kind === 'crawler' ? 1 : 2
   for (const side of [-1, 1]) {
     const nx = x + side
     if (nx < 0 || nx >= cols) continue
-    if (open(ground, nx, y) && open(ground, nx, y - 1)) {
+    if (open(ground, nx, y) && (high === 1 || open(ground, nx, y - 1))) {
       let ly = y
       while (ly + 1 < rows && open(ground, nx, ly + 1)) ly++
       out[n++] = ly * cols + nx
-    } else if (!open(ground, nx, y) && y >= 2 && open(ground, nx, y - 1) && open(ground, nx, y - 2) && open(ground, x, y - 2)) {
+    } else if (!open(ground, nx, y) && y >= high && open(ground, nx, y - 1) && (high === 1 || open(ground, nx, y - 2)) && open(ground, x, y - high)) {
+      // A ball is not rolled up onto a lump: lumps are a wall to it, the gap over them included.
+      const step = at(ground, nx, y)
+      if (kind === 'crawler' && step !== EARTH && step !== ROCK) continue
       out[n++] = (y - 1) * cols + nx
     }
   }
@@ -99,7 +106,7 @@ export function entry(ground: Ground, kind: Walker, mouth: readonly number[] = M
 export function bodyCells(ground: Ground, kind: Walker, cell: number, out: number[]): number {
   const cols = ground.cols
   out[0] = cell
-  if (kind === 'ant') return 1
+  if (kind === 'ant' || kind === 'crawler') return 1
   out[1] = cell - cols
   if (kind === 'beetle') return 2
   out[2] = cell + 1
@@ -114,6 +121,23 @@ export function chamberCells(ground: Ground, mouth: readonly number[] = MOUTH): 
   const inside = new Uint8Array(ground.cells.length)
   for (const room of chambers(ground, mouth)) for (const cell of room.cells) inside[cell] = 1
   return inside
+}
+
+/** For every cell, the chamber it belongs to, counted from 1 in the order `chambers` gives them; 0 for none. */
+export function roomCells(ground: Ground, mouth: readonly number[] = MOUTH): Uint8Array {
+  const rooms = new Uint8Array(ground.cells.length)
+  chambers(ground, mouth).forEach((room, n) => {
+    for (const cell of room.cells) rooms[cell] = n + 1
+  })
+  return rooms
+}
+
+/** The chamber a kind standing in a place is in, by the first part of it that is in one; 0 when it is in none. */
+export function roomOf(ground: Ground, kind: Walker, cell: number, rooms: Uint8Array): number {
+  const body: number[] = []
+  const n = bodyCells(ground, kind, cell, body)
+  for (let i = 0; i < n; i++) if (body[i] >= 0 && rooms[body[i]] !== 0) return rooms[body[i]]
+  return 0
 }
 
 /** Whether a kind standing in a place is inside a chamber. */

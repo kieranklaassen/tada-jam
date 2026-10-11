@@ -1,10 +1,8 @@
-import type { Place } from './config'
 import { OPEN, at, put, type Ground, type Lump } from './ground'
 import type { Shot } from './habits'
 import { LUMP_OF, RELOAD, SHOT_OF, arrivalPlace, canStand, cellsOf, machineAt, nearestStand, shotPath } from './machines'
 import { after, judge, owed, partyAt, type MachineKind, type Party, type Verdict } from './order'
-import { TICK, callRaid, endOf, hit, landInRaid, stepRaid, type Raid, type RaidEvent } from './raid'
-import { bodyCells } from './routes'
+import { TICK, bodyOf, callRaid, endOf, hit, landInRaid, stepRaid, type Raid, type RaidEvent } from './raid'
 import type { Game, Machine } from './save'
 import { Toy } from './toy'
 
@@ -16,9 +14,6 @@ import { Toy } from './toy'
 // view of the nest as it stood when the bell was rung: it runs on a copy, it is never saved, and a put-away in the
 // middle of one leaves the invaders at their camp and the nest as built.
 
-/** The last place of the order this build plays. The dung beetles and their fly come with the great raid. */
-export const LAST_BUILT: Place = 'full-camp'
-
 export type Scene =
   /** The bell rang with no chamber in the kingdom: the party looks down the mouth, shrugs and goes back. */
   | { is: 'shrug'; t: number; length: number }
@@ -28,8 +23,13 @@ export type Scene =
   | { is: 'arrives'; machine: MachineKind; t: number; length: number }
   /** The workers carry back what the raid knocked down. `cells` are the cells that differ, nearest the mouth first. */
   | { is: 'putBack'; cells: number[]; ground: Ground; held: number[]; t: number; length: number }
+  /**
+   * The great raid was turned back: the dung fly is handed a leaf, the workers light a glow-worm in every chamber,
+   * the queen puts her egg down and dusk comes over the camp. It plays once, and holds on its last beat until a touch.
+   */
+  | { is: 'ending'; t: number; length: number }
 
-export const SCENE_SECONDS = { shrug: 5, showing: 5, arrives: 7, putBackLeast: 4, putBackMost: 10 } as const
+export const SCENE_SECONDS = { shrug: 5, showing: 5, arrives: 7, putBackLeast: 4, putBackMost: 10, ending: 20 } as const
 
 export type Flying = { shot: Shot; path: number[]; t: number; length: number; inRaid: boolean; machine: number }
 /** How fast a shot flies, in cells a second, and the least time it is in the air. */
@@ -73,6 +73,11 @@ export class Kingdom {
   private saveNow = false
   /** First showings owed from before this visit start at the child's first touch. */
   private owedAtTouch: boolean
+  /**
+   * The great raid has just been turned back in this visit: the ending plays when its put-back is over. Never
+   * saved: a game put away before then is found with the kingdom open and plays nothing.
+   */
+  private endingOwed = false
 
   constructor(readonly game: Game) {
     this.toy = new Toy(game)
@@ -138,6 +143,17 @@ export class Kingdom {
     if (!scene) return
     this.scene = null
     if (scene.is === 'putBack') this.lastRaid = null
+    this.afterScene(scene)
+  }
+
+  /** What follows a scene that is over: the ending, once, after the put-back of the great raid; otherwise a first showing that is owed. */
+  private afterScene(scene: Scene): void {
+    if (scene.is === 'putBack' && this.endingOwed) {
+      this.endingOwed = false
+      this.scene = { is: 'ending', t: 0, length: SCENE_SECONDS.ending }
+      this.events.push({ type: 'scene', is: 'ending' })
+      return
+    }
     if (scene.is !== 'shrug') this.startOwed()
   }
 
@@ -171,6 +187,7 @@ export class Kingdom {
     // A scene that was playing is over, with its outcome in place since it began. A showing that had not begun
     // yet is still owed, and begins at the child's first touch.
     this.scene = null
+    this.endingOwed = false
     this.owedAtTouch = this.owed().length > 0
   }
 
@@ -214,7 +231,7 @@ export class Kingdom {
         if (invader.cell < 0 || invader.state === 'home' || invader.state === 'held' || invader.state === 'leaving' || invader.state === 'coming') continue
         let where = Infinity
         for (const place of [invader.cell, invader.from]) {
-          const n = bodyCells(raid.ground, invader.kind, place, body)
+          const n = bodyOf(raid, invader, place, body)
           for (let i = 0; i < n; i++) {
             const k = flying.path.indexOf(body[i])
             if (k >= 0 && k < where) where = k
@@ -367,13 +384,14 @@ export class Kingdom {
   private finishRaid(raid: Raid): void {
     const verdict = judge(endOf(raid))
     this.events.push({ type: 'judged', verdict })
-    // This build plays the order as far as `LAST_BUILT`: a raid that goes well there leaves the position where it is.
-    if (!(verdict === 'well' && this.game.position === LAST_BUILT)) {
-      const next = after({ position: this.game.position, muster: this.game.muster, ended: this.game.ended }, verdict)
-      this.game.position = next.position
-      this.game.muster = next.muster
-      this.game.ended = next.ended
-    }
+    // Turning back the great raid opens the kingdom. That is saved now, with the position, and the ending is
+    // only seen: it plays after the put-back, in this visit or never.
+    const wasEnded = this.game.ended
+    const next = after({ position: this.game.position, muster: this.game.muster, ended: this.game.ended }, verdict)
+    this.game.position = next.position
+    this.game.muster = next.muster
+    this.game.ended = next.ended
+    this.endingOwed = next.ended && !wasEnded
     this.marks = [...raid.gave]
     const built = this.game.ground, cols = built.cols
     const cells: number[] = []
@@ -426,9 +444,14 @@ export class Kingdom {
     if (scene) {
       scene.t += dt
       if (scene.t >= scene.length) {
-        this.scene = null
-        if (scene.is === 'putBack') this.lastRaid = null
-        if (scene.is !== 'shrug') this.startOwed()
+        if (scene.is === 'ending') {
+          // It holds on its last beat as long as the child likes.
+          scene.t = scene.length
+        } else {
+          this.scene = null
+          if (scene.is === 'putBack') this.lastRaid = null
+          this.afterScene(scene)
+        }
       }
     }
   }

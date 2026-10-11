@@ -5,7 +5,7 @@ import { POSES, type CreatureKind } from './creatures'
 import type { Item } from './display'
 import { paintGlass } from './glass'
 import { paintAll, repaint, touchedBy } from './groundSheet'
-import { GRASS_Y, GROUND, MOUTH_X } from './layout'
+import { GRASS_Y, GROUND, MOUTH_X, SURFACE } from './layout'
 import * as P from './palette'
 import { LIP, hillShape, paintDrop, paintHill, paintStalk } from './props'
 import { paintSetting } from './setting'
@@ -235,6 +235,19 @@ export class ToyView {
         // An effect that changes as it goes is painted in a few steps of its course, each once.
         const part = Math.max(0, Math.min(EFFECT_STEPS, Math.round(item.progress * EFFECT_STEPS)))
         this.stamps!.stamp(pen, `effect/${item.effect}/${part}`, EFFECT_BOX, (own) => paintEffect(own, item.effect, part / EFFECT_STEPS), item.x, item.y, item.flip)
+        break
+      }
+      case 'dusk': {
+        // Dusk over the sky and the camp: one wash of evening blue, and one small warm glow on the grass.
+        pen.fillStyle = `rgba(38, 32, 92, ${(0.42 * item.strength).toFixed(3)})`
+        pen.fillRect(SURFACE.x, SURFACE.y, SURFACE.width, SURFACE.height)
+        const glow = pen.createRadialGradient(item.x, item.y, 2, item.x, item.y, 84)
+        glow.addColorStop(0, `rgba(255, 214, 120, ${(0.85 * item.strength).toFixed(3)})`)
+        glow.addColorStop(1, 'rgba(255, 214, 120, 0)')
+        pen.fillStyle = glow
+        pen.beginPath()
+        pen.arc(item.x, item.y, 84, 0, Math.PI * 2)
+        pen.fill()
         break
       }
       default:

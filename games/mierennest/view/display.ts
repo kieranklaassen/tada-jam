@@ -3,6 +3,7 @@ import { CELL, MUD, OPEN, SAND, STONE, at, type Ground, type Lump } from '../gro
 import { handPose, type Guidance, type HandPose } from '../guidance'
 import { idleMove, pokeMove, POKE_SECONDS, type Move, type Mover } from '../motion'
 import type { Kingdom, KingdomEvent } from '../kingdom'
+import type { Party } from '../order'
 import type { RaidEvent } from '../raid'
 import type { Machine } from '../save'
 import { WEDGED, demoDrag, queenSeat, workerSpots } from '../residents'
@@ -10,7 +11,7 @@ import { below, makeRng, type Rng } from '../rng'
 import type { Toy, ToyEvent } from '../toy'
 import { GRASS_Y, GROUND, MOUTH_X } from './layout'
 import { BELL, LIP, dropAt, hillGrown, hillShape } from './props'
-import { FLUNG, MOUTH_STEP, showCarriedOut, showFurnishings, showMachine, showMarks, showRaid, showShot } from './raidShow'
+import { FLUNG, MOUTH_STEP, showCarriedOut, showFurnishings, showMachine, showMarks, showRaid, showShot, type Shown } from './raidShow'
 import type { Effect, Thing } from './things'
 
 // What a frame of the toy shows, as a list of things to draw, with no canvas in sight: the view paints the list,
@@ -40,9 +41,11 @@ export type Item =
   | { is: 'thing'; thing: Thing; x: number; y: number; lit: boolean }
   /** A shot in the air, a mark where a wall gave, a puff or a splat. */
   | { is: 'effect'; effect: Effect; x: number; y: number; progress: number; flip: boolean }
+  /** Dusk over the camp, from 0 to 1, and a small glow on the grass, by its middle. */
+  | { is: 'dusk'; strength: number; x: number; y: number }
 
 /** How many draws each kind of item costs. */
-export const DRAWS: Record<Item['is'], number> = { sprite: 1, lump: 2, hole: 1, target: 1, crumbs: 1, drop: 3, glint: 1, hand: 2, machine: 1, stand: 1, thing: 1, effect: 1 }
+export const DRAWS: Record<Item['is'], number> = { sprite: 1, lump: 2, hole: 1, target: 1, crumbs: 1, drop: 3, glint: 1, hand: 2, machine: 1, stand: 1, thing: 1, effect: 1, dusk: 2 }
 export const drawsOf = (items: readonly Item[]): number => items.reduce((sum, item) => sum + DRAWS[item.is], 0)
 
 /**
@@ -58,17 +61,30 @@ const JAWS = { x: 58, y: -30 }
 export const FELT_DEPTH = 3.5
 export const LOOK_SECONDS = 1.2
 /** What each kind does when the bell rang for nothing. */
-const SHRUG: Partial<Record<Mover, string>> = { raider: 'shrug', beetle: 'sit', fly: 'peer' }
+const SHRUG: Partial<Record<Mover, string>> = { raider: 'shrug', beetle: 'sit', fly: 'peer', dungBeetle: 'lost', dungFly: 'arms' }
 /** How each kind is caught out by its own habit in its first showing: the creature and the two poses it flicks between. */
 const SHOWN_AS: Record<string, { who: Mover; poses: readonly [string, string] }> = {
   ant: { who: 'raider', poses: ['stuck', 'stuck2'] },
   beetle: { who: 'beetle', poses: ['onBack', 'onBack2'] },
   fly: { who: 'fly', poses: ['bump', 'peer'] },
+  dungBeetle: { who: 'dungBeetle', poses: ['heave', 'lost'] },
+  dungFly: { who: 'dungFly', poses: ['point', 'arms'] },
 }
 /** Where a first showing is played: in front of the camp, to the left of the log, half as large again. */
 export const SHOWING_AT = { x: 250, y: GRASS_Y, size: 1.5 } as const
-/** How long a puff or a splat is seen where a shot landed, in seconds. */
+/** How long a puff or a splat is seen where a shot landed, and the smoke and the twang of a machine that fired, in seconds. */
 export const BURST_SECONDS = 0.45
+const BURST: Partial<Record<Effect, number>> = { smoke: 0.7, twang: 0.4 }
+const burstSeconds = (effect: Effect) => BURST[effect] ?? BURST_SECONDS
+/** Where a machine's smoke or twang is shown, from the middle of its base, facing right. */
+const MUZZLE = { x: 23, y: -37 } as const
+const ARM = { x: 0, y: -28 } as const
+/** The beats of the ending, in seconds from its start: the leaf, the glow-worms from first to last, the egg, the dusk. */
+export const ENDING = { leaf: 1.5, lightFrom: 4, lightTo: 12, egg: 12.5, duskFrom: 13, duskTo: 19 } as const
+/** Where the dung fly's leaf hangs once the ending is over: under the edge of the toadstool, beside the bell's stalk. */
+export const LEAF_AT = { x: 768, y: GRASS_Y } as const
+/** Where the small glow of the ending lies: on the grass in front of the army. */
+const GLOW_AT = { x: 280, y: GRASS_Y - 14 } as const
 /** The most crumbs in the air at once. */
 export const MOST_CRUMBS = 36
 const CRUMB = { earth: '#c79a63', dust: '#d9dde2', sand: '#f1d58a', spark: '#ffe08a', mud: '#3b2a24' } as const
@@ -87,7 +103,7 @@ export class ToyDisplay {
   private shownGround: Ground
   private dirty: number[] = []
   private readonly fired = new Map<number, number>()
-  private bursts: { effect: Effect; x: number; y: number; at: number }[] = []
+  private bursts: { effect: Effect; x: number; y: number; at: number; flip: boolean }[] = []
   private readonly rng: Rng
   /** Every crumb there can be, made once: one in the air has life left. */
   private readonly crumbs: Crumb[] = Array.from({ length: MOST_CRUMBS }, () => ({ x: 0, y: 0, vx: 0, vy: 0, life: 0, size: 2, colour: '' }))
@@ -200,7 +216,7 @@ export class ToyDisplay {
       crumb.x += crumb.vx * dt
       crumb.y += crumb.vy * dt
     }
-    this.bursts = this.bursts.filter((burst) => this.seconds - burst.at < BURST_SECONDS)
+    this.bursts = this.bursts.filter((burst) => this.seconds - burst.at < burstSeconds(burst.effect))
     this.follow()
     // The bell is a damped spring about a slow sway of its own.
     this.swing += (-46 * this.sway - 2.4 * this.swing) * dt
@@ -236,10 +252,17 @@ export class ToyDisplay {
   seeGame(events: readonly KingdomEvent[], raidEvents: readonly RaidEvent[]): void {
     const cols = this.k.game.ground.cols
     for (const event of events) {
-      if (event.type === 'fired') this.fired.set(this.k.game.machines.findIndex((m) => m.kind === event.machine), this.seconds)
-      else if (event.type === 'shotLanded') {
+      if (event.type === 'fired') {
+        const index = this.k.game.machines.findIndex((m) => m.kind === event.machine), machine = this.k.game.machines[index]
+        this.fired.set(index, this.seconds)
+        if (machine) {
+          // Smoke at the cannon's mouth, and the shake of the catapult's thread.
+          const base = toStage(machine.x + 1, machine.y + 1), at = machine.kind === 'cannon' ? MUZZLE : ARM
+          this.bursts.push({ effect: machine.kind === 'cannon' ? 'smoke' : 'twang', x: base.x + at.x * machine.facing, y: base.y + at.y, at: this.seconds, flip: machine.facing < 0 })
+        }
+      } else if (event.type === 'shotLanded') {
         const p = cellMiddle(event.cell, cols)
-        this.bursts.push({ effect: event.shot === 'mud' ? 'splat' : 'puff', x: p.x, y: p.y, at: this.seconds })
+        this.bursts.push({ effect: event.shot === 'mud' ? 'splat' : 'puff', x: p.x, y: p.y, at: this.seconds, flip: false })
       } else if (event.type === 'called') for (const camper of this.camp) this.startle(camper.id)
     }
     for (const event of raidEvents) {
@@ -247,6 +270,10 @@ export class ToyDisplay {
         this.dirty.push(...event.cells)
         const p = cellMiddle(event.cells[0], cols)
         this.puff(p.x, p.y, 6, CRUMB.sand, 70)
+      } else if (event.type === 'widened') {
+        this.dirty.push(...event.cells)
+        const p = cellMiddle(event.cells[0], cols)
+        this.puff(p.x, p.y, 4, CRUMB.earth, 60)
       } else if (event.type === 'stuck') {
         const p = cellMiddle(event.cell, cols)
         this.puff(p.x, p.y + CELL / 2, 3, CRUMB.mud, 30)
@@ -258,7 +285,8 @@ export class ToyDisplay {
   private follow(): void {
     const k = this.k, built = k.game.ground, scene = k.scene
     const camp = `${k.game.position}/${k.game.muster}`
-    if (camp !== this.campFor && !k.raid && scene?.is !== 'putBack') {
+    // The party at the log is laid out again when a raid and what follows it are over: the army sits out the ending.
+    if (camp !== this.campFor && !k.raid && scene?.is !== 'putBack' && scene?.is !== 'ending') {
       this.campFor = camp
       this.camp = campers(k.party)
     }
@@ -297,6 +325,18 @@ export class ToyDisplay {
     return this.moves[n]
   }
 
+  /** The party of the raid that runs, or of the one whose put-back plays: the position may have moved on since. */
+  private get raidParty(): Party {
+    const raid = this.k.raid ?? this.k.lastRaid
+    return raid ? raid.invaders.map((invader) => invader.kind) : this.k.party
+  }
+
+  /** One of a raid as an item: one who stands and waits fidgets as its kind does at the camp. */
+  private shown(one: Shown, slot: number): Item {
+    const move = one.idle ? idleMove(one.who, this.seconds, ((one.id + 1) * 0.37) % 1, this.move(slot)) : null
+    return { is: 'sprite', who: one.who, pose: one.pose, x: one.x, y: one.y, flip: one.flip, size: one.size, tall: 1, move, turn: one.turn }
+  }
+
   /** The idle move of a creature, or its answer to a poke while that lasts. */
   private moveOf(id: string, kind: Mover, phase: number, slot: number): Move {
     const out = this.move(slot)
@@ -317,9 +357,12 @@ export class ToyDisplay {
     list.push({ is: 'drop', sway, glint: callable ? glow : 0 })
     // The party of a raid, or of the put-back after it, is shown by the raid; otherwise it stands in its file at the log.
     const raided = k.raid ?? (scene?.is === 'putBack' ? k.lastRaid : null)
+    const ending = scene?.is === 'ending' ? scene : null
     for (const camper of this.camp) {
       const inFile = camper.id.startsWith('party')
       if (inFile && raided) continue
+      // In the ending the dung fly is not at the log: it sits on the hill.
+      if (ending && camper.kind === 'dungFly' && inFile) continue
       const move = this.moveOf(camper.id, camper.kind, camper.phase, slot++)
       let x = camper.x, pose = camper.poses[move.second ? 1 : 0]
       if (inFile && scene?.is === 'shrug') {
@@ -330,12 +373,12 @@ export class ToyDisplay {
         x = back > 0 ? there + (camper.x - there) * back : camper.x + (there - camper.x) * go
         pose = u > 0.3 && u < 0.7 ? SHRUG[camper.kind] ?? pose : pose
       }
-      list.push({ is: 'sprite', who: camper.kind, pose, x, y: camper.y, flip: camper.flip, size: 1, tall: 1, move, turn: 0 })
+      list.push({ is: 'sprite', who: camper.kind, pose, x, y: camper.y, flip: camper.flip, size: camper.size ?? 1, tall: 1, move, turn: 0 })
     }
     if (raided && !k.raid && scene?.is === 'putBack') {
       // Those who got home by themselves sit in the file; the others are carried out.
-      const home = showRaid(raided, k.party, this.seconds).filter((_, n) => raided.invaders[n].state === 'home')
-      for (const one of [...home, ...showCarriedOut(scene, raided, k.party)]) list.push({ is: 'sprite', who: one.who, pose: one.pose, x: one.x, y: one.y, flip: one.flip, size: 1, tall: 1, move: null, turn: one.turn })
+      const home = showRaid(raided, this.raidParty, this.seconds).filter((one) => one.id >= 0 && raided.invaders[one.id].state === 'home')
+      for (const one of [...home, ...showCarriedOut(scene, raided, this.raidParty)]) list.push(this.shown(one, slot++))
     }
     if (scene?.is === 'showing') {
       // The kind is caught out by its own habit at the front of the camp, once, large.
@@ -349,26 +392,40 @@ export class ToyDisplay {
     // The things on the back wall of the rooms, and the marks where a wall gave, lie behind everyone.
     const throne = queenSeat(ground, toy.realm.chambers, toy.realm.queenRoom)
     const queenSpan = throne && toy.realm.queenRoom !== null ? { room: toy.realm.queenRoom, from: throne.x - 2.2 * throne.fit, to: throne.x + 2.2 * throne.fit } : null
-    for (const thing of showFurnishings(ground, toy.realm.chambers, k.game.ended, queenSpan)) list.push({ is: 'thing', thing: thing.thing, x: thing.x, y: thing.y, lit: thing.lit })
+    // Once the kingdom is open a glow-worm is lit in every chamber; in the ending they are lit one by one, nearest the mouth first.
+    const rooms = toy.realm.chambers.length
+    const lit = !k.game.ended ? 0 : ending ? Math.max(0, Math.min(rooms, Math.ceil(((ending.t - ENDING.lightFrom) / (ENDING.lightTo - ENDING.lightFrom)) * rooms))) : rooms
+    for (const thing of showFurnishings(ground, toy.realm.chambers, lit, queenSpan, k.game.ended)) list.push({ is: 'thing', thing: thing.thing, x: thing.x, y: thing.y, lit: thing.lit })
+    // The dung fly's leaf, hung on a stalk at the camp, once the ending is over.
+    if (k.game.ended && !ending) list.push({ is: 'thing', thing: 'leaf', x: LEAF_AT.x, y: LEAF_AT.y, lit: false })
     // A mark lies on a floor: under each cell that gave which has something firm beneath it.
     const marks = k.raid ? [] : showMarks(k.marks.filter((cell) => at(ground, cell % cols, Math.floor(cell / cols) + 1) !== OPEN), cols)
     marks.forEach((mark, n) => list.push({ is: 'effect', effect: n === 0 ? 'prints' : 'scuff', x: mark.x, y: mark.y, progress: 0.5, flip: false }))
     // The queen: wedged under the mouth while the kingdom has no chamber, and on the floor of the largest once it has.
     const realm = toy.realm
+    // While a raid runs the workers stand close together at the far end of their floor, and behind the queen in
+    // her room: they are drawn before her then, and look out from either side of her.
+    const huddled = k.raid !== null
+    const workers = () => {
+      workerSpots(ground, realm.chambers, realm.queenRoom, realm.workers, huddled).forEach((spot, n) => {
+        const p = toStage(spot.x, spot.y + 1)
+        const move = this.moveOf(`worker${n}`, 'worker', (n * 0.37) % 1, slot++)
+        list.push({ is: 'sprite', who: 'worker', pose: move.second ? 'walk2' : 'walk', x: p.x, y: p.y, flip: n % 2 === 1, size: 1, tall: 1, move, turn: 0 })
+      })
+    }
+    if (huddled) workers()
     const seat = queenSeat(ground, realm.chambers, realm.queenRoom)
     const queenMove = this.moveOf('queen', 'queen', 0, slot++)
     if (seat) {
       const p = toStage(seat.x, seat.y + 1)
-      list.push({ is: 'sprite', who: 'queen', pose: queenMove.second ? 'sit2' : 'sit', x: p.x, y: p.y, flip: false, size: seat.fit, tall: 1, move: queenMove, turn: 0 })
+      // In the ending she puts her egg down at last.
+      const down = ending !== null && ending.t >= ENDING.egg
+      list.push({ is: 'sprite', who: 'queen', pose: down ? (queenMove.second ? 'eggDown2' : 'eggDown') : queenMove.second ? 'sit2' : 'sit', x: p.x, y: p.y, flip: false, size: seat.fit, tall: 1, move: queenMove, turn: 0 })
     } else {
       const p = toStage(WEDGED.x, WEDGED.y + 1)
       list.push({ is: 'sprite', who: 'queen', pose: queenMove.second ? 'wedged2' : 'wedged', x: p.x, y: p.y, flip: false, size: QUEEN_WEDGED.size, tall: QUEEN_WEDGED.tall, move: queenMove, turn: 0 })
     }
-    workerSpots(ground, realm.chambers, realm.queenRoom, realm.workers).forEach((spot, n) => {
-      const p = toStage(spot.x, spot.y + 1)
-      const move = this.moveOf(`worker${n}`, 'worker', (n * 0.37) % 1, slot++)
-      list.push({ is: 'sprite', who: 'worker', pose: move.second ? 'walk2' : 'walk', x: p.x, y: p.y, flip: n % 2 === 1, size: 1, tall: 1, move, turn: 0 })
-    })
+    if (!huddled) workers()
     if (marks.length > 0) {
       // One worker stands by the place that gave worst, looking at it with its hands on its hips.
       const move = this.moveOf('hips', 'worker', 0.2, slot++)
@@ -381,6 +438,9 @@ export class ToyDisplay {
         if (n >= scene.cells.length) continue
         const p = cellMiddle(scene.cells[n], cols)
         list.push({ is: 'sprite', who: 'worker', pose: Math.floor(this.seconds * 6) % 2 === 0 ? 'carry' : 'walk2', x: p.x, y: p.y + CELL / 2, flip: n % 2 === 1, size: 1, tall: 1, move: null, turn: 0 })
+        // What it carries back it holds over its head, where it is seen: the lump the child had built there.
+        const lump = k.game.ground.cells[scene.cells[n]]
+        if (lump === SAND || lump === MUD || lump === STONE) list.push({ is: 'lump', lump, x: p.x, y: p.y + CELL / 2 - BODY.worker.height - CELL / 2 - 2 })
       }
     }
     k.game.machines.forEach((machine, index) => {
@@ -398,11 +458,19 @@ export class ToyDisplay {
       }
       list.push({ is: 'machine', kind: shown.kind, load: shown.load, pose: shown.pose, x: shown.x, y: shown.y, flip: shown.flip })
     })
-    if (k.raid) for (const one of showRaid(k.raid, k.party, this.seconds)) list.push({ is: 'sprite', who: one.who, pose: one.pose, x: one.x, y: one.y, flip: one.flip, size: 1, tall: 1, move: null, turn: one.turn })
+    if (k.raid) for (const one of showRaid(k.raid, this.raidParty, this.seconds)) list.push(this.shown(one, slot++))
     // The worker who carries the spoil stands on the hill, as high as the hill is.
     const hump = hillShape(this.hill).right
     const spoilMove = this.moveOf('spoil', 'worker', 0.6, slot++)
     list.push({ is: 'sprite', who: 'worker', pose: spoilMove.second ? 'walk2' : 'carry', x: MOUTH_X + LIP + hump.reach * 0.32, y: GRASS_Y - hump.height + 3, flip: true, size: 1, tall: 1, move: spoilMove, turn: 0 })
+    if (ending) {
+      // The dung fly sits on the hill beside the worker, who hands it a leaf: it wipes its eyes.
+      const wiping = ending.t >= ENDING.leaf
+      list.push({ is: 'sprite', who: 'dungFly', pose: wiping ? (Math.floor(this.seconds * 0.8) % 2 === 0 ? 'weep' : 'weep2') : 'down', x: MOUTH_X + LIP + hump.reach * 0.3 + 96, y: GRASS_Y, flip: true, size: 1, tall: 1, move: null, turn: 0 })
+      // Dusk comes over the camp, and the army sits on its balls round a small glow.
+      const dusk = Math.max(0, Math.min(1, (ending.t - ENDING.duskFrom) / (ENDING.duskTo - ENDING.duskFrom)))
+      if (dusk > 0) list.push({ is: 'dusk', strength: dusk, x: GLOW_AT.x, y: GLOW_AT.y })
+    }
     // The carried lump leaves its cell looking empty, and shows where it would lie if the finger let go now.
     const carried = toy.carried
     if (carried && this.carriedAt) {
@@ -436,7 +504,7 @@ export class ToyDisplay {
       const shot = showShot(flying, cols)
       list.push({ is: 'effect', effect: shot.effect, x: shot.x, y: shot.y, progress: shot.progress, flip: shot.flip })
     }
-    for (const burst of this.bursts) list.push({ is: 'effect', effect: burst.effect, x: burst.x, y: burst.y, progress: (this.seconds - burst.at) / BURST_SECONDS, flip: false })
+    for (const burst of this.bursts) list.push({ is: 'effect', effect: burst.effect, x: burst.x, y: burst.y, progress: (this.seconds - burst.at) / burstSeconds(burst.effect), flip: burst.flip })
     const grabbed = k.grabbed, holding = k.holding
     if (grabbed && holding) {
       // A machine under the finger: where it would stand is outlined, and it rides at the finger.

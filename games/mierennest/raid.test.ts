@@ -3,7 +3,8 @@ import { LADDER } from './config'
 import { EARTH, MOUTH, MUD, OPEN, SAND, STONE, at, clone, equal, fromPicture, generate, put, settle, type Ground } from './ground'
 import { HABITS } from './habits'
 import { PARTY, judge, partyAt, type Party } from './order'
-import { LONGEST, SEEN_FOR, TICK, callRaid, endOf, hit, playOut, stepRaid, type Raid, type RaidEvent } from './raid'
+import { roomOf } from './routes'
+import { DIG, LONGEST, QUEUE_GAP, SEEN_FOR, TICK, callRaid, endOf, gaitOf, hit, playOut, stepRaid, type Raid, type RaidEvent } from './raid'
 
 // Whole raids, played from a nest and a party to their end. In the pictures the mouth is the open cell of the top
 // row, a tunnel is two cells high and a room is four wide and three high.
@@ -308,3 +309,363 @@ describe('at every place of the order', () => {
     expect(ticks).toBeLessThan(LONGEST / TICK)
   })
 })
+
+/** Plays a raid to its end, looking at every tick. */
+const watch = (raid: Raid, look: (raid: Raid) => void, events: RaidEvent[] = []) => {
+  while (!raid.over) {
+    stepRaid(raid)
+    events.push(...raid.events)
+    raid.events.length = 0
+    look(raid)
+  }
+  return events
+}
+/** The invaders in each chamber at this tick: those any part of whom is in it and who are going to leave it by themselves. */
+const inRooms = (raid: Raid) => {
+  const rooms = new Map<number, number[]>()
+  for (const invader of raid.invaders) {
+    if (invader.cell < 0 || invader.kind === 'dungFly' || ['home', 'held', 'stuck', 'coming'].includes(invader.state)) continue
+    for (const place of invader.along > 0 ? [invader.cell, invader.from] : [invader.cell]) {
+      const room = roomOf(raid.ground, gaitOf(invader), place, raid.rooms)
+      if (room !== 0 && !rooms.get(room)?.includes(invader.id)) rooms.set(room, [...(rooms.get(room) ?? []), invader.id])
+    }
+  }
+  return rooms
+}
+
+describe('one invader in a chamber at a time', () => {
+  it('a file of three all get in and do their act, one after the other, the others waiting at the door a body apart', () => {
+    const raid = raidOn(nest(), ['ant', 'ant', 'ant'])
+    let mostActing = 0, mostInside = 0, waited = 0
+    const events = watch(raid, () => {
+      mostActing = Math.max(mostActing, raid.invaders.filter((i) => i.state === 'acting').length)
+      for (const ids of inRooms(raid).values()) mostInside = Math.max(mostInside, ids.length)
+      const waiting = raid.invaders.filter((i) => i.state === 'waiting')
+      waited = Math.max(waited, waiting.length)
+      // Nobody who waits is in the chamber, and no two who wait stand within a body of each other.
+      for (const one of waiting) expect(roomOf(raid.ground, 'ant', one.cell, raid.rooms)).toBe(0)
+      for (const a of waiting) for (const b of waiting) {
+        if (a.id < b.id) expect(Math.abs((a.cell % COLS) - (b.cell % COLS)) + Math.abs(Math.floor(a.cell / COLS) - Math.floor(b.cell / COLS))).toBeGreaterThanOrEqual(QUEUE_GAP - 1)
+      }
+    })
+    expect(raid.acts).toBe(3)
+    expect(mostActing).toBe(1)
+    expect(mostInside).toBe(1)
+    expect(waited).toBe(2)
+    expect([...new Set(kinds(events, 'waits').map((e) => (e as { id: number }).id))]).toEqual([1, 2])
+    // Three acts one after the other take three times as long as one.
+    expect(raid.time).toBeGreaterThan(3 * HABITS.ant.act.seconds)
+    expect(raid.time).toBeLessThan(LONGEST)
+  })
+
+  it('the next goes in when the one before has left, and each kind waits for any other', () => {
+    for (const party of [['beetle', 'ant'], ['ant', 'beetle'], ['beetle', 'beetle', 'beetle']] as Party[]) {
+      const raid = raidOn(nest(), party)
+      let most = 0
+      watch(raid, () => {
+        for (const ids of inRooms(raid).values()) most = Math.max(most, ids.length)
+      })
+      expect(most, party.join()).toBe(1)
+      expect(raid.acts, party.join()).toBe(party.length)
+    }
+  })
+
+  it('holds at every place of the order, on the game own ground with a hall dug into it, and every raid still ends by itself', () => {
+    for (const seed of [1, 2, 3]) {
+      const ground = generate(seed)
+      for (let y = 3; y <= 6; y++) for (const x of MOUTH) put(ground, x, y, OPEN)
+      for (let y = 4; y <= 6; y++) for (let x = 22; x <= 33; x++) put(ground, x, y, OPEN)
+      settle(ground)
+      for (const place of LADDER) {
+        const raid = callRaid(ground, partyAt(place, 0))
+        watch(raid, () => {
+          expect(raid.invaders.filter((i) => i.state === 'acting' && i.kind !== 'dungFly').length, `${seed} ${place}`).toBeLessThanOrEqual(1)
+          for (const ids of inRooms(raid).values()) expect(ids.length, `${seed} ${place} at ${raid.time.toFixed(2)}`).toBeLessThanOrEqual(1)
+        })
+        expect(raid.time, `${seed} ${place}`).toBeLessThan(LONGEST)
+      }
+    }
+  })
+
+  it('nobody waits behind one who came later, so no two ever wait for each other', () => {
+    // Two rooms, one either side of the shaft's foot: the file splits, and nobody is left waiting when the raid is over.
+    const picture = [
+      'XXXXXXXXX.XXXXXXXXX',
+      '#########.#########',
+      '#########.#########',
+      '#......##.##......#',
+      '#......##.##......#',
+      '#.................#',
+      '###################',
+      'XXXXXXXXXXXXXXXXXXX',
+    ]
+    const raid = playOut(raidOn(picture, ['ant', 'ant', 'ant', 'ant']))
+    expect(raid.time).toBeLessThan(LONGEST)
+    expect(raid.acts).toBe(4)
+  })
+})
+
+describe('a dung beetle and its ball', () => {
+  /**
+   * A shaft three wide, a way to the right and a room at its end. `rows` are the rows of the way, top first, the
+   * last two of them the tunnel a beetle walks: a way three rows high and clear is itself a room.
+   */
+  const hall = (rows: string[]) => {
+    const picture = ['XX...XXXXXXXXXXXXXXXXXXX', '##...###################']
+    for (let n = 0; n < 3 - rows.length; n++) picture.push('##...###########......##')
+    rows.forEach((row, n) => picture.push(`##...${row}${n < rows.length - 3 ? '######' : '......'}##`))
+    picture.push('########################', 'XXXXXXXXXXXXXXXXXXXXXXXX')
+    return picture
+  }
+  const WIDE = 24
+  const EARTHS = '###########', CLEAR = '...........'
+  const dungRaid = (picture: string[], party: Party = ['dungBeetle']) => callRaid(fromPicture(picture), party, [2, 3, 4])
+  const mudIn = (raid: Raid) => raid.ground.cells.filter((kind) => kind === MUD).length
+
+  it('rolls its ball down a mouth three cells wide into a room three cells high, does its act, and takes longer than a beetle', () => {
+    const open = hall([CLEAR, CLEAR, CLEAR])
+    const raid = dungRaid(open)
+    const events = watch(raid, () => {})
+    expect(raid.acts).toBe(1)
+    expect(kinds(events, 'widened')).toEqual([])
+    expect(raid.invaders[0].ball).toBe(3)
+    const beetle = playOut(dungRaid(open, ['beetle']))
+    expect(raid.time).toBeGreaterThan(beetle.time)
+  })
+
+  it('digs the way wider where earth makes it too narrow for the ball: earth is no wall to it, and only slows it', () => {
+    const low = hall([EARTHS, CLEAR, CLEAR])
+    const built = fromPicture(low), before = clone(built)
+    const raid = callRaid(built, ['dungBeetle'], [2, 3, 4])
+    const events = watch(raid, () => {})
+    const widened = kinds(events, 'widened') as Extract<RaidEvent, { type: 'widened' }>[]
+    expect(widened.length).toBeGreaterThanOrEqual(11)
+    // Every cell it dug was earth, in the row over the tunnel.
+    for (const event of widened) for (const cell of event.cells) expect(at(before, cell % WIDE, Math.floor(cell / WIDE))).toBe(EARTH)
+    expect(raid.acts).toBe(1)
+    expect(raid.time).toBeGreaterThan(11 * DIG)
+    // The nest as built is not touched: what it dug, it dug in the copy.
+    expect(equal(built, before)).toBe(true)
+    expect(equal(raid.ground, before)).toBe(false)
+    // A crawl one cell high in earth is dug out the same way.
+    const crawl = playOut(dungRaid(hall([EARTHS, '....###....', CLEAR])))
+    expect(crawl.acts).toBe(1)
+  })
+
+  it('breaks a wall one cell thick and is stopped by a wall two cells thick and bound with mud, where it sits down and then rolls home', () => {
+    for (const lump of ['s', 'm', 'o']) {
+      const thin = playOut(dungRaid(hall([EARTHS, CLEAR, `....${lump}......`])))
+      expect(thin.acts, lump).toBe(1)
+    }
+    const bound = dungRaid(hall([EARTHS, CLEAR, '....mm.....']))
+    const events = watch(bound, () => {})
+    expect(bound.acts).toBe(0)
+    expect(kinds(events, 'givesUp').length).toBe(1)
+    expect(kinds(events, 'gave')).toEqual([])
+    expect(mudIn(bound)).toBe(2)
+    expect(judge(endOf(bound))).toBe('well')
+    // It does not roll its ball up over the wall through the gap that is left for the air: lumps are a wall to it.
+    expect(bound.invaders[0].trail.every((cell) => cell % WIDE < 9)).toBe(true)
+    // It keeps its ball, and it ends at the foot of the shaft it cannot climb.
+    expect(bound.invaders[0].ball).toBe(3)
+    expect(bound.invaders[0].state).toBe('held')
+  })
+
+  it('digs sand and mud that have earth or rock behind them', () => {
+    // A lump of mud on the floor with a step of earth right behind it.
+    const raid = dungRaid(hall([EARTHS, CLEAR, '....m#.....']))
+    const events = watch(raid, () => {})
+    expect(kinds(events, 'widened').length).toBeGreaterThan(0)
+    expect(mudIn(raid)).toBe(0)
+    expect(raid.acts).toBe(1)
+  })
+
+  it('is jammed by a stone it can neither dig nor shove, heaves at it, and then leaves the ball and walks on as a plain beetle', () => {
+    // A stone bedded in mud in the roof of a way two cells high: it holds more than the ball pushes.
+    const raid = dungRaid(hall(['###mom#####', CLEAR, CLEAR]))
+    const events = watch(raid, () => {})
+    const left = kinds(events, 'leftBall') as Extract<RaidEvent, { type: 'leftBall' }>[]
+    expect(left.length).toBe(1)
+    expect(raid.balls.length).toBe(1)
+    // The ball lies before the stone's bed, in the last place it fitted.
+    expect(raid.balls[0].cell % WIDE).toBe(7)
+    expect(raid.invaders[0].ball).toBe(0)
+    // The beetle went on under it without the ball and did its act.
+    expect(raid.acts).toBe(1)
+    expect(at(raid.ground, 9, 2)).toBe(STONE)
+    expect(mudIn(raid)).toBe(2)
+    // It heaved first.
+    const strain = events.findIndex((e) => e.type === 'strain'), gone = events.findIndex((e) => e.type === 'leftBall')
+    expect(strain).toBeGreaterThanOrEqual(0)
+    expect(gone).toBeGreaterThan(strain)
+  })
+
+  it('does not turn a corner narrower than its ball: at a pit one cell wide in the rock the ball stays up and the beetle goes down alone', () => {
+    const corner = [
+      'XX...XXXXXXXXXXX',
+      '##...###########',
+      '##...###########',
+      '##...###########',
+      '##.........#####',
+      '##.........#####',
+      '#########X.X####',
+      '#########X.X####',
+      '#########X.....#',
+      '#########X.....#',
+      '#########X.....#',
+      '################',
+      'XXXXXXXXXXXXXXXX',
+    ]
+    const raid = callRaid(fromPicture(corner), ['dungBeetle'], [2, 3, 4])
+    const events = watch(raid, () => {})
+    expect(kinds(events, 'leftBall').length).toBe(1)
+    // The ball lies at the top of the pit, on the floor of the way above it.
+    expect(Math.floor(raid.balls[0].cell / 16)).toBe(5)
+    expect(raid.invaders[0].ball).toBe(0)
+    expect(raid.acts).toBe(1)
+    // The same pit in earth is dug as wide as the ball, and the ball goes down it.
+    const soft = callRaid(fromPicture(corner.map((row, y) => (y >= 6 && y <= 10 ? row.replaceAll('X', '#') : row))), ['dungBeetle'], [2, 3, 4])
+    const softEvents = watch(soft, () => {})
+    expect(kinds(softEvents, 'leftBall')).toEqual([])
+    expect(kinds(softEvents, 'widened').length).toBeGreaterThan(0)
+    expect(soft.invaders[0].ball).toBe(3)
+    expect(soft.acts).toBe(1)
+  })
+
+  it('leaves its ball on the grass where the mouth is too narrow for it, and comes in as a plain beetle', () => {
+    const narrow = ['XXX.XXXXXXXXXXXX', '###.############', '###.......######', '###.......######', '####......######', '################', 'XXXXXXXXXXXXXXXX']
+    const raid = callRaid(fromPicture(narrow), ['dungBeetle'], [3])
+    const events = watch(raid, () => {})
+    expect(kinds(events, 'leftBall')).toEqual([{ type: 'leftBall', id: 0, cell: -1 }])
+    expect(raid.balls).toEqual([])
+    expect(raid.invaders[0].ball).toBe(0)
+  })
+
+  it('answers each shot in its own way: sand makes the ball a size bigger, mud takes the ball from it, a stone knocks it back', () => {
+    const tunnel = hall([EARTHS, EARTHS, CLEAR, CLEAR])
+    const until = (raid: Raid, x: number) => { while (!raid.over && raid.invaders[0].cell % WIDE < x) stepRaid(raid) }
+    const dugBy = (raid: Raid) => {
+      const events = watch(raid, () => {})
+      return (kinds(events, 'widened') as Extract<RaidEvent, { type: 'widened' }>[]).reduce((sum, event) => sum + event.cells.length, 0)
+    }
+    const plain = dugBy(dungRaid(tunnel))
+    const sand = dungRaid(tunnel)
+    until(sand, 6)
+    hit(sand, 0, 'sand')
+    expect(sand.invaders[0].ball).toBe(4)
+    hit(sand, 0, 'sand')
+    expect(sand.invaders[0].ball).toBe(4)
+    // A ball a size bigger needs a way a cell higher, and digs more earth to get it.
+    expect(dugBy(sand)).toBeGreaterThan(plain)
+    const mud = dungRaid(tunnel)
+    until(mud, 8)
+    hit(mud, 0, 'mud')
+    expect(mud.invaders[0].ball).toBe(0)
+    expect(mud.balls.length).toBe(1)
+    playOut(mud)
+    expect(mud.acts).toBe(1)
+    const stone = dungRaid(tunnel)
+    until(stone, 12)
+    hit(stone, 0, 'stone')
+    // Back to the end of the tunnel behind it: the foot of the shaft. From there the ball rolls out, and that beetle is home.
+    expect(stone.invaders[0].state).toBe('home')
+    expect(stone.invaders[0].acted).toBe(false)
+    playOut(stone)
+    expect(stone.acts).toBe(0)
+  })
+})
+
+describe('the great raid', () => {
+  const GREAT = partyAt('great-raid', 0)
+  /** The game's own ground with a hall three cells high from the shaft to a room: the dung fly flies straight in. */
+  const openNest = (seed = 1) => {
+    const ground = generate(seed)
+    for (let y = 3; y <= 6; y++) for (const x of MOUTH) put(ground, x, y, OPEN)
+    for (let y = 4; y <= 6; y++) for (let x = 22; x <= 34; x++) put(ground, x, y, OPEN)
+    settle(ground)
+    return ground
+  }
+
+  it('is the dung fly and five dung beetles with their balls, and the fly comes first', () => {
+    expect(GREAT).toEqual(['dungFly', 'dungBeetle', 'dungBeetle', 'dungBeetle', 'dungBeetle', 'dungBeetle'])
+    const raid = callRaid(openNest(), GREAT)
+    expect(raid.invaders.map((i) => i.ball)).toEqual([0, 3, 3, 3, 3, 3])
+  })
+
+  it('with nothing in its way gets in: the fly leads from the air, and the dung beetles do their act one at a time under it', () => {
+    const raid = callRaid(openNest(), GREAT)
+    let led = false, most = 0
+    watch(raid, () => {
+      led ||= raid.led
+      most = Math.max(most, raid.invaders.filter((i) => i.state === 'acting' && i.kind === 'dungBeetle').length)
+    })
+    expect(led).toBe(true)
+    expect(most).toBe(1)
+    expect(raid.acts).toBe(6)
+    expect(judge(endOf(raid))).toBe('not-well')
+    expect(raid.time).toBeLessThan(LONGEST)
+  })
+
+  it('with the fly brought down, every dung beetle loses its way within a few steps and rolls home, in bounded time', () => {
+    const raid = callRaid(openNest(), GREAT)
+    while (!raid.over && raid.invaders[0].state !== 'acting') stepRaid(raid)
+    expect(raid.invaders[0].state).toBe('acting')
+    const downAt = raid.time
+    raid.events.length = 0
+    hit(raid, 0, 'mud')
+    expect(raid.lost).toBe(true)
+    expect(raid.events.some((e) => e.type === 'lost')).toBe(true)
+    watch(raid, () => expect(raid.led).toBe(false))
+    // Nobody finishes an act, the fly included.
+    expect(raid.acts).toBe(0)
+    for (const invader of raid.invaders) expect(['home', 'held']).toContain(invader.state)
+    expect(raid.time - downAt).toBeLessThan(30)
+    expect(judge(endOf(raid))).toBe('well')
+  })
+
+  it('while the fly is up, a ball digs on through a wall of mud that would have held it, and with no fly it is held', () => {
+    const walled = () => {
+      const ground = generate(1)
+      for (let y = 3; y <= 6; y++) for (const x of MOUTH) put(ground, x, y, OPEN)
+      for (let y = 1; y <= 8; y++) for (let x = 15; x <= 38; x++) if (!MOUTH.includes(x) || y > 2) put(ground, x, y, EARTH)
+      for (let y = 3; y <= 6; y++) for (const x of MOUTH) put(ground, x, y, OPEN)
+      // A tunnel two cells high to a room, and in it a wall two cells thick, bound with mud, with a gap over it for the air.
+      for (let y = 5; y <= 6; y++) for (let x = 22; x <= 29; x++) put(ground, x, y, OPEN)
+      for (let y = 4; y <= 6; y++) for (let x = 30; x <= 35; x++) put(ground, x, y, OPEN)
+      for (const x of [26, 27]) put(ground, x, 6, MUD)
+      settle(ground)
+      return ground
+    }
+    const alone = playOut(callRaid(walled(), ['dungBeetle']))
+    expect(alone.acts).toBe(0)
+    expect(alone.ground.cells.filter((kind) => kind === MUD).length).toBe(callRaid(walled(), []).ground.cells.filter((kind) => kind === MUD).length)
+    const raid = callRaid(walled(), GREAT)
+    const events = watch(raid, () => {})
+    // The fly cannot fly over the wall: it peers, and while it hovers there the first ball digs through.
+    expect(kinds(events, 'widened').length).toBeGreaterThan(0)
+    expect(raid.acts).toBeGreaterThan(0)
+  })
+
+  it('leaves the ground as built, cell for cell, turned back or not', () => {
+    for (const seed of [1, 2, 3]) {
+      const built = openNest(seed), before = clone(built)
+      const raid = callRaid(built, GREAT)
+      playOut(raid)
+      expect(equal(built, before), `${seed}`).toBe(true)
+      const turned = callRaid(built, GREAT)
+      while (!turned.over && turned.invaders[0].cell < 0) stepRaid(turned)
+      for (let n = 0; n < 40; n++) stepRaid(turned)
+      hit(turned, 0, 'mud')
+      playOut(turned)
+      expect(equal(built, before), `${seed} turned`).toBe(true)
+    }
+  })
+
+  it('plays the same way twice, invader for invader, ball for ball', () => {
+    const one = playOut(callRaid(openNest(2), GREAT)), two = playOut(callRaid(openNest(2), GREAT))
+    expect(one.time).toBe(two.time)
+    expect(one.invaders.map((i) => [i.state, i.cell, i.ball])).toEqual(two.invaders.map((i) => [i.state, i.cell, i.ball]))
+    expect(equal(one.ground, two.ground)).toBe(true)
+  })
+})
+

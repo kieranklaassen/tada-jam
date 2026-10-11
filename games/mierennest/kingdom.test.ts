@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { LADDER } from './config'
 import { EARTH, LUMPS, MOUTH, MUD, OPEN, STONE, at, clone, count, equal, put, settle } from './ground'
-import { Kingdom, LAST_BUILT, SCENE_SECONDS, type KingdomEvent } from './kingdom'
+import { Kingdom, SCENE_SECONDS, type KingdomEvent } from './kingdom'
 import { RELOAD } from './machines'
 import type { RaidEvent } from './raid'
 import { deserialize, freshGame, serialize, type Game } from './save'
@@ -165,19 +165,142 @@ describe('a raid on call', () => {
     expect(back.position).toBe('beetle-pair')
   })
 
-  it('does not move the position past the last place this build plays', () => {
-    const k = new Kingdom(nestGame(LAST_BUILT, 3))
-    k.game.shown.push('ant', 'beetle', 'fly', 'catapult', 'cannon')
-    // A crawl one cell high with a mud floor: no ant, beetle or fly gets through it.
-    put(k.game.ground, 24, 4, EARTH)
-    put(k.game.ground, 25, 4, EARTH)
-    put(k.game.ground, 26, 4, EARTH)
-    put(k.game.ground, 24, 5, OPEN)
+  it('moves the position on from every place to the next, one raid that went well at a time, as far as the open kingdom', () => {
+    const k = new Kingdom(fortGame('first-chamber'))
+    for (let n = 0; n < LADDER.length - 1; n++) {
+      expect(k.game.position).toBe(LADDER[n])
+      k.bell()
+      const events = settleAll(k)
+      expect(events.find((e) => e.type === 'judged'), LADDER[n]).toEqual({ type: 'judged', verdict: 'well' })
+      // The ending holds until a touch, and a first showing or a machine arriving plays out by itself.
+      if (k.scene) {
+        k.press(22.5, 4.5, 0)
+        k.release()
+        settleAll(k)
+      }
+    }
+    expect(k.game.position).toBe('open-kingdom')
+    expect(k.game.ended).toBe(true)
+  })
+})
+
+/**
+ * The nest of these tests made safe from every party of the order with no machine: three cells of mud in the
+ * tunnel's floor hold three raider ants; the tunnel is two cells high, so no fly gets in; a stone in its roof,
+ * a lintel with earth either side of it, jams a dung ball, whose beetle goes on without it; and a pit two cells
+ * deep beyond it holds every beetle.
+ */
+function fortGame(position: string): Game {
+  const game = nestGame(position, 3)
+  game.shown.push('ant', 'beetle', 'fly', 'dungBeetle', 'dungFly', 'catapult', 'cannon')
+  put(game.ground, 24, 3, STONE)
+  for (const x of [27, 28]) for (const y of [6, 7]) put(game.ground, x, y, OPEN)
+  settle(game.ground)
+  return game
+}
+
+describe('the great raid and the ending', () => {
+  /** Plays until the raid is judged, and stops in that instant. */
+  const untilJudged = (k: Kingdom, events: KingdomEvent[] = []) => {
+    for (let n = 0; n < 9000 && !events.some((e) => e.type === 'judged'); n++) {
+      k.step(1 / 30)
+      events.push(...k.drainEvents())
+      k.drainRaidEvents()
+    }
+    return events
+  }
+
+  it('turned back, opens the kingdom: that is saved in the instant the raid is judged, and the ending plays once after the put-back and holds', () => {
+    const k = new Kingdom(fortGame('great-raid'))
+    const before = clone(k.game.ground)
+    k.bell()
+    expect(k.raid?.invaders.map((i) => i.kind)).toEqual(['dungFly', 'dungBeetle', 'dungBeetle', 'dungBeetle', 'dungBeetle', 'dungBeetle'])
+    const events = untilJudged(k)
+    expect(events.find((e) => e.type === 'judged')).toEqual({ type: 'judged', verdict: 'well' })
+    expect(k.drainUnsaved()).toEqual({ changed: true, now: true })
+    expect(saved(k.game).position).toBe('open-kingdom')
+    expect(saved(k.game).ended).toBe(true)
+    expect(k.scene?.is).toBe('putBack')
+    expect(equal(k.game.ground, before)).toBe(true)
+    // The put-back plays out, and then the ending begins.
+    for (let n = 0; n < 900 && k.scene?.is === 'putBack'; n++) { k.step(1 / 30); events.push(...k.drainEvents()) }
+    expect(k.scene?.is).toBe('ending')
+    // It holds on its last beat for as long as nobody touches.
+    play(k, SCENE_SECONDS.ending + 30, events)
+    expect(k.scene).toEqual({ is: 'ending', t: SCENE_SECONDS.ending, length: SCENE_SECONDS.ending })
+    expect(events.filter((e) => e.type === 'scene' && e.is === 'ending').length).toBe(1)
+    // A touch ends it, and is then an ordinary touch.
+    k.press(22.5, 4.5, 0)
+    k.release()
+    expect(k.scene).toBeNull()
+    // The kingdom stays open to play: a raid can still be called, and no ending plays again.
+    k.bell()
+    expect(k.raid?.invaders.map((i) => i.kind)).toEqual(['ant', 'ant', 'fly'])
+    const later = settleAll(k)
+    expect(later.some((e) => e.type === 'scene' && e.is === 'ending')).toBe(false)
+    expect(k.game.ended).toBe(true)
+    expect(equal(k.game.ground, before)).toBe(true)
+  })
+
+  it('put away in the instant the last of the army turns back, reads back with the ending seen and plays no scene', () => {
+    for (const when of ['as it is judged', 'in the put-back'] as const) {
+      const k = new Kingdom(fortGame('great-raid'))
+      const before = clone(k.game.ground)
+      k.bell()
+      untilJudged(k)
+      if (when === 'in the put-back') play(k, 1)
+      expect(k.scene?.is, when).toBe('putBack')
+      k.putAway()
+      expect(k.scene, when).toBeNull()
+      const back = saved(k.game)
+      expect(back.position, when).toBe('open-kingdom')
+      expect(back.ended, when).toBe(true)
+      expect(equal(back.ground, before), when).toBe(true)
+      // Opened again: nothing plays, at load or at the first touch, and the next party is at the log.
+      const again = new Kingdom(back)
+      const events = play(again, 10)
+      again.press(22.5, 4.5, 0)
+      again.release()
+      play(again, 30, events)
+      expect(events.filter((e) => e.type === 'scene'), when).toEqual([])
+      expect(again.scene, when).toBeNull()
+      expect(again.party, when).toEqual(['ant', 'ant', 'fly'])
+      // And in the visit it was put away in, nothing plays either.
+      const same = play(k, 30)
+      expect(same.filter((e) => e.type === 'scene'), when).toEqual([])
+    }
+  })
+
+  it('not turned back, leaves the position where it was, plays no ending, and the ground is as built', () => {
+    const k = new Kingdom(nestGame('great-raid'))
+    k.game.shown.push('ant', 'beetle', 'fly', 'dungBeetle', 'dungFly', 'catapult', 'cannon')
+    // A hall three cells high from the shaft to the room: the dung fly flies straight in.
+    for (let x = 22; x <= 29; x++) put(k.game.ground, x, 3, OPEN)
+    const before = clone(k.game.ground)
     k.bell()
     const events = settleAll(k)
-    expect(events.find((e) => e.type === 'judged')).toEqual({ type: 'judged', verdict: 'well' })
-    expect(k.game.position).toBe(LAST_BUILT)
-    expect(LADDER.indexOf(LAST_BUILT)).toBe(LADDER.indexOf('dung-scout') - 1)
+    expect(events.find((e) => e.type === 'judged')).toEqual({ type: 'judged', verdict: 'not-well' })
+    expect(events.some((e) => e.type === 'scene' && e.is === 'ending')).toBe(false)
+    expect(k.game.position).toBe('great-raid')
+    expect(k.game.ended).toBe(false)
+    expect(equal(k.game.ground, before)).toBe(true)
+  })
+
+  it('in the open kingdom lays out a mixed party after each raid that went well, round and round the six', () => {
+    const k = new Kingdom(fortGame('open-kingdom'))
+    k.game.ended = true
+    const seen: string[] = []
+    for (let n = 0; n < 7; n++) {
+      expect(k.game.muster).toBe(n % 6)
+      seen.push(k.party.join(' '))
+      k.bell()
+      const events = settleAll(k)
+      expect(events.find((e) => e.type === 'judged')).toEqual({ type: 'judged', verdict: 'well' })
+      expect(events.some((e) => e.type === 'scene' && e.is === 'ending')).toBe(false)
+    }
+    expect(new Set(seen.slice(0, 6)).size).toBe(6)
+    expect(seen[6]).toBe(seen[0])
+    expect(k.game.position).toBe('open-kingdom')
   })
 })
 

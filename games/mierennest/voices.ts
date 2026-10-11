@@ -2,6 +2,7 @@ import type { Note } from './audio'
 import { MUD, ROCK, SAND, STONE, type Kind } from './ground'
 import type { KingdomEvent } from './kingdom'
 import type { RaidEvent } from './raid'
+import type { InvaderKind } from './habits'
 import type { ToyEvent } from './toy'
 
 // Every sound of the game as plain numbers: pitch, peak, attack and length. Nobody has heard them: they are written
@@ -153,7 +154,10 @@ export const SIGH: Note[] = [tone(392, 0.08, 0.03, 0.3, { glideTo: 262 })]
 /** The party sets off: three quick steps up. */
 export const MARCH: Note[] = [tone(294, 0.09, 0.004, 0.08, { wave: 'triangle' }), tone(370, 0.09, 0.004, 0.08, { wave: 'triangle', delay: 0.1 }), tone(440, 0.09, 0.004, 0.12, { wave: 'triangle', delay: 0.2 })]
 
-const speakerOf = (kind: 'ant' | 'beetle' | 'fly'): Speaker => (kind === 'ant' ? 'raider' : kind)
+/** The army loses its way: the leader's three notes, falling apart. */
+export const LOST: Note[] = [tone(930, 0.08, 0.005, 0.1, { wave: 'sawtooth', glideTo: 700 }), tone(620, 0.08, 0.005, 0.12, { wave: 'sawtooth', delay: 0.12, glideTo: 440 }), tone(392, 0.08, 0.01, 0.3, { wave: 'sawtooth', delay: 0.26, glideTo: 220 })]
+
+const speakerOf = (kind: InvaderKind): Speaker => (kind === 'ant' ? 'raider' : kind)
 
 /** The voice of something the game says happened, or null where it makes no sound. */
 export function voiceForGame(event: KingdomEvent): Note[] | null {
@@ -178,7 +182,9 @@ export function voiceForRaid(event: RaidEvent): Note[] | null {
     case 'strain': return SPOKEN.beetle
     case 'gave': return GAVE
     case 'inside': case 'acted': case 'hit': return SPOKEN[speakerOf(event.kind)]
-    case 'givesUp': case 'held': return SIGH
-    case 'in': case 'home': case 'over': return null
+    case 'widened': return SPOKEN.dungBall
+    case 'lost': return LOST
+    case 'givesUp': case 'held': case 'leftBall': return SIGH
+    case 'in': case 'home': case 'over': case 'waits': return null
   }
 }

@@ -1,15 +1,17 @@
 import { describe, expect, it } from 'vitest'
-import { partyFile } from '../camp'
+import { BODY, partyFile } from '../camp'
+import { LADDER } from '../config'
 import { CELL, EARTH, MOUTH, OPEN, STONE, at, fromPicture, put, settle } from '../ground'
 import type { Guidance } from '../guidance'
 import { Kingdom } from '../kingdom'
 import { partyAt } from '../order'
-import { callRaid, playOut, stepRaid } from '../raid'
+import { callRaid, hit, playOut, stepRaid } from '../raid'
+import { queenSeat, workerSpots } from '../residents'
 import { freshGame, type Game } from '../save'
 import { POSES } from './creatures'
 import { DRAWS, ToyDisplay, drawsOf, type Item } from './display'
 import { GRASS_Y, GROUND } from './layout'
-import { FURNISHED, MOUTH_STEP, PLAYED_BY, RAID_POSES, invaderPose, roomFloor, showCarriedOut, showFurnishings, showMachine, showRaid, showShot } from './raidShow'
+import { DUCKS, FURNISHED, MOUTH_STEP, PLAYED_BY, RAID_POSES, covers, invaderPose, roomFloor, showCarriedOut, showFurnishings, showMachine, showRaid, showShot, shownBox, shownFace } from './raidShow'
 import { THING_SIZE } from './things'
 
 const DRAW_BUDGET = 80
@@ -35,18 +37,25 @@ function fullKingdom(): Game {
 
 describe('the poses of a raid', () => {
   it('every pose a raid can name is one the painters have', () => {
-    for (const who of ['raider', 'beetle', 'fly'] as const) for (const pose of RAID_POSES[who]) expect(POSES[who], `${who}/${pose}`).toContain(pose)
+    for (const who of ['raider', 'beetle', 'fly', 'dungBeetle', 'dungFly'] as const) for (const pose of RAID_POSES[who]) expect(POSES[who], `${who}/${pose}`).toContain(pose)
+    for (const [who, pose] of Object.entries(DUCKS)) expect(POSES[who as 'raider'], who).toContain(pose)
   })
 
   it('names only poses from its list, in every state, of every kind, at every moment', () => {
-    const raid = callRaid(fullKingdom().ground, partyAt('full-camp', 0))
-    const named: Record<string, Set<string>> = { raider: new Set(), beetle: new Set(), fly: new Set() }
-    for (let n = 0; !raid.over; n++) {
-      stepRaid(raid)
-      for (const invader of raid.invaders) named[PLAYED_BY[invader.kind]].add(invaderPose(invader, n / 20, raid.ground.cols))
+    const named: Record<string, Set<string>> = { raider: new Set(), beetle: new Set(), fly: new Set(), dungBeetle: new Set(), dungFly: new Set() }
+    for (const place of ['full-camp', 'great-raid'] as const) {
+      const raid = callRaid(fullKingdom().ground, partyAt(place, 0))
+      for (let n = 0; !raid.over; n++) {
+        stepRaid(raid)
+        // The dung fly is brought down half way through, so the army's lost poses are named as well.
+        if (place === 'great-raid' && n === 400) hit(raid, 0, 'mud')
+        for (const invader of raid.invaders) named[PLAYED_BY[invader.kind]].add(invaderPose(invader, n / 20, raid.ground.cols))
+        for (const one of showRaid(raid, partyAt(place, 0), n / 20)) if (one.who !== 'dungBall') named[one.who].add(one.pose)
+      }
     }
-    for (const who of ['raider', 'beetle', 'fly'] as const) {
-      for (const pose of named[who]) expect(RAID_POSES[who], `${who}/${pose}`).toContain(pose)
+    for (const who of ['raider', 'beetle', 'fly', 'dungBeetle', 'dungFly'] as const) {
+      for (const pose of named[who]) expect([...RAID_POSES[who], ...POSES[who]], `${who}/${pose}`).toContain(pose)
+      for (const pose of named[who]) expect(POSES[who], `${who}/${pose}`).toContain(pose)
       expect(named[who].size, who).toBeGreaterThanOrEqual(3)
     }
   })
@@ -59,18 +68,21 @@ describe('the poses of a raid', () => {
 })
 
 describe('where a raid is shown', () => {
-  it('walks each invader from its place in the file to the mouth, and shows it in the nest where the raid has it', () => {
+  it('sits each invader in its place at the log, walks the next one to the mouth, and shows it in the nest where the raid has it', () => {
     const party = partyAt('mixed-party', 0)
     const raid = callRaid(fullKingdom().ground, party), file = partyFile(party)
     const start = showRaid(raid, party, 0)
+    expect(start.length).toBe(party.length)
+    // The first has set off; the others sit where they sat, and nobody is past the mouth.
     start.forEach((one, n) => {
-      expect(one.y).toBe(GRASS_Y)
       expect(one.x).toBeGreaterThanOrEqual(file[n].x - 0.001)
       expect(one.x).toBeLessThanOrEqual(MOUTH_STEP.x + 0.001)
+      expect(one.y).toBeLessThanOrEqual(GRASS_Y)
+      if (n > 0) expect([one.x, one.idle]).toEqual([file[n].x, true])
     })
     for (let n = 0; n < 200; n++) stepRaid(raid)
     const later = showRaid(raid, party, 10)
-    const inNest = later.filter((_, n) => raid.invaders[n].cell >= 0 && raid.invaders[n].state !== 'home')
+    const inNest = later.filter((one) => raid.invaders[one.id].cell >= 0 && raid.invaders[one.id].state !== 'home')
     expect(inNest.length).toBeGreaterThan(0)
     for (const one of inNest) {
       expect(one.y).toBeGreaterThan(GRASS_Y - CELL)
@@ -78,9 +90,49 @@ describe('where a raid is shown', () => {
       expect(one.x).toBeLessThan(GROUND.x + GROUND.width)
     }
     playOut(raid)
-    showRaid(raid, party, 60).forEach((one, n) => {
-      if (raid.invaders[n].state === 'home') expect([one.x, one.y]).toEqual([file[n].x, file[n].y])
+    showRaid(raid, party, 60).forEach((one) => {
+      if (raid.invaders[one.id].state === 'home') expect(one.x).toBe(file[one.id].x)
     })
+  })
+
+  it('seats one who rode a beetle to the log on the grass while that beetle is away, and on its back again when it is home', () => {
+    const party = ['ant', 'beetle'] as const
+    const [antSeat, beetleSeat] = partyFile(party)
+    expect(antSeat.y).toBeLessThan(GRASS_Y)
+    const raid = callRaid(fullKingdom().ground, party)
+    expect(showRaid(raid, party, 0)[1].y).toBe(beetleSeat.y)
+    let onGrass = false, onBack = false
+    while (!raid.over) {
+      stepRaid(raid)
+      const [ant] = showRaid(raid, party, raid.time)
+      if (raid.invaders[0].state !== 'home') continue
+      const beetleHome = raid.invaders[1].state === 'home'
+      expect(ant.y).toBe(beetleHome ? antSeat.y : GRASS_Y)
+      if (beetleHome) onBack = true
+      else onGrass = true
+    }
+    expect(onGrass).toBe(true)
+    // In this kingdom the beetle cannot climb home, so the ant stays on the grass to the end.
+    expect(onBack).toBe(raid.invaders[1].state === 'home')
+  })
+
+  it('shows a dung beetle behind its ball, and the ball where the raid has it', () => {
+    const party = ['dungBeetle'] as const
+    const raid = callRaid(fullKingdom().ground, party)
+    let rolled = 0
+    while (!raid.over) {
+      stepRaid(raid)
+      const shown = showRaid(raid, party, raid.time)
+      const invader = raid.invaders[0]
+      if (invader.cell < 0 || invader.state === 'home' || invader.ball === 0) continue
+      const ball = shown.find((one) => one.who === 'dungBall')!, beetle = shown.find((one) => one.who === 'dungBeetle')!
+      expect(ball).toBeDefined()
+      // The ball is drawn before the beetle, and the two are never further apart than a ball and a beetle are long.
+      expect(shown.indexOf(ball)).toBeLessThan(shown.indexOf(beetle))
+      expect(Math.hypot(ball.x - beetle.x, ball.y - beetle.y)).toBeLessThan(BODY.dungBall.width / 2 + BODY.dungBeetle.width)
+      if (invader.state === 'going' && invader.along > 0) rolled++
+    }
+    expect(rolled).toBeGreaterThan(20)
   })
 
   it('shows a machine empty in a raid until its own lump is back, and flung just after it fired', () => {
@@ -97,6 +149,95 @@ describe('where a raid is shown', () => {
     expect(b.x - a.x).toBe(3 * CELL)
     expect([a.effect, a.flip]).toEqual(['mudBall', false])
     expect(showShot({ ...flying, shot: 'sand', path: [103, 102, 101] }, 40)).toMatchObject({ effect: 'sandBlast', flip: true })
+  })
+})
+
+describe('who is where in a raid', () => {
+  /** A box on the stage. */
+  type Box = { left: number; right: number; top: number; bottom: number }
+  const overlap = (a: Box, b: Box) => Math.min(a.right, b.right) - Math.max(a.left, b.left) > 6 && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 6
+  /** The game's own ground with a way three cells wide down to a hall and a second room beyond a tunnel. */
+  const nestOf = (seed: number) => {
+    const game = freshGame(null, seed), g = game.ground
+    for (let y = 3; y <= 6; y++) for (const x of MOUTH) put(g, x, y, OPEN)
+    for (let y = 4; y <= 6; y++) for (let x = 22; x <= 34; x++) put(g, x, y, OPEN)
+    for (let y = 5; y <= 6; y++) for (let x = 12; x <= 18; x++) put(g, x, y, OPEN)
+    for (let y = 4; y <= 6; y++) for (let x = 5; x <= 11; x++) put(g, x, y, OPEN)
+    settle(g)
+    return game
+  }
+
+  it('at no tick lies an invader face under another invader, under the queen or under a worker, inside the nest', () => {
+    let ducked = 0, ticks = 0
+    for (const seed of [1, 2, 3]) {
+      const game = nestOf(seed), k = new Kingdom(game)
+      for (const place of LADDER) {
+        const party = partyAt(place, 0)
+        const raid = callRaid(game.ground, party)
+        // The kingdom's own, where the display draws them while a raid runs, before every invader.
+        const realm = k.toy.realm, seat = queenSeat(game.ground, realm.chambers, realm.queenRoom)!
+        const stage = (cx: number, cy: number) => ({ x: GROUND.x + cx * CELL, y: GROUND.y + cy * CELL })
+        const own: Box[] = [
+          { left: stage(seat.x, 0).x - (BODY.queen.width / 2) * seat.fit, right: stage(seat.x, 0).x + (BODY.queen.width / 2) * seat.fit, top: stage(0, seat.y + 1).y - BODY.queen.height * seat.fit, bottom: stage(0, seat.y + 1).y },
+          ...workerSpots(game.ground, realm.chambers, realm.queenRoom, realm.workers, true).map((spot) => ({
+            left: stage(spot.x, 0).x - BODY.worker.width / 2, right: stage(spot.x, 0).x + BODY.worker.width / 2, top: stage(0, spot.y + 1).y - BODY.worker.height, bottom: stage(0, spot.y + 1).y,
+          })),
+        ]
+        while (!raid.over) {
+          stepRaid(raid)
+          ticks++
+          const shown = showRaid(raid, party, raid.time)
+          shown.forEach((one, n) => {
+            if (one.who === 'dungBall' || one.y <= GRASS_Y) return
+            const face = shownFace(one)
+            if (!face) {
+              // It ducks: its face is hidden, in its own way, and only because somebody is over it.
+              expect(one.pose).toBe(DUCKS[one.who])
+              ducked++
+              return
+            }
+            // Nobody drawn after it lies over its face.
+            for (let m = n + 1; m < shown.length; m++) {
+              if (shown[m].id === one.id || shown[m].y <= GRASS_Y) continue
+              expect(covers(shownBox(shown[m]), face), `${seed} ${place} at ${raid.time.toFixed(2)}: ${shown[m].who} over ${one.who}`).toBe(false)
+            }
+          })
+          // The queen and the workers are drawn before every invader: an invader lies over them, never under.
+          // And one who does its act does it in the open: it does not duck, and it stands in nobody of the kingdom.
+          for (const invader of raid.invaders) {
+            if (invader.state !== 'acting' || invader.kind === 'dungFly') continue
+            const one = shown.find((other) => other.id === invader.id && other.who !== 'dungBall')!
+            expect(one.pose, `${seed} ${place} at ${raid.time.toFixed(2)}: ${one.who} acting`).not.toBe(DUCKS[one.who])
+            for (const box of own) expect(overlap(shownBox(one), box), `${seed} ${place} at ${raid.time.toFixed(2)}: ${one.who} in the kingdom's own`).toBe(false)
+          }
+          // Two who wait never stand in each other.
+          const waiting = shown.filter((one) => one.id >= 0 && raid.invaders[one.id].state === 'waiting' && one.who !== 'dungBall')
+          for (let a = 0; a < waiting.length; a++) for (let b = a + 1; b < waiting.length; b++) {
+            expect(overlap(shownBox(waiting[a]), shownBox(waiting[b])), `${seed} ${place} at ${raid.time.toFixed(2)}: two waiting`).toBe(false)
+          }
+        }
+      }
+    }
+    // Ducking is for the moment somebody goes by, and for one who sits held under those who pass: on average fewer than one in three ticks has anybody ducking.
+    expect(ticks).toBeGreaterThan(5000)
+    expect(ducked / ticks).toBeLessThan(0.35)
+  })
+
+  it('gives one who waits at a door the fidget of its kind at the camp', () => {
+    const game = nestOf(1), party = ['ant', 'beetle', 'fly'] as const
+    const raid = callRaid(game.ground, ['ant', 'ant', 'beetle', 'fly'])
+    const seen = new Set<string>()
+    while (!raid.over) {
+      stepRaid(raid)
+      for (const one of showRaid(raid, ['ant', 'ant', 'beetle', 'fly'], raid.time)) {
+        if (one.id >= 0 && raid.invaders[one.id].state === 'waiting' && one.pose !== DUCKS[one.who]) {
+          expect(one.idle).toBe(true)
+          seen.add(`${one.who}/${one.pose}`)
+        }
+      }
+    }
+    expect(party.length).toBe(3)
+    expect([...seen].some((name) => name.startsWith('raider/pillow'))).toBe(true)
   })
 })
 
@@ -154,7 +295,7 @@ describe('rooms that look lived in', () => {
     const k = new Kingdom(game)
     const rooms = k.toy.realm.chambers
     expect(rooms.length).toBeGreaterThanOrEqual(6)
-    const things = showFurnishings(game.ground, rooms, false)
+    const things = showFurnishings(game.ground, rooms, 0)
     // Two to a room, in the first rooms of the list; a room whose floor is too short for them has none.
     expect(things.length).toBeLessThanOrEqual(FURNISHED * 2)
     expect(things.length).toBeGreaterThanOrEqual(FURNISHED)
@@ -173,13 +314,13 @@ describe('rooms that look lived in', () => {
     })
     // Two rooms next to each other in the list are not furnished alike.
     expect(things[0].thing).not.toBe(things[2].thing)
-    expect(showFurnishings(game.ground, rooms, true).some((thing) => thing.lit)).toBe(true)
+    expect(showFurnishings(game.ground, rooms, rooms.length).some((thing) => thing.lit)).toBe(true)
     expect(things.some((thing) => thing.lit)).toBe(false)
   })
 
   it('are bare where there is no chamber', () => {
     const game = freshGame(null, 1)
-    expect(showFurnishings(game.ground, new Kingdom(game).toy.realm.chambers, false)).toEqual([])
+    expect(showFurnishings(game.ground, new Kingdom(game).toy.realm.chambers, 0)).toEqual([])
   })
 })
 
@@ -211,6 +352,6 @@ describe('the fullest frame of a raid', () => {
     for (const who of ['raider', 'beetle', 'fly', 'worker', 'queen', 'ant']) expect(has((item) => item.is === 'sprite' && item.who === who), who).toBe(true)
     expect(mostItems.filter((item) => item.is === 'machine').length).toBe(2)
     expect(mostItems.filter((item) => item.is === 'thing').length).toBeGreaterThanOrEqual(FURNISHED)
-    expect(Object.keys(DRAWS).length).toBe(12)
+    expect(Object.keys(DRAWS).length).toBe(13)
   })
 })
