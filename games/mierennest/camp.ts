@@ -36,7 +36,7 @@ export const BODY: Record<Mover, { width: number; height: number }> = {
 }
 
 /** The creature that plays each invader kind, and the two poses it waits in at the log. */
-const WAITING: Record<InvaderKind, { kind: Mover; poses: readonly [string, string] }> = {
+export const WAITING: Record<InvaderKind, { kind: Mover; poses: readonly [string, string] }> = {
   ant: { kind: 'raider', poses: ['pillow', 'pillow'] },
   beetle: { kind: 'beetle', poses: ['napkin', 'napkin'] },
   fly: { kind: 'fly', poses: ['hands', 'hands2'] },
@@ -44,16 +44,46 @@ const WAITING: Record<InvaderKind, { kind: Mover; poses: readonly [string, strin
   dungFly: { kind: 'dungFly', poses: ['point', 'point2'] },
 }
 
+/** Where the head of the file at the log stands: the right end of the log, beside the mouth. */
+export const FILE_HEAD = LOG.x + LOG.length + 2
+/** How much of its own width each one in the file takes: the next stands close behind, over its tail, with its own face clear. */
+export const FILE_STEP = 0.42
+
 /**
- * The campers, in the order they are drawn. Each of the five who are always there is caught out by its own habit;
- * the first of the party that will come next sits on the log beside the mouth.
+ * The party that will come next, as a file along the log: the first of it nearest the mouth, each next one close
+ * behind, facing the mouth. They are listed, and drawn, head first, so each one's face lies over the tail of the
+ * one before it. A larger party is a longer file, and it looks as heavy as it is.
+ */
+export function partyFile(party: Party): Camper[] {
+  const file: Camper[] = []
+  let right = FILE_HEAD
+  party.forEach((member, n) => {
+    const waiting = WAITING[member]
+    const width = BODY[waiting.kind].width
+    file.push({ id: `party${n}`, kind: waiting.kind, x: right - width / 2, y: GRASS_Y, flip: false, poses: waiting.poses, phase: (0.65 + n * 0.23) % 1 })
+    right -= width * FILE_STEP
+  })
+  return file
+}
+
+/** How far left the file reaches. */
+export function fileEnd(file: readonly Camper[]): number {
+  return file.length === 0 ? FILE_HEAD : Math.min(...file.map((camper) => camper.x - BODY[camper.kind].width / 2))
+}
+
+/**
+ * The campers, in the order they are drawn. Each of those who are always there is caught out by its own habit.
+ * The two on the left make room when the file at the log is long: they have joined it.
  */
 export function campers(party: Party): Camper[] {
-  const first = WAITING[party[0] ?? 'ant']
+  const file = partyFile(party), end = fileEnd(file)
+  const left: Camper[] = [
+    { id: 'stuck', kind: 'raider', x: 100, y: GRASS_Y, flip: true, poses: ['stuck', 'stuck2'], phase: 0.3 },
+    { id: 'fly', kind: 'fly', x: 230, y: GRASS_Y, flip: false, poses: ['hands', 'hands2'], phase: 0 },
+  ]
   return [
-    { id: 'stuck', kind: 'raider', x: 112, y: GRASS_Y, flip: true, poses: ['stuck', 'stuck2'], phase: 0.3 },
-    { id: 'fly', kind: 'fly', x: 262, y: GRASS_Y, flip: false, poses: ['hands', 'hands2'], phase: 0 },
-    { id: 'party', kind: first.kind, x: LOG.x + LOG.length / 2, y: GRASS_Y - LOG.height, flip: false, poses: first.poses, phase: 0.65 },
+    ...left.filter((camper) => camper.x + BODY[camper.kind].width / 2 + 6 <= end),
+    ...file,
     { id: 'leader', kind: 'dungFly', x: TOADSTOOL.x, y: GRASS_Y - TOADSTOOL.top, flip: true, poses: ['point', 'point2'], phase: 0.1 },
     { id: 'beetle', kind: 'beetle', x: 900, y: GRASS_Y, flip: false, poses: ['onBack', 'onBack2'], phase: 0.5 },
     { id: 'ball', kind: 'dungBall', x: 1106, y: GRASS_Y, flip: false, poses: ['plain', 'plain'], phase: 0 },

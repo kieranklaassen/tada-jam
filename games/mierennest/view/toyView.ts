@@ -9,7 +9,9 @@ import { GRASS_Y, GROUND, MOUTH_X } from './layout'
 import * as P from './palette'
 import { LIP, hillShape, paintDrop, paintHill, paintStalk } from './props'
 import { paintSetting } from './setting'
-import { Sprites } from './sprites'
+import { Sprites, Stamps } from './sprites'
+import { paintMachine } from './machines'
+import { paintEffect, paintThing } from './things'
 
 // The toy on three layers, each a canvas of its own laid over the last: what stands still (the wood, the setting,
 // the ground as a sheet, the hill), what moves (the creatures, a carried lump, crumbs, the bell's drop), and the
@@ -33,6 +35,13 @@ function hillRegion(): { x: number; y: number; width: number; height: number } {
   return { x: left, y: top, width: right - left, height: GRASS_Y - top }
 }
 
+/** The boxes of what is stamped besides creatures, in stage units, with where in each its origin lies. */
+const MACHINE_BOX = { width: 84, height: 84, originX: 42, originY: 72 } as const
+const THING_BOX = { width: 64, height: 60, originX: 32, originY: 52 } as const
+const EFFECT_BOX = { width: 96, height: 96, originX: 48, originY: 48 } as const
+/** How many steps of its course a changing effect is painted in. */
+const EFFECT_STEPS = 4
+
 const LUMP_FILL: Record<Lump, string> = { 2: P.SAND.fill, 3: P.MUD.fill, 4: P.STONE.fill }
 
 export class ToyView {
@@ -41,6 +50,7 @@ export class ToyView {
   private readonly glass: HTMLCanvasElement
   private setting: HTMLCanvasElement | null = null
   private sprites: Sprites | null = null
+  private stamps: Stamps | null = null
   private madeFor = ''
   private k = 1
   private x = 0
@@ -67,6 +77,11 @@ export class ToyView {
   show(ground: Ground | null): void {
     this.ground = ground
     this.madeFor = ''
+  }
+
+  /** A different ground is shown from now on, alike but for the cells the caller reports as changed: nothing is repainted here. */
+  retarget(ground: Ground): void {
+    this.ground = ground
   }
 
   /** These cells changed. They and the eight round each are repainted over the coming frames, nearest `near` first. */
@@ -113,6 +128,8 @@ export class ToyView {
     const canvasOf = (width: number, height: number) => Object.assign(doc.createElement('canvas'), { width, height })
     if (this.sprites) this.sprites.rescale(k)
     else this.sprites = new Sprites(k, canvasOf)
+    if (this.stamps) this.stamps.rescale(k)
+    else this.stamps = new Stamps(k, canvasOf)
     // Every pose is painted now, at load, so that the first time a creature changes pose is not a frame that stalls.
     for (const kind of Object.keys(POSES) as CreatureKind[]) for (const pose of POSES[kind]) this.sprites.get(kind, pose)
   }
@@ -199,6 +216,25 @@ export class ToyView {
         pen.ellipse(item.x + 12, item.y + 50 - lift, 27, 24, 0.3, 0, Math.PI * 2)
         pen.fill()
         pen.globalAlpha = 1
+        break
+      }
+      case 'machine':
+        this.stamps!.stamp(pen, `machine/${item.kind}/${item.load ?? 'empty'}/${item.pose}`, MACHINE_BOX, (own) => paintMachine(own, item.kind, item.load, item.pose), item.x, item.y, item.flip)
+        break
+      case 'stand':
+        pen.strokeStyle = 'rgba(255,255,255,0.6)'
+        pen.lineWidth = 2
+        pen.beginPath()
+        pen.roundRect(item.x - CELL + 2, item.y - CELL + 2, 2 * CELL - 4, 2 * CELL - 4, 9)
+        pen.stroke()
+        break
+      case 'thing':
+        this.stamps!.stamp(pen, `thing/${item.thing}/${item.lit ? 'lit' : 'dark'}`, THING_BOX, (own) => paintThing(own, item.thing, item.lit), item.x, item.y)
+        break
+      case 'effect': {
+        // An effect that changes as it goes is painted in a few steps of its course, each once.
+        const part = Math.max(0, Math.min(EFFECT_STEPS, Math.round(item.progress * EFFECT_STEPS)))
+        this.stamps!.stamp(pen, `effect/${item.effect}/${part}`, EFFECT_BOX, (own) => paintEffect(own, item.effect, part / EFFECT_STEPS), item.x, item.y, item.flip)
         break
       }
       default:

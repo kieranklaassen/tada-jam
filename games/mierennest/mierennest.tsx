@@ -8,7 +8,6 @@ import { CELL } from './ground'
 import { IdleLadder, type Guidance } from './guidance'
 import { ForgivingTouch, type Gesture, type Point } from './input'
 import { mierennestManifest } from './manifest'
-import { partyAt } from './order'
 import { Overlay, inCorner } from './overlay'
 import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
@@ -16,11 +15,12 @@ import { SaveCadence } from './saveCadence'
 import { seedOf } from './rng'
 import { deserialize, serialize } from './save'
 import { fit, toStage } from './stage'
-import { Toy, type ToyEvent } from './toy'
+import { Kingdom } from './kingdom'
+import type { ToyEvent } from './toy'
 import { ToyDisplay, drawsOf } from './view/display'
 import { GROUND } from './view/layout'
 import { ToyView } from './view/toyView'
-import { APART, BELL, BOING, SPOKEN, voiceFor } from './voices'
+import { APART, BOING, SPOKEN, voiceFor, voiceForGame, voiceForRaid } from './voices'
 
 // The Mount, showing a blank surface. Everything a game needs around its
 // renderer is wired and running: the saved state, attention, the attended
@@ -50,7 +50,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // sprites and figures it drew as drawCalls; a three.js game copies the renderer's own counts.
     const drawn = { drawCalls: 0, triangles: 0 }
     const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, ...drawn }))
-    let toy: Toy | null = null, display: ToyDisplay | null = null, disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
+    let kingdom: Kingdom | null = null, display: ToyDisplay | null = null, disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
     // The seed of this visit, from `seed=<n>` in the address when there is one: a new nest is laid out from it.
     const seed = seedOf(window.location.search)
     // What the loop hands the draw, as `drawn` is what the draw hands back. `guidance` is what the idle ladder
@@ -69,7 +69,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // Going to rest writes whatever the throttle still holds (`cadence.settle`, below).
     // A game whose saved state is more than `state.ts` holds wraps it in a module of its own, as the header of
     // state.ts describes, and `serialize` and `deserialize` here become the wrapper's.
-    const cadence = new SaveCadence(() => { if (toy) ctxRef.current.storage.save(serialize(toy.game)) })
+    const cadence = new SaveCadence(() => { if (kingdom) ctxRef.current.storage.save(serialize(kingdom.game)) })
 
     // The one place the game applies a quality tier: whatever its tiers set besides the pixel ratio, which
     // `resize` applies. It runs once before the first frame and again each time the governor changes tier, ahead
@@ -102,22 +102,43 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // kind of event that comes fast (a mouthful, a landing, a pour) is kept a little apart from its last.
     const lastHeard: Partial<Record<ToyEvent['type'], number>> = {}
     let unsaved = false
-    const answer = (extra: readonly Note[] = []) => {
-      if (!toy || !display) return
-      const events = toy.drainEvents(), now = performance.now() / 1000, notes: Note[] = [...extra]
-      for (const event of events) {
-        const voice = voiceFor(event)
-        if (!voice || now - (lastHeard[event.type] ?? -1) < APART[event.type]) continue
-        lastHeard[event.type] = now
-        if (notes.length + voice.length <= 8) notes.push(...voice)
+    const answer = (extra: readonly Note[] | null = null) => {
+      if (!kingdom || !display) return
+      const toy = kingdom.toy, now = performance.now() / 1000
+      const events = toy.drainEvents(), gameEvents = kingdom.drainEvents(), raidEvents = kingdom.drainRaidEvents()
+      // Everything of one moment is one voice of at most eight notes, so a busy moment is heard and does not roar.
+      let notes: Note[] | null = null
+      const say = (voice: readonly Note[] | null) => {
+        if (!voice || (notes?.length ?? 0) + voice.length > 8) return
+        if (!notes) notes = []
+        for (const note of voice) notes.push(note)
       }
-      if (notes.length > 0) audio.play(voiceOf(notes))
-      display.see(events)
+      say(extra)
+      for (const event of events) {
+        if (now - (lastHeard[event.type] ?? -1) < APART[event.type]) continue
+        lastHeard[event.type] = now
+        say(voiceFor(event))
+      }
+      for (const event of gameEvents) say(voiceForGame(event))
+      for (const event of raidEvents) say(voiceForRaid(event))
+      if (notes) audio.play(voiceOf(notes))
+      if (events.length > 0) display.see(events)
+      if (gameEvents.length > 0 || raidEvents.length > 0) display.seeGame(gameEvents, raidEvents)
+      // The ground that is shown may be the raid's copy; the view is told which, and which of its cells changed.
+      view.retarget(display.ground())
       view.changed(toy.drainDirty(), toy.finger)
+      view.changed(display.drainDirty(), null)
       // A change is handed to storage once the ground has come to rest: working out where falling sand will lie is
       // not a thing to do every few hundred milliseconds of a pour. Until then it is only marked, and a put-away
-      // meanwhile writes it at once, with the ground as it will come to rest (`cadence.settle`).
-      if (toy.drainUnsaved()) unsaved = true
+      // meanwhile writes it at once, with the ground as it will come to rest (`cadence.settle`). The position
+      // after a raid, and the mark of a first showing, are written at once.
+      const save = kingdom.drainUnsaved()
+      if (save.now) {
+        unsaved = false
+        cadence.change(performance.now(), true)
+        return
+      }
+      if (save.changed) unsaved = true
       if (!unsaved) return
       if (toy.atRest) {
         unsaved = false
@@ -158,7 +179,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // the unlock. Everything one touch sets off is played as one voice (`voiceOf` in audio.ts).
     // A press in the grown-up's corner (`inCorner` in overlay.ts) is answered as bare backdrop is, or not at all.
     const act = (gestures: Gesture[]) => {
-      if (!toy || !display) return
+      if (!kingdom || !display) return
+      const game = kingdom
       const by = fit(width, height), seconds = performance.now() / 1000
       // A point of the surface in cell units of the ground, which may lie outside it.
       const cellOf = (at: Point) => {
@@ -170,12 +192,13 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
           case 'press': {
             const p = cellOf(gesture.at)
             if (p.y >= 0) {
-              toy.press(p.x, p.y, seconds)
+              game.press(p.x, p.y, seconds)
               answer()
             } else if (!inCorner(gesture.at.x, gesture.at.y, width)) {
-              // A touch on the surface: the bell rings, a camper answers as itself, the setting gives a soft boing.
+              // A touch on the surface: the bell rings and calls the party, a camper answers as itself, the setting
+              // gives a soft boing.
               const hit = display.poke(p.stage.x, p.stage.y)
-              answer(hit.on === 'bell' ? BELL : hit.on === 'camper' ? SPOKEN[hit.kind] : BOING)
+              answer(hit.on === 'camper' ? SPOKEN[hit.kind] : hit.on === 'setting' ? BOING : null)
             }
             break
           }
@@ -183,7 +206,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
             break
           case 'dragMove': {
             const p = cellOf(gesture.at)
-            toy.drag(p.x, p.y, seconds)
+            game.drag(p.x, p.y, seconds)
             answer()
             break
           }
@@ -193,13 +216,13 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
             break
           case 'tap':
           case 'dragEnd':
-            toy.release()
+            game.release()
             answer()
             break
           case 'pressEnd':
           case 'dragCancel':
             // Not the child's doing: nothing is set down, and a lump in the jaws is where it was picked up.
-            toy.cancel()
+            game.cancel()
             answer()
             break
           default:
@@ -259,12 +282,12 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       // A finger that is working is not idle: a hold or a slow drag keeps the ladder at the bottom.
       // A scene that is playing is not idleness either. A game with short scenes makes the same call for as long
       // as one runs (`if (scene.running) ladder.touch(clock.seconds)`), or the ghost hand comes up over the scene.
-      if (touch.active) ladder.touch(clock.seconds)
+      if (touch.active || kingdom?.raid || kingdom?.scene) ladder.touch(clock.seconds)
       // What to show an idle child: a glow on what can be touched, then one move.
       playing.guidance = ladder.update(clock.seconds)
       // The toy plays the frame's step of game time: the ground comes to rest, the ant runs, the camp idles.
-      if (toy && display) {
-        toy.step(playing.step)
+      if (kingdom && display) {
+        kingdom.step(playing.step)
         display.advance(playing.step)
         answer()
       }
@@ -300,6 +323,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       clock.rest()
       overlay.forget()
       act(touch.clear())
+      // A raid in progress is over without being judged, and nothing is in the hand: the invaders are at their camp.
+      if (kingdom) { kingdom.putAway(); answer() }
       cadence.settle(performance.now())
     })
     attendRef.current = (attended) => attention.set(attended)
@@ -308,8 +333,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       if (disposed) return
       // A saved position wins; `childAge` only chooses where a first visit starts.
       const game = deserialize(value, ctxRef.current.childAge, seed)
-      toy = new Toy(game)
-      display = new ToyDisplay(toy, partyAt(game.position, game.muster), seed)
+      kingdom = new Kingdom(game)
+      display = new ToyDisplay(kingdom, seed)
       view.show(game.ground)
       // The game sets itself up from the state here, as it was left: nothing eases in and no scene replays.
       // Its chance comes from streams it makes here from one seed, `seedOf(window.location.search)` in rng.ts:
@@ -326,6 +351,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       disposed = true
       // As on going to rest: the touch ends first, so the thing in hand is back or down before the last save.
       act(touch.clear())
+      // A raid in progress is over without being judged, and nothing is in the hand: the invaders are at their camp.
+      if (kingdom) { kingdom.putAway(); answer() }
       cadence.settle(performance.now())
       cancelAnimationFrame(frame)
       observer.disconnect()

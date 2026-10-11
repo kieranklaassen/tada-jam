@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { CELL, EARTH, MOUTH, OPEN, STONE, at, put, settle } from '../ground'
 import type { Guidance } from '../guidance'
 import { freshGame, type Game } from '../save'
-import { Toy } from '../toy'
+import { Kingdom } from '../kingdom'
 import { DRAWS, MOST_CRUMBS, QUEEN_WEDGED, ToyDisplay, drawsOf, type Item } from './display'
 import { GRASS_Y, GROUND } from './layout'
 import { BELL } from './props'
@@ -11,8 +11,9 @@ import { BELL } from './props'
 const DRAW_BUDGET = 80
 const sprites = (items: Item[], who: string) => items.filter((item): item is Extract<Item, { is: 'sprite' }> => item.is === 'sprite' && item.who === who)
 const fresh = () => {
-  const toy = new Toy(freshGame(null, 1))
-  return { toy, display: new ToyDisplay(toy, ['ant'], 1) }
+  const k = new Kingdom(freshGame(null, 1))
+  // The first showing of a first visit is owed at the first touch; these tests look at the frame before any touch.
+  return { toy: k.toy, k, display: new ToyDisplay(k, 1) }
 }
 
 /** A nest with eight rooms off two halls, so the kingdom has its full crowd of workers. */
@@ -52,8 +53,8 @@ describe('a frame of the toy', () => {
   })
 
   it('stays under the draw budget at its fullest: a full kingdom, a lump in the jaws, crumbs of every colour and the hand', () => {
-    const toy = new Toy(crowded())
-    const display = new ToyDisplay(toy, ['ant'], 1)
+    const k = new Kingdom(crowded()), toy = k.toy
+    const display = new ToyDisplay(k, 1)
     expect(toy.realm.workers).toBe(16)
     toy.press(16.5, 9.5, 0)
     expect(toy.carried).not.toBeNull()
@@ -91,8 +92,8 @@ describe('a frame of the toy', () => {
   })
 
   it('shows a carried lump in the jaws and its cell empty, and neither once it is let go', () => {
-    const toy = new Toy(crowded())
-    const display = new ToyDisplay(toy, ['ant'], 1)
+    const k = new Kingdom(crowded()), toy = k.toy
+    const display = new ToyDisplay(k, 1)
     toy.press(16.5, 9.5, 0)
     for (let n = 0; n < 30; n++) { toy.step(1 / 60); display.advance(1 / 60) }
     const items = display.items(null)
@@ -142,8 +143,8 @@ describe('the answer to a dig, beyond the mouthful', () => {
   })
 
   it('ends with the ant sitting back to look at what it made', () => {
-    const toy = new Toy(crowded())
-    const display = new ToyDisplay(toy, ['ant'], 1)
+    const k = new Kingdom(crowded()), toy = k.toy
+    const display = new ToyDisplay(k, 1)
     toy.press(18.5, 8.5, 0)
     toy.step(1 / 60)
     display.advance(1 / 60)

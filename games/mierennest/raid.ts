@@ -65,6 +65,8 @@ export type Invader = {
   leaning: Lean | null
   /** It finished its own act in a chamber. */
   acted: boolean
+  /** It has touched a chamber and is on its way to where it does its act. */
+  insideSince: boolean
   /** What it does when it stops being dazed, and the last shot that hit it. */
   after: 'going' | 'leaving'
   lastShot: Shot | null
@@ -123,7 +125,7 @@ export function callRaid(built: Ground, party: Party, mouth: readonly number[] =
     if (!kind) continue
     invaders.push({
       id: invaders.length, kind, state: 'coming', cell: -1, from: -1, along: 0, facing: 1, wait: APART * (invaders.length + 1),
-      way: [], step: 0, trail: [], leaning: null, acted: false, after: 'going', lastShot: null, answer: null,
+      way: [], step: 0, trail: [], leaning: null, acted: false, insideSince: false, after: 'going', lastShot: null, answer: null,
     })
   }
   return {
@@ -166,15 +168,47 @@ function leaningWith(raid: Raid, invader: Invader): number {
   return Math.max(1, Math.min(PUSHERS_IN_A_LINE, n))
 }
 
+/** How far into a chamber a walker goes before it does its act, in steps of its own, at most. */
+export const INTO_THE_ROOM = 5
+
+/** Where a walker that has just come inside does its act: the place on a floor inside a chamber that is furthest in, up to a few steps, and reached first among those. */
+function actSpot(raid: Raid, invader: Invader): number {
+  const { ground } = raid, cols = ground.cols
+  const found = reach(ground, invader.kind, invader.cell)
+  const steps = new Int32Array(ground.cells.length)
+  let best = invader.cell, bestSteps = 0
+  for (const cell of found.order) {
+    if (cell !== invader.cell) steps[cell] = steps[found.from[cell]] + 1
+    if (steps[cell] > INTO_THE_ROOM) break
+    if (steps[cell] <= bestSteps || !isInside(ground, invader.kind, cell, raid.inside)) continue
+    if (at(ground, cell % cols, Math.floor(cell / cols) + 1) === OPEN) continue
+    if (invader.kind === 'ant' && sticks(ground, cell % cols, Math.floor(cell / cols), raid.covered)) continue
+    best = cell
+    bestSteps = steps[cell]
+  }
+  return best
+}
+
 /** An invader that stands still and is free to choose looks for what to do next. */
 function decide(raid: Raid, invader: Invader): void {
   const { ground } = raid
   if (isInside(ground, invader.kind, invader.cell, raid.inside)) {
+    // It is inside from the first cell of a chamber it touches. A walker then goes on to a place on the chamber's
+    // floor, well into the room, and does its act there; a flier does it where it hangs.
+    if (!invader.insideSince) {
+      invader.insideSince = true
+      raid.events.push({ type: 'inside', id: invader.id, kind: invader.kind, cell: invader.cell })
+      const spot = invader.kind === 'fly' ? invader.cell : actSpot(raid, invader)
+      if (spot !== invader.cell) {
+        setOff(invader, wayTo(reach(ground, invader.kind, invader.cell), spot))
+        return
+      }
+    }
     invader.state = 'acting'
     invader.wait = HABITS[invader.kind].act.seconds
-    raid.events.push({ type: 'inside', id: invader.id, kind: invader.kind, cell: invader.cell })
     return
   }
+  invader.insideSince = false
   const way = wayIn(ground, invader.kind, invader.cell, raid.inside)
   if (way && way.length > 1) {
     setOff(invader, way)

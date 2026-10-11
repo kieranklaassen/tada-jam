@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { BODY, SMALLEST_TARGET, boxOf, camperAt, campers, faceOf, onBell } from './camp'
+import { BODY, FILE_HEAD, SMALLEST_TARGET, boxOf, camperAt, campers, faceOf, fileEnd, onBell, partyFile } from './camp'
 import { LADDER } from './config'
 import { partyAt } from './order'
 import { STAGE } from './stage'
-import { FRAME, GRASS_Y, LOG, MOUTH_X } from './view/layout'
+import { FRAME, GRASS_Y, MOUTH_X } from './view/layout'
 import { BELL, LIP, STALK, hillShape } from './view/props'
 
 // Everything here is in stage units, and the stage is fitted whole into any surface, so what holds here holds at
@@ -45,12 +45,12 @@ describe('the camp', () => {
     }
   })
 
-  it('stands no two campers in each other, but for the polisher at its ball', () => {
+  it('stands no two campers in each other, but for the polisher at its ball and the file at the log, which stands close', () => {
     for (const { place, list } of PARTIES) for (let n = 0; n < list.length; n++) for (let m = n + 1; m < list.length; m++) {
       const a = boxOf(list[n]), b = boxOf(list[m])
       const overlapX = Math.min(a.right, b.right) - Math.max(a.left, b.left), overlapY = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)
       const pair = [list[n].id, list[m].id].sort().join('+')
-      if (pair === 'ball+polisher') continue
+      if (pair === 'ball+polisher' || (list[n].id.startsWith('party') && list[m].id.startsWith('party'))) continue
       expect(overlapX > 6 && overlapY > 6, `${place}: ${pair}`).toBe(false)
     }
   })
@@ -67,16 +67,29 @@ describe('the camp', () => {
     }
   })
 
-  it('sits the first of the next party on the log, in a pose of its own kind', () => {
-    for (const { place, list } of PARTIES) {
-      const waiting = list.find((camper) => camper.id === 'party')!
-      const box = boxOf(waiting)
-      expect(box.left, place).toBeGreaterThanOrEqual(LOG.x - 1)
-      expect(box.right, place).toBeLessThanOrEqual(LOG.x + LOG.length + 1)
-      expect(waiting.y).toBe(GRASS_Y - LOG.height)
+  it('stands the whole of the next party in a file at the log, head at the mouth end, each one face clear of the next', () => {
+    for (const place of LADDER) {
+      const party = partyAt(place, 0), file = partyFile(party)
+      expect(file.length, place).toBe(party.length)
+      expect(boxOf(file[0]).right).toBe(FILE_HEAD)
+      for (let n = 1; n < file.length; n++) {
+        // Each stands behind the one before it, and its box stops short of that one's face.
+        expect(file[n].x).toBeLessThan(file[n - 1].x)
+        const face = faceOf(file[n - 1])!
+        expect(boxOf(file[n]).right, `${place} ${n}`).toBeLessThan(face.x - face.radius)
+      }
+      expect(fileEnd(file), place).toBeGreaterThanOrEqual(FRAME)
     }
-    expect(campers(['beetle']).find((c) => c.id === 'party')!.kind).toBe('beetle')
-    expect(campers([]).find((c) => c.id === 'party')!.kind).toBe('raider')
+    expect(partyFile(['beetle'])[0].kind).toBe('beetle')
+    expect(partyFile([])).toEqual([])
+  })
+
+  it('is a longer file for a larger party, and the two campers on the left make room for it', () => {
+    const one = campers(partyAt('first-chamber', 0)), full = campers(partyAt('full-camp', 0))
+    expect(fileEnd(partyFile(partyAt('full-camp', 0)))).toBeLessThan(fileEnd(partyFile(partyAt('first-chamber', 0))) - 200)
+    expect(one.map((c) => c.id)).toContain('fly')
+    expect(one.map((c) => c.id)).toContain('stuck')
+    expect(full.map((c) => c.id)).not.toContain('fly')
   })
 
   it('gives no two of a kind the same phase', () => {

@@ -1,5 +1,7 @@
 import type { Note } from './audio'
 import { MUD, ROCK, SAND, STONE, type Kind } from './ground'
+import type { KingdomEvent } from './kingdom'
+import type { RaidEvent } from './raid'
 import type { ToyEvent } from './toy'
 
 // Every sound of the game as plain numbers: pitch, peak, attack and length. Nobody has heard them: they are written
@@ -119,3 +121,47 @@ export function voiceFor(event: ToyEvent): Note[] | null {
 
 /** The least time between two voices of the same kind of event, in seconds, so a fast drag crunches and does not roar. */
 export const APART: Record<ToyEvent['type'], number> = { dug: 0.07, met: 0.12, picked: 0, set: 0, back: 0, landed: 0.09, pour: 0.28, buried: 0.5 }
+
+/** The catapult's arm lets go with a twang, the cannon with a hollow pop; an empty machine turns with a click, and a machine set down knocks. */
+export const TWANG: Note[] = [tone(330, 0.14, 0.003, 0.16, { wave: 'triangle', glideTo: 520 }), hiss(900, 0.05, 0.003, 0.06, { q: 2 })]
+export const POP: Note[] = [tone(150, 0.2, 0.002, 0.12, { glideTo: 70 }), hiss(1200, 0.08, 0.002, 0.07, { q: 0.8 })]
+export const CLICK: Note[] = [tone(1100, 0.08, 0.002, 0.04, { wave: 'square' })]
+export const KNOCK: Note[] = [tone(210, 0.12, 0.003, 0.09, { wave: 'triangle', glideTo: 160 })]
+/** A shot that goes nowhere: a small cough. */
+export const FIZZLE: Note[] = [hiss(600, 0.07, 0.01, 0.12, { q: 1.5, glideTo: 300 })]
+/** A wall gives: a sigh of sand and a soft bump. */
+export const GAVE: Note[] = [hiss(2400, 0.1, 0.03, 0.4, { q: 0.7, glideTo: 1500 }), tone(92, 0.12, 0.006, 0.16, { glideTo: 60 })]
+/** Giving up: a long step down. */
+export const SIGH: Note[] = [tone(392, 0.08, 0.03, 0.3, { glideTo: 262 })]
+/** The party sets off: three quick steps up. */
+export const MARCH: Note[] = [tone(294, 0.09, 0.004, 0.08, { wave: 'triangle' }), tone(370, 0.09, 0.004, 0.08, { wave: 'triangle', delay: 0.1 }), tone(440, 0.09, 0.004, 0.12, { wave: 'triangle', delay: 0.2 })]
+
+const speakerOf = (kind: 'ant' | 'beetle' | 'fly'): Speaker => (kind === 'ant' ? 'raider' : kind)
+
+/** The voice of something the game says happened, or null where it makes no sound. */
+export function voiceForGame(event: KingdomEvent): Note[] | null {
+  switch (event.type) {
+    case 'bell': return BELL
+    case 'called': return MARCH
+    case 'fired': return event.machine === 'catapult' ? TWANG : POP
+    case 'fizzled': return FIZZLE
+    case 'shotLanded': return SET_DOWN[event.shot]
+    case 'loaded': return PICKED[event.shot]
+    case 'turned': return CLICK
+    case 'machineSet': case 'machineFell': return KNOCK
+    case 'machineBack': return BACK
+    case 'judged': case 'scene': return null
+  }
+}
+
+/** The voice of something a raid says happened, or null where it makes no sound. */
+export function voiceForRaid(event: RaidEvent): Note[] | null {
+  switch (event.type) {
+    case 'stuck': return MET.mud
+    case 'strain': return SPOKEN.beetle
+    case 'gave': return GAVE
+    case 'inside': case 'acted': case 'hit': return SPOKEN[speakerOf(event.kind)]
+    case 'givesUp': case 'held': return SIGH
+    case 'in': case 'home': case 'over': return null
+  }
+}

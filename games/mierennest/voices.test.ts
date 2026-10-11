@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { Note } from './audio'
 import { EARTH, MUD, ROCK, SAND, STONE } from './ground'
 import type { ToyEvent } from './toy'
-import { APART, BACK, BELL, BOING, MET, PICKED, RANGE, SET_DOWN, SPOKEN, digVoice, landedVoice, lengthOf, pourVoice, voiceFor } from './voices'
+import { APART, BACK, BELL, BOING, CLICK, FIZZLE, GAVE, KNOCK, MARCH, MET, PICKED, POP, RANGE, SET_DOWN, SIGH, SPOKEN, TWANG, digVoice, landedVoice, lengthOf, pourVoice, voiceFor, voiceForGame, voiceForRaid } from './voices'
 
 const MATERIALS = ['sand', 'mud', 'stone'] as const
 
@@ -22,6 +22,8 @@ const ALL: Record<string, Note[]> = {
   ...Object.fromEntries(MATERIALS.flatMap((m) => [[`landed ${m} near`, landedVoice(m, 1)], [`landed ${m} far`, landedVoice(m, 30)]])),
   ...Object.fromEntries(Object.entries(SPOKEN).map(([k, v]) => [`spoken ${k}`, v])),
 }
+
+for (const [name, notes] of Object.entries({ twang: TWANG, pop: POP, click: CLICK, knock: KNOCK, fizzle: FIZZLE, gave: GAVE, sigh: SIGH, march: MARCH })) ALL[name] = notes
 
 const within = (value: number, [low, high]: readonly [number, number] | readonly number[]) => value >= low && value <= high
 /** The pitch of the loudest note of a voice: what the ear takes it for. */
@@ -122,5 +124,26 @@ describe('what the toy says happened', () => {
     expect(APART.dug).toBeGreaterThan(0.03)
     expect(APART.pour).toBeGreaterThan(APART.dug)
     expect([APART.picked, APART.set, APART.back]).toEqual([0, 0, 0])
+  })
+})
+
+describe('what the game and a raid say happened', () => {
+  it('gives the two machines voices of their own, and a voice to every act that changes something', () => {
+    expect(voiceForGame({ type: 'fired', machine: 'catapult', shot: 'mud' })).toBe(TWANG)
+    expect(voiceForGame({ type: 'fired', machine: 'cannon', shot: 'mud' })).toBe(POP)
+    for (const event of [{ type: 'bell' }, { type: 'called', party: ['ant'] }, { type: 'loaded', machine: 'cannon', shot: 'sand' }, { type: 'turned', machine: 'cannon' }, { type: 'machineSet', machine: 'cannon' }, { type: 'shotLanded', shot: 'stone', cell: 3 }] as const) {
+      expect(voiceForGame(event), event.type).not.toBeNull()
+    }
+  })
+
+  it('never sounds a verdict: a raid that is judged makes no sound of its own', () => {
+    for (const verdict of ['well', 'not-well', 'not-judged'] as const) expect(voiceForGame({ type: 'judged', verdict })).toBeNull()
+    expect(voiceForRaid({ type: 'over' })).toBeNull()
+  })
+
+  it('lets each kind speak in its own voice when it gets in, acts and is hit', () => {
+    const voices = (['ant', 'beetle', 'fly'] as const).map((kind) => voiceForRaid({ type: 'acted', id: 0, kind }))
+    expect(new Set(voices).size).toBe(3)
+    expect(voiceForRaid({ type: 'hit', id: 0, kind: 'beetle', shot: 'stone', answer: 'x' })).toBe(SPOKEN.beetle)
   })
 })

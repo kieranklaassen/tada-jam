@@ -80,3 +80,40 @@ export class Sprites {
     pen.restore()
   }
 }
+
+/**
+ * Anything else that is painted once and stamped: a machine, a thing on a wall, an effect. Each is named by a key,
+ * with the size of its box and where in the box its origin lies; a change of scale makes them all again.
+ */
+export class Stamps {
+  private readonly made = new Map<string, HTMLCanvasElement | OffscreenCanvas>()
+
+  constructor(private scale: number, private readonly canvasOf: (width: number, height: number) => HTMLCanvasElement | OffscreenCanvas) {}
+
+  rescale(scale: number): void {
+    if (scale === this.scale) return
+    this.scale = scale
+    this.made.clear()
+  }
+
+  /** Stamps the thing with its origin at (x, y) in stage units, mirrored about the origin when `flip` is true. One draw. */
+  stamp(pen: CanvasRenderingContext2D, key: string, box: { width: number; height: number; originX: number; originY: number }, paint: (pen: CanvasRenderingContext2D) => void, x: number, y: number, flip = false): void {
+    let image = this.made.get(key)
+    if (!image) {
+      image = this.canvasOf(Math.ceil(box.width * this.scale), Math.ceil(box.height * this.scale))
+      const own = image.getContext('2d') as CanvasRenderingContext2D
+      own.setTransform(this.scale, 0, 0, this.scale, box.originX * this.scale, box.originY * this.scale)
+      paint(own)
+      this.made.set(key, image)
+    }
+    if (!flip) {
+      pen.drawImage(image, x - box.originX, y - box.originY, box.width, box.height)
+      return
+    }
+    pen.save()
+    pen.translate(x, y)
+    pen.scale(-1, 1)
+    pen.drawImage(image, -box.originX, -box.originY, box.width, box.height)
+    pen.restore()
+  }
+}
