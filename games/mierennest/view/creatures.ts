@@ -1,6 +1,6 @@
 import { invaderPainters, INVADER_POSES, INVADER_SIZE } from './invaders'
-import { ANT, EARTH, GRASS, QUEEN, WORKER } from './palette'
-import { blob, edged, eyes, feeler, mouth, oval, shine } from './parts'
+import { ANT, EARTH, GRASS, INK, QUEEN, WORKER } from './palette'
+import { blob, edged, eyes, feeler, line, mouth, oval, shine } from './parts'
 import type { CreatureKind, Ctx, Face, Look, Painter } from './parts'
 import { antFigure } from './parts2'
 import type { AntBuild, AntPose } from './parts2'
@@ -153,10 +153,19 @@ function pill(ctx: Ctx, x: number, y: number, w: number, h: number, r: number, f
 }
 
 /** Her head, the same in every pose: wide, with heavy lids, cheeks, and a tuft of three feelers that stand like
- *  the points of a crown. `squash` is how hard the shaft presses her cheeks. */
-function queenHead(ctx: Ctx, x: number, y: number, rx: number, ry: number, squash: number, f: Face, look: Look, t: number): void {
+ *  the points of a crown. `squash` is how hard the shaft presses her cheeks. `lay` turns the tuft about its
+ *  roots: forward when it is positive, flat back when it is negative. */
+function queenHead(ctx: Ctx, x: number, y: number, rx: number, ry: number, squash: number, f: Face, look: Look, t: number, lay = 0): void {
   const sway = Math.sin(t * 2.2) * 1.5
-  for (const k of [-1, 1, 0]) feeler(ctx, QUEEN.leg, 3.6, x + k * rx * 0.2, y - ry * 0.8, x + k * rx * 0.42 + sway, y - ry - (k === 0 ? 12 : 8), k * 0.3, QUEEN.body)
+  for (const k of [-1, 1, 0]) {
+    if (lay === 0) {
+      feeler(ctx, QUEEN.leg, 3.6, x + k * rx * 0.2, y - ry * 0.8, x + k * rx * 0.42 + sway, y - ry - (k === 0 ? 12 : 8), k * 0.3, QUEEN.body)
+      continue
+    }
+    // A laid feeler keeps its length and its place in the fan, and bows away from the head.
+    const dx = k * rx * 0.22 + sway, dy = -ry * 0.2 - (k === 0 ? 12 : 8), a = lay + k * 0.28
+    feeler(ctx, QUEEN.leg, 3.6, x + k * rx * 0.2, y - ry * 0.8, x + k * rx * 0.2 + dx * Math.cos(a) - dy * Math.sin(a), y - ry * 0.8 + dx * Math.sin(a) + dy * Math.cos(a), lay > 0 ? 0.3 : -0.3, QUEEN.body)
+  }
   if (squash > 0) {
     pill(ctx, x - rx, y - ry, rx * 2, ry * 2, ry * 0.86, QUEEN.dark)
     pill(ctx, x - rx + 1, y - ry, rx * 2 - 2, ry * 2 - 3, ry * 0.84, QUEEN.body)
@@ -196,6 +205,34 @@ const SIT = {
   sit2: { egg: [43, -34, 0.62], face: { brows: [0.2, 0.35], raise: 0.55, lid: 0.14, tilt: 0.12, mouth: 'wavy' } },
 } as const
 
+/** One roll of her rump: a dark edge, the pale belly under it, and the lit back over both. */
+function roll(ctx: Ctx, x: number, y: number, rx: number, ry: number): void {
+  oval(ctx, x, y, rx, ry, 0, QUEEN.dark)
+  oval(ctx, x, y - 1.2, rx - 1.6, ry - 1.6, 0, QUEEN.belly)
+  oval(ctx, x - 0.5, y - ry * 0.3, rx * 0.92, ry * 0.69, 0, QUEEN.body)
+  shine(ctx, x, y, rx, ry)
+}
+
+/** A fist at (x, y) with one finger out along (dx, dy): the hand that shows a guest the door. */
+function pointing(ctx: Ctx, x: number, y: number, dx: number, dy: number): void {
+  line(ctx, QUEEN.leg, 5.4, [x, y, x + dx, y + dy])
+  oval(ctx, x, y, 5.4, 5.4, 0, QUEEN.leg)
+  line(ctx, QUEEN.dark, 3, [x, y, x + dx, y + dy])
+  oval(ctx, x, y, 4.2, 4.2, 0, QUEEN.dark)
+}
+
+// The two frames of her opinion of a guest: how far she leans, where her head is, the hand of the pointing arm
+// with the bow of its elbow, the finger from that hand, the lay of her feelers and her mouth. And the two frames of
+// being carried to a new room: each kicking leg as [footX, footY, kneeDx, kneeDy], the lay of her feelers, her mouth.
+const GLARE = {
+  glare: { lean: 0.1, head: [38, -56], arm: [-18, -61, 0, -1], finger: [-10.5, -5], lay: -0.3, mouth: 'flat' },
+  glare2: { lean: 0.2, head: [42, -54.5], arm: [-28, -66, 0, -1], finger: [-12.5, -6], lay: 0.7, mouth: 'wavy' },
+} as const
+const CARRIED = {
+  carried: { far: [54, -40, 0, -3], near: [33, -6.5, 8, 1], lay: -1.45, mouth: 'o' },
+  carried2: { far: [41, -7.5, 8, 0], near: [53, -36, 0, -3], lay: -1.62, mouth: 'wavy' },
+} as const
+
 /** The egg set down at last, standing in a little cushion of moss on the floor in front of her. */
 function eggOnMoss(ctx: Ctx, x: number): void {
   for (const [dx, r] of [[-8, 5.4], [0, 6.4], [8, 5.4]]) oval(ctx, x + dx, -4.6, r + 1.6, r, 0, GRASS.dark)
@@ -224,6 +261,27 @@ const paintQueen: Painter = (ctx, pose, look, t) => {
     queenHead(ctx, 0, w.head, 27, 14.5, 2.5, w.face, look, t)
     return
   }
+  if (pose === 'carried' || pose === 'carried2') {
+    // Moving house, lifted off the floor by workers who are not in this picture: she lies tipped back with her
+    // head thrown back, hugs the egg to her chest with both arms, kicks her dangling legs in turn and protests
+    // wide-eyed at whoever is under her, feelers flat back.
+    const c = CARRIED[pose]
+    edged(ctx, QUEEN.leg, QUEEN.arm, 7.6, 31, -28, c.far[0], c.far[1], c.far[2], c.far[3], true)
+    roll(ctx, -38, -22, 21, 16.5)
+    roll(ctx, -16, -31, 25, 22 + breath * 0.6)
+    roll(ctx, 8, -39, 21, 21)
+    blob(ctx, 14, -49, 15, 17, -0.85, QUEEN.body, QUEEN.dark, false)
+    edged(ctx, QUEEN.leg, QUEEN.dark, 7.6, 24, -24, c.near[0], c.near[1], c.near[2], c.near[3], true)
+    egg(ctx, [31, -43 - breath * 0.4, 0.7], [26, -55, 11, 0], [8, -50, -1, 9], t)
+    ctx.save()
+    ctx.translate(12, -58.5)
+    ctx.rotate(-0.5)
+    queenHead(ctx, 0, 0, 17.5, 14.5, 0, { brows: [-0.2, 0.3], mouth: 'none', bias: [0.5, 0.9] }, look, t, c.lay)
+    // Her mouth, twice as wide as she ever opens it on her throne.
+    mouth(ctx, 6.5, 8, 13, c.mouth)
+    ctx.restore()
+    return
+  }
   // Enthroned on her own rump: three great rolls behind her, a short chest, the egg in her arms, and her two hind
   // legs folded in front of her with the knees up.
   const s = SIT[pose === 'sit2' ? 'sit2' : 'sit']
@@ -231,12 +289,30 @@ const paintQueen: Painter = (ctx, pose, look, t) => {
   const down = pose === 'eggDown' || pose === 'eggDown2'
   if (down) edged(ctx, QUEEN.leg, QUEEN.arm, 7.6, 32, -13, 42, -3.8, 6, -11, true)
   else edged(ctx, QUEEN.leg, QUEEN.arm, 7.6, 32, -13, 57, -3.8, 7.5, -11, true)
-  for (const [x, y, rx, ry] of [[-38, -19, 22, 19], [-17, -24, 25, 24 + breath * 0.6], [7, -23, 21, 22]]) {
-    // A roll: a dark edge, the pale belly under it, and the lit back over both.
-    oval(ctx, x, y, rx, ry, 0, QUEEN.dark)
-    oval(ctx, x, y - 1.2, rx - 1.6, ry - 1.6, 0, QUEEN.belly)
-    oval(ctx, x - 0.5, y - ry * 0.3, rx * 0.92, ry * 0.69, 0, QUEEN.body)
-    shine(ctx, x, y, rx, ry)
+  for (const [x, y, rx, ry] of [[-38, -19, 22, 19], [-17, -24, 25, 24 + breath * 0.6], [7, -23, 21, 22]]) roll(ctx, x, y, rx, ry)
+  if (pose === 'glare' || pose === 'glare2') {
+    // A guest is doing its act in her room. She leans at it from her throne, brows hard down in a V over narrowed
+    // eyes, the egg tucked in the crook of one arm and the other thrust out behind her at the door; in the second
+    // frame the arm straightens, the finger jabs further and her feelers snap forward at the guest.
+    const g = GLARE[pose]
+    blob(ctx, 24, -37, 15, 18, g.lean, QUEEN.body, QUEEN.dark, false)
+    edged(ctx, QUEEN.leg, QUEEN.dark, 7.6, 26, -10, 47, -3.8, 7, -10.5, true)
+    blob(ctx, 38, -30 - breath * 0.4, 10.5, 13.5, 0.4, QUEEN.egg, EGG_SHADE, false)
+    edged(ctx, QUEEN.leg, QUEEN.arm, 8, 37, -43, 37, -17, 15, 3)
+    edged(ctx, QUEEN.leg, QUEEN.dark, 8, 16, -44, g.arm[0], g.arm[1], g.arm[2], g.arm[3])
+    pointing(ctx, g.arm[0], g.arm[1], g.finger[0], g.finger[1])
+    ctx.save()
+    ctx.translate(g.head[0], g.head[1])
+    ctx.rotate(g.lean)
+    // She has eyes for her guest alone: they do not follow the finger.
+    queenHead(ctx, 0, 0, 17.5, 14.5, 0, { lid: 0.4, tilt: 0.5, mouth: 'none', bias: [0.9, 0.3] }, { x: 0, y: 0 }, t, g.lay)
+    // Her mouth, a longer line than usual, and her brows, heavier here than anywhere else and pressed onto her eyes.
+    mouth(ctx, 5.5, 9.8, 9, g.mouth)
+    const r = 14.5 * 0.52
+    line(ctx, INK, r * 0.5, [-2.1 - r * 0.95, -2.9 - r * 1.35, -2.1 + r * 0.7, -2.9 - r * 0.55])
+    line(ctx, INK, r * 0.44, [-2.1 + r * 1.3, -2.9 - r * 0.45, -2.1 + r * 2.3, -2.9 - r * 1])
+    ctx.restore()
+    return
   }
   blob(ctx, 21, -37, 15, 18, -0.25, QUEEN.body, QUEEN.dark, false)
   if (down) {
@@ -261,7 +337,8 @@ const paintQueen: Painter = (ctx, pose, look, t) => {
 
 /** The body box of each kind in stage units: its width along the ground and its height above its feet. Feelers,
  *  wings and props may reach a little outside it. The queen's box is that of her `sit` pose; wedged in the shaft
- *  she is 56 wide and 96 tall, and a worker with its hands on its hips is about 28 wide and 56 tall. */
+ *  she is 56 wide and 96 tall, carried she keeps inside 120 by 80, and a worker with its hands on its hips is
+ *  about 28 wide and 56 tall. */
 export const SIZE: Record<CreatureKind, { width: number; height: number }> = {
   ant: { width: 112, height: 28 },
   queen: { width: 120, height: 72 },
@@ -272,7 +349,7 @@ export const SIZE: Record<CreatureKind, { width: number; height: number }> = {
 /** The poses each kind has. The first is the one a kind falls back on when it is asked for a pose it has not. */
 export const POSES: { [K in CreatureKind]: readonly string[] } = {
   ant: ['stand', 'dig', 'look', 'walk1', 'walk2', 'carry', 'wait'],
-  queen: ['wedged', 'sit', 'wedged2', 'sit2', 'eggDown', 'eggDown2'],
+  queen: ['wedged', 'sit', 'wedged2', 'sit2', 'eggDown', 'eggDown2', 'glare', 'glare2', 'carried', 'carried2'],
   worker: ['walk', 'carry', 'hips', 'walk2'],
   ...INVADER_POSES,
 }

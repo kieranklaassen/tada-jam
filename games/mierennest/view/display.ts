@@ -454,9 +454,9 @@ export class ToyDisplay {
       if (carried < 1) {
         const at = alongLine(feet, carried)
         const kick = Math.floor(this.seconds * 5) % 2 === 0
-        list.push({ is: 'sprite', who: 'worker', pose: kick ? 'carry' : 'walk2', x: at.x - 46 * seat.fit, y: at.y, flip: false, size: 1, tall: 1, move: null, turn: 0 })
+        list.push({ is: 'sprite', who: 'worker', pose: kick ? 'walk' : 'walk2', x: at.x - 46 * seat.fit, y: at.y, flip: false, size: 1, tall: 1, move: null, turn: 0 })
         list.push({ is: 'sprite', who: 'queen', pose: kick ? 'carried' : 'carried2', x: at.x, y: at.y - 12, flip: false, size: seat.fit, tall: 1, move: null, turn: 0 })
-        list.push({ is: 'sprite', who: 'worker', pose: kick ? 'walk2' : 'carry', x: at.x + 46 * seat.fit, y: at.y, flip: true, size: 1, tall: 1, move: null, turn: 0 })
+        list.push({ is: 'sprite', who: 'worker', pose: kick ? 'walk2' : 'walk', x: at.x + 46 * seat.fit, y: at.y, flip: true, size: 1, tall: 1, move: null, turn: 0 })
       } else {
         // Each end of the floor in turn, then her own place.
         const floor = showFloor(ground, realm.chambers[realm.queenRoom!])

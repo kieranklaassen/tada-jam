@@ -154,6 +154,8 @@ const PARTNERS: [CreatureKind, string, string][] = [
   ['dungFly', 'conduct', 'conduct2'],
   ['dungFly', 'weep', 'weep2'],
   ['queen', 'eggDown', 'eggDown2'],
+  ['queen', 'glare', 'glare2'],
+  ['queen', 'carried', 'carried2'],
 ]
 
 /** The poses of a raid that goes wrong, added after the others; the last of each of the first three is its duck. */
@@ -165,14 +167,15 @@ const RAID: [CreatureKind, string[]][] = [
   ['dungFly', ['duck', 'conduct', 'conduct2', 'down', 'tumble', 'arms', 'weep', 'weep2']],
 ]
 
-/** The poses added last of all: a duck for every invader, the dung beetle's and the dung fly's, and the queen's. */
+/** The poses added last of all: a duck for every invader, the dung beetle's and the dung fly's, and the queen's:
+ *  her egg set down, her opinion of a guest, and her move to a new room. */
 const NEW: [CreatureKind, string[]][] = [
   ['raider', ['duck']],
   ['beetle', ['duck']],
   ['fly', ['duck']],
   ['dungBeetle', ['duck', 'heave', 'lost', 'onBack', 'onBack2']],
   ['dungFly', ['duck', 'conduct', 'conduct2', 'down', 'tumble', 'arms', 'weep', 'weep2']],
-  ['queen', ['eggDown', 'eggDown2']],
+  ['queen', ['eggDown', 'eggDown2', 'glare', 'glare2', 'carried', 'carried2']],
 ]
 
 /** What only an eye is painted with: its white, or the tint a kind has for it; its pupil; the wash of a shut lid. */
@@ -203,7 +206,7 @@ describe('the creatures', () => {
   it('have the poses the scenes ask for, the first ones in their old order', () => {
     expect(KINDS).toHaveLength(9)
     expect(POSES.ant).toEqual(['stand', 'dig', 'look', 'walk1', 'walk2', 'carry', 'wait'])
-    expect(POSES.queen).toEqual(['wedged', 'sit', 'wedged2', 'sit2', 'eggDown', 'eggDown2'])
+    expect(POSES.queen).toEqual(['wedged', 'sit', 'wedged2', 'sit2', 'eggDown', 'eggDown2', 'glare', 'glare2', 'carried', 'carried2'])
     expect(POSES.worker).toEqual(['walk', 'carry', 'hips', 'walk2'])
     expect(POSES.raider.slice(0, 7)).toEqual(['pillow', 'walk', 'stuck', 'nap', 'walk2', 'stuck2', 'nap2'])
     expect(POSES.beetle.slice(0, 6)).toEqual(['napkin', 'walk', 'onBack', 'lean', 'walk2', 'onBack2'])
@@ -344,6 +347,51 @@ describe('the creatures', () => {
       }
     })
   }
+
+  // Carried, the queen is lifted off the floor and held from below by workers who are sprites of their own, so
+  // she keeps inside a box 120 wide and 80 high over the middle of her feet, feelers and kicking legs included.
+  for (const pose of ['carried', 'carried2']) {
+    it(`keeps the carried queen in pose ${pose} within 60 of her feet to either side, and 80 high`, () => {
+      for (const t of TIMES) {
+        const { bounds } = painted('queen', pose, t)
+        expect(bounds.left, `t = ${t}`).toBeGreaterThanOrEqual(-60)
+        expect(bounds.right, `t = ${t}`).toBeLessThanOrEqual(60)
+        expect(bounds.top, `t = ${t}`).toBeGreaterThanOrEqual(-80)
+        expect(bounds.bottom, `t = ${t}`).toBeLessThanOrEqual(0)
+      }
+    })
+  }
+
+  // Glaring, she sits where she sat: all of her, the arm that points at the door included, stays inside the
+  // picture of her on her throne, but for two more in front where her feelers snap forward.
+  for (const pose of ['glare', 'glare2']) {
+    it(`keeps the glaring queen in pose ${pose} on her throne`, () => {
+      for (const t of TIMES) {
+        const { bounds } = painted('queen', pose, t)
+        const sat = painted('queen', 'sit', t).bounds
+        expect(bounds.left, `t = ${t}`).toBeGreaterThanOrEqual(sat.left)
+        expect(bounds.right, `t = ${t}`).toBeLessThanOrEqual(sat.right + 2)
+        expect(bounds.top, `t = ${t}`).toBeGreaterThanOrEqual(sat.top)
+        expect(bounds.bottom, `t = ${t}`).toBeLessThanOrEqual(sat.bottom)
+      }
+    })
+  }
+
+  // She glares at the guest in front of her and at nobody else: her eyes are open, and wherever the finger is
+  // the picture is the same, so her pupils stay on the guest.
+  it('keeps the eyes of the glaring queen open and on her guest, wherever the finger is', () => {
+    for (const pose of ['glare', 'glare2']) {
+      for (const t of TIMES) {
+        const one = standIn()
+        const other = standIn()
+        paintCreature(one.ctx, 'queen', pose, { x: -1, y: 1 }, t)
+        paintCreature(other.ctx, 'queen', pose, { x: 1, y: -1 }, t)
+        expect(one.seen, `${pose}, t = ${t}`).toEqual(other.seen)
+        expect(one.fills, pose).toContain(EYE.pupil)
+        expect(one.fills, pose).not.toContain(LID_WASH)
+      }
+    }
+  })
 
   it('follows the frame: a stroked line under a turn and a shift lands where a canvas would put it', () => {
     const s = standIn()
