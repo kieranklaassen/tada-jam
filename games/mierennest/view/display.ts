@@ -7,12 +7,12 @@ import type { Party } from '../order'
 import { gaitOf, type RaidEvent } from '../raid'
 import { roomOf } from '../routes'
 import type { Machine } from '../save'
-import { WEDGED, demoDrag, queenSeat, workerSpots } from '../residents'
+import { WEDGED, demoDrag, floorOf, queenSeat, workerSpots } from '../residents'
 import { below, makeRng, type Rng } from '../rng'
 import type { Toy, ToyEvent } from '../toy'
 import { GRASS_Y, GROUND, MOUTH_X, TOADSTOOL } from './layout'
 import { BELL, LIP, dropAt, hillGrown, hillShape } from './props'
-import { FLUNG, MOUTH_STEP, invaderAt, roomFloor as showFloor, showCarriedOut, showFurnishings, showMachine, showMarks, showRaid, showShot, type Shown } from './raidShow'
+import { FLUNG, MOUTH_STEP, alongWay, invaderAt, showCarriedOut, showFurnishings, showMachine, showMarks, showRaid, showShot, toStage, type Shown } from './raidShow'
 import type { Effect, Thing } from './things'
 
 // What a frame of the toy shows, as a list of things to draw, with no canvas in sight: the view paints the list,
@@ -120,21 +120,6 @@ export const LADDER_BEAT = 0.9
 export const LADDER_SWAY = 0.16
 /** How much of the scene in which the queen moves in she is carried for; for the rest she tries the floor. */
 const MOVES = { carried: 0.7 } as const
-/** A point this share of the way along a line of points. */
-function alongLine(points: readonly { x: number; y: number }[], share: number): { x: number; y: number } {
-  let whole = 0
-  for (let n = 1; n < points.length; n++) whole += Math.hypot(points[n].x - points[n - 1].x, points[n].y - points[n - 1].y)
-  let left = whole * share
-  for (let n = 1; n < points.length; n++) {
-    const leg = Math.hypot(points[n].x - points[n - 1].x, points[n].y - points[n - 1].y)
-    if (left <= leg) {
-      const u = leg > 0 ? left / leg : 1
-      return { x: points[n - 1].x + (points[n].x - points[n - 1].x) * u, y: points[n - 1].y + (points[n].y - points[n - 1].y) * u }
-    }
-    left -= leg
-  }
-  return points[points.length - 1]
-}
 /** Where a machine's smoke or twang is shown, from the middle of its base, facing right. */
 const MUZZLE = { x: 23, y: -37 } as const
 const ARM = { x: 0, y: -28 } as const
@@ -150,7 +135,6 @@ const CRUMB = { earth: '#c79a63', dust: '#d9dde2', sand: '#f1d58a', spark: '#ffe
 
 type Crumb = { x: number; y: number; vx: number; vy: number; life: number; size: number; colour: string }
 
-const toStage = (cx: number, cy: number) => ({ x: GROUND.x + cx * CELL, y: GROUND.y + cy * CELL })
 const cellMiddle = (cell: number, cols: number) => toStage((cell % cols) + 0.5, Math.floor(cell / cols) + 0.5)
 
 export class ToyDisplay {
@@ -637,14 +621,14 @@ export class ToyDisplay {
       const home = toStage(seat.x, seat.y + 1)
       feet[feet.length - 1] = home
       if (carried < 1) {
-        const at = alongLine(feet, carried)
+        const at = alongWay(feet, carried)
         const kick = Math.floor(this.seconds * 5) % 2 === 0
         list.push({ is: 'sprite', id: '', who: 'worker', pose: kick ? 'walk' : 'walk2', x: at.x - 46 * seat.fit, y: at.y, flip: false, size: 1, tall: 1, move: null, turn: 0 })
         list.push({ is: 'sprite', id: 'queen', who: 'queen', pose: kick ? 'carried' : 'carried2', x: at.x, y: at.y - 12, flip: false, size: seat.fit, tall: 1, move: null, turn: 0 })
         list.push({ is: 'sprite', id: '', who: 'worker', pose: kick ? 'walk2' : 'walk', x: at.x + 46 * seat.fit, y: at.y, flip: true, size: 1, tall: 1, move: null, turn: 0 })
       } else {
         // Each end of the floor in turn, then her own place.
-        const floor = showFloor(ground, realm.chambers[realm.queenRoom!])
+        const floor = floorOf(ground, realm.chambers[realm.queenRoom!])
         const half = 2.2 * seat.fit, ends = [toStage(floor.from + half, seat.y + 1), toStage(floor.to + 1 - half, seat.y + 1), home]
         const tries = Math.min(ends.length - 1, Math.floor(((u - MOVES.carried) / (1 - MOVES.carried)) * ends.length))
         list.push({ is: 'sprite', id: 'queen', who: 'queen', pose: tries < ends.length - 1 ? 'sit2' : 'sit', x: ends[tries].x, y: ends[tries].y, flip: false, size: seat.fit, tall: 1, move: queenMove, turn: 0 })

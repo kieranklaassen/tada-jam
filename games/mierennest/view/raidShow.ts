@@ -1,12 +1,13 @@
 import { BODY, partyFile, type Camper } from '../camp'
 import type { Room } from '../chambers'
-import { CELL, OPEN, at, type Ground } from '../ground'
+import { CELL, OPEN, type Ground } from '../ground'
 import type { Flying, Scene } from '../kingdom'
 import { RELOAD } from '../machines'
 import type { Mover } from '../motion'
 import type { Party } from '../order'
 import type { InvaderKind } from '../habits'
 import { APART, type Invader, type Raid } from '../raid'
+import { floorOf } from '../residents'
 import type { Machine } from '../save'
 import { GRASS_Y, GROUND, MOUTH_X } from './layout'
 import type { Effect, Thing } from './things'
@@ -14,7 +15,8 @@ import type { Effect, Thing } from './things'
 // What a raid, the machines and the rooms show, as numbers and names with no canvas in sight: which creature in
 // which pose stands where. The display list (display.ts) turns these into things to draw.
 
-const toStage = (cx: number, cy: number) => ({ x: GROUND.x + cx * CELL, y: GROUND.y + cy * CELL })
+/** A point of the ground, in cell units, on the stage. */
+export const toStage = (cx: number, cy: number) => ({ x: GROUND.x + cx * CELL, y: GROUND.y + cy * CELL })
 
 /** The creature that plays each kind of invader. */
 export const PLAYED_BY: Record<InvaderKind, Mover> = { ant: 'raider', beetle: 'beetle', fly: 'fly', dungBeetle: 'dungBeetle', dungFly: 'dungFly' }
@@ -338,7 +340,7 @@ export function showRaid(raid: Raid, party: Party, seconds: number, over: readon
 }
 
 /** A point this share of the way along a line of points. */
-function alongWay(way: readonly { x: number; y: number }[], share: number): { x: number; y: number } {
+export function alongWay(way: readonly { x: number; y: number }[], share: number): { x: number; y: number } {
   let whole = 0
   for (let n = 1; n < way.length; n++) whole += Math.hypot(way[n].x - way[n - 1].x, way[n].y - way[n - 1].y)
   let left = whole * share
@@ -440,23 +442,6 @@ export const FURNISHED = 6
 /** Things that hang on the wall, and how high over the floor they hang. */
 const HUNG: Partial<Record<Thing, number>> = { shelf: 34, lamp: 40, washing: 36 }
 
-/** The floor of a room: its lowest row, and the first and last cell of the longest stretch of it with something firm under it. */
-export function roomFloor(ground: Ground, room: Room): { y: number; from: number; to: number } {
-  const cols = ground.cols
-  const lowest = Math.floor(room.cells[room.cells.length - 1] / cols)
-  const inRow = new Set(room.cells.filter((i) => Math.floor(i / cols) === lowest).map((i) => i % cols))
-  let best = { y: lowest, from: 0, to: -1 }, from = -1
-  for (let x = 0; x <= cols; x++) {
-    const floor = inRow.has(x) && at(ground, x, lowest + 1) !== OPEN
-    if (floor && from < 0) from = x
-    if (!floor && from >= 0) {
-      if (x - 1 - from > best.to - best.from) best = { y: lowest, from, to: x - 1 }
-      from = -1
-    }
-  }
-  return best
-}
-
 /** The chambers in the order their glow-worms are lit: nearest the mouth first, by the first cell of each. */
 export function lightingOrder(ground: Ground, chambers: readonly Room[]): number[] {
   const cols = ground.cols, mouthX = MOUTH_X / CELL - GROUND.x / CELL
@@ -478,7 +463,7 @@ export function showFurnishings(ground: Ground, chambers: readonly Room[], lit: 
   // walls come from the ground alone, never from when a room was dug, so the same six are found on load.
   let hung = 0
   chambers.forEach((room, n) => {
-    const floor = roomFloor(ground, room)
+    const floor = floorOf(ground, room)
     let from = floor.from, to = floor.to + 1
     if (queen && queen.room === n) {
       // The longer stretch of floor beside her.

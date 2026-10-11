@@ -9,8 +9,8 @@ import { EARTH, MOUTH, OPEN, SHAFT_DEPTH, at, type Ground } from './ground'
 /** A place to stand: the cell whose floor the feet are on, and the middle of the feet along the row, in cell units. */
 export type Standing = { x: number; y: number }
 
-/** The longest run of floor in the lowest row of a room: cells of the room with something firm under them. */
-function floorOf(ground: Ground, room: Room): { y: number; from: number; to: number } {
+/** The floor of a room: its lowest row, and the first and last cell of the longest stretch of it with something firm under it. */
+export function floorOf(ground: Ground, room: Room): { y: number; from: number; to: number } {
   const { cols } = ground
   const lowest = Math.floor(room.cells[room.cells.length - 1] / cols)
   let best = { y: lowest, from: 0, to: -1 }

@@ -6,12 +6,12 @@ import type { Guidance } from '../guidance'
 import { Kingdom } from '../kingdom'
 import { partyAt } from '../order'
 import { callRaid, hit, playOut, stepRaid } from '../raid'
-import { queenSeat, workerSpots } from '../residents'
+import { floorOf as roomFloor, queenSeat, workerSpots } from '../residents'
 import { deserialize, freshGame, serialize, type Game } from '../save'
 import { POSES } from './creatures'
 import { DRAWS, ToyDisplay, drawsOf, type Item } from './display'
 import { GRASS_Y, GROUND } from './layout'
-import { DUCKS, FURNISHED, MOUTH_STEP, PLAYED_BY, RAID_POSES, covers, invaderAt, invaderPose, roomFloor, showCarriedOut, showFurnishings, showMachine, showRaid, showShot, shownBox, shownFace } from './raidShow'
+import { DUCKS, FURNISHED, MOUTH_STEP, PLAYED_BY, RAID_POSES, covers, invaderAt, invaderPose, showCarriedOut, showFurnishings, showMachine, showRaid, showShot, shownBox, shownFace, toStage as stage } from './raidShow'
 import { THING_SIZE } from './things'
 
 const DRAW_BUDGET = 80
@@ -265,7 +265,6 @@ describe('who is where in a raid', () => {
         const raid = callRaid(game.ground, party)
         // The kingdom's own, where the display draws them while a raid runs, before every invader.
         const realm = k.toy.realm, seat = queenSeat(game.ground, realm.chambers, realm.queenRoom)!
-        const stage = (cx: number, cy: number) => ({ x: GROUND.x + cx * CELL, y: GROUND.y + cy * CELL })
         const own: Box[] = [
           { left: stage(seat.x, 0).x - (BODY.queen.width / 2) * seat.fit, right: stage(seat.x, 0).x + (BODY.queen.width / 2) * seat.fit, top: stage(0, seat.y + 1).y - BODY.queen.height * seat.fit, bottom: stage(0, seat.y + 1).y },
           ...workerSpots(game.ground, realm.chambers, realm.queenRoom, realm.workers, true).map((spot) => ({
