@@ -102,6 +102,8 @@ export type Invader = {
   answer: string | null
   /** How many cells across the dung ball it rolls is: 0 for none. */
   ball: number
+  /** It is backing off a machine it found itself in front of when it had to wait: it waits one place before it. */
+  backing: boolean
   /** How many cells across the ball it left on the grass is, where the mouth held it: 0 for none. It lies at the log. */
   left: number
   /** Seconds it has heaved at something its ball cannot pass and it cannot dig. */
@@ -157,6 +159,8 @@ export type Raid = {
   covered: Set<number>
   /** The dung balls that were left where they lay: the place each lies in, how many cells across it is, and the way it was rolled there. */
   balls: { cell: number; size: number; trail: number[] }[]
+  /** The cells the machines of the nest stand in: nobody who waits comes to rest in front of one. */
+  machines: ReadonlySet<number>
   /** The stones that are rolling: the cell each is in, which way it rolls, and the seconds until its next cell. */
   rolling: { cell: number; dx: number; wait: number }[]
   /** The dung fly is in the nest and up: a ball that meets soft ground digs on. */
@@ -209,16 +213,16 @@ function residents(ground: Ground, mouth: readonly number[]): Raid['keepClear'] 
 }
 
 /** Calls the party in. The raid runs on a copy of `built`, which is not changed. */
-export function callRaid(built: Ground, party: Party, mouth: readonly number[] = MOUTH): Raid {
+export function callRaid(built: Ground, party: Party, mouth: readonly number[] = MOUTH, machines: readonly number[] = []): Raid {
   const ground = clone(built)
   const inside = chamberCells(ground, mouth)
   const invaders: Invader[] = party.map((kind, id) => ({
     id, kind, state: 'coming', cell: -1, from: -1, toward: -1, along: 0, facing: 1, wait: APART,
     way: [], step: 0, trail: [], leaning: null, acted: false, insideSince: false, room: 0, spot: -1, after: 'going', lastShot: null, answer: null,
-    ball: kind === 'dungBeetle' ? DUNG_BALL.across : 0, left: 0, jammed: 0, lostIn: -1, queued: false, wake: [],
+    ball: kind === 'dungBeetle' ? DUNG_BALL.across : 0, left: 0, backing: false, jammed: 0, lostIn: -1, queued: false, wake: [],
   }))
   return {
-    ground, invaders, time: 0, chambersWhenCalled: chambers(ground, mouth).length, acts: 0, gave: new Set(), covered: new Set(), balls: [], rolling: [],
+    ground, invaders, time: 0, chambersWhenCalled: chambers(ground, mouth).length, acts: 0, gave: new Set(), covered: new Set(), balls: [], rolling: [], machines: new Set(machines),
     led: false, lost: false, begun: [], over: false, settled: 0, events: [], changes: 0, inside, rooms: roomCells(ground, mouth), far: farFromChambers(ground, inside),
     queenRoom: (kingdom(ground, mouth).queenRoom ?? -1) + 1, keepClear: residents(ground, mouth), mouth,
   }
@@ -324,7 +328,11 @@ function actSpot(raid: Raid, invader: Invader): number {
 
 /** Whether someone else has this chamber: one who is in it, or on the step into it, and is going to leave it by itself. */
 function taken(raid: Raid, room: number, but: Invader): boolean {
-  for (const other of raid.invaders) if (other !== but && other.room === room && !settledState(other.state)) return true
+  // One that is held there and is not at its act keeps nobody out: stuck, rolled up, waiting for the workers, or
+  // gummed and dazed before it goes home.
+  for (const other of raid.invaders) {
+    if (other !== but && other.room === room && !settledState(other.state) && !(other.state === 'dazed' && other.after === 'leaving')) return true
+  }
   return false
 }
 
@@ -338,6 +346,52 @@ function queueAhead(raid: Raid, invader: Invader, way: readonly number[], from: 
     for (let n = from; n < way.length && n < from + QUEUE_GAP; n++) if (way[n] === other.cell) return true
   }
   return false
+}
+
+/** Whether one standing in a place stands in front of a machine: any cell of its body is a cell of one. */
+function atAMachine(raid: Raid, gait: Walker, cell: number): boolean {
+  if (raid.machines.size === 0) return false
+  const n = bodyCells(raid.ground, gait, cell, bodyAt)
+  for (let i = 0; i < n; i++) if (raid.machines.has(bodyAt[i])) return true
+  return false
+}
+const bodyAt: number[] = []
+
+/**
+ * What holds it up on the next stretch of its way, from a step of the way on: the chamber somebody else has, or
+ * 'queue' where one who waits stands a body's length ahead. The stretch is the next place and, where that place is
+ * in front of a machine, the places after it up to the first that is not: what it would have to wait for there, it
+ * waits for here, so that nobody comes to rest in front of a machine.
+ */
+function holdUp(raid: Raid, invader: Invader, gait: Walker, way: readonly number[], from: number): number | 'queue' | null {
+  let last = from
+  while (last + 1 < way.length && atAMachine(raid, gait, way[last])) last++
+  for (let k = from; k <= last; k++) {
+    const room = roomOf(raid.ground, gait, way[k], raid.rooms)
+    if (room !== 0 && room !== invader.room && taken(raid, room, invader)) return room
+    if (queueAhead(raid, invader, way, k)) return 'queue'
+    // Someone right ahead on this stretch, bound the same way, will have the chamber first.
+    if (k > from && raid.invaders.some((other) => other !== invader && other.kind !== 'dungFly' && !settledState(other.state) && (other.cell === way[k - 1] || (other.along > 0 && other.toward === way[k - 1])))) return 'queue'
+  }
+  return null
+}
+
+/** It stops to wait where it is, and says so once. Found in front of a machine, it backs off to the place before it first. */
+function waitOrBackOff(raid: Raid, invader: Invader, gait: Walker): void {
+  if (atAMachine(raid, gait, invader.cell)) {
+    const back = [invader.cell]
+    for (let n = invader.trail.length - 2; n >= 0; n--) {
+      back.push(invader.trail[n])
+      if (!atAMachine(raid, gait, invader.trail[n])) break
+    }
+    if (back.length > 1 && !atAMachine(raid, gait, back[back.length - 1]) && back[back.length - 1] >= raid.ground.cols) {
+      invader.backing = true
+      invader.state = 'going'
+      setOff(invader, back)
+      return
+    }
+  }
+  waitHere(raid, invader)
 }
 
 /** It stops to wait where it is, and says so once. */
@@ -419,7 +473,7 @@ function decide(raid: Raid, invader: Invader): void {
     // The dung fly leads from the air and takes no chamber; anyone else has it alone, or waits.
     if (invader.kind !== 'dungFly') {
       if (invader.room !== room && taken(raid, room, invader)) {
-        waitHere(raid, invader)
+        waitOrBackOff(raid, invader, gait)
         return
       }
       invader.room = room
@@ -818,6 +872,8 @@ function comeIn(raid: Raid, invader: Invader): boolean {
     const first = way[1] ?? way[0]
     const room = roomOf(ground, gait, way[0], raid.rooms) || roomOf(ground, gait, first, raid.rooms)
     if (room !== 0 && way.length <= 2 && taken(raid, room, invader)) return false
+    // Where a machine stands at the foot of the shaft, what it would have to wait for there it waits for up here.
+    if (way.length > 1 && atAMachine(raid, gait, way[1]) && holdUp(raid, invader, gait, way, 1) !== null) return false
   }
   // A ball the mouth is shut to is left on the grass, where it lay at the log.
   if (invader.ball > 0 && !withBall) {
@@ -880,6 +936,13 @@ export function stepRaid(raid: Raid): void {
       }
       case 'waiting':
       case 'going': {
+        if (invader.backing && invader.step + 1 >= invader.way.length) {
+          // Backed off the machine: it waits here, and looks for its way again from here.
+          invader.backing = false
+          invader.way = []
+          waitHere(raid, invader)
+          break
+        }
         if (invader.step + 1 >= invader.way.length) {
           // One whose way was lost while it stood in the mouth's row, as when its ball dug there, goes on down.
           if (invader.cell >= 0 && invader.cell < cols && invader.along === 0 && gait !== 'fly' && gait !== 'ant') downFromTheMouth(raid, invader)
@@ -888,21 +951,24 @@ export function stepRaid(raid: Raid): void {
         }
         if (invader.along === 0) {
           const next = invader.way[invader.step + 1]
-          if (invader.kind !== 'dungFly') {
+          if (invader.kind !== 'dungFly' && !invader.backing) {
             // The door of a chamber another has, or the back of one who waits: it waits where it is.
-            const room = roomOf(ground, gait, next, raid.rooms)
-            if (room !== 0 && room !== invader.room && taken(raid, room, invader)) {
-              // Another chamber that nobody has is worth the walk; with none, it waits at this door.
+            const held = holdUp(raid, invader, gait, invader.way, invader.step + 1)
+            if (held === 'queue') {
+              waitOrBackOff(raid, invader, gait)
+              break
+            }
+            if (held !== null) {
+              // Another chamber that nobody has is worth the walk, where the way to it does not lead through one
+              // that somebody has; with none, it waits at this door.
               const other = wayToARoom(raid, invader, gait)
               const end = other ? roomOf(ground, gait, other[other.length - 1], raid.rooms) : 0
-              if (other && other.length > 1 && end !== room && !taken(raid, end, invader)) setOff(invader, other)
-              else waitHere(raid, invader)
+              const through = other ? other.some((cell) => { const room = roomOf(ground, gait, cell, raid.rooms); return room !== 0 && room !== end && room !== invader.room && taken(raid, room, invader) }) : true
+              if (other && other.length > 1 && end !== held && !through && !taken(raid, end, invader) && holdUp(raid, invader, gait, other, 1) === null) setOff(invader, other)
+              else waitOrBackOff(raid, invader, gait)
               break
             }
-            if (queueAhead(raid, invader, invader.way, invader.step + 1)) {
-              waitHere(raid, invader)
-              break
-            }
+            const room = roomOf(ground, gait, next, raid.rooms)
             if (room !== 0) invader.room = room
           }
           invader.state = 'going'
@@ -913,7 +979,9 @@ export function stepRaid(raid: Raid): void {
           }
         }
         if (!move(raid, invader, SPEED[invader.kind])) break
-        invader.trail.push(invader.cell)
+        // Backing off, it goes back over its own trail and leaves none.
+        if (invader.backing) invader.trail.pop()
+        else invader.trail.push(invader.cell)
         if (invader.lostIn > 0) invader.lostIn--
         const x = invader.cell % cols, y = Math.floor(invader.cell / cols)
         if (invader.kind === 'ant' && sticks(ground, x, y, raid.covered)) {

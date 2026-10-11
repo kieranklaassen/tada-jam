@@ -543,6 +543,68 @@ describe('one invader in a chamber at a time', () => {
     }
   })
 
+  it('two chambers in a row: one bound for the further chamber waits at the door of the nearer while someone is at its act there, and no two stand in one cell', () => {
+    const row = ['X.XXXXXXXXXXXXXXXXXXXXXXXXX', '#.#########################', '#.......................###', '#.......................###', '######......######......###', '###########################', 'XXXXXXXXXXXXXXXXXXXXXXXXXXX']
+    const raid = raidOn(row, ['ant', 'ant', 'ant', 'ant'])
+    let together = 0, intruding = 0
+    const events = watch(raid, () => {
+      const standing = raid.invaders.filter((i) => i.cell >= 0 && i.along === 0 && (i.state === 'going' || i.state === 'waiting'))
+      for (const a of standing) for (const b of standing) if (a.id < b.id && a.cell === b.cell) together++
+      // While one is at its act in a chamber nobody else comes into it to stay: one on its way home from the
+      // further chamber passes through, which is the only way out.
+      for (const acting of raid.invaders.filter((i) => i.state === 'acting')) {
+        const room = roomOf(raid.ground, 'ant', acting.cell, raid.rooms)
+        for (const other of standing) if (roomOf(raid.ground, 'ant', other.cell, raid.rooms) === room) intruding++
+      }
+      expect(raid.invaders.filter((i) => i.state === 'acting').length).toBeLessThanOrEqual(2)
+    })
+    expect(together).toBe(0)
+    expect(intruding).toBe(0)
+    expect(raid.acts).toBe(4)
+    expect(kinds(events, 'waits').length).toBeGreaterThan(0)
+    expect(raid.time).toBeLessThan(LONGEST)
+  })
+
+  it('nobody who waits comes to rest in front of a machine: where a machine stands at the door, they wait before it', () => {
+    // The catapult stands in the last two cells of the tunnel, right at the door of the room.
+    const ground = fromPicture(nest())
+    const machine = [2 * COLS + 9, 2 * COLS + 10, 3 * COLS + 9, 3 * COLS + 10]
+    for (const party of [['ant', 'ant', 'ant'], ['beetle', 'beetle'], ['beetle', 'ant', 'ant']] as Party[]) {
+      const raid = callRaid(ground, party, mouthOf(nest()), machine)
+      let waited = 0
+      watch(raid, () => {
+        for (const one of raid.invaders) {
+          if (one.state !== 'waiting' || one.cell < 0) continue
+          waited++
+          expect(machine, `${party.join()} at ${raid.time.toFixed(2)}`).not.toContain(one.cell)
+        }
+        for (const ids of inRooms(raid).values()) expect(ids.length).toBeLessThanOrEqual(1)
+      })
+      expect(waited, party.join()).toBeGreaterThan(0)
+      expect(raid.acts, party.join()).toBe(party.length)
+    }
+  })
+
+  it('one that is held in a chamber and is not at its act keeps nobody out: stuck in mud, rolled up in a mud ball, gummed, or buried', () => {
+    // A cell of mud in the floor just inside the door: the first ant sticks there, the second walks over its back and does its act.
+    const muddy = nest()
+    muddy[5] = '###########m########'
+    const file = playOut(raidOn(muddy, ['ant', 'ant', 'ant']))
+    expect(states(file).filter((state) => state === 'stuck').length).toBe(1)
+    expect(file.acts).toBe(2)
+    // An ant rolled up in a mud ball where it lay at its act, and a fly gummed where it hung: the next goes in past them.
+    for (const [party, shot] of [[['ant', 'ant'], 'mud'], [['ant', 'ant'], 'sand']] as [Party, 'mud' | 'sand'][]) {
+      const raid = raidOn(nest(), party)
+      while (!raid.over && raid.invaders[0].state !== 'acting') stepRaid(raid)
+      hit(raid, 0, shot)
+      const hitAt = raid.time
+      while (!raid.over && raid.invaders[1].state !== 'acting') stepRaid(raid)
+      expect(raid.invaders[1].state, shot).toBe('acting')
+      // It did not wait for the first to be gone: it was at its act within the time it takes to walk in.
+      expect(raid.time - hitAt, shot).toBeLessThan(3)
+    }
+  })
+
   it('nobody waits behind one who came later, so no two ever wait for each other', () => {
     // Two rooms, one either side of the shaft's foot: the file splits, and nobody is left waiting when the raid is over.
     const picture = [

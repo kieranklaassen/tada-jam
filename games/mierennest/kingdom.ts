@@ -1,5 +1,5 @@
 import { asSaved } from './build'
-import { OPEN, STONE, at, put, type Ground, type Kind, type Lump } from './ground'
+import { MOUTH, OPEN, STONE, at, put, type Ground, type Kind, type Lump } from './ground'
 import { HABITS, type InvaderKind, type Shot } from './habits'
 import { LUMP_OF, RELOAD, SHOT_OF, arrivalPlace, canStand, cellsOf, machineAt, shotPath, restPlace } from './machines'
 import { after, judge, owed, partyAt, type MachineKind, type Party, type Verdict } from './order'
@@ -303,7 +303,7 @@ export class Kingdom {
     this.landShots()
     this.reloading = this.game.machines.map(() => 0)
     // The raid runs on the nest as it will come to rest: nothing is copied in the air.
-    this.raid = callRaid(asSaved(this.game.ground), this.party)
+    this.raid = callRaid(asSaved(this.game.ground), this.party, MOUTH, this.game.machines.flatMap((machine) => cellsOf(machine, this.game.ground.cols)))
     this.sinceTick = 0
     this.events.push({ type: 'called', party: this.party })
   }
