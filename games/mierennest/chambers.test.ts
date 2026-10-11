@@ -1,23 +1,46 @@
 import { describe, expect, it } from 'vitest'
 import { MOST_WORKERS, ROOM, aired, chambers, kingdom, rooms } from './chambers'
-import { EARTH, OPEN, fromPicture, generate, put } from './ground'
+import { EARTH, MOUTH, OPEN, fromPicture, generate, put } from './ground'
 
-// In these pictures the mouth is the open cell in the top row.
+// In these pictures the mouth is the open cell in the top row, and the shaft under it is three cells deep.
 const mouthOf = (picture: string[]) => [picture[0].indexOf('.')]
 
 describe('rooms', () => {
   it('finds a clear block four wide and three high', () => {
-    const picture = ['XX.XXXXX', '##.#####', '##....##', '##....##', '##....##', 'XXXXXXXX']
+    const picture = ['XX.XXXXX', '##.#####', '##.#####', '##....##', '##....##', '##....##', 'XXXXXXXX']
     const found = rooms(fromPicture(picture), mouthOf(picture))
     expect(found.length).toBe(1)
     expect(found[0].cells.length).toBe(12)
     expect(found[0].aired).toBe(true)
   })
 
+  it('counts no block in the cells of the shaft: a room dug beside it is a room without them', () => {
+    // Four wide only with the shaft's own cell: no room.
+    const needsTheShaft = ['XX.XXXXX', '##.#####', '##....##', '##....##', '##....##', 'XXXXXXXX']
+    expect(rooms(fromPicture(needsTheShaft), mouthOf(needsTheShaft))).toEqual([])
+    // Four wide beside the shaft: a room, and no cell of the shaft is in it.
+    const beside = ['XX.XXXXXX', '##.######', '##.....##', '##.....##', '##.....##', 'XXXXXXXXX']
+    const found = rooms(fromPicture(beside), mouthOf(beside))
+    expect(found.length).toBe(1)
+    expect(found[0].cells.length).toBe(12)
+    expect(found[0].cells.some((cell) => cell % 9 === 2)).toBe(false)
+    expect(found[0].aired).toBe(true)
+    // Below the shaft's three cells the same column is ground like any other.
+    const below = ['XX.XXXXX', '##.#####', '##.#####', '##....##', '##....##', '##....##', 'XXXXXXXX']
+    expect(rooms(fromPicture(below), mouthOf(below))[0].cells).toContain(3 * 8 + 2)
+    // On the real ground: three cells dug beside the shaft over three rows are no room, though with the shaft's
+    // nearest column the clear block is four wide.
+    const ground = generate(1)
+    for (let y = 1; y <= 3; y++) for (let x = 21; x <= 24; x++) put(ground, x, y, OPEN)
+    expect(rooms(ground)).toEqual([])
+    for (let y = 1; y <= 3; y++) put(ground, 25, y, OPEN)
+    expect(rooms(ground).length).toBe(1)
+  })
+
   const notRooms: { name: string; picture: string[] }[] = [
     { name: 'a tunnel two cells high, however long', picture: ['XX.XXXXXXX', '##.#######', '##........', '##........', 'XXXXXXXXXX'] },
-    { name: 'a block three wide', picture: ['XX.XXXXX', '##.#####', '##...###', '##...###', '##...###', 'XXXXXXXX'] },
-    { name: 'a block with a lump in it', picture: ['XX.XXXXX', '##.#####', '##....##', '##.s..##', '##....##', 'XXXXXXXX'] },
+    { name: 'a block three wide', picture: ['XX.XXXXX', '##.#####', '##.#####', '##...###', '##...###', '##...###', 'XXXXXXXX'] },
+    { name: 'a block with a lump in it', picture: ['XX.XXXXX', '##.#####', '##.#####', '##....##', '##.s..##', '##....##', 'XXXXXXXX'] },
     { name: 'the shaft', picture: ['X..X', '#..#', '#..#', '#..#', '#..#', 'XXXX'] },
   ]
   for (const row of notRooms) it(`does not take ${row.name} for a room`, () => expect(rooms(fromPicture(row.picture), mouthOf(row.picture))).toEqual([]))
@@ -25,19 +48,21 @@ describe('rooms', () => {
   it('takes blocks that overlap or touch along a side as one room, and blocks apart as two', () => {
     const joined = ['XX.XXXXXXX', '##.#######', '##.......#', '##.......#', '##.......#', '######...#', 'XXXXXXXXXX']
     expect(rooms(fromPicture(joined), mouthOf(joined)).length).toBe(1)
-    const apart = ['X.XXXXXXXXXX', '#.##########', '#....##....#', '#....##....#', '#....##....#', 'XXXXXXXXXXXX']
+    const apart = ['X.XXXXXXXXXX', '#.##########', '#.##########', '#....##....#', '#....##....#', '#....##....#', 'XXXXXXXXXXXX']
     expect(rooms(fromPicture(apart), mouthOf(apart)).length).toBe(2)
   })
 })
 
 describe('the largest kingdom', () => {
-  it('holds forty rooms, eight across and five down, each with one cell between it and the next', () => {
+  it('holds thirty-nine rooms: eight across and five down, each with one cell between it and the next, less the one the shaft stands in', () => {
     const ground = generate(1)
     for (let y = 1; y < ground.rows - 1; y++) for (let x = 0; x < ground.cols; x++) put(ground, x, y, EARTH)
     for (let row = 0; row < 5; row++) for (let col = 0; col < 8; col++) {
       for (let y = 0; y < ROOM.height; y++) for (let x = 0; x < ROOM.width; x++) put(ground, col * 5 + x, 1 + row * 4 + y, OPEN)
     }
-    expect(rooms(ground).length).toBe(40)
+    expect(rooms(ground).length).toBe(39)
+    // The top row holds seven: no room there can use the three columns of the shaft, and eight need all but one column.
+    expect(8 * ROOM.width + 7 + MOUTH.length - 1).toBeGreaterThan(ground.cols)
     // A ninth across or a sixth down does not fit between the turf and the bedrock.
     expect(8 * (ROOM.width + 1) - 1).toBeLessThanOrEqual(ground.cols)
     expect(9 * (ROOM.width + 1) - 1).toBeGreaterThan(ground.cols)
@@ -79,7 +104,7 @@ describe('the kingdom that follows from the ground', () => {
   it('gives two workers a chamber, puts the queen in the largest, and grows the hill with what is dug', () => {
     const ground = generate(1)
     const before = kingdom(ground).hollow
-    for (let y = 2; y <= 4; y++) for (let x = 21; x <= 24; x++) put(ground, x, y, OPEN)
+    for (let y = 2; y <= 4; y++) for (let x = 22; x <= 25; x++) put(ground, x, y, OPEN)
     for (let y = 10; y <= 13; y++) for (let x = 17; x <= 22; x++) put(ground, x, y, OPEN)
     for (let y = 4; y <= 9; y++) put(ground, 20, y, OPEN)
     const k = kingdom(ground)

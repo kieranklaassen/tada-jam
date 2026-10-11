@@ -1,4 +1,4 @@
-import { MOUTH, OPEN, at, type Ground } from './ground'
+import { MOUTH, OPEN, SHAFT_DEPTH, at, type Ground } from './ground'
 
 // What the ground module recognises in what the child dug. Nothing here is placed from a menu: a room is found by
 // a measure, and it is a chamber of the kingdom while air reaches it from the mouth.
@@ -41,16 +41,20 @@ export function aired(ground: Ground, mouth: readonly number[] = MOUTH): Uint8Ar
 
 /**
  * The rooms in the ground. Every clear block of the room's measure is found; blocks that overlap or touch along a
- * side are one room. Rooms come in a fixed order, by their first cell.
+ * side are one room. No block is counted in the cells of the shaft under the mouth. Rooms come in a fixed order,
+ * by their first cell.
  */
 export function rooms(ground: Ground, mouth: readonly number[] = MOUTH): Room[] {
   const { cols, rows, cells } = ground
   const inBlock = new Uint8Array(cells.length)
+  // The shaft a new nest starts with is the way in and no part of any room: no block is counted in its cells.
+  const shaft = new Uint8Array(cells.length)
+  for (const x of mouth) for (let y = 0; y < SHAFT_DEPTH && y < rows; y++) if (x < cols) shaft[y * cols + x] = 1
   for (let y = 0; y + ROOM.height <= rows; y++) {
     for (let x = 0; x + ROOM.width <= cols; x++) {
       let clear = true
       for (let dy = 0; dy < ROOM.height && clear; dy++) for (let dx = 0; dx < ROOM.width; dx++) {
-        if (at(ground, x + dx, y + dy) !== OPEN) {
+        if (at(ground, x + dx, y + dy) !== OPEN || shaft[(y + dy) * cols + x + dx] === 1) {
           clear = false
           break
         }

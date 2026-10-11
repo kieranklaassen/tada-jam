@@ -70,6 +70,26 @@ describe('a raid with nothing in the way', () => {
   })
 })
 
+describe('the shaft', () => {
+  it('is the way in and no part of a room dug beside it: an invader coming down it is not yet inside', () => {
+    const ground = generate(1)
+    for (let y = 1; y <= 3; y++) for (let x = 19; x <= 27; x++) put(ground, x, y, OPEN)
+    settle(ground)
+    const raid = callRaid(ground, ['ant', 'beetle', 'fly'])
+    for (const x of MOUTH) for (let y = 0; y < 3; y++) expect(raid.inside[y * ground.cols + x]).toBe(0)
+    const events: RaidEvent[] = []
+    while (!raid.over) {
+      stepRaid(raid)
+      events.push(...raid.events)
+      raid.events.length = 0
+    }
+    const inside = kinds(events, 'inside') as Extract<RaidEvent, { type: 'inside' }>[]
+    expect(inside.length).toBeGreaterThan(0)
+    // The ant is inside from the first cell of the room; the beetle and the fly, which are wider than a cell, as soon as any part of them is.
+    for (const event of inside) expect((event.cell % ground.cols) + (event.kind === 'fly' ? 1 : 0), event.kind).toBeGreaterThanOrEqual(MOUTH[MOUTH.length - 1] + 1)
+  })
+})
+
 describe('mud and raider ants', () => {
   it('one cell of mud on the floor holds one ant, and the next walks over its back', () => {
     const one = playOut(raidOn(nest('..........', '....m.....'), ['ant']))
