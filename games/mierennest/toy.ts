@@ -57,6 +57,8 @@ export class Toy {
   private way: Uint8Array | null = null
   /** The kinds the last bite met. */
   private meeting: Kind[] = []
+  /** The touch landed on a lump the ant cannot take: it digs nothing until it is let go. */
+  private idle = false
   private cameFrom: Int32Array | null = null
   private queue: Int32Array | null = null
 
@@ -112,18 +114,27 @@ export class Toy {
     this.meeting = answer.met
   }
 
-  /** The finger lands on the ground. A lump the ant can reach is taken in its jaws; anywhere else is a mouthful. */
+  /** The finger lands on the ground. On a lump it bites nothing: the ant takes the lump if it can reach it. Anywhere else is a mouthful. */
   press(x: number, y: number, t: number): void {
     if (!this.inGround(x, y)) return
     this.finger = { x, y }
     this.lastFinger = { x, y, t }
     this.speed = 0
     this.meeting = []
+    this.idle = false
     const cx = Math.floor(x), cy = Math.floor(y)
-    const lump = pickUp(this.game.ground, this.game.ant, cx, cy)
-    if (lump) {
-      this.carried = lump
-      this.events.push({ type: 'picked', kind: lump.kind, cell: lump.from })
+    const kind = at(this.game.ground, cx, cy)
+    if (isLump(kind)) {
+      // A touch that lands on a lump bites nothing, not the earth beside it either. A lump the ant can reach is
+      // taken; one it cannot reach answers as the dig's meeting it does, and the drag that follows does nothing.
+      const lump = pickUp(this.game.ground, this.game.ant, cx, cy)
+      if (lump) {
+        this.carried = lump
+        this.events.push({ type: 'picked', kind: lump.kind, cell: lump.from })
+      } else {
+        this.idle = true
+        this.events.push({ type: 'met', kind, x, y })
+      }
       return
     }
     this.bite(x, y, x, y)
@@ -136,7 +147,7 @@ export class Toy {
     const far = Math.hypot(x - last.x, y - last.y), took = Math.max(1e-3, t - last.t)
     this.speed = Math.max(0, Math.min(1, far / took / FAST_DRAG))
     const cx = Math.max(0, Math.min(this.game.ground.cols - 0.001, x)), cy = Math.max(0, Math.min(this.game.ground.rows - 0.001, y))
-    if (!this.carried) this.bite(last.x, last.y, cx, cy)
+    if (!this.carried && !this.idle) this.bite(last.x, last.y, cx, cy)
     this.finger = { x: cx, y: cy }
     this.lastFinger = { x: cx, y: cy, t }
   }

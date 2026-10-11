@@ -53,6 +53,26 @@ describe('digging', () => {
     expect(toy.drainUnsaved()).toBe(false)
   })
 
+  it('bites nothing when the touch lands on a lump, not the earth beside it either', () => {
+    // A stone the ant can reach, with earth round it; and a stone it cannot reach.
+    const toy = new Toy(gameOn(['XXXXXXX', '..o####', '#######', '####o##', '#######', 'XXXXXXX'], [0, 1]))
+    const before = clone(toy.game.ground)
+    toy.press(2.2, 1.9, 0)
+    expect(toy.carried).not.toBeNull()
+    toy.cancel()
+    expect(equal(toy.game.ground, before)).toBe(true)
+    toy.drainEvents()
+    toy.press(4.5, 3.5, 1)
+    toy.drag(5.5, 3.5, 1.1)
+    toy.drag(6.5, 4.5, 1.2)
+    toy.release()
+    expect(toy.drainEvents()).toEqual([{ type: 'met', kind: STONE, x: 4.5, y: 3.5 }])
+    expect(equal(toy.game.ground, before)).toBe(true)
+    // The next touch, on earth, digs as ever.
+    toy.press(5.5, 3.5, 2)
+    expect(at(toy.game.ground, 5, 3)).toBe(OPEN)
+  })
+
   it('never digs the turf or the bedrock, wherever the finger is dragged', () => {
     const game = freshGame(null, 3)
     const toy = new Toy(game)

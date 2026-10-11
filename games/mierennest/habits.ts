@@ -52,8 +52,12 @@ export type Habit = {
   push: number
   /** It ploughs through loose sand that cannot be shoved. */
   ploughsSand: boolean
-  /** Where its way is too narrow, it digs these kinds wider. */
-  widens: readonly Kind[]
+  /**
+   * Where its way is too narrow it digs these wider: `earth` always; `backed` lumps only where earth or rock is
+   * behind them; and `led` lumps wherever they are, but only while its leader is up. Lumps with room beyond them
+   * are otherwise a wall, the gap left over them for the air included: it leans on them and does not dig them.
+   */
+  widens: { earth: boolean; backed: readonly Kind[]; led: readonly Kind[] }
   /** What it wants, which it shows at the log. */
   want: string
   /** Its own act in a chamber, done once, and how many seconds it takes. */
@@ -69,11 +73,12 @@ export const PUSHERS_IN_A_LINE = 3
 export const DUNG_BALL = { across: 3, push: 6 } as const
 
 const FLIER = { wide: 2, high: 3 } as const
+const NOTHING = { earth: false, backed: [], led: [] } as const
 
 export const HABITS: Record<InvaderKind, Habit> = {
   ant: {
     high: 1, flies: null, stepUp: 'any', climbs: [EARTH, STONE, ROCK], slipsOn: [SAND], stuckOn: [MUD], pit: null,
-    push: 0, ploughsSand: false, widens: [],
+    push: 0, ploughsSand: false, widens: NOTHING,
     want: 'a-bed-that-is-not-its-own', act: { id: 'naps-in-the-middle', seconds: 6 }, patience: 5,
     shots: {
       sand: { id: 'buried-to-the-feelers', then: 'home', pause: 2, back: 0 },
@@ -83,7 +88,7 @@ export const HABITS: Record<InvaderKind, Habit> = {
   },
   beetle: {
     high: 2, flies: null, stepUp: 1, climbs: [], slipsOn: [], stuckOn: [], pit: 2,
-    push: 3, ploughsSand: true, widens: [],
+    push: 3, ploughsSand: true, widens: NOTHING,
     want: 'the-seeds-in-the-pantry', act: { id: 'eats-one-seed-slowly', seconds: 7 }, patience: 6,
     shots: {
       sand: { id: 'rattles-off-the-shell', then: 'on', pause: 1, back: 0 },
@@ -93,7 +98,7 @@ export const HABITS: Record<InvaderKind, Habit> = {
   },
   fly: {
     high: 2, flies: FLIER, stepUp: 'any', climbs: [], slipsOn: [], stuckOn: [], pit: null,
-    push: 0, ploughsSand: false, widens: [],
+    push: 0, ploughsSand: false, widens: NOTHING,
     want: 'to-taste-everything', act: { id: 'tastes-its-own-foot', seconds: 6 }, patience: 4,
     shots: {
       sand: { id: 'blown-back-tumbling', then: 'on', pause: 2, back: 'hall' },
@@ -103,7 +108,7 @@ export const HABITS: Record<InvaderKind, Habit> = {
   },
   dungBeetle: {
     high: 2, flies: null, stepUp: 1, climbs: [], slipsOn: [], stuckOn: [], pit: 2,
-    push: 3, ploughsSand: true, widens: [SAND, MUD, EARTH],
+    push: 3, ploughsSand: true, widens: { earth: true, backed: [SAND, MUD], led: [SAND, MUD] },
     want: 'to-park-its-ball-in-the-grandest-room', act: { id: 'admires-its-ball', seconds: 8 }, patience: 6,
     shots: {
       sand: { id: 'ball-a-size-bigger', then: 'on', pause: 1, back: 0, ballGrows: 1 },
@@ -113,7 +118,7 @@ export const HABITS: Record<InvaderKind, Habit> = {
   },
   dungFly: {
     high: 2, flies: FLIER, stepUp: 'any', climbs: [], slipsOn: [], stuckOn: [], pit: null,
-    push: 0, ploughsSand: false, widens: [],
+    push: 0, ploughsSand: false, widens: NOTHING,
     want: 'to-be-obeyed', act: { id: 'conducts-nobody', seconds: 6 }, patience: 8,
     shots: {
       sand: { id: 'drops-its-twig', then: 'on', pause: 3, back: 'hall' },

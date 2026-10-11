@@ -66,8 +66,15 @@ describe('the habits, as the sheet lists them', () => {
   it('only beetles push, a dung ball pushes harder than one beetle, and only a dung beetle widens its way, never through stone', () => {
     expect(INVADERS.filter((kind) => HABITS[kind].push > 0)).toEqual(['beetle', 'dungBeetle'])
     expect(DUNG_BALL.push).toBeGreaterThan(HABITS.beetle.push)
-    expect(INVADERS.filter((kind) => HABITS[kind].widens.length > 0)).toEqual(['dungBeetle'])
-    expect(HABITS.dungBeetle.widens).not.toContain(STONE)
+    expect(INVADERS.filter((kind) => HABITS[kind].widens.earth)).toEqual(['dungBeetle'])
+    // Earth always; sand and mud only with earth or rock behind them, or while the dung fly is up; stone never.
+    expect(HABITS.dungBeetle.widens.backed).toEqual([SAND, MUD])
+    expect(HABITS.dungBeetle.widens.led).toEqual([SAND, MUD])
+    for (const kind of INVADERS) {
+      expect(HABITS[kind].widens.backed).not.toContain(STONE)
+      expect(HABITS[kind].widens.led).not.toContain(STONE)
+      if (kind !== 'dungBeetle') expect(HABITS[kind].widens).toEqual({ earth: false, backed: [], led: [] })
+    }
   })
 
   it('a dung ball fits the mouth of the nest', () => {
