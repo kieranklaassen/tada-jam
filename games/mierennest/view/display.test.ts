@@ -46,7 +46,8 @@ describe('a frame of the toy', () => {
     expect(ant.pose).toBe('look')
     expect(ant.y).toBe(GROUND.y + 4 * CELL)
     expect(ant.y - CELL).toBeGreaterThanOrEqual(queen.y)
-    expect(items.filter((item) => item.is === 'sprite').length).toBe(7 + 2)
+    // Seven campers, the queen, the worker on the hill and the ant.
+    expect(items.filter((item) => item.is === 'sprite').length).toBe(7 + 3)
     expect(items[0].is).toBe('drop')
   })
 
@@ -121,6 +122,37 @@ describe('a frame of the toy', () => {
   })
 })
 
+describe('the answer to a dig, beyond the mouthful', () => {
+  it('is felt on the hill and by the camper right above a shallow tunnel, and by nobody over a deep one', () => {
+    const hopOf = (display: ToyDisplay, who: string, n = 0) => sprites(display.items(null), who)[n].move!.dy
+    const shallow = fresh().display
+    shallow.advance(1)
+    const beetle = shallow.camp.find((camper) => camper.id === 'beetle')!
+    shallow.see([{ type: 'dug', x: (beetle.x - GROUND.x) / CELL, y: 2, cells: 4, speed: 0.5 }])
+    shallow.advance(0.4)
+    expect(hopOf(shallow, 'beetle')).toBeLessThan(-1)
+    expect(hopOf(shallow, 'worker')).toBeLessThan(-1)
+    expect(hopOf(shallow, 'fly')).toBeGreaterThan(-1)
+    const deep = fresh().display
+    deep.advance(1)
+    deep.see([{ type: 'dug', x: (beetle.x - GROUND.x) / CELL, y: 9, cells: 4, speed: 0.5 }])
+    deep.advance(0.4)
+    expect(hopOf(deep, 'beetle')).toBeGreaterThan(-1)
+    expect(hopOf(deep, 'worker')).toBeLessThan(-1)
+  })
+
+  it('ends with the ant sitting back to look at what it made', () => {
+    const toy = new Toy(crowded())
+    const display = new ToyDisplay(toy, ['ant'], 1)
+    toy.press(18.5, 8.5, 0)
+    toy.step(1 / 60)
+    display.advance(1 / 60)
+    toy.release()
+    for (let n = 0; n < 20; n++) { toy.step(1 / 60); display.advance(1 / 60) }
+    expect(sprites(display.items(null), 'ant')[0].pose).toBe('look')
+  })
+})
+
 describe('a touch on the surface', () => {
   it('rings the bell, and the whole camp answers, each in its own way', () => {
     const { display } = fresh()
@@ -130,7 +162,7 @@ describe('a touch on the surface', () => {
     display.advance(0.4)
     const items = display.items(null)
     const hops = items.filter((item): item is Extract<Item, { is: 'sprite' }> => item.is === 'sprite' && item.y <= GRASS_Y && item.who !== 'queen').map((item) => item.move!.dy)
-    expect(hops.length).toBe(7)
+    expect(hops.length).toBe(8)
     expect(new Set(hops.map((dy) => dy.toFixed(2))).size).toBeGreaterThanOrEqual(5)
     expect(hops.every((dy) => dy <= 0)).toBe(true)
     expect(sprites(items, 'beetle')[0].move!.dy).not.toBe(before)

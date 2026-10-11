@@ -1,4 +1,4 @@
-import { camperAt, campers, onBell, type Camper } from '../camp'
+import { BODY, camperAt, campers, onBell, type Camper } from '../camp'
 import { CELL, MUD, OPEN, SAND, STONE, at, type Lump } from '../ground'
 import { handPose, type Guidance, type HandPose } from '../guidance'
 import { idleMove, pokeMove, POKE_SECONDS, type Move, type Mover } from '../motion'
@@ -6,8 +6,8 @@ import type { Party } from '../order'
 import { WEDGED, demoDrag, queenSeat, workerSpots } from '../residents'
 import { below, makeRng, type Rng } from '../rng'
 import type { Toy, ToyEvent } from '../toy'
-import { GROUND } from './layout'
-import { BELL, hillGrown } from './props'
+import { GRASS_Y, GROUND, MOUTH_X } from './layout'
+import { BELL, LIP, hillGrown, hillShape } from './props'
 
 // What a frame of the toy shows, as a list of things to draw, with no canvas in sight: the view paints the list,
 // and the tests count it and measure it. It also holds what is only ever looked at: the crumbs in the air, the
@@ -42,6 +42,9 @@ export const QUEEN_WEDGED = { size: 1.5, tall: 0.8 } as const
 export const ANT_LENGTH = 4
 /** Where the carried lump rides, from the ant's feet: in its jaws. */
 const JAWS = { x: 58, y: -30 }
+/** How deep, in cells, a mouthful is still felt at the camp above it; and how long the ant looks at its work when the finger lets go. */
+export const FELT_DEPTH = 3.5
+export const LOOK_SECONDS = 1.2
 /** The most crumbs in the air at once. */
 export const MOST_CRUMBS = 36
 const CRUMB = { earth: '#c79a63', dust: '#d9dde2', sand: '#f1d58a', spark: '#ffe08a', mud: '#3b2a24' } as const
@@ -62,6 +65,8 @@ export class ToyDisplay {
   private swing = 0
   private carriedAt: { x: number; y: number } | null = null
   private readonly hand: HandPose = { travel: 0, press: 0, opacity: 0 }
+  private wasDown = false
+  private lookUntil = -1
   private readonly moves: Move[] = []
 
   constructor(private readonly toy: Toy, party: Party, seed = 1) {
@@ -97,6 +102,12 @@ export class ToyDisplay {
     this.poked.set(id, { at: this.seconds, count: (was?.count ?? -1) + 1 })
   }
 
+  /** Startles a creature unless it is still in the middle of its last answer. */
+  private startleOnce(id: string): void {
+    const was = this.poked.get(id)
+    if (!was || this.seconds - was.at >= POKE_SECONDS) this.startle(id)
+  }
+
   private puff(x: number, y: number, count: number, colour: string, speed: number): void {
     for (let n = 0; n < count && this.crumbs.length < MOST_CRUMBS; n++) {
       const turn = this.rng.next() * Math.PI * 2, fast = speed * (0.4 + this.rng.next() * 0.8)
@@ -111,6 +122,13 @@ export class ToyDisplay {
       if (event.type === 'dug') {
         const p = toStage(event.x, event.y)
         this.puff(p.x, p.y, 4 + Math.round(event.speed * 4), CRUMB.earth, 70 + 90 * event.speed)
+        // The spoil goes up to the hill, where the worker who carries it gives a hop; and a camper right above a
+        // fresh tunnel feels it through its feet.
+        this.startleOnce('spoil')
+        if (event.y < FELT_DEPTH) {
+          const above = this.camp.find((camper) => camper.y === GRASS_Y && Math.abs(camper.x - p.x) < BODY[camper.kind].width / 2)
+          if (above) this.startleOnce(above.id)
+        }
       } else if (event.type === 'met') {
         const p = toStage(event.x, event.y)
         if (event.kind === STONE) this.puff(p.x, p.y, 2, CRUMB.spark, 150)
@@ -139,6 +157,10 @@ export class ToyDisplay {
     // The bell is a damped spring about a slow sway of its own.
     this.swing += (-46 * this.sway - 2.4 * this.swing) * dt
     this.sway += this.swing * dt
+    // When the finger lets go the ant sits back and looks at what it made, for a moment.
+    const down = this.toy.finger !== null
+    if (this.wasDown && !down) this.lookUntil = this.seconds + LOOK_SECONDS
+    this.wasDown = down
     const carried = this.toy.carried
     if (!carried) this.carriedAt = null
     else {
@@ -198,6 +220,10 @@ export class ToyDisplay {
       const move = this.moveOf(`worker${n}`, 'worker', (n * 0.37) % 1, slot++)
       list.push({ is: 'sprite', who: 'worker', pose: move.second ? 'walk2' : 'walk', x: p.x, y: p.y, flip: n % 2 === 1, size: 1, tall: 1, move, turn: 0 })
     })
+    // The worker who carries the spoil stands on the hill, as high as the hill is.
+    const hump = hillShape(this.hill).right
+    const spoilMove = this.moveOf('spoil', 'worker', 0.6, slot++)
+    list.push({ is: 'sprite', who: 'worker', pose: spoilMove.second ? 'walk2' : 'carry', x: MOUTH_X + LIP + hump.reach * 0.32, y: GRASS_Y - hump.height + 3, flip: true, size: 1, tall: 1, move: spoilMove, turn: 0 })
     // The carried lump leaves its cell looking empty, and shows where it would lie if the finger let go now.
     const carried = toy.carried
     if (carried && this.carriedAt) {
@@ -222,7 +248,7 @@ export class ToyDisplay {
       : state === 'dig' ? 'dig'
       : state === 'carry' ? 'carry'
       : state === 'wait' ? 'wait'
-      : cramped || antMove.second ? 'look' : 'stand'
+      : cramped || antMove.second || this.seconds < this.lookUntil ? 'look' : 'stand'
     const flip = toy.antHeading.x < 0
     if (state === 'dig') antMove.dy = -Math.abs(Math.sin(this.seconds * 18)) * 2
     list.push({ is: 'sprite', who: 'ant', pose, x: feet.x, y: feet.y, flip, size: 1, tall: 1, move: state === 'idle' || state === 'dig' ? antMove : null, turn: climbing ? (toy.antHeading.y > 0 ? 1 : -1) * (flip ? -1 : 1) * (Math.PI / 2) : 0 })
