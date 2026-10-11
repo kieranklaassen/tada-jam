@@ -131,6 +131,7 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 | Tiny Island | `games/tiny-island/` | 2–5 | A wooden toy island in 3D on a turntable in a dish of sea: five chunky toys in a tray (a lighthouse, a boat, a sheep, a tree, a house) are set down on the land or in the water with a tap and a tap, and each does its own funny thing there and with its neighbours, while a cat, a gull, a whale and a sleepy wave look on. A touch on the wave washes everything back to the tray. Open pretend play with no goal. No learning goal. |
 | Gem Miner | `games/gem-miner/` | 7–11 | Hold a finger in a hillside and a mole digs toward it; the gems he frees are lamps, and their mixed light, the water and the dark decide who moves into the cave you dug. No learning goal. |
 | Hungry Hole | `games/hungry-hole/` | 4–8 | A papier-mâché carnival street in 3D: slide a hungry hole under pies, a hat, a dog on wheels, balloons, a tuba and a drummer until they tip in, tap it to burp them back up as a stack in the order of the child's choosing, and let the stack down to walk, play and roll out of the gate as a float. No learning goal. |
+| Dress for the Weather | `games/dress-for-weather/` | 3–6 | A hall of paper dolls on a cutting mat: tab seven paper garments onto a child, a very tall grandfather, a baby or the dog, work the zip, the toggles and the boots, turn the weather cock and open the door to see what rain, snow, wind or sun does to exactly that outfit. No learning goal. |
 
 ## Showcases
 
