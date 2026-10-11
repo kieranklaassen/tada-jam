@@ -41,9 +41,16 @@ export function merge(parts: readonly Part[]): THREE.BufferGeometry {
 const ball = (r: number, w = 14, h = 10): THREE.BufferGeometry => new THREE.SphereGeometry(r, w, h)
 const stick = (r0: number, r1: number, long: number, sides = 7): THREE.BufferGeometry => new THREE.CylinderGeometry(r1, r0, long, sides)
 
-const matte = new THREE.MeshLambertMaterial({ vertexColors: true })
-const glossy = new THREE.MeshPhongMaterial({ vertexColors: true, shininess: 70, specular: new THREE.Color('#8a6a48') })
-const dark = new THREE.MeshBasicMaterial({ color: '#2b160c' })
+// Made on first use, never when the module loads: the jam loads every game's
+// code at once, and a material made here would draw from `Math.random` (its
+// id) in every other game's page too.
+let materials: { matte: THREE.Material; glossy: THREE.Material; dark: THREE.Material } | null = null
+const shared = () =>
+  (materials ??= {
+    matte: new THREE.MeshLambertMaterial({ vertexColors: true }),
+    glossy: new THREE.MeshPhongMaterial({ vertexColors: true, shininess: 70, specular: new THREE.Color('#8a6a48') }),
+    dark: new THREE.MeshBasicMaterial({ color: '#2b160c' }),
+  })
 
 const TONE = {
   conker: '#74351b', scar: '#dcbd90', husk: '#8f9645', huskIn: '#e6dab0', twig: '#6d5139', linen: '#e9dcc0', linenShade: '#cdbd98',
@@ -149,14 +156,14 @@ function face(body: THREE.Group, who: Who, eye: { x: number; y: number; z: numbe
   body.add(pupils)
   // The lids: the upper half of a skin a little bigger than each eye, turned down over it.
   const shell = (): THREE.BufferGeometry => lidSkin(eye.r * LID.outer, eye.r * LID.inner)
-  const lids = new THREE.Mesh(merge([{ geometry: shell(), colour: lidColour, at: [-eye.x, 0, 0] }, { geometry: shell(), colour: lidColour, at: [eye.x, 0, 0] }]), matte)
+  const lids = new THREE.Mesh(merge([{ geometry: shell(), colour: lidColour, at: [-eye.x, 0, 0] }, { geometry: shell(), colour: lidColour, at: [eye.x, 0, 0] }]), shared().matte)
   lids.name = `${who}-lids`
   lids.position.set(0, eye.y, eye.z)
   body.add(lids)
   const brows = new THREE.Mesh(merge([
     { geometry: stick(eye.r * 0.16, eye.r * 0.12, eye.r * 1.7, 6), colour: TONE.twig, at: [-eye.x, 0, 0], turn: [0, 0, Math.PI / 2 - 0.25] },
     { geometry: stick(eye.r * 0.16, eye.r * 0.12, eye.r * 1.7, 6), colour: TONE.twig, at: [eye.x, 0, 0], turn: [0, 0, Math.PI / 2 + 0.25] },
-  ]), matte)
+  ]), shared().matte)
   brows.name = `${who}-brows`
   body.add(brows)
   const mouth = new THREE.Mesh(new THREE.SphereGeometry(1, 14, 8), new THREE.MeshBasicMaterial({ color: TONE.mouth }))
@@ -188,7 +195,7 @@ function king(): FolkView {
   const root = new THREE.Group()
   const body = new THREE.Group()
   root.add(body)
-  const nut = new THREE.Mesh(merge([{ geometry: ball(0.62, 22, 16), colour: TONE.conker, at: [0, 0.57, 0], scale: [1, 0.92, 0.96] }]), glossy)
+  const nut = new THREE.Mesh(merge([{ geometry: ball(0.62, 22, 16), colour: TONE.conker, at: [0, 0.57, 0], scale: [1, 0.92, 0.96] }]), shared().glossy)
   nut.name = 'king-nut'
   body.add(nut)
   const eye = EYE.king
@@ -197,7 +204,7 @@ function king(): FolkView {
     { geometry: ball(0.4, 18, 12), colour: TONE.scar, at: [0, 0.6, 0.37], scale: [1, 0.86, 0.72] },
     { geometry: ball(eye.r), colour: TONE.white, at: [-eye.x, eye.y, eye.z] },
     { geometry: ball(eye.r), colour: TONE.white, at: [eye.x, eye.y, eye.z] },
-  ]), matte)
+  ]), shared().matte)
   front.name = 'king-face'
   body.add(front)
   const pose = face(body, 'king', eye, TONE.scar, [0, 0.45, 0.64], 0.2)
@@ -218,7 +225,7 @@ function king(): FolkView {
   const arms = new THREE.Mesh(merge([
     { geometry: stick(0.045, 0.035, 1.25), colour: TONE.twig, at: [-0.56, -0.5, 0.02], turn: [0, 0, -0.18] },
     { geometry: stick(0.045, 0.035, 1.25), colour: TONE.twig, at: [0.56, -0.5, 0.02], turn: [0, 0, 0.18] },
-  ]), matte)
+  ]), shared().matte)
   arms.name = 'king-arms'
   body.add(arms)
   const cushion = new THREE.Mesh(merge([
@@ -226,7 +233,7 @@ function king(): FolkView {
     { geometry: ball(0.06, 8, 6), colour: TONE.linenShade, at: [0, 0.31, 0] },
     { geometry: ball(0.07, 6, 5), colour: TONE.linenShade, at: [-0.5, 0.14, 0] },
     { geometry: ball(0.07, 6, 5), colour: TONE.linenShade, at: [0.5, 0.14, 0] },
-  ]), matte)
+  ]), shared().matte)
   cushion.name = 'king-cushion'
   root.add(cushion)
   return {
@@ -305,13 +312,13 @@ function cook(): FolkView {
     { geometry: new THREE.SphereGeometry(0.47, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), colour: TONE.cup, scale: [1, 0.72, 1] },
     { geometry: stick(0.04, 0.05, 0.2, 6), colour: TONE.twig, at: [0.03, 0.4, 0], turn: [0, 0, -0.3] },
     ...bumps,
-  ]), matte)
+  ]), shared().matte)
   cap.name = 'cook-cap'
   body.add(cap)
   const spoon = new THREE.Mesh(merge([
     { geometry: stick(0.022, 0.022, 0.52, 6), colour: TONE.twig, at: [0.1, 0.22, 0], turn: [0, 0, -0.4] },
     { geometry: ball(0.06, 8, 6), colour: TONE.twig, at: [0.0, -0.02, 0], scale: [1, 0.5, 1] },
-  ]), matte)
+  ]), shared().matte)
   spoon.name = 'cook-spoon'
   body.add(spoon)
   return {
@@ -369,7 +376,7 @@ function dragon(): FolkView {
   const tail = new THREE.Mesh(merge([
     { geometry: new THREE.ConeGeometry(0.16, 0.6, 8), colour: TONE.cone, at: [-0.3, 0, 0], turn: [0, 0, Math.PI / 2] },
     { geometry: ball(0.1, 8, 6), colour: TONE.coneTip, at: [-0.62, 0, 0], scale: [1.4, 0.5, 1] },
-  ]), matte)
+  ]), shared().matte)
   tail.name = 'dragon-tail'
   root.add(tail)
   // His head and what is under it turn together, away from the way his body runs.
@@ -380,7 +387,7 @@ function dragon(): FolkView {
     { geometry: ball(0.36, 14, 10), colour: TONE.linen, at: [0.42, 0.17, 0.02], scale: [1.35, 0.5, 1.5] },
     { geometry: stick(0.05, 0.04, 0.42), colour: TONE.twig, at: [0.3, 0.33, 0.36], turn: [0, 0.3, Math.PI / 2 - 0.2] },
     { geometry: stick(0.05, 0.04, 0.42), colour: TONE.twig, at: [0.3, 0.33, -0.32], turn: [0, -0.3, Math.PI / 2 - 0.2] },
-  ]), matte)
+  ]), shared().matte)
   rest.name = 'dragon-pillow'
   fore.add(rest)
   // His head: a smaller cone lying on the pillow, snout to the right, with his eyes on top like a frog's and two winged seeds for ears.
@@ -397,13 +404,13 @@ function dragon(): FolkView {
     { geometry: ball(eye.r), colour: TONE.white, at: [eye.x, eye.y, -eye.z] },
     { geometry: ball(0.2, 10, 6), colour: TONE.wing, at: [-0.26, 0.26, 0.2], turn: [0.5, 0.3, 0.9], scale: [1.7, 0.12, 0.6] },
     { geometry: ball(0.2, 10, 6), colour: TONE.wing, at: [-0.26, 0.26, -0.2], turn: [-0.5, -0.3, 0.9], scale: [1.7, 0.12, 0.6] },
-  ]), matte)
+  ]), shared().matte)
   skull.name = 'dragon-head'
   head.add(skull)
   const jaw = new THREE.Mesh(merge([
     { geometry: ball(0.27, 14, 8), colour: TONE.cone, at: [0.28, -0.04, 0], scale: [1.5, 0.34, 0.92] },
     { geometry: ball(0.22, 12, 6), colour: TONE.mouth, at: [0.3, 0.0, 0], scale: [1.5, 0.2, 0.86] },
-  ]), matte)
+  ]), shared().matte)
   jaw.name = 'dragon-jaw'
   jaw.position.set(-0.05, -0.05, 0)
   head.add(jaw)
@@ -413,13 +420,13 @@ function dragon(): FolkView {
     { geometry: ball(eye.r * 0.5, 10, 8), colour: '#1c0f08', at: [0, 0, eye.z], scale: [1, 1, 1] },
     { geometry: ball(eye.r * 0.5, 10, 8), colour: '#1c0f08', at: [0, 0, -eye.z], scale: [1, 1, 1] },
   ])
-  const pupils = new THREE.Mesh(pupilGeometry, dark)
+  const pupils = new THREE.Mesh(pupilGeometry, shared().dark)
   pupils.name = 'dragon-pupils'
   head.add(pupils)
   // His lids are skins like theirs, a little fuller.
   const lidGeometry = (): THREE.BufferGeometry => lidSkin(eye.r * DRAGON_LID.outer, eye.r * DRAGON_LID.inner)
   const lids = [1, -1].map((side) => {
-    const lid = new THREE.Mesh(merge([{ geometry: lidGeometry(), colour: TONE.cone }]), matte)
+    const lid = new THREE.Mesh(merge([{ geometry: lidGeometry(), colour: TONE.cone }]), shared().matte)
     lid.name = 'dragon-lid'
     lid.position.set(eye.x, eye.y, eye.z * side)
     head.add(lid)
