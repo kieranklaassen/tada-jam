@@ -135,6 +135,7 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 | Mushroom Village | `games/mushroom-village/` | 3–6 | A glade in poster paint: press a finger into the moss and a mushroom swells for as long as it is held, then give it a door, lay pebbles to it, and see which of four fussy gnomes moves in and what he makes of it. No learning goal. |
 | Brick Buster | `games/brick-buster/` | 5–9 | A pinball table from above in canvas 2D: slide a rubber bumper under a steel ball to flick it into a wall of five kinds of brick with faces, and steer it through a walrus's tub, a dragon's mouth or an elephant's trunk to make it wet, hot or heavy, which changes what every brick does. No learning goal. |
 | Rocket Penguin | `games/rocket-penguin/` | 8–12 | A pencil drawing on squared paper in 2D: pull a penguin back in a catapult and let go, bolt on any two of a rocket, glider wings, an umbrella, a balloon, spring feet and a fish on a rod, and find out by flying what each does on ice, a seal, a snowdrift, a whale's spout and a cloud, with three friends who each like their fish a different way. No learning goal. |
+| Micro Mayhem | `games/micro-mayhem/` | 6–10 | A pocket game with a house of eight rooms behind its glass: poke the one thing in each room three times to its joke (wake the dog, burst the balloon, topple the pies, flood the soup), then open a door and find that the joke has followed into the rooms beside. Pull the lamp's cord to put the whole house back to bed. No learning goal. |
 
 ## Showcases
 

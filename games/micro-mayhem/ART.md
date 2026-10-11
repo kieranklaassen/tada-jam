@@ -198,7 +198,7 @@ The game has no learning goal: it is designed from no record of either jurisdict
 
 **What the frame costs.** The draw count of this game is the number of sprite stamps plus the shapes filled live, which is what its frame-budget test counts and what the grown-up overlay shows. The one number to hold against the bar of about 80 is the worst frame the test finds in long sessions in every room, with the ghost hand showing and a case button held: 75, in the bathroom. Left alone, a room costs between 21 and 49.
 
-**Registry row, as a request to the lead.** The row for the claimed-styles registry in section 3 of `docs/art-direction.md`, to be added by the lead when the game is taken, with the menu row "LCD handheld segments" moved from reserved to claimed:
+**Registry row.** The row in the claimed-styles registry in section 3 of `docs/art-direction.md`, where the menu row "LCD handheld segments" is claimed:
 
 | Game | Style | Art guide |
 | --- | --- | --- |
