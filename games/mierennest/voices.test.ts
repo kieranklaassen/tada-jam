@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { Note } from './audio'
 import { EARTH, MUD, ROCK, SAND, STONE } from './ground'
 import type { ToyEvent } from './toy'
-import { APART, BACK, BELL, BOING, CARRYING, CLACK, CLICK, FIZZLE, GAVE, KNOCK, LOST, MARCH, MET, RUMBLE, SCHLUP, SCRUNCH, SHOT_HIT, TAP, PICKED, POP, RANGE, SET_DOWN, SIGH, SPOKEN, TWANG, digVoice, landedVoice, lengthOf, pourVoice, voiceFor, voiceForGame, voiceForRaid } from './voices'
+import { APART, BACK, BELL, BOING, CALLED, CARRYING, ENDING, CLACK, CLICK, FIZZLE, GAVE, KNOCK, LOST, MARCH, MET, RUMBLE, SCHLUP, SCRUNCH, SHOT_HIT, TAP, PICKED, POP, RANGE, SET_DOWN, SIGH, SPOKEN, TWANG, digVoice, landedVoice, lengthOf, pourVoice, voiceFor, voiceForGame, voiceForRaid } from './voices'
 
 const MATERIALS = ['sand', 'mud', 'stone'] as const
 
@@ -23,7 +23,7 @@ const ALL: Record<string, Note[]> = {
   ...Object.fromEntries(Object.entries(SPOKEN).map(([k, v]) => [`spoken ${k}`, v])),
 }
 
-for (const [name, notes] of Object.entries({ twang: TWANG, pop: POP, click: CLICK, knock: KNOCK, fizzle: FIZZLE, gave: GAVE, sigh: SIGH, march: MARCH, lost: LOST, tap: TAP, rumble: RUMBLE, scrunch: SCRUNCH, schlup: SCHLUP, clack: CLACK })) ALL[name] = notes
+for (const [name, notes] of Object.entries({ ending: ENDING, called: CALLED, twang: TWANG, pop: POP, click: CLICK, knock: KNOCK, fizzle: FIZZLE, gave: GAVE, sigh: SIGH, march: MARCH, lost: LOST, tap: TAP, rumble: RUMBLE, scrunch: SCRUNCH, schlup: SCHLUP, clack: CLACK })) ALL[name] = notes
 for (const [material, notes] of Object.entries(CARRYING)) ALL[`carrying ${material}`] = notes
 for (const [material, notes] of Object.entries(SHOT_HIT)) ALL[`shot hits ${material}`] = notes
 
@@ -195,12 +195,13 @@ describe('the grid is heard: every material answers each thing that is done to i
     expect(voiceForGame({ type: 'scene', is: 'moves' })).toBe(SPOKEN.queen)
     expect(voiceForGame({ type: 'scene', is: 'putBack' })).toBe(SPOKEN.worker)
     expect(voiceForGame({ type: 'scene', is: 'shrug' })).toBe(SIGH)
+    expect(voiceForGame({ type: 'scene', is: 'ending' })).toBe(ENDING)
+    expect(voiceFor({ type: 'called', x: 3, y: 4 })).toBe(CALLED)
     expect(voiceForGame({ type: 'scene', is: 'showing', who: 'beetle' })).toBe(SPOKEN.beetle)
     expect(voiceForGame({ type: 'scene', is: 'showing', who: 'ant' })).toBe(SPOKEN.raider)
     expect(voiceForGame({ type: 'scene', is: 'arrives', who: 'cannon' })).toBeNull()
     expect(voiceForGame({ type: 'tried', machine: 'cannon' })).toBe(POP)
     expect(voiceForGame({ type: 'tried', machine: 'catapult' })).toBe(TWANG)
-    expect(voiceForGame({ type: 'scene', is: 'ending' })).toBeNull()
     // In a raid the queen answers a guest in her own room, and nobody else's.
     expect(voiceForRaid({ type: 'acts', id: 0, kind: 'beetle', queens: true })).toBe(SPOKEN.queen)
     expect(voiceForRaid({ type: 'acts', id: 0, kind: 'beetle', queens: false })).toBeNull()

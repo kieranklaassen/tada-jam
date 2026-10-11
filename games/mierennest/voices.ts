@@ -148,6 +148,8 @@ export const APART: Record<ToyEvent['type'], number> = { dug: 0.07, met: 0.12, p
 
 /** The ant taps a stone it passes: one small clink, higher and softer than a bite's. */
 export const TAP: Note[] = [tone(2300, 0.07, 0.002, 0.05, { wave: 'triangle' })]
+/** The ending opens with three soft notes going down, like the end of a lullaby. */
+export const ENDING: Note[] = [tone(392, 0.09, 0.03, 0.5, { wave: 'triangle' }), tone(330, 0.08, 0.03, 0.5, { wave: 'triangle', delay: 0.3 }), tone(262, 0.09, 0.03, 0.6, { wave: 'triangle', delay: 0.6 })]
 /** The ant called to a place already dug: a small patter of feet, three quick soft ticks. */
 export const CALLED: Note[] = [hiss(1900, 0.05, 0.003, 0.04, { q: 2 }), hiss(1700, 0.05, 0.003, 0.04, { q: 2, delay: 0.06 }), hiss(1900, 0.04, 0.003, 0.04, { q: 2, delay: 0.12 })]
 /** A beat of carrying: grains of sand patter, mud drips with a small wet smack, a stone scrapes along the floor. */
@@ -213,6 +215,7 @@ export function voiceForGame(event: KingdomEvent): Note[] | null {
       if (event.is === 'moves') return SPOKEN.queen
       if (event.is === 'putBack') return SPOKEN.worker
       if (event.is === 'shrug') return SIGH
+      if (event.is === 'ending') return ENDING
       if (event.is === 'showing' && event.who && event.who in SHOWN_BY) return SPOKEN[SHOWN_BY[event.who]]
       return null
     case 'judged': return null

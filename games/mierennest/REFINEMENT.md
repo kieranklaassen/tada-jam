@@ -4,7 +4,7 @@
 ## Status
 
 - Stage: gates, closed by run 5 (the closing run). The whole order is played, from `first-chamber` to the open kingdom and its round of six. Base commit ef85be4d.
-- **Open: sheet ready for check, round 4.** The sheet passed round 3 (confirmed by the lead from the diff, answers file 4) at commit `734513b`, hash `49a588ec48b43cfce6492461afa1db4a7e440ce46f4496f1c48f651e71cebebb`. Since then 60 sentences above `## The look` have changed, all listed under "Sentences changed since round 3" below with the old and the new: the lead's own line (answers file 5), the 39 rooms it made necessary, and what the closing run found by reading the sheet against the game. The sheet now stands at commit `SHEETCOMMIT`, hash `SHEETHASH`. Round 4 reads only those sentences.
+- **Open: sheet ready for check, round 4.** The sheet passed round 3 (confirmed by the lead from the diff, answers file 4) at commit `734513b`, hash `49a588ec48b43cfce6492461afa1db4a7e440ce46f4496f1c48f651e71cebebb`. Since then 61 sentences above `## The look` have changed, all listed under "Sentences changed since round 3" below with the old and the new: the lead's own line (answers file 5), the 39 rooms it made necessary, and what the closing run found by reading the sheet against the game. The sheet now stands at commit `SHEETCOMMIT`, hash `SHEETHASH`. Round 4 reads only those sentences.
 - Answers handled: 1 to 6, read on the base branch at `93133aa2`. LASTANSWERS
 - **The lead's four points of answers file 6.**
   1. *A creature is in one place.* One whose kind is in the party at the log is in that party, and its own spot at the camp is empty while it is away (`camp.ts`). The dung beetle takes its ball along and the dung fly its twig, since it conducts with it; the toadstool, the tent and the puddle's place stay. The one a first showing shows is one of the party, stepped out to the front. `view/display.test.ts` plays every party of the order and of the round on two seeds through the first showing, the raid and the put-back, and holds that in no frame is anybody drawn twice.
@@ -28,7 +28,7 @@
 
 READER
 
-**Sentences changed since round 3** (above `## The look`; for the checker of round 4). 1 is the lead's; 2 follows from it; 3 to 12 are the sentences the lead named in answers file 6; the rest were found by reading the sheet against the built game in this run, the last of them (in 12, 36, 37 and 43, and 59 and 60) after the reader's first reading. None changes the mechanic, the error, the designed order or the saved state: each says a look, a sound or a detail as the game does it, except 28, which writes down the rule the lead asked for after the game's stills (one invader in a chamber at a time) and the short act of answers file 6.
+**Sentences changed since round 3** (above `## The look`; for the checker of round 4). 1 is the lead's; 2 follows from it; 3 to 12 are the sentences the lead named in answers file 6; the rest were found by reading the sheet against the built game in this run, the last of them (in 12, 36, 37 and 43, and 59 to 61) after the reader's first reading. None changes the mechanic, the error, the designed order or the saved state: each says a look, a sound or a detail as the game does it, except 28, which writes down the rule the lead asked for after the game's stills (one invader in a chamber at a time) and the short act of answers file 6.
 
 1. Was: A **room** is open space that holds a clear block at least 4 cells wide and 3 cells high. All such blocks that overlap or touch along a side are one room. A tunnel two cells high is never a room, however long.
    Now: The same, with the lead's sentence added: "The shaft a new nest starts with (the three columns under the mouth, three cells deep) is the way in and no part of any room: no block is counted in its cells, so an invader coming down it is not yet inside." (answers file 5, pasted as it stands)
@@ -150,6 +150,8 @@ READER
    Now: The same, with a sentence added: "Where all under the finger is dug already, nothing is bitten: a little dust lifts from the place, the ant's feet patter, and it comes."
 60. Was: While the ground is still falling the save holds it as it will come to rest, so nothing is saved in the air.
    Now: While the ground is still falling the save holds it as it will come to rest, so nothing is saved in the air; a machine whose floor is on its way down, or into whose place a lump is falling, is saved where it comes to stand, with what it holds.
+61. Was: (the ending) Dusk comes over the camp, and the dung beetles sit on their balls round a small glow.
+   Now: The same, with a sentence added: "It opens with three soft notes going down, and is quiet after them."
 
 **Frame cost.** FRAMECOST
 
