@@ -17,7 +17,7 @@
 - Frame cost: no frame rate was measured anywhere, and no physical iPad. See "Frame cost of the toy" below: the toy's own work a frame is under the bar at the median and when idle, and over it at the ninety-fifth percentile while a finger digs without pause.
 - Open: sheet ready for check, round 3
 
-**Stills.** STILLS_LINE
+**Stills.** Branch `stills/mierennest-ec7b85a3`, three files under `docs/build/stills/mierennest/`: `1-first-frame.png` (2.6 s of idle), `2-dig-and-carry.png` (sand in the ant's jaws just after a pit was dug, crumbs still in the air), `3-small-nest.png` (a tunnel, a pit, a room with the queen in it, and sand, mud and a stone carried to its far end). Seed 1. Taken at 1180 by 820 from the production build of this lane at `ec7b85a3`, on a paused clock stepped 33 ms at a time, with the same scripted touches each time, on software drawing.
 
 **The four points of the look** (answers file 2), each with what now holds it:
 
