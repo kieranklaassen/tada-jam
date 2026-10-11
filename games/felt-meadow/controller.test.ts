@@ -4,7 +4,7 @@ import { BLUE, ORANGE, RED, YELLOW, type Hue } from './colors'
 import { HELD_LIFT, MeadowController, REST_BEFORE_PACING, visitEveryFor, type Projector } from './controller'
 import { BLOOM_AT, GROWN_AT } from './flowers'
 import { IDLE_BEFORE_DEMO, MAX_DEMOS } from './guidance'
-import { BURROW, groundY, onPouch, PLOT_RADIUS, plotAt, PLOTS, plotTop, POUCH, POUCH_SLOTS, SEED_RADIUS, STEM_HEIGHT } from './layout'
+import { BURROW, groundY, PLOT_RADIUS, plotAt, PLOTS, plotTop, POUCH, POUCH_SLOTS, SEED_RADIUS, STEM_HEIGHT } from './layout'
 import { defaultMeadow, deserialize, type MeadowState } from './meadow'
 
 // A tilted orthographic camera: 4 px per world unit, looking down the slope,
@@ -160,7 +160,7 @@ describe('planting', () => {
 })
 
 describe('picking', () => {
-  it('pulls a flower back into its seed; a put-away mid-drag keeps the seed', () => {
+  it('pulls a flower back into its seed; a put-away mid-drag is no drop, and the flower stands in its molehill again', () => {
     const { controller, save } = makeMeadow(grownMeadow([null, YELLOW, null]))
     run(controller, 0.5)
     const target = fingerOver(-15, 25)
@@ -171,7 +171,20 @@ describe('picking', () => {
 
     save.mockClear()
     controller.setRunning(false)
-    expect(save).toHaveBeenCalledWith(expect.objectContaining({ plots: [null, null, null], loose: [expect.objectContaining({ hue: YELLOW })] }))
+    expect(save).toHaveBeenLastCalledWith(expect.objectContaining({ plots: [null, YELLOW, null], loose: [] }))
+    expect(controller.flowers[1].phase).toBe('bloom')
+    expect(controller.seeds.some((seed) => seed.mode === 'held')).toBe(false)
+  })
+
+  it('lays a picked seed on the grass if its molehill was planted by another finger before the drag was taken away', () => {
+    const { controller } = makeMeadow(grownMeadow([null, YELLOW, null]))
+    run(controller, 0.5)
+    drag(controller, flowerHead(controller, 1), fingerOver(-15, 25), 1, false)
+    drag(controller, pouchSeed(0), fingerOver(PLOTS[1].x, PLOTS[1].z), 2)
+    expect(controller.meadow.plots[1]).toBe(RED)
+    controller.setRunning(false)
+    expect(controller.meadow.plots).toEqual([null, RED, null])
+    expect(controller.meadow.loose.map((seed) => seed.hue)).toEqual([YELLOW])
   })
 
   it('lays the picked seed where it is let go, ready to plant again', () => {
@@ -247,9 +260,35 @@ describe('the bee mixes colours', () => {
     }
   })
 
-  it('visits more often for younger children', () => {
-    expect(visitEveryFor(4)).toBeLessThan(visitEveryFor(7))
-    expect(visitEveryFor(null)).toBeGreaterThan(0)
+  it('visits more often for younger children; no age takes the youngest pace, and ages outside the band the nearest end', () => {
+    const paces = [4, 5, 6, 7].map(visitEveryFor)
+    for (let i = 1; i < paces.length; i++) expect(paces[i]).toBeGreaterThan(paces[i - 1])
+    expect(visitEveryFor(null)).toBe(visitEveryFor(4))
+    expect(visitEveryFor(2)).toBe(visitEveryFor(4))
+    expect(visitEveryFor(12)).toBe(visitEveryFor(7))
+  })
+
+  it('a meadow put away while the bee carried its two colours opens with the mixed seed already laid, and the flight does not play again', () => {
+    const { controller } = makeMeadow(deserialize({ ...defaultMeadow(), plots: [RED, YELLOW, null], pollen: [RED, YELLOW] }), 7)
+    expect(controller.meadow.pollen).toEqual([])
+    expect(controller.meadow.loose.map((seed) => seed.hue)).toEqual([ORANGE])
+    const [seed] = controller.meadow.loose
+    expect(Math.hypot(seed.x - PLOTS[2].x, seed.z - PLOTS[2].z)).toBeLessThan(PLOT_RADIUS + 14)
+    expect(plotAt(seed.x, seed.z, SEED_RADIUS)).toBe(-1)
+    expect(controller.seeds.find((body) => body.id === seed.id)?.mode).toBe('rest')
+    let flew = false
+    run(controller, 5, () => {
+      if (controller.bee.mode === 'loop' || controller.bee.mode === 'carry') flew = true
+      return flew
+    })
+    expect(flew).toBe(false)
+  })
+
+  it('a crowded meadow opens with the bee still holding its two colours', () => {
+    const loose = [0, 1, 2].map((i) => ({ id: i + 1, hue: RED, x: -10 + i * 12, z: 24 }))
+    const { controller } = makeMeadow(deserialize({ ...defaultMeadow(), plots: [RED, YELLOW, null], pollen: [RED, YELLOW], loose, nextId: 4 }), 7)
+    expect(controller.meadow.pollen).toEqual([RED, YELLOW])
+    expect(controller.meadow.loose).toHaveLength(3)
   })
 })
 
@@ -368,15 +407,38 @@ describe('touching everything is safe', () => {
     expect(JSON.stringify(controller.snapshot())).toBe(before)
   })
 
-  it('a resting hand (four fingers) cancels a drag and leaves the seed on the grass', () => {
+  it('a resting hand (four fingers) cancels a drag, and the seed goes back into the pouch it came from', () => {
     const { controller } = makeMeadow()
     drag(controller, pouchSeed(1), fingerOver(10, 22), 1, false)
     for (let id = 2; id <= 4; id++) controller.pointerDown(id, 100 + id * 30, 700, clock)
     run(controller, 1)
     for (let id = 1; id <= 4; id++) controller.pointerUp(id, clock)
     run(controller, 1)
-    expect(controller.meadow.loose.map((seed) => seed.hue)).toEqual([YELLOW])
-    expect(onPouch(controller.meadow.loose[0].x, controller.meadow.loose[0].z)).toBe(false)
+    expect(controller.meadow.loose).toEqual([])
+    expect(controller.meadow.plots).toEqual([null, null, null])
+    expect(controller.seeds.filter((seed) => seed.mode !== 'off').map((seed) => seed.mode)).toEqual(['pouch', 'pouch', 'pouch'])
+  })
+
+  it('a put-away under a finger holding a seed over an empty molehill plants nothing', () => {
+    const { controller, save } = makeMeadow()
+    drag(controller, pouchSeed(0), fingerOver(PLOTS[0].x, PLOTS[0].z), 1, false)
+    controller.setRunning(false)
+    expect(controller.meadow.plots).toEqual([null, null, null])
+    expect(controller.meadow.loose).toEqual([])
+    expect(save).toHaveBeenLastCalledWith(expect.objectContaining({ plots: [null, null, null], loose: [] }))
+    controller.setRunning(true)
+    run(controller, 4)
+    expect(controller.flowers[0].phase).toBe('empty')
+  })
+
+  it('a put-away under a finger carrying a seed from the grass lays it back where it lay', () => {
+    const { controller } = makeMeadow(deserialize({ ...defaultMeadow(), loose: [{ id: 1, hue: ORANGE, x: 40, z: 24 }], nextId: 2 }))
+    run(controller, 0.5)
+    drag(controller, screen(40, groundY(40, 24) + SEED_RADIUS, 24), fingerOver(PLOTS[2].x, PLOTS[2].z), 1, false)
+    expect(controller.meadow.loose).toEqual([])
+    controller.setRunning(false)
+    expect(controller.meadow.plots).toEqual([null, null, null])
+    expect(controller.meadow.loose).toEqual([expect.objectContaining({ hue: ORANGE, x: 40, z: 24 })])
   })
 
   it('keeps flower heads within reach of a small finger', () => {
