@@ -117,6 +117,7 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 | Fruit Slicer | `games/fruit-slicer/` | 9–12 | A market stall drawn as a comic page: cut a fruit by eye to the share on a customer's ticket, bring the piece to the customer's tin, and see the true length open beside it. A learning game on fractions as shares of a length. |
 | Hats for All | `games/hats-for-all/` | 2–4 | A foam play mat in 3D: press a foam hat out of its tile and it pops onto a bare head, until every creature has one hat. A learning game on pairing one with one and comparing two small groups. |
 | Wild Hair Salon | `games/wild-hair-salon/` | 4–6 | A salon in watercolour: pull a lock longer or snip it shorter until it is as long as the friend's lock, then pull off the cape and see the two side by side. A learning game on comparing two lengths. |
+| Flower Table | `games/flower-table/` | 4–7 | A walled garden in oil paint: cut flowers in the bed with a finger, stand them in a visitor's vase, and hand the bouquet over. Four visitors with tastes of their own, three vases, and every plant behaves its own way cut, carried, dropped and sniffed. |
 
 ## Showcases
 
