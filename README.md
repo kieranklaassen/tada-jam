@@ -132,6 +132,7 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 | Gem Miner | `games/gem-miner/` | 7–11 | Hold a finger in a hillside and a mole digs toward it; the gems he frees are lamps, and their mixed light, the water and the dark decide who moves into the cave you dug. No learning goal. |
 | Hungry Hole | `games/hungry-hole/` | 4–8 | A papier-mâché carnival street in 3D: slide a hungry hole under pies, a hat, a dog on wheels, balloons, a tuba and a drummer until they tip in, tap it to burp them back up as a stack in the order of the child's choosing, and let the stack down to walk, play and roll out of the gate as a float. No learning goal. |
 | Dress for the Weather | `games/dress-for-weather/` | 3–6 | A hall of paper dolls on a cutting mat: tab seven paper garments onto a child, a very tall grandfather, a baby or the dog, work the zip, the toggles and the boots, turn the weather cock and open the door to see what rain, snow, wind or sun does to exactly that outfit. No learning goal. |
+| Mushroom Village | `games/mushroom-village/` | 3–6 | A glade in poster paint: press a finger into the moss and a mushroom swells for as long as it is held, then give it a door, lay pebbles to it, and see which of four fussy gnomes moves in and what he makes of it. No learning goal. |
 
 ## Showcases
 
