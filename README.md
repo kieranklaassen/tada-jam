@@ -134,6 +134,7 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 | Dress for the Weather | `games/dress-for-weather/` | 3–6 | A hall of paper dolls on a cutting mat: tab seven paper garments onto a child, a very tall grandfather, a baby or the dog, work the zip, the toggles and the boots, turn the weather cock and open the door to see what rain, snow, wind or sun does to exactly that outfit. No learning goal. |
 | Mushroom Village | `games/mushroom-village/` | 3–6 | A glade in poster paint: press a finger into the moss and a mushroom swells for as long as it is held, then give it a door, lay pebbles to it, and see which of four fussy gnomes moves in and what he makes of it. No learning goal. |
 | Brick Buster | `games/brick-buster/` | 5–9 | A pinball table from above in canvas 2D: slide a rubber bumper under a steel ball to flick it into a wall of five kinds of brick with faces, and steer it through a walrus's tub, a dragon's mouth or an elephant's trunk to make it wet, hot or heavy, which changes what every brick does. No learning goal. |
+| Rocket Penguin | `games/rocket-penguin/` | 8–12 | A pencil drawing on squared paper in 2D: pull a penguin back in a catapult and let go, bolt on any two of a rocket, glider wings, an umbrella, a balloon, spring feet and a fish on a rod, and find out by flying what each does on ice, a seal, a snowdrift, a whale's spout and a cloud, with three friends who each like their fish a different way. No learning goal. |
 
 ## Showcases
 
