@@ -779,6 +779,73 @@ describe('a machine', () => {
     expect([at(bedded.k.game.ground, 24, 5), at(bedded.k.game.ground, 25, 5), at(bedded.k.game.ground, 26, 5)]).toEqual([MUD, STONE, STONE])
   })
 
+  it('a lobbed shot is answered by what it comes down on, in the nest and in a raid, and never by itself', () => {
+    // A hall five cells high, the catapult at its far end: its lob comes down six cells along, in the air over the
+    // floor, and drops the last cell.
+    const lob = (inRaid: boolean, load: 'sand' | 'mud' | 'stone', under: number) => {
+      const game = freshGame(null, 1), g = game.ground
+      for (let y = 1; y < g.rows - 1; y++) for (let x = 0; x < g.cols; x++) put(g, x, y, EARTH)
+      for (let y = 1; y <= 5; y++) for (let x = MOUTH[0]; x <= 37; x++) put(g, x, y, OPEN)
+      game.position = 'the-cannon'
+      game.shown.push('ant', 'beetle', 'fly', 'catapult', 'cannon')
+      game.machines.push({ kind: 'catapult', x: 34, y: 5, facing: -1, load })
+      // Where the lob of an empty hall comes to rest, the lump lies in the floor: the shot comes down on it.
+      if (under !== EARTH) put(g, 28, 6, under as never)
+      const k = new Kingdom(game)
+      const before = whole(k.game)
+      if (inRaid) {
+        k.bell()
+        play(k, 0.3)
+      }
+      k.press(34.5, 5.5, 0)
+      k.release()
+      const events = play(k, 2)
+      if (!inRaid) expect(whole(k.game)).toEqual(before)
+      return { hits: events.filter((e) => e.type === 'shotHit'), landed: events.find((e) => e.type === 'shotLanded') as { cell: number } | undefined, k }
+    }
+    for (const inRaid of [false, true]) for (const load of ['sand', 'mud', 'stone'] as const) {
+      const where = `${inRaid ? 'raid' : 'nest'}: ${load}`
+      // On the bare floor: the earth answers, once, and the lump is not asked what it is itself.
+      const bare = lob(inRaid, load, EARTH)
+      expect(bare.hits, where).toEqual([{ type: 'shotHit', kind: EARTH, cell: 6 * 40 + 28 }])
+      for (const under of [2, MUD, STONE]) expect(lob(inRaid, load, under).hits, `${where} on ${under}`).toEqual([{ type: 'shotHit', kind: under, cell: 6 * 40 + 28 }])
+    }
+    // A lump standing on the floor beside where the lob comes down: the shot meets the floor, which answers, and
+    // comes to lie against the lump. In a raid as in the nest it is the floor that answers, never the shot itself.
+    const against = (inRaid: boolean, load: 'sand' | 'mud' | 'stone', stands: number) => {
+      const game = freshGame(null, 1), g = game.ground
+      for (let y = 1; y < g.rows - 1; y++) for (let x = 0; x < g.cols; x++) put(g, x, y, EARTH)
+      for (let y = 1; y <= 5; y++) for (let x = MOUTH[0]; x <= 37; x++) put(g, x, y, OPEN)
+      put(g, 27, 5, stands as never)
+      // Sand is heaped two high, and slumps into the place where the lob comes down.
+      if (stands === 2) put(g, 27, 4, 2)
+      settle(g)
+      game.position = 'the-cannon'
+      game.shown.push('ant', 'beetle', 'fly', 'catapult', 'cannon')
+      game.machines.push({ kind: 'catapult', x: 34, y: 5, facing: -1, load })
+      const k = new Kingdom(game)
+      if (inRaid) {
+        k.bell()
+        play(k, 0.3)
+      }
+      k.press(34.5, 5.5, 0)
+      k.release()
+      const events = play(k, 2)
+      const ground = inRaid ? k.raid!.ground : k.game.ground
+      return { hits: events.filter((e) => e.type === 'shotHit'), lies: at(ground, 28, 5) }
+    }
+    for (const inRaid of [false, true]) for (const load of ['sand', 'mud', 'stone'] as const) for (const stands of [MUD, STONE]) {
+      const shot = against(inRaid, load, stands)
+      const where = `${inRaid ? 'raid' : 'nest'}: ${load} against ${stands}`
+      expect(shot.hits, where).toEqual([{ type: 'shotHit', kind: EARTH, cell: 6 * 40 + 28 }])
+      expect(shot.lies, where).toBe(LUMPS[['sand', 'mud', 'stone'].indexOf(load)])
+    }
+    // On the slumped sand the shot comes down on sand, and the sand answers: a fan of grains, in a raid as in the nest.
+    for (const inRaid of [false, true]) for (const load of ['mud', 'stone'] as const) {
+      expect(against(inRaid, load, 2).hits, `${inRaid ? 'raid' : 'nest'}: ${load} on slumped sand`).toEqual([{ type: 'shotHit', kind: 2, cell: 5 * 40 + 28 }])
+    }
+  })
+
   it('a stone goes by a fly, which steps aside, and meets whoever is behind it', () => {
     const game = nestGame('first-fly')
     game.shown.push('ant', 'beetle', 'fly', 'catapult', 'cannon')

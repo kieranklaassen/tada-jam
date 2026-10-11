@@ -1,7 +1,7 @@
 import { asSaved } from './build'
 import { MOUTH, OPEN, STONE, at, clone, isLump, put, type Ground, type Kind, type Lump } from './ground'
 import { HABITS, type InvaderKind, type Shot } from './habits'
-import { LUMP_OF, RELOAD, SHOT_OF, arrivalPlace, canStand, cellsOf, machineAt, shotPath, restPlace } from './machines'
+import { LUMP_OF, RELOAD, SHOT_OF, arrivalPlace, canStand, cellsOf, machineAt, shotFlight, restPlace } from './machines'
 import { after, judge, owed, partyAt, type MachineKind, type Party, type Verdict } from './order'
 import { TICK, bodyOf, callRaid, endOf, hit, knockInRaid, landInRaid, stepRaid, type Raid, type RaidEvent } from './raid'
 import { lean } from './walls'
@@ -52,6 +52,8 @@ export type Flying = {
   level: boolean
   /** The invaders it has gone by, who stepped aside for it. */
   passed: number[]
+  /** The cell that stops its flight, the first it cannot pass: what the shot hits. -1 where it flies as far as it carries and nothing stops it. */
+  hit: number
 }
 /**
  * A way through open cells from one cell to another, both ends included; where no open way joins them, the two
@@ -389,13 +391,13 @@ export class Kingdom {
       return
     }
     const ground = this.shown
-    const path = shotPath(ground, machine)
+    const { path, hit } = shotFlight(ground, machine)
     if (path.length === 0) {
       this.events.push({ type: 'fizzled', machine: machine.kind })
       return
     }
     const shot = machine.load
-    this.flying.push({ shot, path, t: 0, length: Math.max(SHOT_LEAST, path.length / SHOT_SPEED), inRaid: this.raid !== null, machine: index, facing: machine.facing, level: machine.kind === 'cannon', passed: [] })
+    this.flying.push({ shot, path, t: 0, length: Math.max(SHOT_LEAST, path.length / SHOT_SPEED), inRaid: this.raid !== null, machine: index, facing: machine.facing, level: machine.kind === 'cannon', passed: [], hit })
     if (this.raid) this.reloading[index] = RELOAD
     else {
       // Outside a raid the lump has really left the machine. It lies where it lands when it has flown there.
@@ -442,19 +444,19 @@ export class Kingdom {
   }
 
   /**
-   * A shot has come to lie against something: what stopped it answers. A stone that a level shot strikes rolls one
-   * cell on where it is free; sand and mud take the shot as it lies against them.
+   * A shot has come to lie against something: what stopped its flight answers, whichever way it was hit. Sand
+   * bursts, mud takes the shot, a stone rings; and a stone that a level shot strikes rolls one cell on where it is
+   * free. The lump that was shot never answers for itself.
    */
-  private strike(flying: Flying, landed: number): void {
+  private strike(flying: Flying): void {
+    if (flying.hit < 0) return
     const ground = this.raid && flying.inRaid ? this.raid.ground : this.game.ground, cols = ground.cols
-    const x = landed % cols, y = Math.floor(landed / cols)
-    const sx = flying.level ? x + flying.facing : x, sy = flying.level ? y : y + 1
+    const sx = flying.hit % cols, sy = Math.floor(flying.hit / cols)
     const kind = at(ground, sx, sy)
     if (kind === OPEN) return
-    const cell = sy * cols + sx
-    this.events.push({ type: 'shotHit', kind, cell })
+    this.events.push({ type: 'shotHit', kind, cell: flying.hit })
     if (kind !== STONE || !flying.level) return
-    if (this.raid && flying.inRaid) knockInRaid(this.raid, cell, flying.facing)
+    if (this.raid && flying.inRaid) knockInRaid(this.raid, flying.hit, flying.facing)
     else {
       const did = lean(ground, sx, sy, flying.facing, 3)
       if (did.did === 'shoved') this.toy.touched(did.cells)
@@ -492,7 +494,7 @@ export class Kingdom {
       const last = flying.path[flying.path.length - 1]
       if (struck.length === 0) landInRaid(raid, last, lump)
       this.events.push({ type: 'shotLanded', shot: flying.shot, cell: struck.length > 0 ? flying.path[Math.min(firstAt, flying.path.length - 1)] : last })
-      if (struck.length === 0) this.strike(flying, last)
+      if (struck.length === 0) this.strike(flying)
       return
     }
     // In the nest: the last cell of its way that is still open, in case the ground changed under it as it flew.
@@ -503,7 +505,7 @@ export class Kingdom {
       put(ground, cell % cols, Math.floor(cell / cols), lump)
       this.toy.touched([cell])
       this.events.push({ type: 'shotLanded', shot: flying.shot, cell })
-      this.strike(flying, cell)
+      this.strike(flying)
       return
     }
     // Nowhere left for it to lie: it is back in the cup.

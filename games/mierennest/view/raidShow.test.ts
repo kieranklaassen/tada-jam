@@ -208,7 +208,7 @@ describe('where a raid is shown', () => {
   })
 
   it('flies a shot along its way from its first cell to its last', () => {
-    const flying = { shot: 'mud', path: [100, 101, 102, 103], t: 0, length: 1, inRaid: true, machine: 0, facing: 1, level: true, passed: [] as number[] } as const
+    const flying = { shot: 'mud', path: [100, 101, 102, 103], t: 0, length: 1, inRaid: true, machine: 0, facing: 1, level: true, passed: [] as number[], hit: -1 } as const
     const a = showShot({ ...flying, path: [...flying.path] }, 40), b = showShot({ ...flying, path: [...flying.path], t: 1 }, 40)
     expect(b.x - a.x).toBe(3 * CELL)
     expect([a.effect, a.flip]).toEqual(['mudBall', false])

@@ -76,23 +76,28 @@ export function arrivalPlace(ground: Ground, machines: readonly Machine[]): { x:
  * cannon fires level along the floor it stands on, where a raider ant walks; the catapult lobs in an arc, up three cells and six along, and on down.
  * A low roof stops a lob short. An empty list means the shot has nowhere to go.
  */
-export function shotPath(ground: Ground, machine: Machine): number[] {
+export function shotFlight(ground: Ground, machine: Machine): { path: number[]; hit: number } {
   const { cols, rows } = ground
   const path: number[] = []
+  // The first cell that stopped it, where one did: that is what the shot hit.
+  let hit = -1
   const own = cellsOf(machine, cols)
   const take = (x: number, y: number): boolean => {
     // The turf's row is a roof to a shot, the mouth in it too: nothing is thrown out of the nest or left lying in its mouth.
     if (x < 0 || y < 1 || x >= cols || y >= rows) return false
     const cell = y * cols + x
     if (own.includes(cell) || path[path.length - 1] === cell) return true
-    if (at(ground, x, y) !== OPEN) return false
+    if (at(ground, x, y) !== OPEN) {
+      if (hit < 0) hit = cell
+      return false
+    }
     path.push(cell)
     return true
   }
   if (machine.kind === 'cannon') {
     const reach = machine.load === 'sand' ? SAND_CARRIES : cols
     for (let n = 0, x = machine.facing > 0 ? machine.x + 2 : machine.x - 1; n < reach; n++, x += machine.facing) if (!take(x, machine.y)) break
-    return path
+    return { path, hit }
   }
   // The cup lets go over the middle of the machine, at the height of its top.
   const sx = machine.x + 1, sy = machine.y - 0.5
@@ -111,7 +116,12 @@ export function shotPath(ground: Ground, machine: Machine): number[] {
     if (cy < lastY && take(lastX + machine.facing, lastY)) for (let down = lastY + 1; take(lastX + machine.facing, down); down++);
     break
   }
-  return path
+  return { path, hit }
+}
+
+/** The cells a shot passes, and no more. */
+export function shotPath(ground: Ground, machine: Machine): number[] {
+  return shotFlight(ground, machine).path
 }
 
 /** What firing a machine outside a raid did: the cells the lump flew through, and the cell it came to lie in. */
