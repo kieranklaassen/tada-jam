@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { canOffer, chooseRecipient, give, isFull, knitRow, mirrorColumn, paintStitch, summonIfReady, unravelRow } from './knitting'
-import { initialState, MAX_ROWS, MAX_SCARVES, WIDTH } from './state'
+import { bringOutBall, canOffer, chooseRecipient, give, isFull, knitRow, mirrorColumn, paintStitch, summonIfReady, unravelRow } from './knitting'
+import { COLOURS, initialState, MAX_ROWS, MAX_SCARVES, WIDTH } from './state'
 
 const row = (colour: number) => new Array<number>(WIDTH).fill(colour)
 
@@ -22,6 +22,18 @@ describe('knitting and unravelling', () => {
     expect(isFull(state)).toBe(true)
     expect(knitRow(state, 0)).toBe(false)
     expect(state.loom).toHaveLength(MAX_ROWS)
+  })
+})
+
+describe('the basket', () => {
+  it('gives up one more ball each time it is tipped, until every colour is out, and remembers how many', () => {
+    const state = initialState()
+    expect(bringOutBall(state, 4)).toBe(4)
+    expect(state.balls).toBe(5)
+    expect(bringOutBall(state, 5)).toBe(5)
+    expect(state.balls).toBe(COLOURS)
+    expect(bringOutBall(state, COLOURS)).toBeNull()
+    expect(state.balls).toBe(COLOURS)
   })
 })
 

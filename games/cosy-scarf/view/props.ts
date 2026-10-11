@@ -143,7 +143,9 @@ export class Props {
   private readonly white = new THREE.Color('#ffffff')
   private readonly powder = new THREE.Color(PALETTE.powder)
 
-  constructor(materials: YarnMaterials, ballCount: number) {
+  constructor(materials: YarnMaterials) {
+    // Room for every colour: the basket gives up more balls as the child taps it.
+    const ballCount = this.yarn.length
     const ballGeometry = new THREE.SphereGeometry(BALL_RADIUS, 26, 18)
     this.balls = new THREE.InstancedMesh(ballGeometry, materials.balls, ballCount)
     this.balls.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
@@ -341,6 +343,7 @@ export class Props {
       this.m.setPosition(ball.pos.x, ball.pos.y - squash * BALL_RADIUS * 0.2, ball.pos.z)
       this.balls.setMatrixAt(i, this.m)
     }
+    this.balls.count = game.balls.length
     this.balls.instanceMatrix.needsUpdate = true
   }
 
