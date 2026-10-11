@@ -126,6 +126,7 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 | Goodnight, Teddy | `games/goodnight-teddy/` | 2–5 | a wordless bedtime room for ages 2 to 5 where a child rubs soap, water and a towel onto a muddy bear, tries the pyjamas and blanket on the duck, the cat and the lamp, and turns the lamp down to put him to sleep. No learning goal. |
 | Treetop Village | `games/treetop-village/` | 4–8 | A pop-up book oak in 2D: hang planks, ladders, rope bridges, buckets, swings, lanterns and slides between its pegs, and four kinds of tree folk come to try each one in their own way, cross it, stay puzzled in front of it or wait to be carried. Draw the sun down for evening and shake the trunk to tidy up. No learning goal. |
 | Dig for the Duck | `games/dig-for-the-duck/` | 6–10 | A glass case of coloured sand seen from the side: rub tunnels with a finger to lead the pond's water down through sand, clay, rock, moss, hot stone and seed earth to a rubber duck waiting in a dry bath, past a mole, a worm and a badger who each answer the water in their own way. No learning goal. |
+| Deep Sea Fishing | `games/deep-sea-fishing/` | 7–11 | A batik sea in 2D: draw the line down from a small boat, hang one of five baits or nothing on the hook, and bring it to nine creatures who each answer every bait in their own way, so that some bite, some steal, some follow and some bolt. Catches go in a tub under the eye of the ship's cat, and tipping the tub out ends the trip. No learning goal. |
 
 ## Showcases
 
