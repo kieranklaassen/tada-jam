@@ -71,6 +71,44 @@ describe('a raid with nothing in the way', () => {
   })
 })
 
+describe('a room under the shaft, and a mouth partly shut', () => {
+  const under = ['XXXX...XXXX', '####...####', '####...####', '####...####', '#.........#', '#.........#', '#.........#', '###########', 'XXXXXXXXXXX']
+
+  it('does not keep a raider ant out: it drops in, does its act, and waits at the foot of its drop for the workers', () => {
+    const raid = playOut(raidOn(under, ['ant']))
+    expect(raid.acts).toBe(1)
+    expect(states(raid)).toEqual(['held'])
+    expect(Math.floor(raid.invaders[0].cell / 11)).toBe(6)
+    expect(judge(endOf(raid))).toBe('not-well')
+    // A file of them sits a body's length apart, none in another.
+    const file = playOut(raidOn(under, ['ant', 'ant', 'ant']))
+    expect(file.acts).toBe(3)
+    expect(new Set(file.invaders.map((invader) => invader.cell)).size).toBe(3)
+  })
+
+  it('lets everyone in by a column that is still open, and sends home with a sigh only those the mouth is shut to', () => {
+    const plugged = ['XXXX...XXXX', '####m..####', '####...####', '####...####', '#.........#', '#.........#', '#.........#', '###########', 'XXXXXXXXXXX']
+    for (const kind of ['beetle', 'fly'] as const) {
+      const raid = playOut(raidOn(plugged, [kind]))
+      expect(raid.acts, kind).toBe(1)
+    }
+    // A dung ball is three columns wide: it is left on the grass, and its beetle comes in without it.
+    const scout = raidOn(plugged, ['dungBeetle'])
+    const events: RaidEvent[] = []
+    while (!scout.over) { stepRaid(scout); events.push(...scout.events.splice(0)) }
+    expect(kinds(events, 'leftBall').length).toBe(1)
+    expect(scout.acts).toBe(1)
+    // All three columns shut: nobody gets in, each gives up at the mouth and is heard, and the raid is over.
+    const shut = ['XXXX...XXXX', '####mmm####', '####...####', '####...####', '#.........#', '#.........#', '#.........#', '###########', 'XXXXXXXXXXX']
+    const none = raidOn(shut, ['beetle', 'fly'])
+    const heard: RaidEvent[] = []
+    while (!none.over) { stepRaid(none); heard.push(...none.events.splice(0)) }
+    expect(none.acts).toBe(0)
+    expect(kinds(heard, 'givesUp').length).toBe(2)
+    expect(states(none)).toEqual(['home', 'home'])
+  })
+})
+
 describe('the shaft', () => {
   it('is the way in and no part of a room dug beside it: an invader coming down it is not yet inside', () => {
     const ground = generate(1)

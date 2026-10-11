@@ -319,8 +319,6 @@ export function showRaid(raid: Raid, party: Party, seconds: number): Shown[] {
     }
     // An ant held fast where the way is one cell wide has no room to lie along it: it stands on end, pulling to get up.
     const narrow = invader.kind === 'ant' && invader.state === 'stuck' && ground.cells[invader.cell - 1] !== OPEN && ground.cells[invader.cell + 1] !== OPEN
-    // An ant whose way into a room ends on a face over open air has no floor to lie on: it lies down across the
-    // way where it is, as it would on a floor, and is drawn flat like any other that naps.
     const upright = pose === 'climb' || narrow
     const goingUp = narrow || Math.floor(headedFor(invader) / cols) < Math.floor(invader.cell / cols)
     out.push({ who, pose, x: at.x, y: at.y, flip: invader.facing < 0, turn: upright ? (goingUp ? -1 : 1) * (invader.facing < 0 ? -1 : 1) * (Math.PI / 2) : 0, size: 1, id: invader.id, idle: invader.state === 'waiting' })

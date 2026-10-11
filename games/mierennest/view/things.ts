@@ -248,16 +248,14 @@ const EFFECTS: Record<Effect, (ctx: Ctx, p: number) => void> = {
     ctx.globalAlpha /= 0.55
     for (const [x, y, r] of [[-9, -1.6, 1.5], [-1, -5.6, 1.3], [8, -1.8, 1.7], [3, -1.2, 1.1], [11.5, -4.6, 1]]) oval(ctx, x, y, r, r * 0.8, 0, DUSTY)
   },
-  // Somebody went round and round here: a ring of six little footprints, each a pad and two toes that point the
-  // way it walked.
+  // Somebody trod back and forth here: a short track of six little footprints along the floor, left foot and right
+  // in turn, each a pad and two toes that point the way it walked. A track, not a ring: nothing stands empty in it.
   prints: (ctx) => {
     ctx.globalAlpha *= 0.7
     for (let i = 0; i < 6; i++) {
-      const a = (i * Math.PI) / 3 + 0.2
-      const r = i % 2 ? 10.4 : 8.8
       ctx.save()
-      ctx.translate(Math.cos(a) * r, Math.sin(a) * r)
-      ctx.rotate(a + Math.PI / 2)
+      ctx.translate(-12 + i * 4.8, i % 2 ? -1.8 : -5.2)
+      ctx.rotate(i % 2 ? 0.25 : -0.25)
       oval(ctx, 0, 0, 2.3, 1.5, 0, DUSTY)
       oval(ctx, 2.6, -1, 0.8, 0.8, 0, DUSTY)
       oval(ctx, 2.6, 1, 0.8, 0.8, 0, DUSTY)

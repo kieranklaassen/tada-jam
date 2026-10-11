@@ -4,7 +4,7 @@
 ## Status
 
 - Stage: gates, closed by run 5 (the closing run). The whole order is played, from `first-chamber` to the open kingdom and its round of six. Base commit ef85be4d.
-- **Open: sheet ready for check, round 4.** The sheet passed round 3 (confirmed by the lead from the diff, answers file 4) at commit `734513b`, hash `49a588ec48b43cfce6492461afa1db4a7e440ce46f4496f1c48f651e71cebebb`. Since then 65 sentences above `## The look` have changed, all listed under "Sentences changed since round 3" below with the old and the new: the lead's own line (answers file 5), the 39 rooms it made necessary, and what the closing run found by reading the sheet against the game. The sheet now stands at commit `815bcac`, hash `796f3705d01aa64f79e11c6ed8e26d805a9bad066d28a1d0ea5b543dcf0d1936`. Round 4 reads only those sentences.
+- **Open: sheet ready for check, round 4.** The sheet passed round 3 (confirmed by the lead from the diff, answers file 4) at commit `734513b`, hash `49a588ec48b43cfce6492461afa1db4a7e440ce46f4496f1c48f651e71cebebb`. Since then 67 sentences above `## The look` have changed, all listed under "Sentences changed since round 3" below with the old and the new: the lead's own line (answers file 5), the 39 rooms it made necessary, and what the closing run found by reading the sheet against the game. The sheet now stands at commit `815bcac`, hash `796f3705d01aa64f79e11c6ed8e26d805a9bad066d28a1d0ea5b543dcf0d1936`. Round 4 reads only those sentences.
 - Answers handled: 1 to 6, read on the base branch at `93133aa2`. A higher-numbered file is looked for again before the last push of the run, and what was found is in the last row of the pass log.
 - **The lead's four points of answers file 6.**
   1. *A creature is in one place.* One whose kind is in the party at the log is in that party, and its own spot at the camp is empty while it is away (`camp.ts`). The dung beetle takes its ball along and the dung fly its twig, since it conducts with it; the toadstool, the tent and the puddle's place stay. The one a first showing shows is one of the party, stepped out to the front. `view/display.test.ts` plays every party of the order and of the round on two seeds through the first showing, the raid and the put-back, and holds that in no frame is anybody drawn twice.
@@ -26,7 +26,7 @@
 - Sound: every voice is numbers in `voices.ts`, held in range by a test. **Nobody has listened to any of them.**
 - Frame cost: no frame rate was measured anywhere, and no physical iPad.
 
-**Sentences changed since round 3** (above `## The look`; for the checker of round 4). 1 is the lead's; 2 follows from it; 3 to 12 are the sentences the lead named in answers file 6; the rest were found by reading the sheet against the built game in this run, the last of them (in 12, 36, 37 and 43, and 59 to 61) after the reader's first reading (in 56, and 62 and 63) after its second, and (in 37, and 64 and 65) after its third. None changes the mechanic, the error, the designed order or the saved state: each says a look, a sound or a detail as the game does it, except 28, which writes down the rule the lead asked for after the game's stills (one invader in a chamber at a time) and the short act of answers file 6.
+**Sentences changed since round 3** (above `## The look`; for the checker of round 4). 1 is the lead's; 2 follows from it; 3 to 12 are the sentences the lead named in answers file 6; the rest were found by reading the sheet against the built game in this run, the last of them (in 12, 36, 37 and 43, and 59 to 61) after the reader's first reading (in 56, and 62 and 63) after its second, (in 37, and 64 and 65) after its third, and (in 27, 43, 66 and 67) after its fourth. Entries 66 and 67 say two rules of a raid that the fourth reading found missing from the game, and that are now built: a raider ant drops where it has nothing to hold, and every column of the mouth is a way in. None changes the error, the designed order or the saved state. Each says a look, a sound or a detail as the game does it, except 66 and 67, which are those two rules, and 28, which writes down the rule the lead asked for after the game's stills (one invader in a chamber at a time) and the short act of answers file 6.
 
 1. Was: A **room** is open space that holds a clear block at least 4 cells wide and 3 cells high. All such blocks that overlap or touch along a side are one room. A tunnel two cells high is never a room, however long.
    Now: The same, with the lead's sentence added: "The shaft a new nest starts with (the three columns under the mouth, three cells deep) is the way in and no part of any room: no block is counted in its cells, so an invader coming down it is not yet inside." (answers file 5, pasted as it stands)
@@ -81,7 +81,7 @@
 26. Was: A room walled off from the mouth goes dim and stale, the workers leave it, and it counts for nothing until it is opened again.
    Now: A room walled off from the mouth is no chamber: its workers and their things are gone from it, and it counts for nothing until it is opened again.
 27. Was: A scuff of pale dust and a ring of footprints mark each cell where a wall was shoved or a lump fell, and a worker stands by the worst one, looking at it with its hands on its hips.
-   Now: A ring of footprints marks the first cell where a wall was shoved or a lump fell, and a scuff of pale dust up to five more; a worker stands by the first, looking at it with its hands on its hips.
+   Now: A short track of footprints marks the first cell where a wall was shoved or a lump fell, and a scuff of pale dust up to five more; a worker stands by the first, looking at it with its hands on its hips.
 28. Was: the campers come back out the way they went in, muddy, sandy or backwards, and sit down at their camp to sulk.
    Now: the campers come back out the way they went in, and sit down at their camp again.
 29. Was: (nothing: a new bullet under "A raid, and how it is judged")
@@ -113,7 +113,7 @@
 42. Was: To park its ball in the grandest room: it holds the ball and eyes the mouth.
    Now: To park its ball in the grandest room: it sits on its ball and eyes the mouth.
 43. Was: Paces the room out, lies down flat in the middle as if it owned it, and is asleep before its feelers settle. Wakes with a start and goes.
-   Now: Goes well into the room, lies down flat as if it owned it, and is asleep before its feelers settle. Then it gets up and goes. Where its way in ends on a face over open air and it can reach no floor of the room, it lies down across the way right there.
+   Now: Goes well into the room, lies down flat as if it owned it, and is asleep before its feelers settle. Then it gets up and goes.
 44. Was: Rolls the ball to the middle, steps back to admire it, polishes one spot, cannot decide it looks right, and rolls it home again.
    Now: Rolls the ball well into the room, polishes one spot and then another, cannot decide it looks right, and rolls it home again.
 45. Was: Stuck: it pulls at each foot in turn and sits down where it is. Otherwise it turns round with a shrug of the feelers.
@@ -158,6 +158,10 @@
    Now: the mouthfuls crunch at a pitch that follows the speed of the finger, a crunch a mouthful and at most fourteen a second,
 65. Was: it cannot leave a stone alone: it taps every stone it passes.
    Now: it cannot leave a stone alone: it taps a stone it passes with empty jaws, and the same stone again only after a few seconds.
+66. Was: (the raider ant, Climbs) Any face of earth or stone, up or down.
+   Now: The same, with three sentences added: "Where the face it climbs down ends over open air, or the floor it walks on ends over nothing, and it has no other way on, it lets go and drops to the floor below. It cannot climb back through the air: after its act it goes as far as the foot of its drop, shrugs, and waits there for the workers, a body's length from the next."
+67. Was: (a raid, before "One invader is in a chamber at a time") nothing.
+   Now: A line added: "Each invader comes in by a column of the mouth that is open to it, the one nearest the camp first: a beetle needs one column, a flier two side by side, a dung ball all three. Where the ball does not fit, its beetle leaves it on the grass and comes in without it; one the mouth is shut to altogether looks in, sighs and goes back to the log."
 
 **Frame cost.** No frame rate was measured, on any machine, and no physical iPad. What was measured is the game's own work a frame, in ms, on the production build of commit `b131b75` (the commit after it changes one voice and no frame), in Chromium on software drawing, tier 0 pinned, pixel ratio 2, six times CPU throttle, in a kingdom with its full crowd:
 
@@ -179,10 +183,10 @@ With drawing, digging and both raids are over the sheet's budget of 8 ms at the 
 - The frame cost with drawing is over the sheet's budget on the one machine it was measured on (see above).
 - Nobody has put a finger on the game or heard it.
 - The queen's glare points her arm away from her guest, which is away from the door when the guest stands between her and it.
-- A beetle or a dung beetle that cannot climb home sits in the way until the raid is over, and the next ones pass in front of it while it ducks.
 - A machine left at the foot of the shaft, where it arrives, is walked over by everyone.
 - A walled-off room is not drawn dim: its workers and their things are gone, and nothing else says it is stale. The sheet now says what is drawn.
-- A raider ant cannot drop. Where its way into a room ends on a face over open air (a hall dug right across the foot of the shaft), it lies down across the way where it is, with nothing under it, and that counts as its act in the room. A rule that let it drop was tried in this run and taken out: every ant then sat held at the foot of the shaft, ducking under those who came after. The sheet says what it does.
+- Those who cannot climb home sit in the nest until the raid is over: a beetle or a dung beetle below a drop of two cells, and since the fourth reading a raider ant that dropped on its way in. They sit a body's length apart, in the way, and duck under whoever passes: in the raids a test plays, somebody ducks in about one tick of four. At the put-back they all leave at once, a worker ahead of each.
+- The raider ant's drop is new in this run's last step and has been seen only in tests and in the closing stills' raids, not in a cold playtest.
 - The queen's seat takes no account of a machine: set down at her end of her floor, a machine stands in her.
 - A long party takes the grass where the stuck ant and the fly have their spots, and they are away while it is at the log (the fly at three of the five places before it is first met). The sheet says so.
 - The first raid can go well by luck (mud under the shaft on seed 1); that a raid went well is said only by the next party at the log.

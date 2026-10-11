@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { fromPicture } from './ground'
-import { canBe, chamberCells, entry, farFromChambers, isInside, nearestTo, nextPlaces, reach, sticks, wallToLeanOn, wayIn, type Walker } from './routes'
+import { canBe, chamberCells, entries, entry, farFromChambers, isInside, nearestTo, nextPlaces, reach, sticks, wallToLeanOn, wayIn, type Walker } from './routes'
 
 // In these pictures the mouth is the open cell or cells in the top row, and a room is four wide and three high.
 const mouthOf = (picture: string[]) => [...picture[0]].flatMap((mark, x) => (mark === '.' ? [x] : []))
@@ -173,5 +173,58 @@ describe('with no way in', () => {
     expect(inside.includes(1)).toBe(false)
     const found = reach(ground, 'beetle', entry(ground, 'beetle', mouth)!)
     expect(wallToLeanOn(ground, found, farFromChambers(ground, inside))).toBeNull()
+  })
+})
+
+describe('a raider ant with nothing to hold', () => {
+  // A room under the shaft, wider than it on both sides: the shaft's wall ends over open air.
+  const under = ['XXXX...XXXX', '####...####', '####...####', '####...####', '#.........#', '#.........#', '#.........#', '###########', 'XXXXXXXXXXX']
+
+  it('lets go where the face it climbs down ends over open air, and drops to the floor', () => {
+    expect(nexts(under, 'ant', 4, 3)).toContainEqual([4, 6])
+    const way = wayOf(under, 'ant')!
+    expect(way).not.toBeNull()
+    // Down the wall, then the drop: it is inside the room at the end of its way.
+    expect(way.map((cell) => [cell % 11, Math.floor(cell / 11)])).toEqual([[4, 0], [4, 1], [4, 2], [4, 3], [4, 6]])
+  })
+
+  it('steps off the edge of a floor that has nothing under its edge, and never lets go of a face with a way on', () => {
+    const ledge = ['XXXX.XXXXXX', '####.######', '####....###', '#######.###', '#.........#', '#.........#', '#.........#', '###########', 'XXXXXXXXXXX']
+    // On the ledge's floor at its end, over the shaft into the room: it can go on down the shaft's face, so no drop there.
+    expect(nexts(ledge, 'ant', 7, 2)).toEqual(expect.arrayContaining([[6, 2], [7, 3]]))
+    for (const [, y] of nexts(ledge, 'ant', 7, 2)) expect(y).toBeLessThanOrEqual(3)
+    // At the mouth it clings to the turf: it does not jump into the middle of a wide shaft.
+    for (const [, y] of nexts(under, 'ant', 4, 0)) expect(y).toBeLessThanOrEqual(1)
+  })
+
+  it('climbs where it can and drops only where it gets no further: the way it finds without a drop comes first', () => {
+    // The same room, with the shaft's left wall carried down to its floor: no drop is needed.
+    const walled = ['XXXX...XXXX', '####...####', '####...####', '####...####', '####......#', '####......#', '####......#', '###########', 'XXXXXXXXXXX']
+    const way = wayOf(walled, 'ant')!.map((cell) => [cell % 11, Math.floor(cell / 11)])
+    for (let n = 1; n < way.length; n++) expect(Math.abs(way[n][1] - way[n - 1][1])).toBeLessThanOrEqual(1)
+    // And a reach lists every place found without a drop before any found only by one.
+    const ground = fromPicture(under), found = reach(ground, 'ant', 4)
+    const firstDropped = found.order.findIndex((cell) => Math.floor(cell / 11) >= 4)
+    expect(found.order.slice(0, firstDropped).every((cell) => Math.floor(cell / 11) <= 3)).toBe(true)
+    expect(firstDropped).toBeGreaterThan(0)
+    expect(found.order.slice(firstDropped).every((cell) => Math.floor(cell / 11) >= 4)).toBe(true)
+  })
+})
+
+describe('the mouth, column by column', () => {
+  it('lets each kind in by any column that is open to it, nearest the camp first', () => {
+    const open = ['XXXX...XXXX', '####...####', '####...####', '####...####', '###########', 'XXXXXXXXXXX']
+    const mouth = mouthOf(open)
+    expect(entries(fromPicture(open), 'beetle', mouth).map((cell) => cell % 11)).toEqual([4, 5, 6])
+    expect(entries(fromPicture(open), 'fly', mouth).map((cell) => cell % 11)).toEqual([4, 5])
+    // One lump of mud in the left column under the turf: the beetle comes in by the next column, the flier by the two that are left.
+    const plugged = ['XXXX...XXXX', '####m..####', '####...####', '####...####', '###########', 'XXXXXXXXXXX']
+    expect(entry(fromPicture(plugged), 'beetle', mouth)! % 11).toBe(5)
+    expect(entry(fromPicture(plugged), 'crawler', mouth)! % 11).toBe(5)
+    expect(entry(fromPicture(plugged), 'fly', mouth)! % 11).toBe(5)
+    // Two columns shut: a beetle still fits the third, and a flier, which is two columns wide, does not.
+    const narrow = ['XXXX...XXXX', '####mm.####', '####...####', '####...####', '###########', 'XXXXXXXXXXX']
+    expect(entry(fromPicture(narrow), 'beetle', mouth)! % 11).toBe(6)
+    expect(entry(fromPicture(narrow), 'fly', mouth)).toBeNull()
   })
 })

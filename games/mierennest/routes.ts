@@ -45,11 +45,12 @@ export function sticks(ground: Ground, x: number, y: number, covered?: ReadonlyS
 
 /**
  * The places this kind can go to next from a place, written into `out` as cell indices; gives how many.
- * An ant and a fly go to the four cells beside them where they can be. A beetle goes along the row: it walks
+ * An ant and a fly go to the four cells beside them where they can be; an ant also goes round an outer corner, and
+ * drops where it has nothing to hold. A beetle goes along the row: it walks
  * where the way is two cells high, drops to the first floor where the floor ends, however far, and gets up a
  * step of one cell and no more.
  */
-export function nextPlaces(ground: Ground, kind: Walker, cell: number, out: number[]): number {
+export function nextPlaces(ground: Ground, kind: Walker, cell: number, out: number[], drops = true): number {
   const { cols, rows } = ground
   const x = cell % cols, y = Math.floor(cell / cols)
   let n = 0
@@ -66,6 +67,18 @@ export function nextPlaces(ground: Ground, kind: Walker, cell: number, out: numb
         if (nx < 0 || nx >= cols) continue
         if (y < rows - 1 && !open(ground, x, y + 1) && open(ground, nx, y) && canBe(ground, 'ant', nx, y + 1)) out[n++] = cell + cols + side
         if (y > 0 && !open(ground, nx, y) && open(ground, x, y - 1) && canBe(ground, 'ant', nx, y - 1)) out[n++] = cell - cols + side
+      }
+      // Where the way on is open air, with no floor and no face to hold, it lets go and drops to the first place
+      // below where it can be: straight down where the face it is on ends, or off the edge of the floor it stands
+      // on. It cannot come back up that way.
+      for (const side of drops ? [0, -1, 1] : []) {
+        const fx = x + side
+        if (fx < 0 || fx >= cols) continue
+        if (side !== 0 && open(ground, x, y + 1)) continue
+        let fy = side === 0 ? y + 1 : y
+        if (fy >= rows || !open(ground, fx, fy) || canBe(ground, 'ant', fx, fy)) continue
+        while (fy + 1 < rows && open(ground, fx, fy + 1) && !canBe(ground, 'ant', fx, fy)) fy++
+        if (fy - y >= 2 && canBe(ground, 'ant', fx, fy)) out[n++] = fy * cols + fx
       }
     }
     return n
@@ -89,17 +102,32 @@ export function nextPlaces(ground: Ground, kind: Walker, cell: number, out: numb
   return n
 }
 
-/** Where this kind comes into the nest from the camp, which lies to the left of the mouth: null where it cannot come in at all. */
-export function entry(ground: Ground, kind: Walker, mouth: readonly number[] = MOUTH): number | null {
+/**
+ * Where this kind can come into the nest from the camp, which lies to the left of the mouth: one place for each
+ * column of the mouth that is open to it, nearest the camp first. Empty where it cannot come in at all.
+ */
+export function entries(ground: Ground, kind: Walker, mouth: readonly number[] = MOUTH): number[] {
   const { cols, rows } = ground
-  const x = mouth[0]
-  if (kind === 'ant') return canBe(ground, 'ant', x, 0) ? x : null
-  if (kind === 'fly') return canBe(ground, 'fly', x, 2) ? 2 * cols + x : null
-  // A beetle steps off the grass into the mouth and drops to the first floor.
-  if (!open(ground, x, 0) || !open(ground, x, 1)) return null
-  let y = 1
-  while (y + 1 < rows && open(ground, x, y + 1)) y++
-  return y * cols + x
+  const out: number[] = []
+  for (const x of mouth) {
+    if (kind === 'ant') {
+      if (canBe(ground, 'ant', x, 0)) out.push(x)
+    } else if (kind === 'fly') {
+      // A flier is two columns wide: it needs this column and the next one of the mouth.
+      if (mouth.includes(x + 1) && canBe(ground, 'fly', x, 2)) out.push(2 * cols + x)
+    } else if (open(ground, x, 0) && open(ground, x, 1)) {
+      // A beetle steps off the grass into the mouth and drops to the first floor.
+      let y = 1
+      while (y + 1 < rows && open(ground, x, y + 1)) y++
+      out.push(y * cols + x)
+    }
+  }
+  return out
+}
+
+/** The first of those places, or null where the mouth is shut to this kind. */
+export function entry(ground: Ground, kind: Walker, mouth: readonly number[] = MOUTH): number | null {
+  return entries(ground, kind, mouth)[0] ?? null
 }
 
 /** The cells that count as inside for a kind standing in a place: the place itself, the cell over a beetle, a fly's whole block. */
@@ -155,21 +183,29 @@ export type Reach = {
   order: number[]
 }
 
-/** Every place a kind can get to from a start, by its own steps. Ties are broken the same way every time. */
+/**
+ * Every place a kind can get to from a start, by its own steps. Ties are broken the same way every time. A raider
+ * ant lets go of a face only where it gets no further without: the places it reaches by walking and climbing come
+ * first, each by its shortest such way, and after them the places it reaches only by a drop.
+ */
 export function reach(ground: Ground, kind: Walker, start: number): Reach {
   const from = new Int32Array(ground.cells.length).fill(-1)
   const order = [start]
   from[start] = start
   const next: number[] = []
-  for (let head = 0; head < order.length; head++) {
-    const n = nextPlaces(ground, kind, order[head], next)
-    for (let i = 0; i < n; i++) {
-      if (from[next[i]] < 0) {
-        from[next[i]] = order[head]
-        order.push(next[i])
+  const spread = (head: number, drops: boolean) => {
+    for (; head < order.length; head++) {
+      const n = nextPlaces(ground, kind, order[head], next, drops)
+      for (let i = 0; i < n; i++) {
+        if (from[next[i]] < 0) {
+          from[next[i]] = order[head]
+          order.push(next[i])
+        }
       }
     }
   }
+  spread(0, kind !== 'ant')
+  if (kind === 'ant') spread(0, true)
   return { from, order }
 }
 

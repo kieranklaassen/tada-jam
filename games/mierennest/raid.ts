@@ -3,7 +3,7 @@ import { EARTH, MOUTH, MUD, OPEN, ROCK, SAND, STONE, at, clone, isLump, put, set
 import { DUNG_BALL, HABITS, PUSHERS_IN_A_LINE, type InvaderKind, type Shot } from './habits'
 import type { Party } from './order'
 import { queenSeat, workerSpots } from './residents'
-import { bodyCells, chamberCells, entry, farFromChambers, nearestTo, reach, roomCells, roomOf, sticks, wallToLeanOn, wayIn, wayTo, type Lean, type Walker } from './routes'
+import { bodyCells, chamberCells, entries, farFromChambers, nearestTo, reach, roomCells, roomOf, sticks, wallToLeanOn, wayIn, wayTo, type Lean, type Walker } from './routes'
 import { HOLD, holdOfCell, lean } from './walls'
 
 // A raid: the party at the log comes into a copy of the nest and each invader goes by its habits. Pure and on
@@ -268,22 +268,26 @@ function pushOn(raid: Raid, invader: Invader): number {
 
 /** How far into a chamber a walker goes before it does its act, in steps of its own, at most. */
 export const INTO_THE_ROOM = 6
+/** How far in it goes at most, where every nearer place has someone standing or sitting in it. */
+export const FURTHER_IN = 14
 /** Half the length of each kind along a floor, in cells. */
 const HALF: Record<Walker, number> = { ant: 2.1, beetle: 2.2, fly: 2.1, crawler: 2.2 }
 
 /**
  * Where an invader that has just come inside does its act: a place on a floor of the chamber (a flier where it
  * hangs), within a few steps, clear of the queen and the workers where the floor has room for that, and then as
- * far in as it gets. Where nothing is clear, the place that is clearest.
+ * far in as it gets. Where nothing is clear of everyone, a place clear of the kingdom's own comes first, and of
+ * those the clearest.
  */
 function actSpot(raid: Raid, invader: Invader): number {
   const { ground } = raid, cols = ground.cols, gait = gaitOf(invader)
   const found = reach(ground, gait, invader.cell)
   const steps = new Int32Array(ground.cells.length)
-  let best = invader.cell, bestClear = -Infinity, bestSteps = 0
+  let best = invader.cell, bestClear = -Infinity, bestSteps = 0, bestOwn = false
   for (const cell of found.order) {
     if (cell !== invader.cell) steps[cell] = steps[found.from[cell]] + 1
-    if (steps[cell] > INTO_THE_ROOM) break
+    // Further in than that it goes only to get clear of someone it would otherwise stand in.
+    if (steps[cell] > (bestClear < 0 ? FURTHER_IN : INTO_THE_ROOM)) break
     if (roomOf(ground, gait, cell, raid.rooms) !== invader.room) continue
     const x = cell % cols, y = Math.floor(cell / cols)
     // A walker does its act on a floor; a flier where it hangs.
@@ -293,16 +297,20 @@ function actSpot(raid: Raid, invader: Invader): number {
     const middle = x + (gait === 'fly' ? 1 : 0.5)
     let clear = 0.5
     for (const one of raid.keepClear) if (one.y === y) clear = Math.min(clear, Math.abs(middle - one.x) - one.half - HALF[gait])
+    // It stands in nobody of the kingdom wherever the floor has such a place at all: that comes before all else.
+    const own = clear >= 0
     // And of anyone who sits where it is for the rest of the raid.
     for (const other of raid.invaders) {
       if (other === invader || other.cell < 0 || (other.state !== 'held' && other.state !== 'stuck') || Math.floor(other.cell / cols) !== y) continue
       const othersGait = gaitOf(other)
       clear = Math.min(clear, Math.abs(middle - ((other.cell % cols) + (othersGait === 'fly' ? 1 : 0.5))) - HALF[othersGait] - HALF[gait])
     }
-    if (clear > bestClear || (clear === bestClear && clear >= 0.5 && steps[cell] > bestSteps)) {
+    if (steps[cell] > INTO_THE_ROOM && clear < 0) continue
+    if ((own && !bestOwn) || (own === bestOwn && (clear > bestClear || (clear === bestClear && clear >= 0.5 && steps[cell] > bestSteps)))) {
       best = cell
       bestClear = clear
       bestSteps = steps[cell]
+      bestOwn = own
     }
   }
   invader.spot = best
@@ -335,10 +343,10 @@ function waitHere(raid: Raid, invader: Invader): void {
   raid.events.push({ type: 'waits', id: invader.id, kind: invader.kind })
 }
 
-/** Whether a beetle that sits held is within a body's length ahead on this one's way home. */
+/** Whether one who sits held on the ground is within a body's length ahead on this one's way home. */
 function heldAhead(raid: Raid, invader: Invader): boolean {
   for (const other of raid.invaders) {
-    if (other === invader || other.state !== 'held' || !plods(gaitOf(other))) continue
+    if (other === invader || other.state !== 'held' || gaitOf(other) === 'fly') continue
     for (let n = invader.step + 1; n < invader.way.length && n <= invader.step + QUEUE_GAP; n++) if (invader.way[n] === other.cell) return true
   }
   return false
@@ -703,11 +711,15 @@ function comeIn(raid: Raid, invader: Invader): boolean {
     top = withBall.top
     start = withBall.foot
   } else {
-    start = entry(ground, gait, raid.mouth)
-    top = gait === 'fly' && start !== null ? start : raid.mouth[0]
+    // Any column of the mouth that is open to it will do: the first from which it finds a way to a chamber, and
+    // otherwise the first it can come in by.
+    const ways = entries(ground, gait, raid.mouth)
+    start = ways.find((cell) => wayIn(ground, gait, cell, raid.inside) !== null) ?? ways[0] ?? null
+    top = start === null ? raid.mouth[0] : gait === 'fly' ? start : start % ground.cols
   }
   if (start === null) {
-    // The mouth is shut to it: it never comes in, and goes back to the log.
+    // The mouth is shut to it: it looks, gives up with a sigh, and goes back to the log.
+    raid.events.push({ type: 'givesUp', id: invader.id, kind: invader.kind })
     invader.state = 'home'
     raid.events.push({ type: 'home', id: invader.id, kind: invader.kind })
     return true
@@ -860,7 +872,9 @@ export function stepRaid(raid: Raid): void {
         }
         // A beetle cannot climb back up a drop of more than one cell: it sits down at its foot and waits for the
         // workers. The next one sits down a body's length behind it, so that each is seen.
-        if (plods(gait) && invader.along === 0 && (Math.floor(invader.cell / cols) - Math.floor(next / cols) > 1 || heldAhead(raid, invader))) {
+        // A raider ant that let go and dropped on its way in cannot climb back through the air either: it goes back
+        // as far as the foot of its drop, shrugs, and waits for the workers the same way.
+        if ((plods(gait) || gait === 'ant') && invader.along === 0 && (Math.floor(invader.cell / cols) - Math.floor(next / cols) > 1 || heldAhead(raid, invader))) {
           invader.state = 'held'
           raid.events.push({ type: 'held', id: invader.id, kind: invader.kind })
           break

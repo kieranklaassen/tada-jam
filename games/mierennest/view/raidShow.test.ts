@@ -126,7 +126,13 @@ describe('where a raid is shown', () => {
     const party = ['ant', 'beetle'] as const
     const [antSeat, beetleSeat] = partyFile(party)
     expect(antSeat.y).toBeLessThan(GRASS_Y)
-    const raid = callRaid(fullKingdom().ground, party)
+    // One hall straight off the foot of a new nest's shaft: the ant walks in and walks home again.
+    const hall = freshGame(null, 1).ground
+    for (let y = 1; y <= 3; y++) for (let x = 22; x <= 30; x++) put(hall, x, y, OPEN)
+    for (let y = 1; y <= 3; y++) put(hall, 18, y, EARTH)
+    for (let x = 18; x <= 31; x++) put(hall, x, 4, EARTH)
+    settle(hall)
+    const raid = callRaid(hall, party)
     expect(showRaid(raid, party, 0)[1].y).toBe(beetleSeat.y)
     let onGrass = false, onBack = false
     while (!raid.over) {
@@ -139,7 +145,7 @@ describe('where a raid is shown', () => {
       else onGrass = true
     }
     expect(onGrass).toBe(true)
-    // In this kingdom the beetle cannot climb home, so the ant stays on the grass to the end.
+    // Where the beetle cannot climb home, the ant stays on the grass to the end.
     expect(onBack).toBe(raid.invaders[1].state === 'home')
   })
 
@@ -195,7 +201,7 @@ describe('who is where in a raid', () => {
   }
 
   it('at no tick lies an invader face under another invader, under the queen or under a worker, inside the nest', () => {
-    let ducked = 0, ticks = 0
+    let ducking = 0, ticks = 0
     for (const seed of [1, 2, 3]) {
       const game = nestOf(seed), k = new Kingdom(game)
       for (const place of LADDER) {
@@ -214,6 +220,7 @@ describe('who is where in a raid', () => {
           stepRaid(raid)
           ticks++
           const shown = showRaid(raid, party, raid.time)
+          let ducked = 0
           shown.forEach((one, n) => {
             if (one.who === 'dungBall' || one.y <= GRASS_Y) return
             const face = shownFace(one)
@@ -229,6 +236,7 @@ describe('who is where in a raid', () => {
               expect(covers(shownBox(shown[m]), face), `${seed} ${place} at ${raid.time.toFixed(2)}: ${shown[m].who} over ${one.who}`).toBe(false)
             }
           })
+          if (ducked > 0) ducking++
           // The queen and the workers are drawn before every invader: an invader lies over them, never under.
           // And one who does its act does it in the open: it does not duck, and it stands in nobody of the kingdom.
           for (const invader of raid.invaders) {
@@ -245,13 +253,19 @@ describe('who is where in a raid', () => {
         }
       }
     }
-    // Ducking is for the moment somebody goes by, and for one who sits held under those who pass: on average fewer than one in three ticks has anybody ducking.
+    // Ducking is for the moment somebody goes by, and for one who sits held under those who pass: fewer than one
+    // tick in three has anybody ducking.
     expect(ticks).toBeGreaterThan(5000)
-    expect(ducked / ticks).toBeLessThan(0.35)
+    expect(ducking / ticks).toBeLessThan(0.35)
   })
 
   it('gives one who waits at a door the fidget of its kind at the camp', () => {
-    const game = nestOf(1), party = ['ant', 'beetle', 'fly'] as const
+    // One chamber, so that the second ant has a door to wait at while the first is at its act.
+    const game = freshGame(null, 1), party = ['ant', 'beetle', 'fly'] as const
+    for (let y = 1; y <= 3; y++) for (let x = 22; x <= 30; x++) put(game.ground, x, y, OPEN)
+    for (let y = 1; y <= 3; y++) put(game.ground, 18, y, EARTH)
+    for (let x = 18; x <= 31; x++) put(game.ground, x, 4, EARTH)
+    settle(game.ground)
     const raid = callRaid(game.ground, ['ant', 'ant', 'beetle', 'fly'])
     const seen = new Set<string>()
     while (!raid.over) {
@@ -276,14 +290,14 @@ describe('an ant held fast in the mud', () => {
       '###...########',
       '####.#########',
       '####.#########',
+      '####.#....####',
+      '####.#....####',
       '####......####',
-      '####......####',
-      '####......####',
-      '####m#########',
+      '#####m########',
       'XXXXXXXXXXXXXX',
     ])
     const raid = callRaid(g, ['ant'], [3, 4, 5])
-    while (raid.invaders[0].state !== 'stuck') stepRaid(raid)
+    while (!raid.over && raid.invaders[0].state !== 'stuck') stepRaid(raid)
     return raid
   }
 
@@ -297,16 +311,22 @@ describe('an ant held fast in the mud', () => {
     expect(showRaid(raid, ['ant'], 0)[0].turn).toBe(0)
   })
 
-  it('lies down across the way where it is when its way into a room ends on a face over open air', () => {
+  it('lets go where its way into a room ends on a face over open air, lies down on the floor, and waits there for the workers', () => {
     const hall = fromPicture(['XXX...XXXX', '###...####', '###...####', '###...####', '###......#', '#........#', '#........#', '##########', 'XXXXXXXXXX'])
     const raid = callRaid(hall, ['ant'], [3, 4, 5])
     while (!raid.over && raid.invaders[0].state !== 'acting') stepRaid(raid)
     expect(raid.invaders[0].state).toBe('acting')
-    // It got as far as the last cell of the face, at the top of the room, and no further: a raider ant does not drop.
-    expect(raid.invaders[0].cell).toBe(4 * 10 + 3)
+    // It does its act on the floor of the room, drawn flat.
+    expect(Math.floor(raid.invaders[0].cell / 10)).toBe(6)
     const one = showRaid(raid, ['ant'], 0)[0]
     expect(['lie', 'nap', 'nap2']).toContain(one.pose)
     expect(one.turn).toBe(0)
+    // It cannot climb back through the air: it shrugs where it is until the raid is over, and its act counts.
+    playOut(raid)
+    expect(raid.invaders[0].state).toBe('held')
+    expect(Math.floor(raid.invaders[0].cell / 10)).toBe(6)
+    expect(raid.acts).toBe(1)
+    expect(showRaid(raid, ['ant'], 0)[0].pose).toBe('shrug')
   })
 
   it('is carried out the way it came, through the open and never through the earth', () => {
