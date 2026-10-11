@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   COLS,
   EARTH,
+  LUMPS,
   MOUTH,
   MUD,
   OPEN,
@@ -153,9 +154,9 @@ describe('the ground as a whole', () => {
 
   it('never makes or loses a lump while it comes to rest', () => {
     const ground = fromPicture(['smosmo', 'osmosm', '......', '.#..#.', '......', 'XXXXXX'])
-    const before = [SAND, MUD, STONE].map((kind) => count(ground, kind))
+    const before = LUMPS.map((kind) => count(ground, kind))
     settle(ground)
-    expect([SAND, MUD, STONE].map((kind) => count(ground, kind))).toEqual(before)
+    expect(LUMPS.map((kind) => count(ground, kind))).toEqual(before)
     expect(atRest(ground)).toBe(true)
   })
 

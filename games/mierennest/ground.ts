@@ -193,7 +193,7 @@ export function generate(seed: number): Ground {
   const lay = (x: number, y: number, kind: Lump) => {
     if (clear(x, y) && at(ground, x, y) === EARTH) put(ground, x, y, kind)
   }
-  for (const [from, to] of [[2, 15], [24, 37]] as const) {
+  for (const [from, to] of [[2, 15], [24, 37]] as [number, number][]) {
     let top = 8 + below(rng, 2)
     for (let x = from; x <= to; x++) {
       if (x > from && below(rng, 3) === 0) top = Math.max(7, Math.min(10, top + below(rng, 3) - 1))
