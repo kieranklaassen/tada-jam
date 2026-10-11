@@ -1,8 +1,8 @@
 import { EYE, HIGHLIGHT, INK } from './palette'
 
 // The shared brushes of the creatures: flat glossy blobs with one hard highlight, thick tapered legs with round
-// ends, springy feelers and large eyes. Nothing here knows a creature; the three body plans at the foot of the
-// file (ant, beetle, fly) are built from these and posed by the two creature files.
+// ends, springy feelers and large eyes. The two body plans at the foot of the file, the ant's and the beetle's, are
+// built from these and posed by the two creature files; the fly's plan is with the invaders.
 
 /** Where the eyes look, x and y each from -1 to 1. */
 export type Look = { x: number; y: number }
@@ -61,21 +61,24 @@ export function line(ctx: Ctx, colour: string, width: number, pts: readonly numb
   ctx.stroke()
 }
 
+/** A stroke with round ends along part of an oval, from angle `from` to angle `to`: a seam, a rim, a highlight. */
+export function bow(ctx: Ctx, colour: string, width: number, x: number, y: number, rx: number, ry: number, rot: number, from: number, to: number): void {
+  ctx.strokeStyle = colour
+  ctx.lineWidth = width
+  ctx.lineCap = 'round'
+  ctx.beginPath()
+  ctx.ellipse(x, y, rx, ry, rot, from, to)
+  ctx.stroke()
+}
+
 /** The one hard highlight of a glossy part: a short bright bow on the side the light comes from, and a dot. */
 export function shine(ctx: Ctx, x: number, y: number, rx: number, ry: number, rot = 0): void {
   const [lx, ly] = toLocal(ctx, -0.5, -0.86)
   const a = Math.atan2(ly, lx) - rot
   const small = Math.min(rx, ry)
-  ctx.strokeStyle = HIGHLIGHT
-  ctx.lineCap = 'round'
-  ctx.lineWidth = clamp(small * 0.22, 1.4, 5)
-  ctx.beginPath()
-  ctx.ellipse(x, y, rx * 0.66, ry * 0.6, rot, a - 0.42, a + 0.3)
-  ctx.stroke()
-  if (small < 8) return
-  ctx.beginPath()
-  ctx.ellipse(x, y, rx * 0.66, ry * 0.6, rot, a + 0.72, a + 0.74)
-  ctx.stroke()
+  const width = clamp(small * 0.22, 1.4, 5)
+  bow(ctx, HIGHLIGHT, width, x, y, rx * 0.66, ry * 0.6, rot, a - 0.42, a + 0.3)
+  if (small >= 8) bow(ctx, HIGHLIGHT, width, x, y, rx * 0.66, ry * 0.6, rot, a + 0.72, a + 0.74)
 }
 
 /** A glossy body part: a flat oval, a darker flat underside on the side of the ground, and its highlight. */
@@ -135,11 +138,9 @@ export function eye(ctx: Ctx, x: number, y: number, r: number, look: Look, o: Ey
   oval(ctx, x, y, r, r, 0, o.white ?? EYE.white)
   const pr = r * (o.pupil ?? 0.48)
   const reach = r - pr - r * 0.06
-  const lx = clamp(look.x)
-  const ly = clamp(look.y)
-  const far = Math.max(1, Math.hypot(lx, ly))
-  const px = x + (lx / far) * reach
-  const py = y + (ly / far) * reach
+  const far = Math.max(1, Math.hypot(look.x, look.y))
+  const px = x + (clamp(look.x) / far) * reach
+  const py = y + (clamp(look.y) / far) * reach
   oval(ctx, px, py, pr, pr, 0, EYE.pupil)
   oval(ctx, px - pr * 0.36, py - pr * 0.4, pr * 0.34, pr * 0.34, 0, EYE.white)
   const lid = clamp(o.lid ?? 0, 0, 0.95)
@@ -154,20 +155,12 @@ export function eye(ctx: Ctx, x: number, y: number, r: number, look: Look, o: Ey
   ctx.fill()
 }
 
-/** An eyebrow: one thick stroke over an eye. A positive angle drops its front end, which reads as cross. */
-export function brow(ctx: Ctx, x: number, y: number, length: number, angle: number, width = 2.2, colour: string = INK): void {
-  const dx = (Math.cos(angle) * length) / 2
-  const dy = (Math.sin(angle) * length) / 2
-  line(ctx, colour, width, [x - dx, y - dy, x + dx, y + dy])
-}
-
-export type Mouth = 'smile' | 'grin' | 'teeth' | 'o' | 'flat' | 'frown' | 'wavy' | 'tongue' | 'none'
+export type Mouth = 'smile' | 'grin' | 'teeth' | 'o' | 'flat' | 'frown' | 'wavy' | 'tongue'
 
 /** A mouth of width `w` with its middle at (x, y). Each shape is a different mood. */
 export function mouth(ctx: Ctx, x: number, y: number, w: number, kind: Mouth, ink: string = INK): void {
   const h = w / 2
   const pen = Math.max(1.3, w * 0.2)
-  if (kind === 'none') return
   if (kind === 'smile') line(ctx, ink, pen, [x - h, y - h * 0.35, x, y + h * 0.75, x + h, y - h * 0.5], true)
   else if (kind === 'frown') line(ctx, ink, pen, [x - h, y + h * 0.4, x, y - h * 0.7, x + h, y + h * 0.4], true)
   else if (kind === 'flat') line(ctx, ink, pen, [x - h, y, x + h, y - h * 0.1])
@@ -193,21 +186,14 @@ export function mouth(ctx: Ctx, x: number, y: number, w: number, kind: Mouth, in
 
 export type Face = { brows?: P; lid?: number; tilt?: number; shut?: Shut; mouth?: Mouth; jaws?: number; bias?: P; dizzy?: boolean }
 /** The build of one kind of ant: its colours, the half width and half height of rump, waist and head, the size of
- *  its eye and the thickness of its legs. A mask is the raider's. */
-export type AntBuild = { body: string; dark: string; leg: string; ab: P; th: P; hd: P; eye: number; limb: number; mask?: string }
+ *  its eye and the thickness of its legs. A mask is the raider's, a blush on the cheek the child's ant's. */
+export type AntBuild = { body: string; dark: string; leg: string; ab: P; th: P; hd: P; eye: number; limb: number; mask?: string; cheek?: string }
 /** A pose. A body part is [x, y, turn]; a leg is [footX, footY, kneeDx, kneeDy], near legs from back to front;
  *  `feel` is how far the tips of the feelers reach from the brow, and their curl. */
-export type AntPose = {
-  ab: readonly number[]
-  th: readonly number[]
-  hd: readonly number[]
-  legs: readonly (readonly number[])[]
-  far?: readonly (readonly number[])[]
-  feel: readonly number[]
-  face?: Face
-  /** Something held under an arm: painted over the body and under the near legs. */
-  held?: (ctx: Ctx) => void
-}
+export type AntPose = { ab: readonly number[]; th: readonly number[]; hd: readonly number[]; legs: Legs; far?: Legs; feel: readonly number[]; face?: Face; held?: Held }
+export type Legs = readonly (readonly number[])[]
+/** Something held under an arm: painted over the body and under the near legs. */
+export type Held = (ctx: Ctx) => void
 
 /** The eyes of a head, in the head's own frame: the far one first, then the near one over it, then the brows.
  *  `dizzy` sends the two pupils different ways, whatever there is to look at. */
@@ -224,8 +210,11 @@ export function eyes(ctx: Ctx, x: number, y: number, r: number, gap: number, loo
   oval(ctx, x, y, r * 1.14, r * 1.14, 0, rim)
   eye(ctx, x, y, r, f.dizzy ? { x: -0.7, y: -0.8 } : at, o)
   if (!f.brows) return
-  brow(ctx, x + gap + r * 0.1, y - r * 0.78, r * 1.3, f.brows[1], r * 0.3)
-  brow(ctx, x - r * 0.1, y - r * 0.95, r * 1.5, f.brows[0], r * 0.34)
+  // A brow is one thick stroke over an eye. A positive angle drops its front end, which reads as cross.
+  const brow = (bx: number, by: number, half: number, angle: number, width: number) =>
+    line(ctx, INK, width, [bx - Math.cos(angle) * half, by - Math.sin(angle) * half, bx + Math.cos(angle) * half, by + Math.sin(angle) * half])
+  brow(x + gap + r * 0.1, y - r * 0.92, r * 0.65, f.brows[1], r * 0.3)
+  brow(x - r * 0.1, y - r * 1.1, r * 0.75, f.brows[0], r * 0.34)
 }
 
 export function antFigure(ctx: Ctx, a: AntBuild, p: AntPose, look: Look, t: number): void {
@@ -253,13 +242,7 @@ export function antFigure(ctx: Ctx, a: AntBuild, p: AntPose, look: Look, t: numb
   ctx.rotate(ar)
   blob(ctx, 0, 0, a.ab[0], a.ab[1] + breath, 0, a.body, a.dark, false)
   // Two seams across the rump, each a bow that follows its roundness.
-  for (const k of [-0.3, 0.22]) {
-    ctx.strokeStyle = a.dark
-    ctx.lineWidth = a.limb * 0.36
-    ctx.beginPath()
-    ctx.ellipse(k * a.ab[0] + 4, -1, 5, a.ab[1] * Math.sqrt(1 - k * k) * 0.86, 0, Math.PI * 0.55, Math.PI * 1.45)
-    ctx.stroke()
-  }
+  for (const k of [-0.3, 0.22]) bow(ctx, a.dark, a.limb * 0.36, k * a.ab[0] + 4, -1, 5, a.ab[1] * Math.sqrt(1 - k * k) * 0.86, 0, Math.PI * 0.55, Math.PI * 1.45)
   shine(ctx, 0, 0, a.ab[0], a.ab[1], 0)
   ctx.restore()
   blob(ctx, tx, ty, a.th[0], a.th[1], tr, a.body, a.dark)
@@ -291,6 +274,7 @@ export function antFigure(ctx: Ctx, a: AntBuild, p: AntPose, look: Look, t: numb
     line(ctx, a.mask, a.limb * 0.6, [-rx * 0.8, -ry * 0.45, -rx * 1.25, -ry * 0.75 + twitch * 0.5])
     line(ctx, a.mask, a.limb * 0.6, [-rx * 0.8, -ry * 0.4, -rx * 1.3, -ry * 0.2 - twitch * 0.5])
   }
+  if (a.cheek) oval(ctx, -rx * 0.12, ry * 0.42, rx * 0.22, ry * 0.17, 0, a.cheek)
   mouth(ctx, rx * 0.52, ry * 0.58, rx * 0.5, f.mouth ?? 'smile')
   eyes(ctx, rx * 0.16, -ry * 0.36, a.eye, a.eye * 1.3, look, f, a.body, a.dark)
   feeler(ctx, a.dark, a.limb * 0.5, rx * 0.1, -ry * 0.85, rx * 0.1 + fx, -ry * 0.85 + fy - twitch, curl)
@@ -302,14 +286,13 @@ export function antFigure(ctx: Ctx, a: AntBuild, p: AntPose, look: Look, t: numb
 // The beetle plan: a domed shell over a pale belly, a neck plate, a low head and six short legs. The beetle and
 // the dung beetle are both built on it.
 
-export type Legs = readonly (readonly number[])[]
 /** Where a body stands and how it is tipped: [x, y, turn, mirror, upturn]. The last two are 1, or -1 to face left
  *  and to lie on its back. */
 export type Stance = readonly number[]
 export type BeetleBuild = { shell: string; dark: string; belly: string; leg: string; horn?: string; lash?: boolean }
 /** A pose. Legs are [footX, footY, kneeDx, kneeDy] on the stage, the near ones from back to front; `hd` nudges and
  *  tilts the head on its neck; `held` is painted over the body and under the near legs. */
-export type BeetlePose = { at: Stance; legs: Legs; far?: Legs; hd?: readonly number[]; face?: Face; held?: (ctx: Ctx) => void }
+export type BeetlePose = { at: Stance; legs: Legs; far?: Legs; hd?: readonly number[]; face?: Face; held?: Held }
 
 /** Where a point of a tipped body lands on the stage. */
 export function place(at: Stance, lx: number, ly: number): P {
@@ -339,12 +322,7 @@ export function beetleFigure(ctx: Ctx, b: BeetleBuild, p: BeetlePose, look: Look
   oval(ctx, -8, -15, 43, 11.5, 0, b.belly)
   blob(ctx, -14, -31, 46, 25 + breath, 0, b.shell, b.dark, false)
   // The edge of the wing case: one bow low on the shell.
-  ctx.strokeStyle = b.dark
-  ctx.lineWidth = 2.2
-  ctx.lineCap = 'round'
-  ctx.beginPath()
-  ctx.ellipse(-14, -40, 40, 22, 0, Math.PI * 0.14, Math.PI * 0.8)
-  ctx.stroke()
+  bow(ctx, b.dark, 2.2, -14, -40, 40, 22, 0, Math.PI * 0.14, Math.PI * 0.8)
   shine(ctx, -14, -31, 46, 25)
   // The neck plate, with a dark sliver behind it where it lies on the shell.
   oval(ctx, 22, -29, 15, 19.5, 0.15, b.dark)

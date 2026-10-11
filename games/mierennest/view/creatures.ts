@@ -1,6 +1,6 @@
 import { invaderPainters, INVADER_POSES, INVADER_SIZE } from './invaders'
-import { ANT, EARTH, HIGHLIGHT, QUEEN, WORKER } from './palette'
-import { antFigure, blob, eyes, feeler, limb, line, mouth, oval, shine } from './parts'
+import { ANT, EARTH, QUEEN, WORKER } from './palette'
+import { antFigure, blob, eyes, feeler, limb, mouth, oval, shine } from './parts'
 import type { AntBuild, AntPose, CreatureKind, Ctx, Face, Look, Painter } from './parts'
 
 // The kingdom: the child's own ant, the queen and a worker. Each is painted with the middle of its feet at the
@@ -9,8 +9,12 @@ import type { AntBuild, AntPose, CreatureKind, Ctx, Face, Look, Painter } from '
 
 export type { CreatureKind, Look } from './parts'
 
-/** The lit top of a crumb of earth, a shade paler than the earth of the palette. */
+// Four colours the palette has not got: the lit top of a crumb of earth, the shaded side of the queen's egg, her
+// far arms and legs (darker than the near ones, as on the ants), and the blush of a cheek.
 const CRUMB_LIGHT = '#d29a5c'
+const EGG_SHADE = '#e6cfa0'
+const QUEEN_ARM = '#6e2c14'
+const CHEEK = '#e2764a'
 
 /** A crumb of dug earth: a small lump with a lit top. */
 function crumb(ctx: Ctx, x: number, y: number, r: number): void {
@@ -22,7 +26,7 @@ function crumb(ctx: Ctx, x: number, y: number, r: number): void {
 
 // ---- The child's ant: warm orange-brown, eager and bright. ----
 
-const ANT_BUILD: AntBuild = { ...ANT, ab: [24, 10.5], th: [14, 8.5], hd: [15, 12.5], eye: 7, limb: 4.4 }
+const ANT_BUILD: AntBuild = { ...ANT, ab: [24, 10.5], th: [14, 8.5], hd: [15, 12.5], eye: 7, limb: 4.4, cheek: CHEEK }
 
 const ANT_POSES: Record<string, AntPose> = {
   // Alert: head up, feelers straight up, a wide grin.
@@ -89,12 +93,6 @@ const paintWorker: Painter = (ctx, pose, look, t) => {
 
 // ---- The queen: very large, with an egg she will not put down. ----
 
-/** The shaded side of her egg, and the blush of a squashed cheek. */
-const EGG_SHADE = '#e6cfa0'
-/** Her far arms and legs, darker than her near ones as on the ants. */
-const QUEEN_ARM = '#6e2c14'
-const CHEEK = '#e2764a'
-
 /** A box with round corners: a roll of her rump, squeezed flat against the walls of the shaft. */
 function pill(ctx: Ctx, x: number, y: number, w: number, h: number, r: number, fill: string): void {
   ctx.fillStyle = fill
@@ -136,23 +134,23 @@ function egg(ctx: Ctx, x: number, y: number, far: readonly number[], near: reado
 const paintQueen: Painter = (ctx, pose, look, t) => {
   const breath = Math.sin(t * 1.6)
   if (pose === 'wedged') {
-    // Stuck upright in a shaft two cells wide like a cork: two small feet that find no floor, then her rump
-    // squeezed into three rolls, each as wide as the shaft, with the pale belly bulging on each.
+    // Stuck upright in a shaft two cells wide like a cork: two small feet that find no floor, then three rolls of
+    // her, each squeezed as wide as the shaft. The pale belly bulges on the lower two; the egg lies on the third.
     limb(ctx, QUEEN_ARM, 5, -12, -9, -15, -2.6, -3, 0)
     limb(ctx, QUEEN_ARM, 5, 10, -9, 14, -2.6, 3, 0)
     for (const [y, h, belly] of [[-3, 22, 1], [-23, 21, 1], [-42, 24, 0]]) {
       pill(ctx, -28, y - h, 56, h, 10.5, QUEEN.dark)
       pill(ctx, -27.5, y - h, 55, h - 3, 10, QUEEN.body)
       if (belly) pill(ctx, -11, y - h + 2.5, 31, h - 8, 7.5, QUEEN.belly)
-      line(ctx, HIGHLIGHT, 2.6, [-21, y - h + 9, -20, y - h + 5.5, -16, y - h + 4], true)
+      shine(ctx, -3, y - h / 2 - 1, 26, h / 2)
     }
     egg(ctx, 5, -53 - breath * 0.5, [23, -62, 6, 5], [-23, -62, -7, 7], t)
     queenHead(ctx, 0, -82, 27, 14.5, 2.5, { brows: [-0.5, 0.5], lid: 0.42, tilt: -0.25, mouth: 'wavy', bias: [0.1, 0.9] }, look, t)
     return
   }
   // Enthroned on her own rump: three great rolls behind her, a short chest, the egg in her arms.
-  limb(ctx, QUEEN_ARM, 6.5, 30, -14, 57, -3.4, 0, -8)
-  limb(ctx, QUEEN_ARM, 6.5, 22, -12, 41, -3.4, 0, -7)
+  limb(ctx, QUEEN_ARM, 6.5, 30, -14, 56, -3.4, 1, -8)
+  limb(ctx, QUEEN_ARM, 6.5, 20, -12, 39, -3.4, 1, -7)
   for (const [x, y, rx, ry] of [[-38, -19, 22, 19], [-17, -24, 25, 24 + breath * 0.6], [7, -23, 21, 22]]) {
     // A roll: a dark edge, the pale belly under it, and the lit back over both.
     oval(ctx, x, y, rx, ry, 0, QUEEN.dark)
@@ -180,12 +178,12 @@ export const SIZE: Record<CreatureKind, { width: number; height: number }> = {
 }
 
 /** The poses each kind has. The first is the one a kind falls back on when it is asked for a pose it has not. */
-export const POSES = {
+export const POSES: { [K in CreatureKind]: readonly string[] } = {
   ant: ['stand', 'dig', 'look'],
   queen: ['wedged', 'sit'],
   worker: ['walk', 'carry', 'hips'],
   ...INVADER_POSES,
-} as const satisfies { [K in CreatureKind]: readonly string[] }
+}
 
 const PAINTERS: Record<CreatureKind, Painter> = { ant: paintAnt, queen: paintQueen, worker: paintWorker, ...invaderPainters }
 
@@ -193,7 +191,7 @@ const PAINTERS: Record<CreatureKind, Painter> = { ant: paintAnt, queen: paintQue
  *  drawn at negative y). The caller translates, flips and scales. `t` is seconds of game time for small idle
  *  motion (breathing, a feeler twitch); at t = 0 the pose is at rest. */
 export function paintCreature(ctx: CanvasRenderingContext2D, kind: CreatureKind, pose: string, look: Look = { x: 0, y: 0 }, t = 0): void {
-  const poses: readonly string[] = POSES[kind]
+  const poses = POSES[kind]
   ctx.save()
   PAINTERS[kind](ctx, poses.includes(pose) ? pose : poses[0], look, t)
   ctx.restore()

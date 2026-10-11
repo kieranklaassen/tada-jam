@@ -1,5 +1,5 @@
 import { BEETLE, DUNG_BEETLE, DUNG_FLY, FLY, GRASS, HIGHLIGHT, INK, MUD, RAIDER, SAND } from './palette'
-import { antFigure, beetleFigure, blob, enter, eyes, feeler, limb, line, mouth, oval, place, shape, shine, TAU, TONGUE } from './parts'
+import { antFigure, beetleFigure, blob, bow, enter, eyes, feeler, limb, line, mouth, oval, place, shape, shine, TAU, TONGUE } from './parts'
 import type { AntBuild, AntPose, BeetleBuild, BeetlePose, Ctx, Face, Legs, Look, P, Painter, Stance } from './parts'
 
 // The campers who raid the nest: the raider ant, the beetle, the fly, the dung beetle with its ball, and the dung
@@ -25,8 +25,14 @@ export const INVADER_POSES = {
   dungFly: ['point', 'fly'],
 } as const
 
-/** The near legs of the dung beetle, darker than any purple of the palette. */
+// The few colours the palette has not got: the near legs of the dung beetle, cloth for the pillow and the rag with
+// its shaded side, the lit top of a lump of dung, and the leather and the bark of the dung fly's strap and twig.
 const DUNG_LEG = '#2f2060'
+const CLOTH = '#fbf3df'
+const CLOTH_SHADE = '#d6c6a2'
+const BALL_LIGHT = '#94703f'
+const STRAP = '#6b4a2a'
+const TWIG = '#5b3a1c'
 
 // ---- The raider ant: red, long and low, masked, a bit of a rascal. ----
 
@@ -57,7 +63,7 @@ const RAIDER_POSES: Record<string, AntPose> = {
   nap: {
     ab: [-32, -10, 0.04], th: [2, -8.5, 0.04], hd: [34, -12, 0.12],
     legs: [[-22, 0, -5, -3], [-3, 0, -6, 2], [19, 0, 5, 1]],
-    feel: [15, 16, 0.3], face: { shut: 'sleep', mouth: 'o', jaws: 0.1 },
+    feel: [-19, 7, -0.35], face: { shut: 'sleep', mouth: 'o', jaws: 0.1 },
   },
 }
 
@@ -80,10 +86,6 @@ const paintRaider: Painter = (ctx, pose, look, t) => {
   line(ctx, MUD.shine, 1.6, [-34, 2.4, -22, 2])
   line(ctx, MUD.shine, 1.4, [24.5, -14.5, 26.5, -15])
 }
-
-/** Cloth, for the pillow and the rag, and its shaded side. */
-const CLOTH = '#fbf3df'
-const CLOTH_SHADE = '#d6c6a2'
 
 // ---- The beetle: round, heavy and blue, with a short horn; dim but dignified. ----
 
@@ -129,7 +131,15 @@ const BEETLE_POSES: Record<string, BeetlePose> = {
   },
 }
 
-const paintBeetle: Painter = (ctx, pose, look, t) => beetleFigure(ctx, BEETLE_BUILD, BEETLE_POSES[pose] ?? BEETLE_POSES.walk, look, t)
+/** Feet that keep moving while a pose holds: from leg `from` on each swings by up to `by`, all still at t = 0. */
+const wave = (legs: Legs, t: number, by: number, from = 0): Legs =>
+  legs.map((l, i) => (i < from ? l : [l[0] + Math.sin(t * 7) * by * (i % 2 ? -1 : 1), l[1], l[2] ?? 0, l[3] ?? 0]))
+
+const paintBeetle: Painter = (ctx, pose, look, t) => {
+  const p = BEETLE_POSES[pose] ?? BEETLE_POSES.walk
+  // On its back its legs go on walking in the air.
+  beetleFigure(ctx, BEETLE_BUILD, pose === 'onBack' ? { ...p, legs: wave(p.legs, t, 4), far: wave(p.far ?? [], t, -4) } : p, look, t)
+}
 
 // ---- The dung beetle: purple, proud, a little vain. ----
 
@@ -173,17 +183,14 @@ const paintDungBeetle: Painter = (ctx, pose, look, t) => {
 const paintBall: Painter = (ctx, pose) => {
   const { ball, ballDark, straw } = DUNG_BEETLE
   // The straws that stick out behind it, then the ball with its dark underside, its lumps and its one highlight.
-  line(ctx, straw, 3, [-22, -70, -36, -88])
-  line(ctx, straw, 3, [28, -66, 45, -79])
+  for (const s of [[-22, -70, -36, -88], [28, -66, 45, -79]]) line(ctx, straw, 3, s)
   oval(ctx, 0, -42, 42, 42, 0, ballDark)
   oval(ctx, -2, -45.5, 38.5, 38, 0, ball)
   for (const [x, y, r, turn] of [[-12, -22, 9, 0.3], [17, -40, 7, -0.5], [-4, -55, 5, 0.2], [22, -17, 6, 0.6], [-26, -44, 4.5, 1]]) {
     oval(ctx, x, y, r, r * 0.6, turn, ballDark)
     oval(ctx, x - 0.6, y - 1.6, r * 0.8, r * 0.36, turn, BALL_LIGHT)
   }
-  line(ctx, straw, 3, [-33, -30, -20, -34, -8, -31], true)
-  line(ctx, straw, 3, [8, -64, 20, -74])
-  line(ctx, straw, 2.6, [30, -30, 43, -27])
+  for (const s of [[-33, -30, -20, -34, -8, -31], [8, -64, 20, -74], [30, -30, 43, -27]]) line(ctx, straw, 3, s, true)
   shine(ctx, 0, -42, 42, 42)
   if (pose !== 'sandy') return
   // Rolled through sand: pale grains stuck all over it, scattered by a fixed rule so that they never jump.
@@ -193,9 +200,6 @@ const paintBall: Painter = (ctx, pose) => {
     oval(ctx, Math.cos(a) * d, -42 + Math.sin(a) * d, 2.4 - (i % 3) * 0.5, 1.9 - (i % 3) * 0.4, a, i % 4 === 0 ? SAND.edge : SAND.fill)
   }
 }
-
-/** The lit top of a lump on the ball, between the two browns of the palette and the highlight. */
-const BALL_LIGHT = '#94703f'
 
 // ---- The fly plan: a striped rump, a round chest, a head that is mostly eye, glassy wings and thin legs. ----
 
@@ -235,11 +239,8 @@ function flyFigure(ctx: Ctx, f: FlyBuild, p: FlyPose, look: Look, t: number): vo
   // At rest the wings stand up from the back; dazed, one lies flat and one sticks up; in flight they are a blur,
   // a glassy fan with two beats of the wing in it.
   const wings = (near: boolean) => {
-    if (p.wings !== 'blur') {
-      const lift = p.wings === 'rest' ? [0.5, 0.26] : [0.85, 0.02]
-      wing(ctx, f, near ? 6 : 8, -40, near ? 57 : 52, 13, lift[near ? 1 : 0])
-      return
-    }
+    const lift = p.wings === 'rest' ? [0.5, 0.26] : [0.85, 0.02]
+    if (p.wings !== 'blur') return wing(ctx, f, near ? 6 : 8, -40, near ? 57 : 52, 13, lift[near ? 1 : 0])
     if (!near) {
       ctx.fillStyle = f.wing
       ctx.beginPath()
@@ -247,13 +248,7 @@ function flyFigure(ctx: Ctx, f: FlyBuild, p: FlyPose, look: Look, t: number): vo
       ctx.arc(6, -40, 42, Math.PI + 0.1, Math.PI + 1.2)
       ctx.closePath()
       ctx.fill()
-      ctx.strokeStyle = HIGHLIGHT
-      ctx.lineWidth = 2
-      for (const r of [28, 36]) {
-        ctx.beginPath()
-        ctx.arc(6, -40, r, Math.PI + 0.45 + beat, Math.PI + 0.85 + beat)
-        ctx.stroke()
-      }
+      for (const r of [28, 36]) bow(ctx, HIGHLIGHT, 2, 6, -40, r, r, 0, Math.PI + 0.45 + beat, Math.PI + 0.85 + beat)
     }
     wing(ctx, f, 6, -40, 46, 9, near ? 0.2 + beat : 1.1 - beat, true)
   }
@@ -279,20 +274,11 @@ function flyFigure(ctx: Ctx, f: FlyBuild, p: FlyPose, look: Look, t: number): vo
   if (f.goggles) {
     // Aviator goggles: the strap round the back of the head, and a pale rim round each eye.
     line(ctx, STRAP, 3.4, [20, -36, 17, -30, 19, -22], true)
-    ctx.strokeStyle = f.goggles
-    ctx.lineWidth = 3.2
-    for (const [x, y, r] of [[44.2, -30.6, 10.6], [30, -32, 12.6]]) {
-      ctx.beginPath()
-      ctx.arc(x, y, r, 0, TAU)
-      ctx.stroke()
-    }
+    for (const [x, y, r] of [[44.2, -30.6, 10.6], [30, -32, 12.6]]) bow(ctx, f.goggles, 3.2, x, y, r, r, 0, 0, TAU)
   }
   ctx.restore()
   legs(p.legs, f.dark, 0)
 }
-
-/** The leather strap of the dung fly's goggles. */
-const STRAP = '#6b4a2a'
 
 // ---- The fly: teal, with huge red eyes; nosy and greedy. ----
 
@@ -318,7 +304,11 @@ const FLY_POSES: Record<string, FlyPose> = {
   },
 }
 
-const paintFly: Painter = (ctx, pose, look, t) => flyFigure(ctx, FLY, FLY_POSES[pose] ?? FLY_POSES.fly, look, t)
+const paintFly: Painter = (ctx, pose, look, t) => {
+  const p = FLY_POSES[pose] ?? FLY_POSES.fly
+  // Its two front hands rub against each other.
+  flyFigure(ctx, FLY, pose === 'hands' ? { ...p, legs: wave(p.legs, t, 2, 2), far: wave(p.far ?? [], t, -2, 2) } : p, look, t)
+}
 
 // ---- The dung fly: golden, goggled, the self-important leader of the dung beetles. ----
 
@@ -348,9 +338,6 @@ const paintDungFly: Painter = (ctx, pose, look, t) => {
   line(ctx, TWIG, 2.2, [x + dx * 0.5, y + dy * 0.5, x + dx * 0.5 + dy * 0.3, y + dy * 0.5 - dx * 0.3 - 2])
   oval(ctx, x, y, 2.8, 2.8, 0, DUNG_FLY.dark)
 }
-
-/** The bark of the dung fly's twig. */
-const TWIG = '#5b3a1c'
 
 export const invaderPainters: Record<Invader, Painter> = {
   raider: paintRaider,

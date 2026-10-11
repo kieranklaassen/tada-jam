@@ -129,8 +129,8 @@ function raid(): SpikeScene {
       { kind: 'beetle', pose: 'onBack', x: 908, y: GRASS_Y },
       { kind: 'worker', pose: 'hips', x: MOUTH_X + 56, y: GRASS_Y - 34, flip: true },
       { kind: 'queen', pose: 'sit', x: f(28.7, 6).x, y: f(28, 6).y },
-      { kind: 'fly', pose: 'fly', x: f(33, 4).x, y: f(33, 4).y, flip: true },
-      { kind: 'worker', pose: 'hips', x: f(33, 6).x, y: f(33, 6).y, flip: true },
+      // The fly's wings reach about a cell over its body box, so it hovers a row under the roof.
+      { kind: 'fly', pose: 'fly', x: f(33.2, 5).x, y: f(33, 5).y - 4, flip: true },
       { kind: 'raider', pose: 'stuck', x: f(13.2, 5).x, y: f(13, 5).y, flip: true },
       { kind: 'raider', pose: 'walk', x: f(7, 6).x, y: f(7, 6).y, flip: true },
       { kind: 'beetle', pose: 'lean', x: f(17.72, 6).x, y: f(17, 6).y, flip: true },
