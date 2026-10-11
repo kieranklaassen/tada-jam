@@ -741,7 +741,14 @@ describe('a dung beetle and its ball', () => {
     const plug = hall([CLEAR, CLEAR, CLEAR])
     plug[1] = '##mm.###################'
     const held = dungRaid(plug)
-    const events = watch(held, () => {})
+    // It comes to the mouth with its ball and leans on them for as long as its patience lasts, in view, before it gives the ball up.
+    let leaning = 0
+    const events = watch(held, () => {
+      const beetle = held.invaders[0]
+      if (beetle.ball > 0 && beetle.cell >= 0 && beetle.cell < WIDE) leaning++
+    })
+    expect(leaning * TICK).toBeGreaterThanOrEqual(HABITS.dungBeetle.patience - 0.2)
+    expect(kinds(events, 'strain')).toEqual([expect.objectContaining({ id: 0, on: MUD })])
     expect(kinds(events, 'leftBall')).toEqual([{ type: 'leftBall', id: 0, cell: -1 }])
     expect(held.invaders[0].ball).toBe(0)
     expect(held.invaders[0].left).toBe(3)
@@ -758,6 +765,26 @@ describe('a dung beetle and its ball', () => {
     expect(jammed.balls).toEqual([])
     expect(jammed.acts).toBe(1)
     expect(toPicture(jammed.ground)[4].slice(0, 5)).toBe('##o..')
+  })
+
+  it('keeps the next of the file at the log while the one before it is still at the mouth with its ball', () => {
+    // A stone on the floor of the shaft's left column jams each ball at the mouth for a while.
+    const stone = hall([CLEAR, CLEAR, CLEAR])
+    stone[4] = `##o..${CLEAR}......##`
+    const raid = dungRaid(stone, ['dungBeetle', 'dungBeetle', 'dungBeetle'])
+    let atTheMouth = 0
+    watch(raid, () => {
+      raid.invaders.forEach((invader, n) => {
+        const next = raid.invaders[n + 1]
+        if (!next || invader.cell < 0 || invader.cell >= WIDE || invader.ball === 0 || invader.state === 'home') return
+        atTheMouth++
+        // The next has not set out for the mouth: it sits where it sat.
+        expect(next.state).toBe('coming')
+        expect(next.wait).toBeGreaterThan(0.69)
+      })
+    })
+    expect(atTheMouth).toBeGreaterThan(100)
+    expect(raid.acts).toBe(3)
   })
 
   it('digs sand and mud that have earth or rock behind them', () => {

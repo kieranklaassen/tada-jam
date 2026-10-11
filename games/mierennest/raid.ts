@@ -697,6 +697,11 @@ const needs: number[] = []
 function widen(raid: Raid, invader: Invader): void {
   const { ground } = raid, cols = ground.cols
   const next = invader.way[invader.step + 1]
+  if (next === undefined && invader.ball > 0 && invader.cell >= 0 && invader.cell < cols) {
+    // At the mouth, with nowhere for the ball to go down: it leans on what lies under it.
+    downFromTheMouth(raid, invader)
+    return
+  }
   if (next === undefined || invader.ball === 0) {
     invader.state = 'going'
     return
@@ -758,7 +763,15 @@ function downFromTheMouth(raid: Raid, invader: Invader): void {
   if (invader.ball > 0) {
     const entry = ballEntry(raid)
     if (!entry) {
-      leaveBall(raid, invader)
+      // Lumps lie across the middle of the mouth: the ball leans on them with its push of 6, and they hold. Its
+      // beetle heaves for as long as its patience lasts, in view, and then leaves the ball on the grass.
+      const x = raid.mouth[Math.floor(raid.mouth.length / 2)]
+      if (invader.jammed === 0) raid.events.push({ type: 'strain', id: invader.id, cell: invader.cell, on: at(ground, x, 1) })
+      invader.jammed += TICK
+      invader.state = 'widening'
+      invader.way = [invader.cell]
+      invader.step = 0
+      if (invader.jammed >= HABITS.dungBeetle.patience) leaveBall(raid, invader)
       return
     }
     start = entry.foot
@@ -878,11 +891,17 @@ function comeIn(raid: Raid, invader: Invader): boolean {
     // Where a machine stands at the foot of the shaft, what it would have to wait for there it waits for up here.
     if (way.length > 1 && atAMachine(raid, gait, way[1]) && holdUp(raid, invader, gait, way, 1) !== null) return false
   }
-  // A ball the mouth is shut to is left on the grass, where it lay at the log.
-  if (invader.ball > 0 && !withBall) {
+  // A ball the mouth is too narrow for is left on the grass, where it lay at the log. One that lumps under the
+  // turf hold comes to the mouth all the same, and leans on them there before it is given up.
+  const leans = invader.ball > 0 && !withBall && raid.mouth.length >= DUNG_BALL.across && raid.mouth.every((x) => at(ground, x, 0) === OPEN)
+  if (invader.ball > 0 && !withBall && !leans) {
     invader.left = invader.ball
     invader.ball = 0
     raid.events.push({ type: 'leftBall', id: invader.id, cell: -1 })
+  }
+  if (leans) {
+    top = raid.mouth[Math.floor(raid.mouth.length / 2)]
+    start = top
   }
   invader.cell = top
   invader.from = top
@@ -931,6 +950,8 @@ export function stepRaid(raid: Raid): void {
         // The next of the file leaves the log once the one before it has come in.
         const before = raid.invaders[invader.id - 1]
         if (before && before.state === 'coming') break
+        // Nor while the one before stands in the mouth's own row, leaning on what lies under it: it sits where it sat.
+        if (before && before.cell >= 0 && before.cell < cols && !settledState(before.state)) break
         invader.wait -= TICK
         if (invader.wait > 0) break
         invader.wait = 0
