@@ -12,6 +12,8 @@ import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
 import { SaveCadence } from './saveCadence'
 import { deserialize, serialize, type GameState } from './state'
+import { spikeScene } from './view/spike'
+import { SpikeView } from './view/spikeView'
 
 // The Mount, showing a blank surface. Everything a game needs around its
 // renderer is wired and running: the saved state, attention, the attended
@@ -76,7 +78,14 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // `setTransform(dpr * scale, 0, 0, dpr * scale, dpr * x, dpr * y)`. The fit is never made from
     // `canvas.width` and `canvas.height`, which are that size times the pixel ratio: every touch would then
     // land off by the ratio on a tablet, and right on a display of ratio 1.
-    const draw = () => {}
+    // The look spike: until the toy replaces it, the Mount shows the game's real scene in its look, laid out from
+    // a fixed seed, with nothing playable behind it. `spike=2` in the address shows the grown kingdom and
+    // `spike=3` a raid; anything else is the first frame.
+    const view = new SpikeView(canvas, spikeScene(Number(new URLSearchParams(window.location.search).get('spike'))))
+    const draw = () => {
+      if (width <= 0 || height <= 0) return
+      drawn.drawCalls = view.draw(width, height, dpr)
+    }
 
     // The shell can resize the surface without a window resize event, so the surface watches itself.
     // Returns whether it sized the surface, and so drew it.

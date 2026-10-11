@@ -8,7 +8,7 @@ import * as P from './palette'
 type Pen = CanvasRenderingContext2D
 
 /** Where the dewdrop hangs at rest, and how near a touch must land to ring it: well over the jam's 48 for a target. */
-export const BELL = { x: MOUTH_X + 104, y: GRASS_Y - 92, radius: 15, reach: 34 } as const
+export const BELL = { x: MOUTH_X + 96, y: GRASS_Y - 96, radius: 17, reach: 34 } as const
 
 /** The hill, from 0 (a new nest) to 1 (as hollow as the ground can be). It leaves the mouth open. */
 export function paintHill(pen: Pen, grown: number): void {
@@ -62,7 +62,7 @@ export function paintBell(pen: Pen, sway = 0): void {
   pen.moveTo(tip.x, tip.y)
   pen.lineTo(drop.x, drop.y - BELL.radius)
   pen.stroke()
-  pen.fillStyle = '#bfe9f7'
+  pen.fillStyle = '#8fdcf5'
   pen.beginPath()
   pen.moveTo(drop.x, drop.y - BELL.radius - 7)
   pen.bezierCurveTo(drop.x + BELL.radius * 1.3, drop.y - 2, drop.x + BELL.radius, drop.y + BELL.radius, drop.x, drop.y + BELL.radius)

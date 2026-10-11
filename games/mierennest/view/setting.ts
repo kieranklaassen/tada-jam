@@ -158,11 +158,11 @@ function paintSurface(pen: Pen): void {
   leafTent(pen, 120, GRASS_Y, 118, '#5fae4a', '#3f8436')
   leafTent(pen, 236, GRASS_Y, 86, '#8fc15a', '#5f943a')
   leafTent(pen, 1068, GRASS_Y, 104, '#d2a441', '#9c7426')
-  toadstool(pen, 760, GRASS_Y, 96, '#d9463a', -0.06)
-  toadstool(pen, 838, GRASS_Y, 58, '#e8743a', 0.12)
-  toadstool(pen, 960, GRASS_Y, 74, '#d9463a', 0.05)
+  toadstool(pen, 800, GRASS_Y, 96, '#d9463a', -0.06)
+  toadstool(pen, 874, GRASS_Y, 62, '#e8743a', 0.12)
+  toadstool(pen, 968, GRASS_Y, 74, '#d9463a', 0.05)
   toadstool(pen, 52, GRASS_Y, 46, '#e8743a', -0.1)
-  log(pen, 338, GRASS_Y, 168)
+  log(pen, 368, GRASS_Y, 150)
   // A washing line between two stalks, with a leaf and a sock on it.
   pen.strokeStyle = P.GRASS.dark
   pen.lineWidth = 4

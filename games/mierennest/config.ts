@@ -5,8 +5,8 @@ import { mierennestManifest } from './manifest'
 // saveCadence.ts) read their numbers from here, so they stay byte-equal to the
 // template and a template fix can be copied over them.
 
-/** The blank surface's colour, until the game draws its own backdrop. */
-export const BACKDROP = '#f4efe6'
+/** The colour behind the stage: the dark wood of the farm's frame, which the draw carries past the stage's edges. */
+export const BACKDROP = '#7a4c22'
 
 // --- Adaptive quality (quality.ts) -----------------------------------------
 
