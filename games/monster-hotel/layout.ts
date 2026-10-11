@@ -80,6 +80,9 @@ export type PageLayout = {
 /** A finger needs this much of anything it can touch, in logical pixels. */
 export const TOUCH = 48
 
+/** The home control the shell lays over the game: round, this many logical pixels across, in the middle of the top edge. `clear` is the room a finger is left beside it. */
+export const HOME = { size: 48, clear: 6 }
+
 // The drawing's own units. One unit is one logical pixel on a 1180 by 820 surface showing the long house.
 const U = {
   wall: 10, slab: 12, roomW: 204, roomH: 200,
@@ -184,9 +187,17 @@ export function layoutPage(width: number, height: number, shape: ShapeId): PageL
   const coach = at(coachX, groundY - U.coachH, U.coachW, U.coachH)
   const doorW = Math.max((TOUCH + 2) / s, 52), doorH = Math.max((TOUCH + 2) / s, 76)
   const coachDoor = at(coachX + 74, groundY - 22 - doorH, doorW, doorH)
-  const bench = at(lobbyX + 62, groundY - 64, U.benchW, 64)
-  const benchGuest = at(lobbyX + 64, groundY - 126, 112, 126)
-  const luggage = at(lobbyX + 2, groundY - 108, 62, 108)
+  // The shell lays one round home control over the top centre of the surface (HOME), and a touch on it never
+  // reaches the game. On the plain page only sky is under it. The bat's page is the plate turned half round about
+  // its middle, which brings the street to the top and, in the two narrow houses, the bench to the middle of it. So
+  // the bench and its luggage stand far enough toward the coach that whoever sits there is clear of the control on
+  // that page too: a finger takes the bench guest from 16 units left of its box (`spotOf` and `bodyBox` in
+  // inkPlaces.ts). The luggage, which nobody has to touch, is what the control lies over there. In the long house
+  // the bench is clear where it stands.
+  const benchShift = Math.max(0, Math.min(coachX - 8 - (lobbyX + 176), plateW / 2 + (HOME.size / 2 + HOME.clear) / s - (lobbyX + 64 - 16)))
+  const bench = at(lobbyX + 62 + benchShift, groundY - 64, U.benchW, 64)
+  const benchGuest = at(lobbyX + 64 + benchShift, groundY - 126, 112, 126)
+  const luggage = at(lobbyX + 2 + benchShift, groundY - 108, 62, 108)
 
   const wheelSize = Math.max((TOUCH + 2) / s, U.wheel)
   const ridgeX = houseX + houseW / 2

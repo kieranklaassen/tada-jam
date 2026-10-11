@@ -1,4 +1,4 @@
-import { ANIMALS, firstCold, MAX_ROWS, MAX_SCARVES, WIDTH, type AnimalKey, type GameState, type Row, type Scarf } from './state'
+import { ANIMALS, COLOURS, firstCold, MAX_ROWS, MAX_SCARVES, WIDTH, type AnimalKey, type GameState, type Row, type Scarf } from './state'
 
 // The rules of the loom. Knitting adds a row at the scarf's free end;
 // unravelling takes the newest row back, so nothing is ever lost that the
@@ -32,6 +32,17 @@ export function paintStitch(state: GameState, row: number, column: number, colou
     changed.push([row, c])
   }
   return changed
+}
+
+/**
+ * A tap on the basket brings out the next colour while one is still inside:
+ * returns its colour, or null once all are out. With `shown` balls out, the
+ * count is kept in the state from then on, where it wins over the age.
+ */
+export function bringOutBall(state: GameState, shown: number): number | null {
+  if (shown >= COLOURS) return null
+  state.balls = shown + 1
+  return shown
 }
 
 export function canOffer(state: GameState, offerRows: number): boolean {

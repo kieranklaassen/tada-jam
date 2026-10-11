@@ -120,9 +120,9 @@ export default {
       run: async (d) => {
         await d.tap(STONE)
         await d.wait(900)
-        await d.tap((await d.find('snail-shell')) ?? [0.5, 0.076])
+        await d.tap((await d.find('snail-shell')) ?? [0.27, 0.076])
         await d.wait(1200)
-        await d.tap((await d.find('snail-shell')) ?? [0.5, 0.076])
+        await d.tap((await d.find('snail-shell')) ?? [0.27, 0.076])
         await d.wait(5200)
         await tapFriend(d, 'dot', 2200)
         await tapFriend(d, 'dot', 2200)

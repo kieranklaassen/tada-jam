@@ -12,6 +12,20 @@ describe('saved state', () => {
     for (const room of rooms) expect(state.rooms[room.def.key]).toEqual({ groups: [...room.startArrangement], walker: room.startTile })
   })
 
+  it('opens a first visit on a diorama set by the child\'s age: the youngest default with no age, open-ended at both ends', () => {
+    const first = (age: number | null) => deserialize(null, rooms, age).current
+    for (const age of [null, 2, 6, 7, 8]) expect(first(age)).toBe('first-turn')
+    expect(first(9)).toBe('ferry')
+    for (const age of [10, 11, 12]) expect(first(age)).toBe('impossible-stair')
+    expect(defaultState(rooms, 10).rooms).toEqual(defaultState(rooms).rooms)
+  })
+
+  it('lets a saved diorama win over the age', () => {
+    expect(deserialize({ v: 1, current: 'first-turn', rooms: {} }, rooms, 10).current).toBe('first-turn')
+    expect(deserialize({ v: 1, current: 'crank', rooms: {} }, rooms, 7).current).toBe('crank')
+    expect(deserialize({ v: 1, current: 'crank', rooms: {} }, rooms, null).current).toBe('crank')
+  })
+
   it('round-trips through JSON', () => {
     const state = defaultState(rooms)
     state.current = 'ferry'

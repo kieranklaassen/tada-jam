@@ -40,3 +40,22 @@ All three fail on main's code.
 - Browser A/B, main against this pass (built on d923249, before the `update(0)` line, so every per-frame path matches the final head): Playwright's bundled headless Chromium on SwiftShader, CDP 6x, 1180×820 at DPR 2, touch, `?chrome=0&tier=0`. Five seeded pairs with the order alternating, each run 30 s of phase taps, drags and the halves, reading `window.__jamPerf.cpuMs`. The software renderer manages about 30 frames a run. cpuP95 median 75.9 ms (44.4–93.7) → 84.9 ms (77.4–119.5), and cpuP50 22.1 → 26.7 ms. The paired cpuP95 differences run from −8.8 to +75.1 ms (median +1.5), and after is lower in 2 of 5 pairs.
 
 The same build's cpuP50 swings from 18 to 38 ms between runs, far more than the microseconds that changed, so no change is measurable in the browser. Tier 0 held in every run, and `frameBudget.test.ts` passes unchanged. No physical iPad was measured.
+
+## Depth and age pass (2026-10-10)
+
+An audit against `docs/build/depth-and-age-pass.md`. No code changed.
+
+| Question | What the audit found | Change |
+| --- | --- | --- |
+| Day 15 | The model is true, and its four settings combine: where the moon is, the hour at home, where home is, and whether the halves show, each seen from the table or from the ground. Any two give a picture of their own: the moon up or set, a pale moon in a blue sky, the lit side on the other side south of the equator, town lights on the night side. On day 15 a child can make a sky on purpose (a full moon coming up as the sun goes down, an hour when the moon cannot be found). | None |
+| Age | A first visit shows the halves from 7 up and hides them at 6, below 6 and with no age. The button is there at every age, and a saved choice wins. | None |
+| Found as left | The moon's place, home, the hour, the view and the halves are saved on every change and at put-away, and read back defensively. Nothing is saved before the slot is read. | None |
+| Engagement | No score, count, streak, pushing timer, praise or remark about leaving. | None |
+| Home control | The toolbar ends 208 px from the left and the round window starts 237 px from the right at 1180 by 820; the control sits between them. They stay clear in any landscape window 416 px wide or more. | None |
+
+**Still weak.**
+- Only the phase is heard: eight phases ring five pitches, and the hour and home have one sound each whatever they are set to. The combinations look different and sound the same.
+- Six seconds after the last touch the model runs on by itself, an hour a second, so a sky a child set up to look at does not hold still. It stops while the game is put away and a tap on a phase or a turn of the dial sets it back.
+- The way the model was turned and tilted is not saved; a fresh open shows it from the first angle, after the opening flight, which plays on every open.
+- At full moon the rays aimed at the moon stop on Earth while the moon stays lit: the moon's path is not tilted, so the model has no answer to why there is no eclipse every month.
+- A put-away while a finger holds the day dial may leave the dial's drag open, and then the hours stop running by themselves until the dial is next touched. Not seen in a browser.

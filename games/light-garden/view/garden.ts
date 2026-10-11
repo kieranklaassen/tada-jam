@@ -85,7 +85,9 @@ export class GardenView {
       mesh.name = sim.c.kind
       mesh.rotation.order = 'YXZ'
       this.root.add(mesh)
-      return { sim, mesh, awake: 0, dream: 1, fed: new Float32Array(3) }
+      // One found awake is drawn awake from the first frame, with no dream to fade.
+      const up = isAwake(sim.c) ? 1 : 0
+      return { sim, mesh, awake: up, dream: 1 - up, fed: new Float32Array(3) }
     })
 
     this.shade.mesh.name = 'shadows-and-eyes'

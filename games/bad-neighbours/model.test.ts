@@ -121,10 +121,57 @@ describe('stacking', () => {
     game.dispose()
   })
 
-  it('age sets the pace as a hint, with open ends and null', () => {
-    expect(paceForAge(null)).toBe(1)
-    expect(paceForAge(2)).toBeLessThan(1)
-    expect(paceForAge(12)).toBeGreaterThan(1)
+  it('age sets the pace as a hint: unknown and younger take the gentlest, older the briskest', () => {
+    const band = [4, 5, 6, 7, 8].map(paceForAge)
+    expect(paceForAge(null)).toBe(band[0])
+    expect(paceForAge(2)).toBe(band[0])
+    expect(paceForAge(12)).toBe(band[4])
+    for (let i = 1; i < band.length; i++) expect(band[i]).toBeGreaterThanOrEqual(band[i - 1])
+    expect(band[0]).toBeLessThan(band[2])
+    expect(band[2]).toBeLessThan(band[4])
+  })
+})
+
+describe('a delivery waits for the child', () => {
+  it('hangs exactly where it arrived until it is touched, however long that takes', () => {
+    const game = new Game(1), first = game.active!, arrived = geometry(first)
+    let events = 0
+    game.onEvent = () => { events++ }
+    run(game, 20000, 60)
+    expect(game.active).toBe(first)
+    expect(geometry(first)).toEqual(arrived)
+    expect(game.pieces.length).toBe(1)
+    expect(events).toBe(0)
+    game.dispose()
+  })
+
+  it('comes down after any touch: a nudge, an aim, a turn, a drop or a soft drop', () => {
+    const touches: ((game: Game) => boolean)[] = [
+      game => { game.move(1); return false }, game => { game.aim(48); return false }, game => { game.rotate(); return false },
+      game => { game.drop(); return false }, () => true,
+    ]
+    for (const touch of touches) {
+      const game = new Game(1), first = game.active!
+      run(game, 3000, 60)
+      const y = first.body.position.y
+      const soft = touch(game)
+      for (let i = 0; i < 30; i++) game.advance(1000 / 60, soft)
+      expect(first.body.position.y).toBeGreaterThan(y + 20)
+      game.dispose()
+    }
+  })
+
+  it('the next delivery waits too, after the one before has landed', () => {
+    const game = new Game(1), first = game.active!
+    game.drop(); run(game, 1500)
+    const second = game.active!
+    expect(second).not.toBe(first)
+    const arrived = geometry(second)
+    run(game, 8000, 60)
+    expect(game.active).toBe(second)
+    expect(geometry(second)).toEqual(arrived)
+    expect(game.pieces.length).toBe(2)
+    game.dispose()
   })
 })
 
@@ -212,6 +259,19 @@ describe('put-away keeps everything the child did', () => {
     const again = new Game(6, undefined, { restore: game.snapshot(), next: game.queue() })
     expect(again.active?.shape).toBe(steering)
     game.dispose(); again.dispose()
+  })
+
+  it('a building that has touched down but not settled comes back as a delivery, not lost', () => {
+    const game = new Game(5), first = game.active!
+    let landed = false
+    game.onEvent = e => { if (e.type === 'impact') landed = true }
+    game.drop()
+    while (!landed) { game.advance(STEP); expect(game.time).toBeLessThan(3000) }
+    expect(first.scored).toBe(false)
+    expect(game.snapshot()).toEqual([])
+    expect(game.queue()[0]).toBe(first.shape)
+    expect(game.queue().length).toBe(3)
+    game.dispose()
   })
 
   it('scaffolding is saved and restored with the buildings it holds', () => {

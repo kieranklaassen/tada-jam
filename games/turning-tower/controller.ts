@@ -552,6 +552,9 @@ export class TowerController {
     }
     this.pendingGoal = null
     this.queuedGoal = null
+    // Settling a drag above may have opened the way to a tile the child asked for: on return the wanderer waits for a touch, it does not set off.
+    this.wish = null
+    this.wishOpenAt = -1
     if (this.phase === 'enter') this.finishTravel(this.nextRoom)
     else if (this.phase === 'leave') this.finishTravel(this.nextRoom)
     else if (this.phase === 'arrive') this.phase = 'play'

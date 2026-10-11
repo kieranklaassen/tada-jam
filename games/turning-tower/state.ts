@@ -2,7 +2,7 @@ import { computeLayout, isWalkable, overlaps, stateRange, type Room } from './wo
 
 // What survives a put-away (R12): which diorama is open, and for every
 // diorama the settled state of each group and the tile the wanderer stands
-// on. Everything read back goes through `deserialize`, which never throws and
+// on. With nothing saved yet, the child's age picks the diorama that opens. Everything read back goes through `deserialize`, which never throws and
 // repairs anything it does not trust to the diorama's starting arrangement.
 
 export type RoomSave = { groups: number[]; walker: number }
@@ -17,10 +17,23 @@ export function startSave(room: Room): RoomSave {
   return { groups: [...room.startArrangement], walker: room.startTile }
 }
 
-export function defaultState(rooms: readonly Room[]): SavedState {
+/**
+ * The diorama a first visit opens on. The five stand in a designed order, one
+ * new idea each, and age sets only where a child starts in it: 8 and under, or
+ * no age, at the one-turn opener; 9 at the Ferry; 10 and over at the first
+ * impossible join. It is a default and never a gate: every diorama is one tap
+ * away on the ring at every age, and a saved diorama wins over the age.
+ */
+export function firstRoomKey(age: number | null): string {
+  if (age === null || age <= 8) return 'first-turn'
+  return age === 9 ? 'ferry' : 'impossible-stair'
+}
+
+export function defaultState(rooms: readonly Room[], age: number | null = null): SavedState {
   const saves: Record<string, RoomSave> = {}
   for (const room of rooms) saves[room.def.key] = startSave(room)
-  return { v: 1, current: rooms[0].def.key, rooms: saves }
+  const first = firstRoomKey(age)
+  return { v: 1, current: rooms.some((room) => room.def.key === first) ? first : rooms[0].def.key, rooms: saves }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -49,8 +62,8 @@ function readRoom(room: Room, raw: unknown): RoomSave {
   return startSave(room)
 }
 
-export function deserialize(raw: unknown, rooms: readonly Room[]): SavedState {
-  const state = defaultState(rooms)
+export function deserialize(raw: unknown, rooms: readonly Room[], age: number | null = null): SavedState {
+  const state = defaultState(rooms, age)
   if (!isRecord(raw) || raw.v !== 1) return state
   if (typeof raw.current === 'string' && rooms.some((room) => room.def.key === raw.current)) state.current = raw.current
   const saved = isRecord(raw.rooms) ? raw.rooms : {}

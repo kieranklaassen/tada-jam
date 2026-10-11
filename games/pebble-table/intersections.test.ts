@@ -10,12 +10,12 @@ import { MotionDirector, SEAT_SPECIES, type ActionKind, type MotionPose } from '
 import { PART_PIECES, partCollider, partCover, partPieceVertices, partReachDown, partRest, partVertices, SHELL, STOOL_REACH, STOOL_TOP, surfacePoints, type Lumped } from './partShape'
 import { HOLD_HEIGHT, PAN_REST_HEIGHT, physicsReady, STEP, stoneHullPoints, stoneRadius3, TablePhysics, to3, toWorld2, UNIT } from './physics3d'
 import { Quat, V3 } from './vec'
-import { JARS, PART_KINDS, type PartKind } from './parts'
-import { panDrops, SWAY_MOST } from './scale'
+import { JARS, PART_KINDS, type Part, type PartKind } from './parts'
+import { panDrops, SWAY_MOST, targetTilt } from './scale'
 import { seededRandom } from './random'
 import { defaultTable, type Piece } from './state'
 import { pebbleRings, STONE_CUTS, STONE_DRAWN_RADIUS, STONE_SEGMENTS, stoneReachAlong, stoneReachDown, stoneRest, stoneVertices } from './stoneShape'
-import { BOWL_FLOOR, DECAL_LIFT, decalReach, feedingFloor, HEM_LINE, hemAt, ON_RUG, PAN_FLOOR, PAN_ROLL, panRimReach, PLATE_HEIGHT, PLATE_PROFILE, PLATE_TOP, ROPE_KNOT, RUG, RUG_HEM_REACH, RUG_HEM_TOP, surfaceUnder, type Surfaces } from './surfaces'
+import { BOWL_FLOOR, DECAL_LIFT, decalReach, DISH_PROFILE, feedingFloor, HEM_LINE, hemAt, ON_RUG, PAN_DEPTH, PAN_FLOOR, PAN_ROLL, panRimReach, PLATE_HEIGHT, PLATE_PROFILE, PLATE_TOP, ROPE_KNOT, RUG, RUG_HEM_REACH, RUG_HEM_TOP, surfaceUnder, type Surfaces } from './surfaces'
 import { ARM_AT, CHEEK_AT, EAR_AT, GUEST_SIZE, guestFloor, NECK_Y, poseGuest, soleDepth, speciesShapes } from './view/guest'
 import {
   ALBUM_SCALE,
@@ -52,7 +52,7 @@ import {
   type StoneMotion,
   type StoneState,
 } from './view/models'
-import { ghostFloor, stoneStates } from './view/game'
+import { ghostFloor, partStates, stoneStates } from './view/game'
 import * as geo from './view/geometry'
 import { comingOut, DOOR_HINGE, DOOR_SWING, doorwayGap, goingHome, houseGap, VISITOR_GAP, VISITOR_REACH, visitorGone, visitorPose, visitorWalk, type VisitorPose, type VisitorTimes } from './visitors'
 import { chunk } from './voice'
@@ -1370,6 +1370,115 @@ describe('the scale hangs together at every tilt', () => {
     }
     expect(met, 'no stone lay in a pan, so this measures nothing').toBeGreaterThan(1000)
     expect(deepest).toBeLessThan(0.1)
+  }, 60_000)
+
+  const partShapes = new Map(PART_KINDS.map((kind) => [kind, partGeometry(kind)]))
+  /** A loose part as the view draws it. */
+  const drawnPart = (part: PartState) =>
+    auditPiece(part.kind, partShapes.get(part.kind)!, new THREE.Matrix4().compose(new THREE.Vector3(part.position.x, part.position.y, part.position.z), new THREE.Quaternion(...part.quaternion), new THREE.Vector3(1, 1, 1)))
+
+  it('brings a pan down onto an acorn, shell, stick or stone lying on the table under it and rests it there, never in it, and on down once that is taken away', () => {
+    const [left] = SCALE.pans
+    const at = to3(left)
+    // Four stones in the left pan bring it down as far as it goes; rings of one kind of thing lie on the table under its floor, the flare of its dish and its rolled rim.
+    const loaded: Piece[] = [0, 1, 2, 3].map((i) => ({ id: i + 1, q: 4, x: left.x + ((i % 2) - 0.5) * 60, y: left.y - 30 + Math.floor(i / 2) * 60 }))
+    const ring = (out: number, count: number) => Array.from({ length: count }, (_, k) => ({ x: left.x + Math.cos(k * ((Math.PI * 2) / count) + out * 7) * left.r * out, y: left.y + Math.sin(k * ((Math.PI * 2) / count) + out * 7) * left.r * out }))
+    let [deepest, met, worst] = [0, 0, '']
+    for (const kind of ['acorn', 'shell', 'stick', 'stone'] as const) {
+      const pieces = [...loaded]
+      const parts: Part[] = []
+      // A stone at a pan's place lies in the pan, so stones lie only under the rim, outside the pan's circle.
+      if (kind === 'stone') for (const spot of ring(1.07, 6)) pieces.push({ id: pieces.length + 1, q: 4, ...spot })
+      else for (const out of kind === 'stick' ? [0.6, 1] : [0.75, 0.88, 0.97, 1.04, 1.1, 1.16]) for (const spot of ring(out, 6)) parts.push({ id: 100 + parts.length, kind, ...spot })
+      const start = { ...defaultTable(6), liveMat: 'scale' as const, pieces, parts, nextId: 200 }
+      const table = new TableController({ ...start, bag: start.total - pieces.length * 4 }, { save: () => {} })
+      table.setProjector({ toScreen: (v) => toWorld2(v), toPlane: (screen) => screen })
+      const measure = () => {
+        const pan = drawnPan(0, at.x + table.physics.panSwung(0), table.physics.panY(0), at.z)
+        const under = [
+          ...partStates(table).map(drawnPart),
+          ...stoneStates(table).filter((stone) => stone.id > loaded.length).map((stone) => auditPiece('stone', stoneGeometry(stone.q), stoneMatrix(still(stone), 1, new THREE.Matrix4()))),
+        ]
+        for (const piece of under) {
+          if (!piece.box.intersectsBox(pan.box)) continue
+          met++
+          const depth = pairDepth(piece, pan, CAMERA)?.depth ?? 0
+          if (depth > deepest) [deepest, worst] = [depth, `${kind} at ${table.t.toFixed(2)} s`]
+        }
+      }
+      for (let frame = 0; frame < 180; frame++) {
+        table.step(1 / 60)
+        if (frame % 3 === 0) measure()
+      }
+      const free = PAN_REST_HEIGHT - panDrops(targetTilt([16, 0]))[0] * UNIT
+      const rested = table.physics.panY(0)
+      expect(rested - free, `the left pan never came to lie on what was under it (${kind}), so this measures nothing`).toBeGreaterThan(kind === 'shell' ? 0.3 : 1)
+      // The beam stopped with its pan, and everything has come to rest: a pan lying on something is not nudged for ever.
+      expect(PAN_REST_HEIGHT - panDrops(table.beam.angle)[0] * UNIT, kind).toBeCloseTo(rested, 2)
+      expect(table.beam.velocity, kind).toBe(0)
+      expect([...table.state.pieces, ...table.state.parts].filter((item) => !table.physics.asleep(item.id)), kind).toEqual([])
+      // Taken away, what it lay on no longer holds it: it comes on down, at the beam's own pace.
+      for (const item of [...table.state.parts, ...table.state.pieces.slice(loaded.length)]) table.physics.removeStone(item.id)
+      table.state.parts = []
+      table.state.pieces = table.state.pieces.slice(0, loaded.length)
+      let fastest = 0
+      for (let frame = 0; frame < 120; frame++) {
+        const before = table.physics.panY(0)
+        table.step(1 / 60)
+        fastest = Math.max(fastest, before - table.physics.panY(0))
+      }
+      expect(table.physics.panY(0), kind).toBeCloseTo(free, 1)
+      expect(fastest, `the left pan dropped off the ${kind} in a jump`).toBeLessThan(0.3)
+    }
+    expect(met, 'nothing lay under the pan, so this measures nothing').toBeGreaterThan(300)
+    expect(deepest, worst).toBeLessThan(0.05)
+  }, 120_000)
+
+  it("draws a pan's dish true to the outline its collider follows, so nothing slid against a low pan from outside rests in it", () => {
+    const [left] = SCALE.pans
+    const at = to3(left)
+    // Drawn lumpy, the underside of the dish hung up to 0.8 cm below the pan's collider, and its flare stood as far out of it.
+    const drawn = pointsOf(shapes.pans[0], new THREE.Matrix4())
+    expect(Math.min(...drawn.map((v) => v.y))).toBeCloseTo(DISH_PROFILE[0][1] * PAN_DEPTH, 6)
+    // The rolled rim's lumps stay inside its tube, which the collider follows in chords.
+    const reach = left.r * UNIT * PAN_ROLL.radius
+    expect(Math.max(...drawn.map((v) => Math.hypot(v.x, v.z)).filter((off) => off > reach)), 'the rim reaches out past its tube').toBeLessThanOrEqual(panRimReach(left.r * UNIT).out)
+    let [deepest, met, worst] = [0, 0, '']
+    for (const kind of ['acorn', 'stick'] as const) {
+      const physics = new TablePhysics()
+      physics.setMat('scale')
+      physics.setPanDrops(panDrops(-SCALE.maxTilt))
+      run(physics, 0.2)
+      const pan = drawnPan(0, at.x, physics.panY(0), at.z)
+      const out = panRimReach(left.r * UNIT).out / UNIT + 30
+      const COUNT = 28
+      for (let i = 0; i < COUNT; i++) {
+        const a = ((i + 0.37 * (i % 3)) / COUNT) * Math.PI * 2
+        const slide = { x: -Math.cos(a) * 40, y: 0, z: -Math.sin(a) * 40 }
+        physics.addPart(i + 1, kind, { x: left.x + Math.cos(a) * out, y: left.y + Math.sin(a) * out }, { velocity: slide, yaw: i * 0.9 })
+        // Every other acorn lies on its side.
+        if (kind !== 'acorn' || i % 2 === 0) continue
+        const body = physics.body(i + 1)!
+        body.place({ x: body.position.x, y: 1.4, z: body.position.z }, new Quat().setFromAxisAngle({ x: Math.cos(i), y: 0, z: Math.sin(i) }, Math.PI / 2))
+        body.setVelocity(slide.x, slide.y, slide.z)
+      }
+      for (let frame = 0; frame < 150; frame++) {
+        physics.step(1 / 60)
+        if (frame % 6 && frame < 147) continue
+        for (let i = 0; i < COUNT; i++) {
+          const body = physics.body(i + 1)!
+          const { x, y, z, w } = body.quaternion
+          const position = { x: body.position.x, y: Math.max(body.position.y, partReachDown(kind, x, y, z, w)), z: body.position.z }
+          const piece = drawnPart({ id: i + 1, kind, position, quaternion: [x, y, z, w], held: false })
+          if (!piece.box.intersectsBox(pan.box)) continue
+          met++
+          const depth = pairDepth(piece, pan, CAMERA)?.depth ?? 0
+          if (depth > deepest) [deepest, worst] = [depth, `${kind} ${i + 1} at frame ${frame}`]
+        }
+      }
+    }
+    expect(met, 'nothing came to lie against the pan, so this measures nothing').toBeGreaterThan(100)
+    expect(deepest, worst).toBeLessThan(0.1)
   }, 60_000)
 
   it('turns the beam on its round hub, so the post meets the beam only there', () => {

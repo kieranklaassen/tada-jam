@@ -36,10 +36,23 @@ export type TableState = {
   parts: Part[]
   /** Past tables the child can set back, newest last. */
   album: AlbumPage[]
+  /** Quarter-stones a tip leaves in a bag that holds more than this; a bag holding this or less tips out everything. */
+  reserve: number
+  /** The empty seats' stools are out: from the first shared meal or the first guest carried off, and for good. */
+  stools: boolean
 }
 
-export function bagStonesForAge(childAge: number | null): number {
-  return childAge !== null && childAge <= 3 ? 5 : 10
+/** Every bag holds ten stones. */
+export const BAG_STONES = 10
+
+/**
+ * How much of the bag a first tip keeps back, in quarter-stones: at 3, below
+ * the band and with no age, five stones come out and the next tip gives the
+ * other five; from 4 one tip gives all ten. A default only: every child
+ * reaches all ten stones.
+ */
+export function bagReserveForAge(childAge: number | null): number {
+  return childAge === null || childAge <= 3 ? 20 : 0
 }
 
 export function defaultMatForAge(childAge: number | null): MatKey {
@@ -47,7 +60,7 @@ export function defaultMatForAge(childAge: number | null): MatKey {
 }
 
 export function defaultTable(childAge: number | null): TableState {
-  const total = bagStonesForAge(childAge) * 4
+  const total = BAG_STONES * 4
   const liveMat = defaultMatForAge(childAge)
   return {
     v: STATE_VERSION,
@@ -61,6 +74,8 @@ export function defaultTable(childAge: number | null): TableState {
     nextId: 1,
     parts: [],
     album: [],
+    reserve: bagReserveForAge(childAge),
+    stools: false,
   }
 }
 
@@ -114,6 +129,8 @@ export function deserialize(raw: unknown, childAge: number | null): TableState {
   const shelfRaw = Array.isArray(raw.shelf) ? raw.shelf.filter((key): key is MatKey => (MAT_KEYS as readonly unknown[]).includes(key)) : []
   const shelf = [...new Set([...shelfRaw, ...fallback.shelf])]
   const seats = FEEDING.seats.map((_, index) => (Array.isArray(raw.seats) ? raw.seats[index] === true : fallback.seats[index]))
+  // A save from before the bag kept stones back has no reserve, and tipped out everything.
+  const reserve = finite(raw.reserve, 0)
 
   const state: TableState = {
     v: STATE_VERSION,
@@ -127,6 +144,8 @@ export function deserialize(raw: unknown, childAge: number | null): TableState {
     nextId: 1,
     parts: [],
     album: readAlbum(raw.album, total),
+    reserve: Number.isInteger(reserve) && reserve > 0 && reserve < total && reserve % 4 === 0 ? reserve : 0,
+    stools: raw.stools === true,
   }
   if (parked[liveMat].length > 0) {
     state.pieces.push(...parked[liveMat])
@@ -182,16 +201,17 @@ function largestAvailable(amount: number): Quarters | null {
   return null
 }
 
-/** Everything in the bag comes out at the mouth; whole stones first. */
+/** The bag tips out at the mouth, whole stones first: down to its reserve, or everything once it holds no more than that. */
 export function tipBag(state: TableState): Piece[] {
   const spilled: Piece[] = []
-  let q = largestAvailable(state.bag)
+  const kept = state.bag > state.reserve ? state.reserve : 0
+  let q = largestAvailable(state.bag - kept)
   while (q !== null) {
     const piece = newPiece(state, q, BAG_MOUTH.x, BAG_MOUTH.y)
     state.bag -= q
     state.pieces.push(piece)
     spilled.push(piece)
-    q = largestAvailable(state.bag)
+    q = largestAvailable(state.bag - kept)
   }
   return spilled
 }

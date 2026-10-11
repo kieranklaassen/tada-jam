@@ -233,6 +233,11 @@ export const BALL_RADIUS = 4.6
 export const BUTTERFLY = { x: LOOM.x + 9.5, y: LOOM.rodY + 3.2, z: SCARF.z + 3.4 }
 
 export const LOOM_SPOT: Spot = { x: -32, z: 7, yaw: 0.32 }
+/**
+ * Where the next cold animal waits, in view, until the child's touch brings
+ * it to the loom: on the blanket, on the line it walks in along from `ENTRY`.
+ */
+export const WAIT_SPOT: Spot = { x: -46, z: 8.75, yaw: 0.32 }
 export const ENTRY: Spot = { x: -104, z: 16, yaw: Math.PI / 2 }
 
 /**

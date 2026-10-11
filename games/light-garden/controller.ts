@@ -288,7 +288,11 @@ export class GardenController {
     this.sound = options.sound ?? silent
     this.cadence = new SaveCadence(() => {
       this.creatures.forEach((creature, i) => {
-        state.beds[i] = { x: creature.c.bed.x, y: creature.c.bed.y }
+        // One walking off to nap is saved asleep where it is going, so the walk never plays twice.
+        const napping = creature.c.phase === 'wandering'
+        const at = napping ? creature.c.to : creature.c.bed
+        state.beds[i] = { x: at.x, y: at.y }
+        state.awake[i] = isAwake(creature.c) && !napping
       })
       options.save(serialize(state))
     })
@@ -324,7 +328,7 @@ export class GardenController {
     this.creatures = CREATURES.map((spec, index) => {
       const bed = state.beds[index]
       return {
-        c: makeCreature(index, spec.kind, spec.wants, spec.radius, bed),
+        c: makeCreature(index, spec.kind, spec.wants, spec.radius, bed, state.awake[index]),
         pose: makePose(),
         x: bed.x,
         y: bed.y,
@@ -341,6 +345,8 @@ export class GardenController {
         carry: { held: false, heldFor: 0, want: 0 },
       }
     })
+    // A garden left with all four up is found that way: its chord and wave are not played again.
+    this.allAwake = this.creatures.every((creature) => isAwake(creature.c))
     // Whatever garden was saved, every knob starts clear of the rest and over the panel.
     for (const piece of this.pieces) {
       if (piece.pose.inTray) continue
@@ -659,7 +665,8 @@ export class GardenController {
         const light = creature.caught | lightAt(this.beams, c.bed.x, c.bed.y, c.radius + 0.5)
         const event = stepCreature(c, light, dt, now, this.chooseBed)
         if (event) this.onCreatureEvent(creature, event)
-        if (event === 'nap') this.cadence.change(performance.now(), true)
+        // Who is up is saved as it changes, a waking as it starts, so a garden put away mid-anything is found as it was.
+        if (event === 'wake' || event === 'wander' || event === 'perk' || event === 'nap') this.cadence.change(performance.now(), true)
       }
       if (isAwake(c)) awake++
       if (c.phase === 'awake' && creature.heldBy === null && now - c.nudgeAt > NUDGE_EVERY) this.tryNudge(creature, now)

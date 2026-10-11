@@ -86,6 +86,13 @@ function creature(forest: ForestController, key: AnimalKey) {
   return forest.creatures[ANIMAL_KEYS.indexOf(key)]
 }
 
+/** A saved forest with everyone in bed but one. */
+function asleepExcept(awake: AnimalKey): ForestState {
+  const state = defaultForest()
+  for (const key of ANIMAL_KEYS) state.animals[key].asleep = key !== awake
+  return state
+}
+
 describe('carrying animals to bed', () => {
   it('a carried animal lifts at once, answers with its voice, and settles in its own home', () => {
     const { forest, saves, cues } = setup()
@@ -197,7 +204,7 @@ describe('carrying animals to bed', () => {
     expect(creature(forest, 'fish').mode).toBe('asleep')
   })
 
-  it('everyone in bed brings the night, then dawn wakes them one by one, songbird first and bear last', () => {
+  it('everyone in bed brings the night, which stays until a touch after the lullaby; then dawn wakes them one by one, songbird first and bear last', () => {
     const { forest, cues } = setup()
     run(forest, 0.5)
     for (const key of ANIMAL_KEYS) {
@@ -207,8 +214,16 @@ describe('carrying animals to bed', () => {
     expect(forest.creatures.every((c) => c.asleep)).toBe(true)
     expect(forest.cycle.playful).toBe(false)
     expect(cues).toContain('phase:nightfall')
+    // The finished scene stays: long after the lullaby, nobody has woken and no morning has come.
+    run(forest, NIGHTFALL_SECONDS + NIGHT_SECONDS + 90)
+    expect(forest.cycle.phase).toBe('night')
+    expect(forest.creatures.every((c) => c.mode === 'asleep')).toBe(true)
+    expect(cues).not.toContain('phase:dawn')
+    forest.pointerDown(1, { x: 600, y: 700 }, (clock += 16))
+    forest.pointerUp(1, { x: 600, y: 700 }, (clock += 100))
+    expect(cues).toContain('phase:dawn')
     const woke: string[] = []
-    for (let t = 0; t < NIGHTFALL_SECONDS + NIGHT_SECONDS + DAWN_SECONDS + 4; t += 1 / 30) {
+    for (let t = 0; t < DAWN_SECONDS + 4; t += 1 / 30) {
       forest.step(1 / 30)
       for (const c of forest.creatures) if (c.mode === 'wake' && !woke.includes(c.key)) woke.push(c.key)
     }
@@ -220,21 +235,48 @@ describe('carrying animals to bed', () => {
     for (const c of forest.creatures) expect(c.atHome || c.mode === 'exit').toBe(false)
   })
 
-  it('a saved forest with everyone asleep plays the night and the morning when it opens', () => {
+  it('a touch while the lullaby plays sparkles and never ends the night', () => {
+    const { forest, cues } = setup(asleepExcept('owl'))
+    run(forest, 0.5)
+    carry(forest, 'owl', 'hollow')
+    run(forest, 12)
+    expect(forest.cycle.phase).toBe('night')
+    forest.pointerDown(1, { x: 600, y: 700 }, (clock += 16))
+    forest.pointerUp(1, { x: 600, y: 700 }, (clock += 100))
+    expect(cues).toContain('twinkle')
+    run(forest, 5)
+    expect(forest.cycle.phase).toBe('night')
+    expect(cues).not.toContain('phase:dawn')
+  })
+
+  it('a saved forest with everyone asleep opens in the night it was left in: no nightfall replays and nobody wakes until a touch', () => {
     const state = defaultForest()
     for (const key of ANIMAL_KEYS) state.animals[key].asleep = true
-    const { forest } = setup(state)
-    expect(forest.cycle.phase).toBe('nightfall')
+    const { forest, cues } = setup(state)
+    run(forest, 0.1)
+    expect(forest.cycle.phase).toBe('night')
+    expect(forest.cycle.sky.moon).toBe(1)
+    run(forest, 60)
+    expect(forest.cycle.phase).toBe('night')
+    expect(forest.creatures.every((c) => c.mode === 'asleep')).toBe(true)
+    expect(cues.filter((cue) => cue.startsWith('phase:'))).toEqual([])
+    forest.pointerDown(1, { x: 600, y: 700 }, (clock += 16))
+    forest.pointerUp(1, { x: 600, y: 700 }, (clock += 100))
+    expect(cues).toContain('phase:dawn')
+    run(forest, DAWN_SECONDS + 4)
+    expect(forest.creatures.every((c) => c.roaming)).toBe(true)
   })
 })
 
 describe('touch at night and on the scenery', () => {
   it('sleepers cannot be picked up at night; a touch makes them stir', () => {
-    const state = defaultForest()
-    for (const key of ANIMAL_KEYS) state.animals[key].asleep = true
-    const { forest, cues } = setup(state)
-    run(forest, 1)
+    const { forest, cues } = setup(asleepExcept('owl'))
+    run(forest, 0.5)
+    carry(forest, 'owl', 'hollow')
+    run(forest, 12)
+    expect(forest.cycle.phase).toBe('night')
     forest.pointerDown(1, screenOfAnimal(forest, 'rabbit'), (clock += 16))
+    forest.pointerMove(1, { x: 600, y: 400 })
     expect(creature(forest, 'rabbit').mode).toBe('asleep')
     expect(cues).toContain('stir:rabbit')
     expect(creature(forest, 'rabbit').stirredAt).toBeGreaterThanOrEqual(0)
@@ -314,6 +356,34 @@ describe('gestures and pausing', () => {
     expect(inClearing(saved, 3)).toBe(true)
     run(forest, 1)
     expect(creature(forest, 'rabbit').roaming).toBe(true)
+  })
+})
+
+describe('a finger that never let go', () => {
+  it('put away while an animal is held over its own home, it is set down awake, not sent to bed', () => {
+    const { forest, saves } = setup()
+    run(forest, 0.5)
+    const from = screenOfAnimal(forest, 'owl')
+    const to = screenOfHome('hollow')
+    forest.pointerDown(1, from, (clock += 16))
+    forest.pointerMove(1, to)
+    run(forest, 0.6)
+    expect(forest.hovering[ANIMAL_KEYS.indexOf('owl')]).toBeGreaterThanOrEqual(0)
+    forest.setRunning(false)
+    expect(creature(forest, 'owl').mode).toBe('fall')
+    expect(saves.at(-1)!.animals.owl.asleep).toBe(false)
+    run(forest, 4)
+    expect(creature(forest, 'owl').asleep).toBe(false)
+  })
+
+  it('a cancelled touch over a home is no drop either', () => {
+    const { forest } = setup()
+    run(forest, 0.5)
+    forest.pointerDown(1, screenOfAnimal(forest, 'owl'), (clock += 16))
+    forest.pointerMove(1, screenOfHome('hollow'))
+    run(forest, 0.6)
+    forest.pointerCancel(1)
+    expect(creature(forest, 'owl').mode).toBe('fall')
   })
 })
 

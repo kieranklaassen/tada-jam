@@ -50,6 +50,22 @@ describe('garden state', () => {
     expect(loaded.beds).toHaveLength(4)
   })
 
+  it('keeps who was awake, and reads anything else as asleep', () => {
+    const garden = defaultGarden(8)
+    expect(garden.awake).toEqual([false, false, false, false])
+    garden.awake = [true, false, true, false]
+    expect(deserialize(JSON.parse(JSON.stringify(serialize(garden))), 8).awake).toEqual([true, false, true, false])
+    expect(deserialize({ v: STATE_VERSION, awake: [1, 'yes', true] }, 8).awake).toEqual([false, false, true, false])
+  })
+
+  it('a garden saved before awake creatures were kept still loads, with everyone asleep', () => {
+    const old = { v: 1, pieces: [{ id: 'prism', x: 10, y: -5, angle: 0.5, inTray: false }], beds: [{ x: -30, y: 12 }] }
+    const loaded = deserialize(old, 7)
+    expect(loaded.pieces.find((p) => p.id === 'prism')).toEqual({ id: 'prism', x: 10, y: -5, angle: 0.5, inTray: false })
+    expect(loaded.beds[0]).toEqual({ x: -30, y: 12 })
+    expect(loaded.awake).toEqual([false, false, false, false])
+  })
+
   it('stays small', () => {
     expect(JSON.stringify(serialize(defaultGarden(7))).length).toBeLessThan(2048)
   })

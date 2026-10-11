@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { SUPPLY_LANES, cardHome, hourX, rowEnd, sectionHandle, trailCell, type Point } from './board'
+import { SUPPLY_LANES, cardHome, hourX, rowEnd, sectionHandle, trailCell, trailPoint, type Point } from './board'
 import { deserializeCamp, planOf, serializeCamp, siteOf, type CampState } from './camp'
 import { Game, GLIDE } from './game'
 import { rowsRead } from './lookKit'
@@ -658,6 +658,22 @@ describe('every cell of the grid', () => {
     const first = game.frame.trail[0], had = game.camp.trail.length
     game.press(first); game.lift()
     expect(game.camp.trail.length).toBe(had - 1)
+  })
+
+  it('lays no marshmallow under the shell\'s home control at the top centre, where a touch on it would go home', () => {
+    // The control is 48 pixels across, 10 from the top edge, and a marshmallow answers a touch 24 pixels round its middle.
+    for (const [w, h] of [[1180, 820], [700, 820]]) {
+      const game = new Game(w, h, deserializeCamp({ v: STATE_VERSION, position: 'meadow' }), 1), home = { x: w / 2, y: 34 }
+      game.press(game.board.tin)
+      // Along the top of the map, straight through the control's place.
+      for (let x = w * 0.3; x <= w * 0.7; x += 6) game.move({ x, y: 34 })
+      game.lift()
+      expect(game.camp.trail.length, `${w} by ${h}`).toBeGreaterThan(2)
+      for (const cell of game.camp.trail) {
+        const at = trailPoint(game.board, cell)
+        expect(Math.hypot(at.x - home.x, at.y - home.y), `cell ${cell} at ${w} by ${h}`).toBeGreaterThanOrEqual(48)
+      }
+    }
   })
 })
 

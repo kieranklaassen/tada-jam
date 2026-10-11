@@ -66,7 +66,7 @@ describe('the firefly loop', () => {
     }
   })
 
-  it('flies home over the far shore and moves continuously all the way round', () => {
+  it('flies home along the far shore and moves continuously all the way round', () => {
     const { targets, occupied } = targetsFor(defaultPond().frogs)
     const at: Vec3 = { x: 0, y: 0, z: 0 }
     fireflyAt(6.5, targets, occupied, at)

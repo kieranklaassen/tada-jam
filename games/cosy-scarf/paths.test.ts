@@ -84,8 +84,9 @@ const TAIL_RADIUS = 3.4
 type Worst = { margin: number; what: string }
 
 /**
- * Plays a scarf's walks: the animal at the loom walks there, is given a
- * scarf, and walks home while the next one arrives. Returns the least room
+ * Plays a scarf's walks: the animal at the loom is given a scarf and walks
+ * home, the next one walks into view and waits, and a touch brings it up to
+ * the loom. Returns the least room
  * any walker's body kept from the loom, the basket and its friends, and the
  * fox's streaming tail from the loom.
  */
@@ -136,6 +137,17 @@ function playWalks(warm: AnimalKey[], atLoom: AnimalKey | null): { body: Worst; 
   game.pointerDown(1, at, 0)
   game.pointerUp(1, at, 80)
   for (let i = 0; i < 60 * 30; i++) step()
+  // The next cold animal has come into view and waits; a touch brings it up to the loom.
+  const next = game.state.atLoom
+  if (next && next !== atLoom) {
+    expect(game.actors[next].destination).toBe('wait')
+    game.pointerDown(1, at, 200)
+    game.pointerUp(1, at, 280)
+    for (let i = 0; i < 60 * 5; i++) step()
+    expect(game.actors[next].walking).toBe(false)
+    expect(game.actors[next].x).toBeCloseTo(LOOM_SPOT.x)
+    expect(game.actors[next].z).toBeCloseTo(LOOM_SPOT.z)
+  }
   return { body, tail, walked }
 }
 
@@ -143,7 +155,7 @@ describe('Cosy Scarf walks', () => {
   const earlier = (animal: AnimalKey) => ANIMALS.slice(0, ANIMALS.indexOf(animal))
 
   for (const animal of ANIMALS) {
-    it(`the ${animal} walks to the loom and home again round the loom, the basket and friends already on the hill`, () => {
+    it(`the ${animal} walks home from the loom round the loom, the basket and friends already on the hill, and the next one walks in to wait and steps up at a touch`, () => {
       const { body, tail, walked } = playWalks(earlier(animal), animal)
       expect(walked.has(animal)).toBe(true)
       expect(body.margin, body.what).toBeGreaterThanOrEqual(0)

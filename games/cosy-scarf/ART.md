@@ -22,7 +22,7 @@ Cool, pale world; warm, saturated play. The snow and the sky are the palest thin
 | Play blanket | `#2f6770`, rib hem `#4a8a8f` | Deep teal, draped over the foot of the slope; the lighter hem steps it into the snow |
 | Loom | `#c9955a`, dark `#a8763f`; needles `#d9b27a` | Honey wood |
 | Felt cloth | `#554a63`, low `#3f374c` | Plain felt with a quiet running stitch at its edge: the scarf's backdrop |
-| Yarn | `#d8402e` `#f3b52c` `#3f78cf` `#f4ecdc` `#4f9e45` `#e05b9c` | One ball per colour; younger children get four |
+| Yarn | `#d8402e` `#f3b52c` `#3f78cf` `#f4ecdc` `#4f9e45` `#e05b9c` | One ball per colour. Four are out at first for the youngest, five from age six, all six from eight; a tap on the basket brings out the next |
 | Animals | bunny `#c8ad90`, penguin `#2d3a57` with cream belly, fox `#dc7431`, bear `#8a5836` | Bead eyes `#1b1614`, blush `#f08f98` |
 | Butterfly | `#f0a3c4` | Opens the mirror for colourwork |
 | Glow | `#ffd978` | Readable on teal, felt, and snow |
@@ -52,3 +52,10 @@ All colours live in `PALETTE` and `YARN` in [`view/yarn.ts`](view/yarn.ts).
 ## Guidance (style-independent)
 
 [`guidance.ts`](guidance.ts) decides what to demonstrate; the view only draws it. When the child stops, whatever can be touched breathes with a glow ring; then a ghost hand shows one next act chosen from the loom's state: tap the yarn ball that would carry the stripe pattern on, or carry the finished scarf to the cold animal. Demonstrations back off with doubling gaps and stop after four per idle stretch. Any touch clears everything at once, and the idle clock is held while a finger is down or a gift is playing, so a long paint stroke or a dance is never mistaken for idleness. The suggested ball also swells and lights a warm rim on its own silhouette, so the cue stays on the thing itself where no neighbour can hide it. The world answers the likeliest wrong guesses instead of ignoring them: a tap on the empty loom makes the wanted ball hop, and a ball carried to the cold animal flies into the loom and is knitted for it. No text, no voice instructions, no verdicts, and nothing counts the wrapped animals.
+
+## Age, and what is found on return
+
+- **Age sets two defaults and gates nothing** ([`state.ts`](state.ts)). The basket starts with four balls out and the loom offers the scarf at eight rows for a five-year-old, a younger child and an unknown age; five balls and ten rows at six and seven; all six balls and twelve rows from eight up. The child may always knit on past the offer, up to the rod.
+- **The basket gives up the rest.** While a colour is still inside, a tap on the basket brings the next ball up from behind it with its own note, and the others hop to make room; once all six are out, a tap makes them all hop as before. Nothing hints at it and nothing counts it. How many the child has brought out is saved, and from then on that wins over the age.
+- **The next cold animal waits for a touch.** After a gift the friend dances and walks home, and the next cold animal walks into view at the edge of the blanket and stands there shivering, for as long as the child likes. The child's next touch, wherever it lands, brings it up to the loom; a tap on a ball knits its first row as it comes. While it waits it is cold in its own way, as it is at the loom, at the same pace however long the wait.
+- **Found as left.** Nobody walks in on open. Whoever the loom's scarf is for stands at the loom; a cold animal with nothing knitted for it yet waits in view at the edge; everyone else is on the hill in their scarves. A gift is saved the moment it starts, so one put away mid-flight is found worn and does not play again.

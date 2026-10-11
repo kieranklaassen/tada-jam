@@ -1,4 +1,4 @@
-import { SUPPLY_LANES, USER_ROWS, boardFor, cardHome, dogPath, hourAt, hourX, rowEnd, streamPoint, targetAt, trailCell, trailPoint, unitLength, unitsAt, type Board, type Live, type Point, type Target } from './board'
+import { SUPPLY_LANES, USER_ROWS, boardFor, cardHome, dogPath, hourAt, hourX, rowEnd, streamPoint, targetAt, trailCell, trailPoint, underHomeControl, unitLength, unitsAt, type Board, type Live, type Point, type Target } from './board'
 import { backToDusk, cardAmount, cardNow, clickWick, fetchNeatWay, flipCard, hoursOf, layIn, layTrail, lightsOut, moveLantern, moveOn, pickTrail, planOf, reachDawn, rowOf, rubLast, serializeCamp, showStamps, siteOf, stamp, turnDial, unfold, type CampState } from './camp'
 import { sparePlaces, towerLoad, towerPlaces } from './consequences'
 import { restGameFrame, type GameFrame, type StripFrame } from './frame'
@@ -496,10 +496,13 @@ export class Game {
     this.rows.wantHeap(supply, ((units - most) * unitLength(this.board, supply)) / (16 * this.board.u))
   }
 
-  /** A marshmallow is laid only on bare map: never on a tent, a camper, the fire or a lantern. */
+  /**
+   * A marshmallow is laid only on bare map: never on a tent, a camper, the fire or a lantern, and never under the
+   * shell's home control, where a touch to pick it up again would go home.
+   */
   private clearCell(cell: number): boolean {
     const at = trailPoint(this.board, cell), on = targetAt(this.board, at, this.live())
-    return on === null
+    return on === null && !underHomeControl(this.board, at)
   }
 
   private dial(setting: number): void {

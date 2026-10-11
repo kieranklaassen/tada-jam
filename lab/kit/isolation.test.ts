@@ -2,8 +2,9 @@
 // configs name no lab path), imports nothing from the jam, and is imported by
 // nothing in the jam. Its own build lands in lab/. The one bridge is at
 // publish time: the jam's `npm run build` also builds the lab into dist/lab/,
-// so the jam's home page can link to the demos; the home page reads a JSON
-// catalog that build writes and shares no code with the lab.
+// so the jam's home page can show the demos; the home page reads a JSON
+// catalog that build writes, frames the demo player's own page, and shares
+// no code with the lab.
 
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { dirname, join, relative, resolve, sep } from 'node:path'

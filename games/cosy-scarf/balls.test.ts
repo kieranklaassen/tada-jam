@@ -260,3 +260,34 @@ describe('a ball carried by a finger', () => {
     glide([game.balls[1].rest, { x: SCARF.x, y: SCARF.top - CELL_H, z: 0 }, needles, { x: BASKET.x + 4, y: BASKET.rimY + 2, z: 0 }])
   })
 })
+
+describe('a ball brought out of the basket', () => {
+  it('comes up and the others make room without any of them passing through another ball or the basket', () => {
+    for (const from of [4, 5]) {
+      const state = initialState()
+      state.balls = from
+      const game = new ScarfController(state, { save: () => {}, childAge: 5 })
+      game.setProjector(projector)
+      game.step(1 / 60)
+      const basket = screenOf(BASKET.x, 1)
+      game.pointerDown(1, basket, 0)
+      game.pointerUp(1, basket, 80)
+      expect(game.balls).toHaveLength(from + 1)
+      let moved = 0
+      for (let frame = 0; frame < 90; frame++) {
+        game.step(1 / 60)
+        game.balls.forEach((ball, i) => {
+          if (ball.returning < 0) return
+          moved++
+          const reach = ballReach(ball.carry.x.v, ball.carry.y.v, 1, ball.squash.x)
+          expect(clearOfBasket(ball.pos), `ball ${i} of ${from + 1} in the basket, frame ${frame}`).toBeGreaterThan(reach - 1e-6)
+          game.balls.forEach((other, j) => {
+            if (j !== i) expect(distance(ball.pos, other.pos), `balls ${i} and ${j} of ${from + 1}, frame ${frame}`).toBeGreaterThan(reach + BALL_RADIUS - 1e-6)
+          })
+        })
+      }
+      expect(moved).toBeGreaterThan(from)
+      game.balls.forEach((ball, i) => expect(ball.pos).toEqual(ballRest(i, from + 1)))
+    }
+  })
+})

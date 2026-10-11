@@ -136,7 +136,7 @@ export default {
       run: async (d) => {
         await tapWorld(d, -24, 55.5, -12)
         await d.wait(600)
-        await tapWorld(d, 26, 55.5, -12)
+        await tapWorld(d, 34, 55.5, -12)
         await d.wait(600)
         await tapWorld(d, 0, 23, 64)
         await d.wait(600)

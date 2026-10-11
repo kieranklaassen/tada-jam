@@ -83,6 +83,8 @@ type PartDrag = {
   magnet: Critter | null
   pull: number
   age: number
+  /** Where a pulled-off part came from: a drag that ends without a drop puts it back there. Null for a part from the tray. */
+  home: { critter: Critter; index: number } | null
 }
 type PullDrag = { type: 'pull'; pointerId: number; critter: Critter; index: number; screen: Screen; from: Screen }
 type CarryDrag = { type: 'carry'; pointerId: number; critter: Critter; screen: Screen }
@@ -456,8 +458,13 @@ export class WorkshopController {
     this.handle(this.tracker.up(pointerId, at, time))
   }
 
+  /** The tablet took the touch away (a system gesture, a put-away under the finger): that is no drop, so whatever the finger held goes back. */
   pointerCancel(pointerId: number): void {
-    this.handle(this.tracker.cancel(pointerId))
+    this.tracker.cancel(pointerId)
+    const drag = this.dragOf(pointerId)
+    if (!drag) return
+    this.removeDrag(drag)
+    this.endDrag(drag, false)
   }
 
   private handle(intents: Intent<Target>[]): void {
@@ -716,7 +723,7 @@ export class WorkshopController {
     this.trayGrow[kind] = -0.3
     const slot = traySlot(kind)
     const at = new THREE.Vector3(slot.x, TRAY.height + displayBase(kind), slot.z)
-    this.setDrag({ type: 'part', pointerId, part: { kind, hue }, screen: { x: this.lastPress.x, y: this.lastPress.y }, at, vx: 0, vz: 0, magnet: null, pull: 0, age: 0 })
+    this.setDrag({ type: 'part', pointerId, part: { kind, hue }, screen: { x: this.lastPress.x, y: this.lastPress.y }, at, vx: 0, vz: 0, magnet: null, pull: 0, age: 0, home: null })
     this.sound.pick()
     this.cadence.now(performance.now())
     this.hintStale = true
@@ -810,7 +817,7 @@ export class WorkshopController {
     critter.pull = null
     if (!part) return
     critter.partRemoved(index)
-    this.setDrag({ type: 'part', pointerId: drag.pointerId, part, screen: drag.screen, at, vx: 0, vz: 0, magnet: null, pull: 0, age: 0 })
+    this.setDrag({ type: 'part', pointerId: drag.pointerId, part, screen: drag.screen, at, vx: 0, vz: 0, magnet: null, pull: 0, age: 0, home: { critter, index } })
     this.sound.pop(critter.profile.voice)
     if (critter.awake) {
       critter.react()
@@ -833,6 +840,7 @@ export class WorkshopController {
           this.hintStale = true
           return
         }
+        if (!released && this.pressBack(drag)) return
         this.flights.push({ part: drag.part, from: drag.at.clone(), t0: this.t, duration: FLIGHT_SECONDS, spin: (drag.vx >= 0 ? 1 : -1) * 5 })
         this.sound.whoosh()
         return
@@ -867,6 +875,23 @@ export class WorkshopController {
         return unreachable
       }
     }
+  }
+
+  /** A pulled-off part whose drag ended without a drop goes back on the body it came from, in the place it had. */
+  private pressBack(drag: PartDrag): boolean {
+    const home = drag.home
+    if (!home || home.critter.gone) return false
+    const { critter } = home
+    const index = Math.min(home.index, critter.save.parts.length)
+    if (!attach(critter.save, drag.part, index)) return false
+    critter.partAttached(index)
+    // a second finger pulling at a later part of the same body keeps hold of that part
+    for (const other of this.drags) if (other.type === 'pull' && other.critter === critter && other.index >= index) other.index += 1
+    if (critter.pull && critter.pull.index >= index) critter.pull.index += 1
+    this.sound.squish(critter.profile.voice)
+    this.cadence.now(performance.now())
+    this.hintStale = true
+    return true
   }
 
   /** A bare lump is not ready to wake: it peeks at the tray, and the part it wants hops to answer. */

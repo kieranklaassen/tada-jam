@@ -1,6 +1,6 @@
 // Saved state for Cosy Scarf: the scarf on the loom, every scarf each animal
-// wears, who is standing by the loom, and whether the butterfly (mirror) is
-// open. Small plain JSON, versioned, and read defensively: anything odd is
+// wears, who the loom's scarf is for, whether the butterfly (mirror) is open,
+// and how many yarn balls the child has brought out of the basket. Small plain JSON, versioned, and read defensively: anything odd is
 // dropped row by row instead of throwing, so an old or corrupt save still
 // opens with every valid stitch in place.
 
@@ -13,8 +13,10 @@ export const WIDTH = 5
 export const MAX_ROWS = 18
 /** Scarves stack; beyond this the oldest one is folded away. */
 export const MAX_SCARVES = 3
-/** Yarn colours that exist; the basket shows a subset by age. */
+/** Yarn colours that exist. The basket starts with some of them out, by age, and gives up the rest one tap at a time. */
 export const COLOURS = 6
+/** The fewest yarn balls a basket starts with. */
+export const MIN_BALLS = 4
 
 /** One row: a colour index per stitch. */
 export type Row = number[]
@@ -26,20 +28,29 @@ export type GameState = {
   mirror: boolean
   scarves: Record<AnimalKey, Scarf[]>
   atLoom: AnimalKey | null
+  /** How many yarn balls are out, once the child has tipped the basket for more; null until then (a save from before this field reads as null). */
+  balls: number | null
 }
 
-/** How many yarn balls sit in the basket. Age is a dial for defaults, never a gate. */
+/**
+ * How many yarn balls sit out in the basket on a first visit. Age is a dial
+ * for this default, never a gate: a tap on the basket brings out the rest.
+ * An unknown age takes the youngest default, and the ends are open.
+ */
 export function ballsForAge(age: number | null): number {
-  if (age === null) return 5
-  if (age <= 5) return 4
+  if (age === null || age <= 5) return MIN_BALLS
   if (age <= 7) return 5
-  return 6
+  return COLOURS
 }
 
-/** How long a scarf is before the loom offers it. The child may always knit on. */
+/** How many yarn balls are out: what the child brought out wins over the age. */
+export function ballsFor(state: GameState, age: number | null): number {
+  return state.balls ?? ballsForAge(age)
+}
+
+/** How long a scarf is before the loom offers it. The child may always knit on. An unknown age takes the youngest default. */
 export function offerRowsForAge(age: number | null): number {
-  if (age === null) return 10
-  if (age <= 5) return 8
+  if (age === null || age <= 5) return 8
   if (age <= 7) return 10
   return 12
 }
@@ -49,7 +60,7 @@ export function emptyScarves(): Record<AnimalKey, Scarf[]> {
 }
 
 export function initialState(): GameState {
-  return { v: 1, loom: [], mirror: false, scarves: emptyScarves(), atLoom: 'bunny' }
+  return { v: 1, loom: [], mirror: false, scarves: emptyScarves(), atLoom: 'bunny', balls: null }
 }
 
 export function isAnimal(value: unknown): value is AnimalKey {
@@ -88,6 +99,8 @@ export function deserialize(saved: unknown): GameState {
   const raw = saved as Record<string, unknown>
   state.loom = readScarf(raw.loom)
   state.mirror = raw.mirror === true
+  const balls = raw.balls
+  if (typeof balls === 'number' && Number.isInteger(balls) && balls >= MIN_BALLS && balls <= COLOURS) state.balls = balls
   const scarves = raw.scarves && typeof raw.scarves === 'object' ? (raw.scarves as Record<string, unknown>) : {}
   for (const animal of ANIMALS) {
     const list = Array.isArray(scarves[animal]) ? (scarves[animal] as unknown[]) : []

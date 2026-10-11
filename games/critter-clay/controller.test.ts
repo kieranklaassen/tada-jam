@@ -531,6 +531,67 @@ describe('WorkshopController', () => {
     expect(workshop.rig.batches.eye.count).toBe(1)
   })
 
+  /** Dress the lump with a leg, an eye and an ear, then pull the leg (the first part) off and keep it on the finger. */
+  function holdPulledLeg(workshop: WorkshopController) {
+    giveSleeper(workshop, 'legStub')
+    giveSleeper(workshop, 'eye')
+    giveSleeper(workshop, 'earFlop')
+    run(workshop, 1)
+    const dressed = workshop.state.sleeper!.parts.map((part) => ({ ...part }))
+    const leg = workshop.sleeper!.world.parts
+    const from = screenOf(leg[0], leg[2])
+    const id = drag(workshop, from, () => ({ x: from.x - 200, y: from.y + 150 }), false)
+    expect(workshop.state.sleeper!.parts).toEqual(dressed.slice(1))
+    return { dressed, id }
+  }
+
+  it('put away with a pulled-off part still on the finger, the part is back where it was pulled from, and that is what is saved', () => {
+    const { workshop, save } = makeWorkshop()
+    const { dressed } = holdPulledLeg(workshop)
+    workshop.setRunning(false)
+    expect(workshop.state.sleeper!.parts).toEqual(dressed)
+    expect(save.mock.lastCall![0].sleeper.parts).toEqual(dressed)
+    workshop.setRunning(true)
+    run(workshop, 1)
+    expect(workshop.rig.batches.legStub.count).toBe(2)
+  })
+
+  it('a resting hand puts a pulled-off part back where it was pulled from', () => {
+    const { workshop } = makeWorkshop()
+    const { dressed } = holdPulledLeg(workshop)
+    for (const other of [301, 302, 303]) workshop.pointerDown(other, screenOf(-40 + other - 300, 20), (clock += 5))
+    run(workshop, 1)
+    expect(workshop.state.sleeper!.parts).toEqual(dressed)
+  })
+
+  it('a touch the tablet takes away is no drop: a part held over the lump goes home, and a pulled-off part goes back', () => {
+    const { workshop } = makeWorkshop()
+    const slot = traySlot('horn')
+    const held = drag(workshop, screenOf(slot.x, slot.z), () => socketScreen(workshop, 'horn'), false)
+    workshop.pointerCancel(held)
+    run(workshop, 1)
+    expect(workshop.state.sleeper!.parts).toHaveLength(0)
+    const { dressed, id } = holdPulledLeg(workshop)
+    workshop.pointerCancel(id)
+    run(workshop, 1)
+    expect(workshop.state.sleeper!.parts).toEqual(dressed)
+  })
+
+  it('a touch the tablet takes away while a critter is carried over the turntable sets it down awake', () => {
+    const { workshop } = makeWorkshop()
+    giveSleeper(workshop, 'legStub')
+    giveSleeper(workshop, 'legStub')
+    const id = workshop.state.sleeper!.id
+    tapNose(workshop)
+    run(workshop, 3)
+    const body = workshop.critters.find((c) => c.save.id === id)!.world.body
+    const finger = drag(workshop, screenOf(body[0], body[2]), () => screenOf(TURNTABLE.x, TURNTABLE.z), false)
+    workshop.pointerCancel(finger)
+    run(workshop, 2)
+    expect(workshop.state.awake.map((c) => c.id)).toEqual([id])
+    expect(workshop.state.sleeper!.id).not.toBe(id)
+  })
+
   it('keeps tray parts in the tray and on screen', () => {
     const { workshop } = makeWorkshop()
     expect(workshop.rig.batches.legStub.count).toBe(1)
