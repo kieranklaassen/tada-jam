@@ -43,6 +43,12 @@ export function fingerMeans(game: Game, spot: Spot): Target | null {
   return means
 }
 
+/**
+ * How far to either side of the middle of the cabinet the top of a crate is kept free of the hand, in studs: the
+ * shell's home control lies over the top centre of the surface, 48 px across, and a finger is as wide again.
+ */
+const HOME_HALF = 3
+
 export function hintFor(game: Game, showing: number): Hint {
   const world = game.world, nth = Math.max(0, showing)
   if (game.scene) return { marks: [], tap: null }
@@ -53,11 +59,17 @@ export function hintFor(game: Game, showing: number): Hint {
     // anywhere on the ledge on that side means that crate.
     const marks = game.crates.map((crate) => ({ x: crate.x, y: CRATE_STANDS + crateTop(crate.which, crate.crews.length) - 1.6, z: crate.z, r: 5.4 }))
     // (Where no gobbler stands in front of that. A crew at the tray hides the ledge behind it; then the hand
-    // taps the crate itself, on the front of its box or on its top, wherever a finger would mean the crate.)
+    // taps the crate itself, on the front of its box or on its top, wherever a finger would mean the crate.
+    // The middle of the top of a crate that stands alone in the middle of the ledge is left out: it is at the
+    // top centre of the surface, where the shell lays its home control, and a finger that copied the hand there
+    // would go home. The hand taps the top of that crate to one side of its knob.)
     const taps = game.crates.map((crate) => {
       const top = CRATE_STANDS + crateTop(crate.which, crate.crews.length)
       const tries: Spot[] = [{ x: crate.x, y: GATE.top + 0.5, z: GATE.z + 0.6 }]
-      for (const dx of [0, -3.5, 3.5, -5.5, 5.5]) tries.push({ x: crate.x + dx, y: top - 3, z: crate.z + 3 }, { x: crate.x + dx, y: top - 1, z: crate.z })
+      for (const dx of [0, -3.5, 3.5, -5.5, 5.5]) {
+        tries.push({ x: crate.x + dx, y: top - 3, z: crate.z + 3 })
+        if (Math.abs(crate.x + dx) >= HOME_HALF) tries.push({ x: crate.x + dx, y: top - 1, z: crate.z })
+      }
       return tries.find((spot) => fingerMeans(game, spot)?.on === 'ledge') ?? tries[0]
     })
     return { marks, tap: taps.length > 0 ? taps[nth % taps.length] : null }
