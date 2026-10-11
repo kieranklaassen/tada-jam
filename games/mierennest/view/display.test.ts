@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BODY, campers } from '../camp'
+import { BODY, campers, faceCircle } from '../camp'
 import { LADDER } from '../config'
 import { CELL, EARTH, MOUTH, OPEN, STONE, at, put, settle } from '../ground'
 import type { Guidance } from '../guidance'
@@ -461,11 +461,7 @@ describe('the kingdom\'s own make way', () => {
     return game
   }
   const boxOf = (item: Extract<Item, { is: 'sprite' }>) => ({ left: item.x - (BODY[item.who].width / 2) * item.size, right: item.x + (BODY[item.who].width / 2) * item.size, top: item.y - BODY[item.who].height * item.size * item.tall, bottom: item.y })
-  const faceOf = (item: Extract<Item, { is: 'sprite' }>) => {
-    const body = BODY[item.who], radius = Math.min(18, body.height * 0.45) * item.size
-    return { x: item.x + (item.flip ? -1 : 1) * ((body.width / 2) * item.size - radius - 2), y: item.y - body.height * 0.55 * item.size, radius }
-  }
-  const covers = (box: ReturnType<typeof boxOf>, face: ReturnType<typeof faceOf>) => Math.hypot(Math.max(box.left - face.x, 0, face.x - box.right), Math.max(box.top - face.y, 0, face.y - box.bottom)) < face.radius
+  const faceOf = (item: Extract<Item, { is: 'sprite' }>) => faceCircle(item.who, item.x, item.y, item.flip, item.size)
 
   it('a worker or the queen standing in a cell that is pressed steps aside, and the cell is answered', () => {
     for (const who of ['worker', 'queen'] as const) {

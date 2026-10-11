@@ -1,4 +1,4 @@
-import { BODY, partyFile, type Camper } from '../camp'
+import { BODY, bodyBox, faceCircle, partyFile, type Box, type Camper, type Face } from '../camp'
 import type { Room } from '../chambers'
 import { CELL, OPEN, type Ground } from '../ground'
 import type { Flying, Scene } from '../kingdom'
@@ -193,35 +193,30 @@ function seatY(raid: Raid, file: readonly Camper[], n: number): number {
 }
 
 /** The body of something shown, as a box on the stage: turned on end where it climbs. */
-export function shownBox(one: Shown): { left: number; right: number; top: number; bottom: number } {
-  const body = BODY[one.who], w = body.width * one.size, h = body.height * one.size
+export function shownBox(one: Shown): Box {
   if (Math.abs(Math.abs(one.turn) - Math.PI / 2) < 0.01 && one.who !== 'dungBall') {
     // Turned about the middle of its body: as long up and down as it was wide.
+    const body = BODY[one.who], w = body.width * one.size, h = body.height * one.size
     const cy = one.y - h / 2
     return { left: one.x - h / 2, right: one.x + h / 2, top: cy - w / 2, bottom: cy + w / 2 }
   }
-  return { left: one.x - w / 2, right: one.x + w / 2, top: one.y - h, bottom: one.y }
+  return bodyBox(one.who, one.x, one.y, one.size)
 }
 
 /** The face of something shown: a circle at the front of its body. A ball has none, and neither has one who ducks. */
-export function shownFace(one: Shown): { x: number; y: number; radius: number } | null {
+export function shownFace(one: Shown): Face | null {
   if (one.who === 'dungBall' || DUCKS[one.who] === one.pose) return null
-  const body = BODY[one.who], w = body.width * one.size, h = body.height * one.size
-  const radius = Math.min(18, body.height * 0.45) * one.size, front = one.flip ? -1 : 1
   // As it stands: at the front, a little over the middle of its height.
-  let dx = front * (w / 2 - radius - 2), dy = -h * 0.55
-  if (one.turn !== 0 && Math.abs(Math.abs(one.turn) - Math.PI / 2) < 0.01) {
-    // Turned about the middle of its body.
-    const ry = dy + h / 2, cos = Math.cos(one.turn), sin = Math.sin(one.turn)
-    const tx = dx * cos - ry * sin, ty = dx * sin + ry * cos
-    dx = tx
-    dy = ty - h / 2
-  }
-  return { x: one.x + dx, y: one.y + dy, radius }
+  const face = faceCircle(one.who, one.x, one.y, one.flip, one.size)
+  if (one.turn === 0 || Math.abs(Math.abs(one.turn) - Math.PI / 2) >= 0.01) return face
+  // Turned about the middle of its body.
+  const h = BODY[one.who].height * one.size, dx = face.x - one.x, ry = face.y - one.y + h / 2
+  const cos = Math.cos(one.turn), sin = Math.sin(one.turn)
+  return { x: one.x + dx * cos - ry * sin, y: one.y + dx * sin + ry * cos - h / 2, radius: face.radius }
 }
 
 /** Whether a face is touched by a box. */
-export function covers(box: { left: number; right: number; top: number; bottom: number }, face: { x: number; y: number; radius: number }): boolean {
+export function covers(box: Box, face: Face): boolean {
   return Math.hypot(Math.max(box.left - face.x, 0, face.x - box.right), Math.max(box.top - face.y, 0, face.y - box.bottom)) < face.radius
 }
 
@@ -248,14 +243,11 @@ function duckUnder(list: Shown[], over: readonly Box[] = []): void {
   }
 }
 
-/** A body on the stage that is drawn after the raid's own: the child's ant. */
-export type Box = { left: number; right: number; top: number; bottom: number }
-
 /**
  * Everyone of a raid, as they are shown, in the order they are drawn. One still at the log sits in its place
  * there; the next to come in walks to the mouth and waits there, in view, until it can; one in the nest is where
- * the raid has it; one that is home sits at the log again. A dung beetle's ball is shown with it. `over` is what is
- * drawn after them all, the child's ant: one whose face it would cover ducks.
+ * the raid has it; one that is home sits at the log again. A dung beetle's ball is shown with it. `over` is the
+ * bodies that are drawn after them all, the child's ant: one whose face it would cover ducks.
  */
 export function showRaid(raid: Raid, party: Party, seconds: number, over: readonly Box[] = []): Shown[] {
   const ground = raid.ground, cols = ground.cols, file = partyFile(party)

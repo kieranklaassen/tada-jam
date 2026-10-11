@@ -1,4 +1,4 @@
-import { BODY, camperAt, campers, onBell, type Camper } from '../camp'
+import { BODY, bodyBox, camperAt, campers, faceRadius, onBell, type Box, type Camper } from '../camp'
 import { CELL, MUD, OPEN, ROCK, SAND, STONE, at, type Ground, type Lump } from '../ground'
 import { handPose, type Guidance, type HandPose } from '../guidance'
 import { idleMove, pokeMove, POKE_SECONDS, type Move, type Mover } from '../motion'
@@ -442,9 +442,9 @@ export class ToyDisplay {
   }
 
   /** The child's ant as a body on the stage, standing along its floor. */
-  private antBox(): { left: number; right: number; top: number; bottom: number } {
+  private antBox(): Box {
     const feet = this.antFeet()
-    return { left: feet.x - BODY.ant.width / 2, right: feet.x + BODY.ant.width / 2, top: feet.y - BODY.ant.height, bottom: feet.y }
+    return bodyBox('ant', feet.x, feet.y)
   }
 
   /** Where the carried lump rides: by its kind. */
@@ -603,7 +603,7 @@ export class ToyDisplay {
     const huddled = k.raid !== null
     const workers = () => {
       workerSpots(ground, realm.chambers, realm.queenRoom, realm.workers, huddled).forEach((spot, n) => {
-        const stands = this.makeWay(spot.x, BODY.worker.width / 2 / CELL, spot.y, 1, Math.min(18, BODY.worker.height * 0.45), n % 2 === 1)
+        const stands = this.makeWay(spot.x, BODY.worker.width / 2 / CELL, spot.y, 1, faceRadius('worker'), n % 2 === 1)
         const p = toStage(stands.x, spot.y + 1)
         const move = this.moveOf(`worker${n}`, 'worker', (n * 0.37) % 1, slot++)
         list.push({ is: 'sprite', id: '', who: 'worker', pose: move.second ? 'walk2' : 'walk', x: p.x, y: p.y, flip: stands.flip, size: 1, tall: 1, move, turn: 0 })
@@ -634,7 +634,7 @@ export class ToyDisplay {
         list.push({ is: 'sprite', id: 'queen', who: 'queen', pose: tries < ends.length - 1 ? 'sit2' : 'sit', x: ends[tries].x, y: ends[tries].y, flip: false, size: seat.fit, tall: 1, move: queenMove, turn: 0 })
       }
     } else if (seat) {
-      const stands = this.makeWay(seat.x, (BODY.queen.width / 2 / CELL) * seat.fit, seat.y, Math.ceil((BODY.queen.height * seat.fit) / CELL), Math.min(18, BODY.queen.height * 0.45) * seat.fit, false)
+      const stands = this.makeWay(seat.x, (BODY.queen.width / 2 / CELL) * seat.fit, seat.y, Math.ceil((BODY.queen.height * seat.fit) / CELL), faceRadius('queen', seat.fit), false)
       const p = toStage(stands.x, seat.y + 1)
       // In the ending she puts her egg down at last.
       const down = ending !== null && ending.t >= ENDING.egg
