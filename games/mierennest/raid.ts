@@ -363,11 +363,27 @@ function climbsItCannotMake(raid: Raid, invader: Invader): boolean {
   return false
 }
 
-/** Whether one who sits held on the ground is within a body's length ahead on this one's way home. */
+/**
+ * Whether the next step of its way home would bring it within a body's length of one who already sits on the same
+ * floor for the rest of the raid, and nearer than it is now: it sits down where it is, a body's length from the next.
+ */
 function heldAhead(raid: Raid, invader: Invader): boolean {
+  const next = invader.way[invader.step + 1]
+  if (next === undefined) return false
+  const cols = raid.ground.cols, gait = gaitOf(invader)
+  const y = Math.floor(next / cols), x = next % cols, now = invader.cell % cols
   for (const other of raid.invaders) {
-    if (other === invader || other.state !== 'held' || gaitOf(other) === 'fly') continue
-    for (let n = invader.step + 1; n < invader.way.length && n <= invader.step + QUEUE_GAP; n++) if (invader.way[n] === other.cell) return true
+    if (other === invader || other.cell < 0 || gaitOf(other) === 'fly') continue
+    // Where it sits, or where it is going to sit: one who left the log earlier and is on its way to the foot of a
+    // climb it cannot make has that place already, so that two never come to sit in one.
+    let seat = -1
+    if (other.state === 'held' || other.state === 'stuck') seat = other.cell
+    else if (other.state === 'leaving' && other.id < invader.id) {
+      for (let n = other.step; n + 1 < other.way.length && seat < 0; n++) if (tooHigh(raid, other.way[n], other.way[n + 1])) seat = other.way[n]
+    }
+    if (seat < 0 || Math.floor(seat / cols) !== y) continue
+    const ox = seat % cols, body = HALF[gait] + HALF[gaitOf(other)]
+    if (Math.abs(x - ox) < body && (Math.floor(invader.cell / cols) !== y || Math.abs(x - ox) < Math.abs(now - ox))) return true
   }
   return false
 }

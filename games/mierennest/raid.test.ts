@@ -104,10 +104,52 @@ describe('a room under the shaft, and a mouth partly shut', () => {
     const mixed = playOut(raidOn(walled, ['beetle', 'ant']))
     expect(mixed.acts).toBe(2)
     expect(states(mixed)).toEqual(['held', 'home'])
-    // A file of them sits a body's length apart, none in another.
-    const file = playOut(raidOn(under, ['ant', 'ant', 'ant']))
+  })
+
+  it('those who wait for the workers sit a body\'s length apart, each from every other, where the floor has room for it', () => {
+    // A body is a little over four cells long: five cells from middle to middle is a body's length apart.
+    const apart = (raid: Raid) => {
+      const held = raid.invaders.filter((invader) => invader.state === 'held')
+      for (const a of held) for (const b of held) {
+        if (a.id >= b.id || Math.floor(a.cell / raid.ground.cols) !== Math.floor(b.cell / raid.ground.cols)) continue
+        expect(Math.abs((a.cell % raid.ground.cols) - (b.cell % raid.ground.cols)), `${a.id} and ${b.id}`).toBeGreaterThanOrEqual(5)
+      }
+      return held.length
+    }
+    // A wide room under the shaft: a file of three raider ants, then beetles with them.
+    const wide = ['XXXXXXXXX...XXXXXXXXXXXXXXXXXXXXXX', '#########...######################', '#########...######################', '#########...######################', `#${'.'.repeat(32)}#`, `#${'.'.repeat(32)}#`, `#${'.'.repeat(32)}#`, '#'.repeat(34), 'X'.repeat(34)]
+    const file = playOut(raidOn(wide, ['ant', 'ant', 'ant']))
     expect(file.acts).toBe(3)
-    expect(new Set(file.invaders.map((invader) => invader.cell)).size).toBe(3)
+    expect(apart(file)).toBe(3)
+    const mixed = playOut(raidOn(wide, ['beetle', 'ant', 'beetle']))
+    expect(mixed.acts).toBe(3)
+    expect(apart(mixed)).toBe(3)
+    // Two rooms at the ends of a low way that passes under the shaft: two who come back to the foot of the same drop
+    // from either side at the same moment do not sit down in one cell.
+    const twoRooms = (right: number) => {
+      const rest = right + 7
+      return [`XXXXXXXXX...${'X'.repeat(rest)}`, ...[1, 2, 3].map(() => `#########...${'#'.repeat(rest)}`), `#......##...${'#'.repeat(right)}......#`, ...[5, 6].map(() => `#${'.'.repeat(rest + 10)}#`), '#'.repeat(rest + 12), 'X'.repeat(rest + 12)]
+    }
+    for (const [right, party] of [[3, ['ant', 'ant']], [5, ['beetle', 'beetle']]] as [number, Party][]) {
+      const met = playOut(raidOn(twoRooms(right), party))
+      expect(met.acts, party[0]).toBe(2)
+      expect(apart(met), party[0]).toBe(2)
+    }
+    // Under a shaft that was widened at its top, where an ant lets go twice on its way down.
+    const widened = ['XXXXXXXXX...XXXXXXXXXXXX', '########.....###########', '#########...############', '#########...############', '#......................#', '#......................#', '#......................#', '########################', 'XXXXXXXXXXXXXXXXXXXXXXXX']
+    const two = playOut(raidOn(widened, ['ant', 'ant']))
+    expect(two.acts).toBe(2)
+    expect(apart(two)).toBe(2)
+    // One that gave up and never did its act waits the same way: at the foot of its drop, a body's length from the next.
+    // A low way under the shaft, wider than it, with one lump of sand before the room: the ants drop in, cannot climb the sand, and give up.
+    const walled = ['XXXXXXXXX...XXXXXXXXXXXX', '#########...############', '#########...############', '#########...############', '#########...######.....#', '#######................#', '#######.........s......#', '########################', 'XXXXXXXXXXXXXXXXXXXXXXXX']
+    const gaveUp = raidOn(walled, ['ant', 'ant'])
+    const events: RaidEvent[] = []
+    while (!gaveUp.over) { stepRaid(gaveUp); events.push(...gaveUp.events.splice(0)) }
+    expect(gaveUp.acts).toBe(0)
+    expect(kinds(events, 'givesUp').length).toBe(2)
+    expect(states(gaveUp)).toEqual(['held', 'held'])
+    expect(apart(gaveUp)).toBe(2)
   })
 
   it('lets everyone in by a column that is still open, and sends home with a sigh only those the mouth is shut to', () => {
