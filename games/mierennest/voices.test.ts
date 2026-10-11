@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import type { Note } from './audio'
-import { BACK, BELL, BOING, MET, PICKED, RANGE, SET_DOWN, SPOKEN, digVoice, landedVoice, lengthOf, pourVoice } from './voices'
+import { EARTH, MUD, ROCK, SAND, STONE } from './ground'
+import type { ToyEvent } from './toy'
+import { APART, BACK, BELL, BOING, MET, PICKED, RANGE, SET_DOWN, SPOKEN, digVoice, landedVoice, lengthOf, pourVoice, voiceFor } from './voices'
 
 const MATERIALS = ['sand', 'mud', 'stone'] as const
 
@@ -88,5 +90,37 @@ describe('the creatures', () => {
     expect(mainPitch(SPOKEN.beetle)).toBeLessThan(150)
     expect(mainPitch(SPOKEN.raider)).toBeGreaterThan(1000)
     expect(SPOKEN.fly[0].wave).toBe('sawtooth')
+  })
+})
+
+describe('what the toy says happened', () => {
+  const events: ToyEvent[] = [
+    { type: 'dug', x: 1, y: 1, cells: 4, speed: 0.5 },
+    { type: 'met', kind: SAND, x: 1, y: 1 },
+    { type: 'met', kind: MUD, x: 1, y: 1 },
+    { type: 'met', kind: STONE, x: 1, y: 1 },
+    { type: 'met', kind: ROCK, x: 1, y: 1 },
+    { type: 'picked', kind: SAND, cell: 3 },
+    { type: 'set', kind: MUD, cell: 3 },
+    { type: 'back', kind: STONE, cell: 3 },
+    { type: 'landed', kind: STONE, cell: 3, fell: 4 },
+    { type: 'pour', cells: 5 },
+    { type: 'buried', cell: 3 },
+  ]
+
+  it('has a voice for every event, and none two of them share', () => {
+    const voices = events.map((event) => JSON.stringify(voiceFor(event)))
+    for (const voice of voices) expect(voice).not.toBe('null')
+    expect(new Set(voices).size).toBe(events.length)
+  })
+
+  it('says nothing for earth the dig only passes', () => {
+    expect(voiceFor({ type: 'met', kind: EARTH, x: 0, y: 0 })).toBeNull()
+  })
+
+  it('keeps fast events apart and lets a set-down sound at once', () => {
+    expect(APART.dug).toBeGreaterThan(0.03)
+    expect(APART.pour).toBeGreaterThan(APART.dug)
+    expect([APART.picked, APART.set, APART.back]).toEqual([0, 0, 0])
   })
 })

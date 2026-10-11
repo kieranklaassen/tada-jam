@@ -100,3 +100,36 @@ describe('the ghost hand', () => {
     expect(handPose(0.9, true, pose)).toMatchObject({ travel: 1, press: 0 })
   })
 })
+
+describe('the ladder with this game own wait', () => {
+  it('shows nothing before the wait the age sets, then the glow, then the hand', () => {
+    const ladder = new IdleLadder(0, 6, 3)
+    expect(ladder.update(5.9).glow).toBe(0)
+    expect(ladder.update(7.3).glow).toBeGreaterThan(0.99)
+    expect(ladder.update(7.9).demo).toBeNull()
+    expect(ladder.update(8.1).demoIndex).toBe(0)
+  })
+
+  it('waits twice as long each time, and after the third showing shows nothing more until the next touch', () => {
+    const ladder = new IdleLadder(0, 6, 3)
+    const starts: number[] = []
+    let last = -1
+    for (let t = 0; t < 400; t += 0.05) {
+      const index = ladder.update(t).demoIndex
+      if (index >= 0 && index !== last) starts.push(t)
+      if (index >= 0) last = index
+    }
+    expect(starts.length).toBe(3)
+    expect(starts[2] - starts[1]).toBeGreaterThan((starts[1] - starts[0]) * 1.5)
+    expect(ladder.update(399).glow).toBe(0)
+    ladder.touch(399)
+    expect(ladder.update(407.2).demoIndex).toBe(0)
+  })
+
+  it('waits longer for an older child', () => {
+    const younger = new IdleLadder(0, 6, 3), older = new IdleLadder(0, 10, 3)
+    expect(younger.update(8.5).demoIndex).toBe(0)
+    expect(older.update(8.5).glow).toBe(0)
+    expect(older.update(12.5).demoIndex).toBe(0)
+  })
+})

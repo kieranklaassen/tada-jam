@@ -32,7 +32,12 @@ export class IdleLadder {
   private idleSince: number
   private readonly guidance: Guidance = { glow: 0, demo: null, demoIndex: -1 }
 
-  constructor(now: number) {
+  /**
+   * `firstCue` is the seconds of stillness before the glow, which this game sets from the child's age (config.ts);
+   * the first demonstration follows it as closely as in the template. `demos` is how many are shown in one
+   * stretch of stillness before the ladder goes quiet.
+   */
+  constructor(now: number, private readonly firstCue: number = IDLE_BEFORE_GLOW, private readonly demos: number = MAX_DEMOS) {
     this.idleSince = now
   }
 
@@ -47,10 +52,11 @@ export class IdleLadder {
     const guidance = this.guidance
     guidance.demo = null
     guidance.demoIndex = -1
-    let start = IDLE_BEFORE_DEMO
-    let gap = IDLE_BEFORE_DEMO * 2
+    const beforeDemo = this.firstCue + (IDLE_BEFORE_DEMO - IDLE_BEFORE_GLOW)
+    let start = beforeDemo
+    let gap = beforeDemo * 2
     let lastEnd = 0
-    for (let i = 0; i < MAX_DEMOS; i++) {
+    for (let i = 0; i < this.demos; i++) {
       if (idle >= start && idle < start + DEMO_SECONDS) {
         guidance.demo = (idle - start) / DEMO_SECONDS
         guidance.demoIndex = i
@@ -59,7 +65,7 @@ export class IdleLadder {
       start += DEMO_SECONDS + gap
       gap *= 2
     }
-    guidance.glow = clamp01((idle - IDLE_BEFORE_GLOW) / GLOW_RAMP) * (1 - clamp01((idle - lastEnd) / GLOW_FADE))
+    guidance.glow = clamp01((idle - this.firstCue) / GLOW_RAMP) * (1 - clamp01((idle - lastEnd) / GLOW_FADE))
     return guidance
   }
 }

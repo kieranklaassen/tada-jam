@@ -38,8 +38,11 @@ export function queenSeat(ground: Ground, rooms: readonly Room[], queenRoom: num
   return { x: Math.min(floor.from + QUEEN_HALF, (floor.from + floor.to + 1) / 2), y: floor.y }
 }
 
-/** Where the wedged queen's feet are: the middle of the shaft, on the floor of its last cell. */
-export const WEDGED: Standing = { x: (MOUTH[0] + MOUTH[MOUTH.length - 1] + 1) / 2, y: SHAFT_DEPTH }
+/**
+ * Where the wedged queen's feet are: the middle of the shaft, one cell above its foot. She stands on nothing: the
+ * walls hold her. The cell under her is left for the child's ant.
+ */
+export const WEDGED: Standing = { x: (MOUTH[0] + MOUTH[MOUTH.length - 1] + 1) / 2, y: SHAFT_DEPTH - 1 }
 
 /**
  * Where the workers stand, up to `most` of them: two to a chamber where its floor has room for two, one where it

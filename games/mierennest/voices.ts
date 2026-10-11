@@ -1,4 +1,6 @@
 import type { Note } from './audio'
+import { MUD, ROCK, SAND, STONE, type Kind } from './ground'
+import type { ToyEvent } from './toy'
 
 // Every sound of the game as plain numbers: pitch, peak, attack and length. Nobody has heard them: they are written
 // from the design sheet's words (ART.md, the grid), kept short, and a test holds each inside a stated range. The
@@ -88,3 +90,32 @@ export const SPOKEN: Record<Speaker, Note[]> = {
 
 /** How long a voice lasts, in seconds. */
 export const lengthOf = (notes: readonly Note[]): number => Math.max(0, ...notes.map((note) => (note.delay ?? 0) + note.attack + note.decay))
+
+const materialOf = (kind: Kind): Material | null => (kind === SAND ? 'sand' : kind === MUD ? 'mud' : kind === STONE ? 'stone' : null)
+
+/** The voice of something the toy says happened, or null where it makes no sound. */
+export function voiceFor(event: ToyEvent): Note[] | null {
+  switch (event.type) {
+    case 'dug':
+      return digVoice(event.speed)
+    case 'met': {
+      const material = materialOf(event.kind)
+      return material ? MET[material] : event.kind === ROCK ? MET.rock : null
+    }
+    case 'picked':
+      return PICKED[materialOf(event.kind)!]
+    case 'set':
+      return SET_DOWN[materialOf(event.kind)!]
+    case 'back':
+      return BACK
+    case 'landed':
+      return landedVoice(materialOf(event.kind)!, event.fell)
+    case 'pour':
+      return pourVoice(event.cells)
+    case 'buried':
+      return SPOKEN.ant
+  }
+}
+
+/** The least time between two voices of the same kind of event, in seconds, so a fast drag crunches and does not roar. */
+export const APART: Record<ToyEvent['type'], number> = { dug: 0.07, met: 0.12, picked: 0, set: 0, back: 0, landed: 0.09, pour: 0.28, buried: 0.5 }

@@ -41,9 +41,9 @@ export function paintHill(pen: Pen, grown: number): void {
     const { reach, height } = side < 0 ? shape.left : shape.right
     pen.fillStyle = side < 0 ? '#9c6a3c' : '#8f5f35'
     pen.beginPath()
-    pen.moveTo(MOUTH_X + side * LIP, GRASS_Y + 2)
+    pen.moveTo(MOUTH_X + side * LIP, GRASS_Y)
     pen.quadraticCurveTo(MOUTH_X + side * (LIP + 2), GRASS_Y - height * 1.05, MOUTH_X + side * (LIP + reach * 0.3), GRASS_Y - height)
-    pen.quadraticCurveTo(MOUTH_X + side * (LIP + reach * 0.75), GRASS_Y - height * 0.8, MOUTH_X + side * (LIP + reach), GRASS_Y + 2)
+    pen.quadraticCurveTo(MOUTH_X + side * (LIP + reach * 0.75), GRASS_Y - height * 0.8, MOUTH_X + side * (LIP + reach), GRASS_Y)
     pen.closePath()
     pen.fill()
     // Crumbs on the slope: the spoil is carried up a mouthful at a time.

@@ -24,7 +24,10 @@ describe('where the kingdom stands', () => {
     const realm = kingdom(ground)
     expect(queenSeat(ground, realm.chambers, realm.queenRoom)).toBeNull()
     expect(at(ground, Math.floor(WEDGED.x), WEDGED.y)).toBe(OPEN)
-    expect(at(ground, Math.floor(WEDGED.x), WEDGED.y + 1)).not.toBe(OPEN)
+    // The walls of the shaft hold her, and the cell under her is free for the ant.
+    expect(at(ground, MOUTH[0] - 1, WEDGED.y)).toBe(EARTH)
+    expect(at(ground, MOUTH[MOUTH.length - 1] + 1, WEDGED.y)).toBe(EARTH)
+    expect(at(ground, Math.floor(WEDGED.x), WEDGED.y + 1)).toBe(OPEN)
   })
 
   it('seats the queen on the floor of the largest chamber, and stands the workers where the floors have room', () => {

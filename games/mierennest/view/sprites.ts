@@ -1,3 +1,4 @@
+import type { Move } from '../motion'
 import { paintCreature, type CreatureKind, type Look } from './creatures'
 
 // A creature in one pose is painted once into a small canvas of its own and stamped from then on, so a creature
@@ -46,5 +47,28 @@ export class Sprites {
       pen.drawImage(sprite.image, -FOOT.x * size, -FOOT.y * size, w, h)
       pen.restore()
     } else pen.drawImage(sprite.image, x - FOOT.x * size, y - FOOT.y * size, w, h)
+  }
+
+  /**
+   * Stamps a creature as its motion has it: shifted, turned about its feet and squashed, then turned again by
+   * `turn` about the middle of its body, which is how the ant climbs a shaft. One draw.
+   */
+  stampMoved(pen: CanvasRenderingContext2D, kind: CreatureKind, pose: string, x: number, y: number, flip: boolean, size: number, tall: number, move: Move | null, turn: number, bodyHeight: number): void {
+    if (!move && turn === 0 && tall === 1) {
+      this.stamp(pen, kind, pose, x, y, flip, size)
+      return
+    }
+    const sprite = this.get(kind, pose)
+    pen.save()
+    pen.translate(x + (move?.dx ?? 0), y + (move?.dy ?? 0))
+    if (turn !== 0) {
+      pen.translate(0, -bodyHeight / 2)
+      pen.rotate(turn)
+      pen.translate(0, bodyHeight / 2)
+    }
+    if (move) pen.rotate(move.turn)
+    pen.scale((flip ? -1 : 1) * (move?.sx ?? 1), (move?.sy ?? 1) * tall)
+    pen.drawImage(sprite.image, -FOOT.x * size, -FOOT.y * size, SPRITE.width * size, SPRITE.height * size)
+    pen.restore()
   }
 }

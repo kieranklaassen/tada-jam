@@ -163,6 +163,34 @@ export class Toy {
     if (carried) this.events.push({ type: 'back', kind: carried.kind, cell: carried.from })
   }
 
+  private openWay(): Uint8Array {
+    if (!this.way) this.way = openWay(this.game.ground, this.game.ant)
+    return this.way
+  }
+
+  /** Whether a carried lump could be set down at this point: an open cell on the ant's open way, below the top row. */
+  canSetAt(x: number, y: number): boolean {
+    const cx = Math.floor(x), cy = Math.floor(y)
+    if (cy < 1 || !this.inGround(cx, cy)) return false
+    return this.openWay()[cy * this.game.ground.cols + cx] === 1
+  }
+
+  /** The lump nearest the ant that it could take now, as a cell, or null. For the idle ladder's glint. */
+  reachableLump(): number | null {
+    const ground = this.game.ground, way = this.openWay(), { cols, rows } = ground
+    let best: number | null = null, bestFar = Infinity
+    for (let y = 1; y < rows - 1; y++) for (let x = 0; x < cols; x++) {
+      if (!isLump(at(ground, x, y))) continue
+      const reached = (x > 0 && way[y * cols + x - 1] === 1) || (x < cols - 1 && way[y * cols + x + 1] === 1) || way[(y - 1) * cols + x] === 1 || way[(y + 1) * cols + x] === 1
+      const far = Math.hypot(x - this.game.ant.x, y - this.game.ant.y)
+      if (reached && far < bestFar) {
+        bestFar = far
+        best = y * cols + x
+      }
+    }
+    return best
+  }
+
   /** One step of the ground coming to rest, with the falls and the landings it makes. */
   private settleOnce(): void {
     const ground = this.game.ground
@@ -260,8 +288,7 @@ export class Toy {
   private moveAnt(dt: number): void {
     const ant = this.game.ant
     this.unbury()
-    if (!this.way) this.way = openWay(this.game.ground, ant)
-    const goal = this.goal(this.way)
+    const goal = this.goal(this.openWay())
     const next = goal === null ? null : this.nextToward(goal)
     const target = next ?? ant
     const dx = target.x + 0.5 - this.antAt.x, dy = target.y + 0.5 - this.antAt.y
