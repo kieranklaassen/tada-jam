@@ -7,7 +7,7 @@ import type { Party } from '../order'
 import { gaitOf, type RaidEvent } from '../raid'
 import { roomOf } from '../routes'
 import type { Machine } from '../save'
-import { WEDGED, demoDrag, floorOf, queenSeat, workerSpots } from '../residents'
+import { QUEEN_HALF, WEDGED, demoDrag, floorOf, queenSeat, workerSpots } from '../residents'
 import { below, makeRng, type Rng } from '../rng'
 import type { Toy, ToyEvent } from '../toy'
 import { GRASS_Y, GROUND, MOUTH_X, TOADSTOOL } from './layout'
@@ -585,7 +585,7 @@ export class ToyDisplay {
     }
     // The things on the back wall of the rooms, and the marks where a wall gave, lie behind everyone.
     const throne = queenSeat(ground, toy.realm.chambers, toy.realm.queenRoom)
-    const queenSpan = throne && toy.realm.queenRoom !== null ? { room: toy.realm.queenRoom, from: throne.x - 2.2 * throne.fit, to: throne.x + 2.2 * throne.fit } : null
+    const queenSpan = throne && toy.realm.queenRoom !== null ? { room: toy.realm.queenRoom, from: throne.x - QUEEN_HALF * throne.fit, to: throne.x + QUEEN_HALF * throne.fit } : null
     // Once the kingdom is open a glow-worm is lit in every chamber; in the ending they are lit one by one, nearest the mouth first.
     const rooms = toy.realm.chambers.length
     const open = k.game.ended && !k.awaitsEnding
@@ -629,7 +629,7 @@ export class ToyDisplay {
       } else {
         // Each end of the floor in turn, then her own place.
         const floor = floorOf(ground, realm.chambers[realm.queenRoom!])
-        const half = 2.2 * seat.fit, ends = [toStage(floor.from + half, seat.y + 1), toStage(floor.to + 1 - half, seat.y + 1), home]
+        const half = QUEEN_HALF * seat.fit, ends = [toStage(floor.from + half, seat.y + 1), toStage(floor.to + 1 - half, seat.y + 1), home]
         const tries = Math.min(ends.length - 1, Math.floor(((u - MOVES.carried) / (1 - MOVES.carried)) * ends.length))
         list.push({ is: 'sprite', id: 'queen', who: 'queen', pose: tries < ends.length - 1 ? 'sit2' : 'sit', x: ends[tries].x, y: ends[tries].y, flip: false, size: seat.fit, tall: 1, move: queenMove, turn: 0 })
       }

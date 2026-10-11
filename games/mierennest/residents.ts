@@ -30,8 +30,8 @@ export function floorOf(ground: Ground, room: Room): { y: number; from: number; 
 /** The middle of the mouth, in cell units. */
 const WEDGED_X = (MOUTH[0] + MOUTH[MOUTH.length - 1] + 1) / 2
 /** Half the queen's width and half a worker's, in cells: she is over four cells wide and a worker three. */
-const QUEEN_HALF = 2.2
-const WORKER_HALF = 1.5
+export const QUEEN_HALF = 2.2
+export const WORKER_HALF = 1.5
 
 /** Whether the left end of a floor is the end nearer the mouth. */
 const mouthIsLeft = (floor: { from: number; to: number }) => Math.abs(floor.from - WEDGED_X) <= Math.abs(floor.to + 1 - WEDGED_X)

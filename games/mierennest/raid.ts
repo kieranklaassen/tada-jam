@@ -2,7 +2,7 @@ import { chambers, kingdom } from './chambers'
 import { EARTH, MOUTH, MUD, OPEN, ROCK, SAND, SHAFT_DEPTH, STONE, at, clone, isLump, put, settle, type Ground, type Kind, type Lump } from './ground'
 import { DUNG_BALL, HABITS, PUSHERS_IN_A_LINE, type InvaderKind, type Shot } from './habits'
 import type { Party, RaidEnd } from './order'
-import { queenSeat, workerSpots } from './residents'
+import { QUEEN_HALF, WORKER_HALF, queenSeat, workerSpots } from './residents'
 import { bodyCells, chamberCells, entries, farFromChambers, nearestTo, reach, roomCells, roomOf, sticks, wallToLeanOn, wayIn, wayTo, type Lean, type Walker } from './routes'
 import { HOLD, holdOfCell, lean } from './walls'
 
@@ -209,10 +209,10 @@ function residents(ground: Ground, mouth: readonly number[]): Raid['keepClear'] 
   const realm = kingdom(ground, mouth)
   const out: Raid['keepClear'] = []
   const seat = queenSeat(ground, realm.chambers, realm.queenRoom)
-  if (seat) out.push({ y: seat.y, x: seat.x, half: 2.2 * seat.fit })
+  if (seat) out.push({ y: seat.y, x: seat.x, half: QUEEN_HALF * seat.fit })
   // The workers huddle while a raid runs: those of the queen's room stand behind her and take no floor of their own.
   for (const spot of workerSpots(ground, realm.chambers, realm.queenRoom, realm.workers, true)) {
-    if (!seat || spot.y !== seat.y || Math.abs(spot.x - seat.x) > 2.2) out.push({ y: spot.y, x: spot.x, half: 1.5 })
+    if (!seat || spot.y !== seat.y || Math.abs(spot.x - seat.x) > QUEEN_HALF) out.push({ y: spot.y, x: spot.x, half: WORKER_HALF })
   }
   return out
 }
@@ -290,7 +290,10 @@ const someoneElseIn = (raid: Raid, invader: Invader) => (cell: number) =>
 export const INTO_THE_ROOM = 6
 /** How far in it goes at most, where every nearer place has someone standing or sitting in it. */
 export const FURTHER_IN = 14
-/** Half the length of each kind along a floor, in cells. */
+/**
+ * Half the length of each kind along a floor, in cells: the same measure as `QUEEN_HALF` and `WORKER_HALF` are for
+ * the kingdom's own (residents.ts), rounded up from the body widths the camp is laid out by (`BODY` in camp.ts).
+ */
 const HALF: Record<Walker, number> = { ant: 2.1, beetle: 2.2, fly: 2.1, crawler: 2.2 }
 
 /**
