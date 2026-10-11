@@ -18,14 +18,14 @@ import { lean } from './walls'
 /** Seconds of game time in one step of a raid. */
 export const TICK = 1 / 20
 /** How fast each kind goes, in cells a second, and how much faster it goes home. */
-export const SPEED: Record<InvaderKind, number> = { ant: 6, beetle: 3, fly: 5, dungBeetle: 2.6, dungFly: 4.5 }
+export const SPEED: Record<InvaderKind, number> = { ant: 9, beetle: 5.5, fly: 8, dungBeetle: 4.5, dungFly: 7 }
 export const HOME_FASTER = 1.6
 /** Seconds between one invader of a party coming in and the next leaving the log, and before the first. */
-export const APART = 1.1
+export const APART = 0.7
 /** A raid that has not ended by itself by now is ended: everyone still inside sits down where they are. */
 export const LONGEST = 200
 /** How long an invader that is stuck or held is left to be seen, once nothing else is going to happen, before the raid is over. */
-export const SEEN_FOR = 2.5
+export const SEEN_FOR = 2
 /** How many places behind one that waits the next one waits: a body's length, so that nobody stands in anybody. */
 export const QUEUE_GAP = 5
 /** Seconds a dung ball takes to dig one cell of its way wider. */
@@ -147,6 +147,8 @@ export type Raid = {
   led: boolean
   /** The dung fly was brought down: the army has lost its way. */
   lost: boolean
+  /** The kinds one of whom has begun its act in this raid: a later one of the same kind does a short one. */
+  begun: InvaderKind[]
   over: boolean
   /** How long nothing more has been going to happen. */
   settled: number
@@ -199,7 +201,7 @@ export function callRaid(built: Ground, party: Party, mouth: readonly number[] =
   }))
   return {
     ground, invaders, time: 0, chambersWhenCalled: chambers(ground, mouth).length, acts: 0, gave: new Set(), covered: new Set(), balls: [],
-    led: false, lost: false, over: false, settled: 0, events: [], changes: 0, inside, rooms: roomCells(ground, mouth), far: farFromChambers(ground, inside),
+    led: false, lost: false, begun: [], over: false, settled: 0, events: [], changes: 0, inside, rooms: roomCells(ground, mouth), far: farFromChambers(ground, inside),
     keepClear: residents(ground, mouth), mouth,
   }
 }
@@ -249,7 +251,7 @@ function pushOn(raid: Raid, invader: Invader): number {
 }
 
 /** How far into a chamber a walker goes before it does its act, in steps of its own, at most. */
-export const INTO_THE_ROOM = 10
+export const INTO_THE_ROOM = 6
 /** Half the length of each kind along a floor, in cells. */
 const HALF: Record<Walker, number> = { ant: 2.1, beetle: 2.2, fly: 2.1, crawler: 2.2 }
 
@@ -374,8 +376,11 @@ function decide(raid: Raid, invader: Invader): void {
         return
       }
     }
+    // The first of its kind in a raid does its act in full; a later one does the end of it only.
+    const act = HABITS[invader.kind].act
     invader.state = 'acting'
-    invader.wait = HABITS[invader.kind].act.seconds
+    invader.wait = raid.begun.includes(invader.kind) ? act.again : act.seconds
+    if (!raid.begun.includes(invader.kind)) raid.begun.push(invader.kind)
     return
   }
   invader.insideSince = false

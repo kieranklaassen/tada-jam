@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { LADDER } from './config'
 import { EARTH, MOUTH, MUD, OPEN, SAND, STONE, at, clone, equal, fromPicture, generate, put, settle, type Ground } from './ground'
 import { HABITS } from './habits'
-import { PARTY, judge, partyAt, type Party } from './order'
+import { PARTY, ROUND, judge, partyAt, type Party } from './order'
 import { roomOf } from './routes'
 import { DIG, LONGEST, QUEUE_GAP, SEEN_FOR, TICK, callRaid, endOf, gaitOf, hit, playOut, stepRaid, type Raid, type RaidEvent } from './raid'
 
@@ -107,7 +107,7 @@ describe('mud and raider ants', () => {
     while (raid.invaders[0].state !== 'stuck') stepRaid(raid)
     const stuckAt = raid.time
     playOut(raid)
-    expect(raid.time - stuckAt).toBeGreaterThanOrEqual(SEEN_FOR - TICK)
+    expect(raid.time - stuckAt).toBeGreaterThanOrEqual(SEEN_FOR - TICK - 1e-9)
     expect(raid.time - stuckAt).toBeLessThan(SEEN_FOR + 2 * TICK)
     const home = raidOn(nest(), ['ant'])
     while (home.invaders[0].state !== 'home') stepRaid(home)
@@ -666,6 +666,51 @@ describe('the great raid', () => {
     expect(one.time).toBe(two.time)
     expect(one.invaders.map((i) => [i.state, i.cell, i.ball])).toEqual(two.invaders.map((i) => [i.state, i.cell, i.ball]))
     expect(equal(one.ground, two.ground)).toBe(true)
+  })
+})
+
+describe('how long a raid takes', () => {
+  /** A kingdom of one chamber on the game's own ground: a hall off the shaft, or a room at the end of a tunnel. */
+  const oneChamber = (seed: number, shape: 'hall' | 'far') => {
+    const ground = generate(seed)
+    for (let y = 3; y <= 6; y++) for (const x of MOUTH) put(ground, x, y, OPEN)
+    if (shape === 'hall') for (let y = 4; y <= 6; y++) for (let x = 22; x <= 32; x++) put(ground, x, y, OPEN)
+    else {
+      for (let y = 5; y <= 6; y++) for (let x = 22; x <= 29; x++) put(ground, x, y, OPEN)
+      for (let y = 4; y <= 6; y++) for (let x = 30; x <= 37; x++) put(ground, x, y, OPEN)
+    }
+    settle(ground)
+    return ground
+  }
+
+  it('is under 45 seconds for every party the order and the round can lay out, on a kingdom of one chamber with nothing in the way', () => {
+    const longest: number[] = []
+    for (const seed of [1, 2, 3]) for (const shape of ['hall', 'far'] as const) {
+      const ground = oneChamber(seed, shape)
+      expect(callRaid(ground, []).chambersWhenCalled).toBe(1)
+      for (const party of [...Object.values(PARTY), ...ROUND]) {
+        const raid = playOut(callRaid(ground, party))
+        expect(raid.time, `${seed} ${shape} ${party.join()}`).toBeLessThan(45)
+        longest.push(raid.time)
+      }
+    }
+    // The longest are long because every one of a large party gets in and does its act, one at a time.
+    expect(Math.max(...longest)).toBeGreaterThan(30)
+  })
+
+  it('gives the first of a kind its act in full and a later one of the same kind a short one', () => {
+    const raid = raidOn(nest(), ['ant', 'beetle', 'ant'])
+    const began: Record<number, number> = {}, ended: Record<number, number> = {}
+    while (!raid.over) {
+      stepRaid(raid)
+      for (const invader of raid.invaders) if (invader.state === 'acting' && began[invader.id] === undefined) began[invader.id] = raid.time
+      for (const event of raid.events) if (event.type === 'acted') ended[event.id] = raid.time
+      raid.events.length = 0
+    }
+    expect(ended[0] - began[0]).toBeCloseTo(HABITS.ant.act.seconds, 0)
+    expect(ended[1] - began[1]).toBeCloseTo(HABITS.beetle.act.seconds, 0)
+    expect(ended[2] - began[2]).toBeCloseTo(HABITS.ant.act.again, 0)
+    expect(HABITS.ant.act.again).toBeLessThan(HABITS.ant.act.seconds / 2)
   })
 })
 

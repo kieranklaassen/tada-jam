@@ -60,8 +60,11 @@ export type Habit = {
   widens: { earth: boolean; backed: readonly Kind[]; led: readonly Kind[] }
   /** What it wants, which it shows at the log. */
   want: string
-  /** Its own act in a chamber, done once, and how many seconds it takes. */
-  act: { id: string; seconds: number }
+  /**
+   * Its own act in a chamber, done once: how many seconds it takes the first of its kind in a raid, who does it in
+   * full, and how many it takes a later one of the same kind, who does the end of it only.
+   */
+  act: { id: string; seconds: number; again: number }
   /** How long it tries at something it cannot pass before it gives up and goes home, in seconds. */
   patience: number
   shots: Record<Shot, Answer>
@@ -72,6 +75,9 @@ export const PUSHERS_IN_A_LINE = 3
 /** How many cells across a dung ball is, and how hard it pushes. */
 export const DUNG_BALL = { across: 3, push: 6 } as const
 
+/** How long the short act of a later one of a kind takes: the end of the act, and no more. */
+export const AGAIN = 1.8
+
 const FLIER = { wide: 2, high: 3 } as const
 const NOTHING = { earth: false, backed: [], led: [] } as const
 
@@ -79,7 +85,7 @@ export const HABITS: Record<InvaderKind, Habit> = {
   ant: {
     high: 1, flies: null, stepUp: 'any', climbs: [EARTH, STONE, ROCK], slipsOn: [SAND], stuckOn: [MUD], pit: null,
     push: 0, ploughsSand: false, widens: NOTHING,
-    want: 'a-bed-that-is-not-its-own', act: { id: 'naps-in-the-middle', seconds: 6 }, patience: 5,
+    want: 'a-bed-that-is-not-its-own', act: { id: 'naps-in-the-middle', seconds: 5, again: AGAIN }, patience: 5,
     shots: {
       sand: { id: 'buried-to-the-feelers', then: 'home', pause: 2, back: 0 },
       mud: { id: 'rolled-up-in-the-ball', then: 'held', pause: 0, back: 0 },
@@ -89,7 +95,7 @@ export const HABITS: Record<InvaderKind, Habit> = {
   beetle: {
     high: 2, flies: null, stepUp: 1, climbs: [], slipsOn: [], stuckOn: [], pit: 2,
     push: 3, ploughsSand: true, widens: NOTHING,
-    want: 'the-seeds-in-the-pantry', act: { id: 'eats-one-seed-slowly', seconds: 7 }, patience: 6,
+    want: 'the-seeds-in-the-pantry', act: { id: 'eats-one-seed-slowly', seconds: 6, again: AGAIN }, patience: 6,
     shots: {
       sand: { id: 'rattles-off-the-shell', then: 'on', pause: 1, back: 0 },
       mud: { id: 'walks-on-blind', then: 'home', pause: 1, back: 0 },
@@ -99,7 +105,7 @@ export const HABITS: Record<InvaderKind, Habit> = {
   fly: {
     high: 2, flies: FLIER, stepUp: 'any', climbs: [], slipsOn: [], stuckOn: [], pit: null,
     push: 0, ploughsSand: false, widens: NOTHING,
-    want: 'to-taste-everything', act: { id: 'tastes-its-own-foot', seconds: 6 }, patience: 4,
+    want: 'to-taste-everything', act: { id: 'tastes-its-own-foot', seconds: 5, again: AGAIN }, patience: 4,
     shots: {
       sand: { id: 'blown-back-tumbling', then: 'on', pause: 2, back: 'hall' },
       mud: { id: 'wings-gummed', then: 'home', pause: 5, back: 0 },
@@ -109,7 +115,7 @@ export const HABITS: Record<InvaderKind, Habit> = {
   dungBeetle: {
     high: 2, flies: null, stepUp: 1, climbs: [], slipsOn: [], stuckOn: [], pit: 2,
     push: 3, ploughsSand: true, widens: { earth: true, backed: [SAND, MUD], led: [SAND, MUD] },
-    want: 'to-park-its-ball-in-the-grandest-room', act: { id: 'admires-its-ball', seconds: 8 }, patience: 6,
+    want: 'to-park-its-ball-in-the-grandest-room', act: { id: 'admires-its-ball', seconds: 6, again: AGAIN }, patience: 6,
     shots: {
       sand: { id: 'ball-a-size-bigger', then: 'on', pause: 1, back: 0, ballGrows: 1 },
       mud: { id: 'ball-stuck-to-the-floor', then: 'on', pause: 3, back: 0, losesBall: true },
@@ -119,7 +125,7 @@ export const HABITS: Record<InvaderKind, Habit> = {
   dungFly: {
     high: 2, flies: FLIER, stepUp: 'any', climbs: [], slipsOn: [], stuckOn: [], pit: null,
     push: 0, ploughsSand: false, widens: NOTHING,
-    want: 'to-be-obeyed', act: { id: 'conducts-nobody', seconds: 6 }, patience: 8,
+    want: 'to-be-obeyed', act: { id: 'conducts-nobody', seconds: 5, again: AGAIN }, patience: 8,
     shots: {
       sand: { id: 'drops-its-twig', then: 'on', pause: 3, back: 'hall' },
       mud: { id: 'down-comes-the-leader', then: 'home', pause: 5, back: 0, armyLosesItsWay: true },

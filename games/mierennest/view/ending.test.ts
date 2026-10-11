@@ -32,8 +32,8 @@ function fullKingdom(): Game {
 }
 
 /**
- * A nest that turns back the great raid with no machine: a tunnel two cells high, so the dung fly does not get in;
- * a stone in its roof that jams a ball, and a pit two cells deep beyond it that holds every beetle. Two rooms.
+ * A nest that turns back the great raid with no machine: tunnels two cells high, so the dung fly does not get in,
+ * and in each a pit two cells deep in plain earth, which holds every beetle with or without its ball. Two rooms.
  */
 function fort(): Game {
   const game = freshGame(null, 1), g = game.ground
@@ -47,7 +47,6 @@ function fort(): Game {
   put(g, 24, 3, STONE)
   for (const x of [27, 28]) for (const y of [6, 7]) put(g, x, y, OPEN)
   for (const x of [15, 16]) for (const y of [6, 7]) put(g, x, y, OPEN)
-  for (const x of [13, 14]) put(g, x, 6, MUD)
   settle(g)
   game.position = 'great-raid'
   game.ant = { x: 20, y: 5 }
