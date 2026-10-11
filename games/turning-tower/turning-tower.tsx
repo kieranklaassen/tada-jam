@@ -39,7 +39,7 @@ function TurningTowerMount({ ctx }: { ctx: CartridgeContext }) {
       .catch(() => null)
       .then((saved) => {
         if (disposed) return
-        const state = deserialize(saved, ROOMS.map(resolveRoom))
+        const state = deserialize(saved, ROOMS.map(resolveRoom), childAge)
         created = new TowerController(state, { save: (next) => storage.save(next), sound: new TowerAudio(), childAge, now: performance.now() / 1000 })
         setTower(created)
       })

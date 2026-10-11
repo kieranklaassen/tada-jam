@@ -255,6 +255,38 @@ describe('turning tower controller', () => {
     expect(h.saves.at(-1)!.rooms['first-turn'].groups).toEqual([2])
   })
 
+  it('waits for a touch after a put-away: a way the put-away itself settled open is not walked unasked', () => {
+    const h = harness()
+    tap(h, [6.5, 3, 1.5])
+    h.run(3)
+    const stood = h.tower.walkerTile
+    dragGroup(h, 0, [3.5, 3, 3.5], 1, 1.8, false)
+    h.tower.setRunning(false)
+    expect(h.tower.arrangementNow).toEqual([2])
+    h.tower.setRunning(true)
+    h.run(10)
+    expect(h.tower.isWalking).toBe(false)
+    expect(h.tower.currentRoom.spec.key).toBe('first-turn')
+    expect(h.tower.walkerTile).toBe(stood)
+    tap(h, [6.5, 3, 1.5])
+    h.run(10)
+    expect(h.tower.currentRoom.spec.key).toBe('ferry')
+  })
+
+  it('keeps every diorama one ring tap away from an older child\'s first diorama', () => {
+    const h = harness(deserialize(null, rooms, 10))
+    expect(h.tower.currentRoom.spec.key).toBe('impossible-stair')
+    const slot = { x: 0, y: 0, scale: 0, depth: 0 }
+    for (const index of [0, 1, 3, 4, 2]) {
+      h.tower.ringSlot(index, slot)
+      h.tower.pointerDown(9, slot.x, slot.y, h.now() * 1000)
+      h.tower.pointerUp(9, slot.x, slot.y, h.now() * 1000 + 50)
+      h.run(3)
+      expect(h.tower.currentRoom.spec.key).toBe(ROOMS[index].key)
+      expect(h.tower.currentPhase).toBe('play')
+    }
+  })
+
   it('shows the next thing to touch after an idle stretch, and hides it on touch', () => {
     const h = harness()
     h.run(1)
