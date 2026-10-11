@@ -1102,13 +1102,17 @@ export function bodyOf(raid: Raid, invader: Invader, place: number, out: number[
   return n
 }
 
+/** Whether a shot can meet this one: it is in the nest, and neither held, nor on its way home, nor home. */
+export const canBeHit = (invader: Invader): boolean =>
+  invader.cell >= 0 && invader.state !== 'home' && invader.state !== 'held' && invader.state !== 'leaving' && invader.state !== 'coming'
+
 /**
  * A shot hits an invader. Nobody is hurt and nobody is removed: by its habits it goes home, is held where it is
  * until the raid is over, or carries on after a moment, thrown back along the way it came.
  */
 export function hit(raid: Raid, id: number, shot: Shot): void {
   const invader = raid.invaders[id]
-  if (!invader || invader.cell < 0 || invader.state === 'home' || invader.state === 'held' || invader.state === 'leaving' || invader.state === 'coming') return
+  if (!invader || !canBeHit(invader)) return
   const habit = HABITS[invader.kind].shots[shot]
   const again = invader.state === 'dazed' && invader.lastShot === shot && habit.twiceIsHome === true
   const wasStuck = invader.state === 'stuck'
