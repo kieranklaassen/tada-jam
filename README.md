@@ -122,6 +122,7 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 | Snack Merge | `games/snack-merge/` | 5–9 | A sweet shop by lamp light: drop six jelly-sweet foods into a glass jar, where two that touch pop into a new snack that acts like both, then tip the jar into a monster's mouth and watch how each of three monsters takes every bite. |
 | Wash Day | `games/wash-day/` | 3–6 | An embroidered washing yard: rub, soap, wring and peg out the muddy clothes of a pig, a heron and a goat, then dress them any way you like and watch each answer in its own manner. Everything in the yard can be washed, the cat included. |
 | Farm Morning | `games/farm-morning/` | 2–5 | A board-book farmyard: bring a scoop, a bucket, a brush or a fork to hens, a pony, a goat and a pig, and every pairing answers with its own joke. The four right ones bring the full morning, and sliding the henhouse door shut brings the night and a new morning. |
+| Egg Heist | `games/egg-heist/` | 6–10 | A paper toy theatre of a farmyard: creep a raccoon from bush to bush past a goose who punts what she sees, carry six things to five places, and watch what each place makes of each thing, one sending the next along when a place is full. No learning goal. |
 
 ## Showcases
 

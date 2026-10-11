@@ -6,6 +6,6 @@ export const washDayManifest = {
   name: 'Wash Day',
   ageBand: [3, 6],
   permissions: ['storage'],
-  iconIdentity: { family: 'learn', contrast: 'paper' },
+  iconIdentity: { family: 'play', contrast: 'paper' },
   windowShape: 'full',
 } as const satisfies CartridgeManifest

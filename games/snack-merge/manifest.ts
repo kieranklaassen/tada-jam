@@ -6,6 +6,6 @@ export const snackMergeManifest = {
   name: 'Snack Merge',
   ageBand: [5, 9],
   permissions: ['storage'],
-  iconIdentity: { family: 'learn', contrast: 'paper' },
+  iconIdentity: { family: 'play', contrast: 'paper' },
   windowShape: 'full',
 } as const satisfies CartridgeManifest
