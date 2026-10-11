@@ -153,7 +153,7 @@ const THINGS: Record<Thing, (ctx: Ctx, lit: boolean) => void> = {
       oval(ctx, 0, -14, 10.5, 10, 0, HALO)
     }
     line(ctx, PALE, 1.2, [0, -40, 0, -25])
-    // The husk: a cap, two ribs and a floor, open in the middle.
+    // The husk: a cap, a rib at each side and a floor, open in the middle so that the worm shows.
     shape(ctx, LIGHT, [-5, -22.6, 5, -22.6, 2.6, -27, -2.6, -27])
     oval(ctx, 0, -14, 7.4, 9.4, 0, lit ? GLOW : SHADE)
     if (lit) oval(ctx, -0.6, -14.6, 3.6, 4.6, 0, GLOW_CORE)
@@ -164,7 +164,6 @@ const THINGS: Record<Thing, (ctx: Ctx, lit: boolean) => void> = {
     }
     bow(ctx, LIGHT, 2, 0, -14, 7.6, 9.6, 0, Math.PI * 0.62, Math.PI * 1.38)
     bow(ctx, LIGHT, 2, 0, -14, 7.6, 9.6, 0, -Math.PI * 0.38, Math.PI * 0.38)
-    line(ctx, lit ? PALER : LIGHT, 1.5, [0, -23, 0, -5])
     oval(ctx, 0, -4.4, 4.6, 1.9, 0, LIGHT)
     oval(ctx, 0, -2.2, 1.4, 1.4, 0, LIGHT)
   },

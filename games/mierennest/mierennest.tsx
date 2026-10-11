@@ -194,12 +194,12 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
         switch (gesture.type) {
           case 'press': {
             const p = cellOf(gesture.at)
-            if (p.y >= 0) {
+            if (p.y >= 0 && p.x >= 0 && p.x < game.game.ground.cols && p.y < game.game.ground.rows) {
               game.press(p.x, p.y, seconds)
               answer()
             } else if (!inCorner(gesture.at.x, gesture.at.y, width)) {
-              // A touch on the surface: the bell rings and calls the party, a camper answers as itself, the setting
-              // gives a soft boing.
+              // A touch above the ground or on the frame round it: the bell rings and calls the party, a camper
+              // answers as itself, the setting and the frame give a puff of dust and a soft boing.
               const hit = display.poke(p.stage.x, p.stage.y)
               answer(hit.on === 'camper' ? SPOKEN[hit.kind] : hit.on === 'setting' ? BOING : null)
             }

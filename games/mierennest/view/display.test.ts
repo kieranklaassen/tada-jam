@@ -291,6 +291,49 @@ describe('a touch on the surface', () => {
     expect(display.items(null).some((item) => item.is === 'crumbs')).toBe(true)
   })
 
+  it('answers a press at the log during a raid by whoever sits there, and an empty place as bare setting', () => {
+    const game = freshGame(null, 1), g = game.ground
+    for (let y = 3; y <= 6; y++) for (const x of MOUTH) put(g, x, y, OPEN)
+    for (let y = 4; y <= 6; y++) for (let x = 22; x <= 33; x++) put(g, x, y, OPEN)
+    settle(g)
+    game.ant = { x: 20, y: 6 }
+    game.position = 'ant-file'
+    game.shown.push('ant')
+    const k = new Kingdom(game), display = new ToyDisplay(k, 1)
+    const places = display.camp.filter((camper) => camper.id.startsWith('party'))
+    expect(places.length).toBe(3)
+    k.bell()
+    // Until the first is well inside: it has left its place, and the last still sits at its own.
+    for (let n = 0; n < 400 && k.raid && k.raid.invaders[0].state === 'coming'; n++) { k.step(1 / 30); display.seeGame(k.drainEvents(), k.drainRaidEvents()); display.advance(1 / 30) }
+    expect(k.raid!.invaders[0].state).not.toBe('coming')
+    expect(k.raid!.invaders[2].state).toBe('coming')
+    const gone = places[0], sits = places[2]
+    expect(display.poke(gone.x, gone.y - 12)).toEqual({ on: 'setting' })
+    expect(display.poke(sits.x, sits.y - 12)).toEqual({ on: 'camper', kind: 'raider' })
+    display.advance(0.2)
+    // The one who sits there is the one drawn there, and it hops.
+    const there = sprites(display.items(null), 'raider').filter((one) => Math.abs(one.x - sits.x) < 1 && one.y <= GRASS_Y)
+    expect(there.length).toBe(1)
+    expect(Math.abs(there[0].move!.dy) + Math.abs(there[0].move!.dx ?? 0) + Math.abs(there[0].move!.turn ?? 0)).toBeGreaterThan(0.5)
+  })
+
+  it('shows the queen once, still under the mouth, while her move waits for a showing to end', () => {
+    const game = freshGame(null, 1), g = game.ground
+    for (let y = 1; y < g.rows - 1; y++) for (let x = 0; x < g.cols; x++) put(g, x, y, MOUTH.includes(x) && y <= 6 ? OPEN : EARTH)
+    for (const y of [4, 5]) for (let x = 22; x <= 27; x++) put(g, x, y, OPEN)
+    settle(g)
+    const k = new Kingdom(game), display = new ToyDisplay(k, 1)
+    k.press(22.5, 6, 0)
+    for (let n = 1; n <= 10; n++) { k.drag(22.5 + n * 0.5, 6, n * 0.05); k.step(0.05) }
+    k.release()
+    for (let n = 0; n < 40; n++) { k.step(1 / 30); display.see(k.toy.drainEvents()); display.seeGame(k.drainEvents(), k.drainRaidEvents()); display.advance(1 / 30) }
+    expect(k.scene?.is).toBe('showing')
+    expect(k.toy.realm.queenRoom).not.toBeNull()
+    const queen = sprites(display.items(null), 'queen')
+    expect(queen.length).toBe(1)
+    expect(['wedged', 'wedged2']).toContain(queen[0].pose)
+  })
+
   it('swings the bell back to rest', () => {
     const { display } = fresh()
     display.poke(BELL.x + 4, BELL.y)

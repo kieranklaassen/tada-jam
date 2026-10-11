@@ -118,8 +118,9 @@ export function paintCell(pen: SheetPen, ground: Ground, x: number, y: number, s
     } else {
       pen.fillStyle = P.ROCK.bedEdge
       pen.fillRect(px, py, s, 3 * u)
-      pen.fillRect(px + speck(x, y, 1) * (s - 8 * u), py + 9 * u, 8 * u, 2 * u)
-      pen.fillRect(px + speck(x, y, 2) * (s - 6 * u), py + 19 * u, 6 * u, 2 * u)
+      // Two chips bedded in it, of two sizes and never one over the other: one in the left half, one in the right.
+      pen.fillRect(px + (3 + speck(x, y, 1) * 6) * u, py + (9 + speck(x, y, 3) * 3) * u, 5 * u, 4 * u)
+      pen.fillRect(px + (18 + speck(x, y, 2) * 5) * u, py + (18 + speck(x, y, 4) * 4) * u, 3 * u, 3 * u)
     }
     return
   }

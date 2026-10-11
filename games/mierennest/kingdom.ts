@@ -1,7 +1,7 @@
 import { asSaved } from './build'
 import { OPEN, STONE, at, put, type Ground, type Kind, type Lump } from './ground'
 import { HABITS, type InvaderKind, type Shot } from './habits'
-import { LUMP_OF, RELOAD, SHOT_OF, arrivalPlace, canStand, cellsOf, machineAt, nearestStand, shotPath } from './machines'
+import { LUMP_OF, RELOAD, SHOT_OF, arrivalPlace, canStand, cellsOf, machineAt, shotPath, restPlace } from './machines'
 import { after, judge, owed, partyAt, type MachineKind, type Party, type Verdict } from './order'
 import { TICK, bodyOf, callRaid, endOf, hit, knockInRaid, landInRaid, stepRaid, type Raid, type RaidEvent } from './raid'
 import { lean } from './walls'
@@ -106,6 +106,9 @@ export type KingdomEvent =
   | { type: 'machineBack'; machine: MachineKind }
   | { type: 'machineFell'; machine: MachineKind }
 
+/** The cells of no room at all: the queen is wedged under the mouth. */
+const NO_ROOM: number[] = []
+
 export class Kingdom {
   readonly toy: Toy
   raid: Raid | null = null
@@ -142,35 +145,61 @@ export class Kingdom {
 
   /** The cells of the room the queen lives in, as it was when she was last seen to: empty while she is wedged under the mouth. */
   private queenLives: number[]
+  /** Where she sat in that room, and how large: null while she is wedged under the mouth. */
+  private queenSat: ReturnType<typeof queenSeat> = null
 
   constructor(readonly game: Game) {
     this.toy = new Toy(game)
     this.reloading = game.machines.map(() => 0)
     this.owedAtTouch = this.owed().length > 0
     // No scene plays on load: she is found where she lives.
-    this.queenLives = this.queenRoomCells()
+    this.queenLives = NO_ROOM
+    this.settleQueen()
     // A machine that was saved with its floor dug away comes down to the floor it finds.
     if (this.toy.atRest) this.restMachines()
   }
 
   private queenRoomCells(): number[] {
     const realm = this.toy.realm
-    return realm.queenRoom === null ? [] : realm.chambers[realm.queenRoom].cells
+    return realm.queenRoom === null ? NO_ROOM : realm.chambers[realm.queenRoom].cells
+  }
+
+  /** She lives where the ground says, from now: no move is owed. */
+  private settleQueen(): void {
+    const realm = this.toy.realm
+    this.queenLives = this.queenRoomCells()
+    this.queenSat = queenSeat(this.game.ground, realm.chambers, realm.queenRoom)
+  }
+
+  /** Whether the room she lives in now is another one than the room she was last seen to in. */
+  private get moveOwed(): boolean {
+    const now = this.queenRoomCells(), before = this.queenLives
+    if (now === before || now.length === 0) return false
+    return !(before.length > 0 && now.some((cell) => before.includes(cell)))
   }
 
   /**
-   * The queen's room is looked at once the ground has come to rest outside a raid. A room that has only grown or
-   * shrunk is the same room; a room that shares no cell with the one she lived in is a new one, and she is carried to it.
+   * Where the queen is while her move is owed and cannot play yet, because another scene is playing: the seat she
+   * had in her old room, or 'mouth' when she was wedged under it. Null when she is where she lives.
+   */
+  get queenStays(): NonNullable<ReturnType<typeof queenSeat>> | 'mouth' | null {
+    if (this.scene?.is === 'moves' || !this.moveOwed) return null
+    return this.queenSat ?? 'mouth'
+  }
+
+  /**
+   * The queen's room is looked at once the ground is at rest and neither a raid nor a scene is playing. A room that
+   * has only grown or shrunk is the same room; a room that shares no cell with the one she lived in is a new one,
+   * and she is carried to it. While something else plays she waits where she was, and is carried when it is over.
    */
   private seeToTheQueen(): void {
-    const now = this.queenRoomCells(), before = this.queenLives
-    if (now.length === 0) {
-      this.queenLives = now
+    const before = this.queenLives
+    if (!this.moveOwed) {
+      this.settleQueen()
       return
     }
-    const same = before.length > 0 && now.some((cell) => before.includes(cell))
-    this.queenLives = now
-    if (same || this.scene) return
+    if (this.scene || this.raid) return
+    this.settleQueen()
     const ground = this.game.ground, cols = ground.cols, realm = this.toy.realm
     const seat = queenSeat(ground, realm.chambers, realm.queenRoom)
     if (!seat) return
@@ -259,6 +288,8 @@ export class Kingdom {
     // A touch ends the scene that is playing, and is then an ordinary touch: the bell rings, unless what follows
     // that scene has begun.
     this.endScene()
+    // A move of the queen that waited for that scene plays first: the bell has rung, and the party waits for the next ring.
+    if (!this.raid && !this.scene && this.toy.atRest) this.seeToTheQueen()
     if (this.raid || this.scene) return
     this.toy.cancel()
     this.dropMachine()
@@ -289,6 +320,8 @@ export class Kingdom {
     this.scene = null
     this.endingOwed = false
     this.owedAtTouch = this.owed().length > 0
+    // A move of the queen that was still owed is not played after a put-away: she is found where she lives, as on load.
+    this.settleQueen()
   }
 
   /** A shot in the air over the nest lands at once, so that no lump is ever lost; a shot of a raid is gone with the raid. */
@@ -545,11 +578,8 @@ export class Kingdom {
     const ground = this.game.ground
     this.game.machines.forEach((machine, index) => {
       if (this.grabbed?.index === index) return
-      if (canStand(ground, this.game.machines, machine.x, machine.y, index)) return
-      let y = machine.y
-      while (y + 1 < ground.rows - 1 && at(ground, machine.x, y + 1) === OPEN && at(ground, machine.x + 1, y + 1) === OPEN) y++
-      const place = canStand(ground, this.game.machines, machine.x, y, index) ? { x: machine.x, y } : nearestStand(ground, this.game.machines, machine.x, y, index)
-      if (!place) return
+      const place = restPlace(ground, this.game.machines, index)
+      if (!place || (place.x === machine.x && place.y === machine.y)) return
       machine.x = place.x
       machine.y = place.y
       this.unsaved = true
@@ -592,10 +622,8 @@ export class Kingdom {
   step(dt: number): void {
     const wasResting = this.toy.atRest
     this.toy.step(dt)
-    if (!wasResting && this.toy.atRest && !this.raid) {
-      this.restMachines()
-      this.seeToTheQueen()
-    }
+    if (!wasResting && this.toy.atRest && !this.raid) this.restMachines()
+    if (this.toy.atRest && !this.raid && !this.scene && this.queenLives !== this.queenRoomCells()) this.seeToTheQueen()
     for (const flying of this.flying) flying.t += dt
     for (let n = 0; n < this.flying.length; n++) {
       // A ball of mud or a stone stops at the first invader it meets, the moment it gets there.

@@ -136,16 +136,20 @@ export function voiceFor(event: ToyEvent): Note[] | null {
       return SPOKEN.ant
     case 'tapped':
       return TAP
+    case 'called':
+      return CALLED
     case 'carrying':
       return CARRYING[materialOf(event.kind)!]
   }
 }
 
 /** The least time between two voices of the same kind of event, in seconds, so a fast drag crunches and does not roar. */
-export const APART: Record<ToyEvent['type'], number> = { dug: 0.07, met: 0.12, picked: 0, set: 0, back: 0, landed: 0.09, pour: 0.28, buried: 0.5, tapped: 0.15, carrying: 0.3 }
+export const APART: Record<ToyEvent['type'], number> = { dug: 0.07, met: 0.12, picked: 0, set: 0, back: 0, landed: 0.09, pour: 0.28, buried: 0.5, tapped: 0.15, called: 0.1, carrying: 0.3 }
 
 /** The ant taps a stone it passes: one small clink, higher and softer than a bite's. */
 export const TAP: Note[] = [tone(2300, 0.07, 0.002, 0.05, { wave: 'triangle' })]
+/** The ant called to a place already dug: a small patter of feet, three quick soft ticks. */
+export const CALLED: Note[] = [hiss(1900, 0.05, 0.003, 0.04, { q: 2 }), hiss(1700, 0.05, 0.003, 0.04, { q: 2, delay: 0.06 }), hiss(1900, 0.04, 0.003, 0.04, { q: 2, delay: 0.12 })]
 /** A beat of carrying: grains of sand patter, mud drips with a small wet smack, a stone scrapes along the floor. */
 export const CARRYING: Record<Material, Note[]> = {
   sand: [hiss(3800, 0.035, 0.004, 0.05, { q: 1.2 }), hiss(3300, 0.03, 0.004, 0.05, { q: 1.2, delay: 0.08 })],

@@ -213,14 +213,11 @@ export class ToyView {
         paintDrop(pen, item.sway, item.glint)
         break
       case 'glint': {
-        const r = 9 + 5 * item.strength
-        pen.fillStyle = `rgba(255,250,215,${(0.75 * item.strength).toFixed(3)})`
+        // A soft gleam: one round patch of light, no rays.
+        const r = 6 + 4 * item.strength
+        pen.fillStyle = `rgba(255,250,215,${(0.62 * item.strength).toFixed(3)})`
         pen.beginPath()
-        pen.moveTo(item.x, item.y - r)
-        pen.quadraticCurveTo(item.x, item.y, item.x + r, item.y)
-        pen.quadraticCurveTo(item.x, item.y, item.x, item.y + r)
-        pen.quadraticCurveTo(item.x, item.y, item.x - r, item.y)
-        pen.quadraticCurveTo(item.x, item.y, item.x, item.y - r)
+        pen.ellipse(item.x, item.y, r, r * 0.82, 0, 0, Math.PI * 2)
         pen.fill()
         break
       }

@@ -4,7 +4,7 @@
 ## Status
 
 - Stage: gates, closed by run 5 (the closing run). The whole order is played, from `first-chamber` to the open kingdom and its round of six. Base commit ef85be4d.
-- **Open: sheet ready for check, round 4.** The sheet passed round 3 (confirmed by the lead from the diff, answers file 4) at commit `734513b`, hash `49a588ec48b43cfce6492461afa1db4a7e440ce46f4496f1c48f651e71cebebb`. Since then 58 sentences above `## The look` have changed, all listed under "Sentences changed since round 3" below with the old and the new: the lead's own line (answers file 5), the 39 rooms it made necessary, and what the closing run found by reading the sheet against the game. The sheet now stands at commit `SHEETCOMMIT`, hash `SHEETHASH`. Round 4 reads only those sentences.
+- **Open: sheet ready for check, round 4.** The sheet passed round 3 (confirmed by the lead from the diff, answers file 4) at commit `734513b`, hash `49a588ec48b43cfce6492461afa1db4a7e440ce46f4496f1c48f651e71cebebb`. Since then 60 sentences above `## The look` have changed, all listed under "Sentences changed since round 3" below with the old and the new: the lead's own line (answers file 5), the 39 rooms it made necessary, and what the closing run found by reading the sheet against the game. The sheet now stands at commit `SHEETCOMMIT`, hash `SHEETHASH`. Round 4 reads only those sentences.
 - Answers handled: 1 to 6, read on the base branch at `93133aa2`. LASTANSWERS
 - **The lead's four points of answers file 6.**
   1. *A creature is in one place.* One whose kind is in the party at the log is in that party, and its own spot at the camp is empty while it is away (`camp.ts`). The dung beetle takes its ball along and the dung fly its twig, since it conducts with it; the toadstool, the tent and the puddle's place stay. The one a first showing shows is one of the party, stepped out to the front. `view/display.test.ts` plays every party of the order and of the round on two seeds through the first showing, the raid and the put-back, and holds that in no frame is anybody drawn twice.
@@ -28,7 +28,7 @@
 
 READER
 
-**Sentences changed since round 3** (above `## The look`; for the checker of round 4). 1 is the lead's; 2 follows from it; 3 to 12 are the sentences the lead named in answers file 6; the rest were found by reading the sheet against the built game in this run. None changes the mechanic, the error, the designed order or the saved state: each says a look, a sound or a detail as the game does it, except 28, which writes down the rule the lead asked for after the game's stills (one invader in a chamber at a time) and the short act of answers file 6.
+**Sentences changed since round 3** (above `## The look`; for the checker of round 4). 1 is the lead's; 2 follows from it; 3 to 12 are the sentences the lead named in answers file 6; the rest were found by reading the sheet against the built game in this run, the last of them (in 12, 36, 37 and 43, and 59 and 60) after the reader's first reading. None changes the mechanic, the error, the designed order or the saved state: each says a look, a sound or a detail as the game does it, except 28, which writes down the rule the lead asked for after the game's stills (one invader in a chamber at a time) and the short act of answers file 6.
 
 1. Was: A **room** is open space that holds a clear block at least 4 cells wide and 3 cells high. All such blocks that overlap or touch along a side are one room. A tunnel two cells high is never a room, however long.
    Now: The same, with the lead's sentence added: "The shaft a new nest starts with (the three columns under the mouth, three cells deep) is the way in and no part of any room: no block is counted in its cells, so an invader coming down it is not yet inside." (answers file 5, pasted as it stands)
@@ -53,7 +53,7 @@ READER
 11. Was: The army rolls home in a muddle, balls bumping. The dung fly sits on the hill and a worker hands it a leaf to wipe its eyes. The workers light a glow-worm in every chamber of the kingdom, nearest the mouth first, so the child's own plan lights up room by room.
    Now: The army, carried out in the put-back, sits on its balls at the log. The dung fly sits at the foot of the hill beside a worker and wipes its eyes with a leaf. A glow-worm wakes in every chamber of the kingdom, nearest the mouth first, so the child's own plan lights up room by room.
 12. Was: Workers pull her out of where she was like a cork, carry her by the way that is open to the new room, and she tries each corner before she sits.
-   Now: Two workers lift her from where she was and carry her, complaining, by the way that is open to the new room, and she tries each end of its floor before she sits.
+   Now: Two workers lift her from where she was and carry her, complaining, by the way that is open to the new room, and she tries each end of its floor before she sits. (And after "About 6 seconds.": While another scene plays she waits where she was, and is carried when it is over; the bell rung meanwhile shows her move first, and calls the party at the next ring. After a put-away she is found in her room.)
 13. Was: the ground gives one dull crunch, and the ant's head turns to the finger.
    Now: the ground gives one dull crunch, and the ant turns to the finger.
 14. Was: Roots that hang into a new tunnel swing. A camper above a fresh tunnel feels it through its feet and looks down.
@@ -101,9 +101,9 @@ READER
 35. Was: A machine stands only on open floor, never on a lump or over the mouth, and is picked up only by a press that starts on it; an overlap test holds this at each surface size (guide, ruling 15).
    Now: A machine stands only in open cells with a floor under it, never in the cell of a lump or over the mouth, and is picked up only by a press that starts on it; a test holds this in stage units, which are the same at every surface size (guide, ruling 15).
 36. Was: A press on a camper, the bell's stalk, a toadstool or the hill is answered by that thing as itself and changes nothing in the nest; only the bell calls a raid.
-   Now: A press on a camper is answered by that camper as itself, and a press anywhere else on the surface by a puff of dust and a small boing; neither changes anything in the nest, and only the bell calls a raid.
+   Now: A press on a camper is answered by that camper as itself, and a press anywhere else above the ground, or on the frame round it, by a puff of dust and a small boing; neither changes anything in the nest, and only the bell calls a raid. While a raid runs, a place at the log whose camper has gone in is bare grass, and one who still sits there, or is home again, answers as itself.
 37. Was: They are shown before they are met: at the camp each kind is caught out by its own habit again and again (the ant stuck in a puddle, the beetle that cannot climb a toadstool, the fly that cracks its head on a low twig).
-   Now: They are shown before they are met: at the camp each kind that is not in the party at the log is caught out by its own habit again and again (the ant stuck in a puddle, the beetle on its back under the toadstool it could not climb, the fly nursing a bump on its head).
+   Now: They are shown before they are met: at the camp each kind that is not in the party at the log is caught out by its own habit again and again (the ant stuck in a puddle, the beetle on its back under the toadstool it could not climb, the fly nursing a bump on its head). A long party takes the grass where the stuck ant and the fly have their spots, and whichever of the two its file reaches is away while that party is the one at the log; each kind is still shown at the camp, and once large at the front of it, before it is met.
 38. Was: The ball needs three cells; the beetle behind it two.
    Now: The ball needs a way three cells high, and three wide where it drops; its beetle goes wherever a way is open at all.
 39. Was: One cell up. Falls any distance down, onto its back.
@@ -115,7 +115,7 @@ READER
 42. Was: To park its ball in the grandest room: it holds the ball and eyes the mouth.
    Now: To park its ball in the grandest room: it sits on its ball and eyes the mouth.
 43. Was: Paces the room out, lies down flat in the middle as if it owned it, and is asleep before its feelers settle. Wakes with a start and goes.
-   Now: Goes well into the room, lies down flat as if it owned it, and is asleep before its feelers settle. Then it gets up and goes.
+   Now: Goes well into the room, lies down flat as if it owned it, and is asleep before its feelers settle. Then it gets up and goes. Where its way in ends on a face over open air and it can reach no floor of the room, it lies down across the way right there.
 44. Was: Rolls the ball to the middle, steps back to admire it, polishes one spot, cannot decide it looks right, and rolls it home again.
    Now: Rolls the ball well into the room, polishes one spot and then another, cannot decide it looks right, and rolls it home again.
 45. Was: Stuck: it pulls at each foot in turn and sits down where it is. Otherwise it turns round with a shrug of the feelers.
@@ -146,6 +146,10 @@ READER
    Now: The budget for the game's own work is 8 ms a frame at six times CPU throttle.
 58. Was: at the camp each kind acts out its own habit for anyone who looks, a press on a camper makes it do so at once, and the idle ladder never shows a solution.
    Now: at the camp each kind acts out its own habit for anyone who looks, a press on a camper is answered by that camper at once, and the idle ladder never shows a solution.
+59. Was: (on touch-down) the mouthful under the finger is gone, crumbs spray from the bite, the ground gives one dull crunch, and the ant turns to the finger.
+   Now: The same, with a sentence added: "Where all under the finger is dug already, nothing is bitten: a little dust lifts from the place, the ant's feet patter, and it comes."
+60. Was: While the ground is still falling the save holds it as it will come to rest, so nothing is saved in the air.
+   Now: While the ground is still falling the save holds it as it will come to rest, so nothing is saved in the air; a machine whose floor is on its way down, or into whose place a lump is falling, is saved where it comes to stand, with what it holds.
 
 **Frame cost.** FRAMECOST
 

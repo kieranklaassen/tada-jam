@@ -366,6 +366,50 @@ describe('the queen moves in', () => {
     expect(more.filter((e) => e.type === 'scene').length).toBe(1)
   })
 
+  it('waits for a scene that is playing: she stays where she was and is carried when it is over, and a put-away finds her in her room', () => {
+    /** A nest one stroke short of its first room, with the ant's first showing still owed at the first touch. */
+    const oneStrokeShort = () => {
+      const game = shownGame(), g = game.ground
+      game.shown.length = 0
+      for (let y = 3; y <= 6; y++) for (const x of MOUTH) put(g, x, y, OPEN)
+      for (const y of [4, 5]) for (let x = 22; x <= 27; x++) put(g, x, y, OPEN)
+      settle(g)
+      return new Kingdom(game)
+    }
+    const k = oneStrokeShort(), events: KingdomEvent[] = []
+    expect(k.toy.realm.chambers.length).toBe(0)
+    // The touch that starts the showing digs the room as it goes on.
+    dig(k, [22.5, 6], [27.5, 6])
+    play(k, 2, events)
+    expect(k.toy.realm.chambers.length).toBe(1)
+    expect(k.scene?.is).toBe('showing')
+    expect(k.queenStays).toBe('mouth')
+    expect(events.filter((e) => e.type === 'scene').map((e) => (e as { is: string }).is)).toEqual(['showing'])
+    play(k, SCENE_SECONDS.showing, events)
+    expect(events.filter((e) => e.type === 'scene').map((e) => (e as { is: string }).is)).toEqual(['showing', 'moves'])
+    expect(k.scene?.is).toBe('moves')
+    expect(k.queenStays).toBeNull()
+    play(k, SCENE_SECONDS.moves + 1, events)
+    expect(events.filter((e) => e.type === 'scene').length).toBe(2)
+    // The bell, rung while she waits, ends the showing and shows her move first; the next ring calls the party.
+    const rung = oneStrokeShort()
+    dig(rung, [22.5, 6], [27.5, 6])
+    play(rung, 2)
+    rung.bell()
+    expect(rung.scene?.is).toBe('moves')
+    expect(rung.raid).toBeNull()
+    rung.bell()
+    expect(rung.raid).not.toBeNull()
+    // Put away while she waits: she is found in her room, and nothing plays.
+    const away = oneStrokeShort()
+    dig(away, [22.5, 6], [27.5, 6])
+    play(away, 2)
+    expect(away.queenStays).toBe('mouth')
+    away.putAway()
+    expect(away.queenStays).toBeNull()
+    expect(play(away, 10).filter((e) => e.type === 'scene')).toEqual([])
+  })
+
   it('plays again when another room becomes the largest, and never on load or after a put-away', () => {
     const k = new Kingdom(shownGame()), events: KingdomEvent[] = []
     digRoom(k, 22, 26, events)

@@ -18,6 +18,7 @@ export const RAID_DUNG_FLY = ['duck', 'conduct', 'conduct2', 'down', 'tumble', '
 const TWIG = '#5b3a1c'
 const LEAF = SKY.far
 const TEAR = SKY.top
+const GLASS = '#bfe0e6'
 
 // ---- The dung beetle. ----
 
@@ -183,21 +184,26 @@ function goggles(ctx: Ctx, f: FlyBuild, x: number, y: number, turn: number, flat
   ctx.translate(x, y)
   ctx.rotate(turn)
   line(ctx, f.strap ?? f.dark, 3.4, [-13, 0, -8, -1])
-  bow(ctx, f.goggles ?? HIGHLIGHT, 3.2, 14.2, 1.4 * flat, 10.6, 10.6 * flat, 0, 0, Math.PI * 2)
-  bow(ctx, f.goggles ?? HIGHLIGHT, 3.2, 0, 0, 12.6, 12.6 * flat, 0, 0, Math.PI * 2)
+  // Each rim holds its glass, with the room's light on it: two lenses on a strap, never two empty rings.
+  for (const [gx, gy, r] of [[14.2, 1.4 * flat, 10.6], [0, 0, 12.6]]) {
+    oval(ctx, gx, gy, r, r * flat, 0, GLASS)
+    bow(ctx, f.goggles ?? HIGHLIGHT, 3.2, gx, gy, r, r * flat, 0, 0, Math.PI * 2)
+    oval(ctx, gx - r * 0.3, gy - r * 0.34 * flat, r * 0.3, r * 0.2 * flat, -0.5, HIGHLIGHT)
+  }
   ctx.restore()
 }
 
-/** Folded arms, in the frame of the body: two forearms crossed on the chest, a fist at the end of each. They are
- *  in the colour of the body inside a dark edge, so that they show on the chest. */
+/** Folded arms, in the frame of the body: the near forearm lies across the chest with its fist at the far side, and
+ *  the other hand is tucked in over it, only its fist showing. They are in the colour of the body inside a dark
+ *  edge, so that they show on the chest, and nothing crosses anything. */
 function folded(ctx: Ctx, f: FlyBuild): void {
-  for (const [x0, y0, x1, y1] of [[-4, -16, 24, -28], [-5, -27, 25, -16]]) {
-    line(ctx, f.dark, 7.6, [x0, y0, x1, y1])
-    oval(ctx, x1, y1, 5, 5, 0, f.dark)
-    line(ctx, f.body, 4.4, [x0, y0, x1, y1])
-    oval(ctx, x1, y1, 3.4, 3.4, 0, f.body)
-  }
-  line(ctx, HIGHLIGHT, 1.5, [0, -25.6, 7, -23])
+  line(ctx, f.dark, 7.6, [-5, -19, 10, -23, 24, -22], true)
+  oval(ctx, 24, -22, 5, 5, 0, f.dark)
+  oval(ctx, 3, -28.4, 5.2, 4.6, 0, f.dark)
+  line(ctx, f.body, 4.4, [-5, -19, 10, -23, 24, -22], true)
+  oval(ctx, 24, -22, 3.4, 3.4, 0, f.body)
+  oval(ctx, 3, -28.4, 3.6, 3, 0, f.body)
+  line(ctx, HIGHLIGHT, 1.5, [2, -22.4, 9, -24])
 }
 
 /** A small pale leaf about (x, y) with a dark edge, its stalk toward the hand that holds it. */

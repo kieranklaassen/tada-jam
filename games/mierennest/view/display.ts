@@ -182,13 +182,29 @@ export class ToyDisplay {
     }
     // Any touch ends a scene that is playing.
     this.k.touch()
-    const camper = camperAt(this.camp, x, y)
+    const camper = camperAt(this.present(), x, y)
     if (camper) {
       this.startle(camper.id)
       return { on: 'camper', kind: camper.kind }
     }
     this.puff(x, y, 4, CRUMB.dust, 40)
     return { on: 'setting' }
+  }
+
+  /**
+   * The campers who are at the camp now. While a raid runs, the party's places at the log are empty but for those
+   * who still sit there waiting their turn and those who are home again: a press on an empty place is a press on the
+   * setting, and a press on one who sits there is answered by it.
+   */
+  private present(): readonly Camper[] {
+    const raid = this.k.raid
+    if (!raid) return this.camp
+    const seated = showRaid(raid, this.raidParty, this.seconds).filter((one) => one.id >= 0 && one.y <= GRASS_Y)
+    return this.camp.filter((camper) => {
+      const place = /^party(?:Ball)?(\d+)$/.exec(camper.id)
+      if (!place) return true
+      return seated.some((one) => one.id === Number(place[1]) && one.who === camper.kind && Math.abs(one.x - camper.x) < 1)
+    })
   }
 
   private startle(id: string): void {
@@ -251,6 +267,10 @@ export class ToyDisplay {
         this.puff(p.x, p.y + CELL / 2, event.kind === STONE ? 5 : 3, colour, event.kind === STONE ? 80 : 45)
         // A stone that is set down or has fallen is felt at the camp through the feet.
         if (event.kind === STONE && (event.type === 'set' || event.fell >= 1)) for (const camper of this.camp) this.startle(camper.id)
+      } else if (event.type === 'called') {
+        // Nothing to bite here: a little dust lifts off the floor under the finger, and the ant comes.
+        const p = toStage(event.x, event.y)
+        this.puff(p.x, p.y, 2, CRUMB.dust, 30)
       } else if (event.type === 'tapped') {
         // The ant taps a stone it passes: a spark off the stone, and a small shake.
         const p = cellMiddle(event.cell, cols)
@@ -419,7 +439,8 @@ export class ToyDisplay {
 
   /** One of a raid as an item: one who stands and waits fidgets as its kind does at the camp. */
   private shown(one: Shown, slot: number): Item {
-    const move = one.idle ? idleMove(one.who, this.seconds, ((one.id + 1) * 0.37) % 1, this.move(slot)) : null
+    // One of the party who sits at the log answers a poke as it does before the raid: it is the same camper.
+    const move = one.idle ? this.moveOf(`party${one.id}`, one.who, ((one.id + 1) * 0.37) % 1, slot) : null
     return { is: 'sprite', who: one.who, pose: one.pose, x: one.x, y: one.y, flip: one.flip, size: one.size, tall: 1, move, turn: one.turn }
   }
 
@@ -516,7 +537,9 @@ export class ToyDisplay {
       })
     }
     if (huddled) workers()
-    const seat = queenSeat(ground, realm.chambers, realm.queenRoom)
+    // While her move waits for another scene to end she is still where she was: on her old seat, or under the mouth.
+    const stays = k.raid ? null : k.queenStays
+    const seat = stays === 'mouth' ? null : (stays ?? queenSeat(ground, realm.chambers, realm.queenRoom))
     const queenMove = this.moveOf('queen', 'queen', 0, slot++)
     if (seat && scene?.is === 'moves') {
       // She is carried to her new room by two workers, complaining, tries each end of its floor, and sits.

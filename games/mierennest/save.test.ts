@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { pickUp } from './build'
 import { LADDER } from './config'
 import { COLS, EARTH, LUMPS, MOUTH, MUD, OPEN, ROCK, ROWS, SAND, STONE, at, clone, count, equal, generate, makeGround, put, settle, type Kind } from './ground'
+import { canStand } from './machines'
 import { SHOWINGS } from './order'
 import { decodeGround, deserialize, encodeGround, freshGame, serialize, type Game } from './save'
 import { STATE_VERSION } from './state'
@@ -13,7 +14,7 @@ const through = (game: Game): Game => deserialize(JSON.parse(JSON.stringify(seri
 /** A nest with a little of everything in it: tunnels, a room, lumps moved, both machines, marks and a late position. */
 function builtGame(): Game {
   const game = freshGame(null, SEED)
-  for (let y = 3; y <= 5; y++) for (let x = 21; x <= 26; x++) put(game.ground, x, y, OPEN)
+  for (let y = 3; y <= 5; y++) for (let x = 21; x <= 29; x++) put(game.ground, x, y, OPEN)
   for (let x = 10; x <= 18; x++) for (const y of [2, 3]) if (at(game.ground, x, y) === EARTH) put(game.ground, x, y, OPEN)
   put(game.ground, 24, 5, STONE)
   put(game.ground, 25, 5, MUD)
@@ -23,7 +24,7 @@ function builtGame(): Game {
     ...game,
     position: 'the-cannon',
     ant: { x: 22, y: 4 },
-    machines: [{ kind: 'catapult', x: 21, y: 5, facing: -1, load: 'mud' }, { kind: 'cannon', x: 23, y: 5, facing: 1, load: null }],
+    machines: [{ kind: 'catapult', x: 21, y: 5, facing: -1, load: 'mud' }, { kind: 'cannon', x: 27, y: 5, facing: 1, load: null }],
     shown: ['ant', 'beetle', 'fly', 'catapult', 'cannon'],
   }
 }
@@ -146,20 +147,36 @@ describe('reading a slot that is not a good save', () => {
   it('keeps a machine only where it can stand and only once it has arrived', () => {
     const raw = good()
     raw.machines = [
-      { kind: 'catapult', x: 0, y: 1, facing: 1, load: 'mud' },
-      { kind: 'cannon', x: 23, y: 5, facing: 7, load: 'gravel' },
+      { kind: 'catapult', x: -3, y: 1, facing: 1, load: 'mud' },
+      { kind: 'cannon', x: 27, y: 5, facing: 7, load: 'gravel' },
       { kind: 'cannon', x: 22, y: 5, facing: 1, load: null },
       { kind: 'trebuchet', x: 22, y: 4, facing: 1, load: null },
       'cannon',
     ]
     const game = deserialize(raw, null, SEED)
-    expect(game.machines.find((m) => m.kind === 'cannon')).toEqual({ kind: 'cannon', x: 23, y: 5, facing: 1, load: null })
+    expect(game.machines.find((m) => m.kind === 'cannon')).toEqual({ kind: 'cannon', x: 27, y: 5, facing: 1, load: null })
     // The catapult's showing had started, so it is in the nest: at the foot of the shaft, empty.
     const catapult = game.machines.find((m) => m.kind === 'catapult')!
     expect(at(game.ground, catapult.x, catapult.y)).toBe(OPEN)
     expect(catapult.load).toBeNull()
     expect(game.machines.length).toBe(2)
     expect(deserialize({ ...good(), position: 'first-fly' }, null, SEED).machines).toEqual([])
+  })
+
+  it('keeps what a machine holds when a lump is on its way into its place: it is saved where it comes to stand, and reads back there', () => {
+    const game = builtGame()
+    // A stone let go over the loaded catapult, and the game put away before it lands.
+    put(game.ground, 21, 3, STONE)
+    const saved = JSON.parse(JSON.stringify(serialize(game)))
+    const back = deserialize(saved, null, SEED)
+    const catapult = back.machines.find((m) => m.kind === 'catapult')!
+    expect(at(back.ground, 21, 5)).toBe(STONE)
+    expect(catapult.load).toBe('mud')
+    expect(canStand(back.ground, back.machines, catapult.x, catapult.y, back.machines.indexOf(catapult))).toBe(true)
+    expect(saved.machines[0]).toEqual({ ...catapult })
+    // An entry that says a machine stands in a lump is read the same way: the machine keeps its load and stands beside it.
+    const raw = { ...saved, machines: [{ kind: 'catapult', x: 21, y: 5, facing: -1, load: 'mud' }, saved.machines[1]] }
+    expect(deserialize(raw, null, SEED).machines.find((m) => m.kind === 'catapult')).toEqual(catapult)
   })
 
   it('reads a ground with its edges damaged as a nest again, with nothing in the air', () => {

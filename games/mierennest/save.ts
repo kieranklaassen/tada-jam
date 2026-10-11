@@ -1,6 +1,7 @@
 import { asSaved } from './build'
 import { COLS, MOUTH, OPEN, ROCK, ROWS, at, generate, makeGround, put, settle, type Ground, type Kind } from './ground'
 import { SHOTS, type Shot } from './habits'
+import { restPlace } from './machines'
 import { ROUND, SHOWINGS, arrived, type MachineKind } from './order'
 import { STATE_VERSION, deserialize as readPosition, isReadable, type GameState } from './state'
 
@@ -96,17 +97,28 @@ export function freshGame(childAge: number | null, seed: number): Game {
 }
 
 /**
- * The record to store. The ground is saved as it will come to rest. A lump in the jaws is still in the cell it
- * was picked from, and a machine under the finger still stands where it stood, so neither needs a word here.
+ * The record to store. The ground is saved as it will come to rest, and each machine where it will stand in that
+ * ground with what it holds: one whose floor is on its way down, or into whose place a lump is falling, is saved
+ * where it comes to stand. A lump in the jaws is still in the cell it was picked from, and a machine under the
+ * finger still stands where it stood, so neither needs a word here.
  */
 export function serialize(game: Game): Save {
+  const ground = asSaved(game.ground)
+  const machines = game.machines.map((m) => ({ kind: m.kind, x: m.x, y: m.y, facing: m.facing, load: m.load }))
+  machines.forEach((machine, index) => {
+    const place = restPlace(ground, machines, index)
+    if (place) {
+      machine.x = place.x
+      machine.y = place.y
+    }
+  })
   return {
     v: STATE_VERSION,
     position: game.position,
     finished: false,
-    ground: encodeGround(asSaved(game.ground)),
+    ground: encodeGround(ground),
     ant: game.ant.y * game.ground.cols + game.ant.x,
-    machines: game.machines.map((m) => ({ kind: m.kind, x: m.x, y: m.y, facing: m.facing, load: m.load })),
+    machines,
     muster: game.muster,
     shown: [...game.shown],
     ended: game.ended,
@@ -115,12 +127,12 @@ export function serialize(game: Game): Save {
 
 const isWhole = (value: unknown): value is number => typeof value === 'number' && Number.isInteger(value)
 
-/** One stored machine, or null when it is not one that can stand where it says in this ground. */
+/** One stored machine, or null when it is not one of this nest's or its place is not a cell of this ground. */
 function readMachine(raw: unknown, ground: Ground, allowed: readonly MachineKind[]): Machine | null {
   if (typeof raw !== 'object' || raw === null) return null
   const m = raw as Record<string, unknown>
   const kind = allowed.find((k) => k === m.kind)
-  if (!kind || !isWhole(m.x) || !isWhole(m.y) || m.y < 1 || at(ground, m.x, m.y) !== OPEN) return null
+  if (!kind || !isWhole(m.x) || !isWhole(m.y) || m.x < 0 || m.x >= ground.cols - 1 || m.y < 1 || m.y >= ground.rows - 1) return null
   const load = SHOTS.find((shot) => shot === m.load) ?? null
   return { kind, x: m.x, y: m.y, facing: m.facing === -1 ? -1 : 1, load }
 }
@@ -147,6 +159,14 @@ export function deserialize(raw: unknown, childAge: number | null, seed: number)
   for (const kind of allowed) {
     if (shown.includes(kind) && !machines.some((m) => m.kind === kind)) machines.push({ kind, x: foot.x, y: foot.y, facing: 1, load: null })
   }
+  // One that cannot stand where its entry says keeps what it holds, and stands where it would have come to rest.
+  machines.forEach((machine, index) => {
+    const place = restPlace(ground, machines, index)
+    if (place) {
+      machine.x = place.x
+      machine.y = place.y
+    }
+  })
   const muster = isWhole(raw.muster) && raw.muster >= 0 && raw.muster < ROUND.length ? raw.muster : 0
   // The kingdom is open only after the great raid was turned back, so the two cannot disagree.
   return { position, ground, ant: { x: antCell % ground.cols, y: Math.floor(antCell / ground.cols) }, machines, muster, shown, ended: position === 'open-kingdom' }

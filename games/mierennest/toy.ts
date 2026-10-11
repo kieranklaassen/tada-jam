@@ -24,6 +24,8 @@ export type ToyEvent =
   | { type: 'buried'; cell: number }
   /** The ant passed a stone and tapped it: it cannot leave a stone alone. */
   | { type: 'tapped'; cell: number }
+  /** The finger landed where nothing is left to bite and no lump lies: the ant is called there, and comes pattering. */
+  | { type: 'called'; x: number; y: number }
   /** A beat of carrying, as the ant runs with a lump: grains leak from sand, mud drips, a stone scrapes along behind. */
   | { type: 'carrying'; kind: Lump; x: number; y: number }
 
@@ -119,13 +121,14 @@ export class Toy {
     this.way = null
   }
 
-  private bite(fromX: number, fromY: number, toX: number, toY: number): void {
+  private bite(fromX: number, fromY: number, toX: number, toY: number): boolean {
     const answer = digAlong(this.game.ground, fromX, fromY, toX, toY)
     this.changed(answer.dug)
     if (answer.dug.length > 0) this.events.push({ type: 'dug', x: toX, y: toY, cells: answer.dug.length, speed: this.speed })
     // A thing the dig cannot bite answers once as the finger comes to it, not once a frame while the finger rubs it.
     for (const kind of answer.met) if (!this.meeting.includes(kind)) this.events.push({ type: 'met', kind, x: toX, y: toY })
     this.meeting = answer.met
+    return answer.dug.length > 0 || answer.met.length > 0
   }
 
   /** Cells of the ground that something other than the finger changed (a machine's lump, a load taken): they are repainted, saved and let come to rest. */
@@ -149,6 +152,7 @@ export class Toy {
     this.turnTo(x)
     const kind = at(this.game.ground, Math.floor(x), Math.floor(y))
     if (isLump(kind)) this.events.push({ type: 'met', kind, x, y })
+    else this.events.push({ type: 'called', x, y })
   }
 
   /** The ant turns to the finger the moment it lands. */
@@ -180,7 +184,8 @@ export class Toy {
       } else this.idle = true
       return
     }
-    this.bite(x, y, x, y)
+    // Where all under the finger is dug already, nothing is bitten: the ant is called, and the touch still has its answer.
+    if (!this.bite(x, y, x, y)) this.events.push({ type: 'called', x, y })
   }
 
   /** The finger moves. A carried lump follows it; otherwise the earth along the way is bitten, and no further. */

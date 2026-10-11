@@ -86,6 +86,21 @@ describe('digging', () => {
     }
   })
 
+  it('calls the ant where all under the finger is dug already: nothing is bitten, and the touch is still answered once', () => {
+    const toy = new Toy(gameOn(['XXXXXXXX', '........', '........', '........', '########', 'XXXXXXXX'], [0, 3]))
+    const before = clone(toy.game.ground)
+    toy.press(4.5, 1.5, 0)
+    expect(toy.drainEvents()).toEqual([{ type: 'called', x: 4.5, y: 1.5 }])
+    expect(equal(toy.game.ground, before)).toBe(true)
+    toy.release()
+    // A finger that only points, as every touch on the ground does while a raid runs, is answered the same way.
+    toy.point(5.5, 2.5, 1)
+    expect(toy.drainEvents()).toEqual([{ type: 'called', x: 5.5, y: 2.5 }])
+    // Beside a wall there is something to bite, and the bite is the answer.
+    toy.press(4.5, 3.9, 2)
+    expect(toy.drainEvents().map((event) => event.type)).toEqual(['dug'])
+  })
+
   it('ignores a press that is not on the ground', () => {
     const toy = new Toy(gameOn(['XXXX', '.###', 'XXXX'], [0, 1]))
     toy.press(-1, 1, 0)

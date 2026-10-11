@@ -51,6 +51,19 @@ export function nearestStand(ground: Ground, machines: readonly Machine[], x: nu
   return null
 }
 
+/**
+ * Where a machine comes to stand once the ground is at rest: where it is, if it can stand there; otherwise down to
+ * the first floor under it, and if a lump lies in its place there, the nearest place it can stand. Null when the
+ * nest has no place for it at all.
+ */
+export function restPlace(ground: Ground, machines: readonly Machine[], index: number): { x: number; y: number } | null {
+  const machine = machines[index]
+  if (canStand(ground, machines, machine.x, machine.y, index)) return { x: machine.x, y: machine.y }
+  let y = machine.y
+  while (y + 1 < ground.rows - 1 && at(ground, machine.x, y + 1) === OPEN && at(ground, machine.x + 1, y + 1) === OPEN) y++
+  return canStand(ground, machines, machine.x, y, index) ? { x: machine.x, y } : nearestStand(ground, machines, machine.x, y, index)
+}
+
 /** Where a machine is first set when the workers bring it: as near the foot of the shaft as it can stand. */
 export function arrivalPlace(ground: Ground, machines: readonly Machine[]): { x: number; y: number } | null {
   let y = 1

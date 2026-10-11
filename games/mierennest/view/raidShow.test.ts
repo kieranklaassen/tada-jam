@@ -297,6 +297,18 @@ describe('an ant held fast in the mud', () => {
     expect(showRaid(raid, ['ant'], 0)[0].turn).toBe(0)
   })
 
+  it('lies down across the way where it is when its way into a room ends on a face over open air', () => {
+    const hall = fromPicture(['XXX...XXXX', '###...####', '###...####', '###...####', '###......#', '#........#', '#........#', '##########', 'XXXXXXXXXX'])
+    const raid = callRaid(hall, ['ant'], [3, 4, 5])
+    while (!raid.over && raid.invaders[0].state !== 'acting') stepRaid(raid)
+    expect(raid.invaders[0].state).toBe('acting')
+    // It got as far as the last cell of the face, at the top of the room, and no further: a raider ant does not drop.
+    expect(raid.invaders[0].cell).toBe(4 * 10 + 3)
+    const one = showRaid(raid, ['ant'], 0)[0]
+    expect(['lie', 'nap', 'nap2']).toContain(one.pose)
+    expect(one.turn).toBe(0)
+  })
+
   it('is carried out the way it came, through the open and never through the earth', () => {
     const raid = muddy(), g = raid.ground
     playOut(raid)

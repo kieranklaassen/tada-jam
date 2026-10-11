@@ -179,10 +179,10 @@ function paintSurface(pen: Pen): void {
   pen.moveTo(918, GRASS_Y - 90)
   pen.quadraticCurveTo(980, GRASS_Y - 76, 1042, GRASS_Y - 94)
   pen.stroke()
+  // Three cloths pegged out: each a plain patch with a soft hem, none of them a shape that could be read.
   pen.fillStyle = '#e2573a'
   pen.beginPath()
-  pen.roundRect(942, GRASS_Y - 86, 9, 22, 4)
-  pen.roundRect(942, GRASS_Y - 70, 17, 8, 4)
+  pen.roundRect(938, GRASS_Y - 87, 17, 23, [2, 2, 7, 7])
   pen.fill()
   pen.fillStyle = '#f1d58a'
   pen.beginPath()
@@ -190,20 +190,19 @@ function paintSurface(pen: Pen): void {
   pen.fill()
   pen.fillStyle = '#6a4fb0'
   pen.beginPath()
-  pen.roundRect(1006, GRASS_Y - 88, 9, 20, 4)
-  pen.roundRect(1006, GRASS_Y - 74, 16, 8, 4)
+  pen.roundRect(1006, GRASS_Y - 88, 15, 26, [2, 2, 6, 6])
   pen.fill()
-  // A ring of pebbles with twigs laid for a fire that is never lit.
+  // A ring of pebbles round one stub of a log, for a fire that is never lit: the log lies flat, its cut end pale.
   pen.fillStyle = P.STONE.edge
   for (const dx of [-22, -11, 0, 11, 22]) blob(pen, 300 + dx, GRASS_Y - 4, 7, 5)
-  pen.strokeStyle = '#6d4426'
-  pen.lineWidth = 4
+  pen.fillStyle = '#6d4426'
   pen.beginPath()
-  pen.moveTo(286, GRASS_Y - 6)
-  pen.lineTo(310, GRASS_Y - 24)
-  pen.moveTo(314, GRASS_Y - 6)
-  pen.lineTo(290, GRASS_Y - 24)
-  pen.stroke()
+  pen.roundRect(284, GRASS_Y - 19, 30, 12, 6)
+  pen.fill()
+  pen.fillStyle = '#b98a58'
+  blob(pen, 310, GRASS_Y - 13, 4, 5.4)
+  pen.fillStyle = '#8a5a34'
+  blob(pen, 293, GRASS_Y - 20, 4, 3)
   // Grass in front, lighter, and a few daisies.
   pen.fillStyle = P.GRASS.blade
   for (let n = 0; n < 190; n++) {
