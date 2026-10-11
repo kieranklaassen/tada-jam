@@ -20,6 +20,8 @@ export type Camper = {
   poses: readonly [string, string]
   /** What sets it apart in time from another of its kind, from 0 to 1. */
   phase: number
+  /** How much of its full size it stands at; 1 where it is not given. A large army at the log stands a little smaller. */
+  size?: number
 }
 
 /** The body box of each kind that can stand at the camp: its width along the ground and its height above its feet. */
@@ -44,39 +46,115 @@ export const WAITING: Record<InvaderKind, { kind: Mover; poses: readonly [string
   dungFly: { kind: 'dungFly', poses: ['point', 'point2'] },
 }
 
-/** Where the head of the file at the log stands: the right end of the log, beside the mouth. */
+/** Where the head of the party at the log stands: the right end of the log, beside the mouth. */
 export const FILE_HEAD = LOG.x + LOG.length + 2
-/** How much of its own width each one in the file takes: the next stands close behind, over its tail, with its own face clear. */
-export const FILE_STEP = 0.42
+/** Where the party's ground ends on the left: the frame, and a little air. */
+export const FILE_FOOT = 34
+/** The air between two of the party who stand side by side, and between one and whoever hovers over it. */
+export const FILE_GAP = 6
+/** How far a rider's feet sink into the back it sits on. */
+const SEATED = 4
+/** The highest anyone of the party hangs: inside the frame, with a little air. */
+const SKY_TOP = 34
 
 /**
- * The party that will come next, as a file along the log: the first of it nearest the mouth, each next one close
- * behind, facing the mouth. They are listed, and drawn, head first, so each one's face lies over the tail of the
- * one before it. A larger party is a longer file, and it looks as heavy as it is.
+ * The party that will come next, at the log, where nobody of it covers anybody: the heavy ones stand side by side
+ * on the grass from the mouth end, a dung beetle on its own ball; each raider ant rides a beetle's back while there
+ * are backs, and the rest stand on the grass behind; each flier hovers over one of them. A party too long for the
+ * grass between the mouth and the frame stands a little smaller, all of it alike. They are given in marching order,
+ * one for each member of the party; the balls come from `partyBalls`.
  */
 export function partyFile(party: Party): Camper[] {
-  const file: Camper[] = []
-  let right = FILE_HEAD
-  party.forEach((member, n) => {
-    const waiting = WAITING[member]
-    const width = BODY[waiting.kind].width
-    file.push({ id: `party${n}`, kind: waiting.kind, x: right - width / 2, y: GRASS_Y, flip: false, poses: waiting.poses, phase: (0.65 + n * 0.23) % 1 })
-    right -= width * FILE_STEP
-  })
-  return file
+  const layout = layOut(party)
+  return layout.members
 }
 
-/** How far left the file reaches. */
+/** The dung balls of the party at the log, each under its own beetle. */
+export function partyBalls(party: Party): Camper[] {
+  return layOut(party).balls
+}
+
+function layOut(party: Party): { members: Camper[]; balls: Camper[] } {
+  const heavy = party.flatMap((kind, n) => (kind === 'beetle' || kind === 'dungBeetle' ? [n] : []))
+  const ants = party.flatMap((kind, n) => (kind === 'ant' ? [n] : []))
+  const fliers = party.flatMap((kind, n) => (kind === 'fly' || kind === 'dungFly' ? [n] : []))
+  // Who stands on the grass, from the mouth end: the heavy ones, then the ants no back is left for, then a flier
+  // nobody is left to hover over, or who would hover out of the picture.
+  const riders = ants.slice(0, heavy.filter((n) => party[n] === 'beetle').length)
+  const walkers = ants.slice(riders.length)
+  const columns = heavy.length + walkers.length
+  let hovering = Math.min(fliers.length, columns)
+  for (;;) {
+    const laid = place(party, heavy, walkers, riders, fliers.slice(0, hovering), fliers.slice(hovering))
+    if (laid || hovering === 0) return laid ?? { members: [], balls: [] }
+    hovering--
+  }
+}
+
+/** Lays the party out with these fliers hovering and those hanging low. Null when a hovering flier would hang above the frame. */
+function place(party: Party, heavy: number[], walkers: number[], riders: number[], hover: number[], low: number[]): { members: Camper[]; balls: Camper[] } | null {
+  const members: (Camper | null)[] = party.map(() => null)
+  const balls: Camper[] = []
+  const widthOf = (n: number) => BODY[WAITING[party[n]].kind].width
+  const onGrass = [...heavy, ...walkers, ...low]
+  const gaps = FILE_GAP * Math.max(0, onGrass.length - 1)
+  const size = Math.min(1, (FILE_HEAD - FILE_FOOT - gaps) / Math.max(1, onGrass.reduce((sum, n) => sum + widthOf(n), 0)))
+  const camper = (n: number, x: number, y: number): Camper => {
+    const waiting = WAITING[party[n]]
+    return { id: `party${n}`, kind: waiting.kind, x, y, flip: false, poses: waiting.poses, phase: (0.65 + n * 0.23) % 1, size }
+  }
+  // Each column: where its middle is, and how high it stands over the grass.
+  const tops: { x: number; top: number }[] = []
+  let right = FILE_HEAD
+  let rider = 0
+  for (const n of onGrass) {
+    const width = widthOf(n) * size, x = right - width / 2
+    let top: number
+    if (party[n] === 'dungBeetle') {
+      const ball = BODY.dungBall
+      balls.push({ id: `partyBall${n}`, kind: 'dungBall', x, y: GRASS_Y, flip: false, poses: ['plain', 'plain'], phase: (0.13 + n * 0.17) % 1, size })
+      const feet = GRASS_Y - (ball.height - SEATED) * size
+      members[n] = camper(n, x, feet)
+      top = feet - BODY.dungBeetle.height * size
+    } else if (low.includes(n)) {
+      // A flier with nobody to hover over hangs low over the grass.
+      members[n] = camper(n, x, GRASS_Y - 8)
+      top = GRASS_Y - 8 - BODY[WAITING[party[n]].kind].height * size
+    } else {
+      members[n] = camper(n, x, GRASS_Y)
+      top = GRASS_Y - BODY[WAITING[party[n]].kind].height * size
+      if (party[n] === 'beetle' && rider < riders.length) {
+        const feet = top + SEATED * size
+        members[riders[rider]] = camper(riders[rider], x, feet)
+        top = feet - BODY.raider.height * size
+        rider++
+      }
+    }
+    if (!low.includes(n)) tops.push({ x, top })
+    right -= width + FILE_GAP
+  }
+  // The fliers hover over the lowest columns, nearest the mouth first among those as low.
+  const order = tops.map((column, k) => ({ ...column, k })).sort((a, b) => b.top - a.top || a.k - b.k)
+  for (let k = 0; k < hover.length; k++) {
+    const n = hover[k], column = order[k]
+    const feet = column.top - FILE_GAP
+    if (feet - BODY[WAITING[party[n]].kind].height * size < SKY_TOP) return null
+    members[n] = camper(n, column.x, feet)
+  }
+  return { members: members.filter((one): one is Camper => one !== null), balls }
+}
+
+/** How far left the party reaches. */
 export function fileEnd(file: readonly Camper[]): number {
-  return file.length === 0 ? FILE_HEAD : Math.min(...file.map((camper) => camper.x - BODY[camper.kind].width / 2))
+  return file.length === 0 ? FILE_HEAD : Math.min(...file.map((camper) => boxOf(camper).left))
 }
 
 /**
  * The campers, in the order they are drawn. Each of those who are always there is caught out by its own habit.
- * The two on the left make room when the file at the log is long: they have joined it.
+ * The two on the left make room when the party at the log is long: they have joined it.
  */
 export function campers(party: Party): Camper[] {
-  const file = partyFile(party), end = fileEnd(file)
+  const file = [...partyBalls(party), ...partyFile(party)], end = fileEnd(file)
   const left: Camper[] = [
     { id: 'stuck', kind: 'raider', x: 100, y: GRASS_Y, flip: true, poses: ['stuck', 'stuck2'], phase: 0.3 },
     { id: 'fly', kind: 'fly', x: 230, y: GRASS_Y, flip: false, poses: ['hands', 'hands2'], phase: 0 },
@@ -94,16 +172,16 @@ export function campers(party: Party): Camper[] {
 export type Box = { left: number; right: number; top: number; bottom: number }
 
 export function boxOf(camper: Camper): Box {
-  const body = BODY[camper.kind]
-  return { left: camper.x - body.width / 2, right: camper.x + body.width / 2, top: camper.y - body.height, bottom: camper.y }
+  const body = BODY[camper.kind], size = camper.size ?? 1
+  return { left: camper.x - (body.width / 2) * size, right: camper.x + (body.width / 2) * size, top: camper.y - body.height * size, bottom: camper.y }
 }
 
 /** Where a camper's face is: a circle at the front of its body. The ball has no face. */
 export function faceOf(camper: Camper): { x: number; y: number; radius: number } | null {
   if (camper.kind === 'dungBall') return null
-  const body = BODY[camper.kind], front = camper.flip ? -1 : 1
-  const radius = Math.min(18, body.height * 0.45)
-  return { x: camper.x + front * (body.width / 2 - radius - 2), y: camper.y - body.height * 0.55, radius }
+  const body = BODY[camper.kind], front = camper.flip ? -1 : 1, size = camper.size ?? 1
+  const radius = Math.min(18, body.height * 0.45) * size
+  return { x: camper.x + front * ((body.width / 2) * size - radius - 2), y: camper.y - body.height * 0.55 * size, radius }
 }
 
 /** A touch rings the bell when it lands within its reach. */
