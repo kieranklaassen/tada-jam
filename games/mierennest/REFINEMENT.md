@@ -3,102 +3,184 @@
 
 ## Status
 
-- Stage: gates. Run 4 is done: the great raid and the ending. The whole order is played, from `first-chamber` to the open kingdom and its round of six; the dung beetles roll their balls, the dung fly leads from the air, the ending plays once, and afterwards the kingdom is found as it was left with its two marks. Base commit ef85be4d.
-- **Sheet: PASSED round 3** at `734513b` (hash `49a588ec…cebebb`), then **one line from the lead, answers file 5**, pasted as it stands at commit `aa4a7d45`. Hash of the sheet part now: `fff9b3273a5e10938d9daeb654e821d9cbf0d9512e86db44608ed6ecab5053ac`, checked again at the end of this run.
-- **Sentences above `## The look` changed in this run**, for the closing run to see:
-  1. *What a chamber is*, first bullet: the lead's line, pasted (the shaft is no part of any room).
-  2. *The largest kingdom this ground holds*: "is 40: eight across and five down" became "is 39: eight across and five down, less one in the top row, where the shaft stands". The lead's line made the old sentence untrue: no room in the top row can use the three columns of the shaft, and eight rooms need all but one column. `chambers.test.ts` holds 39.
-- Answers handled: 1 to 5, read on the base branch at `6220c06a`. No file 6 was there at the end of this run. A note on the last run: its check for a file 5 fetched without updating the branch's own ref, so "no file 5" in the run 3 report was said of a stale ref. The fetch now names the ref in full.
-  - 5, the sheet line: `chambers.ts` counts no block in the cells of the shaft; the raid's measure of inside follows from it, and a raid's chambers are now the ones the kingdom had as it was called (nothing a raid shoves or digs makes a new one). Tests in `chambers.test.ts` and `raid.test.ts` ("the shaft").
-  - 5, point 1, a raid in a small room is a heap: one invader is in a chamber at a time; see "Who is where in a raid" below.
-  - 5, point 2, the machines: repainted to the whole of their two-by-two place in a leaf green nothing else under the grass has, the load a third of the machine across, larger shots with smoke, a twang and a trail. `view/palette.test.ts` holds the hue; `view/machines.test.ts` holds the size, the green and each load's own colour. The lead's test (a person shown the still says what it is loaded with) was done by the builder's eye alone: in still 3 the cannon shows a dark lump of mud at its mouth. Nobody else has looked.
-  - 5, point 3, the party at the log: laid out so that nobody of it covers anybody, and the camp's overlap test now holds for every party of the order and of the round with no exception for the party (`camp.test.ts`).
-  - 5, point 4, the put-back: the worker holds the lump over its head; the place that gave is still told until the next raid (`view/ending.test.ts`).
-  - 5, run 4: built, with the tests the plan lists; see below.
-- **What to try first.** As in run 3 to reach a raid. To see the great raid without playing to it, put the game away and set `position` in the saved slot (`tada-jam:slot:mierennest`, plain JSON in the page's local storage) to `great-raid`, with a hall three cells high off the shaft for the fly to fly into: the army sits at the log on its balls, the fly over it. Ring the drop. With a cannon or a catapult loaded with mud and pointed at where the fly hovers, tap it: the fly comes down, every dung beetle scratches its head and rolls home, and after the put-back the ending plays. The stills were made that way, by planting the slot before the page loads; the route by hand was not tried.
-- **Sentences of the sheet the built game does not make true.** None of these was changed. 1 to 6 are from run 3 and are left for the closing run, as the lead said; 7 of run 3 is settled by his line. New in this run, 8 to 12:
-  1. *The queen moves in*: she is in the new largest room at once, with no scene.
-  2. *A machine arrives*: two workers lower it and it fires once, empty. No crumb, no hat.
-  3. *Which party a new position lays out*: the new party is at the log when the put-back ends; it does not walk there and the last one does not sulk.
-  4. *The fly's own act*: it hangs in the room and tastes; it does not walk the wall and the ceiling.
-  5. *The queen dislikes guests*: she does nothing when an invader does its act in her room.
-  6. *The guidance ladder, step 1*: the ant does not scratch at the earth and the bell does not sway.
-  8. *The dung beetle, when it gives up* ("Sits on its ball"): at the log it sits on its ball; in the nest, under a roof, it sits down against it.
-  9. *The dung fly's own act* ("Lands on the highest thing"): it hovers a cell over the floor and conducts there.
-  10. *The dung beetles go where the dung fly points, toward the chamber nearest to it*: each goes to the nearest chamber nobody else has, by its own way; the fly's place decides nothing but whether a ball digs soft walls.
-  11. *First showings of the dung beetle and the dung fly* (two pebbles; beetles walking off the wrong way): each is shown once, large, in two of its poses (heaving and lost; pointing and arms folded), with no pebbles and no beetles.
-  12. *The ending*: the army is carried out in the put-back and then sits on its balls at the log, it does not roll home in a muddle; the dung fly sits at the foot of the hill beside the worker with the leaf already in its hand.
+- Stage: gates, closed by run 5 (the closing run). The whole order is played, from `first-chamber` to the open kingdom and its round of six. Base commit ef85be4d.
+- **Open: sheet ready for check, round 4.** The sheet passed round 3 (confirmed by the lead from the diff, answers file 4) at commit `734513b`, hash `49a588ec48b43cfce6492461afa1db4a7e440ce46f4496f1c48f651e71cebebb`. Since then 58 sentences above `## The look` have changed, all listed under "Sentences changed since round 3" below with the old and the new: the lead's own line (answers file 5), the 39 rooms it made necessary, and what the closing run found by reading the sheet against the game. The sheet now stands at commit `SHEETCOMMIT`, hash `SHEETHASH`. Round 4 reads only those sentences.
+- Answers handled: 1 to 6, read on the base branch at `93133aa2`. LASTANSWERS
+- **The lead's four points of answers file 6.**
+  1. *A creature is in one place.* One whose kind is in the party at the log is in that party, and its own spot at the camp is empty while it is away (`camp.ts`). The dung beetle takes its ball along and the dung fly its twig, since it conducts with it; the toadstool, the tent and the puddle's place stay. The one a first showing shows is one of the party, stepped out to the front. `view/display.test.ts` plays every party of the order and of the round on two seeds through the first showing, the raid and the put-back, and holds that in no frame is anybody drawn twice.
+  2. *A raid may not be a minute and a half of watching.* By numbers alone (`raid.ts`, `habits.ts`): the walk is half as fast again (raider ant 9 cells a second, beetle 5.5, fly 8, dung beetle 4.5, dung fly 7), the next of the file leaves the log 0.7 s after the one before came in, an act is done within six steps of the door, the first of a kind does its act in full (5 or 6 s) and a later one of the same kind does only the end of it (1.8 s). The three longest raids the order can lay out on a kingdom of one chamber now take **43.3 s** (the full camp), **37.2 s** (the round's fourth party: three ants, two beetles and a fly) and **37.0 s** (the round's fifth: a dung beetle, a beetle, a fly and two ants); the great raid takes 28 s. `raid.test.ts` holds every party under 45 s on three seeds and two shapes of kingdom, and raids still play the same twice.
+  3. *The twelve sentences.* Built: the queen moves in (a scene of her own, once for each new room she comes to live in; `kingdom.ts`, `view/display.ts`), the queen dislikes guests (she glares and points for as long as an invader is at its act in her room, and is heard), and the first rung of the guidance (the ant looks out and scratches at the earth that glints, and the bell sways). Said as built, each one changed sentence in the list below: 2, 3, 4, 8, 9, 11, 12, and 10, which keeps the dung fly's part readable: it flies in first, a ball digs through soft walls while it is up, and the army loses its way when it is down.
+  4. *The closing stills.* STILLS
+- **What the closing run built, besides the lead's points**, because the sheet promised it and a child would see or hear it (each with a test):
+  - An invader is drawn between the place it is in and the one it is on its way to. Until this run it was drawn a place behind and hopped a cell at a time (`view/raidShow.ts`, `raid.ts`).
+  - The shaft left out of the room measure is the mouth's row and the three cells under it; run 4 left out one row too few (`chambers.ts`).
+  - A stone that is shoved rolls on by itself until something stops it: sand with a scrunch, mud with a schlup (and it is bedded), another stone with a clack, which then rolls on in its place (`raid.ts`).
+  - A shot that meets the ground is answered by what it met: sand bursts into a fan with a whoosh, mud takes it with a glug, a stone rings and, struck level and free, rolls one cell on (`kingdom.ts`).
+  - A stone shot goes by a fly, which steps aside, and meets whoever is behind it.
+  - No lump is lost: a shot in the air over the nest lands at once when the game is put away or the bell is rung. A machine saved with its floor dug away comes down when the game is opened. The bell calls the raid on the nest as it will come to rest.
+  - The toy: a lump that is touched answers as itself before it is taken; the ant turns to the finger as it lands, taps every stone it passes, shakes when its jaws ring on a stone; sand rides on its head and leaks grains, mud hangs from its jaws in a drip, a stone is dragged behind and slows it, each with a beat of sound; a worker trots the spoil from the mouth up the hill; roots under the turf swing; the turf and the bedrock give a puff of dust; a stone set down is felt at the camp.
+  - Every scene is heard (the queen carried, the workers at the put-back, the party that came for nothing, a kind at its first showing, a machine tried), any touch ends a scene, the bell and the camp included, and in a raid a machine with nothing in it yet answers a tap with a cough.
+  - After the ending every chamber has its lantern, a short one too.
+- **What to try first.** As before: dig a room, ring the drop. New in this run and worth a look: dig a second, larger room and watch the queen carried to it; let an invader into her room; leave the game alone for six seconds; carry one lump of each kind; let a beetle find a lone stone in a low tunnel.
 - Look in use: the first reserved look, Ant farm behind glass. The registry row's text is at the end of `ART.md`.
-- Sound: every voice is numbers in `voices.ts`, held in range by a test; this run adds one for the army losing its way and uses the ball's rumble for a way dug wider. **Nobody has listened to any of them.**
+- Sound: every voice is numbers in `voices.ts`, held in range by a test. **Nobody has listened to any of them.**
 - Frame cost: no frame rate was measured anywhere, and no physical iPad.
 
-**Stills.** Branch `stills/mierennest-dcc088d1`, three files under `docs/build/stills/mierennest/`:
+READER
 
-- `1-great-raid-comes-down.png`: 4.7 s after the bell. The dung fly conducts in the hall; the first ball is at the foot of the shaft with its beetle on end in the shaft above it; the second waits at the mouth with its ball; three sit on their balls at the log.
-- `2-fly-down-army-turns.png`: the cannon was tapped 5.9 s after the bell; a second later the dung fly sits in the hall with mud on its wings, the dung beetle that had come in scratches its head beside its ball, and the four that had not come in are back on their balls at the log.
-- `3-after-the-ending.png`: the same raid with the fly brought down earlier, turned back; after the put-back and the ending, and one touch. A glow-worm is lit in each of the two chambers, the leaf hangs on its stalk under the edge of the toadstool, and the first party of the round (two ants and a fly) is at the log.
+**Sentences changed since round 3** (above `## The look`; for the checker of round 4). 1 is the lead's; 2 follows from it; 3 to 12 are the sentences the lead named in answers file 6; the rest were found by reading the sheet against the built game in this run. None changes the mechanic, the error, the designed order or the saved state: each says a look, a sound or a detail as the game does it, except 28, which writes down the rule the lead asked for after the game's stills (one invader in a chamber at a time) and the short act of answers file 6.
 
-Seed 1. Taken at 1180 by 820 from the production build of this lane at `dcc088d1`, pixel ratio 2, on a paused clock stepped 33 ms at a time, with the same scripted touches each time, on software drawing. All three start from one saved kingdom planted before the page loads, written cell by cell as a child could have dug it: a hall off the shaft with the cannon in it, loaded with mud, and a second room with the catapult.
+1. Was: A **room** is open space that holds a clear block at least 4 cells wide and 3 cells high. All such blocks that overlap or touch along a side are one room. A tunnel two cells high is never a room, however long.
+   Now: The same, with the lead's sentence added: "The shaft a new nest starts with (the three columns under the mouth, three cells deep) is the way in and no part of any room: no block is counted in its cells, so an invader coming down it is not yet inside." (answers file 5, pasted as it stands)
+2. Was: The most rooms that fit, each with one cell of earth or of lumps between it and the next, is 40: eight across and five down.
+   Now: The most rooms that fit, each with one cell of earth or of lumps between it and the next, is 39: eight across and five down, less one in the top row, where the shaft stands.
+3. Was: Workers lower the machine down the mouth on a thread, set it at the foot of the shaft, load it with a crumb and fire it once to see; it works, and the crumb hits a worker's hat. About 7 seconds.
+   Now: Two workers lower the machine down the mouth and set it at the foot of the shaft, and it fires once, empty, to show that it works. About 7 seconds.
+4. Was: So after a raid that went well, the next party walks to the log while the last one sits down to sulk, and it is the party of the new position. No party is laid out a place behind.
+   Now: So after a raid that went well, the party at the log once the put-back is over is the party of the new position. No party is laid out a place behind.
+5. Was: Walks up the wall and across the ceiling tasting each thing with its feet, rubs its hands, tastes its own foot by mistake and leaves in a hurry.
+   Now: Hangs in the room and tastes it, tongue out, then tastes its own foot by mistake and leaves in a hurry.
+6. Was: Sits on its ball. (the dung beetle, when it gives up)
+   Now: Sits down against its ball.
+7. Was: Lands on the highest thing, raises its twig and conducts the army in. With no army in the room it conducts nobody, notices, and goes.
+   Now: Hovers in the room, raises its twig and conducts the army in. With no army in the room it conducts nobody, and goes.
+8. Was: The dung beetles go where the dung fly points: toward the chamber nearest to it. While the fly is up, a ball that meets soft ground digs on, so soft walls only slow the army. With the fly down, every dung beetle loses its way within a few steps, turns its ball round and rolls it home.
+   Now: The dung fly leads: it flies in first, and each dung beetle rolls its ball after it to the nearest chamber that nobody else is in. While the fly is up in the nest, a ball that meets sand or mud digs on, so soft walls only slow the army. With the fly down, every dung beetle loses its way within a few steps, turns its ball round and rolls it home.
+9. Was: (the order, `great-raid`, what is new) The army follows the fly.
+   Now: The army and its leader: while the fly is up the balls dig through soft walls, and with the fly down the army loses its way.
+10. Was: (a first showing) ...the ant in the puddle, the beetle at the toadstool, the fly at the twig, the dung beetle whose ball will not go between two pebbles, the dung fly whose beetles walk off the wrong way when it looks elsewhere.
+   Now: ...the ant tugging at its stuck foot, the beetle rocking on its back, the fly dazed with a bump on its head, the dung beetle heaving and then scratching its head, the dung fly pointing its twig and then folding its arms because nobody comes.
+11. Was: The army rolls home in a muddle, balls bumping. The dung fly sits on the hill and a worker hands it a leaf to wipe its eyes. The workers light a glow-worm in every chamber of the kingdom, nearest the mouth first, so the child's own plan lights up room by room.
+   Now: The army, carried out in the put-back, sits on its balls at the log. The dung fly sits at the foot of the hill beside a worker and wipes its eyes with a leaf. A glow-worm wakes in every chamber of the kingdom, nearest the mouth first, so the child's own plan lights up room by room.
+12. Was: Workers pull her out of where she was like a cork, carry her by the way that is open to the new room, and she tries each corner before she sits.
+   Now: Two workers lift her from where she was and carry her, complaining, by the way that is open to the new room, and she tries each end of its floor before she sits.
+13. Was: the ground gives one dull crunch, and the ant's head turns to the finger.
+   Now: the ground gives one dull crunch, and the ant turns to the finger.
+14. Was: Roots that hang into a new tunnel swing. A camper above a fresh tunnel feels it through its feet and looks down.
+   Now: Roots that hang from the turf into a new tunnel right under it swing. A camper above a fresh tunnel feels it through its feet and hops.
+15. Was: It is not bitten. It squelches, dimples where the jaws were and closes again.
+   Now: It is not bitten. It squelches, a few dark drops fly from it, and it holds its shape.
+16. Was: It gives at the foot with a sigh; what stood on it sifts down into a pile, and the invader walks over the pile. Sand that touches mud is packed and holds like a wall.
+   Now: It gives at the foot with a sigh and is shoved along; what stood on it sifts down into a pile, which the invader shoves before it or walks over. Sand that touches mud is packed and holds like a wall.
+17. Was: It bulges, creaks and holds. A raider ant that treads on it is stuck by the feet, with a slow sucking pop at every pull.
+   Now: It holds, and the pusher strains at it. A raider ant that treads on it is stuck by the feet with a squelch, and tugs at them.
+18. Was: A bedded stone grates and does not move.
+   Now: A bedded stone does not move.
+19. Was: It bursts into a fan of grains with a whoosh, and the grains rain back down as a lower, wider pile.
+   Now: It bursts into a fan of grains with a whoosh, and the shot comes to lie against it; sand on sand slumps into a lower, wider pile.
+20. Was: The shot goes in with a glug and stays in it: sand in mud is packed, a stone in mud is bedded.
+   Now: The shot meets it with a glug and stays against it: sand that touches mud is packed, a stone that touches mud is bedded.
+21. Was: It rings like a bell, the shot bounces off, and a free stone rolls one cell on.
+   Now: It rings like a bell, the shot stops against it, and a free stone struck by the cannon rolls one cell on.
+22. Was: The roller ploughs in with a long scrunch, buries itself to the middle and stops; the pile spreads.
+   Now: The roller runs into it with a long scrunch and stops against it.
+23. Was: heaped right to the roof it shuts the air out, and the room behind goes dim and stale and the workers leave it; with a gap left over it for the air, the first beetle leans, the wall sighs into a pile, and the beetle walks over it with sand on its head.
+   Now: heaped right to the roof it shuts the air out, and the room behind is no chamber any more: its workers and their things are gone; with a gap left over it for the air, the first beetle leans, the sand gives with a sigh, and the beetle shoves the pile along in front of it.
+24. Was: On day 15 the child builds a doorway with a stone lintel that a dung ball cannot widen, packs
+   Now: On day 15 the child beds a stone in mud in the roof of a way, where a dung ball jams, packs
+25. Was: sets the cannon where one stone rolls down a whole hall,
+   Now: sets the cannon where one stone flies the length of a hall,
+26. Was: A room walled off from the mouth goes dim and stale, the workers leave it, and it counts for nothing until it is opened again.
+   Now: A room walled off from the mouth is no chamber: its workers and their things are gone from it, and it counts for nothing until it is opened again.
+27. Was: A scuff of pale dust and a ring of footprints mark each cell where a wall was shoved or a lump fell, and a worker stands by the worst one, looking at it with its hands on its hips.
+   Now: A ring of footprints marks the first cell where a wall was shoved or a lump fell, and a scuff of pale dust up to five more; a worker stands by the first, looking at it with its hands on its hips.
+28. Was: the campers come back out the way they went in, muddy, sandy or backwards, and sit down at their camp to sulk.
+   Now: the campers come back out the way they went in, and sit down at their camp again.
+29. Was: (nothing: a new bullet under "A raid, and how it is judged")
+   Now: One invader is in a chamber at a time. Another that comes to its door goes to a chamber nobody is in, where there is one, and otherwise waits at the door, in view, until the first has left; those behind it wait a body's length apart. The first of a kind to do its act in a raid does it in full, and a later one of the same kind does only the end of it.
+30. Was: Each chamber of the kingdom is lived in: two workers move in, with their things, as soon as air reaches it.
+   Now: Each chamber of the kingdom is lived in as soon as air reaches it: two workers move in where its floor has room for two, one where it has room for one, and the first six chambers have their things on the back wall.
+31. Was: If lumps lie in reach, one of them glints in turn; if a party waits and a chamber exists, the bell sways and a drop on it catches the light.
+   Now: If lumps lie in reach, one of them glints as well; if a party waits and a chamber exists, the bell sways and its drop catches the light.
+32. Was: 3. It then waits twice as long before showing either again, twice as long again after that, and after the third showing in one stretch of stillness it shows nothing more until the next touch.
+   Now: 3. The hand then waits twice as long before it shows again, twice as long again after that, and after its third showing in one stretch of stillness nothing more is shown until the next touch. The glints stay lit between its showings.
+33. Was: - **The workers.** Two to a chamber. They want things back where they were.
+   Now: - **The workers.** Two to a chamber where its floor has room. They want things back where they were.
+34. Was: A press on a cell is always that cell's: a worker or the queen standing there steps aside and the dig or the lump is answered.
+   Now: A press on a cell is always that cell's: a worker or the queen standing there takes no touch, and the dig or the lump is answered.
+35. Was: A machine stands only on open floor, never on a lump or over the mouth, and is picked up only by a press that starts on it; an overlap test holds this at each surface size (guide, ruling 15).
+   Now: A machine stands only in open cells with a floor under it, never in the cell of a lump or over the mouth, and is picked up only by a press that starts on it; a test holds this in stage units, which are the same at every surface size (guide, ruling 15).
+36. Was: A press on a camper, the bell's stalk, a toadstool or the hill is answered by that thing as itself and changes nothing in the nest; only the bell calls a raid.
+   Now: A press on a camper is answered by that camper as itself, and a press anywhere else on the surface by a puff of dust and a small boing; neither changes anything in the nest, and only the bell calls a raid.
+37. Was: They are shown before they are met: at the camp each kind is caught out by its own habit again and again (the ant stuck in a puddle, the beetle that cannot climb a toadstool, the fly that cracks its head on a low twig).
+   Now: They are shown before they are met: at the camp each kind that is not in the party at the log is caught out by its own habit again and again (the ant stuck in a puddle, the beetle on its back under the toadstool it could not climb, the fly nursing a bump on its head).
+38. Was: The ball needs three cells; the beetle behind it two.
+   Now: The ball needs a way three cells high, and three wide where it drops; its beetle goes wherever a way is open at all.
+39. Was: One cell up. Falls any distance down, onto its back.
+   Now: One cell up. Falls any distance down.
+40. Was: A face of sand (it slides back down with the sand).
+   Now: A face of sand, which it cannot climb.
+41. Was: Stone it cannot dig: a doorway of stone with a stone lintel jams the ball, and the beetle leaves it there and walks on as a plain beetle.
+   Now: Stone it can neither dig nor shove: a stone bedded in mud in the roof of a way jams the ball, and the beetle leaves it there and walks on as a plain beetle.
+42. Was: To park its ball in the grandest room: it holds the ball and eyes the mouth.
+   Now: To park its ball in the grandest room: it sits on its ball and eyes the mouth.
+43. Was: Paces the room out, lies down flat in the middle as if it owned it, and is asleep before its feelers settle. Wakes with a start and goes.
+   Now: Goes well into the room, lies down flat as if it owned it, and is asleep before its feelers settle. Then it gets up and goes.
+44. Was: Rolls the ball to the middle, steps back to admire it, polishes one spot, cannot decide it looks right, and rolls it home again.
+   Now: Rolls the ball well into the room, polishes one spot and then another, cannot decide it looks right, and rolls it home again.
+45. Was: Stuck: it pulls at each foot in turn and sits down where it is. Otherwise it turns round with a shrug of the feelers.
+   Now: Stuck: it pulls at its feet where it is. Otherwise it turns round with a shrug of the feelers.
+46. Was: Hovers at the low place, peers in, buzzes at it, and flies out.
+   Now: Hovers at the low place, peers in, and flies out.
+47. Was: Buried to the feelers. Digs itself out backwards, sneezes and goes home.
+   Now: Buried to the feelers. It digs itself out and goes home.
+48. Was: Rolled flat like pastry. Peels itself off the floor and wobbles home, thin.
+   Now: Rolled flat like pastry. It peels itself off the floor and goes home.
+49. Was: Rattles off its shell. It sneezes once and walks on.
+   Now: Rattles off its shell. It stops a moment and walks on.
+50. Was: Splat over both eyes. It walks on blind, in a straight line, turns round at the first thing it bumps, and so walks out.
+   Now: Splat over both eyes. It stops, turns round, and walks out blind the way it came.
+51. Was: a second knock while it is on its back slides it out of the nest.
+   Now: after a second knock while it is on its back it gives up and goes home.
+52. Was: Wings gummed. It drops, sits, cleans one wing at a time with great care, and walks home sulking.
+   Now: Wings gummed. It hangs where it is, sticky, for a while, and then goes home sulking.
+53. Was: The ball is knocked back up the hall and its beetle runs after it. From the foot of the shaft it rolls out of the mouth, and that beetle is home.
+   Now: The ball is knocked back up the hall and its beetle with it, onto its back. From the foot of the shaft the ball rolls out of the mouth, and that beetle is home.
+54. Was: Blown back, and drops its twig. It fetches the twig and comes again.
+   Now: Blown back, tumbling, its twig in the air. It comes again.
+55. Was: The largest chamber of the kingdom changes, the first time included.
+   Now: The queen's room becomes another room, the first time included. A room that only grows is the same room.
+56. Was: Each invader still in the nest trudges or is carried out by the way it came. The workers carry each fallen lump back to where the child had built it, nearest first, tamp back the earth a dung ball dug away, and one stands by the place that gave.
+   Now: Each invader still in the nest goes out by the way it came. The workers carry each fallen lump back to where the child had built it, nearest the mouth first, the earth a dung ball dug away is back as they pass, and one stands by the place that gave.
+57. Was: The game's own work stays under 8 ms a frame at six times CPU throttle.
+   Now: The budget for the game's own work is 8 ms a frame at six times CPU throttle.
+58. Was: at the camp each kind acts out its own habit for anyone who looks, a press on a camper makes it do so at once, and the idle ladder never shows a solution.
+   Now: at the camp each kind acts out its own habit for anyone who looks, a press on a camper is answered by that camper at once, and the idle ladder never shows a solution.
 
-**Who is where in a raid** (answers file 5, point 1).
+**Frame cost.** FRAMECOST
 
-- One invader is in a chamber at a time (`raid.ts`): another that comes to its door goes to another chamber nobody has, where there is one, and otherwise waits at the door; those behind it wait a body's length apart, back up the shaft and on the grass at the mouth. Only those who left the log earlier are waited for, so no two wait for each other. The dung fly takes no chamber and waits for nobody.
-- A beetle that cannot climb home sits down a body's length behind the one already sitting; while a raid runs the workers stand behind the queen; an act is done clear of the queen, of the workers and of anyone who sits held, where the floor has room.
-- The lead's test is in `view/raidShow.test.ts`: every party of the order, on three seeds, every tick. No face lies under another invader; the queen and the workers are drawn before every invader; whoever does its act does not duck and stands in none of the kingdom's own; no two who wait stand in each other. How the first part is kept: one whose face would lie under somebody ducks, in a pose of its own in which no eye is painted (`view/creatures.test.ts` holds that), until the other has gone by. On those raids somebody is ducking in about one tick in four, nearly always a beetle that sits held under those who pass it.
-- What it costs: acts are one after the other, so a raid of the full camp on one chamber of the stills' hall lasts 81 s, several times what it took when everyone went in together, and the great raid there 66 s when nothing stops it. More chambers shorten it.
+**Still weak**, for the lead, who may hold the game back for any of it.
 
-**Frame cost.** Chromium on this machine's software drawing, production build at `dcc088d1`, tier 0 pinned, pixel ratio 2, 1180 by 820, six times CPU throttle. The game's own work a frame (`window.__jamPerf.cpuMs`):
-
-| What | Seconds | Frames | Median | 90th | 95th | 99th | Most draws |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| A finger digging fast without pause through a kingdom of four chambers | 12 | 95 | 5.0 ms | 11.6 ms | 16.6 ms | 34.5 ms | 24 |
-| The same, with the canvas calls that put pixels down made to do nothing | 12 | 600 | 1.8 ms | 3.0 ms | 3.6 ms | 4.4 ms | 19 |
-| A raid of the full camp in that kingdom, both machines fired again and again | 14 | 91 | 4.5 ms | 10.3 ms | 17.0 ms | 19.0 ms | 25 |
-| The same raid, pixel calls doing nothing | 14 | 600 | 1.9 ms | 3.2 ms | 3.8 ms | 5.9 ms | 25 |
-| The great raid in that kingdom, both machines fired again and again | 24 | 150 | 4.2 ms | 9.5 ms | 12.1 ms | 24.1 ms | 28 |
-| The great raid, pixel calls doing nothing | 24 | 600 | 2.0 ms | 3.4 ms | 3.9 ms | 7.5 ms | 29 |
-| The same kingdom, idle | 12 | 94 | 2.9 ms | 4.1 ms | 4.9 ms | 8.7 ms | 18 |
-| Idle, pixel calls doing nothing | 12 | 600 | 1.7 ms | 2.8 ms | 3.3 ms | 5.1 ms | 18 |
-
-- As the lead accepted it in answers file 5: the game's own work without the pixel calls is 3.3 to 3.9 ms at the ninety-fifth percentile, under the bar of 8 ms; with them, on this machine's software drawing, digging and both raids are over it (12 to 17 ms), and idle is under it. What is over the bar is the canvas calls on the processor. Nothing was measured on a graphics card. The rows without pixel calls hold the last 600 frames of the run.
-- Draws, each counted by a test against the budget of 80: the fullest frame of the toy 40 (`view/display.test.ts`), of a raid with every kind before the great one 48 (`view/raidShow.test.ts`), **of the great raid 56** (`view/ending.test.ts`: the army and its fly inside a kingdom of eight rooms, both machines firing, crumbs and the hand). A frame repaints at most 24 cells of the ground.
-
-**The great raid and the ending, by their tests** (`raid.test.ts`, `kingdom.test.ts`, `view/ending.test.ts`):
-
-- A dung ball is rolled wherever a way is open at all and digs earth that makes the way too narrow for it; it breaks a wall one cell thick of any one material and is stopped by a wall two cells thick bound with mud, where its beetle sits down and then rolls home; it is not rolled up onto lumps through the gap left for the air; it digs sand and mud that have earth or rock behind them. A stone it can neither dig nor shove jams it: the beetle heaves, leaves the ball and walks on as a plain beetle. It does not go down a pit narrower than itself between rock, and digs the same pit wider in earth. A mouth too narrow for it leaves the ball on the grass.
-- Sand makes the ball a size bigger, which needs a higher way; mud takes the ball from its beetle; a stone knocks it back to the end of the tunnel behind it, and from the foot of the shaft that beetle is home.
-- While the dung fly is up a ball digs through a wall of mud that holds it when it comes alone. With the fly brought down, every dung beetle that is not at its act loses its way within three steps, wonders, and rolls home, all within 30 s; none finishes an act.
-- After the great raid, turned back or not, the ground is as built, cell for cell, on three seeds; the same raid twice plays the same, ball for ball.
-- The position and `ended` are saved in the instant the great raid is judged; the ending begins when its put-back is over, plays once and holds on its last beat until a touch. Put away as the raid is judged, or in the put-back, the game reads back with the kingdom open and plays no scene, at load or at the first touch, and nothing plays in the visit it was put away in either.
-- No frame of the ending holds anything but creatures in poses the painters have, the things of the rooms, the bell's drop, the dusk and the marks the raid left on a floor: no crumbs, no glint, no hand, no shot. The painters' own tests hold every painting to shapes with no writing. The glow-worms come on one at a time, nearest the mouth first, and none goes out.
-- Afterwards a raid can still be called, the round of six lays out a different mixed party after each raid that went well and comes round again, and no ending plays again. The two marks are there in the visit and after a load from the save. The leaf hangs clear of the bell, of its stalk, of the hill at its largest and of every camper of every party.
-
-**What is still weak.**
-
-- A beetle or a dung beetle that cannot climb home sits in the way until the raid is over, and the next ones pass in front of it while it ducks: in a hall too short for five balls a body apart, the army that got in ends as a row of balls and tucked beetles from the foot of the shaft into the room. The faces rule holds; it is still a crowd.
-- One who waits at the mouth stands on the grass in front of the party's first seat; a visitor longer than the shaft is wide still covers the wall beside it; the dung beetle on end in the shaft is a little wider than its body's box.
-- A machine left at the foot of the shaft, where it arrives, is walked over by everyone, and in still 2 the fly comes down in front of the cannon.
-- A raid of a large party on one chamber is long (see above), and all that time most of the party waits.
-- From the painters' own lists: the catapult is busier than the cannon and its bowl can read as a goblet at half size; mud is the weakest load on the dark of a tunnel; the twang's lines could be taken for brackets when seen alone; the dung beetle that has lost its way is drawn smaller than in its other poses; the dung fly's folded arms are small at half size; the flies' hands over their eyes read as a lumpy head at half size; the queen's egg on its moss stands 12 units outside her box.
-- From run 3, unchanged: what each invader's act is reads at full size only; the first raid can go well by luck (mud under the shaft on seed 1); that a raid went well is said only by the next party at the log.
-- From the toy, unchanged: the ant runs in front of the queen and the workers; a lump that falls moves a whole cell a step; no crumb is carried up the shaft.
-- The dusk is two flat washes and a glow: the camp darkens and the frame, the glass and the wood do not.
+- The frame cost with drawing is over the sheet's budget on the one machine it was measured on (see above).
+- Nobody has put a finger on the game or heard it.
+- The queen's glare points her arm away from her guest, which is away from the door when the guest stands between her and it.
+- A beetle or a dung beetle that cannot climb home sits in the way until the raid is over, and the next ones pass in front of it while it ducks.
+- A machine left at the foot of the shaft, where it arrives, is walked over by everyone.
+- A walled-off room is not drawn dim: its workers and their things are gone, and nothing else says it is stale. The sheet now says what is drawn.
+- The first raid can go well by luck (mud under the shaft on seed 1); that a raid went well is said only by the next party at the log.
+- What each invader's act is reads at full size only. A later one of a kind shows only the end of its act.
+- From the painters' own lists: the catapult's bowl can read as a goblet at half size; mud is the weakest load on the dark of a tunnel; the twang's lines could be taken for brackets when seen alone; the dung beetle that has lost its way is drawn smaller than in its other poses; the flies' hands over their eyes read as a lumpy head at half size; the queen carried reads fully only with the workers under her.
+- From the toy, unchanged: the ant runs in front of the queen and the workers; a lump that falls moves a whole cell a step.
+- The dusk is three flat washes and a glow: the frame, the glass and the wood do not darken.
+- The grown-up frame-rate readout opens by resting a finger for a second in the top right corner and then tapping there three times. Quick taps never open it; a child who did exactly that would see a small readout with letters and numerals that takes no touch.
 
 **For the next checker and the lead.**
 
-- The creatures' new poses and the machines, shots, smoke, twang and leaf were painted by two subagents on the same model, in this checkout, from briefs; the builder looked at their sheets and at the stills.
-- `Walker` in `routes.ts` has a fourth way of going, `crawler`: a dung beetle behind its ball, which goes like a beetle wherever a way is one cell high. What the ball needs over that is in `raid.ts` (`ballNeeds`, `widen`).
+- Painted by subagents on the same model, in this checkout, from briefs: the creatures and their poses, the machines, the rooms' things and the effects. The builder looked at their sheets and at the stills.
+- A read-only audit of the sheet against the code by a subagent, before the reader's readings, found most of what this run built or reworded.
+- `Walker` in `routes.ts` has a fourth way of going, `crawler`: a dung beetle behind its ball.
+- One commit of this run (`7e227af`) was pushed with one failing test and mended by the next (`7d91b28`); the tip is green.
 - Requests to the lead: the registry row (text at the end of `ART.md`). Nothing else outside the folder.
 
 ### Template notes
 
-- `scene.ts`: copied and **not used**. The game's five scenes (the shrug, a first showing, a machine arrives, the put-back, the ending) are a small union in `kingdom.ts` with one clock, because each is filled in from the raid or the order and ends at a touch with its outcome already in place; `kingdom.test.ts` holds what each saves when it starts. The run's page asks for scenes on `scene.ts`: this is a departure, and the closing run can move them if the lead wants it.
+- `scene.ts`: copied and **not used**. The game's six scenes (the queen moves in, the shrug, a first showing, a machine arrives, the put-back, the ending) are a small union in `kingdom.ts` with one clock, because each is filled in from the raid or the order and ends at a touch with its outcome already in place; `kingdom.test.ts` holds what each saves when it starts. The game run's page asks for scenes on `scene.ts`: this is a departure, left as it is; the lead has not asked for it to be moved.
 - `symbols.ts` and `symbols.test.ts`: removed. The game draws no numeral (its brief says so).
 - `config.ts`: the ladder is the game's thirteen places, typed as a tuple (`Place`); `FIRST_VISIT` has one row; `FIRST_CUE` and `firstCueAfter` are new, for the one thing the age hint sets; `BACKDROP` is the frame's dark wood.
 - The Mount (`mierennest.tsx`): gestures go to `kingdom.ts`, which wraps the toy; a judged raid and a showing that starts are saved at once and everything else once the ground rests; losing attention and unmounting both put the game away (`kingdom.putAway()`), which ends a raid unjudged; the idle ladder is held at the bottom while a raid or a scene runs.
 - `state.ts`: used as copied, wrapped by `save.ts`. `finished` is always false: the game's own field for the ending is `ended`, which follows the position `open-kingdom`.
 - `guidance.ts`: changed. `IdleLadder` takes the wait before its first cue and the number of demonstrations; with no arguments it is the template's.
-- `audio.ts`, `input.ts`, `overlay.ts`, `rng.ts`, `stage.ts`: used as copied.
+- `audio.ts`, `input.ts`, `overlay.ts`, `rng.ts`, `stage.ts`: used as copied. `audio.ts` already counts the fingers of a touch (the closing page's one fix), and is the template's file as it stands on the base branch.
 - **For the template:** a canvas game that stamps its still parts over the whole surface every frame pays for it in its own work on software drawing. A line in the Mount saying that what stands still can be a canvas under or over the Mount's own would have saved a detour. The same for sprites: a box a kind, and every pose painted at load.
 - **For the template:** `cpuMs` on software drawing counts the canvas calls with the game's own work. A switch in the probe that makes the pixel calls do nothing, as this run's script did, tells the two apart in one run.
 - **For the template:** `IdleLadder` with its wait and its count as arguments, as here, would let a sheet set them without editing the file.
@@ -112,7 +194,7 @@ Seed 1. Taken at 1180 by 820 from the production build of this lane at `dcc088d1
 - The bell: a raid is called by a tap on the dewdrop. Taken as yes by the lead in his place.
 - The line a raid is judged by: it went well when no invader finished its act in a chamber. Taken as yes by the lead in his place.
 - The ending's two marks (a glow-worm lit in every chamber, the dung fly's leaf on a stalk at the camp): kept, by the lead in his place, and built.
-- One invader in a chamber at a time makes a large raid on a small kingdom long (about 80 s for the full camp on one chamber). Whether that is the pace he wants.
+- The pace of a raid: one invader in a chamber at a time, the first of a kind doing its act in full and a later one a short one; the longest raid on one chamber is 43 s. Whether that is the pace he wants.
 - Whether a raid that goes well should say so in any other way than the next party at the log. Now nothing else does.
 - None of the guide's defaults awaiting the owner needs a different answer for this game.
 
@@ -129,6 +211,7 @@ One row per pass. No frame rate has been measured: the column holds the game's o
 | 5 (the raid's order) | Strips of the raids of `mixed-party`, `full-camp` and `great-raid` in a hall off the shaft, seed 1, on a paused clock, after the door rule went in. | "That red ant is flying, there's nothing under it. Why does everybody do their thing right at the door, on top of the green cannon? The workers are in the way. The purple beetles are in the ceiling. Where's the beetle that pushes the ball, it's in the wall." | One set, on everybody having a place: one who rode a beetle to the log sits on the grass while that beetle is away; the workers stand behind the queen while a raid runs and an act is done clear of them; a dung beetle that gives up sits down against its ball under a roof; the dung beetle walks behind its ball along the way the ball came, on end in the shaft. Nothing reverted. | None measured. Own work: see the table in the status block. | Held beetles pile up from the foot of the shaft. The fly comes down in front of a machine that stands where it hovers. |
 | 6 (the great raid and the ending) | The great raid on the production build from a saved kingdom with both machines: twenty frames of the army coming down, twelve of the fly brought down, fourteen of the put-back and the ending. | "The mud ball went right through the fly and then the fly fell down. The lamps are on already, before it gets dark. It only gets dark in the sky. The beetle is hanging under the floor." | One set, on things happening when they are seen to: a ball of mud or a stone stops at the first invader it meets, the moment it gets there; the glow-worms and the leaf wait for the ending and are not seen in the put-back before it; the ground darkens a little at dusk; a dung beetle on end stays inside the shaft. Run again on the production build. Nothing reverted. | None measured. | The dusk is flat. Only one of the army is inside when the fly comes down early. |
 | 7 (the newcomer's minute, again) | The cold playtest script of pass 3 on the production build of this run: a fresh save, ten seconds untouched, then sixty as a newcomer. Eight frames looked at. | "It's the same as before, but the workers go and hide when the red ant comes, that's funny. Three ants and one waits in the hole, I can see who's who." Nothing was unclear that was clear in pass 3. | No fix set: nothing found. The pass is logged because the run changed how every raid plays. | None measured. | What each invader's act is still reads at full size only. |
+| 8 (the sheet against the game) | The whole sheet read against the code by a reader who had not built it, sentence by sentence, with probes of the rules; then the raids of the full camp and the great raid again on the dev build. | What a child would have said of what it found: "The ants in the nest jump from square to square, and they're always one square behind where they got stuck. The stone doesn't roll, the beetle just pushes it a bit and a bit. I shot the sand and nothing happened. All the lumps look the same in my ant's mouth. My stone is gone, I fired it and then I closed the game. The dung fly is in two places." | One set, on the game doing what it says: invaders drawn where they are and gliding between cells; stones that roll; a shot answered by what it meets; lumps carried each in its own way; no lump lost in the air; a creature in one place; and the smaller answers listed in the status block. The sentences that only said a detail otherwise were changed and listed for round 4. Nothing reverted. | None measured. | What the status block lists under "Still weak". |
 
 ## For the pull request
 
@@ -136,16 +219,16 @@ Written as the game is built and kept at the end of this file: the pull request 
 
 ### How the game meets the quality bar
 
-As built (run 4: the whole game, to the gates).
+As built, at the end of the closing run.
 
-- **Alive at idle.** Every creature idles in a way of its own (`motion.ts`, one row a kind, held apart by a test); the bell sways; the worker on the hill mutters; the party at the log holds its want in plain sight; one who waits at a door in a raid fidgets as its kind does at the camp.
-- **Motion and sound on every touch.** A touch on the ground is answered in the call the finger lands in: a mouthful, crumbs, a crunch whose pitch follows the finger's speed, and the ant running. Each material answers the dig, the jaws and a set-down in its own look and voice; a poke of any camper, the bell or the setting is answered at once. In a raid a touch on a loaded machine fires it at once, a touch on an empty one fizzles, and a touch on the ground brings the ant to look. Voices are played inside the touch handler. Nobody has heard them.
+- **Alive at idle.** Every creature idles in a way of its own (`motion.ts`, one row a kind, held apart by a test); the bell sways; the worker on the hill mutters; the party at the log holds its want in plain sight; at the camp each kind that is not in the party is caught out by its own habit; one who waits at a door in a raid fidgets as its kind does at the camp.
+- **Motion and sound on every touch.** A touch on the ground is answered in the call the finger lands in: a mouthful, crumbs, a crunch whose pitch follows the finger's speed, and the ant turning to the finger and running. Each material answers the dig, the jaws, the carrying, a set-down, a push, a shot and a rolling stone in its own look and voice (the eighteen cells of the sheet's grid, each drawn and heard); a poke of any camper, the bell or the setting is answered at once. In a raid a touch on a loaded machine fires it at once, a touch on one with nothing in it yet gets a cough, and a touch on the ground brings the ant to look. Voices are played inside the touch handler. Nobody has heard them.
 - **Weight, squash and follow-through.** Sand pours and slumps, mud holds, a stone drops and its landing is felt at the camp. A beetle leans and strains before a wall gives; a stone puts it on its back, rocking; a dung ball rolls as far as it turns, digs its way wider and jams; a machine recoils, smokes or twangs and its shot trails and leaves a puff or a splat; a wall that gave leaves a scuff and footprints until the next raid.
 - **Kid-clear silhouettes and tappables.** The three materials are flat and far apart in lightness, each leaning its own way, held by a test, mud in a tunnel included; the kingdom's ants are told from the raiders by colour and outline; the child's ant wears the only blue in the nest; each kind of invader is one hue. A touch within 34 stage units of the bell rings it, and a test holds the bell clear of every camper and of the hill at its largest; every camper is found by a target of 48 or more; a machine is two cells square. The machines are a leaf green nothing else under the grass has, with the load seen at a glance. In a raid one invader is in a chamber at a time and no face is ever under anybody, held by a test on every party of the order.
 - **Wordless clarity for 9 to 12.** No word, letter or numeral is drawn; the game has no `symbols.ts`. The wordless check passes. Each kind's habit is shown at the camp before it is met, and once, large, when its party first sits at the log.
-- **Wordless idle guidance.** After six seconds of stillness (ten for a child of 10 or older) the earth beside the ant, a lump in reach and, once the kingdom has a chamber, the drop glint; then a ghost hand makes one short drag through plain earth that touches nothing built. It waits twice as long each time and stops after three. The hand never rings the bell, sets a lump or loads a machine.
+- **Wordless idle guidance.** After six seconds of stillness (ten for a child of 10 or older) the ant looks out and scratches at the earth beside it, which glints, as does a lump in reach; once the kingdom has a chamber the bell sways and its drop is lit. Then a ghost hand makes one short drag through plain earth that touches nothing built. It waits twice as long each time and stops after three. The hand never rings the bell, sets a lump or loads a machine.
 - **Nothing rated, counted or praised.** A raid that went well brings the next party to the log and nothing else; one that did not leaves the same party there. The position is shown nowhere. The ending is a scene in the world (a leaf for the dung fly, glow-worms in the chambers, the queen's egg set down, dusk) with no confetti, star, numeral or letter in any frame, held by a test, and it leaves two small marks.
-- **Found as left.** The nest is saved as it changes, as it will come to rest; a lump in the jaws stays in its cell until it is set down; a raid runs on a copy, so the nest is as built the instant the game is put away, the raid is not judged, and the invaders are at their camp. A judged raid and a showing are saved the moment they start, and no scene plays on load. Played on the production build: a raid put away seven seconds in and the page loaded again. The ending's fields are saved when the great raid is judged: put away in that instant or in the put-back, the game is found with the kingdom open and plays no scene.
+- **Found as left.** The nest is saved as it changes, as it will come to rest; a lump in the jaws stays in its cell until it is set down; a raid runs on a copy, so the nest is as built the instant the game is put away, the raid is not judged, and the invaders are at their camp. A judged raid and a showing are saved the moment they start, and no scene plays on load. Played on the production build: a raid put away seven seconds in and the page loaded again. The ending's fields are saved when the great raid is judged: put away in that instant or in the put-back, the game is found with the kingdom open and plays no scene. A shot in the air over the nest lands at once when the game is put away, so no lump is ever lost.
 - **Frame rate.** No frame rate has been measured, on any machine, and no physical iPad. The game's own work a frame on software drawing, production build, tier 0 pinned, pixel ratio 2, six times CPU throttle: 2.9 ms at the median and 4.9 ms at the ninety-fifth percentile idle; 5.0 ms and 16.6 ms digging fast without pause; 4.5 ms and 17.0 ms in a raid of the full camp with both machines firing; 4.2 ms and 12.1 ms in the great raid. The last three are over the bar of 8 ms; with the canvas's pixel calls made to do nothing they are 3.6, 3.8 and 3.9 ms at the ninety-fifth percentile, so what is over the bar is software drawing on the processor. Nothing was measured on a graphics card. The fullest frame is 56 draws (the great raid) by a test, against a budget of 80; a frame repaints at most 24 cells of the ground.
 - **Procedural assets only.** Everything is canvas paths and synthesized notes; no image, font or sound file, and no network request.
 
@@ -159,7 +242,7 @@ None. Mierennest is a play-first game: it claims no school skill, its sheet has 
 - No camera shake and no impact pause: the answer to a touch is carried by chains, sound and squash.
 - No on-device speech: creature voices are invented and synthesized.
 - Taken by the lead in the owner's place, for him to overturn: a raid is called with a dewdrop bell; a raid went well when no invader finished its act in a chamber; the ending leaves two small marks in the world.
-- One invader is in a chamber at a time, as the lead asked after the game's stills; it makes a large raid on a small kingdom long.
+- One invader is in a chamber at a time, as the lead asked after the game's stills, and a later one of a kind does a short act; the longest raid on one chamber is 43 s.
 - The sheet's own choices he may want to overturn: a room is a clear block four cells wide and three high, and counts while air reaches it; the ground has a sixth kind of cell, packed earth, which is dug and never carried.
 
 ### What the next builder should know
