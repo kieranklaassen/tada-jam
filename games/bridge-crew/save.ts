@@ -59,6 +59,10 @@ export type Save = GameState & {
   laid: Record<string, number>
   /** The ideas whose one showing has been given. */
   shown: Showing[]
+  /** The kept tracing that lies on the board, over the bridge of the sheet on the board: its place among that sheet's kept ones. Null when none is laid. */
+  over: number | null
+  /** The hats the chief wears: each one plucked off a part, and worn until the next sheet is unrolled. */
+  worn: number
 }
 
 const SHOWINGS: readonly Showing[] = ['profile', 'prop', 'triangle', 'row', 'tube', 'thread', 'wide-base', 'arch', 'one-change']
@@ -98,7 +102,7 @@ const lineFor = (at: Site): VehicleId[] => [at.job]
 
 export function freshSave(childAge: number | null, startOn: string | null = null): Save {
   const base = freshState(childAge), first = layOut(startOn ?? base.position, {})
-  return { ...base, sheets: [emptySheet(first.site, first.variant)], on: 0, next: null, waiting: lineFor(site(first.site, first.variant)), across: [], tries: 0, laid: { [first.site]: 1 }, shown: [] }
+  return { ...base, sheets: [emptySheet(first.site, first.variant)], on: 0, next: null, waiting: lineFor(site(first.site, first.variant)), across: [], tries: 0, laid: { [first.site]: 1 }, shown: [], over: null, worn: 0 }
 }
 
 /** A list of stored parts read back as a design the sheet allows: anything that could not have been laid is left out. */
@@ -184,6 +188,9 @@ export function deserialize(raw: unknown, childAge: number | null = null, startO
     tries: whole(raw.tries, 0, JUDGE.badly) ? raw.tries : 0,
     laid,
     shown: Array.isArray(raw.shown) ? SHOWINGS.filter((idea) => (raw.shown as unknown[]).includes(idea)) : [],
+    // Only a tracing the sheet on the board keeps can lie on it. A slot saved before these two were kept has neither.
+    over: whole(raw.over, 0, sheets[on].tracings.length - 1) ? raw.over : null,
+    worn: whole(raw.worn, 0, 1e6) ? raw.worn : 0,
   }
 }
 
@@ -194,7 +201,7 @@ export function serialize(state: Save): unknown {
       site: sheet.site, variant: sheet.variant, bridge: writeParts(sheet.bridge), tracings: sheet.tracings.map(writeParts),
       trolley: sheet.trolley, crossed: sheet.crossed, home: sheet.home, ring: sheet.ring, hats: sheet.hats,
     })),
-    on: state.on, next: state.next, waiting: state.waiting, across: state.across, tries: state.tries, laid: state.laid, shown: state.shown,
+    on: state.on, next: state.next, waiting: state.waiting, across: state.across, tries: state.tries, laid: state.laid, shown: state.shown, over: state.over, worn: state.worn,
   }
 }
 
@@ -337,21 +344,24 @@ export function unroll(state: Save): Save {
   if (!state.next) return state
   const { site: id, variant } = state.next
   const sheets = [...state.sheets, emptySheet(id, variant)].slice(-RACK)
-  return { ...state, ...beginCycle(state), sheets, on: sheets.length - 1, next: null, waiting: lineFor(site(id, variant)), across: [], tries: 0 }
+  return { ...state, ...beginCycle(state), sheets, on: sheets.length - 1, next: null, waiting: lineFor(site(id, variant)), across: [], tries: 0, over: null, worn: 0 }
 }
 
-/** The child turned to another sheet of the rack. Nothing else changes: the newest sheet keeps its tries and its waiting vehicles while it lies there. */
-export const turnTo = (state: Save, on: number): Save => (Number.isInteger(on) && on >= 0 && on < state.sheets.length ? { ...state, on } : state)
+/** The child turned to another sheet of the rack. A tracing laid on the sheet that leaves the board is lifted. Nothing else changes: the newest sheet keeps its tries and its waiting vehicles while it lies there. */
+export const turnTo = (state: Save, on: number): Save => (Number.isInteger(on) && on >= 0 && on < state.sheets.length ? { ...state, on, over: on === state.on ? state.over : null } : state)
 
-/** The bridge as it stands is copied onto tracing paper. A third tracing takes the place of the oldest. */
-export const trace = (state: Save): Save => withSheet(state, (sheet) => ({ ...sheet, tracings: [...sheet.tracings, sheet.bridge.map((p) => ({ ...p }))].slice(-TRACINGS) }))
+/** The bridge as it stands is copied onto tracing paper. A third tracing takes the place of the oldest, so a tracing that lay on the board is lifted. */
+export const trace = (state: Save): Save => ({ ...withSheet(state, (sheet) => ({ ...sheet, tracings: [...sheet.tracings, sheet.bridge.map((p) => ({ ...p }))].slice(-TRACINGS) })), over: null })
 
-/** A tracing and the bridge change places. */
+/** A kept tracing of the sheet on the board is laid on the board, or, with null, the one that lies there is lifted. */
+export const layTracing = (state: Save, which: number | null): Save => ({ ...state, over: which })
+
+/** A tracing and the bridge change places, and no tracing lies on the board. */
 export function swapTracing(state: Save, which: number): Save {
   const sheet = state.sheets[state.on]
   if (!sheet.tracings[which]) return state
   const tracings = sheet.tracings.map((t, i) => (i === which ? sheet.bridge : t))
-  return withSheet(edit(state, sheet.tracings[which]), (changed) => ({ ...changed, tracings }))
+  return { ...withSheet(edit(state, sheet.tracings[which]), (changed) => ({ ...changed, tracings })), over: null }
 }
 
 export const markShown = (state: Save, idea: Showing): Save => (state.shown.includes(idea) ? state : { ...state, shown: [...state.shown, idea] })
@@ -359,8 +369,8 @@ export const markShown = (state: Save, idea: Showing): Save => (state.shown.incl
 export const setTrolley = (state: Save, weights: number, at: TrolleyPlace): Save =>
   withSheet(state, (sheet) => ({ ...sheet, trolley: { weights: Math.max(TROLLEY_WEIGHTS.fewest, Math.min(TROLLEY_WEIGHTS.most, Math.round(weights))), at } }))
 
-/** A hat plucked off the part it hung on. */
-export const pluckHat = (state: Save, part: number): Save => withSheet(state, (sheet) => ({ ...sheet, hats: sheet.hats.filter((index) => index !== part) }))
+/** A hat plucked off the part it hung on: the chief wears it, on top of any it has. */
+export const pluckHat = (state: Save, part: number): Save => ({ ...withSheet(state, (sheet) => ({ ...sheet, hats: sheet.hats.filter((index) => index !== part) })), worn: state.worn + 1 })
 
 /** The vehicles parked on the far bank of the sheet on the board: the newest sheet's own list, or, on a sheet taken back from the rack, its job vehicle if it has crossed the bridge as it stands and has not been sent home since. */
 export function parked(state: Save): VehicleId[] {

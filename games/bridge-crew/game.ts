@@ -11,7 +11,7 @@ import { DRAWN_DIP, WATER, atRest, rests, type Rest } from './pose'
 import { answerOf, between, creaks, ended, frontAt, seat, stepAt, type Seat } from './ride'
 import type { Frame, Strain } from './frame'
 import { hang, lowPoint, park, roadOf, run, type Ending, type Run, type Train } from './run'
-import { crossed, crossedHome, failedRun, leaveHats, markShown, onNewest, parked, pluckHat, ringed, sentAway, sentHome, setTrolley, standing, swapTracing, toFront, trace, turnTo, unringed, unroll, type Save, type Sheet } from './save'
+import { crossed, crossedHome, failedRun, layTracing, leaveHats, markShown, onNewest, parked, pluckHat, ringed, sentAway, sentHome, setTrolley, standing, swapTracing, toFront, trace, turnTo, unringed, unroll, type Save, type Sheet } from './save'
 import { Scene } from './scene'
 import { groundAt } from './sheet'
 import { isFooting, isYard, site, type Idea, type VehicleId } from './sites'
@@ -104,8 +104,8 @@ export class Game extends Toy {
   poked = new Map<VehicleId, number>()
   /** The roadway reaches from lip to lip: a vehicle sent now has a road to try. */
   ready = false
-  /** The tracing laid on the board for a comparison, by its place among the kept ones. Not saved: it is lifted again. */
-  laidTracing: number | null = null
+  /** The tracing laid on the board for a comparison, by its place among the kept ones. Saved: it lies there when the game is opened again. */
+  get laidTracing(): number | null { return this.save.over }
   /** Where the laid tracing's parts would lie under the same load at the same place: the second line. */
   tracingRest: Rest[] = []
   /** Seconds since the trolley was rung, since it was set down (it trundles from there), and since a part gave under it (it falls from there). */
@@ -160,8 +160,8 @@ export class Game extends Toy {
    * behind is saved the moment it is let go.
    */
   swap: { id: VehicleId; pulled: number; since: number; away: boolean } | null = null
-  /** A hat the chief has plucked off a part and wears until the next sheet is unrolled. Short-lived: not saved. */
-  chiefHat = 0
+  /** The hats the chief wears: each plucked off a part, and worn until the next sheet is unrolled. Saved. */
+  get chiefHat(): number { return this.save.worn }
   /** The two who watch from the foot of the sheet. Their moves are short-lived: not saved. */
   readonly crew: Readonly<Record<CrewId, CrewDirector>>
   private moleUp = false
@@ -542,14 +542,13 @@ export class Game extends Toy {
     if (hand?.what === 'hat') {
       this.hand = null
       // The chief wears it, on top of any it has already.
-      if (this.save.sheets[this.save.on].hats.includes(hand.index)) { this.save = pluckHat(this.save, hand.index); this.chiefHat += 1; this.changed = true; this.voices.push(unrollVoice(0)); this.chief.poke() }
+      if (this.save.sheets[this.save.on].hats.includes(hand.index)) { this.save = pluckHat(this.save, hand.index); this.changed = true; this.voices.push(unrollVoice(0)); this.chief.poke() }
       return
     }
     if (hand?.what === 'trolley') { this.hand = null; this.tapTrolley(hand.placed); return }
     if (hand?.what === 'tracing') { this.hand = null; this.tapTracing(hand.spot); return }
     if (hand?.what === 'roll') {
       this.hand = null
-      this.chiefHat = 0
       const had = this.save.sheets
       this.turn(unroll(this.save))
       // The rack was full: the oldest sheet slides off its end, in view.
@@ -609,7 +608,6 @@ export class Game extends Toy {
       // A kept tracing carried up onto the board changes places with the bridge.
       const board = !toolAt(this.at, hand.finger[0], hand.finger[1]) && hand.finger[1] > 0
       if (hand.carried && hand.spot !== 'pad' && board && this.save.sheets[this.save.on].tracings[hand.spot]) {
-        this.laidTracing = null
         this.reseat(swapTracing(this.save, hand.spot))
       }
       return
@@ -834,7 +832,6 @@ export class Game extends Toy {
     if (spot === 'pad') {
       if (this.bridge.length === 0) return
       // A white line copy of the bridge as it stands: a third takes the place of the oldest.
-      this.laidTracing = null
       this.save = trace(this.save)
       this.changed = true
       this.voices.push(unrollVoice(1))
@@ -843,7 +840,8 @@ export class Game extends Toy {
     }
     if (!sheet.tracings[spot]) return
     // A kept tracing is laid on the board, or lifted again.
-    this.laidTracing = this.laidTracing === spot ? null : spot
+    this.save = layTracing(this.save, this.laidTracing === spot ? null : spot)
+    this.changed = true
     this.voices.push(unrollVoice(1))
     this.model()
   }
@@ -1170,7 +1168,6 @@ export class Game extends Toy {
     const sheet = save.sheets[save.on]
     this.at = site(sheet.site, sheet.variant)
     this.selected = this.pileFor()
-    this.laidTracing = null
     this.model()
     this.moving = this.rest.map(atRest)
     this.rung = this.bridge.map(() => Infinity); this.turned = this.bridge.map(() => Infinity); this.laid = this.bridge.map(() => Infinity); this.shook = []

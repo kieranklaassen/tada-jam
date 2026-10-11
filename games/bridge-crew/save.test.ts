@@ -3,7 +3,7 @@ import { CROSSINGS, part } from './bridges.fixture'
 import { FIRST_VISIT, LADDER } from './config'
 import { KINDS, MAX_PARTS, SPEC, type Part } from './kit'
 import { JUDGE, movedAfter, strainThinned } from './order'
-import { RACK, TRACINGS, crossed, crossedHome, deserialize, edit, failedRun, freshSave, leaveHats, markShown, onNewest, parked, pluckHat, sentAway, sentHome, serialize, setTrolley, standing, swapTracing, toFront, trace, turnTo, unroll, type Save } from './save'
+import { RACK, TRACINGS, crossed, crossedHome, deserialize, edit, failedRun, freshSave, layTracing, leaveHats, markShown, onNewest, parked, pluckHat, sentAway, sentHome, serialize, setTrolley, standing, swapTracing, toFront, trace, turnTo, unroll, type Save } from './save'
 import { COLS, ROWS, canPin, site } from './sites'
 import { STATE_VERSION } from './state'
 
@@ -389,3 +389,52 @@ describe('what a full reading found of what is stored', () => {
   })
 })
 
+
+describe('found as left: the tracing laid on the board and the hats the chief wears', () => {
+  const traced = () => trace(edit(freshSave(null), bridge))
+
+  it('a tracing laid on the board and a hat the chief wears come back as they were left', () => {
+    expect(freshSave(null)).toMatchObject({ over: null, worn: 0 })
+    let state = layTracing(traced(), 0)
+    expect(state.over).toBe(0)
+    expect(round(state)).toEqual(state)
+    // A hat plucked off a part is on the chief: it is in one place, and that place is saved.
+    state = pluckHat(leaveHats(state, [0]), 0)
+    expect(state.sheets[0].hats).toEqual([])
+    expect(state.worn).toBe(1)
+    expect(round(state)).toEqual(state)
+    expect(layTracing(state, null).over).toBeNull()
+  })
+
+  it('a slot saved before the two were kept still loads, with no tracing laid and no hat worn', () => {
+    const state = crossed(traced(), 'post-van')
+    const old = JSON.parse(JSON.stringify(serialize(state)))
+    delete old.over; delete old.worn
+    expect(deserialize(old)).toEqual(state)
+  })
+
+  it('a damaged one of the two takes its default and the rest is kept', () => {
+    const state = pluckHat(leaveHats(layTracing(traced(), 0), [0]), 0)
+    const raw = JSON.parse(JSON.stringify(serialize(state)))
+    // One tracing is kept, so there is no second one to lie on the board.
+    expect(deserialize({ ...raw, over: 1 })).toEqual({ ...state, over: null })
+    expect(deserialize({ ...raw, over: 'first' })).toEqual({ ...state, over: null })
+    expect(deserialize({ ...raw, worn: -1 })).toEqual({ ...state, worn: 0 })
+    expect(deserialize({ ...raw, worn: 1.5 })).toEqual({ ...state, worn: 0 })
+  })
+
+  it('the tracing is lifted when its place means another tracing or another sheet, and the chief wears a hat until the next sheet is unrolled', () => {
+    const state = pluckHat(leaveHats(layTracing(traced(), 0), [0]), 0)
+    // A new tracing can push the oldest out, and a swap puts the bridge in the tracing's place.
+    expect(trace(state).over).toBeNull()
+    expect(swapTracing(state, 0).over).toBeNull()
+    expect(edit(state, []).over).toBe(0)
+    const second = unroll(crossed(state, 'post-van'))
+    expect(second).toMatchObject({ on: 1, over: null, worn: 0 })
+    // Back on the rack's first sheet the chief keeps the hat it has, and a tracing laid on the other sheet is lifted.
+    const worn = pluckHat(leaveHats(layTracing(trace(edit(second, [part('plank', 9, 6, 12, 6)])), 0), [0]), 0)
+    expect(worn).toMatchObject({ over: 0, worn: 1 })
+    expect(turnTo(worn, 0)).toMatchObject({ on: 0, over: null, worn: 1 })
+    expect(turnTo(worn, 1)).toMatchObject({ on: 1, over: 0, worn: 1 })
+  })
+})

@@ -398,7 +398,8 @@ describe('the trolley, the tracing paper and the two showings', () => {
     for (const index of [2, 3]) { const ends = game.drawn()[index]; tapAt(game, (ends.a[0] + ends.b[0]) / 2, (ends.a[1] + ends.b[1]) / 2 + 0.2); steps(game, 0.3) }
     expect(game.save.sheets[0].hats).toEqual([])
     expect(game.chiefHat).toBe(2)
-    expect(JSON.stringify(stored(game))).not.toContain('chiefHat')
+    // Found as left: opened again, the chief still wears them.
+    expect(new Game(deserialize(stored(game)), stream(4)).chiefHat).toBe(2)
   })
 
   it('a secret that works every time: the threads plucked from longest to shortest play a scale and the chief taps along', () => {
@@ -1858,3 +1859,32 @@ describe('what the eighth reading found', () => {
 
 
 
+
+describe('found as left, in the depth and age pass', () => {
+  it('a tracing laid on the board lies there when the game is opened again, and the chief wears its hat until the next sheet is unrolled', () => {
+    const game = new Game(edit(freshSave(null), CROSSINGS['plank-gap']), stream(2)), paper = tools(game.at).find((tool) => tool.tool === 'tracing')!
+    // The pad keeps a tracing; a tap on the kept tracing lays it on the board.
+    tapAt(game, (paper.x0 + paper.x1) / 2, TRAY.top - TRAY.tall + 0.3)
+    game.takeChange()
+    tapAt(game, paper.x0 + 0.4, TRAY.top - 0.4)
+    expect(game.laidTracing).toBe(0)
+    expect(game.takeChange()).toBe(true)
+    const again = new Game(deserialize(stored(game)), stream(2))
+    expect(again.laidTracing).toBe(0)
+    expect(again.tracingRest).toHaveLength(1)
+    expect(again.takeVoices()).toEqual([])
+    // A second tap lifts it, and that is found as left too.
+    tapAt(again, paper.x0 + 0.4, TRAY.top - 0.4)
+    expect(new Game(deserialize(stored(again)), stream(2)).laidTracing).toBeNull()
+    // The hat: worn through a put-away, and off when the next sheet is unrolled.
+    const hatted = new Game({ ...game.save, sheets: [{ ...game.save.sheets[0], hats: [0] }] }, stream(2))
+    tapAt(hatted, 12, 6.2)
+    expect(hatted.chiefHat).toBe(1)
+    const crossedOver = new Game(crossed(deserialize(stored(hatted)), 'post-van'), stream(2))
+    expect(crossedOver.chiefHat).toBe(1)
+    tapAt(crossedOver, ROLL.x - 0.3, crossedOver.at.right[1] + 1.5)
+    expect(crossedOver.save.sheets).toHaveLength(2)
+    expect(crossedOver.chiefHat).toBe(0)
+    expect(crossedOver.laidTracing).toBeNull()
+  })
+})
