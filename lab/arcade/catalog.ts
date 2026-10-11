@@ -12,6 +12,8 @@ export interface CatalogDemo {
   question: string
   // Its visual treatment, where one was assigned on purpose.
   look?: string
+  // The key of the jam game this demo became, where the game took another name.
+  game?: string
 }
 
 export interface CatalogGroup {
@@ -94,8 +96,8 @@ export const CATALOG: readonly CatalogGroup[] = [
     demos: [
       { key: 'princess-playground', question: 'A four-year-old designed it: is dropping a naughty princess and her cat onto playground toys as funny as she hoped?' },
       { key: 'balloon-pop-parade', question: 'Is popping, with something falling out of each balloon, enough on its own?' },
-      { key: 'surprise-eggs', question: 'How much of the pull is the reveal, and how much is the rare ones?' },
-      { key: 'choo-choo-draw', question: 'Is a train that follows any line you draw a toy without a goal?' },
+      { key: 'surprise-eggs', question: 'How much of the pull is the reveal, and how much is the rare ones?', game: 'who-made-that-sound' },
+      { key: 'choo-choo-draw', question: 'Is a train that follows any line you draw a toy without a goal?', game: 'chalk-train' },
       { key: 'whack-a-mole', question: 'Does a classic reaction game still land, or is it too frantic?' },
     ],
   },
@@ -109,7 +111,7 @@ export const CATALOG: readonly CatalogGroup[] = [
       { key: 'claw-machine', question: 'Is the suspense on the way up worth the wait?' },
       { key: 'hungry-hole', question: 'Is getting bigger by swallowing things a reward in itself?' },
       { key: 'snack-merge', question: 'Do chain merges feel earned or lucky?' },
-      { key: 'draw-a-bridge', question: 'Does a scribble that becomes a solid object delight?' },
+      { key: 'draw-a-bridge', question: 'Does a scribble that becomes a solid object delight?', game: 'bridge-crew' },
       { key: 'dig-for-the-duck', question: 'Is water finding its way down your tunnel satisfying?' },
       { key: 'slingshot-smash', question: 'Pull, fling, collapse: fun, or only destruction?' },
       { key: 'animal-tower', question: 'Is wobbly stacking funny or frustrating?' },
@@ -122,9 +124,9 @@ export const CATALOG: readonly CatalogGroup[] = [
     testing:
       'Loops from the biggest hits for ages six to twelve: coins, upgrades, rare finds, instant retry, rounds that speed up. These are the ones the owner called fun but addictive. Kept as a reference for what that pull feels like, not as a direction.',
     demos: [
-      { key: 'campfire-nights', question: 'Does gather by day, hold the light by night work on one screen?' },
+      { key: 'campfire-nights', question: 'Does gather by day, hold the light by night work on one screen?', game: 'night-camp' },
       { key: 'hop-across', question: 'Is a perfect hop with slapstick failure enough to keep going?' },
-      { key: 'mutant-garden', question: 'How strong is plant, harvest, buy a stranger seed?' },
+      { key: 'mutant-garden', question: 'How strong is plant, harvest, buy a stranger seed?', game: 'seed-lab' },
       { key: 'egg-heist', question: 'Is sneaking past a guard the fun, or the rare egg?' },
       { key: 'deep-sea-fishing', question: 'Does dodge down, gather up, sell, go deeper hook too hard?' },
       { key: 'gem-miner', question: 'Is digging for gems fun without the upgrade shop?' },

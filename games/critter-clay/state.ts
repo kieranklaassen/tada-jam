@@ -73,9 +73,10 @@ export function takeFromTray(state: WorkshopState, kind: PartKind): Hue {
   return hue
 }
 
-export function attach(critter: CritterSave, part: Part): boolean {
+/** Press a part on: last of its parts, or back at `index` when it returns to the place it was pulled from. */
+export function attach(critter: CritterSave, part: Part, index = critter.parts.length): boolean {
   if (!canTake(critter.parts, part.kind)) return false
-  critter.parts.push({ kind: part.kind, hue: part.hue })
+  critter.parts.splice(index, 0, { kind: part.kind, hue: part.hue })
   return true
 }
 

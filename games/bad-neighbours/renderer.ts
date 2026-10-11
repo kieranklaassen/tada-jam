@@ -2,6 +2,7 @@ import { CELL, FLOOR, PLATFORM_WIDTH, SECURE_DELAY, cellsFor, outlineCenter, typ
 import { buildingSprite, drawResidents, pixelPerson, silhouetteFor, type Context } from './buildings'
 import { Neighbourhood, type StreetProp } from './neighbourhood'
 import { TIERS, type Tier } from './quality'
+import { cameraTarget, streetLayout } from './camera'
 
 // Canvas scene for the street. Wordless: no bubbles, metres or labels.
 
@@ -143,11 +144,9 @@ export class Renderer {
     for (let i = 0; i < walkers; i++) { const xx = ((i * 173 + t * (i % 2 ? -8 : 11)) % (w + 60) + w + 60) % (w + 60) - 30; pixelPerson(ctx, xx, h - 36, t * 4 + i, ['#eec46c', '#bc6c51', '#e9e2cc'][i % 3], false, 1.1) }
     this.draws = 1 + walkers
     if (!game) return
-    // Keep the slab above the control dock; short screens put the controls in the corners instead.
-    const reserve = h <= 500 ? 20 : 100
-    this.scale = Math.max(0.34, Math.min(w / 400, 1.35, (h - reserve - 60) / 470))
-    this.cx = w / 2; this.base = h - reserve - (38 * this.scale + 8)
-    const target = Math.max(0, game.maxHeight * CELL - 265)
+    const layout = streetLayout(w, h)
+    this.scale = layout.scale; this.cx = w / 2; this.base = layout.base
+    const target = cameraTarget(game.maxHeight * CELL, layout)
     this.camera += (target - this.camera) * (1 - Math.exp(-delta / 220))
     const sy = (y: number) => this.base + (y - FLOOR + this.camera) * this.scale
     if (delta > 0) this.neighbourhood.update(delta, game.pieces, PLATFORM_WIDTH, this.reduced)

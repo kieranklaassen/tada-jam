@@ -12,7 +12,7 @@ import { feedingFloor } from './surfaces'
 import { panOf } from './scale'
 import { GUEST_ARM, GUEST_RADIUS, GUEST_REACH, guestArms, GUEST_TOP, plateOf } from './feeding'
 import { SEAT_SPECIES } from './motion'
-import { accountedTotal, defaultTable, type Piece } from './state'
+import { accountedTotal, defaultTable, deserialize, serialize, type Piece, type TableState } from './state'
 import { doorwayGap, GATE, HINGE, houseGap } from './visitors'
 import { chooserGeometry, CHOOSER_SCALE } from './view/models'
 import { cameraProjector, placeCamera } from './view/stage'
@@ -290,6 +290,99 @@ describe('one obvious want', () => {
     expect(table.feeding.plates).toEqual([0, 4, 0, 0, 4])
     const pieces = table.state.pieces
     for (const [i, a] of pieces.entries()) for (const b of pieces.slice(i + 1)) expect(Math.hypot(a.x - b.x, a.y - b.y)).toBeGreaterThan(r * 1.9)
+  })
+})
+
+describe('found as left', () => {
+  /** The table as the shell would hand it back: saved, then read again at `age`. */
+  const reopen = (state: TableState, age: number | null = 4) => {
+    const table = new TableController(deserialize(JSON.parse(JSON.stringify(serialize(state))), age), { save: vi.fn() })
+    table.setProjector(topDown)
+    return table
+  }
+
+  it('does not play the story again on a table whose stones were all put back in the bag', () => {
+    const { table } = makeTable()
+    tap(table, { x: BAG.x, y: BAG.y })
+    run(table, 3)
+    for (const piece of [...table.state.pieces]) {
+      drag(table, piece, { x: BAG.x, y: BAG.y })
+      run(table, 0.8)
+    }
+    expect(table.state.bag).toBe(table.state.total)
+    const again = reopen(table.state)
+    run(again, 6)
+    expect(again.state.pieces).toHaveLength(0)
+    expect(again.state.bag).toBe(again.state.total)
+  })
+
+  it('drops no stone on a scale found with empty pans', () => {
+    const { table } = makeTable(6)
+    run(table, 2.5)
+    const [invited] = table.state.pieces
+    drag(table, invited, { x: BAG.x, y: BAG.y })
+    run(table, 1)
+    expect(table.state.pieces).toHaveLength(0)
+    const again = reopen(table.state, 6)
+    run(again, 2.5)
+    expect(again.state.pieces).toHaveLength(0)
+  })
+
+  it('does not eat a shared meal again, and keeps the stools out, when the table is opened again', () => {
+    const { table } = makeTable()
+    tap(table, { x: 1000, y: 900 })
+    for (const seat of [1, 4]) {
+      drag(table, { x: BAG.x, y: BAG.y }, FEEDING.seats[seat].plate)
+      run(table, 1)
+    }
+    run(table, 3)
+    expect(table.munchStart).not.toBeNull()
+    const again = reopen(table.state)
+    expect(again.stoolsShown).toBe(true)
+    run(again, 3)
+    expect(again.feeding.shareComplete).toBe(true)
+    expect(again.munchStart).toBeNull()
+    // The stools stay out after the meal is taken apart, too.
+    drag(again, FEEDING.seats[1].plate, { x: 700, y: 850 })
+    run(again, 1)
+    expect(again.feeding.shareComplete).toBe(false)
+    expect(reopen(again.state).stoolsShown).toBe(true)
+  })
+
+  it('leaves the stool of a guest carried off before any meal, so the guest can be seated again', () => {
+    const { table, save } = makeTable()
+    tap(table, { x: 1000, y: 900 })
+    for (const seat of [1, 4]) {
+      const { guest } = FEEDING.seats[seat]
+      drag(table, guest, { x: guest.x, y: guest.y + (seat === 1 ? -220 : 220) })
+      run(table, 0.5)
+    }
+    expect(table.state.seats).toEqual([false, false, false, false, false])
+    expect(table.stoolsShown).toBe(true)
+    expect(save.mock.lastCall?.[0]).toMatchObject({ stools: true })
+    tap(table, FEEDING.seats[4].guest)
+    expect(table.state.seats[4]).toBe(true)
+    const again = reopen(table.state)
+    expect(again.stoolsShown).toBe(true)
+    tap(again, FEEDING.seats[1].guest)
+    expect(again.state.seats[1]).toBe(true)
+  })
+})
+
+describe('the bag by age', () => {
+  it('spills five stones at a tap and the other five at the next at the youngest default', () => {
+    for (const age of [3, null]) {
+      const { table } = makeTable(age)
+      tap(table, { x: BAG.x, y: BAG.y })
+      expect(table.state.pieces).toHaveLength(5)
+      expect(table.state.bag).toBe(20)
+      run(table, 3)
+      tap(table, { x: BAG.x, y: BAG.y })
+      expect(table.state.pieces).toHaveLength(10)
+      expect(table.state.bag).toBe(0)
+      run(table, 3)
+      expect(accountedTotal(table.state)).toBe(40)
+    }
   })
 })
 

@@ -52,3 +52,11 @@ All colours live in `PALETTE` in [`view/palette.ts`](view/palette.ts).
 ## Guidance (style-independent)
 
 [`guidance.ts`](guidance.ts) decides what to show; the view only draws it. The next useful thing glows after a short idle (3 s at 7, later for older children); a ghost hand then shows one verb (a partial turn, a nudge, a tap) and never how far. Demonstrations back off with doubling gaps and stop after four; any touch clears everything. Until the first touch in a diorama, the wanderer lifts its lantern toward the door now and then.
+
+## What the child's age sets
+
+`ctx.childAge` sets two defaults and gates nothing. The idle ladder waits longer for older children (glow at 3 s and the ghost hand at 5 s at 7 and under or with no age, 4 s and 7 s at 8, 6 s and 10 s at 9 and over). A first visit opens on a diorama by age ([`state.ts`](state.ts), `firstRoomKey`): First Turn at 8 and under or with no age, the Ferry at 9, the Impossible Stair at 10 and over. The five dioramas stand in one designed order, so an older child starts further along it. Every diorama is one tap away on the ring at every age, and the doors lead round all five. Once anything is saved, the saved diorama wins over the age.
+
+## Found as left
+
+A put-away settles whatever is moving to its nearest stop, stands the wanderer on a tile, and saves. A tile the child asked for that the wanderer could not reach yet is forgotten at a put-away: on return the wanderer waits for a touch and never sets off on its own.

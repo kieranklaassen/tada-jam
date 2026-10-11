@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { CartridgeBoundary } from './CartridgeBoundary'
-import { AGE_RANGE, type CartridgeContext, type CartridgeStatus, type JamGame } from './contract'
+import { CornerControl } from './CornerControl'
+import type { CartridgeContext, CartridgeStatus, JamGame } from './contract'
 import { PortraitOverlay } from './PortraitOverlay'
+import { AGES, readPrefs, writePrefs, type Prefs } from './prefs'
 import { createJamStorage } from './storage'
 
 // A thin stand-in for the Tada kid shell: builds a CartridgeContext, owns the
 // loading -> ready lifecycle, flushes storage on park / pagehide / hidden,
-// toggles attention, contains crashes, and covers portrait. Grown-up dev
-// controls sit in a strip above the game surface and can be hidden
-// (or start hidden with ?chrome=0) for full-bleed play and screenshots.
+// toggles attention, contains crashes, and covers portrait. A game opens full
+// bleed under one corner control: a tap goes home, and a held finger shows the
+// grown-up dev controls in a strip above the surface (so does ?chrome=1).
 
 const THEMES: Record<string, Record<string, string>> = {
   meadow: {
@@ -27,40 +29,26 @@ const THEMES: Record<string, Record<string, string>> = {
   },
 }
 
-// No age, then every whole age a jam game can be made for.
-const AGES: readonly (number | null)[] = [null, ...Array.from({ length: AGE_RANGE[1] - AGE_RANGE[0] + 1 }, (_, index) => AGE_RANGE[0] + index)]
 const LANGUAGES = ['en', 'nl', 'fr'] as const
 
-type Prefs = { childAge: number | null; language: string; theme: string }
-
-const PREFS_KEY = 'tada-jam:prefs'
-
-function readPrefs(): Prefs {
-  const fallback: Prefs = { childAge: 4, language: 'en', theme: 'meadow' }
-  try {
-    const parsed = JSON.parse(window.localStorage.getItem(PREFS_KEY) ?? 'null') as Partial<Prefs> | null
-    if (!parsed) return fallback
-    return {
-      childAge: parsed.childAge !== undefined && AGES.includes(parsed.childAge) ? parsed.childAge : fallback.childAge,
-      language: typeof parsed.language === 'string' ? parsed.language : fallback.language,
-      theme: typeof parsed.theme === 'string' && parsed.theme in THEMES ? parsed.theme : fallback.theme,
-    }
-  } catch {
-    return fallback
-  }
-}
-
-function initialChromeVisible(): boolean {
-  return new URLSearchParams(window.location.search).get('chrome') !== '0'
+// chrome=1 opens with the strip; chrome=0 draws nothing at all over the surface
+// (the probes and the audits measure the game alone); otherwise the corner
+// control is the only thing over the game.
+type Chrome = 'strip' | 'corner' | 'bare'
+function initialChrome(): Chrome {
+  const asked = new URLSearchParams(window.location.search).get('chrome')
+  return asked === '1' ? 'strip' : asked === '0' ? 'bare' : 'corner'
 }
 
 export function JamShell({ game, onExit }: { game: JamGame; onExit: () => void }) {
   const { manifest, Mount } = game.cartridge
-  const [prefs, setPrefs] = useState<Prefs>(readPrefs)
+  const [prefs, setPrefs] = useState<Prefs>(() => readPrefs(Object.keys(THEMES)))
   const [attended, setAttended] = useState(true)
   const [parked, setParked] = useState(false)
   const [status, setStatus] = useState<CartridgeStatus>('loading')
-  const [chrome, setChrome] = useState(initialChromeVisible)
+  const [chrome, setChrome] = useState<Chrome>(initialChrome)
+  // Forgetting a save takes two taps, so a hand that found the strip by accident loses nothing.
+  const [resetArmed, setResetArmed] = useState(false)
   const [openCount, setOpenCount] = useState(0)
 
   const storage = useMemo(
@@ -73,7 +61,7 @@ export function JamShell({ game, onExit }: { game: JamGame; onExit: () => void }
   )
 
   useEffect(() => {
-    window.localStorage.setItem(PREFS_KEY, JSON.stringify(prefs))
+    writePrefs(prefs)
   }, [prefs])
 
   useEffect(() => {
@@ -128,13 +116,23 @@ export function JamShell({ game, onExit }: { game: JamGame; onExit: () => void }
   }
 
   const resetSlot = () => {
+    if (!resetArmed) {
+      setResetArmed(true)
+      return
+    }
+    setResetArmed(false)
     storage.reset()
     setOpenCount((count) => count + 1)
   }
+  useEffect(() => {
+    if (!resetArmed) return
+    const timer = window.setTimeout(() => setResetArmed(false), 3000)
+    return () => window.clearTimeout(timer)
+  }, [resetArmed])
 
   return (
     <div className="jam-shell" data-theme={prefs.theme} style={THEMES[prefs.theme] as CSSProperties}>
-      {chrome ? (
+      {chrome === 'strip' ? (
         <div className="jam-toolbar" role="toolbar" aria-label="Harness controls">
           <button type="button" onClick={onExit}>
             ← Games
@@ -187,16 +185,16 @@ export function JamShell({ game, onExit }: { game: JamGame; onExit: () => void }
             </button>
           )}
           <button type="button" onClick={resetSlot} title="Forget this game's saved state">
-            Reset slot
+            {resetArmed ? 'Tap again to reset' : 'Reset slot'}
           </button>
           <span className="jam-spacer" />
-          <button type="button" onClick={() => setChrome(false)} title="Hide controls (tap the corner dot to show)">
+          <button type="button" onClick={() => setChrome('corner')} title="Hide controls (hold the corner control to show)">
             Hide
           </button>
         </div>
-      ) : (
-        <button type="button" className="jam-chrome-dot" aria-label="Show harness controls" onClick={() => setChrome(true)} />
-      )}
+      ) : chrome === 'corner' ? (
+        <CornerControl onHome={onExit} onHold={() => setChrome('strip')} holdLabel="Hold for grown-up controls" />
+      ) : null}
       <div className="jam-surface">
         {status === 'loading' && <div className="jam-loading" />}
         {status === 'error' && (

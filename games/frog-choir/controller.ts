@@ -162,8 +162,8 @@ export function dunk(age: number): number {
   return -0.35 * Math.sin(Math.min(1, age / SPLASH_SECONDS) * Math.PI)
 }
 /** The smallest frog touch radius, CSS px. It only binds on phones, where the pond is small; frog centres are ~100 px apart there. */
-const FROG_HIT_PX = 44
-const FIREFLY_HIT_PX = 30
+export const FROG_HIT_PX = 44
+export const FIREFLY_HIT_PX = 30
 /** A child taps where the firefly was: at the slowest tempo it flies ~230 px/s, so the touch area trails it along this much of its path. */
 const FIREFLY_TRAIL_SECONDS = 0.3
 const DROP_SLOP = 0.35

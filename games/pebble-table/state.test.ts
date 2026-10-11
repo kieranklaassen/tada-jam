@@ -16,19 +16,35 @@ import {
 const roundTrip = (state: TableState, age: number | null = 4) => deserialize(JSON.parse(JSON.stringify(serialize(state))), age)
 
 describe('defaultTable', () => {
-  it('gives a bag of five at age 3 and ten otherwise', () => {
-    expect(defaultTable(3).bag).toBe(20)
-    for (const age of [4, 7, 12, null]) expect(defaultTable(age).bag).toBe(40)
+  it('fills the bag with ten stones at every age', () => {
+    for (const age of [2, 3, 4, 5, 6, 7, 12, null]) expect(defaultTable(age).bag).toBe(40)
+  })
+
+  it('gives five stones at a tip and the other five at the next at 3, below the band and with no age', () => {
+    for (const age of [2, 3, null]) {
+      const state = defaultTable(age)
+      expect(tipBag(state).map((p) => p.q)).toEqual([4, 4, 4, 4, 4])
+      expect(state.bag).toBe(20)
+      expect(tipBag(state).map((p) => p.q)).toEqual([4, 4, 4, 4, 4])
+      expect(state.bag).toBe(0)
+    }
+  })
+
+  it('gives all ten stones at one tip from 4 up, above the band too', () => {
+    for (const age of [4, 5, 6, 7, 12]) {
+      const state = defaultTable(age)
+      expect(tipBag(state)).toHaveLength(10)
+      expect(state.bag).toBe(0)
+    }
   })
 
   it('Covers AE10. still lists every built mat on the shelf at age 3', () => {
     expect([...defaultTable(3).shelf].sort()).toEqual([...MAT_KEYS].sort())
   })
 
-  it('opens on Fair Feeding at 4 and unknown age, on the scale from 5', () => {
-    expect(defaultTable(4).liveMat).toBe('feeding')
-    expect(defaultTable(null).liveMat).toBe('feeding')
-    expect(defaultTable(6).liveMat).toBe('scale')
+  it('opens on Fair Feeding up to 4 and with no age, on the scale from 5', () => {
+    for (const age of [2, 3, 4, null]) expect(defaultTable(age).liveMat).toBe('feeding')
+    for (const age of [5, 6, 7, 12]) expect(defaultTable(age).liveMat).toBe('scale')
   })
 
   it('seats two guests', () => {
@@ -52,6 +68,21 @@ describe('deserialize', () => {
     const piece = pullFromBag(state, { x: 612, y: 433 })!
     const back = roundTrip(state)
     expect(back.pieces.find((p) => p.id === piece.id)).toMatchObject({ x: 612, y: 433 })
+  })
+
+  it('keeps a saved table over the age it is opened at', () => {
+    expect(roundTrip(defaultTable(3), 7)).toEqual(defaultTable(3))
+    expect(roundTrip(defaultTable(7), null)).toEqual(defaultTable(7))
+  })
+
+  it('tips everything out of an older save, which kept no stones back, and reads a kept amount it cannot use as none', () => {
+    const { reserve: _reserve, stools: _stools, ...older } = { ...defaultTable(3), total: 20, bag: 20 }
+    const state = deserialize(JSON.parse(JSON.stringify(older)), 3)
+    expect(state.total).toBe(20)
+    expect(state.stools).toBe(false)
+    expect(tipBag(state)).toHaveLength(5)
+    expect(state.bag).toBe(0)
+    for (const reserve of [7, 40, -4, 'five']) expect(deserialize({ ...defaultTable(3), reserve }, 3).reserve).toBe(0)
   })
 
   for (const junk of [null, 'table', [1, 2], { v: 99 }, { v: 1, total: 7 }, { v: 1, total: -4 }]) {
@@ -131,7 +162,7 @@ describe('bag', () => {
     const halves = cutPiece(state, state.pieces[0].id)
     for (const p of state.pieces.slice()) if (p.q === 4) returnToBag(state, p.id)
     for (const half of halves) returnToBag(state, half.id)
-    expect(state.bag).toBe(20)
+    expect(state.bag).toBe(40)
     const again = tipBag(state)
     expect(again.map((p) => p.q)).toEqual([4, 4, 4, 4, 4])
   })

@@ -37,7 +37,7 @@ Ratings are saved to `lab/arcade/RATINGS.json` by the lab's own Vite server (and
 
 ## On the jam's home page
 
-`npm run build` at the repo root builds the jam and then this lab into `dist/lab/`, so the deployed jam serves the demo player at `lab/arcade/index.html`. The lab build writes `arcade/catalog.json` (the catalog plus each demo's name, emoji, ages and pitch), and the jam's home page reads that file to list the demos, folded by type, with what each is testing. The home page links out to the player and shares no code with the lab. Ratings made on that copy stay in the browser; only the lab's own server writes `RATINGS.json`.
+`npm run build` at the repo root builds the jam and then this lab into `dist/lab/`, so the deployed jam serves the demo player at `lab/arcade/index.html`. The lab build writes `arcade/catalog.json` (the catalog plus each demo's name, emoji, ages and pitch, the jam game it became where `catalog.ts` names one, and its verdict from `RATINGS.json`), and the jam's home page reads that file to show the demos as tiles, grouped by type. A demo opens in the jam's own frame, which frames this player's page with `?chrome=0`: the play view then has no strip and takes the jam's cream as its letterbox. The home page leaves out a demo that has become a game and a demo rated "No", and shares no code with the lab. One link at the foot of the home page leads here, for rating. Ratings made on that copy stay in the browser; only the lab's own server writes `RATINGS.json`.
 
 ## What is here
 

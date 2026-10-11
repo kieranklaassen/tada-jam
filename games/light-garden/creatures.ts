@@ -50,19 +50,23 @@ export type Creature = {
   pokeVariant: number
 }
 
-export function makeCreature(index: number, kind: CreatureKind, wants: Mask, radius: number, bed: Point): Creature {
+/**
+ * A creature on its bed. `awake` is for one found up when the garden is opened again: it is simply
+ * awake and well into its play, with no waking to go through a second time.
+ */
+export function makeCreature(index: number, kind: CreatureKind, wants: Mask, radius: number, bed: Point, awake = false): Creature {
   return {
     index,
     kind,
     wants,
     radius,
     bed: { ...bed },
-    phase: 'asleep',
+    phase: awake ? 'awake' : 'asleep',
     phaseT: 0,
     litFor: 0,
     darkFor: 0,
     stirAt: -Infinity,
-    wokeAt: -Infinity,
+    wokeAt: awake ? -(WAKING_SECONDS[kind] + 2) : -Infinity,
     light: 0,
     from: { ...bed },
     to: { ...bed },

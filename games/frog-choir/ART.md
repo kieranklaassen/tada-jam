@@ -10,6 +10,7 @@ Frog Choir's own visual style: a lily pond at dusk built like a toy diorama on a
 - **Five frogs, five people.** Each frog has its own hue, size, silhouette prop, voice, and way of moving, so a child can tell them apart with the sound off. Showoff (coral, a lily flower on its head), Bouncy (sky blue, spots and tufts), Sleepy (big and green, a floppy lilac nightcap), Shy (butter yellow, small, holds a leaf parasol), Crooner (tan, warts, round spectacles, bushy brows, a bow tie).
 - **A kid can read it at a glance.** Warm frogs on cool pads on mint water; big eyes and big throat bubbles; one moving glow. Near pads are big and far pads are small, so "near is low, far is high" reads as depth before it is heard as pitch.
 - **Calm.** Idle life is breathing, blinking, and each frog's own fidget. The only loop is the firefly's slow drift; nothing flashes, counts, or asks.
+- **The same pond at every age.** A child's age sets one thing, the firefly's tempo: 72 beats a minute at 4 and under and when the age is not known, 80 at 5 and 6, 88 at 7 and over. The pads, the frogs, and everything they do are the same for everyone, and the saved seating opens as it was left at any age.
 
 ## Palette
 
@@ -68,7 +69,7 @@ Every frog has its own idle, anticipation, reaction, carry pose, and landing ([`
 - **Crooner** sways like a lounge singer and conducts on the beat; its brows rise when the firefly comes close. It sings with a vibrato bubble and a sweeping arm. Tapped, it takes a stage bow, leaning aside with its free arm swept wide (the camera looks down, so a straight bow would foreshorten away), then pushes up its spectacles. Carried, it stays stiff with a hand on its glasses. It lands, settles, and bows.
 - **Carrying** lifts a frog just above the fingertip. Over each pad it softly tries that pad's note in its own voice. Let go right above a pad, it falls with weight and lands in its own way. A frog whose pad is hovered scoots aside and looks up at the visitor, because letting go there swaps them. Dropped in the water, a frog throws a crown of droplets and hops home.
 - **Pads** bob on the water, dip, flush warm, and ring when a frog lands or a finger taps them, and lift a little when a carried frog hovers over them.
-- **The firefly** drifts left to right across the columns in a slow loop and turns toward where it is going. Tapped, it does a loop-the-loop. Its touch area trails it along the last 0.3 s of its path, so a child who taps where they saw it still catches it.
+- **The firefly** drifts left to right across the columns in a slow loop and turns toward where it is going. It swings home along the far shore, over the waterline and in front of the bank. On a tablet that keeps it well below the top centre of the frame, where the shell draws its home control ([`homeControl.test.ts`](homeControl.test.ts) holds the distance on six surface sizes). Tapped, it does a loop-the-loop. Its touch area trails it along the last 0.3 s of its path, so a child who taps where they saw it still catches it.
 
 ## Sound
 

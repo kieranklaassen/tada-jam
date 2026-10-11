@@ -230,7 +230,7 @@ Pen-and-ink crosshatch, the first look reserved for this game, on canvas 2D. A h
 
 ### The page
 
-The house stands at the left with its roof, the wheel on the ridge and the chimney; the foundations are a band under the rooms, with the boiler under its column. The lobby stands beside the ground floor, the cupboard is a loft over the lobby so that waiting guests never cover the things, and the street with the coach and the bench runs under the lobby. `layout.ts` fits this one drawing into any surface, for all three houses, with every room and every touchable slot at least 48 logical pixels both ways.
+The house stands at the left with its roof, the wheel on the ridge and the chimney; the foundations are a band under the rooms, with the boiler under its column. The lobby stands beside the ground floor, the cupboard is a loft over the lobby so that waiting guests never cover the things, and the street with the coach and the bench runs under the lobby. `layout.ts` fits this one drawing into any surface, for all three houses, with every room and every touchable slot at least 48 logical pixels both ways. The shell lays its round home control over the top centre of the surface, and a touch on it never reaches the game. On the plain page only sky is under it. On the bat's page, which is the plate turned half round, the street is at the top; so in the four-room house and the tower the bench and its luggage stand a little toward the coach, and whoever sits on the bench is clear of the control on that page too (`hit.test.ts` holds both pages at seven sizes). What the control lies over there is the foot of the luggage, or in the long house the foot of a cellar bay, and nobody has to touch either.
 
 ### The page from a guest's place
 

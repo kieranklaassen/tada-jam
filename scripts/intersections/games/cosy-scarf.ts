@@ -1,9 +1,11 @@
 // Intersection audit script for Cosy Scarf (see scripts/intersections/types.ts).
-// A five-year-old's session: the bunny hops in and the guidance ladder plays,
-// then quick overlapping taps on the yarn balls, carries across the needles,
-// a paint, a ball given to the waiting animal, and a scarf for every animal in
-// turn (flight, wrap, dance, the walk home, the next one walking in), with
-// pets, the basket, the butterfly, the snow and an unravel woven in between.
+// A five-year-old's session: the bunny waits in view while the guidance ladder
+// plays and steps up to the loom at the first touch, then quick overlapping
+// taps on the yarn balls, carries across the needles, a paint, a ball given to
+// the waiting animal, and a scarf for every animal in turn (flight, wrap,
+// dance, the walk home, the next one walking into view, waiting, and stepping
+// up at a touch), with pets, the basket giving up a fifth ball, the butterfly,
+// the snow and an unravel woven in between.
 
 import type { Driver, Frac, GameAudit } from '../types.ts'
 
@@ -13,11 +15,14 @@ type Audit = {
 }
 type Point = [number, number, number]
 
-/** layout.ts: SCARF, CELL_H, BASKET, LOOM_SPOT (the audit runs as a five-year-old: 4 balls, 8 rows offered). */
+/** layout.ts: SCARF, CELL_H, BASKET, LOOM_SPOT, WAIT_SPOT (the audit runs as a five-year-old: 4 balls until the basket is tapped, 8 rows offered). */
 const SCARF = { x: 1, top: 54, z: -1.6 }
 const CELL_H = 2.8
 const BASKET: Point = [34, 5, 9]
 const LOOM_SPOT = [-32, 7] as const
+const WAIT_SPOT = [-46, 8.75] as const
+/** Open blanket in front of the loom: a touch here only puffs the snow. */
+const OPEN_BLANKET: Point = [-12, 0.2, 36]
 
 async function spot(d: Driver, p: Point): Promise<Frac> {
   const f = await d.page.evaluate((q) => (window as unknown as { __jamAudit: Audit }).__jamAudit.projectFrac(q), p)
@@ -43,8 +48,8 @@ async function animal(d: Driver, key: string): Promise<Frac> {
   return (await d.find(`^${key}>body$`)) ?? [0.3, 0.6]
 }
 
-/** Play on until `key` stands at the loom (layout.ts LOOM_SPOT) or `limit` ms have passed. */
-async function atLoom(d: Driver, key: string, limit: number): Promise<void> {
+/** Play on until `key` stands at `place` (layout.ts LOOM_SPOT or WAIT_SPOT) or `limit` ms have passed. */
+async function standsAt(d: Driver, key: string, place: readonly [number, number], limit: number): Promise<void> {
   for (let t = 0; t < limit; t += 250) {
     const there = await d.page.evaluate(
       ([k, x, z]) => {
@@ -52,11 +57,19 @@ async function atLoom(d: Driver, key: string, limit: number): Promise<void> {
         const root = (window as unknown as { __jamAudit: Audit }).__jamAudit.main()?.scene.getObjectByName(k) as Root | undefined
         return !!root && root.visible && Math.hypot(root.position.x - x, root.position.z - z) < 1
       },
-      [key, LOOM_SPOT[0], LOOM_SPOT[1]] as const,
+      [key, place[0], place[1]] as const,
     )
     if (there) return
     await d.wait(250)
   }
+}
+
+/** The next cold animal walks into view and waits; a touch on the open blanket brings it up to the loom. */
+async function callIn(d: Driver, key: string): Promise<void> {
+  await standsAt(d, key, WAIT_SPOT, 15000)
+  await d.wait(1000)
+  await d.tap(await spot(d, OPEN_BLANKET))
+  await standsAt(d, key, LOOM_SPOT, 15000)
 }
 
 const needles = (rows: number): Point => [SCARF.x, SCARF.top - rows * CELL_H - 0.4, SCARF.z]
@@ -105,7 +118,7 @@ export default {
     {
       name: 'arrive-play-bunny',
       run: async (d) => {
-        // The bunny hops in, shivers at the loom; glow rings at 3 s idle, the ghost hand at 5 s.
+        // The bunny waits in view, shivering; glow rings at 3 s idle, the ghost hand at 5 s. The first tap on a ball brings it up to the loom.
         await d.wait(7000)
         await knit(d, 5, 260)
         await d.wait(600)
@@ -133,14 +146,14 @@ export default {
         await d.tap(await animal(d, 'bunny'))
         await d.wait(500)
         await d.tap(await spot(d, cell(4, 2)))
-        // Flight, wrap, three binkies, the walk home and the penguin waddling in.
+        // Flight, wrap, three binkies, the walk home and the penguin waddling into view.
         await d.wait(6500)
       },
     },
     {
       name: 'pets-unravel-penguin',
       run: async (d) => {
-        // Pets, the basket, the butterfly and the snow, all in a quick row.
+        // Pets (the first touch brings the penguin up to the loom), the basket (a fifth ball comes up and the others make room), the butterfly and the snow, all in a quick row.
         await d.tap(await animal(d, 'bunny'))
         await d.wait(250)
         await d.tap(await animal(d, 'penguin'))
@@ -149,7 +162,7 @@ export default {
         await d.wait(350)
         await d.tap(await spot(d, [10.5, 58.7, -1.8]))
         await d.wait(300)
-        await d.tap(await spot(d, [-12, 0.2, 36]))
+        await d.tap(await spot(d, OPEN_BLANKET))
         await d.tap(await spot(d, [-60, 12, -70]))
         await d.wait(900)
         await knit(d, 4, 260)
@@ -170,9 +183,9 @@ export default {
     {
       name: 'fox-gift',
       run: async (d) => {
-        // Knit on while the penguin walks home and the fox walks in, then give it the scarf at the loom.
+        // Knit on while the penguin walks home; the fox walks into view and waits, a touch brings it up, then give it the scarf at the loom.
         await knit(d, 8, 250)
-        await atLoom(d, 'fox', 15000)
+        await callIn(d, 'fox')
         await d.wait(1000)
         await d.tap(await animal(d, 'fox'))
         await d.wait(300)
@@ -184,7 +197,7 @@ export default {
       name: 'bear-gift',
       run: async (d) => {
         await knit(d, 8, 250)
-        await atLoom(d, 'bear', 15000)
+        await callIn(d, 'bear')
         await d.wait(1000)
         await d.tap(await animal(d, 'bear'))
         await d.wait(300)

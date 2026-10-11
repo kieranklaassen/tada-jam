@@ -93,10 +93,12 @@ const hideUnfinished: Plugin = {
 
 // Every build also writes arcade/catalog.json: the demos grouped by type, with
 // what each group and demo is testing (arcade/catalog.ts) and each demo's name,
-// emoji, ages and pitch (its own meta). The jam's home screen reads that file
-// to list the demos; it never imports anything from the lab.
+// emoji, ages and pitch (its own meta), the jam game it became where that game
+// took another name, and the owner's verdict from RATINGS.json where he gave
+// one. The jam's home screen reads that file to list the demos; it never
+// imports anything from the lab.
 interface CatalogSource {
-  CATALOG: readonly { id: string; title: string; testing: string; demos: readonly { key: string; question: string; look?: string }[] }[]
+  CATALOG: readonly { id: string; title: string; testing: string; demos: readonly { key: string; question: string; look?: string; game?: string }[] }[]
 }
 interface ProtoSource {
   proto?: { meta?: { name: string; emoji: string; ages: [number, number]; pitch: string } }
@@ -107,6 +109,8 @@ const demoCatalog: Plugin = {
   async generateBundle() {
     const arcade = join(import.meta.dirname, 'arcade')
     const { CATALOG } = (await import(pathToFileURL(join(arcade, 'catalog.ts')).href)) as CatalogSource
+    const ratingsFile = join(arcade, 'RATINGS.json')
+    const ratings = (existsSync(ratingsFile) ? JSON.parse(readFileSync(ratingsFile, 'utf8')) : {}) as Record<string, { verdict?: string }>
     const groups = []
     for (const group of CATALOG) {
       const demos = []
@@ -115,7 +119,8 @@ const demoCatalog: Plugin = {
         if (hiddenKeys.includes(demo.key) || !existsSync(file)) continue
         const meta = ((await import(pathToFileURL(file).href)) as ProtoSource).proto?.meta
         if (!meta) continue
-        demos.push({ ...demo, name: meta.name, emoji: meta.emoji, ages: meta.ages, pitch: meta.pitch })
+        const verdict = ratings[demo.key]?.verdict
+        demos.push({ ...demo, name: meta.name, emoji: meta.emoji, ages: meta.ages, pitch: meta.pitch, ...(verdict ? { verdict } : {}) })
       }
       if (demos.length > 0) groups.push({ id: group.id, title: group.title, testing: group.testing, demos })
     }

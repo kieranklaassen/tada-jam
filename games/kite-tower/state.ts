@@ -4,6 +4,8 @@ import { clampX, PIECES, SHAPES } from './pieces'
 // The playroom's saved shape (R10). Each piece is either in the tray or on
 // the build plane with its pose, and the kite has a perch. A kite in flight
 // is already saved at its destination, so put-away mid-flight loses nothing.
+// A piece in the hand is saved where the finger took it from (its tray slot
+// or its place on the plane), never in the air.
 // Read defensively: any older, partial, or corrupt shape falls back piece by
 // piece instead of throwing.
 

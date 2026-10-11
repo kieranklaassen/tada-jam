@@ -266,9 +266,10 @@ export class Critter {
     this.partAge.length = this.save.parts.length
   }
 
-  partAttached(): void {
+  /** A part was pressed on at `index` of its parts (the last one unless it went back where it was pulled from). */
+  partAttached(index = this.save.parts.length - 1): void {
+    this.partAge.splice(index, 0, 0)
     this.refresh()
-    this.partAge[this.partAge.length - 1] = 0
     this.kick(0.35)
     if (this.sleeping) this.stir = 0
   }

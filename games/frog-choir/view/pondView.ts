@@ -19,7 +19,7 @@ import { aimRim, createShared, gradientMap, outlineMaterial, toonMaterial, type 
 // whole staff fits and the painted sky fills the top.
 
 const PITCH = 0.72
-const FOV = 30
+export const FOV = 30
 const BOTTOM_Z = NEAR_Z + 1.25
 const HALF_WIDTH = columnX(COLUMNS - 1) + 1.05
 const FAR_HEAD = { y: 1.35, z: rowZ(ROWS - 1) - 0.1 }
@@ -514,7 +514,7 @@ function ndc(camera: THREE.PerspectiveCamera, x: number, y: number, z: number): 
  * inside the sides, and the far frogs' heads low enough to leave the top
  * quarter for the sky. Pulls back until all three hold.
  */
-function frameCamera(camera: THREE.PerspectiveCamera): void {
+export function frameCamera(camera: THREE.PerspectiveCamera): void {
   camera.fov = FOV
   const bottomAngle = PITCH + THREE.MathUtils.degToRad(FOV / 2)
   for (let distance = 12; distance < 60; distance += 0.25) {

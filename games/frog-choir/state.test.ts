@@ -15,10 +15,14 @@ describe('pond state', () => {
     })
   })
 
-  it('sets tempo from age without gating anything', () => {
-    expect(tempoForAge(3)).toBeLessThan(tempoForAge(5))
-    expect(tempoForAge(8)).toBeGreaterThan(tempoForAge(5))
-    expect(tempoForAge(null)).toBe(tempoForAge(5))
+  it('sets the tempo from age: slowest at the youngest end, faster across the band, the ends open', () => {
+    expect([4, 5, 6, 7, 8].map(tempoForAge)).toEqual([72, 80, 80, 88, 88])
+    expect(tempoForAge(2)).toBe(tempoForAge(4))
+    expect(tempoForAge(12)).toBe(tempoForAge(8))
+  })
+
+  it('gives a child of unknown age the youngest tempo', () => {
+    expect(tempoForAge(null)).toBe(tempoForAge(4))
   })
 
   it('round-trips through serialize and deserialize', () => {

@@ -17,10 +17,9 @@ export function defaultPond(): PondState {
   return { v: STATE_VERSION, frogs: Array.from({ length: FROG_COUNT }, (_, frog) => padAt(frog, frog)!.index) }
 }
 
-/** Beats per minute. Age is a dial for defaults, never a gate. */
+/** Beats per minute. Age is a dial for defaults, never a gate; an unknown age takes the youngest tempo. */
 export function tempoForAge(childAge: number | null): number {
-  if (childAge === null) return 80
-  if (childAge <= 4) return 72
+  if (childAge === null || childAge <= 4) return 72
   if (childAge >= 7) return 88
   return 80
 }

@@ -80,6 +80,12 @@ export class SeedBody {
   lift = 0
   rollX = 0
   rollZ = 0
+  /** Where a held seed was taken from: a drag that is taken away puts it back there. */
+  origin: 'pouch' | 'grass' | 'plot' = 'grass'
+  /** Where it lay on the grass, or the molehill it was picked from. */
+  originX = 0
+  originZ = 0
+  originPlot = -1
 
   constructor(index: number) {
     this.index = index
@@ -137,10 +143,13 @@ function magnetPull(plot: number, x: number, z: number): number {
   return 0.5 * (1 - Math.hypot(x - PLOTS[plot].x, z - PLOTS[plot].z) / MAGNET_REACH)
 }
 
-/** How long the bee wanders between visits of its own: little ones get more visits, older ones plan crosses by tapping. */
+/**
+ * How long the bee wanders between visits of its own: little ones get more visits, older ones plan crosses by
+ * tapping. A default only: the bee visits by itself and comes to a tapped flower at every age. With no age it takes
+ * the youngest pace, and an age outside the band takes the nearest end.
+ */
 export function visitEveryFor(age: number | null): number {
-  if (age === null) return 5
-  if (age <= 4) return 3.5
+  if (age === null || age <= 4) return 3.5
   if (age <= 5) return 5
   if (age <= 6) return 7
   return 9
@@ -213,17 +222,6 @@ export class MeadowController implements GestureHandler {
       const hue = meadow.plots[plot]
       if (hue !== null) this.flowers[plot].grown(hue)
     }
-    for (const seed of meadow.loose) {
-      const body = this.alloc()
-      if (!body) break
-      body.hue = seed.hue
-      body.id = seed.id
-      body.mode = 'rest'
-      body.x = seed.x
-      body.z = seed.z
-      body.y = groundY(seed.x, seed.z) + SEED_RADIUS
-    }
-    for (let slot = 0; slot < PRIMARIES.length; slot++) this.fillSlot(slot, false)
     this.world = {
       flowerHead: (plot, out) => {
         const flower = this.flowers[plot]
@@ -270,6 +268,24 @@ export class MeadowController implements GestureHandler {
       startle: (variant) => this.sound.beePoke(variant, this.bee.motion.seconds),
     }
     this.bee = new Bee(events)
+    // A meadow put away while the bee carried its two colours opens with the mixed seed already lying where the bee
+    // would have set it down, so the flight does not play again untouched.
+    if (readyToMix(meadow)) {
+      const hue = blend(meadow)
+      this.dropSpot(scratchHead)
+      if (hue !== null) addLoose(meadow, hue, { x: scratchHead.x, z: scratchHead.z })
+    }
+    for (const seed of meadow.loose) {
+      const body = this.alloc()
+      if (!body) break
+      body.hue = seed.hue
+      body.id = seed.id
+      body.mode = 'rest'
+      body.x = seed.x
+      body.z = seed.z
+      body.y = groundY(seed.x, seed.z) + SEED_RADIUS
+    }
+    for (let slot = 0; slot < PRIMARIES.length; slot++) this.fillSlot(slot, false)
     this.tracker = new GestureTracker(this, (x, y) => this.hitTest(x, y))
   }
 
@@ -433,6 +449,7 @@ export class MeadowController implements GestureHandler {
         this.slotSeed[target.slot] = null
         this.slotRefill[target.slot] = REFILL_SECONDS
         this.pouchSquash.v += 3
+        seed.origin = 'pouch'
         this.grab(seed, pointerId)
         return
       }
@@ -441,6 +458,9 @@ export class MeadowController implements GestureHandler {
         if (!seed || (seed.mode !== 'rest' && seed.mode !== 'arc')) return
         if (seed.id >= 0) takeLoose(this.meadow, seed.id)
         seed.id = -1
+        seed.origin = 'grass'
+        seed.originX = seed.mode === 'arc' ? seed.tx : seed.x
+        seed.originZ = seed.mode === 'arc' ? seed.tz : seed.z
         this.changed()
         this.grab(seed, pointerId)
         this.cadence.now(this.t * 1000)
@@ -520,8 +540,19 @@ export class MeadowController implements GestureHandler {
     this.drop(pointerId)
   }
 
+  /**
+   * The drag was taken away (the meadow put away under the finger, a resting hand, the browser): the child did not
+   * let go, so nothing is dropped or planted and the seed goes back where it came from.
+   */
   cancel(pointerId: number): void {
-    this.drop(pointerId)
+    for (const seed of this.seeds) {
+      if (seed.mode === 'held' && seed.pointer === pointerId) {
+        seed.pointer = -1
+        this.putBack(seed)
+        this.cadence.now(this.t * 1000)
+        this.changed()
+      }
+    }
   }
 
   // ---- acts ----------------------------------------------------------------
@@ -559,6 +590,10 @@ export class MeadowController implements GestureHandler {
     seed.grow.x = 0.3
     seed.grow.v = 0
     this.pluckSeed[plot] = seed
+    seed.origin = 'plot'
+    seed.originPlot = plot
+    seed.originX = PLOTS[plot].x
+    seed.originZ = PLOTS[plot].z
     this.grab(seed, pointerId)
     this.sound.pluck()
     this.emit(head.x, head.y, head.z, 6, 0, 7, hue)
@@ -575,6 +610,23 @@ export class MeadowController implements GestureHandler {
         this.changed()
       }
     }
+  }
+
+  /** Back into the pouch, back to where it lay on the grass, or back into its molehill as the flower it was. */
+  private putBack(seed: SeedBody): void {
+    if (seed.origin === 'pouch') {
+      this.home(seed)
+      return
+    }
+    if (seed.origin === 'plot' && plant(this.meadow, seed.originPlot, seed.hue)) {
+      this.flowers[seed.originPlot].grown(seed.hue)
+      this.pluckSeed[seed.originPlot] = null
+      seed.mode = 'off'
+      return
+    }
+    // From the grass, or from a molehill another finger has planted since: it lies at (or beside) where it was.
+    restingSpot(seed.originX, seed.originZ, this.meadow.loose, scratchPoint)
+    this.lay(seed, scratchPoint.x, scratchPoint.z, 1.2)
   }
 
   /** A seed let go of: plant it, bounce it off a full molehill, send it home to the pouch, or lay it on the grass. */
