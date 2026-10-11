@@ -96,9 +96,9 @@ const bearsFromTheSide = (kind: Kind) => kind === STONE || kind === MUD || kind 
  *   stone, mud, earth or rock (a lintel).
  * - Mud is held when any of the four cells it touches is held.
  */
-export function held(ground: Ground): Uint8Array {
+export function held(ground: Ground, into?: Uint8Array): Uint8Array {
   const { cols, rows, cells } = ground
-  const h = new Uint8Array(cells.length)
+  const h = into && into.length === cells.length ? into.fill(0) : new Uint8Array(cells.length)
   for (let i = 0; i < cells.length; i++) if (cells[i] === EARTH || cells[i] === ROCK) h[i] = 1
   const isHeld = (x: number, y: number) => x < 0 || y < 0 || x >= cols || y >= rows || h[y * cols + x] === 1
   let changed = true
@@ -124,6 +124,8 @@ export function held(ground: Ground): Uint8Array {
   return h
 }
 
+let scratchHeld = new Uint8Array(0), scratchMoved = new Uint8Array(0)
+
 /**
  * One step of the ground coming to rest, in place. What is not held drops one cell, lowest first; then resting
  * sand slides one cell down and sideways where the cell beside it and the cell under that are both open. Stone
@@ -131,9 +133,14 @@ export function held(ground: Ground): Uint8Array {
  */
 export function step(ground: Ground): number[] {
   const { cols, rows, cells } = ground
-  const h = held(ground)
+  // The two lists a step works on are kept between steps of a ground of the same size, so a step makes only what it gives back.
+  if (scratchHeld.length !== cells.length) {
+    scratchHeld = new Uint8Array(cells.length)
+    scratchMoved = new Uint8Array(cells.length)
+  }
+  const h = held(ground, scratchHeld)
   const changed: number[] = []
-  const moved = new Uint8Array(cells.length)
+  const moved = scratchMoved.fill(0)
   const move = (from: number, to: number) => {
     cells[to] = cells[from]
     cells[from] = OPEN

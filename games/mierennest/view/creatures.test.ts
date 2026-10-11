@@ -138,6 +138,16 @@ const PARTNERS: [CreatureKind, string, string][] = [
   ['dungFly', 'fly', 'fly2'],
   ['queen', 'wedged', 'wedged2'],
   ['queen', 'sit', 'sit2'],
+  ['beetle', 'lean', 'strain'],
+  ['beetle', 'eat', 'burp'],
+  ['fly', 'taste', 'tasteFoot'],
+]
+
+/** The poses of a raid that goes wrong, added after the others. */
+const RAID: [CreatureKind, string[]][] = [
+  ['raider', ['buried', 'balled', 'flat', 'shrug', 'lie', 'climb']],
+  ['beetle', ['eat', 'burp', 'blind', 'strain', 'sit', 'fall']],
+  ['fly', ['taste', 'tasteFoot', 'gummed', 'tumble', 'peer', 'dodge']],
 ]
 
 describe('the creatures', () => {
@@ -160,9 +170,9 @@ describe('the creatures', () => {
     expect(POSES.ant).toEqual(['stand', 'dig', 'look', 'walk1', 'walk2', 'carry', 'wait'])
     expect(POSES.queen).toEqual(['wedged', 'sit', 'wedged2', 'sit2'])
     expect(POSES.worker).toEqual(['walk', 'carry', 'hips', 'walk2'])
-    expect(POSES.raider).toEqual(['pillow', 'walk', 'stuck', 'nap', 'walk2', 'stuck2', 'nap2'])
-    expect(POSES.beetle).toEqual(['napkin', 'walk', 'onBack', 'lean', 'walk2', 'onBack2'])
-    expect(POSES.fly).toEqual(['hands', 'fly', 'bump', 'hands2', 'fly2'])
+    expect(POSES.raider.slice(0, 7)).toEqual(['pillow', 'walk', 'stuck', 'nap', 'walk2', 'stuck2', 'nap2'])
+    expect(POSES.beetle.slice(0, 6)).toEqual(['napkin', 'walk', 'onBack', 'lean', 'walk2', 'onBack2'])
+    expect(POSES.fly.slice(0, 5)).toEqual(['hands', 'fly', 'bump', 'hands2', 'fly2'])
     expect(POSES.dungBeetle).toEqual(['polish', 'push', 'sit', 'polish2', 'walk', 'walk2'])
     expect(POSES.dungBall).toEqual(['plain', 'sandy'])
     expect(POSES.dungFly).toEqual(['point', 'fly', 'point2', 'fly2'])
@@ -180,6 +190,35 @@ describe('the creatures', () => {
           // Whatever a painter saves it gives back, so the caller's frame is as it left it.
           expect(s.calls.filter((c) => c === 'save')).toHaveLength(s.calls.filter((c) => c === 'restore').length)
           expect(Number.isFinite(s.bounds.top) && Number.isFinite(s.bounds.left)).toBe(true)
+        }
+      })
+    }
+  }
+
+  it('has the poses of the raid after the old ones, each a picture of its own', () => {
+    expect(POSES.raider.slice(7)).toEqual(RAID[0][1])
+    expect(POSES.beetle.slice(6)).toEqual(RAID[1][1])
+    expect(POSES.fly.slice(5)).toEqual(RAID[2][1])
+    for (const [kind, poses] of RAID) {
+      const pictures = POSES[kind].map((pose) => painted(kind, pose, 0).seen.join('\n'))
+      expect(new Set(pictures).size, kind).toBe(POSES[kind].length)
+      expect(poses.every((pose) => POSES[kind].includes(pose))).toBe(true)
+    }
+  })
+
+  // A raid pose stays in the box of its kind: no higher than 62 above its feet, which is the two cells of the
+  // tallest box and six more, and no further to either side than half the box and ten more for a horn, a jaw or
+  // the tip of a wing. A raider is only one cell high, so it keeps lower still. The same bounds, with the same
+  // limits: see the head of the file.
+  for (const [kind, poses] of RAID) {
+    for (const pose of poses) {
+      it(`keeps ${kind} in the raid pose ${pose} within its box`, () => {
+        for (const t of TIMES) {
+          const { bounds } = painted(kind, pose, t)
+          expect(bounds.top, `t = ${t}`).toBeGreaterThanOrEqual(kind === 'raider' ? -40 : -62)
+          expect(bounds.left, `t = ${t}`).toBeGreaterThanOrEqual(-SIZE[kind].width / 2 - 10)
+          expect(bounds.right, `t = ${t}`).toBeLessThanOrEqual(SIZE[kind].width / 2 + 10)
+          expect(bounds.bottom, `t = ${t}`).toBeLessThanOrEqual(8)
         }
       })
     }

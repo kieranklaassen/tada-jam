@@ -27,14 +27,19 @@ function floorOf(ground: Ground, room: Room): { y: number; from: number; to: num
   return best
 }
 
+/** The middle of the mouth, in cell units. */
+const WEDGED_X = (MOUTH[0] + MOUTH[MOUTH.length - 1] + 1) / 2
 /** Half the queen's width and half a worker's, in cells: she is over four cells wide and a worker three. */
 const QUEEN_HALF = 2.2
 const WORKER_HALF = 1.5
 
+/** Whether the left end of a floor is the end nearer the mouth. */
+const mouthIsLeft = (floor: { from: number; to: number }) => Math.abs(floor.from - WEDGED_X) <= Math.abs(floor.to + 1 - WEDGED_X)
+
 /**
- * Where the queen sits: at the left end of the floor of her room, and how much of her full size she is drawn at
- * there. A floor shorter than she is wide seats her in its middle, a little smaller, so that she stands in nothing.
- * Null while the kingdom has no chamber: she is wedged under the mouth.
+ * Where the queen sits: at the end of the floor of her room that is further from the mouth, and how much of her
+ * full size she is drawn at there. A floor shorter than she is wide seats her in its middle, a little smaller, so
+ * that she stands in nothing. Null while the kingdom has no chamber: she is wedged under the mouth.
  */
 export function queenSeat(ground: Ground, rooms: readonly Room[], queenRoom: number | null): (Standing & { fit: number }) | null {
   if (queenRoom === null) return null
@@ -42,7 +47,8 @@ export function queenSeat(ground: Ground, rooms: readonly Room[], queenRoom: num
   const length = floor.to - floor.from + 1
   if (length <= 0) return null
   const fit = Math.min(1, length / (2 * QUEEN_HALF))
-  return { x: fit < 1 ? floor.from + length / 2 : floor.from + QUEEN_HALF, y: floor.y, fit }
+  const x = fit < 1 ? floor.from + length / 2 : mouthIsLeft(floor) ? floor.to + 1 - QUEEN_HALF : floor.from + QUEEN_HALF
+  return { x, y: floor.y, fit }
 }
 
 /**
@@ -60,7 +66,8 @@ export function workerSpots(ground: Ground, rooms: readonly Room[], queenRoom: n
   rooms.forEach((room, n) => {
     const floor = floorOf(ground, room)
     // The stretch of floor that is free, from its left edge to its right edge in cell units.
-    const left = n === queenRoom ? floor.from + 2 * QUEEN_HALF : floor.from, right = floor.to + 1
+    const queenLeft = n === queenRoom && !mouthIsLeft(floor), queenRight = n === queenRoom && mouthIsLeft(floor)
+    const left = queenLeft ? floor.from + 2 * QUEEN_HALF : floor.from, right = queenRight ? floor.to + 1 - 2 * QUEEN_HALF : floor.to + 1
     const free = right - left
     const here = free >= 4 * WORKER_HALF ? [left + WORKER_HALF, right - WORKER_HALF] : free >= 2 * WORKER_HALF ? [(left + right) / 2] : []
     for (const x of here) if (spots.length < most) spots.push({ x, y: floor.y })

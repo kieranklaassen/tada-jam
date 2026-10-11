@@ -3,6 +3,8 @@ import { beetleFigure, line, oval, shape, shine } from './parts'
 import type { BeetleBuild, BeetlePose, Ctx, Legs, P, Painter } from './parts'
 import { antFigure, flyFigure } from './parts2'
 import type { AntBuild, AntPose, FlyBuild, FlyPose } from './parts2'
+import { paintRaidRaider, RAID_RAIDER } from './invaders2'
+import { paintRaidBeetle, paintRaidFly, RAID_BEETLE, RAID_FLY } from './invaders3'
 
 // The campers who raid the nest: the raider ant, the beetle, the fly, the dung beetle with its ball, and the dung
 // fly who leads them. Each is painted with the middle of its feet at the origin, facing right.
@@ -20,9 +22,9 @@ export const INVADER_SIZE: Record<Invader, { width: number; height: number }> = 
 
 /** The poses of each kind. Two whose names differ only by a number at the end are partners: one movement. */
 export const INVADER_POSES = {
-  raider: ['pillow', 'walk', 'stuck', 'nap', 'walk2', 'stuck2', 'nap2'],
-  beetle: ['napkin', 'walk', 'onBack', 'lean', 'walk2', 'onBack2'],
-  fly: ['hands', 'fly', 'bump', 'hands2', 'fly2'],
+  raider: ['pillow', 'walk', 'stuck', 'nap', 'walk2', 'stuck2', 'nap2', ...RAID_RAIDER],
+  beetle: ['napkin', 'walk', 'onBack', 'lean', 'walk2', 'onBack2', ...RAID_BEETLE],
+  fly: ['hands', 'fly', 'bump', 'hands2', 'fly2', ...RAID_FLY],
   dungBeetle: ['polish', 'push', 'sit', 'polish2', 'walk', 'walk2'],
   dungBall: ['plain', 'sandy'],
   dungFly: ['point', 'fly', 'point2', 'fly2'],
@@ -126,6 +128,7 @@ const RAIDER_POSES: Record<string, AntPose> = {
 }
 
 const paintRaider: Painter = (ctx, pose, look, t) => {
+  if (paintRaidRaider(ctx, RAIDER_BUILD, pose, look, t)) return
   const p = RAIDER_POSES[pose] ?? RAIDER_POSES.walk
   const stuck = pose === 'stuck' || pose === 'stuck2'
   if (stuck) oval(ctx, -2, 1, 52, 5, 0, MUD.edge)
@@ -201,6 +204,7 @@ const wave = (legs: Legs, t: number, by: number, from = 0): Legs =>
   legs.map((l, i) => (i < from ? l : [l[0] + Math.sin(t * 7) * by * (i % 2 ? -1 : 1), l[1], l[2] ?? 0, l[3] ?? 0]))
 
 const paintBeetle: Painter = (ctx, pose, look, t) => {
+  if (paintRaidBeetle(ctx, BEETLE_BUILD, pose, look, t)) return
   const p = BEETLE_POSES[pose] ?? BEETLE_POSES.walk
   // On its back its legs go on walking in the air.
   beetleFigure(ctx, BEETLE_BUILD, pose.startsWith('onBack') ? { ...p, legs: wave(p.legs, t, 4), far: wave(p.far ?? [], t, -4) } : p, look, t)
@@ -330,6 +334,7 @@ const FLY_POSES: Record<string, FlyPose> = {
 }
 
 const paintFly: Painter = (ctx, pose, look, t) => {
+  if (paintRaidFly(ctx, FLY, pose, look, t)) return
   const p = FLY_POSES[pose] ?? FLY_POSES.fly
   // Its two front hands rub against each other.
   flyFigure(ctx, FLY, pose.startsWith('hands') ? { ...p, legs: wave(p.legs, t, 2, 2), far: wave(p.far ?? [], t, -2, 2) } : p, look, t)

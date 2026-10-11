@@ -89,7 +89,9 @@ export class ToyDisplay {
   private readonly fired = new Map<number, number>()
   private bursts: { effect: Effect; x: number; y: number; at: number }[] = []
   private readonly rng: Rng
-  private crumbs: Crumb[] = []
+  /** Every crumb there can be, made once: one in the air has life left. */
+  private readonly crumbs: Crumb[] = Array.from({ length: MOST_CRUMBS }, () => ({ x: 0, y: 0, vx: 0, vy: 0, life: 0, size: 2, colour: '' }))
+  private readonly groups = new Map<string, Crumb[]>()
   private readonly poked = new Map<string, { at: number; count: number }>()
   private sway = 0
   private swing = 0
@@ -143,9 +145,19 @@ export class ToyDisplay {
   }
 
   private puff(x: number, y: number, count: number, colour: string, speed: number): void {
-    for (let n = 0; n < count && this.crumbs.length < MOST_CRUMBS; n++) {
+    let made = 0
+    for (const crumb of this.crumbs) {
+      if (made >= count) break
+      if (crumb.life > 0) continue
       const turn = this.rng.next() * Math.PI * 2, fast = speed * (0.4 + this.rng.next() * 0.8)
-      this.crumbs.push({ x, y, vx: Math.cos(turn) * fast, vy: Math.sin(turn) * fast - speed * 0.6, life: 0.35 + this.rng.next() * 0.3, size: 2 + below(this.rng, 3), colour })
+      crumb.x = x
+      crumb.y = y
+      crumb.vx = Math.cos(turn) * fast
+      crumb.vy = Math.sin(turn) * fast - speed * 0.6
+      crumb.life = 0.35 + this.rng.next() * 0.3
+      crumb.size = 2 + below(this.rng, 3)
+      crumb.colour = colour
+      made++
     }
   }
 
@@ -182,12 +194,12 @@ export class ToyDisplay {
   advance(dt: number): void {
     this.seconds += dt
     for (const crumb of this.crumbs) {
+      if (crumb.life <= 0) continue
       crumb.life -= dt
       crumb.vy += 520 * dt
       crumb.x += crumb.vx * dt
       crumb.y += crumb.vy * dt
     }
-    this.crumbs = this.crumbs.filter((crumb) => crumb.life > 0)
     this.bursts = this.bursts.filter((burst) => this.seconds - burst.at < BURST_SECONDS)
     this.follow()
     // The bell is a damped spring about a slow sway of its own.
@@ -432,13 +444,14 @@ export class ToyDisplay {
       list.push({ is: 'machine', kind: machine.kind, load: machine.load, pose: 'ready', x: at.x, y: at.y, flip: grabbed.facing < 0 })
     }
     // Crumbs, one draw a colour.
-    const byColour = new Map<string, { x: number; y: number; size: number }[]>()
+    for (const group of this.groups.values()) group.length = 0
     for (const crumb of this.crumbs) {
-      let group = byColour.get(crumb.colour)
-      if (!group) byColour.set(crumb.colour, (group = []))
-      group.push({ x: crumb.x, y: crumb.y, size: crumb.size })
+      if (crumb.life <= 0) continue
+      let group = this.groups.get(crumb.colour)
+      if (!group) this.groups.set(crumb.colour, (group = []))
+      group.push(crumb)
     }
-    for (const [colour, group] of byColour) list.push({ is: 'crumbs', colour, at: group })
+    for (const [colour, group] of this.groups) if (group.length > 0) list.push({ is: 'crumbs', colour, at: group })
     // The idle ladder: what can be touched glints, and the hand shows one drag through plain earth.
     if (glow > 0 || (guidance && guidance.demo !== null)) {
       const drag = demoDrag(ground, toy.game.ant)

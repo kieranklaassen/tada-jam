@@ -147,3 +147,14 @@ describe('what the game and a raid say happened', () => {
     expect(voiceForRaid({ type: 'hit', id: 0, kind: 'beetle', shot: 'stone', answer: 'x' })).toBe(SPOKEN.beetle)
   })
 })
+
+describe('a voice that takes a number', () => {
+  it('is made once at load: the same number gives the same list, and playing one makes nothing new', () => {
+    expect(digVoice(0.5)).toBe(digVoice(0.5))
+    expect(digVoice(0.31)).toBe(digVoice(0.33))
+    expect(landedVoice('stone', 3)).toBe(landedVoice('stone', 3))
+    expect(landedVoice('sand', 99)).toBe(landedVoice('sand', 8))
+    expect(pourVoice(5)).toBe(pourVoice(5))
+    expect(pourVoice(0)).toBe(pourVoice(1))
+  })
+})

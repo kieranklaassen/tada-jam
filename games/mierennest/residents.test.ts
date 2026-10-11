@@ -43,7 +43,9 @@ describe('where the kingdom stands', () => {
       expect(at(ground, Math.floor(place.x), place.y + 1)).not.toBe(OPEN)
     }
     expect(realm.chambers[realm.queenRoom!].cells).toContain(seat.y * ground.cols + Math.floor(seat.x))
+    // Her room lies to the right of the mouth, so she sits at its right end, the end further from the mouth.
     expect(seat.x - 2.2).toBeGreaterThanOrEqual(24)
+    expect(seat.x + 2.2).toBeCloseTo(31, 6)
     expect(spots[0].x - 1.5).toBeGreaterThanOrEqual(10)
     expect(spots[0].x + 1.5).toBeLessThanOrEqual(15)
   })
@@ -58,7 +60,7 @@ describe('where the kingdom stands', () => {
     expect(spots.length).toBe(4)
     const beside = spots.filter((s) => s.y === seat.y)
     expect(beside.length).toBe(2)
-    for (const spot of beside) expect(spot.x - seat.x).toBeGreaterThanOrEqual(2.2 + 1.5 - 1e-9)
+    for (const spot of beside) expect(Math.abs(spot.x - seat.x)).toBeGreaterThanOrEqual(2.2 + 1.5 - 1e-9)
     const others = spots.filter((s) => s.y !== seat.y).sort((a, b) => a.x - b.x)
     expect(others[1].x - others[0].x).toBeGreaterThanOrEqual(3)
   })

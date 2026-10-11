@@ -36,11 +36,23 @@ const HALO = 'rgba(214,236,110,0.16)'
 const WORM = '#6b5a3a'
 const DUSTY = '#e9dcc0'
 
-/** A seed: a pale drop with a shaded underside and a short lit streak. */
+/** A seed: a pale drop, round at one end and pointed at the other, with a shaded underside and a lit streak. */
 function seed(ctx: Ctx, x: number, y: number, turn: number, r = 5): void {
-  oval(ctx, x, y, r, r * 0.6, turn, WALL)
-  oval(ctx, x - 0.2, y - 0.7, r * 0.86, r * 0.44, turn, SEED)
-  line(ctx, PALE, 1.2, [x - r * 0.4, y - r * 0.2, x + r * 0.1, y - r * 0.36])
+  const drop = (fill: string, k: number, dy: number) => {
+    ctx.fillStyle = fill
+    ctx.beginPath()
+    ctx.moveTo(r * 1.25 * k, dy)
+    ctx.bezierCurveTo(r * 0.5 * k, -r * 0.75 * k + dy, -r * k, -r * 0.7 * k + dy, -r * k, dy)
+    ctx.bezierCurveTo(-r * k, r * 0.7 * k + dy, r * 0.5 * k, r * 0.75 * k + dy, r * 1.25 * k, dy)
+    ctx.fill()
+  }
+  ctx.save()
+  ctx.translate(x, y)
+  ctx.rotate(turn)
+  drop(WALL, 1, 0)
+  drop(SEED, 0.82, -0.6)
+  line(ctx, PALE, 1.2, [-r * 0.45, -r * 0.2, r * 0.15, -r * 0.3])
+  ctx.restore()
 }
 
 /** A small leaf from its stalk at (x, y) to its tip, with a midrib. */

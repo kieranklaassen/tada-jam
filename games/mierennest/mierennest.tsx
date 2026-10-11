@@ -2,7 +2,7 @@
 import { useEffect, useRef } from 'react'
 import type { Cartridge, CartridgeContext } from '../types'
 import { AttendedClock, Attention } from './attention'
-import { GameAudio, voiceOf, type Note } from './audio'
+import { GameAudio, voiceOf, type Note, type Voice } from './audio'
 import { BACKDROP, firstCueAfter } from './config'
 import { CELL } from './ground'
 import { IdleLadder, type Guidance } from './guidance'
@@ -101,17 +101,21 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // What the toy says happened is heard and seen here: every event of one moment is played as one voice, and a
     // kind of event that comes fast (a mouthful, a landing, a pour) is kept a little apart from its last.
     const lastHeard: Partial<Record<ToyEvent['type'], number>> = {}
+    const voices = new Map<readonly Note[], Voice>()
     let unsaved = false
     const answer = (extra: readonly Note[] | null = null) => {
       if (!kingdom || !display) return
       const toy = kingdom.toy, now = performance.now() / 1000
       const events = toy.drainEvents(), gameEvents = kingdom.drainEvents(), raidEvents = kingdom.drainRaidEvents()
-      // Everything of one moment is one voice of at most eight notes, so a busy moment is heard and does not roar.
-      let notes: Note[] | null = null
-      const say = (voice: readonly Note[] | null) => {
-        if (!voice || (notes?.length ?? 0) + voice.length > 8) return
-        if (!notes) notes = []
-        for (const note of voice) notes.push(note)
+      // A moment plays at most three voices, the first that came. Each list of notes is one voice, made the first
+      // time it is heard and kept, so that a mouthful makes nothing new.
+      let said = 0
+      const say = (notes: readonly Note[] | null) => {
+        if (!notes || said >= 3) return
+        said++
+        let voice = voices.get(notes)
+        if (!voice) voices.set(notes, (voice = voiceOf(notes)))
+        audio.play(voice)
       }
       say(extra)
       for (const event of events) {
@@ -121,7 +125,6 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       }
       for (const event of gameEvents) say(voiceForGame(event))
       for (const event of raidEvents) say(voiceForRaid(event))
-      if (notes) audio.play(voiceOf(notes))
       if (events.length > 0) display.see(events)
       if (gameEvents.length > 0 || raidEvents.length > 0) display.seeGame(gameEvents, raidEvents)
       // The ground that is shown may be the raid's copy; the view is told which, and which of its cells changed.

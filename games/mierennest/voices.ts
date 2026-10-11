@@ -24,10 +24,16 @@ const hiss = (frequency: number, peak: number, attack: number, decay: number, mo
 
 export type Material = 'sand' | 'mud' | 'stone'
 
+/** How many steps of speed the dig's crunch has. Every voice that takes a number is made once, at load, a step at a time: playing one makes nothing new. */
+export const DIG_STEPS = 12
+const DIG: Note[][] = Array.from({ length: DIG_STEPS + 1 }, (_, n) => {
+  const s = n / DIG_STEPS
+  return [hiss(320 + 520 * s, 0.16, 0.003, 0.09, { q: 1.4, glideTo: 240 + 300 * s }), tone(96 - 20 * s, 0.1, 0.004, 0.08, { glideTo: 62 })]
+})
+
 /** A mouthful of earth: a crunch whose pitch follows the speed of the finger, from 0 (a tap) to 1 (a fast drag). */
 export function digVoice(speed: number): Note[] {
-  const s = Math.max(0, Math.min(1, speed))
-  return [hiss(320 + 520 * s, 0.16, 0.003, 0.09, { q: 1.4, glideTo: 240 + 300 * s }), tone(96 - 20 * s, 0.1, 0.004, 0.08, { glideTo: 62 })]
+  return DIG[Math.round(Math.max(0, Math.min(1, speed)) * DIG_STEPS)]
 }
 
 /** What the dig meets and cannot bite: sand trickles, mud squelches, a stone clinks, and the rock rings dull. */
@@ -54,17 +60,28 @@ export const SET_DOWN: Record<Material, Note[]> = {
 
 /** A lump that fell comes to rest: sand hushes, mud plops, a stone thuds harder the further it fell (1 to 8 cells). */
 export function landedVoice(material: Material, fell: number): Note[] {
-  const far = Math.max(0, Math.min(1, (fell - 1) / 7))
+  return LANDED[material][Math.max(1, Math.min(8, Math.round(fell))) - 1]
+}
+const landedAt = (material: Material, fell: number): Note[] => {
+  const far = (fell - 1) / 7
   if (material === 'sand') return [hiss(2600, 0.05 + 0.03 * far, 0.02, 0.22, { q: 0.7 })]
   if (material === 'mud') return [tone(300, 0.1 + 0.04 * far, 0.004, 0.1, { glideTo: 120 })]
   return [tone(70, 0.18 + 0.1 * far, 0.003, 0.26 + 0.1 * far, { glideTo: 42 }), hiss(140, 0.06 + 0.04 * far, 0.003, 0.1, { q: 2 })]
 }
+const LANDED: Record<Material, Note[][]> = {
+  sand: Array.from({ length: 8 }, (_, n) => landedAt('sand', n + 1)),
+  mud: Array.from({ length: 8 }, (_, n) => landedAt('mud', n + 1)),
+  stone: Array.from({ length: 8 }, (_, n) => landedAt('stone', n + 1)),
+}
 
 /** Sand on the move: a long hiss, fuller the more cells are pouring (1 to 12). */
 export function pourVoice(cells: number): Note[] {
-  const many = Math.max(0, Math.min(1, (cells - 1) / 11))
-  return [hiss(3600, 0.05 + 0.07 * many, 0.04, 0.34 + 0.2 * many, { q: 0.7, glideTo: 2800 })]
+  return POUR[Math.max(1, Math.min(12, Math.round(cells))) - 1]
 }
+const POUR: Note[][] = Array.from({ length: 12 }, (_, n) => {
+  const many = n / 11
+  return [hiss(3600, 0.05 + 0.07 * many, 0.04, 0.34 + 0.2 * many, { q: 0.7, glideTo: 2800 })]
+})
 
 /** A lump let go where it cannot lie goes back with a small step down. */
 export const BACK: Note[] = [tone(500, 0.08, 0.004, 0.07, { wave: 'triangle', glideTo: 380 })]

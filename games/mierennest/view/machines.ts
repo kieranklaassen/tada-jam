@@ -104,21 +104,21 @@ function catapult(ctx: Ctx, load: Load, pose: MachinePose): void {
   wheel(ctx, 16, -6.5, 6.5)
   twig(ctx, 5.4, [-25, -13.5, 25, -13.5])
   // The far tine of the fork, behind the arm.
-  twig(ctx, 3.6, [14, -27, 20.5, -38])
+  twig(ctx, 3.6, [14, -30, 21, -42])
   // The arm: a springy blade from its root in the sledge to the cup.
   const tip = ready ? [-15, -25] : [16, -50]
-  const blade = ready ? [0, -14, 7, -55, -13, -27] : [0, -14, 10, -30, 15, -49]
+  const blade = ready ? [0, -14, 7, -63, -13, -27] : [0, -14, 10, -30, 15, -49]
   // The thread that holds it down: taut from the arm to the sledge when ready, loose and wobbling once it has gone.
   if (ready) {
-    line(ctx, THREAD_SHADE, 2.6, [-7, -32.5, -6, -14])
-    line(ctx, THREAD, 1.4, [-7, -32.5, -6, -14])
+    line(ctx, THREAD_SHADE, 2.6, [-5.6, -38, -5.2, -14])
+    line(ctx, THREAD, 1.4, [-5.6, -38, -5.2, -14])
   } else line(ctx, THREAD, 1.6, [11, -41, 0, -39, 9, -31, 1, -26], true)
   line(ctx, GRASS.dark, 6, blade, true)
   line(ctx, GRASS.light, 3.2, blade, true)
   lash(ctx, 0, -15, 0, 3.6)
   // The post of the fork and its near tine, lashed to the sledge.
-  twig(ctx, 4.4, [14, -13, 14, -27])
-  twig(ctx, 3.6, [14, -27, 8, -38])
+  twig(ctx, 4.4, [14, -13, 14, -30])
+  twig(ctx, 3.6, [14, -30, 7.5, -42])
   lash(ctx, 14, -16.5, Math.PI / 2, 3)
   ctx.save()
   ctx.translate(tip[0], tip[1])
