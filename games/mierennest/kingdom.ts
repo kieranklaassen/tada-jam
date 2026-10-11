@@ -458,6 +458,8 @@ export class Kingdom {
     if (kind !== STONE || !flying.level) return
     if (this.raid && flying.inRaid) knockInRaid(this.raid, flying.hit, flying.facing)
     else {
+      // A stone the ant took up while the shot flew is let go first: it is back in its cell when the shot strikes it.
+      if (this.toy.carried?.from === flying.hit) this.toy.cancel()
       const did = lean(ground, sx, sy, flying.facing, 3)
       if (did.did === 'shoved') this.toy.touched(did.cells)
     }
@@ -677,7 +679,13 @@ export class Kingdom {
     // the party waits for the next ring; otherwise the party comes now.
     if (this.rung && this.toy.atRest) {
       this.rung = false
-      if (!this.raid && !this.scene) this.callParty()
+      if (!this.raid && !this.scene) {
+        // The hand is emptied first, as when the bell rings on ground at rest: a finger that went back to work
+        // while the bell waited builds nothing once the raid runs.
+        this.toy.cancel()
+        this.dropMachine()
+        this.callParty()
+      }
     }
     for (const flying of this.flying) flying.t += dt
     for (let n = 0; n < this.flying.length; n++) {
