@@ -124,6 +124,7 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 | Farm Morning | `games/farm-morning/` | 2–5 | A board-book farmyard: bring a scoop, a bucket, a brush or a fork to hens, a pony, a goat and a pig, and every pairing answers with its own joke. The four right ones bring the full morning, and sliding the henhouse door shut brings the night and a new morning. |
 | Egg Heist | `games/egg-heist/` | 6–10 | A paper toy theatre of a farmyard: creep a raccoon from bush to bush past a goose who punts what she sees, carry six things to five places, and watch what each place makes of each thing, one sending the next along when a place is full. No learning goal. |
 | Goodnight, Teddy | `games/goodnight-teddy/` | 2–5 | a wordless bedtime room for ages 2 to 5 where a child rubs soap, water and a towel onto a muddy bear, tries the pyjamas and blanket on the duck, the cat and the lamp, and turns the lamp down to put him to sleep. No learning goal. |
+| Treetop Village | `games/treetop-village/` | 4–8 | A pop-up book oak in 2D: hang planks, ladders, rope bridges, buckets, swings, lanterns and slides between its pegs, and four kinds of tree folk come to try each one in their own way, cross it, stay puzzled in front of it or wait to be carried. Draw the sun down for evening and shake the trunk to tidy up. No learning goal. |
 
 ## Showcases
 
