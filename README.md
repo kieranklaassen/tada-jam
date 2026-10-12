@@ -148,6 +148,7 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 | Rainbow World | `games/rainbow-world/` | 2–5 | Open pretend play at a sunny window: carry three arches, three dolls, a horse and a silk onto a paper mat, where each lands on its own note and every pair answers in its own way (a nest, a cradle, a tower, a ride, a ghost), and a basket takes everything back. No learning goal. |
 | Advent Market | `games/advent-market/` | 4–8 | A candlelit winter fair: dip a candle, fold a star, bind a wreath, ice a biscuit, and give what you made to five fair-goers who each do their own thing with it. No learning goal. |
 | Wool Picture | `games/wool-picture/` | 4–8 | A sheet of dark felt in a frame: lay carded wool from five bowls with a finger and it wakes as country or weather by its colour and height (green low is a hill, white high is a cloud that rains), four felt figures carried onto it do what the place makes them do, and a yarn loop hangs the picture on the wall for the evening. No learning goal. |
+| Sand Kingdom | `games/sand-kingdom/` | 3–7 | A beach at low tide in 3D: dig grooves with a finger, turn out towers with a bucket, lay shells and driftwood, then draw the sun down and watch the sea run into what was made and a crab, a starfish, an eel and three gulls each come to what the beach holds for them. Lifting the sun brings one long wave that smooths the sand for a new day. No learning goal. |
 
 ## Showcases
 
