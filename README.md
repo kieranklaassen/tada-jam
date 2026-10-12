@@ -146,6 +146,7 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 | Tape Town | `games/tape-town/` | 3–7 | A playroom floor seen from above in washi tape: pull strips of four tapes off their rolls to lay roads, rivers, hedges and rails, and a shoebox of toys with fixed habits takes them up. Where two tapes cross there is a bridge, a level crossing, a jam, a trestle, reeds or a tunnel. Open pretend play with no goal. No learning goal. |
 | Wet Paint | `games/wet-paint/` | 3–7 | A tray of water in marbled paper: drop colour from three pots and it keeps spreading, pull it into feathers, comb it, blow it, open it with soap, and lay a sheet on it for a print the fat cat holds up and you hang on the line. No learning goal. |
 | Rainbow World | `games/rainbow-world/` | 2–5 | Open pretend play at a sunny window: carry three arches, three dolls, a horse and a silk onto a paper mat, where each lands on its own note and every pair answers in its own way (a nest, a cradle, a tower, a ride, a ghost), and a basket takes everything back. No learning goal. |
+| Advent Market | `games/advent-market/` | 4–8 | A candlelit winter fair: dip a candle, fold a star, bind a wreath, ice a biscuit, and give what you made to five fair-goers who each do their own thing with it. No learning goal. |
 
 ## Showcases
 
