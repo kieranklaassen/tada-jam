@@ -155,7 +155,7 @@ Written after the style spike, not part of the sheet. This part is the art guide
 - **The ghost hand** is a frost child's red mitten with a thumb and a blue cuff, in the look's inks.
 - **Tiers.** Each tier in `config.ts` sets the pixel ratio and how many snowflakes drift. The lowest tier is still the same print: only the edge of each shape is coarser and fewer flakes fall.
 
-**Registry row, for the lead** (the claimed-styles registry in `docs/art-direction.md`):
+**Registry row** (in the claimed-styles registry in `docs/art-direction.md`):
 
 `| Ice Palace | Two-colour print (canvas 2D): cream paper and two bright inks, a blue and a berry red, overprinting to indigo, the red plate a little off register, with ink grain; a snowy clearing with a pond, a very large King Winter and two frost children. The night is printed, not lit: a second pull of the same blue floods the sheet and a lamp's light is bare paper left out of that pull in hard-edged shapes, so the ledger row's "no lamp, no dark ground" is read as "no lighting effect": no glow, no gradient, no soft edge, and no black or navy ground | [`games/ice-palace/ART.md`](../games/ice-palace/ART.md) |`
 
