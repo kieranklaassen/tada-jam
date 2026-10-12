@@ -147,6 +147,7 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 | Wet Paint | `games/wet-paint/` | 3–7 | A tray of water in marbled paper: drop colour from three pots and it keeps spreading, pull it into feathers, comb it, blow it, open it with soap, and lay a sheet on it for a print the fat cat holds up and you hang on the line. No learning goal. |
 | Rainbow World | `games/rainbow-world/` | 2–5 | Open pretend play at a sunny window: carry three arches, three dolls, a horse and a silk onto a paper mat, where each lands on its own note and every pair answers in its own way (a nest, a cradle, a tower, a ride, a ghost), and a basket takes everything back. No learning goal. |
 | Advent Market | `games/advent-market/` | 4–8 | A candlelit winter fair: dip a candle, fold a star, bind a wreath, ice a biscuit, and give what you made to five fair-goers who each do their own thing with it. No learning goal. |
+| Wool Picture | `games/wool-picture/` | 4–8 | A sheet of dark felt in a frame: lay carded wool from five bowls with a finger and it wakes as country or weather by its colour and height (green low is a hill, white high is a cloud that rains), four felt figures carried onto it do what the place makes them do, and a yarn loop hangs the picture on the wall for the evening. No learning goal. |
 
 ## Showcases
 
