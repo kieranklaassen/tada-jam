@@ -140,6 +140,7 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 | Fairy House | `games/fairy-house/` | 4–7 | A coloured-pencil wood on a canvas: carry leaves, acorn caps, pebbles, bark, twigs, moss and feathers into the hollow of a great tree and set them down, where each thing lies and sounds differently on each thing under it. Pull the sun down behind the hill and three funny folk move in and use the house as they find it; raise it and the day begins again. No learning goal. |
 | Blob Dash | `games/blob-dash/` | 8–12 | A blob that jumps for exactly one beat round a ring sprayed on a brick wall and leaves a spring wherever it jumped, so its laps play back the child's own rhythm; six pieces dragged onto the ring change how it sounds. No learning goal. |
 | Bark Boats | `games/bark-boats/` | 4–8 | A woodblock river print in canvas 2D: build a boat from twelve found things on the bank, set it on the brook, and see six places answer it as it was built, down to a pond where its lamp is lit. No learning goal. |
+| Lane Runner | `games/lane-runner/` | 6–10 | A fox carries one load round a pond along a trail of three lanes, in fused-bead figures on a pegboard: it runs only while a finger is down, and each of five loads does something different at each of six obstacles before whoever wanted it takes it at the clearing. No learning goal. |
 
 ## Showcases
 
