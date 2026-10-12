@@ -144,6 +144,7 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 | Glow Pegs | `games/glow-pegs/` | 4–8 | Push glowing pegs into a board inside an arcade cabinet, mirror them two or four ways, then pull the lever and a beam plays the picture as a tune, each colour bending the beam its own way; the tray's handle clatters every peg home. No learning goal. |
 | Leaf Creatures | `games/leaf-creatures/` | 3–7 | Press leaves, twigs, feathers, seeds and acorn caps together on a forest clearing; two caps wake what was made as a creature that moves the way its parts say, to be poked, called, stroked to sleep under the fern or taken apart again. No learning goal. |
 | Tape Town | `games/tape-town/` | 3–7 | A playroom floor seen from above in washi tape: pull strips of four tapes off their rolls to lay roads, rivers, hedges and rails, and a shoebox of toys with fixed habits takes them up. Where two tapes cross there is a bridge, a level crossing, a jam, a trestle, reeds or a tunnel. Open pretend play with no goal. No learning goal. |
+| Wet Paint | `games/wet-paint/` | 3–7 | A tray of water in marbled paper: drop colour from three pots and it keeps spreading, pull it into feathers, comb it, blow it, open it with soap, and lay a sheet on it for a print the fat cat holds up and you hang on the line. No learning goal. |
 
 ## Showcases
 
