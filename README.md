@@ -139,6 +139,7 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 | Ice Palace | `games/ice-palace/` | 5–9 | A snowy clearing printed in two inks: saw blocks out of the pond along the line your finger draws, build with ice, snow, icicles and one red berry block, then pull the sun down and see what the lamps make of your wall, while a very large King Winter looks for a seat. No learning goal. |
 | Fairy House | `games/fairy-house/` | 4–7 | A coloured-pencil wood on a canvas: carry leaves, acorn caps, pebbles, bark, twigs, moss and feathers into the hollow of a great tree and set them down, where each thing lies and sounds differently on each thing under it. Pull the sun down behind the hill and three funny folk move in and use the house as they find it; raise it and the day begins again. No learning goal. |
 | Blob Dash | `games/blob-dash/` | 8–12 | A blob that jumps for exactly one beat round a ring sprayed on a brick wall and leaves a spring wherever it jumped, so its laps play back the child's own rhythm; six pieces dragged onto the ring change how it sounds. No learning goal. |
+| Bark Boats | `games/bark-boats/` | 4–8 | A woodblock river print in canvas 2D: build a boat from twelve found things on the bank, set it on the brook, and see six places answer it as it was built, down to a pond where its lamp is lit. No learning goal. |
 
 ## Showcases
 
