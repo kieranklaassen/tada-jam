@@ -224,7 +224,7 @@ Written as the game is built and kept at the end of this file: the pull request 
 
 ### What was measured, and on what
 
-Nothing was timed. The stills, the cold playtest and the audit (176 of its 237 moments; the other 61 were written in passes 5 and 6 and have never been run) were made on a machine with no graphics card, on a paused clock stepped by a script, with `Math.random` seeded. The frame budget is counted from the model. A frame rate on a tablet is still to be measured by the lead with the shared probe.
+Nothing was timed. The stills, the cold playtest and the audit (all 237 of its moments, run by the lead on a production build of the finished game: clean, nothing allowed) were made on a machine with no graphics card, on a paused clock stepped by a script, with `Math.random` seeded. The frame budget is counted from the model. A frame rate on a tablet is still to be measured by the lead with the shared probe.
 
 ### The learning claim
 
