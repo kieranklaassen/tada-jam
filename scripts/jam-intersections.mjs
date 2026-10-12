@@ -104,6 +104,7 @@ class TwoGen {
   }
   set(k, v) { this.next.set(k, v); return this }
   roll() { this.prev = this.next; this.next = new Map() }
+  clear() { this.prev = new Map(); this.next = new Map() }
 }
 
 const compileAll = (list) => (list ?? []).map((s) => new RegExp(s))
@@ -396,6 +397,11 @@ async function auditGame(browser, base, game, opts) {
         }
       }, entries)
       await page.reload()
+      // A reloaded page is seeded again, so its geometries get the same uuids
+      // and versions as the page before. Nothing measured there is carried over.
+      positions.clear()
+      prepared.clear()
+      cache.clear()
       if (!(await firstFrame())) throw new Error(`${game}: no frame drawn after reloading`)
       await sample()
     },

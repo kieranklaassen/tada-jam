@@ -151,6 +151,7 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 | Sand Kingdom | `games/sand-kingdom/` | 3–7 | A beach at low tide in 3D: dig grooves with a finger, turn out towers with a bucket, lay shells and driftwood, then draw the sun down and watch the sea run into what was made and a crab, a starfish, an eel and three gulls each come to what the beach holds for them. Lifting the sun brings one long wave that smooths the sand for a new day. No learning goal. |
 | Nature Walk | `games/nature-walk/` | 3–7 | A wood of laser-cut plywood in 2D: look under six covers, turn four seasons by hand, carry six things to a hedgehog, a jay and a toad who each answer in their own temper, and take them home to a table. No learning goal. |
 | Lantern Walk | `games/lantern-walk/` | 4–8 | A night wood drawn as a rainbow scratch card: cut windows in a paper lantern, back them with red, blue or yellow, light the candle and carry it out, and each of six creatures answers each colour of light in its own way, until the lantern is hung by the door. No learning goal. |
+| Box Fort | `games/box-fort/` | 4–8 | A cardboard living room in three.js: cut windows and doors in boxes with scissors, stack them, tape them, roof them with a blanket, stuff them with cushions and hang lights, for a cat, a baby and a grandmother who each use the fort their own way; flick the switch and the holes throw their shapes on the wall. No learning goal. |
 
 ## Showcases
 
