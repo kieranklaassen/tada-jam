@@ -142,6 +142,7 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 | Bark Boats | `games/bark-boats/` | 4–8 | A woodblock river print in canvas 2D: build a boat from twelve found things on the bank, set it on the brook, and see six places answer it as it was built, down to a pond where its lamp is lit. No learning goal. |
 | Lane Runner | `games/lane-runner/` | 6–10 | A fox carries one load round a pond along a trail of three lanes, in fused-bead figures on a pegboard: it runs only while a finger is down, and each of five loads does something different at each of six obstacles before whoever wanted it takes it at the clearing. No learning goal. |
 | Glow Pegs | `games/glow-pegs/` | 4–8 | Push glowing pegs into a board inside an arcade cabinet, mirror them two or four ways, then pull the lever and a beam plays the picture as a tune, each colour bending the beam its own way; the tray's handle clatters every peg home. No learning goal. |
+| Leaf Creatures | `games/leaf-creatures/` | 3–7 | Press leaves, twigs, feathers, seeds and acorn caps together on a forest clearing; two caps wake what was made as a creature that moves the way its parts say, to be poked, called, stroked to sleep under the fern or taken apart again. No learning goal. |
 
 ## Showcases
 
