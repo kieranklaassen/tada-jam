@@ -101,7 +101,7 @@ A rule without `upTo` allows the pair at any depth. A rule on a merged mesh allo
 
 **6. Replay before and after, then enforce.** Keep the moments the same between the two runs. `--replay` takes the earlier run's `report.json` or its output folder and photographs each earlier finding again at the same game time and spot. `before-after.png` pairs the two pictures, and since PR #23 it uses the moment of the earlier photo. It matches by sample time, so it needs "an earlier run with the same moments" (the header of `scripts/jam-intersections.mjs`). Put the before and after counts by kind in the PR body, with samples, the allowed and hidden counts, and what was checked by eye.
 
-Then set `enforce: true`. CI's `Intersection audit (i/4)` job builds and runs `--all --ci` in four shards (`.github/workflows/ci.yml`). Games are dealt to the shards by name, so a new game needs no workflow change. The job fails an enforced game on any visible finding its `allow` list does not cover, or on a crash, and uploads the reports as an artifact kept for 14 days. In CI it photographs only what fails.
+Then set `enforce: true`. CI's `Intersection audit (i/6)` job builds and runs `--all --ci` in six shards (`.github/workflows/ci.yml`). Games are dealt to the shards by name, so a new game needs no workflow change. The job fails an enforced game on any visible finding its `allow` list does not cover, or on a crash, and uploads the reports as an artifact kept for 14 days. In CI it photographs only what fails.
 
 A finished pass too large to publish file by file through the GitHub MCP goes to an agent that can push as a git bundle instead, as Kite Tower's 26 files did ([delivering from a cloud VM](deliver-from-a-cloud-vm-through-the-github-mcp-when-git-push-is-refused.md)).
 
