@@ -143,6 +143,7 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 | Lane Runner | `games/lane-runner/` | 6–10 | A fox carries one load round a pond along a trail of three lanes, in fused-bead figures on a pegboard: it runs only while a finger is down, and each of five loads does something different at each of six obstacles before whoever wanted it takes it at the clearing. No learning goal. |
 | Glow Pegs | `games/glow-pegs/` | 4–8 | Push glowing pegs into a board inside an arcade cabinet, mirror them two or four ways, then pull the lever and a beam plays the picture as a tune, each colour bending the beam its own way; the tray's handle clatters every peg home. No learning goal. |
 | Leaf Creatures | `games/leaf-creatures/` | 3–7 | Press leaves, twigs, feathers, seeds and acorn caps together on a forest clearing; two caps wake what was made as a creature that moves the way its parts say, to be poked, called, stroked to sleep under the fern or taken apart again. No learning goal. |
+| Tape Town | `games/tape-town/` | 3–7 | A playroom floor seen from above in washi tape: pull strips of four tapes off their rolls to lay roads, rivers, hedges and rails, and a shoebox of toys with fixed habits takes them up. Where two tapes cross there is a bridge, a level crossing, a jam, a trestle, reeds or a tunnel. Open pretend play with no goal. No learning goal. |
 
 ## Showcases
 
