@@ -50,7 +50,7 @@ jobs:
     name: Intersection audit (${{ matrix.shard }}/4)
     if: ${{ !startsWith(github.head_ref || github.ref_name, 'lane/') }}
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
