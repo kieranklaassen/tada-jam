@@ -23,6 +23,7 @@ These games have no learning goal. The sheet has no records part and claims no s
 ## What you may run, in your worktree only
 
 - `npx vitest run games/<key>` as often as you like, and `npx vitest run test/games.test.ts` for the manifest and frozen-file rules.
+- Every test run gets its own temp folder, which you delete afterwards: `TMPDIR=<your scratch>/tmp npx vitest run ...`, then `rm -rf <your scratch>/tmp`. Each run leaves a cache folder in the temp folder it is given, and the shared one fills the machine's disk ([temp folders](../solutions/workflow-issues/give-every-test-run-its-own-temp-folder-and-delete-it.md)).
 - `npx tsc --noEmit`, `node scripts/wordless-check.ts`, `node scripts/egress-check.ts`.
 - The dev server for your own stills, on your own port and only while you take them: `npx vite --port <port> --strictPort`. Open `http://localhost:<port>/?chrome=0&seed=1#/play/<key>`. Stop it when the stills are taken and before your run ends. Port 4173 is the lead's.
 - Stills with Playwright from `node_modules/playwright`, launched with `executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome'`, at 1180 by 820. This machine has no graphics card, so three.js renders in software: take three.js stills on a paused clock with the random stream seeded ([record a deterministic walkthrough](../solutions/workflow-issues/record-a-deterministic-walkthrough-on-software-gl-with-a-paused-clock.md)), and never report a frame rate from here as a result ([measure on a GPU-less cloud VM](../solutions/workflow-issues/measure-jam-game-performance-on-a-gpu-less-cloud-vm.md)). Report draw calls and what the frame-budget test counts.
@@ -70,6 +71,8 @@ Your run 2 report is under 60 lines: the stage reached (`gates`, or where you st
 
 ## Rules kept by hand
 
+- A three.js game makes no material, geometry or object at module load: each draws from `Math.random`, in every other game's page too, and turns Pebble Table's audit red ([module load](../solutions/test-failures/a-game-that-makes-three-js-objects-at-module-load-turns-another-games-seeded-audit-red.md)). Make them on first use.
+- The hands follow the [touch rules](../solutions/conventions/touch-rules-that-keep-a-small-childs-finger-in-charge.md) from the first slice, each tested through the path the Mount uses.
 - No web address anywhere under `games/`, `ART.md` included.
 - No name of a model, a vendor or a coding tool, no person's name and no key value in any file.
 - No word, letter, numeral or sign on the kid side of a game whose band starts below 6. From 6, numerals and mathematics signs only through the game's `symbols.ts`, on or beside the quantity they stand for.
