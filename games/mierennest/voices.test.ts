@@ -1,0 +1,223 @@
+import { describe, expect, it } from 'vitest'
+import type { Note } from './audio'
+import { EARTH, MUD, ROCK, SAND, STONE } from './ground'
+import type { ToyEvent } from './toy'
+import { APART, BACK, BELL, BOING, CALLED, CARRYING, ENDING, CLACK, CLICK, CREAK, SUCK, FIZZLE, GAVE, KNOCK, LOST, MARCH, MET, RUMBLE, SCHLUP, SCRUNCH, SHOT_HIT, TAP, PICKED, POP, RANGE, SET_DOWN, SIGH, SPOKEN, TWANG, digVoice, landedVoice, lengthOf, pourVoice, voiceFor, voiceForGame, voiceForRaid } from './voices'
+
+const MATERIALS = ['sand', 'mud', 'stone'] as const
+
+/** Every voice the game can play, with the ends of each one that takes a number. */
+const ALL: Record<string, Note[]> = {
+  'dig slow': digVoice(0),
+  'dig fast': digVoice(1),
+  'dig past the ends': digVoice(7),
+  back: BACK,
+  bell: BELL,
+  boing: BOING,
+  'pour one': pourVoice(1),
+  'pour many': pourVoice(40),
+  ...Object.fromEntries(Object.entries(MET).map(([k, v]) => [`met ${k}`, v])),
+  ...Object.fromEntries(Object.entries(PICKED).map(([k, v]) => [`picked ${k}`, v])),
+  ...Object.fromEntries(Object.entries(SET_DOWN).map(([k, v]) => [`set ${k}`, v])),
+  ...Object.fromEntries(MATERIALS.flatMap((m) => [[`landed ${m} near`, landedVoice(m, 1)], [`landed ${m} far`, landedVoice(m, 30)]])),
+  ...Object.fromEntries(Object.entries(SPOKEN).map(([k, v]) => [`spoken ${k}`, v])),
+}
+
+for (const [name, notes] of Object.entries({ ending: ENDING, called: CALLED, creak: CREAK, suck: SUCK, twang: TWANG, pop: POP, click: CLICK, knock: KNOCK, fizzle: FIZZLE, gave: GAVE, sigh: SIGH, march: MARCH, lost: LOST, tap: TAP, rumble: RUMBLE, scrunch: SCRUNCH, schlup: SCHLUP, clack: CLACK })) ALL[name] = notes
+for (const [material, notes] of Object.entries(CARRYING)) ALL[`carrying ${material}`] = notes
+for (const [material, notes] of Object.entries(SHOT_HIT)) ALL[`shot hits ${material}`] = notes
+
+const within = (value: number, [low, high]: readonly [number, number] | readonly number[]) => value >= low && value <= high
+/** The pitch of the loudest note of a voice: what the ear takes it for. */
+const mainPitch = (notes: readonly Note[]) => [...notes].sort((a, b) => b.peak - a.peak)[0].frequency
+
+describe('every voice', () => {
+  for (const [name, notes] of Object.entries(ALL)) {
+    it(`${name}: is short, not loud, and inside the range of every number`, () => {
+      expect(notes.length).toBeGreaterThan(0)
+      expect(notes.length).toBeLessThanOrEqual(6)
+      for (const note of notes) {
+        expect(within(note.frequency, RANGE.frequency), `frequency ${note.frequency}`).toBe(true)
+        if (note.glideTo !== undefined) expect(within(note.glideTo, RANGE.frequency), `glide ${note.glideTo}`).toBe(true)
+        expect(within(note.peak, RANGE.peak), `peak ${note.peak}`).toBe(true)
+        expect(within(note.attack, RANGE.attack), `attack ${note.attack}`).toBe(true)
+        expect(within(note.decay, RANGE.decay), `decay ${note.decay}`).toBe(true)
+        expect(note.delay ?? 0).toBeGreaterThanOrEqual(0)
+      }
+      expect(lengthOf(notes)).toBeLessThanOrEqual(RANGE.length)
+      expect(notes.reduce((sum, note) => sum + note.peak, 0)).toBeLessThanOrEqual(RANGE.loudness)
+    })
+  }
+})
+
+describe('the three materials', () => {
+  it('sound far apart when the dig meets them, when they are picked up and when they are set down', () => {
+    for (const set of [MET, PICKED, SET_DOWN]) {
+      const pitches = MATERIALS.map((m) => mainPitch(set[m])).sort((a, b) => a - b)
+      expect(pitches[1] / pitches[0]).toBeGreaterThanOrEqual(1.5)
+      expect(pitches[2] / pitches[1]).toBeGreaterThanOrEqual(1.5)
+    }
+  })
+
+  it('sand is noise and high, a stone set down is a low tone, and mud glides down', () => {
+    expect(SET_DOWN.sand.every((note) => note.kind === 'noise')).toBe(true)
+    expect(mainPitch(SET_DOWN.sand)).toBeGreaterThan(1000)
+    expect(mainPitch(SET_DOWN.stone)).toBeLessThan(120)
+    expect(SET_DOWN.mud.every((note) => (note.glideTo ?? note.frequency) < note.frequency)).toBe(true)
+  })
+
+  it('a stone lands harder the further it fell, and sand pours fuller the more of it moves', () => {
+    expect(landedVoice('stone', 8)[0].peak).toBeGreaterThan(landedVoice('stone', 1)[0].peak)
+    expect(pourVoice(12)[0].peak).toBeGreaterThan(pourVoice(1)[0].peak)
+    expect(lengthOf(pourVoice(12))).toBeGreaterThan(lengthOf(pourVoice(1)))
+  })
+})
+
+describe('the dig', () => {
+  it('crunches at a pitch that follows the speed of the finger', () => {
+    const pitches = [0, 0.25, 0.5, 0.75, 1].map((speed) => digVoice(speed)[0].frequency)
+    for (let n = 1; n < pitches.length; n++) expect(pitches[n]).toBeGreaterThan(pitches[n - 1])
+    expect(digVoice(-3)).toEqual(digVoice(0))
+    expect(digVoice(9)).toEqual(digVoice(1))
+  })
+})
+
+describe('the creatures', () => {
+  it('each speak in a voice of their own', () => {
+    const shapes = Object.values(SPOKEN).map((notes) => notes.map((n) => `${n.kind}:${n.frequency}:${n.wave ?? ''}`).join(','))
+    expect(new Set(shapes).size).toBe(shapes.length)
+    const pitches = Object.values(SPOKEN).map(mainPitch)
+    expect(new Set(pitches).size).toBe(pitches.length)
+  })
+
+  it('a beetle is low, a raider ant is high, and the fly buzzes', () => {
+    expect(mainPitch(SPOKEN.beetle)).toBeLessThan(150)
+    expect(mainPitch(SPOKEN.raider)).toBeGreaterThan(1000)
+    expect(SPOKEN.fly[0].wave).toBe('sawtooth')
+  })
+})
+
+describe('what the toy says happened', () => {
+  const events: ToyEvent[] = [
+    { type: 'dug', x: 1, y: 1, cells: 4, speed: 0.5 },
+    { type: 'met', kind: SAND, x: 1, y: 1 },
+    { type: 'met', kind: MUD, x: 1, y: 1 },
+    { type: 'met', kind: STONE, x: 1, y: 1 },
+    { type: 'met', kind: ROCK, x: 1, y: 1 },
+    { type: 'picked', kind: SAND, cell: 3 },
+    { type: 'set', kind: MUD, cell: 3 },
+    { type: 'back', kind: STONE, cell: 3 },
+    { type: 'landed', kind: STONE, cell: 3, fell: 4 },
+    { type: 'pour', cells: 5 },
+    { type: 'buried', cell: 3 },
+  ]
+
+  it('has a voice for every event, and none two of them share', () => {
+    const voices = events.map((event) => JSON.stringify(voiceFor(event)))
+    for (const voice of voices) expect(voice).not.toBe('null')
+    expect(new Set(voices).size).toBe(events.length)
+  })
+
+  it('says nothing for earth the dig only passes', () => {
+    expect(voiceFor({ type: 'met', kind: EARTH, x: 0, y: 0 })).toBeNull()
+  })
+
+  it('keeps fast events apart and lets a set-down sound at once', () => {
+    expect(APART.dug).toBeGreaterThan(0.03)
+    expect(APART.pour).toBeGreaterThan(APART.dug)
+    expect([APART.picked, APART.set, APART.back]).toEqual([0, 0, 0])
+  })
+})
+
+describe('what the game and a raid say happened', () => {
+  it('gives the two machines voices of their own, and a voice to every act that changes something', () => {
+    expect(voiceForGame({ type: 'fired', machine: 'catapult', shot: 'mud' })).toBe(TWANG)
+    expect(voiceForGame({ type: 'fired', machine: 'cannon', shot: 'mud' })).toBe(POP)
+    for (const event of [{ type: 'bell' }, { type: 'called', party: ['ant'] }, { type: 'loaded', machine: 'cannon', shot: 'sand' }, { type: 'turned', machine: 'cannon' }, { type: 'machineSet', machine: 'cannon' }, { type: 'shotLanded', shot: 'stone', cell: 3 }] as const) {
+      expect(voiceForGame(event), event.type).not.toBeNull()
+    }
+  })
+
+  it('never sounds a verdict: a raid that is judged makes no sound of its own', () => {
+    for (const verdict of ['well', 'not-well', 'not-judged'] as const) expect(voiceForGame({ type: 'judged', verdict })).toBeNull()
+    expect(voiceForRaid({ type: 'over' })).toBeNull()
+  })
+
+  it('lets each kind speak in its own voice when it gets in, acts and is hit', () => {
+    const voices = (['ant', 'beetle', 'fly'] as const).map((kind) => voiceForRaid({ type: 'acted', id: 0, kind }))
+    expect(new Set(voices).size).toBe(3)
+    expect(voiceForRaid({ type: 'hit', id: 0, kind: 'beetle', shot: 'stone', answer: 'x' })).toBe(SPOKEN.beetle)
+  })
+})
+
+describe('a voice that takes a number', () => {
+  it('is made once at load: the same number gives the same list, and playing one makes nothing new', () => {
+    expect(digVoice(0.5)).toBe(digVoice(0.5))
+    expect(digVoice(0.31)).toBe(digVoice(0.33))
+    expect(landedVoice('stone', 3)).toBe(landedVoice('stone', 3))
+    expect(landedVoice('sand', 99)).toBe(landedVoice('sand', 8))
+    expect(pourVoice(5)).toBe(pourVoice(5))
+    expect(pourVoice(0)).toBe(pourVoice(1))
+  })
+})
+
+describe('the grid is heard: every material answers each thing that is done to it in a voice of its own', () => {
+  it('carried: sand patters, mud drips, a stone scrapes, as beats while the ant runs', () => {
+    const voices = MATERIALS.map((m) => JSON.stringify(CARRYING[m]))
+    expect(new Set(voices).size).toBe(3)
+    expect(voiceFor({ type: 'carrying', kind: SAND, x: 1, y: 1 })).toBe(CARRYING.sand)
+    expect(voiceFor({ type: 'carrying', kind: STONE, x: 1, y: 1 })).toBe(CARRYING.stone)
+    expect(voiceFor({ type: 'tapped', cell: 5 })).toBe(TAP)
+    expect(APART.carrying).toBeGreaterThan(0.2)
+  })
+
+  it('a shot hits it: sand whooshes, mud glugs, a stone rings, and earth and rock say nothing more than the landing', () => {
+    expect(voiceForGame({ type: 'shotHit', kind: SAND, cell: 1 })).toBe(SHOT_HIT.sand)
+    expect(voiceForGame({ type: 'shotHit', kind: MUD, cell: 1 })).toBe(SHOT_HIT.mud)
+    expect(voiceForGame({ type: 'shotHit', kind: STONE, cell: 1 })).toBe(SHOT_HIT.stone)
+    expect(voiceForGame({ type: 'shotHit', kind: EARTH, cell: 1 })).toBeNull()
+    expect(voiceForGame({ type: 'shotHit', kind: ROCK, cell: 1 })).toBeNull()
+    // The stone's ring is the highest and the longest of the three.
+    expect(mainPitch(SHOT_HIT.stone)).toBeGreaterThan(mainPitch(SHOT_HIT.mud))
+    expect(lengthOf(SHOT_HIT.stone)).toBeGreaterThan(lengthOf(SHOT_HIT.mud))
+  })
+
+  it('something rolls against it: a stone rolls with a rumble, and sand, mud and stone stop it each in its own voice', () => {
+    expect(voiceForRaid({ type: 'rolled', cell: 1 })).toBe(RUMBLE)
+    expect(voiceForRaid({ type: 'stopped', cell: 1, by: SAND })).toBe(SCRUNCH)
+    expect(voiceForRaid({ type: 'stopped', cell: 1, by: MUD })).toBe(SCHLUP)
+    expect(voiceForRaid({ type: 'stopped', cell: 1, by: STONE })).toBe(CLACK)
+    expect(voiceForRaid({ type: 'stopped', cell: 1, by: EARTH })).toBe(KNOCK)
+    expect(new Set([SCRUNCH, SCHLUP, CLACK].map((v) => JSON.stringify(v))).size).toBe(3)
+  })
+
+  it('the mud cell has its own two sounds under an invader: a slow creak where it holds a pusher, a sucking pop where an ant sticks', () => {
+    const creak = voiceForRaid({ type: 'strain', id: 0, cell: 1, on: MUD })!
+    const pop = voiceForRaid({ type: 'stuck', id: 0, cell: 1 })!
+    expect(creak).toBe(CREAK)
+    expect(pop).toBe(SUCK)
+    // Neither is the squelch of the dig that meets mud, nor the other, nor the grunt of a pusher at any other wall.
+    expect(new Set([creak, pop, MET.mud, SPOKEN.beetle].map((voice) => JSON.stringify(voice))).size).toBe(4)
+    expect(voiceForRaid({ type: 'strain', id: 0, cell: 1, on: STONE })).toBe(SPOKEN.beetle)
+    // A creak is slow and low; a pop is short and falls.
+    expect(lengthOf(creak)).toBeGreaterThan(0.5)
+    expect(lengthOf(pop)).toBeLessThan(0.4)
+  })
+
+  it('a scene is heard: the queen as she is carried, the workers at the put-back, the party that came for nothing, a kind at its first showing, a machine tried', () => {
+    expect(voiceForGame({ type: 'scene', is: 'moves' })).toBe(SPOKEN.queen)
+    expect(voiceForGame({ type: 'scene', is: 'putBack' })).toBe(SPOKEN.worker)
+    expect(voiceForGame({ type: 'scene', is: 'shrug' })).toBe(SIGH)
+    expect(voiceForGame({ type: 'scene', is: 'ending' })).toBe(ENDING)
+    expect(voiceFor({ type: 'called', x: 3, y: 4 })).toBe(CALLED)
+    expect(voiceForGame({ type: 'scene', is: 'showing', who: 'beetle' })).toBe(SPOKEN.beetle)
+    expect(voiceForGame({ type: 'scene', is: 'showing', who: 'ant' })).toBe(SPOKEN.raider)
+    expect(voiceForGame({ type: 'scene', is: 'arrives', who: 'cannon' })).toBeNull()
+    expect(voiceForGame({ type: 'tried', machine: 'cannon' })).toBe(POP)
+    expect(voiceForGame({ type: 'tried', machine: 'catapult' })).toBe(TWANG)
+    // In a raid the queen answers a guest in her own room, and nobody else's.
+    expect(voiceForRaid({ type: 'acts', id: 0, kind: 'beetle', queens: true })).toBe(SPOKEN.queen)
+    expect(voiceForRaid({ type: 'acts', id: 0, kind: 'beetle', queens: false })).toBeNull()
+  })
+})
+
