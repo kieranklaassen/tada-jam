@@ -83,7 +83,7 @@ export const CATALOG: readonly CatalogGroup[] = [
       { key: 'wet-paint', question: 'Is colour that bleeds and mixes by itself the whole toy?' },
       { key: 'wool-picture', question: 'Does laying wool that then drifts and grazes feel like making something alive?', look: 'needle-felt' },
       { key: 'glow-pegs', question: 'Can a loud arcade look sit on a quiet peg-board toy?', look: 'neon arcade' },
-      { key: 'chalk-town', question: 'Do toy cars following the lines you drew turn drawing into a town?', look: 'chalk on asphalt' },
+      { key: 'chalk-town', question: 'Do toy cars following the lines you drew turn drawing into a town?', look: 'chalk on asphalt', game: 'tape-town' },
       { key: 'nature-walk', question: 'Is noticing and gathering fun when nothing is counted?' },
       { key: 'lantern-walk', question: 'Does carrying a light you made through the dark hold a child?' },
     ],
