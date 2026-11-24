@@ -16,6 +16,7 @@ function counter(all: { n: number }) {
   const g = new Proxy({}, {
     get(_, name) {
       if (name === 'createRadialGradient' || name === 'createLinearGradient') return () => ({ addColorStop: () => {} })
+      if (name === 'getTransform') return () => ({ a: 2, b: 0, c: 0, d: 2, e: 0, f: 0 })
       if (kept.has(name)) return kept.get(name)
       return (...args: unknown[]) => {
         if (args.some((each) => typeof each === 'number' && !Number.isFinite(each))) bad.push(String(name))

@@ -37,7 +37,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // Grown-ups only: a finger that rests a second in the top right corner and lifts there, then three taps
     // there, or fps=1 in the address (overlay.ts).
     const overlay = new Overlay(root, window.location.search)
-    const g = canvas.getContext('2d')
+    const g = canvas.getContext('2d', { alpha: false })
     const drawn = { drawCalls: 0, triangles: 0 }
     const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, ...drawn }))
     const view = new View(seedOf(window.location.search), (w, h) => {

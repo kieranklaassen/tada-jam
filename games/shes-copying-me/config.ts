@@ -23,16 +23,18 @@ export type Tier = {
   shine: boolean
   /** The sheen that slides over the whole cloth. */
   sheen: boolean
+  /** Whether turned and stretched pictures are smoothed. */
+  smooth: boolean
   /** The most particles in the air. */
   bits: number
 }
 
 /** Tier 0 is full quality; each later tier is cheaper to draw. Whatever a tier change needs is compiled before it happens. */
 export const TIERS: readonly Tier[] = [
-  { dpr: 2, shine: true, sheen: true, bits: 160 },
-  { dpr: 1.5, shine: true, sheen: true, bits: 120 },
-  { dpr: 1.25, shine: false, sheen: true, bits: 90 },
-  { dpr: 1, shine: false, sheen: false, bits: 60 },
+  { dpr: 2, shine: true, sheen: true, smooth: true, bits: 160 },
+  { dpr: 1.5, shine: true, sheen: true, smooth: true, bits: 120 },
+  { dpr: 1.25, shine: false, sheen: true, smooth: false, bits: 90 },
+  { dpr: 1, shine: false, sheen: false, smooth: false, bits: 60 },
 ]
 
 /** The governor's thresholds. The rules they feed are at the top of quality.ts. */

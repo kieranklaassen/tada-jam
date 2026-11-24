@@ -14,7 +14,7 @@ const { Mount } = shesCopyingMeCartridge
 function context(): CanvasRenderingContext2D {
   const kept = new Map<string | symbol, unknown>()
   return new Proxy({}, {
-    get: (_, name) => (kept.has(name) ? kept.get(name) : String(name).startsWith('create') ? () => ({ addColorStop: () => {} }) : () => {}),
+    get: (_, name) => (kept.has(name) ? kept.get(name) : String(name).startsWith('create') ? () => ({ addColorStop: () => {} }) : name === 'getTransform' ? () => ({ a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 }) : () => {}),
     set: (_, name, value) => {
       kept.set(name, value)
       return true

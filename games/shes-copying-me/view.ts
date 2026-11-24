@@ -21,12 +21,9 @@ import { putThing, tipOf } from './thingArt'
 const IN_PLACE = 22
 const PAINTED = 70
 
-const MARGIN = { x: 400, y: 300 }
-
 export class View {
   readonly bits: Bits
   private sheet: { canvas: CanvasImageSource; g: G } | null = null
-  private table: { canvas: CanvasImageSource; g: G } | null = null
   private sized = ''
   private tier: Tier = TIERS[0]
   private readonly make: MakeSheet
@@ -44,6 +41,7 @@ export class View {
   setTier(tier: Tier): void {
     this.tier = tier
     brush.shine = tier.shine
+    this.stamps.smooth = tier.smooth
     this.sized = ''
   }
 
@@ -60,22 +58,20 @@ export class View {
     return { x: p.x + outward(side) * 30, y: p.y + 48 }
   }
 
-  /** The room, painted at the density it is shown at. */
-  private prepare(scale: number): void {
-    const key = scale.toFixed(3)
+  /** The room, painted the size and density of the surface, so a frame begins as one plain copy. */
+  private prepare(scale: number, width: number, height: number, x: number, y: number): void {
+    const key = [scale, width, height].join()
     if (this.sized === key) return
     this.sized = key
     this.stamps.clear()
-    const w = STAGE.width, h = STAGE.height
-    this.sheet = this.make(Math.ceil((w + MARGIN.x * 2) * scale), Math.ceil((h + MARGIN.y * 2) * scale))
+    this.sheet = this.make(width, height)
     const g = this.sheet.g
-    g.setTransform(scale, 0, 0, scale, MARGIN.x * scale, MARGIN.y * scale)
+    g.fillStyle = BACKDROP
+    g.fillRect(0, 0, width, height)
+    g.setTransform(scale, 0, 0, scale, x, y)
     brush.shine = true
     paintRoom(g)
     paintFrame(g)
-    this.table = this.make(Math.ceil(640 * scale), Math.ceil(170 * scale))
-    this.table.g.setTransform(scale, 0, 0, scale, -(MIDDLE - 320) * scale, -650 * scale)
-    paintTable(this.table.g)
     brush.shine = this.tier.shine
   }
 
@@ -83,12 +79,11 @@ export class View {
     const by = fit(width, height)
     if (by.scale === 0) return
     const scale = by.scale * dpr
-    this.prepare(scale)
+    this.prepare(scale, Math.round(width * dpr), Math.round(height * dpr), by.x * dpr, by.y * dpr)
     g.setTransform(1, 0, 0, 1, 0, 0)
     g.globalAlpha = 1
-    g.fillStyle = BACKDROP
-    g.fillRect(0, 0, width * dpr, height * dpr)
-    g.drawImage(this.sheet!.canvas, Math.round(by.x * dpr - MARGIN.x * scale), Math.round(by.y * dpr - MARGIN.y * scale))
+    g.imageSmoothingEnabled = false
+    g.drawImage(this.sheet!.canvas, 0, 0)
     this.drawn = 1
     if (!party) return
     this.stamps.begin(scale)
@@ -107,7 +102,7 @@ export class View {
       g.restore()
     }
     this.cat(g, party, time)
-    g.drawImage(this.table!.canvas, MIDDLE - 320, 650, (this.table!.canvas as HTMLCanvasElement).width / scale, (this.table!.canvas as HTMLCanvasElement).height / scale)
+put(g, 'table', [MIDDLE - 320, 650, 640, 170], '', '', paintTable)
     this.guests(g, party, time)
     this.tableThings(g, party, time, glow)
     if (party.scene?.kind === 'tidy') this.hankies(g, party)
@@ -232,8 +227,7 @@ export class View {
     }
     g.rotate(body.tilt * s + (held >= 0 ? tipOf(thing, doing) : 0))
     if (held >= 0) g.translate(thing === 'fan' ? 10 : 24, thing === 'duster' ? -22 : -4)
-    else g.scale(0.86, 0.86)
-    putThing(g, thing, doing, time, this.stamps.put)
+    putThing(g, thing, doing, time, held >= 0 ? 1 : 0.86, this.stamps.put)
     g.restore()
   }
 
@@ -475,16 +469,16 @@ export class View {
   /** One slow band of satin light over the whole cloth. */
   private sheen(g: G, time: number): void {
     const x = ((time * 46) % 2300) - 560
-    const band = g.createLinearGradient(x - 150, 0, x + 150, 90)
+    const band = g.createLinearGradient(x - 90, 0, x + 90, 54)
     band.addColorStop(0, 'rgba(255,255,255,0)')
     band.addColorStop(0.5, 'rgba(255,250,230,0.13)')
     band.addColorStop(1, 'rgba(255,255,255,0)')
     g.fillStyle = band
     g.beginPath()
-    g.moveTo(x - 180, 0)
-    g.lineTo(x + 180, 0)
-    g.lineTo(x - 60, STAGE.height)
-    g.lineTo(x - 420, STAGE.height)
+    g.moveTo(x - 110, 0)
+    g.lineTo(x + 110, 0)
+    g.lineTo(x - 136, STAGE.height)
+    g.lineTo(x - 356, STAGE.height)
     g.fill()
   }
 }

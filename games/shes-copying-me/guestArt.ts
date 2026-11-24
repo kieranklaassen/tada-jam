@@ -19,7 +19,7 @@ const TINT: Record<Coat, Paint> = {
   bubble: (c) => mix(c, '#b9f0ff', 0.14),
 }
 
-const BOX: Box = [-166, -292, 332, 344]
+const BOX: Box = [-136, -286, 272, 332]
 const MARKED: readonly Coat[] = ['wet', 'gluey', 'feathered']
 
 /** A guest in its seat, as the picture `name`. What the body does as a whole is moved; the face and the coat are painted. */

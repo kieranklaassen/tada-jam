@@ -21,9 +21,12 @@ export function tipOf(thing: Thing, doing: Doing): number {
 }
 
 /** A thing as a picture: painted again only while something in it moves. */
-export function putThing(g: G, thing: Thing, doing: Doing, time: number, put: Stamp): void {
+export function putThing(g: G, thing: Thing, doing: Doing, time: number, size: number, put: Stamp): void {
   const idle = thing === 'fish' || thing === 'duster' ? Math.floor(time * 6) : 0
-  put(g, thing, [-104, -104, 208, 208], '', doing.act && doing.t < 1.5 ? doing.act + Math.floor(doing.t * 30) : String(idle), (g) => paintThing(g, thing, doing, time))
+  put(g, `${thing}${size}`, [-92, -92, 184, 184], '', doing.act && doing.t < 1.5 ? doing.act + Math.floor(doing.t * 30) : String(idle), (g) => {
+    g.scale(size, size)
+    paintThing(g, thing, doing, time)
+  })
 }
 
 function paintThing(g: G, thing: Thing, doing: Doing, time: number): void {

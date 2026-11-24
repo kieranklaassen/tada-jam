@@ -25,6 +25,8 @@ export class Stamps {
   private readonly kept = new Map<string, Kept>()
   private readonly make: MakeSheet
   private scale = 1
+  /** Set by the tier: whether a picture that is turned or stretched is smoothed. One that is only moved never needs it. */
+  smooth = true
   private left = PER_FRAME
   /** Names refused a repaint this frame: first in line next frame. */
   private waiting = new Set<string>()
@@ -74,7 +76,18 @@ export class Stamps {
         paint(kept.g)
       }
     }
-    g.drawImage(kept.canvas, x, y, Math.ceil(w * this.scale) / this.scale, Math.ceil(h * this.scale) / this.scale)
+    const at = g.getTransform(), pw = Math.ceil(w * this.scale), ph = Math.ceil(h * this.scale)
+    const { scale } = this
+    if (Math.abs(at.b) < 1e-4 && Math.abs(at.c) < 1e-4 && Math.abs(Math.abs(at.a) - scale) < 1e-4 && Math.abs(at.d - scale) < 1e-4) {
+      // Only moved, or mirrored: pixel for pixel.
+      g.imageSmoothingEnabled = false
+      g.setTransform(Math.sign(at.a), 0, 0, 1, Math.round(at.e + at.a * x), Math.round(at.f + at.d * y))
+      g.drawImage(kept.canvas, 0, 0)
+      g.setTransform(at)
+    } else {
+      g.imageSmoothingEnabled = this.smooth
+      g.drawImage(kept.canvas, x, y, pw / scale, ph / scale)
+    }
   }
 }
 

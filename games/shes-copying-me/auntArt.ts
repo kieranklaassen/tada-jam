@@ -73,9 +73,7 @@ export function paintAunt(g: G, v: AuntView, put: Stamp): void {
   g.translate(0, v.curtsy * 22)
   // Breath lifts the whole of her a little from the seat.
   const breath = side === 0 ? Math.sin(v.time * 1.3) * 0.003 : Math.sin(v.time * 2.1) * 0.006 + head.jiggle * 0.02
-  g.translate(0, 330)
-  g.scale(1 + breath, 1 - breath)
-  g.translate(0, -330)
+  g.translate(0, -breath * 300)
   put(g, `body${side}`, [-180, -110, 360, 450], '', '', (g) => {
     if (side === 0) bodyTall(g)
     else bodyRound(g)
