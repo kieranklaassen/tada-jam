@@ -23,13 +23,19 @@ function App() {
     return () => window.removeEventListener('hashchange', onHash)
   }, [])
 
+  const openGame = useCallback((key: string) => {
+    // In place of the old link, so going back does not come round to it again.
+    window.location.replace(`#/play/${key}`)
+  }, [])
+
   const goHome = useCallback(() => {
     window.location.hash = ''
   }, [])
 
-  const game = route.view === 'play' ? findGame(route.key) : undefined
-  if (game) return <JamShell key={route.view === 'play' ? route.key : ''} game={game} onExit={goHome} />
-  if (route.view === 'demo') return <DemoFrame key={route.key} demoKey={route.key} onExit={goHome} />
+  // A demo that became a game of the same name opens as the game, so an old link still plays.
+  const game = route.view === 'home' ? undefined : findGame(route.key)
+  if (game && route.view !== 'home') return <JamShell key={route.key} game={game} onExit={goHome} />
+  if (route.view === 'demo') return <DemoFrame key={route.key} demoKey={route.key} onExit={goHome} onGame={openGame} />
   return <GameList games={games} showcases={showcases} onPick={(key) => (window.location.hash = `#/play/${key}`)} onPickDemo={(key) => (window.location.hash = demoRoute(key))} />
 }
 
