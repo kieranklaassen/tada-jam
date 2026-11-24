@@ -7,6 +7,7 @@
 - Look in use: Craft-box collage, the first of the two reserved looks. The second (Thick-line primaries) was not needed.
 - The sheet: checked four rounds by someone who did not write it. Round 1 had eleven findings, round 2 five, round 3 five, round 4 none. Passed on the sha256 of `ART.md` up to and including the line `## The look`: `c9d0bc9086f513dfe9823180cb3e51e97c5502a685b6a33d05b85be27010d74a`.
 - Plan review: the plan was not put through a separate document review. The independent check of the sheet, which holds the same decisions, took its place.
+- Reader: stopped after four readings. The fourth found eight points, all of them fixed and not read again; nothing is known to be left. Each reading found other things than the one before, so a fifth would likely find small ones more.
 - Open: nobody has heard the sounds and nobody has held it on an iPad. See "For the owner to decide".
 
 ### Template notes
@@ -36,6 +37,8 @@ Reader, first reading: rules 1 to 5 clean, 22 points under rule 6. All were buil
 Reader, second reading: rules 1 to 5 clean, 11 points under rule 6, all built (near a seat is enough; a ring closed on a head comes down and turns; wet before the pair, never on dry ground; the ball is snored away and back; the egg turns in the water; the second thing on the hen sends the first hopping; followers clear of foil and scenery; an egg that rides knocks; out from under the wing onto what it rode; the fence's own posts rattle; the corner is patted).
 
 Reader, third reading: rules 1 to 4 clean, one point under rule 5 (a foil crease could look like a tick; it is a facet now) and eight under rule 6, all built: what hangs in a hand is nobody's mother until it is let go, and putting the game away in mid-drag chooses none; the hen gasps behind her wing; an egg in the boot shows its beak; whatever a mother egg or chick does is copied; the egg opening in the pot has the lid on; the sheep bleats and chews, and she and the cow got the pupils they lacked; a second chick carried to the hen leaves the wing up; the overlap test covers what walks, rolls, is kicked, is laid or follows. That test found followers shuffling for a place in a crowd, so a chick with no place to walk to flaps to one.
+
+Reader, fourth reading: rules 1 to 5 clean, eight points under rule 6, all built: a ball that is shut in flies over to free ground when it is kicked; a turned chick's eyes go the right way; the hen looks at what walks, rolls or plays its piece; a mother chick answers at its own pitch; the cow turns round; a drag on a busy hen only squashes her; two happenings at once are found as they were saved; a thing taken up in mid-walk goes back where it was taken.
 
 Code review, by someone who did not build it: ten findings. Nine fixed: the yard is painted once and not again for a tier or while a size changes; nobody chases a rider on its own head; an untouched yard is not written on put-away; the springs hold at 10 frames a second; the egg that was moved comes out from where it is; the hen stops when her half ends; a thing taken or met in mid-roll rests on checked ground; every plain sound name is tested. One left: small per-frame objects (the map of mothers, the draw order), measured at about 0.005 ms a frame on a desktop, against the cost of caches that could go stale.
 

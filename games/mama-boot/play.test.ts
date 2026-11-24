@@ -458,3 +458,31 @@ describe('what a third reading found', () => {
     }
   })
 })
+
+describe('what a fourth reading found', () => {
+  it('the ball is always sent off, however shut in it is', () => {
+    for (const by of ['boot', 'pig'] as const) for (const x of [200, 420, 640, 860, 1060]) for (const y of [440, 540, 640, 720]) {
+      const h = new Hand(); const q = h.yard.things.ball
+      h.drag('ball', { x, y: y - 90 }); h.run(3)
+      const p = { x: q.x, y: q.y }; h.yard.sounds = []
+      h.drag(by, { x: q.x - 140, y: q.y - 100 })
+      if (!names(h).includes(`pair.${by}-ball`)) continue
+      h.run(2.5)
+      expect(apart(q, p), `${by} at ${x}, ${y}`).toBeGreaterThan(60)
+    }
+  })
+  it('a thing taken up in mid-walk and taken away from goes back where it was taken', () => {
+    const h = new Hand(); h.tap('pig'); h.run(0.4)
+    const b = h.yard.things.pig, p = { x: b.x, y: b.y }
+    expect(b.go).not.toBeNull()
+    h.lift('pig'); h.play.move(1, 600, 600); h.play.cancel(1)
+    expect(apart(b, p)).toBeLessThan(40)
+  })
+  it('two eggs under way are found as they were saved', () => {
+    const h = new Hand(state((s) => { Object.assign(s.brood[0], { kind: 'chick', mother: 'pig' }); Object.assign(s.brood[1], { x: 826, y: 560 }) })); h.run(5)
+    h.drag('c0', { x: HEN.x, y: HEN.y - 90 }); h.tap('c1'); h.run(0.2)
+    const saved = h.yard.toState().brood[1].mother
+    h.play.park()
+    expect(h.yard.one('c1')!.mother).toBe(saved)
+  })
+})

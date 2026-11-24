@@ -2,7 +2,7 @@ import { Box, CAST, TAU, type Make, type Pen, type Sprite } from './craft'
 import { YARN, cutCast, type Cast, type Figure } from './figures'
 import { handPose, type Guidance, type HandPose } from './guidance'
 import { moveToShow, type Move } from './guide'
-import { HEN, POSTS, PUDDLE, SCENERY, SIZE, postLean, scaleAt, type Spot, type ThingKey } from './layout'
+import { HEN, POSTS, PUDDLE, SCENERY, SIZE, THINGS, postLean, scaleAt, type Spot, type ThingKey } from './layout'
 import { ringOf, type Gait } from './lineage'
 import { STANCES, WALKS, add, addAct, reset, type Pose } from './moves'
 import { makeRng } from './rng'
@@ -134,11 +134,11 @@ export class View {
     // Their eyes go to the finger too.
     const peek = (x: number, ey: number, gap: number, k: number) => { const f = y.finger ?? { x: 590, y: 600 }, d = Math.hypot(f.x - x, f.y - ey) || 1; for (const side of [-gap, gap]) this.put(this.cast.pupil, x + side + ((f.x - x) / d) * k, ey + ((f.y - ey) / d) * k, k * 0.07) }
     // The cow stands in the barn door, hindquarters out, and looks round at the fifth chick's round.
-    const cow = SCENERY.cow, face = y.cowFaces > 0 ? clamp(y.cowFaces * 3) : 0
-    const chew = sin(t * 1.4) * 1.5
-    this.put(s.cow, cow.x, cow.y + 26 + chew, 0.92)
-    if (face > 0) { const cy = cow.y - 14 + sin(t * 9) * 3 * face; this.put(s.cowHead, cow.x, cy, 1, 1 + sin(t * 9) * 0.04); peek(cow.x, cy - 14, 15, 4.4) }
-    else this.put(s.tail, cow.x + 6, cow.y - 24, 1, 1, sin(t * 1.1) * 0.24 + ring(since('cow'), 3, 1.1) * 1.1)
+    const cow = SCENERY.cow, turned = y.cowFaces > 0 ? smooth(min((3.2 - y.cowFaces) / 0.5, y.cowFaces / 0.5)) : 0
+    const chew = sin(t * 1.4) * 1.5, side = max(0.1, abs(1 - 2 * turned))
+    this.put(s.cow, cow.x, cow.y + 26 + chew, 0.92 * side, 0.92)
+    if (turned > 0.5) { const cy = cow.y - 14 + sin(t * 9) * 3; this.put(s.cowHead, cow.x, cy, side, 1 + sin(t * 9) * 0.04); if (side > 0.5) peek(cow.x, cy - 14, 15 * side, 4.4) }
+    else this.put(s.tail, cow.x + 6 * side, cow.y - 24, side, 1, sin(t * 1.1) * 0.24 + ring(since('cow'), 3, 1.1) * 1.1)
     const sh = SCENERY.sheep, b = ring(since('sheep'), 4)
     this.put(s.sheep, sh.x, sh.y + 8, 1 + b * 0.04, 1 + sin(t * 1.8) * 0.015 - b * 0.05)
     const bleat = since('sheep'), hx = sh.x + 48, hy = sh.y - 22 + sin(t * 2.6) * 2 - abs(b) * 10
@@ -351,7 +351,8 @@ export class View {
     const ringing = y.brood.some((c) => { const ring = c.mother ? ringOf(c.id, mothers) : null; return ring !== null && y.running(ring) })
     const at = { x: HEN.x, y: HEN.y, z: 0 }
     const foot = b.act?.name === 'henFoot'
-    const busy = y.brood.find((c) => c.opening !== null) ?? y.brood.find((c) => c.act)
+    const moving = THINGS.map((k) => y.things[k]).find((o) => o.go || o.hop || o.act)
+    const busy = y.brood.find((c) => c.opening !== null) ?? moving ?? y.brood.find((c) => c.act)
     let look: Spot | null = y.finger ?? (busy ? y.middle(busy) : y.asking ? y.middle(y.asking) : { x: HEN.x + 40, y: HEN.y })
     if (ringing && !b.act) look = { x: HEN.x + cos(t * 5) * 100, y: HEN.y - 150 + sin(t * 5) * 100 }
     const r = this.roll(b, at, look, pose)
@@ -476,7 +477,7 @@ export class View {
     this.put(f.body, 0, 0)
     if (c.kind === 'chick' && c.tucking === null && !(opening && c.thread > 0.4)) this.put(this.cast.scarf[gait], 4, -55)
     this.part(f, 'wing', pose.flap * 0.9)
-    this.eyes(f, c, r, pose.shut, pose.rot * c.dir)
+    this.eyes(f, c, r, pose.shut, pose.rot)
     this.part(f, 'under', pose.mouth * 0.6)
     this.part(f, 'top', -pose.mouth * 0.35)
     if (host?.kind === 'teapot') { const lid = this.cast.things.teapot.parts.lid; this.put(lid.sprite, 6, -96, 0.8, 0.8, sin(this.t * 2) * 0.1) }
