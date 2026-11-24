@@ -15,7 +15,7 @@ execution: code
 - **Means:** A jam cartridge in raw three.js in the Sugar cubes and biscuit look, with every load and opening made of the same cells (KTD1, KTD2).
 - **Authority:** `AGENTS.md`, then `docs/solutions/conventions/building-a-jam-game.md` and both packs, then this plan. `games/removal-bears/ART.md` owns the design detail.
 - **Stop conditions:** The look fails on clarity and so does its backup.
-- **Execution profile:** One pull request, left open. The owner merges and deploys.
+- **Execution profile:** One pull request, merged when green. The owner deploys.
 
 ## Product Contract
 
@@ -30,7 +30,7 @@ No game on main names turning a shape to fit a hole. The idea is close to a shap
 ### Key Decisions
 
 - **The full game.** (session-settled: user-directed — chosen over a thin prototype: "go deep go nice") Governs R1 to R14.
-- **Built, not merged or deployed.** (session-settled: user-directed — chosen over merging: the card approved building only)
+- **Merged when done, not deployed.** (session-settled: user-directed — chosen over leaving it open: the owner wrote to merge to main when done)
 - **No speech and no microphone.** (session-settled: user-directed — chosen over a spoken game: the card offered the six that need no speech) Governs R12.
 - **A wrong heave costs nothing and is the best joke.** It keeps the load, the turn and the place, and shows which cubes were in the way.
 
@@ -44,11 +44,11 @@ No game on main names turning a shape to fit a hole. The idea is close to a shap
 - R6. A wrong heave moves exactly the cubes that were in the way and squashes the bear on that side, or both.
 - R7. Six loads, each with a passenger or a filling that answers each way up, the swap, the jam and the passing through in its own way.
 - R8. Any load may go through any opening it fits, and no order of play leaves a load with no opening.
-- R9. The last load in lifts the front off; what is inside lies as it went in and the cub uses it so. Nothing new starts until the child touches the cart.
+- R9. The last load in lifts the front off; what is inside lies as it went in and the cub uses it so. Nothing new starts until the child touches the cart or the load on it.
 - R10. Positions move one step between houses, never inside one, and nothing shows them.
 - R11. Found as left at any instant, and no scene replays.
 - R12. No word, letter, numeral or sign; no score, praise, timer or count.
-- R13. The touch rules in `docs/solutions/conventions/touch-rules-that-keep-a-small-childs-finger-in-charge.md`.
+- R13. The touch rules in `docs/solutions/conventions/touch-rules-that-keep-a-small-childs-finger-in-charge.md`, with one exception to rule 4: a tap on an opening heaves the load, since at age 2 everything essential is a tap; a heave that does not fit costs nothing, and a finished house is put away only by a touch of the cart or its load.
 - R14. Every line of the quality bar, with measured frame work and a statement of what was not measured.
 
 ### Scope Boundaries
@@ -123,4 +123,4 @@ pointers -> input -> game -> rules (cells, houses)
 
 ## Definition of Done
 
-- Every requirement has a test or a logged still. The sheet has passed a fresh checker. The pull request says what was not measured and is left unmerged.
+- Every requirement has a test or a logged still. The sheet has passed a fresh checker. The pull request says what was not measured.

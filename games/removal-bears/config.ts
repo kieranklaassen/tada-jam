@@ -6,7 +6,7 @@ import { removalBearsManifest } from './manifest'
 // template and a template fix can be copied over them.
 
 /** The blank surface's colour, until the game draws its own backdrop. */
-export const BACKDROP = '#f4efe6'
+export const BACKDROP = '#cfe0df'
 
 // --- Adaptive quality (quality.ts) -----------------------------------------
 
@@ -68,7 +68,7 @@ export const LONGEST_FRAME_S = 0.1
 /** A change that keeps coming (a drag, a stroke) is handed to storage at most this often, in ms. */
 export const SAVE_THROTTLE_MS = 400
 
-const [YOUNGEST, OLDEST] = removalBearsManifest.ageBand
+const [YOUNGEST] = removalBearsManifest.ageBand
 
 // --- Guidance (guidance.ts) -------------------------------------------------
 
@@ -92,7 +92,7 @@ export const TAP_PRESSES: 1 | 2 = YOUNGEST < 4 ? 1 : 2
  * are what a save stores: add steps anywhere, and never rename one that has
  * shipped. Nothing on screen shows where the child is.
  */
-export const LADDER: readonly string[] = ['first', 'second', 'third']
+export const LADDER: readonly string[] = ['wide-opening', 'own-opening', 'which-way', 'other-side', 'three-openings', 'full-house']
 
 /**
  * Where a first visit starts, by `ctx.childAge`: the last row whose age the
@@ -107,6 +107,8 @@ export const LADDER: readonly string[] = ['first', 'second', 'third']
  * typecheck stops on a name nothing uses.
  */
 export const FIRST_VISIT: readonly { fromAge: number; position: string }[] = [
-  { fromAge: YOUNGEST, position: 'first' },
-  ...(OLDEST > YOUNGEST ? [{ fromAge: OLDEST, position: 'second' }] : []),
+  { fromAge: YOUNGEST, position: 'wide-opening' },
+  { fromAge: 3, position: 'own-opening' },
+  { fromAge: 4, position: 'which-way' },
+  { fromAge: 5, position: 'other-side' },
 ]
