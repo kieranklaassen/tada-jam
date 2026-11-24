@@ -117,3 +117,9 @@ The game has no learning goal, names no record and claims no school skill.
 - **Next to its neighbours.** Who Made That Sound is painted tissue with torn edges; Felt Meadow and Critter Clay are solid 3D; Bedtime cut-outs have no thickness. Here the pieces are objects, they are thick, and they are glued.
 
 The small print: `craft.ts` holds the materials, `figures.ts` the characters, `scenery.ts` the yard, `moves.ts` how each moves, `view.ts` only moves pictures that are cut once.
+
+## The music
+
+A rocking tune in G for nylon guitar, soft bass, wooden recorder and glockenspiel. It is played by [live-mix](https://github.com/kieranklaassen/live-mix) (`vendor/live-mix`): `music.worker.ts` plays the score once on its modelled instruments after the first touch, and `music.ts` runs the result as clips on three tracks. Nothing is a recording, and nothing is fetched but the instruments themselves from the same address.
+
+The mood (`mood.ts`) decides how much is heard. A touch brings the accompaniment and the tune, several touches bring the answering instrument, and a child who stops hears them leave one by one until a trace of the accompaniment is left. The music goes down under each sound the game makes and comes back after it. It rests with the game.

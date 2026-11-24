@@ -1,0 +1,13 @@
+{
+  "name": "@kieranklaassen/live-mix",
+  "version": "0.1.0-jam.1",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": { "types": "./index.d.ts", "default": "./core/index.js" },
+    "./render": { "types": "./render.d.ts", "default": "./dsp/render.js" },
+    "./wasm/*": "./wasm/*"
+  }
+}

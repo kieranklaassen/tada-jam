@@ -6,6 +6,7 @@ import { GameAudio, voiceOf } from './audio'
 import { BACKDROP, TIERS } from './config'
 import type { Guidance } from './guidance'
 import { mamaBootManifest } from './manifest'
+import { Music } from './music'
 import { Overlay, inCorner } from './overlay'
 import { installJamPerf } from './perf'
 import { Play } from './play'
@@ -30,7 +31,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
   useEffect(() => {
     const root = rootRef.current!, canvas = canvasRef.current!
     const pen = canvas.getContext('2d')!
-    const audio = new GameAudio(), clock = new AttendedClock()
+    const music = new Music(), audio = new GameAudio(music.attach), clock = new AttendedClock()
     const pinned = tierOverride(window.location.search)
     const governor = new TierGovernor(pinned ?? startingTier(window.matchMedia('(pointer: coarse)').matches), pinned !== null)
     const work = new PerfRing()
@@ -96,6 +97,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const onDown = (event: PointerEvent) => {
       if (!attention.awake || !game) return
       audio.touchDown()
+      music.touch()
       const where = at(event)
       game.down(event.pointerId, where.x, where.y)
       // The grown-up's gesture: a finger in the corner, which the game leaves alone. A palm elsewhere does not undo it.
@@ -135,6 +137,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       if (!attention.awake || disposed) return
       // Advances the attended clock. It returns the step to play, in seconds: the rules, a scene and every animation advance by it.
       playing.step = clock.advance(now)
+      music.step(playing.step)
       const start = performance.now()
       if (game) playing.guidance = game.step(playing.step)
       settle()
@@ -198,6 +201,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       view.dispose()
       overlay.dispose()
       audio.dispose()
+      music.dispose()
     }
   }, [])
 
