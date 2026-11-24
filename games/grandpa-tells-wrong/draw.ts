@@ -72,5 +72,3 @@ export const ease = (k: number): number => { const t = clamp(k); return t * t * 
 export const span = (t: number, a: number, b: number): number => clamp((t - a) / (b - a))
 export const bump = (k: number): number => (k <= 0 || k >= 1 ? 0 : Math.sin(k * Math.PI))
 export const jolt = (t: number, rate = 20, fade = 5): number => (t < 0 ? 0 : Math.sin(t * rate) * Math.exp(-t * fade))
-/** In with a spring past the end. */
-export const pop = (k: number): number => { const t = clamp(k); return 1 - Math.cos(t * Math.PI * 1.5) * (1 - t) * (1 - t) * 1 - (1 - t) * (1 - t) * 0 }

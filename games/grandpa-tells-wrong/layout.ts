@@ -48,7 +48,6 @@ export function pictureAt(i: number, n = 3): { x: number; y: number; width: numb
 
 export const LAMP: Point = { x: 1112, y: 318 }
 export const COCK: Point = { x: 806, y: 122 }
-export const SHOULDER: Point = { x: 820, y: 400 }
 
 /** The sun at morning, noon, dusk, and gone. */
 export const SUN: readonly Point[] = [{ x: 150, y: 168 }, { x: 350, y: 104 }, { x: 590, y: 150 }, { x: 660, y: 560 }]

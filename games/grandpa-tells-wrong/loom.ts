@@ -169,7 +169,7 @@ export class Loom {
         const o = (row + x) * 2
         // Where two colours meet along a warp the weave leaves a slit.
         const slit = x > 0 && codes[i - 1] >> 4 !== code >> 4
-        out[o] = slit ? ((colour >>> 1) & 0x3f3f3f) + ((colour >>> 2) & 0x1f1f1f) | 0xff000000 : colour
+        out[o] = slit ? (((colour >>> 2) & 0x3f3f3f) + ((colour >>> 3) & 0x1f1f1f)) | 0xff000000 : colour
         out[o + 1] = colour
       }
     }
@@ -191,11 +191,20 @@ export class Loom {
         g.fillStyle = 'rgba(255,244,220,0.08)'
         g.fillRect(left + cellW * 0.35, 0, cellW * 0.3, height)
       }
-      g.fillStyle = 'rgba(20,10,16,0.17)'
+      g.strokeStyle = 'rgba(20,10,16,0.17)'
+      g.lineWidth = Math.max(1, cellH * 0.2)
+      g.setLineDash([cellW, cellW])
       for (let y = 0; y <= this.rows; y++) {
         const at = this.offY + y * cellH
         // Over one warp and under the next: every second seam is half a bead lower.
-        for (let x = 0; x < this.cols; x++) g.fillRect(this.offX + x * cellW, at + (x & 1 ? cellH * 0.5 : 0), cellW, Math.max(1, cellH * 0.2))
+        for (const odd of [0, 1]) {
+          const line = at + odd * cellH * 0.5
+          g.lineDashOffset = odd * cellW
+          g.beginPath()
+          g.moveTo(this.offX, line)
+          g.lineTo(width, line)
+          g.stroke()
+        }
       }
     }
     // Yarn from one vat and the next: bands of the same dye a little off.

@@ -46,8 +46,10 @@ export class View {
   private ribs = true
   private chance = 1
   private strung = ''
-  /** The hour shown, easing to the hour it is. */
-  private hour = -1
+  /** The sky shown, the one before it, and how much of the new one is woven. */
+  private hour: Hour | -1 = -1
+  private was: Hour = 0
+  private woven = 1
   private sun: Point = { ...SUN[0] }
   drawn = 0
 
@@ -99,17 +101,26 @@ export class View {
     }
     this.bits = this.bits.filter((bit) => bit.t < bit.lasts)
     if (!play) return
+    this.settle(play)
     const want = hourOf(play)
-    if (this.hour < 0) this.hour = want
-    // Round the clock at morning, and straight on otherwise.
-    if (want === 0 && this.hour > 2.5) this.hour = play.scene?.kind === 'morning' ? 3 + ease(play.scene.t / 1.4) : 4
-    else if (this.hour > 3) this.hour = this.hour >= 4 ? want : 3 + ease((play.scene?.kind === 'morning' ? play.scene.t : 9) / 1.4)
-    else this.hour = Math.abs(want - this.hour) < 0.01 ? want : this.hour + (want - this.hour) * Math.min(1, dt * 2.4)
+    if (want !== this.hour) {
+      this.was = Math.max(0, this.hour) as Hour
+      this.hour = want
+      this.woven = 0
+    }
+    this.woven = Math.min(1, this.woven + dt / 1.5)
     const to = SUN[Math.min(3, want)]
     const k = Math.min(1, dt * 2)
     this.sun.x += (to.x - this.sun.x) * k
     this.sun.y += (to.y - this.sun.y) * k
     if (play.scene?.kind === 'morning' && play.scene.t < 0.1) this.sun = { x: 60, y: 520 }
+  }
+
+  /** The first sight of a play is as it stands: nothing is on its way. */
+  private settle(play: Play): void {
+    if (this.hour >= 0) return
+    this.hour = this.was = hourOf(play)
+    this.sun = { ...SUN[this.hour] }
   }
 
   draw(surface: G, width: number, height: number, dpr: number, play: Play | null, guidance: Guidance | null): void {
@@ -125,11 +136,12 @@ export class View {
     }
     const g = this.loom.begin()
     g.globalAlpha = 1
-    const hour = Math.max(0, this.hour), low = Math.floor(hour) % 4, part = hour - Math.floor(hour)
-    this.loom.lay(this.hours[low]!)
-    if (part > 0.001) {
+    if (play) this.settle(play)
+    const part = ease(this.woven)
+    this.loom.lay(this.hours[part < 1 ? this.was : Math.max(0, this.hour)]!)
+    if (part < 1) {
       // The new sky is woven up from the ground, and the shuttle runs along its edge.
-      this.loom.lay(this.hours[(low + 1) % 4]!, part)
+      this.loom.lay(this.hours[Math.max(0, this.hour)]!, part)
       const edge = 820 * (1 - part)
       const along = 590 + Math.sin(part * 60) * 540
       shape(g, [[along - 46, edge], [along, edge - 10], [along + 46, edge], [along, edge + 10]], dye('walnut', 3))
@@ -169,6 +181,10 @@ export class View {
       g.globalAlpha = 1
     }
     this.emptied(g, play)
+    if (play.knock.t < 0.4) {
+      const k = play.knock.t / 0.4
+      for (let i = 0; i < 5; i++) blob(g, play.knock.at.x + Math.cos(i * 1.26) * 44 * ease(k), play.knock.at.y + Math.sin(i * 1.26) * 34 * ease(k), 11 * (1 - k), 9 * (1 - k), dye('cream', 3))
+    }
     if (scene?.kind === 'lamp') this.carry(g, play, scene.t)
     this.protests(g, play)
     for (const thing of THINGS) {
@@ -291,13 +307,13 @@ export class View {
     }
     g.translate(0, -lift)
     g.scale(near, near)
-    paintFigure(g, who, pose, wear, play.time, was)
+    paintFigure(g, who, pose, wear, play.time, was, false, act !== undefined && worn.up && !act.from.up)
     g.restore()
   }
 
   /** What is on Grandpa's mind shows in his moustache. */
   private grandpa(play: Play, pose: Pose, acting: boolean, asleep: boolean): void {
-    if (play.scene?.kind === 'morning' && play.shown.grandpa.coat !== 'bare') {
+    if (play.scene?.kind === 'morning' && play.finds) {
       // He finds what he told himself into, and goes back to sleep.
       const k = bump(span(play.scene.t, 0.3, 2.1))
       pose.eyes = Math.max(pose.eyes, 1.3 * k)
@@ -312,6 +328,8 @@ export class View {
       if (stirred && !play.night) pose.eyes = 0.5
       return
     }
+    const curl = play.curled >= 0 && play.curled < 1.5
+    if (curl) pose.quirk = 1.1 * ease(play.curled / 0.3)
     if (acting) return
     const t = play.time
     if (play.telling >= 0) {
@@ -330,7 +348,7 @@ export class View {
       pose.look = { x: -0.8, y: 0.9 }
       pose.quirk = 0.5 * jolt(play.pondered, 18, 3)
     }
-    if (play.curled >= 0 && play.curled < 1.5) { pose.quirk = 1.1 * ease(play.curled / 0.3); pose.brow = 0.5; pose.eyes = 0.7; pose.look = { x: 0.7, y: -0.8 } }
+    if (curl) { pose.quirk = 1.1 * ease(play.curled / 0.3); pose.brow = 0.5; pose.eyes = 0.7; pose.look = { x: 0.7, y: -0.8 } }
     if (play.remembered >= 0 && play.remembered < 1.6) { pose.quirk = 1.8 * bump(span(play.remembered, 0, 0.5)); pose.eyes = 1.3; pose.brow = 1; pose.mouth = 'round'; pose.look = { x: 0, y: -1 } }
   }
 
@@ -347,13 +365,13 @@ export class View {
     if (told && !play.meddled) { rx = sx + 66; ry = sy - 158 + 8 * Math.sin(t * 9) * (Math.sin(t * 1.1) > 0 ? 1 : 0) }
     else if (told && (t * 0.35) % 1 > 0.62) { rx = sx + 30; ry = sy - 36 }
     if (play.remembered >= 0 && play.remembered < 1.6) { rx = sx + 24; ry = sy - 170 + 10 * jolt(play.remembered - 0.2, 20, 4) }
-    limb(g, [sx + 92, sy], [sx + 168, sy + 40], [rx, ry], sleeve, 40)
-    blob(g, rx, ry, 26, 24, dye('rose', 2))
     if (play.scene?.kind === 'lamp' && play.scene.t < UNRAVEL[0]) {
       const k = ease(play.scene.t / WICK) * (1 - ease(span(play.scene.t, WICK + 0.1, UNRAVEL[0])))
       rx = lerp(rx, LAMP.x - 6, k)
       ry = lerp(ry, LAMP.y + 10, k)
     }
+    limb(g, [sx + 92, sy], [sx + 168, sy + 40], [rx, ry], sleeve, 40)
+    blob(g, rx, ry, 26, 24, dye('rose', 2))
     // The left, with the puppet on it: a sock with eyes.
     let lx = sx - 128, ly = sy + 84
     if (!asleep) {
@@ -451,7 +469,7 @@ export class View {
     if (play.save.phase !== 'told') return
     const order = [0, 1, 2].filter((i) => i < play.up)
     if (play.sliding) order.sort((a, b) => Number(a === play.sliding!.at) - Number(b === play.sliding!.at))
-    for (const i of order) this.picture(g, play, i, t)
+    for (const i of order) if (!(scene?.kind === 'lamp' && scene.t > HAPPENS[i] - CARRY)) this.picture(g, play, i, t)
   }
 
   private cloth(g: G, play: Play, covered: number): void {
@@ -556,8 +574,10 @@ export class View {
     const t = play.protestT
     if (t > PROTEST + 0.7) return
     const k = Math.min(ease(t / 0.2), 1 - ease(span(t, PROTEST + 0.4, PROTEST + 0.7)))
+    const said = new Set<Who>()
     play.save.day.forEach((event, i) => {
-      if (k <= 0 || i >= play.up || !play.wronged.includes(event.who) || same(event, play.save.told[i])) return
+      if (said.has(event.who) || k <= 0 || i >= play.up || !play.wronged.includes(event.who) || same(event, play.save.told[i])) return
+      said.add(event.who)
       const at = play.crown(event.who), x = clamp(at.x + (event.who === 'goose' ? 60 : 0), 130, 720), y = Math.max(96, at.y - 96)
       blob(g, lerp(x, at.x, 0.7), at.y - 14, 9 * k, 8 * k, dye('cream', 3))
       blob(g, lerp(x, at.x, 0.4), at.y - 34, 14 * k, 11 * k, dye('cream', 3))

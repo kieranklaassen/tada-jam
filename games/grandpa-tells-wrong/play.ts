@@ -41,6 +41,13 @@ export const MORNING_LASTS = 2.4
 const YOUNG = 0.6
 const LONG_AGO = 99
 
+/** How far above the finger a thing hangs. */
+const HANGS = 62
+/** A drag this short was a tap. */
+const SMEAR = 60
+/** Over a third of the way to the next picture is a swap. */
+const SWAP = 130
+
 type Held = { thing: Thing; at: Point; dragging: boolean }
 
 export class Play {
@@ -64,6 +71,8 @@ export class Play {
   lampPoked = LONG_AGO
   cockPoked = LONG_AGO
   clothPoked = { t: LONG_AGO, x: 0 }
+  /** He told of himself this evening, and finds it in the morning. */
+  finds = false
   readonly thingPoked: Record<Thing, number> = { mud: LONG_AGO, water: LONG_AGO, jam: LONG_AGO, pillow: LONG_AGO, pants: LONG_AGO, balloon: LONG_AGO }
   /** Seconds into each picture's own little happening. */
   readonly pictureT: number[] = [LONG_AGO, LONG_AGO, LONG_AGO]
@@ -79,6 +88,7 @@ export class Play {
   private readonly touch = new ForgivingTouch()
   private pressed: Target = { kind: 'yard' }
   private moved = false
+  private from: Point = { x: 0, y: 0 }
   private spent = false
   private events: PlayEvent[] = []
   private readonly rng: Rng
@@ -193,7 +203,7 @@ export class Play {
       case 'dragLift': return
       case 'dragEnd': return this.drop(gesture.at)
       case 'dragCancel':
-        if (this.held) this.fly(this.held.thing, this.held.at, null, 'home')
+        if (this.held) this.fly(this.held.thing, { x: this.held.at.x, y: this.held.at.y - HANGS }, null, 'home')
         this.held = null
         this.sliding = null
         return
@@ -205,6 +215,7 @@ export class Play {
 
   private press(at: Point): void {
     this.moved = false
+    this.from = at
     this.spent = this.moveOn()
     this.pressed = targetAt(at, this.evening, (who) => this.shown[who].up, this.evening, this.count)
     const target = this.pressed
@@ -216,11 +227,11 @@ export class Play {
         return
       case 'who':
         this.poked[target.who] = 0
-        this.say({ kind: this.night || (target.who === 'grandpa' && this.save.phase === 'day') ? 'snore' : 'poke', who: target.who })
+        this.say({ kind: this.night || (target.who === 'grandpa' && !this.evening) ? 'snore' : 'poke', who: target.who })
         return
       case 'puppet':
       case 'prop':
-        if (this.up <= target.at) {
+        if (this.up <= target.at || this.save.finished) {
           this.clothPoked = { t: 0, x: at.x }
           this.say({ kind: 'cloth' })
         } else if (target.kind === 'puppet') {
@@ -240,6 +251,11 @@ export class Play {
         this.say({ kind: 'duck' })
         return
       case 'yard':
+        if (this.evening && at.y > BAND.top) {
+          this.clothPoked = { t: 0, x: at.x }
+          this.say({ kind: 'cloth' })
+          return
+        }
         this.knock = { t: 0, at }
         this.say({ kind: 'knock' })
     }
@@ -291,19 +307,22 @@ export class Play {
 
   private drop(at: Point): void {
     const held = this.held, sliding = this.sliding
+    // A small hand's tap often smears.
+    const smear = Math.hypot(at.x - this.from.x, at.y - this.from.y)
+    if (held && smear < SMEAR) return this.tap(at)
     const over = this.over
     this.held = null
     this.sliding = null
     if (held) {
-      // The one who asks is easy to hit; a thing let go near its shelf just goes back.
-      if (over && isNeighbour(over) && this.save.phase === 'day') this.fly(held.thing, at, over, 'land')
-      else if (over === 'grandpa') this.fly(held.thing, at, 'grandpa', 'miss')
-      else if (Math.hypot(at.x - COCK.x, at.y - COCK.y) < 90) {
+      const hangs = { x: at.x, y: at.y - HANGS }
+      if (Math.hypot(at.x - COCK.x, at.y - COCK.y) < 90) {
         this.cockPoked = 0
         this.say({ kind: 'duck' })
-        this.fly(held.thing, at, null, 'home')
-      } else if (at.y > 620) this.fly(held.thing, at, null, 'home')
-      else this.fly(held.thing, at, null, 'miss')
+        this.fly(held.thing, hangs, null, 'home')
+      } else if (over && isNeighbour(over) && this.save.phase === 'day') this.fly(held.thing, hangs, over, 'land')
+      else if (over === 'grandpa') this.fly(held.thing, hangs, 'grandpa', 'miss')
+      else if (at.y > 620) this.fly(held.thing, hangs, null, 'home')
+      else this.fly(held.thing, hangs, null, 'miss')
       return
     }
     if (sliding) {
@@ -315,12 +334,13 @@ export class Play {
         if (d < least) { least = d; to = i }
       }
       // Partly done counts: more than a third of the way over to the next.
-      if (to === sliding.at && Math.abs(sliding.dx) > 130) to = Math.max(0, Math.min(this.count - 1, to + Math.sign(sliding.dx)))
+      if (to === sliding.at && Math.abs(sliding.dx) > SWAP) to = Math.max(0, Math.min(this.count - 1, to + Math.sign(sliding.dx)))
       if (to !== sliding.at) this.swap(sliding.at, to)
+      else if (this.count === 1 || smear <= SWAP) this.tap(at)
       return
     }
     // A finger that slid off what it pressed is a tap all the same, where the hand is small.
-    if (this.moved && (this.pressed.kind === 'lamp' || this.pressed.kind === 'cock' || (this.pressed.kind === 'who' && this.pressed.who === 'grandpa'))) this.tap(at)
+    if (this.moved && (this.pressed.kind === 'lamp' || this.pressed.kind === 'cock' || this.pressed.kind === 'yard' || (this.save.phase === 'dusk' && (this.pressed.kind === 'puppet' || this.pressed.kind === 'prop')) || (this.pressed.kind === 'who' && this.pressed.who === 'grandpa'))) this.tap(at)
   }
 
   // --- The day -------------------------------------------------------------
@@ -349,7 +369,15 @@ export class Play {
       this.fly(thing, flight.to, null, 'home')
       return
     }
-    if (flight.after === 'land' && who && this.save.phase === 'day' && this.save.day.length < dayLength(this.save)) this.happen({ who, what: thing })
+    if (flight.after === 'land' && who && this.save.phase === 'day' && this.save.day.length < dayLength(this.save)) {
+      this.happen({ who, what: thing })
+      return
+    }
+    if (flight.after === 'land') {
+      // The day was already full when it got there.
+      this.say({ kind: 'splat', thing, at: flight.to })
+      this.fly(thing, flight.to, null, 'home')
+    }
   }
 
   private happen(event: Event): void {
@@ -417,6 +445,7 @@ export class Play {
   }
 
   private newDay(): void {
+    this.finds = this.save.told.some((event) => event.who === 'grandpa')
     this.save = nextMorning(this.save)
     this.shown = worldOf(this.save)
     this.dirty = true
@@ -467,6 +496,7 @@ export class Play {
         const { base, told, day, first } = this.save
         this.shown = run(base, told.slice(0, i))
         for (const who of CAST) delete this.acts[who]
+        this.calm()
         const truth = !same(told[i], day[i]) ? 'lie' : !same(first[i], day[i]) ? 'mended' : 'plain'
         this.start(told[i], truth)
         if (truth === 'lie') {
@@ -482,9 +512,14 @@ export class Play {
         this.scene = null
         this.shown = worldOf(this.save)
         for (const who of CAST) delete this.acts[who]
+        this.calm()
         this.say({ kind: 'night' })
       }
     }
+  }
+
+  private calm(): void {
+    this.stare = this.curled = this.remembered = LONG_AGO
   }
 
   step(dt: number): void {
@@ -553,7 +588,7 @@ export class Play {
 
   /** Where a thing is now: on its shelf, in the hand, or on its way. Null when it has just been emptied over someone. */
   thingAt(thing: Thing): { at: Point; tip: number; held: boolean } {
-    if (this.held?.thing === thing && this.held.dragging) return { at: { x: this.held.at.x, y: this.held.at.y - 62 }, tip: 0, held: true }
+    if (this.held?.thing === thing && this.held.dragging) return { at: { x: this.held.at.x, y: this.held.at.y - HANGS }, tip: 0, held: true }
     const flight = this.flights.find((one) => one.thing === thing)
     if (!flight) return { at: THING_AT(THINGS.indexOf(thing)), tip: 0, held: false }
     const k = flight.t / flight.lasts
@@ -568,7 +603,7 @@ export function demoMove(play: Play, index: number): { from: Point; to: Point | 
   if (play.save.phase === 'dusk') return { from: { x: SPOT.grandpa.x, y: SPOT.grandpa.y - 190 }, to: null }
   if (play.save.phase === 'told') {
     const box = pictureAt(play.count > 1 ? 1 : 0, play.count)
-    if (index === 1 || play.meddled) return { from: LAMP, to: null }
+    if (play.meddled) return { from: LAMP, to: null }
     if (index === 3 && play.count > 2) return { from: { x: box.x + box.width / 2, y: box.y + 80 }, to: { x: box.x + box.width * 1.5, y: box.y + 80 } }
     return { from: { x: box.x + box.width * 0.26, y: box.y + 80 }, to: null }
   }

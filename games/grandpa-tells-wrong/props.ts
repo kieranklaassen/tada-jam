@@ -1,5 +1,5 @@
 import { blob, limb, line, lit, shape, soft } from './draw'
-import { balloon, underpants } from './figures'
+import { balloon } from './figures'
 import { dye, type G } from './loom'
 import type { Thing } from './tale'
 
@@ -62,9 +62,4 @@ export function paintThing(g: G, thing: Thing, tip = 0, k = 0): void {
       break
   }
   g.restore()
-}
-
-/** The thing upside down on a head, for a throw about to land. */
-export function pantsOver(g: G, w: number, flop: number): void {
-  underpants(g, 0, 0, w, flop)
 }

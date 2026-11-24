@@ -415,7 +415,7 @@ function hatOf(who: Who, pose: Pose): readonly [number, number, number] {
   return [x - 2, y - 22, 66]
 }
 
-export function paintFigure(g: G, who: Who, pose: Pose, worn: Worn, t: number, was: Coat = 'bare', puppet = false): void {
+export function paintFigure(g: G, who: Who, pose: Pose, worn: Worn, t: number, was: Coat = 'bare', puppet = false, filling = false): void {
   const parts = PARTS[who]
   g.save()
   g.translate(pose.x, pose.y)
@@ -456,7 +456,7 @@ export function paintFigure(g: G, who: Who, pose: Pose, worn: Worn, t: number, w
   if (!(puppet && who === 'grandpa')) parts.over?.(g, pose)
   if (worn.up && !puppet) {
     const sway = Math.sin(t * 1.3 + tx) * 12
-    balloon(g, tx + sway, ty - (who === 'moon' ? 62 : BALLOON_UP + 46), who === 'moon' ? 26 : 42, clamp(pose.coated + (worn.coat !== was ? 1 : 0)))
+    balloon(g, tx + sway, ty - (who === 'moon' ? 62 : BALLOON_UP + 46), who === 'moon' ? 26 : 42, filling ? clamp(pose.coated) : 1)
   }
   g.restore()
 }

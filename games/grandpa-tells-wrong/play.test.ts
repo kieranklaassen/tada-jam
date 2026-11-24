@@ -108,9 +108,9 @@ describe('the telling', () => {
     const now = play.save.told
     drag(play, puppet(0), puppet(2))
     expect(play.save.told).toEqual([now[2], now[1], now[0]])
-    // Not far enough is not a swap, and not a change either.
+    // A smear is a tap.
     drag(play, puppet(0), { x: puppet(0).x + 60, y: puppet(0).y })
-    expect(play.save.told).toEqual([now[2], now[1], now[0]])
+    expect(play.save.told[0].who).not.toBe(now[2].who)
     expect(play.save.day).toEqual(DAY)
     expect(play.save.first).toEqual(before)
   })
@@ -133,6 +133,29 @@ describe('the telling', () => {
     const other = make({ ...save, told: [DAY[0], DAY[1], { who: 'pig' as const, what: 'water' as const }] })
     tap(other, puppet(2))
     expect(right.take().map((event) => event.kind)).toEqual(other.take().map((event) => event.kind))
+  })
+})
+
+describe('a smeared tap', () => {
+  it('is a tap on a thing, a lone picture and the night sky', () => {
+    const play = make(fresh(4))
+    drag(play, thingHome('mud'), { x: thingHome('mud').x + 30, y: thingHome('mud').y - 20 })
+    wait(play, 9)
+    expect(play.save.day).toHaveLength(1)
+    const before = play.save.told[0].who, at = { x: pictureAt(0, 1).x + 80, y: 720 }
+    drag(play, at, { x: at.x + 120, y: at.y })
+    expect(play.save.told[0].who).not.toBe(before)
+    tap(play, LAMP)
+    wait(play, 9)
+    drag(play, { x: 300, y: 200 }, { x: 340, y: 220 })
+    expect(play.save.phase).toBe('day')
+  })
+  it('has the second of two quick throws splat and hop home, on a day of one', () => {
+    const play = make(fresh(4))
+    tap(play, thingHome('mud'))
+    tap(play, thingHome('jam'))
+    wait(play, 1.5)
+    expect([play.save.day.length, kinds(play, 'splat'), play.flights.length]).toEqual([1, 1, 0])
   })
 })
 
