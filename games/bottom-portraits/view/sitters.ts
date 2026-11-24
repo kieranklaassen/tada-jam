@@ -169,7 +169,7 @@ function hippo(): Parts {
     head.shell(S.a, [s * 0.5, 0.86, -0.08], [0.15, 0.18, 0.09], undefined, 14).shell(S.b, [s * 0.5, 0.86, -0.03], [0.09, 0.12, 0.07], undefined, 12)
   }
   // Curl papers.
-  for (let n = -1; n <= 1; n++) head.disc(S.e, [n * 0.2, 0.9, 0.04 - Math.abs(n) * 0.04], 0.1, 0.24, [0, 0, Math.PI / 2]).disc(S.white, [n * 0.2, 0.9, 0.04 - Math.abs(n) * 0.04], 0.06, 0.28, [0, 0, Math.PI / 2])
+  for (let n = -1; n <= 1; n++) head.disc(S.e, [n * 0.2, 0.9, 0.04 - Math.abs(n) * 0.04], 0.1, 0.16, [0, 0, Math.PI / 2]).disc(S.white, [n * 0.2, 0.9, 0.04 - Math.abs(n) * 0.04], 0.06, 0.19, [0, 0, Math.PI / 2])
   const e = eyes(head, [0, 0.76, 0.34], 0.27, 0.17)
   const jaw = new Press().shell(S.a, [0, -0.1, 0.3], [0.58, 0.2, 0.42], undefined, 24).shell(S.c, [0, 0.0, 0.3], [0.46, 0.12, 0.32], undefined, 18)
   for (const s of [-1, 1]) jaw.shell(S.white, [s * 0.3, 0.08, 0.5], [0.085, 0.13, 0.085], undefined, 12)
@@ -209,7 +209,7 @@ function pig(): Parts {
   const e = eyes(head, [0, 0.58, 0.46], 0.21, 0.155)
   const ear = (s: number): THREE.BufferGeometry => new Press().shell(S.a, [s * 0.08, 0.16, 0], [0.16, 0.24, 0.07], [0, 0, -s * 0.5], 16).shell(S.b, [s * 0.08, 0.15, 0.04], [0.1, 0.16, 0.05], [0, 0, -s * 0.5], 14).weld()
   const curl: [number, number, number][] = []
-  for (let n = 0; n <= 14; n++) curl.push([Math.cos(n * 0.85) * 0.12, Math.sin(n * 0.85) * 0.12, -n * 0.024])
+  for (let n = 0; n <= 14; n++) curl.push([Math.cos(n * 1.25) * (0.13 - n * 0.004), Math.sin(n * 1.25) * (0.13 - n * 0.004), -n * 0.026])
   return {
     body: body.weld(), head: head.weld(), neck: [0, 1.56, 0.18], eyes: e, sheet,
     loose: [

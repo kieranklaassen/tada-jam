@@ -281,7 +281,9 @@ export class Game {
     cue(PAINTING.spin, 'spin')
     beat(PAINTING.spin, 0.7, (t) => {
       const k = ease(t), arc = Math.sin(t * Math.PI)
-      this.easel = { x: EASEL.x + (SHOWN.x - EASEL.x) * k, y: EASEL.y + (SHOWN.y - EASEL.y) * k + arc * 0.35, z: EASEL.z + (SHOWN.z - EASEL.z) * k, yaw: EASEL.yaw + (Math.PI * 4 - EASEL.yaw) * k, roll: arc * 0.12, size: 1 + (SHOWN.size - 1) * k, tile: nail }
+      // Off the easel, then round, then out to its full size, clear of whoever waits on the steps beside it.
+      const out = ease((t - 0.55) / 0.45), forward = ease(t / 0.4), round = ease((t - 0.14) / 0.56)
+      this.easel = { x: EASEL.x + (SHOWN.x - EASEL.x) * out, y: EASEL.y + (SHOWN.y - EASEL.y) * k + arc * 0.35, z: EASEL.z + (SHOWN.z - EASEL.z) * forward, yaw: EASEL.yaw + (Math.PI * 4 - EASEL.yaw) * round, roll: arc * 0.12, size: 1 + (SHOWN.size - 1) * out, tile: nail }
       if (t >= 1) { this.easel.yaw = 0; this.bare = 1 }
     })
     const behind = all.some((s) => s.id !== 'board' && s.side === 'back' && s.how === 'seen')
@@ -488,7 +490,7 @@ export class Game {
     const blink = t % 4.3
     const what = this.stagecraft.what, k = this.stagecraft.k
     if (what === 'measure') { goal.arm = 1; goal.lid = 0.45; goal.nod = -0.05; goal.lean = 0.14; goal.cock = 0.14 }
-    else if (what === 'dab') { goal.arm = 0.45; goal.dab = Math.sin(k * 60) * 0.8; goal.shake = -0.35; goal.nod = 0.15; goal.look = k % 0.34 < 0.12 ? 1 : -1; goal.sway = 0.05 * Math.sin(k * 30); goal.moustache = 0.3 * Math.sin(k * 60); quick = 30 }
+    else if (what === 'dab') { goal.arm = 0.45; goal.dab = Math.sin(k * 60) * 0.45; goal.shake = -0.35; goal.nod = 0.15; goal.look = k % 0.34 < 0.12 ? 1 : -1; goal.sway = 0.05 * Math.sin(k * 30); goal.moustache = 0.3 * Math.sin(k * 60); quick = 30 }
     else if (what === 'back') { goal.lean = -0.2; goal.cock = 0.2; goal.arm = 0.1; goal.moustache = 0.5; goal.nod = -0.1 }
     else if (what === 'shocked') { goal.shake = -0.6; goal.up = 0.5; goal.look = -1; goal.monocle = 1; goal.moustache = -0.5; goal.beret = hold(k, 0.08, 0.5) * 1.4; goal.squash = 1 + 0.1 * hold(k, 0.08, 0.3); goal.lean = -0.16; quick = 13 }
     else if (what === 'proud') { goal.shake = -0.45 + 0.1 * Math.sin(k * 20); goal.up = 0.5; goal.nod = -0.14; goal.lid = 0.4; goal.moustache = 1; goal.squash = 1.06; goal.lean = -0.1 }
@@ -565,8 +567,8 @@ export class Game {
       pose.squash = Math.max(0.72, Math.min(1.2, pose.squash))
     }
     if (this.hanging) {
-      const h = this.hanging, k = ease(h.t / HANG_S), to = NAILS[h.nail], arc = Math.sin(clamp(h.t / HANG_S) * Math.PI)
-      this.easel = { x: h.from.x + (to.x - h.from.x) * k, y: h.from.y + (to.y - h.from.y) * k + arc * 1.3, z: h.from.z + (to.z - h.from.z) * k, yaw: 0, roll: arc * 0.2, size: h.from.size + (HUNG - h.from.size) * k, tile: h.nail }
+      const h = this.hanging, t = h.t / HANG_S, to = NAILS[h.nail], across = to.x > 0, over = ease(across ? t / 0.62 : t), back = across ? ease((t - 0.5) / 0.5) : over, k = ease(t / 0.5), arc = Math.sin(clamp(h.t / HANG_S) * Math.PI)
+      this.easel = { x: h.from.x + (to.x - h.from.x) * over, y: h.from.y + (to.y - h.from.y) * over + arc * 0.9, z: h.from.z + (to.z - h.from.z) * back, yaw: 0, roll: arc * 0.2, size: h.from.size + (HUNG - h.from.size) * k, tile: h.nail }
     } else {
       this.easel.roll = this.wobble >= 0 ? 0.2 * Math.sin(this.wobble * 13) * Math.exp(-this.wobble * 3.4) : this.scene?.running ? this.easel.roll : 0
       if (this.easel.tile < 0) this.easel.size = Math.max(0.02, ease(this.bare)) * this.easelSquash

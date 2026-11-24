@@ -191,7 +191,7 @@ export class Room {
     STEPS.forEach((step, n) => {
       const h = step.y - FLOOR_Y, size = 2.6
       still.add(new THREE.BoxGeometry(size, h - 0.12, 2.72), [S.teal, S.orange, S.plum][n % 3], { at: [step.x, FLOOR_Y + (h - 0.12) / 2, step.z] })
-      still.add(new THREE.BoxGeometry(size + 0.12, 0.11, 2.78), S.cream, { at: [step.x, step.y - 0.062, step.z] })
+      still.add(new THREE.BoxGeometry(size + 0.12, 0.11, 2.78), S.pale, { at: [step.x, step.y - 0.062, step.z] })
       for (let k = -2; k <= 2; k++) still.add(new THREE.CylinderGeometry(0.16, 0.16, 0.04, 16), S.gold, { at: [step.x + k * 0.5, step.y - 0.32, step.z + 1.375], turn: [Math.PI / 2, 0, 0] })
     })
     // The painter's dais.

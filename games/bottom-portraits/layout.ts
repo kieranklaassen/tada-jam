@@ -27,7 +27,7 @@ export const EYE: P3 = { x: 0, y: 3.6, z: -11 }
 export const FRAME_ASPECT = 4 / 3
 
 /** The easel, its back to the child, and the picture's size on it. */
-export const EASEL: P3 & { yaw: number } = { x: -2.3, y: 2.7, z: -5.1, yaw: Math.PI + 0.35 }
+export const EASEL: P3 & { yaw: number } = { x: -2.62, y: 2.7, z: -5.1, yaw: Math.PI + 0.35 }
 export const PICTURE = { w: 2.2, h: 1.65 } as const
 /** Where the finished picture is shown to the child: forward and up, over the table's back. */
 export const SHOWN: P3 & { size: number } = { x: -3.12, y: 4.0, z: -2.65, size: 1.64 }

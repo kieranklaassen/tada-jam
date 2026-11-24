@@ -94,7 +94,7 @@ export class Stage {
     for (const y of [0.05, STAND.h - 0.05]) stand.add(new THREE.TorusGeometry(STAND.r - (y > 0.1 ? 0.07 : 0), 0.045, 8, 40), swatch(2), { at: [0, y, 0], turn: [Math.PI / 2, 0, 0] })
     this.stands = new THREE.InstancedMesh(keep(stand.weld()), tin, STANDS)
     const key = new Press().disc(swatch(3), [0, 0, 0.1], 0.035, 0.22, [Math.PI / 2, 0, 0])
-    for (const s of [-1, 1]) key.shell(swatch(3), [s * 0.15, 0.02, 0.22], [0.15, 0.1, 0.035], [0, 0, s * 0.25], 16)
+    for (const s of [-1, 1]) key.shell(swatch(3), [s * 0.085, 0.01, 0.22], [0.09, 0.07, 0.03], [0, 0, s * 0.25], 14)
     this.keys = new THREE.InstancedMesh(keep(key.weld()), tin, STANDS)
     CAST.forEach((id, n) => this.stands.setColorAt(n, this.colour.set(TINTS[id]).convertLinearToSRGB()))
     this.stands.name = 'stands'
@@ -193,7 +193,7 @@ export class Stage {
     if (!p) { this.put(this.stands, n, 0, -50, 0, 0.0001); this.put(this.keys, n, 0, -50, 0, 0.0001); return }
     this.put(this.stands, n, p.x, p.y, p.z, 1, 1, 1, 0, p.yaw, 0)
     const out = STAND.r - 0.05, x = p.x + Math.sin(p.yaw) * out, z = p.z + Math.cos(p.yaw) * out
-    this.m.compose(this.v.set(x, p.y + STAND.h / 2, z), this.q.setFromEuler(this.e.set(0, p.yaw, wound, 'YXZ')), this.s.set(1, 1, 1))
+    this.m.compose(this.v.set(x, p.y + STAND.h / 2 + 0.02, z), this.q.setFromEuler(this.e.set(0, p.yaw, wound, 'YXZ')), this.s.set(1, 1, 1))
     this.keys.setMatrixAt(n, this.m)
   }
 

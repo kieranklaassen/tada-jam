@@ -21,7 +21,11 @@ function save({ spots, turns = {}, wall = [], last = -1, finished = false }: Sav
     wall: Array.from({ length: 6 }, (_, n) => wall[n] ?? null),
   }
 }
-const open = (d: Driver, saved: Saved): Promise<void> => d.reload({ [SLOT]: save(saved) })
+/** The game's own last save goes out before the page is left, so it cannot land on top of the one laid down here. */
+const open = async (d: Driver, saved: Saved): Promise<void> => {
+  await d.wait(600)
+  await d.reload({ [SLOT]: save(saved) })
+}
 async function touch(d: Driver, pattern: string, lift = 0): Promise<void> {
   const at = await d.find(pattern)
   if (!at) throw new Error(`bottom-portraits: nothing on screen is ${pattern}`)
@@ -37,7 +41,7 @@ const painted = (name: string, saved: Saved) => ({ name, run: async (d: Driver) 
 /** Where a head is, for those whose body may be behind another. */
 const HEAD: Record<Id, string> = { elephant: 'elephant-head', hen: 'hen-head', hippo: 'hippo-head', pig: 'pig-head', giraffe: 'giraffe-head', crocodile: 'crocodile-head', board: 'board-body' }
 
-const audit = {
+export default {
   enforce: true,
   query: 'tier=0&seed=1',
   childAge: 4,
@@ -48,6 +52,13 @@ const audit = {
     'shade', 'glow', 'ghost-hand', 'flecks',
     // Pupils and lids are caps a hair over the eyeball they roll on, in the head by design.
     '-pupils', '-lids',
+  ],
+  allow: [
+    { a: '^maestro>', b: '^maestro>', kind: 'pose', upTo: 1.4, reason: 'The painter is a jointed tin toy: his arm swings from a shoulder sunk in his smock, and his beret, monocle and moustache are fitted to his head and shift on it.' },
+    { a: '^(elephant|hen|hippo|pig|giraffe|crocodile|board)>', b: '^(elephant|hen|hippo|pig|giraffe|crocodile|board)>', kind: 'pose', upTo: 0.8, reason: 'A sitter is a jointed tin toy: its head, ears, trunk, jaw and tail are set into it on pins and press into it as it nods, gapes and wags.' },
+    { a: '^picture-frame', b: '^picture-face', kind: 'pose', upTo: 0.15, reason: 'The picture sits in the rebate of its own frame.' },
+    { a: '^picture-frame', b: '^maestro>maestro-arm', kind: 'penetration', upTo: 0.2, reason: 'He paints with his hand resting on the edge of the frame in front of him.' },
+    { a: '^floor', b: '^hung-\\d-frame', kind: 'penetration', upTo: 0.3, reason: 'The seventh picture sends the oldest off its nail: it drops behind the furniture and is gone as it lands.' },
   ],
   moments: [
     { name: 'idle-guidance', run: async (d) => { await open(d, { spots: ['elephant', null, null, null] }); await d.wait(10000) } },
@@ -84,8 +95,4 @@ const audit = {
     { name: 'seventh', run: async (d) => { const one = [['pig', 0], null, null, null]; await open(d, { spots: ['giraffe', null, null, null], wall: [one, one, one, one, one, one], last: 5 }); await ask(d); await d.wait(8000); await touch(d, HEAD.giraffe); await d.wait(1500); await ask(d); await d.wait(1500) } },
     { name: 'pokes', run: async (d) => { await open(d, { spots: FULL, wall: [[['hen', 0], null, null, null]], last: 0 }); for (const what of ['hung-0-face', 'table-top']) { await touch(d, what); await d.wait(700) } } },
   ],
-} as GameAudit
-const only = process.env.ONLY?.split(',')
-
-if (only) audit.moments = audit.moments!.filter((m) => only.includes(m.name))
-export default audit
+} satisfies GameAudit

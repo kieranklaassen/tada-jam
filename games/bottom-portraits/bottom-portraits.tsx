@@ -229,6 +229,9 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       play = new Play(new Game(loadTable(value, ctxRef.current.childAge)))
       play.size(width, height)
       // The load draws the first frame itself: a game that is resting or parked has no frame coming.
+      // The room is drawn once before a picture is painted from it: whoever watches the renderer (the intersection
+      // audit does) takes the first camera that draws the room for the child's.
+      draw()
       portraits()
       draw()
       view.warm()
