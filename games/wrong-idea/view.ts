@@ -451,7 +451,8 @@ export class View {
     const g = this.g, scene = play.scene
     const grown = play.dreaming ? play.dreamShown : 0
     const pop = grown + Math.sin(grown * Math.PI) * 0.15
-    const head = play.spotOf('gran'), from = { x: head.x + 10, y: head.y - SIZE.gran.h * head.s - 4 }
+    // The bubble stays over her chair, wherever he has put her: a trail across the room read as buttons on the king.
+    const head = homeOf('gran'), from = { x: head.x + 10, y: head.y - SIZE.gran.h * head.s - 4 }
     if (scene !== null) {
       // The bubble has burst: its bits fly off.
       if (scene < 0.5) for (let i = 0; i < 8; i++) {

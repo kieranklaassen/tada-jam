@@ -9,7 +9,7 @@
 - Cold playtest proxy: one fresh reader with nine stills and nothing else. They read the rule from the stills ("he guesses a rule from what I dropped"), named the joke, and listed 14 faults; pass 4 fixes the ones marked there. No child has played it, and the owner has not seen it.
 - Open: nobody has heard a sound of the game. They are tested as numbers.
 - Open: measured on a machine without a graphics card; no iPad.
-- Weak: a wish whose dreamer is in the soup or the bath shows a long trail of dots across the room. In a full pot the piglet is half behind the spotted hat. While he thinks, his bubble covers two things on the shelf for two seconds (a touch still reaches them).
+- Weak: while the grandmother is in the soup or the bath her dream hangs over her empty chair. In a full pot the piglet is half behind the spotted hat. While he thinks, his bubble covers two things on the shelf for two seconds (a touch still reaches them).
 
 ### Template notes
 
