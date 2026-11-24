@@ -3,9 +3,10 @@
 
 ## Status
 
-- Stage: sheet written.
+- Stage: game.
 - Look in use: Foil sweet wrappers (reserved first); String and pins is the backup.
-- Open: sheet ready for check, round 1.
+- Sheet: round 1 by a fresh reader, nine findings with exact replacements, all pasted (round 2 passed from the diff). Then the owner said of the jam's newest games that a four-year-old does not see their loop, so the jumper became the row itself, with no step between, and the sheet was rewritten for that: round 3 by a second fresh reader, one finding, pasted word for word; round 4 passed from the diff (a paste only). sha256 of the sheet part: `648bd44a1fc97cf9aa13e58d531e5fdbcc357bbd21f992b8d51ee7ba4c34f774`.
+- Open: nothing.
 
 The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Ask for the sheet's check by writing `Open: sheet ready for check, round N` here; when it passes, record the round and the commit it judged. Someone with no session to read resumes from this block and the files. The two parts below belong to the block.
 
