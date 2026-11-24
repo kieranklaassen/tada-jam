@@ -1,5 +1,6 @@
 // template: cartridge/stage.ts v3
-import type { Point } from './input'
+
+export type Point = { x: number; y: number }
 
 // For a canvas 2D game. The stage is drawn in fixed units and fitted into the
 // surface with one scale and one offset, and every touch comes back through

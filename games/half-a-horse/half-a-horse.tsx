@@ -2,22 +2,24 @@
 import { useEffect, useRef } from 'react'
 import type { Cartridge, CartridgeContext } from '../types'
 import { AttendedClock, Attention } from './attention'
-import { GameAudio, tick } from './audio'
+import { GameAudio, voiceOf } from './audio'
 import { BACKDROP } from './config'
 import { IdleLadder, type Guidance } from './guidance'
-import { ForgivingTouch, type Gesture, type Point } from './input'
 import { halfAHorseManifest } from './manifest'
-import { Overlay } from './overlay'
+import { Overlay, inCorner } from './overlay'
 import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
 import { SaveCadence } from './saveCadence'
-import { deserialize, serialize, type GameState } from './state'
+import { Play } from './play'
+import { makeRng, seedOf } from './rng'
+import { deserialize } from './save'
+import { toStage, type Point } from './stage'
+import { YardView } from './view'
 
-// The Mount, showing a blank surface. Everything a game needs around its
-// renderer is wired and running: the saved state, attention, the attended
-// clock, touch, sound from the first touch, the idle ladder, adaptive quality,
-// the grown-up performance handle and the grown-up overlay. The renderer, the
-// rules and the sounds go in where the comments say.
+// The Mount. Everything round the yard is the template's wiring: the saved
+// state, attention, the attended clock, sound from the first touch, the idle
+// ladder, adaptive quality, the grown-up handle and overlay. Fingers go
+// straight into play.ts by their ids, since each drives a half of its own.
 
 function Mount({ ctx }: { ctx: CartridgeContext }) {
   const rootRef = useRef<HTMLDivElement>(null)
@@ -28,7 +30,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
 
   useEffect(() => {
     const root = rootRef.current!, canvas = canvasRef.current!
-    const audio = new GameAudio(), touch = new ForgivingTouch(), clock = new AttendedClock(), ladder = new IdleLadder(0)
+    const audio = new GameAudio(), clock = new AttendedClock(), ladder = new IdleLadder(0)
     const pinned = tierOverride(window.location.search)
     const governor = new TierGovernor(pinned ?? startingTier(window.matchMedia('(pointer: coarse)').matches), pinned !== null)
     const work = new PerfRing()
@@ -39,7 +41,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // sprites and figures it drew as drawCalls; a three.js game copies the renderer's own counts.
     const drawn = { drawCalls: 0, triangles: 0 }
     const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, ...drawn }))
-    let state: GameState | null = null, disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
+    const view = new YardView(canvas)
+    let play: Play | null = null, disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
     // What the loop hands the draw, as `drawn` is what the draw hands back. `guidance` is what the idle ladder
     // shows now, and null until the first frame: the loop keeps what `ladder.update` returns, so the glow and the
     // ghost hand reach the renderer without a second call. `step` is the seconds of play the frame advances, for
@@ -56,7 +59,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // Going to rest writes whatever the throttle still holds (`cadence.settle`, below).
     // A game whose saved state is more than `state.ts` holds wraps it in a module of its own, as the header of
     // state.ts describes, and `serialize` and `deserialize` here become the wrapper's.
-    const cadence = new SaveCadence(() => { if (state) ctxRef.current.storage.save(serialize(state)) })
+    const cadence = new SaveCadence(() => { if (play) ctxRef.current.storage.save(play.saved()) })
 
     // The one place the game applies a quality tier: whatever its tiers set besides the pixel ratio, which
     // `resize` applies. It runs once before the first frame and again each time the governor changes tier, ahead
@@ -76,7 +79,26 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // `setTransform(dpr * scale, 0, 0, dpr * scale, dpr * x, dpr * y)`. The fit is never made from
     // `canvas.width` and `canvas.height`, which are that size times the pixel ratio: every touch would then
     // land off by the ratio on a tablet, and right on a display of ratio 1.
-    const draw = () => {}
+    const draw = () => {
+      if (width <= 0 || height <= 0) return
+      view.draw(play, playing.guidance, governor.settings)
+      drawn.drawCalls = view.tally.stamps + view.tally.pen
+    }
+    // What the play queued while it answered: played as one voice, so a first touch keeps all of it for the unlock.
+    // Then whatever it changed is handed to storage, at the throttle: a rub keeps coming.
+    const settle = () => {
+      if (!play) return
+      if (play.heard.length > 0) {
+        audio.play(voiceOf(play.heard))
+        play.heard = []
+      }
+      if (play.changed) {
+        // A scene's outcome is written at once; a rub, a drip or a drop at the throttle.
+        cadence.change(performance.now(), play.urgent)
+        play.changed = false
+        play.urgent = false
+      }
+    }
 
     // The shell can resize the surface without a window resize event, so the surface watches itself.
     // Returns whether it sized the surface, and so drew it.
@@ -92,87 +114,64 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       // A three.js game sizes through its renderer instead: `setPixelRatio(ratio)` and `setSize(w, h, false)`
       // take the place of these two assignments.
       canvas.width = Math.round(w * ratio); canvas.height = Math.round(h * ratio)
+      // The view is told the new size and ratio before it draws, and stitches its pieces again at that density.
+      view.resize(w, h, ratio)
       draw()
       return true
     }
     const observer = new ResizeObserver(resize)
     observer.observe(root)
 
-    // What the game does with a gesture. The blank surface only answers a touch with a sound (`tick`, which goes
-    // with its import when the game plays its own voices). The points are in the surface's CSS pixels: a canvas
-    // 2D game turns each into stage units first, with `toStage` and the one fit made from `width` and `height`.
-    // A game with short scenes ends the one that is playing first thing in every press, before the press is
-    // answered (`finish` in scene.ts). A gesture that changes the state hands it to storage here (`cadence`, above).
-    // Two endings are not the child's doing, and neither makes a move: on `dragCancel` the thing in hand goes
-    // back where it came from, and a `pressEnd` lets go of what the press lit and is not a tap. Every gesture has
-    // a case of its own, so a game that leaves one out, a cancelled drag above all, does not compile.
-    // The game queues its voices as it answers, and they are played here, inside the handler, and again after
-    // the step in the loop: the first sound of a visit then falls inside the touch, where audio.ts holds it for
-    // the unlock. Everything one touch sets off is played as one voice (`voiceOf` in audio.ts).
-    // A press in the grown-up's corner (`inCorner` in overlay.ts) is answered as bare backdrop is, or not at all.
-    const act = (gestures: Gesture[]) => {
-      for (const gesture of gestures) {
-        switch (gesture.type) {
-          case 'press':
-            audio.play(tick)
-            break
-          case 'tap':
-          case 'pressEnd':
-          case 'dragStart':
-          case 'dragMove':
-          case 'dragLift':
-          case 'dragEnd':
-            break
-          // The drag was taken away and the child made no drop: the game puts the thing back where it came from.
-          case 'dragCancel':
-            break
-          default:
-            // No gesture is left once each has its case. One the game forgets arrives here and stops the typecheck.
-            gesture satisfies never
-        }
-      }
-    }
     const at = (event: PointerEvent): Point => {
       const box = root.getBoundingClientRect()
       return { x: event.clientX - box.left, y: event.clientY - box.top }
     }
+    // One finger at a time may be making the grown-up's gesture: the one that landed first.
+    let first: number | null = null
+    const stage = (event: PointerEvent): Point => toStage(at(event), view.fit)
     const onDown = (event: PointerEvent) => {
-      if (!attention.awake) return
+      if (!attention.awake || play === null || view.fit.scale === 0) return
       audio.touchDown()
       ladder.touch(clock.seconds)
       const where = at(event)
-      const gestures = touch.down(event.pointerId, where, event.timeStamp)
-      // Only the working finger counts towards the grown-up's gesture: a palm or a second finger landing is no
-      // tap of the three, and does not undo a hold.
-      if (touch.holds(event.pointerId)) overlay.press(where.x, where.y, width, event.timeStamp)
-      act(gestures)
+      if (first === null) {
+        first = event.pointerId
+        overlay.press(where.x, where.y, width, event.timeStamp)
+      }
       // Captured, so the lift is reported even when the finger has slid off the surface.
-      root.setPointerCapture(event.pointerId)
+      try { root.setPointerCapture(event.pointerId) } catch { /* Gone already: its lift still arrives. */ }
+      // The grown-up's corner answers nothing.
+      if (inCorner(where.x, where.y, width)) return
+      play.down(event.pointerId, stage(event))
+      settle()
     }
     const onMove = (event: PointerEvent) => {
+      if (play === null) return
       const where = at(event)
-      // A hold in the grown-up's corner stays there: the working finger leaving it starts that gesture again.
-      if (touch.holds(event.pointerId)) overlay.move(where.x, where.y, width)
-      act(touch.move(event.pointerId, where))
+      if (event.pointerId === first) overlay.move(where.x, where.y, width)
+      play.move(event.pointerId, stage(event))
+      settle()
     }
     const onUp = (event: PointerEvent) => {
       const where = at(event)
-      if (touch.holds(event.pointerId)) overlay.lift(where.x, where.y, width, event.timeStamp)
-      act(touch.up(event.pointerId, where, event.timeStamp))
-      // A lifted drag waits a moment for the finger to come back. A game whose lift is the act, or whose targets
-      // stand close together, ends it here instead: `act(touch.letGo())` (input.ts).
+      if (event.pointerId === first) { overlay.lift(where.x, where.y, width, event.timeStamp); first = null }
+      play?.up(event.pointerId)
+      settle()
       audio.touchUp()
     }
-    // The browser took the finger away, which is not the child letting go: a drag is cancelled, not dropped.
+    // The browser took the finger away, which is not the child letting go. A lost capture is the same news when
+    // no lift came first; after one the finger is already unknown.
     const onCancel = (event: PointerEvent) => {
-      if (touch.holds(event.pointerId)) overlay.forget()
-      act(touch.cancel(event.pointerId))
-      audio.touchUp()
+      if (event.pointerId === first) { overlay.forget(); first = null }
+      play?.cancel(event.pointerId)
+      settle()
+      if (event.type === 'pointercancel') audio.touchUp()
     }
     root.addEventListener('pointerdown', onDown)
     root.addEventListener('pointermove', onMove)
     root.addEventListener('pointerup', onUp)
     root.addEventListener('pointercancel', onCancel)
+    root.addEventListener('lostpointercapture', onCancel)
 
     const loop = (now: number) => {
       frame = 0
@@ -180,15 +179,17 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       // Advances the attended clock. It returns the step to play, in seconds: the rules, a scene and every animation advance by it.
       playing.step = clock.advance(now)
       const start = performance.now()
-      act(touch.advance(now))
       // A finger that is working is not idle: a hold or a slow drag keeps the ladder at the bottom.
       // A scene that is playing is not idleness either. A game with short scenes makes the same call for as long
       // as one runs (`if (scene.running) ladder.touch(clock.seconds)`), or the ghost hand comes up over the scene.
-      if (touch.active) ladder.touch(clock.seconds)
+      if (play?.busy) ladder.touch(clock.seconds)
       // What to show an idle child: a glow on what can be touched, then one move.
       playing.guidance = ladder.update(clock.seconds)
-      // The game steps its rules and its scene here by `playing.step`, plays the voices they queued, and hands
-      // what they changed to storage (`cadence`, above).
+      // The play plays the step: what is in the air flies on, the springs ring, the ridges tick.
+      if (play) {
+        play.step(playing.step)
+        settle()
+      }
       // A tier change is applied ahead of the draw: whatever the game's tiers set in `applyTier`, then the pixel
       // ratio in `resize`. The interval just measured belongs to the frame before, so it is judged with that
       // frame's work.
@@ -218,7 +219,9 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       frame = 0
       clock.rest()
       overlay.forget()
-      act(touch.clear())
+      first = null
+      play?.clear()
+      settle()
       cadence.settle(performance.now())
     })
     attendRef.current = (attended) => attention.set(attended)
@@ -226,13 +229,16 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     ctxRef.current.storage.load<unknown>().catch(() => null).then((value) => {
       if (disposed) return
       // A saved position wins; `childAge` only chooses where a first visit starts.
-      state = deserialize(value, ctxRef.current.childAge)
+      play = new Play(deserialize(value), makeRng(seedOf(window.location.search)).next)
+      view.warm()
       // The game sets itself up from the state here, as it was left: nothing eases in and no scene replays.
       // Its chance comes from streams it makes here from one seed, `seedOf(window.location.search)` in rng.ts:
       // `seed=<n>` in the address pins it, so a still can be taken again.
       // Then the load draws the first frame itself. A game that is resting or parked when the slot comes back
       // has no frame coming, and would go on showing the surface as it was before the read.
       draw()
+      // The play as it is first drawn is written at once: a first visit put away before any touch opens on the same three.
+      settle()
     })
     applyTier()
     resize()
@@ -241,7 +247,9 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     return () => {
       disposed = true
       // As on going to rest: the touch ends first, so the thing in hand is back or down before the last save.
-      act(touch.clear())
+      first = null
+      play?.clear()
+      settle()
       cadence.settle(performance.now())
       cancelAnimationFrame(frame)
       observer.disconnect()
@@ -250,6 +258,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       root.removeEventListener('pointermove', onMove)
       root.removeEventListener('pointerup', onUp)
       root.removeEventListener('pointercancel', onCancel)
+      root.removeEventListener('lostpointercapture', onCancel)
       uninstallPerf()
       overlay.dispose()
       audio.dispose()

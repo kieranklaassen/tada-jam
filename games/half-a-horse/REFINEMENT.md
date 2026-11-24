@@ -3,9 +3,10 @@
 
 ## Status
 
-- Stage: sheet.
+- Stage: game.
 - Look in use: Cloth busy-book, the first reserved choice; not spiked yet.
-- Open: sheet ready for check, round 1.
+- Sheet: round 1 (reader A) 14 findings, round 2 (reader B) 7 findings, each pasted word for word; passed as a paste-only round, sheet part sha256 starts a3502a9026847e3f.
+- Open: the toy has been tried by no child and by no two children.
 
 The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Ask for the sheet's check by writing `Open: sheet ready for check, round N` here; when it passes, record the round and the commit it judged. Someone with no session to read resumes from this block and the files. The two parts below belong to the block.
 

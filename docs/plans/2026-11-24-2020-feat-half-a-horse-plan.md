@@ -36,7 +36,7 @@ No game in the jam is made for two children at once. The template follows one fi
 
 - R1. Two fingers drive the two halves at once, each independent of the other; a third finger can use the rest of the yard.
 - R2. The cloth stretches thin, sags when slack, bunches when squeezed, springs back when let go, and ties in a bow while the halves stand crossed.
-- R3. A tap anywhere on an end makes that end do its own act, starting on touch-down.
+- R3. An end answers a finger when it lands, and a tap makes it do its own act.
 - R4. A half no finger holds has its own nose: the rear goes to food, the front to its reflection, and neither ever pulls against a held half hard enough to take it from its finger.
 - R5. Eight ends (horse, hen, elephant, crocodile; head and bottom of each) can be worn by either performer. A tap puts a head in front and a bottom behind; a carry puts anything anywhere.
 - R6. Four spectators with fixed tastes follow both halves, believe while they agree, and gape each in their own way.
