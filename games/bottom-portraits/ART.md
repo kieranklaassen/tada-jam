@@ -96,7 +96,7 @@ Everything that acts is thin tin, pressed in rounded shells, closed along a seam
 
 ## The loop, made plain
 
-Play by a child at the low end of the band showed that the first move could be copied but not what to do next. Where this section and the rest of this sheet differ, this section holds.
+A child at the low end of the band played it and the loop was not clear: what to do, what comes of it, what to do next. Where this section and the rest of this sheet differ, this section holds.
 
 - **The opening round.** With nothing saved, the ghost hand plays one whole round for real (`round.ts`, `opening.ts`): it asks for a picture, turns the sitter until it faces the painter, and asks again. Any touch stops it, it plays once, and nothing it did is saved until a touch. It is the one thing that starts by itself.
 - **The loop.** The bare easel asks for a picture; a picture that stands shown asks for the table to change. Calling one over and the key come in where the table changes.

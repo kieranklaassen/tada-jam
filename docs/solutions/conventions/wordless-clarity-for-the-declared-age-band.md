@@ -105,14 +105,14 @@ Checklist:
 
 ### Show the loop, and not only the first move
 
-A child of the youngest age copied the first gesture of seven games and then did not know what came next. A ghost hand that presses the air shows a gesture and leaves out what comes of it, and a glow on everything that answers says only that everything answers. What was done in all seven:
+A child near the youngest age of the band played seven games and their loops were not clear: what to do, what comes of it, what to do next. The likely cause, read off recordings: a ghost hand that presses the air shows a gesture and leaves out what comes of it, and a glow on everything that answers says only that everything answers. What was done in all seven:
 
 - **An opening round played for real.** With nothing saved, the hand plays one whole round with the game's own fingers: what is done, what comes of it, what is asked next. Any touch stops it, it plays once, and nothing it did is saved until a touch (`games/mama-boot/round.ts` is a copy to start from).
 - **Somebody asks for one thing.** A picture over the one who wants it shows the thing it wants and no more. When it has it, the next one asks.
 - **One glow**, on the next step, from 1.5 seconds of idling; the hand from 3.5 seconds shows that same step.
 - **The round closes.** After the last wish something in the world puts everything back to the start, so the child can do it again without a menu.
 
-Whether this is enough for that child has not been observed yet. A cold playtest by a model did not find the fault: ask, of each recording of an untouched game, what the player would do a second time.
+Whether this is enough for that child has not been observed yet. A cold playtest by a model had passed them: ask, of each recording of an untouched game, what the player would do a second time.
 
 ### Run a cold playtest proxy before showing the owner
 

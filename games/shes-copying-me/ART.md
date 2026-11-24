@@ -134,7 +134,7 @@ The room is painted once. Bodies, heads, faces, things and guests are each kept 
 
 ## The loop, made plain
 
-Play by a child at the low end of the band showed that the first move could be copied but not what to do next. Where this section and the rest of this sheet differ, this section holds.
+A child at the low end of the band played it and the loop was not clear: what to do, what comes of it, what to do next. Where this section and the rest of this sheet differ, this section holds.
 
 - **The opening round.** With nothing saved, the ghost hand plays one whole round for real (`round.ts`, `opening.ts`): it pours tea, gives the fan to the aunt and fans the dog. Any touch stops it, it plays once, and nothing it did is saved until a touch. It is the one thing that starts by itself.
 - **The loop.** A guest at the table asks in a cloud for the one thing it wants done to it, and the glow lies on the next step to that. When all four have had theirs the bell asks, and the party starts again.

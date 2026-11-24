@@ -94,7 +94,7 @@ Tiers: the pixel ratio, then the stitching on the stretched cloth, then the quil
 
 ## The loop, made plain
 
-Play by a child at the low end of the band showed that the first move could be copied but not what to do next. Where this section and the rest of this sheet differ, this section holds.
+A child at the low end of the band played it and the loop was not clear: what to do, what comes of it, what to do next. Where this section and the rest of this sheet differ, this section holds.
 
 - **The opening round.** With nothing saved, the ghost hand plays one whole round for real (`round.ts`, `opening.ts`): it leads the horse to the farmer who wishes for it, and when the yard has cheered and the wish is a hen, fetches the hen's head off the line. Any touch stops it, it plays once, and nothing it did is saved until a touch. It is the one thing that starts by itself.
 - **The loop.** The farmer wishes for a whole animal in a picture, cheers at it and wishes for the next.

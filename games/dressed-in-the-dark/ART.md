@@ -106,7 +106,7 @@ A painted box lid, in two lights that are two different pictures.
 
 ## The loop, made plain
 
-Play by a child at the low end of the band showed that the first move could be copied but not what to do next. Where this section and the rest of this sheet differ, this section holds.
+A child at the low end of the band played it and the loop was not clear: what to do, what comes of it, what to do next. Where this section and the rest of this sheet differ, this section holds.
 
 - **The opening round.** With nothing saved, the ghost hand plays one whole round for real (`round.ts`, `opening.ts`): it puts the lamp out, carries the cold hen the boots it dreams of and puts the lamp on again. Any touch stops it, it plays once, and nothing it did is saved until a touch. It is the one thing that starts by itself.
 - **The loop.** A cold sleeper dreams of the one garment it loves. When all five wear just that, the lamp is asked for, the light shows them off, and everything comes off again for another night.

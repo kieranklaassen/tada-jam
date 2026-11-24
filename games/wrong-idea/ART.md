@@ -94,7 +94,7 @@ School wall chart, the first look taken; the fallback (Airbrush gradient poster)
 
 ## The loop, made plain
 
-Play by a child at the low end of the band showed that the first move could be copied but not what to do next. Where this section and the rest of this sheet differ, this section holds.
+A child at the low end of the band played it and the loop was not clear: what to do, what comes of it, what to do next. Where this section and the rest of this sheet differ, this section holds.
 
 - **The opening round.** With nothing saved, the ghost hand plays one whole round for real (`round.ts`, `opening.ts`): it carries the red sock to the soup, and touches the grandmother. Any touch stops it, it plays once, and nothing it did is saved until a touch. It is the one thing that starts by itself.
 - **The loop.** The dream is in its bubble from the start instead of after a while, what he has understood wears a halo, and the hand shows the one move that brings the dream nearer, taking things out included. That replaces the rule that the hand never points at the answer: a young child could not see what the answer was for.

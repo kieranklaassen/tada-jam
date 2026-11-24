@@ -116,7 +116,7 @@ Row for `docs/art-direction.md`, section 3: The Blanket, sponge-stippled flat po
 
 ## The loop, made plain
 
-Play by a child at the low end of the band showed that the first move could be copied but not what to do next. Where this section and the rest of this sheet differ, this section holds.
+A child at the low end of the band played it and the loop was not clear: what to do, what comes of it, what to do next. Where this section and the rest of this sheet differ, this section holds.
 
 - **The opening round.** With nothing saved, the ghost hand plays one whole round for real (`round.ts`, `opening.ts`): it puts the blanket on the dog, moves the sausage while it cannot see and takes the blanket off, and the dog runs to the empty dish. Any touch stops it, it plays once, and nothing it did is saved until a touch. It is the one thing that starts by itself.
 - **The loop.** A bubble shows what the next one to fool believes in, the glow lies on one thing, and the round ends where it began.

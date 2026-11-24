@@ -120,7 +120,7 @@ The small print: `craft.ts` holds the materials, `figures.ts` the characters, `s
 
 ## The loop, made plain
 
-Play by a child at the low end of the band showed that the first move could be copied but not what to do next. Where this section and the rest of this sheet differ, this section holds.
+A child at the low end of the band played it and the loop was not clear: what to do, what comes of it, what to do next. Where this section and the rest of this sheet differ, this section holds.
 
 - **The opening round.** With nothing saved, the ghost hand plays one whole round for real (`round.ts`, `opening.ts`): it opens the egg by the boot, then touches the boot, and the chick copies it. Any touch stops it, it plays once, and nothing it did is saved until a touch. It is the one thing that starts by itself.
 - **The loop.** A dashed thread of yarn runs from the asking egg to its mother to be. The mother last followed is touched next. With every egg hatched the hen, tapped twice, tucks all of them in as eggs again and the round starts over. The first layout moved so that the boot stands clear.
