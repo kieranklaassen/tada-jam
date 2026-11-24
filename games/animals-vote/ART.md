@@ -5,11 +5,11 @@ Written before any game code, and checked by someone who did not write it before
 
 ## The band and its age rule
 
-Ages 3 to 7, so the youngest is 3: the 3 to 4 row of the cue table. No word, letter, numeral or sign; one next act offered at a time; tap and drag only, with a tap enough for a whole cycle. The only pictures are of the very things that happen (a tub, a puddle, a drum, balloons, a pillow). Quantities are four to six voters in two or three columns; the band's youngest start with four. `ctx.childAge` sets only where a first visit starts: 6 and older at `one-over`, 5 and younger at `mud-for-all`. `null` gives `mud-for-all`. A saved position wins.
+Ages 3 to 7, so the youngest is 3: the 3 to 4 row of the cue table. No word, letter, numeral or sign; one next act offered at a time; tap and drag only, with a tap enough for a whole cycle. The only pictures are of the very things that happen (a tub, a puddle, a drum, balloons, a pillow). The pack's rules are ages-2-to-4.md for the youngest and ages-4-to-6.md above: essential targets are about 100 logical pixels and apart, none is in the bottom strip, and a drag survives a lifted finger. The squares are the exception: they stand 80 high with no gap, since a gap would spoil the graph. Quantities are four to six voters in two or three columns; the band's youngest start with four, and six, one past the pack's about five for the youngest, comes only after two wishes have been met. The basket, the snacks and the shut third picture are not there in the first two positions; they come in with the sixth animal, at `both-at-once`. So the first two votes hold nothing but animals, two pictures, the mole and the bell. `ctx.childAge` sets only where a first visit starts: 6 and older at `one-over`, 5 and younger at `mud-for-all`. `null` gives `mud-for-all`. A saved position wins.
 
 ## The toy
 
-Tap an animal. In the same frame it squashes and calls in its own voice; then it springs through the air and squeezes itself into one square of the column it likes best, whatever its size: the elephant folds until its cheeks bulge, the mouse stands on tiptoe in all that room. The square lands with a clack one step higher in pitch than the square below. Tap it again and it pops out; everyone above drops one square with a thud each. Up, down, up, down is good with no goal at all.
+Tap an animal. In the same frame it squashes and calls in its own voice; then it springs through the air and squeezes itself into one square of the column it likes best, whatever its size: the elephant folds until its cheeks bulge, the mouse stands on tiptoe in all that room. The square lands with a clack one step higher in pitch than the square below. Tap it again and it leaps to the next column it can stand, and after the last of those it pops out onto the ground; everyone above drops one square with a thud each. Up, across, down is good with no goal at all. A tap on a snack sends it to the first picture, then to the next one along, then home. So every wish can be met without a drag.
 
 ## The object-by-action grid, and what is new on day 15
 
@@ -28,13 +28,13 @@ Tap an animal. In the same frame it squashes and calls in its own voice; then it
 | cheese | mouse, cat and pig come, soft gnaws | the same, gnawed or spat | worn on the nose, a hum | bounces home, rubbery boings |
 | bun | elephant and pig come, muffled munches | the same, gulped or spat | sat on, a squeaky sigh | tumbles home, soft pats |
 
-Five things in ten pairs: each tie plays both and adds one twist of its own (bath and mud fizzes brown bubbles; bath and dance skids; bath and fly carries everyone in bubbles; bath and sleep snores bubbles; mud and dance splatters the sky; mud and fly rains drips; mud and sleep pulls mud up as a quilt; dance and fly dances upside down; dance and sleep sleepwalks in a line; fly and sleep drifts up with each snore).
+Five things in ten pairs: each tie plays both and adds one twist of its own (bath and mud fizzes brown bubbles; bath and dance skids; bath and fly carries everyone in bubbles; bath and sleep snores bubbles; mud and dance splatters the sky; mud and fly rains drips; mud and sleep pulls mud up as a quilt; dance and fly dances upside down; dance and sleep sleepwalks in a line; fly and sleep drifts up with each snore). Three level columns play all three at once, with the twists of their three pairs.
 
 On day 15 the child knows every animal's taste and its one dislike, baits two columns against each other, hides the pig so that the numbers come out even, and arranges the exact tie she wants.
 
 ## The representation
 
-A picture graph with one picture for one voter (a column of equal squares on one base line, no gaps, no number on it). It is school practice without a trial behind it in the pack. Object stands for voter at once and stays a picture; no tally, no bar, no symbol. The square is a plain slab in the column's one colour with the face of whoever stands for it. Size of body never changes size of square: that is the idea and the joke. The wall behind is bare pale stone.
+A picture graph with one picture for one voter (a column of equal squares on one base line, no gaps, no number on it). It is school practice without a trial behind it in the pack. The voter itself is the object and its face on the square is the picture; the order ends at the picture, with no tally, no bar and no symbol. The face is there because it says whose square it is, which is the idea; a square and whoever is squeezed in it have no idle motion. The square is a plain slab in the column's one colour with the face of whoever stands for it. Size of body never changes size of square: that is the idea and the joke. The wall behind is bare pale stone.
 
 ## The four mechanic questions
 
@@ -45,7 +45,7 @@ A picture graph with one picture for one voter (a column of equal squares on one
 
 ## The error as a consequence
 
-There is no wrong vote. An outcome nobody wished for happens in full, to everyone. The graph of that vote stays on the wall behind the muddy animals, so where one more would have been enough can be seen. The state stays until the child begins again. An animal put on the one thing it cannot stand springs back, with its own cry, to what it likes best.
+There is no wrong vote. An outcome nobody wished for happens in full, to everyone. The graph of that vote stays on the wall behind the muddy animals, so where one more would have been enough can be seen. The mole goes on thinking of its picture, which swells and sinks, and the bell stirs. The state stays: at the child's next touch the animals climb back into the same squares, the snacks and the basket as they were, so one thing can be changed and the bell rung again. Only when the wish was met does a new vote begin. An animal put on the one thing it cannot stand springs back, with its own cry, to what it likes best.
 
 ## The designed order, and what is stored
 
@@ -60,21 +60,21 @@ Tastes, best first; the last is the one it cannot stand:
 | goat | mud | sleep | bath | fly | dance |
 | mouse | fly | dance | mud | bath | sleep |
 
-Positions, each one new thing (`LADDER` in `config.ts`): `mud-for-all` (four animals, two columns, ring the bell), `one-over` (five animals, one must move), `both-at-once` (six, a tie is met with), `make-a-tie` (two columns, make one), `third-column` (three columns, one must move), `all-three` (three level columns are met with), `from-the-top` (take the right one from the tallest of three), `one-of-three` (break a three-way tie), `level-all` (make a three-way tie), `pair-of-three` (two level and the third lower, three moves or fewer). After the last the order goes on from `one-over`. A cycle goes well when what happened is exactly what the mole wished; then the position moves one on. Every other cycle is mixed and nothing moves. There is no badly: the same wish stays for as long as the child likes, and any bell-ring is a whole cycle, so no step down is needed. A harder option the child can pick at any time is the third picture, which is turned over by a tap and opens a third column.
+Positions, each one new thing (`WISHES` in `things.ts`): `mud-for-all` (pig, elephant, cat and mouse, mud against bath, ring the bell; the goat comes as the fifth animal and the giraffe as the sixth), `one-over` (five animals, one must move), `both-at-once` (six, a tie is met with), `make-a-tie` (two columns, make one), `third-column` (three columns, one must move), `all-three` (three level columns are met with), `from-the-top` (take the right one from the tallest of three), `one-of-three` (break a three-way tie), `level-all` (make a three-way tie), `pair-of-three` (two level and the third lower, three moves or fewer). After the last the order goes on from `both-at-once`, so nobody ever leaves town. A cycle goes well when what happened is exactly what the mole wished; then the position moves one on. Every other cycle is mixed and nothing moves. There is no badly: the same wish stays for as long as the child likes, and any bell-ring is a whole cycle, so no step down is needed. A harder option the child can pick at any time is the third picture, which is turned over by a tap and opens a third column.
 
 The mole shows the wish of the position as it stands. When a wish is met the mole holds up the next at once; the pictures and the animals for it come in on the child's next touch.
 
-Stored, each field repaired by itself: `v`, `position`, `finished` (the graph on the wall is a vote that has been read), `fresh` (the next position is still to be laid out), `count` (how many animals are in town), `ballot` (the three pictures, the third may be shut), `columns` (who stands where, bottom first), `hidden` (who is in the basket, or nobody), `snacks` (the column each lies at, or home), `coats` (per animal: clean, muddy, bubbly, fizzy). An animal in the air or in the hand is saved where it came from. The run to the columns, the reading and the result are saved as their end when the bell is rung. Poses, splashes, balloons and fallen tiles are short-lived and gone on load.
+Stored, each field repaired by itself: `v`, `position`, `finished` (the graph on the wall is a vote that has been read), `fresh` (the next position is still to be laid out; only then does a sweep clear the wall), `count` (how many animals are in town, in the order pig, elephant, cat, mouse, goat, giraffe), `ballot` (the three pictures, the third may be shut), `columns` (who stands where, bottom first), `hidden` (who is in the basket, or nobody), `snacks` (the column each lies at, or home), `coats` (per animal: clean, muddy, bubbly, fizzy). An animal in the air or in the hand is saved where it came from. The run to the columns, the reading and the result are saved as their end when the bell is rung. Poses, splashes, balloons and fallen tiles are short-lived and gone on load. What is left of a result, the mole's mud or bubbles included, is drawn from the finished vote and goes with the sweep, except the coats. A snack eaten, spat or given to the mole is saved as home. A second animal put in the basket tips the first one out onto the ground. A third picture once opened stays open until new pictures come.
 
 ## The characters and their fixed tastes
 
-Each animal's want is the picture it runs to; on the ground it looks at that picture and leans to it. Likes and the one dislike are in the table above. Snacks: carrot for giraffe, goat and pig; cheese for mouse, cat and pig; bun for elephant and pig.
+Each animal's want is the picture it runs to; on the ground it has that picture in a thought beside it, looks at it and leans to it. The mole's wish hangs in a thought of the same shape, only larger: one shape means "would like this". Likes and the one dislike are in the table above. Snacks: carrot for giraffe, goat and pig; cheese for mouse, cat and pig; bun for elephant and pig. A snack put down at a picture brings its lovers there, out of another column or off the ground, and overcomes the one dislike for as long as it lies there. The snack put down last is the one that draws; left to itself later, an animal takes the leftmost of two it loves. An animal the child carries stays where it is put. A picture turned over makes everyone in a column choose again.
 
 - **The elephant** is heavy, slow, modest and takes up more room than it means to.
 - **The pig** is quick, round and for everything that is dirty. It eats all three snacks.
 - **The cat** is stiff, exact and offended.
 - **The giraffe** is elegant, late to notice, all neck.
-- **The goat** is stubborn and eats the ballot if it can.
+- **The goat** is stubborn and tries to eat what it is given before it looks at it.
 - **The mouse** is small, fast and certain that it is large.
 - **The mole** rings the bell. It wants to see what it holds up in its picture. Whatever happens to everybody happens to it too.
 
@@ -82,10 +82,11 @@ No one's feeling is about the child. Nobody is hurt or afraid of the child.
 
 ## The scenes
 
-- **The reading.** Cause: the bell. Those on the ground run to their columns (0.9 s). Row by row from the base line (0.5 s a row) everyone in that row hops at once and their squares sound together, a step higher each row; a column that has run out stays still. The last row standing puffs itself up and its picture swells. The outcome (`finished`, coats, and where the wish was met `position` and `fresh`) is saved when the bell is rung. The bell's touch that ends another scene only swings the bell.
+- **The reading.** Cause: the bell. Those on the ground run to their columns (0.9 s). Row by row from the base line (0.5 s a row) everyone in that row hops at once and their squares sound together, a step higher each row; a column that has run out stays still. The tallest column puffs itself up, or each of the level tallest ones, and its picture climbs from under the column to the top of it and stays there for as long as the vote is on the wall. The outcome (`columns` as they are after the run, `finished`, coats, and where the wish was met `position` and `fresh`) is saved when the bell is rung. A touch that ends a scene is answered by what it lands on (a squash and its sound, the bell a swing) and does nothing more; only a later touch sweeps.
+- **What is next.** Never waits for idleness. While somebody is on the ground its thought bobs; when everyone is up, and after a result, the bell swings and is ringed with light. After a bell that did not bring the mole's wish the first idle demonstration is a drag of one animal from the tallest column. The hand never shows a move that grants the wish, but in `one-over`, the position that teaches that a vote can be changed.
 - **The result.** Follows as the same scene, 5.5 s: everyone pops out of the wall to their own place, leaving the squares with their faces; it happens, each in its own way, the hidden one and the mole too; it thins out and they stand in what is left of it. Filled in by what won, by who was hidden and by the coats they had. A bath takes mud off.
 - **A wish met.** The mole drums its feet and its picture turns into the next. Part of the same scene.
-- **The sweep.** Cause: after a result, the bell, the mole, a picture or any animal. The old squares drop off the wall with a clatter (0.6 s), new pictures turn over where the order moved on, snacks go home, whoever was hidden climbs out, and the same touch does what it does. The bell and the mole only sweep.
+- **The sweep.** Cause: after a result, the bell, the mole, a picture or any animal. Where the order did not move on, everyone climbs back into their own square or the basket (0.6 s) and nothing else changes; `finished` is cleared. Where it moved on, the old squares drop off the wall with a clatter (0.6 s), new pictures turn over, snacks go home, whoever was hidden climbs out and the animals for it come in. Then the same touch does what it does; the bell and the mole only sweep. Saved when the sweep starts: `finished`, `fresh`, `count`, `ballot`, `columns`, `hidden` and `snacks`.
 
 Any touch ends a scene at its end. The settled town stays as long as the child likes; nothing starts by itself and nothing plays on load.
 
@@ -93,19 +94,19 @@ Any touch ends a scene at its end. The settled town stays as long as the child l
 
 ### us-ca
 
-Level: preschool-tk, Early (3 to 4 ½ Years) and Later (4 to 5 ½ Years). Age mapping: official. Gap: none printed. Ages 6 and 7 of the band are outside this level, and no record is named for them here.
+Level: preschool-tk, Early (3 to 4 ½ Years) and Later (4 to 5 ½ Years). Age mapping: official for ages 3 to 6, derived for age 7. Gap: none printed for ages 3 to 6; at age 7 the lookup prints that grade 2 is not in the pack. Age 5 also returns kindergarten, age 6 kindergarten and grade-1, age 7 grade-1, and each of those ages the cross-grade lane (labelled cross-grade); no record of these is used, and ages 6 and 7 are outside the level named here.
 
-- `edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-3-0-measurement-and-data-3-4` (`us-ca 3.4`): department-published-foundation, confirmed. Showing data with objects or pictures, one for each thing. The game uses objects (the squares); tally marks are not used.
+- `edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-3-0-measurement-and-data-3-4` (`us-ca 3.4`): department-published-foundation, confirmed. Showing data with objects, tally marks or pictographs. The game uses a pictograph made of objects (squares, each with the face of its voter); tally marks are not used.
   Limits taken: two groups, with adult help, at the earlier age; two or more groups, each marker for exactly one data point, at the later age. Not in Limits: how many voters; four to six is the game's own choice. The help of an adult that the earlier age names is not something the game gives.
 - `edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-3-0-measurement-and-data-3-5` (`us-ca 3.5`): department-published-foundation, confirmed. Taken in part: seeing which group has more or less. Saying it is not taken, since the game is wordless and does not listen.
-  Limits taken: two groups at the earlier age, two or more at the later; only more or less, not how many more. Adult support is named at both ages (at the later age not for the sentence about working out which has more or less), and the game does not give it. Equal columns are the game's own choice; they are not in Limits.
+  Limits taken: two groups at the earlier age, two or more at the later; only more or less, not how many more. Adult support is named at both ages (at the later age not for the sentence about working out which has more or less), and the game does not give it. Equal columns are the game's own choice; they are not in Limits. Judging how many moves would change the result (one move, or up to three) goes beyond this record's only more or less and is the game's own choice.
 
 ### nl
 
-Level: peuters up to the fourth birthday, then fase-1 (groep 1 and 2 are the ages of the card). Age mapping: convention. No record of the end-of-primary lane is used.
+Level: peuters up to the fourth birthday, then fase-1 (the lookup gives it for groep 1, 2 and 3; the records' Limits speak of groep 1 and 2, about ages 4 to 6). Age mapping: convention. Gap: none printed. Age 7 also returns fase-2, of which no record is used. No record of the end-of-primary lane is used.
 
-- `edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-verbanden-2` (`nl 2`, peuters, Verbanden): curriculum-institute-guidance, confirmed. Trying out together how a picture graph is made.
-  Limits taken: no finished or correct graph is asked for; no numerals, axes or tally marks. Doing it together is the record's word: someone beside the child is not something the game gives.
+- `edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-verbanden-2` (`nl 2`, peuters, Verbanden): curriculum-institute-guidance, confirmed. Trying out together how a picture graph is made. Taken in part: the trying out; the doing it together is not taken.
+  Limits taken: it describes what is offered, not what a child must be able to do; no finished or correct graph is mentioned; no numerals, axes or tally marks. Doing it together is the record's word: someone beside the child is not something the game gives.
 - `edu.nl.fase-1.mathematics.objective.inhoudskaart-rekenen-wiskunde-fase-1-verbanden-2` (`nl 2`, fase 1, Verbanden): curriculum-institute-guidance, confirmed. Making a picture graph. A bar chart, its other form, is not used.
   Limits taken: it is what a school offers, not what a child must do; no number of columns or range is set. Two or three columns is the game's own choice.
 - `edu.nl.fase-1.mathematics.objective.inhoudskaart-rekenen-wiskunde-fase-1-verbanden-3` (`nl 3`, fase 1, Verbanden): curriculum-institute-guidance, confirmed. Reading something off a picture graph. Taken in part: most, least and equal, by acting on it; saying how many is not taken.
@@ -117,8 +118,15 @@ California prints two groups for its earlier age and does not name equal groups;
 
 ### The claim
 
-The Animals Vote is designed from the California Department of Education's preschool and transitional kindergarten foundations 3.4 and, in part, 3.5, which name adult support the game does not give, and from SLO guidance for peuters (Verbanden 2) and for fase 1 (Verbanden 2 for the picture graph, and 3 in part); all five records are confirmed, and the voters are characters, not the child's own group.
+The Animals Vote is designed from the California Department of Education's preschool and transitional kindergarten foundations 3.4 and, in part, 3.5, which name adult support (3.4 at the earlier age only) that the game does not give, and from SLO guidance for peuters (Verbanden 2 in part: trying out a picture graph, without the doing it together) and for fase 1 (Verbanden 2 for the picture graph, and 3 in part); all five records are confirmed, and the voters are characters, not the child's own group.
 
 ## The look
 
-Written after the style spike.
+Mosaic tiles, the first look taken; the backup (Cloisonné enamel) was not tried. A town square laid from edge to edge in small uneven stones with pale grout.
+
+- **Laying** (`mosaic.ts`). A shape is filled with grout, the lines of even depth inside its outline are traced, and stones are laid along them, so the stones follow the shape. The outermost row is dark: the mosaic draws with it. Nothing lies on a grid, which is what keeps it from reading as pixels. Dark stones lie in dark grout, or a brown thing reads as a net. What is thinner than its stones is laid in smaller ones. A few stones are glass, with a glint.
+- **Colours.** Ochre, terracotta, limestone, slate blue, sage and wine for the square. Five clear colours belong to the five things and to their squares: bath blue, mud brown, dance red, fly yellow, sleep violet.
+- **The graph is the plainest thing.** Its wall is large pale stones a shade apart, with no figure on it. A square is one flat slab without stones, all of one size on one base line; whoever is in it is drawn a little smaller than the slab, so the slab frames everybody alike, and only ears, horns and tails stick out.
+- **Animals** are laid twice: large for the ground, and squeezed for a square. Every coat is laid as one picture. Eyes are two pictures (white stone, dark glass) so a glance is a move of one of them. Mouths are drawn live.
+- **Layers.** Square, bell, mole, pictures, graph, basket, animals (the furthest first), snacks, weather. In front of somebody sitting in a tub is the tub; the mouse in mud is cut off at the ground.
+- **Surfaces.** The square is laid once for a size of the surface, past the stage's edges.

@@ -16,7 +16,7 @@ execution: code
 - **Means:** a canvas 2D jam game, `games/animals-vote/`, from the cartridge template, with a pure rules module (KTD1), one pure play path (KTD2) and a contour-laid mosaic look (KTD4).
 - **Authority:** `AGENTS.md`, the Tada cartridge contract, `docs/solutions/conventions/building-a-jam-game.md`, the game-design and education packs. The owner asked for a deep, finished game.
 - **Stop conditions:** a shared file must change other than one row in the README games table, one in the claimed-styles registry, one line in `harness/shelves.ts` and the game's cover.
-- **Ships as:** one draft pull request. The owner plays it and merges.
+- **Ships as:** one draft pull request. Merged to main when green, as the owner asked.
 
 ## Product Contract
 
@@ -43,7 +43,7 @@ When the idea was written up, no jam game named picture graphs in its design she
 
 ### Scope Boundaries
 
-No speech, no microphone, no 3D. The look menu (section 4 of `docs/art-direction.md`) is not edited. Nothing is claimed about what a child learns. No merge and no deploy.
+No speech, no microphone, no 3D. The look menu (section 4 of `docs/art-direction.md`) is not edited. Nothing is claimed about what a child learns. Merging was granted on 2026-11-24; no deploy.
 
 ### Acceptance Examples
 
