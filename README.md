@@ -153,6 +153,7 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 | Lantern Walk | `games/lantern-walk/` | 4–8 | A night wood drawn as a rainbow scratch card: cut windows in a paper lantern, back them with red, blue or yellow, light the candle and carry it out, and each of six creatures answers each colour of light in its own way, until the lantern is hung by the door. No learning goal. |
 | Box Fort | `games/box-fort/` | 4–8 | A cardboard living room in three.js: cut windows and doors in boxes with scissors, stack them, tape them, roof them with a blanket, stuff them with cushions and hang lights, for a cat, a baby and a grandmother who each use the fort their own way; flick the switch and the holes throw their shapes on the wall. No learning goal. |
 | Dressed in the Dark | `games/dressed-in-the-dark/` | 3–7 | A lacquer box by night: carry garments from the moonlit line onto sleepers nobody can see, know by ear who has what and who walked in its sleep to another bed, then pull the cord and see all five sit up in it. No learning goal. |
+| Half a Horse | `games/half-a-horse/` | 2–6 | A pantomime horse of cloth for two fingers or two children: each drives one half, pull it long and it twangs, cross it and it ties in a bow, dress either end as a horse, hen, elephant or crocodile, and a farmyard believes it or gapes. Alone, the other half follows its own nose. No learning goal. |
 
 ## Showcases
 
