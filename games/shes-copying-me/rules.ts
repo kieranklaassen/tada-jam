@@ -81,6 +81,9 @@ export function moodOf(guest: Guest, effect: Effect): Mood {
   return TASTES[guest][effect]
 }
 
+/** The thing each guest asks for: the one that delights it from over its head, whatever it has on. */
+export const WANTS: Record<Guest, Thing> = { walrus: 'teapot', dog: 'fan', goose: 'duster', pig: 'glue' }
+
 /** What showing a thing up high does to the hair of the aunt who shows it. */
 export function hairAfter(hair: Hair, thing: Thing): Hair {
   switch (thing) {

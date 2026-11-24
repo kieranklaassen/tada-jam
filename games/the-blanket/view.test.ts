@@ -167,9 +167,9 @@ describe('motion', () => {
 describe('guidance', () => {
   it('shows one next act in every quiet room, and glows where it acts', () => {
     const world = freshWorld()
-    expect(hintFor(world)?.glow).toBe('sitters')
+    expect(hintFor(world)?.glow).toBe('dog')
     cover(world, 'dog')
-    expect(hintFor(world)?.glow).toBe('places')
+    expect(hintFor(world)?.glow).toBe('teapot')
     putSausage(world, 'boot')
     expect(hintFor(world)?.glow).toBe('dog')
     uncover(world, 'dog')
@@ -183,7 +183,7 @@ describe('guidance', () => {
     const eaten = freshWorld()
     eaten.sausage = { kind: 'spot', spot: 'hook' }
     expect(hintFor(eaten)?.glow).toBe('hook')
-    for (const w of [freshWorld(), eaten, world]) { const hint = hintFor(w); if (hint) expect(glows(hint, w).length).toBeGreaterThan(0) }
+    for (const w of [freshWorld(), eaten, world]) { const hint = hintFor(w); if (hint) expect(glows(hint).length).toBeGreaterThan(0) }
   })
 })
 

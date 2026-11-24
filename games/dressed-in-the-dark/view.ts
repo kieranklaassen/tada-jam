@@ -2,6 +2,7 @@ import { BUILD, bareFoot, drawFigure } from './figures'
 import { drawPiece } from './garments'
 import { handPose, type Guidance, type HandPose } from './guidance'
 import { moveFor } from './guide'
+import type { RoundHand } from './round'
 import { C, Pen } from './lacquer'
 import { BED, KNOB, LAMP, LANE, MOON, WARDROBE, bedX, pegOf } from './layout'
 import { NATURE, poseOf } from './motion'
@@ -63,7 +64,7 @@ export class RoomView {
     return this.sprites.painted
   }
 
-  draw(show: Show | null, guidance: Guidance | null): void {
+  draw(show: Show | null, guidance: Guidance | null, round: RoundHand | null = null): void {
     const { ctx, pen } = this, { scale, x, y } = this.by
     const light = show ? show.light : 1
     pen.count = 0
@@ -82,11 +83,13 @@ export class RoomView {
     ctx.setTransform(this.ratio * scale, 0, 0, this.ratio * scale, this.ratio * x, this.ratio * y)
     ctx.lineJoin = 'round'
     if (show) {
-      const glow = guidance?.glow ?? 0
+      // One thing glows: the next one to touch.
+      const glow = guidance?.glow ?? 0, next = glow > 0 ? moveFor(show, guidance!.demoIndex) : null
+      const on = (what: string) => (next?.what === what ? glow : 0)
       this.moon(show)
-      this.wardrobe(show, light, glow)
-      this.line(show, light, glow)
-      this.lamp(show, light, glow)
+      this.wardrobe(show, light, on('wardrobe'))
+      this.line(show, light, on('garment'), next?.carries ?? null)
+      this.lamp(show, light, on('cord'))
       for (const ring of show.rings) {
         const u = (show.t - ring.born) / 0.7
         if (u >= 1) continue
@@ -103,7 +106,8 @@ export class RoomView {
       for (const person of [...people].sort((a, b) => a.depth - b.depth)) if (person.bed === null && light > 0.02) this.onFloor(show, person, light)
       for (const person of people) this.dream(show, person, light)
       this.inAir(show, light)
-      if (guidance && guidance.demo !== null) this.ghost(show, guidance.demo, guidance.demoIndex, light)
+      if (round) this.handAt(round.x, round.y, round.press, round.opacity)
+      else if (guidance && guidance.demo !== null) this.ghost(show, guidance.demo, guidance.demoIndex, light)
     }
     this.drawn = pen.count + stamps + this.sprites.stamps
   }
@@ -165,19 +169,20 @@ export class RoomView {
     }
   }
 
-  private line(show: Show, light: number, glow: number): void {
+  private line(show: Show, light: number, full: number, next: Garment | null): void {
     const { pen, ctx } = this
     for (const garment of GARMENTS) {
       const piece = show.pieces[garment], peg = pegOf(garment)
       if (piece.at !== 'peg' && piece.at !== 'lifted') continue
+      const glow = garment === next ? full : 0
       const u = clamp((show.t - piece.touchedAt) / 0.7), home = clamp((show.t - piece.since) / 0.5)
       const sway = Math.sin(show.t * 1.3 + peg.x) * 0.03 + (u < 1 ? Math.sin(u * Math.PI * 6) * 0.22 * (1 - u) : 0) + piece.vx * 0.0006
       ctx.save()
       ctx.translate(piece.x, piece.y)
       ctx.rotate(Math.max(-0.7, Math.min(0.7, sway)))
-      const lifted = piece.at === 'lifted', breathe = 1 + (lifted ? 0.1 : 0) + glow * 0.04 * Math.sin(show.t * 5) + (u < 1 ? Math.sin(u * Math.PI) * 0.1 : 0) + (home < 1 ? Math.sin(home * Math.PI * 2) * 0.05 : 0)
+      const lifted = piece.at === 'lifted', breathe = 1 + (lifted ? 0.1 : 0) + glow * 0.08 * Math.sin(show.t * 5) + (u < 1 ? Math.sin(u * Math.PI) * 0.1 : 0) + (home < 1 ? Math.sin(home * Math.PI * 2) * 0.05 : 0)
       ctx.scale(breathe, breathe)
-      if (lifted) { ctx.globalAlpha = 0.5 + Math.sin(show.t * 5) * 0.15; pen.ell(0, 0, 54, 58, '#fff3c4', 0); ctx.globalAlpha = 1 }
+      if (lifted || glow > 0) { ctx.globalAlpha = (0.5 + Math.sin(show.t * 5) * 0.15) * (lifted ? 1 : glow); pen.ell(0, 0, 54, 58, '#fff3c4', 0); ctx.globalAlpha = 1 }
       this.piece(garment, light > 0.5 ? 0 : clamp((piece.y - EDGE.from) / (EDGE.to - EDGE.from)), true)
       ctx.restore()
     }
@@ -212,7 +217,7 @@ export class RoomView {
     })
     ctx.restore()
     // The cord and its handle: gold in any light, and it asks when the room wants it.
-    const want = show.allDressed && !show.lit && !show.scene ? 1 : 0
+    const want = show.asksLamp ? 1 : 0
     const sway = Math.sin(show.t * 2.6) * (3 + want * 14 + glow * 5) + show.swing * 10, down = show.knob * 34, kx = KNOB.x + sway, ky = KNOB.y + down
     pen.wire([LAMP.x + show.swing * 10, LAMP.y + 34, LAMP.x + sway * 0.3, (LAMP.y + ky) / 2 + 20, kx, ky - 24], 3.4)
     ctx.globalAlpha = 0.25 + 0.35 * Math.max(glow, want * (0.5 + 0.5 * Math.sin(show.t * 4)))
@@ -345,9 +350,10 @@ export class RoomView {
 
   /** What it dreams of: the one thing it loves. */
   private dream(show: Show, person: Person, light: number): void {
-    const u = (show.t - person.dreamAt) / DREAM
+    const asks = show.dreams === person.sleeper && light < 0.5
+    const u = asks ? 0.5 + Math.sin(show.t * 1.8) * 0.2 : (show.t - person.dreamAt) / DREAM
     if (u < 0 || u >= 1 || person.bed === null) return
-    const { ctx } = this, k = Math.min(1, u * 6) * Math.min(1, (1 - u) * 5)
+    const { ctx } = this, k = asks ? 1.25 : Math.min(1, u * 6) * Math.min(1, (1 - u) * 5)
     const x = person.x, y = light > 0.5 ? 322 - BUILD[person.sleeper].hatY * 0.1 : 440 - u * 12
     ctx.save()
     ctx.globalAlpha = clamp(k)
@@ -417,8 +423,6 @@ export class RoomView {
     const x = move.to ? move.from.x + (move.to.x - move.from.x) * travel : move.from.x
     const y = (move.to ? move.from.y + (move.to.y - move.from.y) * travel : move.from.y)
     pen.dark = 0
-    ctx.save()
-    ctx.globalAlpha = opacity * 0.9
     if (move.carries && press > 0.2) {
       ctx.save()
       ctx.translate(x, y)
@@ -426,7 +430,15 @@ export class RoomView {
       this.piece(move.carries, (1 - light) * clamp((y - EDGE.from) / (EDGE.to - EDGE.from)) * 0.8, false)
       ctx.restore()
     }
-    ctx.translate(x + 8, y + 10 - press * 4 + (move.to === null && move.from.y === KNOB.y ? press * 26 : 0))
+    this.handAt(x, y, press, opacity)
+  }
+
+  private handAt(x: number, y: number, press: number, opacity: number): void {
+    const { ctx } = this, cord = Math.abs(x - KNOB.x) < 4 && Math.abs(y - KNOB.y) < 4
+    this.pen.dark = 0
+    ctx.save()
+    ctx.globalAlpha = opacity * 0.95
+    ctx.translate(x + 8, y + 10 - press * 4 + (cord ? press * 26 : 0))
     ctx.rotate(x > 1000 ? 0.18 : -0.18)
     const s = 1.15 - press * 0.12
     ctx.scale(x > 1000 ? -s : s, s)
