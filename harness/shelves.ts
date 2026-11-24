@@ -40,6 +40,7 @@ export const SHELVES: readonly Shelf[] = [
       'bedtime-forest': 'Carry six yawning animals home until the moon comes up.',
       'dress-for-weather': 'Zip, button and boot them up, then open the door to the weather.',
       'wash-day': 'Scrub, wring and peg out the muddy clothes. And the cat.',
+      'shes-copying-me': 'Move one aunt’s hand and the other copies with whatever she holds.',
       'cosy-scarf': 'Knit stripes for a cold animal until it dances.',
       'hats-for-all': 'Pop out foam hats until every head has one.',
     },
