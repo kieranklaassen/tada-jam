@@ -1,5 +1,4 @@
 // template: cartridge/config.ts v3
-import { monsterTelephoneManifest } from './manifest'
 
 // The one module a game tunes. The frozen files (quality.ts, attention.ts and
 // saveCadence.ts) read their numbers from here, so they stay byte-equal to the
@@ -68,8 +67,6 @@ export const LONGEST_FRAME_S = 0.1
 /** A change that keeps coming (a drag, a stroke) is handed to storage at most this often, in ms. */
 export const SAVE_THROTTLE_MS = 400
 
-const [YOUNGEST, OLDEST] = monsterTelephoneManifest.ageBand
-
 // --- Guidance (guidance.ts) -------------------------------------------------
 
 /**
@@ -77,12 +74,13 @@ const [YOUNGEST, OLDEST] = monsterTelephoneManifest.ageBand
  * tap and not as a hold, but a child under 4 copies what the hand does and
  * taps twice, so a band that starts below 4 is shown one. It follows the
  * manifest band, never the child's age while playing.
+ * One here: a second tap on a magnet drops it back on the shelf.
  * Before keeping two, list what a second tap does to each thing the hand may
  * show. Where a tap counts something, turns something over or starts a
  * scene, the second tap does harm, and the game sets this to 1 whatever its
  * band.
  */
-export const TAP_PRESSES: 1 | 2 = YOUNGEST < 4 ? 1 : 2
+export const TAP_PRESSES: 1 | 2 = 1
 
 // --- The designed order (state.ts) -----------------------------------------
 
@@ -92,21 +90,13 @@ export const TAP_PRESSES: 1 | 2 = YOUNGEST < 4 ? 1 : 2
  * are what a save stores: add steps anywhere, and never rename one that has
  * shipped. Nothing on screen shows where the child is.
  */
-export const LADDER: readonly string[] = ['first', 'second', 'third']
+export const LADDER = ['a-few', 'small-and-large', 'bodies', 'odd-places', 'crowd'] as const
+export type PositionId = (typeof LADDER)[number]
 
-/**
- * Where a first visit starts, by `ctx.childAge`: the last row whose age the
- * child has reached, and the first row for a younger child or no age. Age is a
- * hint: a saved position always wins, and every step stays reachable by play.
- * Rows ascend by age and no two share one, or the earlier row is never reached:
- * a band of a single age has a single row.
- * The two rows below are a start and not a rule. How many rows there are and
- * the age each begins at are the game's to choose: a row for each age of a
- * wide band, or a second row a year below the oldest. A game that writes its
- * rows out by hand takes `OLDEST` out of the line that reads the band, or the
- * typecheck stops on a name nothing uses.
- */
-export const FIRST_VISIT: readonly { fromAge: number; position: string }[] = [
-  { fromAge: YOUNGEST, position: 'first' },
-  ...(OLDEST > YOUNGEST ? [{ fromAge: OLDEST, position: 'second' }] : []),
+/** Where a first visit starts, by `ctx.childAge`: a hint, and a saved place wins. Younger, or no age, starts at the first row. */
+export const FIRST_VISIT: readonly { fromAge: number; position: PositionId }[] = [
+  { fromAge: 4, position: 'a-few' },
+  { fromAge: 5, position: 'small-and-large' },
+  { fromAge: 6, position: 'bodies' },
+  { fromAge: 7, position: 'odd-places' },
 ]

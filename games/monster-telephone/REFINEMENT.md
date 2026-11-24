@@ -3,9 +3,9 @@
 
 ## Status
 
-- Stage: sheet.
+- Stage: toy.
 - Look in use: dry-wipe whiteboard and magnets, not yet spiked.
-- Open: sheet ready for check, round 1.
+- Sheet check, round 1: not passed, 12 findings (band wording, a silent cell, a swaying hidden monster, what three scenes store, lanes and limits in the records). All applied, with the two cells about swapping the builder corrected beside them. Round 2 asked.
 
 ## Pass log
 
