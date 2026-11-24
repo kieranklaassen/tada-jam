@@ -1,5 +1,5 @@
 import { BED } from './bed'
-import { C, mix, pile, type Ctx } from './paint'
+import { C, TUFT, mix, type Ctx } from './paint'
 import { makeRng } from './rng'
 
 // The rug, edge to edge: a printed land of roads, a river, a meadow and a
@@ -69,7 +69,7 @@ function light(x: number): number {
 
 export function paintRug(ctx: Ctx, x0: number, y0: number, w: number, h: number): void {
   const rng = makeRng(5)
-  const s = pile.apart
+  const s = TUFT
   // The ground under the pile is dyed too, so that no grass shows between tufts.
   for (let y = y0; y < y0 + h; y += s * 2) for (let x = x0; x < x0 + w; x += s * 2) {
     ctx.fillStyle = mix(dyeAt(x + s, y + s), '#2b1d1a', 0.16)

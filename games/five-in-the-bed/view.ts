@@ -67,14 +67,14 @@ export class View {
   sounds: Note[][] = []
   private readonly hand: HandPose = { travel: 0, press: 0, opacity: 0 }
 
-  /** The still part, for a surface of this size. `scale` is device pixels to a stage unit. */
-  sized(make: Make, scale: number, x: number, y: number, w: number, h: number): void {
+  /** The still part, for a surface of this size. `scale` is device pixels to a stage unit, for the rug and for the toys. */
+  sized(make: Make, scale: number, toys: number, x: number, y: number, w: number, h: number): void {
     const made = make(Math.max(1, Math.ceil(w * scale)), Math.max(1, Math.ceil(h * scale)))
     made.ctx.scale(scale, scale)
     made.ctx.translate(-x, -y)
     paintRug(made.ctx, x, y, w, h)
     this.rug = { canvas: made.canvas, x, y, w, h }
-    this.stamps.at(scale)
+    this.stamps.at(toys)
     for (const s of SHEEP_SPRITES) this.stamps.warm(s)
     for (const s of PROP_SPRITES) this.stamps.warm(s)
   }
@@ -210,7 +210,7 @@ export class View {
     const foot = this.bottleFoot(milk, s.bottle), b = milk[s.bottle]
     if (s.who !== null) {
       const at = g.bed.sheep[s.who]
-      if (hidden(g, s.who)) return { x: foot.x + (at.x - foot.x) * 0.3, y: QUILT.hem + 12 }
+      if (hidden(g, s.who)) return { x: foot.x + (at.x - foot.x) * 0.3, y: QUILT.hem + 6 }
       return { x: at.x, y: at.y + 27 }
     }
     // It leans toward whoever could have it.
@@ -287,14 +287,15 @@ export class View {
     ctx.globalAlpha = 1
     this.ridge(ctx)
     this.headboard(ctx, g)
-    this.strawsDown(ctx, g, false)
+    this.strawsDown(ctx, g, 'behind')
     this.dogAndCrate(ctx, g)
     const order = g.bed.sheep.map((_, i) => i).sort((a, b) => this.level(g, a) - this.level(g, b))
     for (const i of order) if (!this.under(g, i)) shadow(ctx, st, g.bed.sheep[i].x, g.bed.sheep[i].y, seenHeight(g, i) + this.poseLift(g, i))
     if (this.dogAt > 0) this.dogInBed(ctx)
     for (const i of order) if (!this.under(g, i)) this.oneSheep(ctx, g, i)
-    this.strawsDown(ctx, g, true)
+    this.strawsDown(ctx, g, 'head')
     this.quilt(ctx, g)
+    this.strawsDown(ctx, g, 'quilt')
     this.actProps(ctx, g)
     for (const f of this.flecks) {
       const k = f.t / f.lasts
@@ -430,14 +431,17 @@ export class View {
   }
 
   /** A straw lies behind every sheep but its own, whose head it goes over to the mouth. */
-  private strawsDown(ctx: Ctx, g: Game, over: boolean): void {
+  private strawsDown(ctx: Ctx, g: Game, part: 'behind' | 'head' | 'quilt'): void {
+    const over = part === 'head'
     const all = g.scene?.kind === 'milk' ? g.scene.straws : g.straws ?? this.lastStraws
     const milk = g.scene?.kind === 'milk' ? g.scene.milk : g.save.milk
     if (!all || !milk || this.strawK <= 0 || (g.scene?.kind === 'milk' && g.scene.t > MILK.burp)) return
     const k = ease(this.strawK)
     for (const s of all) {
       const mine = s.who === null ? null : g.bed.sheep[s.who]
-      if (over && (!mine || hidden(g, s.who!))) continue
+      // Those of the covered half hang over the quilt, or go in under its hem.
+      const covered = g.save.quilt === milk[s.bottle].side
+      if (covered !== (part === 'quilt') || (over && !mine)) continue
       const foot = this.bottleFoot(milk, s.bottle), from = { x: foot.x, y: SHELF.y + 16 }
       const end = this.ends[s.bottle] ?? this.strawEnd(g, milk, s)
       const to = { x: from.x + (end.x - from.x) * k, y: from.y + (end.y - from.y) * k }

@@ -44,7 +44,7 @@ The quilt is no quiz. Nobody asks what is under it, nothing waits for an answer,
 
 ## The error as a consequence
 
-When the sheep have settled, a straw comes down from each bottle to a sheep in the half under its shelf. A parting that does not fit leaves a straw that dangles and drips on one side, and on the other a sheep with an open mouth, who looks across at that straw. Nobody drinks; those with a straw blow bubbles. At `whose-milk` the right number with the wrong sheep leaves the coloured straw dangling on the same side as a sheep with an open mouth; the straw's end points across the ridge at the sheep of its colour, and that sheep looks back at it. Everything stays as it is, and each sheep over the ridge changes it.
+A straw comes down from each bottle to a sheep in the half under its shelf, and follows who lies where at once: a sheep that comes over gets its straw as it lands. A parting that does not fit leaves a straw that dangles and drips on one side, and on the other a sheep with an open mouth, who looks across at that straw and hops toward it and falls back, while the straw leans toward that sheep and its full bottle bobs. Nobody drinks; those with a straw blow bubbles. At `whose-milk` the right number with the wrong sheep leaves the coloured straw dangling on the same side as a sheep with an open mouth; the straw's end points across the ridge at the sheep of its colour, and that sheep looks back at it. Everything stays as it is, and each sheep over the ridge changes it.
 
 ## The designed order, and what is stored
 
@@ -77,8 +77,8 @@ The **dog** wants a place in the bed: he watches the half with the most room. Wh
 
 ## The scenes
 
-- **Deal.** Cause: a touch on the dog or his crate when no milk is out. Five bottles hop one by one to the two shelves with a clink each, a rest between the two groups; on `under-the-quilt` the quilt comes up. Four seconds. Saved at its start: bottles, misfits, the number that had to move, quilt, stream.
-- **Milk.** Cause: the settled parting fits. Straws fill, bottles drain, then a burp from each, one group after the other with a rest between; the smaller part's act plays, the empty bottles hop back into the crate, and all shut their eyes. Seven to ten seconds. Saved at its start: no bottles, finished, the position moved. Filled in from who lies where.
+- **Deal.** Cause: a touch on the dog or his crate when no milk is out, sheep on the move or an act playing or not. Five bottles hop one by one to the two shelves with a clink each, a rest between the two groups; on `under-the-quilt` the quilt comes up. Four seconds. Saved at its start: bottles, misfits, the number that had to move, quilt, stream.
+- **Milk.** Cause: the settled parting fits. Milk runs up the straws, bottles drain, then a burp from each, one group after the other with a rest between; the smaller part's act plays, the empty bottles hop back into the crate, and all shut their eyes. Seven to ten seconds. Saved at its start: no bottles, finished, the position moved. Filled in from who lies where.
 - **Act.** Cause: with no milk out, a new parting settles. The smaller part's act, four to five seconds; the larger part watches and bleats once each at the end. Under the quilt it is only bulges and muffled sound, and whoever is uncovered in the middle of an act freezes with wide eyes. It saves nothing.
 
 - **Showing.** Cause: the first opening of the game, and the first deal at `whose-milk`, once each. At the opening, with one sheep's open mouth already in sight, another sheep stretches in its sleep, tumbles over the ridge with a boing and tumbles back, so nothing is solved. At `whose-milk`, as the end of the deal, the sheep of a worn colour puts up its head, and its own thing and the bottle bob together with a clink. Four seconds. Saved when the showing itself starts: its mark in shown. Put away before that, it is still owed and starts at the child's first touch. It never plays again.
@@ -117,3 +117,33 @@ No record of the end-of-primary lane is named.
 ### The claim
 
 Five in the Bed is designed from the California preschool and transitional kindergarten foundation 2.2 (mathematics, strand 2.0), a foundation published by a state department and not a standard: a group has smaller parts in it, a group is split into two in more than one way, and two groups are joined. It is also designed from one Dutch fase 1 statement in part and one whole, both guidance from the curriculum institute: splitting by acting, and splitting and joining small quantities. All three were confirmed when the sheet was written. It claims nothing about what a child has learned.
+
+# The look
+
+Tufted play rug, the first row set aside for this game, in canvas 2D. Seen from above: a printed carpet fills the frame, and hard toys lie on it.
+
+## The rug
+
+Every tuft is one short dab of one dyed colour, so each printed edge is fuzzy by the width of a tuft (`rug.ts`: `dyeAt` says how the place is dyed). Printed on it: a field of night with a moon and stars at the head, meadow with flowers, a road that runs round the bed, a river. The mattress is one plain butter colour, so that five bodies on it are read at a glance; it is bound in brick red. The ridge is sewn in a thick rib of terracotta, lit from the upper left, and wobbles where it is plucked. Pile darkens where a finger or a fast sheep brushed it and stands up again in two and a half seconds. The rug is the only textile besides the quilt: no knitting, no loom, no wool. The sheep are hard.
+
+## The toys
+
+Moulded and turned: one clean edge, a round shade, a small sharp light. The five are cream balls of one size with a brown face plate, pegs for feet and ears. Each is turned as a ball is turned (`sheep.ts`), so that one which rolls shows its curls, its back and its face again, and rights itself at rest; the light on it never turns. What tells them apart is on the head: a blue nightcap, pink curlers, a yellow dummy and tuft, a green mask, an orange bobble hat. A worn bottle has the same colour and a spotted band.
+
+Bottles stand in two painted wooden shelves. Straws are barley-sugar red and white, or in a sheep's own colour. A straw lies behind every sheep but its own and comes to the mouth from the side, past the eyes. The dog is jointed wood with a red collar, large, at the left, behind his crate. The quilt is flat blue felt with stars and a white hem: opaque, and it shows a lump only where somebody moves.
+
+## Palette
+
+Night `#35426f`, meadow `#6f9d4f`, butter `#e8cf8c`, terracotta `#c9825a`, brick `#9c4a3c`, cream `#fbf1dc`, quilt `#5d6cb5`, shelf teal `#57a6a1`. The five own colours are in `OWN` (`paint.ts`) and nothing essential rests on colour alone.
+
+## Motion
+
+Nobody shares one: breathing, wobble, gaze and drinking have a pace and a way for each (`view.ts`), and an act is a function of time (`acts.ts`) that lifts, spins and squeezes whoever is in it where they lie. A leap is a kinematic arc over the others with contact by height, so it passes through nobody. Under the quilt it goes low and in at the side.
+
+## Tiers
+
+A tier sets the pixel ratio only. The rug and the toys are painted once for a size of the surface, never in the middle of play.
+
+## Registry
+
+Row for `docs/art-direction.md`, section 3: Five in the Bed, tufted play rug (canvas 2D).

@@ -3,26 +3,32 @@
 
 ## Status
 
-- Stage: template copied. No sheet yet.
-- Look in use: none yet.
-- Open: the design sheet in `ART.md` and its check.
-
-The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Ask for the sheet's check by writing `Open: sheet ready for check, round N` here; when it passes, record the round and the commit it judged. Someone with no session to read resumes from this block and the files. The two parts below belong to the block.
+- Stage: gates. Built, refined in the passes below, and in review in its pull request.
+- Sheet: check round 1 (a reader who did not write it) returned 16 findings, pasted word for word. Round 2 reads the changes made since.
+- Look in use: the first row set aside, tufted play rug. The second, backlit peg dots, was not tried.
+- Open: the owner has not seen the toy or the game; nobody has listened to the sounds; no physical iPad and no WebKit was measured.
 
 ### Template notes
 
-No entry yet. One entry a file copied from the template, written for the lead and for the games that come after: used as copied, or what was changed and why, and what is wrong or missing that any game would need. Mark a fault or a gap **for the template**. A frozen file is never changed here: a fault in one is a request to the lead.
+- `state.ts`: used as copied, wrapped by `save.ts`.
+- `scene.ts`: copied and not used. Scenes are steps of the rules in `game.ts`, since what they show depends on the physics.
+- `config.ts`: `TAP_PRESSES` is 1, since a second tap takes the sheep back.
+- The Mount: the template's, with the gestures behind `Play` so that tests use the same path.
+- `symbols.ts` went, as the band starts below 6. Frozen files and the rest: used as copied.
 
 ### For the owner to decide
 
-Nothing yet. One line for each thing only the owner can settle: the look and the toy at the toy checkpoint, a default the game would like changed, and anything the guide does not rule on.
+- The look and the toy.
+- Whether the opening showing (one sheep over the ridge and back) is wanted on the first visit.
 
 ## Pass log
 
-No pass yet. One row per pass: what was looked at, the critique written as the child, the one themed fix set, what was reverted, the measured frame rate, and what is still weak.
-
 | Pass | Looked at | Critique | Fix set | Frame rate | Still weak |
 | --- | --- | --- | --- | --- | --- |
+| 1 | the first frame | Grass shows between the tufts of the bed; the ridge is flat; brown shelves are dull; the stars are crumbs | a dyed ground under the pile; a lit rib; teal shelves; larger stars | not measured | straws |
+| 2 | misfit, drinking, acts | Straws lie across the faces of others and over eyes; the mask is gone when its sheep sleeps | straws behind all but their own and in from the side; the mask over the eyes | not measured | why to move anybody |
+| 3 | the loop, as a child of 4: what do I do, what happened, what now | Straws went up each time anything moved, so nothing seemed to follow from a tap; the one without milk only looked; with no milk out nothing called | straws follow at once and a sheep gets its straw as it lands; the one without hops toward the spare straw, which leans to it, and its bottle bobs; the crate's bottles rattle and the dog looks at them; a touch on the crate deals at any time | not measured | |
+| 4 | quilt, dog in the bed, worn bottles, a change of tier | Straws over the covered half are hidden; a change of tier repaints the rug and stops the game for two seconds | those straws hang over the quilt or go in at the hem; painted once for a size | 58 fps in software Chrome | |
 
 ## For the pull request
 

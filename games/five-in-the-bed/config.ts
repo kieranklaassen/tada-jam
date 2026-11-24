@@ -19,12 +19,10 @@ export const BACKDROP = '#5b8842'
 export type Tier = {
   /** Canvas pixel ratio cap; the jam's bar caps it at 2. */
   dpr: number
-  /** How far apart the rug's tufts are, in stage units. Tufts only: every answer to a touch is the same on all tiers. */
-  pile: number
 }
 
 /** Tier 0 is full quality; each later tier is cheaper to draw. Whatever a tier change needs is compiled before it happens. */
-export const TIERS: readonly Tier[] = [{ dpr: 2, pile: 4 }, { dpr: 1.5, pile: 5 }, { dpr: 1.25, pile: 6 }, { dpr: 1, pile: 7 }]
+export const TIERS: readonly Tier[] = [{ dpr: 2 }, { dpr: 1.5 }, { dpr: 1.25 }, { dpr: 1 }]
 
 /** The governor's thresholds. The rules they feed are at the top of quality.ts. */
 export const GOVERNOR = {

@@ -3,13 +3,13 @@ import { useEffect, useRef } from 'react'
 import type { Cartridge, CartridgeContext } from '../types'
 import { AttendedClock, Attention } from './attention'
 import { GameAudio, voiceOf, type Note } from './audio'
-import { BACKDROP } from './config'
+import { BACKDROP, TIERS } from './config'
 import { IdleLadder, type Guidance } from './guidance'
 import type { Point } from './input'
 import { fiveInTheBedManifest } from './manifest'
 import { makeGame, quiet, saveOf } from './game'
 import { Overlay } from './overlay'
-import { pile, surface } from './paint'
+import { surface } from './paint'
 import { installJamPerf } from './perf'
 import { Play } from './play'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
@@ -51,19 +51,18 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // Nothing is saved until the slot has been read, so an early put-away cannot overwrite it.
     const cadence = new SaveCadence(() => { if (play) ctxRef.current.storage.save(serialize(saveOf(play.game))) })
 
-    const applyTier = () => {
-      canvas.dataset.tier = String(governor.tier)
-      pile.apart = governor.settings.pile
-    }
+    const applyTier = () => { canvas.dataset.tier = String(governor.tier) }
 
     const draw = () => {
       if (width <= 0) return
       const scale = dpr * by.scale
-      // The rug is painted once for a size of the surface and a tier.
-      const key = `${width} ${height} ${dpr} ${pile.apart}`
+      // The rug and the toys are painted once for a size of the surface. A change of tier draws the same pictures
+      // with fewer pixels, so nothing is painted anew in the middle of play.
+      const key = `${width} ${height}`
       if (key !== painted) {
         painted = key
-        view.sized(surface.make, scale, -by.x / by.scale, -by.y / by.scale, width / by.scale, height / by.scale)
+        const full = Math.min(window.devicePixelRatio || 1, TIERS[0].dpr) * by.scale
+        view.sized(surface.make, Math.min(full, 1.5 * by.scale), full, -by.x / by.scale, -by.y / by.scale, width / by.scale, height / by.scale)
       }
       pen.setTransform(scale, 0, 0, scale, dpr * by.x, dpr * by.y)
       view.draw(pen, play, play?.game ?? bare, guidance)

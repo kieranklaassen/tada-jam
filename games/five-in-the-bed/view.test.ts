@@ -13,7 +13,7 @@ import { STAMP_LIMIT, View, seenHeight } from './view'
 let undo: () => void
 beforeAll(() => { undo = fakeSurfaces() })
 afterAll(() => undo())
-const ready = () => { const v = new View(); v.sized(surface.make, 0.1, 0, 0, 1180, 820); return v }
+const ready = () => { const v = new View(); v.sized(surface.make, 0.1, 0.1, 0, 0, 1180, 820); return v }
 const make = (over: Partial<Saved> = {}) => new Play(makeGame({ ...firstSaved(4, 9), ...over }))
 let most = 0
 function run(p: Play, v: View, s: number): void {
@@ -57,7 +57,7 @@ describe('a frame', () => {
   }, 60000)
   it('is the same bed on a surface of any size', () => {
     const v = new View(), p = make()
-    v.sized(surface.make, 0.05, -400, -900, 2000, 2600)
+    v.sized(surface.make, 0.05, 0.05, -400, -900, 2000, 2600)
     expect(() => v.draw(fakePen().ctx, null, p.game, null)).not.toThrow()
   })
 })

@@ -26,8 +26,8 @@ export const surface: { make: Make } = {
   },
 }
 
-/** How far apart the tufts of the rug are, from the quality tier. */
-export const pile = { apart: 5 }
+/** How far apart the tufts of the rug are, in stage units. */
+export const TUFT = 5
 
 export function mix(a: string, b: string, k: number): string {
   const p = (s: string, i: number) => parseInt(s.slice(i, i + 2), 16)

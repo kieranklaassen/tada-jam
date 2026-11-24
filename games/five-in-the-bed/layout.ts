@@ -15,7 +15,7 @@ export function bottleAt(side: Side, slot: number, n: number): Point {
   return { x: HALF[side].mid + (slot - (n - 1) / 2) * BOTTLE.apart, y: SHELF.y }
 }
 /** The quilt: rolled at the foot, and pulled up to the hem. */
-export const QUILT = { roll: BED.bottom + 8, rollH: 74, hem: BED.top - 4, hemH: 58 } as const
+export const QUILT = { roll: BED.bottom + 8, rollH: 74, hem: BED.top + 10, hemH: 58 } as const
 /** The hem's height when the quilt is up so far (0 rolled, 1 up). */
 export const hemAt = (k: number): number => QUILT.roll + (QUILT.hem - QUILT.roll) * k
 export const DOG = { x: 102, y: 420 } as const
