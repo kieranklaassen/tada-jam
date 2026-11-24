@@ -29,18 +29,21 @@ Frame cost is counted, not timed: there is no graphics hardware where this was b
 | 1 | The spike at 1180 by 820: first scene, an egg opening, a chick settled | "The chicks are small. The cow is a round thing. The string comes out of its tummy. The sheep is behind the pig." | Chicks a sixth larger; the cow has legs and stands higher in the door; the thread starts at the neck; sheep, pig and eggs moved so that each shows whole | 110 to 130 pieces | Boot's rider out of sight |
 | 2 | Parade, one chick of each kind, ring, riders, the hen with each thing, stood in stills | "Where did the chick in the boot go? The egg is on his face. The boot is in front of the ball." | Seats moved; what the game sets down is put where it hides nothing; chicks keep their place once they stand by their mother, so that a chick does not scoot off from under a finger; chicks shut in flap out | 155 at the busiest | Hen's looks are whole-body |
 | 3 | The hen's ten looks, wing, foil, ground, the guide hand, phone and wide surfaces | "She does not really turn her head. The ground does nothing. The wing goes down when it should go up." | The hen's head turns by itself, right over for the teapot; ground dents, foil creases under the finger; wing signs; the farmer opens one eye; buttons lost their thread, which read as a cross | 160 at the busiest, budget 175 in `frameBudget.test.ts` | See the cold playtest |
+| 4 | The cold playtest proxy on the production build: seven fresh sessions by someone who had read nothing | Two high: with no egg left the hand led to the hen and no further; the first chick stood behind the farmer's hat. Then: a crowd hides faces, a chick after an egg looks cross, a carried pot leaves the frame, the hen under the pig is a pancake | The hand shows the hen and then a chick in one showing, and while her wing is up every chick stands in light; first places moved; what counts as hidden is wider; the chick after an egg hums with open eyes; carried things stay whole in the frame | 165 at the busiest | A child can still build a crowd |
+
+Reader, first reading: rules 1 to 5 clean, 22 points under rule 6. All were built except one answered here: a finger that is carrying and moving keeps its work; lying still for four seconds it gives it up (`play.ts`, `DEAD_S`).
 
 ## For the pull request
 
 ### How the game meets the quality bar
 
 - **Alive at idle**: eggs lean and knock, the teapot's lid lifts, the pig's tail goes, the farmer's belly goes up and down, the hen follows with her eyes, everyone blinks, the sun turns.
-- **Motion and sound on every touch**: every body squashes on a spring in the frame the finger lands; ground, foil, fence, clouds, sun, tree, sheep and cow answer too. 76 acts, no two the same (tested).
+- **Motion and sound on every touch**: every body squashes on a spring in the frame the finger lands; ground, foil, fence, clouds, sun, tree, sheep and cow answer too. 90 acts, no two the same (tested).
 - **Weight and follow-through**: springs on the body, loose pupils that lag and overshoot, hops that land in a squash.
 - **Silhouettes and tappables**: warm and pale bodies on a mid-dark ground; targets about 100 units, 26 more forgiven; nothing to touch in the corner, under the home control or in the bottom strip.
 - **Wordless clarity at two**: one egg asks at a time; any tap does something; no numeral, letter or sign.
 - **Idle guidance**: glow at 3 s, hand at 5 s, four showings with doubling gaps, then quiet.
-- **60 fps**: 155 to 160 pieces at the busiest, one full-surface picture, no post pass, no shadow blur, no picture made after the first frame. No physical iPad measured.
+- **60 fps**: 165 pieces at the busiest (budget 175), one full-surface picture, no post pass, no shadow blur, no picture made after the first frame. No physical iPad measured.
 - **Assets**: all drawn by code; nothing loaded.
 
 ### The learning claim

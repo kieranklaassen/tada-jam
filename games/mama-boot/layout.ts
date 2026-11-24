@@ -46,17 +46,17 @@ export const PUDDLE = { x: 872, y: 688, rx: 122, ry: 44 } as const
 
 /** Where the six loose things stand on a first visit. */
 export const FIRST_THINGS: Record<ThingKey, Spot & { dir: 1 | -1 }> = {
-  boot: { x: 158, y: 520, dir: 1 },
+  boot: { x: 150, y: 496, dir: 1 },
   teapot: { x: 372, y: 448, dir: 1 },
   pig: { x: 664, y: 474, dir: -1 },
-  farmer: { x: 226, y: 716, dir: 1 },
+  farmer: { x: 240, y: 730, dir: 1 },
   ball: { x: 1052, y: 668, dir: -1 },
   bell: { x: 628, y: 700, dir: 1 },
 }
 
 /** Where the eggs stand on a first visit, each nearest to something else, so tapping alone meets different mothers. */
 export const FIRST_EGGS: readonly Spot[] = [
-  { x: 318, y: 566 },
+  { x: 326, y: 566 },
   { x: 540, y: 556 },
   { x: 712, y: 624 },
   { x: 470, y: 700 },
@@ -76,7 +76,9 @@ export function apart(a: Spot, b: Spot): number {
 
 /** How far a place is from the rim of the puddle: below nothing inside it. */
 export function fromPuddle(p: Spot): number {
-  return Math.hypot(p.x - PUDDLE.x, ((p.y - PUDDLE.y) * PUDDLE.rx) / PUDDLE.ry) - PUDDLE.rx
+  const dx = p.x - PUDDLE.x, dy = (p.y - PUDDLE.y) / SQUAT, d = Math.hypot(dx, dy)
+  if (d < 0.01) return -PUDDLE.ry
+  return d - 1 / Math.hypot(dx / d / PUDDLE.rx, dy / d / (PUDDLE.ry / SQUAT))
 }
 
 /**
@@ -119,3 +121,5 @@ export const SCENERY: Record<SceneryKey, Spot & { r: number }> = {
 }
 /** The band the fence stands in. */
 export const FENCE = { top: 322, bottom: 400 } as const
+/** Where there is fence in that band. */
+export const FENCES: readonly (readonly [number, number])[] = [[-520, 92], [300, 446], [584, 800], [1130, 1700]]

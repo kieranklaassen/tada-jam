@@ -1,5 +1,5 @@
 import { Box, TAU, type Pen, type Sprite } from './craft'
-import { GROUND, PUDDLE, SCENERY } from './layout'
+import { FENCES, GROUND, PUDDLE, SCENERY } from './layout'
 import { STAGE } from './stage'
 
 // The yard itself, stuck down once: sheets of card for sky, hills and ground,
@@ -102,8 +102,7 @@ export function blob(p: Pen, x: number, y: number, rx: number, ry: number, seed:
 }
 
 function fence(g: Pen, box: Box): void {
-  const { x: X, w: W } = YARD
-  for (const [from, to] of [[X, 92], [300, 446], [584, 800], [1130, X + W]] as const) {
+  for (const [from, to] of FENCES) {
     box.stick(g, (from + to) / 2, 352, to - from, 13, 0, '#e2bb7c', 3)
     box.stick(g, (from + to) / 2, 380, to - from, 13, 0, '#d9ae6a', 3)
     for (let x = from + 16; x < to - 6; x += 38) box.stick(g, x, 362, 82, 17, Math.PI / 2 + Math.sin(x) * 0.05, '#efcf96', 3)

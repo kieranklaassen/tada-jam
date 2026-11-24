@@ -104,10 +104,6 @@ function pig(box: Box): Figure {
 
 function farmer(box: Box): Figure {
   return figure(box, 400, 260, 196, 226, { x: 0, y: -8 }, [{ x: -92, y: -136, r: 17, lid: '#e8b48c' }, { x: -56, y: -138, r: 19, lid: '#e8b48c' }], { x: -70, y: -92, r: 13 }, (g) => {
-    // Legs first, over the far end of the barrow, in odd socks.
-    box.stick(g, 106, -100, 90, 22, -0.35, '#4d6fb0', 3); box.stick(g, 112, -86, 90, 22, -0.2, '#5a7fc4', 3)
-    box.felt(g, '#6a4a3a', [134, -156, 40, 52], (p) => p.roundRect(138, -150, 26, 46, 11)); box.felt(g, '#7d5a46', [146, -134, 40, 52], (p) => p.roundRect(150, -130, 26, 46, 11))
-    box.button(g, 120, -118, 9, '#f25c54', 2, '#fff', 1); box.button(g, 128, -94, 9, '#ffd23f', 2, '#fff', 1)
     // The head: felt, a cotton beard, a button nose, a straw hat of card and raffia.
     box.felt(g, '#f2c39b', [-118, -170, 90, 90], (p) => p.ellipse(-74, -126, 43, 44, 0, 0, TAU))
     box.cotton(g, [[-102, -92, 17], [-80, -80, 20], [-54, -82, 19], [-38, -96, 15]], '#ffffff', 3)
@@ -124,6 +120,8 @@ function farmer(box: Box): Figure {
     box.button(g, 86, -22, 25, '#3c5c9a', 4, '#ffd23f', 3)
     box.glue(g, -84, -24, 6); box.glue(g, 60, -60, 5)
   }, {
+    // A leg, over the far end of the barrow: it kicks from the knee.
+    leg: { x: 78, y: -88, sprite: box.sprite(130, 110, 20, 76, (g) => { box.stick(g, 32, -10, 84, 22, -0.35, '#4d6fb0', 3); box.felt(g, '#6a4a3a', [58, -62, 40, 52], (p) => p.roundRect(62, -58, 26, 46, 11)); box.button(g, 46, -16, 9, '#f25c54', 2, '#fff', 1) }) },
     // His belly goes up and down behind the barrow's side.
     belly: { x: 22, y: -66, sprite: box.sprite(170, 110, 85, 92, (g) => { box.felt(g, '#4d6fb0', [-76, -70, 152, 72], (p) => { p.moveTo(-74, 2); p.quadraticCurveTo(-70, -70, 0, -70); p.quadraticCurveTo(70, -70, 74, 2); p.closePath() }, { stitch: '#b9d0ff' }); box.felt(g, '#e2564a', [-20, -62, 40, 40], (p) => p.roundRect(-18, -56, 36, 32, 6), { lift: 1.5, stitch: '#ffe3c0' }); box.button(g, -44, -34, 9, '#ffd23f', 4, '#b5820f', 1.5); box.button(g, 44, -34, 9, '#ffd23f', 4, '#b5820f', 1.5) }) },
     arm: { x: -18, y: -88, sprite: box.sprite(120, 110, 30, 90, (g) => { box.pipe(g, [[0, 0], [24, -22], [34, -52]], 22, '#e2564a', '#a8322a'); box.felt(g, '#f2c39b', [22, -82, 36, 36], (p) => p.ellipse(38, -62, 15, 16, 0, 0, TAU), { lift: 2 }) }) },
@@ -174,6 +172,8 @@ function hen(box: Box): Figure {
     wing: { x: 26, y: -96, sprite: box.sprite(200, 150, 160, 40, (g) => { for (let i = 0; i < 5; i++) feather(g, -6 - i * 4, -6 + i * 6, 124 - i * 14, 22, 1.95 - i * 0.3, ['#d8622a', '#f2b134', '#c8442f', '#f6a64f', '#e86a2f'][i]) }) },
     top: { x: 140, y: -178, sprite: box.sprite(90, 60, 16, 34, (g) => box.felt(g, '#ffc02e', [-10, -26, 64, 34], (p) => { p.moveTo(-6, 6); p.quadraticCurveTo(0, -24, 22, -20); p.lineTo(56, 4); p.closePath() })) },
     under: { x: 140, y: -172, sprite: box.sprite(80, 50, 16, 14, (g) => box.felt(g, '#e8961a', [-8, -6, 56, 28], (p) => { p.moveTo(-6, -2); p.lineTo(42, 2); p.quadraticCurveTo(22, 22, -4, 14); p.closePath() })) },
+    // The foot that goes into the boot.
+    leg: { x: 6, y: -24, sprite: box.sprite(50, 110, 20, 10, (g) => box.pipe(g, [[0, 0], [-2, 40], [2, 84]], 13, '#ffb02e', '#c27a0c')) },
     skirt: { x: 92, y: -46, sprite: box.sprite(120, 110, 60, 20, (g) => { for (let i = 0; i < 4; i++) feather(g, -36 + i * 24, -4, 58, 19, 0.14 - i * 0.1, i % 2 ? '#ffd08a' : '#f6a64f') }) },
     // The head turns by itself; its eyes and beak are drawn with it.
     head: { x: 0, y: 0, sprite: box.sprite(170, 200, -10, 300, (g) => {
@@ -192,7 +192,6 @@ const CHICK_WOOL: readonly [number, number, number][] = [[255, 214, 64], [255, 1
 
 function chick(box: Box, i: number): Figure {
   return figure(box, 130, 160, 64, 138, { x: 0, y: -46 }, [{ x: -2, y: -80, r: 17, lid: '#eab52c' }, { x: 29, y: -78, r: 20, lid: '#eab52c' }], null, (g) => {
-    for (const x of [-12, 12]) box.pipe(g, [[x, -14], [x + 1, -4], [x + 12, -2]], 6, '#ff8a2a', '#c25a0c', { lift: 1.5 })
     box.pom(g, 0, -38, 37, 33, CHICK_WOOL[i], { lift: 3 })
     box.pom(g, 6, -74, 33, 31, CHICK_WOOL[i], { lift: 2 })
     // Each has a tuft of its own.
@@ -205,6 +204,7 @@ function chick(box: Box, i: number): Figure {
     ]
     tufts[i]()
   }, {
+    foot: { x: 0, y: -14, sprite: box.sprite(40, 34, 14, 10, (g) => box.pipe(g, [[0, 0], [1, 10], [13, 12]], 6, '#ff8a2a', '#c25a0c', { lift: 1.5 })) },
     wing: { x: -12, y: -48, sprite: box.sprite(60, 50, 40, 14, (g) => box.felt(g, '#f5b226', [-32, -8, 38, 34], (p) => { p.moveTo(4, -6); p.quadraticCurveTo(-26, -8, -32, 14); p.quadraticCurveTo(-12, 28, 4, 10); p.closePath() }, { lift: 2 })) },
     top: { x: 40, y: -68, sprite: box.sprite(40, 30, 6, 16, (g) => box.felt(g, '#ff8a2a', [-4, -10, 28, 16], (p) => { p.moveTo(-3, 4); p.quadraticCurveTo(4, -13, 12, -8); p.lineTo(26, 2); p.closePath() }, { lift: 1 })) },
     under: { x: 40, y: -65, sprite: box.sprite(36, 24, 6, 6, (g) => box.felt(g, '#e06c12', [-4, -2, 24, 14], (p) => { p.moveTo(-3, -1); p.lineTo(19, 0); p.quadraticCurveTo(8, 13, -2, 7); p.closePath() }, { lift: 1 })) },

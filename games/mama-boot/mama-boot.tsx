@@ -83,7 +83,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
         yard.sounds.length = 0
         audio.play(voiceOf(notes))
       }
-      if (yard.changed !== 'no') {
+      if (yard.changed !== 'no' && !yard.waiting) {
         const now = yard.changed === 'now'
         yard.changed = 'no'
         cadence.change(performance.now(), now)

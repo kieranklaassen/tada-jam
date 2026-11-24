@@ -23,8 +23,10 @@ export const SMEAR_S = 0.32
 export const LIFT_GRACE_S = 0.3
 export const REGRAB_PX = 140
 export const REST_S = 1
+/** A hand that lies still this long on a thing it has slid along lets go of it for the next finger. */
+export const DEAD_S = 4
 
-type Work = { id: number | null; x: number; y: number; x0: number; y0: number; landed: number; target: Target; moved: boolean; carrying: boolean; lifted: number }
+type Work = { id: number | null; x: number; y: number; x0: number; y0: number; landed: number; target: Target; moved: boolean; carrying: boolean; lifted: number; still: number }
 
 export class Play {
   width = 0
@@ -66,6 +68,8 @@ export class Play {
     if (work && work.id === null) {
       if (Math.hypot(x - work.x, y - work.y) <= REGRAB_PX) {
         work.id = id
+        work.still = this.time
+        this.yard.waiting = false
         work.x = x
         work.y = y
         this.yard.move(this.stage(x, y))
@@ -73,18 +77,21 @@ export class Play {
       }
       this.letGo()
     } else if (work) {
-      const idle = !work.carrying && (work.target.kind === 'ground' || (!work.moved && this.time - work.landed >= REST_S))
+      const rests = this.time - work.still
+      const idle = work.carrying ? rests >= DEAD_S : work.target.kind === 'ground' || rests >= REST_S
       if (!idle) { this.yard.dab(this.stage(x, y)); return }
+      if (work.carrying) this.letGo()
     }
     const p = this.stage(x, y)
     const target = this.yard.at(p)
-    this.work = { id, x, y, x0: x, y0: y, landed: this.time, target, moved: false, carrying: false, lifted: 0 }
+    this.work = { id, x, y, x0: x, y0: y, landed: this.time, target, moved: false, carrying: false, lifted: 0, still: this.time }
     this.yard.press(target, p)
   }
 
   move(id: number, x: number, y: number): void {
     const work = this.work
     if (!work || work.id !== id) return
+    if (Math.hypot(x - work.x, y - work.y) > 3) work.still = this.time
     work.x = x
     work.y = y
     this.touched()
@@ -118,6 +125,7 @@ export class Play {
     work.x = x
     work.y = y
     work.lifted = this.time
+    this.yard.waiting = true
     this.yard.move(this.stage(x, y))
   }
 
@@ -129,6 +137,7 @@ export class Play {
 
   private letGo(): void {
     this.work = null
+    this.yard.waiting = false
     this.yard.drop()
     this.yard.finger = null
   }
@@ -148,6 +157,7 @@ export class Play {
   park(): void {
     if (this.work && this.work.id === null) this.letGo()
     this.work = null
+    this.yard.waiting = false
     this.yard.settle()
     this.touched()
   }
