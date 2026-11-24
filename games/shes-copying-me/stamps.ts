@@ -13,9 +13,6 @@ export type Box = readonly [x: number, y: number, width: number, height: number]
  */
 export type Stamp = (g: G, name: string, box: Box, what: string, how: string, paint: (g: G) => void) => void
 
-/** Paints in place, with no picture kept. */
-export const direct: Stamp = (g, _name, _box, _what, _how, paint) => paint(g)
-
 /** Pictures whose `how` changed that are painted again in one frame. The others are a frame late. */
 const PER_FRAME = 2
 
@@ -53,10 +50,11 @@ export class Stamps {
 
   readonly put: Stamp = (g, name, box, what, how, paint) => {
     this.puts += 1
-    const [x, y, w, h] = box
+    const [x, y, w, h] = box, { scale } = this
+    const pw = Math.ceil(w * scale), ph = Math.ceil(h * scale)
     let kept = this.kept.get(name)
     if (!kept) {
-      kept = { ...this.make(Math.ceil(w * this.scale), Math.ceil(h * this.scale)), what: '-', how: '-' }
+      kept = { ...this.make(pw, ph), what: '-', how: '-' }
       this.kept.set(name, kept)
     }
     const other = kept.what !== what
@@ -71,13 +69,12 @@ export class Stamps {
         kept.what = what
         kept.how = how
         kept.g.setTransform(1, 0, 0, 1, 0, 0)
-        kept.g.clearRect(0, 0, Math.ceil(w * s), Math.ceil(h * s))
+        kept.g.clearRect(0, 0, pw, ph)
         kept.g.setTransform(s, 0, 0, s, -x * s, -y * s)
         paint(kept.g)
       }
     }
-    const at = g.getTransform(), pw = Math.ceil(w * this.scale), ph = Math.ceil(h * this.scale)
-    const { scale } = this
+    const at = g.getTransform()
     if (Math.abs(at.b) < 1e-4 && Math.abs(at.c) < 1e-4 && Math.abs(Math.abs(at.a) - scale) < 1e-4 && Math.abs(at.d - scale) < 1e-4) {
       // Only moved, or mirrored: pixel for pixel.
       g.imageSmoothingEnabled = false

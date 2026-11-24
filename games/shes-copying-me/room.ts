@@ -1,3 +1,5 @@
+import { BACKDROP } from './config'
+import type { Side } from './rules'
 import { GUEST, MIDDLE, PANE, PANES, PENDULUM, TABLE_TOP, place, toPoint } from './layout'
 import { makeRng } from './rng'
 import { GOLD, GOLD_DARK, blob, cell, dye, gutta, mix, soft, type G } from './silk'
@@ -73,7 +75,7 @@ function curtain(g: G, side: 1 | -1): void {
 }
 
 /** The window's garden behind the waiting guests. */
-export function paintPane(g: G, side: 0 | 1): void {
+export function paintPane(g: G, side: Side): void {
   const p = PANES[side]
   const x = p.x - PANE.width / 2, y = p.y - PANE.height / 2
   g.beginPath()
@@ -243,14 +245,14 @@ export function paintTable(g: G): void {
 /** The stretcher round the silk: wood, and a pin every little way. */
 export function paintFrame(g: G): void {
   const { width: W, height: H } = STAGE
-  g.fillStyle = '#5b2a4e'
+  g.fillStyle = BACKDROP
   g.beginPath()
   g.rect(-400, -300, W + 800, H + 600)
   g.rect(10, 10, W - 20, H - 20)
   g.fill('evenodd')
   g.beginPath()
   g.rect(10, 10, W - 20, H - 20)
-  g.strokeStyle = mix('#5b2a4e', '#000000', 0.35)
+  g.strokeStyle = mix(BACKDROP, '#000000', 0.35)
   g.lineWidth = 6
   g.stroke()
   const pin = (x: number, y: number) => {

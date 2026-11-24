@@ -9,7 +9,10 @@ import { COATS, EFFECTS, outcomeOf, type Act, type Antic, type Guest, type Mood,
 
 const t = (frequency: number, peak: number, attack: number, decay: number, more: Partial<Note> = {}): Note => ({ kind: 'tone', frequency, peak, attack, decay, ...more })
 const n = (frequency: number, peak: number, attack: number, decay: number, more: Partial<Note> = {}): Note => ({ kind: 'noise', frequency, peak, attack, decay, ...more })
-const run = (count: number, gap: number, make: (i: number) => Note): Note[] => Array.from({ length: count }, (_, i) => ({ ...make(i), delay: (make(i).delay ?? 0) + i * gap }))
+const run = (count: number, gap: number, make: (i: number) => Note): Note[] => Array.from({ length: count }, (_, i) => {
+  const note = make(i)
+  return { ...note, delay: (note.delay ?? 0) + i * gap }
+})
 
 export const ACT_SOUNDS: Record<Thing, Record<Act, Note[]>> = {
   teapot: {

@@ -1,7 +1,7 @@
 import { Detector } from './gesture'
 import { Echo } from './echo'
 import { GUEST, HOME, MEETING, onAunt, onCat, place, placeSide, reach, rings, sideOf, targetAt, toPoint, toSpot, zoneAt, type Spot, type Target } from './layout'
-import { BEAT_SECONDS, THINGS, effectOf, hairAfter, lipsAfter, moodOf, nextBeat, other, outcomeOf, type Act, type Antic, type Coat, type Effect, type Guest, type Mood, type Side, type Thing } from './rules'
+import { BEAT_SECONDS, GUESTS, THINGS, effectOf, hairAfter, lipsAfter, moodOf, nextBeat, other, outcomeOf, type Act, type Antic, type Coat, type Effect, type Guest, type Mood, type Side, type Thing } from './rules'
 import type { Point } from './stage'
 import type { GameState } from './state'
 
@@ -148,7 +148,7 @@ export class Party {
   /** Whether there is anything to tidy. The bell stands on the table only then. */
   get untidy(): boolean {
     const { coats, hair, lips } = this.state
-    return Object.values(coats).some((coat) => coat !== 'clean') || hair.some((each) => each !== 'plain') || lips[0] || lips[1]
+    return GUESTS.some((guest) => coats[guest] !== 'clean') || hair.some((each) => each !== 'plain') || lips[0] || lips[1]
   }
 
   holds(id: number): boolean {
@@ -373,12 +373,11 @@ export class Party {
 
   private tidy(): void {
     for (const side of [0, 1] as const) {
-      const guest = this.state.seated[side]
-      this.seats[side] = { antic: null, mood: null, t: 9, from: this.state.coats[guest] }
+      this.seats[side] = this.restSeat(side)
       this.state.hair[side] = 'plain'
       this.state.lips[side] = false
     }
-    for (const guest of Object.keys(this.state.coats) as Guest[]) this.state.coats[guest] = 'clean'
+    for (const guest of GUESTS) this.state.coats[guest] = 'clean'
     this.begin('tidy', [...this.state.seated])
   }
 

@@ -143,11 +143,9 @@ export class Bits {
     }
   }
 
-  draw(g: G, put: Stamp): number {
-    let drawn = 0
+  draw(g: G, put: Stamp): void {
     for (const b of this.bits) {
       if (b.wait > 0) continue
-      drawn += 1
       const k = b.age / b.life, fade = Math.min(1, (1 - k) * 4)
       g.save()
       g.translate(b.x, b.y)
@@ -272,6 +270,5 @@ export class Bits {
       g.restore()
     }
     g.globalAlpha = 1
-    return drawn
   }
 }
