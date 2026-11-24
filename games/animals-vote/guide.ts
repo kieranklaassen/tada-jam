@@ -21,7 +21,7 @@ export function hintFor(play: Play, demo: number): Hint | null {
   // Nobody is up yet: the first one is.
   if (ground.length && town.columns.every((c) => c.length === 0)) return { from: belly(ground[0]), to: null, on: ground[0], r: 80 }
   // When the last vote was not what the mole would like, changing it is the next thing.
-  if ((demo % 2 === 0) !== play.unmet) return bell
+  if (!play.stale && (demo % 2 === 0) !== play.unmet) return bell
   const move = otherMove(play)
   return move ?? (ground.length ? { from: belly(ground[0]), to: null, on: ground[0], r: 80 } : bell)
 }

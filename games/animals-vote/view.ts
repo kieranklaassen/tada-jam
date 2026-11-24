@@ -242,7 +242,7 @@ export class View {
     const t = show ? Math.max(0, show.into) : 0, k = won.length ? strength(t, RESULT) : 0
     const left = town.finished && !show ? tallest(town) : []
 
-    this.drawBell(ctx, !show && (town.finished || onGround(town).length === 0))
+    this.drawBell(ctx, !show && (town.finished || (onGround(town).length === 0 && !play.stale)))
     this.drawMole(ctx, play, won, t, k, left)
     for (let slot = 0; slot < 3; slot++) if ((slot < 2 || tools) && this.crown[slot] === 0) this.drawPlaque(ctx, slot)
     // The graph.
@@ -329,7 +329,7 @@ export class View {
     const asked = play.show && !(play.show.result.met && play.show.into >= MET_AT) ? play.show.result.before.position : play.town.position
     const wish = wishAt(asked).wish, by = BOARD.y + ring(this.mole, 14, 5) * 5 - ring(this.wishSwap, 12, 3) * 16 + Math.sin(this.time * 1.6) * 2
     // Still thinking of it, when something else has happened.
-    const still = play.town.finished && !play.town.fresh && !play.show ? Math.max(0, Math.sin(this.time * 3)) * 0.09 : 0
+    const still = play.stale || (play.town.finished && !play.town.fresh && !play.show) ? Math.max(0, Math.sin(this.time * 3)) * 0.09 : 0
     stamps.stamp(ctx, BOARD_SPRITE, BOARD.x, by, 0, 1 + still)
     const n = wish.length, size = (n === 1 ? 0.88 : n === 2 ? 0.56 : 0.46) * (1 + still)
     const at = n === 1 ? [[0, 0]] : n === 2 ? [[-26, 0], [26, 0]] : [[-24, -20], [24, -20], [0, 22]]

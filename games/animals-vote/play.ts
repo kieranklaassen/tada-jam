@@ -57,6 +57,8 @@ export class Play {
   changed = false
   /** The last bell did not bring what the mole would like. */
   unmet = false
+  /** Everybody is back as before that bell and nothing is changed yet: ringing again would bring the same. */
+  stale = false
   private pressed: Target | null = null
   private slid: Target | null = null
   /** This touch ended a scene, or grew from one that did. */
@@ -156,6 +158,7 @@ export class Play {
 
   private tell(events: Event[]): void {
     this.events.push(...events)
+    if (events.length) this.stale = events.every((e) => e.type === 'return')
     this.changed = true
   }
 
