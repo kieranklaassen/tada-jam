@@ -30,4 +30,4 @@ export const BEARS = [WIDE, TALL] as const
 export const FLAT = 0.4
 
 /** The part of the world that is always in view, as drawn. */
-export const VIEW = { half: 7.45, low: -1.75, high: 8.55 }
+export const VIEW = { half: 7.45, low: -1.75, high: 8.8 }

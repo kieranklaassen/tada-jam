@@ -11,11 +11,11 @@ import { TAP_PRESSES } from './config'
 // task in front of the child.
 // Time is the attended clock's seconds, passed in.
 
-export const IDLE_BEFORE_GLOW = 3
+export const IDLE_BEFORE_GLOW = 1.5
 export const GLOW_RAMP = 1.2
-export const IDLE_BEFORE_DEMO = 5
+export const IDLE_BEFORE_DEMO = 3
 export const DEMO_SECONDS = 3
-export const MAX_DEMOS = 4
+export const MAX_DEMOS = 6
 /** Seconds the glow takes to fade once the last demonstration is over. */
 export const GLOW_FADE = 4
 

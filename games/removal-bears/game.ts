@@ -1,5 +1,5 @@
-import { caughtSide, held, place, size, swapped, type Cell, type Placing } from './cells'
-import { cellsOf, leftOf, layHouse, middleOf, solvable } from './houses'
+import { caughtSide, held, place, size, swapped, type Cell } from './cells'
+import { cellsOf, leftOf, layHouse, middleOf } from './houses'
 import { CELLS, type Kind } from './loads'
 import { MOST_BUMPS, move, type Load, type Saved } from './save'
 import { AT_WALL, BEARS, CARRY, CUB_Z, DEPTH, ENTER_Z, FLAT, LANE, SILL, SLOTS, SLOT_Z, drawnAt } from './space'
@@ -27,7 +27,7 @@ type Want = { do: 'turn' } | { do: 'swap' } | { do: 'heave'; i: number }
 type Act =
   | { kind: 'turn'; t: number; lasts: number; from: { w: number; h: number }; to: { w: number; h: number }; a0: number; show?: boolean }
   | { kind: 'swap'; t: number; a0: number; show?: boolean }
-  | { kind: 'walk'; t: number; i: number }
+  | { kind: 'walk'; t: number; i: number; show?: boolean }
   | { kind: 'in'; t: number; i: number; load: number; x: number; cx: number; cy: number; fromY: number; slotX: number; last: boolean; said: number }
   | { kind: 'bump'; t: number; i: number; x: number; cx: number; cy: number; fromY: number; side: -1 | 0 | 1; blocked: Cell[]; near: boolean; show: boolean; said: number }
   | { kind: 'deliver'; t: number; load: number; fromX: number }
@@ -44,6 +44,8 @@ const ring = (t: number, many = 2, fade = 4): number => Math.exp(-fade * t) * Ma
 
 export const TICK = 1 / 120
 /** A heave: the crouch, the flight, then through the wall or against it. */
+/** Out of sight to the right, on a surface of any shape. */
+const AWAY = 14
 const CROUCH = 0.2, FLY = 0.36
 const FLOWN = CROUCH + FLY
 export const ENDING = 8
@@ -78,8 +80,8 @@ export class Game {
   private readonly wetLeft = [0, 0]
   private finger = { u: 0, v: 2, since: 99 }
   private cubX = 0
-  private cubHop = 0
-  private cubOn = -1
+  private cartFull = true
+  private called = false
   private cubPoke = 99
   private cartPoke = 99
   private readonly insidePoke = [99, 99, 99]
@@ -104,15 +106,13 @@ export class Game {
   get hands(): number { return this.saved.loads.findIndex((l) => l.at === 'hands') }
   /** The load that waits on the cart: of this house, or the first of the next. */
   get waiting(): { kind: Kind; load: Load | null } | null {
-    if (this.act?.kind === 'deliver') {
-      const after = this.saved.loads.find((l) => l.at === 'cart')
-      return after ? { kind: after.kind, load: after } : null
-    }
-    if (this.act?.kind === 'in' && !this.act.last) { const l = this.saved.loads.find((one) => one.at === 'cart'); return l ? { kind: l.kind, load: l } : null }
-    if (this.saved.next) { const laid = this.saved.next.loads[0]; return this.act?.kind === 'in' ? null : { kind: laid.kind, load: { ...laid, at: 'cart', slot: 0 } } }
+    if (!this.cartFull) return null
+    if (this.saved.next) { const laid = this.saved.next.loads[0]; return { kind: laid.kind, load: { ...laid, at: 'cart', slot: 0 } } }
     const next = this.saved.loads.find((l) => l.at === 'cart')
     return next ? { kind: next.kind, load: next } : null
   }
+  /** Whether a load is to come at all: then the cart goes round the corner for it. */
+  private get more(): boolean { return (this.saved.next !== null && this.act?.kind !== 'in') || this.saved.loads.some((l) => l.at === 'cart') }
   get sceneRunning(): boolean { return this.act !== null && this.act.kind !== 'walk' }
   get busy(): boolean { return this.act !== null || this.dragX !== null }
   get empty(): boolean { return this.hands < 0 }
@@ -177,7 +177,7 @@ export class Game {
       return pose
     }
     if (act.kind === 'swap') {
-      pose.angle = act.a0; pose.flip = Math.PI * smooth(span(act.t, 0.08, 0.92))
+      pose.back = !load.way.back; pose.angle = act.a0; pose.flip = Math.PI * smooth(span(act.t, 0.08, 0.92))
       pose.y += Math.abs(Math.sin(act.t * 14)) * 0.05
       return pose
     }
@@ -377,7 +377,6 @@ export class Game {
     if (this.cubPoke < 0.8) pat.squash = 1 - ring(this.cubPoke, 2.5) * 0.25
     if (act?.kind === 'ending' && act.t > 2.6) {
       const n = clamp(Math.floor((act.t - 2.6) / 1.75), 0, 2), k = (act.t - 2.6 - n * 1.75) / 1.75
-      this.cubOn = n
       const to = this.perch(n), from = n === 0 ? pat : this.perch(n - 1)
       const j = span(k, 0, 0.26)
       pat.x = lerp(from.x, to.x, smooth(j)); pat.y = lerp(from.y, to.y, j) + arc(j) * 1.1; pat.z = lerp(from.z, to.z, smooth(span(j, 0.3, 0.8)))
@@ -413,13 +412,13 @@ export class Game {
 
   /** Any press first lands a scene that is only being watched. */
   press_(target: Target, u: number, v: number): void {
+    this.landScene()
     this.finger = { u, v, since: 0 }
-    if (this.showing || this.act?.kind === 'ending') this.land()
     this.grabbed = { x: this.x, u, v }
     switch (target.type) {
       case 'load': this.vPress += 7; this.say(voices.squeeze(this.count++)); break
       case 'bear': this.pokeV[target.who] += 6; this.say(voices.bear(target.who, this.count++)); this.puff(this.bearPose(target.who).x, 1.6, LANE + 1, 'crumb', 3); break
-      case 'opening': this.say(voices.knock(target.i, this.count++)); this.rim(target.i, 1.6); break
+      case 'opening': this.say(voices.knock(target.i, this.count++)); this.rim(target.i, 1.6); if (this.nearest().i === target.i) this.cubPoke = 0; break
       case 'cart': this.cartPoke = 0; this.say(voices.mouse(this.count++)); break
       case 'cub': this.cubPoke = 0; this.say(voices.cub(this.count++)); break
       case 'inside': this.pokeInside(target.i); break
@@ -429,14 +428,17 @@ export class Game {
     }
   }
 
+  /** A scene that is only being watched ends where it was going. */
+  landScene(): void { if (this.showing || this.act?.kind === 'ending') this.land() }
+
   /** The finger came up where it went down. */
   tap(target: Target): void {
     this.letPress()
     if (this.saved.finished || this.act?.kind === 'move') {
-      if (target.type === 'cart' && this.act === null && this.saved.next) this.startMove()
+      if (target.type === 'cart' && this.act?.kind !== 'move') this.called = true
       return
     }
-    if (target.type === 'cart') { if (this.empty && this.act === null) this.deliver(); return }
+    if (target.type === 'cart') { if (this.empty || this.act?.kind === 'in') this.called = true; return }
     if (target.type === 'load') this.want({ do: 'turn' })
     else if (target.type === 'bear') this.want({ do: 'swap' })
     else if (target.type === 'opening') this.want({ do: 'heave', i: target.i })
@@ -452,7 +454,7 @@ export class Game {
   }
 
   dragStart(target: Target): void {
-    if (target.type !== 'load' || this.act || this.empty) { this.grabbed = null; return }
+    if ((target.type !== 'load' && target.type !== 'bear') || this.act || this.empty) { this.grabbed = null; return }
     this.dragX = this.x; this.dragFrom = this.x; this.dragLift = 0
     this.say(voices.lift(this.count++))
   }
@@ -512,7 +514,7 @@ export class Game {
   /** The game was put away and is looked at again: what was being watched has ended. */
   rested(): void {
     this.cancel()
-    if (this.showing || this.act?.kind === 'ending') this.land()
+    this.landScene()
   }
 
   step(seconds: number): void {
@@ -543,14 +545,21 @@ export class Game {
       const t = act.t / act.lasts, corner = Math.hypot(act.from.w, act.from.h) / 2 + 0.04
       this.half = t < 0.5 ? lerp(act.from.w / 2, corner, smooth(span(t, 0, 0.22))) : lerp(corner, act.to.w / 2, smooth(span(t, 0.78, 0.98)))
     } else {
-      const to = this.act?.kind === 'in' ? 1.5 : this.restHalf()
+      const to = this.act?.kind === 'in' || this.act?.kind === 'move' ? 1.5 : this.saved.finished ? 0.08 : this.restHalf()
       this.half += (to - this.half) * Math.min(1, dt * 14)
       if (this.hands >= 0 && !act) this.half = Math.max(this.half, to)
     }
     // The cart keeps clear of the bears, and is out of the street while a house moves.
-    const right = this.bearX(1) + BEARS[this.bearOn(1)].radius + 2.2, cartTo = Math.max(6, right)
-    this.cartX += (cartTo - this.cartX) * Math.min(1, dt * 7)
-    if (this.cartX < right - 0.45) this.cartX = right - 0.45
+    const fallen = act?.kind === 'bump' && act.side >= 0 ? this.fallenOn(act) + this.restHalf() + 1.75 : 0
+    const right = Math.max(this.bearX(1) + BEARS[this.bearOn(1)].radius + 1.95, fallen), away = !this.cartFull && this.more
+    const cartTo = away ? AWAY : Math.max(6, right), roll = clamp((cartTo - this.cartX) * 6, -16, 16) * dt
+    this.cartX = Math.max(this.cartX + roll, Math.min(right - 0.3, AWAY))
+    if (away && this.cartX > AWAY - 0.6) this.cartFull = true
+    if (this.called && this.cartFull && this.act === null && this.more && (this.empty || this.saved.finished)) {
+      this.called = false
+      if (this.saved.finished) this.startMove()
+      else this.deliver()
+    } else if (this.called && !this.empty && !this.act) this.called = false
     const behind = this.nearest(), cubTo = this.cubSpot(behind.i)
     if (Math.abs(cubTo - this.cubX) > 0.02) this.cubX += clamp(cubTo - this.cubX, -dt * 5, dt * 5)
     for (const [key, d] of this.dents) {
@@ -576,22 +585,54 @@ export class Game {
   private owed(): void {
     const s = this.saved
     if (!s.shown) {
-      this.saved = { ...s, shown: true }; this.dirty = 'now'; this.showing = true
-      this.showWants = ['turn', 'turn', 'turn', 'turn', 'heave']
-      this.nextShow()
+      this.startShowing()
     } else if (!s.shownEnds && (s.position === 'other-side' || s.position === 'full-house') && s.loads.filter((l) => l.at === 'cart').length === 2) {
       this.saved = { ...s, shownEnds: true }; this.dirty = 'now'; this.showing = true
       this.showWants = ['swap', 'swap']
       this.nextShow()
     }
   }
-  private showWants: ('turn' | 'swap' | 'heave')[] = []
+  private showWants: ('turn' | 'swap' | 'heave' | 'in')[] = []
+  private showInto = 0
+  /** What is saved from the moment a first showing starts: the load already in the house. */
+  private shownState: Saved | null = null
+
+  /** The first showing is one whole round of the game: the load as it is does not go in, it is turned, and it goes in. Everything after it is the child's. */
+  private startShowing(): void {
+    const s = this.saved, i = this.hands, load = s.loads[i], plan: ('turn' | 'swap')[] = []
+    let way = load.way, into = -1
+    for (const swap of [false, true]) {
+      way = swap ? swapped(load.way) : load.way
+      plan.length = 0
+      if (swap) plan.push('swap')
+      for (let k = 0; k < 4 && into < 0; k++) {
+        into = s.openings.findIndex((o) => place(held(CELLS[load.kind], way), o.cells).fits)
+        if (into < 0) { way = { ...way, turn: (way.turn + 1) % 4 }; plan.push('turn') }
+      }
+      if (into >= 0) break
+    }
+    this.saved = { ...s, shown: true }
+    const loads = s.loads.map((l, n): Load => (n === i ? { ...l, way, at: 'in', slot: this.slotFor(into) } : l))
+    this.shownState = { ...this.saved, loads, x: middleOf(s.openings[into]), wideLeft: plan.includes('swap') ? !s.wideLeft : s.wideLeft }
+    this.showInto = into
+    this.showing = true
+    this.showWants = ['heave', ...plan, 'in']
+    this.dirty = 'now'
+    this.nextShow()
+  }
+
+  private slotFor(opening: number): number {
+    const taken = new Set(this.saved.loads.filter((l) => l.at === 'in').map((l) => l.slot)), middle = middleOf(this.saved.openings[opening])
+    return [0, 1, 2].filter((n) => !taken.has(n)).sort((a, b) => Math.abs(SLOTS[a] - middle) - Math.abs(SLOTS[b] - middle))[0]
+  }
   private nextShow(): void {
     const want = this.showWants.shift()
     if (!want) { this.showing = false; return }
-    if (want === 'turn') this.startTurn(0.62, true)
-    else if (want === 'swap') this.startSwap(true)
-    else this.startHeave(0, true)
+    if (want === 'in' || want === 'heave') {
+      const i = want === 'in' ? this.showInto : this.nearest().i
+      this.x === middleOf(this.saved.openings[i]) ? this.startHeave(i, want === 'heave') : (this.act = { kind: 'walk', t: 0, i, show: want === 'heave' })
+    } else if (want === 'turn') this.startTurn(0.9, true)
+    else this.startSwap(true)
   }
 
   private next(): void {
@@ -611,6 +652,7 @@ export class Game {
 
   private startTurn(lasts: number, show = false): void {
     const i = this.hands, load = this.saved.loads[i], from = this.extent(load)
+    this.last = 'turn'
     this.act = { kind: 'turn', t: 0, lasts, from, to: { w: from.h, h: from.w }, a0: this.angle, show }
     this.setWay(i, { ...load.way, turn: (load.way.turn + 1) % 4 }, show)
     this.say([...voices.toss(lasts), ...voices.rider(load.kind, 'turn', (load.way.turn + 1) % 4, lasts)])
@@ -627,19 +669,19 @@ export class Game {
   }
 
   private startHeave(i: number, show = false): void {
-    const at = this.hands, load = this.saved.loads[at], o = this.saved.openings[i], cells = this.cells(load), put = place(cells, o.cells), { w, h } = size(cells)
+    const at = this.hands, o = this.saved.openings[i], cells = this.cells(this.saved.loads[at]), put = place(cells, o.cells), { w, h } = size(cells)
     const cx = leftOf(o) + put.dx + (w - 1) / 2, cy = SILL + put.dy + h / 2, x = this.x, fromY = CARRY + h / 2 + this.lift
     this.saved = { ...this.saved, x }
-    if (put.fits && !show) return this.goIn(i, at, load, put, { x, cx, cy: cy + 0.02, fromY })
+    if (put.fits && !show) return this.goIn(i, at, { x, cx, cy: cy + 0.02, fromY })
     const side = caughtSide(cells, put)
     this.act = { kind: 'bump', t: 0, i, x, cx, cy: cy + 0.02, fromY, side, blocked: put.blocked, near: put.blocked.length === 1, show, said: 0 }
     if (!show) { this.saved = { ...this.saved, bumps: Math.min(MOST_BUMPS, this.saved.bumps + 1) }; this.dirty = 'now' }
+    this.last = 'bump'
     this.say(voices.heave())
   }
 
-  private goIn(i: number, at: number, load: Load, _put: Placing, way: { x: number; cx: number; cy: number; fromY: number }): void {
-    const s = this.saved, taken = new Set(s.loads.filter((l) => l.at === 'in').map((l) => l.slot)), middle = middleOf(s.openings[i])
-    const slot = [0, 1, 2].filter((n) => !taken.has(n)).sort((a, b) => Math.abs(SLOTS[a] - middle) - Math.abs(SLOTS[b] - middle))[0]
+  private goIn(i: number, at: number, way: { x: number; cx: number; cy: number; fromY: number }): void {
+    const s = this.saved, slot = this.slotFor(i)
     const loads = s.loads.map((l, n): Load => (n === at ? { ...l, at: 'in', slot } : l)), last = loads.every((l) => l.at === 'in')
     this.act = { kind: 'in', t: 0, i, load: at, ...way, slotX: SLOTS[slot], last, said: 0 }
     this.saved = { ...s, loads }
@@ -647,21 +689,20 @@ export class Game {
       const done = finishCycle(this.saved, s.bumps <= loads.length ? 'well' : s.bumps > loads.length * 3 ? 'badly' : 'mixed')
       const laid = layHouse(done.position, s.seed)
       this.saved = { ...done, next: { openings: laid.openings, loads: laid.loads }, seed: laid.seed }
+      this.cartFull = false
     }
+    if (this.showing) { this.showing = false; this.shownState = null }
     this.wants.length = 0
     this.dirty = 'now'
     this.say(voices.heave())
-    this.inAngle = this.angle
-    this.pendingRider = load.kind
   }
-  inAngle = 0
-  private pendingRider: Kind = 'bath'
 
   private deliver(): void {
     const i = this.saved.loads.findIndex((l) => l.at === 'cart')
     if (i < 0) return
     this.saved = { ...this.saved, loads: this.saved.loads.map((l, n): Load => (n === i ? { ...l, at: 'hands' } : l)) }
     this.angle = -this.saved.loads[i].way.turn * Math.PI / 2
+    this.cartFull = false
     this.act = { kind: 'deliver', t: 0, load: i, fromX: this.cartX }
     this.dirty = 'now'
     this.say(voices.spring())
@@ -670,17 +711,15 @@ export class Game {
   /** The next house: everything about it is saved at once, with its first load in the bears' hands. */
   private startMove(): void {
     const s = this.saved, next = s.next!
-    this.old = { ...s }
     this.pendingMove = { ...s, openings: next.openings, loads: move({ openings: next.openings, loads: next.loads }).map((l) => ({ ...l, at: 'cart' as const })), next: null, finished: false, bumps: 0, x: 0 }
     this.act = { kind: 'move', t: 0, swappedHouse: false }
     this.dirty = 'now'
     this.say(voices.rumble())
   }
-  private old: Saved | null = null
   private pendingMove: Saved | null = null
   /** What is saved: while the old house is still rolling off, already the new one. */
   get toSave(): Saved {
-    const s = this.pendingMove ?? this.saved
+    const s = this.pendingMove ?? this.shownState ?? this.saved
     // A load in the air is saved in the hands it is going to.
     return this.act?.kind === 'move' ? { ...s, loads: s.loads.map((l, n): Load => (n === 0 ? { ...l, at: 'hands' } : l)) } : s
   }
@@ -697,7 +736,7 @@ export class Game {
         const to = middleOf(this.saved.openings[act.i]), step = 7.5 * dt
         if (Math.floor(act.t * 13 / Math.PI) !== Math.floor((act.t - dt) * 13 / Math.PI)) this.say(voices.step(this.count++))
         // A turn asked for on the way is made before the heave.
-        if (Math.abs(to - this.x) <= step) { this.x = to; this.act = null; if (this.wants.length > 0) { this.wants.push({ do: 'heave', i: act.i }); this.next() } else this.startHeave(act.i) } else this.x += Math.sign(to - this.x) * step
+        if (Math.abs(to - this.x) <= step) { this.x = to; this.act = null; if (this.wants.length > 0) { this.wants.push({ do: 'heave', i: act.i }); this.next() } else this.startHeave(act.i, act.show) } else this.x += Math.sign(to - this.x) * step
         return
       }
       case 'in': return this.playIn(act)
@@ -712,8 +751,8 @@ export class Game {
         this.houseX = act.t < 0.75 ? -18 * out * out : 18 * (1 - smooth(back))
         if (!act.swappedHouse && act.t >= 0.75) {
           act.swappedHouse = true
-          this.saved = this.pendingMove!; this.pendingMove = null; this.old = null
-          this.frontLift = 0; this.cubOn = -1; this.x = 0; this.angle = 0
+          this.saved = this.pendingMove!; this.pendingMove = null
+          this.frontLift = 0; this.x = 0; this.angle = 0
           this.cubX = this.cubSpot(this.nearest().i)
           this.dirty = 'now'
         }
@@ -777,7 +816,7 @@ export class Game {
     const at = (n: number, t: number, what: () => void): void => { if (act.said === n && act.t >= t) { act.said = n + 1; what() } }
     at(0, 0.9, () => this.say(voices.open()))
     for (let n = 0; n < 3; n++) at(1 + n, 2.6 + n * 1.75 + 0.45, () => {
-      const i = this.saved.loads.findIndex((l) => l.slot === n)
+      const i = this.saved.loads.findIndex((l) => l.at === 'in' && l.slot === n)
       this.insidePoke[i] = 0
       this.say([...voices.cub(n), ...voices.rider(this.saved.loads[i].kind, 'cub', this.saved.loads[i].way.turn, 0.05)])
       this.rider(this.saved.loads[i].kind, 'cub')
@@ -789,6 +828,14 @@ export class Game {
   /** A watched scene lands where it was going. */
   private land(): void {
     if (this.showing) {
+      if (this.shownState) {
+        this.saved = this.shownState
+        this.shownState = null
+        this.showWants = []; this.showing = false; this.act = null
+        this.x = 0; this.half = 1.5
+        this.dirty = 'now'
+        return
+      }
       // The load is back in the hands as it was before the showing.
       const act = this.act, i = this.hands
       let turn = this.saved.loads[i].way.turn
@@ -803,7 +850,7 @@ export class Game {
       this.half = this.restHalf()
       return
     }
-    if (this.act?.kind === 'ending') { this.act = null; this.frontLift = 1; this.x = 0; this.half = 1.5 }
+    if (this.act?.kind === 'ending') { this.act = null; this.frontLift = 1; this.x = 0; this.half = 0.08 }
   }
 
   /** Sets everything to where the saved state has it: nothing eases in. */
@@ -811,9 +858,9 @@ export class Game {
     const s = this.saved, i = this.hands
     this.x = i >= 0 ? s.x : 0
     this.angle = i >= 0 ? -s.loads[i].way.turn * Math.PI / 2 : 0
-    this.half = this.restHalf()
+    this.half = s.finished ? 0.08 : this.restHalf()
     this.frontLift = s.finished ? 1 : 0
-    this.cartX = Math.max(6, this.bearX(1) + BEARS[this.bearOn(1)].radius + 2.2)
+    this.cartX = Math.max(6, this.bearX(1) + BEARS[this.bearOn(1)].radius + 1.95)
     this.cubX = this.cubSpot(this.nearest().i)
   }
 
@@ -854,14 +901,10 @@ export class Game {
 
   private say(notes: Cue): void { if (notes.length) this.cues.push(notes) }
 
-  /** For the guide: what one move can be shown on. */
-  moves(): { load: boolean; opening: number; bear: boolean; cart: boolean } {
-    const i = this.hands
-    return {
-      load: i >= 0, opening: i >= 0 ? this.nearest().i : -1, cart: i < 0,
-      bear: i >= 0 && !solvable(this.saved.loads[i], this.saved.openings).byTurning,
-    }
-  }
+  /** What came last, which says what a hand shows next: after a turn an opening, after a bump the load. */
+  last: 'turn' | 'bump' | null = null
+  /** For the guide: the opening the bears are nearest to. */
+  get under(): number { return this.nearest().i }
 }
 
 function extentTurn(load: Load): { w: number; h: number } { return size(held(CELLS[load.kind], load.way)) }

@@ -3,9 +3,10 @@
 // Touch for a small hand (pack: game-design, ages-2-to-4.md). The tracker
 // turns pointer events into gestures and leaves their meaning to the game.
 // - One finger works at a time. Other fingers, or a palm resting on the
-//   glass, are ignored: they never cancel the finger that is working, and
-//   they do nothing of their own, so a second finger on a thing gets no
-//   answer. For a whole small hand on the glass that is the safer rule.
+//   glass, never cancel the finger that is working and make no move; each is
+//   answered where it lands (`extra`). A finger that has rested for a second
+//   without dragging, or that landed on nothing that moves (`landedOnNothing`),
+//   is taken for a resting hand: the next finger down becomes the working one.
 // - A drag survives a briefly lifted finger. The thing in hand waits where it
 //   was let go, and a finger coming back near it soon enough carries on with
 //   the same drag.
@@ -39,6 +40,8 @@ export type Point = { x: number; y: number }
 export type Gesture =
   | { type: 'press'; at: Point }
   | { type: 'tap'; at: Point }
+  /** Another finger came down while one is working: a small answer there, and no move. */
+  | { type: 'extra'; at: Point }
   /** The press is over and was not a tap: the browser took the finger away, or the surface was parked under it. */
   | { type: 'pressEnd'; at: Point }
   | { type: 'dragStart'; from: Point }
@@ -54,6 +57,8 @@ export type Gesture =
 export const TAP_SLOP = 14
 /** How long a lifted finger may stay away before its drag ends. */
 export const LIFT_GRACE_MS = 300
+/** A finger that has been down this long without dragging is a resting hand. */
+export const RESTING_MS = 1000
 /** How near the lift a finger must come back to carry on the same drag. */
 export const REGRAB_RADIUS = 140
 /** The share of the way to its target from which a drag counts as done. */
@@ -66,6 +71,8 @@ type Working = {
   at: Point
   dragging: boolean
   liftedAt: number
+  landedAt: number
+  nothing: boolean
 }
 
 export class ForgivingTouch {
@@ -84,9 +91,10 @@ export class ForgivingTouch {
   down(id: number, at: Point, t: number): Gesture[] {
     const working = this.working
     // An extra finger or a palm: the working finger carries on.
-    if (working && working.id !== null) return []
+    if (working && working.id !== null && (working.dragging || (t - working.landedAt < RESTING_MS && !working.nothing))) return [{ type: 'extra', at }]
     const gestures: Gesture[] = []
-    if (working) {
+    if (working && working.id !== null) gestures.push({ type: 'pressEnd', at: working.at })
+    else if (working) {
       if (t - working.liftedAt <= LIFT_GRACE_MS && Math.hypot(at.x - working.at.x, at.y - working.at.y) <= REGRAB_RADIUS) {
         working.id = id
         working.at = at
@@ -94,9 +102,14 @@ export class ForgivingTouch {
       }
       gestures.push({ type: 'dragEnd', from: working.from, at: working.at })
     }
-    this.working = { id, from: at, at, dragging: false, liftedAt: 0 }
+    this.working = { id, from: at, at, dragging: false, liftedAt: 0, landedAt: t, nothing: false }
     gestures.push({ type: 'press', at })
     return gestures
+  }
+
+  /** The game says what the press landed on moves nothing: the next finger down may work. */
+  landedOnNothing(): void {
+    if (this.working) this.working.nothing = true
   }
 
   move(id: number, at: Point): Gesture[] {

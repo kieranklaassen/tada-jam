@@ -86,10 +86,10 @@ describe('a drag', () => {
 
   it('is not ended by a second finger or a palm landing, moving or lifting', () => {
     const { touch } = dragging()
-    expect(touch.down(2, { x: 300, y: 300 }, 110)).toEqual([])
+    expect(touch.down(2, { x: 300, y: 300 }, 110)).toEqual([{ type: 'extra', at: { x: 300, y: 300 } }])
     expect(touch.move(2, { x: 340, y: 300 })).toEqual([])
     expect(touch.up(2, { x: 340, y: 300 }, 130)).toEqual([])
-    expect(touch.down(3, { x: 500, y: 700 }, 140)).toEqual([])
+    expect(touch.down(3, { x: 500, y: 700 }, 140)).toEqual([{ type: 'extra', at: { x: 500, y: 700 } }])
     expect(touch.cancel(3)).toEqual([])
     expect(touch.move(1, { x: 90, y: 0 })).toEqual([{ type: 'dragMove', from: { x: 0, y: 0 }, at: { x: 90, y: 0 } }])
   })
