@@ -7,6 +7,7 @@
 - Look in use: Silk painting with gutta (the first row reserved). The second was not tried.
 - Sheet: round 1 by a fresh reader came back with 10 findings, every replacement pasted word for word. One sentence was added afterwards, in pass 2: guests taken up with each other in a scene are out of reach until it ends.
 - The owner has not seen the game. No physical iPad was measured, nobody has listened to the sounds, and no two children have shared it.
+- Reader: the first reading came back NOT READY; every finding was built or its sentence in the sheet changed (targets at least 10 apart; a thing flies to the hand; hair and lips come clean as the bell rings; a stiff guest's face is still). A second reading was not made.
 - Requests to the lead: none. Section 4 of `docs/art-direction.md` is as it was found.
 
 ### Template notes
@@ -28,6 +29,8 @@
 | 2 | Every gesture, five scenes, the idle guide, a phone held sideways | In the bubble scene the walrus lost his bubble: the copy hit whoever sat there by then. | Nothing reaches guests in a scene of two; what the seats show changes over with them | not measured | 772 draws a frame |
 | 3 | Counted draws, production build | Too dear to draw. | Painted parts kept as pictures; the room painted at the surface's size; pictures that are only moved are copied pixel for pixel; the satin band halved | Software Chromium, production build: 26 fps at ratio 2 before, 38 after; 57 (worst second 46) with adaptive quality | Ratio 2 without a graphics card |
 | 4 | Three cold runs of 45 random taps and drags each, production build | The table things ran into each other; gale curls crossed in one point. | Table things at 0.86; curls start apart; every change saved at once | 29 fps at four times slower, with adaptive quality | No child has played it |
+
+| 5 | A fresh reader of the folder, a bug review and a simplify review, then stills | Two children each carrying a thing lost one; a drag through the place above never dabbed; lifting two fingers made a copy; every guest shared its moods; the window hid the wants; lone rings | About forty points: a carry for each half, a held-back act comes when the last is over, two hands led at once are not copied, the beat of a copy is fixed when it starts; each guest's own answers, the walrus's sip, hair on end, a second bubble, a feather on the nose; window guests whole; the clink at the meeting; hands rub with the handkerchiefs; rings in three pieces; tests for each | as pass 4; not measured again | `view.ts` still paints the small props itself |
 
 ### Cold playtest proxy
 

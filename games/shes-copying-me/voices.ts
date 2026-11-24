@@ -153,12 +153,12 @@ function cueSound(event: Extract<PartyEvent, { type: 'cue' }>): Note[] {
     case 'trade':
       return event.cue === 0 ? [t(1900, 0.1, 0.002, 0.3), n(3000, 0.08, 0.002, 0.06)] : [t(330, 0.09, 0.04, 0.3, { glideTo: 470, wave: 'triangle' }), t(220, 0.09, 0.04, 0.3, { glideTo: 310, wave: 'triangle', delay: 0.2 })]
     case 'birds':
-      return run(3, 0.1, (i) => t([620, 780, 930, 780, 620, 500][event.cue] * (1 + i * 0.08), 0.1, 0.008, 0.08, { wave: 'triangle', glideTo: [760, 900, 1080, 900, 760, 420][event.cue] }))
+      return event.cue % 2 ? guestSound(event.guests[event.cue === 3 ? 1 : 0], 'delight') : run(3, 0.1, (i) => t([620, 780, 930, 780, 620, 500][event.cue] * (1 + i * 0.08), 0.1, 0.008, 0.08, { wave: 'triangle', glideTo: [760, 900, 1080, 900, 760, 420][event.cue] }))
     case 'statues':
       return event.cue === 0 || event.cue === 2 ? run(2, 0.16, () => t(430, 0.1, 0.05, 0.14, { glideTo: 340 })) : run(6, 0.06, () => n(1500, 0.06, 0.01, 0.04, { q: 1.5 }))
     case 'bubbles':
-      return event.cue === 1 ? [t(240, 0.16, 0.004, 0.3, { glideTo: 480 })] : [t(360, 0.1, 0.1, 0.5, { glideTo: 620 })]
+      return event.cue === 2 ? event.guests.flatMap((guest) => guestSound(guest, 'puzzled')) : event.cue === 1 ? [t(240, 0.16, 0.004, 0.3, { glideTo: 480 })] : [t(360, 0.1, 0.1, 0.5, { glideTo: 620 })]
     case 'tidy':
-      return event.cue < 4 ? run(3, 0.08, (i) => n(1800 + i * 500 + event.cue * 120, 0.1, 0.02, 0.07, { q: 3 })) : [t(294, 0.09, 0.05, 0.3, { wave: 'triangle', glideTo: 262 }), n(800, 0.08, 0.05, 0.3)]
+      return event.cue < 4 ? run(3, 0.08, (i) => n(1800 + i * 500 + event.cue * 120, 0.1, 0.02, 0.07, { q: 3 })) : [...event.guests.flatMap((guest) => guestSound(guest, 'giggle')), n(800, 0.08, 0.05, 0.3)]
   }
 }

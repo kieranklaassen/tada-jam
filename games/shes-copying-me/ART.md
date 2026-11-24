@@ -9,7 +9,7 @@ Band 3 to 7. The youngest age governs: the cue table's row for 3 to 4 (direct ha
 
 `ctx.childAge` sets one default on a first visit, how long the copy waits: 3 and younger 0.45 s (`quick`), 4 and 5 0.8 s (`steady`), 6 and older 1.2 s (`slow`). `null` gives `quick`. The wait runs on attended game time only. The child can change it at any age by touching the pendulum, and the saved wait wins afterwards. Nothing is gated.
 
-Everything essential works with a tap. A hand target is about 110 units across; a guest 180 or more; a thing on the table, the bell, the pendulum and a guest at the window at least 100, well apart. Nothing essential lies in the bottom 60 units.
+Everything essential works with a tap. A hand target is about 110 units across; a guest 180 or more; a thing on the table, the bell, the pendulum and a guest at the window at least 100, and at least 10 apart. Nothing essential lies in the bottom 60 units.
 
 ## The toy
 
@@ -17,7 +17,7 @@ The finger moves a hand. On touch-down, in the same frame, the thing in the hand
 
 A tap is the same as a short drag: the hand goes where the tap landed, does what that place means, and comes back. A tap on the hand itself shakes the thing. A tap at the middle holds the hand there until the copy has come.
 
-A finger moves the hand of the side it lands on, and that aunt leads. A thing on the table is taken by touching it: the hand of the aunt on that side puts hers in its place and takes it, seen and heard, and one more touch there changes them back; carried by a finger instead, it changes with the thing of the aunt it is let go on, never with one it only passes. A small slip is still a tap. A lift of under 0.3 s keeps the hand where it hangs, and a finger landing near carries on. A second finger takes nothing from the first and gets a small answer of its own; a contact that landed on nothing, or has lain still for a second without carrying, hands the work to the next finger. A lost capture or a cancel only brings the hand, or the thing, back, and does nothing to a guest. A touch on the copier makes her the leader, and what she was about to copy is dropped. One gesture gives one effect, however long it is held; a new one starts when the hand has left the place.
+A finger moves the hand of the side it lands on, and that aunt leads. A thing on the table is taken by touching it: the thing of the aunt on that side flies to its place and it flies to her hand, seen and heard, and one more touch there changes them back; carried by a finger instead, it changes with the thing of the aunt it is let go on, never with one it only passes. A small slip is still a tap. A lift of under 0.3 s keeps the hand where it hangs, and a finger landing near carries on. A second finger takes nothing from the first and gets a small answer of its own; a contact that landed on nothing, or has lain still for a second without carrying, hands the work to the next finger. A lost capture or a cancel only brings the hand, or the thing, back, and does nothing to a guest. A touch on the copier makes her the leader, and what she was about to copy is dropped. One gesture gives one effect, however long it is held; a new one starts when the hand has left the place.
 
 ## The object-by-action grid, and what is new on day 15
 
@@ -89,6 +89,8 @@ A hand, a thing in the air, particles, puddles and the history of the leader's h
 
 A thing can please by what it is: the dog is delighted by any dab or wave of the fish. The walrus's cup is never filled for long: he sips and holds it out again. No want is a task and nothing is kept of it.
 
+A guest as stiff as a statue shows its answer in its body and its voice, with its eyes wide and its face still.
+
 No guest is hurt: a bump is a wobble, a blast lifts hair, and each looks bewildered at worst.
 
 ## The scenes
@@ -99,7 +101,7 @@ Each lasts 4 to 8 s, is caused by what the child just did, and gives way to any 
 - **Two birds.** One guest is feathered and the second becomes so: they look at each other, bow and do the same dance. Saved when it starts: the second guest's `coats`.
 - **Two statues.** One guest is stiff and the second becomes so: a pigeon flies in, sits on one head, then the other, and leaves. Saved when it starts: the second guest's `coats`.
 - **Two bubbles.** One guest is in a bubble and the second gets one: the bubbles drift across, bump in the middle over the table, and settle on each other's stool. Saved when it starts: the second guest's `coats`, and `seated` with the two exchanged.
-- **Tidying.** A tap on the bell only tinkles it and the aunts look up. Carried over the middle of the table and let go there, it rings and hops back to its place; let go elsewhere, it hops back with a tinkle and nothing is tidied. When it rings, each aunt takes out a handkerchief and rubs her guest, hair and lips come clean, and the guests shake themselves. Saved when it starts: all `coats` clean, all `hair` plain, all `lips` free. It is the calm way to tidy up; it changes neither things nor guests.
+- **Tidying.** A tap on the bell only tinkles it and the aunts look up. Carried over the middle of the table and let go there, it rings and hops back to its place; let go elsewhere, it hops back with a tinkle and nothing is tidied. When it rings, each aunt takes out a handkerchief and rubs her guest, hair and lips come clean as it rings, and the guests shake themselves. Saved when it starts: all `coats` clean, all `hair` plain, all `lips` free. It is the calm way to tidy up; it changes neither things nor guests.
 
 Open pretend play has no ending. Nothing new starts by itself. The guest at each window pane waits, its want in view, and comes in when touched; the one it replaces goes to that pane. On load no scene plays.
 

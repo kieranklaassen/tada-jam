@@ -1,5 +1,5 @@
 import { bump, clamp, jolt } from './silk'
-import type { Antic, Coat, Guest, Mood } from './rules'
+import type { Antic, Coat, Effect, Guest, Mood } from './rules'
 
 // How each guest moves. An antic is what a body does when something happens
 // to it; the personality is how that particular body does it, at its own
@@ -95,7 +95,23 @@ const MOODS: Record<Mood, (t: number) => Partial<Pose>> = {
   faint: (t) => ({ mouth: -0.3, open: 0.3, eyes: t < 1.3 ? 0 : 1, turn: t < 1.3 ? 0.9 * clamp(t * 4) : 0.9 * clamp(1 - (t - 1.3) * 4), y: 16 * clamp(t * 4) * clamp(1.6 - t) }),
 }
 
-export const MOOD_SECONDS = 2.3
+/** What only this guest does about this effect, with the rest of its body. */
+export const OWN: Partial<Record<`${Guest}:${Effect}`, Move>> = {
+  'walrus:splash': (t) => ({ turn: 0.1 * bump((t - 0.4) / 1.6), part: 0.3 * Math.sin(t * 5) }),
+  'walrus:wind': (t) => ({ part: 1.5 * bump(t / 2) + 0.25 * Math.sin(t * 26) * bump(t / 2) }),
+  'walrus:bump': (t) => ({ ...squash(0.12 * Math.abs(Math.sin(t * 6)) * clamp(2 - t)), part: -0.8 * bump(t / 2) }),
+  'dog:splash': (t) => ({ turn: Math.sin(t * 40) * 0.12 * clamp(1.4 - t), part: Math.sin(t * 40) * 1.2 * clamp(1.4 - t) }),
+  'dog:bump': (t) => ({ x: -10 * Math.abs(Math.sin(t * 7)) * clamp(2 - t), part: 0.4 * Math.sin(t * 20) * clamp(2 - t) }),
+  'dog:wind': (t) => ({ part: 1.2 * bump(t / 2), turn: 0.06 * bump(t / 2) }),
+  'goose:feathers': (t) => ({ turn: 0.18 * bump(t / 2), part: 1.1 * Math.sin(t * 8) * bump(t / 2) }),
+  'goose:splash': (t) => ({ y: -10 * Math.abs(Math.sin(t * 8)) * clamp(2 - t), part: 0.5 * Math.sin(t * 8) * clamp(2 - t) }),
+  'goose:wind': (t) => ({ part: 3.4 * bump(t / 2), turn: 0.16 * bump(t / 2) }),
+  'pig:glue': (t) => ({ x: 9 * Math.sin(t * 15) * clamp(2 - t), turn: 0.08 * Math.sin(t * 15) * clamp(2 - t), part: 0.6 * Math.sin(t * 15) * clamp(2 - t) }),
+  'pig:wind': (t) => ({ turn: t < 1.4 ? (t / 1.4) * Math.PI * 2 : 0, x: 18 * Math.sin((clamp(t / 1.4)) * Math.PI * 2) }),
+  'pig:splash': (t) => ({ ...squash(0.1 * Math.abs(Math.sin(t * 10)) * clamp(2 - t)), part: -1 * bump(t / 2) }),
+}
+
+const MOOD_SECONDS = 2.3
 
 const REST: Pose = { x: 0, y: 0, turn: 0, sx: 1, sy: 1, mouth: 0.15, open: 0, eyes: 1, brow: 0, part: 0, blush: 0 }
 
@@ -109,7 +125,7 @@ function lay(pose: Pose, over: Partial<Pose>): void {
 }
 
 /** A guest's whole body at `time`, `t` seconds into what last happened to it. */
-export function guestPose(guest: Guest, coat: Coat, antic: Antic | null, mood: Mood | null, t: number, time: number): Pose {
+export function guestPose(guest: Guest, coat: Coat, antic: Antic | null, mood: Mood | null, t: number, time: number, effect: Effect | null = null): Pose {
   const nature = NATURE[guest]
   const pose: Pose = { ...REST }
   const pace = time * nature.tempo
@@ -137,7 +153,11 @@ export function guestPose(guest: Guest, coat: Coat, antic: Antic | null, mood: M
     lay(pose, scaled)
     pose.part += Math.sin(own * 18) * Math.exp(-own * 2.4) * nature.part
   }
-  if (mood && t >= 0 && t < MOOD_SECONDS && !stiff) lay(pose, MOODS[mood](t))
+  if (mood && t >= 0 && t < MOOD_SECONDS && !stiff) {
+    lay(pose, MOODS[mood](t))
+    const own = effect && OWN[`${guest}:${effect}`]
+    if (own) lay(pose, own(t))
+  }
   if (stiff) {
     pose.eyes = 1.2
     pose.mouth = -0.1

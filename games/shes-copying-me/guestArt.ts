@@ -25,7 +25,7 @@ const MARKED: readonly Coat[] = ['wet', 'gluey', 'feathered']
 /** A guest in its seat, as the picture `name`. What the body does as a whole is moved; the face and the coat are painted. */
 export function paintGuest(g: G, name: string, guest: Guest, coat: Coat, pose: Pose, look: Look, time: number, asking: number, cup: number, put: Stamp): void {
   const { x, y, turn, sx, sy, ...face } = pose
-  const how = [step(face.mouth, 0.2), step(face.open, 0.15), step(face.eyes, 0.15), step(face.brow, 0.25), step(face.part, 0.14), step(face.blush, 1), step(look.x, 0.3), step(look.y, 0.3), step(asking, 0.12), cup, MARKED.includes(coat) ? Math.floor(time * 7) : 0].join()
+  const how = [step(face.mouth, 0.2), step(face.open, 0.15), step(face.eyes, 0.15), step(face.brow, 0.25), step(face.part, 0.14), step(face.blush, 1), step(look.x, 0.3), step(look.y, 0.3), step(asking, 0.12), step(cup, 0.1), MARKED.includes(coat) ? Math.floor(time * 7) : 0].join()
   g.save()
   g.translate(x, y - 100)
   g.rotate(turn)
@@ -118,23 +118,10 @@ function walrus(g: G, p: Paint, pose: Pose, look: Look, asking: number, cup: num
     soft(g, [[s * 58, -126], [s * 94, -120], [s * 98, -100], [s * 66, -104]])
     cell(g, p('#ffd24a'), 3)
   }
-  // The arm that holds out the cup, and the one that salutes.
-  const lift = asking * 10
-  limb(g, () => {
-    g.moveTo(-62, -92)
-    g.quadraticCurveTo(-104, -60, -98, -42 - lift)
-  }, p('#c5283d'), 26)
-  g.save()
-  g.translate(-104, -56 - lift)
-  g.beginPath()
-  g.moveTo(-24, -10)
-  g.quadraticCurveTo(-20, 22, 0, 22)
-  g.quadraticCurveTo(20, 22, 24, -10)
-  g.closePath()
-  cell(g, '#fffaf0', 4)
-  blob(g, 0, -10, 24, 7)
-  cell(g, cup > 0 ? '#b8642a' : '#f1ddc6', 3)
-  g.restore()
+  // The arm that holds out the cup, or drinks from it, and the one that salutes.
+  const sip = cup
+  const lift = asking * 10 * (1 - sip)
+  const cx = -104 + 78 * sip, cy = -56 - lift - 76 * sip
   limb(g, () => {
     g.moveTo(62, -92)
     g.quadraticCurveTo(108, -64, pose.brow === 0.5 && pose.eyes > 1.1 ? 48 : 84, pose.brow === 0.5 && pose.eyes > 1.1 ? -176 : -30)
@@ -168,6 +155,23 @@ function walrus(g: G, p: Paint, pose: Pose, look: Look, asking: number, cup: num
   cell(g, p('#2b2f7d'), 4)
   blob(g, 0, -66, 10, 10)
   cell(g, p('#ffd24a'), 3)
+  g.restore()
+  // The arm with the cup is in front of the face it drinks with.
+  limb(g, () => {
+    g.moveTo(-62, -92)
+    g.quadraticCurveTo(-104, -60, cx + 6, cy + 14)
+  }, p('#c5283d'), 26)
+  g.save()
+  g.translate(cx, cy)
+  g.rotate(sip * 0.6)
+  g.beginPath()
+  g.moveTo(-24, -10)
+  g.quadraticCurveTo(-20, 22, 0, 22)
+  g.quadraticCurveTo(20, 22, 24, -10)
+  g.closePath()
+  cell(g, '#fffaf0', 4)
+  blob(g, 0, -10, 24, 7)
+  cell(g, cup > 0 ? '#b8642a' : '#f1ddc6', 3)
   g.restore()
 }
 
@@ -349,6 +353,9 @@ function pig(g: G, p: Paint, pose: Pose, look: Look, asking: number): void {
   cell(g, '#ffd24a', 3)
   g.restore()
 }
+
+/** How high each head is above its seat, hat and all. */
+export const TOP: Record<Guest, number> = { walrus: 250, dog: 204, goose: 262, pig: 238 }
 
 const TALL: Record<Guest, number> = { walrus: 190, dog: 170, goose: 240, pig: 200 }
 

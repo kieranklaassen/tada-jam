@@ -160,6 +160,109 @@ describe('two children', () => {
   })
 })
 
+describe('two children', () => {
+  it('copies nothing when both let go, together or one after the other', () => {
+    for (const gap of [0, 0.1, 0.5]) {
+      const g = party()
+      g.p.down(1, toPoint(0, OVER))
+      g.p.down(2, toPoint(1, ON))
+      g.run(0.6)
+      g.p.up(1, toPoint(0, OVER))
+      g.run(gap)
+      g.p.up(2, toPoint(1, ON))
+      g.run(3)
+      expect([g.acts(0), g.acts(1)]).toEqual([['tip'], ['dab']])
+      expect(g.p.touching).toBe(false)
+    }
+  })
+  it('lets each carry a thing, and gives each where it was let go', () => {
+    const g = party()
+    g.p.down(1, place(0))
+    g.p.move(1, toPoint(0, FACE))
+    g.p.down(2, place(3))
+    g.p.move(2, toPoint(1, FACE))
+    const [a, b] = [g.p.state.table[0], g.p.state.table[3]]
+    g.run(0.2)
+    g.p.up(1, toPoint(0, FACE))
+    g.run(0.5)
+    expect(g.p.holds(2)).toBe(true)
+    expect(g.p.state.held).toEqual([a, 'glue'])
+    g.p.up(2, toPoint(1, FACE))
+    g.run(0.5)
+    expect(g.p.state.held).toEqual([a, b])
+    expect(g.p.touching).toBe(false)
+    g.tap(toPoint(0, OVER))
+    expect(g.acts(0)).toBeDefined()
+  })
+  it('leaves the bell with the finger that has it, however still', () => {
+    const g = party()
+    g.p.state.coats.walrus = 'wet'
+    g.p.down(1, { x: BELL.x - 10, y: BELL.y })
+    g.p.move(1, { x: BELL.x, y: 500 })
+    g.run(1.3)
+    g.p.down(2, { x: BELL.x + 10, y: BELL.y })
+    g.p.up(2, { x: BELL.x + 10, y: BELL.y })
+    g.p.down(3, { x: 100, y: 700 })
+    expect(g.p.scene).toBeNull()
+    expect(g.p.holds(1)).toBe(true)
+  })
+})
+
+describe('gestures after gestures', () => {
+  it('does the dab of a drag that came through the place above', () => {
+    const g = party()
+    g.p.down(1, toPoint(0, OVER))
+    g.run(0.22)
+    g.p.move(1, toPoint(0, ON))
+    g.run(3)
+    expect(g.acts(0)).toEqual(['tip', 'dab'])
+    expect(g.acts(1)).toEqual(['tip', 'dab'])
+  })
+  it('does not shake for a tap beside the hand, however long it lasts', () => {
+    for (const held of [0.02, 0.1, 0.2]) {
+      const g = party(), at = toPoint(0, { u: 200, y: 480 })
+      g.p.down(1, at)
+      g.run(held)
+      g.p.up(1, at)
+      g.run(2)
+      expect(g.acts(0)).toEqual([])
+    }
+  })
+  it('copies a movement once when the pendulum is changed in the middle of it', () => {
+    for (const later of [0.3, 0.8, 1, 1.1, 1.4]) {
+      const g = party()
+      g.tap(toPoint(0, ON))
+      g.run(later)
+      g.tap(PENDULUM.bob)
+      g.run(4)
+      expect(g.acts(1)).toEqual(['dab'])
+    }
+  })
+  it('does not move the copier for a cancelled finger', () => {
+    const g = party()
+    g.p.down(1, toPoint(0, OVER))
+    g.run(0.3)
+    g.p.cancel(1)
+    for (let i = 0; i < 20; i++) {
+      g.run(0.1)
+      expect(Math.abs(g.p.hands[1].u - HOME.u)).toBeLessThan(2)
+    }
+  })
+  it('does not end a scene of two by a meeting of hands that were down already', () => {
+    const g = party()
+    Object.assign(g.p.state.coats, { walrus: 'bubble', dog: 'gluey' })
+    g.p.state.held = ['teapot', 'horn']
+    g.p.state.table[g.p.state.table.indexOf('horn')] = 'glue'
+    g.p.down(1, toPoint(0, MEETING))
+    g.p.down(2, toPoint(1, ON))
+    g.run(0.6)
+    expect(g.p.scene?.kind).toBe('bubbles')
+    g.p.move(2, toPoint(1, MEETING))
+    g.run(0.6)
+    expect(g.p.scene?.kind).toBe('bubbles')
+  })
+})
+
 describe('trading', () => {
   it('trades hand to hand when one goes to the middle and the other follows, by drag or by tap', () => {
     for (const beat of ['quick', 'steady', 'slow'] as const) {
@@ -298,7 +401,8 @@ describe('found as left', () => {
       const saved = JSON.parse(JSON.stringify(serialize(g.p.state)))
       expect(deserialize(saved)).toEqual(g.p.state)
     }
-    g.p.clear()
+    for (const id of [1, 2, 3]) g.p.up(id, { x: 60, y: 60 })
+    g.run(0.5)
     expect(g.p.touching).toBe(false)
   })
 })

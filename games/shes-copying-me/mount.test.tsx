@@ -29,7 +29,7 @@ const storage: CartridgeStorage = {
   save: (value: unknown) => { saves.push(JSON.parse(JSON.stringify(value)) as GameState) },
   flush: () => Promise.resolve(),
 }
-const ctx = (attended: boolean): CartridgeContext => ({ childNickname: 'Sam', childAge: null, language: 'en', theme: 'meadow', status: 'ready', storage, attention: { attended } })
+const ctx = (attended: boolean): CartridgeContext => ({ childNickname: 'Child', childAge: null, language: 'en', theme: 'meadow', status: 'ready', storage, attention: { attended } })
 
 const show = (attended: boolean) => act(async () => root.render(<Mount ctx={ctx(attended)} />))
 function run(seconds: number): void {

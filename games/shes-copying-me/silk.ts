@@ -114,3 +114,13 @@ export const ease = (k: number): number => k * k * (3 - 2 * k)
 export const bump = (k: number): number => (k <= 0 || k >= 1 ? 0 : Math.sin(k * Math.PI))
 /** A wobble that dies away. */
 export const jolt = (t: number, rate = 22, fade = 5): number => (t < 0 ? 0 : Math.sin(t * rate) * Math.exp(-t * fade))
+
+/** The idle guide's ring round what can be touched. */
+export function glowRing(g: G, x: number, y: number, rx: number, ry: number, alpha: number, width: number): void {
+  g.globalAlpha = alpha
+  blob(g, x, y, rx, ry)
+  g.strokeStyle = '#fff3b0'
+  g.lineWidth = width
+  g.stroke()
+  g.globalAlpha = 1
+}

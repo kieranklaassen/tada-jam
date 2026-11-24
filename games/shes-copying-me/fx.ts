@@ -88,7 +88,11 @@ export class Bits {
       const aim = event.act === 'self' || event.act === 'show' ? (out > 0 ? 0 : Math.PI) : event.act === 'tip' ? Math.PI / 2 : out > 0 ? 0.2 : Math.PI - 0.2
       const floor = event.act === 'tip' && event.thing !== 'horn' ? 500 : 770
       const at = event.act === 'tip' || event.act === 'wave' ? spout(event.side) : event.at
-      this.throwAt(THROWS[event.thing][event.act], at, event.thing === 'horn' && event.act === 'tip' ? (out > 0 ? 0 : Math.PI) : aim, most, floor)
+      const own = event.act === 'show' && (event.thing === 'glue' || event.thing === 'teapot')
+      // What is held over her own head comes down on her own hair.
+      if (own) this.throwAt(T(event.thing === 'glue' ? 'glop' : 'drop', event.thing === 'glue' ? '#fff4d8' : '#b8642a', 5, event.thing === 'glue' ? 14 : 8, 30, 1, 0, 900, 0.5, 0.2), toPoint(event.side, { u: 262, y: 50 }), Math.PI / 2, most, 150)
+      if (event.thing === 'horn' && event.act === 'wave') this.throwAt(THROWS.horn.wave, at, aim + Math.PI, most, floor)
+      if (event.thing !== 'glue' || !own) this.throwAt(THROWS[event.thing][event.act], at, event.thing === 'horn' && event.act === 'tip' ? (out > 0 ? 0 : Math.PI) : aim, most, floor)
     } else if (event.type === 'answer') {
       const off = OFF[event.antic]
       const at = toPoint(event.side, { u: GUEST.u, y: off?.shape === 'pool' ? 758 : GUEST.y - 20 })
@@ -191,10 +195,16 @@ export class Bits {
           g.stroke()
           break
         case 'ring':
-          blob(g, 0, 0, b.size * (0.5 + k * 1.6), b.size * (0.5 + k * 1.6))
+          // Three pieces of unlike length, never one closed round.
+          g.rotate(b.turn)
           g.strokeStyle = b.colour
+          g.lineCap = 'round'
           g.lineWidth = 6 * (1 - k) + 1
-          g.stroke()
+          for (const [from, to] of [[0.1, 1.7], [2.4, 3.1], [3.9, 5.6]] as const) {
+            g.beginPath()
+            g.arc(0, 0, b.size * (0.5 + k * 1.6), from, to)
+            g.stroke()
+          }
           break
         case 'puff':
           g.scale((b.size * (0.6 + k)) / 24, (b.size * (0.6 + k)) / 24)
@@ -225,8 +235,10 @@ export class Bits {
           break
         case 'string':
           g.beginPath()
-          g.moveTo(-b.size * 2, Math.sin(b.turn) * 8)
-          g.quadraticCurveTo(0, b.size, b.size * 2, -Math.sin(b.turn) * 8)
+          // A sagging loop with a bead of glue at its end.
+          g.rotate(b.turn * 0.2 - 0.6)
+          g.moveTo(-b.size * 2, 0)
+          g.bezierCurveTo(-b.size, b.size * 2.2, b.size, b.size * 2.4, b.size * 1.8, -b.size * 0.4)
           g.lineCap = 'round'
           g.strokeStyle = GOLD
           g.lineWidth = 9

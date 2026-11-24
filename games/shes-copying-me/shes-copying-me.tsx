@@ -6,7 +6,7 @@ import { GameAudio, voiceOf, type Note } from './audio'
 import { BACKDROP } from './config'
 import { IdleLadder, type Guidance } from './guidance'
 import { shesCopyingMeManifest } from './manifest'
-import { Overlay } from './overlay'
+import { Overlay, inCorner } from './overlay'
 import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
 import { SaveCadence } from './saveCadence'
@@ -105,7 +105,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       ladder.touch(clock.seconds)
       const where = at(event)
       // The grown-up's corner is bare: it answers as the wall does.
-      party?.down(event.pointerId, toStage(where, fit(width, height)))
+      party?.down(event.pointerId, toStage(where, fit(width, height)), inCorner(where.x, where.y, width))
       // Only the working finger counts towards the grown-up's gesture: a palm or a second finger landing is no
       // tap of the three, and does not undo a hold.
       if (party?.holds(event.pointerId)) overlay.press(where.x, where.y, width, event.timeStamp)
@@ -133,7 +133,9 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       answer()
       audio.touchUp()
     }
+    const onLost = (event: PointerEvent) => { if (party?.holds(event.pointerId)) onCancel(event) }
     root.addEventListener('pointerdown', onDown)
+    root.addEventListener('lostpointercapture', onLost)
     root.addEventListener('pointermove', onMove)
     root.addEventListener('pointerup', onUp)
     root.addEventListener('pointercancel', onCancel)
@@ -203,6 +205,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       observer.disconnect()
       attention.dispose()
       root.removeEventListener('pointerdown', onDown)
+      root.removeEventListener('lostpointercapture', onLost)
       root.removeEventListener('pointermove', onMove)
       root.removeEventListener('pointerup', onUp)
       root.removeEventListener('pointercancel', onCancel)

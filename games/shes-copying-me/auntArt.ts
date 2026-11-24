@@ -56,7 +56,9 @@ function headOf(v: AuntView): { x: number; y: number; turn: number; jiggle: numb
     y -= 5
   }
   if (show.face === 'keen') x += v.side === 0 ? -6 : -10
-  if (show.act === 'self' && show.thing === 'duster' && show.t < 1.4) {
+  // Behind her fan: out on one side, and on the other.
+  if (show.act === 'self' && show.thing === 'fan' && show.t < 1.4) x += 46 * Math.sin((show.t / 1.4) * Math.PI * 2)
+  if (show.thing === 'duster' && show.t < 1.4 && (show.act === 'self' || show.act === 'wave')) {
     // The sneeze: a long way back, and all the way forward.
     const t = show.t
     turn += t < 0.7 ? -0.3 * clamp(t * 1.6) : 0.36 * Math.exp(-(t - 0.7) * 4)

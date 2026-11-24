@@ -54,10 +54,10 @@ export function zoneAt(spot: Spot): Zone {
 /** The four places on the table: two on each half, the nearer one first. */
 export const TABLE_TOP = 704
 const PLACES: readonly { side: Side; spot: Spot }[] = [
-  { side: 0, spot: { u: 218, y: 654 } },
-  { side: 0, spot: { u: 106, y: 654 } },
-  { side: 1, spot: { u: 106, y: 654 } },
-  { side: 1, spot: { u: 218, y: 654 } },
+  { side: 0, spot: { u: 226, y: 654 } },
+  { side: 0, spot: { u: 112, y: 654 } },
+  { side: 1, spot: { u: 112, y: 654 } },
+  { side: 1, spot: { u: 226, y: 654 } },
 ]
 export const place = (slot: number): Point => toPoint(PLACES[slot].side, PLACES[slot].spot)
 export const placeSide = (slot: number): Side => PLACES[slot].side
@@ -73,12 +73,13 @@ export type Target =
   | { kind: 'bell' }
   | { kind: 'pendulum' }
   | { kind: 'pane'; side: Side }
+  | { kind: 'wall' }
 
 /** What a finger landing here is on. Everything that is nothing else is the hand of that half, so every touch is answered. */
 export function targetAt(at: Point, bell: boolean): Target {
   for (let slot = 0; slot < 4; slot++) {
     const p = place(slot)
-    if (Math.abs(at.x - p.x) < 54 && at.y > 596 && at.y < 724) return { kind: 'thing', slot }
+    if (Math.abs(at.x - p.x) < 51 && at.y > 596 && at.y < 724) return { kind: 'thing', slot }
   }
   if (bell && Math.abs(at.x - BELL.x) < 50 && at.y > 610 && at.y < 724) return { kind: 'bell' }
   if (Math.hypot(at.x - PENDULUM.bob.x, at.y - PENDULUM.bob.y) < 52) return { kind: 'pendulum' }

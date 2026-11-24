@@ -1,6 +1,6 @@
 import { Detector } from './gesture'
 import { Echo } from './echo'
-import { GUEST, HOME, MEETING, onAunt, onCat, place, placeSide, reach, rings, sideOf, targetAt, toPoint, toSpot, zoneAt, type Spot, type Target } from './layout'
+import { BELL, GUEST, HOME, MEETING, onAunt, onCat, place, placeSide, reach, rings, sideOf, targetAt, toPoint, toSpot, zoneAt, type Spot, type Target } from './layout'
 import { BEAT_SECONDS, GUESTS, THINGS, effectOf, hairAfter, lipsAfter, moodOf, nextBeat, other, outcomeOf, type Act, type Antic, type Coat, type Effect, type Guest, type Mood, type Side, type Thing } from './rules'
 import type { Point } from './stage'
 import type { GameState } from './state'
@@ -36,6 +36,10 @@ export type Hand = {
   quiet: boolean
   copying: boolean
   cool: number
+  /** An act made while the last one is still cooling: it comes when that is over. */
+  next: Act | null
+  /** Where its finger was when it stopped being worth copying, or null: cancelled, or one of two led at once. Until that finger moves on, nothing it does is remembered. */
+  mute: Point | null
 }
 
 export type SeatShow = {
@@ -43,6 +47,7 @@ export type SeatShow = {
   mood: Mood | null
   /** Seconds since the antic began; below 0 it is still on its way. */
   t: number
+  effect: Effect | null
   /** The coat before it, flooded over as the antic begins. */
   from: Coat
 }
@@ -68,13 +73,16 @@ export type PartyEvent =
   | { type: 'cat' }
   | { type: 'notice'; side: Side }
   | { type: 'scene'; kind: SceneKind }
-  | { type: 'cue'; kind: SceneKind; cue: number }
+  | { type: 'cue'; kind: SceneKind; cue: number; guests: [Guest, Guest] }
 
-type Finger = { id: number; target: Target; side: Side; from: Point; at: Point; still: number; moved: boolean }
+/** A table thing in a finger of one half. `lift` is how long it still hangs after the finger let go. */
+export type Carry = { slot: number; at: Point; lift: number }
+
+type Finger = { id: number; target: Target; side: Side; from: Point; at: Point; still: number; moved: boolean; onHand: boolean }
 
 /** The moments of a scene at which something sounds. */
 const CUES: Record<SceneKind, readonly number[]> = {
-  trade: [1.2, 2.4],
+  trade: [0, 2.4],
   birds: [0.8, 1.8, 2.6, 3.4, 4.2, 5],
   statues: [1.1, 2.6, 4.2, 5.2],
   bubbles: [0.6, 2.4, 4.6],
@@ -82,7 +90,7 @@ const CUES: Record<SceneKind, readonly number[]> = {
 }
 
 function newHand(): Hand {
-  return { u: HOME.u, y: HOME.y, vu: 0, vy: 0, mode: 'free', target: { ...HOME }, left: 0, busy: false, quiet: true, copying: false, cool: 0 }
+  return { u: HOME.u, y: HOME.y, vu: 0, vy: 0, mode: 'free', target: { ...HOME }, left: 0, busy: false, quiet: true, copying: false, cool: 0, next: null, mute: null }
 }
 
 export class Party {
@@ -95,12 +103,13 @@ export class Party {
   scene: { kind: SceneKind; t: number; cue: number; from: [Guest, Guest] } | null = null
   /** Which hand is being copied. */
   leader: Side = 0
-  carried: { slot: number; at: Point; side: Side } | null = null
+  readonly carried: [Carry | null, Carry | null] = [null, null]
   /** The bell in a finger, or null on its place. */
   bell: Point | null = null
   private meeting = false
-  /** A lifted carry waits a moment for the finger to come back. */
-  private carryLift = 0
+  /** The bell on its way back to its place, from where it was let go, and for how long. */
+  bellFrom: Point = BELL
+  bellBack = 9
   time = 0
   swing = 0
   pendulumPush = 0
@@ -117,10 +126,12 @@ export class Party {
   private readonly fingers: (Finger | null)[] = [null, null]
   private queue: PartyEvent[] = []
   private met = false
+  private wait = 0
   private noticed = false
 
   constructor(state: GameState) {
     this.state = state
+    this.wait = BEAT_SECONDS[state.beat]
     this.seats = [this.restSeat(0), this.restSeat(1)]
     this.aunts = [0, 1].map((side) => ({ act: null, thing: state.held[side as Side], t: 9, face: 'calm', faceLeft: 0 })) as unknown as [AuntShow, AuntShow]
     this.at = {} as Party['at']
@@ -131,7 +142,7 @@ export class Party {
   }
 
   private restSeat(side: Side): SeatShow {
-    return { antic: null, mood: null, t: 9, from: this.state.coats[this.state.seated[side]] }
+    return { antic: null, mood: null, effect: null, t: 9, from: this.state.coats[this.state.seated[side]] }
   }
 
   /** What happened since the last call, for the voices and the particles. */
@@ -142,7 +153,7 @@ export class Party {
   }
 
   get touching(): boolean {
-    return this.fingers[0] !== null || this.fingers[1] !== null || this.bell !== null || this.carried !== null
+    return this.fingers[0] !== null || this.fingers[1] !== null || this.bell !== null
   }
 
   /** Whether there is anything to tidy. The bell stands on the table only then. */
@@ -161,39 +172,48 @@ export class Party {
     return this.hands[side].copying ? side : null
   }
 
+  /** The finger that leads this hand, or null. */
+  fingerAt(side: Side): Point | null {
+    const finger = this.fingers[side]
+    return finger?.target.kind === 'hand' ? finger.at : null
+  }
+
   handPoint(side: Side): Point {
     return toPoint(side, this.hands[side])
   }
 
   // --- Fingers -------------------------------------------------------------
 
-  down(id: number, at: Point): void {
+  /** `bare` is the grown-up's corner: wall, whatever is under it. */
+  down(id: number, at: Point, bare = false): void {
     this.scene = null
-    let side = sideOf(at)
+    const side = sideOf(at)
     // A carry that is waiting out a lift: the finger came back near it.
-    if (this.carried && this.carryLift > 0 && Math.hypot(at.x - this.carried.at.x, at.y - this.carried.at.y) < 140) {
-      side = this.carried.side
-      const finger = this.fingers[side]
-      if (finger) {
-        finger.id = id
-        finger.at = at
-        this.carryLift = 0
-        this.carried.at = at
-        this.queue.push({ type: 'pick', thing: this.state.table[this.carried.slot], at })
-        return
-      }
+    for (const each of [0, 1] as const) {
+      const carry = this.carried[each], finger = this.fingers[each]
+      if (!carry || !finger || carry.lift <= 0 || Math.hypot(at.x - carry.at.x, at.y - carry.at.y) >= 140) continue
+      Object.assign(finger, { id, at })
+      Object.assign(carry, { lift: 0, at })
+      this.queue.push({ type: 'pick', thing: this.state.table[carry.slot], at })
+      return
+    }
+    const target: Target = bare ? { kind: 'wall' } : targetAt(at, this.untidy)
+    if (target.kind === 'bell' && this.fingers[other(side)]?.target.kind === 'bell') {
+      this.queue.push({ type: 'extra', side, at })
+      return
     }
     const working = this.fingers[side]
     if (working) {
       // A lifted carry takes no more: it is let go where it was.
-      if (this.carried && this.carried.side === side && this.carryLift > 0) this.dropCarry()
-      else if (working.still < RESTING || (working.target.kind === 'thing' && working.moved)) {
+      const carry = this.carried[side]
+      if (carry && carry.lift > 0) this.dropCarry(side)
+      else if (working.still < RESTING || (working.moved && (working.target.kind === 'thing' || working.target.kind === 'bell'))) {
         this.queue.push({ type: 'extra', side, at })
         return
       } else this.release(working, true)
     }
-    const target = targetAt(at, this.untidy)
-    this.fingers[side] = { id, target, side, from: at, at, still: 0, moved: false }
+    const finger: Finger = { id, target, side, from: at, at, still: 0, moved: false, onHand: false }
+    this.fingers[side] = finger
     switch (target.kind) {
       case 'hand': {
         const hand = this.hands[side]
@@ -206,16 +226,23 @@ export class Party {
         hand.busy = true
         hand.quiet = false
         hand.copying = false
+        hand.mute = null
+        finger.onHand = onHand
         hand.target = onHand ? { u: hand.u, y: hand.y } : reach(toSpot(side, at))
         this.lead(side)
         this.queue.push({ type: 'press', side, thing: this.state.held[side], at: this.handPoint(side) })
         break
       }
+      case 'wall':
+        this.queue.push({ type: 'extra', side, at })
+        break
       case 'thing':
         this.queue.push({ type: 'pick', thing: this.state.table[target.slot], at })
         break
       case 'bell':
         this.bellRing = 0
+        this.bellBack = 9
+        for (const each of [0, 1] as const) this.setFace(each, 'innocent', 0.9)
         this.queue.push({ type: 'bell', rung: false })
         break
       case 'pendulum':
@@ -236,11 +263,16 @@ export class Party {
     finger.at = at
     if (!finger.moved && Math.hypot(at.x - finger.from.x, at.y - finger.from.y) > TAP_SLOP) {
       finger.moved = true
-      if (finger.target.kind === 'thing') this.carried = { slot: finger.target.slot, at, side: finger.side }
+      if (finger.target.kind === 'thing') this.carried[finger.side] = { slot: finger.target.slot, at, lift: 0 }
     }
     if (finger.target.kind === 'bell' && finger.moved) this.bell = at
-    if (finger.target.kind === 'hand' && finger.moved) this.hands[finger.side].target = reach(toSpot(finger.side, at))
-    if (finger.target.kind === 'thing' && this.carried && this.carried.side === finger.side) this.carried.at = at
+    if (finger.target.kind === 'hand' && finger.moved) {
+      const hand = this.hands[finger.side]
+      hand.target = reach(toSpot(finger.side, at))
+      if (hand.mute && Math.hypot(at.x - hand.mute.x, at.y - hand.mute.y) > TAP_SLOP) hand.mute = null
+    }
+    const carry = this.carried[finger.side]
+    if (finger.target.kind === 'thing' && carry) carry.at = at
   }
 
   up(id: number, at: Point): void {
@@ -249,8 +281,9 @@ export class Party {
     if (!finger) return
     if (finger.target.kind === 'thing' && finger.moved) {
       // The carry survives a lifted finger for a moment.
-      this.carryLift = 0.3
-      finger.id = -1
+      const carry = this.carried[finger.side]
+      if (carry) carry.lift = 0.3
+      finger.id = -1 - finger.side
       return
     }
     this.release(finger, false)
@@ -264,7 +297,7 @@ export class Party {
 
   /** Put away, or hidden: every finger is gone, and nothing it did not do is done. */
   clear(): void {
-    if (this.carried && this.carryLift > 0) this.dropCarry()
+    for (const side of [0, 1] as const) if (this.carried[side]?.lift) this.dropCarry(side)
     for (const finger of this.fingers) if (finger) this.release(finger, true)
     this.echo.clear()
     for (const hand of this.hands) Object.assign(hand, newHand())
@@ -284,36 +317,42 @@ export class Party {
     const tapped = !finger.moved && !taken
     switch (finger.target.kind) {
       case 'hand': {
-        const hand = this.hands[side]
+        const hand = this.hands[side], beside = this.fingers[other(side)]
+        if (taken) this.mute(side, finger.at)
+        if (this.hands[other(side)].mode !== 'free') {
+          // Two hands were led at once: neither was being copied, and neither is now.
+          this.mute(side, finger.at)
+          if (beside?.target.kind === 'hand') this.mute(other(side), beside.at)
+        }
         if (taken) {
           hand.mode = 'free'
           hand.busy = false
           hand.quiet = true
-          if (this.leader === side) this.echo.clear()
-        } else if (tapped && this.near(side, finger.from) && finger.still < 0.4 && zoneAt(hand) === null) {
+        } else if (tapped && finger.onHand && finger.still < 0.4 && zoneAt(hand) === null) {
           hand.mode = 'waggle'
           hand.left = WAGGLE
           hand.target = { u: hand.u, y: hand.y }
         } else {
           hand.mode = 'linger'
           // At the middle the hand waits for the other to come: a tap there can meet.
-          hand.left = zoneAt(hand.target) === 'meet' ? BEAT_SECONDS[this.state.beat] + 0.7 : LINGER
+          hand.left = zoneAt(hand.target) === 'meet' ? this.wait + 0.7 : LINGER
         }
         // The other child still leads: from now on this aunt copies.
         if (this.fingers[other(side)]?.target.kind === 'hand' && hand.mode === 'free') this.lead(other(side))
         break
       }
       case 'thing':
-        if (this.carried && this.carried.side === side) {
-          const thing = this.state.table[this.carried.slot]
-          this.carried = null
-          this.carryLift = 0
+        if (this.carried[side]) {
+          const thing = this.state.table[this.carried[side].slot]
+          this.carried[side] = null
           this.queue.push({ type: 'back', thing })
         } else if (tapped) this.giveTo(placeSide(finger.target.slot), finger.target.slot)
         break
       case 'bell':
         if (this.bell) {
           const ring = !taken && rings(this.bell)
+          this.bellFrom = this.bell
+          this.bellBack = 0
           this.bell = null
           this.bellRing = 0
           this.queue.push({ type: 'bell', rung: ring })
@@ -333,19 +372,24 @@ export class Party {
     }
   }
 
+  private mute(side: Side, at: Point): void {
+    this.hands[side].mute = at
+    this.echo.clear()
+  }
+
   private lead(side: Side): void {
+    if (!this.hands[other(side)].copying) this.wait = BEAT_SECONDS[this.state.beat]
     if (this.leader === side && !this.hands[other(side)].busy && this.echo.at(this.time) !== null) return
     if (this.leader !== side || this.hands[other(side)].mode === 'held') this.echo.clear()
     this.leader = side
     this.noticed = false
   }
 
-  private dropCarry(): void {
-    const carried = this.carried
+  private dropCarry(side: Side): void {
+    const carried = this.carried[side]
     if (!carried) return
-    this.fingers[carried.side] = null
-    this.carried = null
-    this.carryLift = 0
+    this.fingers[side] = null
+    this.carried[side] = null
     if (onAunt(carried.at)) this.giveTo(sideOf(carried.at), carried.slot)
     else this.queue.push({ type: 'back', thing: this.state.table[carried.slot] })
   }
@@ -394,7 +438,11 @@ export class Party {
 
   private act(side: Side, act: Act): void {
     const hand = this.hands[side]
-    if (hand.cool > 0) return
+    if (hand.cool > 0) {
+      hand.next = act
+      return
+    }
+    hand.next = null
     hand.cool = COOL
     const { state } = this
     const thing = state.held[side]
@@ -409,7 +457,7 @@ export class Party {
         this.dirty = true
       }
     }
-    if (act === 'self') {
+    if (act === 'self' || thing === 'horn') {
       const stuck = lipsAfter(state.lips[side], thing)
       if (stuck !== state.lips[side]) {
         state.lips[side] = stuck
@@ -425,7 +473,7 @@ export class Party {
     const mood = moodOf(guest, effect)
     state.coats[guest] = coat
     this.dirty = true
-    this.seats[side] = { antic, mood, t: act === 'tip' ? -0.22 : act === 'wave' ? -0.1 : -0.02, from: was }
+    this.seats[side] = { antic, mood, effect, t: act === 'tip' ? -0.22 : act === 'wave' ? -0.1 : -0.02, from: was }
     this.queue.push({ type: 'answer', side, guest, effect, antic, mood })
     if (mood === 'outrage') {
       if (copy) {
@@ -465,8 +513,10 @@ export class Party {
 
   private tick(dt: number): void {
     this.time += dt
-    const wait = BEAT_SECONDS[this.state.beat]
-    this.swing += (dt * Math.PI) / Math.max(0.3, wait)
+    // A beat changed in the middle of a copy counts from the next one.
+    if (!this.hands[0].busy && !this.hands[1].busy) this.wait = BEAT_SECONDS[this.state.beat]
+    const { wait } = this
+    this.swing += (dt * Math.PI) / Math.max(0.3, BEAT_SECONDS[this.state.beat])
     this.pendulumPush = Math.max(0, this.pendulumPush - dt * 1.4)
     this.bellRing += dt
     this.catPoke += dt
@@ -481,9 +531,12 @@ export class Party {
       const finger = this.fingers[side]
       if (finger) finger.still += dt
     }
-    if (this.carryLift > 0) {
-      this.carryLift -= dt
-      if (this.carryLift <= 0) this.dropCarry()
+    this.bellBack += dt
+    for (const side of [0, 1] as const) {
+      const carry = this.carried[side]
+      if (!carry || carry.lift <= 0) continue
+      carry.lift -= dt
+      if (carry.lift <= 0) this.dropCarry(side)
     }
     this.led(this.leader, dt)
     const follower = other(this.leader)
@@ -495,6 +548,12 @@ export class Party {
       hand.cool = Math.max(0, hand.cool - dt)
       const act = this.detectors[side].step(hand, dt, hand.quiet)
       if (act) this.act(side, act)
+      else if (hand.next && hand.cool <= 0) {
+        // Only where the hand still is: one that has gone on or home does nothing.
+        const wanted = hand.next
+        hand.next = null
+        if (!hand.quiet && (wanted === 'wave' || zoneAt(hand) === wanted)) this.act(side, wanted)
+      }
     }
     this.things(dt)
     if (this.scene) this.play(this.scene, dt)
@@ -515,10 +574,10 @@ export class Party {
       target = { u: hand.target.u + Math.sin(age * Math.PI * 2 * 3.2) * 62, y: hand.target.y - 14 }
       if (hand.left <= 0) this.goHome(side)
     }
-    if (hand.mode === 'free') target = HOME
+    if (hand.mode === 'free') target = this.rubbing(side) ?? HOME
     spring(hand, target, hand.mode === 'free' ? 11 : 26, dt)
     if (hand.mode === 'free' && Math.hypot(hand.u - HOME.u, hand.y - HOME.y) < 3) hand.busy = false
-    if (side === this.leader && this.fingers[other(side)]?.target.kind !== 'hand') this.echo.push(this.time, hand, hand.quiet)
+    if (side === this.leader && !hand.mute && this.fingers[other(side)]?.target.kind !== 'hand') this.echo.push(this.time, hand, hand.quiet)
   }
 
   private goHome(side: Side): void {
@@ -527,6 +586,13 @@ export class Party {
     hand.quiet = true
     // The other aunt still has a finger on her: this one copies her from now on.
     if (this.fingers[other(side)]?.target.kind === 'hand') this.lead(other(side))
+  }
+
+  /** Where a hand with a handkerchief is, while the tidying rubs. */
+  private rubbing(side: Side): Spot | null {
+    const { scene } = this
+    if (scene?.kind !== 'tidy' || scene.t > 2.8) return null
+    return { u: GUEST.u - 10 + Math.sin(scene.t * (side ? 13 : 8)) * 54, y: 545 + Math.cos(scene.t * (side ? 9 : 6)) * 46 }
   }
 
   /** A hand that follows the other one, a beat behind. */
@@ -543,7 +609,7 @@ export class Party {
       this.setFace(side, 'keen', wait + 0.5)
       this.queue.push({ type: 'notice', side })
     }
-    spring(hand, moment ?? HOME, moment ? 48 : 11, dt)
+    spring(hand, moment ?? this.rubbing(side) ?? HOME, moment ? 48 : 11, dt)
   }
 
   private meet(): void {
@@ -560,7 +626,7 @@ export class Party {
       if (zoneAt(a) !== 'meet' || zoneAt(b) !== 'meet') this.met = false
       return
     }
-    if (this.met) return
+    if (this.met || (this.scene && this.scene.kind !== 'trade')) return
     this.met = true
     this.state.held = [this.state.held[1], this.state.held[0]]
     this.setFace(0, 'proud', 2.4)
@@ -574,7 +640,7 @@ export class Party {
     if (held[0] === thing) return this.handPoint(0)
     if (held[1] === thing) return this.handPoint(1)
     const slot = table.indexOf(thing)
-    if (this.carried?.slot === slot) return this.carried.at
+    for (const carry of this.carried) if (carry?.slot === slot) return carry.at
     return place(slot)
   }
 
@@ -596,7 +662,7 @@ export class Party {
     scene.t += dt
     const cues = CUES[scene.kind]
     while (scene.cue < cues.length && scene.t >= cues[scene.cue]) {
-      this.queue.push({ type: 'cue', kind: scene.kind, cue: scene.cue })
+      this.queue.push({ type: 'cue', kind: scene.kind, cue: scene.cue, guests: [...this.state.seated] })
       scene.cue += 1
     }
     if (scene.t >= SCENE_SECONDS[scene.kind]) this.scene = null

@@ -98,7 +98,7 @@ export function hairAfter(hair: Hair, thing: Thing): Hair {
   }
 }
 
-/** Whether an aunt's lips are stuck after she used a thing on her own face. */
+/** Whether an aunt's lips are stuck after she used a thing on her own face, or blew the horn anywhere. */
 export function lipsAfter(stuck: boolean, thing: Thing): boolean {
   if (thing === 'glue') return true
   if (thing === 'fan') return stuck

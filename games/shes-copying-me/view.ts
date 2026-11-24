@@ -2,13 +2,13 @@ import { paintArm, paintAunt, paintFingers, type AuntView } from './auntArt'
 import { BACKDROP, TIERS, type Tier } from './config'
 import { Bits } from './fx'
 import { handPose, type Guidance, type HandPose } from './guidance'
-import { paintGuest, type Look } from './guestArt'
+import { TOP, paintGuest, type Look } from './guestArt'
 import { AUNT, BELL, GUEST, MIDDLE, PANE, PANES, PENDULUM, outward, toPoint, zoneAt } from './layout'
 import { guestPose } from './motion'
-import { demoMove, type Party, type PartyEvent } from './party'
+import { demoMove, type Party, type PartyEvent, type SeatShow } from './party'
 import { paintFrame, paintPane, paintRoom, paintTable } from './room'
 import { other, type Coat, type Guest, type Side, type Thing } from './rules'
-import { blob, brush, bump, cell, clamp, dye, ease, gutta, line, soft, type G } from './silk'
+import { blob, brush, bump, cell, clamp, dye, ease, gutta, glowRing, line, soft, type G } from './silk'
 import { STAGE, fit, type Point } from './stage'
 import { Stamps, type MakeSheet } from './stamps'
 import { putThing, tipOf } from './thingArt'
@@ -16,6 +16,8 @@ import { putThing, tipOf } from './thingArt'
 // Puts one frame on the surface from the party as it stands. The room, the
 // table and the frame are painted once and stamped; everyone in the room is
 // drawn fresh.
+
+const HAIR_ON_END: Record<Guest, string> = { walrus: '#4a3f63', dog: '#fff3d8', goose: '#ffffff', pig: '#f7a3ba' }
 
 /** For the overlay: what is drawn in place in a still frame, and the floods and lines in a picture painted again. */
 const IN_PLACE = 22
@@ -105,11 +107,11 @@ export class View {
 put(g, 'table', [MIDDLE - 320, 650, 640, 170], '', '', paintTable)
     this.guests(g, party, time)
     this.tableThings(g, party, time, glow)
-    if (party.scene?.kind === 'tidy') this.hankies(g, party)
     for (const side of [0, 1] as const) this.arm(g, party, side, time, glow)
-    if (party.carried) this.thing(g, party, party.state.table[party.carried.slot], time)
+    if (party.scene?.kind === 'tidy') this.hankies(g, party)
+    for (const carry of party.carried) if (carry) this.thing(g, party, party.state.table[carry.slot], time)
     this.bits.draw(g, put)
-    if (party.scene?.kind === 'statues') this.pigeon(g, party.scene.t)
+    if (party.scene?.kind === 'statues') this.pigeon(g, party, party.scene.t)
     if (guidance && guidance.demo !== null) this.ghost(g, party, guidance)
     if (this.tier.sheen) this.sheen(g, time)
     this.drawn = IN_PLACE + this.stamps.puts + this.stamps.painted * PAINTED
@@ -119,7 +121,7 @@ put(g, 'table', [MIDDLE - 320, 650, 640, 170], '', '', paintTable)
     const show = party.aunts[side], hand = party.hands[side]
     const watching = party.copier === side || (party.hands[other(side)].busy && !hand.busy)
     const me = toPoint(side, { u: AUNT.u, y: AUNT.y - 140 })
-    const at = show.face === 'innocent' ? { x: me.x, y: -300 } : watching ? party.handPoint(other(side)) : hand.busy ? party.handPoint(side) : toPoint(side, GUEST)
+    const at = show.face === 'innocent' ? { x: me.x, y: -300 } : hand.busy && !watching ? (party.fingerAt(side) ?? party.handPoint(side)) : party.handPoint(other(side))
     const scene = party.scene
     const curtsy = scene?.kind === 'tidy' ? bump((scene.t - 3.2) / 1.6) : scene?.kind === 'birds' ? bump((scene.t - 4.6) / 1.2) * 0.4 : 0
     return { side, show, hand, hair: party.state.hair[side], lips: party.state.lips[side], look: { x: ((at.x - me.x) * outward(side)) / 260, y: (at.y - me.y) / 260 }, time, copying: party.copier === side, curtsy }
@@ -133,6 +135,8 @@ put(g, 'table', [MIDDLE - 320, 650, 640, 170], '', '', paintTable)
     const came = party.arrived[side]
     if (came < 0.7) out.y -= 90 * (1 - ease(clamp(came / 0.45))) + 26 * bump((came - 0.4) / 0.3)
     if (!scene) return out
+    // Rubbed clean, they shake themselves.
+    if (scene.kind === 'tidy') out.turn = Math.sin(scene.t * (side ? 34 : 24)) * 0.1 * bump((scene.t - 2.6) / 1.2)
     if (scene.kind === 'bubbles') {
       const from = toPoint(other(side), { u: GUEST.u, y: 668 })
       const k = ease(clamp((scene.t - 0.4) / 4.4))
@@ -165,7 +169,7 @@ put(g, 'table', [MIDDLE - 320, 650, 640, 170], '', '', paintTable)
       g.scale(outward(side), 1)
       const scene = party.scene
       let shown: Coat = coat, flood = 1, from = show.from
-      if (scene?.kind === 'tidy') {
+      if (scene?.kind === 'tidy' && show.antic === null) {
         // Rubbed clean from the moment the handkerchief is on it.
         from = this.wasCoat[guest] ?? 'clean'
         flood = clamp((scene.t - 0.6 - side * 0.2) / 1.2)
@@ -175,9 +179,9 @@ put(g, 'table', [MIDDLE - 320, 650, 640, 170], '', '', paintTable)
         else if (show.from !== coat) flood = clamp(show.t / 0.45)
       }
       const asking = this.asking(party, side)
-      const cup = guest === 'walrus' && show.mood === 'delight' && show.t > 0.2 && show.t < 3 && show.from !== 'puffed' ? 1 : 0
+      const cup = guest === 'walrus' && show.effect === 'splash' && show.t > 0.2 && show.t < 3 ? bump((show.t - 0.2) / 2.8) : 0
       const look: Look = this.guestLook(party, side)
-      const paint = (c: Coat, was = '') => paintGuest(g, `seat${side}${was}`, guest, c, guestPose(guest, c, show.antic, show.mood, show.t, time), look, time, asking, cup, this.stamps.put)
+      const paint = (c: Coat, was = '') => paintGuest(g, `seat${side}${was}`, guest, c, guestPose(guest, c, show.antic, show.mood, show.t, time, show.effect), look, time, asking, cup, this.stamps.put)
       if (flood < 1) {
         paint(from, 'was')
         g.save()
@@ -187,9 +191,49 @@ put(g, 'table', [MIDDLE - 320, 650, 640, 170], '', '', paintTable)
         paint(shown)
         g.restore()
       } else paint(shown)
+      const pose = guestPose(guest, coat, show.antic, show.mood, show.t, time, show.effect)
+      // With the body, whatever it does.
+      g.translate(pose.x, pose.y - 100)
+      g.rotate(pose.turn)
+      g.translate(0, 100)
+      g.scale(pose.sx, pose.sy)
+      this.extras(g, guest, show)
       g.restore()
     }
   }
+
+  /** What an answer shows for a moment over the guest. */
+  private extras(g: G, guest: Guest, show: SeatShow): void {
+    const { t, antic } = show
+    if (t < 0) return
+    if (antic === 'nose' && t < 0.85) {
+      g.save()
+      g.translate(guest === 'goose' ? -66 : 0, -TOP[guest] * 0.6 - 60 * clamp(1 - t * 4))
+      g.rotate(0.5 + Math.sin(t * 22) * 0.3)
+      g.beginPath()
+      g.moveTo(-26, 0)
+      g.quadraticCurveTo(0, -19, 26, 0)
+      g.quadraticCurveTo(0, 19, -26, 0)
+      cell(g, '#f25c9a', 3)
+      g.restore()
+    } else if (antic === 'onEnd' && t < 1.4) {
+      const up = Math.min(clamp(t * 8), clamp((1.4 - t) * 4))
+      for (let i = -3; i <= 3; i++) {
+        g.beginPath()
+        g.moveTo(i * 13 - 6, -TOP[guest] + 22 + Math.abs(i) * 8)
+        g.quadraticCurveTo(i * 18, -TOP[guest] - 10 * up, i * 21 + Math.sin(t * 40 + i) * 3, -TOP[guest] + 14 - (46 - Math.abs(i) * 7) * up)
+        g.quadraticCurveTo(i * 18 + 6, -TOP[guest] - 4, i * 13 + 6, -TOP[guest] + 22 + Math.abs(i) * 8)
+        cell(g, HAIR_ON_END[guest], 2.6)
+      }
+    } else if (antic === 'double' && t < 2.6) {
+      const k = Math.min(1, t * 2.2) * 1.14
+      g.globalAlpha = clamp((2.6 - t) * 2)
+      blob(g, 0, -120, 128 * k, 124 * k)
+      gutta(g, 4)
+      g.globalAlpha = 1
+    }
+  }
+
   private wasCoat: Partial<Record<Guest, Coat>> = {}
 
   /** Only one seated guest asks at a time: the one whose aunt is not at work, the first when neither is. */
@@ -203,7 +247,9 @@ put(g, 'table', [MIDDLE - 320, 650, 640, 170], '', '', paintTable)
     const me = toPoint(side, { u: GUEST.u, y: GUEST.y - 90 })
     const busy = party.hands[side].busy
     const hand = party.handPoint(side)
-    const at = busy ? hand : this.asking(party, side) > 0.2 ? { x: me.x - outward(side) * 40, y: me.y + 10 } : party.at[party.state.held[side]]
+    const want = party.state.seated[side] === 'dog' ? party.at.fish : party.state.seated[side] === 'pig' ? party.at.glue : null
+    if (party.scene?.kind === 'birds') return { x: -1, y: 0 }
+    const at = busy ? hand : this.asking(party, side) > 0.2 && want ? want : this.asking(party, side) > 0.2 ? { x: me.x - outward(side) * 40, y: me.y + 10 } : party.at[party.state.held[side]]
     return { x: ((at.x - me.x) * outward(side)) / 160, y: (at.y - me.y) / 160 }
   }
 
@@ -218,12 +264,7 @@ put(g, 'table', [MIDDLE - 320, 650, 640, 170], '', '', paintTable)
     g.translate(body.x, body.y)
     g.scale(s, 1)
     if (lit > 0) {
-      g.globalAlpha = lit * 0.5
-      blob(g, 0, 0, 58, 54)
-      g.strokeStyle = '#fff3b0'
-      g.lineWidth = 8
-      g.stroke()
-      g.globalAlpha = 1
+      glowRing(g, 0, 0, 58, 54, lit * 0.5, 8)
     }
     g.rotate(body.tilt * s + (held >= 0 ? tipOf(thing, doing) : 0))
     if (held >= 0) g.translate(thing === 'fan' ? 10 : 24, thing === 'duster' ? -22 : -4)
@@ -232,12 +273,17 @@ put(g, 'table', [MIDDLE - 320, 650, 640, 170], '', '', paintTable)
   }
 
   private tableThings(g: G, party: Party, time: number, glow: number): void {
-    const carried = party.carried ? party.state.table[party.carried.slot] : null
-    for (const thing of party.state.table) if (thing !== carried) this.thing(g, party, thing, time, glow * 0.6)
-    if (party.untidy || party.bell) {
-      const at = party.bell ?? BELL
+    const carried = party.carried.map((carry) => carry && party.state.table[carry.slot])
+    for (const thing of party.state.table) if (!carried.includes(thing)) this.thing(g, party, thing, time, glow * 0.6)
+    if (party.untidy || party.bell || party.bellBack < 1) {
+      const k = ease(clamp(party.bellBack / 0.45)), from = party.bellFrom
+      // Let go, it hops back to its place.
+      const at = party.bell ?? { x: from.x + (BELL.x - from.x) * k, y: from.y + (BELL.y - from.y) * k - 46 * bump(party.bellBack / 0.45) - 12 * bump((party.bellBack - 0.45) / 0.25) }
+      const gone = party.untidy || party.bell ? 1 : clamp((1 - party.bellBack) / 0.25)
+      if (glow > 0 && party.untidy) glowRing(g, at.x, at.y - 20, 50, 56, glow * 0.3, 8)
       g.save()
       g.translate(at.x, at.y - 34)
+      g.globalAlpha = gone
       g.rotate(Math.sin(party.bellRing * 26) * 0.4 * Math.exp(-party.bellRing * 3) + (party.bell ? Math.sin(time * 12) * 0.1 : 0))
       this.stamps.put(g, 'bell', [-40, -52, 80, 116], '', '', (g) => {
       blob(g, 0, 52, 8, 8)
@@ -284,8 +330,8 @@ put(g, 'table', [MIDDLE - 320, 650, 640, 170], '', '', paintTable)
       g.clip()
       const { x, y } = { x: p.x - PANE.width / 2, y: p.y - PANE.height / 2 }
       this.stamps.put(g, `garden${side}`, [x, y, PANE.width, PANE.height], '', '', (g) => paintPane(g, side))
-      g.translate(p.x, p.y + PANE.height / 2 + 12 + 10 * Math.sin(tap * 18) * Math.exp(-tap * 5))
-      g.scale(outward(side) * 0.66, 0.66)
+      g.translate(p.x, p.y + PANE.height / 2 - 2 + 10 * Math.sin(tap * 18) * Math.exp(-tap * 5))
+      g.scale(outward(side) * 0.47, 0.47)
       const pose = guestPose(guest, party.state.coats[guest], null, null, 9, time + 3)
       paintGuest(g, `pane${side}`, guest, party.state.coats[guest], pose, { x: -0.2, y: 0.5 }, time, 0.25, 0, this.stamps.put)
       g.restore()
@@ -403,7 +449,7 @@ put(g, 'table', [MIDDLE - 320, 650, 640, 170], '', '', paintTable)
     const k = clamp(t / 0.6) * clamp((3.2 - t) / 0.5)
     if (k <= 0) return
     for (const side of [0, 1] as const) {
-      const p = toPoint(side, { u: GUEST.u - 10 + Math.sin(t * (side ? 13 : 8)) * 54, y: 545 + Math.cos(t * (side ? 9 : 6)) * 46 })
+      const p = party.handPoint(side)
       g.save()
       g.translate(p.x, p.y)
       g.scale(k, k)
@@ -414,8 +460,8 @@ put(g, 'table', [MIDDLE - 320, 650, 640, 170], '', '', paintTable)
     }
   }
 
-  private pigeon(g: G, t: number): void {
-    const a = toPoint(0, { u: GUEST.u, y: 424 }), b = toPoint(1, { u: GUEST.u, y: 424 })
+  private pigeon(g: G, party: Party, t: number): void {
+    const a = toPoint(0, { u: GUEST.u, y: 652 - TOP[party.state.seated[0]] }), b = toPoint(1, { u: GUEST.u, y: 652 - TOP[party.state.seated[1]] })
     const path = (from: Point, to: Point, k: number): Point => ({ x: from.x + (to.x - from.x) * ease(k), y: from.y + (to.y - from.y) * ease(k) - Math.sin(k * Math.PI) * 120 })
     let at: Point, fly = true, dir = 1
     if (t < 1.1) at = path({ x: -80, y: 160 }, a, t / 1.1)
