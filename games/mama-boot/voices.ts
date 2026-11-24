@@ -107,7 +107,7 @@ const PAIR_EXTRA: Record<string, Note[]> = {
   'pig-farmer': [z(1200, 0.16, 0.12, 2, { to: 600 }), z(1200, 0.16, 0.12, 2, { to: 600, at: 0.35 }), ...many(6, 0.12, (i) => [n(190 + (i % 2) * 50, 0.09, 0.2, { wave: 'triangle' })], 0.5)],
   'pig-ball': [...snort(), ...boing(200, 0.3)],
   'pig-bell': [...many(8, 0.2, (i) => ding(i % 2 ? 990 : 792, 0, 0.07)), ...many(4, 0.4, () => [n(170, 0.1, 0.2, { to: 240, wave: 'sawtooth' })])],
-  'farmer-ball': [...snoreIn(), ...whistleOut(0.95), ...bop(260, 0.2, 1.1)],
+  'farmer-ball': [...snoreIn(), ...whistleOut(0.95), ...bop(260, 0.12, 1.5), ...bop(300, 0.2, 2.5)],
   'farmer-bell': [...ding(660), ...ding(660, 0.4), n(120, 0.5, 0.2, { to: 190, wave: 'triangle', at: 0.8, a: 0.1 }), ...whistleOut(2.2)],
   'ball-bell': [...bop(260, 0.3), ...ding(1056, 0.02)],
 }

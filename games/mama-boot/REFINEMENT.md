@@ -33,6 +33,10 @@ Frame cost is counted, not timed: there is no graphics hardware where this was b
 
 Reader, first reading: rules 1 to 5 clean, 22 points under rule 6. All were built except one answered here: a finger that is carrying and moving keeps its work; lying still for four seconds it gives it up (`play.ts`, `DEAD_S`).
 
+Reader, second reading: rules 1 to 5 clean, 11 points under rule 6, all built (near a seat is enough; a ring closed on a head comes down and turns; wet before the pair, never on dry ground; the ball is snored away and back; the egg turns in the water; the second thing on the hen sends the first hopping; followers clear of foil and scenery; an egg that rides knocks; out from under the wing onto what it rode; the fence's own posts rattle; the corner is patted).
+
+Code review, by someone who did not build it: ten findings. Nine fixed: the yard is painted once and not again for a tier or while a size changes; nobody chases a rider on its own head; an untouched yard is not written on put-away; the springs hold at 10 frames a second; the egg that was moved comes out from where it is; the hen stops when her half ends; a thing taken or met in mid-roll rests on checked ground; every plain sound name is tested. One left: small per-frame objects (the map of mothers, the draw order), measured at about 0.005 ms a frame on a desktop, against the cost of caches that could go stale.
+
 ## For the pull request
 
 ### How the game meets the quality bar
@@ -40,7 +44,7 @@ Reader, first reading: rules 1 to 5 clean, 22 points under rule 6. All were buil
 - **Alive at idle**: eggs lean and knock, the teapot's lid lifts, the pig's tail goes, the farmer's belly goes up and down, the hen follows with her eyes, everyone blinks, the sun turns.
 - **Motion and sound on every touch**: every body squashes on a spring in the frame the finger lands; ground, foil, fence, clouds, sun, tree, sheep and cow answer too. 90 acts, no two the same (tested).
 - **Weight and follow-through**: springs on the body, loose pupils that lag and overshoot, hops that land in a squash.
-- **Silhouettes and tappables**: warm and pale bodies on a mid-dark ground; targets about 100 units, 26 more forgiven; nothing to touch in the corner, under the home control or in the bottom strip.
+- **Silhouettes and tappables**: warm and pale bodies on a mid-dark ground; targets about 100 units, 26 more forgiven; nothing to be reached for in the corner (a touch there is answered with a pat), under the home control or in the bottom strip.
 - **Wordless clarity at two**: one egg asks at a time; any tap does something; no numeral, letter or sign.
 - **Idle guidance**: glow at 3 s, hand at 5 s, four showings with doubling gaps, then quiet.
 - **60 fps**: 165 pieces at the busiest (budget 175), one full-surface picture, no post pass, no shadow blur, no picture made after the first frame. No physical iPad measured.

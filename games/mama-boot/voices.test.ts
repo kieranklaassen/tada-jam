@@ -11,6 +11,7 @@ describe('the sounds', () => {
   it('has each sound the yard can ask for', () => {
     const source = readFileSync(new URL('./yard.ts', import.meta.url), 'utf8')
     for (const m of source.matchAll(/'((?:press|egg|hen|ring|puddle|seat|set|wet|seen|round|scenery)\.[a-z]+)'/gi)) expect(VOICES[m[1]], m[1]).toBeDefined()
+    for (const m of source.matchAll(/this\.sound\('([a-z.]+)'/gi)) expect(VOICES[m[1]], m[1]).toBeDefined()
     for (const k of THINGS) for (const on of ['tap', 'set', 'seat', 'wet', 'seen', 'hen', 'look']) expect(VOICES[`${on}.${k}`], `${on}.${k}`).toBeDefined()
     for (const [a, b] of PAIRS) expect(VOICES[`pair.${a}-${b}`]).toBeDefined()
     for (const k of ['self', 'egg', 'chick', 'hen']) expect(VOICES[`look.${k}`]).toBeDefined()

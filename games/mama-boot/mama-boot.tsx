@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react'
 import type { Cartridge, CartridgeContext } from '../types'
 import { AttendedClock, Attention } from './attention'
 import { GameAudio, voiceOf } from './audio'
-import { BACKDROP } from './config'
+import { BACKDROP, TIERS } from './config'
 import type { Guidance } from './guidance'
 import { mamaBootManifest } from './manifest'
 import { Overlay, inCorner } from './overlay'
@@ -39,7 +39,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const overlay = new Overlay(root, window.location.search)
     const drawn = { drawCalls: 0, triangles: 0 }
     const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, ...drawn }))
-    const view = new View((w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c })
+    const view = new View((w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c }, Math.min(window.devicePixelRatio || 1, TIERS[0].dpr))
     let game: Play | null = null, disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
     let corner: number | null = null
     const playing = { step: 0, guidance: null as Guidance | null }
@@ -195,6 +195,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       root.removeEventListener('pointerup', onUp)
       root.removeEventListener('pointercancel', onCancel)
       uninstallPerf()
+      view.dispose()
       overlay.dispose()
       audio.dispose()
     }

@@ -20,9 +20,11 @@ export type Pose = {
   gazeX: number; gazeY: number
   /** The head turned on the neck, for a body whose head turns by itself. */
   head: number
+  /** Turned about its own middle, in radians. */
+  spin: number
 }
 
-export const REST: Pose = { dx: 0, lift: 0, rot: 0, sx: 1, sy: 1, mouth: 0, shut: 0, flap: 0, gazeX: 0, gazeY: 0, head: 0 }
+export const REST: Pose = { dx: 0, lift: 0, rot: 0, sx: 1, sy: 1, mouth: 0, shut: 0, flap: 0, gazeX: 0, gazeY: 0, head: 0, spin: 0 }
 
 export type Act = { lasts: number; at(t: number): Partial<Pose> }
 
@@ -91,6 +93,7 @@ export const ACTS = {
   ballBob: act(1.8, (t) => ({ lift: wob(t, 3) * 9 * (1 - t * 0.5), rot: wob(t, 1.5) * 0.2 })),
   ballHover: act(2.3, (t) => ({ lift: hold(t, 0, 0.25, 0.75, 1) * (64 + wob(t, 4) * 8), rot: t * 2.4 })),
   ballBounceOff: act(0.9, (t) => ({ dx: hump(t, 0, 0.4) * 26 - hump(t, 0.35, 1) * 30, lift: hump(t, 0.3, 0.95) * 30, sx: 1 - hump(t, 0.28, 0.42) * 0.22 })),
+  ballSnored: act(2.7, (t) => { const away = hold(t, 0.35, 0.58, 0.64, 0.96); return { dx: hump(t, 0, 0.35) * 8 - away * 78, rot: -away * 1.5, lift: abs(wob(t, 4)) * 6 * away, sx: 1 + hump(t, 0, 0.35) * 0.06 } }),
   ballSeen: act(0.8, (t) => ({ sy: 1 + ring(t, 3) * 0.16, sx: 1 - ring(t, 3) * 0.14, gazeY: -0.4 })),
   // --- the bell: hangs from its handle and swings
   bellSwing: act(1.6, (t) => ({ rot: wob(t, 2) * 0.46 * (1 - t * 0.7), dx: wob(t, 2) * 8, flap: wob(t + 0.04, 2), mouth: abs(wob(t, 2)) * 0.6 })),
@@ -103,7 +106,7 @@ export const ACTS = {
   // --- eggs
   eggRock: act(0.9, (t) => ({ rot: ring(t, 2.5) * 0.28 })),
   eggKnock: act(0.9, (t) => ({ rot: (hump(t, 0, 0.12) + hump(t, 0.25, 0.37) + hump(t, 0.5, 0.62)) * 0.13, flap: hold(t, 0, 0.1, 0.7, 1) })),
-  eggSpin: act(1.7, (t) => ({ rot: sin(t * PI * 4) * 0.12, sx: 1 - abs(sin(t * PI * 3)) * 0.1, lift: wob(t, 2) * 3 })),
+  eggSpin: act(2.6, (t) => ({ spin: hold(t, 0, 0.9, 2, 3) * PI * 2, lift: hump(t, 0, 0.9) * 4 + wob(t, 2) * 3 * (1 - t) })),
   eggTok: act(0.5, (t) => ({ dx: -hump(t, 0, 0.3) * 8, rot: -ring(t, 1.5) * 0.2 })),
   eggSquash: act(0.4, (t) => ({ sy: 1 - hump(t, 0, 0.5) * 0.16, sx: 1 + hump(t, 0, 0.5) * 0.12 })),
   // --- chicks
@@ -162,6 +165,7 @@ export function add(out: Pose, p: Partial<Pose>, amount = 1): Pose {
   out.gazeX += p.gazeX ?? 0
   out.gazeY += p.gazeY ?? 0
   out.head += (p.head ?? 0) * amount
+  out.spin += (p.spin ?? 0) * amount
   return out
 }
 

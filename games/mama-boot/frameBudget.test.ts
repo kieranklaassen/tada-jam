@@ -77,6 +77,17 @@ describe('one frame', () => {
     h.drag('c0', { x: HEN.x, y: HEN.y - 90 })
     for (let i = 0; i < 160; i++) { h.run(1 / 60); frame(h) }
   })
+  it('paints the yard once: not for a tier, and for a new size only when it holds still', () => {
+    const h = new Hand()
+    const shot = (w: number, hh: number, dpr: number) => { count.made = 0; view.draw(surface, h.yard, w, hh, dpr, null, 0); return count.made }
+    shot(1180, 820, 2)
+    expect(shot(1180, 820, 1.5)).toBe(0)
+    for (let i = 1; i <= 30; i++) expect(shot(1180 - i, 820, 1.5)).toBe(0)
+    let made = 0
+    for (let i = 0; i < 40; i++) made += shot(1000, 820, 1.5)
+    expect(made).toBe(1)
+    for (let i = 0; i < 40; i++) shot(1180, 820, 2)
+  })
   it('never hands the surface a number that is not one', () => {
     const h = new Hand()
     const bad: string[] = []

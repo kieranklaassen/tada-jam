@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { GROUND, HEN, PAIRS, PUDDLE, SCENERY, SIZE, SQUAT, THINGS, apart, type BroodId, type ThingKey } from './layout'
+import { GROUND, HEN, PAIRS, PUDDLE, SCENERY, SIZE, SQUAT, THINGS, apart, fromPuddle, type BroodId, type ThingKey } from './layout'
 import { ringOf } from './lineage'
 import { REGRAB_PX } from './play'
 import { deserialize, freshState, serialize } from './save'
@@ -215,9 +215,8 @@ describe('a ring of three', () => {
     const h = new Hand(state((s) => { s.brood.splice(3); s.brood.forEach((b, i) => { b.x = 480 + i * 96; b.y = 600 }); s.brood[1].mother = 'c2'; s.brood[1].kind = 'chick'; s.brood[0].mother = 'c1'; s.brood[0].kind = 'chick'; s.brood[2].host = 'c0' }))
     h.run(1); h.tap('c2'); h.run(3)
     expect(ringOf('c2', h.yard.mothers)?.length).toBe(3)
-    if (h.yard.one('c0')!.dizzy || h.yard.one('c2')!.host) h.tap('c2')
-    h.run(4)
-    if (h.yard.one('c0')!.dizzy) h.tap('c0')
+    // Nobody taps anything more: they are off one another's heads and it turns.
+    expect(h.yard.one('c2')!.host).toBeNull()
     h.run(2)
     const p = { ...h.yard.one('c0')! }
     h.run(0.4)
@@ -288,9 +287,9 @@ describe('touch', () => {
     const r = new Hand(); const b = r.where('bell'); r.play.down(1, b.x, b.y); r.run(1.2); r.play.down(2, q.x, q.y); r.play.up(2, q.x, q.y)
     expect(names(r)).toContain('tap.teapot')
   })
-  it('the grown-up corner takes nothing', () => {
+  it('the grown-up corner is answered with a pat and takes nothing', () => {
     const h = new Hand(); h.play.down(1, 1170, 10)
-    expect(h.yard.sounds).toEqual([])
+    expect(names(h)).toEqual(['press.ground']); expect(h.play.active).toBe(false)
   })
   it('every scenery that looks touchable answers', () => {
     const h = new Hand(); const heard = new Set<string>()
@@ -331,3 +330,74 @@ describe('put away at any moment', () => {
   })
 })
 void SQUAT
+
+describe('what a second reading found', () => {
+  it('a chick let go where it would be drawn sitting sits there', () => {
+    for (const k of THINGS) {
+      const h = new Hand(state((s) => { s.brood.splice(1); s.brood[0].kind = 'chick'; s.brood[0].mother = 'hen' })); h.run(6)
+      const c = h.yard.one('c0')!, b = h.yard.things[k], keep = c.host
+      c.host = k; const to = h.yard.middle(c); c.host = keep
+      h.drag('c0', to)
+      expect(h.yard.one('c0')!.host, k).toBe(k)
+      expect(b.id).toBe(k)
+    }
+  })
+  it('an egg let go on an egg that rides knocks with it', () => {
+    const h = new Hand(state((s) => { s.brood[0].host = 'pig' })); h.run(0.5)
+    h.yard.sounds = []
+    h.drag('c1', h.where('c0'))
+    expect(names(h)).toContain('egg.tok'); expect(h.yard.one('c0')!.act?.name).toBe('eggTok'); expect(h.yard.one('c1')!.host).toBeNull()
+  })
+  it('a ball sent out of the puddle is not wet on dry ground', () => {
+    const h = new Hand(); h.drag('boot', { x: 720, y: 600 }); h.run(1); h.drag('ball', { x: 830, y: 610 }); h.run(1)
+    let wetAt = fromPuddle(h.yard.things.ball)
+    for (let i = 0; i < 300; i++) { h.yard.sounds = []; h.run(1 / 60); if (names(h).includes('wet.ball')) wetAt = fromPuddle(h.yard.things.ball) }
+    expect(wetAt).toBeLessThan(12)
+  })
+  it('the one under her wing comes out again on what it rode', () => {
+    const h = new Hand(state((s) => s.brood.forEach((b, i) => { b.kind = 'chick'; b.mother = 'pig'; if (!i) b.host = 'pig' }))); h.run(5)
+    h.tap('hen'); h.run(0.5); h.tap('c0'); h.run(0.8); h.tap('hen'); h.run(1)
+    expect(h.yard.one('c0')!.kind).toBe('chick'); expect(h.yard.one('c0')!.host).toBe('pig')
+  })
+  it('a second thing set on her sends the first hopping down', () => {
+    const h = new Hand(); h.drag('boot', { x: HEN.x, y: HEN.y - 90 }); h.run(0.5)
+    const was = h.yard.place(h.yard.things.boot)
+    h.lift('bell'); h.play.move(1, HEN.x, HEN.y - 90); h.play.up(1, HEN.x, HEN.y - 90); h.run(0.36)
+    const now = h.yard.place(h.yard.things.boot)
+    expect(Math.hypot(now.x - was.x, now.y - now.z - was.y + was.z)).toBeLessThan(90)
+  })
+})
+
+describe('what the code review found', () => {
+  it('a chick does not run after the mother on its own head', () => {
+    const h = new Hand(state((s) => { s.brood[0] = { ...s.brood[0], kind: 'chick', mother: 'c1' }; s.brood[1] = { ...s.brood[1], kind: 'chick', mother: 'c0', host: 'c0' } }))
+    h.run(4)
+    const p = { x: h.yard.one('c0')!.x, y: h.yard.one('c0')!.y }
+    h.run(3)
+    expect(apart(h.yard.one('c0')!, p)).toBeLessThan(2); expect(h.yard.one('c0')!.going).toBeLessThan(0.1)
+  })
+  it('a yard nobody touched is not written when it is put away', () => {
+    const h = new Hand(); h.run(2); h.play.park()
+    expect(h.yard.changed).toBe('no')
+    h.tapAt({ x: 600, y: 600 }); h.yard.changed = 'no'; h.play.park()
+    expect(h.yard.changed).toBe('now')
+  })
+  it('springs stay small however long the frames are', () => {
+    const h = new Hand(); h.tap('pig')
+    for (let i = 0; i < 300; i++) h.yard.step(0.1)
+    expect(Math.abs(h.yard.things.pig.squash)).toBeLessThan(0.5)
+  })
+  it('an egg the child set in the boot comes out again beside it', () => {
+    const h = new Hand(chicks('pig')); h.run(5)
+    h.tap('hen'); h.run(0.4); h.tap('c4'); h.run(2.2)
+    h.drag('c4', h.where('boot'))
+    expect(h.yard.one('c4')!.host).toBe('boot')
+    h.tap('hen'); h.run(1)
+    expect(h.yard.one('c4')!.kind).toBe('chick'); expect(h.yard.one('c4')!.host).toBeNull()
+  })
+  it('the hen stops her half when the thing is pulled away', () => {
+    const h = new Hand(); h.drag('teapot', { x: HEN.x, y: HEN.y - 90 }); h.run(0.8)
+    h.lift('teapot')
+    expect(h.yard.hen.act?.name).not.toBe('henLaunched')
+  })
+})

@@ -123,3 +123,7 @@ export const SCENERY: Record<SceneryKey, Spot & { r: number }> = {
 export const FENCE = { top: 322, bottom: 400 } as const
 /** Where there is fence in that band. */
 export const FENCES: readonly (readonly [number, number])[] = [[-520, 92], [300, 446], [584, 800], [1130, 1700]]
+/** Where its posts stand. */
+export const POSTS: readonly number[] = FENCES.flatMap(([from, to]) => Array.from({ length: Math.ceil((to - 22 - from) / 38) }, (_, i) => from + 16 + i * 38))
+/** The lean of the post at `x`, as it is cut out. */
+export const postLean = (x: number): number => Math.sin(x) * 0.05

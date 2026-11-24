@@ -62,8 +62,10 @@ export class Play {
   }
 
   down(id: number, x: number, y: number): void {
-    if (this.width <= 0 || this.height <= 0 || inCorner(x, y, this.width)) return
+    if (this.width <= 0 || this.height <= 0) return
     this.touched()
+    // The grown-up's corner is answered and holds nothing.
+    if (inCorner(x, y, this.width)) { if (this.work) this.yard.dab(this.stage(x, y)); else this.yard.pat(this.stage(x, y)); return }
     const work = this.work
     if (work && work.id === null) {
       if (Math.hypot(x - work.x, y - work.y) <= REGRAB_PX) {

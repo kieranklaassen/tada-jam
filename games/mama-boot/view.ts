@@ -2,7 +2,7 @@ import { Box, CAST, TAU, type Make, type Pen, type Sprite } from './craft'
 import { YARN, cutCast, type Cast, type Figure } from './figures'
 import { handPose, type Guidance, type HandPose } from './guidance'
 import { moveToShow, type Move } from './guide'
-import { FENCE, HEN, PUDDLE, SCENERY, SIZE, scaleAt, type Spot, type ThingKey } from './layout'
+import { HEN, POSTS, PUDDLE, SCENERY, SIZE, postLean, scaleAt, type Spot, type ThingKey } from './layout'
 import { ringOf, type Gait } from './lineage'
 import { STANCES, WALKS, add, addAct, reset, type Pose } from './moves'
 import { makeRng } from './rng'
@@ -25,7 +25,9 @@ export class View {
   private readonly cast: Cast
   private readonly scenery: Scenery
   private backdrop: HTMLCanvasElement | null = null
-  private backKey = ''
+  /** The size the yard was painted for, the size last asked for, and for how many draws it has been that. */
+  private painted = { width: 0, height: 0 }
+  private asked = { width: 0, height: 0, draws: 0 }
   private readonly rolls = new Map<string, Roll>()
   private readonly pose: Pose = reset({} as Pose)
   private readonly hand: HandPose = { travel: 0, press: 0, opacity: 0 }
@@ -35,7 +37,8 @@ export class View {
   private step = 0
   drawn = 0
 
-  constructor(private readonly make: Make) {
+  /** `fine` is the most pixels to a unit the surface will ever have: the yard is painted once at that, and a lower tier shows it smaller. */
+  constructor(private readonly make: Make, private readonly fine = 2) {
     const box = new Box(make, makeRng(11))
     this.cast = cutCast(box)
     this.scenery = cutScenery(box)
@@ -43,25 +46,39 @@ export class View {
 
   /** The bare yard, for a surface whose saved state has not been read yet. */
   bare(g: Pen, width: number, height: number, dpr: number): void {
-    const back = this.back(width, height, dpr)
-    g.setTransform(1, 0, 0, 1, 0, 0)
-    if (back) g.drawImage(back, 0, 0)
+    const now = fit(width, height)
+    if (now.scale <= 0) return
+    const back = this.back(width, height), was = fit(this.painted.width, this.painted.height)
+    // While a surface is being resized the picture there is stands in, laid where its stage belongs.
+    const k = now.scale / was.scale
+    g.setTransform(dpr, 0, 0, dpr, 0, 0)
+    if (k !== 1 || this.painted.width !== width || this.painted.height !== height) { g.fillStyle = '#8fd0ea'; g.fillRect(0, 0, width, height) }
+    g.drawImage(back, now.x - was.x * k, now.y - was.y * k, this.painted.width * k, this.painted.height * k)
   }
 
-  private back(width: number, height: number, dpr: number): HTMLCanvasElement | null {
-    const key = `${width} ${height} ${dpr}`
-    if (this.backKey === key) return this.backdrop
-    const by = fit(width, height)
-    if (by.scale <= 0) return null
-    const c = this.make(Math.round(width * dpr), Math.round(height * dpr))
+  /** The painted yard. It costs far more than a frame to paint, so it waits for a new size to hold still. */
+  private back(width: number, height: number): HTMLCanvasElement {
+    const { asked, painted } = this
+    asked.draws = asked.width === width && asked.height === height ? asked.draws + 1 : 0
+    asked.width = width
+    asked.height = height
+    if (this.backdrop && ((painted.width === width && painted.height === height) || asked.draws < 20)) return this.backdrop
+    this.dispose()
+    const by = fit(width, height), c = this.make(Math.round(width * this.fine), Math.round(height * this.fine))
     const g = c.getContext('2d') as Pen
-    g.setTransform(dpr * by.scale, 0, 0, dpr * by.scale, dpr * by.x, dpr * by.y)
+    g.setTransform(this.fine * by.scale, 0, 0, this.fine * by.scale, this.fine * by.x, this.fine * by.y)
     g.fillStyle = '#8fd0ea'
     g.fillRect(YARD.x, YARD.y, YARD.w, YARD.h)
     paintYard(g, new Box(this.make, makeRng(5)))
+    this.painted = { width, height }
     this.backdrop = c
-    this.backKey = key
     return c
+  }
+
+  /** Gives the large picture back at once, rather than when it is collected. */
+  dispose(): void {
+    if (this.backdrop) { this.backdrop.width = 0; this.backdrop.height = 0 }
+    this.backdrop = null
   }
 
   draw(g: Pen, yard: Yard, width: number, height: number, dpr: number, guidance: Guidance | null, step: number): number {
@@ -126,7 +143,13 @@ export class View {
     const tr = ring(since('tree'), 4)
     this.put(s.tree, SCENERY.tree.x, SCENERY.tree.y + 22, 1, 1, sin(t * 0.9) * 0.012 + tr * 0.09)
     const f = since('fence')
-    if (f < 1) for (let i = 0; i < 5; i++) this.put(s.post, Math.round((y.fenceX - 76) / 38) * 38 + i * 38, FENCE.bottom + 1, 1, 1, ring(max(0, f - i * 0.06), 3, 0.8) * 0.2)
+    // The posts by the finger shake where they stand, the nearest first.
+    if (f < 1) for (const x of POSTS) {
+      const far = abs(x - y.fenceX)
+      if (far > 95) continue
+      const shake = ring(max(0, f - far * 0.0015), 5, 0.8)
+      this.put(s.post, x + shake * 5, 404 - abs(shake) * 3, 1, 1, postLean(x) + shake * 0.05)
+    }
     const p = y.puddleT
     const g = this.g
     for (const c of y.creases) {
@@ -149,6 +172,8 @@ export class View {
   private begin(b: Body): Pose {
     const pose = reset(this.pose)
     if (b.act) addAct(pose, b.act.name, b.act.t, b.act.amount)
+    // Only an egg turns lying on the water; a chick that copies it goes head over heels.
+    if (b.kind !== 'egg') pose.rot += pose.spin
     pose.sy *= 1 + b.squash * 0.9
     pose.sx *= 1 - b.squash * 0.7
     return pose
@@ -374,6 +399,7 @@ export class View {
       g.save()
       g.translate(at.x + pose.dx + (pass ? 0 : CAST.x), at.y - at.z - pose.lift + (pass ? 0 : CAST.y))
       g.rotate(pose.rot)
+      if (pose.spin) { g.translate(0, -SPIN_AT * s); g.rotate(pose.spin); g.translate(0, SPIN_AT * s) }
       g.scale(s * pose.sx * (n.x < at.x ? -1 : 1), s * pose.sy)
       if (pass === 0) this.put(e.shadow, 0, 0)
       else { this.put(e.whole, 0, 0); if (c.host === 'teapot') this.put(this.cast.things.teapot.parts.lid.sprite, 0, -100, 0.8); this.put(e.beak, 18 + clamp(pose.flap) * 8 + (asking ? sin(this.t * 2.4) * 1.5 : 0), -61, 0.8 + clamp(pose.flap) * 0.3) }
@@ -491,6 +517,8 @@ export class View {
   }
 }
 
+/** How far above where it stands an egg's middle is. */
+const SPIN_AT = 54
 const clamp2 = (v: number) => min(1.5, max(-1.5, v))
 const hop = (from: Place, to: Spot, u: number): Place => { const k = clamp(u); return { x: from.x + (to.x - from.x) * k, y: from.y + (to.y - from.y) * k, z: from.z * (1 - k) + sin(k * PI) * 44 } }
 const scaled = (p: Partial<Pose>, k: number): Partial<Pose> => ({ dx: (p.dx ?? 0) * k, lift: (p.lift ?? 0) * k, rot: (p.rot ?? 0) * k, sx: 1 + ((p.sx ?? 1) - 1) * k, sy: 1 + ((p.sy ?? 1) - 1) * k, mouth: (p.mouth ?? 0) * k, shut: (p.shut ?? 0) * k, flap: (p.flap ?? 0) * k, gazeX: (p.gazeX ?? 0) * k, gazeY: (p.gazeY ?? 0) * k })

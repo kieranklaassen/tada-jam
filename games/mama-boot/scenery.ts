@@ -1,5 +1,5 @@
 import { Box, TAU, type Pen, type Sprite } from './craft'
-import { FENCES, GROUND, PUDDLE, SCENERY } from './layout'
+import { FENCES, GROUND, POSTS, PUDDLE, SCENERY, postLean } from './layout'
 import { STAGE } from './stage'
 
 // The yard itself, stuck down once: sheets of card for sky, hills and ground,
@@ -105,7 +105,7 @@ function fence(g: Pen, box: Box): void {
   for (const [from, to] of FENCES) {
     box.stick(g, (from + to) / 2, 352, to - from, 13, 0, '#e2bb7c', 3)
     box.stick(g, (from + to) / 2, 380, to - from, 13, 0, '#d9ae6a', 3)
-    for (let x = from + 16; x < to - 6; x += 38) box.stick(g, x, 362, 82, 17, Math.PI / 2 + Math.sin(x) * 0.05, '#efcf96', 3)
+    for (const x of POSTS) if (x > from && x < to) box.stick(g, x, 362, 82, 17, Math.PI / 2 + postLean(x), '#efcf96', 3)
   }
 }
 
@@ -167,6 +167,6 @@ export function cutScenery(box: Box): Scenery {
       box.eye(g, -15, -14, 11); box.eye(g, 15, -14, 11)
     }),
     tail: box.sprite(40, 110, 20, 10, (g) => { box.pipe(g, [[0, 0], [5, 30], [-4, 60]], 9, '#fff4e4', '#cdbba8'); box.pom(g, -4, 70, 13, 17, [86, 66, 74]) }),
-    post: box.sprite(40, 110, 20, 100, (g) => box.stick(g, 0, -42, 82, 17, Math.PI / 2, '#f6dcaa', 3)),
+    post: box.sprite(40, 110, 20, 100, (g) => box.stick(g, 0, -42, 82, 17, Math.PI / 2, '#efcf96', 3)),
   }
 }
