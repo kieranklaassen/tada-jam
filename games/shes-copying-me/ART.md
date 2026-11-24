@@ -107,3 +107,25 @@ Open pretend play has no ending. Nothing new starts by itself. The guest at each
 
 The game has no learning goal and so has no records part, and claims no school skill.
 
+## The look
+
+**Silk painting with gutta**, reserved for this game. The spike held on clarity, so "Gingerbread and piped icing" was not tried. The whole frame is one silk stretched on a pinned plum frame: every area is a flood of dye, bright in its middle and pooled dark toward its edge, shut in by a raised gold line with a thin light edge.
+
+- **Dye.** A radial gradient about each shape's own middle, from a lighter tint to the colour to a plum-dark edge (`dye` in `silk.ts`). Dyes are set strong on the figures and duller on the wall and sofa, so people and things are the brightest shapes.
+- **Gutta.** One gold line round every shape, 2 to 5 units wide, and a thin pale line on it. Nothing is outlined in ink; only pupils and nostrils are dark. Arms and necks are tubes between two gold edges.
+- **A coat floods.** When something is done to a guest the new colours run over it from the top inside its own gold lines, over 0.45 s. That is the look's own motion.
+- **Palette.** Teal wall and green sofa behind; magenta for the tall aunt, orange for the round one; red walrus, straw dog, white goose, pink and violet pig; pink and cream cloths. The things are the clearest colours: turquoise pot, red glue pot, rainbow fan, blue fish, pink duster, brass horn.
+- **Light.** None falls. One slow band of satin light crosses the cloth. Salt specks lie in the wall's dye.
+- **Motion.** The tall aunt moves slowly from the wrist, and her tower of hair and its ship lag; the round aunt bounces, with chins, curls and a chick in her hat. Arms are gum: they stretch to wherever the hand is. Each guest has its own tempo, weight and loose part (moustache, ears, neck, snout) in `motion.ts`; small changes in a face are painted in steps, as by hand. The sofa's cat sleeps through everything with one ear.
+- **Kept from looking like a sign.** The horn's and bell's rings are always several and spread. The wind's curls start apart and bend. The window's bars have a garden and faces behind them. The round dots on the hem are buttons in two rows.
+
+### How each tier keeps the look
+
+| Tier | Pixel ratio | Light edge on the gold | Satin band | Turned pictures smoothed | Bits in the air |
+| --- | --- | --- | --- | --- | --- |
+| 0 | 2 | yes | yes | yes | 160 |
+| 1 | 1.5 | yes | yes | yes | 120 |
+| 2 | 1.25 | no | yes | no | 90 |
+| 3 | 1 | no | no | no | 60 |
+
+The room is painted once. Bodies, heads, faces, things and guests are each kept as a picture and painted again only when they change (`stamps.ts`).
