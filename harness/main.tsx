@@ -23,6 +23,12 @@ function App() {
     return () => window.removeEventListener('hashchange', onHash)
   }, [])
 
+  // The address changes inside the tap; the page changes when the launch has grown, to wherever the address is by then.
+  const pick = (hash: string) => {
+    window.history.pushState(null, '', hash)
+    return () => setRoute(currentRoute())
+  }
+
   const goHome = useCallback(() => {
     window.location.hash = ''
   }, [])
@@ -30,7 +36,7 @@ function App() {
   const game = route.view === 'play' ? findGame(route.key) : undefined
   if (game && route.view === 'play') return <JamShell key={route.key} game={game} onExit={goHome} />
   if (route.view === 'demo') return <DemoFrame key={route.key} demoKey={route.key} onExit={goHome} />
-  return <GameList games={games} showcases={showcases} onPick={(key) => (window.location.hash = `#/play/${key}`)} onPickDemo={(key) => (window.location.hash = demoRoute(key))} />
+  return <GameList games={games} showcases={showcases} onPick={(key) => pick(`#/play/${key}`)} onPickDemo={(key) => pick(demoRoute(key))} />
 }
 
 createRoot(document.getElementById('root')!).render(
