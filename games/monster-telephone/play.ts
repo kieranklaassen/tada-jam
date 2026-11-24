@@ -1,6 +1,6 @@
 import type { Note } from './audio'
 import { CATCH, CURTAIN, MIDDLE, MOLE_FACE, ON_MOLE, OSTRICH_HEAD, PULL, SACKS, SHELF_Y, catches, inBody, nearestPlace, onMole, onOstrich, placeAt, shelfOf, targetAt, type Target, type Who } from './layout'
-import { BODIES, PARTS, PLACES, alike, bare, compare, copy, count, moved, type Body, type Compared, type Monster, type Part, type Place } from './monster'
+import { BODIES, PLACES, alike, bare, compare, copy, count, moved, type Body, type Compared, type Monster, type Part, type Place } from './monster'
 import { PAIRS, copyWorld, refill, serialize, type World } from './save'
 import type { Point } from './stage'
 import { agree, bodyVoice, dance, later, partVoice, quieter, rub, takes, voice, type VoiceName } from './voices'
@@ -46,6 +46,8 @@ export function meetingLength(m: Meeting): number {
 
 export class Play {
   now = 0
+  /** How far a tap may stray, in stage units; the Mount widens it on a small surface. */
+  slop = TAP_SLOP
   heard: Note[] = []
   changed = false
   urgent = false
@@ -194,7 +196,7 @@ export class Play {
     if (!c) return
     c.at = p
     const far = Math.hypot(p.x - c.from.x, p.y - c.from.y)
-    if (!c.moved && far > TAP_SLOP) { c.moved = true; if (!c.extra) this.begin(c) }
+    if (!c.moved && far > this.slop) { c.moved = true; if (!c.extra) this.begin(c) }
     if (c.extra) return
     for (const carry of this.carries) if (carry.finger === id) carry.at = { x: p.x + carry.off.x, y: p.y + carry.off.y }
     if (this.sackCarry?.finger === id) this.sackCarry.at = { x: p.x + this.sackCarry.off.x, y: p.y + this.sackCarry.off.y }
@@ -578,7 +580,7 @@ export class Play {
           this.heard.push(...dance())
           for (const one of m.list) { this.mark(`a:${one.place}`); this.mark(`b:${one.place}`) }
         } else this.heard.push(...takes(m.a.body), ...later(takes(m.b.body), 0.35), ...later(voice('clang'), 0.6))
-        this.heard.push(...later(voice('pop'), 1.2))
+        this.heard.push(...later(voice('pop'), TAKE_S - 0.45))
       }
     }
     if (m.t >= meetingLength(m)) this.meeting = null
@@ -604,12 +606,6 @@ export class Play {
     return m && m.fact.kind === 'part' && m.t >= MIME_PEEK + 1.1 ? ON_MOLE[m.fact.place] : null
   }
 
-  /** For the idle hand: a part that is not the next answer, and a place to show it going to. */
-  example(): Part {
-    const taken = this.world.a.on.top?.part
-    return PARTS.find((part) => part !== taken && part === 'tail') ?? 'ear'
-  }
-
   /** Whether a carried magnet would jump on if it were let go now, for the view's glow. */
   wouldCatch(p: Point): { who: Who; place: Place } | null {
     for (const who of this.hosts()) {
@@ -619,4 +615,3 @@ export class Play {
     return null
   }
 }
-export type { Monster }

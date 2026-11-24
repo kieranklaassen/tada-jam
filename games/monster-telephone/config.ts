@@ -4,8 +4,8 @@
 // saveCadence.ts) read their numbers from here, so they stay byte-equal to the
 // template and a template fix can be copied over them.
 
-/** The blank surface's colour, until the game draws its own backdrop. */
-export const BACKDROP = '#f4efe6'
+/** The board's colour, until the first draw. */
+export const BACKDROP = '#f6f9fa'
 
 // --- Adaptive quality (quality.ts) -----------------------------------------
 
@@ -18,10 +18,12 @@ export const BACKDROP = '#f4efe6'
 export type Tier = {
   /** Canvas pixel ratio cap; the jam's bar caps it at 2. */
   dpr: number
+  /** How many of the child's marker lines are still drawn. */
+  strokes: number
 }
 
 /** Tier 0 is full quality; each later tier is cheaper to draw. Whatever a tier change needs is compiled before it happens. */
-export const TIERS: readonly Tier[] = [{ dpr: 2 }, { dpr: 1.5 }, { dpr: 1.25 }, { dpr: 1 }]
+export const TIERS: readonly Tier[] = [{ dpr: 2, strokes: 6 }, { dpr: 1.5, strokes: 5 }, { dpr: 1.25, strokes: 4 }, { dpr: 1, strokes: 3 }]
 
 /** The governor's thresholds. The rules they feed are at the top of quality.ts. */
 export const GOVERNOR = {
@@ -82,7 +84,7 @@ export const SAVE_THROTTLE_MS = 400
  */
 export const TAP_PRESSES: 1 | 2 = 1
 
-// --- The designed order (state.ts) -----------------------------------------
+// --- The designed order (monster.ts, save.ts) -----------------------------------------
 
 /**
  * The game's challenges in their designed order, easiest first, one new thing

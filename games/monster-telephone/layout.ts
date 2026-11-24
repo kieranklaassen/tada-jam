@@ -43,18 +43,18 @@ export const CORD = { x: 46, top: 44, y: 300 } as const
 export const PULL = 45
 export const OSTRICH = { x: 592, y: 556 } as const
 export const OSTRICH_HEAD: Point = { x: 566, y: 190 }
-export const MOLE = { x: 1086, y: 540 } as const
-export const MOLE_FACE: Point = { x: 1086, y: 492 }
+export const MOLE = { x: 1064, y: 540 } as const
+export const MOLE_FACE: Point = { x: 1064, y: 492 }
 export const SACKS: readonly [Point, Point] = [{ x: 78, y: 712 }, { x: 206, y: 700 }]
 export const WIPER: Point = { x: 1092, y: 728 }
 export const DRAWINGS: readonly Point[] = [{ x: 720, y: 62 }, { x: 880, y: 62 }, { x: 1040, y: 62 }]
 /** The string hangs from can to can. */
-export const CANS: readonly [Point, Point] = [{ x: 640, y: 470 }, { x: 1010, y: 500 }]
+export const CANS: readonly [Point, Point] = [{ x: 640, y: 470 }, { x: 988, y: 500 }]
 
 /** Where the ostrich shows a place, on herself. */
 export const ON_OSTRICH: Record<Place, Point> = { top: { x: 576, y: 112 }, upper: { x: 560, y: 218 }, left: { x: 508, y: 520 }, right: { x: 676, y: 548 }, lower: { x: 594, y: 566 }, bottom: { x: 594, y: 664 } }
 /** Where the mole pats the same place, on itself. */
-export const ON_MOLE: Record<Place, Point> = { top: { x: 1086, y: 420 }, upper: { x: 1086, y: 462 }, left: { x: 1012, y: 540 }, right: { x: 1160, y: 540 }, lower: { x: 1086, y: 574 }, bottom: { x: 1086, y: 636 } }
+export const ON_MOLE: Record<Place, Point> = { top: { x: 1064, y: 420 }, upper: { x: 1064, y: 462 }, left: { x: 990, y: 540 }, right: { x: 1138, y: 540 }, lower: { x: 1064, y: 574 }, bottom: { x: 1064, y: 636 } }
 
 const near = (p: Point, q: Point): number => Math.hypot(p.x - q.x, p.y - q.y)
 
