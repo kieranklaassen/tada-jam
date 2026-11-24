@@ -5,7 +5,7 @@
 
 - Stage: gates.
 - Look in use: dry-wipe whiteboard and magnets, the first choice.
-- Sheet check, round 1: not passed, 12 findings (band wording, a silent cell, a swaying hidden monster, what three scenes store, lanes and limits in the records). All applied, with three cells the builder corrected beside them. Round 2, by the same checker and so no pass: one finding, applied. Then the sheet changed with the game (the first kind of round in view, seen-first rounds, the curtain drawn aside) and went to a fresh checker, round 3.
+- Sheet check, round 1: not passed, 12 findings (band wording, a silent cell, a swaying hidden monster, what three scenes store, lanes and limits in the records). All applied, with three cells the builder corrected beside them. Round 2, by the same checker and so no pass: one finding, applied. Then the sheet changed with the game (the first kind of round in view, seen-first rounds, the curtain drawn aside) and went to a fresh checker, round 3: not passed, 8 findings on consistency, what is stored and how records are cited. All applied verbatim. Not checked again after that.
 
 ### Template notes
 

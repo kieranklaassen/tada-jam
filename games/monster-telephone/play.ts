@@ -474,7 +474,7 @@ export class Play {
     this.mime = null
     const list = compare(w.a, w.b)
     const inView = this.inView
-    this.meeting = { t: inView ? RUN_S * 0.6 : 0, list, same: this.inView ? fits(w.a, w.b) : alike(w.a, w.b), a: copy(w.a), b: copy(w.b), beat: -1 }
+    this.meeting = { t: inView ? RUN_S * 0.6 : 0, list, same: alike(w.a, w.b), a: copy(w.a), b: copy(w.b), beat: -1 }
     w.place = moved(w.place, w.a, w.b, w.own)
     w.open = true
     refill(w)
