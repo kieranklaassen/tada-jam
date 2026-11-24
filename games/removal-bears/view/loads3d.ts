@@ -93,7 +93,7 @@ function moving(kind: Kind, look: Look): Record<string, THREE.Object3D> {
     }
     case 'piano': return {
       mouse: mesh('mouse', [paint(ball(0.18, 0, 0, 0, 0.9, 1, 0.7), C.pink), paint(ball(0.15, 0, 0.22, 0.04), C.pink), ...[-1, 1].map((s) => paint(ball(0.09, s * 0.14, 0.34, 0, 1, 1, 0.4, 8), '#fbd3da')), ...eyes(0, 0.24, 0.17, 0.06, 0.025), paint(ball(0.03, 0, 0.18, 0.19, 1, 1, 1, 8), C.jam), ...[-1, 1].map((s) => paint(ball(0.05, s * 0.16, -0.08, 0.12, 1, 1, 1, 8), '#fbd3da'))]),
-      lid: mesh('lid', [paint(box(1.8, 0.36, 0.09, 0.04, 0, -0.18, 0, 1), '#8f5230')]),
+      lid: mesh('lid', [paint(box(1.8, 0.28, 0.08, 0.04, 0, -0.14, 0, 1), '#8f5230')]),
       hammers: mesh('hammers', [-1, -0.6, -0.2, 0.2, 0.6, 1].flatMap((x) => [paint(rod(V(x, -0.2, 0), V(x, 0.12, 0), 0.025), '#e6b27c'), paint(ball(0.08, x, 0.14, 0, 1, 0.8, 0.8, 8), '#fff6e2')])),
     }
     case 'giraffe': return {
@@ -192,7 +192,7 @@ export class LoadFigure {
         p.bun.rotation.z = out * 9
         p.strand.position.set(-0.36, 1.2, z + 0.2)
         p.strand.rotation.z = th
-        p.strand.scale.y = Math.max(0.01, out * 1.1)
+        p.strand.scale.y = Math.max(0.01, out * 0.7)
         p.strand.visible = out > 0.02
         break
       }
@@ -217,8 +217,8 @@ export class LoadFigure {
         p.mouse.rotation.z = gy > 0.6 ? 0.3 + Math.sin(t * 8) * 0.12 : clamp(th, -0.5, 0.5)
         // The lid falls over the keys when they are above it.
         spring(gy > 0.5 ? 1 : 0, 120, 10)
-        p.lid.position.set(0.42, -0.08, z + 0.16)
-        p.lid.rotation.x = -1.5 + clamp(this.slide, 0, 1.1) * 1.4
+        p.lid.position.set(0.42, -0.3, z + 0.16)
+        p.lid.rotation.x = -3.05 + clamp(this.slide, 0, 1.1) * 2.8
         p.mouse.position.z += clamp(this.slide, 0, 1) * 0.12
         p.hammers.position.set(0, -0.45, -z - 0.1)
         p.hammers.rotation.x = Math.sin(t * 14) * 0.2 * (event < 2 ? 1 : 0.15)

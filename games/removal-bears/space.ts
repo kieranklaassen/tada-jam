@@ -16,17 +16,17 @@ export const LANE = 4.2
 export const CARRY = 0.55
 /** A load is a little less deep than a cell. */
 export const DEPTH = 0.86
-/** Where a load's middle stands pressed against the wall, whose face is at 0. */
-export const AT_WALL = DEPTH / 2 + 0.03
-export const ENTER_Z = -1.75
-export const SLOT_Z = -2.95
-export const CUB_Z = -4.1
+/** Where a load's middle stands against the wall, whose face is at 0, with room for what is on its back. */
+export const AT_WALL = DEPTH / 2 + 0.32
+export const ENTER_Z = -1.87
+export const SLOT_Z = -3.35
+export const CUB_Z = -4.52
 export const SLOTS = [-4.4, 0, 4.4] as const
 
-export const WIDE = { radius: 1.16, height: 3.1 }
-export const TALL = { radius: 0.94, height: 3.75 }
+export const WIDE = { radius: 1.16, height: 3.1, flat: 1.76 }
+export const TALL = { radius: 0.94, height: 3.75, flat: 1.88 }
 export const BEARS = [WIDE, TALL] as const
-/** How flat a bear is pressed, as a share of its height. */
+/** How flat a bear is pressed, as a share of its height. `flat` is how high it then is, ears and all. */
 export const FLAT = 0.4
 
 /** The part of the world that is always in view, as drawn. */

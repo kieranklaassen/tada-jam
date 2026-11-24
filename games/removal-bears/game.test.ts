@@ -265,6 +265,18 @@ describe('the first showing', () => {
     expect(c.game.act).toBeNull()
   })
 
+  it('at five the showing of changing ends comes with the second load', () => {
+    const c = child(freshSave(5, 3))
+    c.wait(24)
+    expect(c.game.saved.shownEnds).toBe(false)
+    c.tap({ type: 'cart' }); c.wait(1.2)
+    const before = c.game.saved.loads.find((l) => l.at === 'hands')!.way
+    c.wait(5)
+    expect(c.game.saved.shownEnds).toBe(true)
+    expect(c.game.act).toBeNull()
+    expect(c.game.saved.loads.find((l) => l.at === 'hands')!.way).toEqual(before)
+  })
+
   it('the showing of changing ends leaves everything as it was', () => {
     const s = { ...house([['piano', 0], ['bath', 0], ['sofa', 0]]), position: 'other-side', shownEnds: false }, c = child(s)
     c.wait(6)

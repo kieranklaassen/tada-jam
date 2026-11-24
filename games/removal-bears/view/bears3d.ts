@@ -121,7 +121,7 @@ export class BearFigure {
       set(this.biscuits, b.biscuits + side)
     }
     // The head.
-    const lean = pose.lean, hx = pose.x - lean * (bodyTop - base + b.head), hs = 0.55 + 0.45 * Math.min(1.12, s)
+    const lean = pose.lean, hx = pose.x - lean * (bodyTop - base + b.head), hs = 0.3 + 0.7 * Math.min(1.12, s)
     this.head.position.set(hx, bodyTop + b.head * hs * 0.86, pose.z + 0.14)
     this.head.scale.set(1 + (1 - hs) * 0.4, hs, 1)
     const dx = pose.look.u - hx, dy = pose.look.v - (this.head.position.y * 0.98 - pose.z * 0.2), far = Math.hypot(dx, dy) + 1.2
@@ -143,11 +143,11 @@ export class BearFigure {
     // Arms from the shoulder to where each hand is.
     for (let i = 0; i < 2; i++) {
       const hand = pose.hands[i], toward = Math.sign(hand.x - pose.x) || 1
-      this.p.set(pose.x - lean * gap * b.biscuits * 0.8 + toward * r0 * 0.78 * wide, base + (bodyTop - base) * 0.8, pose.z + (hand.z - pose.z) * 0.4)
+      this.p.set(pose.x - lean * gap * b.biscuits * 0.8 + toward * r0 * 0.84, base + (bodyTop - base) * 0.8, pose.z + (hand.z - pose.z) * 0.4)
       this.d.set(hand.x, hand.y, hand.z).sub(this.p)
       const length = Math.max(0.05, this.d.length())
       this.q.setFromUnitVectors(this.up, this.d.normalize())
-      this.s.set(0.19, length, 0.19)
+      this.s.set(0.16, length, 0.16)
       set(this.arms, i)
       this.p.set(hand.x, hand.y, hand.z)
       this.q.identity()

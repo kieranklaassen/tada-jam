@@ -94,14 +94,14 @@ export class Stage {
     for (let x = -6; x <= 6; x++) { const y = Math.abs(x) <= 3 ? 9 : 8; icing.push(paint(ball(0.52, x, y + 0.02, -0.46, 1.05, 0.42, 1.05, 12), '#ffffff')); if ((x + 6) % 2 === 0) icing.push(paint(ball(0.2, x + 0.1, y - 0.14, 0.02, 0.9, 1.5, 0.5, 8), '#ffffff')) }
     for (const x of [-4, 4]) icing.push(paint(ball(0.3, x * 1.2, 8.4, -0.46, 1, 1, 1, 12), C.jam))
     icing.push(paint(ball(0.36, 0, 9.4, -0.46, 1, 1, 1, 12), C.jam))
-    add('topping', join(icing, 'topping'), this.look.icing, this.upper)
+    add('topping', join(icing, 'topping'), this.look.icing, this.upper).userData.jamObject = 'wall'
     const line: THREE.BufferGeometry[] = []
-    for (let i = 0; i < 34; i++) line.push(paint(ball(0.19, -6.4 + i * 0.388, 3.95, 0.04, 1, 0.75, 0.6, 8), '#fff'))
-    add('piping', join(line, 'piping'), this.look.icing, this.house)
+    for (let i = 0; i < 34; i++) line.push(paint(ball(0.19, -6.4 + i * 0.388, 3.8, 0.04, 1, 0.75, 0.6, 8), '#fff'))
+    add('piping', join(line, 'piping'), this.look.icing, this.house).userData.jamObject = 'wall'
     const loft = [
-      paint(new THREE.BoxGeometry(12.9, 0.3, 4.1).translate(0, SILL - 0.16, -3), C.loftFloor), paint(new THREE.BoxGeometry(12.9, 2.95, 0.2).translate(0, 5.4, -5.05), '#5f3020'),
-      ...[-6.4, 6.4].map((x) => paint(new THREE.BoxGeometry(0.2, 2.95, 4.1).translate(x, 5.4, -3), '#6b3a29')), paint(new THREE.BoxGeometry(12.9, 0.1, 4.2).rotateX(-0.236).translate(0, 7.4, -3), '#5f3324'),
-      ...[-5, -3, -1, 1, 3, 5].map((x) => paint(new THREE.BoxGeometry(0.5, 0.5, 0.06).translate(x, 6.6, -4.92), '#8d5440')), ...[-5, -3, -1, 1, 3, 5].map((x) => paint(new THREE.BoxGeometry(0.03, 0.31, 4).translate(x, SILL - 0.15, -3), '#9a6a3a')),
+      paint(new THREE.BoxGeometry(12.9, 0.3, 4.1).translate(0, SILL - 0.16, -3), C.loftFloor), paint(new THREE.BoxGeometry(12.9, 2.9, 0.2).translate(0, 5.37, -5.06), '#5f3020'),
+      ...[-6.4, 6.4].map((x) => paint(new THREE.BoxGeometry(0.2, 2.95, 4).translate(x, 5.4, -3), '#6b3a29')), paint(new THREE.BoxGeometry(12.9, 0.1, 4.2).rotateX(-0.236).translate(0, 7.4, -3), '#5f3324'),
+      ...[-5, -3, -1, 1, 3, 5].map((x) => paint(new THREE.BoxGeometry(0.5, 0.5, 0.06).translate(x, 6.6, -4.92), '#8d5440')), ...[-5, -3, -1, 1, 3, 5].map((x) => paint(new THREE.BoxGeometry(0.03, 0.3, 4).translate(x, SILL - 0.145, -2.99), '#9a6a3a')),
     ]
     add('loft', join(loft, 'loft'), this.look.crumb, this.house)
     this.lamp = new THREE.Group()

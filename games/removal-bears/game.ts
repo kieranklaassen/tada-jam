@@ -2,7 +2,7 @@ import { caughtSide, held, place, size, swapped, type Cell } from './cells'
 import { cellsOf, leftOf, layHouse, middleOf } from './houses'
 import { CELLS, type Kind } from './loads'
 import { MOST_BUMPS, move, type Load, type Saved } from './save'
-import { AT_WALL, BEARS, CARRY, CUB_Z, DEPTH, ENTER_Z, FLAT, LANE, SILL, SLOTS, SLOT_Z, drawnAt } from './space'
+import { AT_WALL, BEARS, CARRY, CUB_Z, ENTER_Z, FLAT, LANE, SILL, SLOTS, SLOT_Z, drawnAt } from './space'
 import { finishCycle } from './state'
 import { voices, type Cue } from './voices'
 
@@ -46,6 +46,8 @@ export const TICK = 1 / 120
 /** A heave: the crouch, the flight, then through the wall or against it. */
 /** Out of sight to the right, on a surface of any shape. */
 const AWAY = 14
+/** From the load's edge to the middle of a paw held against it. */
+const PAW = 0.27
 const CROUCH = 0.2, FLY = 0.36
 const FLOWN = CROUCH + FLY
 export const ENDING = 8
@@ -198,7 +200,7 @@ export class Game {
     const c = span(t, 0, CROUCH), f = span(t, CROUCH, FLOWN)
     pose.x = lerp(act.x, act.cx, smooth(f))
     pose.y = lerp(act.fromY - arc(c * 0.5 + (f > 0 ? 0.5 : 0)) * 0.28 * (f > 0 ? 0 : 1), act.cy, Math.sin(f * Math.PI / 2))
-    pose.z = lerp(LANE, AT_WALL + 0.15, f * f)
+    pose.z = lerp(LANE, AT_WALL, f * f)
     pose.sy = 1 + 0.12 * arc(f)
     pose.sx = 1 - 0.04 * arc(f)
   }
@@ -211,7 +213,7 @@ export class Game {
     pose.x = lerp(act.cx, act.slotX, over)
     const rest = SILL + h / 2 + 0.02
     pose.y = lerp(act.cy, rest, drop * drop)
-    pose.z = lerp(lerp(AT_WALL + 0.15, ENTER_Z, through), SLOT_Z, back)
+    pose.z = lerp(lerp(AT_WALL, ENTER_Z, through), SLOT_Z, back)
     pose.sz = 1 - 0.1 * arc(through)
     const land = t - FLOWN - 0.34
     if (land > 0 && land < 1) { const k = ring(land, 3, 6) * 0.16; pose.sy = 1 - k; pose.sx = 1; pose.y -= (k * h) / 2 }
@@ -234,7 +236,7 @@ export class Game {
       // Pressed flat against the wall: the depth halves, the outline spreads a little, and it shivers.
       const flat = Math.min(1, p / 0.06) * (1 - 0.25 * ring(p, 4, 5))
       pose.sz = 1 - 0.45 * clamp(flat, 0, 1.2)
-      pose.z = (DEPTH * pose.sz) / 2 + 0.03
+      pose.z = AT_WALL * pose.sz + 0.02
       pose.x = act.cx
       pose.y = act.cy
       if (act.near) pose.angle = this.angle + Math.sin(p * 34) * 0.03 * span(p, 0.1, 0.9)
@@ -262,14 +264,14 @@ export class Game {
   bearOn(side: -1 | 1): 0 | 1 { return (side === -1) === this.saved.wideLeft ? 0 : 1 }
   private sideOf(who: 0 | 1): -1 | 1 { return this.bearOn(-1) === who ? -1 : 1 }
 
-  private bearX(side: -1 | 1, half = this.half): number { return this.x + side * (half + BEARS[this.bearOn(side)].radius + 0.06) }
+  private bearX(side: -1 | 1, half = this.half): number { return this.x + side * (half + BEARS[this.bearOn(side)].radius + 0.32) }
   /** Where the load comes down after it was caught: over the bear on that side, pushed a little outward, or between both. */
   private fallenOn(act: Extract<Act, { kind: 'bump' }>): number {
     if (act.side === 0) return this.x
     return this.bearX(act.side, this.restHalf()) + act.side * 0.55
   }
   private flatTop(side: -1 | 0 | 1): number {
-    const tall = (s: -1 | 1): number => BEARS[this.bearOn(s)].height * FLAT
+    const tall = (s: -1 | 1): number => BEARS[this.bearOn(s)].flat
     return (side === 0 ? Math.max(tall(-1), tall(1)) : tall(side)) + 0.05
   }
   private restHalf(): number {
@@ -290,9 +292,11 @@ export class Game {
     const poke = this.poke[who]
     pose.squash *= 1 - poke * 0.22
     if (who === 1) pose.lean += Math.sin(this.time * 1.1) * 0.02
-    let edge = load ? load.x + side * (this.half + 0.02) : 0, gripY = load ? load.y - 0.1 : 0, gripZ = LANE
+    // Where the two paws stand to each side of the grip: along the side of the load, which turns as they change ends.
+    let alongX = 0, alongZ = 1
+    let edge = load ? load.x + side * (this.half + PAW) : 0, gripY = load ? load.y - 0.1 : 0, gripZ = LANE
     let grip = load !== null && (act === null || act.kind === 'turn' || act.kind === 'walk' || act.kind === 'swap')
-    let up = 0
+    let up = 0, tuck = 0
     if (!act && i >= 0) pose.squash -= who === 0 ? 0.02 : 0
     if (act?.kind === 'turn') {
       const t = act.t / act.lasts
@@ -300,12 +304,13 @@ export class Game {
       pose.mood = 'strain'
       if (t > 0.1 && t < 0.88) { grip = false; up = 0.8 }
     } else if (act?.kind === 'swap') {
-      const a = Math.PI * smooth(span(act.t, 0.08, 0.92)), r = this.half + body.radius + 0.06
+      const a = Math.PI * smooth(span(act.t, 0.08, 0.92)), r = this.half + body.radius + 0.32
       // The load in hand turns with them, so nothing between them moves: the one that was behind in the saved state is on its way to where it is now.
       pose.x = this.x - side * Math.cos(a) * r
       pose.z = LANE + side * Math.sin(a) * r
       pose.y = Math.abs(Math.sin(act.t * 14 + who)) * 0.12
-      edge = this.x - side * Math.cos(a) * this.half; gripZ = LANE + side * Math.sin(a) * this.half
+      edge = this.x - side * Math.cos(a) * (this.half + PAW); gripZ = LANE + side * Math.sin(a) * (this.half + PAW)
+      alongX = side * Math.sin(a); alongZ = side * Math.cos(a)
       pose.mood = 'strain'
     } else if (act?.kind === 'walk') {
       const s = act.t * 13 + who * 1.2
@@ -321,7 +326,14 @@ export class Game {
       if (act.kind === 'in') {
         const won = t - FLOWN - 0.34
         if (won > 0) { pose.mood = 'glad'; up = 1 - span(won, 0, 0.4); pose.y = who === 1 ? arc(span(won, 0.02, 0.3)) * 0.35 : 0; if (who === 0) pose.squash -= Math.max(0, ring(won, 2, 4)) * 0.12 }
-      } else this.bumped(pose, act, who, side)
+      } else {
+        const b = Game.beats(act.near)
+        this.bumped(pose, act, who, side)
+        // Arms drop as it comes down, and take hold again once it is back.
+        up *= 1 - 0.9 * span(t, b.press, b.press + 0.16)
+        tuck = 0.6 * span(t, b.press, b.press + 0.16)
+        grip ||= t > b.hop + 0.3
+      }
     } else if (act?.kind === 'deliver') {
       up = span(act.t, 0, 0.2) * (1 - span(act.t, 0.78, 0.84)); grip = act.t >= 0.82
       if (act.t > 0.82) pose.squash -= Math.max(0, ring(act.t - 0.82, 2, 4)) * 0.14
@@ -340,8 +352,8 @@ export class Game {
     if (who === 1 && load && !act) pose.nod = clamp(Math.sin(load.angle) * 0.1, -0.1, 0.1)
     // Hands.
     const s = pose.squash, sy = pose.y - pose.sit * 0.5
-    const inner: P3 = grip && load ? { x: edge, y: gripY, z: gripZ + 0.3 } : { x: pose.x - side * (body.radius * (1.02 - 0.25 * up) + 0.12), y: sy + body.height * s * lerp(0.3, 1.02, up), z: pose.z + 0.35 }
-    const outer: P3 = grip && load ? { x: edge, y: gripY - 0.28, z: gripZ - 0.3 } : { x: pose.x + side * (body.radius * (1.02 - 0.25 * up) + 0.16), y: sy + body.height * s * lerp(0.3, 1.02, up), z: pose.z + 0.25 }
+    const inner: P3 = grip && load ? { x: edge + alongX * 0.3, y: gripY, z: gripZ + alongZ * 0.3 } : { x: pose.x - side * (body.radius * (1.02 - 0.25 * up) + 0.12 - tuck), y: sy + body.height * s * lerp(0.3, 1.02, up), z: pose.z + 0.35 }
+    const outer: P3 = grip && load ? { x: edge - alongX * 0.3, y: gripY - 0.28, z: gripZ - alongZ * 0.3 } : { x: pose.x + side * (body.radius * (1.02 - 0.25 * up) + 0.16), y: sy + body.height * s * lerp(0.3, 1.02, up), z: pose.z + 0.25 }
     if (i < 0 && act === null && !this.saved.finished) { // Empty arms held out to the cart.
       inner.x = pose.x + body.radius + 0.35; inner.y = body.height * 0.42 + Math.sin(this.time * 3 + who) * 0.05; inner.z = pose.z + 0.4
       outer.x = pose.x + body.radius + 0.3; outer.y = body.height * 0.36 + Math.sin(this.time * 3 + who) * 0.05; outer.z = pose.z - 0.1
@@ -360,12 +372,12 @@ export class Game {
       return
     }
     // It steps out from under the load's side, is pressed, lies flat under it, and comes up past its height and back.
-    const out = smooth(span(t, b.press, b.press + 0.16)) * (1 - smooth(span(t, b.hop, b.hop + 0.1)))
+    const out = smooth(span(t, b.press, b.press + 0.16)) * (1 - smooth(span(t, b.hop - 0.24, b.hop - 0.06)))
     const apart = act.side === 0 ? side * (1.75 + 0.02) - (pose.x - this.x) : side * 0.55
     pose.x += apart * out
     if (t > b.press) pose.mood = t < b.fall - 0.05 ? 'ouch' : t < b.hop ? 'flat' : who === 0 ? 'glad' : 'ouch'
     // Pressed as the load arrives, and never higher than the load's underside.
-    const pressed = span(t, b.fall - 0.16, b.fall - 0.02)
+    const pressed = span(t, b.fall - 0.26, b.fall - 0.06)
     let squash = lerp(1, FLAT, pressed)
     if (t > b.fall) squash = FLAT * (1 - 0.1 * Math.max(0, ring(t - b.fall, 3, 6)))
     if (t > b.hop + 0.1) { const up = t - b.hop - 0.1; squash = 1 - ring(up, who === 0 ? 1.4 : 3.2, who === 0 ? 8 : 5) * (1 - FLAT) * (up < 0.02 ? 1 : 1) }
@@ -586,7 +598,7 @@ export class Game {
     const s = this.saved
     if (!s.shown) {
       this.startShowing()
-    } else if (!s.shownEnds && (s.position === 'other-side' || s.position === 'full-house') && s.loads.filter((l) => l.at === 'cart').length === 2) {
+    } else if (!s.shownEnds && (s.position === 'other-side' || s.position === 'full-house')) {
       this.saved = { ...s, shownEnds: true }; this.dirty = 'now'; this.showing = true
       this.showWants = ['swap', 'swap']
       this.nextShow()

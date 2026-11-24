@@ -61,7 +61,14 @@ const audit: GameAudit = {
     // The tiled kitchen is a picture behind everything.
     '^kitchen',
   ],
-  allow: [],
+  allow: [
+    // One bear is a pile of separate biscuits with arms, paws, scarf and head set on it: its own parts press into each other as it bends and squashes.
+    { a: '^bear-0', b: '^bear-0', kind: 'pose', upTo: 0.8, reason: 'a bear is one soft doll: its own arms, paws, scarf and filling press together as it squashes' },
+    { a: '^bear-1', b: '^bear-1', kind: 'pose', upTo: 0.8, reason: 'a bear is one soft doll: its own arms, paws, scarf and filling press together as it squashes' },
+    { a: '^topping', b: '^wall', upTo: 0.3, reason: 'icing is piped on to the cubes, which give a little under it' },
+    // Passengers are set into the front of their load and move there.
+    { a: '^load-', b: '^load-', kind: 'pose', upTo: 0.9, reason: 'a passenger is set into its load and moves in its place' },
+  ],
   moments: [
     { name: 'first-showing', run: async (d) => { await open(d, null); await d.wait(17000) } },
     { name: 'first-showing-touched', run: async (d) => { await open(d, null); await d.wait(3000); await d.tap(p(-7, 7)); await d.wait(1500); await d.tap(CART); await d.wait(2500) } },
