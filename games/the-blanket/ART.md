@@ -116,6 +116,6 @@ Row for `docs/art-direction.md`, section 3: The Blanket, sponge-stippled flat po
 
 ## The music
 
-A sly waltz in D minor for upright bass, plucked nylon guitar, clarinet and celesta, with a sunny middle in F. It is played by [live-mix](https://github.com/kieranklaassen/live-mix) (`vendor/live-mix`): `music.worker.ts` plays the score once on its modelled instruments after the first touch, and `music.ts` runs the result as clips on three tracks. Nothing is a recording, and nothing is fetched but the instruments themselves from the same address.
+A sly waltz in D minor for upright bass, plucked nylon guitar, clarinet and celesta, with a sunny middle in F. It is played by live-mix (`vendor/live-mix`, whose README links to it): `music.worker.ts` plays the score once on its modelled instruments after the first touch, and `music.ts` runs the result as clips on three tracks. Nothing is a recording, and nothing is fetched but the instruments themselves from the same address.
 
 The mood (`mood.ts`) decides how much is heard. A touch brings the accompaniment and the tune, several touches bring the answering instrument, and a child who stops hears them leave one by one until a trace of the accompaniment is left. The music goes down under each sound the game makes and comes back after it. It rests with the game.
