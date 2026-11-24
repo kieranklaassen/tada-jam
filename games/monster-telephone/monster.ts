@@ -53,8 +53,13 @@ export function compare(a: Monster, b: Monster): Compared[] {
   return out
 }
 
+/** Every place agrees, whatever the bodies. */
+export function fits(a: Monster, b: Monster): boolean {
+  return compare(a, b).every((one) => one.likeness === 'same')
+}
+
 export function alike(a: Monster, b: Monster): boolean {
-  return a.body === b.body && compare(a, b).every((one) => one.likeness === 'same')
+  return a.body === b.body && fits(a, b)
 }
 
 /** The share of what could agree that does: each compared place and the body count one, the other size counts half. */
@@ -90,9 +95,9 @@ function shuffled<T>(rng: Rng, items: readonly T[]): T[] {
 
 /** A monster of that place in the order. `parts` asks for a number of them where the place leaves it open. */
 export function make(at: PositionId, rng: Rng, parts?: number): Monster {
-  const sizes = at !== 'a-few', bodies = at === 'bodies' || at === 'odd-places' || at === 'crowd'
+  const plain = at === 'in-view' || at === 'a-few', sizes = !plain, bodies = at === 'bodies' || at === 'odd-places' || at === 'crowd'
   const m = bare(bodies ? pick(rng, BODIES) : 'round')
-  const n = parts ?? (at === 'a-few' || at === 'small-and-large' ? 3 : at === 'bodies' ? 3 + below(rng, 2) : at === 'odd-places' ? 4 : 5 + below(rng, 2))
+  const n = parts ?? (plain || at === 'small-and-large' ? 3 : at === 'bodies' ? 3 + below(rng, 2) : at === 'odd-places' ? 4 : 5 + below(rng, 2))
   if (at === 'odd-places' || at === 'crowd') {
     const twice = at === 'crowd'
     for (;;) {

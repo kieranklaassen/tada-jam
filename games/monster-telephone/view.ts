@@ -7,7 +7,7 @@ import { CANS, CORD, CURTAIN, DRAWINGS, MIDDLE, MOLE, MOLE_FACE, ON_OSTRICH, OST
 import { BODY_LINE, Magnets, OUTLINE } from './magnets'
 import { Album, INK, canvas, mark, trace, type Ctx, type Picture } from './marker'
 import { BODIES, PARTS, PLACES, count, type Body, type Monster, type Part, type Place, type Stuck } from './monster'
-import { BEAT_S, HIDE_S, LEAN_S, MIME_PEEK, MIME_S, RUN_S, TAKE_S, type Play } from './play'
+import { BEAT_S, LEAN_S, MIME_PEEK, MIME_S, RUN_S, TAKE_S, type Play } from './play'
 import { Room, TRAY_TOP, paintBoard, paintFrame, paintTray } from './room'
 import { fit, type Fit, type Point } from './stage'
 
@@ -449,8 +449,16 @@ export class BoardView {
     const { ctx } = this, w = play.world, hiding = play.hiding, meeting = play.meeting
     // A finger on the curtain, a pulled cord or a running curtain shows what is behind it.
     const shut = play.aside <= 0.001 && play.lift <= 0.02
-    const behind = hiding && play.aside > 0.02 ? hiding.a : w.a
-    if (!shut) this.monster(play, 'a', meeting ? meeting.a : behind)
+    // A new one that is to be seen jumps out of its sack in front of the open curtain.
+    const behind = hiding && (hiding.seen ? hiding.t < 0.5 : play.aside > 0.02) ? hiding.a : w.a
+    const fresh = hiding?.seen ? clamp((hiding.t - 0.85) / 0.35) : 1
+    if (!shut && (fresh > 0 || hiding!.t < 0.5)) {
+      const k = hiding?.seen && hiding.t >= 0.5 ? fresh + bump(fresh) * 0.18 : hiding?.seen ? 1 - clamp(hiding.t / 0.5) : 1
+      ctx.save()
+      ctx.translate(MIDDLE.a.x, MIDDLE.a.y); ctx.scale(k, k); ctx.translate(-MIDDLE.a.x, -MIDDLE.a.y)
+      this.monster(play, 'a', meeting ? meeting.a : behind)
+      ctx.restore()
+    }
     this.ostrich(play, 'behind')
     this.curtain(play)
     this.ostrich(play, 'front')
@@ -463,8 +471,8 @@ export class BoardView {
         const e = ease(t), to = MIDDLE.a
         this.at(this.room.sack(lumps), mix(hiding.from.x, to.x, e), mix(hiding.from.y, to.y + 120, e) - bump(t) * 150, Math.sin(t * 14) * 0.2, 1.05 - t * 0.15)
       } else {
-        const out = clamp((hiding.t - 1.05) / (HIDE_S - 1.05))
-        if (out > 0) this.at(this.room.sack(0), mix(MIDDLE.a.x, -90, out), 200 - bump(out) * 130, out * 5, 0.7, 0.5)
+        const out = clamp((hiding.t - 1.05) / 0.75)
+        if (out > 0 && out < 1) this.at(this.room.sack(0), mix(MIDDLE.a.x, -90, out), 200 - bump(out) * 130, out * 5, 0.7, 0.5)
       }
     }
     ctx.globalAlpha = 1
@@ -549,6 +557,13 @@ export class BoardView {
     ctx.translate(0, -foot)
     this.stamp(this.magnets.body(m.body))
     const lent = this.lent(play, who, m)
+    // In view, the twin shows as pen lines where the parts of the other go.
+    if (who === 'b' && play.inView && !play.hiding) for (const one of play.missing()) {
+      const o = placeOn(m.body, one.place), need = play.since(`need:${one.place}`), k = sizeOf(one.large) / 100
+      ctx.globalAlpha = 0.5 + bump(need / 0.9) * 0.4
+      this.at(this.magnets.outline(one.part), o.x, o.y, ring(need, 0.9, 20) * 0.1, k * (1 + bump(need / 0.6) * 0.14))
+      ctx.globalAlpha = 1
+    }
     for (const place of PLACES) {
       const one = m.on[place]
       if (!one || (lent && lent.from === place)) continue
@@ -627,7 +642,7 @@ export class BoardView {
     const { x0, y0 } = CURTAIN
     const aside = ease(play.aside), lift = ease(play.lift)
     const drop = play.since('drop'), roll = play.since('roll'), flap = play.since('flap'), shiver = play.since('shiver')
-    const sway = Math.sin(this.now * 1.4) * 0.006 + ring(drop, 0.9, 13) * 0.03 + ring(flap, 0.6, 30) * 0.05 + ring(shiver, 0.6, 30) * 0.02 + ring(roll, 0.4, 24) * 0.01 + this.glow * Math.sin(this.now * 4) * 0.012
+    const sway = Math.sin(this.now * 1.4) * 0.006 + ring(drop, 0.9, 13) * 0.03 + ring(flap, 0.6, 30) * 0.05 + ring(shiver, 0.6, 30) * 0.02 + ring(roll, 0.4, 24) * 0.01 + this.glow * Math.sin(this.now * 4) * 0.012 + (play.enough && !play.busy ? Math.sin(this.now * 3.4) * 0.016 : 0)
     const bulge = !play.world.open && aside < 0.02 ? Math.max(0, Math.sin(this.now * 0.62)) * 0.02 + (play.hiding ? Math.abs(Math.sin(this.now * 16)) * 0.04 : 0) : 0
     const w = 1 - aside * 0.86
     const shown = 1 - lift * 0.97
@@ -650,7 +665,7 @@ export class BoardView {
 
   private cord(play: Play): void {
     const { ctx } = this
-    const t = play.since('cord'), y = CORD.y + play.pull + ring(t, 0.6, 24) * 7 * (play.pull > 0 ? 0.2 : 1) - this.glow * Math.sin(this.now * 5) * 5
+    const t = play.since('cord'), y = CORD.y + play.pull + ring(t, 0.6, 24) * 7 * (play.pull > 0 ? 0.2 : 1) + (play.enough && !play.busy ? Math.abs(Math.sin(this.now * 3.4)) * 20 : 0) - this.glow * Math.sin(this.now * 5) * 5
     const x = CORD.x + Math.sin(this.now * 1.2) * 4 + ring(t, 0.8, 18) * 5
     ctx.beginPath()
     ctx.moveTo(CORD.x, CORD.top)
@@ -674,7 +689,7 @@ export class BoardView {
     for (const i of [0, 1] as const) {
       if (play.sackCarry?.i === i) continue
       const p = SACKS[i], u = clamp((t - i * 0.12) / 0.55), hop = play.since(`sack:${i}`)
-      const x = mix(-110, p.x, ease(u)), y = p.y - Math.abs(Math.sin(u * Math.PI * 2)) * 34 * (1 - u) - bump(hop / 0.4) * 26 - this.glow * Math.abs(Math.sin(this.now * 4 + i)) * 10
+      const x = mix(-110, p.x, ease(u)), y = p.y - Math.abs(Math.sin(u * Math.PI * 2)) * 34 * (1 - u) - bump(hop / 0.4) * 26 - bump(((this.now * 0.55 + i * 0.5) % 1) / 0.28) * (play.busy ? 0 : 24)
       this.at(this.room.sack(i === 0 ? 0 : count(s[1])), x, y, Math.sin(this.now * (2.2 + i * 0.5)) * 0.045 + ring(hop, 0.6, 26) * 0.12, 1 + Math.sin(this.now * 3 + i * 2) * 0.012, 1 - Math.sin(this.now * 3 + i * 2) * 0.016)
     }
   }
@@ -687,6 +702,8 @@ export class BoardView {
     const pose = handPose(guidance.demo, move.drag, this.pose)
     const held = move.hold ? Math.min(clamp((guidance.demo - 0.2) / 0.1), 1 - clamp((guidance.demo - 0.8) / 0.1)) : pose.press
     const x = mix(move.from.x, move.to.x, pose.travel), y = mix(move.from.y, move.to.y, pose.travel)
+    ctx.globalAlpha = pose.opacity * 0.85
+    if (move.part && pose.travel > 0 && pose.travel < 1) this.at(this.magnets.part(move.part), x, y - 8, Math.sin(this.now * 6) * 0.06)
     ctx.globalAlpha = pose.opacity
     this.at(this.room.ghost(), x, y + (1 - held) * 18, 0, 1.12 - held * 0.14)
     ctx.globalAlpha = 1

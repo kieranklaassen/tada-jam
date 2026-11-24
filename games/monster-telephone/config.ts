@@ -92,13 +92,12 @@ export const TAP_PRESSES: 1 | 2 = 1
  * are what a save stores: add steps anywhere, and never rename one that has
  * shipped. Nothing on screen shows where the child is.
  */
-export const LADDER = ['a-few', 'small-and-large', 'bodies', 'odd-places', 'crowd'] as const
+export const LADDER = ['in-view', 'a-few', 'small-and-large', 'bodies', 'odd-places', 'crowd'] as const
 export type PositionId = (typeof LADDER)[number]
 
 /** Where a first visit starts, by `ctx.childAge`: a hint, and a saved place wins. Younger, or no age, starts at the first row. */
 export const FIRST_VISIT: readonly { fromAge: number; position: PositionId }[] = [
-  { fromAge: 4, position: 'a-few' },
-  { fromAge: 5, position: 'small-and-large' },
-  { fromAge: 6, position: 'bodies' },
-  { fromAge: 7, position: 'odd-places' },
+  { fromAge: 4, position: 'in-view' },
+  { fromAge: 6, position: 'a-few' },
+  { fromAge: 7, position: 'small-and-large' },
 ]

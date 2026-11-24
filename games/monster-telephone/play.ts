@@ -1,6 +1,6 @@
 import type { Note } from './audio'
 import { CATCH, CURTAIN, MIDDLE, MOLE_FACE, ON_MOLE, OSTRICH_HEAD, PULL, SACKS, SHELF_Y, catches, inBody, nearestPlace, onMole, onOstrich, placeAt, shelfOf, targetAt, type Target, type Who } from './layout'
-import { BODIES, PLACES, alike, bare, compare, copy, count, moved, type Body, type Compared, type Monster, type Part, type Place } from './monster'
+import { BODIES, PLACES, alike, bare, compare, copy, count, fits, harder, moved, type Body, type Compared, type Monster, type Part, type Place } from './monster'
 import { PAIRS, copyWorld, refill, serialize, type World } from './save'
 import type { Point } from './stage'
 import { agree, bodyVoice, dance, later, partVoice, quieter, rub, takes, voice, type VoiceName } from './voices'
@@ -27,16 +27,21 @@ export type SackCarry = { finger: number | null; i: 0 | 1; at: Point; off: Point
 export type Stroke = { points: Point[]; finger: number | null; age: number; wiped: number }
 export type Fact = { kind: 'part'; place: Place; part: Part; large: boolean } | { kind: 'body'; body: Body }
 export type Meeting = { t: number; list: Compared[]; same: boolean; a: Monster; b: Monster; beat: number }
-export type Hiding = { t: number; kind: 'sack' | 'own'; sack: 0 | 1; from: Point; a: Monster; b: Monster }
+export type Hiding = { t: number; kind: 'sack' | 'own'; sack: 0 | 1; from: Point; a: Monster; b: Monster; /** The new one is looked at before the curtain runs, or no curtain runs at all. */ seen: boolean; length: number }
 
 export const RUN_S = 0.9
 export const LEAN_S = 0.6
 export const BEAT_S = 0.7
 export const TAKE_S = 2.4
 export const HIDE_S = 1.8
+/** How long a new one is seen before the curtain runs shut on it, at the early places. */
+export const SEEN_S = 2.4
+/** A shut curtain dragged this far aside is pulled open, as the cord does. */
+export const DRAG_OPEN = 150
 export const MIME_S = 3
 export const MIME_PEEK = 0.75
 const SHOW_AFTER = 1.5
+const BECKON_S = 3.4
 
 type Contact = { id: number; target: Target; from: Point; at: Point; seconds: number; moved: boolean; fired: boolean; extra: boolean; /** A small sound owed to a drag, so a slow one is not a machine gun. */ said: number }
 
@@ -69,6 +74,10 @@ export class Play {
   ostrichBend: Point | null = null
   moleReach: Point | null = null
   private told = 0
+  private beckoned = 0
+  private nextBeckon = 0
+  /** How far a finger has drawn the shut curtain, 0 to a third. */
+  private drawn = 0
   private lastTouch = 0
   /** The mime on now is the first showing, which any touch ends; an answer is not ended by one. */
   private showing = false
@@ -91,8 +100,17 @@ export class Play {
   get busy(): boolean {
     return this.contacts.size > 0 || this.carries.length > 0 || this.meeting !== null || this.hiding !== null || this.mime !== null
   }
+  /** The first kind of round: both stand in view, and the twin shows where the parts go. */
+  get inView(): boolean {
+    return this.world.open && this.world.sacks === null
+  }
+  /** The twin has as many parts as the hidden one: it is time to look. */
+  get enough(): boolean {
+    const { a, b, open } = this.world
+    return (!open || this.inView) && count(b) > 0 && count(b) >= count(a)
+  }
   get peeked(): boolean {
-    return !this.world.open && [...this.contacts.values()].some((c) => c.target.kind === 'curtain' && !c.extra)
+    return !this.world.open && [...this.contacts.values()].some((c) => c.target.kind === 'curtain' && !c.extra && c.from.x - c.at.x < 50)
   }
 
   // --- What is saved ----------------------------------------------------------
@@ -127,6 +145,7 @@ export class Play {
 
   down(id: number, p: Point): void {
     this.lastTouch = this.now
+    this.beckoned = 0
     // A scene gives way to any touch, and the touch is then answered as usual.
     if (this.showing) { this.mime = null; this.showing = false }
     this.land()
@@ -211,6 +230,11 @@ export class Play {
     if (c.moved && c.target.kind === 'body' && c.seconds - c.said > 0.3) { c.said = c.seconds; this.say('creak') }
     if (c.target.kind === 'ostrich' && c.moved) { this.ostrichBend = p; if (c.seconds - c.said > 0.4) { c.said = c.seconds; this.say('bend') } }
     if (c.target.kind === 'mole' && c.moved) { this.moleReach = p; if (c.seconds - c.said > 0.35) { c.said = c.seconds; this.say('pat') } }
+    if (c.target.kind === 'curtain' && !c.fired && !this.world.open) {
+      const dx = c.from.x - p.x
+      this.drawn = Math.max(0, Math.min(0.34, (dx - 40) / 460))
+      if (dx >= DRAG_OPEN && dx > Math.abs(p.y - c.from.y)) { c.fired = true; this.pulled() }
+    }
     if (c.target.kind === 'cord') {
       this.pull = Math.max(0, Math.min(90, p.y - c.from.y))
       if (!c.fired && this.pull >= PULL) { c.fired = true; this.pulled() }
@@ -272,6 +296,7 @@ export class Play {
     const stroke = this.strokes.find((s) => s.finger === c.id)
     if (stroke) stroke.finger = null
     if (c.target.kind === 'cord') this.pull = 0
+    if (c.target.kind === 'curtain') this.drawn = 0
     if (c.target.kind === 'ostrich') this.ostrichBend = null
     if (c.target.kind === 'mole') this.moleReach = null
     if (c.target.kind === 'curtain' && !this.world.open && !this.peeked && !c.extra) { this.mark('drop'); this.say('drop') }
@@ -324,7 +349,8 @@ export class Play {
   /** Two that stand open and now agree somewhere answer each other there, once for each touch. */
   private echo(place: Place | null): void {
     const w = this.world
-    if (!w.open || this.meeting) return
+    if (!w.open || this.meeting || this.hiding) return
+    if (this.inView && count(w.a) > 0 && fits(w.a, w.b)) { this.meet(); return }
     if (alike(w.a, w.b) && count(w.a) > 0) {
       for (const one of PLACES) if (w.a.on[one]) { this.mark(`a:${one}`); this.mark(`b:${one}`) }
       this.mark('hopBoth')
@@ -439,7 +465,7 @@ export class Play {
 
   private pulled(): void {
     if (this.meeting || this.hiding) return
-    if (this.world.open) this.hide('own', 0, SACKS[0])
+    if (this.world.open && !this.inView) this.hide('own', 0, SACKS[0])
     else this.meet()
   }
 
@@ -447,14 +473,15 @@ export class Play {
     const w = this.world
     this.mime = null
     const list = compare(w.a, w.b)
-    this.meeting = { t: 0, list, same: alike(w.a, w.b), a: copy(w.a), b: copy(w.b), beat: -1 }
+    const inView = this.inView
+    this.meeting = { t: inView ? RUN_S * 0.6 : 0, list, same: this.inView ? fits(w.a, w.b) : alike(w.a, w.b), a: copy(w.a), b: copy(w.b), beat: -1 }
     w.place = moved(w.place, w.a, w.b, w.own)
     w.open = true
     refill(w)
     w.pairs.push([copy(w.a), copy(w.b)])
     if (w.pairs.length > PAIRS) { w.pairs.shift(); this.mark('wiped') }
     this.mark('met')
-    this.say('zip')
+    if (!inView) this.say('zip')
     this.heard.push(...later(voice('glug'), 0.1), ...later(voice('peep'), RUN_S))
     this.change(true)
   }
@@ -475,7 +502,10 @@ export class Play {
     this.told = 0
     // What is in a hand stays in the hand: it belongs to no monster now, so it will not go back to one that has left.
     for (const carry of this.carries) if (carry.from.kind === 'stuck') carry.from = { kind: 'shelf' }
-    this.hiding = { t: 0, kind, sack, from: { ...from }, a: copy(w.a), b: copy(w.b) }
+    const rung = kind === 'own' ? null : sack === 0 ? w.place : harder(w.place)
+    const stays = rung === 'in-view', seen = stays || rung === 'a-few' || rung === 'small-and-large'
+    this.hiding = { t: 0, kind, sack, from: { ...from }, a: copy(w.a), b: copy(w.b), seen, length: stays ? 1.6 : seen ? HIDE_S + SEEN_S : HIDE_S }
+    if (seen) { let d = 1.1; for (const place of PLACES) { const s = (kind === 'sack' ? w.sacks![sack] : w.a).on[place]; if (s) { this.times.set(`a:${place}`, this.now + d); this.heard.push(...later(quieter(partVoice(s.part), 0.7), d)); d += 0.45 } } }
     for (const place of PLACES) {
       const stuck = w.b.on[place]
       if (stuck) this.flights.push({ part: stuck.part, large: stuck.large, from: placeAt('b', w.b.body, place), to: shelfOf(stuck.part), t: -0.15 - 0.07 * PLACES.indexOf(place), dur: 0.5, kind: 'patter' })
@@ -483,8 +513,9 @@ export class Play {
     if (kind === 'sack') { w.a = copy(w.sacks![sack]); w.own = false } else w.own = true
     w.b = bare()
     w.sacks = null
-    w.open = false
-    this.say('zipBack')
+    w.open = stays
+    if (seen && !stays) this.heard.push(...later(voice('zipBack'), 1 + SEEN_S))
+    else if (!seen) this.say('zipBack')
     if (kind === 'sack') this.say('sackIn')
     if (count(this.hiding.b) > 0) this.say('patter')
     this.mark('hid')
@@ -494,7 +525,27 @@ export class Play {
   /** Any touch lands a scene where it ends. */
   private land(): void {
     if (this.meeting) { this.meeting = null; this.aside = 1; this.mark('landed') }
-    if (this.hiding) { this.hiding = null; this.aside = 0; this.flights = this.flights.filter((f) => f.kind !== 'patter') }
+    if (this.hiding) { this.hiding = null; this.aside = this.world.open ? 1 : 0; this.flights = this.flights.filter((f) => f.kind !== 'patter') }
+  }
+
+  /** The parts of the one in view that its twin does not have yet, where they go. */
+  missing(): { place: Place; part: Part; large: boolean }[] {
+    const { a, b } = this.world
+    return PLACES.flatMap((place) => { const s = a.on[place], t = b.on[place]; return s && !(t && t.part === s.part && t.large === s.large) ? [{ place, ...s }] : [] })
+  }
+
+  /** In view, and nobody doing anything: the part on the one, its place on the twin and its magnet on the shelf stir together. A few times, then no more. */
+  private beckon(): void {
+    if (!this.inView || this.busy) { this.nextBeckon = this.now + 1.4; return }
+    if (this.now < this.nextBeckon || this.beckoned >= 5) return
+    this.nextBeckon = this.now + BECKON_S
+    const all = this.missing()
+    if (all.length === 0) return
+    const one = all[this.beckoned % all.length]
+    this.beckoned += 1
+    this.mark(`a:${one.place}`)
+    this.times.set(`rattle:${one.part}`, this.now + 0.35)
+    this.times.set(`need:${one.place}`, this.now + 0.7)
   }
 
   // --- The mime -------------------------------------------------------------------------
@@ -543,10 +594,11 @@ export class Play {
     if (this.strokes.some((s) => s.age > 9)) this.strokes = this.strokes.filter((s) => s.age <= 9)
     if (this.strokes.length > 8) this.strokes.splice(0, this.strokes.length - 8)
     this.lift += ((this.peeked ? 1 : 0) - this.lift) * Math.min(1, dt * (this.peeked ? 11 : 15))
-    const aside = w.open ? 1 : 0
+    const aside = w.open || (this.hiding?.seen && this.hiding.t < 1 + SEEN_S) ? 1 : this.drawn
+    this.beckon()
     this.aside = aside > this.aside ? Math.min(aside, this.aside + dt / RUN_S) : Math.max(aside, this.aside - dt / RUN_S)
     this.stepMeeting(dt)
-    if (this.hiding) { this.hiding.t += dt; if (this.hiding.t >= HIDE_S) this.hiding = null }
+    if (this.hiding) { this.hiding.t += dt; if (this.hiding.t >= this.hiding.length) this.hiding = null }
     this.stepMime(dt)
     if (!w.shown && !this.mime && !this.busy && !w.open && this.now - this.lastTouch >= SHOW_AFTER) {
       w.shown = true

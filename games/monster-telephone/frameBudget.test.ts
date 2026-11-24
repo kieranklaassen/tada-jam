@@ -60,7 +60,7 @@ const full = (body: Body, part: Part, large: boolean): Monster => { const m = ba
 
 /** One visit of everything that can stand on the board at once. */
 function visit(a: Body, b: Body, each: (play: Play) => void): void {
-  const w = freshWorld(null, 3)
+  const w = freshWorld(6, 3)
   w.shown = true
   w.a = full(a, 'eye', true); w.b = full(b, 'eye', false)
   w.worn = { ostrich: 'eye', mole: 'hand' }
@@ -82,7 +82,7 @@ function visit(a: Body, b: Body, each: (play: Play) => void): void {
   run(meetingLength(list) + 0.3)
   for (const place of PLACES) { play.down(93, placeAt('a', a, place)); run(0.03); play.up(93) }
   const two = [drag(shelfOf('eye'), { x: 600, y: 630 }), drag(shelfOf('ear'), { x: 900, y: 630 })]
-  play.up(drag(SACKS[1], MIDDLE.a)); run(2.2)
+  play.up(drag(SACKS[1], MIDDLE.a)); run(4.6)
   for (const one of two) play.up(one)
   run(0.5)
 }

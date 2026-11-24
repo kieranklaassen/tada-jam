@@ -7,7 +7,7 @@ const many = (at: (typeof LADDER)[number]) => Array.from({ length: 300 }, (_, i)
 
 describe('the designed order', () => {
   it('starts with three different large parts where a child expects them, on the round body', () => {
-    for (const m of many('a-few')) {
+    for (const m of [...many('in-view'), ...many('a-few')]) {
       const on = PLACES.filter((p) => m.on[p])
       expect(on).toHaveLength(3)
       expect(m.body).toBe('round')
@@ -16,7 +16,7 @@ describe('the designed order', () => {
     }
   })
   it('adds both sizes, then bodies, then odd places, then a crowd', () => {
-    for (const at of LADDER.slice(1, 3)) for (const m of many(at)) {
+    for (const at of LADDER.slice(2, 4)) for (const m of many(at)) {
       const sizes = PLACES.flatMap((p) => (m.on[p] ? [m.on[p]!.large] : []))
       expect(new Set(sizes).size).toBe(2)
       if (at === 'small-and-large') { expect(m.body).toBe('round'); expect(count(m)).toBe(3) } else expect([3, 4]).toContain(count(m))
@@ -56,6 +56,7 @@ describe('comparing', () => {
     const odd = bare(BODIES.find((x) => x !== a.body)!)
     for (const p of PLACES) odd.on[p] = { part: PARTS.find((x) => x !== a.on[p]?.part)!, large: true }
     expect(moved('bodies', a, odd, false)).toBe('small-and-large')
-    expect(moved('a-few', a, odd, false)).toBe('a-few')
+    expect(moved('a-few', a, odd, false)).toBe('in-view')
+    expect(moved('in-view', a, odd, false)).toBe('in-view')
   })
 })

@@ -21,18 +21,18 @@ describe('saving', () => {
     expect(w.a.on.top?.part === 'tail' && w.worn.mole === 'ear').toBe(false)
   })
   it('starts by age as a hint, and a saved place wins', () => {
-    expect([null, 2, 4, 5, 6, 7, 30].map(firstPlace)).toEqual(['a-few', 'a-few', 'a-few', 'small-and-large', 'bodies', 'odd-places', 'odd-places'])
+    expect([null, 2, 4, 5, 6, 7, 30].map(firstPlace)).toEqual(['in-view', 'in-view', 'in-view', 'in-view', 'a-few', 'small-and-large', 'small-and-large'])
     const raw = serialize(freshWorld(4, 1))
     expect(deserialize({ ...raw, place: 'crowd' }, 4, 1).place).toBe('crowd')
   })
   it('survives anything', () => {
-    const good = serialize(freshWorld(6, 8)), junk = [null, undefined, 0, 'x', [], {}, { v: 2 }, { v: 1 }, NaN]
+    for (const good of [serialize(freshWorld(6, 8)), serialize(freshWorld(4, 8))]) { const junk = [null, undefined, 0, 'x', [], {}, { v: 2 }, { v: 1 }, NaN]
     for (const raw of junk) { const w = deserialize(raw, 5, 3); expect(count(w.a)).toBeGreaterThan(0); expect(LADDER).toContain(w.place); new Play(w).step(0.1) }
     for (const key of Object.keys(good)) for (const bad of [...junk, '9', -1, { ostrich: 3 }, [['q']], [1, 2]]) {
       const w = deserialize({ ...good, [key]: bad }, 5, 3)
       expect(w.pairs.length).toBeLessThanOrEqual(PAIRS)
-      expect(w.open === (w.sacks !== null)).toBe(true)
+      expect(w.open ? w.sacks !== null || (w.place === 'in-view' && !w.own) : w.sacks === null).toBe(true)
       expect(round(w)).toEqual(w)
-    }
+    } }
   })
 })
