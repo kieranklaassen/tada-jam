@@ -1,4 +1,5 @@
 import { FIVE, SIDES, sideOf, type Bed, type Side } from './bed'
+import { bottleAt } from './layout'
 import { below, type Rng } from './rng'
 
 // Milk: five bottles parted over two shelves, and the straws that join them to
@@ -24,7 +25,7 @@ export type Straw = { bottle: number; who: number | null }
 
 /**
  * Straws go down within a half, the colour's own first. One that has a sheep keeps it for as long as that sheep stays;
- * the rest go in order from the side of the bed, so that they never cross for nothing and one with nobody hangs by the ridge. One in the air has no straw.
+ * of the rest the highest sheep takes the nearest, so that they seldom cross and one with nobody hangs clear of it. One in the air has no straw.
  */
 export function straws(bed: Bed, milk: Milk, before: readonly Straw[] | null = null): Straw[] {
   const out: Straw[] = milk.map((_, bottle) => ({ bottle, who: null }))
@@ -33,14 +34,18 @@ export function straws(bed: Bed, milk: Milk, before: readonly Straw[] | null = n
     const here = bed.sheep.map((_, i) => i).filter((i) => !bed.sheep[i].leap && sideOf(bed.sheep[i].x) === side)
     milk.forEach((b, i) => { if (b.side === side && b.owner !== null && here.includes(b.owner)) out[i].who = b.owner })
     // One with a bottle of its own somewhere else waits for that.
-    let plain = here.filter((i) => !milk.some((b) => b.owner === i)).sort((a, b) => (bed.sheep[a].x - bed.sheep[b].x) * inward)
-    let free = milk.map((_, i) => i).filter((i) => milk[i].side === side && milk[i].owner === null).sort((a, b) => (milk[a].slot - milk[b].slot) * inward)
+    let plain = here.filter((i) => !milk.some((b) => b.owner === i)).sort((a, b) => bed.sheep[a].y - bed.sheep[b].y || (bed.sheep[a].x - bed.sheep[b].x) * inward)
+    let free = milk.map((_, i) => i).filter((i) => milk[i].side === side && milk[i].owner === null)
     for (const i of free) {
       const kept = before?.[i]?.who
       if (kept !== null && kept !== undefined && plain.includes(kept)) { out[i].who = kept; plain = plain.filter((x) => x !== kept) }
     }
     free = free.filter((i) => out[i].who === null)
-    free.forEach((bottle, i) => { if (i < plain.length) out[bottle].who = plain[i] })
+    for (const who of plain) {
+      const x = (i: number) => Math.abs(bottleAt(side, milk[i].slot, onShelf(milk, side)).x - bed.sheep[who].x)
+      const nearest = free.sort((a, b) => x(a) - x(b) || (milk[a].slot - milk[b].slot) * inward).shift()
+      if (nearest !== undefined) out[nearest].who = who
+    }
   }
   return out
 }
@@ -54,8 +59,8 @@ export function movesTo(bed: Bed, milk: Milk): number {
   const wrong = named.filter((b) => sideOf(bed.sheep[b.owner!].x) !== b.side).length
   if (!named.length) return Math.abs(bed.sheep.filter((s) => sideOf(s.x) === 'left').length - onShelf(milk, 'left'))
   const side = named[0].side
-  const extra = bed.sheep.filter((s, i) => sideOf(s.x) === side && !named.some((b) => b.owner === i)).length
-  return wrong + extra
+  const others = bed.sheep.filter((s, i) => sideOf(s.x) === side && !named.some((b) => b.owner === i)).length
+  return wrong + Math.abs(others - (onShelf(milk, side) - named.length))
 }
 
 /** The most sheep one deal asks over. */

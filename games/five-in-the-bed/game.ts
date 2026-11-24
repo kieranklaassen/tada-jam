@@ -123,7 +123,9 @@ export function deal(g: Game): boolean {
   const d = dealMilk(bed, g.save.position, g.rng)
   const worn = d.milk.some((b) => b.owner !== null) && !g.save.shown.includes('worn')
   g.save = { ...beginCycle(g.save), milk: d.milk, misfits: 0, needed: movesTo(bed, d.milk) }
+  // A deal that asks for no quilt takes off the one that was left on, so that whoever asks is seen.
   if (d.quilt) pull(g, d.quilt, true)
+  else if (g.save.quilt) pull(g, g.save.quilt, false)
   g.last = keyOf(bed)
   g.straws = null
   g.scene = { kind: 'deal', t: 0, out: 0, worn }

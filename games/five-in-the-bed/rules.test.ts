@@ -193,3 +193,16 @@ describe('the save', () => {
     expect(deserialize(serialize(saved({ position: 'whose-milk' })), 3, 1).position).toBe('whose-milk')
   })
 })
+
+describe('how many have to move', () => {
+  it('is the fewest over all partings that fit, for every deal at every position', () => {
+    const sidesOf = (m: number): Side[] => Array.from({ length: FIVE }, (_, i) => ((m >> i) & 1 ? 'left' : 'right'))
+    const apart = (a: number, b: number) => [0, 1, 2, 3, 4].filter((i) => ((a ^ b) >> i) & 1).length
+    for (const position of LADDER) for (let m = 0; m < 32; m++) for (let seed = 1; seed < 9; seed++) {
+      const { milk } = dealMilk(makeBed(sidesOf(m)), position, makeRng(seed))
+      const fewest = Math.min(...Array.from({ length: 32 }, (_, to) => to).filter((to) => fits(straws(makeBed(sidesOf(to)), milk))).map((to) => apart(m, to)))
+      expect(movesTo(makeBed(sidesOf(m)), milk)).toBe(fewest)
+      expect(fewest).toBeGreaterThan(0)
+    }
+  })
+})

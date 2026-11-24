@@ -42,6 +42,8 @@ function dangle(b: { x: number; y: number }, towards: number, time: number, i: n
   return { x: b.x + Math.sin(time * 2 + i) * 8 + Math.sign(towards) * 46, y: b.y + 104 }
 }
 
+const CRATED = [[3, -25, -14], [4, 25, -14], [0, -50, 16], [1, 0, 16], [2, 50, 16]] as const
+
 export class View {
   readonly stamps = new Stamps()
   private rug: { canvas: CanvasImageSource; x: number; y: number; w: number; h: number } | null = null
@@ -222,7 +224,10 @@ export class View {
     // It leans toward whoever could have it.
     const want = b.owner ?? askers(g).find((i) => sideOf(g.bed.sheep[i].x) !== b.side)
     const to = want === undefined ? 0 : g.bed.sheep[want].x - foot.x
-    return dangle({ x: foot.x, y: SHELF.y + 12 }, Math.abs(to) > 60 ? to : 0, this.time, s.bottle)
+    const end = dangle({ x: foot.x, y: SHELF.y + 12 }, Math.abs(to) > 60 ? to : 0, this.time, s.bottle)
+    // It stays over its own half, clear of a quilt over the other.
+    const h = HALF[b.side]
+    return { x: Math.max(h.left + 44, Math.min(h.right - 44, end.x)), y: end.y }
   }
 
   private lookAt(g: Game, i: number, finger: Point | null, asking: number[], act: ReturnType<typeof actNow>): Point {
@@ -457,7 +462,7 @@ export class View {
       const to = { x: from.x + (end.x - from.x) * k, y: from.y + (end.y - from.y) * k }
       const own = milk[s.bottle].owner
       // It comes down straight and in to the mouth from the side, past the eyes.
-      const side = s.who !== null && Math.abs(end.x - HALF[milk[s.bottle].side].mid) > 40 ? Math.sign(end.x - HALF[milk[s.bottle].side].mid) : from.x >= end.x ? 1 : -1, reach = s.who === null || hidden(g, s.who) ? 0 : 92 * k
+      const side = from.x >= end.x ? 1 : -1, reach = s.who === null || hidden(g, s.who) ? 0 : 92 * k
       const path = () => { ctx.beginPath(); ctx.moveTo(from.x, from.y); ctx.bezierCurveTo(from.x, from.y + (to.y - from.y) * 0.55, to.x + side * reach, to.y - reach * 0.35, to.x, to.y) }
       ctx.save()
       if (over && mine) { ctx.beginPath(); ctx.arc(mine.x, mine.y - 10, R + 12, 0, Math.PI * 2); ctx.clip() }
@@ -481,7 +486,7 @@ export class View {
       const k = this.cover[side], x = HALF[side].left + 6
       const nudge = ring(this.since(`roll${side}`)) * 8
       // What is left of the roll when the quilt is up is thin.
-      const roll = () => { const sy = 1 - 0.6 * k; st.stampAt(ctx, ROLL, x - 2, QUILT.roll + nudge + (1 - sy) * QUILT.rollH, 0, 1, sy) }
+      const roll = () => { const sy = 1 - 0.6 * k; st.stampAt(ctx, ROLL, x + 5, QUILT.roll + nudge + (1 - sy) * QUILT.rollH, 0, 0.97, sy) }
       if (k < 0.02) { roll(); continue }
       const top = hemAt(k)
       ctx.save()
@@ -495,7 +500,7 @@ export class View {
         const speed = Math.hypot(s.vx, s.vy), p = this.poseOf(g, i)
         const moving = s.leap ? 1 : Math.min(1, speed / 140), poked = v.poked < 0.9 ? (1 - v.poked / 0.9) * (0.7 + 0.3 * Math.sin(v.poked * 30)) : 0
         const acting = actNow(g)?.cast.includes(i) ? Math.min(1, p.lift / 40 + Math.abs(p.spin % 6.28) * 0.12 + Math.abs(p.wide - 1) * 3 + 0.25) : 0
-        const wants = askers(g).includes(i) ? Math.min(1, 0.25 + p.lift / 40) : 0
+        const wants = askers(g).includes(i) ? Math.min(1, 0.55 + p.lift / 60) : 0
         const a = Math.max(moving, poked, acting, wants, g.bed.held?.who === i ? 1 : 0)
         if (a < 0.03) continue
         ctx.globalAlpha = Math.min(1, a)
@@ -537,7 +542,8 @@ export class View {
       this.head(ctx, DOG.x + this.dogTurn * 10 + nose, DOG.y - 62 + Math.sin(this.time * 1.6) * 2, this.dogTurn * 0.16, 1, g)
     }
     const full = milkOut(g) === null && this.home > 0.9
-    if (full) for (let i = 0; i < 3; i++) bottle(ctx, st, CRATE.x - 50 + i * 50, CRATE.y + 16 + ring(this.since('crate') - i * 0.06, 24, 6) * 8 - Math.max(0, Math.sin(this.time * 2.2 - i * 0.7)) * 12, 1, null, 0, 0, this.time)
+    // Five, as many as come out of it: two behind three.
+    if (full) for (const [i, x, y] of CRATED) bottle(ctx, st, CRATE.x + x, CRATE.y + y + ring(this.since('crate') - i * 0.06, 24, 6) * 8 - Math.max(0, Math.sin(this.time * 2.2 - i * 0.7)) * 12, 1, null, 0, 0, this.time)
     st.stampAt(ctx, CRATE_BOX, CRATE.x, CRATE.y, ring(this.since('crate'), 26, 7) * 0.05)
   }
 

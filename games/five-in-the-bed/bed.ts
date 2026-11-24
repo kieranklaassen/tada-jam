@@ -25,7 +25,7 @@ export const HAND = 34
 
 const MID: Record<Side, number> = { left: (BED.left + BED.crest) / 2, right: (BED.right + BED.crest) / 2 }
 /** Each has a place of its own, the same in both halves and clear of the rest, as the pips of a five lie. Nobody has to move for another. */
-const PLACE: readonly Point[] = [{ x: -100, y: 300 }, { x: 152, y: 596 }, { x: 4, y: 452 }, { x: -152, y: 596 }, { x: 100, y: 300 }]
+const PLACE: readonly Point[] = [{ x: -100, y: 300 }, { x: 140, y: 596 }, { x: 4, y: 452 }, { x: -140, y: 596 }, { x: 100, y: 300 }]
 export const placeOf = (who: number, side: Side): Point => ({ x: MID[side] + PLACE[who].x - (side === 'left' ? 8 : -8), y: PLACE[who].y })
 
 export type Sheep = {
