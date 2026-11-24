@@ -203,6 +203,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       // has no frame coming, and would go on showing the surface as it was before the read.
       draw()
       // The play as it is first drawn is written at once: a first visit put away before any touch opens on the same shop.
+      play.changed = true
       settle()
     })
     applyTier()

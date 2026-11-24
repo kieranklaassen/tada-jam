@@ -10,6 +10,8 @@ export const STRIP_LENGTH = 900
 export const MOST = 14
 /** A piece let go this near an edge closes up to it. */
 export const SNAP = 20
+/** One let go across an edge by no more than this is meant beside it. */
+export const NUDGE = 44
 /** Holes and bulges up to this much are no fault, and neither is an end this near the tail. */
 export const ROOM = 12
 
@@ -25,17 +27,26 @@ export function slide(row: Piece[], i: number, want: number): number {
   // What it already lies across is left where it is.
   const others = row.filter((q) => q !== p && !meets(p, q) && (right ? q.x >= endOf(p) - 0.5 : endOf(q) <= p.x + 0.5))
   others.sort((a, b) => (right ? a.x - b.x : endOf(b) - endOf(a)))
+  // What lies across one another is shoved as one heap and stays a heap.
+  const heaps: Piece[][] = []
+  for (const q of others) {
+    const heap = heaps.find((h) => h.some((z) => meets(z, q)))
+    if (heap) heap.push(q)
+    else heaps.push([q])
+  }
   let target = clampX(p.k, want)
   for (let go = 0; go < 2; go++) {
     row.forEach((q, n) => { q.x = start[n] })
     p.x = target
-    let edge = right ? endOf(p) : p.x
-    for (const q of others) {
-      if (right ? q.x >= edge : endOf(q) <= edge) continue
-      q.x = right ? edge : edge - LENGTH[q.k]
-      edge = right ? endOf(q) : q.x
+    let edge = right ? endOf(p) : p.x, last = edge
+    for (const heap of heaps) {
+      const lo = Math.min(...heap.map((q) => q.x)), hi = Math.max(...heap.map(endOf))
+      const by = right ? Math.max(0, edge - lo) : Math.min(0, edge - hi)
+      for (const q of heap) q.x += by
+      edge = right ? hi + by : lo + by
+      if (by !== 0) last = edge
     }
-    const over = right ? edge - STRIP_LENGTH : -edge
+    const over = right ? last - STRIP_LENGTH : -last
     if (over <= 0) break
     target += right ? -over : over
     // A jam: nothing can move that way.
@@ -47,12 +58,13 @@ export function slide(row: Piece[], i: number, want: number): number {
 /** Where a piece let go at `x` comes to lie: closed up to an edge that is nearly touching. */
 export function settle(row: readonly Piece[], k: Kind, x: number, but: Piece | null = null): { x: number; kissed: boolean } {
   const at = clampX(k, x), len = LENGTH[k]
-  let best = at, gap = SNAP + 1
+  let best = at, gap = row.some((q) => q !== but && meets({ k, x: at }, q)) ? NUDGE + 1 : SNAP + 1
+  const most = gap
   for (const edge of [0, ...row.flatMap((q) => (q === but ? [] : [endOf(q), q.x - len]))]) {
     const d = Math.abs(edge - at)
-    if (d < gap && edge >= 0 && edge <= STRIP_LENGTH - len) { gap = d; best = edge }
+    if (d < gap && edge >= 0 && edge <= STRIP_LENGTH - len && (d <= SNAP || !row.some((q) => q !== but && meets({ k, x: edge }, q)))) { gap = d; best = edge }
   }
-  return { x: best, kissed: gap <= SNAP }
+  return { x: best, kissed: gap < most }
 }
 
 /** A tapped piece: off whatever it lies across towards the tail, or else up to the next thing towards the pincushion. Null: it has nowhere to go. */
@@ -64,7 +76,14 @@ export function scootTo(row: readonly Piece[], i: number): number | null {
       const under = row.filter((q) => q !== p && meets({ k: p.k, x }, q))
       if (under.length === 0) return x
       x = Math.max(...under.map(endOf))
-      if (x + len > STRIP_LENGTH) return null
+      if (x + len > STRIP_LENGTH) break
+    }
+    // No room towards the tail: off it the other way.
+    x = p.x
+    for (let n = 0; n <= row.length && x >= 0; n++) {
+      const under = row.filter((q) => q !== p && meets({ k: p.k, x }, q))
+      if (under.length === 0) return x
+      x = Math.min(...under.map((q) => q.x)) - len
     }
     return null
   }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { CAST, WHO } from './cast'
-import { BODY_Y, DOOR, HEAD, MAGPIE, MICE, NECK, STRIP, TRAY, WINDOW, centre, inside, trayPoint, type Box } from './layout'
+import { DOOR, HEAD, MAGPIE, MICE, NECK, STRIP, TRAY, WINDOW, centre, inside, trayPoint, type Box } from './layout'
 import { Play } from './play'
 import { KINDS, LENGTH, type Kind, type Piece } from './row'
 import { deserialize, freshSave, type Save } from './save'
@@ -57,7 +57,7 @@ describe('laying', () => {
     drag(p, NECK + 100, STRIP.mid, NECK + 100, STRIP.mid - 160, false)
     expect(p.hand?.what).toBe('piece')
     expect(p.saved().row.length).toBe(2)
-    p.move(1, { x: NECK + 66, y: STRIP.mid - 10 }); p.up(1, { x: NECK + 66, y: STRIP.mid - 10 }, clock); run(p, 0.5)
+    p.move(1, { x: NECK + 34, y: STRIP.mid - 10 }); p.up(1, { x: NECK + 34, y: STRIP.mid - 10 }, clock); run(p, 0.5)
     expect(p.fit?.bulges.length).toBe(1)
     const home = trayPoint('duck')
     drag(p, NECK + 40, STRIP.mid, home.x, home.y)
@@ -152,12 +152,12 @@ describe('the next one', () => {
   })
   it('two share a jumper when the one at the door is carried to the table', () => {
     const p = make({ on: ['dog'], wait: ['snail'], row: lay('duck', 6) })
-    drag(p, door.x, 150, 760, BODY_Y)
+    drag(p, door.x, 150, 760, 372)
     expect(p.save.on).toEqual(['dog', 'snail'])
     expect(p.fit?.short).toBe(true)
     const q = make({ on: ['croc'], wait: ['seal'] })
     heard(q)
-    drag(q, door.x, 150, 760, BODY_Y)
+    drag(q, door.x, 150, 760, 372)
     expect(q.save.on).toEqual(['croc'])
     expect(q.heard.length).toBeGreaterThan(0)
   })
@@ -244,5 +244,44 @@ describe('targets', () => {
       expect(p.under({ x: NECK + 60, y: 400 }).is).toBe('customer')
       expect(inside(HEAD, { x: NECK - 70, y: 340 })).toBe(true)
     }
+  })
+})
+
+describe('what the review found', () => {
+  it('a stroke along the rings and a press elsewhere does not pull the jumper off', () => {
+    const p = make({ row: lay('sausage', 4) })
+    drag(p, NECK + 100, 372, NECK + 300, 372, false)
+    p.up(1, { x: NECK + 300, y: 372 }, clock); clock += 100
+    p.down(2, trayPoint('duck'), clock); clock += 40; p.up(2, trayPoint('duck'), clock); run(p, 0.5)
+    expect(p.save.row.length).toBe(5)
+  })
+  it('a finger bounce while the guest is carried still seats it', () => {
+    const p = make({ on: ['dog'], wait: ['snail'], row: lay('sausage', 3) })
+    const at = { x: 760, y: 372 }
+    drag(p, 1000, 150, at.x, at.y, false)
+    p.up(1, at, clock); clock += 100
+    p.down(2, { x: at.x + 2, y: at.y }, clock); clock += 60; p.up(2, { x: at.x + 2, y: at.y }, clock); run(p, 0.6)
+    expect(p.save.on).toEqual(['dog', 'snail'])
+  })
+  it('the second tap of a double tap leaves the coming of the next one alone', () => {
+    const p = make({ row: lay('sausage', 5) })
+    tap(p, 1000, 150); run(p, 0.2); tap(p, 1000, 150); run(p, 0.2)
+    expect(p.scene?.is).toBe('next')
+  })
+  it('a wobbly tap on a tray lays a piece', () => {
+    const p = make(), at = trayPoint('sausage')
+    drag(p, at.x, at.y, at.x + 24, at.y + 4)
+    expect(p.save.row.length).toBe(1)
+  })
+  it('what lies across another is shoved as one heap', () => {
+    const row: Piece[] = [{ k: 'duck', x: 0 }, { k: 'sausage', x: 100 }, { k: 'duck', x: 110 }]
+    const p = make({ row })
+    drag(p, NECK + 20, STRIP.mid, NECK + 120, STRIP.mid)
+    expect(p.save.row[2].x - p.save.row[1].x).toBe(10)
+  })
+  it('a covered tray that a guest opens tears, seen and heard', () => {
+    const p = make({ on: ['dog'], wait: ['snail'], open: { sausage: true, shoe: false, duck: false } })
+    drag(p, 1000, 150, 760, 372)
+    expect(p.torn.duck).toBeGreaterThanOrEqual(0)
   })
 })

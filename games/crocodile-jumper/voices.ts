@@ -49,6 +49,7 @@ export const VOICES = {
   bellies: (p) => [t(78, 0.28, 0.004, 0.22, { glideTo: 46 }), t(300 * p, 0.08, 0.03, 0.24, { delay: 0.16, wave: 'triangle', glideTo: 380 * p }), t(440 * p, 0.08, 0.03, 0.24, { delay: 0.3, wave: 'triangle', glideTo: 520 * p })],
   noRoom: () => [t(96, 0.2, 0.004, 0.5, { wave: 'triangle', glideTo: 380 }), t(150, 0.1, 0.004, 0.4, { delay: 0.1, glideTo: 520 })],
   call: (p) => [t(390 * p, 0.12, 0.04, 0.2, { wave: 'triangle', glideTo: 560 * p }), t(560 * p, 0.12, 0.03, 0.26, { wave: 'triangle', delay: 0.26, glideTo: 420 * p })],
+  knock: () => [...times(3, 0.15, () => [t(190, 0.16, 0.002, 0.07, { glideTo: 150 }), z(900, 0.1, 0.001, 0.04)]), ...[392, 494, 587].map((f, i) => t(f, 0.08, 0.01, 0.22, { delay: 0.5 + i * 0.11, wave: 'triangle' }))],
   chatter: () => times(9, 0.07, (i) => [z(2700 + 250 * (i % 2), 0.1, 0.001, 0.022, { q: 7 })]),
   smell: (p) => [z(1800, 0.06, 0.12, 0.12, { q: 1.5 }), t(330 * p, 0.09, 0.1, 0.5, { delay: 0.3, glideTo: 240 * p })],
   groan: (p) => [t(210 * p, 0.1, 0.08, 0.6, { wave: 'sawtooth', glideTo: 130 * p })],
@@ -99,8 +100,9 @@ export const VOICES = {
   tick: () => crackle(2),
   wall: (_p, n) => [t(210 + 30 * (n % 3), 0.06, 0.003, 0.08), z(800, 0.04, 0.002, 0.05)],
   goOff: (p) => [...times(6, 0.2, (i) => [t(120 + 14 * (i % 2), 0.1, 0.004, 0.07), z(2600, 0.04, 0.001, 0.04)]), t(380 * p, 0.09, 0.04, 0.3, { delay: 0.2, wave: 'triangle', glideTo: 520 * p })],
-  comeIn: (p) => [t(420 * p, 0.1, 0.04, 0.26, { wave: 'triangle', glideTo: 560 * p, delay: 2.5 }), t(86, 0.2, 0.004, 0.18, { delay: 4, glideTo: 50 })],
-  scrap: () => times(3, 0.9, (i) => [...crackle(3), t(900 + 90 * i, 0.05, 0.004, 0.06, { delay: 0.5 })]),
+  comeIn: (p) => [t(420 * p, 0.1, 0.04, 0.26, { wave: 'triangle', glideTo: 560 * p })],
+  belly: () => [t(86, 0.2, 0.004, 0.18, { glideTo: 50 })],
+  scrap: (_, n) => [...crackle(3), t(900 + 90 * n, 0.05, 0.004, 0.06, { delay: 0.5 })],
 } satisfies Record<string, Make>
 export type VoiceName = keyof typeof VOICES
 

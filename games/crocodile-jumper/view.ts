@@ -4,11 +4,11 @@ import { HEADS, MAGPIE_PARTS as MAG, body, drawHead, feet, midAt, shell, type Fa
 import { Album, LIGHTS, Pen, canvas, oval, path, type Picture } from './foil'
 import { handPose, type Guidance, type HandPose } from './guidance'
 import type { Point } from './input'
-import { DOOR, MAGPIE, MICE, NECK, STRIP, TABLE_Y, TRAY, WINDOW, trayPoint } from './layout'
+import { DOOR, MAGPIE, MICE, NECK, STRIP, TABLE_Y, TRAY, WINDOW, onStrip, trayPoint } from './layout'
 import { cover, piece, ring } from './pieces'
 import type { Play, Scene } from './play'
 import { doorFrame, hand, paintRoom, windowFrame } from './room'
-import { KINDS, LENGTH, STRIP_LENGTH, endOf, fitOf, hopTo, scootTo, type Kind, type Piece } from './row'
+import { KINDS, LENGTH, MOST, STRIP_LENGTH, endOf, fitOf, hopTo, rowEnd, scootTo, type Kind, type Piece } from './row'
 import { fit, type Fit } from './stage'
 
 // Draws the shop as the play has it. Nothing here feeds back into the rules.
@@ -26,6 +26,21 @@ export function ringSeat(on: readonly Who[], p: Piece): { x: number; y: number; 
   const g = mid < total ? Math.max(girthOf(on, mid), 20) : 0
   if (g === 0) return { x: mid, y: TABLE_Y - 16, sy: 0.36 }
   return { x: mid, y: TABLE_Y - 8 - g, sy: (g * 2 + 24) / 108 }
+}
+
+/** How far left whoever leaves has got. */
+const leave = (age: number): number => -ease(span(age, 0.5, 2.5)) * 1500
+type Step = { dx: number; dy: number; turn: number }
+const STILL: Step = { dx: 0, dy: 0, turn: 0 }
+/** Each goes its own way: a waddle, bounds, one smooth glide, belly flops, a sway. */
+function gait(who: Who, t: number): Step {
+  switch (who) {
+    case 'croc': return { dx: 0, dy: -Math.abs(Math.sin(t * 8)) * 7, turn: Math.sin(t * 8) * 0.016 }
+    case 'dog': return { dx: 0, dy: -Math.abs(Math.sin(t * 13)) * 24, turn: Math.sin(t * 13) * 0.03 }
+    case 'snail': return { dx: Math.sin(t * 5) * 16, dy: 0, turn: 0 }
+    case 'seal': return { dx: 0, dy: -Math.abs(Math.sin(t * 5.5)) * 44, turn: Math.cos(t * 11) * 0.03 }
+    case 'python': return { dx: Math.sin(t * 6) * 34, dy: -4 + Math.sin(t * 12) * 4, turn: Math.sin(t * 6) * 0.008 }
+  }
 }
 
 export class ShopView {
@@ -91,13 +106,12 @@ export class ShopView {
     if (s?.is === 'next') {
       const age = t - s.at
       if (age < 2.5) {
-        const go = ease(span(age, 0.5, 2.5)), hop = -Math.abs(Math.sin(age * 10)) * 12 * Number(age > 0.5)
-        this.party(play, s.who, s.worn, -go * 1500, hop, true)
+        this.party(play, s.who, s.worn, leave(age), age > 0.5 ? gait(s.who[0], age) : STILL, true)
       } else if (age > 2.7) {
         const come = ease(span(age, 2.7, 4.2))
-        this.party(play, play.save.on, null, (1 - come) * 1300, -Math.abs(Math.sin(age * 10)) * 10 * Number(come < 1), false)
+        this.party(play, play.save.on, null, (1 - come) * 1300, come < 1 ? gait(play.save.on[0], age) : STILL, false)
       }
-    } else this.party(play, play.save.on, play.save.row.length ? play.save.row : null, 0, 0, false)
+    } else this.party(play, play.save.on, play.save.row.length ? play.save.row : null, 0, STILL, false)
     this.pieces(play)
     this.covers(play)
     this.magpie(play)
@@ -117,10 +131,11 @@ export class ShopView {
     const { pen } = this, t = play.now, W = WINDOW
     const s = play.scene?.is === 'next' ? play.scene : null
     const age = s ? t - s.at : 99
-    const out = play.save.out
-    if (out && age > 2.2) {
+    // The one dressed last is seen out there until the next one walks up.
+    const coming = age < 99 && age > 2.2, out = s && !coming ? s.out : play.save.out
+    if (out) {
       // The one dressed last stands out there in that jumper, or is just walking up.
-      const pic = this.mini(out.who, out.worn), k = ease(span(age, 2.2, 4))
+      const pic = this.mini(out.who, out.worn), k = coming ? ease(span(age, 2.2, 4)) : 1
       const x = W.x + 20 + (1 - k) * 240, y = W.y + 150 - Math.abs(Math.sin(age * 9)) * 7 * Number(k < 1)
       const full = Math.min(0.42, 250 / (lengthOf(out.who) + 230))
       this.ctx.save()
@@ -166,7 +181,7 @@ export class ShopView {
     if (s?.is === 'next') {
       if (age < 2.6) { who = play.save.on; up = 1 - ease(span(age, 1.8, 2.6)) } else up = ease(span(age, 4.4, 5.2))
     }
-    const gone = play.hand?.what === 'guest'
+    const gone = play.hand?.what === 'guest' || this.bouncing(play) !== null
     if (!gone && up > 0) {
       // Whoever has sunk down is behind the half door, never below it.
       this.ctx.save()
@@ -188,7 +203,7 @@ export class ShopView {
   private waiting(play: Play, who: Who, n: number, of: number, up: number): void {
     const { pen, album } = this, t = play.now, a = play.acting('wait', 1.1)
     const shiver = Math.sin(t * 46 + n) * (Math.sin(t * 1.9 + n * 2) > 0.3 ? 2 : 0.4)
-    const eager = play.ready && !play.scene ? -Math.abs(Math.sin(t * 5 + n)) * 20 : 0
+    const eager = play.ready && !play.scene ? -Math.abs(Math.sin(t * 6 + n)) * 34 : 0
     const hop = eager + (a ? -Math.abs(Math.sin(a.age * 9)) * 18 * (1 - a.age / 1.1) : 0)
     const size = of > 1 ? 0.62 : 0.82
     const x = DOOR.x + (of > 1 ? 128 + n * 116 : 206) + shiver, y = 214 + (1 - up) * 220 + hop
@@ -242,56 +257,60 @@ export class ShopView {
     c.translate(20, -255)
     for (const p of worn) this.ringOn(pen, on, p, 0)
     // Two on one spot: a double ring that stands out.
+    this.bulges(pen, on, worn)
+    pic = { image, x: -20, y: 255, w: 960, h: 220 }
+    this.jumpers.set(key, pic)
+    return pic
+  }
+  private bulges(pen: Pen, on: readonly Who[], worn: readonly Piece[]): void {
     for (const b of fitOf(worn, lengthOf(on)).bulges) {
       const top = [...worn].reverse().find((p) => p.x < b.to && endOf(p) > b.from)!
       const g = Math.max(20, girthOf(on, (b.from + b.to) / 2)), w = b.to - b.from
       pen.at((b.from + b.to) / 2, TABLE_Y - 14 - g, () => pen.stamp(ring(this.album, top.k, 1)), 0, (w + 18) / LENGTH[top.k], Math.min(1.75, (g * 2 + 74) / 108))
     }
-    pic = { image, x: -20, y: 255, w: 960, h: 220 }
-    this.jumpers.set(key, pic)
-    return pic
   }
   private ringOn(pen: Pen, on: readonly Who[], p: Piece, light: number, swell = 0): void {
     const q = ringSeat(on, p)
     pen.at(q.x, q.y, () => pen.stamp(ring(this.album, p.k, light)), 0, 1 + swell * 0.3, q.sy * (1 + swell))
   }
 
-  private party(play: Play, on: readonly Who[], worn: readonly Piece[] | null, dx: number, dy: number, leaving: boolean): void {
+  private party(play: Play, on: readonly Who[], worn: readonly Piece[] | null, dx: number, step: Step, leaving: boolean): void {
     const { pen, album, ctx } = this, t = play.now
-    const shown = worn
     const join = on.length > 1 && !leaving ? 1 - ease(span(t - play.joinedAt, 0, 0.6)) : 0
-    const f = shown ? fitOf(shown, lengthOf(on)) : null
+    const f = worn ? fitOf(worn, lengthOf(on)) : null
     const breath = Math.sin(t * 1.5) * 0.006
+    const done = t - play.doneAt, leap = !leaving && done > 0 && done < 1.4 && play.ready
     const wr = play.acts.get('wriggle'), wrAge = wr ? t - wr.at : 9
     ctx.save()
-    ctx.translate(NECK + dx, dy + (wrAge < 0.5 ? ring01(wrAge, 30, 6) * 7 : 0))
+    ctx.translate(NECK + dx + step.dx, step.dy + (wrAge < 0.5 ? ring01(wrAge, 30, 6) * 7 : 0) - (leap ? Math.abs(Math.sin(done * 8.9)) * 34 * (1 - done / 1.4) : 0))
+    ctx.rotate(step.turn + (leap ? Math.sin(done * 18) * 0.012 : 0))
     ctx.translate(0, TABLE_Y); ctx.scale(1, 1 + breath); ctx.translate(0, -TABLE_Y)
-    const shaking = (!f || f.short || f.holes.length > 0) && (Math.sin(t * 1.9) > 0.2 || play.gusting || Boolean(play.acting(`on${on.length - 1}`, 1.6)?.kind === 'cold'))
+    const shaking = (!f || f.short || f.holes.length > 0) && (Math.sin(t * 1.9) > -0.45 || play.gusting || Boolean(play.acting(`on${on.length - 1}`, 1.6)?.kind === 'cold'))
     if (join > 0) {
-      this.bodies(pen, on.slice(0, 1), 0, shown, t, shaking)
+      this.bodies(pen, on.slice(0, 1), 0, worn, t, shaking)
       this.bodies(pen, on.slice(1), CAST[on[0]].length + join * 1000, null, t, true)
-    } else this.bodies(pen, on, 0, leaving || !shown ? shown : shown.filter((p) => t - play.look(p).born > 0.4).map((p) => ({ k: p.k, x: play.look(p).x })), t, shaking)
-    if (shown) {
+    } else this.bodies(pen, on, 0, leaving || !worn ? worn : worn.filter((p) => t - play.look(p).born > 0.4).map((p) => ({ k: p.k, x: play.look(p).x })), t, shaking)
+    if (worn) {
       const gust = play.gusting ? Math.sin(t * 24) * 0.02 : 0
       const r = play.acts.get('ring'), rAge = r ? t - r.at : 9
       ctx.save()
       ctx.translate(0, TABLE_Y); ctx.scale(1, 1 + gust); ctx.translate(0, -TABLE_Y)
-      this.wear(play, on, shown, leaving)
-      if (rAge < 0.5 && r && shown[Number(r.kind)]) this.ringOn(pen, on, shown[Number(r.kind)], lightAt(rAge * 240), Math.max(0, ring01(rAge, 14, 5)) * 0.28)
+      this.wear(play, on, worn, leaving)
+      if (rAge < 0.5 && r && worn[Number(r.kind)]) this.ringOn(pen, on, worn[Number(r.kind)], lightAt(rAge * 240), Math.max(0, ring01(rAge, 12, 4)) * 0.42)
       ctx.restore()
     }
     let from = 0
     on.forEach((w) => {
-      const p = feet(album, w, !shown)
+      const p = feet(album, w, !worn)
       if (p) pen.at(from + (from ? join * 1000 : 0), 0, () => pen.stamp(p))
       from += CAST[w].length
     })
     from = 0
-    for (const w of on) { if (w === 'snail') pen.at(from, 0, () => pen.stamp(shell(album))); from += CAST[w].length }
-    if (f && !leaving) this.draughts(f.holes, f.short ? lengthOf(on) : null, f.end, t)
+    for (const w of on) { if (w === 'snail') pen.at(from + (from ? join * 1000 : 0), 0, () => pen.stamp(shell(album))); from += CAST[w].length }
+    if (!leaving && dx === 0) this.chill(on, f ? f.holes : [], !f || f.short ? lengthOf(on) : null, f ? f.end : 0, t)
     // The jumper that has just come off crumples upward.
     const offAge = t - play.offAt
-    if (!shown && offAge < 0.7 && play.offRow.length) {
+    if (!worn && offAge < 0.7 && play.offRow.length) {
       ctx.save()
       ctx.globalAlpha = 1 - offAge / 0.7
       ctx.translate(0, -offAge * 260)
@@ -314,9 +333,9 @@ export class ShopView {
     const cold = !f || f.short || f.holes.length > 0
     const from = n ? CAST[on[0]].length : 0
     const here = { x: NECK + from - 80, y: midAt(who, 0) - 60 }
-    const face: Face = { gaze: this.want(play, here, f), lid: this.blink(t, n + 1), mouth: cold ? 'chatter' : 'smile', open: 0, cold: !f, pink: !!f?.close }
+    const face: Face = { gaze: this.want(play, here, f), lid: this.blink(t, n + 1), mouth: cold ? 'chatter' : 'smile', open: 0, cold, pink: !!f?.close }
     let dx = 0, dy = Math.sin(t * 1.5 + n) * 2, turn = 0
-    if (cold && Math.sin(t * 1.9) > 0.2) { dx += Math.sin(t * 50) * 1.6; face.open = 0.12 + 0.12 * Math.abs(Math.sin(t * 30)) }
+    if (cold && Math.sin(t * 1.9) > -0.45) { dx += Math.sin(t * 50) * 1.6; face.open = 0.12 + 0.12 * Math.abs(Math.sin(t * 30)) }
     if (f?.bulges.length) face.lid = Math.max(face.lid, 0.25)
     let carry: { k: Kind; x: number; y: number; turn: number; size: number } | null = null
     const [mx, my] = HEADS[who].mouth
@@ -364,26 +383,32 @@ export class ShopView {
     }
   }
 
-  /** Wind through a hole, and a drip that freezes at a bare tail. */
-  private draughts(holes: readonly { from: number; to: number }[], tail: number | null, end: number, t: number): void {
-    const { pen } = this
-    if (holes.length) pen.line(path((p) => {
-      for (const h of holes) for (let i = 0; i < 2; i++) {
-        const m = (h.from + h.to) / 2 - 12 + i * 24, k = (t * 0.9 + i * 0.5) % 1, y = 330 - k * 60
-        p.moveTo(m, y + 24); p.quadraticCurveTo(m + 20, y + 12, m, y); p.quadraticCurveTo(m - 18, y - 12, m + 2, y - 22)
+  /** What the cold does where it gets in: flakes and frost in a hole, icicles and shakes along bare skin, breath in front of the mouth. */
+  private chill(on: readonly Who[], holes: readonly { from: number; to: number }[], tail: number | null, end: number, t: number): void {
+    const { pen } = this, frost = path(() => {}), ice = path(() => {})
+    const flake = (x: number, y: number, r: number): void => { for (let i = 0; i < 3; i++) { const q = i * 1.047 + t; frost.moveTo(x - Math.cos(q) * r, y - Math.sin(q) * r); frost.lineTo(x + Math.cos(q) * r, y + Math.sin(q) * r) } }
+    const spans = [...holes, ...(tail === null ? [] : [{ from: Math.max(0, end), to: tail }])]
+    for (const h of spans) {
+      const w = h.to - h.from, n = Math.max(1, Math.round(w / 110))
+      for (let i = 0; i < n; i++) {
+        const x = h.from + (w * (i + 0.5)) / n, g = Math.max(20, girthOf(on, x)), k = (t * 0.5 + i * 0.37 + h.from * 0.01) % 1
+        flake(x + Math.sin(t * 2 + i) * 8, TABLE_Y - 8 - g * 2 - 34 + k * (g * 2 + 14), 9)
+        const s = Math.min(12, w / 5)
+        for (const d of [-1, 0, 1]) { const q = x + d * s * 1.9, l = 14 + ((i + d + 5) % 3) * 6; ice.moveTo(q - s * 0.6, TABLE_Y - 12); ice.lineTo(q + s * 0.6, TABLE_Y - 12); ice.lineTo(q, TABLE_Y - 12 + l); ice.closePath() }
+        if (w > 100) { const y = TABLE_Y - 24 - g * 2 + Math.sin(t * 30 + i) * 2; frost.moveTo(x - 22, y); for (let j = 1; j < 5; j++) frost.lineTo(x - 22 + j * 11, y + (j % 2 ? -8 : 0)) }
       }
-    }), '#ffffff', 6, 0.9)
-    if (tail !== null) {
-      const x = (Math.max(0, end) + tail) / 2
-      pen.fill(path((p) => { for (let i = -1; i <= 1; i++) { const q = x + i * Math.min(34, (tail - end) / 3.4), h = 16 + (i + 1) * 5; p.moveTo(q - 6, TABLE_Y - 8); p.lineTo(q + 6, TABLE_Y - 8); p.lineTo(q, TABLE_Y - 8 + h); p.closePath() } }), '#e6f5ff', 0.95)
-      pen.line(path((p) => { for (let i = 0; i < 3; i++) { const q = x - 26 + i * 26, y = TABLE_Y - 96 + Math.sin(t * 20 + i) * 3; p.moveTo(q - 8, y); p.lineTo(q, y - 8); p.lineTo(q + 8, y); p.lineTo(q + 16, y - 8) } }), '#cfe6ff', 4)
     }
+    if (!spans.length) return
+    pen.line(frost, '#ffffff', 3.8)
+    pen.fill(ice, '#f2faff')
+    const b = (t * 0.6) % 1
+    pen.fill(path((p) => { for (let i = 0; i < 3; i++) { p.moveTo(-178 - b * 26 - i * 12 + 10, 280 - b * 22 - i * 9); p.arc(-178 - b * 26 - i * 12, 280 - b * 22 - i * 9, 10 - i * 2 + b * 6, 0, 7) } }), '#ffffff', 0.5 * (1 - b))
   }
 
   /** The rings as they lie. One that has just been laid leaps up from its piece, and all of them go where their pieces go. */
   private wear(play: Play, on: readonly Who[], worn: readonly Piece[], leaving: boolean): void {
     const { pen } = this, t = play.now
-    const live = !leaving && worn.some((p) => { const l = play.look(p); return Math.abs(l.x - p.x) > 0.5 || t - l.born < 0.6 } )
+    const live = !leaving && worn.some((p) => { const l = play.look(p); return Math.abs(l.x - p.x) > 0.5 || t - l.born < 0.6 })
     if (!live && play.hand?.what !== 'slide') { pen.stamp(this.jumper(on, worn)); return }
     for (const p of worn) {
       const l = play.look(p), up = ease(span(t - l.born, 0.1, 0.45))
@@ -391,15 +416,16 @@ export class ShopView {
       const seat = ringSeat(on, { k: p.k, x: l.x }), y0 = STRIP.mid
       pen.at(seat.x, y0 + (seat.y - y0) * up - Math.sin(up * Math.PI) * 30, () => pen.stamp(ring(this.album, p.k, lightAt(l.x + (1 - up) * 90))), 0, 1 + ring01(t - l.born - 0.45, 24, 8) * 0.06, (0.4 * (1 - up) + seat.sy * up) * (1 + ring01(t - l.born - 0.45, 24, 8) * 0.12))
     }
+    this.bulges(pen, on, worn.filter((p) => t - play.look(p).born > 0.45).map((p) => ({ k: p.k, x: play.look(p).x })))
   }
 
   // --- The table -----------------------------------------------------------------
 
   private pieces(play: Play): void {
     const { pen, album } = this, t = play.now, row = play.save.row, h = play.hand
-    const flying = new Set(play.flights.filter((f) => f.to.y === STRIP.mid).map((f) => f.to.x))
+    const flying = new Set(play.flights.map((f) => f.piece))
     row.forEach((p, i) => {
-      if (flying.has(NECK + p.x + LENGTH[p.k] / 2)) return
+      if (flying.has(p)) return
       const l = play.look(p), over = row.slice(0, i).some((q) => p.x < endOf(q) - 0.5 && q.x < endOf(p) - 0.5)
       const jolt = t - l.jolt, hop = t - l.hop, going = Math.abs(l.x - p.x) > 1
       const held = h?.what === 'slide' && h.i === i
@@ -432,7 +458,7 @@ export class ShopView {
     const { pen, album } = this, t = play.now, s = play.scene
     const base = { x: MAGPIE.x + 150, y: MAGPIE.y + 148 }
     pen.at(base.x, base.y, () => pen.stamp(MAG.pile(album)))
-    let x = base.x, y = base.y - 66, hop = 0, flip = 1, snipping = false, wear: Kind | null = null, turn = 0, headTurn = Math.sin(t * 0.9) * 0.06, beak = 0
+    let x = base.x, y = base.y - 66, hop = 0, snipping = false, wear: Kind | null = null, turn = 0, headTurn = Math.sin(t * 0.9) * 0.06, beak = 0
     const a = play.acting('magpie', 1.5)
     if (s?.is === 'tune') {
       const age = t - s.at, n = s.order.length, end = 0.3 + n * 0.22, row = play.save.row
@@ -473,7 +499,7 @@ export class ShopView {
       }, headTurn)
       if (wear === 'sausage') pen.at(-28, -40, () => pen.stamp(piece(album, 'sausage', 1)), 0.2, 0.8)
       pen.at(-62, -4, () => pen.stamp(MAG.scissors(album, snipping ? Math.floor(t * 12) % 2 : (Math.sin(t * 0.7) > 0.94 ? 1 : 0))), 0.1 - 0.2 * Number(snipping))
-    }, turn, 0.92 * flip, 0.92)
+    }, turn, 0.92, 0.92)
     if (s?.is === 'show') this.show(play, s)
   }
 
@@ -509,8 +535,11 @@ export class ShopView {
   }
 
   private mice(play: Play): void {
-    const { pen, album } = this, t = play.now, f = play.fit, a = play.acting('mice', 1.3), tripped = !!f?.long && play.scene?.is !== 'next'
-    const x = tripped ? Math.min(MICE.x + 16, NECK + f!.end + 34) : MICE.x + 16, y = TABLE_Y - 2
+    const { pen, album } = this, t = play.now, f = play.fit, a = play.acting('mice', 1.3), s = play.scene?.is === 'next' ? play.scene : null, age = s ? t - s.at : 0
+    // A long end trips them, and takes them along a little when its wearer goes.
+    const left = s && age < 2.5 ? fitOf(s.worn, lengthOf(s.who)) : f, tripped = !!left?.long
+    const along = s && tripped ? Math.max(-260, leave(age)) * (1 - ease(span(age, 1.3, 2.4))) : 0
+    const x = (tripped ? Math.min(MICE.x + 4, NECK + left!.end + 34) : MICE.x + 4) + along, y = TABLE_Y - 2
     const hop = a ? -Math.abs(Math.sin(a.age * 13)) * 16 * (1 - a.age / 1.3) : 0
     for (const n of [0, 1]) pen.at(x - 6 + n * 30, y + hop * (n ? 0.6 : 1) + (tripped ? 4 : 0), () => pen.stamp(MAG.mouse(album, a ? lightAt(a.age * 150) : n)), tripped ? (n ? 1.4 : -1.2) : Math.sin(t * 2 + n) * 0.03, 0.8)
     pen.at(x + 8 + (a ? Math.sin(a.age * 14) * 7 : 0), y - 44 + (tripped ? 18 : hop * 1.6), () => pen.stamp(MAG.cake(album)), tripped ? 2.7 : a ? Math.sin(a.age * 16) * 0.2 : 0, 0.86)
@@ -527,8 +556,20 @@ export class ShopView {
     }
   }
 
+  private bouncing(play: Play): { at: Point; who: Who; k: number } | null {
+    const r = play.rebound
+    if (!r || play.hand?.what === 'guest') return null
+    const k = span(play.now - r.t, r.stay, r.stay + 0.6)
+    return k < 1 ? { at: r.at, who: r.who, k } : null
+  }
+
   private held(play: Play): void {
-    const { pen, album } = this, h = play.hand
+    const { pen, album } = this, h = play.hand, b = this.bouncing(play)
+    if (b) {
+      // Let go where it could not lie: a spring back to the door.
+      const k = ease(b.k), x = b.at.x + 60 + (DOOR.x + 206 - b.at.x - 60) * k, y = b.at.y + 40 + (214 - b.at.y - 40) * k - Math.sin(k * Math.PI) * 110
+      pen.at(x, y, () => drawHead(pen, album, b.who, { gaze: [-0.6, 0.3], lid: b.k === 0 ? 0.7 : 0, mouth: 'open', open: 0.3, cold: true }, lightAt(x)), b.k === 0 ? Math.sin(play.now * 18) * 0.06 : Math.sin(k * 9) * 0.14, 0.82)
+    }
     if (!h || h.what === 'slide') return
     if (h.what === 'guest') {
       const w = play.save.wait[0]
@@ -537,7 +578,7 @@ export class ShopView {
     }
     const x = h.at.x - h.grip + LENGTH[h.k] / 2
     // Where it would come to lie shows as its shadow on the strip.
-    if (h.at.y > STRIP.y - 60 && h.at.y < STRIP.y + STRIP.h + 40 && x > NECK - 60) pen.fill(path((p) => p.ellipse(Math.max(NECK + LENGTH[h.k] / 2, Math.min(NECK + STRIP_LENGTH - LENGTH[h.k] / 2, x)), STRIP.mid + 34, LENGTH[h.k] / 2, 12, 0, 0, 7)), '#2a1c38', 0.24)
+    if (onStrip(h.at)) pen.fill(path((p) => p.ellipse(Math.max(NECK + LENGTH[h.k] / 2, Math.min(NECK + STRIP_LENGTH - LENGTH[h.k] / 2, x)), STRIP.mid + 34, LENGTH[h.k] / 2, 12, 0, 0, 7)), '#2a1c38', 0.24)
     pen.at(x, h.at.y - 14, () => pen.stamp(piece(album, h.k, lightAt(h.at.x + h.at.y))), Math.sin(h.at.x * 0.03) * 0.06, 1.08)
   }
 
@@ -549,27 +590,37 @@ export class ShopView {
   // --- Guidance ----------------------------------------------------------------------
 
   /** One move the child could make now: never where it would come out right. */
-  move(play: Play, index: number): { from: Point; to: Point | null } {
+  move(play: Play, index: number): { from: Point; to: Point | null; k?: Kind } {
     const row = play.save.row
     if (play.ready) return { from: { x: DOOR.x + 120, y: 170 }, to: null }
     const loose = row.findIndex((_, i) => scootTo(row, i) !== null)
-    if (index % 2 && loose >= 0) return { from: { x: NECK + row[loose].x + LENGTH[row[loose].k] / 2, y: STRIP.mid }, to: null }
-    const k = KINDS.find((q) => play.save.open[q])!
-    return { from: trayPoint(k), to: { x: NECK + hopTo(row, k) + LENGTH[k] / 2 - 30, y: STRIP.mid } }
+    const k = row.length < MOST ? KINDS.find((q) => play.save.open[q] && (!row.length || hopTo(row, q) >= rowEnd(row))) : undefined
+    if ((index % 2 || !k) && loose >= 0) return { from: { x: NECK + row[loose].x + LENGTH[row[loose].k] / 2, y: STRIP.mid }, to: null }
+    if (k) return { from: trayPoint(k), to: { x: NECK + hopTo(row, k) + LENGTH[k] / 2, y: STRIP.mid }, k }
+    const last = row[row.length - 1]
+    return { from: { x: NECK + last.x + LENGTH[last.k] / 2, y: STRIP.mid }, to: trayPoint(last.k), k: last.k }
   }
 
   private guide(play: Play, g: Guidance): void {
-    const { pen, album } = this
-    if (g.glow > 0) pen.line(path((p) => {
+    const { pen, album } = this, t0 = play.now
+    // Its turn: the one at the door is ringed for a while as soon as the tail is covered.
+    const since = t0 - play.doneAt - 1, glow = Math.max(g.glow, play.ready && !play.hand ? span(since, 0, 0.3) * (1 - span(since, 8, 9)) : 0)
+    if (glow > 0) pen.line(path((p) => {
       const pulse = 3 * Math.sin(play.now * 4)
       const m = this.move(play, 0).from
       p.ellipse(m.x, m.y, 84 + pulse, 62 + pulse, 0, 0, 7)
-    }), '#fff6c8', 6, g.glow * 0.7)
+    }), '#fff29a', 9, glow * 0.95)
     if (g.demo === null) return
     const m = this.move(play, g.demoIndex), q = handPose(g.demo, m.to !== null, this.pose)
     const x = m.to ? m.from.x + (m.to.x - m.from.x) * q.travel : m.from.x, y = m.to ? m.from.y + (m.to.y - m.from.y) * q.travel : m.from.y
     this.ctx.globalAlpha = q.opacity
-    if (m.to && q.press > 0.5) { const k = KINDS.find((z) => play.save.open[z])!; pen.at(x, y - 8, () => pen.stamp(piece(album, k, lightAt(x)))); this.ctx.globalAlpha = q.opacity }
+    const k = m.k
+    if (m.to && k && m.to.y === STRIP.mid && q.travel > 0.98 && g.demo < 0.9) {
+      const seat = ringSeat(play.save.on, { k, x: m.to.x - NECK - LENGTH[k] / 2 })
+      pen.at(NECK + seat.x, seat.y, () => pen.stamp(ring(album, k, 0)), 0, 1, seat.sy)
+      this.ctx.globalAlpha = q.opacity
+    }
+    if (m.to && k && q.press > 0.5) { pen.at(x, y - 8, () => pen.stamp(piece(album, k, lightAt(x)))); this.ctx.globalAlpha = q.opacity }
     pen.at(x, y, () => pen.stamp(hand(album)), 0, 1.15 - q.press * 0.15)
     this.ctx.globalAlpha = 1
   }

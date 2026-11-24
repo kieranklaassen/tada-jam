@@ -53,13 +53,13 @@ export function feet(album: Album, who: Who, cold: boolean): Picture | null {
 
 /** The snail's house, on its back over whatever it wears. */
 export function shell(album: Album): Picture {
-  return album.get('shell', [40, 180, 220, 240], (c) => {
-    foil(c, oval(150, 300, 92, 84), [58, 216, 184, 170], METAL.mint, { seed: 91, size: 26, round: 0.6 })
+  return album.get('shell', [40, 160, 220, 200], (c) => {
+    foil(c, oval(150, 258, 82, 74), [68, 184, 164, 150], METAL.mint, { seed: 91, size: 26, round: 0.6 })
     c.strokeStyle = METAL.mint[0]
     c.lineWidth = 9
     c.lineCap = 'round'
     c.globalAlpha = 0.7
-    c.stroke(path((p) => { for (let i = 0; i < 60; i++) { const a = i * 0.22, r = 72 - i * 1.15; const x = 150 + Math.cos(a) * r, y = 302 + Math.sin(a) * r * 0.92; if (i) p.lineTo(x, y); else p.moveTo(x, y) } }))
+    c.stroke(path((p) => { for (let i = 0; i < 60; i++) { const a = i * 0.22, r = 62 - i; const x = 150 + Math.cos(a) * r, y = 260 + Math.sin(a) * r * 0.92; if (i) p.lineTo(x, y); else p.moveTo(x, y) } }))
   })
 }
 
@@ -128,7 +128,7 @@ export type Face = {
   gaze: readonly [number, number]
   /** 0 open, 1 shut. */
   lid: number
-  mouth: 'flat' | 'smile' | 'open' | 'chatter' | 'wave' | 'none'
+  mouth: 'smile' | 'open' | 'chatter' | 'wave'
   open: number
   /** Looks at its own nose. */
   cross?: boolean
@@ -156,14 +156,13 @@ export function drawHead(pen: Pen, album: Album, who: Who, face: Face, light: nu
   })
   pen.fill(pupil, '#16122a')
   pen.fill(shine, '#fff')
-  if (face.lid > 0) pen.fill(lid, METAL[who][1])
+  if (face.lid > 0) { pen.fill(lid, metalOf(who, face.cold, 0.6)[1]); pen.line(lid, METAL[who][0], 2.5) }
   if (face.pink) { const b = path(() => {}); const [x, y] = H.mouth; b.ellipse(x + 62, y - 14, 17, 11, 0, 0, 7); pen.fill(b, '#ff7fa6', 0.6) }
   const [mx, my] = H.mouth, w = H.mouthW
-  if (face.mouth === 'none' || who === 'croc') return
+  if (who === 'croc') return
   const mouth = path((p) => {
     switch (face.mouth) {
       case 'smile': p.moveTo(mx - w / 2, my); p.quadraticCurveTo(mx, my + 22, mx + w * 0.7, my - 4); break
-      case 'flat': p.moveTo(mx - w / 2, my + 4); p.lineTo(mx + w / 2, my + 2); break
       case 'wave': case 'chatter': for (let i = 0; i <= 8; i++) { const x = mx - w / 2 + (i / 8) * w, y = my + (i % 2 ? 6 : -2); if (i) p.lineTo(x, y); else p.moveTo(x, y) } break
       case 'open': p.ellipse(mx, my + 4, w * 0.34, 4 + face.open * 18, 0, 0, 7); break
       default: break

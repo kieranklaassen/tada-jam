@@ -1,5 +1,4 @@
 // template: cartridge/config.ts v3
-import { crocodileJumperManifest } from './manifest'
 
 // The one module a game tunes. The frozen files (quality.ts, attention.ts and
 // saveCadence.ts) read their numbers from here, so they stay byte-equal to the
@@ -70,8 +69,6 @@ export const LONGEST_FRAME_S = 0.1
 /** A change that keeps coming (a drag, a stroke) is handed to storage at most this often, in ms. */
 export const SAVE_THROTTLE_MS = 400
 
-const [YOUNGEST] = crocodileJumperManifest.ageBand
-
 // --- Guidance (guidance.ts) -------------------------------------------------
 
 /**
@@ -84,7 +81,8 @@ const [YOUNGEST] = crocodileJumperManifest.ageBand
  * scene, the second tap does harm, and the game sets this to 1 whatever its
  * band.
  */
-export const TAP_PRESSES: 1 | 2 = YOUNGEST < 4 ? 1 : 2
+// A second tap on the door would end the coming of the next one, so the hand presses once.
+export const TAP_PRESSES: 1 | 2 = 1
 
 // --- The designed order (state.ts) -----------------------------------------
 

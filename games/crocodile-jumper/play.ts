@@ -1,7 +1,7 @@
 import type { Note } from './audio'
 import { CAST, lengthOf, type Turn, type Who } from './cast'
 import { ForgivingTouch, type Gesture, type Point } from './input'
-import { BODY, DOOR, HEAD, MAGPIE, MICE, NECK, STRIP, TRAY, WINDOW, inside, trayPoint } from './layout'
+import { BODY, DOOR, HEAD, MAGPIE, MICE, NECK, STRIP, TRAY, WINDOW, headTwo, inside, onStrip, trayPoint } from './layout'
 import { KINDS, LENGTH, MOST, endOf, fitOf, hopTo, mostOf, scootTo, settle, slide, type Fit, type Kind, type Piece } from './row'
 import { callNext, canJoin, join, owed, type Idea, type Save } from './save'
 import type { CycleOutcome } from './state'
@@ -30,11 +30,13 @@ export type Act = { kind: string; at: number; n: number }
 
 export type Scene =
   | { is: 'tune'; at: number; lasts: number; order: number[]; said: number }
-  | { is: 'next'; at: number; lasts: number; who: Who[]; worn: Piece[]; tore: Kind[] }
-  | { is: 'show'; at: number; lasts: number; idea: Idea }
+  | { is: 'next'; at: number; lasts: number; who: Who[]; worn: Piece[]; tore: Kind[]; out: Save['out']; said: number; pitch: number }
+  | { is: 'show'; at: number; lasts: number; idea: Idea; said: number }
 
-export type Flight = { k: Kind; from: Point; to: Point; at: number; lasts: number }
+export type Flight = { k: Kind; from: Point; to: Point; at: number; lasts: number; piece?: Piece; by?: string }
 /** How a lying piece is seen: it glides and hops to where it already lies. */
+const homePitch = (k: Kind): number => (k === 'duck' ? 1.4 : k === 'shoe' ? 0.8 : 1)
+
 export type Look = { x: number; jolt: number; hop: number; born: number }
 
 export const REST_MS = 1000
@@ -55,12 +57,16 @@ export class Play {
   looks = new WeakMap<Piece, Look>()
   gustAt = -99
   joinedAt = -99
+  /** When the tail tip was last covered. */
+  doneAt = -99
   /** When the next in turn came to the door, and when the jumper came off. */
   cameAt = -99
   offAt = -99
   offRow: Piece[] = []
   /** Trays seen torn, and when. */
   torn: Record<Kind, number> = { sausage: -99, shoe: -99, duck: -99 }
+  /** The one who waited, let go where it could not lie: it springs back to the door from here. */
+  rebound: { at: Point; t: number; stay: number; who: Who } | null = null
   sparks: { at: Point; t: number }[] = []
   heard: Note[] = []
   changed = false
@@ -70,6 +76,9 @@ export class Play {
   private snapshot: Piece[] | null = null
   private landed = { id: -1, t: 0, at: { x: 0, y: 0 }, dragging: false }
   private strokeFrom: Point = { x: 0, y: 0 }
+  /** Where the drag began, and the farthest it has been from there. */
+  private liftFrom: Point = { x: 0, y: 0 }
+  private far = 0
   private skidded = 0
   private count = 0
 
@@ -99,11 +108,15 @@ export class Play {
   private later(name: VoiceName, delay: number, p = 1, n = this.count++): void {
     this.heard.push(...voice(name, p, n).map((note) => ({ ...note, delay: (note.delay ?? 0) + delay })))
   }
-  act(key: string, kind: string): void { this.acts.set(key, { kind, at: this.now, n: this.count++ }) }
+  act(key: string, kind: string): void { this.giveBack(key); this.acts.set(key, { kind, at: this.now, n: this.count++ }) }
   /** Seconds since the act began, or null when it is another or over. */
   acting(key: string, lasts = 1.7): (Act & { age: number }) | null {
     const a = this.acts.get(key)
     return a && this.now - a.at < lasts ? { ...a, age: this.now - a.at } : null
+  }
+  /** What somebody was playing with goes home when something else happens to them. */
+  private giveBack(key?: string): void {
+    for (const f of this.flights) if (f.by && f.at > this.now && (!key || f.by === key)) { f.at = this.now; f.by = undefined; this.say('hopHome', homePitch(f.k)) }
   }
   look(p: Piece): Look {
     let l = this.looks.get(p)
@@ -141,11 +154,13 @@ export class Play {
       l.x = Math.abs(d) < 0.4 ? p.x : l.x + d * Math.min(1, seconds * (this.hand?.what === 'slide' ? 34 : 13))
     }
     this.flights = this.flights.filter((f) => this.now - f.at < f.lasts)
+    for (const f of this.flights) if (f.by && f.at > this.now - seconds && f.at <= this.now) this.say('hopHome', homePitch(f.k))
     this.sparks = this.sparks.filter((s) => this.now - s.t < 0.6)
     const s = this.scene
     if (s) {
       if (s.is === 'tune') this.playOn(s)
-      if (s.is === 'next') this.tearIn(s, this.now - s.at)
+      if (s.is === 'next') this.comeIn(s, this.now - s.at)
+      if (s.is === 'show' && s.said < 3 && this.now - s.at >= 0.4 + s.said * 0.9) { this.say('scrap', 1, s.said); s.said++ }
       if (this.now - s.at >= s.lasts) this.finish(true)
     }
   }
@@ -167,15 +182,17 @@ export class Play {
     if (inside(MAGPIE, at, 4)) return { is: 'magpie' }
     if (inside(MICE, at, 6)) return { is: 'mice' }
     if (inside(DOOR, at)) return { is: 'wait' }
+    if (this.save.on.length > 1 && inside(headTwo(CAST[this.save.on[0]].length), at)) return { is: 'customer', n: 1, x: CAST[this.save.on[0]].length }
     if (inside(HEAD, at)) return { is: 'customer', n: 0, x: -60 }
     if (inside(BODY, at)) {
       const x = at.x - NECK
       if (this.worn(x)) return { is: 'jumper', x }
-      if (x <= this.length + 12) return { is: 'customer', n: this.save.on.length > 1 && x > CAST[this.save.on[0]].length ? 1 : 0, x }
+      if (x <= this.length + 12) return { is: 'customer', n: this.whoAt(x), x }
     }
     if (inside(WINDOW, at)) return { is: 'window' }
     return { is: 'room' }
   }
+  private whoAt(x: number): number { return this.save.on.length > 1 && x > CAST[this.save.on[0]].length ? 1 : 0 }
   /** Whether a ring lies at `x`. */
   private worn(x: number): boolean { return this.save.row.some((p) => x >= p.x && x <= endOf(p)) }
 
@@ -199,6 +216,12 @@ export class Play {
 
   private press(at: Point): void {
     const was = this.scene?.is
+    // The second tap of a double tap on the door takes nothing away.
+    if (this.scene?.is === 'next' && this.now - this.scene.at < 0.8 && this.under(at).is === 'wait') {
+      this.sparks.push({ at, t: this.now })
+      this.say('tick')
+      return
+    }
     if (this.scene) this.finish(false)
     this.sparks.push({ at, t: this.now })
     const thing = this.under(at)
@@ -224,7 +247,8 @@ export class Play {
       default: thing satisfies never
     }
     // What the magpie still owes is shown at a touch; the touch that ended a showing does not start one.
-    if (was !== 'show') this.showOwed()
+    // Calling the next one comes first: what is owed is for the one who leaves.
+    if (was !== 'show' && !(thing.is === 'wait' && this.ready)) this.showOwed()
   }
 
   private puff(x: number): void {
@@ -245,7 +269,7 @@ export class Play {
         this.act('magpie', 'look')
         this.later('click', 0.25)
         break
-      case 'magpie': this.tune(); break
+      case 'magpie': if (this.scene?.is !== 'show') this.tune(); break
       case 'wait': this.callIn(); break
       case 'window': this.gust(); break
       case 'jumper': this.feel(); break
@@ -261,6 +285,7 @@ export class Play {
     if (to === null) { this.look(p).jolt = this.now; this.say('stuck', p.k === 'duck' ? 1.6 : p.k === 'shoe' ? 1 : 1.25); return }
     const l = this.look(p)
     l.hop = this.now
+    this.flights = this.flights.filter((f) => f.piece !== p)
     p.x = to
     this.say(`scoot${cap(p.k)}` as VoiceName)
     this.change()
@@ -271,15 +296,16 @@ export class Play {
     const row = this.save.row
     if (row.length >= MOST) { this.bounce(k); return }
     const p: Piece = { k, x: hopTo(row, k) }
-    const over = row.some((q) => p.x < endOf(q) - 0.5 && q.x < endOf(p) - 0.5)
+    // No room past the end: it comes home, seen and heard.
+    if (row.some((q) => p.x < endOf(q) - 0.5 && q.x < endOf(p) - 0.5)) { this.bounce(k); return }
     row.push(p)
     const from = trayPoint(k)
     this.look(p).hop = this.now + 0.34
     this.look(p).born = this.now + 0.34
     this.act('magpie', 'snip')
     this.later('closeUp', 0.4)
-    this.flights.push({ k, from, to: { x: NECK + p.x + LENGTH[k] / 2, y: STRIP.mid }, at: this.now, lasts: 0.34 })
-    this.say(over ? (`flop${cap(k)}` as VoiceName) : 'layDown')
+    this.flights.push({ k, piece: p, from, to: { x: NECK + p.x + LENGTH[k] / 2, y: STRIP.mid }, at: this.now, lasts: 0.34 })
+    this.say('layDown')
     this.change()
   }
 
@@ -329,7 +355,8 @@ export class Play {
     const thing = this.pressed
     this.pressed = null
     this.slid = thing
-    this.strokeFrom = from
+    this.strokeFrom = this.liftFrom = from
+    this.far = 0
     if (!thing) return
     if (thing.is === 'piece') {
       this.snapshot = this.save.row.map((p) => ({ ...p }))
@@ -343,15 +370,20 @@ export class Play {
       this.hand = { what: 'guest', at: from }
       this.slid = null
       this.say('call', CAST[this.save.wait[0]].pitch)
+    } else if (thing.is === 'wait') {
+      // Two come in by the door or not at all.
+      this.act('wait', 'back')
+      this.say('noRoom')
     }
   }
 
   private drag(at: Point): void {
     const h = this.hand
+    this.far = Math.max(this.far, Math.hypot(at.x - this.liftFrom.x, at.y - this.liftFrom.y))
     if (!h) { this.stroke(at); return }
     if (h.what === 'slide') {
       const p = this.save.row[h.i]
-      if (Math.abs(at.y - STRIP.mid) > LIFT + 10 && (at.y < STRIP.mid - LIFT - 10 || at.y > STRIP.mid + LIFT + 10)) {
+      if (Math.abs(at.y - STRIP.mid) > LIFT + 10) {
         // Off the strip: from here it is in the air until it is let go.
         this.save.row.splice(h.i, 1)
         this.hand = { what: 'piece', k: p.k, at, from: 'row', grip: h.grip }
@@ -400,14 +432,14 @@ export class Play {
   }
 
   private letGo(at: Point): void {
-    const h = this.hand, near = Math.hypot(at.x - this.landed.at.x, at.y - this.landed.at.y) < NEAR
+    const h = this.hand, near = this.far < NEAR
     this.hand = null
     this.shoving = false
     if (!h) {
       const thing = this.slid
       this.slid = null
       if (!thing) return
-      if (thing.is === 'jumper' && this.landed.at.y - at.y > 60) { this.pullOff(); return }
+      if (thing.is === 'jumper' && this.liftFrom.y - at.y > 60) { this.pullOff(); return }
       if (near && thing.is !== 'customer' && thing.is !== 'magpie' && thing.is !== 'jumper') { this.pressed = thing; this.tap(); this.pressed = null }
       return
     }
@@ -422,13 +454,14 @@ export class Play {
       return
     }
     this.snapshot = null
-    if (h.from === 'row') this.change()
+    if (near && h.from === 'tray') { this.tapTray(h.k); return }
     this.drop(h, at)
+    if (h.from === 'row') this.change()
   }
 
   private drop(h: { k: Kind; grip: number }, at: Point): void {
     const k = h.k
-    if (at.y > STRIP.y - 26 && at.y < STRIP.y + STRIP.h + 30 && at.x > NECK - 70) {
+    if (onStrip(at)) {
       if (this.save.row.length >= MOST) { this.home(k, at); this.say('full'); return }
       const to = settle(this.save.row, k, at.x - NECK - h.grip)
       const p: Piece = { k, x: to.x }
@@ -446,50 +479,52 @@ export class Play {
     if (inside(MAGPIE, at, 4)) {
       this.act('magpie', k)
       this.say(k === 'sausage' ? 'scarf' : k === 'shoe' ? 'toot' : 'argue')
-      this.home(k, at, 1.3)
+      this.home(k, at, 1.5, 'magpie')
       return
     }
     const thing = this.under(at)
     if (thing.is === 'customer' || thing.is === 'jumper') {
-      const n = thing.is === 'customer' ? thing.n : 0
+      const n = thing.is === 'customer' ? thing.n : this.whoAt(thing.x)
       const turn: Turn = CAST[this.save.on[n]].turn[k]
       this.act(`on${n}`, turn)
       this.say(TURN_VOICE[turn])
-      this.home(k, at, 1.5)
+      this.home(k, at, 1.8, `on${n}`)
       return
     }
     this.home(k, at)
-    this.say('hopHome', k === 'duck' ? 1.4 : k === 'shoe' ? 0.8 : 1)
+    this.say('hopHome', homePitch(k))
   }
 
   /** Back into its tray, after `wait` seconds in somebody's keeping. */
-  private home(k: Kind, from: Point, wait = 0): void {
-    this.flights.push({ k, from, to: trayPoint(k), at: this.now + wait, lasts: 0.42 })
-    if (wait) this.later('hopHome', wait, k === 'duck' ? 1.4 : k === 'shoe' ? 0.8 : 1)
+  private home(k: Kind, from: Point, wait = 0, by?: string): void {
+    this.flights.push({ k, from, to: trayPoint(k), at: this.now + wait, lasts: 0.42, by })
   }
 
   private seat(at: Point, near: boolean): void {
     const p = CAST[this.save.wait[0]].pitch
     if (near) { this.callIn(); return }
+    const back = (stay: number): void => { this.act('wait', 'back'); this.rebound = { at, t: this.now, stay, who: this.save.wait[0] } }
     if (inside(HEAD, at, 10)) {
       this.act('on0', 'rub')
-      this.act('wait', 'back')
+      back(1)
       this.say('noseRub')
       return
     }
     if (inside({ ...BODY, h: BODY.h + 150 }, at)) {
       if (canJoin(this.save)) {
+        const open = this.save.open
         this.save = join(this.save)
+        for (const k of KINDS) if (this.save.open[k] && !open[k]) { this.torn[k] = this.now; this.say('tear') }
         this.joinedAt = this.cameAt = this.now
         this.say('bellies', p)
         this.change(true)
         return
       }
-      this.act('wait', 'back')
+      back(0.15)
       this.say('noRoom')
       return
     }
-    this.act('wait', 'back')
+    back(0)
     this.say('call', p)
   }
 
@@ -521,6 +556,8 @@ export class Play {
     if (f.holes.length > (was?.holes.length ?? 0)) this.later('hole', 0.35)
     if (f.bulges.length > (was?.bulges.length ?? 0)) this.later('bulge', 0.35)
     if (f.long && (!was?.long || f.end > was.end)) { this.later('long', 0.3); this.act('mice', 'trip') }
+    // Covered to the tail tip: up it wriggles, and the one at the door sees it.
+    if (!f.short && (!was || was.short)) { this.doneAt = this.now + 0.5; this.later('knock', 0.9) }
     if (f.close && !was?.close) this.save.on.forEach((w, n) => { this.later('warm', 0.45 + n * 0.3, CAST[w].pitch); this.act(`on${n}`, 'warm') })
   }
 
@@ -566,16 +603,19 @@ export class Play {
     this.save = callNext(before, this.outcome())
     const tore = KINDS.filter((k) => this.save.open[k] && !before.open[k])
     for (const k of tore) this.torn[k] = Infinity
-    this.scene = { is: 'next', at: this.now, lasts: 5.6, who: before.on, worn: before.row, tore }
+    this.scene = { is: 'next', at: this.now, lasts: 5.6, who: before.on, worn: before.row, tore, out: before.out, said: 0, pitch: p }
+    this.giveBack()
     this.acts.clear()
+    this.rebound = null
     this.say('goOff', was)
     if (f.holes.length) this.later('hole', 0.8)
     if (f.long) this.later('long', 1)
-    this.later('comeIn', 0, p)
     this.change(true)
   }
 
-  private tearIn(s: Extract<Scene, { is: 'next' }>, age: number): void {
+  private comeIn(s: Extract<Scene, { is: 'next' }>, age: number): void {
+    if (s.said === 0 && age >= 2.5) { s.said = 1; this.say('comeIn', s.pitch) }
+    if (s.said === 1 && age >= 4) { s.said = 2; this.say('belly') }
     s.tore.forEach((k, n) => {
       if (this.torn[k] !== Infinity || age < 4.6 + n * 0.3) return
       this.torn[k] = this.now
@@ -588,8 +628,7 @@ export class Play {
     const idea = owed(this.save)
     if (!idea || this.scene) return
     this.save.shown = [...this.save.shown, idea]
-    this.scene = { is: 'show', at: this.now, lasts: 4.6, idea }
-    this.later('scrap', 0.4)
+    this.scene = { is: 'show', at: this.now, lasts: 4.6, idea, said: 0 }
     this.change(true)
   }
 

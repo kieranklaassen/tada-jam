@@ -37,7 +37,7 @@ describe('the row', () => {
     expect(scootTo(row(['duck', 0], ['duck', 120]), 1)).toBe(72)
     expect(scootTo(row(['duck', 0]), 0)).toBeNull()
     expect(scootTo(row(['sausage', 0], ['duck', 30]), 1)).toBe(144)
-    expect(scootTo(row(['sausage', 756], ['duck', 760]), 1)).toBeNull()
+    expect(scootTo(row(['sausage', 756], ['duck', 760]), 1)).toBe(684)
   })
   it('finds each fault where it is, alone', () => {
     const just = fitOf(row(['sausage', 0], ['sausage', 144]), 288)

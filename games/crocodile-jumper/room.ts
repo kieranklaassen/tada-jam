@@ -59,12 +59,6 @@ export function paintRoom(c: Ctx, view: { x: number; y: number; w: number; h: nu
   c.stroke(path((p) => { for (let x = x0; x <= x1; x += 12) { if (x === x0) p.moveTo(x, drape(x)); else p.lineTo(x, drape(x)) } }))
   const ms: MetalName[] = ['sausage', 'duck', 'mint', 'python', 'shoe', 'gold']
   for (let i = Math.floor(x0 / 79); i * 79 < x1; i++) if (i * 79 < WINDOW.x - 30 || i * 79 > WINDOW.x + WINDOW.w - 10) if (i * 79 < DOOR.x - 10 || i * 79 > DOOR.x + DOOR.w) sweet(c, i * 79 + 40, drape(i * 79 + 40) + 12, 17, ms[((i % 6) + 6) % 6], 300 + i, (i % 3) * 0.3 - 0.3)
-  // Pattern pieces pinned to the wall: plain paper, cut out.
-  c.globalAlpha = 0.55
-  c.fillStyle = '#efe6d8'
-  c.fill(poly([[392, 262], [470, 254], [486, 280], [462, 286], [462, 344], [404, 344], [402, 290], [380, 290]]))
-  c.fill(poly([[690, 256], [790, 250], [806, 276], [742, 284], [740, 332], [694, 334]]))
-  c.globalAlpha = 1
   // Outside the window: dusk and snow hills, in dull paper.
   c.save()
   c.clip(rect(WINDOW.x, WINDOW.y, WINDOW.w, WINDOW.h, 12))
