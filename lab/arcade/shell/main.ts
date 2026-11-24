@@ -4,6 +4,7 @@
 // take the page down.
 
 import { buildPlayHash, parseRoute } from '../../shell/routes.ts'
+import { jamAddress } from './jamAddress.ts'
 import { CATALOG, demoOf } from '../catalog.ts'
 import type { PlayRoute } from '../../shell/routes.ts'
 import { mountStage } from '../kit/stage.ts'
@@ -364,6 +365,11 @@ function render(): void {
   dispose?.()
   dispose = null
   const route = parseRoute(location.hash, location.search)
+  const jam = jamAddress(location.pathname, location.search, route)
+  if (jam !== null) {
+    location.replace(jam)
+    return
+  }
   if (route.view === 'play' && entries.has(route.key)) dispose = renderPlay(route)
   else dispose = renderList()
 }
