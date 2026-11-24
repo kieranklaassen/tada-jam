@@ -36,6 +36,7 @@ export class BoardView {
   private magnets = new Magnets(this.album)
   private room = new Room(this.album)
   private folk = new Folk(this.album)
+  private warmed = false
   private page: HTMLCanvasElement | null = null
   private tray: Picture | null = null
   private readonly pose: HandPose = { travel: 0, press: 0, opacity: 0 }
@@ -50,10 +51,15 @@ export class BoardView {
     this.fit = fit(width, height)
     this.ratio = ratio
     const k = this.fit.scale * ratio
-    this.album = new Album(Math.max(0.4, k))
-    this.magnets = new Magnets(this.album)
-    this.room = new Room(this.album)
-    this.folk = new Folk(this.album)
+    // The pictures are as fine as the display can show, whatever the tier: a tier change repaints the board and no figure.
+    const density = Math.max(0.4, this.fit.scale * Math.max(ratio, Math.min(2, globalThis.devicePixelRatio || 1)))
+    if (density !== this.album.density) {
+      this.album = new Album(density)
+      this.magnets = new Magnets(this.album)
+      this.room = new Room(this.album)
+      this.folk = new Folk(this.album)
+      if (this.warmed) this.warm()
+    }
     const x0 = -this.fit.x / this.fit.scale, y0 = -this.fit.y / this.fit.scale, x1 = x0 + width / this.fit.scale, y1 = y0 + height / this.fit.scale
     this.page = canvas(Math.round(width * ratio), Math.round(height * ratio))
     const ctx = this.page.getContext('2d')!
@@ -68,6 +74,7 @@ export class BoardView {
 
   /** Paints every piece there is, so none is painted in the middle of play. */
   warm(): void {
+    this.warmed = true
     for (const part of PARTS) { this.magnets.part(part); this.magnets.outline(part) }
     this.magnets.eyeball(); this.magnets.pupil()
     for (const body of BODIES) this.magnets.body(body)
@@ -139,7 +146,8 @@ export class BoardView {
   // --- The board --------------------------------------------------------------
 
   private drawings(play: Play): void {
-    const n = play.world.pairs.length
+    const n = play.world.pairs.length, kept = play.world.pairs.map((pair) => this.pairKey(pair))
+    this.album.keep('pair:', kept)
     for (let i = 0; i < n; i++) {
       const t = play.since(`drawing:${i}`), fresh = i === n - 1 ? clamp(play.since('met') / 1.2) : 1
       const pair = play.world.pairs[i]
@@ -151,9 +159,12 @@ export class BoardView {
     if (wiped < 0.9) this.at(this.room.wiper(), DRAWINGS[0].x - 70 + wiped * 150, DRAWINGS[0].y + Math.sin(wiped * 20) * 8, -0.2, 0.7)
   }
 
+  private pairKey(pair: readonly [Monster, Monster]): string {
+    return 'pair:' + pair.map((m) => m.body + PLACES.map((p) => (m.on[p] ? `${m.on[p]!.part}${m.on[p]!.large ? 'l' : 's'}` : '-')).join('')).join('|')
+  }
   /** Two who met, drawn small. Painted when they meet, and while they are still hidden by their own size. */
   private pair(pair: readonly [Monster, Monster]): Picture {
-    const key = 'pair:' + pair.map((m) => m.body + PLACES.map((p) => (m.on[p] ? `${m.on[p]!.part}${m.on[p]!.large ? 'l' : 's'}` : '-')).join('')).join('|')
+    const key = this.pairKey(pair)
     return this.album.get(key, [-74, -40, 148, 80], (ctx) => {
       const k = 0.155
       pair.forEach((m, i) => {

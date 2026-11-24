@@ -233,6 +233,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       if (disposed) return
       // A saved position wins; `childAge` only chooses where a first visit starts.
       play = new Play(deserialize(value, ctxRef.current.childAge, seedOf(window.location.search)))
+      // A first visit is written as it is dealt, so that one put away before any touch opens on the same monster.
+      if (value === null || value === undefined) play.changed = play.urgent = true
       slop()
       view.warm()
       // The game sets itself up from the state here, as it was left: nothing eases in and no scene replays.

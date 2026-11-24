@@ -332,6 +332,70 @@ describe('the first kind of round', () => {
   })
 })
 
+describe('what two fingers may not spoil', () => {
+  it('a finger that rests on the one who leaves edits nobody behind the cloth', () => {
+    const p = game((w) => { w.a.on.upper = { part: 'eye', large: true }; opened(w) })
+    p.down(950, placeAt('a', p.world.a.body, 'upper')); run(p, 0.3)
+    tap(p, SACKS[0])
+    const a = JSON.stringify(p.world.a)
+    p.move(950, { x: 900, y: 620 }); p.up(950); run(p, 1)
+    expect(JSON.stringify(p.world.a)).toBe(a)
+    expect(p.carries).toHaveLength(0)
+  })
+  it('three fingers on the curtain deaden nothing, and five that start together carry three', () => {
+    const p = game()
+    for (let i = 0; i < 3; i++) p.down(960 + i, { x: 200 + i * 80, y: 300 })
+    put(p, 'eye', 'upper')
+    expect(p.world.b.on.upper!.part).toBe('eye')
+    for (let i = 0; i < 3; i++) p.up(960 + i)
+    for (const [i, part] of (['eye', 'mouth', 'nose', 'ear', 'hand'] as const).entries()) p.down(970 + i, shelfOf(part))
+    for (let i = 0; i < 5; i++) p.move(970 + i, { x: 500 + i * 60, y: 630 })
+    expect(p.carries).toHaveLength(3)
+  })
+  it('a tap on a dotted place puts a ready magnet there, though the ostrich or the string is near', () => {
+    const p = game((w) => { w.b = bare('wide') })
+    tap(p, shelfOf('ear')); tap(p, { x: placeAt('b', 'wide', 'left').x - 15, y: 352 })
+    expect(p.world.b.on.left!.part).toBe('ear')
+    expect(p.world.worn.ostrich).toBeNull()
+    const q = game((w) => { w.b = bare('tall') })
+    tap(q, shelfOf('ear')); tap(q, { x: 795, y: 566 })
+    expect(q.world.b.on.bottom!.part).toBe('ear')
+  })
+  it('a magnet let go during a meeting lands it and is seen', () => {
+    const p = game((w) => { w.b.on.top = { part: 'tail', large: true } })
+    const i = pick(p, shelfOf('eye'), { x: 795, y: 300 })
+    pullCord(p); run(p, 1)
+    p.up(i); run(p, 0.4)
+    expect(p.meeting).toBeNull()
+    expect(p.world.b.on.upper!.part).toBe('eye')
+  })
+  it('a landed scene leaves no sound and no move behind', () => {
+    const p = game((w) => opened(w))
+    tap(p, SACKS[0]); run(p, 0.3)
+    tap(p, WIPER); run(p, 0.5)
+    p.heard = []
+    run(p, 5)
+    expect(p.heard).toHaveLength(0)
+  })
+  it('nothing plays on load, and a curtain put away in the hand is down', () => {
+    const p = game()
+    p.heard = []
+    p.step(FRAME)
+    expect(p.since('drop')).toBeGreaterThan(50)
+    tap(p, { x: 300, y: 300 }); p.clear(); run(p, 0.5)
+    expect(p.lift).toBe(0)
+    expect(p.heard).toHaveLength(0)
+  })
+  it('a scribble goes on, however many other fingers tap', () => {
+    const p = game()
+    p.down(980, { x: 1000, y: 100 })
+    for (let k = 0; k < 400; k++) p.move(980, { x: 900 + (k * 9) % 250, y: 100 + (k % 5) * 12 })
+    for (let k = 0; k < 14; k++) tap(p, { x: 640 + k * 5, y: 130 })
+    expect(p.strokes.some((s) => s.finger === 980)).toBe(true)
+    expect(p.strokes.length).toBeLessThanOrEqual(9)
+  })
+})
+
 describe('the ostrich', () => {
   it('mimes every fact in turn, one at a tap, and does not move the game', () => {
     const p = game((w) => { w.a = bare('wide'); w.a.on.top = { part: 'foot', large: false }; w.a.on.lower = { part: 'eye', large: true } })
@@ -380,13 +444,16 @@ describe('anything at all', () => {
     let s = 17
     const r = () => (s = (s * 16807) % 2147483647) / 2147483647
     const p = game()
+    let hidden = ''
     for (let i = 0; i < 1500; i++) {
       const f = 2000 + Math.floor(r() * 5), at = { x: r() * 1180, y: r() * 820 }, k = r()
       if (k < 0.35) p.down(f, at); else if (k < 0.75) p.move(f, at); else if (k < 0.93) p.up(f); else if (k < 0.98) p.cancel(f); else p.clear()
       for (let n = 0; n < 6; n++) p.step(FRAME * (1 + r() * 4))
       if (!p.world.open) expect(p.world.sacks).toBeNull()
       expect(deserialize(JSON.parse(JSON.stringify(p.saved())), null, 1)).toBeTruthy()
-      expect(p.strokes.length).toBeLessThanOrEqual(9)
+      expect(p.strokes.length).toBeLessThanOrEqual(13)
+      if (p.world.open || p.hiding) hidden = ''
+      else { const now = JSON.stringify(p.world.a); if (hidden) expect(now).toBe(hidden); hidden = now }
       p.heard = []
     }
     p.clear(); run(p, 1)

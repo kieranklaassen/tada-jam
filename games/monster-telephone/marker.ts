@@ -133,6 +133,11 @@ export type Box = readonly [number, number, number, number]
 export class Album {
   private readonly made = new Map<string, Picture>()
   constructor(readonly density: number) {}
+  /** Lets go of every picture whose name starts so and is not one of these. */
+  keep(start: string, names: readonly string[]): void {
+    if (this.made.size < 60) return
+    for (const [key, picture] of this.made) if (key.startsWith(start) && !names.includes(key)) { picture.image.width = picture.image.height = 0; this.made.delete(key) }
+  }
   get(key: string, box: Box, paint: (ctx: Ctx) => void, finer = 1): Picture {
     let picture = this.made.get(key)
     if (!picture) {

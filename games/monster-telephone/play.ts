@@ -1,6 +1,6 @@
 import type { Note } from './audio'
 import { CATCH, CURTAIN, MIDDLE, MOLE_FACE, ON_MOLE, OSTRICH_HEAD, PULL, SACKS, SHELF_Y, catches, inBody, nearestPlace, onMole, onOstrich, placeAt, shelfOf, targetAt, type Target, type Who } from './layout'
-import { BODIES, PLACES, alike, bare, compare, copy, count, fits, harder, moved, type Body, type Compared, type Monster, type Part, type Place } from './monster'
+import { BODIES, PARTS, PLACES, alike, bare, compare, copy, count, fits, harder, moved, type Body, type Compared, type Monster, type Part, type Place } from './monster'
 import { PAIRS, copyWorld, refill, serialize, type World } from './save'
 import type { Point } from './stage'
 import { agree, bodyVoice, dance, later, partVoice, quieter, rub, takes, voice, type VoiceName } from './voices'
@@ -37,6 +37,8 @@ export const HIDE_S = 1.8
 /** How long a new one is seen before the curtain runs shut on it, at the early places. */
 export const SEEN_S = 2.4
 /** A shut curtain dragged this far aside is pulled open, as the cord does. */
+/** Marker lines on the board at most. */
+export const STROKES = 8
 export const DRAG_OPEN = 150
 export const MIME_S = 3
 export const MIME_PEEK = 0.75
@@ -68,7 +70,7 @@ export class Play {
   ready: Part | null = null
   meeting: Meeting | null = null
   hiding: Hiding | null = null
-  mime: { t: number; fact: Fact; said: number } | null = null
+  mime: { t: number; fact: Fact; said: number; /** She began it herself: the child is still idle. */ own: boolean } | null = null
   /** 0 hangs, 1 is rolled up by a finger. */
   lift = 0
   /** 0 shut, 1 drawn aside. */
@@ -77,12 +79,13 @@ export class Play {
   pull = 0
   ostrichBend: Point | null = null
   moleReach: Point | null = null
+  private cues: { at: number; notes: Note[]; key: string | null }[] = []
   private told = 0
   private beckoned = 0
   private nextBeckon = 0
   /** Even a tap lifts the cloth for a moment. */
   private peekUntil = 0
-  private peekDown = true
+  private peekDown = false
   private hinted = 0
   /** The wiper under a finger. */
   wiping: Point | null = null
@@ -108,7 +111,7 @@ export class Play {
   }
   /** A finger is doing something, or a scene runs: the child is not idle. */
   get busy(): boolean {
-    return this.contacts.size > 0 || this.carries.length > 0 || this.meeting !== null || this.hiding !== null || this.mime !== null
+    return this.contacts.size > 0 || this.carries.length > 0 || this.meeting !== null || this.hiding !== null || (this.mime !== null && !this.mime.own)
   }
   /** The first kind of round: both stand in view, and the twin shows where the parts go. */
   get inView(): boolean {
@@ -137,6 +140,19 @@ export class Play {
     if (from.kind === 'worn' && w.worn[from.by] === null) { w.worn[from.by] = carry.part; return true }
     return false
   }
+  /** Sounds and moves of a scene, each at its own time, so that landing the scene leaves none of them behind. */
+  private cue(delay: number, notes: readonly Note[], key?: string): void {
+    const by = new Map<number, Note[]>()
+    for (const note of notes) { const at = delay + (note.delay ?? 0); by.set(at, [...(by.get(at) ?? []), { ...note, delay: 0 }]) }
+    for (const [at, some] of by) this.cues.push({ at: this.now + at, notes: some, key: null })
+    if (key) this.cues.push({ at: this.now + delay, notes: [], key })
+  }
+  private runCues(): void {
+    const due = this.cues.filter((c) => c.at <= this.now)
+    if (due.length === 0) return
+    this.cues = this.cues.filter((c) => c.at > this.now)
+    for (const c of due) { this.heard.push(...c.notes); if (c.key) this.mark(c.key) }
+  }
   private change(now = false): void {
     this.changed = true
     if (now) this.urgent = true
@@ -149,11 +165,12 @@ export class Play {
 
   private working(): number {
     let n = this.carries.filter((c) => c.finger !== null).length + (this.sackCarry && this.sackCarry.finger !== null ? 1 : 0)
-    for (const c of this.contacts.values()) if (!c.extra && (c.target.kind === 'curtain' || c.target.kind === 'cord')) n++
     return n
   }
 
   down(id: number, p: Point): void {
+    // A finger that landed twice was lost in between.
+    if (this.contacts.has(id)) this.cancel(id)
     this.lastTouch = this.now
     this.beckoned = 0
     this.hinted = 0
@@ -163,13 +180,17 @@ export class Play {
     const w = this.world
     // A carry that waits out a lifted finger goes on with the one that comes back.
     const waiting = this.carries.find((c) => c.finger === null && Math.hypot(p.x - c.at.x, p.y - c.at.y) < REGRAB)
-    if (waiting) {
+    const onto = waiting && targetAt(p, { open: w.open, a: w.a, b: w.b, sacks: w.sacks !== null, drawings: 0 })
+    const elsewhere = onto && (onto.kind === 'stuck' || onto.kind === 'shelf') && Math.hypot(p.x - waiting.at.x, p.y - waiting.at.y) > 70
+    if (waiting && !elsewhere) {
+      this.say('lift')
       waiting.finger = id
       waiting.off = { x: waiting.at.x - p.x, y: waiting.at.y - p.y }
       this.contacts.set(id, { id, target: { kind: 'board' }, from: p, at: p, seconds: 9, moved: true, fired: false, extra: false, said: 0 })
       return
     }
     if (this.sackCarry && this.sackCarry.finger === null && Math.hypot(p.x - this.sackCarry.at.x, p.y - this.sackCarry.at.y) < REGRAB) {
+      this.say('knock')
       this.sackCarry.finger = id
       this.sackCarry.off = { x: this.sackCarry.at.x - p.x, y: this.sackCarry.at.y - p.y }
       this.contacts.set(id, { id, target: { kind: 'board' }, from: p, at: p, seconds: 9, moved: true, fired: false, extra: false, said: 0 })
@@ -204,8 +225,12 @@ export class Play {
       case 'string': this.mark('string'); this.say('twang'); break
       case 'drawing': this.mark(`drawing:${target.i}`); this.say('doodle'); break
       case 'board':
-        if (p.y < SHELF_Y - 70) this.strokes.push({ points: [p], finger: id, age: 0, wiped: 0 })
-        this.say('marker')
+        if (p.y < SHELF_Y - 70) { this.strokes.push({ points: [p], finger: id, age: 0, wiped: 0 }); this.say('marker') }
+        else {
+          // The tray: what lies on it jumps.
+          for (const part of PARTS) this.mark(`rattle:${part}`)
+          this.say('tock')
+        }
         break
     }
   }
@@ -227,15 +252,20 @@ export class Play {
     if (!c) return
     c.at = p
     const far = Math.hypot(p.x - c.from.x, p.y - c.from.y)
-    if (!c.moved && far > this.slop) { c.moved = true; if (!c.extra) this.begin(c) }
+    if (!c.moved && far > this.slop) {
+      c.moved = true
+      if (!c.extra && this.working() >= WORKING && c.target.kind !== 'curtain' && c.target.kind !== 'cord') c.extra = true
+      if (!c.extra) this.begin(c)
+    }
     if (c.extra) return
     for (const carry of this.carries) if (carry.finger === id) carry.at = { x: p.x + carry.off.x, y: p.y + carry.off.y }
     if (this.sackCarry?.finger === id) this.sackCarry.at = { x: p.x + this.sackCarry.off.x, y: p.y + this.sackCarry.off.y }
     const stroke = this.strokes.find((s) => s.finger === id)
     if (stroke) {
       const last = stroke.points[stroke.points.length - 1]
-      if (Math.hypot(p.x - last.x, p.y - last.y) > 7 && stroke.points.length < 90 && p.y < SHELF_Y - 60) {
-        stroke.points.push(p)
+      if (Math.hypot(p.x - last.x, p.y - last.y) > 7 && p.y < SHELF_Y - 60) {
+        if (stroke.points.length < 90) stroke.points.push(p)
+        else { stroke.finger = null; this.strokes.push({ points: [last, p], finger: id, age: 0, wiped: 0 }) }
         if (c.seconds - c.said > 0.12) { c.said = c.seconds; this.say('marker') }
       }
     }
@@ -326,9 +356,10 @@ export class Play {
       if (ready === target.part) { this.ready = null; this.say('tock') } else { this.ready = target.part; this.mark('ready') }
       return
     }
-    if (ready && (target.kind === 'body' || target.kind === 'stuck' || target.kind === 'board')) {
+    if (ready && target.kind !== 'sack' && target.kind !== 'cord') {
+      const beside = target.kind !== 'body' && target.kind !== 'stuck' && target.kind !== 'board'
       for (const who of this.hosts()) {
-        const place = target.kind === 'stuck' ? (target.who === who ? target.place : null) : catches(c.at, who, w[who])
+        const place = target.kind === 'stuck' ? (target.who === who ? target.place : null) : beside ? (nearestPlace(c.at, who, w[who].body).far < 46 ? nearestPlace(c.at, who, w[who].body).place : null) : catches(c.at, who, w[who])
         if (place) { this.put(who, place, ready, true, null); this.ready = null; return }
       }
     }
@@ -423,6 +454,8 @@ export class Play {
   }
 
   private drop(carry: Carry): void {
+    // Letting go is the child acting, so a meeting gives way to it.
+    if (this.meeting) this.land()
     const p = carry.at
     this.carries = this.carries.filter((c) => c !== carry)
     for (const who of this.hosts()) {
@@ -466,6 +499,9 @@ export class Play {
     this.land()
     this.flights = []
     this.lift = 0
+    this.peekUntil = 0
+    this.peekDown = false
+    this.drawn = 0
     this.aside = this.world.open ? 1 : 0
     this.heard = []
   }
@@ -509,7 +545,8 @@ export class Play {
     if (w.pairs.length > PAIRS) { w.pairs.shift(); this.mark('wiped') }
     this.mark('met')
     if (!inView) this.say('zip')
-    this.heard.push(...later(voice('glug'), 0.1), ...later(voice('peep'), RUN_S))
+    this.cue(0.1, voice('glug'))
+    this.cue(RUN_S, voice('peep'))
     this.change(true)
   }
 
@@ -532,18 +569,21 @@ export class Play {
     const rung = kind === 'own' ? null : sack === 0 ? w.place : harder(w.place)
     const stays = rung === 'in-view', seen = stays || rung === 'a-few' || rung === 'small-and-large'
     this.hiding = { t: 0, kind, sack, from: { ...from }, a: copy(w.a), b: copy(w.b), seen, length: stays ? 1.6 : seen ? HIDE_S + SEEN_S : HIDE_S }
-    if (seen) { let d = 1.1; for (const place of PLACES) { const s = (kind === 'sack' ? w.sacks![sack] : w.a).on[place]; if (s) { this.times.set(`a:${place}`, this.now + d); this.heard.push(...later(quieter(partVoice(s.part), 0.7), d)); d += 0.45 } } }
+    if (seen) { let d = 1.1; for (const place of PLACES) { const s = (kind === 'sack' ? w.sacks![sack] : w.a).on[place]; if (s) { this.cue(d, quieter(partVoice(s.part), 0.7), `a:${place}`); d += 0.45 } } }
     for (const place of PLACES) {
       const stuck = w.b.on[place]
       if (stuck) this.flights.push({ part: stuck.part, large: stuck.large, from: placeAt('b', w.b.body, place), to: shelfOf(stuck.part), t: -0.15 - 0.07 * PLACES.indexOf(place), dur: 0.5, kind: 'patter' })
     }
     if (kind === 'sack') { w.a = copy(w.sacks![sack]); w.own = false } else w.own = true
+    // A finger that rests on one of the two has nothing under it now.
+    for (const c of this.contacts.values()) if (c.target.kind === 'stuck' || c.target.kind === 'body') c.target = { kind: 'board' }
+    this.ready = null
     w.b = bare()
     w.sacks = null
     w.open = stays
-    if (seen && !stays) this.heard.push(...later(voice('zipBack'), 1 + SEEN_S))
+    if (seen && !stays) this.cue(1 + SEEN_S, voice('zipBack'))
     else if (!seen) this.say('zipBack')
-    if (kind === 'sack') this.say('sackIn')
+    if (kind === 'sack') this.cue(0, voice('sackIn'))
     if (count(this.hiding.b) > 0) this.say('patter')
     this.mark('hid')
     this.change(true)
@@ -551,6 +591,10 @@ export class Play {
 
   /** Any touch lands a scene where it ends. */
   private land(): void {
+    if (this.meeting || this.hiding) {
+      this.cues = []
+      for (const [key, at] of this.times) if (at > this.now) this.times.delete(key)
+    }
     if (this.meeting) { this.meeting = null; this.aside = 1; this.mark('landed') }
     if (this.hiding) { this.hiding = null; this.aside = this.world.open ? 1 : 0; this.flights = this.flights.filter((f) => f.kind !== 'patter') }
   }
@@ -584,12 +628,12 @@ export class Play {
     return out
   }
 
-  private nextMime(): void {
+  private nextMime(own = false): void {
     const facts = this.facts()
     if (facts.length === 0) { this.mark('kick'); this.say('honk'); return }
     const fact = facts[this.told % facts.length]
     this.told += 1
-    this.mime = { t: 0, fact, said: 0 }
+    this.mime = { t: 0, fact, said: 0, own }
     this.say('peek')
   }
 
@@ -598,6 +642,7 @@ export class Play {
   step(dt: number): void {
     if (dt <= 0) return
     this.now += dt
+    this.runCues()
     const w = this.world
     for (const c of this.contacts.values()) c.seconds += dt
     for (const carry of [...this.carries]) {
@@ -619,7 +664,11 @@ export class Play {
     if (this.flights.some((f) => f.t >= f.dur)) this.flights = this.flights.filter((f) => f.t < f.dur)
     for (const s of this.strokes) if (s.finger === null) s.age += dt
     if (this.strokes.some((s) => s.age > 9)) this.strokes = this.strokes.filter((s) => s.age <= 9)
-    if (this.strokes.length > 8) this.strokes.splice(0, this.strokes.length - 8)
+    while (this.strokes.length > STROKES) {
+      const old = this.strokes.findIndex((s) => s.finger === null)
+      if (old < 0) break
+      this.strokes.splice(old, 1)
+    }
     if (this.peekDown && !this.peeked && !w.open) { this.mark('drop'); this.say('drop') }
     this.peekDown = this.peeked
     this.lift += ((this.peeked ? 1 : 0) - this.lift) * Math.min(1, dt * (this.peeked ? 11 : 15))
@@ -634,15 +683,15 @@ export class Play {
       w.shown = true
       this.showing = true
       this.change(true)
-      this.nextMime()
+      this.nextMime(true)
     }
   }
 
   /** A shut curtain and nobody doing anything for a good while: she peeks and mimes, as when she is tapped. */
   private hint(): void {
-    if (this.world.open || this.busy || this.enough || this.hinted >= 3 || this.now - this.lastTouch < HINT_S * (this.hinted + 1)) return
+    if (this.world.open || this.busy || this.mime || this.enough || this.hinted >= 3 || this.now - this.lastTouch < HINT_S * (this.hinted + 1)) return
     this.hinted += 1
-    this.nextMime()
+    this.nextMime(true)
   }
 
   private stepMeeting(dt: number): void {
@@ -659,17 +708,17 @@ export class Play {
         if (one.b) {
           // Alone, each in its turn; together, at once.
           if (one.likeness === 'same') this.mark(`b:${one.place}`)
-          else { this.times.set(`b:${one.place}`, this.now + 0.22); this.heard.push(...later(quieter(partVoice(one.b.part), 0.6), 0.22)) }
+          else this.cue(0.22, quieter(partVoice(one.b.part), 0.6), `b:${one.place}`)
         }
         this.heard.push(...(one.likeness === 'same' ? agree(beat) : rub(beat)))
       } else if (beat === m.list.length) {
         this.mark('taken')
         if (m.same) {
-          this.heard.push(...dance())
+          this.cue(0, dance())
           for (const one of m.list) { this.mark(`a:${one.place}`); this.mark(`b:${one.place}`) }
           this.mark('party')
-        } else this.heard.push(...takes(m.a.body), ...later(takes(m.b.body), 0.35), ...later(voice('clang'), 0.6))
-        this.heard.push(...later(voice('pop'), TAKE_S - 0.45))
+        } else { this.cue(0, takes(m.a.body)); this.cue(0.35, takes(m.b.body)); this.cue(0.6, voice('clang')) }
+        this.cue(m.same ? 0.1 : TAKE_S - 0.45, voice('pop'))
       }
     }
     if (m.t >= meetingLength(m)) this.meeting = null

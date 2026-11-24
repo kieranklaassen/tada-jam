@@ -36,6 +36,6 @@ export function demoFor(play: Play, index: number): Move {
   if (play.enough) return [draw, cord, curtain, draw][index % 4]
   // Whoever starts at a later place has not seen a part go on yet: one is shown, before the first pair has met.
   const one = play.missing()[0]
-  if (w.pairs.length === 0 && count(w.b) === 0 && one && index % 4 === 2) return { from: shelfOf(one.part), to: placeAt('b', w.b.body, one.place), drag: true, part: one.part }
+  if (w.pairs.length === 0 && count(w.b) === 0 && one && index % 2 === 0) return { from: shelfOf(one.part), to: placeAt('b', w.b.body, one.place), drag: true, part: one.part }
   return index % 2 ? ostrich : curtain
 }
