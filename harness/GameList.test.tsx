@@ -2,18 +2,17 @@
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { JamGame } from './contract'
-import { GameList, orderForAge } from './GameList'
+import { GameList } from './GameList'
 import { PREFS_KEY } from './prefs'
 
-// The home page: one age for the child, set here by a grown-up, puts the games
-// made for that age first; demos are tiles of the same kind below the games.
+// The home page: every game can be found by its picture, its shelf or a word;
+// the child's age puts the games made for it first and hides none.
 
 const game = (key: string, name: string, ageBand: [number, number]): JamGame => ({
   emoji: '🧪',
   cartridge: { manifest: { key, name, ageBand, permissions: [] }, Mount: () => null },
 })
 const GAMES = [game('ant-hill', 'Ant Hill', [9, 12]), game('bubble-bath', 'Bubble Bath', [2, 4]), game('cloud-kitchen', 'Cloud Kitchen', [4, 7])]
-const names = (list: readonly JamGame[]) => list.map((g) => g.cartridge.manifest.name)
 
 const demo = (key: string, name: string, extra: object = {}) => ({ key, name, emoji: '🎲', ages: [3, 7], pitch: 'A pitch.', question: 'A question?', ...extra })
 function serveCatalog(demos: object[] | null) {
@@ -27,22 +26,7 @@ async function openHome(onPickDemo: (key: string) => void = () => {}) {
   render(<GameList games={GAMES} onPick={() => {}} onPickDemo={onPickDemo} />)
   await act(async () => {})
 }
-const gameTiles = () => within(screen.getByRole('list', { name: 'Games' })).getAllByRole('button').map((button) => button.textContent)
-
-describe('orderForAge', () => {
-  it('leaves the games as given when no age is set', () => {
-    expect(names(orderForAge(GAMES, null))).toEqual(['Ant Hill', 'Bubble Bath', 'Cloud Kitchen'])
-  })
-
-  it('puts the games whose band holds the age first, at both ends of a band', () => {
-    expect(names(orderForAge(GAMES, 4))).toEqual(['Bubble Bath', 'Cloud Kitchen', 'Ant Hill'])
-    expect(names(orderForAge(GAMES, 12))).toEqual(['Ant Hill', 'Bubble Bath', 'Cloud Kitchen'])
-  })
-
-  it('hides no game at an age none is made for', () => {
-    expect(names(orderForAge(GAMES, 8))).toEqual(['Ant Hill', 'Bubble Bath', 'Cloud Kitchen'])
-  })
-})
+const cards = (list: string) => within(screen.getByRole('list', { name: list })).getAllByRole('button').map((button) => button.querySelector('.home-card-name')!.textContent)
 
 describe('the home page', () => {
   beforeEach(() => {
@@ -55,15 +39,43 @@ describe('the home page', () => {
     vi.unstubAllGlobals()
   })
 
-  it('stores the age a grown-up chooses, keeps the other preferences, and reorders the games', async () => {
+  it('stores the age a grown-up chooses, keeps the other preferences, and puts the games for it first', async () => {
     window.localStorage.setItem(PREFS_KEY, JSON.stringify({ childAge: 4, language: 'nl', theme: 'boring' }))
     await openHome()
-    expect(gameTiles()[0]).toContain('Bubble Bath')
-    fireEvent.change(screen.getByLabelText(/age/i), { target: { value: '10' } })
-    expect(gameTiles()[0]).toContain('Ant Hill')
+    expect(cards('Just arrived')).toEqual(['Bubble Bath', 'Cloud Kitchen'])
+    expect(cards('Made for other ages')).toEqual(['Ant Hill'])
+    fireEvent.click(screen.getByLabelText('age 10'))
+    expect(cards('Just arrived')).toEqual(['Ant Hill'])
     expect(JSON.parse(window.localStorage.getItem(PREFS_KEY)!)).toEqual({ childAge: 10, language: 'nl', theme: 'boring' })
-    fireEvent.change(screen.getByLabelText(/age/i), { target: { value: '' } })
+    fireEvent.click(screen.getByLabelText('any age'))
     expect(JSON.parse(window.localStorage.getItem(PREFS_KEY)!).childAge).toBeNull()
+    expect(cards('Just arrived')).toEqual(['Ant Hill', 'Bubble Bath', 'Cloud Kitchen'])
+    expect(screen.queryByRole('list', { name: 'Made for other ages' })).toBeNull()
+  })
+
+  it('hides no game at an age none is made for', async () => {
+    window.localStorage.setItem(PREFS_KEY, JSON.stringify({ childAge: 8 }))
+    await openHome()
+    expect(cards('Made for other ages')).toEqual(['Ant Hill', 'Bubble Bath', 'Cloud Kitchen'])
+  })
+
+  it('finds a game by a word at any age, and offers the way back when nothing is found', async () => {
+    await openHome()
+    const search = screen.getByRole('searchbox')
+    fireEvent.change(search, { target: { value: 'ant' } })
+    expect(cards('Just arrived')).toEqual(['Ant Hill'])
+    fireEvent.change(search, { target: { value: 'zzz' } })
+    expect(screen.queryByRole('list', { name: 'Just arrived' })).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Show all games' }))
+    expect(cards('Just arrived')).toEqual(['Bubble Bath', 'Cloud Kitchen'])
+  })
+
+  it('opens the game whose picture is touched', async () => {
+    const onPick = vi.fn()
+    render(<GameList games={GAMES} onPick={onPick} onPickDemo={() => {}} />)
+    await act(async () => {})
+    fireEvent.click(screen.getByRole('button', { name: /^Bubble Bath/ }))
+    expect(onPick).toHaveBeenCalledWith('bubble-bath')
   })
 
   it('shows games only when there is no demo catalog', async () => {
@@ -71,13 +83,13 @@ describe('the home page', () => {
     expect(screen.queryByRole('region', { name: 'Demos' })).toBeNull()
   })
 
-  it('shows a demo as a tile marked as a demo, and opens it by its key', async () => {
-    serveCatalog([demo('tiny-island', 'Tiny Island'), demo('ant-hill', 'Ant Hill demo'), demo('peg-blaster', 'Peg Blaster', { verdict: 'no' })])
+  it('shows a demo as a card marked as a demo, and opens it by its key', async () => {
+    serveCatalog([demo('sock-race', 'Sock Race'), demo('ant-hill', 'Ant Hill demo'), demo('peg-blaster', 'Peg Blaster', { verdict: 'no' })])
     const onPickDemo = vi.fn()
     await openHome(onPickDemo)
     const tiles = within(screen.getByRole('list', { name: 'Building' })).getAllByRole('button')
-    expect(tiles.map((tile) => tile.textContent)).toEqual(['🎲Tiny Islanddemo · ages 3–7'])
+    expect(tiles.map((tile) => tile.textContent)).toEqual(['🎲Sock Racedemo · ages 3–7'])
     fireEvent.click(tiles[0])
-    expect(onPickDemo).toHaveBeenCalledWith('tiny-island')
+    expect(onPickDemo).toHaveBeenCalledWith('sock-race')
   })
 })

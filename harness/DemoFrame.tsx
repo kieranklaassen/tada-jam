@@ -8,7 +8,7 @@ import { PortraitOverlay } from './PortraitOverlay'
 // that page without its rating strip. The corner control is the same as over
 // a game: a tap goes home, and a held finger takes a grown-up to the demo's
 // own page, where it can be rated.
-export function DemoFrame({ demoKey, onExit }: { demoKey: string; onExit: () => void }) {
+export function DemoFrame({ demoKey, onExit, onGame }: { demoKey: string; onExit: () => void; onGame: (key: string) => void }) {
   const [name, setName] = useState<string | null>(null)
 
   useEffect(() => {
@@ -17,13 +17,14 @@ export function DemoFrame({ demoKey, onExit }: { demoKey: string; onExit: () => 
       if (!alive) return
       const demo = findDemo(groups, demoKey)
       // A key the catalog does not hold (or no catalog at all) has nothing to show.
-      if (demo) setName(demo.name)
+      if (demo?.game) onGame(demo.game)
+      else if (demo) setName(demo.name)
       else onExit()
     })
     return () => {
       alive = false
     }
-  }, [demoKey, onExit])
+  }, [demoKey, onExit, onGame])
 
   return (
     <div className="jam-shell jam-demo">
