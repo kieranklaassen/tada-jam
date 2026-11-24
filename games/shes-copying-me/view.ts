@@ -3,7 +3,7 @@ import { BACKDROP, TIERS, type Tier } from './config'
 import { Bits } from './fx'
 import { handPose, type Guidance, type HandPose } from './guidance'
 import { paintGuest, type Look } from './guestArt'
-import { AUNT, BELL, GUEST, MIDDLE, PANE, PANES, PENDULUM, outward, toPoint } from './layout'
+import { AUNT, BELL, GUEST, MIDDLE, PANE, PANES, PENDULUM, outward, toPoint, zoneAt } from './layout'
 import { guestPose } from './motion'
 import { demoMove, type Party, type PartyEvent } from './party'
 import { paintFrame, paintPane, paintRoom, paintTable } from './room'
@@ -51,7 +51,7 @@ export class View {
 
   private spout(party: Party, side: Side): Point {
     const p = party.handPoint(side)
-    return { x: p.x + outward(side) * 62, y: p.y + 12 }
+    return { x: p.x + outward(side) * 30, y: p.y + 48 }
   }
 
   /** The room, painted at the density it is shown at. */
@@ -97,6 +97,7 @@ export class View {
       paintAunt(g, this.auntView(party, side, time))
       g.restore()
     }
+    this.cat(g, party, time)
     g.drawImage(this.table!.canvas, MIDDLE - 320, 650, (this.table!.canvas as HTMLCanvasElement).width / scale, (this.table!.canvas as HTMLCanvasElement).height / scale)
     this.guests(g, party, time)
     this.tableThings(g, party, time, glow)
@@ -207,7 +208,7 @@ export class View {
     const held = party.state.held.indexOf(thing)
     const side: Side = held >= 0 ? (held as Side) : body.x < MIDDLE ? 0 : 1
     const show = party.aunts[side]
-    const doing = held >= 0 ? { act: show.thing === thing ? show.act : null, t: show.t } : { act: null, t: 9 }
+    const doing = held >= 0 ? { act: show.thing === thing ? show.act : null, t: show.t, over: zoneAt(party.hands[side]) === 'tip' && !party.hands[side].quiet } : { act: null, t: 9 }
     const s = outward(side)
     g.save()
     g.translate(body.x, body.y)
@@ -221,7 +222,7 @@ export class View {
       g.globalAlpha = 1
     }
     g.rotate(body.tilt * s + (held >= 0 ? tipOf(thing, doing) : 0))
-    if (held >= 0) g.translate(thing === 'fan' ? 14 : 42, thing === 'duster' ? -22 : -4)
+    if (held >= 0) g.translate(thing === 'fan' ? 10 : 24, thing === 'duster' ? -22 : -4)
     else g.scale(0.86, 0.86)
     paintThing(g, thing, doing, time)
     g.restore()
@@ -318,6 +319,66 @@ export class View {
       g.stroke()
       g.globalAlpha = 1
     }
+  }
+
+  /** The sofa's cat: asleep between the aunts, one ear for everything, one eye for a finger. */
+  private cat(g: G, party: Party, time: number): void {
+    const start = Math.exp(-party.catPoke * 1.6), ear = Math.exp(-Math.min(party.seats[0].t < 0 ? 9 : party.seats[0].t, party.seats[1].t < 0 ? 9 : party.seats[1].t, party.catPoke) * 3)
+    const breath = Math.sin(time * 1.5) * 3
+    const duck = party.scene?.kind === 'trade' ? 22 * bump(party.scene.t / 1.6) : 0
+    g.save()
+    g.translate(MIDDLE, 604 + duck)
+    g.scale(1 + breath * 0.003, 1 - breath * 0.004 + start * 0.12)
+    g.save()
+    g.translate(72, -8)
+    g.rotate(Math.sin(time * 1.1) * 0.12 + start * Math.sin(time * 22) * 0.2)
+    soft(g, [[-30, 16], [10, 4], [34, -20], [52, -18], [46, 8], [8, 34], [-30, 34]])
+    cell(g, '#f0a04b', 4)
+    g.restore()
+    soft(g, [[-84, 34], [-78, -14], [-30, -48], [34, -46], [82, -10], [86, 34], [0, 42]])
+    cell(g, dye(g, '#f0a04b', 92), 4.5)
+    for (const x of [-4, 24, 52]) {
+      g.beginPath()
+      g.moveTo(x, -44 + Math.abs(x - 10) * 0.2)
+      g.quadraticCurveTo(x + 10, -24, x + 2, -8)
+      g.strokeStyle = '#c9622a'
+      g.lineWidth = 8
+      g.stroke()
+      gutta(g, 2.4)
+    }
+    g.save()
+    g.translate(-44, -6 - start * 14)
+    for (const s of [-1, 1]) {
+      g.save()
+      g.translate(s * 26, -24)
+      g.rotate(s * 0.2 + (s > 0 ? ear * Math.sin(time * 40) * 0.5 : 0))
+      g.beginPath()
+      g.moveTo(-14, 6)
+      g.lineTo(s * 6, -26)
+      g.lineTo(14, 6)
+      g.closePath()
+      cell(g, '#f0a04b', 4)
+      g.restore()
+    }
+    blob(g, 0, 0, 44, 36)
+    cell(g, dye(g, '#f6b562', 50), 4)
+    for (const s of [-1, 1]) {
+      if (start > 0.25 && s > 0) {
+        blob(g, s * 17, -4, 9, 10)
+        cell(g, '#d7f0a0', 3)
+        blob(g, s * 17, -4, 3, 8)
+        g.fillStyle = '#2a1030'
+        g.fill()
+      } else {
+        g.beginPath()
+        g.arc(s * 17, -7, 9, 0.3, Math.PI - 0.3)
+        gutta(g, 3.4)
+      }
+    }
+    blob(g, 0, 8, 6, 4.5)
+    cell(g, '#e2607a', 2.4)
+    g.restore()
+    g.restore()
   }
 
   private hankies(g: G, party: Party): void {

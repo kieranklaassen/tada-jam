@@ -372,7 +372,7 @@ export function paintArm(g: G, side: Side, hand: Hand, time: number, lit: number
     g.quadraticCurveTo(e.x * 1.15 - (sx + hx) * 0.075, e.y * 1.15 - (sy + hy) * 0.075, hx, hy)
   }, mix(DRESS[side], '#ffffff', 0.1), width)
   blob(g, sx - 2, sy - 4, width * 0.86, width * 0.74)
-  cell(g, dye(g, mix(DRESS[side], '#ffffff', 0.14), width), 4)
+  cell(g, dye(g, mix(DRESS[side], '#ffffff', 0.14), width * 1.9), 4)
   const a = Math.atan2(hy - e.y, hx - e.x)
   g.save()
   g.translate(hx, hy)

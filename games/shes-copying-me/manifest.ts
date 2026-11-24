@@ -6,6 +6,6 @@ export const shesCopyingMeManifest = {
   name: 'She\'s Copying Me',
   ageBand: [3, 7],
   permissions: ['storage'],
-  iconIdentity: { family: 'learn', contrast: 'paper' },
+  iconIdentity: { family: 'play', contrast: 'paper' },
   windowShape: 'full',
 } as const satisfies CartridgeManifest

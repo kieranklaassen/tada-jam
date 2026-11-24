@@ -186,9 +186,9 @@ function dog(g: G, p: Paint, pose: Pose, look: Look, asking: number): void {
   g.rotate(pose.part * 0.08)
   for (const s of [-1, 1]) {
     g.save()
-    g.translate(s * 44, -24)
-    g.rotate(s * (0.35 - pose.part * 0.5))
-    soft(g, [[-16, -10], [16, -8], [24, 44], [6, 66], [-18, 52]])
+    g.translate(s * 52, -30)
+    g.rotate(-s * (0.3 + pose.part * 0.9))
+    soft(g, [[-18, -10], [18, -8], [26, 46], [4, 74], [-24, 50]])
     cell(g, p('#b9692f'), 4)
     g.restore()
   }

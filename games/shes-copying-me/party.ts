@@ -1,6 +1,6 @@
 import { Detector } from './gesture'
 import { Echo } from './echo'
-import { GUEST, HOME, MEETING, onAunt, place, placeSide, reach, rings, sideOf, targetAt, toPoint, toSpot, zoneAt, type Spot, type Target } from './layout'
+import { GUEST, HOME, MEETING, onAunt, onCat, place, placeSide, reach, rings, sideOf, targetAt, toPoint, toSpot, zoneAt, type Spot, type Target } from './layout'
 import { BEAT_SECONDS, THINGS, effectOf, hairAfter, lipsAfter, moodOf, nextBeat, other, outcomeOf, type Act, type Antic, type Coat, type Effect, type Guest, type Mood, type Side, type Thing } from './rules'
 import type { Point } from './stage'
 import type { GameState } from './state'
@@ -65,6 +65,7 @@ export type PartyEvent =
   | { type: 'pendulum'; tapped: boolean }
   | { type: 'bell'; rung: boolean }
   | { type: 'miss'; side: Side }
+  | { type: 'cat' }
   | { type: 'notice'; side: Side }
   | { type: 'scene'; kind: SceneKind }
   | { type: 'cue'; kind: SceneKind; cue: number }
@@ -104,6 +105,8 @@ export class Party {
   swing = 0
   pendulumPush = 0
   bellRing = 9
+  /** Seconds since a finger was on the sofa's cat. */
+  catPoke = 9
   /** Seconds since each guest came in at the door side. */
   arrived: [number, number] = [9, 9]
   paneTap: [number, number] = [9, 9]
@@ -195,6 +198,10 @@ export class Party {
       case 'hand': {
         const hand = this.hands[side]
         const onHand = this.near(side, at)
+        if (onCat(at)) {
+          this.catPoke = 0
+          this.queue.push({ type: 'cat' })
+        }
         hand.mode = 'held'
         hand.busy = true
         hand.quiet = false
@@ -411,7 +418,8 @@ export class Party {
       }
     }
     const effect = effectOf(thing, act)
-    if (!effect) return
+    // Two guests taken up with each other are out of reach until they have done.
+    if (!effect || (this.scene && this.scene.kind !== 'trade' && this.scene.kind !== 'tidy')) return
     const guest = state.seated[side]
     const was = state.coats[guest]
     const { coat, antic } = outcomeOf(was, effect)
@@ -438,6 +446,7 @@ export class Party {
     else if (coat === 'stiff') this.begin('statues', from)
     else if (coat === 'bubble') {
       state.seated = [from[1], from[0]]
+      this.seats.reverse()
       this.begin('bubbles', from)
     }
   }
@@ -461,6 +470,7 @@ export class Party {
     this.swing += (dt * Math.PI) / Math.max(0.3, wait)
     this.pendulumPush = Math.max(0, this.pendulumPush - dt * 1.4)
     this.bellRing += dt
+    this.catPoke += dt
     for (const side of [0, 1] as const) {
       this.arrived[side] += dt
       this.paneTap[side] += dt

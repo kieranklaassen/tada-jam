@@ -27,6 +27,16 @@ function leaf(g: G, x: number, y: number, length: number, turn: number, colour: 
   g.restore()
 }
 
+function flower(g: G, x: number, y: number, r: number): void {
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2
+    blob(g, x + Math.cos(a) * r * 0.72, y + Math.sin(a) * r * 0.72, r * 0.6, r * 0.46, a)
+    cell(g, i % 2 ? '#7d4f9a' : '#6a4790', 2)
+  }
+  blob(g, x, y, r * 0.34, r * 0.34)
+  cell(g, '#c79a4a', 2)
+}
+
 function vine(g: G, x: number, flip: 1 | -1): void {
   g.beginPath()
   g.moveTo(x, 600)
@@ -37,7 +47,8 @@ function vine(g: G, x: number, flip: 1 | -1): void {
   for (let i = 0; i < 9; i++) {
     const k = i / 8, y = 560 - k * 500
     const sx = x + Math.sin(k * 5.4) * 30 * flip
-    leaf(g, sx, y, 62 - k * 18, (i % 2 ? -0.5 : Math.PI + 0.5) - 0.3 * flip, tints[i % 4])
+    leaf(g, sx, y, 78 - k * 18, (i % 2 ? -0.5 : Math.PI + 0.5) - 0.3 * flip, tints[i % 4])
+    if (i % 3 === 1) flower(g, sx + (i % 2 ? -26 : 26), y - 16, 25 - k * 5)
   }
 }
 
@@ -69,10 +80,13 @@ export function paintPane(g: G, side: 0 | 1): void {
   g.rect(x, y, PANE.width, PANE.height)
   g.fillStyle = '#8fd3dc'
   g.fill()
+  g.save()
+  g.clip()
   soft(g, [[x - 30, y + 150], [x + 30, y + 104], [x + 80, y + 128], [x + 150, y + 96], [x + 170, y + 210], [x - 40, y + 210]])
   cell(g, '#7bbf6a', 2.5)
   blob(g, side ? x + 88 : x + 30, y + 40, 19, 19)
   cell(g, '#ffd873', 2.5)
+  g.restore()
 }
 
 export function paintRoom(g: G): void {
@@ -125,6 +139,21 @@ export function paintRoom(g: G): void {
   g.translate(MIDDLE, 440)
   soft(g, [[-452, 210], [-460, 10], [-420, -92], [-330, -120], [-250, -150], [-160, -104], [-70, -60], [0, -50], [70, -60], [160, -104], [250, -150], [330, -120], [420, -92], [460, 10], [452, 210]])
   cell(g, dye(g, '#215a3f', 470), 5)
+  g.save()
+  g.clip()
+  for (let row = 0; row < 5; row++) for (let i = -7; i <= 7; i++) {
+    const x = i * 76 + (row % 2 ? 38 : 0), y = -92 + row * 64
+    g.beginPath()
+    g.moveTo(x, y - 34)
+    g.quadraticCurveTo(x + 36, y - 10, x + 38, y)
+    g.quadraticCurveTo(x + 30, y + 22, x, y + 34)
+    g.quadraticCurveTo(x - 30, y + 22, x - 38, y)
+    g.quadraticCurveTo(x - 36, y - 10, x, y - 34)
+    g.fillStyle = (i + row) % 2 ? '#1f5a41' : '#286848'
+    g.fill()
+    gutta(g, 1.8)
+  }
+  g.restore()
   for (const s of [-1, 1]) {
     for (let i = 0; i < 4; i++) {
       blob(g, s * (70 + i * 108), 30 - (i === 2 ? 80 : 0) + i * 4, 12, 12)

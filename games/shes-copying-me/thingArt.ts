@@ -5,13 +5,13 @@ import { GOLD, INK, blob, bump, cell, clamp, dye, line, soft, type G } from './s
 // outward (+x, toward the guest). `act` and `t` are what the hand that holds
 // it is doing, and how long since.
 
-export type Doing = { act: Act | null; t: number }
+export type Doing = { act: Act | null; t: number; over?: boolean }
 
 const GROW: Record<Act, number> = { tip: 0.06, dab: 0.1, wave: 0.12, show: 0.2, self: 0.04 }
 
 /** How far a thing is tipped by what its hand does. */
 export function tipOf(thing: Thing, doing: Doing): number {
-  if (doing.act === 'tip') return (thing === 'fan' ? 1.5 : thing === 'horn' ? 0.95 : 1.15) * clamp(doing.t < 0.9 ? (doing.t + 0.12) * 6 : 1 - (doing.t - 0.9) * 4)
+  if (doing.act === 'tip') return (thing === 'fan' ? 1.5 : thing === 'horn' ? 0.95 : 1.15) * clamp(doing.t < 0.9 || doing.over ? (doing.t + 0.12) * 6 : 1 - (doing.t - 0.9) * 4)
   if (doing.act === 'dab') return 0.5 * bump(doing.t / 0.7)
   if (doing.act === 'self') return -0.8 * bump(doing.t / 1.2)
   if (doing.act === 'wave') return 0.6 * Math.sin(doing.t * 22) * clamp(0.8 - doing.t)

@@ -99,3 +99,8 @@ export function onAunt(at: Point): boolean {
 export function rings(at: Point): boolean {
   return Math.abs(at.x - BELL.x) < 170 && at.y > 380 && at.y < BELL.y - 50
 }
+
+/** The cat on the sofa, behind the table. It answers a finger as itself, and the hand goes there all the same. */
+export function onCat(at: Point): boolean {
+  return Math.abs(at.x - MIDDLE) < 90 && at.y > 552 && at.y < 600
+}

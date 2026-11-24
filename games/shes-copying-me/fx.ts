@@ -84,7 +84,7 @@ export class Bits {
     if (event.type === 'act') {
       const out = outward(event.side)
       const aim = event.act === 'self' || event.act === 'show' ? (out > 0 ? 0 : Math.PI) : event.act === 'tip' ? Math.PI / 2 : out > 0 ? 0.2 : Math.PI - 0.2
-      const floor = event.act === 'tip' && event.thing !== 'horn' ? 650 : 770
+      const floor = event.act === 'tip' && event.thing !== 'horn' ? 500 : 770
       const at = event.act === 'tip' || event.act === 'wave' ? spout(event.side) : event.at
       this.throwAt(THROWS[event.thing][event.act], at, event.thing === 'horn' && event.act === 'tip' ? (out > 0 ? 0 : Math.PI) : aim, most, floor)
     } else if (event.type === 'answer') {

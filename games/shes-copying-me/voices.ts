@@ -134,6 +134,8 @@ export function soundOf(event: PartyEvent): Note[] {
       return event.rung ? run(3, 0.16, () => t(1760, 0.12, 0.003, 0.5)) : [t(1760, 0.09, 0.003, 0.35)]
     case 'miss':
       return [n(1000, 0.18, 0.002, 0.06, { q: 0.7 })]
+    case 'cat':
+      return [...run(4, 0.07, () => n(160, 0.2, 0.02, 0.05, { q: 3 })), t(520, 0.06, 0.04, 0.2, { glideTo: 690 })]
     case 'notice':
       return [t(330, 0.07, 0.04, 0.16, { wave: 'triangle', glideTo: 440 })]
     case 'scene':
