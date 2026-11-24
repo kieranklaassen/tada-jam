@@ -5,7 +5,7 @@ Written before any game code, and checked by someone who did not write it. A hug
 
 ## The band and its age rule
 
-Ages 4 to 8, so the youngest is 4: the 3 to 4 row of the cue table. No text, numeral, or icon that has to be decoded to get on; one next act offered at a time; tap and drag only. The only pictures are of the very things on screen: a thought holds a pool of the colour, the bare shape of a sock, a patch of spots, or a pair of eyes. `ctx.childAge` sets only which wish is dreamed first: 6 and older start at the fourth, everyone else and `null` at the first. A saved wish wins.
+Ages 4 to 8, so the youngest is 4: the 3 to 4 row of the cue table. No text, numeral, or icon that has to be decoded to get on; one next act offered at a time; tap and drag only. The only pictures are of the very things on screen. A thought holds a pool of the colour, the bare shape of a sock, hat, teapot or animal, a patch of spots, a pair of eyes, or, for everything, all the kinds heaped up; a spared thing is not pictured, it is seen to stay. A wish shows its place with those who must be in it, and those who must stay dry standing small beside it. No cross and no sign. `ctx.childAge` sets only which wish is dreamed first: 6 and older start at `queen-soup`, 5 and younger at `king-soup`. `null` gives `king-soup`. A saved wish wins.
 
 ## The toy
 
@@ -16,13 +16,13 @@ Carry a thing with a finger and let it go over the soup, the bath or the bed. Th
 | | soup | bath | bed | on a person | poked |
 | --- | --- | --- | --- | --- | --- |
 | sock | plop, hangs over the rim and drips | slap, fills like a water balloon and squirts | flump, tucked up to its toe | worn on the nose, a muffled honk | a rubbery twang |
-| hat | floats and turns like a boat, hollow tock | drums under the drips, pat-pat | pops up as a nightcap, fwip | worn, a proud hum | a hollow tock |
-| teapot | gulps, glug in three falling notes | whistles bubbles | snores through the spout, a whistling snore | worn, spout over the eye, clink | a clink |
-| cat, hen, piglet | yowls, paddles; clucks; grunts | flat wet ears; puffed feathers; pink | each its own snore | sits on the lap | each its own voice |
-| king, queen, grandmother | harrumphs; shrieks then tastes it; cackles | sings low; gasps high; blows foam | deep, whistling and giggling snores | (people are not put on people) | each its own voice and gesture |
-| the butler | stands to attention in it, salutes | a rubber-duck squeak | stiff as a board | (nothing: he is the one who serves) | a bow, gloves first |
+| hat | floats and turns like a boat, hollow tock | drums under the drips, pat-pat | pops up as a nightcap, fwip | worn, a proud hum | a hollow tock with a puff of dust |
+| teapot | gulps, glug in three falling notes | whistles bubbles | snores through the spout, a whistling snore | worn, spout over the eye, a hum and a clink | rings its lid |
+| cat, hen, piglet | yowls and paddles; clucks; grunts | a flat-eared moan; a puffed squawk; a happy squeal | low, whirring and snuffling snores | sits on the head a moment, in its own voice | miaow; surprised bok; oink |
+| king, queen, grandmother | harrumphs; shrieks then tastes it; cackles | sings low; gasps high; blows foam | deep, whistling and giggling snores | let go on another person: both cry out and the one let go bounces home | huffs; a sharp ooh, neck out; hee-hee, teeth out |
+| the butler (he puts himself there) | stands to attention and salutes | a rubber-duck squeak | stiff as a board, one long creak | a thing let go on him: he tries it on with a pleased hum | a bow, gloves first, hm-hm |
 
-On day 15 the child picks the two things that give him exactly the rule she wants: spotted and blue for the queen alone, two animals for everyone alive, two things with nothing in common for the whole house, then pulls the grandmother out so that only she stays dry.
+On day 15 the child picks the two things that give him exactly the rule she wants: the blue sock and the hen, so that the queen is the only one he fetches, two animals for everyone alive, two things with nothing in common for the whole house, then pulls the grandmother out so that only she stays dry.
 
 ## The representation
 
@@ -41,23 +41,23 @@ There is no wrong example. An idea that is not the one she meant is carried out 
 
 ## The designed order, and what is stored
 
-The learner is one fixed opinion: colour first, then what sort of thing, then spots, then being alive. One example gives one feature; two or more give all they share; nothing shared gives everything. Pull out something he fetched and, with one example, he takes the next feature that leaves it out; if none does, he leaves that one thing alone.
+The learner is one fixed opinion: colour first, then what sort of thing, then spots, then being alive. One example gives one feature; two or more give all they share; nothing shared gives everything. Each animal and each person is the only one of its kind, so any two of them of different colours share only being alive. The butler has no colour and no spots; he is alive. Pull out something he fetched and it is remembered at that place as left out. With one example he takes the first feature, in his order, that leaves out everything left out there, then the first pair, then all; if none does, he goes back to his first feature and spares those things. With two or more examples his idea stays what they share and he spares what was left out. Putting a left-out thing in there by hand makes it an example. Pulling out an example takes the example away; when the last one is gone the idea goes, and what was left out there is forgotten. Where two ideas claim one thing: the child's own example never moves; otherwise the place acted on last has it. The butler's own place is decided the same way. A person let go in another place is an example there, like any other thing. Let go again in the place it came from, a thing has not been pulled out.
 
 | Examples | His idea |
 | --- | --- |
 | red sock | red |
 | red sock, blue sock | socks |
 | red sock, red hat with spots | red |
-| red sock, red king's neighbour the piglet | red |
+| red sock, piglet | red |
 | blue sock with spots, red hat with spots | spots |
 | blue sock with spots, the hen | blue with spots |
 | cat, piglet | alive |
 | red sock, yellow teapot | everything |
 | red sock, king pulled out | socks |
 
-Stored, all rebuilt defensively: `v`; `at` (where each thing ends up, by stable id); `examples` and `nots` per place, in order; `butler` (the place he has put himself, or none); `wish` (a stable id in the list), `dreaming` (a wish is on show), `begun` (the first idea has been had). A thing in the hand is saved where it came from. The butler's errand is a view of the state: on load it is done. Worn things are short-lived and are home on load.
+Stored, all rebuilt defensively: `v`; `examples` and `nots` per place, in order; `order` (the places by when he last thought about them); `wish` (a stable id in the list), `dreaming` (a wish is on show), `begun` (the first idea has been had). Where each thing and the butler end up follows from these and is never stored. A thing in the hand is saved where it came from. The butler's errand is a view of the state: on load it is done. Worn things are short-lived and are home on load. The soup's tint and the foam follow from what is in them; splashes and drips are short-lived and gone on load.
 
-Wishes in order: `king-soup`, `queen-bath`, `gran-bed`, `king-bath-hats-dry`, `queen-soup`, `butler-bath`, `king-soup-queen-bath`, `all-bed`, `queen-bed-king-dry`, `all-soup-gran-dry`, then round again. A wish names who must be where and who must be at home. The next wish is dreamed when the child pokes the grandmother or pulls the bell, never by itself. A wish met moves on one; one not met never moves and nothing is said about it. A wish already true when it is dreamed counts as a joke already told: the next one that is not true is taken.
+Wishes in order: `king-soup`, `queen-bath`, `gran-bed`, `queen-soup`, `butler-bath`, `king-soup-queen-bath`, `all-bed`, `king-bath-hat-dry`, `all-soup-gran-dry`, `three-ways`, then round again. A wish names who must be where and who must be at home; nothing else in the house matters to it. "All" is the king, the queen and the grandmother. The first wish is dreamed when the first idea has been carried out (`begun` and `dreaming` are saved with the act that causes that idea). Each later one is dreamed when the child pokes the grandmother or pulls the bell, never by itself. Between wishes she holds an empty bubble open and looks from place to place. The bell keeps an unmet wish on show. A wish met moves on one; one not met never moves and nothing is said about it. A wish already true when it is dreamed counts as a joke already told: the next one that is not true is taken.
 
 ## The characters and their fixed tastes
 
@@ -72,8 +72,8 @@ Nobody's feeling is about the child, and nobody is hurt. The soup is cold: it ne
 ## The scenes
 
 - **An idea.** Cause: a thing put in or pulled out. Beats: freeze with brows flying (0.3 s), the bubble shows the examples (0.7 s), what they share stays and the rest falls away (0.6 s), gloves up, off he goes. Filled with the actual examples. A touch on anything is answered meanwhile, and a new example starts a new idea from where he stands. Saved as the outcome when the thing lands.
-- **The wish comes true.** Cause: the shown house meets the wish. 5 s: the grandmother sees it, shakes, cackles, her chair walks, the bubble pops. Saved when it starts (`wish` moved on, `dreaming` off). Any touch ends it. Nothing replays on load.
-- **He includes himself.** Cause: the rule is alive or everything. He looks at his bubble, at himself, straightens his tie, and jumps. He stays in until the next act.
+- **The wish comes true.** Cause: the shown house meets the wish. 5 s: the grandmother sees it, shakes, cackles, her chair walks, the bubble pops. Saved with the act that makes it certain: from that act on, a save holds `wish` moved on and `dreaming` off. If the child changes the outcome before he has carried it out, the scene does not play and the next save holds the old `wish`, dreaming, again. Any touch ends it. Nothing replays on load.
+- **He includes himself.** Cause: the rule is alive or everything. He looks at his bubble, at himself, straightens his tie, and jumps. He stays in until the next act. Then he climbs out to carry, and jumps back in last if an idea still includes him. A drag on him is answered as a poke.
 - **Tidying.** Cause: the bell rope pulled down. Everyone and everything hops home dripping; the ideas pop. Open play has no other ending; the house stays as it is as long as the child likes.
 
 ## The records
