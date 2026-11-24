@@ -406,6 +406,8 @@ const PARTS: Record<Who, Parts> = {
   },
 }
 
+const PUPPET_COAT: Record<Who, number> = { goose: 0.6, pig: 0.55, granny: 0.22, grandpa: 0.22, moon: 0.45 }
+
 /** Where the goose's head is, for a hat and a throw. */
 function hatOf(who: Who, pose: Pose): readonly [number, number, number] {
   if (who !== 'goose') return PARTS[who].hat
@@ -444,7 +446,8 @@ export function paintFigure(g: G, who: Who, pose: Pose, worn: Worn, t: number, w
     } else if (coat === 'feathers') tufts(g, parts.tufts(pose), parts.middle[0], parts.middle[1], k, who === 'moon' ? 22 : 30)
   }
   if (pose.coated < 1 && was !== 'bare') show(was, worn.coat === 'bare' ? 1 - pose.coated : 1)
-  if (worn.coat !== 'bare') show(worn.coat, pose.coated)
+  // A puppet is small: its coat stops above the face, so that it can be told who it is.
+  if (worn.coat !== 'bare') show(worn.coat, pose.coated * (puppet && worn.coat !== 'feathers' ? PUPPET_COAT[who] : 1))
   parts.face(g, pose, worn.coat)
   if (worn.pants) {
     const [hx, hy, w] = hatOf(who, pose)

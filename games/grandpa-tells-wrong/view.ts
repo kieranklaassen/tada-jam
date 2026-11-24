@@ -5,11 +5,11 @@ import { handPose, type Guidance, type HandPose } from './guidance'
 import type { Point } from './input'
 import { BAND, COCK, CROWN, LAMP, LIFT, NEARER, SPOT, SUN, THING_AT, pictureAt } from './layout'
 import { Loom, dye, type G, type MakeSheet } from './loom'
-import { ACT, HIT, actPose, idlePose, type Stance } from './moves'
-import { DUSK_LASTS, HAPPENS, MORNING_LASTS, TELL, UNRAVEL, demoMove, type Play, type PlayEvent } from './play'
+import { ACT, HIT, PROTEST, actPose, idlePose, type Stance } from './moves'
+import { CARRY, DUSK_LASTS, HAPPENS, MORNING_LASTS, TELL, UNRAVEL, WICK, demoMove, type Play, type PlayEvent } from './play'
 import { paintThing } from './props'
 import { fit } from './stage'
-import { BARE, THINGS, YARD, after, type Coat, type Thing, type Who, type World, type Worn } from './tale'
+import { BARE, THINGS, YARD, after, same, type Coat, type Thing, type Who, type World, type Worn } from './tale'
 import { SKY, paintCock, paintLamp, paintSun, paintYard, type Hour } from './yard'
 
 // One frame of the cloth from the evening as it stands.
@@ -151,23 +151,26 @@ export class View {
     this.sky(g, play, t)
     this.cock(g, play, t)
     const scene = play.scene
-    if (play.evening && !play.save.finished) {
+    const wick = scene?.kind === 'lamp' && scene.t < WICK
+    if (play.evening && (!play.save.finished || wick)) {
       // Its light on the wall, in two tones.
       blob(g, LAMP.x, LAMP.y + 14, 104 + 4 * Math.sin(t * 5), 112 + 4 * Math.sin(t * 5), dye('ochre', 0))
       blob(g, LAMP.x, LAMP.y + 14, 68, 76, dye('ochre', 1))
     }
-    paintLamp(g, play.evening && !play.save.finished, jolt(play.lampPoked, 9, 2) * 0.3 + (play.evening && !play.night ? Math.sin(t * 1.6) * 0.04 : 0))
+    paintLamp(g, play.evening && (!play.save.finished || wick), jolt(play.lampPoked, 9, 2) * 0.3 + (play.evening && !play.night ? Math.sin(t * 1.6) * 0.04 : 0))
     if (scene?.kind === 'lamp' && scene.t > UNRAVEL[0] && scene.t < UNRAVEL[1]) this.unravel(g, play, scene.t)
     else this.people(g, play, play.shown)
     this.band(g, play, t)
     this.arms(g, play, t)
-    if (scene?.kind === 'lamp' && scene.t < UNRAVEL[0] + 0.2) {
-      g.globalAlpha = 0.62 * bump(scene.t / (UNRAVEL[0] + 0.2))
+    if (scene?.kind === 'lamp' && scene.t > WICK && scene.t < UNRAVEL[0] + 0.3) {
+      g.globalAlpha = 0.62 * bump(span(scene.t, WICK - 0.2, UNRAVEL[0] + 0.3))
       g.fillStyle = dye('indigo', 0)
       g.fillRect(0, 0, 1180, 820)
       g.globalAlpha = 1
     }
     this.emptied(g, play)
+    if (scene?.kind === 'lamp') this.carry(g, play, scene.t)
+    this.protests(g, play)
     for (const thing of THINGS) {
       const at = play.thingAt(thing)
       if (at.held) this.thing(g, thing, at.at.x, at.at.y, at.tip, 1.08, Math.sin(t * 7) * 0.05)
@@ -259,6 +262,7 @@ export class View {
       look: this.look(play, who),
       under: play.over === who ? play.held!.thing : null,
       poked: play.poked[who],
+      accused: play.accused.includes(who) ? play.protestT : 99,
       protest: play.wronged.includes(who) ? play.protestT : 99,
       stare: play.stare < 0 ? 9 : play.stare,
     }
@@ -293,6 +297,15 @@ export class View {
 
   /** What is on Grandpa's mind shows in his moustache. */
   private grandpa(play: Play, pose: Pose, acting: boolean, asleep: boolean): void {
+    if (play.scene?.kind === 'morning' && play.shown.grandpa.coat !== 'bare') {
+      // He finds what he told himself into, and goes back to sleep.
+      const k = bump(span(play.scene.t, 0.3, 2.1))
+      pose.eyes = Math.max(pose.eyes, 1.3 * k)
+      pose.look = { x: 0, y: 1 }
+      pose.brow = k
+      pose.quirk = 1.2 * k * Math.sin(play.scene.t * 8)
+      return
+    }
     if (asleep) {
       // One eye opens at a splash.
       const stirred = YARD.some((who) => { const act = play.acts[who]; return act && act.t > HIT && act.t < HIT + 0.5 })
@@ -336,6 +349,11 @@ export class View {
     if (play.remembered >= 0 && play.remembered < 1.6) { rx = sx + 24; ry = sy - 170 + 10 * jolt(play.remembered - 0.2, 20, 4) }
     limb(g, [sx + 92, sy], [sx + 168, sy + 40], [rx, ry], sleeve, 40)
     blob(g, rx, ry, 26, 24, dye('rose', 2))
+    if (play.scene?.kind === 'lamp' && play.scene.t < UNRAVEL[0]) {
+      const k = ease(play.scene.t / WICK) * (1 - ease(span(play.scene.t, WICK + 0.1, UNRAVEL[0])))
+      rx = lerp(rx, LAMP.x - 6, k)
+      ry = lerp(ry, LAMP.y + 10, k)
+    }
     // The left, with the puppet on it: a sock with eyes.
     let lx = sx - 128, ly = sy + 84
     if (!asleep) {
@@ -351,6 +369,7 @@ export class View {
     const low = clamp((ly - sy - 120) / 120)
     limb(g, [sx - 92, sy], [lerp(Math.min(sx - 176, (sx + lx) / 2 - 20), sx - 250, low), lerp(Math.min(sy + 40, ly - 40), sy + 330, low)], [lx, ly], sleeve, 40)
     const flap = play.telling >= 0 ? 0.5 + 0.5 * Math.sin(t * 15) : asleep ? 0.25 + 0.25 * Math.sin(t * 1.5) : 0.3 + 0.3 * Math.sin(t * 4)
+    if (play.scene?.kind === 'lamp' && play.scene.t > UNRAVEL[0] && play.scene.t < UNRAVEL[1]) return
     this.sock(g, lx, ly, flap, asleep)
   }
 
@@ -486,7 +505,7 @@ export class View {
     // The puppet.
     const bare: Worn = { ...BARE }, done = after(bare, event.what)
     const acting = age < ACT
-    const stance: Stance = { who: event.who, worn: bare, t: 0, asleep: false, asking: false, look: { x: 0, y: 0 }, under: null, poked: 99, stare: 99, protest: 99 }
+    const stance: Stance = { who: event.who, worn: bare, t: 0, asleep: false, asking: false, look: { x: 0, y: 0 }, under: null, poked: 99, stare: 99, protest: 99, accused: 99 }
     let pose = acting ? actPose({ ...stance, t }, event.what, age, false) : restPose()
     if (event.who === 'goose' && !acting) pose.quirk = 0.2
     const wear = acting && age < HIT ? bare : done
@@ -516,6 +535,42 @@ export class View {
     g.restore()
   }
 
+  /** A picture leaves the band and goes to whoever it is about, and then it happens. */
+  private carry(g: G, play: Play, now: number): void {
+    for (let i = 0; i < play.count; i++) {
+      const s = span(now, HAPPENS[i] - CARRY, HAPPENS[i])
+      if (s <= 0 || s >= 1) continue
+      const box = pictureAt(i, play.count), to = play.crown(play.save.told[i].who), k = ease(s), size = 1 + 0.5 * bump(s) - 0.45 * k
+      g.save()
+      g.translate(lerp(box.x + box.width / 2, to.x, k), lerp(box.y + box.height / 2, to.y - 30, k) - 70 * bump(s))
+      g.rotate(0.06 * Math.sin(s * 9))
+      g.scale(size, size)
+      g.translate(-box.x - box.width / 2, -box.y - box.height / 2)
+      this.picture(g, play, i, play.time)
+      g.restore()
+    }
+  }
+
+  /** What really happened, over the head of whoever protests. */
+  private protests(g: G, play: Play): void {
+    const t = play.protestT
+    if (t > PROTEST + 0.7) return
+    const k = Math.min(ease(t / 0.2), 1 - ease(span(t, PROTEST + 0.4, PROTEST + 0.7)))
+    play.save.day.forEach((event, i) => {
+      if (k <= 0 || i >= play.up || !play.wronged.includes(event.who) || same(event, play.save.told[i])) return
+      const at = play.crown(event.who), x = clamp(at.x + (event.who === 'goose' ? 60 : 0), 130, 720), y = Math.max(96, at.y - 96)
+      blob(g, lerp(x, at.x, 0.7), at.y - 14, 9 * k, 8 * k, dye('cream', 3))
+      blob(g, lerp(x, at.x, 0.4), at.y - 34, 14 * k, 11 * k, dye('cream', 3))
+      g.save()
+      g.translate(x, y)
+      g.scale(k, k)
+      blob(g, 0, 0, 104, 66, dye('walnut', 1))
+      blob(g, 0, 0, 98, 60, dye('cream', 3))
+      this.thing(g, event.what, 0, -8, event.what === 'pants' ? 0 : 0.5, 0.72, 0)
+      g.restore()
+    })
+  }
+
   // --- The lamp's work -------------------------------------------------------
 
   /** The yard comes undone row by row, back to its morning. */
@@ -536,13 +591,13 @@ export class View {
     this.one(g, play, 'moon', play.save.base.moon, 0)
     g.restore()
     // The loose weft, pulled out to one side and back.
-    const out = Math.sin(now * 24)
+    const out = Math.sin(now * 9)
     for (let i = 0; i < 5; i++) {
       const colour = [dye('madder', 2), dye('cream', 3), dye('indigo', 2), dye('ochre', 2), dye('rose', 2)][i]
-      line(g, Array.from({ length: 24 }, (_, n) => [n * 52, edge + i * 7 - 14 + Math.sin(n * 1.3 + now * 18 + i) * 7] as const), colour, 6)
+      line(g, Array.from({ length: 24 }, (_, n) => [n * 52, edge + i * 8 - 16 + Math.sin(n * 1.3 + now * 18 + i) * 4] as const), colour, 6)
     }
-    blob(g, 590 + out * 560, edge, 26, 20, dye('walnut', 2))
-    shape(g, [[590 + out * 560 - 60, edge], [590 + out * 560, edge - 16], [590 + out * 560 + 60, edge], [590 + out * 560, edge + 16]], dye('walnut', 3))
+    // It is his puppet that pulls it out.
+    this.sock(g, 590 + out * 500, edge + 10, 0.4, false)
   }
 
   // --- Loose things ----------------------------------------------------------
@@ -578,12 +633,15 @@ export class View {
     else if (play.save.phase === 'told') {
       // One want at a time: the pictures until one is touched, and then the lamp.
       if (play.meddled) ring(LAMP.x, LAMP.y + 14, 58, 70)
-      else for (let i = 0; i < play.count; i++) {
-        const box = pictureAt(i, play.count)
-        ring(box.x + box.width * 0.26, box.y + 76, 68, 58)
-        ring(box.x + box.width * 0.76, box.y + 76, 68, 58)
+      else {
+        // One at a time, along the row.
+        const at = Math.floor(play.time / 0.8) % (play.count * 2), box = pictureAt(at >> 1, play.count)
+        ring(box.x + box.width * (at & 1 ? 0.76 : 0.26), box.y + 76, 68, 58)
       }
-    } else for (let i = 0; i < THINGS.length; i++) ring(THING_AT(i).x, THING_AT(i).y, 80, 64)
+    } else {
+      const at = THING_AT(Math.floor(play.time / 0.8) % THINGS.length)
+      ring(at.x, at.y, 80, 64)
+    }
   }
 
   private ghost(g: G, play: Play, demo: number, index: number): void {

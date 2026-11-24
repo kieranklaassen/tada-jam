@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { ACT, actPose, idlePose, type Stance } from './moves'
 import { BARE, CAST, THINGS, type Who } from './tale'
 
-const stance = (who: Who, over: Partial<Stance> = {}): Stance => ({ who, worn: { ...BARE }, t: 2, asleep: false, asking: false, look: null, under: null, poked: 99, stare: 99, protest: 99, ...over })
+const stance = (who: Who, over: Partial<Stance> = {}): Stance => ({ who, worn: { ...BARE }, t: 2, asleep: false, asking: false, look: null, under: null, poked: 99, stare: 99, protest: 99, accused: 99, ...over })
 const numbers = (value: unknown): number[] => (typeof value === 'number' ? [value] : value && typeof value === 'object' ? Object.values(value).flatMap(numbers) : [])
 
 describe('how they move', () => {

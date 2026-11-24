@@ -29,10 +29,14 @@ export const TELL = [0.5, 2.8, 5.1] as const
 export const TELL_REST = 2.4
 /** The lamp: dark, back to the morning, then the three, then night. */
 export const UNRAVEL = [0.7, 2.1] as const
-export const HAPPENS = [2.4, 4.6, 6.8] as const
+export const HAPPENS = [2.9, 5.4, 7.9] as const
+/** How long a picture is in the air before it happens. */
+export const CARRY = 0.75
+/** His fingers reach the wick. */
+export const WICK = 0.35
 export const LAMP_REST = 2.6
 export const DUSK_LASTS = 2
-export const MORNING_LASTS = 2
+export const MORNING_LASTS = 2.4
 /** A scene this young does not move on for a second tap of the same excitement. */
 const YOUNG = 0.6
 const LONG_AGO = 99
@@ -126,6 +130,11 @@ export class Play {
     if (save.phase !== 'told' || save.finished || !PROTESTED.includes(save.position)) return []
     return save.day.filter((event, i) => i < this.up && !same(event, save.told[i])).map((event) => event.who)
   }
+  /** Whoever a picture that is up has it wrong of: not they either. */
+  get accused(): readonly Who[] {
+    if (!this.wronged.length) return []
+    return this.save.told.filter((event, i) => i < this.up && event.who !== this.save.day[i].who).map((event) => event.who)
+  }
   /** How many pictures are up. */
   get up(): number {
     if (this.save.phase !== 'told') return 0
@@ -144,7 +153,7 @@ export class Play {
   /** Where a thing in the hand hangs, and over whom. */
   get over(): Who | null {
     if (!this.held?.dragging || this.save.phase !== 'day') return null
-    return nearest({ x: this.held.at.x, y: this.held.at.y + 40 }, (who) => this.shown[who].up, CAST.filter((who) => who !== 'moon'), 26)
+    return nearest({ x: this.held.at.x, y: this.held.at.y + 20 }, (who) => this.shown[who].up, CAST.filter((who) => who !== 'moon'), 26)
   }
 
   down(id: number, at: Point): void {
@@ -544,7 +553,7 @@ export class Play {
 
   /** Where a thing is now: on its shelf, in the hand, or on its way. Null when it has just been emptied over someone. */
   thingAt(thing: Thing): { at: Point; tip: number; held: boolean } {
-    if (this.held?.thing === thing && this.held.dragging) return { at: { x: this.held.at.x, y: this.held.at.y - 24 }, tip: 0, held: true }
+    if (this.held?.thing === thing && this.held.dragging) return { at: { x: this.held.at.x, y: this.held.at.y - 62 }, tip: 0, held: true }
     const flight = this.flights.find((one) => one.thing === thing)
     if (!flight) return { at: THING_AT(THINGS.indexOf(thing)), tip: 0, held: false }
     const k = flight.t / flight.lasts

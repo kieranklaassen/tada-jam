@@ -11,12 +11,17 @@ export function paintThing(g: G, thing: Thing, tip = 0, k = 0): void {
   g.rotate(tip)
   switch (thing) {
     case 'mud': {
-      // A low tub with a heap in it.
+      // A pail on its handle, with a heap in it that runs over the rim.
+      g.beginPath()
+      g.ellipse(0, -6, 54, 50, 0, Math.PI, Math.PI * 2)
+      g.strokeStyle = dye('cream', 1)
+      g.lineWidth = 7
+      g.stroke()
       if (k < 1) soft(g, [[-58, -2], [-52, -34 * (1 - k)], [-14, -58 * (1 - k)], [22, -38 * (1 - k)], [56, -26 * (1 - k)], [60, -2]], dye('walnut', 2))
       if (k < 1) blob(g, -12, -28 * (1 - k), 14, 8, dye('walnut', 3))
-      shape(g, [[-64, -8], [64, -8], [50, 50], [-50, 50]], lit(g, 0, 20, 70, dye('ochre', 1), dye('ochre', 0)))
-      line(g, [[-60, 6], [60, 6]], dye('walnut', 0), 8)
-      line(g, [[-52, 36], [52, 36]], dye('walnut', 0), 8)
+      shape(g, [[-60, -8], [60, -8], [44, 50], [-44, 50]], lit(g, -10, 14, 70, dye('ochre', 2), dye('ochre', 1)))
+      line(g, [[-50, 30], [50, 30]], dye('walnut', 1), 6)
+      if (k < 1) for (const [x, deep] of [[-44, 26], [-16, 14], [14, 34], [42, 18]] as const) line(g, [[x, -6], [x, deep * (1 - k)]], dye('walnut', 2), 15)
       break
     }
     case 'water': {

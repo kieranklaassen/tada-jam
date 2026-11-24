@@ -26,6 +26,8 @@ export type Stance = {
   poked: number
   /** Seconds into protesting that it was not so, or a large number. */
   protest: number
+  /** Seconds into finding it told of them, when it was not they. */
+  accused: number
   /** Seconds into staring at Grandpa, or a large number. */
   stare: number
 }
@@ -103,6 +105,16 @@ export function idlePose(stance: Stance): Pose {
     if (who === 'goose') pose.quirk = away > 0 ? -0.3 : 1
   }
   if (stance.poked < 0.9) poke(pose, who, stance.poked)
+  if (stance.accused < PROTEST) {
+    // Not me: a look down at a clean front, and a shake of the head.
+    const k = bump(stance.accused / PROTEST)
+    pose.eyes = 1.3
+    pose.brow = 1
+    pose.look = stance.accused < PROTEST * 0.5 ? { x: 0, y: 1 } : { x: 1, y: -0.4 }
+    pose.turn += 0.07 * Math.sin(stance.accused * 14) * k
+    pose.mouth = who === 'granny' ? 'grit' : 'round'
+    if (who === 'goose') pose.quirk = 0.9 * k
+  }
   if (stance.protest < PROTEST) protest(pose, who, stance.protest)
   if (stance.stare < 1.6) {
     pose.look = { x: who === 'grandpa' ? -0.6 : 1, y: who === 'moon' ? 0.9 : -0.1 }
@@ -116,7 +128,10 @@ export function idlePose(stance: Stance): Pose {
     pose.mouth = 'shut'
     pose.look = { x: 0, y: 0.3 }
     const snore = 0.5 + 0.5 * Math.sin(t * rate * 1.5 + SEED[who])
-    if (who === 'goose') pose.quirk = -0.72 + 0.1 * snore
+    if (who === 'goose') {
+      pose.quirk = -0.56 + 0.1 * snore
+      pose.x = -22
+    }
     if (who === 'pig') pose.quirk = snore
     if (who === 'granny') pose.turn = 0.07 * snore
     if (who === 'grandpa') pose.quirk = snore - 0.45
@@ -157,7 +172,7 @@ function poke(pose: Pose, who: Who, t: number): void {
 
 /** A happening at `t` seconds into it, over what the stance would be. */
 export function actPose(stance: Stance, what: Thing, t: number, lie: boolean): Pose {
-  const pose = idlePose({ ...stance, asking: false, under: null, poked: 9, stare: 9, protest: 99, asleep: false })
+  const pose = idlePose({ ...stance, asking: false, under: null, poked: 9, stare: 9, protest: 99, accused: 99, asleep: false })
   const { who } = stance
   if (t < HIT) {
     // They see it coming, some sooner than others.
