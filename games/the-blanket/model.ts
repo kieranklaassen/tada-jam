@@ -177,8 +177,8 @@ export function uncover(world: World, who: Who): void {
 }
 
 /** What a sitter goes on when its blanket comes off: its belief, else plain sight, else the nearest neighbour's. */
-function believer(world: World, who: Who, beliefs?: Record<Who, Spot | null>): Spot | null {
-  const known = beliefs ? beliefs[who] : world.sitters[who].belief
+function believer(world: World, who: Who): Spot | null {
+  const known = world.sitters[who].belief
   if (known !== null) return known
   const seen = plain(world, who)
   if (seen !== null) return seen
@@ -186,13 +186,13 @@ function believer(world: World, who: Who, beliefs?: Record<Who, Spot | null>): S
   for (const other of SITTERS) {
     if (other === who) continue
     const s = world.sitters[other]
-    const belief = beliefs ? beliefs[other] : s.belief
+    const belief = s.belief
     if (s.covered || s.phase !== 'seat' || belief === null) continue
     if (best === null || Math.abs(SEATS[other].x - SEATS[who].x) < Math.abs(SEATS[best].x - SEATS[who].x)) best = other
   }
   if (best === null) return null
   world.events.push({ type: 'copy', who: best })
-  return beliefs ? beliefs[best] : world.sitters[best].belief
+  return world.sitters[best].belief
 }
 
 function dash(world: World, who: Who, to: Spot | null): void {
@@ -224,8 +224,8 @@ export function ringBell(world: World): void {
     }
     if (s.phase === 'seat') goers.push(who)
   }
-  const beliefs = Object.fromEntries(SITTERS.map((who) => [who, world.sitters[who].belief])) as Record<Who, Spot | null>
-  const aims = goers.map((who) => believer(world, who, beliefs))
+  // All of them before any goes, since a copied neighbour must still be seated.
+  const aims = goers.map((who) => believer(world, who))
   goers.forEach((who, i) => dash(world, who, aims[i]))
 }
 
@@ -407,7 +407,7 @@ export function quiet(world: World): boolean {
 }
 
 /** A copy that shares nothing with the world. */
-export function copyOf(world: World): World {
+function copyOf(world: World): World {
   return structuredClone({ ...world, events: [] })
 }
 

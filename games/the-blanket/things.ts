@@ -1,5 +1,5 @@
 import { BASKET, BELL, FISH, HOOK, SEATS, SPOTS, type PlaceId, type Who } from './layout'
-import { AQUA, CORAL, CREAM, DEEP, INK, OCHRE, SKIN, blob, boxOf, dabs, ellipse, poly, rounded, shape, sprite, type Ctx, type Sprite, type Stamps } from './paint'
+import { AQUA, CORAL, CREAM, DEEP, INK, OCHRE, blob, boxOf, dabs, ellipse, poly, rounded, shape, sprite, type Ctx, type Sprite, type Stamps } from './paint'
 import { makeRng } from './rng'
 
 // What is handled: the sausage, the blankets, the hiding places, the bell, the
@@ -132,16 +132,23 @@ export const T = {
     shape(c, r, rounded(-104, -110, 24, 14, 7), boxOf(0, 0, 1, 1), BROWN)
     shape(c, r, rounded(80, -110, 24, 14, 7), boxOf(0, 0, 1, 1), BROWN)
   }),
+  blanketCheck: sprite('blanketCheck', 0, 0, 320, 320, (c, r) => {
+    c.fillStyle = AQUA
+    c.fillRect(0, 0, 320, 320)
+    c.fillStyle = '#4d8f96'
+    for (let i = 0; i < 8; i++) { c.globalAlpha = 0.42; c.fillRect(i * 40, 0, 15, 320); c.fillRect(0, i * 40, 320, 15) }
+    c.globalAlpha = 1
+    dabs(c, r, { x: 0, y: 0, w: 320, h: 320 }, CREAM, 'right', 0.5, 2.4, 0.5)
+    dabs(c, makeRng(99), { x: 0, y: 0, w: 320, h: 320 }, '#3b7f88', 'left', 0.34, 2.6, 0.8)
+  }),
 } satisfies Record<string, Sprite>
-
-export const SKIN_TONE = SKIN
 
 export const BACK: Record<PlaceId, Sprite> = { dish: T.dishBack, teapot: T.potBack, boot: T.bootBack, pot: T.flowerBack, gramophone: T.hornBack }
 export const FRONT: Record<PlaceId, Sprite> = { dish: T.dishFront, teapot: T.potFront, boot: T.bootFront, pot: T.flowerFront, gramophone: T.hornFront }
 /** What comes away on the head of one who looked there for nothing, if anything does. */
 export const LOOSE: Partial<Record<PlaceId, Sprite>> = { teapot: T.potLid, boot: T.bootWorn, pot: T.flower }
 
-/** How a sausage lies in each place: where, at what angle, and how much shows. */
+/** How a sausage lies in each place: where, at what angle. */
 export const LIES: Record<PlaceId, { x: number; y: number; rot: number }> = {
   dish: { x: 0, y: -14, rot: -0.04 },
   teapot: { x: 82, y: -44, rot: -0.92 },
@@ -154,7 +161,7 @@ export function sausage(ctx: Ctx, st: Stamps, x: number, y: number, rot: number,
   st.stampAt(ctx, T.sausage, x, y, rot, sx, sy)
 }
 
-/** The string from the hatch. `hung` is whether the lowest, the next one, still hangs. */
+/** The string from the hatch. `hung` is how much of the lowest, the next one, has come down: 0 to 1. */
 export function string(ctx: Ctx, st: Stamps, sway: number, hung: number): void {
   ctx.save()
   ctx.translate(HOOK.x, -20)
@@ -169,17 +176,6 @@ export function string(ctx: Ctx, st: Stamps, sway: number, hung: number): void {
   if (hung > 0) sausage(ctx, st, 0, HOOK.y + 14, 1.57 + Math.sin(sway * 5) * 0.2, hung)
   ctx.restore()
 }
-
-const BLANKET_RNG = 99
-const tile = { sprite: sprite('blanketCheck', 0, 0, 320, 320, (c, r) => {
-  c.fillStyle = AQUA
-  c.fillRect(0, 0, 320, 320)
-  c.fillStyle = '#4d8f96'
-  for (let i = 0; i < 8; i++) { c.globalAlpha = 0.42; c.fillRect(i * 40, 0, 15, 320); c.fillRect(0, i * 40, 320, 15) }
-  c.globalAlpha = 1
-  dabs(c, r, { x: 0, y: 0, w: 320, h: 320 }, CREAM, 'right', 0.5, 2.4, 0.5)
-  dabs(c, makeRng(BLANKET_RNG), { x: 0, y: 0, w: 320, h: 320 }, '#3b7f88', 'left', 0.34, 2.6, 0.8)
-}) }
 
 export type Drape = { x: number; top: number; bottom: number; r: number; w: number; lean: number; air: number; time: number; stir: number; ears?: boolean }
 
@@ -207,7 +203,7 @@ export function blanket(ctx: Ctx, st: Stamps, d: Drape): void {
   const h = hem + 40 - d.top + 30
   ctx.translate(-spread - 10, d.top - 24)
   ctx.scale((spread * 2 + 20) / 320, h / 320)
-  st.stamp(ctx, tile.sprite)
+  st.stamp(ctx, T.blanketCheck)
   ctx.restore()
   // Folds, as two flat strokes.
   ctx.strokeStyle = '#4d8f96'

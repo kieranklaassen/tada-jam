@@ -91,7 +91,7 @@ function inSeat(who: Who, at: Point, grow = 0): boolean {
 }
 
 /**
- * What is at a point. `sausage` is where it can be picked up, or null while somebody is eating it; `standing` is
+ * What is at a point. `sausage` is where it can be picked up, or null while somebody is eating it; `out` is
  * where each sitter is now, so someone who is out of its seat is touched where it runs.
  */
 export function thingAt(at: Point, sausage: Point | null, out: Partial<Record<Who, Point>> = {}): Thing {
@@ -135,9 +135,9 @@ const EDGE = 118
 /** Where the hunters at one spot stand, the first in the middle and the others beside it. */
 export function standAt(spot: Spot, slot: number): Point {
   const at = spotAt(spot)
-  const clear = [0, 1, -1, 2, -2, 3, -3].map((k) => k * 120).filter((d) => at.x + d >= EDGE && at.x + d <= 1180 - EDGE)
+  const clear = [1, -1, 2, -2, 3, -3].map((k) => k * 120).filter((d) => at.x + d >= EDGE && at.x + d <= 1180 - EDGE)
   // A spot at the edge of the room is reached from inside it.
-  const side = [0, ...clear.filter((d) => d !== 0)][slot] ?? 0
+  const side = [0, ...clear][slot] ?? 0
   const who = headOf(spot)
   if (who) return { x: at.x + side, y: SEATS[who].y + 30 }
   if (spot === 'hook') return { x: at.x + side, y: 520 }

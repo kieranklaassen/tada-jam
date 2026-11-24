@@ -39,21 +39,21 @@ export const NATURES: Record<Who, Nature> = {
 }
 
 /** What eyes rest on. */
-export type Looking = { at: Point; sure: boolean }
+export type Looking = { at: Point }
 
 /** Where a sitter in its seat, uncovered, looks: the sausage in the hand, the one being eaten, what it believes, or about. */
 export function looksAt(world: World, who: Who, hand: Point | null, time: number, mouth: Point | null): Looking {
   const s = world.sitters[who]
   if (sees(world, who)) {
-    if (world.held?.kind === 'sausage' && hand && world.held.origin !== headSpot(who)) return { at: hand, sure: true }
-    if (world.sausage.kind === 'mouth' && mouth) return { at: mouth, sure: true }
+    if (world.held?.kind === 'sausage' && hand && world.held.origin !== headSpot(who)) return { at: hand }
+    if (world.sausage.kind === 'mouth' && mouth) return { at: mouth }
   }
-  if (s.belief !== null) return { at: spotAt(s.belief), sure: true }
+  if (s.belief !== null) return { at: spotAt(s.belief) }
   const n = NATURES[who], i = SITTERS.indexOf(who)
   const step = Math.floor(time * n.wander + i * 0.37), h = Math.sin(step * 12.9898 + i * 78.2) * 43758.5453, k = h - Math.floor(h)
   const h2 = Math.sin(step * 39.3 + i * 11.1) * 24634.63, k2 = h2 - Math.floor(h2)
   const head = SEATS[who].head
-  return { at: { x: head.x + (k - 0.5) * 700, y: head.y - 130 + k2 * 260 }, sure: false }
+  return { at: { x: head.x + (k - 0.5) * 700, y: head.y - 130 + k2 * 260 } }
 }
 
 export type Mouth = 'shut' | 'smile' | 'open' | 'o' | 'grump' | 'chew' | 'flat'
@@ -92,13 +92,15 @@ export function neutral(): Pose {
 }
 
 /** The floor line in front of the chairs, where those stand who have been up a wall. */
-const FRONT = 645
+export const FRONT_LINE = 645
+/** The floor line behind what stands on the rug. */
+const RUG = 655
 
 /** The floor under a hunter: behind what stands on the rug, and under what hangs on the wall. */
 function floorUnder(s: Sitter): number {
   const spot = s.target
   if (spot === null || headOf(spot)) return s.at.y
-  return aloft(spot) ? FRONT : 655
+  return aloft(spot) ? FRONT_LINE : RUG
 }
 
 /** Whether a spot is out of reach from the floor, so that getting there is a leap. */
@@ -118,7 +120,7 @@ export function footing(who: Who, s: Sitter): Point {
   if (s.phase === 'eat' || s.phase === 'sulk') return { x: s.at.x, y: s.at.y + (floor - s.at.y) * ease(s.t / 0.3) }
   if (s.phase === 'home') {
     const k = s.t / homeSeconds(who, s.from, SEATS[who])
-    const start = aloft(s.target) ? FRONT : headOf(s.target) ? s.from.y : 655
+    const start = aloft(s.target) ? FRONT_LINE : headOf(s.target) ? s.from.y : RUG
     return { x: s.at.x, y: s.at.y + (start - s.from.y) * (1 - clamp(k)) }
   }
   return s.at
@@ -153,7 +155,7 @@ export function poseOf(who: Who, s: Sitter, time: number, poked: number, freed: 
   out.frizz = clamp(1.2 - freed * 0.8)
   out.flap = Math.sin(time * (1.3 + i * 0.45) + i) * 0.12
   if (freed < 0.6) out.headRot += Math.sin(freed * n.shake * 5) * 0.3 * (1 - freed / 0.6)
-  ;(PHASES[s.phase] ?? PHASES.seat)(who, s, time, out)
+  PHASES[s.phase](who, s, time, out)
   return out
 }
 

@@ -3,7 +3,7 @@ import type { Spot } from './layout'
 
 // Things on their way through the air.
 
-export type Flight = { what: 'sausage' | 'blanket'; from: Point; to: Spot | 'basket'; t: number; seconds: number; key: string }
+export type Flight = { what: 'sausage' | 'blanket'; from: Point; to: Spot | 'basket'; t: number; seconds: number }
 
 /** The size of a blanket rolled up as it flies. */
 export const FOLD = 44

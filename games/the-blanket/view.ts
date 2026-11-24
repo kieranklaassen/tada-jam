@@ -5,7 +5,7 @@ import type { Note } from './audio'
 import type { Point } from './input'
 import { BASKET, BELL, FISH, HOOK, PLACES, SEATS, SITTERS, SPOTS, headOf, sausageAt, type PlaceId, type Spot, type Thing, type Who } from './layout'
 import { EAT, SULK, inBasket, sausageSpot, sees, type Draped, type Event, type World } from './model'
-import { NATURES, aloft, footing, looksAt, neutral, poseOf, type Pose } from './motion'
+import { FRONT_LINE, NATURES, aloft, footing, looksAt, neutral, poseOf, type Pose } from './motion'
 import { Stamps, type Ctx, type Sprite } from './paint'
 import type { Poke, Refusal } from './play'
 import { paintRoom } from './room'
@@ -24,6 +24,13 @@ const LONG = 99
 const NECK: Record<Who, number> = { dog: 8, cat: 4, aunt: 52, grandpa: 34 }
 
 type Seen = { gaze: Gaze; poked: number; freed: number; bowled: number; laid: number; near: boolean; side: boolean; pose: Pose }
+
+/** What each one sits on, and how far under its ground that stands. */
+const FURNITURE: Record<Who, { sprite: Sprite; dy: number }> = { dog: { sprite: T.cushion, dy: -6 }, cat: { sprite: T.stool, dy: 0 }, aunt: { sprite: T.armchair, dy: 14 }, grandpa: { sprite: T.rocker, dy: 24 } }
+/** Seconds a thing stays stuck on a head. */
+const WORN = SULK * 0.55
+/** How far from the mouth of each place the head of a diver comes to. */
+const DIVE_Y: Record<PlaceId, number> = { dish: -42, pot: 22, gramophone: 10, boot: -66, teapot: -36 }
 
 const seen = (): Seen => ({ gaze: { x: 0, y: 0 }, poked: LONG, freed: LONG, bowled: LONG, laid: LONG, near: false, side: false, pose: neutral() })
 
@@ -77,16 +84,16 @@ export class View {
       case 'uncover': {
         const s = this.who[e.who], at = footing(e.who, world.sitters[e.who])
         s.freed = 0
-        this.flights.push({ what: 'blanket', from: { x: at.x, y: at.y + HEAD[e.who].y }, to: 'basket', t: 0, seconds: 0.55, key: e.who })
+        this.flights.push({ what: 'blanket', from: { x: at.x, y: at.y + HEAD[e.who].y }, to: 'basket', t: 0, seconds: 0.55 })
         break
       }
       case 'bowled': this.who[e.who].bowled = 0; break
       case 'ghost': this.who[e.who].laid = 0.3; break
-      case 'put': this.flights.push({ what: 'sausage', from: world.held || this.justHeld > 0 ? this.lastHand : sausageAt(e.from), to: e.spot, t: 0, seconds: this.justHeld > 0 ? 0.22 : 0.5, key: 'sausage' }); this.pushed.set(e.spot, -0.3); break
-      case 'back': this.flights.push({ what: 'sausage', from: this.lastHand, to: e.spot, t: 0, seconds: 0.45, key: 'sausage' }); break
-      case 'flap': this.flights.push({ what: 'blanket', from: this.lastHand, to: 'basket', t: 0, seconds: 0.5, key: 'hand' }); break
+      case 'put': this.flights.push({ what: 'sausage', from: world.held || this.justHeld > 0 ? this.lastHand : sausageAt(e.from), to: e.spot, t: 0, seconds: this.justHeld > 0 ? 0.22 : 0.5 }); this.pushed.set(e.spot, -0.3); break
+      case 'back': this.flights.push({ what: 'sausage', from: this.lastHand, to: e.spot, t: 0, seconds: 0.45 }); break
+      case 'flap': this.flights.push({ what: 'blanket', from: this.lastHand, to: 'basket', t: 0, seconds: 0.5 }); break
       case 'drape': this.laid.set(e.on, 0); this.pushed.set(e.on, 0); break
-      case 'undrape': { const d = DRAPES[e.on]; this.flights.push({ what: 'blanket', from: { x: d.x, y: d.y }, to: 'basket', t: 0, seconds: 0.5, key: e.on }); break }
+      case 'undrape': { const d = DRAPES[e.on]; this.flights.push({ what: 'blanket', from: { x: d.x, y: d.y }, to: 'basket', t: 0, seconds: 0.5 }); break }
       case 'pick': {
         // What is in the hand is not in the air as well.
         const last = this.flights.map((f) => f.what).lastIndexOf(e.what)
@@ -173,14 +180,13 @@ export class View {
       if (SPOTS[id].high) this.place(ctx, world, id, lies, [])
       else items.push({ y: SPOTS[id].at.y + 30, draw: () => this.place(ctx, world, id, lies, divers) })
     }
-    const furniture: Record<Who, Sprite> = { dog: T.cushion, cat: T.stool, aunt: T.armchair, grandpa: T.rocker }
     for (const who of SITTERS) {
       const seat = SEATS[who]
-      items.push({ y: seat.y - 4, draw: () => st.stampAt(ctx, furniture[who], seat.x, seat.y + (who === 'dog' ? -6 : who === 'aunt' ? 14 : who === 'grandpa' ? 24 : 0), who === 'grandpa' ? this.rock : 0, 1 + this.push(who, 0.02), 1 - this.push(who, 0.03)) })
+      items.push({ y: seat.y - 4, draw: () => st.stampAt(ctx, FURNITURE[who].sprite, seat.x, seat.y + FURNITURE[who].dy, who === 'grandpa' ? this.rock : 0, 1 + this.push(who, 0.02), 1 - this.push(who, 0.03)) })
       const s = world.sitters[who]
       if (PLACES.some((id) => !SPOTS[id].high && this.divesAt(world, who, id))) continue
       const out = s.phase !== 'seat' && s.phase !== 'wind'
-      items.push({ y: !out ? seat.y : s.target && aloft(s.target) && s.phase !== 'home' ? 645 : footing(who, s).y, draw: () => this.sitter(ctx, world, who, lies) })
+      items.push({ y: !out ? seat.y : s.target && aloft(s.target) && s.phase !== 'home' ? FRONT_LINE : footing(who, s).y, draw: () => this.sitter(ctx, world, who, lies) })
     }
     items.push({ y: FISH.y + 80, draw: () => this.fish(ctx, world, hand) })
     items.push({ y: BASKET.y + 40, draw: () => basket(ctx, st, Math.max(0, inBasket(world) - this.flights.filter((f) => f.what === 'blanket' && f.to === 'basket').length), this.push('basket', 2.4)) })
@@ -207,11 +213,11 @@ export class View {
 
   private stuck(world: World, who: Who): Sprite | null {
     const s = world.sitters[who]
-    if (s.phase !== 'sulk' || s.t > SULK * 0.55 || s.target === null || headOf(s.target) || s.target === 'hook') return null
+    if (s.phase !== 'sulk' || s.t > WORN || s.target === null || headOf(s.target) || s.target === 'hook') return null
     const id = s.target as PlaceId, loose = LOOSE[id]
     // There is one of each: while somebody still has their head in it, or somebody who was first wears it, it is theirs.
     if (!loose || SITTERS.some((o) => this.divesAt(world, o, id))) return null
-    const first = SITTERS.filter((o) => world.sitters[o].phase === 'sulk' && world.sitters[o].target === id && world.sitters[o].t <= SULK * 0.55).sort((a, b) => world.sitters[b].t - world.sitters[a].t)[0]
+    const first = SITTERS.filter((o) => world.sitters[o].phase === 'sulk' && world.sitters[o].target === id && world.sitters[o].t <= WORN).sort((a, b) => world.sitters[b].t - world.sitters[a].t)[0]
     return first === who ? loose : null
   }
 
@@ -278,7 +284,7 @@ export class View {
       // Over it goes: the head into the place, the legs where they can.
       const at = SPOTS[place].at, high = SPOTS[place].high, side = Math.sign(s.at.x - at.x) || (SEATS[who].x < at.x ? -1 : 1)
       const beside = (s.at.x - at.x) * 0.3
-      const into = { x: at.x + beside + (place === 'gramophone' ? 20 : 0), y: at.y + (place === 'dish' ? -42 : high ? (place === 'pot' ? 22 : 10) : place === 'boot' ? -66 : -36) }
+      const into = { x: at.x + beside + (place === 'gramophone' ? 20 : 0), y: at.y + DIVE_Y[place] }
       // The neck comes to the mouth of it, not the middle of the head.
       if (inside) into.y += NECK[who] * (high ? -1 : 1)
       const px = p.x + h.x + (into.x - p.x - h.x) * p.dive, py = p.y + h.y + (into.y - p.y - h.y) * p.dive

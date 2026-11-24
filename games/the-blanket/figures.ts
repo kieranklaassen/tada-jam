@@ -143,7 +143,6 @@ function eyes(ctx: Ctx, who: Who, p: Pose, gaze: Gaze, dizzy: number): void {
       if (p.lid > 0) { ctx.fillStyle = e.shut; ctx.fillRect(-e.r, -e.r * 1.2, e.r * 2, e.r * 2 * p.lid) }
       ctx.restore()
     }
-    // Brows.
     if (p.brow !== 0 || who === 'grandpa') {
       ctx.strokeStyle = who === 'grandpa' ? CREAM : who === 'cat' ? '#f6cf5a' : INK
       ctx.lineWidth = who === 'grandpa' ? 9 : 5.5
@@ -218,14 +217,12 @@ function limb(ctx: Ctx, color: string, width: number, ...p: number[]): void {
   ctx.stroke()
 }
 
-/** What a sitter has got stuck on its head from where it looked. */
-export type Stuck = Sprite | null
-
 export type Extras = {
   /** Under a blanket: the head and the hands are not drawn. */
   covered: boolean
   dizzy: number
-  stuck: Stuck
+  /** What it has got stuck on its head from where it looked. */
+  stuck: Sprite | null
   /** What the pointing limb points along, as an angle. */
   point: number | null
   time: number
