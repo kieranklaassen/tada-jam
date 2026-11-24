@@ -84,12 +84,12 @@ describe('the home page', () => {
   })
 
   it('shows a demo as a card marked as a demo, and opens it by its key', async () => {
-    serveCatalog([demo('tiny-island', 'Tiny Island'), demo('ant-hill', 'Ant Hill demo'), demo('peg-blaster', 'Peg Blaster', { verdict: 'no' })])
+    serveCatalog([demo('sock-race', 'Sock Race'), demo('ant-hill', 'Ant Hill demo'), demo('peg-blaster', 'Peg Blaster', { verdict: 'no' })])
     const onPickDemo = vi.fn()
     await openHome(onPickDemo)
     const tiles = within(screen.getByRole('list', { name: 'Building' })).getAllByRole('button')
-    expect(tiles.map((tile) => tile.textContent)).toEqual(['🎲Tiny Islanddemo · ages 3–7'])
+    expect(tiles.map((tile) => tile.textContent)).toEqual(['🎲Sock Racedemo · ages 3–7'])
     fireEvent.click(tiles[0])
-    expect(onPickDemo).toHaveBeenCalledWith('tiny-island')
+    expect(onPickDemo).toHaveBeenCalledWith('sock-race')
   })
 })
