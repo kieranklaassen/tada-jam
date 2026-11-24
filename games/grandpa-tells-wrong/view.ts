@@ -45,6 +45,8 @@ export class View {
   private most = 150
   private ribs = true
   private chance = 1
+  private every = 1
+  private tick = 0
   private strung = ''
   /** The sky shown, the one before it, and how much of the new one is woven. */
   private hour: Hour | -1 = -1
@@ -61,6 +63,7 @@ export class View {
   setTier(tier: Tier): void {
     this.ribs = tier.ribs
     this.most = tier.bits
+    this.every = tier.every
     this.strung = ''
   }
 
@@ -128,6 +131,8 @@ export class View {
     if (by.scale === 0) return
     const pw = Math.round(width * dpr), ph = Math.round(height * dpr)
     const key = [pw, ph, this.ribs].join()
+    // Two frames of one cloth, on the slowest devices.
+    if (key === this.strung && ++this.tick % this.every !== 0) return
     if (key !== this.strung) {
       this.strung = key
       this.loom.string(pw, ph, by.scale * dpr, by.x * dpr, by.y * dpr, this.ribs)

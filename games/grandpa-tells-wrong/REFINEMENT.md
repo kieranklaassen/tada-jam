@@ -29,6 +29,7 @@ The look and the toy, at the first play. Whether the protest of the wronged one 
 | 3 | the owner's report that a child of 4 does not see the loops of the games before this one | three things to remember before anything is told; Grandpa waits to be asked; nothing says a picture is wrong; what to do next glows late and in two places | a first day of one thing and one picture; he tells by himself; the wronged one protests; the ladder has a head start and shows one want; the ghost hand carries the thing; the whole night sky wakes the cock | not measured again: no cost was added per frame | as in Status |
 | 4 | cold playtest proxy: a fresh reader with nineteen stills and nothing else. They named put it on somebody, splat, night, morning; not that he told it wrong, nor that the picture made it so | the muddied grandmother in a picture is a bear; nothing ties a picture to the pig; lamp and splat are not one; the weft band reads as water; the mud is a cake; rings all at once; Grandpa stays muddy without noticing | a puppet's coat stops above the face; a bubble with what it really was, and the falsely told shakes their head; each picture flies to whoever it is of; his puppet pulls the weft; a pail that drips; one ring at a time; the thing hangs above the finger; he finds himself muddy in the morning | not measured again | no second cold run |
 | 5 | code review by a fresh reader: 15 findings | a smeared tap did nothing on the pieces; his hand never reached the wick; the sky cut on the second day; a night save opened on a pink frame; a worn balloon blew up again for every splash; the slits were off-dye; a lie about himself never curled his moustache; a second throw vanished; smaller ones | all fixed, with tests for the touches, except one: a voice already sounding when a beat of the lamp is skipped rings out over the next | see Status | as in Status |
+| 6 | slow machine, shared probe | 42 fps at 4x throttle in the last tier | the cloth is woven every second frame in the last tier | Chromium in software, production build, 4x throttle, adaptive, tier 3: 58 fps of display, worst second 50, the picture moving at about 29 | iPad and WebKit not measured |
 
 ## For the pull request
 
@@ -39,7 +40,7 @@ The look and the toy, at the first play. Whether the protest of the wronged one 
 - Weight and follow-through: tips, splashes, squash and thirty answers, one for each of five to each of six things.
 - Clear tappables: large flat masses, every hit target over 100 units.
 - Wordless: no text, numeral or sign. Glow at 3 s, ghost hand at 5 s, sooner after a scene.
-- Frame rate: pass 2. No canvas is made from frame to frame (`view.test.ts`); the read-back of the beads and the figures' gradients are. No iPad and no WebKit measured.
+- Frame rate: passes 2 and 6. No canvas is made from frame to frame (`view.test.ts`); the read-back of the beads and the figures' gradients are. No iPad and no WebKit measured.
 - Nothing passes through anything: everyone has a place of their own, held by `layout.ts`; Grandpa's long arm goes in front of everyone on purpose.
 - Procedural only.
 

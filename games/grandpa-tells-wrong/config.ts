@@ -23,14 +23,16 @@ export type Tier = {
   ribs: boolean
   /** The most loose drops and feathers in the air. */
   bits: number
+  /** The cloth is woven anew every so many frames. */
+  every: number
 }
 
 /** Tier 0 is full quality; each later tier is cheaper to draw. Whatever a tier change needs is compiled before it happens. */
 export const TIERS: readonly Tier[] = [
-  { dpr: 2, ribs: true, bits: 150 },
-  { dpr: 1.5, ribs: true, bits: 120 },
-  { dpr: 1.25, ribs: true, bits: 90 },
-  { dpr: 1, ribs: false, bits: 50 },
+  { dpr: 2, ribs: true, bits: 150, every: 1 },
+  { dpr: 1.5, ribs: true, bits: 120, every: 1 },
+  { dpr: 1.25, ribs: true, bits: 90, every: 1 },
+  { dpr: 1, ribs: false, bits: 50, every: 2 },
 ]
 
 /** The governor's thresholds. The rules they feed are at the top of quality.ts. */

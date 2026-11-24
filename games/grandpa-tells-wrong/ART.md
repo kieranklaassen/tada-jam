@@ -114,4 +114,4 @@ Woven tapestry. The whole picture is drawn small, one pixel to a bead of weft (4
 - **Figures.** Large flat masses, one family of dye each: white goose, rose pig, blue grandmother, madder and cream Grandpa, ochre moon. Eyes are cream rounds with a walnut pupil and are the only small thing kept sharp. A glove puppet in a picture is the same figure cut to head and shoulders.
 - **Coats.** Mud and jam are a pour with fingers of drip, clipped to the figure; feathers are tufts round its edge; underpants are two striped ears.
 - **Light.** None but the lamp: two flat rounds of ochre on the wall behind it.
-- **Tiers.** Pixel ratio 2, 1.5, 1.25, 1; the ribs go last. The weaving itself costs the same at every tier, as it is done at the size of the beads.
+- **Tiers.** Pixel ratio 2, 1.5, 1.25, 1; at the last one the ribs go and the cloth is woven every second frame. The weaving itself costs the same at every tier, as it is done at the size of the beads.
