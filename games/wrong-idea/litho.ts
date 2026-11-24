@@ -35,21 +35,22 @@ function grain(): { dark: Canvas; light: Canvas } {
   return tiles
 }
 
-/** Crayon along one side of whatever is clipped: from nothing to thick over the box, in five layers. */
+/** Crayon along one side of whatever is clipped: from nothing to thick over the box, in thin layers. */
 function rub(g: G, which: 'dark' | 'light', x: number, y: number, w: number, h: number, angle: number, strength: number): void {
   const tile = grain()[which]
   g.save()
   const cx = x + w / 2, cy = y + h / 2, reach = (Math.abs(Math.cos(angle)) * w + Math.abs(Math.sin(angle)) * h) / 2, across = Math.hypot(w, h)
   g.translate(cx, cy)
   g.rotate(angle)
-  for (let i = 0; i < 5; i++) {
+  const layers = 14
+  for (let i = 0; i < layers; i++) {
     const pattern = g.createPattern(tile, 'repeat')
     if (!pattern) break
-    g.globalAlpha = strength * (0.5 + i * 0.12)
+    g.globalAlpha = strength * (0.1 + i * 0.026)
     g.fillStyle = pattern
     g.save()
     g.translate(i * 37, i * 53)
-    g.fillRect(reach * (-0.1 + i * 0.22) - i * 37, -across - i * 53, reach * 2, across * 2)
+    g.fillRect(reach * (-0.45 + i * 0.1) - i * 37, -across - i * 53, reach * 2, across * 2)
     g.restore()
   }
   g.restore()

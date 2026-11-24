@@ -101,11 +101,16 @@ function eye(g: G, x: number, y: number, r: number, open: number, gaze: Gaze, br
 
 function mouth(g: G, x: number, y: number, w: number, open: number, smile: number): void {
   if (open > 0.12) {
+    // Open, it is round when it is cross or shocked and flat on top when it is glad.
+    const path = () => {
+      g.beginPath()
+      if (smile > 0.2) { g.moveTo(x - w * 0.8, y - w * 0.12); g.quadraticCurveTo(x, y + w * 0.04, x + w * 0.8, y - w * 0.12); g.quadraticCurveTo(x + w * 0.5, y + w * (0.45 + open), x, y + w * (0.45 + open)); g.quadraticCurveTo(x - w * 0.5, y + w * (0.45 + open), x - w * 0.8, y - w * 0.12) } else g.ellipse(x, y, w * (0.72 - open * 0.15), w * 0.16 + w * 0.6 * open, 0, 0, Math.PI * 2)
+    }
     g.fillStyle = '#5b1f22'
-    g.beginPath(); g.ellipse(x, y, w * (0.8 - open * 0.15), w * 0.16 + w * 0.5 * open, 0, 0, Math.PI * 2); g.fill()
-    g.save(); g.clip()
+    path(); g.fill()
+    g.save(); path(); g.clip()
     g.fillStyle = '#d7665c'
-    g.beginPath(); g.ellipse(x, y + w * 0.5 * open + w * 0.1, w * 0.6, w * 0.3, 0, 0, Math.PI * 2); g.fill()
+    g.beginPath(); g.ellipse(x, y + w * 0.55 * open + w * 0.3, w * 0.55, w * 0.3, 0, 0, Math.PI * 2); g.fill()
     g.restore()
     return
   }
@@ -117,7 +122,7 @@ function mouth(g: G, x: number, y: number, w: number, open: number, smile: numbe
 
 // --- The people ---------------------------------------------------------------
 
-type Live = { g: G; s: Sprites; pose: Pose; gaze: Gaze; t: number; place: 'home' | 'bed' | 'soup' | 'bath' }
+export type Live = { g: G; s: Sprites; pose: Pose; gaze: Gaze; t: number; place: 'home' | 'bed' | 'soup' | 'bath' }
 
 function at(g: G, x: number, y: number, turn: number, draw: () => void, sx = 1, sy = 1): void {
   g.save()
@@ -128,14 +133,7 @@ function at(g: G, x: number, y: number, turn: number, draw: () => void, sx = 1, 
   g.restore()
 }
 
-function king({ g, s, pose, gaze, place }: Live): void {
-  if (place === 'home') s.stamp(g, 'throne', [-118, -236, 236, 240], (c) => {
-    flat(c, round(-96, -226, 192, 226, 30), '#8a6a4a', [-96, -226, 192, 226], 0.8)
-    flat(c, round(-78, -208, 156, 170, 24), '#76706a', [-78, -208, 156, 170], 0.7)
-    for (const x of [-96, 96]) flat(c, ellipse(x, -228, 13, 13), GOLD, [x - 13, -241, 26, 26])
-    flat(c, round(-112, -96, 34, 96, 10), '#7d5f42', [-112, -96, 34, 96])
-    flat(c, round(78, -96, 34, 96, 10), '#7d5f42', [78, -96, 34, 96])
-  })
+function king({ g, s, pose, gaze }: Live): void {
   at(g, 0, 0, 0, () => s.stamp(g, 'king-body', [-112, -190, 224, 194], (c) => {
     flat(c, ellipse(-34, -5, 30, 11), INK, [-64, -16, 60, 22], 0)
     flat(c, ellipse(34, -5, 30, 11), INK, [4, -16, 60, 22], 0)
@@ -159,15 +157,14 @@ function king({ g, s, pose, gaze, place }: Live): void {
     eye(g, 20, -42, 11, pose.eyes, gaze, pose.brow, 1, '#7a4526')
     flat(g, ellipse(0, -26, 15, 12), '#d99a78', [0, 0, 1, 1], 0)
     mouth(g, 0, -4, 18, pose.mouth, pose.brow < -0.3 ? -0.5 : 0.3)
-    at(g, 0, -64 - Math.max(0, pose.neck) * 0.6, pose.tilt * 0.6, () => s.stamp(g, 'crown', [-50, -52, 100, 60], (c) => {
+    at(g, 0, -64 - Math.max(0, pose.neck) * 0.6, pose.tilt * 0.6, () => s.stamp(g, 'crown', [-58, -58, 116, 66], (c) => {
       flat(c, poly([-42, 2], [-48, -36], [-24, -18], [0, -46], [24, -18], [48, -36], [42, 2]), GOLD, [-48, -46, 96, 48], 0.7)
       dots(c, [[-48, -38, 6], [0, -47, 6], [48, -38, 6], [-22, -8, 4], [0, -10, 5], [22, -8, 4]], WHITE)
     }))
   })
 }
 
-function queen({ g, s, pose, gaze, place }: Live): void {
-  if (place === 'home') flat(g, ellipse(0, -2, 64, 9), 'rgba(52,30,26,0.22)', [0, 0, 1, 1], 0)
+function queen({ g, s, pose, gaze }: Live): void {
   s.stamp(g, 'queen-body', [-76, -190, 152, 194], (c) => {
     const gown = soft([-20, -186], [20, -186], [26, -122], [66, -30], [72, 0], [0, -8], [-72, 0], [-66, -30], [-26, -122])
     flat(c, gown, DYE.blue, [-72, -186, 144, 186], 0.7)
@@ -176,7 +173,7 @@ function queen({ g, s, pose, gaze, place }: Live): void {
     c.restore()
   })
   // The neck is drawn each frame: it is most of the queen.
-  const up = 66 + pose.neck
+  const up = 48 + pose.neck
   g.strokeStyle = '#e4b48c'
   g.lineWidth = 19
   g.lineCap = 'round'
@@ -184,7 +181,7 @@ function queen({ g, s, pose, gaze, place }: Live): void {
   s.stamp(g, 'queen-ruff', [-46, -206, 92, 40], (c) => {
     for (let i = 0; i < 9; i++) flat(c, ellipse(-34 + i * 8.5, -185, 8, 14, (i - 4) * 0.1), i % 2 ? WHITE : '#e6dcc0', [-42, -200, 84, 30], 0.3)
   })
-  at(g, pose.tilt * 12, -172 - up * 0.8, pose.tilt, () => {
+  at(g, pose.tilt * 12, -178 - up * 0.8, pose.tilt, () => {
     s.stamp(g, 'queen-head', [-50, -108, 100, 124], (c) => {
       flat(c, soft([-34, -60], [-38, -94], [0, -106], [38, -94], [34, -60], [40, -40], [-40, -40]), '#5d3b36', [-38, -106, 76, 66], 0.7)
       flat(c, soft([-28, -56], [28, -56], [31, -20], [12, 10], [-12, 10], [-31, -20]), SKIN, [-31, -58, 62, 68], 0.45)
@@ -200,14 +197,7 @@ function queen({ g, s, pose, gaze, place }: Live): void {
 }
 
 function gran({ g, s, pose, gaze, place }: Live): void {
-  if (place === 'home') s.stamp(g, 'gran-chair', [-92, -196, 184, 200], (c) => {
-    flat(c, round(-62, -8, 14, 12, 3), '#59412f', [0, 0, 1, 1], 0)
-    flat(c, round(48, -8, 14, 12, 3), '#59412f', [0, 0, 1, 1], 0)
-    flat(c, soft([-64, -190], [0, -202], [64, -190], [78, -100], [72, -6], [-72, -6], [-78, -100]), '#75806a', [-78, -198, 156, 192], 0.8)
-    flat(c, round(-90, -86, 42, 80, 20), '#667159', [-90, -86, 42, 80], 0.8)
-    flat(c, round(48, -86, 42, 80, 20), '#667159', [48, -86, 42, 80], 0.8)
-  })
-  const sit = place === 'home' ? -30 : 0, shrug = pose.part * 9
+  const sit = place === 'home' ? -34 : 0, shrug = pose.part * 9
   at(g, 0, sit, 0, () => {
     s.stamp(g, 'gran-body', [-60, -104, 120, 108], (c) => {
       flat(c, soft([-30, -98], [30, -98], [52, -44], [54, 0], [-54, 0], [-52, -44]), DYE.yellow, [-54, -100, 108, 100], 0.7)
@@ -289,8 +279,7 @@ function piglet({ g, s, pose, gaze }: Live): void {
     flat(c, soft([-40, -66], [30, -72], [56, -40], [42, -8], [-36, -8], [-54, -36]), c0, [-54, -72, 110, 64], 0.65)
   })
   at(g, -26, -52 - pose.neck, pose.tilt, () => {
-    at(g, -22, -24, -0.3 - pose.part * 0.1, () => s.stamp(g, 'pig-ear', [-16, -22, 32, 30], (c) => flat(c, poly([-10, 4], [-12, -20], [12, 0]), mix(c0, '#3a1410', 0.2), [0, 0, 1, 1], 0)))
-    at(g, 20, -24, 0.5 + pose.part * 0.1, () => s.stamp(g, 'pig-ear', [-16, -22, 32, 30], () => {}))
+    for (const side of [-1, 1]) at(g, side * 21 - 2, -24, side * (0.4 + pose.part * 0.1), () => s.stamp(g, 'pig-ear', [-16, -24, 32, 32], (c) => flat(c, poly([-11, 4], [0, -22], [11, 4]), mix(c0, '#3a1410', 0.2), [0, 0, 1, 1], 0)))
     s.stamp(g, 'pig-head', [-42, -44, 84, 72], (c) => {
       flat(c, soft([-30, -32], [26, -32], [36, -2], [16, 22], [-22, 22], [-38, -2]), mix(c0, '#ffffff', 0.08), [-36, -34, 72, 56], 0.5)
       flat(c, ellipse(-3, 3, 18, 13), pale, [-21, -10, 42, 26], 0.2)
@@ -302,6 +291,26 @@ function piglet({ g, s, pose, gaze }: Live): void {
   })
 }
 
+export function drawThrone(g: G, s: Sprites): void {
+  s.stamp(g, 'throne', [-118, -236, 236, 240], (c) => {
+    flat(c, round(-96, -226, 192, 226, 10), '#9a7650', [-96, -226, 192, 226], 0.8)
+    flat(c, round(-78, -208, 156, 170, 24), '#76706a', [-78, -208, 156, 170], 0.7)
+    for (const x of [-96, 96]) flat(c, ellipse(x, -226, 13, 13), GOLD, [x - 13, -241, 26, 26])
+    flat(c, round(-112, -96, 34, 96, 10), '#7d5f42', [-112, -96, 34, 96])
+    flat(c, round(78, -96, 34, 96, 10), '#7d5f42', [78, -96, 34, 96])
+  })
+}
+
+export function drawChair(g: G, s: Sprites): void {
+  s.stamp(g, 'gran-chair', [-92, -196, 184, 200], (c) => {
+    flat(c, round(-62, -8, 14, 12, 3), '#59412f', [0, 0, 1, 1], 0)
+    flat(c, round(48, -8, 14, 12, 3), '#59412f', [0, 0, 1, 1], 0)
+    flat(c, soft([-64, -190], [0, -202], [64, -190], [78, -100], [72, -6], [-72, -6], [-78, -100]), '#75806a', [-78, -198, 156, 192], 0.8)
+    flat(c, round(-90, -86, 42, 80, 20), '#667159', [-90, -86, 42, 80], 0.8)
+    flat(c, round(48, -86, 42, 80, 20), '#667159', [48, -86, 42, 80], 0.8)
+  })
+}
+
 export function drawLiving(kind: Kind, live: Live): void {
   switch (kind) {
     case 'king': return king(live)
@@ -310,6 +319,7 @@ export function drawLiving(kind: Kind, live: Live): void {
     case 'cat': return cat(live)
     case 'hen': return hen(live)
     case 'piglet': return piglet(live)
+    case 'butler': return drawButler({ ...live, place: 'home' }, { left: { x: -104, y: -190 }, right: { x: 104, y: -190 }, point: false }, 0, 0)
     default:
   }
 }
@@ -319,6 +329,9 @@ export function drawLiving(kind: Kind, live: Live): void {
 export type Hands = { left: Gaze; right: Gaze; point: boolean }
 
 /** Drawn about his feet. The hands are where they are asked to be, however far that is: his sleeves stretch. */
+/** He is drawn a little larger than he stands: 440 from sole to parting. */
+export const BUTLER_DRAWN = 0.93
+
 export function drawButler({ g, s, pose, gaze, t, place }: Live, hands: Hands, stride: number, speed: number): void {
   const run = Math.min(1, Math.abs(speed) / 420), hip = -150
   if (place === 'home') {
@@ -341,7 +354,7 @@ export function drawButler({ g, s, pose, gaze, t, place }: Live, hands: Hands, s
       flat(c, poly([58, -170], [84, -116], [40, -126], [30, -170]), mix(COAT, '#000000', 0.2), [0, 0, 1, 1], 0)
       flat(c, soft([-60, -330], [60, -330], [88, -270], [80, -190], [58, -140], [-58, -140], [-80, -190], [-88, -270]), COAT, [-86, -330, 172, 190], 0.5)
       flat(c, soft([-30, -334], [30, -334], [36, -260], [24, -166], [0, -150], [-24, -166], [-36, -260]), WHITE, [-36, -332, 72, 180], 0.4)
-      flat(c, soft([-34, -230], [34, -230], [30, -168], [0, -146], [-30, -168]), '#8d8a7a', [-34, -230, 68, 84], 0.5)
+      flat(c, soft([-46, -246], [-18, -262], [0, -226], [18, -262], [46, -246], [46, -150], [0, -138], [-46, -150]), '#7c5566', [-44, -260, 88, 120], 0.5)
       dots(c, [[0, -264, 4.5], [0, -206, 4.5], [0, -186, 4.5]], GOLD)
       flat(c, poly([-32, -334], [-62, -322], [-40, -240], [-28, -290]), mix(COAT, '#ffffff', 0.12), [0, 0, 1, 1], 0)
       flat(c, poly([32, -334], [62, -322], [40, -240], [28, -290]), mix(COAT, '#ffffff', 0.12), [0, 0, 1, 1], 0)

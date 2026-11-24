@@ -5,8 +5,8 @@ import { wrongIdeaManifest } from './manifest'
 // saveCadence.ts) read their numbers from here, so they stay byte-equal to the
 // template and a template fix can be copied over them.
 
-/** The blank surface's colour, until the game draws its own backdrop. */
-export const BACKDROP = '#f4efe6'
+/** The colour of the sheet, until the chart is painted. */
+export const BACKDROP = '#b9c7b4'
 
 // --- Adaptive quality (quality.ts) -----------------------------------------
 

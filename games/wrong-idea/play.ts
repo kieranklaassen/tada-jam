@@ -2,7 +2,7 @@ import type { Note } from './audio'
 import { Errand } from './errand'
 import { exampleIn, freshHouse, ideaOf, isTidy, put, take, type House } from './house'
 import type { Gesture, Point } from './input'
-import { BUTLER_HOME, DREAM, ROPE, ROPE_MOST, ROPE_PULL, SIZE, VESSELS, bodyMiddle, homeOf, onThing, placeAt, slotOf, type Spot } from './layout'
+import { DREAM, ROPE, ROPE_MOST, ROPE_PULL, SIZE, VESSELS, bodyMiddle, homeOf, onThing, placeAt, slotOf, type Spot } from './layout'
 import type { Idea } from './learner'
 import { Mover, springTo, type Character, type Spring } from './motion'
 import type { Saved } from './save'
@@ -122,7 +122,7 @@ export class Play {
         return { x: on.x, y: on.y + 16 + now.dy, s: 0.82 }
       }
       case 'fly': {
-        const to = this.restSpot(id, now.where), p = Math.min(1, now.t / now.dur)
+        const to = this.restSpot(id, now.where), p = Math.max(0, Math.min(1, now.t / now.dur))
         return {
           x: now.from.x + (to.x - now.from.x) * p,
           y: now.from.y + (to.y - now.from.y) * p - Math.sin(Math.PI * p) * now.high,
@@ -551,12 +551,12 @@ export class Play {
   }
 
   /** One move the ghost hand may show: a small thing on the shelf carried to a place. It is never chosen to meet a wish. */
-  demo(index: number): { from: Point; to: Point } | null {
+  demo(index: number): { id: ThingId; from: Point; to: Point } | null {
     const free = THINGS.filter((one) => !one.alive && this.atHome(this.shown[one.id]))
     if (free.length === 0) return null
     const one = free[(index * 4) % free.length]
     const place = PLACES[(index + 1) % PLACES.length]
-    return { from: bodyMiddle(one.id, homeOf(one.id)), to: { x: VESSELS[place].x, y: VESSELS[place].rim - 24 } }
+    return { id: one.id, from: bodyMiddle(one.id, homeOf(one.id)), to: { x: VESSELS[place].x, y: VESSELS[place].rim - 24 } }
   }
 
   /** Whether this is the child's own in some place. */
@@ -564,5 +564,3 @@ export class Play {
     return exampleIn(this.house, id) !== null
   }
 }
-
-export { BUTLER_HOME }

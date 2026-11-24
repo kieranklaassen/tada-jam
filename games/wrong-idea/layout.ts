@@ -62,21 +62,23 @@ const BACK: Readonly<Record<string, { dx: number; dy: number; s: number }>> = {
   king: { dx: -72, dy: 40, s: 0.76 },
   queen: { dx: 92, dy: 50, s: 0.72 },
   gran: { dx: 14, dy: 12, s: 0.74 },
-  cat: { dx: -126, dy: -28, s: 0.66 },
-  hen: { dx: 140, dy: -26, s: 0.66 },
-  piglet: { dx: 48, dy: -24, s: 0.66 },
+  cat: { dx: -134, dy: 8, s: 0.72 },
+  hen: { dx: 136, dy: 4, s: 0.72 },
+  piglet: { dx: 32, dy: 14, s: 0.72 },
 }
 
 export function slotOf(id: ThingId, place: Place): Spot {
   const vessel = VESSELS[place]
+  // The quilt comes up higher than the soup does.
+  const up = place === 'bed' ? 24 : 0
   const back = BACK[id]
-  if (back) return { x: vessel.x + back.dx, y: vessel.rim + back.dy, s: back.s }
+  if (back) return { x: vessel.x + back.dx, y: vessel.rim + back.dy - up, s: back.s }
   const n = (SHELF_ORDER as readonly string[]).indexOf(id)
   // Five float behind, four in front, their feet under the edge.
   const front = n % 2 === 1
   const row = Math.floor(n / 2)
   const across = front ? (row - 1.5) * 74 : (row - 2) * 64
-  return { x: vessel.x + across, y: vessel.rim + (front ? 26 : 2), s: 0.62 }
+  return { x: vessel.x + across, y: vessel.rim + (front ? 38 : 20) - up, s: 0.62 }
 }
 
 export function bodyMiddle(id: ThingId, spot: Spot): Point {
