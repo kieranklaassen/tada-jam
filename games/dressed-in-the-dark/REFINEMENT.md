@@ -29,11 +29,11 @@ One entry a file copied from the template, written for the lead and for the game
 
 | Pass | Looked at | Critique | Fix set | Frame rate | Still weak |
 | --- | --- | --- | --- | --- | --- |
-| 1 | first stills, both lights, 1180 by 820 | "The clothes float. The chicken fell into the hippo's bed." | hooks to the line, the hen tips over in its own bed, quilts in the bed's colour | not measured | gold too dim in the dark |
+| 1 | first stills, both lights, 1180 by 820 | The clothes float. The chicken fell into the hippo's bed. | hooks to the line, the hen tips over in its own bed, quilts in the bed's colour | not measured | gold too dim in the dark |
 | 2 | a whole night with everything on | arms and skirts over the neighbour | arms, tails and skirts kept over their own bed; everything painted once and stamped (from about 1,300 calls a frame to at most 80) | counted | feet look like mittens |
-| 3 | every sound rendered offline, 129 of them | peaks from 0.003 to 0.16: far too quiet | tones and noise raised; peaks now 0.01 to 0.27, none longer than 2.3 s | none | nobody has listened |
-| 4 | cold playtest proxy on the production build, about 100 stills, no knowledge of the game | "Where did hippo go? Whose feet? It is daytime when the lamp is off. The croc points and laughs at them. Nothing says where a lifted hat goes." | own feet, a darker sky and a pale moon, garlands and blue on the arches, laughing with hands on the belly and not pointing, cross ones look at the garment and not at the child, every quilt offers its hem while a garment is off its peg, longer dreams, the hand stays on the screen | none | garments are small beside their wearers; boots on the last bed share its colour |
-| 5 | independent code review | 15 findings, most of them reproduced by running the game's own show | all fixed, each behaviour with a test, except the boots' colour above | see below | see the status block |
+| 3 | every sound rendered offline, 129 of them | peaks from 0.003 to 0.16: far too quiet | tones and noise raised; peaks now 0.01 to 0.27, none longer than 2.3 s | not measured | nobody has listened |
+| 4 | cold playtest proxy on the production build, about 100 stills, no knowledge of the game | Where did hippo go? Whose feet? It is daytime when the lamp is off. The croc points and laughs at them. Nothing says where a lifted hat goes. | own feet, a darker sky and a pale moon, garlands and blue on the arches, laughing with hands on the belly and not pointing, cross ones look at the garment and not at the child, every quilt offers its hem while a garment is off its peg, longer dreams, the hand stays on the screen | not measured | garments are small beside their wearers; boots on the last bed share its colour |
+| 5 | independent code review | 15 findings, most of them reproduced by running the game's own show | all fixed but the boots' colour; the found-as-left and dark-frame ones got new tests | see below | see the status block |
 
 ## For the pull request
 
@@ -44,7 +44,7 @@ One entry a file copied from the template, written for the lead and for the game
 - **Weight.** Garments hang on springs, quilts bulge, each sleeper's whole body goes into its act; no two share one (`motion.test.ts`).
 - **Clear silhouettes and targets.** Beds 204 by 380, pegs 91 apart, the cord's target 120 wide.
 - **Wordless.** No word, letter, numeral or sign. One want at a time: the cord, then the one who shivers, then the cord. The ladder shows only moves that can be made (`show.test.ts`).
-- **60 frames.** At most 80 stamps, fills and strokes a frame and at most 16 sprites painted in one (`frameBudget.test.ts`). FRAME
+- **60 frames.** At most 80 stamps, fills and strokes a frame and at most 16 sprites painted in one (`frameBudget.test.ts`). Measured with the shared probe on the production build in desktop Chromium with software rendering, which says little about an iPad: 59.5 fps unthrottled at tier 1 (DPR 1.5), worst second 54, frame CPU p95 1.1 ms, 72 calls at most. At 6x CPU throttle 16.7 fps at tier 3 (DPR 1), where frame CPU p95 was 10.2 ms: the 6x run does not reach 60, and the game code alone does not account for it. WebKit was not available. **No iPad was measured.**
 - **Assets.** All procedural; system sound only through Web Audio.
 
 ### The learning claim
