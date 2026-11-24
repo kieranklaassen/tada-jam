@@ -54,6 +54,8 @@ export class Aim {
       for (const sx of [-1, 1]) for (const sy of [-1, 1]) for (const sz of [-1, 1]) points.push(inRoom(pose, turn, box.x + sx * box.hx * 0.92, box.y + STAND.h + sy * box.hy, box.z + sz * box.hz * 0.92))
       best = Math.min(best, off(this.rect(points), x, y))
     }
+    // The front of its stand, with the key that can be anywhere round it.
+    best = Math.min(best, off(this.rect([{ x: pose.x - STAND.r * 0.85, y: pose.y + STAND.h, z: pose.z }, { x: pose.x + STAND.r * 0.85, y: pose.y, z: pose.z + STAND.r * 0.95 }]), x, y))
     if (id === 'giraffe') {
       // Its neck.
       const a = this.px({ x: pose.x, y: pose.y + 1.8, z: pose.z }), b = this.px(inRoom(pose, turn, 0, headOf(id), 0.3))

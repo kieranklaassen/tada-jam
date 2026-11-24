@@ -390,3 +390,15 @@ describe('anything at all', () => {
     for (const id of CAST) for (const key of ['x', 'y', 'z', 'yaw'] as const) expect(Math.cos(back.game.poses[id][key])).toBeCloseTo(Math.cos(play.game.poses[id][key]), 5)
   })
 })
+
+describe('the stand', () => {
+  it('belongs to whoever stands on it: its key is pulled and tapped as the sitter is', () => {
+    const play = open(), p = play.game.poses.elephant, at = px(play, { x: p.x, y: p.y + 0.1, z: p.z + 1.15 })
+    tap(play, at)
+    expect(play.game.table.turns.elephant).toBe(1)
+    run(play, 1.5)
+    drag(play, at, [at[0] + 200, at[1] - 60])
+    expect(play.game.hand?.id).toBe('elephant')
+    expect(play.game.turned).toBe(0)
+  })
+})

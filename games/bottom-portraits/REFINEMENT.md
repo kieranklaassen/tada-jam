@@ -32,6 +32,7 @@ Frame cost is JavaScript a frame on a machine without a graphics card; absolute 
 | 3 | Cold playtest by a reader who had seen nothing (15 findings) | Two seen passing through each other in a swap; a first touch in a scene did two things; nothing asked to be touched | Swap passes round the child's side; a touch before the picture is seen only ends the scene; guidance ring and tin hand; rim push | same | Monocle has no cord |
 | 4 | Intersection audit, every act | Picture flew through the painter, spun through whoever stood beside it, keys sank in the table, brush in the wall | New flights, spin before growth, smaller keys, wall set back | 58 draw calls in play, CPU p95 2.6 ms | Allowed contacts listed with caps in the audit file |
 | 5 | Code review (12 findings) | Winding keys were frozen after the first frame; a head could stay turned; a hop during a table turn snapped; the painter looked at the wrong sitter after a table turn; picture paint cost | All fixed, `game.test.ts` holds five | picture shader: about 100 noise lookups a pixel fewer | |
+| 6 | Second cold playtest, by a reader who had seen nothing (12 findings) | Keys came loose from their animals (the same fault as pass 5 found); a stand pulled turned the table; truthful and funny; reload as left | Keys fixed, a stand is part of its sitter | same | Far sitters are hidden by near ones; the giraffe's head covers one hung picture; the board's pairing is found by chance; a carried animal is large; on a slow machine the guidance takes long |
 
 ## For the pull request
 
