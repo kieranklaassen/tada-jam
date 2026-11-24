@@ -45,13 +45,13 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const playing = { step: 0, guidance: null as Guidance | null }
 
     // Nothing is saved until the slot has been read, so an early put-away cannot overwrite it.
-    const cadence = new SaveCadence(() => { if (play) ctxRef.current.storage.save(serialize(play.saved)) })
+    const cadence = new SaveCadence(() => { if (play) ctxRef.current.storage.save(serialize(play.saved, play.dreamShown > 0)) })
 
     // A tier changes the pixel ratio, which `resize` applies. The canvas carries it where a still or a probe can read it.
     const applyTier = () => { canvas.dataset.tier = String(governor.tier) }
 
     const draw = () => {
-      drawn.drawCalls = view.draw(play, playing.guidance, playing.step, width, height, dpr)
+      drawn.drawCalls = view.draw(play, playing.guidance, playing.step, width, height, dpr, Math.min(2, window.devicePixelRatio || 1))
     }
 
     // The shell can resize the surface without a window resize event, so the surface watches itself.
@@ -121,8 +121,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       const where = at(event)
       if (touch.holds(event.pointerId)) overlay.lift(where.x, where.y, width, event.timeStamp)
       act(touch.up(event.pointerId, where, event.timeStamp))
-      // The lift is the drop.
-      act(touch.letGo())
+      // Over a place the lift is the drop.
+      if (play?.landsIn(staged(where))) act(touch.letGo())
       audio.touchUp()
     }
     // The browser took the finger away, which is not the child letting go: a drag is cancelled, not dropped.

@@ -1,6 +1,6 @@
 import { freshHouse, settle, type House } from './house'
 import { PLACES, isThing, type Place, type ThingId } from './things'
-import { WISHES, firstWish, isMet } from './wishes'
+import { WISHES, firstWish, isMet, nextWish } from './wishes'
 
 // What goes into ctx.storage: small plain JSON, versioned, read defensively.
 // It holds the house as it ends up, never the butler's errand: an errand that
@@ -61,12 +61,14 @@ export function deserialize(raw: unknown, childAge: number | null): Saved {
 }
 
 /** A wish the outcome already meets is saved as met, so a put-away before the butler has finished replays no scene. */
-export function serialize(saved: Saved): Record<string, unknown> {
-  const met = saved.dreaming && isMet(WISHES[saved.wish], saved.house)
+export function serialize(saved: Saved, seen = true): Record<string, unknown> {
+  const met = saved.dreaming && seen && isMet(WISHES[saved.wish], saved.house)
+  // One that was never on show was a joke already told: she dreams of the next.
+  const wish = saved.dreaming && !seen ? nextWish(saved.wish, saved.house) : saved.wish
   return {
     v: SAVE_VERSION,
     house: { examples: saved.house.examples, nots: saved.house.nots, order: saved.house.order },
-    wish: WISHES[met ? (saved.wish + 1) % WISHES.length : saved.wish].id,
+    wish: WISHES[met ? (wish + 1) % WISHES.length : wish].id,
     dreaming: saved.dreaming && !met,
     begun: saved.begun,
   }

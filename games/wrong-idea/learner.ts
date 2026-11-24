@@ -48,11 +48,6 @@ export function isEverything(idea: Idea): boolean {
   return ORDER.every((feature) => idea[feature] === undefined)
 }
 
-export function sameIdea(a: Idea | null, b: Idea | null): boolean {
-  if (!a || !b) return a === b
-  return ORDER.every((feature) => a[feature] === b[feature])
-}
-
 /** Every choice of `count` of the features, in the order he thinks of them. */
 function choices(features: readonly Feature[], count: number): Feature[][] {
   if (count === 0) return [[]]

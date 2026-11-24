@@ -1,5 +1,5 @@
 import type { Point } from './input'
-import { PLACES, THINGS, thingOf, type Place, type ThingId } from './things'
+import { PLACES, thingOf, type Place, type ThingId } from './things'
 
 // Where everything stands, in stage units. The stage is 1180 by 820: a house cut
 // open from the side, with a shelf of small things across the top, the family
@@ -106,5 +106,3 @@ export const ROPE_MOST = 120
 
 /** The grandmother's dream hangs over her chair. */
 export const DREAM = { x: 152, y: 252, w: 216, h: 116 } as const
-
-export const SMALL = THINGS.filter((one) => (SHELF_ORDER as readonly string[]).includes(one.id)).map((one) => one.id)

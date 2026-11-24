@@ -1,6 +1,6 @@
 import type { Note } from './audio'
 import { Errand } from './errand'
-import { exampleIn, freshHouse, ideaOf, isTidy, put, take, type House } from './house'
+import { freshHouse, ideaOf, isTidy, put, take, type House } from './house'
 import type { Gesture, Point } from './input'
 import { DREAM, ROPE, ROPE_MOST, ROPE_PULL, SIZE, VESSELS, bodyMiddle, homeOf, onThing, placeAt, slotOf, type Spot } from './layout'
 import type { Idea } from './learner'
@@ -8,7 +8,7 @@ import { Mover, springTo, type Character, type Spring } from './motion'
 import type { Saved } from './save'
 import { BUTLER, PLACES, THINGS, thingOf, type Place, type ThingId, type Where } from './things'
 import { VOICES, landVoice, pokeVoice, type VoiceName } from './voices'
-import { WISHES, isMet, nextWish } from './wishes'
+import { WISHES, isMet, nextWish, wishPlaces } from './wishes'
 
 // The game with no browser in it. Gestures come in stage units and time in
 // seconds; the Mount and the tests both play it through here.
@@ -31,7 +31,6 @@ export type Ring = { x: number; y: number; t: number }
 /** How long a thing let go on somebody is worn. */
 export const WORN_SECONDS = 1.7
 export const SCENE_SECONDS = 5
-const GRAN_BOUNCE = 0.5
 
 export class Play {
   readonly shown: Record<ThingId, Shown> = {}
@@ -81,7 +80,20 @@ export class Play {
 
   /** The child is doing something, or the game is. */
   get busy(): boolean {
-    return this.held !== null || this.scene !== null || this.errand.busy || this.errand.inside !== this.house.butler || THINGS.some((one) => this.shown[one.id].mode !== 'rest' || this.house.at[one.id] !== (this.shown[one.id] as { where: Where }).where)
+    return this.held !== null || this.scene !== null || !this.done
+  }
+
+  /** Everything is where the house has it, and nothing is on its way. */
+  private get done(): boolean {
+    return !this.errand.busy && this.errand.inside === this.house.butler && THINGS.every((one) => {
+      const now = this.shown[one.id]
+      return now.mode === 'rest' && now.where === this.house.at[one.id]
+    })
+  }
+
+  /** A drop here lands somewhere, so the lift itself is the drop. Elsewhere a slipped finger has a moment to come back. */
+  landsIn(at: Point): boolean {
+    return this.held?.kind !== 'thing' || placeAt(at) !== null
   }
 
   get holding(): ThingId | null {
@@ -214,7 +226,7 @@ export class Play {
       this.queue.push(landVoice('hat', place).slice(0, 2))
       return
     }
-    if (this.dreaming && Math.abs(at.x - DREAM.x) < DREAM.w / 2 && Math.abs(at.y - DREAM.y) < DREAM.h / 2) {
+    if (this.dreaming && this.inDream(at)) {
       this.poke('gran')
       return
     }
@@ -235,12 +247,23 @@ export class Play {
     saved.wish = nextWish(saved.wish, saved.house)
     saved.dreaming = true
     this.dirty = true
-    if (!this.errand.busy && this.pending() === null) this.showDream()
+    if (this.done) this.showDream()
   }
 
   private showDream(): void {
     this.dreamShown = 0.001
     this.say('dream')
+  }
+
+  /** The bubble: wider for a wish of several places. */
+  dreamBox(): { x: number; w: number } {
+    const w = DREAM.w + (wishPlaces(WISHES[this.saved.wish]).length - 1) * 50
+    return { x: DREAM.x + (w - DREAM.w) / 2, w }
+  }
+
+  private inDream(at: Point): boolean {
+    const { x, w } = this.dreamBox()
+    return Math.abs(at.x - x) < w / 2 && Math.abs(at.y - DREAM.y) < DREAM.h / 2
   }
 
   /** A wish is on show. */
@@ -263,12 +286,13 @@ export class Play {
       return
     }
     const spot = this.spotOf(id)
-    const where = now.mode === 'rest' || now.mode === 'fly' ? now.where : 'home'
+    // Out of his hands, it was on its way to where he thinks it goes.
+    const where = now.mode === 'rest' || now.mode === 'fly' ? now.where : now.mode === 'butler' ? this.house.at[id] : 'home'
     if (now.mode === 'butler') this.errand.lose(id)
     this.renumber()
     this.held = { kind: 'thing', id, grab: { x: spot.x - from.x, y: spot.y - from.y } }
     this.shown[id] = { mode: 'hand', from: where, at: { x: spot.x, y: spot.y } }
-    if (where !== 'home') this.slosh[where].v += 4
+    if (where !== 'home' && now.mode === 'rest') this.slosh[where].v += 4
     this.squash[id].v += 4
   }
 
@@ -317,7 +341,7 @@ export class Play {
     const thing = thingOf(id), size = SIZE[thing.kind], middle = { x: now.at.x, y: now.at.y - size.h * 0.4 }
     const place = placeAt(at) ?? placeAt(middle)
     if (place) {
-      if (place === now.from) {
+      if (place === now.from && this.house.at[id] === place) {
         // Back where it was lifted from: nothing was said.
         this.fly(id, place, 0.22, 20)
         return
@@ -481,6 +505,15 @@ export class Play {
       const now = this.shown[id]
       mover.update(dt, id === BUTLER.id ? (this.errand.inside ?? 'home') : now.mode === 'rest' ? now.where : 'home')
     }
+    if (this.scene !== null) {
+      // She laughs with her whole self, wherever she is.
+      const pose = this.movers.gran.pose, shake = Math.abs(Math.sin(this.scene * 13)), ebb = 1 - (this.scene / SCENE_SECONDS) ** 3
+      pose.part = shake * 1.8 * ebb
+      pose.mouth = Math.max(pose.mouth, (0.6 + shake * 0.5) * ebb)
+      pose.eyes = this.scene < 0.5 ? 1.5 : 0.12
+      pose.tilt = Math.sin(this.scene * 6.5) * 0.16 * ebb
+      pose.lift += shake * 6 * ebb
+    }
     for (const list of [this.splashes, this.rings]) {
       for (const one of list) one.t += dt
       while (list.length > 0 && list[0].t > 1) list.shift()
@@ -516,9 +549,12 @@ export class Play {
   private wishes(dt: number): void {
     const saved = this.saved
     if (this.dreamShown > 0) this.dreamShown = Math.min(1, this.dreamShown + dt * 2.4)
-    if (!saved.dreaming || this.errand.busy || this.held || this.pending() !== null || THINGS.some((one) => this.shown[one.id].mode !== 'rest')) return
-    if (this.errand.inside !== this.house.butler) return
+    if (!saved.dreaming || this.held || !this.done) return
     if (this.dreamShown === 0) {
+      // What the child has made true meanwhile is not dreamed of.
+      const wish = nextWish(saved.wish, saved.house)
+      if (wish !== saved.wish) this.dirty = true
+      saved.wish = wish
       this.showDream()
       return
     }
@@ -547,21 +583,19 @@ export class Play {
 
   /** How far the grandmother's chair has walked off its feet in her laugh. */
   granLift(): number {
-    return this.scene === null ? 0 : Math.abs(Math.sin(this.scene * 11)) * 26 * Math.max(0, 1 - this.scene / SCENE_SECONDS) * GRAN_BOUNCE * 2
+    return this.scene === null || !this.atHome(this.shown.gran) ? 0 : Math.abs(Math.sin(this.scene * 11)) * 26 * Math.max(0, 1 - this.scene / SCENE_SECONDS)
   }
 
-  /** One move the ghost hand may show: a small thing on the shelf carried to a place, and by turns, once something is out, the bell rope pulled. It is never chosen to meet a wish. */
+  /** One move the ghost hand may show: a small thing on the shelf carried to a place, or, once the shelf is empty, the bell rope pulled. It is never chosen to meet a wish. */
   demo(index: number): { id: ThingId | null; from: Point; to: Point } | null {
-    if (index % 2 === 1 && !isTidy(this.house)) return { id: null, from: { x: ROPE.x, y: ROPE.y + 20 }, to: { x: ROPE.x, y: ROPE.y + 120 } }
     const free = THINGS.filter((one) => !one.alive && this.atHome(this.shown[one.id]))
-    if (free.length === 0) return null
-    const one = free[(index * 4) % free.length]
-    const place = PLACES[(index + 1) % PLACES.length]
-    return { id: one.id, from: bodyMiddle(one.id, homeOf(one.id)), to: { x: VESSELS[place].x, y: VESSELS[place].rim - 24 } }
-  }
-
-  /** Whether this is the child's own in some place. */
-  isExample(id: ThingId): boolean {
-    return exampleIn(this.house, id) !== null
+    if (free.length === 0) return { id: null, from: { x: ROPE.x, y: ROPE.y + 20 }, to: { x: ROPE.x, y: ROPE.y + 120 } }
+    const wish = WISHES[this.saved.wish]
+    for (let n = 0; n < free.length * PLACES.length; n++) {
+      const one = free[(index * 4 + n) % free.length], place = PLACES[(index + 1 + Math.floor(n / free.length)) % PLACES.length]
+      if (isMet(wish, put(this.house, one.id, place))) continue
+      return { id: one.id, from: bodyMiddle(one.id, homeOf(one.id)), to: { x: VESSELS[place].x, y: VESSELS[place].rim - 24 } }
+    }
+    return null
   }
 }

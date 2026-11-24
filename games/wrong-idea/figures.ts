@@ -328,14 +328,13 @@ export function drawLiving(kind: Kind, live: Live): void {
 
 export type Hands = { left: Gaze; right: Gaze; point: boolean }
 
-/** Drawn about his feet. The hands are where they are asked to be, however far that is: his sleeves stretch. */
 /** He is drawn a little larger than he stands: 440 from sole to parting. */
 export const BUTLER_DRAWN = 0.93
 
+/** Drawn about his feet. The hands are where they are asked to be, however far that is: his sleeves stretch. */
 export function drawButler({ g, s, pose, gaze, t, place }: Live, hands: Hands, stride: number, speed: number): void {
   const run = Math.min(1, Math.abs(speed) / 420), hip = -150
   if (place === 'home') {
-    flat(g, ellipse(0, 2, 84, 12), 'rgba(52,30,26,0.25)', [0, 0, 1, 1], 0)
     for (const side of [-1, 1]) {
       const swing = Math.sin(stride + (side > 0 ? Math.PI : 0)) * run
       const fx = side * 25 + swing * 46, fy = -Math.max(0, Math.cos(stride + (side > 0 ? Math.PI : 0))) * run * 26

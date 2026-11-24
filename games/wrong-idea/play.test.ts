@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { ForgivingTouch, type Point } from './input'
 import { ROPE, SHELF_ORDER, VESSELS, bodyMiddle, homeOf, onThing, slotOf } from './layout'
+import { put } from './house'
 import { Play } from './play'
 import { below, makeRng } from './rng'
 import { deserialize, serialize } from './save'
@@ -28,7 +29,11 @@ class Hands {
   }
   down(at: Point, id = 1): this { this.play.act(this.touch.down(id, at, this.ms)); return this }
   move(at: Point, id = 1): this { this.play.act(this.touch.move(id, at)); return this }
-  up(at: Point, id = 1): this { this.play.act(this.touch.up(id, at, this.ms)); return this }
+  up(at: Point, id = 1): this {
+    this.play.act(this.touch.up(id, at, this.ms))
+    if (this.play.landsIn(at)) this.play.act(this.touch.letGo())
+    return this
+  }
   tap(at: Point): this { return this.down(at).frames(3).up(at).frames(2) }
   /** Somewhere a finger finds this thing. */
   where(id: ThingId): Point {
@@ -256,3 +261,39 @@ describe('any play', () => {
   })
 })
 
+
+describe('what the review found', () => {
+  it('the ghost hand never shows the wish, dreamed or to come', () => {
+    for (let wish = 0; wish < WISHES.length; wish++) {
+      const play = new Hands().play
+      play.saved.wish = wish
+      for (let index = 0; index < 6; index++) {
+        const move = play.demo(index)!
+        const place = PLACES.find((one) => VESSELS[one].x === move.to.x)!
+        expect(isMet(WISHES[wish], put(play.house, move.id!, place)), WISHES[wish].id).toBe(false)
+      }
+    }
+  })
+  it('a wish made true before it was on show is not dreamed, and not saved as a joke seen', () => {
+    const h = new Hands()
+    h.carry(h.where('yellow-hat'), over('bed')).frames(4)
+    h.carry(h.where('red-hat'), over('soup')).frames(4)
+    expect(isMet(WISHES[0], h.play.house)).toBe(true)
+    const stored = serialize(h.play.saved, h.play.dreamShown > 0)
+    expect(stored.dreaming).toBe(true)
+    expect(stored.wish).not.toBe('king-soup')
+    h.frames(60 * 25)
+    expect(h.play.dreaming).toBe(true)
+    expect(isMet(WISHES[h.play.saved.wish], h.play.house)).toBe(false)
+  })
+  it('what the child takes out of his hands is told to him', () => {
+    const h = new Hands()
+    h.carry(h.where('red-sock'), over('soup'))
+    for (let i = 0; i < 900 && h.play.shown.king.mode !== 'butler'; i++) h.frames(1)
+    expect(h.play.shown.king.mode).toBe('butler')
+    const king = h.where('king')
+    h.down(king).frames(1).move({ x: 560, y: 480 }).frames(2).move({ x: 700, y: 480 }).up({ x: 700, y: 480 }).frames(900)
+    expect(h.play.house.at.king).toBe('home')
+    expect(h.play.shown.king).toMatchObject({ mode: 'rest', where: 'home' })
+  })
+})

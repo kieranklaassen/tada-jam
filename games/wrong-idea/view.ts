@@ -1,5 +1,5 @@
 import { BUTLER_DRAWN, DYE, drawButler, drawChair, drawLiving, drawSmall, drawThrone, type Gaze, type Hands } from './figures'
-import { THINK, THINK_SECONDS } from './errand'
+import { JUMP_SECONDS, REACH_SECONDS, THINK, THINK_SECONDS, TOSS_SECONDS } from './errand'
 import { handPose, type Guidance, type HandPose } from './guidance'
 import { drawIdea, drawMini } from './icons'
 import { DREAM, ROPE, SIZE, VESSELS, homeOf, type Spot } from './layout'
@@ -36,16 +36,17 @@ export class View {
     for (const one of [...THINGS, BUTLER]) this.eased[one.id] = { gaze: { x: 0, y: 0 }, swing: { x: 0, v: 0 }, lastX: 0 }
   }
 
-  draw(play: Play | null, guidance: Guidance | null, step: number, width: number, height: number, dpr: number): number {
+  draw(play: Play | null, guidance: Guidance | null, step: number, width: number, height: number, dpr: number, painted = dpr): number {
     const g = this.g, by = fit(width, height)
     if (by.scale <= 0) return 0
     this.time += step
-    this.sprites.resize(Math.min(2.2, Math.max(1, dpr * by.scale)))
+    // Painted for the device and not for the tier, so a tier change paints nothing anew.
+    this.sprites.resize(Math.min(2.2, Math.max(1, painted * by.scale)))
     this.sprites.drawn = 0
-    const key = `${width} ${height} ${dpr}`
+    const key = `${width} ${height} ${painted}`
     if (key !== this.chartKey || !this.chart) {
       this.frame = { x0: -by.x / by.scale, y0: -by.y / by.scale, x1: (width - by.x) / by.scale, y1: (height - by.y) / by.scale }
-      this.chart = paintChart(this.frame, dpr * by.scale)
+      this.chart = paintChart(this.frame, painted * by.scale)
       this.chartKey = key
     }
     g.setTransform(dpr * by.scale, 0, 0, dpr * by.scale, dpr * by.x, dpr * by.y)
@@ -245,12 +246,12 @@ export class View {
     if (errand.load.length > 0 || act.do === 'toss') {
       const first = errand.load[0] ?? null
       const wide = first ? Math.max(46, (SIZE[thingOf(first).kind].w * errand.loadSpot(0, first).s) / 2) : 60
-      const up = act.do === 'toss' ? Math.sin(Math.min(1, act.t / 0.24) * Math.PI) * 60 : 0
+      const up = act.do === 'toss' ? Math.sin(Math.min(1, act.t / TOSS_SECONDS) * Math.PI) * 60 : 0
       left = { x: -wide - 4, y: -452 + up }
       right = { x: wide + 4, y: -452 + up }
     }
     if (act.do === 'reach') {
-      const to = rel(act.to.x, act.to.y - 40), p = Math.sin(Math.min(1, act.t / 0.3) * Math.PI)
+      const to = rel(act.to.x, act.to.y - 40), p = Math.sin(Math.min(1, act.t / REACH_SECONDS) * Math.PI)
       const which = to.x < 0 ? left : right
       which.x += (to.x - which.x) * p
       which.y += (to.y - which.y) * p
@@ -282,10 +283,10 @@ export class View {
     const hands: Hands = { left: this.hands.left, right: this.hands.right, point }
     const q = Math.max(-0.4, Math.min(0.4, play.squash.butler.x))
     const tall = pose.squash * (1 + q * 0.3)
-    if (!inside && act.do !== 'jump') this.shadow({ x: spot.x, y: spot.y + 2, s: 1 }, 86)
+    if (!inside && act.do !== 'jump') this.shadow({ x: spot.x, y: spot.y + 3, s: 1 }, 84)
     g.save()
     g.translate(spot.x, spot.y - (errand.busy ? pose.lift * 0.3 : pose.lift * 0.5) - lift)
-    g.rotate(pose.lean + lean + (act.do === 'jump' ? Math.sin(Math.min(1, act.t / 0.62) * Math.PI) * 0.3 : 0))
+    g.rotate(pose.lean + lean + (act.do === 'jump' ? Math.sin(Math.min(1, act.t / JUMP_SECONDS) * Math.PI) * 0.3 : 0))
     g.scale(k * (2 - tall), k * tall)
     const shape = { ...pose, brow: pose.brow + brow, mouth: Math.max(pose.mouth, mouth) }
     if (act.do === 'look') shape.tilt += Math.sin(act.t * 5) * 0.12
@@ -469,8 +470,7 @@ export class View {
       }
       return
     }
-    const wish = WISHES[saved.wish], places = wishPlaces(wish), wide = DREAM.w + (places.length - 1) * 70
-    const x = DREAM.x + (wide - DREAM.w) / 2, y = DREAM.y
+    const wish = WISHES[saved.wish], places = wishPlaces(wish), { x, w: wide } = play.dreamBox(), y = DREAM.y
     this.trail(from, { x: DREAM.x, y: y + 56 })
     g.save()
     g.translate(x, y + Math.sin(this.time * 1.2) * 2)

@@ -3,7 +3,7 @@ import { BUTLER, PLACES, THINGS, thingOf, type Place, type Thing, type ThingId, 
 
 // The house as it will be once the butler has carried on. A put or a take is
 // worked out to its end here and saved at once; the butler on screen then
-// walks the house he is in towards this one (butler.ts).
+// walks the house he is in towards this one (errand.ts).
 
 export type House = {
   /** What the child put in each place, in order. These are the child's own: no idea moves them. */
@@ -78,13 +78,10 @@ export function put(house: House, id: ThingId, place: Place): House {
 export function take(house: House, id: ThingId): House {
   const place = house.at[id]
   if (place === 'home') return house
-  if (exampleIn(house, id)) return settle(latest(unshown(house, id), place))
-  return settle(latest({ ...house, nots: { ...house.nots, [place]: [...without(house.nots[place], id), id] } }, place))
-}
-
-/** The bell: everyone and everything goes home and he has no ideas. */
-export function tidy(): House {
-  return freshHouse()
+  const told: Told = unshown(house, id), idea = ideaOf(told, place)
+  // Out is out: if what is left would fetch it straight back, it is left out.
+  if (idea === null || !fits(idea, thingOf(id))) return settle(latest(told, place))
+  return settle(latest({ ...told, nots: { ...told.nots, [place]: [...without(told.nots[place], id), id] } }, place))
 }
 
 export function isTidy(house: House): boolean {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { exampleIn, freshHouse, ideaOf, isTidy, put, take, tidy, type House } from './house'
+import { exampleIn, freshHouse, ideaOf, isTidy, put, take, type House } from './house'
 import { fits, learn } from './learner'
 import { deserialize, fresh, serialize } from './save'
 import { PLACES, THINGS, thingOf, type Place, type ThingId } from './things'
@@ -76,7 +76,7 @@ describe('the house', () => {
     const again = put(spared, 'hen', 'soup')
     expect(again.nots.soup).toEqual([])
     expect(exampleIn(again, 'hen')).toBe('soup')
-    expect(isTidy(tidy())).toBe(true)
+    expect(isTidy(freshHouse())).toBe(true)
   })
   it('putting a thing where it is is a put: an example, or one already', () => {
     const red = into('soup', 'red-sock')
@@ -143,6 +143,16 @@ describe('the save', () => {
       expect(THINGS.every((one) => saved.house.at[one.id] !== undefined)).toBe(true)
       expect(saved.house.order).toHaveLength(3)
       expect(saved.house.nots.bath).toEqual([])
+    }
+  })
+})
+
+describe('out is out', () => {
+  it('an example pulled out is never fetched straight back', () => {
+    const movable = THINGS.filter((one) => !one.heavy)
+    for (const place of PLACES) for (const a of movable) for (const b of movable) {
+      if (a.id === b.id) continue
+      expect(take(put(put(freshHouse(), a.id, place), b.id, place), a.id).at[a.id], `${a.id} out from ${b.id}`).toBe('home')
     }
   })
 })

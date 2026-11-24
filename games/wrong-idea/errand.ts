@@ -26,10 +26,10 @@ export type World = {
 
 export const THINK = { freeze: 0.34, show: 0.9, settle: 0.66 } as const
 export const THINK_SECONDS = THINK.freeze + THINK.show + THINK.settle
-const REACH_SECONDS = 0.3
-const TOSS_SECONDS = 0.24
+export const REACH_SECONDS = 0.3
+export const TOSS_SECONDS = 0.24
 const SELF_LOOK = 1.3
-const JUMP_SECONDS = 0.62
+export const JUMP_SECONDS = 0.62
 const SPEED = 520
 const FASTEST = 940
 /** The bubble stays this long after the last of an errand. */
@@ -90,8 +90,8 @@ export class Errand {
     let up = SIZE.butler.h * at.s + 6
     for (let i = 0; i < n; i++) up += (SIZE[thingOf(this.load[i] ?? id).kind]?.h ?? 80) * 0.62
     const sway = Math.sin(this.stride * 2 + n) * (4 + n * 5) * Math.min(1, Math.abs(this.speed) / 300)
-    const alive = thingOf(id).heavy
-    return { x: at.x + sway, y: at.y - up + (alive ? 46 : 10), s: alive ? 0.72 : 0.9 }
+    const heavy = thingOf(id).heavy
+    return { x: at.x + sway, y: at.y - up + (heavy ? 46 : 10), s: heavy ? 0.72 : 0.9 }
   }
 
   /** What his eyes are on. */
@@ -102,6 +102,13 @@ export class Errand {
   }
 
   think(place: Place, examples: readonly ThingId[], idea: Idea | null): void {
+    if (!idea) {
+      // Nothing left to think about: the cloud goes.
+      this.thought = null
+      this.owed = false
+      if (this.act.do !== 'jump') this.act = { do: 'idle' }
+      return
+    }
     this.thought = { place, examples: [...examples], idea, t: 0 }
     this.linger = LINGER
     this.hurry = 0
@@ -113,6 +120,8 @@ export class Errand {
   /** The child took a thing out of his hands. */
   lose(id: ThingId): void {
     this.load = this.load.filter((one) => one !== id)
+    // What is next may belong somewhere else.
+    if (this.act.do === 'toss') this.act = { do: 'carry' }
   }
 
   /** The bell: his hands are empty and his head too. */
@@ -120,11 +129,9 @@ export class Errand {
     this.load = []
     this.thought = null
     this.owed = false
-    if (this.inside || this.act.do === 'jump') {
-      const from = this.spot()
-      this.inside = null
-      this.act = { do: 'jump', t: 0, from, place: null }
-    } else this.act = { do: 'idle' }
+    this.hurry = 0
+    if (this.inside || this.act.do === 'jump') this.leap(null)
+    else this.act = { do: 'idle' }
   }
 
   private walk(to: number, dt: number): boolean {
