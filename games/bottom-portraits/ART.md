@@ -31,7 +31,7 @@ Day 15: the child plans one picture out of several bodies from the wrong side of
 
 ## The representation
 
-There is no school idea, so nothing is claimed here. The thing at work is that one arrangement looks different from two sides, and the game shows both truthfully: the child's view is the screen and the painter's is the picture, drawn from where his eye is, in the same scene. The prediction a child can make is "what will he see?", answered by the picture. It is made before he turns it round, since the canvas has its plain back to the child. No trial is behind this; the write-up's own check calls the learning argued and not cited. Object and picture only; no symbol.
+There is no school idea, so nothing is claimed here. The thing at work is that one arrangement looks different from two sides, and the game shows both truthfully: the child's view is the screen and the painter's is the picture, drawn from his side of the table at the height of his eye, stood back the length of a room so that near and far keep their places, in the same scene. His frame closes in on whoever stands there and stops at a fixed top over the two places near him, which is what cuts a giraffe off there and nowhere else. The prediction a child can make is "what will he see?", answered by the picture. It is made before he turns it round, since the canvas has its plain back to the child. No trial is behind this; the write-up's own check calls the learning argued and not cited. Object and picture only; no symbol.
 
 ## The four mechanic questions
 
@@ -50,7 +50,7 @@ Open pretend play with one place in its order, `table`. What grows is what the c
 
 Stored, version 1: `position` and `finished` from the template (`finished` is the picture standing shown on the easel); `spots`, four entries, each a sitter or empty; `turns`, seven quarter counts; `homes`, which step each waiting thing stands on; `wall`, six nails, each empty or a picture as its arrangement (four spots and their turns); `last`, the nail of the newest picture, which while `finished` is true is the one on the easel and not yet on its nail; a nail is drawn only when a picture hangs on it; `painted`, whether any picture has ever been painted. A picture is not stored as pixels: the same arrangement always paints the same picture. Nails are filled in a fixed order round the wall, so the seventh picture takes the oldest one's nail: the oldest is seen and heard to swing down behind the wainscot as that painting starts.
 
-Seven things, four places and six steps. A tap on a thing on the steps sends it to an empty place, the two near the child first. When all four are taken it changes places with the one on the near-left place, which is seen and heard to hop to the step the newcomer left; a tap on that one changes them back. A carried thing let go on a taken place changes places in the same way, and let go anywhere else it goes to the nearest empty place or step, or back where it came from, in sight. Somebody is therefore always on the table: the last one is sent back to it if the child carries it off, seen and heard.
+Seven things, four places and six steps. A tap on a thing on the steps sends it to an empty place, the two near the child first. When all four are taken it changes places with the one on the near-left place, which is seen and heard to hop to the step the newcomer left while the newcomer swings round it on the child's side; a tap on that one changes them back. A carried thing let go on a taken place changes places in the same way, and let go anywhere else it goes to the nearest empty place or step, or back where it came from, in sight. Somebody is therefore always on the table: the last one is sent back to it if the child carries it off, seen and heard.
 
 ## The characters and their fixed tastes
 
@@ -75,3 +75,21 @@ None. The game has no learning goal and claims no school skill.
 
 ---
 
+# Art guide
+
+## The look
+
+**Lithographed tin toys**, the first choice of the look menu. The spike held on clarity, so the fallback (quilted patchwork) was not tried.
+
+Everything that acts is thin tin, pressed in rounded shells, closed along a seam that shows, and printed. The print does the drawing: dots, stripes, lace, buttons and rouge lie flat on the metal, a little off register, with a dark line and a fine halftone where a colour deepens. Light is a bright room's: a window in four panes is mirrored in every shell, always in the same place. No brass, no lamp, no dark.
+
+- **The joke is printed.** Every sitter is in full dress in front (frock coat, lace bib, pearls, waistcoat, white tie) and in patched, striped or spotted drawers behind. From the child's side it is a portrait; from his it is a bottom. The painter himself is no better dressed behind than they are.
+- **Palette.** Cream, teal, red, gold and orange for the toys and the studio; the wall a pale printed green, so every head stands clear of it. Each stand has its own tint. Gold is kept for what can be wound (the keys) and for frames.
+- **The pictures** are the one thing that is not tin: the same scene, from his side, melted into dabs, with a brown studio backdrop, a canvas weave and yellow varnish. They are drawn by the same camera the rules read, so what reacts as hidden is hidden.
+- **Shapes a child tells apart at a thumb's size:** trunk and captain's cap, comb and lace, pearls and jowls, round hat and waistcoat, neck, jaw and tail, a board with a hole.
+- **Movement is clockwork, then weight.** A stand goes round in one wound stroke and stops dead; the body it carries lags, overshoots and rocks by its own temper, and what is loose on it goes on wagging. No two share a movement or a sound (`motion.ts`, `voices.ts`; `motion.test.ts` holds it).
+- **What the hand shows** is a pale tin hand with a teal cuff; what is wanted has a soft yellow ring, on the ground round a stand or behind the painter's easel.
+
+## How it is drawn
+
+`view/tin.ts` presses shells, welds each sitter's pieces into a body, a head and one to three loose pieces that share one printed sheet and one lacquer. Stands and keys are two instanced draws for everybody. `view/portrait.ts` draws the table and whoever is on it into one tile of a six-tile sheet, once for each picture, through a four-quadrant melt. Nothing is made at module load. A tier changes the pixel ratio and, at the last, the soft shade on the ground; no answer to a touch is left out by any tier.

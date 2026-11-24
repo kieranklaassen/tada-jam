@@ -127,7 +127,7 @@ export class Stage {
     ring.addColorStop(1, 'rgba(255,200,50,0)')
     glowPen.pen.fillStyle = ring
     glowPen.pen.fillRect(0, 0, 128, 128)
-    const glowMat = keep(new THREE.MeshBasicMaterial({ map: keep(texture(glowPen.sheet)), transparent: true, depthWrite: false, depthTest: false }))
+    const glowMat = keep(new THREE.MeshBasicMaterial({ map: keep(texture(glowPen.sheet)), transparent: true, depthWrite: false }))
     this.glow = new THREE.InstancedMesh(keep(new THREE.PlaneGeometry(1, 1)), glowMat, MAX_GLOW)
     this.glow.name = 'glow'
     this.glow.renderOrder = 8
@@ -271,7 +271,6 @@ export class Stage {
     this.glow.visible = shown.glow.length > 0
     const glow = this.glow.material as THREE.MeshBasicMaterial
     glow.opacity = shown.glow[0]?.k ?? 0
-    glow.depthTest = shown.glow[0]?.flat ?? false
     this.hand.visible = shown.hand !== null
     if (shown.hand) {
       const h = shown.hand, k = 1 - h.press * 0.14

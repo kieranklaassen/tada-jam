@@ -58,7 +58,7 @@ export class MaestroRig {
     for (const s of [-1, 1]) body.shell(S.red, [s * 0.34, 2.14, 0.5], [0.32, 0.2, 0.12], [0, 0, s * 0.25], 18).shell(S.red, [s * 0.18, 1.86, 0.62], [0.13, 0.28, 0.08], [0, 0, -s * 0.2], 14)
     body.shell(S.red, [0, 2.12, 0.58], [0.14, 0.14, 0.12], undefined, 12)
     // His left arm, with the palette.
-    body.tube(S.smock, [[0.8, 1.75, 0.1], [1.22, 1.3, 0.4], [0.95, 1.12, 0.9]], () => 0.25, 14, 12).shell(S.skin, [0.92, 1.14, 1.0], [0.2, 0.18, 0.2], undefined, 14)
+    body.tube(S.smock, [[0.8, 1.75, 0.1], [1.22, 1.3, 0.4], [0.95, 1.12, 0.9]], () => 0.25, 10, 9).shell(S.skin, [0.92, 1.14, 1.0], [0.2, 0.18, 0.2], undefined, 14)
     body.disc(S.cream, [1.06, 1.26, 1.16], 0.56, 0.06, [0.5, 0, -0.2], 0.56, 28)
     for (const [x, z, t] of [[-0.3, 0.1, S.red], [-0.1, 0.3, S.gold], [0.16, 0.32, S.blue], [0.34, 0.12, S.green], [0.3, -0.14, S.white]] as const) body.shell(t, [1.06 + x, 1.31 - z * 0.46 + x * -0.16, 1.16 + z * 0.86], [0.1, 0.07, 0.1], undefined, 10)
     this.man.add(mesh(body, 'body'))
@@ -81,7 +81,7 @@ export class MaestroRig {
     this.lids.position.set(0, 0.8, 0.52)
     this.beret = mesh(new Press().shell(S.red, [0.16, 0.08, 0], [0.92, 0.25, 0.82], [0, 0, -0.16], 28).disc(S.ink, [0, -0.06, 0], 0.62, 0.14).disc(S.red, [0.22, 0.36, 0], 0.05, 0.2), 'beret')
     this.beret.position.set(0, 1.28, -0.04)
-    const whisker = (s: number): Press => new Press().tube(S.brown, [[0, 0, 0.02], [s * 0.32, -0.1, 0.04], [s * 0.64, 0.02, -0.06], [s * 0.82, 0.3, -0.14]], (t) => 0.14 * (1 - t) + 0.035, 16, 10)
+    const whisker = (s: number): Press => new Press().tube(S.brown, [[0, 0, 0.02], [s * 0.32, -0.1, 0.04], [s * 0.64, 0.02, -0.06], [s * 0.82, 0.3, -0.14]], (t) => 0.14 * (1 - t) + 0.035, 12, 8)
     this.left = mesh(whisker(-1), 'moustache-left')
     this.right = mesh(whisker(1), 'moustache-right')
     this.left.position.set(-0.05, 0.3, 0.74)
@@ -92,8 +92,8 @@ export class MaestroRig {
 
     // His right arm and the brush: held from the shoulder.
     this.arm.position.set(-0.84, 1.8, 0.1)
-    const arm = new Press().tube(S.smock, [[0, 0, 0], [-0.4, -0.42, 0.3], [-0.2, -0.2, 0.92]], () => 0.25, 14, 12).shell(S.skin, [-0.18, -0.12, 1.02], [0.2, 0.2, 0.2], undefined, 14)
-    arm.tube(S.gold, [[-0.18, -0.42, 1.04], [-0.18, 0.9, 1.04]], () => 0.045, 2, 8).tube(S.brown, [[-0.18, 0.9, 1.04], [-0.18, 1.2, 1.04]], (t) => 0.09 - t * 0.06, 6, 10)
+    const arm = new Press().tube(S.smock, [[0, 0, 0], [-0.4, -0.42, 0.3], [-0.2, -0.2, 0.92]], () => 0.25, 10, 9).shell(S.skin, [-0.18, -0.12, 1.02], [0.2, 0.2, 0.2], undefined, 14)
+    arm.tube(S.gold, [[-0.18, -0.42, 1.04], [-0.18, 0.9, 1.04]], () => 0.045, 2, 6).tube(S.brown, [[-0.18, 0.9, 1.04], [-0.18, 1.2, 1.04]], (t) => 0.09 - t * 0.06, 4, 8)
     this.arm.add(mesh(arm, 'arm'))
     this.man.add(this.arm)
 

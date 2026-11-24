@@ -225,11 +225,12 @@ export class Press {
 
   /** A pressed shell: its picture runs round it, the front at +z. */
   shell(tile: Tile, at: readonly [number, number, number], size: readonly [number, number, number], turn?: readonly [number, number, number], detail = 28): this {
-    return this.add(new THREE.SphereGeometry(1, detail, Math.round(detail * 0.7)), tile, { at, size, turn })
+    const round = Math.max(8, Math.round(detail * (detail < 14 || detail > 24 ? 0.74 : 0.86)))
+    return this.add(new THREE.SphereGeometry(1, round, Math.round(round * 0.62)), tile, { at, size, turn })
   }
 
   /** A tube of changing thickness through points, closed at both ends. */
-  tube(tile: Tile, points: readonly (readonly [number, number, number])[], radius: (t: number) => number, rings = 18, sides = 12): this {
+  tube(tile: Tile, points: readonly (readonly [number, number, number])[], radius: (t: number) => number, rings = 14, sides = 9): this {
     const curve = new THREE.CatmullRomCurve3(points.map((p) => new THREE.Vector3(...p)))
     const geometry = new THREE.TubeGeometry(curve, rings, 1, sides, false), at = geometry.getAttribute('position') as THREE.BufferAttribute
     const middle = new THREE.Vector3(), v = new THREE.Vector3()
@@ -245,7 +246,7 @@ export class Press {
     this.add(geometry, tile)
     for (const t of [0, 1]) {
       curve.getPointAt(t, middle)
-      this.shell(tile, [middle.x, middle.y, middle.z], [radius(t), radius(t), radius(t)], undefined, 12)
+      this.shell(tile, [middle.x, middle.y, middle.z], [radius(t), radius(t), radius(t)], undefined, 11)
     }
     return this
   }
@@ -256,7 +257,7 @@ export class Press {
 
   /** The folded seam round a shell, where its two halves are tabbed together. */
   seam(tile: Tile, at: readonly [number, number, number], size: readonly [number, number, number]): this {
-    return this.add(new THREE.TorusGeometry(1, 0.022, 6, 40), tile, { at, size: [size[2], size[1], size[0]], turn: [0, Math.PI / 2, 0] })
+    return this.add(new THREE.TorusGeometry(1, 0.022, 4, 28), tile, { at, size: [size[2], size[1], size[0]], turn: [0, Math.PI / 2, 0] })
   }
 
   weld(): THREE.BufferGeometry {

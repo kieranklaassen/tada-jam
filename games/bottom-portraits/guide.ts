@@ -1,7 +1,7 @@
 import type { Id } from './cast'
 import type { Game } from './game'
 import { handPose, type HandPose } from './guidance'
-import { EASEL, KEY, MAESTRO, headOf, inRoom, type P3 } from './layout'
+import { KEY, MAESTRO, headOf, inRoom, type P3 } from './layout'
 import { seated } from './table'
 
 // What the idle ladder shows: one press of a ghost hand, on whatever the
@@ -47,7 +47,7 @@ export function handAt(game: Game, demo: Demo, progress: number): { x: number; y
 
 /** Where the glow lies: the one thing that is wanted. */
 export function glowAt(game: Game): { x: number; y: number; z: number; r: number; flat: boolean } {
-  if (!game.table.painted) return { x: EASEL.x * 0.4, y: 3.2, z: MAESTRO.z + 1.1, r: 2.5, flat: false }
+  if (!game.table.painted) return { x: MAESTRO.x - 0.5, y: 3.4, z: MAESTRO.z - 1.1, r: 3.4, flat: false }
   const p = game.poses[nearest(game)]
   return { x: p.x, y: p.y + 0.05, z: p.z, r: 1.75, flat: true }
 }

@@ -115,7 +115,14 @@ function floorPrint(): HTMLCanvasElement {
 /** The wall runs on past its print: the paper repeats, the window does not. */
 function wide(plane: THREE.PlaneGeometry): THREE.PlaneGeometry {
   const uv = plane.getAttribute('uv') as THREE.BufferAttribute
-  for (let i = 0; i < uv.count; i++) uv.setX(i, (uv.getX(i) - 0.5) * 1.3 + 0.5)
+  for (let i = 0; i < uv.count; i++) uv.setX(i, (uv.getX(i) - 0.5) * 2 + 0.5)
+  return plane
+}
+
+/** The floor runs on past its print as long boards. */
+function wideFloor(plane: THREE.PlaneGeometry): THREE.PlaneGeometry {
+  const uv = plane.getAttribute('uv') as THREE.BufferAttribute
+  for (let i = 0; i < uv.count; i++) uv.setX(i, (uv.getX(i) - 0.5) * (40 / 26) + 0.5)
   return plane
 }
 
@@ -130,11 +137,10 @@ export class Room {
     const keep = <T extends { dispose(): void }>(thing: T): T => { this.bin.push(thing); return thing }
     const wallMap = keep(texture(wallPrint())), floorMap = keep(texture(floorPrint()))
     wallMap.wrapS = THREE.RepeatWrapping
-    floorMap.wrapS = THREE.RepeatWrapping
-    const wall = new THREE.Mesh(keep(wide(new THREE.PlaneGeometry(26, 10))), keep(new THREE.MeshBasicMaterial({ map: wallMap })))
+    const wall = new THREE.Mesh(keep(wide(new THREE.PlaneGeometry(40, 10))), keep(new THREE.MeshBasicMaterial({ map: wallMap })))
     wall.position.set(0, FLOOR_Y + 5, -7.6)
     wall.name = 'wall'
-    const floor = new THREE.Mesh(keep(new THREE.PlaneGeometry(26, 20)), keep(new THREE.MeshBasicMaterial({ map: floorMap })))
+    const floor = new THREE.Mesh(keep(wideFloor(new THREE.PlaneGeometry(40, 20))), keep(new THREE.MeshBasicMaterial({ map: floorMap })))
     floor.rotation.x = -Math.PI / 2
     floor.position.set(0, FLOOR_Y, 2.2)
     floor.name = 'floor'
@@ -191,12 +197,12 @@ export class Room {
     // The painter's dais.
     still.disc(S.plum, [0, FLOOR_Y + 0.07, -5.6], 1.35, 0.14, undefined, 1.3, 40)
     // Easel legs, its ledge, and pots of brushes by it.
-    for (const s of [-1, 1]) still.tube(S.wood, [[EASEL.x + s * 0.9, FLOOR_Y, EASEL.z - 0.25], [EASEL.x + s * 0.16, 4.1, EASEL.z - 0.42]], () => 0.08, 2, 8)
-    still.tube(S.wood, [[EASEL.x, FLOOR_Y, EASEL.z - 1.6], [EASEL.x, 3.9, EASEL.z - 0.45]], () => 0.07, 2, 8)
+    for (const s of [-1, 1]) still.tube(S.wood, [[EASEL.x + s * 0.9, FLOOR_Y, EASEL.z - 0.25], [EASEL.x + s * 0.16, 4.1, EASEL.z - 0.42]], () => 0.08, 2, 6)
+    still.tube(S.wood, [[EASEL.x, FLOOR_Y, EASEL.z - 1.6], [EASEL.x, 3.9, EASEL.z - 0.45]], () => 0.07, 2, 6)
     still.add(new THREE.BoxGeometry(2.3, 0.12, 0.34), S.wood, { at: [EASEL.x, EASEL.y - PICTURE.h / 2 - 0.2, EASEL.z - 0.15], turn: [0, EASEL.yaw, 0] })
     for (const [x, z, c] of [[2.1, -5.6, S.orange], [2.75, -6.1, S.teal], [2.6, -5.1, S.pink]] as const) {
       still.disc(c, [x, 1.0, z], 0.28, 0.6, undefined, 0.32)
-      for (let k = 0; k < 4; k++) still.tube([S.wood, S.red, S.gold, S.brown][k], [[x, 1.1, z], [x - 0.2 + k * 0.14, 2.0 + (k % 2) * 0.2, z - 0.1 + (k % 3) * 0.1]], (t) => (t > 0.85 ? 0.08 : 0.03), 8, 6)
+      for (let k = 0; k < 4; k++) still.tube([S.wood, S.red, S.gold, S.brown][k], [[x, 1.1, z], [x - 0.2 + k * 0.14, 2.0 + (k % 2) * 0.2, z - 0.1 + (k % 3) * 0.1]], (t) => (t > 0.85 ? 0.08 : 0.03), 6, 6)
     }
     still.add(new THREE.BoxGeometry(1.7, 0.14, 2.0), S.wood, { at: [2.45, 0.62, -5.6] })
     still.add(new THREE.BoxGeometry(1.4, 2.05, 1.7), S.red, { at: [2.45, -0.48, -5.6] })

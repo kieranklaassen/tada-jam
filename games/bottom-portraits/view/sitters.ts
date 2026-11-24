@@ -77,17 +77,17 @@ function elephant(): Parts {
   const body = new Press().shell(BODY, [0, 1.2, 0], [0.92, 0.96, 0.82]).seam(S.steel, [0, 1.2, 0], [0.92, 0.97, 0.83])
   bottom(body, 0.74, -0.5, 0.52, 0.4)
   feet(body, S.a, 0.5, 0.62, 0.42)
-  for (const s of [-1, 1]) body.tube(S.red, [[s * 0.78, 1.6, 0.2], [s * 0.98, 1.2, 0.5], [s * 0.72, 0.98, 0.78]], () => 0.2, 10, 10).shell(S.a, [s * 0.68, 0.95, 0.82], [0.22, 0.2, 0.22], undefined, 14)
+  for (const s of [-1, 1]) body.tube(S.red, [[s * 0.78, 1.6, 0.2], [s * 0.98, 1.2, 0.5], [s * 0.72, 0.98, 0.78]], () => 0.2, 8, 8).shell(S.a, [s * 0.68, 0.95, 0.82], [0.22, 0.2, 0.22], undefined, 14)
   // The tail, with its tuft.
-  body.tube(S.a, [[0, 1.12, -0.82], [0.05, 0.9, -1.06], [0.16, 0.62, -1.1]], (t) => 0.075 - t * 0.03, 10, 8).shell(S.d, [0.18, 0.54, -1.1], [0.1, 0.15, 0.1], undefined, 10)
+  body.tube(S.a, [[0, 1.12, -0.82], [0.05, 0.9, -1.06], [0.16, 0.62, -1.1]], (t) => 0.075 - t * 0.03, 8, 6).shell(S.d, [0.18, 0.54, -1.1], [0.1, 0.15, 0.1], undefined, 10)
   // A cocked hat, on the side of its head.
   const head = new Press().shell(HEAD, [0, 0.5, 0.1], [0.74, 0.7, 0.66])
-  head.tube(S.e, [[-0.52, 1.14, 0.1], [0, 1.3, 0.14], [0.52, 1.14, 0.1]], (t) => 0.1 + 0.12 * Math.sin(Math.PI * t), 12, 10)
+  head.tube(S.e, [[-0.52, 1.14, 0.1], [0, 1.3, 0.14], [0.52, 1.14, 0.1]], (t) => 0.1 + 0.12 * Math.sin(Math.PI * t), 9, 8)
   head.shell(S.red, [0, 1.22, 0.1], [0.46, 0.2, 0.26], undefined, 18)
-  for (const s of [-1, 1]) head.tube(S.white, [[s * 0.28, 0.2, 0.62], [s * 0.36, 0.08, 0.86], [s * 0.34, 0.16, 1.0]], (t) => 0.085 - t * 0.06, 8, 8)
+  for (const s of [-1, 1]) head.tube(S.white, [[s * 0.28, 0.2, 0.62], [s * 0.36, 0.08, 0.86], [s * 0.34, 0.16, 1.0]], (t) => 0.085 - t * 0.06, 6, 6)
   const e = eyes(head, [0, 0.64, 0.58], 0.27, 0.19)
   const ear = (s: number): THREE.BufferGeometry => new Press().shell(S.a, [s * 0.26, -0.04, 0], [0.34, 0.5, 0.07], undefined, 22).shell(S.b, [s * 0.25, -0.05, 0.035], [0.25, 0.39, 0.06], undefined, 20).weld()
-  const trunk = new Press().tube(S.a, [[0, 0, 0], [0, -0.16, 0.26], [0, -0.5, 0.36], [0, -0.82, 0.3], [0, -0.96, 0.46]], (t) => 0.23 - t * 0.12, 20, 14)
+  const trunk = new Press().tube(S.a, [[0, 0, 0], [0, -0.16, 0.26], [0, -0.5, 0.36], [0, -0.82, 0.3], [0, -0.96, 0.46]], (t) => 0.23 - t * 0.12, 15, 10)
   for (let n = 1; n < 6; n++) trunk.add(new THREE.TorusGeometry(0.235 - n * 0.016, 0.018, 5, 18), S.d, { at: [0, -0.1 - n * 0.115, 0.24 + Math.sin(n * 0.6) * 0.1], turn: [1.15 + n * 0.06, 0, 0] })
   return {
     body: body.weld(), head: head.weld(), neck: [0, 2.0, 0.06], eyes: e, sheet,
@@ -122,8 +122,8 @@ function hen(): Parts {
   bottom(body, 0.8, -0.42, 0.44, 0.31)
   // A fan of tail plates standing up behind.
   for (let n = -2; n <= 2; n++) body.add(new THREE.SphereGeometry(1, 16, 10), n % 2 ? S.b : S.a, { at: [n * 0.15, 1.72 - Math.abs(n) * 0.06, -0.76], size: [0.16, 0.44, 0.06], turn: [-0.35, 0, -n * 0.24] })
-  for (const s of [-1, 1]) body.tube(S.b, [[s * 0.3, 0.5, 0.18], [s * 0.32, 0.1, 0.26]], () => 0.09, 4, 8).shell(S.b, [s * 0.32, 0.07, 0.42], [0.2, 0.075, 0.3], undefined, 14)
-  const head = new Press().tube(S.a, [[0, -0.1, -0.12], [0, 0.18, 0.02], [0, 0.4, 0.06]], (t) => 0.36 - t * 0.08, 10, 14).shell(HEAD, [0, 0.5, 0.08], [0.36, 0.38, 0.36])
+  for (const s of [-1, 1]) body.tube(S.b, [[s * 0.3, 0.5, 0.18], [s * 0.32, 0.1, 0.26]], () => 0.09, 3, 6).shell(S.b, [s * 0.32, 0.07, 0.42], [0.2, 0.075, 0.3], undefined, 14)
+  const head = new Press().tube(S.a, [[0, -0.1, -0.12], [0, 0.18, 0.02], [0, 0.4, 0.06]], (t) => 0.36 - t * 0.08, 8, 10).shell(HEAD, [0, 0.5, 0.08], [0.36, 0.38, 0.36])
   for (let n = 0; n < 4; n++) head.shell(S.c, [0, 0.86 + [0, 0.1, 0.08, -0.02][n], 0.3 - n * 0.18], [0.075, 0.17, 0.12], undefined, 12)
   head.add(new THREE.ConeGeometry(0.15, 0.36, 14), S.b, { at: [0, 0.42, 0.55], turn: [Math.PI / 2, 0, 0] })
   for (const s of [-1, 1]) head.shell(S.c, [s * 0.09, 0.22, 0.44], [0.08, 0.15, 0.06], undefined, 12)
@@ -161,7 +161,7 @@ function hippo(): Parts {
   const body = new Press().shell(BODY, [0, 1.12, 0], [1.02, 0.94, 0.86]).seam(S.steel, [0, 1.12, 0], [1.02, 0.95, 0.87])
   bottom(body, 0.78, -0.48, 0.6, 0.46)
   feet(body, S.a, 0.5, 0.62, 0.42)
-  for (const s of [-1, 1]) body.tube(S.red, [[s * 0.84, 1.5, 0.2], [s * 1.04, 1.1, 0.48], [s * 0.74, 0.94, 0.74]], () => 0.2, 10, 10).shell(S.a, [s * 0.7, 0.92, 0.78], [0.23, 0.2, 0.22], undefined, 14)
+  for (const s of [-1, 1]) body.tube(S.red, [[s * 0.84, 1.5, 0.2], [s * 1.04, 1.1, 0.48], [s * 0.74, 0.94, 0.74]], () => 0.2, 8, 8).shell(S.a, [s * 0.7, 0.92, 0.78], [0.23, 0.2, 0.22], undefined, 14)
   body.shell(S.a, [0, 1.12, -1.0], [0.1, 0.16, 0.1], [0.5, 0, 0], 12)
   const head = new Press().shell(HEAD, [0, 0.42, 0.06], [0.64, 0.5, 0.52]).shell(S.a, [0, 0.36, 0.5], [0.62, 0.26, 0.36], undefined, 24)
   for (const s of [-1, 1]) {
@@ -201,7 +201,7 @@ function pig(): Parts {
   const body = new Press().shell(BODY, [0, 1.0, 0], [0.8, 0.8, 0.74]).seam(S.steel, [0, 1.0, 0], [0.8, 0.81, 0.75])
   bottom(body, 0.66, -0.42, 0.46, 0.35)
   feet(body, S.d, 0.42, 0.52, 0.34)
-  for (const s of [-1, 1]) body.tube(S.red, [[s * 0.66, 1.34, 0.16], [s * 0.84, 1.02, 0.42], [s * 0.6, 0.84, 0.64]], () => 0.16, 10, 10).shell(S.d, [s * 0.57, 0.82, 0.68], [0.18, 0.16, 0.18], undefined, 12)
+  for (const s of [-1, 1]) body.tube(S.red, [[s * 0.66, 1.34, 0.16], [s * 0.84, 1.02, 0.42], [s * 0.6, 0.84, 0.64]], () => 0.16, 8, 8).shell(S.d, [s * 0.57, 0.82, 0.68], [0.18, 0.16, 0.18], undefined, 12)
   const head = new Press().shell(HEAD, [0, 0.4, 0.08], [0.58, 0.54, 0.5]).disc(S.b, [0, 0.3, 0.6], 0.24, 0.2, [Math.PI / 2, 0, 0], 0.22)
   for (const s of [-1, 1]) head.shell(S.c, [s * 0.09, 0.3, 0.7], [0.045, 0.07, 0.03], undefined, 10)
   // A bowler that is too small.
@@ -252,12 +252,12 @@ function giraffe(): Parts {
   const body = new Press().shell(BODY, [0, 1.04, 0], [0.72, 0.86, 0.68]).seam(S.steel, [0, 1.04, 0], [0.72, 0.87, 0.69])
   bottom(body, 0.68, -0.4, 0.42, 0.32)
   for (const s of [-1, 1]) {
-    body.tube(S.a, [[s * 0.4, 0.5, 0.3], [s * 0.56, 0.75, 0.72], [s * 0.5, 0.12, 0.86]], () => 0.12, 12, 10).shell(S.e, [s * 0.5, 0.1, 0.88], [0.15, 0.1, 0.18], undefined, 12)
-    body.tube(S.red, [[s * 0.58, 1.46, 0.1], [s * 0.74, 1.12, 0.34], [s * 0.4, 0.92, 0.66]], () => 0.13, 10, 10).shell(S.e, [s * 0.37, 0.9, 0.68], [0.13, 0.12, 0.14], undefined, 12)
+    body.tube(S.a, [[s * 0.4, 0.5, 0.3], [s * 0.56, 0.75, 0.72], [s * 0.5, 0.12, 0.86]], () => 0.12, 9, 8).shell(S.e, [s * 0.5, 0.1, 0.88], [0.15, 0.1, 0.18], undefined, 12)
+    body.tube(S.red, [[s * 0.58, 1.46, 0.1], [s * 0.74, 1.12, 0.34], [s * 0.4, 0.92, 0.66]], () => 0.13, 8, 8).shell(S.e, [s * 0.37, 0.9, 0.68], [0.13, 0.12, 0.14], undefined, 12)
   }
-  body.tube(S.a, [[0, 0.98, -0.72], [0.08, 0.8, -0.98], [0.14, 0.44, -1.0]], () => 0.045, 10, 8).shell(S.e, [0.15, 0.38, -1.0], [0.09, 0.15, 0.09], undefined, 10)
+  body.tube(S.a, [[0, 0.98, -0.72], [0.08, 0.8, -0.98], [0.14, 0.44, -1.0]], () => 0.045, 8, 6).shell(S.e, [0.15, 0.38, -1.0], [0.09, 0.15, 0.09], undefined, 10)
   // The neck and head are one piece that turns low on the body.
-  const head = new Press().tube(S.a, [[0, -0.1, -0.1], [0, 0.5, 0.02], [0, 1.2, 0.04], [0, 2.0, 0.12]], (t) => 0.3 - t * 0.11, 22, 16)
+  const head = new Press().tube(S.a, [[0, -0.1, -0.1], [0, 0.5, 0.02], [0, 1.2, 0.04], [0, 2.0, 0.12]], (t) => 0.3 - t * 0.11, 16, 12)
   for (let n = 0; n < 11; n++) {
     const y = 0.14 + n * 0.17, a = n * 2.2, r = 0.29 - (y / 2.1) * 0.11
     head.shell(S.d, [Math.sin(a) * r * 0.72, y, 0.02 + Math.cos(a) * r * 0.72], [0.1, 0.085, 0.1], undefined, 10)
@@ -266,7 +266,7 @@ function giraffe(): Parts {
   head.shell(HEAD, [0, 2.2, 0.22], [0.36, 0.36, 0.4]).shell(S.b, [0, 2.06, 0.58], [0.27, 0.21, 0.3], undefined, 20)
   for (const s of [-1, 1]) {
     head.shell(S.c, [s * 0.1, 2.13, 0.85], [0.04, 0.05, 0.03], undefined, 8)
-    head.tube(S.e, [[s * 0.14, 2.48, 0.12], [s * 0.18, 2.74, 0.06]], () => 0.05, 4, 8).shell(S.e, [s * 0.18, 2.76, 0.06], [0.09, 0.09, 0.09], undefined, 10)
+    head.tube(S.e, [[s * 0.14, 2.48, 0.12], [s * 0.18, 2.74, 0.06]], () => 0.05, 3, 6).shell(S.e, [s * 0.18, 2.76, 0.06], [0.09, 0.09, 0.09], undefined, 10)
     head.shell(S.a, [s * 0.47, 2.3, 0.06], [0.2, 0.1, 0.06], [0, 0, s * 0.35], 14)
   }
   const e = eyes(head, [0, 2.36, 0.46], 0.2, 0.15)
@@ -293,16 +293,16 @@ function crocodile(): Parts {
   const body = new Press().shell(BODY, [0, 0.8, -0.02], [0.54, 0.46, 0.74]).seam(S.steel, [0, 0.8, -0.02], [0.54, 0.47, 0.75])
   bottom(body, 0.72, -0.5, 0.34, 0.26)
   for (let n = 0; n < 5; n++) for (const s of [-1, 1]) body.add(new THREE.ConeGeometry(0.09, 0.2, 4), S.d, { at: [s * 0.16, 1.24 - Math.abs(n - 2) * 0.05, 0.34 - n * 0.2], turn: [-0.1 * (n - 2), 0, -s * 0.3] })
-  for (const s of [-1, 1]) for (const z of [0.36, -0.42]) body.tube(S.a, [[s * 0.42, 0.66, z], [s * 0.68, 0.5, z + 0.06], [s * 0.62, 0.12, z + 0.14]], () => 0.13, 8, 10).shell(S.e, [s * 0.62, 0.09, z + 0.22], [0.17, 0.09, 0.22], undefined, 12)
-  const head = new Press().shell(HEAD, [0, 0.14, 0.14], [0.42, 0.32, 0.4]).tube(S.a, [[0, 0.1, 0.3], [0, 0.08, 0.7], [0, 0.1, 0.92]], (t) => 0.27 - t * 0.09, 14, 14)
+  for (const s of [-1, 1]) for (const z of [0.36, -0.42]) body.tube(S.a, [[s * 0.42, 0.66, z], [s * 0.68, 0.5, z + 0.06], [s * 0.62, 0.12, z + 0.14]], () => 0.13, 6, 8).shell(S.e, [s * 0.62, 0.09, z + 0.22], [0.17, 0.09, 0.22], undefined, 12)
+  const head = new Press().shell(HEAD, [0, 0.14, 0.14], [0.42, 0.32, 0.4]).tube(S.a, [[0, 0.1, 0.3], [0, 0.08, 0.7], [0, 0.1, 0.92]], (t) => 0.27 - t * 0.09, 10, 10)
   for (const s of [-1, 1]) {
     head.shell(S.d, [s * 0.09, 0.28, 1.0], [0.06, 0.05, 0.06], undefined, 8)
     for (let n = 0; n < 5; n++) head.add(new THREE.ConeGeometry(0.05, 0.14, 8), S.white, { at: [s * (0.23 - n * 0.018), -0.07 + n * 0.008, 0.46 + n * 0.12], turn: [Math.PI, 0, s * 0.15] })
   }
   for (const s of [-1, 0, 1]) head.add(new THREE.ConeGeometry(0.05, 0.16, 8), S.white, { at: [s * 0.09, -0.04, 1.06], turn: [Math.PI + 0.2, 0, 0] })
   const e = eyes(head, [0, 0.42, 0.2], 0.2, 0.18)
-  const jaw = new Press().tube(S.b, [[0, -0.02, 0], [0, -0.04, 0.4], [0, -0.02, 0.74]], (t) => 0.23 - t * 0.08, 14, 14)
-  const tail = new Press().tube(S.a, [[0, 0, 0], [0.1, 0.12, -0.24], [0.36, 0.5, -0.3], [0.3, 0.86, -0.12], [0.14, 0.94, 0.06]], (t) => 0.26 - t * 0.2, 18, 12)
+  const jaw = new Press().tube(S.b, [[0, -0.02, 0], [0, -0.04, 0.4], [0, -0.02, 0.74]], (t) => 0.23 - t * 0.08, 10, 10)
+  const tail = new Press().tube(S.a, [[0, 0, 0], [0.1, 0.12, -0.24], [0.36, 0.5, -0.3], [0.3, 0.86, -0.12], [0.14, 0.94, 0.06]], (t) => 0.26 - t * 0.2, 14, 9)
   for (let n = 0; n < 4; n++) tail.add(new THREE.ConeGeometry(0.07, 0.16, 4), S.d, { at: [[0.06, 0.2, 0.42, 0.44][n], [0.3, 0.48, 0.66, 0.9][n] - 0.02, [-0.36, -0.44, -0.36, -0.14][n]], turn: [-0.9 + n * 0.35, 0, -0.2 * n] })
   return {
     body: body.weld(), head: head.weld(), neck: [0, 0.98, 0.3], eyes: e, sheet,
@@ -397,9 +397,9 @@ function boardFace(): { geometry: THREE.BufferGeometry; sheet: THREE.CanvasTextu
   const edge = new THREE.ExtrudeGeometry(boardShape(), { depth: 0.078, bevelEnabled: false, curveSegments: 24 })
   edge.translate(0, 0, 0.021)
   const press = new Press().add(face(true), [0, 0, 512, 512]).add(face(false), [512, 0, 512, 512]).add(edge, S.steel)
-  for (const s of [-1, 1]) press.tube(S.a, [[s * 0.62, 1.5, 0.0], [s * 0.6, 0.06, -0.52]], () => 0.05, 2, 8)
-  press.tube(S.a, [[-0.56, 0.62, -0.32], [0.56, 0.62, -0.32]], () => 0.045, 2, 8)
-  press.tube(S.a, [[-0.7, 0.2, 0.06], [0.7, 0.2, 0.06]], () => 0.09, 2, 10)
+  for (const s of [-1, 1]) press.tube(S.a, [[s * 0.62, 1.5, 0.0], [s * 0.6, 0.06, -0.52]], () => 0.05, 2, 6)
+  press.tube(S.a, [[-0.56, 0.62, -0.32], [0.56, 0.62, -0.32]], () => 0.045, 2, 6)
+  press.tube(S.a, [[-0.7, 0.2, 0.06], [0.7, 0.2, 0.06]], () => 0.09, 2, 8)
   return { geometry: press.weld(), sheet }
 }
 
