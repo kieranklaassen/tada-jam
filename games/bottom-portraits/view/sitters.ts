@@ -32,7 +32,7 @@ function eyes(press: Press, at: readonly [number, number, number], apart: number
     const glint = new THREE.SphereGeometry(r * 1.06, 10, 5, 0, Math.PI * 2, 0, pupil * 0.28)
     pupils.add(glint, S.white, { at: [side * apart, 0, 0], turn: [Math.PI / 2 - 0.22, 0, -side * splay + 0.2] })
     const lid = new THREE.SphereGeometry(r * 1.09, 18, 9, 0, Math.PI * 2, 0, Math.PI * 0.5)
-    lids.add(lid, S.lid, { at: [side * apart, 0, 0], turn: [-0.55, 0, 0] })
+    lids.add(lid, S.lid, { at: [side * apart, 0, 0], turn: [-0.95, 0, 0] })
   }
   return { at, pupils: pupils.weld(), lids: lids.weld() }
 }
@@ -117,7 +117,7 @@ function hen(): Parts {
     p.fill(white)
     for (const s of [-1, 1]) p.oval(s * 58, -8, 16, 18, '#f2a08f')
     p.screen(line, -30, -80, 0.5)
-  }, ['#fffaf0', INK, white, '#e8a13a', '#d33a32', '#b98a4e', '#cfcac0', '#d33a32', '#f2dcc0', '#f6c14a'])
+  }, ['#fffaf0', INK, white, '#e8a13a', '#d33a32', '#b98a4e', '#cfcac0', '#d33a32', '#f2dcc0', '#e9cfa2'])
   const body = new Press().shell(BODY, [0, 1.12, 0], [0.74, 0.72, 0.8]).seam(S.steel, [0, 1.12, 0], [0.74, 0.73, 0.81])
   bottom(body, 0.8, -0.42, 0.44, 0.31)
   // A fan of tail plates standing up behind.
@@ -128,7 +128,7 @@ function hen(): Parts {
   head.add(new THREE.ConeGeometry(0.15, 0.36, 14), S.b, { at: [0, 0.42, 0.55], turn: [Math.PI / 2, 0, 0] })
   for (const s of [-1, 1]) head.shell(S.c, [s * 0.09, 0.22, 0.44], [0.08, 0.15, 0.06], undefined, 12)
   const e = eyes(head, [0, 0.62, 0.3], 0.2, 0.145, 0.42, 0.45)
-  const wing = (s: number): THREE.BufferGeometry => new Press().shell(S.a, [s * 0.03, -0.22, -0.1], [0.09, 0.36, 0.46], [0.5, 0, 0], 20).shell(S.b, [s * 0.06, -0.3, -0.2], [0.07, 0.22, 0.3], [0.5, 0, 0], 16).weld()
+  const wing = (s: number): THREE.BufferGeometry => new Press().shell(S.e, [s * 0.03, -0.22, -0.1], [0.09, 0.36, 0.46], [0.5, 0, 0], 20).shell(S.b, [s * 0.06, -0.3, -0.2], [0.07, 0.22, 0.3], [0.5, 0, 0], 16).weld()
   return {
     body: body.weld(), head: head.weld(), neck: [0, 1.6, 0.26], eyes: e, sheet,
     loose: [
@@ -318,8 +318,8 @@ function boardShape(): THREE.Shape {
   const shape = new THREE.Shape()
   shape.moveTo(-1.0, 0.28)
   shape.lineTo(1.0, 0.28)
-  shape.lineTo(1.0, 2.4)
-  shape.absarc(0, 2.4, 0.96, 0, Math.PI, false)
+  shape.lineTo(1.0, 1.86)
+  shape.absarc(0, 1.86, 0.98, 0, Math.PI, false)
   shape.lineTo(-1.0, 0.28)
   const hole = new THREE.Path()
   hole.absarc(0, HOLE.y, HOLE.r, 0, Math.PI * 2, true)
@@ -339,7 +339,7 @@ function boardFace(): { geometry: THREE.BufferGeometry; sheet: THREE.CanvasTextu
   }, (p) => { p.fill('#c9a878') }, ['#fffaf0', INK, '#b98d5a', '#f5a7c0', '#d33a32', '#7d5a34', '#cfcac0', '#e8b33c', '#b98d5a', '#f3c9a4'])
   const pen = (sheet.image as HTMLCanvasElement).getContext('2d')!
   // Board space: x from -1 to 1, y from 0.28 to 3.36, laid on the left 512 px of the upper half.
-  const X = (x: number): number => 256 + x * 250, Y = (y: number): number => 506 - ((y - 0.28) / 3.1) * 500
+  const X = (x: number): number => 256 + x * 250, Y0 = (y: number): number => 506 - ((y - 0.28) / 3.1) * 500, Y = (y: number): number => Y0(y < 1.95 ? 0.28 + (y - 0.28) * 0.66 : y === HOLE.y ? y : y < 2.15 ? 1.38 + (y - 1.95) * 0.6 : y - 0.62)
   const blob = (points: readonly (readonly [number, number])[], colour: string, line: string | null = INK, width = 4): void => {
     pen.beginPath()
     points.forEach(([x, y], i) => {
@@ -360,11 +360,11 @@ function boardFace(): { geometry: THREE.BufferGeometry; sheet: THREE.CanvasTextu
   sky.addColorStop(1, '#d38f3a')
   pen.fillStyle = sky
   pen.fillRect(0, 0, 512, 512)
-  for (let n = 0; n < 9; n++) { pen.fillStyle = 'rgba(255,255,255,0.28)'; pen.save(); pen.translate(X(0), Y(HOLE.y)); pen.rotate((n / 9) * Math.PI * 2); pen.beginPath(); pen.moveTo(0, 0); pen.lineTo(-26, -460); pen.lineTo(26, -460); pen.fill(); pen.restore() }
+  for (let n = 0; n < 9; n++) { pen.fillStyle = 'rgba(255,255,255,0.28)'; pen.save(); pen.translate(X(0), Y0(HOLE.y)); pen.rotate((n / 9) * Math.PI * 2); pen.beginPath(); pen.moveTo(0, 0); pen.lineTo(-26, -460); pen.lineTo(26, -460); pen.fill(); pen.restore() }
   // A strong lady in a tutu, arms up, with hair piled round the hole.
-  blob([[-0.56, 2.5], [-0.62, 3.0], [-0.2, 3.22], [0.2, 3.22], [0.62, 3.0], [0.56, 2.5], [0.5, 2.1], [-0.5, 2.1]], '#7a3f1c')
+  blob([[-0.68, 2.5], [-0.72, 3.0], [-0.2, 3.3], [0.2, 3.3], [0.72, 3.0], [0.68, 2.5], [0.5, 2.16], [-0.5, 2.16]], '#7a3f1c')
   for (const s of [-1, 1]) {
-    blob([[s * 0.2, 1.72], [s * 0.5, 1.86], [s * 0.86, 2.1], [s * 0.96, 2.6], [s * 0.82, 2.72], [s * 0.7, 2.24], [s * 0.3, 1.5]], '#f3c9a4')
+    blob([[s * 0.2, 1.72], [s * 0.5, 1.86], [s * 0.9, 2.16], [s * 0.97, 2.75], [s * 0.86, 2.85], [s * 0.76, 2.3], [s * 0.3, 1.5]], '#f3c9a4')
     blob([[s * 0.1, 0.95], [s * 0.34, 0.95], [s * 0.36, 0.5], [s * 0.3, 0.34], [s * 0.12, 0.34]], '#f3c9a4')
     blob([[s * 0.08, 0.4], [s * 0.4, 0.44], [s * 0.46, 0.32], [s * 0.08, 0.3]], '#d33a32')
   }
@@ -374,7 +374,7 @@ function boardFace(): { geometry: THREE.BufferGeometry; sheet: THREE.CanvasTextu
   for (const s of [-1, 1]) oval(s * 0.36, 3.06, 0.09, 0.08, '#e8b33c')
   pen.strokeStyle = '#e8b33c'
   pen.lineWidth = 12
-  pen.beginPath(); pen.ellipse(X(0), Y(HOLE.y), HOLE.r * 250 + 5, HOLE.r * 161 + 5, 0, 0, 7); pen.stroke()
+  pen.beginPath(); pen.ellipse(X(0), Y0(HOLE.y), HOLE.r * 250 + 5, HOLE.r * 161 + 5, 0, 0, 7); pen.stroke()
   // The back: bare tin, the maker's struts.
   pen.fillStyle = '#c3c1ba'
   pen.fillRect(512, 0, 512, 512)

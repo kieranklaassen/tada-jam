@@ -32,37 +32,42 @@ export function texture(sheet: HTMLCanvasElement, mip = true): THREE.CanvasTextu
   return made
 }
 
-/** The lacquer: daylight from a tall window on the left, a warm floor below, a thin bright rim. */
-export function lacquer(): THREE.CanvasTexture {
-  const { sheet, pen } = canvas(256, 256)
-  const ground = pen.createLinearGradient(0, 0, 0, 256)
-  ground.addColorStop(0, '#f4f4ec')
-  ground.addColorStop(0.42, '#dcdcd6')
-  ground.addColorStop(0.62, '#b9b2aa')
-  ground.addColorStop(0.8, '#9a8e84')
-  ground.addColorStop(1, '#b59a7e')
-  pen.fillStyle = ground
-  pen.fillRect(0, 0, 256, 256)
-  const soft = pen.createRadialGradient(92, 84, 4, 92, 84, 120)
-  soft.addColorStop(0, 'rgba(255,255,255,0.75)')
-  soft.addColorStop(0.5, 'rgba(255,255,255,0.22)')
-  soft.addColorStop(1, 'rgba(255,255,255,0)')
-  pen.fillStyle = soft
-  pen.fillRect(0, 0, 256, 256)
-  const edge = pen.createRadialGradient(128, 128, 88, 128, 128, 128)
-  edge.addColorStop(0, 'rgba(40,36,52,0)')
-  edge.addColorStop(0.75, 'rgba(40,36,52,0.2)')
-  edge.addColorStop(1, 'rgba(40,36,52,0.4)')
-  pen.fillStyle = edge
-  pen.fillRect(0, 0, 256, 256)
-  // The window itself, in four panes, small and hard: that is what makes it tin and not clay.
-  pen.save()
-  pen.translate(88, 70)
-  pen.rotate(-0.32)
-  pen.fillStyle = 'rgba(255,255,255,0.95)'
-  for (const [x, y] of [[-15, -19], [1, -19], [-15, 1], [1, 1]]) pen.fillRect(x, y, 13, 17)
-  pen.restore()
-  return texture(sheet)
+/**
+ * The lacquer: daylight from a tall window on the left, a warm floor below,
+ * and the window itself, small and hard, which is what makes it tin and not
+ * clay. The colour channels light the print; the fourth is the shine that
+ * lies over it.
+ */
+export function lacquer(): THREE.DataTexture {
+  const size = 256, data = new Uint8Array(size * size * 4)
+  const smooth = (a: number, b: number, t: number): number => { const k = Math.min(1, Math.max(0, (t - a) / (b - a))); return k * k * (3 - 2 * k) }
+  for (let j = 0; j < size; j++) for (let i = 0; i < size; i++) {
+    const x = (i / (size - 1)) * 2 - 1, y = (j / (size - 1)) * 2 - 1, r = Math.hypot(x, y), n = (j * size + i) * 4
+    const up = smooth(-0.95, 0.75, y * 0.85 - x * 0.35), rim = smooth(0.72, 1, r), floor = smooth(-0.45, -0.95, y)
+    const light = 0.36 + 0.52 * up - 0.16 * rim
+    data[n] = 255 * Math.min(1, light + floor * 0.17 + 0.02)
+    data[n + 1] = 255 * Math.min(1, light + floor * 0.1)
+    data[n + 2] = 255 * Math.min(1, light + floor * 0.04 + (1 - up) * 0.05)
+    // Four panes, leaning with the curve, and a long soft streak under them.
+    const u = (x + 0.36) * 0.95 - (y - 0.42) * 0.3, v = (y - 0.42) * 0.95 + (x + 0.36) * 0.3
+    const pane = (c: number, w: number): number => smooth(w + 0.02, w - 0.02, Math.abs(c))
+    const bars = smooth(0.012, 0.03, Math.abs(u)) * smooth(0.012, 0.03, Math.abs(v))
+    const gleam = pane(u, 0.13) * pane(v, 0.17) * bars * 0.85 + 0.26 * smooth(0.75, 0.0, Math.hypot(u * 1.5, v)) + 0.22 * rim * smooth(0.2, 0.9, x * 0.7 + y * 0.6)
+    data[n + 3] = 255 * Math.min(1, gleam)
+  }
+  const made = new THREE.DataTexture(data, size, size, THREE.RGBAFormat)
+  made.magFilter = made.minFilter = THREE.LinearFilter
+  made.needsUpdate = true
+  return made
+}
+
+/** Printed tin under the lacquer. */
+export function tinMaterial(matcap: THREE.Texture, map: THREE.Texture | null): THREE.MeshMatcapMaterial {
+  const made = new THREE.MeshMatcapMaterial({ matcap, map })
+  made.onBeforeCompile = (shader) => {
+    shader.fragmentShader = shader.fragmentShader.replace('vec3 outgoingLight = diffuseColor.rgb * matcapColor.rgb;', 'vec3 outgoingLight = diffuseColor.rgb * matcapColor.rgb * 1.32 + vec3(1.0, 0.98, 0.93) * matcapColor.a * 0.62;')
+  }
+  return made
 }
 
 // --- Printing ----------------------------------------------------------------

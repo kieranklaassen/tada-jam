@@ -33,8 +33,8 @@ export const FIGURES: Readonly<Record<Id, Figure>> = {
   pig: { reach: 1.12, height: 2.4, body: { x: 0, y: 1.02, z: -0.08, hx: 0.8, hy: 0.7, hz: 0.82 }, head: { x: 0, y: 1.95, z: 0.26, hx: 0.6, hy: 0.52, hz: 0.5 } },
   giraffe: { reach: 1.12, height: 4.55, body: { x: 0, y: 1.1, z: -0.14, hx: 0.72, hy: 0.76, hz: 0.82 }, head: { x: 0, y: 3.95, z: 0.4, hx: 0.36, hy: 0.36, hz: 0.5 } },
   crocodile: { reach: 1.28, height: 1.75, body: { x: 0, y: 0.8, z: -0.15, hx: 0.52, hy: 0.44, hz: 1.05 }, head: { x: 0, y: 1.2, z: 0.6, hx: 0.42, hy: 0.36, hz: 0.6 } },
-  board: { reach: 1.12, height: 3.3, body: { x: 0, y: 1.75, z: 0.06, hx: 1.05, hy: 1.45, hz: 0.09 }, head: { x: 0, y: 2.42, z: 0.06, hx: 0.42, hy: 0.42, hz: 0.09 } },
+  board: { reach: 1.12, height: 3.2, body: { x: 0, y: 1.55, z: 0.06, hx: 1.0, hy: 1.27, hz: 0.09 }, head: { x: 0, y: 1.85, z: 0.06, hx: 0.5, hy: 0.5, hz: 0.09 } },
 }
 
 /** The hole in the board: its middle above the stand's foot, and its radius. */
-export const HOLE = { y: 2.42, r: 0.46 } as const
+export const HOLE = { y: 1.85, r: 0.56 } as const
