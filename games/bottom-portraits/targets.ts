@@ -87,8 +87,8 @@ export class Aim {
     const t = this.px({ x: 0, y: -0.2, z: 0.6 }), rx = this.px({ x: 3, y: 0, z: 0 }).x - this.px({ x: 0, y: 0, z: 0 }).x
     if (((x - t.x) / rx) ** 2 + ((y - t.y) / (rx * 0.62)) ** 2 < 1) return { kind: 'small', what: 'table' }
     for (const step of STEPS) if (hit(this.rect([{ x: step.x - 1.3, y: step.y - 0.7, z: step.z + 1.3 }, { x: step.x + 1.3, y: step.y, z: step.z - 1.3 }]))) return { kind: 'small', what: 'step' }
-    if (hit(this.rect([{ x: -4.2, y: 2.6, z: -7.6 }, { x: -0.6, y: 7.4, z: -7.6 }]))) return { kind: 'small', what: 'window' }
-    if (y > this.px({ x: 0, y: -1.5, z: -7.6 }).y) return { kind: 'small', what: 'floor' }
+    if (hit(this.rect([{ x: -4.2, y: 2.6, z: -7.9 }, { x: -0.6, y: 7.4, z: -7.9 }]))) return { kind: 'small', what: 'window' }
+    if (y > this.px({ x: 0, y: -1.5, z: -7.9 }).y) return { kind: 'small', what: 'floor' }
     return { kind: 'air' }
   }
 

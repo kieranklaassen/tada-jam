@@ -196,8 +196,11 @@ export class Game {
     for (const other of CAST) {
       if (other === id || other === pass) continue
       const p = this.where(placeOf(this.table, other)), dx = to.x - from.x, dz = to.z - from.z
-      const k = clamp(((p.x - from.x) * dx + (p.z - from.z) * dz) / (dx * dx + dz * dz || 1))
-      if (Math.hypot(from.x + dx * k - p.x, from.z + dz * k - p.z) < 2.75) high = Math.max(high, p.y + FIGURES[other].height + 0.75)
+      const far = Math.hypot(dx, dz) || 1, along = ((p.x - from.x) * dx + (p.z - from.z) * dz) / (far * far), k = clamp(along)
+      // How far it stands out from the way, on the side the way swings to.
+      const out = (((p.z - from.z) * dx - (p.x - from.x) * dz) / far) * (dx >= 0 ? 1 : -1)
+      const near = Math.hypot(from.x + dx * k - p.x, from.z + dz * k - p.z) < 2.75
+      if (near || (bow > 0 && along > 0 && along < 1 && out > 0 && out < bow + 2.75)) high = Math.max(high, p.y + FIGURES[other].height + 0.75)
     }
     body.flight = { from: { x: from.x, y: from.y, z: from.z }, high, bow, start: this.time, lasts, yaw: body.yaw, landed: false }
     body.act = null

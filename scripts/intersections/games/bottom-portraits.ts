@@ -56,6 +56,7 @@ export default {
   allow: [
     { a: '^maestro>', b: '^maestro>', kind: 'pose', upTo: 1.4, reason: 'The painter is a jointed tin toy: his arm swings from a shoulder sunk in his smock, and his beret, monocle and moustache are fitted to his head and shift on it.' },
     { a: '^(elephant|hen|hippo|pig|giraffe|crocodile|board)>', b: '^(elephant|hen|hippo|pig|giraffe|crocodile|board)>', kind: 'pose', upTo: 0.8, reason: 'A sitter is a jointed tin toy: its head, ears, trunk, jaw and tail are set into it on pins and press into it as it nods, gapes and wags.' },
+    { a: '^(elephant|hen|hippo|pig|giraffe|crocodile|board)>', b: '^stands', kind: 'pose', upTo: 0.25, reason: 'A sitter that bows, hops or sinks presses into the rubber of the stand it is pinned to as it lands.' },
     { a: '^picture-frame', b: '^picture-face', kind: 'pose', upTo: 0.15, reason: 'The picture sits in the rebate of its own frame.' },
     { a: '^picture-frame', b: '^maestro>maestro-arm', kind: 'penetration', upTo: 0.2, reason: 'He paints with his hand resting on the edge of the frame in front of him.' },
     { a: '^floor', b: '^hung-\\d-frame', kind: 'penetration', upTo: 0.3, reason: 'The seventh picture sends the oldest off its nail: it drops behind the furniture and is gone as it lands.' },

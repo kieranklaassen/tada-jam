@@ -33,8 +33,8 @@ export const PICTURE = { w: 2.2, h: 1.65 } as const
 export const SHOWN: P3 & { size: number } = { x: -3.12, y: 4.0, z: -2.65, size: 1.64 }
 /** Six nails, in the order they are filled. */
 export const NAILS: readonly P3[] = [
-  { x: 3.75, y: 5.0, z: -7.45 }, { x: 6.2, y: 5.25, z: -7.45 }, { x: 8.6, y: 4.95, z: -7.45 },
-  { x: -7.35, y: 5.0, z: -7.45 }, { x: -7.5, y: 2.8, z: -7.45 }, { x: 8.5, y: 2.75, z: -7.45 },
+  { x: 3.75, y: 5.0, z: -7.75 }, { x: 6.2, y: 5.25, z: -7.75 }, { x: 8.6, y: 4.95, z: -7.75 },
+  { x: -7.35, y: 5.0, z: -7.75 }, { x: -7.5, y: 2.8, z: -7.75 }, { x: 8.5, y: 2.75, z: -7.75 },
 ]
 export const HUNG = 0.8
 /** The key that turns the table, at its rim. */

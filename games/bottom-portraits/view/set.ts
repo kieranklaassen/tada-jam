@@ -138,7 +138,7 @@ export class Room {
     const wallMap = keep(texture(wallPrint())), floorMap = keep(texture(floorPrint()))
     wallMap.wrapS = THREE.RepeatWrapping
     const wall = new THREE.Mesh(keep(wide(new THREE.PlaneGeometry(40, 10))), keep(new THREE.MeshBasicMaterial({ map: wallMap })))
-    wall.position.set(0, FLOOR_Y + 5, -7.6)
+    wall.position.set(0, FLOOR_Y + 5, -7.9)
     wall.name = 'wall'
     const floor = new THREE.Mesh(keep(wideFloor(new THREE.PlaneGeometry(40, 20))), keep(new THREE.MeshBasicMaterial({ map: floorMap })))
     floor.rotation.x = -Math.PI / 2
