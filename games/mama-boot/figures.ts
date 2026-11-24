@@ -158,28 +158,34 @@ function bell(box: Box): Figure {
 }
 
 function hen(box: Box): Figure {
+  const eyes: Eye[] = [{ x: 62, y: -196, r: 28, lid: '#e07a2c' }, { x: 116, y: -192, r: 32, lid: '#e07a2c' }]
   const feather = (g: Pen, x: number, y: number, l: number, w: number, a: number, c: string) => {
     g.save(); g.translate(x, y); g.rotate(a)
     box.felt(g, c, [-w, -4, w * 2, l + 8], (p) => { p.moveTo(0, -2); p.quadraticCurveTo(w, l * 0.35, w * 0.7, l * 0.8); p.quadraticCurveTo(0, l * 1.16, -w * 0.7, l * 0.8); p.quadraticCurveTo(-w, l * 0.35, 0, -2) }, { lift: 2, fibre: 0.7 })
     g.strokeStyle = 'rgba(255,255,255,0.4)'; g.lineWidth = 2; g.beginPath(); g.moveTo(0, 4); g.lineTo(0, l * 0.8); g.stroke()
     g.restore()
   }
-  return figure(box, 400, 340, 190, 300, { x: 0, y: -20 }, [{ x: 62, y: -196, r: 28, lid: '#e07a2c' }, { x: 116, y: -192, r: 32, lid: '#e07a2c' }], null, (g) => {
+  const f = figure(box, 400, 340, 190, 300, { x: 0, y: -20 }, [], null, (g) => {
     for (const [i, c] of ['#c8442f', '#f2b134', '#2f8f86', '#e86a2f'].entries()) feather(g, -96 + i * 6, -130 + i * 8, 100 - i * 4, 22, 2.25 - i * 0.34, c)
     box.felt(g, '#ef8a35', [-136, -190, 260, 190], (p) => { p.moveTo(-128, -86); p.quadraticCurveTo(-90, -124, -10, -130); p.quadraticCurveTo(30, -140, 36, -190); p.lineTo(120, -182); p.quadraticCurveTo(136, -60, 96, -24); p.quadraticCurveTo(0, 14, -96, -22); p.quadraticCurveTo(-130, -44, -128, -86) })
     for (let row = 0; row < 3; row++) for (let i = 0; i < 7 - row; i++) feather(g, -84 + i * 30 + row * 12, -100 + row * 26, 36, 17, 0.1 - i * 0.03, ['#f6a64f', '#ffd08a', '#f29a3e'][(i + row) % 3])
-    box.felt(g, '#f39a42', [22, -252, 130, 120], (p) => p.ellipse(84, -188, 62, 60, 0, 0, TAU))
-    // Comb, wattle and cheek.
-    for (const [x, y, r] of [[52, -250, 17], [80, -262, 21], [110, -252, 17]] as const) box.pom(g, x, y, r, r * 1.2, [226, 52, 48])
-    box.felt(g, '#e2342f', [90, -152, 40, 50], (p) => { p.ellipse(108, -130, 14, 24, 0, 0, TAU) }, { lift: 2 })
-    box.button(g, 46, -162, 13, '#ff7d5c', 4, '#fff0d0', 1)
     box.glue(g, -110, -40, 6)
   }, {
     wing: { x: 26, y: -96, sprite: box.sprite(200, 150, 160, 40, (g) => { for (let i = 0; i < 5; i++) feather(g, -6 - i * 4, -6 + i * 6, 124 - i * 14, 22, 1.95 - i * 0.3, ['#d8622a', '#f2b134', '#c8442f', '#f6a64f', '#e86a2f'][i]) }) },
     top: { x: 140, y: -178, sprite: box.sprite(90, 60, 16, 34, (g) => box.felt(g, '#ffc02e', [-10, -26, 64, 34], (p) => { p.moveTo(-6, 6); p.quadraticCurveTo(0, -24, 22, -20); p.lineTo(56, 4); p.closePath() })) },
     under: { x: 140, y: -172, sprite: box.sprite(80, 50, 16, 14, (g) => box.felt(g, '#e8961a', [-8, -6, 56, 28], (p) => { p.moveTo(-6, -2); p.lineTo(42, 2); p.quadraticCurveTo(22, 22, -4, 14); p.closePath() })) },
     skirt: { x: 92, y: -46, sprite: box.sprite(120, 110, 60, 20, (g) => { for (let i = 0; i < 4; i++) feather(g, -36 + i * 24, -4, 58, 19, 0.14 - i * 0.1, i % 2 ? '#ffd08a' : '#f6a64f') }) },
+    // The head turns by itself; its eyes and beak are drawn with it.
+    head: { x: 0, y: 0, sprite: box.sprite(170, 200, -10, 300, (g) => {
+      box.felt(g, '#f39a42', [22, -252, 130, 120], (p) => p.ellipse(84, -188, 62, 60, 0, 0, TAU))
+    // Comb, wattle and cheek.
+      for (const [x, y, r] of [[52, -250, 17], [80, -262, 21], [110, -252, 17]] as const) box.pom(g, x, y, r, r * 1.2, [226, 52, 48])
+      box.felt(g, '#e2342f', [90, -152, 40, 50], (p) => { p.ellipse(108, -130, 14, 24, 0, 0, TAU) }, { lift: 2 })
+      box.button(g, 46, -162, 13, '#ff7d5c', 4, '#fff0d0', 1)
+      for (const e of eyes) box.eye(g, e.x, e.y, e.r)
+    }) },
   })
+  return { ...f, eyes }
 }
 
 const CHICK_WOOL: readonly [number, number, number][] = [[255, 214, 64], [255, 190, 70], [255, 232, 120], [250, 204, 104], [255, 222, 84]]

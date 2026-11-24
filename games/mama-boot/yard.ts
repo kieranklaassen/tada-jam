@@ -157,6 +157,10 @@ export class Yard {
   dabs: { x: number; y: number; t: number }[] = []
   /** What the hen last watched happen. */
   watch: Spot = { x: 500, y: 560 }
+  /** Where the ground is pressed in, and how long since. */
+  dent: (Spot & { t: number }) | null = null
+  /** Where the foil has just been creased. */
+  creases: (Spot & { t: number; turn: number })[] = []
   knocking = true
   private later: Later[] = []
   private rings = new Map<string, { x: number; y: number; a: number }>()
@@ -330,6 +334,7 @@ export class Yard {
       this.watch = this.middle(b)
     } else if (target.kind === 'ground') {
       this.sound('press.ground')
+      this.dent = { ...p, t: 0 }
       this.puff('dust', p.x, p.y, 3)
     }
   }
@@ -464,7 +469,7 @@ export class Yard {
 
   /** Takes up what is under the finger, if it can be carried. What cannot still answers. */
   take(target: Target, p: Spot): boolean {
-    if (target.kind === 'puddle') { this.puddleT = 0; this.sound('puddle.rustle'); return false }
+    if (target.kind === 'puddle') { this.crease(p); return false }
     if (target.kind !== 'body') return false
     if (target.id === 'hen') {
       if (!this.gag) this.act(this.hen, 'henStretch')
@@ -485,6 +490,16 @@ export class Yard {
     this.sound('lift')
     this.move(p)
     return true
+  }
+
+  /** A finger that drags over the foil creases it there. */
+  crease(p: Spot): void {
+    if (fromPuddle(p) > 0) return
+    const last = this.creases[this.creases.length - 1]
+    if (last && Math.hypot(last.x - p.x, last.y - p.y) < 16) return
+    this.creases.push({ x: p.x, y: p.y, t: 0, turn: this.rng.next() * 6 })
+    if (this.creases.length > 12) this.creases.shift()
+    this.sound('puddle.rustle')
   }
 
   move(p: Spot): void {
@@ -517,7 +532,7 @@ export class Yard {
     b.z = 0
     b.hop = z > 4 ? { x: b.x, y: b.y, z, t: 0, lasts: 0.16 } : null
     const near = apart(b, HEN) < SIZE.hen.r + SIZE[b.kind].r * 0.5 || Math.hypot((carry.x - HEN.x) / 150, (carry.y - (HEN.y - 110)) / 150) < 1
-    if (isBrood(b.id)) this.dropBrood(b as Chick, { x: carry.x, y: carry.y }, near)
+    if (isBrood(b.id)) this.dropBrood(b as Chick, { x: carry.x, y: carry.y }, near, z)
     else this.dropThing(b as Body & { id: ThingKey }, near)
     this.change(true)
   }
@@ -570,7 +585,7 @@ export class Yard {
       this.puddleT = 0
       this.perform(b, WET[k])
       this.sound(`wet.${k}`)
-      this.puff(k === 'teapot' ? 'bubble' : 'water', b.x, b.y, 9)
+      this.puff(k === 'teapot' ? 'bubble' : 'water', b.x + (k === 'boot' ? 72 * b.dir : 0), b.y, 10)
       return
     }
     let mate: ThingKey | null = null, least = BESIDE
@@ -595,7 +610,7 @@ export class Yard {
     if (how.b) this.perform(B, how.b)
     this.sound(`pair.${key}`)
     const mid = { x: (A.x + B.x) / 2, y: (A.y + B.y) / 2 }
-    if (how.fx) this.puff(how.fx, mid.x, mid.y - 70, 8)
+    if (how.fx) { const hat = key === 'teapot-farmer' ? { x: B.x - 76 * B.dir, y: B.y - 190 } : { x: mid.x, y: mid.y - 70 }; this.puff(how.fx, hat.x, hat.y, 9) }
     if (how.roll) {
       // Sent off away from what sent it.
       const ball = how.roll === 'a' ? A : B
@@ -605,11 +620,16 @@ export class Yard {
     this.watch = mid
   }
 
-  private dropBrood(c: Chick, finger: Spot, onHen: boolean): void {
-    if (onHen) {
-      if (c.kind === 'chick' && c.opening === null) return this.tuck(c, false)
-      const p = this.place(c), to = this.nestSpot(c)
-      this.hopTo(c, p, 30, to)
+  private dropBrood(c: Chick, finger: Spot, onHen: boolean, z: number): void {
+    if (onHen && c.opening === null) {
+      if (c.kind === 'chick') return this.tuck(c, false)
+      const to = this.spotFor(c, { x: HEN.x - 40, y: HEN.y + 130 })
+      c.from = { x: c.x, y: c.y - z }
+      c.hop = null
+      c.x = to.x
+      c.y = to.y
+      c.z = 0
+      c.tucking = 0
       this.act(this.hen, 'henCoo')
       this.sound('hen.egg')
       return
@@ -832,6 +852,9 @@ export class Yard {
     this.cowFaces = Math.max(0, this.cowFaces - dt)
     for (const key of Object.keys(this.scenery) as SceneryKey[]) this.scenery[key] += dt
     for (const d of this.dabs) d.t += dt
+    if (this.dent) { this.dent.t += dt; if (this.dent.t > 0.5) this.dent = null }
+    for (const c of this.creases) c.t += dt
+    this.creases = this.creases.filter((c) => c.t < 1.6)
     this.dabs = this.dabs.filter((d) => d.t < 0.6)
     for (const f of this.fx) {
       f.age += dt

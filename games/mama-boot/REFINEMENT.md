@@ -3,43 +3,55 @@
 
 ## Status
 
-- Stage: template copied. No sheet yet.
-- Look in use: none yet.
-- Open: the design sheet in `ART.md` and its check.
-
-The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Ask for the sheet's check by writing `Open: sheet ready for check, round N` here; when it passes, record the round and the commit it judged. Someone with no session to read resumes from this block and the files. The two parts below belong to the block.
+- Stage: gates.
+- Look in use: Craft-box collage, the first of the two reserved looks. The second (Thick-line primaries) was not needed.
+- The sheet: checked four rounds by someone who did not write it. Round 1 had eleven findings, round 2 five, round 3 five, round 4 none. Passed on the sha256 of `ART.md` up to and including the line `## The look`: `c9d0bc9086f513dfe9823180cb3e51e97c5502a685b6a33d05b85be27010d74a`.
+- Plan review: the plan was not put through a separate document review. The independent check of the sheet, which holds the same decisions, took its place.
+- Open: nobody has heard the sounds and nobody has held it on an iPad. See "For the owner to decide".
 
 ### Template notes
 
-No entry yet. One entry a file copied from the template, written for the lead and for the games that come after: used as copied, or what was changed and why, and what is wrong or missing that any game would need. Mark a fault or a gap **for the template**. A frozen file is never changed here: a fault in one is a request to the lead.
+- `config.ts`: the designed order and `FIRST_VISIT` removed, since the yard is open play. `state.ts`, `scene.ts` and `input.ts` replaced by `save.ts`, `yard.ts` and `play.ts`. `stage.ts`: its point type comes from `layout.ts`. Everything else as copied; the four frozen files are untouched.
+- **For the template**: the overlay is told of the working finger only, and a game that gives the corner to nobody never has a working finger there. The Mount here follows the corner finger by itself.
 
 ### For the owner to decide
 
-Nothing yet. One line for each thing only the owner can settle: the look and the toy at the toy checkpoint, a default the game would like changed, and anything the guide does not rule on.
+- The look and the toy, by playing it.
+- The sounds: every one is set by numbers on a machine with no speaker.
+- A ring turns without a sound until it is nudged, as settled in the idea.
 
 ## Pass log
 
-No pass yet. One row per pass: what was looked at, the critique written as the child, the one themed fix set, what was reverted, the measured frame rate, and what is still weak.
+Frame cost is counted, not timed: there is no graphics hardware where this was built, so no frame rate here says anything about a tablet.
 
-| Pass | Looked at | Critique | Fix set | Frame rate | Still weak |
+| Pass | Looked at | Critique | Fix set | Frame cost | Still weak |
 | --- | --- | --- | --- | --- | --- |
+| 1 | The spike at 1180 by 820: first scene, an egg opening, a chick settled | "The chicks are small. The cow is a round thing. The string comes out of its tummy. The sheep is behind the pig." | Chicks a sixth larger; the cow has legs and stands higher in the door; the thread starts at the neck; sheep, pig and eggs moved so that each shows whole | 110 to 130 pieces | Boot's rider out of sight |
+| 2 | Parade, one chick of each kind, ring, riders, the hen with each thing, stood in stills | "Where did the chick in the boot go? The egg is on his face. The boot is in front of the ball." | Seats moved; what the game sets down is put where it hides nothing; chicks keep their place once they stand by their mother, so that a chick does not scoot off from under a finger; chicks shut in flap out | 155 at the busiest | Hen's looks are whole-body |
+| 3 | The hen's ten looks, wing, foil, ground, the guide hand, phone and wide surfaces | "She does not really turn her head. The ground does nothing. The wing goes down when it should go up." | The hen's head turns by itself, right over for the teapot; ground dents, foil creases under the finger; wing signs; the farmer opens one eye; buttons lost their thread, which read as a cross | 160 at the busiest, budget 175 in `frameBudget.test.ts` | See the cold playtest |
 
 ## For the pull request
 
-Written as the game is built and kept at the end of this file: the pull request is made from it.
-
 ### How the game meets the quality bar
 
-Nothing yet. One entry for each line of the quality bar, saying how the game meets it so far. Each frame rate comes with the engine, the throttle, the pixel ratio and the build it was measured on, and with whether a physical iPad was measured.
+- **Alive at idle**: eggs lean and knock, the teapot's lid lifts, the pig's tail goes, the farmer's belly goes up and down, the hen follows with her eyes, everyone blinks, the sun turns.
+- **Motion and sound on every touch**: every body squashes on a spring in the frame the finger lands; ground, foil, fence, clouds, sun, tree, sheep and cow answer too. 76 acts, no two the same (tested).
+- **Weight and follow-through**: springs on the body, loose pupils that lag and overshoot, hops that land in a squash.
+- **Silhouettes and tappables**: warm and pale bodies on a mid-dark ground; targets about 100 units, 26 more forgiven; nothing to touch in the corner, under the home control or in the bottom strip.
+- **Wordless clarity at two**: one egg asks at a time; any tap does something; no numeral, letter or sign.
+- **Idle guidance**: glow at 3 s, hand at 5 s, four showings with doubling gaps, then quiet.
+- **60 fps**: 155 to 160 pieces at the busiest, one full-surface picture, no post pass, no shadow blur, no picture made after the first frame. No physical iPad measured.
+- **Assets**: all drawn by code; nothing loaded.
 
 ### The learning claim
 
-Nothing yet. The claim as the sheet has it, with each record's standing and its check state read again on the day of the pull request, in the pack's Summary or the game's own words only. A game with no learning goal says so.
+None. The game has no learning goal, names no record and makes no claim about how real chicks behave.
 
 ### Defaults taken for the owner
 
-Nothing yet. Each default the game took in the owner's place, from the guide or from its own sheet.
+Three eggs at 3 and younger or with no age, five at 4 and older, first visit only.
 
 ### What the next builder should know
 
-Nothing yet. What this build taught that the guide and the template do not say.
+- "Nearest" makes pairs, never a ring of three: A nearest B, B nearest C and C nearest A cannot all hold. A ring of three needs the child to move something, or an egg that rides. The independent check found this on paper.
+- A follower needs a place it keeps. Without one, lifting one chick made its sisters shuffle, and the one the child was aiming at walked away.

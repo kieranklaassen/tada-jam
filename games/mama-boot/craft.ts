@@ -189,7 +189,7 @@ export class Box {
     g.strokeStyle = 'rgba(0,0,0,0.22)'; g.beginPath(); g.arc(x, y, r * 0.92, -0.1, PI * 0.7); g.stroke()
     g.lineWidth = r * 0.07; g.strokeStyle = 'rgba(0,0,0,0.2)'; g.beginPath(); g.arc(x, y, r * 0.66, 0, TAU); g.stroke()
     const at = holes === 2 ? [[-0.26, 0], [0.26, 0]] : [[-0.22, -0.22], [0.22, -0.22], [0.22, 0.22], [-0.22, 0.22]]
-    if (holes === 4) { g.strokeStyle = thread; g.lineWidth = r * 0.12; g.beginPath(); g.moveTo(x - r * 0.22, y - r * 0.22); g.lineTo(x + r * 0.22, y + r * 0.22); g.moveTo(x + r * 0.22, y - r * 0.22); g.lineTo(x - r * 0.22, y + r * 0.22); g.stroke() }
+    void thread
     g.fillStyle = 'rgba(40,16,20,0.75)'
     for (const [hx, hy] of at) { g.beginPath(); g.ellipse(x + hx * r, y + hy * r, r * (holes === 2 ? 0.13 : 0.1), r * (holes === 2 ? 0.2 : 0.1), 0, 0, TAU); g.fill() }
     g.restore()

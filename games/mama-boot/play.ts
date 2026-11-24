@@ -94,7 +94,7 @@ export class Play {
       work.carrying = this.yard.take(work.target, this.stage(x, y))
     }
     if (work.carrying) this.yard.move(this.stage(x, y))
-    else this.yard.finger = this.stage(x, y)
+    else { const p = this.stage(x, y); this.yard.finger = p; if (work.target.kind === 'puddle') this.yard.crease(p) }
   }
 
   up(id: number, x: number, y: number): void {

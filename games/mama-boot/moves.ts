@@ -18,9 +18,11 @@ export type Pose = {
   flap: number
   /** Where the eyes are turned by the act, from -1 to 1 each way. */
   gazeX: number; gazeY: number
+  /** The head turned on the neck, for a body whose head turns by itself. */
+  head: number
 }
 
-export const REST: Pose = { dx: 0, lift: 0, rot: 0, sx: 1, sy: 1, mouth: 0, shut: 0, flap: 0, gazeX: 0, gazeY: 0 }
+export const REST: Pose = { dx: 0, lift: 0, rot: 0, sx: 1, sy: 1, mouth: 0, shut: 0, flap: 0, gazeX: 0, gazeY: 0, head: 0 }
 
 export type Act = { lasts: number; at(t: number): Partial<Pose> }
 
@@ -62,7 +64,7 @@ export const ACTS = {
   pigFlat: act(0.8, (t) => ({ sy: 1 - hold(t, 0, 0.12, 0.35, 1) * 0.34, sx: 1 + hold(t, 0, 0.12, 0.35, 1) * 0.2, mouth: hump(t, 0.3, 0.8) })),
   pigGiggle: act(1, (t) => ({ sy: 1 + ring(t, 6) * 0.05, shut: 1 - clamp((t - 0.8) / 0.2), mouth: 0.4 + abs(wob(t, 3)) * 0.4 * (1 - t), flap: wob(t, 4) })),
   pigWallow: act(2.1, (t) => ({ rot: hold(t, 0, 0.22, 0.8, 1) * (PI + wob(t, 3) * 0.28), lift: hold(t, 0, 0.22, 0.8, 1) * 10, flap: wob(t, 5), shut: hold(t, 0.2, 0.3, 0.8, 0.9), mouth: 0.6 * hold(t, 0.1, 0.3, 0.8, 1) })),
-  pigFaint: act(2.4, (t) => ({ dx: hump(t, 0, 0.25) * 18, rot: -hold(t, 0.28, 0.4, 0.86, 1) * 1.55, lift: hold(t, 0.28, 0.4, 0.86, 1) * 14 + hump(t, 0.4, 0.48) * 8, shut: hold(t, 0.22, 0.3, 0.86, 1), flap: hold(t, 0.3, 0.4, 0.8, 1) * wob(t, 6), mouth: hump(t, 0.2, 0.45) })),
+  pigFaint: act(2.4, (t) => ({ dx: hump(t, 0, 0.25) * 18, rot: -hold(t, 0.28, 0.4, 0.86, 1) * 2.8, lift: hold(t, 0.28, 0.4, 0.86, 1) * 10 + hump(t, 0.4, 0.48) * 8, shut: hold(t, 0.22, 0.3, 0.86, 1), flap: hold(t, 0.3, 0.4, 0.8, 1) * wob(t, 6), mouth: hump(t, 0.2, 0.45) })),
   pigSlurp: act(1.9, (t) => ({ dx: hold(t, 0, 0.12, 0.6, 0.7) * 12, rot: hold(t, 0, 0.12, 0.6, 0.7) * 0.2, sx: 1 + hold(t, 0.1, 0.6, 0.72, 0.8) * 0.16, mouth: hold(t, 0.1, 0.16, 0.58, 0.62) * 0.4 + hump(t, 0.72, 0.95), sy: 1 + hump(t, 0.7, 0.86) * 0.12 })),
   pigLick: act(1.5, (t) => ({ dx: hold(t, 0, 0.15, 0.7, 1) * 22, rot: -abs(wob(t, 2)) * 0.16, mouth: abs(wob(t, 2)), flap: 0.5 })),
   pigNose: act(0.9, (t) => ({ rot: hump(t, 0, 0.4) * 0.3 - hump(t, 0.38, 0.8) * 0.25, dx: hump(t, 0.2, 0.7) * 32 })),
@@ -112,20 +114,20 @@ export const ACTS = {
   chickCry: act(0.6, (t) => ({ mouth: hold(t, 0, 0.15, 0.6, 1), sy: 1 + hump(t, 0, 0.7) * 0.14, sx: 1 - hump(t, 0, 0.7) * 0.06, flap: hump(t, 0, 0.5) })),
   // --- the hen: every look of hers belongs to one mother
   henGasp: act(1.7, (t) => ({ sy: 1 + hold(t, 0, 0.1, 0.5, 1) * 0.1, mouth: hold(t, 0, 0.08, 0.6, 0.9), flap: hold(t, 0.1, 0.25, 0.75, 1), gazeX: -1 })),
-  henTurn: act(2, (t) => ({ rot: hold(t, 0.05, 0.3, 0.75, 1) * -0.5, gazeY: 0.8, gazeX: -0.6, mouth: hump(t, 0.4, 0.8) * 0.3 })),
-  henFaint: act(2.3, (t) => ({ rot: hold(t, 0.12, 0.24, 0.8, 1) * 0.6, dx: -hold(t, 0.12, 0.24, 0.8, 1) * 14, shut: hold(t, 0.1, 0.2, 0.82, 0.95), mouth: hold(t, 0, 0.1, 0.8, 0.9), flap: -hold(t, 0.1, 0.2, 0.8, 1) })),
-  henTut: act(1.8, (t) => ({ dx: wob(t, 2.5) * 12 * (1 - t), shut: 0.5 * (1 - t), gazeX: wob(t, 2.5), mouth: abs(wob(t, 2.5)) * 0.3 })),
-  henRound: act(2.1, (t) => ({ gazeX: cos(t * PI * 6), gazeY: sin(t * PI * 6), rot: sin(t * PI * 6) * 0.08, mouth: 0.4 })),
-  henNod: act(2, (t) => ({ lift: -abs(wob(t, 1.5)) * 10, sy: 1 - abs(wob(t, 1.5)) * 0.06, gazeX: -0.7, shut: 0.35 })),
+  henTurn: act(2, (t) => ({ head: hold(t, 0.05, 0.3, 0.75, 1) * -PI, gazeX: -0.6, mouth: hump(t, 0.4, 0.8) * 0.3 })),
+  henFaint: act(2.3, (t) => ({ rot: -hold(t, 0.12, 0.24, 0.8, 1) * 0.5, dx: -hold(t, 0.12, 0.24, 0.8, 1) * 14, shut: hold(t, 0.1, 0.2, 0.82, 0.95), mouth: hold(t, 0, 0.1, 0.8, 0.9), flap: -hold(t, 0.1, 0.2, 0.8, 1) })),
+  henTut: act(1.8, (t) => ({ dx: wob(t, 2.5) * 5 * (1 - t), head: wob(t, 2.5) * 0.3 * (1 - t), shut: 0.5 * (1 - t), gazeX: wob(t, 2.5), mouth: abs(wob(t, 2.5)) * 0.3 })),
+  henRound: act(2.1, (t) => ({ gazeX: cos(t * PI * 6), gazeY: sin(t * PI * 6), head: sin(t * PI * 6) * 0.14, mouth: 0.4 })),
+  henNod: act(2, (t) => ({ head: abs(wob(t, 1.5)) * 0.4, sy: 1 - abs(wob(t, 1.5)) * 0.06, gazeX: -0.7, shut: 0.35 })),
   henSmug: act(2, (t) => ({ sx: 1 + hold(t, 0, 0.3, 0.7, 1) * 0.12, sy: 1 + hold(t, 0, 0.3, 0.7, 1) * 0.07, shut: hold(t, 0.1, 0.3, 0.75, 1) })),
-  henCompare: act(2.4, (t) => ({ gazeX: hold(t, 0, 0.1, 0.25, 0.32) * -1 + hold(t, 0.32, 0.4, 0.55, 0.62) * 0.5 - hold(t, 0.62, 0.7, 0.85, 1), gazeY: 0.5, rot: wob(t, 1.5) * 0.08 })),
+  henCompare: act(2.4, (t) => ({ gazeX: hold(t, 0, 0.1, 0.25, 0.32) * -1 + hold(t, 0.32, 0.4, 0.55, 0.62) * 0.5 - hold(t, 0.62, 0.7, 0.85, 1), gazeY: 0.5, head: wob(t, 1.5) * 0.2 })),
   henTwice: act(1.7, (t) => ({ gazeX: t < 0.3 ? -0.7 : t < 0.5 ? 0.9 : -1, lift: hump(t, 0.5, 0.7) * 16, mouth: hold(t, 0.5, 0.6, 0.8, 1) * 0.8 })),
-  henLean: act(2.1, (t) => ({ dx: hold(t, 0, 0.3, 0.75, 1) * 26, rot: hold(t, 0, 0.3, 0.75, 1) * 0.22, gazeX: -0.6, gazeY: 1 })),
+  henLean: act(2.1, (t) => ({ dx: hold(t, 0, 0.3, 0.75, 1) * 16, rot: hold(t, 0, 0.3, 0.75, 1) * 0.12, head: hold(t, 0, 0.3, 0.75, 1) * 0.5, gazeX: -0.6, gazeY: 1 })),
   henLay: act(1.2, (t) => ({ sy: 1 - hold(t, 0, 0.35, 0.5, 0.6) * 0.14 + hump(t, 0.55, 0.85) * 0.14, sx: 1 + hold(t, 0, 0.35, 0.5, 0.6) * 0.1, shut: hold(t, 0, 0.2, 0.5, 0.6), mouth: hump(t, 0.5, 0.9), lift: hump(t, 0.55, 0.9) * 20 })),
   henWing: act(0.8, (t) => ({ flap: 1, sx: 1 + hump(t, 0, 0.5) * 0.05, mouth: hump(t, 0, 0.6) * 0.5 })),
   henStretch: act(1.1, (t) => ({ lift: hold(t, 0, 0.2, 0.55, 0.75) * 34, sy: 1 + hold(t, 0, 0.2, 0.55, 0.75) * 0.1 - hump(t, 0.75, 0.95) * 0.14, mouth: hold(t, 0.05, 0.15, 0.5, 0.7), flap: -0.5 * hump(t, 0, 0.7) })),
   henFluff: act(1.9, (t) => ({ sx: 1 + hold(t, 0.2, 0.35, 0.6, 0.75) * 0.13 + ring(t, 10) * 0.02, sy: 1 - hold(t, 0.45, 0.6, 0.66, 0.72) * 0.12, shut: hold(t, 0.3, 0.45, 0.66, 0.75), flap: hump(t, 0, 0.35), mouth: hump(t, 0.66, 0.9) * 0.6 })),
-  henCoo: act(1.1, (t) => ({ rot: -hump(t, 0.1, 0.8) * 0.2, shut: hump(t, 0.2, 0.9) * 0.6, mouth: hump(t, 0.1, 0.5) * 0.3, dx: hump(t, 0.1, 0.8) * 10 })),
+  henCoo: act(1.6, (t) => ({ sx: 1 + hold(t, 0.1, 0.35, 0.5, 0.7) * 0.14, sy: 1 + hold(t, 0.1, 0.35, 0.5, 0.7) * 0.08 - hump(t, 0.68, 0.85) * 0.1, shut: hold(t, 0.1, 0.3, 0.6, 0.75), mouth: hump(t, 0.1, 0.6) * 0.3, gazeY: hold(t, 0.75, 0.85, 0.95, 1) })),
   henFoot: act(2.8, (t) => ({ lift: abs(wob(t, 3)) * 40 * hold(t, 0, 0.1, 0.85, 1), rot: wob(t, 3) * 0.12, flap: wob(t, 7), mouth: abs(wob(t, 3)) })),
   henLaunched: act(2.8, (t) => ({ lift: hold(t, 0.15, 0.25, 0.75, 0.95) * (90 + wob(t, 5) * 8), flap: hold(t, 0.1, 0.2, 0.8, 1) * wob(t, 9), mouth: hold(t, 0.12, 0.2, 0.7, 0.9), gazeY: 1 })),
   henUnder: act(2.8, (t) => ({ sy: 1 - hold(t, 0.06, 0.14, 0.8, 0.95) * 0.42, sx: 1 + hold(t, 0.06, 0.14, 0.8, 0.95) * 0.2, gazeY: -1, mouth: hold(t, 0.1, 0.2, 0.75, 0.9) * 0.4 })),
@@ -158,6 +160,7 @@ export function add(out: Pose, p: Partial<Pose>, amount = 1): Pose {
   out.flap += (p.flap ?? 0)
   out.gazeX += p.gazeX ?? 0
   out.gazeY += p.gazeY ?? 0
+  out.head += (p.head ?? 0) * amount
   return out
 }
 

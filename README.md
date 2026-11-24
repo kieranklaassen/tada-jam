@@ -152,6 +152,7 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 | Nature Walk | `games/nature-walk/` | 3–7 | A wood of laser-cut plywood in 2D: look under six covers, turn four seasons by hand, carry six things to a hedgehog, a jay and a toad who each answer in their own temper, and take them home to a table. No learning goal. |
 | Lantern Walk | `games/lantern-walk/` | 4–8 | A night wood drawn as a rainbow scratch card: cut windows in a paper lantern, back them with red, blue or yellow, light the candle and carry it out, and each of six creatures answers each colour of light in its own way, until the lantern is hung by the door. No learning goal. |
 | Box Fort | `games/box-fort/` | 4–8 | A cardboard living room in three.js: cut windows and doors in boxes with scissors, stack them, tape them, roof them with a blanket, stuff them with cushions and hang lights, for a cat, a baby and a grandmother who each use the fort their own way; flick the switch and the holes throw their shapes on the wall. No learning goal. |
+| Mama Boot | `games/mama-boot/` | 2–5 | A farmyard from the craft box in 2D: tap an egg and whatever stands nearest when the chick's eyes land is its mother, so a chick stomps after a boot, pours like a teapot or rolls after a ball; chicks take chicks for parades and rings that turn until nudged, and one put under the hen is an egg again. No learning goal. |
 
 ## Showcases
 

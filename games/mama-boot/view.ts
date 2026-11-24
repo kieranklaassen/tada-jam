@@ -125,7 +125,20 @@ export class View {
     const f = since('fence')
     if (f < 1) for (let i = 0; i < 5; i++) this.put(s.post, SCENERY.fence.x - 48 + i * 38, FENCE.bottom + 1, 1, 1, ring(max(0, f - i * 0.06), 3, 0.8) * 0.2)
     const p = y.puddleT
-    if (p < 1) { const g = this.g; g.strokeStyle = `rgba(255,255,255,${0.8 * (1 - p)})`; g.lineWidth = 4; g.beginPath(); g.ellipse(PUDDLE.x, PUDDLE.y, PUDDLE.rx * (0.3 + p * 0.66), PUDDLE.ry * (0.3 + p * 0.66), 0, 0, TAU); g.stroke(); this.drawn += 1 }
+    const g = this.g
+    for (const c of y.creases) {
+      g.strokeStyle = `rgba(255,255,255,${0.9 * (1 - c.t / 1.6)})`; g.lineWidth = 3
+      const a = cos(c.turn) * 13, b2 = sin(c.turn) * 6
+      g.beginPath(); g.moveTo(c.x - a, c.y - b2); g.lineTo(c.x - b2 * 0.4, c.y + 5); g.lineTo(c.x + a, c.y + b2 - 4); g.stroke()
+      this.drawn += 1
+    }
+    if (y.dent) {
+      const u = y.dent.t / 0.5, k = (1 - smooth(u)) * (1 + sin(u * PI * 3) * 0.1)
+      g.fillStyle = `rgba(6,30,40,${0.34 * k})`; g.beginPath(); g.ellipse(y.dent.x, y.dent.y, 30 * (0.7 + k * 0.3), 20 * (0.7 + k * 0.3), 0, 0, TAU); g.fill()
+      g.strokeStyle = `rgba(255,255,255,${0.4 * k})`; g.lineWidth = 3; g.beginPath(); g.ellipse(y.dent.x + 1, y.dent.y + 3, 30, 20, 0, 0.3, 2.6); g.stroke()
+      this.drawn += 2
+    }
+    if (p < 1) { g.strokeStyle = `rgba(255,255,255,${0.8 * (1 - p)})`; g.lineWidth = 4; g.beginPath(); g.ellipse(PUDDLE.x, PUDDLE.y, PUDDLE.rx * (0.3 + p * 0.66), PUDDLE.ry * (0.3 + p * 0.66), 0, 0, TAU); g.stroke(); this.drawn += 1 }
   }
 
   // --- figures -----------------------------------------------------------------
@@ -187,12 +200,12 @@ export class View {
     return r
   }
 
-  private eyes(f: Figure, b: Body, r: Roll, shut: number, up = 0): void {
+  private eyes(f: Figure, b: Body, r: Roll, shut: number, up = 0, oneOnly = false): void {
     const g = this.g
     const blink = shut === 0 && !b.act && (this.t + b.id.charCodeAt(0) * 0.37 + b.id.charCodeAt(1) * 0.9) % 4.3 < 0.11 ? 1 : 0
-    const lid = clamp(shut + blink)
     const c = cos(up), s = sin(up)
-    for (const e of f.eyes) {
+    for (const [i, e] of f.eyes.entries()) {
+      const lid = oneOnly && i === 0 ? 1 : clamp(shut + blink)
       if (lid < 0.95) {
         const px = r.x * b.dir, k = e.r * 0.4
         this.put(this.cast.pupil, e.x + (px * c + r.y * s) * k, e.y + (-px * s + r.y * c) * k, (e.r * 0.56) / 20)
@@ -271,7 +284,8 @@ export class View {
         this.put(f.body, 0, 0)
         break
     }
-    this.eyes(f, b, r, pose.shut)
+    // Asleep, he opens one eye and no more.
+    this.eyes(f, b, r, pose.shut, 0, b.kind === 'farmer')
     this.mouth(f, pose.mouth)
     this.end()
   }
@@ -309,10 +323,15 @@ export class View {
     const lift = b.act?.name === 'henCoo' ? 0.2 : tuck ? clamp(abs(tuck.tucking! - 0.5) * 2 - 0.4) : 1
     this.part(f, 'skirt', -0.9 * lift - sin(t * 1.6) * 0.05, 0, -6 * lift)
     const wing = y.wing > 0 ? 1 : clamp(pose.flap)
-    this.part(f, 'wing', -wing * 1.5 + min(0, pose.flap) * 0.4 + (y.wing > 0 ? sin(t * 5) * 0.08 : sin(t * 1.6) * 0.03))
-    this.eyes(f, b, r, pose.shut)
+    this.part(f, 'wing', wing * 1 - min(0, pose.flap) * 0.4 + (y.wing > 0 ? sin(t * 5) * 0.08 : sin(t * 1.6) * 0.03))
+    const g = this.g
+    g.save()
+    g.translate(88, -186); g.rotate(pose.head); g.translate(-88, 186)
+    this.part(f, 'head')
+    this.eyes(f, b, r, pose.shut, (pose.head + pose.rot))
     this.part(f, 'under', pose.mouth * 0.5)
     this.part(f, 'top', -pose.mouth * 0.3)
+    g.restore()
     this.end()
     this.put(this.cast.nestFront, HEN.x, HEN.y + 8)
   }
@@ -331,7 +350,7 @@ export class View {
 
   private drawTuck(c: Chick): void {
     const t = c.tucking!, under = { x: HEN.x - 34, y: HEN.y + 10 }
-    if (t < 0.55) { const u = t / 0.55; this.drawChick(c, { x: c.from.x + (under.x - c.from.x) * u, y: c.from.y + (under.y - c.from.y) * u, z: sin(u * PI) * 60 }, 1 - u * 0.35) } else if (t > 1.2) this.drawEgg(c, hop({ x: HEN.x - 70, y: HEN.y + 22, z: 16 }, c, (t - 1.2) / (TUCK_S - 1.2)))
+    if (t < 0.55) { const u = t / 0.55, at = { x: c.from.x + (under.x - c.from.x) * u, y: c.from.y + (under.y - c.from.y) * u, z: sin(u * PI) * 60 }; if (this.yard.hen.act?.name === 'henCoo') this.drawEgg(c, at); else this.drawChick(c, at, 1 - u * 0.35) } else if (t > 1.2) this.drawEgg(c, hop({ x: HEN.x - 70, y: HEN.y + 22, z: 16 }, c, (t - 1.2) / (TUCK_S - 1.2)))
   }
 
   private drawEgg(c: Chick, at: Place): void {
@@ -350,7 +369,7 @@ export class View {
       g.rotate(pose.rot)
       g.scale(s * pose.sx * (n.x < at.x ? -1 : 1), s * pose.sy)
       if (pass === 0) this.put(e.shadow, 0, 0)
-      else { this.put(e.whole, 0, 0); this.put(e.beak, 18 + clamp(pose.flap) * 8 + (asking ? sin(this.t * 2.4) * 1.5 : 0), -61, 0.8 + clamp(pose.flap) * 0.3) }
+      else { this.put(e.whole, 0, 0); if (c.host === 'teapot') this.put(this.cast.things.teapot.parts.lid.sprite, 0, -100, 0.8); this.put(e.beak, 18 + clamp(pose.flap) * 8 + (asking ? sin(this.t * 2.4) * 1.5 : 0), -61, 0.8 + clamp(pose.flap) * 0.3) }
       g.restore()
     }
   }
@@ -390,7 +409,7 @@ export class View {
     const y = this.yard, f = this.cast.chicks[c.id], pose = this.begin(c)
     const gait: Gait = c.kind === 'chick' ? y.gait(c) : 'egg'
     const held = y.carry?.id === c.id
-    if (opening) { pose.rot += out * PI * 2; pose.mouth = max(pose.mouth, c.opening! < LAND ? 0.2 : pose.mouth) } else if (held) { pose.flap += sin(this.t * 22) * 0.8; pose.rot += sin(this.t * 7) * 0.12; pose.mouth = max(pose.mouth, 0.3) } else if (c.dizzy) { pose.rot += sin(this.t * 3 + c.stance) * 0.16; pose.sy *= 0.84; pose.sx *= 1.08 } else if (c.host && !c.act) { pose.rot += sin(this.t * 2.2 + c.stance) * 0.07 } else if (!c.act || c.going > 0.4) {
+    if (opening) { pose.rot += out * PI * 2; pose.mouth = max(pose.mouth, c.opening! < LAND ? 0.2 : pose.mouth) } else if (held) { pose.flap += sin(this.t * 22) * 0.8; pose.rot += sin(this.t * 7) * 0.12; pose.mouth = max(pose.mouth, 0.3) } else if (c.dizzy) { pose.rot += sin(this.t * 3 + c.stance) * 0.16; pose.sy *= 0.84; pose.sx *= 1.08 } else if (c.host && !c.act) { const on = y.of(c.host); pose.rot += sin(this.t * (on?.kind === 'bell' ? 9 : 2.2) + c.stance) * 0.07; if (on?.kind === 'ball') { pose.dx += sin(this.t * 3) * 7; pose.lift += abs(sin(this.t * 14)) * 5 } } else if (!c.act || c.going > 0.4) {
       const go = c.going
       if (go > 0.08) add(pose, WALKS[gait](c.phase, go))
       if (go < 0.5 && c.kind === 'chick') add(pose, scaled(STANCES[gait](c.stance), 1 - go * 2))
@@ -404,8 +423,8 @@ export class View {
     const r = this.roll(c, at, look, pose, rolling)
     this.enter(c, f, at, pose, size * 1.16)
     this.put(f.body, 0, 0)
-    if (c.kind === 'chick' && c.tucking === null) this.put(this.cast.scarf[gait], 4, -55)
-    this.part(f, 'wing', -pose.flap * 0.9)
+    if (c.kind === 'chick' && c.tucking === null && !(opening && c.thread > 0.4)) this.put(this.cast.scarf[gait], 4, -55)
+    this.part(f, 'wing', pose.flap * 0.9)
     this.eyes(f, c, r, pose.shut, pose.rot * c.dir)
     this.part(f, 'under', pose.mouth * 0.6)
     this.part(f, 'top', -pose.mouth * 0.35)

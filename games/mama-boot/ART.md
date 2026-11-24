@@ -107,4 +107,13 @@ The game has no learning goal, names no record and claims no school skill.
 
 ## The look
 
-Written after the style spike, not part of the sheet.
+**Craft-box collage** (canvas 2D). The yard is a thing a child could have stuck together at a table: sheets of card and felt, and glued on them dry pasta, buttons, pom-poms, lolly sticks, cotton wool, pipe cleaners, kitchen foil and googly eyes.
+
+- **Materials, and what each is for.** Felt: bodies, with a light cut edge at the upper left, a dark one at the lower right and a few dashed stitches. Pom-poms: what is woolly and soft (pig, chicks, tree, comb). Lolly sticks: what is built (barn, fence, barrow, soles). Pipe cleaners: what bends (cuff, handles, tail, sleeves, and the yarn round a chick's neck). Buttons: snout, wheel, apples, the middle of the sun. Penne and pasta bows: the spout and the rays. Cotton wool: cloud, sheep, beard, steam. Foil: the puddle.
+- **Light.** From the upper left. Every piece has one small hard shadow to the lower right in one blue-grey. Figures have a second one that falls on what is behind them and a flat soft one on the ground. Glue shows as a few clear shiny blobs.
+- **Eyes.** The one thing every character shares, and what the game is about. White domes with a black disc that rolls on a loose spring: thrown about by the body's own movement and drawn to what it looks at. An egg's chick rolls them until they land.
+- **Colour.** The ground is one mid-dark green-blue, so that all that is warm or pale stands off it. One strong hue for each mother, and her chicks wear it round the neck: boot red, teapot blue, pig pink, farmer green, ball purple, bell turquoise, hen orange, an egg not opened white, the puddle silver, a ring yellow.
+- **Never.** Paint, torn edges, gradients on a body, a stitched or threaded cross on a button, words, numerals.
+- **Next to its neighbours.** Who Made That Sound is painted tissue with torn edges; Felt Meadow and Critter Clay are solid 3D; Bedtime cut-outs have no thickness. Here the pieces are objects, they are thick, and they are glued.
+
+The small print: `craft.ts` holds the materials, `figures.ts` the characters, `scenery.ts` the yard, `moves.ts` how each moves, `view.ts` only moves pictures that are cut once.
