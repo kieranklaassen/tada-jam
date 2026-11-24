@@ -230,7 +230,7 @@ describe('the room', () => {
     g.drag([BELL, { x: 590, y: 500 }])
     expect(Object.values(g.p.state.coats).every((c) => c === 'clean')).toBe(true)
     expect([g.p.state.hair, g.p.state.lips]).toEqual([['plain', 'plain'], [false, false]])
-    expect(g.p.dirty).toBe('now')
+    expect(g.p.dirty).toBe(true)
     expect(g.p.scene?.kind).toBe('tidy')
   })
   it('keeps the bell away while there is nothing to tidy', () => {

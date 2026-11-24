@@ -3,6 +3,7 @@ import { makeRng, type Rng } from './rng'
 import type { PartyEvent } from './party'
 import type { Act, Antic, Side, Thing } from './rules'
 import { GOLD, INK, blob, cell, gutta, soft, type G } from './silk'
+import type { Stamp } from './stamps'
 import type { Point } from './stage'
 
 // Bits in the air and on the floor: what each thing throws, pours and blows,
@@ -68,11 +69,12 @@ export class Bits {
   }
 
   private throwAt(what: Throw, at: Point, aim: number, most: number, floor: number, wait = 0): void {
+    const wide = what.shape === 'curl' ? 110 : 12
     for (let i = 0; i < what.count; i++) {
       if (this.bits.length >= most) this.bits.shift()
       const a = aim + (this.rng.next() - 0.5) * what.spread, v = what.speed * (0.6 + this.rng.next() * 0.8)
       this.bits.push({
-        shape: what.shape, x: at.x + (this.rng.next() - 0.5) * 12, y: at.y + (this.rng.next() - 0.5) * 8,
+        shape: what.shape, x: at.x + (this.rng.next() - 0.5) * wide, y: at.y + (this.rng.next() - 0.5) * wide * 0.7,
         vx: Math.cos(a) * v, vy: Math.sin(a) * v - what.up * (0.6 + this.rng.next() * 0.6), size: what.size * (0.75 + this.rng.next() * 0.5), colour: what.colour,
         life: what.life, age: 0, wait: wait + (what.count > 1 ? (i / what.count) * what.over : 0), pull: what.pull, turn: this.rng.next() * 6, spin: (this.rng.next() - 0.5) * 8, floor,
       })
@@ -141,7 +143,7 @@ export class Bits {
     }
   }
 
-  draw(g: G): number {
+  draw(g: G, put: Stamp): number {
     let drawn = 0
     for (const b of this.bits) {
       if (b.wait > 0) continue
@@ -154,21 +156,30 @@ export class Bits {
         case 'drop': {
           g.rotate(Math.atan2(b.vy, b.vx))
           const l = 1 + Math.min(1.4, Math.hypot(b.vx, b.vy) / 420)
-          blob(g, 0, 0, b.size * l, b.size * 0.8)
-          cell(g, b.colour, 2)
+          g.scale((b.size * l) / 16, (b.size * 0.8) / 16)
+          put(g, `drop${b.colour}`, [-20, -20, 40, 40], '', '', (g) => {
+            blob(g, 0, 0, 16, 16)
+            cell(g, b.colour, 3)
+          })
           break
         }
         case 'glop':
-          soft(g, [[-b.size * 0.8, -b.size], [b.size * 0.8, -b.size], [b.size, b.size * 0.7], [0, b.size * 1.3], [-b.size, b.size * 0.7]])
-          cell(g, b.colour, 3)
+          g.scale(b.size / 20, b.size / 20)
+          put(g, `glop${b.colour}`, [-24, -24, 48, 56], '', '', (g) => {
+            soft(g, [[-16, -20], [16, -20], [20, 14], [0, 26], [-20, 14]])
+            cell(g, b.colour, 3)
+          })
           break
         case 'plume':
           g.rotate(b.turn)
-          g.beginPath()
-          g.moveTo(-b.size, 0)
-          g.quadraticCurveTo(0, -b.size * 0.7, b.size, 0)
-          g.quadraticCurveTo(0, b.size * 0.7, -b.size, 0)
-          cell(g, b.colour, 2)
+          g.scale(b.size / 24, b.size / 24)
+          put(g, `plume${b.colour}`, [-28, -14, 56, 28], '', '', (g) => {
+            g.beginPath()
+            g.moveTo(-24, 0)
+            g.quadraticCurveTo(0, -17, 24, 0)
+            g.quadraticCurveTo(0, 17, -24, 0)
+            cell(g, b.colour, 2.4)
+          })
           break
         case 'curl':
           g.rotate(Math.atan2(b.vy, b.vx))
@@ -188,20 +199,24 @@ export class Bits {
           g.stroke()
           break
         case 'puff':
-          blob(g, 0, 0, b.size * (0.6 + k), b.size * (0.6 + k) * 0.85)
-          g.globalAlpha = fade * 0.75
-          g.fillStyle = b.colour
-          g.fill()
-          gutta(g, 2)
+          g.scale((b.size * (0.6 + k)) / 24, (b.size * (0.6 + k)) / 24)
+          g.globalAlpha = fade * 0.8
+          put(g, `puff${b.colour}`, [-28, -25, 56, 50], '', '', (g) => {
+            blob(g, 0, 0, 24, 20.4)
+            cell(g, b.colour, 2.4)
+          })
           break
         case 'shard':
           g.rotate(b.turn)
-          g.beginPath()
-          g.moveTo(-b.size, 0)
-          g.lineTo(0, -b.size * 0.8)
-          g.lineTo(b.size * 0.9, b.size * 0.4)
-          g.closePath()
-          cell(g, b.colour, 2)
+          g.scale(b.size / 16, b.size / 16)
+          put(g, `shard${b.colour}`, [-20, -18, 40, 30], '', '', (g) => {
+            g.beginPath()
+            g.moveTo(-16, 0)
+            g.lineTo(0, -13)
+            g.lineTo(14, 6)
+            g.closePath()
+            cell(g, b.colour, 2)
+          })
           break
         case 'kiss':
           blob(g, 0, 0, b.size * (0.7 + k * 0.5), b.size * 0.6)
@@ -223,12 +238,15 @@ export class Bits {
           g.stroke()
           break
         case 'soap':
-          blob(g, 0, 0, b.size, b.size)
-          g.globalAlpha = fade * 0.4
-          g.fillStyle = b.colour
-          g.fill()
-          g.globalAlpha = fade
-          gutta(g, 2)
+          g.scale(b.size / 16, b.size / 16)
+          put(g, `soap${b.colour}`, [-20, -20, 40, 40], '', '', (g) => {
+            blob(g, 0, 0, 16, 16)
+            g.globalAlpha = 0.4
+            g.fillStyle = b.colour
+            g.fill()
+            g.globalAlpha = 1
+            gutta(g, 2)
+          })
           break
         case 'pool':
           blob(g, 0, 0, b.size * Math.min(1, k * 5), b.size * 0.17 * Math.min(1, k * 5))

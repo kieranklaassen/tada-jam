@@ -10,13 +10,16 @@ import { paintFrame, paintPane, paintRoom, paintTable } from './room'
 import { other, type Coat, type Guest, type Side, type Thing } from './rules'
 import { blob, brush, bump, cell, clamp, dye, ease, gutta, line, soft, type G } from './silk'
 import { STAGE, fit, type Point } from './stage'
-import { paintThing, tipOf } from './thingArt'
+import { Stamps, type MakeSheet } from './stamps'
+import { putThing, tipOf } from './thingArt'
 
 // Puts one frame on the surface from the party as it stands. The room, the
 // table and the frame are painted once and stamped; everyone in the room is
 // drawn fresh.
 
-export type MakeSheet = (width: number, height: number) => { canvas: CanvasImageSource; g: G }
+/** For the overlay: what is drawn in place in a still frame, and the floods and lines in a picture painted again. */
+const IN_PLACE = 22
+const PAINTED = 70
 
 const MARGIN = { x: 400, y: 300 }
 
@@ -27,6 +30,7 @@ export class View {
   private sized = ''
   private tier: Tier = TIERS[0]
   private readonly make: MakeSheet
+  private readonly stamps: Stamps
   private readonly hand: HandPose = { travel: 0, press: 0, opacity: 0 }
   /** What the last draw put down. */
   drawn = 0
@@ -34,11 +38,13 @@ export class View {
   constructor(seed: number, make: MakeSheet) {
     this.bits = new Bits(seed)
     this.make = make
+    this.stamps = new Stamps(make)
   }
 
   setTier(tier: Tier): void {
     this.tier = tier
     brush.shine = tier.shine
+    this.sized = ''
   }
 
   hear(events: readonly PartyEvent[], party: Party): void {
@@ -59,6 +65,7 @@ export class View {
     const key = scale.toFixed(3)
     if (this.sized === key) return
     this.sized = key
+    this.stamps.clear()
     const w = STAGE.width, h = STAGE.height
     this.sheet = this.make(Math.ceil((w + MARGIN.x * 2) * scale), Math.ceil((h + MARGIN.y * 2) * scale))
     const g = this.sheet.g
@@ -84,6 +91,8 @@ export class View {
     g.drawImage(this.sheet!.canvas, Math.round(by.x * dpr - MARGIN.x * scale), Math.round(by.y * dpr - MARGIN.y * scale))
     this.drawn = 1
     if (!party) return
+    this.stamps.begin(scale)
+    const { put } = this.stamps
     g.setTransform(scale, 0, 0, scale, by.x * dpr, by.y * dpr)
     const time = party.time
     const glow = guidance?.glow ?? 0
@@ -94,7 +103,7 @@ export class View {
       g.save()
       g.translate(p.x, p.y)
       g.scale(outward(side), 1)
-      paintAunt(g, this.auntView(party, side, time))
+      paintAunt(g, this.auntView(party, side, time), put)
       g.restore()
     }
     this.cat(g, party, time)
@@ -104,11 +113,11 @@ export class View {
     if (party.scene?.kind === 'tidy') this.hankies(g, party)
     for (const side of [0, 1] as const) this.arm(g, party, side, time, glow)
     if (party.carried) this.thing(g, party, party.state.table[party.carried.slot], time)
-    this.bits.draw(g)
+    this.bits.draw(g, put)
     if (party.scene?.kind === 'statues') this.pigeon(g, party.scene.t)
     if (guidance && guidance.demo !== null) this.ghost(g, party, guidance)
     if (this.tier.sheen) this.sheen(g, time)
-    this.drawn += 14 + this.bits.bits.length
+    this.drawn = IN_PLACE + this.stamps.puts + this.stamps.painted * PAINTED
   }
 
   private auntView(party: Party, side: Side, time: number): AuntView {
@@ -173,9 +182,9 @@ export class View {
       const asking = this.asking(party, side)
       const cup = guest === 'walrus' && show.mood === 'delight' && show.t > 0.2 && show.t < 3 && show.from !== 'puffed' ? 1 : 0
       const look: Look = this.guestLook(party, side)
-      const paint = (c: Coat) => paintGuest(g, guest, c, guestPose(guest, c, show.antic, show.mood, show.t, time), look, time, asking, cup)
+      const paint = (c: Coat, was = '') => paintGuest(g, `seat${side}${was}`, guest, c, guestPose(guest, c, show.antic, show.mood, show.t, time), look, time, asking, cup, this.stamps.put)
       if (flood < 1) {
-        paint(from)
+        paint(from, 'was')
         g.save()
         g.beginPath()
         g.ellipse(-10, -190 + 60 * flood, 30 + 260 * flood, 30 + 290 * flood, 0, 0, Math.PI * 2)
@@ -224,7 +233,7 @@ export class View {
     g.rotate(body.tilt * s + (held >= 0 ? tipOf(thing, doing) : 0))
     if (held >= 0) g.translate(thing === 'fan' ? 10 : 24, thing === 'duster' ? -22 : -4)
     else g.scale(0.86, 0.86)
-    paintThing(g, thing, doing, time)
+    putThing(g, thing, doing, time, this.stamps.put)
     g.restore()
   }
 
@@ -236,6 +245,7 @@ export class View {
       g.save()
       g.translate(at.x, at.y - 34)
       g.rotate(Math.sin(party.bellRing * 26) * 0.4 * Math.exp(-party.bellRing * 3) + (party.bell ? Math.sin(time * 12) * 0.1 : 0))
+      this.stamps.put(g, 'bell', [-40, -52, 80, 116], '', '', (g) => {
       blob(g, 0, 52, 8, 8)
       cell(g, '#a86a2c', 3)
       g.beginPath()
@@ -249,6 +259,7 @@ export class View {
       line(g, [[0, -14], [0, -34]], '#8a521c', 11)
       blob(g, 0, -38, 9, 9)
       cell(g, '#e2407a', 3)
+      })
       g.restore()
     }
   }
@@ -258,14 +269,14 @@ export class View {
     g.save()
     g.translate(p.x, p.y)
     g.scale(outward(side), 1)
-    paintArm(g, side, hand, time, glow)
+    paintArm(g, side, hand, glow, this.stamps.put)
     g.restore()
     this.thing(g, party, party.state.held[side], time)
     const h = party.handPoint(side)
     g.save()
     g.translate(h.x, h.y)
     g.scale(outward(side), 1)
-    paintFingers(g, side)
+    paintFingers(g, side, this.stamps.put)
     g.restore()
   }
 
@@ -277,11 +288,12 @@ export class View {
       g.beginPath()
       g.rect(p.x - PANE.width / 2, p.y - PANE.height / 2, PANE.width, PANE.height)
       g.clip()
-      paintPane(g, side)
+      const { x, y } = { x: p.x - PANE.width / 2, y: p.y - PANE.height / 2 }
+      this.stamps.put(g, `garden${side}`, [x, y, PANE.width, PANE.height], '', '', (g) => paintPane(g, side))
       g.translate(p.x, p.y + PANE.height / 2 + 12 + 10 * Math.sin(tap * 18) * Math.exp(-tap * 5))
       g.scale(outward(side) * 0.66, 0.66)
       const pose = guestPose(guest, party.state.coats[guest], null, null, 9, time + 3)
-      paintGuest(g, guest, party.state.coats[guest], pose, { x: -0.2, y: 0.5 }, time, 0.25, 0)
+      paintGuest(g, `pane${side}`, guest, party.state.coats[guest], pose, { x: -0.2, y: 0.5 }, time, 0.25, 0, this.stamps.put)
       g.restore()
       g.beginPath()
       g.rect(p.x - PANE.width / 2, p.y - PANE.height / 2, PANE.width, PANE.height)
@@ -305,12 +317,17 @@ export class View {
     const x = pivot.x + Math.sin(a) * length, y = pivot.y + Math.cos(a) * length
     line(g, [[pivot.x, pivot.y], [x, y]], '#8a521c', 9)
     line(g, [[pivot.x, pivot.y], [x, y]], '#f7c23c', 4)
-    blob(g, x, y, 34, 34)
-    cell(g, '#f7c23c', 5)
-    blob(g, x, y, 20, 20)
-    cell(g, '#e2407a', 3)
-    blob(g, x, y, 8, 8)
-    cell(g, '#ffe39a', 2)
+    g.save()
+    g.translate(x, y)
+    this.stamps.put(g, 'bob', [-38, -38, 76, 76], '', '', (g) => {
+      blob(g, 0, 0, 34, 34)
+      cell(g, '#f7c23c', 5)
+      blob(g, 0, 0, 20, 20)
+      cell(g, '#e2407a', 3)
+      blob(g, 0, 0, 8, 8)
+      cell(g, '#ffe39a', 2)
+    })
+    g.restore()
     if (glow > 0) {
       g.globalAlpha = glow * 0.3
       blob(g, x, y, 44, 44)
@@ -332,9 +349,16 @@ export class View {
     g.save()
     g.translate(72, -8)
     g.rotate(Math.sin(time * 1.1) * 0.12 + start * Math.sin(time * 22) * 0.2)
-    soft(g, [[-30, 16], [10, 4], [34, -20], [52, -18], [46, 8], [8, 34], [-30, 34]])
-    cell(g, '#f0a04b', 4)
+    this.stamps.put(g, 'tail', [-36, -30, 96, 72], '', '', (g) => {
+      soft(g, [[-30, 16], [10, 4], [34, -20], [52, -18], [46, 8], [8, 34], [-30, 34]])
+      cell(g, '#f0a04b', 4)
+    })
     g.restore()
+    this.stamps.put(g, 'cat', [-100, -90, 200, 136], '', `${start > 0.25}${start > 0.02 ? Math.round(start * 10) : 0}${ear > 0.1 ? Math.floor(time * 20) : ''}`, (g) => this.catBody(g, start, ear, time))
+    g.restore()
+  }
+
+  private catBody(g: G, start: number, ear: number, time: number): void {
     soft(g, [[-84, 34], [-78, -14], [-30, -48], [34, -46], [82, -10], [86, 34], [0, 42]])
     cell(g, dye(g, '#f0a04b', 92), 4.5)
     for (const x of [-4, 24, 52]) {
@@ -377,7 +401,6 @@ export class View {
     }
     blob(g, 0, 8, 6, 4.5)
     cell(g, '#e2607a', 2.4)
-    g.restore()
     g.restore()
   }
 

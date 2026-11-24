@@ -71,9 +71,9 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
         const notes: Note[] = events.flatMap(soundOf)
         if (notes.length) audio.play(voiceOf(notes))
       }
-      if (party.dirty !== 'no') {
-        cadence.change(performance.now(), party.dirty === 'now')
-        party.dirty = 'no'
+      if (party.dirty) {
+        cadence.change(performance.now(), true)
+        party.dirty = false
       }
     }
 

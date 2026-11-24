@@ -110,8 +110,8 @@ export class Party {
   /** Seconds since each guest came in at the door side. */
   arrived: [number, number] = [9, 9]
   paneTap: [number, number] = [9, 9]
-  /** Set when a change should be saved, and whether at once. */
-  dirty: 'no' | 'soon' | 'now' = 'no'
+  /** Set when a change should be saved. Every change is a whole one, so each is saved at once. */
+  dirty = false
   private readonly echo = new Echo()
   private readonly detectors: [Detector, Detector] = [new Detector(), new Detector()]
   private readonly fingers: (Finger | null)[] = [null, null]
@@ -323,7 +323,7 @@ export class Party {
       case 'pendulum':
         if (tapped) {
           this.state.beat = nextBeat(this.state.beat)
-          this.dirty = 'now'
+          this.dirty = true
           this.queue.push({ type: 'pendulum', tapped: true })
         }
         break
@@ -356,7 +356,7 @@ export class Party {
     const given = this.state.table[slot]
     this.state.table[slot] = this.state.held[side]
     this.state.held[side] = given
-    this.dirty = 'now'
+    this.dirty = true
     this.setFace(side, 'keen', 1.4)
     this.queue.push({ type: 'take', side, thing: given })
   }
@@ -367,7 +367,7 @@ export class Party {
     this.state.seated[side] = guest
     this.seats[side] = this.restSeat(side)
     this.arrived[side] = 0
-    this.dirty = 'now'
+    this.dirty = true
     this.queue.push({ type: 'arrive', side, guest })
   }
 
@@ -384,7 +384,7 @@ export class Party {
 
   private begin(kind: SceneKind, from: [Guest, Guest]): void {
     this.scene = { kind, t: 0, cue: 0, from }
-    this.dirty = 'now'
+    this.dirty = true
     this.queue.push({ type: 'scene', kind })
   }
 
@@ -407,14 +407,14 @@ export class Party {
       const hair = hairAfter(state.hair[side], thing)
       if (hair !== state.hair[side]) {
         state.hair[side] = hair
-        this.dirty = 'soon'
+        this.dirty = true
       }
     }
     if (act === 'self') {
       const stuck = lipsAfter(state.lips[side], thing)
       if (stuck !== state.lips[side]) {
         state.lips[side] = stuck
-        this.dirty = 'soon'
+        this.dirty = true
       }
     }
     const effect = effectOf(thing, act)
@@ -425,7 +425,7 @@ export class Party {
     const { coat, antic } = outcomeOf(was, effect)
     const mood = moodOf(guest, effect)
     state.coats[guest] = coat
-    this.dirty = 'soon'
+    this.dirty = true
     this.seats[side] = { antic, mood, t: act === 'tip' ? -0.22 : act === 'wave' ? -0.1 : -0.02, from: was }
     this.queue.push({ type: 'answer', side, guest, effect, antic, mood })
     if (mood === 'outrage') {

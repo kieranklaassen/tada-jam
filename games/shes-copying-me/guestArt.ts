@@ -1,6 +1,7 @@
 import type { Coat, Guest } from './rules'
 import { GOLD, INK, blob, cell, clamp, dye, gutta, limb, line, mix, soft, type G } from './silk'
 import type { Pose } from './motion'
+import { step, type Box, type Stamp } from './stamps'
 
 // The four guests, each drawn up from its seat at the origin and facing the
 // aunt (-x). A coat tints every dye of the body and adds its own marks.
@@ -18,15 +19,31 @@ const TINT: Record<Coat, Paint> = {
   bubble: (c) => mix(c, '#b9f0ff', 0.14),
 }
 
-export function paintGuest(g: G, guest: Guest, coat: Coat, pose: Pose, look: Look, time: number, asking: number, cup: number): void {
-  const p = TINT[coat]
+const BOX: Box = [-166, -292, 332, 344]
+const MARKED: readonly Coat[] = ['wet', 'gluey', 'feathered']
+
+/** A guest in its seat, as the picture `name`. What the body does as a whole is moved; the face and the coat are painted. */
+export function paintGuest(g: G, name: string, guest: Guest, coat: Coat, pose: Pose, look: Look, time: number, asking: number, cup: number, put: Stamp): void {
+  const { x, y, turn, sx, sy, ...face } = pose
+  const how = [step(face.mouth, 0.2), step(face.open, 0.15), step(face.eyes, 0.15), step(face.brow, 0.25), step(face.part, 0.14), step(face.blush, 1), step(look.x, 0.3), step(look.y, 0.3), step(asking, 0.12), cup, MARKED.includes(coat) ? Math.floor(time * 7) : 0].join()
   g.save()
-  g.translate(pose.x, pose.y)
-  if (coat === 'feathered') plumes(g, guest, time, true)
-  g.translate(0, -100)
-  g.rotate(pose.turn)
+  g.translate(x, y - 100)
+  g.rotate(turn)
   g.translate(0, 100)
-  g.scale(pose.sx, pose.sy)
+  g.scale(sx, sy)
+  put(g, name, BOX, guest + coat, how, (g) => body(g, guest, coat, pose, look, time, asking, cup))
+  if (coat === 'bubble') {
+    const w = 1 + Math.sin(time * 2.3) * 0.02
+    g.translate(0, -104)
+    g.scale(w, 1 / w)
+    put(g, 'bubble', [-140, -140, 280, 280], '', '', bubble)
+  }
+  g.restore()
+}
+
+function body(g: G, guest: Guest, coat: Coat, pose: Pose, look: Look, time: number, asking: number, cup: number): void {
+  const p = TINT[coat]
+  if (coat === 'feathered') plumes(g, guest, time, true)
   if (coat === 'puffed') fuzz(g, guest, p)
   if (guest === 'walrus') walrus(g, p, pose, look, asking, cup)
   else if (guest === 'dog') dog(g, p, pose, look, asking)
@@ -36,8 +53,6 @@ export function paintGuest(g: G, guest: Guest, coat: Coat, pose: Pose, look: Loo
   if (coat === 'gluey') drips(g, time)
   if (coat === 'wet') drops(g, time)
   if (coat === 'stiff') cracks(g)
-  if (coat === 'bubble') bubble(g, time)
-  g.restore()
 }
 
 type Head = { x: number; y: number; eyes: number; gap: number; r: number }
@@ -401,9 +416,8 @@ function cracks(g: G): void {
   for (const path of [[[-54, -90], [-36, -70], [-44, -50], [-22, -28]], [[38, -120], [24, -94], [40, -74], [30, -48]], [[4, -40], [-8, -18], [6, 0]]] as const) line(g, path, '#6d5f52', 3)
 }
 
-function bubble(g: G, time: number): void {
-  const w = 1 + Math.sin(time * 2.3) * 0.02
-  blob(g, 0, -104, 132 * w, 132 / w)
+function bubble(g: G): void {
+  blob(g, 0, 0, 132, 132)
   g.globalAlpha = 0.2
   g.fillStyle = '#c9f4ff'
   g.fill()
@@ -411,7 +425,7 @@ function bubble(g: G, time: number): void {
   gutta(g, 4)
   g.globalAlpha = 0.75
   g.beginPath()
-  g.arc(0, -104, 112, Math.PI * 1.08, Math.PI * 1.36)
+  g.arc(0, 0, 112, Math.PI * 1.08, Math.PI * 1.36)
   g.strokeStyle = '#ffffff'
   g.lineWidth = 10
   g.stroke()

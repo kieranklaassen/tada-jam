@@ -1,5 +1,6 @@
 import type { Act, Thing } from './rules'
 import { GOLD, INK, blob, bump, cell, clamp, dye, line, soft, type G } from './silk'
+import type { Stamp } from './stamps'
 
 // The six things, drawn about their middle, about 100 units across, facing
 // outward (+x, toward the guest). `act` and `t` are what the hand that holds
@@ -19,7 +20,13 @@ export function tipOf(thing: Thing, doing: Doing): number {
   return 0
 }
 
-export function paintThing(g: G, thing: Thing, doing: Doing, time: number): void {
+/** A thing as a picture: painted again only while something in it moves. */
+export function putThing(g: G, thing: Thing, doing: Doing, time: number, put: Stamp): void {
+  const idle = thing === 'fish' || thing === 'duster' ? Math.floor(time * 6) : 0
+  put(g, thing, [-104, -104, 208, 208], '', doing.act && doing.t < 1.5 ? doing.act + Math.floor(doing.t * 30) : String(idle), (g) => paintThing(g, thing, doing, time))
+}
+
+function paintThing(g: G, thing: Thing, doing: Doing, time: number): void {
   const k = doing.act && doing.t < 1.2 ? bump(clamp(doing.t / 1.1)) : 0
   const grow = doing.act ? 1 + GROW[doing.act] * k : 1
   g.save()
