@@ -5,8 +5,8 @@ import { darkGardenManifest } from './manifest'
 // saveCadence.ts) read their numbers from here, so they stay byte-equal to the
 // template and a template fix can be copied over them.
 
-/** The blank surface's colour, until the game draws its own backdrop. */
-export const BACKDROP = '#f4efe6'
+/** The lead and the night round the window. */
+export const BACKDROP = '#07060d'
 
 // --- Adaptive quality (quality.ts) -----------------------------------------
 
@@ -68,7 +68,7 @@ export const LONGEST_FRAME_S = 0.1
 /** A change that keeps coming (a drag, a stroke) is handed to storage at most this often, in ms. */
 export const SAVE_THROTTLE_MS = 400
 
-const [YOUNGEST, OLDEST] = darkGardenManifest.ageBand
+const [YOUNGEST] = darkGardenManifest.ageBand
 
 // --- Guidance (guidance.ts) -------------------------------------------------
 
@@ -83,30 +83,3 @@ const [YOUNGEST, OLDEST] = darkGardenManifest.ageBand
  * band.
  */
 export const TAP_PRESSES: 1 | 2 = YOUNGEST < 4 ? 1 : 2
-
-// --- The designed order (state.ts) -----------------------------------------
-
-/**
- * The game's challenges in their designed order, easiest first, one new thing
- * at a time (pack: game-design, ordered-challenges-high-success.md). The ids
- * are what a save stores: add steps anywhere, and never rename one that has
- * shipped. Nothing on screen shows where the child is.
- */
-export const LADDER: readonly string[] = ['first', 'second', 'third']
-
-/**
- * Where a first visit starts, by `ctx.childAge`: the last row whose age the
- * child has reached, and the first row for a younger child or no age. Age is a
- * hint: a saved position always wins, and every step stays reachable by play.
- * Rows ascend by age and no two share one, or the earlier row is never reached:
- * a band of a single age has a single row.
- * The two rows below are a start and not a rule. How many rows there are and
- * the age each begins at are the game's to choose: a row for each age of a
- * wide band, or a second row a year below the oldest. A game that writes its
- * rows out by hand takes `OLDEST` out of the line that reads the band, or the
- * typecheck stops on a name nothing uses.
- */
-export const FIRST_VISIT: readonly { fromAge: number; position: string }[] = [
-  { fromAge: YOUNGEST, position: 'first' },
-  ...(OLDEST > YOUNGEST ? [{ fromAge: OLDEST, position: 'second' }] : []),
-]

@@ -125,6 +125,7 @@ export const SHELVES: readonly Shelf[] = [
       'felt-meadow': 'Plant felt seeds and let a bee mix the colours.',
       'moon-phases': 'Turn the Earth and the moon, and look out of the window.',
       'seed-lab': 'Breed flowers in a naturalist’s journal.',
+      'dark-garden': 'Carry a light into a dark garden and see who wakes up.',
     },
   },
 ]

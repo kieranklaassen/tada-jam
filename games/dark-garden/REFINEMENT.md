@@ -3,19 +3,22 @@
 
 ## Status
 
-- Stage: template copied. No sheet yet.
-- Look in use: none yet.
-- Open: the design sheet in `ART.md` and its check.
+- Stage: gates. The whole sheet is built.
+- Look in use: Stained glass and lead. The art guide is under "The look" in `ART.md`.
+- Sheet check: one round by a fresh reader, not passed, 12 findings. All 12 were resolved in the sheet, some in the builder's own words; no second round was run.
+- Open: nobody has heard a sound of the game. The notes are tested as numbers.
+- Open: measured on a machine without a graphics card; no iPad. No child has played it, and the owner has not seen it.
+- Weak: on a small phone held sideways those who wait are about 34 px wide. A game is played sideways: upright the shell asks to turn the device.
 
 The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Ask for the sheet's check by writing `Open: sheet ready for check, round N` here; when it passes, record the round and the commit it judged. Someone with no session to read resumes from this block and the files. The two parts below belong to the block.
 
 ### Template notes
 
-No entry yet. One entry a file copied from the template, written for the lead and for the games that come after: used as copied, or what was changed and why, and what is wrong or missing that any game would need. Mark a fault or a gap **for the template**. A frozen file is never changed here: a fault in one is a request to the lead.
+Used as copied except `config.ts`, the Mount, `guidance.ts` (glow at 1.5 s and hand at 3 s), and `scene.ts` and `state.ts`, which this game does not use and were removed: its scenes are in `play.ts` and its saved state in `save.ts`.
 
 ### For the owner to decide
 
-Nothing yet. One line for each thing only the owner can settle: the look and the toy at the toy checkpoint, a default the game would like changed, and anything the guide does not rule on.
+The look and the toy, at the first play.
 
 ## Pass log
 
