@@ -3,43 +3,52 @@
 
 ## Status
 
-- Stage: template copied. No sheet yet.
-- Look in use: none yet.
-- Open: the design sheet in `ART.md` and its check.
-
-The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Ask for the sheet's check by writing `Open: sheet ready for check, round N` here; when it passes, record the round and the commit it judged. Someone with no session to read resumes from this block and the files. The two parts below belong to the block.
+- Stage: gates. The whole sheet is built.
+- Look in use: Woven tapestry, the first choice. The art guide is under "The look" in `ART.md`.
+- Sheet check: one round by a fresh reader, not passed, 17 findings. All were resolved in the sheet; no second round was run. The sheet was changed once more after the owner's report on the games before this one.
+- Open: nobody has heard a sound of the game. They are tested as numbers.
+- Open: measured on a machine without a graphics card; no iPad, no WebKit.
+- Open: no child has played it and the owner has not seen it.
+- Weak: a lamp is an indirect way to say "make it so"; what carries it is its glow and Grandpa's licked fingers.
+- Weak: a goose that has been muddied on her neck can be taken for another kind of goose.
 
 ### Template notes
 
-No entry yet. One entry a file copied from the template, written for the lead and for the games that come after: used as copied, or what was changed and why, and what is wrong or missing that any game would need. Mark a fault or a gap **for the template**. A frozen file is never changed here: a fault in one is a request to the lead.
+Used as copied except `config.ts`, the Mount, and `scene.ts` with its test and `state.test.ts`, which were removed: its scenes change nothing after they start, and its saved state is in `save.ts`, whose test holds the ladder too.
 
 ### For the owner to decide
 
-Nothing yet. One line for each thing only the owner can settle: the look and the toy at the toy checkpoint, a default the game would like changed, and anything the guide does not rule on.
+The look and the toy, at the first play. Whether the protest of the wronged one should stay on at `order` and `any` as well.
 
 ## Pass log
 
-No pass yet. One row per pass: what was looked at, the critique written as the child, the one themed fix set, what was reverted, the measured frame rate, and what is still weak.
-
 | Pass | Looked at | Critique | Fix set | Frame rate | Still weak |
 | --- | --- | --- | --- | --- | --- |
+| 1 | first stills of a whole day and night | his white moustache is lost on white; crossfading skies go muddy; the dark at the lamp turns skin brown; his arm covers the grandmother's face | a brown edge under the moustache; a sky is woven up instead of faded; the dark in indigo; his long arm goes low | not measured | puppets small |
+| 2 | every coat on everyone, 844×390, portrait | puppets in the pictures have no readable faces; cream things vanish on a cream round; the moon's balloon is behind its hat | glove puppets: head and shoulders, larger; a dark round; the moon's string tied at its side | Chromium in software, production build, shared probe, pixel ratio 2, tier 0: 60 fps, worst second 60, CPU p95 5 ms | the loop has many steps for a first visit |
+| 3 | the owner's report that a child of 4 does not see the loops of the games before this one | three things to remember before anything is told; Grandpa waits to be asked; nothing says a picture is wrong; what to do next glows late and in two places | a first day of one thing and one picture; he tells by himself; the wronged one protests; the ladder has a head start and shows one want; the ghost hand carries the thing; the whole night sky wakes the cock | not measured again: no cost was added per frame | as in Status |
 
 ## For the pull request
 
-Written as the game is built and kept at the end of this file: the pull request is made from it.
-
 ### How the game meets the quality bar
 
-Nothing yet. One entry for each line of the quality bar, saying how the game meets it so far. Each frame rate comes with the engine, the throttle, the pixel ratio and the build it was measured on, and with whether a physical iPad was measured.
+- Alive at idle: everyone breathes, blinks and looks in their own tempo; Grandpa's puppet mutters in his sleep.
+- Motion and sound on every touch, in the frame of the touch.
+- Weight and follow-through: tips, splashes, squash and thirty answers, one for each of five to each of six things.
+- Clear tappables: large flat masses, every hit target over 100 units.
+- Wordless: no text, numeral or sign. Glow at 3 s, ghost hand at 5 s, sooner after a scene.
+- Frame rate: pass 2. Nothing is made anew from frame to frame (`view.test.ts`). No iPad and no WebKit measured.
+- Nothing passes through anything: everyone has a place of their own, held by `layout.ts`; Grandpa's long arm goes in front of everyone on purpose.
+- Procedural only.
 
 ### The learning claim
 
-Nothing yet. The claim as the sheet has it, with each record's standing and its check state read again on the day of the pull request, in the pack's Summary or the game's own words only. A game with no learning goal says so.
+As in `ART.md`: designed from a part of a California preschool foundation (3.2) and of Dutch curriculum-institute guidance for fase 1, all four confirmed. It needs no speech.
 
 ### Defaults taken for the owner
 
-Nothing yet. Each default the game took in the owner's place, from the guide or from its own sheet.
+First days of one happening; a protest at the early tellings and none where the order is the joke.
 
 ### What the next builder should know
 
-Nothing yet. What this build taught that the guide and the template do not say.
+Judge the loop of a first visit with one of everything before building three. A picture drawn at bead size and looked up in a table costs about 60,000 beads a frame and runs at 60 fps without a graphics card.

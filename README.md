@@ -158,6 +158,7 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 | Dressed in the Dark | `games/dressed-in-the-dark/` | 3–7 | A lacquer box by night: carry garments from the moonlit line onto sleepers nobody can see, know by ear who has what and who walked in its sleep to another bed, then pull the cord and see all five sit up in it. No learning goal. |
 | Half a Horse | `games/half-a-horse/` | 2–6 | A pantomime horse of cloth for two fingers or two children: each drives one half, pull it long and it twangs, cross it and it ties in a bow, dress either end as a horse, hen, elephant or crocodile, and a farmyard believes it or gapes. Alone, the other half follows its own nose. No learning goal. |
 | The Blanket | `games/the-blanket/` | 3–7 | A parlour of four who all want one sausage: drop a blanket on a head, move the sausage, take the blanket off, and each goes where they last saw it. No learning goal. |
+| Grandpa Tells It Wrong | `games/grandpa-tells-wrong/` | 4–7 | A woven farmyard: put mud on the pig and by evening Grandpa, who slept through it, tells with puppets that it was the goose. The pig protests. Change his pictures with a tap or leave them; put out the lamp, the yard unravels to its morning, and what was told is what happened. One picture at first, three later, then their order; he and the moon can be told of too. Designed from parts of a California preschool foundation and of Dutch fase 1 guidance on stories and on order in time. |
 
 ## Showcases
 
