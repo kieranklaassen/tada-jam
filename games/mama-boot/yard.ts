@@ -75,6 +75,10 @@ export type Chick = Body & {
   stuck: number
   /** Stands beside its mother. */
   settled: boolean
+  /** How far off her that is. */
+  reach: number
+  /** Seconds by her without a place of its own. */
+  restless: number
 }
 
 export type Sound = { name: string; steps: number }
@@ -125,6 +129,13 @@ export function henLook(mother: Id, self: BroodId, egg: boolean): ActName {
   if (mother === self) return 'henLean'
   if (isBrood(mother)) return egg ? 'henCompare' : 'henTwice'
   return ({ boot: 'henGasp', teapot: 'henTurn', pig: 'henFaint', farmer: 'henTut', ball: 'henRound', bell: 'henNod', hen: 'henSmug', puddle: 'henLean' } as const)[mother]
+}
+
+/** How deep in the boot: an egg less, so that the tip of its beak shows; it goes down as its chick climbs out of the shell. */
+function bootDepth(b: Body): number {
+  const opening = 'opening' in b ? (b as Chick).opening : null
+  const egg = opening !== null ? 1 - Math.min(1, Math.max(0, (opening - OUT + 0.5) / 0.5)) : b.kind === 'egg' ? 1 : 0
+  return 40 - egg * 26
 }
 
 function body(id: Id, kind: Body['kind'], at: Spot, dir: 1 | -1 = 1): Body {
@@ -182,7 +193,7 @@ export class Yard {
   }
 
   private chick(b: SavedBrood): Chick {
-    return { ...body(b.id, b.kind, b, b.x > 600 ? -1 : 1), id: b.id, kind: b.kind, mother: b.mother, host: b.host, dizzy: b.dizzy, opening: null, tucking: null, wasEgg: false, from: { x: b.x, y: b.y }, laying: null, thread: 0, shell: 0, stance: this.rng.next() * 10, stuck: 0, settled: false }
+    return { ...body(b.id, b.kind, b, b.x > 600 ? -1 : 1), id: b.id, kind: b.kind, mother: b.mother, host: b.host, dizzy: b.dizzy, opening: null, tucking: null, wasEgg: false, from: { x: b.x, y: b.y }, laying: null, thread: 0, shell: 0, stance: this.rng.next() * 10, stuck: 0, settled: false, reach: 0, restless: 0 }
   }
 
   // --- what is so -----------------------------------------------------------
@@ -216,7 +227,7 @@ export class Yard {
     if (host) {
       const at = this.place(host)
       const s = scaleAt(at.y), size = SIZE[host.kind]
-      let z = at.z + (size.seat - (host.kind === 'teapot' ? 34 : host.kind === 'boot' ? 40 : 0)) * s
+      let z = at.z + (size.seat - (host.kind === 'teapot' ? 34 : host.kind === 'boot' ? bootDepth(b) : 0)) * s
       if (host.act && (host.kind === 'farmer' || host.kind === 'bell')) z += Math.abs(Math.sin(host.act.t * 5)) * 5
       const x = at.x + size.seatX * host.dir * s
       if (!b.hop) return { x, y: at.y, z }
@@ -278,10 +289,25 @@ export class Yard {
     let best: Id = 'hen', least = Infinity
     const ids: Id[] = [...THINGS, 'hen', 'puddle', ...this.brood.filter((o) => o !== c && o.tucking === null && o.laying === null && !this.rides(o, c)).map((o) => o.id)]
     for (const id of ids) {
+      // What hangs in a hand has not been set down, unless the egg hangs there with it.
+      if (id !== 'puddle' && this.carried(id) && !this.carried(c.id)) continue
       const d = this.gap(c, id)
       if (d < least) { best = id; least = d }
     }
     return best === 'puddle' ? c.id : best
+  }
+
+  /** The same, with an egg under a finger back where it was taken from. */
+  private nearestFrom(c: Chick): Id {
+    const carry = this.carry
+    if (!carry || carry.id !== c.id) return this.nearest(c)
+    const was = { x: c.x, y: c.y, z: c.z, host: c.host }
+    this.carry = null
+    Object.assign(c, { x: carry.from.x, y: carry.from.y, z: 0, host: carry.host })
+    const best = this.nearest(c)
+    Object.assign(c, was)
+    this.carry = carry
+    return best
   }
 
   /** Whether `o` rides on `on`, or on what rides on it. */
@@ -437,8 +463,8 @@ export class Yard {
       // Back on what it rode, where that is still to be had.
       if (host && host.kind !== 'egg' && !this.riderOf(host.id) && this.gag?.thing !== host.id) back.host = host.id as BroodId | ThingKey
       this.hopTo(back, { x: HEN.x, y: HEN.y }, 60, { x: back.x, y: back.y })
-      back.act = { name: 'chickFlap', t: 0, amount: 1 }
-      this.act(this.hen, 'henWing')
+      this.perform(back, 'chickFlap')
+      this.perform(this.hen, 'henWing')
       this.sound('hen.back')
       this.change(true)
       return
@@ -473,7 +499,7 @@ export class Yard {
     if (c.tucking !== null || c.laying !== null) { this.sound('press.egg'); return }
     if (c.kind === 'egg' && c.opening === null) {
       c.opening = 0
-      c.act = { name: 'eggSquash', t: 0, amount: 1 }
+      this.perform(c, 'eggSquash')
       this.sound('egg.crack')
       this.change(true)
       return
@@ -708,7 +734,7 @@ export class Yard {
       c.host = seat.id
       c.z = 0
       if (seat.kind === 'chick') {
-        this.act(c, 'chickPerch')
+        this.perform(c, 'chickPerch')
         this.perform(seat, 'chickFlap')
         this.sound('seat.chick')
       } else {
@@ -769,7 +795,7 @@ export class Yard {
     const rider = this.riderOf(c.id)
     if (rider) this.getDown(rider, 60)
     const sat = c.dizzy ? ringOf(c.id, this.mothers) ?? [] : []
-    if (byTap) { this.undo = { id: c.id, mother: c.mother, host: c.host, ring: sat }; this.wing = WING_S + TUCK_S } else { this.undo = null; this.wing = 0 }
+    if (byTap) { this.undo = { id: c.id, mother: c.mother, host: c.host, ring: sat }; this.wing = WING_S + TUCK_S } else if (!this.undo) { this.undo = null; this.wing = 0 }
     const ring = ringOf(c.id, this.mothers)
     if (ring) for (const id of ring) { const o = this.one(id); if (o) o.dizzy = false }
     c.kind = 'egg'
@@ -819,6 +845,13 @@ export class Yard {
     return sight(p) ? p : freeSpot(want, r, solids)
   }
 
+  /** Free ground for a chick that hides nobody and is hidden by nobody, its sisters included. */
+  private homeFor(c: Chick): Spot {
+    const kin = this.brood.filter((o) => o !== c && o.kind === 'chick' && !o.host && !this.carried(o.id))
+    const solids = this.solids(c.id, true).concat(kin.map((o) => ({ x: o.x, y: o.y, r: SIZE.chick.r })))
+    return freeSpot(c, SIZE.chick.r, solids, (p) => this.leavesInSight(c, p) && kin.every((o) => !hides(c, p, o, o) && !hides(o, o, c, p)))
+  }
+
   /** Where a thing let go stands: where the child let it go, or, where it cannot, the nearest place the game would choose. */
   private childSpot(b: Body): Spot {
     const there = freeSpot(b, SIZE[b.kind].r, this.solids(b.id, true))
@@ -856,7 +889,7 @@ export class Yard {
   }
 
   /** Plays an act, and every chick down the chain does it after, one beat later for each step. */
-  perform(b: Body, name: ActName, steps = 0, seen: readonly Id[] = []): void {
+  perform(b: Body, name: ActName, steps = 0, seen: readonly Id[] = [], quiet = false): void {
     this.act(b, name, steps === 0 ? 1 : 0.8)
     const line = [...seen, b.id]
     for (const id of childrenOf(b.id, this.mothers)) {
@@ -864,8 +897,8 @@ export class Yard {
       this.after(BEAT, () => {
         const c = this.one(id)
         if (!c || c.kind !== 'chick' || c.tucking !== null || c.opening !== null || this.carried(c.id)) return
-        this.perform(c, name, steps + 1, line)
-        this.cry(c, steps)
+        this.perform(c, name, steps + 1, line, quiet)
+        if (!quiet) this.cry(c, steps)
       }, this.inRound)
     }
   }
@@ -990,12 +1023,12 @@ export class Yard {
   private openStep(c: Chick, dt: number): void {
     c.thread = Math.max(0, c.thread - dt)
     c.shell = Math.max(0, c.shell - dt)
-    if (c.laying !== null) { c.laying += dt; if (c.laying >= LAY_S) { c.laying = null; this.act(c, 'eggRock'); this.sound('egg.set') } }
+    if (c.laying !== null) { c.laying += dt; if (c.laying >= LAY_S) { c.laying = null; this.perform(c, 'eggRock'); this.sound('egg.set') } }
     if (c.tucking !== null) {
       const was = c.tucking
       c.tucking += dt
       if (was < 1.2 && c.tucking >= 1.2) { this.sound('hen.pop'); this.puff('feather', HEN.x - 60, HEN.y - 30, 5) }
-      if (c.tucking >= TUCK_S) { c.tucking = null; this.act(c, 'eggRock') }
+      if (c.tucking >= TUCK_S) { c.tucking = null; this.perform(c, 'eggRock') }
     }
     if (c.opening === null) return
     const was = c.opening
@@ -1041,7 +1074,7 @@ export class Yard {
     // A ring that has just closed turns.
     const ring = ringOf(c.id, this.mothers)
     if (ring) for (const id of ring) { const o = this.one(id); if (o) o.dizzy = false }
-    this.act(c, 'chickCry')
+    this.perform(c, 'chickCry')
     this.sound('thread')
     this.cry(c, 0)
     const at = this.place(m ?? c)
@@ -1050,7 +1083,7 @@ export class Yard {
       if (mother === c.id) { this.puddleT = 0; this.sound('puddle'); return }
       const b = this.of(mother)
       if (!b) return
-      if (mother === 'hen') { this.sound('seen.hen') } else if (isBrood(mother)) { this.act(b, b.kind === 'egg' ? 'eggRock' : 'chickCry'); this.sound(b.kind === 'egg' ? 'egg.set' : `cry.${this.gait(b as Chick)}`, 1) } else if (this.gag?.thing === mother) { b.squashV -= 3; this.sound(`seen.${mother}`) } else { this.perform(b, SEEN[mother as ThingKey]); this.sound(`seen.${mother}`) }
+      if (mother === 'hen') { this.sound('seen.hen') } else if (isBrood(mother)) { this.perform(b, b.kind === 'egg' ? 'eggRock' : 'chickCry'); this.sound(b.kind === 'egg' ? 'egg.set' : `cry.${this.gait(b as Chick)}`, 1) } else if (this.gag?.thing === mother) { b.squashV -= 3; this.sound(`seen.${mother}`) } else { this.perform(b, SEEN[mother as ThingKey]); this.sound(`seen.${mother}`) }
     })
     this.after(0.75, () => this.henLooks(mother, c, egg, 0))
     this.change(true)
@@ -1069,15 +1102,15 @@ export class Yard {
     const kin = this.brood.filter((o) => o.mother === m.id && o.id !== c.id && o.id < c.id && o.kind === 'chick' && o.host === null).length
     const gapR = SIZE[m.kind].r + SIZE.chick.r + 12
     const back = Math.atan2(-m.hy / SQUAT, -m.hx) + ([0, 0.85, -0.85, 1.6, -1.6][kin] ?? 0)
-    const there = (turn: number): Spot => ({ x: at.x + Math.cos(back + turn) * gapR, y: at.y + Math.sin(back + turn) * gapR * SQUAT })
+    const there = (turn: number, far = 1): Spot => ({ x: at.x + Math.cos(back + turn) * gapR * far, y: at.y + Math.sin(back + turn) * gapR * far * SQUAT })
     if (m.going > 0.3) return clampSpot(there(0))
     // She stands: the nearest place round her that is in the yard, clear, and in sight.
     const bodies = [...THINGS.map((k) => this.things[k]), this.hen].filter((o) => !this.carried(o.id) && this.gag?.thing !== o.id)
     // Away from the edges of the yard first, or those who follow have nowhere to stand.
-    for (const edge of [56, 0]) for (const turn of [0, 0.5, -0.5, 1, -1, 1.5, -1.5, 2, -2, 2.6, -2.6, Math.PI]) {
-      const p = there(turn)
+    for (const far of [1, 1.4, 1.8]) for (const edge of [56, 0]) for (const turn of [0, 0.5, -0.5, 1, -1, 1.5, -1.5, 2, -2, 2.6, -2.6, Math.PI]) {
+      const p = there(turn, far)
       if (p.x < GROUND.left + edge || p.x > GROUND.right - edge || p.y < GROUND.top + edge * 0.6 || p.y > GROUND.bottom) continue
-      if (this.brood.every((o) => o === c || o === m || o.mother === c.id || o.host || apart(p, o) >= SIZE[o.kind].r + SIZE.chick.r - 8) && bodies.every((o) => apart(p, o) >= SIZE[o.kind].r + SIZE.chick.r - 2 && !hides(o, o, c, p) && !hides(c, p, o, o)) && !covers(p)) return p
+      if (this.brood.every((o) => o === c || o === m || o.mother === c.id || o.host || (apart(p, o) >= SIZE[o.kind].r + SIZE.chick.r - 8 && !hides(o, o, c, p) && !hides(c, p, o, o))) && bodies.every((o) => apart(p, o) >= SIZE[o.kind].r + SIZE.chick.r - 2 && !hides(o, o, c, p) && !hides(c, p, o, o)) && !covers(p)) return p
     }
     return clampSpot(there(0))
   }
@@ -1122,8 +1155,20 @@ export class Yard {
             to = this.slot(c, m)
             const d = apart(c, to)
             // Once it stands beside her it stays there until she goes off: a place that comes free is no reason to walk.
-            if (d < 16) c.settled = true
-            if (apart(c, this.place(m)) > SIZE[m.kind].r + SIZE.chick.r + 46) c.settled = false
+            const off = apart(c, this.place(m))
+            if (d < 16 && !c.settled) { c.settled = true; c.reach = off }
+            if (off > c.reach + 46) c.settled = false
+            // Beside her, and no place to be had by walking: it flaps to the nearest one there is.
+            c.restless = c.settled || m.going > 0.3 || off > (SIZE[m.kind].r + SIZE.chick.r) * 1.8 + 90 ? 0 : c.restless + dt
+            if (c.restless > 2) {
+              c.restless = 0
+              const home = this.homeFor(c)
+              this.hopTo(c, c, 0, home)
+              this.perform(c, 'chickFlap')
+              c.settled = true
+              c.reach = apart(home, this.place(m))
+              continue
+            }
             quick = c.settled ? 0 : Math.min(330, 60 + d * 2.1)
           }
         }
@@ -1181,10 +1226,12 @@ export class Yard {
     if (!ring) {
       for (const o of [...THINGS.map((k) => this.things[k]), this.hen, ...this.brood.filter((b) => b !== c && !b.host && b.tucking === null)]) {
         if (this.carried(o.id) || o.going > 0.2 || (!hides(o, o, c, c) && !hides(c, c, o, o))) continue
+        // Two that hide one another at rest: the later one looks for another place.
+        if (o.kind === 'egg' || o.kind !== 'chick' || o.id < c.id || !(o as Chick).settled) c.settled = false
         const side = to && Math.abs(to.x - o.x) > 10 ? to.x >= o.x : c.x >= o.x
         c.x += (side ? 1 : -1) * (o.kind === 'chick' || o.kind === 'egg' ? 80 : 190) * dt
       }
-      for (const o of [PUDDLE, ...SIGHTS]) if (covers(c, o)) c.x += (c.x >= o.x ? 1 : -1) * 80 * dt
+      for (const o of [PUDDLE, ...SIGHTS]) if (covers(c, o)) { c.settled = false; c.x += (c.x >= o.x ? 1 : -1) * 80 * dt }
     }
     const at = clampSpot(c)
     c.x = at.x
@@ -1192,7 +1239,7 @@ export class Yard {
     // Shut in between two things: it flaps out to free ground.
     const shut = THINGS.some((k) => !this.carried(k) && this.gag?.thing !== k && !this.things[k].go && apart(c, this.things[k]) < SIZE.chick.r + SIZE[k].r - 8)
     c.stuck = shut ? c.stuck + dt : 0
-    if (c.stuck > 0.8) { c.stuck = 0; this.act(c, 'chickFlap'); this.hopTo(c, c, 0, this.spotFor(c, c)) }
+    if (c.stuck > 0.8) { c.stuck = 0; this.perform(c, 'chickFlap'); this.hopTo(c, c, 0, this.spotFor(c, c)) }
   }
 
   private knock(dt: number): void {
@@ -1201,7 +1248,7 @@ export class Yard {
     this.knockT -= dt
     if (this.knockT > 0) return
     this.knockT = 3.2
-    if (!c.act) { this.act(c, 'eggKnock'); this.sound('egg.knock') }
+    if (!c.act) { this.perform(c, 'eggKnock', 0, [], true); this.sound('egg.knock') }
   }
 
   // --- put away -------------------------------------------------------------
@@ -1209,6 +1256,10 @@ export class Yard {
   /** The game goes to rest: what lies under a finger goes back, and an opening egg takes what stands nearest. */
   settle(): void {
     this.later = []
+    this.sounds = []
+    // First back to where it was: a move the child had not let go of chooses no mother.
+    this.cancel()
+    for (const c of this.brood) c.hop = null
     this.sounds = []
     for (const c of this.brood) {
       const opened = c.opening !== null
@@ -1220,7 +1271,6 @@ export class Yard {
       c.thread = 0
       c.hop = null
     }
-    this.cancel()
     for (const c of this.brood) { c.hop = null; c.act = null }
     for (const k of THINGS) { const b = this.things[k]; if (b.go) { b.x = b.go.x; b.y = b.go.y; b.go = null } b.act = null; b.hop = null }
     this.gag = null
@@ -1238,7 +1288,7 @@ export class Yard {
     const spot = (b: Body): Spot & { dir: 1 | -1 } => (carry?.id === b.id ? carry.from : { x: b.go?.x ?? b.x, y: b.go?.y ?? b.y, dir: b.dir })
     const round = (n: number) => Math.round(n * 10) / 10
     // As it would be found: an egg that opens has its mother, and a ring that closes so is off one another's heads.
-    const mothers = new Map(this.brood.map((c) => [c.id, c.opening !== null && c.kind === 'egg' ? this.nearest(c) : c.mother]))
+    const mothers = new Map(this.brood.map((c) => [c.id, c.opening !== null && c.kind === 'egg' ? this.nearestFrom(c) : c.mother]))
     const down = new Set(this.brood.filter((c) => c.opening !== null).flatMap((c) => this.stacked(c.id, mothers)))
     return {
       v: STATE_VERSION,

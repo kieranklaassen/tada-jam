@@ -131,15 +131,22 @@ export class View {
     const ring = (u: number, n: number, over = 0.9) => (u < over ? sin((u / over) * PI * 2 * n) * (1 - u / over) : 0)
     this.put(s.sun, SCENERY.sun.x, SCENERY.sun.y, 1 + ring(since('sun'), 2) * 0.06, undefined, t * 0.08 + smooth(since('sun') / 1.4) * 1.2)
     for (const k of ['cloudA', 'cloudB'] as const) { const u = since(k), p = ring(u, 2); this.put(s[k], SCENERY[k].x + sin(t * 0.25 + (k === 'cloudA' ? 0 : 2)) * 14, SCENERY[k].y + sin(t * 0.5) * 3, 1 + p * 0.16, 1 - p * 0.12) }
+    // Their eyes go to the finger too.
+    const peek = (x: number, ey: number, gap: number, k: number) => { const f = y.finger ?? { x: 590, y: 600 }, d = Math.hypot(f.x - x, f.y - ey) || 1; for (const side of [-gap, gap]) this.put(this.cast.pupil, x + side + ((f.x - x) / d) * k, ey + ((f.y - ey) / d) * k, k * 0.07) }
     // The cow stands in the barn door, hindquarters out, and looks round at the fifth chick's round.
     const cow = SCENERY.cow, face = y.cowFaces > 0 ? clamp(y.cowFaces * 3) : 0
     const chew = sin(t * 1.4) * 1.5
     this.put(s.cow, cow.x, cow.y + 26 + chew, 0.92)
-    if (face > 0) this.put(s.cowHead, cow.x, cow.y - 14 + sin(t * 9) * 3 * face, 1, 1 + sin(t * 9) * 0.04)
+    if (face > 0) { const cy = cow.y - 14 + sin(t * 9) * 3 * face; this.put(s.cowHead, cow.x, cy, 1, 1 + sin(t * 9) * 0.04); peek(cow.x, cy - 14, 15, 4.4) }
     else this.put(s.tail, cow.x + 6, cow.y - 24, 1, 1, sin(t * 1.1) * 0.24 + ring(since('cow'), 3, 1.1) * 1.1)
     const sh = SCENERY.sheep, b = ring(since('sheep'), 4)
     this.put(s.sheep, sh.x, sh.y + 8, 1 + b * 0.04, 1 + sin(t * 1.8) * 0.015 - b * 0.05)
-    this.put(s.sheepHead, sh.x + 48, sh.y - 22 + sin(t * 2.6) * 2 - abs(b) * 10, 1, 1 + abs(b) * 0.06, b * 0.16)
+    const bleat = since('sheep'), hx = sh.x + 48, hy = sh.y - 22 + sin(t * 2.6) * 2 - abs(b) * 10
+    this.put(s.sheepHead, hx, hy, 1, 1 + abs(b) * 0.06, b * 0.16)
+    peek(hx, hy - 4, 10, 3.6)
+    // Her mouth: wide for the bleat, then round and round, chewing.
+    const wide = bleat < 0.5 ? sin((bleat / 0.5) * PI) : 0, chews = bleat >= 0.5 && bleat < 2.4
+    this.put(this.cast.mouth, hx + (chews ? sin(bleat * 11) * 5 : 0), hy + 26 + (chews ? cos(bleat * 11) * 2 : 0), 0.42, 0.18 + wide * 0.5)
     const tr = ring(since('tree'), 4)
     this.put(s.tree, SCENERY.tree.x, SCENERY.tree.y + 22, 1, 1, sin(t * 0.9) * 0.012 + tr * 0.09)
     const f = since('fence')
@@ -153,9 +160,10 @@ export class View {
     const p = y.puddleT
     const g = this.g
     for (const c of y.creases) {
-      g.strokeStyle = `rgba(255,255,255,${0.9 * (1 - c.t / 1.6)})`; g.lineWidth = 3
       const a = cos(c.turn) * 13, b2 = sin(c.turn) * 6
-      g.beginPath(); g.moveTo(c.x - a, c.y - b2); g.lineTo(c.x - b2 * 0.4, c.y + 5); g.lineTo(c.x + a, c.y + b2 - 4); g.stroke()
+      // A facet of foil turned to the light.
+      g.fillStyle = `rgba(255,255,255,${0.85 * (1 - c.t / 1.6)})`
+      g.beginPath(); g.moveTo(c.x - a, c.y - b2); g.lineTo(c.x - b2 * 0.5, c.y + 7); g.lineTo(c.x + a, c.y + b2); g.lineTo(c.x + b2 * 0.8, c.y - 8); g.closePath(); g.fill()
       this.drawn += 1
     }
     if (y.dent) {
@@ -355,7 +363,9 @@ export class View {
     const lift = tuck ? clamp(abs(tuck.tucking! - 0.5) * 2 - 0.4) : 1
     this.part(f, 'skirt', -0.9 * lift - sin(t * 1.6) * 0.05, 0, -6 * lift)
     const wing = y.wing > 0 ? 1 : clamp(pose.flap)
-    this.part(f, 'wing', wing * 1 - min(0, pose.flap) * 0.4 + (y.wing > 0 ? sin(t * 5) * 0.08 : sin(t * 1.6) * 0.03))
+    // She gasps behind it; otherwise it lies along her side.
+    const gasp = b.act?.name === 'henGasp'
+    if (!gasp) this.part(f, 'wing', wing * 1 - min(0, pose.flap) * 0.4 + (y.wing > 0 ? sin(t * 5) * 0.08 : sin(t * 1.6) * 0.03))
     const g = this.g
     g.save()
     g.translate(88, -186); g.rotate(pose.head); g.translate(-88, 186)
@@ -364,6 +374,7 @@ export class View {
     this.part(f, 'under', pose.mouth * 0.5)
     this.part(f, 'top', -pose.mouth * 0.3)
     g.restore()
+    if (gasp) this.part(f, 'wing', wing * -3.3, wing * 26, wing * -24)
     this.end()
     this.put(this.cast.nestFront, HEN.x, HEN.y + 8)
   }
@@ -417,6 +428,7 @@ export class View {
       this.put(this.cast.contact, at.x + 4, at.y + 1, 0.46 * s, 0.4 * s)
       g.save(); g.translate(at.x, at.y - at.z); g.rotate(shake); g.scale(s * (1 + u * 0.06 - c.squash * 0.7), s * (1 - sin(u * PI) * 0.1 + c.squash * 0.9))
       this.put(e.bottom, 0, 0); this.put(e.lid, 0, -u * 7, 1, 1, u * 0.06)
+      if (c.host === 'teapot') this.put(this.cast.things.teapot.parts.lid.sprite, 0, -100 - u * 7, 0.8)
       g.restore()
       return
     }

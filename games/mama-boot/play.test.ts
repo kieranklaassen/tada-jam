@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { GROUND, HEN, PAIRS, PUDDLE, SCENERY, SIZE, SQUAT, THINGS, apart, fromPuddle, type BroodId, type ThingKey } from './layout'
+import { GROUND, HEN, PAIRS, PUDDLE, SCENERY, SIZE, SQUAT, THINGS, apart, fromPuddle, scaleAt, type BroodId, type ThingKey } from './layout'
 import { ringOf } from './lineage'
 import { REGRAB_PX } from './play'
 import { deserialize, freshState, serialize } from './save'
 import { Hand, state } from './testing'
-import { hides } from './yard'
+import { hides, type Body } from './yard'
 
 // Everything here goes the way the Mount goes: fingers by pixel, and time.
 
@@ -399,5 +399,62 @@ describe('what the code review found', () => {
     const h = new Hand(); h.drag('teapot', { x: HEN.x, y: HEN.y - 90 }); h.run(0.8)
     h.lift('teapot')
     expect(h.yard.hen.act?.name).not.toBe('henLaunched')
+  })
+})
+
+describe('what a third reading found', () => {
+  it('a thing held by is not taken for a mother until it is let go', () => {
+    const at = { x: 500, y: 600 }
+    const go = (drop: boolean) => {
+      const h = new Hand(state((s) => { s.brood.splice(1); Object.assign(s.brood[0], at) }))
+      h.tap('c0'); h.lift('boot'); h.play.move(1, at.x + 60, at.y - 100)
+      if (drop) h.play.up(1, at.x + 60, at.y - 100)
+      h.run(2)
+      return h.yard.one('c0')!.mother
+    }
+    expect(go(false)).not.toBe('boot'); expect(go(true)).toBe('boot')
+  })
+  it('put away with a thing in the hand, the egg has the mother that stands by it once the thing is back', () => {
+    const h = new Hand(state((s) => { s.brood.splice(1) }))
+    h.tap('c0'); h.run(0.3); h.lift('c0'); h.play.move(1, 1000, 620)
+    const saved = h.yard.toState().brood[0].mother
+    h.play.park()
+    expect(h.yard.one('c0')!.mother).toBe(saved); expect(saved).not.toBe('ball')
+  })
+  it('a second chick carried to her leaves her wing up for the first', () => {
+    const h = new Hand(chicks('pig')); h.run(5)
+    h.tap('hen'); h.run(0.4); h.tap('c4'); h.run(2)
+    h.drag('c3', { x: HEN.x, y: HEN.y - 90 }); h.run(1)
+    h.tap('hen'); h.run(0.6)
+    expect(h.yard.one('c4')!.kind).toBe('chick'); expect(h.yard.one('c3')!.kind).toBe('egg')
+  })
+  it('chicks do what their mother egg does when it opens', () => {
+    const h = new Hand(state((s) => { s.brood[1].kind = 'chick'; s.brood[1].mother = 'c0' })); h.run(4)
+    h.tap('c0'); let copied = false
+    for (let i = 0; i < 60; i++) { h.run(1 / 60); if (h.yard.one('c1')!.act?.name === 'eggSquash') copied = true }
+    expect(copied).toBe(true)
+  })
+  it('what walks, rolls, is kicked, is laid or follows rests in front of the middle of nothing', () => {
+    const clear = (h: Hand, moved: Body[], seed: string) => {
+      const all = [...THINGS.map((k) => h.yard.things[k]), h.yard.hen, ...h.yard.brood.filter((b) => !b.host)]
+      for (const m of moved) {
+        for (const o of all) if (o !== m) expect(hides(m, m, o, o), `${m.id} before ${o.id}, ${seed}`).toBe(false)
+        const s = scaleAt(m.y), my = m.y - SIZE[m.kind].h * 0.48 * s
+        for (const [k, q] of [['puddle', PUDDLE], ...Object.entries(SCENERY).filter(([n]) => n !== 'fence')] as [string, { x: number; y: number }][]) expect(Math.hypot((q.x - m.x) / (SIZE[m.kind].w * 0.36 * s), (q.y - my) / (SIZE[m.kind].h * 0.38 * s)), `${m.id} before ${k}, ${seed}`).toBeGreaterThan(1)
+      }
+    }
+    for (const k of THINGS) {
+      const h = new Hand(state((s) => s.brood.splice(3)))
+      for (let i = 0; i < 12; i++) { h.yard.tap({ kind: 'body', id: k }); h.run(3); clear(h, h.yard.things[k].go ? [] : [h.yard.things[k]], `tap ${i}`) }
+      h.tap('hen'); h.run(3); h.tap('hen'); h.run(3)
+      clear(h, h.yard.brood.slice(3), 'laid')
+      const f = new Hand(state((s) => s.brood.forEach((b) => { b.kind = 'chick'; b.mother = k })))
+      f.run(10); for (let i = 0; i < 5; i++) { f.yard.tap({ kind: 'body', id: k }); f.run(8); clear(f, f.yard.brood, `followers of ${k}, ${i}`) }
+    }
+    for (const by of ['boot', 'pig'] as const) {
+      const h = new Hand(); const q = h.yard.things.ball
+      h.yard.things[by].x = 560; h.yard.things[by].y = 560; q.x = 900; q.y = 590
+      h.drag(by, { x: 790, y: 520 }); h.run(4); clear(h, [q], `kicked by ${by}`)
+    }
   })
 })
