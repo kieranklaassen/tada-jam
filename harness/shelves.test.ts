@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import type { JamGame } from './contract'
@@ -16,6 +16,15 @@ describe('the shelves', () => {
   it('show a game nobody has shelved yet, first', () => {
     const shelves = fillShelves([game('monster-pizza', 'Monster Pizza'), game('brand-new', 'Brand New')])
     expect(shelves.map((shelf) => [shelf.id, shelf.games.length])).toEqual([['new', 1], ['jobs', 1]])
+  })
+
+  it('have a place for every demo of the lab', () => {
+    const catalog = readFileSync(join(import.meta.dirname, '../lab/arcade/catalog.ts'), 'utf8')
+    const demos = [...catalog.matchAll(/\{ key: '([^']+)'([^\n]*)/g)].map(([, key, rest]) => ({ key, game: /game: '([^']+)'/.exec(rest)?.[1], name: key, emoji: '🎲', ages: [3, 7] as [number, number], pitch: '', question: '?' }))
+    const shelves = fillShelves([], demos)
+    expect(demos.length).toBeGreaterThan(50)
+    expect(shelves.flatMap((shelf) => shelf.demos)).toHaveLength(demos.length)
+    expect(shelves.map((shelf) => shelf.id)).not.toContain('new')
   })
 
   it('find a game by its name or its line, in any case', () => {

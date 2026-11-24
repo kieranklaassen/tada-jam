@@ -3,8 +3,8 @@ import { CornerControl } from './CornerControl'
 import { demoPlayerHref, findDemo, loadDemoCatalog } from './demos'
 import { PortraitOverlay } from './PortraitOverlay'
 
-// An old game in the jam's frame. The demo player is a separate page built from
-// the lab, and the jam shares no code with it, so the old game is shown by
+// A demo in the jam's frame. The demo player is a separate page built from
+// the lab, and the jam shares no code with it, so the demo is shown by
 // framing that page without its rating strip. The home control is the same as
 // over a game, but a held finger does nothing: there is nothing to set up.
 export function DemoFrame({ demoKey, onExit }: { demoKey: string; onExit: () => void }) {

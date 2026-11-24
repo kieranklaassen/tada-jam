@@ -1,10 +1,10 @@
-// The old games on the jam's home page: the lab's demos, the first versions
+// The lab's demos on the jam's home page: the first versions
 // most of the jam's games were built from. They are throwaway prototypes, not
 // cartridges, and are never ported to Tada. They are built separately and
 // published beside the jam. This page only reads the catalog file that build
 // writes, and shows one by framing the demo player's own page. No code is
 // shared: when the file is not there (the dev server, or a build without the
-// demos) the home page simply has no old games.
+// demos) the home page simply has no demos.
 
 export const DEMO_CATALOG_URL = 'lab/arcade/catalog.json'
 const DEMO_PLAYER_URL = 'lab/arcade/index.html'
@@ -19,6 +19,8 @@ export type Demo = {
   question: string
   /** Its visual treatment, where one was assigned on purpose. */
   look?: string
+  /** The jam game this demo became, where that game took another name. */
+  game?: string
 }
 
 export type DemoGroup = {
@@ -43,9 +45,11 @@ function parseDemo(raw: unknown): Demo | null {
   const ages = Array.isArray(r.ages) && r.ages.length === 2 && r.ages.every((n) => Number.isInteger(n)) ? (r.ages as [number, number]) : null
   if (!ages) return null
   const look = text(r.look)
+  const game = text(r.game)
   return {
     key, name, question, ages, emoji: text(r.emoji) ?? '🎲', pitch: text(r.pitch) ?? '',
     ...(look ? { look } : {}),
+    ...(game && KEY.test(game) ? { game } : {}),
   }
 }
 
