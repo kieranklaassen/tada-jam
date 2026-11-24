@@ -86,6 +86,8 @@ Cloth busy-book, 2D. The whole surface is one padded cotton page seen from the f
 
 Palette: sky `#bcd9e6`, hills `#9cb87a` and `#7da067`, yard `#d9b98a`, barn `#c9584c`; the animals are the strongest colours: horse mustard, hen coral, elephant violet, crocodile emerald, each in its own print. Performers: goose white and orange, bear brown.
 
+Each half has a slit that its performer looks out of: a wide-awake goose with its beak through, a bear whose lids are half down and shut in a doze. The first look is the whole animal in the middle, the farmer, the cow, the hen and the pig large round it, and the six other ends hung in pairs. The sun, the clouds, the flowers and the stone are sewn on and wobble when poked.
+
 Motion: cloth. Pieces squash along the seam and settle with one overshoot. Nothing in the page moves but what is sewn on loosely.
 
 Tiers: the pixel ratio, then the stitching on the stretched cloth, then the quilting highlights. No tier drops an answer to a touch.

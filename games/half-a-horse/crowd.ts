@@ -35,8 +35,8 @@ export function wants(who: Watcher, b: Beast): number {
   }
 }
 
-export type React = 'jump' | 'shake' | 'laugh' | 'roll' | 'blown' | 'sneeze' | 'hop' | 'skip' | 'poke' | 'wave' | 'catch' | 'flat' | 'buttons' | 'hatless' | 'egg' | 'fed' | 'snip' | 'rattle' | 'pluck' | 'hum' | 'mumble' | 'throw' | 'lean'
-const LASTS: Record<React, number> = { jump: 0.7, shake: 1, laugh: 1.6, roll: 2.2, blown: 1.4, sneeze: 1.5, hop: 0.6, skip: 0.9, poke: 0.9, wave: 1.4, catch: 1.2, flat: 1.9, buttons: 1.8, hatless: 2.4, egg: 1.6, fed: 2, snip: 1.7, rattle: 1.6, pluck: 1.2, hum: 1.6, mumble: 1.4, throw: 0.9, lean: 0.5 }
+export type React = 'jump' | 'shake' | 'laugh' | 'roll' | 'blown' | 'sneeze' | 'hop' | 'skip' | 'poke' | 'wave' | 'catch' | 'flat' | 'buttons' | 'hatless' | 'egg' | 'fed' | 'snip' | 'rattle' | 'pluck' | 'hum' | 'mumble' | 'throw' | 'lean' | 'yawn'
+const LASTS: Record<React, number> = { jump: 0.7, shake: 1, laugh: 1.6, roll: 2.2, blown: 1.4, sneeze: 1.5, hop: 0.6, skip: 0.9, poke: 0.9, wave: 1.4, catch: 1.2, flat: 1.9, buttons: 1.8, hatless: 2.4, egg: 1.6, fed: 2, snip: 1.7, rattle: 1.6, pluck: 1.2, hum: 1.6, mumble: 1.4, throw: 0.9, lean: 0.5, yawn: 1.8 }
 export const REACTS = Object.keys(LASTS) as React[]
 
 /** What a routine does to each of them. */
@@ -168,6 +168,7 @@ export class Crowd {
         case 'hum': out.tilt += Math.sin(t * Math.PI * 4) * 0.05; break
         case 'mumble': out.tilt += 0.16 * hump; out.lift -= 6 * hump; break
         case 'throw': out.tilt += (t < 0.35 ? 0.16 * (t / 0.35) : -0.2 * (1 - t)); out.mouth = hump; break
+        case 'yawn': out.mouth = Math.max(out.mouth, hump); out.tilt -= 0.12 * hump; out.blink = t > 0.2 && t < 0.8 ? 1 : out.blink; break
         case 'lean': out.tilt += -0.06 * hump; break
       }
     }

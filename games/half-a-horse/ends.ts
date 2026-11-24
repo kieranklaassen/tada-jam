@@ -13,10 +13,6 @@ export function animalOf(end: End): Animal {
 export function partOf(end: End): Part {
   return end < 4 ? 'head' : 'bottom'
 }
-export function endOf(animal: Animal, part: Part): End {
-  return ANIMALS.indexOf(animal) + (part === 'head' ? 0 : 4)
-}
-
 /** Which half: the goose's, in front, or the bear's, behind. */
 export type Who = 0 | 1
 export const GOOSE: Who = 0

@@ -8,7 +8,7 @@ import { BODY, FARMER, GROUND, HANG, LINE, LOFT, PEGS, PIG, POST, PUDDLE, TREE, 
 import { paintHem, paintPage } from './page'
 import { demosFor } from './demos'
 import { SIT_DROP, type Play } from './play'
-import { LINE_POST } from './scenery'
+import { BITS, LINE_POST } from './scenery'
 import { fit, type Fit } from './stage'
 import { Album, CLOTHS, canvas, printOf, type Ctx, type ClothName, type Picture } from './stitch'
 import type { Tier } from './config'
@@ -70,7 +70,7 @@ export class YardView {
   }
 
   private still(ctx: Ctx): void {
-    for (const [picture, x, y] of [[this.folk.fence(), 0, 0], [this.folk.farmpost(), LINE_POST.farm, GROUND], [this.folk.post(), POST.x, POST.y], [this.folk.pigMud(), PIG.x, PIG.y + 14]] as const) ctx.drawImage(picture.image, x + picture.x, y + picture.y, picture.w, picture.h)
+    for (const [picture, x, y] of [[this.folk.fence(), 0, 0], [this.folk.farmpost(), LINE_POST.farm, GROUND], ...BITS.map((bit) => [this.folk.bit(bit.key), bit.x, bit.y] as const), [this.folk.post(), POST.x, POST.y], [this.folk.pigMud(), PIG.x, PIG.y + 14]] as const) ctx.drawImage(picture.image, x + picture.x, y + picture.y, picture.w, picture.h)
   }
 
   private place(ctx: Ctx): void {
@@ -111,6 +111,7 @@ export class YardView {
     this.place(ctx)
     this.now = play.now
     const glow = guidance?.glow ?? 0
+    for (const bit of BITS) { const t = play.bits.get(bit.key) ?? 0; if (t > 0) this.at(this.folk.bit(bit.key), bit.x, bit.y, Math.sin(t * 22) * t * 0.14, 1.05 + Math.sin(t * Math.PI) * 0.12) }
     this.cow(play)
     this.line(play, glow)
     // What stands still is in the page, and is stamped only while it rattles.
@@ -172,7 +173,7 @@ export class YardView {
   }
 
   private flight(play: Play, flight: Play['flights'][number]): void {
-    if (flight.wait > 0 && flight.who === null) return
+    if (flight.wait > 0 && !flight.shown) return
     const t = ease(flight.t)
     const half = flight.who === null ? null : play.halves[flight.who]
     const hook = flight.peg >= 0 ? pegAt(flight.peg) : null
@@ -218,7 +219,7 @@ export class YardView {
     const { ctx } = this
     const look = this.watch(play, 'cow')
     const react = play.crowd.states.cow.react
-    const gone = ease(play.night - 4) * (play.ended ? 1 : 0)
+    const gone = ease(play.night - 4) * (play.ended ? 1 : 0) * (react === 'poke' ? 1 - Math.sin(play.crowd.states.cow.t * Math.PI) : 1)
     ctx.save()
     ctx.beginPath()
     ctx.rect(LOFT.x - 112, LOFT.y - 112, 250, 172)
@@ -289,7 +290,7 @@ export class YardView {
       else { const t = Math.max(0, meet!.t - 0.1 - i * 0.32), back = meet!.seconds - meet!.t < 0.25; if (!back) this.at(this.folk.farmerButton(), -t * 170, -256 + i * 34 - t * 190 + t * t * 260, t * 9) }
     const raise = react === 'wave' || react === 'catch' ? 0.9 + Math.sin(this.now * 12) * (react === 'wave' ? 0.4 : 0) : react === 'throw' ? Math.sin(Math.min(1, play.crowd.states.farmer.t * 2) * Math.PI) * 1.2 : meet?.end === 7 ? Math.sin(meet.t * 18) * 0.4 : Math.sin(this.now * 1.6) * 0.04
     // The far arm, then the head, then the arm with the carrot.
-    this.at(this.folk.farmerArm(), 62, -258, 0.9 - (react === 'wave' ? raise : 0), -0.86, 0.86)
+    this.at(this.folk.farmerArm(), 62, -258, -1.25 + (react === 'wave' ? raise : 0), -0.86, 0.86)
     ctx.save()
     ctx.translate(-2, -282)
     ctx.rotate(Math.sin(this.now * 0.7) * 0.02 + (react === 'mumble' ? 0.14 : 0))
@@ -305,7 +306,8 @@ export class YardView {
     ctx.save()
     ctx.translate(-66, -252)
     ctx.rotate(-raise + (meet?.end === 0 ? Math.sin(meet.t * 14) * 0.1 : 0) - 0.12)
-    if (meet?.end === 5) { this.at(this.folk.cup(), -100, -20); if (meet.t > 0.5) this.at(this.folk.food('egg'), -100, -38, 0, 0.8) } else if (play.carrotIn <= 0 || (meet?.end === 0 && meet.t < 0.7)) this.at(this.folk.food('carrot'), -116, -14, 1.35, 1.25)
+    if (meet?.end === 5) { this.at(this.folk.cup(), -100, -20); if (meet.t > 0.5) this.at(this.folk.food('egg'), -100, -38, 0, 0.8) } else if (play.carrotIn <= 0 || (meet?.end === 3 && meet.t < 0.5) || (meet?.end === 0 && meet.t < 0.7)) this.at(this.folk.food('carrot'), -116, -14, 1.35, 1.25)
+    if (meet?.end === 3 && meet.t > 0.5) this.at(this.folk.leaves(), -112, -10)
     this.stamp(this.folk.farmerArm())
     ctx.restore()
     ctx.restore()
@@ -371,7 +373,7 @@ export class YardView {
       this.ctx.save()
       this.ctx.beginPath()
       const edge = 480 - ease((play.night - 0.7) / 1.5) * 254
-      this.ctx.rect(12, 300, edge - 12, 400)
+      this.ctx.rect(12, 0, edge - 12, 720)
       this.ctx.clip()
     }
     const first: Who = play.halves[BEAR].y > play.halves[GOOSE].y + 100 ? GOOSE : BEAR
@@ -392,8 +394,10 @@ export class YardView {
     const half = play.halves[who], pose: Pose = play.poses[who], out = play.out(who)
     const breath = Math.sin(this.now * (who === GOOSE ? 2.6 : 1.4) + who) * 0.012
     ctx.save()
-    ctx.translate(half.x, GROUND - half.y - pose.lift + half.sat * SIT_DROP)
-    ctx.rotate(half.tilt - out * pose.tilt)
+    ctx.translate(half.x, GROUND - half.y - pose.lift - (half.y < 1 ? play.hop * 0.35 : 0) + half.sat * SIT_DROP)
+    // In front of the puddle it strikes the pose that goes with what it wears.
+    const vain = half.preen * Math.sin(this.now * (1.4 + half.wear * 0.37)) * (half.wear % 2 ? 0.05 : 0.075)
+    ctx.rotate(half.tilt - out * pose.tilt + vain)
     const s = half.squash * 0.8 + pose.squash + breath + half.sat * 0.1 + half.doze * 0.1 + sunk * 0.5
     ctx.scale(out * (1 + s * 0.5), 1 - s)
     draw()
@@ -543,7 +547,7 @@ export class YardView {
       if (partOf(end) === 'head' && end !== 2) this.neck(play, who)
       if (end === 2) this.ear(play, who)
       // Sat down, the feet stick out in front.
-      if (half.sat > 0.5) { ctx.save(); ctx.translate(0, -BODY.y); for (const side of [0, 1]) this.leg(play, who, side); ctx.restore() }
+      if (half.sat > 0.5) { ctx.save(); ctx.translate(0, -BODY.y + 26); for (const side of [0, 1]) this.leg(play, who, side); ctx.restore() }
       const shut = (play.ended && play.night > 1.2) || half.doze > 0.6 || (Math.sin(this.now * 1.1 + who * 2) > 0.985)
       ctx.save()
       ctx.translate(who === GOOSE ? -8 : -14, 10)
@@ -665,5 +669,5 @@ export class YardView {
   }
 }
 
-const PUFF: Record<Play['puffs'][number]['kind'], string> = { dust: 'rgba(255,244,220,.75)', drop: '#b5e2f2', crumb: '#f1c98a', leaf: '#5f9c40', feather: '#fffaf0', note: '#fff', air: 'rgba(255,255,255,.6)' }
+const PUFF: Record<Play['puffs'][number]['kind'], string> = { dust: 'rgba(255,244,220,.75)', drop: '#b5e2f2', crumb: '#f1c98a', leaf: '#5f9c40', feather: '#fffaf0', air: 'rgba(255,255,255,.6)' }
 const KINDS = Object.keys(PUFF) as (keyof typeof PUFF)[]

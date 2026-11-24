@@ -1,4 +1,5 @@
 import { blob, button, oval, path, run, sew, type Album, type Ctx, type Picture } from './stitch'
+import { BITS, type BitKey } from './scenery'
 import { FOODS, type FoodKind } from './save'
 
 // The cloth pieces of those who watch, and of what lies about the yard.
@@ -150,6 +151,21 @@ export class Folk {
       for (const x of [8, 16, 22]) { ctx.fillStyle = '#3b2415'; ctx.beginPath(); ctx.ellipse(x, 9, 2.6, 4, -0.4, 0, 7); ctx.fill() }
     })
   }
+  bit(key: BitKey): Picture {
+    return this.album.get(key, [-84, -66, 168, 132], (ctx) => {
+      if (key === 'sun') sew(ctx, oval(0, 0, 54, 54), 'bale', { pad: 20, stitch: 8 })
+      else if (key === 'stone') sew(ctx, blob([[-30, 4], [-14, -18], [16, -16], [32, 4], [0, 18]], 1), 'grey', { pad: 9, stitch: 5, drop: 3 })
+      else if (key === 'cloud' || key === 'cloudlet') {
+        const s = key === 'cloud' ? 1 : 0.7
+        sew(ctx, blob([[-70 * s, 10], [-50 * s, -20 * s], [-16 * s, -22 * s], [6 * s, -42 * s], [38 * s, -24 * s], [70 * s, 4], [50 * s, 22 * s], [-50 * s, 22 * s]], 1.1), 'goose', { pad: 16, stitch: 6, drop: 6 })
+      } else {
+        const name = key === 'flowerRed' ? 'red' : key === 'flowerWhite' ? 'goose' : 'bale'
+        for (let i = 0; i < 5; i++) sew(ctx, oval(Math.cos(i * 1.257) * 11, Math.sin(i * 1.257) * 11, 9, 9), name, { pad: 5, stitch: 0, drop: 1, edge: 1.6 })
+        button(ctx, 0, 0, 7, key === 'flowerYellow' ? '#e8735a' : '#f4c95d', '#8c6a1b')
+      }
+    })
+  }
+  leaves(): Picture { return this.album.get('leaves', [-30, -40, 60, 46], (ctx) => { for (const x of [-10, 0, 10]) sew(ctx, oval(x, -14 - (x ? 0 : 5), 6, 15, x * 0.06), 'leaf', { pad: 4, stitch: 3 }) }) }
   pull(): Picture { return this.album.get('pull', [-14, -8, 28, 40], (ctx) => sew(ctx, oval(0, 9, 8, 14), 'bale', { pad: 4, stitch: 0, drop: 2, edge: 2.4 })) }
   tree(): Picture {
     return this.album.get('tree', [-120, -130, 240, 270], (ctx) => {
@@ -193,10 +209,11 @@ export class Folk {
       sew(ctx, blob([[-9, 2], [0, -6], [10, 2], [12, 34], [40, 40], [42, 66], [32, 92], [-8, 92], [-22, 62], [-28, 44], [-16, 42], [-8, 50]], 0.9), 'goose', { pad: 10, stitch: 5 })
     })
   }
-  ring(): Picture { return this.album.get('ring', [-110, -110, 220, 220], (ctx) => { ctx.strokeStyle = '#fff'; ctx.lineWidth = 7; ctx.setLineDash([16, 12]); ctx.beginPath(); ctx.arc(0, 0, 100, 0, 7); ctx.stroke() }) }
+  ring(): Picture { return this.album.get('ring', [-112, -112, 224, 224], (ctx) => { ctx.setLineDash([22, 14]); ctx.strokeStyle = '#8a5b3c'; ctx.lineWidth = 15; ctx.beginPath(); ctx.arc(0, 0, 98, 0, 7); ctx.stroke(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 9; ctx.beginPath(); ctx.arc(0, 0, 100, 0, 7); ctx.stroke() }) }
   /** Sews every one of them. */
   all(): void {
     for (const kind of FOODS) this.food(kind)
-    for (const piece of ['farmerLegs', 'farmerBody', 'farmerBare', 'farmerButton', 'farmerArm', 'farmerHead', 'farmerNose', 'farmerMoustache', 'farmerHat', 'farmerMouth', 'cowHead', 'cowEar', 'cowMuzzle', 'cowJaw', 'tongue', 'henBody', 'henFace', 'pigBody', 'pigHead', 'pigSnout', 'pigMud', 'cup', 'paw', 'pull', 'tree', 'post', 'farmpost', 'fence', 'door', 'bow', 'hand', 'ring'] as const) this[piece]()
+    for (const bit of BITS) this.bit(bit.key)
+    for (const piece of ['farmerLegs', 'farmerBody', 'farmerBare', 'leaves', 'farmerButton', 'farmerArm', 'farmerHead', 'farmerNose', 'farmerMoustache', 'farmerHat', 'farmerMouth', 'cowHead', 'cowEar', 'cowMuzzle', 'cowJaw', 'tongue', 'henBody', 'henFace', 'pigBody', 'pigHead', 'pigSnout', 'pigMud', 'cup', 'paw', 'pull', 'tree', 'post', 'farmpost', 'fence', 'door', 'bow', 'hand', 'ring'] as const) this[piece]()
   }
 }

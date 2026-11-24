@@ -4,6 +4,7 @@ import type { Cartridge, CartridgeContext } from '../types'
 import { AttendedClock, Attention } from './attention'
 import { GameAudio, voiceOf } from './audio'
 import { BACKDROP } from './config'
+import { TAP_SLOP } from './hands'
 import { IdleLadder, type Guidance } from './guidance'
 import { halfAHorseManifest } from './manifest'
 import { Overlay, inCorner } from './overlay'
@@ -116,9 +117,12 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       canvas.width = Math.round(w * ratio); canvas.height = Math.round(h * ratio)
       // The view is told the new size and ratio before it draws, and stitches its pieces again at that density.
       view.resize(w, h, ratio)
+      slop()
       draw()
       return true
     }
+    // A tap may stray ten points of the glass, however small the stage is drawn on it.
+    const slop = () => { if (play) play.hands.slop = Math.max(TAP_SLOP, 10 / view.fit.scale) }
     const observer = new ResizeObserver(resize)
     observer.observe(root)
 
@@ -230,6 +234,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       if (disposed) return
       // A saved position wins; `childAge` only chooses where a first visit starts.
       play = new Play(deserialize(value), makeRng(seedOf(window.location.search)).next)
+      slop()
       view.warm()
       // The game sets itself up from the state here, as it was left: nothing eases in and no scene replays.
       // Its chance comes from streams it makes here from one seed, `seedOf(window.location.search)` in rng.ts:

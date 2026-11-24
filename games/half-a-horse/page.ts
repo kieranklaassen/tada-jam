@@ -1,5 +1,5 @@
 import { GROUND, LOFT, PUDDLE, STABLE } from './layout'
-import { blob, button, oval, path, printOf, run, sew, type Ctx } from './stitch'
+import { oval, path, printOf, run, sew, type Ctx } from './stitch'
 
 // The page of the book: everything that stands still, painted once, and
 // painted past the stage's edges for a surface of another shape.
@@ -7,9 +7,6 @@ import { blob, button, oval, path, printOf, run, sew, type Ctx } from './stitch'
 export function paintPage(ctx: Ctx, x0: number, y0: number, x1: number, y1: number): void {
   ctx.fillStyle = printOf(ctx, 'sky')
   ctx.fillRect(x0, y0, x1 - x0, y1 - y0)
-  // A sun and two clouds, sewn on.
-  sew(ctx, oval(1092, 70, 54, 54), 'bale', { pad: 20, stitch: 8 })
-  for (const [x, y, s] of [[470, 330, 0.9], [890, 296, 0.6]]) sew(ctx, blob([[x - 70 * s, y + 14], [x - 44 * s, y - 22 * s], [x, y - 34 * s], [x + 44 * s, y - 20 * s], [x + 74 * s, y + 12], [x + 30 * s, y + 24 * s], [x - 34 * s, y + 24 * s]], 1), 'goose', { pad: 16, stitch: 6, drop: 6 })
   const hill = (points: [number, number][], name: 'hillA' | 'hillB'): void => {
     const p = path((one) => {
       one.moveTo(x0 - 40, y1)
@@ -30,12 +27,6 @@ export function paintPage(ctx: Ctx, x0: number, y0: number, x1: number, y1: numb
   // The yard.
   const yard = path((p) => { p.moveTo(x0 - 40, 588); p.quadraticCurveTo(300, 570, 590, 584); p.quadraticCurveTo(900, 598, x1 + 40, 576); p.lineTo(x1 + 40, y1 + 40); p.lineTo(x0 - 40, y1 + 40); p.closePath() })
   sew(ctx, yard, 'yard', { pad: 30, stitch: 11 })
-  // Felt flowers along its edge.
-  for (const [x, y, c] of [[292, 628, 'red'], [420, 612, 'goose'], [690, 620, 'bale'], [800, 612, 'red'], [930, 622, 'goose']] as const) {
-    for (let i = 0; i < 5; i++) sew(ctx, oval(x + Math.cos(i * 1.257) * 8, y + Math.sin(i * 1.257) * 8, 6.5, 6.5), c, { pad: 4, stitch: 0, drop: 1, edge: 1.4 })
-    button(ctx, x, y, 5, '#f4c95d', '#8c6a1b')
-  }
-  for (const [x, y] of [[520, 770], [760, 748], [940, 780], [130, 770], [660, 792], [1080, 730]]) sew(ctx, blob([[x - 18, y], [x - 8, y - 10], [x + 10, y - 8], [x + 18, y + 2], [x, y + 10]], 1), 'grey', { pad: 6, stitch: 4, drop: 2 })
   sew(ctx, oval(PUDDLE.x, PUDDLE.y, PUDDLE.rx, PUDDLE.ry + 6), 'water', { pad: 14, stitch: 7, drop: 0 })
   barn(ctx, x0)
 }

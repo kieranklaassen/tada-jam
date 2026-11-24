@@ -25,7 +25,7 @@ export function freshSave(): Saved {
   return {
     v: SAVE_VERSION,
     halves: [{ x: 560, sit: false, wear: 0 }, { x: 290, sit: false, wear: 4 }],
-    pegs: [1, 5, 2, null, null, 6, 3, 7],
+    pegs: [1, 5, null, 2, 6, null, 3, 7],
     food: [{ kind: 'apple', x: 745 }],
     eaten: [],
     tied: false,

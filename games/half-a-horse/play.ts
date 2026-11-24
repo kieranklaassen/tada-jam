@@ -1,13 +1,13 @@
 import type { Note } from './audio'
 import { Cloth, type Pt } from './cloth'
-import { Crowd, type Beast, type React, type Watcher } from './crowd'
-import { ACTS, BEAR, GOOSE, actPose, partOf, restPose, tempo, type End, type Pose, type Who } from './ends'
+import { Crowd, strangeness, type Beast, type React, type Watcher } from './crowd'
+import { ACTS, BEAR, GOOSE, actPose, animalOf, partOf, restPose, tempo, type End, type Pose, type Who } from './ends'
 import { Hands, LIFT_GRACE_S, REGRAB, REST_S, type Contact } from './hands'
-import { BODY, DRAG_FROM, FARMER, FOOD_LEFT, FOOD_R, FOOD_REACH, FOOD_RIGHT, GROUND, HANG, HANG_REACH, LEFT, LINE, LINE_FLOOR, LOFT, MAX_FOOD, MEET, PEGS, PIG, POST, PUDDLE, RIGHT, ROOM, SEAM, SLACK, STABLE, STABLE_ROOM, TREE, pegAt } from './layout'
+import { BODY, COMPANY, DRAG_FROM, FARMER, FOOD_LEFT, FOOD_R, FOOD_REACH, FOOD_RIGHT, GROUND, HANG, HANG_REACH, LEFT, LINE, LINE_FLOOR, LOFT, MAX_FOOD, MEET, PEGS, PIG, POST, PUDDLE, RIGHT, ROOM, SEAM, SLACK, STABLE, STABLE_ROOM, TREE, pegAt } from './layout'
 import { Routines, type Routine } from './routines'
 import { FOODS, type FoodKind, type Saved } from './save'
 import { notes, type Sound } from './sound'
-import { LINE_POST } from './scenery'
+import { BITS, LINE_POST, type BitKey } from './scenery'
 
 // The Mount's path with no browser in it: fingers land, move, lift and are
 // taken away here by their ids and stage points, and the yard plays its time
@@ -23,6 +23,7 @@ export type Target =
   | { kind: 'half'; who: Who }
   | { kind: 'costume'; peg: number }
   | { kind: 'food'; food: Food }
+  | { kind: 'bit'; key: BitKey }
   | { kind: 'cloth' }
   | { kind: 'watcher'; who: Watcher }
   | { kind: 'tree' | 'puddle' | 'lace' | 'fence' | 'farmpost' | 'henpost' | 'stable' | 'ground' | 'page' }
@@ -39,6 +40,11 @@ export type Half = {
   /** Where a tap called it, or where its own nose takes it. */
   call: number | null
   idle: number
+  /** The nearest it has been to where it was called, and how long it has come no nearer. */
+  near: number
+  /** Where it last stood, followed a little late. */
+  rested: number
+  stuck: number
   act: number
   acted: boolean
   squash: number
@@ -63,15 +69,17 @@ export type Half = {
   meet: boolean
 }
 
-export type Food = { kind: FoodKind; x: number; y: number; vx: number; vy: number; turn: number; wait: number; held: boolean; home: number }
+export type Food = { kind: FoodKind; x: number; y: number; vx: number; vy: number; turn: number; wait: number; held: boolean; home: number; was: number }
 /** A costume in the air, up to a peg or down to a half. */
-export type Flight = { end: End; from: Pt; peg: number; who: Who | null; t: number; seconds: number; wait: number }
+export type Flight = { end: End; from: Pt; peg: number; who: Who | null; t: number; seconds: number; wait: number; shown: boolean }
 /** A costume in a hand: whose peg it left, where it is, and how long since the finger lifted. */
 export type Carried = { end: End; peg: number; at: Pt; vx: number; id: number | null; lifted: number }
-export type Puff = { kind: 'dust' | 'drop' | 'crumb' | 'leaf' | 'feather' | 'note' | 'air'; x: number; y: number; vx: number; vy: number; t: number; seconds: number; size: number; turn: number }
+export type Puff = { kind: 'dust' | 'drop' | 'crumb' | 'leaf' | 'feather' | 'air'; x: number; y: number; vx: number; vy: number; t: number; seconds: number; size: number; turn: number }
 
 /** How much lower a half's middle is when it sits. */
 export const SIT_DROP = 46
+/** As high as a finger lifts an end: its head stays on the page. */
+const HIGHEST = 240
 const WALK = [128, 84] as const
 const CALLED = [330, 250] as const
 const NIGHT_S = 5
@@ -108,6 +116,7 @@ export class Play {
   shake = 0
   ring = 0
   rattle = { farmpost: 0, henpost: 0, fence: 0 }
+  readonly bits = new Map<BitKey, number>()
   ripples: { x: number; y: number; t: number }[] = []
   hop = 0
   private hopV = 0
@@ -119,7 +128,8 @@ export class Play {
   readonly done: Routine[] = []
   private readonly routines: Routines
   private snapFor = 0
-  private lastSnap = 9
+  private sinceBoth = 9
+  private readonly before: [number, number] = [0, 0]
   private creak = 0
   private variant = 0
   private plucked = false
@@ -154,6 +164,7 @@ export class Play {
       return !this.ended && half.held !== null && x <= STABLE.mouth ? STABLE.mouth + 24 : Math.round(x * 10) / 10
     }
     const [front, rear] = [place(GOOSE), place(BEAR)]
+    const coming = this.halves.some((half) => half.call !== null)
     return {
       v: 1,
       halves: [
@@ -164,7 +175,7 @@ export class Play {
       food: this.food.map((one) => ({ kind: one.kind, x: Math.round(one.held ? one.home : Math.max(FOOD_LEFT, Math.min(FOOD_RIGHT, one.x))) })),
       eaten: [...this.eaten],
       tied: this.tied && front < rear,
-      ended: this.ended || (front <= STABLE.mouth && rear <= STABLE.mouth),
+      ended: this.ended || (coming && front <= STABLE.mouth && rear <= STABLE.mouth),
     }
   }
 
@@ -216,15 +227,17 @@ export class Play {
     if (food) return { kind: 'food', food }
     if (at.x < STABLE.right && at.y > 372 && at.y < GROUND + 26) return { kind: 'stable' }
     if (!this.ended && this.cloth.nearest(at).distance < 78) return { kind: 'cloth' }
+    if (Math.abs(at.x - LINE_POST.farm) < 42 && at.y > 470 && at.y < GROUND + 20) return { kind: 'farmpost' }
     if (Math.abs(at.x - FARMER.x) < FARMER.w / 2 && at.y > 250 && at.y < GROUND + 20) return { kind: 'watcher', who: 'farmer' }
+    if (Math.hypot(at.x - FARMER.x + 160, at.y - 408) < 46) return { kind: 'watcher', who: 'farmer' }
     if (Math.hypot(at.x - LOFT.x, at.y - LOFT.y) < 88) return { kind: 'watcher', who: 'cow' }
     if (Math.abs(at.x - POST.x) < 62 && at.y > POST.y - 125 && at.y < POST.y + 6) return { kind: 'watcher', who: 'hen' }
     if (Math.hypot((at.x - PIG.x) / 1.15, at.y - PIG.y + 14) < 88) return { kind: 'watcher', who: 'pig' }
-    if (Math.abs(at.x - LINE_POST.farm) < 34 && at.y > 470 && at.y < GROUND + 20) return { kind: 'farmpost' }
     if (Math.abs(at.x - POST.x) < 30 && at.y >= POST.y && at.y < GROUND - 60) return { kind: 'henpost' }
     if (Math.abs(at.x - TREE.x) < TREE.w / 2 && at.y > TREE.y - TREE.h / 2 && at.y < 560) return { kind: 'tree' }
     if (Math.hypot((at.x - PUDDLE.x) / PUDDLE.rx, (at.y - PUDDLE.y) / 34) < 1) return { kind: 'puddle' }
     if (at.x > LINE.left - 20 && at.x < LINE.right + 20 && Math.abs(at.y - LINE.y - LINE.sag * 0.6) < 40) return { kind: 'lace' }
+    for (const bit of BITS) if (Math.hypot(at.x - bit.x, at.y - bit.y) < bit.r) return { kind: 'bit', key: bit.key }
     if (at.x > 250 && at.x < 985 && at.y > 500 && at.y < 585) return { kind: 'fence' }
     if (at.y > 570 && at.x > STABLE.right - 40 && at.x < FARMER.x - 60) return { kind: 'ground' }
     return { kind: 'page' }
@@ -288,9 +301,14 @@ export class Play {
         else if (holder) holder.extra = true
       }
     } else if (target.kind !== 'page' && target.kind !== 'ground') {
-      extra = others.some((one) => !one.extra && one.target.kind === target.kind && same(one.target, target))
+      for (const one of others) {
+        if (one.extra || !same(one.target, target)) continue
+        // One that rests there hands over, whatever it rests on.
+        if (one.still < REST_S) extra = true
+        else one.extra = true
+      }
     }
-    const contact = this.hands.land(id, at, target, off, extra)
+    const contact = this.hands.land(id, at, target, off, extra, target.kind !== 'page' && target.kind !== 'ground')
     if (contact.extra && !(target.kind === 'watcher' && target.who === 'farmer')) {
       this.say('extra', null, this.next())
       this.ripple(at)
@@ -322,6 +340,7 @@ export class Play {
         target.food.held = true
         target.food.home = target.food.x
         target.food.vx = 0
+        target.food.was = target.food.x
         this.say('squeak', null, this.next())
         break
       case 'cloth': {
@@ -351,6 +370,10 @@ export class Play {
         this.ripple(at)
         this.say('fence', null, Math.floor(at.x / 90))
         break
+      case 'bit':
+        this.bits.set(target.key, 1)
+        this.say('squeak', null, this.next())
+        break
       case 'henpost':
         this.rattle.henpost = 1
         this.crowd.react('hen', 'hop')
@@ -370,6 +393,7 @@ export class Play {
       case 'ground':
       case 'page':
         this.ripple(at)
+        this.puff('air', at.x, at.y, 3)
         this.say('pit', null, this.next())
         break
     }
@@ -427,7 +451,6 @@ export class Play {
       const x = Math.max(FOOD_LEFT - 40, Math.min(FOOD_RIGHT + 180, at.x))
       food.turn += (x - food.x) / FOOD_R
       if (Math.floor(x / 60) !== Math.floor(food.x / 60)) this.say('rumble', null, this.next())
-      food.vx = (x - food.x) * 22
       food.x = x
       food.y = Math.max(0, Math.min(440, GROUND - FOOD_R - at.y))
     } else if (target.kind === 'cloth') {
@@ -468,14 +491,14 @@ export class Play {
         else if (contact.moved) { this.crowd.react('farmer', 'shake'); this.say('bracesPing') } else { this.crowd.react('farmer', 'mumble'); this.say('mumble') }
         break
       case 'farmpost':
-        if (tap) this.call(MEET + 30)
+        if (tap) this.call(MEET + 30, true)
         break
       case 'stable':
         if (tap && !this.ended) this.callHome()
         break
       case 'ground': {
         // A quick tap with no other finger on the page: a resting hand calls nobody.
-        const resting = [...this.hands.contacts.values()].some((one) => one.target.kind === 'ground' || one.target.kind === 'page')
+        const resting = [...this.hands.contacts.values()].some((one) => !one.counts && one.still < REST_S)
         if (tap && !resting) this.call(Math.max(STABLE.right + 40, Math.min(RIGHT, contact.at.x)))
         break
       }
@@ -498,7 +521,8 @@ export class Play {
       half.soft = true
       half.idle = 0
       half.vx = half.vy = 0
-      if (half.x <= STABLE.mouth) half.x = STABLE.mouth + 24
+      // It walks out by itself: nobody put it there.
+      if (half.x <= STABLE.mouth) half.call = STABLE.mouth + 40
       this.mark()
     }
     if (contact.extra) return
@@ -516,6 +540,8 @@ export class Play {
   clear(): void {
     for (const id of [...this.hands.contacts.keys()]) this.cancel(id)
     for (const one of [...this.carried]) this.dropCostume(one)
+    // What moved by itself since the last save is saved where it is.
+    this.mark()
   }
 
   get busy(): boolean {
@@ -669,17 +695,20 @@ export class Play {
     this.mark()
   }
 
-  private call(x: number): void {
+  private call(x: number, greet = false): void {
     if (this.ended) return
     const free = ([GOOSE, BEAR] as const).filter((who) => !this.held(who))
     if (free.length === 0) return
     const who = free.reduce((a, b) => (Math.abs(this.halves[a].x - x) <= Math.abs(this.halves[b].x - x) ? a : b))
+    if (greet) this.halves[who].meet = false
     this.callTo(who, x)
   }
 
   private callTo(who: Who, x: number): void {
     const half = this.halves[who]
     half.call = Math.max(LEFT, Math.min(RIGHT, x))
+    half.near = Infinity
+    half.stuck = 0
     half.sit = false
     half.idle = 0
     this.wake(half)
@@ -688,8 +717,9 @@ export class Play {
   }
 
   private callHome(): void {
-    if (!this.held(BEAR)) this.callTo(BEAR, 96)
-    if (!this.held(GOOSE)) this.callTo(GOOSE, this.held(BEAR) ? 110 : 96 + STABLE_ROOM)
+    // The nearer goes in first, to the inner place.
+    const inner: Who = this.gap < 0 ? GOOSE : BEAR
+    for (const who of [GOOSE, BEAR] as const) if (!this.held(who)) this.callTo(who, who === inner ? 96 : 96 + STABLE_ROOM)
   }
 
   // --- Costumes --------------------------------------------------------------------
@@ -705,6 +735,14 @@ export class Play {
   private dropCostume(one: Carried): void {
     this.carried.splice(this.carried.indexOf(one), 1)
     const who = this.over(one.at)
+    if (who === null && one.at.x > FARMER.x - 110) {
+      // He holds it against himself, hums, and hangs it back.
+      this.crowd.react('farmer', 'hum')
+      this.say('hum')
+      one.at = { x: FARMER.x - 6, y: 456 }
+      this.fly(one, 1.2)
+      return
+    }
     if (this.ended || who === null) { this.fly(one); return }
     const second = this.halves[1 - who].change >= 0 && this.halves[1 - who].change < 0.5
     this.say(second ? 'snapHigh' : 'snap')
@@ -720,7 +758,6 @@ export class Play {
       const d = Math.hypot(at.x - this.halves[who].x, at.y - (GROUND - this.halves[who].y + BODY.y))
       if (d < near) { near = d; best = who }
     }
-    if (best === null && at.x > FARMER.x - 110 && at.y > 250) { this.crowd.react('farmer', 'hum'); this.say('hum') }
     return best
   }
 
@@ -729,8 +766,8 @@ export class Play {
     this.fly(one)
   }
 
-  private fly(one: Carried): void {
-    this.flights.push({ end: one.end, from: { ...one.at }, peg: one.peg, who: null, t: 0, seconds: 0.5, wait: 0 })
+  private fly(one: Carried, shown = 0): void {
+    this.flights.push({ end: one.end, from: { ...one.at }, peg: one.peg, who: null, t: 0, seconds: 0.5, wait: shown, shown: shown > 0 })
     this.say('flap')
   }
 
@@ -743,8 +780,8 @@ export class Play {
     half.change = 0
     half.act = -1
     half.sit = false
-    this.flights.push({ end: half.old, from: { x: half.x, y: GROUND - half.y + BODY.y }, peg, who: null, t: 0, seconds: 0.55, wait: 0.06 })
-    this.flights.push({ end, from, peg: -1, who, t: 0, seconds: 0.44, wait: 0.22 })
+    this.flights.push({ end: half.old, from: { x: half.x, y: GROUND - half.y + BODY.y }, peg, who: null, t: 0, seconds: 0.55, wait: 0.06, shown: false })
+    this.flights.push({ end, from, peg: -1, who, t: 0, seconds: 0.44, wait: 0.22, shown: true })
     this.say('pants', who)
     this.crowd.react('hen', 'shake')
     this.mark(true)
@@ -800,23 +837,54 @@ export class Play {
     this.hands.step(dt)
     // Small fixed slices, so a slow frame plays the same game.
     const slices = Math.max(1, Math.ceil(dt / (1 / 60)))
-    for (let i = 0; i < slices; i++) this.slice(dt / slices)
-    this.cloth.step(dt, this.seam(GOOSE), this.seam(BEAR))
-    this.routine(dt)
-    this.crowd.step(dt, this.beast())
-    this.props(dt)
+    for (let i = 0; i < slices; i++) {
+      const part = dt / slices
+      this.slice(part)
+      this.cloth.step(part, this.seam(GOOSE), this.seam(BEAR))
+      this.routine(part)
+      this.crowd.step(part, this.beast())
+      this.props(part)
+    }
+    this.settled(dt)
   }
+
+  /** What wandered, recoiled or rolled is saved once it stands still, and the pig yawns at an animal that could be one. */
+  private settled(dt: number): void {
+    const moving = this.halves.some((half) => half.held !== null || Math.abs(half.x - half.rested) > 14 || half.y > 0) || this.food.some((food) => food.held || food.y > 0 || Math.abs(food.vx) > 4)
+    this.still = moving ? 0 : this.still + dt
+    if (moving) for (const half of this.halves) half.rested += (half.x - half.rested) * Math.min(1, dt * 6)
+    if (moving) this.unsaved = true
+    else if (this.unsaved) { this.unsaved = false; this.mark() }
+    const [front, rear] = this.halves
+    if (this.still > this.yawnAt && !this.ended && animalOf(front.wear) === animalOf(rear.wear) && strangeness(this.beast()) === 0) {
+      this.crowd.react('pig', 'yawn')
+      this.yawnAt = this.still + 9
+    }
+    if (moving) this.yawnAt = 5
+  }
+  private still = 0
+  private unsaved = false
+  private yawnAt = 5
 
   private slice(dt: number): void {
     if (this.ended) {
       this.halves.forEach((half, who) => { half.x += ((who === GOOSE ? 150 : 88) - half.x) * Math.min(1, dt * 3) })
       return
     }
+    this.before[0] = this.halves[0].x
+    this.before[1] = this.halves[1].x
     for (const who of [GOOSE, BEAR] as const) this.will(who, dt)
     for (const who of [GOOSE, BEAR] as const) this.body(who, dt)
+    const was = [this.halves[0].x, this.halves[1].x]
     this.pull(dt)
     this.apart()
-    const tied = this.tied ? this.gap < 40 : this.gap < -70
+    // No half that nobody leads goes into the stable: it stops at the door.
+    this.halves.forEach((half, who) => {
+      if (half.held === null && half.call === null && half.x <= STABLE.mouth && Math.max(was[who], this.before[who]) > STABLE.mouth) { half.x = STABLE.mouth + 0.5; half.vx = 0 }
+    })
+    this.sinceBoth = this.held(GOOSE) && this.held(BEAR) ? 0 : this.sinceBoth + dt
+    // One finger carries an end across; it takes two to tie.
+    const tied = this.tied ? this.gap < 40 : this.gap < -70 && this.sinceBoth < 0.7
     if (tied !== this.tied) {
       this.tied = tied
       this.mark()
@@ -844,7 +912,7 @@ export class Play {
         const to = Math.sign(want - half.x)
         const pulls = Math.abs(half.x + to * 8 - other.x) > 345 && Math.sign(half.x - other.x) === to
         // Whoever stands in the way is not pushed for it.
-        const blocked = other.y < 120 && Math.sign(other.x - half.x) === to && Math.abs(other.x - half.x) < ROOM + 10
+        const blocked = other.y < 120 && Math.sign(other.x - half.x) === to && Math.abs(other.x - half.x) < COMPANY
         if (pulls || blocked) { strain = 1; want = null }
       } else if (half.sit) {
         want = null
@@ -855,7 +923,11 @@ export class Play {
       const d = want - half.x
       const v = Math.sign(d) * Math.min(speed, Math.abs(d) * 5)
       half.vx += (v - half.vx) * Math.min(1, dt * 9)
-      if (half.call !== null && Math.abs(d) < 6) {
+      if (half.call !== null) {
+        if (Math.abs(d) < half.near - 2) { half.near = Math.abs(d); half.stuck = 0 } else half.stuck += dt
+      }
+      // Where it was called, or as near as it can get.
+      if (half.call !== null && (Math.abs(d) < 6 || half.stuck > 0.7)) {
         half.call = null
         half.vx = 0
         half.idle = 0
@@ -889,7 +961,6 @@ export class Play {
       if (!half.acted && half.act >= act.at) { half.acted = true; this.actLands(who) }
       if (half.act >= 1) half.act = -1
     }
-    if (contact && half.act < 0 && !contact.moved && contact.seconds > 0.5 && contact.seconds - dt <= 0.5) this.act(who)
     const pose = this.poses[who]
     half.sat += ((half.sit ? 1 : 0) - half.sat) * Math.min(1, dt * 12)
     if (half.act >= 0) actPose(half.wear, half.act, pose)
@@ -901,7 +972,7 @@ export class Play {
         half.call = null
         const tx = Math.max(LEFT, Math.min(RIGHT, contact.at.x + contact.off.x))
         const lift = GROUND - (contact.at.y + contact.off.y)
-        const ty = Math.max(0, Math.min(390, lift))
+        const ty = Math.max(0, Math.min(HIGHEST, lift))
         const vx = Math.max(-2600, Math.min(2600, (tx - half.x) * 22)), vy = Math.max(-2200, Math.min(2200, (ty - half.y) * 20))
         half.vx += (vx - half.vx) * Math.min(1, dt * 40)
         half.vy += (vy - half.vy) * Math.min(1, dt * 40)
@@ -948,7 +1019,7 @@ export class Play {
       half.change += dt
       if (half.change > 0.72) { this.landChange(half); this.say('plump', who, 1) }
     }
-    if (half.eat >= 0) { half.eat += dt / 1.2; if (half.eat >= 1) half.eat = -1 } else if (who === BEAR && half.y < 6 && Math.abs(half.vx) < 70) this.tryEat(half)
+    if (half.eat >= 0) { half.eat += dt / 1.2; if (half.eat >= 1) half.eat = -1 } else if (who === BEAR && half.held === null && half.call === null && half.act < 0 && half.change < 0 && half.y < 6 && Math.abs(half.vx) < 70) this.tryEat(half)
   }
 
   private tryEat(half: Half): void {
@@ -974,6 +1045,7 @@ export class Play {
     this.puff('dust', half.x, GROUND - 6, 2 + n)
     if (Math.abs(half.x - PUDDLE.x) < 100) this.splash(half.x)
     this.say(partOf(half.wear) === 'head' ? 'thump' : 'plump', who, n)
+    if (n > 2) this.crowd.react('pig', 'roll')
     if (n > 2) this.hopV = Math.max(this.hopV, 90)
     this.mark()
   }
@@ -1002,7 +1074,6 @@ export class Play {
     // Both walking after a call do not pull each other back.
     if (front.call !== null && rear.call !== null && gap > SLACK) { front.vx *= 0.98; rear.vx *= 0.98 }
     this.snapFor = Math.max(0, this.snapFor - dt)
-    this.lastSnap += dt
     if (gap > SLACK + 40 && (this.held(GOOSE) || this.held(BEAR))) {
       this.creak += (Math.abs(front.vx - rear.vx) * dt) / 70
       if (this.creak > 1) { this.creak = 0; this.say('creak', null, Math.min(12, Math.floor((gap - SLACK) / 50))) }
@@ -1091,8 +1162,8 @@ export class Play {
     for (const routine of this.fired) this.routineHappens(routine)
     // The farmer plucks a cloth that comes past him.
     const mid = this.cloth.x[7]
-    if (mid > 760 && !this.plucked) { this.plucked = true; this.crowd.react('farmer', 'pluck'); this.cloth.flick(7, 700); this.say('plunk') }
-    if (mid < 700) this.plucked = false
+    if (mid > 720 && !this.plucked) { this.plucked = true; this.crowd.react('farmer', 'pluck'); this.cloth.flick(7, 700); this.say('plunk') }
+    if (mid < 660) this.plucked = false
   }
 
   private routineHappens(routine: Routine): void {
@@ -1121,6 +1192,7 @@ export class Play {
     this.hopV -= 1900 * dt
     this.hop = Math.max(0, this.hop + this.hopV * dt)
     if (this.hop === 0) this.hopV = Math.max(0, this.hopV)
+    for (const [key, t] of this.bits) this.bits.set(key, Math.max(0, t - dt * 1.4))
     this.shake = Math.max(0, this.shake - dt * 1.1)
     this.ring = Math.max(0, this.ring - dt * 1.4)
     this.carrotIn = Math.max(0, this.carrotIn - dt)
@@ -1171,7 +1243,13 @@ export class Play {
 
   private roll(food: Food, dt: number): void {
     if (food.wait > 0) { food.wait -= dt; return }
-    if (food.held) return
+    if (food.held) {
+      // How fast the finger is carrying it.
+      const v = (food.x - food.was) / Math.max(dt, 0.004)
+      food.vx += (v - food.vx) * Math.min(1, dt * 18)
+      food.was = food.x
+      return
+    }
     const wasAir = food.y > 2
     food.vy -= 1500 * dt
     food.y += food.vy * dt
@@ -1189,8 +1267,9 @@ export class Play {
     }
     food.x += food.vx * dt
     food.turn += (food.vx * dt) / FOOD_R
-    if (food.x < FOOD_LEFT) { food.x = FOOD_LEFT; food.vx = Math.abs(food.vx) * 0.7 }
-    if (food.x > FOOD_RIGHT) { food.x = FOOD_RIGHT; food.vx = -Math.abs(food.vx) * 0.7 }
+    // Off the side of the yard it comes rolling back.
+    if (food.x < FOOD_LEFT) food.vx = Math.max(200, Math.abs(food.vx) * 0.7)
+    if (food.x > FOOD_RIGHT) food.vx = -Math.max(200, Math.abs(food.vx) * 0.7)
   }
 
   // --- Small things -----------------------------------------------------------------------
@@ -1242,11 +1321,11 @@ function same(a: Target, b: Target): boolean {
 }
 
 function newHalf(saved: Saved['halves'][number]): Half {
-  return { x: saved.x, y: 0, vx: 0, vy: 0, wear: saved.wear, sit: saved.sit, held: null, call: null, idle: 0, act: -1, acted: false, squash: 0, squashV: 0, tilt: 0, tiltV: 0, walked: 0, foot: 0, doze: 0, preen: 0, strain: 0, eat: -1, soft: false, sat: saved.sit ? 1 : 0, change: -1, old: saved.wear, meet: false }
+  return { x: saved.x, y: 0, vx: 0, vy: 0, wear: saved.wear, sit: saved.sit, held: null, call: null, idle: 0, near: Infinity, rested: saved.x, stuck: 0, act: -1, acted: false, squash: 0, squashV: 0, tilt: 0, tiltV: 0, walked: 0, foot: 0, doze: 0, preen: 0, strain: 0, eat: -1, soft: false, sat: saved.sit ? 1 : 0, change: -1, old: saved.wear, meet: false }
 }
 
 export function newFood(kind: FoodKind, x: number): Food {
-  return { kind: FOODS.includes(kind) ? kind : 'apple', x, y: 0, vx: 0, vy: 0, turn: 0, wait: 0, held: false, home: x }
+  return { kind: FOODS.includes(kind) ? kind : 'apple', x, y: 0, vx: 0, vy: 0, turn: 0, wait: 0, held: false, home: x, was: x }
 }
 
 const POSE_KEYS = Object.keys(restPose()) as (keyof Pose)[]

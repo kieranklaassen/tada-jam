@@ -68,6 +68,95 @@ describe('two fingers', () => {
   })
 })
 
+describe('a hand that rests', () => {
+  it('three resting fingers leave every half, costume and tap working', () => {
+    const play = open({ food: [] })
+    for (const id of [21, 22, 23]) play.down(id, { x: 800 + id, y: 700 })
+    run(play, 2)
+    play.down(1, on(play, GOOSE))
+    expect(play.halves[0].held).toBe(1)
+    play.up(1)
+    play.down(2, { x: 700, y: 660 }); run(play, 0.1); play.up(2)
+    expect(play.halves[0].call).toBe(700)
+  })
+  it('on a half it does nothing more than the pat', () => {
+    const play = open({ food: [] })
+    play.down(1, on(play, GOOSE))
+    run(play, 3)
+    expect(play.halves[0].act).toBe(-1)
+    play.up(1)
+    expect(play.halves[0].act).toBe(-1)
+  })
+  it('a slow drag is not rest', () => {
+    const play = open({ food: [] })
+    const p = on(play, GOOSE)
+    play.down(1, p)
+    for (let i = 0; i < 120; i++) { p.x += 1.2; play.move(1, p); play.step(FRAME) }
+    play.down(2, on(play, GOOSE))
+    expect(play.halves[0].held).toBe(1)
+  })
+})
+
+describe('what moves by itself', () => {
+  it('is saved where it comes to rest, and at any put-away', () => {
+    const play = open({ food: [] })
+    const at = both(play)
+    travel(play, at, [[1, 290, 0], [2, -190, 0]], 0.8)
+    play.up(1); play.up(2)
+    run(play, 0.2)
+    play.changed = false
+    run(play, 4)
+    expect(play.changed).toBe(true)
+    play.changed = false
+    play.clear()
+    expect(play.changed).toBe(true)
+  })
+  it('never slides into the stable, and no call lasts for ever', () => {
+    let s = 3
+    const rnd = (): number => (s = (s * 16807) % 2147483647) / 2147483647
+    for (let n = 0; n < 120; n++) {
+      const fresh = freshSave()
+      const play = open({ food: [], halves: [{ x: 80 + rnd() * 770, sit: rnd() < 0.4, wear: 0 }, { x: 80 + rnd() * 770, sit: rnd() < 0.4, wear: 4 }], pegs: fresh.pegs })
+      const stable = n % 2 === 0
+      play.down(1, stable ? { x: 60, y: 480 } : { x: 400 + rnd() * 400, y: 700 }); run(play, 0.05); play.up(1)
+      run(play, 9)
+      expect(play.halves.map((half) => half.call)).toEqual([null, null])
+      expect(play.saved().ended).toBe(play.ended)
+    }
+  })
+  it('a fling at the door stops at the door', () => {
+    const play = open({ food: [], halves: [{ x: 420, sit: false, wear: 0 }, { x: 100, sit: false, wear: 4 }] })
+    const at = new Map([[1, on(play, GOOSE)]])
+    play.down(1, at.get(1)!)
+    travel(play, at, [[1, -180, 0]], 0.12)
+    play.up(1)
+    run(play, 2)
+    expect(play.halves[0].x <= STABLE.mouth && play.halves[1].x <= STABLE.mouth && !play.ended).toBe(false)
+  })
+  it('one finger ties no bow', () => {
+    const play = open({ food: [] })
+    const at = new Map([[1, on(play, GOOSE)]])
+    play.down(1, at.get(1)!)
+    travel(play, at, [[1, 0, -250]], 0.4); travel(play, at, [[1, -400, 0]], 0.6); travel(play, at, [[1, 0, 250]], 0.4)
+    run(play, 0.5)
+    expect(play.tied).toBe(false)
+  })
+  it('a held bear does not eat', () => {
+    const play = open({ food: [{ kind: 'apple', x: 300 }] })
+    play.down(1, on(play, BEAR))
+    run(play, 2)
+    expect(play.food).toHaveLength(1)
+  })
+  it('a slow machine plays the same game', () => {
+    const play = open({ food: [] })
+    const at = both(play)
+    travel(play, at, [[1, -300, 0], [2, 300, 0]], 0.8)
+    for (let i = 0; i < 80; i++) play.step(0.1)
+    expect(Math.abs(play.knot)).toBeLessThan(2)
+    expect(Math.abs(play.crowd.states.hen.doubtV)).toBeLessThan(30)
+  })
+})
+
 describe('what only two can do', () => {
   const routines: [string, (play: Play) => void][] = [
     ['trot', (play) => { const at = both(play); travel(play, at, [[1, 260, 0], [2, 260, 0]], 1) }],
@@ -143,7 +232,7 @@ describe('one child alone', () => {
     travel(play, at, [[1, 400, 0]], 1)
     run(play, 1)
     expect(play.gap).toBeLessThan(440)
-    expect(play.halves[0].x).toBeGreaterThan(830)
+    expect(play.halves[0].x).toBeGreaterThan(800)
   })
 
   it('the bear goes to food and eats it, and the farmer tosses it back', () => {

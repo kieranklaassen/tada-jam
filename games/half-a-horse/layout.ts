@@ -3,14 +3,12 @@
 export const GROUND = 652
 /** How far a half's middle may go along the yard. */
 export const LEFT = 78
-export const RIGHT = 884
+export const RIGHT = 856
 
 /** A half as it is touched and drawn: its middle above its feet, and its size. */
 export const BODY = { y: -196, rx: 112, ry: 98 }
 /** Where the cloth is sewn on, from a half's middle, on its inner side. */
-export const SEAM = { x: 64, y: -196 }
-/** A finger this near an end's middle has hold of it. */
-export const GRAB = 150
+export const SEAM = { x: 70, y: -196 }
 
 /** The cloth's length when nothing pulls, and where pulling begins to be felt by the other end. */
 export const CLOTH_REST = 165
@@ -18,6 +16,8 @@ export const SLACK = 300
 /** Beyond this a finger drags the other end along. */
 export const DRAG_FROM = 420
 
+/** Left to itself, an end comes no nearer to the other than this: an animal that looks whole. */
+export const COMPANY = 268
 /** The least room between two ends that stand, and between two in the stable. */
 export const ROOM = 178
 export const STABLE_ROOM = 64
@@ -29,11 +29,11 @@ export const TREE = { x: 696, y: 356, w: 170, h: 190 }
 export const POST = { x: 836, y: 388 }
 export const FARMER = { x: 1076, y: 470, w: 170, h: 380 }
 /** An end whose middle is past this is being greeted. */
-export const MEET = 800
-export const PIG = { x: 330, y: 742, w: 190, h: 110 }
+export const MEET = 776
+export const PIG = { x: 330, y: 752 }
 
 /** The washing line: a lace that sags between two poles, below the jam's home control. */
-export const LINE = { left: 250, right: 1010, y: 132, sag: 26 }
+export const LINE = { left: 250, right: 966, y: 132, sag: 26 }
 export const PEGS = 8
 export function pegAt(peg: number): { x: number; y: number } {
   const t = (peg + 0.5) / PEGS

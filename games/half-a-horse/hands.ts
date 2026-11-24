@@ -26,21 +26,27 @@ export type Contact<T> = {
   off: Point
   seconds: number
   still: number
+  /** Where `still` is measured from: a slow drag leaves it, a resting finger's tremble does not. */
+  anchor: Point
   moved: boolean
   extra: boolean
+  /** It is on something that takes a finger. One on bare ground keeps none of the three from the others. */
+  counts: boolean
 }
 
 export class Hands<T> {
+  /** How far a tap may stray, in stage units: the Mount widens it on a small surface. */
+  slop = TAP_SLOP
   readonly contacts = new Map<number, Contact<T>>()
 
   working(): number {
     let n = 0
-    for (const contact of this.contacts.values()) if (!contact.extra) n++
+    for (const contact of this.contacts.values()) if (!contact.extra && contact.counts && contact.still < REST_S) n++
     return n
   }
 
-  land(id: number, at: Point, target: T, off: Point, extra: boolean): Contact<T> {
-    const contact: Contact<T> = { id, target, from: { ...at }, at: { ...at }, off, seconds: 0, still: 0, moved: false, extra: extra || this.working() >= MAX_WORKING }
+  land(id: number, at: Point, target: T, off: Point, extra: boolean, counts = true): Contact<T> {
+    const contact: Contact<T> = { id, target, from: { ...at }, at: { ...at }, off, seconds: 0, still: 0, anchor: { ...at }, moved: false, counts, extra: extra || (counts && this.working() >= MAX_WORKING) }
     this.contacts.set(id, contact)
     return contact
   }
@@ -49,9 +55,12 @@ export class Hands<T> {
   move(id: number, at: Point): Contact<T> | null {
     const contact = this.contacts.get(id)
     if (!contact) return null
-    if (Math.hypot(at.x - contact.at.x, at.y - contact.at.y) > 1.5) contact.still = 0
+    if (Math.hypot(at.x - contact.anchor.x, at.y - contact.anchor.y) > 4) {
+      contact.still = 0
+      contact.anchor = { ...at }
+    }
     contact.at = { ...at }
-    if (!contact.moved && Math.hypot(at.x - contact.from.x, at.y - contact.from.y) > TAP_SLOP) contact.moved = true
+    if (!contact.moved && Math.hypot(at.x - contact.from.x, at.y - contact.from.y) > this.slop) contact.moved = true
     return contact
   }
 
