@@ -78,6 +78,6 @@ describe('where a demo opens', () => {
   })
 
   it('leads a grown-up to the demo with its rating strip', () => {
-    expect(demoPlayerHref('bread-day', true)).toBe('lab/arcade/index.html#/play/bread-day')
+    expect(demoPlayerHref('bread-day', true)).toBe('lab/arcade/index.html?chrome=1#/play/bread-day')
   })
 })

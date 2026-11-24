@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
-import { DEMO_PLAYER_URL, listedDemos, loadDemoCatalog, type DemoGroup } from './demos'
-import { Tile } from './Tile'
+import { listedDemos, loadDemoCatalog, type DemoGroup } from './demos'
+import { GameCard, type Launch } from './GameCard'
 
-// Demos on the jam's home page: tiles of the same kind as the games, grouped
-// by what they try out, each marked as a demo. A demo is a quick prototype of
-// one idea, not a game. It opens in the jam's own frame, full bleed, and one
-// grown-up link at the foot leads to the demo player with its ratings.
-export function DemoShelf({ gameKeys, onPick }: { gameKeys: ReadonlySet<string>; onPick: (key: string) => void }) {
+// Demos on the jam's home page: cards of the same kind as the games, grouped
+// by what they try out, each marked as a demo. A demo that became a game, or
+// that the owner turned down, is not here, so with every demo rebuilt this
+// shows nothing.
+export function DemoShelf({ gameKeys, onLaunch }: { gameKeys: ReadonlySet<string>; onLaunch: Launch }) {
   const [groups, setGroups] = useState<DemoGroup[]>([])
 
   useEffect(() => {
@@ -23,19 +23,17 @@ export function DemoShelf({ gameKeys, onPick }: { gameKeys: ReadonlySet<string>;
   if (listed.length === 0) return null
 
   return (
-    <section className="home-demos" aria-label="Demos">
-      <p className="home-showcases-label">Demos · ideas being tried out</p>
+    <section aria-label="Demos">
       {listed.map((group) => (
-        <div key={group.id} className="home-demo-group">
-          <p className="home-demo-group-title">{group.title}</p>
-          <ul className="home-dock home-dock-demos" aria-label={group.title}>
-            {group.demos.map((demo, i) => (
-              <Tile key={demo.key} id={demo.key} name={demo.name} emoji={demo.emoji} caption={`demo · ages ${demo.ages[0]}–${demo.ages[1]}`} index={i} onPick={onPick} />
+        <div key={group.id} className="home-shelf">
+          <h2 className="home-shelf-title">{group.title}</h2>
+          <ul className="home-grid" aria-label={group.title}>
+            {group.demos.map((demo) => (
+              <GameCard key={demo.key} id={demo.key} name={demo.name} emoji={demo.emoji} caption={`demo · ages ${demo.ages[0]}–${demo.ages[1]}`} onLaunch={onLaunch} />
             ))}
           </ul>
         </div>
       ))}
-      <a className="home-demos-all" href={DEMO_PLAYER_URL}>For grown-ups: rate the demos</a>
     </section>
   )
 }
