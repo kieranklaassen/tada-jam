@@ -12,7 +12,6 @@ describe('the night', () => {
     night.give('pan', 2)
     night.give('boots', 2)
     expect(night.worn.hen).toEqual(['pan', 'boots'])
-    expect(night.last('hen')).toBe('boots')
   })
   it('moves a garment from one sleeper to another', () => {
     const night = dark()
@@ -64,7 +63,7 @@ describe('the night', () => {
     night.pull()
     expect(night.pull()).toEqual({ lit: false, thrown: [{ sleeper: 'goat', garment: 'gown' }] })
     expect(night.worn.goat).toEqual(['pan'])
-    expect(night.onLine('gown')).toBe(true)
+    expect(night.wearerOf('gown')).toBeNull()
   })
   it('keeps the last four behind the door until it is opened', () => {
     const night = new Night(freshNight(false))

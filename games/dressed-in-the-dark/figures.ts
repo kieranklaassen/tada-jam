@@ -45,7 +45,7 @@ function plain(pose: Pose): Pose {
   }
 }
 
-const HEAD: Frame = { left: -100, top: -134, width: 200, height: 204 }
+const HEAD: Frame = { left: -100, top: -142, width: 200, height: 236 }
 const BODY: Frame = { left: -112, top: -230, width: 224, height: 232 }
 
 export function drawFigure(sprites: Sprites, sleeper: Sleeper, pose: Pose, worn: readonly Garment[], show: Show): void {
@@ -115,7 +115,7 @@ export function drawFigure(sprites: Sprites, sleeper: Sleeper, pose: Pose, worn:
   for (const garment of hats) {
     ctx.save()
     ctx.translate(0, y)
-    cloth(garment, '', { left: -b.hat * 1.2, top: -b.hat * 1.15, width: b.hat * 2.6, height: b.hat * 1.5 }, (to, pop) => drawHat(to, garment, b.hat, pop, pop * 4))
+    cloth(garment, '', { left: -b.hat * 1.2, top: -b.hat * 1.15, width: b.hat * 2.6, height: b.hat * (garment === 'feather' ? 2.7 : 1.5) }, (to, pop) => drawHat(to, garment, b.hat, pop, pop * 4))
     y -= HAT_RISE[garment]! * b.hat
     ctx.restore()
   }
@@ -165,7 +165,7 @@ function hand(pen: Pen, sleeper: Sleeper): void {
   }
 }
 
-function bareFoot(pen: Pen, sleeper: Sleeper, side: number, w: number): void {
+export function bareFoot(pen: Pen, sleeper: Sleeper, side: number, w: number): void {
   const s = w / 2
   if (sleeper === 'goat') {
     pen.poly([-s * 0.6, -24, s * 0.6, -24, s * 0.9, 0, 2, 0, 0, -10, -2, 0, -s * 0.9, 0], C.brown)

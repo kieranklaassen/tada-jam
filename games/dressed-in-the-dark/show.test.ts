@@ -3,6 +3,7 @@ import { moveFor } from './guide'
 import { BED, KNOB, MOON, WARDROBE, bedX, pegOf, touchedAt } from './layout'
 import { freshNight, type NightRecord } from './night'
 import { below, makeRng } from './rng'
+import { deserialize, freshSave, serialize } from './save'
 import { Show } from './show'
 import { GARMENTS, SETS, SLEEPERS, type Garment, type Sleeper } from './things'
 
@@ -92,7 +93,48 @@ describe('the toy', () => {
   })
 })
 
+describe('a small hand', () => {
+  it('counts a tap that slid', () => {
+    const show = new Show(night())
+    tap(show, pegOf('pan'))
+    show.press(onBed(2))
+    show.dragMove(onBed(2), { x: bedX(2) + 20, y: BED.top + 90 })
+    show.drop()
+    expect(show.night.worn.hen).toEqual(['pan'])
+    const other = new Show(night({ worn: worn({ pig: ['bell'] }) }))
+    other.press(pegOf('bell'))
+    other.dragMove(pegOf('bell'), { x: pegOf('bell').x + 20, y: pegOf('bell').y })
+    other.drop()
+    expect(other.night.worn.pig).toEqual([])
+  })
+})
+
 describe('the dark', () => {
+  it('is quiet in the end with a garment left off its peg', () => {
+    const show = new Show(night())
+    tap(show, pegOf('pan'))
+    run(show, 30)
+    expect(show.loud).toBe(0)
+  })
+  it('does not breathe all at once when the dark begins', () => {
+    const show = new Show(night({ lit: true, worn: worn({ goat: ['pan'] }) }))
+    show.press(KNOB)
+    while (show.scene) { show.step(1 / 60); show.takeSounds() }
+    show.step(1 / 60)
+    expect(show.takeSounds().length).toBeLessThan(16)
+  })
+  it('leaves nothing of a reveal sounding once it is cut short', () => {
+    const show = new Show(night({ worn: worn({ goat: ['boots'] }) }))
+    show.press(KNOB)
+    run(show, 2)
+    show.takeSounds()
+    show.press(KNOB)
+    show.takeSounds()
+    show.press(KNOB)
+    show.takeSounds()
+    run(show, 0.05)
+    expect(show.takeSounds().length).toBeLessThan(8)
+  })
   it('AE1: slippers walk the goat to the next bed and the other back, heard going left', () => {
     const show = new Show(night({ beds: ['pig', 'hippo', 'hen', 'goat', 'croc'] }))
     drag(show, pegOf('slippers'), onBed(3))
@@ -214,6 +256,24 @@ describe('the lamp', () => {
     expect(show.night.worn.goat).toEqual(['pan'])
     expect([show.pieces.pan.at, show.pieces.gown.at]).toEqual(['worn', 'peg'])
   })
+  it('lets nobody jump: caught at any instant of a walk, everyone moves in small steps', () => {
+    for (const after of [0.5, 0.8, 1.2, 1.7, 2.2, 2.8]) {
+      const show = new Show(night())
+      drag(show, pegOf('skates'), onBed(0))
+      drag(show, pegOf('slippers'), onBed(2))
+      run(show, after)
+      show.press(KNOB)
+      let before = SLEEPERS.map((sleeper) => ({ ...show.people[sleeper] }))
+      for (let i = 0; i < 200; i++) {
+        show.step(1 / 60)
+        SLEEPERS.forEach((sleeper, n) => {
+          expect(Math.abs(show.people[sleeper].x - before[n].x)).toBeLessThan(26)
+          expect(Math.abs(show.people[sleeper].floor - before[n].floor)).toBeLessThan(0.13)
+        })
+        before = SLEEPERS.map((sleeper) => ({ ...show.people[sleeper] }))
+      }
+    }
+  })
   it('puts the lamp out with a touch on the cord while it plays', () => {
     const show = new Show(night({ worn: worn({ hippo: ['bell'] }) }))
     show.press(KNOB)
@@ -238,7 +298,7 @@ describe('found as left', () => {
       const from = spots[below(rng, spots.length)], to = spots[below(rng, spots.length)]
       if (below(rng, 2) === 0) tap(show, from); else drag(show, from, to, below(rng, 6) === 0 ? 'back' : 'drop')
       run(show, rng.next() * 1.5)
-      const again = new Show(JSON.parse(JSON.stringify(show.night.record())))
+      const again = new Show(deserialize(JSON.parse(JSON.stringify(serialize({ ...freshSave(null), night: show.night.record() })))).night)
       expect(again.scene).toBeNull()
       expect(again.busy).toBe(false)
       for (const sleeper of SLEEPERS) {
@@ -247,6 +307,12 @@ describe('found as left', () => {
       }
       for (const garment of GARMENTS) for (const value of [show.pieces[garment].x, show.pieces[garment].y]) expect(Number.isFinite(value) && Math.abs(value) < 3000).toBe(true)
       show.takeSounds()
+      // Left alone, what is seen comes to what is saved.
+      if (i % 20 === 0) {
+        show.back()
+        run(show, 14)
+        for (const sleeper of SLEEPERS) expect([show.people[sleeper].bed, show.seenOn(sleeper)]).toEqual([again.people[sleeper].bed, again.seenOn(sleeper)])
+      }
     }
     run(show, 20)
     for (const sleeper of SLEEPERS) {
@@ -272,6 +338,9 @@ describe('the ghost hand', () => {
 })
 
 describe('the layout', () => {
+  it('keeps the moon and every garment out from under the home control', () => {
+    for (const at of [MOON, ...GARMENTS.map(pegOf)]) expect(Math.abs(at.x - 590) > 24 + MOON.r || at.y > 110).toBe(true)
+  })
   it('gives every target room of its own', () => {
     for (const garment of GARMENTS) {
       expect(touchedAt(pegOf(garment), () => true, () => false)).toEqual({ what: 'garment', garment })

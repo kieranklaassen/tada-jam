@@ -21,31 +21,43 @@ One entry a file copied from the template, written for the lead and for the game
 
 ### For the owner to decide
 
-Nothing yet. One line for each thing only the owner can settle: the look and the toy at the toy checkpoint, a default the game would like changed, and anything the guide does not rule on.
+- Whether the dark is the right dark. The window stays lit and the beds keep a blue and a gold line, and the playtester still asked why the beds looked like arches of stone before they got their garlands.
+- Undressed sleepers show their own foot, so a child can tell who is who until they are dressed. Without that the memory starts from the first moment, which a cold reader found too hard.
+- Every sound is synthesized and nobody has heard one.
 
 ## Pass log
 
-No pass yet. One row per pass: what was looked at, the critique written as the child, the one themed fix set, what was reverted, the measured frame rate, and what is still weak.
-
 | Pass | Looked at | Critique | Fix set | Frame rate | Still weak |
 | --- | --- | --- | --- | --- | --- |
+| 1 | first stills, both lights, 1180 by 820 | "The clothes float. The chicken fell into the hippo's bed." | hooks to the line, the hen tips over in its own bed, quilts in the bed's colour | not measured | gold too dim in the dark |
+| 2 | a whole night with everything on | arms and skirts over the neighbour | arms, tails and skirts kept over their own bed; everything painted once and stamped (from about 1,300 calls a frame to at most 80) | counted | feet look like mittens |
+| 3 | every sound rendered offline, 129 of them | peaks from 0.003 to 0.16: far too quiet | tones and noise raised; peaks now 0.01 to 0.27, none longer than 2.3 s | none | nobody has listened |
+| 4 | cold playtest proxy on the production build, about 100 stills, no knowledge of the game | "Where did hippo go? Whose feet? It is daytime when the lamp is off. The croc points and laughs at them. Nothing says where a lifted hat goes." | own feet, a darker sky and a pale moon, garlands and blue on the arches, laughing with hands on the belly and not pointing, cross ones look at the garment and not at the child, every quilt offers its hem while a garment is off its peg, longer dreams, the hand stays on the screen | none | garments are small beside their wearers; boots on the last bed share its colour |
+| 5 | independent code review | 15 findings, most of them reproduced by running the game's own show | all fixed, each behaviour with a test, except the boots' colour above | see below | see the status block |
 
 ## For the pull request
 
-Written as the game is built and kept at the end of this file: the pull request is made from it.
-
 ### How the game meets the quality bar
 
-Nothing yet. One entry for each line of the quality bar, saying how the game meets it so far. Each frame rate comes with the engine, the throttle, the pixel ratio and the build it was measured on, and with whether a physical iPad was measured.
+- **Alive at idle.** Five breaths, five natures, a moon that follows the finger, a cord that sways.
+- **Motion and sound on every touch**, when the finger lands; a test presses everything in both lights.
+- **Weight.** Garments hang on springs, quilts bulge, each sleeper's whole body goes into its act; no two share one (`motion.test.ts`).
+- **Clear silhouettes and targets.** Beds 204 by 380, pegs 91 apart, the cord's target 120 wide.
+- **Wordless.** No word, letter, numeral or sign. One want at a time: the cord, then the one who shivers, then the cord. The ladder shows only moves that can be made (`show.test.ts`).
+- **60 frames.** At most 80 stamps, fills and strokes a frame and at most 16 sprites painted in one (`frameBudget.test.ts`). FRAME
+- **Assets.** All procedural; system sound only through Web Audio.
 
 ### The learning claim
 
-Nothing yet. The claim as the sheet has it, with each record's standing and its check state read again on the day of the pull request, in the pack's Summary or the game's own words only. A game with no learning goal says so.
+None.
 
 ### Defaults taken for the owner
 
-Nothing yet. Each default the game took in the owner's place, from the guide or from its own sheet.
+- Five and over start with the wardrobe open.
+- The lamp going out is also what puts everyone back to sleep; disliked garments fly home, the loved one stays on.
 
 ### What the next builder should know
 
-Nothing yet. What this build taught that the guide and the template do not say.
+- A figure made of many small strokes can meet an 80-call frame when each part is a sprite keyed by a rounded expression.
+- The shell's home control covers the top centre: nothing that asks to be touched goes there.
+- A band of noise renders about ten times quieter than its peak says. Render the sounds offline before believing a list of peaks.

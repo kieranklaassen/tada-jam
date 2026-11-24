@@ -56,7 +56,7 @@ export type Ring = { x: number; y: number; born: number }
 type Going = { walk: Walk; t: number; left: boolean; steps: number; stepsBack: number; bumped: boolean; mutter: boolean }
 
 export const FLIGHT = 0.34
-export const DREAM = 1.5
+export const DREAM = 2.2
 export const PRINT = 2.4
 /** A walk's parts in seconds: getting up, over, and back. The whole is at most five. */
 export const WALK = { rise: 0.6, slippers: 1.7, perBed: 0.3, rollBase: 0.75, bump: 1.5, back: 1.5, lie: 0.4 } as const
@@ -85,10 +85,12 @@ export class Show {
   /** The walk being heard, and those that wait for it. */
   private going: Going | null = null
   private readonly waiting: Walk[] = []
-  hand: { garment: Garment; from: Sleeper | null; far: number } | null = null
+  hand: { garment: Garment; from: Sleeper | null; bed: number | null; far: number } | null = null
   lifted: Garment | null = null
   private pressed: { at: Point; what: ReturnType<typeof touchedAt>; used: boolean } | null = null
   private readonly queue: Note[] = []
+  /** Sounds that come later in what is playing, on game time: a touch that ends it ends them. */
+  private later: { at: number; notes: Note[] }[] = []
   private quietSince = 0
   /** Whoever a reveal is about just now. */
   private star: Person | null = null
@@ -285,10 +287,16 @@ export class Show {
   }
 
   drop(): void {
-    const hand = this.hand, at = this.finger
+    const hand = this.hand, at = this.finger, press = this.pressed
+    // A tap that slid: it does what the tap would have done, where the finger is now.
+    if (!hand) {
+      if (press && at && press.what.what === 'bed') press.what.bed = bedAt(at) ?? press.what.bed
+      this.tap()
+      return
+    }
     this.hand = null
     this.pressed = null
-    if (!hand || !at) return
+    if (!at) return
     const bed = bedAt(at)
     if (bed === null) {
       if (hand.from) this.goHome(hand.garment)
@@ -296,7 +304,7 @@ export class Show {
       return
     }
     // Let go where it was picked up, it was never taken off.
-    if (hand.from && this.whoAt(bed) === hand.from && hand.far < BED.pitch / 2) this.putBack(hand.garment, hand.from)
+    if (hand.from && hand.bed === bed && hand.far < BED.pitch / 2) this.putBack(hand.garment, hand.from)
     else this.give(hand.garment, bed)
   }
 
@@ -317,7 +325,7 @@ export class Show {
     if (from) { piece.x = at.x; piece.y = at.y }
     piece.at = 'hand'
     piece.since = this.t
-    this.hand = { garment, from, far: 0 }
+    this.hand = { garment, from, bed: from ? bedAt(at) : null, far: 0 }
     if (from && this.night.lit) this.react(this.people[from], 'poke', null)
   }
 
@@ -458,12 +466,14 @@ export class Show {
   private finishScene(): void {
     const scene = this.scene
     this.scene = null
+    this.later.length = 0
     scene?.finish()
   }
 
   /** The lamp goes on. */
   private reveal(): void {
     const beats: Beat[] = []
+    this.star = null
     this.going = null
     this.waiting.length = 0
     this.prints.length = 0
@@ -476,8 +486,14 @@ export class Show {
       if (!stray.includes(person)) continue
       person.scuttleFrom = person.x
       person.depth = bedX(this.night.bedOf(person.sleeper)) < person.x ? -22 : 4
-      if (person.floor > 0.2) { person.floor = 1; person.up = 1 }
       this.act(person, 'caught')
+      // Out of bed and onto the floor, from wherever it was caught.
+      const up = person.floor > 0.02 ? 1 : person.up, floor = person.floor
+      beats.push({ at: 0.1, lasts: 0.5, play: (progress) => {
+        person.up = up + (1 - up) * Math.min(1, progress * 2)
+        person.floor = floor + (1 - floor) * Math.max(0, progress * 2 - 1)
+        if (person.floor > 0.02 && person.up >= 1) person.bed = null
+      } })
     }
     beats.push({ at: 0, lasts: 0.3, play: (progress) => { this.light = progress } })
     let at = 0.12
@@ -526,7 +542,7 @@ export class Show {
           if (!finishing) this.sound(VOICE[other.sleeper].laugh, other.x, (other.bed ?? 0) * 0.05, 0.5)
         }
       }))
-      const lasts = part ? 2.6 : verdict.kind === 'late' ? 2.4 : verdict.kind === 'love' && verdict.and ? 2.6 : 1.7
+      const lasts = part ? 2.6 : verdict.kind === 'late' ? 2.4 : verdict.kind === 'love' && verdict.and ? 3.4 : 1.7
       end = Math.max(end, at + lasts, 3.8)
       at += part ? 1.5 : 0.95
     }
@@ -551,6 +567,7 @@ export class Show {
   /** The lamp goes out. */
   private putOut(thrown: { sleeper: Sleeper; garment: Garment }[]): void {
     const beats: Beat[] = []
+    this.star = null
     thrown.forEach(({ sleeper, garment }, i) => {
       const person = this.people[sleeper]
       beats.push(this.cue(0.15 + i * 0.16, (finishing) => {
@@ -582,7 +599,7 @@ export class Show {
     beats.push({ at: from + 2.0, lasts: 0.9, play: (progress) => { this.light = 1 - progress } })
     beats.push(this.cue(from + 2.9, (finishing) => { if (!finishing) this.sound(ROOM.asleep, MOON.x) }))
     beats.push({ at: from + 2.9, lasts: 0.6, play: () => {} })
-    for (const sleeper of SLEEPERS) { this.people[sleeper].rest = 'awake'; this.people[sleeper].part = null; this.people[sleeper].breaths = Math.floor(this.breathOf(sleeper)) }
+    for (const sleeper of SLEEPERS) { this.people[sleeper].rest = 'awake'; this.people[sleeper].part = null }
     this.shiverAt = this.t + from + 4.5
     this.begin(beats)
   }
@@ -615,7 +632,6 @@ export class Show {
     const mood: Mood = verdict.kind === 'love' ? 'joy' : verdict.kind === 'late' ? 'start' : verdict.kind === 'appalled' ? 'grump' : 'joy'
     this.sound(VOICE[sleeper][mood], person.x)
     this.sound(CLOTHES[verdict.at].show, person.x, verdict.kind === 'late' ? 0.2 : 0.4)
-    if (verdict.kind === 'love' && verdict.and) this.sound(VOICE[sleeper].grump, person.x, 1.75)
     if (verdict.kind === 'part') for (let i = 0; i < 3; i++) this.sound(CLOTHES[worn[(worn.indexOf(last) + i) % worn.length]].step, person.x, 0.9 + i * 0.4)
   }
 
@@ -650,6 +666,10 @@ export class Show {
       this.scene.update(this.t)
       if (!this.scene.running) this.scene = null
     } else this.light = this.night.lit ? 1 : 0
+    if (this.later.length > 0) {
+      for (const { at, notes } of this.later) if (at <= this.t) this.queue.push(...notes)
+      this.later = this.later.filter(({ at }) => at > this.t)
+    }
     this.knob *= Math.exp(-7 * dt)
     this.swingV += (-this.swing * 38 - this.swingV * 1.5) * dt
     this.swing += this.swingV * dt
@@ -664,7 +684,7 @@ export class Show {
       this.shiverAt = this.t + SHIVER_EVERY
       this.sound(ROOM.shiver, this.people[cold].x, 0, this.loud)
     }
-    if (this.hand || this.lifted !== null) this.quietSince = this.t
+    if (this.hand) this.quietSince = this.t
   }
 
   private stepPieces(dt: number): void {
@@ -710,13 +730,16 @@ export class Show {
       const verdict = verdictOf(sleeper, this.night.worn[sleeper])
       if (person.act === 'tap' && this.night.lit) { this.reactToAll(person); return }
       // Glad of the one thing, and then it sees the rest.
-      if (person.act === 'love' && verdict.kind === 'love' && verdict.and && this.night.lit) this.react(person, 'appalled', null)
-      else if (this.scene && this.night.lit && (person.act === 'gasp' || person.act === 'look')) this.act(person, 'awake')
+      if (person.act === 'love' && verdict.kind === 'love' && verdict.and && this.night.lit) {
+        this.react(person, 'appalled', null)
+        this.sound(VOICE[sleeper].grump, person.x)
+      } else if (this.scene && this.night.lit && (person.act === 'gasp' || person.act === 'look')) this.act(person, 'awake')
       else if (!this.night.lit) this.act(person, 'awake')
       else { person.act = person.rest; person.actAt = this.t }
     }
     // Asleep: breath, and what can be heard of what it wears.
-    if (!this.night.lit && !this.scene && person.bed !== null) {
+    if (this.night.lit || this.scene || person.bed === null) person.breaths = Math.floor(this.breathOf(sleeper))
+    else {
       const breaths = Math.floor(this.breathOf(sleeper))
       if (breaths > person.breaths) {
         person.breaths = breaths
@@ -741,7 +764,17 @@ export class Show {
 
   private sound(notes: readonly Note[], x: number, delay = 0, gain = 1): void {
     const pan = Math.round(Math.max(-0.8, Math.min(0.8, (x - 590) / 560)) * 20) / 20
-    for (const note of notes) this.queue.push({ ...note, peak: note.peak * gain, delay: (note.delay ?? 0) + delay, pan })
+    const parts: [number, Note[]][] = [[0, []], [1, []]]
+    for (const note of notes) {
+      const own = note.delay ?? 0, part = own >= 1 ? 1 : 0
+      parts[part][1].push({ ...note, peak: note.peak * gain, delay: own - part, pan })
+    }
+    for (const [from, part] of parts) {
+      if (part.length === 0) continue
+      const wait = delay + from
+      if (wait >= 0.3) this.later.push({ at: this.t + wait, notes: part })
+      else this.queue.push(...part.map((note) => ({ ...note, delay: (note.delay ?? 0) + wait })))
+    }
   }
 
   private ring(at: Point): void {

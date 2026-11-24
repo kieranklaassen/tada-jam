@@ -5,7 +5,8 @@ import { BED, KNOB, MOON, bedX, pegOf } from './layout'
 import { freshNight, type NightRecord } from './night'
 import { below, makeRng } from './rng'
 import { Show } from './show'
-import { GARMENTS, SETS } from './things'
+import { Sprites } from './sprites'
+import { GARMENTS, SETS, SLEEPERS } from './things'
 import { RoomView } from './view'
 
 // Counted and not timed: the real view draws every frame onto a surface that only counts.
@@ -32,6 +33,7 @@ describe('the frame budget', () => {
   it('holds in every state a seeded child reaches, and counts what it draws', () => {
     const view = new RoomView(fakeCanvas(true))
     view.resize(1180, 820, 2)
+    let paints = 0, before = view.painted
     let most = 0, where = '', full = 0, frames = 0
     const guidance: Guidance = { glow: 1, demo: 0.5, demoIndex: 0 }
     const frame = (show: Show) => {
@@ -40,6 +42,8 @@ describe('the frame budget', () => {
       count.stamps = count.pen = count.full = 0
       view.draw(show, show.busy ? null : guidance)
       frames += 1
+      paints = Math.max(paints, view.painted - before)
+      before = view.painted
       if (view.drawn !== count.stamps + count.pen) throw new Error(`says ${view.drawn}, drew ${count.stamps + count.pen}`)
       full = Math.max(full, count.full)
       if (count.stamps + count.pen > most) { most = count.stamps + count.pen; where = `lit ${show.lit} scene ${show.scene !== null} walk ${show.walking !== null} at ${show.t.toFixed(1)}: ${count.stamps} + ${count.pen} worn ${JSON.stringify(show.night.worn)} prints ${show.prints.length} acts ${Object.values(show.people).map((p) => p.act).join()}` }
@@ -63,7 +67,25 @@ describe('the frame budget', () => {
       }
     })
     expect(frames).toBeGreaterThan(15000)
+    expect(paints, 'sprites painted in one frame').toBeLessThanOrEqual(16)
     expect(full).toBeLessThanOrEqual(2)
     expect(most, where).toBeLessThanOrEqual(DRAW_BUDGET)
   }, 60_000)
+
+  it('draws nothing in the dark of what anyone wears', () => {
+    const view = new RoomView(fakeCanvas(true)), keys: string[] = []
+    view.resize(1180, 820, 2)
+    const stamp = vi.spyOn(Sprites.prototype, 'stamp').mockImplementation((key) => { keys.push(key) })
+    const show = new Show({ ...freshNight(true), lit: false, worn: { goat: [...SETS.knight], hippo: ['tutu'], hen: ['bell'], croc: ['gown'], pig: ['skates'] } })
+    for (let i = 0; i < 300; i++) {
+      show.step(1 / 60)
+      keys.length = 0
+      view.draw(show, null)
+      for (const garment of ['pan', 'armour', 'boots', 'tutu', 'bell', 'gown', 'skates']) expect(keys.filter((key) => key.split(' ').includes(garment))).toEqual([])
+      // Dressed, not even a foot says who lies there.
+      for (const sleeper of SLEEPERS) expect(keys.filter((key) => key.split(' ').includes(sleeper))).toEqual([])
+    }
+    expect(keys.filter((key) => key.startsWith('piece')).length).toBe(2)
+    stamp.mockRestore()
+  })
 })

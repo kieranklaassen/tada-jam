@@ -1,4 +1,4 @@
-import { BUILD, drawFigure } from './figures'
+import { BUILD, bareFoot, drawFigure } from './figures'
 import { drawPiece } from './garments'
 import { handPose, type Guidance, type HandPose } from './guidance'
 import { moveFor } from './guide'
@@ -49,6 +49,18 @@ export class RoomView {
       if (scale > 0) paintRoom(new Pen(ctx), lit, -x / scale, -y / scale, (width - x) / scale, (height - y) / scale)
       this.rooms[lit ? 1 : 0] = canvas
     }
+    this.warm()
+  }
+
+  /** Paints the figures a reveal starts with, off the surface, so that the lamp does not have to wait for them. */
+  private warm(): void {
+    this.ctx.setTransform(1, 0, 0, 1, -9000, 0)
+    for (const sleeper of SLEEPERS) for (const [act, age, at] of [['gasp', 0.05, 2.03], ['gasp', 0.35, 2.33], ['look', 0.1, 3.1], ['sleepy', 1, 4]] as const) drawFigure(this.sprites, sleeper, poseOf(sleeper, act, age, at, { x: 0, y: 0 }), [], null)
+  }
+
+  /** Sprites painted so far. */
+  get painted(): number {
+    return this.sprites.painted
   }
 
   draw(show: Show | null, guidance: Guidance | null): void {
@@ -105,7 +117,7 @@ export class RoomView {
     this.ctx.save()
     this.ctx.translate(x, y)
     this.ctx.scale(swell, swell)
-    this.sprites.stamp('moon', { left: -46, top: -46, width: 92, height: 92 }, 0, (to) => { to.ell(0, 0, MOON.r, MOON.r, '#ffe9ad', 3); for (const side of [-1, 1]) to.ell(side * 25, 8, 6, 4, '#f4b56a', 0) })
+    this.sprites.stamp('moon', { left: -46, top: -46, width: 92, height: 92 }, 0, (to) => { to.ell(0, 0, MOON.r, MOON.r, '#f3efdc', 3); for (const [cx, cy, r] of [[-24, -18, 6], [20, -26, 4], [26, 22, 5], [-12, 28, 4]] as const) to.ell(cx, cy, r, r, '#dcd6bd', 0); for (const side of [-1, 1]) to.ell(side * 25, 8, 6, 4, '#f0c9a8', 0) })
     this.ctx.restore()
     const at = show.finger, lx = at ? Math.max(-1, Math.min(1, (at.x - x) / 300)) : 0, ly = at ? Math.max(-1, Math.min(1, (at.y - y) / 300)) : 0.4
     for (const side of [-1, 1]) {
@@ -146,8 +158,10 @@ export class RoomView {
     }
     if (open < 0.5) {
       // The nightgown's sleeve, caught in the door, and asking.
-      pen.blob([x + width / 2 - 1, y + 118, x + width / 2 + 10, y + 122, x + width / 2 + 30 + tug, y + 192, x + width / 2 - 4 + tug, y + 204, x + width / 2 - 4, y + 150], C.ivory, 2)
-      pen.ell(x + width / 2 + 12 + tug, y + 200, 19, 8, C.rose, 1.8)
+      pen.blob([x + width / 2 - 4, y + 112, x + width / 2 + 12, y + 108, x + width / 2 + 40, y + 150, x + width / 2 + 46 + tug, y + 206, x + width / 2 + 12 + tug, y + 210, x + width / 2 + 8, y + 160, x + width / 2 - 2, y + 140], C.ivory, 2)
+      for (let i = 0; i < 4; i++) pen.ell(x + width / 2 + 10 + i * 10 + tug, y + 208, 8, 9, C.rose, 1.8)
+      pen.ell(x + width / 2 + 24, y + 160, 5, 5, C.violet, 0)
+      pen.ell(x + width / 2 + 28 + tug / 2, y + 186, 5, 5, C.violet, 0)
     }
   }
 
@@ -264,7 +278,8 @@ export class RoomView {
       h = 216 + show.breath(sleeper) * nature.rise + twitch.up + worn * 5 + person.bulge * 26 * Math.abs(Math.cos(person.bulge * 9))
       lean = twitch.lean * 90 + person.lean * (14 + Math.sin(show.t * 3 + bed) * 4)
       shift = twitch.x
-      hem = person.hem
+      // With a garment off its peg, every quilt offers its hem, one after the other.
+      hem = Math.max(person.hem, show.lifted === null || show.lit ? 0 : 0.45 * Math.max(0, Math.sin(show.t * 3.4 - bed * 0.9)))
       wide = person.bulge * 10
       if (show.cold === sleeper) shift += Math.sin(show.t * 46) * 2.6 * (0.5 + 0.5 * Math.sin(show.t * 2.2))
     }
@@ -289,11 +304,11 @@ export class RoomView {
   private overQuilt(show: Show, bed: number, person: Person | null, light: number): void {
     if (!person || person.up > 0.1 || light > 0.3) return
     const { h, lean, shift } = this.shape(show, bed, person, person.up), x = bedX(bed) + shift
-    if (show.night.worn[person.sleeper].length === 0) this.bareFoot(show, person, x + 54, BED.foot - 66)
+    if (show.night.worn[person.sleeper].length === 0) this.bareFoot(show, person, x + 50, BED.foot - 42)
     this.puff(show, person, x + lean, BED.foot - 30 - h, light)
   }
 
-  /** A sock-less foot out in the cold, the same on everyone. */
+  /** Its own bare foot, out in the cold. Dressed, it draws the foot in, and then only memory says who lies there. */
   private bareFoot(show: Show, person: Person, x: number, y: number): void {
     const { pen, ctx } = this, cold = show.cold === person.sleeper
     const curl = cold ? Math.sin(show.t * 9) * 0.5 : Math.sin(show.t * 0.9 + x) * 0.2
@@ -301,14 +316,9 @@ export class RoomView {
     ctx.save()
     ctx.translate(x + (cold ? Math.sin(show.t * 40) * 1.6 : 0), y)
     ctx.rotate(0.14 + (u < 1 ? Math.sin(u * Math.PI * 3) * 0.2 : 0))
-    const toes = steps(curl, 0.25)
-    this.sprites.stamp(`bare ${cold} ${toes}`, { left: -36, top: -44, width: 72, height: 80 }, cold ? 0.3 : 0.65, (to) => {
-      // The sole of it, seen from the end of the bed.
-      to.blob([-17, 24, -22, -2, -20, -24, 20, -24, 22, -2, 17, 24, 0, 30], C.blush, cold ? 3 : 2.4)
-      to.ell(0, 12, 9, 7, C.rose, 0)
-      to.ell(0, -12, 13, 7, C.rose, 0)
-      for (let i = -2; i <= 2; i++) to.ell(i * 10 + toes * 3, -30 + Math.abs(i + 0.5) * 2.6, i === -2 ? 7.4 : 5.6, 7, C.blush, 2)
-    })
+    const w = BUILD[person.sleeper].foot, size = Math.min(1.7, 74 / w)
+    ctx.scale(1, 1 + curl * 0.1)
+    this.sprites.stamp(`bare ${person.sleeper} ${cold}`, { left: -64, top: -64, width: 128, height: 84 }, cold ? 0.1 : 0.5, (to) => { to.ctx.scale(size, size); bareFoot(to, person.sleeper, 1, w) })
     ctx.restore()
     if (cold) {
       const s = show.t * 2 % 1
@@ -349,7 +359,7 @@ export class RoomView {
       to.ell(-4, 92, 4, 4, C.ivory, 2)
       to.blob([-62, 20, -66, -34, -30, -64, 10, -62, 56, -50, 70, -6, 58, 44, 10, 64, -36, 58], lit ? C.ivory : '#3a4a86', 2.6)
       to.ctx.scale(0.78, 0.78)
-      drawPiece(to, loved, 0, 0)
+      drawPiece(to, loved)
     })
     ctx.restore()
   }
@@ -394,7 +404,7 @@ export class RoomView {
         pen.ell(0, 0, 62, 66, '#ffdf8a', 0)
         ctx.globalAlpha = 1
       }
-      this.piece(garment, (1 - light) * clamp((piece.y - EDGE.from) / (EDGE.to - EDGE.from)) * 0.75, false)
+      this.piece(garment, (1 - light) * clamp((piece.y - EDGE.from) / (EDGE.to - EDGE.from)) * 0.5, false)
       ctx.restore()
     }
     pen.dark = 0
@@ -417,9 +427,9 @@ export class RoomView {
       ctx.restore()
     }
     ctx.translate(x + 8, y + 10 - press * 4 + (move.to === null && move.from.y === KNOB.y ? press * 26 : 0))
-    ctx.rotate(-0.18)
+    ctx.rotate(x > 1000 ? 0.18 : -0.18)
     const s = 1.15 - press * 0.12
-    ctx.scale(s, s)
+    ctx.scale(x > 1000 ? -s : s, s)
     this.sprites.stamp('ghost', { left: -36, top: -20, width: 100, height: 112 }, 0, (to) => {
       for (let i = 3; i >= 1; i--) to.box(-10 + i * 15, 14 + i * 3, 16, 46, 8, C.white, 2.6)
       to.box(-14, 34, 64, 54, 22, C.white, 2.6)
@@ -432,7 +442,7 @@ export class RoomView {
   /** A garment by itself, in its own colours or sunk into the dark. */
   private piece(garment: Garment, dark: number, hooked: boolean): void {
     const sunk = steps(dark, 0.25)
-    this.sprites.stamp(`piece ${garment} ${sunk} ${hooked}`, { left: -56, top: -68, width: 124, height: 140 }, sunk, (to) => drawPiece(to, garment, 0, 0, hooked))
+    this.sprites.stamp(`piece ${garment} ${sunk} ${hooked}`, { left: -56, top: -68, width: 124, height: 140 }, sunk, (to) => drawPiece(to, garment, hooked))
   }
 }
 

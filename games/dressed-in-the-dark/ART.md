@@ -89,8 +89,8 @@ Lacquer miniature: the first of the rows set aside for this game, kept after its
 
 A painted box lid, in two lights that are two different pictures.
 
-- **By night** the lid is mirror-black. Everything on it is only a fine gold line: five onion-arched beds, five equal domed quilts in fish scales, a wardrobe, a lamp, boughs. Set into it is the one lit thing, the window: a blue night, a gold moon with a face, and the clothes in their own colours on a line. A garment loses its colour as it is carried down past the sill and goes on as a gold line. One thing is warm in the dark: a bare foot.
-- **By lamp light** the ground is cinnabar and everything is a jewel: ivory goat, lapis hippo, saffron hen, emerald crocodile, rose pig, each closed by the same gold line. The beds stay black, so the figures are the lightest things in the picture. A cloth belongs to each bed.
+- **By night** the lid is mirror-black. Everything on it is only a fine gold line: five onion-arched beds, five equal domed quilts in fish scales, a wardrobe, a lamp, boughs. Set into it is the one lit thing, the window: a blue night, a gold moon with a face, and the clothes in their own colours on a line. A garment loses its colour as it is carried down past the sill and goes on as a gold line. One thing is warm in the dark: a bare foot, each sleeper's own, and it goes in once its owner is dressed.
+- **By lamp light** the ground is cinnabar and everything is a jewel: ivory goat, lapis hippo, saffron hen, emerald crocodile, rose pig, each closed by the same gold line. The beds stay dark, with a painted garland on each arch, so the figures are the lightest things in the picture. A cloth belongs to each bed.
 
 **The palette** is in `lacquer.ts` and nowhere else. Gold closes every shape and is never a fill larger than the cord's handle and the bell.
 

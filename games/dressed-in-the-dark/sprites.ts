@@ -25,10 +25,6 @@ export class Sprites {
     this.kept.clear()
   }
 
-  get size(): number {
-    return this.kept.size
-  }
-
   stamp(key: string, frame: Frame, dark: number, paint: (pen: Pen) => void): void {
     let canvas = this.kept.get(key)
     if (canvas) this.kept.delete(key)

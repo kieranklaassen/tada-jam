@@ -10,7 +10,8 @@ export const LANE = 800
 export const WINDOW = { x: 184, y: 14, width: 832, height: 312 } as const
 export const LINE = { y: 112, first: 236, pitch: 91, left: 138, right: 1066 } as const
 export const PIECE = { width: 88, height: 118 } as const
-export const MOON = { x: 600, y: 62, r: 40 } as const
+/** Clear of the shell's home control, which stands at the top centre. */
+export const MOON = { x: 800, y: 62, r: 40 } as const
 export const WARDROBE = { x: 8, y: 34, width: 150, height: 316 } as const
 export const LAMP = { x: 1106, y: 96 } as const
 export const KNOB = { x: 1106, y: 292, r: 30 } as const

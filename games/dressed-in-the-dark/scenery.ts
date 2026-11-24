@@ -88,25 +88,25 @@ function paintWindow(pen: Pen, lit: boolean): void {
   ctx.beginPath()
   ctx.roundRect(x, y, width, height, [70, 70, 10, 10])
   const sky = ctx.createLinearGradient(0, y, 0, y + height)
-  if (lit) { sky.addColorStop(0, '#16245c'); sky.addColorStop(1, '#2f58a8') }
-  else { sky.addColorStop(0, '#2a4aa0'); sky.addColorStop(0.6, '#5b8fd8'); sky.addColorStop(1, '#a9cdef') }
+  if (lit) { sky.addColorStop(0, '#101a48'); sky.addColorStop(1, '#22417f') }
+  else { sky.addColorStop(0, '#14225c'); sky.addColorStop(0.6, '#2c4d99'); sky.addColorStop(1, '#5c86c4') }
   ctx.fillStyle = sky
   ctx.fill()
   ctx.clip()
   const glow = ctx.createRadialGradient(MOON.x, MOON.y, 20, MOON.x, MOON.y, 360)
-  glow.addColorStop(0, lit ? 'rgba(255,226,150,0.55)' : 'rgba(255,236,180,0.95)')
+  glow.addColorStop(0, lit ? 'rgba(255,226,150,0.55)' : 'rgba(246,240,214,0.75)')
   glow.addColorStop(1, 'rgba(255,226,150,0)')
   ctx.fillStyle = glow
   ctx.fillRect(x, y, width, height)
   // Clouds in curls, hills, a far tree of gold.
-  for (const [cx, cy, s] of [[300, 78, 1], [860, 70, 1.1], [450, 246, 0.8], [770, 238, 0.9]] as const) {
-    ctx.save(); ctx.translate(cx, cy); ctx.scale(s, s); ctx.globalAlpha = 0.55
+  for (const [cx, cy, s] of [[300, 78, 1], [480, 84, 0.7], [920, 84, 0.6], [450, 246, 0.8], [770, 238, 0.9]] as const) {
+    ctx.save(); ctx.translate(cx, cy); ctx.scale(s, s); ctx.globalAlpha = 0.4
     pen.blob([-60, 10, -56, -10, -30, -12, -18, -32, 14, -26, 22, -12, 50, -14, 60, 8], '#e9f1fb', 1.6)
     pen.wire([-30, -2, -14, -14, 0, -4, -10, 4], 1.6)
     pen.wire([14, -4, 28, -12, 36, -2], 1.6)
     ctx.restore()
   }
-  const hill = lit ? ['#1c3a6e', '#173260'] : ['#3d6fb0', '#2d5892']
+  const hill = lit ? ['#152c56', '#11254a'] : ['#24457f', '#1c376a']
   pen.blob([x - 60, 340, x - 20, 286, 340, 258, 520, 296, 660, 290, 840, 250, 1060, 292, 1080, 340], hill[0], 1.8)
   pen.blob([x - 60, 350, x, 312, 300, 296, 470, 300, 620, 280, 800, 306, 1060, 296, 1080, 350], hill[1], 1.8)
   for (const [tx, ty] of [[250, 288], [276, 290], [920, 286], [944, 282], [966, 288]] as const) { pen.wire([tx, ty + 8, tx, ty - 8], 2.4); pen.ell(tx, ty - 18, 10, 14, hill[1], 1.6) }
@@ -153,7 +153,7 @@ export function bedPanel(pen: Pen, x: number, lit: boolean): void {
 }
 
 function paintBed(pen: Pen, x: number, lit: boolean, quilt: string): void {
-  const half = BED.width / 2, wood = lit ? '#1c0608' : '#0d0b12'
+  const half = BED.width / 2
   // The headboard: an onion arch.
   pen.ctx.beginPath()
   pen.ctx.moveTo(x - half, BED.foot - 20)
@@ -164,13 +164,19 @@ function paintBed(pen: Pen, x: number, lit: boolean, quilt: string): void {
   pen.ctx.quadraticCurveTo(x + half, BED.head + 18, x + half, BED.head + 62)
   pen.ctx.lineTo(x + half, BED.foot - 20)
   pen.ctx.closePath()
-  pen.paint(wood, 3)
+  pen.paint(lit ? '#17405a' : '#1b1d3c', 3)
   pen.ell(x, BED.head - 18, 7, 8, lit ? C.saffron : C.night, 2)
   pen.ctx.save()
   pen.ctx.globalAlpha = lit ? 0.9 : 0.4
   for (const side of [-1, 1]) pen.wire([x, BED.head + 34, x + side * 34, BED.head + 30, x + side * 66, BED.head + 44, x + side * 84, BED.head + 84, x + side * 70, BED.head + 78], 1.8)
   pen.ctx.restore()
-  pen.box(x - 70, BED.top - 6, 140, 62, 26, lit ? C.white : '#221e2c', 2.4)
+  // A painted garland: five flowers on the arch.
+  for (let i = -2; i <= 2; i++) {
+    const fx = x + i * 32, fy = BED.head + 46 + Math.abs(i) * 9
+    for (let k = 0; k < 5; k++) pen.ell(fx + Math.cos(k * 1.257) * 8, fy + Math.sin(k * 1.257) * 8, 5.4, 5.4, lit ? (i % 2 === 0 ? C.rose : C.cream) : '#2b2c52', 1.4)
+    pen.ell(fx, fy, 4.4, 4.4, C.gold, 0)
+  }
+  pen.box(x - 70, BED.top - 6, 140, 62, 26, lit ? C.white : '#34355e', 2.4)
   pen.box(x - half + 8, BED.top + 176, BED.width - 16, 96, 16, lit ? quilt : '#17141f', 2.2)
   pen.box(x - half + 8, BED.top + 164, BED.width - 16, 26, 12, lit ? C.ivory : '#221e2c', 2.2)
   pen.ctx.globalAlpha = lit ? 0.7 : 0.3

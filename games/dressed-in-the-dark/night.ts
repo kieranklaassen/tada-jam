@@ -1,4 +1,4 @@
-import { FIRST_OUT, GARMENTS, LOVES, SLEEPERS, verdictOf, type Garment, type Sleeper, type Verdict } from './things'
+import { FIRST_OUT, LOVES, SLEEPERS, verdictOf, type Garment, type Sleeper, type Verdict } from './things'
 
 // The rules, with no picture, sound or clock. A change is applied whole when it is made: a walk is over in here
 // from its first step, so a put-away in the middle of one finds it done. What the show plays comes back as events.
@@ -64,20 +64,6 @@ export class Night {
   /** Whether a garment is in the room at all: the last four are behind the wardrobe door until it is opened. */
   out(garment: Garment): boolean {
     return this.open || FIRST_OUT.includes(garment) || this.wearerOf(garment) !== null
-  }
-
-  onLine(garment: Garment): boolean {
-    return this.out(garment) && this.wearerOf(garment) === null
-  }
-
-  /** Nobody has anything on that was put on by the child. */
-  get bare(): boolean {
-    return GARMENTS.every((garment) => this.wearerOf(garment) === null)
-  }
-
-  last(sleeper: Sleeper): Garment | null {
-    const worn = this.worn[sleeper]
-    return worn.length > 0 ? worn[worn.length - 1] : null
   }
 
   /** A garment goes on whoever lies in that bed, over everything that one already wears. */

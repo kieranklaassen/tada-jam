@@ -226,28 +226,30 @@ export type Note = {
  */
 export function voiceOf(notes: readonly Note[]): Voice {
   return (context, out, at) => {
-    // One panner for each place in the voice. It is let go once the last note that goes through it is over.
-    const places = new Map<number, { node: StereoPannerNode; over: number }>()
-    const placed = (pan: number, over: number): AudioNode => {
-      if (pan === 0 || typeof context.createStereoPanner !== 'function') return out
-      let place = places.get(pan)
-      if (!place) {
-        const node = context.createStereoPanner()
-        node.pan.value = pan
-        node.connect(out)
-        places.set(pan, (place = { node, over: 0 }))
-      }
-      place.over = Math.max(place.over, over)
-      return place.node
-    }
     for (const note of notes) {
       const start = at + (note.delay ?? 0)
-      const to = placed(note.pan ?? 0, start + note.attack + note.decay)
+      const to = placed(context, out, note.pan ?? 0)
       if (note.kind === 'tone') tone(context, to, start, note.frequency, note.wave ?? 'sine', note.peak, note.attack, note.decay, note.glideTo)
       else noise(context, to, start, note.frequency, note.q ?? 1, note.peak, note.attack, note.decay, note.glideTo)
     }
-    for (const { node, over } of places.values()) setTimeout(() => node.disconnect(), (over - at + 0.3) * 1000)
   }
+}
+
+/** One panner for each place in a context, kept for as long as the context is: a game rounds its places to a few. */
+const places = new WeakMap<AudioNode, Map<number, AudioNode>>()
+
+function placed(context: AudioContext, out: AudioNode, pan: number): AudioNode {
+  if (pan === 0 || typeof context.createStereoPanner !== 'function') return out
+  let kept = places.get(out)
+  if (!kept) places.set(out, (kept = new Map()))
+  let node = kept.get(pan)
+  if (!node) {
+    const panner = context.createStereoPanner()
+    panner.pan.value = pan
+    panner.connect(out)
+    kept.set(pan, (node = panner))
+  }
+  return node
 }
 
 /** The blank surface's answer to a touch. A game replaces it with its own voices. */

@@ -49,6 +49,15 @@ export function drawHat(pen: Pen, garment: Garment, w: number, pop: number, time
     pen.blob([-h * 0.3, -w * 0.24, -h * 0.52 + lean, -up * 0.7, -h * 0.3 + lean * 1.4, -up - 8, lean * 1.5 - h * 0.02, -up * 0.75, -h * 0.16, -w * 0.28], colour, 1.8)
     pen.wire([-h * 0.28, -w * 0.28, -h * 0.28 + lean * 0.7, -up * 0.6, -h * 0.28 + lean * 1.2, -up * 0.9], 1.6)
   }
+  // One of them comes loose and drifts down past the nose.
+  if (pop > 0) {
+    ctx.save()
+    ctx.translate(Math.sin(pop * Math.PI * 4) * w * 0.4, -w * 0.5 + pop * w * 1.6)
+    ctx.rotate(Math.cos(pop * Math.PI * 4) * 0.9)
+    pen.blob([0, -w * 0.3, w * 0.12, -w * 0.06, 0, w * 0.2, -w * 0.12, -w * 0.06], C.turquoise, 1.8)
+    pen.wire([0, w * 0.26, 0, 0, 0, -w * 0.24], 1.6)
+    ctx.restore()
+  }
 }
 
 /** A body garment on a body `w` wide whose shoulders are at y = 0 and whose hips are at y = `h`. */
@@ -128,24 +137,24 @@ export function drawFoot(pen: Pen, garment: Garment, w: number, side: number, po
 }
 
 /** A garment by itself, as it hangs or is carried, in a frame about 84 wide and 110 high round 0,0. */
-export function drawPiece(pen: Pen, garment: Garment, time: number, pop = 0, hooked = false): void {
+export function drawPiece(pen: Pen, garment: Garment, hooked = false): void {
   const ctx = pen.ctx, slot = SLOT[garment]
   ctx.save()
   // The hook it hangs by.
   if (hooked && slot !== 'feet') pen.wire([0, -64, 0, slot === 'head' ? -16 : -34], 2.2)
   if (slot === 'head') {
     ctx.translate(garment === 'pan' ? -14 : 0, garment === 'feather' ? 32 : 24)
-    drawHat(pen, garment, garment === 'feather' ? 66 : 70, pop, time)
+    drawHat(pen, garment, garment === 'feather' ? 66 : 70, 0, 0)
   } else if (slot === 'body') {
     const tutu = garment === 'tutu'
     ctx.translate(0, tutu ? -36 : -46)
-    drawBody(pen, garment, garment === 'gown' ? 62 : tutu ? 50 : 64, garment === 'gown' ? 78 : tutu ? 74 : 88, pop, time)
+    drawBody(pen, garment, garment === 'gown' ? 62 : tutu ? 50 : 64, garment === 'gown' ? 78 : tutu ? 74 : 88, 0, 0)
   } else {
     for (const side of [-1, 1]) {
       ctx.save()
       ctx.translate(side * 22, 34 + side * 3)
       ctx.rotate(side * 0.1)
-      drawFoot(pen, garment, garment === 'slippers' ? 42 : 40, side, pop, time, false)
+      drawFoot(pen, garment, garment === 'slippers' ? 42 : 40, side, 0, 0, false)
       ctx.restore()
     }
     const tie = hooked ? -62 : -26
