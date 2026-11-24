@@ -20,6 +20,10 @@ export type Town = {
   /** The column each snack lies at, or null at home on its sill. */
   snacks: Record<Snack, number | null>
   coats: Record<Animal, Coat>
+  /** The last bell did not bring what the mole would like. */
+  unmet: boolean
+  /** Everybody is back as before that bell and nothing is changed yet: ringing again would bring the same. */
+  stale: boolean
 }
 
 export type Event =
@@ -58,6 +62,8 @@ export function freshTown(childAge: number | null): Town {
     hidden: null,
     snacks: { carrot: null, cheese: null, bun: null },
     coats: { pig: 'clean', elephant: 'clean', cat: 'clean', mouse: 'clean', goat: 'clean', giraffe: 'clean' },
+    unmet: false,
+    stale: false,
   }
 }
 
@@ -164,9 +170,10 @@ export function tapAnimal(town: Town, who: Animal): Event[] {
 
 /** A tap on a snack: to the first open picture, then the next along, then home. */
 export function tapSnack(town: Town, snack: Snack): Event[] {
+  const out = sweep(town)
   const from = town.snacks[snack] ?? -1
-  for (let col = from + 1; col < COLUMNS; col++) if (town.ballot[col]) return bait(town, snack, col)
-  return snackHome(town, snack)
+  for (let col = from + 1; col < COLUMNS; col++) if (town.ballot[col]) return [...out, ...bait(town, snack, col)]
+  return [...out, ...snackHome(town, snack)]
 }
 
 /** Let go over a column. */
@@ -271,6 +278,8 @@ export function ring(town: Town): { events: Event[]; result: Result | null } {
   for (const who of here(town)) town.coats[who] = coatAfter(town.coats[who], won)
   town.finished = true
   town.fresh = met
+  town.unmet = !met
+  town.stale = false
   if (met) town.position = nextWish(town.position)
   return { events, result }
 }

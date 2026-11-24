@@ -12,7 +12,7 @@ const isRecord = (value: unknown): value is Record<string, unknown> => typeof va
 const isThing = (value: unknown): value is Thing => THINGS.includes(value as Thing)
 
 export function serialize(town: Town): Saved {
-  return { v: SAVE_VERSION, position: town.position, finished: town.finished, fresh: town.fresh, count: town.count, ballot: town.ballot, columns: town.columns, hidden: town.hidden, snacks: town.snacks, coats: town.coats }
+  return { v: SAVE_VERSION, position: town.position, finished: town.finished, fresh: town.fresh, count: town.count, ballot: town.ballot, columns: town.columns, hidden: town.hidden, snacks: town.snacks, coats: town.coats, unmet: town.unmet, stale: town.stale }
 }
 
 export function deserialize(raw: unknown, childAge: number | null): Town {
@@ -49,5 +49,10 @@ export function deserialize(raw: unknown, childAge: number | null): Town {
   // A vote that was read has everyone in it but the one who was hidden.
   town.finished = raw.finished === true && onGround(town).length === 0
   town.fresh = town.finished && raw.fresh === true
+  // What the mole would like can be brought about by those who are in town.
+  if (!town.fresh) town.count = Math.max(town.count, WISHES.find((w) => w.id === town.position)!.count)
+  if (onGround(town).length) town.finished = town.fresh = false
+  town.unmet = town.finished ? !town.fresh : raw.unmet === true
+  town.stale = raw.stale === true && town.unmet && !town.finished && onGround(town).length === 0
   return town
 }

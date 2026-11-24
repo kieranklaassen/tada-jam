@@ -244,9 +244,9 @@ const HEAD_SPLATS: Record<Animal, [number, number, number][]> = {
   giraffe: [[-4, -70, 13], [16, -178, 10], [4, -24, 12]],
 }
 
-const MUD: Lay = { size: 6, colors: ['#6b4426', '#7a4f2c', '#5f3b20'], edge: '#45290f', glass: 5, vary: 0.04 }
+const MUD: Lay = { size: 6, colors: ['#6b4426', '#704829'], edge: '#5a371b', glass: 5, vary: 0.02 }
 const FIZZ: Lay = { size: 6, colors: ['#b08a5e', '#c19c70', '#a37d52'], edge: '#7d5c38', glass: 9, vary: 0.05 }
-const FOAM: Lay = { size: 6, colors: ['#f4fbfb', '#e2f2f4', '#d3e9ef'], edge: '#9cc4d2', glass: 9, vary: 0.03 }
+const FOAM: Lay = { size: 6, colors: ['#f4fbfb', '#e8f5f6'], edge: '#b4d6e0', grout: '#dcedf1', glass: 9, vary: 0.015 }
 const splat = (ctx: Ctx, rng: Rng, x: number, y: number, r: number, how: Lay) => {
   const p: number[] = []
   for (let i = 0; i < 9; i++) { const a = (i / 9) * Math.PI * 2, d = r * (0.75 + rng.next() * 0.5); p.push(x + Math.cos(a) * d, y + Math.sin(a) * d * 0.85) }
@@ -263,18 +263,21 @@ const spatter = (c: Ctx, r: Rng, coat: Coat, at: readonly [number, number, numbe
   if (coat !== 'clean' && coat !== 'bubbly') for (const [x, y, k] of at) splat(c, r, x, y, k * 0.9, coat === 'muddy' ? MUD : FIZZ)
 }
 /** Every body, head and square in every coat, laid as one picture. */
-export const BODY = coats((coat) => of((who) => sprite(`body-${who}-${coat}`, ...boxes[who], (c, r) => {
-  BODIES[who](c, r)
+export const BODY: Record<Coat, Record<Animal, Sprite>> = coats((coat) => of((who) => sprite(`body-${who}-${coat}`, ...boxes[who], (c, r, under) => {
+  if (coat === 'clean') BODIES[who](c, r)
+  else under(BODY.clean[who])
   spatter(c, r, coat, SPLATS[who])
   if (coat === 'bubbly') for (const [x, y, k] of SPLATS[who].slice(0, 3)) foam(c, r, x, y + 10, k * 0.6)
 })))
-export const HEAD = coats((coat) => of((who) => sprite(`head-${who}-${coat}`, ...headBoxes[who], (c, r) => {
-  HEADS[who](c, r)
+export const HEAD: Record<Coat, Record<Animal, Sprite>> = coats((coat) => of((who) => sprite(`head-${who}-${coat}`, ...headBoxes[who], (c, r, under) => {
+  if (coat === 'clean') HEADS[who](c, r)
+  else under(HEAD.clean[who])
   spatter(c, r, coat, HEAD_SPLATS[who])
   if (coat === 'bubbly' || coat === 'fizzy') foam(c, r, 0, TOPS[who], who === 'mouse' ? 12 : 17)
 })))
-export const SQUEEZED = coats((coat) => of((who) => sprite(`square-${who}-${coat}`, -66, -56, 132, 100, (c, r) => {
-  SQUARES[who](c, r)
+export const SQUEEZED: Record<Coat, Record<Animal, Sprite>> = coats((coat) => of((who) => sprite(`square-${who}-${coat}`, -66, -56, 132, 100, (c, r, under) => {
+  if (coat === 'clean') SQUARES[who](c, r)
+  else under(SQUEEZED.clean[who])
   spatter(c, r, coat, [[-24, 26, 11], [25, -24, 10], [22, 30, 8]])
   if (coat === 'bubbly') { foam(c, r, 4, -36, 11); foam(c, r, -26, 28, 8) }
 })))
@@ -290,11 +293,11 @@ export const slab = (ctx: Ctx, color: string): void => {
 const things = <T>(make: (t: Thing) => T): Record<Thing, T> => Object.fromEntries(THINGS.map((t) => [t, make(t)])) as Record<Thing, T>
 export const SLAB = things((t) => sprite(`slab-${t}`, -CELL / 2, -CELL / 2, CELL, CELL, (c) => slab(c, HUES[t])))
 /** What is left on the wall while its animal is elsewhere: the slab with its face. */
-export const PORTRAIT = things((t) => of((who) => sprite(`portrait-${t}-${who}`, -CELL / 2, -CELL / 2, CELL, CELL, (ctx, rng) => {
+export const PORTRAIT = things((t) => of((who) => sprite(`portrait-${t}-${who}`, -CELL / 2, -CELL / 2, CELL, CELL, (ctx, _rng, under) => {
   slab(ctx, HUES[t])
   ctx.save()
   ctx.scale(0.72, 0.72)
-  SQUARES[who](ctx, rng)
+  under(SQUEEZED.clean[who])
   whites(ctx, FACES[who].square.eyes)
   pupils(ctx, FACES[who].square.eyes)
   ctx.restore()
@@ -371,7 +374,7 @@ export function drawMouth(ctx: Ctx, stamps: Stamps, m: { x: number; y: number; w
 
 // --- the mole ---------------------------------------------------------------
 
-const MOLE_SKIN: Skin = skin(8, ['#4f4354', '#5a4d5f', '#463a4b'], '#262029', '#6d5f73')
+const MOLE_SKIN: Skin = skin(8, ['#7d6f80', '#887989', '#746678'], '#40364a', '#9a8b9c')
 export const MOLE_SPRITE = sprite('mole', -62, -62, 124, 112, (ctx, rng) => {
   lay(ctx, rng, blob(-40, 50, -50, 0, -30, -46, 0, -56, 30, -46, 50, 0, 40, 50), MOLE_SKIN)
   lay(ctx, rng, oval(0, 6, 17, 13), { size: 6, colors: ['#e7a19b', '#dd918c'], edge: '#a6565a' })

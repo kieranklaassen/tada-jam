@@ -80,7 +80,7 @@ describe('the mount', () => {
   })
 
   it('sends a tapped animal to its column and saves it there', () => {
-    tap(94, 700)
+    tap(108, 700)
     run(1)
     expect(last().columns).toEqual([[], ['pig'], []])
   })
@@ -101,7 +101,7 @@ describe('the mount', () => {
     }
   })
   it('asks for no frames while parked, and hands the newest state over on the way', async () => {
-    tap(94, 700)
+    tap(108, 700)
     tap(148, 500)
     run(0.1)
     await show(false)

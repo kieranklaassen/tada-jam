@@ -33,7 +33,7 @@ describe('voices', () => {
   it('has a sound of its own for every animal in everything, and every pair', () => {
     const heard = new Set<string>()
     for (const thing of THINGS) for (const who of ANIMALS) {
-      const notes = voiceOfCue({ type: 'turnOf', who, n: 0 }, [thing], [], 0)
+      const notes = voiceOfCue({ type: 'turnOf', who, n: 0, round: 0 }, [thing], [], 0)
       sound(notes)
       heard.add(JSON.stringify(notes))
     }

@@ -12,13 +12,13 @@ export const COLX = [430, 590, 750] as const
 export const ROWS = 6
 export const cellAt = (col: number, row: number): Point => ({ x: COLX[col], y: BASE - CELL * (row + 0.5) })
 
-export const PLAQUE = { y: 640, r: 56 } as const
+export const PLAQUE = { y: 634, r: 56 } as const
 export const plaqueAt = (slot: number): Point => ({ x: COLX[slot], y: PLAQUE.y })
 
 /** Each animal's own place: the ground between its feet, and how large it stands there. */
 export const SPOTS: Record<Animal, { x: number; y: number; w: number; h: number; face: 1 | -1 }> = {
   elephant: { x: 148, y: 606, w: 214, h: 236, face: 1 },
-  pig: { x: 94, y: 762, w: 150, h: 136, face: 1 },
+  pig: { x: 108, y: 762, w: 150, h: 136, face: 1 },
   mouse: { x: 236, y: 764, w: 104, h: 124, face: 1 },
   giraffe: { x: 1082, y: 616, w: 140, h: 340, face: -1 },
   cat: { x: 896, y: 762, w: 124, h: 176, face: -1 },
@@ -26,10 +26,10 @@ export const SPOTS: Record<Animal, { x: number; y: number; w: number; h: number;
 }
 
 /** Where each one's thought of what it would like hangs, while it waits on the ground. */
-export const THOUGHTS: Record<Animal, Point> = { elephant: { x: 292, y: 392 }, pig: { x: 36, y: 628 }, mouse: { x: 312, y: 652 }, giraffe: { x: 1152, y: 262 }, cat: { x: 968, y: 556 }, goat: { x: 1148, y: 580 } }
+export const THOUGHTS: Record<Animal, Point> = { elephant: { x: 292, y: 392 }, pig: { x: 33, y: 594 }, mouse: { x: 312, y: 652 }, giraffe: { x: 1152, y: 262 }, cat: { x: 968, y: 556 }, goat: { x: 1146, y: 536 } }
 
 /** The wide mouth of the basket, and the ground under it. */
-export const BASKET = { x: 590, y: 772, w: 130, h: 70 } as const
+export const BASKET = { x: 590, y: 786, w: 130, h: 70 } as const
 export const basketTop: Point = { x: BASKET.x, y: BASKET.y - BASKET.h }
 
 export const SILL_Y = 262

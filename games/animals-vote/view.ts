@@ -2,13 +2,13 @@ import { BODY, EYES, FACES, FIRST_SPRITES, HEAD, LATER_SPRITES, MOLE_EYES, MOLE_
 import { handPose, type Guidance, type HandPose } from './guidance'
 import { hintFor } from './guide'
 import type { Point } from './input'
-import { BASKET, BELL, BOARD, CELL, MOLE, SNACK_HOME, SPOTS, THOUGHTS, basketTop, cellAt, plaqueAt, snackAt } from './layout'
+import { BASE, BASKET, BELL, BOARD, CELL, COLX, MOLE, SNACK_HOME, SPOTS, THOUGHTS, basketTop, cellAt, plaqueAt, snackAt } from './layout'
 import { poseOf, ring, strength, type Pose } from './motion'
 import { Stamps, surface, type Ctx, type Sprite } from './mosaic'
 import { RESULT, MET_AT, type Cue, type Play, type Poke } from './play'
 import { ANIMALS, SNACKS, wishAt, type Animal, type Coat, type Snack, type Thing } from './things'
 import { choice, columnOf, hasTools, here, onGround, tallest, type Event } from './town'
-import { BALLOON, BIG_BUBBLE, BASKET_BACK, BASKET_FRONT, BASKET_LID, BELL_BEAM, BELL_SPRITE, BOARD_SPRITE, DOT, DRUM, FIRST_PROPS, GHOST, GLOW, LATER_PROPS, MOON, PILLOW, PLAQUES, PUDDLE, SHUT, SNACK_ART, TRIO, TUB, WANT, WISH_ART, paintSquare } from './scenery'
+import { BALLOON, BIG_BUBBLE, BASKET_BACK, BASKET_FRONT, BASKET_LID, BELL_BEAM, BELL_SPRITE, BOARD_SPRITE, DOT, DRUM, FIRST_PROPS, GHOST, GLOW, LATER_PROPS, MOON, PILLOW, PLAQUES, PUDDLE, SHUT, SHUTTER, SNACK_ART, TRIO, TUB, WANT, WISH_ART, paintSquare } from './scenery'
 
 // Draws the square from the rules, and keeps what is only to be seen: hops,
 // springs and falling stones. Nothing here is saved and nothing decides.
@@ -65,7 +65,7 @@ export class View {
   }
 
   /** Lays a few of the pictures that are not needed yet. */
-  warmSome(n = 2): void {
+  warmSome(n = 1): void {
     for (const s of this.later.splice(0, n)) this.stamps.warm(s)
   }
 
@@ -77,7 +77,7 @@ export class View {
       case 'animal': if (this.seen) this.seen[t.who].poked = 0; break
       case 'bell': if (this.bell > 2) this.bell = 0.9; break
       case 'mole': this.mole = 0; break
-      case 'snack': this.pushed.set(t.snack, 0); break
+      case 'snack': this.pushed.set(t.snack, 0); if (this.moleWith?.snack === t.snack) this.moleWith = null; break
       case 'plaque': this.pushed.set(`plaque${t.slot}`, 0); break
       case 'basket': this.pushed.set('basket', 0); break
       case 'column': case 'square': this.bits.push({ x: p.at.x, y: p.at.y, t: 0 }); if (this.bits.length > 3) this.bits.shift(); break
@@ -90,13 +90,14 @@ export class View {
       case 'arrive': if (this.seen) { const s = this.seen[e.who]; s.x = SPOTS[e.who].x < 590 ? -220 : 1400; s.y = SPOTS[e.who].y; s.s = 1; this.go(s, 1.1, 60) } break
       case 'bounce': if (this.seen) this.seen[e.who].cross = 0; break
       case 'bait': this.flying.push({ snack: e.snack, from: this.snackFrom(e.snack), t: 0, how: 'bait', seconds: 0.35 }); break
-      case 'home': this.flying.push({ snack: e.snack, from: this.snackFrom(e.snack), t: 0, how: 'home', seconds: 0.6 }); break
+      case 'home': if (this.moleHas(e.snack)) break; this.flying.push({ snack: e.snack, from: this.snackFrom(e.snack), t: 0, how: 'home', seconds: 0.6 }); break
       case 'eat': if (this.seen) { this.seen[e.who].eating = 0; this.snackDone(e.snack) } break
       case 'spit': if (this.seen) { const s = this.seen[e.who]; s.spitting = 0; this.flying.push({ snack: e.snack, from: { x: s.x, y: s.y - 60 }, t: -0.35, how: 'home', seconds: 0.7 }) } break
       case 'turn': this.flip[e.slot] = 0; break
       case 'sweep': for (const w of e.was) { const c = cellAt(w.col, w.row); this.falling.push({ sprite: PORTRAIT[w.thing][w.who], x: c.x, y: c.y, vx: ((w.row * 37 + w.col * 53) % 60) - 30, t: -w.row * 0.04 }) } break
       case 'out': case 'hide': this.pushed.set('basket', 0); break
-      case 'up': case 'down': case 'fall': case 'return': break
+      case 'up': if (e.baited && this.seen) this.seen[e.who].eating = -0.5; break
+      case 'down': case 'fall': case 'return': break
       default: e satisfies never
     }
   }
@@ -115,11 +116,22 @@ export class View {
       case 'row': this.rowAt = { row: c.row, t: 0 }; break
       case 'tall': this.tall = { cols: c.cols, t: 0 }; break
       case 'met': this.wishSwap = 0; this.mole = 0; break
-      case 'mole': this.moleWith = { snack: c.snack, t: 0 }; break
+      case 'mole': this.handBack(); this.moleWith = { snack: c.snack, t: 0 }; break
       case 'rush': case 'result': case 'turnOf': case 'end': case 'back': break
       default: c satisfies never
     }
   }
+  moleHas(snack: Snack): boolean {
+    return this.moleWith?.snack === snack
+  }
+  private handBack(): void {
+    if (!this.moleWith) return
+    this.flying.push({ snack: this.moleWith.snack, from: { x: MOLE.x, y: MOLE.y }, t: 0, how: 'home', seconds: 0.7 })
+    this.sentHome.push(this.moleWith.snack)
+    this.moleWith = null
+  }
+  /** Snacks the mole has just let go, for the voices. */
+  sentHome: Snack[] = []
   private rowAt = { row: -1, t: LONG }
 
   // --- time --------------------------------------------------------------------
@@ -137,7 +149,11 @@ export class View {
     switch (place.kind) {
       case 'ground': return { x: SPOTS[who].x, y: SPOTS[who].y, s: 1 }
       case 'cell': { const c = cellAt(place.col, place.row); return { x: c.x, y: c.y + CELL / 2, s: (CELL * 0.9) / SPOTS[who].h } }
-      case 'basket': return { x: basketTop.x, y: basketTop.y + 60, s: Math.min(0.62, 110 / SPOTS[who].w) }
+      case 'basket': {
+        // Its head over the rim and its feet inside, whatever its size.
+        const s = Math.min(0.6, 95 / SPOTS[who].w, 150 / SPOTS[who].h)
+        return { x: basketTop.x, y: Math.min(BASKET.y - 6, basketTop.y - 32 + SPOTS[who].h * s), s }
+      }
       case 'hand': return { x: this.lastHand.x, y: this.lastHand.y + SPOTS[who].h * HAND_SCALE * 0.5, s: HAND_SCALE }
       default: return place satisfies never
     }
@@ -152,10 +168,7 @@ export class View {
     if (play.hand) this.lastHand = play.hand
     this.bell += dt; this.mole += dt; this.wishSwap += dt; this.tall.t += dt; this.rowAt.t += dt
     for (const [k, t] of this.pushed) this.pushed.set(k, t + dt)
-    if (this.moleWith && (this.moleWith.t += dt) > 2.2) {
-      this.flying.push({ snack: this.moleWith.snack, from: { x: MOLE.x, y: MOLE.y }, t: 0, how: 'home', seconds: 0.7 })
-      this.moleWith = null
-    }
+    if (this.moleWith && (this.moleWith.t += dt) > 2.2) this.handBack()
     this.ballot ??= [...town.ballot]
     for (let i = 0; i < 3; i++) {
       this.flip[i] += dt
@@ -211,7 +224,11 @@ export class View {
     const read = town.finished && (!show || show.t >= show.tallAt), winners = read ? tallest(town) : []
     for (let i = 0; i < 3; i++) {
       const up = town.ballot[i] !== null && winners.includes(town.ballot[i]!)
-      if (up) this.crownY[i] = Math.max(104, cellAt(i, town.columns[i].length).y - 24)
+      if (up) {
+        // On top of its column; beside it where the column reaches the top of the wall.
+        const full = town.columns[i].length > 5
+        this.crownAt[i] = { x: COLX[i] + (full ? (i < 2 ? 102 : -102) : 0), y: full ? cellAt(i, 5).y : cellAt(i, town.columns[i].length).y - 24 }
+      }
       this.crown[i] = this.fresh ? (up ? 1 : 0) : clamp(this.crown[i] + dt * (up ? 1.6 : -3))
     }
     this.fresh = false
@@ -242,7 +259,14 @@ export class View {
     const t = show ? Math.max(0, show.into) : 0, k = won.length ? strength(t, RESULT) : 0
     const left = town.finished && !show ? tallest(town) : []
 
-    this.drawBell(ctx, !show && (town.finished || (onGround(town).length === 0 && !play.stale)))
+    if (!tools) stamps.stamp(ctx, SHUTTER)
+    // The foot of each open column on the base line.
+    ctx.fillStyle = '#d9c38c'
+    ctx.beginPath()
+    for (let slot = 0; slot < (tools ? 3 : 2); slot++) ctx.rect(COLX[slot] - CELL / 2, BASE, CELL, 5)
+    ctx.fill()
+    stamps.count++
+    this.drawBell(ctx, !show && (town.finished || (onGround(town).length === 0 && !play.town.stale)))
     this.drawMole(ctx, play, won, t, k, left)
     for (let slot = 0; slot < 3; slot++) if ((slot < 2 || tools) && this.crown[slot] === 0) this.drawPlaque(ctx, slot)
     // The graph.
@@ -269,7 +293,7 @@ export class View {
     if (tools) this.drawBasketFront(ctx, play)
     if (won.includes('dance')) {
       const b = Math.abs(Math.sin(this.time * Math.PI * 2)) * 0.1 * k
-      stamps.stamp(ctx, DRUM, 452, 806, 0, k * (1 + b), k * (1 - b))
+      stamps.stamp(ctx, DRUM, 590, 812, 0, k * 1.7 * (1 + b), k * 1.5 * (1 - b))
     }
     // Whoever is out, the furthest first.
     const out = here(town).filter((who) => { const s = this.seen![who]; return s.place.kind === 'ground' || (s.hop !== null && s.hop.arc !== 0 && s.place.kind === 'cell') })
@@ -297,7 +321,9 @@ export class View {
   private drawMole(ctx: Ctx, play: Play, won: readonly Thing[], t: number, k: number, left: readonly Thing[]): void {
     const { stamps } = this
     let y = 6 + ring(this.mole, 16, 4) * -14 + Math.sin(this.time * 1.3) * 1.5, rot = 0, lid = this.time % 4.1 < 0.14 ? 0 : 1
-    let mouth: Mouth = 'smile'
+    let mouth: Mouth = 'smile', gaze = play.hand ? { x: clampUnit(play.hand.x - MOLE.x), y: clampUnit(play.hand.y - MOLE.y) } : { x: -0.4, y: 0.4 }
+    // Something else happened, and it still would like its own.
+    if (play.town.stale || (play.town.finished && !play.town.fresh && !play.show)) { mouth = 'frown'; gaze = { x: 0, y: 1 } }
     if (won.includes('dance')) { rot = Math.sin(t * 6) * 0.2 * k; y -= Math.abs(Math.sin(t * 6)) * 10 * k }
     if (won.includes('sleep') && k > 0.3) { lid = 0; mouth = 'round'; y += 10 * k }
     if (won.includes('fly')) y -= 30 * k + Math.sin(t * 2) * 8 * k
@@ -315,7 +341,7 @@ export class View {
     ctx.scale(1 / s, s)
     if (won.includes('fly') && k > 0.1) stamps.stamp(ctx, BALLOON[1], 34, -86 * k, 0.2, 0.62 * k)
     stamps.stamp(ctx, MOLE_SPRITE)
-    drawEyes(ctx, stamps, MOLE_EYES, play.hand ? clampUnit(play.hand.x - MOLE.x) : -0.4, play.hand ? clampUnit(play.hand.y - MOLE.y) : 0.4, this.moleWith?.snack === 'bun' ? 0.5 : lid)
+    drawEyes(ctx, stamps, MOLE_EYES, gaze.x, gaze.y, this.moleWith?.snack === 'bun' ? 0.5 : lid)
     drawMouth(ctx, stamps, MOLE_FACE.mouth, this.moleWith?.snack === 'carrot' ? (Math.sin(this.time * 20) > 0 ? 'open' : 'line') : mouth)
     const wet = won.length && k > 0.2 ? won : left
     if (wet.includes('mud')) { stamps.stamp(ctx, DOT.mud, -24, -32, 0, 0.8); stamps.stamp(ctx, DOT.mud, 30, 6, 1, 0.7) }
@@ -329,7 +355,7 @@ export class View {
     const asked = play.show && !(play.show.result.met && play.show.into >= MET_AT) ? play.show.result.before.position : play.town.position
     const wish = wishAt(asked).wish, by = BOARD.y + ring(this.mole, 14, 5) * 5 - ring(this.wishSwap, 12, 3) * 16 + Math.sin(this.time * 1.6) * 2
     // Still thinking of it, when something else has happened.
-    const still = play.stale || (play.town.finished && !play.town.fresh && !play.show) ? Math.max(0, Math.sin(this.time * 3)) * 0.09 : 0
+    const still = play.town.stale || (play.town.finished && !play.town.fresh && !play.show) ? Math.max(0, Math.sin(this.time * 3)) * 0.09 : 0
     stamps.stamp(ctx, BOARD_SPRITE, BOARD.x, by, 0, 1 + still)
     const n = wish.length, size = (n === 1 ? 0.88 : n === 2 ? 0.56 : 0.46) * (1 + still)
     const at = n === 1 ? [[0, 0]] : n === 2 ? [[-26, 0], [26, 0]] : [[-24, -20], [24, -20], [0, 22]]
@@ -339,13 +365,13 @@ export class View {
 
   /** What won climbs from under its column onto the top of it, and stays there for as long as the vote is on the wall. */
   private crown = [0, 0, 0]
-  private crownY = [0, 0, 0]
+  private crownAt: Point[] = [plaqueAt(0), plaqueAt(1), plaqueAt(2)]
   private drawPlaque(ctx: Ctx, slot: number): void {
     const p = plaqueAt(slot), thing = this.ballot![slot]
     const flip = this.flip[slot] < 0.4 ? Math.abs(Math.cos((this.flip[slot] / 0.4) * Math.PI)) : 1
-    const c = this.crown[slot], swell = Math.sin(clamp(c) * Math.PI) * 0.35
+    const c = this.crown[slot], half = Math.abs(c * 2 - 1), swell = c > 0.5 && c < 1 ? Math.sin(half * Math.PI) * 0.3 : 0
     const k = 1 + ring(this.pushed.get(`plaque${slot}`) ?? LONG) * -0.1 + swell
-    this.stamps.stamp(ctx, thing ? PLAQUES[thing] : SHUT, p.x, p.y + (this.crownY[slot] - p.y) * ease(clamp(c)), 0, Math.max(0.04, flip) * k, k)
+    this.stamps.stamp(ctx, thing ? PLAQUES[thing] : SHUT, c > 0.5 ? this.crownAt[slot].x : p.x, c > 0.5 ? this.crownAt[slot].y : p.y, 0, Math.max(0.04, flip) * k * Math.max(0.04, ease(half)), k * Math.max(0.04, ease(half)))
   }
 
   private drawSquare(ctx: Ctx, play: Play, who: Animal, s: Seen, col: number): void {
@@ -359,7 +385,7 @@ export class View {
     this.stamps.stamp(ctx, SQUEEZED[this.coat(play, who)][who])
     const f = FACES[who].square
     drawEyes(ctx, this.stamps, EYES[who].square, s.gx, s.gy, s.landed < 0.25 ? 0.4 : 1)
-    const mouth: Mouth = hop > 0.1 || s.poked < 0.3 ? 'open' : s.landed < 0.35 ? 'wave' : s.eating < 0.8 ? 'open' : who === 'cat' || who === 'goat' ? 'line' : who === 'elephant' ? 'wave' : 'smile'
+    const mouth: Mouth = hop > 0.1 || s.poked < 0.3 ? 'open' : s.landed < 0.35 ? 'wave' : s.eating > 0 && s.eating < 0.9 ? (Math.sin(s.eating * 24) > 0 ? 'open' : 'line') : choice(play.town, who) !== col ? 'frown' : who === 'cat' || who === 'goat' ? 'line' : 'smile'
     drawMouth(ctx, this.stamps, f.mouth, mouth)
     ctx.restore()
   }
@@ -369,13 +395,13 @@ export class View {
     const settled = s.place.kind === 'ground' && !s.hop
     const pose: Pose = poseOf(who, this.time, settled ? won : [], t, settled ? k : 0)
     const squash = ring(s.poked, 24, 7) * -0.12 + ring(s.landed, 18, 6) * 0.14
-    const eat = s.eating < 1 ? Math.sin(s.eating * 22) * 0.5 + 0.5 : 0
+    const eat = s.eating > 0 && s.eating < 1 ? Math.sin(s.eating * 22) * 0.5 + 0.5 : 0
     const acting = settled && won.length > 0 && k > 0.05
     const x = s.x + pose.x * s.s, y = s.y + pose.y * s.s
     // It leans to the picture it would run to.
     const lean = settled && !play.town.finished ? Math.sign(plaqueAt(choice(play.town, who)).x - s.x) * 0.05 : 0
     if (acting && won.includes('sleep')) stamps.stamp(ctx, PILLOW, s.x - spot.face * spot.w * 0.2, s.y, 0, k)
-    if (acting && won.includes('mud')) stamps.stamp(ctx, PUDDLE, s.x, s.y, 0, k * (spot.w / 170), k * (spot.w / 130))
+    if (acting && won.includes('mud') && !(won.includes('sleep') && won.includes('fly'))) stamps.stamp(ctx, PUDDLE, s.x, s.y, 0, k * (spot.w / 170), k * (spot.w / 130))
     if (settled && left.length) this.drawLeft(ctx, who, left)
     ctx.save()
     if (acting && won.includes('mud') && who === 'mouse' && !won.includes('fly')) {
@@ -399,7 +425,7 @@ export class View {
     stamps.stamp(ctx, HEAD[coat][who])
     const lid = s.cross < 0.5 ? 0.5 : s.place.kind === 'hand' ? 1 : pose.lid
     drawEyes(ctx, stamps, EYES[who].big, acting ? pose.gx || s.gx * 0.6 : s.gx, acting ? pose.gy || s.gy * 0.6 : s.gy, lid)
-    drawMouth(ctx, stamps, f.mouth, s.poked < 0.35 ? 'open' : s.eating < 1 ? (eat > 0.5 ? 'open' : 'line') : s.spitting < 0.6 || s.cross < 0.6 ? 'frown' : s.place.kind === 'hand' ? 'round' : pose.mouth)
+    drawMouth(ctx, stamps, f.mouth, s.poked < 0.35 ? 'open' : s.eating > 0 && s.eating < 1 ? (eat > 0.5 ? 'open' : 'line') : s.spitting < 0.6 || s.cross < 0.6 ? 'frown' : s.place.kind === 'hand' ? 'round' : pose.mouth)
     ctx.restore()
     // What it would like, while it waits for its turn to be put up.
     if (settled && !play.town.finished && !play.show) {
@@ -409,10 +435,10 @@ export class View {
     if (!acting) return
     if (won.includes('bath') && !(won.includes('fly') || won.includes('mud'))) stamps.stamp(ctx, TUB, s.x + pose.x * (won.includes('dance') ? 1 : 0.15), s.y + 4, won.includes('dance') ? pose.rot * 0.6 : 0, k * 0.8)
     else if (won.includes('bath') && !won.includes('fly')) stamps.stamp(ctx, TUB, s.x, s.y + 4, Math.sin(t * 22) * 0.02, k * 0.8)
-    if (won.includes('mud') && won.includes('sleep') && !won.includes('fly')) stamps.stamp(ctx, PUDDLE, s.x, s.y - spot.h * 0.1, 0, (k * spot.w) / 190, k * Math.min(1.7, spot.h / 110))
+    if (won.includes('mud') && won.includes('sleep')) stamps.stamp(ctx, PUDDLE, x, y - spot.h * 0.1, 0, (k * spot.w) / 190, k * Math.min(1.7, spot.h / 110))
     if (won.includes('fly')) {
       if (won.includes('bath')) stamps.stamp(ctx, BIG_BUBBLE, x, y - spot.h * 0.45, t * 0.3, (Math.max(spot.w, spot.h) / 270) * k)
-      else stamps.stamp(ctx, who === 'elephant' ? TRIO : BALLOON[ANIMALS.indexOf(who) % 3], x, y - spot.h * s.s * (who === 'giraffe' ? 0.75 : 0.9) - 80, Math.sin(t * 2 + spot.x) * 0.1, 0.86 * k)
+      else stamps.stamp(ctx, who === 'elephant' ? TRIO : BALLOON[ANIMALS.indexOf(who) % 3], x, y - spot.h * s.s * (who === 'giraffe' ? 1.04 : 0.9) - 80, Math.sin(t * 2 + spot.x) * 0.1, 0.86 * k)
     }
   }
 
@@ -478,7 +504,7 @@ export class View {
       if (how === 'rise') { y -= u * (has('mud') ? 380 : 260); x += Math.sin(u * 9 + i) * 14; size = 0.5 + seed * 0.6 * (1 - u) }
       else if (how === 'burst') { const p = has('dance') ? 620 : 240; x += spread * 2.4 * u; y -= Math.sin(u * Math.PI) * p * (0.5 + seed * 0.5); size = 1 - u * 0.4 }
       else if (how === 'fall') { y = this.seen![who].y - 240 + u * 240; size = 0.9 }
-      else { x += Math.cos(u * 8 + i) * 60; y -= 40 + u * 180; size = 0.9 }
+      else { x += Math.cos(u * 8 + i) * 60; y -= 40 + u * 240; size = 1.1 }
       stamps.stamp(ctx, s, x, y, u * 5 + i, size * k)
     }
   }
@@ -499,6 +525,8 @@ export class View {
     const pose = handPose(guidance.demo, hint.to !== null, this.hand)
     const x = hint.from.x + ((hint.to?.x ?? hint.from.x) - hint.from.x) * pose.travel, y = hint.from.y + ((hint.to?.y ?? hint.from.y) - hint.from.y) * pose.travel
     ctx.globalAlpha = pose.opacity
+    // A drag carries what it would carry.
+    if (hint.to && hint.on !== 'bell' && hint.on !== 'picture') this.stamps.stamp(ctx, SQUEEZED[play.town.coats[hint.on]][hint.on], x, y, 0, 0.8)
     this.stamps.stamp(ctx, GHOST, x, y + 8 - pose.press * 8, 0, 1.1 - pose.press * 0.12)
     ctx.globalAlpha = 1
   }

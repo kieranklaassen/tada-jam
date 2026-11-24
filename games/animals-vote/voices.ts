@@ -126,6 +126,9 @@ const HIDE: Record<Animal, (v: number) => Note[]> = {
   mouse: (v) => [...softer(CALL.mouse(v), 0.6), ...softer(later(CALL.mouse(v), 0.26), 0.3)],
 }
 
+/** A snack on its way back to its sill. */
+export const voiceOfHome = (snack: Snack): Note[] => HOME[snack]
+
 export function voiceOfEvent(e: Event, turn: number): Note[] {
   const v = vary(turn)
   switch (e.type) {
@@ -135,7 +138,7 @@ export function voiceOfEvent(e: Event, turn: number): Note[] {
     case 'hide': return [n(900, 500, 0.12, 0.01, 0.1, 3, 0.4), ...later(HIDE[e.who](v), 0.45)]
     case 'out': return [n(700, 1200, 0.12, 0.02, 0.1, 2), ...later(CALL[e.who](v), 0.1)]
     case 'fall': return []
-    case 'bait': return [t(300 * v, 260, 0.12, 0.004, 0.1, 'triangle', 0.3)]
+    case 'bait': return [t(300 * v, 260, 0.12, 0.004, 0.1, 'triangle', 0.3), ...later(EAT[e.snack], 0.75)]
     case 'home': return HOME[e.snack]
     case 'eat': return [...EAT[e.snack], ...later(softer(CALL[e.who](v * 1.1), 0.6), 0.6)]
     case 'spit': return [n(1600, 500, 0.2, 0.02, 0.1, 1, 0.3), ...CRY[e.who](v), ...later(HOME[e.snack], 0.5)]
@@ -158,8 +161,8 @@ export function voiceOfCue(c: Cue, won: readonly Thing[], pairs: readonly string
     case 'tall': return c.cols.flatMap((col) => [t(262 * [1, 1.25, 1.5][col], 524 * [1, 1.25, 1.5][col], 0.11, 0.2, 0.36, 'triangle')])
     case 'result': return [...softer(won.flatMap((x) => OPEN[x]), won.length > 1 ? 0.7 : 1), ...later(softer(pairs.flatMap((p) => TWIST[p] ?? []), won.length > 2 ? 0.6 : 0.9), 1)]
     case 'turnOf': {
-      const thing = won[c.n % Math.max(1, won.length)]
-      return thing ? softer(hates(c.who, thing) && c.n > 5 ? CRY[c.who](vary(turn)) : ACT[thing][c.who](vary(turn)), 0.85) : []
+      const thing = won[(c.n + c.round) % Math.max(1, won.length)]
+      return thing ? softer(hates(c.who, thing) && c.round > 0 ? CRY[c.who](vary(turn)) : ACT[thing][c.who](vary(turn)), 0.85) : []
     }
     case 'met': return times(8, 0.09, (i) => [n(260, 160, 0.15, 0.003, 0.05, 1.5), ...(i % 2 ? [] : [t(150, 110, 0.12, 0.003, 0.06)])])
     case 'mole': return c.snack === 'carrot' ? later([t(1500, 1300, 0.08, 0.005, 0.05, 'square')], 0.5) : c.snack === 'cheese' ? [t(196, 220, 0.12, 0.1, 0.5)] : [t(700, 300, 0.08, 0.06, 0.4, 'sawtooth')]

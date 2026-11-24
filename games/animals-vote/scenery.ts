@@ -1,6 +1,6 @@
 import { HUES } from './figures'
-import { BASE, BELL, CELL, COLX, HORIZON, MOLE, MOLE_R, SILL_Y, WALL } from './layout'
-import { blob, box, fillOutline, lay, limb, oval, poly, rowsAcross, shade, sprite, stone, type Ctx, type Lay, type Outline, type Sprite } from './mosaic'
+import { BASE, BELL, HORIZON, MOLE, MOLE_R, SILL_Y, WALL } from './layout'
+import { blob, box, lay, limb, oval, poly, rowsAcross, shade, sprite, stone, type Ctx, type Lay, type Outline, type Sprite } from './mosaic'
 import { makeRng, type Rng } from './rng'
 import { SNACKS, THINGS, type Snack, type Thing } from './things'
 
@@ -49,14 +49,11 @@ export function paintSquare(ctx: Ctx, x: number, y: number, w: number, h: number
   lay(ctx, rng, box(-30, SILL_Y - 74, 342, 74), { size: 12, colors: ['#5b4a52', '#65535a', '#524249'] })
   for (let i = 0; i < 7; i++) lay(ctx, rng, blob(-62 + i * 56, SILL_Y - 128, -6 + i * 56, SILL_Y - 128, -4 + i * 56, SILL_Y - 84, -34 + i * 56, SILL_Y - 66, -64 + i * 56, SILL_Y - 84), { size: 9, colors: i % 2 ? ['#f1e7d1', '#e9dcc2'] : ['#a9484a', '#b35253', '#9c3f42'], edge: i % 2 ? '#c9b793' : '#7b2f35' })
   lay(ctx, rng, box(-60, SILL_Y, 386, 20), { size: 9, colors: ['#a77c4c', '#9c7143', '#b08757'], edge: '#694723' })
-  lay(ctx, rng, limb(9, 6, 306, 548, 296, 480, 310, 400, 292, 330, 304, 292), { size: 5, colors: ['#7d6a45', '#8a764f'] })
-  for (const [lx, ly, a] of [[290, 500, 0.6], [314, 462, -0.5], [290, 424, 0.5], [318, 380, -0.6], [280, 346, 0.4], [312, 312, -0.4], [276, 300, 0.9]]) lay(ctx, rng, oval(lx, ly, 16, 9, a), { size: 5, colors: ['#6f8f5b', '#7c9c67', '#648450'], edge: '#47633a' })
-  for (const [lx, ly] of [[272, 388], [306, 350], [300, 440]]) lay(ctx, rng, oval(lx, ly, 10, 10), { size: 5, colors: ['#c9696b', '#d57d7a'], edge: '#8d3f45' })
   // The bell tower: an arch for the bell, a round window for the mole.
   lay(ctx, rng, box(854, 62, 160, 520), { size: 14, colors: ['#e9dcc2', '#e2d3b5', '#ede2cb'], edge: '#a08b68' })
   lay(ctx, rng, poly(836, 70, 934, -8, 1032, 70), { size: 11, colors: ['#b8593c', '#c26746', '#ad5136'], edge: '#74331f' })
   lay(ctx, rng, [...oval(BELL.x, BELL.y - 10, 68, 66).filter((p) => p.y < BELL.y), { x: BELL.x - 68, y: BELL.y + 72 }, { x: BELL.x + 68, y: BELL.y + 72 }].sort((a, b) => Math.atan2(a.y - BELL.y, a.x - BELL.x) - Math.atan2(b.y - BELL.y, b.x - BELL.x)), { size: 10, colors: ['#5d7480', '#68808b', '#536a77'], edge: '#34464f' })
-  lay(ctx, rng, oval(MOLE.x, MOLE.y, MOLE_R + 6, MOLE_R + 6), { size: 9, colors: ['#4a3b3b', '#54443f', '#413433'], edge: '#a97b48' })
+  lay(ctx, rng, oval(MOLE.x, MOLE.y, MOLE_R + 6, MOLE_R + 6), { size: 9, colors: ['#d9e4e0', '#cfdcda', '#e2eae4'], edge: '#a97b48' })
   // The wall of the graph: large pale quiet stones, one thin frame, nothing else.
   ctx.fillStyle = '#cfc2a6'
   ctx.fillRect(WALL.x, WALL.y, WALL.w, WALL.h)
@@ -65,13 +62,12 @@ export function paintSquare(ctx: Ctx, x: number, y: number, w: number, h: number
   for (const px of [WALL.x - 4, WALL.x + WALL.w - 16]) lay(ctx, rng, box(px, WALL.y + 10, 20, BASE - WALL.y), { size: 9, colors: ['#a58a68', '#9a7f5e'], edge: '#6f593b' })
   // One base line for all three.
   lay(ctx, rng, box(WALL.x - 14, BASE, WALL.w + 28, 16), { size: 12, colors: ['#6b5a45', '#75634c'], edge: '#463a2b' })
-  for (const cx of COLX) fillOutline(ctx, box(cx - CELL / 2, BASE, CELL, 5), '#d9c38c')
 }
 
 // --- the five things --------------------------------------------------------
 
 const tub = (ctx: Ctx, rng: Rng, o: Outline) => lay(ctx, rng, o, { size: 8, colors: ['#c58a52', '#b97d46', '#d09a64'], edge: '#7a4a22', glass: 6 })
-const foamy: Lay = { size: 7, colors: ['#f4fbfb', '#e2f2f4', '#d3e9ef'], edge: '#a6ccd8', glass: 8, vary: 0.02 }
+const foamy: Lay = { size: 7, colors: ['#f4fbfb', '#e8f5f6'], edge: '#b4d6e0', grout: '#dcedf1', glass: 8, vary: 0.015 }
 const balloon = (ctx: Ctx, rng: Rng, x: number, y: number, r: number, color: string) => lay(ctx, rng, blob(x, y - r, x + r * 0.86, y - r * 0.3, x + r * 0.4, y + r * 0.8, x, y + r, x - r * 0.4, y + r * 0.8, x - r * 0.86, y - r * 0.3), { size: Math.max(4, r * 0.28), colors: [color, shade(color, 0.05), shade(color, -0.04)], edge: shade(color, -0.2), light: shade(color, 0.16), glass: 8 })
 const BALLOONS = ['#c8473c', '#3f86b8', '#e2b13c']
 
@@ -85,9 +81,11 @@ const THING_ART: Record<Thing, (ctx: Ctx, rng: Rng) => void> = {
   },
   mud(ctx, rng) {
     const mud: Lay = { size: 6, colors: ['#6b4426', '#7a4f2c', '#5f3b20'], edge: '#45290f', glass: 4 }
-    lay(ctx, rng, blob(-42, 18, -30, 4, -4, 8, 18, 0, 42, 14, 36, 32, 6, 30, -20, 36), mud)
-    lay(ctx, rng, blob(-14, 8, -22, -24, -6, -10, 2, -38, 8, -10, 22, -20, 16, 8), mud)
-    for (const [x, y, r] of [[-30, -20, 6], [30, -24, 7], [16, -38, 4.5], [-12, -38, 4]]) lay(ctx, rng, oval(x, y, r, r), { ...mud, size: 4 })
+    lay(ctx, rng, blob(-44, 22, -30, 8, 0, 6, 30, 8, 44, 22, 30, 36, 0, 38, -30, 36), mud)
+    lay(ctx, rng, oval(0, 20, 22, 7), { size: 4.5, colors: ['#8f6238', '#966a40'], edge: '#7d5530' })
+    // A splash coming up out of it, with round ends.
+    for (const [x, y] of [[-20, -8], [0, -22], [20, -8]]) lay(ctx, rng, limb(14, 13, x * 0.5, 18, x, y), { ...mud, size: 5 })
+    for (const [x, y, r] of [[-20, -10, 9], [0, -25, 9], [20, -10, 9], [-36, -22, 5], [36, -22, 5]]) lay(ctx, rng, oval(x, y, r, r), { ...mud, size: 5, edge: '#5a371b' })
   },
   dance(ctx, rng) {
     lay(ctx, rng, blob(-34, -8, 34, -8, 30, 32, 0, 38, -30, 32), { size: 7, colors: ['#c8473c', '#d15448', '#bd3f35'], edge: '#7f2620' })
@@ -212,11 +210,11 @@ export const TRIO = sprite('balloon-trio', -124, -60, 248, 204, (ctx, rng) => {
 export const PILLOW = sprite('pillow', -60, -34, 120, 52, (ctx, rng) => lay(ctx, rng, blob(-54, -16, -44, -26, 0, -20, 44, -26, 54, -16, 50, 0, 54, 12, 0, 8, -54, 12, -50, 0), { size: 8, colors: ['#e7e0f0', '#ddd4ea', '#f0ebf6'], edge: '#8d7cae' }))
 export const MOON = sprite('moon', -60, -60, 120, 120, (ctx, rng) => lay(ctx, rng, blob(10, -50, -28, -38, -46, 0, -28, 38, 14, 50, 40, 30, 4, 22, -12, 0, 2, -24), { size: 9, colors: ['#f4e3a6', '#efd98c', '#f8ecc0'], edge: '#b99a44', glass: 9 }))
 export const DOT: Record<'mud' | 'foam' | 'fizz' | 'drip' | 'leaf' | 'bubble', Sprite> = {
-  mud: sprite('dot-mud', -20, -20, 40, 40, (ctx, rng) => lay(ctx, rng, blob(-15, 2, -6, -14, 8, -12, 16, 4, 4, 15, -8, 13), { size: 6, colors: ['#6b4426', '#7a4f2c'], edge: '#45290f' })),
+  mud: sprite('dot-mud', -20, -20, 40, 40, (ctx, rng) => lay(ctx, rng, blob(-15, 2, -6, -14, 8, -12, 16, 4, 4, 15, -8, 13), { size: 6, colors: ['#6b4426', '#704829'], edge: '#5a371b' })),
   foam: sprite('dot-foam', -20, -20, 40, 40, (ctx, rng) => lay(ctx, rng, oval(0, 0, 16, 16), foamy)),
   fizz: sprite('dot-fizz', -20, -20, 40, 40, (ctx, rng) => lay(ctx, rng, oval(0, 0, 15, 15), { size: 5, colors: ['#b08a5e', '#c19c70'], edge: '#7d5c38', glass: 14 })),
-  drip: sprite('dot-drip', -14, -20, 28, 40, (ctx, rng) => lay(ctx, rng, blob(0, -17, 9, 4, 0, 14, -9, 4), { size: 5, colors: ['#6b4426', '#7a4f2c'], edge: '#45290f' })),
-  leaf: sprite('dot-leaf', -14, -14, 28, 28, (ctx, rng) => { stone(ctx, rng, -4, 0, 0.4, 11, 11, '#d15448'); stone(ctx, rng, 7, 2, -0.3, 9, 9, '#f1d27a') }),
+  drip: sprite('dot-drip', -14, -20, 28, 40, (ctx, rng) => lay(ctx, rng, blob(0, -17, 9, 4, 0, 14, -9, 4), { size: 5, colors: ['#6b4426', '#704829'], edge: '#5a371b' })),
+  leaf: sprite('dot-leaf', -24, -24, 48, 48, (ctx, rng) => { for (const [i, c] of ['#d15448', '#f1d27a', '#4f93bf', '#7c9c67', '#f4ead4'].entries()) { const a = i * 1.26; stone(ctx, rng, Math.cos(a) * 13, Math.sin(a) * 13, a, 13, 11, c) } }),
   bubble: sprite('dot-bubble', -46, -46, 92, 92, (ctx, rng) => {
     for (let i = 0; i < 22; i++) { const a = (i / 22) * Math.PI * 2; stone(ctx, rng, Math.cos(a) * 40, Math.sin(a) * 40, a + Math.PI / 2, 10, 7, pick(rng, ['#dff0f4', '#bfe0ea', '#f4fbfb'])) }
     stone(ctx, rng, -16, -18, -0.8, 16, 7, '#ffffff')
@@ -226,10 +224,15 @@ export const DOT: Record<'mud' | 'foam' | 'fizz' | 'drip' | 'leaf' | 'bubble', S
 export const FIRST_PROPS: Sprite[] = [...Object.values(PLAQUES), SHUT, BELL_SPRITE, BOARD_SPRITE, ...Object.values(WISH_ART), BASKET_BACK, BASKET_FRONT, BASKET_LID, ...SNACKS.map((s) => SNACK_ART[s])]
 export const LATER_PROPS: Sprite[] = [BIG_BUBBLE, TUB, PUDDLE, DRUM, ...BALLOON, TRIO, PILLOW, MOON, ...Object.values(DOT)]
 export const GHOST = sprite('ghost', -30, -8, 78, 96, (ctx, rng) => {
-  lay(ctx, rng, blob(-6, 0, 8, -2, 14, 26, 34, 28, 44, 42, 40, 70, 24, 84, 2, 80, -14, 58, -26, 46, -20, 38, -2, 48), { size: 7, colors: ['#fbf4e4', '#f5ebd6', '#fffaf0'], edge: '#7a6a5a', vary: 0.02 })
+  lay(ctx, rng, blob(-6, 0, 8, -2, 14, 26, 34, 28, 44, 42, 40, 70, 24, 84, 2, 80, -14, 58, -26, 46, -20, 38, -2, 48), { size: 7, colors: ['#ffffff', '#fdfaf4'], edge: '#2f4a5c', grout: '#f4efe4', vary: 0.01 })
 })
 FIRST_PROPS.push(GHOST)
 export const GLOW = sprite('glow', -84, -84, 168, 168, (ctx, rng) => {
   for (const [n, r] of [[26, 66], [30, 77]]) for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2; stone(ctx, rng, Math.cos(a) * r, Math.sin(a) * r, a, 9, 6, pick(rng, ['#fff1b8', '#ffe08a', '#fff8dc'])) }
 })
 FIRST_PROPS.push(GLOW, ...Object.values(WANT))
+/** The shop before it has anything to sell. */
+export const SHUTTER = sprite('shutter', -34, SILL_Y - 78, 352, 82, (ctx, rng) => {
+  for (let i = 0; i < 3; i++) lay(ctx, rng, box(-30 + i * 115, SILL_Y - 74, 111, 74), { size: 10, colors: ['#7f9a8d', '#88a396', '#769184'], edge: '#4f6a5f' })
+})
+FIRST_PROPS.push(SHUTTER)

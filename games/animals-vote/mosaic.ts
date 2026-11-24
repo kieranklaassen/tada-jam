@@ -230,7 +230,8 @@ export function rowsAcross(ctx: Ctx, rng: Rng, x0: number, y0: number, x1: numbe
   }
 }
 
-export type Painter = (ctx: Ctx, rng: Rng) => void
+/** `under` draws another picture first, as it was laid. */
+export type Painter = (ctx: Ctx, rng: Rng, under: (s: Sprite) => void) => void
 export type Sprite = { name: string; x: number; y: number; w: number; h: number; paint: Painter }
 /** A named picture: where its box lies about its own origin, and how it is laid. */
 export const sprite = (name: string, x: number, y: number, w: number, h: number, paint: Painter): Sprite => ({ name, x, y, w, h, paint })
@@ -258,7 +259,7 @@ export class Stamps {
       // Seeded by its name, so no stone moves between visits.
       let seed = 23
       for (const c of s.name) seed = (seed * 31 + c.charCodeAt(0)) >>> 0
-      s.paint(made.ctx, makeRng(seed))
+      s.paint(made.ctx, makeRng(seed), (o) => made.ctx.drawImage(this.warm(o), o.x, o.y, o.w, o.h))
       image = made.canvas
       this.made.set(s.name, image)
     }

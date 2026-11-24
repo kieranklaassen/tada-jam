@@ -4,8 +4,8 @@ import type { Point } from './input'
 import { BASKET, BELL, COLX, MOLE, PLAQUE, SNACK_HOME, SPOTS, cellAt, plaqueAt, snackAt } from './layout'
 import { Play, RESULT } from './play'
 import { deserialize, serialize } from './save'
-import type { Animal } from './things'
-import { columnOf, freshTown, here, onGround, type Town } from './town'
+import { WISHES, type Animal } from './things'
+import { columnOf, freshTown, here, onGround, putOn, type Town } from './town'
 
 // The path the Mount takes: the same calls, with no browser.
 
@@ -41,6 +41,35 @@ describe('play', () => {
     d.run(0.5)
     expect(columnOf(d.town, 'mouse')).toBe(0)
   })
+  it('lets go where the second finger of one carry let go, near where it came back', () => {
+    const d = new Child(), to = cellAt(0, 0)
+    d.play.down(1, body('pig'), 0); d.play.move(1, to); d.play.up(1, to, 20)
+    d.play.down(2, to, 120); d.play.up(2, to, 200); d.run(0.5)
+    // It cannot stand the bath, and goes to the mud by itself; the mouse stays.
+    expect(d.play.events.some((e) => e.type === 'bounce')).toBe(true)
+  })
+  it('loses no slipped tap to a quick next one, and no carry that comes back is a tap', () => {
+    const d = new Child()
+    d.play.down(1, body('pig'), 0); d.play.move(1, { x: body('pig').x + 22, y: body('pig').y }); d.play.up(1, { x: body('pig').x + 22, y: body('pig').y }, 60)
+    d.play.down(2, body('cat'), 160); d.play.up(2, body('cat'), 220)
+    expect([columnOf(d.town, 'pig'), columnOf(d.town, 'cat')]).toEqual([1, 1])
+    const e = new Child()
+    e.play.down(1, body('pig'), 0); e.play.move(1, { x: 400, y: 400 }); e.play.move(1, body('pig')); e.play.up(1, body('pig'), 400); e.run(0.5)
+    expect(columnOf(e.town, 'pig')).toBe(-1)
+  })
+  it('never shows a move that grants the wish, after the position that teaches it', () => {
+    for (const w of WISHES.slice(2)) for (let seed = 1; seed < 60; seed++) {
+      const c = new Child(deserialize({ v: 1, position: w.id, count: 6, ballot: w.ballot, columns: [[], [], []] }, null))
+      let s = seed * 7919
+      const next = () => ((s = (s * 16807) % 2147483647) / 2147483647)
+      for (const who of here(c.town)) if (next() < 0.7) putOn(c.town, who, Math.floor(next() * 3))
+      const hint = hintFor(c.play, 1)
+      if (!hint?.to) continue
+      c.drag(hint.from, hint.to)
+      c.tap(BELL)
+      expect(c.play.show!.result.met, `${w.id} ${seed}`).toBe(false)
+    }
+  })
   it('can do the whole first vote by taps, and meets the first wish', () => {
     const c = new Child()
     for (const who of here(c.town)) { c.tap(body(who)); c.run(0.6) }
@@ -61,15 +90,19 @@ describe('play', () => {
     c.tap(body('pig'))
     expect(c.play.show).toBeNull()
     expect(serialize(c.town)).toEqual(was)
-    c.tap(BELL); c.run(2)
-    c.drag(body('cat'), cellAt(1, 0))
-    expect(c.play.held).toBeNull()
+    const d = new Child()
+    d.tap(BELL); d.run(1)
+    const then = serialize(d.town)
+    d.play.down(1, body('cat'), d.now); d.play.move(1, cellAt(1, 0))
+    expect(d.play.held).toBeNull()
+    d.play.up(1, cellAt(1, 0), d.now); d.run(0.5)
+    expect(serialize(d.town)).toEqual(then)
   })
   it('keeps the vote when the wish is still open, shows the changing move, and takes one change', () => {
     const c = new Child(freshTown(6))
     for (const who of here(c.town)) c.tap(body(who))
     c.tap(BELL)
-    expect(c.play.unmet).toBe(true)
+    expect(c.town.unmet).toBe(true)
     c.run(20)
     c.tap(BELL)
     expect(onGround(c.town)).toHaveLength(0)

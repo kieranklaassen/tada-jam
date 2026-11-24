@@ -14,7 +14,7 @@ import { bait, feed, hasTools, here, hide, onGround, putOn, ring, snackHome, tap
 export type Held = { kind: 'animal'; who: Animal } | { kind: 'snack'; snack: Snack }
 export type Poke = { target: Target; at: Point }
 /** A cue of what is being shown, for the view and the voices. */
-export type Cue = { type: 'rush' } | { type: 'row'; row: number; cols: number[] } | { type: 'tall'; cols: number[] } | { type: 'result' } | { type: 'turnOf'; who: Animal; n: number } | { type: 'met' } | { type: 'end' } | { type: 'ring' } | { type: 'mole'; snack: Snack } | { type: 'back'; held: Held }
+export type Cue = { type: 'rush' } | { type: 'row'; row: number; cols: number[] } | { type: 'tall'; cols: number[] } | { type: 'result' } | { type: 'turnOf'; who: Animal; n: number; round: number } | { type: 'met' } | { type: 'end' } | { type: 'ring' } | { type: 'mole'; snack: Snack } | { type: 'back'; held: Held }
 
 export const REST_MS = 1000
 export const SLIP = 56
@@ -55,15 +55,13 @@ export class Play {
   events: Event[] = []
   cues: Cue[] = []
   changed = false
-  /** The last bell did not bring what the mole would like. */
-  unmet = false
-  /** Everybody is back as before that bell and nothing is changed yet: ringing again would bring the same. */
-  stale = false
   private pressed: Target | null = null
   private slid: Target | null = null
   /** This touch ended a scene, or grew from one that did. */
   private spent = false
-  private landed = { id: -1, at: { x: 0, y: 0 }, t: 0, dragging: false }
+  private landed = { id: -1, t: 0, dragging: false }
+  /** The furthest a drag has been from where it began. */
+  private far = 0
 
   constructor(readonly town: Town) {}
 
@@ -74,6 +72,8 @@ export class Play {
   }
 
   down(id: number, at: Point, t: number): void {
+    // The same finger again: its lift was lost.
+    if (this.touch.holds(id)) this.act(this.touch.cancel(id))
     const rest = this.landed
     const idle = !this.held && (t - rest.t > REST_MS || rest.dragging || this.pressed?.kind === 'square')
     if (this.touch.active && this.touch.holds(rest.id) && rest.id !== id && idle) this.act(this.touch.cancel(rest.id))
@@ -81,8 +81,10 @@ export class Play {
       this.pokes.push({ target: { kind: 'square' }, at })
       return
     }
-    this.landed = { id, at, t, dragging: false }
-    this.act(this.touch.down(id, at, t))
+    const gestures = this.touch.down(id, at, t)
+    // A finger that comes back to the drag it left carries on with it.
+    this.landed = { id, t, dragging: !gestures.some((g) => g.type === 'press') }
+    this.act(gestures)
   }
   move(id: number, at: Point): void { this.act(this.touch.move(id, at)) }
   up(id: number, at: Point, t: number): void { this.act(this.touch.up(id, at, t)) }
@@ -99,7 +101,7 @@ export class Play {
     for (let row = 0; row < s.rows; row++) if (passed(s.start + row * ROW)) this.cues.push({ type: 'row', row, cols: [0, 1, 2].filter((c) => s.heights[c] > row) })
     if (passed(s.tallAt)) this.cues.push({ type: 'tall', cols: [0, 1, 2].filter((c) => s.heights[c] === s.rows) })
     if (passed(s.resultAt)) this.cues.push({ type: 'result' })
-    for (let n = 0; n < TURNS; n++) if (passed(s.resultAt + 0.5 + n * TURN)) this.cues.push({ type: 'turnOf', who: s.everyone[n % s.everyone.length], n })
+    for (let n = 0; n < TURNS; n++) if (passed(s.resultAt + 0.5 + n * TURN)) this.cues.push({ type: 'turnOf', who: s.everyone[n % s.everyone.length], n, round: Math.floor(n / s.everyone.length) })
     if (s.result.met && passed(s.resultAt + MET_AT)) this.cues.push({ type: 'met' })
     if (s.t >= s.end) this.finish()
   }
@@ -130,6 +132,7 @@ export class Play {
           break
         case 'dragStart': {
           this.landed.dragging = true
+          this.far = 0
           const p = this.pressed
           if (!this.spent && p?.kind === 'animal') this.held = { kind: 'animal', who: p.who }
           else if (!this.spent && p?.kind === 'snack') this.held = { kind: 'snack', snack: p.snack }
@@ -139,6 +142,7 @@ export class Play {
           break
         }
         case 'dragMove':
+          this.far = Math.max(this.far, Math.hypot(g.at.x - g.from.x, g.at.y - g.from.y))
           if (this.held) this.hand = g.at
           break
         case 'dragLift':
@@ -158,7 +162,7 @@ export class Play {
 
   private tell(events: Event[]): void {
     this.events.push(...events)
-    if (events.length) this.stale = events.every((e) => e.type === 'return')
+    if (events.length) this.town.stale = events.every((e) => e.type === 'return')
     this.changed = true
   }
 
@@ -166,7 +170,6 @@ export class Play {
     const { events, result } = ring(this.town)
     this.cues.push({ type: 'ring' })
     if (result) {
-      this.unmet = !result.met
       this.show = new Show(result, this.town.columns, here(this.town))
       if (result.ran.length) this.cues.push({ type: 'rush' })
     }
@@ -188,7 +191,7 @@ export class Play {
   }
 
   private letGo(at: Point): void {
-    const held = this.held, near = Math.hypot(at.x - this.landed.at.x, at.y - this.landed.at.y) < SLIP
+    const held = this.held, near = this.far < SLIP
     this.held = this.hand = null
     if (!held || near) {
       this.pressed = held ? (held.kind === 'animal' ? { kind: 'animal', who: held.who } : { kind: 'snack', snack: held.snack }) : near ? this.slid : null

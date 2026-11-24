@@ -16,10 +16,13 @@ import { deserialize, serialize } from './save'
 import { SaveCadence } from './saveCadence'
 import { fit, toStage, type Fit } from './stage'
 import { View } from './view'
-import { voiceOfClack, voiceOfCue, voiceOfEvent, voiceOfPoke } from './voices'
+import { voiceOfClack, voiceOfCue, voiceOfEvent, voiceOfHome, voiceOfPoke } from './voices'
 
 // The Mount: the surface, attention, the attended clock, sound, quality and the
 // save around the rules (town.ts, through play.ts) and the drawing (view.ts).
+
+/** How much of the idle wait is skipped where the next thing is to change something, in seconds. */
+const SOON = 3.2
 
 function Mount({ ctx }: { ctx: CartridgeContext }) {
   const rootRef = useRef<HTMLDivElement>(null)
@@ -93,7 +96,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       const won = play.show?.result.won ?? []
       for (const p of play.pokes.splice(0)) { view.poke(p); notes.push(...voiceOfPoke(p, turn++)) }
       for (const c of play.cues.splice(0)) { view.cue(c); notes.push(...voiceOfCue(c, won, pairsOf(won), turn++)) }
-      for (const e of play.events.splice(0)) { view.notice(e); notes.push(...voiceOfEvent(e, turn++)) }
+      for (const e of play.events.splice(0)) { view.notice(e); if (!(e.type === 'home' && view.moleHas(e.snack))) notes.push(...voiceOfEvent(e, turn++)) }
+      for (const snack of view.sentHome.splice(0)) notes.push(...voiceOfHome(snack))
       for (const c of view.clacks.splice(0)) notes.push(...voiceOfClack(c.who, c.row, c.fell))
       if (notes.length) audio.play(voiceOf(notes))
       if (play.changed) { play.changed = false; cadence.change(performance.now(), true) }
@@ -126,6 +130,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       if (play?.touch.holds(event.pointerId)) overlay.lift(where.x, where.y, width, event.timeStamp)
       play?.up(event.pointerId, toStage(where, by), event.timeStamp)
       tell()
+      // Everybody is back and a change is what comes next: shown soon.
+      if (play?.town.stale) ladder.touch(clock.seconds - SOON)
       audio.touchUp()
     }
     // The browser took the finger away, which is not the child letting go: what it carried goes back.

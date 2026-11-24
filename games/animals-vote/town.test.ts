@@ -61,8 +61,7 @@ describe('the vote', () => {
   it('keeps the graph until the next touch, and the next ballot comes in with it', () => {
     const town = freshTown(null)
     ring(town)
-    const graph = JSON.stringify(town.columns)
-    expect(JSON.stringify(town.columns)).toBe(graph)
+    expect(town).toMatchObject({ finished: true, fresh: true, columns: [['elephant'], ['pig', 'cat', 'mouse'], []], ballot: ['bath', 'mud', null] })
     const events = ring(town).events
     expect(events.map((e) => e.type)).toEqual(expect.arrayContaining(['sweep', 'turn', 'arrive']))
     expect(town).toMatchObject({ finished: false, fresh: false, count: 5, ballot: ['dance', 'sleep', null] })

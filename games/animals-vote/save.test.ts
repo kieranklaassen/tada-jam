@@ -33,4 +33,12 @@ describe('the save', () => {
     const town = { ...freshTown(null), count: 6, columns: [[...ANIMALS], [], []], finished: true }
     expect(JSON.stringify(serialize(town)).length).toBeLessThan(32_000)
   })
+  it('leaves nobody short of animals for what the mole would like', () => {
+    expect(deserialize({ v: 1, position: 'level-all', count: 4 }, null).count).toBe(6)
+  })
+  it('keeps that a vote missed and that nothing is changed since', () => {
+    const raw = { v: 1, position: 'one-over', count: 5, ballot: ['dance', 'sleep', null], columns: [['pig', 'elephant', 'mouse'], ['cat', 'goat'], []], unmet: true, stale: true }
+    expect(deserialize(raw, null)).toMatchObject({ unmet: true, stale: true })
+    expect(deserialize({ ...raw, columns: [[], [], []] }, null).stale).toBe(false)
+  })
 })
