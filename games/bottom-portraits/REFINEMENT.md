@@ -59,3 +59,7 @@ None. The game has no learning goal and claims no school skill.
 
 - An `InstancedMesh` whose matrices change must say so every frame (`instanceMatrix.needsUpdate`); the frozen keys passed two playtests and an audit because they are right on the first frame.
 - A reaction that can be cut short needs one place that lets go of everything it set.
+
+## Pass: the loop, made plain
+
+Seen: a young child did not find the loop. Cause: everything that answered glowed alike, the hand showed a gesture without what it was for, and nobody visibly wanted the next thing. Change: the section of the same name in `ART.md`. Checked by `round.test.ts` and by recording the untouched first visit and reading it frame by frame. Not yet checked: the same child again, and a real iPad.

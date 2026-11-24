@@ -91,3 +91,13 @@ School wall chart, the first look taken; the fallback (Airbrush gradient poster)
 - **The chart** is painted once for a size of the surface, past the stage's edges: meadow, trees and earth on a surface of another shape.
 - **The order of layers** is the depth: shelf, family, butler, then each place's back, what is in it, its front. What is in a place is hidden below its front edge, and a touch below that edge does not reach it.
 - **Pictures in heads.** A colour is a splash of paint (a plain round read as an egg in the cold playtest), a kind is the bare shape in grey, spots are a grey patch with spots, alive is a pair of eyes, everything is the family, the animals and one thing of each kind in a heap.
+
+## The loop, made plain
+
+Play by a child at the low end of the band showed that the first move could be copied but not what to do next. Where this section and the rest of this sheet differ, this section holds.
+
+- **The opening round.** With nothing saved, the ghost hand plays one whole round for real (`round.ts`, `opening.ts`): it carries the red sock to the soup, and touches the grandmother. Any touch stops it, it plays once, and nothing it did is saved until a touch. It is the one thing that starts by itself.
+- **The loop.** The dream is in its bubble from the start instead of after a while, what he has understood wears a halo, and the hand shows the one move that brings the dream nearer, taking things out included. That replaces the rule that the hand never points at the answer: a young child could not see what the answer was for.
+- **The ladder** begins sooner: one glow after 1.5 s, on the next step only, and the hand after 3.5 s.
+
+A picture of what somebody wants is a thing to fetch and never a verdict: nothing is counted, and everything else in the room still answers.

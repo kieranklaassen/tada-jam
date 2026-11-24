@@ -93,3 +93,13 @@ Everything that acts is thin tin, pressed in rounded shells, closed along a seam
 ## How it is drawn
 
 `view/tin.ts` presses shells, welds each sitter's pieces into a body, a head and one to three loose pieces that share one printed sheet and one lacquer. Stands and keys are two instanced draws for everybody. `view/portrait.ts` draws the table and whoever is on it into one tile of a six-tile sheet, once for each picture, through a four-quadrant melt. Nothing is made at module load. A tier changes the pixel ratio and, at the last, the soft shade on the ground; no answer to a touch is left out by any tier.
+
+## The loop, made plain
+
+Play by a child at the low end of the band showed that the first move could be copied but not what to do next. Where this section and the rest of this sheet differ, this section holds.
+
+- **The opening round.** With nothing saved, the ghost hand plays one whole round for real (`round.ts`, `opening.ts`): it asks for a picture, turns the sitter until it faces the painter, and asks again. Any touch stops it, it plays once, and nothing it did is saved until a touch. It is the one thing that starts by itself.
+- **The loop.** The bare easel asks for a picture; a picture that stands shown asks for the table to change. Calling one over and the key come in where the table changes.
+- **The ladder** begins sooner: one glow after 1.5 s, on the next step only, and the hand after 3.5 s.
+
+A picture of what somebody wants is a thing to fetch and never a verdict: nothing is counted, and everything else in the room still answers.

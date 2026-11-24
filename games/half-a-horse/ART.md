@@ -91,3 +91,13 @@ Each half has a slit that its performer looks out of: a wide-awake goose with it
 Motion: cloth. Pieces squash along the seam and settle with one overshoot. Nothing in the page moves but what is sewn on loosely.
 
 Tiers: the pixel ratio, then the stitching on the stretched cloth, then the quilting highlights. No tier drops an answer to a touch.
+
+## The loop, made plain
+
+Play by a child at the low end of the band showed that the first move could be copied but not what to do next. Where this section and the rest of this sheet differ, this section holds.
+
+- **The opening round.** With nothing saved, the ghost hand plays one whole round for real (`round.ts`, `opening.ts`): it leads the horse to the farmer who wishes for it, and when the yard has cheered and the wish is a hen, fetches the hen's head off the line. Any touch stops it, it plays once, and nothing it did is saved until a touch. It is the one thing that starts by itself.
+- **The loop.** The farmer wishes for a whole animal in a picture, cheers at it and wishes for the next.
+- **The ladder** begins sooner: one glow after 1.5 s, on the next step only, and the hand after 3.5 s.
+
+A picture of what somebody wants is a thing to fetch and never a verdict: nothing is counted, and everything else in the room still answers.

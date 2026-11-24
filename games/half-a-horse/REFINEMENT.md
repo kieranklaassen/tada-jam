@@ -58,3 +58,7 @@ The look is the first reserved one. Merging stays with the owner.
 - Count only fingers that hold something and are moving against a cap on working fingers: a cap that counts resting palms deadens the whole page while every single-finger test passes.
 - A game whose creatures move by themselves has to mark a change when they come to rest and at put-away; saving on touches alone saves a yard nobody left.
 - Never ask a resting holder to give up by event distance: a slow drag on a fast screen moves less than any per-event threshold. Measure from an anchor.
+
+## Pass: the loop, made plain
+
+Seen: a young child did not find the loop. Cause: everything that answered glowed alike, the hand showed a gesture without what it was for, and nobody visibly wanted the next thing. Change: the section of the same name in `ART.md`. Checked by `round.test.ts` and by recording the untouched first visit and reading it frame by frame. Not yet checked: the same child again, and a real iPad.
