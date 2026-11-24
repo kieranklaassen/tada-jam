@@ -6,6 +6,7 @@
 //   npm run covers                  every game and showcase
 //   npm run covers -- <key> <key>   only these
 //   npm run covers -- <key>@9       nine seconds in, for a game that opens slowly
+//   npm run covers -- old/<key>     an old game, a demo of the lab (old/ alone takes them all)
 //   BASE=http://localhost:4173      where the build is served
 //
 // Covers land in harness/covers/<key>.webp. They are the jam's own, outside
@@ -20,7 +21,9 @@ const COVER = { width: 720, height: 500, quality: 0.78 }
 
 const folders = (path) => readdirSync(new URL(path, import.meta.url), { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => entry.name)
 const asked = process.argv.slice(2)
-const jobs = (asked.length ? asked : [...folders('../games/'), ...folders('../showcases/')]).map((arg) => {
+const OLD = 'old/'
+const named = asked.flatMap((arg) => (arg === OLD ? folders('../lab/arcade/protos/').map((key) => OLD + key) : [arg]))
+const jobs = (named.length ? named : [...folders('../games/'), ...folders('../showcases/')]).map((arg) => {
   const [key, seconds] = arg.split('@')
   return { key, seconds: Number(seconds) || SECONDS }
 })
@@ -34,7 +37,7 @@ async function take({ key, seconds }) {
   const context = await browser.newContext({ viewport: VIEW, deviceScaleFactor: 1 })
   const page = await context.newPage()
   try {
-    await page.goto(`${base}/?chrome=0#/play/${key}`)
+    await page.goto(key.startsWith(OLD) ? `${base}/lab/arcade/index.html?chrome=0#/play/${key.slice(OLD.length)}` : `${base}/?chrome=0#/play/${key}`)
     await page.waitForTimeout(seconds * 1000)
     const png = await page.screenshot({ timeout: 120_000 })
     const webp = await encoder.evaluate(

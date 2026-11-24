@@ -6,7 +6,7 @@ import { useEffect, useRef, type PointerEvent } from 'react'
 
 export const HOLD_MS = 1000
 
-export function CornerControl({ onHome, onHold, holdLabel }: { onHome: () => void; onHold: () => void; holdLabel: string }) {
+export function CornerControl({ onHome, onHold, holdLabel }: { onHome: () => void; onHold?: () => void; holdLabel?: string }) {
   const timer = useRef<number | null>(null)
   const held = useRef(false)
 
@@ -20,6 +20,7 @@ export function CornerControl({ onHome, onHold, holdLabel }: { onHome: () => voi
     if (!event.isPrimary) return
     held.current = false
     clear()
+    if (!onHold) return
     timer.current = window.setTimeout(() => {
       timer.current = null
       held.current = true

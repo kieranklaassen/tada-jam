@@ -80,16 +80,28 @@ describe('the home page', () => {
 
   it('shows games only when there is no demo catalog', async () => {
     await openHome()
-    expect(screen.queryByRole('region', { name: 'Demos' })).toBeNull()
+    expect(screen.queryByRole('region', { name: 'Old games' })).toBeNull()
+    expect(screen.queryByRole('button', { name: /^Old games/ })).toBeNull()
   })
 
-  it('shows a demo as a card marked as a demo, and opens it by its key', async () => {
-    serveCatalog([demo('sock-race', 'Sock Race'), demo('ant-hill', 'Ant Hill demo'), demo('peg-blaster', 'Peg Blaster', { verdict: 'no' })])
+  it('shows every old game, also one a game grew from or one turned down, and opens it by its key', async () => {
+    serveCatalog([demo('sock-race', 'Sock Race'), demo('ant-hill', 'Ant Hill'), demo('peg-blaster', 'Peg Blaster', { verdict: 'no' }), demo('old-pond', 'Old Pond', { game: 'bubble-bath' })])
     const onPickDemo = vi.fn()
     await openHome(onPickDemo)
-    const tiles = within(screen.getByRole('list', { name: 'Building' })).getAllByRole('button')
-    expect(tiles.map((tile) => tile.textContent)).toEqual(['🎲Sock Racedemo · ages 3–7'])
-    fireEvent.click(tiles[0])
-    expect(onPickDemo).toHaveBeenCalledWith('sock-race')
+    expect(cards('Old games')).toEqual(['Sock Race', 'Ant Hill', 'Peg Blaster', 'Old Pond'])
+    fireEvent.click(within(screen.getByRole('list', { name: 'Old games' })).getByRole('button', { name: /^Ant Hill/ }))
+    expect(onPickDemo).toHaveBeenCalledWith('ant-hill')
+  })
+
+  it('gives the old games a button of their own, and a search finds them too', async () => {
+    serveCatalog([demo('sock-race', 'Sock Race'), demo('peg-blaster', 'Peg Blaster')])
+    await openHome()
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'sock' } })
+    expect(cards('Old games')).toEqual(['Sock Race'])
+    expect(screen.queryByRole('button', { name: 'Show all games' })).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: /^.*Old games 2$/ }))
+    expect(cards('Old games')).toEqual(['Sock Race', 'Peg Blaster'])
+    expect(screen.queryByRole('list', { name: 'Just arrived' })).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: /^All/ }))
   })
 })

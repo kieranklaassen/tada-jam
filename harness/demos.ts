@@ -1,9 +1,10 @@
-// The demo catalog on the jam's home page. Demos are throwaway prototypes that
-// each test one idea; they are not cartridges and are never ported to Tada.
-// They are built separately and published beside the jam. This page only reads
-// the catalog file that build writes, and shows a demo by framing the demo
-// player's own page. No code is shared: when the file is not there (the dev
-// server, or a build without the demos) the home page simply has no demos.
+// The old games on the jam's home page: the lab's demos, the first versions
+// most of the jam's games were built from. They are throwaway prototypes, not
+// cartridges, and are never ported to Tada. They are built separately and
+// published beside the jam. This page only reads the catalog file that build
+// writes, and shows one by framing the demo player's own page. No code is
+// shared: when the file is not there (the dev server, or a build without the
+// demos) the home page simply has no old games.
 
 export const DEMO_CATALOG_URL = 'lab/arcade/catalog.json'
 const DEMO_PLAYER_URL = 'lab/arcade/index.html'
@@ -18,14 +19,7 @@ export type Demo = {
   question: string
   /** Its visual treatment, where one was assigned on purpose. */
   look?: string
-  /** The jam game this demo became, where that game took another name. */
-  game?: string
-  /** The owner's verdict in the rating player, where he gave one. */
-  verdict?: DemoVerdict
 }
-
-export type DemoVerdict = 'build' | 'maybe' | 'no'
-const VERDICTS: readonly string[] = ['build', 'maybe', 'no']
 
 export type DemoGroup = {
   id: string
@@ -49,13 +43,9 @@ function parseDemo(raw: unknown): Demo | null {
   const ages = Array.isArray(r.ages) && r.ages.length === 2 && r.ages.every((n) => Number.isInteger(n)) ? (r.ages as [number, number]) : null
   if (!ages) return null
   const look = text(r.look)
-  const game = text(r.game)
-  const verdict = text(r.verdict)
   return {
     key, name, question, ages, emoji: text(r.emoji) ?? '🎲', pitch: text(r.pitch) ?? '',
     ...(look ? { look } : {}),
-    ...(game && KEY.test(game) ? { game } : {}),
-    ...(verdict && VERDICTS.includes(verdict) ? { verdict: verdict as DemoVerdict } : {}),
   }
 }
 
@@ -76,16 +66,6 @@ export function parseDemoCatalog(raw: unknown): DemoGroup[] {
   return parsed
 }
 
-/**
- * What the home page lists: a demo that has become a jam game is shown once,
- * as the game, and a demo the owner rated "No" is not shown.
- */
-export function listedDemos(groups: readonly DemoGroup[], gameKeys: ReadonlySet<string>): DemoGroup[] {
-  return groups
-    .map((group) => ({ ...group, demos: group.demos.filter((demo) => demo.verdict !== 'no' && !gameKeys.has(demo.key) && !(demo.game && gameKeys.has(demo.game))) }))
-    .filter((group) => group.demos.length > 0)
-}
-
 export function findDemo(groups: readonly DemoGroup[], key: string): Demo | undefined {
   for (const group of groups) {
     const demo = group.demos.find((d) => d.key === key)
@@ -99,9 +79,9 @@ export function demoRoute(key: string): string {
   return `#/demo/${key}`
 }
 
-/** The demo player's page for one demo, with or without its rating strip. */
-export function demoPlayerHref(key: string, strip: boolean): string {
-  return strip ? `${DEMO_PLAYER_URL}?chrome=1#/play/${key}` : `${DEMO_PLAYER_URL}?chrome=0#/play/${key}`
+/** The demo player's page for one demo, without its rating strip. */
+export function demoPlayerHref(key: string): string {
+  return `${DEMO_PLAYER_URL}?chrome=0#/play/${key}`
 }
 
 export async function loadDemoCatalog(): Promise<DemoGroup[]> {

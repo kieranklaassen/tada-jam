@@ -9,6 +9,8 @@ export type Launch = (id: string, from: HTMLElement) => void
 
 export type GameCardProps = {
   id: string
+  /** The picture it wears, where that is not its id. */
+  cover?: string
   name: string
   emoji: string
   art?: JamTile
@@ -17,11 +19,11 @@ export type GameCardProps = {
   onLaunch: Launch
 }
 
-export function GameCard({ id, name, emoji, art, caption, onLaunch }: GameCardProps) {
+export function GameCard({ id, cover = id, name, emoji, art, caption, onLaunch }: GameCardProps) {
   return (
     <li>
       <button type="button" className="home-card" onClick={(event) => onLaunch(id, event.currentTarget.querySelector<HTMLElement>('.home-cover') ?? event.currentTarget)}>
-        <Cover id={id} emoji={emoji} art={art} />
+        <Cover id={cover} emoji={emoji} art={art} />
         <span className="home-card-name">{name}</span>
         <span className="home-card-caption">{caption}</span>
       </button>

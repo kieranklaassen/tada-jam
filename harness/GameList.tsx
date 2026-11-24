@@ -7,9 +7,10 @@ import foxLandscape from './assets/fox-landscape.webp'
 import tadaMark from './assets/tada-mark.svg'
 import type { JamGame, JamShowcase } from './contract'
 import { Cover } from './Cover'
-import { DemoShelf } from './DemoShelf'
+import { loadDemoCatalog, type Demo } from './demos'
 import { GameCard } from './GameCard'
 import { AGES, readPrefs, writePrefs } from './prefs'
+import { OldGames } from './OldGames'
 import { fillShelves, fitsAge, keyOf, lineFor, matches } from './shelves'
 import { useLaunch } from './useLaunch'
 import './home.css'
@@ -22,9 +23,13 @@ import './home.css'
 
 const ages = (game: JamGame) => `ages ${game.cartridge.manifest.ageBand.join('–')}`
 
+// The shelf button for the old games, which are demos and not on any shelf.
+const OLD = 'old'
+
 // What was open when a game was picked, so coming home is coming back to the
 // same place. It lives as long as the page does and is saved nowhere.
-const left = { shelf: null as string | null, query: '', scroll: 0 }
+// The old games are kept with it, so the page is as long as it was when its scroll is put back.
+const left = { shelf: null as string | null, query: '', scroll: 0, old: [] as readonly Demo[] }
 
 const pickOne = <T,>(list: readonly T[]): T | undefined => list[Math.floor(Math.random() * list.length)]
 
@@ -39,7 +44,17 @@ export function GameList({ games, showcases = [], onPick, onPickDemo }: Props) {
   const root = useRef<HTMLDivElement>(null)
   const spotlight = useRef<HTMLDivElement>(null)
 
-  const gameKeys = useMemo(() => new Set(games.map(keyOf)), [games])
+  const [old, setOld] = useState(left.old)
+  useEffect(() => {
+    let alive = true
+    void loadDemoCatalog().then((groups) => {
+      left.old = groups.flatMap((group) => group.demos)
+      if (alive) setOld(left.old)
+    })
+    return () => {
+      alive = false
+    }
+  }, [])
   const shelves = useMemo(() => fillShelves(games), [games])
   const fitting = useMemo(() => games.filter((game) => fitsAge(game, childAge)), [games, childAge])
   // The game at the top is a fresh pick on every visit and for every age, never one chosen by date.
@@ -54,6 +69,9 @@ export function GameList({ games, showcases = [], onPick, onPickDemo }: Props) {
     .map((s) => ({ ...s, games: s.games.filter((game) => matches(game, query)) }))
   const now = shown.map((s) => ({ ...s, games: searching ? s.games : s.games.filter((game) => fitsAge(game, childAge)) })).filter((s) => s.games.length > 0)
   const others = searching ? [] : shown.flatMap((s) => s.games.filter((game) => !fitsAge(game, childAge)))
+
+  const word = query.trim().toLowerCase()
+  const oldShown = searching ? old.filter((demo) => `${demo.name} ${demo.pitch}`.toLowerCase().includes(word)) : shelf === null || shelf === OLD ? old : []
 
   useLayoutEffect(() => {
     root.current?.ownerDocument.scrollingElement?.scrollTo?.(0, left.scroll)
@@ -152,6 +170,12 @@ export function GameList({ games, showcases = [], onPick, onPickDemo }: Props) {
             <button type="button" className="home-pick" aria-pressed={shelf === null && !searching} onClick={() => chooseShelf(null)}>
               All {games.length}
             </button>
+            {old.length > 0 && (
+              <button type="button" className="home-pick" aria-pressed={shelf === OLD && !searching} onClick={() => chooseShelf(OLD)}>
+                <Cover id={`old/${old[0].key}`} emoji={old[0].emoji} eager />
+                Old games {old.length}
+              </button>
+            )}
             {shelves.map((s) => {
               const face = s.games.find((game) => fitsAge(game, childAge)) ?? s.games[0]
               return (
@@ -182,7 +206,7 @@ export function GameList({ games, showcases = [], onPick, onPickDemo }: Props) {
           </section>
         )}
 
-        {searching && now.length === 0 && (
+        {searching && now.length === 0 && oldShown.length === 0 && (
           <p className="home-nothing">
             No game has “{query.trim()}” in its name or its line.{' '}
             <button type="button" onClick={() => search('')}>
@@ -191,21 +215,18 @@ export function GameList({ games, showcases = [], onPick, onPickDemo }: Props) {
           </p>
         )}
 
-        {shelf === null && !searching && (
-          <>
-            {showcases.length > 0 && (
-              <section className="home-shelf" aria-label="Showcases">
-                <h2 className="home-shelf-title">Bigger adventures</h2>
-                <ul className="home-grid" aria-label="Bigger adventures">
-                  {showcases.map((s) => (
-                    <GameCard key={keyOf(s)} id={keyOf(s)} name={s.cartridge.manifest.name} emoji={s.emoji} art={s.tile} caption={s.requires ?? ages(s)} onLaunch={launch} />
-                  ))}
-                </ul>
-              </section>
-            )}
-            <DemoShelf gameKeys={gameKeys} onLaunch={launchDemo} />
-          </>
+        {shelf === null && !searching && showcases.length > 0 && (
+          <section className="home-shelf" aria-label="Showcases">
+            <h2 className="home-shelf-title">Bigger adventures</h2>
+            <ul className="home-grid" aria-label="Bigger adventures">
+              {showcases.map((s) => (
+                <GameCard key={keyOf(s)} id={keyOf(s)} name={s.cartridge.manifest.name} emoji={s.emoji} art={s.tile} caption={s.requires ?? ages(s)} onLaunch={launch} />
+              ))}
+            </ul>
+          </section>
         )}
+
+        <OldGames demos={oldShown} onLaunch={launchDemo} />
       </main>
 
       <div className="home-landscape" aria-hidden>
