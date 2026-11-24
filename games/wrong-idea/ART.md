@@ -79,3 +79,15 @@ Nobody's feeling is about the child, and nobody is hurt. The soup is cold: it ne
 ## The records
 
 A game with no learning goal has no records part.
+
+## The look
+
+School wall chart, the first look taken; the fallback (Airbrush gradient poster) was not tried. Flat matte colours under soft crayon grain, no pen line, a house cut open from edge to edge, the print worn to canvas along two folds each way, a wooden rail at the top and the bottom.
+
+- **Printing** (`litho.ts`). Every shape is one flat and then fourteen thin layers of dark specks on the side away from the light and of light specks on the other. The specks come from two tiles made once. Nothing is stroked round a shape; a paper bubble and a plaque have a darker flat behind them so they stand off the wall.
+- **Colours.** Red `#c83a2b`, blue `#2c5fa6` and yellow `#e8b022` belong to the working things and the family and to nothing else. Walls, floor, pot, quilt and furniture are muted (sage, tan, grey-blue, plum, wood). The butler's plum, black and white are his own.
+- **Working things** are plain: one flat, one silhouette, cream spots or none.
+- **Movers** are cached sprites in the same grain. Eyes, brows, mouths, the queen's neck and the butler's sleeves are drawn each frame, so a glance and a stretch cost a few paths.
+- **The chart** is painted once for a size of the surface, past the stage's edges: meadow, trees and earth on a surface of another shape.
+- **The order of layers** is the depth: shelf, family, butler, then each place's back, what is in it, its front. What is in a place is hidden below its front edge, and a touch below that edge does not reach it.
+- **Pictures in heads.** A colour is a splash of paint (a plain round read as an egg in the cold playtest), a kind is the bare shape in grey, spots are a grey patch with spots, alive is a pair of eyes, everything is the family, the animals and one thing of each kind in a heap.

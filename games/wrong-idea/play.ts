@@ -119,7 +119,7 @@ export class Play {
       case 'butler': return this.errand.loadSpot(now.n, id)
       case 'worn': {
         const on = this.headOf(now.by)
-        return { x: on.x, y: on.y + 16 + now.dy, s: 0.82 }
+        return { x: on.x, y: on.y + 30 + now.dy, s: 0.82 }
       }
       case 'fly': {
         const to = this.restSpot(id, now.where), p = Math.max(0, Math.min(1, now.t / now.dur))
@@ -550,8 +550,9 @@ export class Play {
     return this.scene === null ? 0 : Math.abs(Math.sin(this.scene * 11)) * 26 * Math.max(0, 1 - this.scene / SCENE_SECONDS) * GRAN_BOUNCE * 2
   }
 
-  /** One move the ghost hand may show: a small thing on the shelf carried to a place. It is never chosen to meet a wish. */
-  demo(index: number): { id: ThingId; from: Point; to: Point } | null {
+  /** One move the ghost hand may show: a small thing on the shelf carried to a place, and by turns, once something is out, the bell rope pulled. It is never chosen to meet a wish. */
+  demo(index: number): { id: ThingId | null; from: Point; to: Point } | null {
+    if (index % 2 === 1 && !isTidy(this.house)) return { id: null, from: { x: ROPE.x, y: ROPE.y + 20 }, to: { x: ROPE.x, y: ROPE.y + 120 } }
     const free = THINGS.filter((one) => !one.alive && this.atHome(this.shown[one.id]))
     if (free.length === 0) return null
     const one = free[(index * 4) % free.length]

@@ -354,13 +354,13 @@ export class View {
     if (shown <= 0) return
     const g = this.g, pop = shown + Math.sin(shown * Math.PI) * 0.16
     g.save()
-    g.translate(x, rim + 70)
+    g.translate(x, rim + 68)
     g.scale(pop, pop)
-    this.sprites.stamp(g, 'plaque', [-50, -42, 100, 86], (c) => {
-      flat(c, round(-46, -37, 92, 78, 20), '#5d4433', [-46, -37, 92, 78], 0.5)
-      flat(c, round(-40, -33, 80, 68, 16), CLOUD, [-40, -33, 80, 68], 0.18)
+    this.sprites.stamp(g, 'plaque', [-60, -46, 120, 94], (c) => {
+      flat(c, round(-56, -42, 112, 86, 22), '#5d4433', [-56, -42, 112, 86], 0.5)
+      flat(c, round(-50, -38, 100, 76, 18), CLOUD, [-50, -38, 100, 76], 0.18)
     })
-    g.scale(0.56, 0.56)
+    g.scale(0.6, 0.6)
     drawIdea(g, this.sprites, idea)
     g.restore()
   }
@@ -413,9 +413,9 @@ export class View {
     const g = this.g, spot = errand.spot(), head = spot.y - 390 * spot.s
     const working = thought.t > THINK_SECONDS + 0.2
     const side = spot.x > 660 ? -1 : 1
-    const k = errand.bubble * (working ? 0.66 : 1)
-    const x = Math.max(150, Math.min(1030, spot.x + side * (working ? 150 : 196))), y = Math.max(104, Math.min(330, head + (working ? 10 : 60)))
-    this.trail({ x: spot.x + side * 64, y: head + 46 }, { x: x - side * 70 * k, y: y + 34 * k })
+    const k = errand.bubble * (working ? 0.56 : 1)
+    const x = Math.max(150, Math.min(1030, spot.x + side * (working ? 128 : 190))), y = head < 300 ? (working ? 66 : 116) : head - 60
+    this.trail({ x: spot.x + side * 64, y: head + 20 }, { x: x - side * 60 * k, y: y + 40 * k })
     g.save()
     g.translate(x, y)
     g.scale(k, k)
@@ -438,6 +438,7 @@ export class View {
     if (thought.idea && settle > 0) {
       const pop = settle + Math.sin(settle * Math.PI) * 0.25
       g.scale(pop, pop)
+      g.scale(1.08, 1.08)
       drawIdea(g, this.sprites, thought.idea)
     }
     g.restore()
@@ -515,9 +516,11 @@ export class View {
     if (!move || guidance.demo === null) return
     const g = this.g, hand = handPose(guidance.demo, true, this.hand)
     const x = move.from.x + (move.to.x - move.from.x) * hand.travel, y = move.from.y + (move.to.y - move.from.y) * hand.travel - Math.sin(Math.PI * hand.travel) * 40
+    // Where it goes shows too.
+    if (move.id) this.halo({ x: move.to.x, y: move.to.y + 44, s: 1.5 }, 'hat', hand.opacity)
     g.save()
     g.globalAlpha = hand.opacity * 0.9
-    if (hand.press > 0.2) {
+    if (move.id && hand.press > 0.2) {
       g.save()
       g.globalAlpha *= 0.55
       g.translate(x, y + SIZE[thingOf(move.id).kind].h / 2)

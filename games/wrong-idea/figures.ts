@@ -197,7 +197,7 @@ function queen({ g, s, pose, gaze }: Live): void {
 }
 
 function gran({ g, s, pose, gaze, place }: Live): void {
-  const sit = place === 'home' ? -34 : 0, shrug = pose.part * 9
+  const sit = place === 'home' ? -16 : 0, shrug = pose.part * 9
   at(g, 0, sit, 0, () => {
     s.stamp(g, 'gran-body', [-60, -104, 120, 108], (c) => {
       flat(c, soft([-30, -98], [30, -98], [52, -44], [54, 0], [-54, 0], [-52, -44]), DYE.yellow, [-54, -100, 108, 100], 0.7)

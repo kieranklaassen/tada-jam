@@ -36,9 +36,9 @@ function paint(c: G, s: Sprites, idea: Idea): void {
     for (const [x, y, r] of dots) { c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fill() }
   }
   if (isEverything(idea)) {
-    const heap: readonly (readonly [Kind, number, number, number, string])[] = [['king', 22, -26, 62, ''], ['queen', -26, -28, 66, ''], ['cat', -38, 20, 44, ''], ['piglet', 40, 22, 46, '']]
+    const heap: readonly (readonly [Kind, number, number, number])[] = [['queen', 34, -18, 92], ['king', -30, -20, 80], ['gran', 6, 8, 58], ['cat', -46, 24, 48], ['piglet', 46, 30, 46], ['hen', 22, 34, 38]]
     for (const [kind, x, y, size] of heap) { c.save(); c.translate(x, y); paintFigure(c, s, kind, size); c.restore() }
-    const small: readonly (readonly [Kind, number, number, keyof typeof DYE, boolean])[] = [['hat', 0, 46, 'red', true], ['sock', -20, 56, 'blue', true], ['teapot', 24, 56, 'yellow', false]]
+    const small: readonly (readonly [Kind, number, number, keyof typeof DYE, boolean])[] = [['hat', -22, 60, 'red', true], ['sock', 4, 63, 'blue', true], ['teapot', 34, 63, 'yellow', false]]
     for (const [kind, x, y, colour, spots] of small) { c.save(); c.translate(x, y); c.scale(0.42, 0.42); paintSmall(c, kind, DYE[colour], spots); c.restore() }
     return
   }
@@ -61,7 +61,12 @@ function paint(c: G, s: Sprites, idea: Idea): void {
     return
   }
   if (idea.colour || idea.spots) {
-    const pool = soft([-34, -42], [6, -54], [46, -36], [54, 2], [36, 40], [-4, 52], [-44, 36], [-56, -4])
+    // A splash of it, as it comes out of a pot of paint.
+    const pool = soft(...Array.from({ length: 18 }, (_, i) => {
+      const a = (i / 18) * Math.PI * 2, r = i % 2 ? 40 : [62, 54, 60, 52, 63][i % 5]
+      return [Math.cos(a) * r, Math.sin(a) * r * 0.94] as const
+    }))
+    if (idea.colour) for (const [x, y, r] of [[-54, -44, 6], [52, 46, 7], [56, -40, 4.5]] as const) flat(c, ellipse(x, y, r, r), colour, [0, 0, 1, 1], 0)
     if (idea.colour) flat(c, pool, colour, [-54, -52, 108, 104], 0.4)
     else flat(c, soft([-46, -46], [46, -46], [50, 46], [-50, 46]), BARE, [-48, -46, 96, 92], 0.2)
     if (idea.spots) spot([[-22, -22, 10], [14, -30, 9], [34, -4, 10], [-34, 12, 9], [0, 4, 11], [22, 30, 10], [-14, 34, 9]])
