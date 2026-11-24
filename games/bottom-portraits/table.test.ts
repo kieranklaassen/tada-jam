@@ -15,15 +15,16 @@ describe('the first visit', () => {
 })
 
 describe('moving', () => {
-  it('sends one to the empty places, the near ones first, and then swaps with the near left one', () => {
+  it('sends one to the empty places, the near ones first, and then swaps with the near one on its own side', () => {
     const table = freshTable(null)
     for (const [id, n] of [['hen', 1], ['hippo', 2], ['pig', 3]] as const) {
-      expect(sendTo(table)).toEqual({ kind: 'spot', n })
-      move(table, id, sendTo(table))
+      expect(sendTo(table, id)).toEqual({ kind: 'spot', n })
+      move(table, id, sendTo(table, id))
     }
-    expect(move(table, 'giraffe', sendTo(table))).toEqual(['giraffe', 'elephant'])
+    expect(move(table, 'board', sendTo(table, 'board'))).toEqual(['board', 'elephant'])
     expect(placeOf(table, 'elephant')).toEqual({ kind: 'step', n: 2 })
-    expect(move(table, 'elephant', sendTo(table))).toEqual(['elephant', 'giraffe'])
+    expect(move(table, 'elephant', sendTo(table, 'elephant'))).toEqual(['elephant', 'board'])
+    expect(move(table, 'giraffe', sendTo(table, 'giraffe'))).toEqual(['giraffe', 'hen'])
     expect(everyone(table)).toEqual(ALL)
   })
 

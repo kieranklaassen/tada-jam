@@ -65,7 +65,10 @@ export class Aim {
   at(game: Game, x: number, y: number): Target {
     // Nearest to the child first: what is seen in front is what is touched.
     const near = [...CAST].sort((a, b) => game.poses[b].z - game.poses[a].z || CAST.indexOf(a) - CAST.indexOf(b))
-    for (const id of near) if (this.outside(game, id, x, y) <= 0) return { kind: 'sitter', id }
+    // A shown picture stands before whoever waits behind it.
+    const size = game.easel.size, shown = game.easel.tile >= 0 && off(this.flat(game.easel, (PICTURE.w + 0.4) * size, (PICTURE.h + 0.4) * size), x, y) <= 2
+    for (const id of near) if ((!shown || game.poses[id].z > game.easel.z) && this.outside(game, id, x, y) <= 0) return { kind: 'sitter', id }
+    if (shown) return { kind: 'small', what: 'shown' }
     if (game.keyUp > 0.5) {
       const k = this.px({ x: KEY.x, y: KEY.y + 0.6, z: KEY.z })
       if (Math.hypot(x - k.x, y - k.y) < Math.max(34, this.height * 0.05)) return { kind: 'small', what: 'key' }
@@ -76,11 +79,9 @@ export class Aim {
       if (d < least) { least = d; close = id }
     }
     const hit = (r: Rect): boolean => off(r, x, y) <= 4
-    const size = game.easel.size
-    if (game.easel.tile >= 0 && hit(this.flat(game.easel, (PICTURE.w + 0.4) * size, (PICTURE.h + 0.4) * size))) return { kind: 'small', what: 'shown' }
     if (close) return { kind: 'sitter', id: close }
-    if (hit(this.rect([{ x: MAESTRO.x - 1.4, y: 0.3, z: MAESTRO.z }, { x: MAESTRO.x + 1.35, y: 5.6, z: MAESTRO.z }]))) return { kind: 'small', what: 'maestro' }
-    if (hit(this.rect([{ x: EASEL.x - 1.25, y: -0.4, z: EASEL.z }, { x: EASEL.x + 1.2, y: EASEL.y + 1.2, z: EASEL.z }]))) return { kind: 'small', what: 'easel' }
+    if (hit(this.rect([{ x: MAESTRO.x - 1.4, y: 1.2, z: MAESTRO.z }, { x: MAESTRO.x + 1.35, y: 5.6, z: MAESTRO.z }]))) return { kind: 'small', what: 'maestro' }
+    if (hit(this.rect([{ x: EASEL.x - 1.25, y: 1.5, z: EASEL.z }, { x: EASEL.x + 1.2, y: EASEL.y + 1.2, z: EASEL.z }]))) return { kind: 'small', what: 'easel' }
     for (let n = 0; n < NAILS.length; n++) if (game.nails[n].hung && hit(this.flat(NAILS[n], PICTURE.w * HUNG + 0.3, PICTURE.h * HUNG + 0.3))) return { kind: 'nail', n }
     if (hit(this.rect([{ x: 1.75, y: 0.5, z: -5.4 }, { x: 3.2, y: 2.3, z: -5.4 }]))) return { kind: 'small', what: 'pots' }
     const t = this.px({ x: 0, y: -0.2, z: 0.6 }), rx = this.px({ x: 3, y: 0, z: 0 }).x - this.px({ x: 0, y: 0, z: 0 }).x
@@ -95,7 +96,7 @@ export class Aim {
   placeUnder(game: Game, x: number, y: number): Place {
     const places: Place[] = [...SPOTS.map((_, n): Place => ({ kind: 'spot', n })), ...STEPS.map((_, n): Place => ({ kind: 'step', n }))]
     const own = game.hand ? placeOf(game.table, game.hand.id) : null
-    let best: Place | null = null, least = this.height * 0.115, free: Place | null = null, freeLeast = Infinity
+    let best: Place | null = null, least = this.height * 0.1, free: Place | null = null, freeLeast = Infinity
     for (const place of places) {
       const p = game.where(place), s = this.px({ x: p.x, y: p.y + 0.75, z: p.z }), d = Math.hypot(x - s.x, y - s.y)
       if (d < least) { least = d; best = place }

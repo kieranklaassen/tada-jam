@@ -56,6 +56,8 @@ export class Stage {
   private readonly picture: THREE.Mesh
   private readonly tiles: THREE.PlaneGeometry[]
   private readonly hung: THREE.Group[] = []
+  private readonly faces: THREE.Mesh[] = []
+  private readonly done: boolean[] = NAILS.map(() => false)
   private readonly notPainted: THREE.Object3D[] = []
   private readonly bin: { dispose(): void }[] = []
   private readonly m = new THREE.Matrix4()
@@ -92,7 +94,7 @@ export class Stage {
     for (const y of [0.05, STAND.h - 0.05]) stand.add(new THREE.TorusGeometry(STAND.r - (y > 0.1 ? 0.07 : 0), 0.045, 8, 40), swatch(2), { at: [0, y, 0], turn: [Math.PI / 2, 0, 0] })
     this.stands = new THREE.InstancedMesh(keep(stand.weld()), tin, STANDS)
     const key = new Press().disc(swatch(3), [0, 0, 0.1], 0.035, 0.22, [Math.PI / 2, 0, 0])
-    for (const s of [-1, 1]) key.add(new THREE.TorusGeometry(0.075, 0.028, 8, 18), swatch(3), { at: [s * 0.075, 0, 0.22] })
+    for (const s of [-1, 1]) key.shell(swatch(3), [s * 0.15, 0.02, 0.22], [0.15, 0.1, 0.035], [0, 0, s * 0.25], 16)
     this.keys = new THREE.InstancedMesh(keep(key.weld()), tin, STANDS)
     CAST.forEach((id, n) => this.stands.setColorAt(n, this.colour.set(TINTS[id]).convertLinearToSRGB()))
     this.stands.name = 'stands'
@@ -121,10 +123,10 @@ export class Stage {
     this.scene.add(this.flecks)
 
     const glowPen = canvas(128, 128), ring = glowPen.pen.createRadialGradient(64, 64, 34, 64, 64, 64)
-    ring.addColorStop(0, 'rgba(255,240,150,0)')
-    ring.addColorStop(0.45, 'rgba(255,226,90,0.95)')
-    ring.addColorStop(0.62, 'rgba(255,200,50,0.5)')
-    ring.addColorStop(1, 'rgba(255,200,50,0)')
+    ring.addColorStop(0, 'rgba(255,220,90,0)')
+    ring.addColorStop(0.45, 'rgba(255,196,30,1)')
+    ring.addColorStop(0.62, 'rgba(255,170,20,0.6)')
+    ring.addColorStop(1, 'rgba(255,180,30,0)')
     glowPen.pen.fillStyle = ring
     glowPen.pen.fillRect(0, 0, 128, 128)
     const glowMat = keep(new THREE.MeshBasicMaterial({ map: keep(texture(glowPen.sheet)), transparent: true, depthWrite: false }))
@@ -158,7 +160,7 @@ export class Stage {
     this.picture = hang(this.easel, 'picture', 0)
     NAILS.forEach((_, n) => {
       const group = new THREE.Group()
-      hang(group, `hung-${n}`, n)
+      this.faces.push(hang(group, `hung-${n}`, n))
       this.hung.push(group)
     })
     this.notPainted.push(this.maestro.root, this.easel, ...this.hung, this.shade, this.flecks, this.glow, this.hand, this.room.key)
@@ -213,6 +215,7 @@ export class Stage {
       this.stand(n, pose, 0)
     })
     this.studio.paint(this.renderer, this.scene, framing(arrangement), tile)
+    this.done[tile] = true
     this.notPainted.forEach((thing, n) => { thing.visible = was[n] })
     this.room.table.rotation.y = yaw
     for (const rig of this.rigs.values()) rig.root.visible = true
@@ -244,11 +247,12 @@ export class Stage {
     this.easel.position.set(easel.x, easel.y, easel.z)
     this.easel.rotation.set(0, easel.yaw, easel.roll, 'YXZ')
     this.easel.scale.setScalar(easel.size)
-    this.picture.material = easel.tile < 0 ? this.bare : this.paint
+    this.picture.material = easel.tile < 0 || !this.done[easel.tile] ? this.bare : this.paint
     this.picture.geometry = this.tiles[Math.max(0, easel.tile)]
     shown.wall.forEach((nail, i) => {
       const group = this.hung[i], at = NAILS[i]
       group.visible = nail.hung
+      this.faces[i].material = this.done[i] ? this.paint : this.bare
       // It swings from its nail, above its top edge.
       const r = PICTURE.h * HUNG * 0.62
       group.position.set(at.x + Math.sin(nail.swing) * r, at.y + r - Math.cos(nail.swing) * r - nail.drop, at.z)

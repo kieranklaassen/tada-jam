@@ -211,7 +211,7 @@ export class Room {
 
     // The key that turns the table, folded flat or standing up.
     const key = new Press().disc(S.gold, [0, 0.2, 0], 0.09, 0.5)
-    for (const s of [-1, 1]) key.add(new THREE.TorusGeometry(0.3, 0.1, 10, 26), S.gold, { at: [s * 0.3, 0.66, 0] })
+    for (const s of [-1, 1]) key.shell(S.gold, [s * 0.42, 0.7, 0], [0.46, 0.3, 0.09], [0, 0, s * 0.3], 26).shell(S.red, [s * 0.46, 0.71, 0.05], [0.2, 0.13, 0.06], [0, 0, s * 0.3], 18)
     this.key = new THREE.Mesh(keep(key.weld()), tin)
     this.key.name = 'table-key'
     this.key.position.set(KEY.x, KEY.y, KEY.z)

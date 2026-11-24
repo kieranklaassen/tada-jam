@@ -1,4 +1,4 @@
-import type { Id } from './cast'
+import { FIGURES, type Id } from './cast'
 import { CARRY_Z, type Game } from './game'
 import { onPlane, type P3 } from './layout'
 import { IdleLadder, type Guidance } from './guidance'
@@ -23,6 +23,8 @@ export const REST_S = 1
 /** Seconds a lifted carry waits for the finger, and how near it must come back. */
 export const LIFT_GRACE_S = 0.3
 export const REGRAB = 140
+/** How far the table's rim is pushed for a quarter round. */
+export const PUSH = 110
 
 type Contact = { id: number; x: number; y: number; landed: number; target: Target; carrying: boolean; spent: boolean }
 
@@ -64,28 +66,39 @@ export class Play {
       game.drop(aim.placeUnder(game, lifted.x, lifted.y))
     }
     const target = aim.at(game, x, y)
-    if (this.working && !this.rests(this.working)) { this.answer(target); return true }
+    if (this.working && !this.rests(this.working)) { this.answer(target, x, y); return true }
     // A touch in a scene lands it and is spent on that, whatever it lies on.
     const spent = game.interrupt()
     this.working = { id, x, y, landed: game.time, target, carrying: false, spent }
-    this.answer(target)
+    this.answer(target, x, y)
     return true
   }
 
   /** What a landing finger is answered with. */
-  private answer(target: Target): void {
+  private answer(target: Target, x: number, y: number): void {
     const { game } = this
     if (target.kind === 'sitter') game.pressed(target.id)
     else if (target.kind === 'nail') game.swingPicture(target.n)
     else if (target.kind === 'small') game.small(target.what)
     else game.small('floor')
+    // What does not move itself is answered in paint.
+    if (target.kind === 'air' || (target.kind === 'small' && ['floor', 'step', 'window', 'pots', 'table'].includes(target.what))) game.splash(onPlane(this.aim.seeing, x, y, this.aim.width, this.aim.height, target.kind === 'air' || target.what === 'window' ? -6.6 : CARRY_Z))
   }
 
   move(id: number, x: number, y: number): void {
     const c = this.working
     if (!c || c.id !== id) return
     this.ladder.touch(this.game.time)
-    if (c.spent || c.target.kind !== 'sitter') return
+    if (c.spent) return
+    if (c.target.kind === 'small' && c.target.what === 'table') {
+      // Pushed along by its rim, the table goes round.
+      const gone = x - c.x
+      if (Math.abs(gone) < PUSH) return
+      c.x = x
+      this.game.spin(gone > 0 ? 1 : -1)
+      return
+    }
+    if (c.target.kind !== 'sitter') return
     if (!c.carrying) {
       if (Math.hypot(x - c.x, y - c.y) <= TAP_SLOP) return
       c.carrying = true
@@ -105,7 +118,9 @@ export class Play {
 
   private follow(x: number, y: number): void {
     const { aim, game } = this, p = onPlane(aim.seeing, x, y, aim.width, aim.height, CARRY_Z)
-    game.carry({ x: p.x + this.grip.x, y: Math.max(-1.2, p.y + this.grip.y), z: CARRY_Z })
+    // Never out of sight: its head stays under the top of the surface.
+    const top = onPlane(aim.seeing, aim.width / 2, 0, aim.width, aim.height, CARRY_Z).y - (game.hand ? FIGURES[game.hand.id].height : 0) - 0.4
+    game.carry({ x: p.x + this.grip.x, y: Math.max(-1.2, Math.min(top, p.y + this.grip.y)), z: CARRY_Z })
     this.at = { x, y }
   }
   private at = { x: 0, y: 0 }

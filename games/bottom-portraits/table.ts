@@ -34,7 +34,7 @@ export function freshTable(childAge: number | null): Table {
   const turns = Object.fromEntries(CAST.map((id) => [id, 0])) as Record<Id, Turn>
   const spots: (Id | null)[] = ['elephant', null, null, null]
   if (pair) spots[3] = 'pig'
-  const homes: (Id | null)[] = ['hen', 'hippo', 'giraffe', 'crocodile', pair ? null : 'pig', 'board']
+  const homes: (Id | null)[] = ['hen', 'hippo', 'board', 'crocodile', pair ? null : 'pig', 'giraffe']
   return { ...freshState(childAge), spots, turns, homes, wall: new Array<Arrangement | null>(NAIL_COUNT).fill(null), last: -1, painted: false }
 }
 
@@ -66,10 +66,18 @@ export function turnTable(table: Table): void {
   table.spots = next
 }
 
-/** Where a tap sends one from its step: an empty place, the near ones first, or the near left place whoever stands there. */
-export function sendTo(table: Table): Place {
-  const n = table.spots.indexOf(null)
-  return { kind: 'spot', n: n < 0 ? 0 : n }
+/**
+ * Where a tap sends one from its step: an empty place, the near ones first (the board, which is for standing behind, the
+ * far ones first), or the near place on its own side whoever stands there.
+ */
+export function sendTo(table: Table, id: Id): Place {
+  const order = id === 'board' ? [2, 3, 0, 1] : [0, 1, 2, 3], n = order.find((spot) => table.spots[spot] === null)
+  return { kind: 'spot', n: n ?? (placeOf(table, id).n < 3 ? 0 : 1) }
+}
+
+/** A quarter the other way round. */
+export function turnTableBack(table: Table): void {
+  for (let i = 0; i < 3; i++) turnTable(table)
 }
 
 /**

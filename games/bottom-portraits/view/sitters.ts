@@ -328,7 +328,7 @@ function boardShape(): THREE.Shape {
 }
 
 function board(): Parts {
-  // The whole sheet's upper half is the painted lady, laid flat; its right half is the bare back.
+  // The whole sheet's upper half is the painted lady, laid flat; its right half is her back.
   const { geometry, sheet } = boardFace()
   return { body: geometry, head: null, neck: [0, 0, 0], eyes: null, sheet, loose: [] }
 }
@@ -339,7 +339,8 @@ function boardFace(): { geometry: THREE.BufferGeometry; sheet: THREE.CanvasTextu
   }, (p) => { p.fill('#c9a878') }, ['#fffaf0', INK, '#b98d5a', '#f5a7c0', '#d33a32', '#7d5a34', '#cfcac0', '#e8b33c', '#b98d5a', '#f3c9a4'])
   const pen = (sheet.image as HTMLCanvasElement).getContext('2d')!
   // Board space: x from -1 to 1, y from 0.28 to 3.36, laid on the left 512 px of the upper half.
-  const X = (x: number): number => 256 + x * 250, Y0 = (y: number): number => 506 - ((y - 0.28) / 3.1) * 500, Y = (y: number): number => Y0(y < 1.95 ? 0.28 + (y - 0.28) * 0.66 : y === HOLE.y ? y : y < 2.15 ? 1.38 + (y - 1.95) * 0.6 : y - 0.62)
+  let left = 0
+  const X = (x: number): number => left + 256 + x * 250, Y0 = (y: number): number => 506 - ((y - 0.28) / 3.1) * 500, Y = (y: number): number => Y0(y < 1.95 ? 0.28 + (y - 0.28) * 0.66 : y === HOLE.y ? y : y < 2.15 ? 1.38 + (y - 1.95) * 0.6 : y - 0.62)
   const blob = (points: readonly (readonly [number, number])[], colour: string, line: string | null = INK, width = 4): void => {
     pen.beginPath()
     points.forEach(([x, y], i) => {
@@ -375,12 +376,38 @@ function boardFace(): { geometry: THREE.BufferGeometry; sheet: THREE.CanvasTextu
   pen.strokeStyle = '#e8b33c'
   pen.lineWidth = 12
   pen.beginPath(); pen.ellipse(X(0), Y0(HOLE.y), HOLE.r * 250 + 5, HOLE.r * 161 + 5, 0, 0, 7); pen.stroke()
-  // The back: bare tin, the maker's struts.
-  pen.fillStyle = '#c3c1ba'
+  // The back: the same lady from behind, and what she wears under it.
+  left = 512
+  pen.save()
+  pen.beginPath()
+  pen.rect(512, 0, 512, 512)
+  pen.clip()
+  pen.fillStyle = '#e3cfa6'
   pen.fillRect(512, 0, 512, 512)
-  pen.strokeStyle = 'rgba(120,116,112,0.5)'
-  pen.lineWidth = 2
-  for (let n = 0; n < 60; n++) { pen.beginPath(); pen.moveTo(512, n * 9 + 3); pen.lineTo(1024, n * 9 + ((n * 37) % 11) - 4); pen.stroke() }
+  pen.strokeStyle = 'rgba(150,110,60,0.35)'
+  pen.lineWidth = 3
+  for (let n = 0; n < 16; n++) { pen.beginPath(); pen.moveTo(512 + n * 34, 0); pen.lineTo(512 + n * 34 + ((n * 37) % 11) - 5, 512); pen.stroke() }
+  blob([[-0.68, 2.5], [-0.72, 3.0], [-0.2, 3.3], [0.2, 3.3], [0.72, 3.0], [0.68, 2.5], [0.5, 2.16], [-0.5, 2.16]], '#7a3f1c')
+  for (const s of [-1, 1]) {
+    blob([[s * 0.2, 1.72], [s * 0.5, 1.86], [s * 0.9, 2.16], [s * 0.97, 2.75], [s * 0.86, 2.85], [s * 0.76, 2.3], [s * 0.3, 1.5]], '#f3c9a4')
+    blob([[s * 0.1, 0.95], [s * 0.34, 0.95], [s * 0.36, 0.5], [s * 0.3, 0.34], [s * 0.12, 0.34]], '#f3c9a4')
+    blob([[s * 0.08, 0.4], [s * 0.4, 0.44], [s * 0.46, 0.32], [s * 0.08, 0.3]], '#d33a32')
+  }
+  blob([[-0.28, 1.95], [0.28, 1.95], [0.32, 1.5], [0.22, 1.2], [-0.22, 1.2], [-0.32, 1.5]], '#d33a32')
+  pen.strokeStyle = '#fff6d8'
+  pen.lineWidth = 5
+  for (let n = 0; n < 4; n++) { pen.beginPath(); pen.moveTo(X(-0.1), Y(1.86 - n * 0.13)); pen.lineTo(X(0.1), Y(1.78 - n * 0.13)); pen.moveTo(X(0.1), Y(1.86 - n * 0.13)); pen.lineTo(X(-0.1), Y(1.78 - n * 0.13)); pen.stroke() }
+  // Her skirt stands straight up behind, over striped drawers.
+  blob([[-0.95, 1.36], [-0.5, 1.62], [0, 1.5], [0.5, 1.62], [0.95, 1.36], [0.5, 1.2], [-0.5, 1.2]], '#f5a7c0')
+  for (const s of [-1, 1]) {
+    blob([[s * 0.01, 1.26], [s * 0.44, 1.28], [s * 0.58, 1.02], [s * 0.48, 0.74], [s * 0.1, 0.7], [s * 0.01, 0.86]], '#fbf3df')
+    for (let n = 0; n < 4; n++) { pen.strokeStyle = '#2f8f93'; pen.lineWidth = 7; pen.beginPath(); pen.moveTo(X(s * (0.12 + n * 0.11)), Y(1.2)); pen.lineTo(X(s * (0.14 + n * 0.11)), Y(0.8)); pen.stroke() }
+  }
+  blob([[-0.16, 1.02], [0.1, 1.06], [0.14, 0.84], [-0.12, 0.82]], '#e8b33c', INK, 3)
+  pen.strokeStyle = '#e8b33c'
+  pen.lineWidth = 12
+  pen.beginPath(); pen.ellipse(X(0), Y0(HOLE.y), HOLE.r * 250 + 5, HOLE.r * 161 + 5, 0, 0, 7); pen.stroke()
+  pen.restore()
   sheet.needsUpdate = true
 
   const face = (front: boolean): THREE.BufferGeometry => {

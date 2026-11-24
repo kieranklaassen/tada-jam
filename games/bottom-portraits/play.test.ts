@@ -101,7 +101,7 @@ describe('painting', () => {
     expect(play.game.table.finished).toBe(true)
   })
   it('is landed by any touch, which is answered and does nothing else; the next touch is ordinary', () => {
-    for (const t of [0.2, 1.4, 2.6, 3.1, 4.2]) {
+    for (const t of [0.2, 1.4, 2.6, 3.1]) {
       const play = open()
       tap(play, maestro(play)); run(play, t)
       const before = snap(play)
@@ -119,6 +119,25 @@ describe('painting', () => {
       expect(play.game.table.finished).toBe(false)
     }
   })
+  it('once it has been seen, is ended by a touch that is only a touch', () => {
+    const play = open()
+    tap(play, maestro(play)); run(play, 4.4)
+    play.game.cues.length = 0
+    tap(play, body(play, 'elephant'))
+    expect(play.game.hushed).toBe(true)
+    expect(play.game.table.turns.elephant).toBe(1)
+    expect(play.game.table.finished).toBe(false)
+  })
+  it('is never made twice running: asked again while he shows it, he shows it off, and whoever is in it looks again', () => {
+    const play = open(full())
+    tap(play, maestro(play)); run(play, 12)
+    const before = snap(play)
+    for (let i = 0; i < 5; i++) { tap(play, maestro(play)); run(play, 0.3) }
+    expect(snap(play)).toBe(before)
+    expect(CAST.some((id) => play.game.bodies[id].act !== null)).toBe(true)
+    run(play, 5)
+    expect(CAST.every((id) => play.game.bodies[id].act === null)).toBe(true)
+  })
   it('asked for by a drag that starts in it, also changes nothing', () => {
     const play = open(full())
     tap(play, maestro(play)); run(play, 1)
@@ -135,7 +154,8 @@ describe('painting', () => {
     }
     expect(play.game.table.last).toBe(0)
     tap(play, maestro(play)); run(play, 9)
-    tap(play, maestro(play)); run(play, 0.4)
+    // Asked again at once after a change, the old one reaches its nail first.
+    tap(play, body(play, 'elephant')); tap(play, maestro(play)); run(play, 0.4)
     expect(play.game.easel.tile).toBe(1)
     run(play, 9)
     expect(play.game.table.last).toBe(2)
@@ -278,6 +298,23 @@ describe('the finger', () => {
         play.cancel(1)
       }
     }
+  })
+})
+
+describe('the table\'s rim', () => {
+  it('pushed along, goes round that way, and answers in paint when it is only touched', () => {
+    const play = open(full()), rim: [number, number] = [W / 2, px(play, { x: 0, y: -0.3, z: 2.7 })[1]]
+    play.down(1, ...rim); play.up(1, ...rim)
+    expect(play.game.paintDots.length).toBeGreaterThan(0)
+    const before = snap(play)
+    drag(play, [W / 2 - 90, rim[1]], [W / 2 + 60, rim[1]]); play.up(1, W / 2 + 60, rim[1])
+    expect(play.game.table.spots[1]).toBe('elephant')
+    run(play, 3)
+    drag(play, [W / 2 + 90, rim[1]], [W / 2 - 60, rim[1]]); play.up(1, W / 2 - 60, rim[1])
+    expect(snap(play)).toBe(before)
+    run(play, 3)
+    expect(play.game.poses.elephant.yaw).toBeCloseTo(0, 2)
+    expect(play.game.poses.elephant.x).toBeCloseTo(SPOTS[0].x, 2)
   })
 })
 

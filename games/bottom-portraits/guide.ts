@@ -49,5 +49,5 @@ export function handAt(game: Game, demo: Demo, progress: number): { x: number; y
 export function glowAt(game: Game): { x: number; y: number; z: number; r: number; flat: boolean } {
   if (!game.table.painted) return { x: MAESTRO.x - 0.5, y: 3.4, z: MAESTRO.z - 1.1, r: 3.4, flat: false }
   const p = game.poses[nearest(game)]
-  return { x: p.x, y: p.y + 0.05, z: p.z, r: 1.75, flat: true }
+  return { x: p.x, y: p.y + 0.05, z: p.z, r: 2.15, flat: true }
 }

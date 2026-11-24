@@ -5,7 +5,7 @@ import { ACT_SECONDS, TEMPERS, act, clamp, ease, fly, hold, idle, poke, want } f
 import { restMaestro, restPose, settle, type MaestroPose, type Pose } from './pose'
 import { Scene, type Beat } from './scene'
 import { actOf, affronts, sideOf, sights, type Act } from './sight'
-import { NAIL_COUNT, arrangementOf, at as whoAt, move, paint, placeOf, seated, sendTo, turnOne, turnTable, type Arrangement, type Place, type Table } from './table'
+import { NAIL_COUNT, arrangementOf, at as whoAt, move, paint, placeOf, seated, sendTo, turnOne, turnTable, turnTableBack, type Arrangement, type Place, type Table } from './table'
 import { ACTS, HOPS, SOUNDS, landing, press, winding, type SoundName } from './voices'
 
 // The game with no browser in it: the table, everyone's body in time, the
@@ -71,6 +71,10 @@ export class Game {
   private mood: { what: 'watch' | 'bottom' | 'face' | 'side' | 'teeth' | 'crane'; since: number; x: number } = { what: 'watch', since: -9, x: 0 }
   private stagecraft: { what: 'measure' | 'dab' | 'back' | 'proud' | 'shocked' | 'secret' | null; k: number } = { what: null, k: 0 }
   private nudged = -9
+  private vain = -9
+  /** One who is shown its picture again. */
+  private again: { id: Id; kind: Act; t: number } | null = null
+  private shownTo = 0
   private easelSquash = 1
 
   constructor(readonly table: Table) {
@@ -89,6 +93,7 @@ export class Game {
   /** Every picture is asked for again: on load, and when the browser has lost the sheet they are on. */
   repaint(): void {
     this.table.wall.forEach((arrangement, tile) => { if (arrangement) this.wanted.push({ arrangement, tile }) })
+    this.wanted.sort((a, b) => Number(b.tile === this.table.last) - Number(a.tile === this.table.last))
   }
 
   /** The way a stand faces: on the table its quarter, on the steps turned a little in towards the room as well. */
@@ -116,11 +121,13 @@ export class Game {
   /** A landing finger ends a running scene and is spent on it. Returns whether it was. */
   interrupt(): boolean {
     if (!this.scene?.running) return false
+    // Once the picture has been seen, a touch is only a touch: it ends what is left and is then answered as ever.
+    const seen = this.easel.tile === this.table.last && this.easel.yaw === 0 && !this.hanging
     // The old picture reaches its nail before the new one is shown.
     if (this.hanging) this.hang()
     this.scene.finish()
     this.hushed = true
-    return true
+    return !seen
   }
 
   /** The finger is on one: its tin gives at once. */
@@ -134,7 +141,7 @@ export class Game {
   /** A tap on one: on the table it winds round a quarter; on the steps it comes over. */
   tapped(id: Id): void {
     const place = placeOf(this.table, id)
-    if (place.kind === 'step') { this.done.add('bring'); this.send(id, sendTo(this.table)); return }
+    if (place.kind === 'step') { this.done.add('bring'); this.send(id, sendTo(this.table, id)); return }
     this.alter()
     turnOne(this.table, id)
     const body = this.bodies[id]
@@ -145,15 +152,19 @@ export class Game {
     this.changed()
   }
 
-  /** The whole table goes a quarter round. */
   tappedKey(): boolean {
-    if (seated(this.table).length < 2) return false
+    return seated(this.table).length >= 2 && this.spin(1)
+  }
+
+  /** The whole table goes a quarter round, by its key or pushed by its rim. */
+  spin(way: 1 | -1): true {
     this.alter()
     const who = seated(this.table)
-    turnTable(this.table)
-    this.swing += Q
-    this.turned += 1
-    for (const id of who) { this.bodies[id].goal += Q; this.bodies[id].yaw += Q }
+    if (way > 0) turnTable(this.table)
+    else turnTableBack(this.table)
+    this.swing += Q * way
+    this.turned += way
+    for (const id of who) { this.bodies[id].goal += Q * way; this.bodies[id].yaw += Q * way }
     this.keySquash = 0.75
     this.sound('table')
     this.done.add('key')
@@ -225,9 +236,14 @@ export class Game {
 
   // --- The painter ------------------------------------------------------------
 
-  /** He is asked for a picture. */
+  /** He is asked for a picture. While he is showing the very one he would paint, he shows it off instead. */
   paint(): void {
-    this.alter()
+    // Any change to the table hangs it, so while one stands shown it is always that one.
+    if (this.table.finished) {
+      this.small('shown')
+      this.vain = this.time
+      return
+    }
     this.done.add('paint')
     const table = this.table, offset = this.hanging ? HANG_S - this.hanging.t : 0
     const nail = (table.last + 1) % NAIL_COUNT, old = table.wall[nail] !== null
@@ -292,7 +308,7 @@ export class Game {
     this.scene.start(this.time, () => { paint(table); this.changed(true) })
   }
 
-  /** The table is about to change, or another picture is asked for: the one that stands shown goes to its nail. */
+  /** The table is about to change: the one that stands shown goes to its nail. */
   private alter(): void {
     if (!this.table.finished) return
     this.table.finished = false
@@ -325,7 +341,18 @@ export class Game {
       case 'step': this.sound('wood'); break
       case 'window': this.sound('glass'); this.mood = { what: 'crane', since: this.time, x: -3 }; break
       case 'pots': this.sound('pots'); this.mood = { what: 'side', since: this.time, x: 2 }; break
-      case 'shown': this.sound('swing'); this.wobble = 0; break
+      case 'shown': {
+        this.sound('swing')
+        this.wobble = 0
+        // Whoever is in it looks again, one after another.
+        const arrangement = this.table.wall[this.table.last]
+        if (!this.table.finished || !arrangement || this.scene?.running) break
+        const all = sights(arrangement), s = all[this.shownTo++ % all.length]
+        if (this.again) this.bodies[this.again.id].act = null
+        this.again = { id: s.id, kind: actOf(s), t: 0 }
+        this.say(ACTS[s.id][actOf(s)])
+        break
+      }
       case 'easel': this.sound('wood'); this.easelSquash = 0.9; break
       case 'maestro': this.sound('hmm'); this.nudged = this.time; break
       case 'key': this.sound('wood'); this.keySquash = 0.8; break
@@ -342,6 +369,22 @@ export class Game {
     const first = sights(arrangement)[0]
     for (const note of ACTS[first.id][actOf(first)]) if ((note.delay ?? 0) < 0.9) notes.push({ ...note, peak: note.peak * 0.6, delay: (note.delay ?? 0) + 0.3 })
     this.say(notes)
+  }
+
+  /** Dots of paint jump from where a finger landed on something that does not move. */
+  private readonly dots: { x: number; y: number; z: number; n: number; age: number }[] = []
+  splash(at: P3): void {
+    if (this.dots.length > 10) this.dots.splice(0, this.dots.length - 10)
+    for (let n = 0; n < 5; n++) this.dots.push({ ...at, n, age: 0 })
+  }
+  /** Every fleck of paint in the air. */
+  get paintDots(): { x: number; y: number; z: number; r: number; colour: string }[] {
+    const out = [...this.flecks]
+    for (const d of this.dots) {
+      const a = (d.n / 5) * Math.PI * 2 + 0.6, t = d.age
+      out.push({ x: d.x + Math.cos(a) * t * 0.9, y: d.y + Math.sin(a) * t * 0.9 + t * 1.1 - 3.4 * t * t, z: d.z, r: 0.085 * (1 - t / 0.6) + 0.01, colour: Object.values(COLOURS)[(d.n * 3 + 1) % 7] })
+    }
+    return out
   }
 
   // --- Time -------------------------------------------------------------------
@@ -368,7 +411,8 @@ export class Game {
       this.easel = { ...EASEL, roll: 0, size: 1, tile: -1 }
     }
     this.bare = Math.min(1, this.bare + dt * 3)
-    this.swing = this.swing < 0.002 ? 0 : this.swing - Math.min(this.swing, Math.min(this.swing * 5.5, 3.4) * dt)
+    const left = Math.abs(this.swing)
+    this.swing = left < 0.002 ? 0 : this.swing - Math.sign(this.swing) * Math.min(left, Math.min(left * 5.5, 3.4) * dt)
     const up = seated(this.table).length >= 2 ? 1 : 0
     if (up && this.keyUp === 0 && this.time > 0.1) this.sound('keyUp')
     this.keyUp += Math.sign(up - this.keyUp) * Math.min(Math.abs(up - this.keyUp), dt * 2.6)
@@ -380,6 +424,19 @@ export class Game {
       this.swung[n] += dt
       this.nails[n].swing = 0.3 * Math.sin(this.swung[n] * 7) * Math.exp(-this.swung[n] * 1.7)
       if (this.swung[n] > 2.6) { this.swung[n] = -1; this.nails[n].swing = 0 }
+    }
+    if (this.again) {
+      const { id, kind } = this.again, body = this.bodies[id]
+      this.again.t += dt / ACT_SECONDS[id][kind]
+      const over = this.again.t >= 1 || body.flight !== null || this.hand?.id === id
+      body.act = over ? null : { kind, t: this.again.t, weight: 1 }
+      body.gaze = over ? 0 : hold(this.again.t, 0.12, 0.85)
+      if (over) this.again = null
+    }
+    for (let i = this.dots.length - 1; i >= 0; i--) {
+      const d = this.dots[i]
+      d.age += dt
+      if (d.age > 0.6) this.dots.splice(i, 1)
     }
     for (const id of CAST) this.move(id, dt)
     this.hold(dt)
@@ -449,6 +506,7 @@ export class Game {
     else if (seen === 'side') { goal.arm = 1; goal.lid = 0.5; goal.cock = 0.22; goal.shake = x; goal.lean = 0.12 }
     else if (seen === 'teeth') { goal.duck = 1.1 * hold(age / 2.4, 0.1, 0.7); goal.up = 0.8; goal.moustache = -0.8; goal.beret = 0.8; goal.squash = 0.9; quick = 16 }
     else if (seen === 'crane') { goal.sway = 0.24 * Math.sin(age * 4.2); goal.squash = 1.08; goal.cock = -0.2 * Math.sin(age * 4.2); goal.look = Math.sin(age * 4.2); goal.moustache = 0.2 }
+    if (t - this.vain < 1.6 && !what) { goal.arm = 0.9; goal.shake = -0.5; goal.moustache = 1; goal.nod = -0.15; goal.lid = 0.45; goal.squash = 1.05 }
     const poked = t - this.nudged
     if (poked < 0.9) { goal.beret += 1.2 * Math.max(0, 1 - poked * 2); goal.moustache += Math.sin(poked * 22) * (1 - poked); goal.squash *= 1 - 0.1 * Math.sin(poked * 12) * (1 - poked) }
     if (blink < 0.16) goal.lid = Math.max(goal.lid, Math.sin((blink / 0.16) * Math.PI))
@@ -510,7 +568,7 @@ export class Game {
       const h = this.hanging, k = ease(h.t / HANG_S), to = NAILS[h.nail], arc = Math.sin(clamp(h.t / HANG_S) * Math.PI)
       this.easel = { x: h.from.x + (to.x - h.from.x) * k, y: h.from.y + (to.y - h.from.y) * k + arc * 1.3, z: h.from.z + (to.z - h.from.z) * k, yaw: 0, roll: arc * 0.2, size: h.from.size + (HUNG - h.from.size) * k, tile: h.nail }
     } else {
-      this.easel.roll = this.wobble >= 0 ? 0.13 * Math.sin(this.wobble * 14) * Math.exp(-this.wobble * 3.4) : this.scene?.running ? this.easel.roll : 0
+      this.easel.roll = this.wobble >= 0 ? 0.2 * Math.sin(this.wobble * 13) * Math.exp(-this.wobble * 3.4) : this.scene?.running ? this.easel.roll : 0
       if (this.easel.tile < 0) this.easel.size = Math.max(0.02, ease(this.bare)) * this.easelSquash
     }
   }
@@ -538,6 +596,8 @@ export class Game {
   /** The game is put away: everything is where a load would have it. */
   park(): void {
     this.hand = null
+    this.again = null
+    this.dots.length = 0
     if (this.hanging) this.hang()
     this.scene?.finish()
     this.swing = 0

@@ -68,9 +68,11 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       }
       portraits()
     }
-    // A picture is painted into its tile the moment the game asks, and again if the browser loses the sheet.
+    // One picture a frame is painted into its tile: the new one the moment the game asks, all of them after a load
+    // and again if the browser loses the sheet. Until its turn comes a frame holds bare canvas.
     const portraits = (): void => {
-      for (const one of play?.game.wanted.splice(0) ?? []) view.portrait(one.arrangement, one.tile)
+      const one = play?.game.wanted.shift()
+      if (one) view.portrait(one.arrangement, one.tile)
     }
     const onRestored = (): void => {
       play?.game.repaint()

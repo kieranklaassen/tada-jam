@@ -16,6 +16,6 @@ export function shownOf(play: Play, guidance: Guidance | null): Shown {
   return {
     poses: game.poses, keys, maestro: game.maestro, tableYaw: game.tableYaw,
     tableKey: { up: game.keyUp, spin: game.keySpin, squash: game.keySquash },
-    easel: game.easel, wall: game.nails, flecks: game.flecks, glow, hand,
+    easel: game.easel, wall: game.nails, flecks: game.paintDots, glow, hand,
   }
 }
