@@ -1,22 +1,24 @@
-/* Jam home page. Values follow the tada.computer landing hero in Figma
-   (landing_kid › hero, and the "apps" dock for the tiles). */
+/* Jam home page. Colours and type follow the tada.computer landing hero in
+   Figma (landing_kid › hero). One large game at the top, then shelves of
+   pictures; the pictures carry the colour and everything around them is quiet. */
 
 .home {
-  --home-ink: #003c35;
-  --home-body: #3c555a;
-  --home-label: #3c3113;
-  --home-cream: #fbf8e4;
-  --home-rim: #e8dcb9;
-  --home-dock: #f7f5e7;
-  --home-magenta: #d21ca4;
-  --home-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --home-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ink: #003c35;
+  --body: #3c555a;
+  --plum: #39274e;
+  --cream: #fbf8e4;
+  --cream-deep: #f1ebcd;
+  --rim: #e8dcb9;
+  --magenta: #d11ba4;
+  --warm: linear-gradient(-49.57deg, #ff8342 4.82%, #d11ba4 59.91%);
+  --out: cubic-bezier(0.16, 1, 0.3, 1);
+  --gutter: max(clamp(16px, 3vw, 40px), env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
+  position: relative;
   min-height: 100vh;
   min-height: 100svh;
-  padding: 16px;
-  box-sizing: border-box;
-  background: #ffffff;
-  color: var(--home-ink);
+  padding-top: env(safe-area-inset-top, 0px);
+  background: var(--cream);
+  color: var(--ink);
   font-family: 'Albert Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
 }
 
@@ -26,592 +28,436 @@
   box-sizing: border-box;
 }
 
-.home-frame {
-  --drift: 0;
-  position: relative;
-  min-height: calc(100vh - 32px);
-  min-height: calc(100svh - 32px);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  overflow: hidden;
-  border: 5px solid var(--home-rim);
-  border-radius: 40px;
-  background: var(--home-cream);
-  animation: home-frame-in 700ms var(--home-out) both;
+:where(.home) button,
+:where(.home) input {
+  font: inherit;
+  color: inherit;
 }
 
-/* Logo: mark plus wordmark, centred at the top. */
+:where(.home) button {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.home :focus-visible {
+  outline: 3px solid var(--magenta);
+  outline-offset: 3px;
+}
+
+.home-top,
+.home-main {
+  width: min(100%, 1440px);
+  margin: 0 auto;
+  padding-inline: var(--gutter);
+}
+
+/* Logo, a word to look for, and the child's age. */
+.home-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 24px;
+  padding-block: 16px;
+}
+
 .home-logo {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-top: 26px;
-  color: #39274e;
-  font-size: 25.137px;
+  gap: 10px;
+  margin: 0;
+  color: var(--plum);
+  font-size: 22px;
   font-weight: 500;
-  letter-spacing: -0.2514px;
+  letter-spacing: -0.22px;
   line-height: 1;
-  animation: home-drop 700ms var(--home-out) 250ms both;
-}
-
-.home-logo img {
-  display: block;
 }
 
 .home-logo-jam {
   padding: 4px 10px 5px;
   border-radius: 999px;
-  background-image: linear-gradient(-49.57deg, #ff8342 4.82%, #d11ba4 59.91%);
+  background-image: var(--warm);
   color: #ffffff;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
-  letter-spacing: 0;
 }
 
-.home-main {
-  position: relative;
-  z-index: 2;
+.home-ages {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  width: min(100%, 980px);
-  padding: 44px 24px calc(13vw + 24px);
-  text-align: center;
-}
-
-.home-eyebrow {
-  margin: 0 0 18px;
-  background-image: linear-gradient(267.85deg, #ff8342 26.28%, #d11ba4 84.81%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  font-size: 30px;
-  font-weight: 600;
-  letter-spacing: -0.3px;
-  line-height: 1.3;
-  animation: home-pop 650ms var(--home-spring) 380ms both;
-}
-
-.home-title {
-  max-width: 694px;
+  min-width: 0;
+  max-width: 100%;
   margin: 0;
-  color: var(--home-ink);
-  font-size: 54px;
-  font-weight: 600;
-  letter-spacing: -1.62px;
-  line-height: 1.12;
-}
-
-/* Words rise one after another, unblurring as they land. */
-.home-word {
-  display: inline-block;
-  margin-right: 0.24em;
-  animation: home-word 700ms var(--home-out) calc(450ms + var(--w) * 60ms) both;
-}
-
-.home-word:last-child {
-  margin-right: 0;
-}
-
-.home-lede {
-  max-width: 527px;
-  margin: 20px 0 0;
-  color: var(--home-body);
-  font-size: 18px;
-  letter-spacing: -0.18px;
-  line-height: 1.38;
-  animation: home-rise 700ms var(--home-out) 1000ms both;
-}
-
-/* The dock and its tiles. */
-.home-dock {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 19.2px;
-  margin: 42px 0 0;
-  padding: 19.2px 24px 14px;
-  list-style: none;
-  border-radius: 32px;
-  background: var(--home-dock);
-  box-shadow: 0 1px 0 #ffffff inset, 0 18px 40px -24px #6b5a2466;
-  animation: home-dock 650ms var(--home-out) 1100ms both;
-}
-
-.home-tile-slot {
-  --i: 0;
-  display: flex;
-  animation:
-    home-tile-in 750ms var(--home-spring) calc(900ms + min(var(--i), 17) * 60ms) both,
-    home-float 5s ease-in-out calc(2200ms + mod(var(--i), 7) * 400ms) infinite;
-}
-
-.home-tile {
-  --tilt-x: 0deg;
-  --tilt-y: 0deg;
-  --gloss-x: 30%;
-  --gloss-y: 20%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 7.8px;
-  width: 112px;
-  padding: 0 0 4px;
+  padding: 0;
   border: 0;
-  background: none;
-  color: var(--home-label);
-  font: inherit;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transform: perspective(600px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
-  transition: transform 220ms var(--home-out);
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
-.home-tile:focus-visible {
-  outline: none;
-}
-
-.home-tile:focus-visible .home-tile-face {
-  outline: 3px solid var(--home-magenta);
-  outline-offset: 4px;
-}
-
-.home-tile-face {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 80px;
-  height: 80px;
-  overflow: hidden;
-  border: 2.162px solid rgba(255, 255, 255, 0.1);
-  border-radius: 19.2px;
-  background: linear-gradient(45deg, #d055b1 0%, #ea82d0 83%);
-  box-shadow: 8.108px 7.568px 21.622px 0 rgba(0, 0, 0, 0.2);
-  transition: transform 200ms var(--home-spring), box-shadow 200ms;
-}
-
-.home-tile-face::after {
-  content: '';
-  position: absolute;
-  inset: -2.162px;
-  border-radius: inherit;
-  box-shadow: inset 1.622px -1.622px 3.784px 0 rgba(255, 255, 255, 0.55);
-  pointer-events: none;
-}
-
-.home-tile-face img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  pointer-events: none;
-}
-
-.home-tile-emoji {
-  font-size: 44px;
-  line-height: 1;
-}
-
-/* A soft highlight that follows the finger across the glass. */
-.home-tile-gloss {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at var(--gloss-x) var(--gloss-y), rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 55%);
-  opacity: 0;
-  transition: opacity 200ms;
-  pointer-events: none;
-}
-
-.home-tile:hover .home-tile-gloss {
-  opacity: 1;
-}
-
-.home-tile:hover .home-tile-face {
-  transform: translateY(-4px) scale(1.06);
-  box-shadow: 10px 14px 26px 0 rgba(0, 0, 0, 0.22);
-}
-
-.home-tile:active .home-tile-face {
-  transform: scale(0.94);
-  transition-duration: 80ms;
-}
-
-.home-tile-name {
+.home-ages legend {
+  float: left;
+  padding: 0 10px 0 0;
+  color: var(--body);
   font-size: 15px;
-  font-weight: 600;
-  letter-spacing: -0.3px;
-  line-height: 1.25;
-}
-
-.home-tile-age {
-  margin-top: -5px;
-  color: #3c311380;
-  font-size: 12px;
   font-weight: 500;
+  white-space: nowrap;
 }
 
-.home-tile-yours {
-  cursor: default;
-}
-
-.home-tile-yours .home-tile-dashed {
-  display: block;
-  animation: home-breathe 3.2s ease-in-out 2.4s infinite;
-}
-
-/* Opening a game: the tile bounces, then its glass floods the frame. */
-.home-tile.is-launching {
+.home-age {
   position: relative;
-  z-index: 5;
-}
-
-.home-tile.is-launching .home-tile-face {
-  animation: home-launch 420ms cubic-bezier(0.7, 0, 0.84, 0) forwards;
-}
-
-.home-tile.is-chosen .home-tile-face {
-  animation: home-chosen 650ms var(--home-spring) both;
-}
-
-.home-tile.is-chosen.is-launching .home-tile-face {
-  animation: home-launch 420ms cubic-bezier(0.7, 0, 0.84, 0) forwards;
-}
-
-.home-dock.is-choosing .home-tile:not(.is-chosen) {
-  opacity: 0.45;
-  transition: opacity 300ms;
-}
-
-/* The button from the hero, repurposed: open any game at random. */
-.home-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 30px;
-  padding: 20px 36px;
-  border: 0;
-  border-radius: 18px;
-  background-image: linear-gradient(-49.57deg, #ff8342 4.82%, #d11ba4 59.91%);
-  color: #ffffff;
-  font: inherit;
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: -0.44px;
-  line-height: 1.3;
-  cursor: pointer;
-  box-shadow: 0 10px 24px -12px #d11ba4aa;
-  transition: transform 200ms var(--home-spring), box-shadow 200ms;
-  animation: home-rise 700ms var(--home-out) calc(1500ms + 120ms * 3) both;
-}
-
-.home-cta-icon {
-  width: 26px;
-  height: 26px;
   flex: none;
 }
 
-.home-cta:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 28px -12px #d11ba4cc;
-}
-
-.home-cta:active {
-  transform: scale(0.97);
-}
-
-/* The fox landscape rises from the bottom of the frame and drifts with the pointer. */
-.home-landscape {
+.home-age input {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.home-age span {
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  height: 48px;
+  padding: 0 6px;
+  border-radius: 16px;
+  font-size: 17px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.home-age input:hover + span {
+  background: var(--cream-deep);
+}
+
+.home-age input:checked + span {
+  background: var(--ink);
+  color: var(--cream);
+}
+
+.home-age input:focus-visible + span {
+  outline: 3px solid var(--magenta);
+  outline-offset: -3px;
+}
+
+/* A game's picture, filling the box it is in. */
+.home-cover {
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.home-cover img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.home-cover-emoji {
+  font-size: 64px;
+  line-height: 1;
+}
+
+/* The copy that grows over the page while a game opens. */
+.home-cover.is-opening {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  pointer-events: none;
+}
+
+/* The one large game at the top: what to do on one side, the whole picture on the other. */
+.home-spotlight {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+  align-items: center;
+  overflow: hidden;
+  border-radius: 36px;
+  background: var(--ink);
+}
+
+.home-spotlight > .home-cover {
+  order: 2;
+  aspect-ratio: 36 / 25;
+}
+
+.home-spotlight-words {
+  padding: clamp(22px, 3.4vw, 48px);
+  color: var(--cream);
+}
+
+.home-title {
+  margin: 0;
+  font-size: clamp(34px, 4.2vw, 58px);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.04;
+  text-wrap: balance;
+}
+
+.home-spotlight-line {
+  margin: 14px 0 0;
+  font-size: 18px;
+  line-height: 1.4;
+}
+
+.home-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.home-play,
+.home-surprise {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 0 26px;
+  border: 0;
+  border-radius: 18px;
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  transition: transform 160ms var(--out);
+}
+
+.home .home-play {
+  background-image: var(--warm);
+  color: #ffffff;
+}
+
+.home .home-surprise {
+  background: #ffffff;
+  color: var(--ink);
+}
+
+.home-play:hover,
+.home-surprise:hover {
+  transform: translateY(-2px);
+}
+
+.home-play:active,
+.home-surprise:active {
+  transform: scale(0.96);
+}
+
+/* Shelves to choose from; stays in reach while the page scrolls. */
+.home-finder {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-inline: calc(var(--gutter) * -1);
+  padding: calc(14px + env(safe-area-inset-top, 0px)) var(--gutter) 12px;
+  background: var(--cream);
+}
+
+.home-shelf-picks {
+  display: flex;
+  flex: 1;
+  gap: 8px;
+  min-width: 0;
+  margin: -4px;
+  padding: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.home-shelf-picks::-webkit-scrollbar,
+.home-ages::-webkit-scrollbar {
+  display: none;
+}
+
+.home-pick {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 9px;
+  height: 48px;
+  padding: 0 13px 0 5px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--cream-deep);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.home-pick:first-child {
+  padding-left: 13px;
+}
+
+.home-pick .home-cover {
+  width: 44px;
+  height: 38px;
+  border-radius: 11px;
+}
+
+.home-pick .home-cover-emoji {
+  font-size: 22px;
+}
+
+.home .home-pick[aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--cream);
+}
+
+.home-search {
+  flex: none;
+  width: 190px;
+  margin-left: auto;
+  height: 48px;
+  padding: 0 16px;
+  border: 2px solid var(--rim);
+  border-radius: 16px;
+  background: #ffffff;
+  font-size: 16px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.home-search::placeholder {
+  color: #5c7074;
+}
+
+/* The shelves. */
+.home-shelf {
+  margin-top: 14px;
+  padding-bottom: 26px;
+}
+
+.home-shelf-title {
+  margin: 0 0 14px;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.home-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(210px, 44%), 1fr));
+  gap: 22px 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.home-card {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 22px;
+  background: none;
+  text-align: left;
+}
+
+.home-card .home-cover {
+  aspect-ratio: 36 / 25;
+  border-radius: 22px;
+  transition: transform 220ms var(--out), box-shadow 220ms;
+}
+
+.home-card:hover .home-cover {
+  transform: translateY(-4px) rotate(-0.6deg);
+  box-shadow: 0 16px 26px -14px rgba(60, 49, 19, 0.5);
+}
+
+.home-card:active .home-cover {
+  transform: scale(0.97);
+  transition-duration: 80ms;
+}
+
+.home-card-name {
+  display: block;
+  margin-top: 10px;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.home-card-caption {
+  display: block;
+  margin-top: 2px;
+  color: var(--body);
+  font-size: 14px;
+}
+
+.home-nothing {
+  margin: 40px 0;
+  color: var(--body);
+  font-size: 18px;
+}
+
+.home-nothing button {
+  min-height: 48px;
+  padding: 0 8px;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* The fox landscape closes the page. */
+.home-landscape {
+  position: relative;
   aspect-ratio: 1410 / 332;
   overflow: hidden;
   pointer-events: none;
-  animation: home-landscape 1100ms var(--home-out) 120ms both;
 }
 
 .home-landscape img {
   position: absolute;
-  top: 0;
-  left: -1.5%;
-  width: 103%;
+  inset: 0;
+  width: 100%;
   height: 112%;
   max-width: none;
-  transform: translateX(calc(var(--drift) * -18px));
-  transition: transform 900ms var(--home-out);
 }
 
-@keyframes home-frame-in {
-  from {
-    opacity: 0;
-    transform: translateY(14px) scale(0.975);
+@media (max-width: 720px) {
+  .home-ages {
+    width: 100%;
   }
-}
-
-@keyframes home-drop {
-  from {
-    opacity: 0;
-    transform: translateY(-18px);
+  .home-spotlight {
+    grid-template-columns: minmax(0, 1fr);
+    border-radius: 26px;
   }
-}
-
-@keyframes home-pop {
-  from {
-    opacity: 0;
-    transform: scale(0.6);
+  .home-spotlight > .home-cover {
+    order: 0;
   }
-}
-
-@keyframes home-word {
-  from {
-    opacity: 0;
-    transform: translateY(0.55em) rotate(4deg);
-    filter: blur(8px);
+  .home-search {
+    flex: 1 1 100%;
   }
-}
-
-@keyframes home-rise {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
+  .home-grid {
+    gap: 18px 12px;
   }
-}
-
-@keyframes home-dock {
-  from {
-    opacity: 0;
-    transform: translateY(20px) scale(0.92);
-  }
-}
-
-@keyframes home-tile-in {
-  from {
-    opacity: 0;
-    transform: translateY(28px) scale(0.4) rotate(-14deg);
-  }
-}
-
-@keyframes home-float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-5px);
-  }
-}
-
-@keyframes home-breathe {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.55;
-  }
-}
-
-@keyframes home-landscape {
-  from {
-    opacity: 0;
-    transform: translateY(35%);
-  }
-}
-
-@keyframes home-chosen {
-  0% {
-    transform: scale(1);
-  }
-  30% {
-    transform: scale(1.22) rotate(-6deg);
-  }
-  60% {
-    transform: scale(1.1) rotate(5deg);
-  }
-  100% {
-    transform: scale(1.15);
-  }
-}
-
-@keyframes home-launch {
-  0% {
-    transform: scale(1.1);
-  }
-  25% {
-    transform: scale(1.25);
-  }
-  100% {
-    transform: scale(22);
-    border-radius: 4px;
-  }
-}
-
-@media (max-width: 900px) {
-  .home-title {
-    font-size: 42px;
-    letter-spacing: -1.2px;
-  }
-  .home-lede {
-    font-size: 16px;
-  }
-}
-
-@media (max-width: 560px) {
-  .home {
-    padding: 10px;
-  }
-  .home-frame {
-    min-height: calc(100svh - 20px);
-    border-radius: 28px;
-  }
-  .home-logo {
-    font-size: 20px;
-  }
-  .home-eyebrow {
-    font-size: 24px;
-  }
-  .home-title {
-    font-size: 32px;
-    letter-spacing: -0.8px;
-  }
-  .home-main {
-    padding-top: 28px;
-  }
-}
-
-/* Short landscape screens (phones on their side): tighter vertical rhythm. */
-@media (max-height: 560px) and (min-width: 561px) {
-  .home-logo {
-    margin-top: 16px;
-  }
-  .home-main {
-    padding-top: 18px;
-  }
-  .home-eyebrow {
-    margin-bottom: 6px;
+  .home-shelf-title {
     font-size: 22px;
-  }
-  .home-title {
-    font-size: 34px;
-  }
-  .home-lede {
-    display: none;
-  }
-  .home-dock {
-    margin-top: 20px;
-  }
-  .home-cta {
-    margin-top: 16px;
-    padding: 12px 26px;
-    font-size: 18px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .home *,
-  .home-frame {
+  .home *::before,
+  .home *::after {
     animation: none !important;
     transition: none !important;
   }
-}
-
-/* Showcases: finished games that are not Tada cartridges, listed apart from the dock. */
-.home-showcases {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: 22px;
-  animation: home-rise 700ms var(--home-out) 1500ms both;
-}
-
-.home-showcases-label {
-  margin: 0 0 8px;
-  color: #3c311399;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.home-dock-showcase {
-  margin-top: 0;
-  padding: 14px 20px 10px;
-  animation: none;
-}
-
-.home-tile-requires {
-  margin-top: -3px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: #3c311314;
-  color: #3c3113b3;
-  font-size: 11px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-/* Demos: tiles of the same kind as the games, grouped by what they try out. */
-.home-demos {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  margin-top: 44px;
-  animation: home-rise 700ms var(--home-out) 1700ms both;
-}
-
-.home-demo-group {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  margin-top: 14px;
-}
-
-.home-demo-group-title {
-  margin: 0 0 8px;
-  color: var(--home-ink);
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.home-dock-demos {
-  margin-top: 0;
-  animation: none;
-}
-
-.home-demos-all {
-  margin-top: 28px;
-  min-height: 48px;
-  display: inline-flex;
-  align-items: center;
-  color: var(--home-body);
-  font-size: 14px;
-  font-weight: 500;
-}
-
-/* The child's age: a grown-up sets it once, and every game reads it. */
-.home-age {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 14px;
-  color: var(--home-body);
-  font-size: 15px;
-  font-weight: 500;
-  animation: home-rise 700ms var(--home-out) 900ms both;
-}
-
-.home-age select {
-  min-height: 44px;
-  padding: 0 12px;
-  border: 2px solid var(--home-rim);
-  border-radius: 14px;
-  background: #ffffff;
-  color: var(--home-ink);
-  font: inherit;
-  font-weight: 600;
 }
