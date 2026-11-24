@@ -16,8 +16,8 @@ export const FLOOR_Y = -1.5
 
 /** Six steps where the others wait: three up each side. */
 export const STEPS: readonly P3[] = [
-  { x: -4.45, y: -0.75, z: 2.05 }, { x: -4.75, y: -0.1, z: -0.75 }, { x: -5.05, y: 0.55, z: -3.55 },
-  { x: 4.45, y: -0.75, z: 2.05 }, { x: 4.75, y: -0.1, z: -0.75 }, { x: 5.05, y: 0.55, z: -3.55 },
+  { x: -4.45, y: -0.75, z: 2.05 }, { x: -4.75, y: -0.1, z: -0.75 }, { x: -5.05, y: 0.55, z: -3.95 },
+  { x: 4.45, y: -0.75, z: 2.05 }, { x: 4.75, y: -0.1, z: -0.75 }, { x: 5.05, y: 0.55, z: -3.95 },
 ]
 
 export const MAESTRO: P3 = { x: 0, y: 0, z: -5.6 }
@@ -30,15 +30,15 @@ export const FRAME_ASPECT = 4 / 3
 export const EASEL: P3 & { yaw: number } = { x: -2.3, y: 2.7, z: -5.1, yaw: Math.PI + 0.35 }
 export const PICTURE = { w: 2.2, h: 1.65 } as const
 /** Where the finished picture is shown to the child: forward and up, over the table's back. */
-export const SHOWN: P3 & { size: number } = { x: -2.95, y: 4.3, z: -3.3, size: 1.72 }
+export const SHOWN: P3 & { size: number } = { x: -2.9, y: 4.2, z: -2.65, size: 1.64 }
 /** Six nails, in the order they are filled. */
 export const NAILS: readonly P3[] = [
   { x: 3.2, y: 4.75, z: -7.45 }, { x: 5.75, y: 4.95, z: -7.45 }, { x: 3.35, y: 2.6, z: -7.45 },
-  { x: 5.95, y: 2.75, z: -7.45 }, { x: -5.75, y: 4.95, z: -7.45 }, { x: -5.95, y: 2.75, z: -7.45 },
+  { x: 5.95, y: 2.75, z: -7.45 }, { x: -7.35, y: 4.9, z: -7.45 }, { x: -7.5, y: 2.7, z: -7.45 },
 ]
 export const HUNG = 0.8
 /** The key that turns the table, at its rim. */
-export const KEY: P3 = { x: 2.2, y: -0.1, z: 2.28 }
+export const KEY: P3 = { x: 0, y: -0.1, z: 3.06 }
 
 export const CAMERA = { at: { x: 0, y: 6.7, z: 14.2 }, to: { x: 0, y: 1.72, z: -1.0 }, near: 1, far: 60 } as const
 

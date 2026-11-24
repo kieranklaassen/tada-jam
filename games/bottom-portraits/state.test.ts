@@ -50,7 +50,7 @@ describe('saved state', () => {
   })
 
   it('repairs one damaged field and keeps the other', () => {
-    expect(deserialize({ v: STATE_VERSION, position: LADDER[1], finished: 'yes' })).toEqual({ v: STATE_VERSION, position: LADDER[1], finished: false })
+    expect(deserialize({ v: STATE_VERSION, position: LADDER[0], finished: 'yes' })).toEqual({ v: STATE_VERSION, position: LADDER[0], finished: false })
     expect(deserialize({ v: STATE_VERSION, position: 42, finished: true })).toEqual({ v: STATE_VERSION, position: freshState(null).position, finished: true })
     expect(deserialize({ v: STATE_VERSION, finished: true, extra: { deep: [1, 2] } })).toEqual({ v: STATE_VERSION, position: freshState(null).position, finished: true })
   })

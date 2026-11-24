@@ -55,6 +55,7 @@ export class Rig {
     this.root.position.set(p.x, p.y, p.z)
     this.root.rotation.y = p.yaw
     this.tin.position.y = STAND.h + p.hop
+    this.tin.position.z = p.slide
     const fat = 1 / Math.sqrt(p.squash)
     this.tin.scale.set(fat, p.squash, fat)
     this.tin.rotation.set(p.lean, p.twist, p.tilt, 'YXZ')

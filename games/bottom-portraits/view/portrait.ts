@@ -26,7 +26,7 @@ void main(){
   vec2 uv = vUv + wob; vec3 best = vec3(0.0); float calm = 1e9;
   for (int q=0;q<4;q++){
     vec2 s = vec2(q==0||q==2?-1.0:1.0, q<2?-1.0:1.0); vec3 m=vec3(0.0), m2=vec3(0.0);
-    for (int i=0;i<5;i++) for (int j=0;j<5;j++){ vec3 c = tap(uv + s*vec2(float(i),float(j))*texel*1.5).rgb; m+=c; m2+=c*c; }
+    for (int i=0;i<5;i++) for (int j=0;j<5;j++){ vec3 c = tap(uv + s*vec2(float(i),float(j))*texel*1.2).rgb; m+=c; m2+=c*c; }
     m/=25.0; m2=abs(m2/25.0-m*m); float v=m2.r+m2.g+m2.b; if(v<calm){calm=v;best=m;}
   }
   float ridge = smoothNoise(vec2(vUv.x*150.0+best.r*40.0, vUv.y*90.0-best.g*30.0)) - smoothNoise(vec2(vUv.x*150.0+best.r*40.0+0.8, vUv.y*90.0-best.g*30.0+0.8));

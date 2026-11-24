@@ -12,6 +12,8 @@ export type Pose = {
   /** The whole body turned on its stand. */
   twist: number
   hop: number
+  /** The body's foot moved along the way it looks, on its stand. */
+  slide: number
   nod: number; shake: number; cock: number
   /** The loose pieces: how far the first and the second are out of place. */
   a: number; b: number
@@ -20,10 +22,10 @@ export type Pose = {
   lid: number
 }
 
-export const restPose = (): Pose => ({ x: 0, y: 0, z: 0, yaw: 0, squash: 1, lean: 0, tilt: 0, twist: 0, hop: 0, nod: 0, shake: 0, cock: 0, a: 0, b: 0, look: 0, up: 0, lid: 0 })
+export const restPose = (): Pose => ({ x: 0, y: 0, z: 0, yaw: 0, squash: 1, lean: 0, tilt: 0, twist: 0, hop: 0, slide: 0, nod: 0, shake: 0, cock: 0, a: 0, b: 0, look: 0, up: 0, lid: 0 })
 
 export function settle(pose: Pose): Pose {
-  return Object.assign(pose, { squash: 1, lean: 0, tilt: 0, twist: 0, hop: 0, nod: 0, shake: 0, cock: 0, a: 0, b: 0, look: 0, up: 0, lid: 0 })
+  return Object.assign(pose, { squash: 1, lean: 0, tilt: 0, twist: 0, hop: 0, slide: 0, nod: 0, shake: 0, cock: 0, a: 0, b: 0, look: 0, up: 0, lid: 0 })
 }
 
 /** The painter, as held. */

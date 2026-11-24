@@ -93,8 +93,8 @@ export function sights(arrangement: Arrangement): Sight[] {
 
 /** The affront: two or more, no board, and every one painted from behind. */
 export function affronts(arrangement: Arrangement): boolean {
-  const seen = sights(arrangement)
-  return seen.length >= 2 && seen.every((s) => s.id !== 'board' && s.side === 'back' && s.how === 'seen')
+  const there = arrangement.filter((entry) => entry !== null)
+  return there.length >= 2 && there.every(([id, turn]) => id !== 'board' && sideOf(turn) === 'back')
 }
 
 export type Act = 'front' | 'back' | 'side' | 'cut' | 'hole'

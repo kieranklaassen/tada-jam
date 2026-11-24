@@ -27,7 +27,8 @@ export type Shown = {
   /** Paint flecks above the canvas: place, size, colour. */
   flecks: readonly { x: number; y: number; z: number; r: number; colour: string }[]
   /** Glow round what can be touched, and the ghost hand. */
-  glow: readonly { x: number; y: number; z: number; r: number; k: number }[]
+  /** `flat` lies on the ground under whatever stands on it. */
+  glow: readonly { x: number; y: number; z: number; r: number; k: number; flat: boolean }[]
   hand: { x: number; y: number; z: number; press: number; opacity: number } | null
 }
 
@@ -235,7 +236,7 @@ export class Stage {
     const key = this.room.key, up = shown.tableKey.up
     key.position.set(KEY.x, KEY.y, KEY.z)
     key.rotation.set((1 - up) * 1.35, shown.tableKey.spin, 0)
-    key.scale.setScalar(0.35 + up * 0.65)
+    key.scale.setScalar(0.3 + up * 0.55)
     key.scale.y *= shown.tableKey.squash
     key.visible = up > 0.02
 
@@ -265,10 +266,12 @@ export class Stage {
     for (let i = 0; i < MAX_GLOW; i++) {
       const one = shown.glow[i]
       if (!one || one.k < 0.01) this.put(this.glow, i, 0, -50, 0, 0.0001)
-      else this.put(this.glow, i, one.x, one.y, one.z, one.r * 2 * (0.9 + one.k * 0.1), one.r * 2 * (0.9 + one.k * 0.1), 1, this.camera.rotation.x, 0, 0)
+      else this.put(this.glow, i, one.x, one.y, one.z, one.r * 2 * (0.9 + one.k * 0.1), one.r * 2 * (0.9 + one.k * 0.1), 1, one.flat ? -Math.PI / 2 : this.camera.rotation.x, 0, 0)
     }
     this.glow.visible = shown.glow.length > 0
-    ;(this.glow.material as THREE.MeshBasicMaterial).opacity = shown.glow[0]?.k ?? 0
+    const glow = this.glow.material as THREE.MeshBasicMaterial
+    glow.opacity = shown.glow[0]?.k ?? 0
+    glow.depthTest = shown.glow[0]?.flat ?? false
     this.hand.visible = shown.hand !== null
     if (shown.hand) {
       const h = shown.hand, k = 1 - h.press * 0.14

@@ -84,7 +84,7 @@ export function act(id: Id, kind: Act, t: number, p: Pose): void {
       else if (kind === 'back') {
         // A stiff faint, straight back, legs up; and slowly up again.
         const fall = ease(t / 0.16), rise = ease((t - 0.78) / 0.22), down = fall - rise
-        p.lean -= 1.42 * down; p.hop += 0.34 * down; p.lid = Math.max(p.lid, down); p.a += 0.9 * hold(t, 0.06, 0.3)
+        p.lean -= 1.42 * down; p.hop += 0.75 * down; p.slide += 1.15 * down; p.lid = Math.max(p.lid, down); p.a += 0.9 * hold(t, 0.06, 0.3)
         p.lean += 0.05 * Math.exp(-((t - 0.16) ** 2) / 0.001) * down
       } else if (kind === 'side') { p.shake += 1.0 * k; p.nod += 0.5 * k + 0.16 * bounce(t, 6) * k; p.a += 0.35 * k; p.lid = Math.max(p.lid, 0.6 * k) }
       else if (kind === 'cut') { p.hop += 0.4 * bounce(t, 3) * k; p.squash *= 1 + 0.1 * wave(t, 6) * k; p.a += 1.2 * bounce(t, 6) * k }
@@ -122,7 +122,7 @@ export function act(id: Id, kind: Act, t: number, p: Pose): void {
       if (kind === 'front') { p.tilt += 0.1 * wave(t, 3) * k; p.twist += 0.12 * wave(t, 3) * k }
       else if (kind === 'back') { p.lean += 0.03 * wave(t, 9) * (1 - t); p.tilt += 0.02 * wave(t, 11) * (1 - t) }
       else if (kind === 'side') { p.twist += 0.1 * wave(t, 12) * (1 - t) }
-      else if (kind === 'cut') { p.lean += 0.22 * hold(t, 0.12, 0.6); p.lean -= 0.05 * hold(clamp(t * 1.2 - 0.6), 0.2, 0.5) }
+      else if (kind === 'cut') { p.lean += 0.22 * hold(t, 0.12, 0.6); p.lean -= 0.05 * hold(clamp(t * 2 - 1), 0.2, 0.5) }
       else { p.hop += 0.09 * bounce(t, 8) * k; p.tilt += 0.06 * wave(t, 4) * k }
       break
   }
