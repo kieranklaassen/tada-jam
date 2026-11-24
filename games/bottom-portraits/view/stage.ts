@@ -195,7 +195,11 @@ export class Stage {
     const out = STAND.r - 0.05, x = p.x + Math.sin(p.yaw) * out, z = p.z + Math.cos(p.yaw) * out
     this.m.compose(this.v.set(x, p.y + STAND.h / 2 + 0.02, z), this.q.setFromEuler(this.e.set(0, p.yaw, wound, 'YXZ')), this.s.set(1, 1, 1))
     this.keys.setMatrixAt(n, this.m)
+    this.keys.instanceMatrix.needsUpdate = true
   }
+
+  /** The browser has lost the sheet: until a picture is painted again its frame holds bare canvas. */
+  forget(): void { this.done.fill(false) }
 
   /** Paints an arrangement into a tile, with everyone at rest. */
   portrait(arrangement: Arrangement, tile: number): void {

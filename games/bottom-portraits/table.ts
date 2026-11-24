@@ -26,7 +26,7 @@ export const ROUND: readonly number[] = [1, 3, 0, 2]
 
 export const asTurn = (n: number): Turn => (((Math.round(n) % 4) + 4) % 4) as Turn
 
-/** From this age a first visit has two on the table, one behind the other; younger, and with no age, the elephant alone. */
+/** From this age a first visit has two on the table, one near the child and one near the painter; younger, and with no age, the elephant alone. */
 export const PAIR_FROM = 5
 
 export function freshTable(childAge: number | null): Table {
@@ -141,16 +141,13 @@ export function loadTable(raw: unknown, childAge: number | null): Table {
     if (free >= 0) table.homes[free] = id
     else table.spots[table.spots.indexOf(null)] = id
   }
-  if (seated(table).length === 0) {
-    const who = table.homes.indexOf('elephant') >= 0 ? table.homes.indexOf('elephant') : table.homes.findIndex((id) => id !== null)
-    table.spots[0] = table.homes[who]
-    table.homes[who] = null
-  }
+  // Seven of them and six steps: somebody is on the table.
   const turns = typeof raw.turns === 'object' && raw.turns !== null ? (raw.turns as Record<string, unknown>) : {}
   for (const id of CAST) table.turns[id] = typeof turns[id] === 'number' && Number.isFinite(turns[id]) ? asTurn(turns[id] as number) : 0
   table.wall = Array.from({ length: NAIL_COUNT }, (_, n) => readArrangement(Array.isArray(raw.wall) ? raw.wall[n] : null))
   table.last = typeof raw.last === 'number' && Number.isInteger(raw.last) && raw.last >= 0 && raw.last < NAIL_COUNT && table.wall[raw.last] ? raw.last : table.wall.reduce((best, a, n) => (a ? n : best), -1)
-  table.finished = base.finished && table.last >= 0
+  // What stands shown is always the picture of the table as it stands.
+  table.finished = base.finished && table.last >= 0 && JSON.stringify(table.wall[table.last]) === JSON.stringify(arrangementOf(table))
   table.painted = raw.painted === true || table.last >= 0
   return table
 }

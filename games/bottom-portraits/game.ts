@@ -13,7 +13,7 @@ import { ACTS, HOPS, SOUNDS, landing, press, winding, type SoundName } from './v
 // means; the view reads `poses`, `maestro`, `easel`, `nails` and the rest.
 
 export type Cue = { notes: readonly Note[]; scene: boolean }
-type Flight = { from: P3; high: number; /** How far it swings out of the straight way, so two can pass. */ bow: number; start: number; lasts: number; yaw: number; landed: boolean }
+type Flight = { from: P3; high: number; /** How far it swings out of the straight way, so two can pass. */ bow: number; start: number; lasts: number }
 type Body = {
   /** Where its stand has got to and where it is going, in radians, unwrapped. */
   yaw: number; yawV: number; goal: number
@@ -164,11 +164,16 @@ export class Game {
     else turnTableBack(this.table)
     this.swing += Q * way
     this.turned += way
-    for (const id of who) { this.bodies[id].goal += Q * way; this.bodies[id].yaw += Q * way }
+    for (const id of who) {
+      const body = this.bodies[id]
+      body.goal += Q * way
+      // One in the air is not on the table yet: it comes round to its new facing by itself.
+      if (!body.flight) body.yaw += Q * way
+    }
     this.keySquash = 0.75
     this.sound('table')
     this.done.add('key')
-    this.notice(who.sort((a, b) => this.where(placeOf(this.table, a)).z - this.where(placeOf(this.table, b)).z)[0])
+    this.notice(who.sort((a, b) => SPOTS[placeOf(this.table, a).n].z - SPOTS[placeOf(this.table, b).n].z)[0])
     this.changed()
     return true
   }
@@ -202,7 +207,9 @@ export class Game {
       const near = Math.hypot(from.x + dx * k - p.x, from.z + dz * k - p.z) < 2.75
       if (near || (bow > 0 && along > 0 && along < 1 && out > 0 && out < bow + 2.75)) high = Math.max(high, p.y + FIGURES[other].height + 0.75)
     }
-    body.flight = { from: { x: from.x, y: from.y, z: from.z }, high, bow, start: this.time, lasts, yaw: body.yaw, landed: false }
+    body.flight = { from: { x: from.x, y: from.y, z: from.z }, high, bow, start: this.time, lasts }
+    // On a turning table it faced another way than where it will have come to rest.
+    body.yaw = this.poses[id].yaw
     body.act = null
     body.goal = this.nearestTurn(body.yaw, this.facing(id))
     this.say(HOPS[id])
@@ -309,6 +316,7 @@ export class Game {
       cue(start + 3.0, 'swivel')
       beat(start, PAINTING.secretLasts, (t) => { this.stagecraft = t < 1 ? { what: 'secret', k: t } : { what: null, k: 0 } })
     }
+    this.moodDue = null
     this.scene = new Scene(beats)
     this.scene.start(this.time, () => { paint(table); this.changed(true) })
   }
@@ -367,11 +375,12 @@ export class Game {
   /** A hung picture swings and calls in the voices of those in it. */
   swingPicture(n: number): void {
     const arrangement = this.table.wall[n]
-    if (!arrangement || !this.nails[n].hung) return
+    // The touch itself has just ended its fall.
+    if (!arrangement || !this.nails[n].hung) { this.sound('swing'); return }
     this.swung[n] = 0
     const notes: Note[] = [...SOUNDS.swing]
-    sights(arrangement).slice(0, 3).forEach((s, k) => { for (const note of press(s.id)) notes.push({ ...note, delay: (note.delay ?? 0) + 0.18 + k * 0.2 }) })
-    const first = sights(arrangement)[0]
+    const all = sights(arrangement), first = all[0]
+    all.slice(0, 3).forEach((s, k) => { for (const note of press(s.id)) notes.push({ ...note, delay: (note.delay ?? 0) + 0.18 + k * 0.2 }) })
     for (const note of ACTS[first.id][actOf(first)]) if ((note.delay ?? 0) < 0.9) notes.push({ ...note, peak: note.peak * 0.6, delay: (note.delay ?? 0) + 0.3 })
     this.say(notes)
   }
@@ -459,10 +468,12 @@ export class Game {
     body.squash = Math.max(0.8, Math.min(1.16, body.squash + body.squashV * dt))
     if (body.poked >= 0 && (body.poked += dt / 0.6) >= 1) body.poked = -1
     if (body.act && body.act.weight < 1 && (body.act.weight -= dt * 6) <= 0) { body.act = null; body.gaze = 0 }
+    if (!body.act) body.gaze = Math.max(0, body.gaze - dt * 6)
     if (body.act && body.act.weight < 1) body.gaze = Math.min(body.gaze, body.act.weight)
     const flight = body.flight
     if (flight && this.time >= flight.start + flight.lasts) {
       body.flight = null
+      if (placeOf(this.table, id).kind === 'spot') body.yaw += this.swing
       body.squashV -= 3.4
       this.say(landing(id))
     }
@@ -570,7 +581,7 @@ export class Game {
       pose.squash = Math.max(0.72, Math.min(1.2, pose.squash))
     }
     if (this.hanging) {
-      const h = this.hanging, t = h.t / HANG_S, to = NAILS[h.nail], across = to.x > 0, over = ease(across ? t / 0.62 : t), back = across ? ease((t - 0.5) / 0.5) : over, k = ease(t / 0.5), arc = Math.sin(clamp(h.t / HANG_S) * Math.PI)
+      const h = this.hanging, t = h.t / HANG_S, to = NAILS[h.nail], across = to.x > 0, over = ease(across ? t / 0.62 : t), back = across ? ease((t - 0.5) / 0.5) : over, k = ease(t / 0.5), arc = Math.sin(clamp(t) * Math.PI)
       this.easel = { x: h.from.x + (to.x - h.from.x) * over, y: h.from.y + (to.y - h.from.y) * over + arc * 0.9, z: h.from.z + (to.z - h.from.z) * back, yaw: 0, roll: arc * 0.2, size: h.from.size + (HUNG - h.from.size) * k, tile: h.nail }
     } else {
       this.easel.roll = this.wobble >= 0 ? 0.2 * Math.sin(this.wobble * 13) * Math.exp(-this.wobble * 3.4) : this.scene?.running ? this.easel.roll : 0
@@ -607,7 +618,9 @@ export class Game {
     this.scene?.finish()
     this.swing = 0
     this.moodDue = null
-    this.mood.since = -9
+    this.mood.since = this.vain = this.nudged = this.time - 9
+    this.turned = this.keySpin = 0
+    this.keySquash = this.easelSquash = 1
     this.wobble = -1
     this.bare = 1
     this.stagecraft = { what: null, k: 0 }

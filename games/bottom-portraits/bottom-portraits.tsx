@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react'
 import type { Cartridge, CartridgeContext } from '../types'
 import { AttendedClock, Attention } from './attention'
 import { GameAudio } from './audio'
-import { BACKDROP } from './config'
+import { BACKDROP, SAVE_THROTTLE_MS } from './config'
 import { Game } from './game'
 import type { Guidance } from './guidance'
 import { bottomPortraitsManifest } from './manifest'
@@ -54,6 +54,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
 
     // Nothing is saved until the slot has been read, so an early put-away cannot overwrite it. A turn is handed to
     // storage at the throttle; a scene's outcome is in the state when the scene starts and is handed over at once.
+    let changedAt = 0
     const cadence = new SaveCadence(() => { if (play) ctxRef.current.storage.save(saveTable(play.game.table)) })
     // What the game queued since the last call goes out: first the hush, so that a scene a touch has ended is
     // silent from this frame, then every new sound as one voice, then the save.
@@ -63,7 +64,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       const voice = band.take(game)
       if (voice) audio.play(voice)
       if (game.dirty) {
-        cadence.change(performance.now(), game.urgent)
+        changedAt = performance.now()
+        cadence.change(changedAt, game.urgent)
         game.dirty = game.urgent = false
       }
       portraits()
@@ -75,8 +77,10 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       if (one) view.portrait(one.arrangement, one.tile)
     }
     const onRestored = (): void => {
+      view.forget()
       play?.game.repaint()
-      portraits()
+      // All at once: a resting game has no frame coming.
+      while (play && play.game.wanted.length > 0) portraits()
       draw()
     }
     canvas.addEventListener('webglcontextrestored', onRestored)
@@ -178,6 +182,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       if (play) {
         guidance = play.step(step)
         flush()
+        // The last of a burst of touches is handed over once they stop.
+        if (changedAt > 0 && start - changedAt >= SAVE_THROTTLE_MS) { cadence.settle(start); changedAt = 0 }
       }
       // A tier change is applied ahead of the draw: whatever the game's tiers set in `applyTier`, then the pixel
       // ratio in `resize`. The interval just measured belongs to the frame before, so it is judged with that
