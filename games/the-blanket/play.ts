@@ -1,7 +1,6 @@
 import { ForgivingTouch, type Gesture, type Point } from './input'
-import { SEATS, dropAt, headOf, sausageAt, thingAt, type Thing, type Who, SITTERS } from './layout'
-import { footing } from './motion'
-import { STEP, cover, drop, inBasket, peek, pickBlanket, pickSausage, putBack, putSausage, ringBell, sausageSpot, step, tapHook, uncover, undrape, type World } from './model'
+import { SEATS, dropAt, headOf, sausageAt, thingAt, type PlaceId, type Thing, type Who, SITTERS } from './layout'
+import { STEP, footing, topOf, cover, drop, inBasket, peek, pickBlanket, pickSausage, putBack, putSausage, ringBell, sausageSpot, step, tapHook, uncover, undrape, type World } from './model'
 
 // The Mount's path with no browser in it: fingers land, move, lift and are
 // taken away here, in stage units, and the game plays its time here. The Mount
@@ -21,6 +20,9 @@ export type Refusal = { thing: Thing; what: 'sausage' | 'blanket' }
 /** How long a resting finger keeps the next one out, in ms. */
 export const REST_MS = 1000
 
+/** How far a finger may slip from where it landed and still have tapped, in stage units. */
+export const SLIP = 56
+
 export class Play {
   readonly touch = new ForgivingTouch()
   /** Where the carried thing is. */
@@ -30,6 +32,8 @@ export class Play {
   /** The room changed in a way worth saving. */
   changed = false
   private pressed: Thing | null = null
+  /** What a finger slid on that took nothing up: a short slide was a tap. */
+  private slid: Thing | null = null
   /** The press took a blanket off somebody, who may be followed by that blanket coming along in the hand. */
   private whipped: Who | null = null
   private owed = 0
@@ -38,9 +42,10 @@ export class Play {
   constructor(readonly world: World) {}
 
   down(id: number, at: Point, t: number): void {
-    // A finger that only rests hands the work to the one that lands.
+    // A finger with nothing in hand that rests or only slides hands the work to the one that lands.
     const rest = this.landed
-    if (this.touch.active && this.touch.holds(rest.id) && !rest.dragging && rest.id !== id && (t - rest.t > REST_MS || this.pressed?.kind === 'room')) this.act(this.touch.cancel(rest.id))
+    const idle = !this.world.held && (t - rest.t > REST_MS || rest.dragging || this.pressed?.kind === 'room')
+    if (this.touch.active && this.touch.holds(rest.id) && rest.id !== id && idle) this.act(this.touch.cancel(rest.id))
     if (this.touch.active && this.touch.holds(rest.id)) {
       // A second finger takes nothing from the first, and is answered where it lands.
       this.pokes.push({ thing: { kind: 'room' }, at })
@@ -80,7 +85,7 @@ export class Play {
     const out: Partial<Record<Who, Point>> = {}
     for (const who of SITTERS) {
       const s = this.world.sitters[who]
-      if (s.phase === 'run' || s.phase === 'hunt' || s.phase === 'sulk' || s.phase === 'home' || (s.phase === 'eat' && s.at.x !== SEATS[who].x)) out[who] = footing(who, s)
+      if (s.at.x !== SEATS[who].x || s.at.y !== SEATS[who].y) out[who] = footing(who, s)
     }
     return out
   }
@@ -89,9 +94,9 @@ export class Play {
     const spot = sausageSpot(this.world)
     const out = this.out()
     const wearer = spot === null ? null : headOf(spot)
-    const worn = wearer ? out[wearer] : undefined
-    // One that is worn goes where its wearer goes.
-    const lies = spot === null || spot === 'hook' ? null : wearer && worn ? { x: worn.x, y: worn.y + SEATS[wearer].top.y - SEATS[wearer].y } : sausageAt(spot)
+    // One that is worn goes where its wearer goes, and one under a blanket is the blanket's.
+    const hidden = spot === null || spot === 'hook' || (!wearer && this.world.draped.includes(spot as PlaceId))
+    const lies = hidden ? null : wearer ? topOf(this.world, wearer) : sausageAt(spot)
     return thingAt(at, lies, out)
   }
 
@@ -131,6 +136,7 @@ export class Play {
           else if (p?.kind === 'place' && w.draped.includes(p.id)) pickBlanket(w, { on: p.id })
           else if (p?.kind === 'fish' && w.draped.includes('fish')) pickBlanket(w, { on: 'fish' })
           this.pressed = null
+          this.slid = w.held ? null : p
           break
         }
         case 'dragMove':
@@ -142,6 +148,7 @@ export class Play {
           this.letGo(g.at)
           break
         case 'dragCancel':
+          this.slid = null
           putBack(w)
           this.hand = null
           this.changed = true
@@ -193,7 +200,21 @@ export class Play {
   private letGo(at: Point): void {
     const held = this.world.held
     this.hand = null
-    if (!held) return
+    const near = Math.hypot(at.x - this.landed.at.x, at.y - this.landed.at.y) < SLIP
+    if (!held) {
+      if (near && this.slid) {
+        this.pressed = this.slid
+        this.tap()
+      }
+      this.slid = this.pressed = null
+      return
+    }
+    if (near && held.kind === 'blanket' && typeof held.origin === 'object' && 'who' in held.origin) {
+      // The finger that took a blanket off somebody slipped a little: that was a tap, and it stays off.
+      this.world.held = null
+      this.world.events.push({ type: 'flap' })
+      return
+    }
     const thing = dropAt(at, this.out())
     const on = thing.kind === 'sitter' ? { who: thing.who } : thing.kind === 'place' ? { place: thing.id } : thing.kind === 'fish' ? 'fish' as const : 'elsewhere' as const
     const before = this.world.events.length

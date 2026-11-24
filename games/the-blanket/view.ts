@@ -4,8 +4,8 @@ import { hintFor, type Hint } from './guide'
 import type { Note } from './audio'
 import type { Point } from './input'
 import { BASKET, BELL, FISH, HOOK, PLACES, SEATS, SITTERS, SPOTS, headOf, sausageAt, type PlaceId, type Spot, type Thing, type Who } from './layout'
-import { EAT, SULK, inBasket, sausageSpot, sees, type Draped, type Event, type World } from './model'
-import { FRONT_LINE, NATURES, aloft, footing, looksAt, neutral, poseOf, type Pose } from './motion'
+import { EAT, FRONT_LINE, SULK, aloft, footing, topOf, inBasket, sausageSpot, sees, type Draped, type Event, type World } from './model'
+import { NATURES, looksAt, neutral, poseOf, type Pose } from './motion'
 import { Stamps, type Ctx, type Sprite } from './paint'
 import type { Poke, Refusal } from './play'
 import { paintRoom } from './room'
@@ -23,7 +23,7 @@ const LONG = 99
 /** How far the neck of each is below the middle of its head. */
 const NECK: Record<Who, number> = { dog: 8, cat: 4, aunt: 52, grandpa: 34 }
 
-type Seen = { gaze: Gaze; poked: number; freed: number; bowled: number; laid: number; near: boolean; side: boolean; pose: Pose }
+type Seen = { gaze: Gaze; poked: number; freed: number; askew: number; bowled: number; laid: number; near: boolean; side: boolean; pose: Pose }
 
 /** What each one sits on, and how far under its ground that stands. */
 const FURNITURE: Record<Who, { sprite: Sprite; dy: number }> = { dog: { sprite: T.cushion, dy: -6 }, cat: { sprite: T.stool, dy: 0 }, aunt: { sprite: T.armchair, dy: 14 }, grandpa: { sprite: T.rocker, dy: 24 } }
@@ -32,7 +32,7 @@ const WORN = SULK * 0.55
 /** How far from the mouth of each place the head of a diver comes to. */
 const DIVE_Y: Record<PlaceId, number> = { dish: -42, pot: 22, gramophone: 10, boot: -66, teapot: -36 }
 
-const seen = (): Seen => ({ gaze: { x: 0, y: 0 }, poked: LONG, freed: LONG, bowled: LONG, laid: LONG, near: false, side: false, pose: neutral() })
+const seen = (): Seen => ({ gaze: { x: 0, y: 0 }, poked: LONG, freed: LONG, askew: LONG, bowled: LONG, laid: LONG, near: false, side: false, pose: neutral() })
 
 const keyOf = (thing: Thing): string => thing.kind === 'place' ? thing.id : thing.kind === 'sitter' ? thing.who : thing.kind
 
@@ -71,7 +71,7 @@ export class View {
   poke(p: Poke): void {
     this.pushed.set(keyOf(p.thing), 0)
     if (p.thing.kind === 'sitter') this.who[p.thing.who].poked = 0
-    if (p.thing.kind === 'room') { this.puffs.push({ at: p.at, t: 0 }); this.glance = { at: p.at, t: 0 } }
+    if (p.thing.kind === 'room') { if (this.puffs.push({ at: p.at, t: 0 }) > 2) this.puffs.shift(); this.glance = { at: p.at, t: 0 } }
   }
 
   refusal(r: Refusal): void {
@@ -80,11 +80,11 @@ export class View {
 
   notice(e: Event, world: World): void {
     switch (e.type) {
-      case 'cover': { this.who[e.who].laid = 0; break }
+      case 'cover': { this.who[e.who].laid = 0; if (e.askew) this.who[e.who].askew = 0; break }
       case 'uncover': {
         const s = this.who[e.who], at = footing(e.who, world.sitters[e.who])
         s.freed = 0
-        this.flights.push({ what: 'blanket', from: { x: at.x, y: at.y + HEAD[e.who].y }, to: 'basket', t: 0, seconds: 0.55 })
+        this.flights.push({ what: 'blanket', from: { x: at.x, y: at.y + HEAD[e.who].y }, to: 'basket', t: 0, seconds: 0.55, of: e.who })
         break
       }
       case 'bowled': this.who[e.who].bowled = 0; break
@@ -93,17 +93,19 @@ export class View {
       case 'back': this.flights.push({ what: 'sausage', from: this.lastHand, to: e.spot, t: 0, seconds: 0.45 }); break
       case 'flap': this.flights.push({ what: 'blanket', from: this.lastHand, to: 'basket', t: 0, seconds: 0.5 }); break
       case 'drape': this.laid.set(e.on, 0); this.pushed.set(e.on, 0); break
-      case 'undrape': { const d = DRAPES[e.on]; this.flights.push({ what: 'blanket', from: { x: d.x, y: d.y }, to: 'basket', t: 0, seconds: 0.5 }); break }
+      case 'undrape': { const d = DRAPES[e.on]; this.flights.push({ what: 'blanket', from: { x: d.x, y: d.y }, to: 'basket', t: 0, seconds: 0.5, of: e.on }); break }
       case 'pick': {
         // What is in the hand is not in the air as well.
-        const last = this.flights.map((f) => f.what).lastIndexOf(e.what)
-        if (last >= 0 && (e.what === 'sausage' || world.held?.kind === 'blanket' && world.held.origin !== 'basket')) this.flights.splice(last, 1)
+        const held = world.held
+        const of = held?.kind !== 'blanket' || held.origin === 'basket' ? null : 'who' in held.origin ? held.origin.who : held.origin.on
+        this.flights = this.flights.filter((f) => f.what !== e.what || (e.what === 'blanket' && f.of !== of))
         break
       }
+      case 'found': case 'gift': this.flights = this.flights.filter((f) => f.what !== 'sausage'); break
       case 'bell': this.pushed.set('bell', 0); break
       case 'peek': this.pushed.set('sausage', 0); break
       case 'empty': this.pushed.set(e.spot, 0); break
-      case 'gulp': this.pushed.set('hook', -0.1); break
+      case 'gulp': this.pushed.set('gulped', -0.1); break
       default: break
     }
   }
@@ -125,7 +127,7 @@ export class View {
     const mouth = this.mouthAt(world)
     for (const who of SITTERS) {
       const v = this.who[who], s = world.sitters[who]
-      v.poked += dt; v.freed += dt; v.bowled += dt; v.laid += dt
+      v.poked += dt; v.freed += dt; v.askew += dt; v.bowled += dt; v.laid += dt
       const moving = s.phase === 'run' || s.phase === 'home'
       // Eyes turn at their owner's pace.
       const look = this.glance && sees(world, who) ? { at: this.glance.at } : looksAt(world, who, hand, this.time, mouth)
@@ -157,6 +159,12 @@ export class View {
     return { x: foot.x + HEAD[who].x, y: foot.y + HEAD[who].y + 40 }
   }
 
+  /** Where the sausage in a spot is now, as it goes about on a head. */
+  private sausageIn(world: World, spot: Spot): Point {
+    const who = headOf(spot)
+    return who ? topOf(world, who) : sausageAt(spot)
+  }
+
   private push(key: string, size = 0.12): number {
     const t = this.since(key)
     return t < 0 ? 0 : ring(t) * size
@@ -169,7 +177,7 @@ export class View {
     ctx.drawImage(this.room.canvas, this.room.x, this.room.y, this.room.w, this.room.h)
     const spot = sausageSpot(world), flying = this.flights.some((f) => f.what === 'sausage'), held = world.held?.kind === 'sausage'
     const lies = spot !== null && !flying && !held ? spot : null
-    const gulped = this.since('hook')
+    const gulped = this.since('gulped')
     string(ctx, st, Math.sin(this.time * 0.8) * 0.02 + this.push('hook', 0.16), lies === 'hook' ? Math.min(1, Math.max(0, gulped + 0.1) * 3) : 0)
     const b = this.since('bell')
     bellAt(ctx, st, (b < LONG ? ring(b, 13, 1.6) * 0.5 : 0) + this.push('tinkle', 0.14))
@@ -216,7 +224,7 @@ export class View {
     if (s.phase !== 'sulk' || s.t > WORN || s.target === null || headOf(s.target) || s.target === 'hook') return null
     const id = s.target as PlaceId, loose = LOOSE[id]
     // There is one of each: while somebody still has their head in it, or somebody who was first wears it, it is theirs.
-    if (!loose || SITTERS.some((o) => this.divesAt(world, o, id))) return null
+    if (!loose || sausageSpot(world) === id || SITTERS.some((o) => this.divesAt(world, o, id))) return null
     const first = SITTERS.filter((o) => world.sitters[o].phase === 'sulk' && world.sitters[o].target === id && world.sitters[o].t <= WORN).sort((a, b) => world.sitters[b].t - world.sitters[a].t)[0]
     return first === who ? loose : null
   }
@@ -224,13 +232,15 @@ export class View {
   private place(ctx: Ctx, world: World, id: PlaceId, lies: Spot | null, divers: Who[]): void {
     const st = this.stamps, at = SPOTS[id].at, k = this.push(id)
     const busy = divers.length > 0
-    const gone = lies !== id && SITTERS.some((who) => world.sitters[who].target === id && this.stuck(world, who) !== null)
+    const gone = SITTERS.some((who) => world.sitters[who].target === id && this.stuck(world, who) !== null)
     // Nobody in the room knows: it looks out by itself.
     const lost = lies === id && SITTERS.every((who) => sees(world, who) && world.sitters[who].belief === null)
     const shake = busy ? Math.sin(this.time * 26) * 0.03 : 0
     ctx.save()
     ctx.translate(at.x, at.y + 60)
-    ctx.rotate(k * 0.5 + shake)
+    // Under a blanket the horn sags; the boot hops when it is touched.
+    ctx.rotate(k * 0.5 + shake + (id === 'gramophone' && world.draped.includes(id) ? 0.16 : 0))
+    if (id === 'boot') ctx.translate(0, -Math.abs(k) * 260)
     ctx.scale(1 + k, 1 - k)
     ctx.translate(0, -60)
     if (!(gone && id === 'boot')) {
@@ -251,7 +261,12 @@ export class View {
       if (id === 'teapot' && !gone) st.stampAt(ctx, T.potLid, busy ? 74 : 0, busy ? 40 : -38 - Math.abs(k) * 130, busy ? 0.5 : k)
     }
     ctx.restore()
-    if (world.draped.includes(id)) this.draped(ctx, id)
+    if (world.draped.includes(id)) {
+      // A tip of it shows from under the hem.
+      const d = DRAPES[id]
+      if (lies === id) sausage(ctx, st, d.x + d.w * 0.86, d.y + d.bottom - 16, 0.14)
+      this.draped(ctx, id)
+    }
   }
 
   private draped(ctx: Ctx, on: Draped): void {
@@ -303,7 +318,7 @@ export class View {
       const puff = who === 'grandpa' ? Math.max(0, Math.sin(this.time * 1.4)) * 10 : 0
       const heave = Math.sin(this.time * n.lumpRate * 2) * n.lump
       const poke = ring(v.poked) * 12
-      blanket(ctx, st, { x: h.x * 0.5, top: o.top + heave * 0.6 - fall * fall * 240 + poke, bottom: o.bottom - fall * 120, r: o.r, w: o.w, lean: heave + Math.sin(this.time * 0.7 + SEATS[who].x) * n.lump, air: fall, time: this.time, stir: puff + (s.phase === 'home' ? 8 : 0), ears: o.ears })
+      blanket(ctx, st, { x: h.x * 0.5, top: o.top + heave * 0.6 - fall * fall * 240 + poke, bottom: o.bottom - fall * 120, r: o.r, w: o.w, lean: heave + (v.askew < 1 ? Math.cos(v.askew * 15) * 52 * (1 - v.askew) : 0) + Math.sin(this.time * 0.7 + SEATS[who].x) * n.lump, air: fall, time: this.time, stir: puff + (s.phase === 'home' ? 8 : 0), ears: o.ears })
     }
     if (lies && headOf(lies) === who) {
       const q = this.since('sausage'), up = q >= 0 && q < 0.6 ? Math.sin((q / 0.6) * Math.PI) * 24 : 0
@@ -318,7 +333,7 @@ export class View {
     const poked = this.since('fish'), k = this.push('fish', 0.06) + this.push('slosh', 0.09)
     const spot = sausageSpot(world)
     // It always knows.
-    const to = world.held?.kind === 'sausage' && hand ? hand : spot ? (sausageAt(spot)) : this.mouthAt(world) ?? HOOK
+    const to = world.held?.kind === 'sausage' && hand ? hand : spot ? this.sausageIn(world, spot) : this.mouthAt(world) ?? HOOK
     const face = to.x >= FISH.x ? 1 : -1, tilt = Math.max(-0.7, Math.min(0.7, Math.atan2(to.y - FISH.y, Math.abs(to.x - FISH.x) + 60)))
     ctx.save()
     ctx.translate(FISH.x, FISH.y)

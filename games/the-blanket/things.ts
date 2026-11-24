@@ -62,6 +62,11 @@ export const T = {
     for (let i = 0; i < 6; i++) { const a = i * 1.047; shape(c, r, ellipse(2 + Math.cos(a) * 24, -76 + Math.sin(a) * 24, 18, 15, a), boxOf(2 + Math.cos(a) * 24, -76 + Math.sin(a) * 24, 18, 15), CREAM, { color: OCHRE, side: 'bottom', reach: 0.5 }) }
     shape(c, r, ellipse(2, -76, 16, 15), boxOf(2, -76, 16, 15), OCHRE, { color: BROWN, side: 'bottom' })
   }),
+  flowerWorn: sprite('flowerWorn', -70, -118, 140, 170, (c, r) => {
+    T.flower.paint(c, r)
+    shape(c, r, ellipse(0, 20, 44, 14), boxOf(0, 20, 44, 14), '#5b3a24', { color: INK, side: 'bottom', reach: 0.6 })
+    for (const [x, y] of [[-30, 44], [26, 48], [2, 40], [-12, 34]]) shape(c, r, ellipse(x, y, 9, 8), boxOf(0, 0, 1, 1), '#5b3a24')
+  }),
   flowerFront: sprite('flowerFront', -62, -6, 124, 84, (c, r) => {
     shape(c, r, poly(-50, 10, 50, 10, 36, 68, -36, 68), boxOf(0, 40, 50, 30), OCHRE, { color: BROWN, side: 'left', reach: 0.5 })
     shape(c, r, rounded(-56, 2, 112, 18, 7), boxOf(0, 11, 56, 9), OCHRE, { color: BROWN, side: 'bottom', reach: 0.6 })
@@ -146,7 +151,7 @@ export const T = {
 export const BACK: Record<PlaceId, Sprite> = { dish: T.dishBack, teapot: T.potBack, boot: T.bootBack, pot: T.flowerBack, gramophone: T.hornBack }
 export const FRONT: Record<PlaceId, Sprite> = { dish: T.dishFront, teapot: T.potFront, boot: T.bootFront, pot: T.flowerFront, gramophone: T.hornFront }
 /** What comes away on the head of one who looked there for nothing, if anything does. */
-export const LOOSE: Partial<Record<PlaceId, Sprite>> = { teapot: T.potLid, boot: T.bootWorn, pot: T.flower }
+export const LOOSE: Partial<Record<PlaceId, Sprite>> = { teapot: T.potLid, boot: T.bootWorn, pot: T.flowerWorn }
 
 /** How a sausage lies in each place: where, at what angle. */
 export const LIES: Record<PlaceId, { x: number; y: number; rot: number }> = {

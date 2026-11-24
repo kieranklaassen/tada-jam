@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { BASKET, BELL, FISH, HOOK, PLACES, SEATS, SITTERS, SPOTS, dropAt, sausageAt, spotAt, standAt, thingAt, type Spot, headSpot } from './layout'
-import { freshWorld, inBasket, quiet, sausageSpot } from './model'
+import { cover, faults, footing, freshWorld, inBasket, putSausage, quiet, ringBell, sausageSpot, topOf } from './model'
 import { Play } from './play'
 import type { Point } from './input'
 
@@ -163,5 +163,94 @@ describe('the room', () => {
       const at = [0, 1, 2].map((i) => standAt(spot, i))
       for (const p of at) { expect(p.x).toBeGreaterThan(40); expect(p.x).toBeLessThan(1140) }
     }
+  })
+})
+
+describe('what a reader broke', () => {
+  it('a blanket on the dish comes off with a tap, and the sausage under it is not what is dragged', () => {
+    const p = new Play(freshWorld())
+    drag(p, BASKET, SPOTS.dish.at)
+    expect(p.world.draped).toEqual(['dish'])
+    drag(p, SPOTS.dish.at, { x: 560, y: 560 })
+    expect(sausageSpot(p.world)).toBe('dish')
+    drag(p, BASKET, SPOTS.dish.at)
+    tap(p, SPOTS.dish.at)
+    expect(p.world.draped).toEqual([])
+  })
+  it('a sausage worn by somebody who has run off is not found at the empty seat, and is picked up where it is worn', () => {
+    const p = new Play(freshWorld())
+    cover(p.world, 'aunt')
+    putSausage(p.world, headSpot('aunt'))
+    ringBell(p.world)
+    let picked = false
+    for (let i = 0; i < 900 && !quiet(p.world); i++) {
+      p.advance(1 / 60, (t += 17))
+      const s = p.world.sitters.aunt
+      if (s.phase === 'run') picked ||= topOf(p.world, 'aunt').x !== SEATS.aunt.top.x
+      if (s.phase === 'hunt' && p.world.sitters.dog.phase === 'sulk') expect(sausageSpot(p.world)).toBe(headSpot('aunt'))
+      if (p.world.sausage.kind === 'mouth') {
+        // Whoever eats it, its owner was in her seat.
+        expect(p.world.sausage.who).not.toBe('aunt')
+        expect(s.at).toEqual({ x: SEATS.aunt.x, y: SEATS.aunt.y })
+      }
+    }
+    expect(picked).toBe(true)
+  })
+  it('a slipped tap on a covered sitter leaves the blanket off, and the dash goes on', () => {
+    const p = new Play(freshWorld())
+    tap(p, body('dog')); p.advance(0, (t += 400))
+    const at = body('dog')
+    p.down(1, at, (t += 50)); p.move(1, { x: at.x + 18, y: at.y }); p.up(1, { x: at.x + 18, y: at.y }, (t += 50)); p.advance(0.02, (t += 400))
+    expect(p.world.sitters.dog.covered).toBe(false)
+    expect(p.world.sitters.dog.phase).toBe('wind')
+    expect(inBasket(p.world)).toBe(4)
+  })
+  it('a tap that slides on the bell still rings it', () => {
+    const p = new Play(freshWorld())
+    p.down(1, BELL, (t += 50)); p.move(1, { x: BELL.x + 20, y: BELL.y }); p.up(1, { x: BELL.x + 20, y: BELL.y }, (t += 50)); p.advance(0, (t += 400))
+    expect(quiet(p.world)).toBe(false)
+  })
+  it('a palm that rolls keeps nobody out, and one that carries keeps its thing', () => {
+    const p = new Play(freshWorld())
+    p.down(7, { x: 560, y: 560 }, (t += 50)); p.move(7, { x: 585, y: 560 })
+    tap(p, body('cat'), 2)
+    expect(p.world.sitters.cat.covered).toBe(true)
+    const q = new Play(freshWorld()), from = sausageAt('dish')
+    q.down(1, from, (t += 50)); q.move(1, { x: from.x + 90, y: from.y }); q.up(1, { x: from.x + 90, y: from.y }, (t += 20))
+    q.down(1, { x: from.x + 92, y: from.y }, (t += 60)); q.move(1, { x: from.x + 120, y: from.y })
+    q.down(2, body('cat'), (t += 3000))
+    expect(q.world.held?.kind).toBe('sausage')
+    expect(q.world.sitters.cat.covered).toBe(false)
+  })
+  it('one covered in the middle of a hunt and uncovered on the way home dashes again from where it is', () => {
+    const p = new Play(freshWorld())
+    cover(p.world, 'dog'); putSausage(p.world, 'boot'); tap(p, body('dog'))
+    while (p.world.sitters.dog.phase !== 'hunt') p.advance(1 / 60, (t += 17))
+    const belly = () => { const f = footing('dog', p.world.sitters.dog); return { x: f.x, y: f.y - 90 } }
+    tap(p, belly())
+    expect(p.world.sitters.dog.phase).toBe('home')
+    p.advance(0.1, (t += 400)); tap(p, belly())
+    expect(p.world.sitters.dog.phase).toBe('wind')
+    rest(p)
+    expect(p.world.sitters.dog.at).toEqual({ x: SEATS.dog.x, y: SEATS.dog.y })
+  })
+  it('random fingers never break a rule, and everything comes to rest', () => {
+    let seed = 7
+    const r = () => (seed = (seed * 16807) % 2147483647) / 2147483647
+    const p = new Play(freshWorld())
+    const spot = () => ({ x: r() * 1180, y: r() * 820 })
+    for (let i = 0; i < 4000; i++) {
+      const id = r() < 0.8 ? 1 : 2, k = r()
+      if (k < 0.3) p.down(id, spot(), (t += 20))
+      else if (k < 0.6) p.move(id, spot())
+      else if (k < 0.85) p.up(id, spot(), (t += 20))
+      else if (k < 0.9) p.cancel(id)
+      else if (k < 0.92) p.clear()
+      p.advance(r() * 0.4, (t += 200))
+      expect(faults(p.world)).toEqual([])
+    }
+    p.clear(); rest(p)
+    expect(quiet(p.world)).toBe(true)
+    expect(p.world.held).toBeNull()
   })
 })

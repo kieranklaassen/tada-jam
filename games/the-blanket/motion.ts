@@ -1,7 +1,7 @@
-import { SITTERS, headSpot, spotAt, SEATS, headOf, SPOTS, standAt, type Spot, type Who } from './layout'
+import { SITTERS, headSpot, spotAt, SEATS, headOf, type Spot, type Who } from './layout'
 import type { Point } from './input'
 import type { Phase, Sitter, World } from './model'
-import { EAT, HUNT, LOST, SULK, WIND, homeSeconds, runSeconds, sees } from './model'
+import { EAT, HUNT, LOST, SULK, WIND, footing, sees, topOf } from './model'
 
 // How each one moves, as numbers for the view. No two share a curve: the dog
 // is all front and no brakes, the cat pours, the aunt bounces where she sits
@@ -48,6 +48,8 @@ export function looksAt(world: World, who: Who, hand: Point | null, time: number
     if (world.held?.kind === 'sausage' && hand && world.held.origin !== headSpot(who)) return { at: hand }
     if (world.sausage.kind === 'mouth' && mouth) return { at: mouth }
   }
+  const wearer = s.belief === null ? null : headOf(s.belief)
+  if (wearer) return { at: topOf(world, wearer) }
   if (s.belief !== null) return { at: spotAt(s.belief) }
   const n = NATURES[who], i = SITTERS.indexOf(who)
   const step = Math.floor(time * n.wander + i * 0.37), h = Math.sin(step * 12.9898 + i * 78.2) * 43758.5453, k = h - Math.floor(h)
@@ -91,41 +93,6 @@ export function neutral(): Pose {
   return { x: 0, y: 0, rot: 0, sx: 1, sy: 1, dive: 0, headX: 0, headY: 0, headRot: 0, lid: 0, brow: 0, mouth: 'shut', legs: 0, legging: 0, flap: 0, frizz: 0 }
 }
 
-/** The floor line in front of the chairs, where those stand who have been up a wall. */
-export const FRONT_LINE = 645
-/** The floor line behind what stands on the rug. */
-const RUG = 655
-
-/** The floor under a hunter: behind what stands on the rug, and under what hangs on the wall. */
-function floorUnder(s: Sitter): number {
-  const spot = s.target
-  if (spot === null || headOf(spot)) return s.at.y
-  return aloft(spot) ? FRONT_LINE : RUG
-}
-
-/** Whether a spot is out of reach from the floor, so that getting there is a leap. */
-export function aloft(spot: Spot): boolean {
-  return spot === 'hook' || (headOf(spot) === null && SPOTS[spot as keyof typeof SPOTS].high)
-}
-
-/** Where a sitter is seen to stand, and so where it is touched: the rules move it in straight lines, and it keeps to the floor until it leaps. */
-export function footing(who: Who, s: Sitter): Point {
-  if (s.target === null) return s.at
-  const floor = floorUnder(s)
-  if (s.phase === 'run' && aloft(s.target)) {
-    const to = standAt(s.target, s.slot), k = s.t / runSeconds(who, s.from, to)
-    const base = s.from.y + (floor - s.from.y) * clamp(k / 0.5)
-    return { x: s.at.x, y: base + (to.y - base) * ease((k - 0.5) / 0.5) }
-  }
-  if (s.phase === 'eat' || s.phase === 'sulk') return { x: s.at.x, y: s.at.y + (floor - s.at.y) * ease(s.t / 0.3) }
-  if (s.phase === 'home') {
-    const k = s.t / homeSeconds(who, s.from, SEATS[who])
-    const start = aloft(s.target) ? FRONT_LINE : headOf(s.target) ? s.from.y : RUG
-    return { x: s.at.x, y: s.at.y + (start - s.from.y) * (1 - clamp(k)) }
-  }
-  return s.at
-}
-
 const arc: Record<Who, number> = { dog: 110, cat: 190, aunt: 70, grandpa: 130 }
 
 /** Fills in the pose of one sitter. `time` is game time, `poked` seconds since it was last touched, `freed` since its blanket came off. */
@@ -154,6 +121,8 @@ export function poseOf(who: Who, s: Sitter, time: number, poked: number, freed: 
   }
   out.frizz = clamp(1.2 - freed * 0.8)
   out.flap = Math.sin(time * (1.3 + i * 0.45) + i) * 0.12
+  // The dog shakes from nose to tail, the others only their heads.
+  if (who === 'dog' && freed < 0.6) out.rot += Math.sin(freed * n.shake * 5 + 1) * 0.09 * (1 - freed / 0.6)
   if (freed < 0.6) out.headRot += Math.sin(freed * n.shake * 5) * 0.3 * (1 - freed / 0.6)
   PHASES[s.phase](who, s, time, out)
   return out

@@ -1,4 +1,4 @@
-import { PLACES, SEATS, SITTERS, headOf, headSpot, standAt, type PlaceId, type Spot, type Who } from './layout'
+import { PLACES, SEATS, SITTERS, SPOTS, headOf, headSpot, standAt, type PlaceId, type Spot, type Who } from './layout'
 import type { Point } from './input'
 
 // The rules of the parlour, with no clock, no chance and no drawing: what each
@@ -56,7 +56,7 @@ export type Draped = PlaceId | 'fish'
 export type Held = { kind: 'sausage'; origin: Spot } | { kind: 'blanket'; origin: 'basket' | { who: Who } | { on: Draped } }
 
 export type Event =
-  | { type: 'cover' | 'uncover' | 'wind' | 'run' | 'gulp' | 'seated' | 'lost' | 'copy' | 'squeak'; who: Who; spot?: Spot }
+  | { type: 'cover' | 'uncover' | 'wind' | 'run' | 'gulp' | 'seated' | 'lost' | 'copy' | 'squeak'; who: Who; spot?: Spot; askew?: boolean }
   | { type: 'hunt' | 'empty' | 'found' | 'miss'; who: Who; spot: Spot }
   | { type: 'gift' | 'bowled' | 'ghost'; who: Who }
   | { type: 'put'; spot: Spot; from: Spot }
@@ -133,6 +133,8 @@ function show(world: World, spot: Spot): void {
 
 function enter(world: World, who: Who, phase: Phase): void {
   const s = world.sitters[who]
+  // It walks home from where it is seen to stand.
+  if (phase === 'home') s.at = footing(who, s)
   s.phase = phase
   s.t = 0
   s.from = s.at
@@ -149,7 +151,7 @@ function enter(world: World, who: Who, phase: Phase): void {
 // --- What a child can do ------------------------------------------------------
 
 /** A blanket on a sitter, wherever it is. False when there is no blanket to be had. */
-export function cover(world: World, who: Who): boolean {
+export function cover(world: World, who: Who, askew = false): boolean {
   const s = world.sitters[who]
   if (s.covered) return false
   if (inBasket(world) <= 0) {
@@ -161,9 +163,9 @@ export function cover(world: World, who: Who): boolean {
   }
   s.covered = true
   if (ownHead(who, s.belief)) s.belief = null
-  world.events.push({ type: 'cover', who })
+  world.events.push({ type: 'cover', who, askew })
   // Out of its seat, it turns for home under the blanket. One that is eating finishes first.
-  if (s.phase === 'wind' || s.phase === 'lost') enter(world, who, 'seat')
+  if (s.phase === 'wind' || s.phase === 'lost') enter(world, who, atHome(who, s) ? 'seat' : 'home')
   else if (s.phase === 'run' || s.phase === 'hunt' || s.phase === 'sulk') enter(world, who, 'home')
   return true
 }
@@ -173,7 +175,7 @@ export function uncover(world: World, who: Who): void {
   if (!s.covered) return
   s.covered = false
   world.events.push({ type: 'uncover', who })
-  if (s.phase === 'seat') dash(world, who, believer(world, who))
+  if (s.phase === 'seat' || s.phase === 'home') dash(world, who, believer(world, who))
 }
 
 /** What a sitter goes on when its blanket comes off: its belief, else plain sight, else the nearest neighbour's. */
@@ -218,11 +220,12 @@ export function ringBell(world: World): void {
   const goers: Who[] = []
   for (const who of SITTERS) {
     const s = world.sitters[who]
-    if (s.covered) {
+    const was = s.covered
+    if (was) {
       s.covered = false
       world.events.push({ type: 'uncover', who })
     }
-    if (s.phase === 'seat') goers.push(who)
+    if (s.phase === 'seat' || (was && s.phase === 'home')) goers.push(who)
   }
   // All of them before any goes, since a copied neighbour must still be seated.
   const aims = goers.map((who) => believer(world, who))
@@ -305,6 +308,47 @@ export function homeSeconds(who: Who, from: Point, to: Point): number {
   return Math.max(0.6, far(from, to) / (PACE[who] * 0.62))
 }
 
+const clamp = (k: number) => Math.max(0, Math.min(1, k))
+const ease = (k: number) => { const c = clamp(k); return c * c * (3 - 2 * c) }
+
+/** The floor line in front of the chairs, where those stand who have been up a wall. */
+export const FRONT_LINE = 645
+/** The floor line behind what stands on the rug. */
+const RUG = 655
+
+/** The floor under a hunter: behind what stands on the rug, and under what hangs on the wall. */
+function floorUnder(s: Sitter): number {
+  const spot = s.target
+  if (spot === null || headOf(spot)) return s.at.y
+  return aloft(spot) ? FRONT_LINE : RUG
+}
+
+/** Whether a spot is out of reach from the floor, so that getting there is a leap. */
+export function aloft(spot: Spot): boolean {
+  return spot === 'hook' || (headOf(spot) === null && SPOTS[spot as keyof typeof SPOTS].high)
+}
+
+/** Where a sitter is seen to stand, and so where it is touched: the rules move it in straight lines, and it keeps to the floor until it leaps. */
+export function footing(who: Who, s: Sitter): Point {
+  if (s.target === null) return s.at
+  const floor = floorUnder(s)
+  if (s.phase === 'run' && aloft(s.target)) {
+    const to = standAt(s.target, s.slot), k = s.t / runSeconds(who, s.from, to)
+    const base = s.from.y + (floor - s.from.y) * clamp(k / 0.5)
+    return { x: s.at.x, y: base + (to.y - base) * ease((k - 0.5) / 0.5) }
+  }
+  if (s.phase === 'eat' || s.phase === 'sulk') return { x: s.at.x, y: s.at.y + (floor - s.at.y) * ease(s.t / 0.3) }
+  return s.at
+}
+
+/** Where a sitter's head carries a sausage now, whether it is in its seat or out. */
+export function topOf(world: World, who: Who): Point {
+  const foot = footing(who, world.sitters[who]), seat = SEATS[who]
+  return { x: foot.x + seat.top.x - seat.x, y: foot.y + seat.top.y - seat.y }
+}
+
+const atHome = (who: Who, s: Sitter) => far(s.at, SEATS[who]) < 1
+
 const ownHead = (who: Who, spot: Spot | null) => spot !== null && headOf(spot) === who
 
 function destination(who: Who, s: Sitter): Point {
@@ -330,7 +374,9 @@ function finishHunt(world: World, who: Who): void {
     world.events.push({ type: 'ghost', who })
   }
   const owner = headOf(spot)
-  if (spot !== 'hook' && at === spot && world.held?.kind !== 'sausage') {
+  // A sausage on the head of somebody who has run off is not where its owner sat.
+  const ranOff = owner !== null && !atHome(owner, world.sitters[owner])
+  if (spot !== 'hook' && at === spot && !ranOff && world.held?.kind !== 'sausage') {
     world.events.push({ type: 'found', who, spot })
     if (owner && owner !== who) world.events.push({ type: 'bowled', who: owner })
     takes(world, who)
@@ -383,13 +429,13 @@ export function step(world: World): void {
         if (s.t < EAT) break
         world.sausage = { kind: 'spot', spot: 'hook' }
         world.events.push({ type: 'gulp', who })
-        enter(world, who, far(s.at, SEATS[who]) < 1 ? 'seat' : 'home')
+        enter(world, who, atHome(who, s) ? 'seat' : 'home')
         break
       case 'sulk':
-        if (s.t >= SULK) enter(world, who, far(s.at, SEATS[who]) < 1 ? 'seat' : 'home')
+        if (s.t >= SULK) enter(world, who, atHome(who, s) ? 'seat' : 'home')
         break
       case 'lost':
-        if (s.t >= LOST) enter(world, who, 'seat')
+        if (s.t >= LOST) enter(world, who, atHome(who, s) ? 'seat' : 'home')
         break
       case 'home': {
         const to = { x: SEATS[who].x, y: SEATS[who].y }
@@ -480,7 +526,7 @@ export function drop(world: World, on: DropOn): void {
     if (!done) world.events.push({ type: 'back', spot: held.origin })
     return
   }
-  const done = on === 'elsewhere' ? false : on === 'fish' ? drape(world, 'fish') : 'who' in on ? cover(world, on.who) : drape(world, on.place)
+  const done = on === 'elsewhere' ? false : on === 'fish' ? drape(world, 'fish') : 'who' in on ? cover(world, on.who, true) : drape(world, on.place)
   if (!done) world.events.push({ type: 'flap' })
 }
 

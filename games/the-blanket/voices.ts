@@ -77,14 +77,21 @@ const rummage = (spot: Spot): Note[] => {
   }
 }
 
+/** What a place adds when somebody comes out of it with nothing: a sneeze, a stamp, a honk. */
+const AFTER: Partial<Record<PlaceId, Note[]>> = {
+  pot: [n(1200, 2600, 0.08, 0.16, 0.05, 1.2, 0.1), n(2400, 700, 0.2, 0.01, 0.16, 0.8, 0.3)],
+  boot: [t(110, 60, 0.22, 0.005, 0.12, 'sine', 0.05)],
+  gramophone: [t(220, 215, 0.16, 0.02, 0.2, 'sawtooth')],
+}
+
 export function voiceOfEvent(e: Event, turn: number): Note[] {
   const v = vary(turn)
   switch (e.type) {
-    case 'cover': return [...flump(turn), ...grunt[e.who](v)]
+    case 'cover': return [...flump(turn), ...grunt[e.who](v), ...(e.askew ? [n(700, 300, 0.12, 0.02, 0.1, 1, 0.34), n(640, 280, 0.1, 0.02, 0.1, 1, 0.5)] : [])]
     case 'uncover': return [...whoosh(turn), ...yelp[e.who](v)]
     case 'run': return start[e.who]()
     case 'hunt': return rummage(e.spot)
-    case 'empty': return disliked(e.who, e.spot) ? [...outrage[e.who](v * 0.8), n(900, 500, 0.06, 0.02, 0.3, 2, 0.3)] : outrage[e.who](v)
+    case 'empty': return [...(AFTER[e.spot as PlaceId] ?? []), ...(disliked(e.who, e.spot) ? [...outrage[e.who](v * 0.8), n(900, 500, 0.06, 0.02, 0.3, 2, 0.3)] : outrage[e.who](v))]
     case 'miss': return [t(420, 120, 0.16, 0.01, 0.4, 'triangle'), ...later(outrage[e.who](v), 0.3)]
     case 'found': case 'gift': return munch[e.who]()
     case 'bowled': return [n(240, 120, 0.26, 0.01, 0.24, 0.8), ...grunt[e.who](v * 1.3)]

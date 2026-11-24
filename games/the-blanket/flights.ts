@@ -1,9 +1,10 @@
 import type { Point } from './input'
-import type { Spot } from './layout'
+import type { Spot, Who } from './layout'
+import type { Draped } from './model'
 
 // Things on their way through the air.
 
-export type Flight = { what: 'sausage' | 'blanket'; from: Point; to: Spot | 'basket'; t: number; seconds: number }
+export type Flight = { what: 'sausage' | 'blanket'; from: Point; to: Spot | 'basket'; t: number; seconds: number; of?: Who | Draped }
 
 /** The size of a blanket rolled up as it flies. */
 export const FOLD = 44

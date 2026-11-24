@@ -4,8 +4,8 @@ import { FIGURE_SPRITES } from './figures'
 import { flightAt } from './flights'
 import { hintFor } from './guide'
 import { BELL, FISH, HOOK, PLACES, SEATS, SITTERS, SPOTS, headSpot, sausageAt, spotAt, type Spot } from './layout'
-import { cover, drape, freshWorld, pickSausage, putSausage, quiet, ringBell, step, uncover, type World } from './model'
-import { NATURES, aloft, footing, looksAt, neutral, poseOf } from './motion'
+import { aloft, cover, drape, footing, freshWorld, pickSausage, putSausage, quiet, ringBell, step, uncover, type World } from './model'
+import { NATURES, looksAt, neutral, poseOf } from './motion'
 import { STAMP_LIMIT, View, glows } from './view'
 import { surface } from './paint'
 import { T } from './things'
@@ -52,6 +52,17 @@ describe('a frame', () => {
       })
       expect(quiet(world)).toBe(true)
     }
+    expect(most).toBeLessThanOrEqual(STAMP_LIMIT)
+  })
+  it('stays in its budget with fingers all over the bare room', () => {
+    const world = busiest(), view = ready()
+    ringBell(world)
+    let most = 0
+    play(world, view, 6, () => {
+      for (let i = 0; i < 4; i++) view.poke({ thing: { kind: 'room' }, at: { x: 600, y: 300 } })
+      view.draw(fakePen().ctx, world, null, { glow: 1, demo: 0.4, demoIndex: 0 })
+      most = Math.max(most, view.stamps.stamped)
+    })
     expect(most).toBeLessThanOrEqual(STAMP_LIMIT)
   })
   it('paints nothing anew while the room plays', () => {
@@ -130,7 +141,9 @@ describe('motion', () => {
       world.sitters[who].belief = spot
       uncover(world, who)
       let last = footing(who, world.sitters[who])
-      for (let i = 0; i < 600; i++) {
+      for (let i = 0; i < 900; i++) {
+        // Blinded in the middle of the hunt, it gropes home from where it stood.
+        if (i === 110) cover(world, who)
         step(world)
         const now = footing(who, world.sitters[who])
         expect(Math.hypot(now.x - last.x, now.y - last.y), `${who} to ${spot}, ${world.sitters[who].phase}`).toBeLessThan(48)
