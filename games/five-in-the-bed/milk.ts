@@ -5,10 +5,10 @@ import { below, type Rng } from './rng'
 // the sheep below, one to one.
 
 /** One bottle, on the shelf over a half. A bottle that wears a sheep's colour is that sheep's. */
-export type Bottle = { side: Side; slot: number; owner: number | null }
+type Bottle = { side: Side; slot: number; owner: number | null }
 export type Milk = Bottle[]
 
-export const onShelf = (milk: Milk, side: Side): number => milk.filter((b) => b.side === side).length
+const onShelf = (milk: Milk, side: Side): number => milk.filter((b) => b.side === side).length
 
 export function bottles(left: number, owners: { side: Side; who: readonly number[] } | null = null): Milk {
   const milk: Milk = []
@@ -24,16 +24,17 @@ export type Straw = { bottle: number; who: number | null }
 
 /**
  * Straws go down within a half, the colour's own first. One that has a sheep keeps it for as long as that sheep stays;
- * the rest go from left to right, so that they never cross for nothing. One in the air has no straw.
+ * the rest go in order from the side of the bed, so that they never cross for nothing and one with nobody hangs by the ridge. One in the air has no straw.
  */
 export function straws(bed: Bed, milk: Milk, before: readonly Straw[] | null = null): Straw[] {
   const out: Straw[] = milk.map((_, bottle) => ({ bottle, who: null }))
   for (const side of SIDES) {
+    const inward = side === 'left' ? 1 : -1
     const here = bed.sheep.map((_, i) => i).filter((i) => !bed.sheep[i].leap && sideOf(bed.sheep[i].x) === side)
     milk.forEach((b, i) => { if (b.side === side && b.owner !== null && here.includes(b.owner)) out[i].who = b.owner })
     // One with a bottle of its own somewhere else waits for that.
-    let plain = here.filter((i) => !milk.some((b) => b.owner === i)).sort((a, b) => bed.sheep[a].x - bed.sheep[b].x)
-    let free = milk.map((_, i) => i).filter((i) => milk[i].side === side && milk[i].owner === null)
+    let plain = here.filter((i) => !milk.some((b) => b.owner === i)).sort((a, b) => (bed.sheep[a].x - bed.sheep[b].x) * inward)
+    let free = milk.map((_, i) => i).filter((i) => milk[i].side === side && milk[i].owner === null).sort((a, b) => (milk[a].slot - milk[b].slot) * inward)
     for (const i of free) {
       const kept = before?.[i]?.who
       if (kept !== null && kept !== undefined && plain.includes(kept)) { out[i].who = kept; plain = plain.filter((x) => x !== kept) }
@@ -57,6 +58,9 @@ export function movesTo(bed: Bed, milk: Milk): number {
   return wrong + extra
 }
 
+/** The most sheep one deal asks over. */
+const FAR = 3
+
 /** The next deal: never one that already fits. */
 export function deal(bed: Bed, position: string, rng: Rng): { milk: Milk; quilt: Side | null } {
   const left = bed.sheep.filter((s) => sideOf(s.x) === 'left').length
@@ -65,18 +69,14 @@ export function deal(bed: Bed, position: string, rng: Rng): { milk: Milk; quilt:
     return { milk: bottles(near[below(rng, near.length)]), quilt: null }
   }
   if (position === 'whose-milk') {
-    const n = 1 + below(rng, 2), side = SIDES[below(rng, 2)]
-    const from = Array.from({ length: FIVE }, (_, i) => i)
-    for (let turn = 0; turn < 40; turn++) {
-      const pool = [...from], who: number[] = []
-      while (who.length < n) who.push(pool.splice(below(rng, pool.length), 1)[0])
-      const milk = bottles(side === 'left' ? n : FIVE - n, { side, who })
-      if (!fits(straws(bed, milk))) return { milk, quilt: null }
-    }
-    return { milk: bottles(left > 0 ? left - 1 : 1), quilt: null }
+    const n = 1 + below(rng, 2), side = SIDES[below(rng, 2)], on = side === 'left' ? n : FIVE - n
+    // Its owner is somebody who has to come over for it.
+    const away = bed.sheep.map((_, i) => i).filter((i) => sideOf(bed.sheep[i].x) !== side)
+    if (away.length > 0) return { milk: bottles(on, { side, who: [away[below(rng, away.length)]] }), quilt: null }
+    const there = side === 'left' ? 'right' : 'left'
+    return { milk: bottles(FIVE - on, { side: there, who: [below(rng, FIVE)] }), quilt: null }
   }
-  const ways = Array.from({ length: FIVE + 1 }, (_, n) => n).filter((n) => n !== left)
+  const ways = Array.from({ length: FIVE + 1 }, (_, n) => n).filter((n) => n !== left && Math.abs(n - left) <= FAR)
   const milk = bottles(ways[below(rng, ways.length)])
   return { milk, quilt: position === 'under-the-quilt' ? SIDES[below(rng, 2)] : null }
 }
-

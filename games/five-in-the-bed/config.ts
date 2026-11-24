@@ -92,7 +92,7 @@ export const TAP_PRESSES: 1 | 2 = 1
  * are what a save stores: add steps anywhere, and never rename one that has
  * shipped. Nothing on screen shows where the child is.
  */
-export const LADDER: readonly string[] = ['next-door', 'further', 'under-the-quilt', 'whose-milk']
+export const LADDER: readonly string[] = ['next-door', 'further', 'whose-milk', 'under-the-quilt']
 
 /** Where a first visit starts, by `ctx.childAge`: 4 and younger and no age at the first row, 5 and older at the second. */
 export const FIRST_VISIT: readonly { fromAge: number; position: string }[] = [

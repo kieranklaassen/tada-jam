@@ -9,26 +9,24 @@ export const SIDES: readonly Side[] = ['left', 'right']
 export const other = (side: Side): Side => (side === 'left' ? 'right' : 'left')
 
 export const WHO = ['tup', 'curl', 'pip', 'nell', 'gus'] as const
-export type Who = (typeof WHO)[number]
 export const FIVE = WHO.length
 
 /** The mattress, and the ridge's crest. */
 export const BED = { left: 212, right: 1112, top: 206, bottom: 690, crest: 662 } as const
 export const R = 66
 /** How far from the crest the ridge still pushes a sheep away. */
-export const SLOPE = 88
+const SLOPE = 88
 export const STEP = 1 / 120
 /** A leap: how long it takes and how high it goes, which is well over a sheep. */
-export const LEAP_S = 0.8
-export const LEAP_HIGH = 170
+const LEAP_S = 0.8
+const LEAP_HIGH = 170
 /** The hand that shoves through a bare mattress. */
 export const HAND = 34
 
-const HOLLOW: Record<Side, Point> = {
-  left: { x: (BED.left + BED.crest) / 2 - 10, y: (BED.top + BED.bottom) / 2 },
-  right: { x: (BED.right + BED.crest) / 2 + 10, y: (BED.top + BED.bottom) / 2 },
-}
-export const hollow = (side: Side): Point => HOLLOW[side]
+const MID: Record<Side, number> = { left: (BED.left + BED.crest) / 2, right: (BED.right + BED.crest) / 2 }
+/** Each has a place of its own, the same in both halves and clear of the rest, as the pips of a five lie. Nobody has to move for another. */
+const PLACE: readonly Point[] = [{ x: -100, y: 300 }, { x: 152, y: 596 }, { x: 4, y: 452 }, { x: -152, y: 596 }, { x: 100, y: 300 }]
+export const placeOf = (who: number, side: Side): Point => ({ x: MID[side] + PLACE[who].x - (side === 'left' ? 8 : -8), y: PLACE[who].y })
 
 export type Sheep = {
   x: number
@@ -63,17 +61,9 @@ export function parting(bed: Bed): Record<Side, number[]> {
   return parts
 }
 
-/** Places for a half that holds so many, roughly where they roll to by themselves. */
+/** Everybody in their place. */
 export function makeBed(sides: readonly Side[]): Bed {
-  const bed: Bed = { sheep: [], held: null, hand: null, bumps: [], still: 0 }
-  const seen: Record<Side, number> = { left: 0, right: 0 }
-  const total: Record<Side, number> = { left: sides.filter((s) => s === 'left').length, right: sides.filter((s) => s === 'right').length }
-  for (const side of sides) {
-    const i = seen[side]++, n = total[side], h = HOLLOW[side]
-    const ring = n === 1 ? 0 : n === 2 ? R + 2 : n === 3 ? R * 1.2 : n === 4 ? R * 1.45 : R * 1.75
-    const turn = (i / n) * Math.PI * 2 + (n === 2 ? 0 : -Math.PI / 2)
-    bed.sheep.push({ x: h.x + Math.cos(turn) * ring, y: h.y + Math.sin(turn) * ring, vx: 0, vy: 0, z: 0, leap: null })
-  }
+  const bed: Bed = { sheep: sides.map((side, i) => ({ ...placeOf(i, side), vx: 0, vy: 0, z: 0, leap: null })), held: null, hand: null, bumps: [], still: 0 }
   settle(bed)
   return bed
 }
@@ -93,24 +83,12 @@ export function settle(bed: Bed, seconds = 12): void {
   bed.bumps = []
 }
 
-/** Sends one over the ridge by itself, to the roomiest place near the hollow of the other half. */
+/** Sends one over the ridge by itself, to its place in the other half. */
 export function rollOver(bed: Bed, who: number): void {
   const s = bed.sheep[who]
   if (s.leap) return
-  s.leap = { from: { x: s.x, y: s.y }, to: roomIn(bed, other(sideOf(s.x)), who), t: 0 }
+  s.leap = { from: { x: s.x, y: s.y }, to: placeOf(who, other(sideOf(s.x))), t: 0 }
   bed.still = 0
-}
-
-function roomIn(bed: Bed, side: Side, who: number): Point {
-  const h = HOLLOW[side]
-  let best = h, most = -Infinity
-  for (let y = BED.top + R + 4; y <= BED.bottom - R - 4; y += 24) for (let x = h.x - 150; x <= h.x + 150; x += 24) {
-    let room = R * 2
-    bed.sheep.forEach((s, i) => { if (i !== who) { const at = s.leap?.to ?? s; room = Math.min(room, Math.hypot(at.x - x, at.y - y)) } })
-    const worth = room * 3 - Math.hypot(x - h.x, y - h.y)
-    if (worth > most) { most = worth; best = { x, y } }
-  }
-  return best
 }
 
 /** A finger takes hold of one. One in the air cannot be held. */
@@ -146,10 +124,10 @@ export function stepBed(bed: Bed): void {
         const way = dx === 0 ? (s.vx < 0 ? -1 : 1) : Math.sign(dx)
         s.vx += way * (260 + 900 * Math.sin((far / SLOPE) * Math.PI)) * dt
       }
-      const h = HOLLOW[sideOf(s.x)]
-      s.vx += (h.x - s.x) * 5 * dt
-      s.vy += (h.y - s.y) * 5 * dt
-      const drag = Math.exp(-1.9 * dt)
+      const h = placeOf(i, sideOf(s.x))
+      s.vx += (h.x - s.x) * 9 * dt
+      s.vy += (h.y - s.y) * 9 * dt
+      const drag = Math.exp(-2.6 * dt)
       s.vx *= drag
       s.vy *= drag
     }
@@ -199,6 +177,8 @@ function fly(bed: Bed, i: number): void {
 
 function knock(bed: Bed, i: number, j: number, first: boolean): void {
   const a = bed.sheep[i], b = bed.sheep[j]
+  // Two in the air go over one another.
+  if (a.leap && b.leap) return
   let dx = b.x - a.x, dy = b.y - a.y
   let d = Math.hypot(dx, dy)
   // One that is up in the air is over another by its height: balls touch when their middles are two radii apart.
@@ -209,7 +189,7 @@ function knock(bed: Bed, i: number, j: number, first: boolean): void {
   const nx = dx / d, ny = dy / d
   const over = reach - d
   const heldA = bed.held?.who === i, heldB = bed.held?.who === j
-  const shareA = a.leap && b.leap ? 0.5 : a.leap ? 0 : b.leap ? 1 : heldA ? 0.2 : heldB ? 0.8 : 0.5
+  const shareA = a.leap ? 0 : b.leap ? 1 : heldA ? 0.2 : heldB ? 0.8 : 0.5
   a.x -= nx * over * shareA
   a.y -= ny * over * shareA
   b.x += nx * over * (1 - shareA)

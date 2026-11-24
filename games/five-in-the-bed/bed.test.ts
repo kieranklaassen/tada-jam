@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BED, FIVE, HAND, R, STEP, grab, makeBed, other, parting, resting, rollOver, settle, sideOf, stepBed, type Bed, type Side } from './bed'
+import { BED, FIVE, R, STEP, grab, makeBed, other, parting, resting, rollOver, settle, sideOf, stepBed, type Bed, type Side } from './bed'
 import { makeRng } from './rng'
 
 const partings = Array.from({ length: 32 }, (_, n) => Array.from({ length: FIVE }, (_, i): Side => ((n >> i) & 1 ? 'left' : 'right')))
@@ -24,6 +24,11 @@ describe('the bed', () => {
     for (const p of partings) for (let who = 0; who < FIVE; who++) {
       const bed = makeBed(p)
       rollOver(bed, who)
+      for (let i = 0; i < 3 / STEP; i++) {
+        stepBed(bed)
+        // By height as well, nobody is in anybody on the way.
+        bed.sheep.forEach((a, m) => bed.sheep.forEach((b, n) => { if (m < n) expect(R * 2 - Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z)).toBeLessThan(6) }))
+      }
       settle(bed)
       expect(resting(bed)).toBe(true)
       const parts = parting(bed)
@@ -52,7 +57,6 @@ describe('the bed', () => {
       settle(bed)
       expect(resting(bed)).toBe(true)
       expect(deepest(bed)).toBeLessThan(1)
-      expect(HAND).toBeGreaterThan(0)
     }
     expect(worst).toBeLessThan(7)
   })

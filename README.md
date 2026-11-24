@@ -158,6 +158,7 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 | Dressed in the Dark | `games/dressed-in-the-dark/` | 3–7 | A lacquer box by night: carry garments from the moonlit line onto sleepers nobody can see, know by ear who has what and who walked in its sleep to another bed, then pull the cord and see all five sit up in it. No learning goal. |
 | Half a Horse | `games/half-a-horse/` | 2–6 | A pantomime horse of cloth for two fingers or two children: each drives one half, pull it long and it twangs, cross it and it ties in a bow, dress either end as a horse, hen, elephant or crocodile, and a farmyard believes it or gapes. Alone, the other half follows its own nose. No learning goal. |
 | The Blanket | `games/the-blanket/` | 3–7 | A parlour of four who all want one sausage: drop a blanket on a head, move the sausage, take the blanket off, and each goes where they last saw it. No learning goal. |
+| Five in the Bed | `games/five-in-the-bed/` | 3–6 | A bed on a tufted rug with a ridge down its middle: tap or shove five toy sheep from side to side, and when each has a straw from the milk on the shelf above its half they all drink. Every way of parting the five puts on an act of its own, and a quilt can hide one side. A learning game on splitting five, designed from California preschool foundations and Dutch fase 1 guidance. |
 
 ## Showcases
 

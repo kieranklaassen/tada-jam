@@ -1,5 +1,6 @@
 import { BED } from './bed'
 import { BOTTLE, HALF, QUILT, SHELF } from './layout'
+import { DUMMY, GEAR, MASK } from './sheep'
 import { C, OWN, box, disc, mix, moulded, sprite, type Ctx } from './paint'
 
 // The hard toys around the bed, and the quilt, which is flat felt.
@@ -45,12 +46,17 @@ const BOTTLE_FRONT = sprite('bottleFront', -34, -112, 68, 116, (ctx) => {
   ctx.strokeStyle = 'rgba(60,80,100,0.55)'
   ctx.stroke()
 })
-const teat = (color: string) => sprite(`teat${color}`, -22, -24, 44, 34, (ctx) => {
-  moulded(ctx, () => box(ctx, -18, -12, 36, 18, 6), color, { x: -18, y: -12, w: 36, h: 18 }, 0.6)
+const TEAT = sprite('teat', -22, -24, 44, 34, (ctx) => {
+  moulded(ctx, () => box(ctx, -18, -12, 36, 18, 6), C.red, { x: -18, y: -12, w: 36, h: 18 }, 0.6)
 })
-const TEATS = [C.red, ...OWN].map(teat)
+/** A bottle that is somebody's wears what they wear, over a face-high band of their colour. */
+function wear(ctx: Ctx, st: { stampAt(ctx: Ctx, s: ReturnType<typeof sprite>, x: number, y: number, rot?: number, sx?: number, sy?: number): void }, owner: number): void {
+  const top = -BOTTLE.h * 0.94
+  if (owner === 2) { st.stampAt(ctx, DUMMY, 0, top - 2, 0, 0.8); return }
+  st.stampAt(ctx, owner === 3 ? MASK : GEAR[owner], 0, top + (owner === 3 ? 30 : 4), 0, owner === 3 ? 0.56 : 0.62)
+}
 const BAND = OWN.map((c) => sprite(`band${c}`, -32, -50, 64, 34, (ctx) => {
-  ctx.save(); ctx.translate(0, 0); bottlePath(ctx); ctx.clip()
+  ctx.save(); bottlePath(ctx); ctx.clip()
   ctx.fillStyle = c; ctx.fillRect(-30, -44, 60, 24)
   ctx.fillStyle = mix(c, '#ffffff', 0.55)
   for (const x of [-18, 0, 18]) { ctx.beginPath(); ctx.arc(x, -32, 5, 0, 7); ctx.fill() }
@@ -86,7 +92,8 @@ export function bottle(ctx: Ctx, st: { stampAt(ctx: Ctx, s: ReturnType<typeof sp
   }
   st.stamp(ctx, BOTTLE_FRONT)
   if (owner !== null) st.stamp(ctx, BAND[owner])
-  st.stampAt(ctx, TEATS[owner === null ? 0 : owner + 1], 0, -BOTTLE.h * 0.94)
+  if (owner === null) st.stampAt(ctx, TEAT, 0, -BOTTLE.h * 0.94)
+  else wear(ctx, st, owner)
   ctx.restore()
 }
 
@@ -203,7 +210,7 @@ export const BULGE = sprite('bulge', -110, -110, 220, 220, (ctx) => {
 export const NAP = sprite('nap', -46, -34, 92, 68, (ctx, rng) => {
   for (let i = 0; i < 90; i++) {
     const a = rng.next() * 7, r = Math.sqrt(rng.next())
-    ctx.globalAlpha = 0.34 * (1 - r * 0.8)
+    ctx.globalAlpha = 0.2 * (1 - r * 0.8)
     disc(ctx, Math.cos(a) * r * 40, Math.sin(a) * r * 28, 5, 2.6, '#2b1d1a', 0.9)
   }
 })
@@ -240,4 +247,4 @@ export const GHOST = sprite('ghost', -40, -14, 80, 104, (ctx) => {
   }
   p(); ctx.fillStyle = 'rgba(255,255,255,0.96)'; ctx.fill(); ctx.strokeStyle = C.ink; ctx.lineWidth = 4; ctx.stroke()
 })
-export const PROP_SPRITES = [BOTTLE_BACK, BOTTLE_FRONT, ...TEATS, ...BAND, HEADBOARD, HOLE, MOUSE_HEAD, TONGUE, DOG_BODY, DOG_HEAD, DOG_EAR, DOG_LYING, CRATE_BOX, CLOTH, HEM, ROLL, BULGE, NAP, FEATHER, PILLOW, BUBBLE, PUFF, DROP, HALO, GHOST]
+export const PROP_SPRITES = [BOTTLE_BACK, BOTTLE_FRONT, TEAT, ...BAND, HEADBOARD, HOLE, MOUSE_HEAD, TONGUE, DOG_BODY, DOG_HEAD, DOG_EAR, DOG_LYING, CRATE_BOX, CLOTH, HEM, ROLL, BULGE, NAP, FEATHER, PILLOW, BUBBLE, PUFF, DROP, HALO, GHOST]

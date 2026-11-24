@@ -20,7 +20,7 @@ export const QUILT = { roll: BED.bottom + 8, rollH: 74, hem: BED.top + 10, hemH:
 export const hemAt = (k: number): number => QUILT.roll + (QUILT.hem - QUILT.roll) * k
 export const DOG = { x: 102, y: 420 } as const
 export const CRATE = { x: 102, y: 640 } as const
-export const MOUSE = { x: 1142, y: 150 } as const
+export const MOUSE = { x: 1132, y: 150 } as const
 /** Anything the finger can land on. */
 export type Thing =
   | { kind: 'sheep'; who: number }
@@ -28,6 +28,7 @@ export type Thing =
   | { kind: 'hem'; side: Side }
   | { kind: 'roll'; side: Side }
   | { kind: 'bottle'; index: number }
+  | { kind: 'straw' }
   | { kind: 'dog' }
   | { kind: 'crate' }
   | { kind: 'mouse' }

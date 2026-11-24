@@ -1,4 +1,5 @@
 import type { Note } from './audio'
+import type { Bump } from './bed'
 import type { Event } from './game'
 import type { Poke } from './play'
 
@@ -9,7 +10,7 @@ const t = (frequency: number, glideTo: number | undefined, peak: number, attack:
 const n = (frequency: number, glideTo: number | undefined, peak: number, attack: number, decay: number, q = 1, delay = 0): Note => ({ kind: 'noise', frequency, glideTo, peak, attack, decay, q, delay })
 
 /** G, D, G, E, B: one scale, Tup lowest and Pip highest. */
-export const PITCH = [196, 294, 392, 330, 247] as const
+const PITCH = [196, 294, 392, 330, 247] as const
 const bleats: ((f: number, v: number) => Note[])[] = [
   (f, v) => [t(f * v, f * 0.86 * v, 0.2, 0.05, 0.4, 'sawtooth'), t(f * 2 * v, f * 1.7 * v, 0.05, 0.05, 0.3, 'triangle')],
   (f, v) => [0, 1].map((i) => t(f * v * 1.1, f * 1.16 * v, 0.1, 0.01, 0.09, 'square', i * 0.11)),
@@ -39,19 +40,24 @@ const CUES: Record<string, (f: number) => Note[]> = {
   thud: () => [t(110, 60, 0.26, 0.004, 0.16), n(300, 140, 0.16, 0.004, 0.12)],
 }
 
+function bump(b: Bump): Note[] {
+  const k = Math.min(1, b.speed / 900)
+  if (b.what === 'ridge') return [t(150, 330 + k * 120, 0.08 + k * 0.08, 0.01, 0.18)]
+  if (b.what === 'land') return [t(120, 62, 0.22, 0.004, 0.16), n(340, 160, 0.14, 0.004, 0.14)]
+  if (b.what === 'wall') return b.wall === 'top' ? [n(900, 500, 0.06 + k * 0.1, 0.004, 0.1, 2), ...[0, 1].map((i) => t(1500 + i * 220, undefined, 0.03 + k * 0.03, 0.003, 0.14, 'sine', i * 0.05)), ...(k > 0.3 ? [t(2400, 2900, 0.03, 0.01, 0.06, 'triangle', 0.12)] : [])] : [n(260, 140, 0.08 + k * 0.14, 0.004, 0.12)]
+  // Two hard toys: a knock, pitched by how fast, and a squeak from the one that was hit.
+  return [t(300 + k * 420, 220 + k * 260, 0.08 + k * 0.14, 0.002, 0.07, 'triangle'), ...(k > 0.25 ? [t(PITCH[b.with] * 2.4, PITCH[b.with] * 3, 0.05, 0.01, 0.07, 'triangle', 0.04)] : [])]
+}
+
 export function voiceOfEvent(e: Event, turn: number): Note[] {
   switch (e.type) {
     case 'bump': {
-      const b = e.bump, k = Math.min(1, b.speed / 900)
-      if (b.what === 'ridge') return [t(150, 330 + k * 120, 0.08 + k * 0.08, 0.01, 0.18)]
-      if (b.what === 'land') return [t(120, 62, 0.22, 0.004, 0.16), n(340, 160, 0.14, 0.004, 0.14)]
-      if (b.what === 'wall') return b.wall === 'top' ? [n(900, 500, 0.06 + k * 0.1, 0.004, 0.1, 2), ...[0, 1].map((i) => t(1500 + i * 220, undefined, 0.03 + k * 0.03, 0.003, 0.14, 'sine', i * 0.05))] : [n(260, 140, 0.08 + k * 0.14, 0.004, 0.12)]
-      // Two hard toys: a knock, pitched by how fast, and a squeak from the one that was hit.
-      const knock = [t(300 + k * 420, 220 + k * 260, 0.08 + k * 0.14, 0.002, 0.07, 'triangle'), ...(k > 0.25 ? [t(PITCH[b.with] * 2.4, PITCH[b.with] * 3, 0.05, 0.01, 0.07, 'triangle', 0.04)] : [])]
-      return e.hidden ? muffled(knock) : knock
+      const x = bump(e.bump)
+      return e.hidden ? muffled(x) : x
     }
+    case 'call': return bleat(e.who, turn, e.hidden)
     case 'squash': return bleat(e.who, turn, e.hidden)
-    case 'leap': return [t(PITCH[e.who] * 0.9, PITCH[e.who] * 2.2, 0.11, 0.02, 0.26), n(400, 1200, 0.06, 0.1, 0.3, 1)]
+    case 'leap': { const x = [t(PITCH[e.who] * 0.9, PITCH[e.who] * 2.2, 0.11, 0.02, 0.26), n(400, 1200, 0.06, 0.1, 0.3, 1)]; return e.hidden ? muffled(x) : x }
     case 'bottleOut': return [t(1047 + e.index * 4, 1040, 0.12, 0.002, 0.3), t(1960, 1950, 0.05, 0.002, 0.2), n(300, 200, 0.08, 0.002, 0.05)]
     case 'bottlesHome': return [0, 1, 2, 3, 4].map((i) => t(1200 - i * 60, 1190 - i * 60, 0.06, 0.002, 0.14, 'sine', 0.05 + i * 0.09))
     case 'straws': return [...Array.from({ length: e.joined }, (_, i) => t(700, 1100, 0.07, 0.002, 0.05, 'sine', i * 0.09)), ...(e.loose ? [t(520, 300, 0.08, 0.01, 0.2, 'triangle', e.joined * 0.09 + 0.06)] : [])]
@@ -74,7 +80,8 @@ export function voiceOfEvent(e: Event, turn: number): Note[] {
 export function voiceOfPoke(p: Poke, turn: number): Note[] {
   const v = vary(turn), k = p.thing.kind
   if (p.slide) switch (k) {
-    case 'sheep': case 'hidden': return [n(160 * v, 140, 0.07, 0.03, 0.12, 1)]
+    case 'sheep': case 'hidden': { const r = Math.min(1, (p.speed ?? 300) / 900); return [n((110 + 130 * r) * v, 120, 0.05 + 0.1 * r, 0.03, 0.14, 1.4)] }
+    case 'straw': return [t(500 * v, 900, 0.04, 0.04, 0.1)]
     case 'ridge': return [t(74 * v, 70, 0.14, 0.01, 0.2, 'triangle')]
     case 'bottle': return [t(1900 * v, 2300, 0.03, 0.03, 0.08)]
     case 'dog': case 'crate': return [n(700 * v, 500, 0.05, 0.02, 0.1, 9)]
@@ -87,6 +94,7 @@ export function voiceOfPoke(p: Poke, turn: number): Note[] {
     case 'hem': return [n(700 * v, 1000, 0.08, 0.02, 0.1)]
     case 'roll': return [n(380 * v, 260, 0.12, 0.01, 0.12, 0.8)]
     case 'bottle': return [t([1047, 1175, 1319, 1568, 1760][p.thing.index % 5], undefined, 0.13, 0.002, 0.4), t(2600, 2580, 0.03, 0.002, 0.2)]
+    case 'straw': return [t(640 * v, 1300, 0.09, 0.004, 0.07), n(1400, 900, 0.03, 0.01, 0.1, 5)]
     case 'dog': return [t(300 * v, 560, 0.14, 0.01, 0.09, 'sawtooth'), n(700, 900, 0.04, 0.01, 0.06, 3)]
     case 'crate': return [...[0, 1, 2].map((i) => t(1300 + i * 170, undefined, 0.06, 0.002, 0.12, 'sine', i * 0.05)), n(220, 140, 0.16, 0.003, 0.08)]
     case 'mouse': return [t(1500, 2600, 0.09, 0.004, 0.05), t(2200 * v, 2700, 0.06, 0.01, 0.07, 'triangle', 0.5)]

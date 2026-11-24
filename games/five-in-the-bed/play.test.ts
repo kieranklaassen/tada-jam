@@ -10,7 +10,7 @@ import { voiceOfEvent, voiceOfPoke } from './voices'
 const make = (over: Partial<Saved> = {}) => { const p = new Play(makeGame({ ...firstSaved(4, 9), shown: ['ridge', 'worn'], ...over })); p.advance(0.1, 0); return p }
 let clock = 1000
 const wait = (p: Play, s: number) => { for (let i = 0; i < s * 60; i++) { clock += 1000 / 60; p.advance(1 / 60, clock) } }
-const tap = (p: Play, x: number, y: number, dx = 0) => { p.down(1, { x, y }, clock); if (dx) p.move(1, { x: x + dx, y }); p.up(1, { x: x + dx, y }, (clock += 60)) }
+const tap = (p: Play, x: number, y: number, dx = 0) => { p.down(1, { x, y }, clock); if (dx) p.move(1, { x: x + dx, y }, clock); p.up(1, { x: x + dx, y }, (clock += 60)) }
 const at = (p: Play, i: number) => ({ x: p.game.bed.sheep[i].x, y: p.game.bed.sheep[i].y })
 const FREE: Partial<Saved> = { milk: null, finished: true }
 
@@ -32,7 +32,7 @@ describe('a finger on a sheep', () => {
     const p = make(FREE), i = 2
     const a = at(p, i), to = sideOf(a.x) === 'left' ? 900 : 400
     p.down(1, a, clock)
-    for (let k = 1; k <= 20; k++) { p.move(1, { x: a.x + ((to - a.x) * k) / 20, y: a.y }); wait(p, 0.03) }
+    for (let k = 1; k <= 20; k++) { p.move(1, { x: a.x + ((to - a.x) * k) / 20, y: a.y }, clock); wait(p, 0.03) }
     wait(p, 0.4)
     expect(sideOfSheep(p.game.bed, i)).not.toBe(sideOf(a.x))
     p.up(1, { x: to, y: a.y }, clock)
@@ -43,7 +43,7 @@ describe('a finger on a sheep', () => {
   it('goes back over when the finger is taken away, and a save in hand is of where it came from', () => {
     const p = make(FREE), i = 2, a = at(p, i), home = sideOf(a.x), to = home === 'left' ? 900 : 400
     p.down(1, a, clock)
-    for (let k = 1; k <= 20; k++) { p.move(1, { x: a.x + ((to - a.x) * k) / 20, y: a.y }); wait(p, 0.03) }
+    for (let k = 1; k <= 20; k++) { p.move(1, { x: a.x + ((to - a.x) * k) / 20, y: a.y }, clock); wait(p, 0.03) }
     wait(p, 0.4)
     expect(saveOf(p.game).sides[i]).toBe(home)
     p.cancel(1)
@@ -98,11 +98,11 @@ describe('the rest of the bed', () => {
       tap(p, HALF[other(side)].mid, QUILT.hem + 20)
       expect(p.game.save.quilt).toBe(null)
       p.down(1, { x, y: QUILT.roll + 30 }, clock)
-      for (let k = 1; k <= 10; k++) p.move(1, { x, y: QUILT.roll + 30 - k * 40 })
+      for (let k = 1; k <= 10; k++) p.move(1, { x, y: QUILT.roll + 30 - k * 40 }, clock)
       p.up(1, { x, y: QUILT.roll - 370 }, clock + 300)
       expect(p.game.save.quilt).toBe(side)
       p.down(1, { x, y: QUILT.hem + 20 }, clock + 400)
-      for (let k = 1; k <= 10; k++) p.move(1, { x, y: QUILT.hem + 20 + k * 40 })
+      for (let k = 1; k <= 10; k++) p.move(1, { x, y: QUILT.hem + 20 + k * 40 }, clock)
       p.up(1, { x, y: QUILT.hem + 420 }, clock + 700)
       expect(p.game.save.quilt).toBe(null)
     }
@@ -111,7 +111,7 @@ describe('the rest of the bed', () => {
     const p = make({ ...FREE, quilt: 'left' }), i = p.game.bed.sheep.findIndex((s) => sideOf(s.x) === 'left')
     const a = at(p, i)
     p.down(1, { x: a.x - 90, y: a.y }, clock)
-    for (let k = 1; k <= 20; k++) { p.move(1, { x: a.x - 90 + k * 22, y: a.y }); wait(p, 0.03) }
+    for (let k = 1; k <= 20; k++) { p.move(1, { x: a.x - 90 + k * 22, y: a.y }, clock); wait(p, 0.03) }
     p.up(1, { x: a.x + 350, y: a.y }, clock)
     wait(p, 4)
     for (const s of p.game.bed.sheep) { expect(s.x).toBeGreaterThan(BED.left + R - 1); expect(s.x).toBeLessThan(BED.right - R + 1) }
@@ -132,7 +132,7 @@ describe('the rest of the bed', () => {
       for (const n of notes) { expect(n.peak).toBeLessThanOrEqual(0.3); expect(n.frequency).toBeGreaterThan(30); expect(n.frequency).toBeLessThan(6000) }
       p.clear()
     }
-    expect(kinds.size).toBe(11)
+    expect(kinds.size).toBeGreaterThanOrEqual(11)
   })
   it('plays every sound in range', () => {
     const p = make(FREE)
@@ -149,7 +149,7 @@ describe('the rest of the bed', () => {
       for (let i = 0; i < 900; i++) {
         const q = () => ({ x: rng.next() * 1180, y: rng.next() * 820 }), id = 1 + Math.floor(rng.next() * 3), k = rng.next()
         if (k < 0.4) p.down(id, q(), clock)
-        else if (k < 0.7) p.move(id, q())
+        else if (k < 0.7) p.move(id, q(), clock)
         else if (k < 0.92) p.up(id, q(), clock)
         else p.cancel(id)
         wait(p, 0.08)

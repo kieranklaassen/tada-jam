@@ -6,7 +6,7 @@ import { C, disc, mix, moulded, sprite, type Ctx, type Stamps } from './paint'
 // from how the ball is turned, so a rolling one shows its face, its back and
 // its face again.
 
-export type V3 = [number, number, number]
+type V3 = [number, number, number]
 /** A turn, as a quaternion: w, x, y, z. x is right, y down, z towards the eye. */
 export type Turn = [number, number, number, number]
 export const FACING: Turn = [1, 0, 0, 0]
@@ -100,7 +100,7 @@ const FACE = sprite('face', -50, -44, 100, 94, (ctx) => {
 })
 
 /** The thing each one wears, about the middle of where it sits; up is away from the face. */
-const GEAR = [
+export const GEAR = [
   sprite('cap', -54, -62, 124, 96, (ctx) => {
     const p = () => {
       ctx.beginPath()
@@ -175,7 +175,8 @@ export type Look = {
   /** The dummy or the mask is away, in an act. */
   bare: boolean
   squash: number
-  bubbles: number
+  /** Has drunk: the mouth is content and the brows are down. */
+  fed: boolean
   time: number
 }
 
@@ -303,7 +304,7 @@ function eyes(ctx: Ctx, who: number, p: Pose, l: Look): void {
     disc(ctx, x + l.gaze.x * (r - pr - 1) - pr * 0.35, y + l.gaze.y * (r - pr - 1) - pr * 0.4, pr * 0.32, pr * 0.32, C.white)
     // Tup's lids are always half down; Curl's brows are always cross.
     if (who === 0 && kind === 'open') { ctx.save(); ctx.beginPath(); ctx.ellipse(x, y, r + 1, r * 1.1, 0, Math.PI, 0); ctx.fillStyle = C.faceDark; ctx.fill(); ctx.restore() }
-    if (who === 1) { ctx.strokeStyle = C.ink; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(x - s * 10, y - r - 1); ctx.lineTo(x + s * 11, y - r - 7); ctx.stroke() }
+    if (who === 1 && !l.fed) { ctx.strokeStyle = C.ink; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(x - s * 10, y - r - 1); ctx.lineTo(x + s * 11, y - r - 7); ctx.stroke() }
   }
 }
 
@@ -311,7 +312,7 @@ function eyes(ctx: Ctx, who: number, p: Pose, l: Look): void {
 function front(ctx: Ctx, st: Stamps, who: number, p: Pose, l: Look): void {
   const open = Math.max(p.mouth, l.thirsty ? 0.75 + 0.15 * Math.sin(l.time * 5) : 0)
   const sucking = l.drinking > 0
-  if (who === 2 && !l.bare && !sucking && !l.thirsty) {
+  if (who === 2 && !l.bare && !sucking && !l.thirsty && open < 0.3) {
     const suck = 1 + 0.05 * Math.sin(l.time * 5)
     st.stampAt(ctx, DUMMY, 0, 2, 0, 0.82 * suck)
     return
@@ -331,7 +332,8 @@ function front(ctx: Ctx, st: Stamps, who: number, p: Pose, l: Look): void {
   ctx.lineWidth = 3.4
   ctx.lineCap = 'round'
   ctx.beginPath()
-  if (who === 1) { ctx.moveTo(-9, 6); ctx.lineTo(9, 6) }
+  if (l.fed) ctx.arc(0, -6, 17, 0.35, Math.PI - 0.35)
+  else if (who === 1) { ctx.moveTo(-9, 6); ctx.lineTo(9, 6) }
   else if (who === 4) ctx.arc(0, -4, 14, 0.4, Math.PI - 0.4)
   else ctx.arc(0, -2, 10, 0.6, Math.PI - 0.6)
   ctx.stroke()

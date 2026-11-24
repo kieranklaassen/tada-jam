@@ -132,7 +132,7 @@ describe('a cycle', () => {
       until(g, () => g.scene?.kind === 'show', 6)
       expect(g.save.shown).toContain('ridge')
       let fitted = false
-      if (cut) { run(g, cut); expect(saveOf(g).sides).toEqual(before); wake(g); until(g, () => resting(g.bed), 6) }
+      if (cut) { run(g, cut); expect(saveOf(g).sides).toEqual(before); wake(g); run(g, 0.1); until(g, () => resting(g.bed), 6) }
       else for (let i = 0; i < 480; i++) { advance(g, 1 / 60); if (g.scene && g.scene.kind === 'milk') fitted = true }
       expect(fitted).toBe(false)
       expect(g.bed.sheep.map((s) => sideOf(s.x))).toEqual(before)

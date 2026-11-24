@@ -13,8 +13,8 @@ execution: code
 
 - **Objective:** A child of 3 to 6 parts five sheep between two halves of a bed in every way there is, sees that they stay five, and laughs at what each parting sets off, with no word on screen and nothing that tests them.
 - **Means:** A canvas 2D jam game from the cartridge template, a small circle physics under a tufted-rug view (KTD1, KTD2).
-- **Authority:** Kieran's request, then `AGENTS.md`, then this plan, then `games/five-in-the-bed/ART.md`.
-- **Profile:** one draft pull request. Merging stays with Kieran.
+- **Authority:** the owner's request, then `AGENTS.md`, then this plan, then `games/five-in-the-bed/ART.md`.
+- **Profile:** one draft pull request. Merging is the owner's decision.
 - **Stop when:** the game cannot meet a rule of `AGENTS.md`, or both reserved looks fail on clarity.
 
 ## Product Contract

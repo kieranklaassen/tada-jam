@@ -110,6 +110,7 @@ export const SHELVES: readonly Shelf[] = [
       'hillside-spring': 'Lay bamboo pipes so every dry terrace blooms.',
       'bridge-crew': 'Build a balsa bridge, load it, and see if it holds.',
       'night-camp': 'Pack enough wood, oil and water to last the night.',
+      'five-in-the-bed': 'Roll five sheep over the ridge until each has a straw.',
       'pebble-table': 'Clay stones, an honest scale, and guests to feed fairly.',
       'princess-playground': 'Who can lift whom? Find out on the seesaw.',
     },

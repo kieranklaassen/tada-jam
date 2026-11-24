@@ -41,7 +41,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const overlay = new Overlay(root, window.location.search)
     const drawn = { drawCalls: 0, triangles: 0 }
     const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, ...drawn }))
-    let play: Play | null = null, disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0, turn = 0, painted = ''
+    let play: Play | null = null, disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0, turn = 0, painted = '', asked = '', askedAt = 0
     let by: Fit = fit(0, 0)
     const pen = canvas.getContext('2d')!
     const view = new View()
@@ -58,8 +58,10 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       const scale = dpr * by.scale
       // The rug and the toys are painted once for a size of the surface. A change of tier draws the same pictures
       // with fewer pixels, so nothing is painted anew in the middle of play.
+      // While the surface is changing its size the old picture is stretched, and the new one is painted when it holds still.
       const key = `${width} ${height}`
-      if (key !== painted) {
+      if (key !== asked) { asked = key; askedAt = performance.now() }
+      if (key !== painted && (painted === '' || performance.now() - askedAt > 300)) {
         painted = key
         const full = Math.min(window.devicePixelRatio || 1, TIERS[0].dpr) * by.scale
         view.sized(surface.make, Math.min(full, 1.5 * by.scale), full, -by.x / by.scale, -by.y / by.scale, width / by.scale, height / by.scale)
@@ -93,7 +95,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const tell = () => {
       if (!play) return
       const notes: Note[] = []
-      for (const p of play.pokes.splice(0)) { view.poke(p, play.game); notes.push(...voiceOfPoke(p, turn++)) }
+      for (const p of play.pokes.splice(0)) { view.poke(p); notes.push(...voiceOfPoke(p, turn++)) }
       for (const e of play.game.events.splice(0)) { view.notice(e, play.game); notes.push(...voiceOfEvent(e, turn++)) }
       for (const s of view.sounds.splice(0)) notes.push(...s)
       if (notes.length) audio.play(voiceOf(notes))
@@ -119,7 +121,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const onMove = (event: PointerEvent) => {
       const where = at(event)
       if (play?.touch.holds(event.pointerId)) overlay.move(where.x, where.y, width)
-      play?.move(event.pointerId, toStage(where, by))
+      play?.move(event.pointerId, toStage(where, by), event.timeStamp)
       tell()
     }
     const onUp = (event: PointerEvent) => {
@@ -150,6 +152,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       if (play) {
         play.advance(step, now)
         view.advance(play, step)
+        play.loose = view.loose
         tell()
         // A finger at work, or somebody on the run, is not idleness.
         if (play.touch.active || !quiet(play.game)) ladder.touch(clock.seconds)

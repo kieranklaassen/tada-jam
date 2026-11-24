@@ -1,17 +1,17 @@
 import { actOf, still as neutral, type Pose } from './acts'
 import { BED, FIVE, R, SIDES, sideOf, type Side } from './bed'
-import { actNow, askers, burpAt, dealAt, hidden, milkOut, MILK, type Event, type Game } from './game'
+import { actNow, asker, askers, burpAt, dealAt, hidden, milkOut, MILK, type Event, type Game } from './game'
 import { handPose, type Guidance, type HandPose } from './guidance'
 import { hintFor, roomiest, type Hint } from './guide'
 import type { Note } from './audio'
 import type { Point } from './input'
 import { CRATE, DOG, HALF, MOUSE, QUILT, SHELF, bottleAt, hemAt } from './layout'
 import type { Milk, Straw } from './milk'
-import { C, OWN, Stamps, disc, type Ctx, type Make } from './paint'
+import { C, OWN, Stamps, box, disc, type Ctx, type Make } from './paint'
 import type { Play, Poke } from './play'
 import { BUBBLE, BULGE, CLOTH, CRATE_BOX, DOG_BODY, DOG_EAR, DOG_HEAD, DOG_LYING, DROP, FEATHER, GHOST, HALO, HEADBOARD, HEM, HOLE, MOUSE_HEAD, NAP, PILLOW, PROP_SPRITES, PUFF, ROLL, TONGUE, bottle } from './props'
 import { paintRug } from './rug'
-import { DUMMY, FACING, MASK, SHEEP_SPRITES, righted, rolled, shadow, sheep, type Look, type Turn } from './sheep'
+import { DUMMY, FACING, MASK, SHEEP_SPRITES, righted, rolled, shadow, sheep, turned, type Look, type Turn } from './sheep'
 import { BARK, DRIP, SNEEZE } from './voices'
 
 // Draws the bed from the rules, and keeps what is only to be seen: which way
@@ -22,7 +22,7 @@ import { BARK, DRIP, SNEEZE } from './voices'
 export const STAMP_LIMIT = 80
 const LONG = 99
 
-type Seen = { turn: Turn; x: number; y: number; squash: number; squashV: number; gaze: Point; blink: number; bob: number; bleat: number; worn: number; caught: number; burp: number; poked: number }
+type Seen = { turn: Turn; x: number; y: number; squash: number; squashV: number; gaze: Point; blink: number; bob: number; bleat: number; worn: number; called: number; caught: number; burp: number; poked: number }
 type Fleck = { kind: 'puff' | 'drop' | 'nap'; x: number; y: number; t: number; lasts: number; size: number }
 
 const ease = (v: number) => { const k = Math.min(1, Math.max(0, v)); return k * k * (3 - 2 * k) }
@@ -38,7 +38,7 @@ export function seenHeight(g: Game, who: number): number {
 }
 
 /** The end of a straw that has nobody. */
-export function dangle(b: { x: number; y: number }, towards: number, time: number, i: number): Point {
+function dangle(b: { x: number; y: number }, towards: number, time: number, i: number): Point {
   return { x: b.x + Math.sin(time * 2 + i) * 8 + Math.sign(towards) * 46, y: b.y + 104 }
 }
 
@@ -46,7 +46,7 @@ export class View {
   readonly stamps = new Stamps()
   private rug: { canvas: CanvasImageSource; x: number; y: number; w: number; h: number } | null = null
   private time = 0
-  private readonly seen: Seen[] = Array.from({ length: FIVE }, (_, i) => ({ turn: FACING, x: NaN, y: NaN, squash: 0, squashV: 0, gaze: { x: 0, y: 0 }, blink: 1 + i * 0.9, bob: LONG, bleat: LONG, worn: LONG, caught: LONG, burp: LONG, poked: LONG }))
+  private readonly seen: Seen[] = Array.from({ length: FIVE }, (_, i) => ({ turn: FACING, x: NaN, y: NaN, squash: 0, squashV: 0, gaze: { x: 0, y: 0 }, blink: 1 + i * 0.9, bob: LONG, bleat: LONG, worn: LONG, called: LONG, caught: LONG, burp: LONG, poked: LONG }))
   private readonly cover: Record<Side, number> = { left: -1, right: -1 }
   private readonly pushed = new Map<string, number>()
   private readonly flecks: Fleck[] = []
@@ -63,7 +63,10 @@ export class View {
   private mouseX = 0
   private sneeze = LONG
   private drip = 0
-  private demos = -1
+  private drips = 0
+  /** Where the straws hang that have nobody. */
+  loose: Point[] = []
+  private poses: Pose[] = []
   sounds: Note[][] = []
   private readonly hand: HandPose = { travel: 0, press: 0, opacity: 0 }
 
@@ -82,7 +85,7 @@ export class View {
   private push(key: string): void { this.pushed.set(key, 0) }
   private since(key: string): number { return this.pushed.get(key) ?? LONG }
 
-  poke(p: Poke, g: Game): void {
+  poke(p: Poke): void {
     const k = p.thing.kind
     if (k === 'rug' || k === 'mattress') {
       this.fleck('nap', p.at.x, p.at.y, 1)
@@ -91,13 +94,13 @@ export class View {
     }
     if (k === 'ridge') { this.push('ridge'); this.pushed.set('ridgeY', p.at.y); if (p.slide) this.fleck('nap', p.at.x, p.at.y, 0.7) }
     if (k === 'hidden') { this.fleck('puff', p.at.x, p.at.y, 0.6); this.push('pat'); if (p.near !== null) this.seen[p.near].poked = 0 }
-    if (k === 'hem' || k === 'roll') this.push(`${k}${p.thing.kind === 'hem' || p.thing.kind === 'roll' ? p.thing.side : ''}`)
-    if (k === 'bottle' && p.thing.kind === 'bottle') this.push(`bottle${p.thing.index}`)
+    if (p.thing.kind === 'hem' || p.thing.kind === 'roll') this.push(`${k}${p.thing.side}`)
+    if (k === 'straw') this.push('straw')
+    if (p.thing.kind === 'bottle') this.push(`bottle${p.thing.index}`)
     if (k === 'dog') this.push('dog')
     if (k === 'crate') this.push('crate')
     if (k === 'mouse') this.push('mouse')
-    if (k === 'sheep' && p.thing.kind === 'sheep' && p.second) this.seen[p.thing.who].squashV += 5
-    void g
+    if (p.thing.kind === 'sheep' && p.second) this.seen[p.thing.who].squashV += 5
   }
 
   notice(e: Event, g: Game): void {
@@ -112,6 +115,7 @@ export class View {
         break
       }
       case 'squash': this.seen[e.who].squashV += 7; this.seen[e.who].bleat = 0; if (e.hidden) this.seen[e.who].poked = 0; break
+      case 'call': this.seen[e.who].called = 0; this.seen[e.who].bleat = 0; if (e.hidden) this.seen[e.who].poked = 0; break
       case 'bleat': this.seen[e.who].bleat = 0; this.seen[e.who].squashV += 2.5; break
       case 'burp': this.seen[e.who].burp = 0; this.seen[e.who].squashV += 5; break
       case 'caught': this.seen[e.who].caught = 0; break
@@ -170,7 +174,7 @@ export class View {
       v.squash = Math.max(-0.8, Math.min(1.4, v.squash + v.squashV * dt * 3))
       v.blink -= dt
       if (v.blink < -0.13) v.blink = 1.7 + ((i * 1.37 + this.time) % 2.9)
-      v.bob += dt; v.bleat += dt; v.worn += dt; v.caught += dt; v.burp += dt; v.poked += dt
+      v.bob += dt; v.bleat += dt; v.worn += dt; v.called += dt; v.caught += dt; v.burp += dt; v.poked += dt
       const to = this.lookAt(g, i, play.finger, asking, act)
       const d = Math.hypot(to.x - s.x, to.y - s.y)
       const reach = Math.min(1, d / 110)
@@ -181,7 +185,7 @@ export class View {
     })
     this.dogAt = Math.min(1, Math.max(0, this.dogAt + (g.dogIn ? dt / 1.1 : -dt / 0.5)))
     if (g.dogIn) this.dogSide = g.dogIn
-    const watch = play.finger ? play.finger.x : milk ? HALF[roomiest(g)].mid : DOG.x
+    const watch = play.finger ? play.finger.x : milk || this.time % 5 < 2.5 ? HALF[roomiest(g)].mid : DOG.x
     this.dogTurn += (Math.max(-1, Math.min(1, (watch - DOG.x) / 600)) - this.dogTurn) * (1 - Math.exp(-dt * 4))
     const mx = play.finger && play.finger.x > 950 && play.finger.y < 320 ? Math.max(-14, Math.min(14, (play.finger.x - MOUSE.x) * 0.2)) : Math.sin(this.time * 0.8) * 4
     this.mouseX += (mx - this.mouseX) * (1 - Math.exp(-dt * 8))
@@ -196,10 +200,11 @@ export class View {
         if (loose && g.save.milk) {
           const e = this.strawEnd(g, g.save.milk, loose)
           this.fleck('drop', e.x, e.y + 6, 1)
-          if (this.time % 6 < 1.5) this.sounds.push(DRIP)
+          if (this.drips++ < 3) this.sounds.push(DRIP)
         }
       }
-    } else this.drip = 0.7
+    } else { this.drip = 0.7; this.drips = 0 }
+    this.loose = g.straws && milk ? g.straws.filter((x) => x.who === null).map((x) => this.ends[x.bottle] ?? this.strawEnd(g, milk, x)) : []
   }
 
   private bottleFoot(milk: Milk, i: number): Point {
@@ -211,10 +216,11 @@ export class View {
     if (s.who !== null) {
       const at = g.bed.sheep[s.who]
       if (hidden(g, s.who)) return { x: foot.x + (at.x - foot.x) * 0.3, y: QUILT.hem + 6 }
-      return { x: at.x, y: at.y + 27 }
+      // The mouth of one that is turned away cannot be reached: the end waits over its head.
+      return turned(this.seen[s.who].turn, [0, 0.36, 0.93])[2] > 0.35 ? { x: at.x, y: at.y + 27 } : { x: at.x, y: at.y - R - 24 }
     }
     // It leans toward whoever could have it.
-    const want = b.owner ?? askers(g)[0]
+    const want = b.owner ?? askers(g).find((i) => sideOf(g.bed.sheep[i].x) !== b.side)
     const to = want === undefined ? 0 : g.bed.sheep[want].x - foot.x
     return dangle({ x: foot.x, y: SHELF.y + 12 }, Math.abs(to) > 60 ? to : 0, this.time, s.bottle)
   }
@@ -240,7 +246,8 @@ export class View {
     return { x: me.x + Math.cos(a) * 90, y: me.y + Math.sin(a * 1.3) * 70 }
   }
 
-  private poseOf(g: Game, i: number): Pose {
+  private poseOf(_g: Game, i: number): Pose { return this.poses[i] }
+  private makePose(g: Game, i: number): Pose {
     const act = actNow(g), v = this.seen[i]
     let p = neutral()
     // Breathing, each at its own pace.
@@ -252,14 +259,16 @@ export class View {
     if (askers(g).includes(i)) {
       // It wants to be over there: it hops and leans to the straw that has nobody, and falls back.
       const u = (this.time * 0.8 + i * 0.37) % 1, b = u < 0.45 ? Math.sin((u / 0.45) * Math.PI) : 0
-      p.lift += 30 * b
-      p.tipY += (sideOf(g.bed.sheep[i].x) === 'left' ? 0.5 : -0.5) * b
-      p.feet = b
+      const k = asker(g) === i ? 1 : 0.25
+      p.lift += 40 * b * k
+      p.tipY += (sideOf(g.bed.sheep[i].x) === 'left' ? 0.5 : -0.5) * b * k
+      p.feet = b * k
     }
     if (g.scene?.kind === 'milk' && g.scene.t < MILK.drain) this.drinkPose(p, i, g.scene.t)
     if (v.bleat < 0.45) p.mouth = Math.max(p.mouth, Math.sin((v.bleat / 0.45) * Math.PI))
     if (v.burp < 0.4) { p.mouth = Math.max(p.mouth, Math.sin((v.burp / 0.4) * Math.PI)); p.eyes = 'squint' }
     if (v.bob < 0.5) p.lift += 34 * Math.sin((v.bob / 0.5) * Math.PI)
+    if (v.called < 1.1) { p.lift += 80 * Math.abs(Math.sin(v.called * 5.7)) * (1 - v.called / 1.1); p.eyes = 'wide'; p.feet = 1 }
     if (v.worn < 1.4) { p.lift += 26 * Math.abs(Math.sin(v.worn * 6)) * (1 - v.worn / 1.4); p.eyes = 'wide' }
     if (v.caught < 1.6) { p.eyes = 'wide'; p.mouth = 0; p.wide = 0.94 }
     if (g.bed.sheep[i].leap) { p.eyes = i === 4 ? 'squint' : 'wide'; p.mouth = Math.max(p.mouth, i === 1 ? 0 : 0.6); p.feet = 1 }
@@ -280,6 +289,7 @@ export class View {
   draw(ctx: Ctx, play: Play | null, g: Game, guidance: Guidance | null): void {
     const st = this.stamps
     st.stamped = 0
+    this.poses = g.bed.sheep.map((_, i) => this.makePose(g, i))
     if (!this.rug) return
     ctx.drawImage(this.rug.canvas, this.rug.x, this.rug.y, this.rug.w, this.rug.h)
     st.stamped++
@@ -319,14 +329,14 @@ export class View {
   }
 
   private oneSheep(ctx: Ctx, g: Game, i: number): void {
-    const s = g.bed.sheep[i], v = this.seen[i], p = this.poseOf(g, i)
+    const s = g.bed.sheep[i], v = this.seen[i], p = { ...this.poseOf(g, i) }
     p.lift += seenHeight(g, i)
     const act = actNow(g)
     const asking = askers(g).includes(i) && !hidden(g, i)
     const props = act && act.cast.includes(i) && act.t < actOf(act.cast).lasts ? actOf(act.cast).props(act.t, this.places(g, act.cast)) : []
     const bare = (i === 2 && props.some((x) => x.kind === 'dummy')) || (i === 3 && props.some((x) => x.kind === 'mask'))
     const joined = this.strawK > 0.8 && !!(g.scene?.kind === 'milk' ? g.scene.straws : g.straws)?.some((x) => x.who === i) && !(g.scene?.kind === 'milk' && g.scene.t > MILK.drain)
-    const look: Look = { gaze: v.gaze, blink: v.blink < 0, asleep: g.asleep, thirsty: asking, drinking: joined ? 1 : 0, bare, squash: v.squash, bubbles: 0, time: this.time }
+    const look: Look = { gaze: v.gaze, blink: v.blink < 0, asleep: g.asleep, thirsty: asking, drinking: joined ? 1 : 0, bare, squash: v.squash, fed: g.asleep || (g.scene?.kind === 'milk' && g.scene.t > MILK.drain), time: this.time }
     sheep(ctx, this.stamps, i, s.x, s.y, v.turn, p, look)
   }
 
@@ -441,16 +451,16 @@ export class View {
       const mine = s.who === null ? null : g.bed.sheep[s.who]
       // Those of the covered half hang over the quilt, or go in under its hem.
       const covered = g.save.quilt === milk[s.bottle].side
-      if (covered !== (part === 'quilt') || (over && !mine)) continue
+      if (covered !== (part === 'quilt') || (part === 'behind' && !mine)) continue
       const foot = this.bottleFoot(milk, s.bottle), from = { x: foot.x, y: SHELF.y + 16 }
       const end = this.ends[s.bottle] ?? this.strawEnd(g, milk, s)
       const to = { x: from.x + (end.x - from.x) * k, y: from.y + (end.y - from.y) * k }
       const own = milk[s.bottle].owner
       // It comes down straight and in to the mouth from the side, past the eyes.
-      const side = from.x >= end.x ? 1 : -1, reach = s.who === null || hidden(g, s.who) ? 0 : 92 * k
+      const side = s.who !== null && Math.abs(end.x - HALF[milk[s.bottle].side].mid) > 40 ? Math.sign(end.x - HALF[milk[s.bottle].side].mid) : from.x >= end.x ? 1 : -1, reach = s.who === null || hidden(g, s.who) ? 0 : 92 * k
       const path = () => { ctx.beginPath(); ctx.moveTo(from.x, from.y); ctx.bezierCurveTo(from.x, from.y + (to.y - from.y) * 0.55, to.x + side * reach, to.y - reach * 0.35, to.x, to.y) }
       ctx.save()
-      if (over) { ctx.beginPath(); ctx.arc(mine!.x, mine!.y - 10, R + 12, 0, Math.PI * 2); ctx.clip() }
+      if (over && mine) { ctx.beginPath(); ctx.arc(mine.x, mine.y - 10, R + 12, 0, Math.PI * 2); ctx.clip() }
       ctx.lineCap = 'round'
       ctx.strokeStyle = 'rgba(43,29,26,0.5)'; ctx.lineWidth = 13; path(); ctx.stroke()
       ctx.strokeStyle = C.white; ctx.lineWidth = 10; path(); ctx.stroke()
@@ -461,7 +471,7 @@ export class View {
       path(); ctx.stroke()
       ctx.setLineDash([])
       ctx.restore()
-      if (!over && s.who === null && this.strawK > 0.9 && 1.5 - this.drip > 0.9) this.stamps.stampAt(ctx, DROP, to.x, to.y + 8, 0, Math.min(1, (1.5 - this.drip - 0.9) / 0.6))
+      if (s.who === null && this.strawK > 0.9 && 1.5 - this.drip > 0.9) this.stamps.stampAt(ctx, DROP, to.x, to.y + 8, 0, Math.min(1, (1.5 - this.drip - 0.9) / 0.6))
     }
   }
 
@@ -470,15 +480,13 @@ export class View {
     for (const side of SIDES) {
       const k = this.cover[side], x = HALF[side].left + 6
       const nudge = ring(this.since(`roll${side}`)) * 8
-      if (k < 0.97) {
-        const sy = 1 - 0.45 * k
-        st.stampAt(ctx, ROLL, x - 2, QUILT.roll + nudge + (1 - sy) * QUILT.rollH, 0, 1, sy)
-      }
-      if (k < 0.02) continue
+      // What is left of the roll when the quilt is up is thin.
+      const roll = () => { const sy = 1 - 0.6 * k; st.stampAt(ctx, ROLL, x - 2, QUILT.roll + nudge + (1 - sy) * QUILT.rollH, 0, 1, sy) }
+      if (k < 0.02) { roll(); continue }
       const top = hemAt(k)
       ctx.save()
       ctx.beginPath()
-      ctx.rect(x - 40, top, 540, QUILT.roll + QUILT.rollH - 20 - top)
+      box(ctx, x - 16, top, 478, QUILT.roll + QUILT.rollH - 14 - top, 22)
       ctx.clip()
       st.stampAt(ctx, CLOTH, x + 8, top)
       for (let i = 0; i < FIVE; i++) {
@@ -487,13 +495,15 @@ export class View {
         const speed = Math.hypot(s.vx, s.vy), p = this.poseOf(g, i)
         const moving = s.leap ? 1 : Math.min(1, speed / 140), poked = v.poked < 0.9 ? (1 - v.poked / 0.9) * (0.7 + 0.3 * Math.sin(v.poked * 30)) : 0
         const acting = actNow(g)?.cast.includes(i) ? Math.min(1, p.lift / 40 + Math.abs(p.spin % 6.28) * 0.12 + Math.abs(p.wide - 1) * 3 + 0.25) : 0
-        const a = Math.max(moving, poked, acting, g.bed.held?.who === i ? 1 : 0)
+        const wants = askers(g).includes(i) ? Math.min(1, 0.25 + p.lift / 40) : 0
+        const a = Math.max(moving, poked, acting, wants, g.bed.held?.who === i ? 1 : 0)
         if (a < 0.03) continue
         ctx.globalAlpha = Math.min(1, a)
         st.stampAt(ctx, BULGE, s.x, s.y - 8 - p.lift * 0.25, 0, (0.8 + a * 0.12) * p.wide)
         ctx.globalAlpha = 1
       }
       ctx.restore()
+      roll()
       st.stampAt(ctx, HEM, x + 8, top + ring(this.since(`hem${side}`)) * 9 + ring(this.since('flump'), 24, 6) * 5)
     }
   }
@@ -550,8 +560,7 @@ export class View {
   }
 
   private guide(ctx: Ctx, g: Game, guidance: Guidance): void {
-    if (guidance.demoIndex >= 0) this.demos = guidance.demoIndex
-    const hint: Hint | null = guidance.glow > 0 || guidance.demo !== null ? hintFor(g, Math.max(0, this.demos)) : null
+    const hint: Hint | null = guidance.glow > 0 || guidance.demo !== null ? hintFor(g) : null
     if (!hint) return
     const beat = 0.5 + 0.5 * Math.sin(this.time * 2.6)
     ctx.globalAlpha = guidance.glow * (0.55 + 0.45 * beat)

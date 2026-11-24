@@ -20,7 +20,7 @@ function run(p: Play, v: View, s: number): void {
   for (let i = 0; i < s * 30; i++) {
     p.advance(1 / 30, i * 33)
     v.advance(p, 1 / 30)
-    for (const k of p.pokes.splice(0)) v.poke(k, p.game)
+    for (const k of p.pokes.splice(0)) v.poke(k)
     for (const e of p.game.events.splice(0)) v.notice(e, p.game)
     const pen = fakePen()
     v.draw(pen.ctx, p, p.game, { glow: 1, demo: (i % 90) / 90, demoIndex: 0 })

@@ -1,5 +1,5 @@
 import { BED, R, grab, sideOf, sideOfSheep, type Side } from './bed'
-import { actNow, advance, deal, hidden, leap, pull, wake, milkOut, type Game } from './game'
+import { actNow, advance, call, deal, hidden, knows, leap, milkOut, pull, wake, type Game } from './game'
 import { ForgivingTouch, type Gesture, type Point } from './input'
 import { BOTTLE, CRATE, DOG, HALF, MOUSE, QUILT, bottleAt, hemAt, type Thing } from './layout'
 
@@ -12,11 +12,11 @@ import { BOTTLE, CRATE, DOG, HALF, MOUSE, QUILT, bottleAt, hemAt, type Thing } f
 // - A finger that is taken away puts back what it had.
 
 /** What a finger landed on, for the view and the voice. */
-export type Poke = { thing: Thing; at: Point; second: boolean; near: number | null; slide?: boolean }
+export type Poke = { thing: Thing; at: Point; second: boolean; near: number | null; slide?: boolean; speed?: number }
 
-export const REST_MS = 1000
+const REST_MS = 1000
 /** How far a finger may slip and still have tapped. */
-export const SLIP = 44
+const SLIP = 44
 
 export class Play {
   readonly touch = new ForgivingTouch()
@@ -28,6 +28,12 @@ export class Play {
   private pressed: Thing | null = null
   private landed = { id: -1, at: { x: 0, y: 0 }, t: 0 }
   private slid = 0
+  /** How far the finger has been from where it landed. */
+  private farthest = 0
+  /** Who was acting under the quilt when a finger came for it. */
+  private acting: number[] = []
+  /** Where the straws hang that have nobody, for a finger that goes for one. */
+  loose: Point[] = []
 
   constructor(readonly game: Game) {}
 
@@ -43,7 +49,10 @@ export class Play {
     this.landed = { id, at, t }
     this.act(this.touch.down(id, at, t))
   }
-  move(id: number, at: Point): void { this.act(this.touch.move(id, at)) }
+  move(id: number, at: Point, t: number): void {
+    if (this.touch.holds(id) && this.finger && Math.hypot(at.x - this.finger.x, at.y - this.finger.y) > 4) this.landed.t = t
+    this.act(this.touch.move(id, at))
+  }
   up(id: number, at: Point, t: number): void {
     this.act(this.touch.up(id, at, t))
     this.act(this.touch.letGo())
@@ -77,6 +86,7 @@ export class Play {
       const p = bottleAt(milk[i].side, milk[i].slot, milk.filter((b) => b.side === milk[i].side).length)
       if (Math.abs(at.x - p.x) < BOTTLE.apart / 2 && at.y > p.y - BOTTLE.h - 12 && at.y < p.y + 12) return { kind: 'bottle', index: i }
     }
+    if (this.loose.some((p) => Math.hypot(p.x - at.x, p.y - at.y) < 46)) return { kind: 'straw' }
     if (Math.abs(at.x - CRATE.x) < 100 && Math.abs(at.y - CRATE.y) < 90) return { kind: 'crate' }
     if (Math.abs(at.x - DOG.x) < 104 && Math.abs(at.y - DOG.y) < 140) return { kind: 'dog' }
     if (Math.hypot(at.x - MOUSE.x, at.y - MOUSE.y) < 64) return { kind: 'mouse' }
@@ -100,10 +110,8 @@ export class Play {
     for (const e of gestures) switch (e.type) {
       case 'press': {
         const thing = this.under(e.at)
-        // One uncovered in the middle of an act is caught: that is asked before the touch ends the act.
-        const acting = actNow(g)
-        const caught = acting && thing.kind === 'hem' ? acting.cast.filter((i) => hidden(g, i)) : []
-        const busy = g.scene?.kind === 'milk' || g.scene?.kind === 'deal'
+        // Who acts is asked before the touch ends the act: one uncovered in the middle of it is caught.
+        this.acting = actNow(g)?.cast.filter((i) => hidden(g, i)) ?? []
         wake(g)
         this.pressed = thing
         this.finger = e.at
@@ -111,8 +119,8 @@ export class Play {
         this.pokes.push({ thing, at: e.at, second: false, near })
         if (thing.kind === 'sheep') g.events.push({ type: 'squash', who: thing.who, hidden: false })
         else if (thing.kind === 'hidden' && near !== null) g.events.push({ type: 'squash', who: near, hidden: true })
-        for (const who of caught) { g.stare = 1.6; g.events.push({ type: 'caught', who }) }
-        if ((thing.kind === 'dog' || thing.kind === 'crate') && !busy) deal(g)
+        if (thing.kind === 'dog' || thing.kind === 'crate') deal(g)
+        if (thing.kind === 'bottle' || thing.kind === 'straw') call(g)
         break
       }
       case 'tap':
@@ -125,6 +133,8 @@ export class Play {
       case 'dragStart': {
         const p = this.pressed
         this.slid = 0
+        this.farthest = 0
+        this.begun()
         if (p?.kind === 'sheep') { grab(g.bed, p.who, e.from) }
         else if (p?.kind === 'hidden' || p?.kind === 'mattress') { g.bed.hand = { at: e.from, to: e.from } }
         else if (p?.kind === 'hem') this.hem = { side: p.side, k: 1 }
@@ -134,20 +144,24 @@ export class Play {
       case 'dragMove': {
         this.slid += this.finger ? Math.hypot(e.at.x - this.finger.x, e.at.y - this.finger.y) : 0
         this.finger = e.at
+        this.farthest = Math.max(this.farthest, Math.hypot(e.at.x - this.landed.at.x, e.at.y - this.landed.at.y))
         if (g.bed.held) g.bed.held.at = e.at
         if (g.bed.hand) g.bed.hand.to = e.at
         if (this.hem) this.hem.k = Math.min(1, Math.max(0, (e.at.y - hemAt(0) - (this.pressed?.kind === 'hem' ? 24 : 30)) / (hemAt(1) - hemAt(0))))
         if (this.slid > 60) {
           this.slid = 0
           const p = this.pressed
-          if (p && p.kind !== 'sheep') this.pokes.push({ thing: p.kind === 'ridge' || p.kind === 'mattress' || p.kind === 'rug' ? this.under(e.at) : p, at: e.at, second: false, near: null, slide: true })
+          if (p?.kind === 'sheep' && g.bed.held) {
+            const s = g.bed.sheep[p.who]
+            this.pokes.push({ thing: p, at: e.at, second: false, near: null, slide: true, speed: Math.hypot(s.vx, s.vy) })
+          } else if (p && p.kind !== 'sheep') this.pokes.push({ thing: p.kind === 'ridge' || p.kind === 'mattress' || p.kind === 'rug' ? this.under(e.at) : p, at: e.at, second: false, near: null, slide: true })
         }
         break
       }
       case 'dragLift':
         break
       case 'dragEnd': {
-        const slip = Math.hypot(e.at.x - this.landed.at.x, e.at.y - this.landed.at.y) < SLIP
+        const slip = this.farthest < SLIP
         const held = g.bed.held
         g.bed.held = null
         g.bed.hand = null
@@ -156,8 +170,9 @@ export class Play {
         this.finger = null
         if (hem) {
           if (slip) this.tap()
-          else pull(g, hem.side, this.pressed?.kind === 'roll' ? hem.k > 0.3 : hem.k > 0.7)
+          else this.pull(hem.side, this.pressed?.kind === 'roll' ? hem.k > 0.3 : hem.k > 0.7)
         } else if (held && slip && sideOfSheep(g.bed, held.who) === sideOf(held.from.x)) this.tap()
+        else if (held && sideOfSheep(g.bed, held.who) !== sideOf(held.from.x)) knows(g)
         else if (!held && slip && this.pressed?.kind === 'hidden') this.tap()
         this.pressed = null
         g.changed = true
@@ -179,12 +194,26 @@ export class Play {
     }
   }
 
+  /** A scene that began under a finger that was only resting ends when the finger does something. */
+  private begun(): void {
+    const k = this.pressed?.kind
+    if (this.game.scene && k !== 'dog' && k !== 'crate') wake(this.game)
+  }
+
+  private pull(side: Side, up: boolean): void {
+    const g = this.game
+    pull(g, side, up)
+    for (const who of this.acting) if (!hidden(g, who)) { g.stare = 1.6; g.events.push({ type: 'caught', who }) }
+    this.acting = []
+  }
+
   private tap(): void {
     const g = this.game, p = this.pressed
+    this.begun()
     this.pressed = null
     this.finger = null
     if (p?.kind === 'sheep') leap(g, p.who)
-    else if (p?.kind === 'roll') pull(g, p.side, true)
-    else if (p?.kind === 'hem') pull(g, p.side, false)
+    else if (p?.kind === 'roll') this.pull(p.side, true)
+    else if (p?.kind === 'hem' || p?.kind === 'hidden') this.pull(p.side, false)
   }
 }
