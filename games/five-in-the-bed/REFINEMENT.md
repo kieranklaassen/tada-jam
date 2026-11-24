@@ -45,7 +45,7 @@ Written as the game is built and kept at the end of this file: the pull request 
 - **Kid-clear:** five cream balls on one plain butter field; targets of about 100 units, apart.
 - **Wordless clarity:** nothing to read. One sheep at a time asks, and the spare straw leans to it. Looked at cold twice by a reader who had not seen it, not by a child.
 - **Wordless guidance:** the hint glows on the one that asks and taps it; off at any touch.
-- **60 fps:** 58 fps in software-rendered Chrome, a production build, tier auto, at most 69 stamps a frame, the game's own work 0.9 ms at the 95th percentile. WebKit and a physical iPad were not measured.
+- **60 fps:** 58.8 fps in software-rendered Chrome without throttle, a production build, tier auto (it settled at pixel ratio 1, the lowest tier, since that Chrome has no GPU), at most 70 stamps a frame, the game's own work 1 ms at the 95th percentile. WebKit and a physical iPad were not measured.
 - **Procedural assets only:** painted once for a size of the surface.
 - **Its own art direction:** a tufted play rug with hard toys on it.
 - **Nothing through anything:** model tests; canvas 2D, so the 3D audit does not apply.
