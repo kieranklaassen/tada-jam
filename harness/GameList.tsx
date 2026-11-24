@@ -11,7 +11,7 @@ import { DemoShelf } from './DemoShelf'
 import { GameCard } from './GameCard'
 import { AGES, readPrefs, writePrefs } from './prefs'
 import { fillShelves, fitsAge, keyOf, lineFor, matches } from './shelves'
-import { useLaunch } from './useLaunch'
+import { useLaunch, type Open } from './useLaunch'
 import './home.css'
 
 // The jam's home page, for finding something to play. Every game is shown as a
@@ -30,7 +30,7 @@ const pickOne = <T,>(list: readonly T[]): T | undefined => list[Math.floor(Math.
 
 const SURPRISE_MS = 700
 
-type Props = { games: readonly JamGame[]; showcases?: readonly JamShowcase[]; onPick: (key: string) => void; onPickDemo: (key: string) => void }
+type Props = { games: readonly JamGame[]; showcases?: readonly JamShowcase[]; onPick: Open; onPickDemo: Open }
 
 export function GameList({ games, showcases = [], onPick, onPickDemo }: Props) {
   const [childAge, setChildAge] = useState(() => readPrefs().childAge)
@@ -59,9 +59,9 @@ export function GameList({ games, showcases = [], onPick, onPickDemo }: Props) {
     root.current?.ownerDocument.scrollingElement?.scrollTo?.(0, left.scroll)
   }, [])
   const leave = useCallback(
-    (open: (key: string) => void) => (key: string) => {
+    (open: Open): Open => (key) => {
       left.scroll = document.scrollingElement?.scrollTop ?? 0
-      open(key)
+      return open(key)
     },
     [],
   )
