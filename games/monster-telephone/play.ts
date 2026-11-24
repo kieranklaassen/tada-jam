@@ -42,6 +42,10 @@ export const MIME_S = 3
 export const MIME_PEEK = 0.75
 const SHOW_AFTER = 1.5
 const BECKON_S = 3.4
+/** A tap on the curtain lifts it this long. */
+export const PEEK_S = 0.9
+/** Left alone this long before a shut curtain, the ostrich has a look of her own accord, three times at most. */
+export const HINT_S = 14
 
 type Contact = { id: number; target: Target; from: Point; at: Point; seconds: number; moved: boolean; fired: boolean; extra: boolean; /** A small sound owed to a drag, so a slow one is not a machine gun. */ said: number }
 
@@ -76,6 +80,12 @@ export class Play {
   private told = 0
   private beckoned = 0
   private nextBeckon = 0
+  /** Even a tap lifts the cloth for a moment. */
+  private peekUntil = 0
+  private peekDown = true
+  private hinted = 0
+  /** The wiper under a finger. */
+  wiping: Point | null = null
   /** How far a finger has drawn the shut curtain, 0 to a third. */
   private drawn = 0
   private lastTouch = 0
@@ -110,7 +120,7 @@ export class Play {
     return (!open || this.inView) && count(b) > 0 && count(b) >= count(a)
   }
   get peeked(): boolean {
-    return !this.world.open && [...this.contacts.values()].some((c) => c.target.kind === 'curtain' && !c.extra && c.from.x - c.at.x < 50)
+    return !this.world.open && [...this.contacts.values()].some((c) => c.target.kind === 'curtain' && !c.extra && c.from.x - c.at.x < 50) || (!this.world.open && this.now < this.peekUntil && this.drawn === 0)
   }
 
   // --- What is saved ----------------------------------------------------------
@@ -146,6 +156,7 @@ export class Play {
   down(id: number, p: Point): void {
     this.lastTouch = this.now
     this.beckoned = 0
+    this.hinted = 0
     // A scene gives way to any touch, and the touch is then answered as usual.
     if (this.showing) { this.mime = null; this.showing = false }
     this.land()
@@ -181,6 +192,7 @@ export class Play {
         const second = [...this.contacts.values()].some((c) => c !== contact && c.target.kind === 'curtain')
         this.mark(second ? 'flap' : 'roll')
         this.say(second ? 'flap' : 'rollUp')
+        this.peekUntil = this.now + PEEK_S
         if (!second) { this.mark('cover'); this.heard.push(...later(voice('slap'), 0.12), ...later(voice('rustle'), 0.2), ...later(voice('shy'), 0.5)) }
         break
       }
@@ -234,6 +246,11 @@ export class Play {
       const dx = c.from.x - p.x
       this.drawn = Math.max(0, Math.min(0.34, (dx - 40) / 460))
       if (dx >= DRAG_OPEN && dx > Math.abs(p.y - c.from.y)) { c.fired = true; this.pulled() }
+    }
+    if (c.target.kind === 'wiper' && c.moved) {
+      this.wiping = p
+      for (const s of this.strokes) if (s.finger === null && s.age < 6 && s.points.some((q) => Math.hypot(q.x - p.x, q.y - p.y) < 70)) s.age = 6
+      if (c.seconds - c.said > 0.35) { c.said = c.seconds; this.say('rub') }
     }
     if (c.target.kind === 'cord') {
       this.pull = Math.max(0, Math.min(90, p.y - c.from.y))
@@ -294,12 +311,12 @@ export class Play {
   /** What a finger held is let go of, however it ends. */
   private unhold(c: Contact): void {
     const stroke = this.strokes.find((s) => s.finger === c.id)
-    if (stroke) stroke.finger = null
+    if (stroke) { stroke.finger = null; if (stroke.points.length < 3) stroke.age = 4 }
     if (c.target.kind === 'cord') this.pull = 0
     if (c.target.kind === 'curtain') this.drawn = 0
     if (c.target.kind === 'ostrich') this.ostrichBend = null
     if (c.target.kind === 'mole') this.moleReach = null
-    if (c.target.kind === 'curtain' && !this.world.open && !this.peeked && !c.extra) { this.mark('drop'); this.say('drop') }
+    if (c.target.kind === 'wiper') this.wiping = null
   }
 
   private tap(c: Contact): void {
@@ -341,8 +358,8 @@ export class Play {
         if (w.open || this.wornAt(c.at)) { this.mark('kick'); this.say('honk') } else this.nextMime()
         return
       case 'mole': this.mark('nod'); return
-      case 'sack': this.say('hop'); return
-      case 'cord': this.mark('shiver'); return
+      case 'sack': this.hide('sack', target.i, SACKS[target.i]); return
+      case 'cord': if (!this.world.open && this.enough) this.pulled(); else if (this.inView && this.enough) this.pulled(); else this.mark('shiver'); return
     }
   }
 
@@ -466,7 +483,17 @@ export class Play {
   private pulled(): void {
     if (this.meeting || this.hiding) return
     if (this.world.open && !this.inView) this.hide('own', 0, SACKS[0])
-    else this.meet()
+    else if (count(this.world.b) === 0 && !this.inView) {
+      // Nothing to show yet: the cloth shakes, and the ostrich has a look instead.
+      this.mark('flap')
+      this.say('flap')
+      this.nextMime()
+    } else if (this.inView && !this.enough) {
+      // Not yet: everything that is missing stirs at once.
+      this.mark('flap')
+      this.say('flap')
+      for (const one of this.missing()) { this.mark(`a:${one.place}`); this.mark(`need:${one.place}`); this.mark(`rattle:${one.part}`) }
+    } else this.meet()
   }
 
   private meet(): void {
@@ -593,6 +620,8 @@ export class Play {
     for (const s of this.strokes) if (s.finger === null) s.age += dt
     if (this.strokes.some((s) => s.age > 9)) this.strokes = this.strokes.filter((s) => s.age <= 9)
     if (this.strokes.length > 8) this.strokes.splice(0, this.strokes.length - 8)
+    if (this.peekDown && !this.peeked && !w.open) { this.mark('drop'); this.say('drop') }
+    this.peekDown = this.peeked
     this.lift += ((this.peeked ? 1 : 0) - this.lift) * Math.min(1, dt * (this.peeked ? 11 : 15))
     const aside = w.open || (this.hiding?.seen && this.hiding.t < 1 + SEEN_S) ? 1 : this.drawn
     this.beckon()
@@ -600,12 +629,20 @@ export class Play {
     this.stepMeeting(dt)
     if (this.hiding) { this.hiding.t += dt; if (this.hiding.t >= this.hiding.length) this.hiding = null }
     this.stepMime(dt)
+    if (w.shown) this.hint()
     if (!w.shown && !this.mime && !this.busy && !w.open && this.now - this.lastTouch >= SHOW_AFTER) {
       w.shown = true
       this.showing = true
       this.change(true)
       this.nextMime()
     }
+  }
+
+  /** A shut curtain and nobody doing anything for a good while: she peeks and mimes, as when she is tapped. */
+  private hint(): void {
+    if (this.world.open || this.busy || this.enough || this.hinted >= 3 || this.now - this.lastTouch < HINT_S * (this.hinted + 1)) return
+    this.hinted += 1
+    this.nextMime()
   }
 
   private stepMeeting(dt: number): void {
@@ -625,12 +662,12 @@ export class Play {
           else { this.times.set(`b:${one.place}`, this.now + 0.22); this.heard.push(...later(quieter(partVoice(one.b.part), 0.6), 0.22)) }
         }
         this.heard.push(...(one.likeness === 'same' ? agree(beat) : rub(beat)))
-        if (one.likeness !== 'same') this.mark('stare')
       } else if (beat === m.list.length) {
         this.mark('taken')
         if (m.same) {
           this.heard.push(...dance())
           for (const one of m.list) { this.mark(`a:${one.place}`); this.mark(`b:${one.place}`) }
+          this.mark('party')
         } else this.heard.push(...takes(m.a.body), ...later(takes(m.b.body), 0.35), ...later(voice('clang'), 0.6))
         this.heard.push(...later(voice('pop'), TAKE_S - 0.45))
       }

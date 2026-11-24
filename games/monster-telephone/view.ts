@@ -113,6 +113,7 @@ export class BoardView {
     this.string(play)
     this.mole(play)
     this.monsters(play)
+    this.party(play)
     this.stamp(this.tray!)
     this.mimed(play)
     this.cord(play)
@@ -223,7 +224,7 @@ export class BoardView {
   private sunk(play: Play): number {
     const m = play.meeting
     if (!m) return 0
-    const back = RUN_S + LEAN_S + m.list.length * BEAT_S + TAKE_S - 0.45
+    const back = RUN_S + LEAN_S + m.list.length * BEAT_S + (m.same ? 0.1 : TAKE_S - 0.45)
     return Math.min(ease(m.t / 0.45), 1 - ease((m.t - back) / 0.35))
   }
 
@@ -244,6 +245,7 @@ export class BoardView {
     x = mix(x, 452, peek); y = mix(y, 250, peek); turn = mix(turn, 0.1, peek)
     if (play.ostrichBend) { const dx = play.ostrichBend.x - x, dy = play.ostrichBend.y - y, d = Math.hypot(dx, dy) || 1, r = Math.min(d, 130); x += (dx / d) * r; y += (dy / d) * r; turn += clamp(dx / 600, -0.3, 0.3) }
     const kick = play.since('kick'), cluck = play.since('ostrich'), worn = play.since('wear:ostrich')
+    if (play.meeting?.same && play.since('party') < 2.4) { y += Math.sin(play.since('party') * 10.5) * 26; x += Math.sin(play.since('party') * 5.2) * 12; turn += Math.sin(play.since('party') * 5.2) * 0.3 }
     y -= bump(kick / 0.5) * 24; turn += ring(kick, 0.6, 18) * 0.2
     y += bump(cluck / 0.3) * 12 + bump(worn / 0.35) * 22
     turn += ring(cluck, 0.5, 20) * 0.12 + ring(worn, 0.9, 16) * 0.2
@@ -340,7 +342,7 @@ export class BoardView {
   // --- The mole --------------------------------------------------------------------------
 
   private moleY(play: Play): number {
-    return MOLE.y + Math.sin(this.now * 1.5) * 2.5 - bump(play.since('mole') / 0.35) * 10 - bump(play.since('wear:mole') / 0.4) * 16
+    return MOLE.y + Math.sin(this.now * 1.5) * 2.5 - bump(play.since('mole') / 0.35) * 10 - bump(play.since('wear:mole') / 0.4) * 16 - (play.meeting && play.since('taken') < TAKE_S ? Math.abs(Math.sin(this.now * (play.meeting.same ? 5 : 13))) * (play.meeting.same ? 20 : 9) : 0)
   }
   private mole(play: Play): void {
     const { ctx } = this, w = play.world, y = this.moleY(play)
@@ -384,6 +386,10 @@ export class BoardView {
     if (pat) { const beat = Math.abs(Math.sin(this.now * 9)); rx = mix(rx, pat.x + 6, 0.9); ry = mix(ry, pat.y + 26 - beat * 10, 0.9); rt = -0.2 }
     if (play.moleReach) { const p = play.moleReach; for (const s of [0, 1]) { const ox = s ? rx : lx, oy = s ? ry : ly, dx = p.x - ox, dy = p.y - oy, d = Math.hypot(dx, dy) || 1, r = Math.min(d, 110), tap = Math.sin(this.now * 12 + s * 3) * 6; if (s) { rx += (dx / d) * r; ry += (dy / d) * r + tap } else { lx += (dx / d) * r; ly += (dy / d) * r + tap } } }
     if (play.since('wear:mole') < 1.2 && play.world.worn.mole === 'hand') { rx = MOLE.x + 34; ry = y - 30 + Math.sin(this.now * 20) * 14; rt = -0.4 }
+    const taken = meeting && !meeting.same && play.since('taken') < TAKE_S
+    if (play.meeting?.same && play.since('party') < 2.4) { const p = play.since('party'); lx = MOLE.x - 92; rx = MOLE.x + 92; ly = y - 60 + Math.sin(p * 10.5) * 30; ry = y - 60 - Math.sin(p * 10.5) * 30; lt = -0.3; rt = 0.3 }
+    // It holds its belly and shakes.
+    if (taken) { lx = MOLE.x - 40; rx = MOLE.x + 40; ly = ry = y + 70 + Math.sin(this.now * 26) * 5; lt = 0.8; rt = -0.8 }
     lx = mix(lx, MOLE.x - 28 - apart, cover); ly = mix(ly, y - 74, cover); lt = mix(lt, 0.15 - apart * 0.02, cover)
     rx = mix(rx, MOLE.x + 28 + apart, cover); ry = mix(ry, y - 74, cover); rt = mix(rt, -0.15 + apart * 0.02, cover)
     const sway = play.lift > 0.5 ? Math.sin(this.now * 3) * 2 : 0
@@ -432,7 +438,7 @@ export class BoardView {
       const rattle = play.since(`rattle:${part}`), land = play.since(`shelfLand:${part}`)
       let { x, y } = p, k = 0.92
       const m = { ...this.act(part, t) }
-      if (play.ready === part) { y -= 22 + Math.sin(this.now * 5) * 5; k = 1.04; m.turn += Math.sin(this.now * 3.2) * 0.07 }
+      if (play.ready === part) { y -= 40 + Math.sin(this.now * 5) * 7; k = 1.14; m.turn += Math.sin(this.now * 3.2) * 0.07 }
       y -= this.glow * Math.max(0, Math.sin(this.now * 4 - i * 0.7)) * 12
       y -= bump(rattle / 0.5) * 14; m.turn += ring(rattle, 0.7, 34) * 0.14
       if (land < 0.3) { m.sx *= 1 + bump(land / 0.3) * 0.16; m.sy *= 1 - bump(land / 0.3) * 0.16 }
@@ -440,7 +446,8 @@ export class BoardView {
       this.magnet(part, true, x, y, m, t, k)
     }
     const wipe = play.since('wiper')
-    this.at(this.room.wiper(), WIPER.x - bump(wipe / 0.8) * 34, WIPER.y, ring(wipe, 0.8, 18) * 0.06)
+    if (!play.wiping) this.at(this.room.wiper(), WIPER.x - bump(wipe / 0.8) * 34, WIPER.y, ring(wipe, 0.8, 18) * 0.06)
+    else this.at(this.room.wiper(), play.wiping.x, play.wiping.y, Math.sin(this.now * 14) * 0.06)
   }
 
   // --- The monsters ---------------------------------------------------------------------------------
@@ -502,13 +509,17 @@ export class BoardView {
       const b = bump(((meet.t - t0) % BEAT_S) / BEAT_S)
       m.dx += way * room * 0.3 * b
       m.turn += way * b * (beat.place === 'bottom' ? -0.05 : 0.035)
+      // Both start up at what they see.
+      m.dy -= bump(((meet.t - t0) % BEAT_S) / 0.3) * 20
     }
     const t = meet.t - t0 - meet.list.length * BEAT_S
     if (t > 0) {
       const u = clamp(t / TAKE_S), fade = 1 - ease((u - 0.86) / 0.14)
       m.dx *= fade; m.turn *= fade
       if (meet.same) {
-        m.dy -= Math.abs(Math.sin(t * Math.PI / 0.6)) * 34 * fade
+        // Apart first, so that the ostrich has room to dance between them.
+        m.dx *= 1 - ease(t / 0.4)
+        m.dy -= Math.abs(Math.sin(t * Math.PI / 0.6)) * 46 * fade
         m.turn += Math.sin(t * Math.PI / 0.6) * 0.1 * fade
       } else switch (body) {
         case 'round': {
@@ -559,11 +570,15 @@ export class BoardView {
     const lent = this.lent(play, who, m)
     // In view, the twin shows as pen lines where the parts of the other go.
     if (who === 'b' && play.inView && !play.hiding) for (const one of play.missing()) {
+      // A part of any kind covers its line, so that a wrong face looks meant.
+      if (m.on[one.place]) continue
       const o = placeOn(m.body, one.place), need = play.since(`need:${one.place}`), k = sizeOf(one.large) / 100
       ctx.globalAlpha = 0.5 + bump(need / 0.9) * 0.4
       this.at(this.magnets.outline(one.part), o.x, o.y, ring(need, 0.9, 20) * 0.1, k * (1 + bump(need / 0.6) * 0.14))
       ctx.globalAlpha = 1
     }
+    this.openPlaces(play, who, m)
+    const beat = this.beat(play)
     for (const place of PLACES) {
       const one = m.on[place]
       if (!one || (lent && lent.from === place)) continue
@@ -573,7 +588,7 @@ export class BoardView {
       const ringing = ring(play.since(`ring:${who}:${place}`), 0.5, 44)
       a.turn += ringing * 0.1
       const size = play.since(`size:${who}:${place}`)
-      const pop = size < 0.4 ? 1 + ring(size, 0.4, 24) * 0.3 : 1
+      const pop = (size < 0.4 ? 1 + ring(size, 0.4, 24) * 0.3 : 1) * (beat && beat.place === place && beat.likeness !== 'same' ? 1 + bump(beat.u) * 0.45 : 1)
       this.magnet(one.part, one.large, o.x, o.y, a, t, pop)
     }
     if (who === 'a' && play.lift > 0.02) {
@@ -604,7 +619,7 @@ export class BoardView {
   }
 
   private compared(play: Play): void {
-    const meet = play.meeting!, { ctx } = this
+    const meet = play.meeting!
     for (const who of ['a', 'b'] as const) {
       const l = this.lent(play, who, who === 'a' ? meet.a : meet.b)
       if (!l) continue
@@ -613,25 +628,53 @@ export class BoardView {
       const e = Math.min(ease(l.t / 0.28), 1 - ease((l.t - 0.72) / 0.28))
       this.scaled(l.stuck.part, sizeOf(l.stuck.large) / 100, mix(p.x, q.x, e), mix(p.y, q.y, e) - bump(e) * 60, Math.sin(l.t * 24) * 0.14, 0)
     }
-    const t = meet.t - RUN_S - LEAN_S
-    if (t < 0) return
-    const beat = meet.list[Math.floor(t / BEAT_S)]
-    if (!beat || beat.likeness === 'same') return
-    // A pen rings the place on both, where they differ.
-    const u = (t % BEAT_S) / BEAT_S
+  }
+
+  /** The place that is being compared now, and how far that has come. */
+  private beat(play: Play): { place: Place; likeness: string; u: number } | null {
+    const meet = play.meeting
+    const t = meet ? meet.t - RUN_S - LEAN_S : -1
+    if (!meet || t < 0) return null
+    const one = meet.list[Math.floor(t / BEAT_S)]
+    return one ? { place: one.place, likeness: one.likeness, u: (t % BEAT_S) / BEAT_S } : null
+  }
+
+  /** With a magnet in a hand or ready, the free places show as dotted rounds. */
+  private openPlaces(play: Play, who: Who, m: Monster): void {
+    if (who !== 'b' || play.inView || play.meeting || play.hiding || (play.carries.length === 0 && play.ready === null)) return
+    const { ctx } = this, free = PLACES.filter((place) => !m.on[place])
+    if (free.length === 0) return
     ctx.beginPath()
-    for (const who of ['a', 'b'] as const) {
-      const m = who === 'a' ? meet.a : meet.b, s = this.stance(play, who, m.body), o = placeOn(m.body, beat.place), foot = REACH[m.body].h, c = Math.cos(s.turn), n = Math.sin(s.turn)
-      const x = MIDDLE[who].x + s.dx + o.x * c - (o.y - foot) * n, y = MIDDLE[who].y + s.dy + foot + o.x * n + (o.y - foot) * c
-      const r = 62, from = -1.3
-      ctx.moveTo(x + Math.cos(from) * r, y + Math.sin(from) * r)
-      ctx.arc(x, y, r, from, from + Math.min(1, u * 2.4) * Math.PI * 2)
-    }
-    ctx.strokeStyle = INK.black
-    ctx.lineWidth = 5
+    for (const place of free) { const o = placeOn(m.body, place); ctx.moveTo(o.x + 42, o.y); ctx.arc(o.x, o.y, 42, 0, Math.PI * 2) }
+    ctx.setLineDash([3, 14])
+    ctx.lineDashOffset = -this.now * 22
     ctx.lineCap = 'round'
-    ctx.globalAlpha = 0.8 * (1 - clamp((u - 0.8) / 0.2))
+    ctx.lineWidth = 6
+    ctx.strokeStyle = '#d9c8ff'
     this.stroke()
+    ctx.setLineDash([])
+  }
+
+  /** Marker scraps thrown up when two are alike. */
+  private party(play: Play): void {
+    const t = play.since('party'), { ctx } = this
+    if (t > 2.6 || !play.meeting) return
+    const inks = ['red', 'blue', 'green', 'black'] as const
+    inks.forEach((ink, k) => {
+      ctx.beginPath()
+      for (let i = k; i < 44; i += 4) {
+        const s = Math.sin(i * 12.9898) * 43758.5453, r = s - Math.floor(s)
+        const x = 553 + (r - 0.5) * 940 * Math.min(1, t * 1.6) + Math.sin(t * 5 + i) * 10, q = Math.sin(i * 78.233) * 24634.6345, r2 = q - Math.floor(q), y = 440 - (120 + r2 * 330) * (1 - (1 - Math.min(1, t * 1.4)) ** 2) + Math.max(0, t - 0.5) ** 2 * 190, a = t * (4 + r * 5) + i
+        if (y > 640) continue
+        ctx.moveTo(x - Math.cos(a) * 10, y - Math.sin(a) * 10)
+        ctx.quadraticCurveTo(x + Math.sin(a) * 8, y, x + Math.cos(a) * 10, y + Math.sin(a) * 10)
+      }
+      ctx.strokeStyle = INK[ink]
+      ctx.lineWidth = 6
+      ctx.lineCap = 'round'
+      ctx.globalAlpha = 1 - clamp((t - 2.1) / 0.5)
+      this.stroke()
+    })
     ctx.globalAlpha = 1
   }
 

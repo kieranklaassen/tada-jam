@@ -5,7 +5,7 @@
 
 - Stage: gates.
 - Look in use: dry-wipe whiteboard and magnets, the first choice.
-- Sheet check, round 1: not passed, 12 findings (band wording, a silent cell, a swaying hidden monster, what three scenes store, lanes and limits in the records). All applied, with three cells the builder corrected beside them. Round 2, by the same checker and so no pass: one finding, applied. Then the sheet changed with the game (the first kind of round in view, seen-first rounds, the curtain drawn aside) and went to a fresh checker, round 3: not passed, 8 findings on consistency, what is stored and how records are cited. All applied verbatim. Not checked again after that.
+- Sheet check, round 1: not passed, 12 findings (band wording, a silent cell, a swaying hidden monster, what three scenes store, lanes and limits in the records). All applied, with three cells the builder corrected beside them. Round 2, by the same checker and so no pass: one finding, applied. Then the sheet changed with the game (the first kind of round in view, seen-first rounds, the curtain drawn aside) and went to a fresh checker, round 3: not passed, 8 findings on consistency, what is stored and how records are cited. All applied verbatim. What the cold playtest changed after that (pass 4) has not been read by a checker.
 
 ### Template notes
 
@@ -26,6 +26,7 @@
 | 1 | Rest, a held curtain, building, a meeting, at 1180 by 820 | The look works at once: ink is ink and plastic is plastic. The ostrich stands behind the curtain and loses half her face; the mole is cut by the edge; the rolled curtain hides a tall one's head; the lumpy sack has no lumps; the two overlap when they lean | Ostrich before the curtain, her head in round its edge to peek with a lump in the cloth; mole moved in; the roll thinner and higher; lumps; the two lean only as far as there is room | not measured | |
 | 2 | The mime, wearing, finale, next one | The ostrich comes up through the magnets while the two still lean | She waits until the last half second; rings follow a leaning place | not measured | |
 | 3 | The loop, judged as a child of four who cannot read (the owner said of earlier games that the loop was not clear to a child) | Nothing says what to do first: a shut curtain, a bare ball and seven magnets. The cord that ends a round is small and at the edge. What a twin is is never shown | A first kind of round with both in view and pen outlines where the parts go, met by the last part; early new ones jump out and are looked at before the curtain; a curtain that can be drawn aside by hand; the knob bobs when the twin has enough parts; the ghost hand carries the magnet it shows; sacks hop until one is carried | 58.2 fps, see below | |
+| 4 | Cold playtest proxy: 12 short sessions, screenshots only, no source read | First sight is very clear. Then: a tapped sack is dead, a tapped cord too; an early cord ends the round; the only hint before the shut curtain is a wrong part; rings at the meeting look like a teacher's marks; outlines stick out from under wrong parts; same looks like nothing happened | Sacks go at a tap; the cord works at a tap once the twin has enough parts and ends nothing before; the ostrich looks of her own accord and the hand points at her and the curtain; rings gone, the differing part swells and both start up; the alike dance has the ostrich, the mole and scraps; outlines give way to any part; a tap on the curtain gives a glimpse; the wiper can be drawn over lines | as above | no child has tried it |
 
 ## For the pull request
 
@@ -34,10 +35,10 @@
 - Alive at idle: breathing and blinking, the ostrich's neck and gaze, the mole's free hand, a toe under the curtain, sacks that hop.
 - Motion and sound on every touch: every place has an answer and a voice of its own when the finger lands (`play.test.ts`); no two voices are the same (`voices.test.ts`).
 - Weight, squash, follow-through: magnets hang and swing, bodies wobble like jelly, the parts on it ring, the curtain drops and sways.
-- Silhouettes and tappables: seven outlines told apart by their edge; targets 88 units and more; a tap for every essential act but the two that end something.
+- Silhouettes and tappables: seven outlines told apart by their edge; targets 88 units and more; a tap for every essential act.
 - Wordless: no word, numeral or symbol; passes `wordless:check`.
 - Idle guidance: outlines and stirring magnets in the first kind of round; the ladder; one first showing by the ostrich.
-- 60 fps: 58.2 fps over 42 s of the shared probe, production build, headless Chromium with software rendering (no GPU), no throttle, tiers on automatic, ending at tier 2 (pixel ratio 1.25). DRAWS No blur, shadow or filter; one full composite. **WebKit and a physical iPad were not measured.**
+- 60 fps: 58.2 fps over 42 s of the shared probe, production build, headless Chromium with software rendering (no GPU), no throttle, tiers on automatic, ending at tier 2 (pixel ratio 1.25). At most 66 draws a frame in the budget test's visits (budget 80), counted over every pair of bodies.No blur, shadow or filter; one full composite. **WebKit and a physical iPad were not measured.**
 - Nothing passes through anything: 2D, so `layout.test.ts` in place of the intersection audit.
 - Assets: all drawn and sounded in code.
 

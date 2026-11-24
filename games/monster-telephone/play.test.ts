@@ -147,13 +147,19 @@ describe('the curtain', () => {
   it('shows only while it is held, however it ends, and a tap never opens it', () => {
     const p = game()
     tap(p, { x: 300, y: 300 })
+    run(p, 0.4)
+    // Even a tap gives a glimpse.
+    expect(p.lift).toBeGreaterThan(0.9)
     expect(p.world.open).toBe(false)
-    p.down(940, { x: 300, y: 300 }); run(p, 0.4); p.cancel(940); run(p, 0.6)
+    run(p, 1.5)
+    expect(p.lift).toBeLessThan(0.02)
+    p.down(940, { x: 300, y: 300 }); run(p, 0.4); p.cancel(940); run(p, 1.3)
     expect(p.lift).toBeLessThan(0.02)
     expect(p.world.open).toBe(false)
   })
   it('opens when it is drawn well aside, and not for a finger that wanders', () => {
     const p = game()
+    p.world.b.on.top = { part: 'ear', large: true }
     const i = pick(p, { x: 480, y: 300 }, { x: 480 - DRAG_OPEN + 20, y: 300 })
     p.up(i); run(p, 1)
     expect(p.world.open).toBe(false)
@@ -161,13 +167,22 @@ describe('the curtain', () => {
     p.up(pick(p, { x: 480, y: 300 }, { x: 480 - DRAG_OPEN - 10, y: 310 }))
     expect(p.meeting).not.toBeNull()
   })
-  it('opens only for a pulled cord, not a tapped one', () => {
-    const p = game()
+  it('opens for a pulled cord, and for a tapped one once the twin has as many parts', () => {
+    const p = game((w) => { w.b.on.top = { part: 'tail', large: true } })
     tap(p, CORD)
     expect(p.world.open).toBe(false)
     pullCord(p)
     expect(p.world.open).toBe(true)
     expect(p.meeting).not.toBeNull()
+    const q = game((w) => { for (const place of PLACES) w.b.on[place] = { part: 'tail', large: true } })
+    tap(q, CORD)
+    expect(q.meeting).not.toBeNull()
+  })
+  it('a cord pulled with nothing on the twin ends nothing: the ostrich has a look', () => {
+    const p = game()
+    pullCord(p)
+    expect(p.world.open).toBe(false)
+    expect(p.mime).not.toBeNull()
   })
 })
 
@@ -200,11 +215,11 @@ describe('the meeting', () => {
   })
   it('keeps three pairs', () => {
     const p = game()
-    for (let i = 0; i < 5; i++) { pullCord(p); run(p, 10); pullCord(p); run(p, 3) }
+    for (let i = 0; i < 5; i++) { put(p, 'ear', 'top'); pullCord(p); run(p, 10); pullCord(p); run(p, 3) }
     expect(p.world.pairs).toHaveLength(3)
   })
   it('lands at a touch, and the touch is answered', () => {
-    const p = game()
+    const p = game((w) => { w.b.on.top = { part: 'ear', large: true } })
     pullCord(p); run(p, 1)
     tap(p, shelfOf('eye'))
     expect(p.meeting).toBeNull()
@@ -224,11 +239,9 @@ describe('the meeting', () => {
 })
 
 describe('the next one', () => {
-  it('comes from a sack that is carried, not tapped, and not from one let go near home', () => {
+  it('comes from a sack that is carried or tapped, and not from one let go near home', () => {
     const p = game((w) => { opened(w); w.b.on.upper = { part: 'eye', large: true } })
     const next = JSON.stringify(p.world.sacks![1])
-    tap(p, SACKS[1])
-    expect(p.world.open).toBe(true)
     drag(p, SACKS[1], { x: SACKS[1].x + 40, y: SACKS[1].y - 60 })
     expect(p.world.open).toBe(true)
     drag(p, SACKS[1], MIDDLE.a)
@@ -241,6 +254,9 @@ describe('the next one', () => {
     run(p, 2)
     expect(p.aside).toBe(1)
     run(p, HIDE_S + SEEN_S - 1.6)
+    const q = game((w) => opened(w))
+    tap(q, SACKS[0])
+    expect(q.world.open).toBe(false)
     expect(p.hiding).toBeNull()
     expect(p.flights).toHaveLength(0)
     expect(p.aside).toBe(0)
@@ -282,16 +298,21 @@ describe('the first kind of round', () => {
     run(p, 10)
     expect(p.inView).toBe(false)
   })
-  it('is met however the twin looks when the cord is pulled, and comes again when it was bare', () => {
+  it('is met however the twin looks when the cord is pulled with enough on it, and never before', () => {
     const p = view()
     pullCord(p)
-    expect(p.meeting).not.toBeNull()
+    expect(p.inView).toBe(true)
+    expect(p.meeting).toBeNull()
+    for (const place of ['left', 'bottom', 'top'] as const) put(p, 'tail', place)
+    tap(p, CORD)
+    expect(p.meeting!.same).toBe(false)
     expect(p.world.place).toBe('in-view')
-    run(p, 10)
-    drag(p, SACKS[0], MIDDLE.a); run(p, 2)
+    run(p, 12)
+    tap(p, SACKS[0]); run(p, 2)
     expect(p.inView).toBe(true)
     expect(p.missing()).toHaveLength(3)
-    pullCord(p); run(p, 10)
+    for (const one of p.missing()) put(p, one.part, one.place)
+    run(p, 10)
     drag(p, SACKS[1], MIDDLE.a); run(p, 5)
     expect(p.world.open).toBe(false)
   })
@@ -335,6 +356,22 @@ describe('the ostrich', () => {
     const q = new Play(deserialize(JSON.parse(JSON.stringify(p.saved())), null, 1))
     run(q, 10)
     expect(q.mime).toBeNull()
+  })
+})
+
+describe('left alone before a shut curtain', () => {
+  it('the ostrich has a look three times, then all is quiet', () => {
+    const p = game()
+    let mimes = 0, on = false
+    for (let s = 0; s < 120; s += FRAME) { p.step(FRAME); if (p.mime && !on) mimes++; on = p.mime !== null }
+    expect(mimes).toBe(3)
+  })
+  it('the wiper wipes what it is drawn over', () => {
+    const p = game()
+    p.up(pick(p, { x: 1000, y: 130 }, { x: 1050, y: 200 }))
+    expect(p.strokes[0].age).toBeLessThan(1)
+    pick(p, WIPER, { x: 1040, y: 190 })
+    expect(p.strokes[0].age).toBeGreaterThanOrEqual(6)
   })
 })
 
