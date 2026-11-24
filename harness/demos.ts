@@ -6,7 +6,7 @@
 // server, or a build without the demos) the home page simply has no demos.
 
 export const DEMO_CATALOG_URL = 'lab/arcade/catalog.json'
-export const DEMO_PLAYER_URL = 'lab/arcade/index.html'
+const DEMO_PLAYER_URL = 'lab/arcade/index.html'
 
 export type Demo = {
   key: string
@@ -101,7 +101,7 @@ export function demoRoute(key: string): string {
 
 /** The demo player's page for one demo, with or without its rating strip. */
 export function demoPlayerHref(key: string, strip: boolean): string {
-  return strip ? `${DEMO_PLAYER_URL}#/play/${key}` : `${DEMO_PLAYER_URL}?chrome=0#/play/${key}`
+  return strip ? `${DEMO_PLAYER_URL}?chrome=1#/play/${key}` : `${DEMO_PLAYER_URL}?chrome=0#/play/${key}`
 }
 
 export async function loadDemoCatalog(): Promise<DemoGroup[]> {
