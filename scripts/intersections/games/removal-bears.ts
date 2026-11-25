@@ -50,7 +50,7 @@ const audit: GameAudit = {
   enforce: true,
   query: 'tier=0&seed=11',
   childAge: 2,
-  sampleMs: 250,
+  sampleMs: 330,
   ignore: [
     // Soft contact shadows and the idle ladder's glow: flat decals with depth writing off.
     'shadow-blobs', 'glow-blobs',

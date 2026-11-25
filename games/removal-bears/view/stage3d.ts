@@ -184,11 +184,15 @@ export class Stage {
     return one
   }
 
+  private dented = true
+  private cube(game: Game, col: number, row: number): THREE.Matrix4 { return this.m.makeTranslation(col, row + 0.5, -0.475 - (game.dents.get(`${col},${row}`)?.push ?? 0)) }
+
   /** Lays the upper wall for this house's openings. */
   private lay(game: Game): void {
     const key = game.saved.openings.map((o) => `${o.x}:${o.cells.join(' ')}`).join('|')
     if (key === this.laidFor) return
     this.laidFor = key
+    this.dented = true
     const open = new Set<string>()
     for (const o of game.saved.openings) for (const [x, y] of o.cells) open.add(`${leftOf(o) + x},${SILL + y}`)
     const hash = [...key].reduce((n, c) => (n * 31 + c.charCodeAt(0)) >>> 0, 7), accent = ACCENT[hash % ACCENT.length]
@@ -212,16 +216,14 @@ export class Stage {
     this.house.position.x = game.house
     this.upper.position.y = game.front * 10.5
     this.upper.visible = game.front < 0.99
-    this.cells.forEach(({ col, row }, i) => {
-      const d = game.dents.get(`${col},${row}`)
-      this.wall.setMatrixAt(i, this.m.makeTranslation(col, row + 0.5, -0.475 - (d ? d.push : 0)))
-    })
-    this.wall.instanceMatrix.needsUpdate = true
-    for (let i = 0; i < LOWER; i++) {
-      const col = (i % COLS) - 6, row = Math.floor(i / COLS), d = game.dents.get(`${col},${row}`)
-      this.base.setMatrixAt(i, this.m.makeTranslation(col, row + 0.5, -0.475 - (d ? d.push : 0)))
+    // The cubes are only written again while one of them is pushed in, and once after.
+    if (game.dents.size > 0 || this.dented) {
+      this.cells.forEach(({ col, row }, i) => this.wall.setMatrixAt(i, this.cube(game, col, row)))
+      for (let i = 0; i < LOWER; i++) this.base.setMatrixAt(i, this.cube(game, (i % COLS) - 6, Math.floor(i / COLS)))
+      this.wall.instanceMatrix.needsUpdate = true
+      this.base.instanceMatrix.needsUpdate = true
+      this.dented = game.dents.size > 0
     }
-    this.base.instanceMatrix.needsUpdate = true
     this.lamp.rotation.z = Math.sin(game.time * 2.1) * (0.03 + (game.act?.kind === 'ending' ? 0.35 * Math.exp(-Math.abs(game.act.t - 2.5)) : 0))
     this.lampLight.intensity = 14 + game.front * 26
     // Loads.
