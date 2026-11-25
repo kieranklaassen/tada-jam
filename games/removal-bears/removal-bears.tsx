@@ -265,6 +265,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       // has no frame coming, and would go on showing the surface as it was before the read.
       draw()
     })
+    view.warm()
     applyTier()
     resize()
     attention.set(ctxRef.current.attention.attended)

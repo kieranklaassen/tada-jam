@@ -9,8 +9,8 @@ import { BEARS, SILL, drawnAt } from './space'
 
 const COS = Math.cos(0.2)
 
-export function pick(game: Game, u: number, v: number): Target {
-  const inside = (x: number, y: number, w: number, h: number, pad: number): boolean => Math.abs(u - x) <= w + pad && Math.abs(v - y) <= h + pad
+export function pick(game: Game, u: number, v: number, least = 0): Target {
+  const inside = (x: number, y: number, w: number, h: number, pad: number): boolean => Math.abs(u - x) <= Math.max(least, w + pad) && Math.abs(v - y) <= Math.max(least, h + pad)
   const i = game.hands
   if (i >= 0 && game.act?.kind !== 'in') {
     const pose = game.loadPose(i)!, e = size(game.cells()), at = drawnAt(pose.x, pose.y, pose.z + 0.43)

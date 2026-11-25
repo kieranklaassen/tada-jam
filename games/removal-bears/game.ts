@@ -45,7 +45,7 @@ const ring = (t: number, many = 2, fade = 4): number => Math.exp(-fade * t) * Ma
 export const TICK = 1 / 120
 /** A heave: the crouch, the flight, then through the wall or against it. */
 /** Out of sight to the right, on a surface of any shape. */
-const AWAY = 14
+const AWAY = 17
 /** From the load's edge to the middle of a paw held against it. */
 const PAW = 0.27
 const CROUCH = 0.2, FLY = 0.36
@@ -450,7 +450,7 @@ export class Game {
       if (target.type === 'cart' && this.act?.kind !== 'move') this.called = true
       return
     }
-    if (target.type === 'cart') { if (this.empty || this.act?.kind === 'in') this.called = true; return }
+    if (target.type === 'cart') { if (this.act?.kind === 'in' ? !this.act.last : this.empty) this.called = true; return }
     if (target.type === 'load') this.want({ do: 'turn' })
     else if (target.type === 'bear') this.want({ do: 'swap' })
     else if (target.type === 'opening') this.want({ do: 'heave', i: target.i })
@@ -458,15 +458,22 @@ export class Game {
 
   private want(want: Want): void {
     // With nothing in hand, or a load on its way in, there is nothing to turn: the touch was answered where it landed.
-    if (this.empty || this.act?.kind === 'in' || this.act?.kind === 'deliver' && want.do === 'heave') return
-    const last = this.wants[this.wants.length - 1]
-    if (want.do === 'heave' && (last?.do === 'heave' || this.act?.kind === 'walk' || this.act?.kind === 'bump')) return
+    if (this.showing || this.empty || this.act?.kind === 'in' || this.act?.kind === 'deliver' && want.do === 'heave') return
+    // One heave waits at a time, and it is the opening tapped last.
+    if (want.do === 'heave' && this.act?.kind === 'walk') { this.act.i = want.i; return }
+    const waiting = this.wants.findIndex((w) => w.do === 'heave')
+    if (want.do === 'heave' && waiting >= 0) { this.wants[waiting] = want; return }
     if (this.wants.length < 6) this.wants.push(want)
     this.next()
   }
 
-  dragStart(target: Target): void {
-    if ((target.type !== 'load' && target.type !== 'bear') || this.act || this.empty) { this.grabbed = null; return }
+  get dragging(): boolean { return this.dragX !== null }
+
+  /** The finger has slid. Asked again as it slides on, until what the bears are doing is over and they take it up. */
+  dragStart(target: Target, u: number, v: number): void {
+    if ((target.type !== 'load' && target.type !== 'bear') || this.act || this.empty) return
+    this.grabbed = { x: this.x, u, v }
+    this.back = null
     this.dragX = this.x; this.dragFrom = this.x; this.dragLift = 0
     this.say(voices.lift(this.count++))
   }
@@ -481,10 +488,9 @@ export class Game {
 
   /** The finger let go. Carried up before an opening is heaved there; anywhere else the bears stay where they were brought. */
   letGo(u: number, v: number): void {
-    this.letPress()
-    if (this.dragX === null || !this.grabbed) return
+    if (this.dragX === null || !this.grabbed) { this.letPress(); return }
     const rose = v - this.grabbed.v
-    this.dragX = null; this.dragLift = 0
+    this.dragX = null; this.dragLift = 0; this.grabbed = null; this.back = null
     this.saved = { ...this.saved, x: clamp(this.x, -4.5, 4.5) }
     this.dirty = 'soon'
     const i = this.openingAt(u, v)
@@ -494,7 +500,7 @@ export class Game {
 
   /** The drag was taken away: the bears go back to where they were. */
   cancel(): void {
-    this.letPress()
+    this.grabbed = null
     if (this.dragX === null) return
     this.back = this.dragFrom
     this.dragX = null; this.dragLift = 0
@@ -502,7 +508,7 @@ export class Game {
   private back: number | null = null
 
   pressEnd(): void { this.letPress() }
-  private letPress(): void { this.grabbed = this.dragX === null ? null : this.grabbed }
+  private letPress(): void { if (this.dragX === null) this.grabbed = null }
 
   /** A second finger takes nothing from the first and is answered where it lands. */
   extra(u: number, v: number): void { this.puff(u, v + 0.2, 6, 'sugar', 2); this.say(voices.sugar(this.count++)) }
@@ -539,7 +545,7 @@ export class Game {
     this.finger.since += dt; this.cartPoke += dt; this.cubPoke += dt; this.rest += dt; this.riderAt += dt
     for (let i = 0; i < 3; i++) this.insidePoke[i] += dt
     for (let i = 0; i < 2; i++) this.wetLeft[i] = Math.max(0, this.wetLeft[i] - dt / 3)
-    if (this.begun && this.time > 1.2 && !this.act && this.dragX === null && this.hands >= 0) this.owed()
+    if (this.begun && this.time > 1.2 && !this.act && this.dragX === null && this.grabbed === null && this.hands >= 0) this.owed()
     const pull = (x: number, v: number, to: number, k: number, d: number): [number, number] => { const nv = v + ((to - x) * k - v * d) * dt; return [x + nv * dt, nv] }
     ;[this.press, this.vPress] = pull(this.press, this.vPress, 0, 320, 16)
     for (let i = 0; i < 3; i++) [this.poke[i], this.pokeV[i]] = pull(this.poke[i], this.pokeV[i], 0, 220, 11)
@@ -599,7 +605,7 @@ export class Game {
     if (!s.shown) {
       this.startShowing()
     } else if (!s.shownEnds && (s.position === 'other-side' || s.position === 'full-house')) {
-      this.saved = { ...s, shownEnds: true }; this.dirty = 'now'; this.showing = true
+      this.saved = { ...s, shownEnds: true }; this.shownState = this.saved; this.dirty = 'now'; this.showing = true
       this.showWants = ['swap', 'swap']
       this.nextShow()
     }
@@ -628,7 +634,8 @@ export class Game {
     this.shownState = { ...this.saved, loads, x: middleOf(s.openings[into]), wideLeft: plan.includes('swap') ? !s.wideLeft : s.wideLeft }
     this.showInto = into
     this.showing = true
-    this.showWants = ['heave', ...plan, 'in']
+    const under = this.nearest().i, already = place(this.cells(), s.openings[under].cells).fits
+    this.showWants = already ? [...plan, 'in'] : ['heave', ...plan, 'in']
     this.dirty = 'now'
     this.nextShow()
   }
@@ -639,7 +646,8 @@ export class Game {
   }
   private nextShow(): void {
     const want = this.showWants.shift()
-    if (!want) { this.showing = false; return }
+    if (!want) { this.showing = false; this.shownState = null; this.dirty = 'now'; return }
+    this.back = null
     if (want === 'in' || want === 'heave') {
       const i = want === 'in' ? this.showInto : this.nearest().i
       this.x === middleOf(this.saved.openings[i]) ? this.startHeave(i, want === 'heave') : (this.act = { kind: 'walk', t: 0, i, show: want === 'heave' })
@@ -712,7 +720,8 @@ export class Game {
   private deliver(): void {
     const i = this.saved.loads.findIndex((l) => l.at === 'cart')
     if (i < 0) return
-    this.saved = { ...this.saved, loads: this.saved.loads.map((l, n): Load => (n === i ? { ...l, at: 'hands' } : l)) }
+    this.saved = { ...this.saved, loads: this.saved.loads.map((l, n): Load => (n === i ? { ...l, at: 'hands' } : l)), x: this.x }
+    this.back = null
     this.angle = -this.saved.loads[i].way.turn * Math.PI / 2
     this.cartFull = false
     this.act = { kind: 'deliver', t: 0, load: i, fromX: this.cartX }
@@ -748,7 +757,11 @@ export class Game {
         const to = middleOf(this.saved.openings[act.i]), step = 7.5 * dt
         if (Math.floor(act.t * 13 / Math.PI) !== Math.floor((act.t - dt) * 13 / Math.PI)) this.say(voices.step(this.count++))
         // A turn asked for on the way is made before the heave.
-        if (Math.abs(to - this.x) <= step) { this.x = to; this.act = null; if (this.wants.length > 0) { this.wants.push({ do: 'heave', i: act.i }); this.next() } else this.startHeave(act.i, act.show) } else this.x += Math.sign(to - this.x) * step
+        if (Math.abs(to - this.x) <= step) { this.x = to; this.act = null; 
+          const turns = act.show === undefined ? this.wants.filter((w) => w.do !== 'heave') : []
+          this.wants.length = 0
+          if (turns.length > 0) { this.wants.push(...turns, { do: 'heave', i: act.i }); this.next() } else this.startHeave(act.i, act.show)
+        } else this.x += Math.sign(to - this.x) * step
         return
       }
       case 'in': return this.playIn(act)
@@ -760,7 +773,7 @@ export class Game {
       case 'ending': return this.playEnding(act)
       case 'move': {
         const out = span(act.t, 0, 0.75), back = span(act.t, 0.75, 1.6)
-        this.houseX = act.t < 0.75 ? -18 * out * out : 18 * (1 - smooth(back))
+        this.houseX = act.t < 0.75 ? -22 * out * out : 22 * (1 - smooth(back))
         if (!act.swappedHouse && act.t >= 0.75) {
           act.swappedHouse = true
           this.saved = this.pendingMove!; this.pendingMove = null
@@ -787,6 +800,7 @@ export class Game {
       this.puff(act.cx + 1, SILL + 0.2, 0.3, 'sugar', 4)
     }
     if (act.t < FLOWN + 1.25) return
+    if (act.last) this.called = false
     this.act = act.last ? { kind: 'ending', t: 0, said: 0 } : null
     this.x = act.x
   }
@@ -840,26 +854,15 @@ export class Game {
   /** A watched scene lands where it was going. */
   private land(): void {
     if (this.showing) {
-      if (this.shownState) {
-        this.saved = this.shownState
-        this.shownState = null
-        this.showWants = []; this.showing = false; this.act = null
-        this.x = 0; this.half = 1.5
-        this.dirty = 'now'
-        return
-      }
-      // The load is back in the hands as it was before the showing.
-      const act = this.act, i = this.hands
-      let turn = this.saved.loads[i].way.turn
-      let back = this.saved.loads[i].way.back
-      const turnsLeft = this.showWants.filter((w) => w === 'turn').length, swapsLeft = this.showWants.filter((w) => w === 'swap').length
-      turn = (turn + turnsLeft) % 4
-      if (swapsLeft % 2 === 1) { ({ turn, back } = swapped({ turn, back })); this.saved = { ...this.saved, wideLeft: !this.saved.wideLeft } }
-      this.setWay(i, { turn, back }, true)
-      this.angle = -turn * Math.PI / 2
-      if (act?.kind === 'bump') this.x = act.x
+      // What was saved when it started is how it ends.
+      this.saved = this.shownState!
+      this.shownState = null
       this.showWants = []; this.showing = false; this.act = null
+      this.wants.length = 0
+      const i = this.hands
+      if (i >= 0) { this.angle = -this.saved.loads[i].way.turn * Math.PI / 2; this.x = this.saved.x }
       this.half = this.restHalf()
+      this.dirty = 'now'
       return
     }
     if (this.act?.kind === 'ending') { this.act = null; this.frontLift = 1; this.x = 0; this.half = 0.08 }

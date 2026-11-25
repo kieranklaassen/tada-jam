@@ -6,6 +6,9 @@ import { pick } from './pick'
 /** A finger that has slid less than this is still tapping, in pixels: at two a tap is often a small smear. */
 export const SMEAR = 30
 
+/** Half of the least a target is on any surface, in pixels. */
+const LEAST = 24
+
 /** Turns gestures into what the game does. The Mount and the tests both play through here. */
 export class Finger {
   private held: Target | null = null
@@ -22,7 +25,7 @@ export class Finger {
           // A scene that is only watched ends first, so the finger lands on the picture as the scene leaves it.
           game.landScene()
           // The grown-up's corner is answered as the bare kitchen is.
-          this.held = inCorner(gesture.at.x, gesture.at.y, width) ? { type: 'kitchen', u, v } : pick(game, u, v)
+          this.held = inCorner(gesture.at.x, gesture.at.y, width) ? { type: 'kitchen', u, v } : pick(game, u, v, LEAST * (at(1, 0).u - at(0, 0).u))
           this.from = gesture.at
           this.dragging = false
           if (this.held.type === 'wall' || this.held.type === 'cloth' || this.held.type === 'kitchen') this.touch.landedOnNothing()
@@ -49,8 +52,16 @@ export class Finger {
             if (gesture.type === 'dragLift') { this.touch.clear(); game.tap(this.held); this.held = null }
             break
           }
-          if (!this.dragging) { this.dragging = true; game.dragStart(this.held) }
+          // Held from where the finger came down; taken up late, from where it is by then.
+          const first = !this.dragging
+          this.dragging = true
+          if (!game.dragging) {
+            const held = first ? at(this.from.x, this.from.y) : { u, v }
+            game.dragStart(this.held, held.u, held.v)
+          }
           game.dragTo(u, v)
+          // Nothing is in hand, so there is nothing to come back for: the next finger down is a touch of its own.
+          if (gesture.type === 'dragLift' && !game.dragging) { this.touch.clear(); game.pressEnd(); this.held = null }
           break
         case 'dragEnd':
           if (this.held) { if (this.dragging) game.letGo(u, v); else game.tap(this.held) }

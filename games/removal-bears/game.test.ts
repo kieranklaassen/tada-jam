@@ -286,6 +286,62 @@ describe('the first showing', () => {
   })
 })
 
+describe('put away in a showing or after odd touches', () => {
+  it('what is stored is what is on the screen whenever nothing is happening', () => {
+    let chance = 7
+    const roll = (): number => { chance = (Math.imul(chance, 1664525) + 1013904223) >>> 0; return chance / 2 ** 32 }
+    for (let run = 0; run < 30; run++) {
+      const c = child({ ...freshSave([null, 3, 4, 5][run % 4], run + 1) })
+      c.wait(roll() * 1.5)
+      for (let n = 0; n < 60; n++) {
+        const what = roll()
+        if (what < 0.3) c.tap({ type: 'cart' })
+        else if (what < 0.55 && c.game.hands >= 0) c.tap({ type: 'load' })
+        else if (what < 0.65) c.tap({ type: 'bear', who: roll() < 0.5 ? 0 : 1 })
+        else if (what < 0.8) c.tap({ type: 'opening', i: Math.floor(roll() * c.game.saved.openings.length) })
+        else { const u = roll() * 14 - 7, v = roll() * 9 - 1; c.down(u, v); c.move(u + roll() * 4 - 2, v + roll() * 4); c.wait(roll()); if (roll() < 0.3) c.cancel(); else c.up(u, v) }
+        c.wait(roll() * roll() * 4)
+        if (roll() < 0.1) { c.game.rested(); c.wait(0.02) }
+        expect(Number.isFinite(c.game.bearPose(0).x + c.game.bearPose(1).x + c.game.cart.x)).toBe(true)
+      }
+      c.settle(); c.wait(12)
+      expect(c.game.act).toBeNull()
+      const stored = c.saves.at(-1)
+      if (stored) {
+        expect(stored.loads).toEqual(serialize(c.game.saved).loads)
+        expect(stored.wideLeft).toBe(c.game.saved.wideLeft)
+        if (c.game.hands >= 0) expect(stored.x).toBeCloseTo(c.game.bearsX, 1)
+      }
+      // And the house can be finished from there.
+      for (let n = 0; n < 60 && !c.game.saved.finished; n++) {
+        if (c.game.empty) { c.tap({ type: 'cart' }); c.wait(3); continue }
+        const into = c.game.saved.openings.findIndex((o) => place(c.game.cells(), o.cells).fits)
+        if (into >= 0) c.tap({ type: 'opening', i: into })
+        else if (n % 5 === 4) c.tap({ type: 'bear', who: 0 })
+        else c.tap({ type: 'load' })
+        c.settle()
+      }
+      expect(c.game.saved.finished).toBe(true)
+    }
+  }, 60000)
+
+  it('a heave tapped twice with a turn between is made once and never walks for ever', () => {
+    const c = child(house([['sofa', 1], ['bath', 1], ['lamp', 1]]))
+    for (const what of ['load', 'opening', 'load', 'opening'] as const) c.tap(what === 'load' ? { type: 'load' } : { type: 'opening', i: 0 })
+    c.settle()
+    expect(c.game.act).toBeNull()
+    expect(c.game.wants).toHaveLength(0)
+  })
+
+  it('the cart tapped during the last heave brings nothing', () => {
+    const c = child(house([['bath', 0], ['sofa', 0], ['lamp', 2]]))
+    for (let k = 0; k < 2; k++) { c.tap({ type: 'opening', i: 0 }); c.settle(); c.tap({ type: 'cart' }); c.wait(3) }
+    c.tap({ type: 'opening', i: 0 }); c.wait(0.3); c.tap({ type: 'cart' })
+    c.wait(25)
+    expect(c.game.saved.finished).toBe(true)
+  })
+})
+
 describe('what stands where', () => {
   it('a load in the hands and the bears stay clear of every opening, as drawn', () => {
     for (const kind of KINDS) for (let turn = 0; turn < 4; turn++) {

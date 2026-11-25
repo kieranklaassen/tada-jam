@@ -20,7 +20,7 @@ const ACCENT = [C.pink, C.mint, C.vanilla, C.sky]
 
 export class Stage {
   readonly scene = new THREE.Scene()
-  readonly camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 80)
+  readonly camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 180)
   readonly look = makeLook()
   private readonly house = new THREE.Group()
   private readonly upper = new THREE.Group()
@@ -67,9 +67,9 @@ export class Stage {
     this.kitchen = add('kitchen', new THREE.PlaneGeometry(40, 14), new THREE.MeshBasicMaterial({ map: this.look.textures.kitchen }))
     this.kitchen.position.set(0, 2.9, -9)
     const cloth = this.look.textures.gingham
-    cloth.repeat.set(24, 9)
-    this.floor = add('cloth', new THREE.PlaneGeometry(60, 24).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ map: cloth, roughness: 0.95 }))
-    this.floor.position.set(0, 0, 3)
+    cloth.repeat.set(24, 40)
+    this.floor = add('cloth', new THREE.PlaneGeometry(60, 100).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ map: cloth, roughness: 0.95 }))
+    this.floor.position.set(0, 0, 41)
     // The house: lower wall, upper wall with the openings (which lifts off), and the loft behind.
     this.scene.add(this.house)
     const cube = join([paint(box(0.99, 0.99, 0.95, 0.12, 0, 0, 0, 1), '#ffffff')], 'cube')
@@ -140,6 +140,13 @@ export class Stage {
     return this.colour.multiplyScalar(0.95 + n * 0.05)
   }
 
+  /** Something in each material, to be compiled before it is first needed. */
+  samples(): THREE.Group {
+    const group = new THREE.Group(), geometry = paint(new THREE.BoxGeometry(0.01, 0.01, 0.01), '#ffffff')
+    for (const one of Object.values(this.look)) if (one instanceof THREE.Material) group.add(new THREE.Mesh(geometry, one))
+    return group
+  }
+
   /** The grain is what a slower tier sheds: each material with and without it is compiled ahead by `warm`. */
   setGrain(on: boolean): void {
     for (const [material, map] of [[this.look.sugar, this.look.textures.sugar], [this.look.crumb, this.look.textures.crumb]] as const) {
@@ -156,7 +163,7 @@ export class Stage {
     const spare = tall * 2 - (VIEW.high - VIEW.low), mid = (low + VIEW.high) / 2 + Math.max(0, spare) * 0.06
     this.camera.left = -half; this.camera.right = half; this.camera.top = tall; this.camera.bottom = -tall
     // Looking along the pitch at a point that is drawn at (0, mid).
-    const y = mid / Math.cos(PITCH), reach = 30
+    const y = mid / Math.cos(PITCH), reach = 100
     this.camera.position.set(0, y + Math.sin(PITCH) * reach, Math.cos(PITCH) * reach)
     this.camera.rotation.set(-PITCH, 0, 0)
     this.camera.updateProjectionMatrix()
@@ -295,6 +302,7 @@ export class Stage {
 
   dispose(): void {
     this.scene.traverse((o) => { const mesh = o as THREE.Mesh; mesh.geometry?.dispose(); const mat = mesh.material; for (const one of Array.isArray(mat) ? mat : mat ? [mat] : []) one.dispose(); if ((o as THREE.InstancedMesh).isInstancedMesh) (o as THREE.InstancedMesh).dispose() })
+    for (const one of Object.values(this.look)) if (one instanceof THREE.Material) one.dispose()
     this.look.dispose()
   }
 }

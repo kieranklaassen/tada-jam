@@ -1,5 +1,5 @@
 import type { Cell, Way } from './cells'
-import { FIRST, layHouse, type House, type Laid, type Opening } from './houses'
+import { FIRST, layHouse, solvable, type House, type Laid, type Opening } from './houses'
 import { isKind, type Kind } from './loads'
 import { STATE_VERSION, deserialize as readPosition, freshState, isRecord, type GameState } from './state'
 
@@ -68,6 +68,8 @@ function readHouse(raw: unknown): House | null {
   if (!isRecord(raw) || !Array.isArray(raw.loads) || raw.loads.length !== 3) return null
   const openings = readOpenings(raw.openings), loads = raw.loads.map(readLaid)
   if (!openings || loads.some((laid) => !laid) || new Set(loads.map((laid) => laid!.kind)).size !== 3) return null
+  // A house that cannot be finished is no house.
+  if (!(loads as Laid[]).every((laid) => { const way = solvable(laid, openings); return way.byTurning || way.bySwap })) return null
   return { openings, loads: loads as Laid[] }
 }
 

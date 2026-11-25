@@ -13,6 +13,14 @@ export class View {
     this.renderer.toneMappingExposure = 1.12
   }
 
+  /** Compiles every material with the grain and without it, so no tier change and no first load does it in play. */
+  warm(): void {
+    const samples = this.stage.samples()
+    this.stage.scene.add(samples)
+    for (const grain of [false, true]) { this.stage.setGrain(grain); this.renderer.compile(this.stage.scene, this.stage.camera) }
+    this.stage.scene.remove(samples)
+  }
+
   resize(width: number, height: number, ratio: number): void {
     this.renderer.setPixelRatio(ratio)
     this.renderer.setSize(width, height, false)
