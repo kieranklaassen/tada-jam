@@ -3,43 +3,33 @@
 
 ## Status
 
-- Stage: template copied. No sheet yet.
-- Look in use: none yet.
-- Open: the design sheet in `ART.md` and its check.
-
-The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Ask for the sheet's check by writing `Open: sheet ready for check, round N` here; when it passes, record the round and the commit it judged. Someone with no session to read resumes from this block and the files. The two parts below belong to the block.
+- Stage: gates.
+- Look in use: thick-line primaries, first choice. Ink brush was not needed.
+- Sheet: round 1 was read by a fresh checker. Twelve findings, eleven taken. On the twelfth (any touch ends a reaction at once) the game keeps the reaction for its first two seconds, for the reason the sheet gives. No second round was run.
+- Open: no physical iPad, no listening test and no child yet.
 
 ### Template notes
 
-No entry yet. One entry a file copied from the template, written for the lead and for the games that come after: used as copied, or what was changed and why, and what is wrong or missing that any game would need. Mark a fault or a gap **for the template**. A frozen file is never changed here: a fault in one is a request to the lead.
+`state.ts`, `scene.ts` and their tests are not used: there is no ladder and no beat list; `save.ts` and `acts.ts` take their place. `guidance.ts` glows at 1.5 s and shows the hand at 3 s. The rest is used as copied.
 
 ### For the owner to decide
 
-Nothing yet. One line for each thing only the owner can settle: the look and the toy at the toy checkpoint, a default the game would like changed, and anything the guide does not rule on.
+- The foot goes in by itself 2.6 s after the last thing lands. Longer gives more time for a second thing, shorter brings the laugh nearer.
+- An animal family and a grandmother; no saint, no helper.
 
 ## Pass log
 
-No pass yet. One row per pass: what was looked at, the critique written as the child, the one themed fix set, what was reverted, the measured frame rate, and what is still weak.
-
 | Pass | Looked at | Critique | Fix set | Frame rate | Still weak |
 | --- | --- | --- | --- | --- | --- |
+| 1 | first frame, opener, night, morning at 1180 by 820 | toes stuck out behind the boot; things floated in an open handle; feet missed their holes in the blanket | the foot points down as it goes in; a white-lined lid behind the heap; pillows over shoes | | |
+| 2 | 30 rows of five moments, all five owners | a landing squashed in one frame; the bear's boot sank through the floor; the horse left the frame; a treat the frog ate never showed | squash eased; a leaning owner stands on its edge; smaller rear; the treat pops up before it is gulped | | |
+| 3 | idle, morning | yellow rings were lost on white; raised legs hid faces in the row; the next owner popped in during a reaction | yellow discs; a lower foot in the row; the next owner slides in when the round is over | 6 ms of script a frame at the 95th percentile (Chrome at 6x throttle, pixel ratio 2, production build, software renderer); up to 209 fills and strokes in the probe's play | absolute frame rate needs a device |
+| 4 | a fresh reading of the code | twelve findings: a busy finger could hold the foot back for ever; a tap during a reaction was lost; the room ended at the stage on a wide screen; others smaller | all twelve fixed, the first two with tests | not measured again | |
+
+Cold play, hands off: the grandmother looks at the boot, the frog goes in by itself, the foot goes in, she is carried off and back, and the basket glows. First touch: any thing goes in and the foot follows. Nothing unclear was found by the builder, who is not a child.
 
 ## For the pull request
 
-Written as the game is built and kept at the end of this file: the pull request is made from it.
-
-### How the game meets the quality bar
-
-Nothing yet. One entry for each line of the quality bar, saying how the game meets it so far. Each frame rate comes with the engine, the throttle, the pixel ratio and the build it was measured on, and with whether a physical iPad was measured.
-
 ### The learning claim
 
-Nothing yet. The claim as the sheet has it, with each record's standing and its check state read again on the day of the pull request, in the pack's Summary or the game's own words only. A game with no learning goal says so.
-
-### Defaults taken for the owner
-
-Nothing yet. Each default the game took in the owner's place, from the guide or from its own sheet.
-
-### What the next builder should know
-
-Nothing yet. What this build taught that the guide and the template do not say.
+None. The game has no learning goal.

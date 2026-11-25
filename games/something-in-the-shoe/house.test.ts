@@ -60,6 +60,8 @@ describe('the round', () => {
     const h = new House(old((s) => { s.shoes.oma = ['carrot'] }))
     run(h, 12)
     expect(h.busy).toBe(false)
+    tapAt(h, { x: 400, y: 60 }); run(h, 6)
+    expect(h.busy).toBe(false)
     tapAt(h, FOOT)
     expect(h.busy).toBe(true)
   })
@@ -95,6 +97,22 @@ describe('the round', () => {
     const p = h.homeOf('frog'), on = h.at(p)
     h.press(on, p); h.take(on, p); h.move({ x: 500, y: 300 }); h.cancel()
     expect(h.things.frog.where).toBe('home')
+  })
+})
+
+describe('what a busy child does', () => {
+  it('still sees what came of it, however often it touches the room', () => {
+    const h = new House(old())
+    tap(h, 'frog')
+    for (let i = 0; i < 4 && !h.busy; i++) { run(h, 1); tapAt(h, { x: 400, y: 60 }) }
+    expect(h.busy).toBe(true)
+  })
+  it('gets the next owner, the night or a thing it asked for too soon', () => {
+    const h = new House(old())
+    run(h, 1); tap(h, 'bell'); run(h, 0.8); tapAt(h, FOOT); run(h, 0.5); tapAt(h, { x: 20, y: 620 }); run(h, 9)
+    expect(h.owner).toBe('bear')
+    tapAt(h, { x: 20, y: 620 }); run(h, 0.3); tap(h, 'frog'); run(h, 1.8)
+    expect(h.shoes.goose).toEqual(['frog'])
   })
 })
 

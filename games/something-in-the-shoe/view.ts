@@ -4,7 +4,7 @@ import { drawBits, drawBoot, drawBootBack, drawFoot, drawItem, drawLeg, drawOwne
 import { handPose, type Guidance, type HandPose } from './guidance'
 import { moveToShow } from './guide'
 import type { Group, House } from './house'
-import { BED, PEEK, PEEP, pillow } from './layout'
+import { BED, FLOOR, PEEK, PEEP, pillow } from './layout'
 import { OWNERS } from './owners'
 import { PAD, drawBasket, drawBasketBack, drawCat, drawSky, paintRoom } from './scenery'
 import { STAGE, fit } from './stage'
@@ -44,14 +44,27 @@ export class View {
     pen.drawImage(this.room[i], -PAD, -PAD, STAGE.width + PAD * 2, STAGE.height + PAD * 2)
     this.b.laid++
   }
+  /** The room's two colours over everything that can be seen, whatever the surface's shape. */
+  private ground(pen: CanvasRenderingContext2D, dark: number): void {
+    for (const [a, wall, floor] of [[1, C.blue, C.green], [dark, C.night, '#0f5a3c']] as const) {
+      if (a <= 0) continue
+      pen.globalAlpha = a
+      pen.fillStyle = wall; pen.fillRect(-2400, -2400, 6000, 2400 + FLOOR - 74)
+      pen.fillStyle = floor; pen.fillRect(-2400, FLOOR - 74, 6000, 3000)
+    }
+    pen.globalAlpha = 1
+    this.b.laid += 2
+  }
   bare(pen: CanvasRenderingContext2D, width: number, height: number, dpr: number): void {
     this.set(pen, width, height, dpr)
+    this.ground(pen, 0)
     this.stamp(pen, 0)
   }
 
   draw(pen: CanvasRenderingContext2D, h: House, width: number, height: number, dpr: number, guidance: Guidance | null): number {
     this.set(pen, width, height, dpr)
     const b = this.b, t = h.time, dark = h.dark
+    this.ground(pen, dark)
     if (dark < 1) this.stamp(pen, 0)
     if (dark > 0) { pen.globalAlpha = dark; this.stamp(pen, 1); pen.globalAlpha = 1 }
     drawSky(b, dark, h.sunPoke, t)
@@ -59,28 +72,34 @@ export class View {
     const busy = h.busy, first = groups[0].frame.pose
     if (h.bed < 0.4) drawCat(b, busy ? -0.9 : h.finger ? Math.sign(h.finger.x - 800) * 0.8 : Math.sin(t * 0.5) * 0.6, busy ? 0.5 : 0.8, h.catPoke, t, busy && first.eyes === 'wide')
     if (h.bed > 0) this.bed(h, t)
-    if (h.peeking) drawPeek(b, h.peeking, PEEK.x - (1 - spring(h.peekIn)) * 230, PEEK.y, t)
+    if (h.peeking) drawPeek(b, h.peeking, h.peekX - (1 - spring(h.peekIn)) * 230 + Math.abs(Math.sin(h.peekPoke * 7)) * h.peekPoke * 34, PEEK.y, t)
     const bx = h.basketX
-    if (bx < 340) drawBasketBack(b, bx)
+    pen.translate(0, h.basketY)
+    drawBasketBack(b, bx)
+    pen.translate(0, -h.basketY)
     // The glow: a fat yellow ring round what can be touched next.
     const glow = guidance ? guidance.glow : 0
-    const empty = h.phase === 'day' ? h.shoes[h.owner].length === 0 : true
     for (const id of THINGS) {
       const thing = h.things[id]
       if (thing.where !== 'home') continue
       const at = h.homeOf(id), q = thing.squash, wob = q > 0 ? Math.sin(q * 15) * q * 0.22 : 0
       const lively = h.phase === 'day' && id === 'frog' ? Math.max(0, Math.sin(t * 1.1)) ** 12 * 10 : 0
-      const bob = glow > 0 && move && empty ? Math.sin(t * 5 + at.x) * 5 * glow : 0
+      const bob = glow > 0 && move?.thing ? Math.sin(t * 5 + at.x) * 5 * glow : 0
       const jump = thing.queued ? Math.abs(Math.sin(t * 9)) * 20 : 0
-      if (glow > 0 && move && empty && bx === 0) { pen.globalAlpha = glow; b.dot(at.x, at.y + bob, 58 + Math.sin(t * 4) * 3, 54 + Math.sin(t * 4) * 3, C.yellow); pen.globalAlpha = 1 }
+      if (glow > 0 && move?.thing && bx === 0) { pen.globalAlpha = glow; b.dot(at.x, at.y + bob, 58 + Math.sin(t * 4) * 3, 54 + Math.sin(t * 4) * 3, C.yellow); pen.globalAlpha = 1 }
       drawThing(b, id, at.x, at.y - lively + bob - jump, 0, 1 + wob, 1 - wob)
     }
-    if (bx < 340) drawBasket(b, bx)
+    pen.translate(0, h.basketY)
+    drawBasket(b, bx)
+    pen.translate(0, -h.basketY)
+    // What is not a thing glows by itself when it is next.
+    if (glow > 0 && move && !move.thing) { pen.globalAlpha = glow * 0.9; b.ring(move.from.x, move.from.y, 84 + Math.sin(t * 4) * 5, 0, 6.283, 13, C.yellow); pen.globalAlpha = 1 }
     for (const g of groups) this.group(g, h)
     for (const id of THINGS) {
       const thing = h.things[id]
       if (thing.where === 'air' || thing.where === 'hand') drawThing(b, id, thing.x, thing.y, thing.rot, thing.where === 'hand' ? 1.15 : 1, thing.where === 'hand' ? 1.15 : 1)
     }
+    for (const q of h.puffs) b.ring(q.x, q.y, 16 + q.t * 70, 0, 6.283, 9 * (1 - q.t * 2), C.white)
     if (move && guidance && guidance.demo !== null) this.ghost(move, guidance.demo)
     return b.laid
   }

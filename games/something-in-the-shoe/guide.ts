@@ -21,7 +21,7 @@ export function moveToShow(house: House, guidance: Guidance): Move | null {
     return tap(SUN)
   }
   if (house.shoes[house.owner].length > 0) return tap(house.world(STAGE_PLACE, { x: ANKLE.x + 40, y: ANKLE.y + 30 }))
-  if (house.begun && n === 1) return tap({ x: PEEK.x + 30, y: PEEK.y })
+  if (house.begun && n === 1) return tap({ x: house.peekX + 30, y: PEEK.y })
   if (house.begun && n === 3) return tap(SUN)
   const id = (['porridge', 'bell', 'frog'] as const)[n % 3]
   return { from: house.homeOf(id), to: house.mouthOf(house.owner), drag: true, thing: id }

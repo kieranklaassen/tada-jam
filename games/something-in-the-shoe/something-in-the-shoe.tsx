@@ -57,6 +57,14 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       else view.bare(pen, width, height, dpr)
     }
 
+    /** How far the room goes on past the stage at either side. */
+    const edges = () => {
+      const by = fit(width, height)
+      if (!house || by.scale <= 0) return
+      house.left = -by.x / by.scale
+      house.right = (width - by.x) / by.scale
+    }
+
     // The shell can resize the surface without a window resize event, so the surface watches itself.
     // Returns whether it sized the surface, and so drew it.
     const resize = (): boolean => {
@@ -66,6 +74,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       const ratio = Math.min(window.devicePixelRatio || 1, governor.settings.dpr)
       if (w === width && h === height && ratio === dpr) return false
       width = w; height = h; dpr = ratio
+      edges()
       // Sizing the backing store wipes the surface, so it is redrawn at once.
       canvas.width = Math.round(w * ratio); canvas.height = Math.round(h * ratio)
       draw()
@@ -203,6 +212,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     ctxRef.current.storage.load<unknown>().catch(() => null).then((value) => {
       if (disposed) return
       house = new House(deserialize(value))
+      edges()
       // The load draws the first frame itself: a game that is resting when the slot comes back has no frame coming.
       draw()
     })

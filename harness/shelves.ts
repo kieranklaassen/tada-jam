@@ -42,6 +42,7 @@ export const SHELVES: readonly Shelf[] = [
       'wash-day': 'Scrub, wring and peg out the muddy clothes. And the cat.',
       'shes-copying-me': 'Move one aunt’s hand and the other copies with whatever she holds.',
       'cosy-scarf': 'Knit stripes for a cold animal until it dances.',
+      'something-in-the-shoe': 'Put a frog in the boot and see what the bare foot does.',
       'hats-for-all': 'Pop out foam hats until every head has one.',
     },
   },

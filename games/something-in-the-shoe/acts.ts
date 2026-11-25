@@ -447,6 +447,8 @@ export type Cue = { at: number; sound: string }
 /** Every sound of an act, timed from the foot starting down. */
 export function cuesOf(found: readonly ThingId[], owner: OwnerId): Cue[] {
   const name = actOf(found), c0 = PLUNGE + HUSH, cues: Cue[] = [{ at: 0.4, sound: 'plunge' }, { at: 0.5, sound: `find.${all0(found)}` }]
+  // A pair is heard as both.
+  if (found.length > 1) cues.push({ at: 0.72, sound: `find.${inOrder(found)[1]}` })
   const add = (at: number, sound: string): void => { cues.push({ at: c0 + at, sound }) }
   const yelp = `yelp.${owner}`, gig = `giggle.${owner}`
   const at = (times: readonly number[], sound: string): void => times.forEach((t) => add(t, sound))
