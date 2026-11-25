@@ -7,9 +7,11 @@ import { BACKDROP, SAVE_THROTTLE_MS } from './config'
 import { Game } from './game'
 import type { Guidance } from './guidance'
 import { bottomPortraitsManifest } from './manifest'
+import { fingerOn, openingBeats } from './opening'
 import { Overlay } from './overlay'
 import { installJamPerf } from './perf'
 import { Play } from './play'
+import { OpeningRound } from './round'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
 import { SaveCadence } from './saveCadence'
 import { shownOf } from './show'
@@ -45,6 +47,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, ...view.counts }))
     // The game itself, once the slot has been read. Until then nothing is drawn.
     let play: Play | null = null
+    let round: OpeningRound | null = null
     let disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
     /** What the idle ladder shows now, for the draw; null until the first frame. */
     let guidance: Guidance | null = null
@@ -61,6 +64,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const flush = (): void => {
       const game = play?.game
       if (!game) return
+      // Nothing the opening round did is kept until the child has touched something.
+      if (round?.active) game.dirty = game.urgent = false
       const voice = band.take(game)
       if (voice) audio.play(voice)
       if (game.dirty) {
@@ -98,7 +103,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const draw = () => {
       if (width <= 0 || height <= 0) return
       if (!play) return
-      view.update(shownOf(play, guidance))
+      view.update(shownOf(play, guidance, round?.hand ?? null))
       view.render()
     }
 
@@ -130,6 +135,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const onDown = (event: PointerEvent) => {
       if (!attention.awake) return
       audio.touchDown()
+      round?.stop()
       const where = at(event)
       if (fingers.size === 0) first = event.pointerId
       fingers.add(event.pointerId)
@@ -180,6 +186,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       const step = clock.advance(now)
       const start = performance.now()
       if (play) {
+        if (round?.active) { round.advance(step, now); play.ladder.touch(play.game.time) }
         guidance = play.step(step)
         flush()
         // The last of a burst of touches is handed over once they stop.
@@ -207,7 +214,10 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       first = null
       overlay.forget()
       if (!play) return
+      const alone = round?.active
+      round?.stop()
       play.park()
+      if (alone) play.game.dirty = play.game.urgent = false
       band.silence()
       flush()
       guidance = null
@@ -234,6 +244,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       // was left: nothing eases in, no scene replays and nothing sounds.
       play = new Play(new Game(loadTable(value, ctxRef.current.childAge)))
       play.size(width, height)
+      if (value === null || value === undefined) round = new OpeningRound(openingBeats(play), fingerOn(play))
       // The load draws the first frame itself: a game that is resting or parked has no frame coming.
       // The room is drawn once before a picture is painted from it: whoever watches the renderer (the intersection
       // audit does) takes the first camera that draws the room for the child's.

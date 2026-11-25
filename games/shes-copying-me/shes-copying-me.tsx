@@ -6,6 +6,8 @@ import { GameAudio, voiceOf, type Note } from './audio'
 import { BACKDROP } from './config'
 import { IdleLadder, type Guidance } from './guidance'
 import { shesCopyingMeManifest } from './manifest'
+import { fingerOn, openingBeats } from './opening'
+import { OpeningRound } from './round'
 import { Overlay, inCorner } from './overlay'
 import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
@@ -46,6 +48,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       sheet.height = h
       return { canvas: sheet, g: sheet.getContext('2d')! }
     })
+    // One whole round, shown once on a first visit (round.ts).
+    let round: OpeningRound | null = null
     let party: Party | null = null, guidance: Guidance | null = null
     let disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
     // Nothing is saved until the slot has been read, so an early put-away cannot overwrite it.
@@ -58,7 +62,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
 
     const draw = () => {
       if (!g || width <= 0 || height <= 0) return
-      view.draw(g, width, height, dpr, party, guidance)
+      view.draw(g, width, height, dpr, party, guidance, round?.hand ?? null)
       drawn.drawCalls = view.drawn
     }
 
@@ -71,6 +75,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
         const notes: Note[] = events.flatMap(soundOf)
         if (notes.length) audio.play(voiceOf(notes))
       }
+      // Nothing the opening round did is kept until the child has touched something.
+      if (round?.active) party.dirty = false
       if (party.dirty) {
         cadence.change(performance.now(), true)
         party.dirty = false
@@ -102,6 +108,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const onDown = (event: PointerEvent) => {
       if (!attention.awake) return
       audio.touchDown()
+      round?.stop()
       ladder.touch(clock.seconds)
       const where = at(event)
       // The grown-up's corner is bare: it answers as the wall does.
@@ -146,9 +153,11 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       const step = clock.advance(now)
       const start = performance.now()
       // A hand at work, a copy on its way and a scene are not idleness.
+      if (round?.active) ladder.touch(clock.seconds)
       if (party && (party.touching || party.scene || party.hands[0].busy || party.hands[1].busy)) ladder.touch(clock.seconds)
       guidance = ladder.update(clock.seconds)
       if (party) {
+        round?.advance(step, now)
         party.step(step)
         answer()
         view.step(step)
@@ -177,6 +186,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       frame = 0
       clock.rest()
       overlay.forget()
+      round?.stop()
       party?.clear()
       view.bits.clear()
       answer()
@@ -188,6 +198,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       if (disposed) return
       // A saved position wins; `childAge` only chooses where a first visit starts.
       party = new Party(deserialize(value, ctxRef.current.childAge))
+      if (value === null || value === undefined) round = new OpeningRound(openingBeats(party), fingerOn(party))
       draw()
     })
     applyTier()

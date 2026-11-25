@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { ForgivingTouch, type Point } from './input'
 import { ROPE, SHELF_ORDER, VESSELS, bodyMiddle, homeOf, onThing, slotOf } from './layout'
-import { put } from './house'
 import { Play } from './play'
 import { below, makeRng } from './rng'
 import { deserialize, serialize } from './save'
@@ -78,7 +77,7 @@ describe('an idea', () => {
     const h = new Hands().put('red-sock', 'soup').settle()
     asSaved(h.play)
     expect(h.play.shown.king).toEqual({ mode: 'rest', where: 'soup' })
-    expect(h.play.dreaming).toBe(true)
+    expect(h.play.saved.dreaming).toBe(false)
   })
   it('is changed by a second thing while he is in the middle of the first', () => {
     const h = new Hands().put('red-sock', 'soup').frames(200).put('blue-sock', 'soup').settle()
@@ -179,8 +178,10 @@ describe('the finger', () => {
 })
 
 describe('the wish', () => {
-  it('comes after the first errand, is met, and the next waits for a poke', () => {
-    const h = new Hands().put('yellow-hat', 'bed').settle()
+  it('is there from the start, is met, and the next waits for a poke, in a tidy house', () => {
+    const h = new Hands()
+    expect(h.play.dreaming).toBe(true)
+    h.put('yellow-hat', 'bed').settle()
     expect(h.play.dreaming).toBe(true)
     expect(WISHES[h.play.saved.wish].id).toBe('king-soup')
     h.put('red-hat', 'soup')
@@ -191,7 +192,8 @@ describe('the wish', () => {
     expect(h.play.scene).toBeNull()
     h.frames(600)
     expect(h.play.dreaming).toBe(false)
-    h.tap(h.where('gran')).frames(5)
+    h.tap(h.where('gran')).frames(200)
+    expect(THINGS.every((one) => h.play.house.at[one.id] === 'home')).toBe(true)
     expect(h.play.dreaming).toBe(true)
     expect(isMet(WISHES[h.play.saved.wish], h.play.house)).toBe(false)
   })
@@ -263,28 +265,21 @@ describe('any play', () => {
 
 
 describe('what the review found', () => {
-  it('the ghost hand never shows the wish, dreamed or to come', () => {
-    for (let wish = 0; wish < WISHES.length; wish++) {
-      const play = new Hands().play
-      play.saved.wish = wish
-      for (let index = 0; index < 6; index++) {
-        const move = play.demo(index)!
-        const place = PLACES.find((one) => VESSELS[one].x === move.to.x)!
-        expect(isMet(WISHES[wish], put(play.house, move.id!, place)), WISHES[wish].id).toBe(false)
-      }
-    }
-  })
-  it('a wish made true before it was on show is not dreamed, and not saved as a joke seen', () => {
+  it('the ghost hand followed meets every dream, one after the other, for ever', { timeout: 60000 }, () => {
     const h = new Hands()
-    h.carry(h.where('yellow-hat'), over('bed')).frames(4)
-    h.carry(h.where('red-hat'), over('soup')).frames(4)
-    expect(isMet(WISHES[0], h.play.house)).toBe(true)
-    const stored = serialize(h.play.saved, h.play.dreamShown > 0)
-    expect(stored.dreaming).toBe(true)
-    expect(stored.wish).not.toBe('king-soup')
-    h.frames(60 * 25)
-    expect(h.play.dreaming).toBe(true)
-    expect(isMet(WISHES[h.play.saved.wish], h.play.house)).toBe(false)
+    for (let wish = 0; wish <= WISHES.length; wish++) {
+      const was = h.play.saved.wish
+      for (let n = 0; n < 8 && h.play.saved.dreaming; n++) {
+        const move = h.play.demo()!
+        expect(move, WISHES[was].id).not.toBeNull()
+        h.carry(move.from, move.to)
+        h.frames(60 * 30)
+      }
+      expect(h.play.saved.dreaming, WISHES[was].id).toBe(false)
+      expect(h.play.demo()!.what).toBe('gran')
+      h.tap(h.where('gran')).frames(240)
+      expect(h.play.dreaming).toBe(true)
+    }
   })
   it('what the child takes out of his hands is told to him', () => {
     const h = new Hands()

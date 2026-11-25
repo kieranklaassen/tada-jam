@@ -50,6 +50,7 @@ export const SHELVES: readonly Shelf[] = [
     title: 'Run a silly shop',
     label: 'Silly shops',
     games: {
+      'crocodile-jumper': 'Lay sausages along a cold crocodile and a jumper grows on him.',
       'monster-pizza': 'Make the pizza on the card for a very hungry monster.',
       'bread-day': 'Knead, rise and bake in a badger’s bakery.',
       'tea-time': 'Pour the tea just the way each guest likes it.',

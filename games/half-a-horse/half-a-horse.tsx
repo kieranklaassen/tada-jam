@@ -10,6 +10,8 @@ import { halfAHorseManifest } from './manifest'
 import { Overlay, inCorner } from './overlay'
 import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
+import { openingBeats } from './opening'
+import { OpeningRound } from './round'
 import { SaveCadence } from './saveCadence'
 import { Play } from './play'
 import { makeRng, seedOf } from './rng'
@@ -43,6 +45,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const drawn = { drawCalls: 0, triangles: 0 }
     const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, ...drawn }))
     const view = new YardView(canvas)
+    // One whole round, shown once on a first visit (round.ts).
+    let round: OpeningRound | null = null
     let play: Play | null = null, disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
     // What the loop hands the draw, as `drawn` is what the draw hands back. `guidance` is what the idle ladder
     // shows now, and null until the first frame: the loop keeps what `ladder.update` returns, so the glow and the
@@ -82,7 +86,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // land off by the ratio on a tablet, and right on a display of ratio 1.
     const draw = () => {
       if (width <= 0 || height <= 0) return
-      view.draw(play, playing.guidance, governor.settings)
+      view.draw(play, playing.guidance, governor.settings, round?.hand ?? null)
       drawn.drawCalls = view.tally.stamps + view.tally.pen
     }
     // What the play queued while it answered: played as one voice, so a first touch keeps all of it for the unlock.
@@ -93,6 +97,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
         audio.play(voiceOf(play.heard))
         play.heard = []
       }
+      // What the hand shows is not the child's doing, and is not saved.
+      if (round?.active) play.changed = play.urgent = false
       if (play.changed) {
         // A scene's outcome is written at once; a rub, a drip or a drop at the throttle.
         cadence.change(performance.now(), play.urgent)
@@ -137,6 +143,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       if (!attention.awake || play === null || view.fit.scale === 0) return
       audio.touchDown()
       ladder.touch(clock.seconds)
+      round?.stop()
       const where = at(event)
       if (first === null) {
         first = event.pointerId
@@ -186,11 +193,12 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       // A finger that is working is not idle: a hold or a slow drag keeps the ladder at the bottom.
       // A scene that is playing is not idleness either. A game with short scenes makes the same call for as long
       // as one runs (`if (scene.running) ladder.touch(clock.seconds)`), or the ghost hand comes up over the scene.
-      if (play?.busy) ladder.touch(clock.seconds)
+      if (round?.active || play?.busy) ladder.touch(clock.seconds)
       // What to show an idle child: a glow on what can be touched, then one move.
       playing.guidance = ladder.update(clock.seconds)
       // The play plays the step: what is in the air flies on, the springs ring, the ridges tick.
       if (play) {
+        round?.advance(playing.step, now)
         play.step(playing.step)
         settle()
       }
@@ -224,6 +232,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       clock.rest()
       overlay.forget()
       first = null
+      round?.stop()
       play?.clear()
       settle()
       cadence.settle(performance.now())
@@ -234,6 +243,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       if (disposed) return
       // A saved position wins; `childAge` only chooses where a first visit starts.
       play = new Play(deserialize(value), makeRng(seedOf(window.location.search)).next)
+      if (value === null || value === undefined) round = new OpeningRound(openingBeats(play), play)
       slop()
       view.warm()
       // The game sets itself up from the state here, as it was left: nothing eases in and no scene replays.
