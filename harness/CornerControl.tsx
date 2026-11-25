@@ -6,9 +6,10 @@ import { useEffect, useRef, type PointerEvent } from 'react'
 
 export const HOLD_MS = 1000
 
-export function CornerControl({ onHome, onHold, holdLabel }: { onHome: () => void; onHold: () => void; holdLabel: string }) {
+export function CornerControl({ onHome, onHold, holdLabel }: { onHome: () => void; onHold?: () => void; holdLabel?: string }) {
   const timer = useRef<number | null>(null)
   const held = useRef(false)
+  const pressed = useRef(false)
 
   const clear = () => {
     if (timer.current !== null) window.clearTimeout(timer.current)
@@ -19,15 +20,24 @@ export function CornerControl({ onHome, onHold, holdLabel }: { onHome: () => voi
   const down = (event: PointerEvent<HTMLButtonElement>) => {
     if (!event.isPrimary) return
     held.current = false
+    pressed.current = true
     clear()
+    if (!onHold) return
     timer.current = window.setTimeout(() => {
       timer.current = null
       held.current = true
       onHold()
     }, HOLD_MS)
   }
+  const up = () => {
+    pressed.current = false
+    clear()
+  }
   // A finger that slides off or is cancelled neither goes home nor counts as a hold.
+  // A finger that lifts also leaves, between its pointerup and its click, and that is a tap.
   const abandon = () => {
+    if (!pressed.current) return
+    pressed.current = false
     clear()
     held.current = true
   }
@@ -44,6 +54,7 @@ export function CornerControl({ onHome, onHold, holdLabel }: { onHome: () => voi
       aria-label="Home"
       title={holdLabel}
       onPointerDown={down}
+      onPointerUp={up}
       onPointerLeave={abandon}
       onPointerCancel={abandon}
       onClick={click}

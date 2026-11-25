@@ -7,11 +7,11 @@ import foxLandscape from './assets/fox-landscape.webp'
 import tadaMark from './assets/tada-mark.svg'
 import type { JamGame, JamShowcase } from './contract'
 import { Cover } from './Cover'
-import { DemoShelf } from './DemoShelf'
+import { loadDemoCatalog, type Demo } from './demos'
 import { GameCard } from './GameCard'
 import { AGES, readPrefs, writePrefs } from './prefs'
-import { fillShelves, fitsAge, keyOf, lineFor, matches } from './shelves'
-import { useLaunch } from './useLaunch'
+import { demoMatches, fillShelves, fitsAge, fitsBand, keyOf, lineFor, matches, type FilledShelf } from './shelves'
+import { useLaunch, type Open } from './useLaunch'
 import './home.css'
 
 // The jam's home page, for finding something to play. Every game is shown as a
@@ -24,13 +24,14 @@ const ages = (game: JamGame) => `ages ${game.cartridge.manifest.ageBand.join('�
 
 // What was open when a game was picked, so coming home is coming back to the
 // same place. It lives as long as the page does and is saved nowhere.
-const left = { shelf: null as string | null, query: '', scroll: 0 }
+// The demos are kept with it, so the page is as long as it was when its scroll is put back.
+const left = { shelf: null as string | null, query: '', scroll: 0, demos: [] as readonly Demo[] }
 
 const pickOne = <T,>(list: readonly T[]): T | undefined => list[Math.floor(Math.random() * list.length)]
 
 const SURPRISE_MS = 700
 
-type Props = { games: readonly JamGame[]; showcases?: readonly JamShowcase[]; onPick: (key: string) => void; onPickDemo: (key: string) => void }
+type Props = { games: readonly JamGame[]; showcases?: readonly JamShowcase[]; onPick: Open; onPickDemo: Open }
 
 export function GameList({ games, showcases = [], onPick, onPickDemo }: Props) {
   const [childAge, setChildAge] = useState(() => readPrefs().childAge)
@@ -39,8 +40,19 @@ export function GameList({ games, showcases = [], onPick, onPickDemo }: Props) {
   const root = useRef<HTMLDivElement>(null)
   const spotlight = useRef<HTMLDivElement>(null)
 
+  const [demos, setDemos] = useState(left.demos)
+  useEffect(() => {
+    let alive = true
+    void loadDemoCatalog().then((groups) => {
+      left.demos = groups.flatMap((group) => group.demos)
+      if (alive) setDemos(left.demos)
+    })
+    return () => {
+      alive = false
+    }
+  }, [])
   const gameKeys = useMemo(() => new Set(games.map(keyOf)), [games])
-  const shelves = useMemo(() => fillShelves(games), [games])
+  const shelves = useMemo(() => fillShelves(games, demos), [games, demos])
   const fitting = useMemo(() => games.filter((game) => fitsAge(game, childAge)), [games, childAge])
   // The game at the top is a fresh pick on every visit and for every age, never one chosen by date.
   const [surprised, setSurprised] = useState<JamGame | null>(null)
@@ -51,17 +63,19 @@ export function GameList({ games, showcases = [], onPick, onPickDemo }: Props) {
   // A search looks everywhere; otherwise the chosen shelf, the games for the age first and none hidden.
   const shown = shelves
     .filter((s) => searching || shelf === null || s.id === shelf)
-    .map((s) => ({ ...s, games: s.games.filter((game) => matches(game, query)) }))
-  const now = shown.map((s) => ({ ...s, games: searching ? s.games : s.games.filter((game) => fitsAge(game, childAge)) })).filter((s) => s.games.length > 0)
-  const others = searching ? [] : shown.flatMap((s) => s.games.filter((game) => !fitsAge(game, childAge)))
+    .map((s) => ({ ...s, games: s.games.filter((game) => matches(game, query)), demos: s.demos.filter((demo) => demoMatches(demo, query)) }))
+  const fits = (s: FilledShelf) => ({ ...s, games: s.games.filter((game) => fitsAge(game, childAge)), demos: s.demos.filter((demo) => fitsBand(demo.ages, childAge)) })
+  const now = (searching ? shown : shown.map(fits)).filter((s) => s.games.length + s.demos.length > 0)
+  const otherGames = searching ? [] : shown.flatMap((s) => s.games.filter((game) => !fitsAge(game, childAge)))
+  const otherDemos = searching ? [] : shown.flatMap((s) => s.demos.filter((demo) => !fitsBand(demo.ages, childAge)))
 
   useLayoutEffect(() => {
     root.current?.ownerDocument.scrollingElement?.scrollTo?.(0, left.scroll)
   }, [])
   const leave = useCallback(
-    (open: (key: string) => void) => (key: string) => {
+    (open: Open): Open => (key) => {
       left.scroll = document.scrollingElement?.scrollTop ?? 0
-      open(key)
+      return open(key)
     },
     [],
   )
@@ -97,6 +111,19 @@ export function GameList({ games, showcases = [], onPick, onPickDemo }: Props) {
   }, [surprised])
 
   const card = (game: JamGame) => <GameCard key={keyOf(game)} id={keyOf(game)} name={game.cartridge.manifest.name} emoji={game.emoji} art={game.tile} caption={ages(game)} onLaunch={launch} />
+
+  // A demo a game grew from can share its name, so it says which of the two it is.
+  const demoCard = (demo: Demo) => (
+    <GameCard
+      key={`first/${demo.key}`}
+      id={demo.key}
+      cover={`first/${demo.key}`}
+      name={demo.name}
+      emoji={demo.emoji}
+      caption={`${gameKeys.has(demo.game ?? demo.key) ? 'first version · ' : ''}ages ${demo.ages.join('–')}`}
+      onLaunch={launchDemo}
+    />
+  )
 
   return (
     <div className="home" ref={root}>
@@ -150,13 +177,14 @@ export function GameList({ games, showcases = [], onPick, onPickDemo }: Props) {
         <nav className="home-finder" aria-label="Shelves">
           <div className="home-shelf-picks">
             <button type="button" className="home-pick" aria-pressed={shelf === null && !searching} onClick={() => chooseShelf(null)}>
-              All {games.length}
+              All {games.length + demos.length}
             </button>
             {shelves.map((s) => {
               const face = s.games.find((game) => fitsAge(game, childAge)) ?? s.games[0]
+              const demo = s.demos[0]
               return (
                 <button key={s.id} type="button" className="home-pick" aria-pressed={shelf === s.id && !searching} onClick={() => chooseShelf(s.id)}>
-                  <Cover id={keyOf(face)} emoji={face.emoji} art={face.tile} eager />
+                  {face ? <Cover id={keyOf(face)} emoji={face.emoji} art={face.tile} eager /> : <Cover id={`first/${demo.key}`} emoji={demo.emoji} eager />}
                   {s.label}
                 </button>
               )
@@ -169,15 +197,17 @@ export function GameList({ games, showcases = [], onPick, onPickDemo }: Props) {
             <h2 className="home-shelf-title">{s.title}</h2>
             <ul className="home-grid" aria-label={s.title}>
               {s.games.map(card)}
+              {s.demos.map(demoCard)}
             </ul>
           </section>
         ))}
 
-        {others.length > 0 && (
+        {otherGames.length + otherDemos.length > 0 && (
           <section className="home-shelf" aria-label="Made for other ages">
             <h2 className="home-shelf-title">Made for other ages</h2>
             <ul className="home-grid" aria-label="Made for other ages">
-              {others.map(card)}
+              {otherGames.map(card)}
+              {otherDemos.map(demoCard)}
             </ul>
           </section>
         )}
@@ -191,20 +221,15 @@ export function GameList({ games, showcases = [], onPick, onPickDemo }: Props) {
           </p>
         )}
 
-        {shelf === null && !searching && (
-          <>
-            {showcases.length > 0 && (
-              <section className="home-shelf" aria-label="Showcases">
-                <h2 className="home-shelf-title">Bigger adventures</h2>
-                <ul className="home-grid" aria-label="Bigger adventures">
-                  {showcases.map((s) => (
-                    <GameCard key={keyOf(s)} id={keyOf(s)} name={s.cartridge.manifest.name} emoji={s.emoji} art={s.tile} caption={s.requires ?? ages(s)} onLaunch={launch} />
-                  ))}
-                </ul>
-              </section>
-            )}
-            <DemoShelf gameKeys={gameKeys} onLaunch={launchDemo} />
-          </>
+        {shelf === null && !searching && showcases.length > 0 && (
+          <section className="home-shelf" aria-label="Showcases">
+            <h2 className="home-shelf-title">Bigger adventures</h2>
+            <ul className="home-grid" aria-label="Bigger adventures">
+              {showcases.map((s) => (
+                <GameCard key={keyOf(s)} id={keyOf(s)} name={s.cartridge.manifest.name} emoji={s.emoji} art={s.tile} caption={s.requires ?? ages(s)} onLaunch={launch} />
+              ))}
+            </ul>
+          </section>
         )}
       </main>
 

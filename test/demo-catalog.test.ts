@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 // The lab's demo catalog names, for a demo whose game took another name, the
-// jam game it became, and the home page hides the demo on that word alone. The
+// jam game it became, which says what it grew into. The
 // lab imports nothing from the jam, so nothing there can check the name. This
 // reads the catalog as text and checks every such name is a game's folder.
 

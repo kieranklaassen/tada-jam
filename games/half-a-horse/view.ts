@@ -4,12 +4,13 @@ import type { Look, Watcher } from './crowd'
 import { BEAR, GOOSE, animalOf, partOf, type Pose, type Who } from './ends'
 import { Folk } from './folk'
 import { handPose, type Guidance, type HandPose } from './guidance'
-import { BODY, FARMER, GROUND, HANG, LINE, LOFT, PEGS, PIG, POST, PUDDLE, TREE, pegAt } from './layout'
+import { BODY, FARMER, WISH, GROUND, HANG, LINE, LOFT, PEGS, PIG, POST, PUDDLE, TREE, pegAt } from './layout'
 import { paintHem, paintPage } from './page'
-import { demosFor } from './demos'
-import { SIT_DROP, type Play } from './play'
+import { demosFor, wantedPeg } from './demos'
+import { CHEER_S, SIT_DROP, type Play } from './play'
 import { BITS, LINE_POST } from './scenery'
 import { fit, type Fit } from './stage'
+import type { RoundHand } from './round'
 import { Album, CLOTHS, canvas, printOf, type Ctx, type ClothName, type Picture } from './stitch'
 import type { Tier } from './config'
 
@@ -64,6 +65,7 @@ export class YardView {
       if (partOf(end) === 'head') { this.wardrobe.head(end); if (JAWS[end]) this.wardrobe.jaw(end) } else this.wardrobe.tail(end)
     }
     this.wardrobe.ear(); this.wardrobe.pupil()
+    for (let animal = 0; animal < 4; animal++) this.wardrobe.wish(animal)
     for (const who of [GOOSE, BEAR] as const) { this.wardrobe.bare(who); this.wardrobe.peep(who, false); this.wardrobe.peep(who, true) }
     this.folk.all()
     for (const name of ['horse', 'hen', 'elephant', 'croc', 'egg'] as const) this.print(name)
@@ -99,7 +101,7 @@ export class YardView {
   private fill(): void { this.tally.pen++; this.ctx.fill() }
   private stroke(): void { this.tally.pen++; this.ctx.stroke() }
 
-  draw(play: Play | null, guidance: Guidance | null, tier: Tier): void {
+  draw(play: Play | null, guidance: Guidance | null, tier: Tier, round: RoundHand | null = null): void {
     const { ctx } = this
     this.tally.stamps = this.tally.pen = 0
     if (!this.page || this.fit.scale === 0) return
@@ -129,13 +131,16 @@ export class YardView {
     }
     this.pig(play)
     this.puffs(play)
-    this.ghost(play, guidance)
+    this.wish(play, glow)
+    if (round) this.hand(round.x, round.y, round.press, round.opacity, 0)
+    else this.ghost(play, guidance)
   }
 
   // --- The line --------------------------------------------------------------------
 
   private line(play: Play, glow: number): void {
     const { ctx } = this
+    const peg0 = wantedPeg(play), wanted = peg0 === null ? null : play.pegs[peg0]
     ctx.beginPath()
     ctx.moveTo(LINE.left - 14, LINE.y - 8)
     for (let peg = 0; peg < PEGS; peg++) { const at = pegAt(peg); ctx.lineTo(at.x, at.y + Math.sin(play.swing + peg) * play.swing * 6) }
@@ -154,11 +159,13 @@ export class YardView {
       const y = at.y + Math.sin(play.swing + peg) * play.swing * 6
       const away = end === null || play.carried.some((one) => one.peg === peg) || play.flights.some((one) => one.peg === peg)
       if (!away) {
-        const wind = Math.sin(this.now * 1.3 + peg * 1.7) * 0.035 + play.swing * 0.5 + Math.sin(this.now * 26) * play.flutter[peg] * 0.22 + Math.sin(this.now * 5 + peg) * glow * 0.06
+        // The one the wish is short of swings the most.
+        const asked = end === wanted && glow > 0
+        const wind = (asked ? Math.sin(this.now * 7) * 0.2 * glow : 0) + Math.sin(this.now * 1.3 + peg * 1.7) * 0.035 + play.swing * 0.5 + Math.sin(this.now * 26) * play.flutter[peg] * 0.22 + Math.sin(this.now * 5 + peg) * glow * 0.06
         ctx.save()
         ctx.translate(at.x, y)
         ctx.rotate(wind)
-        this.at(this.wardrobe.hung(end), 0, HANG, 0, 1 + play.flutter[peg] * 0.08)
+        this.at(this.wardrobe.hung(end), 0, HANG, 0, 1 + play.flutter[peg] * 0.08 + (asked ? glow * (0.16 + Math.sin(this.now * 5) * 0.06) : 0))
         ctx.restore()
       }
     }
@@ -655,17 +662,30 @@ export class YardView {
     }
   }
 
+  /** What he wishes for hangs over his hat, and grows in anew after each joy. */
+  private wish(play: Play, glow: number): void {
+    if (play.ended || play.cheer < CHEER_S) { this.wished = 0; return }
+    this.wished += (1 - this.wished) * 0.14
+    const pulse = 1 + Math.sin(this.now * 2.4) * 0.025 + Math.sin(this.now * 6) * glow * 0.04
+    this.at(this.wardrobe.wish(play.wish), WISH.x, WISH.y, 0, this.wished * pulse)
+  }
+  private wished = 0
+
+  private hand(x: number, y: number, press: number, opacity: number, lean: number): void {
+    const { ctx } = this
+    ctx.globalAlpha = opacity * 0.95
+    if (press > 0.1) this.at(this.folk.ring(), x, y, 0, 0.36 * press)
+    this.at(this.folk.hand(), x, y + (1 - press) * 22, lean, 1.1 - press * 0.1)
+    ctx.globalAlpha = 1
+  }
+
   private ghost(play: Play, guidance: Guidance | null): void {
     if (!guidance || guidance.demo === null) return
-    const { ctx } = this
     for (const move of demosFor(play, guidance.demoIndex)) {
       const pose = handPose(guidance.demo, move.drag, this.pose)
-      ctx.globalAlpha = pose.opacity * 0.92
       const x = move.from.x + (move.to.x - move.from.x) * pose.travel, y = move.from.y + (move.to.y - move.from.y) * pose.travel
-      if (pose.press > 0.1) this.at(this.folk.ring(), x, y, 0, 0.36 * pose.press)
-      this.at(this.folk.hand(), x, y + (1 - pose.press) * 22, move.lean, 1.1 - pose.press * 0.1)
+      this.hand(x, y, pose.press, pose.opacity, move.lean)
     }
-    ctx.globalAlpha = 1
   }
 }
 
