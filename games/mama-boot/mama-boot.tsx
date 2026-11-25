@@ -7,6 +7,8 @@ import { BACKDROP, TIERS } from './config'
 import type { Guidance } from './guidance'
 import { mamaBootManifest } from './manifest'
 import { Music } from './music'
+import { fingerOn, openingBeats } from './opening'
+import { OpeningRound } from './round'
 import { Overlay, inCorner } from './overlay'
 import { installJamPerf } from './perf'
 import { Play } from './play'
@@ -41,6 +43,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const drawn = { drawCalls: 0, triangles: 0 }
     const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, ...drawn }))
     const view = new View((w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c }, Math.min(window.devicePixelRatio || 1, TIERS[0].dpr))
+    let round: OpeningRound | null = null
     let game: Play | null = null, disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
     let corner: number | null = null
     const playing = { step: 0, guidance: null as Guidance | null }
@@ -52,7 +55,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
 
     const draw = () => {
       if (width <= 0 || height <= 0) return
-      if (game) drawn.drawCalls = view.draw(pen, game.yard, width, height, dpr, playing.guidance, playing.step)
+      if (game) drawn.drawCalls = view.draw(pen, game.yard, width, height, dpr, playing.guidance, playing.step, round?.hand ?? null)
       else view.bare(pen, width, height, dpr)
     }
 
@@ -79,6 +82,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const settle = () => {
       if (!game) return
       const yard = game.yard
+      // Nothing the opening round did is kept until the child has touched something.
+      if (round?.active) yard.changed = 'no'
       if (yard.sounds.length > 0) {
         const notes = yard.sounds.flatMap((s) => notesOf(s.name, s.steps))
         yard.sounds.length = 0
@@ -98,6 +103,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       if (!attention.awake || !game) return
       audio.touchDown()
       music.touch()
+      round?.stop()
       const where = at(event)
       game.down(event.pointerId, where.x, where.y)
       // The grown-up's gesture: a finger in the corner, which the game leaves alone. A palm elsewhere does not undo it.
@@ -139,6 +145,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       playing.step = clock.advance(now)
       music.step(playing.step)
       const start = performance.now()
+      if (round?.active) round.advance(playing.step, now)
       if (game) playing.guidance = game.step(playing.step)
       settle()
       // A tier change is applied ahead of the draw: whatever the game's tiers set in `applyTier`, then the pixel
@@ -167,7 +174,10 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       frame = 0
       clock.rest()
       overlay.forget()
+      const alone = round?.active
+      round?.stop()
       game?.park()
+      if (game && alone) game.yard.changed = 'no'
       settle()
       cadence.settle(performance.now())
     })
@@ -178,6 +188,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       const yard = new Yard(deserialize(value, ctxRef.current.childAge), makeRng(seedOf(window.location.search)))
       game = new Play(yard)
       game.size(width, height)
+      if (value === null || value === undefined) round = new OpeningRound(openingBeats(yard), fingerOn(game))
       // The load draws the first frame itself: a game that is resting when the slot comes back has no frame coming.
       draw()
     })

@@ -123,3 +123,13 @@ The small print: `craft.ts` holds the materials, `figures.ts` the characters, `s
 A rocking tune in G for nylon guitar, soft bass, wooden recorder and glockenspiel. It is played by live-mix (`vendor/live-mix`, whose README links to it): `music.worker.ts` plays the score once on its modelled instruments after the first touch, and `music.ts` runs the result as clips on three tracks. Nothing is a recording, and nothing is fetched but the instruments themselves from the same address.
 
 The mood (`mood.ts`) decides how much is heard. A touch brings the accompaniment and the tune, several touches bring the answering instrument, and a child who stops hears them leave one by one until a trace of the accompaniment is left. The music goes down under each sound the game makes and comes back after it. It rests with the game.
+
+## The loop, made plain
+
+A child at the low end of the band played it and the loop was not clear: what to do, what comes of it, what to do next. Where this section and the rest of this sheet differ, this section holds.
+
+- **The opening round.** With nothing saved, the ghost hand plays one whole round for real (`round.ts`, `opening.ts`): it opens the egg by the boot, then touches the boot, and the chick copies it. Any touch stops it, it plays once, and nothing it did is saved until a touch. It is the one thing that starts by itself.
+- **The loop.** A dashed thread of yarn runs from the asking egg to its mother to be. The mother last followed is touched next. With every egg hatched the hen, tapped twice, tucks all of them in as eggs again and the round starts over. The first layout moved so that the boot stands clear.
+- **The ladder** begins sooner: one glow after 1.5 s, on the next step only, and the hand after 3.5 s.
+
+A picture of what somebody wants is a thing to fetch and never a verdict: nothing is counted, and everything else in the room still answers.

@@ -277,7 +277,7 @@ describe('trading', () => {
   it('takes a tapped thing from the table, and another tap gives it back', () => {
     const g = party()
     g.tap(place(0))
-    expect(g.p.state.held[0]).toBe('fan')
+    expect(g.p.state.held[0]).toBe('duster')
     expect(g.p.state.table[0]).toBe('teapot')
     g.tap(place(0))
     expect(g.p.state.held[0]).toBe('teapot')
@@ -290,7 +290,7 @@ describe('trading', () => {
     g.p.move(3, toPoint(1, { u: 250, y: 420 }))
     g.p.up(3, toPoint(1, { u: 250, y: 420 }))
     g.run(0.5)
-    expect(g.p.state.held[1]).toBe('fan')
+    expect(g.p.state.held[1]).toBe('duster')
     expect(g.p.state.table[0]).toBe('glue')
   })
   it('does not give a thing that only passed over, is let go elsewhere, or is taken away', () => {
