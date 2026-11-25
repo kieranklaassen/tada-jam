@@ -104,6 +104,7 @@ export const SHELVES: readonly Shelf[] = [
     title: 'Puzzle it out',
     label: 'Puzzles',
     games: {
+      'grandpa-tells-wrong': 'Grandpa tells the day wrong. Fix it, or let it come true.',
       'animals-vote': 'Everyone takes one square, and the tallest column happens to all.',
       'the-blanket': 'Cover a head, move the sausage, and see who looks where.',
       'light-garden': 'Bend beams with mirrors to wake sea-glass creatures.',
