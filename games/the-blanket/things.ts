@@ -16,7 +16,9 @@ export const T = {
     shape(c, r, path, boxOf(0, 2, 52, 22), CORAL, { color: '#9c2f24', side: 'bottom', reach: 0.5 })
     c.save(); c.beginPath(); path(c); c.clip(); dabs(c, r, { x: -40, y: -18, w: 80, h: 14 }, '#ffb08a', 'top', 0.7, 2.4); c.restore()
   }),
-  ghostHand: sprite('ghostHand', -30, -12, 66, 92, (c, r) => {
+  ghostHand: sprite('ghostHand', -36, -18, 78, 104, (c, r) => {
+    // Cut out of dark paper first, so that it stands off a cream dog.
+    shape(c, r, blob(-18, 0, -12, -17, 8, -17, 14, 0, 16, 20, 36, 26, 39, 62, 24, 85, -16, 85, -33, 52, -32, 30, -18, 33), boxOf(2, 34, 38, 52), INK)
     shape(c, r, blob(-12, 0, -8, -10, 4, -10, 8, 0, 10, 26, 30, 30, 32, 60, 20, 78, -12, 78, -26, 50, -26, 36, -12, 40), boxOf(2, 34, 32, 46), CREAM, { color: OCHRE, side: 'bottom', reach: 0.5 })
   }),
   blanketFolded: sprite('blanketFolded', -58, -16, 116, 32, (c, r) => { shape(c, r, rounded(-54, -14, 108, 28, 13), boxOf(0, 0, 54, 14), AQUA, { color: '#4d8f96', side: 'bottom', reach: 0.6 }); shape(c, r, rounded(-54, -4, 108, 5, 2), boxOf(0, 0, 1, 1), DEEP) }),
@@ -252,3 +254,25 @@ export function bellAt(ctx: Ctx, st: Stamps, swing: number): void {
   st.stampAt(ctx, T.bellFrame, BELL.x, BELL.y + 10)
   st.stampAt(ctx, T.bell, BELL.x, BELL.y - 36, swing)
 }
+
+/** A thought: a cream cloud with the place in it, and the sausage in the place. */
+const cloud = (name: string, inside: (c: Ctx, r: Parameters<Sprite['paint']>[1]) => void): Sprite => sprite(name, -70, -64, 140, 172, (c, r) => {
+  for (const [x, y, k] of [[-6, 72, 11], [-14, 94, 7]]) shape(c, r, ellipse(x, y, k, k * 0.9), boxOf(x, y, k, k), '#fffaf0', { color: OCHRE, side: 'bottom', reach: 0.5 })
+  shape(c, r, blob(-60, 0, -58, -42, -18, -44, 2, -60, 34, -46, 60, -36, 62, 6, 54, 40, 18, 46, -10, 58, -40, 44, -62, 34), boxOf(0, 0, 64, 58), '#fffaf0', { color: OCHRE, side: 'bottom', reach: 0.35 })
+  c.save()
+  inside(c, r)
+  c.restore()
+})
+export const THINK: Record<PlaceId, Sprite> = Object.fromEntries((['dish', 'teapot', 'boot', 'pot', 'gramophone'] as const).map((id) => [id, cloud(`think-${id}`, (c, r) => {
+  const l = LIES[id], k = id === 'pot' ? 0.46 : 0.54
+  c.translate(id === 'teapot' ? -8 : 0, id === 'dish' ? -8 : id === 'pot' ? 14 : id === 'boot' ? 12 : 2)
+  c.scale(k, k)
+  BACK[id].paint(c, r)
+  const lay = () => { c.save(); c.translate(l.x, l.y - 4); c.rotate(l.rot); T.sausage.paint(c, r); c.restore() }
+  lay()
+  if (id === 'pot') T.flower.paint(c, r)
+  FRONT[id].paint(c, r)
+  if (id === 'teapot') { c.translate(0, -38); T.potLid.paint(c, r) }
+})])) as Record<PlaceId, Sprite>
+/** Somebody's head is thought of as the sausage alone. */
+export const THINK_HEAD = cloud('think-head', (c, r) => { c.scale(0.8, 0.8); T.sausage.paint(c, r) })

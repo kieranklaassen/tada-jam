@@ -4,20 +4,23 @@ import { handPose, type HandPose } from './guidance'
 import { KEY, MAESTRO, headOf, inRoom, type P3 } from './layout'
 import { seated } from './table'
 
-// What the idle ladder shows: one press of a ghost hand, on whatever the
-// child has not tried yet. First the painter, since what he paints is the
-// whole joke; then a turn; then calling one over; and the table's key once
-// something has been painted and it stands up. The picture is never the
-// hand's to plan: it turns whoever is nearest, whichever way that faces.
+// What the idle ladder shows: one press of a ghost hand, on the next step of
+// the round. Somebody on the table changes, he paints it, somebody changes.
+// What is found by the way (calling one over, the table's key) comes in where
+// somebody changes. The picture is never the hand's to plan: it turns whoever
+// is nearest, whichever way that faces.
 
 export type Demo = 'paint' | 'turn' | 'bring' | 'key'
 
 export function nextDemo(game: Game, index: number): Demo {
-  const order: Demo[] = game.table.painted ? ['turn', 'paint', 'bring'] : ['paint', 'turn', 'bring']
-  if (game.table.painted && game.keyUp > 0.9) order.push('key')
-  const fresh = order.filter((demo) => !game.done.has(demo) && (demo !== 'paint' || !game.table.painted))
-  // Turn and paint by turns when everything has been found.
-  const list = fresh.length > 0 ? fresh : (['turn', 'paint'] as Demo[])
+  // A bare easel waits for a picture. A picture that stands shown is of the table as it is, so the table is to change.
+  const changes: Demo[] = []
+  if (game.done.has('turn')) {
+    if (!game.done.has('bring') && waiting(game)) changes.push('bring')
+    else if (!game.done.has('key') && game.keyUp > 0.9) changes.push('key')
+  }
+  changes.push('turn')
+  const list: Demo[] = game.table.finished ? changes : ['paint', ...changes]
   return list[index % list.length]
 }
 
@@ -45,9 +48,10 @@ export function handAt(game: Game, demo: Demo, progress: number): { x: number; y
   return { ...at, press: pose.press, opacity: pose.opacity }
 }
 
-/** Where the glow lies: the one thing that is wanted. */
-export function glowAt(game: Game): { x: number; y: number; z: number; r: number; flat: boolean } {
-  if (!game.table.painted) return { x: MAESTRO.x - 0.5, y: 3.4, z: MAESTRO.z - 1.1, r: 3.4, flat: false }
-  const p = game.poses[nearest(game)]
+/** Where the glow lies: on the one thing the hand will show first. */
+export function glowAt(game: Game, demo: Demo = nextDemo(game, 0)): { x: number; y: number; z: number; r: number; flat: boolean } {
+  if (demo === 'paint') return { x: MAESTRO.x - 0.5, y: 3.4, z: MAESTRO.z - 1.1, r: 3.4, flat: false }
+  if (demo === 'key') return { x: KEY.x, y: KEY.y, z: KEY.z, r: 1.5, flat: false }
+  const p = game.poses[(demo === 'bring' ? waiting(game) : null) ?? nearest(game)]
   return { x: p.x, y: p.y + 0.05, z: p.z, r: 2.15, flat: true }
 }

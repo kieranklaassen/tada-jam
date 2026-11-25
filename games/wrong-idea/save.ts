@@ -19,7 +19,7 @@ export type Saved = {
 }
 
 export function fresh(childAge: number | null): Saved {
-  return { v: SAVE_VERSION, house: freshHouse(), wish: firstWish(childAge), dreaming: false, begun: false }
+  return { v: SAVE_VERSION, house: freshHouse(), wish: firstWish(childAge), dreaming: true, begun: false }
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -55,7 +55,8 @@ export function deserialize(raw: unknown, childAge: number | null): Saved {
     v: SAVE_VERSION,
     house: readHouse(raw.house),
     wish: wish >= 0 ? wish : start.wish,
-    dreaming: raw.dreaming === true,
+    // She has a dream from the start.
+    dreaming: raw.dreaming === true || raw.begun !== true,
     begun: raw.begun === true,
   }
 }

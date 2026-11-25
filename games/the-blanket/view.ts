@@ -9,9 +9,10 @@ import { NATURES, looksAt, neutral, poseOf, type Pose } from './motion'
 import { Stamps, type Ctx, type Sprite } from './paint'
 import type { Poke, Refusal } from './play'
 import { paintRoom } from './room'
-import { BACK, DRAPES, FRONT, LIES, LOOSE, OVER, T, basket, bellAt, blanket, sausage, string } from './things'
+import { BACK, DRAPES, FRONT, LIES, LOOSE, OVER, T, THINK, THINK_HEAD, basket, bellAt, blanket, sausage, string } from './things'
 import { SLOSH, TINKLE } from './voices'
 import { FOLD, flightAt, type Flight } from './flights'
+import type { RoundHand } from './round'
 
 // Draws the parlour from the rules, and keeps what is only to be seen: springs,
 // things on their way through the air, and where each pair of eyes has got to.
@@ -23,16 +24,18 @@ const LONG = 99
 /** How far the neck of each is below the middle of its head. */
 const NECK: Record<Who, number> = { dog: 8, cat: 4, aunt: 52, grandpa: 34 }
 
-type Seen = { gaze: Gaze; poked: number; freed: number; askew: number; bowled: number; laid: number; near: boolean; side: boolean; pose: Pose }
+type Seen = { gaze: Gaze; poked: number; freed: number; askew: number; bowled: number; laid: number; near: boolean; side: boolean; pose: Pose; thought: number; mind: Spot | null }
 
 /** What each one sits on, and how far under its ground that stands. */
 const FURNITURE: Record<Who, { sprite: Sprite; dy: number }> = { dog: { sprite: T.cushion, dy: -6 }, cat: { sprite: T.stool, dy: 0 }, aunt: { sprite: T.armchair, dy: 14 }, grandpa: { sprite: T.rocker, dy: 24 } }
+/** Where each one's thought hangs: over its head and off everything a finger goes to. */
+const THINK_AT: Record<Who, Point> = { dog: { x: 300, y: 290 }, cat: { x: 497, y: 168 }, aunt: { x: 725, y: 182 }, grandpa: { x: 955, y: 186 } }
 /** Seconds a thing stays stuck on a head. */
 const WORN = SULK * 0.55
 /** How far from the mouth of each place the head of a diver comes to. */
 const DIVE_Y: Record<PlaceId, number> = { dish: -42, pot: 22, gramophone: 10, boot: -66, teapot: -36 }
 
-const seen = (): Seen => ({ gaze: { x: 0, y: 0 }, poked: LONG, freed: LONG, askew: LONG, bowled: LONG, laid: LONG, near: false, side: false, pose: neutral() })
+const seen = (): Seen => ({ gaze: { x: 0, y: 0 }, poked: LONG, freed: LONG, askew: LONG, bowled: LONG, laid: LONG, near: false, side: false, pose: neutral(), thought: 0, mind: null })
 
 const keyOf = (thing: Thing): string => thing.kind === 'place' ? thing.id : thing.kind === 'sitter' ? thing.who : thing.kind
 
@@ -64,7 +67,7 @@ export class View {
     made.ctx.translate(-x, -y)
     paintRoom(made.ctx, x, y, w, h)
     // Every picture is painted now, so that no touch waits for one.
-    for (const s of [...Object.values(FIGURE_SPRITES), ...Object.values(T)]) this.stamps.warm(s)
+    for (const s of [...Object.values(FIGURE_SPRITES), ...Object.values(T), ...Object.values(THINK), THINK_HEAD]) this.stamps.warm(s)
     this.room = { canvas: made.canvas, x, y, w, h }
   }
 
@@ -104,7 +107,11 @@ export class View {
       case 'found': case 'gift': this.flights = this.flights.filter((f) => f.what !== 'sausage'); break
       case 'bell': this.pushed.set('bell', 0); break
       case 'peek': this.pushed.set('sausage', 0); break
-      case 'empty': this.pushed.set(e.spot, 0); break
+      case 'empty':
+        this.pushed.set(e.spot, 0)
+        // Whoever knows better shakes with it.
+        for (const who of SITTERS) if (who !== e.who && sees(world, who) && world.sitters[who].belief === sausageSpot(world)) this.who[who].poked = 0
+        break
       case 'gulp': this.pushed.set('gulped', -0.1); break
       default: break
     }
@@ -170,7 +177,7 @@ export class View {
     return t < 0 ? 0 : ring(t) * size
   }
 
-  draw(ctx: Ctx, world: World, hand: Point | null, guidance: Guidance | null): void {
+  draw(ctx: Ctx, world: World, hand: Point | null, guidance: Guidance | null, round: RoundHand | null = null): void {
     const st = this.stamps
     st.stamped = 0
     if (!this.room) return
@@ -210,7 +217,9 @@ export class View {
       const a = i * 1.26 + 0.4, d = 14 + 60 * Math.sqrt(p.t)
       st.stampAt(ctx, FIGURE_SPRITES.puff, p.at.x + Math.cos(a) * d, p.at.y + Math.sin(a) * d * 0.7, 0, Math.max(0, 1 - p.t * 2))
     }
-    if (guidance) this.guide(ctx, world, guidance)
+    for (const who of SITTERS) this.thought(ctx, world, who)
+    if (round) this.ghost(ctx, round.x, round.y, round.press, round.opacity)
+    else if (guidance) this.guide(ctx, world, guidance)
   }
 
   /** Whether a sitter's head is down in a place. */
@@ -373,7 +382,7 @@ export class View {
     if (g.glow <= 0 && g.demo === null) return
     const hint = hintFor(world)
     if (!hint) return
-    for (const c of glows(hint, world)) {
+    for (const c of glows(hint)) {
       const beat = 0.5 + 0.5 * Math.sin(this.time * 2.6)
       ctx.globalAlpha = g.glow * (0.6 + 0.4 * beat)
       this.stamps.stampAt(ctx, T.halo, c.x, c.y, 0, (c.r / 60) * (1 + beat * 0.05))
@@ -382,18 +391,36 @@ export class View {
     if (g.demo === null) return
     const h = handPose(g.demo, hint.to !== null, this.hand)
     const x = hint.from.x + (hint.to ? (hint.to.x - hint.from.x) * h.travel : 0), y = hint.from.y + (hint.to ? (hint.to.y - hint.from.y) * h.travel : 0)
-    ctx.globalAlpha = h.opacity * 0.94
-    this.stamps.stampAt(ctx, T.ghostHand, x, y + 4, -0.16, 1.6 - h.press * 0.28)
+    this.ghost(ctx, x, y, h.press, h.opacity)
+  }
+
+  private ghost(ctx: Ctx, x: number, y: number, press: number, opacity: number): void {
+    ctx.globalAlpha = opacity * 0.94
+    this.stamps.stampAt(ctx, T.ghostHand, x, y + 4, -0.16, 1.6 - press * 0.28)
     ctx.globalAlpha = 1
+  }
+
+  /** What somebody under a blanket, or off to look, has in mind: the place it last saw the sausage in. It is the joke, so it is seen. */
+  private thought(ctx: Ctx, world: World, who: Who): void {
+    const v = this.who[who], s = world.sitters[who]
+    const thinks = s.belief !== null && s.belief !== 'hook' && ((s.covered && s.phase === 'seat') || s.phase === 'wind' || s.phase === 'run')
+    v.thought += ((thinks ? 1 : 0) - v.thought) * 0.16
+    if (thinks) v.mind = s.belief
+    if (v.thought < 0.04 || v.mind === null) return
+    const foot = footing(who, s), seat = SEATS[who], to = THINK_AT[who]
+    const k = v.thought * 1.16 * (1 + Math.sin(this.time * 2.2 + seat.x) * 0.02)
+    this.stamps.stampAt(ctx, headOf(v.mind) ? THINK_HEAD : THINK[v.mind as PlaceId], to.x + foot.x - seat.x, to.y + foot.y - seat.y, 0, k)
   }
 }
 
 /** What glows with a hint. */
-export function glows(hint: Hint, world: World): { x: number; y: number; r: number }[] {
+export function glows(hint: Hint): { x: number; y: number; r: number }[] {
   if (hint.glow === 'hook') return [{ x: HOOK.x, y: HOOK.y, r: 62 }]
   if (hint.glow === 'bell') return [{ ...BELL, r: 78 }]
   if (hint.glow === 'sausage') return [{ ...hint.from, r: 64 }]
-  if (hint.glow === 'places') { const at = PLACES.filter((id) => sausageSpot(world) !== id && !world.draped.includes(id)); return at.map((id) => ({ ...SPOTS[id].at, r: 84 })) }
-  const whom = hint.glow === 'sitters' ? SITTERS : [hint.glow]
-  return whom.map((who) => ({ x: SEATS[who].head.x, y: SEATS[who].head.y, r: SEATS[who].r + 30 }))
+  // A carry glows at both ends, so that the eye has the whole of it.
+  const place = PLACES.find((id) => id === hint.glow)
+  if (place) return [{ ...hint.from, r: 56 }, { ...SPOTS[place].at, r: 84 }]
+  const who = hint.glow as Who
+  return [{ x: SEATS[who].head.x, y: SEATS[who].head.y, r: SEATS[who].r + 30 }]
 }

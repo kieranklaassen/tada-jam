@@ -140,6 +140,19 @@ describe('a game opened without the strip', () => {
     expect(strip()).toBeNull()
   })
 
+  // What a touch screen sends: the lifted finger leaves before its click comes.
+  it('goes home on a tap of a finger', async () => {
+    const onExit = vi.fn()
+    await openShell(onExit)
+    press(corner())
+    fireEvent.pointerUp(corner(), { isPrimary: true })
+    fireEvent.pointerLeave(corner())
+    fireEvent.click(corner())
+    expect(onExit).toHaveBeenCalledTimes(1)
+    act(() => void vi.advanceTimersByTime(HOLD_MS))
+    expect(strip()).toBeNull()
+  })
+
   it('shows the strip after a full hold and does not go home when the finger lifts', async () => {
     const onExit = vi.fn()
     await openShell(onExit)
@@ -168,6 +181,7 @@ describe('a game opened without the strip', () => {
     press(corner())
     act(() => void vi.advanceTimersByTime(HOLD_MS / 2))
     fireEvent.pointerLeave(corner())
+    fireEvent.click(corner())
     act(() => void vi.advanceTimersByTime(HOLD_MS))
     expect(strip()).toBeNull()
     expect(onExit).not.toHaveBeenCalled()

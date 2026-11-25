@@ -1,3 +1,4 @@
+import type { RoundHand } from './round'
 import { BUTLER_DRAWN, DYE, drawButler, drawChair, drawLiving, drawSmall, drawThrone, type Gaze, type Hands } from './figures'
 import { JUMP_SECONDS, REACH_SECONDS, THINK, THINK_SECONDS, TOSS_SECONDS } from './errand'
 import { handPose, type Guidance, type HandPose } from './guidance'
@@ -36,7 +37,7 @@ export class View {
     for (const one of [...THINGS, BUTLER]) this.eased[one.id] = { gaze: { x: 0, y: 0 }, swing: { x: 0, v: 0 }, lastX: 0 }
   }
 
-  draw(play: Play | null, guidance: Guidance | null, step: number, width: number, height: number, dpr: number, painted = dpr): number {
+  draw(play: Play | null, guidance: Guidance | null, step: number, width: number, height: number, dpr: number, painted = dpr, hand: RoundHand | null = null): number {
     const g = this.g, by = fit(width, height)
     if (by.scale <= 0) return 0
     this.time += step
@@ -51,12 +52,16 @@ export class View {
     }
     g.setTransform(dpr * by.scale, 0, 0, dpr * by.scale, dpr * by.x, dpr * by.y)
     g.drawImage(this.chart, this.frame.x0, this.frame.y0, this.frame.x1 - this.frame.x0, this.frame.y1 - this.frame.y0)
-    if (play) this.house(play, guidance, step)
+    if (play) this.house(play, guidance, step, hand)
     return this.sprites.drawn + 1
   }
 
-  private house(play: Play, guidance: Guidance | null, step: number): void {
+  private house(play: Play, guidance: Guidance | null, step: number, round: RoundHand | null): void {
     const g = this.g, glow = guidance?.glow ?? 0
+    // One thing glows: the next one to touch. What he has just understood goes with the rest glows as well.
+    const next = glow > 0.01 ? play.demo() : null, called = play.called
+    const lit = (id: ThingId) => (called.includes(id) ? 1.2 : next?.id === id || (id === 'gran' && next?.what === 'gran') ? glow : 0)
+    if (next?.what === 'rope') this.halo({ x: ROPE.x, y: ROPE.y + 60, s: 1.3 }, 'hat', glow)
     this.mouse()
     this.pendulum()
     this.rope(play)
@@ -65,15 +70,16 @@ export class View {
       return now.mode === 'rest' && now.where === mode
     }
     for (const one of THINGS) if (!one.alive && at('home', one.id)) {
-      if (glow > 0.01) this.halo(play.spotOf(one.id), one.kind, glow)
+      if (lit(one.id) > 0) this.halo(play.spotOf(one.id), one.kind, lit(one.id))
       this.thing(play, one.id, step)
     }
+    for (const id of ['gran', 'king', 'queen']) if (at('home', id) && lit(id) > 0) this.halo(play.spotOf(id), thingOf(id).kind, lit(id))
     this.still(homeOf('gran'), play.granLift(), () => drawChair(g, this.sprites))
     this.still(homeOf('king'), 0, () => drawThrone(g, this.sprites))
     for (const id of ['gran', 'king', 'queen', 'cat', 'hen', 'piglet']) if (at('home', id)) {
       const spot = play.spotOf(id)
       if (id !== 'gran' && id !== 'king') this.shadow(spot, SIZE[thingOf(id).kind].w * 0.42)
-      if (glow > 0.01 && !thingOf(id).heavy) this.halo(spot, thingOf(id).kind, glow)
+      if (lit(id) > 0 && !thingOf(id).heavy) this.halo(spot, thingOf(id).kind, lit(id))
       this.thing(play, id, step)
     }
     const jumping = play.errand.act.do === 'jump'
@@ -99,7 +105,8 @@ export class View {
       g.lineWidth = 4
       g.beginPath(); g.arc(ring.x, ring.y, 14 + ring.t * 90, 0, Math.PI * 2); g.stroke()
     }
-    if (guidance?.demo != null && !play.busy) this.ghost(play, guidance)
+    if (round) this.handAt(round.x, round.y, round.press, round.opacity)
+    else if (guidance?.demo != null && !play.busy) this.ghost(play, guidance)
   }
 
   // --- The living house ---------------------------------------------------------
@@ -186,7 +193,7 @@ export class View {
       c.fillStyle = shine
       c.fillRect(-64, -64, 128, 128)
     })
-    g.globalAlpha = glow * (0.6 + Math.sin(this.time * 2.6) * 0.25)
+    g.globalAlpha = Math.min(1, glow * (0.6 + Math.sin(this.time * 2.6) * 0.25))
     g.drawImage(sprite.canvas, spot.x - r, spot.y - h * 0.5 * spot.s - r, r * 2, r * 2)
     g.globalAlpha = 1
     this.sprites.drawn += 1
@@ -447,7 +454,7 @@ export class View {
 
   private dream(play: Play): void {
     const saved = play.saved
-    if (!saved.begun) return
+    if (!saved.begun && !saved.dreaming) return
     const g = this.g, scene = play.scene
     const grown = play.dreaming ? play.dreamShown : 0
     const pop = grown + Math.sin(grown * Math.PI) * 0.15
@@ -513,23 +520,28 @@ export class View {
   // --- The ghost hand --------------------------------------------------------------
 
   private ghost(play: Play, guidance: Guidance): void {
-    const move = play.demo(guidance.demoIndex)
+    const move = play.demo()
     if (!move || guidance.demo === null) return
-    const g = this.g, hand = handPose(guidance.demo, true, this.hand)
+    const g = this.g, hand = handPose(guidance.demo, move.what !== 'gran', this.hand)
     const x = move.from.x + (move.to.x - move.from.x) * hand.travel, y = move.from.y + (move.to.y - move.from.y) * hand.travel - Math.sin(Math.PI * hand.travel) * 40
     // Where it goes shows too.
-    if (move.id) this.halo({ x: move.to.x, y: move.to.y + 44, s: 1.5 }, 'hat', hand.opacity)
-    g.save()
-    g.globalAlpha = hand.opacity * 0.9
-    if (move.id && hand.press > 0.2) {
+    if (move.what === 'thing') this.halo({ x: move.to.x, y: move.to.y + 44, s: 1.5 }, 'hat', hand.opacity)
+    if (move.id && hand.press > 0.2 && !thingOf(move.id).alive) {
       g.save()
-      g.globalAlpha *= 0.55
+      g.globalAlpha = hand.opacity * 0.5
       g.translate(x, y + SIZE[thingOf(move.id).kind].h / 2)
       drawSmall(g, this.sprites, thingOf(move.id))
       g.restore()
     }
+    this.handAt(x, y, hand.press, hand.opacity)
+  }
+
+  private handAt(x: number, y: number, press: number, opacity: number): void {
+    const g = this.g
+    g.save()
+    g.globalAlpha = opacity * 0.95
     g.translate(x, y + 8)
-    g.scale(1 - hand.press * 0.1, 1 - hand.press * 0.1)
+    g.scale(1.1 - press * 0.12, 1.1 - press * 0.12)
     this.sprites.stamp(g, 'ghost', [-34, -14, 84, 104], (c) => {
       const shape = soft([-8, -8], [8, -8], [11, 30], [34, 34], [44, 52], [38, 84], [0, 86], [-24, 58], [-14, 48], [-8, 56])
       flat(c, shape, '#fff9ea', [-24, -8, 68, 94], 0.18)
