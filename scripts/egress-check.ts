@@ -48,6 +48,7 @@ export const ALLOWED_GAME_PACKAGES = [
   '@react-three/postprocessing',
   'postprocessing',
   'cannon-es',
+  '@kieranklaassen/live-mix', // vendor/live-mix: the music engine and its instruments, all same-origin
 ]
 
 const URL_PATTERN = /(?:https?|wss?):\/\/[a-zA-Z0-9][a-zA-Z0-9.-]*/g
