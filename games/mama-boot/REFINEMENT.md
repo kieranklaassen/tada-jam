@@ -67,3 +67,7 @@ Three eggs at 3 and younger or with no age, five at 4 and older, first visit onl
 
 - "Nearest" makes pairs, never a ring of three: A nearest B, B nearest C and C nearest A cannot all hold. A ring of three needs the child to move something, or an egg that rides. The independent check found this on paper.
 - A follower needs a place it keeps. Without one, lifting one chick made its sisters shuffle, and the one the child was aiming at walked away.
+
+## Pass: the loop, made plain
+
+Told: the loop was not clear to a young child. Likely cause: everything that answered glowed alike, the hand showed a gesture without what it was for, and nobody visibly wanted the next thing. Change: the section of the same name in `ART.md`. Checked by `round.test.ts` and by recording the untouched first visit and reading it frame by frame. Not yet checked: the same child again, and a real iPad.

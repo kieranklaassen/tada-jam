@@ -61,3 +61,7 @@ None.
 - A figure made of many small strokes can meet an 80-call frame when each part is a sprite keyed by a rounded expression.
 - The shell's home control covers the top centre: nothing that asks to be touched goes there.
 - A band of noise renders about ten times quieter than its peak says. Render the sounds offline before believing a list of peaks.
+
+## Pass: the loop, made plain
+
+Told: the loop was not clear to a young child. Likely cause: everything that answered glowed alike, the hand showed a gesture without what it was for, and nobody visibly wanted the next thing. Change: the section of the same name in `ART.md`. Checked by `round.test.ts` and by recording the untouched first visit and reading it frame by frame. Not yet checked: the same child again, and a real iPad.

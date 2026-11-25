@@ -1,4 +1,5 @@
 import type { JamGame } from './contract'
+import type { Demo } from './demos'
 
 // How the home page helps someone find a game: shelves by what the hands do,
 // and one line about each game. A game that is on no shelf yet is listed on
@@ -42,6 +43,7 @@ export const SHELVES: readonly Shelf[] = [
       'wash-day': 'Scrub, wring and peg out the muddy clothes. And the cat.',
       'shes-copying-me': 'Move one aunt’s hand and the other copies with whatever she holds.',
       'cosy-scarf': 'Knit stripes for a cold animal until it dances.',
+      'something-in-the-shoe': 'Put a frog in the boot and see what the bare foot does.',
       'hats-for-all': 'Pop out foam hats until every head has one.',
     },
   },
@@ -50,6 +52,7 @@ export const SHELVES: readonly Shelf[] = [
     title: 'Run a silly shop',
     label: 'Silly shops',
     games: {
+      'crocodile-jumper': 'Lay sausages along a cold crocodile and a jumper grows on him.',
       'monster-pizza': 'Make the pizza on the card for a very hungry monster.',
       'bread-day': 'Knead, rise and bake in a badger’s bakery.',
       'tea-time': 'Pour the tea just the way each guest likes it.',
@@ -87,6 +90,7 @@ export const SHELVES: readonly Shelf[] = [
     label: 'Dash & splash',
     games: {
       'rocket-penguin': 'Bolt anything to a penguin and let the catapult go.',
+      'roll-it-all-up': 'Roll a snowball over the boot and the cat, and see how he walks.',
       'hungry-hole': 'Swallow a carnival, then burp it back up as a float.',
       'hop-across': 'Lead three small rabbits over roads, rivers and rails.',
       'lane-runner': 'Run a fox and its cargo around the pond.',
@@ -103,6 +107,8 @@ export const SHELVES: readonly Shelf[] = [
     title: 'Puzzle it out',
     label: 'Puzzles',
     games: {
+      'grandpa-tells-wrong': 'Grandpa tells the day wrong. Fix it, or let it come true.',
+      'animals-vote': 'Everyone takes one square, and the tallest column happens to all.',
       'the-blanket': 'Cover a head, move the sausage, and see who looks where.',
       'light-garden': 'Bend beams with mirrors to wake sea-glass creatures.',
       'turning-tower': 'Twist the tower until the paths line up.',
@@ -112,6 +118,7 @@ export const SHELVES: readonly Shelf[] = [
       'hillside-spring': 'Lay bamboo pipes so every dry terrace blooms.',
       'bridge-crew': 'Build a balsa bridge, load it, and see if it holds.',
       'night-camp': 'Pack enough wood, oil and water to last the night.',
+      'five-in-the-bed': 'Roll five sheep over the ridge until each has a straw.',
       'pebble-table': 'Clay stones, an honest scale, and guests to feed fairly.',
       'princess-playground': 'Who can lift whom? Find out on the seesaw.',
     },
@@ -131,6 +138,15 @@ export const SHELVES: readonly Shelf[] = [
   },
 ]
 
+// A demo stands on the shelf of the game it became; these became none.
+const DEMO_SHELVES: Readonly<Record<string, string>> = {
+  'animal-tower': 'build',
+  'feed-the-monster': 'care',
+  'whack-a-mole': 'go',
+  'slingshot-smash': 'go',
+  'peg-blaster': 'go',
+}
+
 const LINES: Readonly<Record<string, string>> = Object.assign({}, ...SHELVES.map((shelf) => shelf.games))
 
 export const keyOf = (game: JamGame) => game.cartridge.manifest.key
@@ -138,27 +154,28 @@ export const keyOf = (game: JamGame) => game.cartridge.manifest.key
 /** The one line about a game, or nothing where none has been written yet. */
 export const lineFor = (key: string): string => LINES[key] ?? ''
 
-export function fitsAge(game: JamGame, age: number | null): boolean {
-  const [youngest, oldest] = game.cartridge.manifest.ageBand
+export const fitsAge = (game: JamGame, age: number | null): boolean => fitsBand(game.cartridge.manifest.ageBand, age)
+
+export function fitsBand([youngest, oldest]: readonly [number, number], age: number | null): boolean {
   return age === null || (youngest <= age && age <= oldest)
 }
 
-export function matches(game: JamGame, query: string): boolean {
-  const asked = query.trim().toLowerCase()
-  return asked === '' || `${game.cartridge.manifest.name} ${lineFor(keyOf(game))}`.toLowerCase().includes(asked)
-}
+const says = (text: string, query: string) => text.toLowerCase().includes(query.trim().toLowerCase())
 
-export type FilledShelf = { id: string; title: string; label: string; games: JamGame[] }
+export const matches = (game: JamGame, query: string): boolean => says(`${game.cartridge.manifest.name} ${lineFor(keyOf(game))}`, query)
 
-/** Every given game on exactly one shelf, in shelf order; empty shelves are left out. */
-export function fillShelves(games: readonly JamGame[]): FilledShelf[] {
+export const demoMatches = (demo: Demo, query: string): boolean => says(`${demo.name} ${demo.pitch}`, query)
+
+export type FilledShelf = { id: string; title: string; label: string; games: JamGame[]; /** The demos that belong here, after the games. */ demos: Demo[] }
+
+const shelfOfGame = (key: string) => SHELVES.find((shelf) => key in shelf.games)?.id
+const shelfOfDemo = (demo: Demo) => shelfOfGame(demo.game ?? demo.key) ?? DEMO_SHELVES[demo.key] ?? NEW_SHELF.id
+
+/** Every given game and demo on exactly one shelf, in shelf order; empty shelves are left out. */
+export function fillShelves(games: readonly JamGame[], demos: readonly Demo[] = []): FilledShelf[] {
   const byKey = new Map(games.map((game) => [keyOf(game), game]))
-  const filled: FilledShelf[] = SHELVES.map(({ id, title, label, games: lines }) => ({
-    id,
-    title,
-    label,
-    games: Object.keys(lines).flatMap((key) => byKey.get(key) ?? []),
-  }))
-  const fresh = games.filter((game) => !(keyOf(game) in LINES))
-  return [{ ...NEW_SHELF, games: fresh }, ...filled].filter((shelf) => shelf.games.length > 0)
+  const shelves = [{ ...NEW_SHELF, games: games.filter((game) => !(keyOf(game) in LINES)) }, ...SHELVES.map((shelf) => ({ ...shelf, games: Object.keys(shelf.games).flatMap((key) => byKey.get(key) ?? []) }))]
+  return shelves
+    .map(({ id, title, label, games: shelved }) => ({ id, title, label, games: shelved, demos: demos.filter((demo) => shelfOfDemo(demo) === id) }))
+    .filter((shelf) => shelf.games.length + shelf.demos.length > 0)
 }
