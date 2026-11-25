@@ -1,4 +1,5 @@
 import type { JamGame } from './contract'
+import type { Demo } from './demos'
 
 // How the home page helps someone find a game: shelves by what the hands do,
 // and one line about each game. A game that is on no shelf yet is listed on
@@ -132,6 +133,15 @@ export const SHELVES: readonly Shelf[] = [
   },
 ]
 
+// A demo stands on the shelf of the game it became; these became none.
+const DEMO_SHELVES: Readonly<Record<string, string>> = {
+  'animal-tower': 'build',
+  'feed-the-monster': 'care',
+  'whack-a-mole': 'go',
+  'slingshot-smash': 'go',
+  'peg-blaster': 'go',
+}
+
 const LINES: Readonly<Record<string, string>> = Object.assign({}, ...SHELVES.map((shelf) => shelf.games))
 
 export const keyOf = (game: JamGame) => game.cartridge.manifest.key
@@ -139,27 +149,28 @@ export const keyOf = (game: JamGame) => game.cartridge.manifest.key
 /** The one line about a game, or nothing where none has been written yet. */
 export const lineFor = (key: string): string => LINES[key] ?? ''
 
-export function fitsAge(game: JamGame, age: number | null): boolean {
-  const [youngest, oldest] = game.cartridge.manifest.ageBand
+export const fitsAge = (game: JamGame, age: number | null): boolean => fitsBand(game.cartridge.manifest.ageBand, age)
+
+export function fitsBand([youngest, oldest]: readonly [number, number], age: number | null): boolean {
   return age === null || (youngest <= age && age <= oldest)
 }
 
-export function matches(game: JamGame, query: string): boolean {
-  const asked = query.trim().toLowerCase()
-  return asked === '' || `${game.cartridge.manifest.name} ${lineFor(keyOf(game))}`.toLowerCase().includes(asked)
-}
+const says = (text: string, query: string) => text.toLowerCase().includes(query.trim().toLowerCase())
 
-export type FilledShelf = { id: string; title: string; label: string; games: JamGame[] }
+export const matches = (game: JamGame, query: string): boolean => says(`${game.cartridge.manifest.name} ${lineFor(keyOf(game))}`, query)
 
-/** Every given game on exactly one shelf, in shelf order; empty shelves are left out. */
-export function fillShelves(games: readonly JamGame[]): FilledShelf[] {
+export const demoMatches = (demo: Demo, query: string): boolean => says(`${demo.name} ${demo.pitch}`, query)
+
+export type FilledShelf = { id: string; title: string; label: string; games: JamGame[]; /** The demos that belong here, after the games. */ demos: Demo[] }
+
+const shelfOfGame = (key: string) => SHELVES.find((shelf) => key in shelf.games)?.id
+const shelfOfDemo = (demo: Demo) => shelfOfGame(demo.game ?? demo.key) ?? DEMO_SHELVES[demo.key] ?? NEW_SHELF.id
+
+/** Every given game and demo on exactly one shelf, in shelf order; empty shelves are left out. */
+export function fillShelves(games: readonly JamGame[], demos: readonly Demo[] = []): FilledShelf[] {
   const byKey = new Map(games.map((game) => [keyOf(game), game]))
-  const filled: FilledShelf[] = SHELVES.map(({ id, title, label, games: lines }) => ({
-    id,
-    title,
-    label,
-    games: Object.keys(lines).flatMap((key) => byKey.get(key) ?? []),
-  }))
-  const fresh = games.filter((game) => !(keyOf(game) in LINES))
-  return [{ ...NEW_SHELF, games: fresh }, ...filled].filter((shelf) => shelf.games.length > 0)
+  const shelves = [{ ...NEW_SHELF, games: games.filter((game) => !(keyOf(game) in LINES)) }, ...SHELVES.map((shelf) => ({ ...shelf, games: Object.keys(shelf.games).flatMap((key) => byKey.get(key) ?? []) }))]
+  return shelves
+    .map(({ id, title, label, games: shelved }) => ({ id, title, label, games: shelved, demos: demos.filter((demo) => shelfOfDemo(demo) === id) }))
+    .filter((shelf) => shelf.games.length + shelf.demos.length > 0)
 }
