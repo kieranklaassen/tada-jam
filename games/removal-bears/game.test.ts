@@ -1,3 +1,4 @@
+import { hint } from './guide'
 import { describe, expect, it } from 'vitest'
 import { held, place, size, swapped, type Cell, type Way } from './cells'
 import { Finger } from './finger'
@@ -350,4 +351,19 @@ describe('what stands where', () => {
     }
     for (const b of BEARS) expect(drawnAt(0, b.height, 3).v).toBeLessThan(drawnAt(0, SILL, 0).v)
   })
+})
+
+describe('the ghost hand', () => {
+  it('followed, finishes any house of any position without one wrong heave', () => {
+    for (const position of [null, 2, 3, 4, 5, 6]) for (let seed = 1; seed <= 12; seed++) {
+      const c = child({ ...freshSave(position, seed), shown: true, shownEnds: true })
+      for (let n = 0; n < 40 && !c.game.saved.finished; n++) {
+        c.settle()
+        c.tap(hint(c.game, 0).hand!)
+        c.wait(3)
+      }
+      expect(c.game.saved.finished).toBe(true)
+      expect(c.game.saved.bumps).toBe(0)
+    }
+  }, 60000)
 })

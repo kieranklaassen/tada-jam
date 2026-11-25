@@ -287,7 +287,7 @@ export class Stage {
       this.glows.setMatrixAt(n++, this.m.compose(this.toWorld(at.u, at.v, 12), this.camera.quaternion, this.s.set((at.w + 0.9) * k, (at.h + 0.9) * k, 1)))
     }
     this.glows.count = n
-    ;(this.glows.material as THREE.MeshBasicMaterial).opacity = guide ? guide.glow * 0.42 : 0
+    ;(this.glows.material as THREE.MeshBasicMaterial).opacity = guide ? guide.glow * 0.34 : 0
     this.glows.instanceMatrix.needsUpdate = true
     this.hand.visible = !!guide && guide.opacity > 0 && !!guide.hint.hand
     if (!this.hand.visible) return

@@ -32,22 +32,33 @@ Frame rates: none. The builder's machine draws in software (SwiftShader), where 
 | 3 | Six loads, an open house, a load from behind | The mouse stands up out of the piano's outline, feet cut by the cloth, sitting bears too far apart to lean | Mouse smaller and lower, feet raised, bears close up when a house is done | - |
 | 4 | Each act, by stills and by the intersection audit | Paws sink into the load, a fallen load sits in a flat bear's ears, loads brush the back of the wall, a dropped load meets the cart | Room for a paw, flatter heads and measured flat heights, arms down when pressed, the cart makes way, a deeper loft | - |
 | 5 | The loop, after the owner's word on the first games | What to do next is not shown | One whole round first; the hand follows what was just done | - |
-## For the pull request
+| 6 | A code review by a fresh reader | Twelve findings: a heave tapped twice with a turn between never ended, a showing put away kept the old save, and others | All fixed, with a test that plays at random and compares what is stored with what is shown | - |
+| 7 | A cold playtest by a reader who knew nothing of the game, by stills | Finished a house. The hand pointed at the wrong opening; nothing linked the load to its opening; a load that went in was gone too soon to be seen; the top of a tall load on the cart was dead; the next house opened with the same load; glow too strong; a tap on the wall hardly showed | The hand is right whenever it is followed (a test finishes 72 houses by it without a wrong heave), the load and its opening glow together, a load stays in its opening for a second, the cart's load is all one target, another load first, a fainter glow, a stronger dent | Some loads are hard to name as furniture when they are upside down |
 
-Written as the game is built and kept at the end of this file: the pull request is made from it.
+## For the pull request
 
 ### How the game meets the quality bar
 
-Nothing yet. One entry for each line of the quality bar, saying how the game meets it so far. Each frame rate comes with the engine, the throttle, the pixel ratio and the build it was measured on, and with whether a physical iPad was measured.
+- **Alive at idle.** The bears breathe and blink at their own rates, the cub hops behind the opening, each passenger has its own idle.
+- **Motion and sound on every touch.** Every target answers when the finger lands, the wall, the cloth, the jars and a second finger included; each has a synthesized voice. Nobody has listened to them yet.
+- **Weight, squash and follow-through.** Crouch, toss, catch with a squash, flat bears that spring up past their height, cubes that bulge and ring.
+- **Kid-clear.** Brown loads on a white house, dark openings, one load in hand. Targets of 48 px or more on every surface tested.
+- **Wordless.** No word, letter, numeral or symbol; `npm run wordless:check`.
+- **Guidance.** A first showing of one whole round, wrong then right; then a glow after 1.5 s and a hand after 3 s, six times, gone on any touch.
+- **60 fps.** Not measured: the build machine draws in software (SwiftShader, Chrome, 6x throttle, pixel ratio 2, 1.2 frames a second, which says nothing about a tablet). No iPad and no WebKit. What is held by a test is at most 60 draws and 60,000 triangles (53 and 55,000 measured); pixel ratio capped at 2, no shadow map, no post pass, three quality tiers.
+- **Assets.** All procedural.
+- **Its own look.** Sugar cubes and biscuit.
 
 ### The learning claim
 
-Nothing yet. The claim as the sheet has it, with each record's standing and its check state read again on the day of the pull request, in the pack's Summary or the game's own words only. A game with no learning goal says so.
+The Removal Bears is designed from California's infant-toddler foundation 2.2, in the part about how things fit, and from California's preschool and transitional kindergarten foundation 4.6. Both are foundations published by a department, not standards; both confirmed, read again on 2026-11-25. No Dutch record is named. No child has tried the game.
 
 ### Defaults taken for the owner
 
-Nothing yet. Each default the game took in the owner's place, from the guide or from its own sheet.
+- The owner's word on the first games put clarity before the puzzle: the first showing gives one whole round, and the hand, after a wait, shows the right move. A child who does not wait works it out alone.
+- A tap on an opening heaves (touch rule 4 says a tap moves nothing of weight): at age 2 everything essential is a tap, and a heave that does not fit costs nothing.
 
 ### What the next builder should know
 
-Nothing yet. What this build taught that the guide and the template do not say.
+- A hint that "shows a move and never the answer" is read by a newcomer as a hand that is wrong. If the hand can be followed, it has to be right.
+- Two big characters, a load and a wall in one plane: put the bears' places in terms of the load's outline from the start, or the intersection audit finds every act.

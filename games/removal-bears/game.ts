@@ -209,7 +209,7 @@ export class Game {
     const t = act.t
     this.heavePath(pose, t, act)
     if (t <= FLOWN) return pose
-    const through = span(t, FLOWN, FLOWN + 0.2), drop = span(t, FLOWN + 0.2, FLOWN + 0.34), over = smooth(span(t, FLOWN + 0.5, FLOWN + 0.9)), back = smooth(span(t, FLOWN + 0.9, FLOWN + 1.15))
+    const through = span(t, FLOWN, FLOWN + 0.2), drop = span(t, FLOWN + 0.2, FLOWN + 0.34), over = smooth(span(t, FLOWN + 1, FLOWN + 1.4)), back = smooth(span(t, FLOWN + 1.4, FLOWN + 1.65))
     pose.x = lerp(act.cx, act.slotX, over)
     const rest = SILL + h / 2 + 0.02
     pose.y = lerp(act.cy, rest, drop * drop)
@@ -403,7 +403,7 @@ export class Game {
       pat.x = to.x; pat.y = to.y + Math.abs(Math.sin(this.time * 2)) * 0.03; pat.z = to.z; pat.roll = to.roll; pat.glad = 1
       return pat
     }
-    if (act?.kind === 'in' || act?.kind === 'bump') pat.duck = smooth(span(act.t, 0.05, 0.3)) * (1 - smooth(span(act.t, 1.4, 1.8)))
+    if (act?.kind === 'in' || act?.kind === 'bump') pat.duck = smooth(span(act.t, 0.05, 0.3)) * (1 - smooth(span(act.t, act.kind === 'in' ? 1.9 : 1.4, act.kind === 'in' ? 2.3 : 1.8)))
     else pat.y += hop * (this.empty ? 0.3 : 1)
     pat.squash *= 1 - pat.duck * 0.45
     return pat
@@ -434,9 +434,9 @@ export class Game {
       case 'cart': this.cartPoke = 0; this.say(voices.mouse(this.count++)); break
       case 'cub': this.cubPoke = 0; this.say(voices.cub(this.count++)); break
       case 'inside': this.pokeInside(target.i); break
-      case 'wall': this.dent(Math.round(target.u), Math.floor(target.v / Math.cos(0.2)), 2.2); this.say(voices.sugar(this.count++)); this.puff(target.u, target.v + 0.1, 0.3, 'sugar', 4); break
+      case 'wall': this.dent(Math.round(target.u), Math.floor(target.v / Math.cos(0.2)), 4.5); this.say(voices.sugar(this.count++)); this.puff(target.u, target.v + 0.1, 0.3, 'sugar', 4); break
       case 'cloth': this.say(voices.cloth(this.count++)); this.puff(target.u, 0.1, 6, 'crumb', 4); break
-      case 'kitchen': this.say(voices.jar(target.u, this.count++)); break
+      case 'kitchen': this.puff(target.u, target.v, 6, 'sugar', 5); this.say(voices.jar(target.u, this.count++)); break
     }
   }
 
@@ -672,7 +672,6 @@ export class Game {
 
   private startTurn(lasts: number, show = false): void {
     const i = this.hands, load = this.saved.loads[i], from = this.extent(load)
-    this.last = 'turn'
     this.act = { kind: 'turn', t: 0, lasts, from, to: { w: from.h, h: from.w }, a0: this.angle, show }
     this.setWay(i, { ...load.way, turn: (load.way.turn + 1) % 4 }, show)
     this.say([...voices.toss(lasts), ...voices.rider(load.kind, 'turn', (load.way.turn + 1) % 4, lasts)])
@@ -696,7 +695,6 @@ export class Game {
     const side = caughtSide(cells, put)
     this.act = { kind: 'bump', t: 0, i, x, cx, cy: cy + 0.02, fromY, side, blocked: put.blocked, near: put.blocked.length === 1, show, said: 0 }
     if (!show) { this.saved = { ...this.saved, bumps: Math.min(MOST_BUMPS, this.saved.bumps + 1) }; this.dirty = 'now' }
-    this.last = 'bump'
     this.say(voices.heave())
   }
 
@@ -708,7 +706,9 @@ export class Game {
     if (last) {
       const done = finishCycle(this.saved, s.bumps <= loads.length ? 'well' : s.bumps > loads.length * 3 ? 'badly' : 'mixed')
       const laid = layHouse(done.position, s.seed)
-      this.saved = { ...done, next: { openings: laid.openings, loads: laid.loads }, seed: laid.seed }
+      // The next house does not open with the load that has just gone in.
+      const same = laid.loads.length > 1 && laid.loads[0].kind === s.loads[at].kind
+      this.saved = { ...done, next: { openings: laid.openings, loads: same ? [...laid.loads.slice(1), laid.loads[0]] : laid.loads }, seed: laid.seed }
       this.cartFull = false
     }
     if (this.showing) { this.showing = false; this.shownState = null }
@@ -799,7 +799,7 @@ export class Game {
       this.puff(act.cx - 1, SILL + 0.2, 0.3, 'sugar', 4)
       this.puff(act.cx + 1, SILL + 0.2, 0.3, 'sugar', 4)
     }
-    if (act.t < FLOWN + 1.25) return
+    if (act.t < FLOWN + 1.75) return
     if (act.last) this.called = false
     this.act = act.last ? { kind: 'ending', t: 0, said: 0 } : null
     this.x = act.x
@@ -916,8 +916,6 @@ export class Game {
 
   private say(notes: Cue): void { if (notes.length) this.cues.push(notes) }
 
-  /** What came last, which says what a hand shows next: after a turn an opening, after a bump the load. */
-  last: 'turn' | 'bump' | null = null
   /** For the guide: the opening the bears are nearest to. */
   get under(): number { return this.nearest().i }
 }

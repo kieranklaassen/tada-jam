@@ -1,7 +1,7 @@
 import { size } from './cells'
 import type { Game, Target } from './game'
 import { leftOf } from './houses'
-import { BEARS, SILL, drawnAt } from './space'
+import { BEARS, LANE, SILL, drawnAt } from './space'
 
 // What a finger landed on, from where it is as drawn. Nearest the child first:
 // the load, the cart, the bears, what is inside an open house, the openings,
@@ -16,7 +16,10 @@ export function pick(game: Game, u: number, v: number, least = 0): Target {
     const pose = game.loadPose(i)!, e = size(game.cells()), at = drawnAt(pose.x, pose.y, pose.z + 0.43)
     if (inside(at.u, at.v, e.w / 2, e.h / 2, 0.14)) return { type: 'load' }
   }
-  const cart = drawnAt(game.cart.x, 1.6, 4.9)
+  // The cart with what stands on it.
+  const cart = drawnAt(game.cart.x, 1.6, 4.9), on = game.waiting?.load, stands = on ? size(game.cells(on)) : { w: 0, h: 0 }
+  const top = drawnAt(game.cart.x, 1.02 + stands.h / 2, LANE)
+  if (on && inside(top.u, top.v, stands.w / 2, stands.h / 2, 0.14)) return { type: 'cart' }
   if (inside(cart.u, cart.v, 1.5, 1.75, 0.1)) return { type: 'cart' }
   let best: Target | null = null, near = Infinity
   for (const who of [0, 1] as const) {
