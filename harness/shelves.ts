@@ -66,6 +66,7 @@ export const SHELVES: readonly Shelf[] = [
       'one-more-table': 'Pull the table longer and see who plops in with a dish.',
       'advent-market': 'Dip candles, fold stars, ice biscuits, and give them away.',
       'bottom-portraits': 'Turn the animals round and a grand painter paints exactly what he sees.',
+      'wrap-the-cat': 'Wind paper round anything, even the cat, then rip it open.',
     },
   },
   {
@@ -110,8 +111,10 @@ export const SHELVES: readonly Shelf[] = [
     label: 'Puzzles',
     games: {
       'grandpa-tells-wrong': 'Grandpa tells the day wrong. Fix it, or let it come true.',
+      'removal-bears': 'Turn the sofa to get it through the door.',
       'animals-vote': 'Everyone takes one square, and the tallest column happens to all.',
       'the-blanket': 'Cover a head, move the sausage, and see who looks where.',
+      'endless-string': 'Pull out lights, boots and an uncle, hang them on a moose, hit the switch.',
       'light-garden': 'Bend beams with mirrors to wake sea-glass creatures.',
       'turning-tower': 'Twist the tower until the paths line up.',
       'shadow-lantern': 'Turn paper shapes until the shadow fits.',
