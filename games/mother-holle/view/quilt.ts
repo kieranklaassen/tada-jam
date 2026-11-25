@@ -69,7 +69,7 @@ export class Holle {
       .form({ at: [s * 1.02, 0.75, 0.2], r: [0.28, 0.5, 0.35], across: 5, up: 2, puff: 0.1, dye: d(C.hair, 'ticking') })
     add('holle-head', sew, this.head)
     const pup = new Sew(), lid = new Sew()
-    for (const s of [-1, 1]) { pup.form({ at: [s * 0.4, 0, 0], r: [0.13, 0.15, 0.06], across: 6, up: 2, puff: 0, dye: d(C.ink, 'smooth') }); lid.form({ at: [s * 0.4, 1.02, 0.82], r: [0.28, 0.29, 0.13], across: 5, up: 2, puff: 0, dye: d(C.skinB, 'smooth') }).form({ at: [s * 0.4, 0.9, 0.93], r: [0.2, 0.035, 0.04], turn: [0, 0, s * -0.3], across: 4, up: 2, puff: 0, dye: d(C.ink, 'smooth') }) }
+    for (const s of [-1, 1]) { pup.form({ at: [s * 0.4, 0, 0], r: [0.13, 0.15, 0.06], across: 6, up: 2, puff: 0, dye: d(C.ink, 'smooth') }); lid.form({ at: [s * 0.4, 1.02, 0.82], r: [0.28, 0.29, 0.13], across: 5, up: 2, puff: 0, dye: d(C.skinB, 'smooth') }).form({ at: [s * 0.4, 0.94, 0.94], r: [0.2, 0.035, 0.04], turn: [0, 0, s * -0.3], across: 4, up: 2, puff: 0, dye: d(C.ink, 'smooth') }) }
     this.pupils = add('holle-pupils', pup, this.head)
     this.lids = add('holle-lids', lid, this.head)
     this.mouth = add('holle-mouth', new Sew().form({ at: [0, -0.02, 0], r: [0.27, 0.15, 0.08], across: 6, up: 2, puff: 0, dye: d(0xa8393c, 'smooth') }).form({ at: [-0.31, 0.12, -0.02], r: [0.14, 0.06, 0.07], turn: [0, 0, -0.7], across: 4, up: 2, puff: 0, dye: d(0xa8393c, 'smooth') }).form({ at: [0.31, 0.12, -0.02], r: [0.14, 0.06, 0.07], turn: [0, 0, 0.7], across: 4, up: 2, puff: 0, dye: d(0xa8393c, 'smooth') }), this.head)
@@ -129,6 +129,7 @@ export class Holle {
     this.pupils.position.set(Math.max(-1, Math.min(1, (look.x - bx) * 0.12)) * 0.1, 1.02 + Math.max(-1, Math.min(1, (look.y - 6) * 0.14)) * 0.1, 0.875)
     const blink = Math.max(0, Math.sin(time * 1.3) * 40 - 39)
     this.lids.visible = this.hug > 0.5 || blink > 0
+    this.pupils.visible = !this.lids.visible
     this.mouth.scale.set(1 + e * 0.15, 0.5 + e * 1.1 + (this.hug > 0.5 ? (breath * 0.5 + 0.5) * 0.9 : 0) + (q.empty ? 0.2 : 0), 1)
     this.mouth.rotation.z = q.empty && q.rising === 0 ? Math.sin(time * 2) * 0.1 : 0
 
