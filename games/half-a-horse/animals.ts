@@ -230,6 +230,16 @@ export class Wardrobe {
       ctx.restore()
     })
   }
+  /** The farmer's wish: the whole animal, small, in a cloud of felt. */
+  wish(animal: number): Picture {
+    return this.album.get(`wish${animal}`, [-104, -84, 208, 214], (ctx) => {
+      for (const [x, y, r] of [[8, 82, 13], [14, 108, 8]]) sew(ctx, oval(x, y, r, r * 0.9), 'goose', { pad: 6, stitch: 0, drop: 2, edge: 2 })
+      sew(ctx, blob([[-90, 10], [-86, -46], [-30, -66], [0, -74], [48, -66], [90, -40], [92, 24], [60, 60], [0, 68], [-60, 58]], 0.95), 'goose', { pad: 14, stitch: 8 })
+      const put = (end: End, x: number, y: number, flip: number) => { const p = this.hung(end); ctx.save(); ctx.translate(x, y); ctx.scale(flip * 0.92, 0.92); ctx.drawImage(p.image, p.x, p.y, p.w, p.h); ctx.restore() }
+      put(animal + 4, -22, 6, -1)
+      put(animal, 24, 2, 1)
+    })
+  }
   private headParts(ctx: Ctx, end: End): void {
     const jaw = JAWS[end]
     if (jaw) { ctx.save(); ctx.translate(jaw.x, jaw.y); ctx.rotate(0.08); [horseJaw, henJaw, () => {}, crocJaw][end](ctx); ctx.restore() }
