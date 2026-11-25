@@ -1,5 +1,6 @@
 import { Box, CAST, TAU, type Make, type Pen, type Sprite } from './craft'
 import { YARN, cutCast, type Cast, type Figure } from './figures'
+import type { RoundHand } from './round'
 import { handPose, type Guidance, type HandPose } from './guidance'
 import { moveToShow, type Move } from './guide'
 import { HEN, POSTS, PUDDLE, SCENERY, SIZE, THINGS, postLean, scaleAt, type Spot, type ThingKey } from './layout'
@@ -81,7 +82,7 @@ export class View {
     this.backdrop = null
   }
 
-  draw(g: Pen, yard: Yard, width: number, height: number, dpr: number, guidance: Guidance | null, step: number): number {
+  draw(g: Pen, yard: Yard, width: number, height: number, dpr: number, guidance: Guidance | null, step: number, round: RoundHand | null = null): number {
     const by = fit(width, height)
     if (by.scale <= 0) return 0
     this.g = g
@@ -94,7 +95,7 @@ export class View {
     g.globalAlpha = 1
     this.background()
     const move = guidance && guidance.glow > 0 ? moveToShow(yard, guidance) : null
-    if (guidance && move) { g.globalAlpha = guidance.glow * (0.75 + 0.25 * sin(this.t * 4)); const on = yard.asking ? 1 : 1.9; this.put(this.cast.glow, move.glow.x, move.glow.y, on, on); g.globalAlpha = 1 }
+    if (guidance && move) { g.globalAlpha = guidance.glow * (0.75 + 0.25 * sin(this.t * 4)); const on = yard.asking && !yard.proud ? 1 : 1.5; this.put(this.cast.glow, move.glow.x, move.glow.y, on, on); g.globalAlpha = 1 }
     // While her wing is up, each chick that can run under it stands in the light.
     if (yard.wing > 0 && yard.canTuck) for (const c of yard.brood) if (c.kind === 'chick' && c.opening === null) { const p = yard.middle(c); g.globalAlpha = 0.7 + 0.3 * sin(this.t * 6); this.put(this.cast.glow, p.x, p.y, 0.8) }
     g.globalAlpha = 1
@@ -103,10 +104,12 @@ export class View {
       if (b.kind === 'hen') { this.drawHen(b) } else if (b.kind === 'egg' || b.kind === 'chick') this.drawBrood(b as Chick)
       else this.drawThing(b as Body & { kind: ThingKey })
     }
+    this.wouldBe()
     this.threads()
     this.particles()
     for (const d of yard.dabs) { const u = d.t / 0.6; g.globalAlpha = 1 - u; this.put(this.cast.fx.fluff, d.x, d.y - u * 14, 1 + sin(u * PI) * 0.6); g.globalAlpha = 1 }
-    if (guidance && move && guidance.demo !== null) this.ghost(move, guidance)
+    if (round) this.handAt(round.x, round.y, round.press, round.opacity)
+    else if (guidance && move && guidance.demo !== null) this.ghost(move, guidance)
     g.setTransform(1, 0, 0, 1, 0, 0)
     return this.drawn
   }
@@ -505,6 +508,27 @@ export class View {
     }
   }
 
+  /** Before it opens: stitches of wool from an egg to whom it would take for its mother, so that the touch that opens it ties what can be seen already. */
+  private wouldBe(): void {
+    const g = this.g, y = this.yard
+    const c = y.brood.find((o) => o.kind === 'egg' && (y.carry?.id === o.id || (o.opening !== null && o.opening < LAND))) ?? y.asking
+    if (!c || c.tucking !== null || c.laying !== null) return
+    const n = y.nearest(c), at = y.place(c), m = n === c.id ? PUDDLE : y.middle(y.of(n)!)
+    const gait: Gait = n === c.id ? 'self' : n === 'puddle' ? 'self' : y.of(n)!.kind === 'egg' ? 'egg' : y.of(n)!.kind === 'chick' ? y.gait(y.of(n) as Chick) : (n as Gait)
+    const [light, dark] = YARN[gait]
+    const a = { x: at.x, y: at.y - at.z - 62 * scaleAt(at.y) }
+    const mx = (a.x + m.x) / 2, my = (a.y + m.y) / 2 - 46
+    g.lineCap = 'round'
+    g.setLineDash([12, 16])
+    g.lineDashOffset = -this.t * 34
+    for (const [w, col, dx, dy] of [[9, 'rgba(10,30,40,0.3)', 3, 5], [8, dark, 0, 0], [5, light, -0.6, -1]] as const) {
+      g.strokeStyle = col; g.lineWidth = w
+      g.beginPath(); g.moveTo(a.x + dx, a.y + dy); g.quadraticCurveTo(mx + dx, my + dy, m.x + dx, m.y + dy); g.stroke()
+    }
+    g.setLineDash([])
+    this.drawn += 1
+  }
+
   private particles(): void {
     const g = this.g
     for (const f of this.yard.fx) {
@@ -519,13 +543,17 @@ export class View {
   private ghost(move: Move, guidance: Guidance): void {
     const second = move.then !== undefined && guidance.demo! >= 0.5
     const u = move.then ? (guidance.demo! * 2) % 1 : guidance.demo!
-    const g = this.g, p = handPose(u, move.drag, this.hand)
+    const p = handPose(u, move.drag, this.hand)
     if (second) move = { ...move, from: move.then!, to: move.then! }
-    const x = move.from.x + (move.to.x - move.from.x) * p.travel, y = move.from.y + (move.to.y - move.from.y) * p.travel + (1 - p.press) * 26
-    g.globalAlpha = p.opacity * 0.5
-    this.put(this.cast.handShadow, x + 6 + (1 - p.press) * 8, y + 8 + (1 - p.press) * 12, 1, 1, -0.3)
-    g.globalAlpha = p.opacity
-    this.put(this.cast.hand, x, y, 1 - p.press * 0.08, undefined, -0.3)
+    this.handAt(move.from.x + (move.to.x - move.from.x) * p.travel, move.from.y + (move.to.y - move.from.y) * p.travel, p.press, p.opacity)
+  }
+
+  private handAt(x: number, under: number, press: number, opacity: number): void {
+    const g = this.g, y = under + (1 - press) * 26
+    g.globalAlpha = opacity * 0.5
+    this.put(this.cast.handShadow, x + 6 + (1 - press) * 8, y + 8 + (1 - press) * 12, 1, 1, -0.3)
+    g.globalAlpha = opacity
+    this.put(this.cast.hand, x, y, 1 - press * 0.08, undefined, -0.3)
     g.globalAlpha = 1
   }
 }

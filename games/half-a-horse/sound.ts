@@ -73,6 +73,8 @@ const VOICES = {
   meet5: () => [t(1568, 0.12, 0.001, 0.4, { delay: 0.5 }), t(2093, 0.06, 0.001, 0.3, { delay: 0.5 })],
   meet6: () => [t(130, 0.12, 0.2, 0.5, { wave: 'sawtooth', glideTo: 96 }), z(700, 0.06, 0.2, 0.4, { q: 9, glideTo: 420 })],
   meet7: () => [0, 0.14, 0.28, 0.42, 0.56].map((delay, i) => z(1400 + 300 * (i % 2), 0.12, 0.002, 0.06, { q: 8, delay })),
+  cheer: () => [392, 494, 587, 784, 988, 784, 988].map((frequency, i) => t(frequency, 0.1, 0.01, 0.2, { delay: i * 0.11, wave: 'triangle' })),
+  wish: () => [t(330, 0.1, 0.02, 0.16, { wave: 'triangle' }), t(440, 0.1, 0.02, 0.28, { wave: 'triangle', delay: 0.18, glideTo: 480 })],
   // The rest of the yard.
   moo: () => [t(150, 0.14, 0.1, 0.6, { wave: 'sawtooth', glideTo: 118 })],
   squawk: () => [t(900, 0.1, 0.01, 0.1, { wave: 'square', glideTo: 1300 }), t(1100, 0.08, 0.01, 0.12, { wave: 'square', delay: 0.14, glideTo: 700 })],

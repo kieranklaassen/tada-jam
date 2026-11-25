@@ -50,6 +50,7 @@ export const SHELVES: readonly Shelf[] = [
     title: 'Run a silly shop',
     label: 'Silly shops',
     games: {
+      'crocodile-jumper': 'Lay sausages along a cold crocodile and a jumper grows on him.',
       'monster-pizza': 'Make the pizza on the card for a very hungry monster.',
       'bread-day': 'Knead, rise and bake in a badger’s bakery.',
       'tea-time': 'Pour the tea just the way each guest likes it.',
@@ -60,6 +61,7 @@ export const SHELVES: readonly Shelf[] = [
       'fix-it-stall': 'Clip leads and test parts until the gadget wakes up.',
       'flower-table': 'Cut a bouquet for four visitors with strong opinions.',
       'advent-market': 'Dip candles, fold stars, ice biscuits, and give them away.',
+      'bottom-portraits': 'Turn the animals round and a grand painter paints exactly what he sees.',
     },
   },
   {

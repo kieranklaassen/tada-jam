@@ -1,5 +1,5 @@
 import type { Note } from './audio'
-import { Errand } from './errand'
+import { Errand, THINK } from './errand'
 import { freshHouse, ideaOf, isTidy, put, take, type House } from './house'
 import type { Gesture, Point } from './input'
 import { DREAM, ROPE, ROPE_MOST, ROPE_PULL, SIZE, VESSELS, bodyMiddle, homeOf, onThing, placeAt, slotOf, type Spot } from './layout'
@@ -8,7 +8,7 @@ import { Mover, springTo, type Character, type Spring } from './motion'
 import type { Saved } from './save'
 import { BUTLER, PLACES, THINGS, thingOf, type Place, type ThingId, type Where } from './things'
 import { VOICES, landVoice, pokeVoice, type VoiceName } from './voices'
-import { WISHES, isMet, nextWish, wishPlaces } from './wishes'
+import { WISHES, isMet, nextWish, whereIs, wishPlaces } from './wishes'
 
 // The game with no browser in it. Gestures come in stage units and time in
 // seconds; the Mount and the tests both play it through here.
@@ -244,6 +244,8 @@ export class Play {
   private dreamNext(): void {
     const saved = this.saved
     if (!saved.begun || saved.dreaming) return
+    // A new dream starts in a tidy house.
+    if (!isTidy(saved.house)) this.tidy()
     saved.wish = nextWish(saved.wish, saved.house)
     saved.dreaming = true
     this.dirty = true
@@ -395,6 +397,12 @@ export class Play {
   /** The bell: the house is tidied. */
   private ring(): void {
     this.say('bell')
+    if (isTidy(this.house)) this.movers.butler.touch()
+    this.tidy()
+    this.dreamNext()
+  }
+
+  private tidy(): void {
     const wasTidy = isTidy(this.house)
     this.saved.house = freshHouse()
     this.errand.home()
@@ -407,20 +415,13 @@ export class Play {
     }
     for (const place of PLACES) this.slosh[place].v += wasTidy ? 2 : 9
     this.dirty = true
-    if (wasTidy) this.movers.butler.touch()
-    this.dreamNext()
   }
 
   private change(house: House, place: Place): void {
     const saved = this.saved
     saved.house = house
     this.dirty = true
-    if (!saved.begun) {
-      saved.begun = true
-      saved.wish = nextWish(saved.wish, house)
-      saved.dreaming = true
-      this.dreamShown = 0
-    }
+    saved.begun = true
     this.errand.think(place, house.examples[place], ideaOf(house, place))
   }
 
@@ -586,16 +587,43 @@ export class Play {
     return this.scene === null || !this.atHome(this.shown.gran) ? 0 : Math.abs(Math.sin(this.scene * 11)) * 26 * Math.max(0, 1 - this.scene / SCENE_SECONDS)
   }
 
-  /** One move the ghost hand may show: a small thing on the shelf carried to a place, or, once the shelf is empty, the bell rope pulled. It is never chosen to meet a wish. */
-  demo(index: number): { id: ThingId | null; from: Point; to: Point } | null {
-    const free = THINGS.filter((one) => !one.alive && this.atHome(this.shown[one.id]))
-    if (free.length === 0) return { id: null, from: { x: ROPE.x, y: ROPE.y + 20 }, to: { x: ROPE.x, y: ROPE.y + 120 } }
+  /** What he has understood belongs somewhere and has not fetched yet: it lights up, so the child sees what he saw. */
+  get called(): ThingId[] {
+    const { thought } = this.errand
+    if (!thought || thought.t < THINK.freeze + THINK.show) return []
+    return THINGS.filter((one) => {
+      const now = this.shown[one.id], to = this.house.at[one.id]
+      return now.mode === 'rest' && now.where === 'home' && to !== 'home'
+    }).map((one) => one.id)
+  }
+
+  /** The one move the house asks for, for the glow and the ghost hand: something small carried to where it brings her dream nearer; the bell, where nothing does; herself, when her dream has come true. */
+  demo(): Demo | null {
+    if (!this.saved.dreaming) { const at = bodyMiddle('gran', this.spotOf('gran')); return { id: null, what: 'gran', from: at, to: at } }
+    if (this.memo?.house !== this.house || this.memo.wish !== this.saved.wish) this.memo = { house: this.house, wish: this.saved.wish, move: this.best() }
+    const { move } = this.memo
+    if (move === null) return isTidy(this.house) ? null : { id: null, what: 'rope', from: { x: ROPE.x, y: ROPE.y + 20 }, to: { x: ROPE.x, y: ROPE.y + 120 } }
+    return { id: move.id, what: 'thing', from: bodyMiddle(move.id, this.spotOf(move.id)), to: move.place === 'home' ? bodyMiddle(move.id, homeOf(move.id)) : { x: VESSELS[move.place].x, y: VESSELS[move.place].rim - 24 } }
+  }
+
+  private memo: { house: House; wish: number; move: { id: ThingId; place: Where } | null } | null = null
+
+  private best(): { id: ThingId; place: Where } | null {
     const wish = WISHES[this.saved.wish]
-    for (let n = 0; n < free.length * PLACES.length; n++) {
-      const one = free[(index * 4 + n) % free.length], place = PLACES[(index + 1 + Math.floor(n / free.length)) % PLACES.length]
-      if (isMet(wish, put(this.house, one.id, place))) continue
-      return { id: one.id, from: bodyMiddle(one.id, homeOf(one.id)), to: { x: VESSELS[place].x, y: VESSELS[place].rim - 24 } }
-    }
-    return null
+    const score = (house: House) => Object.entries(wish.who).filter(([id, where]) => whereIs(house, id) === where).length
+    const moves = (house: House): { id: ThingId; place: Where; house: House }[] => THINGS.flatMap((one): { id: ThingId; place: Where; house: House }[] => {
+      const { id } = one
+      if (house.at[id] !== 'home') return [{ id, place: 'home' as const, house: take(house, id) }]
+      return one.heavy ? [] : PLACES.map((place) => ({ id, place, house: put(house, id, place) }))
+    })
+    let most = score(this.house), found: { id: ThingId; place: Where } | null = null
+    const first = moves(this.house)
+    for (const move of first) { const now = score(move.house); if (now > most) { most = now; found = move } }
+    if (found) return found
+    // Nothing brings it nearer by itself: two that do it together.
+    for (const move of first) for (const next of moves(move.house)) { const now = score(next.house); if (now > most) { most = now; found = move } }
+    return found
   }
 }
+
+export type Demo = { id: ThingId | null; what: 'thing' | 'rope' | 'gran'; from: Point; to: Point }
