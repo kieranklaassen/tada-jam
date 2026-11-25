@@ -47,6 +47,7 @@ export default {
     { a: '^quilt$', b: '^(holle|cloud|quilt)', reason: 'As above.' },
     ...(['walrus', 'granny', 'grandpa', 'cow', 'hen', 'mayor'] as const).map((id) => ({ a: `^${id}`, b: `^${id}`, reason: 'Parts of one sewn toy, stuffed against each other where they join.' })),
     { a: '^pond$', b: '^(walrus|granny|grandpa|cow|hen|mayor)', reason: 'They float in the pond, wade in it and go under in it.' },
+    { a: '^grandpa', b: '^(hill|snow)$', upTo: 1, reason: 'He goes right under in the pond, through the thin snow that floats on it and down to its bed.' },
     { a: '^granny>granny-door', b: '^(hill|snow|hay)$', upTo: 1.6, reason: 'A thin board ploughs its edge into the bank beside the pond and into snow it lands on; measured against its own thinness.' },
     { a: '^granny>granny-door', b: '^(walrus|grandpa|cow|hen|mayor)', upTo: 1.05, reason: 'The same thin board pressed onto a soft head, or sat on by a chair.' },
     { a: '^(hill|snow)$', b: '^(walrus|granny|grandpa|cow|hen|mayor)', upTo: 0.3, reason: 'Runners and feet press into soft ground.' },

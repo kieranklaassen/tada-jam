@@ -41,7 +41,7 @@ Screenshots at 1180×820 from a production build in Chromium's software renderer
 - **Weight.** A heavy tub, a quick door, squash on landing; snow slumps; the quilt swings after the finger.
 - **Wordless, age 3.** No word, letter, numeral or sign. One asker. The first shake is shown with a hand before anybody touches. Taps alone play all of it.
 - **Found as left.** Forty seeded plays put away at random instants and opened again: nothing lost, nothing moves by itself.
-- **60 fps.** Under 80 draws, one texture, no shadow maps, no post pass. No physical iPad was measured.
+- **60 fps.** Measured: 53 draws, 107,000 triangles, about 2 ms of the game's own work a frame on the desk machine here. One texture, no shadow maps, no post pass. The frame rate could not be measured: only a software renderer was here (3 fps, filling pixels), without WebKit. No physical iPad was measured.
 - **Nothing through anything.** The audit is enforced; every allowance has its reason.
 
 ### The learning claim
