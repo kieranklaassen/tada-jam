@@ -89,7 +89,9 @@ export class Play {
       else {
         work.moved = true
         if (work.target.kind === 'body') work.carrying = this.village.lift(work.target.id, p)
-        // Not to be had (it hops, or it is the sun): the finger is a shake from here.
+        // The sun has answered; a finger that wobbles on it does not undo that.
+        if (work.target.kind === 'sun') return
+        // Not to be had (it hops): the finger is a shake from here.
         if (!work.carrying) { work.target = { kind: 'quilt' }; this.village.grab(p) }
       }
     }

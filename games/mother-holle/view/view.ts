@@ -53,6 +53,7 @@ export class View {
   private readonly tint = new THREE.Color()
   private readonly a = new THREE.Color()
   private dark = 0
+  private fresh = true
   private time = 0
   private patted = 0
   private hayHit = 0
@@ -263,6 +264,7 @@ export class View {
   }
 
   private evening(v: Village, dt: number): void {
+    if (this.fresh) { this.fresh = false; this.dark = v.night ? 1 : 0 }
     this.dark += ((v.night ? 1 : 0) - this.dark) * (1 - Math.exp(-dt * 1.6))
     const k = this.dark
     this.hemi.color.set(0xffffff).lerp(this.a.set(0x7f90d8), k)

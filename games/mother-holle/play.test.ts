@@ -221,3 +221,40 @@ describe('put away', () => {
     expect(QUILT.left).toBeLessThan(QUILT.right)
   })
 })
+
+describe('what a review found', () => {
+  const left = (bodies: object, more: object = {}) => { const s = new Hand().v.toState(); return { ...s, shown: true, ...more, bodies: { ...s.bodies, ...bodies } } }
+  const body = (x: number, more: object = {}) => ({ x, on: null, out: true, face: 1, cap: 0, egg: false, ...more })
+  it('nobody sneezes at being opened', () => {
+    const h = new Hand(left({ walrus: body(-5.1, { cap: 0.6 }) }))
+    h.run(3)
+    expect(h.v.events).toEqual([])
+    sound(h)
+  })
+  it('the quilt is found clear of a heap, and does not rise', () => {
+    const h = new Hand(left({ granny: body(0, { on: 'walrus' }), grandpa: body(0, { on: 'granny' }) }, { quilt: -5 })), hem = h.v.quilt.hem
+    expect(hem).toBeGreaterThan(3)
+    h.run(1)
+    expect(h.v.quilt.hem).toBeCloseTo(hem, 1)
+  })
+  it('a rider whose place is under its sled hops down beside it', () => {
+    const h = new Hand(left({ walrus: body(3.2), hen: body(3.2, { on: 'walrus' }) }, { empty: true, snow: Array(120).fill(0.5) }))
+    for (let k = 0; k < 5; k++) { h.v.grab({ x: -5, y: 5 }); h.v.letGoQuilt(); h.run(0.5) }
+    h.rest(); h.run(1)
+    const w = h.v.bodies.walrus, n = h.v.bodies.hen
+    expect(n.on !== null || Math.abs(n.x - w.x) > 1.5).toBe(true)
+    sound(h)
+  })
+  it('a wobbly finger on the sun is still the evening', () => {
+    const h = fresh()
+    h.drag(SUN.x, SUN.y, SUN.x + 0.6, SUN.y + 0.5, 0.2)
+    expect(h.v.night).toBe(true)
+  })
+  it('put away during the first showing, the tub stays', () => {
+    const h = new Hand()
+    h.run(2.2); h.play.park()
+    const x = h.v.bodies.walrus.x
+    h.run(5)
+    expect(h.v.bodies.walrus.x).toBeCloseTo(x, 1)
+  })
+})

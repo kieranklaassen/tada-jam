@@ -30,6 +30,7 @@ Screenshots at 1180×820 from a production build in Chromium's software renderer
 | 4 | Tests | A village opened again started to slide; a sled sat in the dip for good; a pat near the sun brought the night; two could wait in one place | Only the showing may set a sled off by itself; a shove out of the dip; the quilt comes before the sun; everybody waits behind the lane; places settled until still | | |
 | 5 | Cold playtest (a reader who had seen no code) | Five taps in one place do little; no finish; the cow stands in the way; she looks cross when she blinks | A tap on the quilt carries her a step on; poles and flags at the foot; the cow further back; lashes the other way | | What an empty quilt wants is told by the glow and the hand only |
 | 6 | Intersection audit | The quilt through heaps; boards into humps; riders up through each other | She hangs behind the lane, drawn to look the same; sleds laid on their highest touch; up first and then across; seats and sizes measured from the figures | | |
+| 7 | Code review (a reader of the code, with 1,500 seeded plays) | A full head sneezed on opening; the quilt rose on opening; a hen snapped into a tub; the evening replayed on opening; a wobbly tap on the sun undid itself | All nine findings fixed, five with tests | | |
 
 ## For the pull request
 

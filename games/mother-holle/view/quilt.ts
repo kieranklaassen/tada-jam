@@ -108,8 +108,11 @@ export class Holle {
     this.group.add(this.quilt)
   }
 
+  private fresh = true
   update(v: Village, time: number, dt: number, look: { x: number; y: number }, patted: number): void {
     const q = v.quilt, k = 1 - Math.exp(-dt * 7)
+    // The first picture is the village as it was left.
+    if (this.fresh) { this.fresh = false; this.fat = q.left / FEATHERS; this.hug = v.night ? 1 : 0; this.cloudX = q.x * 0.78 }
     this.fat += (q.left / FEATHERS - this.fat) * (1 - Math.exp(-dt * 5))
     this.swing += (Math.max(-1, Math.min(1, -q.vx * 0.06)) - this.swing) * k
     this.hug += ((v.night ? 1 : 0) - this.hug) * (1 - Math.exp(-dt * 3))

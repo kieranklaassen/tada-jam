@@ -63,6 +63,8 @@ export type Target = { kind: 'body'; id: Id } | { kind: 'sun' } | { kind: 'quilt
 export class Village {
   readonly snow = new Snow()
   readonly bodies: Record<Id, Body>
+  /** The six, in their order. */
+  readonly list: readonly Body[]
   readonly feathers: Feather[] = []
   readonly quilt = { x: QUILT.start, to: QUILT.start, left: FEATHERS, hem: QUILT.hem, hemTo: QUILT.hem, energy: 0, due: 0, grabbed: false, vx: 0, empty: false, rising: 0, pats: 0 }
   night = false
@@ -85,21 +87,20 @@ export class Village {
       const s = state.bodies[id]
       this.bodies[id] = { id, x: s.x, y: 0, z: s.out || !isSled(id) ? 0 : WAITS[id].z, v: 0, vy: 0, face: s.face, mode: s.on ? 'ride' : 'rest', on: s.on, out: s.out, cap: s.cap, egg: s.egg, hop: null, mount: null, tilt: 0, react: null, sneeze: 0, ran: 0, floats: false, back: null }
     }
+    this.list = IDS.map((id) => this.bodies[id])
     state.snow.forEach((d, i) => { this.snow.depth[i] = d })
     this.night = state.night
     // What the quilt holds is whatever is not lying about, so nothing is ever lost or made.
     this.shown = state.shown
+    this.shed()
     this.quilt.left = Math.max(0, FEATHERS - this.snow.total - this.capped())
     this.quilt.empty = state.empty && this.quilt.left < FEATHERS - 1e-6
     this.quilt.x = this.quilt.to = state.quilt
     this.settleAll()
+    this.quilt.hem = this.quilt.hemTo = this.clearHem()
   }
 
   // --- Reading the village ---------------------------------------------------
-
-  get list(): Body[] {
-    return IDS.map((id) => this.bodies[id])
-  }
 
   private capped(): number {
     return this.list.reduce((sum, b) => sum + b.cap, 0)
@@ -414,7 +415,7 @@ export class Village {
     const under = back.on ? this.bodies[back.on] : null
     // Back onto the same head, if that is still free.
     if (under && under.mode !== 'hop' && !this.above(under.id) && this.base(under) !== b) { b.on = under.id; b.mode = 'ride' }
-    else { b.on = null; b.mode = 'rest'; if (under) b.x = this.clearX(b.x, b); this.seat(b) }
+    else { b.on = null; b.mode = 'rest'; if (Math.abs(b.z) < 0.5 && (under || this.taken(b.x, b))) b.x = this.clearX(b.x, b); this.seat(b) }
   }
 
   // --- Evening ---------------------------------------------------------------
@@ -478,18 +479,36 @@ export class Village {
     this.evenings(dt)
   }
 
+  /** How high the hem hangs to be clear of whoever is under it. */
+  private clearHem(): number {
+    let hem: number = QUILT.hem
+    for (const b of this.list) {
+      const s = seen(b.x, b.y, b.z)
+      if (Math.abs(s.x - this.quilt.x) < SIZE[b.id].half + 2.7) hem = Math.max(hem, s.y + SIZE[b.id].tall * s.k + 0.5)
+    }
+    return Math.min(5.2, hem)
+  }
+
+  /** A head too full is blown clear at once, so nobody sneezes at being opened. */
+  private shed(): void {
+    for (const b of this.list) if (b.cap >= HEADFUL) this.blow(b)
+  }
+
+  private blow(b: Body): void {
+    const half = b.cap / 2, off = SIZE[b.id].half + 0.5
+    this.snow.add(b.x - off, half)
+    this.snow.add(b.x + off, half)
+    b.cap = 0
+    b.sneeze = 0
+  }
+
   private quiltTick(dt: number): void {
     const q = this.quilt
     const x = q.x
     q.x += (q.to - q.x) * (1 - Math.exp(-dt * 9))
     q.vx = (q.x - x) / dt
     // Held clear of whoever is under it, however many sit on one another.
-    let hem = QUILT.hem
-    for (const b of this.list) {
-      const s = seen(b.x, b.y, b.z)
-      if (Math.abs(s.x - q.x) < SIZE[b.id].half + 2.7) hem = Math.max(hem, s.y + SIZE[b.id].tall * s.k + 0.5)
-    }
-    q.hemTo = Math.min(5.2, hem)
+    q.hemTo = this.clearHem()
     q.hem += (q.hemTo - q.hem) * (1 - Math.exp(-dt * 10))
     q.energy *= Math.exp(-dt * 1.9)
     // A shake lets its feathers go over a moment, so a moving quilt leaves a line and not a heap.
@@ -557,13 +576,15 @@ export class Village {
     for (const b of [...this.list].sort((a, c) => c.y - a.y)) {
       if (b.mode === 'held' || (b.mode === 'hop' && b.hop) || (isSled(b.id) && this.base(b).x < BOTTOM)) continue
       const w = b === lead ? { x: SLOTS[0], z: 0 } : WAITS[b.id]
+      const sat = b.on !== null
       b.egg = false
       b.on = null
       b.mount = null
       b.face = 1
       if (isSled(b.id)) b.out = b === lead
-      if (Math.hypot(b.x - w.x, b.z - w.z) < 0.4) { b.mode = 'rest'; b.x = w.x; b.z = w.z; b.v = b.vy = 0 }
-      else { this.hopTo(b, w.x, w.z, 0); if (b.hop) b.hop.t = (-0.75 * turn++) / b.hop.s; this.say('home', { id: b.id }) }
+      const x1 = w.z === 0 ? this.clearX(w.x, b) : w.x
+      if (!sat && b.mode === 'rest' && Math.hypot(b.x - x1, b.z - w.z) < 0.4) { b.x = x1; b.z = w.z; b.v = b.vy = 0 }
+      else { this.hopTo(b, x1, w.z, 0); if (b.hop) b.hop.t = (-0.75 * turn++) / b.hop.s; this.say('home', { id: b.id }) }
     }
     this.change(true)
   }
@@ -585,8 +606,7 @@ export class Village {
 
   private headUnder(x: number, y: number): Body | null {
     for (const b of this.list) {
-      if (b.mode === 'held' || b.mode === 'hop' || this.above(b.id) || Math.abs(b.z) > 0.5) continue
-      if (Math.abs(b.x - x) < SIZE[b.id].half * 0.75 && y < b.y + SIZE[b.id].tall && y > b.y) return b
+      if (Math.abs(b.x - x) < SIZE[b.id].half * 0.75 && y < b.y + SIZE[b.id].tall && y > b.y && b.mode !== 'held' && b.mode !== 'hop' && Math.abs(b.z) <= 0.5 && !this.above(b.id)) return b
     }
     return null
   }
@@ -598,11 +618,7 @@ export class Village {
     if (b.sneeze > 0) {
       b.sneeze += dt
       if (b.sneeze > SNEEZE_S) {
-        const half = b.cap / 2, off = SIZE[b.id].half + 0.5
-        this.snow.add(b.x - off, half)
-        this.snow.add(b.x + off, half)
-        b.cap = 0
-        b.sneeze = 0
+        this.blow(b)
         this.change()
       }
     }
@@ -897,6 +913,7 @@ export class Village {
     while (q.rising > 0) this.quiltTick(STEP)
     if (q.left < FEATHER * 0.5 && !q.empty) q.empty = true
     this.evening = null
+    this.slipping = this.showingLeft = 0
     for (const b of this.list) {
       if (b.hop) { b.x = b.hop.x1; b.z = b.hop.z1; b.hop = null; b.mode = 'rest'; b.face = 1 }
       b.mount = null
@@ -907,6 +924,7 @@ export class Village {
       // As it is saved, so a load decides the same.
       b.x = Math.round(b.x * 100) / 100
     }
+    this.shed()
     for (let i = 0; i < 400; i++) this.snow.settle()
     q.x = q.to
     this.settleAll()
@@ -923,7 +941,8 @@ export class Village {
       for (const b of this.list) if (b.on === null && b.mode !== 'held' && Math.abs(b.z) < 0.5 && this.taken(b.x, b, undefined, 0)) { const x = this.clearX(b.x, b); moved ||= x !== b.x; b.x = x }
     }
     for (const b of this.list) if (b.on === null && b.mode !== 'held') this.seat(b)
-    for (const b of this.list) if (b.on === null) this.carryUp(b)
+    // Heaps lean as they will have come to lean.
+    for (let i = 0; i < 60; i++) for (const b of this.list) if (b.on === null) this.carryUp(b)
   }
 
   toState(): GameState {
