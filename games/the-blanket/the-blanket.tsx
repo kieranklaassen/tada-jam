@@ -8,6 +8,7 @@ import { IdleLadder, type Guidance } from './guidance'
 import type { Point } from './input'
 import { theBlanketManifest } from './manifest'
 import { quiet, freshWorld, sausageSpot, type World } from './model'
+import { Music } from './music'
 import { Overlay } from './overlay'
 import { sponge, surface } from './paint'
 import { installJamPerf } from './perf'
@@ -33,7 +34,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
 
   useEffect(() => {
     const root = rootRef.current!, canvas = canvasRef.current!
-    const audio = new GameAudio(), clock = new AttendedClock(), ladder = new IdleLadder(0)
+    const music = new Music(), audio = new GameAudio(music.attach), clock = new AttendedClock(), ladder = new IdleLadder(0)
     const pinned = tierOverride(window.location.search)
     const governor = new TierGovernor(pinned ?? startingTier(window.matchMedia('(pointer: coarse)').matches), pinned !== null)
     const work = new PerfRing()
@@ -113,6 +114,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const onDown = (event: PointerEvent) => {
       if (!attention.awake) return
       audio.touchDown()
+      music.touch()
       ladder.touch(clock.seconds)
       const where = at(event)
       if (round?.active) round.stop()
@@ -154,6 +156,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       if (!attention.awake || disposed) return
       // Advances the attended clock. It returns the step to play, in seconds: the rules, a scene and every animation advance by it.
       const step = clock.advance(now)
+      music.step(step)
       const start = performance.now()
       if (play) {
         round?.advance(step, now)
@@ -222,6 +225,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       uninstallPerf()
       overlay.dispose()
       audio.dispose()
+      music.dispose()
     }
   }, [])
 
