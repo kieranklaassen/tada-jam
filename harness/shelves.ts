@@ -24,6 +24,7 @@ export const SHELVES: readonly Shelf[] = [
       'fairy-house': 'Furnish a hollow tree with whatever the wood gives you.',
       'mushroom-village': 'Grow mushrooms with a finger and see which gnome moves in.',
       'box-fort': 'Cut, stack and tape a fort for a cat, a baby and a grandmother.',
+      'mierennest': 'Dig an ant kingdom out of sand, mud and stone.',
       'bad-neighbours': 'Drop wobbly apartments and meet everyone who lives in them.',
       'kite-tower': 'Stack rainbow wood so a peg doll can reach her kite.',
     },
