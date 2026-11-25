@@ -80,16 +80,30 @@ describe('the home page', () => {
 
   it('shows games only when there is no demo catalog', async () => {
     await openHome()
-    expect(screen.queryByRole('region', { name: 'Demos' })).toBeNull()
+    expect(screen.getAllByRole('button', { name: /^All/ })[0].textContent).toBe('All 3')
   })
 
-  it('shows a demo as a card marked as a demo, and opens it by its key', async () => {
-    serveCatalog([demo('sock-race', 'Sock Race'), demo('ant-hill', 'Ant Hill demo'), demo('peg-blaster', 'Peg Blaster', { verdict: 'no' })])
+  it('shelves every demo, also one a game grew from or one turned down, says which are first versions, and opens it by its key', async () => {
+    serveCatalog([demo('sock-race', 'Sock Race'), demo('ant-hill', 'Ant Hill', { ages: [9, 12] }), demo('peg-blaster', 'Peg Blaster', { verdict: 'no' }), demo('pond', 'Pond', { game: 'bubble-bath' })])
     const onPickDemo = vi.fn()
+    window.localStorage.setItem(PREFS_KEY, JSON.stringify({ childAge: null }))
     await openHome(onPickDemo)
-    const tiles = within(screen.getByRole('list', { name: 'Building' })).getAllByRole('button')
-    expect(tiles.map((tile) => tile.textContent)).toEqual(['🎲Sock Racedemo · ages 3–7'])
-    fireEvent.click(tiles[0])
-    expect(onPickDemo).toHaveBeenCalledWith('sock-race')
+    expect(screen.getByRole('button', { name: /^All/ }).textContent).toBe('All 7')
+    expect(cards('Just arrived')).toEqual(['Ant Hill', 'Bubble Bath', 'Cloud Kitchen', 'Sock Race', 'Ant Hill', 'Pond'])
+    expect(cards('Dash, drop and splash')).toEqual(['Peg Blaster'])
+    const captions = within(screen.getByRole('list', { name: 'Just arrived' })).getAllByRole('button').map((button) => button.querySelector('.home-card-caption')!.textContent)
+    expect(captions.slice(3)).toEqual(['ages 3–7', 'first version · ages 9–12', 'first version · ages 3–7'])
+    fireEvent.click(screen.getByRole('button', { name: /first version · ages 9/ }))
+    expect(onPickDemo).toHaveBeenCalledWith('ant-hill')
+  })
+
+  it('puts the demos for the chosen age first too, and finds them by a word', async () => {
+    window.localStorage.setItem(PREFS_KEY, JSON.stringify({ childAge: 10 }))
+    serveCatalog([demo('sock-race', 'Sock Race')])
+    await openHome()
+    expect(cards('Just arrived')).toEqual(['Ant Hill'])
+    expect(cards('Made for other ages')).toEqual(['Bubble Bath', 'Cloud Kitchen', 'Sock Race'])
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'sock' } })
+    expect(cards('Just arrived')).toEqual(['Sock Race'])
   })
 })

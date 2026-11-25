@@ -7,17 +7,25 @@ const LAUNCH_MS = 380
  * Opening a game: its picture grows from where it was touched until it fills
  * the screen, and the game opens behind it. The copy that grows is removed
  * when the page that made it goes, or when the growing is done.
+ *
+ * `open` is called inside the tap and gives back what shows the game, called
+ * when the growing is done. The address has to change inside the tap: Safari
+ * passes over a history entry that no touch made, so going back from a game
+ * opened later, by the animation, could skip the home page.
  */
-export function useLaunch(open: (id: string) => void): Launch {
+export type Open = (id: string) => void | (() => void)
+
+export function useLaunch(open: Open): Launch {
   const busy = useRef(false)
   return useCallback(
     (id, from) => {
       if (busy.current) return
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || typeof from.animate !== 'function') {
-        open(id)
+        open(id)?.()
         return
       }
       busy.current = true
+      const show = open(id)
       const rect = from.getBoundingClientRect()
       const copy = from.cloneNode(true) as HTMLElement
       copy.classList.add('is-opening')
@@ -29,7 +37,7 @@ export function useLaunch(open: (id: string) => void): Launch {
       const finish = () => {
         if (opened) return
         opened = true
-        open(id)
+        show?.()
         const gone = copy.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 220, delay: 120, fill: 'forwards' })
         gone.onfinish = () => copy.remove()
         // An animation that never runs (a page put in the background) must not leave a picture over the game.
