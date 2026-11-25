@@ -21,6 +21,8 @@ export type GameState = {
   hair: Pair<Hair>
   lips: Pair<boolean>
   beat: BeatId
+  /** Who has had what it asked for, this round. */
+  glad: Record<Guest, boolean>
 }
 
 /** How long the copy waits on a first visit. Age is a hint: no age takes the youngest, and both ends are open. */
@@ -33,13 +35,14 @@ export function freshState(childAge: number | null): GameState {
   return {
     v: STATE_VERSION,
     held: ['teapot', 'glue'],
-    table: ['fan', 'duster', 'horn', 'fish'],
+    table: ['duster', 'fish', 'horn', 'fan'],
     seated: ['walrus', 'dog'],
     waiting: ['goose', 'pig'],
     coats: { walrus: 'clean', dog: 'clean', goose: 'clean', pig: 'clean' },
     hair: ['plain', 'plain'],
     lips: [false, false],
     beat: firstBeat(childAge),
+    glad: { walrus: false, dog: false, goose: false, pig: false },
   }
 }
 
@@ -79,6 +82,7 @@ export function deserialize(raw: unknown, childAge: number | null = null): GameS
     if (Array.isArray(raw.hair)) state.hair[side] = one(raw.hair[side], HAIRS, 'plain')
     if (Array.isArray(raw.lips)) state.lips[side] = raw.lips[side] === true
   }
+  if (isRecord(raw.glad)) for (const guest of GUESTS) state.glad[guest] = raw.glad[guest] === true
   state.beat = one(raw.beat, BEATS, state.beat)
   return state
 }

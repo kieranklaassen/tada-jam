@@ -7,6 +7,8 @@ import { BACKDROP } from './config'
 import { IdleLadder, type Guidance } from './guidance'
 import { ForgivingTouch, type Gesture, type Point } from './input'
 import { dressedInTheDarkManifest } from './manifest'
+import { fingerOn, openingBeats } from './opening'
+import { OpeningRound } from './round'
 import { Overlay, inCorner } from './overlay'
 import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
@@ -42,6 +44,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // sprites and figures it drew as drawCalls; a three.js game copies the renderer's own counts.
     const drawn = { drawCalls: 0, triangles: 0 }
     const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, ...drawn }))
+    // One whole round, shown once on a first visit (round.ts).
+    let round: OpeningRound | null = null
     let game: Show | null = null, disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
     // What the loop hands the draw, as `drawn` is what the draw hands back. `guidance` is what the idle ladder
     // shows now, and null until the first frame: the loop keeps what `ladder.update` returns, so the glow and the
@@ -67,6 +71,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     /** Hands what the game changed to storage: a stroke at the throttle; a move, the lamp or a scene's outcome at once. */
     const keep = () => {
       if (!game || game.changed === 0) return
+      // Nothing the opening round did is kept until the child has touched something.
+      if (round?.active) { game.changed = 0; return }
       cadence.change(performance.now(), game.changed === 2)
       game.changed = 0
     }
@@ -99,7 +105,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // land off by the ratio on a tablet, and right on a display of ratio 1.
     const draw = () => {
       if (width <= 0 || height <= 0) return
-      view.draw(game, playing.guidance)
+      view.draw(game, playing.guidance, round?.hand ?? null)
       // What a frame costs on a canvas: sprites stamped onto the surface plus live strokes and fills.
       drawn.drawCalls = view.drawn
     }
@@ -190,6 +196,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const onDown = (event: PointerEvent) => {
       if (!attention.awake) return
       audio.touchDown()
+      round?.stop()
       const where = at(event)
       // A touch in the grown-up's corner is not the child's, and does not send the idle hand away.
       if (!inCorner(where.x, where.y, width)) ladder.touch(clock.seconds)
@@ -237,10 +244,11 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       // A scene that is playing is not idleness either. A game with short scenes makes the same call for as long
       // as one runs (`if (scene.running) ladder.touch(clock.seconds)`), or the ghost hand comes up over the scene.
       // A finger down in the grown-up's corner is not the child's working finger.
-      if ((touch.active && ours) || game?.busy) ladder.touch(clock.seconds)
+      if ((touch.active && ours) || game?.busy || round?.active) ladder.touch(clock.seconds)
       // What to show an idle child: a glow on what can be touched, then one move.
       playing.guidance = ladder.update(clock.seconds)
       if (game) {
+        round?.advance(playing.step, now)
         game.step(playing.step)
         sound()
         keep()
@@ -276,6 +284,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       frame = 0
       clock.rest()
       overlay.forget()
+      round?.stop()
       act(touch.clear())
       cadence.settle(performance.now())
     })
@@ -285,6 +294,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       if (disposed) return
       // A saved position wins; `childAge` only chooses where a first visit starts.
       game = new Show(deserialize(value, ctxRef.current.childAge).night)
+      if (value === null || value === undefined) round = new OpeningRound(openingBeats(game), fingerOn(game))
       // The game sets itself up from the state here, as it was left: nothing eases in and no scene replays.
       // Then the load draws the first frame itself. A game that is resting or parked when the slot comes back
       // has no frame coming, and would go on showing the surface as it was before the read.

@@ -1,7 +1,7 @@
 import type { Note } from './audio'
 import { Cloth, type Pt } from './cloth'
 import { Crowd, strangeness, type Beast, type React, type Watcher } from './crowd'
-import { ACTS, BEAR, GOOSE, actPose, animalOf, partOf, restPose, tempo, type End, type Pose, type Who } from './ends'
+import { ACTS, ANIMALS, BEAR, GOOSE, actPose, animalOf, partOf, restPose, tempo, type End, type Pose, type Who } from './ends'
 import { Hands, LIFT_GRACE_S, REGRAB, REST_S, type Contact } from './hands'
 import { BODY, COMPANY, DRAG_FROM, FARMER, FOOD_LEFT, FOOD_R, FOOD_REACH, FOOD_RIGHT, GROUND, HANG, HANG_REACH, LEFT, LINE, LINE_FLOOR, LOFT, MAX_FOOD, MEET, PEGS, PIG, POST, PUDDLE, RIGHT, ROOM, SEAM, SLACK, STABLE, STABLE_ROOM, TREE, pegAt } from './layout'
 import { Routines, type Routine } from './routines'
@@ -83,6 +83,9 @@ const HIGHEST = 240
 const WALK = [128, 84] as const
 const CALLED = [330, 250] as const
 const NIGHT_S = 5
+/** The farmer's joy at the animal he wished for, and how near whole it has to be. */
+export const CHEER_S = 2.6
+const WHOLE = 480
 
 export class Play {
   readonly halves: [Half, Half]
@@ -98,6 +101,9 @@ export class Play {
   /** How far the bow is drawn together, 0 to 1 and over, on a spring. */
   knot = 0
   private knotV = 0
+  /** The animal the farmer wishes for, and the seconds of his joy at the last one: below 0 while its greeting is still on. */
+  wish: number
+  cheer = CHEER_S
   ended: boolean
   /** Seconds into the ending, or past its end. */
   night: number
@@ -145,6 +151,7 @@ export class Play {
     this.tied = saved.tied
     this.knot = saved.tied ? 1 : 0
     this.ended = saved.ended
+    this.wish = saved.wish
     this.night = saved.ended ? NIGHT_S : 0
     this.door = saved.ended ? 1 : 0
     if (saved.ended) this.lieDown()
@@ -176,6 +183,7 @@ export class Play {
       eaten: [...this.eaten],
       tied: this.tied && front < rear,
       ended: this.ended || (coming && front <= STABLE.mouth && rear <= STABLE.mouth),
+      wish: this.wish,
     }
   }
 
@@ -891,6 +899,7 @@ export class Play {
       if (!tied) this.say('unbow')
     }
     for (const who of [GOOSE, BEAR] as const) this.greet(who)
+    this.grant(dt)
   }
 
   /** A half nobody holds has its own nose: it goes where it was called, or where it wants to be. */
@@ -1150,6 +1159,35 @@ export class Play {
         this.mark(true)
       }
     }
+  }
+
+  /** The animal he wished for stands before him, both its ends: the yard is beside itself, and he thinks of the next. */
+  private grant(dt: number): void {
+    const [front, rear] = this.halves
+    if (this.cheer < CHEER_S) {
+      const was = this.cheer
+      this.cheer = Math.min(CHEER_S, this.cheer + dt)
+      const beat = (at: number): boolean => was < at && this.cheer >= at
+      if (beat(0)) {
+        this.say('cheer')
+        this.crowd.react('farmer', 'wave')
+        this.crowd.react('cow', 'wave')
+        this.crowd.react('hen', 'skip')
+        this.crowd.react('pig', 'roll')
+        this.swingV += 5
+        for (const half of this.halves) half.squashV += 5
+        this.puff('leaf', FARMER.x - 90, 300, 8)
+        this.puff('feather', (front.x + rear.x) / 2, 330, 8)
+      }
+      if (beat(0.9)) { this.hopV = 260; for (const half of this.halves) half.squashV += 4; this.puff('feather', FARMER.x - 120, 280, 8) }
+      if (beat(CHEER_S)) this.say('wish')
+      return
+    }
+    if (animalOf(front.wear) !== ANIMALS[this.wish] || animalOf(rear.wear) !== ANIMALS[this.wish] || front.wear === rear.wear) return
+    if (Math.max(front.x, rear.x) < MEET || Math.abs(this.gap) > WHOLE || front.change >= 0 || rear.change >= 0 || front.y > 110 || rear.y > 110) return
+    this.wish = (this.wish + 1) % ANIMALS.length
+    this.cheer = this.meeting ? this.meeting.t - this.meeting.seconds - 0.1 : -0.1
+    this.mark(true)
   }
 
   private routine(dt: number): void {
