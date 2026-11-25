@@ -120,6 +120,7 @@ export const SHELVES: readonly Shelf[] = [
       'night-camp': 'Pack enough wood, oil and water to last the night.',
       'five-in-the-bed': 'Roll five sheep over the ridge until each has a straw.',
       'pebble-table': 'Clay stones, an honest scale, and guests to feed fairly.',
+      'monster-telephone': 'One peeks and tells, the other builds the monster’s twin.',
       'princess-playground': 'Who can lift whom? Find out on the seesaw.',
     },
   },
