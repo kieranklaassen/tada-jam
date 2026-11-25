@@ -103,3 +103,13 @@ A painted box lid, in two lights that are two different pictures.
 **Painted once.** The two rooms are painted once for each size. Figures, garments and quilts are stamped from sprites keyed by their look, with expressions rounded to a few steps (`sprites.ts`); limbs, eyes of the moon, the cord and rings are live. A frame takes at most 80 stamps, fills and strokes.
 
 **Tiers** change the pixel ratio, and at the last one the scales on the quilts are left out.
+
+## The loop, made plain
+
+A child at the low end of the band played it and the loop was not clear: what to do, what comes of it, what to do next. Where this section and the rest of this sheet differ, this section holds.
+
+- **The opening round.** With nothing saved, the ghost hand plays one whole round for real (`round.ts`, `opening.ts`): it puts the lamp out, carries the cold hen the boots it dreams of and puts the lamp on again. Any touch stops it, it plays once, and nothing it did is saved until a touch. It is the one thing that starts by itself.
+- **The loop.** A cold sleeper dreams of the one garment it loves. When all five wear just that, the lamp is asked for, the light shows them off, and everything comes off again for another night.
+- **The ladder** begins sooner: one glow after 1.5 s, on the next step only, and the hand after 3.5 s.
+
+A picture of what somebody wants is a thing to fetch and never a verdict: nothing is counted, and everything else in the room still answers.

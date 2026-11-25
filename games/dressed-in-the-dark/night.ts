@@ -86,6 +86,11 @@ export class Night {
     this.lit = !this.lit
     if (this.lit) return { lit: true, shown: this.beds.map((sleeper, bed) => ({ sleeper, bed, verdict: verdictOf(sleeper, this.worn[sleeper]) })) }
     const thrown: { sleeper: Sleeper; garment: Garment }[] = []
+    // All five have just what they dreamed of: it all comes off, and the night begins again.
+    if (SLEEPERS.every((sleeper) => this.worn[sleeper].length === 1 && this.worn[sleeper][0] === LOVES[sleeper])) {
+      for (const sleeper of this.beds) { thrown.push({ sleeper, garment: LOVES[sleeper] }); this.worn[sleeper] = [] }
+      return { lit: false, thrown }
+    }
     for (const sleeper of this.beds) {
       for (const garment of this.worn[sleeper]) if (garment !== LOVES[sleeper]) thrown.push({ sleeper, garment })
       this.worn[sleeper] = this.worn[sleeper].filter((garment) => garment === LOVES[sleeper])

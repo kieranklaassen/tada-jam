@@ -53,3 +53,7 @@ The order he notices things in (colour, kind, spots, alive), the ten wishes, peo
 ### What the next builder should know
 
 A round pool of a colour reads as an object. A splash with drops reads as the colour.
+
+## Pass: the loop, made plain
+
+Told: the loop was not clear to a young child. Likely cause: everything that answered glowed alike, the hand showed a gesture without what it was for, and nobody visibly wanted the next thing. Change: the section of the same name in `ART.md`. Checked by `round.test.ts` and by recording the untouched first visit and reading it frame by frame. Not yet checked: the same child again, and a real iPad.

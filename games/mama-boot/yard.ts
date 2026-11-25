@@ -1,5 +1,5 @@
 import {
-  BROOD, FENCE, FENCES, GROUND, HEN, PUDDLE, SCENERY, SIZE, SQUAT, THINGS, apart, clampSpot, freeSpot, fromPuddle, scaleAt,
+  BROOD, FENCE, FIRST_EGGS, FENCES, GROUND, HEN, PUDDLE, SCENERY, SIZE, SQUAT, THINGS, apart, clampSpot, freeSpot, fromPuddle, scaleAt,
   type BroodId, type Id, type SceneryKey, type Spot, type ThingKey,
 } from './layout'
 import { childrenOf, gaitOf, isBrood, lineOf, ringOf, stepsOf, type Gait, type Mothers } from './lineage'
@@ -180,6 +180,8 @@ export class Yard {
   /** Where the foil has just been creased. */
   creases: (Spot & { t: number; turn: number })[] = []
   knocking = true
+  /** Whose chick has just hatched, until it is touched and the chick is seen to copy it. */
+  proud: ThingKey | null = null
   private later: Later[] = []
   private rings = new Map<string, { x: number; y: number; a: number }>()
   private knockT = 1.4
@@ -406,6 +408,7 @@ export class Yard {
   private tapThing(k: ThingKey): void {
     const b = this.things[k]
     if (this.gag?.thing === k) this.endGag()
+    if (this.proud === k) this.proud = null
     const t = TAP[k]
     this.sound(`tap.${k}`)
     if (k === 'teapot') {
@@ -481,10 +484,25 @@ export class Yard {
       this.change(true)
       return
     }
+    // Asked again with her wing up: they all run under it, and all are eggs again, all over the yard.
+    if (this.wing > 0 && this.brood.every((c) => this.free(c) || c.host !== null) && this.brood.every((c) => c.kind === 'chick')) return this.gather()
     this.undo = null
     this.perform(this.hen, 'henWing')
     this.sound('hen.wing')
     this.wing = WING_S
+  }
+
+  private gather(): void {
+    const from = this.brood.map((c) => this.place(c))
+    this.brood.forEach((c, i) => {
+      Object.assign(c, { kind: 'egg', mother: null, host: null, dizzy: false, thread: 0, act: null, hop: null, z: 0, tucking: 0, wasEgg: false, from: { x: from[i].x, y: from[i].y - from[i].z } })
+    })
+    for (const c of this.brood) Object.assign(c, this.spotFor(c, FIRST_EGGS[BROOD.indexOf(c.id)]))
+    this.wing = 0
+    this.proud = null
+    this.perform(this.hen, 'henFluff')
+    this.sound('hen.tuck')
+    this.change(true)
   }
 
   /** Her wing is up and nobody has gone under it yet. */
@@ -1083,6 +1101,7 @@ export class Yard {
     const egg = m?.kind === 'egg'
     c.kind = 'chick'
     c.mother = mother
+    this.proud = isBrood(mother) || mother === 'hen' || mother === 'puddle' ? null : mother
     c.thread = OUT - LAND + 0.5
     c.stance = this.rng.next() * 10
     this.lastNearest.delete(c.id)

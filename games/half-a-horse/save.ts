@@ -1,4 +1,4 @@
-import { ENDS } from './ends'
+import { ANIMALS, ENDS } from './ends'
 import { FOOD_LEFT, FOOD_RIGHT, LEFT, MAX_FOOD, PEGS, RIGHT, STABLE } from './layout'
 
 // What goes into ctx.storage: small plain JSON, versioned, read defensively.
@@ -19,6 +19,8 @@ export type Saved = {
   eaten: FoodKind[]
   tied: boolean
   ended: boolean
+  /** Which animal the farmer wishes for, in the order of the animals. */
+  wish: number
 }
 
 export function freshSave(): Saved {
@@ -30,6 +32,7 @@ export function freshSave(): Saved {
     eaten: [],
     tied: false,
     ended: false,
+    wish: 0,
   }
 }
 
@@ -83,5 +86,5 @@ export function deserialize(raw: unknown): Saved {
   const eaten = (Array.isArray(raw.eaten) ? raw.eaten : []).filter(isFood).slice(0, MAX_FOOD - food.length)
   // A bow is tied only while the two stand crossed.
   const tied = raw.tied === true && two[0].x < two[1].x
-  return { v: SAVE_VERSION, halves: two, pegs: hung, food, eaten, tied, ended }
+  return { v: SAVE_VERSION, halves: two, pegs: hung, food, eaten, tied, ended, wish: typeof raw.wish === 'number' && Number.isInteger(raw.wish) && raw.wish >= 0 && raw.wish < ANIMALS.length ? raw.wish : 0 }
 }
