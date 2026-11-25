@@ -61,6 +61,7 @@ export const SHELVES: readonly Shelf[] = [
       'flower-table': 'Cut a bouquet for four visitors with strong opinions.',
       'advent-market': 'Dip candles, fold stars, ice biscuits, and give them away.',
       'bottom-portraits': 'Turn the animals round and a grand painter paints exactly what he sees.',
+      'wrap-the-cat': 'Wind paper round anything, even the cat, then rip it open.',
     },
   },
   {

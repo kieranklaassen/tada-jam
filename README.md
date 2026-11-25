@@ -159,6 +159,7 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 | Half a Horse | `games/half-a-horse/` | 2–6 | A pantomime horse of cloth for two fingers or two children: each drives one half, pull it long and it twangs, cross it and it ties in a bow, dress either end as a horse, hen, elephant or crocodile, and a farmyard believes it or gapes. Alone, the other half follows its own nose. No learning goal. |
 | The Blanket | `games/the-blanket/` | 3–7 | A parlour of four who all want one sausage: drop a blanket on a head, move the sausage, take the blanket off, and each goes where they last saw it. No learning goal. |
 | Bottom Portraits | `games/bottom-portraits/` | 3–7 | A studio of wind-up tin toys in three.js: a pompous painter sits across the table and paints exactly what he sees from there. Tap a sitter and it turns a quarter, so the smiling elephant becomes a bottom in a gold frame; put one behind another, or a head in the painted board's hole, and hang six on the wall. No learning goal. |
+| Wrap the Cat | `games/wrap-the-cat/` | 3–7 | A living room of crepe paper in 2D: circle the bicycle, the giraffe, Grandpa or the cat with a finger and paper winds on until a bow springs up, then rip it open again. Parcels keep the shape of what is in them, the cat walks off in hers, and the family at the door will open whatever is left. No learning goal. |
 
 ## Showcases
 
