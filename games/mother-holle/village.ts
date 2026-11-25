@@ -45,7 +45,7 @@ export type Body = {
   egg: boolean
   hop: Hop | null
   /** Getting up onto somebody: where from, and how far along. */
-  mount: { x: number; y: number; z: number; t: number } | null
+  mount: { dx: number; y: number; z: number; t: number } | null
   tilt: number
   react: { name: React; t: number } | null
   sneeze: number
@@ -176,8 +176,7 @@ export class Village {
     }
     if (best) return { kind: 'body', id: best.id }
     // The quilt may hang before the sun.
-    const q = this.quilt
-    if (Math.abs(p.x - q.x) < 3.2 && p.y > q.hem - 0.3 && p.y < q.hem + 3.2) return { kind: 'quilt' }
+    if (this.onQuilt(p)) return { kind: 'quilt' }
     if (Math.hypot(p.x - SUN.x, p.y - SUN.y) < SUN.r + 0.25) return { kind: 'sun' }
     return { kind: 'quilt' }
   }
@@ -210,14 +209,27 @@ export class Village {
     if (this.night) this.morning()
     const q = this.quilt
     q.grabbed = true
-    q.to = clampQuilt(p.x)
     this.hand = { ...p }
     this.travel = 0
     this.say('grab')
+    q.to = this.onQuilt(p) ? this.onward() : clampQuilt(p.x)
     if (q.empty) { this.pat(); return }
     this.shake(12)
     this.callNext()
     this.change()
+  }
+
+  private onQuilt(p: { x: number; y: number }): boolean {
+    return Math.abs(p.x - this.quilt.x) < 3.2 && p.y > this.quilt.hem - 0.3 && p.y < this.quilt.hem + 3.2
+  }
+
+  /** A tap on the quilt itself: she carries it a step towards the bare grass in front of whoever asks, so taps alone make a run. */
+  private onward(): number {
+    const q = this.quilt, asker = q.empty ? null : this.asker
+    if (!asker) return q.to
+    const end = this.snowEnds(asker.x) + 1.1
+    if (end > HAY) return q.to
+    return clampQuilt(q.to + Math.max(-2.6, Math.min(2.6, end - q.to)))
   }
 
   /** The finger goes on: the quilt with it, and feathers for every bit of the way. */
@@ -473,7 +485,10 @@ export class Village {
     q.vx = (q.x - x) / dt
     // Held clear of whoever is under it, however many sit on one another.
     let hem = QUILT.hem
-    for (const b of this.list) if (Math.abs(b.x - q.x) < SIZE[b.id].half + 2.7) hem = Math.max(hem, b.y + SIZE[b.id].tall + 0.5)
+    for (const b of this.list) {
+      const s = seen(b.x, b.y, b.z)
+      if (Math.abs(s.x - q.x) < SIZE[b.id].half + 2.7) hem = Math.max(hem, s.y + SIZE[b.id].tall * s.k + 0.5)
+    }
     q.hemTo = Math.min(5.2, hem)
     q.hem += (q.hemTo - q.hem) * (1 - Math.exp(-dt * 10))
     q.energy *= Math.exp(-dt * 1.9)
@@ -538,6 +553,7 @@ export class Village {
     // From the top of every heap down, so each has a clear way out.
     const first = !SLEDS.some((id) => { const b = this.bodies[id]; return b.out && this.base(b).x < BOTTOM })
     const lead = first ? SLEDS.map((id) => this.bodies[id]).find((b) => b.out) : undefined
+    let turn = 0
     for (const b of [...this.list].sort((a, c) => c.y - a.y)) {
       if (b.mode === 'held' || (b.mode === 'hop' && b.hop) || (isSled(b.id) && this.base(b).x < BOTTOM)) continue
       const w = b === lead ? { x: SLOTS[0], z: 0 } : WAITS[b.id]
@@ -547,7 +563,7 @@ export class Village {
       b.face = 1
       if (isSled(b.id)) b.out = b === lead
       if (Math.hypot(b.x - w.x, b.z - w.z) < 0.4) { b.mode = 'rest'; b.x = w.x; b.z = w.z; b.v = b.vy = 0 }
-      else { this.hopTo(b, w.x, w.z, 0); this.say('home', { id: b.id }) }
+      else { this.hopTo(b, w.x, w.z, 0); if (b.hop) b.hop.t = (-0.75 * turn++) / b.hop.s; this.say('home', { id: b.id }) }
     }
     this.change(true)
   }
@@ -609,15 +625,16 @@ export class Village {
 
   private hopTick(b: Body, h: Hop, dt: number): void {
     h.t = Math.min(1, h.t + dt / h.s)
-    const t = h.t
+    // Below nothing it waits its turn.
+    const t = Math.max(0, h.t)
     b.face = h.x1 < h.x0 ? -1 : 1
     b.x = h.x0 + (h.x1 - h.x0) * t
     // A long way home goes along the front, out of everybody's way.
     const lane = h.out ? HOME_LANE : 0
     const out = Math.min(1, t * 5), inn = Math.min(1, (1 - t) * 5)
     b.z = h.out ? (t < 0.5 ? h.z0 + (lane - h.z0) * ease(out) : h.z1 + (lane - h.z1) * ease(inn)) : h.z0 + (h.z1 - h.z0) * ease(t)
-    const base = this.surface(b), from = Math.max(0, 1 - t * 4)
-    b.y = Math.max(base, base + (h.y0 - base) * from * from) + Math.abs(Math.sin(t * Math.PI * h.hops)) * (h.out ? 0.9 : 1.1)
+    const base = this.surface(b), from = Math.min(1, Math.max(0, 1 - (t - 0.2) * 4))
+    b.y = Math.max(base, base + (h.y0 - base) * from) + Math.abs(Math.sin(t * Math.PI * h.hops)) * (h.out ? 0.9 : 1.1)
     b.tilt += (0 - b.tilt) * (1 - Math.exp(-dt * 10))
     b.floats = false
     if (t < 1) return
@@ -637,13 +654,12 @@ export class Village {
     b.vy = 0
   }
 
-  private surface(b: Body): number {
-    if (b.z < -1) return ground(b.x) + 0.12
-    const half = SIZE[b.id].half * 0.75
+  private surface(b: Body, as?: number): number {
+    if (b.z < -1) return back(b)
+    // Laid on the snow by its highest touch, so a long board bridges a dip and cuts into no hump.
+    const half = SIZE[b.id].half, slope = as ?? (b.mode === 'hop' ? 0 : this.slope(b.x, half))
     let y = -Infinity
-    const mid = (this.snow.top(b.x - half) + this.snow.top(b.x + half)) / 2
-    y = Math.max(this.snow.top(b.x), mid)
-    if (b.mode === 'hop') for (const o of [-half, half]) y = Math.max(y, this.snow.top(b.x + o))
+    for (let k = -2; k <= 2; k++) { const o = (k / 2) * half; y = Math.max(y, this.snow.top(b.x + o) + (this.snow.at(b.x + o) > 0.05 ? 0.1 : 0) - slope * o) }
     return this.snow.water(b.x) && b.mode !== 'hop' ? y - (isSled(b.id) ? 0.32 : 0.5) : y
   }
 
@@ -659,7 +675,7 @@ export class Village {
 
   private slideTick(b: Body, dt: number): void {
     const half = SIZE[b.id].half
-    if (Math.abs(b.z) > 0.5) { b.y = ground(b.x) + 0.12; b.tilt = 0; return }
+    if (Math.abs(b.z) > 0.5) { b.y = back(b); b.tilt = 0; return }
     const wet = this.snow.water(b.x)
     const slope = this.slope(b.x, half)
     if (b.mode === 'rest') {
@@ -719,8 +735,8 @@ export class Village {
       this.react(b, 'fly', Math.min(1, Math.abs(b.v) / 7))
       return
     }
-    b.y += (y - b.y) * (1 - Math.exp(-dt * 24))
     b.tilt += (Math.atan(this.slope(b.x, half)) - b.tilt) * (1 - Math.exp(-dt * 14))
+    b.y = Math.max(this.surface(b, Math.tan(b.tilt)), b.y + (y - b.y) * (1 - Math.exp(-dt * 24)))
     b.floats = nowWet
   }
 
@@ -737,7 +753,13 @@ export class Village {
     }
     if (b.x < EDGE.left) { b.x = EDGE.left; b.v = 0 }
     b.tilt += (Math.atan2(b.vy, Math.max(3, Math.abs(b.v))) * 0.6 * b.face - b.tilt) * (1 - Math.exp(-dt * 5))
-    const y = this.surface(b)
+    // Down onto a head, if there is one under it.
+    if (b.vy <= 0) for (const o of this.list) {
+      if (o === b || !this.grounded(o) || Math.abs(o.x - b.x) > SIZE[o.id].half * 0.7 + SIZE[b.id].half * 0.3) continue
+      const on = this.top(o.id), head = on.y + SIZE[on.id].tall
+      if (b.y <= head && b.y > head - 1.2 && this.ontoWhoeverIsHere(b)) return
+    }
+    const y = this.surface(b, Math.tan(b.tilt))
     if (b.y > y) return
     const hard = Math.min(1, -b.vy / 7)
     b.y = y
@@ -782,12 +804,13 @@ export class Village {
     const up = this.above(b.id)
     if (!up) return
     const seat = SIZE[b.id].seat
-    const t = up.mount ? ease(Math.min(1, up.mount.t)) : 1
     const tx = b.x - Math.sin(b.tilt) * seat * 0.4, ty = b.y + seat * (0.6 + 0.4 * Math.cos(b.tilt)), tz = b.z
     if (up.mount) {
-      up.x = up.mount.x + (tx - up.mount.x) * t
-      up.y = up.mount.y + (ty - up.mount.y) * t + Math.sin(Math.PI * t) * 1.1
-      up.z = up.mount.z + (tz - up.mount.z) * t
+      // Up first, then across, so nobody goes up through anybody.
+      const t = Math.min(1, up.mount.t), rise = ease(Math.min(1, t / 0.45)), over = ease(Math.max(0, (t - 0.35) / 0.65)), high = Math.max(ty + 0.7, up.mount.y)
+      up.x = tx + up.mount.dx * (1 - over)
+      up.y = up.mount.y + (high - up.mount.y) * rise + (ty - high) * over
+      up.z = up.mount.z + (tz - up.mount.z) * over
     } else { up.x = tx; up.y = ty; up.z = tz }
     up.mode = 'ride'
     up.floats = false
@@ -805,7 +828,7 @@ export class Village {
       for (const b of this.list) {
         if (b === a || !this.grounded(b) || b.mode === 'air' || a.mode === 'air' && a.y > b.y + this.stackTall(b) * 0.8) continue
         // A hair of room: a sled meets what is ahead of it.
-        const gap = SIZE[a.id].half * 0.85 + SIZE[b.id].half * 0.7
+        const gap = SIZE[a.id].half + SIZE[b.id].half + 0.1
         const dx = b.x - a.x
         if (Math.abs(dx) > gap || (a.mode === 'slide' && Math.sign(dx) !== Math.sign(a.v))) continue
         if (Math.abs(b.v) > Math.abs(a.v) && b.mode === 'slide') continue
@@ -823,7 +846,7 @@ export class Village {
   private ontoWhoeverIsHere(a: Body): boolean {
     for (const b of this.list) {
       if (b === a || !this.grounded(b)) continue
-      if (Math.abs(b.x - a.x) > SIZE[a.id].half * 0.6 + SIZE[b.id].half * 0.75) continue
+      if (Math.abs(b.x - a.x) > SIZE[a.id].half * 0.9 + SIZE[b.id].half * 0.9) continue
       if (isSled(a.id) && !isSled(b.id) && b.mode === 'rest') { this.sit(b, a) ; a.mode = 'rest'; this.seat(a); return true }
       this.sit(a, b)
       return true
@@ -847,7 +870,9 @@ export class Village {
       this.say('spill', { id: top.id })
     }
     const seat = this.top(b.id)
-    a.mount = { x: a.x, y: a.y, z: a.z, t: 0 }
+    a.mount = { dx: a.x - b.x, y: a.y, z: a.z, t: 0 }
+    // Snow on the head that is sat on goes to both sides.
+    if (seat.cap > 0) { this.snow.add(seat.x, seat.cap); seat.cap = 0; seat.sneeze = 0 }
     a.on = seat.id
     a.mode = 'ride'
     if (b.mode === 'rest' && Math.abs(a.v) > 2 && isSled(b.id) && this.canStart(b)) { b.mode = 'slide'; b.v = a.v * 0.45; b.face = a.v > 0 ? 1 : -1 }
@@ -915,5 +940,7 @@ export class Village {
 }
 
 const ease = (t: number): number => t * t * (3 - 2 * t)
+/** The ground behind the lane rises a little. */
+const back = (b: Body): number => Math.max(ground(b.x - SIZE[b.id].half), ground(b.x + SIZE[b.id].half)) + Math.max(0, -1.8 - b.z) * 0.16 + 0.12
 const clampQuilt = (x: number): number => Math.min(QUILT.right, Math.max(QUILT.left, x))
 export { BEARS, type SledId }

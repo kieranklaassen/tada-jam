@@ -47,7 +47,7 @@ Nothing is wrong. Snow in a gap-toothed line lets the sled go as far as the firs
 
 ## The designed order, and what is stored
 
-The first picture on a first visit: a short strip of snow runs from the hilltop to the walrus and ends under his tub; in front of him is green grass, and at the bottom the pond. The quilt hangs fat over the grass just ahead of him, and he paddles and looks up at it. If no finger has landed for three seconds, Mother Holle gives the quilt one shake, a few feathers land before him as snow, and he slips about a tub's length and stops with a short groan; any touch ends it, and it does not come again once the child has touched. Its mark is saved when it starts. The first touch anywhere but on somebody, the sun or the moon lets fall enough snow to slide on; a touch on him is answered with his fountain and gargle. So there is a joke at the first touch either way.
+The first picture on a first visit: a short strip of snow runs from the hilltop to the walrus and ends under his tub; in front of him is green grass, and at the bottom the pond. The quilt hangs fat over the grass just ahead of him, and he paddles and looks up at it. If no finger has landed for a second and a half, a ghost hand presses the quilt and Mother Holle gives it one shake, a few feathers land before him as snow, and he slips about a tub's length and stops with a short groan; any touch ends it, and it does not come again once the child has touched. Its mark is saved when it starts. The first touch anywhere but on somebody, the sun or the moon lets fall enough snow to slide on; a touch on him is answered with his fountain and gargle. So there is a joke at the first touch either way.
 
 One new thing at a time, in the order the child's own acts bring them: snow under the walrus, snow on ahead, the bump, the pond at the bottom, and past it the haystack, which puffs straw and bounces back whoever gets that far; then the grandmother comes to the start, then the grandfather, then the cow; then the empty quilt, which is patted. Nothing is locked: the hen and the mayor stand on the hill from the start, and anyone who can be seen can be dragged into play. There is no position and no ladder.
 
@@ -82,4 +82,14 @@ None: no learning goal, and no school skill is claimed.
 
 ## The look
 
-Written after the style spike, not part of the sheet: the claimed look, the palette, materials, lighting and motion rules, and how each tier in `config.ts` keeps the look.
+Quilted patchwork, in 3D. Everything is sewn: the sky, the hill, the cloud, the houses and the six are cut into patches, each patch stuffed, so it bulges between seams that pinch it, with a line of running stitches inside the edge. Nothing is knitted and nothing is smooth, except eyes, noses and cheeks.
+
+- **One sheet of prints.** `view/fabric.ts` draws sixteen small grey prints (dots, gingham, sprigs, plaid, ticking and so on), each with its seam, stitches and weave, into one 1024 px sheet at mount. A patch is one cell of it, dyed by vertex colour. So the whole picture is one texture and five materials.
+- **Sewing.** `view/puff.ts` makes a rounded form of patches and collects many into one geometry: a character's part is one draw.
+- **Palette.** Apple greens for the hill, pale blue squares for the sky, white for cloud and snow and for nothing else that is large, so a white line on the hill is the brightest thing in the lower half. Red, mustard, teal, plum and orange are kept for the quilt, the roofs and the sleds. At night the same dyes under a blue lamp, with yellow windows, lanterns and a moon.
+- **The quilt** is the fattest, reddest thing in the picture: full, its edge is a row of buns; as it empties they go flat, and empty it hangs limp and wavy-hemmed. Over a tall heap she gathers it up.
+- **Snow** is white patches with grey seams, as deep as the model says, under the same light.
+- **Light.** A hemisphere light and one warm lamp from the upper left. No shadow maps, no post pass; a soft round dark under each who stands.
+- **Frame.** An off-axis lens: the lane the sleds run in is drawn flat, to one scale, and the land behind rises. 25 by 17.5 units always fit; a wider surface shows more land.
+- **Motion.** `motion.ts`: each of the six has its own tempo and one odd part (flippers, knees, footrest, tail, wings, hat). No two share a pose in any state; a test holds it.
+- **Tiers.** Pixel ratio 2, 1.5, 1.25, 1, and fewer loose bits (snow dust, straw, water). Feathers are never thinned: they are the answer to the touch.

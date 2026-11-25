@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { handPose, type Guidance, type HandPose } from '../guidance'
-import { EYE, IDS, POND, SIZE, SLEDS, SUN, ground, seen, unseen, type Id } from '../layout'
+import { BEHIND, EYE, IDS, POND, SIZE, SLEDS, SUN, ground, seen, unseen, type Id } from '../layout'
 import { moveToShow } from '../guide'
 import { newPose, poseOf, type Sight } from '../motion'
 import { scaleOf } from '../play'
@@ -18,6 +18,7 @@ import { Holle } from './quilt'
 
 /** The most loose bits in the air at once: feathers, snow dust, water, straw. */
 export const MOST_BITS = 380
+const SUN_Z = -10
 export const MOST_FEATHERS = 260
 
 type Bit = { x: number; y: number; z: number; vx: number; vy: number; vz: number; t: number; s: number; size: number; color: number; up: boolean }
@@ -107,9 +108,9 @@ export class View {
     }
     this.ring = over('ring', this.ringTexture, 1, 1, 9)
     this.hand = over('ghost-hand', this.handTexture, 2.7, 2.7, 10)
-    const s = unseen(SUN.x, SUN.y, -5)
-    this.land.sun.position.set(s.x, s.y, -5)
-    this.land.moon.position.set(s.x, s.y, -5)
+    const s = unseen(SUN.x, SUN.y, SUN_Z)
+    this.land.sun.position.set(s.x, s.y, SUN_Z)
+    this.land.moon.position.set(s.x, s.y, SUN_Z)
   }
 
   setTier(tier: Tier): void {
@@ -177,19 +178,23 @@ export class View {
       sight.right = dx / l
       sight.up = dy / l
       const p = poseOf(b, time, sight, this.pose)
-      const a = b.tilt + p.lean + p.flip * (id === 'cow' ? 1 : 0), mid = 1.1
+      const a = b.tilt + (id === 'granny' ? 0 : p.lean) + p.flip * (id === 'cow' ? 1 : 0), mid = 1.1
       if (id !== 'cow' && id !== 'grandpa') p.flip = 0
+      if (id === 'cow') p.up += 1.5 * Math.abs(Math.sin(p.flip)) + 0.4 * (1 - Math.cos(p.flip))
+      const ridden = v.above(id) !== null
+      // With somebody on the head there is no fountain, no hat in the air and no snow.
+      if (ridden && (id === 'walrus' || id === 'mayor')) p.c = 0
       f.root.position.set(b.x + Math.sin(a) * mid - Math.sin(b.tilt) * mid, b.y + p.up + (Math.cos(b.tilt) - Math.cos(a)) * mid, b.z)
       f.root.rotation.set(0, b.face < 0 ? -0.5 : 0.12, a)
       f.apply(p)
       const snow = Math.min(1, b.cap / HEADFUL)
-      f.cap.visible = snow > 0.04 && !(b.sneeze > 0.62)
+      f.cap.visible = !ridden && snow > 0.04 && !(b.sneeze > 0.62)
       f.cap.scale.setScalar(0.35 + 0.65 * snow)
       if (b.sneeze > 0.62 && b.sneeze - dt <= 0.62) this.burst(b.x, b.y + SIZE[id].tall * 0.8, 22, 0xffffff, 5, 0.22)
       if (b.egg && !v.above(id)) { this.m.position.set(b.x + f.egg[0] - Math.sin(a) * f.egg[1], b.y + f.egg[1] * Math.cos(a) + p.up, b.z + f.egg[2]); this.m.rotation.set(0, 0, a); this.m.scale.setScalar(1); this.m.updateMatrix(); this.eggs.setMatrixAt(eggs++, this.m.matrix) }
       if (v.night && b.out && (SLEDS as readonly Id[]).includes(id)) { this.m.position.set(b.x + SIZE[id].half * 0.9, b.y + 1.75 + Math.sin(time * 2 + b.x) * 0.06, b.z + 0.85); this.m.rotation.set(0, 0, Math.sin(time * 3 + b.x) * 0.15); this.m.scale.setScalar(1); this.m.updateMatrix(); this.lanterns.setMatrixAt(lamps++, this.m.matrix) }
       if (!b.on && !v.snow.water(b.x)) {
-        const top = b.z < -1 || b.z > 1 ? ground(b.x) + 0.15 + (b.z < -1.8 ? (-1.8 - b.z) * 0.16 : 0) : v.snow.top(b.x) + 0.12
+        const top = b.z < -1 || b.z > 1 ? ground(b.x) + 0.05 + (b.z < -1.8 ? (-1.8 - b.z) * 0.16 : 0) : v.snow.top(b.x) + 0.12
         const high = Math.max(0, b.y - top), k = 1 / (1 + high * 0.35)
         this.m.position.set(b.x, top, b.z)
         this.m.rotation.set(0, 0, Math.atan((v.snow.top(b.x + 0.7) - v.snow.top(b.x - 0.7)) / 1.4))
@@ -216,7 +221,8 @@ export class View {
       // A feather at the quilt, a round flake of snow by the time it is down.
       const fall = Math.min(1, Math.max(0, f.y - v.snow.top(f.x)) / 4.5)
       const rock = Math.sin(f.age * 5 + f.seed * 9)
-      m.position.set(f.x + rock * 0.28 * fall, f.y, f.z)
+      const back = f.z + (BEHIND - f.z) * Math.max(0, fall * 1.6 - 0.6), w = unseen(f.x + rock * 0.28 * fall, f.y, back)
+      m.position.set(w.x, w.y, back)
       m.rotation.set(0.4, (f.seed - 0.5) * 0.8, (f.seed - 0.5) * 2 + rock * 0.9 * fall + Math.PI / 2 * fall)
       m.scale.set(0.3 + fall * 0.1, 0.2 + fall * 0.3, 0.3)
       put(0xffffff)
@@ -266,7 +272,7 @@ export class View {
     this.lamp.intensity = 2.05 - k * 1.45
     this.skyCloth.color.set(0xffffff).lerp(this.a.set(0x6a74c0), k)
     this.renderer.setClearColor(this.a.set(C.sky).lerp(this.tint.set(0x2b3569), k))
-    const u = unseen(SUN.x, SUN.y, -5)
+    const u = unseen(SUN.x, SUN.y, SUN_Z)
     this.land.sun.position.y = u.y - k * 15
     this.land.sun.rotation.z = Math.sin(this.time * 0.5) * 0.06
     this.land.moon.position.y = u.y + (1 - k) * 9

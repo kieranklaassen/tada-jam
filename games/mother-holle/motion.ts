@@ -78,7 +78,7 @@ const MOVES: Record<Body['id'], Move> = {
     if (n.flying) { p.b = 0.55; p.nod = -0.15; p.a = 0.7 }
     if (n.r === 'stop') { p.c = Math.exp(-n.t * 1.6) * (1 - 0.3 * sin(n.t * 18)); p.nod += ring(n.t, 8, 2.2) * 0.5; p.lean -= ring(n.t, 6, 2.6) * 0.16 }
     if (n.r === 'land') { p.b = Math.max(0, ring(n.t, 12, 3)) * 0.4; p.tall *= 1 - Math.max(0, ring(n.t, 13, 4)) * 0.22 }
-    if (n.r === 'splash') { p.up = -1.15 * bump(n.t, 1.5); p.lean += ring(n.t, 3, 1) * 0.18 }
+    if (n.r === 'splash' && b.floats) { p.up = -1.15 * bump(n.t, 1.5); p.lean += ring(n.t, 3, 1) * 0.18 }
     if (n.r === 'poke') { p.flip = -bump(n.t, 1.3) * 0.75; p.c = bump(n.t, 1.3) }
     if (n.r === 'meet') { p.head = 0.45 * Math.min(1, n.t * 3) * Math.max(0, 1 - n.t / 3) }
     if (n.sneeze >= 0) { p.nod = n.sneeze < 0.5 ? -0.3 * (n.sneeze / 0.5) : 0.35; p.wide *= n.sneeze < 0.5 ? 1 + n.sneeze * 0.2 : 0.94 }

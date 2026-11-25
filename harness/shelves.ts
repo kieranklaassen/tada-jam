@@ -86,6 +86,7 @@ export const SHELVES: readonly Shelf[] = [
     label: 'Dash & splash',
     games: {
       'rocket-penguin': 'Bolt anything to a penguin and let the catapult go.',
+      'mother-holle': 'Shake the featherbed: where it snows, a walrus sledges.',
       'hungry-hole': 'Swallow a carnival, then burp it back up as a float.',
       'hop-across': 'Lead three small rabbits over roads, rivers and rails.',
       'lane-runner': 'Run a fox and its cargo around the pond.',

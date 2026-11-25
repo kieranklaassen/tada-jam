@@ -46,12 +46,12 @@ export const isSled = (id: Id): id is SledId => (SLEDS as readonly Id[]).include
 
 /** Half the width at the runners, how high the next one sits, and how high the whole of it stands. */
 export const SIZE: Record<Id, { half: number; seat: number; tall: number }> = {
-  walrus: { half: 1.8, seat: 2.75, tall: 2.9 },
-  granny: { half: 1.6, seat: 3.0, tall: 3.2 },
-  grandpa: { half: 1.35, seat: 2.6, tall: 2.75 },
-  cow: { half: 1.4, seat: 2.4, tall: 2.8 },
-  hen: { half: 0.68, seat: 1.2, tall: 1.45 },
-  mayor: { half: 0.62, seat: 2.35, tall: 2.6 },
+  walrus: { half: 1.9, seat: 3.05, tall: 3.25 },
+  granny: { half: 1.75, seat: 3.2, tall: 3.4 },
+  grandpa: { half: 1.5, seat: 2.85, tall: 3.3 },
+  cow: { half: 1.6, seat: 2.55, tall: 2.8 },
+  hen: { half: 0.8, seat: 1.5, tall: 1.65 },
+  mayor: { half: 0.72, seat: 2.75, tall: 2.9 },
 }
 
 /** Where the next ones wait, in view behind the start, and where the two who stand about stand. */
@@ -59,12 +59,12 @@ export const WAITS: Record<Id, { x: number; z: number }> = {
   walrus: { x: -5.4, z: -3.3 },
   granny: { x: -9.0, z: -3.3 },
   grandpa: { x: -12.2, z: -3.3 },
-  cow: { x: 0.6, z: -3.3 },
+  cow: { x: 2.6, z: -4.2 },
   hen: { x: 3.5, z: 0 },
   mayor: { x: 10.6, z: 0 },
 }
 /** Places at the top for whoever comes home, the front one first. */
-export const SLOTS = [-5.1, -8.7, -11.4] as const
+export const SLOTS = [-5.1, -8.9, -12.3] as const
 /** Left of this is the top. */
 export const TOP = -3.4
 /** Right of this is the bottom. */
@@ -75,6 +75,8 @@ export const HOME_LANE = 2.6
 export const MOST_HIGH = 4
 
 /** The quilt: half of what snows, its lowest hem, and how far it can be carried. */
+/** How far behind the lane she hangs: whoever is high passes before the quilt and not through it. */
+export const BEHIND = -2.8
 export const QUILT = { half: 1.75, hem: 1.0, left: -9.5, right: 10.5, start: -3.9 }
 /** Everything the quilt holds, as snow: strip area, so a hill can be covered with some to spare. */
 export const FEATHERS = 15
@@ -83,7 +85,7 @@ export const FEATHER = FEATHERS / 240
 export const SUN = { x: 10.6, y: 5.3, r: 1.25 }
 
 /** The walkable stretch. */
-export const EDGE = { left: -11.6, right: HAY - 0.2 }
+export const EDGE = { left: -12.3, right: HAY - 0.2 }
 
 /** The eye: straight on, this high and this far from the lane the sleds run in. What stands in that lane is drawn to one scale; what is behind it draws in towards the eye. */
 export const EYE = { y: 7, z: 36 }

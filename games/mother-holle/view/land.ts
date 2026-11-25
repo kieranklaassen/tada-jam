@@ -120,7 +120,7 @@ export class Land {
       sew.form({ at: [x + w * 0.5, y + h * 2 + 1.5, z - 0.3], r: [0.2, 0.5, 0.2], round: [0.4, 0.4], across: 4, up: 2, dye: d(C.red, 'checks') })
       sew.form({ at: [x, y + 0.62, z + 1.14], r: [0.36, 0.64, 0.1], round: [0.5, 0.5], across: 4, up: 2, dye: d(roof, 'stripes') })
     }
-    const trees: [number, number, number, number][] = [[-9.9, -5, 1, 0], [-3.7, -5.2, 1.15, 1], [2.2, -5.4, 0.9, 0], [7.4, -5, 1.15, 1], [9.2, -8, 1.3, 0], [14, -5.6, 1.2, 1], [-14.6, -5, 1.2, 1], [-5.4, -9, 1.4, 0]]
+    const trees: [number, number, number, number][] = [[-9.9, -5, 1, 0], [-3.7, -5.2, 1.15, 1], [6.3, -8.6, 1.1, 0], [7.4, -5, 1.15, 1], [9.2, -8, 1.3, 0], [14, -5.6, 1.2, 1], [-14.6, -5, 1.2, 1], [-5.4, -9, 1.4, 0]]
     for (const [x, z, k, kind] of trees) {
       const y = land(x, z) - 0.1
       sew.form({ at: [x, y + 0.5 * k, z], r: [0.2 * k, 0.6 * k, 0.2 * k], across: 4, up: 2, dye: d(C.wood, 'stripes') })
@@ -143,6 +143,10 @@ export class Land {
       }
     })
     for (let i = 0; i < 9; i++) { const x = 8.6 + i * 0.75, z = -3.4; sew.form({ at: [x, land(x, z) + 0.4, z], r: [0.11, 0.45, 0.09], across: 4, up: 2, dye: d(C.cream, 'smooth') }) }
+    // The finish at the foot of the hill: two striped poles and a string of flags behind the lane.
+    const flags = [C.red, C.mustard, C.teal, C.rose, 0xe27d4b, C.navy], foot = (x: number) => land(x, -2.9)
+    for (const x of [8.9, 12.9]) sew.form({ at: [x, foot(x) + 2, -2.9], r: [0.13, 2.1, 0.13], across: 4, up: 7, sub: 1, puff: 0, round: [0.3, 1], dye: scraps(d(C.red, 'smooth'), d(C.cream, 'smooth')) })
+    for (let i = 0; i < 8; i++) { const x = 9.15 + i * 0.5, sag = 1 - ((x - 10.9) / 2) ** 2; sew.form({ at: [x, foot(8.9) + 3.75 - sag * 0.5, -2.85], r: [0.24, 0.34, 0.07], round: [0.6, 0.5], taper: 2.4, across: 4, up: 2, sub: 1, dye: d(flags[i % 6], i % 2 ? 'dots' : 'plain') }) }
     sew.form({ at: [11.6, land(11, -3.4) + 0.5, -3.4], r: [3.2, 0.08, 0.06], across: 8, up: 2, dye: d(C.cream, 'stripes') })
   }
 

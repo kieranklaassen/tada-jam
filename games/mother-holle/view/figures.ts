@@ -82,7 +82,7 @@ function granny(k: Kit, root: THREE.Group): Figure {
   const pu = k.mesh('pupils', pupils(0.065, 0.16), head)
   const cap = k.mesh('cap', new Sew().form({ at: [0, 0.34, 0], r: [0.34, 0.5, 0.32], across: 6, up: 3, taper: 0.5, dye: d(C.snow) }), head, [0, 0.72, 0])
   return { root, cap, egg: [0, SIZE.granny.seat, 0], apply: (p) => {
-    body.scale.set(p.wide, p.tall, p.wide); body.rotation.x = 0; al.rotation.z = -p.a - 0.2; ar.rotation.z = p.b + 0.2
+    body.scale.set(p.wide, p.tall, p.wide); body.rotation.z = p.lean; al.rotation.z = -p.a - 0.2; ar.rotation.z = p.b + 0.2
     head.rotation.set(p.nod, 0.4 + p.head * 0.5, p.head); look(pu, [0, 0.34, 0.425], p, 0.055); door.rotation.z = p.c * 0.12
   } }
 }
