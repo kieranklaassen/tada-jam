@@ -8,11 +8,14 @@ import { IdleLadder, type Guidance } from './guidance'
 import type { Point } from './input'
 import { theBlanketManifest } from './manifest'
 import { quiet, freshWorld, sausageSpot, type World } from './model'
+import { Music } from './music'
 import { Overlay } from './overlay'
 import { sponge, surface } from './paint'
 import { installJamPerf } from './perf'
 import { Play } from './play'
+import { openingBeats } from './opening'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
+import { OpeningRound } from './round'
 import { SaveCadence } from './saveCadence'
 import { fit, toStage, type Fit } from './stage'
 import { deserialize, serialize } from './state'
@@ -31,7 +34,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
 
   useEffect(() => {
     const root = rootRef.current!, canvas = canvasRef.current!
-    const audio = new GameAudio(), clock = new AttendedClock(), ladder = new IdleLadder(0)
+    const music = new Music(), audio = new GameAudio(music.attach), clock = new AttendedClock(), ladder = new IdleLadder(0)
     const pinned = tierOverride(window.location.search)
     const governor = new TierGovernor(pinned ?? startingTier(window.matchMedia('(pointer: coarse)').matches), pinned !== null)
     const work = new PerfRing()
@@ -46,6 +49,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const view = new View()
     const bare: World = freshWorld()
     let guidance: Guidance | null = null
+    // The whole trick, shown once on a first visit (round.ts).
+    let round: OpeningRound | null = null
 
     // Nothing is saved until the slot has been read, so an early put-away cannot overwrite it.
     const cadence = new SaveCadence(() => { if (play) ctxRef.current.storage.save(serialize(play.world)) })
@@ -65,7 +70,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
         view.sized(surface.make, scale, -by.x / by.scale, -by.y / by.scale, width / by.scale, height / by.scale)
       }
       pen.setTransform(scale, 0, 0, scale, dpr * by.x, dpr * by.y)
-      view.draw(pen, play?.world ?? bare, play?.hand ?? null, guidance)
+      view.draw(pen, play?.world ?? bare, play?.hand ?? null, guidance, round?.hand ?? null)
       drawn.drawCalls = view.stamps.stamped
     }
 
@@ -98,6 +103,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       for (const r of play.refusals.splice(0)) { view.refusal(r); notes.push(...voiceOfRefusal(r)) }
       for (const s of view.sounds.splice(0)) notes.push(...s)
       if (notes.length) audio.play(voiceOf(notes))
+      // What the hand shows is not the child's doing, and is not saved.
+      if (round?.active) play.changed = false
       if (play.changed) { play.changed = false; cadence.change(performance.now(), true) }
     }
     const at = (event: PointerEvent): Point => {
@@ -107,8 +114,10 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const onDown = (event: PointerEvent) => {
       if (!attention.awake) return
       audio.touchDown()
+      music.touch()
       ladder.touch(clock.seconds)
       const where = at(event)
+      if (round?.active) round.stop()
       if (play) {
         play.down(event.pointerId, toStage(where, by), event.timeStamp)
         // Only the working finger counts towards the grown-up's gesture.
@@ -147,13 +156,15 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       if (!attention.awake || disposed) return
       // Advances the attended clock. It returns the step to play, in seconds: the rules, a scene and every animation advance by it.
       const step = clock.advance(now)
+      music.step(step)
       const start = performance.now()
       if (play) {
+        round?.advance(step, now)
         play.advance(step, now)
         view.advance(play.world, play.hand, step)
         tell()
         // A finger at work, or somebody on the run, is not idleness.
-        if (play.touch.active || !quiet(play.world)) ladder.touch(clock.seconds)
+        if (round?.active || play.touch.active || !quiet(play.world)) ladder.touch(clock.seconds)
       }
       guidance = ladder.update(clock.seconds)
       const stepped = clock.intervalMs > 0 && governor.sample(clock.intervalMs, lastWork)
@@ -180,6 +191,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       frame = 0
       clock.rest()
       overlay.forget()
+      round?.stop()
       play?.clear()
       tell()
       cadence.settle(performance.now())
@@ -189,6 +201,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     ctxRef.current.storage.load<unknown>().catch(() => null).then((value) => {
       if (disposed) return
       play = new Play(deserialize(value))
+      if (value === null || value === undefined) round = new OpeningRound(openingBeats(play), play)
       // A game that is resting or parked when the slot comes back has no frame coming.
       draw()
     })
@@ -212,6 +225,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       uninstallPerf()
       overlay.dispose()
       audio.dispose()
+      music.dispose()
     }
   }, [])
 

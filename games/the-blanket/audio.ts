@@ -30,6 +30,12 @@ export class GameAudio {
   private asking = 0
   private held: Voice | null = null
 
+  /**
+   * `changed` hears of every context this makes, with the node all the game's sounds go through, and of its end
+   * (null): music plays in the same context, so it is unlocked, rests and is rebuilt with the sounds.
+   */
+  constructor(private readonly changed: (context: AudioContext | null, sounds: AudioNode | null) => void = () => {}) {}
+
   /** Call first in every touch-down handler. */
   touchDown(): void {
     // A second finger or a palm landing inside a touch must not drop the sound the first finger is waiting to hear.
@@ -119,9 +125,11 @@ export class GameAudio {
     compressor.threshold.value = -18
     master.connect(compressor).connect(context.destination)
     this.master = master
+    this.changed(context, master)
   }
 
   private teardown(): void {
+    if (this.context) this.changed(null, null)
     void this.context?.close().catch(() => {})
     this.context = null
     this.master = null

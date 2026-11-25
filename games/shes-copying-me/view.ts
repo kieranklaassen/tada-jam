@@ -1,13 +1,14 @@
 import { paintArm, paintAunt, paintFingers, type AuntView } from './auntArt'
+import type { RoundHand } from './round'
 import { BACKDROP, TIERS, type Tier } from './config'
 import { Bits } from './fx'
 import { handPose, type Guidance, type HandPose } from './guidance'
 import { TOP, paintGuest, type Look } from './guestArt'
 import { AUNT, BELL, GUEST, MIDDLE, PANE, PANES, PENDULUM, outward, toPoint, zoneAt } from './layout'
 import { guestPose } from './motion'
-import { demoMove, type Party, type PartyEvent, type SeatShow } from './party'
+import { demoMove, type Move, type Party, type PartyEvent, type SeatShow } from './party'
 import { paintFrame, paintPane, paintRoom, paintTable } from './room'
-import { other, type Coat, type Guest, type Side, type Thing } from './rules'
+import { WANTS, other, type Coat, type Guest, type Side, type Thing } from './rules'
 import { blob, brush, bump, cell, clamp, dye, ease, gutta, glowRing, line, soft, type G } from './silk'
 import { STAGE, fit, type Point } from './stage'
 import { Stamps, type MakeSheet } from './stamps'
@@ -77,7 +78,7 @@ export class View {
     brush.shine = this.tier.shine
   }
 
-  draw(g: G, width: number, height: number, dpr: number, party: Party | null, guidance: Guidance | null): void {
+  draw(g: G, width: number, height: number, dpr: number, party: Party | null, guidance: Guidance | null, round: RoundHand | null = null): void {
     const by = fit(width, height)
     if (by.scale === 0) return
     const scale = by.scale * dpr
@@ -93,8 +94,11 @@ export class View {
     g.setTransform(scale, 0, 0, scale, by.x * dpr, by.y * dpr)
     const time = party.time
     const glow = guidance?.glow ?? 0
-    this.window(g, party, time, glow)
-    this.pendulum(g, party, glow)
+    // One thing glows: the next one to touch.
+    const next = glow > 0 ? demoMove(party) : null
+    const on = (what: Move['what'], side: Side) => (next?.what === what && next.side === side ? glow : 0)
+    this.window(g, party, time, on)
+    this.pendulum(g, party)
     for (const side of [0, 1] as const) {
       const p = toPoint(side, AUNT)
       g.save()
@@ -106,13 +110,15 @@ export class View {
     this.cat(g, party, time)
 put(g, 'table', [MIDDLE - 320, 650, 640, 170], '', '', paintTable)
     this.guests(g, party, time)
-    this.tableThings(g, party, time, glow)
-    for (const side of [0, 1] as const) this.arm(g, party, side, time, glow)
+    this.tableThings(g, party, time, glow, next)
+    this.wish(g, party, time)
+    for (const side of [0, 1] as const) this.arm(g, party, side, time, on('hand', side))
     if (party.scene?.kind === 'tidy') this.hankies(g, party)
     for (const carry of party.carried) if (carry) this.thing(g, party, party.state.table[carry.slot], time)
     this.bits.draw(g, put)
     if (party.scene?.kind === 'statues') this.pigeon(g, party, party.scene.t)
-    if (guidance && guidance.demo !== null) this.ghost(g, party, guidance)
+    if (round) this.handAt(g, round.x, round.y, round.press, round.opacity)
+    else if (guidance && guidance.demo !== null) this.ghost(g, party, guidance)
     if (this.tier.sheen) this.sheen(g, time)
     this.drawn = IN_PLACE + this.stamps.puts + this.stamps.painted * PAINTED
   }
@@ -236,10 +242,9 @@ put(g, 'table', [MIDDLE - 320, 650, 640, 170], '', '', paintTable)
 
   private wasCoat: Partial<Record<Guest, Coat>> = {}
 
-  /** Only one seated guest asks at a time: the one whose aunt is not at work, the first when neither is. */
+  /** Only one seated guest asks at a time. */
   private asking(party: Party, side: Side): number {
-    const turn = party.hands[0].busy && !party.hands[1].busy ? 1 : 0
-    if (party.scene || turn !== side) return 0.2
+    if (party.asker !== side) return 0.2
     return 0.55 + 0.45 * Math.sin(party.time * 2.2)
   }
 
@@ -247,7 +252,7 @@ put(g, 'table', [MIDDLE - 320, 650, 640, 170], '', '', paintTable)
     const me = toPoint(side, { u: GUEST.u, y: GUEST.y - 90 })
     const busy = party.hands[side].busy
     const hand = party.handPoint(side)
-    const want = party.state.seated[side] === 'dog' ? party.at.fish : party.state.seated[side] === 'pig' ? party.at.glue : null
+    const want = party.at[WANTS[party.state.seated[side]]]
     if (party.scene?.kind === 'birds') return { x: -1, y: 0 }
     const at = busy ? hand : this.asking(party, side) > 0.2 && want ? want : this.asking(party, side) > 0.2 ? { x: me.x - outward(side) * 40, y: me.y + 10 } : party.at[party.state.held[side]]
     return { x: ((at.x - me.x) * outward(side)) / 160, y: (at.y - me.y) / 160 }
@@ -264,7 +269,7 @@ put(g, 'table', [MIDDLE - 320, 650, 640, 170], '', '', paintTable)
     g.translate(body.x, body.y)
     g.scale(s, 1)
     if (lit > 0) {
-      glowRing(g, 0, 0, 58, 54, lit * 0.5, 8)
+      glowRing(g, 0, 0, 58, 54, Math.min(1, lit), 9)
     }
     g.rotate(body.tilt * s + (held >= 0 ? tipOf(thing, doing) : 0))
     if (held >= 0) g.translate(thing === 'fan' ? 10 : 24, thing === 'duster' ? -22 : -4)
@@ -272,15 +277,15 @@ put(g, 'table', [MIDDLE - 320, 650, 640, 170], '', '', paintTable)
     g.restore()
   }
 
-  private tableThings(g: G, party: Party, time: number, glow: number): void {
+  private tableThings(g: G, party: Party, time: number, glow: number, next: Move | null): void {
     const carried = party.carried.map((carry) => carry && party.state.table[carry.slot])
-    for (const thing of party.state.table) if (!carried.includes(thing)) this.thing(g, party, thing, time, glow * 0.6)
+    for (const thing of party.state.table) if (!carried.includes(thing)) this.thing(g, party, thing, time, next?.what === 'thing' && party.state.table[next.slot] === thing ? glow * 1.2 : 0)
     if (party.untidy || party.bell || party.bellBack < 1) {
       const k = ease(clamp(party.bellBack / 0.45)), from = party.bellFrom
       // Let go, it hops back to its place.
       const at = party.bell ?? { x: from.x + (BELL.x - from.x) * k, y: from.y + (BELL.y - from.y) * k - 46 * bump(party.bellBack / 0.45) - 12 * bump((party.bellBack - 0.45) / 0.25) }
       const gone = party.untidy || party.bell ? 1 : clamp((1 - party.bellBack) / 0.25)
-      if (glow > 0 && party.untidy) glowRing(g, at.x, at.y - 20, 50, 56, glow * 0.3, 8)
+      if (glow > 0 && next?.what === 'bell') glowRing(g, at.x, at.y - 20, 50, 56, glow * 0.7, 9)
       g.save()
       g.translate(at.x, at.y - 34)
       g.globalAlpha = gone
@@ -304,6 +309,28 @@ put(g, 'table', [MIDDLE - 320, 650, 640, 170], '', '', paintTable)
     }
   }
 
+  /** What the guest whose turn it is asks for, in a cloud over its head. */
+  private wish(g: G, party: Party, time: number): void {
+    const side = party.asker
+    if (side === null) return
+    const guest = party.state.seated[side], s = outward(side)
+    const p = toPoint(side, { u: 478, y: Math.max(150, 560 - TOP[guest]) - 60 })
+    g.save()
+    g.translate(p.x, p.y + Math.sin(time * 2.2) * 5)
+    g.scale(s, 1)
+    this.stamps.put(g, 'cloud', [-100, -92, 200, 220], '', '', (g) => {
+      blob(g, -12, 108, 9, 9)
+      cell(g, '#fffdf6', 3)
+      blob(g, -6, 84, 14, 12)
+      cell(g, '#fffdf6', 3.4)
+      soft(g, [[-84, 10], [-72, -44], [-26, -72], [30, -70], [78, -42], [84, 14], [52, 62], [0, 68], [-54, 58]])
+      cell(g, '#fffdf6', 5)
+    })
+    g.rotate(Math.sin(time * 3) * 0.08)
+    putThing(g, WANTS[guest], { act: null, t: 9 }, time, 1.1, this.stamps.put)
+    g.restore()
+  }
+
   private arm(g: G, party: Party, side: Side, time: number, glow: number): void {
     const p = toPoint(side, AUNT), hand = party.hands[side]
     g.save()
@@ -320,8 +347,9 @@ put(g, 'table', [MIDDLE - 320, 650, 640, 170], '', '', paintTable)
     g.restore()
   }
 
-  private window(g: G, party: Party, time: number, glow: number): void {
+  private window(g: G, party: Party, time: number, on: (what: Move['what'], side: Side) => number): void {
     for (const side of [0, 1] as const) {
+      const glow = on('pane', side)
       const p = PANES[side]
       const guest = party.state.waiting[side], tap = party.paneTap[side]
       g.save()
@@ -342,16 +370,16 @@ put(g, 'table', [MIDDLE - 320, 650, 640, 170], '', '', paintTable)
       g.stroke()
       gutta(g, 4)
       if (glow > 0) {
-        g.globalAlpha = glow * 0.35
+        g.globalAlpha = glow * (0.6 + 0.3 * Math.sin(time * 4))
         g.strokeStyle = '#fff3b0'
-        g.lineWidth = 8
+        g.lineWidth = 10
         g.stroke()
         g.globalAlpha = 1
       }
     }
   }
 
-  private pendulum(g: G, party: Party, glow: number): void {
+  private pendulum(g: G, party: Party): void {
     const a = Math.sin(party.swing) * (0.42 + party.pendulumPush * 0.35)
     const { pivot, length } = PENDULUM
     const x = pivot.x + Math.sin(a) * length, y = pivot.y + Math.cos(a) * length
@@ -368,14 +396,6 @@ put(g, 'table', [MIDDLE - 320, 650, 640, 170], '', '', paintTable)
       cell(g, '#ffe39a', 2)
     })
     g.restore()
-    if (glow > 0) {
-      g.globalAlpha = glow * 0.3
-      blob(g, x, y, 44, 44)
-      g.strokeStyle = '#fff3b0'
-      g.lineWidth = 6
-      g.stroke()
-      g.globalAlpha = 1
-    }
   }
 
   /** The sofa's cat: asleep between the aunts, one ear for everything, one eye for a finger. */
@@ -498,14 +518,17 @@ put(g, 'table', [MIDDLE - 320, 650, 640, 170], '', '', paintTable)
   }
 
   private ghost(g: G, party: Party, guidance: Guidance): void {
-    const { from, to } = demoMove(party, guidance.demoIndex)
-    const h = handPose(guidance.demo!, true, this.hand)
-    const x = from.x + (to.x - from.x) * h.travel, y = from.y + (to.y - from.y) * h.travel
+    const { from, to, drag } = demoMove(party)
+    const h = handPose(guidance.demo!, drag, this.hand)
+    this.handAt(g, from.x + (to.x - from.x) * h.travel, from.y + (to.y - from.y) * h.travel, h.press, h.opacity)
+  }
+
+  private handAt(g: G, x: number, y: number, press: number, opacity: number): void {
     g.save()
-    g.globalAlpha = h.opacity * 0.8
+    g.globalAlpha = opacity * 0.95
     g.translate(x + 8, y + 22)
     g.rotate(-0.25)
-    g.scale(1 - h.press * 0.1, 1 - h.press * 0.1)
+    g.scale(1.15 - press * 0.12, 1.15 - press * 0.12)
     soft(g, [[-9, -34], [0, -42], [9, -34], [10, 0], [34, 6], [40, 26], [30, 62], [-10, 62], [-32, 22], [-22, 8], [-9, 18]])
     cell(g, '#fffdf6', 4)
     g.restore()
