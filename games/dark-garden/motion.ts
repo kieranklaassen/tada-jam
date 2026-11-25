@@ -29,7 +29,7 @@ export const STRIDE: Readonly<Record<Carrier, number>> = { gnome: 124, goose: 92
 /** Breaths a second over two pi, and seconds between blinks. */
 const LIFE: Readonly<Record<Carrier, { breath: number; blink: number }>> = { gnome: { breath: 2.1, blink: 3.7 }, goose: { breath: 3.1, blink: 2.3 }, hare: { breath: 5.2, blink: 4.6 }, bear: { breath: 1.2, blink: 5.9 } }
 
-export function move(who: Carrier, o: { walked: number; speed: number; time: number; squash: number; hop: number }, pose: Pose): Pose {
+export function move(who: Carrier, o: { walked: number; speed: number; time: number; squash: number; hop: number; /** Seconds since its candle caught, and how far it is in setting its apple down, 0..1. */ caught?: number; setting?: number }, pose: Pose): Pose {
   const go = Math.min(1, o.speed / 420), p = (o.walked / STRIDE[who]) * Math.PI * 2, s = Math.sin(p), c = Math.cos(p), life = LIFE[who]
   pose.lift = 0; pose.turn = 0; pose.hands = 0; pose.mouth = 0
   const breath = Math.sin(o.time * life.breath)
@@ -81,6 +81,24 @@ export function move(who: Carrier, o: { walked: number; speed: number; time: num
     if (who === 'goose') pose.part += Math.sin(o.hop * 25) * 2
     if (who === 'bear') pose.turn += Math.sin(o.hop * 12) * 0.1
     if (who === 'gnome') pose.part += Math.sin(o.hop * 20) * 2
+  }
+  // The candle catches: a sneeze, a look the other way, a jump back, a huff.
+  const c2 = (o.caught ?? 9) / 0.7
+  if (c2 < 1) {
+    const n = hump(c2)
+    if (who === 'gnome') { pose.turn += c2 < 0.45 ? -hump(c2 / 0.45) * 0.28 : hump((c2 - 0.45) / 0.55) * 0.42; pose.mouth = n; pose.eyes = 0.05; pose.part += n * 2 }
+    else if (who === 'goose') { pose.turn -= n * 0.2; pose.part += n * 3 }
+    else if (who === 'hare') { pose.lift += n * 58; pose.turn -= n * 0.3; pose.eyes = 1.25; pose.part += n * 3 }
+    else { pose.squash += n * 0.07; pose.mouth = n; pose.lift += n * 3 }
+  }
+  // Setting it down: pats, a turn just so, a drop and a catch, two careful claws.
+  const d = o.setting ?? 0
+  if (d > 0) {
+    const n = hump(d)
+    if (who === 'gnome') { pose.hands = -1.6 * Math.abs(Math.sin(d * Math.PI * 3)); pose.turn += n * 0.18; pose.part += Math.sin(d * 19) }
+    else if (who === 'goose') { pose.turn += n * 0.26 + Math.sin(d * 25) * 0.05 * n; pose.hands = -n }
+    else if (who === 'hare') { pose.hands = d < 0.5 ? -hump(d * 2) * 3 : hump(d * 2 - 1) * 2.4; pose.lift += hump(d * 2 - 1) * 26; pose.eyes = 1.25 }
+    else { pose.squash -= n * 0.16; pose.hands = -n * 1.5; pose.eyes = 0.4 }
   }
   return pose
 }

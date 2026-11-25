@@ -8,7 +8,7 @@ import { allSet, setDown, type Save } from './save'
 // lasts is in `save`; everything else is on its way there.
 
 export type Cue =
-  | { cue: 'cry' | 'step' | 'stumble' | 'hum' | 'set' | 'home' | 'light' | 'breath'; who: Carrier }
+  | { cue: 'cry' | 'step' | 'stumble' | 'set' | 'home' | 'light' | 'breath'; who: Carrier }
   | { cue: 'ring'; place: number; who: Carrier; soft: boolean }
   | { cue: 'joke'; sleeper: Sleeper }
   | { cue: 'open'; place: number }
@@ -50,7 +50,7 @@ export type Walker = {
   arrived: number
 }
 
-export type Leaver = { who: Carrier; from: Point; size: number; t: number; slot: number }
+export type Leaver = { who: Carrier; from: Point; size: number; t: number }
 
 /** How a place looks: who set it, and seconds since it opened or began to close. */
 export type Shown = { who: Carrier | null; open: number; closing: number | null; joke: number; rung: number }
@@ -58,7 +58,7 @@ export type Shown = { who: Carrier | null; open: number; closing: number | null;
 export const WAITING: readonly Point[] = [{ x: 282, y: 800 }, { x: 354, y: 806 }, { x: 430, y: 810 }]
 export const WAITING_SIZE = 0.46
 
-type Grip = { on: 'walker' | 'glass'; last: Point; heard: number; moved: boolean }
+type Grip = { on: 'walker' | 'glass'; last: Point; heard: number; moved: boolean; /** A pull that has been to the flame lights there, however fast the finger went on. */ flame: boolean }
 
 export class Play {
   walker: Walker
@@ -99,7 +99,7 @@ export class Play {
   get full(): boolean { return allSet(this.save) }
   get atGate(): boolean { return this.walker.u < 24 }
   /** Nothing is left to carry, and the one at the gate has full cheeks. */
-  get asksToBlow(): boolean { return this.full && this.tune === null && this.puff === null && this.leavers.length === 0 && this.shown.every((one) => one.open > OPENING) }
+  get asksToBlow(): boolean { return this.full && this.atGate && this.walker.goal === null && this.tune === null && this.puff === null && this.leavers.length === 0 && this.shown.every((one) => one.open > OPENING) }
   get busy(): boolean { return this.walker.goal !== null || this.walker.setting !== null || this.tune !== null || this.puff !== null || this.showing === 'on' || this.grip !== null || this.walker.arrived < 1 || this.leavers.length > 0 }
 
   private make(who: Carrier, u = 0, lit = false): Walker {
@@ -159,10 +159,10 @@ export class Play {
     if (on === 'front') {
       this.walker.squash = 1
       this.cues.push({ cue: 'cry', who: this.walker.who })
-      this.grip = { on: 'walker', last: p, heard: 0, moved: false }
+      this.grip = { on: 'walker', last: p, heard: 0, moved: false, flame: false }
       return
     }
-    this.grip = { on: 'glass', last: p, heard: 0, moved: false }
+    this.grip = { on: 'glass', last: p, heard: 0, moved: false, flame: false }
     if (on !== null) {
       const who = this.save.queue[on + 1]
       this.hop[who] = 1
@@ -191,7 +191,7 @@ export class Play {
   /** An open place rings its light and its sleeper does its joke. */
   private answer(place: number): void {
     const shown = this.shown[place], sleeper = this.sleeperAt(place)
-    if (!shown.who || !sleeper) return
+    if (!shown.who || !sleeper || shown.closing !== null) return
     shown.rung = 0
     this.cues.push({ cue: 'ring', place, who: shown.who, soft: false })
     if (shown.joke > JOKE[sleeper]) { shown.joke = 0; this.cues.push({ cue: 'joke', sleeper }) }
@@ -244,7 +244,9 @@ export class Play {
       if (w.setting !== null) return
       // The place it was on its way to is given up: the finger says where now.
       if (!grip.moved) { grip.moved = true; w.place = null; this.keep(false) }
-      w.goal = byFlame(p) ? LENGTH : nearest(p)
+      if (byFlame(p)) grip.flame = true
+      grip.last = p
+      w.goal = (grip.flame && !w.lit && !this.full) || byFlame(p) ? LENGTH : nearest(p)
       this.trail.push({ ...p, t: 0 })
       if (this.trail.length > 26) this.trail.shift()
       return
@@ -274,8 +276,9 @@ export class Play {
     const { place, far } = placeAt(p)
     const over = far < 92 && !byFlame(p)
     if (!w.lit) {
-      if (byFlame(p)) { w.goal = LENGTH; return }
-      if (over && this.save.set[place.id] === null && Math.abs(w.u - place.u) < 400) this.murmur(place.id, true)
+      const dark = over && this.save.set[place.id] === null
+      if (grip.flame || byFlame(p)) { if (dark) this.toPlace(place.id); else this.send(LENGTH, null); return }
+      if (dark) this.murmur(place.id, true)
       w.goal = null
       this.keep(true)
       return
@@ -323,6 +326,9 @@ export class Play {
     this.send(this.walker.lit ? PLACES[place].u : LENGTH, place)
   }
 
+  /** Put away in the middle of a walk: it is found where it had got to. */
+  pause(): void { if (this.walker.goal !== null && this.walker.setting === null && this.puff === null) this.keep(true) }
+
   /** Nothing to carry: it trots back to the gate. */
   private home(): void { this.walker.goal = 0 }
 
@@ -336,6 +342,8 @@ export class Play {
   /** Someone waiting changes places with the one in front. */
   private call(slot: number): void {
     const queue = [...this.save.queue]
+    // One still on its way home is not there yet.
+    if (this.leavers.some((one) => one.who === queue[slot + 1])) return
     ;[queue[0], queue[slot + 1]] = [queue[slot + 1], queue[0]]
     this.save = { ...this.save, queue }
     this.walker = this.make(queue[0])
@@ -353,7 +361,7 @@ export class Play {
       for (const place of PLACES) if (this.shown[place.id].who && this.shown[place.id].open > 1) this.shown[place.id].rung = 0.3
       this.keep(true)
       if (w.place !== null) w.goal = PLACES[w.place].u
-      else if (this.grip?.on !== 'walker') w.goal = null
+      else w.goal = this.grip?.on === 'walker' ? nearest(this.grip.last) : null
       return
     }
     if (w.place !== null && w.lit && Math.abs(w.u - PLACES[w.place].u) < 2) {
@@ -371,12 +379,12 @@ export class Play {
     const from = this.where()
     this.save = { ...setDown(this.save, place), shown: true }
     this.shown[place] = { who: w.who, open: 0, closing: null, joke: -0.55, rung: 0 }
-    this.leavers.push({ who: w.who, from, size: sizeAt(w.u), t: 0, slot: 2 })
+    this.leavers.push({ who: w.who, from, size: sizeAt(w.u), t: 0 })
     this.cues.push({ cue: 'open', place }, { cue: 'home', who: w.who })
     if (this.shown.some((one, i) => i !== place && one.who && Math.hypot(PLACES[i].apple.x - PLACES[place].apple.x, PLACES[i].apple.y - PLACES[place].apple.y) < 260)) this.cues.push({ cue: 'chord' })
     this.walker = this.make(this.save.queue[0])
     if (this.showing === 'on') this.showing = 'done'
-    this.grip = null
+    if (this.grip?.on === 'walker') this.grip = null
     this.changed(true)
     this.ended = false
   }
@@ -515,7 +523,7 @@ export class Play {
 
   /** The way from the gate for one that leaps home, above the hedges. */
   static leap(one: Leaver): Point & { turn: number } {
-    const t = Math.min(1, one.t / LEAP), to = WAITING[one.slot]
+    const t = Math.min(1, one.t / LEAP), to = WAITING[WAITING.length - 1]
     return { x: one.from.x + (to.x - one.from.x) * t, y: one.from.y + (to.y - one.from.y) * t - Math.sin(t * Math.PI) * 190, turn: t }
   }
 

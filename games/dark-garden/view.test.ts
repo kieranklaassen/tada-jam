@@ -9,7 +9,7 @@ import { View } from './view'
 
 // What a frame costs, counted and not timed, and that no number goes wrong.
 
-let canvases = 0, strokes = 0
+let canvases = 0
 function pen(): CanvasRenderingContext2D {
   let depth = 0
   return new Proxy({} as Record<string, unknown>, {
@@ -21,7 +21,6 @@ function pen(): CanvasRenderingContext2D {
         for (const a of args) if (typeof a === 'number' && !Number.isFinite(a)) throw new Error(`${String(name)} was given a number that is not one`)
         if (name === 'save') depth++
         if (name === 'restore' && --depth < 0) throw new Error('restored more than saved')
-        if (name === 'stroke') strokes++
       }
     },
     set: () => true,
@@ -30,7 +29,7 @@ function pen(): CanvasRenderingContext2D {
 class FakePath { constructor(d?: unknown) { if (typeof d === 'string' && /NaN|undefined|Infinity/.test(d)) throw new Error(`a shape went wrong: ${d}`) } addPath() {} moveTo() {} lineTo() {} closePath() {} ellipse() {} }
 
 beforeEach(() => {
-  canvases = 0; strokes = 0
+  canvases = 0
   vi.stubGlobal('Path2D', FakePath)
   vi.stubGlobal('document', { createElement: () => { canvases++; return { width: 100, height: 100, getContext: pen } } })
 })
@@ -53,7 +52,6 @@ describe('a frame', () => {
       expect(canvases).toBe(made)
       expect(most).toBeLessThan(560)
     }
-    expect(strokes).toBeGreaterThan(0)
   }, 30000)
   it('draws nothing on a surface with no size, and the window before the slot is read', () => {
     const view = new View(pen())

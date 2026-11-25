@@ -71,6 +71,10 @@ export function cut(): Pane[] {
   for (let v = FAR.length - 2; v >= 0; v--) band(START + 2, START - 360, v, v + 1, [66, 78, 92, 110, 140, 200, 320][v])
   band(START - 360, END, 0, 0.5, 60)
   band(START - 360, END, 0.5, 1, 60)
+  // Where the two ends of the outer turn lie over each other, the gate's panes are seen.
+  const inside = (p: Point, q: Point[]) => q.reduce((c, a, i) => { const b = q[(i + q.length - 1) % q.length]; return (a.y > p.y) !== (b.y > p.y) && p.x < ((b.x - a.x) * (p.y - a.y)) / (b.y - a.y) + a.x ? !c : c }, false)
+  const gate = panes.filter((one) => one.owner === GATE_PANE)
+  for (const one of panes) if (one.owner >= 0 && gate.some((q) => inside(one.mid, q.points))) one.owner = GATE_PANE
   // The hedge: short fir triangles along both sides, then the stones of the path over their feet.
   for (let deg = START; deg > END; ) {
     const size = 11 / Math.max(0.3, reach(deg)), next = deg - size * 0.42

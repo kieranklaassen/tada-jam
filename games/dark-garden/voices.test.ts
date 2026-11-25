@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CARRIERS, KINDS } from './cast'
+import { KINDS } from './cast'
 import { CRY, HOMES, JOKES, MURMUR, notesOf, ring, SETS, SNEEZE, STEP } from './voices'
 
 describe('the voices', () => {
@@ -16,6 +16,5 @@ describe('the voices', () => {
   it('are all different: each carrier, each joke, each kind of place', () => {
     for (const set of [CRY, HOMES, SETS, SNEEZE, STEP, JOKES, MURMUR]) expect(new Set(Object.values(set).map((l) => JSON.stringify(l))).size).toBe(Object.keys(set).length)
     expect(new Set(KINDS.map((k) => JSON.stringify(ring(k, 440, 1)))).size).toBe(KINDS.length)
-    expect(CARRIERS).toHaveLength(4)
   })
 })

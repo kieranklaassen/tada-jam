@@ -1,5 +1,4 @@
 import type { Carrier } from './cast'
-import { APPLE } from './cast'
 import { apple, eye, flame, line, oval, piece, shine, type G } from './glass'
 import type { Pose } from './motion'
 
@@ -154,4 +153,3 @@ function bear(g: G, p: Pose, look: Look, cheeks: number): void {
   oval(g, 48, -268, 10, 10, '#f7e6b4', 4)
 }
 
-export const colorOf = (who: Carrier) => APPLE[who]

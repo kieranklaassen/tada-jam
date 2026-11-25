@@ -45,7 +45,7 @@ export function deserialize(raw: unknown): Save {
     const queue = [...new Set(from.queue.filter(isCarrier))]
     out.queue = [...queue, ...CARRIERS.filter((one) => !queue.includes(one))]
   }
-  if (typeof from.u === 'number' && from.u >= 0 && from.u <= LENGTH) out.u = from.u
+  if (typeof from.u === 'number' && Number.isFinite(from.u)) out.u = Math.min(LENGTH, Math.max(0, from.u))
   out.lit = from.lit === true
   if (typeof from.to === 'number' && Number.isInteger(from.to) && from.to >= 0 && from.to < PLACES.length && out.set[from.to] === null) out = setDown(out, from.to)
   if (allSet(out)) { out.u = 0; out.lit = false }

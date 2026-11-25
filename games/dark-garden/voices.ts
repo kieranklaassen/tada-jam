@@ -66,7 +66,6 @@ export function notesOf(cues: readonly Cue[]): Note[] {
       case 'cry': out.push(...CRY[one.who]); break
       case 'step': if (steps++ < 1) out.push(...STEP[one.who]); break
       case 'stumble': out.push(...STEP[one.who], tone(210, 0.1, 0.01, 0.16, { wave: 'triangle', glideTo: 130 })); break
-      case 'hum': out.push(tone(PITCH[one.who] / 2, 0.06, 0.1, 0.4)); break
       case 'ring': out.push(...ring(PLACES[one.place].kind, Play.pitch(one.place, one.who), one.soft ? 0.7 : 1)); break
       case 'joke': out.push(...JOKES[one.sleeper]); break
       case 'open': {

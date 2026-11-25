@@ -40,7 +40,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // What the last draw put on the surface, for the grown-up handle and the overlay.
     const drawn = { drawCalls: 0, triangles: 0 }
     const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, ...drawn }))
-    let play: Play | null = null, disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
+    let play: Play | null = null, theirs = false, disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
     // What the loop hands the draw: the seconds the frame advances, 0 outside a frame, and what the idle ladder shows.
     const playing = { step: 0, guidance: null as Guidance | null }
 
@@ -88,8 +88,11 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     }
     const act = (gestures: Gesture[]) => {
       if (!play || gestures.length === 0 || width <= 0) return
-      // A press in the grown-up's corner is theirs.
-      for (const one of gestures) if (one.type !== 'press' || !inCorner(one.at.x, one.at.y, width)) play.act(inStage(one))
+      // A touch that begins in the grown-up's corner is theirs to its end.
+      for (const one of gestures) {
+        if (one.type === 'press') theirs = inCorner(one.at.x, one.at.y, width)
+        if (!theirs) play.act(inStage(one))
+      }
       settle()
     }
     const at = (event: PointerEvent): Point => {
@@ -177,6 +180,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       clock.rest()
       overlay.forget()
       act(touch.clear())
+      play?.pause()
       cadence.settle(performance.now())
     })
     attendRef.current = (attended) => attention.set(attended)
@@ -197,6 +201,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       disposed = true
       // As on going to rest: the touch ends first, so the thing in hand is back or down before the last save.
       act(touch.clear())
+      play?.pause()
       cadence.settle(performance.now())
       cancelAnimationFrame(frame)
       observer.disconnect()

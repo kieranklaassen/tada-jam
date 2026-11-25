@@ -47,6 +47,41 @@ describe('a round', () => {
     run(play, 4)
     expect(play.save.set[3]).toBe('gnome')
   })
+  it('is one drag in and out at the speed of a child', () => {
+    for (const total of [0.4, 1, 2]) {
+      const play = start(), from = body(play), way = [from, flame, heart(PLACES[3])]
+      play.act({ type: 'press', at: from })
+      play.act({ type: 'dragStart', from })
+      for (let i = 0; i < 2; i++) for (let k = 1; k <= 10; k++) {
+        const a = way[i], b = way[i + 1]
+        play.act({ type: 'dragMove', from, at: { x: a.x + (b.x - a.x) * k / 10, y: a.y + (b.y - a.y) * k / 10 } })
+        run(play, total / 20)
+      }
+      play.act({ type: 'dragEnd', from, at: way[2] })
+      run(play, 6)
+      expect(play.save.set[3]).toBe('gnome')
+    }
+  })
+  it('snorts and stays dark where an unlit candle is let go over the dark', () => {
+    const play = start()
+    play.act({ type: 'press', at: body(play) })
+    play.act({ type: 'dragStart', from: body(play) })
+    play.act({ type: 'dragMove', from: body(play), at: heart(PLACES[5]) })
+    play.cues.length = 0
+    play.act({ type: 'dragEnd', from: body(play), at: heart(PLACES[5]) })
+    expect(play.cues).toContainEqual({ cue: 'murmur', place: 5, cold: true })
+    run(play, 3)
+    expect(play.save.set[5]).toBeNull()
+  })
+  it('is found lit at the flame, and where it had got to on the way', () => {
+    const play = start()
+    tap(play, body(play))
+    run(play, 0.8)
+    play.pause()
+    expect(deserialize(serialize(play.save)).u).toBeCloseTo(play.walker.u, -1)
+    run(play, 3)
+    expect(deserialize(serialize(play.save))).toMatchObject({ lit: true, u: LENGTH })
+  })
   it('crosses the garden in under two and a half seconds', () => {
     const play = start()
     tap(play, body(play))
@@ -157,6 +192,15 @@ describe('the scenes', () => {
     run(play, 2.6)
     expect(play.walker.lit).toBe(true)
   })
+  it('never blows from the path', () => {
+    const play = start(full())
+    pull(play, body(play), flame)()
+    tap(play, body(play))
+    run(play, 0.2)
+    expect(play.puff).toBeNull()
+    run(play, 4)
+    expect(play.asksToBlow).toBe(true)
+  })
   it('gives way to a touch in the middle of the puff', () => {
     const play = start(full())
     tap(play, body(play))
@@ -204,6 +248,7 @@ describe('anything a child does', () => {
         // Opened again, only a walk on its way has been finished.
         const ahead = back.set.filter(Boolean).length - saved.set.filter(Boolean).length
         expect(ahead === 0 || (ahead === 1 && saved.to !== null)).toBe(true)
+        if (ahead === 0 && !allSet(back)) expect(Math.abs(back.u - saved.u)).toBeLessThan(1)
         expect(play.walker.u >= 0 && play.walker.u <= LENGTH).toBe(true)
       }
       run(play, 22)

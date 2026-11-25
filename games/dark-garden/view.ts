@@ -1,6 +1,6 @@
 import { APPLE, JOKE, type Carrier } from './cast'
 import { at, ENTRY, FLAME, GATE, LENGTH, PLACES, sizeAt } from './garden'
-import { apple, count, flame, glow, LEAD, line, oval, piece, type G } from './glass'
+import { apple, count, flame, glow, line, makeCanvas, oval, piece, type Canvas, type G } from './glass'
 import { handAt, want } from './guide'
 import { handPose, type Guidance, type HandPose } from './guidance'
 import { homeTurn, move, rest, type Pose } from './motion'
@@ -16,6 +16,9 @@ type Look = { x: number; y: number }
 
 export class View {
   private painted: Painted | null = null
+  /** The dark window with every place that is wholly open already in it, so a place at rest costs nothing. */
+  private base: Canvas | null = null
+  private baked: boolean[] = []
   private key = ''
   private frame: Frame = { x0: 0, y0: 0, x1: STAGE.width, y1: STAGE.height }
   private readonly pose: Pose = rest()
@@ -37,17 +40,39 @@ export class View {
     if (key !== this.key || !this.painted) {
       this.frame = { x0: -by.x / by.scale, y0: -by.y / by.scale, x1: (width - by.x) / by.scale, y1: (height - by.y) / by.scale }
       this.painted = paint(this.frame, Math.min(2, painted * by.scale))
+      this.base = makeCanvas(this.painted.dark.width, this.painted.dark.height)
+      this.base.getContext('2d')!.drawImage(this.painted.dark, 0, 0)
+      this.baked = PLACES.map(() => false)
       this.key = key
     }
     g.setTransform(dpr * by.scale, 0, 0, dpr * by.scale, dpr * by.x, dpr * by.y)
     g.globalAlpha = 1
     const p = this.painted
     if (play && play.shown.every((one) => one.who && one.open > OPENING && one.closing === null)) this.layer(p.lit)
-    else this.layer(p.dark)
+    else { if (play) this.bake(play, p); this.layer(this.base!) }
     if (play) this.garden(play, guidance, p)
-    else this.middle(null)
+    else { this.shine(0); this.middle(null) }
     g.setTransform(1, 0, 0, 1, 0, 0)
     return count.fills + 1
+  }
+
+  private bake(play: Play, p: Painted): void {
+    const g = this.base!.getContext('2d')!
+    const open = (id: number) => play.shown[id].who !== null && play.shown[id].open >= OPENING && play.shown[id].closing === null
+    if (this.baked.some((one, id) => one && !open(id))) {
+      g.setTransform(1, 0, 0, 1, 0, 0)
+      g.drawImage(p.dark, 0, 0)
+      this.baked.fill(false)
+    }
+    const f = this.frame, k = p.lit.width / (f.x1 - f.x0)
+    for (const place of PLACES) if (open(place.id) && !this.baked[place.id]) {
+      g.save()
+      g.setTransform(k, 0, 0, k, -f.x0 * k, -f.y0 * k)
+      g.clip(p.clips[place.id].path)
+      g.drawImage(p.lit, f.x0, f.y0, f.x1 - f.x0, f.y1 - f.y0)
+      g.restore()
+      this.baked[place.id] = true
+    }
   }
 
   private layer(canvas: HTMLCanvasElement): void {
@@ -73,14 +98,15 @@ export class View {
     this.way(play, glowing)
     this.trail(play)
     // The stars where the light is wanted.
-    if (wants.what === 'place') for (const place of PLACES) if (play.save.set[place.id] === null && place.id !== w.place) {
-      const here2 = place.id === wants.place
+    if (wants.what === 'place') for (const place of PLACES) if (play.save.set[place.id] === null) {
+      const here2 = place.id === (w.place ?? wants.place)
       const beat = here2 ? 0.75 + Math.sin(this.time * 4) * 0.25 : 0.4
       g.globalAlpha = beat
       star(g, place, here2 ? 0.95 + Math.sin(this.time * 4) * 0.06 : 0.78, '#f7d35a')
       g.globalAlpha = 1
       if (here2) glow(g, place.apple.x, place.apple.y - 4, 70 + glowing * 30, 0.35 + glowing * 0.4)
     }
+    this.shine(play.flare + (wants.what === 'light' ? glowing * 0.35 : 0))
     // From the back to the front.
     const things: { y: number; draw: () => void }[] = []
     for (const place of PLACES) {
@@ -106,19 +132,15 @@ export class View {
     if (all) return
     for (const place of PLACES) {
       const one = play.shown[place.id], clip = p.clips[place.id]
-      if (!one.who) continue
+      if (!one.who || this.baked[place.id]) continue
       g.save()
       if (one.closing !== null) {
         g.globalAlpha = Math.max(0, 1 - one.closing / CLOSING)
         g.clip(clip.path)
         this.litPart(p, clip.box)
-      } else if (one.open >= OPENING) {
-        g.clip(clip.path)
-        this.litPart(p, clip.box)
       } else {
         // Pane by pane, outward from the light.
-        const reach = Math.max(...clip.panes.filter((q) => q.mid.x > -60 && q.mid.x < STAGE.width + 60 && q.mid.y > -60 && q.mid.y < STAGE.height + 60).map((q) => q.far), 1)
-        const front = (one.open / OPENING) * (reach + 60), open = new Path2D()
+        const front = (one.open / OPENING) * (clip.reach + 60), open = new Path2D()
         const just: Path2D[] = []
         for (const q of clip.panes) if (q.far < front) { open.addPath(q.path); if (front - q.far < 60) just.push(q.path) }
         g.clip(open)
@@ -139,22 +161,23 @@ export class View {
     const g = this.g, w = play.walker
     if (!w.lit) return
     const q = play.where(), r = 96 + Math.min(1, w.caught) * 26 + Math.sin(this.time * 9) * 3
-    g.save()
-    g.beginPath(); g.arc(q.x, q.y - 34, r, 0, 7)
-    g.clip()
-    g.globalAlpha = 0.8
-    this.litPart(p, { x0: q.x - r, y0: q.y - 34 - r, x1: q.x + r, y1: q.y - 34 + r })
-    g.restore()
-    g.strokeStyle = LEAD
-    g.lineWidth = 5
-    g.beginPath(); g.arc(q.x, q.y - 34, r, 0, 7); g.stroke()
-    glow(g, q.x, q.y - 60, r * 1.5, 0.5)
+    // Faint at its edge, so that it reads as light and not as a thing.
+    for (const part of [1.12, 0.95, 0.76]) {
+      const reach = r * part
+      g.save()
+      g.beginPath(); g.arc(q.x, q.y - 34, reach, 0, 7)
+      g.clip()
+      g.globalAlpha = 0.42
+      this.litPart(p, { x0: q.x - reach, y0: q.y - 34 - reach, x1: q.x + reach, y1: q.y - 34 + reach })
+      g.restore()
+    }
+    glow(g, q.x, q.y - 60, r * 1.5, play.shown.filter((one) => one.who).length > 5 ? 0.2 : 0.4)
   }
 
   /** The way that is meant: crumbs of light that run along the path to where the candle is wanted. */
   private way(play: Play, glowing: number): void {
     const g = this.g, w = play.walker
-    if (play.full || play.walker.setting !== null || play.walker.arrived < 1) return
+    if (play.full || play.puff !== null || play.walker.setting !== null || play.walker.arrived < 1) return
     const lit = w.lit, to = lit ? (w.place !== null ? PLACES[w.place].u : PLACES[Math.max(0, play.nearestDark(play.where()))].u) : LENGTH - 30
     const from = w.u + (to > w.u ? 46 : -46), way = to - from
     if (way * (to - w.u) <= 0) return
@@ -178,11 +201,15 @@ export class View {
     g.globalAlpha = 1
   }
 
+  /** The light of the middle flame lies on the glass, under everyone, so a white goose beside it stays a goose. */
+  private shine(flare: number): void {
+    glow(this.g, FLAME.x, FLAME.y - 60, 190 + flare * 90 + Math.sin(this.time * 7) * 5, 0.85)
+  }
+
   private middle(play: Play | null): void {
     const g = this.g, t = this.time
     const flare = play?.flare ?? 0, duck = play?.duck ?? 0, lean = play?.lean ?? 0
     const size = 1.15 + flare * 0.5, tall = (1 - Math.sin(Math.min(1, duck) * Math.PI) * 0.6) * (play?.dancing ? 1.35 + Math.sin(t * 8) * 0.1 : 1)
-    glow(g, FLAME.x, FLAME.y - 60, 190 + flare * 90 + Math.sin(t * 7) * 5, 0.85)
     oval(g, FLAME.x, FLAME.y + 16, 46, 16, '#7a4a22', 5)
     piece(g, 'M625 426 L624 372 C 632 364 658 364 666 372 L665 426 C 652 434 638 434 625 426 Z', '#fbf0d2', 5)
     piece(g, 'M624 376 C 632 366 658 366 666 376 C 666 396 656 384 654 390 C 650 404 644 386 638 388 C 632 392 626 398 624 376 Z', '#fffaf0', 3)
@@ -227,10 +254,9 @@ export class View {
       const blink = life < 0.13 ? 0 : 1
       // It bobs on its light's note.
       const bob = one.rung < 0.4 ? Math.sin((one.rung / 0.4) * Math.PI) * 10 : 0
-      const awake = play.save.set[id] !== null || one.closing !== null
       g.translate(0, -bob)
       if (play.dancing) g.rotate(Math.sin(this.time * 7 + id) * 0.07)
-      sleeper(g, who, { p: one.joke > JOKE[who] ? 1 : p, open: Math.max(0, open) * (p < 1 ? 1 : blink) * (awake ? 1 : 0), look: { x: look.x * mirror, y: look.y }, t: this.time + id * 2.2 })
+      sleeper(g, who, { p: one.joke > JOKE[who] ? 1 : p, open: Math.max(0, open) * (p < 1 ? 1 : blink), look: { x: look.x * mirror, y: look.y }, t: this.time + id * 2.2 })
     }
     g.restore()
   }
@@ -263,8 +289,8 @@ export class View {
 
   // --- Those who carry ---------------------------------------------------------------
 
-  private figure(who: Carrier, x: number, y: number, k: number, o: { walked: number; speed: number; squash: number; hop: number; flip: number; held: 'lit' | 'unlit' | 'none'; caught: number; cheeks: number; lean: number; turn: number; look: Look }): void {
-    const g = this.g, pose = move(who, { walked: o.walked, speed: o.speed, time: this.time, squash: o.squash, hop: o.hop }, this.pose)
+  private figure(who: Carrier, x: number, y: number, k: number, o: { walked: number; speed: number; squash: number; hop: number; flip: number; held: 'lit' | 'unlit' | 'none'; caught: number; cheeks: number; lean: number; turn: number; look: Look; setting?: number }): void {
+    const g = this.g, pose = move(who, { walked: o.walked, speed: o.speed, time: this.time, squash: o.squash, hop: o.hop, caught: o.caught, setting: o.setting }, this.pose)
     const size = who === 'bear' ? 1.06 : who === 'gnome' ? 1 : 0.98
     g.save()
     g.translate(x, y)
@@ -276,7 +302,9 @@ export class View {
     if (o.turn) { g.translate(0, -110); g.rotate(o.turn); g.translate(0, 110) }
     g.rotate(pose.turn + o.lean)
     g.scale(2 - pose.squash, pose.squash)
-    walker(g, who, pose, { x: o.look.x * o.flip, y: o.look.y }, o.held === 'none' ? null : { color: APPLE[who], lit: o.held === 'lit', caught: o.caught }, o.cheeks, this.time)
+    // The goose looks at nobody.
+    const look = who === 'goose' ? { x: 0.75, y: -0.5 } : { x: o.look.x * o.flip, y: o.look.y }
+    walker(g, who, pose, look, o.held === 'none' ? null : { color: APPLE[who], lit: o.held === 'lit', caught: o.caught }, o.cheeks, this.time)
     g.restore()
   }
 
@@ -307,10 +335,8 @@ export class View {
     const gaze = play.puff !== null ? FLAME : wants.what === 'light' ? (Math.sin(this.time * 0.9) > 0.3 && !play.busy ? { x: q.x, y: q.y + 400 } : FLAME) : wants.what === 'place' ? wants.to : { x: q.x, y: q.y + 400 }
     const look = this.lookFrom('front', q.x, q.y - 180 * k, gaze)
     if (glowing > 0.01 || asks) glow(this.g, x, y - 110 * scale, 190 * scale, Math.max(glowing * 0.5, asks ? 0.3 : 0))
-    let drop = 0
-    if (w.setting !== null) drop = Math.sin(Math.min(1, w.setting / SETTING) * Math.PI) * 0.16
     this.figure(w.who, x, y - sit * -8, scale * (1 - sit * 0.3), {
-      walked: w.walked, speed: w.speed, squash: w.squash, hop: play.hop[w.who], flip: w.goal !== null && w.speed > 60 ? this.facing(play) : 1, held: empty ? 'none' : w.lit ? 'lit' : 'unlit', caught: w.caught, cheeks, lean: lean + drop, turn: 0, look,
+      walked: w.walked, speed: w.speed, squash: w.squash, hop: play.hop[w.who], flip: w.goal !== null && w.speed > 60 ? this.facing(play) : 1, held: empty ? 'none' : w.lit ? 'lit' : 'unlit', caught: w.caught, cheeks, lean, turn: 0, look, setting: w.setting === null ? 0 : w.setting / SETTING,
     })
   }
 

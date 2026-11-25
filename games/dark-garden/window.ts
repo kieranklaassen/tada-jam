@@ -1,5 +1,5 @@
 import type { Kind } from './cast'
-import { GATE, HALF, PLACES, type Place } from './garden'
+import { GATE, PLACES, type Place } from './garden'
 import { cut, GATE_PANE, MIDDLE, trace, type Pane } from './panes'
 import { LEAD, line, makeCanvas, oval, piece, streakTile, type Canvas, type G } from './glass'
 
@@ -30,7 +30,7 @@ function colorOf(pane: Pane, lit: boolean): string {
   if (pane.kind === 'middle' || pane.owner === MIDDLE) return pane.kind === 'hedge' ? '#3f6e2c' : pane.kind === 'path' ? pick(PATH_LIT) : pick(MIDDLE_LIT)
   if (pane.kind === 'path') return pick(lit ? PATH_LIT : PATH_DARK)
   if (pane.kind === 'hedge') return lit ? pick(['#1f6b3a', '#2a7d43', '#185a34']) : pick(['#0d2a2c', '#0f2f30', '#0b2428'])
-  if (pane.owner === GATE_PANE) return pick(lit ? ['#39407f', '#444d92', '#30366e'] : ['#272c66', '#2d3372', '#222658'])
+  if (pane.owner === GATE_PANE) return pick(lit ? ['#8a5fb4', '#9c72c4', '#7a52a4'] : ['#272c66', '#2d3372', '#222658'])
   return pick(lit ? LIT[pane.owner] : NIGHT)
 }
 
@@ -139,7 +139,7 @@ function gate(g: G, lit: boolean): void {
   oval(g, GATE.x, GATE.y + 4, 104, 26, lit ? '#6a72b8' : '#474e98', 4)
 }
 
-export type Painted = { dark: Canvas; lit: Canvas; clips: readonly { path: Path2D; panes: readonly { path: Path2D; far: number; mid: { x: number; y: number } }[]; box: Frame }[] }
+export type Painted = { dark: Canvas; lit: Canvas; clips: readonly { path: Path2D; panes: readonly { path: Path2D; far: number; mid: { x: number; y: number } }[]; box: Frame; /** How far its farthest pane in sight is from its light. */ reach: number }[] }
 
 export function paint(frame: Frame, scale: number): Painted {
   const panes = cut()
@@ -170,7 +170,7 @@ export function paint(frame: Frame, scale: number): Painted {
         g.fillStyle = fade
         g.fillRect(place.apple.x - 150, place.apple.y - 170, 300, 300)
       }
-      star(g, place, 0.78, lit ? '#f7d35a' : '#4a4678')
+      star(g, place, 0.78, lit ? '#f7d35a' : '#6f69b4')
     }
     gate(g, lit)
     return canvas
@@ -184,9 +184,8 @@ export function paint(frame: Frame, scale: number): Painted {
       for (const q of p.points) { box.x0 = Math.min(box.x0, q.x); box.y0 = Math.min(box.y0, q.y); box.x1 = Math.max(box.x1, q.x); box.y1 = Math.max(box.y1, q.y) }
       return { path: one, far: Math.hypot(p.mid.x - place.apple.x, p.mid.y - place.apple.y), mid: p.mid }
     })
-    return { path, panes: own, box }
+    const reach = Math.max(1, ...own.filter((q) => q.mid.x > frame.x0 - 60 && q.mid.x < frame.x1 + 60 && q.mid.y > frame.y0 - 60 && q.mid.y < frame.y1 + 60).map((q) => q.far))
+    return { path, panes: own, box, reach }
   })
   return { dark: layer(false), lit: layer(true), clips }
 }
-
-export const PATH_WIDE = HALF * 2

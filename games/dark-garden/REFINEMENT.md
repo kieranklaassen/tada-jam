@@ -22,10 +22,12 @@ The look and the toy, at the first play.
 
 ## Pass log
 
-No pass yet. One row per pass: what was looked at, the critique written as the child, the one themed fix set, what was reverted, the measured frame rate, and what is still weak.
-
 | Pass | Looked at | Critique | Fix set | Frame rate | Still weak |
 | --- | --- | --- | --- | --- | --- |
+| 1 | first stills, a whole round | light of one place leaks into its neighbour; a hole in the middle; the dens are dim | dens stamped live, panes wound one way, petals follow the path | not measured | no reader but the builder |
+| 2 | the garden full, the puff, 844×390, twice the pixels | a green wedge at the gate post; who waits looks like a second asker | gate panes; only the one in front glows; glow 1.5 s, hand 3 s | not measured | - |
+| 3 | cold playtest proxy: a fresh reader with thirteen stills and nothing else. They read the loop ("move the big figure to the candle, light the apple, carry it out, the neighbour wakes and the window colours") and could not tell whether to drag or to tap (both work) | the ring of carried light looks like a bubble; the white goose is bleached by the flame; target stars hardly seen; the last corner stays navy | soft edge and no ring; the flame's light lies under people; paler stars; the gate's corner turns violet at the end | Chromium, production build, 1180×820, no throttle, software GL, before pass 4: 50.8 fps on average at the lowest tier, CPU p95 13.3 ms | the hand covers the star it points at; the inner snail hides its apple |
+| 4 | code review by a fresh reader: 19 findings | a quick pull in and out lit nothing; a light left at the flame came back at the gate; touches in the grown-ups' corner played; sleepers shut their eyes before the breath; all four set an apple the same way | all nineteen answered: fixed with tests, or the sheet corrected (the half second of setting, the first place) | Chromium, production build, 1180×820, no throttle, software GL, scripted play of 42 s: 58.9 fps on average and 52 in the worst second with the quality tiers free (they settle on the lowest, pixel ratio 1), CPU p95 9.6 ms; held at the full tier at pixel ratio 2, 43.7 fps and CPU p95 10.7 ms. About 330 fills a frame and no canvas made anew. No iPad, no WebKit and no graphics card | a small violet sliver at the left edge shows early |
 
 ## For the pull request
 
@@ -33,16 +35,23 @@ Written as the game is built and kept at the end of this file: the pull request 
 
 ### How the game meets the quality bar
 
-Nothing yet. One entry for each line of the quality bar, saying how the game meets it so far. Each frame rate comes with the engine, the throttle, the pixel ratio and the build it was measured on, and with whether a physical iPad was measured.
+- Alive at idle: the flame, the crumbs of light on the path, breath and blinks in four tempos, sleepers who breathe in the dark.
+- Motion and sound on every touch: a cry and a squash, a murmur and a roll under the glass, a ring and a joke, the flame ducks.
+- Weight and follow-through: gaits, catching a candle, setting an apple and the way home are different for each of the four (`motion.test.ts`).
+- Clear tappables: people in saturated glass on a blue night; targets held apart in `garden.test.ts`.
+- Wordless: no text, numeral or sign. Glow at 1.5 s, ghost hand at 3 s, and one round shown once on a first visit.
+- 60 fps: Chromium, production build, 1180×820, no throttle, software GL, scripted play of 42 s: 58.9 fps on average and 52 in the worst second with the quality tiers free (they settle on the lowest, pixel ratio 1), CPU p95 9.6 ms; held at the full tier at pixel ratio 2, 43.7 fps and CPU p95 10.7 ms. About 330 fills a frame and no canvas made anew. No iPad, no WebKit and no graphics card.
+- Nothing passes through anything: places, targets and turns of the path are held apart by tests; layers back to front.
+- Procedural only.
 
 ### The learning claim
 
-Nothing yet. The claim as the sheet has it, with each record's standing and its check state read again on the day of the pull request, in the pack's Summary or the game's own words only. A game with no learning goal says so.
+No learning goal.
 
 ### Defaults taken for the owner
 
-Nothing yet. Each default the game took in the owner's place, from the guide or from its own sheet.
+Four carriers, ten places, sixteen sleepers; whoever has set a light goes to the end of the line and the child may call up another; blowing the garden dark is asked for by full cheeks and never happens by itself; nothing follows the calendar.
 
 ### What the next builder should know
 
-Nothing yet. What this build taught that the guide and the template do not say.
+A pull that has to reach two points in one stroke must remember that the finger was at the first: whoever follows the finger lags, and a test that waits at each point hides it.

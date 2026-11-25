@@ -5,7 +5,6 @@ import { makeRng } from './rng'
 
 export type G = CanvasRenderingContext2D
 export type Canvas = HTMLCanvasElement
-export type Draw = (g: G) => void
 
 export const LEAD = '#06050b'
 
@@ -38,13 +37,14 @@ export function streakTile(): Canvas {
   return canvas
 }
 
-const paths = new Map<string, Path2D>()
+let paths = new Map<string, Path2D>(), older = new Map<string, Path2D>()
 /** A shape by its outline, kept. */
 export function shape(d: string): Path2D {
   let path = paths.get(d)
-  // Shapes that move are new each frame: let the lot go before it grows.
-  if (!path && paths.size > 900) paths.clear()
-  if (!path) paths.set(d, (path = new Path2D(d)))
+  if (path) return path
+  // Shapes that move are new each frame. What has not been drawn for a while is let go, what is still drawn is kept.
+  if (paths.size > 600) { older = paths; paths = new Map() }
+  paths.set(d, (path = older.get(d) ?? new Path2D(d)))
   return path
 }
 
