@@ -4,7 +4,7 @@ import { PROTESTED } from './config'
 import { ACT } from './moves'
 import { makeRng, pick, type Rng } from './rng'
 import { dayLength, nextAsk, nextMorning, putOut, worldOf, type Save } from './save'
-import { CAST, DAY, THINGS, after, next, run, same, tellWrong, type Event, type Thing, type Who, type World } from './tale'
+import { CAST, DAY, THINGS, after, next, run, same, tellWrong, wishOf, type Event, type Thing, type Who, type World } from './tale'
 
 // The evening and the day, through fingers in stage units and seconds. The
 // save is always the outcome; everything else here is a view of getting there.
@@ -123,6 +123,10 @@ export class Play {
   }
   get busy(): boolean {
     return this.scene !== null || this.wait > 0 || this.flights.length > 0 || CAST.some((who) => this.acts[who])
+  }
+  /** What whoever asks would like. Anything else is as good. */
+  get wish(): Thing {
+    return wishOf(this.save.asks, this.shown[this.save.asks])
   }
   /** How many pictures the story has. */
   get count(): number {
@@ -607,7 +611,7 @@ export function demoMove(play: Play, index: number): { from: Point; to: Point | 
     if (index === 3 && play.count > 2) return { from: { x: box.x + box.width / 2, y: box.y + 80 }, to: { x: box.x + box.width * 1.5, y: box.y + 80 } }
     return { from: { x: box.x + box.width * 0.26, y: box.y + 80 }, to: null }
   }
-  const thing = THINGS[(THINGS.indexOf('mud') + index + play.save.day.length) % THINGS.length]
+  const thing = play.wish
   const who = play.save.asks
   return { from: thingHome(thing), to: { x: SPOT[who].x, y: SPOT[who].y - 150 }, thing }
 }

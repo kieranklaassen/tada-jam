@@ -3,6 +3,7 @@ import { blob, bump, clamp, ease, jolt, lerp, limb, line, shape, soft, span } fr
 import { paintFigure, restPose, type Pose } from './figures'
 import { handPose, type Guidance, type HandPose } from './guidance'
 import type { Point } from './input'
+import type { RoundHand } from './round'
 import { BAND, COCK, CROWN, LAMP, LIFT, NEARER, SPOT, SUN, THING_AT, pictureAt } from './layout'
 import { Loom, dye, type G, type MakeSheet } from './loom'
 import { ACT, HIT, PROTEST, actPose, idlePose, type Stance } from './moves'
@@ -126,7 +127,7 @@ export class View {
     this.sun = { ...SUN[this.hour] }
   }
 
-  draw(surface: G, width: number, height: number, dpr: number, play: Play | null, guidance: Guidance | null): void {
+  draw(surface: G, width: number, height: number, dpr: number, play: Play | null, guidance: Guidance | null, round: RoundHand | null = null): void {
     const by = fit(width, height)
     if (by.scale === 0) return
     const pw = Math.round(width * dpr), ph = Math.round(height * dpr)
@@ -152,6 +153,7 @@ export class View {
       shape(g, [[along - 46, edge], [along, edge - 10], [along + 46, edge], [along, edge + 10]], dye('walnut', 3))
     }
     if (play) this.scene(g, play, guidance)
+    if (round) this.pointer(g, round.x, round.y, round.press, round.opacity)
     surface.setTransform(1, 0, 0, 1, 0, 0)
     surface.globalAlpha = 1
     this.loom.weave(surface)
@@ -192,6 +194,7 @@ export class View {
     }
     if (scene?.kind === 'lamp') this.carry(g, play, scene.t)
     this.protests(g, play)
+    this.wish(g, play)
     for (const thing of THINGS) {
       const at = play.thingAt(thing)
       if (at.held) this.thing(g, thing, at.at.x, at.at.y, at.tip, 1.08, Math.sin(t * 7) * 0.05)
@@ -584,16 +587,27 @@ export class View {
       if (said.has(event.who) || k <= 0 || i >= play.up || !play.wronged.includes(event.who) || same(event, play.save.told[i])) return
       said.add(event.who)
       const at = play.crown(event.who), x = clamp(at.x + (event.who === 'goose' ? 60 : 0), 130, 720), y = Math.max(96, at.y - 96)
-      blob(g, lerp(x, at.x, 0.7), at.y - 14, 9 * k, 8 * k, dye('cream', 3))
-      blob(g, lerp(x, at.x, 0.4), at.y - 34, 14 * k, 11 * k, dye('cream', 3))
-      g.save()
-      g.translate(x, y)
-      g.scale(k, k)
-      blob(g, 0, 0, 104, 66, dye('walnut', 1))
-      blob(g, 0, 0, 98, 60, dye('cream', 3))
-      this.thing(g, event.what, 0, -8, event.what === 'pants' ? 0 : 0.5, 0.72, 0)
-      g.restore()
+      this.bubble(g, event.what, at, x, y, k)
     })
+  }
+
+  /** Whoever asks thinks of what it would like. */
+  private wish(g: G, play: Play): void {
+    if (play.save.phase !== 'day' || play.busy || play.held?.dragging) return
+    const who = play.save.asks, at = play.crown(who)
+    this.bubble(g, play.wish, at, clamp(at.x + (who === 'goose' ? 90 : 0), 130, 720), Math.max(90, at.y - 92 + 5 * Math.sin(play.time * 1.7)), 1)
+  }
+
+  private bubble(g: G, what: Thing, at: Point, x: number, y: number, k: number): void {
+    blob(g, lerp(x, at.x, 0.7), at.y - 14, 9 * k, 8 * k, dye('cream', 3))
+    blob(g, lerp(x, at.x, 0.4), at.y - 34, 14 * k, 11 * k, dye('cream', 3))
+    g.save()
+    g.translate(x, y)
+    g.scale(k, k)
+    blob(g, 0, 0, 104, 66, dye('walnut', 1))
+    blob(g, 0, 0, 98, 60, what === 'pillow' || what === 'pants' ? dye('sage', 1) : dye('cream', 3))
+    this.thing(g, what, 0, what === 'balloon' ? 0 : -6, 0, 0.72, 0)
+    g.restore()
   }
 
   // --- The lamp's work -------------------------------------------------------
@@ -664,7 +678,7 @@ export class View {
         ring(box.x + box.width * (at & 1 ? 0.76 : 0.26), box.y + 76, 68, 58)
       }
     } else {
-      const at = THING_AT(Math.floor(play.time / 0.8) % THINGS.length)
+      const at = THING_AT(THINGS.indexOf(play.wish))
       ring(at.x, at.y, 80, 64)
     }
   }
@@ -673,11 +687,15 @@ export class View {
     const { from, to, thing } = demoMove(play, index)
     const pose = handPose(demo, to !== null, this.hand)
     const x = to ? lerp(from.x, to.x, pose.travel) : from.x, y = to ? lerp(from.y, to.y, pose.travel) : from.y
-    g.globalAlpha = pose.opacity
     if (thing && pose.travel > 0 && pose.travel < 1) this.thing(g, thing, x, y - 24, 0, 0.9, 0)
+    this.pointer(g, x, y, pose.press, pose.opacity)
+  }
+
+  private pointer(g: G, x: number, y: number, press: number, opacity: number): void {
+    g.globalAlpha = opacity
     g.save()
     g.translate(x + 10, y + 12)
-    g.scale(1.15 - pose.press * 0.2, 1.15 - pose.press * 0.2)
+    g.scale(1.15 - press * 0.2, 1.15 - press * 0.2)
     for (const [colour, grow] of [[dye('walnut', 0), 8], [dye('cream', 3), 0]] as const) {
       line(g, [[0, 0], [10, 44]], colour, 24 + grow)
       soft(g, [[-12 - grow, 34], [52 + grow, 26], [64 + grow, 66], [44, 106 + grow], [4, 104 + grow], [-16 - grow, 70]], colour)

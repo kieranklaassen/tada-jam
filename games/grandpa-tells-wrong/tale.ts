@@ -49,6 +49,15 @@ export const sameTale = (a: readonly Event[], b: readonly Event[]): boolean => a
 export const LIES = ['who', 'what', 'himself', 'order', 'moon'] as const
 export type Lie = (typeof LIES)[number]
 
+/** What each of the yard asks for, dearest first. */
+const WISHES: Record<Neighbour, readonly Thing[]> = { goose: ['pants', 'pillow', 'jam'], pig: ['mud', 'balloon', 'jam'], granny: ['jam', 'balloon', 'pillow'] }
+
+/** The first wish that would change anything, or else the dearest. */
+export function wishOf(who: Neighbour, worn: Worn): Thing {
+  const other = WISHES[who].find((what) => JSON.stringify(after(worn, what)) !== JSON.stringify(worn))
+  return other ?? WISHES[who][0]
+}
+
 type Pick = <T>(from: readonly T[]) => T
 
 /** Grandpa's telling of a day: the same length, and never the same tale. */

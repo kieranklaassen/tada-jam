@@ -11,7 +11,9 @@ import type { Point } from './input'
 import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
 import { SaveCadence } from './saveCadence'
+import { fingerOn, openingBeats } from './opening'
 import { Play } from './play'
+import { OpeningRound } from './round'
 import { seedOf } from './rng'
 import { fit, toStage } from './stage'
 import { deserialize, serialize } from './save'
@@ -47,6 +49,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       sheet.height = h
       return { canvas: sheet, g: sheet.getContext('2d', { willReadFrequently: read })! }
     })
+    let round: OpeningRound | null = null
     let play: Play | null = null, guidance: Guidance | null = null
     let disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
     // Nothing is saved until the slot has been read, so an early put-away cannot overwrite it.
@@ -59,13 +62,15 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
 
     const draw = () => {
       if (!g || width <= 0 || height <= 0) return
-      view.draw(g, width, height, dpr, play, guidance)
+      view.draw(g, width, height, dpr, play, guidance, round?.hand ?? null)
       drawn.drawCalls = view.drawn
     }
 
     /** Plays and shows what just happened, and hands what changed to storage. */
     const answer = () => {
       if (!play) return
+      // Nothing the opening round did is kept until the child has touched something.
+      if (round?.active) play.dirty = false
       const events = play.take()
       if (events.length) {
         view.hear(events, play)
@@ -103,6 +108,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const onDown = (event: PointerEvent) => {
       if (!attention.awake) return
       audio.touchDown()
+      round?.stop()
       ladder.touch(clock.seconds)
       const where = at(event)
       play?.down(event.pointerId, toStage(where, fit(width, height)))
@@ -146,6 +152,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       const step = clock.advance(now)
       const start = performance.now()
       // A hand at work and a scene are not idleness.
+      if (round?.active) round.advance(step, now)
       if (play?.touching) ladder.touch(clock.seconds)
       // A scene that ends has used up most of the wait: what to touch next glows almost at once.
       else if (play?.busy) ladder.touch(clock.seconds - HEAD_START)
@@ -179,7 +186,10 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       frame = 0
       clock.rest()
       overlay.forget()
+      const alone = round?.active
+      round?.stop()
       play?.clear()
+      if (play && alone) play.dirty = false
       view.clear()
       answer()
       cadence.settle(performance.now())
@@ -190,6 +200,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       if (disposed) return
       // A saved position wins; `childAge` only chooses where a first visit starts.
       play = new Play(deserialize(value, ctxRef.current.childAge), seedOf(window.location.search))
+      // A first visit: the hand plays one whole day, until it is touched.
+      if (value === null || value === undefined) round = new OpeningRound(openingBeats(play), fingerOn(play))
       draw()
     })
     applyTier()
@@ -199,7 +211,10 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     return () => {
       disposed = true
       // As on going to rest: the touch ends first, so the thing in hand is back or down before the last save.
+      const alone = round?.active
+      round?.stop()
       play?.clear()
+      if (play && alone) play.dirty = false
       view.clear()
       answer()
       cadence.settle(performance.now())

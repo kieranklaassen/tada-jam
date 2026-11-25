@@ -127,4 +127,4 @@ export const DAY_OF: Readonly<Record<string, number>> = { who: 1, what: 1, himse
 /** The tellings in which whoever it really happened to protests at the picture that has it wrong. Later, she finds it without. */
 export const PROTESTED: readonly string[] = ['who', 'what', 'himself', 'moon']
 /** How long the ladder has already waited when a scene ends: what to touch next glows almost at once. */
-export const HEAD_START = 2.5
+export const HEAD_START = 1
