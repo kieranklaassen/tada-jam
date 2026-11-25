@@ -46,17 +46,17 @@ export const PUDDLE = { x: 872, y: 688, rx: 122, ry: 44 } as const
 
 /** Where the six loose things stand on a first visit. */
 export const FIRST_THINGS: Record<ThingKey, Spot & { dir: 1 | -1 }> = {
-  boot: { x: 150, y: 496, dir: 1 },
-  teapot: { x: 372, y: 448, dir: 1 },
+  boot: { x: 168, y: 700, dir: 1 },
+  teapot: { x: 410, y: 446, dir: 1 },
   pig: { x: 664, y: 474, dir: -1 },
-  farmer: { x: 240, y: 730, dir: 1 },
+  farmer: { x: 206, y: 462, dir: 1 },
   ball: { x: 1052, y: 668, dir: -1 },
   bell: { x: 628, y: 700, dir: 1 },
 }
 
 /** Where the eggs stand on a first visit, each nearest to something else, so tapping alone meets different mothers. */
 export const FIRST_EGGS: readonly Spot[] = [
-  { x: 326, y: 566 },
+  { x: 312, y: 690 },
   { x: 540, y: 556 },
   { x: 712, y: 624 },
   { x: 470, y: 700 },

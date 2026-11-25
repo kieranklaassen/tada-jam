@@ -5,7 +5,7 @@ import { LASTS, NATURE, type Act } from './motion'
 import { Night, type Walk } from './night'
 import type { NightRecord } from './night'
 import { Scene, sceneLength, type Beat } from './scene'
-import { GARMENTS, SLEEPERS, verdictOf, type Garment, type Part, type Sleeper } from './things'
+import { GARMENTS, LOVES, SLEEPERS, verdictOf, type Garment, type Part, type Sleeper } from './things'
 import { CLOTHES, ROOM, VOICE, hollow, stepOf, type Mood } from './voices'
 
 // What the rules look and sound like, on game time. The record in `night` is always already where things are
@@ -95,6 +95,8 @@ export class Show {
   /** Whoever a reveal is about just now. */
   private star: Person | null = null
   private shiverAt = 1.5
+  /** Something went on in the dark since the lamp went out. */
+  private news = false
 
   constructor(record: NightRecord) {
     this.night = new Night(record)
@@ -113,6 +115,7 @@ export class Show {
     }
     this.pieces = pieces
     for (const sleeper of SLEEPERS) this.settle(sleeper)
+    this.news = !this.night.lit && SLEEPERS.some((sleeper) => this.night.worn[sleeper].some((garment) => garment !== LOVES[sleeper]))
   }
 
   // ---- what the view reads -------------------------------------------------
@@ -156,6 +159,16 @@ export class Show {
       if (person.bed === bed && this.night.worn[sleeper].length === 0) return sleeper
     }
     return null
+  }
+
+  /** Somebody was dressed in this dark, and nobody has seen it yet: the lamp is what comes next. */
+  get asksLamp(): boolean {
+    return !this.night.lit && this.scene === null && !this.hand && this.lifted === null && (this.news || this.allDressed)
+  }
+
+  /** Whoever dreams where it can be seen: the cold one, until the lamp is what comes next. */
+  get dreams(): Sleeper | null {
+    return this.asksLamp ? null : this.cold
   }
 
   get allDressed(): boolean {
@@ -375,6 +388,7 @@ export class Show {
     const sleeper = this.whoAt(bed)
     const given = this.night.give(garment, this.night.bedOf(sleeper))
     if (!given) { this.toPeg(garment); return }
+    if (!this.night.lit) this.news = true
     this.changed = 2
     const piece = this.pieces[garment]
     piece.at = 'going'
@@ -447,6 +461,7 @@ export class Show {
     // Whatever is still in the air is on already.
     for (const garment of GARMENTS) if (this.pieces[garment].at === 'going') this.pieces[garment].at = 'worn'
     const pulled = this.night.pull()
+    this.news = false
     this.changed = 2
     this.sound(pulled.lit ? ROOM.cordOn : ROOM.cordOff, KNOB.x)
     if (pulled.lit) this.reveal()

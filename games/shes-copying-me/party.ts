@@ -1,7 +1,7 @@
 import { Detector } from './gesture'
 import { Echo } from './echo'
-import { BELL, GUEST, HOME, MEETING, onAunt, onCat, place, placeSide, reach, rings, sideOf, targetAt, toPoint, toSpot, zoneAt, type Spot, type Target } from './layout'
-import { BEAT_SECONDS, GUESTS, THINGS, effectOf, hairAfter, lipsAfter, moodOf, nextBeat, other, outcomeOf, type Act, type Antic, type Coat, type Effect, type Guest, type Mood, type Side, type Thing } from './rules'
+import { BELL, GUEST, HOME, MEETING, PANES, onAunt, onCat, place, placeSide, reach, rings, sideOf, targetAt, toPoint, toSpot, zoneAt, type Spot, type Target } from './layout'
+import { BEAT_SECONDS, GUESTS, THINGS, WANTS, effectOf, hairAfter, lipsAfter, moodOf, nextBeat, other, outcomeOf, type Act, type Antic, type Coat, type Effect, type Guest, type Mood, type Side, type Thing } from './rules'
 import type { Point } from './stage'
 import type { GameState } from './state'
 
@@ -16,6 +16,8 @@ const LINGER = 0.42
 /** A finger that has not moved for this long is resting, and gives way to the next one. */
 const RESTING = 1
 const WAGGLE = 0.95
+/** How long nobody asks after somebody got what it asked for. */
+export const HUSH = 2.6
 /** Two acts of one hand are at least this far apart. */
 const COOL = 0.3
 
@@ -119,6 +121,8 @@ export class Party {
   /** Seconds since each guest came in at the door side. */
   arrived: [number, number] = [9, 9]
   paneTap: [number, number] = [9, 9]
+  /** Seconds until the next one asks, so that what both aunts did is seen first. */
+  private hush = 0
   /** Set when a change should be saved. Every change is a whole one, so each is saved at once. */
   dirty = false
   private readonly echo = new Echo()
@@ -160,6 +164,25 @@ export class Party {
   get untidy(): boolean {
     const { coats, hair, lips } = this.state
     return GUESTS.some((guest) => coats[guest] !== 'clean') || hair.some((each) => each !== 'plain') || lips[0] || lips[1]
+  }
+
+  /** The side whose guest asks now, or null: nobody at the table asks, or something else is going on. */
+  get asker(): Side | null {
+    if (this.hush > 0 || this.scene) return null
+    const { seated, glad } = this.state
+    return !glad[seated[0]] ? 0 : !glad[seated[1]] ? 1 : null
+  }
+
+  /** The side of the window whose guest is to come in now, with nobody at the table asking, or null. */
+  get calling(): Side | null {
+    if (this.hush > 0 || this.scene || this.asker !== null) return null
+    const { waiting, glad } = this.state
+    return !glad[waiting[0]] ? 0 : !glad[waiting[1]] ? 1 : null
+  }
+
+  /** All four have had what they asked for: the bell is next, and then they ask again. */
+  get asksBell(): boolean {
+    return this.hush <= 0 && !this.scene && this.untidy && GUESTS.every((guest) => this.state.glad[guest])
   }
 
   holds(id: number): boolean {
@@ -422,6 +445,7 @@ export class Party {
       this.state.lips[side] = false
     }
     for (const guest of GUESTS) this.state.coats[guest] = 'clean'
+    if (GUESTS.every((guest) => this.state.glad[guest])) for (const guest of GUESTS) this.state.glad[guest] = false
     this.begin('tidy', [...this.state.seated])
   }
 
@@ -475,6 +499,10 @@ export class Party {
     this.dirty = true
     this.seats[side] = { antic, mood, effect, t: act === 'tip' ? -0.22 : act === 'wave' ? -0.1 : -0.02, from: was }
     this.queue.push({ type: 'answer', side, guest, effect, antic, mood })
+    if (thing === WANTS[guest] && mood === 'delight' && !state.glad[guest]) {
+      state.glad[guest] = true
+      this.hush = HUSH
+    }
     if (mood === 'outrage') {
       if (copy) {
         this.setFace(side, 'puzzled', 1.8)
@@ -513,6 +541,7 @@ export class Party {
 
   private tick(dt: number): void {
     this.time += dt
+    if (!this.hands[0].busy && !this.hands[1].busy) this.hush = Math.max(0, this.hush - dt)
     // A beat changed in the middle of a copy counts from the next one.
     if (!this.hands[0].busy && !this.hands[1].busy) this.wait = BEAT_SECONDS[this.state.beat]
     const { wait } = this
@@ -680,11 +709,18 @@ function spring(hand: Hand, to: Spot, rate: number, dt: number): void {
   }
 }
 
-/** The idle guide's moves, in turn: to the guest, up and over it, and a thing to a hand. From, and to. */
-export function demoMove(party: Party, index: number): { from: Point; to: Point } {
-  const side: Side = index % 2 === 0 ? 0 : 1
-  if (index % 3 === 2) return { from: place(side === 0 ? 0 : 3), to: toPoint(side, { u: 250, y: 440 }) }
-  const to = index % 3 === 0 ? { u: GUEST.u, y: 330 } : MEETING
-  return { from: party.handPoint(side), to: toPoint(side, to) }
-}
+export type Move = { what: 'hand' | 'thing' | 'pane' | 'bell'; side: Side; slot: number; drag: boolean; from: Point; to: Point }
 
+/** The one move the room asks for now: what the asking guest wants, to its aunt's hand, and from there over its head; with nobody asking, the next one in at the window; with all four glad, the bell. */
+export function demoMove(party: Party): Move {
+  const { asker, calling } = party
+  const at = (what: Move['what'], side: Side, from: Point, to: Point, slot = -1): Move => ({ what, side, slot, drag: what !== 'pane', from, to })
+  if (asker === null && calling !== null) return at('pane', calling, PANES[calling], PANES[calling])
+  if (party.asksBell) return at('bell', 0, { x: BELL.x, y: BELL.y - 20 }, { x: BELL.x, y: 500 })
+  const side: Side = asker ?? 0, { held, table, seated } = party.state, want = WANTS[seated[side]]
+  const slot = table.indexOf(want)
+  if (slot >= 0) return at('thing', side, place(slot), toPoint(side, { u: 250, y: 440 }), slot)
+  // The other aunt has it: the hands meet in the middle, and the things change hands.
+  if (held[other(side)] === want) return at('hand', side, party.handPoint(side), toPoint(side, MEETING))
+  return at('hand', side, party.handPoint(side), toPoint(side, { u: GUEST.u, y: 330 }))
+}

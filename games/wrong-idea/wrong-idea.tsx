@@ -7,6 +7,8 @@ import { BACKDROP } from './config'
 import { IdleLadder, type Guidance } from './guidance'
 import { ForgivingTouch, type Gesture, type Point } from './input'
 import { wrongIdeaManifest } from './manifest'
+import { fingerOn, openingBeats } from './opening'
+import { OpeningRound } from './round'
 import { Overlay, inCorner } from './overlay'
 import { installJamPerf } from './perf'
 import { Play } from './play'
@@ -40,6 +42,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // What the last draw put on the surface, for the grown-up handle and the overlay.
     const drawn = { drawCalls: 0, triangles: 0 }
     const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, ...drawn }))
+    // One whole round, shown once on a first visit (round.ts).
+    let round: OpeningRound | null = null
     let play: Play | null = null, disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
     // What the loop hands the draw: the seconds the frame advances, 0 outside a frame, and what the idle ladder shows.
     const playing = { step: 0, guidance: null as Guidance | null }
@@ -51,7 +55,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const applyTier = () => { canvas.dataset.tier = String(governor.tier) }
 
     const draw = () => {
-      drawn.drawCalls = view.draw(play, playing.guidance, playing.step, width, height, dpr, Math.min(2, window.devicePixelRatio || 1))
+      drawn.drawCalls = view.draw(play, playing.guidance, playing.step, width, height, dpr, Math.min(2, window.devicePixelRatio || 1), round?.hand ?? null)
     }
 
     // The shell can resize the surface without a window resize event, so the surface watches itself.
@@ -78,7 +82,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       if (!play) return
       const notes = play.voices().flat()
       if (notes.length > 0) audio.play(voiceOf(notes))
-      if (play.changed()) cadence.change(performance.now(), true)
+      // Nothing the opening round did is kept until the child has touched something.
+      if (play.changed() && !round?.active) cadence.change(performance.now(), true)
     }
     const staged = (point: Point): Point => toStage(point, fit(width, height))
     const inStage = (gesture: Gesture): Gesture => {
@@ -101,6 +106,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const onDown = (event: PointerEvent) => {
       if (!attention.awake) return
       audio.touchDown()
+      round?.stop()
       ladder.touch(clock.seconds)
       const where = at(event)
       const gestures = touch.down(event.pointerId, where, event.timeStamp)
@@ -144,9 +150,10 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       const start = performance.now()
       act(touch.advance(now))
       // A finger that is working is not idle: a hold or a slow drag keeps the ladder at the bottom.
-      if (touch.active || play?.busy) ladder.touch(clock.seconds)
+      if (touch.active || play?.busy || round?.active) ladder.touch(clock.seconds)
       // What to show an idle child: a glow on what can be touched, then one move.
       playing.guidance = ladder.update(clock.seconds)
+      round?.advance(playing.step, now)
       play?.step(playing.step)
       settle()
       // A tier change is applied ahead of the draw: whatever the game's tiers set in `applyTier`, then the pixel
@@ -178,6 +185,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       frame = 0
       clock.rest()
       overlay.forget()
+      round?.stop()
       act(touch.clear())
       cadence.settle(performance.now())
     })
@@ -187,6 +195,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       if (disposed) return
       // A saved position wins; `childAge` only chooses where a first visit starts.
       play = new Play(deserialize(value, ctxRef.current.childAge), seedOf(window.location.search))
+      if (value === null || value === undefined) round = new OpeningRound(openingBeats(play), fingerOn(play))
       // The load draws the first frame itself. A game that is resting or parked when the slot comes back
       // has no frame coming, and would go on showing the surface as it was before the read.
       draw()

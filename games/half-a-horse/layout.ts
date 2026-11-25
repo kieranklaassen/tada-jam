@@ -30,6 +30,8 @@ export const POST = { x: 836, y: 388 }
 export const FARMER = { x: 1076, y: 470, w: 170, h: 380 }
 /** An end whose middle is past this is being greeted. */
 export const MEET = 776
+/** Where the farmer's wish hangs, over his hat. */
+export const WISH = { x: 1062, y: 176 }
 export const PIG = { x: 330, y: 752 }
 
 /** The washing line: a lace that sags between two poles, below the jam's home control. */
