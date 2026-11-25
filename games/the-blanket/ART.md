@@ -114,6 +114,12 @@ A tier sets the pixel ratio and how many dabs the sponge gives (`TIERS` in `conf
 
 Row for `docs/art-direction.md`, section 3: The Blanket, sponge-stippled flat poster (canvas 2D).
 
+## The music
+
+A sly waltz in D minor for upright bass, plucked nylon guitar, clarinet and celesta, with a sunny middle in F. It is played by live-mix (`vendor/live-mix`, whose README links to it): `music.worker.ts` plays the score once on its modelled instruments after the first touch, and `music.ts` runs the result as clips on three tracks. Nothing is a recording, and nothing is fetched but the instruments themselves from the same address.
+
+The mood (`mood.ts`) decides how much is heard. A touch brings the accompaniment and the tune, several touches bring the answering instrument, and a child who stops hears them leave one by one until a trace of the accompaniment is left. The music goes down under each sound the game makes and comes back after it. It rests with the game.
+
 ## The loop, made plain
 
 A child at the low end of the band played it and the loop was not clear: what to do, what comes of it, what to do next. Where this section and the rest of this sheet differ, this section holds.
